@@ -169,7 +169,10 @@ public:
     return GetNumberInfo().mNumberInfo[aAttrEnum].mPercentagesAllowed;
   }
   void SetLength(nsIAtom* aName, const nsSVGLength2 &aLength);
-  virtual void DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr);
+
+  nsAttrValue WillChangeLength(PRUint8 aAttrEnum);
+
+  void DidChangeLength(PRUint8 aAttrEnum, const nsAttrValue& aEmptyOrOldValue);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeNumberPair(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, bool aDoSetAttr);
@@ -249,6 +252,16 @@ public:
   }
 
 protected:
+#ifdef DEBUG
+  // We define BeforeSetAttr here and mark it MOZ_FINAL to ensure it is NOT used
+  // by SVG elements.
+  // This is because we're not currently passing the correct value for aValue to
+  // BeforeSetAttr since it would involve allocating extra SVG value types.
+  // See the comment in nsSVGElement::WillChangeValue.
+  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                 const nsAttrValueOrString* aValue,
+                                 bool aNotify) MOZ_FINAL { return NS_OK; }
+#endif // DEBUG
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify);
   virtual bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
@@ -263,6 +276,11 @@ protected:
   void UpdateContentStyleRule();
   void UpdateAnimatedContentStyleRule();
   mozilla::css::StyleRule* GetAnimatedContentStyleRule();
+
+  nsAttrValue WillChangeValue(nsIAtom* aName);
+  void DidChangeValue(nsIAtom* aName, const nsAttrValue& aEmptyOrOldValue,
+                      nsAttrValue& aNewValue);
+  void MaybeSerializeAttrBeforeRemoval(nsIAtom* aName, bool aNotify);
 
   static nsIAtom* GetEventNameForAttr(nsIAtom* aAttr);
 

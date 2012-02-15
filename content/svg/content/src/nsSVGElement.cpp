@@ -89,6 +89,7 @@
 #include <stdarg.h>
 #include "nsSMILMappedAttribute.h"
 #include "SVGMotionSMILAttr.h"
+#include "nsAttrValueOrString.h"
 
 using namespace mozilla;
 
@@ -262,6 +263,15 @@ nsresult
 nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                            const nsAttrValue* aValue, bool aNotify)
 {
+  // We don't currently use nsMappedAttributes within SVG. If this changes, we
+  // need to be very careful because some nsAttrValues used by SVG point to
+  // member data of SVG elements and if an nsAttrValue outlives the SVG element
+  // whose data it points to (by virtue of being stored in
+  // mAttrsAndChildren->mMappedAttributes, meaning it's shared between
+  // elements), the pointer will dangle. See bug 724680.
+  NS_ABORT_IF_FALSE(!mAttrsAndChildren.HasMappedAttrs(),
+    "Unexpected use of nsMappedAttributes within SVG");
+
   // If this is an svg presentation attribute we need to map it into
   // the content stylerule.
   // XXX For some reason incremental mapping doesn't work, so for now
@@ -303,6 +313,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
         rv = lengthInfo.mLengths[i].SetBaseValueString(aValue, this, false);
         if (NS_FAILED(rv)) {
           lengthInfo.Reset(i);
+        } else {
+          aResult.SetTo(lengthInfo.mLengths[i], &aValue);
+          didSetResult = true;
         }
         foundMatch = true;
         break;
@@ -592,8 +605,8 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
 
     for (PRUint32 i = 0; i < lenInfo.mLengthCount; i++) {
       if (aName == *lenInfo.mLengthInfo[i].mName) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         lenInfo.Reset(i);
-        DidChangeLength(i, false);
         return;
       }
     }
@@ -1254,6 +1267,137 @@ nsSVGElement::GetAnimatedContentStyleRule()
                                              nsnull));
 }
 
+/**
+ * Helper methods for the type-specific WillChangeXXX methods.
+ *
+ * This method sends out appropriate pre-change notifications so that selector
+ * restyles (e.g. due to changes that cause |elem[attr="val"]| to start/stop
+ * matching) work, and it returns an nsAttrValue that _may_ contain the
+ * attribute's pre-change value.
+ *
+ * The nsAttrValue returned by this method depends on whether there are
+ * mutation event listeners listening for changes to this element's attributes.
+ * If not, then the object returned is empty. If there are, then the
+ * nsAttrValue returned contains a serialized copy of the attribute's value
+ * prior to the change, and this object should be passed to the corresponding
+ * DidChangeXXX method call (assuming a WillChangeXXX call is required for the
+ * SVG type - see comment below). This is necessary so that the 'prevValue'
+ * property of the mutation event that is dispatched will correctly contain the
+ * old value.
+ *
+ * The reason we need to serialize the old value if there are mutation
+ * event listeners is because the underlying nsAttrValue for the attribute
+ * points directly to a parsed representation of the attribute (e.g. an
+ * SVGAnimatedLengthList*) that is a member of the SVG element. That object
+ * will have changed by the time DidChangeXXX has been called, so without the
+ * serialization of the old attribute value that we provide, DidChangeXXX
+ * would have no way to get the old value to pass to SetAttrAndNotify.
+ *
+ * We only return the old value when there are mutation event listeners because
+ * it's not needed otherwise, and because it's expensive to serialize the old
+ * value. This is especially true for list type attributes, which may be built
+ * up via the SVG DOM resulting in a large number of Will/DidModifyXXX calls
+ * before the script finally finishes setting the attribute.
+ *
+ * Note that unlike using SetParsedAttr, using Will/DidChangeXXX does NOT check
+ * and filter out redundant changes. Before calling WillChangeXXX, the caller
+ * should check whether the new and old values are actually the same, and skip
+ * calling Will/DidChangeXXX if they are.
+ *
+ * Also note that not all SVG types use this scheme. For types that can be
+ * represented by an nsAttrValue without pointing back to an SVG object (e.g.
+ * enums, booleans, integers) we can simply use SetParsedAttr which will do all
+ * of the above for us. For such types there is no matching WillChangeXXX
+ * method, only DidChangeXXX which calls SetParsedAttr.
+ */
+nsAttrValue
+nsSVGElement::WillChangeValue(nsIAtom* aName)
+{
+  // We need an empty attr value:
+  //   a) to pass to BeforeSetAttr when GetParsedAttr returns nsnull
+  //   b) to store the old value in the case we have mutation listeners
+  // We can use the same value for both purposes since (a) happens before (b).
+  // Also, we should be careful to always return this value to benefit from
+  // return value optimization.
+  nsAttrValue emptyOrOldAttrValue;
+  const nsAttrValue* attrValue = GetParsedAttr(aName);
+
+  // This is not strictly correct--the attribute value parameter for
+  // BeforeSetAttr should reflect the value that *will* be set but that implies
+  // allocating, e.g. an extra nsSVGLength2, and isn't necessary at the moment
+  // since no SVG elements overload BeforeSetAttr. For now we just pass the
+  // current value.
+  nsAttrValueOrString attrStringOrValue(attrValue ? *attrValue
+                                                  : emptyOrOldAttrValue);
+  DebugOnly<nsresult> rv =
+    BeforeSetAttr(kNameSpaceID_None, aName, &attrStringOrValue,
+                  kNotifyDocumentObservers);
+  // SVG elements aren't expected to overload BeforeSetAttr in such a way that
+  // it may fail. So long as this is the case we don't need to check and pass on
+  // the return value which simplifies the calling code significantly.
+  NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Unexpected failure from BeforeSetAttr");
+
+  // We only need to set the old value if we have listeners since otherwise it
+  // isn't used.
+  if (attrValue &&
+      nsContentUtils::HasMutationListeners(this,
+                                           NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                           this)) {
+    emptyOrOldAttrValue.SetToSerialized(*attrValue);
+  }
+
+  PRUint8 modType = attrValue
+                  ? static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION)
+                  : static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+  nsNodeUtils::AttributeWillChange(this, kNameSpaceID_None, aName, modType);
+
+  return emptyOrOldAttrValue;
+}
+
+/**
+ * Helper methods for the type-specific DidChangeXXX methods.
+ *
+ * aEmptyOrOldValue will normally be the object returned from the corresponding
+ * WillChangeXXX call. This is because:
+ * a) WillChangeXXX will ensure the object is set when we have mutation
+ *    listeners, and
+ * b) WillChangeXXX will ensure the object represents a serialized version of
+ *    the old attribute value so that the value doesn't change when the
+ *    underlying SVG type is updated.
+ */
+void
+nsSVGElement::DidChangeValue(nsIAtom* aName,
+                             const nsAttrValue& aEmptyOrOldValue,
+                             nsAttrValue& aNewValue)
+{
+  bool hasListeners =
+    nsContentUtils::HasMutationListeners(this,
+                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                         this);
+  PRUint8 modType = HasAttr(kNameSpaceID_None, aName)
+                  ? static_cast<PRUint8>(nsIDOMMutationEvent::MODIFICATION)
+                  : static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION);
+  SetAttrAndNotify(kNameSpaceID_None, aName, nsnull, aEmptyOrOldValue,
+                   aNewValue, modType, hasListeners, kNotifyDocumentObservers,
+                   kCallAfterSetAttr);
+}
+
+void
+nsSVGElement::MaybeSerializeAttrBeforeRemoval(nsIAtom* aName, bool aNotify)
+{
+  if (!aNotify ||
+      !nsContentUtils::HasMutationListeners(this,
+                                            NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
+                                            this)) {
+    return;
+  }
+
+  nsAutoString serializedValue;
+  mAttrsAndChildren.GetAttr(aName)->ToString(serializedValue);
+  nsAttrValue attrValue(serializedValue);
+  mAttrsAndChildren.SetAndTakeAttr(aName, attrValue);
+}
+
 /* static */
 nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
 {
@@ -1336,25 +1480,27 @@ nsSVGElement::SetLength(nsIAtom* aName, const nsSVGLength2 &aLength)
   NS_ABORT_IF_FALSE(false, "no length found to set");
 }
 
-void
-nsSVGElement::DidChangeLength(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangeLength(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
+  return WillChangeValue(*GetLengthInfo().mLengthInfo[aAttrEnum].mName);
+}
 
+void
+nsSVGElement::DidChangeLength(PRUint8 aAttrEnum,
+                              const nsAttrValue& aEmptyOrOldValue)
+{
   LengthAttributesInfo info = GetLengthInfo();
 
   NS_ASSERTION(info.mLengthCount > 0,
                "DidChangeLength on element with no length attribs");
-
   NS_ASSERTION(aAttrEnum < info.mLengthCount, "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mLengths[aAttrEnum].GetBaseValueString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(info.mLengths[aAttrEnum], nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, *info.mLengthInfo[aAttrEnum].mName, nsnull,
-                attrValue, true);
+  DidChangeValue(*info.mLengthInfo[aAttrEnum].mName, aEmptyOrOldValue,
+                 newValue);
 }
 
 void

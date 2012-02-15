@@ -51,6 +51,7 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
+#include "nsSVGLength2.h"
 
 namespace css = mozilla::css;
 
@@ -264,6 +265,11 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
         cont->mIntMargin = new nsIntMargin(*otherCont->mIntMargin);
       break;
     }
+    case eSVGLength:
+    {
+      cont->mSVGLength = otherCont->mSVGLength;
+      break;
+    }
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -344,6 +350,17 @@ nsAttrValue::SetToSerialized(const nsAttrValue& aOther)
     SetTo(val);
   } else {
     SetTo(aOther);
+  }
+}
+
+void
+nsAttrValue::SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mSVGLength = &aValue;
+    cont->mType = eSVGLength;
+    SetMiscAtomOrString(aSerialized);
   }
 }
 
@@ -442,6 +459,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     {
       aResult.Truncate();
       aResult.AppendFloat(GetDoubleValue());
+      break;
+    }
+    case eSVGLength:
+    {
+      GetMiscContainer()->mSVGLength->GetBaseValueString(aResult);
       break;
     }
     default:
@@ -628,6 +650,10 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mIntMargin);
     }
+    case eSVGLength:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGLength);
+    }
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -719,6 +745,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eIntMarginValue:
     {
       return thisCont->mIntMargin == otherCont->mIntMargin;
+    }
+    case eSVGLength:
+    {
+      return thisCont->mSVGLength == otherCont->mSVGLength;
     }
     default:
     {
