@@ -307,6 +307,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     private void cancelAndFinish() {
         setResult(Activity.RESULT_CANCELED);
         finish();
+        overridePendingTransition(0, 0);
     }
 
     private void finishWithResult(Intent intent) {
