@@ -147,6 +147,19 @@ function runTests()
   marker.orientAngle.baseVal.newValueSpecifiedUnits(
     SVGAngle.SVG_ANGLETYPE_UNSPECIFIED, 40);
 
+  // boolean attribute
+
+  eventChecker.watchAttr(convolve, "preserveAlpha");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("preserveAlpha", "true");
+  convolve.preserveAlpha.baseVal = false;
+  convolve.removeAttribute("preserveAlpha");
+  convolve.preserveAlpha.baseVal = true;
+
+  eventChecker.expect("");
+  convolve.preserveAlpha.baseVal = true;
+  convolve.setAttribute("preserveAlpha", "true");
+
   // enum attribute
 
   eventChecker.watchAttr(convolve, "edgeMode");

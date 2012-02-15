@@ -177,6 +177,11 @@ function runTests()
   convolve.preserveAlpha.baseVal = true;
   is(convolve.preserveAlpha.animVal, true, "boolean animVal");
   is(convolve.getAttribute("preserveAlpha"), "true", "boolean attribute");
+  convolve.setAttribute("preserveAlpha", "");
+  ok(convolve.getAttribute("preserveAlpha") === "", "empty boolean attribute");
+  convolve.removeAttribute("preserveAlpha");
+  ok(convolve.getAttribute("preserveAlpha") === null,
+     "removed boolean attribute");
 
   // enum attribute
 
