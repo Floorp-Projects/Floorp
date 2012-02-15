@@ -132,19 +132,36 @@ ThebesLayerD3D10::RenderLayer()
   SetEffectTransformAndOpacity();
 
   ID3D10EffectTechnique *technique;
-  switch (mCurrentSurfaceMode) {
-  case SURFACE_COMPONENT_ALPHA:
-    technique = effect()->GetTechniqueByName("RenderComponentAlphaLayer");
-    break;
-  case SURFACE_OPAQUE:
-    technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
-    break;
-  case SURFACE_SINGLE_CHANNEL_ALPHA:
-    technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
-    break;
-  default:
-    NS_ERROR("Unknown mode");
-    return;
+  if (LoadMaskTexture()) {
+    switch (mCurrentSurfaceMode) {
+    case SURFACE_COMPONENT_ALPHA:
+      technique = effect()->GetTechniqueByName("RenderComponentAlphaLayerMask");
+      break;
+    case SURFACE_OPAQUE:
+      technique = effect()->GetTechniqueByName("RenderRGBLayerPremulMask");
+      break;
+    case SURFACE_SINGLE_CHANNEL_ALPHA:
+      technique = effect()->GetTechniqueByName("RenderRGBALayerPremulMask");
+      break;
+    default:
+      NS_ERROR("Unknown mode");
+      return;
+    }
+  } else {
+    switch (mCurrentSurfaceMode) {
+    case SURFACE_COMPONENT_ALPHA:
+      technique = effect()->GetTechniqueByName("RenderComponentAlphaLayer");
+      break;
+    case SURFACE_OPAQUE:
+      technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+      break;
+    case SURFACE_SINGLE_CHANNEL_ALPHA:
+      technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
+      break;
+    default:
+      NS_ERROR("Unknown mode");
+      return;
+    }
   }
 
   nsIntRegionRectIterator iter(mVisibleRegion);
@@ -635,8 +652,12 @@ ShadowThebesLayerD3D10::RenderLayer()
 
   SetEffectTransformAndOpacity();
 
-  ID3D10EffectTechnique *technique =
-      effect()->GetTechniqueByName("RenderRGBLayerPremul");
+  ID3D10EffectTechnique *technique;
+  if (LoadMaskTexture()) {
+    technique = effect()->GetTechniqueByName("RenderRGBLayerPremulMask");
+  } else {
+    technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+  }
 
   effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(srView);
 

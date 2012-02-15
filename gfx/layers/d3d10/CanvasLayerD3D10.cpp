@@ -266,25 +266,49 @@ CanvasLayerD3D10::RenderLayer()
 
   ID3D10EffectTechnique *technique;
 
-  if (mDataIsPremultiplied) {
-    if (!mHasAlpha) {
-      if (mFilter == gfxPattern::FILTER_NEAREST) {
-        technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
+  if (LoadMaskTexture()) {
+    if (mDataIsPremultiplied) {
+      if (!mHasAlpha) {
+        if (mFilter == gfxPattern::FILTER_NEAREST) {
+          technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPointMask");
+        } else {
+          technique = effect()->GetTechniqueByName("RenderRGBLayerPremulMask");
+        }
       } else {
-        technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+        if (mFilter == gfxPattern::FILTER_NEAREST) {
+          technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPointMask");
+        } else {
+          technique = effect()->GetTechniqueByName("RenderRGBALayerPremulMask");
+        }
       }
     } else {
       if (mFilter == gfxPattern::FILTER_NEAREST) {
-        technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
+        technique = effect()->GetTechniqueByName("RenderRGBALayerNonPremulPointMask");
       } else {
-        technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
+        technique = effect()->GetTechniqueByName("RenderRGBALayerNonPremulMask");
       }
     }
-  } else {
-    if (mFilter == gfxPattern::FILTER_NEAREST) {
-      technique = effect()->GetTechniqueByName("RenderRGBALayerNonPremulPoint");
+  } else { // no mask
+    if (mDataIsPremultiplied) {
+      if (!mHasAlpha) {
+        if (mFilter == gfxPattern::FILTER_NEAREST) {
+          technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
+        } else {
+          technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+        }
+      } else {
+        if (mFilter == gfxPattern::FILTER_NEAREST) {
+          technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
+        } else {
+          technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
+        }
+      }
     } else {
-      technique = effect()->GetTechniqueByName("RenderRGBALayerNonPremul");
+      if (mFilter == gfxPattern::FILTER_NEAREST) {
+        technique = effect()->GetTechniqueByName("RenderRGBALayerNonPremulPoint");
+      } else {
+        technique = effect()->GetTechniqueByName("RenderRGBALayerNonPremul");
+      }
     }
   }
 
