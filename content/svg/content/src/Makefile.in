@@ -171,6 +171,8 @@ EXPORTS =  			\
 	nsSVGFeatures.h            \
 	nsSVGLength2.h             \
 	nsSVGRect.h                \
+	SVGLength.h                \
+	SVGLengthList.h            \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

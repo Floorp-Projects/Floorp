@@ -171,6 +171,7 @@ public:
   void SetLength(nsIAtom* aName, const nsSVGLength2 &aLength);
 
   nsAttrValue WillChangeLength(PRUint8 aAttrEnum);
+  nsAttrValue WillChangeLengthList(PRUint8 aAttrEnum);
 
   void DidChangeLength(PRUint8 aAttrEnum, const nsAttrValue& aEmptyOrOldValue);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, bool aDoSetAttr);
@@ -183,7 +184,8 @@ public:
   virtual void DidChangeViewBox(bool aDoSetAttr);
   virtual void DidChangePreserveAspectRatio(bool aDoSetAttr);
   virtual void DidChangeNumberList(PRUint8 aAttrEnum, bool aDoSetAttr);
-  virtual void DidChangeLengthList(PRUint8 aAttrEnum, bool aDoSetAttr);
+  void DidChangeLengthList(PRUint8 aAttrEnum,
+                           const nsAttrValue& aEmptyOrOldValue);
   virtual void DidChangePointList(bool aDoSetAttr);
   virtual void DidChangePathSegList(bool aDoSetAttr);
   virtual void DidChangeTransformList(bool aDoSetAttr);

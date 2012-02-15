@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=515116
   <title>Generic tests for SVG animated length lists</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="matrixUtils.js"></script>
+  <script type="text/javascript" src="MutationEventChecker.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -452,6 +453,7 @@ function get_array_of_list_items(list)
 function run_baseVal_API_tests()
 {
   var res, threw, items;
+  var eventChecker = new MutationEventChecker;
 
   for each (var t in tests) {
 
@@ -462,6 +464,8 @@ function run_baseVal_API_tests()
     is(t.baseVal.numberOfItems, 4,
        'The '+t.list_type+' object should contain four list items.');
 
+    eventChecker.watchAttr(t.element, t.attr_name);
+    eventChecker.expect("modify");
     res = t.baseVal.clear();
 
     is(t.baseVal.numberOfItems, 0,
@@ -469,13 +473,48 @@ function run_baseVal_API_tests()
        ' object.');
     is(res, undefined,
        'The method '+t.list_type+'.clear() should not return a value.');
+    ok(t.element.hasAttribute(t.attr_name),
+       'The method '+t.list_type+'.clear() should not remove the attribute.');
+    ok(t.element.getAttribute(t.attr_name) === "",
+       'Cleared '+t.attr_name+' ('+t.list_type+') but did not get an '+
+       'empty string back.');
+
+    eventChecker.expect("");
+    t.baseVal.clear();
+    eventChecker.ignoreEvents();
+
+    // Test empty strings
+
+    t.element.setAttribute(t.attr_name, "");
+    ok(t.element.getAttribute(t.attr_name) === "",
+       'Set an empty attribute value for '+t.attr_name+' ('+t.list_type+
+       ') but did not get an empty string back.');
+
+    // Test removed attributes
+
+    t.element.removeAttribute(t.attr_name);
+    ok(t.element.getAttribute(t.attr_name) === null,
+       'Removed attribute value for '+t.attr_name+' ('+t.list_type+
+       ') but did not get null back.');
+    ok(!t.element.hasAttribute(t.attr_name),
+       'Removed attribute value for '+t.attr_name+' ('+t.list_type+
+       ') but hasAttribute still returns true.');
 
     // Test .initialize():
 
     t.element.setAttribute(t.attr_name, t.attr_val_4);
 
     var item = t.item_constructor();
+    // Our current implementation of 'initialize' for most list types performs
+    // a 'clear' followed by an 'insertItemBefore'. This results in two
+    // modification events being dispatched. SVGStringList however avoids the
+    // additional clear.
+    var expectedModEvents =
+      t.item_type == "DOMString" ? "modify" : "modify modify";
+    eventChecker.expect(expectedModEvents);
     var res = t.baseVal.initialize(item);
+    eventChecker.ignoreEvents();
+
 
     is(t.baseVal.numberOfItems, 1,
        'The '+t.list_type+' object should contain one list item.');
@@ -515,6 +554,7 @@ function run_baseVal_API_tests()
          'is passed in, even if that object is the only item in that list.');
       // [SVGWG issue] not what the spec currently says
 
+      eventChecker.expect("");
       threw = false;
       try {
         t.baseVal.initialize({});
@@ -524,6 +564,7 @@ function run_baseVal_API_tests()
       ok(threw,
          'The method '+t.list_type+'.initialize() should throw if passed an '+
          'object of the wrong type.');
+      eventChecker.ignoreEvents();
     }
 
     // Test .insertItemBefore():
@@ -532,7 +573,9 @@ function run_baseVal_API_tests()
 
     old_items = get_array_of_list_items(t.baseVal);
     item = t.item_constructor();
+    eventChecker.expect("modify");
     res = t.baseVal.insertItemBefore(item, 2);
+    eventChecker.ignoreEvents();
 
     is(t.baseVal.numberOfItems, 5,
        'The '+t.list_type+' object should contain five list items.');
@@ -587,6 +630,7 @@ function run_baseVal_API_tests()
          'the list at the index specified.');
       // [SVGWG issue] not what the spec currently says
 
+      eventChecker.expect("");
       threw = false;
       try {
         t.baseVal.insertItemBefore({}, 2);
@@ -596,6 +640,7 @@ function run_baseVal_API_tests()
       ok(threw,
          'The method '+t.list_type+'.insertItemBefore() should throw if passed '+
          'an object of the wrong type.');
+      eventChecker.ignoreEvents();
     }
 
     // Test .replaceItem():
@@ -604,7 +649,9 @@ function run_baseVal_API_tests()
 
     old_items = get_array_of_list_items(t.baseVal);
     item = t.item_constructor();
+    eventChecker.expect("modify");
     res = t.baseVal.replaceItem(item, 2);
+    eventChecker.ignoreEvents();
 
     is(t.baseVal.numberOfItems, 4,
        'The '+t.list_type+' object should contain four list items.');
@@ -627,6 +674,7 @@ function run_baseVal_API_tests()
 
     item = t.item_constructor();
 
+    eventChecker.expect("");
     threw = false;
     try {
       t.baseVal.replaceItem(item, 100);
@@ -636,6 +684,7 @@ function run_baseVal_API_tests()
     ok(threw,
        'The method '+t.list_type+'.replaceItem() should throw if passed '+
        'an index that is out of bounds.');
+    eventChecker.ignoreEvents();
 
     old_items = get_array_of_list_items(t.baseVal);
     item = t.baseVal.getItem(3);
@@ -683,7 +732,9 @@ function run_baseVal_API_tests()
 
     old_items = get_array_of_list_items(t.baseVal);
     item = t.baseVal.getItem(2);
+    eventChecker.expect("modify");
     res = t.baseVal.removeItem(2);
+    eventChecker.ignoreEvents();
 
     is(t.baseVal.numberOfItems, 3,
        'The '+t.list_type+' object should contain three list items.');
@@ -701,6 +752,7 @@ function run_baseVal_API_tests()
        'the item at index 2 was removed using the '+t.list_type+
        '.replaceItem() method.');
 
+    eventChecker.expect("");
     threw = false;
     try {
       t.baseVal.removeItem(100);
@@ -710,6 +762,7 @@ function run_baseVal_API_tests()
     ok(threw,
        'The method '+t.list_type+'.removeItem() should throw if passed '+
        'an index that is out of bounds.');
+    eventChecker.ignoreEvents();
 
     // Test .appendItem():
 
@@ -717,7 +770,9 @@ function run_baseVal_API_tests()
 
     old_items = get_array_of_list_items(t.baseVal);
     item = t.item_constructor();
+    eventChecker.expect("modify");
     res = t.baseVal.appendItem(item);
+    eventChecker.ignoreEvents();
 
     is(t.baseVal.numberOfItems, 5,
        'The '+t.list_type+' object should contain five list items.');
@@ -763,6 +818,7 @@ function run_baseVal_API_tests()
          'that list.');
       // [SVGWG issue] not what the spec currently says
 
+      eventChecker.expect("");
       threw = false;
       try {
         t.baseVal.appendItem({});
@@ -772,7 +828,15 @@ function run_baseVal_API_tests()
       ok(threw,
          'The method '+t.list_type+'.appendItem() should throw if passed '+
          'an object of the wrong type.');
+      eventChecker.ignoreEvents();
     }
+
+    // Test removal and addition events
+
+    eventChecker.expect("remove add");
+    t.element.removeAttribute(t.attr_name);
+    res = t.baseVal.appendItem(item);
+    eventChecker.finish();
   }
 }
 
@@ -880,7 +944,7 @@ function run_animVal_API_tests()
 
 /**
  * This function runs some basic tests to check the effect of setAttribute()
- * calls on object identidy, without taking SMIL animation into consideration.
+ * calls on object identity, without taking SMIL animation into consideration.
  */
 function run_basic_setAttribute_tests()
 {
