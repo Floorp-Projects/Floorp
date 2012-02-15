@@ -70,6 +70,9 @@
 #include "prinit.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 static PRLogModuleInfo *gFontLog = PR_NewLogModule("ft2fonts");
 
@@ -614,6 +617,7 @@ gfxFT2Font::GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
                           bool aNeedsBold)
 {
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry, aStyle);
+    Telemetry::Accumulate(Telemetry::FONT_CACHE_HIT, font != nsnull);
     if (!font) {
         cairo_scaled_font_t *scaledFont = aFontEntry->CreateScaledFont(aStyle);
         font = new gfxFT2Font(scaledFont, aFontEntry, aStyle, aNeedsBold);
