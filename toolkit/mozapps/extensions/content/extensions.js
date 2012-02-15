@@ -1966,7 +1966,7 @@ var gDiscoverView = {
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
     let transferStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
                         Ci.nsIWebProgressListener.STATE_IS_REQUEST |
-                        Ci.nsIWebProgressListener.STATE_IS_TRANSFERRING;
+                        Ci.nsIWebProgressListener.STATE_TRANSFERRING;
     // Once transferring begins show the content
     if (aStateFlags & transferStart)
       this.node.selectedPanel = this._browser;
