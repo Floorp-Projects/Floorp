@@ -71,6 +71,7 @@ class StyleRule;
 class SVGAnimatedPreserveAspectRatio;
 class SVGLengthList;
 class SVGNumberList;
+class SVGPointList;
 }
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
@@ -141,8 +142,9 @@ public:
     ,eSVGLengthList =  0x17
     ,eSVGNumberList =  0x18
     ,eSVGNumberPair =  0x19
-    ,eSVGPreserveAspectRatio = 0x20
-    ,eSVGViewBox =     0x21
+    ,eSVGPointList  =  0x20
+    ,eSVGPreserveAspectRatio = 0x21
+    ,eSVGViewBox =     0x22
   };
 
   ValueType Type() const;
@@ -165,6 +167,7 @@ public:
   void SetTo(const mozilla::SVGNumberList& aValue,
              const nsAString* aSerialized);
   void SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGPointList& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
              const nsAString* aSerialized);
   void SetTo(const nsSVGViewBox& aValue, const nsAString* aSerialized);
@@ -405,6 +408,7 @@ private:
       const mozilla::SVGLengthList* mSVGLengthList;
       const mozilla::SVGNumberList* mSVGNumberList;
       const nsSVGNumberPair* mSVGNumberPair;
+      const mozilla::SVGPointList* mSVGPointList;
       const mozilla::SVGAnimatedPreserveAspectRatio* mSVGPreserveAspectRatio;
       const nsSVGViewBox* mSVGViewBox;
     };
