@@ -169,6 +169,7 @@ FORCE_STATIC_LIB = 1
 EXPORTS =  			\
 	nsSVGElement.h             \
 	nsSVGFeatures.h            \
+	nsSVGIntegerPair.h         \
 	nsSVGLength2.h             \
 	nsSVGNumberPair.h          \
 	nsSVGRect.h                \

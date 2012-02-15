@@ -109,6 +109,20 @@ function runTests()
   convolve.setAttribute("targetX", "8");
   convolve.targetX.baseVal = 8;
 
+  // integer-optional-integer attribute
+
+  eventChecker.watchAttr(filter, "filterRes");
+  eventChecker.expect("add modify remove add");
+  filter.setAttribute("filterRes", "60, 70");
+  filter.filterResX.baseVal = 50;
+  filter.removeAttribute("filterRes");
+  filter.setAttribute("filterRes", "50, 60");
+
+  eventChecker.expect("");
+  filter.filterResX.baseVal = 50;
+  filter.setAttribute("filterRes", "50, 60");
+  filter.filterResY.baseVal = 60;
+
   // enum attribute
 
   eventChecker.watchAttr(convolve, "edgeMode");
