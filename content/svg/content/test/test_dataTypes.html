@@ -279,6 +279,10 @@ function runTests()
   is(marker.getAttribute("viewBox"), "5 6 7 8", "viewBox attribute");
   marker.removeAttribute("viewBox");
   is(marker.hasAttribute("viewBox"), false, "viewBox hasAttribute");
+  ok(marker.getAttribute("viewBox") === null, "removed viewBox attribute");
+
+  marker.setAttribute("viewBox", "");
+  ok(marker.getAttribute("viewBox") === "", "empty viewBox attribute");
 
   SimpleTest.finish();
 }

@@ -217,6 +217,22 @@ function runTests()
     SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET;
   marker.setAttribute("preserveAspectRatio", "xMidYMin meet");
 
+  // viewBox attribute
+
+  eventChecker.watchAttr(marker, "viewBox");
+  eventChecker.expect("add modify remove add");
+  marker.setAttribute("viewBox", "1 2 3 4");
+  marker.viewBox.baseVal.height = 5;
+  marker.removeAttribute("viewBox");
+  marker.viewBox.baseVal.height = 4;
+
+  eventChecker.ignoreEvents();
+  marker.setAttribute("viewBox", "1 2 3 4");
+  eventChecker.expect("");
+  marker.viewBox.baseVal.height = 4;
+  marker.viewBox.baseVal.x = 1;
+  marker.setAttribute("viewBox", "1 2 3 4");
+
   eventChecker.finish();
 
   SimpleTest.finish();

@@ -55,6 +55,7 @@
 #include "nsSVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumberPair.h"
+#include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGLengthList.h"
 
@@ -300,6 +301,11 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mSVGPreserveAspectRatio = otherCont->mSVGPreserveAspectRatio;
       break;
     }
+    case eSVGViewBox:
+    {
+      cont->mSVGViewBox = otherCont->mSVGViewBox;
+      break;
+    }
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -470,6 +476,17 @@ nsAttrValue::SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
 }
 
 void
+nsAttrValue::SetTo(const nsSVGViewBox& aValue, const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mSVGViewBox = &aValue;
+    cont->mType = eSVGViewBox;
+    SetMiscAtomOrString(aSerialized);
+  }
+}
+
+void
 nsAttrValue::SwapValueWith(nsAttrValue& aOther)
 {
   PtrBits tmp = aOther.mBits;
@@ -594,6 +611,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eSVGPreserveAspectRatio:
     {
       GetMiscContainer()->mSVGPreserveAspectRatio->GetBaseValueString(aResult);
+      break;
+    }
+    case eSVGViewBox:
+    {
+      GetMiscContainer()->mSVGViewBox->GetBaseValueString(aResult);
       break;
     }
     default:
@@ -804,6 +826,10 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mSVGPreserveAspectRatio);
     }
+    case eSVGViewBox:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGViewBox);
+    }
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -920,6 +946,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     {
       return thisCont->mSVGPreserveAspectRatio ==
         otherCont->mSVGPreserveAspectRatio;
+    }
+    case eSVGViewBox:
+    {
+      return thisCont->mSVGViewBox == otherCont->mSVGViewBox;
     }
     default:
     {
