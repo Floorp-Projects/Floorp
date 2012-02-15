@@ -201,6 +201,22 @@ function runTests()
   convolve.setAttribute("result", "bar");
   convolve.result.baseVal = "bar";
 
+  // preserveAspectRatio attribute
+
+  eventChecker.watchAttr(marker, "preserveAspectRatio");
+  eventChecker.expect("add modify remove add");
+  marker.setAttribute("preserveAspectRatio", "xMaxYMid slice");
+  marker.preserveAspectRatio.baseVal.align =
+    SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMAX;
+  marker.removeAttribute("preserveAspectRatio");
+  marker.preserveAspectRatio.baseVal.align =
+    SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN;
+
+  eventChecker.expect("");
+  marker.preserveAspectRatio.baseVal.meetOrSlice =
+    SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET;
+  marker.setAttribute("preserveAspectRatio", "xMidYMin meet");
+
   eventChecker.finish();
 
   SimpleTest.finish();

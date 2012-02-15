@@ -235,6 +235,13 @@ function runTests()
   is(basePreserveAspectRatio.meetOrSlice, 2, "preserveAspectRatio.meetOrSlice baseVal");
   is(animPreserveAspectRatio.meetOrSlice, 2, "preserveAspectRatio.meetOrSlice animVal");
 
+  marker.setAttribute("preserveAspectRatio", "");
+  ok(marker.getAttribute("preserveAspectRatio") === "",
+     "empty preserveAspectRatio attribute");
+  marker.removeAttribute("preserveAspectRatio");
+  ok(marker.getAttribute("preserveAspectRatio") === null,
+     "removed preserveAspectRatio attribute");
+
   // viewBox attribute
   var baseViewBox = marker.viewBox.baseVal;
   var animViewBox = marker.viewBox.animVal;
