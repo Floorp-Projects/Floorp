@@ -445,9 +445,13 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       IntegerPairAttributesInfo integerPairInfo = GetIntegerPairInfo();
       for (i = 0; i < integerPairInfo.mIntegerPairCount; i++) {
         if (aAttribute == *integerPairInfo.mIntegerPairInfo[i].mName) {
-          rv = integerPairInfo.mIntegerPairs[i].SetBaseValueString(aValue, this);
+          rv =
+            integerPairInfo.mIntegerPairs[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             integerPairInfo.Reset(i);
+          } else {
+            aResult.SetTo(integerPairInfo.mIntegerPairs[i], &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -701,8 +705,8 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
 
     for (PRUint32 i = 0; i < intPairInfo.mIntegerPairCount; i++) {
       if (aName == *intPairInfo.mIntegerPairInfo[i].mName) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         intPairInfo.Reset(i);
-        DidChangeIntegerPair(i, false);
         return;
       }
     }
@@ -1978,25 +1982,28 @@ void nsSVGElement::IntegerPairAttributesInfo::Reset(PRUint8 aAttrEnum)
                                 mIntegerPairInfo[aAttrEnum].mDefaultValue2);
 }
 
-void
-nsSVGElement::DidChangeIntegerPair(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangeIntegerPair(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
+  return WillChangeValue(
+    *GetIntegerPairInfo().mIntegerPairInfo[aAttrEnum].mName);
+}
 
+void
+nsSVGElement::DidChangeIntegerPair(PRUint8 aAttrEnum,
+                                   const nsAttrValue& aEmptyOrOldValue)
+{
   IntegerPairAttributesInfo info = GetIntegerPairInfo();
 
   NS_ASSERTION(info.mIntegerPairCount > 0,
                "DidChangeIntegerPair on element with no integer pair attribs");
-
   NS_ASSERTION(aAttrEnum < info.mIntegerPairCount, "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mIntegerPairs[aAttrEnum].GetBaseValueString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(info.mIntegerPairs[aAttrEnum], nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, *info.mIntegerPairInfo[aAttrEnum].mName, nsnull,
-                attrValue, true);
+  DidChangeValue(*info.mIntegerPairInfo[aAttrEnum].mName, aEmptyOrOldValue,
+                 newValue);
 }
 
 void

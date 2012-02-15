@@ -141,6 +141,13 @@ function runTests()
   is(filter.filterResY.baseVal, 90, "integer-optional-integer second baseVal");
   is(filter.filterResY.animVal, 90, "integer-optional-integer second animVal");
 
+  filter.setAttribute("filterRes", "");
+  ok(filter.getAttribute("filterRes") === "",
+     "empty integer-optional-integer attribute");
+  filter.removeAttribute("filterRes");
+  ok(filter.getAttribute("filterRes") === null,
+     "removed integer-optional-integer attribute");
+
   // angle attribute
 
   marker.setAttribute("orient", "90deg");
