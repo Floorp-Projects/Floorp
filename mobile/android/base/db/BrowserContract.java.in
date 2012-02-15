@@ -110,6 +110,7 @@ public class BrowserContract {
         public static final String UNFILED_FOLDER_GUID = "unfiled";
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "bookmarks");
+        public static final Uri PARENTS_CONTENT_URI = Uri.withAppendedPath(CONTENT_URI, "parents");
 
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/bookmark";
 
