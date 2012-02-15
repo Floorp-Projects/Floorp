@@ -48,6 +48,11 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/AddonRepository.jsm");
 
+
+var gInteruptable = true;
+var gPendingClose = false;
+
+
 var gUpdateWizard = {
   // When synchronizing app compatibility info this contains all installed
   // add-ons. When checking for compatible versions this contains only
@@ -129,6 +134,19 @@ var gUpdateWizard = {
 
   onWizardClose: function (aEvent)
   {
+    return this.onWizardCancel();
+  },
+
+  onWizardCancel: function ()
+  {
+    if (!gInteruptable) {
+      gPendingClose = true;
+      this._setUpButton("back", null, true);
+      this._setUpButton("next", null, true);
+      this._setUpButton("cancel", null, true);
+      return false;
+    }
+
     if (gInstallingPage.installing) {
       gInstallingPage.cancelInstalls();
       return false;
@@ -176,8 +194,15 @@ var gVersionInfoPage = {
       // Ensure compatibility overrides are up to date before checking for
       // individual addon updates.
       let ids = [addon.id for each (addon in gUpdateWizard.addons)];
+
+      gInteruptable = false;
       AddonRepository.repopulateCache(ids, function() {
         AddonManagerPrivate.updateAddonRepositoryData(function() {
+          gInteruptable = true;
+          if (gPendingClose) {
+            window.close();
+            return;
+          }
 
           gUpdateWizard.addons.forEach(function(aAddon) {
             aAddon.findUpdates(gVersionInfoPage, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);

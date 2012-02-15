@@ -770,7 +770,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
   // If we get here, we have an uncollapsed selection!
   // Look backwards through each range in the selection till you
   // find the first text node. If you find one, find the
-  // beginning of it's text block, and make it the current
+  // beginning of its text block, and make it the current
   // block.
 
   result = selection->GetRangeCount(&rangeCount);
@@ -950,7 +950,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     if (IsTextNode(content))
     {
       // We found a text node! Adjust the document's iterator to point
-      // to the beginning of it's text block, then get the current selection.
+      // to the beginning of its text block, then get the current selection.
 
       result = mIterator->PositionAt(content);
 
@@ -1229,7 +1229,7 @@ nsTextServicesDocument::DeleteSelection()
   // PrintOffsetTable();
   //**** KDEBUG ****
 
-  // If we have an mExtent, save off it's current set of
+  // If we have an mExtent, save off its current set of
   // end points so we can compare them against mExtent's
   // set after the deletion of the content.
 
@@ -1415,7 +1415,7 @@ nsTextServicesDocument::DeleteSelection()
       if (mIteratorStatus != nsTextServicesDocument::eIsDone)
       {
         // The old iterator is still pointing to something valid,
-        // so get it's current node so we can restore it after we
+        // so get its current node so we can restore it after we
         // create the new iterator!
 
         curContent = do_QueryInterface(mIterator->GetCurrentNode());
@@ -1616,7 +1616,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
   {
     // We are inserting text at the end of the current offset entry.
     // Look at the next valid entry in the table. If it's an inserted
-    // text entry, add to it's length and adjust it's node offset. If
+    // text entry, add to its length and adjust its node offset. If
     // it isn't, add a new inserted text entry.
 
     i       = mSelStartIndex + 1;
@@ -1664,7 +1664,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
       }
     }
 
-    // We have a valid inserted text offset entry. Update it's
+    // We have a valid inserted text offset entry. Update its
     // length, adjust the selection indexes, and make sure the
     // caret is properly placed!
 
@@ -2676,7 +2676,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   {
     // Good news, the caret is in a text node. Look
     // through the offset table for the entry that
-    // matches it's parent and offset.
+    // matches its parent and offset.
 
     for (i = 0; i < tableCount; i++)
     {
@@ -2704,7 +2704,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   // The caret is in our text block, but it's positioned in some
   // non-text node (ex. <b>). Create a range based on the start
   // and end of the text block, then create an iterator based on
-  // this range, with it's initial position set to the closest
+  // this range, with its initial position set to the closest
   // child of this non-text node. Then look for the closest text
   // node.
 
@@ -3736,7 +3736,7 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   bool hasEntry = false;
 
   // It's assumed that aNode is a text node. The first thing
-  // we do is get it's index in the offset table so we can
+  // we do is get its index in the offset table so we can
   // calculate the dom point's string offset.
 
   nsresult result = NodeHasOffsetEntry(aOffsetTable, aNode, &hasEntry, &entryIndex);

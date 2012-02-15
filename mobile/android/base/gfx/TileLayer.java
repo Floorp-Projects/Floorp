@@ -203,13 +203,13 @@ public abstract class TileLayer extends Layer {
 
         if (newlyCreated || dirtyRect.contains(bufferRect)) {
             if (mSize.equals(bufferSize)) {
-                gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
+                gl.glTexImage2D(GL10.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
                                 0, glInfo.format, glInfo.type, imageBuffer);
                 return;
             } else {
-                gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
+                gl.glTexImage2D(GL10.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
                                 0, glInfo.format, glInfo.type, null);
-                gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, 0, bufferSize.width, bufferSize.height,
+                gl.glTexSubImage2D(GL10.GL_TEXTURE_2D, 0, 0, 0, bufferSize.width, bufferSize.height,
                                    glInfo.format, glInfo.type, imageBuffer);
                 return;
             }
@@ -237,7 +237,7 @@ public abstract class TileLayer extends Layer {
         }
 
         viewBuffer.position(position);
-        gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, dirtyRect.top, bufferSize.width,
+        gl.glTexSubImage2D(GL10.GL_TEXTURE_2D, 0, 0, dirtyRect.top, bufferSize.width,
                            Math.min(bufferSize.height - dirtyRect.top, dirtyRect.height()),
                            glInfo.format, glInfo.type, viewBuffer);
     }

@@ -70,6 +70,8 @@
 
 /************************************************************************/
 
+#define JS_Assert MOZ_Assert
+
 #ifdef __cplusplus
 namespace JS {
 
@@ -2569,12 +2571,11 @@ JS_StringToVersion(const char *string);
 #define JSOPTION_PCCOUNT        JS_BIT(17)      /* Collect per-op execution counts */
 
 #define JSOPTION_TYPE_INFERENCE JS_BIT(18)      /* Perform type inference. */
-#define JSOPTION_SOFTEN         JS_BIT(19)      /* Disable JIT hardening. */
 
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_XML)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(20) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(19) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32_t)
@@ -2585,6 +2586,9 @@ JS_SetOptions(JSContext *cx, uint32_t options);
 
 extern JS_PUBLIC_API(uint32_t)
 JS_ToggleOptions(JSContext *cx, uint32_t options);
+
+extern JS_PUBLIC_API(void)
+JS_SetJitHardening(JSRuntime *rt, JSBool enabled);
 
 extern JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void);

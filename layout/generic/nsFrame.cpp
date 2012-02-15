@@ -975,6 +975,26 @@ nsIFrame::Preserves3D() const
   return true;
 }
 
+bool
+nsIFrame::HasPerspective() const
+{
+  if (!IsTransformed()) {
+    return false;
+  }
+  const nsStyleDisplay* parentDisp = nsnull;
+  nsStyleContext* parentStyleContext = GetStyleContext()->GetParent();
+  if (parentStyleContext) {
+    parentDisp = parentStyleContext->GetStyleDisplay();
+  }
+
+  if (parentDisp &&
+      parentDisp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
+      parentDisp->mChildPerspective.GetCoordValue() > 0.0) {
+    return true;
+  }
+  return false;
+}
+
 nsRect
 nsIFrame::GetContentRectRelativeToSelf() const
 {
@@ -6634,7 +6654,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   nsRect bounds(nsPoint(0, 0), aNewSize);
   // Store the passed in overflow area if we are a preserve-3d frame,
   // and it's not just the frame bounds.
-  if (Preserves3D() && (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
+  if ((Preserves3D() || HasPerspective()) && (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
                         !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds))) {
     nsOverflowAreas* initial =
       static_cast<nsOverflowAreas*>(Properties().Get(nsIFrame::InitialOverflowProperty()));
@@ -6729,6 +6749,9 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     RemoveStateBits(NS_FRAME_HAS_CLIP);
   }
 
+  bool preTransformVisualOverflowChanged =
+    !GetVisualOverflowRectRelativeToSelf().IsEqualInterior(aOverflowAreas.VisualOverflow());
+
   /* If we're transformed, transform the overflow rect by the current transformation. */
   bool hasTransform = IsTransformed();
   if (hasTransform) {
@@ -6746,13 +6769,13 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     }
     if (Preserves3DChildren()) {
       ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
+    } else if (HasPerspective()) {
+      RecomputePerspectiveChildrenOverflow(this, &newBounds);
     }
   } else {
     Properties().Delete(nsIFrame::PreTransformOverflowAreasProperty());
   }
 
-  bool visualOverflowChanged =
-    !GetVisualOverflowRect().IsEqualInterior(aOverflowAreas.VisualOverflow());
   bool anyOverflowChanged;
   if (aOverflowAreas != nsOverflowAreas(bounds, bounds)) {
     anyOverflowChanged = SetOverflowAreas(aOverflowAreas);
@@ -6760,7 +6783,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     anyOverflowChanged = ClearOverflowRects();
   }
 
-  if (visualOverflowChanged) {
+  if (preTransformVisualOverflowChanged) {
     if (hasOutlineOrEffects) {
       // When there's an outline or box-shadow or SVG effects,
       // changes to those styles might require repainting of the old and new
@@ -6782,28 +6805,62 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       // changed (in particular, if it grows), we have to repaint the
       // new area here.
       Invalidate(aOverflowAreas.VisualOverflow());
-    } else if (hasTransform) {
-      // When there's a transform, changes to that style might require
-      // repainting of the old and new overflow areas in the widget.
-      // Repainting of the frame itself will not be required if there's
-      // a retained layer, so we can call InvalidateLayer here
-      // which will avoid repainting ThebesLayers if possible.
-      // nsCSSFrameConstructor::DoApplyRenderingChangeToTree repaints
-      // the old overflow area in the widget in response to
-      // nsChangeHint_UpdateTransformLayer. But since the new overflow
-      // area is not known at that time, we have to handle it here.
-      // If the overflow area hasn't changed, then it doesn't matter that
-      // we didn't reach here since repainting the old overflow area was enough.
-      // If there is no transform now, then the container layer for
-      // the transform will go away and the frame contents will change
-      // ThebesLayers, forcing it to be invalidated, so it doesn't matter
-      // that we didn't reach here.
-      InvalidateLayer(aOverflowAreas.VisualOverflow(),
-                      nsDisplayItem::TYPE_TRANSFORM);
     }
+  }
+  if (anyOverflowChanged && hasTransform) {
+    // When there's a transform, changes to that style might require
+    // repainting of the old and new overflow areas in the widget.
+    // Repainting of the frame itself will not be required if there's
+    // a retained layer, so we can call InvalidateLayer here
+    // which will avoid repainting ThebesLayers if possible.
+    // nsCSSFrameConstructor::DoApplyRenderingChangeToTree repaints
+    // the old overflow area in the widget in response to
+    // nsChangeHint_UpdateTransformLayer. But since the new overflow
+    // area is not known at that time, we have to handle it here.
+    // If the overflow area hasn't changed, then it doesn't matter that
+    // we didn't reach here since repainting the old overflow area was enough.
+    // If there is no transform now, then the container layer for
+    // the transform will go away and the frame contents will change
+    // ThebesLayers, forcing it to be invalidated, so it doesn't matter
+    // that we didn't reach here.
+    InvalidateLayer(aOverflowAreas.VisualOverflow(),
+                    nsDisplayItem::TYPE_TRANSFORM);
   }
 
   return anyOverflowChanged;
+}
+
+void
+nsIFrame::RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame, const nsRect* aBounds)
+{
+  // Children may check our size when getting our transform, make sure it's valid.
+  nsSize oldSize = GetSize();
+  if (aBounds) {
+    SetSize(aBounds->Size());
+  }
+  nsIFrame::ChildListIterator lists(this);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* child = childFrames.get();
+      if (child->HasPerspective()) {
+        nsOverflowAreas* overflow = 
+          static_cast<nsOverflowAreas*>(child->Properties().Get(nsIFrame::InitialOverflowProperty()));
+        nsRect bounds(nsPoint(0, 0), child->GetSize());
+        if (overflow) {
+          child->FinishAndStoreOverflow(*overflow, bounds.Size());
+        } else {
+          nsOverflowAreas boundsOverflow;
+          boundsOverflow.SetAllTo(bounds);
+          child->FinishAndStoreOverflow(boundsOverflow, bounds.Size());
+        }
+      } else if (child->GetParentStyleContextFrame() != aStartFrame) {
+        child->RecomputePerspectiveChildrenOverflow(aStartFrame, nsnull);
+      }
+    }
+  }
+  // Restore our old size just in case something depends on this elesewhere.
+  SetSize(oldSize);
 }
 
 /* The overflow rects for leaf nodes in a preserve-3d hierarchy depends on
@@ -6922,7 +6979,7 @@ nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
  * If aFrame is not an anonymous block, null is returned.
  */
 static nsIFrame*
-GetIBSpecialSiblingForAnonymousBlock(nsIFrame* aFrame)
+GetIBSpecialSiblingForAnonymousBlock(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "Must have a non-null frame!");
   NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL,
@@ -7040,7 +7097,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
 }
 
 nsIFrame*
-nsFrame::DoGetParentStyleContextFrame()
+nsFrame::DoGetParentStyleContextFrame() const
 {
   if (mContent && !mContent->GetParent() &&
       !GetStyleContext()->GetPseudo()) {
@@ -7069,7 +7126,7 @@ nsFrame::DoGetParentStyleContextFrame()
 
   // For out-of-flow frames, we must resolve underneath the
   // placeholder's parent.
-  nsIFrame* oofFrame = this;
+  const nsIFrame* oofFrame = this;
   if ((oofFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
       GetPrevInFlow()) {
     // Out of flows that are continuations do not
