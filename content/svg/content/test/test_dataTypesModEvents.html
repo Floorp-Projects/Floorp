@@ -77,6 +77,20 @@ function runTests()
   convolve.divisor.baseVal = 8;
   convolve.setAttribute("divisor", "8");
 
+  // number-optional-number attribute
+
+  eventChecker.watchAttr(blur, "stdDeviation");
+  eventChecker.expect("add modify remove add");
+  blur.setAttribute("stdDeviation", "5, 6");
+  blur.stdDeviationX.baseVal = 8;
+  blur.removeAttribute("stdDeviation");
+  blur.setAttribute("stdDeviation", "2, 3");
+
+  eventChecker.expect("");
+  blur.stdDeviationX.baseVal = 2;
+  blur.stdDeviationY.baseVal = 3;
+  blur.setAttribute("stdDeviation", "2, 3");
+
   // enum attribute
 
   eventChecker.watchAttr(convolve, "edgeMode");

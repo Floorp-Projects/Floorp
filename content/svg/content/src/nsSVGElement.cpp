@@ -412,6 +412,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           rv = numberPairInfo.mNumberPairs[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             numberPairInfo.Reset(i);
+          } else {
+            aResult.SetTo(numberPairInfo.mNumberPairs[i], &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -674,8 +677,8 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
 
     for (PRUint32 i = 0; i < numPairInfo.mNumberPairCount; i++) {
       if (aName == *numPairInfo.mNumberPairInfo[i].mName) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         numPairInfo.Reset(i);
-        DidChangeNumberPair(i, false);
         return;
       }
     }
@@ -1862,25 +1865,27 @@ void nsSVGElement::NumberPairAttributesInfo::Reset(PRUint8 aAttrEnum)
                                mNumberPairInfo[aAttrEnum].mDefaultValue2);
 }
 
-void
-nsSVGElement::DidChangeNumberPair(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangeNumberPair(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
+  return WillChangeValue(*GetNumberPairInfo().mNumberPairInfo[aAttrEnum].mName);
+}
 
+void
+nsSVGElement::DidChangeNumberPair(PRUint8 aAttrEnum,
+                                  const nsAttrValue& aEmptyOrOldValue)
+{
   NumberPairAttributesInfo info = GetNumberPairInfo();
 
   NS_ASSERTION(info.mNumberPairCount > 0,
                "DidChangePairNumber on element with no number pair attribs");
-
   NS_ASSERTION(aAttrEnum < info.mNumberPairCount, "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mNumberPairs[aAttrEnum].GetBaseValueString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(info.mNumberPairs[aAttrEnum], nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, *info.mNumberPairInfo[aAttrEnum].mName, nsnull,
-                attrValue, true);
+  DidChangeValue(*info.mNumberPairInfo[aAttrEnum].mName, aEmptyOrOldValue,
+                 newValue);
 }
 
 void

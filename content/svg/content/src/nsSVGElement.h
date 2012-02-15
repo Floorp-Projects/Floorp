@@ -171,11 +171,13 @@ public:
   void SetLength(nsIAtom* aName, const nsSVGLength2 &aLength);
 
   nsAttrValue WillChangeLength(PRUint8 aAttrEnum);
+  nsAttrValue WillChangeNumberPair(PRUint8 aAttrEnum);
   nsAttrValue WillChangeLengthList(PRUint8 aAttrEnum);
 
   void DidChangeLength(PRUint8 aAttrEnum, const nsAttrValue& aEmptyOrOldValue);
   void DidChangeNumber(PRUint8 aAttrEnum);
-  virtual void DidChangeNumberPair(PRUint8 aAttrEnum, bool aDoSetAttr);
+  void DidChangeNumberPair(PRUint8 aAttrEnum,
+                           const nsAttrValue& aEmptyOrOldValue);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeIntegerPair(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeAngle(PRUint8 aAttrEnum, bool aDoSetAttr);
