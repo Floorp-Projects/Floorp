@@ -205,7 +205,6 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, bool aNeedsBold)
     // the font entry name is the psname, not the family name
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(this, aStyle);
 
-    Telemetry::Accumulate(Telemetry::FONT_CACHE_HIT, font != nsnull);
     if (!font) {
         gfxFont *newFont = CreateFontInstance(aStyle, aNeedsBold);
         if (!newFont)
@@ -1071,6 +1070,8 @@ gfxFontCache::Lookup(const gfxFontEntry *aFontEntry,
 {
     Key key(aFontEntry, aStyle);
     HashEntry *entry = mFonts.GetEntry(key);
+
+    Telemetry::Accumulate(Telemetry::FONT_CACHE_HIT, entry != nsnull);
     if (!entry)
         return nsnull;
 
