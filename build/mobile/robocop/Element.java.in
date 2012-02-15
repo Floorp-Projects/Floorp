@@ -39,13 +39,21 @@
 
 package @ANDROID_PACKAGE_NAME@;
 
+/** 
+ *  Element provides access to a specific UI view (android.view.View). 
+ *  See also Driver.findElement().
+ */
 public interface Element {
-  //Click on the element
-  void click();
-  //Returns true if the element is currently displayed
-  boolean isDisplayed();
-  //Returns the text currently displayed on the element.
-  String getText();
-  //Returns view ID.
-  Integer getId();
+
+    /** Click on the element */
+    void click();
+
+    /** Returns true if the element is currently displayed */
+    boolean isDisplayed();
+
+    /** Returns the text currently displayed on the element */
+    String getText();
+
+    /** Returns the view ID */
+    Integer getId();
 }
