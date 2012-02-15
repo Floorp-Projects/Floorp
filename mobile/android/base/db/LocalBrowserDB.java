@@ -90,6 +90,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                 appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(limit)).build();
     }
 
+    private Uri appendProfileAndShowDeleted(Uri uri) {
+        return uri.buildUpon().appendQueryParameter(BrowserContract.PARAM_PROFILE, mProfile).
+                appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1").build();
+    }
+
     private Uri appendProfile(Uri uri) {
         return uri.buildUpon().appendQueryParameter(BrowserContract.PARAM_PROFILE, mProfile).build();
     }
@@ -170,7 +175,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                     History.VISITS, // 1
             };
 
-            cursor = cr.query(appendProfile(History.CONTENT_URI),
+            cursor = cr.query(appendProfileAndShowDeleted(History.CONTENT_URI),
                               projection,
                               History.URL + " = ?",
                               new String[] { uri },
@@ -181,6 +186,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
                 values.put(History.VISITS, cursor.getInt(1) + 1);
                 values.put(History.DATE_LAST_VISITED, now);
+
+                // Restore deleted record if possible
+                values.put(History.IS_DELETED, 0);
 
                 Uri historyUri = ContentUris.withAppendedId(History.CONTENT_URI, cursor.getLong(0));
                 cr.update(appendProfile(historyUri), values, null, null);
