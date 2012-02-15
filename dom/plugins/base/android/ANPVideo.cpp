@@ -35,22 +35,23 @@
 
 using namespace mozilla;
 
-static AndroidMediaLayer* GetLayerForInstance(NPP instance) {
+static nsresult GetOwner(NPP instance, nsPluginInstanceOwner** owner) {
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
 
-  nsPluginInstanceOwner* owner;
-  if (NS_FAILED(pinst->GetOwner((nsIPluginInstanceOwner**)&owner))) {
-    return NULL;
-  }
+  return pinst->GetOwner((nsIPluginInstanceOwner**)owner);
+}
 
+static AndroidMediaLayer* GetLayerForInstance(NPP instance) {
+  nsRefPtr<nsPluginInstanceOwner> owner;
+  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner))))
+    return NULL;
+  
   return owner->Layer();
 }
 
 static void Invalidate(NPP instance) {
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
-
-  nsPluginInstanceOwner* owner;
-  if (NS_FAILED(pinst->GetOwner((nsIPluginInstanceOwner**)&owner)))
+  nsRefPtr<nsPluginInstanceOwner> owner;
+  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner))))
     return;
 
   owner->Invalidate();

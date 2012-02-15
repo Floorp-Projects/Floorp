@@ -85,6 +85,12 @@ anp_window_requestCenterFitZoom(NPP instance)
   NOT_IMPLEMENTED();
 }
 
+static nsresult GetOwner(NPP instance, nsPluginInstanceOwner** owner) {
+  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+
+  return pinst->GetOwner((nsIPluginInstanceOwner**)owner);
+}
+
 ANPRectI
 anp_window_visibleRect(NPP instance)
 {
@@ -92,8 +98,8 @@ anp_window_visibleRect(NPP instance)
 
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
 
-  nsPluginInstanceOwner* owner;
-  if (NS_FAILED(pinst->GetOwner((nsIPluginInstanceOwner**)&owner))) {
+  nsRefPtr<nsPluginInstanceOwner> owner;
+  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner)))) {
     return rect;
   }
 
