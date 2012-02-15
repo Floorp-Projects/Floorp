@@ -70,6 +70,7 @@
 #include "nsStyleConsts.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/Telemetry.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
@@ -204,6 +205,7 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, bool aNeedsBold)
     // the font entry name is the psname, not the family name
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(this, aStyle);
 
+    Telemetry::Accumulate(Telemetry::FONT_CACHE_HIT, font != nsnull);
     if (!font) {
         gfxFont *newFont = CreateFontInstance(aStyle, aNeedsBold);
         if (!newFont)
@@ -1920,8 +1922,13 @@ gfxFont::GetShapedWord(gfxContext *aContext,
 
     CacheHashEntry *entry = mWordCache.PutEntry(key);
     gfxShapedWord *sw = entry->mShapedWord;
+    Telemetry::Accumulate(Telemetry::WORD_CACHE_LOOKUP_LEN, aLength);
+    Telemetry::Accumulate(Telemetry::WORD_CACHE_LOOKUP_SCRIPT, aRunScript);
+
     if (sw) {
         sw->ResetAge();
+        Telemetry::Accumulate(Telemetry::WORD_CACHE_HIT_LEN, aLength);
+        Telemetry::Accumulate(Telemetry::WORD_CACHE_HIT_SCRIPT, aRunScript);
         return sw;
     }
 
