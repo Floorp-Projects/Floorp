@@ -496,18 +496,18 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                 break;
             }
             case R.id.remove_bookmark: {
-                GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
+                (new GeckoAsyncTask<Void, Void, Void>() {
+                    @Override
+                    public Void doInBackground(Void... params) {
                         BrowserDB.removeBookmark(mResolver, id);
-
-                        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
-                            public void run() {
-                                Toast.makeText(AwesomeBar.this, R.string.bookmark_removed,
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        return null;
                     }
-                });
+
+                    @Override
+                    public void onPostExecute(Void result) {
+                        Toast.makeText(AwesomeBar.this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                    }
+                }).execute();
                 break;
             }
             case R.id.add_to_launcher: {
