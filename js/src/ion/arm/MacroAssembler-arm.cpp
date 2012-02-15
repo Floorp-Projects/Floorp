@@ -866,6 +866,21 @@ MacroAssemblerARM::ma_push(Register r)
     ma_dtr(IsStore, sp,Imm32(-4), r, PreIndex);
 }
 
+void
+MacroAssemblerARM::ma_vpop(VFPRegister r)
+{
+    startFloatTransferM(IsLoad, sp, IA, WriteBack);
+    transferFloatReg(r);
+    finishFloatTransfer();
+}
+void
+MacroAssemblerARM::ma_vpush(VFPRegister r)
+{
+    startFloatTransferM(IsStore, sp, DB, WriteBack);
+    transferFloatReg(r);
+    finishFloatTransfer();
+}
+
 // branches when done from within arm-specific code
 void
 MacroAssemblerARM::ma_b(Label *dest, Assembler::Condition c)
