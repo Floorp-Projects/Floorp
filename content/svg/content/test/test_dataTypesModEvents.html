@@ -31,7 +31,21 @@ function runTests()
   var marker = doc.getElementById("marker");
   var eventChecker = new MutationEventChecker;
 
-  // Tests go here
+  // enum attribute
+
+  eventChecker.watchAttr(convolve, "edgeMode");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("edgeMode", "none");
+  convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_WRAP;
+  convolve.removeAttribute("edgeMode");
+  convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_NONE;
+
+  eventChecker.expect("");
+  convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_NONE;
+  convolve.setAttribute("edgeMode", "none");
+  convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_NONE;
+
+  eventChecker.finish();
 
   SimpleTest.finish();
 }

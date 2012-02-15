@@ -290,6 +290,8 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   nsresult rv = NS_OK;
   bool foundMatch = false;
+  bool didSetResult = false;
+
   if (aNamespaceID == kNameSpaceID_None) {
 
     // Check for nsSVGLength2 attribute
@@ -462,9 +464,13 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       EnumAttributesInfo enumInfo = GetEnumInfo();
       for (i = 0; i < enumInfo.mEnumCount; i++) {
         if (aAttribute == *enumInfo.mEnumInfo[i].mName) {
-          rv = enumInfo.mEnums[i].SetBaseValueString(aValue, this);
+          nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aValue);
+          rv = enumInfo.mEnums[i].SetBaseValueAtom(valAtom, this);
           if (NS_FAILED(rv)) {
             enumInfo.Reset(i);
+          } else {
+            aResult.SetTo(valAtom);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -550,7 +556,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       ReportAttributeParseFailure(OwnerDoc(), aAttribute, aValue);
       return false;
     }
-    aResult.SetTo(aValue);
+    if (!didSetResult) {
+      aResult.SetTo(aValue);
+    }
     return true;
   }
 
@@ -703,7 +711,6 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     for (PRUint32 i = 0; i < enumInfo.mEnumCount; i++) {
       if (aName == *enumInfo.mEnumInfo[i].mName) {
         enumInfo.Reset(i);
-        DidChangeEnum(i, false);
         return;
       }
     }
@@ -1959,22 +1966,15 @@ void nsSVGElement::EnumAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
-
   EnumAttributesInfo info = GetEnumInfo();
 
   NS_ASSERTION(info.mEnumCount > 0,
                "DidChangeEnum on element with no enum attribs");
-
   NS_ASSERTION(aAttrEnum < info.mEnumCount, "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mEnums[aAttrEnum].GetBaseValueString(serializedValue, this);
-
-  nsAttrValue attrValue(serializedValue);
+  nsAttrValue attrValue(info.mEnums[aAttrEnum].GetBaseValueAtom(this));
   SetParsedAttr(kNameSpaceID_None, *info.mEnumInfo[aAttrEnum].mName, nsnull,
                 attrValue, true);
 }

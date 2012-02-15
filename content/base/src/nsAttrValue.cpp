@@ -76,6 +76,12 @@ nsAttrValue::nsAttrValue(const nsAString& aValue)
   SetTo(aValue);
 }
 
+nsAttrValue::nsAttrValue(nsIAtom* aValue)
+    : mBits(0)
+{
+  SetTo(aValue);
+}
+
 nsAttrValue::nsAttrValue(css::StyleRule* aValue, const nsAString* aSerialized)
     : mBits(0)
 {
@@ -287,6 +293,16 @@ nsAttrValue::SetTo(const nsAString& aValue)
   nsStringBuffer* buf = GetStringBuffer(aValue);
   if (buf) {
     SetPtrValueAndType(buf, eStringBase);
+  }
+}
+
+void
+nsAttrValue::SetTo(nsIAtom* aValue)
+{
+  ResetIfSet();
+  if (aValue) {
+    NS_ADDREF(aValue);
+    SetPtrValueAndType(aValue, eAtomBase);
   }
 }
 
