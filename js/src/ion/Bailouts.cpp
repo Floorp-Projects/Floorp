@@ -359,7 +359,7 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
     // one word.
 
     uint32 callerFrameSize = frame->prevFrameLocalSize() +
-                             SizeOfFramePrefix(frame->prevType()) - sizeof(IonExitFrameLayout);
+        IonJSFrameLayout::Size() - IonExitFrameLayout::Size();
     frame->setFrameDescriptor(callerFrameSize, frame->prevType());
 }
 
