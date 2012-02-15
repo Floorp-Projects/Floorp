@@ -591,15 +591,44 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
         nsIntRect srcRect(overlap), dstRect(overlap);
         srcRect.MoveBy(- mBufferRect.TopLeft() + mBufferRotation);
         dstRect.MoveBy(- destBufferRect.TopLeft());
+        
+        if (mBufferRotation != nsIntPoint(0, 0)) {
+        // If mBuffer is rotated, then BlitTextureImage will only be copying the bottom-right section
+        // of the buffer. We need to invalidate the remaining sections so that they get redrawn too.
+        // Alternatively we could teach BlitTextureImage to rearrange the rotated segments onto
+        // the new buffer.
+          
+        // When the rotated buffer is reorganised, the bottom-right section will be drawn in the top left.
+        // Find the point where this content ends.
+          nsIntPoint rotationPoint(mBufferRect.x + mBufferRect.width - mBufferRotation.x, 
+                                   mBufferRect.y + mBufferRect.height - mBufferRotation.y);
+
+          // Mark the remaining quadrants (bottom-left&right, top-right) as invalid.
+          nsIntRect bottom(mBufferRect.x, rotationPoint.y, mBufferRect.width, mBufferRotation.y);
+          nsIntRect topright(rotationPoint.x, mBufferRect.y, mBufferRotation.x, rotationPoint.y - mBufferRect.y);
+
+          if (!bottom.IsEmpty()) {
+            nsIntRegion temp;
+            temp.And(destBufferRect, bottom);
+            result.mRegionToDraw.Or(result.mRegionToDraw, temp);
+          }
+          if (!topright.IsEmpty()) {
+            nsIntRegion temp;
+            temp.And(destBufferRect, topright);
+            result.mRegionToDraw.Or(result.mRegionToDraw, temp);
+          }
+        }
 
         destBuffer->Resize(destBufferRect.Size());
 
         gl()->BlitTextureImage(mTexImage, srcRect,
                                destBuffer, dstRect);
+        destBuffer->MarkValid();
         if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
           destBufferOnWhite->Resize(destBufferRect.Size());
           gl()->BlitTextureImage(mTexImageOnWhite, srcRect,
                                  destBufferOnWhite, dstRect);
+          destBufferOnWhite->MarkValid();
         }
       } else {
         // can't blit, just draw everything
