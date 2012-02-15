@@ -332,6 +332,13 @@ nsAttrValue::SetTo(PRInt16 aInt)
 }
 
 void
+nsAttrValue::SetTo(PRInt32 aInt, const nsAString* aSerialized)
+{
+  ResetIfSet();
+  SetIntValueAndType(aInt, eInteger, aSerialized);
+}
+
+void
 nsAttrValue::SetTo(double aValue, const nsAString* aSerialized)
 {
   if (EnsureEmptyMiscContainer()) {

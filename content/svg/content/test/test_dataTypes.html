@@ -114,6 +114,10 @@ function runTests()
   convolve.targetX.baseVal = 7;
   is(convolve.targetX.animVal, 7, "integer animVal");
   is(convolve.getAttribute("targetX"), "7", "integer attribute");
+  convolve.setAttribute("targetX", "");
+  ok(convolve.getAttribute("targetX") === "", "empty integer attribute");
+  convolve.removeAttribute("targetX");
+  ok(convolve.getAttribute("targetX") === null, "removed integer attribute");
 
   // integer-optional-integer attribute
 

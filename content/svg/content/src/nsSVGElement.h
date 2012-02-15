@@ -178,7 +178,7 @@ public:
   void DidChangeNumber(PRUint8 aAttrEnum);
   void DidChangeNumberPair(PRUint8 aAttrEnum,
                            const nsAttrValue& aEmptyOrOldValue);
-  virtual void DidChangeInteger(PRUint8 aAttrEnum, bool aDoSetAttr);
+  void DidChangeInteger(PRUint8 aAttrEnum);
   virtual void DidChangeIntegerPair(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeAngle(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeBoolean(PRUint8 aAttrEnum, bool aDoSetAttr);
