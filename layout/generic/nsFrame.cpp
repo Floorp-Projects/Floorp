@@ -975,6 +975,26 @@ nsIFrame::Preserves3D() const
   return true;
 }
 
+bool
+nsIFrame::HasPerspective() const
+{
+  if (!IsTransformed()) {
+    return false;
+  }
+  const nsStyleDisplay* parentDisp = nsnull;
+  nsStyleContext* parentStyleContext = GetStyleContext()->GetParent();
+  if (parentStyleContext) {
+    parentDisp = parentStyleContext->GetStyleDisplay();
+  }
+
+  if (parentDisp &&
+      parentDisp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
+      parentDisp->mChildPerspective.GetCoordValue() > 0.0) {
+    return true;
+  }
+  return false;
+}
+
 nsRect
 nsIFrame::GetContentRectRelativeToSelf() const
 {
@@ -6634,7 +6654,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   nsRect bounds(nsPoint(0, 0), aNewSize);
   // Store the passed in overflow area if we are a preserve-3d frame,
   // and it's not just the frame bounds.
-  if (Preserves3D() && (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
+  if ((Preserves3D() || HasPerspective()) && (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
                         !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds))) {
     nsOverflowAreas* initial =
       static_cast<nsOverflowAreas*>(Properties().Get(nsIFrame::InitialOverflowProperty()));
@@ -6749,6 +6769,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     }
     if (Preserves3DChildren()) {
       ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
+    } else if (HasPerspective()) {
+      RecomputePerspectiveChildrenOverflow(this, &newBounds);
     }
   } else {
     Properties().Delete(nsIFrame::PreTransformOverflowAreasProperty());
@@ -6806,6 +6828,39 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   return anyOverflowChanged;
+}
+
+void
+nsIFrame::RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame, const nsRect* aBounds)
+{
+  // Children may check our size when getting our transform, make sure it's valid.
+  nsSize oldSize = GetSize();
+  if (aBounds) {
+    SetSize(aBounds->Size());
+  }
+  nsIFrame::ChildListIterator lists(this);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* child = childFrames.get();
+      if (child->HasPerspective()) {
+        nsOverflowAreas* overflow = 
+          static_cast<nsOverflowAreas*>(child->Properties().Get(nsIFrame::InitialOverflowProperty()));
+        nsRect bounds(nsPoint(0, 0), child->GetSize());
+        if (overflow) {
+          child->FinishAndStoreOverflow(*overflow, bounds.Size());
+        } else {
+          nsOverflowAreas boundsOverflow;
+          boundsOverflow.SetAllTo(bounds);
+          child->FinishAndStoreOverflow(boundsOverflow, bounds.Size());
+        }
+      } else if (child->GetParentStyleContextFrame() != aStartFrame) {
+        child->RecomputePerspectiveChildrenOverflow(aStartFrame, nsnull);
+      }
+    }
+  }
+  // Restore our old size just in case something depends on this elesewhere.
+  SetSize(oldSize);
 }
 
 /* The overflow rects for leaf nodes in a preserve-3d hierarchy depends on

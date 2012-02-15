@@ -1247,8 +1247,12 @@ public:
    */
   bool Preserves3D() const;
 
+  bool HasPerspective() const;
+
   // Calculate the overflow size of all child frames, taking preserve-3d into account
   void ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas, const nsRect& aBounds);
+
+  void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame, const nsRect* aBounds);
 
   /**
    * Event handling of GUI events.
