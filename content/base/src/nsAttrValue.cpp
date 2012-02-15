@@ -52,6 +52,7 @@
 #include "nsReadableUtils.h"
 #include "prprf.h"
 #include "nsSVGLength2.h"
+#include "SVGLengthList.h"
 
 namespace css = mozilla::css;
 
@@ -270,6 +271,11 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mSVGLength = otherCont->mSVGLength;
       break;
     }
+    case eSVGLengthList:
+    {
+      cont->mSVGLengthList = otherCont->mSVGLengthList;
+      break;
+    }
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -360,6 +366,18 @@ nsAttrValue::SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized)
     MiscContainer* cont = GetMiscContainer();
     cont->mSVGLength = &aValue;
     cont->mType = eSVGLength;
+    SetMiscAtomOrString(aSerialized);
+  }
+}
+
+void
+nsAttrValue::SetTo(const mozilla::SVGLengthList& aValue,
+                   const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mSVGLengthList = &aValue;
+    cont->mType = eSVGLengthList;
     SetMiscAtomOrString(aSerialized);
   }
 }
@@ -464,6 +482,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eSVGLength:
     {
       GetMiscContainer()->mSVGLength->GetBaseValueString(aResult);
+      break;
+    }
+    case eSVGLengthList:
+    {
+      GetMiscContainer()->mSVGLengthList->GetValueAsString(aResult);
       break;
     }
     default:
@@ -654,6 +677,10 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mSVGLength);
     }
+    case eSVGLengthList:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGLengthList);
+    }
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -749,6 +776,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eSVGLength:
     {
       return thisCont->mSVGLength == otherCont->mSVGLength;
+    }
+    case eSVGLengthList:
+    {
+      return thisCont->mSVGLengthList == otherCont->mSVGLengthList;
     }
     default:
     {

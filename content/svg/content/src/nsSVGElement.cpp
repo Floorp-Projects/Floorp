@@ -330,6 +330,10 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           rv = lengthListInfo.mLengthLists[i].SetBaseValueString(aValue);
           if (NS_FAILED(rv)) {
             lengthListInfo.Reset(i);
+          } else {
+            aResult.SetTo(lengthListInfo.mLengthLists[i].GetBaseValue(),
+                          &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -616,8 +620,8 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
 
     for (PRUint32 i = 0; i < lengthListInfo.mLengthListCount; i++) {
       if (aName == *lengthListInfo.mLengthListInfo[i].mName) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         lengthListInfo.Reset(i);
-        DidChangeLengthList(i, false);
         return;
       }
     }
@@ -1577,24 +1581,27 @@ nsSVGElement::LengthListAttributesInfo::Reset(PRUint8 aAttrEnum)
   // caller notifies
 }
 
-void
-nsSVGElement::DidChangeLengthList(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangeLengthList(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
+  return WillChangeValue(*GetLengthListInfo().mLengthListInfo[aAttrEnum].mName);
+}
 
+void
+nsSVGElement::DidChangeLengthList(PRUint8 aAttrEnum,
+                                  const nsAttrValue& aEmptyOrOldValue)
+{
   LengthListAttributesInfo info = GetLengthListInfo();
 
   NS_ASSERTION(info.mLengthListCount > 0,
                "DidChangeLengthList on element with no length list attribs");
   NS_ASSERTION(aAttrEnum < info.mLengthListCount, "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mLengthLists[aAttrEnum].GetBaseValue().GetValueAsString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(info.mLengthLists[aAttrEnum].GetBaseValue(), nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, *info.mLengthListInfo[aAttrEnum].mName,
-                nsnull, attrValue, true);
+  DidChangeValue(*info.mLengthListInfo[aAttrEnum].mName, aEmptyOrOldValue,
+                 newValue);
 }
 
 void
