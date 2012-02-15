@@ -99,6 +99,7 @@ public class AwesomeBarTabs extends TabHost {
     private OnUrlOpenListener mUrlOpenListener;
     private View.OnTouchListener mListTouchListener;
     private JSONArray mSearchEngines;
+    private ContentResolver mContentResolver;
 
     private AwesomeBarCursorAdapter mAllPagesCursorAdapter;
     private BookmarksListAdapter mBookmarksAdapter;
@@ -209,14 +210,13 @@ public class AwesomeBarTabs extends TabHost {
 
         @Override
         protected Cursor doInBackground(String... params) {
-            ContentResolver resolver = mContext.getContentResolver();
             String guid = params[0];
             if (guid != null && guid.equals(Bookmarks.MOBILE_FOLDER_GUID))
-                return BrowserDB.getMobileBookmarks(resolver);
+                return BrowserDB.getMobileBookmarks(mContentResolver);
 
             // If we don't have the mobile bookmarks folder, we must have
             // the desktop bookmarks folder
-            return BrowserDB.getDesktopBookmarks(resolver);
+            return BrowserDB.getDesktopBookmarks(mContentResolver);
         }
 
         @Override
@@ -329,8 +329,7 @@ public class AwesomeBarTabs extends TabHost {
 
         protected Pair<GroupList,List<ChildrenList>> doInBackground(Void... arg0) {
             Pair<GroupList, List<ChildrenList>> result = null;
-            ContentResolver resolver = mContext.getContentResolver();
-            Cursor cursor = BrowserDB.getRecentHistory(resolver, MAX_RESULTS);
+            Cursor cursor = BrowserDB.getRecentHistory(mContentResolver, MAX_RESULTS);
 
             Date now = new Date();
             now.setHours(0);
@@ -618,6 +617,7 @@ public class AwesomeBarTabs extends TabHost {
         mContext = context;
         mInflated = false;
         mSearchEngines = new JSONArray();
+        mContentResolver = context.getContentResolver();
     }
 
     @Override
@@ -719,10 +719,9 @@ public class AwesomeBarTabs extends TabHost {
 
         mAllPagesCursorAdapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
-                ContentResolver resolver = mContext.getContentResolver();
                 long start = SystemClock.uptimeMillis();
 
-                Cursor c = BrowserDB.filter(resolver, constraint, MAX_RESULTS);
+                Cursor c = BrowserDB.filter(mContentResolver, constraint, MAX_RESULTS);
                 c.getCount(); // ensure the query runs at least once
 
                 long end = SystemClock.uptimeMillis();
