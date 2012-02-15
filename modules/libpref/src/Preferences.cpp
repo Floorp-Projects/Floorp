@@ -719,8 +719,6 @@ Preferences::WritePrefFile(nsIFile* aFile)
     NS_LINEBREAK
     " * To make a manual change to preferences, you can visit the URL about:config"
     NS_LINEBREAK
-    " * For more information, see http://www.mozilla.org/unix/customizing.html#prefs"
-    NS_LINEBREAK
     " */"
     NS_LINEBREAK
     NS_LINEBREAK;
