@@ -184,7 +184,7 @@ public:
   void DidChangeIntegerPair(PRUint8 aAttrEnum,
                             const nsAttrValue& aEmptyOrOldValue);
   void DidChangeAngle(PRUint8 aAttrEnum, const nsAttrValue& aEmptyOrOldValue);
-  virtual void DidChangeBoolean(PRUint8 aAttrEnum, bool aDoSetAttr);
+  void DidChangeBoolean(PRUint8 aAttrEnum);
   void DidChangeEnum(PRUint8 aAttrEnum);
   virtual void DidChangeViewBox(bool aDoSetAttr);
   virtual void DidChangePreserveAspectRatio(bool aDoSetAttr);
