@@ -99,6 +99,13 @@ function runTests()
   is(blur.stdDeviationY.baseVal, 0.5, "integer-optional-integer second baseVal");
   is(blur.stdDeviationY.animVal, 0.5, "integer-optional-integer second animVal");
 
+  blur.setAttribute("stdDeviation", "");
+  ok(blur.getAttribute("stdDeviation") === "",
+     "empty number-optional-number attribute");
+  blur.removeAttribute("stdDeviation");
+  ok(blur.getAttribute("stdDeviation") === null,
+     "removed number-optional-number attribute");
+
   // integer attribute
 
   convolve.setAttribute("targetX", "12");
