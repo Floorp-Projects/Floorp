@@ -143,6 +143,7 @@ public:
   void SetTo(const nsAString& aValue);
   void SetTo(nsIAtom* aValue);
   void SetTo(PRInt16 aInt);
+  void SetTo(PRInt32 aInt, const nsAString* aSerialized);
   void SetTo(double aValue, const nsAString* aSerialized);
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);

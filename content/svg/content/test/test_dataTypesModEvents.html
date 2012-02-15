@@ -91,6 +91,24 @@ function runTests()
   blur.stdDeviationY.baseVal = 3;
   blur.setAttribute("stdDeviation", "2, 3");
 
+  // integer attribute
+
+  eventChecker.watchAttr(convolve, "targetX");
+  eventChecker.expect("add modify remove add");
+  convolve.setAttribute("targetX", "12");
+  convolve.targetX.baseVal = 6;
+  convolve.removeAttribute("targetX");
+  convolve.targetX.baseVal = 8;
+
+  // Check redundant change when comparing typed value to attribute value
+  eventChecker.expect("");
+  convolve.setAttribute("targetX", "8");
+  // Check redundant change when comparing attribute value to typed value
+  eventChecker.expect("remove add");
+  convolve.removeAttribute("targetX");
+  convolve.setAttribute("targetX", "8");
+  convolve.targetX.baseVal = 8;
+
   // enum attribute
 
   eventChecker.watchAttr(convolve, "edgeMode");
