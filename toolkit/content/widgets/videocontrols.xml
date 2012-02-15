@@ -448,6 +448,10 @@
                     this.controlBar.hidden = true;
                     this.adjustControlSize();
 
+                    // Preserve Statistics when toggling fullscreen mode due to bug 714071.
+                    if (this.video.mozMediaStatisticsShowing)
+                        this.showStatistics(true);
+
                     this._handleCustomEventsBound = this.handleCustomEvents.bind(this);
                     this.video.addEventListener("media-showStatistics", this._handleCustomEventsBound, false, true);
                 },
@@ -615,6 +619,7 @@
                                 // If video hasn't shown anything yet, disable the controls.
                                 if (!this.firstFrameShown)
                                     this.startFadeOut(this.controlBar);
+                                this.controlsSpacer.removeAttribute("hideCursor");
                             }
                             break;
                         default:
@@ -896,8 +901,14 @@
                         // when we remove the attribute.
                         element.clientTop;
                         element.removeAttribute("fadeout");
+                        if (element.className == "controlBar")
+                            this.controlsSpacer.removeAttribute("hideCursor");
                     } else {
                         element.setAttribute("fadeout", true);
+                        if (element.className == "controlBar" && !this.hasError() &&
+                            document.mozFullScreenElement == this.video)
+                            this.controlsSpacer.setAttribute("hideCursor", true);
+
                     }
                 },
 

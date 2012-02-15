@@ -10,7 +10,7 @@
 <p id="display"></p>
 
 <div id="content">
-  <audio id="audio" src="audio.wav" controls preload="auto"></audio>
+  <audio id="audio" controls preload="auto"></audio>
 </div>
 
 <pre id="test">
@@ -23,10 +23,11 @@
     SimpleTest.finish();
   }
 
-  var audio = document.getElementById("audio"), video;
+  var audio = document.getElementById("audio");
 
   // Kick off test once audio has loaded.
   audio.addEventListener("loadedmetadata", loadedmetadata, false);
+  audio.src = "audio.wav";
 
   SimpleTest.waitForExplicitFinish();
 
