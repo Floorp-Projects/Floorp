@@ -206,7 +206,8 @@ private:
   SVGTransform& Transform() {
     return HasOwner() ? InternalItem() : *mTransform;
   }
-  void NotifyElementOfChange();
+  inline nsAttrValue NotifyElementWillChange();
+  void NotifyElementDidChange(const nsAttrValue& aEmptyOrOldValue);
 
   nsRefPtr<DOMSVGTransformList> mList;
 
@@ -234,6 +235,16 @@ private:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMSVGTransform, MOZILLA_DOMSVGTRANSFORM_IID)
+
+nsAttrValue
+DOMSVGTransform::NotifyElementWillChange()
+{
+  nsAttrValue result;
+  if (HasOwner()) {
+    result = Element()->WillChangeTransformList();
+  }
+  return result;
+}
 
 } // namespace mozilla
 

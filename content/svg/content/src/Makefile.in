@@ -183,6 +183,8 @@ EXPORTS =  			\
 	SVGPathSegUtils.h          \
 	SVGPoint.h                 \
 	SVGPointList.h             \
+	SVGTransform.h             \
+	SVGTransformList.h         \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
