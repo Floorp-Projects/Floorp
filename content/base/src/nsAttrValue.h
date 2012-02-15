@@ -62,6 +62,7 @@ class nsSVGAngle;
 class nsSVGIntegerPair;
 class nsSVGLength2;
 class nsSVGNumberPair;
+class nsSVGViewBox;
 
 namespace mozilla {
 namespace css {
@@ -139,6 +140,7 @@ public:
     ,eSVGLengthList =  0x17
     ,eSVGNumberPair =  0x18
     ,eSVGPreserveAspectRatio = 0x19
+    ,eSVGViewBox =     0x20
   };
 
   ValueType Type() const;
@@ -161,6 +163,7 @@ public:
   void SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
              const nsAString* aSerialized);
+  void SetTo(const nsSVGViewBox& aValue, const nsAString* aSerialized);
 
   /**
    * Sets this object with the string or atom representation of aValue.
@@ -398,6 +401,7 @@ private:
       const mozilla::SVGLengthList* mSVGLengthList;
       const nsSVGNumberPair* mSVGNumberPair;
       const mozilla::SVGAnimatedPreserveAspectRatio* mSVGPreserveAspectRatio;
+      const nsSVGViewBox* mSVGViewBox;
     };
   };
 

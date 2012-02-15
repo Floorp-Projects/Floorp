@@ -547,6 +547,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           rv = viewBox->SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             viewBox->Init();
+          } else {
+            aResult.SetTo(*viewBox, &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
         }
@@ -756,8 +759,8 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     if (aName == nsGkAtoms::viewBox) {
       nsSVGViewBox* viewBox = GetViewBox();
       if (viewBox) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         viewBox->Init();
-        DidChangeViewBox(false);
         return;
       }
     }
@@ -2158,22 +2161,23 @@ nsSVGElement::GetViewBox()
   return nsnull;
 }
 
-void
-nsSVGElement::DidChangeViewBox(bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangeViewBox()
 {
-  if (!aDoSetAttr)
-    return;
+  return WillChangeValue(nsGkAtoms::viewBox);
+}
 
+void
+nsSVGElement::DidChangeViewBox(const nsAttrValue& aEmptyOrOldValue)
+{
   nsSVGViewBox *viewBox = GetViewBox();
 
   NS_ASSERTION(viewBox, "DidChangeViewBox on element with no viewBox attrib");
 
-  nsAutoString serializedValue;
-  viewBox->GetBaseValueString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(*viewBox, nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, nsGkAtoms::viewBox, nsnull,
-                attrValue, true);
+  DidChangeValue(nsGkAtoms::viewBox, aEmptyOrOldValue, newValue);
 }
 
 void
