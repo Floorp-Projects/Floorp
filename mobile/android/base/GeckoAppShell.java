@@ -116,6 +116,14 @@ public class GeckoAppShell
 
     private static HashMap<String, ArrayList<GeckoEventListener>> mEventListeners;
 
+    /* Is the value in sVibrationEndTime valid? */
+    private static boolean sVibrationMaybePlaying = false;
+
+    /* Time (in System.nanoTime() units) when the currently-playing vibration
+     * is scheduled to end.  This value is valid only when
+     * sVibrationMaybePlaying is true. */
+    private static long sVibrationEndTime = 0;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -1125,11 +1133,15 @@ public class GeckoAppShell
     }
 
     public static void performHapticFeedback(boolean aIsLongPress) {
-        LayerController layerController = GeckoApp.mAppContext.getLayerController();
-        LayerView layerView = layerController.getView();
-        layerView.performHapticFeedback(aIsLongPress ?
-                                        HapticFeedbackConstants.LONG_PRESS :
-                                        HapticFeedbackConstants.VIRTUAL_KEY);
+        // Don't perform haptic feedback if a vibration is currently playing,
+        // because the haptic feedback will nuke the vibration.
+        if (!sVibrationMaybePlaying || System.nanoTime() >= sVibrationEndTime) {
+            LayerController layerController = GeckoApp.mAppContext.getLayerController();
+            LayerView layerView = layerController.getView();
+            layerView.performHapticFeedback(aIsLongPress ?
+                                            HapticFeedbackConstants.LONG_PRESS :
+                                            HapticFeedbackConstants.VIRTUAL_KEY);
+        }
     }
 
     private static Vibrator vibrator() {
@@ -1140,14 +1152,28 @@ public class GeckoAppShell
     }
 
     public static void vibrate(long milliseconds) {
+        sVibrationEndTime = System.nanoTime() + milliseconds * 1000000;
+        sVibrationMaybePlaying = true;
         vibrator().vibrate(milliseconds);
     }
 
     public static void vibrate(long[] pattern, int repeat) {
+        // If pattern.length is even, the last element in the pattern is a
+        // meaningless delay, so don't include it in vibrationDuration.
+        long vibrationDuration = 0;
+        int iterLen = pattern.length - (pattern.length % 2 == 0 ? 1 : 0);
+        for (int i = 0; i < iterLen; i++) {
+          vibrationDuration += pattern[i];
+        }
+
+        sVibrationEndTime = System.nanoTime() + vibrationDuration * 1000000;
+        sVibrationMaybePlaying = true;
         vibrator().vibrate(pattern, repeat);
     }
 
     public static void cancelVibrate() {
+        sVibrationMaybePlaying = false;
+        sVibrationEndTime = 0;
         vibrator().cancel();
     }
 
