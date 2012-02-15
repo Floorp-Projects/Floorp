@@ -576,6 +576,9 @@ public class BrowserProvider extends ContentProvider {
         } else {
             deleted = deleteInTransaction(uri, selection, selectionArgs);
         }
+        
+        if (deleted > 0)
+            getContext().getContentResolver().notifyChange(uri, null);
 
         return deleted;
     }
@@ -658,6 +661,9 @@ public class BrowserProvider extends ContentProvider {
         } else {
             result = insertInTransaction(uri, values);
         }
+
+        if (result != null)
+            getContext().getContentResolver().notifyChange(uri, null);
 
         return result;
     }
@@ -781,6 +787,9 @@ public class BrowserProvider extends ContentProvider {
         } else {
             updated = updateInTransaction(uri, values, selection, selectionArgs);
         }
+
+        if (updated > 0)
+            getContext().getContentResolver().notifyChange(uri, null);
 
         return updated;
     }

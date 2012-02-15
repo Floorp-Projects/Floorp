@@ -48,6 +48,7 @@ import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.database.MatrixCursor;
@@ -378,18 +379,29 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         if (updated == 0)
             cr.insert(appendProfile(Bookmarks.CONTENT_URI), values);
+
+        cr.notifyChange(appendProfile(Bookmarks.CONTENT_URI), null);
     }
 
     public void removeBookmark(ContentResolver cr, int id) {
         cr.delete(appendProfile(Bookmarks.CONTENT_URI),
                   Bookmarks._ID + " = ?",
                   new String[] { String.valueOf(id) });
+
+        cr.notifyChange(appendProfile(Bookmarks.CONTENT_URI), null);
     }
 
     public void removeBookmarksWithURL(ContentResolver cr, String uri) {
         cr.delete(appendProfile(Bookmarks.CONTENT_URI),
                   Bookmarks.URL + " = ?",
                   new String[] { uri });
+
+        cr.notifyChange(appendProfile(Bookmarks.CONTENT_URI), null);
+    }
+
+    public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer) {
+        Uri uri = appendProfile(Bookmarks.CONTENT_URI);
+        cr.registerContentObserver(uri, false, observer);
     }
 
     public void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword) {
