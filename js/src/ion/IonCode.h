@@ -288,6 +288,11 @@ struct IonScript
     bool containsCodeAddress(uint8 *addr) const {
         return method()->raw() <= addr && addr < method()->raw() + method()->instructionsSize();
     }
+    bool containsReturnAddress(uint8 *addr) const {
+        // This accounts for an off by one error caused by the return address of a
+        // bailout sitting outside the range of the containing function.
+        return method()->raw() <= addr && addr <= method()->raw() + method()->instructionsSize();
+    }
     void setInvalidationEpilogueOffset(uint32 offset) {
         JS_ASSERT(!invalidateEpilogueOffset_);
         invalidateEpilogueOffset_ = offset;

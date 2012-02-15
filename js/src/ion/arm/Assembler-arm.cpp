@@ -419,13 +419,13 @@ Assembler::resetCounter()
 }
 
 ptrdiff_t
-Assembler::actualOffset(uint8 *off_)
+Assembler::actualOffset(uint8 *off_) const
 {
     return (ptrdiff_t)off_ + m_buffer.poolSizeBefore((ptrdiff_t)off_);
 }
 
 BufferOffset
-Assembler::actualOffset(BufferOffset off_)
+Assembler::actualOffset(BufferOffset off_) const
 {
     return BufferOffset(off_.getOffset() + m_buffer.poolSizeBefore(off_.getOffset()));
 }
@@ -610,7 +610,7 @@ void
 Assembler::processDeferredData(IonCode *code, uint8 *data)
 {
     // Deferred Data is something like Pools for X86.
-    // Since ARM have competent pools, this isn't actually used.
+    // Since ARM has competent pools, this isn't actually used.
     // Except of course, for SwitchTables.  Those are really shoehorned
     // in and don't take up any space in the instruction stream, so dataSize()
     // is still 0.

@@ -198,7 +198,7 @@ class VFPRegister
     bool isSInt()   { return kind == Int; }
     bool isUInt()   { return kind == UInt; }
     bool equiv(VFPRegister other) { return other.kind == kind; }
-
+    size_t size() { return (kind == Double) ? 8 : 4; }
     bool isInvalid();
     bool isMissing();
 
@@ -1118,8 +1118,8 @@ class Assembler
     }
   public:
     void resetCounter();
-    ptrdiff_t actualOffset(uint8*);
-    BufferOffset actualOffset(BufferOffset);
+    ptrdiff_t actualOffset(uint8*) const;
+    BufferOffset actualOffset(BufferOffset) const;
   protected:
 
     // structure for fixing up pc-relative loads/jumps when a the machine code
@@ -1559,6 +1559,7 @@ class Assembler
         dtmBase = rm;
         dtmCond = c;
         dtmLastReg = -1;
+        dtmMode = mode;
     }
     void transferFloatReg(VFPRegister rn)
     {
