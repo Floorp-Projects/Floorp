@@ -482,9 +482,13 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       BooleanAttributesInfo booleanInfo = GetBooleanInfo();
       for (i = 0; i < booleanInfo.mBooleanCount; i++) {
         if (aAttribute == *booleanInfo.mBooleanInfo[i].mName) {
-          rv = booleanInfo.mBooleans[i].SetBaseValueString(aValue, this);
+          nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aValue);
+          rv = booleanInfo.mBooleans[i].SetBaseValueAtom(valAtom, this);
           if (NS_FAILED(rv)) {
             booleanInfo.Reset(i);
+          } else {
+            aResult.SetTo(valAtom);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -731,7 +735,6 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     for (PRUint32 i = 0; i < boolInfo.mBooleanCount; i++) {
       if (aName == *boolInfo.mBooleanInfo[i].mName) {
         boolInfo.Reset(i);
-        DidChangeBoolean(i, false);
         return;
       }
     }
@@ -2083,22 +2086,15 @@ void nsSVGElement::BooleanAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeBoolean(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsSVGElement::DidChangeBoolean(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
-
   BooleanAttributesInfo info = GetBooleanInfo();
 
   NS_ASSERTION(info.mBooleanCount > 0,
                "DidChangeBoolean on element with no boolean attribs");
-
   NS_ASSERTION(aAttrEnum < info.mBooleanCount, "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mBooleans[aAttrEnum].GetBaseValueString(serializedValue);
-
-  nsAttrValue attrValue(serializedValue);
+  nsAttrValue attrValue(info.mBooleans[aAttrEnum].GetBaseValueAtom());
   SetParsedAttr(kNameSpaceID_None, *info.mBooleanInfo[aAttrEnum].mName, nsnull,
                 attrValue, true);
 }
