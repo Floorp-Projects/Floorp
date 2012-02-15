@@ -349,6 +349,10 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           rv = numberListInfo.mNumberLists[i].SetBaseValueString(aValue);
           if (NS_FAILED(rv)) {
             numberListInfo.Reset(i);
+          } else {
+            aResult.SetTo(numberListInfo.mNumberLists[i].GetBaseValue(),
+                          &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -657,8 +661,8 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
 
     for (PRUint32 i = 0; i < numberListInfo.mNumberListCount; i++) {
       if (aName == *numberListInfo.mNumberListInfo[i].mName) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         numberListInfo.Reset(i);
-        DidChangeNumberList(i, false);
         return;
       }
     }
@@ -1687,24 +1691,28 @@ nsSVGElement::NumberListAttributesInfo::Reset(PRUint8 aAttrEnum)
   // caller notifies
 }
 
-void
-nsSVGElement::DidChangeNumberList(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangeNumberList(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
+  return WillChangeValue(*GetNumberListInfo().mNumberListInfo[aAttrEnum].mName);
+}
 
+void
+nsSVGElement::DidChangeNumberList(PRUint8 aAttrEnum,
+                                  const nsAttrValue& aEmptyOrOldValue)
+{
   NumberListAttributesInfo info = GetNumberListInfo();
 
   NS_ABORT_IF_FALSE(info.mNumberListCount > 0,
-                    "DidChangeNumberList on element with no number list attribs");
-  NS_ABORT_IF_FALSE(aAttrEnum < info.mNumberListCount, "aAttrEnum out of range");
+    "DidChangeNumberList on element with no number list attribs");
+  NS_ABORT_IF_FALSE(aAttrEnum < info.mNumberListCount,
+    "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mNumberLists[aAttrEnum].GetBaseValue().GetValueAsString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(info.mNumberLists[aAttrEnum].GetBaseValue(), nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, *info.mNumberListInfo[aAttrEnum].mName,
-                nsnull, attrValue, true);
+  DidChangeValue(*info.mNumberListInfo[aAttrEnum].mName, aEmptyOrOldValue,
+                 newValue);
 }
 
 void
