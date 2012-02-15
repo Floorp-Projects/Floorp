@@ -58,6 +58,7 @@
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGLengthList.h"
+#include "SVGNumberList.h"
 
 namespace css = mozilla::css;
 
@@ -291,6 +292,11 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mSVGLengthList = otherCont->mSVGLengthList;
       break;
     }
+    case eSVGNumberList:
+    {
+      cont->mSVGNumberList = otherCont->mSVGNumberList;
+      break;
+    }
     case eSVGNumberPair:
     {
       cont->mSVGNumberPair = otherCont->mSVGNumberPair;
@@ -453,6 +459,18 @@ nsAttrValue::SetTo(const mozilla::SVGLengthList& aValue,
 }
 
 void
+nsAttrValue::SetTo(const mozilla::SVGNumberList& aValue,
+                   const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mSVGNumberList = &aValue;
+    cont->mType = eSVGNumberList;
+    SetMiscAtomOrString(aSerialized);
+  }
+}
+
+void
 nsAttrValue::SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized)
 {
   if (EnsureEmptyMiscContainer()) {
@@ -601,6 +619,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eSVGLengthList:
     {
       GetMiscContainer()->mSVGLengthList->GetValueAsString(aResult);
+      break;
+    }
+    case eSVGNumberList:
+    {
+      GetMiscContainer()->mSVGNumberList->GetValueAsString(aResult);
       break;
     }
     case eSVGNumberPair:
@@ -818,6 +841,10 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mSVGLengthList);
     }
+    case eSVGNumberList:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGNumberList);
+    }
     case eSVGNumberPair:
     {
       return NS_PTR_TO_INT32(cont->mSVGNumberPair);
@@ -937,6 +964,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eSVGLengthList:
     {
       return thisCont->mSVGLengthList == otherCont->mSVGLengthList;
+    }
+    case eSVGNumberList:
+    {
+      return thisCont->mSVGNumberList == otherCont->mSVGNumberList;
     }
     case eSVGNumberPair:
     {

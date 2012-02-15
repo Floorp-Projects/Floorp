@@ -171,6 +171,7 @@ DOMSVGNumberList::Clear()
   }
 
   if (Length() > 0) {
+    nsAttrValue emptyOrOldValue = Element()->WillChangeNumberList(AttrEnum());
     // Notify any existing DOM items of removal *before* truncating the lists
     // so that they can find their SVGNumber internal counterparts and copy
     // their values. This also notifies the animVal list:
@@ -178,7 +179,7 @@ DOMSVGNumberList::Clear()
 
     mItems.Clear();
     InternalList().Clear();
-    Element()->DidChangeNumberList(AttrEnum(), true);
+    Element()->DidChangeNumberList(AttrEnum(), emptyOrOldValue);
     if (mAList->IsAnimating()) {
       Element()->AnimationNeedsResample();
     }
@@ -256,6 +257,7 @@ DOMSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  nsAttrValue emptyOrOldValue = Element()->WillChangeNumberList(AttrEnum());
   // Now that we know we're inserting, keep animVal list in sync as necessary.
   MaybeInsertNullInAnimValListAt(index);
 
@@ -269,7 +271,7 @@ DOMSVGNumberList::InsertItemBefore(nsIDOMSVGNumber *newItem,
 
   UpdateListIndicesFromIndex(mItems, index + 1);
 
-  Element()->DidChangeNumberList(AttrEnum(), true);
+  Element()->DidChangeNumberList(AttrEnum(), emptyOrOldValue);
   if (mAList->IsAnimating()) {
     Element()->AnimationNeedsResample();
   }
@@ -298,6 +300,7 @@ DOMSVGNumberList::ReplaceItem(nsIDOMSVGNumber *newItem,
     domItem = domItem->Clone(); // must do this before changing anything!
   }
 
+  nsAttrValue emptyOrOldValue = Element()->WillChangeNumberList(AttrEnum());
   if (mItems[index]) {
     // Notify any existing DOM item of removal *before* modifying the lists so
     // that the DOM item can copy the *old* value at its index:
@@ -311,7 +314,7 @@ DOMSVGNumberList::ReplaceItem(nsIDOMSVGNumber *newItem,
   // would end up reading bad data from InternalList()!
   domItem->InsertingIntoList(this, AttrEnum(), index, IsAnimValList());
 
-  Element()->DidChangeNumberList(AttrEnum(), true);
+  Element()->DidChangeNumberList(AttrEnum(), emptyOrOldValue);
   if (mAList->IsAnimating()) {
     Element()->AnimationNeedsResample();
   }
@@ -340,6 +343,7 @@ DOMSVGNumberList::RemoveItem(PRUint32 index,
   // We have to return the removed item, so make sure it exists:
   EnsureItemAt(index);
 
+  nsAttrValue emptyOrOldValue = Element()->WillChangeNumberList(AttrEnum());
   // Notify the DOM item of removal *before* modifying the lists so that the
   // DOM item can copy its *old* value:
   mItems[index]->RemovingFromList();
@@ -350,7 +354,7 @@ DOMSVGNumberList::RemoveItem(PRUint32 index,
 
   UpdateListIndicesFromIndex(mItems, index);
 
-  Element()->DidChangeNumberList(AttrEnum(), true);
+  Element()->DidChangeNumberList(AttrEnum(), emptyOrOldValue);
   if (mAList->IsAnimating()) {
     Element()->AnimationNeedsResample();
   }

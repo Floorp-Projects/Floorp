@@ -178,6 +178,7 @@ EXPORTS =  			\
 	SVGAnimatedPreserveAspectRatio.h \
 	SVGLength.h                \
 	SVGLengthList.h            \
+	SVGNumberList.h            \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
