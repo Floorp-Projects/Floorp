@@ -248,6 +248,12 @@ public:
     }
 
     /**
+     * Mark this texture as having valid contents. Call this after modifying
+     * the texture contents externally.
+     */
+    virtual void MarkValid() {}
+
+    /**
      * aSurf - the source surface to update from
      * aRegion - the region in this image to update
      * aFrom - offset in the source to update from
@@ -391,6 +397,8 @@ public:
     // Returns a surface to draw into
     virtual already_AddRefed<gfxASurface>
       GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt);
+
+    virtual void MarkValid() { mTextureState = Valid; }
 
     // Call when drawing into the update surface is complete.
     // Returns true if textures should be upload with a relative 
