@@ -430,6 +430,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           rv = integerInfo.mIntegers[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             integerInfo.Reset(i);
+          } else {
+            aResult.SetTo(integerInfo.mIntegers[i].GetBaseValue(), &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -689,7 +692,6 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     for (PRUint32 i = 0; i < intInfo.mIntegerCount; i++) {
       if (aName == *intInfo.mIntegerInfo[i].mName) {
         intInfo.Reset(i);
-        DidChangeInteger(i, false);
         return;
       }
     }
@@ -1914,22 +1916,17 @@ void nsSVGElement::IntegerAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
-
   IntegerAttributesInfo info = GetIntegerInfo();
 
   NS_ASSERTION(info.mIntegerCount > 0,
                "DidChangeInteger on element with no integer attribs");
-
   NS_ASSERTION(aAttrEnum < info.mIntegerCount, "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mIntegers[aAttrEnum].GetBaseValueString(serializedValue);
+  nsAttrValue attrValue;
+  attrValue.SetTo(info.mIntegers[aAttrEnum].GetBaseValue(), nsnull);
 
-  nsAttrValue attrValue(serializedValue);
   SetParsedAttr(kNameSpaceID_None, *info.mIntegerInfo[aAttrEnum].mName, nsnull,
                 attrValue, true);
 }
