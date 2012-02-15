@@ -148,6 +148,7 @@ abstract public class GeckoApp
     private static AbsoluteLayout mPluginContainer;
 
     public String mLastTitle;
+    public String mLastSnapshotUri;
     public String mLastViewport;
     public byte[] mLastScreen;
     public int mOwnActivityDepth = 0;
@@ -573,23 +574,32 @@ abstract public class GeckoApp
 
         public void run() {
             synchronized (mSoftwareLayerClient) {
-                Tab tab = Tabs.getInstance().getSelectedTab();
-                if (tab == null)
-                    return;
-
-                HistoryEntry lastHistoryEntry = tab.getLastHistoryEntry();
-                if (lastHistoryEntry == null)
+                if (!Tabs.getInstance().isSelectedTab(mThumbnailTab))
                     return;
 
                 if (getLayerController().getLayerClient() != mSoftwareLayerClient)
                     return;
 
-                ViewportMetrics viewportMetrics = mSoftwareLayerClient.getGeckoViewportMetrics();
-                if (viewportMetrics != null)
-                    mLastViewport = viewportMetrics.toJSON();
+                HistoryEntry lastHistoryEntry = mThumbnailTab.getLastHistoryEntry();
+                if (lastHistoryEntry == null)
+                    return;
 
+                ViewportMetrics viewportMetrics = mSoftwareLayerClient.getGeckoViewportMetrics();
+                // If we don't have viewport metrics, the screenshot won't be right so bail
+                if (viewportMetrics == null)
+                    return;
+                
+                String viewportJSON = viewportMetrics.toJSON();
+                // If the title, uri and viewport haven't changed, the old screenshot is probably valid
+                if (viewportJSON.equals(mLastViewport) &&
+                    mLastTitle.equals(lastHistoryEntry.mTitle) &&
+                    mLastSnapshotUri.equals(lastHistoryEntry.mUri))
+                    return; 
+
+                mLastViewport = viewportJSON;
                 mLastTitle = lastHistoryEntry.mTitle;
-                getAndProcessThumbnailForTab(tab, true);
+                mLastSnapshotUri = lastHistoryEntry.mUri;
+                getAndProcessThumbnailForTab(mThumbnailTab, true);
             }
         }
     }
@@ -1309,8 +1319,10 @@ abstract public class GeckoApp
             }
         });
 
-        Runnable r = new SessionSnapshotRunnable(tab);
-        GeckoAppShell.getHandler().postDelayed(r, 500);
+        if (Tabs.getInstance().isSelectedTab(tab)) {
+            Runnable r = new SessionSnapshotRunnable(tab);
+            GeckoAppShell.getHandler().postDelayed(r, 500);
+        }
     }
 
     void handleShowToast(final String message, final String duration) {
