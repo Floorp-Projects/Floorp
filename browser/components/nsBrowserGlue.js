@@ -52,17 +52,15 @@ const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AddonManager.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  Cu.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-  return PlacesUtils;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "KeywordURLResetPrompter",
                                   "resource:///modules/KeywordURLResetPrompter.jsm");
@@ -428,19 +426,20 @@ BrowserGlue.prototype = {
       this._showPluginUpdatePage();
 
     // For any add-ons that were installed disabled and can be enabled offer
-    // them to the user
-    var win = this.getMostRecentBrowserWindow();
-    var browser = win.gBrowser;
-    var changedIDs = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED);
-    AddonManager.getAddonsByIDs(changedIDs, function(aAddons) {
-      aAddons.forEach(function(aAddon) {
-        // If the add-on isn't user disabled or can't be enabled then skip it
-        if (!aAddon.userDisabled || !(aAddon.permissions & AddonManager.PERM_CAN_ENABLE))
-          return;
+    // them to the user.
+    let changedIDs = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED);
+    if (changedIDs.length > 0) {
+      let browser = this.getMostRecentBrowserWindow().gBrowser;
+      AddonManager.getAddonsByIDs(changedIDs, function(aAddons) {
+        aAddons.forEach(function(aAddon) {
+          // If the add-on isn't user disabled or can't be enabled then skip it.
+          if (!aAddon.userDisabled || !(aAddon.permissions & AddonManager.PERM_CAN_ENABLE))
+            return;
 
-        browser.selectedTab = browser.addTab("about:newaddon?id=" + aAddon.id);
-      })
-    });
+          browser.selectedTab = browser.addTab("about:newaddon?id=" + aAddon.id);
+        })
+      });
+    }
 
     let keywordURLUserSet = Services.prefs.prefHasUserValue("keyword.URL");
     Services.telemetry.getHistogramById("FX_KEYWORD_URL_USERSET").add(keywordURLUserSet);
