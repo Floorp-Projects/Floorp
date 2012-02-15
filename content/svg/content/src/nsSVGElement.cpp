@@ -365,11 +365,12 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       if (GetPointListAttrName() == aAttribute) {
         SVGAnimatedPointList* pointList = GetAnimatedPointList();
         if (pointList) {
-          rv = pointList->SetBaseValueString(aValue);
-          if (NS_FAILED(rv)) {
-            // The spec says we parse everything up to the failure, so we don't
-            // call pointList->ClearBaseValue()
-          }
+          pointList->SetBaseValueString(aValue);
+          // The spec says we parse everything up to the failure, so we DON'T
+          // need to check the result of SetBaseValueString or call
+          // pointList->ClearBaseValue() if it fails
+          aResult.SetTo(pointList->GetBaseValue(), &aValue);
+          didSetResult = true;
           foundMatch = true;
         }
       }
@@ -671,6 +672,7 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     if (GetPointListAttrName() == aName) {
       SVGAnimatedPointList *pointList = GetAnimatedPointList();
       if (pointList) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         pointList->ClearBaseValue();
         return;
       }
@@ -1754,20 +1756,24 @@ nsSVGElement::GetAnimatedNumberList(nsIAtom *aAttrName)
   return nsnull;
 }
 
-void
-nsSVGElement::DidChangePointList(bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangePointList()
 {
-  NS_ABORT_IF_FALSE(GetPointListAttrName(), "Changing non-existent point list?");
+  NS_ABORT_IF_FALSE(GetPointListAttrName(),
+                    "Changing non-existent point list?");
+  return WillChangeValue(GetPointListAttrName());
+}
 
-  if (!aDoSetAttr)
-    return;
+void
+nsSVGElement::DidChangePointList(const nsAttrValue& aEmptyOrOldValue)
+{
+  NS_ABORT_IF_FALSE(GetPointListAttrName(),
+                    "Changing non-existent point list?");
 
-  nsAutoString serializedValue;
-  GetAnimatedPointList()->GetBaseValue().GetValueAsString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(GetAnimatedPointList()->GetBaseValue(), nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, GetPointListAttrName(), nsnull,
-                attrValue, true);
+  DidChangeValue(GetPointListAttrName(), aEmptyOrOldValue, newValue);
 }
 
 void

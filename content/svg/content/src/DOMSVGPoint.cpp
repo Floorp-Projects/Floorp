@@ -98,8 +98,12 @@ DOMSVGPoint::SetX(float aX)
   NS_ENSURE_FINITE(aX, NS_ERROR_ILLEGAL_VALUE);
 
   if (HasOwner()) {
+    if (InternalItem().mX == aX) {
+      return NS_OK;
+    }
+    nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
     InternalItem().mX = aX;
-    Element()->DidChangePointList(true);
+    Element()->DidChangePointList(emptyOrOldValue);
     if (mList->AttrIsAnimating()) {
       Element()->AnimationNeedsResample();
     }
@@ -129,8 +133,12 @@ DOMSVGPoint::SetY(float aY)
   NS_ENSURE_FINITE(aY, NS_ERROR_ILLEGAL_VALUE);
 
   if (HasOwner()) {
+    if (InternalItem().mY == aY) {
+      return NS_OK;
+    }
+    nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
     InternalItem().mY = aY;
-    Element()->DidChangePointList(true);
+    Element()->DidChangePointList(emptyOrOldValue);
     if (mList->AttrIsAnimating()) {
       Element()->AnimationNeedsResample();
     }

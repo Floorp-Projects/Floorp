@@ -59,6 +59,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGLengthList.h"
 #include "SVGNumberList.h"
+#include "SVGPointList.h"
 
 namespace css = mozilla::css;
 
@@ -302,6 +303,11 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mSVGNumberPair = otherCont->mSVGNumberPair;
       break;
     }
+    case eSVGPointList:
+    {
+      cont->mSVGPointList = otherCont->mSVGPointList;
+      break;
+    }
     case eSVGPreserveAspectRatio:
     {
       cont->mSVGPreserveAspectRatio = otherCont->mSVGPreserveAspectRatio;
@@ -482,6 +488,20 @@ nsAttrValue::SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized)
 }
 
 void
+nsAttrValue::SetTo(const mozilla::SVGPointList& aValue,
+                   const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mSVGPointList = &aValue;
+    cont->mType = eSVGPointList;
+    if (aSerialized && aSerialized->Length()) {
+      SetMiscAtomOrString(aSerialized);
+    }
+  }
+}
+
+void
 nsAttrValue::SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
                    const nsAString* aSerialized)
 {
@@ -629,6 +649,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eSVGNumberPair:
     {
       GetMiscContainer()->mSVGNumberPair->GetBaseValueString(aResult);
+      break;
+    }
+    case eSVGPointList:
+    {
+      GetMiscContainer()->mSVGPointList->GetValueAsString(aResult);
       break;
     }
     case eSVGPreserveAspectRatio:
@@ -849,6 +874,10 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mSVGNumberPair);
     }
+    case eSVGPointList:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGPointList);
+    }
     case eSVGPreserveAspectRatio:
     {
       return NS_PTR_TO_INT32(cont->mSVGPreserveAspectRatio);
@@ -972,6 +1001,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eSVGNumberPair:
     {
       return thisCont->mSVGNumberPair == otherCont->mSVGNumberPair;
+    }
+    case eSVGPointList:
+    {
+      return thisCont->mSVGPointList == otherCont->mSVGPointList;
     }
     case eSVGPreserveAspectRatio:
     {

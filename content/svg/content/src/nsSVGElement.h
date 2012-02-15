@@ -178,6 +178,7 @@ public:
   nsAttrValue WillChangePreserveAspectRatio();
   nsAttrValue WillChangeNumberList(PRUint8 aAttrEnum);
   nsAttrValue WillChangeLengthList(PRUint8 aAttrEnum);
+  nsAttrValue WillChangePointList();
 
   void DidChangeLength(PRUint8 aAttrEnum, const nsAttrValue& aEmptyOrOldValue);
   void DidChangeNumber(PRUint8 aAttrEnum);
@@ -195,7 +196,7 @@ public:
                            const nsAttrValue& aEmptyOrOldValue);
   void DidChangeLengthList(PRUint8 aAttrEnum,
                            const nsAttrValue& aEmptyOrOldValue);
-  virtual void DidChangePointList(bool aDoSetAttr);
+  void DidChangePointList(const nsAttrValue& aEmptyOrOldValue);
   virtual void DidChangePathSegList(bool aDoSetAttr);
   virtual void DidChangeTransformList(bool aDoSetAttr);
   void DidChangeString(PRUint8 aAttrEnum) {}
