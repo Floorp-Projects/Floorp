@@ -842,6 +842,37 @@ LayerD3D10::LayerD3D10(LayerManagerD3D10 *aManager)
 {
 }
 
+bool LayerD3D10::LoadMaskTexture()
+{
+  if (Layer* maskLayer = GetLayer()->GetMaskLayer()) {
+    gfxIntSize size;
+    nsRefPtr<ID3D10ShaderResourceView> maskSRV =
+      static_cast<LayerD3D10*>(maskLayer->ImplData())->GetAsTexture(&size);
+  
+    if (!maskSRV) {
+      return false;
+    }
+
+    gfxMatrix maskTransform;
+    bool maskIs2D = maskLayer->GetTransform().CanDraw2D(&maskTransform);
+    NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
+    gfxRect bounds = gfxRect(maskTransform.GetTranslation(), size);
+
+    effect()->GetVariableByName("vMaskQuad")->AsVector()->SetFloatVector(
+      ShaderConstantRectD3D10(
+        (float)bounds.x,
+        (float)bounds.y,
+        (float)bounds.width,
+        (float)bounds.height)
+      );
+
+    effect()->GetVariableByName("tMask")->AsShaderResource()->SetResource(maskSRV);
+    return true;
+  }
+
+  return false; 
+}
+
 WindowLayer::WindowLayer(LayerManagerD3D10* aManager)
   : ThebesLayer(aManager, nsnull)
 {
