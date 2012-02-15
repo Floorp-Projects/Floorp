@@ -31,6 +31,39 @@ function runTests()
   var marker = doc.getElementById("marker");
   var eventChecker = new MutationEventChecker;
 
+  // length attribute
+
+  eventChecker.watchAttr(marker, "markerWidth");
+  eventChecker.expect("add modify modify modify modify modify remove add");
+  marker.setAttribute("markerWidth", "12.5");
+  marker.markerWidth.baseVal.value = 8;
+  marker.markerWidth.baseVal.valueInSpecifiedUnits = 9;
+  marker.markerWidth.baseVal.valueAsString = "10";
+  marker.markerWidth.baseVal.convertToSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_CM);
+  marker.markerWidth.baseVal.newValueSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_MM, 11);
+  marker.removeAttribute("markerWidth");
+  marker.markerWidth.baseVal.value = 8;
+
+  eventChecker.expect("remove add modify");
+  marker.removeAttribute("markerWidth");
+  console.log(marker.getAttribute("markerWidth"));
+  marker.markerWidth.baseVal.convertToSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_NUMBER);
+  console.log(marker.getAttribute("markerWidth"));
+  marker.markerWidth.baseVal.value = 8;
+
+  eventChecker.expect("");
+  marker.markerWidth.baseVal.value = 8;
+  marker.setAttribute("markerWidth", "8");
+  marker.markerWidth.baseVal.value = 8;
+  marker.markerWidth.baseVal.valueAsString = "8";
+  marker.markerWidth.baseVal.convertToSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_NUMBER);
+  marker.markerWidth.baseVal.newValueSpecifiedUnits(
+    SVGLength.SVG_LENGTHTYPE_NUMBER, 8);
+
   // enum attribute
 
   eventChecker.watchAttr(convolve, "edgeMode");
