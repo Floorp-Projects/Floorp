@@ -48,11 +48,11 @@ LIBXUL_LIBRARY = 1
 EXPORTS = \
   nsAudioAvailableEventManager.h \
   nsMediaDecoder.h \
-  nsMediaStream.h \
   nsMediaCache.h \
   nsBuiltinDecoder.h \
   nsBuiltinDecoderStateMachine.h \
   nsBuiltinDecoderReader.h \
+  MediaResource.h \
   VideoFrameContainer.h \
   VideoUtils.h \
   $(NULL)
@@ -61,10 +61,10 @@ CPPSRCS = \
   nsAudioAvailableEventManager.cpp \
   nsMediaDecoder.cpp \
   nsMediaCache.cpp \
-  nsMediaStream.cpp \
   nsBuiltinDecoder.cpp \
   nsBuiltinDecoderStateMachine.cpp \
   nsBuiltinDecoderReader.cpp \
+  MediaResource.cpp \
   VideoFrameContainer.cpp \
   VideoUtils.cpp \
   $(NULL)

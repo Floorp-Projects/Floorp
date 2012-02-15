@@ -52,9 +52,12 @@
 #include "VideoFrameContainer.h"
 
 class nsHTMLMediaElement;
-class nsMediaStream;
 class nsIStreamListener;
 class nsTimeRanges;
+
+namespace mozilla {
+class MediaResource;
+}
 
 // The size to use for audio data frames in MozAudioAvailable events.
 // This value is per channel, and is chosen to give ~43 fps of events,
@@ -72,6 +75,7 @@ static const PRUint32 FRAMEBUFFER_LENGTH_MAX = 16384;
 class nsMediaDecoder : public nsIObserver
 {
 public:
+  typedef mozilla::MediaResource MediaResource;
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
@@ -90,9 +94,9 @@ public:
   // on failure.
   virtual bool Init(nsHTMLMediaElement* aElement);
 
-  // Get the current nsMediaStream being used. Its URI will be returned
+  // Get the current MediaResource being used. Its URI will be returned
   // by currentSrc. Returns what was passed to Load(), if Load() has been called.
-  virtual nsMediaStream* GetStream() = 0;
+  virtual MediaResource* GetResource() = 0;
 
   // Return the principal of the current URI being played or downloaded.
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
@@ -137,10 +141,10 @@ public:
 
   // Start downloading the media. Decode the downloaded data up to the
   // point of the first frame of data.
-  // aStream is the media stream to use. Ownership of aStream passes to
+  // aResource is the media stream to use. Ownership of aResource passes to
   // the decoder, even if Load returns an error.
   // This is called at most once per decoder, after Init().
-  virtual nsresult Load(nsMediaStream* aStream,
+  virtual nsresult Load(MediaResource* aResource,
                         nsIStreamListener **aListener,
                         nsMediaDecoder* aCloneDonor) = 0;
 
@@ -318,17 +322,17 @@ public:
   // outlined in the specification.
   virtual void FireTimeUpdate();
 
-  // Called by nsMediaStream when the "cache suspended" status changes.
-  // If nsMediaStream::IsSuspendedByCache returns true, then the decoder
+  // Called by MediaResource when the "cache suspended" status changes.
+  // If MediaResource::IsSuspendedByCache returns true, then the decoder
   // should stop buffering or otherwise waiting for download progress and
   // start consuming data, if possible, because the cache is full.
   virtual void NotifySuspendedStatusChanged() = 0;
 
-  // Called by nsMediaStream when some data has been received.
+  // Called by MediaResource when some data has been received.
   // Call on the main thread only.
   virtual void NotifyBytesDownloaded() = 0;
 
-  // Called by nsChannelToPipeListener or nsMediaStream when the
+  // Called by nsChannelToPipeListener or MediaResource when the
   // download has ended. Called on the main thread only. aStatus is
   // the result from OnStopRequest.
   virtual void NotifyDownloadEnded(nsresult aStatus) = 0;
@@ -372,7 +376,7 @@ public:
   // block the load event. This is called when we stop delaying the load
   // event. Any new loads initiated (for example to seek) will also be in the
   // background. Implementations of this must call MoveLoadsToBackground() on
-  // their nsMediaStream.
+  // their MediaResource.
   virtual void MoveLoadsToBackground()=0;
 
   // Constructs the time ranges representing what segments of the media
