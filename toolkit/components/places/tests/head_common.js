@@ -112,25 +112,32 @@ function uri(aSpec) NetUtil.newURI(aSpec);
  * Gets the database connection.  If the Places connection is invalid it will
  * try to create a new connection.
  *
+ * @param [optional] aForceNewConnection
+ *        Forces creation of a new connection to the database.  When a
+ *        connection is asyncClosed it cannot anymore schedule async statements,
+ *        though connectionReady will keep returning true (Bug 726990).
+ *
  * @return The database connection or null if unable to get one.
  */
 let gDBConn;
-function DBConn() {
-  let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                              .DBConnection;
-  if (db.connectionReady)
-    return db;
+function DBConn(aForceNewConnection) {
+  if (!aForceNewConnection) {
+    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
+                                .DBConnection;
+    if (db.connectionReady)
+      return db;
+  }
 
   // If the Places database connection has been closed, create a new connection.
-  if (!gDBConn) {
+  if (!gDBConn || aForceNewConnection) {
     let file = Services.dirsvc.get('ProfD', Ci.nsIFile);
     file.append("places.sqlite");
-    gDBConn = Services.storage.openDatabase(file);
+    let dbConn = gDBConn = Services.storage.openDatabase(file);
 
     // Be sure to cleanly close this connection.
-    Services.obs.addObserver(function (aSubject, aTopic, aData) {
-      Services.obs.removeObserver(arguments.callee, aTopic);
-      gDBConn.asyncClose();
+    Services.obs.addObserver(function DBCloseCallback(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(DBCloseCallback, aTopic);
+      dbConn.asyncClose();
     }, "profile-before-change", false);
   }
 
