@@ -64,6 +64,7 @@ namespace mozilla {
 namespace css {
 class StyleRule;
 }
+class SVGLengthList;
 }
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
@@ -129,6 +130,7 @@ public:
     ,eDoubleValue  =   0x12
     ,eIntMarginValue = 0x13
     ,eSVGLength =      0x14
+    ,eSVGLengthList =  0x15
   };
 
   ValueType Type() const;
@@ -142,6 +144,8 @@ public:
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
   void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGLengthList& aValue,
+             const nsAString* aSerialized);
 
   /**
    * Sets this object with the string or atom representation of aValue.
@@ -374,6 +378,7 @@ private:
       double mDoubleValue;
       nsIntMargin* mIntMargin;
       const nsSVGLength2* mSVGLength;
+      const mozilla::SVGLengthList* mSVGLengthList;
     };
   };
 
