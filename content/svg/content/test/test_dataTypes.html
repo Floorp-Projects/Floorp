@@ -57,6 +57,11 @@ function runTests()
   is(marker.markerWidth.animVal.value, 7.5, "length animVal");
   is(marker.getAttribute("markerWidth"), "7.5", "length attribute");
 
+  marker.setAttribute("markerWidth", "");
+  ok(marker.getAttribute("markerWidth") === "", "empty length attribute");
+  marker.removeAttribute("markerWidth");
+  ok(marker.getAttribute("markerWidth") === null, "removed length attribute");
+
   // number attribute
 
   convolve.setAttribute("divisor", "12.5");

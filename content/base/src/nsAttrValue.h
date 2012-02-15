@@ -58,6 +58,7 @@ class nsIAtom;
 class nsIDocument;
 template<class E, class A> class nsTArray;
 struct nsTArrayDefaultAllocator;
+class nsSVGLength2;
 
 namespace mozilla {
 namespace css {
@@ -124,9 +125,10 @@ public:
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
     eCSSStyleRule =    0x10
-    ,eAtomArray =      0x11 
+    ,eAtomArray =      0x11
     ,eDoubleValue  =   0x12
     ,eIntMarginValue = 0x13
+    ,eSVGLength =      0x14
   };
 
   ValueType Type() const;
@@ -139,6 +141,7 @@ public:
   void SetTo(PRInt16 aInt);
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
+  void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
 
   /**
    * Sets this object with the string or atom representation of aValue.
@@ -370,6 +373,7 @@ private:
       AtomArray* mAtomArray;
       double mDoubleValue;
       nsIntMargin* mIntMargin;
+      const nsSVGLength2* mSVGLength;
     };
   };
 
