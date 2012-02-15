@@ -91,8 +91,6 @@ IonBuilder::optimizeNativeCall(uint32 argc)
     types::TypeSet *returnTypes = oracle->getCallReturn(script, pc);
     MIRType returnType = MIRTypeFromValueType(returnTypes->getKnownTypeTag(cx));
 
-    types::TypeSet *thisTypes = oracle->getCallArg(script, argc, 0, pc);
-    MIRType thisType = MIRTypeFromValueType(thisTypes->getKnownTypeTag(cx));
     if (argc == 0)
         return false;
 

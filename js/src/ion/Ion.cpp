@@ -157,7 +157,7 @@ IonCompartment::IonCompartment()
 bool
 IonCompartment::initialize(JSContext *cx)
 {
-    execAlloc_ = js::OffTheBooks::new_<JSC::ExecutableAllocator>();
+    execAlloc_ = cx->runtime->getExecutableAllocator(cx);
     if (!execAlloc_)
         return false;
 
@@ -176,21 +176,21 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 
     // These must be available if we could be running JIT code.
     if (enterJIT_)
-        MarkRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
+        MarkIonCodeRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
 
     // These need to be here until we can figure out how to make the GC
     // scan these references inside the code generator itself.
     if (osrPrologue_)
-        MarkRoot(trc, osrPrologue_.unsafeGet(), "osrPrologue");
+        MarkIonCodeRoot(trc, osrPrologue_.unsafeGet(), "osrPrologue");
     if (bailoutHandler_)
-        MarkRoot(trc, bailoutHandler_.unsafeGet(), "bailoutHandler");
+        MarkIonCodeRoot(trc, bailoutHandler_.unsafeGet(), "bailoutHandler");
     if (argumentsRectifier_)
-        MarkRoot(trc, argumentsRectifier_.unsafeGet(), "argumentsRectifier");
+        MarkIonCodeRoot(trc, argumentsRectifier_.unsafeGet(), "argumentsRectifier");
     if (invalidator_)
-        MarkRoot(trc, invalidator_.unsafeGet(), "invalidator");
+        MarkIonCodeRoot(trc, invalidator_.unsafeGet(), "invalidator");
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
         if (bailoutTables_[i])
-            MarkRoot(trc, bailoutTables_[i].unsafeGet(), "bailoutTable");
+            MarkIonCodeRoot(trc, bailoutTables_[i].unsafeGet(), "bailoutTable");
     }
 
     // functionWrappers_ are not marked because this is a WeakCache of VM
@@ -248,7 +248,6 @@ IonCompartment::getBailoutTable(JSContext *cx, const FrameSizeClass &frameClass)
 
 IonCompartment::~IonCompartment()
 {
-    Foreground::delete_(execAlloc_);
     Foreground::delete_(functionWrappers_);
 }
 

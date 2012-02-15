@@ -304,7 +304,7 @@ public class CrashReporter extends Activity
             HashMap<String, String>  responseMap = new HashMap<String, String>();
             readStringsFromReader(br, responseMap);
 
-            if (conn.getResponseCode() == conn.HTTP_OK) {
+            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 File submittedDir = new File(SUBMITTED_DIR);
                 submittedDir.mkdirs();
                 minidumpFile.delete();
