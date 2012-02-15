@@ -153,6 +153,10 @@ function runTests()
   convolve.edgeMode.baseVal = 1;
   is(convolve.edgeMode.animVal, 1, "enum animVal");
   is(convolve.getAttribute("edgeMode"), "duplicate", "enum attribute");
+  convolve.setAttribute("edgeMode", "");
+  ok(convolve.getAttribute("edgeMode") === "", "empty enum attribute");
+  convolve.removeAttribute("edgeMode");
+  ok(convolve.getAttribute("edgeMode") === null, "removed enum attribute");
 
   // string attribute
 

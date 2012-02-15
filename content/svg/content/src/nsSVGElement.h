@@ -176,7 +176,7 @@ public:
   virtual void DidChangeIntegerPair(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeAngle(PRUint8 aAttrEnum, bool aDoSetAttr);
   virtual void DidChangeBoolean(PRUint8 aAttrEnum, bool aDoSetAttr);
-  virtual void DidChangeEnum(PRUint8 aAttrEnum, bool aDoSetAttr);
+  void DidChangeEnum(PRUint8 aAttrEnum);
   virtual void DidChangeViewBox(bool aDoSetAttr);
   virtual void DidChangePreserveAspectRatio(bool aDoSetAttr);
   virtual void DidChangeNumberList(PRUint8 aAttrEnum, bool aDoSetAttr);
