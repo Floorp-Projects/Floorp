@@ -74,7 +74,11 @@ ColorLayerD3D10::RenderLayer()
   effect()->GetVariableByName("fLayerColor")->AsVector()->SetFloatVector(color);
 
   ID3D10EffectTechnique *technique;
-  technique = effect()->GetTechniqueByName("RenderSolidColorLayer");
+  if (LoadMaskTexture()) {
+    technique = effect()->GetTechniqueByName("RenderSolidColorLayerMask");
+  } else {
+    technique = effect()->GetTechniqueByName("RenderSolidColorLayer");
+  }
 
   nsIntRegionRectIterator iter(mVisibleRegion);
 
