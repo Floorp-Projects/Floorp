@@ -220,8 +220,14 @@ IonFrameIterator::prevFp() const
     JS_ASSERT(type_ != IonFrame_Entry);
 
     size_t currentSize = SizeOfFramePrefix(type_);
+    // This quick fix must be removed as soon as bug 717297 land.  This is
+    // needed because the descriptor size of JS-to-JS frame which is just after
+    // a Rectifier frame should not change. (cf EnsureExitFrame function)
+    if (prevType() == IonFrame_Bailed_Rectifier) {
+        JS_ASSERT(type_ == IonFrame_Exit);
+        currentSize = SizeOfFramePrefix(IonFrame_JS);
+    }
     currentSize += current()->prevFrameLocalSize();
-
     return current_ + currentSize;
 }
 

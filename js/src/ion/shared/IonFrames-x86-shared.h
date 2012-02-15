@@ -125,12 +125,12 @@ class IonRectifierFrameLayout : public IonJSFrameLayout
     }
 };
 
-class IonBailedRectifierFrameLayout : public IonJSFrameLayout
+// The callee token is now dead.
+class IonBailedRectifierFrameLayout : public IonRectifierFrameLayout
 {
   public:
     static inline size_t Size() {
-        // Include an extra word for the dead callee token.
-        return sizeof(IonBailedRectifierFrameLayout) + sizeof(void *);
+        return sizeof(IonBailedRectifierFrameLayout);
     }
 };
 
