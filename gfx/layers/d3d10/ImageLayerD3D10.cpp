@@ -211,17 +211,33 @@ ImageLayerD3D10::RenderLayer()
       return;
     }
     
-    if (hasAlpha) {
-      if (mFilter == gfxPattern::FILTER_NEAREST) {
-        technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
-      } else {
-        technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
-      }
-    } else {
-      if (mFilter == gfxPattern::FILTER_NEAREST) {
-        technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
-      } else {
-        technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+    if (LoadMaskTexture()) {
+      if (hasAlpha) {
+        if (mFilter == gfxPattern::FILTER_NEAREST) {
+          technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPointMask");
+        } else {
+          technique = effect()->GetTechniqueByName("RenderRGBALayerPremulMask");
+        }
+       } else {
+        if (mFilter == gfxPattern::FILTER_NEAREST) {
+          technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPointMask");
+        } else {
+          technique = effect()->GetTechniqueByName("RenderRGBLayerPremulMask");
+        }
+       }
+     } else {
+      if (hasAlpha) {
+        if (mFilter == gfxPattern::FILTER_NEAREST) {
+          technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
+        } else {
+          technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
+        }
+       } else {
+        if (mFilter == gfxPattern::FILTER_NEAREST) {
+          technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
+        } else {
+          technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
+        }
       }
     }
 
@@ -259,12 +275,18 @@ ImageLayerD3D10::RenderLayer()
       return;
     }
 
+    bool useMask = LoadMaskTexture();
+
     // TODO: At some point we should try to deal with mFilter here, you don't
     // really want to use point filtering in the case of NEAREST, since that
     // would also use point filtering for Chroma upsampling. Where most likely
     // the user would only want point filtering for final RGB image upsampling.
 
-    technique = effect()->GetTechniqueByName("RenderYCbCrLayer");
+    if (useMask) {
+      technique = effect()->GetTechniqueByName("RenderYCbCrLayerMask");
+    } else {
+      technique = effect()->GetTechniqueByName("RenderYCbCrLayer");
+    }
 
     effect()->GetVariableByName("tY")->AsShaderResource()->SetResource(data->mYView);
     effect()->GetVariableByName("tCb")->AsShaderResource()->SetResource(data->mCbView);
