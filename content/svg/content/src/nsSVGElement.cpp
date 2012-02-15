@@ -558,6 +558,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           rv = preserveAspectRatio->SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             preserveAspectRatio->Init();
+          } else {
+            aResult.SetTo(*preserveAspectRatio, &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
         }
@@ -763,10 +766,9 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     if (aName == nsGkAtoms::preserveAspectRatio) {
       SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
         GetPreserveAspectRatio();
-
       if (preserveAspectRatio) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         preserveAspectRatio->Init();
-        DidChangePreserveAspectRatio(false);
         return;
       }
     }
@@ -2192,24 +2194,26 @@ nsSVGElement::GetPreserveAspectRatio()
   return nsnull;
 }
 
-void
-nsSVGElement::DidChangePreserveAspectRatio(bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangePreserveAspectRatio()
 {
-  if (!aDoSetAttr)
-    return;
+  return WillChangeValue(nsGkAtoms::preserveAspectRatio);
+}
 
+void
+nsSVGElement::DidChangePreserveAspectRatio(const nsAttrValue& aEmptyOrOldValue)
+{
   SVGAnimatedPreserveAspectRatio *preserveAspectRatio =
     GetPreserveAspectRatio();
 
   NS_ASSERTION(preserveAspectRatio,
-               "DidChangePreserveAspectRatio on element with no preserveAspectRatio attrib");
+               "DidChangePreserveAspectRatio on element with no "
+               "preserveAspectRatio attrib");
 
-  nsAutoString serializedValue;
-  preserveAspectRatio->GetBaseValueString(serializedValue);
+  nsAttrValue newValue;
+  newValue.SetTo(*preserveAspectRatio, nsnull);
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, nsGkAtoms::preserveAspectRatio, nsnull,
-                attrValue, true);
+  DidChangeValue(nsGkAtoms::preserveAspectRatio, aEmptyOrOldValue, newValue);
 }
 
 void

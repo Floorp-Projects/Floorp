@@ -67,6 +67,7 @@ namespace mozilla {
 namespace css {
 class StyleRule;
 }
+class SVGAnimatedPreserveAspectRatio;
 class SVGLengthList;
 }
 
@@ -137,6 +138,7 @@ public:
     ,eSVGLength =      0x16
     ,eSVGLengthList =  0x17
     ,eSVGNumberPair =  0x18
+    ,eSVGPreserveAspectRatio = 0x19
   };
 
   ValueType Type() const;
@@ -157,6 +159,8 @@ public:
   void SetTo(const mozilla::SVGLengthList& aValue,
              const nsAString* aSerialized);
   void SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
+             const nsAString* aSerialized);
 
   /**
    * Sets this object with the string or atom representation of aValue.
@@ -393,6 +397,7 @@ private:
       const nsSVGLength2* mSVGLength;
       const mozilla::SVGLengthList* mSVGLengthList;
       const nsSVGNumberPair* mSVGNumberPair;
+      const mozilla::SVGAnimatedPreserveAspectRatio* mSVGPreserveAspectRatio;
     };
   };
 

@@ -55,6 +55,7 @@
 #include "nsSVGIntegerPair.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumberPair.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGLengthList.h"
 
 namespace css = mozilla::css;
@@ -294,6 +295,11 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mSVGNumberPair = otherCont->mSVGNumberPair;
       break;
     }
+    case eSVGPreserveAspectRatio:
+    {
+      cont->mSVGPreserveAspectRatio = otherCont->mSVGPreserveAspectRatio;
+      break;
+    }
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -452,6 +458,18 @@ nsAttrValue::SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized)
 }
 
 void
+nsAttrValue::SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
+                   const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mSVGPreserveAspectRatio = &aValue;
+    cont->mType = eSVGPreserveAspectRatio;
+    SetMiscAtomOrString(aSerialized);
+  }
+}
+
+void
 nsAttrValue::SwapValueWith(nsAttrValue& aOther)
 {
   PtrBits tmp = aOther.mBits;
@@ -571,6 +589,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eSVGNumberPair:
     {
       GetMiscContainer()->mSVGNumberPair->GetBaseValueString(aResult);
+      break;
+    }
+    case eSVGPreserveAspectRatio:
+    {
+      GetMiscContainer()->mSVGPreserveAspectRatio->GetBaseValueString(aResult);
       break;
     }
     default:
@@ -777,6 +800,10 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mSVGNumberPair);
     }
+    case eSVGPreserveAspectRatio:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGPreserveAspectRatio);
+    }
     default:
     {
       NS_NOTREACHED("unknown type stored in MiscContainer");
@@ -888,6 +915,11 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eSVGNumberPair:
     {
       return thisCont->mSVGNumberPair == otherCont->mSVGNumberPair;
+    }
+    case eSVGPreserveAspectRatio:
+    {
+      return thisCont->mSVGPreserveAspectRatio ==
+        otherCont->mSVGPreserveAspectRatio;
     }
     default:
     {
