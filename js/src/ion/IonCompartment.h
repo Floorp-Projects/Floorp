@@ -66,6 +66,7 @@ class IonCompartment
 
     friend class IonActivation;
 
+    // Executable allocator (owned by the runtime).
     JSC::ExecutableAllocator *execAlloc_;
 
     // Trampoline for entering JIT code. Contains OSR prologue.

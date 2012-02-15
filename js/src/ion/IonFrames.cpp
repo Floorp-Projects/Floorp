@@ -49,6 +49,8 @@
 #include "Safepoints.h"
 #include "IonSpewer.h"
 #include "IonMacroAssembler.h"
+#include "jsgcmark.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -299,10 +301,10 @@ MarkCalleeToken(JSTracer *trc, CalleeToken token)
 {
     switch (GetCalleeTokenTag(token)) {
       case CalleeToken_Function:
-        MarkRoot(trc, CalleeTokenToFunction(token), "ion-callee");
+        MarkObjectRoot(trc, CalleeTokenToFunction(token), "ion-callee");
         break;
       case CalleeToken_Script:
-        MarkRoot(trc, CalleeTokenToScript(token), "ion-entry");
+        MarkScriptRoot(trc, CalleeTokenToScript(token), "ion-entry");
         break;
       default:
         JS_NOT_REACHED("unknown callee token type");
@@ -328,7 +330,7 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
         // Trace function arguments.
         Value *argv = layout->argv();
         for (size_t i = 0; i < fun->nargs; i++)
-            gc::MarkRoot(trc, argv[i], "ion-argv");
+            gc::MarkValueRoot(trc, argv[i], "ion-argv");
 
         ionScript = fun->script()->ion;
     } else {
@@ -352,12 +354,12 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     uint32 slot;
     while (safepoint.getGcSlot(&slot)) {
         uintptr_t *ref = layout->slotRef(slot);
-        gc::MarkRootThingOrValue(trc, *ref, "ion-gc-slot");
+        gc::MarkThingOrValueRoot(trc, *ref, "ion-gc-slot");
     }
 
     while (safepoint.getValueSlot(&slot)) {
         Value *v = (Value *)layout->slotRef(slot);
-        gc::MarkRoot(trc, *v, "ion-gc-slot");
+        gc::MarkValueRoot(trc, *v, "ion-gc-slot");
     }
 }
 

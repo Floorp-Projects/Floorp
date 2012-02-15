@@ -535,6 +535,8 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     int32_t             inOOMReport;
 
+    bool                jitHardening;
+
     // If Ion code is on the stack, and has called into C++, this will be
     // aligned to an Ion exit frame.
     uint8_t             *ionTop;
@@ -636,6 +638,11 @@ struct JSRuntime : js::RuntimeFriendFields
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes, JSContext *cx);
 
     JS_FRIEND_API(void) triggerOperationCallback();
+
+    void setJitHardening(bool enabled);
+    bool getJitHardening() const {
+        return jitHardening;
+    }
 
     void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
                              size_t *regexpCode, size_t *stackCommitted);
@@ -928,7 +935,6 @@ struct JSContext : js::ContextFriendFields
     bool hasStrictOption() const { return hasRunOption(JSOPTION_STRICT); }
     bool hasWErrorOption() const { return hasRunOption(JSOPTION_WERROR); }
     bool hasAtLineOption() const { return hasRunOption(JSOPTION_ATLINE); }
-    bool hasJITHardeningOption() const { return !hasRunOption(JSOPTION_SOFTEN); }
 
     js::LifoAlloc &tempLifoAlloc() { return runtime->tempLifoAlloc; }
     inline js::LifoAlloc &typeLifoAlloc();

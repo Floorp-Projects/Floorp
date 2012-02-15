@@ -730,6 +730,12 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
         case NS_TEXT_TEXT:
             mIMEComposingText = static_cast<nsTextEvent*>(aEvent)->theText;
             break;
+        case NS_KEY_PRESS:
+            // Sometimes the text changes after a key press do not generate notifications (see Bug 723810)
+            // Call the corresponding methods explicitly to send those changes back to Java
+            OnIMETextChange(0, 0, 0);
+            OnIMESelectionChange();
+            break;
         }
         return status;
     }

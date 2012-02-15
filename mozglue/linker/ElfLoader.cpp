@@ -318,7 +318,6 @@ ElfLoader::~ElfLoader()
         debug("ElfLoader::~ElfLoader(): Remaining handle for \"%s\" "
               "[%d direct refs, %d refs total]", (*it)->GetPath(),
               (*it)->DirectRefCount(), (*it)->refCount());
-        delete (*it);
       } else {
         debug("ElfLoader::~ElfLoader(): Unexpected remaining handle for \"%s\" "
               "[%d direct refs, %d refs total]", (*it)->GetPath(),

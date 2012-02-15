@@ -386,16 +386,15 @@ js_TraceAtomState(JSTracer *trc)
     JSAtomState *state = &rt->atomState;
 
     if (rt->gcKeepAtoms) {
-        for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
-            MarkRoot(trc, r.front().asPtr(), "locked_atom");
-        }
+        for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront())
+            MarkStringRoot(trc, r.front().asPtr(), "locked_atom");
     } else {
         for (AtomSet::Range r = state->atoms.all(); !r.empty(); r.popFront()) {
             AtomStateEntry entry = r.front();
             if (!entry.isTagged())
                 continue;
 
-            MarkRoot(trc, entry.asPtr(), "interned_atom");
+            MarkStringRoot(trc, entry.asPtr(), "interned_atom");
         }
     }
 }
