@@ -51,6 +51,7 @@
 #include "nsCaseTreatment.h"
 #include "nsMargin.h"
 #include "nsCOMPtr.h"
+#include "SVGAttrValueWrapper.h"
 
 typedef PRUptrdiff PtrBits;
 class nsAString;
@@ -58,22 +59,11 @@ class nsIAtom;
 class nsIDocument;
 template<class E, class A> class nsTArray;
 struct nsTArrayDefaultAllocator;
-class nsSVGAngle;
-class nsSVGIntegerPair;
-class nsSVGLength2;
-class nsSVGNumberPair;
-class nsSVGViewBox;
 
 namespace mozilla {
 namespace css {
 class StyleRule;
 }
-class SVGAnimatedPreserveAspectRatio;
-class SVGLengthList;
-class SVGNumberList;
-class SVGPathData;
-class SVGPointList;
-class SVGTransformList;
 }
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
@@ -138,7 +128,8 @@ public:
     ,eAtomArray =      0x11
     ,eDoubleValue  =   0x12
     ,eIntMarginValue = 0x13
-    ,eSVGAngle =       0x14
+    ,eSVGTypesBegin =  0x14
+    ,eSVGAngle =       eSVGTypesBegin
     ,eSVGIntegerPair = 0x15
     ,eSVGLength =      0x16
     ,eSVGLengthList =  0x17
@@ -149,6 +140,7 @@ public:
     ,eSVGPreserveAspectRatio = 0x22
     ,eSVGTransformList = 0x23
     ,eSVGViewBox =     0x24
+    ,eSVGTypesEnd =    0x34
   };
 
   ValueType Type() const;
@@ -424,6 +416,7 @@ private:
   };
 
   inline ValueBaseType BaseType() const;
+  inline bool IsSVGType(ValueType aType) const;
 
   /**
    * Get the index of an EnumTable in the sEnumTableArray.
@@ -440,6 +433,8 @@ private:
   void SetColorValue(nscolor aColor, const nsAString& aString);
   void SetMiscAtomOrString(const nsAString* aValue);
   void ResetMiscAtomOrString();
+  void SetSVGType(ValueType aType, const void* aValue,
+                  const nsAString* aSerialized);
   inline void ResetIfSet();
 
   inline void* GetPtr() const;
@@ -552,6 +547,12 @@ inline nsAttrValue::ValueBaseType
 nsAttrValue::BaseType() const
 {
   return static_cast<ValueBaseType>(mBits & NS_ATTRVALUE_BASETYPE_MASK);
+}
+
+inline bool
+nsAttrValue::IsSVGType(ValueType aType) const
+{
+  return aType >= eSVGTypesBegin && aType <= eSVGTypesEnd;
 }
 
 inline void

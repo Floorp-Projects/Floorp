@@ -51,19 +51,10 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
-#include "nsSVGAngle.h"
-#include "nsSVGIntegerPair.h"
-#include "nsSVGLength2.h"
-#include "nsSVGNumberPair.h"
-#include "nsSVGViewBox.h"
-#include "SVGAnimatedPreserveAspectRatio.h"
-#include "SVGLengthList.h"
-#include "SVGNumberList.h"
-#include "SVGPathData.h"
-#include "SVGPointList.h"
-#include "SVGTransformList.h"
 
 namespace css = mozilla::css;
+
+using mozilla::SVGAttrValueWrapper;
 
 #define MISC_STR_PTR(_cont) \
   reinterpret_cast<void*>((_cont)->mStringBits & NS_ATTRVALUE_POINTERVALUE_MASK)
@@ -275,64 +266,15 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
         cont->mIntMargin = new nsIntMargin(*otherCont->mIntMargin);
       break;
     }
-    case eSVGAngle:
-    {
-      cont->mSVGAngle = otherCont->mSVGAngle;
-      break;
-    }
-    case eSVGIntegerPair:
-    {
-      cont->mSVGIntegerPair = otherCont->mSVGIntegerPair;
-      break;
-    }
-    case eSVGLength:
-    {
-      cont->mSVGLength = otherCont->mSVGLength;
-      break;
-    }
-    case eSVGLengthList:
-    {
-      cont->mSVGLengthList = otherCont->mSVGLengthList;
-      break;
-    }
-    case eSVGNumberList:
-    {
-      cont->mSVGNumberList = otherCont->mSVGNumberList;
-      break;
-    }
-    case eSVGNumberPair:
-    {
-      cont->mSVGNumberPair = otherCont->mSVGNumberPair;
-      break;
-    }
-    case eSVGPathData:
-    {
-      cont->mSVGPathData = otherCont->mSVGPathData;
-      break;
-    }
-    case eSVGPointList:
-    {
-      cont->mSVGPointList = otherCont->mSVGPointList;
-      break;
-    }
-    case eSVGPreserveAspectRatio:
-    {
-      cont->mSVGPreserveAspectRatio = otherCont->mSVGPreserveAspectRatio;
-      break;
-    }
-    case eSVGTransformList:
-    {
-      cont->mSVGTransformList = otherCont->mSVGTransformList;
-      break;
-    }
-    case eSVGViewBox:
-    {
-      cont->mSVGViewBox = otherCont->mSVGViewBox;
-      break;
-    }
     default:
     {
-      NS_NOTREACHED("unknown type stored in MiscContainer");
+      if (IsSVGType(otherCont->mType)) {
+        // All SVG types are just pointers to classes and will therefore have
+        // the same size so it doesn't really matter which one we assign
+        cont->mSVGAngle = otherCont->mSVGAngle;
+      } else {
+        NS_NOTREACHED("unknown type stored in MiscContainer");
+      }
       break;
     }
   }
@@ -434,134 +376,98 @@ nsAttrValue::SetToSerialized(const nsAttrValue& aOther)
 void
 nsAttrValue::SetTo(const nsSVGAngle& aValue, const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGAngle = &aValue;
-    cont->mType = eSVGAngle;
-    SetMiscAtomOrString(aSerialized);
-  }
+  SetSVGType(eSVGAngle, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const nsSVGIntegerPair& aValue, const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGIntegerPair = &aValue;
-    cont->mType = eSVGIntegerPair;
-    SetMiscAtomOrString(aSerialized);
-  }
+  SetSVGType(eSVGIntegerPair, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGLength = &aValue;
-    cont->mType = eSVGLength;
-    SetMiscAtomOrString(aSerialized);
-  }
+  SetSVGType(eSVGLength, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const mozilla::SVGLengthList& aValue,
                    const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGLengthList = &aValue;
-    cont->mType = eSVGLengthList;
-    SetMiscAtomOrString(aSerialized);
+  // While an empty string will parse as a length list, there's no need to store
+  // it (and SetMiscAtomOrString will assert if we try)
+  if (aSerialized && aSerialized->IsEmpty()) {
+    aSerialized = nsnull;
   }
+  SetSVGType(eSVGLengthList, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const mozilla::SVGNumberList& aValue,
                    const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGNumberList = &aValue;
-    cont->mType = eSVGNumberList;
-    SetMiscAtomOrString(aSerialized);
+  // While an empty string will parse as a number list, there's no need to store
+  // it (and SetMiscAtomOrString will assert if we try)
+  if (aSerialized && aSerialized->IsEmpty()) {
+    aSerialized = nsnull;
   }
+  SetSVGType(eSVGNumberList, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGNumberPair = &aValue;
-    cont->mType = eSVGNumberPair;
-    SetMiscAtomOrString(aSerialized);
-  }
+  SetSVGType(eSVGNumberPair, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const mozilla::SVGPathData& aValue,
                    const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGPathData = &aValue;
-    cont->mType = eSVGPathData;
-    if (aSerialized && aSerialized->Length()) {
-      SetMiscAtomOrString(aSerialized);
-    }
+  // While an empty string will parse as path data, there's no need to store it
+  // (and SetMiscAtomOrString will assert if we try)
+  if (aSerialized && aSerialized->IsEmpty()) {
+    aSerialized = nsnull;
   }
+  SetSVGType(eSVGPathData, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const mozilla::SVGPointList& aValue,
                    const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGPointList = &aValue;
-    cont->mType = eSVGPointList;
-    if (aSerialized && aSerialized->Length()) {
-      SetMiscAtomOrString(aSerialized);
-    }
+  // While an empty string will parse as a point list, there's no need to store
+  // it (and SetMiscAtomOrString will assert if we try)
+  if (aSerialized && aSerialized->IsEmpty()) {
+    aSerialized = nsnull;
   }
+  SetSVGType(eSVGPointList, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
                    const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGPreserveAspectRatio = &aValue;
-    cont->mType = eSVGPreserveAspectRatio;
-    SetMiscAtomOrString(aSerialized);
-  }
+  SetSVGType(eSVGPreserveAspectRatio, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const mozilla::SVGTransformList& aValue,
                    const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGTransformList = &aValue;
-    cont->mType = eSVGTransformList;
-    if (aSerialized && aSerialized->Length()) {
-      SetMiscAtomOrString(aSerialized);
-    }
+  // While an empty string will parse as a transform list, there's no need to
+  // store it (and SetMiscAtomOrString will assert if we try)
+  if (aSerialized && aSerialized->IsEmpty()) {
+    aSerialized = nsnull;
   }
+  SetSVGType(eSVGTransformList, &aValue, aSerialized);
 }
 
 void
 nsAttrValue::SetTo(const nsSVGViewBox& aValue, const nsAString* aSerialized)
 {
-  if (EnsureEmptyMiscContainer()) {
-    MiscContainer* cont = GetMiscContainer();
-    cont->mSVGViewBox = &aValue;
-    cont->mType = eSVGViewBox;
-    SetMiscAtomOrString(aSerialized);
-  }
+  SetSVGType(eSVGViewBox, &aValue, aSerialized);
 }
 
 void
@@ -663,57 +569,63 @@ nsAttrValue::ToString(nsAString& aResult) const
     }
     case eSVGAngle:
     {
-      GetMiscContainer()->mSVGAngle->GetBaseValueString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGAngle, aResult);
       break;
     }
     case eSVGIntegerPair:
     {
-      GetMiscContainer()->mSVGIntegerPair->GetBaseValueString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGIntegerPair,
+                                    aResult);
       break;
     }
     case eSVGLength:
     {
-      GetMiscContainer()->mSVGLength->GetBaseValueString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGLength, aResult);
       break;
     }
     case eSVGLengthList:
     {
-      GetMiscContainer()->mSVGLengthList->GetValueAsString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGLengthList,
+                                    aResult);
       break;
     }
     case eSVGNumberList:
     {
-      GetMiscContainer()->mSVGNumberList->GetValueAsString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGNumberList,
+                                    aResult);
       break;
     }
     case eSVGNumberPair:
     {
-      GetMiscContainer()->mSVGNumberPair->GetBaseValueString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGNumberPair,
+                                    aResult);
       break;
     }
     case eSVGPathData:
     {
-      GetMiscContainer()->mSVGPathData->GetValueAsString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGPathData, aResult);
       break;
     }
     case eSVGPointList:
     {
-      GetMiscContainer()->mSVGPointList->GetValueAsString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGPointList, aResult);
       break;
     }
     case eSVGPreserveAspectRatio:
     {
-      GetMiscContainer()->mSVGPreserveAspectRatio->GetBaseValueString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGPreserveAspectRatio,
+                                    aResult);
       break;
     }
     case eSVGTransformList:
     {
-      GetMiscContainer()->mSVGTransformList->GetValueAsString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGTransformList,
+                                    aResult);
       break;
     }
     case eSVGViewBox:
     {
-      GetMiscContainer()->mSVGViewBox->GetBaseValueString(aResult);
+      SVGAttrValueWrapper::ToString(GetMiscContainer()->mSVGViewBox, aResult);
       break;
     }
     default:
@@ -900,52 +812,12 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mIntMargin);
     }
-    case eSVGAngle:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGAngle);
-    }
-    case eSVGIntegerPair:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGIntegerPair);
-    }
-    case eSVGLength:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGLength);
-    }
-    case eSVGLengthList:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGLengthList);
-    }
-    case eSVGNumberList:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGNumberList);
-    }
-    case eSVGNumberPair:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGNumberPair);
-    }
-    case eSVGPathData:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGPathData);
-    }
-    case eSVGPointList:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGPointList);
-    }
-    case eSVGPreserveAspectRatio:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGPreserveAspectRatio);
-    }
-    case eSVGTransformList:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGTransformList);
-    }
-    case eSVGViewBox:
-    {
-      return NS_PTR_TO_INT32(cont->mSVGViewBox);
-    }
     default:
     {
+      if (IsSVGType(cont->mType)) {
+        // All SVG types are just pointers to classes so we can treat them alike
+        return NS_PTR_TO_INT32(cont->mSVGAngle);
+      }
       NS_NOTREACHED("unknown type stored in MiscContainer");
       return 0;
     }
@@ -1036,53 +908,18 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     {
       return thisCont->mIntMargin == otherCont->mIntMargin;
     }
-    case eSVGAngle:
-    {
-      return thisCont->mSVGAngle == otherCont->mSVGAngle;
-    }
-    case eSVGIntegerPair:
-    {
-      return thisCont->mSVGIntegerPair == otherCont->mSVGIntegerPair;
-    }
-    case eSVGLength:
-    {
-      return thisCont->mSVGLength == otherCont->mSVGLength;
-    }
-    case eSVGLengthList:
-    {
-      return thisCont->mSVGLengthList == otherCont->mSVGLengthList;
-    }
-    case eSVGNumberList:
-    {
-      return thisCont->mSVGNumberList == otherCont->mSVGNumberList;
-    }
-    case eSVGNumberPair:
-    {
-      return thisCont->mSVGNumberPair == otherCont->mSVGNumberPair;
-    }
-    case eSVGPathData:
-    {
-      return thisCont->mSVGPathData == otherCont->mSVGPathData;
-    }
-    case eSVGPointList:
-    {
-      return thisCont->mSVGPointList == otherCont->mSVGPointList;
-    }
-    case eSVGPreserveAspectRatio:
-    {
-      return thisCont->mSVGPreserveAspectRatio ==
-        otherCont->mSVGPreserveAspectRatio;
-    }
-    case eSVGTransformList:
-    {
-      return thisCont->mSVGTransformList == otherCont->mSVGTransformList;
-    }
-    case eSVGViewBox:
-    {
-      return thisCont->mSVGViewBox == otherCont->mSVGViewBox;
-    }
     default:
     {
+      if (IsSVGType(thisCont->mType)) {
+        // Currently this method is never called for nsAttrValue objects that
+        // point to SVG data types.
+        // If that changes then we probably want to add methods to the
+        // corresponding SVG types to compare their base values.
+        // As a shortcut, however, we can begin by comparing the pointers.
+        NS_ABORT_IF_FALSE(false, "Comparing nsAttrValues that point to SVG "
+          "data");
+        return false;
+      }
       NS_NOTREACHED("unknown type stored in MiscContainer");
       return false;
     }
@@ -1725,6 +1562,22 @@ nsAttrValue::ResetMiscAtomOrString()
       static_cast<nsIAtom*>(ptr)->Release();
     }
     cont->mStringBits = 0;
+  }
+}
+
+void
+nsAttrValue::SetSVGType(ValueType aType, const void* aValue,
+                        const nsAString* aSerialized) {
+  NS_ABORT_IF_FALSE(IsSVGType(aType), "Not an SVG type");
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    // All SVG types are just pointers to classes so just setting any of them
+    // will do. We'll lose type-safety but the signature of the calling
+    // function should ensure we don't get anything unexpected, and once we
+    // stick aValue in a union we lose type information anyway.
+    cont->mSVGAngle = static_cast<const nsSVGAngle*>(aValue);
+    cont->mType = aType;
+    SetMiscAtomOrString(aSerialized);
   }
 }
 
