@@ -394,6 +394,9 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
           rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this);
           if (NS_FAILED(rv)) {
             numberInfo.Reset(i);
+          } else {
+            aResult.SetTo(numberInfo.mNumbers[i].GetBaseValue(), &aValue);
+            didSetResult = true;
           }
           foundMatch = true;
           break;
@@ -662,7 +665,6 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     for (PRUint32 i = 0; i < numInfo.mNumberCount; i++) {
       if (aName == *numInfo.mNumberInfo[i].mName) {
         numInfo.Reset(i);
-        DidChangeNumber(i, false);
         return;
       }
     }
@@ -1798,22 +1800,17 @@ void nsSVGElement::NumberAttributesInfo::Reset(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum, bool aDoSetAttr)
+nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum)
 {
-  if (!aDoSetAttr)
-    return;
-
   NumberAttributesInfo info = GetNumberInfo();
 
   NS_ASSERTION(info.mNumberCount > 0,
                "DidChangeNumber on element with no number attribs");
-
   NS_ASSERTION(aAttrEnum < info.mNumberCount, "aAttrEnum out of range");
 
-  nsAutoString serializedValue;
-  info.mNumbers[aAttrEnum].GetBaseValueString(serializedValue);
+  nsAttrValue attrValue;
+  attrValue.SetTo(info.mNumbers[aAttrEnum].GetBaseValue(), nsnull);
 
-  nsAttrValue attrValue(serializedValue);
   SetParsedAttr(kNameSpaceID_None, *info.mNumberInfo[aAttrEnum].mName, nsnull,
                 attrValue, true);
 }

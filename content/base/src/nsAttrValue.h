@@ -141,6 +141,7 @@ public:
   void SetTo(const nsAString& aValue);
   void SetTo(nsIAtom* aValue);
   void SetTo(PRInt16 aInt);
+  void SetTo(double aValue, const nsAString* aSerialized);
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
   void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
