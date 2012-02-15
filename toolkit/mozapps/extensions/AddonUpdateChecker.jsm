@@ -47,6 +47,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 var EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
 
@@ -62,6 +63,7 @@ const XMLURI_PARSE_ERROR    = "http://www.mozilla.org/newlayout/xml/parsererror.
 const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonRepository.jsm");
 // shared code for suppressing bad cert dialogs
 Components.utils.import("resource://gre/modules/CertUtils.jsm");
@@ -77,6 +79,12 @@ var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
     return this[aName];
   });
 }, this);
+
+XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
+  Cu.import("resource://gre/modules/AddonManager.jsm");
+  return AddonManager;
+});
+
 
 /**
  * A serialisation method for RDF data that produces an identical string
@@ -351,14 +359,6 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
   if (!cu.IsContainer(ds, updates))
     throw new Error("Updates property was not an RDF container");
 
-  let checkSecurity = true;
-
-  try {
-    checkSecurity = Services.prefs.getBoolPref("extensions.checkUpdateSecurity");
-  }
-  catch (e) {
-  }
-
   let results = [];
   let ctr = Cc["@mozilla.org/rdf/container;1"].
             createInstance(Ci.nsIRDFContainer);
@@ -399,7 +399,7 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
         targetApplications: [appEntry]
       };
 
-      if (result.updateURL && checkSecurity &&
+      if (result.updateURL && AddonManager.checkUpdateSecurity &&
           result.updateURL.substring(0, 6) != "https:" &&
           (!result.updateHash || result.updateHash.substring(0, 3) != "sha")) {
         WARN("updateLink " + result.updateURL + " is not secure and is not verified" +
