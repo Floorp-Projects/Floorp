@@ -180,6 +180,7 @@ public:
   nsAttrValue WillChangeLengthList(PRUint8 aAttrEnum);
   nsAttrValue WillChangePointList();
   nsAttrValue WillChangePathSegList();
+  nsAttrValue WillChangeTransformList();
 
   void DidChangeLength(PRUint8 aAttrEnum, const nsAttrValue& aEmptyOrOldValue);
   void DidChangeNumber(PRUint8 aAttrEnum);
@@ -199,7 +200,7 @@ public:
                            const nsAttrValue& aEmptyOrOldValue);
   void DidChangePointList(const nsAttrValue& aEmptyOrOldValue);
   void DidChangePathSegList(const nsAttrValue& aEmptyOrOldValue);
-  virtual void DidChangeTransformList(bool aDoSetAttr);
+  void DidChangeTransformList(const nsAttrValue& aEmptyOrOldValue);
   void DidChangeString(PRUint8 aAttrEnum) {}
   void DidChangeStringList(bool aIsConditionalProcessingAttribute,
                            PRUint8 aAttrEnum);
