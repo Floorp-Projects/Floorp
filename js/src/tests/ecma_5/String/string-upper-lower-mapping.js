@@ -619,7 +619,7 @@ var mapping = [
   [0x194, 0x263], /* LATIN SMALL LETTER GAMMA */
   [0x264, 0x264], /* LATIN SMALL LETTER RAMS HORN (LATIN SMALL LETTER BABY GAMMA) */
   [0xa78d, 0x265], /* LATIN SMALL LETTER TURNED H */
-  [0x266, 0x266], /* LATIN SMALL LETTER H WITH HOOK (LATIN SMALL LETTER H HOOK) */
+  [0xa7aa, 0x266], /* LATIN SMALL LETTER H WITH HOOK (LATIN SMALL LETTER H HOOK) */
   [0x267, 0x267], /* LATIN SMALL LETTER HENG WITH HOOK (LATIN SMALL LETTER HENG HOOK) */
   [0x197, 0x268], /* LATIN SMALL LETTER I WITH STROKE (LATIN SMALL LETTER BARRED I) */
   [0x196, 0x269], /* LATIN SMALL LETTER IOTA */
@@ -1428,7 +1428,7 @@ var mapping = [
   [0x58c, 0x58c],
   [0x58d, 0x58d],
   [0x58e, 0x58e],
-  [0x58f, 0x58f],
+  [0x58f, 0x58f], /* ARMENIAN DRAM SIGN */
   [0x590, 0x590],
   [0x591, 0x591], /* HEBREW ACCENT ETNAHTA */
   [0x592, 0x592], /* HEBREW ACCENT SEGOL */
@@ -1545,7 +1545,7 @@ var mapping = [
   [0x601, 0x601], /* ARABIC SIGN SANAH */
   [0x602, 0x602], /* ARABIC FOOTNOTE MARKER */
   [0x603, 0x603], /* ARABIC SIGN SAFHA */
-  [0x604, 0x604],
+  [0x604, 0x604], /* ARABIC SIGN SAMVAT */
   [0x605, 0x605],
   [0x606, 0x606], /* ARABIC-INDIC CUBE ROOT */
   [0x607, 0x607], /* ARABIC-INDIC FOURTH ROOT */
@@ -2213,19 +2213,19 @@ var mapping = [
   [0x89d, 0x89d],
   [0x89e, 0x89e],
   [0x89f, 0x89f],
-  [0x8a0, 0x8a0],
+  [0x8a0, 0x8a0], /* ARABIC LETTER BEH WITH SMALL V BELOW */
   [0x8a1, 0x8a1],
-  [0x8a2, 0x8a2],
-  [0x8a3, 0x8a3],
-  [0x8a4, 0x8a4],
-  [0x8a5, 0x8a5],
-  [0x8a6, 0x8a6],
-  [0x8a7, 0x8a7],
-  [0x8a8, 0x8a8],
-  [0x8a9, 0x8a9],
-  [0x8aa, 0x8aa],
-  [0x8ab, 0x8ab],
-  [0x8ac, 0x8ac],
+  [0x8a2, 0x8a2], /* ARABIC LETTER JEEM WITH TWO DOTS ABOVE */
+  [0x8a3, 0x8a3], /* ARABIC LETTER TAH WITH TWO DOTS ABOVE */
+  [0x8a4, 0x8a4], /* ARABIC LETTER FEH WITH DOT BELOW AND THREE DOTS ABOVE */
+  [0x8a5, 0x8a5], /* ARABIC LETTER QAF WITH DOT BELOW */
+  [0x8a6, 0x8a6], /* ARABIC LETTER LAM WITH DOUBLE BAR */
+  [0x8a7, 0x8a7], /* ARABIC LETTER MEEM WITH THREE DOTS ABOVE */
+  [0x8a8, 0x8a8], /* ARABIC LETTER YEH WITH TWO DOTS BELOW AND HAMZA ABOVE */
+  [0x8a9, 0x8a9], /* ARABIC LETTER YEH WITH TWO DOTS BELOW AND DOT ABOVE */
+  [0x8aa, 0x8aa], /* ARABIC LETTER REH WITH LOOP */
+  [0x8ab, 0x8ab], /* ARABIC LETTER WAW WITH DOT WITHIN */
+  [0x8ac, 0x8ac], /* ARABIC LETTER ROHINGYA YEH */
   [0x8ad, 0x8ad],
   [0x8ae, 0x8ae],
   [0x8af, 0x8af],
@@ -2281,33 +2281,33 @@ var mapping = [
   [0x8e1, 0x8e1],
   [0x8e2, 0x8e2],
   [0x8e3, 0x8e3],
-  [0x8e4, 0x8e4],
-  [0x8e5, 0x8e5],
-  [0x8e6, 0x8e6],
-  [0x8e7, 0x8e7],
-  [0x8e8, 0x8e8],
-  [0x8e9, 0x8e9],
-  [0x8ea, 0x8ea],
-  [0x8eb, 0x8eb],
-  [0x8ec, 0x8ec],
-  [0x8ed, 0x8ed],
-  [0x8ee, 0x8ee],
-  [0x8ef, 0x8ef],
-  [0x8f0, 0x8f0],
-  [0x8f1, 0x8f1],
-  [0x8f2, 0x8f2],
-  [0x8f3, 0x8f3],
-  [0x8f4, 0x8f4],
-  [0x8f5, 0x8f5],
-  [0x8f6, 0x8f6],
-  [0x8f7, 0x8f7],
-  [0x8f8, 0x8f8],
-  [0x8f9, 0x8f9],
-  [0x8fa, 0x8fa],
-  [0x8fb, 0x8fb],
-  [0x8fc, 0x8fc],
-  [0x8fd, 0x8fd],
-  [0x8fe, 0x8fe],
+  [0x8e4, 0x8e4], /* ARABIC CURLY FATHA */
+  [0x8e5, 0x8e5], /* ARABIC CURLY DAMMA */
+  [0x8e6, 0x8e6], /* ARABIC CURLY KASRA */
+  [0x8e7, 0x8e7], /* ARABIC CURLY FATHATAN */
+  [0x8e8, 0x8e8], /* ARABIC CURLY DAMMATAN */
+  [0x8e9, 0x8e9], /* ARABIC CURLY KASRATAN */
+  [0x8ea, 0x8ea], /* ARABIC TONE ONE DOT ABOVE */
+  [0x8eb, 0x8eb], /* ARABIC TONE TWO DOTS ABOVE */
+  [0x8ec, 0x8ec], /* ARABIC TONE LOOP ABOVE */
+  [0x8ed, 0x8ed], /* ARABIC TONE ONE DOT BELOW */
+  [0x8ee, 0x8ee], /* ARABIC TONE TWO DOTS BELOW */
+  [0x8ef, 0x8ef], /* ARABIC TONE LOOP BELOW */
+  [0x8f0, 0x8f0], /* ARABIC OPEN FATHATAN */
+  [0x8f1, 0x8f1], /* ARABIC OPEN DAMMATAN */
+  [0x8f2, 0x8f2], /* ARABIC OPEN KASRATAN */
+  [0x8f3, 0x8f3], /* ARABIC SMALL HIGH WAW */
+  [0x8f4, 0x8f4], /* ARABIC FATHA WITH RING */
+  [0x8f5, 0x8f5], /* ARABIC FATHA WITH DOT ABOVE */
+  [0x8f6, 0x8f6], /* ARABIC KASRA WITH DOT BELOW */
+  [0x8f7, 0x8f7], /* ARABIC LEFT ARROWHEAD ABOVE */
+  [0x8f8, 0x8f8], /* ARABIC RIGHT ARROWHEAD ABOVE */
+  [0x8f9, 0x8f9], /* ARABIC LEFT ARROWHEAD BELOW */
+  [0x8fa, 0x8fa], /* ARABIC RIGHT ARROWHEAD BELOW */
+  [0x8fb, 0x8fb], /* ARABIC DOUBLE RIGHT ARROWHEAD ABOVE */
+  [0x8fc, 0x8fc], /* ARABIC DOUBLE RIGHT ARROWHEAD ABOVE WITH DOT */
+  [0x8fd, 0x8fd], /* ARABIC RIGHT ARROWHEAD ABOVE WITH DOT */
+  [0x8fe, 0x8fe], /* ARABIC DAMMA WITH DOT */
   [0x8ff, 0x8ff],
   [0x900, 0x900], /* DEVANAGARI SIGN INVERTED CANDRABINDU */
   [0x901, 0x901], /* DEVANAGARI SIGN CANDRABINDU */
@@ -2805,7 +2805,7 @@ var mapping = [
   [0xaed, 0xaed], /* GUJARATI DIGIT SEVEN */
   [0xaee, 0xaee], /* GUJARATI DIGIT EIGHT */
   [0xaef, 0xaef], /* GUJARATI DIGIT NINE */
-  [0xaf0, 0xaf0],
+  [0xaf0, 0xaf0], /* GUJARATI ABBREVIATION SIGN */
   [0xaf1, 0xaf1], /* GUJARATI RUPEE SIGN */
   [0xaf2, 0xaf2],
   [0xaf3, 0xaf3],
@@ -3811,8 +3811,8 @@ var mapping = [
   [0xedb, 0xedb],
   [0xedc, 0xedc], /* LAO HO NO */
   [0xedd, 0xedd], /* LAO HO MO */
-  [0xede, 0xede],
-  [0xedf, 0xedf],
+  [0xede, 0xede], /* LAO LETTER KHMU GO */
+  [0xedf, 0xedf], /* LAO LETTER KHMU NYO */
   [0xee0, 0xee0],
   [0xee1, 0xee1],
   [0xee2, 0xee2],
@@ -4300,13 +4300,13 @@ var mapping = [
   [0x10c4, 0x2d24], /* GEORGIAN CAPITAL LETTER HAR */
   [0x10c5, 0x2d25], /* GEORGIAN CAPITAL LETTER HOE */
   [0x10c6, 0x10c6],
-  [0x10c7, 0x10c7],
+  [0x10c7, 0x2d27], /* GEORGIAN CAPITAL LETTER YN */
   [0x10c8, 0x10c8],
   [0x10c9, 0x10c9],
   [0x10ca, 0x10ca],
   [0x10cb, 0x10cb],
   [0x10cc, 0x10cc],
-  [0x10cd, 0x10cd],
+  [0x10cd, 0x2d2d], /* GEORGIAN CAPITAL LETTER AEN */
   [0x10ce, 0x10ce],
   [0x10cf, 0x10cf],
   [0x10d0, 0x10d0], /* GEORGIAN LETTER AN (GEORGIAN SMALL LETTER AN) */
@@ -4354,9 +4354,9 @@ var mapping = [
   [0x10fa, 0x10fa], /* GEORGIAN LETTER AIN */
   [0x10fb, 0x10fb], /* GEORGIAN PARAGRAPH SEPARATOR */
   [0x10fc, 0x10fc], /* MODIFIER LETTER GEORGIAN NAR */
-  [0x10fd, 0x10fd],
-  [0x10fe, 0x10fe],
-  [0x10ff, 0x10ff],
+  [0x10fd, 0x10fd], /* GEORGIAN LETTER AEN */
+  [0x10fe, 0x10fe], /* GEORGIAN LETTER HARD SIGN */
+  [0x10ff, 0x10ff], /* GEORGIAN LETTER LABIAL SIGN */
   [0x1100, 0x1100], /* HANGUL CHOSEONG KIYEOK */
   [0x1101, 0x1101], /* HANGUL CHOSEONG SSANGKIYEOK */
   [0x1102, 0x1102], /* HANGUL CHOSEONG NIEUN */
@@ -7088,9 +7088,9 @@ var mapping = [
   [0x1ba8, 0x1ba8], /* SUNDANESE VOWEL SIGN PAMEPET */
   [0x1ba9, 0x1ba9], /* SUNDANESE VOWEL SIGN PANEULEUNG */
   [0x1baa, 0x1baa], /* SUNDANESE SIGN PAMAAEH */
-  [0x1bab, 0x1bab],
-  [0x1bac, 0x1bac],
-  [0x1bad, 0x1bad],
+  [0x1bab, 0x1bab], /* SUNDANESE SIGN VIRAMA */
+  [0x1bac, 0x1bac], /* SUNDANESE CONSONANT SIGN PASANGAN MA */
+  [0x1bad, 0x1bad], /* SUNDANESE CONSONANT SIGN PASANGAN WA */
   [0x1bae, 0x1bae], /* SUNDANESE LETTER KHA */
   [0x1baf, 0x1baf], /* SUNDANESE LETTER SYA */
   [0x1bb0, 0x1bb0], /* SUNDANESE DIGIT ZERO */
@@ -7103,12 +7103,12 @@ var mapping = [
   [0x1bb7, 0x1bb7], /* SUNDANESE DIGIT SEVEN */
   [0x1bb8, 0x1bb8], /* SUNDANESE DIGIT EIGHT */
   [0x1bb9, 0x1bb9], /* SUNDANESE DIGIT NINE */
-  [0x1bba, 0x1bba],
-  [0x1bbb, 0x1bbb],
-  [0x1bbc, 0x1bbc],
-  [0x1bbd, 0x1bbd],
-  [0x1bbe, 0x1bbe],
-  [0x1bbf, 0x1bbf],
+  [0x1bba, 0x1bba], /* SUNDANESE AVAGRAHA */
+  [0x1bbb, 0x1bbb], /* SUNDANESE LETTER REU */
+  [0x1bbc, 0x1bbc], /* SUNDANESE LETTER LEU */
+  [0x1bbd, 0x1bbd], /* SUNDANESE LETTER BHA */
+  [0x1bbe, 0x1bbe], /* SUNDANESE LETTER FINAL K */
+  [0x1bbf, 0x1bbf], /* SUNDANESE LETTER FINAL M */
   [0x1bc0, 0x1bc0], /* BATAK LETTER A */
   [0x1bc1, 0x1bc1], /* BATAK LETTER SIMALUNGUN A */
   [0x1bc2, 0x1bc2], /* BATAK LETTER HA */
@@ -7365,14 +7365,14 @@ var mapping = [
   [0x1cbd, 0x1cbd],
   [0x1cbe, 0x1cbe],
   [0x1cbf, 0x1cbf],
-  [0x1cc0, 0x1cc0],
-  [0x1cc1, 0x1cc1],
-  [0x1cc2, 0x1cc2],
-  [0x1cc3, 0x1cc3],
-  [0x1cc4, 0x1cc4],
-  [0x1cc5, 0x1cc5],
-  [0x1cc6, 0x1cc6],
-  [0x1cc7, 0x1cc7],
+  [0x1cc0, 0x1cc0], /* SUNDANESE PUNCTUATION BINDU SURYA */
+  [0x1cc1, 0x1cc1], /* SUNDANESE PUNCTUATION BINDU PANGLONG */
+  [0x1cc2, 0x1cc2], /* SUNDANESE PUNCTUATION BINDU PURNAMA */
+  [0x1cc3, 0x1cc3], /* SUNDANESE PUNCTUATION BINDU CAKRA */
+  [0x1cc4, 0x1cc4], /* SUNDANESE PUNCTUATION BINDU LEU SATANGA */
+  [0x1cc5, 0x1cc5], /* SUNDANESE PUNCTUATION BINDU KA SATANGA */
+  [0x1cc6, 0x1cc6], /* SUNDANESE PUNCTUATION BINDU DA SATANGA */
+  [0x1cc7, 0x1cc7], /* SUNDANESE PUNCTUATION BINDU BA SATANGA */
   [0x1cc8, 0x1cc8],
   [0x1cc9, 0x1cc9],
   [0x1cca, 0x1cca],
@@ -7416,10 +7416,10 @@ var mapping = [
   [0x1cf0, 0x1cf0], /* VEDIC SIGN RTHANG LONG ANUSVARA */
   [0x1cf1, 0x1cf1], /* VEDIC SIGN ANUSVARA UBHAYATO MUKHA */
   [0x1cf2, 0x1cf2], /* VEDIC SIGN ARDHAVISARGA */
-  [0x1cf3, 0x1cf3],
-  [0x1cf4, 0x1cf4],
-  [0x1cf5, 0x1cf5],
-  [0x1cf6, 0x1cf6],
+  [0x1cf3, 0x1cf3], /* VEDIC SIGN ROTATED ARDHAVISARGA */
+  [0x1cf4, 0x1cf4], /* VEDIC TONE CANDRA ABOVE */
+  [0x1cf5, 0x1cf5], /* VEDIC SIGN JIHVAMULIYA */
+  [0x1cf6, 0x1cf6], /* VEDIC SIGN UPADHMANIYA */
   [0x1cf7, 0x1cf7],
   [0x1cf8, 0x1cf8],
   [0x1cf9, 0x1cf9],
@@ -10192,9 +10192,9 @@ var mapping = [
   [0x27c8, 0x27c8], /* REVERSE SOLIDUS PRECEDING SUBSET */
   [0x27c9, 0x27c9], /* SUPERSET PRECEDING SOLIDUS */
   [0x27ca, 0x27ca], /* VERTICAL BAR WITH HORIZONTAL STROKE */
-  [0x27cb, 0x27cb],
+  [0x27cb, 0x27cb], /* MATHEMATICAL RISING DIAGONAL */
   [0x27cc, 0x27cc], /* LONG DIVISION */
-  [0x27cd, 0x27cd],
+  [0x27cd, 0x27cd], /* MATHEMATICAL FALLING DIAGONAL */
   [0x27ce, 0x27ce], /* SQUARED LOGICAL AND */
   [0x27cf, 0x27cf], /* SQUARED LOGICAL OR */
   [0x27d0, 0x27d0], /* WHITE DIAMOND WITH CENTRED DOT */
@@ -11511,8 +11511,8 @@ var mapping = [
   [0x2cef, 0x2cef], /* COPTIC COMBINING NI ABOVE */
   [0x2cf0, 0x2cf0], /* COPTIC COMBINING SPIRITUS ASPER */
   [0x2cf1, 0x2cf1], /* COPTIC COMBINING SPIRITUS LENIS */
-  [0x2cf2, 0x2cf2],
-  [0x2cf3, 0x2cf3],
+  [0x2cf2, 0x2cf3], /* COPTIC CAPITAL LETTER BOHAIRIC KHEI */
+  [0x2cf2, 0x2cf3], /* COPTIC SMALL LETTER BOHAIRIC KHEI */
   [0x2cf4, 0x2cf4],
   [0x2cf5, 0x2cf5],
   [0x2cf6, 0x2cf6],
@@ -11564,13 +11564,13 @@ var mapping = [
   [0x10c4, 0x2d24], /* GEORGIAN SMALL LETTER HAR */
   [0x10c5, 0x2d25], /* GEORGIAN SMALL LETTER HOE */
   [0x2d26, 0x2d26],
-  [0x2d27, 0x2d27],
+  [0x10c7, 0x2d27], /* GEORGIAN SMALL LETTER YN */
   [0x2d28, 0x2d28],
   [0x2d29, 0x2d29],
   [0x2d2a, 0x2d2a],
   [0x2d2b, 0x2d2b],
   [0x2d2c, 0x2d2c],
-  [0x2d2d, 0x2d2d],
+  [0x10cd, 0x2d2d], /* GEORGIAN SMALL LETTER AEN */
   [0x2d2e, 0x2d2e],
   [0x2d2f, 0x2d2f],
   [0x2d30, 0x2d30], /* TIFINAGH LETTER YA */
@@ -11627,8 +11627,8 @@ var mapping = [
   [0x2d63, 0x2d63], /* TIFINAGH LETTER YAZ */
   [0x2d64, 0x2d64], /* TIFINAGH LETTER TAWELLEMET YAZ */
   [0x2d65, 0x2d65], /* TIFINAGH LETTER YAZZ */
-  [0x2d66, 0x2d66],
-  [0x2d67, 0x2d67],
+  [0x2d66, 0x2d66], /* TIFINAGH LETTER YE */
+  [0x2d67, 0x2d67], /* TIFINAGH LETTER YO */
   [0x2d68, 0x2d68],
   [0x2d69, 0x2d69],
   [0x2d6a, 0x2d6a],
@@ -11831,16 +11831,16 @@ var mapping = [
   [0x2e2f, 0x2e2f], /* VERTICAL TILDE */
   [0x2e30, 0x2e30], /* RING POINT */
   [0x2e31, 0x2e31], /* WORD SEPARATOR MIDDLE DOT */
-  [0x2e32, 0x2e32],
-  [0x2e33, 0x2e33],
-  [0x2e34, 0x2e34],
-  [0x2e35, 0x2e35],
-  [0x2e36, 0x2e36],
-  [0x2e37, 0x2e37],
-  [0x2e38, 0x2e38],
-  [0x2e39, 0x2e39],
-  [0x2e3a, 0x2e3a],
-  [0x2e3b, 0x2e3b],
+  [0x2e32, 0x2e32], /* TURNED COMMA */
+  [0x2e33, 0x2e33], /* RAISED DOT */
+  [0x2e34, 0x2e34], /* RAISED COMMA */
+  [0x2e35, 0x2e35], /* TURNED SEMICOLON */
+  [0x2e36, 0x2e36], /* DAGGER WITH LEFT GUARD */
+  [0x2e37, 0x2e37], /* DAGGER WITH RIGHT GUARD */
+  [0x2e38, 0x2e38], /* TURNED DAGGER */
+  [0x2e39, 0x2e39], /* TOP HALF SECTION SIGN */
+  [0x2e3a, 0x2e3a], /* TWO-EM DASH */
+  [0x2e3b, 0x2e3b], /* THREE-EM DASH */
   [0x2e3c, 0x2e3c],
   [0x2e3d, 0x2e3d],
   [0x2e3e, 0x2e3e],
@@ -40913,7 +40913,7 @@ var mapping = [
   [0x9fc9, 0x9fc9], /* CJK Ideograph */
   [0x9fca, 0x9fca], /* CJK Ideograph */
   [0x9fcb, 0x9fcb], /* CJK Ideograph */
-  [0x9fcc, 0x9fcc],
+  [0x9fcc, 0x9fcc], /* CJK Ideograph */
   [0x9fcd, 0x9fcd],
   [0x9fce, 0x9fce],
   [0x9fcf, 0x9fcf],
@@ -42617,14 +42617,14 @@ var mapping = [
   [0xa671, 0xa671], /* COMBINING CYRILLIC HUNDRED MILLIONS SIGN */
   [0xa672, 0xa672], /* COMBINING CYRILLIC THOUSAND MILLIONS SIGN */
   [0xa673, 0xa673], /* SLAVONIC ASTERISK */
-  [0xa674, 0xa674],
-  [0xa675, 0xa675],
-  [0xa676, 0xa676],
-  [0xa677, 0xa677],
-  [0xa678, 0xa678],
-  [0xa679, 0xa679],
-  [0xa67a, 0xa67a],
-  [0xa67b, 0xa67b],
+  [0xa674, 0xa674], /* COMBINING CYRILLIC LETTER UKRAINIAN IE */
+  [0xa675, 0xa675], /* COMBINING CYRILLIC LETTER I */
+  [0xa676, 0xa676], /* COMBINING CYRILLIC LETTER YI */
+  [0xa677, 0xa677], /* COMBINING CYRILLIC LETTER U */
+  [0xa678, 0xa678], /* COMBINING CYRILLIC LETTER HARD SIGN */
+  [0xa679, 0xa679], /* COMBINING CYRILLIC LETTER YERU */
+  [0xa67a, 0xa67a], /* COMBINING CYRILLIC LETTER SOFT SIGN */
+  [0xa67b, 0xa67b], /* COMBINING CYRILLIC LETTER OMEGA */
   [0xa67c, 0xa67c], /* COMBINING CYRILLIC KAVYKA */
   [0xa67d, 0xa67d], /* COMBINING CYRILLIC PAYEROK */
   [0xa67e, 0xa67e], /* CYRILLIC KAVYKA */
@@ -42660,7 +42660,7 @@ var mapping = [
   [0xa69c, 0xa69c],
   [0xa69d, 0xa69d],
   [0xa69e, 0xa69e],
-  [0xa69f, 0xa69f],
+  [0xa69f, 0xa69f], /* COMBINING CYRILLIC LETTER IOTIFIED E */
   [0xa6a0, 0xa6a0], /* BAMUM LETTER A */
   [0xa6a1, 0xa6a1], /* BAMUM LETTER KA */
   [0xa6a2, 0xa6a2], /* BAMUM LETTER U */
@@ -42903,8 +42903,8 @@ var mapping = [
   [0xa78f, 0xa78f],
   [0xa790, 0xa791], /* LATIN CAPITAL LETTER N WITH DESCENDER */
   [0xa790, 0xa791], /* LATIN SMALL LETTER N WITH DESCENDER */
-  [0xa792, 0xa792],
-  [0xa793, 0xa793],
+  [0xa792, 0xa793], /* LATIN CAPITAL LETTER C WITH BAR */
+  [0xa792, 0xa793], /* LATIN SMALL LETTER C WITH BAR */
   [0xa794, 0xa794],
   [0xa795, 0xa795],
   [0xa796, 0xa796],
@@ -42927,7 +42927,7 @@ var mapping = [
   [0xa7a6, 0xa7a7], /* LATIN SMALL LETTER R WITH OBLIQUE STROKE */
   [0xa7a8, 0xa7a9], /* LATIN CAPITAL LETTER S WITH OBLIQUE STROKE */
   [0xa7a8, 0xa7a9], /* LATIN SMALL LETTER S WITH OBLIQUE STROKE */
-  [0xa7aa, 0xa7aa],
+  [0xa7aa, 0x266], /* LATIN CAPITAL LETTER H WITH HOOK */
   [0xa7ab, 0xa7ab],
   [0xa7ac, 0xa7ac],
   [0xa7ad, 0xa7ad],
@@ -43005,8 +43005,8 @@ var mapping = [
   [0xa7f5, 0xa7f5],
   [0xa7f6, 0xa7f6],
   [0xa7f7, 0xa7f7],
-  [0xa7f8, 0xa7f8],
-  [0xa7f9, 0xa7f9],
+  [0xa7f8, 0xa7f8], /* MODIFIER LETTER CAPITAL H WITH STROKE */
+  [0xa7f9, 0xa7f9], /* MODIFIER LETTER SMALL LIGATURE OE */
   [0xa7fa, 0xa7fa], /* LATIN LETTER SMALL CAPITAL TURNED M */
   [0xa7fb, 0xa7fb], /* LATIN EPIGRAPHIC LETTER REVERSED F */
   [0xa7fc, 0xa7fc], /* LATIN EPIGRAPHIC LETTER REVERSED P */
@@ -43749,29 +43749,29 @@ var mapping = [
   [0xaadd, 0xaadd], /* TAI VIET SYMBOL SAM */
   [0xaade, 0xaade], /* TAI VIET SYMBOL HO HOI */
   [0xaadf, 0xaadf], /* TAI VIET SYMBOL KOI KOI */
-  [0xaae0, 0xaae0],
-  [0xaae1, 0xaae1],
-  [0xaae2, 0xaae2],
-  [0xaae3, 0xaae3],
-  [0xaae4, 0xaae4],
-  [0xaae5, 0xaae5],
-  [0xaae6, 0xaae6],
-  [0xaae7, 0xaae7],
-  [0xaae8, 0xaae8],
-  [0xaae9, 0xaae9],
-  [0xaaea, 0xaaea],
-  [0xaaeb, 0xaaeb],
-  [0xaaec, 0xaaec],
-  [0xaaed, 0xaaed],
-  [0xaaee, 0xaaee],
-  [0xaaef, 0xaaef],
-  [0xaaf0, 0xaaf0],
-  [0xaaf1, 0xaaf1],
-  [0xaaf2, 0xaaf2],
-  [0xaaf3, 0xaaf3],
-  [0xaaf4, 0xaaf4],
-  [0xaaf5, 0xaaf5],
-  [0xaaf6, 0xaaf6],
+  [0xaae0, 0xaae0], /* MEETEI MAYEK LETTER E */
+  [0xaae1, 0xaae1], /* MEETEI MAYEK LETTER O */
+  [0xaae2, 0xaae2], /* MEETEI MAYEK LETTER CHA */
+  [0xaae3, 0xaae3], /* MEETEI MAYEK LETTER NYA */
+  [0xaae4, 0xaae4], /* MEETEI MAYEK LETTER TTA */
+  [0xaae5, 0xaae5], /* MEETEI MAYEK LETTER TTHA */
+  [0xaae6, 0xaae6], /* MEETEI MAYEK LETTER DDA */
+  [0xaae7, 0xaae7], /* MEETEI MAYEK LETTER DDHA */
+  [0xaae8, 0xaae8], /* MEETEI MAYEK LETTER NNA */
+  [0xaae9, 0xaae9], /* MEETEI MAYEK LETTER SHA */
+  [0xaaea, 0xaaea], /* MEETEI MAYEK LETTER SSA */
+  [0xaaeb, 0xaaeb], /* MEETEI MAYEK VOWEL SIGN II */
+  [0xaaec, 0xaaec], /* MEETEI MAYEK VOWEL SIGN UU */
+  [0xaaed, 0xaaed], /* MEETEI MAYEK VOWEL SIGN AAI */
+  [0xaaee, 0xaaee], /* MEETEI MAYEK VOWEL SIGN AU */
+  [0xaaef, 0xaaef], /* MEETEI MAYEK VOWEL SIGN AAU */
+  [0xaaf0, 0xaaf0], /* MEETEI MAYEK CHEIKHAN */
+  [0xaaf1, 0xaaf1], /* MEETEI MAYEK AHANG KHUDAM */
+  [0xaaf2, 0xaaf2], /* MEETEI MAYEK ANJI */
+  [0xaaf3, 0xaaf3], /* MEETEI MAYEK SYLLABLE REPETITION MARK */
+  [0xaaf4, 0xaaf4], /* MEETEI MAYEK WORD REPETITION MARK */
+  [0xaaf5, 0xaaf5], /* MEETEI MAYEK VOWEL SIGN VISARGA */
+  [0xaaf6, 0xaaf6], /* MEETEI MAYEK VIRAMA */
   [0xaaf7, 0xaaf7],
   [0xaaf8, 0xaaf8],
   [0xaaf9, 0xaaf9],
@@ -64051,8 +64051,8 @@ var mapping = [
   [0xfa2b, 0xfa2b], /* CJK COMPATIBILITY IDEOGRAPH-FA2B */
   [0xfa2c, 0xfa2c], /* CJK COMPATIBILITY IDEOGRAPH-FA2C */
   [0xfa2d, 0xfa2d], /* CJK COMPATIBILITY IDEOGRAPH-FA2D */
-  [0xfa2e, 0xfa2e],
-  [0xfa2f, 0xfa2f],
+  [0xfa2e, 0xfa2e], /* CJK COMPATIBILITY IDEOGRAPH-FA2E */
+  [0xfa2f, 0xfa2f], /* CJK COMPATIBILITY IDEOGRAPH-FA2F */
   [0xfa30, 0xfa30], /* CJK COMPATIBILITY IDEOGRAPH-FA30 */
   [0xfa31, 0xfa31], /* CJK COMPATIBILITY IDEOGRAPH-FA31 */
   [0xfa32, 0xfa32], /* CJK COMPATIBILITY IDEOGRAPH-FA32 */
