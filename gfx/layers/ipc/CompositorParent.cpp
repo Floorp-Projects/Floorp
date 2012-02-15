@@ -273,8 +273,8 @@ CompositorParent::TransformShadowTree(Layer* aLayer, const ViewTransform& aTrans
     const FrameMetrics* metrics = &container->GetFrameMetrics();
     const gfx3DMatrix& currentTransform = aLayer->GetTransform();
 
-    aTempScaleDiffX *= GetXScale(shadowTransform) * mXScale;
-    aTempScaleDiffY *= GetYScale(shadowTransform) * mYScale;
+    aTempScaleDiffX *= GetXScale(mLayerManager->GetRoot()->GetTransform()) * mXScale;
+    aTempScaleDiffY *= GetYScale(mLayerManager->GetRoot()->GetTransform()) * mYScale;
 
     nsIntPoint metricsScrollOffset = metrics->mViewportScrollOffset;
 
