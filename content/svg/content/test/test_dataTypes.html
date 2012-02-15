@@ -38,8 +38,11 @@ function runTests()
   is(filter.className.animVal, "bar", "className animVal");
   filter.removeAttribute("class");
   is(filter.hasAttribute("class"), false, "class attribute");
+  ok(filter.getAttribute("class") === null, "removed class attribute");
   is(filter.className.baseVal, "", "className baseVal");
   is(filter.className.animVal, "", "className animVal");
+  filter.setAttribute("class", "");
+  ok(filter.getAttribute("class") === "", "empty class attribute");
 
   // length attribute
 
@@ -204,6 +207,10 @@ function runTests()
   convolve.result.baseVal = "bar";
   is(convolve.result.animVal, "bar", "string animVal");
   is(convolve.getAttribute("result"), "bar", "string attribute");
+  convolve.setAttribute("result", "");
+  ok(convolve.getAttribute("result") === "", "empty string attribute");
+  convolve.removeAttribute("result");
+  ok(convolve.getAttribute("result") === null, "removed string attribute");
 
   // preserveAspectRatio attribute
 

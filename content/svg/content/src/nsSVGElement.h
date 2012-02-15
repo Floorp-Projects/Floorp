@@ -194,7 +194,7 @@ public:
   virtual void DidChangePointList(bool aDoSetAttr);
   virtual void DidChangePathSegList(bool aDoSetAttr);
   virtual void DidChangeTransformList(bool aDoSetAttr);
-  virtual void DidChangeString(PRUint8 aAttrEnum) {}
+  void DidChangeString(PRUint8 aAttrEnum) {}
   void DidChangeStringList(bool aIsConditionalProcessingAttribute,
                            PRUint8 aAttrEnum);
 
