@@ -146,6 +146,7 @@ CPPSRCS		= \
 		nsSVGAnimationElement.cpp \
 		nsSVGMpathElement.cpp \
 		nsSVGSetElement.cpp \
+		SVGAttrValueWrapper.cpp \
 		SVGIntegerPairSMILType.cpp \
 		SVGLengthListSMILType.cpp \
 		SVGMotionSMILType.cpp \
@@ -167,24 +168,9 @@ include $(topsrcdir)/config/config.mk
 FORCE_STATIC_LIB = 1
 
 EXPORTS =  			\
-	nsSVGAngle.h               \
-	nsSVGElement.h             \
 	nsSVGFeatures.h            \
-	nsSVGIntegerPair.h         \
-	nsSVGLength2.h             \
-	nsSVGNumberPair.h          \
 	nsSVGRect.h                \
-	nsSVGViewBox.h             \
-	SVGAnimatedPreserveAspectRatio.h \
-	SVGLength.h                \
-	SVGLengthList.h            \
-	SVGNumberList.h            \
-	SVGPathData.h              \
-	SVGPathSegUtils.h          \
-	SVGPoint.h                 \
-	SVGPointList.h             \
-	SVGTransform.h             \
-	SVGTransformList.h         \
+	SVGAttrValueWrapper.h      \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
