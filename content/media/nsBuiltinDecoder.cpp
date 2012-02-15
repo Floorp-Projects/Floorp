@@ -137,7 +137,6 @@ bool nsBuiltinDecoder::Init(nsHTMLMediaElement* aElement)
     return false;
 
   nsContentUtils::RegisterShutdownObserver(this);
-  mImageContainer = aElement->GetImageContainer();
   return true;
 }
 
