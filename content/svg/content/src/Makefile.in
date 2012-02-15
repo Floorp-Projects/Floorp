@@ -179,6 +179,8 @@ EXPORTS =  			\
 	SVGLength.h                \
 	SVGLengthList.h            \
 	SVGNumberList.h            \
+	SVGPathData.h              \
+	SVGPathSegUtils.h          \
 	SVGPoint.h                 \
 	SVGPointList.h             \
 	$(NULL)
