@@ -271,12 +271,6 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 
   gfx->Multiply(matrixForChildren);
 
-  // Transform the dirty rect into the rectangle containing the
-  // transformed dirty rect.
-  gfxMatrix invmatrix = matrix.Invert();
-  NS_ASSERTION(!invmatrix.IsSingular(),
-               "inverse of non-singular matrix should be non-singular");
-
   PRUint32 flags = nsLayoutUtils::PAINT_IN_TRANSFORM;
   if (aContext->IsPaintingToWindow()) {
     flags |= nsLayoutUtils::PAINT_TO_WINDOW;
