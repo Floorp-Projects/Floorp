@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined(nsMediaStream_h_)
-#define nsMediaStream_h_
+#if !defined(MediaResource_h_)
+#define MediaResource_h_
 
 #include "mozilla/Mutex.h"
 #include "mozilla/XPCOM.h"
@@ -57,6 +57,8 @@ static const PRUint32 HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE = 416;
 
 class nsMediaDecoder;
 
+namespace mozilla {
+
 /**
  * This class is useful for estimating rates of data passing through
  * some channel. The idea is that activity on the channel "starts"
@@ -70,12 +72,9 @@ class nsMediaDecoder;
  * All methods take "now" as a parameter so the user of this class can
  * control the timeline used.
  */
-class nsChannelStatistics {
+class MediaChannelStatistics {
 public:
-  typedef mozilla::TimeStamp TimeStamp;
-  typedef mozilla::TimeDuration TimeDuration;
-
-  nsChannelStatistics() { Reset(); }
+  MediaChannelStatistics() { Reset(); }
   void Reset() {
     mLastStartTime = TimeStamp();
     mAccumulatedTime = TimeDuration(0);
@@ -124,16 +123,16 @@ private:
   PRInt64      mAccumulatedBytes;
   TimeDuration mAccumulatedTime;
   TimeStamp    mLastStartTime;
-  bool mIsStarted;
+  bool         mIsStarted;
 };
 
 // Represents a section of contiguous media, with a start and end offset.
 // Used to denote ranges of data which are cached.
-class nsByteRange {
+class MediaByteRange {
 public:
-  nsByteRange() : mStart(0), mEnd(0) {}
+  MediaByteRange() : mStart(0), mEnd(0) {}
 
-  nsByteRange(PRInt64 aStart, PRInt64 aEnd)
+  MediaByteRange(PRInt64 aStart, PRInt64 aEnd)
     : mStart(aStart), mEnd(aEnd)
   {
     NS_ASSERTION(mStart < mEnd, "Range should end after start!");
@@ -146,31 +145,39 @@ public:
   PRInt64 mStart, mEnd;
 };
 
-/*
-   Provides the ability to open, read and seek into a media stream
-   (audio, video). Handles the underlying machinery to do range
-   requests, etc as needed by the actual stream type. Instances of
-   this class must be created on the main thread. 
-
-   Most methods must be called on the main thread only. Read, Seek and
-   Tell must only be called on non-main threads. In the case of the Ogg
-   Decoder they are called on the Decode thread for example. You must
-   ensure that no threads are calling these methods once Close is called.
-
-   Instances of this class are explicitly managed. 'delete' it when done.
-*/
-class nsMediaStream 
+/**
+ * Provides a thread-safe, seek/read interface to resources
+ * loaded from a URI. Uses nsMediaCache to cache data received over
+ * Necko's async channel API, thus resolving the mismatch between clients
+ * that need efficient random access to the data and protocols that do not
+ * support efficient random access, such as HTTP.
+ *
+ * Instances of this class must be created on the main thread.
+ * Most methods must be called on the main thread only. Read, Seek and
+ * Tell must only be called on non-main threads. In the case of the Ogg
+ * Decoder they are called on the Decode thread for example. You must
+ * ensure that no threads are calling these methods once Close is called.
+ *
+ * Instances of this class are explicitly managed. 'delete' it when done.
+ *
+ * The generic implementation of this class is ChannelMediaResource, which can
+ * handle any URI for which Necko supports AsyncOpen.
+ * The 'file:' protocol can be implemented efficiently with direct random
+ * access, so the FileMediaResource implementation class bypasses the cache.
+ * MediaResource::Create automatically chooses the best implementation class.
+ */
+class MediaResource
 {
 public:
-  virtual ~nsMediaStream()
+  virtual ~MediaResource()
   {
-    MOZ_COUNT_DTOR(nsMediaStream);
+    MOZ_COUNT_DTOR(MediaResource);
   }
 
   // The following can be called on the main thread only:
   // Get the URI
   nsIURI* URI() const { return mURI; }
-  // Close the stream, stop any listeners, channels, etc.
+  // Close the resource, stop any listeners, channels, etc.
   // Cancels any currently blocking Read request and forces that request to
   // return an error.
   virtual nsresult Close() = 0;
@@ -187,7 +194,7 @@ public:
   // Create a new stream of the same type that refers to the same URI
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
-  virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder) = 0;
+  virtual MediaResource* CloneData(nsMediaDecoder* aDecoder) = 0;
 
   // These methods are called off the main thread.
   // The mode is initially MODE_PLAYBACK.
@@ -264,7 +271,7 @@ public:
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) = 0;
   // Returns true if all the data from aOffset to the end of the stream
   // is in cache. If the end of the stream is not known, we return false.
-  virtual bool IsDataCachedToEndOfStream(PRInt64 aOffset) = 0;
+  virtual bool IsDataCachedToEndOfResource(PRInt64 aOffset) = 0;
   // Returns true if this stream is suspended by the cache because the
   // cache is full. If true then the decoder should try to start consuming
   // data, otherwise we may not be able to make progress.
@@ -272,9 +279,9 @@ public:
   // changes.
   // For resources using the media cache, this returns true only when all
   // streams for the same resource are all suspended.
-  // If aActiveStream is non-null, fills it with a pointer to a stream
+  // If aActiveResource is non-null, fills it with a pointer to a stream
   // for this resource that is not suspended or ended.
-  virtual bool IsSuspendedByCache(nsMediaStream** aActiveStream) = 0;
+  virtual bool IsSuspendedByCache(MediaResource** aActiveResource) = 0;
   // Returns true if this stream has been suspended.
   virtual bool IsSuspended() = 0;
   // Reads only data which is cached in the media cache. If you try to read
@@ -287,11 +294,10 @@ public:
                                  PRUint32 aCount) = 0;
 
   /**
-   * Create a stream, reading data from the media resource via the
-   * channel. Call on main thread only.
-   * The caller must follow up by calling aStream->Open.
+   * Create a resource, reading data from the channel. Call on main thread only.
+   * The caller must follow up by calling resource->Open().
    */
-  static nsMediaStream* Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel);
+  static MediaResource* Create(nsMediaDecoder* aDecoder, nsIChannel* aChannel);
 
   /**
    * Open the stream. This creates a stream listener and returns it in
@@ -300,20 +306,20 @@ public:
   virtual nsresult Open(nsIStreamListener** aStreamListener) = 0;
 
   /**
-   * Fills aRanges with ByteRanges representing the data which is cached
+   * Fills aRanges with MediaByteRanges representing the data which is cached
    * in the media cache. Stream should be pinned during call and while
    * aRanges is being used.
    */
-  virtual nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges) = 0;
+  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) = 0;
 
 protected:
-  nsMediaStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
+  MediaResource(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     mDecoder(aDecoder),
     mChannel(aChannel),
     mURI(aURI),
     mLoadInBackground(false)
   {
-    MOZ_COUNT_CTOR(nsMediaStream);
+    MOZ_COUNT_CTOR(MediaResource);
   }
 
   // Set the request's load flags to aFlags.  If the request is part of a
@@ -340,20 +346,18 @@ protected:
 };
 
 /**
- * This is the nsMediaStream implementation that wraps Necko channels.
+ * This is the MediaResource implementation that wraps Necko channels.
  * Much of its functionality is actually delegated to nsMediaCache via
  * an underlying nsMediaCacheStream.
  *
  * All synchronization is performed by nsMediaCacheStream; all off-main-
  * thread operations are delegated directly to that object.
  */
-class nsMediaChannelStream : public nsMediaStream
+class ChannelMediaResource : public MediaResource
 {
-  typedef mozilla::Mutex Mutex;
-
 public:
-  nsMediaChannelStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
-  ~nsMediaChannelStream();
+  ChannelMediaResource(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
+  ~ChannelMediaResource();
 
   // These are called on the main thread by nsMediaCache. These must
   // not block or grab locks, because the media cache is holding its lock.
@@ -387,7 +391,7 @@ public:
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
   // Return true if the stream has been closed.
   bool IsClosed() const { return mCacheStream.IsClosed(); }
-  virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder);
+  virtual MediaResource* CloneData(nsMediaDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount);
   virtual void     EnsureCacheUpToDate();
 
@@ -405,8 +409,8 @@ public:
   virtual PRInt64 GetLength();
   virtual PRInt64 GetNextCachedData(PRInt64 aOffset);
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset);
-  virtual bool    IsDataCachedToEndOfStream(PRInt64 aOffset);
-  virtual bool    IsSuspendedByCache(nsMediaStream** aActiveStream);
+  virtual bool    IsDataCachedToEndOfResource(PRInt64 aOffset);
+  virtual bool    IsSuspendedByCache(MediaResource** aActiveResource);
   virtual bool    IsSuspended();
 
   class Listener : public nsIStreamListener,
@@ -414,7 +418,7 @@ public:
                    public nsIChannelEventSink
   {
   public:
-    Listener(nsMediaChannelStream* aStream) : mStream(aStream) {}
+    Listener(ChannelMediaResource* aResource) : mResource(aResource) {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
@@ -422,14 +426,14 @@ public:
     NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
 
-    void Revoke() { mStream = nsnull; }
+    void Revoke() { mResource = nsnull; }
 
   private:
-    nsMediaChannelStream* mStream;
+    ChannelMediaResource* mResource;
   };
   friend class Listener;
 
-  nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges);
+  nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges);
 
 protected:
   // These are called on the main thread by Listener.
@@ -471,7 +475,7 @@ protected:
   nsRefPtr<Listener> mListener;
   // A data received event for the decoder that has been dispatched but has
   // not yet been processed.
-  nsRevocableEventPtr<nsRunnableMethod<nsMediaChannelStream, void, false> > mDataReceivedEvent;
+  nsRevocableEventPtr<nsRunnableMethod<ChannelMediaResource, void, false> > mDataReceivedEvent;
   PRUint32           mSuspendCount;
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
@@ -485,12 +489,14 @@ protected:
 
   // This lock protects mChannelStatistics
   Mutex               mLock;
-  nsChannelStatistics mChannelStatistics;
+  MediaChannelStatistics mChannelStatistics;
 
   // True if we couldn't suspend the stream and we therefore don't want
   // to resume later. This is usually due to the channel not being in the
   // isPending state at the time of the suspend request.
   bool mIgnoreResume;
 };
+
+}
 
 #endif
