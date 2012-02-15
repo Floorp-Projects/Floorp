@@ -381,11 +381,12 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       if (GetPathDataAttrName() == aAttribute) {
         SVGAnimatedPathSegList* segList = GetAnimPathSegList();
         if (segList) {
-          rv = segList->SetBaseValueString(aValue);
-          if (NS_FAILED(rv)) {
-            // The spec says we parse everything up to the failure, so we don't
-            // call segList->ClearBaseValue()
-          }
+          segList->SetBaseValueString(aValue);
+          // The spec says we parse everything up to the failure, so we DON'T
+          // need to check the result of SetBaseValueString or call
+          // segList->ClearBaseValue() if it fails
+          aResult.SetTo(segList->GetBaseValue(), &aValue);
+          didSetResult = true;
           foundMatch = true;
         }
       }
@@ -682,8 +683,8 @@ nsSVGElement::UnsetAttrInternal(PRInt32 aNamespaceID, nsIAtom* aName,
     if (GetPathDataAttrName() == aName) {
       SVGAnimatedPathSegList *segList = GetAnimPathSegList();
       if (segList) {
+        MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         segList->ClearBaseValue();
-        DidChangePathSegList(false);
         return;
       }
     }
@@ -1791,18 +1792,24 @@ nsSVGElement::DidAnimatePointList()
   }
 }
 
-void
-nsSVGElement::DidChangePathSegList(bool aDoSetAttr)
+nsAttrValue
+nsSVGElement::WillChangePathSegList()
 {
-  if (!aDoSetAttr)
-    return;
+  NS_ABORT_IF_FALSE(GetPathDataAttrName(),
+                    "Changing non-existent path seg list?");
+  return WillChangeValue(GetPathDataAttrName());
+}
 
-  nsAutoString serializedValue;
-  GetAnimPathSegList()->GetBaseValue().GetValueAsString(serializedValue);
+void
+nsSVGElement::DidChangePathSegList(const nsAttrValue& aEmptyOrOldValue)
+{
+  NS_ABORT_IF_FALSE(GetPathDataAttrName(),
+                    "Changing non-existent path seg list?");
 
-  nsAttrValue attrValue(serializedValue);
-  SetParsedAttr(kNameSpaceID_None, GetPathDataAttrName(), nsnull,
-                attrValue, true);
+  nsAttrValue newValue;
+  newValue.SetTo(GetAnimPathSegList()->GetBaseValue(), nsnull);
+
+  DidChangeValue(GetPathDataAttrName(), aEmptyOrOldValue, newValue);
 }
 
 void

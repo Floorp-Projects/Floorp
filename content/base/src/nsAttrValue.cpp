@@ -59,6 +59,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGLengthList.h"
 #include "SVGNumberList.h"
+#include "SVGPathData.h"
 #include "SVGPointList.h"
 
 namespace css = mozilla::css;
@@ -303,6 +304,11 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mSVGNumberPair = otherCont->mSVGNumberPair;
       break;
     }
+    case eSVGPathData:
+    {
+      cont->mSVGPathData = otherCont->mSVGPathData;
+      break;
+    }
     case eSVGPointList:
     {
       cont->mSVGPointList = otherCont->mSVGPointList;
@@ -488,6 +494,20 @@ nsAttrValue::SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized)
 }
 
 void
+nsAttrValue::SetTo(const mozilla::SVGPathData& aValue,
+                   const nsAString* aSerialized)
+{
+  if (EnsureEmptyMiscContainer()) {
+    MiscContainer* cont = GetMiscContainer();
+    cont->mSVGPathData = &aValue;
+    cont->mType = eSVGPathData;
+    if (aSerialized && aSerialized->Length()) {
+      SetMiscAtomOrString(aSerialized);
+    }
+  }
+}
+
+void
 nsAttrValue::SetTo(const mozilla::SVGPointList& aValue,
                    const nsAString* aSerialized)
 {
@@ -649,6 +669,11 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eSVGNumberPair:
     {
       GetMiscContainer()->mSVGNumberPair->GetBaseValueString(aResult);
+      break;
+    }
+    case eSVGPathData:
+    {
+      GetMiscContainer()->mSVGPathData->GetValueAsString(aResult);
       break;
     }
     case eSVGPointList:
@@ -874,6 +899,10 @@ nsAttrValue::HashValue() const
     {
       return NS_PTR_TO_INT32(cont->mSVGNumberPair);
     }
+    case eSVGPathData:
+    {
+      return NS_PTR_TO_INT32(cont->mSVGPathData);
+    }
     case eSVGPointList:
     {
       return NS_PTR_TO_INT32(cont->mSVGPointList);
@@ -1001,6 +1030,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
     case eSVGNumberPair:
     {
       return thisCont->mSVGNumberPair == otherCont->mSVGNumberPair;
+    }
+    case eSVGPathData:
+    {
+      return thisCont->mSVGPathData == otherCont->mSVGPathData;
     }
     case eSVGPointList:
     {
