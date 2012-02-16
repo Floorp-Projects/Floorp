@@ -60,7 +60,6 @@ import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.CryptoInfo;
-import org.mozilla.gecko.sync.crypto.Cryptographer;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.crypto.NoKeyBundleException;
 import org.mozilla.gecko.sync.net.ResourceDelegate;
@@ -553,11 +552,8 @@ public class JPakeClient implements JPakeRequestDelegate {
   public boolean verifyCiphertext(String theirCiphertext, String iv,
       KeyBundle keyBundle) throws UnsupportedEncodingException, CryptoException {
     byte[] cleartextBytes = JPAKE_VERIFY_VALUE.getBytes("UTF-8");
-    CryptoInfo info = new CryptoInfo(cleartextBytes, keyBundle);
-    info.setIV(Base64.decodeBase64(iv));
-
-    Cryptographer.encrypt(info);
-    String myCiphertext = new String(Base64.encodeBase64(info.getMessage()));
+    CryptoInfo encrypted = CryptoInfo.encrypt(cleartextBytes, Base64.decodeBase64(iv), keyBundle);
+    String myCiphertext = new String(Base64.encodeBase64(encrypted.getMessage()));
     return myCiphertext.equals(theirCiphertext);
   }
 
@@ -1221,9 +1217,7 @@ public class JPakeClient implements JPakeRequestDelegate {
         .get(Constants.JSON_KEY_CIPHERTEXT));
     byte[] iv = Utils.decodeBase64((String) payload.get(Constants.JSON_KEY_IV));
     byte[] hmac = Utils.hex2Byte((String) payload.get(Constants.JSON_KEY_HMAC));
-    byte[] plainbytes = Cryptographer.decrypt(new CryptoInfo(ciphertext, iv,
-        hmac, keybundle));
-    return plainbytes;
+    return CryptoInfo.decrypt(ciphertext, iv, hmac, keybundle).getMessage();
   }
 
   /**
@@ -1242,8 +1236,7 @@ public class JPakeClient implements JPakeRequestDelegate {
       throw new NoKeyBundleException();
     }
     byte[] cleartextBytes = data.getBytes("UTF-8");
-    CryptoInfo info = new CryptoInfo(cleartextBytes, keyBundle);
-    Cryptographer.encrypt(info);
+    CryptoInfo info = CryptoInfo.encrypt(cleartextBytes, keyBundle);
     String message = new String(Base64.encodeBase64(info.getMessage()));
     String iv = new String(Base64.encodeBase64(info.getIV()));
 
