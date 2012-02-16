@@ -52,7 +52,7 @@ using namespace mozilla;
 
 class nsSVGImageFrame;
 
-class nsSVGImageListener : public nsStubImageDecoderObserver
+class nsSVGImageListener MOZ_FINAL : public nsStubImageDecoderObserver
 {
 public:
   nsSVGImageListener(nsSVGImageFrame *aFrame);

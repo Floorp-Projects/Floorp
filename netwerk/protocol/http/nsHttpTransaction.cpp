@@ -341,6 +341,13 @@ nsHttpTransaction::Http1xTransactionCount()
   return 1;
 }
 
+nsresult
+nsHttpTransaction::TakeSubTransactions(
+    nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //----------------------------------------------------------------------------
 // nsHttpTransaction::nsAHttpTransaction
 //----------------------------------------------------------------------------

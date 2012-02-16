@@ -39,52 +39,40 @@ package @ANDROID_PACKAGE_NAME@;
 
 
 public class FennecTalosAssert implements Assert {
-  
-  public FennecTalosAssert() {
-  }
+    
+    public FennecTalosAssert() { }
 
-  // Write information to a logfile and logcat
-  public void dumpLog(String message)
-  {
-    FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_INFO, message);
-  }
+    /**
+     *  Write information to a logfile and logcat
+     */
+    public void dumpLog(String message) {
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_INFO, message);
+    }
 
-  // Set the filename used for dumpLog.
-  public void setLogFile(String filename)
-  {
-    FennecNativeDriver.setLogFile(filename);
-  }
+    /**
+     *  Set the filename used for dumpLog.
+     */
+    public void setLogFile(String filename) {
+        FennecNativeDriver.setLogFile(filename);
+    }
 
-  public void setTestName(String testName)
-  {
-  }
+    public void setTestName(String testName) { }
 
+    public void finalize() { }
 
-  public void finalize()
-  {
-  }
+    public void ok(boolean condition, String name, String diag) { }
 
-  public void ok(boolean condition, String name, String diag) {
-  }
+    public void is(Object a, Object b, String name) { }
+    
+    public void isnot(Object a, Object b, String name) { }
 
-  public void is(Object a, Object b, String name) {
-  }
-  
-  public void isnot(Object a, Object b, String name) {
-  }
+    public void ispixel(int actual, int r, int g, int b, String name) { }
 
-  public void ispixel(int actual, int r, int g, int b, String name) {
-  }
+    public void todo(boolean condition, String name, String diag) { }
 
-  public void todo(boolean condition, String name, String diag) {
-  }
+    public void todo_is(Object a, Object b, String name) { }
+    
+    public void todo_isnot(Object a, Object b, String name) { }
 
-  public void todo_is(Object a, Object b, String name) {
-  }
-  
-  public void todo_isnot(Object a, Object b, String name) {
-  }
-
-  public void info(String name, String message) {
-  }
+    public void info(String name, String message) { }
 }

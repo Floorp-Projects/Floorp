@@ -70,13 +70,26 @@ GetValueFromString(const nsAString &aValueAsString,
   return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
+static nsresult
+GetValueFromAtom(const nsIAtom* aValueAsAtom, bool *aValue)
+{
+  if (aValueAsAtom == nsGkAtoms::_true) {
+    *aValue = true;
+    return NS_OK;
+  }
+  if (aValueAsAtom == nsGkAtoms::_false) {
+    *aValue = false;
+    return NS_OK;
+  }
+  return NS_ERROR_DOM_SYNTAX_ERR;
+}
+
 nsresult
-nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
-                                 nsSVGElement *aSVGElement)
+nsSVGBoolean::SetBaseValueAtom(const nsIAtom* aValue, nsSVGElement *aSVGElement)
 {
   bool val;
 
-  nsresult rv = GetValueFromString(aValueAsString, &val);
+  nsresult rv = GetValueFromAtom(aValue, &val);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -95,30 +108,28 @@ nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
   return NS_OK;
 }
 
-void
-nsSVGBoolean::GetBaseValueString(nsAString & aValueAsString)
+nsIAtom*
+nsSVGBoolean::GetBaseValueAtom() const
 {
-  aValueAsString.Assign(mBaseVal
-                        ? NS_LITERAL_STRING("true")
-                        : NS_LITERAL_STRING("false"));
+  return mBaseVal ? nsGkAtoms::_true : nsGkAtoms::_false;
 }
 
 void
-nsSVGBoolean::SetBaseValue(bool aValue,
-                           nsSVGElement *aSVGElement)
+nsSVGBoolean::SetBaseValue(bool aValue, nsSVGElement *aSVGElement)
 {
   NS_PRECONDITION(aValue == true || aValue == false, "Boolean out of range");
 
-  if (aValue != mBaseVal) {
-    mBaseVal = aValue;
-    if (!mIsAnimated) {
-      mAnimVal = mBaseVal;
-    }
-    else {
-      aSVGElement->AnimationNeedsResample();
-    }
-    aSVGElement->DidChangeBoolean(mAttrEnum, true);
+  if (aValue == mBaseVal) {
+    return;
   }
+
+  mBaseVal = aValue;
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+  } else {
+    aSVGElement->AnimationNeedsResample();
+  }
+  aSVGElement->DidChangeBoolean(mAttrEnum);
 }
 
 void

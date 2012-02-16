@@ -150,6 +150,9 @@
 @BINPATH@/components/dom_system_b2g.xpt
 #endif
 @BINPATH@/components/dom_battery.xpt
+#ifdef MOZ_B2G_BT
+@BINPATH@/components/dom_bluetooth.xpt
+#endif
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_core.xpt
 @BINPATH@/components/dom_css.xpt
@@ -398,6 +401,8 @@
 #endif
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
+@BINPATH@/components/messageWakeupService.js
+@BINPATH@/components/messageWakeupService.manifest
 
 ; Modules
 @BINPATH@/modules/*

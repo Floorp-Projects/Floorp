@@ -547,6 +547,14 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case ACTIVITY_STOPPING:
+        case ACTIVITY_START:
+        case ACTIVITY_PAUSING:
+        case ACTIVITY_RESUMING: {
+            mFlags = jenv->GetIntField(jobj, jFlagsField);
+            break;
+        }
+
         default:
             break;
     }

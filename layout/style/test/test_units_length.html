@@ -48,6 +48,11 @@ for (var test in tests) {
   }
 }
 
+// Bug 393910
+p.setAttribute("style", "margin-left: 0");
+is(p.style.getPropertyValue("margin-left"), "0px",
+  "0 serializes to 0px");
+
 </script>
 </pre>
 </body>

@@ -59,295 +59,294 @@ import org.json.*;
 import com.jayway.android.robotium.solo.Solo;
 
 public class FennecNativeActions implements Actions {
-  private Solo solo;
-  private Instrumentation instr;
-  private Activity geckoApp;
+    private Solo mSolo;
+    private Instrumentation mInstr;
+    private Activity mGeckoApp;
 
-  // Objects for reflexive access of fennec classes.
-  private ClassLoader classLoader;
-  private Class gel;
-  private Class ge;
-  private Class gas;
-  private Class drawListener;
-  private Method registerGEL;
-  private Method unregisterGEL;
-  private Method sendGE;
-  private Method getLayerClient;
-  private Method setDrawListener;
+    // Objects for reflexive access of fennec classes.
+    private ClassLoader mClassLoader;
+    private Class mGel;
+    private Class mGe;
+    private Class mGas;
+    private Class mDrawListener;
+    private Method mRegisterGEL;
+    private Method mUnregisterGEL;
+    private Method mSendGE;
+    private Method mGetLayerClient;
+    private Method mSetDrawListener;
 
-  public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation){
-    this.solo = robocop;
-    this.instr = instrumentation;
-    this.geckoApp = activity;
-    // Set up reflexive access of java classes and methods.
-    try {
-      classLoader = activity.getClassLoader();
-      gel = classLoader.loadClass("org.mozilla.gecko.GeckoEventListener");
-      ge = classLoader.loadClass("org.mozilla.gecko.GeckoEvent");
-      gas = classLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
-      Class [] parameters = new Class[2];
-      parameters[0] = String.class;
-      parameters[1] = gel;
-      registerGEL = gas.getMethod("registerGeckoEventListener", parameters);
-      unregisterGEL = gas.getMethod("unregisterGeckoEventListener", parameters);
-      parameters = new Class[1];
-      parameters[0] = ge;
-      sendGE = gas.getMethod("sendEventToGecko", parameters);
-
-      getLayerClient = activity.getClass().getMethod("getSoftwareLayerClient");
-      Class gslc = classLoader.loadClass("org.mozilla.gecko.gfx.GeckoSoftwareLayerClient");
-      drawListener = classLoader.loadClass("org.mozilla.gecko.gfx.GeckoSoftwareLayerClient$DrawListener");
-      setDrawListener = gslc.getDeclaredMethod("setDrawListener", drawListener);
-     } catch (ClassNotFoundException e) {
-       e.printStackTrace();
-     } catch (SecurityException e) {
-       e.printStackTrace();
-     } catch (NoSuchMethodException e) {
-       e.printStackTrace();
-     } catch (IllegalArgumentException e) {
-       e.printStackTrace();
-     }
-  }
-
-  class wakeInvocationHandler implements InvocationHandler {
-    private final GeckoEventExpecter mEventExpecter;
-
-    public wakeInvocationHandler(GeckoEventExpecter expecter) {
-      mEventExpecter = expecter;
-    }
-
-    public Object invoke(Object proxy, Method method, Object[] args) {
-      String methodName = method.getName();
-      //Depending on the method, return a completely different type.
-      if(methodName.equals("toString")) {
-        return "wakeInvocationHandler";
-      }
-      if(methodName.equals("equals")) {
-        return this == args[0];
-      }
-      if(methodName.equals("clone")) {
-        return this;
-      }
-      if(methodName.equals("hashCode")) {
-        return 314;
-      }
-      FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG, 
-        "Waking up on "+methodName);
-      mEventExpecter.notifyOfEvent();
-      return null;
-    }
-  }
-
-  class GeckoEventExpecter implements EventExpecter {
-    private final String mGeckoEvent;
-    private final Object[] mRegistrationParams;
-    private boolean mEventReceived;
-
-    GeckoEventExpecter(String geckoEvent, Object[] registrationParams) {
-      mGeckoEvent = geckoEvent;
-      mRegistrationParams = registrationParams;
-    }
-
-    public synchronized void blockForEvent() {
-      while (! mEventReceived) {
+    public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation) {
+        mSolo = robocop;
+        mInstr = instrumentation;
+        mGeckoApp = activity;
+        // Set up reflexive access of java classes and methods.
         try {
-          this.wait();
-        } catch (InterruptedException ie) {
-          ie.printStackTrace();
-          break;
+            mClassLoader = activity.getClassLoader();
+            mGel = mClassLoader.loadClass("org.mozilla.gecko.GeckoEventListener");
+            mGe = mClassLoader.loadClass("org.mozilla.gecko.GeckoEvent");
+            mGas = mClassLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
+            Class [] parameters = new Class[2];
+            parameters[0] = String.class;
+            parameters[1] = mGel;
+            mRegisterGEL = mGas.getMethod("registerGeckoEventListener", parameters);
+            mUnregisterGEL = mGas.getMethod("unregisterGeckoEventListener", parameters);
+            parameters = new Class[1];
+            parameters[0] = mGe;
+            mSendGE = mGas.getMethod("sendEventToGecko", parameters);
+
+            mGetLayerClient = activity.getClass().getMethod("getSoftwareLayerClient");
+            Class gslc = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoSoftwareLayerClient");
+            mDrawListener = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoSoftwareLayerClient$DrawListener");
+            mSetDrawListener = gslc.getDeclaredMethod("setDrawListener", mDrawListener);
+         } catch (ClassNotFoundException e) {
+             e.printStackTrace();
+         } catch (SecurityException e) {
+             e.printStackTrace();
+         } catch (NoSuchMethodException e) {
+             e.printStackTrace();
+         } catch (IllegalArgumentException e) {
+             e.printStackTrace();
+         }
+    }
+
+    class wakeInvocationHandler implements InvocationHandler {
+        private final GeckoEventExpecter mEventExpecter;
+
+        public wakeInvocationHandler(GeckoEventExpecter expecter) {
+            mEventExpecter = expecter;
         }
-      }
-      FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
-        "unblocked on expecter for " + mGeckoEvent);
+
+        public Object invoke(Object proxy, Method method, Object[] args) {
+            String methodName = method.getName();
+            //Depending on the method, return a completely different type.
+            if(methodName.equals("toString")) {
+                return "wakeInvocationHandler";
+            }
+            if(methodName.equals("equals")) {
+                return this == args[0];
+            }
+            if(methodName.equals("clone")) {
+                return this;
+            }
+            if(methodName.equals("hashCode")) {
+                return 314;
+            }
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG, 
+                "Waking up on "+methodName);
+            mEventExpecter.notifyOfEvent();
+            return null;
+        }
     }
 
-    public synchronized boolean eventReceived() {
-      return mEventReceived;
-    }
+    class GeckoEventExpecter implements EventExpecter {
+        private final String mGeckoEvent;
+        private final Object[] mRegistrationParams;
+        private boolean mEventReceived;
 
-    void notifyOfEvent() {
-      try {
-        unregisterGEL.invoke(null, mRegistrationParams);
-      } catch (IllegalAccessException e) {
-        e.printStackTrace();
-      } catch (InvocationTargetException e) {
-        e.printStackTrace();
-      }
-      FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
-        "received event " + mGeckoEvent);
-      synchronized (this) {
-        mEventReceived = true;
-        this.notifyAll();
-      }
-    }
-  }
-  
-  public EventExpecter expectGeckoEvent(String geckoEvent) {
-    FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
-      "waiting for "+geckoEvent);
-    try {
-      Class [] interfaces = new Class[1];
-      interfaces[0] = gel;
-      Object[] finalParams = new Object[2];
-      finalParams[0] = geckoEvent;
-     
-      GeckoEventExpecter expecter = new GeckoEventExpecter(geckoEvent, finalParams);
-      wakeInvocationHandler wIH = new wakeInvocationHandler(expecter);
-      Object proxy = Proxy.newProxyInstance(classLoader, interfaces, wIH);
-      finalParams[1] = proxy;
-      registerGEL.invoke(null, finalParams);
-      
-      return expecter;
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
+        GeckoEventExpecter(String geckoEvent, Object[] registrationParams) {
+            mGeckoEvent = geckoEvent;
+            mRegistrationParams = registrationParams;
+        }
 
-  class DrawListenerProxy implements InvocationHandler {
-    private final PaintExpecter mPaintExpecter;
+        public synchronized void blockForEvent() {
+            while (! mEventReceived) {
+                try {
+                    this.wait();
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                    break;
+                }
+            }
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+                "unblocked on expecter for " + mGeckoEvent);
+        }
 
-    DrawListenerProxy(PaintExpecter paintExpecter) {
-      mPaintExpecter = paintExpecter;
+        public synchronized boolean eventReceived() {
+            return mEventReceived;
+        }
+
+        void notifyOfEvent() {
+            try {
+                mUnregisterGEL.invoke(null, mRegistrationParams);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+                "received event " + mGeckoEvent);
+            synchronized (this) {
+                mEventReceived = true;
+                this.notifyAll();
+            }
+        }
     }
-
-    public Object invoke(Object proxy, Method method, Object[] args) {
-      String methodName = method.getName();
-      if ("drawFinished".equals(methodName)) {
+    
+    public EventExpecter expectGeckoEvent(String geckoEvent) {
         FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
-          "Received drawFinished notification");
-        mPaintExpecter.notifyOfEvent();
-      } else if ("toString".equals(methodName)) {
-        return "DrawListenerProxy";
-      } else if ("equals".equals(methodName)) {
-        return false;
-      } else if ("hashCode".equals(methodName)) {
-        return 0;
-      }
-      return null;
-    }
-  }
-
-  class PaintExpecter implements RepeatedEventExpecter {
-    private Object mLayerClient;
-    private boolean mPaintDone;
-
-    PaintExpecter() throws IllegalAccessException, InvocationTargetException {
-      mLayerClient = getLayerClient.invoke(geckoApp);
-      setDrawListener.invoke(mLayerClient, Proxy.newProxyInstance(classLoader, new Class[] { drawListener }, new DrawListenerProxy(this)));
-    }
-
-    void notifyOfEvent() {
-      synchronized (this) {
-        mPaintDone = true;
-        this.notifyAll();
-      }
-    }
-
-    public synchronized void blockForEvent() {
-      while (! mPaintDone) {
+            "waiting for "+geckoEvent);
         try {
-          this.wait();
-        } catch (InterruptedException ie) {
-          ie.printStackTrace();
-          break;
+            Class [] interfaces = new Class[1];
+            interfaces[0] = mGel;
+            Object[] finalParams = new Object[2];
+            finalParams[0] = geckoEvent;
+         
+            GeckoEventExpecter expecter = new GeckoEventExpecter(geckoEvent, finalParams);
+            wakeInvocationHandler wIH = new wakeInvocationHandler(expecter);
+            Object proxy = Proxy.newProxyInstance(mClassLoader, interfaces, wIH);
+            finalParams[1] = proxy;
+            mRegisterGEL.invoke(null, finalParams);
+            
+            return expecter;
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
         }
-      }
-      try {
-        setDrawListener.invoke(mLayerClient, (Object)null);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+        return null;
     }
 
-    public synchronized boolean eventReceived() {
-      return mPaintDone;
+    class DrawListenerProxy implements InvocationHandler {
+        private final PaintExpecter mPaintExpecter;
+
+        DrawListenerProxy(PaintExpecter paintExpecter) {
+            mPaintExpecter = paintExpecter;
+        }
+
+        public Object invoke(Object proxy, Method method, Object[] args) {
+            String methodName = method.getName();
+            if ("drawFinished".equals(methodName)) {
+                FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_DEBUG,
+                    "Received drawFinished notification");
+                mPaintExpecter.notifyOfEvent();
+            } else if ("toString".equals(methodName)) {
+                return "DrawListenerProxy";
+            } else if ("equals".equals(methodName)) {
+                return false;
+            } else if ("hashCode".equals(methodName)) {
+                return 0;
+            }
+            return null;
+        }
     }
 
-    public synchronized void blockUntilClear(long millis) {
-      if (millis <= 0) {
-        throw new IllegalArgumentException("millis must be > 0");
-      }
-      // wait for at least one event
-      while (! mPaintDone) {
+    class PaintExpecter implements RepeatedEventExpecter {
+        private Object mLayerClient;
+        private boolean mPaintDone;
+
+        PaintExpecter() throws IllegalAccessException, InvocationTargetException {
+            mLayerClient = mGetLayerClient.invoke(mGeckoApp);
+            mSetDrawListener.invoke(mLayerClient, Proxy.newProxyInstance(mClassLoader, new Class[] { mDrawListener }, new DrawListenerProxy(this)));
+        }
+
+        void notifyOfEvent() {
+            synchronized (this) {
+                mPaintDone = true;
+                this.notifyAll();
+            }
+        }
+
+        public synchronized void blockForEvent() {
+            while (!mPaintDone) {
+                try {
+                    this.wait();
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                    break;
+                }
+            }
+            try {
+                mSetDrawListener.invoke(mLayerClient, (Object)null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public synchronized boolean eventReceived() {
+            return mPaintDone;
+        }
+
+        public synchronized void blockUntilClear(long millis) {
+            if (millis <= 0) {
+                throw new IllegalArgumentException("millis must be > 0");
+            }
+            // wait for at least one event
+            while (!mPaintDone) {
+                try {
+                    this.wait();
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                    break;
+                }
+            }
+            // now wait for a period of millis where we don't get an event
+            long startTime = SystemClock.uptimeMillis();
+            while (true) {
+                try {
+                    this.wait(millis);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                    break;
+                }
+                long endTime = SystemClock.uptimeMillis();
+                if (endTime - startTime >= millis) {
+                    // success
+                    break;
+                }
+                // we got a notify() before we could wait long enough, so we need to start over
+                startTime = endTime;
+            }
+            try {
+                mSetDrawListener.invoke(mLayerClient, (Object)null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public RepeatedEventExpecter expectPaint() {
         try {
-          this.wait();
-        } catch (InterruptedException ie) {
-          ie.printStackTrace();
-          break;
+            return new PaintExpecter();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-      }
-      // now wait for a period of millis where we don't get an event
-      long startTime = SystemClock.uptimeMillis();
-      while (true) {
-        try {
-          this.wait(millis);
-        } catch (InterruptedException ie) {
-          ie.printStackTrace();
-          break;
+    }
+
+    public void sendSpecialKey(SpecialKey button) {
+        switch(button) {
+            case DOWN:
+                mInstr.sendCharacterSync(KeyEvent.KEYCODE_DPAD_DOWN);
+                break;
+            case UP:
+                mInstr.sendCharacterSync(KeyEvent.KEYCODE_DPAD_UP);
+                break;
+            case LEFT:
+                mInstr.sendCharacterSync(KeyEvent.KEYCODE_DPAD_LEFT);
+                break;
+            case RIGHT:
+                mInstr.sendCharacterSync(KeyEvent.KEYCODE_DPAD_RIGHT);
+                break;
+            case ENTER:
+                mInstr.sendCharacterSync(KeyEvent.KEYCODE_ENTER);
+                break;
+            case MENU:
+                mInstr.sendCharacterSync(KeyEvent.KEYCODE_MENU);
+                break;
+            case BACK:
+                mInstr.sendCharacterSync(KeyEvent.KEYCODE_BACK);
+                break;
+            default:
+                break;
         }
-        long endTime = SystemClock.uptimeMillis();
-        if (endTime - startTime >= millis) {
-          // success
-          break;
-        }
-        // we got a notify() before we could wait long enough, so we need to start over
-        startTime = endTime;
-      }
-      try {
-        setDrawListener.invoke(mLayerClient, (Object)null);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
     }
-  }
 
-  public RepeatedEventExpecter expectPaint() {
-    try {
-      return new PaintExpecter();
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
+    @Override
+    public void sendKeys(String input) {
+        mInstr.sendStringSync(input);
     }
-  }
 
-  public void sendSpecialKey(SpecialKey button) {
-    switch( button) {
-      case DOWN:
-        instr.sendCharacterSync(KeyEvent.KEYCODE_DPAD_DOWN);
-        break;
-      case UP:
-        instr.sendCharacterSync(KeyEvent.KEYCODE_DPAD_UP);
-        break;
-      case LEFT:
-        instr.sendCharacterSync(KeyEvent.KEYCODE_DPAD_LEFT);
-        break;
-      case RIGHT:
-        instr.sendCharacterSync(KeyEvent.KEYCODE_DPAD_RIGHT);
-        break;
-      case ENTER:
-        instr.sendCharacterSync(KeyEvent.KEYCODE_ENTER);
-        break;
-      case MENU:
-        instr.sendCharacterSync(KeyEvent.KEYCODE_MENU);
-        break;
-      case BACK:
-        instr.sendCharacterSync(KeyEvent.KEYCODE_BACK);
-        break;
-      default:
-        break;
+    public void drag(int startingX, int endingX, int startingY, int endingY) {
+        mSolo.drag(startingX, endingX, startingY, endingY, 10);
     }
-  }
-
-  @Override
-  public void sendKeys(String input) {
-    instr.sendStringSync(input);
-  }
-
-
-  public void drag(int startingX, int endingX, int startingY, int endingY) {
-    solo.drag(startingX, endingX, startingY, endingY, 10);
-  }
 }
