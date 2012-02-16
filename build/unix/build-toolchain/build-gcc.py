@@ -154,7 +154,7 @@ def build_source_dir(prefix, version):
     return source_dir + '/' + prefix + version
 
 binutils_version = "2.21.1"
-glibc_version = "2.11.1" #FIXME: should probably use 2.5.1
+glibc_version = "2.10.1" #FIXME: should probably use 2.5.1
 tar_version = "1.26"
 make_version = "3.81"
 gcc_version = "4.5.2"
