@@ -65,6 +65,11 @@ class nsIDOMMozConnection;
 class nsIDOMTelephony;
 #endif
 
+#ifdef MOZ_B2G_BT
+#include "nsIDOMNavigatorBluetooth.h"
+#endif
+
+class nsIDOMAdapter;
 //*****************************************************************************
 // Navigator: Script "navigator" object
 //*****************************************************************************
@@ -98,6 +103,9 @@ class Navigator : public nsIDOMNavigator
                 , public nsIDOMNavigatorTelephony
 #endif
                 , public nsIDOMMozNavigatorNetwork
+#ifdef MOZ_B2G_BT
+                , public nsIDOMNavigatorBluetooth
+#endif
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
@@ -114,6 +122,10 @@ public:
   NS_DECL_NSIDOMNAVIGATORTELEPHONY
 #endif
   NS_DECL_NSIDOMMOZNAVIGATORNETWORK
+
+#ifdef MOZ_B2G_BT
+  NS_DECL_NSIDOMNAVIGATORBLUETOOTH
+#endif
 
   static void Init();
 
@@ -146,6 +158,9 @@ private:
   nsCOMPtr<nsIDOMTelephony> mTelephony;
 #endif
   nsRefPtr<network::Connection> mConnection;
+#ifdef MOZ_B2G_BT
+  nsCOMPtr<nsIDOMBluetoothAdapter> mBluetooth;
+#endif
   nsWeakPtr mWindow;
 };
 

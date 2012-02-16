@@ -49,7 +49,7 @@ function attr_modified(ev) {
   e_prev = e_new;
   if (!recursive) {
     recursive = true;
-    e_new = "width: 0pt;";
+    e_new = "width: 0px;";
     testDiv.style.width = "0";
   } else {
     recursive = false;

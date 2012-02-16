@@ -229,6 +229,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		visited_image_loading_frame.html \
 		visited_image_loading_frame_empty.html \
 		test_load_events_on_stylesheets.html \
+		test_bug721136.html \
 		$(NULL)
 
 _VISITED_REFTEST_FILES = \

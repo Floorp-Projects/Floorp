@@ -1446,11 +1446,12 @@ typedef struct JSCountHeapTracer {
 } JSCountHeapTracer;
 
 static void
-CountHeapNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
+CountHeapNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     JSCountHeapTracer *countTracer;
     JSDHashEntryStub *entry;
     JSCountHeapNode *node;
+    void *thing = *thingp;
 
     JS_ASSERT(trc->callback == CountHeapNotify);
     countTracer = (JSCountHeapTracer *)trc;
