@@ -884,11 +884,6 @@ inline bool JSObject::setUncacheableProto(JSContext *cx)
     return setFlag(cx, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
 }
 
-inline bool JSObject::isExtensible() const
-{
-    return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
-}
-
 inline bool JSObject::isBoundFunction() const
 {
     return lastProperty()->hasObjectFlag(js::BaseShape::BOUND_FUNCTION);
