@@ -1482,6 +1482,32 @@ nsNPAPIPluginInstance::URLRedirectResponse(void* notifyData, NPBool allow)
   }
 }
 
+NPError
+nsNPAPIPluginInstance::InitAsyncSurface(NPSize *size, NPImageFormat format,
+                                        void *initData, NPAsyncSurface *surface)
+{
+  if (mOwner)
+    return mOwner->InitAsyncSurface(size, format, initData, surface);
+
+  return NS_ERROR_FAILURE;
+}
+
+NPError
+nsNPAPIPluginInstance::FinalizeAsyncSurface(NPAsyncSurface *surface)
+{
+  if (mOwner)
+    return mOwner->FinalizeAsyncSurface(surface);
+
+  return NS_ERROR_FAILURE;
+}
+
+void
+nsNPAPIPluginInstance::SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed)
+{
+  if (mOwner)
+    mOwner->SetCurrentAsyncSurface(surface, changed);
+}
+
 class CarbonEventModelFailureEvent : public nsRunnable {
 public:
   nsCOMPtr<nsIContent> mContent;
