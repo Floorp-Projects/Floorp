@@ -1753,30 +1753,36 @@ class LFunctionEnvironment : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LCallGetPropertyOrName : public LCallInstructionHelper<BOX_PIECES, 1, 0>
-{
-  public:
-    MCallGetPropertyOrName *mir() const {
-        return static_cast<MCallGetPropertyOrName *>(mir_);
-    }
-};
-
-class LCallGetProperty : public LCallGetPropertyOrName
+class LCallGetProperty : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(CallGetProperty);
+
+    static const size_t Value = 0;
+
+    MCallGetProperty *mir() const {
+        return mir_->toCallGetProperty();
+    }
 };
 
-class LCallGetName : public LCallGetPropertyOrName
+class LCallGetName : public LCallInstructionHelper<BOX_PIECES, 1, 0>
 {
   public:
     LIR_HEADER(CallGetName);
+
+    MCallGetName *mir() const {
+        return mir_->toCallGetName();
+    }
 };
 
-class LCallGetNameTypeOf : public LCallGetPropertyOrName
+class LCallGetNameTypeOf : public LCallInstructionHelper<BOX_PIECES, 1, 0>
 {
   public:
     LIR_HEADER(CallGetNameTypeOf);
+
+    MCallGetNameTypeOf *mir() const {
+        return mir_->toCallGetNameTypeOf();
+    }
 };
 
 // Call a js::GetElement stub.

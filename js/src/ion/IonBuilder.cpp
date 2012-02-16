@@ -3133,7 +3133,7 @@ IonBuilder::jsop_getname(JSAtom *atom)
         object = current->pop();
     }
 
-    MCallGetPropertyOrName *ins;
+    MCallGetNameInstruction *ins;
 
     JSOp op2 = JSOp(*GetNextPc(pc));
     if (op2 == JSOP_TYPEOF)
