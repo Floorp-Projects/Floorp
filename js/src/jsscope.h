@@ -1113,30 +1113,6 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
 #pragma warning(pop)
 #endif
 
-inline js::Class *
-JSObject::getClass() const
-{
-    return lastProperty()->getObjectClass();
-}
-
-inline JSClass *
-JSObject::getJSClass() const
-{
-    return Jsvalify(getClass());
-}
-
-inline bool
-JSObject::hasClass(const js::Class *c) const
-{
-    return getClass() == c;
-}
-
-inline const js::ObjectOps *
-JSObject::getOps() const
-{
-    return &getClass()->ops;
-}
-
 namespace JS {
     template<> class AnchorPermitted<js::Shape *> { };
     template<> class AnchorPermitted<const js::Shape *> { };

@@ -420,11 +420,6 @@ struct JSObject : public js::ObjectImpl
     void makeLazyType(JSContext *cx);
 
   public:
-    inline js::Shape *lastProperty() const {
-        JS_ASSERT(shape_);
-        return shape_;
-    }
-
     /*
      * Update the last property, keeping the number of allocated slots in sync
      * with the object's new slot span.
@@ -462,9 +457,6 @@ struct JSObject : public js::ObjectImpl
      */
     bool setSlotSpan(JSContext *cx, uint32_t span);
 
-    static inline size_t offsetOfShape() { return offsetof(JSObject, shape_); }
-    inline js::HeapPtrShape *addressOfShape() { return &shape_; }
-
     const js::Shape *nativeLookup(JSContext *cx, jsid id);
 
     inline bool nativeContains(JSContext *cx, jsid id);
@@ -474,23 +466,6 @@ struct JSObject : public js::ObjectImpl
     static const uint32_t NELEMENTS_LIMIT = JS_BIT(28);
 
   public:
-    inline bool isNative() const;
-
-    inline js::Class *getClass() const;
-    inline JSClass *getJSClass() const;
-    inline bool hasClass(const js::Class *c) const;
-    inline const js::ObjectOps *getOps() const;
-
-    /*
-     * An object is a delegate if it is on another object's prototype or scope
-     * chain, and therefore the delegate might be asked implicitly to get or
-     * set a property on behalf of another object. Delegates may be accessed
-     * directly too, as may any object, but only those objects linked after the
-     * head of any prototype or scope chain are flagged as delegates. This
-     * definition helps to optimize shape-based property cache invalidation
-     * (see Purge{Scope,Proto}Chain in jsobj.cpp).
-     */
-    inline bool isDelegate() const;
     inline bool setDelegate(JSContext *cx);
 
     inline bool isBoundFunction() const;
@@ -555,13 +530,6 @@ struct JSObject : public js::ObjectImpl
 
     /* Whether there may be indexed properties on this object. */
     inline bool isIndexed() const;
-
-    /*
-     * Return true if this object is a native one that has been converted from
-     * shared-immutable prototype-rooted shape storage to dictionary-shapes in
-     * a doubly-linked list.
-     */
-    inline bool inDictionaryMode() const;
 
     inline uint32_t propertyCount() const;
 
@@ -737,18 +705,6 @@ struct JSObject : public js::ObjectImpl
     inline void initFixedSlot(uintN slot, const js::Value &value);
 
     /*
-     * Whether this is the only object which has its specified type. This
-     * object will have its type constructed lazily as needed by analysis.
-     */
-    bool hasSingletonType() const { return !!type_->singleton; }
-
-    /*
-     * Whether the object's type has not been constructed yet. If an object
-     * might have a lazy type, use getType() below, otherwise type().
-     */
-    bool hasLazyType() const { return type_->lazy(); }
-
-    /*
      * Marks this object as having a singleton type, and leave the type lazy.
      * Constructs a new, unique shape for the object.
      */
@@ -756,18 +712,10 @@ struct JSObject : public js::ObjectImpl
 
     inline js::types::TypeObject *getType(JSContext *cx);
 
-    js::types::TypeObject *type() const {
-        JS_ASSERT(!hasLazyType());
-        return type_;
-    }
-
     js::HeapPtr<js::types::TypeObject> &typeFromGC() {
         /* Direct field access for use by GC. */
         return type_;
     }
-
-    static inline size_t offsetOfType() { return offsetof(JSObject, type_); }
-    inline js::HeapPtrTypeObject *addressOfType() { return &type_; }
 
     inline void setType(js::types::TypeObject *newType);
 
@@ -798,10 +746,6 @@ struct JSObject : public js::ObjectImpl
      * or the global object.
      */
     bool shouldSplicePrototype(JSContext *cx);
-
-    JSObject * getProto() const {
-        return type_->proto;
-    }
 
     /*
      * Parents and scope chains.
@@ -1357,13 +1301,12 @@ struct JSObject : public js::ObjectImpl
 
   private:
     static void staticAsserts() {
-        /* Check alignment for any fixed slots allocated after the object. */
-        JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0);
-
-        JS_STATIC_ASSERT(offsetof(JSObject, shape_) == offsetof(js::shadow::Object, shape));
-        JS_STATIC_ASSERT(offsetof(JSObject, slots) == offsetof(js::shadow::Object, slots));
-        JS_STATIC_ASSERT(offsetof(JSObject, type_) == offsetof(js::shadow::Object, type));
-        JS_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::shadow::Object));
+        MOZ_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::shadow::Object),
+                          "shadow interface must match actual interface");
+        MOZ_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::ObjectImpl),
+                          "JSObject itself must not have any fields");
+        MOZ_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0,
+                          "fixed slots after an object must be aligned");
     }
 };
 
