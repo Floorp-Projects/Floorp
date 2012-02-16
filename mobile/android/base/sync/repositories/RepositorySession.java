@@ -41,7 +41,7 @@ package org.mozilla.gecko.sync.repositories;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
@@ -77,11 +77,11 @@ public abstract class RepositorySession {
   private static final String LOG_TAG = "RepositorySession";
 
   private static void error(String message) {
-    Utils.error(LOG_TAG, message);
+    Logger.error(LOG_TAG, message);
   }
 
   protected static void trace(String message) {
-    Utils.trace(LOG_TAG, message);
+    Logger.trace(LOG_TAG, message);
   }
 
   protected SessionStatus status = SessionStatus.UNSTARTED;

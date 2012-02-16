@@ -11,7 +11,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 import android.util.Log;
 
 public abstract class StoreTrackingRepositorySession extends RepositorySession {
-  private static final String LOG_TAG = "StoreTrackingRepositorySession";
+  private static final String LOG_TAG = "StoreTrackSession";
   protected StoreTracker storeTracker;
 
   protected static StoreTracker createStoreTracker() {
