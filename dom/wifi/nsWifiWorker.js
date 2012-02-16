@@ -795,6 +795,15 @@ var WifiManager = (function() {
   return manager;
 })();
 
+function WifiNetwork(ssid, bssid, flags, signal) {
+  this.ssid = ssid;
+  this.bssid = bssid;
+  this.flags = flags;
+  this.signal = Number(signal);
+}
+
+WifiNetwork.prototype.QueryInterface = XPCOMUtils.generateQI([Ci.nsIWifiNetwork]);
+
 function nsWifiWorker() {
   WifiManager.onsupplicantconnection = function() {
     debug("Connected to supplicant");
@@ -806,24 +815,27 @@ function nsWifiWorker() {
     debug("Couldn't connect to supplicant");
   }
 
-  var state;
+  var self = this;
+
+  this.state = null;
+  this.networks = Object.create(null);
   WifiManager.onstatechange = function() {
-    debug("State change: " + state + " -> " + this.state);
-    if (state === "SCANNING" && this.state === "INACTIVE") {
+    debug("State change: " + self.state + " -> " + this.state);
+    if (self.state === "SCANNING" && this.state === "INACTIVE") {
       // We're not trying to connect so try to find an open Mozilla network.
       // TODO Remove me in favor of UI and a way to select a network.
 
       debug("Haven't connected to a network, trying a default (for now)");
       var name = "Mozilla";
-      var net = networks[name];
-      if (net && (net[1] && net[1] !== "[IBSS]")) {
+      var net = self.networks[name];
+      if (net && (net.flags && net.flags !== "[IBSS]")) {
         debug("Network Mozilla exists, but is encrypted");
         net = null;
       }
       if (!net) {
         name = "Mozilla Guest";
-        net = networks[name];
-        if (!net || (net[1] && net[1] !== "[IBSS]")) {
+        net = self.networks[name];
+        if (!net || (net.flags && net.flags !== "[IBSS]")) {
           debug("Network Mozilla Guest doesn't exist or is encrypted");
           return;
         }
@@ -844,10 +856,9 @@ function nsWifiWorker() {
       });
     }
 
-    state = this.state;
+    self.state = this.state;
   }
 
-  var networks = Object.create(null);
   WifiManager.onscanresultsavailable = function() {
     debug("Scan results are available! Asking for them.");
     WifiManager.getScanResults(function(r) {
@@ -855,10 +866,12 @@ function nsWifiWorker() {
       // NB: Skip the header line.
       for (let i = 1; i < lines.length; ++i) {
         // bssid / frequency / signal level / flags / ssid
-        var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s+(.*)/.exec(lines[i])
-        if (match)
-          networks[match[5]] = [match[1], match[4]];
-        else
+        var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s+(.*)/.exec(lines[i]);
+
+        // TODO Choose bssid based on strength?
+        if (match && match[5])
+          self.networks[match[5]] = new WifiNetwork(match[5], match[1], match[4], match[3]);
+        else if (!match)
           debug("Match didn't find anything for: " + lines[i]);
       }
     });
