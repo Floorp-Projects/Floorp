@@ -54,6 +54,7 @@ import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 public class RepoUtils {
@@ -165,6 +166,7 @@ public class RepoUtils {
       return this.query(null, projection, selection, selectionArgs, sortOrder);
     }
 
+    // For ContentProvider queries.
     public Cursor query(String label, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
       String logLabel = (label == null) ? this.tag : this.tag + label;
       long queryStart = android.os.SystemClock.uptimeMillis();
@@ -174,8 +176,30 @@ public class RepoUtils {
       return c;
     }
 
+    // For SQLiteOpenHelper queries.
+    public Cursor query(SQLiteDatabase db, String label, String table, String[] columns,
+        String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+      String logLabel = (label == null) ? this.tag : this.tag + label;
+      long queryStart = android.os.SystemClock.uptimeMillis();
+      Cursor c = db.query(table, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
+      long queryEnd   = android.os.SystemClock.uptimeMillis();
+      RepoUtils.queryTimeLogger(logLabel, queryStart, queryEnd);
+      return c;
+    }
+
     public Cursor safeQuery(String label, String[] projection, String selection, String[] selectionArgs, String sortOrder) throws NullCursorException {
       Cursor c = this.query(label, projection, selection, selectionArgs, sortOrder);
+      if (c == null) {
+        Logger.error(tag, "Got null cursor exception in " + tag + ((label == null) ? "" : label));
+        throw new NullCursorException(null);
+      }
+      return c;
+    }
+
+    public Cursor safeQuery(SQLiteDatabase db, String label, String table, String[] columns,
+        String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) throws NullCursorException  {
+      Cursor c = this.query(db, label, table, columns, selection, selectionArgs,
+          groupBy, having, orderBy, limit);
       if (c == null) {
         Logger.error(tag, "Got null cursor exception in " + tag + ((label == null) ? "" : label));
         throw new NullCursorException(null);
