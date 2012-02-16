@@ -128,6 +128,7 @@ PluginInstanceParent::~PluginInstanceParent()
 
         if (container) {
             container->SetRemoteImageData(nsnull, nsnull);
+            container->SetCompositionNotifySink(nsnull);
             DeallocShmem(mRemoteImageDataShmem);
         }
     }
@@ -365,6 +366,17 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginUsesDOMForCursor(
     return true;
 }
 
+class NotificationSink : public CompositionNotifySink
+{
+public:
+  NotificationSink(PluginInstanceParent *aInstance) : mInstance(aInstance)
+  { }
+
+  virtual void DidComposite() { mInstance->DidComposite(); }
+private:
+  PluginInstanceParent *mInstance;
+};
+
 bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
     const int& drawingModel, OptionalShmem *shmem, CrossProcessMutexHandle *mutex, NPError* result)
@@ -404,6 +416,10 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
 
         *mutex = mRemoteImageDataMutex->ShareToProcess(OtherProcess());
         container->SetRemoteImageData(mRemoteImageDataShmem.get<RemoteImageData>(), mRemoteImageDataMutex);
+
+        mNotifySink = new NotificationSink(this);
+
+        container->SetCompositionNotifySink(mNotifySink);
     } else if (drawingModel == NPDrawingModelSyncWin ||
 #ifdef XP_MACOSX
 #ifndef NP_NO_QUICKDRAW
@@ -427,6 +443,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
 
         if (mRemoteImageDataShmem.IsWritable()) {
             container->SetRemoteImageData(nsnull, nsnull);
+            container->SetCompositionNotifySink(nsnull);
             DeallocShmem(mRemoteImageDataShmem);
             mRemoteImageDataMutex = NULL;
         }
