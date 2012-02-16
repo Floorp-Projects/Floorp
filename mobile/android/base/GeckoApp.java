@@ -1024,13 +1024,13 @@ abstract public class GeckoApp
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
-                        mBrowserToolbar.setVisibility(View.GONE);
+                        mBrowserToolbar.hide();
                     }
                 });
             } else if (event.equals("ToggleChrome:Show")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
-                        mBrowserToolbar.setVisibility(View.VISIBLE);
+                        mBrowserToolbar.show();
                     }
                 });
             } else if (event.equals("DOMFullScreen:Start")) {
@@ -1507,7 +1507,8 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        tab.removePluginLayer(surface);
+        Layer layer = tab.removePluginLayer(surface);
+        hidePluginLayer(layer);
     }
 
     public void showSurface(Surface surface, int x, int y,
@@ -1642,9 +1643,12 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 // Hide/show the system notification bar
-                getWindow().setFlags(fullscreen ?
-                                     WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
-                                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                Window window = getWindow();
+                window.setFlags(fullscreen ?
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+                window.getDecorView().setSystemUiVisibility(fullscreen ? 1 : 0);
             }
         });
     }
@@ -2087,7 +2091,7 @@ abstract public class GeckoApp
         Runnable r = new SessionSnapshotRunnable(null);
         GeckoAppShell.getHandler().post(r);
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent());
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(mOwnActivityDepth));
         // The user is navigating away from this activity, but nothing
         // has come to the foreground yet; for Gecko, we may want to
         // stop repainting, for example.
@@ -2107,7 +2111,8 @@ abstract public class GeckoApp
     {
         Log.i(LOGTAG, "resume");
         if (checkLaunchState(LaunchState.GeckoRunning))
-            GeckoAppShell.onResume();
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createResumeEvent(mOwnActivityDepth));
+
         // After an onPause, the activity is back in the foreground.
         // Undo whatever we did in onPause.
         super.onResume();
@@ -2156,7 +2161,7 @@ abstract public class GeckoApp
         // etc., and generally mark the profile as 'clean', and then
         // dirty it again if we get an onResume.
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createStoppingEvent());
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createStoppingEvent(mOwnActivityDepth));
         super.onStop();
     }
 
@@ -2173,7 +2178,7 @@ abstract public class GeckoApp
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onStart");
 
         Log.i(LOGTAG, "start");
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createStartEvent());
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createStartEvent(mOwnActivityDepth));
         super.onStart();
     }
 

@@ -65,11 +65,8 @@ public:
     mIsBaseSet = false;
   }
 
-  nsresult SetBaseValueString(const nsAString& aValue,
-                              nsSVGElement *aSVGElement);
-  void GetBaseValueString(nsAString& aValue,
-                          nsSVGElement *aSVGElement);
-
+  nsresult SetBaseValueAtom(const nsIAtom* aValue, nsSVGElement *aSVGElement);
+  nsIAtom* GetBaseValueAtom(nsSVGElement *aSVGElement);
   nsresult SetBaseValue(PRUint16 aValue,
                         nsSVGElement *aSVGElement);
   PRUint16 GetBaseValue() const
