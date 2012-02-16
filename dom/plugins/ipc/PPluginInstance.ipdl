@@ -52,6 +52,7 @@ using NPError;
 using NPRemoteWindow;
 using NPRemoteEvent;
 using NPRect;
+using NPImageFormat;
 using NPNURLVariable;
 using NPCoordinateSpace;
 using mozilla::plugins::NativeWindowHandle;
@@ -59,6 +60,7 @@ using mozilla::gfxSurfaceType;
 using gfxIntSize;
 using mozilla::null_t;
 using mozilla::plugins::WindowsSharedMemoryHandle;
+using mozilla::plugins::DXGISharedSurfaceHandle;
 using SurfaceDescriptorX11;
 using nsIntRect;
 using nsTextEvent;
@@ -82,6 +84,20 @@ union SurfaceDescriptor {
   //    and it just want to grab prevSurface
   //     back without giving new surface
   null_t;
+};
+
+union AsyncSurfaceDescriptor {
+  Shmem;
+  DXGISharedSurfaceHandle;
+};
+
+struct NPRemoteAsyncSurface
+{
+  uint32_t version;
+  gfxIntSize size;
+  NPImageFormat format;
+  uint32_t      stride;
+  AsyncSurfaceDescriptor data;
 };
 
 rpc protocol PPluginInstance

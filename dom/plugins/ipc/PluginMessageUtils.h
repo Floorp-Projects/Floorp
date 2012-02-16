@@ -142,8 +142,10 @@ typedef intptr_t NativeWindowHandle; // never actually used, will always be 0
 
 #ifdef XP_WIN
 typedef base::SharedMemoryHandle WindowsSharedMemoryHandle;
+typedef HANDLE DXGISharedSurfaceHandle;
 #else
 typedef mozilla::null_t WindowsSharedMemoryHandle;
+typedef mozilla::null_t DXGISharedSurfaceHandle;
 #endif
 
 // XXX maybe not the best place for these. better one?
@@ -332,6 +334,32 @@ template <>
 struct ParamTraits<NPWindowType>
 {
   typedef NPWindowType paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    aMsg->WriteInt16(int16(aParam));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    int16 result;
+    if (aMsg->ReadInt16(aIter, &result)) {
+      *aResult = paramType(result);
+      return true;
+    }
+    return false;
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    aLog->append(StringPrintf(L"%d", int16(aParam)));
+  }
+};
+
+template <>
+struct ParamTraits<NPImageFormat>
+{
+  typedef NPImageFormat paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
