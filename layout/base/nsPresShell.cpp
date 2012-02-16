@@ -5214,7 +5214,7 @@ void PresShell::SetDisplayPort(const nsRect& aDisplayPort)
 
 nsresult PresShell::SetResolution(float aXResolution, float aYResolution)
 {
-  if (!(aXResolution > 0.0 && aXResolution > 0.0)) {
+  if (!(aXResolution > 0.0 && aYResolution > 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
   if (aXResolution == mXResolution && aYResolution == mYResolution) {
