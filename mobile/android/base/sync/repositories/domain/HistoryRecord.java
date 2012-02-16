@@ -48,8 +48,6 @@ import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 
-import android.util.Log;
-
 /**
  * Visits are in microsecond precision.
  *
@@ -125,7 +123,7 @@ public class HistoryRecord extends Record {
     try {
       this.visits = p.getArray("visits");
     } catch (NonArrayJSONException e) {
-      Log.e(LOG_TAG, "Got non-array visits in history record " + this.guid, e);
+      Logger.error(LOG_TAG, "Got non-array visits in history record " + this.guid, e);
       this.visits = new JSONArray();
     }
   }
@@ -134,7 +132,7 @@ public class HistoryRecord extends Record {
   public CryptoRecord getPayload() {
     CryptoRecord rec = new CryptoRecord(this);
     rec.payload = new ExtendedJSONObject();
-    Log.d(LOG_TAG, "Getting payload for history record " + this.guid + " (" + this.guid.length() + ").");
+    Logger.debug(LOG_TAG, "Getting payload for history record " + this.guid + " (" + this.guid.length() + ").");
     rec.payload.put("id",      this.guid);
     rec.payload.put("title",   this.title);
     rec.payload.put("histUri", this.histURI);             // TODO: encoding?
@@ -163,12 +161,12 @@ public class HistoryRecord extends Record {
   @Override
   public boolean equalPayloads(Object o) {
     if (o == null || !(o instanceof HistoryRecord)) {
-      Log.d(LOG_TAG, "Not a HistoryRecord: " + o);
+      Logger.debug(LOG_TAG, "Not a HistoryRecord: " + o);
       return false;
     }
     HistoryRecord other = (HistoryRecord) o;
     if (!super.equalPayloads(other)) {
-      Log.d(LOG_TAG, "super.equalPayloads returned false.");
+      Logger.debug(LOG_TAG, "super.equalPayloads returned false.");
       return false;
     }
     return RepoUtils.stringsEqual(this.title, other.title) &&
@@ -193,7 +191,7 @@ public class HistoryRecord extends Record {
 
   private boolean checkVisitsEquals(HistoryRecord other) {
     Logger.debug(LOG_TAG, "Checking visits.");
-    if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+    if (Logger.logVerbose(LOG_TAG)) {
       // Don't JSON-encode unless we're logging.
       Logger.trace(LOG_TAG, ">> Mine:   " + ((this.visits == null) ? "null" : this.visits.toJSONString()));
       Logger.trace(LOG_TAG, ">> Theirs: " + ((other.visits == null) ? "null" : other.visits.toJSONString()));
