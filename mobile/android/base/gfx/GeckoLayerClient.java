@@ -86,6 +86,8 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
     // inside a transaction, so no synchronization is needed.
     private boolean mUpdateViewportOnEndDraw;
 
+    private String mLastCheckerboardColor;
+
     private static Pattern sColorPattern;
 
     /* Used by robocop for testing purposes */
@@ -145,7 +147,8 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
 
             // Update the background color, if it's present.
             String backgroundColorString = viewportObject.optString("backgroundColor");
-            if (backgroundColorString != null) {
+            if (backgroundColorString != null && !backgroundColorString.equals(mLastCheckerboardColor)) {
+                mLastCheckerboardColor = backgroundColorString;
                 LayerController controller = getLayerController();
                 controller.setCheckerboardColor(parseColorFromGecko(backgroundColorString));
             }
