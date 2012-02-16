@@ -54,6 +54,7 @@
 #include "PluginProcessChild.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
+#include "nsNPAPIPluginInstance.h"
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
@@ -131,6 +132,7 @@ struct RunnableMethodTraits<PluginInstanceChild>
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     : mPluginIface(aPluginIface)
+    , mDrawingModel(kDefaultDrawingModel)
     , mCachedWindowActor(nsnull)
     , mCachedElementActor(nsnull)
 #if defined(OS_WIN)
@@ -149,7 +151,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 #endif
     , mShColorSpace(nsnull)
     , mShContext(nsnull)
-    , mDrawingModel(NPDrawingModelCoreGraphics)
     , mCGLayer(nsnull)
     , mCurrentEvent(nsnull)
 #endif
@@ -414,6 +415,16 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 #endif
     }
 
+    case NPNVsupportsAsyncBitmapSurfaceBool: {
+#ifdef XP_WIN
+        *((NPBool*)aValue) = PluginModuleChild::current()->AsyncDrawingAllowed();
+#else
+        // We do not support non-windows yet.
+        *((NPBool*)aValue) = false;
+#endif
+        return NPERR_NO_ERROR;
+    }
+
 #ifdef XP_MACOSX
    case NPNVsupportsCoreGraphicsBool: {
         *((NPBool*)aValue) = true;
@@ -519,18 +530,27 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
         return rv;
     }
 
-#ifdef XP_MACOSX
     case NPPVpluginDrawingModel: {
         NPError rv;
         int drawingModel = (int16) (intptr_t) aValue;
+
+        if (!PluginModuleChild::current()->AsyncDrawingAllowed()) {
+          if (drawingModel == NPDrawingModelAsyncBitmapSurface ||
+              drawingModel == NPDrawingModelAsyncWindowsDXGISurface ||
+              drawingModel == NPDrawingModelAsyncWindowsDX9ExSurface) {
+                return NPERR_GENERIC_ERROR;
+          }
+        }              
 
         if (!CallNPN_SetValue_NPPVpluginDrawingModel(drawingModel, &rv))
             return NPERR_GENERIC_ERROR;
         mDrawingModel = drawingModel;
 
+#ifdef XP_MACOSX
         if (drawingModel == NPDrawingModelCoreAnimation) {
             mCARefreshTimer = ScheduleTimer(DEFAULT_REFRESH_MS, true, CAUpdate);
         }
+#endif
 
         PLUGIN_LOG_DEBUG(("  Plugin requested drawing model id  #%i\n",
             mDrawingModel));
@@ -538,6 +558,7 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
         return rv;
     }
 
+#ifdef XP_MACOSX
     case NPPVpluginEventModel: {
         NPError rv;
         int eventModel = (int16) (intptr_t) aValue;

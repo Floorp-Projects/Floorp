@@ -64,6 +64,18 @@ class nsIPluginInstanceOwner;
 class nsIPluginStreamListener;
 class nsIOutputStream;
 
+#if defined(OS_WIN)
+const NPDrawingModel kDefaultDrawingModel = NPDrawingModelSyncWin;
+#elif defined(MOZ_X11)
+const NPDrawingModel kDefaultDrawingModel = NPDrawingModelSyncX;
+#else
+#ifndef NP_NO_QUICKDRAW
+const NPDrawingModel kDefaultDrawingModel = NPDrawingModelQuickDraw;
+#else
+const NPDrawingModel kDefaultDrawingModel = NPDrawingModelCoreGraphics;
+#endif
+#endif
+
 class nsNPAPITimer
 {
 public:
@@ -141,8 +153,8 @@ public:
   NPError SetUsesDOMForCursor(bool aUsesDOMForCursor);
   bool UsesDOMForCursor();
 
-#ifdef XP_MACOSX
   void SetDrawingModel(NPDrawingModel aModel);
+#ifdef XP_MACOSX
   void SetEventModel(NPEventModel aModel);
 #endif
 
@@ -237,9 +249,7 @@ protected:
   // the browser.
   NPP_t mNPP;
 
-#ifdef XP_MACOSX
   NPDrawingModel mDrawingModel;
-#endif
 
 #ifdef MOZ_WIDGET_ANDROID
   PRUint32 mANPDrawingModel;
