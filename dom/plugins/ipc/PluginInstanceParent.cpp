@@ -367,7 +367,8 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
 #endif
     {
         if (!GetImageContainer()) {
-          return false;
+          *result = NPERR_GENERIC_ERROR;
+          return true;
         }
 
         mDrawingModel = drawingModel;
