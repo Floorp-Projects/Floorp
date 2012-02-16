@@ -430,3 +430,5 @@ pref("layout.frame_rate.precise", true);
 pref("power.screen.timeout", 60);
 
 pref("full-screen-api.enabled", true);
+
+pref("media.volume.steps", 10);
