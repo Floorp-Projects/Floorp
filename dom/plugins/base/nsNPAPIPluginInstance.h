@@ -154,6 +154,7 @@ public:
   bool UsesDOMForCursor();
 
   void SetDrawingModel(NPDrawingModel aModel);
+  void RedrawPlugin();
 #ifdef XP_MACOSX
   void SetEventModel(NPEventModel aModel);
 #endif

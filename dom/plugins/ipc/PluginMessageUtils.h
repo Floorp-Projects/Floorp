@@ -43,6 +43,7 @@
 #include "base/message_loop.h"
 
 #include "mozilla/ipc/RPCChannel.h"
+#include "mozilla/ipc/CrossProcessMutex.h"
 #include "gfxipc/ShadowLayerUtils.h"
 
 #include "npapi.h"
@@ -87,6 +88,15 @@ UnmungePluginDsoPath(const std::string& munged);
 extern PRLogModuleInfo* gPluginLog;
 
 const uint32_t kAllowAsyncDrawing = 0x1;
+
+inline bool IsDrawingModelAsync(int16_t aModel) {
+  return aModel == NPDrawingModelAsyncBitmapSurface
+#ifdef XP_WIN
+         || aModel == NPDrawingModelAsyncWindowsDXGISurface
+         || aModel == NPDrawingModelAsyncWindowsDX9ExSurface
+#endif
+         ;
+}
 
 #if defined(_MSC_VER)
 #define FULLFUNCTION __FUNCSIG__
