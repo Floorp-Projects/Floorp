@@ -362,6 +362,19 @@ LIRGenerator::visitTypeOf(MTypeOf *ins)
 }
 
 bool
+LIRGenerator::visitToId(MToId *ins)
+{
+    LToIdV *lir = new LToIdV();
+    if (!useBox(lir, LToIdV::Object, ins->lhs()))
+        return false;
+    if (!useBox(lir, LToIdV::Index, ins->rhs()))
+        return false;
+    if (!defineVMReturn(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitBitNot(MBitNot *ins)
 {
     MDefinition *input = ins->getOperand(0);

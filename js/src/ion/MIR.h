@@ -1593,6 +1593,28 @@ class MTypeOf
     }
 };
 
+class MToId
+  : public MBinaryInstruction,
+    public BoxInputsPolicy
+{
+    MToId(MDefinition *object, MDefinition *index)
+      : MBinaryInstruction(object, index)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ToId);
+
+    static MToId *New(MDefinition *object, MDefinition *index) {
+        return new MToId(object, index);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 class MBinaryBitwiseInstruction
   : public MBinaryInstruction,
     public BitwisePolicy

@@ -314,6 +314,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_deflocalfun(uint32 local, JSFunction *fun);
     bool jsop_this();
     bool jsop_typeof();
+    bool jsop_toid();
     bool jsop_iter(uint8 flags);
     bool jsop_iternext(uint8 depth);
     bool jsop_itermore();

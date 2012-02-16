@@ -122,6 +122,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTest(MTest *test);
     bool visitCompare(MCompare *comp);
     bool visitTypeOf(MTypeOf *ins);
+    bool visitToId(MToId *ins);
     bool visitBitNot(MBitNot *ins);
     bool visitBitAnd(MBitAnd *ins);
     bool visitBitOr(MBitOr *ins);

@@ -128,6 +128,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitThrow(LThrow *lir);
     bool visitTypeOfV(LTypeOfV *lir);
     bool visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool);
+    bool visitToIdV(LToIdV *lir);
     bool visitLoadElementV(LLoadElementV *load);
     bool visitLoadElementHole(LLoadElementHole *lir);
     bool visitStoreElementT(LStoreElementT *lir);

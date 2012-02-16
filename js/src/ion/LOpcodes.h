@@ -147,6 +147,7 @@
     _(ArrayLength)                  \
     _(StringLength)                 \
     _(TypeOfV)                      \
+    _(ToIdV)                        \
     _(Round)
 
 #if defined(JS_CPU_X86)
