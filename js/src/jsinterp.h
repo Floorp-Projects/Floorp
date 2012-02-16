@@ -360,7 +360,7 @@ bool
 Throw(JSContext *cx, const Value &v);
 
 bool
-GetObjectProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
+GetProperty(JSContext *cx, const Value &value, PropertyName *name, Value *vp);
 
 bool
 GetScopeName(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);

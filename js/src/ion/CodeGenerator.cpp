@@ -1482,10 +1482,11 @@ typedef bool (*GetPropertyOrNameFn)(JSContext *, JSObject *, PropertyName *, Val
 bool
 CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
 {
-    static const VMFunction Info = FunctionInfo<GetPropertyOrNameFn>(GetObjectProperty);
+    typedef bool (*pf)(JSContext *, const Value &, PropertyName *, Value *);
+    static const VMFunction Info = FunctionInfo<pf>(GetProperty);
 
     pushArg(ImmGCPtr(lir->mir()->atom()));
-    pushArg(ToRegister(lir->getOperand(0)));
+    pushArg(ToValue(lir, LCallGetProperty::Value));
     return callVM(Info, lir);
 }
 
