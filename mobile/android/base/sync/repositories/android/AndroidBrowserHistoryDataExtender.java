@@ -145,12 +145,15 @@ public class AndroidBrowserHistoryDataExtender extends SQLiteOpenHelper {
   }
   
   public Cursor fetch(String guid) throws NullCursorException {
+    String where = COL_GUID + " = ?";
+    String[] args = new String[] { guid };
+
     SQLiteDatabase db = this.getCachedReadableDatabase();
     long queryStart = System.currentTimeMillis();
     Cursor cur = db.query(TBL_HISTORY_EXT,
                           new String[] { COL_GUID, COL_VISITS },
-                          COL_GUID + " = '" + guid + "'",
-                          null, null, null, null);
+                          where, args,
+                          null, null, null);
     RepoUtils.queryTimeLogger("AndroidBrowserHistoryDataExtender.fetch(guid)", queryStart, System.currentTimeMillis());
     if (cur == null) {
       Log.e(TAG, "Got a null cursor while doing fetch for guid " + guid + " on history extension table");
@@ -160,7 +163,10 @@ public class AndroidBrowserHistoryDataExtender extends SQLiteOpenHelper {
   }
   
   public void delete(String guid) {
+    String where = COL_GUID + " = ?";
+    String[] args = new String[] { guid };
+
     SQLiteDatabase db = this.getCachedWritableDatabase();
-    db.delete(TBL_HISTORY_EXT, COL_GUID + " = '" + guid + "'", null);
+    db.delete(TBL_HISTORY_EXT, where, args);
   }
 }
