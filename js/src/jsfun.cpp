@@ -530,7 +530,7 @@ args_trace(JSTracer *trc, JSObject *obj)
 {
     ArgumentsObject &argsobj = obj->asArguments();
     ArgumentsData *data = argsobj.data();
-    MarkValue(trc, data->callee, js_callee_str);
+    MarkValue(trc, &data->callee, js_callee_str);
     MarkValueRange(trc, argsobj.initialLength(), data->slots, js_arguments_str);
 
     /*
