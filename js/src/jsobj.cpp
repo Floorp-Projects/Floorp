@@ -3495,6 +3495,11 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
     types::TypeObject::writeBarrierPost(a->type_, &a->type_);
     types::TypeObject::writeBarrierPost(b->type_, &b->type_);
 #endif
+
+    if (a->inDictionaryMode())
+        a->lastProperty()->listp = &a->shape_;
+    if (b->inDictionaryMode())
+        b->lastProperty()->listp = &b->shape_;
 }
 
 /*
