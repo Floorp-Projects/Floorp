@@ -188,7 +188,7 @@ class IonBuilder : public MIRGenerator
 
   public:
     IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp, MIRGraph &graph,
-               TypeOracle *oracle, CompileInfo &info, size_t inliningDepth = 0);
+               TypeOracle *oracle, CompileInfo &info, size_t inliningDepth = 0, uint32 loopDepth = 0);
 
     bool build();
     bool buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
@@ -238,8 +238,9 @@ class IonBuilder : public MIRGenerator
                   jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc,
                   jsbytecode *continuepc = NULL);
 
-    MBasicBlock *addBlock(MBasicBlock *block);
+    MBasicBlock *addBlock(MBasicBlock *block, uint32 loopDepth);
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc);
+    MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32 loopDepth);
     MBasicBlock *newOsrPreheader(MBasicBlock *header, jsbytecode *loopHead, jsbytecode *loopEntry);
     MBasicBlock *newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newBlock(jsbytecode *pc) {
@@ -346,6 +347,7 @@ class IonBuilder : public MIRGenerator
     jsbytecode *pc;
     JSObject *initialScopeChain_;
     MBasicBlock *current;
+    uint32 loopDepth_;
 
     /* Information used for inline-call builders. */
     MResumePoint *callerResumePoint_;

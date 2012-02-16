@@ -56,10 +56,11 @@ using namespace js;
 using namespace js::ion;
 
 IonBuilder::IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp, MIRGraph &graph,
-                       TypeOracle *oracle, CompileInfo &info, size_t inliningDepth)
+                       TypeOracle *oracle, CompileInfo &info, size_t inliningDepth, uint32 loopDepth)
   : MIRGenerator(cx, temp, graph, info),
     script(info.script()),
     initialScopeChain_(scopeChain),
+    loopDepth_(loopDepth),
     callerResumePoint_(NULL),
     oracle(oracle),
     inliningDepth(inliningDepth)
@@ -272,7 +273,11 @@ IonBuilder::build()
             ins->setResumePoint(current->entryResumePoint());
     }
 
-    return traverseBytecode();
+    if (!traverseBytecode())
+        return false;
+
+    JS_ASSERT(loopDepth_ == 0);
+    return true;
 }
 
 bool
@@ -1001,10 +1006,21 @@ IonBuilder::processBrokenLoop(CFGState &state)
 {
     JS_ASSERT(!current);
 
+    JS_ASSERT(loopDepth_);
+    loopDepth_--;
+
+    // A broken loop is not a real loop (it has no header or backedge), so
+    // reset the loop depth.
+    for (MBasicBlockIterator i(graph_.begin(state.loop.entry)); i != graph_.end(); i++) {
+        if (i->loopDepth() > loopDepth_)
+            i->setLoopDepth(i->loopDepth() - 1);
+    }
+
     // If the loop started with a condition (while/for) then even if the
     // structure never actually loops, the condition itself can still fail and
     // thus we must resume at the successor, if one exists.
     current = state.loop.successor;
+    JS_ASSERT_IF(current, current->loopDepth() == loopDepth_);
 
     // Join the breaks together and continue parsing.
     if (state.loop.breaks) {
@@ -1037,6 +1053,10 @@ IonBuilder::ControlStatus
 IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
 {
     JS_ASSERT(current);
+
+    JS_ASSERT(loopDepth_);
+    loopDepth_--;
+    JS_ASSERT_IF(successor, successor->loopDepth() == loopDepth_);
 
     // Compute phis in the loop header and propagate them throughout the loop,
     // including the successor.
@@ -1112,7 +1132,7 @@ IonBuilder::processDoWhileCondEnd(CFGState &state)
 
     // Pop the last value, and create the successor block.
     MDefinition *vins = current->pop();
-    MBasicBlock *successor = newBlock(current, GetNextPc(pc));
+    MBasicBlock *successor = newBlock(current, GetNextPc(pc), loopDepth_ - 1);
     if (!successor)
         return ControlStatus_Error;
 
@@ -1132,7 +1152,7 @@ IonBuilder::processWhileCondEnd(CFGState &state)
 
     // Create the body and successor blocks.
     MBasicBlock *body = newBlock(current, state.loop.bodyStart);
-    state.loop.successor = newBlock(current, state.loop.exitpc);
+    state.loop.successor = newBlock(current, state.loop.exitpc, loopDepth_ - 1);
     if (!body || !state.loop.successor)
         return ControlStatus_Error;
 
@@ -1169,7 +1189,7 @@ IonBuilder::processForCondEnd(CFGState &state)
 
     // Create the body and successor blocks.
     MBasicBlock *body = newBlock(current, state.loop.bodyStart);
-    state.loop.successor = newBlock(current, state.loop.exitpc);
+    state.loop.successor = newBlock(current, state.loop.exitpc, loopDepth_ - 1);
     if (!body || !state.loop.successor)
         return ControlStatus_Error;
 
@@ -2356,14 +2376,14 @@ IonBuilder::maybeInline(uint32 argc)
         TypeInferenceOracle oracle;
         if (!oracle.init(cx, data.callee->script()))
             return InliningStatus_Error;
-        IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle, *info, inliningDepth + 1);
+        IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle, *info, inliningDepth + 1, loopDepth_);
         return jsop_call_inline(argc, inlineBuilder, &data)
              ? InliningStatus_Inlined
              : InliningStatus_Error;
     }
 
     DummyOracle oracle;
-    IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle, *info, inliningDepth + 1);
+    IonBuilder inlineBuilder(cx, NULL, temp(), graph(), &oracle, *info, inliningDepth + 1, loopDepth_);
     return jsop_call_inline(argc, inlineBuilder, &data)
          ? InliningStatus_Inlined
          : InliningStatus_Error;
@@ -2552,12 +2572,12 @@ IonBuilder::jsop_newarray(uint32 count)
 }
 
 MBasicBlock *
-IonBuilder::addBlock(MBasicBlock *block)
+IonBuilder::addBlock(MBasicBlock *block, uint32 loopDepth)
 {
     if (!block)
         return NULL;
     graph().addBlock(block);
-    block->setLoopDepth(loops_.length());
+    block->setLoopDepth(loopDepth);
     return block;
 }
 
@@ -2565,7 +2585,14 @@ MBasicBlock *
 IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
-    return addBlock(block);
+    return addBlock(block, loopDepth_);
+}
+
+MBasicBlock *
+IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32 loopDepth)
+{
+    MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
+    return addBlock(block, loopDepth);
 }
 
 MBasicBlock *
@@ -2687,8 +2714,9 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopHead, jsby
 MBasicBlock *
 IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 {
+    loopDepth_++;
     MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(graph(), info(), predecessor, pc);
-    return addBlock(block);
+    return addBlock(block, loopDepth_);
 }
 
 // A resume point is a mapping of stack slots to MDefinitions. It is used to
