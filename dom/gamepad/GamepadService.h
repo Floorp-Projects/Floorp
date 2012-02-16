@@ -6,9 +6,9 @@
 #define mozilla_dom_GamepadService_h_
 
 #include "mozilla/StandardInteger.h"
+#include "Gamepad.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
-#include "nsDOMGamepad.h"
 #include "nsIGamepadServiceTest.h"
 #include "nsGlobalWindow.h"
 #include "nsIFocusManager.h"
@@ -31,6 +31,8 @@ class GamepadService : public nsIObserver
 
   // Get the singleton service
   static already_AddRefed<GamepadService> GetService();
+  // Return true if the API is preffed on.
+  static bool IsAPIEnabled();
 
   void BeginShutdown();
 
@@ -50,7 +52,7 @@ class GamepadService : public nsIObserver
   void NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue);
 
   // Synchronize the state of |aGamepad| to match the gamepad stored at |aIndex|
-  void SyncGamepadState(uint32_t aIndex, nsDOMGamepad* aGamepad);
+  void SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad);
 
  protected:
   GamepadService();
@@ -59,15 +61,15 @@ class GamepadService : public nsIObserver
 
   void NewConnectionEvent(uint32_t aIndex, bool aConnected);
   void FireAxisMoveEvent(EventTarget* aTarget,
-                         nsDOMGamepad* aGamepad,
+                         Gamepad* aGamepad,
                          uint32_t axis,
                          double value);
   void FireButtonEvent(EventTarget* aTarget,
-                       nsDOMGamepad* aGamepad,
+                       Gamepad* aGamepad,
                        uint32_t aButton,
                        double aValue);
   void FireConnectionEvent(EventTarget* aTarget,
-                           nsDOMGamepad* aGamepad,
+                           Gamepad* aGamepad,
                            bool aConnected);
 
   // true if this feature is enabled in preferences
@@ -92,7 +94,7 @@ class GamepadService : public nsIObserver
 
   // Gamepads connected to the system. Copies of these are handed out
   // to each window.
-  nsTArray<nsRefPtr<nsDOMGamepad> > mGamepads;
+  nsTArray<nsRefPtr<Gamepad> > mGamepads;
   // nsGlobalWindows that are listening for gamepad events.
   // has been sent to that window.
   nsTArray<nsRefPtr<nsGlobalWindow> > mListeners;

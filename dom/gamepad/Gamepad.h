@@ -2,39 +2,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDomGamepad_h
-#define nsDomGamepad_h
+#ifndef mozilla_dom_gamepad_Gamepad_h
+#define mozilla_dom_gamepad_Gamepad_h
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/StandardInteger.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMGamepad.h"
+#include "nsIVariant.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
-class nsDOMGamepad : public nsIDOMGamepad
-                   , public nsWrapperCache
+namespace mozilla {
+namespace dom {
+
+class Gamepad : public nsIDOMGamepad
+              , public nsWrapperCache
 {
 public:
-  nsDOMGamepad(nsISupports* aParent,
-               const nsAString& aID, uint32_t aIndex,
-               uint32_t aNumButtons, uint32_t aNumAxes);
+  Gamepad(nsISupports* aParent,
+          const nsAString& aID, uint32_t aIndex,
+          uint32_t aNumButtons, uint32_t aNumAxes);
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMGamepad)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
 
-  nsDOMGamepad();
   void SetConnected(bool aConnected);
   void SetButton(uint32_t aButton, double aValue);
   void SetAxis(uint32_t aAxis, double aValue);
   void SetIndex(uint32_t aIndex);
 
   // Make the state of this gamepad equivalent to other.
-  void SyncState(nsDOMGamepad* other);
+  void SyncState(Gamepad* aOther);
 
-  // Return a new nsDOMGamepad containing the same data as this object,
+  // Return a new Gamepad containing the same data as this object,
   // parented to aParent.
-  already_AddRefed<nsDOMGamepad> Clone(nsISupports* aParent);
+  already_AddRefed<Gamepad> Clone(nsISupports* aParent);
 
   nsISupports* GetParentObject() const
   {
@@ -74,7 +77,7 @@ public:
   }
 
 private:
-  virtual ~nsDOMGamepad() {}
+  virtual ~Gamepad() {}
 
   nsresult GetButtons(nsIVariant** aButtons);
   nsresult GetAxes(nsIVariant** aAxes);
@@ -92,4 +95,7 @@ protected:
   nsTArray<double> mAxes;
 };
 
-#endif // nsDomGamepad_h
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_gamepad_Gamepad_h

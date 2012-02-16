@@ -93,6 +93,9 @@ if CONFIG['MOZ_B2G_FM']:
 if CONFIG['MOZ_PAY']:
     PARALLEL_DIRS += ['payment']
 
+if CONFIG['MOZ_GAMEPAD']:
+    PARALLEL_DIRS += ['gamepad']
+
 # bindings/test is here, because it needs to build after bindings/, and
 # we build subdirectories before ourselves.
 TEST_DIRS += [
