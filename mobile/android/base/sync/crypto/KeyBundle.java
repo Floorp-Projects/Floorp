@@ -75,7 +75,7 @@ public class KeyBundle {
       if (account.matches("^[A-Za-z0-9._-]+$")) {
         return account;
       }
-      return Cryptographer.sha1Base32(account);
+      return Utils.sha1Base32(account);
     }
 
     // If we encounter characters not allowed by the API (as found for
