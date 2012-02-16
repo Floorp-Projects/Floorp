@@ -483,13 +483,14 @@ struct JSDumpHeapTracer : public JSTracer {
 };
 
 static void
-DumpHeapVisitChild(JSTracer *trc, void *thing, JSGCTraceKind kind);
+DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
 static void
-DumpHeapPushIfNew(JSTracer *trc, void *thing, JSGCTraceKind kind)
+DumpHeapPushIfNew(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     JS_ASSERT(trc->callback == DumpHeapPushIfNew ||
               trc->callback == DumpHeapVisitChild);
+    void *thing = *thingp;
     JSDumpHeapTracer *dtrc = static_cast<JSDumpHeapTracer *>(trc);
 
     /*
@@ -509,13 +510,13 @@ DumpHeapPushIfNew(JSTracer *trc, void *thing, JSGCTraceKind kind)
 }
 
 static void
-DumpHeapVisitChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
+DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     JS_ASSERT(trc->callback == DumpHeapVisitChild);
     JSDumpHeapTracer *dtrc = static_cast<JSDumpHeapTracer *>(trc);
     const char *edgeName = JS_GetTraceEdgeName(dtrc, dtrc->buffer, sizeof(dtrc->buffer));
-    fprintf(dtrc->output, "> %p %s\n", (void *)thing, edgeName);
-    DumpHeapPushIfNew(dtrc, thing, kind);
+    fprintf(dtrc->output, "> %p %s\n", *thingp, edgeName);
+    DumpHeapPushIfNew(dtrc, thingp, kind);
 }
 
 void
