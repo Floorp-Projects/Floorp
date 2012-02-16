@@ -163,6 +163,8 @@ class MOZ_EXPORT_API(GuardObjectNotificationReceiver)
      , const mozilla::detail::GuardObjectNotifier& _notifier
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT \
      , _notifier
+#  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT \
+       _notifier
 #  define MOZ_GUARD_OBJECT_NOTIFIER_INIT \
      do { _mCheckNotUsedAsTemporary.init(_notifier); } while (0)
 #else
@@ -170,6 +172,7 @@ class MOZ_EXPORT_API(GuardObjectNotificationReceiver)
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM
 #  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL
+#  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT
 #  define MOZ_GUARD_OBJECT_NOTIFIER_INIT do { } while (0)
 #endif
