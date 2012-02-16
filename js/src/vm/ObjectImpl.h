@@ -173,6 +173,9 @@ class ObjectImpl : public gc::Cell
     friend struct Shape;
     friend class NewObjectCache;
 
+    /* Minimum size for dynamically allocated slots. */
+    static const uint32_t SLOT_CAPACITY_MIN = 8;
+
     /*
      * These functions are currently public for simplicity; in the long run
      * it may make sense to make at least some of them private.
@@ -225,6 +228,17 @@ class ObjectImpl : public gc::Cell
      * a doubly-linked list.
      */
     inline bool inDictionaryMode() const;
+
+    /*
+     * Get the number of dynamic slots to allocate to cover the properties in
+     * an object with the given number of fixed slots and slot span. The slot
+     * capacity is not stored explicitly, and the allocated size of the slot
+     * array is kept in sync with this count.
+     */
+    static inline size_t dynamicSlotsCount(size_t nfixed, size_t span);
+
+    /* Memory usage functions. */
+    inline size_t sizeOfThis() const;
 
     /* JIT helpers. */
     static inline size_t offsetOfShape() { return offsetof(ObjectImpl, shape_); }
