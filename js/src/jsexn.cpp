@@ -432,9 +432,8 @@ exn_trace(JSTracer *trc, JSObject *obj)
             vcount += elem->argc;
         }
         vp = GetStackTraceValueBuffer(priv);
-        for (i = 0; i != vcount; ++i, ++vp) {
-            MarkValue(trc, *vp, "stack trace argument");
-        }
+        for (i = 0; i != vcount; ++i, ++vp)
+            MarkValue(trc, vp, "stack trace argument");
     }
 }
 
