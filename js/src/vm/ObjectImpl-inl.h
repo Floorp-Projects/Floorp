@@ -8,6 +8,12 @@
 #ifndef ObjectImpl_inl_h___
 #define ObjectImpl_inl_h___
 
+#include "mozilla/Assertions.h"
+
+#include "jscell.h"
+
+#include "js/TemplateLib.h"
+
 #include "ObjectImpl.h"
 
 inline bool
@@ -50,6 +56,26 @@ inline bool
 js::ObjectImpl::inDictionaryMode() const
 {
     return lastProperty()->inDictionary();
+}
+
+/* static */ inline size_t
+js::ObjectImpl::dynamicSlotsCount(size_t nfixed, size_t span)
+{
+    if (span <= nfixed)
+        return 0;
+    span -= nfixed;
+    if (span <= SLOT_CAPACITY_MIN)
+        return SLOT_CAPACITY_MIN;
+
+    size_t slots = RoundUpPow2(span);
+    MOZ_ASSERT(slots >= span);
+    return slots;
+}
+
+inline size_t
+js::ObjectImpl::sizeOfThis() const
+{
+    return arenaHeader()->getThingSize();
 }
 
 #endif /* ObjectImpl_inl_h__ */

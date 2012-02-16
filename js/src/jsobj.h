@@ -535,7 +535,6 @@ struct JSObject : public js::ObjectImpl
 
     inline bool hasPropertyTable() const;
 
-    inline size_t sizeOfThis() const;
     inline size_t computedSizeOfThisSlotsElements() const;
 
     inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
@@ -574,9 +573,6 @@ struct JSObject : public js::ObjectImpl
     static inline size_t getPrivateDataOffset(size_t nfixed);
     static inline size_t offsetOfSlots() { return offsetof(JSObject, slots); }
 
-    /* Minimum size for dynamically allocated slots. */
-    static const uint32_t SLOT_CAPACITY_MIN = 8;
-
     /*
      * Grow or shrink slots immediately before changing the slot span.
      * The number of allocated slots is not stored explicitly, and changes to
@@ -586,14 +582,6 @@ struct JSObject : public js::ObjectImpl
     void shrinkSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount);
 
     bool hasDynamicSlots() const { return slots != NULL; }
-
-    /*
-     * Get the number of dynamic slots to allocate to cover the properties in
-     * an object with the given number of fixed slots and slot span. The slot
-     * capacity is not stored explicitly, and the allocated size of the slot
-     * array is kept in sync with this count.
-     */
-    static inline size_t dynamicSlotsCount(size_t nfixed, size_t span);
 
     /* Compute dynamicSlotsCount() for this object. */
     inline size_t numDynamicSlots() const;
