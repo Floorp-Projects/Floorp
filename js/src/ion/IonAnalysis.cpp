@@ -434,13 +434,52 @@ ion::ReorderBlocks(MIRGraph &graph)
     if (graph.osrBlock())
         graph.addBlock(graph.osrBlock());
 
-    // Insert the remaining blocks in RPO.
+    // Insert the remaining blocks in RPO. Loop blocks are treated specially,
+    // to make sure no loop successor blocks are inserted before the loop's
+    // backedge.
+    uint32 loopDepth = 0;
+
+    // List of loop successor blocks we need to insert after the backedge.
+    Vector<MBasicBlock *, 8, IonAllocPolicy> pendingNonLoopBlocks;
+
+    // For every active loop, this list contains the index of the first
+    // block in pendingNonLoopBlocks.
+    Vector<size_t, 4, IonAllocPolicy> loops;
+
     while (!done.empty()) {
         current = done.popFront();
         current->unmark();
+
+        if (current->isLoopHeader()) {
+            loopDepth = current->loopDepth();
+            if (!loops.append(pendingNonLoopBlocks.length()))
+                return false;
+        }
+
+        if (current->isLoopBackedge() && current->loopDepth() == loopDepth) {
+            loopDepth--;
+            graph.addBlock(current);
+
+            // Re-visit all blocks we were not allowed to insert before the
+            // current backedge.
+            size_t nblocks = pendingNonLoopBlocks.length() - loops.popCopy();
+            for (size_t i = 0; i < nblocks; i++)
+                done.pushFront(pendingNonLoopBlocks.popCopy());
+            continue;
+        } else if (current->loopDepth() < loopDepth) {
+            // We are not allowed to insert this loop successor block before the
+            // backedge. Add it to the pending list so that we can insert it
+            // after the backedge.
+            if (!pendingNonLoopBlocks.append(current))
+                return false;
+            continue;
+        }
+
         graph.addBlock(current);
     }
 
+    JS_ASSERT(loopDepth == 0);
+    JS_ASSERT(pendingNonLoopBlocks.empty());
     JS_ASSERT(graph.numBlocks() == numBlocks);
 
     return true;
