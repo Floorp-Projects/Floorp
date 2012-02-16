@@ -671,6 +671,15 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+ 
+NS_IMETHODIMP
+nsPluginInstanceOwner::RedrawPlugin()
+{
+  if (mObjectFrame) {
+    mObjectFrame->InvalidateLayer(mObjectFrame->GetContentRectRelativeToSelf(), nsDisplayItem::TYPE_PLUGIN);
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 {
