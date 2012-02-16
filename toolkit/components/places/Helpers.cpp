@@ -400,13 +400,6 @@ PlacesEvent::Run()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PlacesEvent::Complete()
-{
-  Notify();
-  return NS_OK;
-}
-
 void
 PlacesEvent::Notify()
 {
@@ -417,9 +410,8 @@ PlacesEvent::Notify()
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(
+NS_IMPL_THREADSAFE_ISUPPORTS1(
   PlacesEvent
-, mozIStorageCompletionCallback
 , nsIRunnable
 )
 
