@@ -1893,6 +1893,12 @@ XMLHttpRequestPrivate::MaybeDispatchPrematureAbortEvents(JSContext* aCx)
     false, false, false, false, false
   };
 
+  // If we never saw loadstart, we must Unpin ourselves or we will hang at
+  // shutdown.  Do that here before any early returns.
+  if (!mProxy->mSeenLoadStart && mProxy->mWorkerPrivate) {
+    Unpin(aCx);
+  }
+
   if (mProxy->mSeenUploadLoadStart) {
     JSObject* target = mProxy->mXMLHttpRequestPrivate->GetUploadJSObject();
     NS_ASSERTION(target, "Must have a target!");
