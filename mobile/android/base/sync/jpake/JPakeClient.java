@@ -387,12 +387,14 @@ public class JPakeClient implements JPakeRequestDelegate {
     // Jpake round 2
     try {
       JPakeCrypto.round2(secret, jParty, numGen);
-    } catch (Gx4IsOneException e) {
-      Log.e(LOG_TAG, "gx4 cannot equal 1.");
+    } catch (Gx3OrGx4IsZeroOrOneException e) {
+      Log.e(LOG_TAG, "gx3 and gx4 cannot equal 0 or 1.");
       abort(Constants.JPAKE_ERROR_INTERNAL);
+      return;
     } catch (IncorrectZkpException e) {
       Log.e(LOG_TAG, "ZKP mismatch");
       abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
+      return;
     }
 
     // Make outgoing payload.
@@ -491,7 +493,20 @@ public class JPakeClient implements JPakeRequestDelegate {
       this.state = State.VERIFY_PAIRING;
       scheduleGetRequest(jpakePollInterval);
     } else { // Prepare and send verification of keys.
-      jOutgoing = computeKeyVerification(myKeyBundle);
+      try {
+        jOutgoing = computeKeyVerification(myKeyBundle);
+      } catch (UnsupportedEncodingException e) {
+        Log.e(LOG_TAG, "Failed to encrypt key verification value.", e);
+        abort(Constants.JPAKE_ERROR_INTERNAL);
+        e.printStackTrace();
+        return;
+      } catch (CryptoException e) {
+        Log.e(LOG_TAG, "Failed to encrypt key verification value.", e);
+        abort(Constants.JPAKE_ERROR_INTERNAL);
+        e.printStackTrace();
+        return;
+      }
+
       stateContext = State.VERIFY_KEY;
       this.state = State.PUT;
       putStep();
@@ -502,19 +517,12 @@ public class JPakeClient implements JPakeRequestDelegate {
    * (Receiver Only) Helper method to compute verification message from JPake
    * key bundle, to be sent to other device for verification.
    */
-  public ExtendedJSONObject computeKeyVerification(KeyBundle keyBundle) {
+  public ExtendedJSONObject computeKeyVerification(KeyBundle keyBundle)
+      throws UnsupportedEncodingException, CryptoException
+  {
     Log.d(LOG_TAG, "Encrypting key verification value.");
     // KeyBundle not null
-    ExtendedJSONObject jPayload = null;
-    try {
-      jPayload = encryptPayload(JPAKE_VERIFY_VALUE, keyBundle);
-    } catch (UnsupportedEncodingException e) {
-      Log.e(LOG_TAG, "Failed to encrypt key verification value.", e);
-      abort(Constants.JPAKE_ERROR_INTERNAL);
-    } catch (CryptoException e) {
-      Log.e(LOG_TAG, "Failed to encrypt key verification value.", e);
-      abort(Constants.JPAKE_ERROR_INTERNAL);
-    }
+    ExtendedJSONObject jPayload = encryptPayload(JPAKE_VERIFY_VALUE, keyBundle);
     Log.d(
         LOG_TAG,
         "enc key64: "
