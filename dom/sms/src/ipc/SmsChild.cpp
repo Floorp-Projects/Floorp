@@ -100,8 +100,7 @@ SmsChild::RecvNotifyRequestSmsSent(const SmsMessageData& aMessage,
   }
 
   nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessage);
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifySmsSent(aRequestId, message);
+  SmsRequestManager::GetInstance()->NotifySmsSent(aRequestId, message);
 
   return true;
 }
@@ -115,8 +114,8 @@ SmsChild::RecvNotifyRequestSmsSendFailed(const PRInt32& aError,
     return true;
   }
 
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifySmsSendFailed(aRequestId, aError);
+  SmsRequestManager::GetInstance()->NotifySmsSendFailed(aRequestId,
+                                                        SmsRequest::ErrorType(aError));
 
   return true;
 }
@@ -131,8 +130,7 @@ SmsChild::RecvNotifyRequestGotSms(const SmsMessageData& aMessage,
   }
 
   nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessage);
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyGotSms(aRequestId, message);
+  SmsRequestManager::GetInstance()->NotifyGotSms(aRequestId, message);
 
   return true;
 }
@@ -146,8 +144,8 @@ SmsChild::RecvNotifyRequestGetSmsFailed(const PRInt32& aError,
     return true;
   }
 
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyGetSmsFailed(aRequestId, aError);
+  SmsRequestManager::GetInstance()->NotifyGetSmsFailed(aRequestId,
+                                                       SmsRequest::ErrorType(aError));
 
   return true;
 }
@@ -161,8 +159,7 @@ SmsChild::RecvNotifyRequestSmsDeleted(const bool& aDeleted,
     return true;
   }
 
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifySmsDeleted(aRequestId, aDeleted);
+  SmsRequestManager::GetInstance()->NotifySmsDeleted(aRequestId, aDeleted);
 
   return true;
 }
@@ -176,8 +173,8 @@ SmsChild::RecvNotifyRequestSmsDeleteFailed(const PRInt32& aError,
     return true;
   }
 
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifySmsDeleteFailed(aRequestId, aError);
+  SmsRequestManager::GetInstance()->NotifySmsDeleteFailed(aRequestId,
+                                                          SmsRequest::ErrorType(aError));
 
   return true;
 }
@@ -190,8 +187,7 @@ SmsChild::RecvNotifyRequestNoMessageInList(const PRInt32& aRequestId,
     return true;
   }
 
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyNoMessageInList(aRequestId);
+  SmsRequestManager::GetInstance()->NotifyNoMessageInList(aRequestId);
   return true;
 }
 
@@ -206,8 +202,7 @@ SmsChild::RecvNotifyRequestCreateMessageList(const PRInt32& aListId,
   }
 
   nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessageData);
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyCreateMessageList(aRequestId, aListId, message);
+  SmsRequestManager::GetInstance()->NotifyCreateMessageList(aRequestId, aListId, message);
   return true;
 }
 
@@ -221,8 +216,7 @@ SmsChild::RecvNotifyRequestGotNextMessage(const SmsMessageData& aMessageData,
   }
 
   nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessageData);
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyGotNextMessage(aRequestId, message);
+  SmsRequestManager::GetInstance()->NotifyGotNextMessage(aRequestId, message);
   return true;
 }
 
@@ -235,8 +229,8 @@ SmsChild::RecvNotifyRequestReadListFailed(const PRInt32& aError,
     return true;
   }
 
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-  requestManager->NotifyReadMessageListFailed(aRequestId, aError);
+  SmsRequestManager::GetInstance()->NotifyReadMessageListFailed(aRequestId,
+                                                                SmsRequest::ErrorType(aError));
   return true;
 }
 

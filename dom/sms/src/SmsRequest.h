@@ -54,6 +54,19 @@ class SmsRequest : public nsIDOMMozSmsRequest
 public:
   friend class SmsRequestManager;
 
+  /**
+   * All SMS related errors that could apply to SmsRequest objects.
+   * Make sure to keep this list in sync with the list in:
+   * embedding/android/GeckoSmsManager.java
+   */
+  enum ErrorType {
+    eNoError = 0,
+    eNoSignalError,
+    eNotFoundError,
+    eUnknownError,
+    eInternalError,
+  };
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMOZSMSREQUEST
 
@@ -98,7 +111,7 @@ private:
   /**
    * Set the object in an error state with the error type being aError.
    */
-  void SetError(PRInt32 aError);
+  void SetError(ErrorType aError);
 
   /**
    * Set the object in a success state with the result being the nsISupports
@@ -116,7 +129,7 @@ private:
 
   jsval     mResult;
   bool      mResultRooted;
-  PRInt32   mError;
+  ErrorType mError;
   bool      mDone;
   nsCOMPtr<nsIDOMMozSmsCursor> mCursor;
 
