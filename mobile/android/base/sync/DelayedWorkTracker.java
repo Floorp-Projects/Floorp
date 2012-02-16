@@ -37,8 +37,6 @@
 
 package org.mozilla.gecko.sync;
 
-import android.util.Log;
-
 /**
  * A little class to allow us to maintain a count of extant
  * things (in our case, callbacks that need to fire), and
@@ -53,13 +51,13 @@ public class DelayedWorkTracker {
   protected int outstandingCount = 0;
 
   public int incrementOutstanding() {
-    Log.d(LOG_TAG, "Incrementing outstanding.");
+    Logger.trace(LOG_TAG, "Incrementing outstanding.");
     synchronized(this) {
       return ++outstandingCount;
     }
   }
   public int decrementOutstanding() {
-    Log.d(LOG_TAG, "Decrementing outstanding.");
+    Logger.trace(LOG_TAG, "Decrementing outstanding.");
     Runnable job = null;
     int count;
     synchronized(this) {
@@ -81,10 +79,10 @@ public class DelayedWorkTracker {
     }
   }
   public void delayWorkItem(Runnable item) {
-    Log.d(LOG_TAG, "delayWorkItem.");
+    Logger.trace(LOG_TAG, "delayWorkItem.");
     boolean runnableNow = false;
     synchronized(this) {
-      Log.d(LOG_TAG, "outstandingCount: " + outstandingCount);
+      Logger.trace(LOG_TAG, "outstandingCount: " + outstandingCount);
       if (outstandingCount == 0) {
         runnableNow = true;
       } else {
@@ -95,7 +93,7 @@ public class DelayedWorkTracker {
       }
     }
     if (runnableNow) {
-      Log.d(LOG_TAG, "Running item now.");
+      Logger.trace(LOG_TAG, "Running item now.");
       item.run();
     }
   }

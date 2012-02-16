@@ -57,7 +57,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 public class SyncAuthenticatorService extends Service {
-  private static final String LOG_TAG = "SyncAuthenticatorService";
+  private static final String LOG_TAG = "SyncAuthService";
   private SyncAccountAuthenticator sAccountAuthenticator = null;
 
   @Override
