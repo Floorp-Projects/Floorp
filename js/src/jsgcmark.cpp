@@ -144,7 +144,8 @@ MarkRoot(JSTracer *trc, T *thing, const char *name)
 
 template <typename T>
 static void
-MarkRange(JSTracer *trc, size_t len, HeapPtr<T> *vec, const char *name) {
+MarkRange(JSTracer *trc, size_t len, HeapPtr<T> *vec, const char *name)
+{
     for (size_t i = 0; i < len; ++i) {
         if (T *obj = vec[i]) {
             JS_SET_TRACING_INDEX(trc, name, i);
@@ -155,7 +156,8 @@ MarkRange(JSTracer *trc, size_t len, HeapPtr<T> *vec, const char *name) {
 
 template <typename T>
 static void
-MarkRootRange(JSTracer *trc, size_t len, T **vec, const char *name) {
+MarkRootRange(JSTracer *trc, size_t len, T **vec, const char *name)
+{
     for (size_t i = 0; i < len; ++i) {
         JS_SET_TRACING_INDEX(trc, name, i);
         MarkInternal(trc, vec[i]);
@@ -669,7 +671,10 @@ MarkChildren(JSTracer *trc, JSScript *script)
     JS_ASSERT_IF(trc->runtime->gcCheckCompartment,
                  script->compartment() == trc->runtime->gcCheckCompartment);
 
-    MarkStringRootRange(trc, script->natoms, script->atoms, "atoms");
+    for (uint32_t i = 0; i < script->natoms; ++i) {
+        if (JSAtom *p = script->atoms[i])
+            MarkStringUnbarriered(trc, p, "atom");
+    }
 
     if (JSScript::isValidOffset(script->objectsOffset)) {
         JSObjectArray *objarray = script->objects();
