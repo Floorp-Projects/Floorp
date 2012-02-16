@@ -180,7 +180,7 @@ CopyContext(gfxContext* dest, gfxContext* src)
  **/
 #define NS_CANVASGRADIENT_PRIVATE_IID \
     { 0x491d39d8, 0x4058, 0x42bd, { 0xac, 0x76, 0x70, 0xd5, 0x62, 0x7f, 0x02, 0x10 } }
-class nsCanvasGradient : public nsIDOMCanvasGradient
+class nsCanvasGradient MOZ_FINAL : public nsIDOMCanvasGradient
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENT_PRIVATE_IID)
@@ -238,7 +238,7 @@ NS_INTERFACE_MAP_END
  **/
 #define NS_CANVASPATTERN_PRIVATE_IID \
     { 0xb85c6c8a, 0x0624, 0x4530, { 0xb8, 0xee, 0xff, 0xdf, 0x42, 0xe8, 0x21, 0x6d } }
-class nsCanvasPattern : public nsIDOMCanvasPattern
+class nsCanvasPattern MOZ_FINAL : public nsIDOMCanvasPattern
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASPATTERN_PRIVATE_IID)
