@@ -323,7 +323,8 @@ class IonBuilder : public MIRGenerator
 
     // Replace generic calls to native function by instructions which can be
     // specialized and which can enable GVN & LICM on these native calls.
-    void discardCallArgs(uint32 argc, MDefinition **argv);
+    bool discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
+    bool discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
     bool optimizeNativeCall(uint32 argc);
 
     /* Inlining. */
