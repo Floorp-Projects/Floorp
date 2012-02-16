@@ -64,6 +64,7 @@ namespace ion {
     _(Call)                                                                 \
     _(BitNot)                                                               \
     _(TypeOf)                                                               \
+    _(ToId)                                                                 \
     _(BitAnd)                                                               \
     _(BitOr)                                                                \
     _(BitXor)                                                               \
