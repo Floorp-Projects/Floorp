@@ -11,6 +11,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/StdInt.h"
 
+#include "jsinfer.h"
+#include "jsval.h"
+
 #include "gc/Barrier.h"
 
 namespace js {
@@ -74,8 +77,11 @@ class ObjectElements
 /* Shared singleton for objects with no elements. */
 extern HeapValue *emptyObjectElements;
 
-struct Shape;
+struct Class;
 struct GCMarker;
+struct ObjectOps;
+struct Shape;
+
 class NewObjectCache;
 
 /*
@@ -145,11 +151,93 @@ class ObjectImpl : public gc::Cell
     HeapValue *slots;     /* Slots for object properties. */
     HeapValue *elements;  /* Slots for object elements. */
 
-  protected:
-    friend struct Shape;
-    friend struct GCMarker;
-    friend class  NewObjectCache;
+  private:
+    static void staticAsserts() {
+        MOZ_STATIC_ASSERT(sizeof(ObjectImpl) == sizeof(shadow::Object),
+                          "shadow interface must match actual implementation");
+        MOZ_STATIC_ASSERT(sizeof(ObjectImpl) % sizeof(Value) == 0,
+                          "fixed slots after an object must be aligned");
 
+        MOZ_STATIC_ASSERT(offsetof(ObjectImpl, shape_) == offsetof(shadow::Object, shape),
+                          "shadow shape must match actual shape");
+        MOZ_STATIC_ASSERT(offsetof(ObjectImpl, type_) == offsetof(shadow::Object, type),
+                          "shadow type must match actual type");
+        MOZ_STATIC_ASSERT(offsetof(ObjectImpl, slots) == offsetof(shadow::Object, slots),
+                          "shadow slots must match actual slots");
+        MOZ_STATIC_ASSERT(offsetof(ObjectImpl, elements) == offsetof(shadow::Object, _1),
+                          "shadow placeholder must match actual elements");
+    }
+
+  protected:
+    friend struct GCMarker;
+    friend struct Shape;
+    friend class NewObjectCache;
+
+    /*
+     * These functions are currently public for simplicity; in the long run
+     * it may make sense to make at least some of them private.
+     */
+
+  public:
+    Shape * lastProperty() const {
+        MOZ_ASSERT(shape_);
+        return shape_;
+    }
+
+    types::TypeObject *type() const {
+        MOZ_ASSERT(!hasLazyType());
+        return type_;
+    }
+
+    /*
+     * Whether this is the only object which has its specified type. This
+     * object will have its type constructed lazily as needed by analysis.
+     */
+    bool hasSingletonType() const { return !!type_->singleton; }
+
+    /*
+     * Whether the object's type has not been constructed yet. If an object
+     * might have a lazy type, use getType() below, otherwise type().
+     */
+    bool hasLazyType() const { return type_->lazy(); }
+
+    inline bool isNative() const;
+
+    inline Class *getClass() const;
+    inline JSClass *getJSClass() const;
+    inline bool hasClass(const Class *c) const;
+    inline const ObjectOps *getOps() const;
+
+    /*
+     * An object is a delegate if it is on another object's prototype or scope
+     * chain, and therefore the delegate might be asked implicitly to get or
+     * set a property on behalf of another object. Delegates may be accessed
+     * directly too, as may any object, but only those objects linked after the
+     * head of any prototype or scope chain are flagged as delegates. This
+     * definition helps to optimize shape-based property cache invalidation
+     * (see Purge{Scope,Proto}Chain in jsobj.cpp).
+     */
+    inline bool isDelegate() const;
+
+    /*
+     * Return true if this object is a native one that has been converted from
+     * shared-immutable prototype-rooted shape storage to dictionary-shapes in
+     * a doubly-linked list.
+     */
+    inline bool inDictionaryMode() const;
+
+    /* JIT helpers. */
+    static inline size_t offsetOfShape() { return offsetof(ObjectImpl, shape_); }
+    inline HeapPtrShape *addressOfShape() { return &shape_; }
+    static inline size_t offsetOfType() { return offsetof(ObjectImpl, type_); }
+    HeapPtrTypeObject *addressOfType() { return &type_; }
+
+    /* These functions are public, and they should remain public. */
+
+  public:
+    JSObject * getProto() const {
+        return type_->proto;
+    }
 };
 
 } /* namespace js */
