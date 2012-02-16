@@ -252,6 +252,7 @@ static void Shutdown();
 #include "nsCSPService.h"
 #include "nsISmsService.h"
 #include "nsISmsDatabaseService.h"
+#include "mozilla/dom/sms/SmsRequestManager.h"
 #include "mozilla/dom/sms/SmsServicesFactory.h"
 #include "nsIPowerManagerService.h"
 
@@ -309,6 +310,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsService, SmsServicesFactory::Crea
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsDatabaseService, SmsServicesFactory::CreateSmsDatabaseService)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPowerManagerService,
                                          PowerManagerService::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(SmsRequestManager)
 
 //-----------------------------------------------------------------------------
 
@@ -800,6 +802,7 @@ NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 #endif
 NS_DEFINE_NAMED_CID(SMS_SERVICE_CID);
 NS_DEFINE_NAMED_CID(SMS_DATABASE_SERVICE_CID);
+NS_DEFINE_NAMED_CID(SMS_REQUEST_MANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_POWERMANAGERSERVICE_CID);
 
 static nsresult
@@ -1071,6 +1074,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_STRUCTUREDCLONECONTAINER_CID, false, NULL, nsStructuredCloneContainerConstructor },
   { &kSMS_SERVICE_CID, false, NULL, nsISmsServiceConstructor },
   { &kSMS_DATABASE_SERVICE_CID, false, NULL, nsISmsDatabaseServiceConstructor },
+  { &kSMS_REQUEST_MANAGER_CID, false, NULL, SmsRequestManagerConstructor },
   { &kNS_POWERMANAGERSERVICE_CID, false, NULL, nsIPowerManagerServiceConstructor },
   { NULL }
 };
@@ -1207,6 +1211,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_STRUCTUREDCLONECONTAINER_CONTRACTID, &kNS_STRUCTUREDCLONECONTAINER_CID },
   { SMS_SERVICE_CONTRACTID, &kSMS_SERVICE_CID },
   { SMS_DATABASE_SERVICE_CONTRACTID, &kSMS_DATABASE_SERVICE_CID },
+  { SMS_REQUEST_MANAGER_CONTRACTID, &kSMS_REQUEST_MANAGER_CID },
   { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID },
   { NULL }
 };
