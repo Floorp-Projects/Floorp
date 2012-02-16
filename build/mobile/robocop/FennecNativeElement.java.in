@@ -42,7 +42,6 @@ package @ANDROID_PACKAGE_NAME@;
 import java.util.List;
 
 import android.app.Activity;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -55,110 +54,110 @@ import com.jayway.android.robotium.solo.Solo;
 import java.util.concurrent.SynchronousQueue;
 
 public class FennecNativeElement implements Element {
-  private final Activity mActivity;
-  private Integer id;
-  private Solo robocop;
+    private final Activity mActivity;
+    private Integer mId;
+    private Solo mSolo;
 
-  public FennecNativeElement(Integer id, Activity activity, Solo solo){
-    this.id = id;
-    mActivity = activity;
-    robocop = solo;
-  }
-
-  public Integer getId() {
-    return id;
-  }
-
-  public void click() {
-    final SynchronousQueue syncQueue = new SynchronousQueue();
-    mActivity.runOnUiThread(
-        new Runnable() {
-          public void run() {
-            View view = (View)mActivity.findViewById(id);
-            if(view != null) {
-              if (!view.performClick()) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_WARN,
-                  "Robocop called click on an element with no listener");
-              }
-            } else {
-              throw new RoboCopException("click: unable to find view "+id); 
-            }
-            syncQueue.offer(new Object());
-          }
-        });
-    try {
-      syncQueue.take();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+    public FennecNativeElement(Integer id, Activity activity, Solo solo) {
+        mId = id;
+        mActivity = activity;
+        mSolo = solo;
     }
-  }
 
-  private Object text;
+    public Integer getId() {
+        return mId;
+    }
 
-  public String getText() {
-    final SynchronousQueue syncQueue = new SynchronousQueue();
-    mActivity.runOnUiThread(
-        new Runnable() {
-          public void run() {
-            View v = mActivity.findViewById(id);
-            if(v instanceof EditText) {
-              EditText et = (EditText)v;
-              text = et.getEditableText();
-            }else if(v instanceof TextSwitcher) {
-              TextSwitcher ts = (TextSwitcher)v;
-              ts.getNextView();
-              text = ((TextView)ts.getCurrentView()).getText();
-            }else if(v instanceof ViewGroup) {
-              ViewGroup vg = (ViewGroup)v;
-              for(int i = 0; i < vg.getChildCount(); i++) {
-                if(vg.getChildAt(i) instanceof TextView) {
-                  text = ((TextView)vg.getChildAt(i)).getText();
+    public void click() {
+        final SynchronousQueue syncQueue = new SynchronousQueue();
+        mActivity.runOnUiThread(
+            new Runnable() {
+                public void run() {
+                    View view = (View)mActivity.findViewById(mId);
+                    if(view != null) {
+                        if (!view.performClick()) {
+                            FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_WARN,
+                                "Robocop called click on an element with no listener");
+                        }
+                    } else {
+                        throw new RoboCopException("click: unable to find view "+mId); 
+                    }
+                    syncQueue.offer(new Object());
                 }
-              } //end of for
-            } else if(v instanceof TextView) {
-              text = ((TextView)v).getText(); 
-            } else if(v == null) {
-              throw new RoboCopException("getText: unable to find view "+id); 
-            } else {
-              throw new RoboCopException("getText: unhandled type for view "+id); 
-            }
-            syncQueue.offer(new Object());
-          } // end of run() method definition
-        } // end of anonymous Runnable object instantiation
-    );
-    try {   
-      //Wait for the UiThread code to finish running
-      syncQueue.take();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+            });
+        try {
+            syncQueue.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
-    if(text == null) {
-      throw new RoboCopException("getText: Text is null for view "+id);
-    }
-    return text.toString();
-  }
 
-  private boolean displayed;
+    private Object mText;
 
-  public boolean isDisplayed() {
-    final SynchronousQueue syncQueue = new SynchronousQueue();
-    displayed = false;
-    mActivity.runOnUiThread(
-        new Runnable() {
-          public void run() {
-            View view = (View)mActivity.findViewById(id);
-            if(view != null) {
-              displayed = true;
-            }
-            syncQueue.offer(new Object());
-          }
-        });
-    try {
-      syncQueue.take();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+    public String getText() {
+        final SynchronousQueue syncQueue = new SynchronousQueue();
+        mActivity.runOnUiThread(
+            new Runnable() {
+                public void run() {
+                    View v = mActivity.findViewById(mId);
+                    if (v instanceof EditText) {
+                        EditText et = (EditText)v;
+                        mText = et.getEditableText();
+                    } else if (v instanceof TextSwitcher) {
+                        TextSwitcher ts = (TextSwitcher)v;
+                        ts.getNextView();
+                        mText = ((TextView)ts.getCurrentView()).getText();
+                    } else if (v instanceof ViewGroup) {
+                        ViewGroup vg = (ViewGroup)v;
+                        for (int i = 0; i < vg.getChildCount(); i++) {
+                            if (vg.getChildAt(i) instanceof TextView) {
+                                mText = ((TextView)vg.getChildAt(i)).getText();
+                            }
+                        }
+                    } else if (v instanceof TextView) {
+                        mText = ((TextView)v).getText(); 
+                    } else if (v == null) {
+                        throw new RoboCopException("getText: unable to find view "+mId); 
+                    } else {
+                        throw new RoboCopException("getText: unhandled type for view "+mId); 
+                    }
+                    syncQueue.offer(new Object());
+                } // end of run() method definition
+            } // end of anonymous Runnable object instantiation
+        );
+        try {     
+            // Wait for the UiThread code to finish running
+            syncQueue.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (mText == null) {
+            throw new RoboCopException("getText: Text is null for view "+mId);
+        }
+        return mText.toString();
     }
-    return displayed;
-  }
+
+    private boolean mDisplayed;
+
+    public boolean isDisplayed() {
+        final SynchronousQueue syncQueue = new SynchronousQueue();
+        mDisplayed = false;
+        mActivity.runOnUiThread(
+            new Runnable() {
+                public void run() {
+                    View view = (View)mActivity.findViewById(mId);
+                    if (view != null) {
+                        mDisplayed = true;
+                    }
+                    syncQueue.offer(new Object());
+                }
+            });
+        try {
+            syncQueue.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return mDisplayed;
+    }
 
 }

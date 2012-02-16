@@ -213,6 +213,7 @@ DOMSVGPointList::Clear()
   }
 
   if (Length() > 0) {
+    nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
     // DOM list items that are to be removed must be removed before we change
     // the internal list, otherwise they wouldn't be able to copy their
     // internal counterparts' values!
@@ -229,7 +230,7 @@ DOMSVGPointList::Clear()
     }
 
     InternalList().Clear();
-    Element()->DidChangePointList(true);
+    Element()->DidChangePointList(emptyOrOldValue);
     if (AttrIsAnimating()) {
       Element()->AnimationNeedsResample();
     }
@@ -307,6 +308,7 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
   // Now that we know we're inserting, keep animVal list in sync as necessary.
   MaybeInsertNullInAnimValListAt(aIndex);
 
@@ -320,7 +322,7 @@ DOMSVGPointList::InsertItemBefore(nsIDOMSVGPoint *aNewItem,
 
   UpdateListIndicesFromIndex(mItems, aIndex + 1);
 
-  Element()->DidChangePointList(true);
+  Element()->DidChangePointList(emptyOrOldValue);
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
@@ -349,6 +351,7 @@ DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem,
     domItem = domItem->Clone(); // must do this before changing anything!
   }
 
+  nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
   if (mItems[aIndex]) {
     // Notify any existing DOM item of removal *before* modifying the lists so
     // that the DOM item can copy the *old* value at its index:
@@ -362,7 +365,7 @@ DOMSVGPointList::ReplaceItem(nsIDOMSVGPoint *aNewItem,
   // would end up reading bad data from InternalList()!
   domItem->InsertingIntoList(this, aIndex, IsAnimValList());
 
-  Element()->DidChangePointList(true);
+  Element()->DidChangePointList(emptyOrOldValue);
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }
@@ -383,6 +386,7 @@ DOMSVGPointList::RemoveItem(PRUint32 aIndex,
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
+  nsAttrValue emptyOrOldValue = Element()->WillChangePointList();
   // Now that we know we're removing, keep animVal list in sync as necessary.
   // Do this *before* touching InternalList() so the removed item can get its
   // internal value.
@@ -401,7 +405,7 @@ DOMSVGPointList::RemoveItem(PRUint32 aIndex,
 
   UpdateListIndicesFromIndex(mItems, aIndex);
 
-  Element()->DidChangePointList(true);
+  Element()->DidChangePointList(emptyOrOldValue);
   if (AttrIsAnimating()) {
     Element()->AnimationNeedsResample();
   }

@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=515116
 <head>
   <title>Tests specific to SVGLengthList</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="MutationEventChecker.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -36,11 +37,31 @@ function run_tests()
 
   is(lengths.numberOfItems, 0, 'Checking numberOfItems');
 
-/*
-  is(lengths.numberOfItems, 2, 'Checking numberOfItems');
-  is(lengths.getItem(1).valueInSpecifiedUnits == 20, 'Checking the value of the second length');
-  is(lengths.getItem(1).unitType == SVGLength.SVG_LENGTHTYPE_CM, 'Checking the unit of the second length');
-*/
+  // Test mutation events
+  // --- Initialization
+  eventChecker = new MutationEventChecker;
+  eventChecker.watchAttr(text, "x");
+  eventChecker.expect("modify");
+  text.textContent = "abc";
+  text.setAttribute("x", "10 20 30");
+  is(lengths.numberOfItems, 3, 'Checking numberOfItems');
+  // -- Actual changes
+  eventChecker.expect("modify modify modify modify modify");
+  lengths[0].value = 8;
+  lengths[0].valueInSpecifiedUnits = 9;
+  lengths[0].valueAsString = "10";
+  lengths[0].convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_CM);
+  lengths[0].newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_MM, 11);
+  // -- Redundant changes
+  eventChecker.expect("modify");
+  lengths[0].valueAsString = "10";
+  eventChecker.expect("");
+  lengths[0].value = 10;
+  lengths[0].valueInSpecifiedUnits = 10;
+  lengths[0].valueAsString = "10";
+  lengths[0].convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_NUMBER);
+  lengths[0].newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_NUMBER, 10);
+  eventChecker.finish();
 
   SimpleTest.finish();
 }

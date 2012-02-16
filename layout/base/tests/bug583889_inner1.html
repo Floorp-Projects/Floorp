@@ -20,6 +20,7 @@ function postPos() {
 function runTest() {
   var inner = document.getElementById("inner");
   window.onload = grabEventAndGo;
+  // Wait for onLoad event.
   yield;
 
   document.body.scrollTop = 300;
@@ -29,6 +30,8 @@ function runTest() {
 
   inner.src = "bug583889_inner2.html#id1";
   inner.onload = grabEventAndGo;
+  // Let parent process sent message.
+  // Wait for onLoad event from 'inner' iframe.
   yield;
   
   postPos();
@@ -37,17 +40,24 @@ function runTest() {
   dump("hi");
   inner.contentWindow.location = "bug583889_inner2.html#id2"
   waitAsync();
+  // Let parent process sent message.
+  // Let 'inner' iframe update itself.
   yield;
 
   postPos();
 
   inner.contentWindow.location.hash = "#id3"
   waitAsync();
+  // Let parent process sent message.
+  // Let 'inner' iframe update itself.
   yield;
 
   postPos();
 
   parent.postMessage("done", "*");
+  // Let parent process sent messages.
+  // "End" generator.
+  yield;
 }
 
 var gen = runTest();

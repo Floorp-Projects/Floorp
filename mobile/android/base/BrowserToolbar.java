@@ -322,6 +322,20 @@ public class BrowserToolbar extends LinearLayout {
         }
     }
 
+    public void show() {
+        if (Build.VERSION.SDK_INT >= 11)
+            GeckoActionBar.show(GeckoApp.mAppContext);
+        else
+            setVisibility(View.VISIBLE);
+    }
+
+    public void hide() {
+        if (Build.VERSION.SDK_INT >= 11)
+            GeckoActionBar.hide(GeckoApp.mAppContext);
+        else
+            setVisibility(View.GONE);
+    }
+
     public void refresh() {
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {

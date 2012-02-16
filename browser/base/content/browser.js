@@ -3555,10 +3555,11 @@ const BrowserSearch = {
     if (!submission)
       return;
 
+    let inBackground = Services.prefs.getBoolPref("browser.search.context.loadInBackground");
     openLinkIn(submission.uri.spec,
                useNewTab ? "tab" : "current",
                { postData: submission.postData,
-                 inBackground: false,
+                 inBackground: inBackground,
                  relatedToCurrent: true });
   },
 

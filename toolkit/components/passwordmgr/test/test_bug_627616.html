@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 627616</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="prompt_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var Cc = SpecialPowers.wrap(Components).classes;
+
+    testNum = 1;
+
+    var login, login2;
+    function init() {
+        var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+        var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+
+        var uri = ios.newURI("http://example.com", null, null);
+        var pi = pps.resolve(uri, 0);
+        var mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
+
+        var pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+        login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+        login.init(mozproxy, null, "proxy_realm", "proxy_user", "proxy_pass", "", "");
+        pwmgr.addLogin(login);
+
+        login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+        login2.init("http://mochi.test:8888", null, "mochirealm", "user1name", "user1pass", "", "");
+        pwmgr.addLogin(login2);
+    }
+    function cleanup() {
+        var pwmgr = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+        pwmgr.removeLogin(login);        
+        pwmgr.removeLogin(login2);
+    }
+
+    function makeXHR(expectedStatus, expectedText, extra) {
+      var xhr =  new XMLHttpRequest();
+      xhr.open("GET", "authenticate.sjs?" +
+                      "proxy_user=proxy_user&" +
+                      "proxy_pass=proxy_pass&" +
+                      "proxy_realm=proxy_realm&" +
+                      "user=user1name&" +
+                      "pass=user1pass&" +
+                      "realm=mochirealm&" +
+                      extra || "");
+      xhr.onloadend = function() {
+        is(xhr.status, expectedStatus);
+        is(xhr.statusText, expectedText);
+        runNextTest();
+      }
+      return xhr;
+    }
+
+    function testNonAnonymousCredentials() {
+      var xhr = makeXHR(200, "OK");
+      xhr.send();
+      startCallbackTimer();
+    }
+
+    function testAnonymousCredentials() {
+      // Test that an anonymous request correctly performs proxy authentication
+      var xhr = makeXHR(401, "Authentication required");
+      SpecialPowers.wrap(xhr).channel.loadFlags |= Ci.nsIChannel.LOAD_ANONYMOUS;
+      xhr.send();
+    }
+
+    function testAnonymousNoAuth() {
+      // Next, test that an anonymous request still does not include any non-proxy
+      // authentication headers.
+      var xhr = makeXHR(200, "Authorization header not found", "anonymous=1");
+      SpecialPowers.wrap(xhr).channel.loadFlags |= Ci.nsIChannel.LOAD_ANONYMOUS;
+      xhr.send();
+    }
+
+    var gCurrentTest;
+    function runNextTest() {
+      if (pendingTests.length > 0) {
+        gCurrentTest = pendingTests.shift();
+        gCurrentTest.call(this);
+      } else {
+        cleanup();
+        SimpleTest.finish();
+      }
+    }
+
+    var pendingTests = [testNonAnonymousCredentials, testAnonymousCredentials,
+                        testAnonymousNoAuth];
+    init();
+    runNextTest();
+
+    function handleDialog(doc, testNum)
+    {
+        var dialog = doc.getElementById("commonDialog");
+        dialog.acceptDialog();
+        if (gCurrentTest == testNonAnonymousCredentials) {
+          startCallbackTimer();
+        }
+    }
+</script>
+</body>
+</html>

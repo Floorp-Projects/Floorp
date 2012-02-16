@@ -185,7 +185,7 @@ static const nsAttrValue::EnumTable* kInputDefaultAutocomplete = &kInputAutocomp
   {0xb5, 0x13, 0x7b, 0x36, 0x93, 0x43, 0xe3, 0xa0} \
 }
 
-class nsHTMLInputElementState : public nsISupports
+class nsHTMLInputElementState MOZ_FINAL : public nsISupports
 {
   public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPUT_ELEMENT_STATE_IID)

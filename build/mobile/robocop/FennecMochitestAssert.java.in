@@ -38,202 +38,194 @@
 package @ANDROID_PACKAGE_NAME@;
 
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Date;
+import android.os.SystemClock;
 
 public class FennecMochitestAssert implements Assert {
-  // Objects for reflexive access of fennec classes.
+    private LinkedList<testInfo> mTestList = new LinkedList<testInfo>();
 
-  private LinkedList<testInfo> testList = new LinkedList<testInfo>();
+    // Internal state variables to make logging match up with existing mochitests
+    private int mLineNumber = 0;
+    private int mPassed = 0;
+    private int mFailed = 0;
+    private int mTodo = 0;
+    
+    // Used to write the first line of the test file
+    private boolean mLogStarted = false;
 
-  // Internal state variables to make logging match up with existing mochitests
-  private int lineNumber = 0;
-  private int passed = 0;
-  private int failed = 0;
-  private int todo = 0;
-  
-  // Used to write the first line of the test file
-  private boolean logStarted = false;
+    // Used to write the test-start/test-end log lines
+    private String mLogTestName = "";
 
-  // Used to write the test-start/test-end log lines
-  private String logTestName = "";
+    // Measure the time it takes to run test case
+    private long mStartTime = 0;
 
-  // Measure the time it takes to run test case
-  private long startTime = 0;
-
-  public FennecMochitestAssert() {
-  }
-
-  // Write information to a logfile and logcat
-  public void dumpLog(String message)
-  {
-    FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_INFO, message);
-  }
-
-  // Set the filename used for dumpLog.
-  public void setLogFile(String filename)
-  {
-    FennecNativeDriver.setLogFile(filename);
-
-    String message;
-    if (!logStarted) {
-      dumpLog(Integer.toString(lineNumber++) + " INFO SimpleTest START");
-      logStarted = true;
+    public FennecMochitestAssert() {
     }
 
-    if (logTestName != "") {
-      long diff = (new Date().getTime()) - startTime;
-      message = Integer.toString(lineNumber++) + " INFO TEST-END | " + logTestName;
-      message += " | finished in " + diff + "ms";
-      dumpLog(message);
-      logTestName = "";
-    }
-  }
-
-  public void setTestName(String testName)
-  {
-    String[] nameParts = testName.split("\\.");
-    logTestName = nameParts[nameParts.length - 1];
-    startTime = new Date().getTime();
-
-    dumpLog(Integer.toString(lineNumber++) + " INFO TEST-START | " + logTestName);
-  }
-
-  class testInfo {
-    public boolean result;
-    public String name;
-    public String diag;
-    public boolean todo;
-    public testInfo(boolean r, String n, String d, boolean t) {
-      result = r;
-      name = n;
-      diag = d;
-      todo = t;
+    /** Write information to a logfile and logcat */
+    public void dumpLog(String message) {
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.LOG_LEVEL_INFO, message);
     }
 
-  }
+    /** Set the filename used for dumpLog. */
+    public void setLogFile(String filename) {
+        FennecNativeDriver.setLogFile(filename);
 
-  private void _logMochitestResult(testInfo test, String passString, String failString)
-  {
-    boolean isError = true;
-    String resultString = failString;
-    if (test.result || test.todo) {
-      isError = false;
-    }
-    if (test.result)
-    {
-      resultString = passString;
-    }
-    String diag = test.name;
-    if (test.diag != null) diag += " - " + test.diag;
+        String message;
+        if (!mLogStarted) {
+            dumpLog(Integer.toString(mLineNumber++) + " INFO SimpleTest START");
+            mLogStarted = true;
+        }
 
-    String message = Integer.toString(lineNumber++) + " INFO " + resultString + " | " + logTestName + " | " + diag;
-    dumpLog(message);
-
-    if (test.todo) {
-      todo++;
-    } else if (isError) {
-      failed++;
-    } else {
-      passed++;
-    }
-    if (isError) {
-      junit.framework.Assert.fail(message);
-    }
-  }
-
-  public void finalize()
-  {
-    // It appears that we call finalize during cleanup, this might be an invalid assertion.
-    String message;
-
-    if (logTestName != "") {
-      long diff = (new Date().getTime()) - startTime;
-      message = Integer.toString(lineNumber++) + " INFO TEST-END | " + logTestName;
-      message += " | finished in " + diff + "ms";
-      dumpLog(message);
-      logTestName = "";
+        if (mLogTestName != "") {
+            long diff = SystemClock.uptimeMillis() - mStartTime;
+            message = Integer.toString(mLineNumber++) + " INFO TEST-END | " + mLogTestName;
+            message += " | finished in " + diff + "ms";
+            dumpLog(message);
+            mLogTestName = "";
+        }
     }
 
-    message = Integer.toString(lineNumber++) + " INFO TEST-START | Shutdown";
-    dumpLog(message);
-    message = Integer.toString(lineNumber++) + " INFO Passed: " + Integer.toString(passed);
-    dumpLog(message);
-    message = Integer.toString(lineNumber++) + " INFO Failed: " + Integer.toString(failed);
-    dumpLog(message);
-    message = Integer.toString(lineNumber++) + " INFO Todo: " + Integer.toString(todo);
-    dumpLog(message);
-    message = Integer.toString(lineNumber++) + " INFO SimpleTest FINISHED";
-    dumpLog(message);
-  }
+    public void setTestName(String testName) {
+        String[] nameParts = testName.split("\\.");
+        mLogTestName = nameParts[nameParts.length - 1];
+        mStartTime = SystemClock.uptimeMillis();
 
-  public void ok(boolean condition, String name, String diag) {
-    testInfo test = new testInfo(condition, name, diag, false);
-    _logMochitestResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
-    testList.add(test);
-  }
-
-  public void is(Object a, Object b, String name) {
-    boolean pass = a.equals(b);
-    String diag = "got " + a.toString() + ", expected " + b.toString();
-    if(pass) {
-      diag = a.toString() + " should equal " + b.toString();
+        dumpLog(Integer.toString(mLineNumber++) + " INFO TEST-START | " + mLogTestName);
     }
-    ok(pass, name, diag);
-  }
-  
-  public void isnot(Object a, Object b, String name) {
-    boolean pass = !a.equals(b);
-    String diag = "didn't expect " + a.toString() + ", but got it";
-    if(pass) {
-      diag = a.toString() + " should not equal " + b.toString();
+
+    class testInfo {
+        public boolean mResult;
+        public String mName;
+        public String mDiag;
+        public boolean mTodo;
+        public testInfo(boolean r, String n, String d, boolean t) {
+            mResult = r;
+            mName = n;
+            mDiag = d;
+            mTodo = t;
+        }
+
     }
-    ok(pass, name, diag);
-  }
 
-  public void ispixel(int actual, int r, int g, int b, String name) {
-    // When we read GL pixels the GPU has already processed them and they
-    // are usually off by a little bit. For example a CSS-color pixel of color #64FFF5
-    // was turned into #63FFF7 when it came out of glReadPixels. So in order to compare
-    // against the expected value, we use a little fuzz factor. For the alpha we just
-    // make sure it is always 0xFF.
-    int aAlpha = ((actual >> 24) & 0xFF);
-    int aR = ((actual >> 16) & 0xFF);
-    int aG = ((actual >> 8) & 0xFF);
-    int aB = (actual & 0xFF);
-    boolean pass = (aAlpha == 0xFF) /* alpha */
-                && (Math.abs(aR - r) < 8) /* red */
-                && (Math.abs(aG - g) < 8) /* green */
-                && (Math.abs(aB - b) < 8); /* blue */
-    ok(pass, name, "Color rgba(" + aR + "," + aG + "," + aB + "," + aAlpha + ")" + (pass ? " " : " not") + " close enough to expected rgb(" + r + "," + g + "," + b + ")");
-  }
+    private void _logMochitestResult(testInfo test, String passString, String failString) {
+        boolean isError = true;
+        String resultString = failString;
+        if (test.mResult || test.mTodo) {
+            isError = false;
+        }
+        if (test.mResult)
+        {
+            resultString = passString;
+        }
+        String diag = test.mName;
+        if (test.mDiag != null) diag += " - " + test.mDiag;
 
-  public void todo(boolean condition, String name, String diag) {
-    testInfo test = new testInfo(condition, name, diag, true);
-    _logMochitestResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
-    testList.add(test);
-  }
+        String message = Integer.toString(mLineNumber++) + " INFO " + resultString + " | " + mLogTestName + " | " + diag;
+        dumpLog(message);
 
-  public void todo_is(Object a, Object b, String name) {
-    boolean pass = a.equals(b);
-    String diag = "got " + a.toString() + ", expected " + b.toString();
-    if(pass) {
-      diag = a.toString() + " should equal " + b.toString();
+        if (test.mTodo) {
+            mTodo++;
+        } else if (isError) {
+            mFailed++;
+        } else {
+            mPassed++;
+        }
+        if (isError) {
+            junit.framework.Assert.fail(message);
+        }
     }
-    todo(pass, name, diag);
-  }
-  
-  public void todo_isnot(Object a, Object b, String name) {
-    boolean pass = !a.equals(b);
-    String diag = "didn't expect " + a.toString() + ", but got it";
-    if(pass) {
-      diag = a.toString() + " should not equal " + b.toString();
-    }
-    todo(pass, name, diag);
-  }
 
-  public void info(String name, String message) {
-    testInfo test = new testInfo(true, name, message, false);
-    _logMochitestResult(test, "TEST-INFO", "INFO FAILED?");
-  }
+    public void finalize() {
+        // It appears that we call finalize during cleanup, this might be an invalid assertion.
+        String message;
+
+        if (mLogTestName != "") {
+            long diff = SystemClock.uptimeMillis() - mStartTime;
+            message = Integer.toString(mLineNumber++) + " INFO TEST-END | " + mLogTestName;
+            message += " | finished in " + diff + "ms";
+            dumpLog(message);
+            mLogTestName = "";
+        }
+
+        message = Integer.toString(mLineNumber++) + " INFO TEST-START | Shutdown";
+        dumpLog(message);
+        message = Integer.toString(mLineNumber++) + " INFO Passed: " + Integer.toString(mPassed);
+        dumpLog(message);
+        message = Integer.toString(mLineNumber++) + " INFO Failed: " + Integer.toString(mFailed);
+        dumpLog(message);
+        message = Integer.toString(mLineNumber++) + " INFO Todo: " + Integer.toString(mTodo);
+        dumpLog(message);
+        message = Integer.toString(mLineNumber++) + " INFO SimpleTest FINISHED";
+        dumpLog(message);
+    }
+
+    public void ok(boolean condition, String name, String diag) {
+        testInfo test = new testInfo(condition, name, diag, false);
+        _logMochitestResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
+        mTestList.add(test);
+    }
+
+    public void is(Object a, Object b, String name) {
+        boolean pass = a.equals(b);
+        String diag = "got " + a.toString() + ", expected " + b.toString();
+        if (pass) {
+            diag = a.toString() + " should equal " + b.toString();
+        }
+        ok(pass, name, diag);
+    }
+    
+    public void isnot(Object a, Object b, String name) {
+        boolean pass = !a.equals(b);
+        String diag = "didn't expect " + a.toString() + ", but got it";
+        if (pass) {
+            diag = a.toString() + " should not equal " + b.toString();
+        }
+        ok(pass, name, diag);
+    }
+
+    public void ispixel(int actual, int r, int g, int b, String name) {
+        // When we read GL pixels the GPU has already processed them and they
+        // are usually off by a little bit. For example a CSS-color pixel of color #64FFF5
+        // was turned into #63FFF7 when it came out of glReadPixels. So in order to compare
+        // against the expected value, we use a little fuzz factor. For the alpha we just
+        // make sure it is always 0xFF.
+        int aAlpha = ((actual >> 24) & 0xFF);
+        int aR = ((actual >> 16) & 0xFF);
+        int aG = ((actual >> 8) & 0xFF);
+        int aB = (actual & 0xFF);
+        boolean pass = (aAlpha == 0xFF) /* alpha */
+                                && (Math.abs(aR - r) < 8) /* red */
+                                && (Math.abs(aG - g) < 8) /* green */
+                                && (Math.abs(aB - b) < 8); /* blue */
+        ok(pass, name, "Color rgba(" + aR + "," + aG + "," + aB + "," + aAlpha + ")" + (pass ? " " : " not") + " close enough to expected rgb(" + r + "," + g + "," + b + ")");
+    }
+
+    public void todo(boolean condition, String name, String diag) {
+        testInfo test = new testInfo(condition, name, diag, true);
+        _logMochitestResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
+        mTestList.add(test);
+    }
+
+    public void todo_is(Object a, Object b, String name) {
+        boolean pass = a.equals(b);
+        String diag = "got " + a.toString() + ", expected " + b.toString();
+        if (pass) {
+            diag = a.toString() + " should equal " + b.toString();
+        }
+        todo(pass, name, diag);
+    }
+    
+    public void todo_isnot(Object a, Object b, String name) {
+        boolean pass = !a.equals(b);
+        String diag = "didn't expect " + a.toString() + ", but got it";
+        if (pass) {
+            diag = a.toString() + " should not equal " + b.toString();
+        }
+        todo(pass, name, diag);
+    }
+
+    public void info(String name, String message) {
+        testInfo test = new testInfo(true, name, message, false);
+        _logMochitestResult(test, "TEST-INFO", "INFO FAILED?");
+    }
 }

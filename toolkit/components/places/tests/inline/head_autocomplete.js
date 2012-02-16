@@ -21,9 +21,32 @@ XPCOMUtils.defineLazyServiceGetter(this, "gHistory",
                                    "@mozilla.org/browser/history;1",
                                    "mozIAsyncHistory");
 
+function VisitInfo(aTransitionType, aVisitTime)
+{
+  this.transitionType =
+    aTransitionType === undefined ? TRANSITION_LINK : aTransitionType;
+  this.visitDate = aVisitTime || Date.now() * 1000;
+}
+
+function addVisits(aUrls)
+{
+  let places = [];
+  aUrls.forEach(function(url) {
+    places.push({
+                  uri: url.url,
+                  title: "test for " + url.url,
+                  visits: [
+                    new VisitInfo(url.transition),
+                  ],
+    });
+  });
+
+  gHistory.updatePlaces(places);
+}
+
 /**
  * @param aSearches
- *        Array of AutoCompleteSearch names. 
+ *        Array of AutoCompleteSearch names.
  */
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;

@@ -71,12 +71,12 @@ is(bounce.cssRules[0].keyText, "0%", "keyframe rule keyText");
 is(bounce.cssRules[1].keyText, "25%", "keyframe rule keyText");
 is(bounce.cssRules[2].keyText, "75%, 85%", "keyframe rule keyText");
 is(bounce.cssRules[3].keyText, "100%", "keyframe rule keyText");
-is(bounce.cssRules[0].style.marginLeft, "0pt", "keyframe rule style");
+is(bounce.cssRules[0].style.marginLeft, "0px", "keyframe rule style");
 is(bounce.cssRules[1].style.marginLeft, "25px", "keyframe rule style");
 
-is(bounce.cssRules[0].cssText, "0% { margin-left: 0pt; }");
+is(bounce.cssRules[0].cssText, "0% { margin-left: 0px; }");
 is(bounce.cssText, "@-moz-keyframes bouncier {\n" +
-                   "0% { margin-left: 0pt; }\n" +
+                   "0% { margin-left: 0px; }\n" +
                    "25% { margin-left: 25px; }\n" +
                    "75%, 85% { margin-left: 90px; }\n" +
                    "100% { margin-left: 100px; }\n" +

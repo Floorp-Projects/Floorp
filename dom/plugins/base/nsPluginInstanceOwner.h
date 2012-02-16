@@ -328,16 +328,14 @@ private:
   void FixUpURLS(const nsString &name, nsAString &value);
 #ifdef MOZ_WIDGET_ANDROID
   void SendSize(int width, int height);
-  void SendOnScreenEvent(bool onScreen);
 
   bool AddPluginView(const gfxRect& aRect);
   void RemovePluginView();
 
-  bool mOnScreen;
   bool mInverted;
 
   // For kOpenGL_ANPDrawingModel
-  mozilla::AndroidMediaLayer *mLayer;
+  nsRefPtr<mozilla::AndroidMediaLayer> mLayer;
 #endif 
  
   nsPluginNativeWindow       *mPluginWindow;
