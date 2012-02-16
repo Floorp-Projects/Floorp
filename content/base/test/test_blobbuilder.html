@@ -151,7 +151,7 @@ function doTest(data) {
     ok(blob instanceof Blob, "Test " + testCounter + " blob is a Blob");
     ok(!(blob instanceof File), "Test " + testCounter + " blob is not a File");
 
-    let slice = blob.mozSlice(test.start, test.start + test.length);
+    let slice = blob.slice(test.start, test.start + test.length);
     ok(slice, "Test " + testCounter + " got slice");
     ok(slice instanceof Blob, "Test " + testCounter + " slice is a Blob");
     ok(!(slice instanceof File), "Test " + testCounter + " slice is not a File");

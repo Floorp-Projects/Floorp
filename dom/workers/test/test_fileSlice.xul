@@ -30,13 +30,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
   var fileNum = 0;
 
   /**
-   * Create a file which contains the given data.
+   * Create a file which contains the given data and optionally adds the specified file extension.
    */
-  function createFileWithData(fileData) {
+  function createFileWithData(fileData, /** optional */ extension) {
     var testFile = Components.classes["@mozilla.org/file/directory_service;1"]
                        .getService(Components.interfaces.nsIProperties)
                        .get("ProfD", Components.interfaces.nsIFile);
-    testFile.append("workerReadMozSlice" + fileNum++);
+    var fileExtension = (extension == undefined) ? "" : "." + extension;
+    testFile.append("workerSlice" + fileNum++ + fileExtension);
 
     var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                         .createInstance(Components.interfaces.nsIFileOutputStream);
@@ -52,11 +53,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
   }
 
   /**
-   * Creates a worker which slices a blob to the given start and end offset and
-   * reads the content as text.
+   * Starts a worker which slices the blob to the given start offset and optional end offset and
+   * content type. It then verifies that the size and type of the sliced blob is correct.
    */
-  function readMozSlice(blob, start, end, expectedText) {
-    var worker = new Worker("fileReadMozSlice_worker.js");
+  function createSlice(blob, start, expectedLength, /** optional */ end, /** optional */ contentType) {
+    var worker = new Worker("fileSlice_worker.js");
 
     worker.onerror = function(event) {
       ok(false, "Worker had an error: " + event.data);
@@ -64,26 +65,41 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
     };
 
     worker.onmessage = function(event) {
-      is(event.data, expectedText, "Text from sliced blob in worker is incorrect.");
+      is(event.data.size, expectedLength, "size property of slice is incorrect.");
+      is(event.data.type, contentType ? contentType : blob.type, "type property of slice is incorrect.");
       finish();
     };
 
-    var params = {blob: blob, start: start, end: end};
+    var params = {blob: blob, start: start, end: end, contentType: contentType};
     worker.postMessage(params);
     waitForWorkerFinish();
   }
 
   // Empty file.
-  readMozSlice(createFileWithData(""), 0, 0, "");
+  createSlice(createFileWithData(""), 0, 0, 0);
 
   // Typical use case.
-  readMozSlice(createFileWithData("HelloBye"), 5, 8, "Bye");
+  createSlice(createFileWithData("Hello"), 1, 1, 2);
 
-  // End offset too large.
-  readMozSlice(createFileWithData("HelloBye"), 5, 9, "Bye");
+  // Longish file.
+  var text = "";
+  for (var i = 0; i < 10000; ++i) {
+    text += "long";
+  }
+  createSlice(createFileWithData(text), 2000, 2000, 4000);
 
-  // Start of file.
-  readMozSlice(createFileWithData("HelloBye"), 0, 5, "Hello");
+  // Slice to different type.
+  createSlice(createFileWithData("text", "txt"), 0, 2, 2, "image/png");
+
+  // Length longer than blob.
+  createSlice(createFileWithData("text"), 0, 4, 20);
+
+  // Start longer than blob.
+  createSlice(createFileWithData("text"), 20, 0, 4);
+
+  // No optional arguments
+  createSlice(createFileWithData("text"), 0, 4);
+  createSlice(createFileWithData("text"), 2, 2);
 
   ]]>
   </script>

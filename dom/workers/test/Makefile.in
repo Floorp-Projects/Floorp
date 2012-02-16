@@ -136,21 +136,21 @@ _CHROME_TEST_FILES = \
   test_extension.xul \
   test_extensionBootstrap.xul \
   test_file.xul \
-  test_fileMozSlice.xul \
+  test_fileSlice.xul \
   test_fileBlobPosting.xul \
   test_filePosting.xul \
   test_fileReaderSync.xul \
   test_fileReaderSyncErrors.xul \
-  test_fileReadMozSlice.xul \
+  test_fileReadSlice.xul \
   test_fileSubWorker.xul \
   test_fileBlobSubWorker.xul \
   file_worker.js \
   fileBlob_worker.js \
-  fileMozSlice_worker.js \
+  fileSlice_worker.js \
   filePosting_worker.js \
   fileReaderSync_worker.js \
   fileReaderSyncErrors_worker.js \
-  fileReadMozSlice_worker.js \
+  fileReadSlice_worker.js \
   fileSubWorker_worker.js \
   fileBlobSubWorker_worker.js \
   WorkerTest.jsm \

@@ -71,9 +71,9 @@ interface nsIDOMBlob : nsISupports
   // blob: protocol handler
   [noscript] DOMString getInternalUrl(in nsIPrincipal principal);
 
-  [optional_argc] nsIDOMBlob mozSlice([optional] in long long start,
-                                      [optional] in long long end,
-                                      [optional] in DOMString contentType);
+  [optional_argc] nsIDOMBlob slice([optional] in long long start,
+                                   [optional] in long long end,
+                                   [optional] in DOMString contentType);
 
   // Get internal id of stored file. Returns -1 if it is not a stored file.
   // Intended only for testing. It can be called on any thread.
