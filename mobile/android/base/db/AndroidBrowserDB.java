@@ -188,23 +188,6 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         Browser.clearHistory(cr);
     }
 
-    public Cursor getAllBookmarks(ContentResolver cr) {
-        Cursor c = cr.query(Browser.BOOKMARKS_URI,
-                            new String[] { URL_COLUMN_ID,
-                                           BookmarkColumns.URL,
-                                           BookmarkColumns.TITLE,
-                                           BookmarkColumns.FAVICON },
-                            // Select all bookmarks with a non-empty URL. When the history
-                            // is empty there appears to be a dummy entry in the database
-                            // which has a title of "Bookmarks" and no URL; the length restriction
-                            // is to avoid picking that up specifically.
-                            Browser.BookmarkColumns.BOOKMARK + " = 1 AND LENGTH(" + Browser.BookmarkColumns.URL + ") > 0",
-                            null,
-                            Browser.BookmarkColumns.TITLE);
-
-        return new AndroidDBCursor(c);
-    }
-
     public Cursor getMobileBookmarks(ContentResolver cr) {
         Cursor c = cr.query(null, null, null, null, null);
         return new AndroidDBCursor(c);

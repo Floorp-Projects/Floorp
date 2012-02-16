@@ -3098,7 +3098,7 @@ JSVAL_TRACE_KIND(jsval v)
  * wants to use the existing liveness of entries.
  */
 typedef void
-(* JSTraceCallback)(JSTracer *trc, void *thing, JSGCTraceKind kind);
+(* JSTraceCallback)(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
 struct JSTracer {
     JSRuntime           *runtime;

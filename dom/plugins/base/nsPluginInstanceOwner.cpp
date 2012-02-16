@@ -339,9 +339,8 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mWaitingForPaint = false;
 
 #ifdef MOZ_WIDGET_ANDROID
-  mOnScreen = false;
   mInverted = false;
-  mLayer = new AndroidMediaLayer();
+  mLayer = nsnull;
 #endif
 }
 
@@ -393,10 +392,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   mPluginWindow = nsnull;
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (mLayer) {
-    delete mLayer;
-    mLayer = nsnull;
-  }
+  RemovePluginView();
 #endif
 
   if (mInstance) {
@@ -1688,22 +1684,6 @@ void nsPluginInstanceOwner::SendSize(int width, int height)
   mInstance->HandleEvent(&event, nsnull);
 }
 
-void nsPluginInstanceOwner::SendOnScreenEvent(bool onScreen)
-{
-  if (!mInstance)
-    return;
-
-  if ((onScreen && !mOnScreen) || (!onScreen && mOnScreen)) {
-    ANPEvent event;
-    event.inSize = sizeof(ANPEvent);
-    event.eventType = kLifecycle_ANPEventType;
-    event.data.lifecycle.action = onScreen ? kOnScreen_ANPLifecycleAction : kOffScreen_ANPLifecycleAction;
-    mInstance->HandleEvent(&event, nsnull);
-
-    mOnScreen = onScreen;
-  }
-}
-
 bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
 {
   void* javaSurface = mInstance->GetJavaSurface();
@@ -1754,14 +1734,12 @@ bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
                             aRect.height);
 #endif
 
-  SendOnScreenEvent(true);
-
   return true;
 }
 
 void nsPluginInstanceOwner::RemovePluginView()
 {
-  if (!mInstance || !mObjectFrame | !mOnScreen)
+  if (!mInstance || !mObjectFrame)
     return;
 
   void* surface = mInstance->GetJavaSurface();
@@ -1779,7 +1757,6 @@ void nsPluginInstanceOwner::RemovePluginView()
                                             "removePluginView",
                                             "(Landroid/view/View;)V");
   env->CallStaticVoidMethod(cls, method, surface);
-  SendOnScreenEvent(false);
 }
 
 void nsPluginInstanceOwner::Invalidate() {
@@ -2759,6 +2736,14 @@ nsPluginInstanceOwner::Destroy()
   mContent->RemoveEventListener(NS_LITERAL_STRING("text"), this, true);
 #endif
 
+#if MOZ_WIDGET_ANDROID
+  RemovePluginView();
+
+  if (mLayer)
+    mLayer->SetVisible(false);
+
+#endif
+
   if (mWidget) {
     if (mPluginWindow) {
       mPluginWindow->SetPluginWidget(nsnull);
@@ -2867,7 +2852,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                                   const gfxRect& aFrameRect,
                                   const gfxRect& aDirtyRect)
 {
-  if (!mInstance || !mObjectFrame)
+  if (!mInstance || !mObjectFrame || !mPluginDocumentActiveState)
     return;
 
   PRInt32 model = mInstance->GetANPDrawingModel();
@@ -2880,11 +2865,13 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   }
 
   if (model == kOpenGL_ANPDrawingModel) {
+    if (!mLayer)
+      mLayer = new AndroidMediaLayer();
+
     // FIXME: this is gross
     float zoomLevel = aFrameRect.width / (float)mPluginWindow->width;
     mLayer->UpdatePosition(aFrameRect, zoomLevel);
 
-    SendOnScreenEvent(true);
     SendSize((int)aFrameRect.width, (int)aFrameRect.height);
     return;
   }
@@ -3587,17 +3574,6 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(bool aSetWindow)
   } else {
     mPluginWindow->clipRect.right = 0;
     mPluginWindow->clipRect.bottom = 0;
-#if 0 //MOZ_WIDGET_ANDROID
-    if (mInstance) {
-      PRInt32 model = mInstance->GetANPDrawingModel();
-
-      if (model == kSurface_ANPDrawingModel) {
-        RemovePluginView();
-      } else if (model == kOpenGL_ANPDrawingModel) {
-        HidePluginLayer();
-      }
-    }
-#endif
   }
 
   if (!aSetWindow)
@@ -3625,6 +3601,26 @@ nsPluginInstanceOwner::UpdateDocumentActiveState(bool aIsActive)
 {
   mPluginDocumentActiveState = aIsActive;
   UpdateWindowPositionAndClipRect(true);
+
+#ifdef MOZ_WIDGET_ANDROID
+  if (mInstance) {
+    if (mLayer)
+      mLayer->SetVisible(mPluginDocumentActiveState);
+
+    if (!mPluginDocumentActiveState)
+      RemovePluginView();
+
+    mInstance->NotifyOnScreen(mPluginDocumentActiveState);
+
+    // This is, perhaps, incorrect. It is supposed to be sent
+    // when "the webview has paused or resumed". The side effect
+    // is that Flash video players pause or resume (if they were
+    // playing before) based on the value here. I personally think
+    // we want that on Android when switching to another tab, so
+    // that's why we call it here.
+    mInstance->NotifyForeground(mPluginDocumentActiveState);
+  }
+#endif
 }
 #endif // XP_MACOSX
 

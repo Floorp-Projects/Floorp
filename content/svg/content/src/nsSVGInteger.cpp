@@ -106,9 +106,16 @@ nsSVGInteger::GetBaseValueString(nsAString & aValueAsString)
 }
 
 void
-nsSVGInteger::SetBaseValue(int aValue,
-                           nsSVGElement *aSVGElement)
+nsSVGInteger::SetBaseValue(int aValue, nsSVGElement *aSVGElement)
 {
+  // We can't just rely on SetParsedAttrValue (as called by DidChangeInteger)
+  // detecting redundant changes since it will compare false if the existing
+  // attribute value has an associated serialized version (a string value) even
+  // if the integers match due to the way integers are stored in nsAttrValue.
+  if (aValue == mBaseVal && mIsBaseSet) {
+    return;
+  }
+
   mBaseVal = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
@@ -117,7 +124,7 @@ nsSVGInteger::SetBaseValue(int aValue,
   else {
     aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeInteger(mAttrEnum, true);
+  aSVGElement->DidChangeInteger(mAttrEnum);
 }
 
 void

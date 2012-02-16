@@ -79,7 +79,6 @@ SHARED_LIBRARY_LIBS = \
 		../io/$(LIB_PREFIX)xpcomio_s.$(LIB_SUFFIX) \
 		../components/$(LIB_PREFIX)xpcomcomponents_s.$(LIB_SUFFIX) \
 		../threads/$(LIB_PREFIX)xpcomthreads_s.$(LIB_SUFFIX) \
-		../proxy/src/$(LIB_PREFIX)xpcomproxy_s.$(LIB_SUFFIX) \
 		../base/$(LIB_PREFIX)xpcombase_s.$(LIB_SUFFIX) \
 		../reflect/xptcall/src/$(LIB_PREFIX)xptcall.$(LIB_SUFFIX) \
 		../reflect/xptcall/src/$(LIB_PREFIX)xptcmd.$(LIB_SUFFIX) \

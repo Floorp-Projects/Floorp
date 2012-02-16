@@ -41,43 +41,55 @@ package @ANDROID_PACKAGE_NAME@;
 import java.util.List;
 
 public interface Actions {
-  public enum SpecialKey {
-    DOWN, UP, LEFT, RIGHT, ENTER, MENU, BACK
-  }
 
-  public interface EventExpecter {
-    /** Blocks until the event has been received. Subsequent calls will return immediately. */
-    public void blockForEvent();
-    /** Polls to see if the event has been received. Once this returns true, subsequent calls will also return true. */
-    public boolean eventReceived();
-  }
+    /** Special keys supported by sendSpecialKey() */
+    public enum SpecialKey {
+        DOWN, UP, LEFT, RIGHT, ENTER, MENU, BACK
+    }
 
-  public interface RepeatedEventExpecter extends EventExpecter {
-    /** Blocks until at least one event has been received, and no events have been received in the last <code>millis</code> milliseconds. */
-    public void blockUntilClear(long millis);
-  }
+    public interface EventExpecter {
+        /** Blocks until the event has been received. Subsequent calls will return immediately. */
+        public void blockForEvent();
 
-  /**
-   * Listens for a gecko event to be sent from the Gecko instance.
-   * The returned object can be used to test if the event has been
-   * received. Note that only one event is listened for.
-   * 
-   * @param geckoEvent The geckoEvent JSONObject's type
-   */
-  EventExpecter expectGeckoEvent(String geckoEvent);
+        /** Polls to see if the event has been received. Once this returns true, subsequent calls will also return true. */
+        public boolean eventReceived();
+    }
 
-  /**
-   * Listens for a paint event. Note that calling expectPaint() will
-   * invalidate the event expecters returned from any previous calls
-   * to expectPaint(); calling any methods on those invalidated objects
-   * will result in undefined behaviour.
-   */
-  RepeatedEventExpecter expectPaint();
+    public interface RepeatedEventExpecter extends EventExpecter {
+        /** Blocks until at least one event has been received, and no events have been received in the last <code>millis</code> milliseconds. */
+        public void blockUntilClear(long millis);
+    }
 
-  // Send the string kewsToSend to the application 
-  void sendKeys(String keysToSend);
-  //Send any of the above keys to the element
-  void sendSpecialKey(SpecialKey button);
+    /**
+     * Listens for a gecko event to be sent from the Gecko instance.
+     * The returned object can be used to test if the event has been
+     * received. Note that only one event is listened for.
+     * 
+     * @param geckoEvent The geckoEvent JSONObject's type
+     */
+    EventExpecter expectGeckoEvent(String geckoEvent);
 
-  void drag(int startingX, int endingX, int startingY, int endingY);
+    /**
+     * Listens for a paint event. Note that calling expectPaint() will
+     * invalidate the event expecters returned from any previous calls
+     * to expectPaint(); calling any methods on those invalidated objects
+     * will result in undefined behaviour.
+     */
+    RepeatedEventExpecter expectPaint();
+
+    /** 
+     * Send a string to the application 
+     * 
+     * @param keysToSend The string to send
+     */
+    void sendKeys(String keysToSend);
+
+    /**
+     * Send a special keycode to the element
+     *
+     * @param key The special key to send
+     */
+    void sendSpecialKey(SpecialKey key);
+
+    void drag(int startingX, int endingX, int startingY, int endingY);
 }
