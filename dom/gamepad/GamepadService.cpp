@@ -8,10 +8,10 @@
 #include "mozilla/StaticPtr.h"
 
 #include "GamepadService.h"
+#include "Gamepad.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
-#include "nsDOMGamepad.h"
 #include "nsIDOMGamepadButtonEvent.h"
 #include "nsIDOMGamepadAxisMoveEvent.h"
 #include "nsIDOMGamepadEvent.h"
@@ -49,7 +49,7 @@ GamepadService::GamepadService()
   : mStarted(false),
     mShuttingDown(false)
 {
-  mEnabled = Preferences::GetBool(kGamepadEnabledPref, false);
+  mEnabled = IsAPIEnabled();
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   observerService->AddObserver(this,
@@ -135,12 +135,12 @@ GamepadService::AddGamepad(const char* aId,
                            uint32_t aNumAxes)
 {
   //TODO: bug 852258: get initial button/axis state
-  nsRefPtr<nsDOMGamepad> gamepad =
-    new nsDOMGamepad(nullptr,
-                     NS_ConvertUTF8toUTF16(nsDependentCString(aId)),
-                     0,
-                     aNumButtons,
-                     aNumAxes);
+  nsRefPtr<Gamepad> gamepad =
+    new Gamepad(nullptr,
+                NS_ConvertUTF8toUTF16(nsDependentCString(aId)),
+                0,
+                aNumButtons,
+                aNumAxes);
   int index = -1;
   for (uint32_t i = 0; i < mGamepads.Length(); i++) {
     if (!mGamepads[i]) {
@@ -207,7 +207,7 @@ GamepadService::NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed)
       NewConnectionEvent(aIndex, true);
     }
 
-    nsRefPtr<nsDOMGamepad> gamepad = listeners[i]->GetGamepad(aIndex);
+    nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
     if (gamepad) {
       gamepad->SetButton(aButton, value);
       // Fire event
@@ -218,7 +218,7 @@ GamepadService::NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed)
 
 void
 GamepadService::FireButtonEvent(EventTarget* aTarget,
-                                nsDOMGamepad* aGamepad,
+                                Gamepad* aGamepad,
                                 uint32_t aButton,
                                 double aValue)
 {
@@ -265,7 +265,7 @@ GamepadService::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue)
       NewConnectionEvent(aIndex, true);
     }
 
-    nsRefPtr<nsDOMGamepad> gamepad = listeners[i]->GetGamepad(aIndex);
+    nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
     if (gamepad) {
       gamepad->SetAxis(aAxis, aValue);
       // Fire event
@@ -276,7 +276,7 @@ GamepadService::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue)
 
 void
 GamepadService::FireAxisMoveEvent(EventTarget* aTarget,
-                                  nsDOMGamepad* aGamepad,
+                                  Gamepad* aGamepad,
                                   uint32_t aAxis,
                                   double aValue)
 {
@@ -322,7 +322,7 @@ GamepadService::NewConnectionEvent(uint32_t aIndex, bool aConnected)
 
       SetWindowHasSeenGamepad(listeners[i], aIndex);
 
-      nsRefPtr<nsDOMGamepad> gamepad = listeners[i]->GetGamepad(aIndex);
+      nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
       if (gamepad) {
         // Fire event
         FireConnectionEvent(listeners[i], gamepad, aConnected);
@@ -338,7 +338,7 @@ GamepadService::NewConnectionEvent(uint32_t aIndex, bool aConnected)
       // deal with the hassle of syncing the state of removed gamepads.
 
       if (WindowHasSeenGamepad(listeners[i], aIndex)) {
-        nsRefPtr<nsDOMGamepad> gamepad = listeners[i]->GetGamepad(aIndex);
+        nsRefPtr<Gamepad> gamepad = listeners[i]->GetGamepad(aIndex);
         if (gamepad) {
           gamepad->SetConnected(false);
           // Fire event
@@ -355,7 +355,7 @@ GamepadService::NewConnectionEvent(uint32_t aIndex, bool aConnected)
 
 void
 GamepadService::FireConnectionEvent(EventTarget* aTarget,
-                                    nsDOMGamepad* aGamepad,
+                                    Gamepad* aGamepad,
                                     bool aConnected)
 {
   nsCOMPtr<nsIDOMEvent> event;
@@ -373,7 +373,7 @@ GamepadService::FireConnectionEvent(EventTarget* aTarget,
 }
 
 void
-GamepadService::SyncGamepadState(uint32_t aIndex, nsDOMGamepad* aGamepad)
+GamepadService::SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad)
 {
   if (mShuttingDown || !mEnabled || aIndex > mGamepads.Length()) {
     return;
@@ -398,10 +398,16 @@ GamepadService::GetService()
   return service.forget();
 }
 
+// static
+bool
+GamepadService::IsAPIEnabled() {
+  return Preferences::GetBool(kGamepadEnabledPref, false);
+}
+
 bool
 GamepadService::WindowHasSeenGamepad(nsGlobalWindow* aWindow, uint32_t aIndex)
 {
-  nsRefPtr<nsDOMGamepad> gamepad = aWindow->GetGamepad(aIndex);
+  nsRefPtr<Gamepad> gamepad = aWindow->GetGamepad(aIndex);
   return gamepad != nullptr;
 }
 
@@ -418,7 +424,7 @@ GamepadService::SetWindowHasSeenGamepad(nsGlobalWindow* aWindow,
   if (aHasSeen) {
     aWindow->SetHasSeenGamepadInput(true);
     nsCOMPtr<nsISupports> window = nsGlobalWindow::ToSupports(aWindow);
-    nsRefPtr<nsDOMGamepad> gamepad = mGamepads[aIndex]->Clone(window);
+    nsRefPtr<Gamepad> gamepad = mGamepads[aIndex]->Clone(window);
     aWindow->AddGamepad(aIndex, gamepad);
   } else {
     aWindow->RemoveGamepad(aIndex);

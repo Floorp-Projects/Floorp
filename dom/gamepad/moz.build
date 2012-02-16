@@ -4,10 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPIDL_MODULE = 'dom_gamepad'
+EXPORTS.mozilla.dom += [
+    'Gamepad.h',
+    'GamepadService.h',
+    ]
 
-XPIDL_SOURCES = [
-  'nsIDOMGamepad.idl',
-  'nsIGamepadServiceTest.idl',
-  'nsINavigatorGamepads.idl',
-  ]
+CPP_SOURCES = [
+    'Gamepad.cpp',
+    'GamepadService.cpp',
+    ]
