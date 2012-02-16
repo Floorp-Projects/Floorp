@@ -633,7 +633,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
   if (mPushedClips.size()) {
     mPrivateData->mEffect->GetVariableByName("mask")->AsShaderResource()->SetResource(maskSRView);
     mPrivateData->mEffect->GetVariableByName("MaskTexCoords")->AsVector()->
-      SetFloatVector(ShaderConstantRectD3D10(shadowDest.x / mSize.width, shadowDest.y / mSize.width,
+      SetFloatVector(ShaderConstantRectD3D10(shadowDest.x / mSize.width, shadowDest.y / mSize.height,
                                              Float(aSurface->GetSize().width) / mSize.width,
                                              Float(aSurface->GetSize().height) / mSize.height));
     mPrivateData->mEffect->GetTechniqueByName("SampleTextureWithShadow")->
@@ -658,7 +658,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
 
   if (mPushedClips.size()) {
     mPrivateData->mEffect->GetVariableByName("MaskTexCoords")->AsVector()->
-      SetFloatVector(ShaderConstantRectD3D10(aDest.x / mSize.width, aDest.y / mSize.width,
+      SetFloatVector(ShaderConstantRectD3D10(aDest.x / mSize.width, aDest.y / mSize.height,
                                              Float(aSurface->GetSize().width) / mSize.width,
                                              Float(aSurface->GetSize().height) / mSize.height));
     mPrivateData->mEffect->GetTechniqueByName("SampleMaskedTexture")->
