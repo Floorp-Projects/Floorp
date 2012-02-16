@@ -272,7 +272,7 @@ function testSlice(file, size, type, contents, fileType) {
   testFile(slice.slice(5000, 42000), contents.slice(5000, 40000), "file slice slice");
   
   // ...of slice of slice
-  slice = slice.slice(5000, 42000).mozSlice(400, 700);
+  slice = slice.slice(5000, 42000).slice(400, 700);
   SpecialPowers.gc();
   testFile(slice, contents.slice(5400, 5700), "file slice slice slice");
 }
