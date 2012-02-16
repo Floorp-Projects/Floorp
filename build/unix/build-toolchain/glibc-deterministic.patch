@@ -40,13 +40,7 @@ diff -ru a/csu/Makefile b/csu/Makefile
 diff -ru a/elf/Makefile b/elf/Makefile
 --- a/elf/Makefile	2008-10-31 16:35:11.000000000 -0400
 +++ b/elf/Makefile	2012-02-16 12:20:00.038593752 -0500
-@@ -1,4 +1,4 @@
--# Copyright (C) 1995-2007, 2008 Free Software Foundation, Inc.
-+# Copyright (C) 1995-2007, 2008, 2009 Free Software Foundation, Inc.
- # This file is part of the GNU C Library.
- 
- # The GNU C Library is free software; you can redistribute it and/or
-@@ -299,18 +299,11 @@
+@@ -295,20 +295,13 @@
  z-now-yes = -Wl,-z,now
  
  $(objpfx)ld.so: $(objpfx)librtld.os $(ld-map)
@@ -65,8 +59,11 @@ diff -ru a/elf/Makefile b/elf/Makefile
 +		  -Wl,-soname=$(rtld-installed-name)			\
 +		  -Wl,-defsym=_begin=0
  	readelf -s $@ \
- 	  | $(AWK) '($$7 ~ /^UND(|EF)$$/ && $$1 != "0:" && $$4 != "REGISTER") { print; p=1 } END { exit p != 0 }'
+-	  | awk '($$7 ~ /^UND(|EF)$$/ && $$1 != "0:" && $$4 != "REGISTER") { print; p=1 } END { exit p != 0 }'
++	  | $(AWK) '($$7 ~ /^UND(|EF)$$/ && $$1 != "0:" && $$4 != "REGISTER") { print; p=1 } END { exit p != 0 }'
  
+ # interp.c exists just to get this string into the libraries.
+ CFLAGS-interp.c = -D'RUNTIME_LINKER="$(slibdir)/$(rtld-installed-name)"' \
 diff -ru a/Makerules b/Makerules
 --- a/Makerules	2011-01-17 23:34:07.000000000 -0500
 +++ b/Makerules	2012-01-30 08:47:56.565068903 -0500
