@@ -461,9 +461,10 @@ struct Shape : public js::gc::Cell
 {
     friend struct ::JSObject;
     friend struct ::JSFunction;
-    friend class js::StaticBlockObject;
-    friend class js::PropertyTree;
     friend class js::Bindings;
+    friend class js::ObjectImpl;
+    friend class js::PropertyTree;
+    friend class js::StaticBlockObject;
     friend struct js::StackShape;
     friend struct js::StackBaseShape;
 

@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 
 #include "jscell.h"
+#include "jsgc.h"
 
 #include "js/TemplateLib.h"
 
@@ -76,6 +77,12 @@ inline size_t
 js::ObjectImpl::sizeOfThis() const
 {
     return arenaHeader()->getThingSize();
+}
+
+inline bool
+js::ObjectImpl::isExtensible() const
+{
+    return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
 }
 
 #endif /* ObjectImpl_inl_h__ */

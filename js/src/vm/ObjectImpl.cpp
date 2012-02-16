@@ -5,7 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+
+#include "jsscope.h"
+
 #include "ObjectImpl.h"
+
+#include "ObjectImpl-inl.h"
 
 using namespace js;
 
@@ -14,3 +21,19 @@ static ObjectElements emptyElementsHeader(0, 0);
 /* Objects with no elements share one empty set of elements. */
 HeapValue *js::emptyObjectElements =
     reinterpret_cast<HeapValue *>(uintptr_t(&emptyElementsHeader) + sizeof(ObjectElements));
+
+#if defined(_MSC_VER) && _MSC_VER >= 1500
+/*
+ * Work around a compiler bug in MSVC9 and above, where inlining this function
+ * causes stack pointer offsets to go awry and spp to refer to something higher
+ * up the stack.
+ */
+MOZ_NEVER_INLINE
+#endif
+const Shape *
+js::ObjectImpl::nativeLookup(JSContext *cx, jsid id)
+{
+    MOZ_ASSERT(isNative());
+    Shape **spp;
+    return Shape::search(cx, lastProperty(), id, &spp);
+}
