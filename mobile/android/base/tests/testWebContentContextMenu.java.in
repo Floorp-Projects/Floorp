@@ -1,0 +1,40 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.util.Log;
+import android.util.DisplayMetrics;
+
+public class testWebContentContextMenu extends BaseTest {
+    public void testWebContentContextMenu() {
+        setTestType("mochitest");
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
+        // Load the about: page
+        String url = getAbsoluteUrl("/robocop/robocop_big_link.html");
+        loadUrl(url);
+
+        DisplayMetrics dm = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+        // The link has a 60px height, so let's try to hit the middle
+        float top = mDriver.getGeckoTop() + 30 * dm.density;
+        float left = mDriver.getGeckoLeft() + mDriver.getGeckoWidth() / 2;
+        mSolo.clickLongOnScreen(left, top);
+
+        mAsserter.ok(mSolo.waitForText("Open"), "looking for context menu action", "found 'Open Link'");
+
+        Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+        mSolo.clickOnText("Open");
+
+        // Wait for the new tab and page to load
+        tabEventExpecter.blockForEvent();
+        contentEventExpecter.blockForEvent();
+
+        // See tab count
+        Element tabCount = mDriver.findElement(getActivity(), "tabs_count");
+        mAsserter.is(tabCount.getText(), "2", "Number of tabs has increased");
+    }
+}
