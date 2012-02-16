@@ -205,6 +205,12 @@ FormatInList(const Image::Format* aFormats, PRUint32 aNumFormats,
   return false;
 }
 
+class CompositionNotifySink
+{
+public:
+  virtual void DidComposite() = 0;
+};
+
 /**
  * A class that manages Image creation for a LayerManager. The only reason
  * we need a separate class here is that LayerMananers aren't threadsafe
@@ -295,7 +301,8 @@ public:
     mImageFactory(new ImageFactory()),
     mRecycleBin(new BufferRecycleBin()),
     mRemoteData(nsnull),
-    mRemoteDataMutex(nsnull)
+    mRemoteDataMutex(nsnull),
+    mCompositionNotifySink(nsnull)
   {}
 
   ~ImageContainer();
@@ -448,6 +455,14 @@ public:
       mPaintCount++;
       mPreviousImagePainted = true;
     }
+
+    if (mCompositionNotifySink) {
+      mCompositionNotifySink->DidComposite();
+    }
+  }
+
+  void SetCompositionNotifySink(CompositionNotifySink *aSink) {
+    mCompositionNotifySink = aSink;
   }
 
   /**
@@ -519,6 +534,8 @@ protected:
   // When this mutex is held, we will always be inside the mReentrantMonitor
   // however the same is not true vice versa.
   CrossProcessMutex *mRemoteDataMutex;
+
+  CompositionNotifySink *mCompositionNotifySink;
 };
  
 class AutoLockImage
