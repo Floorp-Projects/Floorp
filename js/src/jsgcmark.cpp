@@ -442,7 +442,7 @@ MarkThingOrValueRoot(JSTracer *trc, uintptr_t word, const char *name)
             jsval_layout layout;
             layout.asBits = word;
             Value v = IMPL_TO_JSVAL(layout);
-            gc::MarkRoot(trc, v, name);
+            gc::MarkValueRoot(trc, v, name);
 	    return;
         }
     }
