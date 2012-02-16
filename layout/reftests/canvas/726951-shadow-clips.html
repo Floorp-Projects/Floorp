@@ -1,0 +1,18 @@
+<!doctype html>
+<head>
+  
+<body>
+  <canvas id="mycanvas" width="200" height="600"></canvas>
+
+  <script type="text/javascript">
+  var cx = document.getElementById('mycanvas').getContext('2d');
+  cx.beginPath();
+  cx.rect(10, 10, 50, 50);
+  cx.clip();
+  cx.beginPath();
+  cx.rect(0, 0, 50, 50);
+  cx.shadowColor = "black";
+  cx.shadowOffsetX = 10;
+  cx.shadowOffsetY = 10;
+  cx.fill();
+  </script>
