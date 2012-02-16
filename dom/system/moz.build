@@ -30,14 +30,6 @@ EXPORTS += [
     'nsDeviceSensors.h',
 ]
 
-if CONFIG['MOZ_GAMEPAD']:
-    EXPORTS.mozilla.dom = [
-        'GamepadService.h',
-    ]
-    CPP_SOURCES += [
-        'GamepadService.cpp',
-    ]
-
 EXPORTS.mozilla += [
     'OSFileConstants.h',
 ]

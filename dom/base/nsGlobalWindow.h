@@ -60,7 +60,7 @@
 #include "nsIIdleObserver.h"
 #include "nsIDOMWakeLock.h"
 #ifdef MOZ_GAMEPAD
-#include "nsDOMGamepad.h"
+#include "mozilla/dom/Gamepad.h"
 #endif
 #include "nsIDocument.h"
 
@@ -691,15 +691,19 @@ public:
   }
 
 #ifdef MOZ_GAMEPAD
-  void AddGamepad(uint32_t aIndex, nsDOMGamepad* aGamepad);
+  void AddGamepad(uint32_t aIndex, mozilla::dom::Gamepad* aGamepad);
   void RemoveGamepad(uint32_t aIndex);
-  already_AddRefed<nsDOMGamepad> GetGamepad(uint32_t aIndex);
+  void GetGamepads(nsTArray<nsRefPtr<mozilla::dom::Gamepad> >& aGamepads);
+  already_AddRefed<mozilla::dom::Gamepad> GetGamepad(uint32_t aIndex);
   void SetHasSeenGamepadInput(bool aHasSeen);
   bool HasSeenGamepadInput();
   void SyncGamepadState();
   static PLDHashOperator EnumGamepadsForSync(const uint32_t& aKey,
-                                             nsDOMGamepad* aData,
-                                             void* userArg);
+                                             mozilla::dom::Gamepad* aData,
+                                             void* aUserArg);
+  static PLDHashOperator EnumGamepadsForGet(const PRUint32& aKey,
+                                            mozilla::dom::Gamepad* aData,
+                                            void* aUserArg);
 #endif
 
   // Enable/disable updates for gamepad input.
@@ -1156,7 +1160,7 @@ protected:
   // Indicates whether this window wants gamepad input events
   bool                   mHasGamepad : 1;
 #ifdef MOZ_GAMEPAD
-  nsRefPtrHashtable<nsUint32HashKey, nsDOMGamepad> mGamepads;
+  nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
   bool mHasSeenGamepadInput;
 #endif
 
