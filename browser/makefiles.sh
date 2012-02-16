@@ -88,6 +88,12 @@ browser/themes/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
 $MOZ_BRANDING_DIRECTORY/content/Makefile
 $MOZ_BRANDING_DIRECTORY/locales/Makefile
+toolkit/locales/Makefile
+extensions/spellcheck/locales/Makefile
+intl/locales/Makefile
+netwerk/locales/Makefile
+dom/locales/Makefile
+security/manager/locales/Makefile
 "
 
 if [ "$MOZ_SAFE_BROWSING" ]; then
