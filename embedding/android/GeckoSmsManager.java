@@ -327,9 +327,9 @@ public class GeckoSmsManager
   public final static String ACTION_SMS_DELIVERED = "org.mozilla.gecko.SMS_DELIVERED";
 
   /*
-   * Make sure that the following error codes are in sync with |ErrorType| in:
-   * dom/sms/src/Types.h
-   * The error code are owned by the DOM.
+   * Make sure that the following error codes are in sync with the ones
+   * defined in dom/sms/interfaces/nsISmsRequestManager.idl. They are owned
+   * owned by the interface.
    */
   public final static int kNoError       = 0;
   public final static int kNoSignalError = 1;
