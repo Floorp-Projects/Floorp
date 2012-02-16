@@ -38,9 +38,8 @@
 
 package org.mozilla.gecko.sync.crypto;
 
-import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
@@ -53,10 +52,8 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.Utils;
-import java.security.InvalidKeyException;
 
 /*
  * Implements the basic required cryptography options.
@@ -221,14 +218,5 @@ public class Cryptographer {
   private static byte[] generateHMAC(CryptoInfo bundle) throws NoSuchAlgorithmException, InvalidKeyException {
     Mac hmacHasher = HKDF.makeHMACHasher(bundle.getKeys().getHMACKey());
     return hmacHasher.doFinal(Base64.encodeBase64(bundle.getMessage()));
-  }
-
-  public static byte[] sha1(String utf8) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-    return sha1.digest(utf8.getBytes("UTF-8"));
-  }
-
-  public static String sha1Base32(String utf8) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    return new Base32().encodeAsString(sha1(utf8)).toLowerCase();
   }
 }

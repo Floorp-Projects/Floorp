@@ -274,6 +274,7 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     return intent;
   }
 
+  @SuppressWarnings("unused")
   private void authFailure() {
     enableCredEntry(true);
     Intent intent = new Intent(mContext, SetupFailureActivity.class);
