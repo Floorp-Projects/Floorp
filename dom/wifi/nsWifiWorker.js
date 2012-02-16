@@ -821,7 +821,12 @@ function nsWifiWorker() {
   this.networks = Object.create(null);
   WifiManager.onstatechange = function() {
     debug("State change: " + self.state + " -> " + this.state);
-    if (self.state === "SCANNING" && this.state === "INACTIVE") {
+
+    self.state = this.state;
+  }
+
+  function connectToMozilla() {
+    if (self.state === "INACTIVE") {
       // We're not trying to connect so try to find an open Mozilla network.
       // TODO Remove me in favor of UI and a way to select a network.
 
@@ -855,9 +860,8 @@ function nsWifiWorker() {
         });
       });
     }
-
-    self.state = this.state;
   }
+  this.waitForScan(connectToMozilla);
 
   WifiManager.onscanresultsavailable = function() {
     debug("Scan results are available! Asking for them.");
@@ -873,6 +877,10 @@ function nsWifiWorker() {
           self.networks[match[5]] = new WifiNetwork(match[5], match[1], match[4], match[3]);
         else if (!match)
           debug("Match didn't find anything for: " + lines[i]);
+      }
+
+      if (self.wantScanResults) {
+        self.wantScanResults();
       }
     });
   }
@@ -897,6 +905,18 @@ nsWifiWorker.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder,
                                          Ci.nsIWifi]),
+
+  // Internal methods.
+  waitForScan: function(callback) {
+    if (this.wantScanResults) {
+      var older = this.wantScanResults;
+      this.wantScanResults = function() { callback(); older(); };
+    } else {
+      this.wantScanResults = callback;
+    }
+  },
+
+  // nsIWifi
 
   setWifiEnabled: function(enable) {
     WifiManager.setWifiEnabled(enable, function (ok) {
