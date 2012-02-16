@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *  Blake Kaplan <mrbkap@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,6 +36,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+
+[scriptable, uuid(14c815f0-e9db-41d4-a15e-f3e69140f83b)]
+interface nsIWifiNetwork : nsISupports {
+    readonly attribute DOMString ssid; // can be null
+    readonly attribute DOMString bssid; // can be null
+    readonly attribute DOMString flags; // TODO make this be real flags instead of a string
+    readonly attribute long signal;
+};
 
 [scriptable, uuid(9DCE05BF-659C-4427-A050-0EAC3BB6C1C0)]
 interface nsIWifi : nsISupports {
