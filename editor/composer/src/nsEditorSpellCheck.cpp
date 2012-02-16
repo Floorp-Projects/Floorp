@@ -83,7 +83,7 @@ class UpdateDictionnaryHolder {
 
 #define CPS_PREF_NAME NS_LITERAL_STRING("spellcheck.lang")
 
-class LastDictionary {
+class LastDictionary MOZ_FINAL {
 public:
   /**
    * Store current dictionary for editor document url. Use content pref
