@@ -365,20 +365,6 @@ JSObject::dynamicSlotIndex(size_t slot)
     return slot - numFixedSlots();
 }
 
-/*static*/ inline size_t
-JSObject::dynamicSlotsCount(size_t nfixed, size_t span)
-{
-    if (span <= nfixed)
-        return 0;
-    span -= nfixed;
-    if (span <= SLOT_CAPACITY_MIN)
-        return SLOT_CAPACITY_MIN;
-
-    size_t slots = js::RoundUpPow2(span);
-    JS_ASSERT(slots >= span);
-    return slots;
-}
-
 inline size_t
 JSObject::numDynamicSlots() const
 {
@@ -1196,12 +1182,6 @@ inline bool
 JSObject::hasPropertyTable() const
 {
     return lastProperty()->hasTable();
-}
-
-inline size_t
-JSObject::sizeOfThis() const
-{
-    return arenaHeader()->getThingSize();
 }
 
 inline size_t
