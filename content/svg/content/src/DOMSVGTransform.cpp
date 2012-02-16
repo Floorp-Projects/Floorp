@@ -173,9 +173,7 @@ DOMSVGTransform::SetMatrix(nsIDOMSVGMatrix *matrix)
   if (!domMatrix)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  Transform().SetMatrix(domMatrix->Matrix());
-  NotifyElementOfChange();
-
+  SetMatrix(domMatrix->Matrix());
   return NS_OK;
 }
 
@@ -188,8 +186,14 @@ DOMSVGTransform::SetTranslate(float tx, float ty)
   }
   NS_ENSURE_FINITE2(tx, ty, NS_ERROR_ILLEGAL_VALUE);
 
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE &&
+      Matrix().x0 == tx && Matrix().y0 == ty) {
+    return NS_OK;
+  }
+
+  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
   Transform().SetTranslate(tx, ty);
-  NotifyElementOfChange();
+  NotifyElementDidChange(emptyOrOldValue);
 
   return NS_OK;
 }
@@ -203,8 +207,14 @@ DOMSVGTransform::SetScale(float sx, float sy)
   }
   NS_ENSURE_FINITE2(sx, sy, NS_ERROR_ILLEGAL_VALUE);
 
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_SCALE &&
+      Matrix().xx == sx && Matrix().yy == sy) {
+    return NS_OK;
+  }
+
+  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
   Transform().SetScale(sx, sy);
-  NotifyElementOfChange();
+  NotifyElementDidChange(emptyOrOldValue);
 
   return NS_OK;
 }
@@ -218,8 +228,17 @@ DOMSVGTransform::SetRotate(float angle, float cx, float cy)
   }
   NS_ENSURE_FINITE3(angle, cx, cy, NS_ERROR_ILLEGAL_VALUE);
 
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_ROTATE) {
+    float currentCx, currentCy;
+    Transform().GetRotationOrigin(currentCx, currentCy);
+    if (Transform().Angle() == angle && currentCx == cx && currentCy == cy) {
+      return NS_OK;
+    }
+  }
+
+  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
   Transform().SetRotate(angle, cx, cy);
-  NotifyElementOfChange();
+  NotifyElementDidChange(emptyOrOldValue);
 
   return NS_OK;
 }
@@ -233,10 +252,16 @@ DOMSVGTransform::SetSkewX(float angle)
   }
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
 
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX &&
+      Transform().Angle() == angle) {
+    return NS_OK;
+  }
+
+  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
   nsresult rv = Transform().SetSkewX(angle);
   if (NS_FAILED(rv))
     return rv;
-  NotifyElementOfChange();
+  NotifyElementDidChange(emptyOrOldValue);
 
   return NS_OK;
 }
@@ -250,10 +275,16 @@ DOMSVGTransform::SetSkewY(float angle)
   }
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
 
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY &&
+      Transform().Angle() == angle) {
+    return NS_OK;
+  }
+
+  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
   nsresult rv = Transform().SetSkewY(angle);
   if (NS_FAILED(rv))
     return rv;
-  NotifyElementOfChange();
+  NotifyElementDidChange(emptyOrOldValue);
 
   return NS_OK;
 }
@@ -324,8 +355,15 @@ DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix)
 {
   NS_ABORT_IF_FALSE(!mIsAnimValItem,
       "Attempting to modify read-only transform");
+
+  if (Transform().Type() == nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX &&
+      SVGTransform::MatricesEqual(Matrix(), aMatrix)) {
+    return;
+  }
+
+  nsAttrValue emptyOrOldValue = NotifyElementWillChange();
   Transform().SetMatrix(aMatrix);
-  NotifyElementOfChange();
+  NotifyElementDidChange(emptyOrOldValue);
 }
 
 void
@@ -341,10 +379,10 @@ DOMSVGTransform::ClearMatrixTearoff(DOMSVGMatrix* aMatrix)
 // Implementation helpers
 
 void
-DOMSVGTransform::NotifyElementOfChange()
+DOMSVGTransform::NotifyElementDidChange(const nsAttrValue& aEmptyOrOldValue)
 {
   if (HasOwner()) {
-    Element()->DidChangeTransformList(true);
+    Element()->DidChangeTransformList(aEmptyOrOldValue);
     if (mList->mAList->IsAnimating()) {
       Element()->AnimationNeedsResample();
     }

@@ -37,7 +37,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 343713;
-var summary = 'Do not JS_Assert with nested function evaluation';
+var summary = 'Do not assert with nested function evaluation';
 var actual = 'No Crash';
 var expect = 'No Crash';
 

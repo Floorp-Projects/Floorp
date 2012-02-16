@@ -87,6 +87,7 @@ public class GeckoEvent {
     private static final int VISITED = 21;
     private static final int NETWORK_CHANGED = 22;
     private static final int PROXIMITY_EVENT = 23;
+    private static final int ACTIVITY_RESUMING = 24;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -139,16 +140,28 @@ public class GeckoEvent {
         mType = evType;
     }
 
-    public static GeckoEvent createPauseEvent() {
-        return new GeckoEvent(ACTIVITY_PAUSING);
+    public static GeckoEvent createPauseEvent(int activityDepth) {
+        GeckoEvent event = new GeckoEvent(ACTIVITY_PAUSING);
+        event.mFlags = activityDepth > 0 ? 1 : 0;
+        return event;
     }
 
-    public static GeckoEvent createStoppingEvent() {
-        return new GeckoEvent(ACTIVITY_STOPPING);
+    public static GeckoEvent createResumeEvent(int activityDepth) {
+        GeckoEvent event = new GeckoEvent(ACTIVITY_RESUMING);
+        event.mFlags = activityDepth > 0 ? 1 : 0;
+        return event;
     }
 
-    public static GeckoEvent createStartEvent() {
-        return new GeckoEvent(ACTIVITY_START);
+    public static GeckoEvent createStoppingEvent(int activityDepth) {
+        GeckoEvent event = new GeckoEvent(ACTIVITY_STOPPING);
+        event.mFlags = activityDepth > 0 ? 1 : 0;
+        return event;
+    }
+
+    public static GeckoEvent createStartEvent(int activityDepth) {
+        GeckoEvent event = new GeckoEvent(ACTIVITY_START);
+        event.mFlags = activityDepth > 0 ? 1 : 0;
+        return event;
     }
 
     public static GeckoEvent createShutdownEvent() {

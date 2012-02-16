@@ -439,27 +439,19 @@ NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
 }
 
 inline bool
-DefVarOrConstOperation(JSContext *cx, JSOp op, PropertyName *dn, StackFrame *fp)
+DefVarOrConstOperation(JSContext *cx, JSObject &varobj, PropertyName *dn, uintN attrs)
 {
-    /* ES5 10.5 step 8 (with subsequent errata). */
-    uintN attrs = JSPROP_ENUMERATE;
-    if (!fp->isEvalFrame())
-        attrs |= JSPROP_PERMANENT;
-    if (op == JSOP_DEFCONST)
-        attrs |= JSPROP_READONLY;
-
-    /* Step 8b. */
-    JSObject &obj = fp->varObj();
-    JS_ASSERT(!obj.getOps()->defineProperty);
+    JS_ASSERT(varobj.isVarObj());
+    JS_ASSERT(!varobj.getOps()->defineProperty);
 
     JSProperty *prop;
     JSObject *obj2;
-    if (!obj.lookupProperty(cx, dn, &obj2, &prop))
+    if (!varobj.lookupProperty(cx, dn, &obj2, &prop))
         return false;
 
     /* Steps 8c, 8d. */
-    if (!prop || (obj2 != &obj && obj.isGlobal())) {
-        if (!DefineNativeProperty(cx, &obj, dn, UndefinedValue(),
+    if (!prop || (obj2 != &varobj && varobj.isGlobal())) {
+        if (!DefineNativeProperty(cx, &varobj, dn, UndefinedValue(),
                                   JS_PropertyStub, JS_StrictPropertyStub, attrs, 0, 0))
         {
             return false;
@@ -470,7 +462,7 @@ DefVarOrConstOperation(JSContext *cx, JSOp op, PropertyName *dn, StackFrame *fp)
          * see a redeclaration that's |const|, we consider it a conflict.
          */
         uintN oldAttrs;
-        if (!obj.getPropertyAttributes(cx, dn, &oldAttrs))
+        if (!varobj.getPropertyAttributes(cx, dn, &oldAttrs))
             return false;
         if (attrs & JSPROP_READONLY) {
             JSAutoByteString bytes;

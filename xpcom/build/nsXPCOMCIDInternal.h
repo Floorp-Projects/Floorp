@@ -72,12 +72,6 @@
 #define NS_THREADPOOL_CONTRACTID "@mozilla.org/thread-pool;1"
 
 /**
- * The global proxy object manager.  This component is a singleton.
- * @implement nsIProxyObjectManager
- */
-#define NS_XPCOMPROXY_CONTRACTID "@mozilla.org/xpcomproxy;1"
-
-/**
  * The contract id for the nsIXULAppInfo service.
  */
 #define XULAPPINFO_SERVICE_CONTRACTID \
