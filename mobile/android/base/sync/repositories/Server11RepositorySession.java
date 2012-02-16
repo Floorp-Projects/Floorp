@@ -82,7 +82,7 @@ public class Server11RepositorySession extends RepositorySession {
     }
   }
 
-  public static final String LOG_TAG = "Server11RepositorySession";
+  public static final String LOG_TAG = "Server11Session";
 
   private static final int UPLOAD_BYTE_THRESHOLD = 1024 * 1024;    // 1MB.
   private static final int UPLOAD_ITEM_THRESHOLD = 50;

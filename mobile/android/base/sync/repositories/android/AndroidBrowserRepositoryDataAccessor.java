@@ -51,7 +51,7 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
 
   private static final String[] GUID_COLUMNS = new String[] { BrowserContract.SyncColumns.GUID };
   protected Context context;
-  protected String LOG_TAG = "AndroidBrowserRepositoryDataAccessor";
+  protected static String LOG_TAG = "BrowserDataAccessor";
   private final RepoUtils.QueryHelper queryHelper;
 
   public AndroidBrowserRepositoryDataAccessor(Context context) {

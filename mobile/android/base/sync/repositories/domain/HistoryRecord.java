@@ -43,6 +43,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
@@ -191,10 +192,11 @@ public class HistoryRecord extends Record {
   }
 
   private boolean checkVisitsEquals(HistoryRecord other) {
-    Log.d(LOG_TAG, "Checking visits.");
-    if (Utils.ENABLE_TRACE_LOGGING) {
-      Log.d(LOG_TAG, ">> Mine:   " + ((this.visits == null) ? "null" : this.visits.toJSONString()));
-      Log.d(LOG_TAG, ">> Theirs: " + ((other.visits == null) ? "null" : other.visits.toJSONString()));
+    Logger.debug(LOG_TAG, "Checking visits.");
+    if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+      // Don't JSON-encode unless we're logging.
+      Logger.trace(LOG_TAG, ">> Mine:   " + ((this.visits == null) ? "null" : this.visits.toJSONString()));
+      Logger.trace(LOG_TAG, ">> Theirs: " + ((other.visits == null) ? "null" : other.visits.toJSONString()));
     }
 
     // Handle nulls.
