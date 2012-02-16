@@ -125,7 +125,6 @@
 #include "nsHyphenationManager.h"
 #include "nsEditorSpellCheck.h"
 #include "nsDOMMemoryReporter.h"
-#include "mozilla/dom/sms/SmsRequestManager.h"
 
 extern void NS_ShutdownChainItemPool();
 
@@ -272,16 +271,12 @@ nsLayoutStatics::Initialize()
 
   nsDOMMemoryMultiReporter::Init();
 
-  sms::SmsRequestManager::Init();
-
   return NS_OK;
 }
 
 void
 nsLayoutStatics::Shutdown()
 {
-  sms::SmsRequestManager::Shutdown();
-
   // Don't need to shutdown nsDOMMemoryReporter, that will be done by the memory
   // reporter manager.
 
