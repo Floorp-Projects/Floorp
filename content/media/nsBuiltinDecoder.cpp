@@ -216,6 +216,7 @@ nsresult nsBuiltinDecoder::Load(MediaResource* aResource,
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mDecoderStateMachine->SetSeekable(mSeekable);
     mDecoderStateMachine->SetDuration(mDuration);
+    mDecoderStateMachine->SetVolume(mInitialVolume);
     
     if (mFrameBufferLength > 0) {
       // The valid mFrameBufferLength value was specified earlier
