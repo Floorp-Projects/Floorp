@@ -1197,7 +1197,8 @@ bool
 LIRGenerator::visitCallGetProperty(MCallGetProperty *ins)
 {
     LCallGetProperty *lir = new LCallGetProperty();
-    lir->setOperand(0, useRegister(ins->getOperand(0)));
+    if (!useBox(lir, LCallGetProperty::Value, ins->value()))
+        return false;
     return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 

@@ -3108,16 +3108,14 @@ class MStoreSlot
     }
 };
 
-// Inline call to get a property from an object or a name from a scope object.
-// This is a superclass of the actual opcodes which implement different
-// variants of the operation.
-class MCallGetPropertyOrName
+// Inline call to get a name from a scope object. This is a superclass of the
+// actual opcodes which implement different variants of the operation.
+class MCallGetNameInstruction
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
   public:
     enum AccessKind {
-        PROPERTY,
         NAMETYPEOF,
         NAME
     };
@@ -3127,7 +3125,7 @@ class MCallGetPropertyOrName
     AccessKind kind_;
 
   protected:
-    MCallGetPropertyOrName(MDefinition *obj, JSAtom *atom, AccessKind kind)
+    MCallGetNameInstruction(MDefinition *obj, JSAtom *atom, AccessKind kind)
       : MUnaryInstruction(obj),
         atom_(atom),
         kind_(kind)
@@ -3147,13 +3145,6 @@ class MCallGetPropertyOrName
     }
     AccessKind accessKind() const {
         return kind_;
-    }
-    AliasSet getAliasSet() const {
-        // "x" can be set with defineProperty in "obj.x" which can have some
-        // side-effect.  This instruction does a load, but it may also performs
-        // store.
-        return AliasSet::Load(AliasSet::Any) |
-               AliasSet::Store(AliasSet::Any);
     }
 };
 
@@ -3228,24 +3219,39 @@ class MSetPropertyCache
     }
 };
 
-class MCallGetProperty : public MCallGetPropertyOrName
+class MCallGetProperty
+  : public MUnaryInstruction,
+    public BoxInputsPolicy
 {
-    MCallGetProperty(MDefinition *obj, JSAtom *atom)
-        : MCallGetPropertyOrName(obj, atom, MCallGetPropertyOrName::PROPERTY)
-    {}
+    JSAtom *atom_;
+
+    MCallGetProperty(MDefinition *value, JSAtom *atom)
+      : MUnaryInstruction(value), atom_(atom)
+    {
+        setResultType(MIRType_Value);
+    }
 
   public:
     INSTRUCTION_HEADER(CallGetProperty);
 
-    static MCallGetProperty *New(MDefinition *obj, JSAtom *atom) {
-        return new MCallGetProperty(obj, atom);
+    static MCallGetProperty *New(MDefinition *value, JSAtom *atom) {
+        return new MCallGetProperty(value, atom);
+    }
+    MDefinition *value() const {
+        return getOperand(0);
+    }
+    JSAtom *atom() const {
+        return atom_;
+    }
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 
-class MCallGetName : public MCallGetPropertyOrName
+class MCallGetName : public MCallGetNameInstruction
 {
     MCallGetName(MDefinition *obj, JSAtom *atom)
-        : MCallGetPropertyOrName(obj, atom, MCallGetPropertyOrName::NAME)
+        : MCallGetNameInstruction(obj, atom, MCallGetNameInstruction::NAME)
     {}
 
   public:
@@ -3256,10 +3262,10 @@ class MCallGetName : public MCallGetPropertyOrName
     }
 };
 
-class MCallGetNameTypeOf : public MCallGetPropertyOrName
+class MCallGetNameTypeOf : public MCallGetNameInstruction
 {
     MCallGetNameTypeOf(MDefinition *obj, JSAtom *atom)
-        : MCallGetPropertyOrName(obj, atom, MCallGetPropertyOrName::NAMETYPEOF)
+        : MCallGetNameInstruction(obj, atom, MCallGetNameInstruction::NAMETYPEOF)
     {}
 
   public:

@@ -4490,8 +4490,11 @@ js::Throw(JSContext *cx, const Value &v)
 }
 
 bool
-js::GetObjectProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp)
+js::GetProperty(JSContext *cx, const Value &value, PropertyName *name, Value *vp)
 {
+    JSObject *obj = ValueToObject(cx, value);
+    if (!obj)
+        return false;
     return obj->getProperty(cx, name, vp);
 }
 
