@@ -11,11 +11,11 @@ onmessage = function(event) {
 
   var slicedBlob;
   if (contentType == undefined && end == undefined) {
-    slicedBlob = blob.mozSlice(start);
+    slicedBlob = blob.slice(start);
   } else if (contentType == undefined) {
-    slicedBlob = blob.mozSlice(start, end);
+    slicedBlob = blob.slice(start, end);
   } else {
-    slicedBlob = blob.mozSlice(start, end, contentType);
+    slicedBlob = blob.slice(start, end, contentType);
   }
 
   var rtnObj = new Object();

@@ -72,7 +72,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
       finish();
     };
 
-    var blob = file.mozSlice();
+    var blob = file.slice();
     worker.postMessage(blob);
     waitForWorkerFinish();
   }

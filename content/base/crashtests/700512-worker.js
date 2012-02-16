@@ -1,7 +1,7 @@
 onmessage = function(event) {
   var blob = event.data;
 
-  blob.mozSlice(1, 5);
+  blob.slice(1, 5);
 
   postMessage("done");
 }
