@@ -43,7 +43,6 @@ import java.util.HashMap;
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.repositories.BookmarkNeedsReparentingException;
 import org.mozilla.gecko.sync.repositories.NoGuidForIdException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.ParentNotFoundException;

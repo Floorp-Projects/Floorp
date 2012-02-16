@@ -41,13 +41,13 @@ package org.mozilla.gecko.sync;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
-import org.mozilla.gecko.sync.crypto.Cryptographer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -211,10 +211,20 @@ public class Utils {
     return (long)(decimal * 1000);
   }
 
+  public static byte[] sha1(String utf8)
+      throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+    return sha1.digest(utf8.getBytes("UTF-8"));
+  }
+
+  public static String sha1Base32(String utf8)
+      throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    return new Base32().encodeAsString(sha1(utf8)).toLowerCase();
+  }
 
   public static String getPrefsPath(String username, String serverURL)
     throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    return "sync.prefs." + Cryptographer.sha1Base32(serverURL + ":" + username);
+    return "sync.prefs." + sha1Base32(serverURL + ":" + username);
   }
 
   public static SharedPreferences getSharedPreferences(Context context, String username, String serverURL) throws NoSuchAlgorithmException, UnsupportedEncodingException {
