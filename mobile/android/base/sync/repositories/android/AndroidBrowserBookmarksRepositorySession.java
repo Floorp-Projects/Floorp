@@ -54,7 +54,6 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.util.Log;
 
 public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepositorySession {
 
@@ -187,7 +186,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         }
         childArray.add(kid);
       }
-      if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+      if (Logger.logVerbose(LOG_TAG)) {
         // Don't JSON-encode unless we're logging.
         Logger.trace(LOG_TAG, "Output child array: " + childArray.toJSONString());
       }
