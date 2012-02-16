@@ -299,15 +299,36 @@ hb_ot_position_complex (hb_ot_shape_context_t *c)
     c->applied_position_complex = TRUE;
   }
 
-  hb_ot_layout_position_finish (c->buffer);
+  hb_ot_layout_position_finish (c->face, c->buffer);
 
   return;
 }
 
 static void
-hb_position_complex_fallback (hb_ot_shape_context_t *c HB_UNUSED)
+hb_position_complex_fallback (hb_ot_shape_context_t *c)
 {
-  /* TODO Mark pos */
+  unsigned int count = c->buffer->len;
+  if (c->buffer->props.direction == HB_DIRECTION_RTL) {
+    for (unsigned int i = 1; i < count; i++) {
+      unsigned int gen_cat = c->buffer->info[i].general_category();
+      if ((1<<gen_cat) & ((1<<HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)|
+                          (1<<HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK)|
+                          (1<<HB_UNICODE_GENERAL_CATEGORY_FORMAT))) {
+        c->buffer->pos[i].x_advance = 0;
+      }
+    }
+  } else {
+    for (unsigned int i = 1; i < count; i++) {
+      unsigned int gen_cat = c->buffer->info[i].general_category();
+      if ((1<<gen_cat) & ((1<<HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)|
+                          (1<<HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK)|
+                          (1<<HB_UNICODE_GENERAL_CATEGORY_FORMAT))) {
+        hb_glyph_position_t& pos = c->buffer->pos[i];
+        pos.x_offset = -pos.x_advance;
+        pos.x_advance = 0;
+      }
+    }
+  }
 }
 
 static void
