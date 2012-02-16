@@ -200,7 +200,10 @@ static NPNetscapeFuncs sBrowserFuncs = {
   _convertpoint,
   NULL, // handleevent, unimplemented
   NULL, // unfocusinstance, unimplemented
-  _urlredirectresponse
+  _urlredirectresponse,
+  _initasyncsurface,
+  _finalizeasyncsurface,
+  _setcurrentasyncsurface
 };
 
 static Mutex *sPluginThreadAsyncCallLock = nsnull;
@@ -2881,6 +2884,36 @@ _popupcontextmenu(NPP instance, NPMenu* menu)
     return NPERR_GENERIC_ERROR;
 
   return inst->PopUpContextMenu(menu);
+}
+
+NPError NP_CALLBACK
+_initasyncsurface(NPP instance, NPSize *size, NPImageFormat format, void *initData, NPAsyncSurface *surface)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return NPERR_GENERIC_ERROR;
+
+  return inst->InitAsyncSurface(size, format, initData, surface);
+}
+
+NPError NP_CALLBACK
+_finalizeasyncsurface(NPP instance, NPAsyncSurface *surface)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return NPERR_GENERIC_ERROR;
+
+  return inst->FinalizeAsyncSurface(surface);
+}
+
+void NP_CALLBACK
+_setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface, NPRect *changed)
+{
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+  if (!inst)
+    return;
+
+  inst->SetCurrentAsyncSurface(surface, changed);
 }
 
 NPBool NP_CALLBACK
