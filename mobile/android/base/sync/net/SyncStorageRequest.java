@@ -170,6 +170,9 @@ public class SyncStorageRequest implements Resource {
       if (ifUnmodifiedSince != null) {
         request.setHeader("x-weave-if-unmodified-since", ifUnmodifiedSince);
       }
+      if (request.getMethod().equalsIgnoreCase("DELETE")) {
+        request.addHeader("x-confirm-delete", "1");
+      }
     }
   }
 
@@ -192,7 +195,6 @@ public class SyncStorageRequest implements Resource {
   }
 
   public void delete() {
-    this.resource.request.addHeader("x-confirm-delete", "1");
     this.resource.delete();
   }
 
