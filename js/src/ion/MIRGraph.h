@@ -550,6 +550,9 @@ class MIRGraph
     MBasicBlockIterator begin() {
         return blocks_.begin();
     }
+    MBasicBlockIterator begin(MBasicBlock *at) {
+        return blocks_.begin(at);
+    }
     MBasicBlockIterator end() {
         return blocks_.end();
     }
