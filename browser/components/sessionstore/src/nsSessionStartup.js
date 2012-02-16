@@ -72,6 +72,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource:///modules/TelemetryStopwatch.jsm");
 
 const STATE_RUNNING_STR = "running";
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 megabytes
@@ -127,23 +128,30 @@ SessionStartup.prototype = {
       return;
 
     // parse the session state into a JS object
+    // remove unneeded braces (added for compatibility with Firefox 2.0 and 3.0)
+    if (iniString.charAt(0) == '(')
+      iniString = iniString.slice(1, -1);
+    let corruptFile = false;
     try {
-      // remove unneeded braces (added for compatibility with Firefox 2.0 and 3.0)
-      if (iniString.charAt(0) == '(')
-        iniString = iniString.slice(1, -1);
+      this._initialState = JSON.parse(iniString);
+    }
+    catch (ex) {
+      debug("The session file contained un-parse-able JSON: " + ex);
+      // Try to eval.
+      // evalInSandbox will throw if iniString is not parse-able.
       try {
-        this._initialState = JSON.parse(iniString);
-      }
-      catch (exJSON) {
         var s = new Cu.Sandbox("about:blank", {sandboxName: 'nsSessionStartup'});
         this._initialState = Cu.evalInSandbox("(" + iniString + ")", s);
+      } catch(ex) {
+        debug("The session file contained un-eval-able JSON: " + ex);
+        corruptFile = true;
       }
-
-      // If this is a normal restore then throw away any previous session
-      if (!doResumeSessionOnce)
-        delete this._initialState.lastSessionState;
     }
-    catch (ex) { debug("The session file is invalid: " + ex); }
+    Services.telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").add(corruptFile);
+
+    // If this is a normal restore then throw away any previous session
+    if (!doResumeSessionOnce)
+      delete this._initialState.lastSessionState;
 
     let resumeFromCrash = prefBranch.getBoolPref("sessionstore.resume_from_crash");
     let lastSessionCrashed =
@@ -154,8 +162,7 @@ SessionStartup.prototype = {
     // Report shutdown success via telemetry. Shortcoming here are
     // being-killed-by-OS-shutdown-logic, shutdown freezing after
     // session restore was written, etc.
-    let Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-    Telemetry.getHistogramById("SHUTDOWN_OK").add(!lastSessionCrashed);
+    Services.telemetry.getHistogramById("SHUTDOWN_OK").add(!lastSessionCrashed);
 
     // set the startup type
     if (lastSessionCrashed && resumeFromCrash)
@@ -296,9 +303,11 @@ SessionStartup.prototype = {
    * @returns a session state string
    */
   _readStateFile: function sss_readStateFile(aFile) {
+    TelemetryStopwatch.start("FX_SESSION_RESTORE_READ_FILE_MS");
     var stateString = Cc["@mozilla.org/supports-string;1"].
                         createInstance(Ci.nsISupportsString);
     stateString.data = this._readFile(aFile) || "";
+    TelemetryStopwatch.finish("FX_SESSION_RESTORE_READ_FILE_MS");
 
     Services.obs.notifyObservers(stateString, "sessionstore-state-read", "");
 
