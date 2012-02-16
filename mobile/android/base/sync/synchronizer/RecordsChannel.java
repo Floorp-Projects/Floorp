@@ -51,8 +51,6 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecor
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
-import android.util.Log;
-
 /**
  * Pulls records from `source`, applying them to `sink`.
  * Notifies its delegate of errors and completion.
@@ -104,7 +102,7 @@ class RecordsChannel implements
   public RepositorySession sink;
   private RecordsChannelDelegate delegate;
   private long timestamp;
-  private long end = -1;                     // Oo er, missus.
+  private long fetchEnd = -1;
 
   public RecordsChannel(RepositorySession source, RepositorySession sink, RecordsChannelDelegate delegate) {
     this.source    = source;
@@ -198,19 +196,19 @@ class RecordsChannel implements
   }
 
   @Override
-  public void onFetchSucceeded(Record[] records, long end) {
+  public void onFetchSucceeded(Record[] records, final long fetchEnd) {
     for (Record record : records) {
       this.toProcess.add(record);
     }
     this.consumer.doNotify();
-    this.onFetchCompleted(end);
+    this.onFetchCompleted(fetchEnd);
   }
 
   @Override
-  public void onFetchCompleted(long end) {
+  public void onFetchCompleted(final long fetchEnd) {
     Logger.info(LOG_TAG, "onFetchCompleted. Stopping consumer once stores are done.");
-    Logger.info(LOG_TAG, "Fetch timestamp is " + end);
-    this.end = end;
+    Logger.info(LOG_TAG, "Fetch timestamp is " + fetchEnd);
+    this.fetchEnd = fetchEnd;
     this.consumer.queueFilled();
   }
 
@@ -237,10 +235,11 @@ class RecordsChannel implements
   }
 
   @Override
-  public void onStoreCompleted() {
-    Logger.info(LOG_TAG, "onStoreCompleted. Notifying delegate of onFlowCompleted. End is " + end);
+  public void onStoreCompleted(long storeEnd) {
+    Logger.info(LOG_TAG, "onStoreCompleted. Notifying delegate of onFlowCompleted. " +
+                         "Fetch end is " + fetchEnd + ", store end is " + storeEnd);
     // TODO: synchronize on consumer callback?
-    delegate.onFlowCompleted(this, end);
+    delegate.onFlowCompleted(this, fetchEnd, storeEnd);
   }
 
   @Override
