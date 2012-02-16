@@ -104,7 +104,7 @@ _hb_unicode_modified_combining_class (hb_unicode_funcs_t *ufuncs,
 {
   int c = hb_unicode_combining_class (ufuncs, unicode);
 
-  /* For Hebrew, we permute the "fixed-position" classes 10-15 into the order
+  /* For Hebrew, we permute the "fixed-position" classes 10-25 into the order
    * described in the SBL Hebrew manual http://www.sbl-site.org/Fonts/SBLHebrewUserManual1.5x.pdf
    * (as recommended by http://forum.fontlab.com/archive-old-microsoft-volt-group/vista-and-diacritic-ordering-t6751.0.html)
    */
