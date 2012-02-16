@@ -795,6 +795,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_TYPEOF:
         return jsop_typeof();
 
+      case JSOP_TOID:
+        return jsop_toid();
+
       case JSOP_LAMBDA:
         return jsop_lambda(info().getFunction(pc));
 
@@ -3675,6 +3678,23 @@ IonBuilder::jsop_typeof()
     if (ins->isEffectful() && !resumeAfter(ins))
         return false;
     return true;
+}
+
+bool
+IonBuilder::jsop_toid()
+{
+    // No-op if the index is an integer.
+    TypeOracle::Unary unary = oracle->unaryOp(script, pc);
+    if (unary.ival == MIRType_Int32)
+        return true;
+
+    MDefinition *index = current->pop();
+    MToId *ins = MToId::New(current->peek(-1), index);
+
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
 }
 
 bool

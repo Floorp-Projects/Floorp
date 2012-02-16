@@ -1885,6 +1885,17 @@ CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool)
 }
 
 bool
+CodeGenerator::visitToIdV(LToIdV *lir)
+{
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
+    static const VMFunction Info = FunctionInfo<pf>(ToIdOperation);
+
+    pushArg(ToValue(lir, LToIdV::Index));
+    pushArg(ToValue(lir, LToIdV::Object));
+    return callVM(Info, lir);
+}
+
+bool
 CodeGenerator::visitLoadElementV(LLoadElementV *load)
 {
     Register elements = ToRegister(load->elements());
