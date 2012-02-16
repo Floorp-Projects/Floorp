@@ -48,13 +48,14 @@ include $(topsrcdir)/dom/dom-config.mk
 XPIDLSRCS = \
   nsIDOMNavigatorSms.idl \
   nsIDOMSmsManager.idl \
-  nsISmsService.idl \
   nsIDOMSmsMessage.idl \
   nsIDOMSmsEvent.idl \
-  nsISmsDatabaseService.idl \
   nsIDOMSmsRequest.idl \
   nsIDOMSmsFilter.idl \
   nsIDOMSmsCursor.idl \
+  nsISmsDatabaseService.idl \
+  nsISmsRequestManager.idl \
+  nsISmsService.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
