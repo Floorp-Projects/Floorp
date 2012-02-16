@@ -380,7 +380,7 @@ OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
       flag6 |= FILE_FLAG_DELETE_ON_CLOSE;
     }
 
-    if (osflags && nsILocalFile::OS_READAHEAD) {
+    if (osflags & nsILocalFile::OS_READAHEAD) {
       flag6 |= FILE_FLAG_SEQUENTIAL_SCAN;
     }
 
