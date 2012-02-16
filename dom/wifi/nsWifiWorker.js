@@ -837,18 +837,19 @@ function nsWifiWorker() {
         debug("Network Mozilla exists, but is encrypted");
         net = null;
       }
+
+      var config = Object.create(null);
       if (!net) {
         name = "Mozilla Guest";
         net = self.networks[name];
         if (!net || (net.flags && net.flags !== "[IBSS]")) {
-          debug("Network Mozilla Guest doesn't exist or is encrypted");
-          return;
+          debug("Can't find either network, trying to force 'Mozilla Guest'");
+          config.scan_ssid = 1;
         }
       }
 
-      var config = Object.create(null);
-      config["ssid"] = '"' + name + '"';
-      config["key_mgmt"] = "NONE";
+      config.ssid = '"' + name + '"';
+      config.key_mgmt = "NONE";
       WifiManager.addNetwork(config, function(ok) {
         if (!ok) {
           debug("Unable to add the network!");
