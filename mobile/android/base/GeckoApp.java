@@ -1024,13 +1024,13 @@ abstract public class GeckoApp
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
-                        mBrowserToolbar.setVisibility(View.GONE);
+                        mBrowserToolbar.hide();
                     }
                 });
             } else if (event.equals("ToggleChrome:Show")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
-                        mBrowserToolbar.setVisibility(View.VISIBLE);
+                        mBrowserToolbar.show();
                     }
                 });
             } else if (event.equals("DOMFullScreen:Start")) {
@@ -1643,9 +1643,12 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 // Hide/show the system notification bar
-                getWindow().setFlags(fullscreen ?
-                                     WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
-                                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                Window window = getWindow();
+                window.setFlags(fullscreen ?
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+                window.getDecorView().setSystemUiVisibility(fullscreen ? 1 : 0);
             }
         });
     }
