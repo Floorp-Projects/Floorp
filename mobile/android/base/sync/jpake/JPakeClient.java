@@ -245,7 +245,7 @@ public class JPakeClient implements JPakeRequestDelegate {
       channelRequest = new JPakeRequest(jpakeServer + "new_channel",
           makeRequestResourceDelegate());
     } catch (URISyntaxException e) {
-      e.printStackTrace();
+      Log.e(LOG_TAG, "URISyntaxException", e);
       abort(Constants.JPAKE_ERROR_CHANNEL);
       return;
     }
@@ -266,7 +266,7 @@ public class JPakeClient implements JPakeRequestDelegate {
           putRequest = new JPakeRequest(channelUrl,
               makeRequestResourceDelegate());
         } catch (URISyntaxException e) {
-          e.printStackTrace();
+          Log.e(LOG_TAG, "URISyntaxException", e);
           abort(Constants.JPAKE_ERROR_CHANNEL);
           return;
         }
@@ -283,7 +283,7 @@ public class JPakeClient implements JPakeRequestDelegate {
   /*
    * Step One of J-PAKE protocol.
    */
-  private void computeStepOne() {
+  private void computeStepOne() throws NoSuchAlgorithmException, UnsupportedEncodingException {
     Log.d(LOG_TAG, "Computing round 1.");
 
     JPakeCrypto.round1(jParty, numGen);
@@ -321,7 +321,7 @@ public class JPakeClient implements JPakeRequestDelegate {
    * Verifies message computed by other party in their Step One. Creates Step
    * Two message to be sent.
    */
-  private void computeStepTwo() {
+  private void computeStepTwo() throws NonObjectJSONException {
     Log.d(LOG_TAG, "Computing round 2.");
 
     // Check incoming message sender.
@@ -332,61 +332,47 @@ public class JPakeClient implements JPakeRequestDelegate {
     }
 
     // Check incoming message fields.
-    ExtendedJSONObject iPayload = null;
-    try {
-      iPayload = jIncoming.getObject(Constants.JSON_KEY_PAYLOAD);
-      if (iPayload == null
-          || iPayload.getObject(Constants.ZKP_KEY_ZKP_X1) == null
-          || !theirSignerId.equals(iPayload.getObject(Constants.ZKP_KEY_ZKP_X1)
-              .get(Constants.ZKP_KEY_ID))
-          || iPayload.getObject(Constants.ZKP_KEY_ZKP_X2) == null
-          || !theirSignerId.equals(iPayload.getObject(Constants.ZKP_KEY_ZKP_X2)
-              .get(Constants.ZKP_KEY_ID))) {
-        Log.e(LOG_TAG, "Invalid round 1 message: " + jIncoming.toJSONString());
-        abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
-        return;
-      }
-    } catch (NonObjectJSONException e) {
-      e.printStackTrace();
+    ExtendedJSONObject iPayload = jIncoming.getObject(Constants.JSON_KEY_PAYLOAD);
+    if (iPayload == null) {
+      Log.e(LOG_TAG, "Invalid round 1 message: " + jIncoming.toJSONString());
+      abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
+      return;
+    }
+
+    ExtendedJSONObject zkpPayload3 = iPayload.getObject(Constants.ZKP_KEY_ZKP_X1);
+    ExtendedJSONObject zkpPayload4 = iPayload.getObject(Constants.ZKP_KEY_ZKP_X2);
+    if (zkpPayload3 == null || zkpPayload4 == null) {
+      Log.e(LOG_TAG, "Invalid round 1 zkpPayload message");
+      abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
+      return;
+    }
+
+    if (!theirSignerId.equals(zkpPayload3.get(Constants.ZKP_KEY_ID)) ||
+        !theirSignerId.equals(zkpPayload4.get(Constants.ZKP_KEY_ID))) {
+      Log.e(LOG_TAG, "Invalid round 1 zkpPayload message");
+      abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
+      return;
     }
 
     // Extract message fields.
-    jParty.gx3 = new BigInteger((String) iPayload.get(Constants.ZKP_KEY_GX1),
-        16);
-    jParty.gx4 = new BigInteger((String) iPayload.get(Constants.ZKP_KEY_GX2),
-        16);
-
-    ExtendedJSONObject zkpPayload3 = null;
-    ExtendedJSONObject zkpPayload4 = null;
-    try {
-      zkpPayload3 = iPayload.getObject(Constants.ZKP_KEY_ZKP_X1);
-      zkpPayload4 = iPayload.getObject(Constants.ZKP_KEY_ZKP_X2);
-      if (zkpPayload3 == null || zkpPayload4 == null) {
-        Log.e(LOG_TAG, "Invalid round 1 zkpPayload message");
-        abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
-        return;
-      }
-    } catch (NonObjectJSONException e) {
-      e.printStackTrace();
-    }
+    jParty.gx3 = new BigInteger((String) iPayload.get(Constants.ZKP_KEY_GX1), 16);
+    jParty.gx4 = new BigInteger((String) iPayload.get(Constants.ZKP_KEY_GX2), 16);
 
     // Extract ZKPs.
     String zkp3_gr = (String) zkpPayload3.get(Constants.ZKP_KEY_GR);
-    String zkp3_b = (String) zkpPayload3.get(Constants.ZKP_KEY_B);
+    String zkp3_b  = (String) zkpPayload3.get(Constants.ZKP_KEY_B);
     String zkp3_id = (String) zkpPayload3.get(Constants.ZKP_KEY_ID);
 
     String zkp4_gr = (String) zkpPayload4.get(Constants.ZKP_KEY_GR);
-    String zkp4_b = (String) zkpPayload4.get(Constants.ZKP_KEY_B);
+    String zkp4_b  = (String) zkpPayload4.get(Constants.ZKP_KEY_B);
     String zkp4_id = (String) zkpPayload4.get(Constants.ZKP_KEY_ID);
 
-    jParty.zkp3 = new Zkp(new BigInteger(zkp3_gr, 16), new BigInteger(zkp3_b,
-        16), zkp3_id);
-    jParty.zkp4 = new Zkp(new BigInteger(zkp4_gr, 16), new BigInteger(zkp4_b,
-        16), zkp4_id);
+    jParty.zkp3 = new Zkp(new BigInteger(zkp3_gr, 16), new BigInteger(zkp3_b, 16), zkp3_id);
+    jParty.zkp4 = new Zkp(new BigInteger(zkp4_gr, 16), new BigInteger(zkp4_b, 16), zkp4_id);
 
-    // Jpake round 2
+    // J-PAKE round 2.
     try {
-      JPakeCrypto.round2(secret, jParty, numGen);
+      JPakeCrypto.round2(JPakeClient.secretAsBigInteger(secret), jParty, numGen);
     } catch (Gx3OrGx4IsZeroOrOneException e) {
       Log.e(LOG_TAG, "gx3 and gx4 cannot equal 0 or 1.");
       abort(Constants.JPAKE_ERROR_INTERNAL);
@@ -395,14 +381,21 @@ public class JPakeClient implements JPakeRequestDelegate {
       Log.e(LOG_TAG, "ZKP mismatch");
       abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
       return;
+    } catch (NoSuchAlgorithmException e) {
+      Log.e(LOG_TAG, "NoSuchAlgorithmException", e);
+      abort(Constants.JPAKE_ERROR_INTERNAL);
+      return;
+    } catch (UnsupportedEncodingException e) {
+      Log.e(LOG_TAG, "UnsupportedEncodingException", e);
+      abort(Constants.JPAKE_ERROR_INTERNAL);
+      return;
     }
 
     // Make outgoing payload.
     Zkp zkpA = jParty.thisZkpA;
     ExtendedJSONObject oPayload = new ExtendedJSONObject();
     ExtendedJSONObject jZkpA = makeJZkp(zkpA.gr, zkpA.b, zkpA.id);
-    oPayload.put(Constants.ZKP_KEY_A,
-        BigIntegerHelper.toEvenLengthHex(jParty.thisA));
+    oPayload.put(Constants.ZKP_KEY_A, BigIntegerHelper.toEvenLengthHex(jParty.thisA));
     oPayload.put(Constants.ZKP_KEY_ZKP_A, jZkpA);
 
     // Make outgoing message.
@@ -429,7 +422,7 @@ public class JPakeClient implements JPakeRequestDelegate {
    * Verifies message computed by other party in Step Two. Creates or fetches
    * encrypted message for verification of successful key exchange.
    */
-  private void computeFinal() {
+  private void computeFinal() throws NonObjectJSONException {
     Log.d(LOG_TAG, "Computing final round.");
     // Check incoming message type.
     if (!jIncoming.get(Constants.JSON_KEY_TYPE).equals(theirSignerId + "2")) {
@@ -439,53 +432,49 @@ public class JPakeClient implements JPakeRequestDelegate {
     }
 
     // Check incoming message fields.
-    ExtendedJSONObject iPayload = null;
-    try {
-      iPayload = jIncoming.getObject(Constants.JSON_KEY_PAYLOAD);
-      if (iPayload == null
-          || iPayload.getObject(Constants.ZKP_KEY_ZKP_A) == null
-          || !theirSignerId.equals(iPayload.getObject(Constants.ZKP_KEY_ZKP_A)
-              .get(Constants.ZKP_KEY_ID))) {
-        Log.e(LOG_TAG, "Invalid round 2 message: " + jIncoming.toJSONString());
-        abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
-        return;
-      }
-    } catch (NonObjectJSONException e) {
-      e.printStackTrace();
+    ExtendedJSONObject iPayload = jIncoming.getObject(Constants.JSON_KEY_PAYLOAD);
+    if (iPayload == null ||
+        iPayload.getObject(Constants.ZKP_KEY_ZKP_A) == null) {
+      Log.e(LOG_TAG, "Invalid round 2 message: " + jIncoming.toJSONString());
+      abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
+      return;
     }
-    // Extract fields.
-    jParty.otherA = new BigInteger((String) iPayload.get(Constants.ZKP_KEY_A),
-        16);
+    ExtendedJSONObject zkpPayload = iPayload.getObject(Constants.ZKP_KEY_ZKP_A);
+    if (!theirSignerId.equals(zkpPayload.get(Constants.ZKP_KEY_ID))) {
+      Log.e(LOG_TAG, "Invalid round 2 message: " + jIncoming.toJSONString());
+      abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
+      return;
+    }
 
-    ExtendedJSONObject zkpPayload = null;
-    try {
-      zkpPayload = iPayload.getObject(Constants.ZKP_KEY_ZKP_A);
-    } catch (NonObjectJSONException e) {
-      e.printStackTrace();
-    }
+    // Extract fields.
+    jParty.otherA = new BigInteger((String) iPayload.get(Constants.ZKP_KEY_A), 16);
+
     // Extract ZKP.
     String gr = (String) zkpPayload.get(Constants.ZKP_KEY_GR);
-    String b = (String) zkpPayload.get(Constants.ZKP_KEY_B);
+    String b  = (String) zkpPayload.get(Constants.ZKP_KEY_B);
     String id = (String) zkpPayload.get(Constants.ZKP_KEY_ID);
 
-    jParty.otherZkpA = new Zkp(new BigInteger(gr, 16), new BigInteger(b, 16),
-        id);
+    jParty.otherZkpA = new Zkp(new BigInteger(gr, 16), new BigInteger(b, 16), id);
 
     myKeyBundle = null;
     try {
-      myKeyBundle = JPakeCrypto.finalRound(secret, jParty);
+      myKeyBundle = JPakeCrypto.finalRound(JPakeClient.secretAsBigInteger(secret), jParty);
     } catch (IncorrectZkpException e) {
       Log.e(LOG_TAG, "ZKP mismatch");
       abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
-      e.printStackTrace();
+      return;
     } catch (NoSuchAlgorithmException e) {
       Log.e(LOG_TAG, "NoSuchAlgorithmException", e);
       abort(Constants.JPAKE_ERROR_INTERNAL);
-      e.printStackTrace();
+      return;
     } catch (InvalidKeyException e) {
       Log.e(LOG_TAG, "InvalidKeyException", e);
       abort(Constants.JPAKE_ERROR_INTERNAL);
-      e.printStackTrace();
+      return;
+    } catch (UnsupportedEncodingException e) {
+      Log.e(LOG_TAG, "UnsupportedEncodingException", e);
+      abort(Constants.JPAKE_ERROR_INTERNAL);
+      return;
     }
 
     if (pairWithPin) { // Wait for other device to send verification of keys.
@@ -498,12 +487,10 @@ public class JPakeClient implements JPakeRequestDelegate {
       } catch (UnsupportedEncodingException e) {
         Log.e(LOG_TAG, "Failed to encrypt key verification value.", e);
         abort(Constants.JPAKE_ERROR_INTERNAL);
-        e.printStackTrace();
         return;
       } catch (CryptoException e) {
         Log.e(LOG_TAG, "Failed to encrypt key verification value.", e);
         abort(Constants.JPAKE_ERROR_INTERNAL);
-        e.printStackTrace();
         return;
       }
 
@@ -523,13 +510,6 @@ public class JPakeClient implements JPakeRequestDelegate {
     Log.d(LOG_TAG, "Encrypting key verification value.");
     // KeyBundle not null
     ExtendedJSONObject jPayload = encryptPayload(JPAKE_VERIFY_VALUE, keyBundle);
-    Log.d(
-        LOG_TAG,
-        "enc key64: "
-            + new String(Base64.encodeBase64(keyBundle.getEncryptionKey())));
-    Log.e(LOG_TAG,
-        "hmac64: " + new String(Base64.encodeBase64(keyBundle.getHMACKey())));
-
     ExtendedJSONObject result = new ExtendedJSONObject();
     result.put(Constants.JSON_KEY_TYPE, mySignerId + "3");
     result.put(Constants.JSON_KEY_VERSION, KEYEXCHANGE_VERSION);
@@ -546,8 +526,7 @@ public class JPakeClient implements JPakeRequestDelegate {
       NonObjectJSONException {
     if (!verificationObject.get(Constants.JSON_KEY_TYPE).equals(
         theirSignerId + "3")) {
-      Log.e(LOG_TAG,
-          "Invalid round 3 message: " + verificationObject.toJSONString());
+      Log.e(LOG_TAG, "Invalid round 3 message: " + verificationObject.toJSONString());
       abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
       return false;
     }
@@ -609,9 +588,11 @@ public class JPakeClient implements JPakeRequestDelegate {
     } catch (UnsupportedEncodingException e) {
       Log.e(LOG_TAG, "Failed to encrypt data.", e);
       abort(Constants.JPAKE_ERROR_INTERNAL);
+      return;
     } catch (CryptoException e) {
       Log.e(LOG_TAG, "Failed to encrypt data.", e);
       abort(Constants.JPAKE_ERROR_INTERNAL);
+      return;
     }
     jOutgoing = new ExtendedJSONObject();
     jOutgoing.put(Constants.JSON_KEY_TYPE, mySignerId + "3");
@@ -636,6 +617,7 @@ public class JPakeClient implements JPakeRequestDelegate {
         e.printStackTrace();
       }
       abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
+      return;
     }
 
     // Decrypt payload and verify HMAC.
@@ -645,6 +627,7 @@ public class JPakeClient implements JPakeRequestDelegate {
     } catch (NonObjectJSONException e1) {
       Log.e(LOG_TAG, "Invalid round 3 data.", e1);
       abort(Constants.JPAKE_ERROR_WRONGMESSAGE);
+      return;
     }
     Log.d(LOG_TAG, "Decrypting data.");
     String cleartext = null;
@@ -653,9 +636,11 @@ public class JPakeClient implements JPakeRequestDelegate {
     } catch (UnsupportedEncodingException e1) {
       Log.e(LOG_TAG, "Failed to decrypt data.", e1);
       abort(Constants.JPAKE_ERROR_INTERNAL);
+      return;
     } catch (CryptoException e1) {
       Log.e(LOG_TAG, "Failed to decrypt data.", e1);
       abort(Constants.JPAKE_ERROR_KEYMISMATCH);
+      return;
     }
     JSONObject jCreds = null;
     try {
@@ -679,7 +664,7 @@ public class JPakeClient implements JPakeRequestDelegate {
     ssActivity.onComplete(jCreds);
   }
 
-  /* JpakeRequestDelegate methods */
+  // JPakeRequestDelegate methods.
   @Override
   public void onRequestFailure(HttpResponse res) {
     JPakeResponse response = new JPakeResponse(res);
@@ -718,16 +703,14 @@ public class JPakeClient implements JPakeRequestDelegate {
         onRequestSuccess(res);
         break;
       default:
-        Log.e(LOG_TAG, "Could not retrieve data. Server responded with HTTP "
-            + statusCode);
+        Log.e(LOG_TAG, "Could not retrieve data. Server responded with HTTP " + statusCode);
         abort(Constants.JPAKE_ERROR_SERVER);
         return;
       }
       pollTries = 0;
       break;
     case PUT:
-      Log.e(LOG_TAG, "Could not upload data. Server responded with HTTP "
-          + response.getStatusCode());
+      Log.e(LOG_TAG, "Could not upload data. Server responded with HTTP " + response.getStatusCode());
       abort(Constants.JPAKE_ERROR_SERVER);
       break;
     case ABORT:
@@ -777,7 +760,17 @@ public class JPakeClient implements JPakeRequestDelegate {
 
       // Set up next step.
       this.state = State.RCVR_STEP_ONE;
-      computeStepOne();
+      try {
+        computeStepOne();
+      } catch (NoSuchAlgorithmException e) {
+        Log.e(LOG_TAG, "NoSuchAlgorithmException", e);
+        abort(Constants.JPAKE_ERROR_INTERNAL);
+        return;
+      } catch (UnsupportedEncodingException e) {
+        Log.e(LOG_TAG, "UnsupportedEncodingException", e);
+        abort(Constants.JPAKE_ERROR_INTERNAL);
+        return;
+      }
       break;
 
     // Results from GET request. Continue flow depending on case.
@@ -794,8 +787,7 @@ public class JPakeClient implements JPakeRequestDelegate {
       etagHeaders = response.httpResponse().getHeaders("etag");
       if (etagHeaders == null) {
         try {
-          Log.e(LOG_TAG,
-              "Server did not supply ETag for message: " + response.body());
+          Log.e(LOG_TAG, "Server did not supply ETag for message: " + response.body());
           abort(Constants.JPAKE_ERROR_SERVER);
         } catch (IllegalStateException e) {
           e.printStackTrace();
@@ -822,16 +814,37 @@ public class JPakeClient implements JPakeRequestDelegate {
       Log.d(LOG_TAG, "incoming message: " + jIncoming.toJSONString());
 
       if (this.state == State.SNDR_STEP_ZERO) {
-        computeStepOne();
+        try {
+          computeStepOne();
+        } catch (NoSuchAlgorithmException e) {
+          Log.e(LOG_TAG, "NoSuchAlgorithmException", e);
+          abort(Constants.JPAKE_ERROR_INTERNAL);
+          return;
+        } catch (UnsupportedEncodingException e) {
+          Log.e(LOG_TAG, "UnsupportedEncodingException", e);
+          abort(Constants.JPAKE_ERROR_INTERNAL);
+          return;
+        }
       } else if (this.state == State.RCVR_STEP_ONE
           || this.state == State.SNDR_STEP_ONE) {
-        computeStepTwo();
+        try {
+          computeStepTwo();
+        } catch (NonObjectJSONException e) {
+          Log.e(LOG_TAG, "NonObjectJSONException", e);
+          abort(Constants.JPAKE_ERROR_INVALID);
+          return;
+        }
       } else if (this.state == State.SNDR_STEP_TWO) {
         stateContext = state;
         state = State.PUT;
         putStep();
       } else if (this.state == State.RCVR_STEP_TWO) {
-        computeFinal();
+        try {
+          computeFinal();
+        } catch (NonObjectJSONException e) {
+          abort(Constants.JPAKE_ERROR_INVALID);
+          return;
+        }
       } else if (this.state == State.VERIFY_KEY) {
         decryptData(myKeyBundle);
       } else if (this.state == State.VERIFY_PAIRING) {
@@ -864,11 +877,23 @@ public class JPakeClient implements JPakeRequestDelegate {
         ssActivity.onPaired();
       }
       if (state == State.SNDR_STEP_ONE) {
-        computeStepTwo();
+        try {
+          computeStepTwo();
+        } catch (NonObjectJSONException e) {
+          Log.e(LOG_TAG, "NonObjectJSONException", e);
+          abort(Constants.JPAKE_ERROR_INVALID);
+          return;
+        }
         return; // No need to wait for response from PUT request.
       }
       if (state == State.SNDR_STEP_TWO) {
-        computeFinal();
+        try {
+          computeFinal();
+        } catch (NonObjectJSONException e) {
+          Log.e(LOG_TAG, "NonObjectJSONException", e);
+          abort(Constants.JPAKE_ERROR_INVALID);
+          return;
+        }
         return; // No need to wait for response from PUT request.
       }
 
@@ -892,20 +917,20 @@ public class JPakeClient implements JPakeRequestDelegate {
 
   /* ResourceDelegate that handles Resource responses */
   public ResourceDelegate makeRequestResourceDelegate() {
-    return new JpakeRequestResourceDelegate(this);
+    return new JPakeRequestResourceDelegate(this);
   }
 
-  public class JpakeRequestResourceDelegate implements ResourceDelegate {
+  public class JPakeRequestResourceDelegate implements ResourceDelegate {
 
     private JPakeRequestDelegate requestDelegate;
 
-    public JpakeRequestResourceDelegate(JPakeRequestDelegate delegate) {
+    public JPakeRequestResourceDelegate(JPakeRequestDelegate delegate) {
       this.requestDelegate = delegate;
     }
 
     @Override
     public String getCredentials() {
-      // Jpake setup has no credentials
+      // J-PAKE setup has no credentials
       return null;
     }
 
@@ -1063,7 +1088,7 @@ public class JPakeClient implements JPakeRequestDelegate {
    * Generates and sets a clientId for communications with JPAKE setup server.
    */
   private void setClientId() {
-    byte[] rBytes = generateRandomBytes(JPAKE_LENGTH_CLIENTID / 2);
+    byte[] rBytes = Utils.generateRandomBytes(JPAKE_LENGTH_CLIENTID / 2);
     StringBuilder id = new StringBuilder();
 
     for (byte b : rBytes) {
@@ -1085,7 +1110,7 @@ public class JPakeClient implements JPakeRequestDelegate {
     String key = "23456789abcdefghijkmnpqrstuvwxyz";
     int keylen = key.length();
 
-    byte[] rBytes = generateRandomBytes(JPAKE_LENGTH_SECRET);
+    byte[] rBytes = Utils.generateRandomBytes(JPAKE_LENGTH_SECRET);
     StringBuilder secret = new StringBuilder();
     for (byte b : rBytes) {
       secret.append(key.charAt(Math.abs(b) * keylen / 256));
@@ -1133,7 +1158,7 @@ public class JPakeClient implements JPakeRequestDelegate {
     try {
       getRequest = new JPakeRequest(channelUrl, makeRequestResourceDelegate());
     } catch (URISyntaxException e) {
-      e.printStackTrace();
+      Log.e(LOG_TAG, "URISyntaxException", e);
       abort(Constants.JPAKE_ERROR_CHANNEL);
       return;
     }
@@ -1156,16 +1181,12 @@ public class JPakeClient implements JPakeRequestDelegate {
   }
 
   /*
-   * Helper to generate random bytes
-   *
-   * @param length Number of bytes to generate
+   * Helper for turning a string secret into a numeric secret.
    */
-  private static byte[] generateRandomBytes(int length) {
-    byte[] bytes = new byte[length];
-    Random random = new Random(System.nanoTime());
-    random.nextBytes(bytes);
-    return bytes;
+  public static BigInteger secretAsBigInteger(String secretString) throws UnsupportedEncodingException {
+    return new BigInteger(secretString.getBytes("UTF-8"));
   }
+
 
   /*
    * Helper function to generate a JSON encoded ZKP.

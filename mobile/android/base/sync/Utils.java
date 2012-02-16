@@ -40,9 +40,10 @@ package org.mozilla.gecko.sync;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.Random;
+import java.security.SecureRandom;
 
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
@@ -55,6 +56,8 @@ import android.util.Log;
 public class Utils {
 
   private static final String LOG_TAG = "Utils";
+
+  private static SecureRandom sharedSecureRandom = new SecureRandom();
 
   // See <http://developer.android.com/reference/android/content/Context.html#getSharedPreferences%28java.lang.String,%20int%29>
   public static final int SHARED_PREFERENCES_MODE = 0;
@@ -104,11 +107,33 @@ public class Utils {
     return new String(encodedBytes).replace("+", "-").replace("/", "_");
   }
 
-  private static byte[] generateRandomBytes(int length) {
+  /*
+   * Helper to generate secure random bytes.
+   *
+   * @param length Number of bytes to generate.
+   */
+  public static byte[] generateRandomBytes(int length) {
     byte[] bytes = new byte[length];
-    Random random = new Random(System.nanoTime());
-    random.nextBytes(bytes);
+    sharedSecureRandom.nextBytes(bytes);
     return bytes;
+  }
+
+  /*
+   * Helper to generate a random integer in a specified range.
+   *
+   * @param r Generate an integer between 0 and r-1 inclusive.
+   */
+  public static BigInteger generateBigIntegerLessThan(BigInteger r) {
+    int maxBytes = (int) Math.ceil(((double) r.bitLength()) / 8);
+    BigInteger randInt = new BigInteger(generateRandomBytes(maxBytes));
+    return randInt.mod(r);
+  }
+
+  /*
+   * Helper to reseed the shared secure random number generator.
+   */
+  public static void reseedSharedRandom() {
+    sharedSecureRandom.setSeed(sharedSecureRandom.generateSeed(8));
   }
 
   /*
