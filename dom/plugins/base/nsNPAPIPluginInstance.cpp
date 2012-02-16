@@ -703,6 +703,11 @@ void nsNPAPIPluginInstance::SetDrawingModel(NPDrawingModel aModel)
   mDrawingModel = aModel;
 }
 
+void nsNPAPIPluginInstance::RedrawPlugin()
+{
+  mOwner->RedrawPlugin();
+}
+
 #if defined(XP_MACOSX)
 void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 {

@@ -119,6 +119,11 @@ interface nsIPluginInstanceOwner : nsISupports
   void invalidateRegion(in NPRegion aRegion);
 
   /**
+   * Have the plugin recomposited.
+   */
+  void redrawPlugin();
+
+  /**
    * Get NetscapeWindow, corresponds to NPNVnetscapeWindow
    */
   void getNetscapeWindow(in voidPtr aValue);
