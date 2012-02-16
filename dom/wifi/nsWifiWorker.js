@@ -821,46 +821,52 @@ function nsWifiWorker() {
   this.networks = Object.create(null);
   WifiManager.onstatechange = function() {
     debug("State change: " + self.state + " -> " + this.state);
-
     self.state = this.state;
+
+    // TODO Worth adding a more generic API for this?
+    if (self.state === "INACTIVE" && connectToMozilla.waiting)
+      connectToMozilla();
   }
 
   function connectToMozilla() {
-    if (self.state === "INACTIVE") {
-      // We're not trying to connect so try to find an open Mozilla network.
-      // TODO Remove me in favor of UI and a way to select a network.
-
-      debug("Haven't connected to a network, trying a default (for now)");
-      var name = "Mozilla";
-      var net = self.networks[name];
-      if (net && (net.flags && net.flags !== "[IBSS]")) {
-        debug("Network Mozilla exists, but is encrypted");
-        net = null;
-      }
-
-      var config = Object.create(null);
-      if (!net) {
-        name = "Mozilla Guest";
-        net = self.networks[name];
-        if (!net || (net.flags && net.flags !== "[IBSS]")) {
-          debug("Can't find either network, trying to force 'Mozilla Guest'");
-          config.scan_ssid = 1;
-        }
-      }
-
-      config.ssid = '"' + name + '"';
-      config.key_mgmt = "NONE";
-      WifiManager.addNetwork(config, function(ok) {
-        if (!ok) {
-          debug("Unable to add the network!");
-          return;
-        }
-
-        WifiManager.enableNetwork(config.netId, false, function(ok) {
-          debug((ok ? "Successfully enabled " : "Didn't enable ") + name);
-        });
-      });
+    if (self.state !== "INACTIVE") {
+      connectToMozilla.waiting = true;
+      return;
     }
+
+    // We're not trying to connect so try to find an open Mozilla network.
+    // TODO Remove me in favor of UI and a way to select a network.
+
+    debug("Haven't connected to a network, trying a default (for now)");
+    var name = "Mozilla";
+    var net = self.networks[name];
+    if (net && (net.flags && net.flags !== "[IBSS]")) {
+      debug("Network Mozilla exists, but is encrypted");
+      net = null;
+    }
+
+    var config = Object.create(null);
+    if (!net) {
+      name = "Mozilla Guest";
+      net = self.networks[name];
+      if (!net || (net.flags && net.flags !== "[IBSS]")) {
+        debug("Can't find either network, trying to force 'Mozilla Guest'");
+        config.scan_ssid = 1;
+      }
+    }
+
+    config.ssid = '"' + name + '"';
+    config.key_mgmt = "NONE";
+    WifiManager.addNetwork(config, function(ok) {
+      if (!ok) {
+        debug("Unable to add the network!");
+        return;
+      }
+
+      WifiManager.enableNetwork(config.netId, false, function(ok) {
+        debug((ok ? "Successfully enabled " : "Didn't enable ") + name);
+      });
+    });
   }
   this.waitForScan(connectToMozilla);
 
