@@ -1031,7 +1031,6 @@ struct JSObject : public js::ObjectImpl
     void freeSlot(JSContext *cx, uint32_t slot);
 
   public:
-    bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotConfigurable(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotExtensible(JSContext *cx, uintN report = JSREPORT_ERROR);
 
