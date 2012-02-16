@@ -42,12 +42,11 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import org.mozilla.apache.commons.codec.binary.Base64;
 import org.json.JSONException;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
+import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.crypto.CryptoException;
-import org.mozilla.gecko.sync.crypto.Cryptographer;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 
 import android.util.Log;
@@ -68,9 +67,16 @@ public class CollectionKeys {
     }
   }
 
+  /**
+   * Randomly generate a basic CollectionKeys object.
+   * @throws CryptoException
+   */
   public static CollectionKeys generateCollectionKeys() throws CryptoException {
     CollectionKeys ck = new CollectionKeys();
-    ck.populate();
+    ck.clear();
+    ck.defaultKeyBundle = KeyBundle.withRandomKeys();
+    // TODO: eventually we would like to keep per-collection keys, just generate
+    // new ones as appropriate.
     return ck;
   }
 
@@ -104,7 +110,7 @@ public class CollectionKeys {
   private static KeyBundle arrayToKeyBundle(JSONArray array) throws UnsupportedEncodingException {
     String encKeyStr  = (String) array.get(0);
     String hmacKeyStr = (String) array.get(1);
-    return KeyBundle.decodeKeyStrings(encKeyStr, hmacKeyStr);
+    return KeyBundle.fromBase64EncodedKeys(encKeyStr, hmacKeyStr);
   }
 
   @SuppressWarnings("unchecked")
@@ -203,16 +209,5 @@ public class CollectionKeys {
   public void clear() {
     this.defaultKeyBundle = null;
     this.collectionKeyBundles = new HashMap<String, KeyBundle>();
-  }
-
-  /**
-   * Randomly generate a basic CollectionKeys object.
-   * @throws CryptoException
-   */
-  public void populate() throws CryptoException {
-    this.clear();
-    this.defaultKeyBundle = Cryptographer.generateKeys();
-    // TODO: eventually we would like to keep per-collection keys, just generate
-    // new ones as appropriate.
   }
 }
