@@ -106,10 +106,13 @@ MarkInternal(JSTracer *trc, T *thing)
      * GC.
      */
     if (!rt->gcCurrentCompartment || thing->compartment() == rt->gcCurrentCompartment) {
-        if (IS_GC_MARKING_TRACER(trc))
+        if (IS_GC_MARKING_TRACER(trc)) {
             PushMarkStack(static_cast<GCMarker *>(trc), thing);
-        else
-            trc->callback(trc, (void *)thing, GetGCThingTraceKind(thing));
+        } else {
+            void *tmp = (void *)thing;
+            trc->callback(trc, &tmp, GetGCThingTraceKind(thing));
+            JS_ASSERT(tmp == thing);
+        }
     }
 
 #ifdef DEBUG

@@ -1815,7 +1815,7 @@ GCMarker::markDelayedChildren()
 
 #ifdef DEBUG
 static void
-EmptyMarkCallback(JSTracer *trc, void *thing, JSGCTraceKind kind)
+EmptyMarkCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
 }
 #endif
@@ -3393,7 +3393,7 @@ struct VerifyTracer : JSTracer {
  * node.
  */
 static void
-AccumulateEdge(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
+AccumulateEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyTracer *trc = (VerifyTracer *)jstrc;
 
@@ -3406,7 +3406,7 @@ AccumulateEdge(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
     VerifyNode *node = trc->curnode;
     uint32_t i = node->count;
 
-    node->edges[i].thing = thing;
+    node->edges[i].thing = *thingp;
     node->edges[i].kind = kind;
     node->edges[i].label = trc->debugPrinter ? NULL : (char *)trc->debugPrintArg;
     node->count++;
@@ -3547,9 +3547,9 @@ oom:
 }
 
 static void
-CheckAutorooter(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
+CheckAutorooter(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
-    static_cast<Cell *>(thing)->markIfUnmarked();
+    static_cast<Cell *>(*thingp)->markIfUnmarked();
 }
 
 /*
@@ -3560,13 +3560,13 @@ CheckAutorooter(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
  * modified) must point to marked objects.
  */
 static void
-CheckEdge(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
+CheckEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyTracer *trc = (VerifyTracer *)jstrc;
     VerifyNode *node = trc->curnode;
 
     for (uint32_t i = 0; i < node->count; i++) {
-        if (node->edges[i].thing == thing) {
+        if (node->edges[i].thing == *thingp) {
             JS_ASSERT(node->edges[i].kind == kind);
             node->edges[i].thing = NULL;
             return;
