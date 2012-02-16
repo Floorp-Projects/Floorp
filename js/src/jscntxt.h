@@ -76,12 +76,23 @@ JS_BEGIN_EXTERN_C
 struct DtoaState;
 JS_END_EXTERN_C
 
-struct JSSharpObjectMap {
-    jsrefcount  depth;
-    uint32_t    sharpgen;
-    JSHashTable *table;
+struct JSSharpInfo {
+    bool hasGen;
+    bool isSharp;
 
-    JSSharpObjectMap() : depth(0), sharpgen(0), table(NULL) {}
+    JSSharpInfo() : hasGen(false), isSharp(false) {}
+};
+
+typedef js::HashMap<JSObject *, JSSharpInfo> JSSharpTable;
+
+struct JSSharpObjectMap {
+    jsrefcount   depth;
+    uint32_t     sharpgen;
+    JSSharpTable table;
+
+    JSSharpObjectMap(JSContext *cx) : depth(0), sharpgen(0), table(js::TempAllocPolicy(cx)) {
+        table.init();
+    }
 };
 
 namespace js {
