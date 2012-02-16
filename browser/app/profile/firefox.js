@@ -357,6 +357,9 @@ pref("browser.search.order.3",                "chrome://browser-region/locale/re
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);
 
+// context menu searches open in the foreground
+pref("browser.search.context.loadInBackground", false);
+
 // send ping to the server to update
 pref("browser.search.update", true);
 

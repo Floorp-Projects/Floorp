@@ -46,7 +46,7 @@ function MessageWakeupService() { };
 MessageWakeupService.prototype =
 {
   classID:          Components.ID("{f9798742-4f7b-4188-86ba-48b116412b29}"),
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIMessageWakeupService, Ci.nsISupports, Ci.nsIObserver]),
+  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   messagesData: [],
 
