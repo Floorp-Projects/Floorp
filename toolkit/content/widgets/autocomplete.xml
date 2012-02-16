@@ -91,9 +91,19 @@
       <field name="mEnterEvent">null</field>
       <field name="mConsumeRollupEvent">false</field>
 
+      <field name="_searchBeginHandler">null</field>
+      <field name="_searchCompleteHandler">null</field>
+      <field name="_textEnteredHandler">null</field>
+      <field name="_textRevertedHandler">null</field>
+
       <constructor><![CDATA[
-        mController = Components.classes["@mozilla.org/autocomplete/controller;1"].
-                        getService(Components.interfaces.nsIAutoCompleteController);
+        this.mController = Components.classes["@mozilla.org/autocomplete/controller;1"].
+          getService(Components.interfaces.nsIAutoCompleteController);
+
+        this._searchBeginHandler = this.initEventHandler("searchbegin");
+        this._searchCompleteHandler = this.initEventHandler("searchcomplete");
+        this._textEnteredHandler = this.initEventHandler("textentered");
+        this._textRevertedHandler = this.initEventHandler("textreverted");
 
         // For security reasons delay searches on pasted values.
         this.inputField.controllers.insertControllerAt(0, this._pasteController);
@@ -238,7 +248,8 @@
 
       <method name="onSearchBegin">
         <body><![CDATA[
-          this.fireEvent("searchbegin");
+          if (this._searchBeginHandler)
+            this._searchBeginHandler();
         ]]></body>
       </method>
 
@@ -249,13 +260,16 @@
           else
             this.removeAttribute("nomatch");
 
-          this.fireEvent("searchcomplete");
+          if (this._searchCompleteHandler)
+            this._searchCompleteHandler();
         ]]></body>
       </method>
 
       <method name="onTextEntered">
         <body><![CDATA[
-          var rv = this.fireEvent("textentered", this.mEnterEvent);
+          let rv = false;
+          if (this._textEnteredHandler)
+            rv = this._textEnteredHandler(this.mEnterEvent);
           this.mEnterEvent = null;
           return rv;
         ]]></body>
@@ -263,7 +277,8 @@
 
       <method name="onTextReverted">
         <body><![CDATA[
-          return this.fireEvent("textreverted");
+          if (this._textRevertedHandler)
+            this._textRevertedHandler();
         ]]></body>
       </method>
 
@@ -441,18 +456,14 @@
 
       <!-- ::::::::::::: event dispatching ::::::::::::: -->
 
-      <method name="fireEvent">
+      <method name="initEventHandler">
         <parameter name="aEventType"/>
         <body><![CDATA[
-          var cancel = false;
-          // handle any xml attribute event handlers
-          var handler = this.getAttribute("on"+aEventType);
-          if (handler) {
-            var fn = new Function("eventType", "param", handler);
-            cancel = fn.apply(this, arguments);
+          let handlerString = this.getAttribute("on" + aEventType);
+          if (handlerString) {
+            return (new Function("eventType", "param", handlerString)).bind(this, aEventType);
           }
-
-          return cancel;
+          return null;
         ]]></body>
       </method>
 
