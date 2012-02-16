@@ -4060,7 +4060,7 @@
           let alignRight = false;
 
           if (getComputedStyle(document.documentElement).direction == "rtl")
-            alighRight = !alignRight;
+            alignRight = !alignRight;
 
           let rect = this.getBoundingClientRect();
           this._mouseTargetRect = {
