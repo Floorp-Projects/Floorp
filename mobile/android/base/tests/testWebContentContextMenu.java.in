@@ -17,17 +17,19 @@ public class testWebContentContextMenu extends BaseTest {
 
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
-        Log.i("TBN", "******** density= " + dm.density);
 
+        // The link is 60px tall in the web content so let's try to tap in the middle
         float top = mDriver.getGeckoTop() + 30 * dm.density;
         float left = mDriver.getGeckoLeft() + mDriver.getGeckoWidth() / 2;
         mSolo.clickLongOnScreen(left, top);
 
         mAsserter.ok(mSolo.waitForText("Open"), "looking for context menu action", "found 'Open Link'");
+
+        Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
         mSolo.clickOnText("Open");
 
         // Wait for the new tab and page to load
-        mActions.expectGeckoEvent("Tab:Added").blockForEvent();
+        tabEventExpecter.blockForEvent();
         mActions.expectGeckoEvent("DOMContentLoaded").blockForEvent();
 
         // See tab count
