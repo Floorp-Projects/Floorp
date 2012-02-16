@@ -457,8 +457,6 @@ struct JSObject : public js::ObjectImpl
      */
     bool setSlotSpan(JSContext *cx, uint32_t span);
 
-    const js::Shape *nativeLookup(JSContext *cx, jsid id);
-
     inline bool nativeContains(JSContext *cx, jsid id);
     inline bool nativeContains(JSContext *cx, const js::Shape &shape);
 
@@ -541,13 +539,9 @@ struct JSObject : public js::ObjectImpl
                                     size_t *slotsSize, size_t *elementsSize,
                                     size_t *miscSize) const;
 
-    inline size_t numFixedSlots() const;
-
     static const uint32_t MAX_FIXED_SLOTS = 16;
 
   private:
-    inline js::HeapValue* fixedSlots() const;
-
     /*
      * Get internal pointers to the range of values starting at start and
      * running for length.
@@ -567,11 +561,6 @@ struct JSObject : public js::ObjectImpl
 
     /* Get a raw pointer to the object's properties. */
     inline const js::HeapValue *getRawSlots();
-
-    /* JIT Accessors */
-    static inline size_t getFixedSlotOffset(size_t slot);
-    static inline size_t getPrivateDataOffset(size_t nfixed);
-    static inline size_t offsetOfSlots() { return offsetof(JSObject, slots); }
 
     /*
      * Grow or shrink slots immediately before changing the slot span.
@@ -813,7 +802,6 @@ struct JSObject : public js::ObjectImpl
     inline void *&privateRef(uint32_t nfixed) const;
 
   public:
-    inline bool isExtensible() const;
     bool preventExtensions(JSContext *cx, js::AutoIdVector *props);
 
     /* ES5 15.2.3.8: non-extensible, all props non-configurable */
@@ -825,10 +813,6 @@ struct JSObject : public js::ObjectImpl
     bool isFrozen(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, FREEZE, resultp); }
 
     /* Accessors for elements. */
-
-    js::ObjectElements *getElementsHeader() const {
-        return js::ObjectElements::fromElements(elements);
-    }
 
     inline bool ensureElements(JSContext *cx, uintN cap);
     bool growElements(JSContext *cx, uintN cap);
@@ -850,12 +834,6 @@ struct JSObject : public js::ObjectImpl
          * (which have at least two fixed slots) and can only result in a leak.
          */
         return elements != js::emptyObjectElements && elements != fixedElements();
-    }
-
-    /* JIT Accessors */
-    static inline size_t offsetOfElements() { return offsetof(JSObject, elements); }
-    static inline size_t offsetOfFixedElements() {
-        return sizeof(JSObject) + sizeof(js::ObjectElements);
     }
 
     inline js::ElementIteratorObject *asElementIterator();
@@ -1312,28 +1290,6 @@ static JS_ALWAYS_INLINE bool
 operator!=(const JSObject &lhs, const JSObject &rhs)
 {
     return &lhs != &rhs;
-}
-
-inline js::HeapValue*
-JSObject::fixedSlots() const
-{
-    return (js::HeapValue *) (uintptr_t(this) + sizeof(JSObject));
-}
-
-inline size_t
-JSObject::numFixedSlots() const
-{
-    return reinterpret_cast<const js::shadow::Object *>(this)->numFixedSlots();
-}
-
-/* static */ inline size_t
-JSObject::getFixedSlotOffset(size_t slot) {
-    return sizeof(JSObject) + (slot * sizeof(js::Value));
-}
-
-/* static */ inline size_t
-JSObject::getPrivateDataOffset(size_t nfixed) {
-    return getFixedSlotOffset(nfixed);
 }
 
 struct JSObject_Slots2 : JSObject { js::Value fslots[2]; };
