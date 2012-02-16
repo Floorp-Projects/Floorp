@@ -319,6 +319,7 @@ class HeapValue
     inline void set(JSCompartment *comp, const Value &v);
 
     const Value &get() const { return value; }
+    Value *unsafeGet() { return &value; }
     operator const Value &() const { return value; }
 
     bool isUndefined() const { return value.isUndefined(); }
