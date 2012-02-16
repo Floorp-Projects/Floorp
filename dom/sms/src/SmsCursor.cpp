@@ -115,11 +115,7 @@ SmsCursor::Continue()
   mMessage = nsnull;
   static_cast<SmsRequest*>(mRequest.get())->Reset();
 
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-
-  PRInt32 requestId;
-  nsresult rv = requestManager->AddRequest(mRequest, &requestId);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 requestId = SmsRequestManager::GetInstance()->AddRequest(mRequest);
 
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);

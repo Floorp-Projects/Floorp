@@ -51,11 +51,33 @@ namespace mozilla {
 namespace dom {
 namespace sms {
 
-NS_IMPL_ISUPPORTS1(SmsRequestManager, nsISmsRequestManager)
+SmsRequestManager* SmsRequestManager::sInstance = nsnull;
 
-NS_IMETHODIMP
-SmsRequestManager::AddRequest(nsIDOMMozSmsRequest* aRequest,
-                              PRInt32* aRequestId)
+void
+SmsRequestManager::Init()
+{
+  NS_PRECONDITION(!sInstance,
+                  "sInstance shouldn't be set. Did you call Init() twice?");
+  sInstance = new SmsRequestManager();
+}
+
+void
+SmsRequestManager::Shutdown()
+{
+  NS_PRECONDITION(sInstance, "sInstance should be set. Did you call Init()?");
+
+  delete sInstance;
+  sInstance = nsnull;
+}
+
+/* static */ SmsRequestManager*
+SmsRequestManager::GetInstance()
+{
+  return sInstance;
+}
+
+PRInt32
+SmsRequestManager::AddRequest(nsIDOMMozSmsRequest* aRequest)
 {
   // TODO: merge with CreateRequest
   PRInt32 size = mRequests.Count();
@@ -67,21 +89,17 @@ SmsRequestManager::AddRequest(nsIDOMMozSmsRequest* aRequest,
     }
 
     mRequests.ReplaceObjectAt(aRequest, i);
-    *aRequestId = i;
-    return NS_OK;
+    return i;
   }
 
   mRequests.AppendObject(aRequest);
-  *aRequestId = size;
-  return NS_OK;
+  return size;
 }
 
-
-NS_IMETHODIMP
+PRInt32
 SmsRequestManager::CreateRequest(nsPIDOMWindow* aWindow,
                                  nsIScriptContext* aScriptContext,
-                                 nsIDOMMozSmsRequest** aRequest,
-                                 PRInt32* aRequestId)
+                                 nsIDOMMozSmsRequest** aRequest)
 {
   nsCOMPtr<nsIDOMMozSmsRequest> request =
     new SmsRequest(aWindow, aScriptContext);
@@ -96,14 +114,12 @@ SmsRequestManager::CreateRequest(nsPIDOMWindow* aWindow,
 
     mRequests.ReplaceObjectAt(request, i);
     NS_ADDREF(*aRequest = request);
-    *aRequestId = i;
-    return NS_OK;
+    return i;
   }
 
   mRequests.AppendObject(request);
   NS_ADDREF(*aRequest = request);
-  *aRequestId = size;
-  return NS_OK;
+  return size;
 }
 
 nsresult
@@ -133,67 +149,66 @@ SmsRequestManager::GetRequest(PRInt32 aRequestId)
 }
 
 template <class T>
-nsresult
+void
 SmsRequestManager::NotifySuccess(PRInt32 aRequestId, T aParam)
 {
   SmsRequest* request = GetRequest(aRequestId);
   request->SetSuccess(aParam);
 
-  nsresult rv = DispatchTrustedEventToRequest(SUCCESS_EVENT_NAME, request);
+  DispatchTrustedEventToRequest(SUCCESS_EVENT_NAME, request);
 
   mRequests.ReplaceObjectAt(nsnull, aRequestId);
-  return rv;
 }
 
-nsresult
-SmsRequestManager::NotifyError(PRInt32 aRequestId, PRInt32 aError)
+void
+SmsRequestManager::NotifyError(PRInt32 aRequestId, SmsRequest::ErrorType aError)
 {
   SmsRequest* request = GetRequest(aRequestId);
   request->SetError(aError);
 
-  nsresult rv = DispatchTrustedEventToRequest(ERROR_EVENT_NAME, request);
+  DispatchTrustedEventToRequest(ERROR_EVENT_NAME, request);
 
   mRequests.ReplaceObjectAt(nsnull, aRequestId);
-  return rv;
 }
 
-NS_IMETHODIMP
+void
 SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
-  return NotifySuccess<nsIDOMMozSmsMessage*>(aRequestId, aMessage);
+  NotifySuccess<nsIDOMMozSmsMessage*>(aRequestId, aMessage);
 }
 
-NS_IMETHODIMP
-SmsRequestManager::NotifySmsSendFailed(PRInt32 aRequestId, PRInt32 aError)
+void
+SmsRequestManager::NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError)
 {
-  return NotifyError(aRequestId, aError);
+  NotifyError(aRequestId, aError);
 }
 
-NS_IMETHODIMP
+void
 SmsRequestManager::NotifyGotSms(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
-  return NotifySuccess<nsIDOMMozSmsMessage*>(aRequestId, aMessage);
+  NotifySuccess<nsIDOMMozSmsMessage*>(aRequestId, aMessage);
 }
 
-NS_IMETHODIMP
-SmsRequestManager::NotifyGetSmsFailed(PRInt32 aRequestId, PRInt32 aError)
+void
+SmsRequestManager::NotifyGetSmsFailed(PRInt32 aRequestId,
+                                      SmsRequest::ErrorType aError)
 {
-  return NotifyError(aRequestId, aError);
+  NotifyError(aRequestId, aError);
 }
 
-NS_IMETHODIMP
+void
 SmsRequestManager::NotifySmsDeleted(PRInt32 aRequestId, bool aDeleted)
 {
-  return NotifySuccess<bool>(aRequestId, aDeleted);
+  NotifySuccess<bool>(aRequestId, aDeleted);
 }
 
-NS_IMETHODIMP
-SmsRequestManager::NotifySmsDeleteFailed(PRInt32 aRequestId, PRInt32 aError)
+void
+SmsRequestManager::NotifySmsDeleteFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError)
 {
-  return NotifyError(aRequestId, aError);
+  NotifyError(aRequestId, aError);
 }
 
-NS_IMETHODIMP
+void
 SmsRequestManager::NotifyNoMessageInList(PRInt32 aRequestId)
 {
   SmsRequest* request = GetRequest(aRequestId);
@@ -205,10 +220,10 @@ SmsRequestManager::NotifyNoMessageInList(PRInt32 aRequestId)
     static_cast<SmsCursor*>(cursor.get())->Disconnect();
   }
 
-  return NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
+  NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
 }
 
-NS_IMETHODIMP
+void
 SmsRequestManager::NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId,
                                            nsIDOMMozSmsMessage* aMessage)
 {
@@ -217,10 +232,10 @@ SmsRequestManager::NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId,
   nsCOMPtr<SmsCursor> cursor = new SmsCursor(aListId, request);
   cursor->SetMessage(aMessage);
 
-  return NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
+  NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
 }
 
-NS_IMETHODIMP
+void
 SmsRequestManager::NotifyGotNextMessage(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
   SmsRequest* request = GetRequest(aRequestId);
@@ -229,11 +244,12 @@ SmsRequestManager::NotifyGotNextMessage(PRInt32 aRequestId, nsIDOMMozSmsMessage*
   NS_ASSERTION(cursor, "Request should have an cursor in that case!");
   cursor->SetMessage(aMessage);
 
-  return NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
+  NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
 }
 
-NS_IMETHODIMP
-SmsRequestManager::NotifyReadMessageListFailed(PRInt32 aRequestId, PRInt32 aError)
+void
+SmsRequestManager::NotifyReadMessageListFailed(PRInt32 aRequestId,
+                                               SmsRequest::ErrorType aError)
 {
   SmsRequest* request = GetRequest(aRequestId);
 
@@ -242,7 +258,7 @@ SmsRequestManager::NotifyReadMessageListFailed(PRInt32 aRequestId, PRInt32 aErro
     static_cast<SmsCursor*>(cursor.get())->Disconnect();
   }
 
-  return NotifyError(aRequestId, aError);
+  NotifyError(aRequestId, aError);
 }
 
 } // namespace sms

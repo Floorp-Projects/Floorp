@@ -146,23 +146,17 @@ SmsManager::Send(JSContext* aCx, JSObject* aGlobal, JSString* aNumber,
 
   nsCOMPtr<nsIDOMMozSmsRequest> request;
 
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-
-  PRInt32 requestId;
-  nsresult rv = requestManager->CreateRequest(mOwner, mScriptContext,
-                                              getter_AddRefs(request),
-                                              &requestId);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Failed to create the request!");
-    return rv;
-  }
+  int requestId =
+    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext,
+                                                    getter_AddRefs(request));
+  NS_ASSERTION(request, "The request object must have been created!");
 
   nsDependentJSString number;
   number.init(aCx, aNumber);
 
   smsService->Send(number, aMessage, requestId, 0);
 
-  rv = nsContentUtils::WrapNative(aCx, aGlobal, request, aRequest);
+  nsresult rv = nsContentUtils::WrapNative(aCx, aGlobal, request, aRequest);
   if (NS_FAILED(rv)) {
     NS_ERROR("Failed to create the js value!");
     return rv;
@@ -223,15 +217,9 @@ SmsManager::Send(const jsval& aNumber, const nsAString& aMessage, jsval* aReturn
 NS_IMETHODIMP
 SmsManager::GetMessageMoz(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
 {
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-
-  PRInt32 requestId;
-  nsresult rv = requestManager->CreateRequest(mOwner, mScriptContext, aRequest,
-                                              &requestId);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Failed to create the request!");
-    return rv;
-  }
+  int requestId =
+    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext, aRequest);
+  NS_ASSERTION(*aRequest, "The request object must have been created!");
 
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
@@ -245,15 +233,9 @@ SmsManager::GetMessageMoz(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
 nsresult
 SmsManager::Delete(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
 {
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-
-  PRInt32 requestId;
-  nsresult rv = requestManager->CreateRequest(mOwner, mScriptContext, aRequest,
-                                              &requestId);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Failed to create the request!");
-    return rv;
-  }
+  int requestId =
+    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext, aRequest);
+  NS_ASSERTION(*aRequest, "The request object must have been created!");
 
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
@@ -296,15 +278,9 @@ SmsManager::GetMessages(nsIDOMMozSmsFilter* aFilter, bool aReverse,
     filter = new SmsFilter();
   }
 
-  nsCOMPtr<nsISmsRequestManager> requestManager = do_GetService(SMS_REQUEST_MANAGER_CONTRACTID);
-
-  PRInt32 requestId;
-  nsresult rv = requestManager->CreateRequest(mOwner, mScriptContext, aRequest,
-                                              &requestId);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Failed to create the request!");
-    return rv;
-  }
+  int requestId =
+    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext, aRequest);
+  NS_ASSERTION(*aRequest, "The request object must have been created!");
 
   nsCOMPtr<nsISmsDatabaseService> smsDBService =
     do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
