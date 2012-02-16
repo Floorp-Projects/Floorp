@@ -3115,8 +3115,13 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
   // deal with headers and post data
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    rv = httpChannel->SetReferrer(doc->GetDocumentURI());  
-    NS_ENSURE_SUCCESS(rv,rv);
+    if (!aPostStream) {
+      // Only set the Referer header for GET requests because IIS throws
+      // errors about malformed requests if we include it in POSTs. See
+      // bug 724465.
+      rv = httpChannel->SetReferrer(doc->GetDocumentURI());  
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
       
     if (aPostStream) {
       // XXX it's a bit of a hack to rewind the postdata stream
