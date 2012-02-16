@@ -2095,6 +2095,15 @@ PluginInstanceChild::AnswerUpdateWindow()
 #endif
 }
 
+bool
+PluginInstanceChild::RecvNPP_DidComposite()
+{
+  if (mPluginIface->didComposite) {
+    mPluginIface->didComposite(GetNPP());
+  }
+  return true;
+}
+
 PPluginScriptableObjectChild*
 PluginInstanceChild::AllocPPluginScriptableObject()
 {

@@ -218,6 +218,9 @@ protected:
     virtual bool
     AnswerUpdateWindow();
 
+    virtual bool
+    RecvNPP_DidComposite();
+
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface);
 

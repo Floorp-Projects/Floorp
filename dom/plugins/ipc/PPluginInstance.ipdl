@@ -173,6 +173,8 @@ child:
   rpc HandleKeyEvent(nsKeyEvent event)
     returns (bool handled);
 
+  async NPP_DidComposite();
+
   rpc NPP_Destroy()
     returns (NPError rv);
 

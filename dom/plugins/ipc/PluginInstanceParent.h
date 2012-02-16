@@ -305,6 +305,8 @@ public:
     nsresult HandleGUIEvent(const nsGUIEvent& anEvent, bool* handled);
 #endif
 
+    void DidComposite() { SendNPP_DidComposite(); }
+
 private:
     // Create an appropriate platform surface for a background of size
     // |aSize|.  Return true if successful.
@@ -337,6 +339,7 @@ private:
     Shmem mRemoteImageDataShmem;
     nsAutoPtr<CrossProcessMutex> mRemoteImageDataMutex;
     int16_t            mDrawingModel;
+    nsAutoPtr<mozilla::layers::CompositionNotifySink> mNotifySink;
 
     nsDataHashtable<nsVoidPtrHashKey, PluginScriptableObjectParent*> mScriptableObjects;
 
