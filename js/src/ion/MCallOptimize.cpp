@@ -47,13 +47,16 @@
 namespace js {
 namespace ion {
 
-void
-IonBuilder::discardCallArgs(uint32 argc, MDefinition **argv)
+bool
+IonBuilder::discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
 {
+    if (!argv.resizeUninitialized(argc + 1))
+        return false;
+
     // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
     // Copy PassArg arguments from ArgN to This.
     for (int32 i = argc; i >= 0; i--) {
-        MPassArg *passArg = current->pop()->toPassArg();
+        MPassArg *passArg = bb->pop()->toPassArg();
         MBasicBlock *block = passArg->block();
         MDefinition *wrapped = passArg->getArgument();
         passArg->replaceAllUsesWith(wrapped);
@@ -61,9 +64,19 @@ IonBuilder::discardCallArgs(uint32 argc, MDefinition **argv)
         argv[i] = wrapped;
     }
 
+    return true;
+}
+
+bool
+IonBuilder::discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
+{
+    if (!discardCallArgs(argc, argv, bb))
+        return false;
+
     // Discard function it would be removed by DCE if it is not captured by a
     // resume point.
-    current->pop();
+    bb->pop();
+    return true;
 }
 
 bool
@@ -91,18 +104,22 @@ IonBuilder::optimizeNativeCall(uint32 argc)
     types::TypeSet *returnTypes = oracle->getCallReturn(script, pc);
     MIRType returnType = MIRTypeFromValueType(returnTypes->getKnownTypeTag(cx));
 
+    types::TypeSet *thisTypes = oracle->getCallArg(script, argc, 0, pc);
+    MIRType thisType = MIRTypeFromValueType(thisTypes->getKnownTypeTag(cx));
+    MDefinitionVector argv;
+
     if (argc == 0)
         return false;
 
     types::TypeSet *arg1Types = oracle->getCallArg(script, argc, 1, pc);
     MIRType arg1Type = MIRTypeFromValueType(arg1Types->getKnownTypeTag(cx));
     if (argc == 1) {
-        MDefinition *argv[2];
         if (native == js_math_abs) {
             // argThis == MPassArg(MConstant(Math))
             if ((arg1Type == MIRType_Double || arg1Type == MIRType_Int32) &&
                 arg1Type == returnType) {
-                discardCallArgs(argc, argv);
+                if (!discardCall(argc, argv, current))
+                    return false;
                 MAbs *ins = MAbs::New(argv[1], returnType);
                 current->add(ins);
                 current->push(ins);
@@ -112,7 +129,8 @@ IonBuilder::optimizeNativeCall(uint32 argc)
         if (native == js_math_floor) {
             // argThis == MPassArg(MConstant(Math))
             if (arg1Type == MIRType_Double && returnType == MIRType_Int32) {
-                discardCallArgs(argc, argv);
+                if (!discardCall(argc, argv, current))
+                    return false;
                 MRound *ins = new MRound(argv[1], MRound::RoundingMode_Floor);
                 current->add(ins);
                 current->push(ins);
@@ -120,7 +138,8 @@ IonBuilder::optimizeNativeCall(uint32 argc)
             }
             if (arg1Type == MIRType_Int32 && returnType == MIRType_Int32) {
                 // i == Math.floor(i)
-                discardCallArgs(argc, argv);
+                if (!discardCall(argc, argv, current))
+                    return false;
                 current->push(argv[1]);
                 return true;
             }
@@ -128,7 +147,8 @@ IonBuilder::optimizeNativeCall(uint32 argc)
         if (native == js_math_round) {
             // argThis == MPassArg(MConstant(Math))
             if (arg1Type == MIRType_Double && returnType == MIRType_Int32) {
-                discardCallArgs(argc, argv);
+                if (!discardCall(argc, argv, current))
+                    return false;
                 MRound *ins = new MRound(argv[1], MRound::RoundingMode_Round);
                 current->add(ins);
                 current->push(ins);
@@ -136,7 +156,8 @@ IonBuilder::optimizeNativeCall(uint32 argc)
             }
             if (arg1Type == MIRType_Int32 && returnType == MIRType_Int32) {
                 // i == Math.round(i)
-                discardCallArgs(argc, argv);
+                if (!discardCall(argc, argv, current))
+                    return false;
                 current->push(argv[1]);
                 return true;
             }
