@@ -80,8 +80,10 @@
 #include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
-#include "vm/String-inl.h"
+
+#include "vm/ObjectImpl-inl.h"
 #include "vm/RegExpStatics-inl.h"
+#include "vm/String-inl.h"
 
 inline bool
 JSObject::hasPrivate() const
@@ -866,11 +868,6 @@ inline bool JSObject::setSystem(JSContext *cx)
     return setFlag(cx, js::BaseShape::SYSTEM);
 }
 
-inline bool JSObject::isDelegate() const
-{
-    return lastProperty()->hasObjectFlag(js::BaseShape::DELEGATE);
-}
-
 inline bool JSObject::setDelegate(JSContext *cx)
 {
     return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
@@ -1172,12 +1169,6 @@ JSObject::nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js:
 }
 
 inline bool
-JSObject::isNative() const
-{
-    return lastProperty()->isNative();
-}
-
-inline bool
 JSObject::nativeContains(JSContext *cx, jsid id)
 {
     return nativeLookup(cx, id) != NULL;
@@ -1193,12 +1184,6 @@ inline bool
 JSObject::nativeEmpty() const
 {
     return lastProperty()->isEmptyShape();
-}
-
-inline bool
-JSObject::inDictionaryMode() const
-{
-    return lastProperty()->inDictionary();
 }
 
 inline uint32_t
