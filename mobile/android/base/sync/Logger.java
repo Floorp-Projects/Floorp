@@ -43,7 +43,7 @@ public class Logger {
     isWarnLoggable    = new IdentityHashMap<String, Boolean>();
     isInfoLoggable    = new IdentityHashMap<String, Boolean>();
     isDebugLoggable   = new IdentityHashMap<String, Boolean>();
-    isVerboseLoggable = new IdentityHashMap<String, Boolean>();    
+    isVerboseLoggable = new IdentityHashMap<String, Boolean>();
   }
 
   private static boolean shouldLogError(String logTag) {
