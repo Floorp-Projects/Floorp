@@ -50,6 +50,7 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxSharedImageSurface.h"
+#include "nsNPAPIPluginInstance.h"
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
@@ -91,6 +92,7 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mNPP(npp)
     , mNPNIface(npniface)
     , mWindowType(NPWindowTypeWindow)
+    , mDrawingModel(kDefaultDrawingModel)
 #if defined(OS_WIN)
     , mPluginHWND(NULL)
     , mPluginWndProc(NULL)
@@ -100,7 +102,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mShWidth(0)
     , mShHeight(0)
     , mShColorSpace(nsnull)
-    , mDrawingModel(NPDrawingModelCoreGraphics)
 #endif
 {
 }
@@ -362,16 +363,18 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
                                   (void*)NPDrawingModelCoreGraphics);
-    } else {
+    } else
+#endif
+    {
+        if (!GetImageContainer()) {
+          return false;
+        }
+
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
-                                  (void*)drawingModel);
+                                      (void*)drawingModel);
     }
     return true;
-#else
-    *result = NPERR_GENERIC_ERROR;
-    return true;
-#endif
 }
 
 bool

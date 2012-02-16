@@ -86,6 +86,8 @@ UnmungePluginDsoPath(const std::string& munged);
 
 extern PRLogModuleInfo* gPluginLog;
 
+const uint32_t kAllowAsyncDrawing = 0x1;
+
 #if defined(_MSC_VER)
 #define FULLFUNCTION __FUNCSIG__
 #elif (__GNUC__ >= 4)

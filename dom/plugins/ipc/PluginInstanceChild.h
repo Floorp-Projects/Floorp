@@ -364,6 +364,7 @@ private:
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
+    int16_t               mDrawingModel;
 
     // Cached scriptable actors to avoid IPC churn
     PluginScriptableObjectChild* mCachedWindowActor;
@@ -426,7 +427,6 @@ private:
 #endif
     CGColorSpaceRef       mShColorSpace;
     CGContextRef          mShContext;
-    int16_t               mDrawingModel;
     nsCARenderer          mCARenderer;
     void                 *mCGLayer;
 

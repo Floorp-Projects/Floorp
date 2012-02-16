@@ -2528,7 +2528,8 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       return inst->SetUsesDOMForCursor(useDOMForCursor);
     }
 
-#ifdef XP_MACOSX
+#ifndef MOZ_WIDGET_ANDROID
+    // On android, their 'drawing model' uses the same constant!
     case NPPVpluginDrawingModel: {
       if (inst) {
         inst->SetDrawingModel((NPDrawingModel)NS_PTR_TO_INT32(result));
@@ -2538,7 +2539,9 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         return NPERR_GENERIC_ERROR;
       }
     }
+#endif
 
+#ifdef XP_MACOSX
     case NPPVpluginEventModel: {
       if (inst) {
         inst->SetEventModel((NPEventModel)NS_PTR_TO_INT32(result));
