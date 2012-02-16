@@ -148,7 +148,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
                        KeyBundle syncKeyBundle,
                        GlobalSessionCallback callback,
                        Context context,
-                       Bundle persisted)
+                       Bundle extras)
                            throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
     if (callback == null) {
       throw new IllegalArgumentException("Must provide a callback to GlobalSession constructor.");
@@ -158,7 +158,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
       throw new SyncConfigurationException();
     }
 
-    Log.i(LOG_TAG, "GlobalSession initialized with bundle " + persisted);
+    Log.i(LOG_TAG, "GlobalSession initialized with bundle " + extras);
     URI serverURI;
     try {
       serverURI = (serverURL == null) ? null : new URI(serverURL);
@@ -181,9 +181,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
     config.username      = username;
     config.password      = password;
     config.syncKeyBundle = syncKeyBundle;
-    // clusterURL and syncID are set through `persisted`, or fetched from the server.
 
-    assert(null == persisted);
     prepareStages();
   }
 
