@@ -101,8 +101,9 @@ public class JPakeCrypto {
    *
    * @param mySignerId
    * @param valuesOut
+   * @throws NoSuchAlgorithmException 
    */
-  public static void round1(JPakeParty jp, JPakeNumGenerator gen) {
+  public static void round1(JPakeParty jp, JPakeNumGenerator gen) throws NoSuchAlgorithmException, UnsupportedEncodingException {
     // Randomly select x1 from [0,q), x2 from [1,q).
     BigInteger x1 = gen.generateFromRange(Q); // [0, q)
     BigInteger x2 = jp.x2 = BigInteger.ONE.add(gen.generateFromRange(Q
@@ -132,9 +133,11 @@ public class JPakeCrypto {
    * @param zkp3
    * @param zkp4
    * @throws IncorrectZkpException
+   * @throws NoSuchAlgorithmException
    */
-  public static void round2(String secret, JPakeParty jp,
-      JPakeNumGenerator gen) throws IncorrectZkpException, Gx3OrGx4IsZeroOrOneException {
+  public static void round2(BigInteger secretValue, JPakeParty jp, JPakeNumGenerator gen)
+      throws IncorrectZkpException, NoSuchAlgorithmException,
+      Gx3OrGx4IsZeroOrOneException, UnsupportedEncodingException {
 
     Log.d(LOG_TAG, "round2 started.");
 
@@ -150,13 +153,7 @@ public class JPakeCrypto {
 
     // Compute a = g^[(x1+x3+x4)*(x2*secret)].
     BigInteger y1 = jp.gx3.multiply(jp.gx4).mod(P).multiply(jp.gx1).mod(P);
-    BigInteger y2 = null;
-    try {
-      y2 = jp.x2.multiply(new BigInteger(secret.getBytes("US-ASCII"))).mod(P);
-    } catch (UnsupportedEncodingException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    BigInteger y2 = jp.x2.multiply(secretValue).mod(P);
 
     BigInteger a  = y1.modPow(y2, P);
     jp.thisZkpA = createZkp(y1, y2, a, jp.signerId, gen);
@@ -175,8 +172,8 @@ public class JPakeCrypto {
    * @return KeyBundle
    * @throws IncorrectZkpException
    */
-  public static KeyBundle finalRound(String secret, JPakeParty jp)
-      throws IncorrectZkpException, NoSuchAlgorithmException, InvalidKeyException {
+  public static KeyBundle finalRound(BigInteger secretValue, JPakeParty jp)
+      throws IncorrectZkpException, NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
     Log.d(LOG_TAG, "Final round started.");
     BigInteger gb = jp.gx1.multiply(jp.gx2).mod(P).multiply(jp.gx3)
         .mod(P);
@@ -184,7 +181,7 @@ public class JPakeCrypto {
 
     // Calculate shared key g^(x1+x3)*x2*x4*secret, which is equivalent to
     // (B/g^(x2*x4*s))^x2 = (B*(g^x4)^x2^s^-1)^2.
-    BigInteger k = jp.gx4.modPow(jp.x2.multiply(new BigInteger(secret.getBytes())).negate().mod(Q), P).multiply(jp.otherA)
+    BigInteger k = jp.gx4.modPow(jp.x2.multiply(secretValue).negate().mod(Q), P).multiply(jp.otherA)
         .modPow(jp.x2, P);
 
     byte[] enc = new byte[32];
@@ -217,7 +214,7 @@ public class JPakeCrypto {
    * pass in gx to save on an exponentiation of g^x)
    */
   private static Zkp createZkp(BigInteger g, BigInteger x, BigInteger gx,
-      String id, JPakeNumGenerator gen) {
+      String id, JPakeNumGenerator gen) throws NoSuchAlgorithmException, UnsupportedEncodingException {
     // Generate random r for exponent.
     BigInteger r = gen.generateFromRange(Q);
 
@@ -238,7 +235,7 @@ public class JPakeCrypto {
    * Verify ZKP.
    */
   private static void checkZkp(BigInteger g, BigInteger gx, Zkp zkp)
-      throws IncorrectZkpException {
+      throws IncorrectZkpException, NoSuchAlgorithmException, UnsupportedEncodingException {
 
     BigInteger h = computeBHash(g, zkp.gr, gx, zkp.id);
 
@@ -278,33 +275,22 @@ public class JPakeCrypto {
    * form hash.
    */
   private static BigInteger computeBHash(BigInteger g, BigInteger gr, BigInteger gx,
-      String id) {
-    MessageDigest sha = null;
-    try {
-      sha = MessageDigest.getInstance("SHA-256");
-      sha.reset();
+      String id) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    MessageDigest sha = MessageDigest.getInstance("SHA-256");
+    sha.reset();
 
-      /*
-       * Note: you should ensure the items in H(...) have clear boundaries. It
-       * is simple if the other party knows sizes of g, gr, gx and signerID and
-       * hence the boundary is unambiguous. If not, you'd better prepend each
-       * item with its byte length, but I've omitted that here.
-       */
+    /*
+     * Note: you should ensure the items in H(...) have clear boundaries. It
+     * is simple if the other party knows sizes of g, gr, gx and signerID and
+     * hence the boundary is unambiguous. If not, you'd better prepend each
+     * item with its byte length, but I've omitted that here.
+     */
 
-      hashByteArrayWithLength(sha,
-          BigIntegerHelper.BigIntegerToByteArrayWithoutSign(g));
-      hashByteArrayWithLength(sha,
-          BigIntegerHelper.BigIntegerToByteArrayWithoutSign(gr));
-      hashByteArrayWithLength(sha,
-          BigIntegerHelper.BigIntegerToByteArrayWithoutSign(gx));
-      hashByteArrayWithLength(sha, id.getBytes("US-ASCII"));
+    hashByteArrayWithLength(sha, BigIntegerHelper.BigIntegerToByteArrayWithoutSign(g));
+    hashByteArrayWithLength(sha, BigIntegerHelper.BigIntegerToByteArrayWithoutSign(gr));
+    hashByteArrayWithLength(sha, BigIntegerHelper.BigIntegerToByteArrayWithoutSign(gx));
+    hashByteArrayWithLength(sha, id.getBytes("UTF-8"));
 
-    } catch (NoSuchAlgorithmException e) {
-      e.printStackTrace();
-    } catch (UnsupportedEncodingException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
     byte[] hash = sha.digest();
 
     return BigIntegerHelper.ByteArrayToBigIntegerWithoutSign(hash);
