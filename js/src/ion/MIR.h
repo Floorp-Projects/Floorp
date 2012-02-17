@@ -870,7 +870,9 @@ class MGoto : public MAryControlInstruction<0, 1>
 
 // Tests if the input instruction evaluates to true or false, and jumps to the
 // start of a corresponding basic block.
-class MTest : public MAryControlInstruction<1, 2>
+class MTest
+  : public MAryControlInstruction<1, 2>,
+    public TestPolicy
 {
     MTest(MDefinition *ins, MBasicBlock *if_true, MBasicBlock *if_false) {
         initOperand(0, ins);
@@ -888,6 +890,9 @@ class MTest : public MAryControlInstruction<1, 2>
     }
     MBasicBlock *ifFalse() const {
         return getSuccessor(1);
+    }
+    TypePolicy *typePolicy() {
+        return this;
     }
 
     AliasSet getAliasSet() const {
@@ -3334,15 +3339,18 @@ class MStringLength
   : public MUnaryInstruction,
     public StringPolicy
 {
-  public:
     MStringLength(MDefinition *string)
       : MUnaryInstruction(string)
     {
         setResultType(MIRType_Int32);
         setMovable();
     }
-
+  public:
     INSTRUCTION_HEADER(StringLength);
+
+    static MStringLength *New(MDefinition *string) {
+        return new MStringLength(string);
+    }
 
     TypePolicy *typePolicy() {
         return this;
