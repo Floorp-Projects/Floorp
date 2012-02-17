@@ -392,7 +392,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "Intel",
                 "NVIDIA",
                 "ATI",
-                "Qualcomm"
+                "Qualcomm",
+                "Imagination"
         };
         mVendor = VendorOther;
         for (int i = 0; i < VendorOther; ++i) {
@@ -404,7 +405,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         glRendererString = (const char *)fGetString(LOCAL_GL_RENDERER);
         const char *rendererMatchStrings[RendererOther] = {
-                "Adreno 200"
+                "Adreno 200",
+                "PowerVR SGX 540"
         };
         mRenderer = RendererOther;
         for (int i = 0; i < RendererOther; ++i) {
@@ -612,6 +614,27 @@ GLContext::CanUploadSubTextures()
     // because that function can be very slow and/or buggy
 
     return !(Renderer() == RendererAdreno200);
+}
+
+bool
+GLContext::WantsSmallTiles()
+{
+#ifdef MOZ_WIDGET_ANDROID
+    // We must use small tiles for good performance if we can't use
+    // glTexSubImage2D() for some reason.
+    if (!CanUploadSubTextures())
+        return true;
+
+    // We can't use small tiles on the SGX 540, because of races in texture upload.
+    if (Renderer() == RendererSGX540)
+        return false;
+
+    // Don't use small tiles otherwise. (If we implement incremental texture upload,
+    // then we will want to revisit this.)
+    return false;
+#else
+    return false;
+#endif
 }
 
 // Common code for checking for both GL extensions and GLX extensions.
@@ -866,7 +889,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     , mUseNearestFilter(aUseNearestFilter)
     , mTextureState(Created)
 {
-    mTileSize = 256;//mGL->GetMaxTextureSize();
+    mTileSize = mGL->WantsSmallTiles() ? 256 : mGL->GetMaxTextureSize();
     if (aSize != nsIntSize(0,0)) {
         Resize(aSize);
     }
