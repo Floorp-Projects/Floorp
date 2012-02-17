@@ -1257,7 +1257,12 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         metadataProvider->GetDrawMetadata(metadata);
     }
 
-    nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
+#if 0
+    // BEGIN HACK: gl layers
+    nsPaintEvent event(true, NS_PAINT, this);
+    nsIntRect tileRect(0, 0, gAndroidBounds.width, gAndroidBounds.height);
+    event.region = tileRect;
+#endif
 
     static unsigned char *bits2 = NULL;
     static gfxIntSize bitsSize(0, 0);
@@ -1273,10 +1278,24 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * 2,
                             gfxASurface::ImageFormatRGB16_565);
 
+#if 0
+    nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
+    AutoLayerManagerSetup setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+
+    nsEventStatus status;
+    status = DispatchEvent(&event);
+
+    return;
+    // END HACK: gl layers
+#endif
+
+    nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
+
     AndroidGeckoLayerClient &client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height,
                              gAndroidTileSize.width, gAndroidTileSize.height,
-                             metadata, HasDirectTexture())) {
+                             dirtyRect, metadata, HasDirectTexture())) {
+        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### BeginDrawing returned false!");
         return;
     }
 

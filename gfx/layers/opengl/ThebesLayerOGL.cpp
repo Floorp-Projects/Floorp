@@ -597,14 +597,12 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
           // of the buffer. We need to invalidate the remaining sections so that they get redrawn too.
           // Alternatively we could teach BlitTextureImage to rearrange the rotated segments onto
           // the new buffer.
-
+          
           // When the rotated buffer is reorganised, the bottom-right section will be drawn in the top left.
           // Find the point where this content ends.
-
           nsIntPoint rotationPoint(mBufferRect.x + mBufferRect.width - mBufferRotation.x, 
                                    mBufferRect.y + mBufferRect.height - mBufferRotation.y);
 
-          // Mark the remaining quadrants (bottom-left&right, top-right) as invalid.
           // The buffer looks like:
           //  ______
           // |1  |2 |  Where the center point is offset by mBufferRotation from the top-left corner.
@@ -621,6 +619,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
           //
           // Quadrants 2 and 1
           nsIntRect bottom(mBufferRect.x, rotationPoint.y, mBufferRect.width, mBufferRotation.y);
+          // Quadrant 3
           nsIntRect topright(rotationPoint.x, mBufferRect.y, mBufferRotation.x, rotationPoint.y - mBufferRect.y);
 
           if (!bottom.IsEmpty()) {
