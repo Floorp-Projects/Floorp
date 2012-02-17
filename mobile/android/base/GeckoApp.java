@@ -547,10 +547,6 @@ abstract public class GeckoApp
         }
     }
 
-    public String getLastViewport() {
-        return mLastViewport;
-    }
-
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         if (mOwnActivityDepth > 0)
@@ -1808,8 +1804,7 @@ abstract public class GeckoApp
              * run experience, perhaps?
              */
             mLayerController = new LayerController(this);
-            mPlaceholderLayerClient = PlaceholderLayerClient.createInstance(this);
-            mLayerController.setLayerClient(mPlaceholderLayerClient);
+            mPlaceholderLayerClient = new PlaceholderLayerClient(mLayerController, mLastViewport);
 
             mGeckoLayout.addView(mLayerController.getView(), 0);
         }

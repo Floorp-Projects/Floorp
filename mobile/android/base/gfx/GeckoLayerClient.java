@@ -297,7 +297,6 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
         return Color.rgb(r, g, b);
     }
 
-    @Override
     public void render() {
         adjustViewportWithThrottling();
     }
@@ -325,7 +324,6 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
         adjustViewport();
     }
 
-    @Override
     public void viewportSizeChanged() {
         mViewportSizeChanged = true;
     }
@@ -361,7 +359,6 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
         }
     }
 
-    @Override
     public void geometryChanged() {
         /* Let Gecko know if the screensize has changed */
         sendResizeEventIfNecessary();
