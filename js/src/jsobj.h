@@ -998,22 +998,6 @@ struct JSObject : js::gc::Cell
     bool isSealed(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, SEAL, resultp); }
     bool isFrozen(JSContext *cx, bool *resultp) { return isSealedOrFrozen(cx, FREEZE, resultp); }
 
-    /*
-     * Primitive-specific getters and setters.
-     */
-
-  private:
-    static const uint32_t JSSLOT_PRIMITIVE_THIS = 0;
-
-  public:
-    inline const js::Value &getPrimitiveThis() const;
-    inline void setPrimitiveThis(const js::Value &pthis);
-
-    static size_t getPrimitiveThisOffset() {
-        /* All primitive objects have their value in a fixed slot. */
-        return getFixedSlotOffset(JSSLOT_PRIMITIVE_THIS);
-    }
-
     /* Accessors for elements. */
 
     js::ObjectElements *getElementsHeader() const {
