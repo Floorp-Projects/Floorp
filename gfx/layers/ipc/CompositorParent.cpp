@@ -184,10 +184,8 @@ CompositorParent::Composite()
 
 #ifdef MOZ_WIDGET_ANDROID
   RequestViewTransform();
-  Layer* layer = GetPrimaryScrollableLayer();
   printf_stderr("Correcting for position fixed %i, %i\n", -mScrollOffset.x, -mScrollOffset.y);
-  ViewTransform v(mScrollOffset, mXScale, mYScale);
-  TransformShadowTree(layer, v);
+  TransformShadowTree();
 #endif
 
   mLayerManager->EndEmptyTransaction();
@@ -259,67 +257,32 @@ static double GetYScale(const gfx3DMatrix& aTransform)
   return aTransform._22;
 }
 
-static void ReverseTranslate(gfx3DMatrix& aTransform, ViewTransform& aViewTransform)
-{
-  aTransform._41 -= aViewTransform.mTranslation.x / aViewTransform.mXScale;
-  aTransform._42 -= aViewTransform.mTranslation.y / aViewTransform.mYScale;
-}
-
 void
-CompositorParent::TransformShadowTree(Layer* aLayer, const ViewTransform& aTransform,
-                    float aTempScaleDiffX, float aTempScaleDiffY)
+CompositorParent::TransformShadowTree()
 {
-  ShadowLayer* shadow = aLayer->AsShadowLayer();
+  Layer* layer = GetPrimaryScrollableLayer();
+  ShadowLayer* shadow = layer->AsShadowLayer();
 
-  gfx3DMatrix shadowTransform = aLayer->GetTransform();
-  ViewTransform layerTransform = aTransform;
+  gfx3DMatrix shadowTransform = layer->GetTransform();
 
-  ContainerLayer* container = aLayer->AsContainerLayer();
+  ContainerLayer* container = layer->AsContainerLayer();
 
-  if (container && container->GetFrameMetrics().IsScrollable()) {
-    const FrameMetrics* metrics = &container->GetFrameMetrics();
-    const gfx3DMatrix& currentTransform = aLayer->GetTransform();
+  const FrameMetrics* metrics = &container->GetFrameMetrics();
+  const gfx3DMatrix& currentTransform = layer->GetTransform();
 
-    aTempScaleDiffX *= GetXScale(mLayerManager->GetRoot()->GetTransform()) * mXScale;
-    aTempScaleDiffY *= GetYScale(mLayerManager->GetRoot()->GetTransform()) * mYScale;
+  float tempScaleDiffX = GetXScale(mLayerManager->GetRoot()->GetTransform()) * mXScale;
+  float tempScaleDiffY = GetYScale(mLayerManager->GetRoot()->GetTransform()) * mYScale;
 
-    nsIntPoint metricsScrollOffset = metrics->mViewportScrollOffset;
+  nsIntPoint metricsScrollOffset = metrics->mViewportScrollOffset;
 
-    nsIntPoint scrollCompensation(
-        (mScrollOffset.x / aTempScaleDiffX - metricsScrollOffset.x) * mXScale,
-        (mScrollOffset.y / aTempScaleDiffY - metricsScrollOffset.y) * mYScale);
-    ViewTransform treeTransform(-scrollCompensation, mXScale,
-                                mYScale);
-    shadowTransform = gfx3DMatrix(treeTransform) * currentTransform;
-    layerTransform = treeTransform;
-  }
-
-  // Uncomment to deal with position:fixed.
-  /*
-  if (aLayer->GetIsFixedPosition() &&
-      !aLayer->GetParent()->GetIsFixedPosition()) {
-    printf_stderr("Correcting for position fixed\n");
-    ReverseTranslate(shadowTransform, layerTransform);
-    const nsIntRect* clipRect = shadow->GetShadowClipRect();
-    if (clipRect) {
-      nsIntRect transformedClipRect(*clipRect);
-      transformedClipRect.MoveBy(shadowTransform._41, shadowTransform._42);
-      shadow->SetShadowClipRect(&transformedClipRect);
-    }
-  }*/
+  nsIntPoint scrollCompensation(
+    (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
+    (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
+  ViewTransform treeTransform(-scrollCompensation, mXScale,
+                              mYScale);
+  shadowTransform = gfx3DMatrix(treeTransform) * currentTransform;
 
   shadow->SetShadowTransform(shadowTransform);
-
-  // Uncomment the following when we want to deal with position:fixed.
-  // Note that we need to modify other code to ensure that position:fixed
-  // things get their own layer. See Bug 607417.
-  /*
-  for (Layer* child = aLayer->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    TransformShadowTree(child, layerTransform, aTempScaleDiffX,
-                       aTempScaleDiffY);
-  }*/
-
 }
 
 void
