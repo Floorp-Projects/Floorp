@@ -110,6 +110,7 @@ protected:
     mozilla::AndroidGeckoEvent *PeekNextEvent();
 
     nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
+    bool mPendingOrientationEvents;
 };
 
 #endif // nsAppShell_h__
