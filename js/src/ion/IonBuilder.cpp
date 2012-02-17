@@ -2457,6 +2457,9 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
     call->addArg(0, current->pop()->toPassArg());
     call->initFunction(current->pop());
 
+    if (target)
+        call->setSingleTarget(target);
+
     // Insert an MPrepareCall immediately before the first argument is pushed.
     MPrepareCall *start = new MPrepareCall;
     MPassArg *arg = call->getArg(0)->toPassArg();
