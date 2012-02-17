@@ -100,7 +100,7 @@ var gTreeUtils = {
     if (!ascending)
       aDataSet.reverse();
 
-    aTree.view.selection.select(-1);
+    aTree.view.selection.clearSelection();
     aTree.view.selection.select(0);
     aTree.treeBoxObject.invalidate();
     aTree.treeBoxObject.ensureRowIsVisible(0);
