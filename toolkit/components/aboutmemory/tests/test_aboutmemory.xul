@@ -89,7 +89,10 @@
     f("", "explicit/g/b",       HEAP,      5 * MB),
     f("", "explicit/g/other",   HEAP,      4 * MB),
     f("", "other1",             OTHER,   111 * MB),
-    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888)
+    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888),
+    // These compartments ones shouldn't be displayed.
+    f("", "compartments/user/foo",   OTHER, COUNT, 1),
+    f("", "compartments/system/foo", OTHER, COUNT, 1)
   ];
   let fakeMultiReporters = [
     { name: "fake1",
@@ -135,6 +138,16 @@
         f("smaps/pss/a",        43);
       },
       explicitNonHeap: 0
+    },
+    { name: "compartments",
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP) {
+          aCbObj.callback("", aP, OTHER, COUNT, 1, "", aClosure);
+        }
+        f("compartments/user/bar");
+        f("compartments/system/bar");
+      },
+      explicitNonHeap: 0
     }
   ];
   for (let i = 0; i < fakeReporters.length; i++) {
@@ -165,6 +178,13 @@
     f("2nd", "danger<script>window.alert(1)</script>",
                                 OTHER,   666 * MB),
     f("2nd", "other1",          OTHER,   111 * MB),
+    // Even though the "smaps" reporter is a multi-reporter, if its in a
+    // child process it'll be passed to the main process as single reports.
+    // The fact that we skip the "smaps" multi-reporter in the main
+    // process won't cause these to be skipped;  the fall-back skipping will
+    // be hit instead.
+    f("2nd", "smaps/vsize/e",   NONHEAP, 24*4*KB),
+    f("2nd", "smaps/vsize/f",   NONHEAP, 24*4*KB),
 
     // kUnknown should be handled gracefully for "heap-allocated", non-leaf
     // reporters, leaf-reporters, "other" reporters, and duplicated reporters.
@@ -211,30 +231,10 @@
     f("5th", "explicit/b/c/g/h", NONHEAP,  10 * KB),
     f("5th", "explicit/b/c/i/j", NONHEAP,   5 * KB)
   ];
-  let fakeMultiReporters2 = [
-    // Because this multi-reporter is in a child process, the fact that we
-    // skip the "smaps" multi-reporter in the parent process won't cause
-    // these to be skipped;  the fall-back skipping will be hit instead.
-    { name: "smaps",
-      collectReports: function(aCbObj, aClosure) {
-        // The amounts are given in pages, so multiply here by 4kb.
-        function f(aP, aA) {
-          aCbObj.callback("2nd", aP, NONHEAP, BYTES, aA * 4 * KB, "(desc)", aClosure);
-        }
-        f("smaps/vsize/a", 24);
-        f("smaps/vsize/b", 24);
-      },
-      explicitNonHeap: 0
-    }
-  ];
   for (let i = 0; i < fakeReporters2.length; i++) {
     mgr.registerReporter(fakeReporters2[i]);
   }
-  for (let i = 0; i < fakeMultiReporters2.length; i++) {
-    mgr.registerMultiReporter(fakeMultiReporters2[i]);
-  }
   fakeReporters = fakeReporters.concat(fakeReporters2);
-  fakeMultiReporters = fakeMultiReporters.concat(fakeMultiReporters2);
   ]]>
   </script>
 
@@ -565,10 +565,10 @@ Other Measurements\n\
   // Cut+paste the entire page and check that the cut text matches what we
   // expect.  This tests the output in general and also that the cutting and
   // pasting works as expected.
-  function test(aFrame, aExpected, aNext) {
+  function test(aFrameId, aExpected, aNext) {
     SimpleTest.executeSoon(function() {
       let mostRecentActual;
-      document.getElementById(aFrame).focus();
+      document.getElementById(aFrameId).focus();
       SimpleTest.waitForClipboard(
         function(aActual) {
           mostRecentActual = aActual;
@@ -580,7 +580,7 @@ Other Measurements\n\
         },
         aNext,
         function() {
-          ok(false, "pasted text doesn't match for " + aFrame);
+          ok(false, "pasted text doesn't match for " + aFrameId);
           dump("******EXPECTED******\n");
           dump(aExpected);
           dump("*******ACTUAL*******\n");
