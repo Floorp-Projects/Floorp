@@ -102,7 +102,7 @@ class PICStubCompiler : public BaseCompiler
     JSScript *script;
     ic::PICInfo &pic;
     void *stub;
-    uint32_t gcNumber;
+    uint64_t gcNumber;
 
   public:
     bool canCallHook;

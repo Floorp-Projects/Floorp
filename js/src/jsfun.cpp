@@ -551,7 +551,7 @@ args_trace(JSTracer *trc, JSObject *obj)
  */
 Class js::NormalArgumentsObjectClass = {
     "Arguments",
-    JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(NormalArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_FOR_OF_ITERATION,
@@ -587,7 +587,7 @@ Class js::NormalArgumentsObjectClass = {
  */
 Class js::StrictArgumentsObjectClass = {
     "Arguments",
-    JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(StrictArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_FOR_OF_ITERATION,
@@ -942,7 +942,7 @@ call_trace(JSTracer *trc, JSObject *obj)
 
 JS_PUBLIC_DATA(Class) js::CallClass = {
     "Call",
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS) |
     JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,         /* addProperty */
@@ -1499,7 +1499,7 @@ JSFunction::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
  */
 JS_FRIEND_DATA(Class) js::FunctionClass = {
     js_Function_str,
-    JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */

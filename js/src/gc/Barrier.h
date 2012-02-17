@@ -456,6 +456,20 @@ class ReadBarriered
     operator MarkablePtr<U>() const { return MarkablePtr<U>(value); }
 };
 
+class ReadBarrieredValue
+{
+    Value value;
+
+  public:
+    ReadBarrieredValue() : value(UndefinedValue()) {}
+    ReadBarrieredValue(const Value &value) : value(value) {}
+
+    inline const Value &get() const;
+    inline operator const Value &() const;
+
+    inline JSObject &toObject() const;
+};
+
 }
 
 #endif /* jsgc_barrier_h___ */

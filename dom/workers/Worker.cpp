@@ -300,7 +300,7 @@ private:
 
 JSClass Worker::sClass = {
   "Worker",
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize, NULL, NULL, NULL,
   NULL, NULL, NULL, Trace, NULL
@@ -415,7 +415,7 @@ private:
 
 JSClass ChromeWorker::sClass = {
   "ChromeWorker",
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize, NULL, NULL, NULL,
   NULL, NULL, NULL, Trace, NULL

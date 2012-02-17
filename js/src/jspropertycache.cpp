@@ -282,7 +282,7 @@ PropertyCache::purge(JSContext *cx)
 #ifdef JS_THREADSAFE
         fprintf(fp, "thread %lu, ", (unsigned long) cx->thread->id);
 #endif
-        fprintf(fp, "GC %u\n", cx->runtime->gcNumber);
+        fprintf(fp, "GC %lu\n", (unsigned long)cx->runtime->gcNumber);
 
 # define P(mem) fprintf(fp, "%11s %10lu\n", #mem, (unsigned long)mem)
         P(fills);

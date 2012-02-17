@@ -146,7 +146,11 @@ MarkChildren(JSTracer *trc, JSObject *obj);
 void
 MarkCycleCollectorChildren(JSTracer *trc, const Shape *shape);
 
+void
+PushArena(GCMarker *gcmarker, ArenaHeader *aheader);
+
 /*** Generic ***/
+
 /*
  * The Mark() functions interface should only be used by code that must be
  * templated.  Other uses should use the more specific, type-named functions.

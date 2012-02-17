@@ -2195,7 +2195,7 @@ TypeCompartment::nukeTypes(JSContext *cx)
 
 #ifdef JS_THREADSAFE
     AutoLockGC maybeLock;
-    if (!cx->runtime->gcMarkAndSweep)
+    if (!cx->runtime->gcRunning)
         maybeLock.lock(cx->runtime);
 #endif
 
