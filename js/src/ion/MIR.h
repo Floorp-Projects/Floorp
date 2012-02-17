@@ -2139,6 +2139,39 @@ class MRecompileCheck : public MNullaryInstruction
     }
 };
 
+// If not defined, set a global variable to |undefined|.
+class MDefVar : public MUnaryInstruction
+{
+  PropertyName *name_; // Target name to be defined.
+  uintN attrs_; // Attributes to be set.
+
+  private:
+    MDefVar(PropertyName *name, uintN attrs, MDefinition *scopeChain)
+      : MUnaryInstruction(scopeChain),
+        name_(name),
+        attrs_(attrs)
+    {
+    }
+
+  public:
+    INSTRUCTION_HEADER(DefVar);
+
+    static MDefVar *New(PropertyName *name, uintN attrs, MDefinition *scopeChain) {
+        return new MDefVar(name, attrs, scopeChain);
+    }
+
+    PropertyName *name() const {
+        return name_;
+    }
+    uintN attrs() const {
+        return attrs_;
+    }
+    MDefinition *scopeChain() const {
+        return getOperand(0);
+    }
+
+};
+
 class MRegExp : public MNullaryInstruction
 {
   public:

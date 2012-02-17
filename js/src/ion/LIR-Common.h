@@ -250,6 +250,28 @@ class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
     }
 };
 
+class LDefVar : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(DefVar);
+
+    LDefVar(const LAllocation &scopeChain, const LDefinition &namereg)
+    {
+        setOperand(0, scopeChain);
+        setTemp(0, namereg);
+    }
+
+    const LAllocation *getScopeChain() {
+        return getOperand(0);
+    }
+    const LAllocation *nameTemp() {
+        return getTemp(0)->output();
+    }
+    MDefVar *mir() const {
+        return mir_->toDefVar();
+    }
+};
+
 class LTypeOfV : public LInstructionHelper<1, BOX_PIECES, 0>
 {
   public:

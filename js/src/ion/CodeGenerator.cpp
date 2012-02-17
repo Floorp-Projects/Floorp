@@ -825,6 +825,28 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
 }
 
 bool
+CodeGenerator::visitDefVar(LDefVar *lir)
+{
+    Register scopeChain = ToRegister(lir->getScopeChain());
+    Register nameTemp   = ToRegister(lir->nameTemp());
+
+    typedef bool (*pf)(JSContext *, PropertyName *, uintN, JSObject *);
+    static const VMFunction DefVarOrConstInfo =
+        FunctionInfo<pf>(DefVarOrConst);
+
+    masm.movePtr(ImmWord(lir->mir()->name()), nameTemp);
+
+    pushArg(scopeChain); // JSObject *
+    pushArg(Imm32(lir->mir()->attrs())); // uintN
+    pushArg(nameTemp); // PropertyName *
+
+    if (!callVM(DefVarOrConstInfo, lir))
+        return false;
+
+    return true;
+}
+
+bool
 CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
 {
     // The OOL path is hit if the recursion depth has been exceeded.

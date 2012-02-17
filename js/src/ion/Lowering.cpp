@@ -106,9 +106,28 @@ LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
     LCheckOverRecursed *lir = new LCheckOverRecursed(temp(LDefinition::GENERAL));
 
+    if (!add(lir))
+        return false;
     if (!assignSafepoint(lir, ins))
         return false;
-    return add(lir);
+
+    return true;
+}
+
+bool
+LIRGenerator::visitDefVar(MDefVar *ins)
+{
+    LAllocation scopeChain = useRegister(ins->scopeChain());
+    LDefVar *lir = new LDefVar(scopeChain, temp(LDefinition::GENERAL));
+
+    lir->setMir(ins);
+
+    if (!add(lir))
+        return false;
+    if (!assignSafepoint(lir, ins))
+        return false;
+
+    return true;
 }
 
 bool

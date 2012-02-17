@@ -80,6 +80,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallee(LCallee *lir);
     bool visitStart(LStart *lir);
     bool visitReturn(LReturn *ret);
+    bool visitDefVar(LDefVar *lir);
     bool visitOsrEntry(LOsrEntry *lir);
     bool visitOsrScopeChain(LOsrScopeChain *lir);
     bool visitStackArg(LStackArg *lir);
