@@ -1546,7 +1546,12 @@ void
 nsGfxScrollFrameInner::ScrollTo(nsPoint aScrollPosition,
                                 nsIScrollableFrame::ScrollMode aMode)
 {
-  mDestination = ClampScrollPosition(aScrollPosition);
+  nsSubDocumentFrame* subdocFrame = static_cast<nsSubDocumentFrame*>
+    (nsLayoutUtils::GetCrossDocParentFrame(mOuter->PresContext()->PresShell()->GetRootFrame()));
+  if (!subdocFrame || subdocFrame->ShouldClampScrollPosition())
+    mDestination = ClampScrollPosition(aScrollPosition);
+  else
+    mDestination = aScrollPosition;
 
   if (aMode == nsIScrollableFrame::INSTANT) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
@@ -1854,7 +1859,14 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
   nsPresContext* presContext = mOuter->PresContext();
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsIntPoint ptDevPx;
-  nsPoint pt = ClampAndRestrictToDevPixels(aPt, &ptDevPx);
+  nsPoint pt;
+
+  nsSubDocumentFrame* subdocFrame = static_cast<nsSubDocumentFrame*>
+    (nsLayoutUtils::GetCrossDocParentFrame(presContext->PresShell()->GetRootFrame()));
+  if (!subdocFrame || subdocFrame->ShouldClampScrollPosition())
+    pt = ClampAndRestrictToDevPixels(aPt, &ptDevPx);
+  else
+    pt = aPt;
 
   nsPoint curPos = GetScrollPosition();
   if (pt == curPos) {
