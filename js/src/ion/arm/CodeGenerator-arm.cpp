@@ -387,7 +387,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
         if (mul->canBeNegativeZero() && constant <= 0) {
             Assembler::Condition bailoutCond = (constant == 0) ? Assembler::LessThan : Assembler::Equal;
             masm.ma_cmp(ToRegister(lhs), Imm32(0));
-            if (bailoutIf(bailoutCond, ins->snapshot()))
+            if (!bailoutIf(bailoutCond, ins->snapshot()))
                     return false;
         }
         // TODO: move these to ma_mul.
