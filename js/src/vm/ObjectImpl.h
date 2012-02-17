@@ -169,6 +169,8 @@ class ObjectImpl : public gc::Cell
                           "shadow placeholder must match actual elements");
     }
 
+    JSObject * asObjectPtr() { return reinterpret_cast<JSObject *>(this); }
+
   protected:
     friend struct GCMarker;
     friend struct Shape;
@@ -256,6 +258,13 @@ class ObjectImpl : public gc::Cell
     ObjectElements * getElementsHeader() const {
         return ObjectElements::fromElements(elements);
     }
+
+    /* Write barrier support. */
+    static inline void readBarrier(ObjectImpl *obj);
+    static inline void writeBarrierPre(ObjectImpl *obj);
+    static inline void writeBarrierPost(ObjectImpl *obj, void *addr);
+    inline void privateWriteBarrierPre(void **oldval);
+    inline void privateWriteBarrierPost(void **oldval);
 
     /* JIT Accessors */
     static size_t offsetOfShape() { return offsetof(ObjectImpl, shape_); }
