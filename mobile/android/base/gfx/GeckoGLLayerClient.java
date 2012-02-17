@@ -174,7 +174,7 @@ public class GeckoGLLayerClient extends GeckoLayerClient
         GeckoAppShell.sendEventToGecko(event);
     }
 
-    /** For Gecko to use. */
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public ViewTransform getViewTransform() {
         Log.e(LOGTAG, "### getViewTransform()");
 
@@ -216,7 +216,7 @@ public class GeckoGLLayerClient extends GeckoLayerClient
         renderRequested();
     }
 
-    /** For Gecko to use. */
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public LayerRenderer.Frame createFrame() {
         // Create the shaders and textures if necessary.
         if (!mLayerRendererInitialized) {
@@ -230,12 +230,12 @@ public class GeckoGLLayerClient extends GeckoLayerClient
         return mLayerRenderer.createFrame(pageContext, screenContext);
     }
 
-    /** For Gecko to use. */
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public void activateProgram() {
         mLayerRenderer.activateProgram();
     }
 
-    /** For Gecko to use. */
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public void deactivateProgram() {
         mLayerRenderer.deactivateProgram();
     }
