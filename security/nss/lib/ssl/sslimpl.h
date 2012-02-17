@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.93 2012/02/11 12:58:47 kaie%kuix.de Exp $ */
+/* $Id: sslimpl.h,v 1.94 2012/02/15 21:52:08 kaie%kuix.de Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1359,7 +1359,7 @@ extern void ssl_FreeSocket(struct sslSocketStr *ssl);
 extern SECStatus SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level,
 				SSL3AlertDescription desc);
 
-extern SECStatus ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode status);
+extern SECStatus ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode error);
 
 /*
  * for dealing with SSL 3.0 clients sending SSL 2.0 format hellos
