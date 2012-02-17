@@ -40,7 +40,7 @@ diff -ru a/csu/Makefile b/csu/Makefile
 diff -ru a/elf/Makefile b/elf/Makefile
 --- a/elf/Makefile	2008-10-31 16:35:11.000000000 -0400
 +++ b/elf/Makefile	2012-02-16 12:20:00.038593752 -0500
-@@ -295,20 +295,13 @@
+@@ -295,18 +295,11 @@
  z-now-yes = -Wl,-z,now
  
  $(objpfx)ld.so: $(objpfx)librtld.os $(ld-map)
@@ -58,12 +58,9 @@ diff -ru a/elf/Makefile b/elf/Makefile
 -	rm -f $@.lds
 +		  -Wl,-soname=$(rtld-installed-name)			\
 +		  -Wl,-defsym=_begin=0
- 	readelf -s $@ \
--	  | awk '($$7 ~ /^UND(|EF)$$/ && $$1 != "0:" && $$4 != "REGISTER") { print; p=1 } END { exit p != 0 }'
-+	  | $(AWK) '($$7 ~ /^UND(|EF)$$/ && $$1 != "0:" && $$4 != "REGISTER") { print; p=1 } END { exit p != 0 }'
+ 	nm -u $@ | cmp -s /dev/null -
  
  # interp.c exists just to get this string into the libraries.
- CFLAGS-interp.c = -D'RUNTIME_LINKER="$(slibdir)/$(rtld-installed-name)"' \
 diff -ru a/Makerules b/Makerules
 --- a/Makerules	2011-01-17 23:34:07.000000000 -0500
 +++ b/Makerules	2012-01-30 08:47:56.565068903 -0500
