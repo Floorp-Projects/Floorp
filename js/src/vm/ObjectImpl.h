@@ -259,6 +259,26 @@ class ObjectImpl : public gc::Cell
         return ObjectElements::fromElements(elements);
     }
 
+    inline HeapValue * fixedElements() const {
+        MOZ_STATIC_ASSERT(2 * sizeof(Value) == sizeof(ObjectElements),
+                          "when elements are stored inline, the first two "
+                          "slots will hold the ObjectElements header");
+        return &fixedSlots()[2];
+    }
+
+    void setFixedElements() { this->elements = fixedElements(); }
+
+    inline bool hasDynamicElements() const {
+        /*
+         * Note: for objects with zero fixed slots this could potentially give
+         * a spurious 'true' result, if the end of this object is exactly
+         * aligned with the end of its arena and dynamic slots are allocated
+         * immediately afterwards. Such cases cannot occur for dense arrays
+         * (which have at least two fixed slots) and can only result in a leak.
+         */
+        return elements != emptyObjectElements && elements != fixedElements();
+    }
+
     /* Write barrier support. */
     static inline void readBarrier(ObjectImpl *obj);
     static inline void writeBarrierPre(ObjectImpl *obj);
