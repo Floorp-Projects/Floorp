@@ -750,7 +750,16 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix * *aCTM)
 NS_IMETHODIMP
 nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **aCTM)
 {
-  gfxMatrix m = nsSVGUtils::GetCTM(this, true);
+  gfxMatrix m;
+  if (IsRoot()) {
+    // Consistency with other elements would have us return only the
+    // eFromUserSpace transforms, but this is what we've been doing for
+    // a while, and it keeps us consistent with WebKit and Opera (if not
+    // really with the ambiguous spec).
+    m = PrependLocalTransformsTo(m);
+  } else {
+    m = nsSVGUtils::GetCTM(this, true);
+  }
   *aCTM = m.IsSingular() ? nsnull : new DOMSVGMatrix(m);
   NS_IF_ADDREF(*aCTM);
   return NS_OK;
