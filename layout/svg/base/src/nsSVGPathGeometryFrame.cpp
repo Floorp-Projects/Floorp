@@ -217,7 +217,7 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
     nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIgnoreStrokeIfNone |
     nsSVGUtils::eBBoxIncludeMarkers);
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent,
-            PresContext()->AppUnitsPerDevPixel());
+            PresContext()->AppUnitsPerCSSPixel());
 
   // See bug 614732 comment 32.
   mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
