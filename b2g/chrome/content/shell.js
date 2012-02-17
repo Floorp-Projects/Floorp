@@ -26,10 +26,17 @@ XPCOMUtils.defineLazyGetter(Services, 'ss', function() {
   return Cc['@mozilla.org/content/style-sheet-service;1']
            .getService(Ci.nsIStyleSheetService);
 });
+
 XPCOMUtils.defineLazyGetter(Services, 'idle', function() {
   return Cc['@mozilla.org/widget/idleservice;1']
            .getService(Ci.nsIIdleService);
 });
+
+XPCOMUtils.defineLazyServiceGetter(Services, 'fm', function(){
+  return Cc['@mozilla.org/focus-managr;1']
+           .getService(Ci.nsFocusManager);
+});
+
 
 // In order to use http:// scheme instead of file:// scheme
 // (that is much more restricted) the following code kick-off
@@ -106,6 +113,7 @@ var shell = {
     window.addEventListener('keypress', this);
     window.addEventListener('MozApplicationManifest', this);
     window.addEventListener("AppCommand", this);
+    window.addEventListener('mozfullscreenchange', this);
     this.contentBrowser.addEventListener('load', this, true);
 
     try {
@@ -243,6 +251,14 @@ var shell = {
             this.changeVolume(-1);
             break;
         }
+        break;
+
+      case 'mozfullscreenchange':
+        // When the screen goes fullscreen make sure to set the focus to the
+        // main window so noboby can prevent the ESC key to get out fullscreen
+        // mode
+        if (document.mozFullScreen)
+          Services.fm.focusedWindow = window;
         break;
       case 'load':
         this.contentBrowser.removeEventListener('load', this, true);
@@ -410,3 +426,4 @@ Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
   dump('Opened socket on ' + serverSocket.port + '\n');
   serverSocket.asyncListen(listener);
 })();
+
