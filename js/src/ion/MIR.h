@@ -1025,9 +1025,12 @@ class MCall
   protected:
     // True if the call is for JSOP_NEW.
     bool construct_;
+    // Monomorphic cache of single target from TI, or NULL.
+    JSFunction *target_;
 
     MCall(bool construct)
-      : construct_(construct)
+      : construct_(construct),
+        target_(NULL)
     {
         setResultType(MIRType_Value);
     }
@@ -1056,6 +1059,14 @@ class MCall
 
     MDefinition *getArg(uint32 index) const {
         return getOperand(NumNonArgumentOperands + index);
+    }
+
+    // For TI-informed monomorphic callsites.
+    void setSingleTarget(JSFunction *target) {
+        target_ = target;
+    }
+    JSFunction *getSingleTarget() const {
+        return target_;
     }
 
     bool isConstruct() const {
