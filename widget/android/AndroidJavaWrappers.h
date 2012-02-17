@@ -160,7 +160,7 @@ public:
     void Init(jobject jobj);
 
     bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight,
-                      const nsAString &aMetadata, bool aHasDirectTexture);
+                      nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture);
     void EndDrawing(const nsIntRect &aRect);
 
 protected:
