@@ -93,8 +93,10 @@
   ];
   let fakeMultiReporters = [
     { name: "fake1",
-      collectReports: function(cbObj, closure) {
-        function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP, aK, aU, aA) {
+          aCbObj.callback("", aP, aK, aU, aA, "(desc)", aClosure);
+        }
         f("explicit/c/d",     NONHEAP, BYTES,  13 * MB),
         f("explicit/c/d",     NONHEAP, BYTES,  10 * MB), // dup
         f("explicit/c/other", NONHEAP, BYTES,  77 * MB),
@@ -107,8 +109,10 @@
       explicitNonHeap: (100 + 13 + 10)*MB + (499 + 100)*KB
     },
     { name: "fake2",
-      collectReports: function(cbObj, closure) {
-        function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP, aK, aU, aA) {
+          aCbObj.callback("", aP, aK, aU, aA, "(desc)", aClosure);
+        }
         f("other3",           OTHER,   COUNT, 777);
         f("other2",           OTHER,   BYTES, 222 * MB);
         f("perc2",            OTHER,   PERCENTAGE, 10000);
@@ -117,9 +121,11 @@
       explicitNonHeap: 0
     },
     { name: "smaps",
-      collectReports: function(cbObj, closure) {
+      collectReports: function(aCbObj, aClosure) {
         // The amounts are given in pages, so multiply here by 4kb.
-        function f(p, a) { cbObj.callback("", p, NONHEAP, BYTES, a * 4 * KB, "(desc)", closure); }
+        function f(aP, aA) {
+          aCbObj.callback("", aP, NONHEAP, BYTES, aA * 4 * KB, "(desc)", aClosure);
+        }
         f("smaps/vsize/a",     24);
         f("smaps/swap/a",       1);
         f("smaps/swap/a",       2);
@@ -210,11 +216,13 @@
     // skip the "smaps" multi-reporter in the parent process won't cause
     // these to be skipped;  the fall-back skipping will be hit instead.
     { name: "smaps",
-      collectReports: function(cbObj, closure) {
+      collectReports: function(aCbObj, aClosure) {
         // The amounts are given in pages, so multiply here by 4kb.
-        function f(p, a) { cbObj.callback("2nd", p, NONHEAP, BYTES, a * 4 * KB, "(desc)", closure); }
-        f("smaps/vsize/a",     24);
-        f("smaps/vsize/b",     24);
+        function f(aP, aA) {
+          aCbObj.callback("2nd", aP, NONHEAP, BYTES, aA * 4 * KB, "(desc)", aClosure);
+        }
+        f("smaps/vsize/a", 24);
+        f("smaps/vsize/b", 24);
       },
       explicitNonHeap: 0
     }
@@ -554,31 +562,18 @@ Other Measurements\n\
     SimpleTest.finish();
   }
 
-  let gHaveDumped = false;
-
-  function checkClipboard(actual, expected) {
-    if (actual != expected) {
-      if (!gHaveDumped) {
-        dump("******EXPECTED******\n");
-        dump(expected);
-        dump("*******ACTUAL*******\n");
-        dump(actual);
-        dump("********************\n");
-        gHaveDumped = true;
-      }
-      return false;
-    }
-    return true;
-  }
-
   // Cut+paste the entire page and check that the cut text matches what we
   // expect.  This tests the output in general and also that the cutting and
   // pasting works as expected.
-  function test(aFrame, aExpectedText, aNext) {
+  function test(aFrame, aExpected, aNext) {
     SimpleTest.executeSoon(function() {
+      let mostRecentActual;
       document.getElementById(aFrame).focus();
       SimpleTest.waitForClipboard(
-        function(actual) { return checkClipboard(actual, aExpectedText) },
+        function(aActual) {
+          mostRecentActual = aActual;
+          return aActual === aExpected;
+        },
         function() {
           synthesizeKey("A", {accelKey: true});
           synthesizeKey("C", {accelKey: true});
@@ -586,13 +581,18 @@ Other Measurements\n\
         aNext,
         function() {
           ok(false, "pasted text doesn't match for " + aFrame);
+          dump("******EXPECTED******\n");
+          dump(aExpected);
+          dump("*******ACTUAL*******\n");
+          dump(mostRecentActual);
+          dump("********************\n");
           finish();
         }
       );
     });
   }
 
-  addLoadEvent(function() {
+  SimpleTest.waitForFocus(function() {
     test(
       "amFrame",
       amExpectedText,
