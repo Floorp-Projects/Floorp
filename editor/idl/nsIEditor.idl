@@ -55,7 +55,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(20ee0b70-c528-11e0-9572-0800200c9a66)]
+[scriptable, uuid(B53516F8-270D-4DCF-85B2-01047650CEA0)]
 
 interface nsIEditor  : nsISupports
 {
@@ -361,19 +361,7 @@ interface nsIEditor  : nsISupports
   void endOfDocument();
 
    /* ------------ Drag/Drop methods -------------- */
-  
-   /** 
-    * canDrag decides if a drag should be started
-    * (for example, based on the current selection and mousepoint).
-    */
-  boolean canDrag(in nsIDOMEvent aEvent);
- 
-   /** 
-    * doDrag transfers the relevant data (as appropriate)
-    * to a transferable so it can later be dropped.
-    */
-  void doDrag(in nsIDOMEvent aEvent);
- 
+
    /** 
     * insertFromDrop looks for a dragsession and inserts the
     * relevant data in response to a drop.

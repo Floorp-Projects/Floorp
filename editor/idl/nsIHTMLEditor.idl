@@ -52,7 +52,7 @@ interface nsIContentFilter;
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
 
 %}
-[scriptable, uuid(68890CBB-999D-42D0-A15C-5D534CF25C00)]
+[scriptable, uuid(77271525-543F-4432-8BD6-B7686E562D9C)]
 
 interface nsIHTMLEditor : nsISupports
 {
@@ -200,18 +200,6 @@ interface nsIHTMLEditor : nsISupports
   void decreaseFontSize();
 
   /* ------------ Drag/Drop methods -------------- */
-
-  /** 
-   * canDrag decides if a drag should be started
-   * (for example, based on the current selection and mousepoint).
-   */
-  boolean canDrag(in nsIDOMEvent aEvent);
-
-  /** 
-   * doDrag transfers the relevant data (as appropriate)
-   * to a transferable so it can later be dropped.
-   */
-  void doDrag(in nsIDOMEvent aEvent);
 
   /** 
    * insertFromDrop looks for a dragsession and inserts the
