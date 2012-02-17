@@ -495,7 +495,7 @@ nsSVGForeignObjectFrame::GetCanvasTM()
     nsSVGForeignObjectElement *content =
       static_cast<nsSVGForeignObjectElement*>(mContent);
 
-    gfxMatrix tm = content->PrependLocalTransformTo(parent->GetCanvasTM());
+    gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
 
     mCanvasTM = new gfxMatrix(tm);
   }

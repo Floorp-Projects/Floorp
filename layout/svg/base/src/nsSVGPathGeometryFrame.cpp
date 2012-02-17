@@ -384,7 +384,7 @@ nsSVGPathGeometryFrame::GetCanvasTM()
   nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
   nsSVGGraphicElement *content = static_cast<nsSVGGraphicElement*>(mContent);
 
-  return content->PrependLocalTransformTo(parent->GetCanvasTM());
+  return content->PrependLocalTransformsTo(parent->GetCanvasTM());
 }
 
 //----------------------------------------------------------------------
