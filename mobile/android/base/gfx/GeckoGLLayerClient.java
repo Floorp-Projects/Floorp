@@ -60,11 +60,12 @@ public class GeckoGLLayerClient extends GeckoLayerClient
     }
 
     @Override
-    public boolean beginDrawing(int width, int height, int tileWidth, int tileHeight,
-                                String metadata, boolean hasDirectTexture) {
-        if (!super.beginDrawing(width, height, tileWidth, tileHeight, metadata,
-                                hasDirectTexture)) {
-            return false;
+    public Rect beginDrawing(int width, int height, int tileWidth, int tileHeight,
+                             String metadata, boolean hasDirectTexture) {
+        Rect bufferRect = super.beginDrawing(width, height, tileWidth, tileHeight,
+                                             metadata, hasDirectTexture);
+        if (bufferRect == null) {
+            return null;
         }
 
         // Be sure to adjust the buffer size; if it's not at least as large as the viewport size,
@@ -74,7 +75,7 @@ public class GeckoGLLayerClient extends GeckoLayerClient
             mBufferSize = new IntSize(width, height);
         }
 
-        return true;
+        return bufferRect;
     }
 
     @Override

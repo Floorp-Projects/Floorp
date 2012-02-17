@@ -356,7 +356,7 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
 
-    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Z");
+    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Landroid/graphics/Rect;");
     jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
 #endif
 }
@@ -372,7 +372,7 @@ AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
 
     jLockBufferMethod = getMethod("lockBuffer", "()Ljava/nio/ByteBuffer;");
     jUnlockBufferMethod = getMethod("unlockBuffer", "()V");
-    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Z");
+    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Landroid/graphics/Rect;");
     jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
 #endif
 }
@@ -782,7 +782,7 @@ AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
 
 bool
 AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight,
-                                      const nsAString &aMetadata, bool aHasDirectTexture)
+                                      nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture)
 {
     NS_ASSERTION(!isNull(), "BeginDrawing() called on null layer client!");
     JNIEnv *env = AndroidBridge::GetJNIEnv();
@@ -791,8 +791,20 @@ AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, int aTileWidth, i
 
     AndroidBridge::AutoLocalJNIFrame(env, 1);
     jstring jMetadata = env->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
-    return env->CallBooleanMethod(wrapped_obj, jBeginDrawingMethod, aWidth, aHeight, aTileWidth,
-                                  aTileHeight, jMetadata, aHasDirectTexture);
+
+    jobject rectObject = env->CallObjectMethod(wrapped_obj, jBeginDrawingMethod,
+                                               aWidth, aHeight, aTileWidth, aTileHeight,
+                                               jMetadata, aHasDirectTexture);
+
+    if (rectObject == nsnull)
+        return false;
+
+    AndroidRect rect(env, rectObject);
+    nsIntRect newDirtyRect = aDirtyRect.Intersect(nsIntRect(rect.Top(), rect.Left(),
+                                                            rect.Width(), rect.Height()));
+    aDirtyRect.SetRect(newDirtyRect.x, newDirtyRect.y, newDirtyRect.width, newDirtyRect.height);
+
+    return true;
 }
 
 void

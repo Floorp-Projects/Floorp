@@ -571,7 +571,7 @@ abstract public class GeckoApp
     public class SessionSnapshotRunnable implements Runnable {
         Tab mThumbnailTab;
         SessionSnapshotRunnable(Tab thumbnailTab) {
-                mThumbnailTab = thumbnailTab;
+            mThumbnailTab = thumbnailTab;
         }
 
         public void run() {
