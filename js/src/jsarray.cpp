@@ -1193,7 +1193,7 @@ array_trace(JSTracer *trc, JSObject *obj)
     JS_ASSERT(obj->isDenseArray());
 
     uint32_t initLength = obj->getDenseArrayInitializedLength();
-    MarkSlotRange(trc, initLength, obj->getDenseArrayElements(), "element");
+    MarkArraySlots(trc, initLength, obj->getDenseArrayElements(), "element");
 }
 
 static JSBool

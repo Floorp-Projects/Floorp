@@ -56,8 +56,11 @@ JSString::writeBarrierPre(JSString *str)
         return;
 
     JSCompartment *comp = str->compartment();
-    if (comp->needsBarrier())
-        MarkStringUnbarriered(comp->barrierTracer(), str, "write barrier");
+    if (comp->needsBarrier()) {
+        JSString *tmp = str;
+        MarkStringUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        JS_ASSERT(tmp == str);
+    }
 #endif
 }
 
@@ -81,8 +84,11 @@ JSString::readBarrier(JSString *str)
 {
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = str->compartment();
-    if (comp->needsBarrier())
-        MarkStringUnbarriered(comp->barrierTracer(), str, "read barrier");
+    if (comp->needsBarrier()) {
+        JSString *tmp = str;
+        MarkStringUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
+        JS_ASSERT(tmp == str);
+    }
 #endif
 }
 
@@ -119,6 +125,13 @@ JSRope::new_(JSContext *cx, JSString *left, JSString *right, size_t length)
     return str;
 }
 
+inline void
+JSRope::markChildren(JSTracer *trc)
+{
+    js::gc::MarkStringUnbarriered(trc, &d.u1.left, "left child");
+    js::gc::MarkStringUnbarriered(trc, &d.s.u2.right, "right child");
+}
+
 JS_ALWAYS_INLINE void
 JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length)
 {
@@ -144,6 +157,12 @@ JSDependentString::new_(JSContext *cx, JSLinearString *base, const jschar *chars
         return NULL;
     str->init(base, chars, length);
     return str;
+}
+
+inline void
+JSDependentString::markChildren(JSTracer *trc)
+{
+    js::gc::MarkStringUnbarriered(trc, &d.s.u2.base, "base");
 }
 
 inline js::PropertyName *

@@ -394,8 +394,11 @@ Shape::writeBarrierPre(const js::Shape *shape)
         return;
 
     JSCompartment *comp = shape->compartment();
-    if (comp->needsBarrier())
-        MarkShapeUnbarriered(comp->barrierTracer(), const_cast<Shape *>(shape), "write barrier");
+    if (comp->needsBarrier()) {
+        Shape *tmp = const_cast<Shape *>(shape);
+        MarkShapeUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        JS_ASSERT(tmp == shape);
+    }
 #endif
 }
 
@@ -409,9 +412,21 @@ Shape::readBarrier(const Shape *shape)
 {
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = shape->compartment();
-    if (comp->needsBarrier())
-        MarkShapeUnbarriered(comp->barrierTracer(), const_cast<Shape *>(shape), "read barrier");
+    if (comp->needsBarrier()) {
+        Shape *tmp = const_cast<Shape *>(shape);
+        MarkShapeUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
+        JS_ASSERT(tmp == shape);
+    }
 #endif
+}
+
+inline void
+Shape::markChildren(JSTracer *trc)
+{
+    MarkBaseShape(trc, &base_, "base");
+    gc::MarkId(trc, &propidRef(), "propid");
+    if (parent)
+        MarkShape(trc, &parent, "parent");
 }
 
 inline void
@@ -422,8 +437,11 @@ BaseShape::writeBarrierPre(BaseShape *base)
         return;
 
     JSCompartment *comp = base->compartment();
-    if (comp->needsBarrier())
-        MarkBaseShapeUnbarriered(comp->barrierTracer(), base, "write barrier");
+    if (comp->needsBarrier()) {
+        BaseShape *tmp = base;
+        MarkBaseShapeUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        JS_ASSERT(tmp == base);
+    }
 #endif
 }
 
@@ -437,9 +455,28 @@ BaseShape::readBarrier(BaseShape *base)
 {
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = base->compartment();
-    if (comp->needsBarrier())
-        MarkBaseShapeUnbarriered(comp->barrierTracer(), base, "read barrier");
+    if (comp->needsBarrier()) {
+        BaseShape *tmp = base;
+        MarkBaseShapeUnbarriered(comp->barrierTracer(), &tmp, "read barrier");
+        JS_ASSERT(tmp == base);
+    }
 #endif
+}
+
+inline void
+BaseShape::markChildren(JSTracer *trc)
+{
+    if (hasGetterObject())
+        MarkObjectUnbarriered(trc, &getterObj, "getter");
+
+    if (hasSetterObject())
+        MarkObjectUnbarriered(trc, &setterObj, "setter");
+
+    if (isOwned())
+        MarkBaseShape(trc, &unowned_, "base");
+
+    if (parent)
+        MarkObject(trc, &parent, "parent");
 }
 
 } /* namespace js */
