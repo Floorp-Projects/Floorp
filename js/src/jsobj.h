@@ -1156,12 +1156,6 @@ struct JSObject : public js::ObjectImpl
 
     inline void initArrayClass();
 
-    static inline void writeBarrierPre(JSObject *obj);
-    static inline void writeBarrierPost(JSObject *obj, void *addr);
-    static inline void readBarrier(JSObject *obj);
-    inline void privateWriteBarrierPre(void **oldval);
-    inline void privateWriteBarrierPost(void **oldval);
-
     /*
      * In addition to the generic object interface provided by JSObject,
      * specific types of objects may provide additional operations. To access,

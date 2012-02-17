@@ -11,7 +11,9 @@
 #include "mozilla/Assertions.h"
 
 #include "jscell.h"
+#include "jscompartment.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 
 #include "js/TemplateLib.h"
 
@@ -77,6 +79,59 @@ inline size_t
 js::ObjectImpl::sizeOfThis() const
 {
     return arenaHeader()->getThingSize();
+}
+
+/* static */ inline void
+js::ObjectImpl::readBarrier(ObjectImpl *obj)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = obj->compartment();
+    if (comp->needsBarrier()) {
+        MOZ_ASSERT(!comp->rt->gcRunning);
+        MarkObjectUnbarriered(comp->barrierTracer(), obj->asObjectPtr(), "read barrier");
+    }
+#endif
+}
+
+inline void
+js::ObjectImpl::privateWriteBarrierPre(void **old)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = compartment();
+    if (comp->needsBarrier()) {
+        if (*old && getClass()->trace)
+            getClass()->trace(comp->barrierTracer(), this->asObjectPtr());
+    }
+#endif
+}
+
+inline void
+js::ObjectImpl::privateWriteBarrierPost(void **old)
+{
+}
+
+/* static */ inline void
+js::ObjectImpl::writeBarrierPre(ObjectImpl *obj)
+{
+#ifdef JSGC_INCREMENTAL
+    /*
+     * This would normally be a null test, but TypeScript::global uses 0x1 as a
+     * special value.
+     */
+    if (uintptr_t(obj) < 32)
+        return;
+
+    JSCompartment *comp = obj->compartment();
+    if (comp->needsBarrier()) {
+        MOZ_ASSERT(!comp->rt->gcRunning);
+        MarkObjectUnbarriered(comp->barrierTracer(), obj->asObjectPtr(), "write barrier");
+    }
+#endif
+}
+
+/* static */ inline void
+js::ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *addr)
+{
 }
 
 inline bool
