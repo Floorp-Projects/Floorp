@@ -552,10 +552,11 @@ OPDEF(JSOP_LENGTH,        217, "length",       NULL,  3,  1,  1, 18,  JOF_ATOM|J
  */
 OPDEF(JSOP_HOLE,          218, "hole",         NULL,  1,  0,  1,  0,  JOF_BYTE)
 
+OPDEF(JSOP_UNUSED17,      219,"unused17",      NULL,  1,  0,  0,  0,  JOF_BYTE)
+
 /*
- * Variants of JSOP_{DEF{,LOCAL}FUN,LAMBDA} optimized for the flat closure case.
+ * Variants of JSOP_{DEFLOCALFUN,LAMBDA} optimized for the flat closure case.
  */
-OPDEF(JSOP_DEFFUN_FC,     219,"deffun_fc",     NULL,  5,  0,  0,  0,  JOF_OBJECT|JOF_DECLARING)
 OPDEF(JSOP_DEFLOCALFUN_FC,220,"deflocalfun_fc",NULL,  7,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING|JOF_TMPSLOT)
 OPDEF(JSOP_LAMBDA_FC,     221,"lambda_fc",     NULL,  5,  0,  1, 19,  JOF_OBJECT)
 

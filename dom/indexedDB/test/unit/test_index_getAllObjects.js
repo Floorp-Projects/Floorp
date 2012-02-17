@@ -108,6 +108,66 @@ function testSteps()
     }
   }
 
+  request = objectStore.index("height").getAll(65, 0);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+
+  is(event.target.result instanceof Array, true, "Got an array object");
+  is(event.target.result.length, 2, "Correct length");
+
+  for (let i in event.target.result) {
+    let result = event.target.result[i];
+    let testObj = objectStoreDataHeightSort[parseInt(i) + 3].value;
+
+    is(result.name, testObj.name, "Correct name");
+    is(result.height, testObj.height, "Correct height");
+
+    if (testObj.hasOwnProperty("weight")) {
+      is(result.weight, testObj.weight, "Correct weight");
+    }
+  }
+
+  request = objectStore.index("height").getAll(65, null);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+
+  is(event.target.result instanceof Array, true, "Got an array object");
+  is(event.target.result.length, 2, "Correct length");
+
+  for (let i in event.target.result) {
+    let result = event.target.result[i];
+    let testObj = objectStoreDataHeightSort[parseInt(i) + 3].value;
+
+    is(result.name, testObj.name, "Correct name");
+    is(result.height, testObj.height, "Correct height");
+
+    if (testObj.hasOwnProperty("weight")) {
+      is(result.weight, testObj.weight, "Correct weight");
+    }
+  }
+
+  request = objectStore.index("height").getAll(65, undefined);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+
+  is(event.target.result instanceof Array, true, "Got an array object");
+  is(event.target.result.length, 2, "Correct length");
+
+  for (let i in event.target.result) {
+    let result = event.target.result[i];
+    let testObj = objectStoreDataHeightSort[parseInt(i) + 3].value;
+
+    is(result.name, testObj.name, "Correct name");
+    is(result.height, testObj.height, "Correct height");
+
+    if (testObj.hasOwnProperty("weight")) {
+      is(result.weight, testObj.weight, "Correct weight");
+    }
+  }
+
   request = objectStore.index("height").getAll();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;

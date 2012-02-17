@@ -111,8 +111,6 @@ private:
 
   ~DOMSVGStringList();
 
-  void DidChangeStringList(PRUint8 aAttrEnum, bool aDoSetAttr);
-
   SVGStringList &InternalList();
 
   // Strong ref to our element to keep it alive.

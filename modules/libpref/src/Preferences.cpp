@@ -87,9 +87,10 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 static nsresult openPrefFile(nsIFile* aFile);
 static nsresult pref_InitInitialObjects(void);
 static nsresult pref_LoadPrefsInDirList(const char *listId);
+static nsresult ReadExtensionPrefs(nsIFile *aFile);
 
 Preferences* Preferences::sPreferences = nsnull;
-nsIPrefBranch2* Preferences::sRootBranch = nsnull;
+nsIPrefBranch* Preferences::sRootBranch = nsnull;
 nsIPrefBranch* Preferences::sDefaultRootBranch = nsnull;
 bool Preferences::sShutdown = false;
 
@@ -454,8 +455,8 @@ Preferences::SavePrefFile(nsIFile *aFile)
   return SavePrefFileInternal(aFile);
 }
 
-nsresult
-Preferences::ReadExtensionPrefs(nsIFile *aFile)
+static nsresult
+ReadExtensionPrefs(nsIFile *aFile)
 {
   nsresult rv;
   nsCOMPtr<nsIZipReader> reader = do_CreateInstance(kZipReaderCID, &rv);
@@ -718,8 +719,6 @@ Preferences::WritePrefFile(nsIFile* aFile)
     NS_LINEBREAK
     " * To make a manual change to preferences, you can visit the URL about:config"
     NS_LINEBREAK
-    " * For more information, see http://www.mozilla.org/unix/customizing.html#prefs"
-    NS_LINEBREAK
     " */"
     NS_LINEBREAK
     NS_LINEBREAK;
@@ -940,25 +939,35 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
 {
   nsresult rv;
   nsCOMPtr<nsIProperties> dirSvc(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
-  nsCOMPtr<nsISimpleEnumerator> dirList;
+  nsCOMPtr<nsISimpleEnumerator> list;
   dirSvc->Get(listId,
               NS_GET_IID(nsISimpleEnumerator),
-              getter_AddRefs(dirList));
-  if (dirList) {
-    bool hasMore;
-    while (NS_SUCCEEDED(dirList->HasMoreElements(&hasMore)) && hasMore) {
-      nsCOMPtr<nsISupports> elem;
-      dirList->GetNext(getter_AddRefs(elem));
-      if (elem) {
-        nsCOMPtr<nsIFile> dir = do_QueryInterface(elem);
-        if (dir) {
-          // Do we care if a file provided by this process fails to load?
-          pref_LoadPrefsInDir(dir, nsnull, 0); 
-        }
-      }
-    }
+              getter_AddRefs(list));
+  if (!list)
+    return NS_OK;
+
+  bool hasMore;
+  while (NS_SUCCEEDED(list->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> elem;
+    list->GetNext(getter_AddRefs(elem));
+    if (!elem)
+      continue;
+
+    nsCOMPtr<nsIFile> path = do_QueryInterface(elem);
+    if (!path)
+      continue;
+
+    nsCAutoString leaf;
+    path->GetNativeLeafName(leaf);
+
+    // Do we care if a file provided by this process fails to load?
+    if (Substring(leaf, leaf.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi")))
+      ReadExtensionPrefs(path);
+    else
+      pref_LoadPrefsInDir(path, nsnull, 0);
   }
   return NS_OK;
 }

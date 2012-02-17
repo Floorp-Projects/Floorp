@@ -103,8 +103,10 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
         CompartmentPrivate *priv =
             (CompartmentPrivate *)JS_GetCompartmentPrivate(cx, js::GetObjectCompartment(obj));
         JSObject *wobj = nsnull;
-        if (priv && priv->waiverWrapperMap)
+        if (priv && priv->waiverWrapperMap) {
             wobj = priv->waiverWrapperMap->Find(obj);
+            xpc_UnmarkGrayObject(wobj);
+        }
 
         // No wrapper yet, make one.
         if (!wobj) {
@@ -456,7 +458,7 @@ JSObject *
 WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
 {
     JSObject *wrapperObj =
-        Wrapper::New(cx, obj, JS_GetPrototype(cx, obj), JS_GetGlobalForObject(cx, obj),
+        Wrapper::New(cx, obj, JS_GetPrototype(obj), JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper,
                      OnlyIfSubjectIsSystem>::singleton);
     return wrapperObj;

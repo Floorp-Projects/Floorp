@@ -48,9 +48,9 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXFormsDropmarkerWidgetAccessible::
-  nsXFormsDropmarkerWidgetAccessible(nsIContent *aContent,
-                                     nsIWeakReference *aShell) :
-  nsLeafAccessible(aContent, aShell)
+  nsXFormsDropmarkerWidgetAccessible(nsIContent* aContent,
+                                     nsDocAccessible* aDoc) :
+  nsLeafAccessible(aContent, aDoc)
 {
 }
 
@@ -113,8 +113,8 @@ nsXFormsDropmarkerWidgetAccessible::DoAction(PRUint8 aIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXFormsCalendarWidgetAccessible::
-nsXFormsCalendarWidgetAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessibleWrap(aContent, aShell)
+  nsXFormsCalendarWidgetAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -130,9 +130,9 @@ nsXFormsCalendarWidgetAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXFormsComboboxPopupWidgetAccessible::
-  nsXFormsComboboxPopupWidgetAccessible(nsIContent *aContent,
-                                        nsIWeakReference *aShell) :
-  nsXFormsAccessible(aContent, aShell)
+  nsXFormsComboboxPopupWidgetAccessible(nsIContent* aContent,
+                                        nsDocAccessible* aDoc) :
+  nsXFormsAccessible(aContent, aDoc)
 {
 }
 

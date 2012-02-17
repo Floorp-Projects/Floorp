@@ -457,8 +457,12 @@ LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
     if (!appended)
       continue;
 
-    for (const char *const *a = aAppendList; *a; ++a)
-      appended->AppendNative(nsDependentCString(*a));
+    nsCAutoString leaf;
+    appended->GetNativeLeafName(leaf);
+    if (!Substring(leaf, leaf.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi"))) {
+      for (const char *const *a = aAppendList; *a; ++a)
+        appended->AppendNative(nsDependentCString(*a));
+    }
 
     if (NS_SUCCEEDED(appended->Exists(&exists)) && exists)
       aDirectories.AppendObject(appended);
@@ -510,8 +514,6 @@ LoadExtensionDirectories(nsINIParser &parser,
 {
   nsresult rv;
   PRInt32 i = 0;
-  nsCOMPtr<nsIPrefService> prefs =
-    do_GetService("@mozilla.org/preferences-service;1");
   do {
     nsCAutoString buf("Extension");
     buf.AppendInt(i++);
@@ -529,15 +531,11 @@ LoadExtensionDirectories(nsINIParser &parser,
     if (NS_FAILED(rv))
       continue;
 
+    aDirectories.AppendObject(dir);
     if (Substring(path, path.Length() - 4).Equals(NS_LITERAL_CSTRING(".xpi"))) {
       XRE_AddJarManifestLocation(aType, dir);
-      if (!prefs)
-        continue;
-      mozilla::Preferences::ReadExtensionPrefs(dir);
     }
     else {
-      aDirectories.AppendObject(dir);
-
       nsCOMPtr<nsILocalFile> manifest =
         CloneAndAppend(dir, "chrome.manifest");
       XRE_AddManifestLocation(aType, manifest);
@@ -747,7 +745,8 @@ nsXREDirProvider::DoStartup()
     nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
     if (appStartup) {
       rv = appStartup->TrackStartupCrashBegin(&safeModeNecessary);
-      if (NS_FAILED(rv)) NS_WARNING("Error while beginning startup crash tracking");
+      if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
+        NS_WARNING("Error while beginning startup crash tracking");
 
       if (!gSafeMode && safeModeNecessary) {
         appStartup->RestartInSafeMode(nsIAppStartup::eForceQuit);

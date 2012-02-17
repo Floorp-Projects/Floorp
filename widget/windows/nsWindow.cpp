@@ -1273,7 +1273,8 @@ NS_METHOD nsWindow::IsVisible(bool & bState)
 // transparency. These routines are called on size and move operations.
 void nsWindow::ClearThemeRegion()
 {
-  if (nsUXThemeData::sIsVistaOrLater && !HasGlass() &&
+  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
+      !HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     SetWindowRgn(mWnd, NULL, false);
@@ -1287,7 +1288,8 @@ void nsWindow::SetThemeRegion()
   // so default constants are used for part and state. At some point we might need part and
   // state values from nsNativeThemeWin's GetThemePartAndState, but currently windows that
   // change shape based on state haven't come up.
-  if (nsUXThemeData::sIsVistaOrLater && !HasGlass() &&
+  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
+      !HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     HRGN hRgn = nsnull;
@@ -6357,7 +6359,7 @@ nsWindow::InitMouseWheelScrollData()
 
   if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0,
                               &sMouseWheelScrollChars, 0)) {
-    NS_ASSERTION(!nsUXThemeData::sIsVistaOrLater,
+    NS_ASSERTION(WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION,
                  "Failed to get SPI_GETWHEELSCROLLCHARS");
     sMouseWheelScrollChars = 1;
   } else if (sMouseWheelScrollChars > WHEEL_DELTA) {
@@ -7291,15 +7293,17 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
     }
   }
 
-  // If a plugin is not visibile, especially if it is in a background tab,
+  // If a plugin is not visible, especially if it is in a background tab,
   // it should not be able to steal keyboard focus.  This code checks whether
   // the region that the plugin is being clipped to is NULLREGION.  If it is,
   // the plugin window gets disabled.
   if(mWindowType == eWindowType_plugin) {
     if(NULLREGION == ::CombineRgn(dest, dest, dest, RGN_OR)) {
+      ::ShowWindow(mWnd, SW_HIDE);
       ::EnableWindow(mWnd, FALSE);
     } else {
       ::EnableWindow(mWnd, TRUE);
+      ::ShowWindow(mWnd, SW_SHOW);
     }
   }
   if (!::SetWindowRgn(mWnd, dest, TRUE)) {

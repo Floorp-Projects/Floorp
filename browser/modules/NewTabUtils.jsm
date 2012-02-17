@@ -172,7 +172,7 @@ PrivateBrowsingStorage.prototype = {
    * Clears the storage and removes all values.
    */
   clear: function PrivateBrowsingStorage_clear() {
-    this._data.listkeys().forEach(function (akey) {
+    this._data.listkeys().forEach(function (aKey) {
       this._data.del(aKey);
     }, this);
   }

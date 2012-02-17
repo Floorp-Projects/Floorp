@@ -1524,6 +1524,14 @@
         ]]></body>
       </method>
 
+      <method name="onPropertyChanged">
+        <parameter name="aProperties"/>
+        <body><![CDATA[
+          if (aProperties.indexOf("appDisabled") != -1)
+            this._updateState();
+        ]]></body>
+      </method>
+
       <method name="onNoUpdateAvailable">
         <body><![CDATA[
           this._showStatus("none");

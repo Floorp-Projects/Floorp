@@ -128,7 +128,7 @@ nsSVGIntegerPair::SetBaseValueString(const nsAString &aValueAsString,
 }
 
 void
-nsSVGIntegerPair::GetBaseValueString(nsAString &aValueAsString)
+nsSVGIntegerPair::GetBaseValueString(nsAString &aValueAsString) const
 {
   aValueAsString.Truncate();
   aValueAsString.AppendInt(mBaseVal[0]);
@@ -143,6 +143,11 @@ nsSVGIntegerPair::SetBaseValue(PRInt32 aValue, PairIndex aPairIndex,
                                nsSVGElement *aSVGElement)
 {
   PRUint32 index = (aPairIndex == eFirst ? 0 : 1);
+  if (mIsBaseSet && mBaseVal[index] == aValue) {
+    return;
+  }
+
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeIntegerPair(mAttrEnum);
   mBaseVal[index] = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
@@ -151,13 +156,18 @@ nsSVGIntegerPair::SetBaseValue(PRInt32 aValue, PairIndex aPairIndex,
   else {
     aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeIntegerPair(mAttrEnum, true);
+  aSVGElement->DidChangeIntegerPair(mAttrEnum, emptyOrOldValue);
 }
 
 void
 nsSVGIntegerPair::SetBaseValues(PRInt32 aValue1, PRInt32 aValue2,
                                 nsSVGElement *aSVGElement)
 {
+  if (mIsBaseSet && mBaseVal[0] == aValue1 && mBaseVal[1] == aValue2) {
+    return;
+  }
+
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeIntegerPair(mAttrEnum);
   mBaseVal[0] = aValue1;
   mBaseVal[1] = aValue2;
   mIsBaseSet = true;
@@ -168,7 +178,7 @@ nsSVGIntegerPair::SetBaseValues(PRInt32 aValue1, PRInt32 aValue2,
   else {
     aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeIntegerPair(mAttrEnum, true);
+  aSVGElement->DidChangeIntegerPair(mAttrEnum, emptyOrOldValue);
 }
 
 void

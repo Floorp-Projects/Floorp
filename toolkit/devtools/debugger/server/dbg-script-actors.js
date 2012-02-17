@@ -49,8 +49,8 @@
  * of debuggees.
  *
  * @param aHooks object
- *        An object with preNest and postNest methods that can be called when
- *        entering and exiting a nested event loop.
+ *        An object with preNest and postNest methods for calling when entering
+ *        and exiting a nested event loop.
  */
 function ThreadActor(aHooks)
 {
@@ -176,7 +176,7 @@ ThreadActor.prototype = {
       // now.
       return null;
     } catch(e) {
-      dumpn(e);
+      Cu.reportError(e);
       return { error: "notAttached", message: e.toString() };
     }
   },
@@ -286,10 +286,8 @@ ThreadActor.prototype = {
     }
 
     let location = aRequest.location;
-    // TODO: deal with actualLocation being different from the provided location
     if (!this._scripts[location.url] || location.line < 0) {
-      return { from: this.actorID,
-               error: "noScript" };
+      return { error: "noScript" };
     }
     // Fetch the list of scripts in that url.
     let scripts = this._scripts[location.url];
@@ -307,19 +305,69 @@ ThreadActor.prototype = {
         break;
       }
     }
+
     if (!script) {
-      return { from: this.actorID,
-               error: "noScript" };
+      return { error: "noScript" };
     }
+
+    script = this._getInnermostContainer(script, location.line);
     let bpActor = new BreakpointActor(script, this);
     this.breakpointActorPool.addActor(bpActor);
-    var offsets = script.getLineOffsets(location.line);
-    for (var i = 0; i < offsets.length; i++) {
+
+    let offsets = script.getLineOffsets(location.line);
+    let codeFound = false;
+    for (let i = 0; i < offsets.length; i++) {
       script.setBreakpoint(offsets[i], bpActor);
+      codeFound = true;
     }
-    let packet = { from: this.actorID,
-                   actor: bpActor.actorID };
-    return packet;
+
+    let actualLocation;
+    if (offsets.length == 0) {
+      // No code at that line in any script, skipping forward.
+      let lines = script.getAllOffsets();
+      for (let line = location.line; line < lines.length; ++line) {
+        if (lines[line]) {
+          for (let i = 0; i < lines[line].length; i++) {
+            script.setBreakpoint(lines[line][i], bpActor);
+            codeFound = true;
+          }
+          actualLocation = location;
+          actualLocation.line = line;
+          break;
+        }
+      }
+    }
+    if (!codeFound) {
+      bpActor.onDelete();
+      return  { error: "noCodeAtLineColumn" };
+    }
+
+    return { actor: bpActor.actorID, actualLocation: actualLocation };
+  },
+
+  /**
+   * Get the innermost script that contains this line, by looking through child
+   * scripts of the supplied script.
+   *
+   * @param aScript Debugger.Script
+   *        The source script.
+   * @param aLine number
+   *        The line number.
+   */
+  _getInnermostContainer: function TA__getInnermostContainer(aScript, aLine) {
+    let children = aScript.getChildScripts();
+    if (children.length > 0) {
+      for (let i = 0; i < children.length; i++) {
+        let child = children[i];
+        // Stop when the first script that contains this location is found.
+        if (child.startLine <= aLine &&
+            child.startLine + child.lineCount > aLine) {
+          return this._getInnermostContainer(child, aLine);
+        }
+      }
+    }
+    // Location not found in children, this is the innermost containing script.
+    return aScript;
   },
 
   /**
@@ -344,6 +392,46 @@ ThreadActor.prototype = {
     let packet = { from: this.actorID,
                    scripts: scripts };
     return packet;
+  },
+
+  /**
+   * Handle a protocol request to pause the debuggee.
+   */
+  onInterrupt: function TA_onScripts(aRequest) {
+    if (this.state == "exited") {
+      return { type: "exited" };
+    } else if (this.state == "paused") {
+      // TODO: return the actual reason for the existing pause.
+      return { type: "paused", why: { type: "alreadyPaused" } };
+    } else if (this.state != "running") {
+      return { error: "wrongState",
+               message: "Received interrupt request in " + this.state +
+                        " state." };
+    }
+
+    try {
+      // Put ourselves in the paused state.
+      let packet = this._paused();
+      if (!packet) {
+        return { error: "notInterrupted" };
+      }
+      packet.why = { type: "interrupted" };
+
+      // Send the response to the interrupt request now (rather than
+      // returning it), because we're going to start a nested event loop
+      // here.
+      this.conn.send(packet);
+
+      // Start a nested event loop.
+      this._nest();
+
+      // We already sent a response to this request, don't send one
+      // now.
+      return null;
+    } catch(e) {
+      Cu.reportError(e);
+      return { error: "notInterrupted", message: e.toString() };
+    }
   },
 
   /**
@@ -626,7 +714,8 @@ ThreadActor.prototype = {
       this.conn.send(packet);
       return this._nest();
     } catch(e) {
-      dumpn("Got an exception during onDebuggerStatement: " + e + ': ' + e.stack);
+      Cu.reportError("Got an exception during onDebuggerStatement: " + e +
+                     ": " + e.stack);
       return undefined;
     }
   },
@@ -645,10 +734,6 @@ ThreadActor.prototype = {
    *        The function object that the ew code is part of.
    */
   onNewScript: function TA_onNewScript(aScript, aFunction) {
-    dumpn("Got a new script:" + aScript + ", url: " + aScript.url +
-          ", startLine: " + aScript.startLine + ", lineCount: " +
-          aScript.lineCount + ", strictMode: " + aScript.strictMode +
-          ", function: " + aFunction);
     // Use a sparse array for storing the scripts for each URL in order to
     // optimize retrieval. XXX: in case this is not fast enough for very large
     // files with too many scripts, we could sort the hash of script locations
@@ -670,6 +755,7 @@ ThreadActor.prototype.requestTypes = {
   "resume": ThreadActor.prototype.onResume,
   "clientEvaluate": ThreadActor.prototype.onClientEvaluate,
   "frames": ThreadActor.prototype.onFrames,
+  "interrupt": ThreadActor.prototype.onInterrupt,
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "setBreakpoint": ThreadActor.prototype.onSetBreakpoint,
   "scripts": ThreadActor.prototype.onScripts
@@ -1009,6 +1095,10 @@ FrameActor.prototype = {
     grip.environment = envActor ? envActor.grip() : envActor;
     grip["this"] = this.threadActor.createValueGrip(this.frame["this"]);
     grip.arguments = this._args();
+    if (this.frame.script) {
+      grip.where = { url: this.frame.script.url,
+                     line: this.frame.script.getOffsetLine(this.frame.offset) };
+    }
 
     if (!this.frame.older) {
       grip.oldest = true;
@@ -1079,7 +1169,7 @@ BreakpointActor.prototype = {
       this.conn.send(packet);
       return this.threadActor._nest();
     } catch(e) {
-      dumpn("Got an exception during hit: " + e + ': ' + e.stack);
+      Cu.reportError("Got an exception during hit: " + e + ': ' + e.stack);
       return undefined;
     }
   },
@@ -1232,4 +1322,3 @@ EnvironmentActor.prototype.requestTypes = {
   "assign": EnvironmentActor.prototype.onAssign,
   "bindings": EnvironmentActor.prototype.onBindings
 };
-

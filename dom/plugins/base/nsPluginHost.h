@@ -120,11 +120,8 @@ public:
                                nsIURI *aURL,
                                nsIPluginInstanceOwner *aOwner);
   nsresult IsPluginEnabledForType(const char* aMimeType);
-  nsresult IsPluginEnabledForType(const char* aMimeType,
-                                  bool aShouldPlay);
   nsresult IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
-  nsresult IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType,
-                                       bool aShouldPlay);
+
   nsresult GetPluginCount(PRUint32* aPluginCount);
   nsresult GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray);
 

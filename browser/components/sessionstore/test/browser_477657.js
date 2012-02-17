@@ -36,11 +36,6 @@
 
 function test() {
   /** Test for Bug 477657 **/
-
-  // Test fails randomly on OS X (bug 482975)
-  if ("nsILocalFileMac" in Ci)
-    return;
-
   waitForExplicitFinish();
   
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no");

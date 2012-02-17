@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE           = android
 LIBRARY_NAME     = android
 FORCE_STATIC_LIB = 1
+STL_FLAGS=
 
 DEFINES += \
   -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"' \

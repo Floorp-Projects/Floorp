@@ -1,16 +1,8 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=2 ts=8 et ft=cpp : */
-/* ***** BEGIN LICENSE BLOCK *****
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/.
- * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>
- *   Michael Wu <mwu@mozilla.com>
- *   Justin Lebar <justin.lebar@gmail.com>
- *   Jim Straus <jstraus@mozilla.com>
- *
- * ***** END LICENSE BLOCK ***** */
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "hardware_legacy/uevent.h"
 #include "Hal.h"
@@ -264,6 +256,10 @@ DisableBatteryNotifications()
 void
 GetCurrentBatteryInformation(hal::BatteryInformation *aBatteryInfo)
 {
+  static const int BATTERY_NOT_CHARGING = 0;
+  static const int BATTERY_CHARGING_USB = 1;
+  static const int BATTERY_CHARGING_AC  = 2;
+
   FILE *capacityFile = fopen("/sys/class/power_supply/battery/capacity", "r");
   double capacity = dom::battery::kDefaultLevel * 100;
   if (capacityFile) {
@@ -278,8 +274,17 @@ GetCurrentBatteryInformation(hal::BatteryInformation *aBatteryInfo)
     fclose(chargingFile);
   }
 
+  #ifdef DEBUG
+  if (chargingSrc != BATTERY_NOT_CHARGING &&
+      chargingSrc != BATTERY_CHARGING_USB &&
+      chargingSrc != BATTERY_CHARGING_AC) {
+    HAL_LOG(("charging_source contained unknown value: %d", chargingSrc));
+  }
+  #endif
+
   aBatteryInfo->level() = capacity / 100;
-  aBatteryInfo->charging() = chargingSrc == 1;
+  aBatteryInfo->charging() = (chargingSrc == BATTERY_CHARGING_USB ||
+                              chargingSrc == BATTERY_CHARGING_AC);
   aBatteryInfo->remainingTime() = dom::battery::kUnknownRemainingTime;
 }
 

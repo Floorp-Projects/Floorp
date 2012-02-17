@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+
+<script>
+ok(true, "Method with empty body didn't crash");
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml"/>
+
+<box style="-moz-binding: url(#binding)"/>
+
+<xbl:bindings xmlns:xbl="http://www.mozilla.org/xbl">
+  <xbl:binding id="binding">
+    <xbl:implementation>
+      <xbl:method name="init"/>
+    </xbl:implementation>
+  </xbl:binding>
+</xbl:bindings>
+
+
+</window>

@@ -126,26 +126,15 @@
 
 #define MOZ_STATIC_ASSERT_IF(cond, expr, reason)  MOZ_STATIC_ASSERT(!(cond) || (expr), reason)
 
-/*
- * XXX: we're cheating here in order to avoid creating object files
- * for mfbt /just/ to provide a function like FatalError() to be used
- * by MOZ_ASSERT().  (It'll happen eventually, but for just ASSERT()
- * it isn't worth the pain.)  JS_Assert(), although unfortunately
- * named, is part of SpiderMonkey's stable, external API, so this
- * isn't quite as bad as it seems.
- *
- * Once mfbt needs object files, this unholy union with JS_Assert()
- * will be broken.
- *
- * JS_Assert is present even in release builds, for the benefit of applications
- * that build DEBUG and link against a non-DEBUG SpiderMonkey library.
- */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 extern MFBT_API(void)
-JS_Assert(const char* s, const char* file, int ln);
+MOZ_Crash(void);
+
+extern MFBT_API(void)
+MOZ_Assert(const char* s, const char* file, int ln);
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -186,10 +175,10 @@ JS_Assert(const char* s, const char* file, int ln);
 #ifdef DEBUG
    /* First the single-argument form. */
 #  define MOZ_ASSERT_HELPER1(expr) \
-     ((expr) ? ((void)0) : JS_Assert(#expr, __FILE__, __LINE__))
+     ((expr) ? ((void)0) : MOZ_Assert(#expr, __FILE__, __LINE__))
    /* Now the two-argument form. */
 #  define MOZ_ASSERT_HELPER2(expr, explain) \
-     ((expr) ? ((void)0) : JS_Assert(#expr " (" explain ")", __FILE__, __LINE__))
+     ((expr) ? ((void)0) : MOZ_Assert(#expr " (" explain ")", __FILE__, __LINE__))
    /* And now, helper macrology up the wazoo. */
    /* Count the number of arguments passed to MOZ_ASSERT. */
 #  define MOZ_COUNT_ASSERT_ARGS(...) \
@@ -239,7 +228,7 @@ JS_Assert(const char* s, const char* file, int ln);
  *   }
  */
 #ifdef DEBUG
-#  define MOZ_NOT_REACHED(reason)    JS_Assert(reason, __FILE__, __LINE__)
+#  define MOZ_NOT_REACHED(reason)    MOZ_Assert(reason, __FILE__, __LINE__)
 #else
 #  define MOZ_NOT_REACHED(reason)    ((void)0)
 #endif

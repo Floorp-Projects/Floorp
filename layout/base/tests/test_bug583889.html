@@ -23,11 +23,13 @@ function grabEventAndGo(event) {
 
 function runTest() {
   window.onload = grabEventAndGo;
+  // Wait for onLoad event.
   yield;
 
   var inner = $("inner");
   inner.src = "bug583889_inner1.html";
   window.onmessage = grabEventAndGo;
+  // Wait for message from 'inner' iframe.
   event = yield;
 
   while (event.data != "done") {
@@ -35,10 +37,13 @@ function runTest() {
     is(data.top, 300, "should remain at same top");
     is(data.left, 300, "should remain at same left");
 
+    // Wait for message from 'inner' iframe.
     event = yield;
   }
 
-  SimpleTest.finish();
+  // finish(), yet let the test actually end first, to be safe.
+  SimpleTest.executeSoon(SimpleTest.finish);
+  // "End" generator.
   yield;
 }
 

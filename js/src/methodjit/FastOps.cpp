@@ -1518,8 +1518,8 @@ GetDenseArrayShape(JSContext *cx, JSObject *globalObj)
 {
     JS_ASSERT(globalObj);
 
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, globalObj, JSProto_Array, &proto, NULL))
+    JSObject *proto = globalObj->global().getOrCreateArrayPrototype(cx);
+    if (!proto)
         return NULL;
 
     return EmptyShape::getInitialShape(cx, &ArrayClass, proto,

@@ -59,10 +59,15 @@ public class DoorHangerPopup extends PopupWindow {
     private Context mContext;
     private LinearLayout mContent;
 
+    private boolean mInflated; 
+
     public DoorHangerPopup(Context aContext) {
         super(aContext);
         mContext = aContext;
+        mInflated = false;
+   }
 
+    private void init() {
         setBackgroundDrawable(new BitmapDrawable());
         setOutsideTouchable(true);
         setWindowLayoutMode(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -72,11 +77,15 @@ public class DoorHangerPopup extends PopupWindow {
         mContent = (LinearLayout) layout.findViewById(R.id.doorhanger_container);
         
         setContentView(layout);
+        mInflated = true;
     }
 
     public void addDoorHanger(String message, String value, JSONArray buttons,
                               Tab tab, JSONObject options) {
         Log.i(LOGTAG, "Adding a DoorHanger to Tab: " + tab.getId());
+
+        if (!mInflated)
+            init();
 
         // Replace the doorhanger if it already exists
         DoorHanger dh = tab.getDoorHanger(value);

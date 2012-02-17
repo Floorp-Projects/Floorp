@@ -55,8 +55,10 @@ function testFrameParameters()
       localNodes[1].expand();
 
       // Poll every few milliseconds until the properties are retrieved.
+      // It's important to set the timer in the chrome window, because the
+      // content window timers are disabled while the debuggee is paused.
       let count = 0;
-      let intervalID = content.setInterval(function(){
+      let intervalID = window.setInterval(function(){
         if (++count > 50) {
           ok(false, "Timed out while polling for the properties.");
           resumeAndFinish();
@@ -64,7 +66,7 @@ function testFrameParameters()
         if (!localNodes[0].fetched || !localNodes[1].fetched) {
           return;
         }
-        content.clearInterval(intervalID);
+        window.clearInterval(intervalID);
         is(localNodes[0].querySelector(".property > .title > .key")
                         .textContent, "__proto__ ",
           "Should have the right property name for __proto__.");

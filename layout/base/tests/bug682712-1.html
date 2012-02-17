@@ -21,7 +21,7 @@
           synthesizeMouse(iframe, 10, 10, {});
 
           // Now try to move the caret
-          win.getSelection().collapse(doc.body.firstChild, 1);
+          win.getSelection().collapse(doc.body.firstChild, 0);
           synthesizeKey("VK_RIGHT", {});
 
           document.documentElement.removeAttribute("class");

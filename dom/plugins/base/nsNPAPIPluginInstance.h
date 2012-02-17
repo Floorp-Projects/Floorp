@@ -101,7 +101,7 @@ public:
   bool ShouldCache();
   nsresult IsWindowless(bool* isWindowless);
   nsresult AsyncSetWindow(NPWindow* window);
-  nsresult GetImage(ImageContainer* aContainer, Image** aImage);
+  nsresult GetImageContainer(ImageContainer **aContainer);
   nsresult GetImageSize(nsIntSize* aSize);
   nsresult NotifyPainted(void);
   nsresult UseAsyncPainting(bool* aIsAsync);
@@ -115,7 +115,6 @@ public:
   nsresult GetPluginAPIVersion(PRUint16* version);
   nsresult InvalidateRect(NPRect *invalidRect);
   nsresult InvalidateRegion(NPRegion invalidRegion);
-  nsresult ForceRedraw();
   nsresult GetMIMEType(const char* *result);
   nsresult GetJSContext(JSContext* *outContext);
   nsresult GetOwner(nsIPluginInstanceOwner **aOwner);
@@ -148,6 +147,14 @@ public:
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
+  void NotifyForeground(bool aForeground);
+  void NotifyOnScreen(bool aOnScreen);
+  void MemoryPressure();
+
+  bool IsOnScreen() {
+    return mOnScreen;
+  }
+
   PRUint32 GetANPDrawingModel() { return mANPDrawingModel; }
   void SetANPDrawingModel(PRUint32 aModel);
 
@@ -283,6 +290,7 @@ private:
   bool mUsePluginLayersPref;
 #ifdef MOZ_WIDGET_ANDROID
   void* mSurface;
+  bool mOnScreen;
 #endif
 };
 

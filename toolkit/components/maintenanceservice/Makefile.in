@@ -57,9 +57,10 @@ CPPSRCS = \
 PROGRAM = maintenanceservice$(BIN_SUFFIX)
 DIST_PROGRAM = maintenanceservice$(BIN_SUFFIX)
 
-# Don't link the maintenanceservice against libmozutils. See bug 687139
-MOZ_UTILS_LDFLAGS =
-MOZ_UTILS_PROGRAM_LDFLAGS =
+# Don't link the maintenanceservice against mozglue.dll. See bug 687139 and
+# bug 725876
+MOZ_GLUE_LDFLAGS =
+MOZ_GLUE_PROGRAM_LDFLAGS =
 
 LIBS += \
   ../../mozapps/update/common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \

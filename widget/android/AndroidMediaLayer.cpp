@@ -45,7 +45,7 @@
 namespace mozilla {
 
 AndroidMediaLayer::AndroidMediaLayer()
-  : mInverted(false) {
+  : mInverted(false), mVisible(true) {
 }
 
 AndroidMediaLayer::~AndroidMediaLayer() {
@@ -132,6 +132,8 @@ void AndroidMediaLayer::SetNativeWindowDimensions(void* aWindow, const gfxRect& 
 }
 
 void AndroidMediaLayer::UpdatePosition(const gfxRect& aRect, float aZoomLevel) {
+  if (!mVisible)
+    return;
 
   std::map<void*, SurfaceData*>::iterator it;
 
@@ -149,6 +151,26 @@ void AndroidMediaLayer::UpdatePosition(const gfxRect& aRect, float aZoomLevel) {
     gfxRect videoRect(aRect.x + scaledDimensions.x, aRect.y + scaledDimensions.y,
                       scaledDimensions.width, scaledDimensions.height);
     AndroidBridge::Bridge()->ShowSurface(data->surface, videoRect, mInverted, false);
+  }
+}
+
+void AndroidMediaLayer::SetVisible(bool aVisible) {
+  if (aVisible == mVisible)
+    return;
+
+  mVisible = aVisible;
+  if (mVisible)
+    return;
+
+  // Hide all surfaces
+  std::map<void*, SurfaceData*>::iterator it;
+
+  if (EnsureContentSurface())
+    AndroidBridge::Bridge()->HideSurface(mContentData.surface);
+
+  for (it = mVideoSurfaces.begin(); it != mVideoSurfaces.end(); it++) {
+    SurfaceData* data = it->second;
+    AndroidBridge::Bridge()->HideSurface(data->surface);
   }
 }
 

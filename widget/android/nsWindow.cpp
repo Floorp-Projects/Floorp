@@ -733,6 +733,12 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
         case NS_TEXT_TEXT:
             mIMEComposingText = static_cast<nsTextEvent*>(aEvent)->theText;
             break;
+        case NS_KEY_PRESS:
+            // Sometimes the text changes after a key press do not generate notifications (see Bug 723810)
+            // Call the corresponding methods explicitly to send those changes back to Java
+            OnIMETextChange(0, 0, 0);
+            OnIMESelectionChange();
+            break;
         }
         return status;
     }
@@ -1251,12 +1257,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         metadataProvider->GetDrawMetadata(metadata);
     }
 
-#if 0
-    // BEGIN HACK: gl layers
-    nsPaintEvent event(true, NS_PAINT, this);
-    nsIntRect tileRect(0, 0, gAndroidBounds.width, gAndroidBounds.height);
-    event.region = tileRect;
-#endif
+    nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
 
     static unsigned char *bits2 = NULL;
     static gfxIntSize bitsSize(0, 0);
@@ -1272,26 +1273,12 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * 2,
                             gfxASurface::ImageFormatRGB16_565);
 
-#if 0
-    nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
-    AutoLayerManagerSetup setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
-
-    nsEventStatus status;
-    status = DispatchEvent(&event);
-
-    return;
-    // END HACK: gl layers
-#endif
-
     AndroidGeckoLayerClient &client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height,
                              gAndroidTileSize.width, gAndroidTileSize.height,
                              metadata, HasDirectTexture())) {
-        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### BeginDrawing returned false!");
         return;
     }
-
-    nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
 
     int layerClientType = AndroidBridge::Bridge()->GetLayerClientType();
 

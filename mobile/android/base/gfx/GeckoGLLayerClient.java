@@ -173,10 +173,9 @@ public class GeckoGLLayerClient extends GeckoLayerClient
         mScreenSize = newSize;
 
         Log.e(LOGTAG, "### Screen-size changed to " + mScreenSize);
-        GeckoEvent event = new GeckoEvent(GeckoEvent.SIZE_CHANGED,
-                                          mScreenSize.width, mScreenSize.height,
-                                          mScreenSize.width, mScreenSize.height,
-                                          mScreenSize.width, mScreenSize.height);
+        GeckoEvent event = GeckoEvent.createSizeChangedEvent(mScreenSize.width, mScreenSize.height,
+                                                             mScreenSize.width, mScreenSize.height,
+                                                             mScreenSize.width, mScreenSize.height);
         GeckoAppShell.sendEventToGecko(event);
     }
 

@@ -84,6 +84,9 @@
 #include "nsStringBuffer.h"
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
 nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
 enum nsRangeIterationDirection {
@@ -378,7 +381,7 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
     node = aNode;
   
   if (node->IsElement()) {
-    mozilla::dom::Element* originalElement =
+    Element* originalElement =
       aOriginalNode && aOriginalNode->IsElement() ?
         aOriginalNode->AsElement() : nsnull;
     mSerializer->AppendElementStart(node->AsElement(),
@@ -1795,22 +1798,12 @@ nsHTMLCopyEncoder::GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
 bool 
 nsHTMLCopyEncoder::IsMozBR(nsIDOMNode* aNode)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  if (IsTag(content, nsGkAtoms::br))
-  {
-    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
-    if (elem)
-    {
-      nsAutoString typeAttrName(NS_LITERAL_STRING("type"));
-      nsAutoString typeAttrVal;
-      nsresult rv = elem->GetAttribute(typeAttrName, typeAttrVal);
-      ToLowerCase(typeAttrVal);
-      if (NS_SUCCEEDED(rv) && (typeAttrVal.EqualsLiteral("_moz")))
-        return true;
-    }
-    return false;
-  }
-  return false;
+  MOZ_ASSERT(aNode);
+  nsCOMPtr<Element> element = do_QueryInterface(aNode);
+  return element &&
+         element->IsHTML(nsGkAtoms::br) &&
+         element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                              NS_LITERAL_STRING("_moz"), eIgnoreCase);
 }
 
 nsresult 

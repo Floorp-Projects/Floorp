@@ -493,6 +493,7 @@ var WifiManager = (function() {
     for (let i = 0; i < lines.length; ++i) {
       let [key, value] = lines[i].split("=");
       if (key === "wpa_state") {
+        notify("statechange", { state: value });
         if (value === "COMPLETED")
           onconnected();
       }
@@ -564,8 +565,8 @@ var WifiManager = (function() {
   }
 
   var supplicantStatesMap = ["DISCONNECTED", "INACTIVE", "SCANNING", "ASSOCIATING",
-                             "FOUR_WAY_HANDSHAKE", "GROUP_HANDSHAKE", "COMPLETED",
-                             "DORMANT", "UNINITIALIZED"];
+                             "ASSOCIATED", "FOUR_WAY_HANDSHAKE", "GROUP_HANDSHAKE",
+                             "COMPLETED", "DORMANT", "UNINITIALIZED"];
   var driverEventMap = { STOPPED: "driverstopped", STARTED: "driverstarted", HANGED: "driverhung" };
 
   // handle events sent to us by the event worker
@@ -580,11 +581,12 @@ var WifiManager = (function() {
       return true;
     }
 
-    var eventData = event.substr(0, event.indexOf(" ") + 1);
+    var space = event.indexOf(" ");
+    var eventData = event.substr(0, space + 1);
     if (eventData.indexOf("CTRL-EVENT-STATE-CHANGE") === 0) {
       // Parse the event data
       var fields = {};
-      var tokens = eventData.split(" ");
+      var tokens = event.substr(space + 1).split(" ");
       for (var n = 0; n < tokens.length; ++n) {
         var kv = tokens[n].split("=");
         if (kv.length === 2)
@@ -630,7 +632,7 @@ var WifiManager = (function() {
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-SCAN-RESULTS") === 0) {
-      debug("Notifying of scn results available");
+      debug("Notifying of scan results available");
       notify("scanresultsavailable");
       return true;
     }
@@ -804,6 +806,47 @@ function nsWifiWorker() {
     debug("Couldn't connect to supplicant");
   }
 
+  var state;
+  WifiManager.onstatechange = function() {
+    debug("State change: " + state + " -> " + this.state);
+    if (state === "SCANNING" && this.state === "INACTIVE") {
+      // We're not trying to connect so try to find an open Mozilla network.
+      // TODO Remove me in favor of UI and a way to select a network.
+
+      debug("Haven't connected to a network, trying a default (for now)");
+      var name = "Mozilla";
+      var net = networks[name];
+      if (net && (net[1] && net[1] !== "[IBSS]")) {
+        debug("Network Mozilla exists, but is encrypted");
+        net = null;
+      }
+      if (!net) {
+        name = "Mozilla Guest";
+        net = networks[name];
+        if (!net || (net[1] && net[1] !== "[IBSS]")) {
+          debug("Network Mozilla Guest doesn't exist or is encrypted");
+          return;
+        }
+      }
+
+      var config = Object.create(null);
+      config["ssid"] = '"' + name + '"';
+      config["key_mgmt"] = "NONE";
+      WifiManager.addNetwork(config, function(ok) {
+        if (!ok) {
+          debug("Unable to add the network!");
+          return;
+        }
+
+        WifiManager.enableNetwork(config.netId, false, function(ok) {
+          debug((ok ? "Successfully enabled " : "Didn't enable ") + name);
+        });
+      });
+    }
+
+    state = this.state;
+  }
+
   var networks = Object.create(null);
   WifiManager.onscanresultsavailable = function() {
     debug("Scan results are available! Asking for them.");
@@ -814,7 +857,7 @@ function nsWifiWorker() {
         // bssid / frequency / signal level / flags / ssid
         var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s+(.*)/.exec(lines[i])
         if (match)
-          networks[match[5]] = match[1];
+          networks[match[5]] = [match[1], match[4]];
         else
           debug("Match didn't find anything for: " + lines[i]);
       }

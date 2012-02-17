@@ -71,6 +71,9 @@
 #include "nsPoint.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsAttrName.h"
+
+#include "mozilla/dom/Element.h"
 
 class nsIDOMKeyEvent;
 class nsITransferable;
@@ -425,6 +428,13 @@ public:
     return mCSSAware && mHTMLCSSUtils && mHTMLCSSUtils->IsCSSPrefChecked();
   }
 
+  static bool HasAttributes(mozilla::dom::Element* aElement)
+  {
+    MOZ_ASSERT(aElement);
+    PRUint32 attrCount = aElement->GetAttrCount();
+    return attrCount > 1 ||
+           (1 == attrCount && !aElement->GetAttrNameAt(0)->Equals(nsGkAtoms::mozdirty));
+  }
 
 protected:
 
@@ -447,6 +457,7 @@ protected:
   // Return TRUE if aElement is a table-related elemet and caret was set
   bool SetCaretInTableCell(nsIDOMElement* aElement);
   bool IsNodeInActiveEditor(nsIDOMNode* aNode);
+  bool IsNodeInActiveEditor(nsINode* aNode);
 
   // key event helpers
   NS_IMETHOD TabInTable(bool inIsShift, bool *outHandled);

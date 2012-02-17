@@ -447,14 +447,19 @@ public:
   static nsRect
   GetCoveredRegion(const nsFrameList &aFrames);
 
-  /*
-   * Convert a rect from device pixel units to app pixel units by inflation.
-   */
+  // Converts aPoint from an app unit point in outer-<svg> content rect space
+  // to an app unit point in a frame's SVG userspace. 
+  // This is a temporary helper we should no longer need after bug 614732 is
+  // fixed.
+  static nsPoint
+  TransformOuterSVGPointToChildFrame(nsPoint aPoint,
+                                     const gfxMatrix& aFrameToCanvasTM,
+                                     nsPresContext* aPresContext);
+
   static nsRect
-  ToAppPixelRect(nsPresContext *aPresContext,
-                 double xmin, double ymin, double xmax, double ymax);
-  static nsRect
-  ToAppPixelRect(nsPresContext *aPresContext, const gfxRect& rect);
+  TransformFrameRectToOuterSVG(const nsRect& aRect,
+                               const gfxMatrix& aMatrix,
+                               nsPresContext* aPresContext);
 
   /*
    * Convert a surface size to an integer for use by thebes
@@ -581,9 +586,11 @@ public:
    * This should die once bug 478152 is fixed.
    */
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                                               nsSVGGeometryFrame* aFrame);
+                                               nsSVGGeometryFrame* aFrame,
+                                               const gfxMatrix& aMatrix);
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                                               nsSVGPathGeometryFrame* aFrame);
+                                               nsSVGPathGeometryFrame* aFrame,
+                                               const gfxMatrix& aMatrix);
 
   /**
    * Convert a floating-point value to a 32-bit integer value, clamping to

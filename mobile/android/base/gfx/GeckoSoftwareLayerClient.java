@@ -193,22 +193,19 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         if (mBufferSize.width != width || mBufferSize.height != height) {
             mBufferSize = new IntSize(width, height);
 
-            // We only need to allocate buffer memory if we're using MultiTileLayer.
-            if (!(mTileLayer instanceof MultiTileLayer)) {
-                return true;
-            }
-
             // Reallocate the buffer if necessary
-            int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
-            int size = mBufferSize.getArea() * bpp;
-            if (mBuffer == null || mBuffer.capacity() != size) {
-                // Free the old buffer
-                if (mBuffer != null) {
-                    GeckoAppShell.freeDirectBuffer(mBuffer);
-                    mBuffer = null;
-                }
+            if (mTileLayer instanceof MultiTileLayer) {
+                int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
+                int size = mBufferSize.getArea() * bpp;
+                if (mBuffer == null || mBuffer.capacity() != size) {
+                    // Free the old buffer
+                    if (mBuffer != null) {
+                        GeckoAppShell.freeDirectBuffer(mBuffer);
+                        mBuffer = null;
+                    }
 
-                mBuffer = GeckoAppShell.allocateDirectBuffer(size);
+                    mBuffer = GeckoAppShell.allocateDirectBuffer(size);
+                }
             }
         }
 
@@ -324,7 +321,6 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
             throw new RuntimeException("Screen size of " + mScreenSize +
                                        " larger than maximum texture size of " + maxSize);
         }
-
         // Round to next power of two until we have NPOT texture support, respecting maximum
         // texture size
         return new IntSize(Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.width +
@@ -338,5 +334,6 @@ public class GeckoSoftwareLayerClient extends GeckoLayerClient {
         // Round up depending on layer implementation to remove texture wastage
         return !mHasDirectTexture ? TILE_SIZE : new IntSize(0, 0);
     }
+
 }
 

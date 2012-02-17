@@ -660,3 +660,14 @@ js::CloneLeftHandSide(ParseNode *opn, TreeContext *tc)
     }
     return pn;
 }
+
+#ifdef DEBUG
+void
+js::DumpParseTree(ParseNode *pn, int indent)
+{
+    if (pn == NULL) 
+        fprintf(stderr, "()");
+    else
+        pn->dump(indent);
+}
+#endif

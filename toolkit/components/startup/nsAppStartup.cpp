@@ -822,8 +822,10 @@ nsAppStartup::GetStartupInfo(JSContext* aCx, JS::Value* aRetval)
 NS_IMETHODIMP
 nsAppStartup::GetAutomaticSafeModeNecessary(bool *_retval)
 {
-    *_retval = mIsSafeModeNecessary;
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = mIsSafeModeNecessary;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

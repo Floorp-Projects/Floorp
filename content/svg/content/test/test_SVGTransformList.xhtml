@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602759
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="matrixUtils.js"></script>
+  <script type="text/javascript" src="MutationEventChecker.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -41,7 +42,8 @@ function main()
       testCreateSVGTransformFromMatrix,
       testReadOnly,
       testOrphan,
-      testFailedSet
+      testFailedSet,
+      testMutationEvents
     ];
   for (var i = 0; i < tests.length; i++) {
     tests[i](g);
@@ -353,6 +355,76 @@ function testFailedSet(g)
      "Transform list should be empty after setting bad value");
   is(g.transform.animVal.numberOfItems, 0,
      "Animated transform list should also be empty after setting bad value");
+}
+
+function testMutationEvents(g)
+{
+  // Check mutation events
+
+  // Set initial value
+  g.setAttribute("transform", "translate(50 90)");
+  var list = g.transform.baseVal;
+  is(list.numberOfItems, 1, "Unexpected initial length of list");
+  eventChecker = new MutationEventChecker;
+  eventChecker.watchAttr(g, "transform");
+
+  // consolidate
+  //
+  // Consolidate happens to generate two modification events in our
+  // implementation--it's not ideal but it's better than none
+  eventChecker.expect("modify modify modify");
+  g.setAttribute("transform", "translate(10 10) translate(10 10)");
+  list.consolidate();
+
+  // In the following, each of the operations is performed twice but only one
+  // mutation event is expected. This is to check that redundant mutation
+  // events are not sent.
+
+  // transform.setMatrix
+  eventChecker.expect("modify");
+  var mx = $('svg').createSVGMatrix();
+  list[0].setMatrix(mx);
+  list[0].setMatrix(mx);
+
+  // transform.setTranslate
+  eventChecker.expect("modify");
+  list[0].setTranslate(10, 10);
+  list[0].setTranslate(10, 10);
+
+  // transform.setScale
+  eventChecker.expect("modify");
+  list[0].setScale(2, 2);
+  list[0].setScale(2, 2);
+
+  // transform.setRotate
+  eventChecker.expect("modify");
+  list[0].setRotate(45, 1, 2);
+  list[0].setRotate(45, 1, 2);
+
+  // transform.setSkewX
+  eventChecker.expect("modify");
+  list[0].setSkewX(45);
+  list[0].setSkewX(45);
+
+  // transform.setSkewY
+  eventChecker.expect("modify");
+  list[0].setSkewY(25);
+  list[0].setSkewY(25);
+
+  // transform.matrix
+  eventChecker.expect("modify modify");
+  list[0].matrix.a = 1;
+  list[0].matrix.a = 1;
+  list[0].matrix.e = 5;
+  list[0].matrix.e = 5;
+
+  // setAttribute interaction
+  eventChecker.expect("modify");
+  list[0].setMatrix(mx);
+  eventChecker.expect("");
+  g.setAttribute("transform", "matrix(1, 0, 0, 1, 0, 0)");
+  list[0].setMatrix(mx);
+  eventChecker.finish();
 }
 
 window.addEventListener("load", main, false);

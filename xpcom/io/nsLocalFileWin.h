@@ -95,6 +95,7 @@ private:
     ~nsLocalFile() {}
 
     bool mDirty;            // cached information can only be used when this is false
+    bool mResolveDirty;
     bool mFollowSymlinks;   // should we follow symlinks when working on this file
     
     // this string will always be in native format!
@@ -110,9 +111,15 @@ private:
 
     PRFileInfo64 mFileInfo64;
 
-    void MakeDirty() { mDirty = true; mShortWorkingPath.Truncate(); }
+    void MakeDirty() 
+    { 
+      mDirty = true;
+      mResolveDirty = true;
+      mShortWorkingPath.Truncate();
+    }
 
     nsresult ResolveAndStat();
+    nsresult Resolve();
     nsresult ResolveShortcut();
 
     void EnsureShortPath();

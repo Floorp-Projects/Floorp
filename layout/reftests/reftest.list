@@ -26,6 +26,9 @@ skip-if(Android) include border-image/reftest.list
 # border-radius/
 include border-radius/reftest.list
 
+# -moz-box tests
+include box/reftest.list
+
 # box-ordinal/
 include box-ordinal/reftest.list
 
@@ -139,9 +142,6 @@ skip-if(Android) include first-letter/reftest.list
 
 # first-line/
 include first-line/reftest.list
-
-# flexbox/
-include flexbox/reftest.list
 
 # floats/
 include floats/reftest.list

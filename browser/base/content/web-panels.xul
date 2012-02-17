@@ -98,5 +98,5 @@
   <commandset id="editMenuCommands"/> 
   <browser id="web-panels-browser" persist="cachedurl" type="content" flex="1"
            context="contentAreaContextMenu" tooltip="aHTMLTooltip"
-           onclick="return window.parent.contentAreaClick(event, true);"/>
+           onclick="window.parent.contentAreaClick(event, true);"/>
 </page>

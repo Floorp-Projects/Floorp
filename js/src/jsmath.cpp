@@ -516,10 +516,10 @@ static const jsdouble RNG_DSCALE = jsdouble(1LL << 53);
 /*
  * Math.random() support, lifted from java.util.Random.java.
  */
-static inline void
-random_setSeed(JSContext *cx, int64_t seed)
+extern void
+random_setSeed(int64_t *rngSeed, int64_t seed)
 {
-    cx->rngSeed = (seed ^ RNG_MULTIPLIER) & RNG_MASK;
+    *rngSeed = (seed ^ RNG_MULTIPLIER) & RNG_MASK;
 }
 
 void
@@ -531,26 +531,24 @@ js_InitRandom(JSContext *cx)
      * the context and its successor. We don't just use the context because it might be
      * possible to reverse engineer the context pointer if one guesses the time right.
      */
-    random_setSeed(cx,
-                   (PRMJ_Now() / 1000) ^
-                   int64_t(cx) ^
-                   int64_t(cx->link.next));
+    random_setSeed(&cx->rngSeed, (PRMJ_Now() / 1000) ^ int64_t(cx) ^ int64_t(cx->link.next));
 }
 
-static inline uint64_t
-random_next(JSContext *cx, int bits)
+extern uint64_t
+random_next(int64_t *rngSeed, int bits)
 {
-    uint64_t nextseed = cx->rngSeed * RNG_MULTIPLIER;
+    uint64_t nextseed = *rngSeed * RNG_MULTIPLIER;
     nextseed += RNG_ADDEND;
     nextseed &= RNG_MASK;
-    cx->rngSeed = nextseed;
+    *rngSeed = nextseed;
     return nextseed >> (48 - bits);
 }
 
 static inline jsdouble
 random_nextDouble(JSContext *cx)
 {
-    return jsdouble((random_next(cx, 26) << 27) + random_next(cx, 27)) / RNG_DSCALE;
+    return jsdouble((random_next(&cx->rngSeed, 26) << 27) + random_next(&cx->rngSeed, 27)) /
+           RNG_DSCALE;
 }
 
 static JSBool

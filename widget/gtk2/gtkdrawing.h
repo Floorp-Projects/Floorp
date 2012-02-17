@@ -246,12 +246,15 @@ gint moz_gtk_enable_style_props(style_prop_t styleGetProp);
  */
 gint moz_gtk_shutdown();
 
+#if defined(MOZ_WIDGET_GTK2)
 /**
  * Retrieves the colormap to use for drawables passed to moz_gtk_widget_paint.
  */
 GdkColormap* moz_gtk_widget_get_colormap();
+#endif
 
 /*** Widget drawing ***/
+#if defined(MOZ_WIDGET_GTK2)
 /**
  * Paint a widget in the current theme.
  * widget:    a constant giving the widget to paint
@@ -268,6 +271,13 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                      GdkRectangle* rect, GdkRectangle* cliprect,
                      GtkWidgetState* state, gint flags,
                      GtkTextDirection direction);
+#else
+gint
+moz_gtk_widget_paint(GtkThemeWidgetType widget, cairo_t *cr,
+                     GdkRectangle* rect, GdkRectangle* cliprect,
+                     GtkWidgetState* state, gint flags,
+                     GtkTextDirection direction);
+#endif
 
 
 /*** Widget metrics ***/

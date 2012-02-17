@@ -190,7 +190,7 @@ static void DrawPlugin(ImageContainer* aContainer, void* aPluginInstanceOwner)
 {
   nsObjectFrame* frame = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner)->GetFrame();
   if (frame) {
-    frame->UpdateImageLayer(aContainer, gfxRect(0,0,0,0));
+    frame->UpdateImageLayer(gfxRect(0,0,0,0));
   }
 }
 
@@ -201,29 +201,28 @@ static void OnDestroyImage(void* aPluginInstanceOwner)
 }
 #endif // XP_MACOSX
 
-bool
-nsPluginInstanceOwner::SetCurrentImage(ImageContainer* aContainer)
+already_AddRefed<ImageContainer>
+nsPluginInstanceOwner::GetImageContainer()
 {
   if (mInstance) {
-    nsRefPtr<Image> image;
+    nsRefPtr<ImageContainer> container;
     // Every call to nsIPluginInstance::GetImage() creates
     // a new image.  See nsIPluginInstance.idl.
-    mInstance->GetImage(aContainer, getter_AddRefs(image));
-    if (image) {
+    mInstance->GetImageContainer(getter_AddRefs(container));
+    if (container) {
 #ifdef XP_MACOSX
-      if (image->GetFormat() == Image::MAC_IO_SURFACE && mObjectFrame) {
+      nsRefPtr<Image> image = container->GetCurrentImage();
+      if (image && image->GetFormat() == Image::MAC_IO_SURFACE && mObjectFrame) {
         MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
         NS_ADDREF_THIS();
         oglImage->SetUpdateCallback(&DrawPlugin, this);
         oglImage->SetDestroyCallback(&OnDestroyImage);
       }
 #endif
-      aContainer->SetCurrentImage(image);
-      return true;
+      return container.forget();
     }
   }
-  aContainer->SetCurrentImage(nsnull);
-  return false;
+  return nsnull;
 }
 
 void
@@ -340,9 +339,8 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mWaitingForPaint = false;
 
 #ifdef MOZ_WIDGET_ANDROID
-  mOnScreen = false;
   mInverted = false;
-  mLayer = new AndroidMediaLayer();
+  mLayer = nsnull;
 #endif
 }
 
@@ -394,10 +392,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   mPluginWindow = nsnull;
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (mLayer) {
-    delete mLayer;
-    mLayer = nsnull;
-  }
+  RemovePluginView();
 #endif
 
   if (mInstance) {
@@ -635,12 +630,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   // Each time an asynchronously-drawing plugin sends a new surface to display,
   // InvalidateRect is called. We notify reftests that painting is up to
   // date and update our ImageContainer with the new surface.
-  nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
+  nsRefPtr<ImageContainer> container;
+  mInstance->GetImageContainer(getter_AddRefs(container));
   gfxIntSize oldSize(0, 0);
-  if (container) {
-    oldSize = container->GetCurrentSize();
-    SetCurrentImage(container);
-  }
 
 #ifndef XP_MACOSX
   // Windowed plugins should not be calling NPN_InvalidateRect, but
@@ -676,11 +668,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
@@ -1090,13 +1077,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(PRUint32 *result)
     *result = 0;
 
   return rv;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner::GetUniqueID(PRUint32 *result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-  *result = NS_PTR_TO_INT32(mObjectFrame);
-  return NS_OK;
 }
 
 // Cache the attributes and/or parameters of our tag into a single set
@@ -1704,22 +1684,6 @@ void nsPluginInstanceOwner::SendSize(int width, int height)
   mInstance->HandleEvent(&event, nsnull);
 }
 
-void nsPluginInstanceOwner::SendOnScreenEvent(bool onScreen)
-{
-  if (!mInstance)
-    return;
-
-  if ((onScreen && !mOnScreen) || (!onScreen && mOnScreen)) {
-    ANPEvent event;
-    event.inSize = sizeof(ANPEvent);
-    event.eventType = kLifecycle_ANPEventType;
-    event.data.lifecycle.action = onScreen ? kOnScreen_ANPLifecycleAction : kOffScreen_ANPLifecycleAction;
-    mInstance->HandleEvent(&event, nsnull);
-
-    mOnScreen = onScreen;
-  }
-}
-
 bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
 {
   void* javaSurface = mInstance->GetJavaSurface();
@@ -1770,14 +1734,12 @@ bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect)
                             aRect.height);
 #endif
 
-  SendOnScreenEvent(true);
-
   return true;
 }
 
 void nsPluginInstanceOwner::RemovePluginView()
 {
-  if (!mInstance || !mObjectFrame | !mOnScreen)
+  if (!mInstance || !mObjectFrame)
     return;
 
   void* surface = mInstance->GetJavaSurface();
@@ -1795,7 +1757,6 @@ void nsPluginInstanceOwner::RemovePluginView()
                                             "removePluginView",
                                             "(Landroid/view/View;)V");
   env->CallStaticVoidMethod(cls, method, surface);
-  SendOnScreenEvent(false);
 }
 
 void nsPluginInstanceOwner::Invalidate() {
@@ -2775,6 +2736,14 @@ nsPluginInstanceOwner::Destroy()
   mContent->RemoveEventListener(NS_LITERAL_STRING("text"), this, true);
 #endif
 
+#if MOZ_WIDGET_ANDROID
+  RemovePluginView();
+
+  if (mLayer)
+    mLayer->SetVisible(false);
+
+#endif
+
   if (mWidget) {
     if (mPluginWindow) {
       mPluginWindow->SetPluginWidget(nsnull);
@@ -2883,7 +2852,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                                   const gfxRect& aFrameRect,
                                   const gfxRect& aDirtyRect)
 {
-  if (!mInstance || !mObjectFrame)
+  if (!mInstance || !mObjectFrame || !mPluginDocumentActiveState)
     return;
 
   PRInt32 model = mInstance->GetANPDrawingModel();
@@ -2896,11 +2865,13 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   }
 
   if (model == kOpenGL_ANPDrawingModel) {
+    if (!mLayer)
+      mLayer = new AndroidMediaLayer();
+
     // FIXME: this is gross
     float zoomLevel = aFrameRect.width / (float)mPluginWindow->width;
     mLayer->UpdatePosition(aFrameRect, zoomLevel);
 
-    SendOnScreenEvent(true);
     SendSize((int)aFrameRect.width, (int)aFrameRect.height);
     return;
   }
@@ -3603,17 +3574,6 @@ void nsPluginInstanceOwner::UpdateWindowPositionAndClipRect(bool aSetWindow)
   } else {
     mPluginWindow->clipRect.right = 0;
     mPluginWindow->clipRect.bottom = 0;
-#if 0 //MOZ_WIDGET_ANDROID
-    if (mInstance) {
-      PRInt32 model = mInstance->GetANPDrawingModel();
-
-      if (model == kSurface_ANPDrawingModel) {
-        RemovePluginView();
-      } else if (model == kOpenGL_ANPDrawingModel) {
-        HidePluginLayer();
-      }
-    }
-#endif
   }
 
   if (!aSetWindow)
@@ -3641,6 +3601,26 @@ nsPluginInstanceOwner::UpdateDocumentActiveState(bool aIsActive)
 {
   mPluginDocumentActiveState = aIsActive;
   UpdateWindowPositionAndClipRect(true);
+
+#ifdef MOZ_WIDGET_ANDROID
+  if (mInstance) {
+    if (mLayer)
+      mLayer->SetVisible(mPluginDocumentActiveState);
+
+    if (!mPluginDocumentActiveState)
+      RemovePluginView();
+
+    mInstance->NotifyOnScreen(mPluginDocumentActiveState);
+
+    // This is, perhaps, incorrect. It is supposed to be sent
+    // when "the webview has paused or resumed". The side effect
+    // is that Flash video players pause or resume (if they were
+    // playing before) based on the value here. I personally think
+    // we want that on Android when switching to another tab, so
+    // that's why we call it here.
+    mInstance->NotifyForeground(mPluginDocumentActiveState);
+  }
+#endif
 }
 #endif // XP_MACOSX
 

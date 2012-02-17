@@ -78,6 +78,7 @@ struct DebugOnly
 
     DebugOnly() {}
     DebugOnly(const T& other) : value(other) {}
+    DebugOnly(const DebugOnly& other) : value(other.value) {}
     DebugOnly& operator=(const T& rhs) {
         value = rhs;
         return *this;
@@ -97,6 +98,7 @@ struct DebugOnly
 #else
     DebugOnly() {}
     DebugOnly(const T&) {}
+    DebugOnly(const DebugOnly&) {}
     DebugOnly& operator=(const T&) { return *this; }
     void operator++(int) {}
     void operator--(int) {}

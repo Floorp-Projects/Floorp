@@ -275,8 +275,10 @@ public:
   }
   
   void NotifyPaintWaiter(nsDisplayListBuilder* aBuilder);
-  // Return true if we set image with valid surface
-  bool SetCurrentImage(ImageContainer* aContainer);
+
+  // Returns the image container that has our currently displayed image.
+  already_AddRefed<ImageContainer> GetImageContainer();
+
   /**
    * Returns the bounds of the current async-rendered surface. This can only
    * change in response to messages received by the event loop (i.e. not during
@@ -326,16 +328,14 @@ private:
   void FixUpURLS(const nsString &name, nsAString &value);
 #ifdef MOZ_WIDGET_ANDROID
   void SendSize(int width, int height);
-  void SendOnScreenEvent(bool onScreen);
 
   bool AddPluginView(const gfxRect& aRect);
   void RemovePluginView();
 
-  bool mOnScreen;
   bool mInverted;
 
   // For kOpenGL_ANPDrawingModel
-  mozilla::AndroidMediaLayer *mLayer;
+  nsRefPtr<mozilla::AndroidMediaLayer> mLayer;
 #endif 
  
   nsPluginNativeWindow       *mPluginWindow;

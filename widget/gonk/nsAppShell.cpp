@@ -59,6 +59,8 @@
 #include "nsGkAtoms.h"
 #include "nsGUIEvent.h"
 #include "nsIObserverService.h"
+#include "nsIScreen.h"
+#include "nsScreenManagerGonk.h"
 #include "nsWindow.h"
 
 #include "android/log.h"
@@ -347,6 +349,19 @@ GeckoInputReaderPolicy::getDisplayInfo(int32_t displayId,
                                        int32_t* height,
                                        int32_t* orientation)
 {
+    MOZ_STATIC_ASSERT(nsIScreen::ROTATION_0_DEG ==
+                      InputReaderPolicyInterface::ROTATION_0,
+                      "Orientation enums not matched!");
+    MOZ_STATIC_ASSERT(nsIScreen::ROTATION_90_DEG ==
+                      InputReaderPolicyInterface::ROTATION_90,
+                      "Orientation enums not matched!");
+    MOZ_STATIC_ASSERT(nsIScreen::ROTATION_180_DEG ==
+                      InputReaderPolicyInterface::ROTATION_180,
+                      "Orientation enums not matched!");
+    MOZ_STATIC_ASSERT(nsIScreen::ROTATION_270_DEG ==
+                      InputReaderPolicyInterface::ROTATION_270,
+                      "Orientation enums not matched!");
+
     // 0 is the default displayId. We only support one display
     if (displayId)
         return false;
@@ -356,7 +371,7 @@ GeckoInputReaderPolicy::getDisplayInfo(int32_t displayId,
     if (height)
         *height = gScreenBounds.height;
     if (orientation)
-        *orientation = ROTATION_0;
+        *orientation = nsScreenGonk::GetRotation();
     return true;
 }
 
@@ -587,7 +602,10 @@ GeckoInputDispatcher::notifyMotion(nsecs_t eventTime,
     }
     {
         MutexAutoLock lock(mQueueLock);
-        if (!mEventQueue.empty() && mEventQueue.back().type == UserInputData::MOTION_DATA)
+        if (!mEventQueue.empty() &&
+             mEventQueue.back().type == UserInputData::MOTION_DATA &&
+            (mEventQueue.back().action & AMOTION_EVENT_ACTION_MASK) ==
+             AMOTION_EVENT_ACTION_MOVE)
             mEventQueue.back() = data;
         else
             mEventQueue.push(data);

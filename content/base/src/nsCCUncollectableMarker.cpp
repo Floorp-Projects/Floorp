@@ -61,6 +61,7 @@
 #include "nsInProcessTabChildGlobal.h"
 #include "nsFrameLoader.h"
 #include "nsGenericElement.h"
+#include "xpcpublic.h"
 
 static bool sInited = 0;
 PRUint32 nsCCUncollectableMarker::sGeneration = 0;
@@ -364,6 +365,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
   if (cleanupJS) {
     nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments(sGeneration);
     MarkMessageManagers();
+    xpc_UnmarkSkippableJSHolders();
   }
 
 #ifdef MOZ_XUL

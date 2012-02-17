@@ -10,7 +10,7 @@
         <LinearLayout android:orientation="vertical"
                       android:layout_width="138dip"
                       android:layout_height="80dip"
-                      android:background="@drawable/abouthome_topsite_shadow"
+                      android:background="@drawable/tab_thumbnail_shadow"
                       android:padding="1dip"
                       android:paddingBottom="2dip">
 

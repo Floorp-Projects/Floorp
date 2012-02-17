@@ -140,12 +140,14 @@
 
     function init() {
       window.addEventListener("popstate", onPopState, false);
+      Services.obs.addObserver(Addons, "browser-search-engine-modified", false);
 
       AddonManager.addInstallListener(Addons);
       Addons.getAddons();
     }
 
     function uninit() {
+      Services.obs.removeObserver(Addons, "browser-search-engine-modified");
       AddonManager.removeInstallListener(Addons);
     }
 
@@ -490,8 +492,8 @@
           // visible if the user later re-adds it (works around bug 341833)
           detailItem.addon.engine.hidden = false;
           Services.search.removeEngine(detailItem.addon.engine);
-          // the search-engine-modified observer in browser.js will take care of
-          // updating the list
+          // the search-engine-modified observer will take care of updating the list
+          history.back();
         } else {
           detailItem.addon.uninstall();
           let opType = this._getOpTypeForOperations(detailItem.addon.pendingOperations);
@@ -552,6 +554,18 @@
 
         if (needsRestart)
           element.setAttribute("opType", "needs-restart");
+      },
+
+      observe: function observe(aSubject, aTopic, aData) {
+        if (aTopic == "browser-search-engine-modified") {
+          switch (aData) {
+            case "engine-added":
+            case "engine-removed":
+            case "engine-changed":
+              this.getAddons();
+              break;
+          }
+        }
       },
 
       onInstallFailed: function(aInstall) {

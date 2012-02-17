@@ -63,8 +63,11 @@ FocusManager::FocusedAccessible() const
     return mActiveItem;
 
   nsINode* focusedNode = FocusedDOMNode();
-  if (focusedNode)
-    return GetAccService()->GetAccessibleOrContainer(focusedNode, nsnull);
+  if (focusedNode) {
+    nsDocAccessible* doc = 
+      GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
+    return doc ? doc->GetAccessibleOrContainer(focusedNode) : nsnull;
+  }
 
   return nsnull;
 }
@@ -84,8 +87,10 @@ FocusManager::IsFocused(const nsAccessible* aAccessible) const
     // FocusedAccessible() method call. Make sure this issue is fixed in
     // bug 638465.
     if (focusedNode->OwnerDoc() == aAccessible->GetNode()->OwnerDoc()) {
+      nsDocAccessible* doc = 
+        GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
       return aAccessible ==
-        GetAccService()->GetAccessibleOrContainer(focusedNode, nsnull);
+	(doc ? doc->GetAccessibleOrContainer(focusedNode) : nsnull);
     }
   }
   return false;
@@ -209,7 +214,7 @@ FocusManager::ActiveItemChanged(nsAccessible* aItem, bool aCheckIfActive)
   // DOM focus.
   nsAccessible* target = FocusedAccessible();
   if (target)
-    DispatchFocusEvent(target->GetDocAccessible(), target);
+    DispatchFocusEvent(target->Document(), target);
 }
 
 void
@@ -251,11 +256,11 @@ FocusManager::ProcessDOMFocus(nsINode* aTarget)
     GetAccService()->GetDocAccessible(aTarget->OwnerDoc());
 
   nsAccessible* target = document->GetAccessibleOrContainer(aTarget);
-  if (target) {
+  if (target && document) {
     // Check if still focused. Otherwise we can end up with storing the active
     // item for control that isn't focused anymore.
     nsAccessible* DOMFocus =
-      GetAccService()->GetAccessibleOrContainer(FocusedDOMNode(), nsnull);
+      document->GetAccessibleOrContainer(FocusedDOMNode());
     if (target != DOMFocus)
       return;
 
@@ -282,10 +287,12 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   // if it's still focused and then update active item and emit focus event.
   nsAccessible* target = aEvent->GetAccessible();
   if (target != mActiveItem) {
+
     // Check if still focused. Otherwise we can end up with storing the active
     // item for control that isn't focused anymore.
-    nsAccessible* DOMFocus =
-      GetAccService()->GetAccessibleOrContainer(FocusedDOMNode(), nsnull);
+    nsDocAccessible* document = aEvent->GetDocAccessible();
+    nsAccessible* DOMFocus = document->GetAccessibleOrContainer(FocusedDOMNode());
+
     if (target != DOMFocus)
       return;
 
@@ -341,7 +348,7 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   // Fire scrolling_start event when the document receives the focus if it has
   // an anchor jump. If an accessible within the document receive the focus
   // then null out the anchor jump because it no longer applies.
-  nsDocAccessible* targetDocument = target->GetDocAccessible();
+  nsDocAccessible* targetDocument = target->Document();
   nsAccessible* anchorJump = targetDocument->AnchorJump();
   if (anchorJump) {
     if (target == targetDocument) {

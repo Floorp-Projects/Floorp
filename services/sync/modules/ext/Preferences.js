@@ -436,8 +436,7 @@ Preferences.prototype = {
     if (this._defaultBranch) {
       prefSvc = prefSvc.getDefaultBranch(this._prefBranch);
     } else {
-      prefSvc = prefSvc.getBranch(this._prefBranch)
-                .QueryInterface(Ci.nsIPrefBranch2);
+      prefSvc = prefSvc.getBranch(this._prefBranch);
     }
 
     this.__defineGetter__("_prefSvc", function() prefSvc);

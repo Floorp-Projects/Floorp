@@ -172,6 +172,8 @@ public:
 
     static void NotifyIMEChange(const PRUnichar *aText, PRUint32 aTextLen, int aStart, int aEnd, int aNewEnd);
 
+    void NotifyScreenshot(unsigned char* data, int size, int tabId, int width, int height);
+
     void AcknowledgeEventSync();
 
     void EnableDeviceMotion(bool aEnable);
@@ -457,6 +459,7 @@ protected:
     jmethodID jNotifyIME;
     jmethodID jNotifyIMEEnabled;
     jmethodID jNotifyIMEChange;
+    jmethodID jNotifyScreenShot;
     jmethodID jAcknowledgeEventSync;
     jmethodID jEnableDeviceMotion;
     jmethodID jEnableLocation;

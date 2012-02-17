@@ -1,0 +1,100 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+let EXPORTED_SYMBOLS = ["TelemetryStopwatch"];
+
+let Telemetry = Cc["@mozilla.org/base/telemetry;1"]
+                  .getService(Ci.nsITelemetry);
+
+// simpleTimers are directly associated with a histogram
+// name. objectTimers are associated with an object _and_
+// a histogram name.
+let simpleTimers = {};
+let objectTimers = new WeakMap();
+
+let TelemetryStopwatch = {
+  /**
+   * Starts a timer associated with a telemetry histogram. The timer can be
+   * directly associated with a histogram, or with a pair of a histogram and
+   * an object.
+   *
+   * @param aHistogram a string which must be a valid histogram name
+   *                   from TelemetryHistograms.h
+   *
+   * @param aObj Optional parameter. If specified, the timer is associated
+   *             with this object, meaning that multiple timers for a same
+   *             histogram may be run concurrently, as long as they are
+   *             associated with different objects.
+   *
+   * @return true if the timer was successfully started, false otherwise. If a
+   *         timer already exists, it can't be started again, and the existing
+   *         one will be cleared in order to avoid measurements errors.
+   */
+  start: function(aHistogram, aObj) {
+    if (!validTypes(aHistogram, aObj))
+      return false;
+
+    let timers;
+    if (aObj) {
+      timers = objectTimers.get(aObj, {});
+      objectTimers.set(aObj, timers);
+    } else {
+      timers = simpleTimers;
+    }
+
+    if (timers.hasOwnProperty(aHistogram)) {
+      delete timers[aHistogram];
+      Cu.reportError("TelemetryStopwatch: key was already initialized");
+      return false;
+    }
+
+    timers[aHistogram] = Date.now();
+    return true;
+  },
+
+  /**
+   * Stops the timer associated with the given histogram (and object),
+   * calculates the time delta between start and finish, and adds the value
+   * to the histogram.
+   *
+   * @param aHistogram a string which must be a valid histogram name
+   *                   from TelemetryHistograms.h. If an invalid name
+   *                   is given, the function will throw.
+   *
+   * @param aObj Optional parameter which associates the histogram timer with
+   *             the given object.
+   *
+   * @return true if the timer was succesfully stopped and the data was
+   *         added to the histogram, false otherwise.
+   */
+  finish: function(aHistogram, aObj) {
+    if (!validTypes(aHistogram, aObj))
+      return false;
+
+    let timers = aObj
+                 ? objectTimers.get(aObj, {})
+                 : simpleTimers;
+
+    let start = timers[aHistogram];
+    delete timers[aHistogram];
+
+    if (start) {
+      let delta = Date.now() - start;
+      let histogram = Telemetry.getHistogramById(aHistogram);
+      histogram.add(delta);
+      return true;
+    }
+
+    return false;
+  }
+}
+
+function validTypes(aKey, aObj) {
+  return (typeof aKey == "string") &&
+         (aObj === undefined || typeof aObj == "object");
+}

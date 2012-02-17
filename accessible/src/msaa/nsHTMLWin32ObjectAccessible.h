@@ -39,7 +39,6 @@
 #ifndef _nsHTMLWin32ObjectAccessible_H_
 #define _nsHTMLWin32ObjectAccessible_H_
 
-#include "nsIAccessibleWin32Object.h"
 #include "nsBaseWidgetAccessible.h"
 
 struct IAccessible;
@@ -53,8 +52,8 @@ public:
   // because the native plugin accessible doesn't know where it exists in the
   // Mozilla tree, and returns null for previous and next sibling. This would
   // have the effect of cutting off all content after the plugin.
-  nsHTMLWin32ObjectOwnerAccessible(nsIContent *aContent,
-                                   nsIWeakReference *aShell, void *aHwnd);
+  nsHTMLWin32ObjectOwnerAccessible(nsIContent* aContent,
+                                   nsDocAccessible* aDoc, void* aHwnd);
   virtual ~nsHTMLWin32ObjectOwnerAccessible() {}
 
   // nsAccessNode
@@ -82,8 +81,7 @@ protected:
   *   object returned by us in Accessible::NewAccessible() that gets the IAccessible
   *   from the windows system from the window handle.
   */
-class nsHTMLWin32ObjectAccessible : public nsLeafAccessible,
-                                    public nsIAccessibleWin32Object
+class nsHTMLWin32ObjectAccessible : public nsLeafAccessible
 {
 public:
 
@@ -91,7 +89,8 @@ public:
   virtual ~nsHTMLWin32ObjectAccessible() {}
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLEWIN32OBJECT
+
+  NS_IMETHOD GetNativeInterface(void** aNativeAccessible) MOZ_OVERRIDE;
 
 protected:
   void* mHwnd;

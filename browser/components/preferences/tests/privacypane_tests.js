@@ -92,7 +92,6 @@ function test_dependent_elements(win) {
   ok(pbautostart, "the private browsing auto-start checkbox should exist");
   let controls = [
     win.document.getElementById("rememberHistory"),
-    win.document.getElementById("rememberDownloads"),
     win.document.getElementById("rememberForms"),
     win.document.getElementById("keepUntil"),
     win.document.getElementById("keepCookiesUntil"),
@@ -116,8 +115,6 @@ function test_dependent_elements(win) {
   ok(alwaysclear, "the clear data on close checkbox should exist");
   let rememberhistory = win.document.getElementById("rememberHistory");
   ok(rememberhistory, "the remember history checkbox should exist");
-  let rememberdownloads = win.document.getElementById("rememberDownloads");
-  ok(rememberdownloads, "the remember downloads checkbox should exist");
   let rememberforms = win.document.getElementById("rememberForms");
   ok(rememberforms, "the remember forms checkbox should exist");
   let alwaysclearsettings = win.document.getElementById("clearDataSettings");
@@ -135,8 +132,6 @@ function test_dependent_elements(win) {
         "the clear data on close checkbox value should be as expected");
      ok(!rememberhistory.checked,
         "the remember history checkbox value should be as expected");
-     ok(!rememberdownloads.checked,
-        "the remember downloads checkbox value should be as expected");
      ok(!rememberforms.checked,
         "the remember forms checkbox value should be as expected");
     }
@@ -302,7 +297,6 @@ function test_dependent_prefs(win) {
   ok(historymode, "history mode menulist should exist");
   let controls = [
     win.document.getElementById("rememberHistory"),
-    win.document.getElementById("rememberDownloads"),
     win.document.getElementById("rememberForms"),
     win.document.getElementById("acceptCookies"),
     win.document.getElementById("acceptThirdParty"),

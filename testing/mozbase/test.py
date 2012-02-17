@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 """
-run mozbase tests
+run mozbase tests from a manifest,
+by default https://github.com/mozilla/mozbase/blob/master/test-manifest.ini
 """
 
 import imp

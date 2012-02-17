@@ -669,9 +669,8 @@ NotificationController::CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
 void
 NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 {
-  nsAccessible* container =
-    GetAccService()->GetContainerAccessible(aEvent->mNode,
-                                            aEvent->mAccessible->GetWeakShell());
+  nsDocAccessible* document = aEvent->GetDocAccessible();
+  nsAccessible* container = document->GetContainerAccessible(aEvent->mNode);
   if (!container)
     return;
 

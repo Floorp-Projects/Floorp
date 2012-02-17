@@ -101,7 +101,12 @@ public class CrashReporter extends Activity
   @Override
   public void finish()
   {
-    mProgressDialog.dismiss();
+    try {
+      if (mProgressDialog.isShowing()) {
+        mProgressDialog.dismiss();
+      }
+    } catch (Exception e) {
+    }
     super.finish();
   }
 
@@ -230,8 +235,10 @@ public class CrashReporter extends Activity
     final CheckBox includeURLCheckbox = (CheckBox) findViewById(R.id.include_url);
 
     String spec = extras.get("ServerURL");
-    if (spec == null)
+    if (spec == null) {
       doFinish();
+      return;
+    }
 
     Log.i("GeckoCrashReport", "server url: " + spec);
     try {

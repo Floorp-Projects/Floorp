@@ -1990,12 +1990,6 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 extern bool
 js_ClearNative(JSContext *cx, JSObject *obj);
 
-extern bool
-js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, js::Value *vp);
-
-extern bool
-js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, const js::Value &v);
-
 extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
 
@@ -2005,6 +1999,17 @@ js_InferFlags(JSContext *cx, uintN defaultFlags);
 /* Object constructor native. Exposed only so the JIT can know its address. */
 JSBool
 js_Object(JSContext *cx, uintN argc, js::Value *vp);
+
+/*
+ * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
+ * JSProto_Null, clasp must non-null.
+ *
+ * If protoKey is constant and scope is non-null, use GlobalObject's prototype
+ * methods instead.
+ */
+extern JS_FRIEND_API(JSBool)
+js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
+                     JSObject **protop, js::Class *clasp = NULL);
 
 namespace js {
 

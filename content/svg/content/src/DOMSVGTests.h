@@ -59,6 +59,8 @@ public:
   friend class mozilla::DOMSVGStringList;
   typedef mozilla::SVGStringList SVGStringList;
 
+  DOMSVGTests();
+
   /**
    * Compare the language name(s) in a systemLanguage attribute to the
    * user's language preferences, as defined in
@@ -104,29 +106,19 @@ public:
          nsAttrValue& aResult);
 
   /**
-   * Serialises the conditional processing attribute.
-   */
-  void GetValue(PRUint8 aAttrEnum, nsAString& aValue) const;
-
-  /**
    * Unsets a conditional processing attribute.
    */
   void UnsetAttr(const nsIAtom* aAttribute);
 
-  void DidChangeStringList(PRUint8 aAttrEnum);
+  nsIAtom* GetAttrName(PRUint8 aAttrEnum) const;
+  void GetAttrValue(PRUint8 aAttrEnum, nsAttrValue &aValue) const;
 
   void MaybeInvalidate();
 
 private:
-
-  struct StringListInfo {
-    nsIAtom** mName;
-    bool      mIsCommaSeparated;
-  };
-
   enum { FEATURES, EXTENSIONS, LANGUAGE };
   SVGStringList mStringListAttributes[3];
-  static StringListInfo sStringListInfo[3];
+  static nsIAtom** sStringListNames[3];
 };
 
 #endif // MOZILLA_DOMSVGTESTS_H__

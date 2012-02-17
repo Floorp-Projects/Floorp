@@ -87,8 +87,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   // nsIAccessibilityService
-  virtual nsAccessible* GetAccessibleInShell(nsINode* aNode,
-                                             nsIPresShell* aPresShell);
   virtual nsAccessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
                                                   bool aCanCreate);
 
@@ -186,49 +184,18 @@ public:
    * one.
    *
    * @param  aNode             [in] the given node
-   * @param  aPresShell        [in] the pres shell of the node
-   * @param  aWeakShell        [in] the weak shell for the pres shell
+   * @param  aDoc              [in] the doc accessible of the node  
    * @param  aIsSubtreeHidden  [out, optional] indicates whether the node's
    *                             frame and its subtree is hidden
    */
-  nsAccessible* GetOrCreateAccessible(nsINode* aNode, nsIPresShell* aPresShell,
-                                      nsIWeakReference* aWeakShell,
+  nsAccessible* GetOrCreateAccessible(nsINode* aNode, nsDocAccessible* aDoc,
                                       bool* aIsSubtreeHidden = nsnull);
 
   /**
-   * Return an accessible for the given DOM node.
+   * Return an accessible for the given DOM node and eventually a presentation
+   * shell.
    */
-  nsAccessible* GetAccessible(nsINode* aNode);
-
-  /**
-   * Return an accessible for a DOM node in the given presshell.
-   *
-   * @param aNode       [in] the given node
-   * @param aWeakShell  [in] the presentation shell for the given node
-   */
-  inline nsAccessible* GetAccessibleInWeakShell(nsINode* aNode,
-                                                nsIWeakReference* aWeakShell)
-  {
-    // XXX: weak shell is ignored until multiple shell documents are supported.
-    return GetAccessible(aNode);
-  }
-
-  /**
-   * Return an accessible for the given DOM node or container accessible if
-   * the node is not accessible.
-   */
-  nsAccessible* GetAccessibleOrContainer(nsINode* aNode,
-                                         nsIWeakReference* aWeakShell);
-
-  /**
-   * Return a container accessible for the given DOM node.
-   */
-  inline nsAccessible* GetContainerAccessible(nsINode* aNode,
-                                              nsIWeakReference* aWeakShell)
-  {
-    return aNode ?
-      GetAccessibleOrContainer(aNode->GetNodeParent(), aWeakShell) : nsnull;
-  }
+  nsAccessible* GetAccessible(nsINode* aNode, nsIPresShell* aPresShell);
 
 private:
   // nsAccessibilityService creation is controlled by friend
@@ -253,28 +220,28 @@ private:
    * interface.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleByType(nsIContent* aContent, nsIWeakReference* aWeakShell);
+    CreateAccessibleByType(nsIContent* aContent, nsDocAccessible* aDoc);
 
   /**
    * Create accessible for HTML node by tag name.
    */
   already_AddRefed<nsAccessible>
     CreateHTMLAccessibleByMarkup(nsIFrame* aFrame, nsIContent* aContent,
-                                 nsIWeakReference* aWeakShell);
+                                 nsDocAccessible* aDoc);
 
   /**
    * Create accessible if parent is a deck frame.
    */
   already_AddRefed<nsAccessible>
     CreateAccessibleForDeckChild(nsIFrame* aFrame, nsIContent* aContent,
-                                 nsIWeakReference* aWeakShell);
+                                 nsDocAccessible* aDoc);
 
 #ifdef MOZ_XUL
   /**
    * Create accessible for XUL tree element.
    */
   already_AddRefed<nsAccessible>
-    CreateAccessibleForXULTree(nsIContent* aContent, nsIWeakReference* aWeakShell);
+    CreateAccessibleForXULTree(nsIContent* aContent, nsDocAccessible* aDoc);
 #endif
 
   /**

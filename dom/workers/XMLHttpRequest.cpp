@@ -108,13 +108,9 @@ public:
 
     JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
     if (obj) {
+      JS_SetReservedSlot(obj, SLOT_xhrParent, OBJECT_TO_JSVAL(aParentObj));
       XMLHttpRequestUpload* priv = new XMLHttpRequestUpload();
-      if (!JS_SetReservedSlot(aCx, obj, SLOT_xhrParent,
-                              OBJECT_TO_JSVAL(aParentObj)) ||
-          !SetJSPrivateSafeish(aCx, obj, priv)) {
-        delete priv;
-        return NULL;
-      }
+      SetJSPrivateSafeish(obj, priv);
     }
     return obj;
   }
@@ -134,12 +130,12 @@ private:
   }
 
   static XMLHttpRequestUpload*
-  GetPrivate(JSContext* aCx, JSObject* aObj)
+  GetPrivate(JSObject* aObj)
   {
     if (aObj) {
       JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == &sClass) {
-        return GetJSPrivateSafeish<XMLHttpRequestUpload>(aCx, aObj);
+        return GetJSPrivateSafeish<XMLHttpRequestUpload>(aObj);
       }
     }
     return NULL;
@@ -148,7 +144,7 @@ private:
   static XMLHttpRequestUpload*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    XMLHttpRequestUpload* priv = GetPrivate(aCx, aObj);
+    XMLHttpRequestUpload* priv = GetPrivate(aObj);
     if (priv) {
       return priv;
     }
@@ -171,7 +167,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    XMLHttpRequestUpload* priv = GetPrivate(aCx, aObj);
+    XMLHttpRequestUpload* priv = GetPrivate(aObj);
     if (priv) {
       priv->FinalizeInstance(aCx);
       delete priv;
@@ -182,7 +178,7 @@ private:
   Trace(JSTracer* aTrc, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    XMLHttpRequestUpload* priv = GetPrivate(aTrc->context, aObj);
+    XMLHttpRequestUpload* priv = GetPrivate(aObj);
     if (priv) {
       priv->TraceInstance(aTrc);
     }
@@ -325,13 +321,11 @@ public:
   static bool
   UpdateState(JSContext* aCx, JSObject* aObj, const xhr::StateData& aNewState)
   {
-    JS_ASSERT(GetPrivate(aCx, aObj));
+    JS_ASSERT(GetPrivate(aObj));
 
 #define HANDLE_STATE_VALUE(_member, _slot) \
   if (aNewState. _member##Exception || !JSVAL_IS_VOID(aNewState. _member)) { \
-    if (!JS_SetReservedSlot(aCx, aObj, _slot, aNewState. _member)) { \
-      return false; \
-    } \
+    JS_SetReservedSlot(aObj, _slot, aNewState. _member);                     \
   }
 
     HANDLE_STATE_VALUE(mResponseText, SLOT_responseText)
@@ -353,12 +347,12 @@ private:
   ~XMLHttpRequest();
 
   static XMLHttpRequestPrivate*
-  GetPrivate(JSContext* aCx, JSObject* aObj)
+  GetPrivate(JSObject* aObj)
   {
     if (aObj) {
       JSClass* classPtr = JS_GetClass(aObj);
       if (classPtr == &sClass) {
-        return GetJSPrivateSafeish<XMLHttpRequestPrivate>(aCx, aObj);
+        return GetJSPrivateSafeish<XMLHttpRequestPrivate>(aObj);
       }
     }
     return NULL;
@@ -367,7 +361,7 @@ private:
   static XMLHttpRequestPrivate*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
   {
-    XMLHttpRequestPrivate* priv = GetPrivate(aCx, aObj);
+    XMLHttpRequestPrivate* priv = GetPrivate(aObj);
     if (priv) {
       return priv;
     }
@@ -394,27 +388,21 @@ private:
     jsval emptyString = JS_GetEmptyStringValue(aCx);
     jsval zero = INT_TO_JSVAL(0);
 
-    if (!JS_SetReservedSlot(aCx, obj, SLOT_channel, JSVAL_NULL) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_responseXML, JSVAL_NULL) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_responseText, emptyString) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_status, zero) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_statusText, emptyString) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_readyState, zero) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_multipart, JSVAL_FALSE) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_mozBackgroundRequest, JSVAL_FALSE) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_withCredentials, JSVAL_FALSE) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_upload, JSVAL_NULL) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_responseType,
-                            STRING_TO_JSVAL(textStr))) {
-      return false;
-    }
+    JS_SetReservedSlot(obj, SLOT_channel, JSVAL_NULL);
+    JS_SetReservedSlot(obj, SLOT_responseXML, JSVAL_NULL);
+    JS_SetReservedSlot(obj, SLOT_responseText, emptyString);
+    JS_SetReservedSlot(obj, SLOT_status, zero);
+    JS_SetReservedSlot(obj, SLOT_statusText, emptyString);
+    JS_SetReservedSlot(obj, SLOT_readyState, zero);
+    JS_SetReservedSlot(obj, SLOT_multipart, JSVAL_FALSE);
+    JS_SetReservedSlot(obj, SLOT_mozBackgroundRequest, JSVAL_FALSE);
+    JS_SetReservedSlot(obj, SLOT_withCredentials, JSVAL_FALSE);
+    JS_SetReservedSlot(obj, SLOT_upload, JSVAL_NULL);
+    JS_SetReservedSlot(obj, SLOT_responseType, STRING_TO_JSVAL(textStr));
 
     WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
     XMLHttpRequestPrivate* priv = new XMLHttpRequestPrivate(obj, workerPrivate);
-    if (!SetJSPrivateSafeish(aCx, obj, priv)) {
-      delete priv;
-      return false;
-    }
+    SetJSPrivateSafeish(obj, priv);
 
     JS_SET_RVAL(aCx, aVp, OBJECT_TO_JSVAL(obj));
     return true;
@@ -424,7 +412,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    XMLHttpRequestPrivate* priv = GetPrivate(aCx, aObj);
+    XMLHttpRequestPrivate* priv = GetPrivate(aObj);
     if (priv) {
       priv->FinalizeInstance(aCx);
       delete priv;
@@ -435,7 +423,7 @@ private:
   Trace(JSTracer* aTrc, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    XMLHttpRequestPrivate* priv = GetPrivate(aTrc->context, aObj);
+    XMLHttpRequestPrivate* priv = GetPrivate(aObj);
     if (priv) {
       priv->TraceInstance(aTrc);
     }
@@ -453,10 +441,7 @@ private:
       return false;
     }
 
-    jsval rval;
-    if (!JS_GetReservedSlot(aCx, aObj, slot, &rval)) {
-      return false;
-    }
+    jsval rval = JS_GetReservedSlot(aObj, slot);
 
     if (JSVAL_IS_VOID(rval)) {
       // Throw an exception.
@@ -492,10 +477,7 @@ private:
       return false;
     }
 
-    jsval uploadVal;
-    if (!JS_GetReservedSlot(aCx, aObj, slot, &uploadVal)) {
-      return false;
-    }
+    jsval uploadVal = JS_GetReservedSlot(aObj, slot);
 
     if (JSVAL_IS_NULL(uploadVal)) {
       JSObject* uploadObj = XMLHttpRequestUpload::Create(aCx, aObj);
@@ -505,9 +487,7 @@ private:
 
       uploadVal = OBJECT_TO_JSVAL(uploadObj);
 
-      if (!JS_SetReservedSlot(aCx, aObj, slot, uploadVal)) {
-        return false;
-      }
+      JS_SetReservedSlot(aObj, slot, uploadVal);
 
       priv->SetUploadObject(uploadObj);
     }
@@ -533,16 +513,12 @@ private:
       return false;                                                            \
     }                                                                          \
                                                                                \
-    jsval oldVal;                                                              \
-    if (!JS_GetReservedSlot(aCx, aObj, slot, &oldVal)) {                       \
-      return false;                                                            \
-    }                                                                          \
+    jsval oldVal = JS_GetReservedSlot(aObj, slot);                             \
                                                                                \
     jsval rval = *aVp;                                                         \
-    if (!priv->Set##_name (aCx, oldVal, &rval) ||                              \
-        !JS_SetReservedSlot(aCx, aObj, slot, rval)) {                          \
+    if (!priv->Set##_name (aCx, oldVal, &rval))                                \
       return false;                                                            \
-    }                                                                          \
+    JS_SetReservedSlot(aObj, slot, rval);                                      \
                                                                                \
     *aVp = rval;                                                               \
     return true;                                                               \
@@ -880,10 +856,7 @@ XMLHttpRequestUpload::UpdateState(JSContext* aCx, JSObject* aObj,
 {
   JS_ASSERT(JS_GetClass(aObj) == &sClass);
 
-  jsval parentVal;
-  if (!JS_GetReservedSlot(aCx, aObj, SLOT_xhrParent, &parentVal)) {
-    return false;
-  }
+  jsval parentVal = JS_GetReservedSlot(aObj, SLOT_xhrParent);
 
   if (!JSVAL_IS_PRIMITIVE(parentVal)) {
     return XMLHttpRequest::UpdateState(aCx, JSVAL_TO_OBJECT(parentVal),

@@ -80,6 +80,10 @@
 #ifdef MOZ_B2G_RIL
 #include "TelephonyFactory.h"
 #endif
+#ifdef MOZ_B2G_BT
+#include "nsIDOMBluetoothAdapter.h"
+#include "BluetoothAdapter.h"
+#endif
 
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
@@ -133,6 +137,9 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorTelephony)
 #endif
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorNetwork)
+#ifdef MOZ_B2G_BT
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorBluetooth)
+#endif
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -182,6 +189,12 @@ Navigator::Invalidate()
     mConnection->Shutdown();
     mConnection = nsnull;
   }
+
+#ifdef MOZ_B2G_BT
+  if (mBluetooth) {
+    mBluetooth = nsnull;
+  }
+#endif
 }
 
 nsPIDOMWindow *
@@ -1111,6 +1124,30 @@ Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
   NS_ADDREF(*aConnection = mConnection);
   return NS_OK;
 }
+
+#ifdef MOZ_B2G_BT
+//*****************************************************************************
+//    nsNavigator::nsIDOMNavigatorBluetooth
+//*****************************************************************************
+
+NS_IMETHODIMP
+Navigator::GetMozBluetooth(nsIDOMBluetoothAdapter** aBluetooth)
+{
+  nsCOMPtr<nsIDOMBluetoothAdapter> bluetooth = mBluetooth;
+
+  if (!bluetooth) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+    mBluetooth = new bluetooth::BluetoothAdapter();
+
+    bluetooth = mBluetooth;
+  }
+
+  bluetooth.forget(aBluetooth);
+  return NS_OK;
+}
+#endif //MOZ_B2G_BT
 
 PRInt64
 Navigator::SizeOf() const

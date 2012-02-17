@@ -49,7 +49,7 @@ class nsPIDOMWindow;
 
 BEGIN_TELEPHONY_NAMESPACE
 
-class TelephonyCall : public nsDOMEventTargetWrapperCache,
+class TelephonyCall : public nsDOMEventTargetHelper,
                       public nsIDOMTelephonyCall
 {
   NS_DECL_EVENT_HANDLER(statechange)
@@ -75,9 +75,9 @@ class TelephonyCall : public nsDOMEventTargetWrapperCache,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMTELEPHONYCALL
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetWrapperCache::)
+  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TelephonyCall,
-                                           nsDOMEventTargetWrapperCache)
+                                           nsDOMEventTargetHelper)
 
   static already_AddRefed<TelephonyCall>
   Create(Telephony* aTelephony, const nsAString& aNumber, PRUint16 aCallState,
@@ -86,7 +86,7 @@ public:
   nsIDOMEventTarget*
   ToIDOMEventTarget() const
   {
-    return static_cast<nsDOMEventTargetWrapperCache*>(
+    return static_cast<nsDOMEventTargetHelper*>(
              const_cast<TelephonyCall*>(this));
   }
 

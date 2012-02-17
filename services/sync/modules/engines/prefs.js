@@ -257,7 +257,7 @@ PrefTracker.prototype = {
       case "weave:engine:start-tracking":
         if (!this._enabled) {
           Cc["@mozilla.org/preferences-service;1"]
-            .getService(Ci.nsIPrefBranch2).addObserver("", this, false);
+            .getService(Ci.nsIPrefBranch).addObserver("", this, false);
           this._enabled = true;
         }
         break;
@@ -268,7 +268,7 @@ PrefTracker.prototype = {
       case "profile-before-change":
         this.__prefs = null;
         Cc["@mozilla.org/preferences-service;1"]
-          .getService(Ci.nsIPrefBranch2).removeObserver("", this);
+          .getService(Ci.nsIPrefBranch).removeObserver("", this);
         break;
       case "nsPref:changed":
         // Trigger a sync for MULTI-DEVICE for a change that determines

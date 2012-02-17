@@ -2022,7 +2022,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
 
   args->m_cx         = cx;
   args->m_kungFuDeathGrip = GetISupportsFromContext(cx);
-  args->m_scope      = JS_GetParent(cx, script_obj);
+  args->m_scope      = JS_GetParent(script_obj);
 
   args->m_jsCallback.Adopt(!!jsCallback ? nsCRT::strdup(jsCallback.ptr()) : 0);
   args->m_principals = principals;

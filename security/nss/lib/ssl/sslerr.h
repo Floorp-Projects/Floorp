@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslerr.h,v 1.18 2011/11/19 21:58:21 bsmith%mozilla.com Exp $ */
+/* $Id: sslerr.h,v 1.19 2012/02/11 12:55:58 kaie%kuix.de Exp $ */
 #ifndef __SSL_ERR_H_
 #define __SSL_ERR_H_
 

@@ -35,21 +35,13 @@
 # ***** END LICENSE BLOCK *****
 
 add_makefiles "
-netwerk/locales/Makefile
-dom/locales/Makefile
-toolkit/locales/Makefile
-security/manager/locales/Makefile
 b2g/app/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
+$MOZ_BRANDING_DIRECTORY/content/Makefile
+$MOZ_BRANDING_DIRECTORY/locales/Makefile
 b2g/chrome/Makefile
 b2g/components/Makefile
 b2g/installer/Makefile
 b2g/locales/Makefile
 b2g/Makefile
 "
-
-if test -n "$MOZ_UPDATE_PACKAGING"; then
-   add_makefiles "
-     tools/update-packaging/Makefile
-   "
-fi

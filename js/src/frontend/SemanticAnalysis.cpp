@@ -570,15 +570,20 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool isDirectEval)
                 }
             }
 
+            /*
+             * Top-level functions, and (extension) functions not at top level
+             * which are also not directly within other functions, aren't
+             * flattened.
+             */
+            if (fn->isOp(JSOP_DEFFUN))
+                canFlatten = false;
+
             if (!hasUpvars) {
                 /* No lexical dependencies => null closure, for best performance. */
                 fun->setKind(JSFUN_NULL_CLOSURE);
             } else if (canFlatten) {
                 fun->setKind(JSFUN_FLAT_CLOSURE);
                 switch (fn->getOp()) {
-                  case JSOP_DEFFUN:
-                    fn->setOp(JSOP_DEFFUN_FC);
-                    break;
                   case JSOP_DEFLOCALFUN:
                     fn->setOp(JSOP_DEFLOCALFUN_FC);
                     break;

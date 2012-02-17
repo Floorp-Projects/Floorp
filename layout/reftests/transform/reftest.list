@@ -66,6 +66,8 @@ random == rotate-1f.html rotate-1-ref.html
 == abspos-1c.html abspos-1-ref.html
 == abspos-1d.html abspos-1-ref.html
 != abspos-1e.html abspos-1-ref.html
+== abspos-1f.html abspos-1-ref.html
+== abspos-1g.html abspos-1-ref.html
 # Origin can use "top" "right" etc.
 == origin-name-1a.html origin-name-1-ref.html
 == origin-name-1b.html origin-name-1-ref.html
@@ -110,3 +112,9 @@ fails-if(Android) == stresstest-1.html stresstest-1-ref.html
 # Bugs
 == 601894-1.html 601894-ref.html
 == 601894-2.html 601894-ref.html
+# Bug 722777
+== table-1a.html table-1-ref.html
+== table-1b.html table-1-ref.html
+== table-1c.html table-1-ref.html
+== table-2a.html table-2-ref.html
+== table-2b.html table-2-ref.html

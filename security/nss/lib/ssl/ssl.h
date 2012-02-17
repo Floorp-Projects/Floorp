@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.45 2011/10/29 00:29:11 bsmith%mozilla.com Exp $ */
+/* $Id: ssl.h,v 1.48 2012/02/11 12:58:47 kaie%kuix.de Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -343,15 +343,15 @@ SSL_IMPORT CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd);
 ** The authenticate certificate hook must return SECSuccess to indicate the
 ** certificate is valid, SECFailure to indicate the certificate is invalid,
 ** or SECWouldBlock if the application will authenticate the certificate
-** asynchronously.
+** asynchronously. SECWouldBlock is only supported for non-blocking sockets.
 **
 ** If the authenticate certificate hook returns SECFailure, then the bad cert
 ** hook will be called. The bad cert handler is NEVER called if the
 ** authenticate certificate hook returns SECWouldBlock.
-** 
-** See the documentation for SSL_RestartHandshakeAfterAuthCertificate for more
-** information about the asynchronous behavior that occurs when the
-** authenticate certificate hook returns SECWouldBlock.
+**
+** See the documentation for SSL_AuthCertificateComplete for more information
+** about the asynchronous behavior that occurs when the authenticate
+** certificate hook returns SECWouldBlock
 */
 typedef SECStatus (PR_CALLBACK *SSLAuthCertificate)(void *arg, PRFileDesc *fd, 
                                                     PRBool checkSig,
@@ -459,11 +459,12 @@ SSL_IMPORT SECStatus SSL_SetPKCS11PinArg(PRFileDesc *fd, void *a);
 ** The bad cert hook must return SECSuccess to override the result of the
 ** authenticate certificate hook, SECFailure if the certificate should still be
 ** considered invalid, or SECWouldBlock if the application will authenticate
-** the certificate asynchronously.
+** the certificate asynchronously. SECWouldBlock is only supported for
+** non-blocking sockets.
 **
-** See the documentation for SSL_RestartHandshakeAfterAuthCertificate for more
-** information about the asynchronous behavior that occurs when the bad cert
-** hook returns SECWouldBlock.
+** See the documentation for SSL_AuthCertificateComplete for more information
+** about the asynchronous behavior that occurs when the bad cert hook returns
+** SECWouldBlock.
 */
 typedef SECStatus (PR_CALLBACK *SSLBadCertHandler)(void *arg, PRFileDesc *fd);
 SSL_IMPORT SECStatus SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f, 
@@ -766,37 +767,45 @@ extern const char *NSSSSL_GetVersion(void);
  * chain validation (when the auth certificate hook or bad cert handler
  * returned SECWouldBlock).
  *
- * Currently, this function works only for the client role of a connection; it
- * does not work for the server role.
+ * This function only works for non-blocking sockets; Do not use it for
+ * blocking sockets. Currently, this function works only for the client role of
+ * a connection; it does not work for the server role.
  *
- * The application MUST call SSL_RestartHandshakeAfterAuthCertificate after it
- * has successfully validated the peer's certificate to continue the SSL
- * handshake.
+ * The application must call SSL_AuthCertificateComplete with 0 as the value of
+ * status parameter after it has successfully validated the peer's certificate,
+ * in order to continue the SSL handshake.
  *
- * The application MUST NOT call SSL_RestartHandshakeAfterAuthCertificate when
- * certificate validation fails; instead, it should just close the connection.
+ * The application may call SSL_AuthCertificateComplete with a non-zero value
+ * for status (e.g. SEC_ERROR_REVOKED_CERTIFICATE) when certificate validation
+ * fails, before it closes the connection. If the application does so, an
+ * alert corresponding to the error (e.g. certificate_revoked) will be sent to
+ * the peer. See the source code of the internal function
+ * ssl3_SendAlertForCertError for the current mapping of error to alert. This
+ * mapping may change in future versions of libssl.
  *
  * This function will not complete the entire handshake. The application must
  * call SSL_ForceHandshake, PR_Recv, PR_Send, etc. after calling this function
  * to force the handshake to complete.
  *
- * libssl will wait for the peer's certificate to be authenticated before
- * calling the handshake callback, sending a client certificate,
- * sending any application data, or returning any application data to the
- * application (on the first handshake on a connection only).
+ * On the first handshake of a connection, libssl will wait for the peer's
+ * certificate to be authenticated before calling the handshake callback,
+ * sending a client certificate, sending any application data, or returning
+ * any application data to the application. On subsequent (renegotiation)
+ * handshakes, libssl will block the handshake unconditionally while the
+ * certificate is being validated.
  *
- * However, libssl may send and receive handshake messages while waiting for
- * the application to call SSL_RestartHandshakeAfterAuthCertificate, and it may
- * call other callbacks (e.g, the client auth data hook) before
- * SSL_RestartHandshakeAfterAuthCertificate has been called. 
+ * libssl may send and receive handshake messages while waiting for the
+ * application to call SSL_AuthCertificateComplete, and it may call other
+ * callbacks (e.g, the client auth data hook) before
+ * SSL_AuthCertificateComplete has been called.
  *
  * An application that uses this asynchronous mechanism will usually have lower
  * handshake latency if it has to do public key operations on the certificate
- * chain during the authentication, especially if it does so in parallel on
- * another thread. However, if the application can authenticate the peer's
- * certificate quickly then it may be more efficient to use the synchronous
- * mechanism (i.e. returning SECFailure/SECSuccess instead of SECWouldBlock
- * from the authenticate certificate hook).
+ * chain and/or CRL/OCSP/cert fetching during the authentication, especially if
+ * it does so in parallel on another thread. However, if the application can
+ * authenticate the peer's certificate quickly then it may be more efficient
+ * to use the synchronous mechanism (i.e. returning SECFailure/SECSuccess
+ * instead of SECWouldBlock from the authenticate certificate hook).
  *
  * Be careful about converting an application from synchronous cert validation
  * to asynchronous certificate validation. A naive conversion is likely to
@@ -805,10 +814,12 @@ extern const char *NSSSSL_GetVersion(void);
  * waiting for this function to be called.
  *
  * Returns SECFailure on failure, SECSuccess on success. Never returns
- * SECWouldBlock.
+ * SECWouldBlock. Note that SSL_AuthCertificateComplete will (usually) return
+ * SECSuccess; do not interpret the return value of SSL_AuthCertificateComplete
+ * as an indicator of whether it is OK to continue using the connection.
  */
-SSL_IMPORT SECStatus SSL_RestartHandshakeAfterAuthCertificate(PRFileDesc *fd);
-
+SSL_IMPORT SECStatus SSL_AuthCertificateComplete(PRFileDesc *fd,
+						 PRErrorCode status);
 SEC_END_PROTOS
 
 #endif /* __ssl_h_ */

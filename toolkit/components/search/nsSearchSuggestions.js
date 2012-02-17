@@ -526,7 +526,7 @@ SuggestAutoComplete.prototype = {
 
   _addObservers: function SAC_addObservers() {
     var prefService2 = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefBranch2);
+                       getService(Ci.nsIPrefBranch);
     prefService2.addObserver(BROWSER_SUGGEST_PREF, this, false);
 
     var os = Cc["@mozilla.org/observer-service;1"].
@@ -536,7 +536,7 @@ SuggestAutoComplete.prototype = {
 
   _removeObservers: function SAC_removeObservers() {
     var prefService2 = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefBranch2);
+                       getService(Ci.nsIPrefBranch);
     prefService2.removeObserver(BROWSER_SUGGEST_PREF, this);
 
     var os = Cc["@mozilla.org/observer-service;1"].
