@@ -67,49 +67,52 @@ function makeSafe(aUnsafeStr)
 
 const kTreeUnsafeDescriptions = {
   'explicit' :
-    "This tree covers explicit memory allocations by the application, " +
-    "both at the operating system level (via calls to functions such as " +
-    "VirtualAlloc, vm_allocate, and mmap), and at the heap allocation level " +
-    "(via functions such as malloc, calloc, realloc, memalign, operator " +
-    "new, and operator new[]).  It excludes memory that is mapped implicitly " +
-    "such as code and data segments, and thread stacks.  It also excludes " +
-    "heap memory that has been freed by the application but is still being " +
-    "held onto by the heap allocator.  It is not guaranteed to cover every " +
-    "explicit allocation, but it does cover most (including the entire " +
-    "heap), and therefore it is the single best number to focus on when " +
-    "trying to reduce memory usage.",
+"This tree covers explicit memory allocations by the application, both at the \
+operating system level (via calls to functions such as VirtualAlloc, \
+vm_allocate, and mmap), and at the heap allocation level (via functions such \
+as malloc, calloc, realloc, memalign, operator new, and operator new[]).\
+\n\n\
+It excludes memory that is mapped implicitly such as code and data segments, \
+and thread stacks.  It also excludes heap memory that has been freed by the \
+application but is still being held onto by the heap allocator. \
+\n\n\
+It is not guaranteed to cover every explicit allocation, but it does cover \
+most (including the entire heap), and therefore it is the single best number \
+to focus on when trying to reduce memory usage.",
 
   'resident':
-    "This tree shows how much space in physical memory each of the " +
-    "process's mappings is currently using (the mapping's 'resident set size', " +
-    "or 'RSS'). This is a good measure of the 'cost' of the mapping, although " +
-    "it does not take into account the fact that shared libraries may be mapped " +
-    "by multiple processes but appear only once in physical memory. " +
-    "Note that the 'resident' value here might not equal the value for " +
-    "'resident' under 'Other Measurements' because the two measurements are not " +
-    "taken at exactly the same time.",
+"This tree shows how much space in physical memory each of the process's \
+mappings is currently using (the mapping's 'resident set size', or 'RSS'). \
+This is a good measure of the 'cost' of the mapping, although it does not \
+take into account the fact that shared libraries may be mapped by multiple \
+processes but appear only once in physical memory. \
+\n\n\
+Note that the 'resident' value here might not equal the value for 'resident' \
+under 'Other Measurements' because the two measurements are not taken at \
+exactly the same time.",
 
   'pss':
-    "This tree shows how much space in physical memory can be 'blamed' on this " +
-    "process.  For each mapping, its 'proportional set size' (PSS) is the " +
-    "mapping's resident size divided by the number of processes which use the " +
-    "mapping.  So if a mapping is private to this process, its PSS should equal " +
-    "its RSS.  But if a mapping is shared between three processes, its PSS in " +
-    "each of the processes would be 1/3 its RSS.",
+"This tree shows how much space in physical memory can be 'blamed' on this \
+process.  For each mapping, its 'proportional set size' (PSS) is the \
+mapping's resident size divided by the number of processes which use the \
+mapping.  So if a mapping is private to this process, its PSS should equal \
+its RSS.  But if a mapping is shared between three processes, its PSS in each \
+of the processes would be 1/3 its RSS.",
 
   'vsize':
-    "This tree shows how much virtual addres space each of the process's " +
-    "mappings takes up (the mapping's 'vsize').  A mapping may have a large " +
-    "vsize but use only a small amount of physical memory; the resident set size " +
-    "of a mapping is a better measure of the mapping's 'cost'. Note that the " +
-    "'vsize' value here might not equal the value for 'vsize' under 'Other " +
-    "Measurements' because the two measurements are not taken at exactly the " +
-    "same time.",
+"This tree shows how much virtual addres space each of the process's mappings \
+takes up (the mapping's 'vsize').  A mapping may have a large vsize but use \
+only a small amount of physical memory; the resident set size of a mapping is \
+a better measure of the mapping's 'cost'. \
+\n\n\
+Note that the 'vsize' value here might not equal the value for 'vsize' under \
+'Other Measurements' because the two measurements are not taken at exactly \
+the same time.",
 
   'swap':
-    "This tree shows how much space in the swap file each of the process's " +
-    "mappings is currently using. Mappings which are not in the swap file " +
-    "(i.e., nodes which would have a value of 0 in this tree) are omitted."
+"This tree shows how much space in the swap file each of the process's \
+mappings is currently using. Mappings which are not in the swap file (i.e., \
+nodes which would have a value of 0 in this tree) are omitted."
 };
 
 const kTreeNames = {
