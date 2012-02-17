@@ -818,24 +818,6 @@ struct JSObject : public js::ObjectImpl
     bool growElements(JSContext *cx, uintN cap);
     void shrinkElements(JSContext *cx, uintN cap);
 
-    inline js::HeapValue* fixedElements() const {
-        JS_STATIC_ASSERT(2 * sizeof(js::Value) == sizeof(js::ObjectElements));
-        return &fixedSlots()[2];
-    }
-
-    void setFixedElements() { this->elements = fixedElements(); }
-
-    inline bool hasDynamicElements() const {
-        /*
-         * Note: for objects with zero fixed slots this could potentially give
-         * a spurious 'true' result, if the end of this object is exactly
-         * aligned with the end of its arena and dynamic slots are allocated
-         * immediately afterwards. Such cases cannot occur for dense arrays
-         * (which have at least two fixed slots) and can only result in a leak.
-         */
-        return elements != js::emptyObjectElements && elements != fixedElements();
-    }
-
     inline js::ElementIteratorObject *asElementIterator();
 
     /*
