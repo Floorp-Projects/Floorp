@@ -4105,6 +4105,43 @@ if test -n "$MOZ_LINKER"; then
   fi
 fi
 
+dnl The custom linker doesn't support text relocations, but NDK >= r6b
+dnl creates some (http://code.google.com/p/android/issues/detail?id=23203)
+dnl We however want to avoid these text relocations, and this can be done
+dnl by making gcc not link crtbegin and crtend. In the broken NDKs, crtend
+dnl doesn't contain anything at all, beside placeholders for some sections,
+dnl and crtbegin only contains a finalizer function that calls
+dnl __cxa_finalize. The custom linker actually takes care of calling
+dnl __cxa_finalize when the library doesn't call it itself, which makes it
+dnl safe not to link crtbegin. Besides, previous versions of the NDK didn't
+dnl link crtbegin and crtend at all.
+if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$OS_TARGET" = "Android"; then
+  AC_CACHE_CHECK([whether the CRT objects have text relocations],
+    ac_cv_crt_has_text_relocations,
+    [echo 'int foo() { return 0; }' > conftest.cpp
+     if AC_TRY_COMMAND(${CXX-g++} -o conftest${DLL_SUFFIX} $CXXFLAGS $DSO_LDOPTS $LDFLAGS conftest.cpp $LIBS 1>&5) &&
+        test -s conftest${DLL_SUFFIX}; then
+       if readelf -d conftest${DLL_SUFFIX} | grep TEXTREL > /dev/null; then
+         ac_cv_crt_has_text_relocations=yes
+       else
+         ac_cv_crt_has_text_relocations=no
+       fi
+     else
+       AC_ERROR([couldn't compile a simple C file])
+     fi
+     rm -rf conftest*])
+  if test "$ac_cv_crt_has_text_relocations" = yes; then
+    dnl While we want libraries to skip the CRT files, we don't want
+    dnl executables to be treated the same way. We thus set the flag
+    dnl in DSO_LDOPTS and not LDFLAGS. However, to pass it to nspr,
+    dnl we need to use LDFLAGS because nspr doesn't inherit DSO_LDOPTS.
+    dnl Using LDFLAGS in nspr is safe, since we only really build
+    dnl libraries there.
+    DSO_LDOPTS="$DSO_LDOPTS -nostartfiles"
+    NSPR_LDFLAGS=-nostartfiles
+  fi
+fi
+
 dnl Check for the existence of various allocation headers/functions
 
 MALLOC_H=
@@ -9119,7 +9156,11 @@ if test -z "$MOZ_NATIVE_NSPR"; then
       _SAVE_CPPFLAGS="$CPPFLAGS"
       export CPPFLAGS="-include $_topsrcdir/mozglue/linker/dladdr.h $CPPFLAGS"
     fi
+    _SAVE_LDFLAGS="$LDFLAGS"
+    export LDFLAGS="$LDFLAGS $NSPR_LDFLAGS"
     AC_OUTPUT_SUBDIRS(nsprpub)
+    unset LDFLAGS
+    LDFLAGS="$_SAVE_LDFLAGS"
     if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$ac_cv_func_dladdr" = no; then
       unset CPPFLAGS
       CPPFLAGS="$_SAVE_CFLAGS"
