@@ -434,6 +434,23 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         break;
     }
 
+    case AndroidGeckoEvent::SCREENSHOT: {
+        if (!mBrowserApp)
+            break;
+
+        AndroidBridge* bridge = AndroidBridge::Bridge();
+        if (!bridge)
+            break;
+
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        mBrowserApp->GetWindowForTab(curEvent->MetaState(), getter_AddRefs(domWindow));
+        nsTArray<nsIntPoint> points = curEvent->Points();
+        NS_ASSERTION(points.Length() != 2, "Screenshot event does not have enough coordinates");
+        if (domWindow)
+            bridge->TakeScreenshot(domWindow, 0, 0, points[0].x, points[0].y, points[1].x, points[1].y, curEvent->MetaState());
+        break;
+    }
+
     case AndroidGeckoEvent::VIEWPORT:
     case AndroidGeckoEvent::BROADCAST: {
 
