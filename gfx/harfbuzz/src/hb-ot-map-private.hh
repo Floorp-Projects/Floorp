@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2009,2010  Red Hat, Inc.
- * Copyright (C) 2010  Google, Inc.
+ * Copyright © 2009,2010  Red Hat, Inc.
+ * Copyright © 2010,2011  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -33,43 +33,57 @@
 
 #include "hb-ot-layout.h"
 
-HB_BEGIN_DECLS
 
-
-#define MAX_FEATURES 100 /* FIXME */
-#define MAX_LOOKUPS 1000 /* FIXME */
-
-/* some constants for feature-ordering priorities; intermediate values can also be
-   used if required for shapers that want precise control. */
-#define FIRST_PRIORITY   100
-#define EARLY_PRIORITY   300
-#define DEFAULT_PRIORITY 500
-#define LATE_PRIORITY    700
-#define LAST_PRIORITY    900
 
 static const hb_tag_t table_tags[2] = {HB_OT_TAG_GSUB, HB_OT_TAG_GPOS};
 
-struct hb_ot_map_t {
+struct hb_ot_map_t
+{
+  friend struct hb_ot_map_builder_t;
+
+  public:
+
+  hb_ot_map_t (void) { memset (this, 0, sizeof (*this)); }
+
+  typedef void (*gsub_pause_func_t) (const hb_ot_map_t *map, hb_face_t *face, hb_buffer_t *buffer, void *user_data);
+  typedef void (*gpos_pause_func_t) (const hb_ot_map_t *map, hb_font_t *font, hb_buffer_t *buffer, void *user_data);
+
+  inline hb_mask_t get_global_mask (void) const { return global_mask; }
+
+  inline hb_mask_t get_mask (hb_tag_t tag, unsigned int *shift = NULL) const {
+    const feature_map_t *map = features.bsearch (&tag);
+    if (shift) *shift = map ? map->shift : 0;
+    return map ? map->mask : 0;
+  }
+
+  inline hb_mask_t get_1_mask (hb_tag_t tag) const {
+    const feature_map_t *map = features.bsearch (&tag);
+    return map ? map->_1_mask : 0;
+  }
+
+  inline hb_tag_t get_chosen_script (unsigned int table_index) const
+  { return chosen_script[table_index]; }
+
+  inline void substitute (hb_face_t *face, hb_buffer_t *buffer) const
+  { apply (0, (hb_ot_map_t::apply_lookup_func_t) hb_ot_layout_substitute_lookup, face, buffer); }
+  inline void position (hb_font_t *font, hb_buffer_t *buffer) const
+  { apply (1, (hb_ot_map_t::apply_lookup_func_t) hb_ot_layout_position_lookup, font, buffer); }
+
+  inline void finish (void) {
+    features.finish ();
+    lookups[0].finish ();
+    lookups[1].finish ();
+    pauses[0].finish ();
+    pauses[1].finish ();
+  }
 
   private:
 
-  struct feature_info_t {
-    hb_tag_t tag;
-    unsigned int seq; /* sequence#, used for stable sorting only */
-    unsigned int max_value;
-    bool global; /* whether the feature applies value to every glyph in the buffer */
-    unsigned short default_value; /* for non-global features, what should the unset glyphs take */
-    unsigned short priority; /* feature ordering priority, for cases such as Arabic */
-
-    static int cmp (const feature_info_t *a, const feature_info_t *b)
-    { return (a->tag != b->tag) ?  (a->tag < b->tag ? -1 : 1) : (a->seq < b->seq ? -1 : 1); }
-  };
-
   struct feature_map_t {
     hb_tag_t tag; /* should be first for our bsearch to work */
-    unsigned int index[2]; /* GSUB, GPOS */
-    unsigned short shift;
-    unsigned short priority;
+    unsigned int index[2]; /* GSUB/GPOS */
+    unsigned int stage[2]; /* GSUB/GPOS */
+    unsigned int shift;
     hb_mask_t mask;
     hb_mask_t _1_mask; /* mask for value=1, for quick access */
 
@@ -78,83 +92,100 @@ struct hb_ot_map_t {
   };
 
   struct lookup_map_t {
-    unsigned short index;
-    unsigned short priority;
+    unsigned int index;
     hb_mask_t mask;
 
     static int cmp (const lookup_map_t *a, const lookup_map_t *b)
-    {
-      unsigned int a_key = (a->priority << 16) + a->index;
-      unsigned int b_key = (b->priority << 16) + b->index;
-      return a_key < b_key ? -1 : a_key > b_key ? 1 : 0;
-    }
+    { return a->index < b->index ? -1 : a->index > b->index ? 1 : 0; }
   };
+
+  typedef void (*pause_func_t) (const hb_ot_map_t *map, void *face_or_font, hb_buffer_t *buffer, void *user_data);
+  typedef struct {
+    pause_func_t func;
+    void *user_data;
+  } pause_callback_t;
+
+  struct pause_map_t {
+    unsigned int num_lookups; /* Cumulative */
+    pause_callback_t callback;
+  };
+
+  typedef hb_bool_t (*apply_lookup_func_t) (void *face_or_font,
+					    hb_buffer_t  *buffer,
+					    unsigned int  lookup_index,
+					    hb_mask_t     mask);
 
   HB_INTERNAL void add_lookups (hb_face_t    *face,
 				unsigned int  table_index,
 				unsigned int  feature_index,
-				unsigned short priority,
 				hb_mask_t     mask);
 
+  HB_INTERNAL void apply (unsigned int table_index,
+			  hb_ot_map_t::apply_lookup_func_t apply_lookup_func,
+			  void *face_or_font,
+			  hb_buffer_t *buffer) const;
 
+  hb_mask_t global_mask;
+
+  hb_tag_t chosen_script[2];
+  hb_prealloced_array_t<feature_map_t, 8> features;
+  hb_prealloced_array_t<lookup_map_t, 32> lookups[2]; /* GSUB/GPOS */
+  hb_prealloced_array_t<pause_map_t, 1> pauses[2]; /* GSUB/GPOS */
+};
+
+
+struct hb_ot_map_builder_t
+{
   public:
 
-  hb_ot_map_t (void) : feature_count (0) {}
+  hb_ot_map_builder_t (void) { memset (this, 0, sizeof (*this)); }
 
-  void add_feature (hb_tag_t tag, unsigned int value, unsigned short priority, bool global)
-  {
-    feature_info_t *info = &feature_infos[feature_count++];
-    info->tag = tag;
-    info->seq = feature_count;
-    info->max_value = value;
-    info->global = global;
-    info->default_value = global ? value : 0;
-    info->priority = priority;
-  }
+  HB_INTERNAL void add_feature (hb_tag_t tag, unsigned int value, bool global);
 
-  inline void add_bool_feature (hb_tag_t tag, unsigned short priority, bool global = true)
-  { add_feature (tag, 1, priority, global); }
+  inline void add_bool_feature (hb_tag_t tag, bool global = true)
+  { add_feature (tag, 1, global); }
+
+  inline void add_gsub_pause (hb_ot_map_t::gsub_pause_func_t pause_func, void *user_data)
+  { add_pause (0, (hb_ot_map_t::pause_func_t) pause_func, user_data); }
+  inline void add_gpos_pause (hb_ot_map_t::gpos_pause_func_t pause_func, void *user_data)
+  { add_pause (1, (hb_ot_map_t::pause_func_t) pause_func, user_data); }
 
   HB_INTERNAL void compile (hb_face_t *face,
-			    const hb_segment_properties_t *props);
+			    const hb_segment_properties_t *props,
+			    struct hb_ot_map_t &m);
 
-  inline hb_mask_t get_global_mask (void) const { return global_mask; }
-
-  inline hb_mask_t get_mask (hb_tag_t tag, unsigned short *shift = NULL) const {
-    const feature_map_t *map = (const feature_map_t *) bsearch (&tag, feature_maps, feature_count, sizeof (feature_maps[0]), (hb_compare_func_t) feature_map_t::cmp);
-    if (shift) *shift = map ? map->shift : 0;
-    return map ? map->mask : 0;
-  }
-
-  inline hb_mask_t get_1_mask (hb_tag_t tag) const {
-    const feature_map_t *map = (const feature_map_t *) bsearch (&tag, feature_maps, feature_count, sizeof (feature_maps[0]), (hb_compare_func_t) feature_map_t::cmp);
-    return map ? map->_1_mask : 0;
-  }
-
-  inline void substitute (hb_face_t *face, hb_buffer_t *buffer) const {
-    for (unsigned int i = 0; i < lookup_count[0]; i++)
-      hb_ot_layout_substitute_lookup (face, buffer, lookup_maps[0][i].index, lookup_maps[0][i].mask);
-  }
-
-  inline void position (hb_font_t *font, hb_face_t *face, hb_buffer_t *buffer) const {
-    for (unsigned int i = 0; i < lookup_count[1]; i++)
-      hb_ot_layout_position_lookup (font, face, buffer, lookup_maps[1][i].index, lookup_maps[1][i].mask);
+  inline void finish (void) {
+    feature_infos.finish ();
+    pauses[0].finish ();
+    pauses[1].finish ();
   }
 
   private:
 
-  hb_mask_t global_mask;
+  struct feature_info_t {
+    hb_tag_t tag;
+    unsigned int seq; /* sequence#, used for stable sorting only */
+    unsigned int max_value;
+    bool global; /* whether the feature applies value to every glyph in the buffer */
+    unsigned int default_value; /* for non-global features, what should the unset glyphs take */
+    unsigned int stage[2]; /* GSUB/GPOS */
 
-  unsigned int feature_count;
-  feature_info_t feature_infos[MAX_FEATURES]; /* used before compile() only */
-  feature_map_t feature_maps[MAX_FEATURES];
+    static int cmp (const feature_info_t *a, const feature_info_t *b)
+    { return (a->tag != b->tag) ?  (a->tag < b->tag ? -1 : 1) : (a->seq < b->seq ? -1 : 1); }
+  };
 
-  lookup_map_t lookup_maps[2][MAX_LOOKUPS]; /* GSUB/GPOS */
-  unsigned int lookup_count[2];
+  struct pause_info_t {
+    unsigned int stage;
+    hb_ot_map_t::pause_callback_t callback;
+  };
+
+  HB_INTERNAL void add_pause (unsigned int table_index, hb_ot_map_t::pause_func_t pause_func, void *user_data);
+
+  unsigned int current_stage[2]; /* GSUB/GPOS */
+  hb_prealloced_array_t<feature_info_t,16> feature_infos;
+  hb_prealloced_array_t<pause_info_t, 1> pauses[2]; /* GSUB/GPOS */
 };
 
 
-
-HB_END_DECLS
 
 #endif /* HB_OT_MAP_PRIVATE_HH */

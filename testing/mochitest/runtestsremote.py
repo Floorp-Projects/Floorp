@@ -39,6 +39,7 @@ import sys
 import os
 import time
 import tempfile
+import re
 
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
 
@@ -221,6 +222,7 @@ class MochiRemote(Mochitest):
     _automation = None
     _dm = None
     localProfile = None
+    logLines = []
 
     def __init__(self, automation, devmgr, options):
         self._automation = automation
@@ -346,6 +348,65 @@ class MochiRemote(Mochitest):
     def getLogFilePath(self, logFile):             
         return logFile
 
+    # In the future we could use LogParser: http://hg.mozilla.org/automation/logparser/
+    def addLogData(self):
+        with open(self.localLog) as currentLog:
+            data = currentLog.readlines()
+
+        restart = re.compile('0 INFO SimpleTest START.*')
+        reend = re.compile('([0-9]+) INFO TEST-START . Shutdown.*')
+        start_found = False
+        end_found = False
+        for line in data:
+            if reend.match(line):
+                end_found = True
+                start_found = False
+                return
+
+            if start_found and not end_found:
+                # Append the line without the number to increment
+                self.logLines.append(' '.join(line.split(' ')[1:]))
+
+            if restart.match(line):
+                start_found = True
+
+    def printLog(self):
+        passed = 0
+        failed = 0
+        todo = 0
+        incr = 1
+        logFile = [] 
+        logFile.append("0 INFO SimpleTest START")
+        for line in self.logLines:
+            if line.startswith("INFO TEST-PASS"):
+                passed += 1
+            elif line.startswith("INFO TEST-UNEXPECTED"):
+                failed += 1
+            elif line.startswith("INFO TEST-KNOWN"):
+                todo += 1
+
+            logFile.append("%s %s" % (incr, line))
+            incr += 1
+
+        logFile.append("%s INFO TEST-START | Shutdown" % incr)
+        incr += 1
+        logFile.append("%s INFO Passed: %s" % (incr, passed))
+        incr += 1
+        logFile.append("%s INFO Failed: %s" % (incr, failed))
+        incr += 1
+        logFile.append("%s INFO Todo: %s" % (incr, todo))
+        incr += 1
+        logFile.append("%s INFO SimpleTest FINISHED" % incr)
+
+        # TODO: Consider not printing to stdout because we might be duplicating output
+        print '\n'.join(logFile)
+        with open(self.localLog, 'w') as localLog:
+            localLog.write('\n'.join(logFile))
+
+        if failed > 0:
+            return 1
+        return 0
+        
 def main():
     scriptdir = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
     dm_none = devicemanagerADB.DeviceManagerADB()
@@ -425,6 +486,7 @@ def main():
 
             try:
                 retVal = mochitest.runTests(options)
+                mochitest.addLogData()
             except:
                 print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running robocop tests." % sys.exc_info()[1]
                 mochitest.stopWebServer(options)
@@ -436,7 +498,9 @@ def main():
                 sys.exit(1)
         if retVal is None:
             print "No tests run. Did you pass an invalid TEST_PATH?"
-            retVal = 1         
+            retVal = 1
+
+        retVal = mochitest.printLog() 
     else:
       try:
         retVal = mochitest.runTests(options)

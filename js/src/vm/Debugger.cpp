@@ -2633,15 +2633,13 @@ DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
         /* Create an arguments object. */
         RootedVar<GlobalObject*> global(cx);
         global = &args.callee().global();
-        JSObject *proto;
-        if (!js_GetClassPrototype(cx, global, JSProto_Array, &proto))
+        JSObject *proto = global->getOrCreateArrayPrototype(cx);
+        if (!proto)
             return false;
         argsobj = NewObjectWithGivenProto(cx, &DebuggerArguments_class, proto, global);
-        if (!argsobj ||
-            !js_SetReservedSlot(cx, argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj)))
-        {
+        if (!argsobj)
             return false;
-        }
+        SetReservedSlot(argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj));
 
         JS_ASSERT(fp->numActualArgs() <= 0x7fffffff);
         int32_t fargc = int32_t(fp->numActualArgs());
@@ -3793,7 +3791,8 @@ JS_DefineDebuggerObject(JSContext *cx, JSObject *obj)
         scriptProto(cx),
         objectProto(cx);
 
-    if (!js_GetClassPrototype(cx, obj, JSProto_Object, objProto.address()))
+    objProto = obj->asGlobal().getOrCreateObjectPrototype(cx);
+    if (!objProto)
         return false;
 
 

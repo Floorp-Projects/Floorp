@@ -57,9 +57,9 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLImageMapAccessible::
-  nsHTMLImageMapAccessible(nsIContent *aContent, nsIWeakReference *aShell,
-                           nsIDOMHTMLMapElement *aMapElm) :
-  nsHTMLImageAccessibleWrap(aContent, aShell), mMapElement(aMapElm)
+  nsHTMLImageMapAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+                           nsIDOMHTMLMapElement* aMapElm) :
+  nsHTMLImageAccessibleWrap(aContent, aDoc), mMapElement(aMapElm)
 {
 }
 
@@ -117,7 +117,7 @@ nsHTMLImageMapAccessible::CacheChildren()
   if (!mapAreas)
     return;
 
-  nsDocAccessible* document = GetDocAccessible();
+  nsDocAccessible* document = Document();
 
   PRUint32 areaCount = 0;
   mapAreas->GetLength(&areaCount);
@@ -130,7 +130,7 @@ nsHTMLImageMapAccessible::CacheChildren()
 
     nsCOMPtr<nsIContent> areaContent(do_QueryInterface(areaNode));
     nsRefPtr<nsAccessible> area =
-      new nsHTMLAreaAccessible(areaContent, mWeakShell);
+      new nsHTMLAreaAccessible(areaContent, mDoc);
 
     if (!document->BindToDocument(area, nsAccUtils::GetRoleMapEntry(areaContent)) ||
         !AppendChild(area)) {
@@ -145,8 +145,8 @@ nsHTMLImageMapAccessible::CacheChildren()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLAreaAccessible::
-  nsHTMLAreaAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsHTMLLinkAccessible(aContent, aShell)
+  nsHTMLAreaAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHTMLLinkAccessible(aContent, aDoc)
 {
 }
 

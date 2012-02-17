@@ -245,9 +245,13 @@ DOMSVGPathSeg::IndexIsValid()
     }                                                                         \
     NS_ENSURE_FINITE(float(a##propName), NS_ERROR_ILLEGAL_VALUE);             \
     if (HasOwner()) {                                                         \
+      if (InternalItem()[1+index] == float(a##propName)) {                    \
+        return NS_OK;                                                         \
+      }                                                                       \
+      NS_ABORT_IF_FALSE(IsInList(), "Will/DidChangePathSegList() is wrong");  \
+      nsAttrValue emptyOrOldValue = Element()->WillChangePathSegList();       \
       InternalItem()[1+index] = float(a##propName);                           \
-      NS_ABORT_IF_FALSE(IsInList(), "DidChangePathSegList() is wrong");       \
-      Element()->DidChangePathSegList(true);                               \
+      Element()->DidChangePathSegList(emptyOrOldValue);                       \
       if (mList->AttrIsAnimating()) {                                         \
         Element()->AnimationNeedsResample();                                  \
       }                                                                       \

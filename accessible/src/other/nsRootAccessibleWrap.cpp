@@ -46,9 +46,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsRootAccessibleWrap::
-  nsRootAccessibleWrap(nsIDocument *aDocument, nsIContent *aRootContent,
-                       nsIWeakReference *aShell) :
-  nsRootAccessible(aDocument, aRootContent, aShell)
+  nsRootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
+                       nsIPresShell* aPresShell) :
+  nsRootAccessible(aDocument, aRootContent, aPresShell)
 {
 }
 

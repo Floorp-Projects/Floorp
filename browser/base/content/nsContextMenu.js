@@ -860,12 +860,6 @@ nsContextMenu.prototype = {
     let video = this.target;
     if (document.mozFullScreenEnabled)
       video.mozRequestFullScreen();
-    else {
-      // Fallback for the legacy full-screen video implementation.
-      video.pause();
-      openDialog("chrome://browser/content/fullscreen-video.xhtml",
-                  "", "chrome,centerscreen,dialog=no", video);
-    }
   },
 
   // Change current window to the URL of the background image.

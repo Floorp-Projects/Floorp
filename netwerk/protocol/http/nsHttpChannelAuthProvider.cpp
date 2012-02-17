@@ -128,12 +128,15 @@ nsHttpChannelAuthProvider::ProcessAuthentication(PRUint32 httpStatus,
     rv = mAuthChannel->GetLoadFlags(&loadFlags);
     if (NS_FAILED(rv)) return rv;
 
-    if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
     nsCAutoString challenges;
     mProxyAuth = (httpStatus == 407);
+
+    // Do proxy auth even if we're LOAD_ANONYMOUS
+    if ((loadFlags & nsIRequest::LOAD_ANONYMOUS) &&
+        (!mProxyAuth || !UsingHttpProxy())) {
+        LOG(("Skipping authentication for anonymous non-proxy request\n"));
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
     rv = PrepareForAuthentication(mProxyAuth);
     if (NS_FAILED(rv))
@@ -199,10 +202,6 @@ nsHttpChannelAuthProvider::AddAuthorizationHeaders()
     rv = mAuthChannel->GetLoadFlags(&loadFlags);
     if (NS_FAILED(rv)) return rv;
 
-    if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
-        return NS_OK;
-    }
-
     // this getter never fails
     nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
 
@@ -213,6 +212,11 @@ nsHttpChannelAuthProvider::AddAuthorizationHeaders()
                                "http", proxyHost, ProxyPort(),
                                nsnull, // proxy has no path
                                mProxyIdent);
+
+    if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
+        LOG(("Skipping Authorization header for anonymous load\n"));
+        return NS_OK;
+    }
 
     // check if server credentials should be sent
     nsCAutoString path, scheme;

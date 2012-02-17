@@ -71,6 +71,8 @@ HISTOGRAM(CYCLE_COLLECTOR_COLLECTED, 1, 100000, 50, EXPONENTIAL, "Number of obje
 HISTOGRAM_BOOLEAN(CYCLE_COLLECTOR_NEED_GC, "Needed garbage collection before cycle collection.")
 HISTOGRAM(CYCLE_COLLECTOR_TIME_BETWEEN, 1, 120, 50, EXPONENTIAL, "Time spent in between cycle collections (seconds)")
 
+HISTOGRAM(FORGET_SKIPPABLE_MAX, 1, 10000, 50, EXPONENTIAL, "Max time spent on one forget skippable (ms)")
+
 /**
  * GC telemetry
  */
@@ -125,6 +127,17 @@ HISTOGRAM(MAC_INITFONTLIST_TOTAL, 1, 30000, 10, EXPONENTIAL, "gfxMacPlatformFont
 
 HISTOGRAM(SYSTEM_FONT_FALLBACK, 1, 100000, 50, EXPONENTIAL, "System font fallback (us)")
 HISTOGRAM(SYSTEM_FONT_FALLBACK_FIRST, 1, 40000, 20, EXPONENTIAL, "System font fallback, first call (ms)")
+
+/**
+ * Word cache - one count for overall lookups, the other for the number of times a word is found
+ * Note: range and number of buckets must match
+ */
+HISTOGRAM(WORD_CACHE_LOOKUP_LEN, 1, 256, 30, EXPONENTIAL, "Word cache lookup (chars)")
+HISTOGRAM(WORD_CACHE_HIT_LEN, 1, 256, 30, EXPONENTIAL, "Word cache hit (chars)")
+HISTOGRAM(WORD_CACHE_LOOKUP_SCRIPT, 1, 110, 111, LINEAR, "Word cache lookup (script)")
+HISTOGRAM(WORD_CACHE_HIT_SCRIPT, 1, 110, 111, LINEAR, "Word cache hit (script)")
+
+HISTOGRAM_BOOLEAN(FONT_CACHE_HIT, "font cache hit")
 
 HISTOGRAM_BOOLEAN(SHUTDOWN_OK, "Did the browser start after a successful shutdown")
 
@@ -320,10 +333,10 @@ HISTOGRAM(THUNDERBIRD_INDEXING_RATE_MSG_PER_S, 1, 100, 20, LINEAR, "Gloda: index
 // #ifdef MOZ_PHOENIX
 HISTOGRAM(FX_TAB_ANIM_OPEN_MS, 1, 3000, 10, EXPONENTIAL, "Firefox: Time taken by the tab opening animation in milliseconds")
 HISTOGRAM(FX_TAB_ANIM_CLOSE_MS, 1, 3000, 10, EXPONENTIAL, "Firefox: Time taken by the tab closing animation in milliseconds")
-HISTOGRAM_BOOLEAN(FX_CONTEXT_SEARCH_AND_TAB_SELECT, "Firefox: Background tab was selected within 5 seconds of searching from the context menu")
 HISTOGRAM_BOOLEAN(FX_KEYWORD_URL_USERSET, "Firefox: keyword.URL has a user-set value")
 HISTOGRAM(FX_IDENTITY_POPUP_OPEN_MS, 1, 1000, 10, EXPONENTIAL, "Firefox: Time taken by the identity popup to open in milliseconds")
 HISTOGRAM(FX_APP_MENU_OPEN_MS, 1, 1000, 10, EXPONENTIAL, "Firefox: Time taken by the app-menu opening in milliseconds")
+HISTOGRAM(FX_BOOKMARKS_TOOLBAR_INIT_MS, 50, 5000, 10, EXPONENTIAL, "Firefox: Time to initialize the bookmarks toolbar view (ms)")
 
 /**
  * Thumbnail Service telemetry.

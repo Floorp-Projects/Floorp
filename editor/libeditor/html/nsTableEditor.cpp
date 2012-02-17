@@ -813,7 +813,7 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
     res = GetCellIndexes(cell, &startRowIndex, &startColIndex);
     NS_ENSURE_SUCCESS(res, res);
 
-    // The setCaret object will call SetSelectionAfterTableEdit in it's destructor
+    // The setCaret object will call SetSelectionAfterTableEdit in its destructor
     nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, false);
     nsAutoTxnsConserveSelection dontChangeSelection(this);
 
@@ -949,7 +949,7 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
     {
       // More than 1 cell in the row
 
-      // The setCaret object will call SetSelectionAfterTableEdit in it's destructor
+      // The setCaret object will call SetSelectionAfterTableEdit in its destructor
       nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, false);
       nsAutoTxnsConserveSelection dontChangeSelection(this);
 
@@ -2336,7 +2336,7 @@ nsHTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     if( spanAboveMergedCell > 0 )
     {
       // Cell we merged started in a row above the target cell
-      // Reduce rowspan to give room where target cell will extend it's colspan
+      // Reduce rowspan to give room where target cell will extend its colspan
       res = SetRowSpan(cell2, spanAboveMergedCell);
       NS_ENSURE_SUCCESS(res, res);
     }

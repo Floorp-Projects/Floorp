@@ -466,7 +466,6 @@ struct Shape : public js::gc::Cell
     friend class js::Bindings;
     friend struct js::StackShape;
     friend struct js::StackBaseShape;
-    friend bool IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape);
 
   protected:
     HeapPtrBaseShape    base_;
@@ -772,7 +771,7 @@ struct Shape : public js::gc::Cell
     }
 
     jsid propid() const { JS_ASSERT(!isEmptyShape()); return maybePropid(); }
-    jsid maybePropid() const { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
+    const HeapId &maybePropid() const { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
 
     int16_t shortid() const { JS_ASSERT(hasShortID()); return maybeShortid(); }
     int16_t maybeShortid() const { return shortid_; }

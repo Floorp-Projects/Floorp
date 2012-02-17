@@ -2350,7 +2350,7 @@ CSS_PROP_DISPLAY(
     perspective,
     CSS_PROP_DOMPROP_PREFIXED(Perspective),
     CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_NONE | VARIANT_INHERIT | VARIANT_LENGTH,
+    VARIANT_NONE | VARIANT_INHERIT | VARIANT_LENGTH | VARIANT_POSITIVE_LENGTH,
     nsnull,
     offsetof(nsStyleDisplay, mChildPerspective),
     eStyleAnimType_Coord)

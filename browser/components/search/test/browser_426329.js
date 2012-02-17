@@ -8,6 +8,8 @@ this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/Chr
 function test() {
   waitForExplicitFinish();
 
+  const ENGINE_HTML_BASE = "http://mochi.test:8888/browser/browser/components/search/test/test.html";
+
   var searchEntries = ["test", "More Text", "Some Text"];
   var searchBar = BrowserSearch.searchBar;
   var searchButton = document.getAnonymousElementByAttribute(searchBar,
@@ -57,6 +59,7 @@ function test() {
       is(gBrowser.tabs.length, preTabNo, "Return key did not open new tab");
       is(event.originalTarget, preSelectedBrowser.contentDocument,
          "Return key loaded results in current tab");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
 
       testAltReturn();
     });
@@ -72,6 +75,7 @@ function test() {
             "Alt+Return key loaded results in new tab");
       is(event.originalTarget, gBrowser.contentDocument,
          "Alt+Return key loaded results in foreground tab");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
 
       //Shift key has no effect for now, so skip it
       //testShiftAltReturn();
@@ -89,6 +93,7 @@ function test() {
             "Shift+Alt+Return key loaded results in new tab");
       isnot(event.originalTarget, gBrowser.contentDocument,
             "Shift+Alt+Return key loaded results in background tab");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
 
       testLeftClick();
     });
@@ -102,6 +107,7 @@ function test() {
       is(gBrowser.tabs.length, preTabNo, "LeftClick did not open new tab");
       is(event.originalTarget, preSelectedBrowser.contentDocument,
          "LeftClick loaded results in current tab");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
 
       testMiddleClick();
     });
@@ -117,6 +123,7 @@ function test() {
             "MiddleClick loaded results in new tab");
       is(event.originalTarget, gBrowser.contentDocument,
          "MiddleClick loaded results in foreground tab");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
 
       testShiftMiddleClick();
     });
@@ -132,6 +139,7 @@ function test() {
             "Shift+MiddleClick loaded results in new tab");
       isnot(event.originalTarget, gBrowser.contentDocument,
             "Shift+MiddleClick loaded results in background tab");
+      is(event.originalTarget.URL, expectedURL(searchBar.value), "Check URL of search page opened");
 
       testDropText();
      });
@@ -230,6 +238,13 @@ function test() {
                           ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
                           buttonArg, null); 
     aTarget.dispatchEvent(event);
+  }
+
+  function expectedURL(aSearchTerms) {
+    var textToSubURI = Cc["@mozilla.org/intl/texttosuburi;1"].
+                       getService(Ci.nsITextToSubURI);
+    var searchArg = textToSubURI.ConvertAndEscape("utf-8", aSearchTerms);
+    return ENGINE_HTML_BASE + "?test=" + searchArg;
   }
 
   // modified from toolkit/components/satchel/test/test_form_autocomplete.html

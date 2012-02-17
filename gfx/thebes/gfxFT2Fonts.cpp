@@ -64,6 +64,7 @@
 #include "nsTArray.h"
 #include "nsUnicodeRange.h"
 #include "nsCRT.h"
+#include "nsXULAppAPI.h"
 
 #include "prlog.h"
 #include "prinit.h"
@@ -641,11 +642,10 @@ gfxFT2Font::FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd)
         return;
     }
 
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    FT_Error err = FT_Load_Glyph(face, gid, FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-#else
-    FT_Error err = FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
-#endif
+    FT_Int32 flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
+                     FT_LOAD_DEFAULT :
+                     (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+    FT_Error err = FT_Load_Glyph(face, gid, flags);
 
     if (err) {
         // hmm, this is weird, we failed to load a glyph that we had?

@@ -59,5 +59,7 @@ SQLITE_WRAPPER(sqlite3_column_type, int, sqlite3_stmt*, int)
 SQLITE_WRAPPER(sqlite3_column_blob, const void*, sqlite3_stmt*, int)
 SQLITE_WRAPPER(sqlite3_column_bytes, int, sqlite3_stmt*, int)
 SQLITE_WRAPPER(sqlite3_column_text, const unsigned char*, sqlite3_stmt*, int)
+SQLITE_WRAPPER(sqlite3_changes, int, sqlite3*)
+SQLITE_WRAPPER(sqlite3_last_insert_rowid, sqlite3_int64, sqlite3*)
 
 #endif /* SQLiteBridge_h */

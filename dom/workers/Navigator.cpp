@@ -108,23 +108,17 @@ public:
 
     jsval empty = JS_GetEmptyStringValue(aCx);
 
-    if (!JS_SetReservedSlot(aCx, obj, SLOT_appName,
-                            appName ? STRING_TO_JSVAL(appName) : empty) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_appVersion,
-                            version ? STRING_TO_JSVAL(version) : empty) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_platform,
-                            platform ? STRING_TO_JSVAL(platform) : empty) ||
-        !JS_SetReservedSlot(aCx, obj, SLOT_userAgent,
-                            userAgent ? STRING_TO_JSVAL(userAgent) : empty)) {
-      return NULL;
-    }
+    JS_SetReservedSlot(obj, SLOT_appName,
+                       appName ? STRING_TO_JSVAL(appName) : empty);
+    JS_SetReservedSlot(obj, SLOT_appVersion,
+                       version ? STRING_TO_JSVAL(version) : empty);
+    JS_SetReservedSlot(obj, SLOT_platform,
+                       platform ? STRING_TO_JSVAL(platform) : empty);
+    JS_SetReservedSlot(obj, SLOT_userAgent,
+                       userAgent ? STRING_TO_JSVAL(userAgent) : empty);
 
     Navigator* priv = new Navigator();
-
-    if (!JS_SetPrivate(aCx, obj, priv)) {
-      delete priv;
-      return NULL;
-    }
+    JS_SetPrivate(obj, priv);
 
     return obj;
   }
@@ -152,7 +146,7 @@ private:
   Finalize(JSContext* aCx, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
-    delete static_cast<Navigator*>(JS_GetPrivate(aCx, aObj));
+    delete static_cast<Navigator*>(JS_GetPrivate(aObj));
   }
 
   static JSBool
@@ -169,7 +163,8 @@ private:
     JS_ASSERT(JSID_IS_INT(aIdval));
     JS_ASSERT(JSID_TO_INT(aIdval) >= 0 && JSID_TO_INT(aIdval) < SLOT_COUNT);
 
-    return JS_GetReservedSlot(aCx, aObj, JSID_TO_INT(aIdval), aVp);
+    *aVp = JS_GetReservedSlot(aObj, JSID_TO_INT(aIdval));
+    return true;
   }
 };
 

@@ -75,13 +75,17 @@ public class PanZoomController
 
     // Animation stops if the velocity is below this value when overscrolled or panning.
     private static final float STOPPED_THRESHOLD = 4.0f;
+
     // Animation stops is the velocity is below this threshold when flinging.
     private static final float FLING_STOPPED_THRESHOLD = 0.1f;
-    // The distance the user has to pan before we recognize it as such (e.g. to avoid
-    // 1-pixel pans between the touch-down and touch-up of a click). In units of inches.
-    public static final float PAN_THRESHOLD = 0.1f;
+
+    // The distance the user has to pan before we recognize it as such (e.g. to avoid 1-pixel pans
+    // between the touch-down and touch-up of a click). In units of density-independent pixels.
+    public static final float PAN_THRESHOLD = 1/16f * GeckoAppShell.getDpi();
+
     // Angle from axis within which we stay axis-locked
     private static final double AXIS_LOCK_ANGLE = Math.PI / 6.0; // 30 degrees
+
     // The maximum amount we allow you to zoom into a page
     private static final float MAX_ZOOM = 4.0f;
 
@@ -197,7 +201,7 @@ public class PanZoomController
     }
 
     public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction() & event.ACTION_MASK) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
         case MotionEvent.ACTION_DOWN:   return onTouchStart(event);
         case MotionEvent.ACTION_MOVE:   return onTouchMove(event);
         case MotionEvent.ACTION_UP:     return onTouchEnd(event);
@@ -207,7 +211,6 @@ public class PanZoomController
     }
 
     /** This function must be called from the UI thread. */
-    @SuppressWarnings("fallthrough")
     public void abortAnimation() {
         checkMainThread();
         // this happens when gecko changes the viewport on us or if the device is rotated.
@@ -277,7 +280,6 @@ public class PanZoomController
         return false;
     }
 
-    @SuppressWarnings("fallthrough")
     private boolean onTouchMove(MotionEvent event) {
         Log.d(LOGTAG, "onTouchMove in state " + mState);
 
@@ -287,27 +289,34 @@ public class PanZoomController
             // should never happen
             Log.e(LOGTAG, "Received impossible touch move while in " + mState);
             return false;
+
         case TOUCHING:
-            if (panDistance(event) < PAN_THRESHOLD * GeckoAppShell.getDpi()) {
+            if (panDistance(event) < PAN_THRESHOLD) {
                 return false;
             }
             cancelTouch();
+            startPanning(event.getX(0), event.getY(0), event.getEventTime());
             GeckoApp.mAppContext.hidePlugins(false /* don't hide layers */);
-            // fall through
+            GeckoApp.mAutoCompletePopup.hide();
+            track(event);
+            return true;
+
         case PANNING_HOLD_LOCKED:
-            GeckoApp.mAppContext.mAutoCompletePopup.hide();
+            GeckoApp.mAutoCompletePopup.hide();
             mState = PanZoomState.PANNING_LOCKED;
             // fall through
         case PANNING_LOCKED:
             track(event);
             return true;
+
         case PANNING_HOLD:
-            GeckoApp.mAppContext.mAutoCompletePopup.hide();
+            GeckoApp.mAutoCompletePopup.hide();
             mState = PanZoomState.PANNING;
             // fall through
         case PANNING:
             track(event);
             return true;
+
         case ANIMATED_ZOOM:
         case PINCHING:
             // scale gesture listener will handle this
@@ -366,6 +375,29 @@ public class PanZoomController
         mLastEventTime = time;
     }
 
+    private void startPanning(float x, float y, long time) {
+        float dx = mX.panDistance(x);
+        float dy = mY.panDistance(y);
+        double angle = Math.atan2(dy, dx); // range [-pi, pi]
+        angle = Math.abs(angle); // range [0, pi]
+
+        // When the touch move breaks through the pan threshold, reposition the touch down origin
+        // so the page won't jump when we start panning.
+        mX.startTouch(x);
+        mY.startTouch(y);
+        mLastEventTime = time;
+
+        if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
+            mY.setScrollingDisabled(true);
+            mState = PanZoomState.PANNING_LOCKED;
+        } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
+            mX.setScrollingDisabled(true);
+            mState = PanZoomState.PANNING_LOCKED;
+        } else {
+            mState = PanZoomState.PANNING;
+        }
+    }
+
     private float panDistance(MotionEvent move) {
         float dx = mX.panDistance(move.getX(0));
         float dy = mY.panDistance(move.getY(0));
@@ -380,27 +412,6 @@ public class PanZoomController
             return;
         }
         mLastEventTime = time;
-
-        if (mState == PanZoomState.PANNING_LOCKED) {
-            // check to see if we should break the axis lock
-            double angle = Math.atan2(mY.panDistance(y), mX.panDistance(x)); // range [-pi, pi]
-            angle = Math.abs(angle); // range [0, pi]
-            if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
-                // lock to x-axis
-                mX.setLocked(false);
-                mY.setLocked(true);
-            } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
-                // lock to y-axis
-                mX.setLocked(true);
-                mY.setLocked(false);
-            } else {
-                // break axis lock but log the angle so we can fine-tune this when people complain
-                mState = PanZoomState.PANNING;
-                mX.setLocked(false);
-                mY.setLocked(false);
-                angle = Math.abs(angle - (Math.PI / 2));  // range [0, pi/2]
-            }
-        }
 
         mX.updateWithTouchAt(x, timeDelta);
         mY.updateWithTouchAt(y, timeDelta);
@@ -749,7 +760,7 @@ public class PanZoomController
         mState = PanZoomState.PINCHING;
         mLastZoomFocus = new PointF(detector.getFocusX(), detector.getFocusY());
         GeckoApp.mAppContext.hidePlugins(false /* don't hide layers, only views */);
-        GeckoApp.mAppContext.mAutoCompletePopup.hide();
+        GeckoApp.mAutoCompletePopup.hide();
         cancelTouch();
 
         return true;
@@ -836,7 +847,7 @@ public class PanZoomController
             return;
         }
 
-        GeckoAppShell.sendEventToGecko(new GeckoEvent(event, json));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(event, json));
     }
 
     @Override
@@ -852,7 +863,7 @@ public class PanZoomController
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
-        GeckoApp.mAppContext.mAutoCompletePopup.hide();
+        GeckoApp.mAutoCompletePopup.hide();
         sendPointToGecko("Gesture:SingleTap", motionEvent);
         return true;
     }
@@ -864,12 +875,12 @@ public class PanZoomController
     }
 
     public void cancelTouch() {
-        GeckoEvent e = new GeckoEvent("Gesture:CancelTouch", "");
+        GeckoEvent e = GeckoEvent.createBroadcastEvent("Gesture:CancelTouch", "");
         GeckoAppShell.sendEventToGecko(e);
     }
 
     private boolean animatedZoomTo(RectF zoomToRect) {
-        GeckoApp.mAppContext.mAutoCompletePopup.hide();
+        GeckoApp.mAutoCompletePopup.hide();
 
         mState = PanZoomState.ANIMATED_ZOOM;
         final float startZoom = mController.getZoomFactor();

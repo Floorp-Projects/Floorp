@@ -49,7 +49,6 @@ DEFFILE = $(win_srcdir)/AccessibleMarshal.def
 include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS = \
-      nsIAccessibleWin32Object.idl \
       nsIWinAccessNode.idl \
       $(NULL)
 

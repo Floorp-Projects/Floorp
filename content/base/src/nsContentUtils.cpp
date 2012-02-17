@@ -362,6 +362,8 @@ nsContentUtils::Init()
     return NS_OK;
   }
 
+  nsINode::Init();
+
   nsresult rv = NS_GetNameSpaceManager(&sNameSpaceManager);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3072,7 +3074,7 @@ static
 nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
                            const nsAString& aEventName,
                            bool aCanBubble, bool aCancelable,
-                           nsIDOMEvent** aEvent,
+                           bool aTrusted, nsIDOMEvent** aEvent,
                            nsIDOMEventTarget** aTargetOut)
 {
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
@@ -3090,7 +3092,7 @@ nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
   rv = event->InitEvent(aEventName, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = privateEvent->SetTrusted(true);
+  rv = privateEvent->SetTrusted(aTrusted);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = privateEvent->SetTarget(target);
@@ -3108,10 +3110,32 @@ nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
                                      bool aCanBubble, bool aCancelable,
                                      bool *aDefaultAction)
 {
+  return DispatchEvent(aDoc, aTarget, aEventName, aCanBubble, aCancelable,
+                       true, aDefaultAction);
+}
+
+// static
+nsresult
+nsContentUtils::DispatchUntrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
+                                       const nsAString& aEventName,
+                                       bool aCanBubble, bool aCancelable,
+                                       bool *aDefaultAction)
+{
+  return DispatchEvent(aDoc, aTarget, aEventName, aCanBubble, aCancelable,
+                       false, aDefaultAction);
+}
+
+// static
+nsresult
+nsContentUtils::DispatchEvent(nsIDocument* aDoc, nsISupports* aTarget,
+                              const nsAString& aEventName,
+                              bool aCanBubble, bool aCancelable,
+                              bool aTrusted, bool *aDefaultAction)
+{
   nsCOMPtr<nsIDOMEvent> event;
   nsCOMPtr<nsIDOMEventTarget> target;
   nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
-                                  aCancelable, getter_AddRefs(event),
+                                  aCancelable, aTrusted, getter_AddRefs(event),
                                   getter_AddRefs(target));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3130,7 +3154,7 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   nsCOMPtr<nsIDOMEvent> event;
   nsCOMPtr<nsIDOMEventTarget> target;
   nsresult rv = GetEventAndTarget(aDoc, aTarget, aEventName, aCanBubble,
-                                  aCancelable, getter_AddRefs(event),
+                                  aCancelable, true, getter_AddRefs(event),
                                   getter_AddRefs(target));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3421,7 +3445,6 @@ PLDHashOperator
 ListenerEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
                    PRUint32 aNumber, void* aArg)
 {
-  PRUint32* gen = static_cast<PRUint32*>(aArg);
   EventListenerManagerMapEntry* entry =
     static_cast<EventListenerManagerMapEntry*>(aEntry);
   if (entry) {

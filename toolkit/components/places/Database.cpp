@@ -82,16 +82,6 @@
 // Set when the database file was found corrupt by a previous maintenance.
 #define PREF_FORCE_DATABASE_REPLACEMENT "places.database.replaceOnStartup"
 
-// The wanted size of the cache.  This is calculated based on current database
-// size and clamped to the limits specified below.
-#define DATABASE_CACHE_TO_DATABASE_PERC 10
-// The minimum size of the cache.  We should never work without a cache, since
-// that would badly hurt WAL journaling mode.
-#define DATABASE_CACHE_MIN_BYTES (PRUint64)4194304 // 4MiB
-// The maximum size of the cache.  This is the maximum memory that each
-// connection may use.
-#define DATABASE_CACHE_MAX_BYTES (PRUint64)8388608 // 8MiB
-
 // Maximum size for the WAL file.  It should be small enough since in case of
 // crashes we could lose all the transactions in the file.  But a too small
 // file could hurt performance.
@@ -565,39 +555,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
   // Ensure that temp tables are held in memory, not on disk.
   nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA temp_store = MEMORY"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Get the current database size. Due to chunked growth we have to use
-  // page_count to evaluate it.
-  PRUint64 databaseSizeBytes = 0;
-  {
-    nsCOMPtr<mozIStorageStatement> statement;
-    nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
-      "PRAGMA page_count"
-    ), getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool hasResult = false;
-    rv = statement->ExecuteStep(&hasResult);
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasResult, NS_ERROR_FAILURE);
-    PRInt32 pageCount = 0;
-    rv = statement->GetInt32(0, &pageCount);
-    NS_ENSURE_SUCCESS(rv, rv);
-    databaseSizeBytes = pageCount * mDBPageSize;
-  }
-
-  // Clamp the cache size to a percentage of the database size, forcing
-  // meaningful limits.
-  PRInt64 cacheSize = clamped(databaseSizeBytes *  DATABASE_CACHE_TO_DATABASE_PERC / 100,
-                              DATABASE_CACHE_MIN_BYTES,
-                              DATABASE_CACHE_MAX_BYTES);
-
-  // Set the number of cached pages.
-  // We don't use PRAGMA default_cache_size, since the database could be moved
-  // among different devices and the value would adapt accordingly.
-  nsCAutoString cacheSizePragma(MOZ_STORAGE_UNIQUIFY_QUERY_STR
-				"PRAGMA cache_size = ");
-  cacheSizePragma.AppendInt(cacheSize / mDBPageSize);
-  rv = mMainConn->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Be sure to set journal mode after page_size.  WAL would prevent the change

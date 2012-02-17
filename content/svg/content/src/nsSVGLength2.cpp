@@ -307,8 +307,17 @@ nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame, PRUint8 aUnitType) const
 
 void
 nsSVGLength2::SetBaseValueInSpecifiedUnits(float aValue,
-                                           nsSVGElement *aSVGElement)
+                                           nsSVGElement *aSVGElement,
+                                           bool aDoSetAttr)
 {
+  if (mIsBaseSet && mBaseVal == aValue) {
+    return;
+  }
+
+  nsAttrValue emptyOrOldValue;
+  if (aDoSetAttr) {
+    emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
+  }
   mBaseVal = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
@@ -317,7 +326,9 @@ nsSVGLength2::SetBaseValueInSpecifiedUnits(float aValue,
   else {
     aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeLength(mAttrEnum, true);
+  if (aDoSetAttr) {
+    aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
+  }
 }
 
 nsresult
@@ -327,10 +338,23 @@ nsSVGLength2::ConvertToSpecifiedUnits(PRUint16 unitType,
   if (!IsValidUnitType(unitType))
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
-  float valueInUserUnits = 
+  if (mIsBaseSet && mSpecifiedUnitType == PRUint8(unitType))
+    return NS_OK;
+
+  // Even though we're not changing the visual effect this length will have
+  // on the document, we still need to send out notifications in case we have
+  // mutation listeners, since the actual string value of the attribute will
+  // change.
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
+
+  float valueInUserUnits =
     mBaseVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
   mSpecifiedUnitType = PRUint8(unitType);
-  SetBaseValue(valueInUserUnits, aSVGElement);
+  // Setting aDoSetAttr to false here will ensure we don't call
+  // Will/DidChangeAngle a second time (and dispatch duplicate notifications).
+  SetBaseValue(valueInUserUnits, aSVGElement, false);
+
+  aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
 
   return NS_OK;
 }
@@ -345,6 +369,12 @@ nsSVGLength2::NewValueSpecifiedUnits(PRUint16 unitType,
   if (!IsValidUnitType(unitType))
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
+  if (mIsBaseSet && mBaseVal == valueInSpecifiedUnits &&
+      mSpecifiedUnitType == PRUint8(unitType)) {
+    return NS_OK;
+  }
+
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
   mBaseVal = valueInSpecifiedUnits;
   mIsBaseSet = true;
   mSpecifiedUnitType = PRUint8(unitType);
@@ -354,7 +384,7 @@ nsSVGLength2::NewValueSpecifiedUnits(PRUint16 unitType,
   else {
     aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeLength(mAttrEnum, true);
+  aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
   return NS_OK;
 }
 
@@ -407,12 +437,21 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
 {
   float value;
   PRUint16 unitType;
-  
+
   nsresult rv = GetValueFromString(aValueAsString, &value, &unitType);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  
+
+  if (mIsBaseSet && mBaseVal == value &&
+      mSpecifiedUnitType == PRUint8(unitType)) {
+    return NS_OK;
+  }
+
+  nsAttrValue emptyOrOldValue;
+  if (aDoSetAttr) {
+    emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
+  }
   mBaseVal = value;
   mIsBaseSet = true;
   mSpecifiedUnitType = PRUint8(unitType);
@@ -423,28 +462,31 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
     aSVGElement->AnimationNeedsResample();
   }
 
-  aSVGElement->DidChangeLength(mAttrEnum, aDoSetAttr);
+  if (aDoSetAttr) {
+    aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
+  }
   return NS_OK;
 }
 
 void
-nsSVGLength2::GetBaseValueString(nsAString & aValueAsString)
+nsSVGLength2::GetBaseValueString(nsAString & aValueAsString) const
 {
   GetValueString(aValueAsString, mBaseVal, mSpecifiedUnitType);
 }
 
 void
-nsSVGLength2::GetAnimValueString(nsAString & aValueAsString)
+nsSVGLength2::GetAnimValueString(nsAString & aValueAsString) const
 {
   GetValueString(aValueAsString, mAnimVal, mSpecifiedUnitType);
 }
 
 void
-nsSVGLength2::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
+nsSVGLength2::SetBaseValue(float aValue, nsSVGElement *aSVGElement,
+                           bool aDoSetAttr)
 {
   SetBaseValueInSpecifiedUnits(aValue * GetUnitScaleFactor(aSVGElement,
                                                            mSpecifiedUnitType),
-                               aSVGElement);
+                               aSVGElement, aDoSetAttr);
 }
 
 void

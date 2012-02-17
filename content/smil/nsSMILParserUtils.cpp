@@ -564,7 +564,7 @@ public:
 
   virtual nsresult Parse(const nsAString& aValueStr) {
     nsSMILValue newValue;
-    bool tmpPreventCachingOfSandwich;
+    bool tmpPreventCachingOfSandwich = false;
     nsresult rv = mSMILAttr->ValueFromString(aValueStr, mSrcElement, newValue,
                                              tmpPreventCachingOfSandwich);
     if (NS_FAILED(rv))

@@ -7,6 +7,8 @@ public class testAwesomebar extends BaseTest {
     public void testAwesomebar() {
         setTestType("mochitest");
 
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         loadUrl(url);
 

@@ -263,7 +263,7 @@ public:
   virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
-  virtual nsIFrame* GetParentStyleContextFrame() {
+  virtual nsIFrame* GetParentStyleContextFrame() const {
     return DoGetParentStyleContextFrame();
   }
 
@@ -274,7 +274,7 @@ public:
    * frames by using the frame manager's placeholder map and it also
    * handles block-within-inline and generated content wrappers.)
    */
-  nsIFrame* DoGetParentStyleContextFrame();
+  nsIFrame* DoGetParentStyleContextFrame() const;
 
   virtual bool IsEmpty();
   virtual bool IsSelfEmpty();

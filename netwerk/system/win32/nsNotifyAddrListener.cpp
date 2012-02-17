@@ -138,8 +138,6 @@ nsNotifyAddrListener::nsNotifyAddrListener()
     , mCheckAttempted(false)
     , mShutdownEvent(nsnull)
 {
-    mOSVerInfo.dwOSVersionInfoSize = sizeof(mOSVerInfo);
-    GetVersionEx(&mOSVerInfo);
 }
 
 nsNotifyAddrListener::~nsNotifyAddrListener()
@@ -236,11 +234,6 @@ nsNotifyAddrListener::Init(void)
     //
     // CheckLinkStatus();
 
-    // only start a thread on Windows 2000 or later
-    if (mOSVerInfo.dwPlatformId != VER_PLATFORM_WIN32_NT ||
-        mOSVerInfo.dwMajorVersion < 5)
-        return NS_OK;
-
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (!observerService)
@@ -319,18 +312,14 @@ nsNotifyAddrListener::GetOperationalStatus(DWORD aAdapterIndex)
 {
     DWORD status = MIB_IF_OPER_STATUS_CONNECTED;
 
-    // try to get operational status on WinNT--on Win98, it consistently gives
-    // me the wrong status, dagnabbit
-    if (mOSVerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-        // If this fails, assume it's connected.  Didn't find a KB, but it
-        // failed for me w/Win2K SP2, and succeeded for me w/Win2K SP3.
-        if (sGetIfEntry) {
-            MIB_IFROW ifRow;
+    // If this fails, assume it's connected.  Didn't find a KB, but it
+    // failed for me w/Win2K SP2, and succeeded for me w/Win2K SP3.
+    if (sGetIfEntry) {
+        MIB_IFROW ifRow;
 
-            ifRow.dwIndex = aAdapterIndex;
-            if (sGetIfEntry(&ifRow) == ERROR_SUCCESS)
-                status = ifRow.dwOperStatus;
-        }
+        ifRow.dwIndex = aAdapterIndex;
+        if (sGetIfEntry(&ifRow) == ERROR_SUCCESS)
+            status = ifRow.dwOperStatus;
     }
     return status;
 }
@@ -427,21 +416,21 @@ nsNotifyAddrListener::CheckAdaptersInfo(void)
             }
             mLinkUp = linkUp;
             mStatusKnown = true;
-            free(adapters);
         }
+        free(adapters);
     }
     return ret;
 }
 
-BOOL
+bool
 nsNotifyAddrListener::CheckIsGateway(PIP_ADAPTER_ADDRESSES aAdapter)
 {
     if (!aAdapter->FirstUnicastAddress)
-        return FALSE;
+        return false;
 
     LPSOCKADDR aAddress = aAdapter->FirstUnicastAddress->Address.lpSockaddr;
     if (!aAddress)
-        return FALSE;
+        return false;
 
     PSOCKADDR_IN in_addr = (PSOCKADDR_IN)aAddress;
     bool isGateway = (aAddress->sa_family == AF_INET &&
@@ -456,7 +445,7 @@ nsNotifyAddrListener::CheckIsGateway(PIP_ADAPTER_ADDRESSES aAdapter)
     return isGateway;
 }
 
-BOOL
+bool
 nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName)
 {
     InitNetshellLibrary();
@@ -464,14 +453,9 @@ nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName)
     // This method enumerates all privately shared connections and checks if some
     // of them has the same name as the one provided in aAdapterName. If such
     // connection is found in the collection the adapter is used as ICS gateway
-    BOOL isICSGatewayAdapter = FALSE;
+    bool isICSGatewayAdapter = false;
 
     HRESULT hr;
-
-    hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    if (FAILED(hr))
-        return FALSE;
-
     nsRefPtr<INetSharingManager> netSharingManager;
     hr = CoCreateInstance(
                 CLSID_NetSharingManager,
@@ -516,26 +500,22 @@ nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName)
             }
 
             nsRefPtr<INetConnection> connection;
-            hr = connectionVariant.punkVal->QueryInterface(
-                        IID_INetConnection,
-                        getter_AddRefs(connection));
-            connectionVariant.punkVal->Release();
+            if (SUCCEEDED(connectionVariant.punkVal->QueryInterface(
+                              IID_INetConnection,
+                              getter_AddRefs(connection)))) {
+                connectionVariant.punkVal->Release();
 
-            NETCON_PROPERTIES *properties;
-            if (SUCCEEDED(hr))
-                hr = connection->GetProperties(&properties);
+                NETCON_PROPERTIES *properties;
+                if (SUCCEEDED(connection->GetProperties(&properties))) {
+                    if (!wcscmp(properties->pszwName, aAdapterName))
+                        isICSGatewayAdapter = true;
 
-            if (SUCCEEDED(hr)) {
-                if (!wcscmp(properties->pszwName, aAdapterName))
-                    isICSGatewayAdapter = TRUE;
-
-                if (sNcFreeNetconProperties)
-                    sNcFreeNetconProperties(properties);
+                    if (sNcFreeNetconProperties)
+                        sNcFreeNetconProperties(properties);
+                }
             }
         }
     }
-
-    CoUninitialize();
 
     return isICSGatewayAdapter;
 }
@@ -565,20 +545,27 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void)
         ret = sGetAdaptersAddresses(AF_UNSPEC, 0, NULL, addresses, &len);
     }
 
+    if (FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED))) {
+        free(addresses);
+        return ERROR_NOT_SUPPORTED;
+    }
+
     if (ret == ERROR_SUCCESS) {
         PIP_ADAPTER_ADDRESSES ptr;
-        BOOL linkUp = FALSE;
+        bool linkUp = false;
 
         for (ptr = addresses; !linkUp && ptr; ptr = ptr->Next) {
             if (ptr->OperStatus == IfOperStatusUp &&
                     ptr->IfType != IF_TYPE_SOFTWARE_LOOPBACK &&
                     !CheckIsGateway(ptr))
-                linkUp = TRUE;
+                linkUp = true;
         }
         mLinkUp = linkUp;
-        mStatusKnown = TRUE;
+        mStatusKnown = true;
     }
     free(addresses);
+
+    CoUninitialize();
 
     return ret;
 }

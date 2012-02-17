@@ -1,13 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/.
- * Contributor(s):
- *   Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
- *   Jim Straus <jstraus@mozilla.com>
- *
- * ***** END LICENSE BLOCK ***** */
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef mozilla_hal_Types_h
 #define mozilla_hal_Types_h

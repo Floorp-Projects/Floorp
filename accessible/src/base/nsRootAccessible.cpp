@@ -108,9 +108,9 @@ NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible)
 // Constructor/desctructor
 
 nsRootAccessible::
-  nsRootAccessible(nsIDocument *aDocument, nsIContent *aRootContent,
-                   nsIWeakReference *aShell) :
-  nsDocAccessibleWrap(aDocument, aRootContent, aShell)
+  nsRootAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
+                   nsIPresShell* aPresShell) :
+  nsDocAccessibleWrap(aDocument, aRootContent, aPresShell)
 {
   mFlags |= eRootAccessible;
 }
@@ -203,7 +203,7 @@ nsRootAccessible::NativeState()
     states |= states::MODAL;
 #endif
 
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     nsCOMPtr<nsIDOMWindow> rootWindow;
     GetWindow(getter_AddRefs(rootWindow));
@@ -371,23 +371,19 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   nsAutoString eventType;
   aDOMEvent->GetType(eventType);
 
-  nsCOMPtr<nsIWeakReference> weakShell =
-    nsCoreUtils::GetWeakShellFor(origTargetNode);
-  if (!weakShell)
-    return;
-
   if (eventType.EqualsLiteral("popuphiding")) {
     HandlePopupHidingEvent(origTargetNode);
     return;
   }
 
-  nsAccessible* accessible =
-    GetAccService()->GetAccessibleOrContainer(origTargetNode, weakShell);
+  nsDocAccessible* targetDocument = GetAccService()->
+    GetDocAccessible(origTargetNode->OwnerDoc());
+  NS_ASSERTION(targetDocument, "No document while accessible is in document?!");
+
+  nsAccessible* accessible = 
+    targetDocument->GetAccessibleOrContainer(origTargetNode);
   if (!accessible)
     return;
-
-  nsDocAccessible* targetDocument = accessible->GetDocAccessible();
-  NS_ASSERTION(targetDocument, "No document while accessible is in document?!");
 
   nsINode* targetNode = accessible->GetNode();
 
@@ -568,7 +564,7 @@ void
 nsRootAccessible::Shutdown()
 {
   // Called manually or by nsAccessNode::LastRelease()
-  if (!mWeakShell)
+  if (!PresShell())
     return;  // Already shutdown
 
   nsDocAccessibleWrap::Shutdown();

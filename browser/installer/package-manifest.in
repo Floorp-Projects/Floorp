@@ -150,6 +150,9 @@
 @BINPATH@/components/dom_system_b2g.xpt
 #endif
 @BINPATH@/components/dom_battery.xpt
+#ifdef MOZ_B2G_BT
+@BINPATH@/components/dom_bluetooth.xpt
+#endif
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_core.xpt
 @BINPATH@/components/dom_css.xpt
@@ -398,6 +401,8 @@
 #endif
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
+@BINPATH@/components/messageWakeupService.js
+@BINPATH@/components/messageWakeupService.manifest
 
 ; Modules
 @BINPATH@/modules/*
@@ -435,14 +440,11 @@
 #endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
+#ifdef MOZ_GTK2
 @BINPATH@/chrome/icons/default/default16.png
 @BINPATH@/chrome/icons/default/default32.png
 @BINPATH@/chrome/icons/default/default48.png
 #endif
-#endif
-
 
 ; shell icons
 #ifdef XP_UNIX

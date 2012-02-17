@@ -38,6 +38,7 @@
 package org.mozilla.gecko.db;
 
 import android.content.ContentResolver;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 
@@ -76,8 +77,6 @@ public class BrowserDB {
 
         public void clearHistory(ContentResolver cr);
 
-        public Cursor getAllBookmarks(ContentResolver cr);
-
         public Cursor getMobileBookmarks(ContentResolver cr);
 
         public Cursor getDesktopBookmarks(ContentResolver cr);
@@ -88,7 +87,9 @@ public class BrowserDB {
 
         public void addBookmark(ContentResolver cr, String title, String uri);
 
-        public void removeBookmark(ContentResolver cr, String uri);
+        public void removeBookmark(ContentResolver cr, int id);
+
+        public void removeBookmarksWithURL(ContentResolver cr, String uri);
 
         public void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword);
 
@@ -99,6 +100,8 @@ public class BrowserDB {
         public void updateThumbnailForUrl(ContentResolver cr, String uri, BitmapDrawable thumbnail);
 
         public byte[] getThumbnailForUrl(ContentResolver cr, String uri);
+
+        public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
     }
 
     static {
@@ -143,10 +146,6 @@ public class BrowserDB {
         sDb.clearHistory(cr);
     }
 
-    public static Cursor getAllBookmarks(ContentResolver cr) {
-        return sDb.getAllBookmarks(cr);
-    }
-
     public static Cursor getMobileBookmarks(ContentResolver cr) {
         return sDb.getMobileBookmarks(cr);
     }
@@ -167,8 +166,12 @@ public class BrowserDB {
         sDb.addBookmark(cr, title, uri);
     }
 
-    public static void removeBookmark(ContentResolver cr, String uri) {
-        sDb.removeBookmark(cr, uri);
+    public static void removeBookmark(ContentResolver cr, int id) {
+        sDb.removeBookmark(cr, id);
+    }
+
+    public static void removeBookmarksWithURL(ContentResolver cr, String uri) {
+        sDb.removeBookmarksWithURL(cr, uri);
     }
 
     public static void updateBookmark(ContentResolver cr, String oldUri, String uri, String title, String keyword) {
@@ -189,5 +192,13 @@ public class BrowserDB {
 
     public static byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
         return sDb.getThumbnailForUrl(cr, uri);
+    }
+
+    public static void registerBookmarkObserver(ContentResolver cr, ContentObserver observer) {
+        sDb.registerBookmarkObserver(cr, observer);
+    }
+
+    public static void unregisterBookmarkObserver(ContentResolver cr, ContentObserver observer) {
+        cr.unregisterContentObserver(observer);
     }
 }

@@ -44,7 +44,7 @@ __all__ = ['Profile', 'FirefoxProfile', 'ThunderbirdProfile']
 import os
 import tempfile
 from addons import AddonManager
-from permissions import PermissionsManager
+from permissions import Permissions
 from shutil import rmtree
 
 try:
@@ -68,6 +68,12 @@ class Profile(object):
 
         # if true, remove installed addons/prefs afterwards
         self.restore = restore
+
+        # prefs files written to
+        self.written_prefs = set()
+
+        # our magic markers
+        self.delimeters = ('#MozRunner Prefs Start', '#MozRunner Prefs End')
 
         # Handle profile creation
         self.create_new = not profile
@@ -99,8 +105,8 @@ class Profile(object):
         # set permissions
         self._locations = locations # store this for reconstruction
         self._proxy = proxy
-        self.permission_manager = PermissionsManager(self.profile, locations)
-        prefs_js, user_js = self.permission_manager.getNetworkPreferences(proxy)
+        self.permissions = Permissions(self.profile, locations)
+        prefs_js, user_js = self.permissions.network_prefs(proxy)
         self.set_preferences(prefs_js, 'prefs.js')
         self.set_preferences(user_js)
 
@@ -139,34 +145,37 @@ class Profile(object):
     def set_preferences(self, preferences, filename='user.js'):
         """Adds preferences dict to profile preferences"""
 
+
         # append to the file
         prefs_file = os.path.join(self.profile, filename)
         f = open(prefs_file, 'a')
 
-        if isinstance(preferences, dict):
-            # order doesn't matter
-            preferences = preferences.items()
-
-        # write the preferences
         if preferences:
-            f.write('\n#MozRunner Prefs Start\n')
+
+            # note what files we've touched
+            self.written_prefs.add(filename)
+
+
+            if isinstance(preferences, dict):
+                # order doesn't matter
+                preferences = preferences.items()
+
+            # write the preferences
+            f.write('\n%s\n' % self.delimeters[0])
             _prefs = [(simplejson.dumps(k), simplejson.dumps(v) )
                       for k, v in preferences]
             for _pref in _prefs:
                 f.write('user_pref(%s, %s);\n' % _pref)
-            f.write('#MozRunner Prefs End\n')
+            f.write('%s\n' % self.delimeters[1])
         f.close()
 
-    def pop_preferences(self):
+    def pop_preferences(self, filename):
         """
         pop the last set of preferences added
         returns True if popped
         """
 
-        # our magic markers
-        delimeters = ('#MozRunner Prefs Start', '#MozRunner Prefs End')
-
-        lines = file(os.path.join(self.profile, 'user.js')).read().splitlines()
+        lines = file(os.path.join(self.profile, filename)).read().splitlines()
         def last_index(_list, value):
             """
             returns the last index of an item;
@@ -175,29 +184,32 @@ class Profile(object):
             for index in reversed(range(len(_list))):
                 if _list[index] == value:
                     return index
-        s = last_index(lines, delimeters[0])
-        e = last_index(lines, delimeters[1])
+        s = last_index(lines, self.delimeters[0])
+        e = last_index(lines, self.delimeters[1])
 
         # ensure both markers are found
         if s is None:
-            assert e is None, '%s found without %s' % (delimeters[1], delimeters[0])
+            assert e is None, '%s found without %s' % (self.delimeters[1], self.delimeters[0])
             return False # no preferences found
         elif e is None:
-            assert e is None, '%s found without %s' % (delimeters[0], delimeters[1])
+            assert s is None, '%s found without %s' % (self.delimeters[0], self.delimeters[1])
 
         # ensure the markers are in the proper order
-        assert e > s, '%s found at %s, while %s found at %s' (delimeter[1], e, delimeter[0], s)
+        assert e > s, '%s found at %s, while %s found at %s' % (self.delimeters[1], e, self.delimeters[0], s)
 
         # write the prefs
         cleaned_prefs = '\n'.join(lines[:s] + lines[e+1:])
         f = file(os.path.join(self.profile, 'user.js'), 'w')
+        f.write(cleaned_prefs)
+        f.close()
         return True
 
     def clean_preferences(self):
         """Removed preferences added by mozrunner."""
-        while True:
-            if not self.pop_preferences():
-                break
+        for filename in self.written_prefs:
+            while True:
+                if not self.pop_preferences(filename):
+                    break
 
     ### cleanup
 
@@ -237,7 +249,7 @@ class Profile(object):
             else:
                 self.clean_preferences()
                 self.addon_manager.clean_addons()
-                self.permission_manager.clean_permissions()
+                self.permissions.clean_db()
 
     __del__ = cleanup
 
@@ -268,6 +280,8 @@ class FirefoxProfile(Profile):
                    'extensions.update.notifyUser' : False,
                    # Suppress automatic safe mode after crashes
                    'toolkit.startup.max_resumed_crashes' : -1,
+                   # Enable test mode to run multiple tests in parallel
+                   'focusmanager.testmode' : True,
                    }
 
 class ThunderbirdProfile(Profile):

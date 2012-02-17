@@ -579,6 +579,33 @@ XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
     GetCompartmentMap().EnumerateRead(SuspectCompartment, &closure);
 }
 
+static JSDHashOperator
+UnmarkJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
+               void *arg)
+{
+    ObjectHolder* entry = reinterpret_cast<ObjectHolder*>(hdr);
+    entry->tracer->CanSkip(entry->holder, true);
+    return JS_DHASH_NEXT;
+}
+
+void
+XPCJSRuntime::UnmarkSkippableJSHolders()
+{
+    XPCAutoLock lock(mMapLock);
+    if (mJSHolders.ops) {             
+        JS_DHashTableEnumerate(&mJSHolders, UnmarkJSHolder, nsnull);
+    }
+}
+
+void
+xpc_UnmarkSkippableJSHolders()
+{
+    if (nsXPConnect::GetXPConnect() &&
+        nsXPConnect::GetXPConnect()->GetRuntime()) {
+        nsXPConnect::GetXPConnect()->GetRuntime()->UnmarkSkippableJSHolders();
+    }
+}
+
 template<class T> static void
 DoDeferredRelease(nsTArray<T> &array)
 {
@@ -999,17 +1026,17 @@ DetachedWrappedNativeProtoShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *h
     XPCWrappedNativeProto* proto =
         (XPCWrappedNativeProto*)((JSDHashEntryStub*)hdr)->key;
 
-    proto->SystemIsBeingShutDown((JSContext*)arg);
+    proto->SystemIsBeingShutDown();
     return JS_DHASH_NEXT;
 }
 
-void XPCJSRuntime::SystemIsBeingShutDown(JSContext* cx)
+void XPCJSRuntime::SystemIsBeingShutDown()
 {
     DOM_ClearInterfaces();
 
     if (mDetachedWrappedNativeProtoMap)
         mDetachedWrappedNativeProtoMap->
-            Enumerate(DetachedWrappedNativeProtoShutdownMarker, cx);
+            Enumerate(DetachedWrappedNativeProtoShutdownMarker, nsnull);
 }
 
 JSContext *

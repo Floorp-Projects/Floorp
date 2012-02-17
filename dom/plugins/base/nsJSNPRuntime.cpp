@@ -1073,7 +1073,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
     // obj is one of our own, its private data is the NPObject we're
     // looking for.
 
-    NPObject *npobj = (NPObject *)::JS_GetPrivate(cx, obj);
+    NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
 
     if (LookupNPP(npobj) == npp)
       return _retainobject(npobj);
@@ -1154,17 +1154,17 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
 }
 
 static NPObject *
-GetNPObject(JSContext *cx, JSObject *obj)
+GetNPObject(JSObject *obj)
 {
   while (obj && JS_GetClass(obj) != &sNPObjectJSWrapperClass) {
-    obj = ::JS_GetPrototype(cx, obj);
+    obj = ::JS_GetPrototype(obj);
   }
 
   if (!obj) {
     return nsnull;
   }
 
-  return (NPObject *)::JS_GetPrivate(cx, obj);
+  return (NPObject *)::JS_GetPrivate(obj);
 }
 
 
@@ -1173,7 +1173,7 @@ GetNPObject(JSContext *cx, JSObject *obj)
 static JSBool
 NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  NPObject *npobj = GetNPObject(cx, obj);
+  NPObject *npobj = GetNPObject(obj);
 
   if (!npobj || !npobj->_class || !npobj->_class->hasProperty ||
       !npobj->_class->hasMethod) {
@@ -1214,7 +1214,7 @@ NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  NPObject *npobj = GetNPObject(cx, obj);
+  NPObject *npobj = GetNPObject(obj);
 
   if (!npobj || !npobj->_class || !npobj->_class->hasProperty ||
       !npobj->_class->removeProperty) {
@@ -1245,7 +1245,7 @@ NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
-  NPObject *npobj = GetNPObject(cx, obj);
+  NPObject *npobj = GetNPObject(obj);
 
   if (!npobj || !npobj->_class || !npobj->_class->hasProperty ||
       !npobj->_class->setProperty) {
@@ -1304,7 +1304,7 @@ NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, j
 static JSBool
 NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-  NPObject *npobj = GetNPObject(cx, obj);
+  NPObject *npobj = GetNPObject(obj);
 
   if (!npobj || !npobj->_class || !npobj->_class->hasProperty ||
       !npobj->_class->hasMethod || !npobj->_class->getProperty) {
@@ -1393,7 +1393,7 @@ CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval, bool ctorCall)
 {
   while (obj && JS_GetClass(obj) != &sNPObjectJSWrapperClass) {
-    obj = ::JS_GetPrototype(cx, obj);
+    obj = ::JS_GetPrototype(obj);
   }
 
   if (!obj) {
@@ -1402,7 +1402,7 @@ CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  NPObject *npobj = (NPObject *)::JS_GetPrivate(cx, obj);
+  NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
 
   if (!npobj || !npobj->_class) {
     ThrowJSException(cx, "Bad NPObject as private data!");
@@ -1545,7 +1545,7 @@ static JSBool
 NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                           jsval *statep, jsid *idp)
 {
-  NPObject *npobj = GetNPObject(cx, obj);
+  NPObject *npobj = GetNPObject(obj);
   NPIdentifier *enum_value;
   uint32_t length;
   NPObjectEnumerateState *state;
@@ -1625,7 +1625,7 @@ static JSBool
 NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                         JSObject **objp)
 {
-  NPObject *npobj = GetNPObject(cx, obj);
+  NPObject *npobj = GetNPObject(obj);
 
   if (!npobj || !npobj->_class || !npobj->_class->hasProperty ||
       !npobj->_class->hasMethod) {
@@ -1714,7 +1714,7 @@ NPObjWrapper_Convert(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 static void
 NPObjWrapper_Finalize(JSContext *cx, JSObject *obj)
 {
-  NPObject *npobj = (NPObject *)::JS_GetPrivate(cx, obj);
+  NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
   if (npobj) {
     if (sNPObjWrappers.ops) {
       PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_REMOVE);
@@ -1780,11 +1780,7 @@ nsNPObjWrapper::OnDestroy(NPObject *npobj)
     // Found a live NPObject wrapper, null out its JSObjects' private
     // data.
 
-    JSContext *cx = GetJSContext(entry->mNpp);
-
-    if (cx) {
-      ::JS_SetPrivate(cx, entry->mJSObj, nsnull);
-    }
+    ::JS_SetPrivate(entry->mJSObj, nsnull);
 
     // Remove the npobj from the hash now that it went away.
     PL_DHashTableRawRemove(&sNPObjWrappers, entry);
@@ -1876,8 +1872,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
   entry->mJSObj = obj;
 
-  // JS_SetPrivate() never fails.
-  ::JS_SetPrivate(cx, obj, npobj);
+  ::JS_SetPrivate(obj, npobj);
 
   // The new JSObject now holds on to npobj
   _retainobject(npobj);
@@ -1960,10 +1955,7 @@ NPObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
       PR_Free(npobj);
     }
 
-    JSAutoEnterCompartment ac;
-    if (ac.enter(nppcx->cx, entry->mJSObj)) {
-      ::JS_SetPrivate(nppcx->cx, entry->mJSObj, nsnull);
-    }
+    ::JS_SetPrivate(entry->mJSObj, nsnull);
 
     table->ops = ops;    
 
@@ -2074,10 +2066,10 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
   // be only one, but remove all instances found in case the page put
   // more than one of the plugin's scriptable objects on the prototype
   // chain).
-  while (obj && (proto = ::JS_GetPrototype(cx, obj))) {
+  while (obj && (proto = ::JS_GetPrototype(obj))) {
     if (JS_GetClass(proto) == &sNPObjectJSWrapperClass) {
       // We found an NPObject on the proto chain, get its prototype...
-      proto = ::JS_GetPrototype(cx, proto);
+      proto = ::JS_GetPrototype(proto);
 
       // ... and pull it out of the chain.
       ::JS_SetPrototype(cx, obj, proto);
@@ -2140,7 +2132,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
   *vp = OBJECT_TO_JSVAL(memobj);
   ::JS_AddValueRoot(cx, vp);
 
-  ::JS_SetPrivate(cx, memobj, (void *)memberPrivate);
+  ::JS_SetPrivate(memobj, (void *)memberPrivate);
 
   NPIdentifier identifier = JSIdToNPIdentifier(id);
 
@@ -2173,7 +2165,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
   // outlive the underlying NPObject, so make sure it points to the
   // real JSObject wrapper for the NPObject.
   while (JS_GetClass(obj) != &sNPObjectJSWrapperClass) {
-    obj = ::JS_GetPrototype(cx, obj);
+    obj = ::JS_GetPrototype(obj);
   }
 
   memberPrivate->npobjWrapper = obj;
@@ -2226,7 +2218,7 @@ NPObjectMember_Finalize(JSContext *cx, JSObject *obj)
 {
   NPObjectMemberPrivate *memberPrivate;
 
-  memberPrivate = (NPObjectMemberPrivate *)::JS_GetPrivate(cx, obj);
+  memberPrivate = (NPObjectMemberPrivate *)::JS_GetPrivate(obj);
   if (!memberPrivate)
     return;
 
@@ -2246,7 +2238,7 @@ NPObjectMember_Call(JSContext *cx, uintN argc, jsval *vp)
   if (!memberPrivate || !memberPrivate->npobjWrapper)
     return JS_FALSE;
 
-  NPObject *npobj = GetNPObject(cx, memberPrivate->npobjWrapper);
+  NPObject *npobj = GetNPObject(memberPrivate->npobjWrapper);
   if (!npobj) {
     ThrowJSException(cx, "Call on invalid member object");
 
@@ -2319,7 +2311,7 @@ static void
 NPObjectMember_Trace(JSTracer *trc, JSObject *obj)
 {
   NPObjectMemberPrivate *memberPrivate =
-    (NPObjectMemberPrivate *)::JS_GetPrivate(trc->context, obj);
+    (NPObjectMemberPrivate *)::JS_GetPrivate(obj);
   if (!memberPrivate)
     return;
 

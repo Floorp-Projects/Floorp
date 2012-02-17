@@ -73,8 +73,7 @@ const PERSIST_FILES = {
 
 __defineGetter__("_prefs", function () {
   delete this._prefs;
-  return this._prefs = Services.prefs.getBranch("lightweightThemes.")
-                                     .QueryInterface(Ci.nsIPrefBranch2);
+  return this._prefs = Services.prefs.getBranch("lightweightThemes.");
 });
 
 __defineGetter__("_maxUsedThemes", function() {
@@ -93,6 +92,8 @@ __defineSetter__("_maxUsedThemes", function(aVal) {
   return this._maxUsedThemes = aVal;
 });
 
+var _usedThemes = null;
+
 // Holds the ID of the theme being enabled or disabled while sending out the
 // events so cached AddonWrapper instances can return correct values for
 // permissions and pendingOperations
@@ -101,12 +102,16 @@ var _themeIDBeingDisbled = null;
 
 var LightweightThemeManager = {
   get usedThemes () {
+    if (_usedThemes)
+      return _usedThemes;
+
     try {
-      return JSON.parse(_prefs.getComplexValue("usedThemes",
-                                               Ci.nsISupportsString).data);
+      _usedThemes = JSON.parse(_prefs.getComplexValue("usedThemes",
+                                                      Ci.nsISupportsString).data);
     } catch (e) {
-      return [];
+      _usedThemes = [];
     }
+    return _usedThemes;
   },
 
   get currentTheme () {
@@ -409,7 +414,8 @@ var LightweightThemeManager = {
       return;
     }
 
-    aCallback([new AddonWrapper(a) for each (a in this.usedThemes)]);
+    let themes = this.usedThemes;
+    aCallback([new AddonWrapper(a) for each (a in themes)]);
   },
 };
 
@@ -746,6 +752,10 @@ function _prefObserver(aSubject, aTopic, aData) {
       }
       // Update the theme list to remove any themes over the number we keep
       _updateUsedThemes(LightweightThemeManager.usedThemes);
+      break;
+    case "usedThemes":
+      // Clear the cache - it will be repopulated next time it's used.
+      _usedThemes = null;
       break;
   }
 }

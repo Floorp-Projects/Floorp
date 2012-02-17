@@ -82,6 +82,42 @@ function testSteps()
     is(event.target.result[i], values[i], "Same value");
   }
 
+  request = db.transaction("foo").objectStore("foo").getAll(keyRange, 0);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+
+  is(event.target.result instanceof Array, true, "Got an array object");
+  is(event.target.result.length, values.length, "Correct length");
+
+  for (let i in event.target.result) {
+    is(event.target.result[i], values[i], "Same value");
+  }
+
+  request = db.transaction("foo").objectStore("foo").getAll(keyRange, null);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+
+  is(event.target.result instanceof Array, true, "Got an array object");
+  is(event.target.result.length, values.length, "Correct length");
+
+  for (let i in event.target.result) {
+    is(event.target.result[i], values[i], "Same value");
+  }
+
+  request = db.transaction("foo").objectStore("foo").getAll(keyRange, undefined);
+  request.onerror = errorHandler;
+  request.onsuccess = grabEventAndContinueHandler;
+  event = yield;
+
+  is(event.target.result instanceof Array, true, "Got an array object");
+  is(event.target.result.length, values.length, "Correct length");
+
+  for (let i in event.target.result) {
+    is(event.target.result[i], values[i], "Same value");
+  }
+
   keyRange = IDBKeyRange.bound(4, 7);
 
   request = db.transaction("foo").objectStore("foo").getAll(keyRange);
@@ -139,7 +175,7 @@ function testSteps()
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array object");
-  is(event.target.result.length, 0, "Correct length");
+  is(event.target.result.length, 4, "Correct length");
 
   keyRange = IDBKeyRange.bound(4, 7, true, true);
 

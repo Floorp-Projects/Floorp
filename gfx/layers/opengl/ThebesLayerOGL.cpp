@@ -593,17 +593,33 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
         dstRect.MoveBy(- destBufferRect.TopLeft());
         
         if (mBufferRotation != nsIntPoint(0, 0)) {
-        // If mBuffer is rotated, then BlitTextureImage will only be copying the bottom-right section
-        // of the buffer. We need to invalidate the remaining sections so that they get redrawn too.
-        // Alternatively we could teach BlitTextureImage to rearrange the rotated segments onto
-        // the new buffer.
-          
-        // When the rotated buffer is reorganised, the bottom-right section will be drawn in the top left.
-        // Find the point where this content ends.
+          // If mBuffer is rotated, then BlitTextureImage will only be copying the bottom-right section
+          // of the buffer. We need to invalidate the remaining sections so that they get redrawn too.
+          // Alternatively we could teach BlitTextureImage to rearrange the rotated segments onto
+          // the new buffer.
+
+          // When the rotated buffer is reorganised, the bottom-right section will be drawn in the top left.
+          // Find the point where this content ends.
+
           nsIntPoint rotationPoint(mBufferRect.x + mBufferRect.width - mBufferRotation.x, 
                                    mBufferRect.y + mBufferRect.height - mBufferRotation.y);
 
           // Mark the remaining quadrants (bottom-left&right, top-right) as invalid.
+          // The buffer looks like:
+          //  ______
+          // |1  |2 |  Where the center point is offset by mBufferRotation from the top-left corner.
+          // |___|__|
+          // |3  |4 |
+          // |___|__|
+          //
+          // This is drawn to the screen as:
+          //  ______
+          // |4  |3 |  Where the center point is { width - mBufferRotation.x, height - mBufferRotation.y } from
+          // |___|__|  from the top left corner - rotationPoint. Since only quadrant 4 will actually be copied, 
+          // |2  |1 |  we need to invalidate the others.
+          // |___|__|
+          //
+          // Quadrants 2 and 1
           nsIntRect bottom(mBufferRect.x, rotationPoint.y, mBufferRect.width, mBufferRotation.y);
           nsIntRect topright(rotationPoint.x, mBufferRect.y, mBufferRotation.x, rotationPoint.y - mBufferRect.y);
 

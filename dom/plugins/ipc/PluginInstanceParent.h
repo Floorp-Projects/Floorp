@@ -280,7 +280,7 @@ public:
     AnswerPluginFocusChange(const bool& gotFocus);
 
     nsresult AsyncSetWindow(NPWindow* window);
-    nsresult GetImage(mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
+    nsresult GetImageContainer(mozilla::layers::ImageContainer** aContainer);
     nsresult GetImageSize(nsIntSize* aSize);
 #ifdef XP_MACOSX
     nsresult IsRemoteDrawingCoreAnimation(bool *aDrawing);
@@ -300,6 +300,9 @@ private:
     bool CreateBackground(const nsIntSize& aSize);
     void DestroyBackground();
     SurfaceDescriptor BackgroundDescriptor() /*const*/;
+
+    typedef mozilla::layers::ImageContainer ImageContainer;
+    ImageContainer *GetImageContainer();
 
     NS_OVERRIDE
     virtual PPluginBackgroundDestroyerParent*
@@ -365,6 +368,8 @@ private:
     // the consistency of the pixels in |mBackground|.  A plugin may
     // be able to observe partial updates to the background.
     nsRefPtr<gfxASurface>    mBackground;
+    
+    nsRefPtr<ImageContainer> mImageContainer;
 };
 
 

@@ -1308,22 +1308,6 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
 void NP_CALLBACK
 _forceredraw(NPP npp)
 {
-  if (!NS_IsMainThread()) {
-    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_forceredraw called from the wrong thread\n"));
-    return;
-  }
-  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_ForceDraw: npp=%p\n", (void*)npp));
-
-  if (!npp || !npp->ndata) {
-    NS_WARNING("_forceredraw: npp or npp->ndata == 0");
-    return;
-  }
-
-  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance*)npp->ndata;
-
-  PluginDestructionGuard guard(inst);
-
-  inst->ForceRedraw();
 }
 
 NPObject* NP_CALLBACK

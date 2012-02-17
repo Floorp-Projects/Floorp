@@ -1949,6 +1949,40 @@ SpdySession::Http1xTransactionCount()
   return 0;
 }
 
+// used as an enumerator by TakeSubTransactions()
+static PLDHashOperator
+TakeStream(nsAHttpTransaction *key,
+           nsAutoPtr<SpdyStream> &stream,
+           void *closure)
+{
+  nsTArray<nsRefPtr<nsAHttpTransaction> > *list =
+    static_cast<nsTArray<nsRefPtr<nsAHttpTransaction> > *>(closure);
+
+  list->AppendElement(key);
+
+  // removing the stream from the hash will delete the stream
+  // and drop the transaction reference the hash held
+  return PL_DHASH_REMOVE;
+}
+
+nsresult
+SpdySession::TakeSubTransactions(
+    nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
+{
+  // Generally this cannot be done with spdy as transactions are
+  // started right away.
+
+  LOG3(("SpdySession::TakeSubTransactions %p\n", this));
+
+  if (mConcurrentHighWater > 0)
+    return NS_ERROR_ALREADY_OPENED;
+
+  LOG3(("   taking %d\n", mStreamTransactionHash.Count()));
+
+  mStreamTransactionHash.Enumerate(TakeStream, &outTransactions);
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // Pass through methods of nsAHttpConnection
 //-----------------------------------------------------------------------------

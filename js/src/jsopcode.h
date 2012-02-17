@@ -504,6 +504,7 @@ class Sprinter
      * the beginning of this new data
      */
     ptrdiff_t put(const char *s, size_t len);
+    ptrdiff_t put(const char *s);
     ptrdiff_t putString(JSString *str);
 
     /* Prints a formatted string into the buffer */
@@ -517,15 +518,6 @@ class Sprinter
     ptrdiff_t getOffset() const;
     ptrdiff_t getOffsetOf(const char *string) const;
 };
-
-extern ptrdiff_t
-SprintPut(Sprinter *sp, const char *s, size_t len);
-
-extern ptrdiff_t
-SprintCString(Sprinter *sp, const char *s);
-
-extern ptrdiff_t
-SprintString(Sprinter *sp, JSString *str);
 
 extern ptrdiff_t
 Sprint(Sprinter *sp, const char *format, ...);

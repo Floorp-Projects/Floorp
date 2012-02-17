@@ -80,7 +80,7 @@ public:
   }
 
   void
-  UnrootJSObject(JSContext* aCx);
+  Unpin(JSContext* aCx);
 
   JSObject*
   GetJSObject()
@@ -152,7 +152,7 @@ private:
   ReleaseProxy();
 
   bool
-  RootJSObject(JSContext* aCx);
+  Pin(JSContext* aCx);
 
   bool
   MaybeDispatchPrematureAbortEvents(JSContext* aCx);

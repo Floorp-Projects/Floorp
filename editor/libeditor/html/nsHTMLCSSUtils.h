@@ -108,7 +108,8 @@ public:
     * @param aProperty      [IN] an atom containing a HTML tag name
     * @param aAttribute     [IN] a string containing the name of a HTML attribute carried by the element above
     */
-  bool        IsCSSEditableProperty(nsIDOMNode * aNode, nsIAtom * aProperty, const nsAString * aAttribute);
+  bool IsCSSEditableProperty(nsIContent* aNode, nsIAtom* aProperty, const nsAString* aAttribute);
+  bool IsCSSEditableProperty(nsIDOMNode* aNode, nsIAtom* aProperty, const nsAString* aAttribute);
 
   /** adds/remove a CSS declaration to the STYLE atrribute carried by a given element
     *
@@ -193,7 +194,7 @@ public:
     * @param aStyleType     [IN] SPECIFIED_STYLE_TYPE to query the specified style values
                                  COMPUTED_STYLE_TYPE  to query the computed style values
     */
-  nsresult    GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
+  nsresult    GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                    nsIAtom * aHTMLProperty,
                                                    const nsAString * aAttribute,
                                                    nsAString & aValueString,
@@ -299,6 +300,7 @@ public:
     * @param aNode           [IN] a node
     * @param aElement        [OUT] the deepest element node containing aNode (possibly aNode itself)
     */
+  mozilla::dom::Element* GetElementContainerOrSelf(nsINode* aNode);
   already_AddRefed<nsIDOMElement> GetElementContainerOrSelf(nsIDOMNode* aNode);
 
   /**
@@ -307,7 +309,8 @@ public:
    * @param aNode    the node we want the default Window for
    * @param aWindow  [OUT] the default Window
    */
-  nsresult        GetDefaultViewCSS(nsIDOMNode* aNode, nsIDOMWindow** aWindow);
+  nsresult GetDefaultViewCSS(nsINode* aNode, nsIDOMWindow** aWindow);
+  nsresult GetDefaultViewCSS(nsIDOMNode* aNode, nsIDOMWindow** aWindow);
 
 
 private:
@@ -350,12 +353,12 @@ private:
     *                                 is made for GetCSSEquivalentToHTMLInlineStyleSet or
     *                                 RemoveCSSEquivalentToHTMLInlineStyleSet
     */
-  void      GenerateCSSDeclarationsFromHTMLStyle(nsIDOMNode * aNode,
-                                                 nsIAtom * aHTMLProperty,
-                                                 const nsAString *aAttribute,
-                                                 const nsAString *aValue,
-                                                 nsTArray<nsIAtom*> & aPropertyArray,
-                                                 nsTArray<nsString> & aValueArray,
+  void      GenerateCSSDeclarationsFromHTMLStyle(mozilla::dom::Element* aNode,
+                                                 nsIAtom* aHTMLProperty,
+                                                 const nsAString* aAttribute,
+                                                 const nsAString* aValue,
+                                                 nsTArray<nsIAtom*>& aPropertyArray,
+                                                 nsTArray<nsString>& aValueArray,
                                                  bool aGetOrRemoveRequest);
 
   /** creates a Transaction for setting or removing a css property
@@ -381,10 +384,12 @@ private:
    * @param aStyleType          [IN] SPECIFIED_STYLE_TYPE to query the specified style values
    *                                 COMPUTED_STYLE_TYPE  to query the computed style values
    */
-  nsresult    GetCSSInlinePropertyBase(nsIDOMNode * aNode, nsIAtom * aProperty,
-                                       nsAString & aValue,
-                                       nsIDOMWindow* aWindow,
-                                       PRUint8 aStyleType);
+  nsresult GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
+                                    nsAString& aValue, nsIDOMWindow* aWindow,
+                                    PRUint8 aStyleType);
+  nsresult GetCSSInlinePropertyBase(nsIDOMNode* aNode, nsIAtom* aProperty,
+                                    nsAString& aValue, nsIDOMWindow* aWindow,
+                                    PRUint8 aStyleType);
 
 
 private:

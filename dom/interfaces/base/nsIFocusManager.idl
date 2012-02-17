@@ -191,6 +191,14 @@ interface nsIFocusManager : nsISupports
   const unsigned long FLAG_NOSWITCHFRAME = 4;
 
   /**
+   * This flag is only used when passed to moveFocus. If set, focus is never
+   * moved to the parent frame of the starting element's document, instead
+   * iterating around to the beginning of that document again. Child frames
+   * are navigated as normal.
+   */
+  const unsigned long FLAG_NOPARENTFRAME = 8;
+
+  /**
    * Focus is changing due to a mouse operation, for instance the mouse was
    * clicked on an element.
    */

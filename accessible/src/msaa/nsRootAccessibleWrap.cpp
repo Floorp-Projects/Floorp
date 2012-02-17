@@ -51,8 +51,8 @@ using namespace mozilla::a11y;
 
 nsRootAccessibleWrap::
   nsRootAccessibleWrap(nsIDocument* aDocument, nsIContent* aRootContent,
-                       nsIWeakReference* aShell) :
-  nsRootAccessible(aDocument, aRootContent, aShell)
+                       nsIPresShell* aPresShell) :
+  nsRootAccessible(aDocument, aRootContent, aPresShell)
 {
 }
 

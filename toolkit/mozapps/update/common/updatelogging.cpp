@@ -51,7 +51,7 @@ UpdateLog::UpdateLog() : logFP(NULL)
 {
 }
 
-void UpdateLog::Init(NS_tchar* sourcePath, NS_tchar* fileName)
+void UpdateLog::Init(NS_tchar* sourcePath, const NS_tchar* fileName)
 {
   if (logFP)
     return;

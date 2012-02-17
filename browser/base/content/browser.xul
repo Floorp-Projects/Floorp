@@ -966,7 +966,7 @@
                   tabcontainer="tabbrowser-tabs"
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
-                  onclick="return contentAreaClick(event, false);"/>
+                  onclick="contentAreaClick(event, false);"/>
       <statuspanel id="statusbar-display" inactive="true"/>
     </vbox>
     <splitter id="devtools-side-splitter" hidden="true"/>

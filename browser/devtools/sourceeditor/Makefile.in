@@ -49,7 +49,6 @@ TEST_DIRS += test
 EXTRA_JS_MODULES = \
 	source-editor.jsm \
 	source-editor-orion.jsm \
-	source-editor-textarea.jsm \
 	source-editor-ui.jsm \
 	$(NULL)
 

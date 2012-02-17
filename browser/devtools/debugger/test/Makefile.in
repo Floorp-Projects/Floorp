@@ -69,6 +69,9 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_stack-04.js \
 	browser_dbg_location-changes.js \
 	browser_dbg_script-switching.js \
+	browser_dbg_pause-resume.js \
+	browser_dbg_update-editor-mode.js \
+	browser_dbg_select-line.js \
 	head.js \
 	$(NULL)
 
@@ -81,6 +84,8 @@ _BROWSER_TEST_PAGES = \
 	test-script-switching-01.js \
 	test-script-switching-02.js \
 	browser_dbg_frame-parameters.html \
+	browser_dbg_update-editor-mode.html \
+	test-editor-mode \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

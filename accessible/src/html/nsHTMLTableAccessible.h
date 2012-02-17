@@ -52,7 +52,7 @@ class nsHTMLTableCellAccessible : public nsHyperTextAccessibleWrap,
                                   public nsIAccessibleTableCell
 {
 public:
-  nsHTMLTableCellAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsHTMLTableCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -95,8 +95,8 @@ protected:
 class nsHTMLTableHeaderCellAccessible : public nsHTMLTableCellAccessible
 {
 public:
-  nsHTMLTableHeaderCellAccessible(nsIContent *aContent,
-                                  nsIWeakReference *aShell);
+  nsHTMLTableHeaderCellAccessible(nsIContent* aContent,
+                                  nsDocAccessible* aDoc);
 
   // nsAccessible
   virtual mozilla::a11y::role NativeRole();
@@ -124,7 +124,7 @@ class nsHTMLTableAccessible : public nsAccessibleWrap,
                               public nsIAccessibleTable
 {
 public:
-  nsHTMLTableAccessible(nsIContent *aContent, nsIWeakReference *aShell);
+  nsHTMLTableAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLETABLE
@@ -211,8 +211,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsHTMLTableAccessible,
 class nsHTMLCaptionAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  nsHTMLCaptionAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
-    nsHyperTextAccessibleWrap(aContent, aShell) { }
+  nsHTMLCaptionAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+    nsHyperTextAccessibleWrap(aContent, aDoc) { }
+  virtual ~nsHTMLCaptionAccessible() { }
 
   // nsIAccessible
 

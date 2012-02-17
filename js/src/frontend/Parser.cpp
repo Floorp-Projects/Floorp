@@ -257,7 +257,7 @@ Parser::trace(JSTracer *trc)
 {
     ObjectBox *objbox = traceListHead;
     while (objbox) {
-        MarkRoot(trc, objbox->object, "parser.object");
+        MarkObjectRoot(trc, objbox->object, "parser.object");
         if (objbox->isFunctionBox)
             static_cast<FunctionBox *>(objbox)->bindings.trace(trc);
         objbox = objbox->traceLink;
@@ -1331,6 +1331,7 @@ Parser::functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **l
                  *     until after all arguments have been parsed.
                  */
                 if (funtc.decls.lookupFirst(name)) {
+                    funtc.bindings.noteDup();
                     duplicatedArg = name;
                     if (destructuringArg)
                         goto report_dup_and_destructuring;

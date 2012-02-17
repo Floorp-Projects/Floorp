@@ -197,7 +197,7 @@ xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp);
 JSBool
 xpc_qsThrowMethodFailedWithCcx(XPCCallContext &ccx, nsresult rv);
 
-void
+bool
 xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
                                    const char *ifaceName,
                                    const char *memberName);

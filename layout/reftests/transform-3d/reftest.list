@@ -10,7 +10,7 @@
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html
-fails == preserve3d-1a.html preserve3d-1-ref.html
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank 
 == preserve3d-2a.html preserve3d-2-ref.html
@@ -33,6 +33,7 @@ fails == preserve3d-1a.html preserve3d-1-ref.html
 == backface-visibility-1b.html about:blank
 != perspective-origin-1a.html rotatex-perspective-1a.html
 == perspective-origin-1b.html perspective-origin-1a.html
+== perspective-origin-2a.html perspective-origin-2-ref.html
 != sorting-1a.html sorting-1-ref.html
 # Parallel planes, different z depth
 == sorting-2a.html sorting-2-ref.html
@@ -42,3 +43,4 @@ fails == preserve3d-1a.html preserve3d-1-ref.html
 # Different, but equivalent (for the given transform) transform origins
 == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
 == overflow-hidden-1a.html overflow-hidden-1-ref.html
+== transform-style-flat-1a.html transform-style-flat-1-ref.html

@@ -280,6 +280,7 @@ public class ProfileMigrator {
             File dbFileShm = new File(dbPathShm);
 
             SQLiteBridge db = null;
+            GeckoAppShell.ensureSQLiteLibsLoaded(GeckoApp.mAppContext.getApplication().getPackageResourcePath());
             try {
                 db = new SQLiteBridge(dbPath);
                 migrateBookmarks(db);
@@ -305,9 +306,9 @@ public class ProfileMigrator {
             File cacheFile = GeckoAppShell.getCacheDir();
             File[] files = cacheFile.listFiles();
             if (files != null) {
-                Iterator cacheFiles = Arrays.asList(files).iterator();
+                Iterator<File> cacheFiles = Arrays.asList(files).iterator();
                 while (cacheFiles.hasNext()) {
-                    File libFile = (File)cacheFiles.next();
+                    File libFile = cacheFiles.next();
                     if (libFile.getName().endsWith(".so")) {
                         libFile.delete();
                     }
