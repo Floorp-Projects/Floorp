@@ -1185,12 +1185,13 @@ nsSVGUtils::TransformOuterSVGPointToChildFrame(nsPoint aPoint,
                                                const gfxMatrix& aFrameToCanvasTM,
                                                nsPresContext* aPresContext)
 {
-  gfxMatrix devToUser = aFrameToCanvasTM;
-  devToUser.Invert();
-  NS_ABORT_IF_FALSE(!devToUser.IsSingular(), "should not get here");
+  NS_ABORT_IF_FALSE(!aFrameToCanvasTM.IsSingular(),
+                    "Callers must not pass a singular matrix");
+  gfxMatrix canvasDevToFrameUserSpace = aFrameToCanvasTM;
+  canvasDevToFrameUserSpace.Invert();
   gfxPoint devPt = gfxPoint(aPoint.x, aPoint.y) /
     aPresContext->AppUnitsPerDevPixel();
-  gfxPoint userPt = devToUser.Transform(devPt).Round();
+  gfxPoint userPt = canvasDevToFrameUserSpace.Transform(devPt).Round();
   gfxPoint appPt = userPt * aPresContext->AppUnitsPerCSSPixel();
   userPt.x = clamped(appPt.x, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
   userPt.y = clamped(appPt.y, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
