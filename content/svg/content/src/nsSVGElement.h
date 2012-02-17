@@ -155,7 +155,7 @@ public:
    * Returns aMatrix post-multiplied by the transform from the userspace
    * established by this element to the userspace established by its parent.
    */
-  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
+  virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix) const;
 
   // Setter for to set the current <animateMotion> transformation
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that

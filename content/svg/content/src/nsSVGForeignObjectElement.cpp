@@ -112,10 +112,10 @@ NS_IMETHODIMP nsSVGForeignObjectElement::GetHeight(nsIDOMSVGAnimatedLength * *aH
 // nsSVGElement methods
 
 /* virtual */ gfxMatrix
-nsSVGForeignObjectElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
+nsSVGForeignObjectElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix) const
 {
   // 'transform' attribute:
-  gfxMatrix matrix = nsSVGForeignObjectElementBase::PrependLocalTransformTo(aMatrix);
+  gfxMatrix matrix = nsSVGForeignObjectElementBase::PrependLocalTransformsTo(aMatrix);
   
   // now translate by our 'x' and 'y':
   float x, y;

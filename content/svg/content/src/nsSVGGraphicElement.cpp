@@ -189,7 +189,7 @@ nsSVGGraphicElement::IsEventName(nsIAtom* aName)
 }
 
 gfxMatrix
-nsSVGGraphicElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
+nsSVGGraphicElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix) const
 {
   gfxMatrix result(aMatrix);
 

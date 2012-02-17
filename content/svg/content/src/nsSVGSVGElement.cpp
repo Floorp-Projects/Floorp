@@ -1180,7 +1180,7 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
 // nsSVGElement methods
 
 /* virtual */ gfxMatrix
-nsSVGSVGElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
+nsSVGSVGElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix) const
 {
   if (IsInner()) {
     float x, y;
