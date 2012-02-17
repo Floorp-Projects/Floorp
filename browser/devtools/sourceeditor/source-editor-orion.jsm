@@ -146,6 +146,7 @@ function SourceEditor() {
     Services.prefs.getBoolPref(SourceEditor.PREFS.EXPAND_TAB);
 
   this._onOrionSelection = this._onOrionSelection.bind(this);
+  this._onTextChanged = this._onTextChanged.bind(this);
 
   this._eventTarget = {};
   this._eventListenersQueue = [];
@@ -172,6 +173,7 @@ SourceEditor.prototype = {
   _iframeWindow: null,
   _eventTarget: null,
   _eventListenersQueue: null,
+  _dirty: false,
 
   /**
    * The Source Editor user interface manager.
@@ -279,8 +281,11 @@ SourceEditor.prototype = {
 
     this._view.addEventListener("Load", onOrionLoad);
     if (config.highlightCurrentLine || Services.appinfo.OS == "Linux") {
-      this._view.addEventListener("Selection", this._onOrionSelection);
+      this.addEventListener(SourceEditor.EVENTS.SELECTION,
+                            this._onOrionSelection);
     }
+    this.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
+                           this._onTextChanged);
 
     let KeyBinding = window.require("orion/textview/keyBinding").KeyBinding;
     let TextDND = window.require("orion/textview/textDND").TextDND;
@@ -585,6 +590,28 @@ SourceEditor.prototype = {
         window.setTimeout(this._updatePrimarySelection.bind(this),
                           PRIMARY_SELECTION_DELAY);
     }
+  },
+
+  /**
+   * The TextChanged event handler which tracks the dirty state of the editor.
+   *
+   * @see SourceEditor.EVENTS.TEXT_CHANGED
+   * @see SourceEditor.EVENTS.DIRTY_CHANGED
+   * @see SourceEditor.dirty
+   * @private
+   */
+  _onTextChanged: function SE__onTextChanged()
+  {
+    this._updateDirty();
+  },
+
+  /**
+   * Update the dirty state of the editor based on the undo stack.
+   * @private
+   */
+  _updateDirty: function SE__updateDirty()
+  {
+    this.dirty = !this._undoStack.isClean();
   },
 
   /**
@@ -903,11 +930,53 @@ SourceEditor.prototype = {
   },
 
   /**
-   * Reset the Undo stack
+   * Reset the Undo stack.
    */
   resetUndo: function SE_resetUndo()
   {
     this._undoStack.reset();
+    this._updateDirty();
+  },
+
+  /**
+   * Set the "dirty" state of the editor. Set this to false when you save the
+   * text being edited. The dirty state will become true once the user makes
+   * changes to the text.
+   *
+   * @param boolean aNewValue
+   *        The new dirty state: true if the text is not saved, false if you
+   *        just saved the text.
+   */
+  set dirty(aNewValue)
+  {
+    if (aNewValue == this._dirty) {
+      return;
+    }
+
+    let event = {
+      type: SourceEditor.EVENTS.DIRTY_CHANGED,
+      oldValue: this._dirty,
+      newValue: aNewValue,
+    };
+
+    this._dirty = aNewValue;
+    if (!this._dirty && !this._undoStack.isClean()) {
+      this._undoStack.markClean();
+    }
+    this._dispatchEvent(event);
+  },
+
+  /**
+   * Get the editor "dirty" state. This tells if the text is considered saved or
+   * not.
+   *
+   * @see SourceEditor.EVENTS.DIRTY_CHANGED
+   * @return boolean
+   *         True if there are changes which are not saved, false otherwise.
+   */
+  get dirty()
+  {
+    return this._dirty;
   },
 
   /**
@@ -1326,9 +1395,14 @@ SourceEditor.prototype = {
   destroy: function SE_destroy()
   {
     if (this._config.highlightCurrentLine || Services.appinfo.OS == "Linux") {
-      this._view.removeEventListener("Selection", this._onOrionSelection);
+      this.removeEventListener(SourceEditor.EVENTS.SELECTION,
+                               this._onOrionSelection);
     }
     this._onOrionSelection = null;
+
+    this.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
+                             this._onTextChanged);
+    this._onTextChanged = null;
 
     if (this._primarySelectionTimeout) {
       let window = this.parentElement.ownerDocument.defaultView;
