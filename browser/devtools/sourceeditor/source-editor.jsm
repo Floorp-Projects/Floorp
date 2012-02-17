@@ -282,6 +282,15 @@ SourceEditor.EVENTS = {
    * condition.
    */
   BREAKPOINT_CHANGE: "BreakpointChange",
+
+  /**
+   * The DirtyChanged event is fired when the dirty state of the editor is
+   * changed. The dirty state of the editor tells if the are text changes that
+   * have not been saved yet. Event object properties: oldValue and newValue.
+   * Both are booleans telling the old dirty state and the new state,
+   * respectively.
+   */
+  DIRTY_CHANGED: "DirtyChanged",
 };
 
 /**
