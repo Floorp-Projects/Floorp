@@ -572,6 +572,16 @@ protected:
   NS_IMETHOD InsertAsPlaintextQuotation(const nsAString & aQuotedText,
                                         bool aAddCites,
                                         nsIDOMNode **aNodeInserted);
+  // Return true if the data is safe to insert as the source and destination
+  // principals match, or we are in a editor context where this doesn't matter.
+  // Otherwise, the data must be sanitized first.
+  bool IsSafeToInsertData(nsIDOMDocument* aSourceDoc);
+
+  nsresult InsertObject(const char* aType, nsISupports* aObject, bool aIsSafe,
+                        nsIDOMDocument *aSourceDoc,
+                        nsIDOMNode *aDestinationNode,
+                        PRInt32 aDestOffset,
+                        bool aDoDeleteSelection);
 
   // factored methods for handling insertion of data from transferables (drag&drop or clipboard)
   NS_IMETHOD PrepareTransferable(nsITransferable **transferable);
@@ -583,6 +593,14 @@ protected:
                                     nsIDOMNode *aDestinationNode,
                                     PRInt32 aDestinationOffset,
                                     bool aDoDeleteSelection);
+  nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
+                                  PRInt32 aIndex,
+                                  nsIDOMDocument *aSourceDoc,
+                                  const nsAString & aContextStr,
+                                  const nsAString & aInfoStr,
+                                  nsIDOMNode *aDestinationNode,
+                                  PRInt32 aDestOffset,
+                                  bool aDoDeleteSelection);
   bool HavePrivateHTMLFlavor( nsIClipboard *clipboard );
   nsresult   ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnichar **aCfcontext);
   nsresult   DoContentFilterCallback(const nsAString &aFlavor,
