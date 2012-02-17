@@ -1094,13 +1094,13 @@ JSFunction::trace(JSTracer *trc)
     }
 
     if (atom)
-        MarkStringUnbarriered(trc, atom, "atom");
+        MarkStringUnbarriered(trc, &atom, "atom");
 
     if (isInterpreted()) {
-        if (script())
-            MarkScript(trc, &script(), "script");
-        if (environment())
-            MarkObjectUnbarriered(trc, environment(), "fun_callscope");
+        if (u.i.script_)
+            MarkScriptUnbarriered(trc, &u.i.script_, "script");
+        if (u.i.env_)
+            MarkObjectUnbarriered(trc, &u.i.env_, "fun_callscope");
     }
 }
 

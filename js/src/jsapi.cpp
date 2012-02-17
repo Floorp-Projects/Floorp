@@ -4264,7 +4264,9 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
          * barrier here because the pointer is updated via setPrivate, which
          * always takes a barrier.
          */
-        MarkShapeUnbarriered(trc, (Shape *)pdata, "prop iter shape");
+        Shape *tmp = (Shape *)pdata;
+        MarkShapeUnbarriered(trc, &tmp, "prop iter shape");
+        obj->setPrivate(tmp);
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;

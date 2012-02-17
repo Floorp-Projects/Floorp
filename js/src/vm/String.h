@@ -444,6 +444,8 @@ class JSRope : public JSString
         JS_ASSERT(isRope());
         return d.s.u2.right;
     }
+
+    inline void markChildren(JSTracer *trc);
 };
 
 JS_STATIC_ASSERT(sizeof(JSRope) == sizeof(JSString));
@@ -486,6 +488,8 @@ class JSDependentString : public JSLinearString
         JS_ASSERT(JSString::isDependent());
         return d.s.u2.base;
     }
+
+    inline void markChildren(JSTracer *trc);
 };
 
 JS_STATIC_ASSERT(sizeof(JSDependentString) == sizeof(JSString));
