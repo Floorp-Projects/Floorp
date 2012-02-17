@@ -307,6 +307,8 @@ SourceEditor.prototype = {
         {styleClass: rulerClass}, {styleClass: "rulerLines odd"},
         {styleClass: "rulerLines even"});
 
+      this._linesRuler.onClick = this._linesRulerClick.bind(this);
+      this._linesRuler.onDblClick = this._linesRulerDblClick.bind(this);
       this._view.addRuler(this._linesRuler);
     }
 
@@ -617,6 +619,59 @@ SourceEditor.prototype = {
 
     annotationModel.replaceAnnotations(oldAnnotation ? [oldAnnotation] : null,
                                        [this._currentLineAnnotation]);
+  },
+
+  /**
+   * The click event handler for the lines gutter. This function allows the user
+   * to jump to a line or to perform line selection while holding the Shift key
+   * down.
+   *
+   * @private
+   * @param number aLineIndex
+   *        The line index where the click event occurred.
+   * @param object aEvent
+   *        The DOM click event object.
+   */
+  _linesRulerClick: function SE__linesRulerClick(aLineIndex, aEvent)
+  {
+    if (aLineIndex === undefined) {
+      return;
+    }
+
+    if (aEvent.shiftKey) {
+      let model = this._model;
+      let selection = this.getSelection();
+      let selectionLineStart = model.getLineAtOffset(selection.start);
+      let selectionLineEnd = model.getLineAtOffset(selection.end);
+      let newStart = aLineIndex <= selectionLineStart ?
+                     model.getLineStart(aLineIndex) : selection.start;
+      let newEnd = aLineIndex <= selectionLineStart ?
+                   selection.end : model.getLineEnd(aLineIndex);
+      this.setSelection(newStart, newEnd);
+    } else {
+      this.setCaretPosition(aLineIndex);
+    }
+  },
+
+  /**
+   * The dblclick event handler for the lines gutter. This function selects the
+   * whole line where the event occurred.
+   *
+   * @private
+   * @param number aLineIndex
+   *        The line index where the double click event occurred.
+   * @param object aEvent
+   *        The DOM dblclick event object.
+   */
+  _linesRulerDblClick: function SE__linesRulerDblClick(aLineIndex)
+  {
+    if (aLineIndex === undefined) {
+      return;
+    }
+
+    let newStart = this._model.getLineStart(aLineIndex);
+    let newEnd = this._model.getLineEnd(aLineIndex);
+    this.setSelection(newStart, newEnd);
   },
 
   /**
