@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.162 2012/02/11 13:03:08 kaie%kuix.de Exp $ */
+/* $Id: ssl3con.c,v 1.163 2012/02/15 21:52:08 kaie%kuix.de Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -8146,7 +8146,7 @@ ssl3_AlwaysFail(sslSocket * ss)
 /* Caller must hold 1stHandshakeLock.
 */
 SECStatus
-ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode status)
+ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode error)
 {
     SECStatus rv;
 
@@ -8168,9 +8168,9 @@ ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode status)
 
     ss->ssl3.hs.authCertificatePending = PR_FALSE;
 
-    if (status != 0) {
+    if (error != 0) {
 	ss->ssl3.hs.restartTarget = ssl3_AlwaysFail;
-	ssl3_SendAlertForCertError(ss, status);
+	ssl3_SendAlertForCertError(ss, error);
 	rv = SECSuccess;
     } else if (ss->ssl3.hs.restartTarget != NULL) {
 	sslRestartTarget target = ss->ssl3.hs.restartTarget;

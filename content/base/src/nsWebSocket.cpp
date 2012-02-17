@@ -439,13 +439,19 @@ nsWebSocket::~nsWebSocket()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsWebSocket)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsWebSocket)
-  if (tmp->IsBlack()) {
+  bool isBlack = tmp->IsBlack();
+  if (isBlack|| tmp->mKeepingAlive) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->UnmarkGrayJSListeners();
       NS_UNMARK_LISTENER_WRAPPER(Open)
       NS_UNMARK_LISTENER_WRAPPER(Error)
       NS_UNMARK_LISTENER_WRAPPER(Message)
       NS_UNMARK_LISTENER_WRAPPER(Close)
+    }
+    if (!isBlack) {
+      xpc_UnmarkGrayObject(tmp->PreservingWrapper() ? 
+                           tmp->GetWrapperPreserveColor() :
+                           tmp->GetExpandoObjectPreserveColor());
     }
     return true;
   }

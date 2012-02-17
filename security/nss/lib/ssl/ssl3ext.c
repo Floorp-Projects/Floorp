@@ -41,7 +41,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* TLS extension code moved here from ssl3ecc.c */
-/* $Id: ssl3ext.c,v 1.20 2011/11/16 19:12:35 kaie%kuix.de Exp $ */
+/* $Id: ssl3ext.c,v 1.21 2012/02/15 21:52:08 kaie%kuix.de Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -241,7 +241,7 @@ static const ssl3HelloExtensionHandler clientHelloHandlers[] = {
 #endif
     { ssl_session_ticket_xtn,     &ssl3_ServerHandleSessionTicketXtn },
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
-    { ssl_next_proto_neg_xtn,     &ssl3_ServerHandleNextProtoNegoXtn },
+    { ssl_next_proto_nego_xtn,    &ssl3_ServerHandleNextProtoNegoXtn },
     { -1, NULL }
 };
 
@@ -252,7 +252,7 @@ static const ssl3HelloExtensionHandler serverHelloHandlersTLS[] = {
     /* TODO: add a handler for ssl_ec_point_formats_xtn */
     { ssl_session_ticket_xtn,     &ssl3_ClientHandleSessionTicketXtn },
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
-    { ssl_next_proto_neg_xtn,     &ssl3_ClientHandleNextProtoNegoXtn },
+    { ssl_next_proto_nego_xtn,    &ssl3_ClientHandleNextProtoNegoXtn },
     { -1, NULL }
 };
 
@@ -276,7 +276,7 @@ ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
     { ssl_ec_point_formats_xtn,   &ssl3_SendSupportedPointFormatsXtn },
 #endif
     { ssl_session_ticket_xtn,     &ssl3_SendSessionTicketXtn },
-    { ssl_next_proto_neg_xtn,     &ssl3_ClientSendNextProtoNegoXtn }
+    { ssl_next_proto_nego_xtn,    &ssl3_ClientSendNextProtoNegoXtn }
     /* any extra entries will appear as { 0, NULL }    */
 };
 
@@ -641,14 +641,14 @@ ssl3_ClientSendNextProtoNegoXtn(sslSocket * ss, PRBool append,
 
     if (append && maxBytes >= extension_length) {
 	SECStatus rv;
-	rv = ssl3_AppendHandshakeNumber(ss, ssl_next_proto_neg_xtn, 2);
+	rv = ssl3_AppendHandshakeNumber(ss, ssl_next_proto_nego_xtn, 2);
 	if (rv != SECSuccess)
 	    goto loser;
 	rv = ssl3_AppendHandshakeNumber(ss, 0, 2);
 	if (rv != SECSuccess)
 	    goto loser;
 	ss->xtnData.advertised[ss->xtnData.numAdvertised++] =
-		ssl_next_proto_neg_xtn;
+		ssl_next_proto_nego_xtn;
     } else if (maxBytes < extension_length) {
 	return 0;
     }
