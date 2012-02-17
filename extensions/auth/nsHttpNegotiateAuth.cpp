@@ -70,6 +70,7 @@
 #include "prprf.h"
 #include "prlog.h"
 #include "prmem.h"
+#include "prnetdb.h"
 
 //-----------------------------------------------------------------------------
 
@@ -77,6 +78,7 @@ static const char kNegotiate[] = "Negotiate";
 static const char kNegotiateAuthTrustedURIs[] = "network.negotiate-auth.trusted-uris";
 static const char kNegotiateAuthDelegationURIs[] = "network.negotiate-auth.delegation-uris";
 static const char kNegotiateAuthAllowProxies[] = "network.negotiate-auth.allow-proxies";
+static const char kNegotiateAuthAllowNonFqdn[] = "network.negotiate-auth.allow-non-fqdn";
 static const char kNegotiateAuthSSPI[] = "network.auth.use-sspi";
 
 #define kNegotiateLen  (sizeof(kNegotiate)-1)
@@ -143,7 +145,8 @@ nsHttpNegotiateAuth::ChallengeReceived(nsIHttpAuthenticableChannel *authChannel,
         proxyInfo->GetHost(service);
     }
     else {
-        bool allowed = TestPref(uri, kNegotiateAuthTrustedURIs);
+        bool allowed = TestNonFqdn(uri) ||
+                       TestPref(uri, kNegotiateAuthTrustedURIs);
         if (!allowed) {
             LOG(("nsHttpNegotiateAuth::ChallengeReceived URI blocked\n"));
             return NS_ERROR_ABORT;
@@ -329,6 +332,23 @@ nsHttpNegotiateAuth::TestBoolPref(const char *pref)
         return false;
 
     return val;
+}
+
+bool
+nsHttpNegotiateAuth::TestNonFqdn(nsIURI *uri)
+{
+    nsCAutoString host;
+    PRNetAddr addr;
+
+    if (!TestBoolPref(kNegotiateAuthAllowNonFqdn))
+        return false;
+
+    if (NS_FAILED(uri->GetAsciiHost(host)))
+        return false;
+
+    // return true if host does not contain a dot and is not an ip address
+    return !host.IsEmpty() && host.FindChar('.') == kNotFound &&
+           PR_StringToNetAddr(host.BeginReading(), &addr) != PR_SUCCESS;
 }
 
 bool

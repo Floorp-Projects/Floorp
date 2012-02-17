@@ -1036,6 +1036,9 @@ pref("network.negotiate-auth.trusted-uris", "");
 // This list controls which URIs can support delegation.
 pref("network.negotiate-auth.delegation-uris", "");
 
+// Do not allow SPNEGO by default when challenged by a local server.
+pref("network.negotiate-auth.allow-non-fqdn", false);
+
 // Allow SPNEGO by default when challenged by a proxy server.
 pref("network.negotiate-auth.allow-proxies", true);
 
@@ -1066,6 +1069,7 @@ pref("network.auth.force-generic-ntlm", false);
 // Window's domain logon.  The trusted-uris pref follows the format of the
 // trusted-uris pref for negotiate authentication.
 pref("network.automatic-ntlm-auth.allow-proxies", true);
+pref("network.automatic-ntlm-auth.allow-non-fqdn", false);
 pref("network.automatic-ntlm-auth.trusted-uris", "");
 
 // This preference controls whether or not the LM hash will be included in
