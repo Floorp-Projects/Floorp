@@ -189,8 +189,7 @@ public:
 
     void ScheduleRestart();
 
-    void SetLayerClient(jobject jobj, jint type);
-    int GetLayerClientType() const { return mLayerClientType; }
+    void SetLayerClient(jobject jobj);
     AndroidGeckoLayerClient &GetLayerClient() { return *mLayerClient; }
 
     void SetSurfaceView(jobject jobj);
@@ -432,7 +431,6 @@ protected:
     AndroidGeckoSurfaceView mSurfaceView;
 
     AndroidGeckoLayerClient *mLayerClient;
-    int mLayerClientType;
 
     nsRefPtr<mozilla::layers::CompositorParent> mCompositorParent;
     base::Thread *mCompositorThread;

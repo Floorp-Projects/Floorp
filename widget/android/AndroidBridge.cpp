@@ -988,20 +988,11 @@ AndroidBridge::SetSurfaceView(jobject obj)
 }
 
 void
-AndroidBridge::SetLayerClient(jobject obj, jint type)
+AndroidBridge::SetLayerClient(jobject obj)
 {
-    switch (type) {
-        case LAYER_CLIENT_TYPE_GL: {
-            AndroidGeckoGLLayerClient *client = new AndroidGeckoGLLayerClient();
-            client->Init(obj);
-            mLayerClient = client;
-            break;
-        }
-        default:
-            NS_ASSERTION(0, "Unknown layer client type!");
-    }
-
-    mLayerClientType = type;
+    AndroidGeckoGLLayerClient *client = new AndroidGeckoGLLayerClient();
+    client->Init(obj);
+    mLayerClient = client;
 }
 
 void
@@ -1906,7 +1897,6 @@ AndroidBridge::GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float
 
 AndroidBridge::AndroidBridge()
 : mLayerClient(NULL)
-, mLayerClientType(0)
 , mViewTransformGetter(NULL)
 {
 }
