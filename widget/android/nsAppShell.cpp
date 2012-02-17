@@ -95,7 +95,8 @@ nsAppShell::nsAppShell()
       mCondLock("nsAppShell.mCondLock"),
       mQueueCond(mCondLock, "nsAppShell.mQueueCond"),
       mNumDraws(0),
-      mNumViewports(0)
+      mNumViewports(0),
+      mPendingOrientationEvents(false)
 {
     gAppShell = this;
 }
@@ -342,6 +343,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
                                                  -curEvent->Alpha(),
                                                  curEvent->Beta(),
                                                  curEvent->Gamma());
+        mPendingOrientationEvents = false;
         break;
 
     case AndroidGeckoEvent::LOCATION_EVENT: {
@@ -589,6 +591,10 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                     delete event;
                 }
             }
+        } else if (ae->Type() == AndroidGeckoEvent::ORIENTATION_EVENT) {
+            if (!mPendingOrientationEvents)
+                 mEventQueue.AppendElement(ae);
+            mPendingOrientationEvents = true;
         } else {
             mEventQueue.AppendElement(ae);
         }
