@@ -247,6 +247,10 @@ LIRGenerator::visitTest(MTest *test)
     if (opd->type() == MIRType_Undefined || opd->type() == MIRType_Null)
         return add(new LGoto(ifFalse));
 
+    // Objects are easy, too.
+    if (opd->type() == MIRType_Object)
+        return add(new LGoto(ifTrue));
+
     // Check if the operand for this test is a compare operation. If it is, we want
     // to emit an LCompare*AndBranch rather than an LTest*AndBranch, to fuse the
     // compare and jump instructions.
@@ -273,6 +277,7 @@ LIRGenerator::visitTest(MTest *test)
     if (opd->type() == MIRType_Double)
         return add(new LTestDAndBranch(useRegister(opd), ifTrue, ifFalse));
 
+    JS_ASSERT(opd->type() == MIRType_Int32 || opd->type() == MIRType_Boolean);
     return add(new LTestIAndBranch(useRegister(opd), ifTrue, ifFalse));
 }
 

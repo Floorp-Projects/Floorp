@@ -3389,7 +3389,7 @@ IonBuilder::jsop_length_fastPath()
     switch (sig.inTypes->getKnownTypeTag(cx)) {
       case JSVAL_TYPE_STRING: {
         MDefinition *obj = current->pop();
-        MStringLength *ins = new MStringLength(obj);
+        MStringLength *ins = MStringLength::New(obj);
         current->add(ins);
         current->push(ins);
         return true;
@@ -3456,7 +3456,7 @@ IonBuilder::jsop_not()
 
     // Get the String length for String operands
     if (type == MIRType_String) {
-        MStringLength *len = new MStringLength(value);
+        MStringLength *len = MStringLength::New(value);
         current->add(len);
 
         type = MIRType_Int32;
