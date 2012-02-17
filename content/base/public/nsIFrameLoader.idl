@@ -67,7 +67,7 @@ typedef unsigned long long nsContentViewId;
  * These APIs are designed to be used with nsIDOMWindowUtils
  * setDisplayPort() and setResolution().
  */
-[scriptable, uuid(fbd25468-d2cf-487b-bc58-a0e105398b47)]
+[scriptable, uuid(c04c5c40-fa2a-4e9c-94f5-b362a10a86cb)]
 interface nsIContentView : nsISupports
 {
   /**
@@ -265,6 +265,13 @@ interface nsIFrameLoader : nsISupports
    * Defaults to true.
    */
   attribute boolean clipSubdocument;
+
+  /**
+   * If false, then the subdocument's scroll coordinates will not be clamped
+   * to their scroll boundaries.
+   * Defaults to true.
+   */
+  attribute boolean clampScrollPosition;
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
