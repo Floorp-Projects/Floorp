@@ -704,9 +704,6 @@ void GLContext::ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter)
         fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
         fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
     } else {
-        if (aFilter != gfxPattern::FILTER_GOOD) {
-            NS_WARNING("Unsupported filter type!");
-        }
         fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
        fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
     }
