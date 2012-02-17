@@ -48,130 +48,13 @@ import android.graphics.RectF;
 import android.util.Log;
 import android.view.View;
 
-public class GeckoGLLayerClient extends GeckoLayerClient
-                                implements FlexibleGLSurfaceView.Listener, VirtualLayer.Listener {
+public class GeckoGLLayerClient extends GeckoLayerClient {
     private static final String LOGTAG = "GeckoGLLayerClient";
 
-    private LayerRenderer mLayerRenderer;
     private boolean mLayerRendererInitialized;
 
     public GeckoGLLayerClient(Context context) {
         super(context);
-    }
-
-    @Override
-    public Rect beginDrawing(int width, int height, int tileWidth, int tileHeight,
-                             String metadata, boolean hasDirectTexture) {
-        Rect bufferRect = super.beginDrawing(width, height, tileWidth, tileHeight,
-                                             metadata, hasDirectTexture);
-        if (bufferRect == null) {
-            return null;
-        }
-
-        // Be sure to adjust the buffer size; if it's not at least as large as the viewport size,
-        // ViewportMetrics.getOptimumViewportOffset() gets awfully confused and severe display
-        // corruption results!
-        if (mBufferSize.width != width || mBufferSize.height != height) {
-            mBufferSize = new IntSize(width, height);
-        }
-
-        return bufferRect;
-    }
-
-    @Override
-    protected boolean handleDirectTextureChange(boolean hasDirectTexture) {
-        Log.e(LOGTAG, "### handleDirectTextureChange");
-        if (mTileLayer != null) {
-            return false;
-        }
-
-        Log.e(LOGTAG, "### Creating virtual layer");
-        VirtualLayer virtualLayer = new VirtualLayer();
-        virtualLayer.setListener(this);
-        virtualLayer.setSize(getBufferSize());
-        mLayerController.setRoot(virtualLayer);
-        mTileLayer = virtualLayer;
-
-        sendResizeEventIfNecessary(true);
-        return true;
-    }
-
-    @Override
-    public void setLayerController(LayerController layerController) {
-        super.setLayerController(layerController);
-
-        LayerView view = layerController.getView();
-        view.setListener(this);
-
-        mLayerRenderer = new LayerRenderer(view);
-    }
-
-    @Override
-    protected boolean shouldDrawProceed(int tileWidth, int tileHeight) {
-        Log.e(LOGTAG, "### shouldDrawProceed");
-        // Always draw.
-        return true;
-    }
-
-    @Override
-    protected void updateLayerAfterDraw(Rect updatedRect) {
-        Log.e(LOGTAG, "### updateLayerAfterDraw");
-        // Nothing to do.
-    }
-
-    @Override
-    protected IntSize getBufferSize() {
-        View view = mLayerController.getView();
-        IntSize size = new IntSize(view.getWidth(), view.getHeight());
-        Log.e(LOGTAG, "### getBufferSize " + size);
-        return size;
-    }
-
-    @Override
-    protected IntSize getTileSize() {
-        Log.e(LOGTAG, "### getTileSize " + getBufferSize());
-        return getBufferSize();
-    }
-
-    @Override
-    protected void tileLayerUpdated() {
-        // Set the new origin and resolution instantly.
-        mTileLayer.performUpdates(null);
-    }
-
-    @Override
-    public Bitmap getBitmap() {
-        Log.e(LOGTAG, "### getBitmap");
-        IntSize size = getBufferSize();
-        try {
-            return Bitmap.createBitmap(size.width, size.height, Bitmap.Config.RGB_565);
-        } catch (OutOfMemoryError oom) {
-            Log.e(LOGTAG, "Unable to create bitmap", oom);
-            return null;
-        }
-    }
-
-    public void dimensionsChanged(Point newOrigin, float newResolution) {
-        Log.e(LOGTAG, "### dimensionsChanged " + newOrigin + " " + newResolution);
-    }
-
-    /* Informs Gecko that the screen size has changed. */
-    @Override
-    protected void sendResizeEventIfNecessary(boolean force) {
-        Log.e(LOGTAG, "### sendResizeEventIfNecessary " + force);
-
-        IntSize newSize = getBufferSize();
-        if (!force && mScreenSize != null && mScreenSize.equals(newSize)) {
-            return;
-        }
-
-        mScreenSize = newSize;
-
-        Log.e(LOGTAG, "### Screen-size changed to " + mScreenSize);
-        GeckoEvent event = GeckoEvent.createSizeChangedEvent(mScreenSize.width, mScreenSize.height,
-                                                             mScreenSize.width, mScreenSize.height,
-                                                             mScreenSize.width, mScreenSize.height);
-        GeckoAppShell.sendEventToGecko(event);
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
@@ -192,28 +75,6 @@ public class GeckoGLLayerClient extends GeckoLayerClient
                   mTileLayer.getResolution());
             return new ViewTransform(scrollX, scrollY, zoomFactor);
         }
-    }
-
-    public void renderRequested() {
-        Log.e(LOGTAG, "### Render requested, scheduling composite");
-        GeckoAppShell.scheduleComposite();
-    }
-
-    public void compositionPauseRequested() {
-        Log.e(LOGTAG, "### Scheduling PauseComposition");
-        GeckoAppShell.schedulePauseComposition();
-    }
-
-    public void compositionResumeRequested() {
-        Log.e(LOGTAG, "### Scheduling ResumeComposition");
-        GeckoAppShell.scheduleResumeComposition();
-    }
-
-    public void surfaceChanged(int width, int height) {
-        compositionPauseRequested();
-        mLayerController.setViewportSize(new FloatSize(width, height));
-        compositionResumeRequested();
-        renderRequested();
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
