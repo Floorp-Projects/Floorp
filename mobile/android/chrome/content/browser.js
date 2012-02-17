@@ -1438,8 +1438,6 @@ let gTabIDFactory = 0;
 let gScreenWidth = 1;
 let gScreenHeight = 1;
 
-let gBrowserWidth = null;
-
 function Tab(aURL, aParams) {
   this.browser = null;
   this.vbox = null;
@@ -2083,7 +2081,7 @@ Tab.prototype = {
     let minScale = this.getPageZoomLevel(screenW);
     viewportH = Math.max(viewportH, screenH / minScale);
 
-    let oldBrowserWidth = gBrowserWidth;
+    let oldBrowserWidth = this.browserWidth;
     this.setBrowserSize(viewportW, viewportH);
 
     // Avoid having the scroll position jump around after device rotation.
@@ -2094,7 +2092,7 @@ Tab.prototype = {
     // If the browser width changes, we change the zoom proportionally. This ensures sensible
     // behavior when rotating the device on pages with automatically-resizing viewports.
 
-    if (oldBrowserWidth == null || viewportW == oldBrowserWidth)
+    if (viewportW == oldBrowserWidth)
       return;
 
     let viewport = this.viewport;
@@ -2108,7 +2106,7 @@ Tab.prototype = {
       return md.defaultZoom;
 
     dump("### getDefaultZoomLevel gScreenWidth=" + gScreenWidth);
-    return gScreenWidth / gBrowserWidth;
+    return gScreenWidth / this.browserWidth;
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
@@ -2121,8 +2119,12 @@ Tab.prototype = {
   },
 
   setBrowserSize: function(aWidth, aHeight) {
-    // TODO: Use nsIDOMWindowUtils::SetCSSViewport() here.
-    gBrowserWidth = aWidth;
+    this.browserWidth = aWidth;
+
+    if (!this.browser.contentWindow)
+      return;
+    let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    cwu.setCSSViewport(aWidth, aHeight);
   },
 
   getRequestLoadContext: function(aRequest) {
