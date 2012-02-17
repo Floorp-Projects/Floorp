@@ -1896,7 +1896,6 @@ struct FullGCMarker : public GCMarker {
 void
 MarkStackRangeConservatively(JSTracer *trc, Value *begin, Value *end);
 
-typedef void (*IterateCompartmentCallback)(JSContext *cx, void *data, JSCompartment *compartment);
 typedef void (*IterateChunkCallback)(JSContext *cx, void *data, gc::Chunk *chunk);
 typedef void (*IterateArenaCallback)(JSContext *cx, void *data, gc::Arena *arena,
                                      JSGCTraceKind traceKind, size_t thingSize);
@@ -1904,19 +1903,13 @@ typedef void (*IterateCellCallback)(JSContext *cx, void *data, void *thing,
                                     JSGCTraceKind traceKind, size_t thingSize);
 
 /*
- * This function calls |compartmentCallback| on every compartment.
- */
-extern JS_FRIEND_API(void)
-IterateCompartments(JSContext *cx, void *data,
-                    IterateCompartmentCallback compartmentCallback);
-/*
  * This function calls |compartmentCallback| on every compartment,
  * |arenaCallback| on every in-use arena, and |cellCallback| on every in-use
  * cell in the GC heap.
  */
 extern JS_FRIEND_API(void)
 IterateCompartmentsArenasCells(JSContext *cx, void *data,
-                               IterateCompartmentCallback compartmentCallback,
+                               JSIterateCompartmentCallback compartmentCallback,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback);
 
