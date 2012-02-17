@@ -114,9 +114,7 @@ private:
 
   void Composite();
   void ScheduleComposition();
-  void TransformShadowTree(Layer* aLayer, const ViewTransform& aTransform,
-                           float aTempScaleDiffX = 1.0,
-                           float aTempScaleDiffY = 1.0);
+  void TransformShadowTree();
 
   // Platform specific functions
 #ifdef MOZ_WIDGET_ANDROID
