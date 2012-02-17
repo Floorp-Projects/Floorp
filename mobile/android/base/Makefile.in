@@ -112,7 +112,6 @@ FENNEC_JAVA_FILES = \
   gfx/FloatSize.java \
   gfx/GeckoGLLayerClient.java \
   gfx/GeckoLayerClient.java \
-  gfx/GeckoSoftwareLayerClient.java \
   gfx/GLController.java \
   gfx/GLThread.java \
   gfx/InputConnectionHandler.java \

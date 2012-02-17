@@ -1310,12 +1310,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
       }
 
       sDirectTexture->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, dirtyRect, &bits);
-    } else if (layerClientType == AndroidBridge::LAYER_CLIENT_TYPE_SOFTWARE) {
-        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Software layer client!");
-        bits = ((AndroidGeckoSoftwareLayerClient &)client).LockBufferBits();
-        if (!bits) {
-            ALOG("### Failed to lock buffer");
-        }
     }
 
     if (targetSurface->CairoStatus()) {
@@ -1327,8 +1321,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     if (HasDirectTexture()) {
         sDirectTexture->Unlock();
-    } else if (layerClientType == AndroidBridge::LAYER_CLIENT_TYPE_SOFTWARE) {
-        ((AndroidGeckoSoftwareLayerClient &)client).UnlockBuffer();
     }
 
     __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling EndDrawing()!");
