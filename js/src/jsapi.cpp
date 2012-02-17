@@ -88,6 +88,7 @@
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
+#include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
 #include "mozilla/Util.h"
 #include "yarr/BumpPointerAllocator.h"
@@ -701,7 +702,6 @@ JSRuntime::JSRuntime()
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc_(NULL),
     bumpAlloc_(NULL),
-    reCache_(NULL),
     nativeStackBase(0),
     nativeStackQuota(0),
     interpreterFrames(NULL),
@@ -720,8 +720,6 @@ JSRuntime::JSRuntime()
     gcUserAvailableChunkListHead(NULL),
     gcKeepAtoms(0),
     gcBytes(0),
-    gcTriggerBytes(0),
-    gcLastBytes(0),
     gcMaxBytes(0),
     gcMaxMallocBytes(0),
     gcNumArenasFreeCommitted(0),
@@ -849,7 +847,6 @@ JSRuntime::~JSRuntime()
 
     delete_<JSC::ExecutableAllocator>(execAlloc_);
     delete_<WTF::BumpPointerAllocator>(bumpAlloc_);
-    JS_ASSERT(!reCache_);
 
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
@@ -944,6 +941,8 @@ JS_NewRuntime(uint32_t maxbytes)
 #include "js.msg"
 #undef MSG_DEF
 #endif /* DEBUG */
+
+        InitMemorySubsystem();
 
         js_NewRuntimeWasCalled = JS_TRUE;
     }
@@ -1327,6 +1326,12 @@ JS_ToggleOptions(JSContext *cx, uint32_t options)
     uintN oldopts = cx->allOptions();
     uintN newopts = oldopts ^ options;
     return SetOptionsCommon(cx, newopts);
+}
+
+JS_PUBLIC_API(void)
+JS_SetJitHardening(JSRuntime *rt, JSBool enabled)
+{
+    rt->setJitHardening(!!enabled);
 }
 
 JS_PUBLIC_API(const char *)
@@ -2170,6 +2175,14 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject **objp)
 }
 
 JS_PUBLIC_API(JSObject *)
+JS_GetObjectPrototype(JSContext *cx, JSObject *forObj)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, forObj);
+    return forObj->global().getOrCreateObjectPrototype(cx);
+}
+
+JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     AssertNoGC(cx);
@@ -2629,8 +2642,9 @@ typedef struct JSDumpingTracer {
 } JSDumpingTracer;
 
 static void
-DumpNotify(JSTracer *trc, void *thing, JSGCTraceKind kind)
+DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
+    void *thing = *thingp;
     JSDumpingTracer *dtrc;
     JSContext *cx;
     JSDHashEntryStub *entry;
@@ -3153,18 +3167,17 @@ JS_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 }
 
 JS_PUBLIC_API(void *)
-JS_GetPrivate(JSContext *cx, JSObject *obj)
+JS_GetPrivate(JSObject *obj)
 {
     /* This function can be called by a finalizer. */
     return obj->getPrivate();
 }
 
-JS_PUBLIC_API(JSBool)
-JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
+JS_PUBLIC_API(void)
+JS_SetPrivate(JSObject *obj, void *data)
 {
     /* This function can be called by a finalizer. */
     obj->setPrivate(data);
-    return true;
 }
 
 JS_PUBLIC_API(void *)
@@ -3176,10 +3189,8 @@ JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetPrototype(JSContext *cx, JSObject *obj)
+JS_GetPrototype(JSObject *obj)
 {
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
     return obj->getProto();
 }
 
@@ -3193,10 +3204,9 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_GetParent(JSContext *cx, JSObject *obj)
+JS_GetParent(JSObject *obj)
 {
     JS_ASSERT(!obj->isScope());
-    assertSameCompartment(cx, obj);
     return obj->getParent();
 }
 
@@ -4282,7 +4292,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;
-        MarkIdRange(trc, ida->vector, ida->vector + ida->length, "prop iter");
+        MarkIdRange(trc, ida->length, ida->vector, "prop iter");
     }
 }
 
@@ -4402,22 +4412,23 @@ JS_ElementIteratorStub(JSContext *cx, JSObject *obj, JSBool keysonly)
     return JS_NewElementIterator(cx, obj);
 }
 
-JS_PUBLIC_API(JSBool)
-JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp)
+JS_PUBLIC_API(jsval)
+JS_GetReservedSlot(JSObject *obj, uint32_t index)
 {
-    /* This function can be called by a finalizer. */
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    return js_GetReservedSlot(cx, obj, index, vp);
+    if (!obj->isNative())
+        return UndefinedValue();
+
+    return GetReservedSlot(obj, index);
 }
 
-JS_PUBLIC_API(JSBool)
-JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval v)
+JS_PUBLIC_API(void)
+JS_SetReservedSlot(JSObject *obj, uint32_t index, jsval v)
 {
-    AssertNoGC(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj, v);
-    return js_SetReservedSlot(cx, obj, index, v);
+    if (!obj->isNative())
+        return;
+
+    SetReservedSlot(obj, index, v);
+    GCPoke(obj->compartment()->rt, NullValue());
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -6353,7 +6364,7 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, s
     CHECK_REQUEST(cx);
 
     RegExpStatics *res = obj->asGlobal().getRegExpStatics();
-    return ExecuteRegExp(cx, res, &reobj->asRegExp(), NULL, chars, length,
+    return ExecuteRegExp(cx, res, reobj->asRegExp(), NULL, chars, length,
                          indexp, test ? RegExpTest : RegExpExec, rval);
 }
 
@@ -6385,7 +6396,7 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t le
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    return ExecuteRegExp(cx, NULL, &obj->asRegExp(), NULL, chars, length, indexp,
+    return ExecuteRegExp(cx, NULL, obj->asRegExp(), NULL, chars, length, indexp,
                          test ? RegExpTest : RegExpExec, rval);
 }
 
@@ -6597,7 +6608,7 @@ JS_AbortIfWrongThread(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
     if (!rt->onOwnerThread())
-        JS_Assert("rt->onOwnerThread()", __FILE__, __LINE__);
+        MOZ_Assert("rt->onOwnerThread()", __FILE__, __LINE__);
 #endif
 }
 

@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Synthetic italic should not use true italic face</title>
+<!-- see bug 724231 -->
+<style type="text/css">
+body {
+  font-family: "Times New Roman", "Times", "DejaVu Serif", "FreeSerif", "Droid Serif", sans-serif;
+}
+</style>
+</head>
+<body>
+<p><i>Synthetic italics</i> should <i>not</i> use the true italic face.
+</body>
+</html>

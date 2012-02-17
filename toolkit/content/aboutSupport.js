@@ -57,6 +57,7 @@ const PREFS_WHITELIST = [
   "browser.history_expire_",
   "browser.link.open_newwindow",
   "browser.places.",
+  "browser.sessionstore.",
   "browser.startup.homepage",
   "browser.tabs.",
   "browser.zoom.",
@@ -385,13 +386,13 @@ function getPrefValue(aName) {
   let value = "";
   let type = Services.prefs.getPrefType(aName);
   switch (type) {
-    case Ci.nsIPrefBranch2.PREF_STRING:
+    case Ci.nsIPrefBranch.PREF_STRING:
       value = Services.prefs.getComplexValue(aName, Ci.nsISupportsString).data;
       break;
-    case Ci.nsIPrefBranch2.PREF_BOOL:
+    case Ci.nsIPrefBranch.PREF_BOOL:
       value = Services.prefs.getBoolPref(aName);
       break;
-    case Ci.nsIPrefBranch2.PREF_INT:
+    case Ci.nsIPrefBranch.PREF_INT:
       value = Services.prefs.getIntPref(aName);
       break;
   }

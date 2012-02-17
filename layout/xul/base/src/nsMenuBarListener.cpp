@@ -344,21 +344,34 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     PRUint32 theChar;
     keyEvent->GetKeyCode(&theChar);
 
-    if (!mAccessKeyDownCanceled && theChar == (PRUint32)mAccessKey &&
-        (GetModifiers(keyEvent) & ~mAccessKeyMask) == 0) {
-      // No other modifiers can be down.
-      // Especially CTRL.  CTRL+ALT == AltGR, and
-      // we'll fuck up on non-US enhanced 102-key
-      // keyboards if we don't check this.
-      mAccessKeyDown = true;
-    }
-    else {
-      // Some key other than the access key just went down,
-      // so we won't activate the menu bar when the access
-      // key is released.
+    // No other modifiers can be down.
+    // Especially CTRL.  CTRL+ALT == AltGR, and we'll fuck up on non-US
+    // enhanced 102-key keyboards if we don't check this.
+    bool isAccessKeyDownEvent =
+      ((theChar == (PRUint32)mAccessKey) &&
+       (GetModifiers(keyEvent) & ~mAccessKeyMask) == 0);
 
-      mAccessKeyDownCanceled = true;
+    if (!mAccessKeyDown) {
+      // If accesskey isn't being pressed and the key isn't the accesskey,
+      // ignore the event.
+      if (!isAccessKeyDownEvent) {
+        return NS_OK;
+      }
+
+      // Otherwise, accept the accesskey state.
+      mAccessKeyDown = true;
+      mAccessKeyDownCanceled = false;
+      return NS_OK;
     }
+
+    // If the pressed accesskey was canceled already, ignore the event.
+    if (mAccessKeyDownCanceled) {
+      return NS_OK;
+    }
+
+    // Some key other than the access key just went down,
+    // so we won't activate the menu bar when the access key is released.
+    mAccessKeyDownCanceled = !isAccessKeyDownEvent;
   }
 
   return NS_OK; // means I am NOT consuming event
@@ -371,9 +384,11 @@ nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 {
   if (!mMenuBarFrame->IsMenuOpen() && mMenuBarFrame->IsActive()) {
     ToggleMenuActiveState();
-    mAccessKeyDown = false;
-    mAccessKeyDownCanceled = false;
   }
+  // Reset the accesskey state because we cannot receive the keyup event for
+  // the pressing accesskey.
+  mAccessKeyDown = false;
+  mAccessKeyDownCanceled = false;
   return NS_OK; // means I am NOT consuming event
 }
   

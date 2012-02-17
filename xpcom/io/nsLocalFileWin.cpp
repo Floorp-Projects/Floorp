@@ -694,6 +694,7 @@ NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
 
 nsLocalFile::nsLocalFile()
   : mDirty(true)
+  , mResolveDirty(true)
   , mFollowSymlinks(false)
 {
 }
@@ -735,6 +736,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
 
 nsLocalFile::nsLocalFile(const nsLocalFile& other)
   : mDirty(true)
+  , mResolveDirty(true)
   , mFollowSymlinks(other.mFollowSymlinks)
   , mWorkingPath(other.mWorkingPath)
 {
@@ -797,6 +799,7 @@ nsLocalFile::ResolveAndStat()
         || !IsShortcutPath(mWorkingPath))
     {
         mDirty = false;
+        mResolveDirty = false;
         return NS_OK;
     }
 
@@ -810,6 +813,7 @@ nsLocalFile::ResolveAndStat()
         mResolvedPath.Assign(mWorkingPath);
         return rv;
     }
+    mResolveDirty = false;
 
     // get the details of the resolved path
     rv = GetFileInfo(mResolvedPath, &mFileInfo64);
@@ -820,6 +824,50 @@ nsLocalFile::ResolveAndStat()
     return NS_OK;
 }
 
+/**
+ * Fills the mResolvedPath member variable with the file or symlink target
+ * if follow symlinks is on.  This is a copy of the Resolve parts from
+ * ResolveAndStat. ResolveAndStat is much slower though because of the stat.
+ *
+ * @return NS_OK on success.
+*/
+nsresult
+nsLocalFile::Resolve()
+{
+  // if we aren't dirty then we are already done
+  if (!mResolveDirty) {
+    return NS_OK;
+  }
+
+  // we can't resolve/stat anything that isn't a valid NSPR addressable path
+  if (mWorkingPath.IsEmpty()) {
+    return NS_ERROR_FILE_INVALID_PATH;
+  }
+  
+  // this is usually correct
+  mResolvedPath.Assign(mWorkingPath);
+
+  // if this isn't a shortcut file or we aren't following symlinks then
+  // we're done.
+  if (!mFollowSymlinks || 
+      !IsShortcutPath(mWorkingPath)) {
+    mResolveDirty = false;
+    return NS_OK;
+  }
+
+  // we need to resolve this shortcut to what it points to, this will
+  // set mResolvedPath. Even if it fails we need to have the resolved
+  // path equal to working path for those functions that always use
+  // the resolved path.
+  nsresult rv = ResolveShortcut();
+  if (NS_FAILED(rv)) {
+    mResolvedPath.Assign(mWorkingPath);
+    return rv;
+  }
+
+  mResolveDirty = false;
+  return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // nsLocalFile::nsIFile,nsILocalFile
@@ -874,6 +922,14 @@ nsLocalFile::InitWithPath(const nsAString &filePath)
     if (secondChar != L':' && (secondChar != L'\\' || firstChar != L'\\'))
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
+    if (secondChar == L':') {
+        // Make sure we have a valid drive, later code assumes the drive letter
+        // is a single char a-z or A-Z.
+        if (PathGetDriveNumberW(filePath.Data()) == -1) {
+            return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+        }
+    }
+
     mWorkingPath = filePath;
     // kill any trailing '\'
     if (mWorkingPath.Last() == L'\\')
@@ -886,8 +942,8 @@ nsLocalFile::InitWithPath(const nsAString &filePath)
 NS_IMETHODIMP
 nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 {
-    nsresult rv = ResolveAndStat();
-    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
+    nsresult rv = Resolve();
+    if (NS_FAILED(rv))
         return rv;
 
     return OpenFile(mResolvedPath, flags, mode, _retval);
@@ -2467,7 +2523,7 @@ nsLocalFile::IsExecutable(bool *_retval)
             "wsf",
             "wsh"};
         nsDependentSubstring ext = Substring(path, dotIdx + 1);
-        for ( int i = 0; i < ArrayLength(executableExts); i++ ) {
+        for ( size_t i = 0; i < ArrayLength(executableExts); i++ ) {
             if ( ext.EqualsASCII(executableExts[i])) {
                 // Found a match.  Set result and quit.
                 *_retval = true;
@@ -2483,27 +2539,31 @@ nsLocalFile::IsExecutable(bool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsDirectory(bool *_retval)
 {
-    NS_ENSURE_ARG(_retval);
+  nsresult rv = IsFile(_retval);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-    nsresult rv = ResolveAndStat();
-    if (NS_FAILED(rv))
-        return rv;
-
-    *_retval = (mFileInfo64.type == PR_FILE_DIRECTORY); 
-    return NS_OK;
+  *_retval = !*_retval;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLocalFile::IsFile(bool *_retval)
 {
-    NS_ENSURE_ARG(_retval);
+  NS_ENSURE_ARG(_retval);
+  nsresult rv = Resolve();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-    nsresult rv = ResolveAndStat();
-    if (NS_FAILED(rv))
-        return rv;
+  DWORD attributes = GetFileAttributes(mResolvedPath.get());
+  if (INVALID_FILE_ATTRIBUTES == attributes) {
+    return NS_ERROR_FILE_NOT_FOUND;
+  }
 
-    *_retval = (mFileInfo64.type == PR_FILE_FILE); 
-    return NS_OK;
+  *_retval = !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

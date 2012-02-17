@@ -259,6 +259,13 @@ LookupCache::WriteFile()
   rv = storeFile->AppendNative(mTableName + NS_LITERAL_CSTRING(CACHE_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Need to close the inputstream here *before* rewriting its file.
+  // Windows will fail if we don't.
+  if (mInputStream) {
+    rv = mInputStream->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsCOMPtr<nsIOutputStream> out;
   rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(out), storeFile,
                                        PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);

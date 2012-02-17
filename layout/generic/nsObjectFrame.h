@@ -158,7 +158,7 @@ public:
   virtual bool ReflowFinished();
   virtual void ReflowCallbackCanceled();
 
-  void UpdateImageLayer(ImageContainer* aContainer, const gfxRect& aRect);
+  void UpdateImageLayer(const gfxRect& aRect);
 
   /**
    * Builds either an ImageLayer or a ReadbackLayer, depending on the type

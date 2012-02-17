@@ -1198,7 +1198,7 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
                                                            nsLinebreakConverter::eLinebreakAny, 
                                                            nsLinebreakConverter::eLinebreakContent, 
                                                            oldLengthInChars, &newLengthInChars);
-  // it's ok for context to be empty.  frag might be whole doc and contain all it's context.
+  // it's ok for context to be empty.  frag might be whole doc and contain all its context.
   
   // we're done!  
   return NS_OK;
@@ -2817,7 +2817,7 @@ nsHTMLEditor::ReplaceOrphanedStructure(bool aEnd,
                                  curNode, address_of(replaceNode));
   NS_ENSURE_SUCCESS(res, res);
   
-  // if we found substructure, paste it instead of it's descendants
+  // if we found substructure, paste it instead of its descendants
   if (replaceNode)
   {
     // postprocess list to remove any descendants of this node

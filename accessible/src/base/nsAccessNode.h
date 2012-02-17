@@ -71,7 +71,7 @@ class nsAccessNode: public nsISupports
 {
 public:
 
-  nsAccessNode(nsIContent *aContent, nsIWeakReference *aShell);
+  nsAccessNode(nsIContent* aContent, nsDocAccessible* aDoc);
   virtual ~nsAccessNode();
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -88,20 +88,12 @@ public:
   /**
    * Return the document accessible for this access node.
    */
-  nsDocAccessible *GetDocAccessible() const;
+  nsDocAccessible* Document() const { return mDoc; }
 
   /**
    * Return the root document accessible for this accessnode.
    */
   nsRootAccessible* RootAccessible() const;
-
-  /**
-   * Return focused node within accessible window.
-   *
-   * XXX: it shouldn't break us if we return focused node not depending on
-   * window so that we can turn this method into util method.
-   */
-  already_AddRefed<nsINode> GetCurrentFocus();
 
   /**
    * Initialize the access node object, add it to the cache.
@@ -148,16 +140,6 @@ public:
   }
 
   /**
-   * Return the corresponding press shell for this accessible.
-   */
-  already_AddRefed<nsIPresShell> GetPresShell();
-
-  /**
-   * Return presentation shell for the accessible.
-   */
-  nsIWeakReference* GetWeakShell() const { return mWeakShell; }
-
-  /**
    * Return the unique identifier of the accessible.
    */
   void* UniqueID() { return static_cast<void*>(this); }
@@ -172,12 +154,6 @@ public:
   virtual bool IsPrimaryForNode() const;
 
   /**
-   * Return the string bundle
-   */
-  static nsIStringBundle* GetStringBundle()
-    { return gStringBundle; }
-
-  /**
    * Interface methods on nsIAccessible shared with ISimpleDOM.
    */
   void Language(nsAString& aLocale);
@@ -189,7 +165,7 @@ protected:
     void LastRelease();
 
   nsCOMPtr<nsIContent> mContent;
-  nsCOMPtr<nsIWeakReference> mWeakShell;
+  nsDocAccessible* mDoc;
 
     /**
      * Notify global nsIObserver's that a11y is getting init'd or shutdown
@@ -202,9 +178,9 @@ protected:
     static bool gIsFormFillEnabled;
 
 private:
-  nsAccessNode();
-  nsAccessNode(const nsAccessNode&);
-  nsAccessNode& operator =(const nsAccessNode&);
+  nsAccessNode() MOZ_DELETE;
+  nsAccessNode(const nsAccessNode&) MOZ_DELETE;
+  nsAccessNode& operator =(const nsAccessNode&) MOZ_DELETE;
   
   static nsApplicationAccessible *gApplicationAccessible;
 };

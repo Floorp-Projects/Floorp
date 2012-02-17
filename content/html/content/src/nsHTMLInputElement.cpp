@@ -75,6 +75,7 @@
 #include "nsGUIEvent.h"
 #include "nsIIOService.h"
 #include "nsDocument.h"
+#include "nsAttrValueOrString.h"
 
 #include "nsPresState.h"
 #include "nsLayoutErrors.h"
@@ -184,7 +185,7 @@ static const nsAttrValue::EnumTable* kInputDefaultAutocomplete = &kInputAutocomp
   {0xb5, 0x13, 0x7b, 0x36, 0x93, 0x43, 0xe3, 0xa0} \
 }
 
-class nsHTMLInputElementState : public nsISupports
+class nsHTMLInputElementState MOZ_FINAL : public nsISupports
 {
   public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPUT_ELEMENT_STATE_IID)
@@ -266,10 +267,10 @@ AsyncClickHandler::Run()
   }
 
   // Check if page is allowed to open the popup
-  if (mPopupControlState != openAllowed) {
+  if (mPopupControlState > openControlled) {
     nsCOMPtr<nsIPopupWindowManager> pm =
       do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
- 
+
     if (!pm) {
       return NS_OK;
     }
@@ -722,7 +723,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 
 nsresult
 nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                  const nsAString* aValue,
+                                  const nsAttrValueOrString* aValue,
                                   bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
@@ -739,7 +740,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     } else if (aNotify && aName == nsGkAtoms::src &&
                mType == NS_FORM_INPUT_IMAGE) {
       if (aValue) {
-        LoadImage(*aValue, true, aNotify);
+        LoadImage(aValue->String(), true, aNotify);
       } else {
         // Null value means the attr got unset; drop the image
         CancelImageRequests(aNotify);
@@ -755,8 +756,7 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 nsresult
 nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                 const nsAString* aValue,
-                                 bool aNotify)
+                                 const nsAttrValue* aValue, bool aNotify)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     //

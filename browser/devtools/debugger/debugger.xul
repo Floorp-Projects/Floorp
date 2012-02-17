@@ -53,7 +53,7 @@
     <div id="body" class="vbox flex">
         <xul:toolbar id="dbg-toolbar">
             <xul:button id="close">&debuggerUI.closeButton;</xul:button>
-            <xul:button id="resume">&debuggerUI.resumeButton;</xul:button>
+            <xul:button id="resume"/>
             <xul:menulist id="scripts"/>
         </xul:toolbar>
         <div id="dbg-content" class="hbox flex">

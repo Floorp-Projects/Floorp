@@ -195,11 +195,11 @@ public class LauncherShortcuts extends Activity {
             try {
                 JSONObject webApps = (JSONObject) new JSONTokener(webappsJson).nextValue();
 
-                Iterator appKeys = webApps.keys();
+                @SuppressWarnings("rawtypes") Iterator appKeys = webApps.keys();
                 HashMap<String, String> map;
 
                 while (appKeys.hasNext()) {
-                    String appKey = appKeys.next().toString();
+                    String appKey = (String)appKeys.next();
                     JSONObject app = webApps.getJSONObject(appKey);
                     
                     map = new HashMap<String, String>();

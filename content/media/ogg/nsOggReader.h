@@ -193,7 +193,7 @@ private:
 
   // Fills aRanges with SeekRanges denoting the sections of the media which
   // have been downloaded and are stored in the media cache. The reader
-  // monitor must must be held with exactly one lock count. The nsMediaStream
+  // monitor must must be held with exactly one lock count. The MediaResource
   // must be pinned while calling this.
   nsresult GetSeekRanges(nsTArray<SeekRange>& aRanges);
 

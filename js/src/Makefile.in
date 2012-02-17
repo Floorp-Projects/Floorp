@@ -119,7 +119,6 @@ CPPSRCS		= \
 		jsfun.cpp \
 		jsgc.cpp \
 		jsgcmark.cpp \
-		jsgcchunk.cpp \
 		jsgcstats.cpp \
 		jscrashreport.cpp \
 		jshash.cpp \
@@ -171,6 +170,7 @@ CPPSRCS		= \
 		RegExpObject.cpp \
 		RegExpStatics.cpp \
 		RegExp.cpp \
+		Memory.cpp \
 		Statistics.cpp \
 		Unicode.cpp \
 		$(NULL)
@@ -193,7 +193,6 @@ INSTALLED_HEADERS = \
 		jsfriendapi.h \
 		jsgc.h \
 		jscell.h \
-		jsgcchunk.h \
 		jsgcstats.h \
 		jshash.h \
 		jslock.h \
@@ -368,8 +367,7 @@ VPATH += 	$(srcdir)/assembler \
 		$(srcdir)/yarr \
 		$(NONE)
 
-CPPSRCS += 	Assertions.cpp \
-		ExecutableAllocator.cpp \
+CPPSRCS += 	ExecutableAllocator.cpp \
 		ARMAssembler.cpp \
 		MacroAssemblerARM.cpp \
 		MacroAssemblerX86Common.cpp \
@@ -491,6 +489,13 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
+ifeq (,$(MOZ_GLUE_PROGRAM_LDFLAGS))
+# When building standalone, we need to include mfbt sources, and to declare
+# "exported" mfbt symbols on its behalf when we use its headers.
+include $(srcdir)/../../mfbt/sources.mk
+DEFINES += -DIMPL_MFBT
+endif
+
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 ifndef BUILD_OPT
@@ -605,7 +610,7 @@ check-malloc-function-usage: $(filter-out %jsalloc.h %jscntxt.h %jsutil.h, $(ALL
 
 	# We desire these numbers to go down, not up. See "User guide to memory
 	# management within SpiderMonkey" in jsutil.h.
-	$(srcdir)/config/check_source_count.py OffTheBooks:: 58 \
+	$(srcdir)/config/check_source_count.py OffTheBooks:: 71 \
 		"in Makefile.in" "{cx,rt}->{new_,array_new,malloc_,calloc_,realloc_}" $^
 	# This should go to zero, if possible.
 	$(srcdir)/config/check_source_count.py UnwantedForeground:: 31 \
@@ -669,11 +674,6 @@ distclean::
 	$(RM) $(DIST_GARBAGE)
 
 DEFINES		+= -DEXPORT_JS_API
-
-# mfbt is always packed with us, so if we're building a shared object,
-# we need to declare "exported" mfbt symbols on its behalf when we use
-# its headers.
-DEFINES		+= -DIMPL_MFBT
 
 INCLUDES	+= -I$(srcdir)
 

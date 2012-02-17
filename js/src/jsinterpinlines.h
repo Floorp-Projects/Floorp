@@ -153,28 +153,23 @@ ComputeThis(JSContext *cx, StackFrame *fp)
  * problem to the value at |spindex| on the stack.
  */
 JS_ALWAYS_INLINE JSObject *
-ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
+ValuePropertyBearer(JSContext *cx, StackFrame *fp, const Value &v, int spindex)
 {
     if (v.isObject())
         return &v.toObject();
 
-    JSProtoKey protoKey;
-    if (v.isString()) {
-        protoKey = JSProto_String;
-    } else if (v.isNumber()) {
-        protoKey = JSProto_Number;
-    } else if (v.isBoolean()) {
-        protoKey = JSProto_Boolean;
-    } else {
-        JS_ASSERT(v.isNull() || v.isUndefined());
-        js_ReportIsNullOrUndefined(cx, spindex, v, NULL);
-        return NULL;
-    }
+    GlobalObject &global = fp->scopeChain().global();
 
-    JSObject *pobj;
-    if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
-        return NULL;
-    return pobj;
+    if (v.isString())
+        return global.getOrCreateStringPrototype(cx);
+    if (v.isNumber())
+        return global.getOrCreateNumberPrototype(cx);
+    if (v.isBoolean())
+        return global.getOrCreateBooleanPrototype(cx);
+
+    JS_ASSERT(v.isNull() || v.isUndefined());
+    js_ReportIsNullOrUndefined(cx, spindex, v, NULL);
+    return NULL;
 }
 
 inline bool
@@ -444,6 +439,50 @@ NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
 }
 
 inline bool
+DefVarOrConstOperation(JSContext *cx, JSObject &varobj, PropertyName *dn, uintN attrs)
+{
+    JS_ASSERT(varobj.isVarObj());
+    JS_ASSERT(!varobj.getOps()->defineProperty);
+
+    JSProperty *prop;
+    JSObject *obj2;
+    if (!varobj.lookupProperty(cx, dn, &obj2, &prop))
+        return false;
+
+    /* Steps 8c, 8d. */
+    if (!prop || (obj2 != &varobj && varobj.isGlobal())) {
+        if (!DefineNativeProperty(cx, &varobj, dn, UndefinedValue(),
+                                  JS_PropertyStub, JS_StrictPropertyStub, attrs, 0, 0))
+        {
+            return false;
+        }
+    } else {
+        /*
+         * Extension: ordinarily we'd be done here -- but for |const|.  If we
+         * see a redeclaration that's |const|, we consider it a conflict.
+         */
+        uintN oldAttrs;
+        if (!varobj.getPropertyAttributes(cx, dn, &oldAttrs))
+            return false;
+        if (attrs & JSPROP_READONLY) {
+            JSAutoByteString bytes;
+            if (js_AtomToPrintableString(cx, dn, &bytes)) {
+                JS_ALWAYS_FALSE(JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
+                                                             js_GetErrorMessage,
+                                                             NULL, JSMSG_REDECLARED_VAR,
+                                                             (oldAttrs & JSPROP_READONLY)
+                                                             ? "const"
+                                                             : "var",
+                                                             bytes.ptr()));
+            }
+            return false;
+        }
+    }
+
+    return true;
+}
+
+inline bool
 FunctionNeedsPrologue(JSContext *cx, JSFunction *fun)
 {
     /* Heavyweight functions need call objects created. */
@@ -654,6 +693,27 @@ FetchElementId(JSContext *cx, JSObject *obj, const Value &idval, jsid &id, Value
         return true;
     }
     return !!js_InternNonIntElementId(cx, obj, idval, &id, vp);
+}
+
+static JS_ALWAYS_INLINE bool
+ToIdOperation(JSContext *cx, const Value &objval, const Value &idval, Value *res)
+{
+    if (idval.isInt32()) {
+        *res = idval;
+        return true;
+    }
+
+    JSObject *obj = ValueToObject(cx, objval);
+    if (!obj)
+        return false;
+
+    jsid dummy;
+    if (!js_InternNonIntElementId(cx, obj, idval, &dummy, res))
+        return false;
+
+    if (!res->isInt32())
+        types::TypeScript::MonitorUnknown(cx);
+    return true;
 }
 
 static JS_ALWAYS_INLINE bool

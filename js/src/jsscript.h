@@ -176,7 +176,9 @@ class Bindings {
     uint16_t nargs;
     uint16_t nvars;
     uint16_t nupvars;
+    bool     hasDup_:1;     // true if there are duplicate argument names
 
+    inline Shape *initialShape(JSContext *cx) const;
   public:
     inline Bindings(JSContext *cx);
 
@@ -208,8 +210,14 @@ class Bindings {
     /* Ensure these bindings have a shape lineage. */
     inline bool ensureShape(JSContext *cx);
 
-    /* Returns the shape lineage generated for these bindings. */
+    /* Return the shape lineage generated for these bindings. */
     inline Shape *lastShape() const;
+
+    /*
+     * Return the shape to use to create a call object for these bindings.
+     * The result is guaranteed not to have duplicate property names.
+     */
+    Shape *callObjectShape(JSContext *cx) const;
 
     /* See Scope::extensibleParents */
     inline bool extensibleParents();
@@ -262,6 +270,9 @@ class Bindings {
         *slotp = nargs;
         return add(cx, NULL, ARGUMENT);
     }
+
+    void noteDup() { hasDup_ = true; }
+    bool hasDup() const { return hasDup_; }
 
     /*
      * Look up an argument or variable name, returning its kind when found or

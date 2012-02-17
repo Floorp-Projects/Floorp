@@ -84,7 +84,7 @@ public class AutoCompletePopup extends ListView {
         setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parentView, View view, int position, long id) {
                 String value = ((TextView) view).getText().toString();
-                GeckoAppShell.sendEventToGecko(new GeckoEvent("FormAssist:AutoComplete", value));
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:AutoComplete", value));
                 hide();
             }
         });
@@ -182,7 +182,7 @@ public class AutoCompletePopup extends ListView {
     public void hide() {
         if (isShown()) {
             setVisibility(View.GONE);
-            GeckoAppShell.sendEventToGecko(new GeckoEvent("FormAssist:Closed", null));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:Closed", null));
         }
     }
 }

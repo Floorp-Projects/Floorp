@@ -637,7 +637,7 @@ common_FindCertByNicknameOrEmailAddrForUsage(CERTCertDBHandle *handle,
 {
     NSSCryptoContext *cc;
     NSSCertificate *c, *ct;
-    CERTCertificate *cert;
+    CERTCertificate *cert = NULL;
     NSSUsage usage;
     CERTCertList *certlist;
 

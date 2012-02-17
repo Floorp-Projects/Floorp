@@ -46,6 +46,7 @@
 #ifndef xpcprivate_h___
 #define xpcprivate_h___
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
 #include <string.h>
@@ -747,6 +748,7 @@ public:
     void TraceXPConnectRoots(JSTracer *trc);
     void AddXPConnectRoots(JSContext* cx,
                            nsCycleCollectionTraversalCallback& cb);
+    void UnmarkSkippableJSHolders();
 
     static JSBool GCCallback(JSContext *cx, JSGCStatus status);
 
@@ -762,7 +764,7 @@ public:
 
     void DebugDump(PRInt16 depth);
 
-    void SystemIsBeingShutDown(JSContext* cx);
+    void SystemIsBeingShutDown();
 
     PRThread* GetThreadRunningGC() const {return mThreadRunningGC;}
 
@@ -1545,7 +1547,7 @@ public:
     }
 
     static void
-    SystemIsBeingShutDown(JSContext* cx);
+    SystemIsBeingShutDown();
 
     static void
     TraceJS(JSTracer* trc, XPCJSRuntime* rt);
@@ -1607,7 +1609,7 @@ public:
 
     static XPCWrappedNativeScope *GetNativeScope(JSContext *cx, JSObject *obj)
     {
-        JS_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
+        MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
 
         const js::Value &v = js::GetObjectSlot(obj, JSCLASS_GLOBAL_SLOT_COUNT);
         return v.isUndefined()
@@ -2281,7 +2283,7 @@ public:
 
     void JSProtoObjectFinalized(JSContext *cx, JSObject *obj);
 
-    void SystemIsBeingShutDown(JSContext* cx);
+    void SystemIsBeingShutDown();
 
     void DebugDump(PRInt16 depth);
 
@@ -2381,7 +2383,8 @@ public:
 
     XPCNativeInterface* GetInterface() const {return mInterface;}
     nsISupports*        GetNative()    const {return mNative;}
-    JSObject*           GetJSObject()  const;
+    JSObject*           GetJSObject();
+    JSObject*           GetJSObjectPreserveColor() const;
     void SetInterface(XPCNativeInterface*  Interface) {mInterface = Interface;}
     void SetNative(nsISupports*  Native)              {mNative = Native;}
     void SetJSObject(JSObject*  JSObj);
@@ -2632,9 +2635,9 @@ public:
                            nsISupports* aCOMObj,
                            XPCWrappedNative** aWrapper);
 
-    void FlatJSObjectFinalized(JSContext *cx);
+    void FlatJSObjectFinalized();
 
-    void SystemIsBeingShutDown(JSContext* cx);
+    void SystemIsBeingShutDown();
 
     enum CallMode {CALL_METHOD, CALL_GETTER, CALL_SETTER};
 
@@ -3018,7 +3021,10 @@ public:
     JSBool IsAggregatedToNative() const {return mRoot->mOuter != nsnull;}
     nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
 
-    void SetIsMainThreadOnly() {JS_ASSERT(mMainThread); mMainThreadOnly = true;}
+    void SetIsMainThreadOnly() {
+        MOZ_ASSERT(mMainThread);
+        mMainThreadOnly = true;
+    }
     bool IsMainThreadOnly() const {return mMainThreadOnly;}
 
     void TraceJS(JSTracer* trc);
@@ -3647,7 +3653,7 @@ public:
         // XPConnect off the main thread. If you're an extension developer hitting
         // this, you need to change your code. See bug 716167.
         if (!NS_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
-            JS_Assert("NS_IsMainThread()", __FILE__, __LINE__);
+            MOZ_Assert("NS_IsMainThread()", __FILE__, __LINE__);
 
         if (cx) {
             if (js::GetOwnerThread(cx) == sMainJSThread)

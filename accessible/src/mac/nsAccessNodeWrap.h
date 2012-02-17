@@ -47,12 +47,12 @@
 
 class nsAccessNodeWrap :  public nsAccessNode
 {
-  public: // construction, destruction
-    nsAccessNodeWrap(nsIContent *aContent, nsIWeakReference *aShell);
-    virtual ~nsAccessNodeWrap();
+public:
+  nsAccessNodeWrap(nsIContent* aContent, nsDocAccessible* aDoc);
+  virtual ~nsAccessNodeWrap();
 
-    static void InitAccessibility();
-    static void ShutdownAccessibility();
+  static void InitAccessibility();
+  static void ShutdownAccessibility();
 };
 
 #endif

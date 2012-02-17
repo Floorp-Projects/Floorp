@@ -67,12 +67,14 @@ class ConfirmPreference extends DialogPreference {
                 public void run() {
                     BrowserDB.clearHistory(mContext.getContentResolver());
                     GeckoApp.mAppContext.mFavicons.clearFavicons();
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("browser:purge-session-history", null));
+                    GeckoApp.mAppContext.handleClearHistory();
                 }
             });
         } else if ("clear_private_data".equalsIgnoreCase(mAction)) {
             GeckoAppShell.getHandler().post(new Runnable(){
                 public void run() {
-                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Sanitize:ClearAll", null));
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Sanitize:ClearAll", null));
                 }
             });
         }

@@ -101,4 +101,12 @@ js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
 extern JSObject *
 js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope);
 
+static JS_INLINE JSProtoKey
+GetExceptionProtoKey(intN exn)
+{
+    JS_ASSERT(JSEXN_ERR <= exn);
+    JS_ASSERT(exn < JSEXN_LIMIT);
+    return JSProtoKey(JSProto_Error + exn);
+}
+
 #endif /* jsexn_h___ */

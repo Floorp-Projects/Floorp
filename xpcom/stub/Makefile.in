@@ -72,6 +72,11 @@ FORCE_SHARED_LIB = 1
 
 EXTRA_DSO_LDOPTS = $(LIBS_DIR)
 
+# Must be included before DEPENDENT_LIBS_LIST starts so that apps have a chance
+# of getting their stuff in before xul.
+# It is ok for this file not to exist
+-include $(topsrcdir)/$(MOZ_BUILD_APP)/extradependlibs.mk
+
 DEPENDENT_LIBS_LIST += \
 	$(DLL_PREFIX)nspr4$(DLL_SUFFIX) \
 	$(DLL_PREFIX)plc4$(DLL_SUFFIX) \

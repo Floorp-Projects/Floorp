@@ -70,3 +70,8 @@ HTTP(..) == stretchmapping-137.html stretchmapping-137-ref.html
 # test for font-stretch using @font-face
 HTTP(..) == font-stretch-1.html font-stretch-1-ref.html
 
+# bug 724231 - applying synthetic styles to a single @font-face font
+# should apply artificial obliquing, not switch to a true styled face
+!= synthetic-style-1.html synthetic-style-1-notref.html
+!= synthetic-style-2.html synthetic-style-2-notref.html
+

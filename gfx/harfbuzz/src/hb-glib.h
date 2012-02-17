@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2009  Red Hat, Inc.
+ * Copyright © 2009  Red Hat, Inc.
+ * Copyright © 2011  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -22,14 +23,23 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  * Red Hat Author(s): Behdad Esfahbod
+ * Google Author(s): Behdad Esfahbod
  */
 
 #ifndef HB_GLIB_H
 #define HB_GLIB_H
 
 #include "hb.h"
+#include <glib.h>
 
 HB_BEGIN_DECLS
+
+
+hb_script_t
+hb_glib_script_to_script (GUnicodeScript script);
+
+GUnicodeScript
+hb_glib_script_from_script (hb_script_t script);
 
 
 hb_unicode_funcs_t *

@@ -103,7 +103,6 @@ LoginManagerCrypto_SDR.prototype = {
     init : function () {
         // Connect to the correct preferences branch.
         this._prefBranch = Services.prefs.getBranch("signon.");
-        this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
 
         this._debug = this._prefBranch.getBoolPref("debug");
 

@@ -145,6 +145,7 @@ using namespace mozilla;
 #define XML_HTTP_REQUEST_NEED_AC_PREFLIGHT (1 << 16) // Internal
 #define XML_HTTP_REQUEST_AC_WITH_CREDENTIALS (1 << 17) // Internal
 #define XML_HTTP_REQUEST_TIMED_OUT (1 << 18) // Internal
+#define XML_HTTP_REQUEST_DELETED (1 << 19) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNSENT |                \
@@ -444,8 +445,8 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mProgressSinceLastProgressEvent(false),
     mUploadProgress(0), mUploadProgressMax(0),
     mRequestSentTime(0), mTimeoutMilliseconds(0),
-    mErrorLoad(false), mProgressTimerIsActive(false),
-    mProgressEventWasDelayed(false),
+    mErrorLoad(false), mWaitingForOnStopRequest(false),
+    mProgressTimerIsActive(false), mProgressEventWasDelayed(false),
     mIsHtml(false),
     mWarnAboutMultipartHtml(false),
     mWarnAboutSyncHtml(false),
@@ -460,6 +461,8 @@ nsXMLHttpRequest::nsXMLHttpRequest()
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
 {
+  mState |= XML_HTTP_REQUEST_DELETED;
+
   if (mState & (XML_HTTP_REQUEST_STOPPED |
                 XML_HTTP_REQUEST_SENT |
                 XML_HTTP_REQUEST_LOADING)) {
@@ -599,7 +602,8 @@ nsXMLHttpRequest::SetRequestObserver(nsIRequestObserver* aObserver)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLHttpRequest)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsXMLHttpRequest)
-  if (tmp->IsBlack()) {
+  bool isBlack = tmp->IsBlack();
+  if (isBlack || tmp->mWaitingForOnStopRequest) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->UnmarkGrayJSListeners();
       NS_UNMARK_LISTENER_WRAPPER(Load)
@@ -610,6 +614,11 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsXMLHttpRequest)
       NS_UNMARK_LISTENER_WRAPPER(Loadend)
       NS_UNMARK_LISTENER_WRAPPER(UploadProgress)
       NS_UNMARK_LISTENER_WRAPPER(Readystatechange)
+    }
+    if (!isBlack) {
+      xpc_UnmarkGrayObject(tmp->PreservingWrapper() ? 
+                           tmp->GetWrapperPreserveColor() :
+                           tmp->GetExpandoObjectPreserveColor());
     }
     return true;
   }
@@ -1269,7 +1278,11 @@ nsXMLHttpRequest::CloseRequestWithError(const nsAString& aType,
   PRUint32 responseLength = mResponseBody.Length();
   ResetResponse();
   mState |= aFlag;
-  
+
+  // If we're in the destructor, don't risk dispatching an event.
+  if (mState & XML_HTTP_REQUEST_DELETED)
+    return;
+
   if (!(mState & (XML_HTTP_REQUEST_UNSENT |
                   XML_HTTP_REQUEST_OPENED |
                   XML_HTTP_REQUEST_DONE))) {
@@ -2133,6 +2146,8 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     return NS_OK;
   }
 
+  mWaitingForOnStopRequest = false;
+
   nsresult rv = NS_OK;
 
   // If we're loading a multipart stream of XML documents, we'll get
@@ -2766,6 +2781,9 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     mCORSPreflightChannel = nsnull;
     return rv;
   }
+
+  // Either AsyncOpen was called, or CORS will open the channel later.
+  mWaitingForOnStopRequest = true;
 
   // If we're synchronous, spin an event loop here and wait
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {

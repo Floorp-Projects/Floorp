@@ -661,6 +661,37 @@ var popupTests = [
   test: function() {
     synthesizeKey("VK_ALT", {  });
   }
+},
+
+// bug 625151
+{
+  testname: "Alt key state before deactivating the window shouldn't prevent " +
+            "next Alt key handling",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: function() {
+    return [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ];
+  },
+  test: function() {
+    synthesizeKey("VK_ALT", { type: "keydown" });
+    synthesizeKey("VK_TAB", { type: "keydown" }); // cancels the Alt key
+    var thisWindow = window;
+    var newWindow =
+      window.open("data:text/html,", "_blank", "width=100,height=100");
+    newWindow.addEventListener("focus", function () {
+      newWindow.removeEventListener("focus", arguments.callee, false);
+      thisWindow.addEventListener("focus", function () {
+        thisWindow.removeEventListener("focus", arguments.callee, false);
+        setTimeout(function () {
+          synthesizeKey("VK_ALT", { }, thisWindow);
+        }, 0);
+      }, false);
+      newWindow.close();
+      thisWindow.focus();
+      // Note that our window dispatches a hacky key event if IMM is installed
+      // on the system during focus change only if Alt key is pressed.
+      synthesizeKey("`", { type: "keypress" }, thisWindow);
+    }, false);
+  }
 }
 
 ];

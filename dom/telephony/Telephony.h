@@ -51,7 +51,7 @@ class nsPIDOMWindow;
 
 BEGIN_TELEPHONY_NAMESPACE
 
-class Telephony : public nsDOMEventTargetWrapperCache,
+class Telephony : public nsDOMEventTargetHelper,
                   public nsIDOMTelephony
 {
   nsCOMPtr<nsIRadioInterfaceLayer> mRIL;
@@ -72,10 +72,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMTELEPHONY
   NS_DECL_NSIRILTELEPHONYCALLBACK
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetWrapperCache::)
+  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
                                                    Telephony,
-                                                   nsDOMEventTargetWrapperCache)
+                                                   nsDOMEventTargetHelper)
 
   static already_AddRefed<Telephony>
   Create(nsPIDOMWindow* aOwner, nsIRadioInterfaceLayer* aRIL);
@@ -83,7 +83,7 @@ public:
   nsIDOMEventTarget*
   ToIDOMEventTarget() const
   {
-    return static_cast<nsDOMEventTargetWrapperCache*>(
+    return static_cast<nsDOMEventTargetHelper*>(
              const_cast<Telephony*>(this));
   }
 

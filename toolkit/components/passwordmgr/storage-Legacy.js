@@ -170,7 +170,6 @@ LoginManagerStorage_legacy.prototype = {
         this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
                            getService(Ci.nsIPrefService);
         this._prefBranch = this._prefBranch.getBranch("signon.");
-        this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
 
         this._debug = this._prefBranch.getBoolPref("debug");
 
@@ -1472,7 +1471,6 @@ LoginManagerStorage_legacy.prototype = {
             this._prefBranch = Cc["@mozilla.org/preferences-service;1"].
                                getService(Ci.nsIPrefService);
             this._prefBranch = this._prefBranch.getBranch("signon.");
-            this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
 
             this._debug = this._prefBranch.getBoolPref("debug");
 

@@ -28,14 +28,18 @@ function test() {
     executeSoon(function () {
       let consoleListener = {
         observe: function (m) {
+          info("m: " + m + "\n");
+          info("m.message: " + m.message + "\n");
           if (m.message.indexOf("NS_ERROR_DOM_BAD_URI") > -1) {
-            Services.console.unregisterListener(consoleListener);
             ok(true, "drop was blocked");
             executeSoon(finish);
           }
         }
       }
       Services.console.registerListener(consoleListener);
+      registerCleanupFunction(function () {
+        Services.console.unregisterListener(consoleListener);
+      });
 
       // The drop handler throws an exception when dragging URIs that inherit
       // principal, e.g. javascript:

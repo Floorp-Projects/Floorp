@@ -48,10 +48,10 @@ function runTests() {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var p = $("plugin1").getLastMouseX();
     const delta = 2;
-    ok(p-delta <= x && x <= p+delta, "test"+test+" LastMouseX got " + p + " expected" + x + 
+    ok(p-delta <= x && x <= p+delta, "test"+test+" LastMouseX got " + p + " expected " + x + 
                                      " with fullZoom="+viewer.fullZoom+" MozTransform='"+$("container").style.MozTransform+"'");
     p = $("plugin1").getLastMouseY();
-    ok(p-delta <= y && y <= p+delta, "test"+test+" LastMouseY got " + p + " expected" + y +
+    ok(p-delta <= y && y <= p+delta, "test"+test+" LastMouseY got " + p + " expected " + y +
                                      " with fullZoom="+viewer.fullZoom+" MozTransform='"+$("container").style.MozTransform+"'");
     if (next) next();
   }

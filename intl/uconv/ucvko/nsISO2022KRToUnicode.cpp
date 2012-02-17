@@ -71,14 +71,14 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
           mRunLength = 0;
         } 
         else if(*src & 0x80) {
-          *dest++ = 0xFFFD;
-          if(dest >= destEnd)
+          if (CHECK_OVERRUN(dest, destEnd, 1))
             goto error1;
+          *dest++ = 0xFFFD;
         } 
         else {
-          *dest++ = (PRUnichar) *src;
-          if(dest >= destEnd)
+          if (CHECK_OVERRUN(dest, destEnd, 1))
             goto error1;
+          *dest++ = (PRUnichar) *src;
         }
         break;
           
@@ -87,7 +87,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
           mState = mState_ESC_24;
         } 
         else  {
-          if((dest+2) >= destEnd)
+          if (CHECK_OVERRUN(dest, destEnd, 2))
             goto error1;
           *dest++ = (PRUnichar) 0x1b;
           *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
@@ -100,7 +100,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
           mState = mState_ESC_24_29;
         } 
         else  {
-          if((dest+3) >= destEnd)
+          if (CHECK_OVERRUN(dest, destEnd, 3))
             goto error1;
           *dest++ = (PRUnichar) 0x1b;
           *dest++ = (PRUnichar) '$';
@@ -116,7 +116,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
           mRunLength = 0;
         } 
         else  {
-          if((dest+4) >= destEnd)
+          if (CHECK_OVERRUN(dest, destEnd, 4))
             goto error1;
           *dest++ = (PRUnichar) 0x1b;
           *dest++ = (PRUnichar) '$';
@@ -134,7 +134,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
         else if (0x0f == *src) { // Shift-In (SI)
           mState = mState_ASCII;
           if (mRunLength == 0) {
-            if(dest+1 >= destEnd)
+            if (CHECK_OVERRUN(dest, destEnd, 1))
               goto error1;
             *dest++ = 0xFFFD;
           }
@@ -142,16 +142,16 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
         } 
         else if ((PRUint8) *src == 0x20 || (PRUint8) *src == 0x09) {
           // Allow space and tab between SO and SI (i.e. in Hangul segment)
+          if (CHECK_OVERRUN(dest, destEnd, 1))
+            goto error1;
           mState = mState_KSX1001_1992;
           *dest++ = (PRUnichar) *src;
           ++mRunLength;
-          if(dest >= destEnd)
-          goto error1;
         } 
         else {         // Everything else is invalid.
+          if (CHECK_OVERRUN(dest, destEnd, 1))
+            goto error1;
           *dest++ = 0xFFFD;
-          if(dest >= destEnd)
-             goto error1;
         }
         break;
 
@@ -171,6 +171,8 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
            *dest++ = 0xFFFD;
           } 
           else {              
+            if (CHECK_OVERRUN(dest, destEnd, 1))
+              goto error1;
             unsigned char ksx[2];
             PRUnichar uni;
             PRInt32 ksxLen = 2, uniLen = 1;
@@ -184,8 +186,6 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
             *dest++ = uni;
             ++mRunLength;
           }
-          if(dest >= destEnd)
-            goto error1;
           mState = mState_KSX1001_1992;
         } 
         else {        // Invalid 
@@ -195,17 +195,17 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
           else {
             mState = mState_KSX1001_1992;
           }
+          if (CHECK_OVERRUN(dest, destEnd, 1))
+            goto error1;
           *dest++ = 0xFFFD;
-          if(dest >= destEnd)
-           goto error1;
         }
         break;
 
       case mState_ERROR:
         mState = mLastLegalState;
-        *dest++ = 0xFFFD;
-        if(dest >= destEnd)
+        if (CHECK_OVERRUN(dest, destEnd, 1))
           goto error1;
+        *dest++ = 0xFFFD;
         break;
 
     } // switch

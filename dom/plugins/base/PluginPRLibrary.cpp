@@ -295,7 +295,7 @@ PluginPRLibrary::HandleGUIEvent(NPP instance, const nsGUIEvent& anEvent,
 #endif
 
 nsresult
-PluginPRLibrary::GetImage(NPP instance, ImageContainer* aContainer, Image** aImage)
+PluginPRLibrary::GetImageContainer(NPP instance, ImageContainer** aContainer)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -204,6 +204,28 @@ const CARD_APP_STATE_READY = 5;
 
 const CARD_MAX_APPS = 8;
 
+// Network registration states. See TS 27.007 7.2
+const NETWORK_CREG_STATE_NOT_SEARCHING = 0;
+const NETWORK_CREG_STATE_REGISTERED_HOME = 1;
+const NETWORK_CREG_STATE_SEARCHING = 2;
+const NETWORK_CREG_STATE_DENIED = 3;
+const NETWORK_CREG_STATE_UNKNOWN = 4;
+const NETWORK_CREG_STATE_REGISTERED_ROAMING = 5;
+
+const NETWORK_CREG_TECH_UNKNOWN = 0;
+const NETWORK_CREG_TECH_GPRS = 1;
+const NETWORK_CREG_TECH_EDGE = 2;
+const NETWORK_CREG_TECH_UMTS = 3;
+const NETWORK_CREG_TECH_IS95A = 4;
+const NETWORK_CREG_TECH_IS95B = 5;
+const NETWORK_CREG_TECH_1XRTT = 6;
+const NETWORK_CREG_TECH_EVDO0 = 7;
+const NETWORK_CREG_TECH_EVDOA = 8;
+const NETWORK_CREG_TECH_HSDPA = 9;
+const NETWORK_CREG_TECH_HSUPA = 10;
+const NETWORK_CREG_TECH_HSPA = 11;
+const NETWORK_CREG_TECH_EVDOB = 12;
+
 const CALL_STATE_ACTIVE = 0;
 const CALL_STATE_HOLDING = 1;
 const CALL_STATE_DIALING = 2;
@@ -220,23 +242,6 @@ const CALL_PRESENTATION_UNKNOWN = 2;
 const CALL_PRESENTATION_PAYPHONE = 3;
 
 const SMS_HANDLED = 0;
-
-
-/**
- * DOM constants
- */
-
-const DOM_RADIOSTATE_UNAVAILABLE   = "unavailable";
-const DOM_RADIOSTATE_OFF           = "off";
-const DOM_RADIOSTATE_READY         = "ready";
-
-const DOM_CARDSTATE_UNAVAILABLE    = "unavailable";
-const DOM_CARDSTATE_ABSENT         = "absent";
-const DOM_CARDSTATE_PIN_REQUIRED   = "pin_required";
-const DOM_CARDSTATE_PUK_REQUIRED   = "puk_required";
-const DOM_CARDSTATE_NETWORK_LOCKED = "network_locked";
-const DOM_CARDSTATE_NOT_READY      = "not_ready";
-const DOM_CARDSTATE_READY          = "ready";
 
 
 /**
@@ -407,8 +412,8 @@ const PDU_ALPHABET_7BIT_DEFAULT = [
   "\xe0"    // LATIN SMALL LETTER A WITH GRAVE
 ];
 
-const DATACALL_RADIOTECHONLOGY_CDMA = 0;
-const DATACALL_RADIOTECHONLOGY_GSM = 1;
+const DATACALL_RADIOTECHNOLOGY_CDMA = 0;
+const DATACALL_RADIOTECHNOLOGY_GSM = 1;
 
 const DATACALL_AUTH_NONE = 0;
 const DATACALL_AUTH_PAP = 1;
@@ -426,12 +431,26 @@ const DATACALL_INACTIVE = 0;
 const DATACALL_ACTIVE_DOWN = 1;
 const DATACALL_ACTIVE_UP = 2;
 
-// Keep consistent with nsITelephone.DATACALL_STATE_*.
-const GECKO_DATACALL_STATE_UNKNOWN = 0;
-const GECKO_DATACALL_STATE_CONNECTING = 1;
-const GECKO_DATACALL_STATE_CONNECTED = 2;
-const GECKO_DATACALL_STATE_DISCONNECTING = 3;
-const GECKO_DATACALL_STATE_DISCONNECTED = 4;
+// Keep consistent with nsINetworkManager.NETWORK_STATE_*.
+const GECKO_NETWORK_STATE_UNKNOWN = -1;
+const GECKO_NETWORK_STATE_CONNECTING = 0;
+const GECKO_NETWORK_STATE_CONNECTED = 1;
+const GECKO_NETWORK_STATE_SUSPENDED = 2;
+const GECKO_NETWORK_STATE_DISCONNECTING = 3;
+const GECKO_NETWORK_STATE_DISCONNECTED = 4;
+
+// Other Gecko-specific constants
+const GECKO_RADIOSTATE_UNAVAILABLE   = "unavailable";
+const GECKO_RADIOSTATE_OFF           = "off";
+const GECKO_RADIOSTATE_READY         = "ready";
+
+const GECKO_CARDSTATE_UNAVAILABLE    = "unavailable";
+const GECKO_CARDSTATE_ABSENT         = "absent";
+const GECKO_CARDSTATE_PIN_REQUIRED   = "pin_required";
+const GECKO_CARDSTATE_PUK_REQUIRED   = "puk_required";
+const GECKO_CARDSTATE_NETWORK_LOCKED = "network_locked";
+const GECKO_CARDSTATE_NOT_READY      = "not_ready";
+const GECKO_CARDSTATE_READY          = "ready";
 
 
 // Allow this file to be imported via Components.utils.import().

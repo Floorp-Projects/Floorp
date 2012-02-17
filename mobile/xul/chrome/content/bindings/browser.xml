@@ -565,8 +565,7 @@
           this._contentViewManager = this._frameLoader.QueryInterface(Components.interfaces.nsIContentViewManager);
 
           let prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                              .getService(Components.interfaces.nsIPrefService)
-                                              .QueryInterface(Components.interfaces.nsIPrefBranch2);
+                                              .getService(Components.interfaces.nsIPrefBranch);
 
           this._cacheRatioWidth = Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioWidth") / 1000);
           this._cacheRatioHeight = Math.max(1, prefService.getIntPref("toolkit.browser.cacheRatioHeight") / 1000);

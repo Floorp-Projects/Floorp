@@ -153,7 +153,7 @@ TelephonyCall::ChangeStateInternal(PRUint16 aCallState, bool aFireEvents)
 NS_IMPL_CYCLE_COLLECTION_CLASS(TelephonyCall)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TelephonyCall,
-                                                  nsDOMEventTargetWrapperCache)
+                                                  nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_PTR(tmp->mTelephony->ToISupports(),
                                                Telephony, "mTelephony")
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(statechange)
@@ -168,7 +168,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TelephonyCall,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TelephonyCall,
-                                                nsDOMEventTargetWrapperCache)
+                                                nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTelephony)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(statechange)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(dialing)
@@ -184,10 +184,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TelephonyCall)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTelephonyCall)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TelephonyCall)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(TelephonyCall, nsDOMEventTargetWrapperCache)
-NS_IMPL_RELEASE_INHERITED(TelephonyCall, nsDOMEventTargetWrapperCache)
+NS_IMPL_ADDREF_INHERITED(TelephonyCall, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(TelephonyCall, nsDOMEventTargetHelper)
 
 DOMCI_DATA(TelephonyCall, TelephonyCall)
 

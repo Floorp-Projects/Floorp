@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Mihai Sucan <mihai.sucan@gmail.com> (original author)
  *   Kenny Heaton <kennyheaton@gmail.com>
+ *   Spyros Livathinos <livathinos.spyros@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,6 +76,8 @@ const ORION_EVENTS = {
   ContextMenu: "ContextMenu",
   TextChanged: "ModelChanged",
   Selection: "Selection",
+  Focus: "Focus",
+  Blur: "Blur",
 };
 
 /**

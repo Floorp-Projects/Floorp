@@ -6,7 +6,9 @@ chrome.jar:
 
 * content/shell.xul                     (content/shell.xul)
   content/shell.js                      (content/shell.js)
+#ifndef MOZ_TOUCH
   content/touch.js                      (content/touch.js)
+#endif
   content/commandUtil.js                (content/commandUtil.js)
   content/httpd.js                      (content/httpd.js)
   content/webapi.js                     (content/webapi.js)

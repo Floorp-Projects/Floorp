@@ -2040,7 +2040,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
   else
   {
     // otherwise we want to look at the first editable node after
-    // {parent,offset} and it's ancestors for divs with alignment on them
+    // {parent,offset} and its ancestors for divs with alignment on them
     nodeToExamine = GetChildAt(parent, offset);
     //GetNextNode(parent, offset, true, address_of(nodeToExamine));
   }
@@ -3575,7 +3575,7 @@ nsHTMLEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
 }
 
 
-/* This routine examines aNode and it's ancestors looking for any node which has the
+/* This routine examines aNode and its ancestors looking for any node which has the
    -moz-user-select: all style lit.  Return the highest such ancestor.  */
 already_AddRefed<nsIDOMNode>
 nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode* aNode)
@@ -3995,29 +3995,26 @@ bool
 nsHTMLEditor::IsNodeInActiveEditor(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!node) {
-    return false;
-  }
+  return node && IsNodeInActiveEditor(node);
+}
+
+bool
+nsHTMLEditor::IsNodeInActiveEditor(nsINode* aNode)
+{
   nsIContent* activeEditingHost = GetActiveEditingHost();
   if (!activeEditingHost) {
     return false;
   }
-  return nsContentUtils::ContentIsDescendantOf(node, activeEditingHost);
+  return nsContentUtils::ContentIsDescendantOf(aNode, activeEditingHost);
 }
 
 bool
 nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
 {
-  if (!aElement || !IsNodeInActiveEditor(aElement)) {
-    return false;
-  }
-
   nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
-  if (!element || !element->IsHTML()) {
-    return false;
-  }
-
-  if (!nsHTMLEditUtils::IsTableElement(element)) {
+  if (!element || !element->IsHTML() ||
+      !nsHTMLEditUtils::IsTableElement(element) ||
+      !IsNodeInActiveEditor(element)) {
     return false;
   }
 
@@ -4074,7 +4071,7 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
   nsString prestr ("PRE");  // GetFirstNodeOfType requires capitals
   nsCOMPtr<nsIDOMNode> preNode;
   if (NS_FAILED(nsEditor::GetFirstNodeOfType(rootNode, prestr,
-                                                 getter_AddRefs(preNode))))
+                                             getter_AddRefs(preNode))))
     return 0;
 
   return do_QueryInterface(preNode);
@@ -4108,10 +4105,11 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 
   while (!iter->IsDone())
   {
-    nsCOMPtr<nsIDOMCharacterData> text = do_QueryInterface(iter->GetCurrentNode());
-    if (text && IsEditable(text))
-    {
-      textNodes.AppendElement(text);
+    nsINode* node = iter->GetCurrentNode();
+    if (node->NodeType() == nsIDOMNode::TEXT_NODE &&
+        IsEditable(static_cast<nsIContent*>(node))) {
+      nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(node);
+      textNodes.AppendElement(domNode);
     }
 
     iter->Next();
@@ -4126,7 +4124,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
     nsIDOMNode *rightTextNode = textNodes[1];
     NS_ASSERTION(leftTextNode && rightTextNode,"left or rightTextNode null in CollapseAdjacentTextNodes");
 
-    // get the prev sibling of the right node, and see if it's leftTextNode
+    // get the prev sibling of the right node, and see if its leftTextNode
     nsCOMPtr<nsIDOMNode> prevSibOfRightNode;
     result =
       rightTextNode->GetPreviousSibling(getter_AddRefs(prevSibOfRightNode));
@@ -4150,15 +4148,15 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 NS_IMETHODIMP 
 nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
 {
-  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
+  dom::Element* rootElement = GetRoot();
   NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
 
-  return aSelection->Collapse(rootElement,0);
+  return aSelection->CollapseNative(rootElement, 0);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// RemoveBlockContainer: remove inNode, reparenting it's children into their
+// RemoveBlockContainer: remove inNode, reparenting its children into their
 //                  the parent of inNode.  In addition, INSERT ANY BR's NEEDED
 //                  TO PRESERVE IDENTITY OF REMOVED BLOCK.
 //
@@ -4920,26 +4918,24 @@ nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
 nsresult
 nsHTMLEditor::SetIsCSSEnabled(bool aIsCSSPrefChecked)
 {
-  nsresult  err = NS_ERROR_NOT_INITIALIZED;
-  if (mHTMLCSSUtils)
-  {
-    err = mHTMLCSSUtils->SetCSSEnabled(aIsCSSPrefChecked);
+  if (!mHTMLCSSUtils) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
-  // Disable the eEditorNoCSSMask flag if we're enabling StyleWithCSS.
-  if (NS_SUCCEEDED(err)) {
-    PRUint32 flags = mFlags;
-    if (aIsCSSPrefChecked) {
-      // Turn off NoCSS as we're enabling CSS
-      flags &= ~eEditorNoCSSMask;
-    } else {
-      // Turn on NoCSS, as we're disabling CSS.
-      flags |= eEditorNoCSSMask;
-    }
 
-    err = SetFlags(flags);
-    NS_ENSURE_SUCCESS(err, err);
+  nsresult rv = mHTMLCSSUtils->SetCSSEnabled(aIsCSSPrefChecked);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Disable the eEditorNoCSSMask flag if we're enabling StyleWithCSS.
+  PRUint32 flags = mFlags;
+  if (aIsCSSPrefChecked) {
+    // Turn off NoCSS as we're enabling CSS
+    flags &= ~eEditorNoCSSMask;
+  } else {
+    // Turn on NoCSS, as we're disabling CSS.
+    flags |= eEditorNoCSSMask;
   }
-  return err;
+
+  return SetFlags(flags);
 }
 
 // Set the block background color
@@ -5265,8 +5261,7 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
     res = CreateBR(deepestStyle, 0, address_of(outBRNode));
     NS_ENSURE_SUCCESS(res, res);
     // Getters must addref
-    *aOutBrNode = outBRNode;
-    NS_ADDREF(*aOutBrNode);
+    outBRNode.forget(aOutBrNode);
   }
   return NS_OK;
 }
@@ -5410,9 +5405,7 @@ nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
   }
 
   nsCOMPtr<nsIDOMElement> focusElement = do_QueryInterface(focusNode);
-  *aReturn = focusElement;
-  NS_IF_ADDREF(*aReturn);
-
+  focusElement.forget(aReturn);
   return NS_OK;
 }
 
@@ -5639,8 +5632,7 @@ nsHTMLEditor::GetFocusedNode()
   }
 
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  nsCOMPtr<nsINode> node = do_QueryInterface(doc);
-  return node.forget();
+  return doc.forget();
 }
 
 bool

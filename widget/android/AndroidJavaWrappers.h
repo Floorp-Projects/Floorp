@@ -137,6 +137,8 @@ public:
     int Left() { return mLeft; }
     int Right() { return mRight; }
     int Top() { return mTop; }
+    int Width() { return mRight - mLeft; }
+    int Height() { return mBottom - mTop; }
 
 protected:
     int mBottom;
@@ -185,7 +187,7 @@ public:
     unsigned char *LockBufferBits();
     void UnlockBuffer();
     void GetRenderOffset(nsIntPoint &aOffset);
-    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, const nsAString &aMetadata, bool aHasDirectTexture);
+    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture);
     void EndDrawing(const nsIntRect &aRect);
 
 private:
@@ -676,6 +678,7 @@ public:
         VISITED = 21,
         NETWORK_CHANGED = 22,
         PROXIMITY_EVENT = 23,
+        ACTIVITY_RESUMING = 24,
         dummy_java_enum_list_end
     };
 

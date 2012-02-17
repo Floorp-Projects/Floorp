@@ -72,6 +72,7 @@ FENNEC_JAVA_FILES = \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
+  db/DBUtils.java \
   DoorHanger.java \
   DoorHangerPopup.java \
   Favicons.java \
@@ -156,6 +157,7 @@ FENNEC_PP_JAVA_FILES = \
   Restarter.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \
+  db/PasswordsProvider.java \
   SmsManager.java \
   $(NULL)
 
@@ -300,8 +302,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/abouthome_sync_logo.png \
   res/drawable/abouthome_sync_bg.9.png \
   res/drawable/abouthome_sync_pressed_bg.9.png \
-  res/drawable/abouthome_topsite_placeholder.png \
-  res/drawable/abouthome_topsite_shadow.9.png \
   res/drawable/awesomebar_tab.9.png \
   res/drawable/awesomebar_tab_pressed.9.png \
   res/drawable/ic_addons_empty.png \
@@ -350,8 +350,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/abouthome_sync_logo.png \
   res/drawable-hdpi/abouthome_sync_bg.9.png \
   res/drawable-hdpi/abouthome_sync_pressed_bg.9.png \
-  res/drawable-hdpi/abouthome_topsite_placeholder.png \
-  res/drawable-hdpi/abouthome_topsite_shadow.9.png \
   res/drawable-hdpi/awesomebar_tab.9.png \
   res/drawable-hdpi/awesomebar_tab_pressed.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
@@ -414,8 +412,6 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/abouthome_sync_logo.png \
   res/drawable-xhdpi-v11/abouthome_sync_bg.9.png \
   res/drawable-xhdpi-v11/abouthome_sync_pressed_bg.9.png \
-  res/drawable-xhdpi-v11/abouthome_topsite_placeholder.png \
-  res/drawable-xhdpi-v11/abouthome_topsite_shadow.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab.9.png \
   res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
   res/drawable-xhdpi-v11/ic_addons_empty.png \

@@ -26,6 +26,10 @@
   text-decoration: none !important;
 }
 
+.controlsSpacer[hideCursor] {
+  cursor: none;
+}
+
 /* CSS Transitions
  *
  * These are overriden by the default theme; the rules here just 

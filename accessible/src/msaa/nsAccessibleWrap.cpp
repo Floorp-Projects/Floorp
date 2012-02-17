@@ -50,7 +50,6 @@
 
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessibleRelation.h"
-#include "nsIAccessibleWin32Object.h"
 
 #include "Accessible2_i.c"
 #include "AccessibleStates.h"
@@ -97,8 +96,8 @@ ITypeInfo* nsAccessibleWrap::gTypeInfo = NULL;
 // construction
 //-----------------------------------------------------
 nsAccessibleWrap::
-  nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessible(aContent, aShell), mEnumVARIANTPosition(0)
+  nsAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessible(aContent, aDoc), mEnumVARIANTPosition(0)
 {
 }
 
@@ -1516,7 +1515,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
     return NS_OK;
 
   // Means we're not active.
-  NS_ENSURE_TRUE(mWeakShell, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(!IsDefunct(), NS_ERROR_FAILURE);
 
   nsAccessible *accessible = aEvent->GetAccessible();
   if (!accessible)
@@ -1587,6 +1586,10 @@ HWND
 nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
 {
   if (aAccessible) {
+    nsDocAccessible* document = aAccessible->Document();
+    if(!document)
+      return nsnull;
+
     // Popup lives in own windows, use its HWND until the popup window is
     // hidden to make old JAWS versions work with collapsed comboboxes (see
     // discussion in bug 379678).
@@ -1597,7 +1600,7 @@ nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
         bool isVisible = false;
         widget->IsVisible(isVisible);
         if (isVisible) {
-          nsCOMPtr<nsIPresShell> shell(aAccessible->GetPresShell());
+          nsCOMPtr<nsIPresShell> shell(document->PresShell());
           nsIViewManager* vm = shell->GetViewManager();
           if (vm) {
             nsCOMPtr<nsIWidget> rootWidget;
@@ -1612,9 +1615,7 @@ nsAccessibleWrap::GetHWNDFor(nsAccessible *aAccessible)
       }
     }
 
-    nsDocAccessible* document = aAccessible->GetDocAccessible();
-    if (document)
-      return static_cast<HWND>(document->GetNativeWindow());
+    return static_cast<HWND>(document->GetNativeWindow());
   }
   return nsnull;
 }
@@ -1682,29 +1683,16 @@ nsAccessibleWrap::ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
   return *aIA2Attributes ? S_OK : E_OUTOFMEMORY;
 }
 
-IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
+IDispatch*
+nsAccessibleWrap::NativeAccessible(nsIAccessible* aAccessible)
 {
-  if (!aXPAccessible) {
-   NS_WARNING("Not passing in an aXPAccessible");
+  if (!aAccessible) {
+   NS_WARNING("Not passing in an aAccessible");
    return NULL;
   }
 
-  nsCOMPtr<nsIAccessibleWin32Object> accObject(do_QueryInterface(aXPAccessible));
-  if (accObject) {
-    void* hwnd = nsnull;
-    accObject->GetHwnd(&hwnd);
-    if (hwnd) {
-      IDispatch *retval = nsnull;
-      ::AccessibleObjectFromWindow(reinterpret_cast<HWND>(hwnd),
-                                   OBJID_WINDOW, IID_IAccessible,
-                                   (void **) &retval);
-      return retval;
-    }
-  }
-
-  IAccessible *msaaAccessible;
-  aXPAccessible->GetNativeInterface((void**)&msaaAccessible);
-
+  IAccessible* msaaAccessible = nsnull;
+  aAccessible->GetNativeInterface(reinterpret_cast<void**>(&msaaAccessible));
   return static_cast<IDispatch*>(msaaAccessible);
 }
 
@@ -1742,7 +1730,7 @@ nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 
     // ARIA document.
     if (ARIARole() == roles::DOCUMENT) {
-      nsDocAccessible* document = GetDocAccessible();
+      nsDocAccessible* document = Document();
       nsAccessible* child =
         document->GetAccessibleByUniqueIDInSubtree(uniqueID);
 

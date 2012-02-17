@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _BROWSER_TEST_FILES = \
                  browser_styleeditor_enabled.js \
+                 browser_styleeditor_filesave.js \
                  browser_styleeditor_import.js \
                  browser_styleeditor_init.js \
                  browser_styleeditor_loading.js \

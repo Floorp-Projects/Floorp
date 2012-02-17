@@ -1,12 +1,6 @@
-#
-# ***** BEGIN LICENSE BLOCK *****
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
-# Contributor(s):
-#   Shawn Wilsher <me@shawnwilsher.com>
-#
-# ***** END LICENSE BLOCK *****
 
 DEPTH     = ../..
 topsrcdir = @top_srcdir@
@@ -404,6 +398,9 @@ OS_LIBS += \
   -lbinder \
   -lsensorservice \
   $(NULL)
+ifdef MOZ_B2G_BT
+OS_LIBS += -lbluedroid
+endif
 endif
 
 EXTRA_DEPS += \

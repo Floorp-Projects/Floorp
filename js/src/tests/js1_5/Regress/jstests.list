@@ -357,7 +357,7 @@ script regress-68498-004.js
 script regress-69607.js
 script regress-71107.js
 script regress-76054.js
-script regress-80981.js
+slow script regress-80981.js
 script regress-82306.js
 script regress-89443.js
 script regress-89474.js

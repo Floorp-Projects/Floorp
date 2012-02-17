@@ -241,8 +241,10 @@ public class CrashReporter extends Activity
         final CheckBox includeURLCheckbox = (CheckBox) findViewById(R.id.include_url);
 
         String spec = extras.get(SERVER_URL_KEY);
-        if (spec == null)
+        if (spec == null) {
             doFinish();
+            return;
+        }
 
         Log.i(LOGTAG, "server url: " + spec);
         try {
@@ -302,7 +304,7 @@ public class CrashReporter extends Activity
             HashMap<String, String>  responseMap = new HashMap<String, String>();
             readStringsFromReader(br, responseMap);
 
-            if (conn.getResponseCode() == conn.HTTP_OK) {
+            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 File submittedDir = new File(SUBMITTED_DIR);
                 submittedDir.mkdirs();
                 minidumpFile.delete();

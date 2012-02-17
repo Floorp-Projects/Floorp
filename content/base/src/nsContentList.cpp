@@ -90,6 +90,27 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsBaseContentList)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsBaseContentList)
+  if (nsCCUncollectableMarker::sGeneration && tmp->IsBlack()) {
+    for (PRUint32 i = 0; i < tmp->mElements.Length(); ++i) {
+      nsIContent* c = tmp->mElements[i];
+      if (c->IsPurple()) {
+        c->RemovePurple();
+      }
+      nsGenericElement::MarkNodeChildren(c);
+    }
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsBaseContentList)
+  return nsCCUncollectableMarker::sGeneration && tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsBaseContentList)
+  return nsCCUncollectableMarker::sGeneration && tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
+
 #define NS_CONTENT_LIST_INTERFACES(_class)                                    \
     NS_INTERFACE_TABLE_ENTRY(_class, nsINodeList)                             \
     NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMNodeList)
