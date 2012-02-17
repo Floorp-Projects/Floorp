@@ -574,11 +574,12 @@ abstract public class GeckoApp
         }
 
         public void run() {
+            if (mLayerClient == null) {
+                return;
+            }
+
             synchronized (mLayerClient) {
                 if (!Tabs.getInstance().isSelectedTab(mThumbnailTab))
-                    return;
-
-                if (getLayerController().getLayerClient() != mLayerClient)
                     return;
 
                 HistoryEntry lastHistoryEntry = mThumbnailTab.getLastHistoryEntry();
