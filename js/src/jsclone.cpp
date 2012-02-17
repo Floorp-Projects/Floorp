@@ -42,7 +42,10 @@
 
 #include "jstypedarrayinlines.h"
 
+#include "vm/BooleanObject-inl.h"
+#include "vm/NumberObject-inl.h"
 #include "vm/RegExpObject-inl.h"
+#include "vm/StringObject-inl.h"
 
 using namespace js;
 
@@ -536,12 +539,12 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
         } else if (js_IsArrayBuffer(obj)) {
             return writeArrayBuffer(obj);
         } else if (obj->isBoolean()) {
-            return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->getPrimitiveThis().toBoolean());
+            return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->asBoolean().unbox());
         } else if (obj->isNumber()) {
             return out.writePair(SCTAG_NUMBER_OBJECT, 0) &&
-                   out.writeDouble(obj->getPrimitiveThis().toNumber());
+                   out.writeDouble(obj->asNumber().unbox());
         } else if (obj->isString()) {
-            return writeString(SCTAG_STRING_OBJECT, obj->getPrimitiveThis().toString());
+            return writeString(SCTAG_STRING_OBJECT, obj->asString().unbox());
         }
 
         if (callbacks && callbacks->write)

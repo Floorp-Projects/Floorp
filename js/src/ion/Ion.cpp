@@ -475,7 +475,7 @@ IonScript::trace(JSTracer *trc)
         MarkIonCode(trc, deoptTable_, "deoptimizationTable");
 
     for (size_t i = 0; i < numConstants(); i++)
-        gc::MarkValue(trc, getConstant(i), "constant");
+        gc::MarkValue(trc, &getConstant(i), "constant");
 }
 
 void

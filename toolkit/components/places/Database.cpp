@@ -251,6 +251,49 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
   return JOURNAL_DELETE;
 }
 
+class BlockingConnectionCloseCallback : public mozIStorageCompletionCallback {
+  bool mDone;
+
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGECOMPLETIONCALLBACK
+  BlockingConnectionCloseCallback();
+  void Spin();
+};
+
+NS_IMETHODIMP
+BlockingConnectionCloseCallback::Complete()
+{
+  mDone = true;
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  MOZ_ASSERT(os);
+  if (!os)
+    return NS_OK;
+  DebugOnly<nsresult> rv = os->NotifyObservers(nsnull,
+                                               TOPIC_PLACES_CONNECTION_CLOSED,
+                                               nsnull);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return NS_OK;
+}
+
+BlockingConnectionCloseCallback::BlockingConnectionCloseCallback()
+  : mDone(false)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+void BlockingConnectionCloseCallback::Spin() {
+  nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
+  while (!mDone) {
+    NS_ProcessNextEvent(thread);
+  }
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(
+  BlockingConnectionCloseCallback
+, mozIStorageCompletionCallback
+)
+
 nsresult
 CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
            const nsCString& aRootName,
@@ -1672,9 +1715,10 @@ Database::Shutdown()
         );
   DispatchToAsyncThread(event);
 
-  nsRefPtr<PlacesEvent> closeListener =
-    new PlacesEvent(TOPIC_PLACES_CONNECTION_CLOSED);
+  nsRefPtr<BlockingConnectionCloseCallback> closeListener =
+    new BlockingConnectionCloseCallback();
   (void)mMainConn->AsyncClose(closeListener);
+  closeListener->Spin();
 
   // Don't set this earlier, otherwise some internal helper used on shutdown
   // may bail out.

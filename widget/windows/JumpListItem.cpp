@@ -737,11 +737,6 @@ nsresult JumpListLink::GetShellItem(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IS
   rv = uri->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Load vista+ SHCreateItemFromParsingName
-  if (!WinUtils::VistaCreateItemFromParsingNameInit()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   // Create the IShellItem
   if (FAILED(WinUtils::SHCreateItemFromParsingName(
                NS_ConvertASCIItoUTF16(spec).get(), NULL, IID_PPV_ARGS(&psi)))) {

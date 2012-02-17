@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.48 2012/02/11 12:58:47 kaie%kuix.de Exp $ */
+/* $Id: ssl.h,v 1.49 2012/02/15 21:52:08 kaie%kuix.de Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -347,11 +347,14 @@ SSL_IMPORT CERTCertificate *SSL_PeerCertificate(PRFileDesc *fd);
 **
 ** If the authenticate certificate hook returns SECFailure, then the bad cert
 ** hook will be called. The bad cert handler is NEVER called if the
-** authenticate certificate hook returns SECWouldBlock.
+** authenticate certificate hook returns SECWouldBlock. If the application
+** needs to handle and/or override a bad cert, it should do so before it
+** calls SSL_AuthCertificateComplete (modifying the error it passes to
+** SSL_AuthCertificateComplete as needed).
 **
 ** See the documentation for SSL_AuthCertificateComplete for more information
 ** about the asynchronous behavior that occurs when the authenticate
-** certificate hook returns SECWouldBlock
+** certificate hook returns SECWouldBlock.
 */
 typedef SECStatus (PR_CALLBACK *SSLAuthCertificate)(void *arg, PRFileDesc *fd, 
                                                     PRBool checkSig,
@@ -772,11 +775,11 @@ extern const char *NSSSSL_GetVersion(void);
  * a connection; it does not work for the server role.
  *
  * The application must call SSL_AuthCertificateComplete with 0 as the value of
- * status parameter after it has successfully validated the peer's certificate,
- * in order to continue the SSL handshake.
+ * the error parameter after it has successfully validated the peer's
+ * certificate, in order to continue the SSL handshake.
  *
  * The application may call SSL_AuthCertificateComplete with a non-zero value
- * for status (e.g. SEC_ERROR_REVOKED_CERTIFICATE) when certificate validation
+ * for error (e.g. SEC_ERROR_REVOKED_CERTIFICATE) when certificate validation
  * fails, before it closes the connection. If the application does so, an
  * alert corresponding to the error (e.g. certificate_revoked) will be sent to
  * the peer. See the source code of the internal function
@@ -816,10 +819,16 @@ extern const char *NSSSSL_GetVersion(void);
  * Returns SECFailure on failure, SECSuccess on success. Never returns
  * SECWouldBlock. Note that SSL_AuthCertificateComplete will (usually) return
  * SECSuccess; do not interpret the return value of SSL_AuthCertificateComplete
- * as an indicator of whether it is OK to continue using the connection.
+ * as an indicator of whether it is OK to continue using the connection. For
+ * example, SSL_AuthCertificateComplete(fd, SEC_ERROR_REVOKED_CERTIFICATE) will
+ * return SECSuccess (normally), but that does not mean that the application
+ * should continue using the connection. If the application passes a non-zero
+ * value for second argument (error), or if SSL_AuthCertificateComplete returns
+ * anything other than SECSuccess, then the application should close the
+ * connection.
  */
 SSL_IMPORT SECStatus SSL_AuthCertificateComplete(PRFileDesc *fd,
-						 PRErrorCode status);
+						 PRErrorCode error);
 SEC_END_PROTOS
 
 #endif /* __ssl_h_ */

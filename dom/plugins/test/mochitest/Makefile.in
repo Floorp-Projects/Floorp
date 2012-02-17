@@ -109,6 +109,8 @@ _MOCHITEST_FILES = \
   test_instance_unparent1.html \
   test_instance_unparent2.html \
   test_instance_unparent3.html \
+  test_pluginstream_referer.html \
+  plugin-stream-referer.sjs \
   $(NULL)
 
 #  test_plugin_scroll_painting.html \ bug 596491
