@@ -741,6 +741,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_setgname(info().getAtom(pc));
 
       case JSOP_NAME:
+      case JSOP_CALLNAME:
         return jsop_getname(info().getAtom(pc));
 
       case JSOP_GETFCSLOT:
