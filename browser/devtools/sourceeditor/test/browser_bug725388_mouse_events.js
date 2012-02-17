@@ -76,11 +76,12 @@ function editorLoaded()
 
   editor.addEventListener(SourceEditor.EVENTS.MOUSE_MOVE, mMoveHandler);
 
-  editor.focus();
   waitForFocus(function() {
-  EventUtils.synthesizeMouse(target, 1, 1, {type: "mousemove"},
-                             targetWin);
+    EventUtils.synthesizeMouse(target, 15, 17, {type: "mousemove"},
+                               targetWin);
   }, targetWin);
+
+  editor.focus();
 }
 
 function testEnd()

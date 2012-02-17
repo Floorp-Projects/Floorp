@@ -10,7 +10,6 @@
  *		Felipe Heidrich (IBM Corporation) - initial API and implementation
  *		Silenio Quarti (IBM Corporation) - initial API and implementation
  *		Mihai Sucan (Mozilla Foundation) - fix for Bug#364214
- *		Alex Lakatos (Mozilla Contributor) - fix for Mozilla Bug#719028
  */
 
 /*global window */
@@ -22,15 +21,15 @@
  * This function is intented to by used when RequireJS is not available.
  * </p>
  *
+ * @param {String} name The mixin module name.
  * @param {String[]} deps The array of dependency names.
  * @param {Function} callback The definition function.
- * @param {String} moduleName The mixin module name.
  */
 if (!window.define) {
-	window.define = function(deps, callback, moduleName) {
+	window.define = function(name, deps, callback) {
 		var module = this;
-		var split = (moduleName || "").split("/"), i, j;
-		for (i = 0; i < split.length; i++) {
+		var split = (name || "").split("/"), i, j;
+		for (i = 0; i < split.length - 1; i++) {
 			module = module[split[i]] = (module[split[i]] || {});
 		}
 		var depModules = [], depModule;
@@ -96,7 +95,7 @@ if (!window.require) {
  ******************************************************************************/
  
 /*global define */
-define([], function() {
+define("orion/textview/eventTarget", [], function() {
 	/** 
 	 * Constructs a new EventTarget object.
 	 * 
@@ -225,7 +224,7 @@ define([], function() {
 		}
 	};
 	return {EventTarget: EventTarget};
-}, "orion/textview");
+});
 /*******************************************************************************
  * @license
  * Copyright (c) 2011 IBM Corporation and others.
@@ -244,7 +243,7 @@ define([], function() {
  * @class Utilities for dealing with regular expressions.
  * @description Utilities for dealing with regular expressions.
  */
-define([], function() {
+define("orion/editor/regex", [], function() {
 	/**
 	 * @methodOf orion.editor.regex
 	 * @static
@@ -282,7 +281,7 @@ define([], function() {
 		escape: escape,
 		parse: parse
 	};
-}, "orion/editor");
+});
 /*******************************************************************************
  * @license
  * Copyright (c) 2010, 2011 IBM Corporation and others.
@@ -298,7 +297,7 @@ define([], function() {
 
 /*global window define */
 
-define([], function() {
+define("orion/textview/keyBinding", [], function() {
 	var isMac = window.navigator.platform.indexOf("Mac") !== -1;
 
 	/**
@@ -367,1554 +366,8 @@ define([], function() {
 		} 
 	};
 	return {KeyBinding: KeyBinding};
-}, "orion/textview");
+});
 /*******************************************************************************
- * @license
- * Copyright (c) 2010, 2011 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials are made 
- * available under the terms of the Eclipse Public License v1.0 
- * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
- * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
- * 
- * Contributors: IBM Corporation - initial API and implementation
- ******************************************************************************/
-
-/*global define setTimeout clearTimeout setInterval clearInterval Node */
-
-define(['orion/textview/tooltip'], function(mTooltip) {
-
-	/**
-	 * Constructs a new ruler. 
-	 * <p>
-	 * The default implementation does not implement all the methods in the interface
-	 * and is useful only for objects implementing rulers.
-	 * <p/>
-	 * 
-	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
-	 * @param {String} [rulerLocation="left"] the location for the ruler.
-	 * @param {String} [rulerOverview="page"] the overview for the ruler.
-	 * @param {orion.textview.Style} [rulerStyle] the style for the ruler. 
-	 * 
-	 * @class This interface represents a ruler for the text view.
-	 * <p>
-	 * A Ruler is a graphical element that is placed either on the left or on the right side of 
-	 * the view. It can be used to provide the view with per line decoration such as line numbering,
-	 * bookmarks, breakpoints, folding disclosures, etc. 
-	 * </p><p>
-	 * There are two types of rulers: page and document. A page ruler only shows the content for the lines that are
-	 * visible, while a document ruler always shows the whole content.
-	 * </p>
-	 * <b>See:</b><br/>
-	 * {@link orion.textview.LineNumberRuler}<br/>
-	 * {@link orion.textview.AnnotationRuler}<br/>
-	 * {@link orion.textview.OverviewRuler}<br/> 
-	 * {@link orion.textview.TextView}<br/>
-	 * {@link orion.textview.TextView#addRuler}
-	 * </p>		 
-	 * @name orion.textview.Ruler
-	 */
-	function Ruler (annotationModel, rulerLocation, rulerOverview, rulerStyle) {
-		this._location = rulerLocation || "left";
-		this._overview = rulerOverview || "page";
-		this._rulerStyle = rulerStyle;
-		this._types = [];
-		this._view = null;
-		var self = this;
-		this._listener = {
-			onTextModelChanged: function(e) {
-				self._onTextModelChanged(e);
-			},
-			onAnnotationModelChanged: function(e) {
-				self._onAnnotationModelChanged(e);
-			}
-		};
-		this.setAnnotationModel(annotationModel);
-	}
-	Ruler.prototype = /** @lends orion.textview.Ruler.prototype */ {
-		/**
-		 * Adds an annotation type to the ruler.
-		 * <p>
-		 * Only annotations of the specified types will be shown by
-		 * this ruler.
-		 * </p>
-		 *
-		 * @param type {Object} the annotation type to be shown
-		 * 
-		 * @see #removeAnnotationType
-		 * @see #isAnnotationTypeVisible
-		 */
-		addAnnotationType: function(type) {
-			this._types.push(type);
-		},
-		/**
-		 * Returns the annotations for a given line range merging multiple
-		 * annotations when necessary.
-		 * <p>
-		 * This method is called by the text view when the ruler is redrawn.
-		 * </p>
-		 *
-		 * @param {Number} startLine the start line index
-		 * @param {Number} endLine the end line index
-		 * @return {orion.textview.Annotation[]} the annotations for the line range. The array might be sparse.
-		 */
-		getAnnotations: function(startLine, endLine) {
-			var annotationModel = this._annotationModel;
-			if (!annotationModel) { return []; }
-			var model = this._view.getModel();
-			var start = model.getLineStart(startLine);
-			var end = model.getLineEnd(endLine - 1);
-			var baseModel = model;
-			if (model.getBaseModel) {
-				baseModel = model.getBaseModel();
-				start = model.mapOffset(start);
-				end = model.mapOffset(end);
-			}
-			var annotations = annotationModel.getAnnotations(start, end);
-			var result = [];
-			while (annotations.hasNext()) {
-				var annotation = annotations.next();
-				if (!this.isAnnotationTypeVisible(annotation.type)) { continue; }
-				var annotationLineStart = baseModel.getLineAtOffset(annotation.start);
-				var annotationLineEnd = baseModel.getLineAtOffset(Math.max(annotation.start, annotation.end - 1));
-				for (var lineIndex = annotationLineStart; lineIndex<=annotationLineEnd; lineIndex++) {
-					var visualLineIndex = lineIndex;
-					if (model !== baseModel) {
-						var ls = baseModel.getLineStart(lineIndex);
-						ls = model.mapOffset(ls, true);
-						if (ls === -1) { continue; }
-						visualLineIndex = model.getLineAtOffset(ls);
-					}
-					if (!(startLine <= visualLineIndex && visualLineIndex < endLine)) { continue; }
-					var rulerAnnotation = this._mergeAnnotation(result[visualLineIndex], annotation, lineIndex - annotationLineStart, annotationLineEnd - annotationLineStart + 1);
-					if (rulerAnnotation) {
-						result[visualLineIndex] = rulerAnnotation;
-					}
-				}
-			}
-			if (!this._multiAnnotation && this._multiAnnotationOverlay) {
-				for (var k in result) {
-					if (result[k]._multiple) {
-						result[k].html = result[k].html + this._multiAnnotationOverlay.html;
-					}
-				}
-			}
-			return result;
-		},
-		/**
-		 * Returns the annotation model.
-		 *
-		 * @returns {orion.textview.AnnotationModel} the ruler annotation model.
-		 *
-		 * @see #setAnnotationModel
-		 */
-		getAnnotationModel: function() {
-			return this._annotationModel;
-		},
-		/**
-		 * Returns the ruler location.
-		 *
-		 * @returns {String} the ruler location, which is either "left" or "right".
-		 *
-		 * @see #getOverview
-		 */
-		getLocation: function() {
-			return this._location;
-		},
-		/**
-		 * Returns the ruler overview type.
-		 *
-		 * @returns {String} the overview type, which is either "page" or "document".
-		 *
-		 * @see #getLocation
-		 */
-		getOverview: function() {
-			return this._overview;
-		},
-		/**
-		 * Returns the style information for the ruler.
-		 *
-		 * @returns {orion.textview.Style} the style information.
-		 */
-		getRulerStyle: function() {
-			return this._rulerStyle;
-		},
-		/**
-		 * Returns the widest annotation which determines the width of the ruler.
-		 * <p>
-		 * If the ruler does not have a fixed width it should provide the widest
-		 * annotation to avoid the ruler from changing size as the view scrolls.
-		 * </p>
-		 * <p>
-		 * This method is called by the text view when the ruler is redrawn.
-		 * </p>
-		 *
-		 * @returns {orion.textview.Annotation} the widest annotation.
-		 *
-		 * @see #getAnnotations
-		 */
-		getWidestAnnotation: function() {
-			return null;
-		},
-		/**
-		 * Returns whether the ruler shows annotations of the specified type.
-		 *
-		 * @param {Object} type the annotation type 
-		 * @returns {Boolean} whether the specified annotation type is shown
-		 * 
-		 * @see #addAnnotationType
-		 * @see #removeAnnotationType
-		 */
-		isAnnotationTypeVisible: function(type) {
-			for (var i = 0; i < this._types.length; i++) {
-				if (this._types[i] === type) {
-					return true;
-				}
-			}
-			return false;
-		},
-		/**
-		 * Removes an annotation type from the ruler.
-		 *
-		 * @param {Object} type the annotation type to be removed
-		 * 
-		 * @see #addAnnotationType
-		 * @see #isAnnotationTypeVisible
-		 */
-		removeAnnotationType: function(type) {
-			for (var i = 0; i < this._types.length; i++) {
-				if (this._types[i] === type) {
-					this._types.splice(i, 1);
-					break;
-				}
-			}
-		},
-		/**
-		 * Sets the annotation model for the ruler.
-		 *
-		 * @param {orion.textview.AnnotationModel} annotationModel the annotation model.
-		 *
-		 * @see #getAnnotationModel
-		 */
-		setAnnotationModel: function (annotationModel) {
-			if (this._annotationModel) {
-				this._annotationModel.removEventListener("Changed", this._listener.onAnnotationModelChanged); 
-			}
-			this._annotationModel = annotationModel;
-			if (this._annotationModel) {
-				this._annotationModel.addEventListener("Changed", this._listener.onAnnotationModelChanged); 
-			}
-		},
-		/**
-		 * Sets the annotation that is displayed when a given line contains multiple
-		 * annotations.  This annotation is used when there are different types of
-		 * annotations in a given line.
-		 *
-		 * @param {orion.textview.Annotation} annotation the annotation for lines with multiple annotations.
-		 * 
-		 * @see #setMultiAnnotationOverlay
-		 */
-		setMultiAnnotation: function(annotation) {
-			this._multiAnnotation = annotation;
-		},
-		/**
-		 * Sets the annotation that overlays a line with multiple annotations.  This annotation is displayed on
-		 * top of the computed annotation for a given line when there are multiple annotations of the same type
-		 * in the line. It is also used when the multiple annotation is not set.
-		 *
-		 * @param {orion.textview.Annotation} annotation the annotation overlay for lines with multiple annotations.
-		 * 
-		 * @see #setMultiAnnotation
-		 */
-		setMultiAnnotationOverlay: function(annotation) {
-			this._multiAnnotationOverlay = annotation;
-		},
-		/**
-		 * Sets the view for the ruler.
-		 * <p>
-		 * This method is called by the text view when the ruler
-		 * is added to the view.
-		 * </p>
-		 *
-		 * @param {orion.textview.TextView} view the text view.
-		 */
-		setView: function (view) {
-			if (this._onTextModelChanged && this._view) {
-				this._view.removeEventListener("ModelChanged", this._listener.onTextModelChanged); 
-			}
-			this._view = view;
-			if (this._onTextModelChanged && this._view) {
-				this._view.addEventListener("ModelChanged", this._listener.onTextModelChanged);
-			}
-		},
-		/**
-		 * This event is sent when the user clicks a line annotation.
-		 *
-		 * @event
-		 * @param {Number} lineIndex the line index of the annotation under the pointer.
-		 * @param {DOMEvent} e the click event.
-		 */
-		onClick: function(lineIndex, e) {
-		},
-		/**
-		 * This event is sent when the user double clicks a line annotation.
-		 *
-		 * @event
-		 * @param {Number} lineIndex the line index of the annotation under the pointer.
-		 * @param {DOMEvent} e the double click event.
-		 */
-		onDblClick: function(lineIndex, e) {
-		},
-		/**
-		 * This event is sent when the user moves the mouse over a line annotation.
-		 *
-		 * @event
-		 * @param {Number} lineIndex the line index of the annotation under the pointer.
-		 * @param {DOMEvent} e the mouse move event.
-		 */
-		onMouseMove: function(lineIndex, e) {
-			var tooltip = mTooltip.Tooltip.getTooltip(this._view);
-			if (!tooltip) { return; }
-			if (tooltip.isVisible() && this._tooltipLineIndex === lineIndex) { return; }
-			this._tooltipLineIndex = lineIndex;
-			var self = this;
-			tooltip.setTarget({
-				y: e.clientY,
-				getTooltipInfo: function() {
-					return self._getTooltipInfo(self._tooltipLineIndex, this.y);
-				}
-			});
-		},
-		/**
-		 * This event is sent when the mouse pointer enters a line annotation.
-		 *
-		 * @event
-		 * @param {Number} lineIndex the line index of the annotation under the pointer.
-		 * @param {DOMEvent} e the mouse over event.
-		 */
-		onMouseOver: function(lineIndex, e) {
-			this.onMouseMove(lineIndex, e);
-		},
-		/**
-		 * This event is sent when the mouse pointer exits a line annotation.
-		 *
-		 * @event
-		 * @param {Number} lineIndex the line index of the annotation under the pointer.
-		 * @param {DOMEvent} e the mouse out event.
-		 */
-		onMouseOut: function(lineIndex, e) {
-			var tooltip = mTooltip.Tooltip.getTooltip(this._view);
-			if (!tooltip) { return; }
-			tooltip.setTarget(null);
-		},
-		/** @ignore */
-		_getTooltipInfo: function(lineIndex, y) {
-			if (lineIndex === undefined) { return; }
-			var view = this._view;
-			var model = view.getModel();
-			var annotationModel = this._annotationModel;
-			var annotations = [];
-			if (annotationModel) {
-				var start = model.getLineStart(lineIndex);
-				var end = model.getLineEnd(lineIndex);
-				if (model.getBaseModel) {
-					start = model.mapOffset(start);
-					end = model.mapOffset(end);
-				}
-				var iter = annotationModel.getAnnotations(start, end);
-				var annotation;
-				while (iter.hasNext()) {
-					annotation = iter.next();
-					if (!this.isAnnotationTypeVisible(annotation.type)) { continue; }
-					annotations.push(annotation);
-				}
-			}
-			var contents = this._getTooltipContents(lineIndex, annotations);
-			if (!contents) { return null; }
-			var info = {
-				contents: contents,
-				anchor: this.getLocation()
-			};
-			var rect = view.getClientArea();
-			if (this.getOverview() === "document") {
-				rect.y = view.convert({y: y}, "view", "document").y;
-			} else {
-				rect.y = view.getLocationAtOffset(model.getLineStart(lineIndex)).y;
-			}
-			view.convert(rect, "document", "page");
-			info.x = rect.x;
-			info.y = rect.y;
-			if (info.anchor === "right") {
-				info.x += rect.width;
-			}
-			info.maxWidth = rect.width;
-			info.maxHeight = rect.height - (rect.y - view._parent.getBoundingClientRect().top);
-			return info;
-		},
-		/** @ignore */
-		_getTooltipContents: function(lineIndex, annotations) {
-			return annotations;
-		},
-		/** @ignore */
-		_onAnnotationModelChanged: function(e) {
-			var view = this._view;
-			if (!view) { return; }
-			var model = view.getModel(), self = this;
-			var lineCount = model.getLineCount();
-			if (e.textModelChangedEvent) {
-				var start = e.textModelChangedEvent.start;
-				if (model.getBaseModel) { start = model.mapOffset(start, true); }
-				var startLine = model.getLineAtOffset(start);
-				view.redrawLines(startLine, lineCount, self);
-				return;
-			}
-			function redraw(changes) {
-				for (var i = 0; i < changes.length; i++) {
-					if (!self.isAnnotationTypeVisible(changes[i].type)) { continue; }
-					var start = changes[i].start;
-					var end = changes[i].end;
-					if (model.getBaseModel) {
-						start = model.mapOffset(start, true);
-						end = model.mapOffset(end, true);
-					}
-					if (start !== -1 && end !== -1) {
-						view.redrawLines(model.getLineAtOffset(start), model.getLineAtOffset(Math.max(start, end - 1)) + 1, self);
-					}
-				}
-			}
-			redraw(e.added);
-			redraw(e.removed);
-			redraw(e.changed);
-		},
-		/** @ignore */
-		_mergeAnnotation: function(result, annotation, annotationLineIndex, annotationLineCount) {
-			if (!result) { result = {}; }
-			if (annotationLineIndex === 0) {
-				if (result.html && annotation.html) {
-					if (annotation.html !== result.html) {
-						if (!result._multiple && this._multiAnnotation) {
-							result.html = this._multiAnnotation.html;
-						}
-					} 
-					result._multiple = true;
-				} else {
-					result.html = annotation.html;
-				}
-			}
-			result.style = this._mergeStyle(result.style, annotation.style);
-			return result;
-		},
-		/** @ignore */
-		_mergeStyle: function(result, style) {
-			if (style) {
-				if (!result) { result = {}; }
-				if (result.styleClass && style.styleClass && result.styleClass !== style.styleClass) {
-					result.styleClass += " " + style.styleClass;
-				} else {
-					result.styleClass = style.styleClass;
-				}
-				var prop;
-				if (style.style) {
-					if (!result.style) { result.style  = {}; }
-					for (prop in style.style) {
-						if (!result.style[prop]) {
-							result.style[prop] = style.style[prop];
-						}
-					}
-				}
-				if (style.attributes) {
-					if (!result.attributes) { result.attributes  = {}; }
-					for (prop in style.attributes) {
-						if (!result.attributes[prop]) {
-							result.attributes[prop] = style.attributes[prop];
-						}
-					}
-				}
-			}
-			return result;
-		}
-	};
-
-	/**
-	 * Constructs a new line numbering ruler. 
-	 *
-	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
-	 * @param {String} [rulerLocation="left"] the location for the ruler.
-	 * @param {orion.textview.Style} [rulerStyle=undefined] the style for the ruler.
-	 * @param {orion.textview.Style} [oddStyle={style: {backgroundColor: "white"}] the style for lines with odd line index.
-	 * @param {orion.textview.Style} [evenStyle={backgroundColor: "white"}] the style for lines with even line index.
-	 *
-	 * @augments orion.textview.Ruler
-	 * @class This objects implements a line numbering ruler.
-	 *
-	 * <p><b>See:</b><br/>
-	 * {@link orion.textview.Ruler}
-	 * </p>
-	 * @name orion.textview.LineNumberRuler
-	 */
-	function LineNumberRuler (annotationModel, rulerLocation, rulerStyle, oddStyle, evenStyle) {
-		Ruler.call(this, annotationModel, rulerLocation, "page", rulerStyle);
-		this._oddStyle = oddStyle || {style: {backgroundColor: "white"}};
-		this._evenStyle = evenStyle || {style: {backgroundColor: "white"}};
-		this._numOfDigits = 0;
-	}
-	LineNumberRuler.prototype = new Ruler(); 
-	/** @ignore */
-	LineNumberRuler.prototype.getAnnotations = function(startLine, endLine) {
-		var result = Ruler.prototype.getAnnotations.call(this, startLine, endLine);
-		var model = this._view.getModel();
-		for (var lineIndex = startLine; lineIndex < endLine; lineIndex++) {
-			var style = lineIndex & 1 ? this._oddStyle : this._evenStyle;
-			var mapLine = lineIndex;
-			if (model.getBaseModel) {
-				var lineStart = model.getLineStart(mapLine);
-				mapLine = model.getBaseModel().getLineAtOffset(model.mapOffset(lineStart));
-			}
-			if (!result[lineIndex]) { result[lineIndex] = {}; }
-			result[lineIndex].html = (mapLine + 1) + "";
-			if (!result[lineIndex].style) { result[lineIndex].style = style; }
-		}
-		return result;
-	};
-	/** @ignore */
-	LineNumberRuler.prototype.getWidestAnnotation = function() {
-		var lineCount = this._view.getModel().getLineCount();
-		return this.getAnnotations(lineCount - 1, lineCount)[lineCount - 1];
-	};
-	/** @ignore */
-	LineNumberRuler.prototype._onTextModelChanged = function(e) {
-		var start = e.start;
-		var model = this._view.getModel();
-		var lineCount = model.getBaseModel ? model.getBaseModel().getLineCount() : model.getLineCount();
-		var numOfDigits = (lineCount+"").length;
-		if (this._numOfDigits !== numOfDigits) {
-			this._numOfDigits = numOfDigits;
-			var startLine = model.getLineAtOffset(start);
-			this._view.redrawLines(startLine,  model.getLineCount(), this);
-		}
-	};
-	
-	/** 
-	 * @class This is class represents an annotation for the AnnotationRuler. 
-	 * <p> 
-	 * <b>See:</b><br/> 
-	 * {@link orion.textview.AnnotationRuler}
-	 * </p> 
-	 * 
-	 * @name orion.textview.Annotation 
-	 * 
-	 * @property {String} [html=""] The html content for the annotation, typically contains an image.
-	 * @property {orion.textview.Style} [style] the style for the annotation.
-	 * @property {orion.textview.Style} [overviewStyle] the style for the annotation in the overview ruler.
-	 */ 
-	/**
-	 * Constructs a new annotation ruler. 
-	 *
-	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
-	 * @param {String} [rulerLocation="left"] the location for the ruler.
-	 * @param {orion.textview.Style} [rulerStyle=undefined] the style for the ruler.
-	 * @param {orion.textview.Annotation} [defaultAnnotation] the default annotation.
-	 *
-	 * @augments orion.textview.Ruler
-	 * @class This objects implements an annotation ruler.
-	 *
-	 * <p><b>See:</b><br/>
-	 * {@link orion.textview.Ruler}<br/>
-	 * {@link orion.textview.Annotation}
-	 * </p>
-	 * @name orion.textview.AnnotationRuler
-	 */
-	function AnnotationRuler (annotationModel, rulerLocation, rulerStyle) {
-		Ruler.call(this, annotationModel, rulerLocation, "page", rulerStyle);
-	}
-	AnnotationRuler.prototype = new Ruler();
-	
-	/**
-	 * Constructs a new overview ruler. 
-	 * <p>
-	 * The overview ruler is used in conjunction with a AnnotationRuler, for each annotation in the 
-	 * AnnotationRuler this ruler displays a mark in the overview. Clicking on the mark causes the 
-	 * view to scroll to the annotated line.
-	 * </p>
-	 *
-	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
-	 * @param {String} [rulerLocation="left"] the location for the ruler.
-	 * @param {orion.textview.Style} [rulerStyle=undefined] the style for the ruler.
-	 *
-	 * @augments orion.textview.Ruler
-	 * @class This objects implements an overview ruler.
-	 *
-	 * <p><b>See:</b><br/>
-	 * {@link orion.textview.AnnotationRuler} <br/>
-	 * {@link orion.textview.Ruler} 
-	 * </p>
-	 * @name orion.textview.OverviewRuler
-	 */
-	function OverviewRuler (annotationModel, rulerLocation, rulerStyle) {
-		Ruler.call(this, annotationModel, rulerLocation, "document", rulerStyle);
-	}
-	OverviewRuler.prototype = new Ruler();
-	
-	/** @ignore */
-	OverviewRuler.prototype.getRulerStyle = function() {
-		var result = {style: {lineHeight: "1px", fontSize: "1px"}};
-		result = this._mergeStyle(result, this._rulerStyle);
-		return result;
-	};
-	/** @ignore */	
-	OverviewRuler.prototype.onClick = function(lineIndex, e) {
-		if (lineIndex === undefined) { return; }
-		this._view.setTopIndex(lineIndex);
-	};
-	/** @ignore */
-	OverviewRuler.prototype._getTooltipContents = function(lineIndex, annotations) {
-		if (annotations.length === 0) {
-			var model = this._view.getModel();
-			var mapLine = lineIndex;
-			if (model.getBaseModel) {
-				var lineStart = model.getLineStart(mapLine);
-				mapLine = model.getBaseModel().getLineAtOffset(model.mapOffset(lineStart));
-			}
-			return "Line: " + (mapLine + 1);
-		}
-		return Ruler.prototype._getTooltipContents.call(this, lineIndex, annotations);
-	};
-	/** @ignore */
-	OverviewRuler.prototype._mergeAnnotation = function(previousAnnotation, annotation, annotationLineIndex, annotationLineCount) {
-		if (annotationLineIndex !== 0) { return undefined; }
-		var result = previousAnnotation;
-		if (!result) {
-			//TODO annotationLineCount does not work when there are folded lines
-			var height = 3 * annotationLineCount;
-			result = {html: "&nbsp;", style: { style: {height: height + "px"}}};
-			result.style = this._mergeStyle(result.style, annotation.overviewStyle);
-		}
-		return result;
-	};
-
-	/**
-	 * Constructs a new folding ruler. 
-	 *
-	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
-	 * @param {String} [rulerLocation="left"] the location for the ruler.
-	 * @param {orion.textview.Style} [rulerStyle=undefined] the style for the ruler.
-	 *
-	 * @augments orion.textview.Ruler
-	 * @class This objects implements an overview ruler.
-	 *
-	 * <p><b>See:</b><br/>
-	 * {@link orion.textview.AnnotationRuler} <br/>
-	 * {@link orion.textview.Ruler} 
-	 * </p>
-	 * @name orion.textview.OverviewRuler
-	 */
-	function FoldingRuler (annotationModel, rulerLocation, rulerStyle) {
-		AnnotationRuler.call(this, annotationModel, rulerLocation, rulerStyle);
-	}
-	FoldingRuler.prototype = new AnnotationRuler();
-	
-	/** @ignore */
-	FoldingRuler.prototype.onClick =  function(lineIndex, e) {
-		if (lineIndex === undefined) { return; }
-		var annotationModel = this._annotationModel;
-		if (!annotationModel) { return; }
-		var view = this._view;
-		var model = view.getModel();
-		var start = model.getLineStart(lineIndex);
-		var end = model.getLineEnd(lineIndex, true);
-		if (model.getBaseModel) {
-			start = model.mapOffset(start);
-			end = model.mapOffset(end);
-		}
-		var annotation, iter = annotationModel.getAnnotations(start, end);
-		while (!annotation && iter.hasNext()) {
-			var a = iter.next();
-			if (!this.isAnnotationTypeVisible(a.type)) { continue; }
-			annotation = a;
-		}
-		if (annotation) {
-			var tooltip = mTooltip.Tooltip.getTooltip(this._view);
-			if (tooltip) {
-				tooltip.setTarget(null);
-			}
-			if (annotation.expanded) {
-				annotation.collapse();
-			} else {
-				annotation.expand();
-			}
-			this._annotationModel.modifyAnnotation(annotation);
-		}
-	};
-	/** @ignore */
-	FoldingRuler.prototype._getTooltipContents = function(lineIndex, annotations) {
-		if (annotations.length === 1) {
-			if (annotations[0].expanded) {
-				return null;
-			}
-		}
-		return AnnotationRuler.prototype._getTooltipContents.call(this, lineIndex, annotations);
-	};
-	/** @ignore */
-	FoldingRuler.prototype._onAnnotationModelChanged = function(e) {
-		if (e.textModelChangedEvent) {
-			AnnotationRuler.prototype._onAnnotationModelChanged.call(this, e);
-			return;
-		}
-		var view = this._view;
-		if (!view) { return; }
-		var model = view.getModel(), self = this, i;
-		var lineCount = model.getLineCount(), lineIndex = lineCount;
-		function redraw(changes) {
-			for (i = 0; i < changes.length; i++) {
-				if (!self.isAnnotationTypeVisible(changes[i].type)) { continue; }
-				var start = changes[i].start;
-				if (model.getBaseModel) {
-					start = model.mapOffset(start, true);
-				}
-				if (start !== -1) {
-					lineIndex = Math.min(lineIndex, model.getLineAtOffset(start));
-				}
-			}
-		}
-		redraw(e.added);
-		redraw(e.removed);
-		redraw(e.changed);
-		var rulers = view.getRulers();
-		for (i = 0; i < rulers.length; i++) {
-			view.redrawLines(lineIndex, lineCount, rulers[i]);
-		}
-	};
-	
-	return {
-		Ruler: Ruler,
-		AnnotationRuler: AnnotationRuler,
-		LineNumberRuler: LineNumberRuler,
-		OverviewRuler: OverviewRuler,
-		FoldingRuler: FoldingRuler
-	};
-}, "orion/textview");
-/*******************************************************************************
- * @license
- * Copyright (c) 2010, 2011 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials are made 
- * available under the terms of the Eclipse Public License v1.0 
- * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
- * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
- * 
- * Contributors: IBM Corporation - initial API and implementation
- ******************************************************************************/
-
-/*global define */
-
-define([], function() {
-
-	/** 
-	 * Constructs a new Change object.
-	 * 
-	 * @class 
-	 * @name orion.textview.Change
-	 * @private
-	 */
-	function Change(offset, text, previousText) {
-		this.offset = offset;
-		this.text = text;
-		this.previousText = previousText;
-	}
-	Change.prototype = {
-		/** @ignore */
-		undo: function (view, select) {
-			this._doUndoRedo(this.offset, this.previousText, this.text, view, select);
-		},
-		/** @ignore */
-		redo: function (view, select) {
-			this._doUndoRedo(this.offset, this.text, this.previousText, view, select);
-		},
-		_doUndoRedo: function(offset, text, previousText, view, select) {
-			var model = view.getModel();
-			/* 
-			* TODO UndoStack should be changing the text in the base model.
-			* This is code needs to change when modifications in the base
-			* model are supported properly by the projection model.
-			*/
-			if (model.mapOffset && view.annotationModel) {
-				var mapOffset = model.mapOffset(offset, true);
-				if (mapOffset < 0) {
-					var annotationModel = view.annotationModel;
-					var iter = annotationModel.getAnnotations(offset, offset + 1);
-					while (iter.hasNext()) {
-						var annotation = iter.next();
-						if (annotation.type === "orion.annotation.folding") {
-							annotation.expand();
-							mapOffset = model.mapOffset(offset, true);
-							break;
-						}
-					}
-				}
-				if (mapOffset < 0) { return; }
-				offset = mapOffset;
-			}
-			view.setText(text, offset, offset + previousText.length);
-			if (select) {
-				view.setSelection(offset, offset + text.length);
-			}
-		}
-	};
-
-	/** 
-	 * Constructs a new CompoundChange object.
-	 * 
-	 * @class 
-	 * @name orion.textview.CompoundChange
-	 * @private
-	 */
-	function CompoundChange () {
-		this.changes = [];
-	}
-	CompoundChange.prototype = {
-		/** @ignore */
-		add: function (change) {
-			this.changes.push(change);
-		},
-		/** @ignore */
-		end: function (view) {
-			this.endSelection = view.getSelection();
-			this.endCaret = view.getCaretOffset();
-		},
-		/** @ignore */
-		undo: function (view, select) {
-			for (var i=this.changes.length - 1; i >= 0; i--) {
-				this.changes[i].undo(view, false);
-			}
-			if (select) {
-				var start = this.startSelection.start;
-				var end = this.startSelection.end;
-				view.setSelection(this.startCaret ? start : end, this.startCaret ? end : start);
-			}
-		},
-		/** @ignore */
-		redo: function (view, select) {
-			for (var i = 0; i < this.changes.length; i++) {
-				this.changes[i].redo(view, false);
-			}
-			if (select) {
-				var start = this.endSelection.start;
-				var end = this.endSelection.end;
-				view.setSelection(this.endCaret ? start : end, this.endCaret ? end : start);
-			}
-		},
-		/** @ignore */
-		start: function (view) {
-			this.startSelection = view.getSelection();
-			this.startCaret = view.getCaretOffset();
-		}
-	};
-
-	/**
-	 * Constructs a new UndoStack on a text view.
-	 *
-	 * @param {orion.textview.TextView} view the text view for the undo stack.
-	 * @param {Number} [size=100] the size for the undo stack.
-	 *
-	 * @name orion.textview.UndoStack
-	 * @class The UndoStack is used to record the history of a text model associated to an view. Every
-	 * change to the model is added to stack, allowing the application to undo and redo these changes.
-	 *
-	 * <p>
-	 * <b>See:</b><br/>
-	 * {@link orion.textview.TextView}<br/>
-	 * </p>
-	 */
-	function UndoStack (view, size) {
-		this.view = view;
-		this.size = size !== undefined ? size : 100;
-		this.reset();
-		var model = view.getModel();
-		if (model.getBaseModel) {
-			model = model.getBaseModel();
-		}
-		this.model = model;
-		var self = this;
-		this._listener = {
-			onChanging: function(e) {
-				self._onChanging(e);
-			},
-			onDestroy: function(e) {
-				self._onDestroy(e);
-			}
-		};
-		model.addEventListener("Changing", this._listener.onChanging);
-		view.addEventListener("Destroy", this._listener.onDestroy);
-	}
-	UndoStack.prototype = /** @lends orion.textview.UndoStack.prototype */ {
-		/**
-		 * Adds a change to the stack.
-		 * 
-		 * @param change the change to add.
-		 * @param {Number} change.offset the offset of the change
-		 * @param {String} change.text the new text of the change
-		 * @param {String} change.previousText the previous text of the change
-		 */
-		add: function (change) {
-			if (this.compoundChange) {
-				this.compoundChange.add(change);
-			} else {
-				var length = this.stack.length;
-				this.stack.splice(this.index, length-this.index, change);
-				this.index++;
-				if (this.stack.length > this.size) {
-					this.stack.shift();
-					this.index--;
-					this.cleanIndex--;
-				}
-			}
-		},
-		/** 
-		 * Marks the current state of the stack as clean.
-		 *
-		 * <p>
-		 * This function is typically called when the content of view associated with the stack is saved.
-		 * </p>
-		 *
-		 * @see #isClean
-		 */
-		markClean: function() {
-			this.endCompoundChange();
-			this._commitUndo();
-			this.cleanIndex = this.index;
-		},
-		/**
-		 * Returns true if current state of stack is the same
-		 * as the state when markClean() was called.
-		 *
-		 * <p>
-		 * For example, the application calls markClean(), then calls undo() four times and redo() four times.
-		 * At this point isClean() returns true.  
-		 * </p>
-		 * <p>
-		 * This function is typically called to determine if the content of the view associated with the stack
-		 * has changed since the last time it was saved.
-		 * </p>
-		 *
-		 * @return {Boolean} returns if the state is the same as the state when markClean() was called.
-		 *
-		 * @see #markClean
-		 */
-		isClean: function() {
-			return this.cleanIndex === this.getSize().undo;
-		},
-		/**
-		 * Returns true if there is at least one change to undo.
-		 *
-		 * @return {Boolean} returns true if there is at least one change to undo.
-		 *
-		 * @see #canRedo
-		 * @see #undo
-		 */
-		canUndo: function() {
-			return this.getSize().undo > 0;
-		},
-		/**
-		 * Returns true if there is at least one change to redo.
-		 *
-		 * @return {Boolean} returns true if there is at least one change to redo.
-		 *
-		 * @see #canUndo
-		 * @see #redo
-		 */
-		canRedo: function() {
-			return this.getSize().redo > 0;
-		},
-		/**
-		 * Finishes a compound change.
-		 *
-		 * @see #startCompoundChange
-		 */
-		endCompoundChange: function() {
-			if (this.compoundChange) {
-				this.compoundChange.end(this.view);
-			}
-			this.compoundChange = undefined;
-		},
-		/**
-		 * Returns the sizes of the stack.
-		 *
-		 * @return {object} a object where object.undo is the number of changes that can be un-done, 
-		 *  and object.redo is the number of changes that can be re-done.
-		 *
-		 * @see #canUndo
-		 * @see #canRedo
-		 */
-		getSize: function() {
-			var index = this.index;
-			var length = this.stack.length;
-			if (this._undoStart !== undefined) {
-				index++;
-			}
-			return {undo: index, redo: (length - index)};
-		},
-		/**
-		 * Undo the last change in the stack.
-		 *
-		 * @return {Boolean} returns true if a change was un-done.
-		 *
-		 * @see #redo
-		 * @see #canUndo
-		 */
-		undo: function() {
-			this._commitUndo();
-			if (this.index <= 0) {
-				return false;
-			}
-			var change = this.stack[--this.index];
-			this._ignoreUndo = true;
-			change.undo(this.view, true);
-			this._ignoreUndo = false;
-			return true;
-		},
-		/**
-		 * Redo the last change in the stack.
-		 *
-		 * @return {Boolean} returns true if a change was re-done.
-		 *
-		 * @see #undo
-		 * @see #canRedo
-		 */
-		redo: function() {
-			this._commitUndo();
-			if (this.index >= this.stack.length) {
-				return false;
-			}
-			var change = this.stack[this.index++];
-			this._ignoreUndo = true;
-			change.redo(this.view, true);
-			this._ignoreUndo = false;
-			return true;
-		},
-		/**
-		 * Reset the stack to its original state. All changes in the stack are thrown away.
-		 */
-		reset: function() {
-			this.index = this.cleanIndex = 0;
-			this.stack = [];
-			this._undoStart = undefined;
-			this._undoText = "";
-			this._ignoreUndo = false;
-			this._compoundChange = undefined;
-		},
-		/**
-		 * Starts a compound change. 
-		 * <p>
-		 * All changes added to stack from the time startCompoundChange() is called
-		 * to the time that endCompoundChange() is called are compound on one change that can be un-done or re-done
-		 * with one single call to undo() or redo().
-		 * </p>
-		 *
-		 * @see #endCompoundChange
-		 */
-		startCompoundChange: function() {
-			this._commitUndo();
-			var change = new CompoundChange();
-			this.add(change);
-			this.compoundChange = change;
-			this.compoundChange.start(this.view);
-		},
-		_commitUndo: function () {
-			if (this._undoStart !== undefined) {
-				if (this._undoStart < 0) {
-					this.add(new Change(-this._undoStart, "", this._undoText, ""));
-				} else {
-					this.add(new Change(this._undoStart, this._undoText, ""));
-				}
-				this._undoStart = undefined;
-				this._undoText = "";
-			}
-		},
-		_onDestroy: function(evt) {
-			this.model.removeEventListener("Changing", this._listener.onChanging);
-			this.view.removeEventListener("Destroy", this._listener.onDestroy);
-		},
-		_onChanging: function(e) {
-			var newText = e.text;
-			var start = e.start;
-			var removedCharCount = e.removedCharCount;
-			var addedCharCount = e.addedCharCount;
-			if (this._ignoreUndo) {
-				return;
-			}
-			if (this._undoStart !== undefined && 
-				!((addedCharCount === 1 && removedCharCount === 0 && start === this._undoStart + this._undoText.length) ||
-					(addedCharCount === 0 && removedCharCount === 1 && (((start + 1) === -this._undoStart) || (start === -this._undoStart)))))
-			{
-				this._commitUndo();
-			}
-			if (!this.compoundChange) {
-				if (addedCharCount === 1 && removedCharCount === 0) {
-					if (this._undoStart === undefined) {
-						this._undoStart = start;
-					}
-					this._undoText = this._undoText + newText;
-					return;
-				} else if (addedCharCount === 0 && removedCharCount === 1) {
-					var deleting = this._undoText.length > 0 && -this._undoStart === start;
-					this._undoStart = -start;
-					if (deleting) {
-						this._undoText = this._undoText + this.model.getText(start, start + removedCharCount);
-					} else {
-						this._undoText = this.model.getText(start, start + removedCharCount) + this._undoText;
-					}
-					return;
-				}
-			}
-			this.add(new Change(start, newText, this.model.getText(start, start + removedCharCount)));
-		}
-	};
-	
-	return {
-		UndoStack: UndoStack
-	};
-}, "orion/textview");
-/*******************************************************************************
- * @license
- * Copyright (c) 2010, 2011 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials are made 
- * available under the terms of the Eclipse Public License v1.0 
- * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
- * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
- * 
- * Contributors: 
- *		Felipe Heidrich (IBM Corporation) - initial API and implementation
- *		Silenio Quarti (IBM Corporation) - initial API and implementation
- ******************************************************************************/
- 
-/*global define window*/
-
-define(['orion/textview/eventTarget'], function(mEventTarget) {
-	var isWindows = window.navigator.platform.indexOf("Win") !== -1;
-
-	/**
-	 * Constructs a new TextModel with the given text and default line delimiter.
-	 *
-	 * @param {String} [text=""] the text that the model will store
-	 * @param {String} [lineDelimiter=platform delimiter] the line delimiter used when inserting new lines to the model.
-	 *
-	 * @name orion.textview.TextModel
-	 * @class The TextModel is an interface that provides text for the view. Applications may
-	 * implement the TextModel interface to provide a custom store for the view content. The
-	 * view interacts with its text model in order to access and update the text that is being
-	 * displayed and edited in the view. This is the default implementation.
-	 * <p>
-	 * <b>See:</b><br/>
-	 * {@link orion.textview.TextView}<br/>
-	 * {@link orion.textview.TextView#setModel}
-	 * </p>
-	 * @borrows orion.textview.EventTarget#addEventListener as #addEventListener
-	 * @borrows orion.textview.EventTarget#removeEventListener as #removeEventListener
-	 * @borrows orion.textview.EventTarget#dispatchEvent as #dispatchEvent
-	 */
-	function TextModel(text, lineDelimiter) {
-		this._lastLineIndex = -1;
-		this._text = [""];
-		this._lineOffsets = [0];
-		this.setText(text);
-		this.setLineDelimiter(lineDelimiter);
-	}
-
-	TextModel.prototype = /** @lends orion.textview.TextModel.prototype */ {
-		/**
-		 * Returns the number of characters in the model.
-		 *
-		 * @returns {Number} the number of characters in the model.
-		 */
-		getCharCount: function() {
-			var count = 0;
-			for (var i = 0; i<this._text.length; i++) {
-				count += this._text[i].length;
-			}
-			return count;
-		},
-		/**
-		 * Returns the text of the line at the given index.
-		 * <p>
-		 * The valid indices are 0 to line count exclusive.  Returns <code>null</code> 
-		 * if the index is out of range. 
-		 * </p>
-		 *
-		 * @param {Number} lineIndex the zero based index of the line.
-		 * @param {Boolean} [includeDelimiter=false] whether or not to include the line delimiter. 
-		 * @returns {String} the line text or <code>null</code> if out of range.
-		 *
-		 * @see #getLineAtOffset
-		 */
-		getLine: function(lineIndex, includeDelimiter) {
-			var lineCount = this.getLineCount();
-			if (!(0 <= lineIndex && lineIndex < lineCount)) {
-				return null;
-			}
-			var start = this._lineOffsets[lineIndex];
-			if (lineIndex + 1 < lineCount) {
-				var text = this.getText(start, this._lineOffsets[lineIndex + 1]);
-				if (includeDelimiter) {
-					return text;
-				}
-				var end = text.length, c;
-				while (((c = text.charCodeAt(end - 1)) === 10) || (c === 13)) {
-					end--;
-				}
-				return text.substring(0, end);
-			} else {
-				return this.getText(start); 
-			}
-		},
-		/**
-		 * Returns the line index at the given character offset.
-		 * <p>
-		 * The valid offsets are 0 to char count inclusive. The line index for
-		 * char count is <code>line count - 1</code>. Returns <code>-1</code> if
-		 * the offset is out of range.
-		 * </p>
-		 *
-		 * @param {Number} offset a character offset.
-		 * @returns {Number} the zero based line index or <code>-1</code> if out of range.
-		 */
-		getLineAtOffset: function(offset) {
-			var charCount = this.getCharCount();
-			if (!(0 <= offset && offset <= charCount)) {
-				return -1;
-			}
-			var lineCount = this.getLineCount();
-			if (offset === charCount) {
-				return lineCount - 1; 
-			}
-			var lineStart, lineEnd;
-			var index = this._lastLineIndex;
-			if (0 <= index && index < lineCount) {
-				lineStart = this._lineOffsets[index];
-				lineEnd = index + 1 < lineCount ? this._lineOffsets[index + 1] : charCount;
-				if (lineStart <= offset && offset < lineEnd) {
-					return index;
-				}
-			}
-			var high = lineCount;
-			var low = -1;
-			while (high - low > 1) {
-				index = Math.floor((high + low) / 2);
-				lineStart = this._lineOffsets[index];
-				lineEnd = index + 1 < lineCount ? this._lineOffsets[index + 1] : charCount;
-				if (offset <= lineStart) {
-					high = index;
-				} else if (offset < lineEnd) {
-					high = index;
-					break;
-				} else {
-					low = index;
-				}
-			}
-			this._lastLineIndex = high;
-			return high;
-		},
-		/**
-		 * Returns the number of lines in the model.
-		 * <p>
-		 * The model always has at least one line.
-		 * </p>
-		 *
-		 * @returns {Number} the number of lines.
-		 */
-		getLineCount: function() {
-			return this._lineOffsets.length;
-		},
-		/**
-		 * Returns the line delimiter that is used by the view
-		 * when inserting new lines. New lines entered using key strokes 
-		 * and paste operations use this line delimiter.
-		 *
-		 * @return {String} the line delimiter that is used by the view when inserting new lines.
-		 */
-		getLineDelimiter: function() {
-			return this._lineDelimiter;
-		},
-		/**
-		 * Returns the end character offset for the given line. 
-		 * <p>
-		 * The end offset is not inclusive. This means that when the line delimiter is included, the 
-		 * offset is either the start offset of the next line or char count. When the line delimiter is
-		 * not included, the offset is the offset of the line delimiter.
-		 * </p>
-		 * <p>
-		 * The valid indices are 0 to line count exclusive.  Returns <code>-1</code> 
-		 * if the index is out of range. 
-		 * </p>
-		 *
-		 * @param {Number} lineIndex the zero based index of the line.
-		 * @param {Boolean} [includeDelimiter=false] whether or not to include the line delimiter. 
-		 * @return {Number} the line end offset or <code>-1</code> if out of range.
-		 *
-		 * @see #getLineStart
-		 */
-		getLineEnd: function(lineIndex, includeDelimiter) {
-			var lineCount = this.getLineCount();
-			if (!(0 <= lineIndex && lineIndex < lineCount)) {
-				return -1;
-			}
-			if (lineIndex + 1 < lineCount) {
-				var end = this._lineOffsets[lineIndex + 1];
-				if (includeDelimiter) {
-					return end;
-				}
-				var text = this.getText(Math.max(this._lineOffsets[lineIndex], end - 2), end);
-				var i = text.length, c;
-				while (((c = text.charCodeAt(i - 1)) === 10) || (c === 13)) {
-					i--;
-				}
-				return end - (text.length - i);
-			} else {
-				return this.getCharCount();
-			}
-		},
-		/**
-		 * Returns the start character offset for the given line.
-		 * <p>
-		 * The valid indices are 0 to line count exclusive.  Returns <code>-1</code> 
-		 * if the index is out of range. 
-		 * </p>
-		 *
-		 * @param {Number} lineIndex the zero based index of the line.
-		 * @return {Number} the line start offset or <code>-1</code> if out of range.
-		 *
-		 * @see #getLineEnd
-		 */
-		getLineStart: function(lineIndex) {
-			if (!(0 <= lineIndex && lineIndex < this.getLineCount())) {
-				return -1;
-			}
-			return this._lineOffsets[lineIndex];
-		},
-		/**
-		 * Returns the text for the given range.
-		 * <p>
-		 * The end offset is not inclusive. This means that character at the end offset
-		 * is not included in the returned text.
-		 * </p>
-		 *
-		 * @param {Number} [start=0] the zero based start offset of text range.
-		 * @param {Number} [end=char count] the zero based end offset of text range.
-		 *
-		 * @see #setText
-		 */
-		getText: function(start, end) {
-			if (start === undefined) { start = 0; }
-			if (end === undefined) { end = this.getCharCount(); }
-			if (start === end) { return ""; }
-			var offset = 0, chunk = 0, length;
-			while (chunk<this._text.length) {
-				length = this._text[chunk].length; 
-				if (start <= offset + length) { break; }
-				offset += length;
-				chunk++;
-			}
-			var firstOffset = offset;
-			var firstChunk = chunk;
-			while (chunk<this._text.length) {
-				length = this._text[chunk].length; 
-				if (end <= offset + length) { break; }
-				offset += length;
-				chunk++;
-			}
-			var lastOffset = offset;
-			var lastChunk = chunk;
-			if (firstChunk === lastChunk) {
-				return this._text[firstChunk].substring(start - firstOffset, end - lastOffset);
-			}
-			var beforeText = this._text[firstChunk].substring(start - firstOffset);
-			var afterText = this._text[lastChunk].substring(0, end - lastOffset);
-			return beforeText + this._text.slice(firstChunk+1, lastChunk).join("") + afterText; 
-		},
-		/**
-		 * Notifies all listeners that the text is about to change.
-		 * <p>
-		 * This notification is intended to be used only by the view. Application clients should
-		 * use {@link orion.textview.TextView#event:onModelChanging}.
-		 * </p>
-		 * <p>
-		 * NOTE: This method is not meant to called directly by application code. It is called internally by the TextModel
-		 * as part of the implementation of {@link #setText}. This method is included in the public API for documentation
-		 * purposes and to allow integration with other toolkit frameworks.
-		 * </p>
-		 *
-		 * @param {orion.textview.ModelChangingEvent} modelChangingEvent the changing event
-		 */
-		onChanging: function(modelChangingEvent) {
-			return this.dispatchEvent(modelChangingEvent);
-		},
-		/**
-		 * Notifies all listeners that the text has changed.
-		 * <p>
-		 * This notification is intended to be used only by the view. Application clients should
-		 * use {@link orion.textview.TextView#event:onModelChanged}.
-		 * </p>
-		 * <p>
-		 * NOTE: This method is not meant to called directly by application code. It is called internally by the TextModel
-		 * as part of the implementation of {@link #setText}. This method is included in the public API for documentation
-		 * purposes and to allow integration with other toolkit frameworks.
-		 * </p>
-		 *
-		 * @param {orion.textview.ModelChangedEvent} modelChangedEvent the changed event
-		 */
-		onChanged: function(modelChangedEvent) {
-			return this.dispatchEvent(modelChangedEvent);
-		},
-		/**
-		 * Sets the line delimiter that is used by the view
-		 * when new lines are inserted in the model due to key
-		 * strokes  and paste operations.
-		 * <p>
-		 * If lineDelimiter is "auto", the delimiter is computed to be
-		 * the first delimiter found the in the current text. If lineDelimiter
-		 * is undefined or if there are no delimiters in the current text, the
-		 * platform delimiter is used.
-		 * </p>
-		 *
-		 * @param {String} lineDelimiter the line delimiter that is used by the view when inserting new lines.
-		 */
-		setLineDelimiter: function(lineDelimiter) {
-			if (lineDelimiter === "auto") {
-				lineDelimiter = undefined;
-				if (this.getLineCount() > 1) {
-					lineDelimiter = this.getText(this.getLineEnd(0), this.getLineEnd(0, true));
-				}
-			}
-			this._lineDelimiter = lineDelimiter ? lineDelimiter : (isWindows ? "\r\n" : "\n"); 
-		},
-		/**
-		 * Replaces the text in the given range with the given text.
-		 * <p>
-		 * The end offset is not inclusive. This means that the character at the 
-		 * end offset is not replaced.
-		 * </p>
-		 * <p>
-		 * The text model must notify the listeners before and after the
-		 * the text is changed by calling {@link #onChanging} and {@link #onChanged}
-		 * respectively. 
-		 * </p>
-		 *
-		 * @param {String} [text=""] the new text.
-		 * @param {Number} [start=0] the zero based start offset of text range.
-		 * @param {Number} [end=char count] the zero based end offset of text range.
-		 *
-		 * @see #getText
-		 */
-		setText: function(text, start, end) {
-			if (text === undefined) { text = ""; }
-			if (start === undefined) { start = 0; }
-			if (end === undefined) { end = this.getCharCount(); }
-			var startLine = this.getLineAtOffset(start);
-			var endLine = this.getLineAtOffset(end);
-			var eventStart = start;
-			var removedCharCount = end - start;
-			var removedLineCount = endLine - startLine;
-			var addedCharCount = text.length;
-			var addedLineCount = 0;
-			var lineCount = this.getLineCount();
-			
-			var cr = 0, lf = 0, index = 0;
-			var newLineOffsets = [];
-			while (true) {
-				if (cr !== -1 && cr <= index) { cr = text.indexOf("\r", index); }
-				if (lf !== -1 && lf <= index) { lf = text.indexOf("\n", index); }
-				if (lf === -1 && cr === -1) { break; }
-				if (cr !== -1 && lf !== -1) {
-					if (cr + 1 === lf) {
-						index = lf + 1;
-					} else {
-						index = (cr < lf ? cr : lf) + 1;
-					}
-				} else if (cr !== -1) {
-					index = cr + 1;
-				} else {
-					index = lf + 1;
-				}
-				newLineOffsets.push(start + index);
-				addedLineCount++;
-			}
-		
-			var modelChangingEvent = {
-				type: "Changing",
-				text: text,
-				start: eventStart,
-				removedCharCount: removedCharCount,
-				addedCharCount: addedCharCount,
-				removedLineCount: removedLineCount,
-				addedLineCount: addedLineCount
-			};
-			this.onChanging(modelChangingEvent);
-			
-			//TODO this should be done the loops below to avoid getText()
-			if (newLineOffsets.length === 0) {
-				var startLineOffset = this.getLineStart(startLine), endLineOffset;
-				if (endLine + 1 < lineCount) {
-					endLineOffset = this.getLineStart(endLine + 1);
-				} else {
-					endLineOffset = this.getCharCount();
-				}
-				if (start !== startLineOffset) {
-					text = this.getText(startLineOffset, start) + text;
-					start = startLineOffset;
-				}
-				if (end !== endLineOffset) {
-					text = text + this.getText(end, endLineOffset);
-					end = endLineOffset;
-				}
-			}
-			
-			var changeCount = addedCharCount - removedCharCount;
-			for (var j = startLine + removedLineCount + 1; j < lineCount; j++) {
-				this._lineOffsets[j] += changeCount;
-			}
-			var args = [startLine + 1, removedLineCount].concat(newLineOffsets);
-			Array.prototype.splice.apply(this._lineOffsets, args);
-			
-			var offset = 0, chunk = 0, length;
-			while (chunk<this._text.length) {
-				length = this._text[chunk].length; 
-				if (start <= offset + length) { break; }
-				offset += length;
-				chunk++;
-			}
-			var firstOffset = offset;
-			var firstChunk = chunk;
-			while (chunk<this._text.length) {
-				length = this._text[chunk].length; 
-				if (end <= offset + length) { break; }
-				offset += length;
-				chunk++;
-			}
-			var lastOffset = offset;
-			var lastChunk = chunk;
-			var firstText = this._text[firstChunk];
-			var lastText = this._text[lastChunk];
-			var beforeText = firstText.substring(0, start - firstOffset);
-			var afterText = lastText.substring(end - lastOffset);
-			var params = [firstChunk, lastChunk - firstChunk + 1];
-			if (beforeText) { params.push(beforeText); }
-			if (text) { params.push(text); }
-			if (afterText) { params.push(afterText); }
-			Array.prototype.splice.apply(this._text, params);
-			if (this._text.length === 0) { this._text = [""]; }
-			
-			var modelChangedEvent = {
-				type: "Changed",
-				start: eventStart,
-				removedCharCount: removedCharCount,
-				addedCharCount: addedCharCount,
-				removedLineCount: removedLineCount,
-				addedLineCount: addedLineCount
-			};
-			this.onChanged(modelChangedEvent);
-		}
-	};
-	mEventTarget.EventTarget.addMixin(TextModel.prototype);
-	
-	return {TextModel: TextModel};
-}, "orion/textview");/*******************************************************************************
  * @license
  * Copyright (c) 2010, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials are made 
@@ -1929,7 +382,7 @@ define(['orion/textview/eventTarget'], function(mEventTarget) {
 
 /*global define */
 
-define(['orion/textview/eventTarget'], function(mEventTarget) {
+define("orion/textview/annotations", ['orion/textview/eventTarget'], function(mEventTarget) {
 	/**
 	 * @class This object represents a decoration attached to a range of text. Annotations are added to a
 	 * <code>AnnotationModel</code> which is attached to a <code>TextModel</code>.
@@ -2003,6 +456,122 @@ define(['orion/textview/eventTarget'], function(mEventTarget) {
 			this.html = this._expandedHTML;
 			this.style = this._expandedStyle;
 			this._projectionModel.removeProjection(this._projection);
+		}
+	};
+	
+	/** 
+	 * Constructs a new AnnotationTypeList object.
+	 * 
+	 * @class 
+	 * @name orion.textview.AnnotationTypeList
+	 */
+	function AnnotationTypeList () {
+	}
+	/**
+	 * Adds in the annotation type interface into the specified object.
+	 *
+	 * @param {Object} object The object to add in the annotation type interface.
+	 */
+	AnnotationTypeList.addMixin = function(object) {
+		var proto = AnnotationTypeList.prototype;
+		for (var p in proto) {
+			if (proto.hasOwnProperty(p)) {
+				object[p] = proto[p];
+			}
+		}
+	};	
+	AnnotationTypeList.prototype = /** @lends orion.textview.AnnotationTypeList.prototype */ {
+		/**
+		 * Adds an annotation type to the receiver.
+		 * <p>
+		 * Only annotations of the specified types will be shown by
+		 * the receiver.
+		 * </p>
+		 *
+		 * @param {Object} type the annotation type to be shown
+		 * 
+		 * @see #removeAnnotationType
+		 * @see #isAnnotationTypeVisible
+		 */
+		addAnnotationType: function(type) {
+			if (!this._annotationTypes) { this._annotationTypes = []; }
+			this._annotationTypes.push(type);
+		},
+		/**
+		 * Gets the annotation type priority.  The priority is determined by the
+		 * order the annotation type is added to the receiver.  Annotation types
+		 * added first have higher priority.
+		 * <p>
+		 * Returns <code>0</code> if the annotation type is not added.
+		 * </p>
+		 *
+		 * @param {Object} type the annotation type
+		 * 
+		 * @see #addAnnotationType
+		 * @see #removeAnnotationType
+		 * @see #isAnnotationTypeVisible
+		 */
+		getAnnotationTypePriority: function(type) {
+			if (this._annotationTypes) { 
+				for (var i = 0; i < this._annotationTypes.length; i++) {
+					if (this._annotationTypes[i] === type) {
+						return i + 1;
+					}
+				}
+			}
+			return 0;
+		},
+		/**
+		 * Returns an array of annotations in the specified annotation model for the given range of text sorted by type.
+		 *
+		 * @param {orion.textview.AnnotationModel} annotationModel the annotation model.
+		 * @param {Number} start the start offset of the range.
+		 * @param {Number} end the end offset of the range.
+		 * @return {orion.textview.Annotation[]} an annotation array.
+		 */
+		getAnnotationsByType: function(annotationModel, start, end) {
+			var iter = annotationModel.getAnnotations(start, end);
+			var annotation, annotations = [];
+			while (iter.hasNext()) {
+				annotation = iter.next();
+				var priority = this.getAnnotationTypePriority(annotation.type);
+				if (priority === 0) { continue; }
+				annotations.push(annotation);
+			}
+			var self = this;
+			annotations.sort(function(a, b) {
+				return self.getAnnotationTypePriority(a.type) - self.getAnnotationTypePriority(b.type);
+			});
+			return annotations;
+		},
+		/**
+		 * Returns whether the receiver shows annotations of the specified type.
+		 *
+		 * @param {Object} type the annotation type 
+		 * @returns {Boolean} whether the specified annotation type is shown
+		 * 
+		 * @see #addAnnotationType
+		 * @see #removeAnnotationType
+		 */
+		isAnnotationTypeVisible: function(type) {
+			return this.getAnnotationTypePriority(type) !== 0;
+		},
+		/**
+		 * Removes an annotation type from the receiver.
+		 *
+		 * @param {Object} type the annotation type to be removed
+		 * 
+		 * @see #addAnnotationType
+		 * @see #isAnnotationTypeVisible
+		 */
+		removeAnnotationType: function(type) {
+			if (!this._annotationTypes) { return; }
+			for (var i = 0; i < this._annotationTypes.length; i++) {
+				if (this._annotationTypes[i] === type) {
+					this._annotationTypes.splice(i, 1);
+					break;
+				}
+			}
 		}
 	};
 	
@@ -2322,11 +891,15 @@ define(['orion/textview/eventTarget'], function(mEventTarget) {
 	 * 
 	 * @class This object represents a styler for annotation attached to a text view.
 	 * @name orion.textview.AnnotationStyler
+	 * @borrows orion.textview.AnnotationTypeList#addAnnotationType as #addAnnotationType
+	 * @borrows orion.textview.AnnotationTypeList#getAnnotationTypePriority as #getAnnotationTypePriority
+	 * @borrows orion.textview.AnnotationTypeList#getAnnotationsByType as #getAnnotationsByType
+	 * @borrows orion.textview.AnnotationTypeList#isAnnotationTypeVisible as #isAnnotationTypeVisible
+	 * @borrows orion.textview.AnnotationTypeList#removeAnnotationType as #removeAnnotationType
 	 */
 	function AnnotationStyler (view, annotationModel) {
 		this._view = view;
 		this._annotationModel = annotationModel;
-		this._types = [];
 		var self = this;
 		this._listener = {
 			onDestroy: function(e) {
@@ -2345,21 +918,6 @@ define(['orion/textview/eventTarget'], function(mEventTarget) {
 	}
 	AnnotationStyler.prototype = /** @lends orion.textview.AnnotationStyler.prototype */ {
 		/**
-		 * Adds an annotation type to the receiver.
-		 * <p>
-		 * Only annotations of the specified types will be shown by
-		 * this receiver.
-		 * </p>
-		 *
-		 * @param type {Object} the annotation type to be shown
-		 * 
-		 * @see #removeAnnotationType
-		 * @see #isAnnotationTypeVisible
-		 */
-		addAnnotationType: function(type) {
-			this._types.push(type);
-		},
-		/**
 		 * Destroys the styler. 
 		 * <p>
 		 * Removes all listeners added by this styler.
@@ -2376,39 +934,6 @@ define(['orion/textview/eventTarget'], function(mEventTarget) {
 			if (annotationModel) {
 				annotationModel.removeEventListener("Changed", this._listener.onChanged);
 				annotationModel = null;
-			}
-		},
-		/**
-		 * Returns whether the receiver shows annotations of the specified type.
-		 *
-		 * @param {Object} type the annotation type 
-		 * @returns {Boolean} whether the specified annotation type is shown
-		 * 
-		 * @see #addAnnotationType
-		 * @see #removeAnnotationType
-		 */
-		isAnnotationTypeVisible: function(type) {
-			for (var i = 0; i < this._types.length; i++) {
-				if (this._types[i] === type) {
-					return true;
-				}
-			}
-			return false;
-		},
-		/**
-		 * Removes an annotation type from the receiver.
-		 *
-		 * @param {Object} type the annotation type to be removed
-		 * 
-		 * @see #addAnnotationType
-		 * @see #isAnnotationTypeVisible
-		 */
-		removeAnnotationType: function(type) {
-			for (var i = 0; i < this._types.length; i++) {
-				if (this._types[i] === type) {
-					this._types.splice(i, 1);
-					break;
-				}
 			}
 		},
 		_mergeStyle: function(result, style) {
@@ -2527,13 +1052,15 @@ define(['orion/textview/eventTarget'], function(mEventTarget) {
 			}
 		}
 	};
+	AnnotationTypeList.addMixin(AnnotationStyler.prototype);
 	
 	return {
 		FoldingAnnotation: FoldingAnnotation,
+		AnnotationTypeList: AnnotationTypeList,
 		AnnotationModel: AnnotationModel,
 		AnnotationStyler: AnnotationStyler
 	};
-}, "orion/textview");
+});
 /*******************************************************************************
  * @license
  * Copyright (c) 2010, 2011 IBM Corporation and others.
@@ -2547,7 +1074,1508 @@ define(['orion/textview/eventTarget'], function(mEventTarget) {
 
 /*global define setTimeout clearTimeout setInterval clearInterval Node */
 
-define(['orion/textview/textView', 'orion/textview/textModel', 'orion/textview/projectionTextModel'], function(mTextView, mTextModel, mProjectionTextModel) {
+define("orion/textview/rulers", ['orion/textview/annotations', 'orion/textview/tooltip'], function(mAnnotations, mTooltip) {
+
+	/**
+	 * Constructs a new ruler. 
+	 * <p>
+	 * The default implementation does not implement all the methods in the interface
+	 * and is useful only for objects implementing rulers.
+	 * <p/>
+	 * 
+	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
+	 * @param {String} [rulerLocation="left"] the location for the ruler.
+	 * @param {String} [rulerOverview="page"] the overview for the ruler.
+	 * @param {orion.textview.Style} [rulerStyle] the style for the ruler. 
+	 * 
+	 * @class This interface represents a ruler for the text view.
+	 * <p>
+	 * A Ruler is a graphical element that is placed either on the left or on the right side of 
+	 * the view. It can be used to provide the view with per line decoration such as line numbering,
+	 * bookmarks, breakpoints, folding disclosures, etc. 
+	 * </p><p>
+	 * There are two types of rulers: page and document. A page ruler only shows the content for the lines that are
+	 * visible, while a document ruler always shows the whole content.
+	 * </p>
+	 * <b>See:</b><br/>
+	 * {@link orion.textview.LineNumberRuler}<br/>
+	 * {@link orion.textview.AnnotationRuler}<br/>
+	 * {@link orion.textview.OverviewRuler}<br/> 
+	 * {@link orion.textview.TextView}<br/>
+	 * {@link orion.textview.TextView#addRuler}
+	 * </p>		 
+	 * @name orion.textview.Ruler
+	 * @borrows orion.textview.AnnotationTypeList#addAnnotationType as #addAnnotationType
+	 * @borrows orion.textview.AnnotationTypeList#getAnnotationTypePriority as #getAnnotationTypePriority
+	 * @borrows orion.textview.AnnotationTypeList#getAnnotationsByType as #getAnnotationsByType
+	 * @borrows orion.textview.AnnotationTypeList#isAnnotationTypeVisible as #isAnnotationTypeVisible
+	 * @borrows orion.textview.AnnotationTypeList#removeAnnotationType as #removeAnnotationType
+	 */
+	function Ruler (annotationModel, rulerLocation, rulerOverview, rulerStyle) {
+		this._location = rulerLocation || "left";
+		this._overview = rulerOverview || "page";
+		this._rulerStyle = rulerStyle;
+		this._view = null;
+		var self = this;
+		this._listener = {
+			onTextModelChanged: function(e) {
+				self._onTextModelChanged(e);
+			},
+			onAnnotationModelChanged: function(e) {
+				self._onAnnotationModelChanged(e);
+			}
+		};
+		this.setAnnotationModel(annotationModel);
+	}
+	Ruler.prototype = /** @lends orion.textview.Ruler.prototype */ {
+		/**
+		 * Returns the annotations for a given line range merging multiple
+		 * annotations when necessary.
+		 * <p>
+		 * This method is called by the text view when the ruler is redrawn.
+		 * </p>
+		 *
+		 * @param {Number} startLine the start line index
+		 * @param {Number} endLine the end line index
+		 * @return {orion.textview.Annotation[]} the annotations for the line range. The array might be sparse.
+		 */
+		getAnnotations: function(startLine, endLine) {
+			var annotationModel = this._annotationModel;
+			if (!annotationModel) { return []; }
+			var model = this._view.getModel();
+			var start = model.getLineStart(startLine);
+			var end = model.getLineEnd(endLine - 1);
+			var baseModel = model;
+			if (model.getBaseModel) {
+				baseModel = model.getBaseModel();
+				start = model.mapOffset(start);
+				end = model.mapOffset(end);
+			}
+			var result = [];
+			var annotations = this.getAnnotationsByType(annotationModel, start, end);
+			for (var i = 0; i < annotations.length; i++) {
+				var annotation = annotations[i];
+				var annotationLineStart = baseModel.getLineAtOffset(annotation.start);
+				var annotationLineEnd = baseModel.getLineAtOffset(Math.max(annotation.start, annotation.end - 1));
+				for (var lineIndex = annotationLineStart; lineIndex<=annotationLineEnd; lineIndex++) {
+					var visualLineIndex = lineIndex;
+					if (model !== baseModel) {
+						var ls = baseModel.getLineStart(lineIndex);
+						ls = model.mapOffset(ls, true);
+						if (ls === -1) { continue; }
+						visualLineIndex = model.getLineAtOffset(ls);
+					}
+					if (!(startLine <= visualLineIndex && visualLineIndex < endLine)) { continue; }
+					var rulerAnnotation = this._mergeAnnotation(result[visualLineIndex], annotation, lineIndex - annotationLineStart, annotationLineEnd - annotationLineStart + 1);
+					if (rulerAnnotation) {
+						result[visualLineIndex] = rulerAnnotation;
+					}
+				}
+			}
+			if (!this._multiAnnotation && this._multiAnnotationOverlay) {
+				for (var k in result) {
+					if (result[k]._multiple) {
+						result[k].html = result[k].html + this._multiAnnotationOverlay.html;
+					}
+				}
+			}
+			return result;
+		},
+		/**
+		 * Returns the annotation model.
+		 *
+		 * @returns {orion.textview.AnnotationModel} the ruler annotation model.
+		 *
+		 * @see #setAnnotationModel
+		 */
+		getAnnotationModel: function() {
+			return this._annotationModel;
+		},
+		/**
+		 * Returns the ruler location.
+		 *
+		 * @returns {String} the ruler location, which is either "left" or "right".
+		 *
+		 * @see #getOverview
+		 */
+		getLocation: function() {
+			return this._location;
+		},
+		/**
+		 * Returns the ruler overview type.
+		 *
+		 * @returns {String} the overview type, which is either "page" or "document".
+		 *
+		 * @see #getLocation
+		 */
+		getOverview: function() {
+			return this._overview;
+		},
+		/**
+		 * Returns the style information for the ruler.
+		 *
+		 * @returns {orion.textview.Style} the style information.
+		 */
+		getRulerStyle: function() {
+			return this._rulerStyle;
+		},
+		/**
+		 * Returns the widest annotation which determines the width of the ruler.
+		 * <p>
+		 * If the ruler does not have a fixed width it should provide the widest
+		 * annotation to avoid the ruler from changing size as the view scrolls.
+		 * </p>
+		 * <p>
+		 * This method is called by the text view when the ruler is redrawn.
+		 * </p>
+		 *
+		 * @returns {orion.textview.Annotation} the widest annotation.
+		 *
+		 * @see #getAnnotations
+		 */
+		getWidestAnnotation: function() {
+			return null;
+		},
+		/**
+		 * Sets the annotation model for the ruler.
+		 *
+		 * @param {orion.textview.AnnotationModel} annotationModel the annotation model.
+		 *
+		 * @see #getAnnotationModel
+		 */
+		setAnnotationModel: function (annotationModel) {
+			if (this._annotationModel) {
+				this._annotationModel.removEventListener("Changed", this._listener.onAnnotationModelChanged); 
+			}
+			this._annotationModel = annotationModel;
+			if (this._annotationModel) {
+				this._annotationModel.addEventListener("Changed", this._listener.onAnnotationModelChanged); 
+			}
+		},
+		/**
+		 * Sets the annotation that is displayed when a given line contains multiple
+		 * annotations.  This annotation is used when there are different types of
+		 * annotations in a given line.
+		 *
+		 * @param {orion.textview.Annotation} annotation the annotation for lines with multiple annotations.
+		 * 
+		 * @see #setMultiAnnotationOverlay
+		 */
+		setMultiAnnotation: function(annotation) {
+			this._multiAnnotation = annotation;
+		},
+		/**
+		 * Sets the annotation that overlays a line with multiple annotations.  This annotation is displayed on
+		 * top of the computed annotation for a given line when there are multiple annotations of the same type
+		 * in the line. It is also used when the multiple annotation is not set.
+		 *
+		 * @param {orion.textview.Annotation} annotation the annotation overlay for lines with multiple annotations.
+		 * 
+		 * @see #setMultiAnnotation
+		 */
+		setMultiAnnotationOverlay: function(annotation) {
+			this._multiAnnotationOverlay = annotation;
+		},
+		/**
+		 * Sets the view for the ruler.
+		 * <p>
+		 * This method is called by the text view when the ruler
+		 * is added to the view.
+		 * </p>
+		 *
+		 * @param {orion.textview.TextView} view the text view.
+		 */
+		setView: function (view) {
+			if (this._onTextModelChanged && this._view) {
+				this._view.removeEventListener("ModelChanged", this._listener.onTextModelChanged); 
+			}
+			this._view = view;
+			if (this._onTextModelChanged && this._view) {
+				this._view.addEventListener("ModelChanged", this._listener.onTextModelChanged);
+			}
+		},
+		/**
+		 * This event is sent when the user clicks a line annotation.
+		 *
+		 * @event
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
+		 * @param {DOMEvent} e the click event.
+		 */
+		onClick: function(lineIndex, e) {
+		},
+		/**
+		 * This event is sent when the user double clicks a line annotation.
+		 *
+		 * @event
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
+		 * @param {DOMEvent} e the double click event.
+		 */
+		onDblClick: function(lineIndex, e) {
+		},
+		/**
+		 * This event is sent when the user moves the mouse over a line annotation.
+		 *
+		 * @event
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
+		 * @param {DOMEvent} e the mouse move event.
+		 */
+		onMouseMove: function(lineIndex, e) {
+			var tooltip = mTooltip.Tooltip.getTooltip(this._view);
+			if (!tooltip) { return; }
+			if (tooltip.isVisible() && this._tooltipLineIndex === lineIndex) { return; }
+			this._tooltipLineIndex = lineIndex;
+			var self = this;
+			tooltip.setTarget({
+				y: e.clientY,
+				getTooltipInfo: function() {
+					return self._getTooltipInfo(self._tooltipLineIndex, this.y);
+				}
+			});
+		},
+		/**
+		 * This event is sent when the mouse pointer enters a line annotation.
+		 *
+		 * @event
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
+		 * @param {DOMEvent} e the mouse over event.
+		 */
+		onMouseOver: function(lineIndex, e) {
+			this.onMouseMove(lineIndex, e);
+		},
+		/**
+		 * This event is sent when the mouse pointer exits a line annotation.
+		 *
+		 * @event
+		 * @param {Number} lineIndex the line index of the annotation under the pointer.
+		 * @param {DOMEvent} e the mouse out event.
+		 */
+		onMouseOut: function(lineIndex, e) {
+			var tooltip = mTooltip.Tooltip.getTooltip(this._view);
+			if (!tooltip) { return; }
+			tooltip.setTarget(null);
+		},
+		/** @ignore */
+		_getTooltipInfo: function(lineIndex, y) {
+			if (lineIndex === undefined) { return; }
+			var view = this._view;
+			var model = view.getModel();
+			var annotationModel = this._annotationModel;
+			var annotations = [];
+			if (annotationModel) {
+				var start = model.getLineStart(lineIndex);
+				var end = model.getLineEnd(lineIndex);
+				if (model.getBaseModel) {
+					start = model.mapOffset(start);
+					end = model.mapOffset(end);
+				}
+				annotations = this.getAnnotationsByType(annotationModel, start, end);
+			}
+			var contents = this._getTooltipContents(lineIndex, annotations);
+			if (!contents) { return null; }
+			var info = {
+				contents: contents,
+				anchor: this.getLocation()
+			};
+			var rect = view.getClientArea();
+			if (this.getOverview() === "document") {
+				rect.y = view.convert({y: y}, "view", "document").y;
+			} else {
+				rect.y = view.getLocationAtOffset(model.getLineStart(lineIndex)).y;
+			}
+			view.convert(rect, "document", "page");
+			info.x = rect.x;
+			info.y = rect.y;
+			if (info.anchor === "right") {
+				info.x += rect.width;
+			}
+			info.maxWidth = rect.width;
+			info.maxHeight = rect.height - (rect.y - view._parent.getBoundingClientRect().top);
+			return info;
+		},
+		/** @ignore */
+		_getTooltipContents: function(lineIndex, annotations) {
+			return annotations;
+		},
+		/** @ignore */
+		_onAnnotationModelChanged: function(e) {
+			var view = this._view;
+			if (!view) { return; }
+			var model = view.getModel(), self = this;
+			var lineCount = model.getLineCount();
+			if (e.textModelChangedEvent) {
+				var start = e.textModelChangedEvent.start;
+				if (model.getBaseModel) { start = model.mapOffset(start, true); }
+				var startLine = model.getLineAtOffset(start);
+				view.redrawLines(startLine, lineCount, self);
+				return;
+			}
+			function redraw(changes) {
+				for (var i = 0; i < changes.length; i++) {
+					if (!self.isAnnotationTypeVisible(changes[i].type)) { continue; }
+					var start = changes[i].start;
+					var end = changes[i].end;
+					if (model.getBaseModel) {
+						start = model.mapOffset(start, true);
+						end = model.mapOffset(end, true);
+					}
+					if (start !== -1 && end !== -1) {
+						view.redrawLines(model.getLineAtOffset(start), model.getLineAtOffset(Math.max(start, end - 1)) + 1, self);
+					}
+				}
+			}
+			redraw(e.added);
+			redraw(e.removed);
+			redraw(e.changed);
+		},
+		/** @ignore */
+		_mergeAnnotation: function(result, annotation, annotationLineIndex, annotationLineCount) {
+			if (!result) { result = {}; }
+			if (annotationLineIndex === 0) {
+				if (result.html && annotation.html) {
+					if (annotation.html !== result.html) {
+						if (!result._multiple && this._multiAnnotation) {
+							result.html = this._multiAnnotation.html;
+						}
+					} 
+					result._multiple = true;
+				} else {
+					result.html = annotation.html;
+				}
+			}
+			result.style = this._mergeStyle(result.style, annotation.style);
+			return result;
+		},
+		/** @ignore */
+		_mergeStyle: function(result, style) {
+			if (style) {
+				if (!result) { result = {}; }
+				if (result.styleClass && style.styleClass && result.styleClass !== style.styleClass) {
+					result.styleClass += " " + style.styleClass;
+				} else {
+					result.styleClass = style.styleClass;
+				}
+				var prop;
+				if (style.style) {
+					if (!result.style) { result.style  = {}; }
+					for (prop in style.style) {
+						if (!result.style[prop]) {
+							result.style[prop] = style.style[prop];
+						}
+					}
+				}
+				if (style.attributes) {
+					if (!result.attributes) { result.attributes  = {}; }
+					for (prop in style.attributes) {
+						if (!result.attributes[prop]) {
+							result.attributes[prop] = style.attributes[prop];
+						}
+					}
+				}
+			}
+			return result;
+		}
+	};
+	mAnnotations.AnnotationTypeList.addMixin(Ruler.prototype);
+
+	/**
+	 * Constructs a new line numbering ruler. 
+	 *
+	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
+	 * @param {String} [rulerLocation="left"] the location for the ruler.
+	 * @param {orion.textview.Style} [rulerStyle=undefined] the style for the ruler.
+	 * @param {orion.textview.Style} [oddStyle={style: {backgroundColor: "white"}] the style for lines with odd line index.
+	 * @param {orion.textview.Style} [evenStyle={backgroundColor: "white"}] the style for lines with even line index.
+	 *
+	 * @augments orion.textview.Ruler
+	 * @class This objects implements a line numbering ruler.
+	 *
+	 * <p><b>See:</b><br/>
+	 * {@link orion.textview.Ruler}
+	 * </p>
+	 * @name orion.textview.LineNumberRuler
+	 */
+	function LineNumberRuler (annotationModel, rulerLocation, rulerStyle, oddStyle, evenStyle) {
+		Ruler.call(this, annotationModel, rulerLocation, "page", rulerStyle);
+		this._oddStyle = oddStyle || {style: {backgroundColor: "white"}};
+		this._evenStyle = evenStyle || {style: {backgroundColor: "white"}};
+		this._numOfDigits = 0;
+	}
+	LineNumberRuler.prototype = new Ruler(); 
+	/** @ignore */
+	LineNumberRuler.prototype.getAnnotations = function(startLine, endLine) {
+		var result = Ruler.prototype.getAnnotations.call(this, startLine, endLine);
+		var model = this._view.getModel();
+		for (var lineIndex = startLine; lineIndex < endLine; lineIndex++) {
+			var style = lineIndex & 1 ? this._oddStyle : this._evenStyle;
+			var mapLine = lineIndex;
+			if (model.getBaseModel) {
+				var lineStart = model.getLineStart(mapLine);
+				mapLine = model.getBaseModel().getLineAtOffset(model.mapOffset(lineStart));
+			}
+			if (!result[lineIndex]) { result[lineIndex] = {}; }
+			result[lineIndex].html = (mapLine + 1) + "";
+			if (!result[lineIndex].style) { result[lineIndex].style = style; }
+		}
+		return result;
+	};
+	/** @ignore */
+	LineNumberRuler.prototype.getWidestAnnotation = function() {
+		var lineCount = this._view.getModel().getLineCount();
+		return this.getAnnotations(lineCount - 1, lineCount)[lineCount - 1];
+	};
+	/** @ignore */
+	LineNumberRuler.prototype._onTextModelChanged = function(e) {
+		var start = e.start;
+		var model = this._view.getModel();
+		var lineCount = model.getBaseModel ? model.getBaseModel().getLineCount() : model.getLineCount();
+		var numOfDigits = (lineCount+"").length;
+		if (this._numOfDigits !== numOfDigits) {
+			this._numOfDigits = numOfDigits;
+			var startLine = model.getLineAtOffset(start);
+			this._view.redrawLines(startLine,  model.getLineCount(), this);
+		}
+	};
+	
+	/** 
+	 * @class This is class represents an annotation for the AnnotationRuler. 
+	 * <p> 
+	 * <b>See:</b><br/> 
+	 * {@link orion.textview.AnnotationRuler}
+	 * </p> 
+	 * 
+	 * @name orion.textview.Annotation 
+	 * 
+	 * @property {String} [html=""] The html content for the annotation, typically contains an image.
+	 * @property {orion.textview.Style} [style] the style for the annotation.
+	 * @property {orion.textview.Style} [overviewStyle] the style for the annotation in the overview ruler.
+	 */ 
+	/**
+	 * Constructs a new annotation ruler. 
+	 *
+	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
+	 * @param {String} [rulerLocation="left"] the location for the ruler.
+	 * @param {orion.textview.Style} [rulerStyle=undefined] the style for the ruler.
+	 * @param {orion.textview.Annotation} [defaultAnnotation] the default annotation.
+	 *
+	 * @augments orion.textview.Ruler
+	 * @class This objects implements an annotation ruler.
+	 *
+	 * <p><b>See:</b><br/>
+	 * {@link orion.textview.Ruler}<br/>
+	 * {@link orion.textview.Annotation}
+	 * </p>
+	 * @name orion.textview.AnnotationRuler
+	 */
+	function AnnotationRuler (annotationModel, rulerLocation, rulerStyle) {
+		Ruler.call(this, annotationModel, rulerLocation, "page", rulerStyle);
+	}
+	AnnotationRuler.prototype = new Ruler();
+	
+	/**
+	 * Constructs a new overview ruler. 
+	 * <p>
+	 * The overview ruler is used in conjunction with a AnnotationRuler, for each annotation in the 
+	 * AnnotationRuler this ruler displays a mark in the overview. Clicking on the mark causes the 
+	 * view to scroll to the annotated line.
+	 * </p>
+	 *
+	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
+	 * @param {String} [rulerLocation="left"] the location for the ruler.
+	 * @param {orion.textview.Style} [rulerStyle=undefined] the style for the ruler.
+	 *
+	 * @augments orion.textview.Ruler
+	 * @class This objects implements an overview ruler.
+	 *
+	 * <p><b>See:</b><br/>
+	 * {@link orion.textview.AnnotationRuler} <br/>
+	 * {@link orion.textview.Ruler} 
+	 * </p>
+	 * @name orion.textview.OverviewRuler
+	 */
+	function OverviewRuler (annotationModel, rulerLocation, rulerStyle) {
+		Ruler.call(this, annotationModel, rulerLocation, "document", rulerStyle);
+	}
+	OverviewRuler.prototype = new Ruler();
+	
+	/** @ignore */
+	OverviewRuler.prototype.getRulerStyle = function() {
+		var result = {style: {lineHeight: "1px", fontSize: "1px"}};
+		result = this._mergeStyle(result, this._rulerStyle);
+		return result;
+	};
+	/** @ignore */	
+	OverviewRuler.prototype.onClick = function(lineIndex, e) {
+		if (lineIndex === undefined) { return; }
+		this._view.setTopIndex(lineIndex);
+	};
+	/** @ignore */
+	OverviewRuler.prototype._getTooltipContents = function(lineIndex, annotations) {
+		if (annotations.length === 0) {
+			var model = this._view.getModel();
+			var mapLine = lineIndex;
+			if (model.getBaseModel) {
+				var lineStart = model.getLineStart(mapLine);
+				mapLine = model.getBaseModel().getLineAtOffset(model.mapOffset(lineStart));
+			}
+			return "Line: " + (mapLine + 1);
+		}
+		return Ruler.prototype._getTooltipContents.call(this, lineIndex, annotations);
+	};
+	/** @ignore */
+	OverviewRuler.prototype._mergeAnnotation = function(previousAnnotation, annotation, annotationLineIndex, annotationLineCount) {
+		if (annotationLineIndex !== 0) { return undefined; }
+		var result = previousAnnotation;
+		if (!result) {
+			//TODO annotationLineCount does not work when there are folded lines
+			var height = 3 * annotationLineCount;
+			result = {html: "&nbsp;", style: { style: {height: height + "px"}}};
+			result.style = this._mergeStyle(result.style, annotation.overviewStyle);
+		}
+		return result;
+	};
+
+	/**
+	 * Constructs a new folding ruler. 
+	 *
+	 * @param {orion.textview.AnnotationModel} annotationModel the annotation model for the ruler.
+	 * @param {String} [rulerLocation="left"] the location for the ruler.
+	 * @param {orion.textview.Style} [rulerStyle=undefined] the style for the ruler.
+	 *
+	 * @augments orion.textview.Ruler
+	 * @class This objects implements an overview ruler.
+	 *
+	 * <p><b>See:</b><br/>
+	 * {@link orion.textview.AnnotationRuler} <br/>
+	 * {@link orion.textview.Ruler} 
+	 * </p>
+	 * @name orion.textview.OverviewRuler
+	 */
+	function FoldingRuler (annotationModel, rulerLocation, rulerStyle) {
+		AnnotationRuler.call(this, annotationModel, rulerLocation, rulerStyle);
+	}
+	FoldingRuler.prototype = new AnnotationRuler();
+	
+	/** @ignore */
+	FoldingRuler.prototype.onClick =  function(lineIndex, e) {
+		if (lineIndex === undefined) { return; }
+		var annotationModel = this._annotationModel;
+		if (!annotationModel) { return; }
+		var view = this._view;
+		var model = view.getModel();
+		var start = model.getLineStart(lineIndex);
+		var end = model.getLineEnd(lineIndex, true);
+		if (model.getBaseModel) {
+			start = model.mapOffset(start);
+			end = model.mapOffset(end);
+		}
+		var annotation, iter = annotationModel.getAnnotations(start, end);
+		while (!annotation && iter.hasNext()) {
+			var a = iter.next();
+			if (!this.isAnnotationTypeVisible(a.type)) { continue; }
+			annotation = a;
+		}
+		if (annotation) {
+			var tooltip = mTooltip.Tooltip.getTooltip(this._view);
+			if (tooltip) {
+				tooltip.setTarget(null);
+			}
+			if (annotation.expanded) {
+				annotation.collapse();
+			} else {
+				annotation.expand();
+			}
+			this._annotationModel.modifyAnnotation(annotation);
+		}
+	};
+	/** @ignore */
+	FoldingRuler.prototype._getTooltipContents = function(lineIndex, annotations) {
+		if (annotations.length === 1) {
+			if (annotations[0].expanded) {
+				return null;
+			}
+		}
+		return AnnotationRuler.prototype._getTooltipContents.call(this, lineIndex, annotations);
+	};
+	/** @ignore */
+	FoldingRuler.prototype._onAnnotationModelChanged = function(e) {
+		if (e.textModelChangedEvent) {
+			AnnotationRuler.prototype._onAnnotationModelChanged.call(this, e);
+			return;
+		}
+		var view = this._view;
+		if (!view) { return; }
+		var model = view.getModel(), self = this, i;
+		var lineCount = model.getLineCount(), lineIndex = lineCount;
+		function redraw(changes) {
+			for (i = 0; i < changes.length; i++) {
+				if (!self.isAnnotationTypeVisible(changes[i].type)) { continue; }
+				var start = changes[i].start;
+				if (model.getBaseModel) {
+					start = model.mapOffset(start, true);
+				}
+				if (start !== -1) {
+					lineIndex = Math.min(lineIndex, model.getLineAtOffset(start));
+				}
+			}
+		}
+		redraw(e.added);
+		redraw(e.removed);
+		redraw(e.changed);
+		var rulers = view.getRulers();
+		for (i = 0; i < rulers.length; i++) {
+			view.redrawLines(lineIndex, lineCount, rulers[i]);
+		}
+	};
+	
+	return {
+		Ruler: Ruler,
+		AnnotationRuler: AnnotationRuler,
+		LineNumberRuler: LineNumberRuler,
+		OverviewRuler: OverviewRuler,
+		FoldingRuler: FoldingRuler
+	};
+});
+/*******************************************************************************
+ * @license
+ * Copyright (c) 2010, 2011 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials are made 
+ * available under the terms of the Eclipse Public License v1.0 
+ * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
+ * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
+ * 
+ * Contributors: IBM Corporation - initial API and implementation
+ ******************************************************************************/
+
+/*global define */
+
+define("orion/textview/undoStack", [], function() {
+
+	/** 
+	 * Constructs a new Change object.
+	 * 
+	 * @class 
+	 * @name orion.textview.Change
+	 * @private
+	 */
+	function Change(offset, text, previousText) {
+		this.offset = offset;
+		this.text = text;
+		this.previousText = previousText;
+	}
+	Change.prototype = {
+		/** @ignore */
+		undo: function (view, select) {
+			this._doUndoRedo(this.offset, this.previousText, this.text, view, select);
+		},
+		/** @ignore */
+		redo: function (view, select) {
+			this._doUndoRedo(this.offset, this.text, this.previousText, view, select);
+		},
+		_doUndoRedo: function(offset, text, previousText, view, select) {
+			var model = view.getModel();
+			/* 
+			* TODO UndoStack should be changing the text in the base model.
+			* This is code needs to change when modifications in the base
+			* model are supported properly by the projection model.
+			*/
+			if (model.mapOffset && view.annotationModel) {
+				var mapOffset = model.mapOffset(offset, true);
+				if (mapOffset < 0) {
+					var annotationModel = view.annotationModel;
+					var iter = annotationModel.getAnnotations(offset, offset + 1);
+					while (iter.hasNext()) {
+						var annotation = iter.next();
+						if (annotation.type === "orion.annotation.folding") {
+							annotation.expand();
+							mapOffset = model.mapOffset(offset, true);
+							break;
+						}
+					}
+				}
+				if (mapOffset < 0) { return; }
+				offset = mapOffset;
+			}
+			view.setText(text, offset, offset + previousText.length);
+			if (select) {
+				view.setSelection(offset, offset + text.length);
+			}
+		}
+	};
+
+	/** 
+	 * Constructs a new CompoundChange object.
+	 * 
+	 * @class 
+	 * @name orion.textview.CompoundChange
+	 * @private
+	 */
+	function CompoundChange () {
+		this.changes = [];
+	}
+	CompoundChange.prototype = {
+		/** @ignore */
+		add: function (change) {
+			this.changes.push(change);
+		},
+		/** @ignore */
+		end: function (view) {
+			this.endSelection = view.getSelection();
+			this.endCaret = view.getCaretOffset();
+		},
+		/** @ignore */
+		undo: function (view, select) {
+			for (var i=this.changes.length - 1; i >= 0; i--) {
+				this.changes[i].undo(view, false);
+			}
+			if (select) {
+				var start = this.startSelection.start;
+				var end = this.startSelection.end;
+				view.setSelection(this.startCaret ? start : end, this.startCaret ? end : start);
+			}
+		},
+		/** @ignore */
+		redo: function (view, select) {
+			for (var i = 0; i < this.changes.length; i++) {
+				this.changes[i].redo(view, false);
+			}
+			if (select) {
+				var start = this.endSelection.start;
+				var end = this.endSelection.end;
+				view.setSelection(this.endCaret ? start : end, this.endCaret ? end : start);
+			}
+		},
+		/** @ignore */
+		start: function (view) {
+			this.startSelection = view.getSelection();
+			this.startCaret = view.getCaretOffset();
+		}
+	};
+
+	/**
+	 * Constructs a new UndoStack on a text view.
+	 *
+	 * @param {orion.textview.TextView} view the text view for the undo stack.
+	 * @param {Number} [size=100] the size for the undo stack.
+	 *
+	 * @name orion.textview.UndoStack
+	 * @class The UndoStack is used to record the history of a text model associated to an view. Every
+	 * change to the model is added to stack, allowing the application to undo and redo these changes.
+	 *
+	 * <p>
+	 * <b>See:</b><br/>
+	 * {@link orion.textview.TextView}<br/>
+	 * </p>
+	 */
+	function UndoStack (view, size) {
+		this.view = view;
+		this.size = size !== undefined ? size : 100;
+		this.reset();
+		var model = view.getModel();
+		if (model.getBaseModel) {
+			model = model.getBaseModel();
+		}
+		this.model = model;
+		var self = this;
+		this._listener = {
+			onChanging: function(e) {
+				self._onChanging(e);
+			},
+			onDestroy: function(e) {
+				self._onDestroy(e);
+			}
+		};
+		model.addEventListener("Changing", this._listener.onChanging);
+		view.addEventListener("Destroy", this._listener.onDestroy);
+	}
+	UndoStack.prototype = /** @lends orion.textview.UndoStack.prototype */ {
+		/**
+		 * Adds a change to the stack.
+		 * 
+		 * @param change the change to add.
+		 * @param {Number} change.offset the offset of the change
+		 * @param {String} change.text the new text of the change
+		 * @param {String} change.previousText the previous text of the change
+		 */
+		add: function (change) {
+			if (this.compoundChange) {
+				this.compoundChange.add(change);
+			} else {
+				var length = this.stack.length;
+				this.stack.splice(this.index, length-this.index, change);
+				this.index++;
+				if (this.stack.length > this.size) {
+					this.stack.shift();
+					this.index--;
+					this.cleanIndex--;
+				}
+			}
+		},
+		/** 
+		 * Marks the current state of the stack as clean.
+		 *
+		 * <p>
+		 * This function is typically called when the content of view associated with the stack is saved.
+		 * </p>
+		 *
+		 * @see #isClean
+		 */
+		markClean: function() {
+			this.endCompoundChange();
+			this._commitUndo();
+			this.cleanIndex = this.index;
+		},
+		/**
+		 * Returns true if current state of stack is the same
+		 * as the state when markClean() was called.
+		 *
+		 * <p>
+		 * For example, the application calls markClean(), then calls undo() four times and redo() four times.
+		 * At this point isClean() returns true.  
+		 * </p>
+		 * <p>
+		 * This function is typically called to determine if the content of the view associated with the stack
+		 * has changed since the last time it was saved.
+		 * </p>
+		 *
+		 * @return {Boolean} returns if the state is the same as the state when markClean() was called.
+		 *
+		 * @see #markClean
+		 */
+		isClean: function() {
+			return this.cleanIndex === this.getSize().undo;
+		},
+		/**
+		 * Returns true if there is at least one change to undo.
+		 *
+		 * @return {Boolean} returns true if there is at least one change to undo.
+		 *
+		 * @see #canRedo
+		 * @see #undo
+		 */
+		canUndo: function() {
+			return this.getSize().undo > 0;
+		},
+		/**
+		 * Returns true if there is at least one change to redo.
+		 *
+		 * @return {Boolean} returns true if there is at least one change to redo.
+		 *
+		 * @see #canUndo
+		 * @see #redo
+		 */
+		canRedo: function() {
+			return this.getSize().redo > 0;
+		},
+		/**
+		 * Finishes a compound change.
+		 *
+		 * @see #startCompoundChange
+		 */
+		endCompoundChange: function() {
+			if (this.compoundChange) {
+				this.compoundChange.end(this.view);
+			}
+			this.compoundChange = undefined;
+		},
+		/**
+		 * Returns the sizes of the stack.
+		 *
+		 * @return {object} a object where object.undo is the number of changes that can be un-done, 
+		 *  and object.redo is the number of changes that can be re-done.
+		 *
+		 * @see #canUndo
+		 * @see #canRedo
+		 */
+		getSize: function() {
+			var index = this.index;
+			var length = this.stack.length;
+			if (this._undoStart !== undefined) {
+				index++;
+			}
+			return {undo: index, redo: (length - index)};
+		},
+		/**
+		 * Undo the last change in the stack.
+		 *
+		 * @return {Boolean} returns true if a change was un-done.
+		 *
+		 * @see #redo
+		 * @see #canUndo
+		 */
+		undo: function() {
+			this._commitUndo();
+			if (this.index <= 0) {
+				return false;
+			}
+			var change = this.stack[--this.index];
+			this._ignoreUndo = true;
+			change.undo(this.view, true);
+			this._ignoreUndo = false;
+			return true;
+		},
+		/**
+		 * Redo the last change in the stack.
+		 *
+		 * @return {Boolean} returns true if a change was re-done.
+		 *
+		 * @see #undo
+		 * @see #canRedo
+		 */
+		redo: function() {
+			this._commitUndo();
+			if (this.index >= this.stack.length) {
+				return false;
+			}
+			var change = this.stack[this.index++];
+			this._ignoreUndo = true;
+			change.redo(this.view, true);
+			this._ignoreUndo = false;
+			return true;
+		},
+		/**
+		 * Reset the stack to its original state. All changes in the stack are thrown away.
+		 */
+		reset: function() {
+			this.index = this.cleanIndex = 0;
+			this.stack = [];
+			this._undoStart = undefined;
+			this._undoText = "";
+			this._undoType = 0;
+			this._ignoreUndo = false;
+			this._compoundChange = undefined;
+		},
+		/**
+		 * Starts a compound change. 
+		 * <p>
+		 * All changes added to stack from the time startCompoundChange() is called
+		 * to the time that endCompoundChange() is called are compound on one change that can be un-done or re-done
+		 * with one single call to undo() or redo().
+		 * </p>
+		 *
+		 * @see #endCompoundChange
+		 */
+		startCompoundChange: function() {
+			this._commitUndo();
+			var change = new CompoundChange();
+			this.add(change);
+			this.compoundChange = change;
+			this.compoundChange.start(this.view);
+		},
+		_commitUndo: function () {
+			if (this._undoStart !== undefined) {
+				if (this._undoType === -1) {
+					this.add(new Change(this._undoStart, "", this._undoText, ""));
+				} else {
+					this.add(new Change(this._undoStart, this._undoText, ""));
+				}
+				this._undoStart = undefined;
+				this._undoText = "";
+				this._undoType = 0;
+			}
+		},
+		_onDestroy: function(evt) {
+			this.model.removeEventListener("Changing", this._listener.onChanging);
+			this.view.removeEventListener("Destroy", this._listener.onDestroy);
+		},
+		_onChanging: function(e) {
+			var newText = e.text;
+			var start = e.start;
+			var removedCharCount = e.removedCharCount;
+			var addedCharCount = e.addedCharCount;
+			if (this._ignoreUndo) {
+				return;
+			}
+			if (this._undoStart !== undefined && 
+				!((addedCharCount === 1 && removedCharCount === 0 && this._undoType === 1 && start === this._undoStart + this._undoText.length) ||
+					(addedCharCount === 0 && removedCharCount === 1 && this._undoType === -1 && (((start + 1) === this._undoStart) || (start === this._undoStart)))))
+			{
+				this._commitUndo();
+			}
+			if (!this.compoundChange) {
+				if (addedCharCount === 1 && removedCharCount === 0) {
+					if (this._undoStart === undefined) {
+						this._undoStart = start;
+					}
+					this._undoText = this._undoText + newText;
+					this._undoType = 1;
+					return;
+				} else if (addedCharCount === 0 && removedCharCount === 1) {
+					var deleting = this._undoText.length > 0 && this._undoStart === start;
+					this._undoStart = start;
+					this._undoType = -1;
+					if (deleting) {
+						this._undoText = this._undoText + this.model.getText(start, start + removedCharCount);
+					} else {
+						this._undoText = this.model.getText(start, start + removedCharCount) + this._undoText;
+					}
+					return;
+				}
+			}
+			this.add(new Change(start, newText, this.model.getText(start, start + removedCharCount)));
+		}
+	};
+	
+	return {
+		UndoStack: UndoStack
+	};
+});
+/*******************************************************************************
+ * @license
+ * Copyright (c) 2010, 2011 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials are made 
+ * available under the terms of the Eclipse Public License v1.0 
+ * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
+ * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
+ * 
+ * Contributors: 
+ *		Felipe Heidrich (IBM Corporation) - initial API and implementation
+ *		Silenio Quarti (IBM Corporation) - initial API and implementation
+ ******************************************************************************/
+ 
+/*global define window*/
+
+define("orion/textview/textModel", ['orion/textview/eventTarget'], function(mEventTarget) {
+	var isWindows = window.navigator.platform.indexOf("Win") !== -1;
+
+	/**
+	 * Constructs a new TextModel with the given text and default line delimiter.
+	 *
+	 * @param {String} [text=""] the text that the model will store
+	 * @param {String} [lineDelimiter=platform delimiter] the line delimiter used when inserting new lines to the model.
+	 *
+	 * @name orion.textview.TextModel
+	 * @class The TextModel is an interface that provides text for the view. Applications may
+	 * implement the TextModel interface to provide a custom store for the view content. The
+	 * view interacts with its text model in order to access and update the text that is being
+	 * displayed and edited in the view. This is the default implementation.
+	 * <p>
+	 * <b>See:</b><br/>
+	 * {@link orion.textview.TextView}<br/>
+	 * {@link orion.textview.TextView#setModel}
+	 * </p>
+	 * @borrows orion.textview.EventTarget#addEventListener as #addEventListener
+	 * @borrows orion.textview.EventTarget#removeEventListener as #removeEventListener
+	 * @borrows orion.textview.EventTarget#dispatchEvent as #dispatchEvent
+	 */
+	function TextModel(text, lineDelimiter) {
+		this._lastLineIndex = -1;
+		this._text = [""];
+		this._lineOffsets = [0];
+		this.setText(text);
+		this.setLineDelimiter(lineDelimiter);
+	}
+
+	TextModel.prototype = /** @lends orion.textview.TextModel.prototype */ {
+		/**
+		 * Returns the number of characters in the model.
+		 *
+		 * @returns {Number} the number of characters in the model.
+		 */
+		getCharCount: function() {
+			var count = 0;
+			for (var i = 0; i<this._text.length; i++) {
+				count += this._text[i].length;
+			}
+			return count;
+		},
+		/**
+		 * Returns the text of the line at the given index.
+		 * <p>
+		 * The valid indices are 0 to line count exclusive.  Returns <code>null</code> 
+		 * if the index is out of range. 
+		 * </p>
+		 *
+		 * @param {Number} lineIndex the zero based index of the line.
+		 * @param {Boolean} [includeDelimiter=false] whether or not to include the line delimiter. 
+		 * @returns {String} the line text or <code>null</code> if out of range.
+		 *
+		 * @see #getLineAtOffset
+		 */
+		getLine: function(lineIndex, includeDelimiter) {
+			var lineCount = this.getLineCount();
+			if (!(0 <= lineIndex && lineIndex < lineCount)) {
+				return null;
+			}
+			var start = this._lineOffsets[lineIndex];
+			if (lineIndex + 1 < lineCount) {
+				var text = this.getText(start, this._lineOffsets[lineIndex + 1]);
+				if (includeDelimiter) {
+					return text;
+				}
+				var end = text.length, c;
+				while (((c = text.charCodeAt(end - 1)) === 10) || (c === 13)) {
+					end--;
+				}
+				return text.substring(0, end);
+			} else {
+				return this.getText(start); 
+			}
+		},
+		/**
+		 * Returns the line index at the given character offset.
+		 * <p>
+		 * The valid offsets are 0 to char count inclusive. The line index for
+		 * char count is <code>line count - 1</code>. Returns <code>-1</code> if
+		 * the offset is out of range.
+		 * </p>
+		 *
+		 * @param {Number} offset a character offset.
+		 * @returns {Number} the zero based line index or <code>-1</code> if out of range.
+		 */
+		getLineAtOffset: function(offset) {
+			var charCount = this.getCharCount();
+			if (!(0 <= offset && offset <= charCount)) {
+				return -1;
+			}
+			var lineCount = this.getLineCount();
+			if (offset === charCount) {
+				return lineCount - 1; 
+			}
+			var lineStart, lineEnd;
+			var index = this._lastLineIndex;
+			if (0 <= index && index < lineCount) {
+				lineStart = this._lineOffsets[index];
+				lineEnd = index + 1 < lineCount ? this._lineOffsets[index + 1] : charCount;
+				if (lineStart <= offset && offset < lineEnd) {
+					return index;
+				}
+			}
+			var high = lineCount;
+			var low = -1;
+			while (high - low > 1) {
+				index = Math.floor((high + low) / 2);
+				lineStart = this._lineOffsets[index];
+				lineEnd = index + 1 < lineCount ? this._lineOffsets[index + 1] : charCount;
+				if (offset <= lineStart) {
+					high = index;
+				} else if (offset < lineEnd) {
+					high = index;
+					break;
+				} else {
+					low = index;
+				}
+			}
+			this._lastLineIndex = high;
+			return high;
+		},
+		/**
+		 * Returns the number of lines in the model.
+		 * <p>
+		 * The model always has at least one line.
+		 * </p>
+		 *
+		 * @returns {Number} the number of lines.
+		 */
+		getLineCount: function() {
+			return this._lineOffsets.length;
+		},
+		/**
+		 * Returns the line delimiter that is used by the view
+		 * when inserting new lines. New lines entered using key strokes 
+		 * and paste operations use this line delimiter.
+		 *
+		 * @return {String} the line delimiter that is used by the view when inserting new lines.
+		 */
+		getLineDelimiter: function() {
+			return this._lineDelimiter;
+		},
+		/**
+		 * Returns the end character offset for the given line. 
+		 * <p>
+		 * The end offset is not inclusive. This means that when the line delimiter is included, the 
+		 * offset is either the start offset of the next line or char count. When the line delimiter is
+		 * not included, the offset is the offset of the line delimiter.
+		 * </p>
+		 * <p>
+		 * The valid indices are 0 to line count exclusive.  Returns <code>-1</code> 
+		 * if the index is out of range. 
+		 * </p>
+		 *
+		 * @param {Number} lineIndex the zero based index of the line.
+		 * @param {Boolean} [includeDelimiter=false] whether or not to include the line delimiter. 
+		 * @return {Number} the line end offset or <code>-1</code> if out of range.
+		 *
+		 * @see #getLineStart
+		 */
+		getLineEnd: function(lineIndex, includeDelimiter) {
+			var lineCount = this.getLineCount();
+			if (!(0 <= lineIndex && lineIndex < lineCount)) {
+				return -1;
+			}
+			if (lineIndex + 1 < lineCount) {
+				var end = this._lineOffsets[lineIndex + 1];
+				if (includeDelimiter) {
+					return end;
+				}
+				var text = this.getText(Math.max(this._lineOffsets[lineIndex], end - 2), end);
+				var i = text.length, c;
+				while (((c = text.charCodeAt(i - 1)) === 10) || (c === 13)) {
+					i--;
+				}
+				return end - (text.length - i);
+			} else {
+				return this.getCharCount();
+			}
+		},
+		/**
+		 * Returns the start character offset for the given line.
+		 * <p>
+		 * The valid indices are 0 to line count exclusive.  Returns <code>-1</code> 
+		 * if the index is out of range. 
+		 * </p>
+		 *
+		 * @param {Number} lineIndex the zero based index of the line.
+		 * @return {Number} the line start offset or <code>-1</code> if out of range.
+		 *
+		 * @see #getLineEnd
+		 */
+		getLineStart: function(lineIndex) {
+			if (!(0 <= lineIndex && lineIndex < this.getLineCount())) {
+				return -1;
+			}
+			return this._lineOffsets[lineIndex];
+		},
+		/**
+		 * Returns the text for the given range.
+		 * <p>
+		 * The end offset is not inclusive. This means that character at the end offset
+		 * is not included in the returned text.
+		 * </p>
+		 *
+		 * @param {Number} [start=0] the zero based start offset of text range.
+		 * @param {Number} [end=char count] the zero based end offset of text range.
+		 *
+		 * @see #setText
+		 */
+		getText: function(start, end) {
+			if (start === undefined) { start = 0; }
+			if (end === undefined) { end = this.getCharCount(); }
+			if (start === end) { return ""; }
+			var offset = 0, chunk = 0, length;
+			while (chunk<this._text.length) {
+				length = this._text[chunk].length; 
+				if (start <= offset + length) { break; }
+				offset += length;
+				chunk++;
+			}
+			var firstOffset = offset;
+			var firstChunk = chunk;
+			while (chunk<this._text.length) {
+				length = this._text[chunk].length; 
+				if (end <= offset + length) { break; }
+				offset += length;
+				chunk++;
+			}
+			var lastOffset = offset;
+			var lastChunk = chunk;
+			if (firstChunk === lastChunk) {
+				return this._text[firstChunk].substring(start - firstOffset, end - lastOffset);
+			}
+			var beforeText = this._text[firstChunk].substring(start - firstOffset);
+			var afterText = this._text[lastChunk].substring(0, end - lastOffset);
+			return beforeText + this._text.slice(firstChunk+1, lastChunk).join("") + afterText; 
+		},
+		/**
+		 * Notifies all listeners that the text is about to change.
+		 * <p>
+		 * This notification is intended to be used only by the view. Application clients should
+		 * use {@link orion.textview.TextView#event:onModelChanging}.
+		 * </p>
+		 * <p>
+		 * NOTE: This method is not meant to called directly by application code. It is called internally by the TextModel
+		 * as part of the implementation of {@link #setText}. This method is included in the public API for documentation
+		 * purposes and to allow integration with other toolkit frameworks.
+		 * </p>
+		 *
+		 * @param {orion.textview.ModelChangingEvent} modelChangingEvent the changing event
+		 */
+		onChanging: function(modelChangingEvent) {
+			return this.dispatchEvent(modelChangingEvent);
+		},
+		/**
+		 * Notifies all listeners that the text has changed.
+		 * <p>
+		 * This notification is intended to be used only by the view. Application clients should
+		 * use {@link orion.textview.TextView#event:onModelChanged}.
+		 * </p>
+		 * <p>
+		 * NOTE: This method is not meant to called directly by application code. It is called internally by the TextModel
+		 * as part of the implementation of {@link #setText}. This method is included in the public API for documentation
+		 * purposes and to allow integration with other toolkit frameworks.
+		 * </p>
+		 *
+		 * @param {orion.textview.ModelChangedEvent} modelChangedEvent the changed event
+		 */
+		onChanged: function(modelChangedEvent) {
+			return this.dispatchEvent(modelChangedEvent);
+		},
+		/**
+		 * Sets the line delimiter that is used by the view
+		 * when new lines are inserted in the model due to key
+		 * strokes  and paste operations.
+		 * <p>
+		 * If lineDelimiter is "auto", the delimiter is computed to be
+		 * the first delimiter found the in the current text. If lineDelimiter
+		 * is undefined or if there are no delimiters in the current text, the
+		 * platform delimiter is used.
+		 * </p>
+		 *
+		 * @param {String} lineDelimiter the line delimiter that is used by the view when inserting new lines.
+		 */
+		setLineDelimiter: function(lineDelimiter) {
+			if (lineDelimiter === "auto") {
+				lineDelimiter = undefined;
+				if (this.getLineCount() > 1) {
+					lineDelimiter = this.getText(this.getLineEnd(0), this.getLineEnd(0, true));
+				}
+			}
+			this._lineDelimiter = lineDelimiter ? lineDelimiter : (isWindows ? "\r\n" : "\n"); 
+		},
+		/**
+		 * Replaces the text in the given range with the given text.
+		 * <p>
+		 * The end offset is not inclusive. This means that the character at the 
+		 * end offset is not replaced.
+		 * </p>
+		 * <p>
+		 * The text model must notify the listeners before and after the
+		 * the text is changed by calling {@link #onChanging} and {@link #onChanged}
+		 * respectively. 
+		 * </p>
+		 *
+		 * @param {String} [text=""] the new text.
+		 * @param {Number} [start=0] the zero based start offset of text range.
+		 * @param {Number} [end=char count] the zero based end offset of text range.
+		 *
+		 * @see #getText
+		 */
+		setText: function(text, start, end) {
+			if (text === undefined) { text = ""; }
+			if (start === undefined) { start = 0; }
+			if (end === undefined) { end = this.getCharCount(); }
+			if (start === end && text === "") { return; }
+			var startLine = this.getLineAtOffset(start);
+			var endLine = this.getLineAtOffset(end);
+			var eventStart = start;
+			var removedCharCount = end - start;
+			var removedLineCount = endLine - startLine;
+			var addedCharCount = text.length;
+			var addedLineCount = 0;
+			var lineCount = this.getLineCount();
+			
+			var cr = 0, lf = 0, index = 0;
+			var newLineOffsets = [];
+			while (true) {
+				if (cr !== -1 && cr <= index) { cr = text.indexOf("\r", index); }
+				if (lf !== -1 && lf <= index) { lf = text.indexOf("\n", index); }
+				if (lf === -1 && cr === -1) { break; }
+				if (cr !== -1 && lf !== -1) {
+					if (cr + 1 === lf) {
+						index = lf + 1;
+					} else {
+						index = (cr < lf ? cr : lf) + 1;
+					}
+				} else if (cr !== -1) {
+					index = cr + 1;
+				} else {
+					index = lf + 1;
+				}
+				newLineOffsets.push(start + index);
+				addedLineCount++;
+			}
+		
+			var modelChangingEvent = {
+				type: "Changing",
+				text: text,
+				start: eventStart,
+				removedCharCount: removedCharCount,
+				addedCharCount: addedCharCount,
+				removedLineCount: removedLineCount,
+				addedLineCount: addedLineCount
+			};
+			this.onChanging(modelChangingEvent);
+			
+			//TODO this should be done the loops below to avoid getText()
+			if (newLineOffsets.length === 0) {
+				var startLineOffset = this.getLineStart(startLine), endLineOffset;
+				if (endLine + 1 < lineCount) {
+					endLineOffset = this.getLineStart(endLine + 1);
+				} else {
+					endLineOffset = this.getCharCount();
+				}
+				if (start !== startLineOffset) {
+					text = this.getText(startLineOffset, start) + text;
+					start = startLineOffset;
+				}
+				if (end !== endLineOffset) {
+					text = text + this.getText(end, endLineOffset);
+					end = endLineOffset;
+				}
+			}
+			
+			var changeCount = addedCharCount - removedCharCount;
+			for (var j = startLine + removedLineCount + 1; j < lineCount; j++) {
+				this._lineOffsets[j] += changeCount;
+			}
+			var args = [startLine + 1, removedLineCount].concat(newLineOffsets);
+			Array.prototype.splice.apply(this._lineOffsets, args);
+			
+			var offset = 0, chunk = 0, length;
+			while (chunk<this._text.length) {
+				length = this._text[chunk].length; 
+				if (start <= offset + length) { break; }
+				offset += length;
+				chunk++;
+			}
+			var firstOffset = offset;
+			var firstChunk = chunk;
+			while (chunk<this._text.length) {
+				length = this._text[chunk].length; 
+				if (end <= offset + length) { break; }
+				offset += length;
+				chunk++;
+			}
+			var lastOffset = offset;
+			var lastChunk = chunk;
+			var firstText = this._text[firstChunk];
+			var lastText = this._text[lastChunk];
+			var beforeText = firstText.substring(0, start - firstOffset);
+			var afterText = lastText.substring(end - lastOffset);
+			var params = [firstChunk, lastChunk - firstChunk + 1];
+			if (beforeText) { params.push(beforeText); }
+			if (text) { params.push(text); }
+			if (afterText) { params.push(afterText); }
+			Array.prototype.splice.apply(this._text, params);
+			if (this._text.length === 0) { this._text = [""]; }
+			
+			var modelChangedEvent = {
+				type: "Changed",
+				start: eventStart,
+				removedCharCount: removedCharCount,
+				addedCharCount: addedCharCount,
+				removedLineCount: removedLineCount,
+				addedLineCount: addedLineCount
+			};
+			this.onChanged(modelChangedEvent);
+		}
+	};
+	mEventTarget.EventTarget.addMixin(TextModel.prototype);
+	
+	return {TextModel: TextModel};
+});/*******************************************************************************
+ * @license
+ * Copyright (c) 2010, 2011 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials are made 
+ * available under the terms of the Eclipse Public License v1.0 
+ * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
+ * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
+ * 
+ * Contributors: IBM Corporation - initial API and implementation
+ ******************************************************************************/
+
+/*global define setTimeout clearTimeout setInterval clearInterval Node */
+
+define("orion/textview/tooltip", ['orion/textview/textView', 'orion/textview/textModel', 'orion/textview/projectionTextModel'], function(mTextView, mTextModel, mProjectionTextModel) {
 
 	/** @private */
 	function Tooltip (view) {
@@ -2728,7 +2756,7 @@ define(['orion/textview/textView', 'orion/textview/textModel', 'orion/textview/p
 				annotation = annotations[0];
 				if (annotation.title) {
 					title = annotation.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-					return "<div>" + annotation.html + "&nbsp;<span style='vertical-align:mddle;'>" + title + "</span><div>";
+					return "<div>" + annotation.html + "&nbsp;<span style='vertical-align:middle;'>" + title + "</span><div>";
 				} else {
 					var newModel = new mProjectionTextModel.ProjectionTextModel(baseModel);
 					var lineStart = baseModel.getLineStart(baseModel.getLineAtOffset(annotation.start));
@@ -2745,7 +2773,7 @@ define(['orion/textview/textView', 'orion/textview/textModel', 'orion/textview/p
 						title = getText(annotation.start, annotation.end);
 					}
 					title = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-					tooltipHTML += "<div>" + annotation.html + "&nbsp;<span style='vertical-align:mddle;'>" + title + "</span><div>";
+					tooltipHTML += "<div>" + annotation.html + "&nbsp;<span style='vertical-align:middle;'>" + title + "</span><div>";
 				}
 				return tooltipHTML;
 			}
@@ -2771,7 +2799,7 @@ define(['orion/textview/textView', 'orion/textview/textModel', 'orion/textview/p
 		}
 	};
 	return {Tooltip: Tooltip};
-}, "orion/textview");
+});
 /*******************************************************************************
  * @license
  * Copyright (c) 2010, 2011 IBM Corporation and others.
@@ -2783,12 +2811,12 @@ define(['orion/textview/textView', 'orion/textview/textModel', 'orion/textview/p
  * Contributors: 
  *		Felipe Heidrich (IBM Corporation) - initial API and implementation
  *		Silenio Quarti (IBM Corporation) - initial API and implementation
- *		Mihai Sucan (Mozilla Foundation) - fix for Bug#334583 Bug#348471 Bug#349485 Bug#350595 Bug#360726 Bug#361180 Bug#362835 Bug#362428 Bug#362286 Bug#354270 Bug#361474 Bug#363945 Bug#366312
+ *		Mihai Sucan (Mozilla Foundation) - fix for Bug#334583 Bug#348471 Bug#349485 Bug#350595 Bug#360726 Bug#361180 Bug#362835 Bug#362428 Bug#362286 Bug#354270 Bug#361474 Bug#363945 Bug#366312 Bug#370584
  ******************************************************************************/
 
-/*global window document navigator setTimeout clearTimeout XMLHttpRequest define */
+/*global window document navigator setTimeout clearTimeout XMLHttpRequest define DOMException */
 
-define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview/eventTarget'], function(mTextModel, mKeyBinding, mEventTarget) {
+define("orion/textview/textView", ['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview/eventTarget'], function(mTextModel, mKeyBinding, mEventTarget) {
 
 	/** @private */
 	function addHandler(node, type, handler, capture) {
@@ -2911,8 +2939,8 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 	 * @property {Boolean} [readonly=false] whether or not the view is read-only.
 	 * @property {Boolean} [fullSelection=true] whether or not the view is in full selection mode.
 	 * @property {Boolean} [sync=false] whether or not the view creation should be synchronous (if possible).
-	 * @property {Boolean} [expandTab=false] whether or not the tab key inserts white spaces
-	 * @property {String|String[]} [stylesheet] one or more stylesheet URIs for the view.
+	 * @property {Boolean} [expandTab=false] whether or not the tab key inserts white spaces.
+	 * @property {String|String[]} [stylesheet] one or more stylesheet for the view. Each stylesheet can be either a URI or a string containing the CSS rules.
 	 * @property {String} [themeClass] the CSS class for the view theming.
 	 * @property {Number} [tabSize] The number of spaces in a tab.
 	 */
@@ -3529,6 +3557,16 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 				}
 			}
 			return false;
+		},
+		/**
+		* Returns if the view is loaded.
+		* <p>
+		* @returns {Boolean} <code>true</code> if the view is loaded.
+		*
+		* @see #onLoad
+		*/
+		isLoaded: function () {
+			return !!this._clientDiv;
 		},
 		/** 
 		 * @class This is the event sent when the user right clicks or otherwise invokes the context menu of the view. 
@@ -4189,7 +4227,9 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 					if (!recreate) {
 						var update = defaultOptions[option].update;
 						if (created && update) {
-							update.call(this, newValue);
+							if (update.call(this, newValue)) {
+								recreate = true;
+							}
 							continue;
 						}
 					}
@@ -4267,7 +4307,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 				/*
 				* Bug in Firefox.  For some reason, the caret does not show after the
 				* view is refreshed.  The fix is to toggle the contentEditable state and
-				* force the clientDiv to loose and receive focus if the it is focused.
+				* force the clientDiv to loose and receive focus if it is focused.
 				*/
 				if (isFirefox) {
 					this._fixCaret();
@@ -4340,7 +4380,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 		/**************************************** Event handlers *********************************/
 		_handleBodyMouseDown: function (e) {
 			if (!e) { e = window.event; }
-			if (isFirefox) {
+			if (isFirefox && e.which === 1) {
 				this._clientDiv.contentEditable = false;
 				(this._overlayDiv || this._clientDiv).draggable = true;
 				this._ignoreBlur = true;
@@ -4375,7 +4415,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 		},
 		_handleBodyMouseUp: function (e) {
 			if (!e) { e = window.event; }
-			if (isFirefox) {
+			if (isFirefox && e.which === 1) {
 				this._clientDiv.contentEditable = true;
 				(this._overlayDiv || this._clientDiv).draggable = false;
 				
@@ -4384,7 +4424,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 				* in some cases. For example when the user cancels a drag operation 
 				* by pressing ESC.  The fix is to detect that the drag operation was
 				* cancelled,  toggle the contentEditable state and force the clientDiv
-				* to loose and receive focus if the it is focused.
+				* to loose and receive focus if it is focused.
 				*/
 				this._fixCaret();
 				this._ignoreBlur = false;
@@ -4520,6 +4560,14 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 			}
 			if (isFirefox) {
 				this._fixCaret();
+				/*
+				* Bug in Firefox.  For some reason, Firefox stops showing the caret when the 
+				* selection is dropped onto itself. The fix is to detected the case and 
+				* call fixCaret() a second time.
+				*/
+				if (e.dataTransfer.dropEffect === "none" && !e.dataTransfer.mozUserCancelled) {
+					this._fixCaret();
+				}
 			}
 		},
 		_handleDragEnter: function (e) {
@@ -4632,7 +4680,22 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 					if (e.preventDefault) { e.preventDefault(); }
 					return false;
 				}
-				this._startIME();
+				var startIME = true;
+				
+				/*
+				* Bug in Safari. Some Control+key combinations send key events
+				* with keyCode equals to 229. This is unexpected and causes the
+				* view to start an IME composition. The fix is to ignore these
+				* events.
+				*/
+				if (isSafari && isMac) {
+					if (e.ctrlKey) {
+						startIME = false;
+					}
+				}
+				if (startIME) {
+					this._startIME();
+				}
 			} else {
 				this._commitIME();
 			}
@@ -4871,9 +4934,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 			this._lastMouseMoveX = e.clientX;
 			this._lastMouseMoveY = e.clientY;
 			this._setLinksVisible(changed && !this._isMouseDown && (isMac ? e.metaKey : e.ctrlKey));
-			if (!this._isMouseDown || this._dragOffset !== -1) {
-				return;
-			}
+
 			/*
 			* Feature in IE8 and older, the sequence of events in the IE8 event model
 			* for a doule-click is:
@@ -4900,6 +4961,9 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 					this._clickCount = 2;
 					return this._handleMouse(e, this._clickCount);
 				}
+			}
+			if (!this._isMouseDown || this._dragOffset !== -1) {
+				return;
 			}
 			
 			var x = e.clientX;
@@ -5104,7 +5168,16 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 			if (this._frameWidth !== newWidth || this._frameHeight !== newHeight) {
 				this._frameWidth = newWidth;
 				this._frameHeight = newHeight;
-				this._updatePage();
+				/*
+				* Feature in IE7. For some reason, sometimes Internet Explorer 7 
+				* returns incorrect values for element.getBoundingClientRect() when 
+				* inside a resize handler. The fix is to queue the work.
+				*/
+				if (isIE < 9) {
+					this._queueUpdatePage();
+				} else {
+					this._updatePage();
+				}
 			}
 		},
 		_handleRulerEvent: function (e) {
@@ -5681,7 +5754,9 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 			if (reset) {
 				var attrs = node.attributes;
 				for (var i= attrs.length; i-->0;) {
-					node.removeAttributeNode(attrs[i]); 
+					if (attrs[i].specified) {
+						node.removeAttributeNode(attrs[i]); 
+					}
 				}
 			}
 			if (!style) {
@@ -6153,7 +6228,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 					} else {
 						changeStart = -1;
 					}
-					delete div.modelChangedEvent;
+					div.modelChangedEvent = undefined;
 				}
 				oldSpan = div.firstChild;
 			}
@@ -6167,7 +6242,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 					oldStyle = oldSpan.viewStyle;
 					if (oldText === text && this._compare(style, oldStyle)) {
 						oldEnd += oldText.length;
-						delete oldSpan._rectsCache;
+						oldSpan._rectsCache = undefined;
 						span = oldSpan = oldSpan.nextSibling;
 						continue;
 					} else {
@@ -6393,23 +6468,36 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 			if (this._stylesheet) {
 				var stylesheet = typeof(this._stylesheet) === "string" ? [this._stylesheet] : this._stylesheet;
 				for (var i = 0; i < stylesheet.length; i++) {
-					if (this._sync) {
+					var sheet = stylesheet[i];
+					var isLink = this._isLinkURL(sheet);
+					if (isLink && this._sync) {
 						try {
 							var objXml = new XMLHttpRequest();
 							if (objXml.overrideMimeType) {
 								objXml.overrideMimeType("text/css");
 							}
-							objXml.open("GET", stylesheet[i], false);
+							objXml.open("GET", sheet, false);
 							objXml.send(null);
-							html.push("<style>");
-							html.push(objXml.responseText);
-							html.push("</style>");
-							continue;
+							sheet = objXml.responseText;
+							isLink = false;
 						} catch (e) {}
 					}
-					html.push("<link rel='stylesheet' type='text/css' href='");
-					html.push(stylesheet[i]);
-					html.push("'></link>");
+					if (isLink) {
+						html.push("<link rel='stylesheet' type='text/css' ");
+						/*
+						* Bug in IE7. The window load event is not sent unless a load handler is added to the link node.
+						*/
+						if (isIE < 9) {
+							html.push("onload='window' ");
+						}
+						html.push("href='");
+						html.push(sheet);
+						html.push("'></link>");
+					} else {
+						html.push("<style>");
+						html.push(sheet);
+						html.push("</style>");
+					}
 				}
 			}
 			/*
@@ -6430,44 +6518,87 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 			var frameDocument = this._frameDocument = frameWindow.document;
 			var self = this;
 			function write() {
-				frameDocument.open();
+				frameDocument.open("text/html", "replace");
 				frameDocument.write(self._getFrameHTML());
 				frameDocument.close();
 				self._windowLoadHandler = function(e) {
-					self._createContent();
+					/*
+					* Bug in Safari.  Safari sends the window load event before the
+					* style sheets are loaded. The fix is to defer creation of the
+					* contents until the document readyState changes to complete.
+					*/
+					if (self._isDocumentReady()) {
+						self._createContent();
+					}
 				};
 				addHandler(frameWindow, "load", self._windowLoadHandler);
 			}
-			/*
-			* Bug in Firefox.  Firefox does not send window load event if document.write
-			* is done inside of the frame load event handler.
-			*/
-			if (isFirefox && !this._sync) {
-				setTimeout(write, 0);
-			} else {
-				write();
-			}
+			write();
 			if (this._sync) {
 				this._createContent();
+			} else {
+				/*
+				* Bug in Webkit. Webkit does not send the load event for the iframe window when the main page
+				* loads as a result of backward or forward navigation.
+				* The fix is to use a timer to create the content only when the document is ready.
+				*/
+				this._createViewTimer = function() {
+					if (self._clientDiv) { return; }
+					if (self._isDocumentReady()) {
+						self._createContent();
+					} else {
+						setTimeout(self._createViewTimer, 10);
+					}
+				};
+				setTimeout(this._createViewTimer, 10);
 			}
+		},
+		_isDocumentReady: function() {
+			var frameDocument = this._frameDocument;
+			if (!frameDocument) { return false; }
+			if (frameDocument.readyState === "complete") {
+				return true;
+			} else if (frameDocument.readyState === "interactive" && isFirefox) {
+				/*
+				* Bug in Firefox. Firefox does not change the document ready state to complete 
+				* all the time. The fix is to wait for the ready state to be "interactive" and check that 
+				* all css rules are initialized.
+				*/
+				var styleSheets = frameDocument.styleSheets;
+				var styleSheetCount = 1;
+				if (this._stylesheet) {
+					styleSheetCount += typeof(this._stylesheet) === "string" ? 1 : this._stylesheet.length;
+				}
+				if (styleSheetCount === styleSheets.length) {
+					var index = 0;
+					while (index < styleSheets.length) {
+						var count = 0;
+						try {
+							count = styleSheets.item(index).cssRules.length;
+						} catch (ex) {
+							/*
+							* Feature in Firefox. To determine if a stylesheet is loaded the number of css rules is used, if the 
+							* stylesheet is not loaded this operation will throw an invalid access error. When a stylesheet from
+							* a different domain is loaded, accessing the css rules will result in a security exception. In this
+							* case count is set to 1 to indicate the stylesheet is loaded.
+							*/
+							if (ex.code !== DOMException.INVALID_ACCESS_ERR) {
+								count = 1;
+							}
+						}
+						if (count === 0) { break; }
+						index++;
+					}
+					return index === styleSheets.length;
+				}	
+			}
+			return false;
 		},
 		_createContent: function() {
 			if (this._clientDiv) { return; }
 			var parent = this._parent;
 			var parentDocument = this._parentDocument;
 			var frameDocument = this._frameDocument;
-			/*
-			* Bug in Safari.  Safari sends the window load event before the
-			* style sheets are loaded. The fix is to defer creation of the
-			* contents until the document readyState changes to complete.
-			*/
-			var self = this;
-			if (!this._sync && frameDocument.readyState !== "complete") {
-				setTimeout(function() {
-					self._createContent();
-				}, 10);
-				return;
-			}
 			var body = frameDocument.body;
 			this._setThemeClass(this._themeClass, true);
 			body.style.margin = "0px";
@@ -6494,8 +6625,8 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 				textArea.style.whiteSpace = "pre";
 				textArea.style.left = "-1000px";
 				textArea.tabIndex = 1;
-				textArea.autocapitalize = false;
-				textArea.autocorrect = false;
+				textArea.autocapitalize = "off";
+				textArea.autocorrect = "off";
 				textArea.className = "viewContainer";
 				textArea.style.background = "transparent";
 				textArea.style.color = "transparent";
@@ -6620,7 +6751,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 				fullSelection: {value: true, recreate: false, update: this._setFullSelection},
 				tabSize: {value: 8, recreate: false, update: this._setTabSize},
 				expandTab: {value: false, recreate: false, update: null},
-				stylesheet: {value: [], recreate: true, update: null},
+				stylesheet: {value: [], recreate: false, update: this._setStyleSheet},
 				themeClass: {value: undefined, recreate: false, update: this._setThemeClass},
 				sync: {value: false, recreate: false, update: null}
 			};
@@ -7567,6 +7698,9 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 			this._createActions();
 			this._createFrame();
 		},
+		_isLinkURL: function(string) {
+			return string.toLowerCase().lastIndexOf(".css") === string.length - 4;
+		},
 		_modifyContent: function(e, updateCaret) {
 			if (this._readonly && !e._code) {
 				return;
@@ -7675,7 +7809,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 				/*
 				* Bug in Firefox.  For some reason, the caret does not show after the
 				* view is refreshed.  The fix is to toggle the contentEditable state and
-				* force the clientDiv to loose and receive focus if the it is focused.
+				* force the clientDiv to loose and receive focus if it is focused.
 				*/
 				if (isFirefox) {
 					this._ignoreFocus = false;
@@ -8136,6 +8270,72 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 			this._setSelection(selection, true, true);
 			return true;
 		},
+		_setStyleSheet: function(stylesheet) {
+			var oldstylesheet = this._stylesheet;
+			if (!(oldstylesheet instanceof Array)) {
+				oldstylesheet = [oldstylesheet];
+			}
+			this._stylesheet = stylesheet;
+			if (!(stylesheet instanceof Array)) {
+				stylesheet = [stylesheet];
+			}
+			var document = this._frameDocument;
+			var documentStylesheet = document.styleSheets;
+			var head = document.getElementsByTagName("head")[0];
+			var changed = false;
+			var i = 0, sheet, oldsheet, documentSheet, ownerNode, styleNode, textNode;
+			while (i < stylesheet.length) {
+				if (i >= oldstylesheet.length) { break; }
+				sheet = stylesheet[i];
+				oldsheet = oldstylesheet[i];
+				if (sheet !== oldsheet) {
+					if (this._isLinkURL(sheet)) {
+						return true;
+					} else {
+						documentSheet = documentStylesheet[i+1];
+						ownerNode = documentSheet.ownerNode;
+						styleNode = document.createElement('STYLE');
+						textNode = document.createTextNode(sheet);
+						styleNode.appendChild(textNode);
+						head.replaceChild(styleNode, ownerNode);
+						changed = true;
+					}
+				}
+				i++;
+			}
+			if (i < oldstylesheet.length) {
+				while (i < oldstylesheet.length) {
+					sheet = oldstylesheet[i];
+					if (this._isLinkURL(sheet)) {
+						return true;
+					} else {
+						documentSheet = documentStylesheet[i+1];
+						ownerNode = documentSheet.ownerNode;
+						head.removeChild(ownerNode);
+						changed = true;
+					}
+					i++;
+				}
+			} else {
+				while (i < stylesheet.length) {
+					sheet = stylesheet[i];
+					if (this._isLinkURL(sheet)) {
+						return true;
+					} else {
+						styleNode = document.createElement('STYLE');
+						textNode = document.createTextNode(sheet);
+						styleNode.appendChild(textNode);
+						head.appendChild(styleNode);
+						changed = true;
+					}
+					i++;
+				}
+			}
+			if (changed) {
+				this._updateStyle();
+			}
+			return false;
+		},
 		_setFullSelection: function(fullSelection, init) {
 			this._fullSelection = fullSelection;
 			
@@ -8272,15 +8472,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 				if (this._themeClass) { viewContainerClass += " " + this._themeClass; }
 				document.body.className = viewContainerClass;
 				if (!init) {
-					if (isIE) {
-						document.body.style.lineHeight = "normal";
-					}
-					this._lineHeight = this._calculateLineHeight();
-					this._viewPadding = this._calculatePadding();
-					if (isIE) {
-						document.body.style.lineHeight = this._lineHeight + "px";
-					}
-					this.redraw();
+					this._updateStyle();
 				}
 			}
 		},
@@ -8817,12 +9009,24 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
 				div.rulerChanged = false;
 				div = div.nextSibling;
 			}
+		},
+		_updateStyle: function () {
+			var document = this._frameDocument;
+			if (isIE) {
+				document.body.style.lineHeight = "normal";
+			}
+			this._lineHeight = this._calculateLineHeight();
+			this._viewPadding = this._calculatePadding();
+			if (isIE) {
+				document.body.style.lineHeight = this._lineHeight + "px";
+			}
+			this.redraw();
 		}
 	};//end prototype
 	mEventTarget.EventTarget.addMixin(TextView.prototype);
 	
 	return {TextView: TextView};
-}, "orion/textview");
+});
 
 /*******************************************************************************
  * @license
@@ -8839,7 +9043,7 @@ define(['orion/textview/textModel', 'orion/textview/keyBinding', 'orion/textview
  
 /*global define */
 
-define([], function() {
+define("orion/textview/textDND", [], function() {
 
 	function TextDND(view, undoStack) {
 		this._view = view;
@@ -8962,7 +9166,7 @@ define([], function() {
 	};
 
 	return {TextDND: TextDND};
-}, "orion/textview");/******************************************************************************* 
+});/******************************************************************************* 
  * @license
  * Copyright (c) 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials are made 
@@ -8976,96 +9180,80 @@ define([], function() {
 /*jslint */
 /*global define */
 
-define([], function() {
+define("orion/editor/htmlGrammar", [], function() {
 
 	/**
 	 * Provides a grammar that can do some very rough syntax highlighting for HTML.
 	 * @class orion.syntax.HtmlGrammar
 	 */
 	function HtmlGrammar() {
+		/**
+		 * Object containing the grammar rules.
+		 * @public
+		 * @type Object
+		 */
 		return {
-			/**
-			 * What kind of highlight provider we are.
-			 * @public
-			 * @type String
-			 */
-			type: "grammar",
-			
-			/**
-			 * The file extensions that we provide rules for.
-			 * @public
-			 * @type String[]
-			 */
-			fileTypes: [ "html", "htm" ],
-			
-			/**
-			 * Object containing the grammar rules.
-			 * @public
-			 * @type Object
-			 */
-			grammar: {
-				"name": "HTML",
-				"scopeName": "source.html",
-				"uuid": "3B5C76FB-EBB5-D930-F40C-047D082CE99B",
-				"patterns": [
-					// TODO unicode?
-					{
-						"match": "<!(doctype|DOCTYPE)[^>]+>",
-						"name": "entity.name.tag.doctype.html"
+			"name": "HTML",
+			"scopeName": "source.html",
+			"uuid": "3B5C76FB-EBB5-D930-F40C-047D082CE99B",
+			"patterns": [
+				// TODO unicode?
+				{
+					"match": "<!(doctype|DOCTYPE)[^>]+>",
+					"name": "entity.name.tag.doctype.html"
+				},
+				{
+					"begin": "<!--",
+					"end": "-->",
+					"beginCaptures": {
+						"0": { "name": "punctuation.definition.comment.html" }
 					},
-					{
-						"begin": "<!--",
-						"end": "-->",
-						"beginCaptures": {
-							"0": { "name": "punctuation.definition.comment.html" }
-						},
-						"endCaptures": {
-							"0": { "name": "punctuation.definition.comment.html" }
-						},
-						"patterns": [
-							{
-								"match": "--",
-								"name": "invalid.illegal.badcomment.html"
-							}
-						],
-						"contentName": "comment.block.html"
+					"endCaptures": {
+						"0": { "name": "punctuation.definition.comment.html" }
 					},
-					{ // startDelimiter + tagName
-						"match": "<[A-Za-z0-9_\\-:]+(?= ?)",
-						"name": "entity.name.tag.html"
-					},
-					{ "include": "#attrName" },
-					{ "include": "#qString" },
-					{ "include": "#qqString" },
-					// TODO attrName, qString, qqString should be applied first while inside a tag
-					{ // startDelimiter + slash + tagName + endDelimiter
-						"match": "</[A-Za-z0-9_\\-:]+>",
-						"name": "entity.name.tag.html"
-					},
-					{ // end delimiter of open tag
-						"match": ">", 
-						"name": "entity.name.tag.html"
-					} ],
-				"repository": {
-					"attrName": { // attribute name
-						"match": "[A-Za-z\\-:]+(?=\\s*=\\s*['\"])",
-						"name": "entity.other.attribute.name.html"
-					},
-					"qqString": { // double quoted string
-						"match": "(\")[^\"]+(\")",
-						"name": "string.quoted.double.html"
-					},
-					"qString": { // single quoted string
-						"match": "(')[^']+(\')",
-						"name": "string.quoted.single.html"
-					}
+					"patterns": [
+						{
+							"match": "--",
+							"name": "invalid.illegal.badcomment.html"
+						}
+					],
+					"contentName": "comment.block.html"
+				},
+				{ // startDelimiter + tagName
+					"match": "<[A-Za-z0-9_\\-:]+(?= ?)",
+					"name": "entity.name.tag.html"
+				},
+				{ "include": "#attrName" },
+				{ "include": "#qString" },
+				{ "include": "#qqString" },
+				// TODO attrName, qString, qqString should be applied first while inside a tag
+				{ // startDelimiter + slash + tagName + endDelimiter
+					"match": "</[A-Za-z0-9_\\-:]+>",
+					"name": "entity.name.tag.html"
+				},
+				{ // end delimiter of open tag
+					"match": ">", 
+					"name": "entity.name.tag.html"
+				} ],
+			"repository": {
+				"attrName": { // attribute name
+					"match": "[A-Za-z\\-:]+(?=\\s*=\\s*['\"])",
+					"name": "entity.other.attribute.name.html"
+				},
+				"qqString": { // double quoted string
+					"match": "(\")[^\"]+(\")",
+					"name": "string.quoted.double.html"
+				},
+				"qString": { // single quoted string
+					"match": "(')[^']+(\')",
+					"name": "string.quoted.single.html"
 				}
 			}
 		};
 	}
 
 	return {HtmlGrammar: HtmlGrammar};
-}, "orion/editor");
+});
 /******************************************************************************* 
  * @license
  * Copyright (c) 2011 IBM Corporation and others.
@@ -9080,7 +9268,7 @@ define([], function() {
 /*jslint regexp:false laxbreak:true*/
 /*global define */
 
-define(['orion/editor/regex'], function(mRegex) {
+define("orion/editor/textMateStyler", ['orion/editor/regex'], function(mRegex) {
 
 var RegexUtil = {
 	// Rules to detect some unsupported Oniguruma features
@@ -10421,7 +10609,7 @@ var RegexUtil = {
 		RegexUtil: RegexUtil,
 		TextMateStyler: TextMateStyler
 	};
-}, "orion/editor");
+});
 /*******************************************************************************
  * @license
  * Copyright (c) 2010, 2011 IBM Corporation and others.
@@ -10431,11 +10619,12 @@ var RegexUtil = {
  * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
  * 
  * Contributors: IBM Corporation - initial API and implementation
+ *               Alex Lakatos - fix for bug#369781
  ******************************************************************************/
 
 /*global document window navigator define */
 
-define(['orion/textview/annotations'], function(mAnnotations) {
+define("examples/textview/textStyler", ['orion/textview/annotations'], function(mAnnotations) {
 
 	var JS_KEYWORDS =
 		["break",
@@ -10868,6 +11057,22 @@ define(['orion/textview/annotations'], function(mAnnotations) {
 	}
 	
 	TextStyler.prototype = {
+		getClassNameForToken: function(token) {
+			switch (token) {
+				case "singleLineComment": return singleCommentStyle.styleClass;
+				case "multiLineComment": return multiCommentStyle.styleClass;
+				case "docComment": return docCommentStyle.styleClass;
+				case "docHtmlComment": return htmlMarkupStyle.styleClass;
+				case "tasktag": return tasktagStyle.styleClass;
+				case "doctag": return doctagStyle.styleClass;
+				case "string": return stringStyle.styleClass;
+				case "keyword": return keywordStyle.styleClass;
+				case "space": return spaceStyle.styleClass;
+				case "tab": return tabStyle.styleClass;
+				case "caretLine": return caretLineStyle.styleClass;
+			}
+			return null;
+		},
 		destroy: function() {
 			var view = this.view;
 			if (view) {
@@ -11516,4 +11721,4 @@ define(['orion/textview/annotations'], function(mAnnotations) {
 	};
 	
 	return {TextStyler: TextStyler};
-}, "examples/textview");
+});
