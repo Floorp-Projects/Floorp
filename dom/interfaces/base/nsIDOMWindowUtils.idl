@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(ab6e9c71-8aa1-40bb-8bf9-65e16429055f)]
+[scriptable, uuid(73b48170-55d5-11e1-b86c-0800200c9a66)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -991,6 +991,12 @@ interface nsIDOMWindowUtils : nsISupports {
                             [optional] out long aRefCnt,
                             [optional] out long aDBRefCnt,
                             [optional] out long aSliceRefCnt);
+
+  /**
+   * Return whether incremental GC has been disabled due to a binary add-on.
+   */
+  [implicit_jscontext]
+  boolean isIncrementalGCEnabled();
 
   /**
    * Begin opcode-level profiling of all JavaScript execution in the window's

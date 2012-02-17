@@ -799,7 +799,7 @@ private:
 
 JSClass DedicatedWorkerGlobalScope::sClass = {
   "DedicatedWorkerGlobalScope",
-  JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
+  JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_RESOLVE,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, reinterpret_cast<JSResolveOp>(Resolve), JS_ConvertStub,
   Finalize, NULL, NULL, NULL, NULL, NULL, NULL, Trace, NULL

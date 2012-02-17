@@ -75,7 +75,8 @@ xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
 
 #define XPCONNECT_GLOBAL_FLAGS                                                \
     JSCLASS_XPCONNECT_GLOBAL | JSCLASS_HAS_PRIVATE |                          \
-    JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(1)
+    JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_IMPLEMENTS_BARRIERS |            \
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(1)
 
 void
 TraceXPCGlobal(JSTracer *trc, JSObject *obj);
@@ -182,8 +183,12 @@ xpc_UnmarkGrayObjectRecursive(JSObject* obj);
 inline void
 xpc_UnmarkGrayObject(JSObject *obj)
 {
-    if (obj && xpc_IsGrayGCThing(obj))
-        xpc_UnmarkGrayObjectRecursive(obj);
+    if (obj) {
+        if (xpc_IsGrayGCThing(obj))
+            xpc_UnmarkGrayObjectRecursive(obj);
+        else if (js::IsIncrementalBarrierNeededOnObject(obj))
+            js::IncrementalReferenceBarrier(obj);
+    }
 }
 
 // If aVariant is an XPCVariant, this marks the object to be in aGeneration.

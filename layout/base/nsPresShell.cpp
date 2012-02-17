@@ -5428,6 +5428,24 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
   }
 }
 
+class nsAutoNotifyDidPaint
+{
+public:
+  nsAutoNotifyDidPaint(bool aWillSendDidPaint)
+    : mWillSendDidPaint(aWillSendDidPaint)
+  {
+  }
+  ~nsAutoNotifyDidPaint()
+  {
+    if (!mWillSendDidPaint && nsContentUtils::XPConnect()) {
+      nsContentUtils::XPConnect()->NotifyDidPaint();
+    }
+  }
+
+private:
+  bool mWillSendDidPaint;
+};
+
 void
 PresShell::Paint(nsIView*           aViewToPaint,
                  nsIWidget*         aWidgetToPaint,
@@ -5450,6 +5468,8 @@ PresShell::Paint(nsIView*           aViewToPaint,
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
   NS_ASSERTION(aWidgetToPaint, "Can't paint without a widget");
+
+  nsAutoNotifyDidPaint notifyDidPaint(aWillSendDidPaint);
 
   nsPresContext* presContext = GetPresContext();
   AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
@@ -7220,6 +7240,10 @@ PresShell::DidPaint()
   // tree is torn down we might not be a root presshell...
   if (rootPresContext == mPresContext) {
     rootPresContext->UpdatePluginGeometry();
+  }
+
+  if (nsContentUtils::XPConnect()) {
+    nsContentUtils::XPConnect()->NotifyDidPaint();
   }
 }
 

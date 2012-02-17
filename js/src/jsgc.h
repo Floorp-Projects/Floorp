@@ -55,7 +55,6 @@
 #include "jslock.h"
 #include "jsutil.h"
 #include "jsversion.h"
-#include "jsgcstats.h"
 #include "jscell.h"
 
 #include "ds/BitArray.h"
@@ -81,6 +80,14 @@ class GCHelperThread;
 struct Shape;
 
 namespace gc {
+
+enum State {
+    NO_INCREMENTAL,
+    MARK_ROOTS,
+    MARK,
+    SWEEP,
+    INVALID
+};
 
 struct Arena;
 
@@ -419,6 +426,10 @@ struct ArenaHeader {
      * not present in the stack we use an extra flag to tag arenas on the
      * stack.
      *
+     * Delayed marking is also used for arenas that we allocate into during an
+     * incremental GC. In this case, we intend to mark all the objects in the
+     * arena, and it's faster to do this marking in bulk.
+     *
      * To minimize the ArenaHeader size we record the next delayed marking
      * linkage as arenaAddress() >> ArenaShift and pack it with the allocKind
      * field and hasDelayedMarking flag. We use 8 bits for the allocKind, not
@@ -427,7 +438,9 @@ struct ArenaHeader {
      */
   public:
     size_t       hasDelayedMarking  : 1;
-    size_t       nextDelayedMarking : JS_BITS_PER_WORD - 8 - 1;
+    size_t       allocatedDuringIncremental : 1;
+    size_t       markOverflow : 1;
+    size_t       nextDelayedMarking : JS_BITS_PER_WORD - 8 - 1 - 1 - 1;
 
     static void staticAsserts() {
         /* We must be able to fit the allockind into uint8_t. */
@@ -437,7 +450,7 @@ struct ArenaHeader {
          * nextDelayedMarkingpacking assumes that ArenaShift has enough bits
          * to cover allocKind and hasDelayedMarking.
          */
-        JS_STATIC_ASSERT(ArenaShift >= 8 + 1);
+        JS_STATIC_ASSERT(ArenaShift >= 8 + 1 + 1 + 1);
     }
 
     inline uintptr_t address() const;
@@ -450,6 +463,8 @@ struct ArenaHeader {
 
     void init(JSCompartment *comp, AllocKind kind) {
         JS_ASSERT(!allocated());
+        JS_ASSERT(!markOverflow);
+        JS_ASSERT(!allocatedDuringIncremental);
         JS_ASSERT(!hasDelayedMarking);
         compartment = comp;
 
@@ -462,6 +477,8 @@ struct ArenaHeader {
 
     void setAsNotAllocated() {
         allocKind = size_t(FINALIZE_LIMIT);
+        markOverflow = 0;
+        allocatedDuringIncremental = 0;
         hasDelayedMarking = 0;
         nextDelayedMarking = 0;
     }
@@ -507,8 +524,8 @@ struct ArenaHeader {
     void checkSynchronizedWithFreeList() const;
 #endif
 
-    inline Arena *getNextDelayedMarking() const;
-    inline void setNextDelayedMarking(Arena *arena);
+    inline ArenaHeader *getNextDelayedMarking() const;
+    inline void setNextDelayedMarking(ArenaHeader *aheader);
 };
 
 struct Arena {
@@ -908,25 +925,24 @@ ArenaHeader::getThingSize() const
     return Arena::thingSize(getAllocKind());
 }
 
-inline Arena *
+inline ArenaHeader *
 ArenaHeader::getNextDelayedMarking() const
 {
-    return reinterpret_cast<Arena *>(nextDelayedMarking << ArenaShift);
+    return &reinterpret_cast<Arena *>(nextDelayedMarking << ArenaShift)->aheader;
 }
 
 inline void
-ArenaHeader::setNextDelayedMarking(Arena *arena)
+ArenaHeader::setNextDelayedMarking(ArenaHeader *aheader)
 {
-    JS_ASSERT(!hasDelayedMarking);
+    JS_ASSERT(!(uintptr_t(aheader) & ArenaMask));
     hasDelayedMarking = 1;
-    nextDelayedMarking = arena->address() >> ArenaShift;
+    nextDelayedMarking = aheader->arenaAddress() >> ArenaShift;
 }
 
 JS_ALWAYS_INLINE void
 ChunkBitmap::getMarkWordAndMask(const Cell *cell, uint32_t color,
                                 uintptr_t **wordp, uintptr_t *maskp)
 {
-    JS_ASSERT(cell->chunk() == Chunk::fromAddress(reinterpret_cast<uintptr_t>(this)));
     size_t bit = (cell->address() & ChunkMask) / Cell::CellSize + color;
     JS_ASSERT(bit < ArenaBitmapBits * ArenasPerChunk);
     *maskp = uintptr_t(1) << (bit % JS_BITS_PER_WORD);
@@ -969,21 +985,6 @@ Cell::compartment() const
 {
     return arenaHeader()->compartment;
 }
-
-/*
- * Lower limit after which we limit the heap growth
- */
-const size_t GC_ALLOCATION_THRESHOLD = 30 * 1024 * 1024;
-
-/*
- * A GC is triggered once the number of newly allocated arenas is
- * GC_HEAP_GROWTH_FACTOR times the number of live arenas after the last GC
- * starting after the lower limit of GC_ALLOCATION_THRESHOLD.
- */
-const float GC_HEAP_GROWTH_FACTOR = 3.0f;
-
-/* Perform a Full GC every 20 seconds if MaybeGC is called */
-static const int64_t GC_IDLE_FULL_SPAN = 20 * 1000 * 1000;
 
 static inline JSGCTraceKind
 MapAllocToTraceKind(AllocKind thingKind)
@@ -1168,12 +1169,13 @@ struct ArenaLists {
             FreeSpan *headSpan = &freeLists[i];
             if (!headSpan->isEmpty()) {
                 ArenaHeader *aheader = headSpan->arenaHeader();
-                JS_ASSERT(!aheader->hasFreeThings());
                 aheader->setFirstFreeSpan(headSpan);
                 headSpan->initAsEmpty();
             }
         }
     }
+
+    inline void prepareForIncrementalGC(JSCompartment *comp);
 
     /*
      * Temporarily copy the free list heads to the arenas so the code can see
@@ -1309,23 +1311,6 @@ typedef js::HashMap<void *,
                     js::DefaultHasher<void *>,
                     js::SystemAllocPolicy> RootedValueMap;
 
-/* If HashNumber grows, need to change WrapperHasher. */
-JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
-
-struct WrapperHasher
-{
-    typedef Value Lookup;
-
-    static HashNumber hash(Value key) {
-        uint64_t bits = JSVAL_TO_IMPL(key).asBits;
-        return uint32_t(bits) ^ uint32_t(bits >> 32);
-    }
-
-    static bool match(const Value &l, const Value &k) { return l == k; }
-};
-
-typedef HashMap<Value, Value, WrapperHasher, SystemAllocPolicy> WrapperMap;
-
 } /* namespace js */
 
 extern JS_FRIEND_API(JSGCTraceKind)
@@ -1377,6 +1362,9 @@ js_IsAddressableGCThing(JSRuntime *rt, uintptr_t w, js::gc::AllocKind *thingKind
 namespace js {
 
 extern void
+MarkCompartmentActive(js::StackFrame *fp);
+
+extern void
 TraceRuntime(JSTracer *trc);
 
 extern JS_FRIEND_API(void)
@@ -1396,8 +1384,6 @@ MaybeGC(JSContext *cx);
 extern void
 ShrinkGCBuffers(JSRuntime *rt);
 
-} /* namespace js */
-
 /*
  * Kinds of js_GC invocation.
  */
@@ -1411,9 +1397,20 @@ typedef enum JSGCInvocationKind {
 
 /* Pass NULL for |comp| to get a full GC. */
 extern void
-js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcreason::Reason r);
+GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+
+extern void
+GCSlice(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+
+extern void
+GCDebugSlice(JSContext *cx, int64_t objCount);
+
+} /* namespace js */
 
 namespace js {
+
+void
+InitTracer(JSTracer *trc, JSRuntime *rt, JSContext *cx, JSTraceCallback callback);
 
 #ifdef JS_THREADSAFE
 
@@ -1572,17 +1569,56 @@ struct MarkStack {
     T *tos;
     T *limit;
 
-    bool push(T item) {
-        if (tos == limit)
+    T *ballast;
+    T *ballastLimit;
+
+    MarkStack()
+      : stack(NULL),
+        tos(NULL),
+        limit(NULL),
+        ballast(NULL),
+        ballastLimit(NULL) { }
+
+    ~MarkStack() {
+        if (stack != ballast)
+            js_free(stack);
+        js_free(ballast);
+    }
+
+    bool init(size_t ballastcap) {
+        JS_ASSERT(!stack);
+
+        if (ballastcap == 0)
+            return true;
+
+        ballast = (T *)js_malloc(sizeof(T) * ballastcap);
+        if (!ballast)
             return false;
+        ballastLimit = ballast + ballastcap;
+        stack = ballast;
+        limit = ballastLimit;
+        tos = stack;
+        return true;
+    }
+
+    bool push(T item) {
+        if (tos == limit) {
+            if (!enlarge())
+                return false;
+        }
+        JS_ASSERT(tos < limit);
         *tos++ = item;
         return true;
     }
 
     bool push(T item1, T item2, T item3) {
         T *nextTos = tos + 3;
-        if (nextTos > limit)
-            return false;
+        if (nextTos > limit) {
+            if (!enlarge())
+                return false;
+            nextTos = tos + 3;
+        }
+        JS_ASSERT(nextTos <= limit);
         tos[0] = item1;
         tos[1] = item2;
         tos[2] = item3;
@@ -1599,61 +1635,130 @@ struct MarkStack {
         return *--tos;
     }
 
-    template<size_t N>
-    MarkStack(T (&buffer)[N])
-      : stack(buffer),
-        tos(buffer),
-        limit(buffer + N) { }
+    ptrdiff_t position() const {
+        return tos - stack;
+    }
+
+    void reset() {
+        if (stack != ballast) {
+            js_free(stack);
+            stack = ballast;
+            limit = ballastLimit;
+        }
+        tos = stack;
+        JS_ASSERT(limit == ballastLimit);
+    }
+
+    bool enlarge() {
+        size_t tosIndex = tos - stack;
+        size_t cap = limit - stack;
+        size_t newcap = cap * 2;
+        if (newcap == 0)
+            newcap = 32;
+
+        T *newStack;
+        if (stack == ballast) {
+            newStack = (T *)js_malloc(sizeof(T) * newcap);
+            if (!newStack)
+                return false;
+            for (T *src = stack, *dst = newStack; src < tos; )
+                *dst++ = *src++;
+        } else {
+            newStack = (T *)js_realloc(stack, sizeof(T) * newcap);
+            if (!newStack)
+                return false;
+        }
+        stack = newStack;
+        tos = stack + tosIndex;
+        limit = newStack + newcap;
+        return true;
+    }
+};
+
+/*
+ * This class records how much work has been done in a given GC slice, so that
+ * we can return before pausing for too long. Some slices are allowed to run for
+ * unlimited time, and others are bounded. To reduce the number of gettimeofday
+ * calls, we only check the time every 1000 operations.
+ */
+struct SliceBudget {
+    int64_t deadline; /* in microseconds */
+    intptr_t counter;
+
+    static const intptr_t CounterReset = 1000;
+
+    static const int64_t Unlimited = 0;
+    static int64_t TimeBudget(int64_t millis);
+    static int64_t WorkBudget(int64_t work);
+
+    /* Equivalent to SliceBudget(UnlimitedBudget). */
+    SliceBudget();
+
+    /* Instantiate as SliceBudget(Time/WorkBudget(n)). */
+    SliceBudget(int64_t budget);
+
+    void reset() {
+        deadline = INT64_MAX;
+        counter = INTPTR_MAX;
+    }
+
+    void step() {
+        counter--;
+    }
+
+    bool checkOverBudget();
+
+    bool isOverBudget() {
+        if (counter > 0)
+            return false;
+        return checkOverBudget();
+    }
 };
 
 static const size_t MARK_STACK_LENGTH = 32768;
 
 struct GCMarker : public JSTracer {
+  private:
     /*
      * We use a common mark stack to mark GC things of different types and use
      * the explicit tags to distinguish them when it cannot be deduced from
      * the context of push or pop operation.
-     *
-     * Currently we need only 4 tags. However that can be extended to 8 if
-     * necessary as we tag only GC things.
      */
     enum StackTag {
         ValueArrayTag,
         ObjectTag,
         TypeTag,
         XmlTag,
-        LastTag = XmlTag
+        SavedValueArrayTag,
+        LastTag = SavedValueArrayTag
     };
 
-    static const uintptr_t StackTagMask = 3;
+    static const uintptr_t StackTagMask = 7;
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(StackTagMask >= uintptr_t(LastTag));
         JS_STATIC_ASSERT(StackTagMask <= gc::Cell::CellMask);
     }
 
-  private:
-    /* The color is only applied to objects, functions and xml. */
-    uint32_t color;
-
   public:
-    /* Pointer to the top of the stack of arenas we are delaying marking on. */
-    js::gc::Arena *unmarkedArenaStackTop;
-    /* Count of arenas that are currently in the stack. */
-    DebugOnly<size_t> markLaterArenas;
+    explicit GCMarker();
+    bool init(bool lazy);
 
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-    js::gc::ConservativeGCStats conservativeStats;
-    Vector<void *, 0, SystemAllocPolicy> conservativeRoots;
-    const char *conservativeDumpFileName;
-    void dumpConservativeRoots();
-#endif
+    void start(JSRuntime *rt, JSContext *cx);
+    void stop();
+    void reset();
 
-    MarkStack<uintptr_t> stack;
+    void pushObject(JSObject *obj) {
+        pushTaggedPtr(ObjectTag, obj);
+    }
 
-  public:
-    explicit GCMarker(JSContext *cx);
-    ~GCMarker();
+    void pushType(types::TypeObject *type) {
+        pushTaggedPtr(TypeTag, type);
+    }
+
+    void pushXML(JSXML *xml) {
+        pushTaggedPtr(XmlTag, xml);
+    }
 
     uint32_t getMarkColor() const {
         return color;
@@ -1668,43 +1773,123 @@ struct GCMarker : public JSTracer {
      * objects that are still reachable.
      */
     void setMarkColorGray() {
+        JS_ASSERT(isDrained());
         JS_ASSERT(color == gc::BLACK);
         color = gc::GRAY;
     }
 
+    inline void delayMarkingArena(gc::ArenaHeader *aheader);
     void delayMarkingChildren(const void *thing);
-
+    void markDelayedChildren(gc::ArenaHeader *aheader);
+    bool markDelayedChildren(SliceBudget &budget);
     bool hasDelayedChildren() const {
         return !!unmarkedArenaStackTop;
     }
 
-    void markDelayedChildren();
+    bool isDrained() {
+        return isMarkStackEmpty() && !unmarkedArenaStackTop;
+    }
+
+    bool drainMarkStack(SliceBudget &budget);
+
+    /*
+     * Gray marking must be done after all black marking is complete. However,
+     * we do not have write barriers on XPConnect roots. Therefore, XPConnect
+     * roots must be accumulated in the first slice of incremental GC. We
+     * accumulate these roots in the GrayRootMarker and then mark them later,
+     * after black marking is complete. This accumulation can fail, but in that
+     * case we switch to non-incremental GC.
+     */
+    bool hasBufferedGrayRoots() const;
+    void startBufferingGrayRoots();
+    void endBufferingGrayRoots();
+    void markBufferedGrayRoots();
+
+    static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
+
+    MarkStack<uintptr_t> stack;
+
+  private:
+#ifdef DEBUG
+    void checkCompartment(void *p);
+#else
+    void checkCompartment(void *p) {}
+#endif
+
+    void pushTaggedPtr(StackTag tag, void *ptr) {
+        checkCompartment(ptr);
+        uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
+        JS_ASSERT(!(addr & StackTagMask));
+        if (!stack.push(addr | uintptr_t(tag)))
+            delayMarkingChildren(ptr);
+    }
+
+    void pushValueArray(JSObject *obj, void *start, void *end) {
+        checkCompartment(obj);
+
+        if (start == end)
+            return;
+
+        JS_ASSERT(start <= end);
+        uintptr_t tagged = reinterpret_cast<uintptr_t>(obj) | GCMarker::ValueArrayTag;
+        uintptr_t startAddr = reinterpret_cast<uintptr_t>(start);
+        uintptr_t endAddr = reinterpret_cast<uintptr_t>(end);
+
+        /*
+         * Push in the reverse order so obj will be on top. If we cannot push
+         * the array, we trigger delay marking for the whole object.
+         */
+        if (!stack.push(endAddr, startAddr, tagged))
+            delayMarkingChildren(obj);
+    }
 
     bool isMarkStackEmpty() {
         return stack.isEmpty();
     }
 
-    void drainMarkStack();
+    bool restoreValueArray(JSObject *obj, void **vpp, void **endp);
+    void saveValueRanges();
+    inline void processMarkStackTop(SliceBudget &budget);
 
-    inline void processMarkStackTop();
+    void appendGrayRoot(void *thing, JSGCTraceKind kind);
 
-    void pushObject(JSObject *obj) {
-        pushTaggedPtr(ObjectTag, obj);
+    /* The color is only applied to objects, functions and xml. */
+    uint32_t color;
+
+    DebugOnly<bool> started;
+
+    /* Pointer to the top of the stack of arenas we are delaying marking on. */
+    js::gc::ArenaHeader *unmarkedArenaStackTop;
+    /* Count of arenas that are currently in the stack. */
+    DebugOnly<size_t> markLaterArenas;
+
+    struct GrayRoot {
+        void *thing;
+        JSGCTraceKind kind;
+#ifdef DEBUG
+        JSTraceNamePrinter debugPrinter;
+        const void *debugPrintArg;
+        size_t debugPrintIndex;
+#endif
+
+        GrayRoot(void *thing, JSGCTraceKind kind)
+          : thing(thing), kind(kind) {}
+    };
+
+    bool grayFailed;
+    Vector<GrayRoot, 0, SystemAllocPolicy> grayRoots;
+};
+
+struct BarrierGCMarker : public GCMarker {
+    bool init() {
+        return GCMarker::init(true);
     }
+};
 
-    void pushType(types::TypeObject *type) {
-        pushTaggedPtr(TypeTag, type);
-    }
 
-    void pushXML(JSXML *xml) {
-        pushTaggedPtr(XmlTag, xml);
-    }
-
-    void pushTaggedPtr(StackTag tag, void *ptr) {
-        uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
-        JS_ASSERT(!(addr & StackTagMask));
-        if (!stack.push(addr | uintptr_t(tag)))
-            delayMarkingChildren(ptr);
+struct FullGCMarker : public GCMarker {
+    bool init() {
+        return GCMarker::init(false);
     }
 };
 
@@ -1757,7 +1942,8 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str);
 /*
  * Macro to test if a traversal is the marking phase of the GC.
  */
-#define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
+#define IS_GC_MARKING_TRACER(trc) \
+    ((trc)->callback == NULL || (trc)->callback == GCMarker::GrayCallback)
 
 namespace js {
 namespace gc {
@@ -1778,20 +1964,30 @@ inline void MaybeCheckStackRoots(JSContext *cx) { CheckStackRoots(cx); }
 inline void MaybeCheckStackRoots(JSContext *cx) {}
 #endif
 
-const int ZealPokeThreshold = 1;
-const int ZealAllocThreshold = 2;
-const int ZealVerifierThreshold = 4;
+const int ZealPokeValue = 1;
+const int ZealAllocValue = 2;
+const int ZealFrameGCValue = 3;
+const int ZealVerifierValue = 4;
+const int ZealFrameVerifierValue = 5;
 
 #ifdef JS_GC_ZEAL
 
 /* Check that write barriers have been used correctly. See jsgc.cpp. */
 void
-VerifyBarriers(JSContext *cx, bool always = false);
+VerifyBarriers(JSContext *cx);
+
+void
+MaybeVerifyBarriers(JSContext *cx, bool always = false);
 
 #else
 
 static inline void
-VerifyBarriers(JSContext *cx, bool always = false)
+VerifyBarriers(JSContext *cx)
+{
+}
+
+static inline void
+MaybeVerifyBarriers(JSContext *cx, bool always = false)
 {
 }
 

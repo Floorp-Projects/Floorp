@@ -127,7 +127,7 @@ class WeakMapBase {
             // Add ourselves to the list if we are not already in the list. We can already
             // be in the list if the weak map is marked more than once due delayed marking.
             if (next == WeakMapNotInList) {
-                JSRuntime *rt = tracer->context->runtime;
+                JSRuntime *rt = tracer->runtime;
                 next = rt->gcWeakMapList;
                 rt->gcWeakMapList = this;
             }
@@ -155,6 +155,8 @@ class WeakMapBase {
 
     // Trace all delayed weak map bindings. Used by the cycle collector.
     static void traceAllMappings(WeakMapTracer *tracer);
+
+    void check() { JS_ASSERT(next == WeakMapNotInList); }
 
     // Remove everything from the live weak map list.
     static void resetWeakMapList(JSRuntime *rt);

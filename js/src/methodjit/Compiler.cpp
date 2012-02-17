@@ -3924,7 +3924,7 @@ void
 mjit::Compiler::interruptCheckHelper()
 {
     Jump jump;
-    if (cx->runtime->gcZeal() >= js::gc::ZealVerifierThreshold) {
+    if (cx->runtime->gcZeal() == js::gc::ZealVerifierValue) {
         /* For barrier verification, always take the interrupt so we can verify. */
         jump = masm.jump();
     } else {
@@ -6892,7 +6892,9 @@ mjit::Compiler::jsop_regexp()
         !cx->typeInferenceEnabled() ||
         analysis->localsAliasStack() ||
         types::TypeSet::HasObjectFlags(cx, globalObj->getType(cx),
-                                       types::OBJECT_FLAG_REGEXP_FLAGS_SET)) {
+                                       types::OBJECT_FLAG_REGEXP_FLAGS_SET) ||
+        cx->runtime->gcIncrementalState == gc::MARK)
+    {
         prepareStubCall(Uses(0));
         masm.move(ImmPtr(obj), Registers::ArgReg1);
         INLINE_STUBCALL(stubs::RegExp, REJOIN_FALLTHROUGH);
@@ -6946,10 +6948,11 @@ mjit::Compiler::jsop_regexp()
     }
 
     /*
-     * Force creation of the RegExpShared in the script's RegExpObject
-     * so that we grab it in the getNewObject template copy. Note that
-     * JIT code is discarded on every GC, which permits us to burn in
-     * the pointer to the RegExpShared.
+     * Force creation of the RegExpShared in the script's RegExpObject so that
+     * we grab it in the getNewObject template copy. Note that JIT code is
+     * discarded on every GC, which permits us to burn in the pointer to the
+     * RegExpShared. We don't do this during an incremental
+     * GC, since we don't discard JIT code after every marking slice.
      */
     if (!reobj->getShared(cx))
         return false;

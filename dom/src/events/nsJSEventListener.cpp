@@ -233,6 +233,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
                "JSEventListener has wrong script context?");
 #endif
   nsCOMPtr<nsIVariant> vrv;
+  xpc_UnmarkGrayObject(mScopeObject);
+  xpc_UnmarkGrayObject(mHandler);
   rv = mContext->CallEventHandler(mTarget, mScopeObject, mHandler, iargv,
                                   getter_AddRefs(vrv));
 

@@ -103,7 +103,7 @@ MarkInternal(JSTracer *trc, T *thing)
      * GC.
      */
     if (!rt->gcCurrentCompartment || thing->compartment() == rt->gcCurrentCompartment) {
-        if (IS_GC_MARKING_TRACER(trc)) {
+        if (!trc->callback) {
             PushMarkStack(static_cast<GCMarker *>(trc), thing);
         } else {
             void *tmp = (void *)thing;
@@ -117,6 +117,12 @@ MarkInternal(JSTracer *trc, T *thing)
     trc->debugPrintArg = NULL;
 #endif
 }
+
+#define JS_ROOT_MARKING_ASSERT(trc)                                     \
+    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc),                             \
+                 trc->runtime->gcIncrementalState == NO_INCREMENTAL ||  \
+                 trc->runtime->gcIncrementalState == MARK_ROOTS);
+
 
 template <typename T>
 static void
@@ -138,6 +144,7 @@ template <typename T>
 static void
 MarkRoot(JSTracer *trc, T **thingp, const char *name)
 {
+    JS_ROOT_MARKING_ASSERT(trc);
     JS_SET_TRACING_NAME(trc, name);
     MarkInternal(trc, *thingp);
 }
@@ -158,6 +165,7 @@ template <typename T>
 static void
 MarkRootRange(JSTracer *trc, size_t len, T **vec, const char *name)
 {
+    JS_ROOT_MARKING_ASSERT(trc);
     for (size_t i = 0; i < len; ++i) {
         JS_SET_TRACING_INDEX(trc, name, i);
         MarkInternal(trc, vec[i]);
@@ -246,6 +254,7 @@ MarkKind(JSTracer *trc, void *thing, JSGCTraceKind kind)
 void
 MarkGCThingRoot(JSTracer *trc, void *thing, const char *name)
 {
+    JS_ROOT_MARKING_ASSERT(trc);
     JS_SET_TRACING_NAME(trc, name);
     if (!thing)
         return;
@@ -273,6 +282,7 @@ MarkId(JSTracer *trc, const HeapId &id, const char *name)
 void
 MarkIdRoot(JSTracer *trc, const jsid &id, const char *name)
 {
+    JS_ROOT_MARKING_ASSERT(trc);
     JS_SET_TRACING_NAME(trc, name);
     MarkIdInternal(trc, id);
 }
@@ -289,6 +299,7 @@ MarkIdRange(JSTracer *trc, size_t len, HeapId *vec, const char *name)
 void
 MarkIdRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name)
 {
+    JS_ROOT_MARKING_ASSERT(trc);
     for (size_t i = 0; i < len; ++i) {
         JS_SET_TRACING_INDEX(trc, name, i);
         MarkIdInternal(trc, vec[i]);
@@ -316,6 +327,7 @@ MarkValue(JSTracer *trc, HeapValue *v, const char *name)
 void
 MarkValueRoot(JSTracer *trc, Value *v, const char *name)
 {
+    JS_ROOT_MARKING_ASSERT(trc);
     JS_SET_TRACING_NAME(trc, name);
     MarkValueInternal(trc, v);
 }
@@ -332,6 +344,7 @@ MarkValueRange(JSTracer *trc, size_t len, HeapValue *vec, const char *name)
 void
 MarkValueRootRange(JSTracer *trc, size_t len, Value *vec, const char *name)
 {
+    JS_ROOT_MARKING_ASSERT(trc);
     for (size_t i = 0; i < len; ++i) {
         JS_SET_TRACING_INDEX(trc, name, i);
         MarkValueInternal(trc, &vec[i]);
@@ -372,6 +385,10 @@ MarkCrossCompartmentValue(JSTracer *trc, HeapValue *v, const char *name)
         Cell *cell = (Cell *)v->toGCThing();
         JSRuntime *rt = trc->runtime;
         if (rt->gcCurrentCompartment && cell->compartment() != rt->gcCurrentCompartment)
+            return;
+
+        /* In case we're called from a write barrier. */
+        if (rt->gcIncrementalCompartment && cell->compartment() != rt->gcIncrementalCompartment)
             return;
 
         MarkValue(trc, v, name);
@@ -543,7 +560,7 @@ ScanLinearString(GCMarker *gcmarker, JSLinearString *str)
 static void
 ScanRope(GCMarker *gcmarker, JSRope *rope)
 {
-    uintptr_t *savedTos = gcmarker->stack.tos;
+    ptrdiff_t savedPos = gcmarker->stack.position();
     for (;;) {
         JS_ASSERT(GetGCThingTraceKind(rope) == JSTRACE_STRING);
         JS_ASSERT(rope->JSString::isRope());
@@ -575,14 +592,14 @@ ScanRope(GCMarker *gcmarker, JSRope *rope)
         }
         if (next) {
             rope = next;
-        } else if (savedTos != gcmarker->stack.tos) {
-            JS_ASSERT(savedTos < gcmarker->stack.tos);
+        } else if (savedPos != gcmarker->stack.position()) {
+            JS_ASSERT(savedPos < gcmarker->stack.position());
             rope = reinterpret_cast<JSRope *>(gcmarker->stack.pop());
         } else {
             break;
         }
     }
-    JS_ASSERT(savedTos == gcmarker->stack.tos);
+    JS_ASSERT(savedPos == gcmarker->stack.position());
  }
 
 static inline void
@@ -606,24 +623,6 @@ PushMarkStack(GCMarker *gcmarker, JSString *str)
      */
     if (str->markIfUnmarked())
         ScanString(gcmarker, str);
-}
-
-static inline void
-PushValueArray(GCMarker *gcmarker, JSObject* obj, HeapValue *start, HeapValue *end)
-{
-    JS_ASSERT(start <= end);
-    uintptr_t tagged = reinterpret_cast<uintptr_t>(obj) | GCMarker::ValueArrayTag;
-    uintptr_t startAddr = reinterpret_cast<uintptr_t>(start);
-    uintptr_t endAddr = reinterpret_cast<uintptr_t>(end);
-
-    /* Push in the reverse order so obj will be on top. */
-    if (!gcmarker->stack.push(endAddr, startAddr, tagged)) {
-        /*
-         * If we cannot push the array, we trigger delay marking for the whole
-         * object.
-         */
-        gcmarker->delayMarkingChildren(obj);
-    }
 }
 
 void
@@ -851,12 +850,163 @@ MarkChildren(JSTracer *trc, JSXML *xml)
 }
 #endif
 
+template<typename T>
+void
+PushArenaTyped(GCMarker *gcmarker, ArenaHeader *aheader)
+{
+    for (CellIterUnderGC i(aheader); !i.done(); i.next())
+        PushMarkStack(gcmarker, i.get<T>());
+}
+
+void
+PushArena(GCMarker *gcmarker, ArenaHeader *aheader)
+{
+    switch (MapAllocToTraceKind(aheader->getAllocKind())) {
+      case JSTRACE_OBJECT:
+        PushArenaTyped<JSObject>(gcmarker, aheader);
+        break;
+
+      case JSTRACE_STRING:
+        PushArenaTyped<JSString>(gcmarker, aheader);
+        break;
+
+      case JSTRACE_SCRIPT:
+        PushArenaTyped<JSScript>(gcmarker, aheader);
+        break;
+
+      case JSTRACE_SHAPE:
+        PushArenaTyped<js::Shape>(gcmarker, aheader);
+        break;
+
+      case JSTRACE_BASE_SHAPE:
+        PushArenaTyped<js::BaseShape>(gcmarker, aheader);
+        break;
+
+      case JSTRACE_TYPE_OBJECT:
+        PushArenaTyped<js::types::TypeObject>(gcmarker, aheader);
+        break;
+
+#if JS_HAS_XML_SUPPORT
+      case JSTRACE_XML:
+        PushArenaTyped<JSXML>(gcmarker, aheader);
+        break;
+#endif
+    }
+}
+
 } /* namespace gc */
 
 using namespace js::gc;
 
+struct ValueArrayLayout
+{
+    union {
+        HeapValue *end;
+        js::Class *clasp;
+    };
+    union {
+        HeapValue *start;
+        uintptr_t index;
+    };
+    JSObject *obj;
+
+    static void staticAsserts() {
+        /* This should have the same layout as three mark stack items. */
+        JS_STATIC_ASSERT(sizeof(ValueArrayLayout) == 3 * sizeof(uintptr_t));
+    }
+};
+
+/*
+ * During incremental GC, we return from drainMarkStack without having processed
+ * the entire stack. At that point, JS code can run and reallocate slot arrays
+ * that are stored on the stack. To prevent this from happening, we replace all
+ * ValueArrayTag stack items with SavedValueArrayTag. In the latter, slots
+ * pointers are replaced with slot indexes.
+ *
+ * We also replace the slot array end pointer (which can be derived from the obj
+ * pointer) with the object's class. During JS executation, array slowification
+ * can cause the layout of slots to change. We can observe that slowification
+ * happened if the class changed; in that case, we completely rescan the array.
+ */
+void
+GCMarker::saveValueRanges()
+{
+    for (uintptr_t *p = stack.tos; p > stack.stack; ) {
+        uintptr_t tag = *--p & StackTagMask;
+        if (tag == ValueArrayTag) {
+            p -= 2;
+            ValueArrayLayout *arr = reinterpret_cast<ValueArrayLayout *>(p);
+            JSObject *obj = arr->obj;
+
+            if (obj->getClass() == &ArrayClass) {
+                HeapValue *vp = obj->getDenseArrayElements();
+                JS_ASSERT(arr->start >= vp &&
+                          arr->end == vp + obj->getDenseArrayInitializedLength());
+                arr->index = arr->start - vp;
+            } else {
+                HeapValue *vp = obj->fixedSlots();
+                unsigned nfixed = obj->numFixedSlots();
+                if (arr->start >= vp && arr->start < vp + nfixed) {
+                    JS_ASSERT(arr->end == vp + Min(nfixed, obj->slotSpan()));
+                    arr->index = arr->start - vp;
+                } else {
+                    JS_ASSERT(arr->start >= obj->slots &&
+                              arr->end == obj->slots + obj->slotSpan() - nfixed);
+                    arr->index = (arr->start - obj->slots) + nfixed;
+                }
+            }
+            arr->clasp = obj->getClass();
+            p[2] |= SavedValueArrayTag;
+        } else if (tag == SavedValueArrayTag) {
+            p -= 2;
+        }
+    }
+}
+
+bool
+GCMarker::restoreValueArray(JSObject *obj, void **vpp, void **endp)
+{
+    uintptr_t start = stack.pop();
+    js::Class *clasp = reinterpret_cast<js::Class *>(stack.pop());
+
+    JS_ASSERT(obj->getClass() == clasp ||
+              (clasp == &ArrayClass && obj->getClass() == &SlowArrayClass));
+
+    if (clasp == &ArrayClass) {
+        if (obj->getClass() != &ArrayClass)
+            return false;
+
+        uint32_t initlen = obj->getDenseArrayInitializedLength();
+        HeapValue *vp = obj->getDenseArrayElements();
+        if (start < initlen) {
+            *vpp = vp + start;
+            *endp = vp + initlen;
+        } else {
+            /* The object shrunk, in which case no scanning is needed. */
+            *vpp = *endp = vp;
+        }
+    } else {
+        HeapValue *vp = obj->fixedSlots();
+        unsigned nfixed = obj->numFixedSlots();
+        unsigned nslots = obj->slotSpan();
+        if (start < nfixed) {
+            *vpp = vp + start;
+            *endp = vp + Min(nfixed, nslots);
+        } else if (start < nslots) {
+            *vpp = obj->slots + start - nfixed;
+            *endp = obj->slots + nslots - nfixed;
+        } else {
+            /* The object shrunk, in which case no scanning is needed. */
+            *vpp = *endp = obj->slots;
+        }
+    }
+
+    JS_ASSERT(*vpp <= *endp);
+    return true;
+}
+
 inline void
-GCMarker::processMarkStackTop()
+GCMarker::processMarkStackTop(SliceBudget &budget)
 {
     /*
      * The function uses explicit goto and implements the scanning of the
@@ -885,29 +1035,46 @@ GCMarker::processMarkStackTop()
 
     if (tag == ObjectTag) {
         obj = reinterpret_cast<JSObject *>(addr);
+        JS_COMPARTMENT_ASSERT(runtime, obj);
         goto scan_obj;
     }
 
     if (tag == TypeTag) {
         ScanTypeObject(this, reinterpret_cast<types::TypeObject *>(addr));
+    } else if (tag == SavedValueArrayTag) {
+        JS_ASSERT(!(addr & Cell::CellMask));
+        obj = reinterpret_cast<JSObject *>(addr);
+        if (restoreValueArray(obj, (void **)&vp, (void **)&end))
+            goto scan_value_array;
+        else
+            goto scan_obj;
     } else {
         JS_ASSERT(tag == XmlTag);
         MarkChildren(this, reinterpret_cast<JSXML *>(addr));
     }
+    budget.step();
     return;
 
   scan_value_array:
     JS_ASSERT(vp <= end);
     while (vp != end) {
+        budget.step();
+        if (budget.isOverBudget()) {
+            pushValueArray(obj, vp, end);
+            return;
+        }
+
         const Value &v = *vp++;
         if (v.isString()) {
             JSString *str = v.toString();
+            JS_COMPARTMENT_ASSERT_STR(runtime, str);
             if (str->markIfUnmarked())
                 ScanString(this, str);
         } else if (v.isObject()) {
             JSObject *obj2 = &v.toObject();
+            JS_COMPARTMENT_ASSERT(runtime, obj2);
             if (obj2->markIfUnmarked(getMarkColor())) {
-                PushValueArray(this, obj, vp, end);
+                pushValueArray(obj, vp, end);
                 obj = obj2;
                 goto scan_obj;
             }
@@ -917,6 +1084,14 @@ GCMarker::processMarkStackTop()
 
   scan_obj:
     {
+        JS_COMPARTMENT_ASSERT(runtime, obj);
+
+        budget.step();
+        if (budget.isOverBudget()) {
+            pushObject(obj);
+            return;
+        }
+
         types::TypeObject *type = obj->typeFromGC();
         PushMarkStack(this, type);
 
@@ -931,6 +1106,9 @@ GCMarker::processMarkStackTop()
                 vp = obj->getDenseArrayElements();
                 end = vp + obj->getDenseArrayInitializedLength();
                 goto scan_value_array;
+            } else {
+                JS_ASSERT_IF(runtime->gcIncrementalState != NO_INCREMENTAL,
+                             clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
             }
             clasp->trace(this, obj);
         }
@@ -943,7 +1121,7 @@ GCMarker::processMarkStackTop()
         if (obj->slots) {
             unsigned nfixed = obj->numFixedSlots();
             if (nslots > nfixed) {
-                PushValueArray(this, obj, vp, vp + nfixed);
+                pushValueArray(obj, vp, vp + nfixed);
                 vp = obj->slots;
                 end = vp + (nslots - nfixed);
                 goto scan_value_array;
@@ -955,15 +1133,33 @@ GCMarker::processMarkStackTop()
     }
 }
 
-void
-GCMarker::drainMarkStack()
+bool
+GCMarker::drainMarkStack(SliceBudget &budget)
 {
+#ifdef DEBUG
     JSRuntime *rt = runtime;
-    rt->gcCheckCompartment = rt->gcCurrentCompartment;
+
+    struct AutoCheckCompartment {
+        JSRuntime *runtime;
+        AutoCheckCompartment(JSRuntime *rt) : runtime(rt) {
+            runtime->gcCheckCompartment = runtime->gcCurrentCompartment;
+        }
+        ~AutoCheckCompartment() { runtime->gcCheckCompartment = NULL; }
+    } acc(rt);
+#endif
+
+    if (budget.isOverBudget())
+        return false;
 
     for (;;) {
-        while (!stack.isEmpty())
-            processMarkStackTop();
+        while (!stack.isEmpty()) {
+            processMarkStackTop(budget);
+            if (budget.isOverBudget()) {
+                saveValueRanges();
+                return false;
+            }
+        }
+
         if (!hasDelayedChildren())
             break;
 
@@ -972,10 +1168,13 @@ GCMarker::drainMarkStack()
          * above tracing. Don't do this until we're done with everything
          * else.
          */
-        markDelayedChildren();
+        if (!markDelayedChildren(budget)) {
+            saveValueRanges();
+            return false;
+        }
     }
 
-    rt->gcCheckCompartment = NULL;
+    return true;
 }
 
 void

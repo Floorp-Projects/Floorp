@@ -2092,6 +2092,13 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::IsIncrementalGCEnabled(JSContext* cx, bool* aResult)
+{
+  *aResult = js::IsIncrementalGCEnabled(JS_GetRuntime(cx));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::StartPCCountProfiling(JSContext* cx)
 {
   js::StartPCCountProfiling(cx);

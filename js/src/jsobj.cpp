@@ -2763,6 +2763,13 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type, JSObject *parent
     if (!obj)
         return NULL;
 
+    /*
+     * This will cancel an already-running incremental GC from doing any more
+     * slices, and it will prevent any future incremental GCs.
+     */
+    if (clasp->trace && !(clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS))
+        cx->runtime->gcIncrementalEnabled = false;
+
     Probes::createObject(cx, obj);
     return obj;
 }
@@ -3475,7 +3482,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         a->slots = reserved.newaslots;
         a->initSlotRange(0, reserved.bvals.begin(), bcap);
         if (a->hasPrivate())
-            a->setPrivate(bpriv);
+            a->initPrivate(bpriv);
 
         if (b->isNative())
             b->shape_->setNumFixedSlots(reserved.newbfixed);
@@ -3485,7 +3492,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         b->slots = reserved.newbslots;
         b->initSlotRange(0, reserved.avals.begin(), acap);
         if (b->hasPrivate())
-            b->setPrivate(apriv);
+            b->initPrivate(apriv);
 
         /* Make sure the destructor for reserved doesn't free the slots. */
         reserved.newaslots = NULL;

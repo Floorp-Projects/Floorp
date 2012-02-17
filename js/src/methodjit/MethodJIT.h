@@ -402,7 +402,7 @@ struct RecompilationMonitor
     unsigned frameExpansions;
 
     /* If a GC occurs it may discard jit code on the stack. */
-    unsigned gcNumber;
+    uint64_t gcNumber;
 
     RecompilationMonitor(JSContext *cx)
         : cx(cx),

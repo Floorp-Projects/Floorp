@@ -62,7 +62,7 @@ RegExpObjectBuilder::RegExpObjectBuilder(JSContext *cx, RegExpObject *reobj)
   : cx(cx), reobj_(reobj)
 {
     if (reobj_)
-        reobj_->setPrivate(NULL);
+        reobj_->setShared(cx, NULL);
 }
 
 bool
@@ -74,7 +74,7 @@ RegExpObjectBuilder::getOrCreate()
     JSObject *obj = NewBuiltinClassInstance(cx, &RegExpClass);
     if (!obj)
         return false;
-    obj->setPrivate(NULL);
+    obj->initPrivate(NULL);
 
     reobj_ = &obj->asRegExp();
     return true;
@@ -88,7 +88,7 @@ RegExpObjectBuilder::getOrCreateClone(RegExpObject *proto)
     JSObject *clone = NewObjectWithGivenProto(cx, &RegExpClass, proto, proto->getParent());
     if (!clone)
         return false;
-    clone->setPrivate(NULL);
+    clone->initPrivate(NULL);
 
     reobj_ = &clone->asRegExp();
     return true;
@@ -103,7 +103,7 @@ RegExpObjectBuilder::build(JSAtom *source, RegExpShared &shared)
     if (!reobj_->init(cx, source, shared.getFlags()))
         return NULL;
 
-    reobj_->setPrivate(&shared);
+    reobj_->setShared(cx, &shared);
     return reobj_;
 }
 
@@ -330,13 +330,18 @@ RegExpCode::execute(JSContext *cx, const jschar *chars, size_t length, size_t st
 static void
 regexp_trace(JSTracer *trc, JSObject *obj)
 {
-    if (trc->runtime->gcRunning)
+     /*
+      * We have to check both conditions, since:
+      *   1. During TraceRuntime, gcRunning is set
+      *   2. When a write barrier executes, IS_GC_MARKING_TRACER is true.
+      */
+    if (trc->runtime->gcRunning && IS_GC_MARKING_TRACER(trc))
         obj->setPrivate(NULL);
 }
 
 Class js::RegExpClass = {
     js_RegExp_str,
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(RegExpObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     JS_PropertyStub,         /* addProperty */
@@ -360,8 +365,8 @@ Class js::RegExpClass = {
     regexp_trace
 };
 
-RegExpShared::RegExpShared(RegExpFlag flags)
-  : parenCount(0), flags(flags), activeUseCount(0)
+RegExpShared::RegExpShared(JSRuntime *rt, RegExpFlag flags)
+  : parenCount(0), flags(flags), activeUseCount(0), gcNumberWhenUsed(rt->gcNumber)
 {}
 
 RegExpObject *
@@ -402,7 +407,7 @@ RegExpObject::createShared(JSContext *cx)
     if (!shared)
         return NULL;
 
-    setPrivate(shared);
+    setShared(cx, shared);
     return shared;
 }
 
@@ -616,11 +621,12 @@ RegExpCompartment::init(JSContext *cx)
 }
 
 void
-RegExpCompartment::purge()
+RegExpCompartment::sweep(JSRuntime *rt)
 {
     for (Map::Enum e(map_); !e.empty(); e.popFront()) {
+        /* See the comment on RegExpShared lifetime in RegExpObject.h. */
         RegExpShared *shared = e.front().value;
-        if (shared->activeUseCount == 0) {
+        if (shared->activeUseCount == 0 && shared->gcNumberWhenUsed < rt->gcStartNumber) {
             Foreground::delete_(shared);
             e.removeFront();
         }
@@ -630,14 +636,14 @@ RegExpCompartment::purge()
 inline RegExpShared *
 RegExpCompartment::get(JSContext *cx, JSAtom *keyAtom, JSAtom *source, RegExpFlag flags, Type type)
 {
-    DebugOnly<size_t> gcNumberBefore = cx->runtime->gcNumber;
+    DebugOnly<uint64_t> gcNumberBefore = cx->runtime->gcNumber;
 
     Key key(keyAtom, flags, type);
     Map::AddPtr p = map_.lookupForAdd(key);
     if (p)
         return p->value;
 
-    RegExpShared *shared = cx->runtime->new_<RegExpShared>(flags);
+    RegExpShared *shared = cx->runtime->new_<RegExpShared>(cx->runtime, flags);
     if (!shared || !shared->compile(cx, source))
         goto error;
 

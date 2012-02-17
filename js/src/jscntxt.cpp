@@ -282,10 +282,10 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
                 c->clearTraps(cx);
             JS_ClearAllWatchPoints(cx);
 
-            js_GC(cx, NULL, GC_NORMAL, gcreason::LAST_CONTEXT);
+            GC(cx, NULL, GC_NORMAL, gcreason::LAST_CONTEXT);
 
         } else if (mode == JSDCM_FORCE_GC) {
-            js_GC(cx, NULL, GC_NORMAL, gcreason::DESTROY_CONTEXT);
+            GC(cx, NULL, GC_NORMAL, gcreason::DESTROY_CONTEXT);
         } else if (mode == JSDCM_MAYBE_GC) {
             JS_MaybeGC(cx);
         }
@@ -875,7 +875,7 @@ js_InvokeOperationCallback(JSContext *cx)
     JS_ATOMIC_SET(&rt->interrupt, 0);
 
     if (rt->gcIsNeeded)
-        js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL, rt->gcTriggerReason);
+        GCSlice(cx, rt->gcTriggerCompartment, GC_NORMAL, rt->gcTriggerReason);
 
 #ifdef JS_THREADSAFE
     /*

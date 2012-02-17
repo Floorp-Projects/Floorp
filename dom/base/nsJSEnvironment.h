@@ -188,7 +188,7 @@ public:
   static void CycleCollectNow(nsICycleCollectorListener *aListener = nsnull,
                               PRInt32 aExtraForgetSkippableCalls = 0);
 
-  static void PokeGC(js::gcreason::Reason aReason);
+  static void PokeGC(js::gcreason::Reason aReason, int aDelay = 0);
   static void KillGCTimer();
 
   static void PokeShrinkGCBuffers();

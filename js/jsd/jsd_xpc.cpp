@@ -107,8 +107,8 @@
 #define JSD_AUTOREG_ENTRY "JSDebugger Startup Observer"
 #define JSD_STARTUP_ENTRY "JSDebugger Startup Observer"
 
-static JSBool
-jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
+static void
+jsds_GCSliceCallbackProc (JSRuntime *rt, js::GCProgress progress, const js::GCDescription &desc);
 
 /*******************************************************************************
  * global vars
@@ -128,9 +128,9 @@ PRUint32 gContextCount  = 0;
 PRUint32 gFrameCount  = 0;
 #endif
 
-static jsdService   *gJsds       = 0;
-static JSGCCallback  gLastGCProc = jsds_GCCallbackProc;
-static JSGCStatus    gGCStatus   = JSGC_END;
+static jsdService          *gJsds               = 0;
+static js::GCSliceCallback gPrevGCSliceCallback = jsds_GCSliceCallbackProc;
+static bool                gGCRunning           = false;
 
 static struct DeadScript {
     PRCList     links;
@@ -460,11 +460,8 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
  *******************************************************************************/
 
 static void
-jsds_NotifyPendingDeadScripts (JSContext *cx)
+jsds_NotifyPendingDeadScripts (JSRuntime *rt)
 {
-#ifdef CAUTIOUS_SCRIPTHOOK
-    JSRuntime *rt = JS_GetRuntime(cx);
-#endif
     jsdService *jsds = gJsds;
 
     nsCOMPtr<jsdIScriptHook> hook;
@@ -511,31 +508,23 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
     }
 }
 
-static JSBool
-jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
+static void
+jsds_GCSliceCallbackProc (JSRuntime *rt, js::GCProgress progress, const js::GCDescription &desc)
 {
-#ifdef DEBUG_verbose
-    printf ("new gc status is %i\n", status);
-#endif
-    if (status == JSGC_END) {
-        /* just to guard against reentering. */
-        gGCStatus = JSGC_BEGIN;
+    if (progress == js::GC_CYCLE_END || progress == js::GC_SLICE_END) {
+        NS_ASSERTION(gGCRunning, "GC slice callback was missed");
+
         while (gDeadScripts)
-            jsds_NotifyPendingDeadScripts (cx);
+            jsds_NotifyPendingDeadScripts (rt);
+
+        gGCRunning = false;
+    } else {
+        NS_ASSERTION(!gGCRunning, "should not re-enter GC");
+        gGCRunning = true;
     }
 
-    gGCStatus = status;
-    if (gLastGCProc && !gLastGCProc (cx, status)) {
-        /*
-         * If gLastGCProc returns false, then the GC will abort without making
-         * another callback with status=JSGC_END, so set the status to JSGC_END
-         * here.
-         */
-        gGCStatus = JSGC_END;
-        return JS_FALSE;
-    }
-    
-    return JS_TRUE;
+    if (gPrevGCSliceCallback)
+        (*gPrevGCSliceCallback)(rt, progress, desc);
 }
 
 static uintN
@@ -751,7 +740,7 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
 
         jsdis->Invalidate();
 
-        if (gGCStatus == JSGC_END) {
+        if (!gGCRunning) {
             nsCOMPtr<jsdIScriptHook> hook;
             gJsds->GetScriptHook(getter_AddRefs(hook));
             if (!hook)
@@ -2580,9 +2569,9 @@ jsdService::ActivateDebugger (JSRuntime *rt)
 
     mRuntime = rt;
 
-    if (gLastGCProc == jsds_GCCallbackProc)
+    if (gPrevGCSliceCallback == jsds_GCSliceCallbackProc)
         /* condition indicates that the callback proc has not been set yet */
-        gLastGCProc = JS_SetGCCallbackRT (rt, jsds_GCCallbackProc);
+        gPrevGCSliceCallback = js::SetGCSliceCallback (rt, jsds_GCSliceCallbackProc);
 
     mCx = JSD_DebuggerOnForUser (rt, NULL, NULL);
     if (!mCx)
@@ -2652,18 +2641,13 @@ jsdService::Off (void)
         return NS_ERROR_NOT_INITIALIZED;
     
     if (gDeadScripts) {
-        if (gGCStatus != JSGC_END)
+        if (gGCRunning)
             return NS_ERROR_NOT_AVAILABLE;
 
         JSContext *cx = JSD_GetDefaultJSContext(mCx);
         while (gDeadScripts)
-            jsds_NotifyPendingDeadScripts (cx);
+            jsds_NotifyPendingDeadScripts (JS_GetRuntime(cx));
     }
-
-    /*
-    if (gLastGCProc != jsds_GCCallbackProc)
-        JS_SetGCCallbackRT (mRuntime, gLastGCProc);
-    */
 
     DeactivateDebugger();
 
@@ -3374,7 +3358,7 @@ jsdService::~jsdService()
     mThrowHook = nsnull;
     mTopLevelHook = nsnull;
     mFunctionHook = nsnull;
-    gGCStatus = JSGC_END;
+    gGCRunning = false;
     Off();
     gJsds = nsnull;
 }

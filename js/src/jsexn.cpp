@@ -94,7 +94,7 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
 Class js::ErrorClass = {
     js_Error_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Error),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */

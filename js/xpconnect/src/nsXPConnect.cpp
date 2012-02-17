@@ -406,8 +406,6 @@ nsXPConnect::Collect(PRUint32 reason, PRUint32 kind)
     // To improve debugging, if DEBUG_CC is defined all JS objects are
     // traversed.
 
-    mNeedGCBeforeCC = false;
-
     XPCCallContext ccx(NATIVE_CALLER);
     if (!ccx.IsValid())
         return;
@@ -424,6 +422,8 @@ nsXPConnect::Collect(PRUint32 reason, PRUint32 kind)
     js::gcreason::Reason gcreason = (js::gcreason::Reason)reason;
     if (kind == nsGCShrinking) {
         js::ShrinkingGC(cx, gcreason);
+    } else if (kind == nsGCIncremental) {
+        js::IncrementalGC(cx, gcreason);
     } else {
         MOZ_ASSERT(kind == nsGCNormal);
         js::GCForReason(cx, gcreason);
@@ -2822,6 +2822,23 @@ nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
         return NS_ERROR_OUT_OF_MEMORY;
 
     *rval = OBJECT_TO_JSVAL(obj);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPConnect::NotifyDidPaint()
+{
+    JSRuntime *rt = mRuntime->GetJSRuntime();
+    if (!js::WantGCSlice(rt))
+        return NS_OK;
+
+    XPCCallContext ccx(NATIVE_CALLER);
+    if (!ccx.IsValid())
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+
+    JSContext *cx = ccx.GetJSContext();
+
+    js::NotifyDidPaint(cx);
     return NS_OK;
 }
 
