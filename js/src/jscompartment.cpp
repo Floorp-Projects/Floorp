@@ -73,7 +73,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),
     principals(NULL),
     needsBarrier_(false),
-    gcIncrementalTracer(NULL),
     gcBytes(0),
     gcTriggerBytes(0),
     gcLastBytes(0),
@@ -126,6 +125,9 @@ JSCompartment::init(JSContext *cx)
         return false;
 
     if (!scriptFilenameTable.init())
+        return false;
+
+    if (!barrierMarker_.init())
         return false;
 
     return debuggees.init();
@@ -459,6 +461,30 @@ JSCompartment::markTypes(JSTracer *trc)
 }
 
 void
+JSCompartment::discardJitCode(JSContext *cx)
+{
+    /*
+     * Kick all frames on the stack into the interpreter, and release all JIT
+     * code in the compartment.
+     */
+#ifdef JS_METHODJIT
+    mjit::ClearAllFrames(this);
+
+    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        mjit::ReleaseScriptCode(cx, script);
+
+        /*
+         * Use counts for scripts are reset on GC. After discarding code we
+         * need to let it warm back up to get information like which opcodes
+         * are setting array holes or accessing getter properties.
+         */
+        script->resetUseCount();
+    }
+#endif
+}
+
+void
 JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 {
     /* Remove dead wrappers from the table. */
@@ -474,6 +500,8 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 
     /* Remove dead references held weakly by the compartment. */
 
+    regExps.sweep(rt);
+
     sweepBaseShapeTable(cx);
     sweepInitialShapeTable(cx);
     sweepNewTypeObjectTable(cx, newTypeObjects);
@@ -488,26 +516,7 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_CODE);
-
-        /*
-         * Kick all frames on the stack into the interpreter, and release all JIT
-         * code in the compartment.
-         */
-#ifdef JS_METHODJIT
-        mjit::ClearAllFrames(this);
-
-        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-            JSScript *script = i.get<JSScript>();
-            mjit::ReleaseScriptCode(cx, script);
-
-            /*
-             * Use counts for scripts are reset on GC. After discarding code we
-             * need to let it warm back up to get information like which opcodes
-             * are setting array holes or accessing getter properties.
-             */
-            script->resetUseCount();
-        }
-#endif
+        discardJitCode(cx);
     }
 
     if (!activeAnalysis) {
@@ -561,8 +570,6 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 void
 JSCompartment::purge(JSContext *cx)
 {
-    arenas.purge();
-    regExps.purge();
     dtoaCache.purge();
 
     /*
@@ -774,13 +781,6 @@ JSCompartment::sweepBreakpoints(JSContext *cx)
             }
         }
     }
-}
-
-GCMarker *
-JSCompartment::createBarrierTracer()
-{
-    JS_ASSERT(!gcIncrementalTracer);
-    return NULL;
 }
 
 size_t

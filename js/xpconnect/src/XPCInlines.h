@@ -604,7 +604,8 @@ void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
 inline
 XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff()
 {
-    NS_ASSERTION(!(GetInterface()||GetNative()||GetJSObjectPreserveColor()), "tearoff not empty in dtor");
+    NS_ASSERTION(!(GetInterface()||GetNative()||GetJSObjectPreserveColor()),
+                 "tearoff not empty in dtor");
 }
 
 /***************************************************************************/

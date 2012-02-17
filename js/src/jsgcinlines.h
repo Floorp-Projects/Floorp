@@ -210,7 +210,7 @@ GCPoke(JSRuntime *rt, Value oldval)
 
 #ifdef JS_GC_ZEAL
     /* Schedule a GC to happen "soon" after a GC poke. */
-    if (rt->gcZeal() >= js::gc::ZealPokeThreshold)
+    if (rt->gcZeal() == js::gc::ZealPokeValue)
         rt->gcNextScheduled = 1;
 #endif
 }
@@ -262,14 +262,25 @@ class CellIterImpl
     CellIterImpl() {
     }
 
-    void init(JSCompartment *comp, AllocKind kind) {
+    void initSpan(JSCompartment *comp, AllocKind kind) {
         JS_ASSERT(comp->arenas.isSynchronizedFreeList(kind));
         firstThingOffset = Arena::firstThingOffset(kind);
         thingSize = Arena::thingSize(kind);
-        aheader = comp->arenas.getFirstArena(kind);
         firstSpan.initAsEmpty();
         span = &firstSpan;
         thing = span->first;
+    }
+
+    void init(ArenaHeader *singleAheader) {
+        aheader = singleAheader;
+        initSpan(aheader->compartment, aheader->getAllocKind());
+        next();
+        aheader = NULL;
+    }
+
+    void init(JSCompartment *comp, AllocKind kind) {
+        initSpan(comp, kind);
+        aheader = comp->arenas.getFirstArena(kind);
         next();
     }
 
@@ -311,12 +322,17 @@ class CellIterImpl
     }
 };
 
-class CellIterUnderGC : public CellIterImpl {
-
+class CellIterUnderGC : public CellIterImpl
+{
   public:
     CellIterUnderGC(JSCompartment *comp, AllocKind kind) {
         JS_ASSERT(comp->rt->gcRunning);
         init(comp, kind);
+    }
+
+    CellIterUnderGC(ArenaHeader *aheader) {
+        JS_ASSERT(aheader->compartment->rt->gcRunning);
+        init(aheader);
     }
 };
 
@@ -325,7 +341,7 @@ class CellIterUnderGC : public CellIterImpl {
  * allocations of GC things are possible and that the background finalization
  * for the given thing kind is not enabled or is done.
  */
-class CellIter: public CellIterImpl
+class CellIter : public CellIterImpl
 {
     ArenaLists *lists;
     AllocKind kind;
@@ -335,7 +351,8 @@ class CellIter: public CellIterImpl
   public:
     CellIter(JSContext *cx, JSCompartment *comp, AllocKind kind)
       : lists(&comp->arenas),
-        kind(kind) {
+        kind(kind)
+    {
 #ifdef JS_THREADSAFE
         JS_ASSERT(comp->arenas.doneBackgroundFinalize(kind));
 #endif
@@ -397,6 +414,9 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
     void *t = comp->arenas.allocateFromFreeList(kind, thingSize);
     if (!t)
         t = js::gc::ArenaLists::refillFreeList(cx, kind);
+
+    JS_ASSERT_IF(t && comp->needsBarrier(),
+                 static_cast<T *>(t)->arenaHeader()->allocatedDuringIncremental);
     return static_cast<T *>(t);
 }
 
@@ -419,6 +439,8 @@ TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
 #endif
 
     void *t = cx->compartment->arenas.allocateFromFreeList(kind, thingSize);
+    JS_ASSERT_IF(t && cx->compartment->needsBarrier(),
+                 static_cast<T *>(t)->arenaHeader()->allocatedDuringIncremental);
     return static_cast<T *>(t);
 }
 

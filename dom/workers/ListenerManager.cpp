@@ -107,6 +107,9 @@ struct Listener : PRCList
   static void
   Remove(JSContext* aCx, Listener* aListener)
   {
+    if (js::IsIncrementalBarrierNeeded(aCx))
+      js::IncrementalValueBarrier(aListener->mListenerVal);
+
     PR_REMOVE_LINK(aListener);
     JS_free(aCx, aListener);
   }

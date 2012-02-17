@@ -220,7 +220,7 @@ private:
 
 JSClass XMLHttpRequestUpload::sClass = {
   "XMLHttpRequestUpload",
-  JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
+  JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
   NULL, NULL, NULL, NULL, NULL, NULL, Trace, NULL
@@ -769,7 +769,7 @@ private:
 
 JSClass XMLHttpRequest::sClass = {
   "XMLHttpRequest",
-  JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
+  JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, Finalize,
   NULL, NULL, NULL, NULL, NULL, NULL, Trace, NULL

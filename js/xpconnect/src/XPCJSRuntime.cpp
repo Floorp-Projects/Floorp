@@ -911,6 +911,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 #ifdef XPC_TRACK_DEFERRED_RELEASES
             printf("XPC - End deferred Releases\n");
 #endif
+
+            self->GetXPConnect()->ClearGCBeforeCC();
             break;
         }
         default:
@@ -1889,6 +1891,18 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
         break;
       case JS_TELEMETRY_GC_SWEEP_MS:
         Telemetry::Accumulate(Telemetry::GC_SWEEP_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_SLICE_MS:
+        Telemetry::Accumulate(Telemetry::GC_SLICE_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_MMU_50:
+        Telemetry::Accumulate(Telemetry::GC_MMU_50, sample);
+        break;
+      case JS_TELEMETRY_GC_RESET:
+        Telemetry::Accumulate(Telemetry::GC_RESET, sample);
+        break;
+      case JS_TELEMETRY_GC_INCREMENTAL_DISABLED:
+        Telemetry::Accumulate(Telemetry::GC_INCREMENTAL_DISABLED, sample);
         break;
     }
 }

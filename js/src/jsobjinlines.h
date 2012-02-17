@@ -119,6 +119,12 @@ JSObject::setPrivate(void *data)
     privateWriteBarrierPost(pprivate);
 }
 
+inline void
+JSObject::initPrivate(void *data)
+{
+    privateRef(numFixedSlots()) = data;
+}
+
 inline bool
 JSObject::enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp)
 {
@@ -602,20 +608,32 @@ JSObject::moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count)
     JS_ASSERT(srcStart + count <= getDenseArrayInitializedLength());
 
     /*
-     * Use a custom write barrier here since it's performance sensitive. We
-     * only want to barrier the elements that are being overwritten.
-     */
-    uintN markStart, markEnd;
-    if (dstStart > srcStart) {
-        markStart = js::Max(srcStart + count, dstStart);
-        markEnd = dstStart + count;
+     * Using memmove here would skip write barriers. Also, we need to consider
+     * an array containing [A, B, C], in the following situation:
+     *
+     * 1. Incremental GC marks slot 0 of array (i.e., A), then returns to JS code.
+     * 2. JS code moves slots 1..2 into slots 0..1, so it contains [B, C, C].
+     * 3. Incremental GC finishes by marking slots 1 and 2 (i.e., C).
+     *
+     * Since normal marking never happens on B, it is very important that the
+     * write barrier is invoked here on B, despite the fact that it exists in
+     * the array before and after the move.
+    */
+    if (compartment()->needsBarrier()) {
+        if (dstStart < srcStart) {
+            js::HeapValue *dst = elements + dstStart;
+            js::HeapValue *src = elements + srcStart;
+            for (unsigned i = 0; i < count; i++, dst++, src++)
+                *dst = *src;
+        } else {
+            js::HeapValue *dst = elements + dstStart + count - 1;
+            js::HeapValue *src = elements + srcStart + count - 1;
+            for (unsigned i = 0; i < count; i++, dst--, src--)
+                *dst = *src;
+        }
     } else {
-        markStart = dstStart;
-        markEnd = js::Min(dstStart + count, srcStart);
+        memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
     }
-    prepareElementRangeForOverwrite(markStart, markEnd);
-
-    memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
 }
 
 inline void
@@ -2122,6 +2140,18 @@ JSObject::writeBarrierPre(JSObject *obj)
     if (comp->needsBarrier()) {
         JS_ASSERT(!comp->rt->gcRunning);
         MarkObjectUnbarriered(comp->barrierTracer(), obj, "write barrier");
+    }
+#endif
+}
+
+inline void
+JSObject::readBarrier(JSObject *obj)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = obj->compartment();
+    if (comp->needsBarrier()) {
+        JS_ASSERT(!comp->rt->gcRunning);
+        MarkObjectUnbarriered(comp->barrierTracer(), obj, "read barrier");
     }
 #endif
 }

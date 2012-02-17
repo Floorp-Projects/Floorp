@@ -318,7 +318,8 @@ typedef nsDataHashtable<xpc::PtrAndPrincipalHashKey, JSCompartment *> XPCCompart
     return (result || !src) ? NS_OK : NS_ERROR_OUT_OF_MEMORY
 
 
-#define WRAPPER_SLOTS (JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1))
+#define WRAPPER_SLOTS (JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | \
+                       JSCLASS_HAS_RESERVED_SLOTS(1))
 
 #define INVALID_OBJECT ((JSObject *)1)
 
@@ -520,6 +521,7 @@ public:
     JSBool IsShuttingDown() const {return mShuttingDown;}
 
     void EnsureGCBeforeCC() { mNeedGCBeforeCC = true; }
+    void ClearGCBeforeCC() { mNeedGCBeforeCC = false; }
 
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
