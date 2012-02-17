@@ -214,10 +214,6 @@ protected:
   /* small utility routine to test the eEditorReadonly bit */
   bool IsModifiable();
 
-  //XXX Kludge: Used to suppress spurious drag/drop events (bug 50703)
-  bool     mIgnoreSpuriousDragEvent;
-  NS_IMETHOD IgnoreSpuriousDragEvent(bool aIgnoreSpuriousDragEvent) {mIgnoreSpuriousDragEvent = aIgnoreSpuriousDragEvent; return NS_OK;}
-
   bool CanCutOrCopy();
   bool FireClipboardEvent(PRInt32 aType);
 

@@ -52,7 +52,7 @@ interface nsIContentFilter;
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
 
 %}
-[scriptable, uuid(d58f35a7-c269-4292-b9aa-a79e200a7c99)]
+[scriptable, uuid(68890CBB-999D-42D0-A15C-5D534CF25C00)]
 
 interface nsIHTMLEditor : nsISupports
 {
@@ -534,12 +534,6 @@ interface nsIHTMLEditor : nsISupports
    */
   void setBodyAttribute(in AString aAttr, in AString aValue);
   
-  /** 
-   * XXX Used to suppress spurious drag/drop events to workaround bug 50703
-   * Don't use this method! It will go away after first release!
-   */
-  void ignoreSpuriousDragEvent(in boolean aIgnoreSpuriousDragEvent);
-
   /**
    * Find all the nodes in the document which contain references
    * to outside URIs (e.g. a href, img src, script src, etc.)
