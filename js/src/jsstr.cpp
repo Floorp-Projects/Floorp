@@ -399,7 +399,7 @@ static const uintN STRING_ELEMENT_ATTRS = JSPROP_ENUMERATE | JSPROP_READONLY | J
 static JSBool
 str_enumerate(JSContext *cx, JSObject *obj)
 {
-    JSString *str = obj->getPrimitiveThis().toString();
+    JSString *str = obj->asString().unbox();
     for (size_t i = 0, length = str->length(); i < length; i++) {
         JSString *str1 = js_NewDependentString(cx, str, i, 1);
         if (!str1)
@@ -421,7 +421,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     if (!JSID_IS_INT(id))
         return JS_TRUE;
 
-    JSString *str = obj->getPrimitiveThis().toString();
+    JSString *str = obj->asString().unbox();
 
     jsint slot = JSID_TO_INT(id);
     if ((size_t)slot < str->length()) {
@@ -472,8 +472,9 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
                                 ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
                                 js_str_toString))
         {
-            call.thisv() = obj->getPrimitiveThis();
-            return call.thisv().toString();
+            JSString *str = obj->asString().unbox();
+            call.thisv().setString(str);
+            return str;
         }
     } else if (call.thisv().isNullOrUndefined()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
