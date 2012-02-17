@@ -125,6 +125,13 @@ class ComparePolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *def);
 };
 
+// Policy for MTest instructions.
+class TestPolicy : public BoxInputsPolicy
+{
+  public:
+    bool adjustInputs(MInstruction *ins);
+};
+
 class CallPolicy : public BoxInputsPolicy
 {
   public:

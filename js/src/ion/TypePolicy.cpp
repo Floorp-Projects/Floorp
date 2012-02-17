@@ -156,6 +156,35 @@ ComparePolicy::adjustInputs(MInstruction *def)
 }
 
 bool
+TestPolicy::adjustInputs(MInstruction *ins)
+{
+    MDefinition *op = ins->getOperand(0);
+    switch (op->type()) {
+      case MIRType_Value:
+      case MIRType_Null:
+      case MIRType_Undefined:
+      case MIRType_Boolean:
+      case MIRType_Int32:
+      case MIRType_Double:
+      case MIRType_Object:
+        break;
+
+      case MIRType_String:
+      {
+        MStringLength *length = MStringLength::New(op);
+        ins->block()->insertBefore(ins, length);
+        ins->replaceOperand(0, length);
+        break;
+      }
+
+      default:
+        ins->replaceOperand(0, boxAt(ins, op));
+        break;
+    }
+    return true;
+}
+
+bool
 BitwisePolicy::adjustInputs(MInstruction *ins)
 {
     if (specialization_ == MIRType_None)
