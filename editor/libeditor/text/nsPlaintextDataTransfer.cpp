@@ -72,10 +72,6 @@
 #include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
 
-// private clipboard data flavors for html copy/paste
-#define kHTMLContext   "text/_moz_htmlcontext"
-#define kHTMLInfo      "text/_moz_htmlinfo"
-
 using namespace mozilla;
 
 NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transferable)
