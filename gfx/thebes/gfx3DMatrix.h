@@ -114,7 +114,10 @@ public:
    * Returns true if the matrix can be reduced to a 2D affine transformation
    * (i.e. as obtained by From2D). If it is, optionally returns the 2D
    * matrix in aMatrix. This should only be used on matrices required for
-   * rendering, not for intermediate calculations.
+   * rendering, not for intermediate calculations. It is assumed that the 2D
+   * matrix will only be used for transforming objects on to the z=0 plane,
+   * therefore any z-component perspective is ignored. This means that if
+   * aMatrix is applied to objects with z != 0, the results may be incorrect.
    *
    * Since drawing is to a 2d plane, any 3d transform without perspective
    * can be reduced by dropping the z row and column.
