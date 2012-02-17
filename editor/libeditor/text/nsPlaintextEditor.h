@@ -118,8 +118,6 @@ public:
   NS_IMETHOD PasteTransferable(nsITransferable *aTransferable);
   NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste);
 
-  NS_IMETHOD CanDrag(nsIDOMEvent *aDragEvent, bool *aCanDrag);
-  NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
   NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
 
   NS_IMETHOD OutputToString(const nsAString& aFormatType,
@@ -205,8 +203,6 @@ protected:
                                         nsIDOMNode *aDestinationNode,
                                         PRInt32 aDestOffset,
                                         bool aDoDeleteSelection);
-  virtual nsresult SetupDocEncoder(nsIDocumentEncoder **aDocEncoder);
-  virtual nsresult PutDragDataInTransferable(nsITransferable **aTransferable);
 
   /** shared outputstring; returns whether selection is collapsed and resulting string */
   nsresult SharedOutputString(PRUint32 aFlags, bool* aIsCollapsed, nsAString& aResult);
