@@ -969,7 +969,7 @@ nsHTMLScrollFrame::GetFrameName(nsAString& aResult) const
 already_AddRefed<nsAccessible>
 nsHTMLScrollFrame::CreateAccessible()
 {
-  // Create an accessible regardless focusable state because the state can be
+  // Create an accessible regardless of focusable state because the state can be
   // changed during frame life cycle without any notifications to accessibility.
   if (mContent->IsRootOfNativeAnonymousSubtree() ||
       GetScrollbarStyles() == nsIScrollableFrame::
