@@ -1476,6 +1476,7 @@ Tab.prototype = {
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     if (kUsingGLLayers) {
         frameLoader.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
+        frameLoader.clampScrollPosition = false;
     } else {
         // Turn off clipping so we can buffer areas outside of the browser element.
         frameLoader.clipSubdocument = false;
@@ -1593,11 +1594,6 @@ Tab.prototype = {
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
 
-    // If we've been asked to over-scroll, do it via the transformation
-    // and store it separately to the viewport.
-    let excessX = aViewport.x - win.scrollX;
-    let excessY = aViewport.y - win.scrollY;
-
     this._viewport.width = gScreenWidth = aViewport.width;
     this._viewport.height = gScreenHeight = aViewport.height;
     dump("### gScreenWidth = " + gScreenWidth + "\n");
@@ -1606,15 +1602,11 @@ Tab.prototype = {
     let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
 
-    if ((aViewport.offsetX != this._viewport.offsetX) ||
-        (excessX != this.viewportExcess.x)) {
+    if (aViewport.offsetX != this._viewport.offsetX) {
       this._viewport.offsetX = aViewport.offsetX;
-      this.viewportExcess.x = excessX;
     }
-    if ((aViewport.offsetY != this._viewport.offsetY) ||
-        (excessY != this.viewportExcess.y)) {
+    if (aViewport.offsetY != this._viewport.offsetY) {
       this._viewport.offsetY = aViewport.offsetY;
-      this.viewportExcess.y = excessY;
     }
     if (Math.abs(zoom - this._viewport.zoom) >= 1e-6) {
       this._viewport.zoom = zoom;
