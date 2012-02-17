@@ -279,12 +279,13 @@ class ObjectImpl : public gc::Cell
         return elements != emptyObjectElements && elements != fixedElements();
     }
 
-    /* Write barrier support. */
+    /* GC support. */
     static inline void readBarrier(ObjectImpl *obj);
     static inline void writeBarrierPre(ObjectImpl *obj);
     static inline void writeBarrierPost(ObjectImpl *obj, void *addr);
     inline void privateWriteBarrierPre(void **oldval);
     inline void privateWriteBarrierPost(void **oldval);
+    void markChildren(JSTracer *trc);
 
     /* JIT Accessors */
     static size_t offsetOfShape() { return offsetof(ObjectImpl, shape_); }
