@@ -175,10 +175,20 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
   }
 
   /* Reserve enough memory to map the complete virtual address space for this
-   * library. */
-  elf->base.Assign(mmap(NULL, max_vaddr, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS,
+   * library.
+   * As we are using the base address from here to mmap something else with
+   * MAP_FIXED | MAP_SHARED, we need to make sure these mmaps will work. For
+   * instance, on armv6, MAP_SHARED mappings require a 16k alignment, but mmap
+   * MAP_PRIVATE only returns a 4k aligned address. So we first get a base
+   * address with MAP_SHARED, which guarantees the kernel returns an address
+   * that we'll be able to use with MAP_FIXED, and then remap MAP_PRIVATE at
+   * the same address, because of some bad side effects of keeping it as
+   * MAP_SHARED. */
+  elf->base.Assign(mmap(NULL, max_vaddr, PROT_NONE, MAP_SHARED | MAP_ANONYMOUS,
                       -1, 0), max_vaddr);
-  if (elf->base == MAP_FAILED) {
+  if ((elf->base == MAP_FAILED) ||
+      (mmap(elf->base, max_vaddr, PROT_NONE,
+            MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0) != elf->base)) {
     log("%s: Failed to mmap", elf->GetPath());
     return NULL;
   }
