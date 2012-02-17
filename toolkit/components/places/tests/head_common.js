@@ -645,6 +645,21 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments)
 }
 
 /**
+ * Shutdowns Places, invoking the callback when the connection has been closed.
+ *
+ * @param aCallback
+ *        Function to be called when done.
+ */
+function waitForConnectionClosed(aCallback)
+{
+  Services.obs.addObserver(function WFCCCallback() {
+    Services.obs.removeObserver(WFCCCallback, "places-connection-closed");
+    aCallback();
+  }, "places-connection-closed", false);
+  shutdownPlaces();
+}
+
+/**
  * Tests if a given guid is valid for use in Places or not.
  *
  * @param aGuid
