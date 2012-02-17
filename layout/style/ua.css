@@ -77,6 +77,8 @@
   /* Bug 722777 */
   -moz-transform: inherit;
   -moz-transform-origin: inherit;
+  /* Bug 724750 */
+  -moz-backface-visibility: inherit;
 }
 
 *|*::-moz-table-row {

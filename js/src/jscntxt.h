@@ -76,12 +76,23 @@ JS_BEGIN_EXTERN_C
 struct DtoaState;
 JS_END_EXTERN_C
 
-struct JSSharpObjectMap {
-    jsrefcount  depth;
-    uint32_t    sharpgen;
-    JSHashTable *table;
+struct JSSharpInfo {
+    bool hasGen;
+    bool isSharp;
 
-    JSSharpObjectMap() : depth(0), sharpgen(0), table(NULL) {}
+    JSSharpInfo() : hasGen(false), isSharp(false) {}
+};
+
+typedef js::HashMap<JSObject *, JSSharpInfo> JSSharpTable;
+
+struct JSSharpObjectMap {
+    jsrefcount   depth;
+    uint32_t     sharpgen;
+    JSSharpTable table;
+
+    JSSharpObjectMap(JSContext *cx) : depth(0), sharpgen(0), table(js::TempAllocPolicy(cx)) {
+        table.init();
+    }
 };
 
 namespace js {
@@ -1121,6 +1132,8 @@ struct JSContext : js::ContextFriendFields
         return reinterpret_cast<JSContext *>(uintptr_t(link) - offsetof(JSContext, link));
     }
 
+    void mark(JSTracer *trc);
+
   private:
     /*
      * The allocation code calls the function to indicate either OOM failure
@@ -1558,18 +1571,18 @@ class AutoShapeVector : public AutoVectorRooter<const Shape *>
 
 class AutoValueArray : public AutoGCRooter
 {
-    const js::Value *start_;
+    js::Value *start_;
     unsigned length_;
 
   public:
-    AutoValueArray(JSContext *cx, const js::Value *start, unsigned length
+    AutoValueArray(JSContext *cx, js::Value *start, unsigned length
                    JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : AutoGCRooter(cx, VALARRAY), start_(start), length_(length)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    const Value *start() const { return start_; }
+    Value *start() { return start_; }
     unsigned length() const { return length_; }
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER

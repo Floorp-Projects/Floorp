@@ -135,10 +135,12 @@ nsCocoaWindow::nsCocoaWindow()
 , mPopupContentView(nil)
 , mShadowStyle(NS_STYLE_WINDOW_SHADOW_DEFAULT)
 , mWindowFilter(0)
+, mAnimationType(nsIWidget::eGenericWindowAnimation)
 , mWindowMadeHere(false)
 , mSheetNeedsShow(false)
 , mFullScreen(false)
 , mModal(false)
+, mIsAnimationSuppressed(false)
 , mInReportMoveEvent(false)
 , mNumModalDescendents(0)
 {
@@ -303,6 +305,8 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
     }
     return CreatePopupContentView(newBounds, aHandleEventFunction, aContext);
   }
+
+  mIsAnimationSuppressed = aInitData->mIsAnimationSuppressed;
 
   return NS_OK;
 
@@ -745,6 +749,26 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
     }
     else {
       NS_OBJC_BEGIN_TRY_LOGONLY_BLOCK;
+      if (mWindowType == eWindowType_toplevel &&
+          [mWindow respondsToSelector:@selector(setAnimationBehavior:)]) {
+        NSWindowAnimationBehavior behavior;
+        if (mIsAnimationSuppressed) {
+          behavior = NSWindowAnimationBehaviorNone;
+        } else {
+          switch (mAnimationType) {
+            case nsIWidget::eDocumentWindowAnimation:
+              behavior = NSWindowAnimationBehaviorDocumentWindow;
+              break;
+            default:
+              NS_NOTREACHED("unexpected mAnimationType value");
+              // fall through
+            case nsIWidget::eGenericWindowAnimation:
+              behavior = NSWindowAnimationBehaviorDefault;
+              break;
+          }
+        }
+        [mWindow setAnimationBehavior:behavior];
+      }
       [mWindow makeKeyAndOrderFront:nil];
       NS_OBJC_END_TRY_LOGONLY_BLOCK;
       SendSetZLevelEvent();
@@ -1616,6 +1640,11 @@ void nsCocoaWindow::SetShowsToolbarButton(bool aShow)
   [mWindow setShowsToolbarButton:aShow];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void nsCocoaWindow::SetWindowAnimationType(nsIWidget::WindowAnimationType aType)
+{
+  mAnimationType = aType;
 }
 
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, bool aActive)

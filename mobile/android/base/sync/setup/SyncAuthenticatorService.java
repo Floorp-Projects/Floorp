@@ -41,6 +41,7 @@ package org.mozilla.gecko.sync.setup;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
@@ -54,25 +55,23 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 
 public class SyncAuthenticatorService extends Service {
-  private static final String LOG_TAG = "SyncAuthenticatorService";
+  private static final String LOG_TAG = "SyncAuthService";
   private SyncAccountAuthenticator sAccountAuthenticator = null;
 
   @Override
   public void onCreate() {
-    Log.d(LOG_TAG, "onCreate");
+    Logger.debug(LOG_TAG, "onCreate");
     sAccountAuthenticator = getAuthenticator();
   }
 
   @Override
   public IBinder onBind(Intent intent) {
-    IBinder ret = null;
-    if (intent.getAction().equals(
-        android.accounts.AccountManager.ACTION_AUTHENTICATOR_INTENT))
-      ret = getAuthenticator().getIBinder();
-    return ret;
+    if (intent.getAction().equals(android.accounts.AccountManager.ACTION_AUTHENTICATOR_INTENT)) {
+      return getAuthenticator().getIBinder();
+    }
+    return null;
   }
 
   private SyncAccountAuthenticator getAuthenticator() {
@@ -82,8 +81,7 @@ public class SyncAuthenticatorService extends Service {
     return sAccountAuthenticator;
   }
 
-  private static class SyncAccountAuthenticator extends
-      AbstractAccountAuthenticator {
+  private static class SyncAccountAuthenticator extends AbstractAccountAuthenticator {
     private Context mContext;
     public SyncAccountAuthenticator(Context context) {
       super(context);
@@ -94,10 +92,10 @@ public class SyncAuthenticatorService extends Service {
     public Bundle addAccount(AccountAuthenticatorResponse response,
         String accountType, String authTokenType, String[] requiredFeatures,
         Bundle options) throws NetworkErrorException {
-      Log.d(LOG_TAG, "addAccount()");
+      Logger.debug(LOG_TAG, "addAccount()");
       final Intent intent = new Intent(mContext, SetupSyncActivity.class);
       intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE,
-          response);
+                      response);
       intent.putExtra("accountType", Constants.ACCOUNTTYPE_SYNC);
       intent.putExtra(Constants.INTENT_EXTRA_IS_SETUP, true);
 
@@ -109,15 +107,16 @@ public class SyncAuthenticatorService extends Service {
 
     @Override
     public Bundle confirmCredentials(AccountAuthenticatorResponse response,
-        Account account, Bundle options) throws NetworkErrorException {
-      Log.d(LOG_TAG, "confirmCredentials()");
+                                     Account account,
+                                     Bundle options) throws NetworkErrorException {
+      Logger.debug(LOG_TAG, "confirmCredentials()");
       return null;
     }
 
     @Override
     public Bundle editProperties(AccountAuthenticatorResponse response,
-        String accountType) {
-      Log.d(LOG_TAG, "editProperties");
+                                 String accountType) {
+      Logger.debug(LOG_TAG, "editProperties");
       return null;
     }
 
@@ -125,7 +124,7 @@ public class SyncAuthenticatorService extends Service {
     public Bundle getAuthToken(AccountAuthenticatorResponse response,
         Account account, String authTokenType, Bundle options)
         throws NetworkErrorException {
-      Log.d(LOG_TAG, "getAuthToken()");
+      Logger.debug(LOG_TAG, "getAuthToken()");
       if (!authTokenType.equals(Constants.AUTHTOKEN_TYPE_PLAIN)) {
         final Bundle result = new Bundle();
         result.putString(AccountManager.KEY_ERROR_MESSAGE,
@@ -135,7 +134,7 @@ public class SyncAuthenticatorService extends Service {
 
       // Extract the username and password from the Account Manager, and ask
       // the server for an appropriate AuthToken.
-      Log.d(LOG_TAG, "AccountManager.get(" + mContext + ")");
+      Logger.info(LOG_TAG, "AccountManager.get(" + mContext + ")");
       final AccountManager am = AccountManager.get(mContext);
       final String password = am.getPassword(account);
       if (password != null) {
@@ -154,7 +153,8 @@ public class SyncAuthenticatorService extends Service {
         // Username after hashing.
         try {
           String username = KeyBundle.usernameFromAccount(account.name);
-          Log.i("rnewman", "Account " + account.name + " hashes to " + username);
+          Logger.pii(LOG_TAG, "Account " + account.name + " hashes to " + username);
+          Logger.info(LOG_TAG, "Setting username. Null?" + (username == null));
           result.putString(Constants.OPTION_USERNAME, username);
         } catch (NoSuchAlgorithmException e) {
           // Do nothing. Calling code must check for missing value.
@@ -164,27 +164,27 @@ public class SyncAuthenticatorService extends Service {
 
         // Sync key.
         final String syncKey = am.getUserData(account, Constants.OPTION_SYNCKEY);
-        Log.i("rnewman", "Setting Sync Key to " + syncKey);
+        Logger.info(LOG_TAG, "Setting Sync Key. Null? " + (syncKey == null));
         result.putString(Constants.OPTION_SYNCKEY, syncKey);
 
         // Password.
         result.putString(AccountManager.KEY_AUTHTOKEN, password);
         return result;
       }
-      Log.w(LOG_TAG, "Returning null bundle for getAuthToken.");
+      Logger.warn(LOG_TAG, "Returning null bundle for getAuthToken.");
       return null;
     }
 
     @Override
     public String getAuthTokenLabel(String authTokenType) {
-      Log.d(LOG_TAG, "getAuthTokenLabel()");
+      Logger.debug(LOG_TAG, "getAuthTokenLabel()");
       return null;
     }
 
     @Override
     public Bundle hasFeatures(AccountAuthenticatorResponse response,
         Account account, String[] features) throws NetworkErrorException {
-      Log.d(LOG_TAG, "hasFeatures()");
+      Logger.debug(LOG_TAG, "hasFeatures()");
       return null;
     }
 
@@ -192,7 +192,7 @@ public class SyncAuthenticatorService extends Service {
     public Bundle updateCredentials(AccountAuthenticatorResponse response,
         Account account, String authTokenType, Bundle options)
         throws NetworkErrorException {
-      Log.d(LOG_TAG, "updateCredentials()");
+      Logger.debug(LOG_TAG, "updateCredentials()");
       return null;
     }
   }

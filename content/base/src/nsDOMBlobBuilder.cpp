@@ -122,9 +122,9 @@ nsDOMMultipartFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
       PRUint64 upperBound = NS_MIN<PRUint64>(l - skipStart, length);
 
       nsCOMPtr<nsIDOMBlob> firstBlob;
-      rv = blob->MozSlice(skipStart, skipStart + upperBound,
-                          aContentType, 3,
-                          getter_AddRefs(firstBlob));
+      rv = blob->Slice(skipStart, skipStart + upperBound,
+                       aContentType, 3,
+                       getter_AddRefs(firstBlob));
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       // Avoid wrapping a single blob inside an nsDOMMultipartFile
@@ -150,8 +150,8 @@ nsDOMMultipartFile::CreateSlice(PRUint64 aStart, PRUint64 aLength,
 
     if (length < l) {
       nsCOMPtr<nsIDOMBlob> lastBlob;
-      rv = blob->MozSlice(0, length, aContentType, 3,
-                          getter_AddRefs(lastBlob));
+      rv = blob->Slice(0, length, aContentType, 3,
+                       getter_AddRefs(lastBlob));
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       blobs.AppendElement(lastBlob);

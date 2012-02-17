@@ -186,6 +186,24 @@ var shell = {
       Services.prefs.setBoolPref("nglayout.debug.paint_flashing", false);
     }
   },
+ 
+  changeVolume: function shell_changeVolume(aDelta) {
+    let audioManager = Cc["@mozilla.org/telephony/audiomanager;1"].getService(Ci.nsIAudioManager);
+
+    let steps = 10;
+    try {
+      steps = Services.prefs.getIntPref("media.volume.steps");
+      if (steps <= 0)
+        steps = 1;
+    } catch(e) {}
+
+    let volume = audioManager.masterVolume + aDelta / steps;
+    if (volume > 1)
+      volume = 1;
+    if (volume < 0)
+      volume = 0;
+    audioManager.masterVolume = volume;
+  },
 
   handleEvent: function shell_handleEvent(evt) {
     switch (evt.type) {
@@ -216,6 +234,12 @@ var shell = {
             break;
           case 'Search':
             this.toggleDebug();
+            break;
+          case 'VolumeUp':
+            this.changeVolume(1);
+            break;
+          case 'VolumeDown':
+            this.changeVolume(-1);
             break;
         }
         break;

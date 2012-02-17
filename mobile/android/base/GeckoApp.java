@@ -1648,7 +1648,8 @@ abstract public class GeckoApp
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-                window.getDecorView().setSystemUiVisibility(fullscreen ? 1 : 0);
+                if (Build.VERSION.SDK_INT >= 11)
+                    window.getDecorView().setSystemUiVisibility(fullscreen ? 1 : 0);
             }
         });
     }
