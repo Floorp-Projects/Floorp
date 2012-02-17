@@ -124,7 +124,7 @@ public class GeckoAppShell
 
     // helper methods
     //    public static native void setSurfaceView(GeckoSurfaceView sv);
-    public static native void setLayerClient(GeckoLayerClient client, int type);
+    public static native void setLayerClient(GeckoLayerClient client);
     public static native void putenv(String map);
     public static native void onResume();
     public static native void onLowMemory();
@@ -471,8 +471,7 @@ public class GeckoAppShell
         Log.i(LOGTAG, "post native init");
 
         // Tell Gecko where the target byte buffer is for rendering
-        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerClient(),
-                                     GeckoApp.mAppContext.getLayerClient().getType());
+        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerClient());
 
         Log.i(LOGTAG, "setLayerClient called");
 

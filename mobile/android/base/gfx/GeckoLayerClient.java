@@ -60,9 +60,6 @@ import java.util.regex.Pattern;
 public abstract class GeckoLayerClient extends LayerClient implements GeckoEventListener {
     private static final String LOGTAG = "GeckoLayerClient";
 
-    public static final int LAYER_CLIENT_TYPE_NONE = 0;
-    public static final int LAYER_CLIENT_TYPE_GL = 2;
-
     protected IntSize mScreenSize;
     protected IntSize mBufferSize;
 
@@ -100,7 +97,6 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
     protected abstract IntSize getTileSize();
     protected abstract void tileLayerUpdated();
     public abstract Bitmap getBitmap();
-    public abstract int getType();
 
     public GeckoLayerClient(Context context) {
         mScreenSize = new IntSize(0, 0);

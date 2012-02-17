@@ -151,12 +151,6 @@ public class GeckoGLLayerClient extends GeckoLayerClient
         }
     }
 
-    @Override
-    public int getType() {
-        Log.e(LOGTAG, "### getType");
-        return LAYER_CLIENT_TYPE_GL;
-    }
-
     public void dimensionsChanged(Point newOrigin, float newResolution) {
         Log.e(LOGTAG, "### dimensionsChanged " + newOrigin + " " + newResolution);
     }
