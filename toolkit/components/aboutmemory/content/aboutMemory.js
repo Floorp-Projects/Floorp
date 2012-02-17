@@ -66,9 +66,8 @@ let gChildMemoryListener = undefined;
 //---------------------------------------------------------------------------
 
 // Forward slashes in URLs in paths are represented with backslashes to avoid
-// being mistaken for path separators.  Paths/names/descriptions where this
-// hasn't been undone are prefixed with "unsafe"; the rest are prefixed with
-// "safe".
+// being mistaken for path separators.  Paths/names where this hasn't been
+// undone are prefixed with "unsafe"; the rest are prefixed with "safe".
 function flipBackslashes(aUnsafeStr)
 {
   return aUnsafeStr.replace(/\\/g, '/');
@@ -254,7 +253,7 @@ function appendElementWithText(aP, aTagName, aClassName, aText)
 
 const kUnknown = -1;    // used for an unknown _amount
 
-const kTreeUnsafeDescriptions = {
+const kTreeDescriptions = {
   'explicit' :
 "This tree covers explicit memory allocations by the application, both at the \
 operating system level (via calls to functions such as VirtualAlloc, \
@@ -425,13 +424,13 @@ function updateAboutMemory()
 
 //---------------------------------------------------------------------------
 
-function Report(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc)
+function Report(aUnsafePath, aKind, aUnits, aAmount, aDescription)
 {
   this._unsafePath  = aUnsafePath;
   this._kind        = aKind;
   this._units       = aUnits;
   this._amount      = aAmount;
-  this._unsafeDescription = aUnsafeDesc;
+  this._description = aDescription;
   // this._nMerged is only defined if > 1
   // this._done is defined and set to true when the Report's amount is read
 }
@@ -480,10 +479,10 @@ function getReportsByProcess(aMgr)
   let reportsByProcess = {};
 
   function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
-                        aUnsafeDesc)
+                        aDescription)
   {
     let process = aProcess === "" ? "Main" : aProcess;
-    let r = new Report(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc);
+    let r = new Report(aUnsafePath, aKind, aUnits, aAmount, aDescription);
     if (!reportsByProcess[process]) {
       reportsByProcess[process] = {};
     }
@@ -516,14 +515,14 @@ function TreeNode(aUnsafeName)
   this._kids = [];
   // Leaf TreeNodes have these properties added immediately after construction:
   // - _amount (which is never |kUnknown|)
-  // - _unsafeDescription
+  // - _description
   // - _kind
   // - _nMerged (only defined if > 1)
   // - _isUnknown (only defined if true)
   //
   // Non-leaf TreeNodes have these properties added later:
   // - _amount (which is never |kUnknown|)
-  // - _unsafeDescription
+  // - _description
   // - _hideKids (only defined if true)
 }
 
@@ -605,7 +604,7 @@ function buildTree(aReports, aTreeName)
         u._amount = 0;
         u._isUnknown = true;
       }
-      u._unsafeDescription = r._unsafeDescription;
+      u._description = r._description;
       u._kind = r._kind;
       if (r._nMerged) {
         u._nMerged = r._nMerged;
@@ -626,7 +625,7 @@ function buildTree(aReports, aTreeName)
       // Leaf node.  Has already been filled in.
       assert(aT._kind !== undefined, "aT._kind is undefined for leaf node");
     } else {
-      // Non-leaf node.  Derive its _amount and _unsafeDescription entirely
+      // Non-leaf node.  Derive its _amount and _description entirely
       // from its children.
       assert(aT._kind === undefined, "aT._kind is defined for non-leaf node");
       let childrenBytes = 0;
@@ -634,8 +633,8 @@ function buildTree(aReports, aTreeName)
         childrenBytes += fillInNonLeafNodes(aT._kids[i]);
       }
       aT._amount = childrenBytes;
-      aT._unsafeDescription =
-        "The sum of all entries below '" + aT._unsafeName + "'.";
+      aT._description = "The sum of all entries below '" +
+                        flipBackslashes(aT._unsafeName) + "'.";
     }
     assert(aT._amount !== kUnknown, "aT._amount !== kUnknown");
     return aT._amount;
@@ -654,7 +653,7 @@ function buildTree(aReports, aTreeName)
   }
 
   // Set the (unsafe) description on the root node.
-  t._unsafeDescription = kTreeUnsafeDescriptions[t._unsafeName];
+  t._description = kTreeDescriptions[t._unsafeName];
 
   return t;
 }
@@ -721,7 +720,7 @@ function fixUpExplicitTree(aT, aReports)
   // This kindToString() ensures the "(Heap)" prefix is set without having to
   // set the _kind property, which would mean that there is a corresponding
   // Report object for this TreeNode object (which isn't true)
-  heapUnclassifiedT._unsafeDescription = kindToString(KIND_HEAP) +
+  heapUnclassifiedT._description = kindToString(KIND_HEAP) +
       "Memory not classified by a more specific reporter. This includes " +
       "slop bytes due to internal fragmentation in the heap allocator " +
       "(caused when the allocator rounds up request sizes).";
@@ -786,7 +785,7 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT)
       }
       aggT._hideKids = true;
       aggT._amount = aggBytes;
-      aggT._unsafeDescription =
+      aggT._description =
         nAgg + " sub-trees that are below the " + kSignificanceThresholdPerc +
         "% significance threshold.";
       aT._kids.splice(i0, nAgg, aggT);
@@ -1073,7 +1072,7 @@ const kNoKids   = 0;
 const kHideKids = 1;
 const kShowKids = 2;
 
-function appendMrNameSpan(aP, aKind, aKidsState, aUnsafeDesc, aUnsafeName,
+function appendMrNameSpan(aP, aKind, aKidsState, aDescription, aUnsafeName,
                           aIsUnknown, aIsInvalid, aNMerged)
 {
   let text = "";
@@ -1091,7 +1090,7 @@ function appendMrNameSpan(aP, aKind, aKidsState, aUnsafeDesc, aUnsafeName,
 
   let nameSpan = appendElementWithText(aP, "span", "mrName",
                                        flipBackslashes(aUnsafeName));
-  nameSpan.title = kindToString(aKind) + flipBackslashes(aUnsafeDesc);
+  nameSpan.title = kindToString(aKind) + aDescription;
 
   if (aIsUnknown) {
     let noteSpan = appendElementWithText(aP, "span", "mrNote", " [*]");
@@ -1291,7 +1290,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
     // We don't want to show '(nonheap)' on a tree like 'smaps/vsize', since
     // the whole tree is non-heap.
     let kind = isExplicitTree ? aT._kind : undefined;
-    appendMrNameSpan(d, kind, kidsState, aT._unsafeDescription, aT._unsafeName,
+    appendMrNameSpan(d, kind, kidsState, aT._description, aT._unsafeName,
                      aT._isUnknown, tIsInvalid, aT._nMerged);
     appendTextNode(d, "\n");
 
@@ -1339,7 +1338,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
 
 //---------------------------------------------------------------------------
 
-function OtherReport(aUnsafePath, aUnits, aAmount, aUnsafeDesc, aNMerged)
+function OtherReport(aUnsafePath, aUnits, aAmount, aDescription, aNMerged)
 {
   // Nb: _kind is not needed, it's always KIND_OTHER.
   this._unsafePath = aUnsafePath;
@@ -1350,7 +1349,7 @@ function OtherReport(aUnsafePath, aUnits, aAmount, aUnsafeDesc, aNMerged)
   } else {
     this._amount = aAmount;
   }
-  this._unsafeDescription = aUnsafeDesc;
+  this._description = aDescription;
   this._asString = this.toString();
 }
 
@@ -1415,7 +1414,7 @@ function appendOtherElements(aP, aReportsByProcess)
              "_kind !== KIND_OTHER for " + flipBackslashes(r._unsafePath));
       assert(r._nMerged === undefined);  // we don't allow dup'd OTHER Reports
       let o = new OtherReport(r._unsafePath, r._units, r._amount,
-                              r._unsafeDescription);
+                              r._description);
       otherReports.push(o);
       if (o._asString.length > maxStringLength) {
         maxStringLength = o._asString.length;
@@ -1433,8 +1432,8 @@ function appendOtherElements(aP, aReportsByProcess)
       gUnsafePathsWithInvalidValuesForThisProcess.push(o._unsafePath);
     }
     appendMrValueSpan(pre, pad(o._asString, maxStringLength, ' '), oIsInvalid);
-    appendMrNameSpan(pre, KIND_OTHER, kNoKids, o._unsafeDescription,
-                     o._unsafePath, o._isUnknown, oIsInvalid);
+    appendMrNameSpan(pre, KIND_OTHER, kNoKids, o._description, o._unsafePath,
+                     o._isUnknown, oIsInvalid);
     appendTextNode(pre, "\n");
   }
 
@@ -1536,14 +1535,15 @@ function getCompartmentsByProcess(aMgr)
 
   let compartmentsByProcess = {};
 
-  function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount, aDesc)
+  function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
+                        aDescription)
   {
     let process = aProcess === "" ? "Main" : aProcess;
 
-    assert(aKind   === KIND_OTHER, "bad kind");
-    assert(aUnits  === UNITS_COUNT, "bad units");
-    assert(aAmount === 1, "bad amount");
-    assert(aDesc   === "", "bad description");
+    assert(aKind        === KIND_OTHER, "bad kind");
+    assert(aUnits       === UNITS_COUNT, "bad units");
+    assert(aAmount      === 1, "bad amount");
+    assert(aDescription === "", "bad description");
 
     let unsafeNames = aUnsafePath.split('/');
 
