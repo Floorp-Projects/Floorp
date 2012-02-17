@@ -1299,8 +1299,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         return;
     }
 
-    int layerClientType = AndroidBridge::Bridge()->GetLayerClientType();
-
     unsigned char *bits = NULL;
     if (HasDirectTexture()) {
       __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Have direct texture!");
@@ -1314,7 +1312,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     if (targetSurface->CairoStatus()) {
         ALOG("### Failed to create a valid surface from the bitmap");
-    } else if (bits || layerClientType == AndroidBridge::LAYER_CLIENT_TYPE_GL) {
+    } else {
         __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling DrawTo()!");
         DrawTo(targetSurface, dirtyRect);
     }
