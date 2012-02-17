@@ -1349,8 +1349,6 @@ struct JSObject : js::gc::Cell
 
     static bool thisObject(JSContext *cx, const js::Value &v, js::Value *vp);
 
-    inline JSObject *getThrowTypeError() const;
-
     bool swap(JSContext *cx, JSObject *other);
 
     inline void initArrayClass();
