@@ -2084,6 +2084,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
         NS_RegisterMemoryMultiReporter(new JSMemoryMultiReporter);
+        NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
     }
 
     if (!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
