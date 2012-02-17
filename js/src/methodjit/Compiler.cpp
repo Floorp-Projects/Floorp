@@ -177,6 +177,11 @@ mjit::Compiler::checkAnalysis(JSScript *script)
         return Compile_Abort;
     }
 
+    if (JSOp(*script->code) == JSOP_GENERATOR) {
+        JaegerSpew(JSpew_Abort, "script is a generator\n");
+        return Compile_Abort;
+    }
+
     if (!script->ensureRanAnalysis(cx, NULL))
         return Compile_Error;
     if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))

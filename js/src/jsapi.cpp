@@ -4415,20 +4415,13 @@ JS_ElementIteratorStub(JSContext *cx, JSObject *obj, JSBool keysonly)
 JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index)
 {
-    if (!obj->isNative())
-        return UndefinedValue();
-
-    return GetReservedSlot(obj, index);
+    return obj->getReservedSlot(index);
 }
 
 JS_PUBLIC_API(void)
 JS_SetReservedSlot(JSObject *obj, uint32_t index, jsval v)
 {
-    if (!obj->isNative())
-        return;
-
-    SetReservedSlot(obj, index, v);
-    GCPoke(obj->compartment()->rt, NullValue());
+    obj->setReservedSlot(index, v);
 }
 
 JS_PUBLIC_API(JSObject *)

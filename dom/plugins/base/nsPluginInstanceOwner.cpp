@@ -1390,7 +1390,19 @@ void nsPluginInstanceOwner::CARefresh(nsITimer *aTimer, void *aClosure) {
   }
 }
 
-void nsPluginInstanceOwner::AddToCARefreshTimer(nsPluginInstanceOwner *aPluginInstance) {
+void nsPluginInstanceOwner::AddToCARefreshTimer() {
+  if (!mInstance) {
+    return;
+  }
+
+  // Flash invokes InvalidateRect for us.
+  const char* mime = nsnull;
+  if (NS_SUCCEEDED(mInstance->GetMIMEType(&mime)) && mime) {
+    if (strcmp(mime, "application/x-shockwave-flash") == 0) {
+      return;
+    }
+  }
+
   if (!sCARefreshListeners) {
     sCARefreshListeners = new nsTArray<nsPluginInstanceOwner*>();
     if (!sCARefreshListeners) {
@@ -1398,9 +1410,11 @@ void nsPluginInstanceOwner::AddToCARefreshTimer(nsPluginInstanceOwner *aPluginIn
     }
   }
 
-  NS_ASSERTION(!sCARefreshListeners->Contains(aPluginInstance), 
-      "pluginInstanceOwner already registered as a listener");
-  sCARefreshListeners->AppendElement(aPluginInstance);
+  if (sCARefreshListeners->Contains(this)) {
+    return;
+  }
+
+  sCARefreshListeners->AppendElement(this);
 
   if (!sCATimer) {
     sCATimer = new nsCOMPtr<nsITimer>();
@@ -1416,12 +1430,12 @@ void nsPluginInstanceOwner::AddToCARefreshTimer(nsPluginInstanceOwner *aPluginIn
   }
 }
 
-void nsPluginInstanceOwner::RemoveFromCARefreshTimer(nsPluginInstanceOwner *aPluginInstance) {
-  if (!sCARefreshListeners || sCARefreshListeners->Contains(aPluginInstance) == false) {
+void nsPluginInstanceOwner::RemoveFromCARefreshTimer() {
+  if (!sCARefreshListeners || sCARefreshListeners->Contains(this) == false) {
     return;
   }
 
-  sCARefreshListeners->RemoveElement(aPluginInstance);
+  sCARefreshListeners->RemoveElement(this);
 
   if (sCARefreshListeners->Length() == 0) {
     if (sCATimer) {
@@ -1432,21 +1446,6 @@ void nsPluginInstanceOwner::RemoveFromCARefreshTimer(nsPluginInstanceOwner *aPlu
     delete sCARefreshListeners;
     sCARefreshListeners = NULL;
   }
-}
-
-void nsPluginInstanceOwner::SetupCARefresh()
-{
-  if (!mInstance) {
-    return;
-  }
-
-  const char* mime = nsnull;
-  if (NS_SUCCEEDED(mInstance->GetMIMEType(&mime)) && mime) {
-    // Flash invokes InvalidateRect for us.
-    if (strcmp(mime, "application/x-shockwave-flash") != 0) {
-    AddToCARefreshTimer(this);
-  }
-}
 }
 
 void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
@@ -2699,7 +2698,7 @@ nsPluginInstanceOwner::Destroy()
   CancelTimer();
 #endif
 #ifdef XP_MACOSX
-  RemoveFromCARefreshTimer(this);
+  RemoveFromCARefreshTimer();
   if (mColorProfile)
     ::CGColorSpaceRelease(mColorProfile);  
 #endif
@@ -3277,7 +3276,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 {
   NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
 
-    nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_FAILURE;
   
   // Can't call this twice!
   if (mWidget) {
@@ -3318,6 +3317,21 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
     mWidget->EnableDragDrop(true);
     mWidget->Show(false);
     mWidget->Enable(false);
+
+#ifdef XP_MACOSX
+    // Now that we have a widget we want to set the event model before
+    // any events are processed.
+    nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+    if (!pluginWidget) {
+      return NS_ERROR_FAILURE;
+    }
+    pluginWidget->SetPluginEventModel(GetEventModel());
+    pluginWidget->SetPluginDrawingModel(GetDrawingModel());
+
+    if (GetDrawingModel() == NPDrawingModelCoreAnimation) {
+      AddToCARefreshTimer();
+    }
+#endif
   }
 
   if (mObjectFrame) {

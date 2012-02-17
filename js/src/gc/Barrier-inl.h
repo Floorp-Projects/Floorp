@@ -134,8 +134,11 @@ inline void
 HeapValue::writeBarrierPre(JSCompartment *comp, const Value &value)
 {
 #ifdef JSGC_INCREMENTAL
-    if (comp->needsBarrier())
-        js::gc::MarkValueUnbarriered(comp->barrierTracer(), value, "write barrier");
+    if (comp->needsBarrier()) {
+        Value tmp(value);
+        js::gc::MarkValueUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        JS_ASSERT(tmp == value);
+    }
 #endif
 }
 

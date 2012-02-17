@@ -6,9 +6,15 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
 * In a clean clone of mozilla-central, run the following commands
 
-    $ rm -rf jpeg
-    $ svn export --ignore-externals /path/to/libjpeg-turbo jpeg
-    $ cd jpeg
+    $ rm -rf media/libjpeg
+    $ svn export --ignore-externals /path/to/libjpeg-turbo media/libjpeg
+    $ cd media/libjpeg
+
+* Copy win/jsimdcfg.inc to simd/.
+
+* Since libjpeg-turbo normally creates config.h and jconfig.h at build time and
+  we use pre-generated versions, changes to jconfig.h.in and win/config.h.in
+  should be looked for and noted for later inclusion.
 
 * Now look through the new files and rm any which are npotb.  When I upgraded
   to libjpeg-turbo 1.1.0, the only files I kept which didn't match
@@ -32,19 +38,37 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
     diff <(ls *.c | sort) <(grep -o '\w*\.c' Makefile.in | sort)
 
-  of course, libjpeg-turbo might have added some new source files, so you'll
+  Of course, libjpeg-turbo might have added some new source files, so you'll
   have to look though and figure out which of these files to keep.
 
 * Restore files modified in the Mozilla repository.
 
-    $ hg revert --no-backup Makefile.in jconfig.h jmorecfg.h simd/Makefile.in \
-      simd/jsimdcfg.inc jchuff.c jdhuff.c jdhuff.h MOZCHANGES
+    $ hg revert --no-backup config.h jconfig.h Makefile.in MOZCHANGES \
+      mozilla.diff simd/Makefile.in
+
+* Update config.h and jconfig.h as noted previously.
+
+* Apply Mozilla-specific changes to upstream files.
+
+    $ patch -p0 -i mozilla.diff
 
 * Update Makefile.in to build any new files.
 
 * Finally, tell hg that we've added or removed some files:
 
     $ hg addremove
+
+
+== February 10, 2012 (libjpeg-turbo v1.2.0 r807 2012-02-10) ==
+
+* Imported jchuff.c, jdhuff.c, jdhuff.h under new licensing.
+
+* Created mozilla.diff for the required jmorecfg.h changes and to allow for any
+  future changes made by Mozilla to upstream files.
+
+* Removed the following files which are unused by the Mozilla build:
+
+    cderror.h, cdjpeg.h, jconfig.h.in, transupp.h, simd/jsimdcfg.inc.h
 
 
 == March 28, 2011 (initial commit, libjpeg-turbo v1.1.0 r469 2011-02-27) ==

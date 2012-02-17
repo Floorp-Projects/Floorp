@@ -47,7 +47,7 @@ interface nsIDocShellTreeItem;
  * containing an embedded Gecko web browser.
  */
 
-[scriptable, uuid(BA434C60-9D52-11d3-AFB0-00A024FFC08C)]
+[scriptable, uuid(E8C414C4-DC38-4BA3-AB4E-EC4CBBE22907)]
 interface nsIWebBrowserChrome : nsISupports
 {
     const unsigned long STATUS_SCRIPT         = 0x00000001;
@@ -75,43 +75,47 @@ interface nsIWebBrowserChrome : nsISupports
     /**
      * Definitions for the chrome flags
      */
-    const unsigned long CHROME_DEFAULT          = 0x00000001;
-    const unsigned long CHROME_WINDOW_BORDERS   = 0x00000002;
-    const unsigned long CHROME_WINDOW_CLOSE     = 0x00000004;
-    const unsigned long CHROME_WINDOW_RESIZE    = 0x00000008;
-    const unsigned long CHROME_MENUBAR          = 0x00000010;
-    const unsigned long CHROME_TOOLBAR          = 0x00000020;
-    const unsigned long CHROME_LOCATIONBAR      = 0x00000040;
-    const unsigned long CHROME_STATUSBAR        = 0x00000080;
-    const unsigned long CHROME_PERSONAL_TOOLBAR = 0x00000100;
-    const unsigned long CHROME_SCROLLBARS       = 0x00000200;
-    const unsigned long CHROME_TITLEBAR         = 0x00000400;
-    const unsigned long CHROME_EXTRA            = 0x00000800;
+    const unsigned long CHROME_DEFAULT                = 0x00000001;
+    const unsigned long CHROME_WINDOW_BORDERS         = 0x00000002;
+    const unsigned long CHROME_WINDOW_CLOSE           = 0x00000004;
+    const unsigned long CHROME_WINDOW_RESIZE          = 0x00000008;
+    const unsigned long CHROME_MENUBAR                = 0x00000010;
+    const unsigned long CHROME_TOOLBAR                = 0x00000020;
+    const unsigned long CHROME_LOCATIONBAR            = 0x00000040;
+    const unsigned long CHROME_STATUSBAR              = 0x00000080;
+    const unsigned long CHROME_PERSONAL_TOOLBAR       = 0x00000100;
+    const unsigned long CHROME_SCROLLBARS             = 0x00000200;
+    const unsigned long CHROME_TITLEBAR               = 0x00000400;
+    const unsigned long CHROME_EXTRA                  = 0x00000800;
     
     // createBrowserWindow specific flags
-    const unsigned long CHROME_WITH_SIZE        = 0x00001000;
-    const unsigned long CHROME_WITH_POSITION    = 0x00002000;
+    const unsigned long CHROME_WITH_SIZE              = 0x00001000;
+    const unsigned long CHROME_WITH_POSITION          = 0x00002000;
 
     // special cases
-    const unsigned long CHROME_WINDOW_MIN       = 0x00004000;
-    const unsigned long CHROME_WINDOW_POPUP     = 0x00008000;
+    const unsigned long CHROME_WINDOW_MIN             = 0x00004000;
+    const unsigned long CHROME_WINDOW_POPUP           = 0x00008000;
 
-    const unsigned long CHROME_WINDOW_RAISED    = 0x02000000;
-    const unsigned long CHROME_WINDOW_LOWERED   = 0x04000000;
-    const unsigned long CHROME_CENTER_SCREEN    = 0x08000000;
+    // Prevents new window animations on Mac OS X Lion.  Ignored on other
+    // platforms.
+    const unsigned long CHROME_MAC_SUPPRESS_ANIMATION = 0x01000000;
+
+    const unsigned long CHROME_WINDOW_RAISED          = 0x02000000;
+    const unsigned long CHROME_WINDOW_LOWERED         = 0x04000000;
+    const unsigned long CHROME_CENTER_SCREEN          = 0x08000000;
 
     // Make the new window dependent on the parent.  This flag is only
     // meaningful if CHROME_OPENAS_CHROME is set; content windows should not be
     // dependent.
-    const unsigned long CHROME_DEPENDENT        = 0x10000000;
+    const unsigned long CHROME_DEPENDENT              = 0x10000000;
 
     // Note: The modal style bit just affects the way the window looks and does
     //       mean it's actually modal.
-    const unsigned long CHROME_MODAL            = 0x20000000; 
-    const unsigned long CHROME_OPENAS_DIALOG    = 0x40000000;
-    const unsigned long CHROME_OPENAS_CHROME    = 0x80000000;
+    const unsigned long CHROME_MODAL                  = 0x20000000; 
+    const unsigned long CHROME_OPENAS_DIALOG          = 0x40000000;
+    const unsigned long CHROME_OPENAS_CHROME          = 0x80000000;
     
-    const unsigned long CHROME_ALL              = 0x00000ffe;
+    const unsigned long CHROME_ALL                    = 0x00000ffe;
     
     /**
      * The chrome flags for this browser chrome. The implementation should

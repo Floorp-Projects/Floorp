@@ -72,7 +72,8 @@ nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
     rv = mInputStream->Available(&count);
     if (NS_FAILED(rv)) return rv;
 
-    count = NS_MIN(count, aCount);
+    // bug716556 - Ensure count+1 doesn't overflow
+    count = NS_MIN(NS_MIN(count, aCount), PR_UINT32_MAX - 1);
     buffer = (char*)nsMemory::Alloc(count+1); // make room for '\0'
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
