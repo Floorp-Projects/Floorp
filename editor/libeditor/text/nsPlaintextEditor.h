@@ -118,8 +118,6 @@ public:
   NS_IMETHOD PasteTransferable(nsITransferable *aTransferable);
   NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste);
 
-  NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
-
   NS_IMETHOD OutputToString(const nsAString& aFormatType,
                             PRUint32 aFlags,
                             nsAString& aOutputString);
@@ -164,6 +162,15 @@ public:
                         nsIDOMNode *aDestinationNode,
                         PRInt32 aDestOffset,
                         bool aDoDeleteSelection);
+
+  virtual nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
+                                          PRInt32 aIndex,
+                                          nsIDOMDocument *aSourceDoc,
+                                          nsIDOMNode *aDestinationNode,
+                                          PRInt32 aDestOffset,
+                                          bool aDoDeleteSelection);
+
+  virtual nsresult InsertFromDrop(nsIDOMEvent* aDropEvent);
 
   /**
    * Extends the selection for given deletion operation
