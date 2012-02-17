@@ -268,10 +268,29 @@ GetCurrentBatteryInformation(hal::BatteryInformation *aBatteryInfo)
   }
 
   FILE *chargingFile = fopen("/sys/class/power_supply/battery/charging_source", "r");
-  int chargingSrc = 1;
+  int chargingSrc = BATTERY_CHARGING_USB;
+  bool done = false;
   if (chargingFile) {
     fscanf(chargingFile, "%d", &chargingSrc);
     fclose(chargingFile);
+    done = true;
+  }
+
+  if (!done) {
+    // toro devices support
+    chargingFile = fopen("/sys/class/power_supply/battery/status", "r");
+    if (chargingFile) {
+      char status[16];
+      fscanf(chargingFile, "%s", &status);
+      if (!strcmp(status, "Charging") || !strcmp(status, "Full")) {
+        // no way here to know if we're charging from USB or AC.
+        chargingSrc = BATTERY_CHARGING_USB;
+      } else {
+        chargingSrc = BATTERY_NOT_CHARGING;
+      }
+      fclose(chargingFile);
+      done = true;
+    }
   }
 
   #ifdef DEBUG

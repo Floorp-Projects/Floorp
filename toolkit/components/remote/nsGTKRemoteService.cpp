@@ -164,19 +164,20 @@ nsGTKRemoteService::Shutdown()
 // Set desktop startup ID to the passed ID, if there is one, so that any created
 // windows get created with the right window manager metadata, and any windows
 // that get new tabs and are activated also get the right WM metadata.
-// If there is no desktop startup ID, then use the X event's timestamp
-// for _NET_ACTIVE_WINDOW when the window gets focused or shown.
+// The timestamp will be used if there is no desktop startup ID, or if we're
+// raising an existing window rather than showing a new window for the first time.
 void
 nsGTKRemoteService::SetDesktopStartupIDOrTimestamp(const nsACString& aDesktopStartupID,
                                                    PRUint32 aTimestamp) {
   nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
   if (!toolkit)
     return;
+
   if (!aDesktopStartupID.IsEmpty()) {
     toolkit->SetDesktopStartupID(aDesktopStartupID);
-  } else {
-    toolkit->SetFocusTimestamp(aTimestamp);
   }
+
+  toolkit->SetFocusTimestamp(aTimestamp);
 }
 
 
