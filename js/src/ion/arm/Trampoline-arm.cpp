@@ -319,22 +319,20 @@ IonCompartment::generateInvalidator(JSContext *cx)
     masm.finishFloatTransfer();
 
     masm.ma_mov(sp, r0);
-    masm.reserveStack(sizeof(size_t)*2);
+    const int sizeOfRetval = sizeof(size_t)*2;
+    masm.reserveStack(sizeOfRetval);
     masm.mov(sp, r1);
     masm.setupAlignedABICall(2);
     masm.setABIArg(0, r0);
     masm.setABIArg(1, r1);
-    //masm.as_bkpt();
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InvalidationBailout));
 
-    const uint32 BailoutDataSize = sizeof(double) * FloatRegisters::Total +
-                                   sizeof(void *) * Registers::Total;
-
     masm.ma_ldr(Address(sp, 0), r1);
-    // Add an additional 16 to make up the difference between the bottom and top of the frame.
-    // this 8 here is magic.  Sometimes, it crashes with it, sometimes it crashes without it.
-    // I suspect I don't fully understand what is going on here.
-    masm.ma_add(sp, Imm32(BailoutDataSize + sizeof(size_t) * 2), sp);
+    // Remove the return address, the IonScript, the register state
+    // (InvaliationBailoutStack) and the space that was allocated for the return value
+    masm.ma_add(sp, Imm32(sizeof(InvalidationBailoutStack) + sizeOfRetval), sp);
+    // remove the space that this frame was using before the bailout
+    // (computed by InvalidationBailout)
     masm.ma_add(sp, r1, sp);
     generateBailoutTail(masm);
     Linker linker(masm);
