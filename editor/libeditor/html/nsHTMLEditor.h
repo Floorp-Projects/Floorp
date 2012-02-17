@@ -370,8 +370,7 @@ public:
                               nsCOMPtr<nsIDOMNode> *ioParent, 
                               PRInt32 *ioOffset, 
                               bool aNoEmptyNodes);
-  already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode);
-                                
+  virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode);
 
   /** returns the absolute position of the end points of aSelection
     * in the document as a text stream.
@@ -596,8 +595,6 @@ protected:
   nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
                                   PRInt32 aIndex,
                                   nsIDOMDocument *aSourceDoc,
-                                  const nsAString & aContextStr,
-                                  const nsAString & aInfoStr,
                                   nsIDOMNode *aDestinationNode,
                                   PRInt32 aDestOffset,
                                   bool aDoDeleteSelection);

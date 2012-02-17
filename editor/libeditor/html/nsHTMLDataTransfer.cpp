@@ -1417,8 +1417,6 @@ GetStringFromDataTransfer(nsIDOMDataTransfer *aDataTransfer, const nsAString& aT
 nsresult nsHTMLEditor::InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
                                               PRInt32 aIndex,
                                               nsIDOMDocument *aSourceDoc,
-                                              const nsAString & aContextStr,
-                                              const nsAString & aInfoStr,
                                               nsIDOMNode *aDestinationNode,
                                               PRInt32 aDestOffset,
                                               bool aDoDeleteSelection)
@@ -1478,13 +1476,15 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
         }
       }
       else if (type.EqualsLiteral(kHTMLMime)) {
-        nsAutoString text;
+        nsAutoString text, contextString, infoString;
         GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
+        GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLContext), aIndex, contextString);
+        GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLInfo), aIndex, infoString);
 
         nsAutoEditBatch beginBatching(this);
         if (type.EqualsLiteral(kHTMLMime)) {
           rv = DoInsertHTMLWithContext(text,
-                                       aContextStr, aInfoStr, type,
+                                       contextString, infoString, type,
                                        aSourceDoc,
                                        aDestinationNode, aDestOffset,
                                        aDoDeleteSelection,
@@ -1506,164 +1506,6 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
         return NS_OK;
     }
   }
-
-  return rv;
-}
-
-NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
-{
-  ForceCompositionEnd();
-
-  nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aDropEvent));
-  NS_ENSURE_TRUE(dragEvent, NS_OK);
-
-  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
-  nsresult rv = dragEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint32 numItems = 0;
-  dataTransfer->GetMozItemCount(&numItems);
-
-  // Combine any deletion and drop insertion into one transaction
-  nsAutoEditBatch beginBatching(this);
-
-  // We never have to delete if selection is already collapsed
-  bool deleteSelection = false;
-  nsCOMPtr<nsIDOMNode> newSelectionParent;
-  PRInt32 newSelectionOffset = 0;
-
-  nsCOMPtr<nsIDOMNode> sourceNode;
-  dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
-
-  nsCOMPtr<nsIDOMDocument> srcdomdoc;
-  if (sourceNode) {
-    sourceNode->GetOwnerDocument(getter_AddRefs(srcdomdoc));
-    NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
-  }
-
-  PRUint32 i; 
-  bool doPlaceCaret = true;
-  for (i = 0; i < numItems; ++i)
-  {
-    nsAutoString contextString, infoString;
-    GetStringFromDataTransfer(dataTransfer, NS_LITERAL_STRING(kHTMLContext), i, contextString);
-    GetStringFromDataTransfer(dataTransfer, NS_LITERAL_STRING(kHTMLInfo), i, infoString);
-
-    if (doPlaceCaret)
-    {
-      nsCOMPtr<nsISelection> selection;
-      rv = GetSelection(getter_AddRefs(selection));
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-
-      bool isCollapsed;
-      rv = selection->GetIsCollapsed(&isCollapsed);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aDropEvent);
-      NS_ENSURE_TRUE(uiEvent, NS_ERROR_FAILURE);
-
-      // Parent and offset under the mouse cursor
-      rv = uiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
-
-      rv = uiEvent->GetRangeOffset(&newSelectionOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // XXX: This userSelectNode code is a workaround for bug 195957.
-      //
-      // Check to see if newSelectionParent is part of a "-moz-user-select: all"
-      // subtree. If it is, we need to make sure we don't drop into it!
-
-      nsCOMPtr<nsIDOMNode> userSelectNode = FindUserSelectAllNode(newSelectionParent);
-
-      if (userSelectNode)
-      {
-        // The drop is happening over a "-moz-user-select: all"
-        // subtree so make sure the content we insert goes before
-        // the root of the subtree.
-        //
-        // XXX: Note that inserting before the subtree matches the
-        //      current behavior when dropping on top of an image.
-        //      The decision for dropping before or after the
-        //      subtree should really be done based on coordinates.
-
-        rv = GetNodeLocation(userSelectNode, address_of(newSelectionParent),
-                             &newSelectionOffset);
-
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
-      }
-
-      // We never have to delete if selection is already collapsed
-      bool cursorIsInSelection = false;
-
-      // Check if mouse is in the selection
-      if (!isCollapsed)
-      {
-        PRInt32 rangeCount;
-        rv = selection->GetRangeCount(&rangeCount);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        for (PRInt32 j = 0; j < rangeCount; j++)
-        {
-          nsCOMPtr<nsIDOMRange> range;
-
-          rv = selection->GetRangeAt(j, getter_AddRefs(range));
-          if (NS_FAILED(rv) || !range) 
-            continue;//don't bail yet, iterate through them all
-
-          rv = range->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
-          if(cursorIsInSelection)
-            break;
-        }
-
-        nsCOMPtr<nsIDOMDocument> destdomdoc;
-        GetDocument(getter_AddRefs(destdomdoc));
-        NS_ENSURE_TRUE(destdomdoc, NS_ERROR_FAILURE);
-
-        if (cursorIsInSelection)
-        {
-          // Dragging within same doc can't drop on itself -- leave!
-          // (We shouldn't get here - drag event shouldn't have started if over selection)
-          if (srcdomdoc == destdomdoc)
-            return NS_OK;
-          
-          // Dragging from another window onto a selection
-          // XXX Decision made to NOT do this,
-          //     note that 4.x does replace if dropped on
-          //deleteSelection = true;
-        }
-        else 
-        {
-          // We are NOT over the selection
-          if (srcdomdoc == destdomdoc)
-          {
-            // Within the same doc: delete if user doesn't want to copy
-            PRUint32 dropEffect;
-            dataTransfer->GetDropEffectInt(&dropEffect);
-            deleteSelection = !(dropEffect & nsIDragService::DRAGDROP_ACTION_COPY);
-          }
-          else
-          {
-            // Different source doc: Don't delete
-            deleteSelection = false;
-          }
-        }
-      }
-
-      // We have to figure out whether to delete/relocate caret only once
-      doPlaceCaret = false;
-    }
-    
-    rv = InsertFromDataTransfer(dataTransfer, i, srcdomdoc,
-                                contextString, infoString, newSelectionParent,
-                                newSelectionOffset, deleteSelection);
-  }
-
-  if (NS_SUCCEEDED(rv))
-    ScrollSelectionIntoView(false);
 
   return rv;
 }
