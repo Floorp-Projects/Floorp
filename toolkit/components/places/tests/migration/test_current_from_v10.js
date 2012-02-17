@@ -282,30 +282,40 @@ function test_moz_hosts()
 {
   // This will throw if the column does not exist
   let stmt = DBConn().createStatement(
-    "SELECT host, frecency "
+    "SELECT host, frecency, typed "
   + "FROM moz_hosts "
   );
   stmt.finalize();
 
+  // moz_hosts is populated asynchronously, so query asynchronously to serialize
+  // to that.
   // check the number of entries in moz_hosts equals the number of
   // unique rev_host in moz_places
-  var query = "SELECT ("
-              + "SELECT COUNT(host) "
-              + "FROM moz_hosts), ("
-              + "SELECT COUNT(DISTINCT rev_host) "
-              + "FROM moz_places "
-              + "WHERE LENGTH(rev_host) > 1)";
-
-  stmt = DBConn().createStatement(query);
+  stmt = DBConn().createAsyncStatement(
+    "SELECT ("
+  + "SELECT COUNT(host) "
+  + "FROM moz_hosts), ("
+  + "SELECT COUNT(DISTINCT rev_host) "
+  + "FROM moz_places "
+  + "WHERE LENGTH(rev_host) > 1)"
+  );
   try {
-    stmt.executeStep();
-    let mozPlacesCount = stmt.getInt32(0);
-    let mozHostsCount = stmt.getInt32(1);
-    do_check_eq(mozPlacesCount, mozHostsCount);
+    stmt.executeAsync({
+      handleResult: function (aResultSet) {
+        let row = aResult.getNextRow();
+        let mozPlacesCount = row.getResultByIndex(0);
+        let mozHostsCount = row.getResultByIndex(1);
+        do_check_eq(mozPlacesCount, mozHostsCount);
+      },
+      handleError: function () {},
+      handleCompletion: function (aReason) {
+        do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
+        run_next_test();
+      }
+    });
   }
   finally {
     stmt.finalize();
-    run_next_test();
   }
 }
 
@@ -327,8 +337,6 @@ function test_final_state()
   do_check_true(db.indexExists("moz_bookmarks_guid_uniqueindex"));
   do_check_true(db.indexExists("moz_places_guid_uniqueindex"));
   do_check_true(db.indexExists("moz_favicons_guid_uniqueindex"));
-
-  do_check_true(db.indexExists("moz_hosts_frecencyhostindex"));
 
   do_check_eq(db.schemaVersion, CURRENT_SCHEMA_VERSION);
 
