@@ -928,7 +928,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             }
         case AndroidGeckoEvent::SIZE_CHANGED: {
             nsTArray<nsIntPoint> points = ae->Points();
-            NS_ASSERTION(points.Length() != 3, "Size changed does not have enough coordinates");
+            NS_ASSERTION(points.Length() == 3, "Size changed does not have enough coordinates");
 
 #ifdef MOZ_JAVA_COMPOSITOR
             int nw = points[1].x;
