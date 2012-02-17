@@ -11,16 +11,11 @@
 .view {
   color: black; /* Default text color */
   background: #f0f0ff; /* Background of the editor */
-  padding-left: 0;
+  padding-left: 4px;
 }
 
 .readonly > .view {
   background: #f0f0ff;
-}
-
-/* One line */
-.viewContent > div {
-  padding-left: 4px; /* Margin between the ruler and the editor */
 }
 
 /* Styles for the line number ruler */
