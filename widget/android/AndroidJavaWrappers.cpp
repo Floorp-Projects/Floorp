@@ -113,11 +113,6 @@ jclass AndroidGeckoLayerClient::jGeckoLayerClientClass = 0;
 jmethodID AndroidGeckoLayerClient::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoLayerClient::jEndDrawingMethod = 0;
 
-jclass AndroidGeckoSoftwareLayerClient::jGeckoSoftwareLayerClientClass = 0;
-jmethodID AndroidGeckoSoftwareLayerClient::jLockBufferMethod = 0;
-jmethodID AndroidGeckoSoftwareLayerClient::jUnlockBufferMethod = 0;
-jmethodID AndroidGeckoSoftwareLayerClient::jGetRenderOffsetMethod = 0;
-
 jclass AndroidGeckoGLLayerClient::jGeckoGLLayerClientClass = 0;
 jmethodID AndroidGeckoGLLayerClient::jGetViewTransformMethod = 0;
 jmethodID AndroidGeckoGLLayerClient::jCreateFrameMethod = 0;
@@ -134,9 +129,6 @@ jclass AndroidViewTransform::jViewTransformClass = 0;
 jfieldID AndroidViewTransform::jXField = 0;
 jfieldID AndroidViewTransform::jYField = 0;
 jfieldID AndroidViewTransform::jScaleField = 0;
-
-jmethodID AndroidGeckoSoftwareLayerClient::jBeginDrawingMethod = 0;
-jmethodID AndroidGeckoSoftwareLayerClient::jEndDrawingMethod = 0;
 
 jclass AndroidGeckoSurfaceView::jGeckoSurfaceViewClass = 0;
 jmethodID AndroidGeckoSurfaceView::jBeginDrawingMethod = 0;
@@ -169,7 +161,6 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidAddress::InitAddressClass(jEnv);
     AndroidRect::InitRectClass(jEnv);
     AndroidGeckoLayerClient::InitGeckoLayerClientClass(jEnv);
-    AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(jEnv);
     AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(jEnv);
     AndroidLayerRendererFrame::InitLayerRendererFrameClass(jEnv);
     AndroidViewTransform::InitViewTransformClass(jEnv);
@@ -356,22 +347,6 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
 
-    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Landroid/graphics/Rect;");
-    jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
-#endif
-}
-
-void
-AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv)
-{
-#ifdef MOZ_JAVA_COMPOSITOR
-    initInit();
-
-    jGeckoSoftwareLayerClientClass =
-        getClassGlobalRef("org/mozilla/gecko/gfx/GeckoSoftwareLayerClient");
-
-    jLockBufferMethod = getMethod("lockBuffer", "()Ljava/nio/ByteBuffer;");
-    jUnlockBufferMethod = getMethod("unlockBuffer", "()V");
     jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Landroid/graphics/Rect;");
     jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
 #endif
@@ -686,13 +661,6 @@ AndroidPoint::Init(JNIEnv *jenv, jobject jobj)
 }
 
 void
-AndroidGeckoSoftwareLayerClient::Init(jobject jobj)
-{
-    NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
-    wrapped_obj = jobj;
-}
-
-void
 AndroidGeckoGLLayerClient::Init(jobject jobj)
 {
     NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
@@ -818,98 +786,6 @@ AndroidGeckoLayerClient::EndDrawing(const nsIntRect &aRect)
     AndroidBridge::AutoLocalJNIFrame(env, 1);
     return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod, aRect.x, aRect.y, aRect.width,
                                aRect.height);
-}
-
-jobject
-AndroidGeckoSoftwareLayerClient::LockBuffer()
-{
-    NS_ASSERTION(!isNull(), "LockBuffer() called on null software layer client!");
-
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return nsnull;
-
-    AndroidBridge::AutoLocalJNIFrame(env, 1);
-    return env->CallObjectMethod(wrapped_obj, jLockBufferMethod);
-}
-
-unsigned char *
-AndroidGeckoSoftwareLayerClient::LockBufferBits()
-{
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return nsnull;
-
-    AndroidBridge::AutoLocalJNIFrame(env, 1);
-    jobject bufferObject = LockBuffer();
-
-    if (bufferObject != nsnull)
-        return reinterpret_cast<unsigned char *>(env->GetDirectBufferAddress(bufferObject));
-
-    return nsnull;
-}
-
-void
-AndroidGeckoSoftwareLayerClient::UnlockBuffer()
-{
-    NS_ASSERTION(!isNull(), "UnlockBuffer() called on null software layer client!");
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AndroidBridge::AutoLocalJNIFrame(env, 1);
-    env->CallVoidMethod(wrapped_obj, jUnlockBufferMethod);
-}
-
-bool
-AndroidGeckoSoftwareLayerClient::BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture)
-{
-    NS_ASSERTION(!isNull(), "BeginDrawing() called on null software layer client!");
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return false;
-
-    AndroidBridge::AutoLocalJNIFrame(env, 1);
-    jstring jMetadata = env->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
-
-    jobject rectObject = env->CallObjectMethod(wrapped_obj, jBeginDrawingMethod,
-                                               aWidth, aHeight, aTileWidth, aTileHeight,
-                                               jMetadata, aHasDirectTexture);
-
-    if (rectObject == nsnull)
-        return false;
-
-    AndroidRect rect(env, rectObject);
-    nsIntRect newDirtyRect = aDirtyRect.Intersect(nsIntRect(rect.Top(), rect.Left(),
-                                                            rect.Width(), rect.Height()));
-    aDirtyRect.SetRect(newDirtyRect.x, newDirtyRect.y, newDirtyRect.width, newDirtyRect.height);
-
-    return true;
-}
-
-void
-AndroidGeckoSoftwareLayerClient::EndDrawing(const nsIntRect &aRect)
-{
-    NS_ASSERTION(!isNull(), "EndDrawing() called on null software layer client!");
-
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AndroidBridge::AutoLocalJNIFrame(env, 1);
-    return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod, aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-void
-AndroidGeckoSoftwareLayerClient::GetRenderOffset(nsIntPoint &aOffset)
-{
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-
-    AndroidPoint offset(env, env->CallObjectMethod(wrapped_obj, jGetRenderOffsetMethod));
-    aOffset.x = offset.X();
-    aOffset.y = offset.Y();
 }
 
 jobject

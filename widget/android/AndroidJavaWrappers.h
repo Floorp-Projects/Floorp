@@ -174,33 +174,6 @@ protected:
     static jmethodID jEndDrawingMethod;
 };
 
-class AndroidGeckoSoftwareLayerClient : public AndroidGeckoLayerClient {
-public:
-    static void InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv);
- 
-    void Init(jobject jobj);
- 
-    AndroidGeckoSoftwareLayerClient() {}
-    AndroidGeckoSoftwareLayerClient(jobject jobj) { Init(jobj); }
-
-    jobject LockBuffer();
-    unsigned char *LockBufferBits();
-    void UnlockBuffer();
-    void GetRenderOffset(nsIntPoint &aOffset);
-    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture);
-    void EndDrawing(const nsIntRect &aRect);
-
-private:
-    static jclass jGeckoSoftwareLayerClientClass;
-    static jmethodID jLockBufferMethod;
-    static jmethodID jUnlockBufferMethod;
-
-protected:
-    static jmethodID jGetRenderOffsetMethod;
-    static jmethodID jBeginDrawingMethod;
-    static jmethodID jEndDrawingMethod;
-};
-
 /** A callback that retrieves the view transform. */
 class AndroidViewTransformGetter
 {

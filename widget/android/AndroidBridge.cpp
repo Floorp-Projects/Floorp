@@ -991,12 +991,6 @@ void
 AndroidBridge::SetLayerClient(jobject obj, jint type)
 {
     switch (type) {
-        case LAYER_CLIENT_TYPE_SOFTWARE: {
-            AndroidGeckoSoftwareLayerClient *client = new AndroidGeckoSoftwareLayerClient();
-            client->Init(obj);
-            mLayerClient = client;
-            break;
-        }
         case LAYER_CLIENT_TYPE_GL: {
             AndroidGeckoGLLayerClient *client = new AndroidGeckoGLLayerClient();
             client->Init(obj);

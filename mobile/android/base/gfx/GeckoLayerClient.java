@@ -61,7 +61,6 @@ public abstract class GeckoLayerClient extends LayerClient implements GeckoEvent
     private static final String LOGTAG = "GeckoLayerClient";
 
     public static final int LAYER_CLIENT_TYPE_NONE = 0;
-    public static final int LAYER_CLIENT_TYPE_SOFTWARE = 1;
     public static final int LAYER_CLIENT_TYPE_GL = 2;
 
     protected IntSize mScreenSize;
