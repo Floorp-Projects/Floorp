@@ -1365,7 +1365,8 @@
 
               // pretend the user typed this so it'll be available till
               // the document successfully loads
-              b.userTypedValue = aURI;
+              if (!isBlankPageURL(aURI))
+                b.userTypedValue = aURI;
 
               let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
               if (aAllowThirdPartyFixup)
