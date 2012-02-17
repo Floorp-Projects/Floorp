@@ -2696,6 +2696,11 @@ public:
         return reinterpret_cast<void **>(where)[-1];
     }
 
+    static void **getPointerRef(void* where)
+    {
+        return &reinterpret_cast<void **>(where)[-1];
+    }
+
     static void setPointer(void* where, const void* value)
     {
         js::JaegerSpew(js::JSpew_Insns,

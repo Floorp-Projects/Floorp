@@ -42,13 +42,15 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/BooleanObject-inl.h"
+
 namespace js {
 
 inline bool
 BooleanGetPrimitiveValue(JSContext *cx, JSObject &obj, Value *vp)
 {
     if (obj.isBoolean()) {
-        *vp = obj.getPrimitiveThis();
+        *vp = BooleanValue(obj.asBoolean().unbox());
         return true;
     }
 

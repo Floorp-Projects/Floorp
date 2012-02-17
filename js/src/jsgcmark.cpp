@@ -46,9 +46,6 @@
  * scanning functions, but they don't push onto an explicit stack.
  */
 
-using namespace js;
-using namespace js::gc;
-
 namespace js {
 namespace gc {
 
@@ -148,7 +145,8 @@ MarkRoot(JSTracer *trc, T *thing, const char *name)
 
 template <typename T>
 static void
-MarkRange(JSTracer *trc, size_t len, HeapPtr<T> *vec, const char *name) {
+MarkRange(JSTracer *trc, size_t len, HeapPtr<T> *vec, const char *name)
+{
     for (size_t i = 0; i < len; ++i) {
         if (T *obj = vec[i]) {
             JS_SET_TRACING_INDEX(trc, name, i);
@@ -159,7 +157,8 @@ MarkRange(JSTracer *trc, size_t len, HeapPtr<T> *vec, const char *name) {
 
 template <typename T>
 static void
-MarkRootRange(JSTracer *trc, size_t len, T **vec, const char *name) {
+MarkRootRange(JSTracer *trc, size_t len, T **vec, const char *name)
+{
     for (size_t i = 0; i < len; ++i) {
         JS_SET_TRACING_INDEX(trc, name, i);
         MarkInternal(trc, vec[i]);
@@ -304,43 +303,43 @@ MarkIdRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name)
 /*** Value Marking ***/
 
 static inline void
-MarkValueInternal(JSTracer *trc, const Value &v)
+MarkValueInternal(JSTracer *trc, Value *v)
 {
-    if (v.isMarkable()) {
-        JS_ASSERT(v.toGCThing());
-        return MarkKind(trc, v.toGCThing(), v.gcKind());
+    if (v->isMarkable()) {
+        JS_ASSERT(v->toGCThing());
+        return MarkKind(trc, v->toGCThing(), v->gcKind());
     }
 }
 
 void
-MarkValue(JSTracer *trc, const js::HeapValue &v, const char *name)
+MarkValue(JSTracer *trc, HeapValue *v, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    MarkValueInternal(trc, v->unsafeGet());
+}
+
+void
+MarkValueRoot(JSTracer *trc, Value *v, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
     MarkValueInternal(trc, v);
 }
 
 void
-MarkValueRoot(JSTracer *trc, const Value &v, const char *name)
-{
-    JS_SET_TRACING_NAME(trc, name);
-    MarkValueInternal(trc, v);
-}
-
-void
-MarkValueRange(JSTracer *trc, size_t len, const HeapValue *vec, const char *name)
+MarkValueRange(JSTracer *trc, size_t len, HeapValue *vec, const char *name)
 {
     for (size_t i = 0; i < len; ++i) {
         JS_SET_TRACING_INDEX(trc, name, i);
-        MarkValueInternal(trc, vec[i]);
+        MarkValueInternal(trc, vec[i].unsafeGet());
     }
 }
 
 void
-MarkValueRootRange(JSTracer *trc, size_t len, const Value *vec, const char *name)
+MarkValueRootRange(JSTracer *trc, size_t len, Value *vec, const char *name)
 {
     for (size_t i = 0; i < len; ++i) {
         JS_SET_TRACING_INDEX(trc, name, i);
-        MarkValueInternal(trc, vec[i]);
+        MarkValueInternal(trc, &vec[i]);
     }
 }
 
@@ -365,17 +364,17 @@ MarkShape(JSTracer *trc, const HeapPtr<const Shape> &thing, const char *name)
 }
 
 void
-MarkValueUnbarriered(JSTracer *trc, const js::Value &v, const char *name)
+MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
     MarkValueInternal(trc, v);
 }
 
 void
-MarkCrossCompartmentValue(JSTracer *trc, const js::HeapValue &v, const char *name)
+MarkCrossCompartmentValue(JSTracer *trc, HeapValue *v, const char *name)
 {
-    if (v.isMarkable()) {
-        js::gc::Cell *cell = (js::gc::Cell *)v.toGCThing();
+    if (v->isMarkable()) {
+        Cell *cell = (Cell *)v->toGCThing();
         JSRuntime *rt = trc->runtime;
         if (rt->gcCurrentCompartment && cell->compartment() != rt->gcCurrentCompartment)
             return;
@@ -435,23 +434,24 @@ static void
 MarkChildren(JSTracer *trc, JSScript *script);
 
 void
-MarkThingOrValueRoot(JSTracer *trc, uintptr_t word, const char *name)
+MarkThingOrValueRoot(JSTracer *trc, uintptr_t *word, const char *name)
 {
 #ifdef JS_PUNBOX64
     // All pointers on x64 will have the top bits cleared. If those bits
     // are not cleared, this must be a Value.
     {
-        if (word >> JSVAL_TAG_SHIFT) {
+        if (*word >> JSVAL_TAG_SHIFT) {
             jsval_layout layout;
-            layout.asBits = word;
+            layout.asBits = *word;
             Value v = IMPL_TO_JSVAL(layout);
-            gc::MarkValueRoot(trc, v, name);
+            gc::MarkValueRoot(trc, &v, name);
+	    *word = JSVAL_TO_IMPL(v).asBits;
 	    return;
         }
     }
 #endif
 
-    gc::MarkGCThingRoot(trc, reinterpret_cast<void *>(word), name);
+    gc::MarkGCThingRoot(trc, reinterpret_cast<void *>(*word), name);
 }
 
 static void
@@ -678,7 +678,7 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         uint32_t nslots = obj->slotSpan();
         for (uint32_t i = 0; i < nslots; i++) {
             JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
-            MarkValueInternal(trc, obj->nativeGetSlot(i));
+            MarkValueInternal(trc, obj->nativeGetSlotRef(i).unsafeGet());
         }
     }
 }
@@ -707,7 +707,10 @@ MarkChildren(JSTracer *trc, JSScript *script)
     JS_ASSERT_IF(trc->runtime->gcCheckCompartment,
                  script->compartment() == trc->runtime->gcCheckCompartment);
 
-    MarkStringRootRange(trc, script->natoms, script->atoms, "atoms");
+    for (uint32_t i = 0; i < script->natoms; ++i) {
+        if (JSAtom *p = script->atoms[i])
+            MarkStringUnbarriered(trc, p, "atom");
+    }
 
     if (JSScript::isValidOffset(script->objectsOffset)) {
         JSObjectArray *objarray = script->objects();
@@ -900,6 +903,8 @@ MarkChildren(JSTracer *trc, JSXML *xml)
 
 } /* namespace gc */
 
+using namespace js::gc;
+
 inline void
 GCMarker::processMarkStackTop()
 {
@@ -967,7 +972,7 @@ GCMarker::processMarkStackTop()
         types::TypeObject *type = obj->typeFromGC();
         PushMarkStack(this, type);
 
-        js::Shape *shape = obj->lastProperty();
+        Shape *shape = obj->lastProperty();
         PushMarkStack(this, shape);
 
         /* Call the trace hook if necessary. */

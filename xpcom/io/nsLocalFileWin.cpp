@@ -261,6 +261,9 @@ static nsresult ConvertWinError(DWORD winErr)
         case ERROR_FILENAME_EXCED_RANGE:
             rv = NS_ERROR_FILE_NAME_TOO_LONG;
             break;
+        case ERROR_DIRECTORY:
+            rv = NS_ERROR_FILE_NOT_DIRECTORY;
+            break;
         case 0:
             rv = NS_OK;
             break;
@@ -377,7 +380,7 @@ OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
       flag6 |= FILE_FLAG_DELETE_ON_CLOSE;
     }
 
-    if (osflags && nsILocalFile::OS_READAHEAD) {
+    if (osflags & nsILocalFile::OS_READAHEAD) {
       flag6 |= FILE_FLAG_SEQUENTIAL_SCAN;
     }
 
@@ -490,10 +493,12 @@ OpenDir(const nsAFlatString &name, nsDir * *dir)
 
     filename.ReplaceChar(L'/', L'\\');
 
+    // FindFirstFileW Will have a last error of ERROR_DIRECTORY if
+    // <file_path>\* is passed in.  If <unknown_path>\* is passed in then
+    // ERROR_PATH_NOT_FOUND will be the last error.
     d->handle = ::FindFirstFileW(filename.get(), &(d->data) );
 
-    if ( d->handle == INVALID_HANDLE_VALUE )
-    {
+    if (d->handle == INVALID_HANDLE_VALUE) {
         PR_Free(d);
         return ConvertWinError(GetLastError());
     }
@@ -589,6 +594,8 @@ class nsDirEnumerator : public nsISimpleEnumerator,
                 return NS_ERROR_UNEXPECTED;
             }
 
+            // IsDirectory is not needed here because OpenDir will return
+            // NS_ERROR_FILE_NOT_DIRECTORY if the passed in path is a file.
             nsresult rv = OpenDir(filepath, &mDir);
             if (NS_FAILED(rv))
                 return rv;
@@ -2735,13 +2742,6 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
         *entries = drives;
         return NS_OK;
     }
-
-    bool isDir;
-    rv = IsDirectory(&isDir);
-    if (NS_FAILED(rv))
-        return rv;
-    if (!isDir)
-        return NS_ERROR_FILE_NOT_DIRECTORY;
 
     nsDirEnumerator* dirEnum = new nsDirEnumerator();
     if (dirEnum == nsnull)

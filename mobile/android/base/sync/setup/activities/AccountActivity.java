@@ -230,7 +230,8 @@ public class AccountActivity extends AccountAuthenticatorActivity {
                                      AccountManager accountManager,
                                      String username,
                                      String syncKey,
-                                     String password, String serverURL) {
+                                     String password,
+                                     String serverURL) {
 
     final Account account = new Account(username, Constants.ACCOUNTTYPE_SYNC);
     final Bundle userbundle = new Bundle();
@@ -246,7 +247,7 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     Log.d(LOG_TAG, "Adding account for " + Constants.ACCOUNTTYPE_SYNC);
     boolean result = accountManager.addAccountExplicitly(account, password, userbundle);
 
-    Log.d(LOG_TAG, "Account: " + account.toString() + " added successfully? " + result);
+    Log.d(LOG_TAG, "Account: " + account + " added successfully? " + result);
     if (!result) {
       Log.e(LOG_TAG, "Error adding account!");
     }
@@ -254,6 +255,7 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     // Set components to sync (default: all).
     ContentResolver.setMasterSyncAutomatically(true);
     ContentResolver.setSyncAutomatically(account, Authorities.BROWSER_AUTHORITY, true);
+    ContentResolver.setIsSyncable(account, Authorities.BROWSER_AUTHORITY, 1);
 
     // TODO: add other ContentProviders as needed (e.g. passwords)
     // TODO: for each, also add to res/xml to make visible in account settings
@@ -274,6 +276,7 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     return intent;
   }
 
+  @SuppressWarnings("unused")
   private void authFailure() {
     enableCredEntry(true);
     Intent intent = new Intent(mContext, SetupFailureActivity.class);

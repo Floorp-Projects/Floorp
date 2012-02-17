@@ -1908,6 +1908,6 @@ JSScript::markTrapClosures(JSTracer *trc)
     for (unsigned i = 0; i < length; i++) {
         BreakpointSite *site = debug->breakpoints[i];
         if (site && site->trapHandler)
-            MarkValue(trc, site->trapClosure, "trap closure");
+            MarkValue(trc, &site->trapClosure, "trap closure");
     }
 }

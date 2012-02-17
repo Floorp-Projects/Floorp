@@ -50,7 +50,7 @@ namespace js {
 
 class StringObject : public JSObject
 {
-    static const uintN PRIMITIVE_THIS_SLOT = 0;
+    static const uintN PRIMITIVE_VALUE_SLOT = 0;
     static const uintN LENGTH_SLOT = 1;
 
   public:
@@ -69,20 +69,24 @@ class StringObject : public JSObject
     static inline StringObject *createWithProto(JSContext *cx, JSString *str, JSObject &proto);
 
     JSString *unbox() const {
-        return getSlot(PRIMITIVE_THIS_SLOT).toString();
+        return getFixedSlot(PRIMITIVE_VALUE_SLOT).toString();
     }
 
     inline size_t length() const {
-        return size_t(getSlot(LENGTH_SLOT).toInt32());
+        return size_t(getFixedSlot(LENGTH_SLOT).toInt32());
+    }
+
+    static size_t getPrimitiveValueOffset() {
+        return getFixedSlotOffset(PRIMITIVE_VALUE_SLOT);
     }
 
   private:
     inline bool init(JSContext *cx, JSString *str);
 
     void setStringThis(JSString *str) {
-        JS_ASSERT(getSlot(PRIMITIVE_THIS_SLOT).isUndefined());
-        setSlot(PRIMITIVE_THIS_SLOT, StringValue(str));
-        setSlot(LENGTH_SLOT, Int32Value(int32_t(str->length())));
+        JS_ASSERT(getReservedSlot(PRIMITIVE_VALUE_SLOT).isUndefined());
+        setFixedSlot(PRIMITIVE_VALUE_SLOT, StringValue(str));
+        setFixedSlot(LENGTH_SLOT, Int32Value(int32_t(str->length())));
     }
 
     /* For access to init, as String.prototype is special. */

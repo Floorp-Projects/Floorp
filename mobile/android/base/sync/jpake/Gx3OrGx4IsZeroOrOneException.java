@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Chenxia Liu <liuche@mozilla.com>
+ *   Chenxia Liu <liuche@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,14 +37,6 @@
 
 package org.mozilla.gecko.sync.jpake;
 
-import java.util.Random;
-
-public class JPakeUtils {
-
-  public static byte[] generateRandomBytes(int length) {
-    byte[] bytes = new byte[length];
-    Random random = new Random(System.nanoTime());
-    random.nextBytes(bytes);
-    return bytes;
-  }
+public class Gx3OrGx4IsZeroOrOneException extends Exception {
+  private static final long serialVersionUID = 7347530447460039679L;
 }

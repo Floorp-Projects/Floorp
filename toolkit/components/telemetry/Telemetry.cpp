@@ -146,6 +146,27 @@ private:
   bool ShouldReflectHistogram(Histogram *h);
   void IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs);
   typedef StatisticsRecorder::Histograms::iterator HistogramIterator;
+
+  struct AddonHistogramInfo {
+    PRUint32 min;
+    PRUint32 max;
+    PRUint32 bucketCount;
+    PRUint32 histogramType;
+    Histogram *h;
+  };
+  typedef nsBaseHashtableET<nsCStringHashKey, AddonHistogramInfo> AddonHistogramEntryType;
+  typedef AutoHashtable<AddonHistogramEntryType> AddonHistogramMapType;
+  typedef nsBaseHashtableET<nsCStringHashKey, AddonHistogramMapType *> AddonEntryType;
+  typedef AutoHashtable<AddonEntryType> AddonMapType;
+  struct AddonEnumeratorArgs {
+    JSContext *cx;
+    JSObject *obj;
+  };
+  static bool AddonHistogramReflector(AddonHistogramEntryType *entry,
+                                      JSContext *cx, JSObject *obj);
+  static bool AddonReflector(AddonEntryType *entry, JSContext *cx, JSObject *obj);
+  AddonMapType mAddonMap;
+
   // This is used for speedy string->Telemetry::ID conversions
   typedef nsBaseHashtableET<nsCharPtrHashKey, Telemetry::ID> CharPtrEntryType;
   typedef AutoHashtable<CharPtrEntryType> HistogramMapType;
@@ -612,6 +633,111 @@ TelemetryImpl::ShouldReflectHistogram(Histogram *h)
   }
 }
 
+// Compute the name to pass into Histogram for the addon histogram
+// 'name' from the addon 'id'.  We can't use 'name' directly because it
+// might conflict with other histograms in other addons or even with our
+// own.
+void
+AddonHistogramName(const nsACString &id, const nsACString &name,
+                   nsACString &ret)
+{
+  ret.Append(id);
+  ret.Append(NS_LITERAL_CSTRING(":"));
+  ret.Append(name);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::RegisterAddonHistogram(const nsACString &id,
+                                      const nsACString &name,
+                                      PRUint32 min, PRUint32 max,
+                                      PRUint32 bucketCount,
+                                      PRUint32 histogramType)
+{
+  AddonEntryType *addonEntry = mAddonMap.GetEntry(id);
+  if (!addonEntry) {
+    addonEntry = mAddonMap.PutEntry(id);
+    if (NS_UNLIKELY(!addonEntry)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    addonEntry->mData = new AddonHistogramMapType();
+  }
+
+  AddonHistogramMapType *histogramMap = addonEntry->mData;
+  AddonHistogramEntryType *histogramEntry = histogramMap->GetEntry(name);
+  // Can't re-register the same histogram.
+  if (histogramEntry) {
+    return NS_ERROR_FAILURE;
+  }
+
+  histogramEntry = histogramMap->PutEntry(name);
+  if (NS_UNLIKELY(!histogramEntry)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  AddonHistogramInfo &info = histogramEntry->mData;
+  info.min = min;
+  info.max = max;
+  info.bucketCount = bucketCount;
+  info.histogramType = histogramType;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetAddonHistogram(const nsACString &id, const nsACString &name,
+                                 JSContext *cx, jsval *ret)
+{
+  AddonEntryType *addonEntry = mAddonMap.GetEntry(id);
+  // The given id has not been registered.
+  if (!addonEntry) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  AddonHistogramMapType *histogramMap = addonEntry->mData;
+  AddonHistogramEntryType *histogramEntry = histogramMap->GetEntry(name);
+  // The given histogram name has not been registered.
+  if (!histogramEntry) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  AddonHistogramInfo &info = histogramEntry->mData;
+  Histogram *h;
+  if (info.h) {
+    h = info.h;
+  } else {
+    nsCAutoString actualName;
+    AddonHistogramName(id, name, actualName);
+    nsresult rv = HistogramGet(PromiseFlatCString(actualName).get(),
+                               info.min, info.max, info.bucketCount,
+                               info.histogramType, &h);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    // Don't let this histogram be reported via the normal means
+    // (e.g. Telemetry.registeredHistograms); we'll make it available in
+    // other ways.
+    h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
+    info.h = h;
+  }
+  return WrapAndReturnHistogram(h, cx, ret);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::UnregisterAddonHistograms(const nsACString &id)
+{
+  AddonEntryType *addonEntry = mAddonMap.GetEntry(id);
+  if (addonEntry) {
+    // Histogram's destructor is private, so this is the best we can do.
+    // The histograms the addon created *will* stick around, but they
+    // will be deleted if and when the addon registers histograms with
+    // the same names.
+    delete addonEntry->mData;
+    mAddonMap.RemoveEntry(id);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
 {
@@ -657,6 +783,73 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
       }
     }
   }
+  return NS_OK;
+}
+
+bool
+TelemetryImpl::AddonHistogramReflector(AddonHistogramEntryType *entry,
+                                       JSContext *cx, JSObject *obj)
+{
+  // Never even accessed the histogram.
+  if (!entry->mData.h) {
+    return true;
+  }
+
+  JSObject *snapshot = JS_NewObject(cx, NULL, NULL, NULL);
+  js::AutoObjectRooter r(cx, snapshot);
+  switch (ReflectHistogramSnapshot(cx, snapshot, entry->mData.h)) {
+  case REFLECT_FAILURE:
+  case REFLECT_CORRUPT:
+    return false;
+  case REFLECT_OK:
+    const nsACString &histogramName = entry->GetKey();
+    if (!JS_DefineProperty(cx, obj,
+                           PromiseFlatCString(histogramName).get(),
+                           OBJECT_TO_JSVAL(snapshot), NULL, NULL,
+                           JSPROP_ENUMERATE)) {
+      return false;
+    }
+    break;
+  }
+  return true;
+}
+
+bool
+TelemetryImpl::AddonReflector(AddonEntryType *entry,
+                              JSContext *cx, JSObject *obj)
+{
+  const nsACString &addonId = entry->GetKey();
+  JSObject *subobj = JS_NewObject(cx, NULL, NULL, NULL);
+  if (!subobj) {
+    return false;
+  }
+  js::AutoObjectRooter r(cx, subobj);
+
+  AddonHistogramMapType *map = entry->mData;
+  if (!(map->ReflectHashtable(AddonHistogramReflector, cx, subobj)
+        && JS_DefineProperty(cx, obj,
+                             PromiseFlatCString(addonId).get(),
+                             OBJECT_TO_JSVAL(subobj), NULL, NULL,
+                             JSPROP_ENUMERATE))) {
+    return false;
+  }
+  return true;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetAddonHistogramSnapshots(JSContext *cx, jsval *ret)
+{
+  *ret = JSVAL_VOID;
+  JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
+  if (!obj) {
+    return NS_ERROR_FAILURE;
+  }
+  js::AutoObjectRooter r(cx, obj);
+
+  if (!mAddonMap.ReflectHashtable(AddonReflector, cx, obj)) {
+    return NS_ERROR_FAILURE;
+  }
+  *ret = OBJECT_TO_JSVAL(obj);
   return NS_OK;
 }
 

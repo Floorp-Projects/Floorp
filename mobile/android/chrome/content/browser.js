@@ -1136,6 +1136,15 @@ var NativeWindow = {
                  NativeWindow.toast.show(label, "short");
                });
 
+      this.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
+               this.linkShareableContext,
+               function(aTarget) {
+                 let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+                 let title = aTarget.textContent || aTarget.title;
+                 let sharing = Cc["@mozilla.org/uriloader/external-sharing-app-service;1"].getService(Ci.nsIExternalSharingAppService);
+                 sharing.shareWithDefault(url, "text/plain", title);
+               });
+
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
                this.SelectorContext("video:not(:-moz-full-screen)"),
                function(aTarget) {
@@ -1220,6 +1229,32 @@ var NativeWindow = {
 
           let dontOpen = /^(mailto|javascript|news|snews)$/;
           return (scheme && !dontOpen.test(scheme));
+        }
+        return false;
+      }
+    },
+
+    linkShareableContext: {
+      matches: function linkShareableContextMatches(aElement) {
+        if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
+            ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
+            (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
+            aElement instanceof Ci.nsIDOMHTMLLinkElement ||
+            aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
+          let uri;
+          try {
+            let url = NativeWindow.contextmenus._getLinkURL(aElement);
+            uri = Services.io.newURI(url, null, null);
+          } catch (e) {
+            return false;
+          }
+
+          let scheme = uri.scheme;
+          if (!scheme)
+            return false;
+
+          let dontShare = /^(chrome|about|file|javascript|resource)$/;
+          return (scheme && !dontShare.test(scheme));
         }
         return false;
       }

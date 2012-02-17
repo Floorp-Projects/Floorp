@@ -171,25 +171,26 @@ LookupCache::Reset()
 
 
 nsresult
-LookupCache::Build(const AddPrefixArray& aAddPrefixes,
-                   const AddCompleteArray& aAddCompletes)
+LookupCache::Build(AddPrefixArray& aAddPrefixes,
+                   AddCompleteArray& aAddCompletes)
 {
+  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_COMPLETIONS,
+                        static_cast<PRUint32>(aAddCompletes.Length()));
+
   mCompletions.Clear();
   mCompletions.SetCapacity(aAddCompletes.Length());
   for (uint32 i = 0; i < aAddCompletes.Length(); i++) {
     mCompletions.AppendElement(aAddCompletes[i].CompleteHash());
   }
+  aAddCompletes.Clear();
   mCompletions.Sort();
 
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_COMPLETIONS,
-                        static_cast<PRUint32>(mCompletions.Length()));
+  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_PREFIXES,
+                        static_cast<PRUint32>(aAddPrefixes.Length()));
 
   nsresult rv = ConstructPrefixSet(aAddPrefixes);
   NS_ENSURE_SUCCESS(rv, rv);
   mPrimed = true;
-
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_LC_PREFIXES,
-                        static_cast<PRUint32>(aAddPrefixes.Length()));
 
   return NS_OK;
 }
@@ -679,18 +680,22 @@ bool LookupCache::IsPrimed()
 }
 
 nsresult
-LookupCache::ConstructPrefixSet(const AddPrefixArray& aAddPrefixes)
+LookupCache::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_CONSTRUCT_TIME> timer;
 
-  nsTArray<PRUint32> array;
-  array.SetCapacity(aAddPrefixes.Length());
+  FallibleTArray<PRUint32> array;
+  nsresult rv;
+  if (!array.SetCapacity(aAddPrefixes.Length())) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto error_bailout;
+  }
 
   for (uint32 i = 0; i < aAddPrefixes.Length(); i++) {
     array.AppendElement(aAddPrefixes[i].PrefixHash().ToUint32());
   }
+  aAddPrefixes.Clear();
 
-  // clear old tree
   if (array.IsEmpty()) {
     // DB is empty, but put a sentinel to show that we looked
     array.AppendElement(0);
@@ -699,7 +704,7 @@ LookupCache::ConstructPrefixSet(const AddPrefixArray& aAddPrefixes)
   array.Sort();
 
   // construct new one, replace old entries
-  nsresult rv = mPrefixSet->SetPrefixes(array.Elements(), array.Length());
+  rv = mPrefixSet->SetPrefixes(array.Elements(), array.Length());
   if (NS_FAILED(rv)) {
     goto error_bailout;
   }
