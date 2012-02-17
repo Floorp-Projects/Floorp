@@ -120,6 +120,7 @@ public abstract class GeckoLayerClient implements GeckoEventListener {
         sendResizeEventIfNecessary();
     }
 
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public Rect beginDrawing(int width, int height, int tileWidth, int tileHeight,
                              String metadata, boolean hasDirectTexture) {
         Log.e(LOGTAG, "### beginDrawing " + width + " " + height + " " + tileWidth + " " +
@@ -196,7 +197,8 @@ public abstract class GeckoLayerClient implements GeckoEventListener {
         return bufferRect;
     }
 
-    /*
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature.
+     *
      * TODO: Would be cleaner if this took an android.graphics.Rect instead, but that would require
      * a little more JNI magic.
      */
