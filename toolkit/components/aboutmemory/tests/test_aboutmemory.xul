@@ -14,21 +14,21 @@
   <![CDATA[
   const Cc = Components.classes;
   const Ci = Components.interfaces;
-  var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
   // Access mgr.explicit and mgr.resident just to make sure they don't crash.
   // We can't check their actual values because they're non-deterministic.
-  var dummy = mgr.explicit;
+  let dummy = mgr.explicit;
   dummy = mgr.resident;
 
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
-  var e = mgr.enumerateReporters();
-  var realReporters = [];
+  let e = mgr.enumerateReporters();
+  let realReporters = [];
   dummy = 0;
   while (e.hasMoreElements()) {
-    var r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     // Get the |amount| field, even though we don't use it, just to test
     // that the reporter doesn't crash or anything.
     dummy += r.amount;
@@ -36,10 +36,10 @@
     realReporters.push(r);
   }
   e = mgr.enumerateMultiReporters();
-  var realMultiReporters = [];
-  var dummy = 0;
+  let realMultiReporters = [];
+  let dummy = 0;
   while (e.hasMoreElements()) {
-    var r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
     // Call collectReports, even though we don't use its results, just to
     // test that the multi-reporter doesn't crash or anything.  And likewise
     // for the |explicitNonHeap| field.
@@ -77,7 +77,7 @@
     return f2(aProcess, aPath, aKind, BYTES, aAmount);
   }
 
-  var fakeReporters = [
+  let fakeReporters = [
     f("", "heap-allocated",     OTHER,   500 * MB),
     f("", "heap-unallocated",   OTHER,   100 * MB),
     f("", "explicit/a",         HEAP,    222 * MB),
@@ -91,7 +91,7 @@
     f("", "other1",             OTHER,   111 * MB),
     f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888)
   ];
-  var fakeMultiReporters = [
+  let fakeMultiReporters = [
      { name: "fake1",
        collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
@@ -131,10 +131,10 @@
        explicitNonHeap: 0
      }
   ];
-  for (var i = 0; i < fakeReporters.length; i++) {
+  for (let i = 0; i < fakeReporters.length; i++) {
     mgr.registerReporter(fakeReporters[i]);
   }
-  for (var i = 0; i < fakeMultiReporters.length; i++) {
+  for (let i = 0; i < fakeMultiReporters.length; i++) {
     mgr.registerMultiReporter(fakeMultiReporters[i]);
   }
 
@@ -145,7 +145,7 @@
   // and subsequent processes.
   is(mgr.explicit, 500*MB + (100 + 13 + 10)*MB + 599*KB, "mgr.explicit");
  
-  var fakeReporters2 = [
+  let fakeReporters2 = [
     f("2nd", "heap-allocated",  OTHER,  1000 * MB),
     f("2nd", "heap-unallocated",OTHER,   100 * MB),
     f("2nd", "explicit/a/b/c",  HEAP,    497 * MB),
@@ -205,7 +205,7 @@
     f("5th", "explicit/b/c/g/h", NONHEAP,  10 * KB),
     f("5th", "explicit/b/c/i/j", NONHEAP,   5 * KB)
   ];
-  var fakeMultiReporters2 = [
+  let fakeMultiReporters2 = [
      // Because this multi-reporter is in a child process, the fact that we
      // skip the "smaps" multi-reporter in the parent process won't cause
      // these to be skipped;  the fall-back skipping will be hit instead.
@@ -219,10 +219,10 @@
        explicitNonHeap: 0
      }
   ];
-  for (var i = 0; i < fakeReporters2.length; i++) {
+  for (let i = 0; i < fakeReporters2.length; i++) {
     mgr.registerReporter(fakeReporters2[i]);
   }
-  for (var i = 0; i < fakeMultiReporters2.length; i++) {
+  for (let i = 0; i < fakeMultiReporters2.length; i++) {
     mgr.registerMultiReporter(fakeMultiReporters2[i]);
   }
   fakeReporters = fakeReporters.concat(fakeReporters2);
@@ -235,7 +235,7 @@
 
   <script type="application/javascript">
   <![CDATA[
-  var amExpectedText =
+  let amExpectedText =
 "\
 Main Process\n\
 \n\
@@ -375,7 +375,7 @@ Other Measurements\n\
 \n\
 ";
 
-  var amvExpectedText =
+  let amvExpectedText =
 "\
 Main Process\n\
 \n\
@@ -539,22 +539,22 @@ Other Measurements\n\
     // Unregister fake reporters and multi-reporters, re-register the real
     // reporters and multi-reporters, just in case subsequent tests rely on
     // them.
-    for (var i = 0; i < fakeReporters.length; i++) {
+    for (let i = 0; i < fakeReporters.length; i++) {
       mgr.unregisterReporter(fakeReporters[i]);
     }
-    for (var i = 0; i < fakeMultiReporters.length; i++) {
+    for (let i = 0; i < fakeMultiReporters.length; i++) {
       mgr.unregisterMultiReporter(fakeMultiReporters[i]);
     }
-    for (var i = 0; i < realReporters.length; i++) {
+    for (let i = 0; i < realReporters.length; i++) {
       mgr.registerReporter(realReporters[i]);
     }
-    for (var i = 0; i < realMultiReporters.length; i++) {
+    for (let i = 0; i < realMultiReporters.length; i++) {
       mgr.registerMultiReporter(realMultiReporters[i]);
     }
     SimpleTest.finish();
   }
 
-  var gHaveDumped = false;
+  let gHaveDumped = false;
 
   function checkClipboard(actual, expected) {
     if (actual != expected) {
