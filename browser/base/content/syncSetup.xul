@@ -195,7 +195,7 @@
                     oncommand="gSyncSetup.onServerCommand()"
                     oninput="gSyncSetup.onServerInput()">
             <menupopup>
-              <menuitem label="&serverType.main.label;"
+              <menuitem label="&serverType.default.label;"
                         value="main"/>
               <menuitem label="&serverType.custom2.label;"
                         value="custom"/>
@@ -335,7 +335,7 @@
                       oncommand="gSyncSetup.onExistingServerCommand()"
                       oninput="gSyncSetup.onExistingServerInput()">
               <menupopup>
-                <menuitem label="&serverType.main.label;"
+                <menuitem label="&serverType.default.label;"
                           value="main"/>
                 <menuitem label="&serverType.custom2.label;"
                           value="custom"/>
