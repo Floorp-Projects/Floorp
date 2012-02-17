@@ -89,6 +89,7 @@ nsEventSource::nsEventSource() :
   mErrorLoadOnRedirect(false),
   mGoingToDispatchAllMessages(false),
   mWithCredentials(false),
+  mWaitingForOnStopRequest(false),
   mLastConvertionResult(NS_OK),
   mReadyState(nsIEventSource::CONNECTING),
   mScriptLine(0),
@@ -108,12 +109,18 @@ nsEventSource::~nsEventSource()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventSource)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsEventSource)
-  if (tmp->IsBlack()) {
+  bool isBlack = tmp->IsBlack();
+  if (isBlack || tmp->mWaitingForOnStopRequest) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->UnmarkGrayJSListeners();
       NS_UNMARK_LISTENER_WRAPPER(Open)
       NS_UNMARK_LISTENER_WRAPPER(Message)
       NS_UNMARK_LISTENER_WRAPPER(Error)
+    }
+    if (!isBlack) {
+      xpc_UnmarkGrayObject(tmp->PreservingWrapper() ? 
+                           tmp->GetWrapperPreserveColor() :
+                           tmp->GetExpandoObjectPreserveColor());
     }
     return true;
   }
@@ -599,6 +606,8 @@ nsEventSource::OnStopRequest(nsIRequest *aRequest,
                              nsISupports *aContext,
                              nsresult aStatusCode)
 {
+  mWaitingForOnStopRequest = false;
+
   if (mReadyState == nsIEventSource::CLOSED) {
     return NS_ERROR_ABORT;
   }
@@ -949,7 +958,11 @@ nsEventSource::InitChannelAndRequestEventSource()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Start reading from the channel
-  return mHttpChannel->AsyncOpen(listener, nsnull);
+  rv = mHttpChannel->AsyncOpen(listener, nsnull);
+  if (NS_SUCCEEDED(rv)) {
+    mWaitingForOnStopRequest = true;
+  }
+  return rv;
 }
 
 void

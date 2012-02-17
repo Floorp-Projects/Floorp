@@ -325,7 +325,8 @@ ownAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
 {
     ServerCertAuth * serverCertAuth = (ServerCertAuth *) arg;
 
-    FPRINTF(stderr, "using asynchronous certificate validation\n");
+    FPRINTF(stderr, "%s: using asynchronous certificate validation\n",
+	    progName);
 
     PORT_Assert(serverCertAuth->shouldPause);
     PORT_Assert(!serverCertAuth->isPaused);
