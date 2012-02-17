@@ -58,6 +58,7 @@
     _(NewArray)                     \
     _(CheckOverRecursed)            \
     _(RecompileCheck)               \
+    _(DefVar)                       \
     _(CallGeneric)                  \
     _(CallNative)                   \
     _(StackArg)                     \

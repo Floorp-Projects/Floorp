@@ -773,6 +773,7 @@ CheckFrame(StackFrame *fp)
     if (fp->isEvalFrame()) {
         // Eval frames are not yet supported. Supporting this will require new
         // logic in pushBailoutFrame to deal with linking prev.
+        // Additionally, JSOP_DEFVAR support will require baking in isEvalFrame().
         IonSpew(IonSpew_Abort, "eval frame");
         return false;
     }

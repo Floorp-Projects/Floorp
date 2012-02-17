@@ -87,6 +87,17 @@ ReportOverRecursed(JSContext *cx)
     return false;
 }
 
+bool
+DefVarOrConst(JSContext *cx, PropertyName *dn, uintN attrs, JSObject *scopeChain)
+{
+    // Given the ScopeChain, extract the VarObj.
+    JSObject *obj = scopeChain;
+    while (!obj->isVarObj())
+        obj = obj->enclosingScope();
+
+    return DefVarOrConstOperation(cx, *obj, dn, attrs);
+}
+
 template<bool Equal>
 bool
 LooselyEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res)

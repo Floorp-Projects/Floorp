@@ -59,6 +59,7 @@ namespace ion {
     _(OsrScopeChain)                                                        \
     _(CheckOverRecursed)                                                    \
     _(RecompileCheck)                                                       \
+    _(DefVar)                                                               \
     _(PrepareCall)                                                          \
     _(PassArg)                                                              \
     _(Call)                                                                 \
