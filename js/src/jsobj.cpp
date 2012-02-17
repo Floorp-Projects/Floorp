@@ -5862,7 +5862,7 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
                                  &StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
                                  js_str_toString)) {
-            *vp = obj->getPrimitiveThis();
+            *vp = StringValue(obj->asString().unbox());
             return true;
         }
 
@@ -5885,7 +5885,9 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
              ClassMethodIsNative(cx, obj, &NumberClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom),
                                  js_num_valueOf))) {
-            *vp = obj->getPrimitiveThis();
+            *vp = obj->isString()
+                  ? StringValue(obj->asString().unbox())
+                  : NumberValue(obj->asNumber().unbox());
             return true;
         }
 
