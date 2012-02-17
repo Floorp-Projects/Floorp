@@ -68,6 +68,7 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
     protected LayerRenderer mLayerRenderer;
 
     protected IntSize mScreenSize;
+    protected IntSize mWindowSize;
     protected IntSize mBufferSize;
 
     protected Layer mTileLayer;
@@ -263,19 +264,36 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
 
     /* Informs Gecko that the screen size has changed. */
     protected void sendResizeEventIfNecessary(boolean force) {
-        Log.e(LOGTAG, "### sendResizeEventIfNecessary " + force);
+        Log.d(LOGTAG, "### sendResizeEventIfNecessary " + force);
 
-        IntSize newSize = getBufferSize();
-        if (!force && mScreenSize != null && mScreenSize.equals(newSize)) {
+        DisplayMetrics metrics = new DisplayMetrics();
+        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+        IntSize newScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
+        IntSize newWindowSize = getBufferSize();
+
+        boolean screenSizeChanged = mScreenSize == null || !mScreenSize.equals(newScreenSize);
+        boolean windowSizeChanged = mWindowSize == null || !mWindowSize.equals(newWindowSize);
+
+        if (!force && !screenSizeChanged && !windowSizeChanged) {
             return;
         }
 
-        mScreenSize = newSize;
+        mScreenSize = newScreenSize;
+        mWindowSize = newWindowSize;
 
-        Log.e(LOGTAG, "### Screen-size changed to " + mScreenSize);
-        GeckoEvent event = GeckoEvent.createSizeChangedEvent(mScreenSize.width, mScreenSize.height,
-                                                             mScreenSize.width, mScreenSize.height,
-                                                             mScreenSize.width, mScreenSize.height);
+        if (screenSizeChanged) {
+            Log.i(LOGTAG, "### Screen-size changed to " + mScreenSize);
+        }
+
+        if (windowSizeChanged) {
+            Log.i(LOGTAG, "### Window-size changed to " + mWindowSize);
+        }
+
+        IntSize bufferSize = getBufferSize();
+        GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height, // Window (buffer) size
+                                                             mScreenSize.width, mScreenSize.height, // Screen size
+                                                             0, 0);                                 // Tile-size (unused)
         GeckoAppShell.sendEventToGecko(event);
     }
 
