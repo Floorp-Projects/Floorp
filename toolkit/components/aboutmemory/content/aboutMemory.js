@@ -42,8 +42,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const gVerbose = location.href === "about:memory?verbose";
-
 let gAddedObserver = false;
 
 const KIND_NONHEAP           = Ci.nsIMemoryReporter.KIND_NONHEAP;
@@ -54,8 +52,6 @@ const UNITS_COUNT            = Ci.nsIMemoryReporter.UNITS_COUNT;
 const UNITS_COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
 const UNITS_PERCENTAGE       = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
-const kUnknown = -1;    // used for an unknown _amount
-
 // Forward slashes in URLs in paths are represented with backslashes to avoid
 // being mistaken for path separators.  Paths/names/descriptions where this
 // hasn't been undone are prefixed with "unsafe"; the rest are prefixed with
@@ -64,6 +60,106 @@ function makeSafe(aUnsafeStr)
 {
   return aUnsafeStr.replace(/\\/g, '/');
 }
+
+function assert(aCond, aMsg)
+{
+  if (!aCond) {
+    throw("assertion failed: " + aMsg);
+  }
+}
+
+function debug(x)
+{
+  let content = document.getElementById("content");
+  appendElementWithText(content, "div", "legend", JSON.stringify(x));
+}
+
+//---------------------------------------------------------------------------
+
+function onLoad()
+{
+  let os = Cc["@mozilla.org/observer-service;1"].
+      getService(Ci.nsIObserverService);
+  os.notifyObservers(null, "child-memory-reporter-request", null);
+
+  os.addObserver(ChildMemoryListener, "child-memory-reporter-update", false);
+  gAddedObserver = true;
+
+  update();
+}
+
+function onUnload()
+{
+  // We need to check if the observer has been added before removing; in some
+  // circumstances (eg. reloading the page quickly) it might not have because
+  // onLoad might not fire.
+  if (gAddedObserver) {
+    let os = Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService);
+    os.removeObserver(ChildMemoryListener, "child-memory-reporter-update");
+  }
+}
+
+// For maximum effect, this returns to the event loop between each
+// notification.  See bug 610166 comment 12 for an explanation.
+// Ideally a single notification would be enough.
+function sendHeapMinNotifications()
+{
+  function runSoon(f)
+  {
+    let tm = Cc["@mozilla.org/thread-manager;1"]
+              .getService(Ci.nsIThreadManager);
+
+    tm.mainThread.dispatch({ run: f }, Ci.nsIThread.DISPATCH_NORMAL);
+  }
+
+  function sendHeapMinNotificationsInner()
+  {
+    let os = Cc["@mozilla.org/observer-service;1"]
+             .getService(Ci.nsIObserverService);
+    os.notifyObservers(null, "memory-pressure", "heap-minimize");
+
+    if (++j < 3)
+      runSoon(sendHeapMinNotificationsInner);
+    else
+      runSoon(update);
+  }
+
+  let j = 0;
+  sendHeapMinNotificationsInner();
+}
+
+//---------------------------------------------------------------------------
+
+function appendTextNode(aP, aText)
+{
+  let e = document.createTextNode(aText);
+  aP.appendChild(e);
+  return e;
+}
+
+function appendElement(aP, aTagName, aClassName)
+{
+  let e = document.createElement(aTagName);
+  if (aClassName) {
+    e.className = aClassName;
+  }
+  aP.appendChild(e);
+  return e;
+}
+
+function appendElementWithText(aP, aTagName, aClassName, aText)
+{
+  let e = appendElement(aP, aTagName, aClassName);
+  appendTextNode(e, aText);
+  return e;
+}
+
+//---------------------------------------------------------------------------
+
+const gVerbose = location.href === "about:memory?verbose";
+
+const kUnknown = -1;    // used for an unknown _amount
 
 const kTreeUnsafeDescriptions = {
   'explicit' :
@@ -127,29 +223,7 @@ const kTreeNames = {
 const kMapTreePaths =
   ['smaps/resident', 'smaps/pss', 'smaps/vsize', 'smaps/swap'];
 
-function onLoad()
-{
-  let os = Cc["@mozilla.org/observer-service;1"].
-      getService(Ci.nsIObserverService);
-  os.notifyObservers(null, "child-memory-reporter-request", null);
-
-  os.addObserver(ChildMemoryListener, "child-memory-reporter-update", false);
-  gAddedObserver = true;
-
-  update();
-}
-
-function onUnload()
-{
-  // We need to check if the observer has been added before removing; in some
-  // circumstances (eg. reloading the page quickly) it might not have because
-  // onLoad might not fire.
-  if (gAddedObserver) {
-    let os = Cc["@mozilla.org/observer-service;1"].
-        getService(Ci.nsIObserverService);
-    os.removeObserver(ChildMemoryListener, "child-memory-reporter-update");
-  }
-}
+//---------------------------------------------------------------------------
 
 function ChildMemoryListener(aSubject, aTopic, aData)
 {
@@ -176,34 +250,88 @@ function doCC()
   update();
 }
 
-// For maximum effect, this returns to the event loop between each
-// notification.  See bug 610166 comment 12 for an explanation.
-// Ideally a single notification would be enough.
-function sendHeapMinNotifications()
+//---------------------------------------------------------------------------
+
+/**
+ * Top-level function that does the work of generating the page.
+ */
+function update()
 {
-  function runSoon(f)
-  {
-    let tm = Cc["@mozilla.org/thread-manager;1"]
-              .getService(Ci.nsIThreadManager);
+  // First, clear the page contents.  Necessary because update() might be
+  // called more than once due to ChildMemoryListener.
+  let oldContent = document.getElementById("content");
+  let content = oldContent.cloneNode(false);
+  oldContent.parentNode.replaceChild(content, oldContent);
+  content.classList.add(gVerbose ? 'verbose' : 'non-verbose');
 
-    tm.mainThread.dispatch({ run: f }, Ci.nsIThread.DISPATCH_NORMAL);
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+      getService(Ci.nsIMemoryReporterManager);
+
+  // Generate output for one process at a time.  Always start with the
+  // Main process.
+  let reportsByProcess = getReportsByProcess(mgr);
+  let hasMozMallocUsableSize = mgr.hasMozMallocUsableSize;
+  appendProcessElements(content, "Main", reportsByProcess["Main"],
+                        hasMozMallocUsableSize);
+  for (let process in reportsByProcess) {
+    if (process !== "Main") {
+      appendProcessElements(content, process, reportsByProcess[process],
+                            hasMozMallocUsableSize);
+    }
   }
 
-  function sendHeapMinNotificationsInner()
-  {
-    let os = Cc["@mozilla.org/observer-service;1"]
-             .getService(Ci.nsIObserverService);
-    os.notifyObservers(null, "memory-pressure", "heap-minimize");
+  appendElement(content, "hr");
 
-    if (++j < 3)
-      runSoon(sendHeapMinNotificationsInner);
-    else
-      runSoon(update);
+  // Memory-related actions.
+  const UpDesc = "Re-measure.";
+  const GCDesc = "Do a global garbage collection.";
+  const CCDesc = "Do a cycle collection.";
+  const MPDesc = "Send three \"heap-minimize\" notifications in a " +
+                 "row.  Each notification triggers a global garbage " +
+                 "collection followed by a cycle collection, and causes the " +
+                 "process to reduce memory usage in other ways, e.g. by " +
+                 "flushing various caches.";
+
+  function appendButton(aTitle, aOnClick, aText, aId)
+  {
+    let b = appendElementWithText(content, "button", "", aText);
+    b.title = aTitle;
+    b.onclick = aOnClick
+    if (aId) {
+      b.id = aId;
+    }
   }
 
-  let j = 0;
-  sendHeapMinNotificationsInner();
+  // The "Update" button has an id so it can be clicked in a test.
+  appendButton(UpDesc, update,                   "Update", "updateButton");
+  appendButton(GCDesc, doGlobalGC,               "GC");
+  appendButton(CCDesc, doCC,                     "CC");
+  appendButton(MPDesc, sendHeapMinNotifications, "Minimize memory usage");
+
+  let div1 = appendElement(content, "div");
+  if (gVerbose) {
+    let a = appendElementWithText(div1, "a", "option", "Less verbose");
+    a.href = "about:memory";
+  } else {
+    let a = appendElementWithText(div1, "a", "option", "More verbose");
+    a.href = "about:memory?verbose";
+  }
+
+  let div2 = appendElement(content, "div");
+  let a = appendElementWithText(div2, "a", "option",
+                                "Troubleshooting information");
+  a.href = "about:support";
+
+  let legendText1 = "Click on a non-leaf node in a tree to expand ('++') " +
+                    "or collapse ('--') its children.";
+  let legendText2 = "Hover the pointer over the name of a memory report " +
+                    "to see a description of what it measures.";
+
+  appendElementWithText(content, "div", "legend", legendText1);
+  appendElementWithText(content, "div", "legend", legendText2);
 }
+
+//---------------------------------------------------------------------------
 
 function Report(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc)
 {
@@ -303,108 +431,7 @@ function getReportsByProcess(aMgr)
   return reportsByProcess;
 }
 
-function appendTextNode(aP, aText)
-{
-  let e = document.createTextNode(aText);
-  aP.appendChild(e);
-  return e;
-}
-
-function appendElement(aP, aTagName, aClassName)
-{
-  let e = document.createElement(aTagName);
-  if (aClassName) {
-    e.className = aClassName;
-  }
-  aP.appendChild(e);
-  return e;
-}
-
-function appendElementWithText(aP, aTagName, aClassName, aText)
-{
-  let e = appendElement(aP, aTagName, aClassName);
-  appendTextNode(e, aText);
-  return e;
-}
-
-/**
- * Top-level function that does the work of generating the page.
- */
-function update()
-{
-  // First, clear the page contents.  Necessary because update() might be
-  // called more than once due to ChildMemoryListener.
-  let oldContent = document.getElementById("content");
-  let content = oldContent.cloneNode(false);
-  oldContent.parentNode.replaceChild(content, oldContent);
-  content.classList.add(gVerbose ? 'verbose' : 'non-verbose');
-
-  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
-      getService(Ci.nsIMemoryReporterManager);
-
-  // Generate output for one process at a time.  Always start with the
-  // Main process.
-  let reportsByProcess = getReportsByProcess(mgr);
-  let hasMozMallocUsableSize = mgr.hasMozMallocUsableSize;
-  appendProcessElements(content, "Main", reportsByProcess["Main"],
-                        hasMozMallocUsableSize);
-  for (let process in reportsByProcess) {
-    if (process !== "Main") {
-      appendProcessElements(content, process, reportsByProcess[process],
-                            hasMozMallocUsableSize);
-    }
-  }
-
-  appendElement(content, "hr");
-
-  // Memory-related actions.
-  const UpDesc = "Re-measure.";
-  const GCDesc = "Do a global garbage collection.";
-  const CCDesc = "Do a cycle collection.";
-  const MPDesc = "Send three \"heap-minimize\" notifications in a " +
-                 "row.  Each notification triggers a global garbage " +
-                 "collection followed by a cycle collection, and causes the " +
-                 "process to reduce memory usage in other ways, e.g. by " +
-                 "flushing various caches.";
-
-  function appendButton(aTitle, aOnClick, aText, aId)
-  {
-    let b = appendElementWithText(content, "button", "", aText);
-    b.title = aTitle;
-    b.onclick = aOnClick
-    if (aId) {
-      b.id = aId;
-    }
-  }
-
-  // The "Update" button has an id so it can be clicked in a test.
-  appendButton(UpDesc, update,                   "Update", "updateButton");
-  appendButton(GCDesc, doGlobalGC,               "GC");
-  appendButton(CCDesc, doCC,                     "CC");
-  appendButton(MPDesc, sendHeapMinNotifications, "Minimize memory usage");
-
-  let div1 = appendElement(content, "div");
-  if (gVerbose) {
-    let a = appendElementWithText(div1, "a", "option", "Less verbose");
-    a.href = "about:memory";
-  } else {
-    let a = appendElementWithText(div1, "a", "option", "More verbose");
-    a.href = "about:memory?verbose";
-  }
-
-  let div2 = appendElement(content, "div");
-  let a = appendElementWithText(div2, "a", "option",
-                                "Troubleshooting information");
-  a.href = "about:support";
-
-  let legendText1 = "Click on a non-leaf node in a tree to expand ('++') " +
-                    "or collapse ('--') its children.";
-  let legendText2 = "Hover the pointer over the name of a memory report " +
-                    "to see a description of what it measures.";
-
-  appendElementWithText(content, "div", "legend", legendText1);
-  appendElementWithText(content, "div", "legend", legendText2);
-}
+//---------------------------------------------------------------------------
 
 // There are two kinds of TreeNode.
 // - Leaf TreeNodes correspond to Reports and have more properties.
@@ -1237,6 +1264,8 @@ function appendTreeElements(aPOuter, aT, aProcess)
   appendTextNode(aPOuter, "\n");  // gives nice spacing when we cut and paste
 }
 
+//---------------------------------------------------------------------------
+
 function OtherReport(aUnsafePath, aUnits, aAmount, aUnsafeDesc, aNMerged)
 {
   // Nb: _kind is not needed, it's always KIND_OTHER.
@@ -1345,15 +1374,3 @@ function appendSectionHeader(aP, aText)
   appendTextNode(aP, "\n");
 }
 
-function assert(aCond, aMsg)
-{
-  if (!aCond) {
-    throw("assertion failed: " + aMsg);
-  }
-}
-
-function debug(x)
-{
-  let content = document.getElementById("content");
-  appendElementWithText(content, "div", "legend", JSON.stringify(x));
-}
