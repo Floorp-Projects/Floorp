@@ -86,10 +86,6 @@
 #include "imgIRequest.h"
 #include "nsDOMDataTransfer.h"
 
-// private clipboard data flavors for html copy, used by editor when pasting
-#define kHTMLContext   "text/_moz_htmlcontext"
-#define kHTMLInfo      "text/_moz_htmlinfo"
-
 class NS_STACK_CLASS DragDataProducer
 {
 public:

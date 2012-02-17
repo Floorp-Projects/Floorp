@@ -133,9 +133,6 @@ const PRUnichar nbsp = 160;
 
 static NS_DEFINE_CID(kCParserCID,     NS_PARSER_CID);
 
-// private clipboard data flavors for html copy/paste
-#define kHTMLContext   "text/_moz_htmlcontext"
-#define kHTMLInfo      "text/_moz_htmlinfo"
 #define kInsertCookie  "_moz_Insert Here_moz_"
 
 #define NS_FOUND_TARGET NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR, 3)
