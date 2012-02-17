@@ -265,6 +265,13 @@ interface nsIFrameLoader : nsISupports
    * Defaults to true.
    */
   attribute boolean clipSubdocument;
+
+  /**
+   * If false, then the subdocument's scroll coordinates will not be clamped
+   * to their scroll boundaries.
+   * Defaults to true.
+   */
+  attribute boolean clampScrollPosition;
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
