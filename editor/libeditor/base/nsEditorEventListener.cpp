@@ -61,8 +61,6 @@
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
-#include "nsIDragService.h"
-#include "nsIDragSession.h"
 #include "nsIContent.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMRange.h"
@@ -700,6 +698,10 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
   }
   else
   {
+    // This is needed when dropping on an input, to prevent the editor for
+    // the editable parent from receiving the event.
+    aDragEvent->StopPropagation();
+
     if (mCaret)
     {
       mCaret->EraseCaret();
@@ -771,8 +773,6 @@ nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
 
   aMouseEvent->StopPropagation();
   aMouseEvent->PreventDefault();
-  // Beware! This may flush notifications via synchronous
-  // ScrollSelectionIntoView.
   return mEditor->InsertFromDrop(aMouseEvent);
 }
 

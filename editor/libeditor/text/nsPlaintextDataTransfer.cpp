@@ -52,6 +52,7 @@
 #include "nsServiceManagerUtils.h"
 
 #include "nsIDOMRange.h"
+#include "nsIDOMDOMStringList.h"
 #include "nsIDocumentEncoder.h"
 #include "nsISupportsPrimitives.h"
 
@@ -61,6 +62,7 @@
 #include "nsIDragService.h"
 #include "nsIDOMUIEvent.h"
 #include "nsCopySupport.h"
+#include "nsITransferable.h"
 
 // Misc
 #include "nsEditorUtils.h"
@@ -69,6 +71,10 @@
 #include "nsFrameSelection.h"
 #include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
+
+// private clipboard data flavors for html copy/paste
+#define kHTMLContext   "text/_moz_htmlcontext"
+#define kHTMLInfo      "text/_moz_htmlinfo"
 
 using namespace mozilla;
 
@@ -151,8 +157,6 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
       
   // Try to scroll the selection into view if the paste/drop succeeded
 
-  // After ScrollSelectionIntoView(), the pending notifications might be flushed
-  // and PresShell/PresContext/Frames may be dead. See bug 418470.
   if (NS_SUCCEEDED(rv))
     ScrollSelectionIntoView(false);
 
@@ -162,29 +166,21 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
 NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 {
   ForceCompositionEnd();
-  
-  nsresult rv;
-  nsCOMPtr<nsIDragService> dragService = 
-           do_GetService("@mozilla.org/widget/dragservice;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDragSession> dragSession;
-  dragService->GetCurrentSession(getter_AddRefs(dragSession));
-  NS_ENSURE_TRUE(dragSession, NS_OK);
+  nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aDropEvent));
+  NS_ENSURE_TRUE(dragEvent, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
+  nsresult rv = dragEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Current doc is destination
   nsCOMPtr<nsIDOMDocument> destdomdoc; 
   rv = GetDocument(getter_AddRefs(destdomdoc)); 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get the nsITransferable interface for getting the data from the drop
-  nsCOMPtr<nsITransferable> trans;
-  rv = PrepareTransferable(getter_AddRefs(trans));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(trans, NS_OK);  // NS_ERROR_FAILURE; SHOULD WE FAIL?
-
   PRUint32 numItems = 0; 
-  rv = dragSession->GetNumDropItems(&numItems);
+  rv = dataTransfer->GetMozItemCount(&numItems);
   NS_ENSURE_SUCCESS(rv, rv);
   if (numItems < 1) return NS_ERROR_FAILURE;  // nothing to drop?
 
@@ -240,11 +236,14 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
         break;
     }
 
-    // Source doc is null if source is *not* the current editor document
-    // Current doc is destination (set earlier)
+    nsCOMPtr<nsIDOMNode> sourceNode;
+    dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
+
     nsCOMPtr<nsIDOMDocument> srcdomdoc;
-    rv = dragSession->GetSourceDocument(getter_AddRefs(srcdomdoc));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (sourceNode) {
+      sourceNode->GetOwnerDocument(getter_AddRefs(srcdomdoc));
+      NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
+    }
 
     if (cursorIsInSelection)
     {
@@ -263,9 +262,9 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       if (srcdomdoc == destdomdoc)
       {
         // Within the same doc: delete if user doesn't want to copy
-        PRUint32 action;
-        dragSession->GetDragAction(&action);
-        deleteSelection = !(action & nsIDragService::DRAGDROP_ACTION_COPY);
+        PRUint32 dropEffect;
+        dataTransfer->GetDropEffectInt(&dropEffect);
+        deleteSelection = !(dropEffect & nsIDragService::DRAGDROP_ACTION_COPY);
       }
       else
       {
@@ -285,7 +284,6 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     if (formControl && !formControl->AllowDrop()) {
       // Don't allow dropping into a form control that doesn't allow being
       // dropped into.
-
       return NS_OK;
     }
 
@@ -295,14 +293,19 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   PRUint32 i; 
   for (i = 0; i < numItems; ++i)
   {
-    rv = dragSession->GetData(trans, i);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(trans, NS_OK); // NS_ERROR_FAILURE; Should we fail?
+    nsCOMPtr<nsIVariant> data;
+    dataTransfer->MozGetDataAt(NS_LITERAL_STRING("text/plain"), i,
+                               getter_AddRefs(data));
+    nsAutoString insertText;
+    data->GetAsAString(insertText);
+    nsContentUtils::PlatformToDOMLineBreaks(insertText);
 
-    // Beware! This may flush notifications via synchronous
-    // ScrollSelectionIntoView.
-    rv = InsertTextFromTransferable(trans, newSelectionParent, newSelectionOffset, deleteSelection);
+    nsAutoEditBatch beginBatching(this);
+    rv = InsertTextAt(insertText, newSelectionParent, newSelectionOffset, deleteSelection);
   }
+
+  if (NS_SUCCEEDED(rv))
+    ScrollSelectionIntoView(false);
 
   return rv;
 }
@@ -332,8 +335,6 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
       if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, trans))
         return NS_OK;
 
-      // Beware! This may flush notifications via synchronous
-      // ScrollSelectionIntoView.
       rv = InsertTextFromTransferable(trans, nsnull, nsnull, true);
     }
   }
@@ -355,8 +356,6 @@ NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferabl
   if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, aTransferable))
     return NS_OK;
 
-  // Beware! This may flush notifications via synchronous
-  // ScrollSelectionIntoView.
   return InsertTextFromTransferable(aTransferable, nsnull, nsnull, true);
 }
 
