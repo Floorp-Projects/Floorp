@@ -52,7 +52,7 @@ interface nsIContentFilter;
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_EDITOR, 1)
 
 %}
-[scriptable, uuid(77271525-543F-4432-8BD6-B7686E562D9C)]
+[scriptable, uuid(FF67AD39-ED58-4CD1-A1A3-DCD988390A97)]
 
 interface nsIHTMLEditor : nsISupports
 {
@@ -198,14 +198,6 @@ interface nsIHTMLEditor : nsISupports
    *  so they will be decreased instead of inserting new <FONT> tag
    */
   void decreaseFontSize();
-
-  /* ------------ Drag/Drop methods -------------- */
-
-  /** 
-   * insertFromDrop looks for a dragsession and inserts the
-   * relevant data in response to a drop.
-   */
-  void insertFromDrop(in nsIDOMEvent aEvent);
 
   /* ------------ HTML content methods -------------- */
 

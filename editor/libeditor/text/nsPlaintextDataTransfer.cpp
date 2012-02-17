@@ -163,7 +163,25 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
   return rv;
 }
 
-NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
+nsresult nsPlaintextEditor::InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
+                                                   PRInt32 aIndex,
+                                                   nsIDOMDocument *aSourceDoc,
+                                                   nsIDOMNode *aDestinationNode,
+                                                   PRInt32 aDestOffset,
+                                                   bool aDoDeleteSelection)
+{
+  nsCOMPtr<nsIVariant> data;
+  aDataTransfer->MozGetDataAt(NS_LITERAL_STRING("text/plain"), aIndex,
+                              getter_AddRefs(data));
+  nsAutoString insertText;
+  data->GetAsAString(insertText);
+  nsContentUtils::PlatformToDOMLineBreaks(insertText);
+
+  nsAutoEditBatch beginBatching(this);
+  return InsertTextAt(insertText, aDestinationNode, aDestOffset, aDoDeleteSelection);
+}
+
+nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 {
   ForceCompositionEnd();
 
@@ -179,7 +197,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   rv = GetDocument(getter_AddRefs(destdomdoc)); 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 numItems = 0; 
+  PRUint32 numItems = 0;
   rv = dataTransfer->GetMozItemCount(&numItems);
   NS_ENSURE_SUCCESS(rv, rv);
   if (numItems < 1) return NS_ERROR_FAILURE;  // nothing to drop?
@@ -212,6 +230,35 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   rv = selection->GetIsCollapsed(&isCollapsed);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIDOMNode> sourceNode;
+  dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
+
+  nsCOMPtr<nsIDOMDocument> srcdomdoc;
+  if (sourceNode) {
+    sourceNode->GetOwnerDocument(getter_AddRefs(srcdomdoc));
+    NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
+  }
+
+  // Only the nsHTMLEditor::FindUserSelectAllNode returns a node.
+  nsCOMPtr<nsIDOMNode> userSelectNode = FindUserSelectAllNode(newSelectionParent);
+  if (userSelectNode)
+  {
+    // The drop is happening over a "-moz-user-select: all"
+    // subtree so make sure the content we insert goes before
+    // the root of the subtree.
+    //
+    // XXX: Note that inserting before the subtree matches the
+    //      current behavior when dropping on top of an image.
+    //      The decision for dropping before or after the
+    //      subtree should really be done based on coordinates.
+
+    rv = GetNodeLocation(userSelectNode, address_of(newSelectionParent),
+                         &newSelectionOffset);
+
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(newSelectionParent, NS_ERROR_FAILURE);
+  }
+
   // Check if mouse is in the selection
   // if so, jump through some hoops to determine if mouse is over selection (bail)
   // and whether user wants to copy selection or delete it
@@ -234,15 +281,6 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       rv = range->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
       if (cursorIsInSelection)
         break;
-    }
-
-    nsCOMPtr<nsIDOMNode> sourceNode;
-    dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
-
-    nsCOMPtr<nsIDOMDocument> srcdomdoc;
-    if (sourceNode) {
-      sourceNode->GetOwnerDocument(getter_AddRefs(srcdomdoc));
-      NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
     }
 
     if (cursorIsInSelection)
@@ -274,34 +312,22 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     }
   }
 
-  nsCOMPtr<nsIContent> newSelectionContent =
-    do_QueryInterface(newSelectionParent);
-  nsIContent *content = newSelectionContent;
-
-  while (content) {
-    nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
-
-    if (formControl && !formControl->AllowDrop()) {
-      // Don't allow dropping into a form control that doesn't allow being
-      // dropped into.
-      return NS_OK;
+  if (IsPlaintextEditor()) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(newSelectionParent);
+    while (content) {
+      nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
+      if (formControl && !formControl->AllowDrop()) {
+        // Don't allow dropping into a form control that doesn't allow being
+        // dropped into.
+        return NS_OK;
+      }
+      content = content->GetParent();
     }
-
-    content = content->GetParent();
   }
 
-  PRUint32 i; 
-  for (i = 0; i < numItems; ++i)
-  {
-    nsCOMPtr<nsIVariant> data;
-    dataTransfer->MozGetDataAt(NS_LITERAL_STRING("text/plain"), i,
-                               getter_AddRefs(data));
-    nsAutoString insertText;
-    data->GetAsAString(insertText);
-    nsContentUtils::PlatformToDOMLineBreaks(insertText);
-
-    nsAutoEditBatch beginBatching(this);
-    rv = InsertTextAt(insertText, newSelectionParent, newSelectionOffset, deleteSelection);
+  for (PRUint32 i = 0; i < numItems; ++i) {
+    InsertFromDataTransfer(dataTransfer, i, srcdomdoc, newSelectionParent,
+                           newSelectionOffset, deleteSelection);
   }
 
   if (NS_SUCCEEDED(rv))
