@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslt.h,v 1.17 2011/10/29 00:29:11 bsmith%mozilla.com Exp $ */
+/* $Id: sslt.h,v 1.18 2012/02/15 21:52:08 kaie%kuix.de Exp $ */
 
 #ifndef __sslt_h_
 #define __sslt_h_
@@ -203,7 +203,7 @@ typedef enum {
     ssl_ec_point_formats_xtn         = 11,
 #endif
     ssl_session_ticket_xtn           = 35,
-    ssl_next_proto_neg_xtn           = 13172,
+    ssl_next_proto_nego_xtn          = 13172,
     ssl_renegotiation_info_xtn       = 0xff01	/* experimental number */
 } SSLExtensionType;
 

@@ -171,14 +171,14 @@ private:
   }
 
   static JSBool
-  MozSlice(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Slice(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
 
-    nsIDOMBlob* blob = GetInstancePrivate(aCx, obj, "mozSlice");
+    nsIDOMBlob* blob = GetInstancePrivate(aCx, obj, "slice");
     if (!blob) {
       return false;
     }
@@ -197,10 +197,10 @@ private:
 
     PRUint8 optionalArgc = aArgc;
     nsCOMPtr<nsIDOMBlob> rtnBlob;
-    if (NS_FAILED(blob->MozSlice(static_cast<PRUint64>(start),
-                                 static_cast<PRUint64>(end),
-                                 contentType, optionalArgc,
-                                 getter_AddRefs(rtnBlob)))) {
+    if (NS_FAILED(blob->Slice(static_cast<PRUint64>(start),
+                              static_cast<PRUint64>(end),
+                              contentType, optionalArgc,
+                              getter_AddRefs(rtnBlob)))) {
       ThrowFileExceptionForCode(aCx, FILE_NOT_READABLE_ERR);
       return false;
     }
@@ -230,7 +230,7 @@ JSPropertySpec Blob::sProperties[] = {
 };
 
 JSFunctionSpec Blob::sFunctions[] = {
-  JS_FN("mozSlice", MozSlice, 1, JSPROP_ENUMERATE),
+  JS_FN("slice", Slice, 1, JSPROP_ENUMERATE),
   JS_FS_END
 };
 

@@ -344,6 +344,15 @@ HISTOGRAM(FX_BOOKMARKS_TOOLBAR_INIT_MS, 50, 5000, 10, EXPONENTIAL, "Firefox: Tim
 HISTOGRAM(FX_THUMBNAILS_CAPTURE_TIME_MS, 1, 500, 15, EXPONENTIAL, "THUMBNAILS: Time (ms) it takes to capture a thumbnail")
 HISTOGRAM(FX_THUMBNAILS_STORE_TIME_MS, 1, 500, 15, EXPONENTIAL, "THUMBNAILS: Time (ms) it takes to store a thumbnail in the cache")
 HISTOGRAM(FX_THUMBNAILS_HIT_OR_MISS, 0, 1, 2, BOOLEAN, "THUMBNAILS: Thumbnail found")
+
+/**
+ * Session restore telemetry
+ */
+HISTOGRAM(FX_SESSION_RESTORE_COLLECT_DATA_MS, 1, 30000, 10, EXPONENTIAL, "Session restore: Time to collect all window and tab data (ms)")
+HISTOGRAM(FX_SESSION_RESTORE_SERIALIZE_DATA_MS, 1, 1000, 10, EXPONENTIAL, "Session restore: Time to JSON serialize session data (ms)")
+HISTOGRAM(FX_SESSION_RESTORE_READ_FILE_MS, 1, 3000, 10, EXPONENTIAL, "Session restore: Time to read the session data from the file on disk (ms)")
+HISTOGRAM(FX_SESSION_RESTORE_WRITE_FILE_MS, 1, 3000, 10, EXPONENTIAL, "Session restore: Time to write the session data to the file on disk (ms)")
+HISTOGRAM_BOOLEAN(FX_SESSION_RESTORE_CORRUPT_FILE, "Session restore: Whether the file read on startup contained parse-able JSON")
 // #endif
 
 HISTOGRAM_BOOLEAN(INNERWINDOWS_WITH_MUTATION_LISTENERS, "Deleted or to-be-reused innerwindow which has had mutation event listeners.")

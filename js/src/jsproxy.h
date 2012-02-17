@@ -183,13 +183,6 @@ GetProxyPrivate(const JSObject *obj)
     return GetReservedSlot(obj, JSSLOT_PROXY_PRIVATE);
 }
 
-inline void
-SetProxyPrivate(JSObject *obj, const Value &priv)
-{
-    JS_ASSERT(IsProxy(obj));
-    SetReservedSlot(obj, JSSLOT_PROXY_PRIVATE, priv);
-}
-
 inline const Value &
 GetProxyExtra(const JSObject *obj, size_t n)
 {
@@ -209,9 +202,6 @@ JS_FRIEND_API(JSObject *)
 NewProxyObject(JSContext *cx, ProxyHandler *handler, const Value &priv,
                JSObject *proto, JSObject *parent,
                JSObject *call = NULL, JSObject *construct = NULL);
-
-JS_FRIEND_API(JSBool)
-FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp);
 
 } /* namespace js */
 

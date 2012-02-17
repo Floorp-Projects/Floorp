@@ -51,6 +51,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&window.title;"
         windowtype="devtools:scratchpad"
+        macanimationtype="document"
         screenX="4" screenY="4"
         width="640" height="480"
         persist="screenX screenY width height sizemode">

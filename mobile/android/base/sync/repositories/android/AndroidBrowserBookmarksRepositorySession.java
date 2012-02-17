@@ -41,8 +41,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.json.simple.JSONArray;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.repositories.BookmarkNeedsReparentingException;
 import org.mozilla.gecko.sync.repositories.NoGuidForIdException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.ParentNotFoundException;
@@ -54,7 +54,6 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.util.Log;
 
 public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepositorySession {
 
@@ -122,7 +121,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         parentName = RepoUtils.getStringFromCursor(name, BrowserContract.Bookmarks.TITLE);
       }
       else {
-        Log.e(LOG_TAG, "Couldn't find record with guid '" + parentGUID + "' when looking for parent name.");
+        Logger.error(LOG_TAG, "Couldn't find record with guid '" + parentGUID + "' when looking for parent name.");
         throw new ParentNotFoundException(null);
       }
     } finally {
@@ -157,13 +156,13 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         int childPosition = (int) RepoUtils.getLongFromCursor(children, BrowserContract.Bookmarks.POSITION);
         trace("  Child position: " + childPosition);
         if (childPosition >= count) {
-          Log.w(LOG_TAG, "Child position " + childPosition + " greater than expected children " + count);
+          Logger.warn(LOG_TAG, "Child position " + childPosition + " greater than expected children " + count);
           broken.put(childGuid, 0L);
         } else {
           String existing = kids[childPosition];
           if (existing != null) {
-            Log.w(LOG_TAG, "Child position " + childPosition + " already occupied! (" +
-                childGuid + ", " + existing + ")");
+            Logger.warn(LOG_TAG, "Child position " + childPosition + " already occupied! (" +
+                                 childGuid + ", " + existing + ")");
             broken.put(childGuid, 0L);
           } else {
             kids[childPosition] = childGuid;
@@ -175,7 +174,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
       try {
         Utils.fillArraySpaces(kids, broken);
       } catch (Exception e) {
-        Log.e(LOG_TAG, "Unable to reposition children to yield a valid sequence. Data loss may result.", e);
+        Logger.error(LOG_TAG, "Unable to reposition children to yield a valid sequence. Data loss may result.", e);
       }
       // TODO: now use 'broken' to edit the records on disk.
 
@@ -187,8 +186,9 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         }
         childArray.add(kid);
       }
-      if (Utils.ENABLE_TRACE_LOGGING) {
-        Log.d(LOG_TAG, "Output child array: " + childArray.toJSONString());
+      if (Logger.logVerbose(LOG_TAG)) {
+        // Don't JSON-encode unless we're logging.
+        Logger.trace(LOG_TAG, "Output child array: " + childArray.toJSONString());
       }
     } finally {
       children.close();
@@ -199,10 +199,10 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   @Override
   protected Record recordFromMirrorCursor(Cursor cur) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
     String recordGUID = getGUID(cur);
-    Log.d(LOG_TAG, "Record from mirror cursor: " + recordGUID);
+    Logger.trace(LOG_TAG, "Record from mirror cursor: " + recordGUID);
 
     if (forbiddenGUID(recordGUID)) {
-      Log.d(LOG_TAG, "Ignoring " + recordGUID + " record in recordFromMirrorCursor.");
+      Logger.debug(LOG_TAG, "Ignoring " + recordGUID + " record in recordFromMirrorCursor.");
       return null;
     }
 
@@ -210,10 +210,10 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     String androidParentGUID = getGUIDForID(androidParentID);
 
     if (androidParentGUID == null) {
-      Log.d(LOG_TAG, "No parent GUID for record " + recordGUID + " with parent " + androidParentID);
+      Logger.debug(LOG_TAG, "No parent GUID for record " + recordGUID + " with parent " + androidParentID);
       // If the parent has been stored and somehow has a null GUID, throw an error.
       if (idToGuid.containsKey(androidParentID)) {
-        Log.e(LOG_TAG, "Have the parent android ID for the record but the parent's GUID wasn't found.");
+        Logger.error(LOG_TAG, "Have the parent android ID for the record but the parent's GUID wasn't found.");
         throw new NoGuidForIdException(null);
       }
     }
@@ -227,13 +227,13 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   protected JSONArray getChildArrayForCursor(Cursor cur, String recordGUID) throws NullCursorException {
     JSONArray childArray = null;
     boolean isFolder = rowIsFolder(cur);
-    Log.d(LOG_TAG, "Record " + recordGUID + " is a " + (isFolder ? "folder." : "bookmark."));
+    Logger.debug(LOG_TAG, "Record " + recordGUID + " is a " + (isFolder ? "folder." : "bookmark."));
     if (isFolder) {
       long androidID = guidToID.get(recordGUID);
       childArray = getChildren(androidID);
     }
     if (childArray != null) {
-      Log.d(LOG_TAG, "Fetched " + childArray.size() + " children for " + recordGUID);
+      Logger.debug(LOG_TAG, "Fetched " + childArray.size() + " children for " + recordGUID);
     }
     return childArray;
   }
@@ -245,7 +245,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         bmk.type.equalsIgnoreCase(AndroidBrowserBookmarksDataAccessor.TYPE_FOLDER)) {
       return true;
     }
-    Log.i(LOG_TAG, "Ignoring record with guid: " + record.guid + " and type: " + ((BookmarkRecord)record).type);
+    Logger.info(LOG_TAG, "Ignoring record with guid: " + record.guid + " and type: " + ((BookmarkRecord)record).type);
     return false;
   }
   
@@ -255,12 +255,12 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     // and insert them if they don't exist.
     Cursor cur;
     try {
-      Log.d(LOG_TAG, "Check and build special GUIDs.");
+      Logger.debug(LOG_TAG, "Check and build special GUIDs.");
       dataAccessor.checkAndBuildSpecialGuids();
       cur = dataAccessor.getGuidsIDsForFolders();
-      Log.d(LOG_TAG, "Got GUIDs for folders.");
+      Logger.debug(LOG_TAG, "Got GUIDs for folders.");
     } catch (android.database.sqlite.SQLiteConstraintException e) {
-      Log.e(LOG_TAG, "Got sqlite constraint exception working with Fennec bookmark DB.", e);
+      Logger.error(LOG_TAG, "Got sqlite constraint exception working with Fennec bookmark DB.", e);
       delegate.onBeginFailed(e);
       return;
     } catch (NullCursorException e) {
@@ -274,7 +274,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     // To deal with parent mapping of bookmarks we have to do some
     // hairy stuff. Here's the setup for it.
 
-    Log.d(LOG_TAG, "Preparing folder ID mappings.");
+    Logger.debug(LOG_TAG, "Preparing folder ID mappings.");
     idToGuid.put(0L, "places");       // Fake our root.
     try {
       cur.moveToFirst();
@@ -283,13 +283,13 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         long id = RepoUtils.getLongFromCursor(cur, BrowserContract.Bookmarks._ID);
         guidToID.put(guid, id);
         idToGuid.put(id, guid);
-        Log.d(LOG_TAG, "GUID " + guid + " maps to " + id);
+        Logger.debug(LOG_TAG, "GUID " + guid + " maps to " + id);
         cur.moveToNext();
       }
     } finally {
       cur.close();
     }
-    Log.d(LOG_TAG, "Done with initial setup of bookmarks session.");
+    Logger.debug(LOG_TAG, "Done with initial setup of bookmarks session.");
     super.begin(delegate);
   }
 
@@ -298,8 +298,8 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     // Override finish to do this check; make sure all records
     // needing re-parenting have been re-parented.
     if (needsReparenting != 0) {
-      Log.e(LOG_TAG, "Finish called but " + needsReparenting +
-            " bookmark(s) have been placed in unsorted bookmarks and not been reparented.");
+      Logger.error(LOG_TAG, "Finish called but " + needsReparenting +
+                            " bookmark(s) have been placed in unsorted bookmarks and not been reparented.");
 
       // TODO: handling of failed reparenting.
       // E.g., delegate.onFinishFailed(new BookmarkNeedsReparentingException(null));
@@ -337,16 +337,28 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
       missingParentToChildren.put(bmk.parentID, children);
     }
 
-    if (bmk.isFolder()) {
-      Log.d(LOG_TAG, "Inserting folder " + bmk.guid + ", " + bmk.title +
-                     " with parent " + bmk.androidParentID +
-                     " (" + bmk.parentID + ", " + bmk.parentName +
-                     ", " + bmk.pos + ")");
+    if (Logger.LOG_PERSONAL_INFORMATION) {
+      if (bmk.isFolder()) {
+        Logger.pii(LOG_TAG, "Inserting folder " + bmk.guid + ", " + bmk.title +
+                            " with parent " + bmk.androidParentID +
+                            " (" + bmk.parentID + ", " + bmk.parentName +
+                            ", " + bmk.pos + ")");
+      } else {
+        Logger.pii(LOG_TAG, "Inserting bookmark " + bmk.guid + ", " + bmk.title + ", " +
+                            bmk.bookmarkURI + " with parent " + bmk.androidParentID +
+                            " (" + bmk.parentID + ", " + bmk.parentName +
+                            ", " + bmk.pos + ")");
+      }
     } else {
-      Log.d(LOG_TAG, "Inserting bookmark " + bmk.guid + ", " + bmk.title + ", " +
-                     bmk.bookmarkURI + " with parent " + bmk.androidParentID +
-                     " (" + bmk.parentID + ", " + bmk.parentName +
-                     ", " + bmk.pos + ")");
+      if (bmk.isFolder()) {
+        Logger.debug(LOG_TAG, "Inserting folder " + bmk.guid +  ", parent " +
+                              bmk.androidParentID +
+                              " (" + bmk.parentID + ", " + bmk.pos + ")");
+      } else {
+        Logger.debug(LOG_TAG, "Inserting bookmark " + bmk.guid + " with parent " +
+                              bmk.androidParentID +
+                              " (" + bmk.parentID + ", " + ", " + bmk.pos + ")");
+      }
     }
     return bmk;
   }

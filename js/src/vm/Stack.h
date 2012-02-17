@@ -1004,7 +1004,7 @@ class StackFrame
         return !!(flags_ & HAS_RVAL);
     }
 
-    const Value &returnValue() {
+    Value &returnValue() {
         if (!(flags_ & HAS_RVAL))
             rval_.setUndefined();
         return rval_;
