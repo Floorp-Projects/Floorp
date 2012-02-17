@@ -54,7 +54,7 @@ const UNITS_COUNT            = Ci.nsIMemoryReporter.UNITS_COUNT;
 const UNITS_COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
 const UNITS_PERCENTAGE       = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
-const kUnknown = -1;    // used for _amount if a memory reporter failed
+const kUnknown = -1;    // used for an unknown _amount
 
 // Forward slashes in URLs in paths are represented with backslashes to avoid
 // being mistaken for path separators.  Paths/names/descriptions where this
@@ -205,7 +205,7 @@ function sendHeapMinNotifications()
   sendHeapMinNotificationsInner();
 }
 
-function Reporter(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc)
+function Report(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc)
 {
   this._unsafePath  = aUnsafePath;
   this._kind        = aKind;
@@ -213,12 +213,12 @@ function Reporter(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc)
   this._amount      = aAmount;
   this._unsafeDescription = aUnsafeDesc;
   // this._nMerged is only defined if > 1
-  // this._done is defined and set to true when the reporter's amount is read
+  // this._done is defined and set to true when the Report's amount is read
 }
 
-Reporter.prototype = {
+Report.prototype = {
   // Sum the values (accounting for possible kUnknown amounts), and mark |this|
-  // as a dup.  We mark dups because it's useful to know when a reporter is
+  // as a dup.  We mark dups because it's useful to know when a report is
   // duplicated;  it might be worth investigating and splitting up to have
   // non-duplicated names.
   merge: function(r) {
@@ -238,36 +238,36 @@ Reporter.prototype = {
   }
 };
 
-function getReportersByProcess(aMgr)
+function getReportsByProcess(aMgr)
 {
   // Process each memory reporter:
-  // - Make a copy of it into a sub-table indexed by its process.  Each copy
-  //   is a Reporter object.  After this point we never use the original memory
-  //   reporter again.
+  // - Put a copy of its report(s) into a sub-table indexed by its process.
+  //   Each copy is a Report object.  After this point we never use the
+  //   original memory reporter again.
   //
   // - Note that copying rOrig.amount (which calls a C++ function under the
-  //   IDL covers) to r._amount for every reporter now means that the
+  //   IDL covers) to r._amount for every report now means that the
   //   results as consistent as possible -- measurements are made all at
   //   once before most of the memory required to generate this page is
   //   allocated.
-  let reportersByProcess = {};
+  let reportsByProcess = {};
 
-  function addReporter(aProcess, aUnsafePath, aKind, aUnits, aAmount,
-                       aUnsafeDesc)
+  function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
+                        aUnsafeDesc)
   {
     let process = aProcess === "" ? "Main" : aProcess;
-    let r = new Reporter(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc);
-    if (!reportersByProcess[process]) {
-      reportersByProcess[process] = {};
+    let r = new Report(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc);
+    if (!reportsByProcess[process]) {
+      reportsByProcess[process] = {};
     }
-    let reporters = reportersByProcess[process];
-    let reporter = reporters[r._unsafePath];
-    if (reporter) {
-      // Already an entry;  must be a duplicated reporter.  This can happen
+    let reports = reportsByProcess[process];
+    let rOld = reports[r._unsafePath];
+    if (rOld) {
+      // Already an entry;  must be a duplicated report.  This can happen
       // legitimately.  Merge them.
-      reporter.merge(r);
+      rOld.merge(r);
     } else {
-      reporters[r._unsafePath] = r;
+      reports[r._unsafePath] = r;
     }
   }
 
@@ -276,8 +276,8 @@ function getReportersByProcess(aMgr)
   while (e.hasMoreElements()) {
     let rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     try {
-      addReporter(rOrig.process, rOrig.path, rOrig.kind, rOrig.units,
-                  rOrig.amount, rOrig.description);
+      handleReport(rOrig.process, rOrig.path, rOrig.kind, rOrig.units,
+                   rOrig.amount, rOrig.description);
     }
     catch(e) {
       debug("An error occurred when collecting results from the memory reporter " +
@@ -287,20 +287,20 @@ function getReportersByProcess(aMgr)
   let e = aMgr.enumerateMultiReporters();
   while (e.hasMoreElements()) {
     let mrOrig = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
-    // Ignore the "smaps" reporters in non-verbose mode.
+    // Ignore the "smaps" reports in non-verbose mode.
     if (!gVerbose && mrOrig.name === "smaps") {
       continue;
     }
 
     try {
-      mrOrig.collectReports(addReporter, null);
+      mrOrig.collectReports(handleReport, null);
     }
     catch(e) {
       debug("An error occurred when collecting a multi-reporter's results: " + e);
     }
   }
 
-  return reportersByProcess;
+  return reportsByProcess;
 }
 
 function appendTextNode(aP, aText)
@@ -344,13 +344,13 @@ function update()
 
   // Generate output for one process at a time.  Always start with the
   // Main process.
-  let reportersByProcess = getReportersByProcess(mgr);
+  let reportsByProcess = getReportsByProcess(mgr);
   let hasMozMallocUsableSize = mgr.hasMozMallocUsableSize;
-  appendProcessElements(content, "Main", reportersByProcess["Main"],
+  appendProcessElements(content, "Main", reportsByProcess["Main"],
                         hasMozMallocUsableSize);
-  for (let process in reportersByProcess) {
+  for (let process in reportsByProcess) {
     if (process !== "Main") {
-      appendProcessElements(content, process, reportersByProcess[process],
+      appendProcessElements(content, process, reportsByProcess[process],
                             hasMozMallocUsableSize);
     }
   }
@@ -399,7 +399,7 @@ function update()
 
   let legendText1 = "Click on a non-leaf node in a tree to expand ('++') " +
                     "or collapse ('--') its children.";
-  let legendText2 = "Hover the pointer over the name of a memory reporter " +
+  let legendText2 = "Hover the pointer over the name of a memory report " +
                     "to see a description of what it measures.";
 
   appendElementWithText(content, "div", "legend", legendText1);
@@ -407,7 +407,7 @@ function update()
 }
 
 // There are two kinds of TreeNode.
-// - Leaf TreeNodes correspond to Reporters and have more properties.
+// - Leaf TreeNodes correspond to Reports and have more properties.
 // - Non-leaf TreeNodes are just scaffolding nodes for the tree;  their values
 //   are derived from their children.
 function TreeNode(aUnsafeName)
@@ -448,43 +448,43 @@ TreeNode.compare = function(a, b) {
 };
 
 /**
- * From a list of memory reporters, builds a tree that mirrors the tree
- * structure that will be shown as output.
+ * From a table of Reports, builds a tree that mirrors the tree structure that
+ * will be shown as output.
  *
- * @param aReporters
- *        The table of Reporters, indexed by _unsafePath.
+ * @param aReports
+ *        The table of Reports, indexed by _unsafePath.
  * @param aTreeName
  *        The name of the tree being built.
  * @return The built tree.
  */
-function buildTree(aReporters, aTreeName)
+function buildTree(aReports, aTreeName)
 {
-  // We want to process all reporters that begin with |aTreeName|.  First we
+  // We want to process all reports that begin with |aTreeName|.  First we
   // build the tree but only fill the properties that we can with a top-down
   // traversal.
 
-  // There should always be at least one matching reporter when |aTreeName| is
-  // "explicit".  But there may be zero for "smaps" trees;  if that happens,
-  // bail.
-  let foundReporter = false;
-  for (let unsafePath in aReporters) {
-    if (aReporters[unsafePath].treeNameMatches(aTreeName)) {
-      foundReporter = true;
+  // There should always be at least one matching Report object when
+  // |aTreeName| is "explicit".  But there may be zero for "smaps" trees;  if
+  // that happens, bail.
+  let foundReport = false;
+  for (let unsafePath in aReports) {
+    if (aReports[unsafePath].treeNameMatches(aTreeName)) {
+      foundReport = true;
       break;
     }
   }
-  if (!foundReporter) {
+  if (!foundReport) {
     assert(aTreeName !== 'explicit');
     return null;
   }
 
   let t = new TreeNode("falseRoot");
-  for (let unsafePath in aReporters) {
+  for (let unsafePath in aReports) {
     // Add any missing nodes in the tree implied by the unsafePath.
-    let r = aReporters[unsafePath];
+    let r = aReports[unsafePath];
     if (r.treeNameMatches(aTreeName)) {
       assert(r._kind === KIND_HEAP || r._kind === KIND_NONHEAP,
-             "reporters in the tree must have KIND_HEAP or KIND_NONHEAP");
+             "reports in the tree must have KIND_HEAP or KIND_NONHEAP");
       assert(r._units === UNITS_BYTES, "r._units === UNITS_BYTES");
       let unsafeNames = r._unsafePath.split('/');
       let u = t;
@@ -499,7 +499,7 @@ function buildTree(aReporters, aTreeName)
           u = v;
         }
       }
-      // Fill in extra details in the leaf node from the Reporter.
+      // Fill in extra details in the leaf node from the Report object.
       if (r._amount !== kUnknown) {
         u._amount = r._amount;
       } else {
@@ -564,13 +564,13 @@ function buildTree(aReporters, aTreeName)
  * Ignore all the memory reports that belong to a "smaps" tree;  this involves
  * explicitly marking them as done.
  *
- * @param aReporters
- *        The table of Reporters, indexed by _unsafePath.
+ * @param aReports
+ *        The table of Reports, indexed by _unsafePath.
  */
-function ignoreSmapsTrees(aReporters)
+function ignoreSmapsTrees(aReports)
 {
-  for (let unsafePath in aReporters) {
-    let r = aReporters[unsafePath];
+  for (let unsafePath in aReports) {
+    let r = aReports[unsafePath];
     if (r.treeNameMatches("smaps")) {
       r._done = true;
     }
@@ -582,13 +582,13 @@ function ignoreSmapsTrees(aReporters)
  *
  * @param aT
  *        The tree.
- * @param aReporters
- *        Table of Reporters for this process, indexed by _unsafePath.
+ * @param aReports
+ *        Table of Reports for this process, indexed by _unsafePath.
  * @return A boolean indicating if "heap-allocated" is known for the process.
  */
-function fixUpExplicitTree(aT, aReporters)
+function fixUpExplicitTree(aT, aReports)
 {
-  // Determine how many bytes are reported by heap reporters.
+  // Determine how many bytes are in heap reports.
   function getKnownHeapUsedBytes(aT)
   {
     let n = 0;
@@ -607,9 +607,9 @@ function fixUpExplicitTree(aT, aReporters)
   // A special case:  compute the derived "heap-unclassified" value.  Don't
   // mark "heap-allocated" when we get its size because we want it to appear
   // in the "Other Measurements" list.
-  let heapAllocatedReporter = aReporters["heap-allocated"];
-  assert(heapAllocatedReporter, "no 'heap-allocated' reporter");
-  let heapAllocatedBytes = heapAllocatedReporter._amount;
+  let heapAllocatedReport = aReports["heap-allocated"];
+  assert(heapAllocatedReport, "no 'heap-allocated' report");
+  let heapAllocatedBytes = heapAllocatedReport._amount;
   let heapUnclassifiedT = new TreeNode("heap-unclassified");
   let hasKnownHeapAllocated = heapAllocatedBytes !== kUnknown;
   if (hasKnownHeapAllocated) {
@@ -621,7 +621,7 @@ function fixUpExplicitTree(aT, aReporters)
   }
   // This kindToString() ensures the "(Heap)" prefix is set without having to
   // set the _kind property, which would mean that there is a corresponding
-  // Reporter for this TreeNode (which isn't true)
+  // Report object for this TreeNode object (which isn't true)
   heapUnclassifiedT._unsafeDescription = kindToString(KIND_HEAP) +
       "Memory not classified by a more specific reporter. This includes " +
       "slop bytes due to internal fragmentation in the heap allocator " +
@@ -710,7 +710,7 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT)
 }
 
 // Global variable indicating if we've seen any invalid values for this
-// process;  it holds the unsafePaths of any such reporters.  It is reset for
+// process;  it holds the unsafePaths of any such reports.  It is reset for
 // each new process.
 let gUnsafePathsWithInvalidValuesForThisProcess = [];
 
@@ -773,14 +773,13 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
  *        The parent DOM node.
  * @param aProcess
  *        The name of the process.
- * @param aReporters
- *        Table of Reporters for this process, indexed by _unsafePath.
+ * @param aReports
+ *        Table of Reports for this process, indexed by _unsafePath.
  * @param aHasMozMallocUsableSize
  *        Boolean indicating if moz_malloc_usable_size works.
  * @return The generated text.
  */
-function appendProcessElements(aP, aProcess, aReporters,
-                               aHasMozMallocUsableSize)
+function appendProcessElements(aP, aProcess, aReports, aHasMozMallocUsableSize)
 {
   appendElementWithText(aP, "h1", "", aProcess + " Process");
   appendTextNode(aP, "\n\n");   // gives nice spacing when we cut and paste
@@ -788,17 +787,17 @@ function appendProcessElements(aP, aProcess, aReporters,
   // We'll fill this in later.
   let warningsDiv = appendElement(aP, "div", "accuracyWarning");
 
-  let explicitTree = buildTree(aReporters, 'explicit');
-  let hasKnownHeapAllocated = fixUpExplicitTree(explicitTree, aReporters);
+  let explicitTree = buildTree(aReports, 'explicit');
+  let hasKnownHeapAllocated = fixUpExplicitTree(explicitTree, aReports);
   sortTreeAndInsertAggregateNodes(explicitTree._amount, explicitTree);
   appendTreeElements(aP, explicitTree, aProcess);
 
   // We only show these breakdown trees in verbose mode.
   if (gVerbose) {
     kMapTreePaths.forEach(function(t) {
-      let tree = buildTree(aReporters, t);
+      let tree = buildTree(aReports, t);
 
-      // |tree| will be null if we don't have any reporters for the given
+      // |tree| will be null if we don't have any reports for the given
       // unsafePath.
       if (tree) {
         sortTreeAndInsertAggregateNodes(tree._amount, tree);
@@ -807,15 +806,15 @@ function appendProcessElements(aP, aProcess, aReporters,
       }
     });
   } else {
-    // Although we skip the "smaps" multi-reporter in getReportersByProcess(),
+    // Although we skip the "smaps" multi-reporter in getReportsByProcess(),
     // we might get some smaps reports from a child process, and they must be
     // explicitly ignored.
-    ignoreSmapsTrees(aReporters);
+    ignoreSmapsTrees(aReports);
   }
 
   // We have to call appendOtherElements after we process all the trees,
-  // because it looks at all the reporters which aren't part of a tree.
-  appendOtherElements(aP, aReporters);
+  // because it looks at all the reports which aren't part of a tree.
+  appendOtherElements(aP, aReports);
 
   // Add any warnings about inaccuracies due to platform limitations.
   // These must be computed after generating all the text.  The newlines give
@@ -1238,7 +1237,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
   appendTextNode(aPOuter, "\n");  // gives nice spacing when we cut and paste
 }
 
-function OtherReporter(aUnsafePath, aUnits, aAmount, aUnsafeDesc, aNMerged)
+function OtherReport(aUnsafePath, aUnits, aAmount, aUnsafeDesc, aNMerged)
 {
   // Nb: _kind is not needed, it's always KIND_OTHER.
   this._unsafePath = aUnsafePath;
@@ -1253,7 +1252,7 @@ function OtherReporter(aUnsafePath, aUnits, aAmount, aUnsafeDesc, aNMerged)
   this._asString = this.toString();
 }
 
-OtherReporter.prototype = {
+OtherReport.prototype = {
   toString: function() {
     switch (this._units) {
       case UNITS_BYTES:            return formatBytes(this._amount);
@@ -1261,7 +1260,7 @@ OtherReporter.prototype = {
       case UNITS_COUNT_CUMULATIVE: return formatInt(this._amount);
       case UNITS_PERCENTAGE:       return formatPercentage(this._amount);
       default:
-        assert(false, "bad units in OtherReporter.toString");
+        assert(false, "bad units in OtherReport.toString");
     }
   },
 
@@ -1274,12 +1273,12 @@ OtherReporter.prototype = {
       case UNITS_PERCENTAGE:       return (n !== kUnknown &&
                                            !(0 <= n && n <= 10000));
       default:
-        assert(false, "bad units in OtherReporter.isInvalid");
+        assert(false, "bad units in OtherReport.isInvalid");
     }
   }
 };
 
-OtherReporter.compare = function(a, b) {
+OtherReport.compare = function(a, b) {
   return a._unsafePath < b._unsafePath ? -1 :
          a._unsafePath > b._unsafePath ?  1 :
          0;
@@ -1290,43 +1289,43 @@ OtherReporter.compare = function(a, b) {
  *
  * @param aP
  *        The parent DOM node.
- * @param aReportersByProcess
- *        Table of Reporters for this process, indexed by _unsafePath.
+ * @param aReportsByProcess
+ *        Table of Reports for this process, indexed by _unsafePath.
  * @param aProcess
- *        The process these reporters correspond to.
+ *        The process these Reports correspond to.
  * @return The generated text.
  */
-function appendOtherElements(aP, aReportersByProcess)
+function appendOtherElements(aP, aReportsByProcess)
 {
   appendSectionHeader(aP, kTreeNames['other']);
 
   let pre = appendElement(aP, "pre", "tree");
 
-  // Generate an array of Reporter-like elements, stripping out all the
-  // Reporters that have already been handled.  Also find the width of the
+  // Generate an array of Report-like elements, stripping out all the
+  // Reports that have already been handled.  Also find the width of the
   // widest element, so we can format things nicely.
   let maxStringLength = 0;
-  let otherReporters = [];
-  for (let unsafePath in aReportersByProcess) {
-    let r = aReportersByProcess[unsafePath];
+  let otherReports = [];
+  for (let unsafePath in aReportsByProcess) {
+    let r = aReportsByProcess[unsafePath];
     if (!r._done) {
       assert(r._kind === KIND_OTHER,
              "_kind !== KIND_OTHER for " + makeSafe(r._unsafePath));
-      assert(r._nMerged === undefined);  // we don't allow dup'd OTHER reporters
-      let o = new OtherReporter(r._unsafePath, r._units, r._amount,
-                                r._unsafeDescription);
-      otherReporters.push(o);
+      assert(r._nMerged === undefined);  // we don't allow dup'd OTHER Reports
+      let o = new OtherReport(r._unsafePath, r._units, r._amount,
+                              r._unsafeDescription);
+      otherReports.push(o);
       if (o._asString.length > maxStringLength) {
         maxStringLength = o._asString.length;
       }
     }
   }
-  otherReporters.sort(OtherReporter.compare);
+  otherReports.sort(OtherReport.compare);
 
   // Generate text for the not-yet-printed values.
   let text = "";
-  for (let i = 0; i < otherReporters.length; i++) {
-    let o = otherReporters[i];
+  for (let i = 0; i < otherReports.length; i++) {
+    let o = otherReports[i];
     let oIsInvalid = o.isInvalid();
     if (oIsInvalid) {
       gUnsafePathsWithInvalidValuesForThisProcess.push(o._unsafePath);
