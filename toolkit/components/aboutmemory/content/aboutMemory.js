@@ -44,7 +44,7 @@ const Cu = Components.utils;
 
 const gVerbose = location.href === "about:memory?verbose";
 
-var gAddedObserver = false;
+let gAddedObserver = false;
 
 const KIND_NONHEAP           = Ci.nsIMemoryReporter.KIND_NONHEAP;
 const KIND_HEAP              = Ci.nsIMemoryReporter.KIND_HEAP;
@@ -126,7 +126,7 @@ const kMapTreePaths =
 
 function onLoad()
 {
-  var os = Cc["@mozilla.org/observer-service;1"].
+  let os = Cc["@mozilla.org/observer-service;1"].
       getService(Ci.nsIObserverService);
   os.notifyObservers(null, "child-memory-reporter-request", null);
 
@@ -142,7 +142,7 @@ function onUnload()
   // circumstances (eg. reloading the page quickly) it might not have because
   // onLoad might not fire.
   if (gAddedObserver) {
-    var os = Cc["@mozilla.org/observer-service;1"].
+    let os = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
     os.removeObserver(ChildMemoryListener, "child-memory-reporter-update");
   }
@@ -156,7 +156,7 @@ function ChildMemoryListener(aSubject, aTopic, aData)
 function doGlobalGC()
 {
   Cu.forceGC();
-  var os = Cc["@mozilla.org/observer-service;1"]
+  let os = Cc["@mozilla.org/observer-service;1"]
             .getService(Ci.nsIObserverService);
   os.notifyObservers(null, "child-gc-request", null);
   update();
@@ -167,7 +167,7 @@ function doCC()
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .cycleCollect();
-  var os = Cc["@mozilla.org/observer-service;1"]
+  let os = Cc["@mozilla.org/observer-service;1"]
             .getService(Ci.nsIObserverService);
   os.notifyObservers(null, "child-cc-request", null);
   update();
@@ -180,7 +180,7 @@ function sendHeapMinNotifications()
 {
   function runSoon(f)
   {
-    var tm = Cc["@mozilla.org/thread-manager;1"]
+    let tm = Cc["@mozilla.org/thread-manager;1"]
               .getService(Ci.nsIThreadManager);
 
     tm.mainThread.dispatch({ run: f }, Ci.nsIThread.DISPATCH_NORMAL);
@@ -188,7 +188,7 @@ function sendHeapMinNotifications()
 
   function sendHeapMinNotificationsInner()
   {
-    var os = Cc["@mozilla.org/observer-service;1"]
+    let os = Cc["@mozilla.org/observer-service;1"]
              .getService(Ci.nsIObserverService);
     os.notifyObservers(null, "memory-pressure", "heap-minimize");
 
@@ -198,7 +198,7 @@ function sendHeapMinNotifications()
       runSoon(update);
   }
 
-  var j = 0;
+  let j = 0;
   sendHeapMinNotificationsInner();
 }
 
@@ -247,18 +247,18 @@ function getReportersByProcess(aMgr)
   //   results as consistent as possible -- measurements are made all at
   //   once before most of the memory required to generate this page is
   //   allocated.
-  var reportersByProcess = {};
+  let reportersByProcess = {};
 
   function addReporter(aProcess, aUnsafePath, aKind, aUnits, aAmount,
                        aUnsafeDesc)
   {
-    var process = aProcess === "" ? "Main" : aProcess;
-    var r = new Reporter(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc);
+    let process = aProcess === "" ? "Main" : aProcess;
+    let r = new Reporter(aUnsafePath, aKind, aUnits, aAmount, aUnsafeDesc);
     if (!reportersByProcess[process]) {
       reportersByProcess[process] = {};
     }
-    var reporters = reportersByProcess[process];
-    var reporter = reporters[r._unsafePath];
+    let reporters = reportersByProcess[process];
+    let reporter = reporters[r._unsafePath];
     if (reporter) {
       // Already an entry;  must be a duplicated reporter.  This can happen
       // legitimately.  Merge them.
@@ -269,9 +269,9 @@ function getReportersByProcess(aMgr)
   }
 
   // Process vanilla reporters first, then multi-reporters.
-  var e = aMgr.enumerateReporters();
+  let e = aMgr.enumerateReporters();
   while (e.hasMoreElements()) {
-    var rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    let rOrig = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     try {
       addReporter(rOrig.process, rOrig.path, rOrig.kind, rOrig.units,
                   rOrig.amount, rOrig.description);
@@ -281,9 +281,9 @@ function getReportersByProcess(aMgr)
             rOrig.path + ": " + e);
     }
   }
-  var e = aMgr.enumerateMultiReporters();
+  let e = aMgr.enumerateMultiReporters();
   while (e.hasMoreElements()) {
-    var mrOrig = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    let mrOrig = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
     // Ignore the "smaps" reporters in non-verbose mode.
     if (!gVerbose && mrOrig.name === "smaps") {
       continue;
@@ -302,14 +302,14 @@ function getReportersByProcess(aMgr)
 
 function appendTextNode(aP, aText)
 {
-  var e = document.createTextNode(aText);
+  let e = document.createTextNode(aText);
   aP.appendChild(e);
   return e;
 }
 
 function appendElement(aP, aTagName, aClassName)
 {
-  var e = document.createElement(aTagName);
+  let e = document.createElement(aTagName);
   if (aClassName) {
     e.className = aClassName;
   }
@@ -319,7 +319,7 @@ function appendElement(aP, aTagName, aClassName)
 
 function appendElementWithText(aP, aTagName, aClassName, aText)
 {
-  var e = appendElement(aP, aTagName, aClassName);
+  let e = appendElement(aP, aTagName, aClassName);
   appendTextNode(e, aText);
   return e;
 }
@@ -331,21 +331,21 @@ function update()
 {
   // First, clear the page contents.  Necessary because update() might be
   // called more than once due to ChildMemoryListener.
-  var oldContent = document.getElementById("content");
-  var content = oldContent.cloneNode(false);
+  let oldContent = document.getElementById("content");
+  let content = oldContent.cloneNode(false);
   oldContent.parentNode.replaceChild(content, oldContent);
   content.classList.add(gVerbose ? 'verbose' : 'non-verbose');
 
-  var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
       getService(Ci.nsIMemoryReporterManager);
 
   // Generate output for one process at a time.  Always start with the
   // Main process.
-  var reportersByProcess = getReportersByProcess(mgr);
-  var hasMozMallocUsableSize = mgr.hasMozMallocUsableSize;
+  let reportersByProcess = getReportersByProcess(mgr);
+  let hasMozMallocUsableSize = mgr.hasMozMallocUsableSize;
   appendProcessElements(content, "Main", reportersByProcess["Main"],
                         hasMozMallocUsableSize);
-  for (var process in reportersByProcess) {
+  for (let process in reportersByProcess) {
     if (process !== "Main") {
       appendProcessElements(content, process, reportersByProcess[process],
                             hasMozMallocUsableSize);
@@ -366,7 +366,7 @@ function update()
 
   function appendButton(aTitle, aOnClick, aText, aId)
   {
-    var b = appendElementWithText(content, "button", "", aText);
+    let b = appendElementWithText(content, "button", "", aText);
     b.title = aTitle;
     b.onclick = aOnClick
     if (aId) {
@@ -380,23 +380,23 @@ function update()
   appendButton(CCDesc, doCC,                     "CC");
   appendButton(MPDesc, sendHeapMinNotifications, "Minimize memory usage");
 
-  var div1 = appendElement(content, "div");
-  var a;
+  let div1 = appendElement(content, "div");
   if (gVerbose) {
-    var a = appendElementWithText(div1, "a", "option", "Less verbose");
+    let a = appendElementWithText(div1, "a", "option", "Less verbose");
     a.href = "about:memory";
   } else {
-    var a = appendElementWithText(div1, "a", "option", "More verbose");
+    let a = appendElementWithText(div1, "a", "option", "More verbose");
     a.href = "about:memory?verbose";
   }
 
-  var div2 = appendElement(content, "div");
-  a = appendElementWithText(div2, "a", "option", "Troubleshooting information");
+  let div2 = appendElement(content, "div");
+  let a = appendElementWithText(div2, "a", "option",
+                                "Troubleshooting information");
   a.href = "about:support";
 
-  var legendText1 = "Click on a non-leaf node in a tree to expand ('++') " +
+  let legendText1 = "Click on a non-leaf node in a tree to expand ('++') " +
                     "or collapse ('--') its children.";
-  var legendText2 = "Hover the pointer over the name of a memory reporter " +
+  let legendText2 = "Hover the pointer over the name of a memory reporter " +
                     "to see a description of what it measures.";
 
   appendElementWithText(content, "div", "legend", legendText1);
@@ -427,7 +427,7 @@ function TreeNode(aUnsafeName)
 
 TreeNode.prototype = {
   findKid: function(aUnsafeName) {
-    for (var i = 0; i < this._kids.length; i++) {
+    for (let i = 0; i < this._kids.length; i++) {
       if (this._kids[i]._unsafeName === aUnsafeName) {
         return this._kids[i];
       }
@@ -463,8 +463,8 @@ function buildTree(aReporters, aTreeName)
   // There should always be at least one matching reporter when |aTreeName| is
   // "explicit".  But there may be zero for "smaps" trees;  if that happens,
   // bail.
-  var foundReporter = false;
-  for (var unsafePath in aReporters) {
+  let foundReporter = false;
+  for (let unsafePath in aReporters) {
     if (aReporters[unsafePath].treeNameMatches(aTreeName)) {
       foundReporter = true;
       break;
@@ -475,23 +475,23 @@ function buildTree(aReporters, aTreeName)
     return null;
   }
 
-  var t = new TreeNode("falseRoot");
-  for (var unsafePath in aReporters) {
+  let t = new TreeNode("falseRoot");
+  for (let unsafePath in aReporters) {
     // Add any missing nodes in the tree implied by the unsafePath.
-    var r = aReporters[unsafePath];
+    let r = aReporters[unsafePath];
     if (r.treeNameMatches(aTreeName)) {
       assert(r._kind === KIND_HEAP || r._kind === KIND_NONHEAP,
              "reporters in the tree must have KIND_HEAP or KIND_NONHEAP");
       assert(r._units === UNITS_BYTES, "r._units === UNITS_BYTES");
-      var unsafeNames = r._unsafePath.split('/');
-      var u = t;
-      for (var i = 0; i < unsafeNames.length; i++) {
-        var unsafeName = unsafeNames[i];
-        var uMatch = u.findKid(unsafeName);
+      let unsafeNames = r._unsafePath.split('/');
+      let u = t;
+      for (let i = 0; i < unsafeNames.length; i++) {
+        let unsafeName = unsafeNames[i];
+        let uMatch = u.findKid(unsafeName);
         if (uMatch) {
           u = uMatch;
         } else {
-          var v = new TreeNode(unsafeName);
+          let v = new TreeNode(unsafeName);
           u._kids.push(v);
           u = v;
         }
@@ -527,8 +527,8 @@ function buildTree(aReporters, aTreeName)
       // Non-leaf node.  Derive its _amount and _unsafeDescription entirely
       // from its children.
       assert(aT._kind === undefined, "aT._kind is defined for non-leaf node");
-      var childrenBytes = 0;
-      for (var i = 0; i < aT._kids.length; i++) {
+      let childrenBytes = 0;
+      for (let i = 0; i < aT._kids.length; i++) {
         childrenBytes += fillInNonLeafNodes(aT._kids[i]);
       }
       aT._amount = childrenBytes;
@@ -543,8 +543,8 @@ function buildTree(aReporters, aTreeName)
 
   // Reduce the depth of the tree by the number of occurrences of '/' in
   // aTreeName.  (Thus the tree named 'foo/bar/baz' will be rooted at 'baz'.)
-  var slashCount = 0;
-  for (var i = 0; i < aTreeName.length; i++) {
+  let slashCount = 0;
+  for (let i = 0; i < aTreeName.length; i++) {
     if (aTreeName[i] == '/') {
       assert(t._kids.length == 1, "Not expecting multiple kids here.");
       t = t._kids[0];
@@ -566,8 +566,8 @@ function buildTree(aReporters, aTreeName)
  */
 function ignoreSmapsTrees(aReporters)
 {
-  for (var unsafePath in aReporters) {
-    var r = aReporters[unsafePath];
+  for (let unsafePath in aReporters) {
+    let r = aReporters[unsafePath];
     if (r.treeNameMatches("smaps")) {
       r._done = true;
     }
@@ -588,13 +588,13 @@ function fixUpExplicitTree(aT, aReporters)
   // Determine how many bytes are reported by heap reporters.
   function getKnownHeapUsedBytes(aT)
   {
-    var n = 0;
+    let n = 0;
     if (aT._kids.length === 0) {
       // Leaf node.
       assert(aT._kind !== undefined, "aT._kind is undefined for leaf node");
       n = aT._kind === KIND_HEAP ? aT._amount : 0;
     } else {
-      for (var i = 0; i < aT._kids.length; i++) {
+      for (let i = 0; i < aT._kids.length; i++) {
         n += getKnownHeapUsedBytes(aT._kids[i]);
       }
     }
@@ -604,11 +604,11 @@ function fixUpExplicitTree(aT, aReporters)
   // A special case:  compute the derived "heap-unclassified" value.  Don't
   // mark "heap-allocated" when we get its size because we want it to appear
   // in the "Other Measurements" list.
-  var heapAllocatedReporter = aReporters["heap-allocated"];
+  let heapAllocatedReporter = aReporters["heap-allocated"];
   assert(heapAllocatedReporter, "no 'heap-allocated' reporter");
-  var heapAllocatedBytes = heapAllocatedReporter._amount;
-  var heapUnclassifiedT = new TreeNode("heap-unclassified");
-  var hasKnownHeapAllocated = heapAllocatedBytes !== kUnknown;
+  let heapAllocatedBytes = heapAllocatedReporter._amount;
+  let heapUnclassifiedT = new TreeNode("heap-unclassified");
+  let hasKnownHeapAllocated = heapAllocatedBytes !== kUnknown;
   if (hasKnownHeapAllocated) {
     heapUnclassifiedT._amount =
       heapAllocatedBytes - getKnownHeapUsedBytes(aT);
@@ -661,22 +661,23 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT)
   // _hideKids property and process all children.
   if (isInsignificant(aT._kids[0])) {
     aT._hideKids = true;
-    for (var i = 0; i < aT._kids.length; i++) {
+    for (let i = 0; i < aT._kids.length; i++) {
       sortTreeAndInsertAggregateNodes(aTotalBytes, aT._kids[i]);
     }
     return;
   }
 
   // Look at all children except the last one.
-  for (var i = 0; i < aT._kids.length - 1; i++) {
+  let i;
+  for (i = 0; i < aT._kids.length - 1; i++) {
     if (isInsignificant(aT._kids[i])) {
       // This child is below the significance threshold.  If there are other
       // (smaller) children remaining, move them under an aggregate node.
-      var i0 = i;
-      var nAgg = aT._kids.length - i0;
+      let i0 = i;
+      let nAgg = aT._kids.length - i0;
       // Create an aggregate node.
-      var aggT = new TreeNode("(" + nAgg + " tiny)");
-      var aggBytes = 0;
+      let aggT = new TreeNode("(" + nAgg + " tiny)");
+      let aggBytes = 0;
       for ( ; i < aT._kids.length; i++) {
         aggBytes += aT._kids[i]._amount;
         aggT._kids.push(aT._kids[i]);
@@ -708,7 +709,7 @@ function sortTreeAndInsertAggregateNodes(aTotalBytes, aT)
 // Global variable indicating if we've seen any invalid values for this
 // process;  it holds the unsafePaths of any such reporters.  It is reset for
 // each new process.
-var gUnsafePathsWithInvalidValuesForThisProcess = [];
+let gUnsafePathsWithInvalidValuesForThisProcess = [];
 
 function appendWarningElements(aP, aHasKnownHeapAllocated,
                                aHasMozMallocUsableSize)
@@ -738,13 +739,13 @@ function appendWarningElements(aP, aHasKnownHeapAllocated,
   }
 
   if (gUnsafePathsWithInvalidValuesForThisProcess.length > 0) {
-    var div = appendElement(aP, "div");
+    let div = appendElement(aP, "div");
     appendElementWithText(div, "p", "", 
       "WARNING: the following values are negative or unreasonably large.");
     appendTextNode(div, "\n");  
 
-    var ul = appendElement(div, "ul");
-    for (var i = 0;
+    let ul = appendElement(div, "ul");
+    for (let i = 0;
          i < gUnsafePathsWithInvalidValuesForThisProcess.length;
          i++)
     {
@@ -782,17 +783,17 @@ function appendProcessElements(aP, aProcess, aReporters,
   appendTextNode(aP, "\n\n");   // gives nice spacing when we cut and paste
 
   // We'll fill this in later.
-  var warningsDiv = appendElement(aP, "div", "accuracyWarning");
+  let warningsDiv = appendElement(aP, "div", "accuracyWarning");
 
-  var explicitTree = buildTree(aReporters, 'explicit');
-  var hasKnownHeapAllocated = fixUpExplicitTree(explicitTree, aReporters);
+  let explicitTree = buildTree(aReporters, 'explicit');
+  let hasKnownHeapAllocated = fixUpExplicitTree(explicitTree, aReporters);
   sortTreeAndInsertAggregateNodes(explicitTree._amount, explicitTree);
   appendTreeElements(aP, explicitTree, aProcess);
 
   // We only show these breakdown trees in verbose mode.
   if (gVerbose) {
     kMapTreePaths.forEach(function(t) {
-      var tree = buildTree(aReporters, t);
+      let tree = buildTree(aReporters, t);
 
       // |tree| will be null if we don't have any reporters for the given
       // unsafePath.
@@ -851,14 +852,14 @@ function hasNegativeSign(aN)
  */
 function formatInt(aN, aExtra)
 {
-  var neg = false;
+  let neg = false;
   if (hasNegativeSign(aN)) {
     neg = true;
     aN = -aN;
   }
-  var s = [];
+  let s = [];
   while (true) {
-    var k = aN % 1000;
+    let k = aN % 1000;
     aN = Math.floor(aN / 1000);
     if (aN > 0) {
       if (k < 10) {
@@ -891,14 +892,14 @@ function formatInt(aN, aExtra)
  */
 function formatBytes(aBytes)
 {
-  var unit = gVerbose ? " B" : " MB";
+  let unit = gVerbose ? " B" : " MB";
 
-  var s;
+  let s;
   if (gVerbose) {
     s = formatInt(aBytes, unit);
   } else {
-    var mbytes = (aBytes / (1024 * 1024)).toFixed(2);
-    var a = String(mbytes).split(".");
+    let mbytes = (aBytes / (1024 * 1024)).toFixed(2);
+    let a = String(mbytes).split(".");
     // If the argument to formatInt() is -0, it will print the negative sign.
     s = formatInt(Number(a[0])) + "." + a[1] + unit;
   }
@@ -930,9 +931,9 @@ function formatPercentage(aPerc100x)
  */
 function pad(aS, aN, aC)
 {
-  var padding = "";
-  var n2 = aN - aS.length;
-  for (var i = 0; i < n2; i++) {
+  let padding = "";
+  let n2 = aN - aS.length;
+  for (let i = 0; i < n2; i++) {
     padding += aC;
   }
   return padding + aS;
@@ -973,7 +974,7 @@ const kShowKids = 2;
 function appendMrNameSpan(aP, aKind, aKidsState, aUnsafeDesc, aUnsafeName,
                           aIsUnknown, aIsInvalid, aNMerged)
 {
-  var text = "";
+  let text = "";
   if (aKidsState === kNoKids) {
     appendElementWithText(aP, "span", "mrSep", kDoubleHorizontalSep);
   } else if (aKidsState === kHideKids) {
@@ -986,23 +987,23 @@ function appendMrNameSpan(aP, aKind, aKidsState, aUnsafeDesc, aUnsafeName,
     assert(false, "bad aKidsState");
   }
 
-  var nameSpan = appendElementWithText(aP, "span", "mrName",
+  let nameSpan = appendElementWithText(aP, "span", "mrName",
                                        makeSafe(aUnsafeName));
   nameSpan.title = kindToString(aKind) + makeSafe(aUnsafeDesc);
 
   if (aIsUnknown) {
-    var noteSpan = appendElementWithText(aP, "span", "mrNote", " [*]");
+    let noteSpan = appendElementWithText(aP, "span", "mrNote", " [*]");
     noteSpan.title =
       "Warning: this memory reporter was unable to compute a useful value. ";
   }
   if (aIsInvalid) {
-    var noteSpan = appendElementWithText(aP, "span", "mrNote", " [?!]");
+    let noteSpan = appendElementWithText(aP, "span", "mrNote", " [?!]");
     noteSpan.title =
       "Warning: this value is invalid and indicates a bug in one or more " +
       "memory reporters. ";
   }
   if (aNMerged) {
-    var noteSpan = appendElementWithText(aP, "span", "mrNote",
+    let noteSpan = appendElementWithText(aP, "span", "mrNote",
                                          " [" + aNMerged + "]");
     noteSpan.title =
       "This value is the sum of " + aNMerged +
@@ -1016,7 +1017,7 @@ function appendMrNameSpan(aP, aKind, aKidsState, aUnsafeDesc, aUnsafeName,
 // for compartments that have been closed.  This doesn't seem like a big deal,
 // because the number is limited by the number of entries the user has changed
 // from their original state.
-var gTogglesBySafeTreeId = {};
+let gTogglesBySafeTreeId = {};
 
 function assertClassListContains(e, className) {
   assert(e, "undefined " + className);
@@ -1032,24 +1033,24 @@ function toggle(aEvent)
   // this line must immediately follow.  Assertions check this.
 
   // |aEvent.target| will be one of the five spans.  Get the outer span.
-  var outerSpan = aEvent.target.parentNode;
+  let outerSpan = aEvent.target.parentNode;
   assertClassListContains(outerSpan, "hasKids");
 
   // Toggle visibility of the '++' and '--' separators.
-  var plusSpan  = outerSpan.childNodes[2];
-  var minusSpan = outerSpan.childNodes[3];
+  let plusSpan  = outerSpan.childNodes[2];
+  let minusSpan = outerSpan.childNodes[3];
   assertClassListContains(plusSpan,  "mrSep");
   assertClassListContains(minusSpan, "mrSep");
   plusSpan .classList.toggle("hidden");
   minusSpan.classList.toggle("hidden");
 
   // Toggle visibility of the span containing this node's children.
-  var subTreeSpan = outerSpan.nextSibling;
+  let subTreeSpan = outerSpan.nextSibling;
   assertClassListContains(subTreeSpan, "kids");
   subTreeSpan.classList.toggle("hidden");
 
   // Record/unrecord that this sub-tree was toggled.
-  var safeTreeId = outerSpan.id;
+  let safeTreeId = outerSpan.id;
   if (gTogglesBySafeTreeId[safeTreeId]) {
     delete gTogglesBySafeTreeId[safeTreeId];
   } else {
@@ -1066,8 +1067,8 @@ function expandPathToThisElement(aElement)
 
   } else if (aElement.classList.contains("hasKids")) {
     // Unhide the '--' separator and hide the '++' separator.
-    var  plusSpan = aElement.childNodes[2];
-    var minusSpan = aElement.childNodes[3];
+    let  plusSpan = aElement.childNodes[2];
+    let minusSpan = aElement.childNodes[3];
     assertClassListContains(plusSpan,  "mrSep");
     assertClassListContains(minusSpan, "mrSep");
     plusSpan.classList.add("hidden");
@@ -1092,9 +1093,9 @@ function expandPathToThisElement(aElement)
  */
 function appendTreeElements(aPOuter, aT, aProcess)
 {
-  var treeBytes = aT._amount;
-  var rootStringLength = aT.toString().length;
-  var isExplicitTree = aT._unsafeName == 'explicit';
+  let treeBytes = aT._amount;
+  let rootStringLength = aT.toString().length;
+  let isExplicitTree = aT._unsafeName == 'explicit';
 
   /**
    * Appends the elements for a particular tree, without a heading.
@@ -1122,33 +1123,33 @@ function appendTreeElements(aPOuter, aT, aProcess)
   {
     function repeatStr(aA, aC, aN)
     {
-      for (var i = 0; i < aN; i++) {
+      for (let i = 0; i < aN; i++) {
         aA.push(aC);
       }
     }
 
-    var unsafePath = aUnsafePrePath + aT._unsafeName;
+    let unsafePath = aUnsafePrePath + aT._unsafeName;
 
     // Indent more if this entry is narrower than its parent, and update
     // aIndentGuide accordingly.
-    var tString = aT.toString();
-    var extraIndentArray = [];
-    var extraIndentLength = Math.max(aParentStringLength - tString.length, 0);
+    let tString = aT.toString();
+    let extraIndentArray = [];
+    let extraIndentLength = Math.max(aParentStringLength - tString.length, 0);
     if (extraIndentLength > 0) {
       repeatStr(extraIndentArray, kHorizontal, extraIndentLength);
       aIndentGuide[aIndentGuide.length - 1]._depth += extraIndentLength;
     }
-    var indentText = aBaseIndentText + extraIndentArray.join("");
+    let indentText = aBaseIndentText + extraIndentArray.join("");
     appendElementWithText(aP, "span", "treeLine", indentText);
 
     // Generate the percentage;  detect and record invalid values at the same
     // time.
-    var percText = "";
-    var tIsInvalid = false;
+    let percText = "";
+    let tIsInvalid = false;
     if (aT._amount === treeBytes) {
       percText = "100.0";
     } else {
-      var perc = (100 * aT._amount / treeBytes);
+      let perc = (100 * aT._amount / treeBytes);
       if (!(0 <= perc && perc <= 100)) {
         tIsInvalid = true;
         gUnsafePathsWithInvalidValuesForThisProcess.push(unsafePath);
@@ -1160,14 +1161,15 @@ function appendTreeElements(aPOuter, aT, aProcess)
 
     // For non-leaf nodes, the entire sub-tree is put within a span so it can
     // be collapsed if the node is clicked on.
-    var d;
-    var hasKids = aT._kids.length > 0;
-    var kidsState;
+    let d;
+    let hasKids = aT._kids.length > 0;
+    let kidsState;
+    let showSubtrees;
     if (hasKids) {
       // Determine if we should show the sub-tree below this entry;  this
       // involves reinstating any previous toggling of the sub-tree.
-      var safeTreeId = makeSafe(aProcess + ":" + unsafePath);
-      var showSubtrees = !aT._hideKids;
+      let safeTreeId = makeSafe(aProcess + ":" + unsafePath);
+      showSubtrees = !aT._hideKids;
       if (gTogglesBySafeTreeId[safeTreeId]) {
         showSubtrees = !showSubtrees;
       }
@@ -1186,7 +1188,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
 
     // We don't want to show '(nonheap)' on a tree like 'map/vsize', since the
     // whole tree is non-heap.
-    var kind = isExplicitTree ? aT._kind : undefined;
+    let kind = isExplicitTree ? aT._kind : undefined;
     appendMrNameSpan(d, kind, kidsState, aT._unsafeDescription, aT._unsafeName,
                      aT._isUnknown, tIsInvalid, aT._nMerged);
     appendTextNode(d, "\n");
@@ -1201,14 +1203,15 @@ function appendTreeElements(aPOuter, aT, aProcess)
       // The 'kids' class is just used for sanity checking in toggle().
       d = appendElement(aP, "span", showSubtrees ? "kids" : "kids hidden");
 
-      for (var i = 0; i < aT._kids.length; i++) {
+      for (let i = 0; i < aT._kids.length; i++) {
         // 3 is the standard depth, the callee adjusts it if necessary.
         aIndentGuide.push({ _isLastKid: (i === aT._kids.length - 1), _depth: 3 });
 
         // Generate the base indent.
-        var baseIndentArray = [];
+        let baseIndentArray = [];
         if (aIndentGuide.length > 0) {
-          for (var j = 0; j < aIndentGuide.length - 1; j++) {
+          let j;
+          for (j = 0; j < aIndentGuide.length - 1; j++) {
             baseIndentArray.push(aIndentGuide[j]._isLastKid ? " " : kVertical);
             repeatStr(baseIndentArray, " ", aIndentGuide[j]._depth - 1);
           }
@@ -1217,7 +1220,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
           repeatStr(baseIndentArray, kHorizontal, aIndentGuide[j]._depth - 1);
         }
 
-        var baseIndentText = baseIndentArray.join("");
+        let baseIndentText = baseIndentArray.join("");
         appendTreeElements2(d, unsafePath + "/", aT._kids[i], aIndentGuide,
                             baseIndentText, tString.length);
         aIndentGuide.pop();
@@ -1227,7 +1230,7 @@ function appendTreeElements(aPOuter, aT, aProcess)
 
   appendSectionHeader(aPOuter, kTreeNames[aT._unsafeName]);
  
-  var pre = appendElement(aPOuter, "pre", "tree");
+  let pre = appendElement(aPOuter, "pre", "tree");
   appendTreeElements2(pre, /* prePath = */"", aT, [], "", rootStringLength);
   appendTextNode(aPOuter, "\n");  // gives nice spacing when we cut and paste
 }
@@ -1260,7 +1263,7 @@ OtherReporter.prototype = {
   },
 
   isInvalid: function() {
-    var n = this._amount;
+    let n = this._amount;
     switch (this._units) {
       case UNITS_BYTES:
       case UNITS_COUNT:
@@ -1294,20 +1297,20 @@ function appendOtherElements(aP, aReportersByProcess)
 {
   appendSectionHeader(aP, kTreeNames['other']);
 
-  var pre = appendElement(aP, "pre", "tree");
+  let pre = appendElement(aP, "pre", "tree");
 
   // Generate an array of Reporter-like elements, stripping out all the
   // Reporters that have already been handled.  Also find the width of the
   // widest element, so we can format things nicely.
-  var maxStringLength = 0;
-  var otherReporters = [];
-  for (var unsafePath in aReportersByProcess) {
-    var r = aReportersByProcess[unsafePath];
+  let maxStringLength = 0;
+  let otherReporters = [];
+  for (let unsafePath in aReportersByProcess) {
+    let r = aReportersByProcess[unsafePath];
     if (!r._done) {
       assert(r._kind === KIND_OTHER,
              "_kind !== KIND_OTHER for " + makeSafe(r._unsafePath));
       assert(r._nMerged === undefined);  // we don't allow dup'd OTHER reporters
-      var o = new OtherReporter(r._unsafePath, r._units, r._amount,
+      let o = new OtherReporter(r._unsafePath, r._units, r._amount,
                                 r._unsafeDescription);
       otherReporters.push(o);
       if (o._asString.length > maxStringLength) {
@@ -1318,10 +1321,10 @@ function appendOtherElements(aP, aReportersByProcess)
   otherReporters.sort(OtherReporter.compare);
 
   // Generate text for the not-yet-printed values.
-  var text = "";
-  for (var i = 0; i < otherReporters.length; i++) {
-    var o = otherReporters[i];
-    var oIsInvalid = o.isInvalid();
+  let text = "";
+  for (let i = 0; i < otherReporters.length; i++) {
+    let o = otherReporters[i];
+    let oIsInvalid = o.isInvalid();
     if (oIsInvalid) {
       gUnsafePathsWithInvalidValuesForThisProcess.push(o._unsafePath);
     }
@@ -1349,6 +1352,6 @@ function assert(aCond, aMsg)
 
 function debug(x)
 {
-  var content = document.getElementById("content");
+  let content = document.getElementById("content");
   appendElementWithText(content, "div", "legend", JSON.stringify(x));
 }

@@ -17,22 +17,22 @@
   <![CDATA[
   const Cc = Components.classes;
   const Ci = Components.interfaces;
-  var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
-  var e = mgr.enumerateReporters();
-  var realReporters = [];
+  let e = mgr.enumerateReporters();
+  let realReporters = [];
   while (e.hasMoreElements()) {
-    var r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     mgr.unregisterReporter(r);
     realReporters.push(r);
   }
   e = mgr.enumerateMultiReporters();
-  var realMultiReporters = [];
+  let realMultiReporters = [];
   while (e.hasMoreElements()) {
-    var r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
     mgr.unregisterMultiReporter(r);
     realMultiReporters.push(r);
   }
@@ -55,7 +55,7 @@
     };
   }
 
-  var fakeReporters = [
+  let fakeReporters = [
     f("heap-allocated",     OTHER,   250 * MB),
     f("explicit/a/b",       HEAP,     50 * MB),
     f("explicit/a/c/d",     HEAP,     30 * MB),
@@ -64,7 +64,7 @@
     f("explicit/g",         HEAP,    100 * MB)
   ];
 
-  for (var i = 0; i < fakeReporters.length; i++) {
+  for (let i = 0; i < fakeReporters.length; i++) {
     mgr.registerReporter(fakeReporters[i]);
   }
 
@@ -80,19 +80,19 @@
     // Unregister fake reporters and multi-reporters, re-register the real
     // reporters and multi-reporters, just in case subsequent tests rely on
     // them.
-    for (var i = 0; i < fakeReporters.length; i++) {
+    for (let i = 0; i < fakeReporters.length; i++) {
       mgr.unregisterReporter(fakeReporters[i]);
     }
-    for (var i = 0; i < realReporters.length; i++) {
+    for (let i = 0; i < realReporters.length; i++) {
       mgr.registerReporter(realReporters[i]);
     }
-    for (var i = 0; i < realMultiReporters.length; i++) {
+    for (let i = 0; i < realMultiReporters.length; i++) {
       mgr.registerMultiReporter(realMultiReporters[i]);
     }
     SimpleTest.finish();
   }
 
-  var gHaveDumped = false;
+  let gHaveDumped = false;
 
   function checkClipboard(actual, expected) {
     if (actual != expected) {
@@ -112,8 +112,8 @@
   // Click on the identified element, then cut+paste the entire page and
   // check that the cut text matches what we expect.
   function test(aId, aExpectedText, aNext) {
-    var win = document.getElementById("amFrame").contentWindow;
-    var node = win.document.getElementById(aId);
+    let win = document.getElementById("amFrame").contentWindow;
+    let node = win.document.getElementById(aId);
 
     // Yuk:  clicking a button is easy;  but for tree entries we need to
     // click on a child of the span identified via |id|.
@@ -142,7 +142,7 @@
 
   // Returns a function that chains together one test() call per id.
   function chain(ids) {
-    var x = ids.shift();
+    let x = ids.shift();
     if (x) {
       return function() { test(x.id, x.expected, chain(ids)); }
     } else {
@@ -150,7 +150,7 @@
     }
   }
 
-  var openExpected =
+  let openExpected =
 "\
 Main Process\n\
 \n\
@@ -170,7 +170,7 @@ Other Measurements\n\
 \n\
 ";
 
-  var cClosedExpected =
+  let cClosedExpected =
 "\
 Main Process\n\
 \n\
@@ -188,7 +188,7 @@ Other Measurements\n\
 \n\
 ";
 
-  var aClosedExpected =
+  let aClosedExpected =
 "\
 Main Process\n\
 \n\
@@ -205,7 +205,7 @@ Other Measurements\n\
 
   // We close two sub-trees, hit the "Update" button, then reopen the two
   // sub-trees in reverse order.  After each step, we check the output.
-  var idsToClick = [
+  let idsToClick = [
     { id: "Main:explicit/a/c", expected: cClosedExpected },
     { id: "Main:explicit/a",   expected: aClosedExpected },
     { id: "updateButton",      expected: aClosedExpected },
