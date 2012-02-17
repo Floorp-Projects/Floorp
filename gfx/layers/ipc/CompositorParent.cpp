@@ -177,6 +177,11 @@ CompositorParent::Composite()
     return;
   }
 
+#ifdef MOZ_RENDERTRACE
+  Layer* aLayer = mLayerManager->GetRoot();
+  mozilla::layers::RenderTraceLayers(aLayer, "0000");
+#endif
+
 #ifdef MOZ_WIDGET_ANDROID
   RequestViewTransform();
   Layer* layer = GetPrimaryScrollableLayer();

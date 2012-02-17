@@ -43,6 +43,7 @@
 #include "ShadowLayersParent.h"
 #include "ShadowLayerParent.h"
 #include "ShadowLayers.h"
+#include "RenderTrace.h"
 
 #include "mozilla/unused.h"
 
@@ -322,6 +323,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         static_cast<ShadowThebesLayer*>(shadow->AsLayer());
       const ThebesBuffer& newFront = op.newFrontBuffer();
 
+#ifdef MOZ_RENDERTRACE
+      RenderTraceInvalidateStart(thebes, "00FF", op.updatedRegion().GetBounds());
+#endif
+
       OptionalThebesBuffer newBack;
       nsIntRegion newValidRegion;
       OptionalThebesBuffer readonlyFront;
@@ -334,6 +339,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
           shadow, NULL,
           newBack, newValidRegion,
           readonlyFront, frontUpdatedRegion));
+
+#ifdef MOZ_RENDERTRACE
+      RenderTraceInvalidateEnd(thebes, "00FF");
+#endif
       break;
     }
     case Edit::TOpPaintCanvas: {
@@ -344,6 +353,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowCanvasLayer* canvas =
         static_cast<ShadowCanvasLayer*>(shadow->AsLayer());
 
+#ifdef MOZ_RENDERTRACE
+      RenderTraceInvalidateStart(canvas, "00FF", canvas->GetVisibleRegion().GetBounds());
+#endif
+
       canvas->SetAllocator(this);
       CanvasSurface newBack;
       canvas->Swap(op.newFrontBuffer(), op.needYFlip(), &newBack);
@@ -351,6 +364,9 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       replyv.push_back(OpBufferSwap(shadow, NULL,
                                     newBack));
 
+#ifdef MOZ_RENDERTRACE
+      RenderTraceInvalidateEnd(canvas, "00FF");
+#endif
       break;
     }
     case Edit::TOpPaintImage: {
