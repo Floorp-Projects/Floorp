@@ -640,6 +640,10 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_OR:
         return jsop_andor(op);
 
+      case JSOP_DEFVAR:
+      case JSOP_DEFCONST:
+        return jsop_defvar(GET_SLOTNO(pc));
+
       case JSOP_LOCALINC:
       case JSOP_INCLOCAL:
       case JSOP_LOCALDEC:
@@ -3666,6 +3670,31 @@ IonBuilder::jsop_deflocalfun(uint32 local, JSFunction *fun)
     current->pop();
 
     return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_defvar(uint32 index)
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_DEFVAR || JSOp(*pc) == JSOP_DEFCONST);
+
+    PropertyName *name = script->getName(index);
+
+    // Bake in attrs.
+    uintN attrs = JSPROP_ENUMERATE;
+    // isEvalFrame() requires  attrs |= JSPROP_PERMANENT.
+    if (JSOp(*pc) == JSOP_DEFCONST)
+        attrs |= JSPROP_READONLY;
+
+    // Pass the ScopeChain.
+    JS_ASSERT(script->analysis()->usesScopeChain());
+    MDefinition *scopeChain = current->getSlot(info().scopeChainSlot());
+    JS_ASSERT(scopeChain->type() == MIRType_Object);
+
+    // Bake the name pointer into the MDefVar.
+    MDefVar *defvar = MDefVar::New(name, attrs, scopeChain);
+    current->add(defvar);
+
+    return resumeAfter(defvar);
 }
 
 bool
