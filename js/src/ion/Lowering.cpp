@@ -172,19 +172,6 @@ LIRGenerator::visitPassArg(MPassArg *arg)
     return add(stack);
 }
 
-static JSFunction *
-CheckKnownCallee(MDefinition *func)
-{
-    if (!func->isConstant() || !func->toConstant()->value().isObject())
-        return NULL;
-
-    JSObject &obj = func->toConstant()->value().toObject();
-    if (!obj.isFunction())
-        return NULL;
-
-    return obj.toFunction();
-}
-
 bool
 LIRGenerator::visitCall(MCall *call)
 {
@@ -200,7 +187,7 @@ LIRGenerator::visitCall(MCall *call)
 
     // If the callsite is known-monomorphic (calls an MConstant),
     // extract the target function.
-    JSFunction *target = CheckKnownCallee(call->getFunction());
+    JSFunction *target = call->getSingleTarget();
 
     LInstruction *ins = NULL;
 
