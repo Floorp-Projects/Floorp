@@ -3219,8 +3219,7 @@ var ViewportHandler = {
   },
 
   onResize: function onResize() {
-    for (let i = 0; i < BrowserApp.tabs.length; i++)
-      BrowserApp.tabs[i].updateViewportSize();
+    Tabs.getInstance().getSelectedTab().updateViewportSize();        
   },
 
   clamp: function(num, min, max) {
