@@ -121,14 +121,14 @@ nsSVGNumberPair::SetBaseValueString(const nsAString &aValueAsString,
     aSVGElement->AnimationNeedsResample();
   }
 
-  // We don't need to call DidChange* here - we're only called by
+  // We don't need to call Will/DidChange* here - we're only called by
   // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
   // which takes care of notifying.
   return NS_OK;
 }
 
 void
-nsSVGNumberPair::GetBaseValueString(nsAString &aValueAsString)
+nsSVGNumberPair::GetBaseValueString(nsAString &aValueAsString) const
 {
   aValueAsString.Truncate();
   aValueAsString.AppendFloat(mBaseVal[0]);
@@ -143,6 +143,10 @@ nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
                               nsSVGElement *aSVGElement)
 {
   PRUint32 index = (aPairIndex == eFirst ? 0 : 1);
+  if (mIsBaseSet && mBaseVal[index] == aValue) {
+    return;
+  }
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeNumberPair(mAttrEnum);
   mBaseVal[index] = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
@@ -151,13 +155,17 @@ nsSVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
   else {
     aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeNumberPair(mAttrEnum, true);
+  aSVGElement->DidChangeNumberPair(mAttrEnum, emptyOrOldValue);
 }
 
 void
 nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
                                nsSVGElement *aSVGElement)
 {
+  if (mIsBaseSet && mBaseVal[0] == aValue1 && mBaseVal[1] == aValue2) {
+    return;
+  }
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeNumberPair(mAttrEnum);
   mBaseVal[0] = aValue1;
   mBaseVal[1] = aValue2;
   mIsBaseSet = true;
@@ -168,7 +176,7 @@ nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
   else {
     aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeNumberPair(mAttrEnum, true);
+  aSVGElement->DidChangeNumberPair(mAttrEnum, emptyOrOldValue);
 }
 
 void

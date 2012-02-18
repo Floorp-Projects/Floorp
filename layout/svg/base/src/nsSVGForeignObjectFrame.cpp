@@ -271,12 +271,6 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 
   gfx->Multiply(matrixForChildren);
 
-  // Transform the dirty rect into the rectangle containing the
-  // transformed dirty rect.
-  gfxMatrix invmatrix = matrix.Invert();
-  NS_ASSERTION(!invmatrix.IsSingular(),
-               "inverse of non-singular matrix should be non-singular");
-
   PRUint32 flags = nsLayoutUtils::PAINT_IN_TRANSFORM;
   if (aContext->IsPaintingToWindow()) {
     flags |= nsLayoutUtils::PAINT_TO_WINDOW;
@@ -370,7 +364,7 @@ nsSVGForeignObjectFrame::UpdateCoveredRegion()
   // GetCanvasTM includes the x,y translation
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(
                            gfxRect(0.0, 0.0, w, h),
-                           PresContext()->AppUnitsPerDevPixel());
+                           PresContext()->AppUnitsPerCSSPixel());
   mCoveredRegion = ToCanvasBounds(gfxRect(0.0, 0.0, w, h), GetCanvasTM(), PresContext());
 
   return NS_OK;
@@ -501,7 +495,7 @@ nsSVGForeignObjectFrame::GetCanvasTM()
     nsSVGForeignObjectElement *content =
       static_cast<nsSVGForeignObjectElement*>(mContent);
 
-    gfxMatrix tm = content->PrependLocalTransformTo(parent->GetCanvasTM());
+    gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
 
     mCanvasTM = new gfxMatrix(tm);
   }

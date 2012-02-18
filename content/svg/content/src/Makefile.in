@@ -146,6 +146,7 @@ CPPSRCS		= \
 		nsSVGAnimationElement.cpp \
 		nsSVGMpathElement.cpp \
 		nsSVGSetElement.cpp \
+		SVGAttrValueWrapper.cpp \
 		SVGIntegerPairSMILType.cpp \
 		SVGLengthListSMILType.cpp \
 		SVGMotionSMILType.cpp \
@@ -169,6 +170,7 @@ FORCE_STATIC_LIB = 1
 EXPORTS =  			\
 	nsSVGFeatures.h            \
 	nsSVGRect.h                \
+	SVGAttrValueWrapper.h      \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

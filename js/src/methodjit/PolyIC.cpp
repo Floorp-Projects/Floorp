@@ -53,6 +53,7 @@
 #include "jsautooplen.h"
 
 #include "vm/ScopeObject-inl.h"
+#include "vm/StringObject-inl.h"
 
 #if defined JS_POLYIC
 
@@ -944,7 +945,7 @@ class GetPropCompiler : public PICStubCompiler
 
         Jump notStringObj = masm.guardShape(pic.objReg, obj);
 
-        masm.loadPayload(Address(pic.objReg, JSObject::getPrimitiveThisOffset()), pic.objReg);
+        masm.loadPayload(Address(pic.objReg, StringObject::getPrimitiveValueOffset()), pic.objReg);
         masm.loadPtr(Address(pic.objReg, JSString::offsetOfLengthAndFlags()), pic.objReg);
         masm.urshift32(Imm32(JSString::LENGTH_SHIFT), pic.objReg);
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
@@ -1885,7 +1886,7 @@ GetPropMaybeCached(VMFrame &f, ic::PICInfo *pic, bool cached)
                     LookupStatus status = cc.generateStringObjLengthStub();
                     if (status == Lookup_Error)
                         THROW();
-                    JSString *str = obj->getPrimitiveThis().toString();
+                    JSString *str = obj->asString().unbox();
                     f.regs.sp[-1].setInt32(str->length());
                 }
                 return;

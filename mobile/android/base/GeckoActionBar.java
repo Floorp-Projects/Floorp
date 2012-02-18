@@ -66,4 +66,8 @@ public class GeckoActionBar {
     public static void setDisplayHomeAsUpEnabled(Activity activity, boolean enabled) {
          activity.getActionBar().setDisplayHomeAsUpEnabled(enabled);
     } 
+ 
+    public static void show(Activity activity) {
+        activity.getActionBar().show();
+    }
 }

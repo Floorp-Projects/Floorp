@@ -5328,31 +5328,18 @@ nsNavHistory::UpdateFrecency(PRInt64 aPlaceId)
     "WHERE id = :page_id"
   );
   NS_ENSURE_STATE(updateFrecencyStmt);
+  nsresult rv = updateFrecencyStmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
+                                                    aPlaceId);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<mozIStorageAsyncStatement> updateHiddenStmt = mDB->GetAsyncStatement(
     "UPDATE moz_places "
     "SET hidden = 0 "
     "WHERE id = :page_id AND frecency <> 0"
   );
   NS_ENSURE_STATE(updateHiddenStmt);
-
-#define ASYNC_BIND(_stmt) \
-  PR_BEGIN_MACRO \
-    nsCOMPtr<mozIStorageBindingParamsArray> paramsArray; \
-    nsresult rv = _stmt->NewBindingParamsArray(getter_AddRefs(paramsArray)); \
-    NS_ENSURE_SUCCESS(rv, rv); \
-    nsCOMPtr<mozIStorageBindingParams> params; \
-    rv = paramsArray->NewBindingParams(getter_AddRefs(params)); \
-    NS_ENSURE_SUCCESS(rv, rv); \
-    rv = params->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlaceId); \
-    NS_ENSURE_SUCCESS(rv, rv); \
-    rv = paramsArray->AddParams(params); \
-    NS_ENSURE_SUCCESS(rv, rv); \
-    rv = _stmt->BindParameters(paramsArray); \
-    NS_ENSURE_SUCCESS(rv, rv); \
-  PR_END_MACRO
-
-  ASYNC_BIND(updateFrecencyStmt);
-  ASYNC_BIND(updateHiddenStmt);
+  rv = updateHiddenStmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
+                                         aPlaceId);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mozIStorageBaseStatement *stmts[] = {
     updateFrecencyStmt.get()
@@ -5362,12 +5349,11 @@ nsNavHistory::UpdateFrecency(PRInt64 aPlaceId)
   nsRefPtr<AsyncStatementCallbackNotifier> cb =
     new AsyncStatementCallbackNotifier(TOPIC_FRECENCY_UPDATED);
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  nsresult rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts), cb,
-                                               getter_AddRefs(ps));
+  rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts), cb,
+                                     getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
-#undef ASYNC_BIND
 }
 
 

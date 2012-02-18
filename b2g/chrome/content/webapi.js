@@ -177,19 +177,22 @@ const ContentPanning = {
     }
   },
 
-  position: {
-    origin: new Point(0, 0),
-    current: new Point(0 , 0)
-  },
+  position: new Point(0 , 0),
 
   onTouchStart: function cp_onTouchStart(evt) {
     this.dragging = true;
-    KineticPanning.stop();
+
+    // If there is a pan animation running (from a previous pan gesture) and
+    // the user touch back the screen, stop this animation immediatly and
+    // prevent the possible click action.
+    if (KineticPanning.active) {
+      KineticPanning.stop();
+      this.preventNextClick = true;
+    }
 
     this.scrollCallback = this.getPannable(evt.originalTarget);
-    this.position.origin.set(evt.screenX, evt.screenY);
-    this.position.current.set(evt.screenX, evt.screenY);
-    KineticPanning.record(new Point(0, 0));
+    this.position.set(evt.screenX, evt.screenY);
+    KineticPanning.record(new Point(0, 0), evt.timeStamp);
   },
 
   onTouchEnd: function cp_onTouchEnd(evt) {
@@ -197,26 +200,29 @@ const ContentPanning = {
       return;
     this.dragging = false;
 
-    if (this.isPan()) {
-      if (evt.detail) // The event will generate a click
-        evt.target.addEventListener('click', this, true);
+    this.onTouchMove(evt);
 
+    let pan = KineticPanning.isPan();
+    let click = evt.detail;
+    if (click && (pan || this.preventNextClick))
+      evt.target.addEventListener('click', this, true);
+
+    this.preventNextClick = false;
+
+    if (pan)
       KineticPanning.start(this);
-    }
   },
 
   onTouchMove: function cp_onTouchMove(evt) {
     if (!this.dragging || !this.scrollCallback)
       return;
 
-    let current = this.position.current;
+    let current = this.position;
     let delta = new Point(evt.screenX - current.x, evt.screenY - current.y);
     current.set(evt.screenX, evt.screenY);
 
-    if (this.isPan()) {
-      KineticPanning.record(delta);
-      this.scrollCallback(delta.scale(-1));
-    }
+    KineticPanning.record(delta, evt.timeStamp);
+    this.scrollCallback(delta.scale(-1));
   },
 
 
@@ -232,24 +238,11 @@ const ContentPanning = {
       this.scrollCallback = null;
   },
 
-  isPan: function cp_isPan() {
-    let dpi = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils)
-                     .displayDPI;
-
-    let threshold = Services.prefs.getIntPref('ui.dragThresholdX') / 240 * dpi;
-
-    let deltaX = this.position.origin.x - this.position.current.x;
-    let deltaY = this.position.origin.y - this.position.current.y;
-    return (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold);
-  },
-
   getPannable: function cp_getPannable(node) {
     if (!(node instanceof Ci.nsIDOMHTMLElement) || node.tagName == 'HTML')
       return null;
 
     let content = node.ownerDocument.defaultView;
-
     while (!(node instanceof Ci.nsIDOMHTMLBodyElement)) {
       let style = content.getComputedStyle(node, null);
 
@@ -299,7 +292,7 @@ const kMinVelocity = 0.4;
 const kMaxVelocity = 6;
 
 // Constants that affect the "friction" of the scroll pane.
-const kExponentialC = 1400;
+const kExponentialC = 1000;
 const kPolynomialC = 100 / 1000000;
 
 // How often do we change the position of the scroll pane?
@@ -307,17 +300,25 @@ const kPolynomialC = 100 / 1000000;
 // Too little and panning will be choppy. In milliseconds.
 const kUpdateInterval = 16;
 
+// The numbers of momentums to use for calculating the velocity of the pan.
+// Those are taken from the end of the action
+const kSamples = 5;
+
 const KineticPanning = {
   _position: new Point(0, 0),
   _velocity: new Point(0, 0),
   _acceleration: new Point(0, 0),
+
+  get active() {
+    return this.target !== null;
+  },
 
   _target: null,
   start: function kp_start(target) {
     this.target = target;
 
     // Calculate the initial velocity of the movement based on user input
-    let momentums = this.momentums;
+    let momentums = this.momentums.slice(-kSamples);
 
     let distance = new Point(0, 0);
     momentums.forEach(function(momentum) {
@@ -338,6 +339,7 @@ const KineticPanning = {
     let velocity = this._velocity;
     velocity.set(Math.abs(velocityX) < kMinVelocity ? 0 : velocityX,
                  Math.abs(velocityY) < kMinVelocity ? 0 : velocityY);
+    this.momentums = [];
 
     // Set acceleration vector to opposite signs of velocity
     function sign(x) {
@@ -358,20 +360,32 @@ const KineticPanning = {
     if (!this.target)
       return;
 
-    this.momentums.splice(0);
+    this.momentums = [];
 
     this.target.onKineticEnd();
     this.target = null;
   },
 
   momentums: [],
-  record: function kp_record(delta) {
-    // If the panning direction has changed, stop the current activity.
-    if (this.target && ((delta.x * this._velocity.x < 0) ||
-                        (delta.y * this._velocity.y < 0)))
-      this.stop();
+  record: function kp_record(delta, timestamp) {
+    this.momentums.push({ 'time': timestamp, 'dx' : delta.x, 'dy' : delta.y });
+  },
 
-    this.momentums.push({ 'time': Date.now(), 'dx' : delta.x, 'dy' : delta.y });
+  isPan: function cp_isPan() {
+    let dpi = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindowUtils)
+                     .displayDPI;
+
+    let threshold = Services.prefs.getIntPref('ui.dragThresholdX') / 240 * dpi;
+
+    let deltaX = 0;
+    let deltaY = 0;
+    let start = this.momentums[0].time;
+    return this.momentums.slice(1).some(function(momentum) {
+      deltaX += momentum.dx;
+      deltaY += momentum.dy;
+      return (Math.abs(deltaX) > threshold) || (Math.abs(deltaY) > threshold);
+    });
   },
 
   _startAnimation: function kp_startAnimation() {

@@ -511,6 +511,10 @@ GfxInfo::Init()
                 driverDate2 = value;
                 dwcbData = sizeof(value);
                 result = RegQueryValueExW(key, L"Device Description", NULL, NULL, (LPBYTE)value, &dwcbData);
+                if (result != ERROR_SUCCESS) {
+                  dwcbData = sizeof(value);
+                  result = RegQueryValueExW(key, L"DriverDesc", NULL, NULL, (LPBYTE)value, &dwcbData);
+                }
                 RegCloseKey(key);
                 if (result == ERROR_SUCCESS) {
                   mHasDualGPU = true;

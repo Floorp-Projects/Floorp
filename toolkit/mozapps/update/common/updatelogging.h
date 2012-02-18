@@ -50,7 +50,7 @@ public:
     return primaryLog;
   }
 
-  void Init(NS_tchar* sourcePath, NS_tchar* fileName);
+  void Init(NS_tchar* sourcePath, const NS_tchar* fileName);
   void Finish();
   void Flush();
   void Printf(const char *fmt, ... );

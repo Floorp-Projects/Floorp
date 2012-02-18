@@ -51,6 +51,7 @@
 #include "nsCaseTreatment.h"
 #include "nsMargin.h"
 #include "nsCOMPtr.h"
+#include "SVGAttrValueWrapper.h"
 
 typedef PRUptrdiff PtrBits;
 class nsAString;
@@ -102,6 +103,7 @@ public:
   nsAttrValue();
   nsAttrValue(const nsAttrValue& aOther);
   explicit nsAttrValue(const nsAString& aValue);
+  explicit nsAttrValue(nsIAtom* aValue);
   nsAttrValue(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
   explicit nsAttrValue(const nsIntMargin& aValue);
   ~nsAttrValue();
@@ -123,9 +125,23 @@ public:
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
     eCSSStyleRule =    0x10
-    ,eAtomArray =      0x11 
+    ,eAtomArray =      0x11
     ,eDoubleValue  =   0x12
     ,eIntMarginValue = 0x13
+    ,eSVGTypesBegin =  0x14
+    ,eSVGAngle =       eSVGTypesBegin
+    ,eSVGIntegerPair = 0x15
+    ,eSVGLength =      0x16
+    ,eSVGLengthList =  0x17
+    ,eSVGNumberList =  0x18
+    ,eSVGNumberPair =  0x19
+    ,eSVGPathData   =  0x20
+    ,eSVGPointList  =  0x21
+    ,eSVGPreserveAspectRatio = 0x22
+    ,eSVGStringList =  0x23
+    ,eSVGTransformList = 0x24
+    ,eSVGViewBox =     0x25
+    ,eSVGTypesEnd =    0x34
   };
 
   ValueType Type() const;
@@ -134,9 +150,29 @@ public:
 
   void SetTo(const nsAttrValue& aOther);
   void SetTo(const nsAString& aValue);
+  void SetTo(nsIAtom* aValue);
   void SetTo(PRInt16 aInt);
+  void SetTo(PRInt32 aInt, const nsAString* aSerialized);
+  void SetTo(double aValue, const nsAString* aSerialized);
   void SetTo(mozilla::css::StyleRule* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
+  void SetTo(const nsSVGAngle& aValue, const nsAString* aSerialized);
+  void SetTo(const nsSVGIntegerPair& aValue, const nsAString* aSerialized);
+  void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGLengthList& aValue,
+             const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGNumberList& aValue,
+             const nsAString* aSerialized);
+  void SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGPathData& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGPointList& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
+             const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGStringList& aValue,
+             const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGTransformList& aValue,
+             const nsAString* aSerialized);
+  void SetTo(const nsSVGViewBox& aValue, const nsAString* aSerialized);
 
   /**
    * Sets this object with the string or atom representation of aValue.
@@ -368,10 +404,23 @@ private:
       AtomArray* mAtomArray;
       double mDoubleValue;
       nsIntMargin* mIntMargin;
+      const nsSVGAngle* mSVGAngle;
+      const nsSVGIntegerPair* mSVGIntegerPair;
+      const nsSVGLength2* mSVGLength;
+      const mozilla::SVGLengthList* mSVGLengthList;
+      const mozilla::SVGNumberList* mSVGNumberList;
+      const nsSVGNumberPair* mSVGNumberPair;
+      const mozilla::SVGPathData* mSVGPathData;
+      const mozilla::SVGPointList* mSVGPointList;
+      const mozilla::SVGAnimatedPreserveAspectRatio* mSVGPreserveAspectRatio;
+      const mozilla::SVGStringList* mSVGStringList;
+      const mozilla::SVGTransformList* mSVGTransformList;
+      const nsSVGViewBox* mSVGViewBox;
     };
   };
 
   inline ValueBaseType BaseType() const;
+  inline bool IsSVGType(ValueType aType) const;
 
   /**
    * Get the index of an EnumTable in the sEnumTableArray.
@@ -388,6 +437,8 @@ private:
   void SetColorValue(nscolor aColor, const nsAString& aString);
   void SetMiscAtomOrString(const nsAString* aValue);
   void ResetMiscAtomOrString();
+  void SetSVGType(ValueType aType, const void* aValue,
+                  const nsAString* aSerialized);
   inline void ResetIfSet();
 
   inline void* GetPtr() const;
@@ -500,6 +551,12 @@ inline nsAttrValue::ValueBaseType
 nsAttrValue::BaseType() const
 {
   return static_cast<ValueBaseType>(mBits & NS_ATTRVALUE_BASETYPE_MASK);
+}
+
+inline bool
+nsAttrValue::IsSVGType(ValueType aType) const
+{
+  return aType >= eSVGTypesBegin && aType <= eSVGTypesEnd;
 }
 
 inline void

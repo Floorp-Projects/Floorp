@@ -77,8 +77,6 @@ public class BrowserDB {
 
         public void clearHistory(ContentResolver cr);
 
-        public Cursor getAllBookmarks(ContentResolver cr);
-
         public Cursor getMobileBookmarks(ContentResolver cr);
 
         public Cursor getDesktopBookmarks(ContentResolver cr);
@@ -146,10 +144,6 @@ public class BrowserDB {
 
     public static void clearHistory(ContentResolver cr) {
         sDb.clearHistory(cr);
-    }
-
-    public static Cursor getAllBookmarks(ContentResolver cr) {
-        return sDb.getAllBookmarks(cr);
     }
 
     public static Cursor getMobileBookmarks(ContentResolver cr) {

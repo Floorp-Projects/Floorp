@@ -1815,7 +1815,7 @@ GCMarker::markDelayedChildren()
 
 #ifdef DEBUG
 static void
-EmptyMarkCallback(JSTracer *trc, void *thing, JSGCTraceKind kind)
+EmptyMarkCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
 }
 #endif
@@ -1855,7 +1855,7 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
     if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
         MarkGCThingRoot(trc, *reinterpret_cast<void **>(entry.key), name);
     else
-        MarkValueRoot(trc, *reinterpret_cast<Value *>(entry.key), name);
+        MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
 }
 
 static void
@@ -1883,7 +1883,7 @@ AutoGCRooter::trace(JSTracer *trc)
 {
     switch (tag) {
       case JSVAL:
-        MarkValueRoot(trc, static_cast<AutoValueRooter *>(this)->val, "JS::AutoValueRooter.val");
+        MarkValueRoot(trc, &static_cast<AutoValueRooter *>(this)->val, "JS::AutoValueRooter.val");
         return;
 
       case PARSER:
@@ -1905,10 +1905,10 @@ AutoGCRooter::trace(JSTracer *trc)
             static_cast<AutoPropDescArrayRooter *>(this)->descriptors;
         for (size_t i = 0, len = descriptors.length(); i < len; i++) {
             PropDesc &desc = descriptors[i];
-            MarkValueRoot(trc, desc.pd, "PropDesc::pd");
-            MarkValueRoot(trc, desc.value, "PropDesc::value");
-            MarkValueRoot(trc, desc.get, "PropDesc::get");
-            MarkValueRoot(trc, desc.set, "PropDesc::set");
+            MarkValueRoot(trc, &desc.pd, "PropDesc::pd");
+            MarkValueRoot(trc, &desc.value, "PropDesc::value");
+            MarkValueRoot(trc, &desc.get, "PropDesc::get");
+            MarkValueRoot(trc, &desc.set, "PropDesc::set");
         }
         return;
       }
@@ -1917,7 +1917,7 @@ AutoGCRooter::trace(JSTracer *trc)
         PropertyDescriptor &desc = *static_cast<AutoPropertyDescriptorRooter *>(this);
         if (desc.obj)
             MarkObjectRoot(trc, desc.obj, "Descriptor::obj");
-        MarkValueRoot(trc, desc.value, "Descriptor::value");
+        MarkValueRoot(trc, &desc.value, "Descriptor::value");
         if ((desc.attrs & JSPROP_GETTER) && desc.getter)
             MarkObjectRoot(trc, CastAsObject(desc.getter), "Descriptor::get");
         if (desc.attrs & JSPROP_SETTER && desc.setter)
@@ -1996,26 +1996,6 @@ AutoGCRooter::traceAll(JSTracer *trc)
 
 namespace js {
 
-JS_FRIEND_API(void)
-MarkContext(JSTracer *trc, JSContext *acx)
-{
-    /* Stack frames and slots are traced by StackSpace::mark. */
-
-    /* Mark other roots-by-definition in acx. */
-    if (acx->globalObject && !acx->hasRunOption(JSOPTION_UNROOTED_GLOBAL))
-        MarkObjectRoot(trc, acx->globalObject, "global object");
-    if (acx->isExceptionPending())
-        MarkValueRoot(trc, acx->getPendingException(), "exception");
-
-    if (acx->autoGCRooters)
-        acx->autoGCRooters->traceAll(trc);
-
-    if (acx->sharpObjectMap.depth > 0)
-        js_TraceSharpMap(trc, &acx->sharpObjectMap);
-
-    MarkValueRoot(trc, acx->iterValue, "iterValue");
-}
-
 void
 MarkWeakReferences(GCMarker *gcmarker)
 {
@@ -2053,7 +2033,7 @@ MarkRuntime(JSTracer *trc)
 
     JSContext *iter = NULL;
     while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
-        MarkContext(trc, acx);
+        acx->mark(trc);
 
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->activeAnalysis)
@@ -3393,7 +3373,7 @@ struct VerifyTracer : JSTracer {
  * node.
  */
 static void
-AccumulateEdge(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
+AccumulateEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyTracer *trc = (VerifyTracer *)jstrc;
 
@@ -3406,7 +3386,7 @@ AccumulateEdge(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
     VerifyNode *node = trc->curnode;
     uint32_t i = node->count;
 
-    node->edges[i].thing = thing;
+    node->edges[i].thing = *thingp;
     node->edges[i].kind = kind;
     node->edges[i].label = trc->debugPrinter ? NULL : (char *)trc->debugPrintArg;
     node->count++;
@@ -3547,9 +3527,9 @@ oom:
 }
 
 static void
-CheckAutorooter(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
+CheckAutorooter(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
-    static_cast<Cell *>(thing)->markIfUnmarked();
+    static_cast<Cell *>(*thingp)->markIfUnmarked();
 }
 
 /*
@@ -3560,13 +3540,13 @@ CheckAutorooter(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
  * modified) must point to marked objects.
  */
 static void
-CheckEdge(JSTracer *jstrc, void *thing, JSGCTraceKind kind)
+CheckEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyTracer *trc = (VerifyTracer *)jstrc;
     VerifyNode *node = trc->curnode;
 
     for (uint32_t i = 0; i < node->count; i++) {
-        if (node->edges[i].thing == thing) {
+        if (node->edges[i].thing == *thingp) {
             JS_ASSERT(node->edges[i].kind == kind);
             node->edges[i].thing = NULL;
             return;

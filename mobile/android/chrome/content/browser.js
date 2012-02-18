@@ -202,11 +202,12 @@ var BrowserApp = {
 
     getBridge().setDrawMetadataProvider(MetadataProvider);
 
+    getBridge().browserApp = this;
+
     Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "Tab:Closed", false);
-    Services.obs.addObserver(this, "Tab:Screenshot", false);
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Reload", false);
@@ -555,36 +556,6 @@ var BrowserApp = {
 
     aTab.destroy();
     this._tabs.splice(this._tabs.indexOf(aTab), 1);
-  },
-
-  screenshotQueue: null,
-
-  screenshotTab: function screenshotTab(aData) {
-      if (this.screenshotQueue == null) {
-          this.screenShotQueue = [];
-          this.doScreenshotTab(aData);
-      } else {
-          this.screenshotQueue.push(aData);
-      }
-  },
-
-  doNextScreenshot: function() {
-      if (this.screenshotQueue == null || this.screenshotQueue.length == 0) {
-          this.screenshotQueue = null;
-          return;
-      }
-      let data = this.screenshotQueue.pop();
-      if (data == null) {
-          this.screenshotQueue = null;
-          return;
-      }
-      this.doScreenshotTab(data);
-  },
-
-  doScreenshotTab: function doScreenshotTab(aData) {
-      let json = JSON.parse(aData);
-      let tab = this.getTabForId(parseInt(json.tabID));
-      tab.screenshot(json.source, json.destination);
   },
 
   // Use this method to select a tab from JS. This method sends a message
@@ -964,10 +935,6 @@ var BrowserApp = {
       this._handleTabSelected(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Closed") {
       this._handleTabClosed(this.getTabForId(parseInt(aData)));
-    } else if (aTopic == "Tab:Screenshot") {
-      this.screenshotTab(aData);
-    } else if (aTopic == "Tab:Screenshot:Cancel") {
-      this.screenshotQueue = null;
     } else if (aTopic == "Browser:Quit") {
       this.quit();
     } else if (aTopic == "SaveAs:PDF") {
@@ -1002,7 +969,16 @@ var BrowserApp = {
     delete this.defaultBrowserWidth;
     let width = Services.prefs.getIntPref("browser.viewport.desktopWidth");
     return this.defaultBrowserWidth = width;
+  },
+
+  // nsIAndroidBrowserApp
+  getWindowForTab: function(tabId) {
+      let tab = this.getTabForId(tabId);
+      if (!tab.browser)
+	  return null;
+      return tab.browser.contentWindow;
   }
+
 };
 
 var NativeWindow = {
@@ -1136,6 +1112,15 @@ var NativeWindow = {
                  NativeWindow.toast.show(label, "short");
                });
 
+      this.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
+               this.linkShareableContext,
+               function(aTarget) {
+                 let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+                 let title = aTarget.textContent || aTarget.title;
+                 let sharing = Cc["@mozilla.org/uriloader/external-sharing-app-service;1"].getService(Ci.nsIExternalSharingAppService);
+                 sharing.shareWithDefault(url, "text/plain", title);
+               });
+
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
                this.SelectorContext("video:not(:-moz-full-screen)"),
                function(aTarget) {
@@ -1220,6 +1205,32 @@ var NativeWindow = {
 
           let dontOpen = /^(mailto|javascript|news|snews)$/;
           return (scheme && !dontOpen.test(scheme));
+        }
+        return false;
+      }
+    },
+
+    linkShareableContext: {
+      matches: function linkShareableContextMatches(aElement) {
+        if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
+            ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
+            (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
+            aElement instanceof Ci.nsIDOMHTMLLinkElement ||
+            aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
+          let uri;
+          try {
+            let url = NativeWindow.contextmenus._getLinkURL(aElement);
+            uri = Services.io.newURI(url, null, null);
+          } catch (e) {
+            return false;
+          }
+
+          let scheme = uri.scheme;
+          if (!scheme)
+            return false;
+
+          let dontShare = /^(chrome|about|file|javascript|resource)$/;
+          return (scheme && !dontShare.test(scheme));
         }
         return false;
       }
@@ -1618,16 +1629,6 @@ Tab.prototype = {
 
     if (transformChanged)
       this.updateTransform();
-  },
-
-  screenshot: function(aSrc, aDst) {
-      if (!this.browser || !this.browser.contentWindow)
-        return;
-
-      getBridge().takeScreenshot(this.browser.contentWindow, 0, 0, aSrc.width, aSrc.height, aDst.width, aDst.height, this.id);
-      Services.tm.mainThread.dispatch(function() {
-	  BrowserApp.doNextScreenshot()
-      }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   updateTransform: function() {

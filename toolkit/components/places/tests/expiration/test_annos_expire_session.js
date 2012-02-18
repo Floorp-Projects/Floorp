@@ -86,17 +86,27 @@ function run_test() {
   items = as.getItemsWithAnnotation("test2");
   do_check_eq(items.length, 10);
 
-  waitForAsyncUpdates(function() {
-    let stmt = DBConn().createStatement(
+  waitForConnectionClosed(function() {
+    let stmt = DBConn(true).createAsyncStatement(
       "SELECT id FROM moz_annos "
-    + "UNION "
+    + "UNION ALL "
     + "SELECT id FROM moz_items_annos "
     );
-    do_check_false(stmt.executeStep());
+    stmt.executeAsync({
+      handleResult: function(aResultSet) {
+        dump_table("moz_annos");
+        dump_table("moz_items_annos");
+        do_throw("Should not find any leftover session annotations");
+      },
+      handleError: function(aError) {
+        do_throw("Error code " + aError.result + " with message '" +
+                 aError.message + "' returned.");
+      },
+      handleCompletion: function(aReason) {
+        do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
+        do_test_finished();
+      }
+    });
     stmt.finalize();
-
-    do_test_finished();
   });
-
-  shutdownPlaces();
 }

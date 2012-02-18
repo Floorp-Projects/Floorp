@@ -1024,7 +1024,7 @@ struct WebGLVertexAttribData {
     }
 };
 
-class WebGLBuffer
+class WebGLBuffer MOZ_FINAL
     : public nsIWebGLBuffer
     , public WebGLRefCountedObject<WebGLBuffer>
     , public WebGLContextBoundObject
@@ -1158,7 +1158,7 @@ protected:
     void* mData; // in the case of an Element Array Buffer, we keep a copy.
 };
 
-class WebGLTexture
+class WebGLTexture MOZ_FINAL
     : public nsIWebGLTexture
     , public WebGLRefCountedObject<WebGLTexture>
     , public WebGLContextBoundObject
@@ -1608,7 +1608,7 @@ public:
     }
 };
 
-class WebGLShader
+class WebGLShader MOZ_FINAL
     : public nsIWebGLShader
     , public WebGLRefCountedObject<WebGLShader>
     , public WebGLContextBoundObject
@@ -1673,7 +1673,7 @@ protected:
     WebGLMonotonicHandle mMonotonicHandle;
 };
 
-class WebGLProgram
+class WebGLProgram MOZ_FINAL
     : public nsIWebGLProgram
     , public WebGLRefCountedObject<WebGLProgram>
     , public WebGLContextBoundObject
@@ -1795,7 +1795,7 @@ protected:
     WebGLMonotonicHandle mMonotonicHandle;
 };
 
-class WebGLRenderbuffer
+class WebGLRenderbuffer MOZ_FINAL
     : public nsIWebGLRenderbuffer
     , public WebGLRefCountedObject<WebGLRenderbuffer>
     , public WebGLRectangleObject
@@ -2001,7 +2001,7 @@ public:
     }
 };
 
-class WebGLFramebuffer
+class WebGLFramebuffer MOZ_FINAL
     : public nsIWebGLFramebuffer
     , public WebGLRefCountedObject<WebGLFramebuffer>
     , public WebGLContextBoundObject
@@ -2296,7 +2296,7 @@ public:
     WebGLMonotonicHandle mMonotonicHandle;
 };
 
-class WebGLUniformLocation
+class WebGLUniformLocation MOZ_FINAL
     : public nsIWebGLUniformLocation
     , public WebGLContextBoundObject
     , public WebGLRefCountedObject<WebGLUniformLocation>
@@ -2337,7 +2337,7 @@ protected:
     friend class WebGLProgram;
 };
 
-class WebGLActiveInfo
+class WebGLActiveInfo MOZ_FINAL
     : public nsIWebGLActiveInfo
 {
 public:
@@ -2356,7 +2356,7 @@ protected:
     nsString mName;
 };
 
-class WebGLShaderPrecisionFormat
+class WebGLShaderPrecisionFormat MOZ_FINAL
     : public nsIWebGLShaderPrecisionFormat
 {
 public:
@@ -2388,6 +2388,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLEXTENSION
+    virtual ~WebGLExtension() {}
 };
 
 inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
