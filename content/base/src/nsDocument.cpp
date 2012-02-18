@@ -2119,7 +2119,6 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   }
 #endif
 
-  SetPrincipal(nsnull);
   mSecurityInfo = nsnull;
 
   mDocumentLoadGroup = nsnull;
@@ -2168,6 +2167,12 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 
   // Release the stylesheets list.
   mDOMStyleSheets = nsnull;
+
+  // Release our principal after tearing down the document, rather than before.
+  // This ensures that, during teardown, the document and the dying window (which
+  // already nulled out its document pointer and cached the principal) have
+  // matching principals.
+  SetPrincipal(nsnull);
 
   // Clear the original URI so SetDocumentURI sets it.
   mOriginalURI = nsnull;
