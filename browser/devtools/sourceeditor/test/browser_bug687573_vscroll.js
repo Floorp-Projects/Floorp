@@ -48,7 +48,7 @@ function initEditor()
 
   let config = {
     showLineNumbers: true,
-    initialText: text,
+    placeholderText: text,
   };
 
   editor = new SourceEditor();
