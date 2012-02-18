@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import sys, os, subprocess, struct
+import sys, os, subprocess, struct, re
 
 local_file_header = [
     ("signature", "uint32"),
@@ -329,10 +329,12 @@ if len(sys.argv) != 5:
     print "Usage: --optimize|--deoptimize %s JAR_LOG_DIR IN_JAR_DIR OUT_JAR_DIR" % sys.argv[0]
     exit(1)
 
+jar_regex = re.compile("\\.jar?$")
+
 def optimize(JAR_LOG_DIR, IN_JAR_DIR, OUT_JAR_DIR):
     ls = os.listdir(IN_JAR_DIR)
     for jarfile in ls:
-        if not jarfile.endswith(".jar"):
+        if not re.search(jar_regex, jarfile):
             continue
         injarfile = os.path.join(IN_JAR_DIR, jarfile)
         outjarfile = os.path.join(OUT_JAR_DIR, jarfile) 
@@ -347,7 +349,7 @@ def deoptimize(JAR_LOG_DIR, IN_JAR_DIR, OUT_JAR_DIR):
 
     ls = os.listdir(IN_JAR_DIR)
     for jarfile in ls:
-        if not jarfile.endswith(".jar"):
+        if not re.search(jar_regex, jarfile):
             continue
         injarfile = os.path.join(IN_JAR_DIR, jarfile)
         outjarfile = os.path.join(OUT_JAR_DIR, jarfile) 
