@@ -236,6 +236,7 @@ class Debugger {
 
     bool init(JSContext *cx);
     inline const js::HeapPtrObject &toJSObject() const;
+    inline js::HeapPtrObject &toJSObjectRef();
     static inline Debugger *fromJSObject(JSObject *obj);
     static Debugger *fromChildJSObject(JSObject *obj);
 
@@ -431,6 +432,7 @@ class Breakpoint {
     Breakpoint *nextInDebugger();
     Breakpoint *nextInSite();
     const HeapPtrObject &getHandler() const { return handler; }
+    HeapPtrObject &getHandlerRef() { return handler; }
 };
 
 Debugger *
@@ -450,6 +452,13 @@ Debugger::firstBreakpoint() const
 
 const js::HeapPtrObject &
 Debugger::toJSObject() const
+{
+    JS_ASSERT(object);
+    return object;
+}
+
+js::HeapPtrObject &
+Debugger::toJSObjectRef()
 {
     JS_ASSERT(object);
     return object;
