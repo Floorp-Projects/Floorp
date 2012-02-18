@@ -260,6 +260,7 @@ static double GetYScale(const gfx3DMatrix& aTransform)
 void
 CompositorParent::TransformShadowTree()
 {
+#ifdef MOZ_WIDGET_ANDROID
   Layer* layer = GetPrimaryScrollableLayer();
   ShadowLayer* shadow = layer->AsShadowLayer();
 
@@ -283,6 +284,7 @@ CompositorParent::TransformShadowTree()
   shadowTransform = gfx3DMatrix(treeTransform) * currentTransform;
 
   shadow->SetShadowTransform(shadowTransform);
+#endif
 }
 
 void
