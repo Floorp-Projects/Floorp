@@ -249,10 +249,24 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
     Invalidate(nsRect(0, 0, mRect.width, mRect.height));
   }
 
+  // Reflow the single anon block child.
+  nsReflowStatus childStatus;
+  nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
+  nsIFrame* childFrame = mFrames.FirstChild();
+  NS_ASSERTION(!childFrame->GetNextSibling(), "HTML canvas should have 1 kid");
+  nsHTMLReflowMetrics childDesiredSize(aMetrics.mFlags);
+  nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame,
+                                     availSize);
+  ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowState,
+              0, 0, 0, childStatus, nsnull);
+  FinishReflowChild(childFrame, aPresContext, &childReflowState,
+                    childDesiredSize, 0, 0, 0);
+
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsHTMLCanvasFrame::Reflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
+
   return NS_OK;
 }
 
