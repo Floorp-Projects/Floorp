@@ -1194,7 +1194,7 @@ array_trace(JSTracer *trc, JSObject *obj)
     JS_ASSERT(obj->isDenseArray());
 
     uint32_t initLength = obj->getDenseArrayInitializedLength();
-    MarkValueRange(trc, initLength, obj->getDenseArrayElements(), "element");
+    MarkSlotRange(trc, initLength, obj->getDenseArrayElements(), "element");
 }
 
 static JSBool
@@ -1377,7 +1377,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     this->shape_ = shape;
 
     /* Take ownership of the dense elements, reset to an empty dense array. */
-    HeapValue *elems = elements;
+    HeapSlot *elems = elements;
     elements = emptyObjectElements;
 
     /* Root all values in the array during conversion. */

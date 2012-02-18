@@ -152,8 +152,8 @@ class CallObject : public ScopeObject
      * inference is enabled, where we ensure that call object variables are in
      * contiguous slots (see NewCallObject).
      */
-    inline js::HeapValueArray argArray();
-    inline js::HeapValueArray varArray();
+    inline js::HeapSlotArray argArray();
+    inline js::HeapSlotArray varArray();
 
     inline void copyValues(uintN nargs, Value *argv, uintN nvars, Value *slots);
 };
@@ -210,7 +210,7 @@ class BlockObject : public NestedScopeObject
 
   protected:
     /* Blocks contain an object slot for each slot i: 0 <= i < slotCount. */
-    inline HeapValue &slotValue(unsigned i);
+    inline HeapSlot &slotValue(unsigned i);
 };
 
 class StaticBlockObject : public BlockObject

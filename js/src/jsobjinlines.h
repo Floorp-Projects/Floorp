@@ -101,7 +101,7 @@ JSObject::privateRef(uint32_t nfixed) const
      */
     JS_ASSERT(nfixed == numFixedSlots());
     JS_ASSERT(hasPrivate());
-    js::HeapValue *end = &fixedSlots()[nfixed];
+    js::HeapSlot *end = &fixedSlots()[nfixed];
     return *reinterpret_cast<void**>(end);
 }
 
@@ -406,7 +406,7 @@ JSObject::canRemoveLastProperty()
         && previous->getObjectFlags() == lastProperty()->getObjectFlags();
 }
 
-inline const js::HeapValue *
+inline const js::HeapSlot *
 JSObject::getRawSlots()
 {
     JS_ASSERT(isGlobal());
@@ -420,7 +420,7 @@ JSObject::getReservedSlot(uintN index) const
     return getSlot(index);
 }
 
-inline js::HeapValue &
+inline js::HeapSlot &
 JSObject::getReservedSlotRef(uintN index)
 {
     JS_ASSERT(index < JSSLOT_FREE(getClass()));
@@ -432,6 +432,13 @@ JSObject::setReservedSlot(uintN index, const js::Value &v)
 {
     JS_ASSERT(index < JSSLOT_FREE(getClass()));
     setSlot(index, v);
+}
+
+inline void
+JSObject::initReservedSlot(uintN index, const js::Value &v)
+{
+    JS_ASSERT(index < JSSLOT_FREE(getClass()));
+    initSlot(index, v);
 }
 
 inline bool
@@ -449,7 +456,7 @@ inline void
 JSObject::prepareSlotRangeForOverwrite(size_t start, size_t end)
 {
     for (size_t i = start; i < end; i++)
-        getSlotAddressUnchecked(i)->js::HeapValue::~HeapValue();
+        getSlotAddressUnchecked(i)->js::HeapSlot::~HeapSlot();
 }
 
 inline void
@@ -458,7 +465,7 @@ JSObject::prepareElementRangeForOverwrite(size_t start, size_t end)
     JS_ASSERT(isDenseArray());
     JS_ASSERT(end <= getDenseArrayInitializedLength());
     for (size_t i = start; i < end; i++)
-        elements[i].js::HeapValue::~HeapValue();
+        elements[i].js::HeapSlot::~HeapSlot();
 }
 
 inline uint32_t
@@ -529,11 +536,11 @@ JSObject::ensureElements(JSContext *cx, uint32_t capacity)
     return true;
 }
 
-inline js::HeapValueArray
+inline js::HeapSlotArray
 JSObject::getDenseArrayElements()
 {
     JS_ASSERT(isDenseArray());
-    return js::HeapValueArray(elements);
+    return js::HeapSlotArray(elements);
 }
 
 inline const js::Value &
@@ -547,14 +554,14 @@ inline void
 JSObject::setDenseArrayElement(uintN idx, const js::Value &val)
 {
     JS_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
-    elements[idx] = val;
+    elements[idx].set(this, idx, val);
 }
 
 inline void
 JSObject::initDenseArrayElement(uintN idx, const js::Value &val)
 {
     JS_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
-    elements[idx].init(val);
+    elements[idx].init(this, idx, val);
 }
 
 inline void
@@ -577,7 +584,7 @@ JSObject::copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN cou
     JS_ASSERT(dstStart + count <= getDenseArrayCapacity());
     JSCompartment *comp = compartment();
     for (unsigned i = 0; i < count; ++i)
-        elements[dstStart + i].set(comp, src[i]);
+        elements[dstStart + i].set(comp, this, dstStart + i, src[i]);
 }
 
 inline void
@@ -586,7 +593,7 @@ JSObject::initDenseArrayElements(uintN dstStart, const js::Value *src, uintN cou
     JS_ASSERT(dstStart + count <= getDenseArrayCapacity());
     JSCompartment *comp = compartment();
     for (unsigned i = 0; i < count; ++i)
-        elements[dstStart + i].init(comp, src[i]);
+        elements[dstStart + i].init(comp, this, dstStart + i, src[i]);
 }
 
 inline void
@@ -607,20 +614,21 @@ JSObject::moveDenseArrayElements(uintN dstStart, uintN srcStart, uintN count)
      * write barrier is invoked here on B, despite the fact that it exists in
      * the array before and after the move.
     */
-    if (compartment()->needsBarrier()) {
+    JSCompartment *comp = compartment();
+    if (comp->needsBarrier()) {
         if (dstStart < srcStart) {
-            js::HeapValue *dst = elements + dstStart;
-            js::HeapValue *src = elements + srcStart;
+            js::HeapSlot *dst = elements + dstStart;
+            js::HeapSlot *src = elements + srcStart;
             for (unsigned i = 0; i < count; i++, dst++, src++)
-                *dst = *src;
+                dst->set(comp, this, dst - elements, *src);
         } else {
-            js::HeapValue *dst = elements + dstStart + count - 1;
-            js::HeapValue *src = elements + srcStart + count - 1;
+            js::HeapSlot *dst = elements + dstStart + count - 1;
+            js::HeapSlot *src = elements + srcStart + count - 1;
             for (unsigned i = 0; i < count; i++, dst--, src--)
-                *dst = *src;
+                dst->set(comp, this, dst - elements, *src);
         }
     } else {
-        memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
+        memmove(elements + dstStart, elements + srcStart, count * sizeof(js::HeapSlot));
     }
 }
 
@@ -971,30 +979,62 @@ JSObject::isQName() const
 }
 
 inline void
+JSObject::getSlotRangeUnchecked(size_t start, size_t length,
+                                js::HeapSlot **fixedStart, js::HeapSlot **fixedEnd,
+                                js::HeapSlot **slotsStart, js::HeapSlot **slotsEnd)
+{
+    JS_ASSERT(!isDenseArray());
+
+    size_t fixed = numFixedSlots();
+    if (start < fixed) {
+        if (start + length < fixed) {
+            *fixedStart = &fixedSlots()[start];
+            *fixedEnd = &fixedSlots()[start + length];
+            *slotsStart = *slotsEnd = NULL;
+        } else {
+            size_t localCopy = fixed - start;
+            *fixedStart = &fixedSlots()[start];
+            *fixedEnd = &fixedSlots()[start + localCopy];
+            *slotsStart = &slots[0];
+            *slotsEnd = &slots[length - localCopy];
+        }
+    } else {
+        *fixedStart = *fixedEnd = NULL;
+        *slotsStart = &slots[start - fixed];
+        *slotsEnd = &slots[start - fixed + length];
+    }
+}
+
+inline void
+JSObject::getSlotRange(size_t start, size_t length,
+                       js::HeapSlot **fixedStart, js::HeapSlot **fixedEnd,
+                       js::HeapSlot **slotsStart, js::HeapSlot **slotsEnd)
+{
+    JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
+    getSlotRangeUnchecked(start, length, fixedStart, fixedEnd, slotsStart, slotsEnd);
+}
+
+inline void
 JSObject::initializeSlotRange(size_t start, size_t length)
 {
     /*
      * No bounds check, as this is used when the object's shape does not
      * reflect its allocated slots (updateSlotsForSpan).
      */
-    JS_ASSERT(!isDenseArray());
-    size_t fixed = numFixedSlots();
-    if (start < fixed) {
-        if (start + length < fixed) {
-            js::InitValueRange(fixedSlots() + start, length, false);
-        } else {
-            size_t localClear = fixed - start;
-            js::InitValueRange(fixedSlots() + start, localClear, false);
-            js::InitValueRange(slots, length - localClear, false);
-        }
-    } else {
-        js::InitValueRange(slots + start - fixed, length, false);
-    }
+    js::HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    getSlotRangeUnchecked(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+
+    JSCompartment *comp = compartment();
+    size_t offset = start;
+    for (js::HeapSlot *sp = fixedStart; sp != fixedEnd; sp++)
+        sp->init(comp, this, offset++, js::UndefinedValue());
+    for (js::HeapSlot *sp = slotsStart; sp != slotsEnd; sp++)
+        sp->init(comp, this, offset++, js::UndefinedValue());
 }
 
 /* static */ inline JSObject *
 JSObject::create(JSContext *cx, js::gc::AllocKind kind,
-                 js::HandleShape shape, js::HandleTypeObject type, js::HeapValue *slots)
+                 js::HandleShape shape, js::HandleTypeObject type, js::HeapSlot *slots)
 {
     /*
      * Callers must use dynamicSlotsCount to size the initial slot array of the
@@ -1102,7 +1142,7 @@ JSObject::slotSpan() const
     return lastProperty()->slotSpan();
 }
 
-inline js::HeapValue &
+inline js::HeapSlot &
 JSObject::nativeGetSlotRef(uintN slot)
 {
     JS_ASSERT(isNative());
@@ -1344,7 +1384,7 @@ inline JSBool
 JSObject::getGenericAttributes(JSContext *cx, jsid id, uintN *attrsp)
 {
     js::GenericAttributesOp op = getOps()->getGenericAttributes;
-    return (op ? op : js_GetAttributes)(cx, this, id, attrsp);    
+    return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
 }
 
 inline JSBool
@@ -1813,13 +1853,13 @@ NewObjectGCKind(JSContext *cx, js::Class *clasp)
  * may or may not need dynamic slots.
  */
 inline bool
-PreallocateObjectDynamicSlots(JSContext *cx, Shape *shape, HeapValue **slots)
+PreallocateObjectDynamicSlots(JSContext *cx, Shape *shape, HeapSlot **slots)
 {
     if (size_t count = JSObject::dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan())) {
-        *slots = (HeapValue *) cx->malloc_(count * sizeof(HeapValue));
+        *slots = (HeapSlot *) cx->malloc_(count * sizeof(HeapSlot));
         if (!*slots)
             return false;
-        Debug_SetValueRangeToCrashOnTouch(*slots, count);
+        Debug_SetSlotRangeToCrashOnTouch(*slots, count);
         return true;
     }
     *slots = NULL;
@@ -1969,7 +2009,7 @@ inline void
 JSObject::setSlot(uintN slot, const js::Value &value)
 {
     JS_ASSERT(slotInRange(slot));
-    getSlotRef(slot).set(compartment(), value);
+    getSlotRef(slot).set(this, slot, value);
 }
 
 inline void
@@ -1983,21 +2023,21 @@ JSObject::initSlot(uintN slot, const js::Value &value)
 inline void
 JSObject::initSlotUnchecked(uintN slot, const js::Value &value)
 {
-    getSlotAddressUnchecked(slot)->init(value);
+    getSlotAddressUnchecked(slot)->init(this, slot, value);
 }
 
 inline void
 JSObject::setFixedSlot(uintN slot, const js::Value &value)
 {
     JS_ASSERT(slot < numFixedSlots());
-    fixedSlots()[slot] = value;
+    fixedSlots()[slot].set(this, slot, value);
 }
 
 inline void
 JSObject::initFixedSlot(uintN slot, const js::Value &value)
 {
     JS_ASSERT(slot < numFixedSlots());
-    fixedSlots()[slot].init(value);
+    fixedSlots()[slot].init(this, slot, value);
 }
 
 #endif /* jsobjinlines_h___ */
