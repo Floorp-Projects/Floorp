@@ -67,15 +67,15 @@ public:
   nsresult SetBaseValueString(const nsAString& aValue,
                               nsSVGElement *aSVGElement,
                               bool aDoSetAttr);
-  void GetBaseValueString(nsAString& aValue);
-  void GetAnimValueString(nsAString& aValue);
+  void GetBaseValueString(nsAString& aValue) const;
+  void GetAnimValueString(nsAString& aValue) const;
 
   float GetBaseValue() const
     { return mBaseVal * GetDegreesPerUnit(mBaseValUnit); }
   float GetAnimValue() const
     { return mAnimVal * GetDegreesPerUnit(mAnimValUnit); }
 
-  void SetBaseValue(float aValue, nsSVGElement *aSVGElement);
+  void SetBaseValue(float aValue, nsSVGElement *aSVGElement, bool aDoSetAttr);
   void SetAnimValue(float aValue, PRUint8 aUnit, nsSVGElement *aSVGElement);
 
   PRUint8 GetBaseValueUnit() const { return mBaseValUnit; }
@@ -125,7 +125,7 @@ public:
     NS_IMETHOD GetValue(float* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
     NS_IMETHOD SetValue(float aValue)
-      { mVal->SetBaseValue(aValue, mSVGElement); return NS_OK; }
+      { mVal->SetBaseValue(aValue, mSVGElement, true); return NS_OK; }
 
     NS_IMETHOD GetValueInSpecifiedUnits(float* aResult)
       { *aResult = mVal->mBaseVal; return NS_OK; }

@@ -87,11 +87,12 @@
   "AFTER INSERT ON moz_places FOR EACH ROW " \
   "WHEN LENGTH(NEW.rev_host) > 1 " \
   "BEGIN " \
-    "INSERT OR REPLACE INTO moz_hosts (id, host, frecency) " \
+    "INSERT OR REPLACE INTO moz_hosts (id, host, frecency, typed) " \
     "VALUES (" \
       "(SELECT id FROM moz_hosts WHERE host = fixup_url(get_unreversed_host(NEW.rev_host))), " \
       "fixup_url(get_unreversed_host(NEW.rev_host)), " \
-      "MAX((SELECT frecency FROM moz_hosts WHERE host = fixup_url(get_unreversed_host(NEW.rev_host))), NEW.frecency) " \
+      "MAX((SELECT frecency FROM moz_hosts WHERE host = fixup_url(get_unreversed_host(NEW.rev_host))), NEW.frecency), " \
+      "MAX(IFNULL((SELECT typed FROM moz_hosts WHERE host = fixup_url(get_unreversed_host(NEW.rev_host))), 0), NEW.typed) " \
     "); " \
   "END" \
 )
@@ -110,7 +111,7 @@
 // frecency changes by a meaningful percentage.  This is because the frecency
 // decay algorithm requires to update all the frecencies at once, causing a
 // too high overhead, while leaving the ordering unchanged.
-#define CREATE_PLACES_AFTERUPDATE_TRIGGER NS_LITERAL_CSTRING( \
+#define CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMP TRIGGER moz_places_afterupdate_frecency_trigger " \
   "AFTER UPDATE OF frecency ON moz_places FOR EACH ROW " \
   "WHEN NEW.frecency >= 0 " \
@@ -123,6 +124,17 @@
     "SET frecency = (SELECT MAX(frecency) FROM moz_places " \
                     "WHERE rev_host = NEW.rev_host " \
                        "OR rev_host = NEW.rev_host || 'www.') " \
+    "WHERE host = fixup_url(get_unreversed_host(NEW.rev_host)); " \
+  "END" \
+)
+
+#define CREATE_PLACES_AFTERUPDATE_TYPED_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_places_afterupdate_typed_trigger " \
+  "AFTER UPDATE OF typed ON moz_places FOR EACH ROW " \
+  "WHEN NEW.typed = 1 " \
+  "BEGIN " \
+    "UPDATE moz_hosts " \
+    "SET typed = 1 " \
     "WHERE host = fixup_url(get_unreversed_host(NEW.rev_host)); " \
   "END" \
 )

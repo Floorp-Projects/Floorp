@@ -238,9 +238,9 @@ ParseSize(PRInt64 aSize, PRInt64& aStart, PRInt64& aEnd)
 }
 
 NS_IMETHODIMP
-nsDOMFileBase::MozSlice(PRInt64 aStart, PRInt64 aEnd,
-                        const nsAString& aContentType, PRUint8 optional_argc,
-                        nsIDOMBlob **aBlob)
+nsDOMFileBase::Slice(PRInt64 aStart, PRInt64 aEnd,
+                     const nsAString& aContentType, PRUint8 optional_argc,
+                     nsIDOMBlob **aBlob)
 {
   *aBlob = nsnull;
 

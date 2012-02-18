@@ -46,6 +46,7 @@
 #ifndef xpcprivate_h___
 #define xpcprivate_h___
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
 #include <string.h>
@@ -1350,7 +1351,8 @@ private:
 // These are the various JSClasses and callbacks whose use that required
 // visibility from more than one .cpp file.
 
-extern js::Class XPC_WN_NoHelper_JSClass;
+struct XPCWrappedNativeJSClass;
+extern XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass;
 extern js::Class XPC_WN_NoMods_WithCall_Proto_JSClass;
 extern js::Class XPC_WN_NoMods_NoCall_Proto_JSClass;
 extern js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass;
@@ -1608,7 +1610,7 @@ public:
 
     static XPCWrappedNativeScope *GetNativeScope(JSContext *cx, JSObject *obj)
     {
-        JS_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
+        MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
 
         const js::Value &v = js::GetObjectSlot(obj, JSCLASS_GLOBAL_SLOT_COUNT);
         return v.isUndefined()
@@ -2034,7 +2036,10 @@ public:
 // was a big problem when wrappers are reparented to different scopes (and
 // thus different protos (the DOM does this).
 
-struct XPCNativeScriptableSharedJSClass
+// We maintain the invariant that every JSClass for which ext.isWrappedNative
+// is true is a contained in an instance of this struct, and can thus be cast
+// to it.
+struct XPCWrappedNativeJSClass
 {
     js::Class base;
     PRUint32 interfacesBitmap;
@@ -2076,7 +2081,7 @@ public:
 
 private:
     XPCNativeScriptableFlags mFlags;
-    XPCNativeScriptableSharedJSClass mJSClass;
+    XPCWrappedNativeJSClass  mJSClass;
     JSBool                   mCanBeSlim;
 };
 
@@ -3020,7 +3025,10 @@ public:
     JSBool IsAggregatedToNative() const {return mRoot->mOuter != nsnull;}
     nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
 
-    void SetIsMainThreadOnly() {JS_ASSERT(mMainThread); mMainThreadOnly = true;}
+    void SetIsMainThreadOnly() {
+        MOZ_ASSERT(mMainThread);
+        mMainThreadOnly = true;
+    }
     bool IsMainThreadOnly() const {return mMainThreadOnly;}
 
     void TraceJS(JSTracer* trc);
@@ -3649,7 +3657,7 @@ public:
         // XPConnect off the main thread. If you're an extension developer hitting
         // this, you need to change your code. See bug 716167.
         if (!NS_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
-            JS_Assert("NS_IsMainThread()", __FILE__, __LINE__);
+            MOZ_Assert("NS_IsMainThread()", __FILE__, __LINE__);
 
         if (cx) {
             if (js::GetOwnerThread(cx) == sMainJSThread)

@@ -4331,7 +4331,7 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
     // Must be a zero number...
     NS_ASSERTION(0 == aNumber, "numbers without units must be 0");
     if ((VARIANT_LENGTH & aVariantMask) != 0) {
-      units = eCSSUnit_Point;
+      units = eCSSUnit_Pixel;
       type = VARIANT_LENGTH;
     }
     else if ((VARIANT_ANGLE & aVariantMask) != 0) {
@@ -7764,6 +7764,35 @@ CSSParserImpl::ParseSingleTransform(nsCSSValue& aValue, bool& aIs3D)
   if (!GetFunctionParseInformation(keyword,
                                    minElems, maxElems, variantMask, aIs3D))
     return false;
+
+  // Bug 721136: Normalize the identifier to lowercase, except that things
+  // like scaleX should have the last character capitalized.  This matches
+  // what other browsers do.
+  nsContentUtils::ASCIIToLower(mToken.mIdent);
+  switch (keyword) {
+    case eCSSKeyword_rotatex:
+    case eCSSKeyword_scalex:
+    case eCSSKeyword_skewx:
+    case eCSSKeyword_translatex:
+      mToken.mIdent.Replace(mToken.mIdent.Length() - 1, 1, PRUnichar('X'));
+      break;
+
+    case eCSSKeyword_rotatey:
+    case eCSSKeyword_scaley:
+    case eCSSKeyword_skewy:
+    case eCSSKeyword_translatey:
+      mToken.mIdent.Replace(mToken.mIdent.Length() - 1, 1, PRUnichar('Y'));
+      break;
+
+    case eCSSKeyword_rotatez:
+    case eCSSKeyword_scalez:
+    case eCSSKeyword_translatez:
+      mToken.mIdent.Replace(mToken.mIdent.Length() - 1, 1, PRUnichar('Z'));
+      break;
+
+    default:
+      break;
+  }
 
   return ParseFunction(mToken.mIdent, variantMask, minElems, maxElems, aValue);
 }

@@ -275,7 +275,7 @@ StackFrame::mark(JSTracer *trc)
     }
     if (IS_GC_MARKING_TRACER(trc))
         script()->compartment()->active = true;
-    gc::MarkValueUnbarriered(trc, returnValue(), "rval");
+    gc::MarkValueUnbarriered(trc, &returnValue(), "rval");
 }
 
 /*****************************************************************************/
@@ -485,7 +485,7 @@ StackSpace::markFrameSlots(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbyt
 
         /* Will this slot be synced by the JIT? */
         if (!analysis->trackSlot(slot) || analysis->liveness(slot).live(offset))
-            gc::MarkValueRoot(trc, *vp, "vm_stack");
+            gc::MarkValueRoot(trc, vp, "vm_stack");
         else
             *vp = UndefinedValue();
     }

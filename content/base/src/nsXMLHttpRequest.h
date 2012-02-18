@@ -365,7 +365,7 @@ protected:
   void HandleTimeoutCallback();
 
   bool mErrorLoad;
-
+  bool mWaitingForOnStopRequest;
   bool mProgressTimerIsActive;
   bool mProgressEventWasDelayed;
   bool mIsHtml;

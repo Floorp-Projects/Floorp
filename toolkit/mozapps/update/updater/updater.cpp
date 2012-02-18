@@ -1452,6 +1452,7 @@ WriteStatusApplying()
   return true;
 }
 
+#ifdef MOZ_MAINTENANCE_SERVICE
 /* 
  * Read the update.status file and sets isPendingService to true if
  * the status is set to pending-service.
@@ -1486,7 +1487,9 @@ IsUpdateStatusPending(bool &isPendingService)
                              sizeof(kPendingService) - 1) == 0;
   return isPending;
 }
+#endif
 
+#ifdef XP_WIN
 /* 
  * Read the update.status file and sets isSuccess to true if
  * the status is set to succeeded.
@@ -1516,7 +1519,6 @@ IsUpdateStatusSucceeded(bool &isSucceeded)
   return true;
 }
 
-#ifdef XP_WIN
 static void 
 WaitForServiceFinishThread(void *param)
 {
@@ -2555,7 +2557,6 @@ int DoUpdate()
   ActionList list;
   NS_tchar *line;
   bool isFirstAction = true;
-  bool isComplete = false;
 
   while((line = mstrtok(kNL, &rb)) != 0) {
     // skip comments
@@ -2572,7 +2573,6 @@ int DoUpdate()
       const NS_tchar *type = mstrtok(kQuote, &line);
       LOG(("UPDATE TYPE " LOG_S "\n", type));
       if (NS_tstrcmp(type, NS_T("complete")) == 0) {
-        isComplete = true;
         rv = AddPreCompleteActions(&list);
         if (rv)
           return rv;

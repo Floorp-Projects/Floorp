@@ -539,8 +539,8 @@ castNativeFromWrapper(JSContext *cx,
 
     NS_ASSERTION(IS_WRAPPER_CLASS(js::GetObjectClass(cur)), "Not a wrapper?");
 
-    XPCNativeScriptableSharedJSClass *clasp =
-      (XPCNativeScriptableSharedJSClass*)js::GetObjectClass(cur);
+    XPCWrappedNativeJSClass *clasp =
+      (XPCWrappedNativeJSClass*)js::GetObjectClass(cur);
     if (!(clasp->interfacesBitmap & (1 << interfaceBit)))
         return nsnull;
 

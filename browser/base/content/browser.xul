@@ -90,6 +90,7 @@
         lightweightthemes="true"
         lightweightthemesfooter="browser-bottombox"
         windowtype="navigator:browser"
+        macanimationtype="document"
         screenX="4" screenY="4"
         browsingmode="normal"
         persist="screenX screenY width height sizemode">
