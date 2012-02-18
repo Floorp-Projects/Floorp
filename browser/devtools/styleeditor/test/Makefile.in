@@ -51,6 +51,7 @@ _BROWSER_TEST_FILES = \
                  browser_styleeditor_init.js \
                  browser_styleeditor_loading.js \
                  browser_styleeditor_new.js \
+                 browser_styleeditor_passedinsheet.js \
                  browser_styleeditor_pretty.js \
                  browser_styleeditor_readonly.js \
                  browser_styleeditor_reopen.js \

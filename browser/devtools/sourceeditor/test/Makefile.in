@@ -55,6 +55,7 @@ _BROWSER_TEST_FILES = \
 		browser_bug687160_line_api.js \
 		browser_bug650345_find.js \
 		browser_bug703692_focus_blur.js \
+		browser_bug725388_mouse_events.js \
 		head.js \
 
 libs:: $(_BROWSER_TEST_FILES)
