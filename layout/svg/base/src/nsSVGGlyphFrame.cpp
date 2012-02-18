@@ -900,21 +900,25 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext, nsRefPtr<gfxPattern> *aSt
     nsSVGPaintServerFrame *ps = GetPaintServer(&style->mStroke,
                                                nsSVGEffects::StrokeProperty());
 
+    nsRefPtr<gfxPattern> strokePattern;
+
     if (ps) {
       // Gradient or Pattern: can get pattern directly from frame
-      *aStrokePattern = ps->GetPaintServerPattern(this, opacity);
+      strokePattern = ps->GetPaintServerPattern(this, opacity);
+    }
 
-      NS_ASSERTION(*aStrokePattern, "No pattern returned from paint server");
-    } else {
+    if (!strokePattern) {
       nscolor color;
       nsSVGUtils::GetFallbackOrPaintColor(aContext, GetStyleContext(),
                                           &nsStyleSVG::mStroke, &opacity,
                                           &color);
-      *aStrokePattern = new gfxPattern(gfxRGBA(NS_GET_R(color) / 255.0,
-                                              NS_GET_G(color) / 255.0,
-                                              NS_GET_B(color) / 255.0,
-                                              NS_GET_A(color) / 255.0 * opacity));
+      strokePattern = new gfxPattern(gfxRGBA(NS_GET_R(color) / 255.0,
+                                             NS_GET_G(color) / 255.0,
+                                             NS_GET_B(color) / 255.0,
+                                             NS_GET_A(color) / 255.0 * opacity));
     }
+
+    strokePattern.swap(*aStrokePattern);
   }
 
   if (SetupCairoFill(aContext)) {
