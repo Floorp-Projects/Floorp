@@ -128,6 +128,25 @@ protected:
 
   // Cached useful interfaces
   nsCOMPtr<nsIFind> mFind;
+
+  bool mCaseSensitive;
+
+  bool EnsureFind() {
+    if (mFind) {
+      return true;
+    }
+
+    mFind = do_CreateInstance("@mozilla.org/embedcomp/rangefind;1");
+    if (!mFind) {
+      return false;
+    }
+
+    mFind->SetCaseSensitive(mCaseSensitive);
+    mFind->SetWordBreaker(nsnull);
+
+    return true;
+  }
+
   nsCOMPtr<nsIWebBrowserFind> mWebBrowserFind;
 
   // The focused content window that we're listening to and its cached objects
