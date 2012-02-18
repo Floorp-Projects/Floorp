@@ -5764,6 +5764,7 @@ PresShell::RecordMouseLocation(nsGUIEvent* aEvent)
   }
 }
 
+#ifdef MOZ_TOUCH
 static void
 EvictTouchPoint(nsCOMPtr<nsIDOMTouch>& aTouch)
 {
@@ -5811,6 +5812,7 @@ AppendToTouchList(const PRUint32& aKey, nsCOMPtr<nsIDOMTouch>& aData, void *aTou
   touches->AppendElement(aData);
   return PL_DHASH_NEXT;
 }
+#endif // MOZ_TOUCH
 
 nsresult
 PresShell::HandleEvent(nsIFrame        *aFrame,
