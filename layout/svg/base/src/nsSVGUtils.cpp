@@ -451,24 +451,21 @@ nsSVGUtils::GetNearestViewportElement(nsIContent *aContent)
   return nsnull;
 }
 
-gfxMatrix
-nsSVGUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
+static gfxMatrix
+GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
 {
   nsIDocument* currentDoc = aElement->GetCurrentDoc();
-  if (currentDoc) {
-    // Flush all pending notifications so that our frames are up to date
-    currentDoc->FlushPendingNotifications(Flush_Layout);
-  }
 
-  gfxMatrix matrix = aElement->PrependLocalTransformTo(gfxMatrix());
+  gfxMatrix matrix = aElement->PrependLocalTransformsTo(gfxMatrix(),
+    aHaveRecursed ? nsSVGElement::eAllTransforms : nsSVGElement::eUserSpaceToParent);
   nsSVGElement *element = aElement;
   nsIContent *ancestor = aElement->GetFlattenedTreeParent();
 
   while (ancestor && ancestor->IsSVG() &&
                      ancestor->Tag() != nsGkAtoms::foreignObject) {
     element = static_cast<nsSVGElement*>(ancestor);
-    matrix *= element->PrependLocalTransformTo(gfxMatrix()); // i.e. *A*ppend
-    if (!aScreenCTM && EstablishesViewport(element)) {
+    matrix *= element->PrependLocalTransformsTo(gfxMatrix()); // i.e. *A*ppend
+    if (!aScreenCTM && nsSVGUtils::EstablishesViewport(element)) {
       if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
           !element->NodeInfo()->Equals(nsGkAtoms::symbol, kNameSpaceID_SVG)) {
         NS_ERROR("New (SVG > 1.1) SVG viewport establishing element?");
@@ -490,7 +487,8 @@ nsSVGUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
     if (element->Tag() != nsGkAtoms::svg) {
       return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
     }
-    return matrix * GetCTM(static_cast<nsSVGElement*>(ancestor), true);
+    return
+      matrix * GetCTMInternal(static_cast<nsSVGElement*>(ancestor), true, true);
   }
   // XXX this does not take into account CSS transform, or that the non-SVG
   // content that we've hit may itself be inside an SVG foreignObject higher up
@@ -508,6 +506,17 @@ nsSVGUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
     }
   }
   return matrix * gfxMatrix().Translate(gfxPoint(x, y));
+}
+
+gfxMatrix
+nsSVGUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
+{
+  nsIDocument* currentDoc = aElement->GetCurrentDoc();
+  if (currentDoc) {
+    // Flush all pending notifications so that our frames are up to date
+    currentDoc->FlushPendingNotifications(Flush_Layout);
+  }
+  return GetCTMInternal(aElement, aScreenCTM, false);
 }
 
 nsSVGDisplayContainerFrame*
@@ -1185,12 +1194,13 @@ nsSVGUtils::TransformOuterSVGPointToChildFrame(nsPoint aPoint,
                                                const gfxMatrix& aFrameToCanvasTM,
                                                nsPresContext* aPresContext)
 {
-  gfxMatrix devToUser = aFrameToCanvasTM;
-  devToUser.Invert();
-  NS_ABORT_IF_FALSE(!devToUser.IsSingular(), "should not get here");
+  NS_ABORT_IF_FALSE(!aFrameToCanvasTM.IsSingular(),
+                    "Callers must not pass a singular matrix");
+  gfxMatrix canvasDevToFrameUserSpace = aFrameToCanvasTM;
+  canvasDevToFrameUserSpace.Invert();
   gfxPoint devPt = gfxPoint(aPoint.x, aPoint.y) /
     aPresContext->AppUnitsPerDevPixel();
-  gfxPoint userPt = devToUser.Transform(devPt).Round();
+  gfxPoint userPt = canvasDevToFrameUserSpace.Transform(devPt).Round();
   gfxPoint appPt = userPt * aPresContext->AppUnitsPerCSSPixel();
   userPt.x = clamped(appPt.x, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
   userPt.y = clamped(appPt.y, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
@@ -1383,7 +1393,17 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, PRUint32 aFlags)
       }
       svg = do_QueryFrame(aFrame);
     }
-    bbox = svg->GetBBoxContribution(gfxMatrix(), aFlags);
+    gfxMatrix matrix;
+    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+      // The spec says getBBox "Returns the tight bounding box in *current user
+      // space*". So we should really be doing this for all elements, but that
+      // needs investigation to check that we won't break too much content.
+      NS_ABORT_IF_FALSE(aFrame->GetContent()->IsSVG(), "bad cast");
+      nsSVGElement *element = static_cast<nsSVGElement*>(aFrame->GetContent());
+      matrix = element->PrependLocalTransformsTo(matrix,
+                          nsSVGElement::eChildToUserSpace);
+    }
+    bbox = svg->GetBBoxContribution(matrix, aFlags);
   } else {
     bbox = nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
   }

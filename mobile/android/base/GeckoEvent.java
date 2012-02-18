@@ -88,6 +88,7 @@ public class GeckoEvent {
     private static final int NETWORK_CHANGED = 22;
     private static final int PROXIMITY_EVENT = 23;
     private static final int ACTIVITY_RESUMING = 24;
+    private static final int SCREENSHOT = 25;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -397,6 +398,15 @@ public class GeckoEvent {
         GeckoEvent event = new GeckoEvent(NETWORK_CHANGED);
         event.mBandwidth = bandwidth;
         event.mCanBeMetered = canBeMetered;
+        return event;
+    }
+
+    public static GeckoEvent createScreenshotEvent(int tabId, int sw, int sh, int dw, int dh) {
+        GeckoEvent event = new GeckoEvent(SCREENSHOT);
+        event.mPoints = new Point[2];
+        event.mPoints[0] = new Point(sw, sh);
+        event.mPoints[1] = new Point(dw, dh);
+        event.mMetaState = tabId;
         return event;
     }
 }

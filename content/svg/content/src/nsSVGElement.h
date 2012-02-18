@@ -151,11 +151,36 @@ public:
   // nsnull for outer <svg> or SVG without an <svg> parent (invalid SVG).
   nsSVGSVGElement* GetCtx() const;
 
+  enum TransformTypes {
+     eAllTransforms
+    ,eUserSpaceToParent
+    ,eChildToUserSpace
+  };
   /**
-   * Returns aMatrix post-multiplied by the transform from the userspace
-   * established by this element to the userspace established by its parent.
+   * Returns aMatrix pre-multiplied by (explicit or implicit) transforms that
+   * are introduced by attributes on this element.
+   *
+   * If aWhich is eAllTransforms, then all the transforms from the coordinate
+   * space established by this element for its children to the coordinate
+   * space established by this element's parent element for this element, are
+   * included.
+   *
+   * If aWhich is eUserSpaceToParent, then only the transforms from this
+   * element's userspace to the coordinate space established by its parent is
+   * included. This includes any transforms introduced by the 'transform'
+   * attribute, transform animations and animateMotion, but not any offsets
+   * due to e.g. 'x'/'y' attributes, or any transform due to a 'viewBox'
+   * attribute. (SVG userspace is defined to be the coordinate space in which
+   * coordinates on an element apply.)
+   *
+   * If aWhich is eChildToUserSpace, then only the transforms from the
+   * coordinate space established by this element for its childre to this
+   * elements userspace are included. This includes any offsets due to e.g.
+   * 'x'/'y' attributes, and any transform due to a 'viewBox' attribute, but
+   * does not include any transforms due to the 'transform' attribute.
    */
-  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
+  virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
+                      TransformTypes aWhich = eAllTransforms) const;
 
   // Setter for to set the current <animateMotion> transformation
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that

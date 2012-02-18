@@ -307,15 +307,7 @@ nsHttpHandler::Init()
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
-#ifdef ANDROID
-    mProductSub.AssignLiteral(MOZ_APP_UA_VERSION);
-#else
-    mProductSub.AssignLiteral(MOZ_UA_BUILDID);
-#endif
-    if (mProductSub.IsEmpty() && appInfo)
-        appInfo->GetPlatformBuildID(mProductSub);
-    if (mProductSub.Length() > 8)
-        mProductSub.SetLength(8);
+    mProductSub.AssignLiteral(MOZILLA_VERSION);
 
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category

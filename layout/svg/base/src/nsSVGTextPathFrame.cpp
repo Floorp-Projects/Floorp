@@ -147,7 +147,7 @@ nsSVGTextPathFrame::GetFlattenedPath()
     nsSVGPathGeometryElement *element =
       static_cast<nsSVGPathGeometryElement*>(path->GetContent());
 
-    return element->GetFlattenedPath(element->PrependLocalTransformTo(gfxMatrix()));
+    return element->GetFlattenedPath(element->PrependLocalTransformsTo(gfxMatrix()));
   }
   return nsnull;
 }

@@ -327,8 +327,8 @@ nsSVGClipPathFrame::GetCanvasTM()
   nsSVGClipPathElement *content = static_cast<nsSVGClipPathElement*>(mContent);
 
   gfxMatrix tm =
-    content->PrependLocalTransformTo(mClipParentMatrix ?
-                                     *mClipParentMatrix : gfxMatrix());
+    content->PrependLocalTransformsTo(mClipParentMatrix ?
+                                      *mClipParentMatrix : gfxMatrix());
 
   return nsSVGUtils::AdjustMatrixForUnits(tm,
                                           &content->mEnumAttributes[nsSVGClipPathElement::CLIPPATHUNITS],
