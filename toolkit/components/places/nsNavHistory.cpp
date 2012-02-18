@@ -263,7 +263,6 @@ nsNavHistory::nsNavHistory()
 , mHistoryEnabled(true)
 , mNumVisitsForFrecency(10)
 , mTagsFolder(-1)
-, mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED)
 , mHasHistoryEntries(-1)
 , mCanNotify(true)
 , mCacheObservers("history-observers")
@@ -316,7 +315,6 @@ nsNavHistory::Init()
   if (obsSvc) {
     (void)obsSvc->AddObserver(this, TOPIC_PLACES_CONNECTION_CLOSED, true);
     (void)obsSvc->AddObserver(this, TOPIC_IDLE_DAILY, true);
-    (void)obsSvc->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
 #ifdef MOZ_XUL
     (void)obsSvc->AddObserver(this, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING, true);
 #endif
@@ -1224,7 +1222,7 @@ nsNavHistory::CanAddURI(nsIURI* aURI, bool* canAdd)
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(canAdd);
 
-  // If history is disabled (included privatebrowsing), don't add any entry.
+  // If history is disabled, don't add any entry.
   if (IsHistoryDisabled()) {
     *canAdd = false;
     return NS_OK;
@@ -3429,7 +3427,6 @@ nsNavHistory::IsVisited(nsIURI *aURI, bool *_retval)
   return NS_OK;
 }
 
-
 // nsNavHistory::SetPageTitle
 //
 //    This sets the page title.
@@ -3448,9 +3445,7 @@ nsNavHistory::SetPageTitle(nsIURI* aURI,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
 
-  // Don't update the page title inside the private browsing mode.
-  if (InPrivateBrowsingMode())
-    return NS_OK;
+  ENSURE_NOT_PRIVATE_BROWSING;
 
   // if aTitle is empty we want to clear the previous title.
   // We don't want to set it to an empty string, but to a NULL value,
@@ -3672,6 +3667,15 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     if (!input)
       return NS_OK;
 
+    // If the source is a private window, don't add any input history.
+    bool isPrivate;
+    nsresult rv = input->GetInPrivateContext(&isPrivate);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isPrivate)
+      return NS_OK;
+
+    ENSURE_NOT_PRIVATE_BROWSING;
+
     nsCOMPtr<nsIAutoCompletePopup> popup;
     input->GetPopup(getter_AddRefs(popup));
     if (!popup)
@@ -3684,7 +3688,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     // Don't bother if the popup is closed
     bool open;
-    nsresult rv = popup->GetPopupOpen(&open);
+    rv = popup->GetPopupOpen(&open);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!open)
       return NS_OK;
@@ -3707,15 +3711,6 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
   else if (strcmp(aTopic, TOPIC_IDLE_DAILY) == 0) {
     (void)DecayFrecency();
-  }
-
-  else if (strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC) == 0) {
-    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
-      mInPrivateBrowsing = true;
-    }
-    else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
-      mInPrivateBrowsing = false;
-    }
   }
 
   return NS_OK;
@@ -5088,9 +5083,7 @@ nsresult
 nsNavHistory::AutoCompleteFeedback(int32_t aIndex,
                                    nsIAutoCompleteController *aController)
 {
-  // We do not track user choices in the location bar in private browsing mode.
-  if (InPrivateBrowsingMode())
-    return NS_OK;
+  ENSURE_NOT_PRIVATE_BROWSING;
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt = mDB->GetAsyncStatement(
     "INSERT OR REPLACE INTO moz_inputhistory "
