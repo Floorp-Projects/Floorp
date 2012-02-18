@@ -148,7 +148,8 @@ ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee)
         return NULL;
 
     data->callee.init(ObjectValue(callee));
-    InitValueRange(data->slots, argc, false);
+    for (HeapValue *vp = data->slots; vp != data->slots + argc; vp++)
+        vp->init(UndefinedValue());
 
     /* We have everything needed to fill in the object, so make the object. */
     JSObject *obj = JSObject::create(cx, FINALIZE_KIND, emptyArgumentsShape, type, NULL);

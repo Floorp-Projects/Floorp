@@ -78,7 +78,7 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &enclosing, JSObjec
     if (!type)
         return NULL;
 
-    HeapValue *slots;
+    HeapSlot *slots;
     if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
@@ -433,7 +433,7 @@ ClonedBlockObject::create(JSContext *cx, StaticBlockObject &block, StackFrame *f
     if (!type)
         return NULL;
 
-    HeapValue *slots;
+    HeapSlot *slots;
     if (!PreallocateObjectDynamicSlots(cx, block.lastProperty(), &slots))
         return NULL;
 
