@@ -743,7 +743,7 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, bool co
   if ( !aInString || !tagTXT || !imageName )
       return false;
 
-  PRInt32  tagLen = nsCRT::strlen(tagTXT);
+  PRInt32 tagLen = strlen(tagTXT);
  
   PRUint32 delim = (col0 ? 0 : 1) + tagLen;
 
