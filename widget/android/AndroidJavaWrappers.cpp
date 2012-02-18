@@ -87,9 +87,6 @@ jfieldID AndroidRect::jLeftField = 0;
 jfieldID AndroidRect::jRightField = 0;
 jfieldID AndroidRect::jTopField = 0;
 
-jclass AndroidSurfaceView::jSurfaceViewClass = 0;
-jfieldID AndroidSurfaceView::jNativeSurfaceField = 0;
-
 jclass AndroidLocation::jLocationClass = 0;
 jmethodID AndroidLocation::jGetLatitudeMethod = 0;
 jmethodID AndroidLocation::jGetLongitudeMethod = 0;
@@ -121,7 +118,6 @@ jmethodID AndroidGeckoGLLayerClient::jGetViewTransformMethod = 0;
 jmethodID AndroidGeckoGLLayerClient::jCreateFrameMethod = 0;
 jmethodID AndroidGeckoGLLayerClient::jActivateProgramMethod = 0;
 jmethodID AndroidGeckoGLLayerClient::jDeactivateProgramMethod = 0;
-jmethodID AndroidGeckoGLLayerClient::jCreateSurfaceViewForBackingSurfaceMethod = 0;
 
 jclass AndroidLayerRendererFrame::jLayerRendererFrameClass = 0;
 jmethodID AndroidLayerRendererFrame::jBeginDrawingMethod = 0;
@@ -344,33 +340,6 @@ AndroidRect::InitRectClass(JNIEnv *jEnv)
 }
 
 void
-AndroidSurfaceView::InitSurfaceViewClass(JNIEnv *jEnv)
-{
-    initInit();
-
-    jSurfaceViewClass = getClassGlobalRef("android/view/SurfaceView");
-
-    jNativeSurfaceField = getField("mNativeSurface", "I");
-}
-
-void
-AndroidSurfaceView::Init(JNIEnv *jEnv, jobject jobj)
-{
-    NS_ABORT_IF_FALSE(!wrapped_obj, "Init called on non-null wrapped_obj!");
-    NS_ABORT_IF_FALSE(!jobj, "Init called with null object!");
-
-    wrapped_obj = jobj;
-}
-
-ANativeWindow*
-AndroidSurfaceView::GetNativeWindow()
-{
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "Couldn't get JNI environment at GetNativeWindow()!");
-    return reinterpret_cast<ANativeWindow*>(env->GetIntField(wrapped_obj, jNativeSurfaceField));
-}
-
-void
 AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 {
 #ifdef MOZ_JAVA_COMPOSITOR
@@ -396,8 +365,6 @@ AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(JNIEnv *jEnv)
     jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
     jActivateProgramMethod = getMethod("activateProgram", "()V");
     jDeactivateProgramMethod = getMethod("deactivateProgram", "()V");
-    jCreateSurfaceViewForBackingSurfaceMethod = getMethod("createSurfaceViewForBackingSurface",
-                                                          "(II)Landroid/view/SurfaceView;");
 #endif
 }
 
@@ -907,23 +874,6 @@ AndroidGeckoGLLayerClient::DeactivateProgram()
     }
 
     env->CallVoidMethod(wrapped_obj, jDeactivateProgramMethod);
-}
-
-void
-AndroidGeckoGLLayerClient::CreateSurfaceViewForBackingSurface(AndroidSurfaceView& aSurfaceView,
-                                                              int aWidth, int aHeight)
-{
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at CreateSurfaceViewForBackingSurface()!");
-    if (!env) {
-        return;
-    }
-
-    jobject result_jobj = env->CallObjectMethod(wrapped_obj,
-                                                jCreateSurfaceViewForBackingSurfaceMethod,
-                                                aWidth, aHeight);
-    NS_ABORT_IF_FALSE(result_jobj, "No surface view returned!");
-    aSurfaceView.Init(env, result_jobj);
 }
 
 void
