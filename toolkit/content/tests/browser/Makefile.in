@@ -56,6 +56,7 @@ _BROWSER_TEST_FILES = \
   browser_bug594509.js \
   browser_Geometry.js \
   browser_save_resend_postdata.js \
+  browser_browserDrop.js \
   browser_Services.js \
   $(NULL)
 

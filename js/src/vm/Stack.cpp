@@ -532,6 +532,15 @@ StackSpace::mark(JSTracer *trc)
     }
 }
 
+void
+StackSpace::markActiveCompartments()
+{
+    for (StackSegment *seg = seg_; seg; seg = seg->prevInMemory()) {
+        for (StackFrame *fp = seg->maybefp(); (Value *)fp > (Value *)seg; fp = fp->prev())
+            MarkCompartmentActive(fp);
+    }
+}
+
 JS_FRIEND_API(bool)
 StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from, ptrdiff_t nvals,
                             JSCompartment *dest) const

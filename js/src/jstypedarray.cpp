@@ -2180,6 +2180,7 @@ Class ArrayBuffer::slowClass = {
 Class js::ArrayBufferClass = {
     "ArrayBuffer",
     JSCLASS_HAS_PRIVATE |
+    JSCLASS_IMPLEMENTS_BARRIERS |
     Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(ARRAYBUFFER_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
@@ -2298,7 +2299,7 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
 {                                                                              \
     #_typedArray,                                                              \
     JSCLASS_HAS_RESERVED_SLOTS(TypedArray::FIELD_MAX) |                        \
-    JSCLASS_HAS_PRIVATE |                                                      \
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |                        \
     JSCLASS_FOR_OF_ITERATION |                                                 \
     Class::NON_NATIVE,                                                         \
     JS_PropertyStub,         /* addProperty */                                 \
