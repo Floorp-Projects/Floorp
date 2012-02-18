@@ -132,8 +132,10 @@
 <xul:script type="application/javascript"><![CDATA[
 Components.utils.import("resource:///modules/devtools/StyleEditorChrome.jsm");
 let chromeRoot = document.getElementById("style-editor-chrome");
-let contentWindow = window.arguments[0];
+let args = window.arguments[0].wrappedJSObject;
+let contentWindow = args.contentWindow;
 let chrome = new StyleEditorChrome(chromeRoot, contentWindow);
+chrome.selectStyleSheet(args.selectedStyleSheet, args.line, args.col);
 window.styleEditorChrome = chrome;
 ]]></xul:script>
 </xul:window>

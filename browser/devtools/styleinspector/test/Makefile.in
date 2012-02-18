@@ -59,11 +59,19 @@ _BROWSER_TEST_FILES = \
   browser_ruleview_manipulation.js \
   browser_ruleview_override.js \
   browser_ruleview_ui.js \
+  browser_bug705707_is_content_stylesheet.js \
   head.js \
   $(NULL)
 
 _BROWSER_TEST_PAGES = \
   browser_bug683672.html \
+  browser_bug705707_is_content_stylesheet.html \
+  browser_bug705707_is_content_stylesheet_imported.css \
+  browser_bug705707_is_content_stylesheet_imported2.css \
+  browser_bug705707_is_content_stylesheet_linked.css \
+  browser_bug705707_is_content_stylesheet_script.css \
+  browser_bug705707_is_content_stylesheet.xul \
+  browser_bug705707_is_content_stylesheet_xul.css \
   $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
