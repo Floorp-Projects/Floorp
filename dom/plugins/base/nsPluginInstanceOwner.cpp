@@ -3683,10 +3683,13 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
       container->SetCurrentImage(nsnull);
     }
 
-    // If we had an old frame and we're not going to have a new one then
-    // we should unregister for some things.
+#if defined(XP_MACOSX) && !defined(NP_NO_QUICKDRAW)
     if (!aFrame) {
-      // Unregister scroll position listeners
+      // At this point we had a frame but it is going away and we're not getting a new one.
+      // Unregister for a scroll position listening, which is only required for Carbon
+      // event model plugins on Mac OS X. It's OK to unregister when we didn't register,
+      // so don't be strict about unregistering. Better to unregister when we didn't have to
+      // than to not unregister when we should.
       for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
         nsIScrollableFrame* sf = do_QueryFrame(f);
         if (sf) {
@@ -3694,21 +3697,28 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
         }
       }
     }
+#endif
 
     // Make sure the old frame isn't holding a reference to us.
     mObjectFrame->SetInstanceOwner(nsnull);
   } else {
+    // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
+    // Note that we probably have a crash bug in the way we register/unregister, bug 723190.
+    // Bug 723190 is mitigated by limiting registration to Carbon event model plugins.
+#if defined(XP_MACOSX) && !defined(NP_NO_QUICKDRAW)
     if (aFrame) {
-      // We didn't have an object frame before but we do now!
-      // We need to register a scroll position listener on every scrollable
-      // frame up to the top
-      for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-        nsIScrollableFrame* sf = do_QueryFrame(f);
-        if (sf) {
-          sf->AddScrollPositionListener(this);
+      // We didn't have an object frame before but we do now. We need to register a scroll
+      // position listener on every scrollable frame up to the top.
+      if (GetEventModel() == NPEventModelCarbon) {
+        for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+          nsIScrollableFrame* sf = do_QueryFrame(f);
+          if (sf) {
+            sf->AddScrollPositionListener(this);
+          }
         }
       }
     }
+#endif
   }
 
   // Swap in the new frame (or no frame)

@@ -62,7 +62,7 @@ bool
 WeakMapBase::markAllIteratively(JSTracer *tracer)
 {
     bool markedAny = false;
-    JSRuntime *rt = tracer->context->runtime;
+    JSRuntime *rt = tracer->runtime;
     for (WeakMapBase *m = rt->gcWeakMapList; m; m = m->next) {
         if (m->markIteratively(tracer))
             markedAny = true;
@@ -73,7 +73,7 @@ WeakMapBase::markAllIteratively(JSTracer *tracer)
 void
 WeakMapBase::sweepAll(JSTracer *tracer)
 {
-    JSRuntime *rt = tracer->context->runtime;
+    JSRuntime *rt = tracer->runtime;
     for (WeakMapBase *m = rt->gcWeakMapList; m; m = m->next)
         m->sweep(tracer);
 }
@@ -314,8 +314,16 @@ WeakMap_mark(JSTracer *trc, JSObject *obj)
 static void
 WeakMap_finalize(JSContext *cx, JSObject *obj)
 {
-    ObjectValueMap *map = GetObjectMap(obj);
-    cx->delete_(map);
+    if (ObjectValueMap *map = GetObjectMap(obj)) {
+        map->check();
+#ifdef DEBUG
+        map->~ObjectValueMap();
+        memset(map, 0xdc, sizeof(ObjectValueMap));
+        cx->free_(map);
+#else
+        cx->delete_(map);
+#endif
+    }
 }
 
 static JSBool
@@ -331,7 +339,7 @@ WeakMap_construct(JSContext *cx, uintN argc, Value *vp)
 
 Class js::WeakMapClass = {
     "WeakMap",
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
