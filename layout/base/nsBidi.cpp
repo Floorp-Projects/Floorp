@@ -279,7 +279,7 @@ nsresult nsBidi::SetPara(const PRUnichar *aText, PRInt32 aLength,
   }
 
   if(aLength==-1) {
-    aLength=nsCRT::strlen(aText);
+    aLength = strlen(aText);
   }
 
   /* initialize member data */
