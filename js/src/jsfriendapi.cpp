@@ -177,7 +177,7 @@ JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc)
 JS_FRIEND_API(void)
 JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape)
 {
-    MarkCycleCollectorChildren(trc, (const Shape *)shape);
+    MarkCycleCollectorChildren(trc, (Shape *)shape);
 }
 
 AutoPreserveCompartment::AutoPreserveCompartment(JSContext *cx

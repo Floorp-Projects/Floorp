@@ -61,7 +61,7 @@ static inline void
 PushMarkStack(GCMarker *gcmarker, JSScript *thing);
 
 static inline void
-PushMarkStack(GCMarker *gcmarker, const Shape *thing);
+PushMarkStack(GCMarker *gcmarker, Shape *thing);
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSString *thing);
@@ -264,23 +264,28 @@ MarkGCThingRoot(JSTracer *trc, void *thing, const char *name)
 /*** ID Marking ***/
 
 static inline void
-MarkIdInternal(JSTracer *trc, const jsid &id)
+MarkIdInternal(JSTracer *trc, jsid *id)
 {
-    if (JSID_IS_STRING(id))
-        MarkInternal(trc, JSID_TO_STRING(id));
-    else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
-        MarkInternal(trc, JSID_TO_OBJECT(id));
+    if (JSID_IS_STRING(*id)) {
+        JSString *str = JSID_TO_STRING(*id);
+        MarkInternal(trc, str);
+        *id = ATOM_TO_JSID(reinterpret_cast<JSAtom *>(str));
+    } else if (JS_UNLIKELY(JSID_IS_OBJECT(*id))) {
+        JSObject *obj = JSID_TO_OBJECT(*id);
+        MarkInternal(trc, obj);
+        *id = OBJECT_TO_JSID(obj);
+    }
 }
 
 void
-MarkId(JSTracer *trc, const HeapId &id, const char *name)
+MarkId(JSTracer *trc, HeapId *id, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    MarkIdInternal(trc, id);
+    MarkIdInternal(trc, id->unsafeGet());
 }
 
 void
-MarkIdRoot(JSTracer *trc, const jsid &id, const char *name)
+MarkIdRoot(JSTracer *trc, jsid *id, const char *name)
 {
     JS_ROOT_MARKING_ASSERT(trc);
     JS_SET_TRACING_NAME(trc, name);
@@ -292,7 +297,7 @@ MarkIdRange(JSTracer *trc, size_t len, HeapId *vec, const char *name)
 {
     for (size_t i = 0; i < len; ++i) {
         JS_SET_TRACING_INDEX(trc, name, i);
-        MarkIdInternal(trc, vec[i]);
+        MarkIdInternal(trc, vec[i].unsafeGet());
     }
 }
 
@@ -302,7 +307,7 @@ MarkIdRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name)
     JS_ROOT_MARKING_ASSERT(trc);
     for (size_t i = 0; i < len; ++i) {
         JS_SET_TRACING_INDEX(trc, name, i);
-        MarkIdInternal(trc, vec[i]);
+        MarkIdInternal(trc, &vec[i]);
     }
 }
 
@@ -362,13 +367,6 @@ MarkObject(JSTracer *trc, const HeapPtr<GlobalObject, JSScript *> &thing, const 
 {
     JS_SET_TRACING_NAME(trc, name);
     MarkInternal(trc, thing.get());
-}
-
-void
-MarkShape(JSTracer *trc, HeapPtr<const Shape> *thing, const char *name)
-{
-    JS_SET_TRACING_NAME(trc, name);
-    MarkInternal(trc, const_cast<Shape *>(thing->get()));
 }
 
 void
@@ -460,10 +458,10 @@ PushMarkStack(GCMarker *gcmarker, JSScript *thing)
 }
 
 static void
-ScanShape(GCMarker *gcmarker, const Shape *shape);
+ScanShape(GCMarker *gcmarker, Shape *shape);
 
 static void
-PushMarkStack(GCMarker *gcmarker, const Shape *thing)
+PushMarkStack(GCMarker *gcmarker, Shape *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime, thing);
 
@@ -486,12 +484,12 @@ PushMarkStack(GCMarker *gcmarker, BaseShape *thing)
 }
 
 static void
-ScanShape(GCMarker *gcmarker, const Shape *shape)
+ScanShape(GCMarker *gcmarker, Shape *shape)
 {
   restart:
     PushMarkStack(gcmarker, shape->base());
 
-    jsid id = shape->maybePropid();
+    const HeapId &id = shape->propidRef();
     if (JSID_IS_STRING(id))
         PushMarkStack(gcmarker, JSID_TO_STRING(id));
     else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
@@ -712,7 +710,7 @@ static void
 MarkChildren(JSTracer *trc, Shape *shape)
 {
     MarkBaseShapeUnbarriered(trc, shape->base(), "base");
-    MarkId(trc, shape->maybePropid(), "propid");
+    MarkId(trc, &shape->propidRef(), "propid");
     if (shape->previous())
         MarkShape(trc, &shape->previousRef(), "parent");
 }
@@ -775,12 +773,12 @@ MarkCycleCollectorChildren(JSTracer *trc, BaseShape *base, JSObject **prevParent
  * parent pointer will only be marked once.
  */
 void
-MarkCycleCollectorChildren(JSTracer *trc, const Shape *shape)
+MarkCycleCollectorChildren(JSTracer *trc, Shape *shape)
 {
     JSObject *prevParent = NULL;
     do {
         MarkCycleCollectorChildren(trc, shape->base(), &prevParent);
-        MarkId(trc, shape->maybePropid(), "propid");
+        MarkId(trc, &shape->propidRef(), "propid");
         shape = shape->previous();
     } while (shape);
 }
@@ -823,7 +821,7 @@ MarkChildren(JSTracer *trc, types::TypeObject *type)
         for (unsigned i = 0; i < count; i++) {
             types::Property *prop = type->getProperty(i);
             if (prop)
-                MarkId(trc, prop->id, "type_prop");
+                MarkId(trc, &prop->id, "type_prop");
         }
     }
 

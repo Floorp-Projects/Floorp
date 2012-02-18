@@ -2266,7 +2266,7 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case ID:
-        MarkIdRoot(trc, static_cast<AutoIdRooter *>(this)->id_, "JS::AutoIdRooter.id_");
+        MarkIdRoot(trc, &static_cast<AutoIdRooter *>(this)->id_, "JS::AutoIdRooter.id_");
         return;
 
       case VALVECTOR: {
