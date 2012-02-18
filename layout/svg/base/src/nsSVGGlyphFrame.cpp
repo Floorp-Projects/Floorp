@@ -374,7 +374,7 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
   iter.SetInitialMatrix(gfx);
 
   nsRefPtr<gfxPattern> strokePattern;
-  DrawMode drawMode = SetupCairoState(gfx, &strokePattern);
+  DrawMode drawMode = SetupCairoState(gfx, getter_AddRefs(strokePattern));
 
   if (drawMode) {
     DrawCharacters(&iter, gfx, drawMode, strokePattern);
@@ -884,7 +884,7 @@ nsSVGGlyphFrame::GetBaselineOffset(float aMetricsScale)
 }
 
 DrawMode
-nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext, nsRefPtr<gfxPattern> *aStrokePattern)
+nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext, gfxPattern **aStrokePattern)
 {
   DrawMode toDraw = DrawMode(0);
   const nsStyleSVG* style = GetStyleSVG();
@@ -918,6 +918,7 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext, nsRefPtr<gfxPattern> *aSt
                                              NS_GET_A(color) / 255.0 * opacity));
     }
 
+    *aStrokePattern = nsnull;
     strokePattern.swap(*aStrokePattern);
   }
 
