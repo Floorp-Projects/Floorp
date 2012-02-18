@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.viewTooltip {
+  display: none; /* TODO: add tooltips support, see bug 721752 */
+  font-family: monospace;
+  font-size: 13px;
+  background-color: InfoBackground;
+  color: InfoText;
+  padding: 2px;
+  border-radius: 4px;
+  border: 1px solid black;
+  z-index: 100;
+  position: fixed;
+  overflow: hidden;
+  white-space: pre;
+}
+
+.viewTooltip em {
+  font-style: normal;
+  font-weight: bold;
+}
+
+.annotationHTML {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.annotationHTML.task {
+  background-image: url("chrome://browser/skin/devtools/orion-task.png");
+}
+.annotationHTML.breakpoint {
+  background-image: url("chrome://browser/skin/devtools/orion-breakpoint.png");
+}
