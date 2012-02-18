@@ -16,6 +16,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
   Cu.import("resource://gre/modules/PlacesUtils.jsm");
   return PlacesUtils;
@@ -537,23 +540,24 @@ this.PlacesUIUtils = {
     if (!aItemsToOpen.length)
       return;
 
-    var urls = [];
-    for (var i = 0; i < aItemsToOpen.length; i++) {
-      var item = aItemsToOpen[i];
-      if (item.isBookmark)
-        this.markPageAsFollowedBookmark(item.uri);
-      else
-        this.markPageAsTyped(item.uri);
-
-      urls.push(item.uri);
-    }
-
     // Prefer the caller window if it's a browser window, otherwise use
     // the top browser window.
     var browserWindow = null;
     browserWindow =
       aWindow && aWindow.document.documentElement.getAttribute("windowtype") == "navigator:browser" ?
       aWindow : this._getTopBrowserWin();
+
+    var urls = [];
+    for (let item of aItemsToOpen) {
+      if (!PrivateBrowsingUtils.isWindowPrivate(browserWindow)) {
+        if (item.isBookmark)
+          this.markPageAsFollowedBookmark(item.uri);
+        else
+          this.markPageAsTyped(item.uri);
+      }
+
+      urls.push(item.uri);
+    }
 
     // whereToOpenLink doesn't return "window" when there's no browser window
     // open (Bug 630255).
@@ -634,10 +638,12 @@ this.PlacesUIUtils = {
         this.checkURLSecurity(aNode, aWindow)) {
       let isBookmark = PlacesUtils.nodeIsBookmark(aNode);
 
-      if (isBookmark)
-        this.markPageAsFollowedBookmark(aNode.uri);
-      else
-        this.markPageAsTyped(aNode.uri);
+      if (!PrivateBrowsingUtils.isWindowPrivate(aWindow)) {
+        if (isBookmark)
+          this.markPageAsFollowedBookmark(aNode.uri);
+        else
+          this.markPageAsTyped(aNode.uri);
+      }
 
       // Check whether the node is a bookmark which should be opened as
       // a web panel
