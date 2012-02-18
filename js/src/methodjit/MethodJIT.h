@@ -761,6 +761,14 @@ struct CrossChunkEdge
     void *sourceJump1;
     void *sourceJump2;
 
+#ifdef JS_CPU_X64
+    /*
+     * Location of a trampoline for the edge to perform an indirect jump if
+     * out of range, NULL if the source is not compiled.
+     */
+    void *sourceTrampoline;
+#endif
+
     /* Any jump table entries along this edge. */
     typedef Vector<void**,4,SystemAllocPolicy> JumpTableEntryVector;
     JumpTableEntryVector *jumpTableEntries;
