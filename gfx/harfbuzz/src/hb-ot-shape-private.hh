@@ -104,12 +104,40 @@ _hb_unicode_modified_combining_class (hb_unicode_funcs_t *ufuncs,
 {
   int c = hb_unicode_combining_class (ufuncs, unicode);
 
+  /* For Hebrew, we permute the "fixed-position" classes 10-25 into the order
+   * described in the SBL Hebrew manual http://www.sbl-site.org/Fonts/SBLHebrewUserManual1.5x.pdf
+   * (as recommended by http://forum.fontlab.com/archive-old-microsoft-volt-group/vista-and-diacritic-ordering-t6751.0.html)
+   */
+  static const int permuted_hebrew_classes[25 - 10 + 1] = {
+    /* 10 sheva */        15,
+    /* 11 hataf segol */  16,
+    /* 12 hataf patah */  17,
+    /* 13 hataf qamats */ 18,
+    /* 14 hiriq */        19,
+    /* 15 tsere */        20,
+    /* 16 segol */        21,
+    /* 17 patah */        22,
+    /* 18 qamats */       23,
+    /* 19 holam */        14,
+    /* 20 qubuts */       24,
+    /* 21 dagesh */       12,
+    /* 22 meteg */        25,
+    /* 23 rafe */         13,
+    /* 24 shin dot */     10,
+    /* 25 sin dot */      11,
+  };
+
   /* Modify the combining-class to suit Arabic better.  See:
    * http://unicode.org/faq/normalization.html#8
    * http://unicode.org/faq/normalization.html#9
    */
   if (unlikely (hb_in_range<int> (c, 27, 33)))
     c = c == 33 ? 27 : c + 1;
+  /* The equivalent fix for Hebrew is more complex,
+   * see the SBL Hebrew manual.
+   */
+  else if (unlikely (hb_in_range<int> (c, 10, 25)))
+    c = permuted_hebrew_classes[c - 10];
 
   return c;
 }

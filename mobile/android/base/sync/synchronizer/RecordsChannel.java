@@ -40,8 +40,8 @@ package org.mozilla.gecko.sync.synchronizer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.ThreadPool;
-import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.DeferredRepositorySessionBeginDelegate;
@@ -50,8 +50,6 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDeleg
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
-
-import android.util.Log;
 
 /**
  * Pulls records from `source`, applying them to `sink`.
@@ -104,7 +102,7 @@ class RecordsChannel implements
   public RepositorySession sink;
   private RecordsChannelDelegate delegate;
   private long timestamp;
-  private long end = -1;                     // Oo er, missus.
+  private long fetchEnd = -1;
 
   public RecordsChannel(RepositorySession source, RepositorySession sink, RecordsChannelDelegate delegate) {
     this.source    = source;
@@ -133,30 +131,6 @@ class RecordsChannel implements
 
   protected boolean isReady() {
     return source.isActive() && sink.isActive();
-  }
-
-
-  private static void info(String message) {
-    Utils.logToStdout(LOG_TAG, "::INFO: ", message);
-    Log.i(LOG_TAG, message);
-  }
-
-  private static void trace(String message) {
-    if (!Utils.ENABLE_TRACE_LOGGING) {
-      return;
-    }
-    Utils.logToStdout(LOG_TAG, "::TRACE: ", message);
-    Log.d(LOG_TAG, message);
-  }
-
-  private static void error(String message, Exception e) {
-    Utils.logToStdout(LOG_TAG, "::ERROR: ", message);
-    Log.e(LOG_TAG, message, e);
-  }
-
-  private static void warn(String message, Exception e) {
-    Utils.logToStdout(LOG_TAG, "::WARN: ", message);
-    Log.w(LOG_TAG, message, e);
   }
 
   /**
@@ -194,7 +168,7 @@ class RecordsChannel implements
    * Begin both sessions, invoking flow() when done.
    */
   public void beginAndFlow() {
-    info("Beginning source.");
+    Logger.info(LOG_TAG, "Beginning source.");
     source.begin(this);
   }
 
@@ -203,7 +177,7 @@ class RecordsChannel implements
     try {
       sink.store(record);
     } catch (NoStoreDelegateException e) {
-      error("Got NoStoreDelegateException in RecordsChannel.store(). This should not occur. Aborting.", e);
+      Logger.error(LOG_TAG, "Got NoStoreDelegateException in RecordsChannel.store(). This should not occur. Aborting.", e);
       delegate.onFlowStoreFailed(this, e);
       this.abort();
     }
@@ -211,7 +185,7 @@ class RecordsChannel implements
 
   @Override
   public void onFetchFailed(Exception ex, Record record) {
-    warn("onFetchFailed. Calling for immediate stop.", ex);
+    Logger.warn(LOG_TAG, "onFetchFailed. Calling for immediate stop.", ex);
     this.consumer.halt();
   }
 
@@ -222,19 +196,19 @@ class RecordsChannel implements
   }
 
   @Override
-  public void onFetchSucceeded(Record[] records, long end) {
+  public void onFetchSucceeded(Record[] records, final long fetchEnd) {
     for (Record record : records) {
       this.toProcess.add(record);
     }
     this.consumer.doNotify();
-    this.onFetchCompleted(end);
+    this.onFetchCompleted(fetchEnd);
   }
 
   @Override
-  public void onFetchCompleted(long end) {
-    info("onFetchCompleted. Stopping consumer once stores are done.");
-    info("Fetch timestamp is " + end);
-    this.end = end;
+  public void onFetchCompleted(final long fetchEnd) {
+    Logger.info(LOG_TAG, "onFetchCompleted. Stopping consumer once stores are done.");
+    Logger.info(LOG_TAG, "Fetch timestamp is " + fetchEnd);
+    this.fetchEnd = fetchEnd;
     this.consumer.queueFilled();
   }
 
@@ -253,7 +227,7 @@ class RecordsChannel implements
 
   @Override
   public void consumerIsDone(boolean allRecordsQueued) {
-    trace("Consumer is done. Are we waiting for it? " + waitingForQueueDone);
+    Logger.trace(LOG_TAG, "Consumer is done. Are we waiting for it? " + waitingForQueueDone);
     if (waitingForQueueDone) {
       waitingForQueueDone = false;
       this.sink.storeDone();                 // Now we'll be waiting for onStoreCompleted.
@@ -261,10 +235,11 @@ class RecordsChannel implements
   }
 
   @Override
-  public void onStoreCompleted() {
-    info("onStoreCompleted. Notifying delegate of onFlowCompleted. End is " + end);
+  public void onStoreCompleted(long storeEnd) {
+    Logger.info(LOG_TAG, "onStoreCompleted. Notifying delegate of onFlowCompleted. " +
+                         "Fetch end is " + fetchEnd + ", store end is " + storeEnd);
     // TODO: synchronize on consumer callback?
-    delegate.onFlowCompleted(this, end);
+    delegate.onFlowCompleted(this, fetchEnd, storeEnd);
   }
 
   @Override
@@ -275,11 +250,11 @@ class RecordsChannel implements
   @Override
   public void onBeginSucceeded(RepositorySession session) {
     if (session == source) {
-      info("Source session began. Beginning sink session.");
+      Logger.info(LOG_TAG, "Source session began. Beginning sink session.");
       sink.begin(this);
     }
     if (session == sink) {
-      info("Sink session began. Beginning flow.");
+      Logger.info(LOG_TAG, "Sink session began. Beginning flow.");
       this.flow();
       return;
     }

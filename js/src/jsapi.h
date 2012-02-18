@@ -1860,7 +1860,11 @@ INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str)
     jsid id;
     JS_ASSERT(str);
     JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
+#ifdef DEBUG
     JS_ASSERT(JS_StringHasBeenInterned(cx, str));
+#else
+    (void)cx;
+#endif
     JSID_BITS(id) = (size_t)str;
     return id;
 }
@@ -3098,7 +3102,7 @@ JSVAL_TRACE_KIND(jsval v)
  * wants to use the existing liveness of entries.
  */
 typedef void
-(* JSTraceCallback)(JSTracer *trc, void *thing, JSGCTraceKind kind);
+(* JSTraceCallback)(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
 struct JSTracer {
     JSRuntime           *runtime;
@@ -5314,6 +5318,8 @@ JS_IsConstructing(JSContext *cx, const jsval *vp)
     } else {
         JS_ASSERT(JS_GetClass(callee)->construct != NULL);
     }
+#else
+    (void)cx;
 #endif
 
     return JSVAL_IS_MAGIC_IMPL(JSVAL_TO_IMPL(vp[1]));

@@ -375,6 +375,10 @@ nsPluginHost::nsPluginHost()
   if (obsService) {
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     obsService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, false);
+#ifdef MOZ_WIDGET_ANDROID
+    obsService->AddObserver(this, "application-foreground", false);
+    obsService->AddObserver(this, "application-background", false);
+#endif
   }
 
 #ifdef PLUGIN_LOGGING
@@ -3111,8 +3115,13 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
   // deal with headers and post data
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    rv = httpChannel->SetReferrer(doc->GetDocumentURI());  
-    NS_ENSURE_SUCCESS(rv,rv);
+    if (!aPostStream) {
+      // Only set the Referer header for GET requests because IIS throws
+      // errors about malformed requests if we include it in POSTs. See
+      // bug 724465.
+      rv = httpChannel->SetReferrer(doc->GetDocumentURI());  
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
       
     if (aPostStream) {
       // XXX it's a bit of a hack to rewind the postdata stream
@@ -3381,6 +3390,24 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
       mInstances[i]->PrivateModeStateChanged();
     }
   }
+#ifdef MOZ_WIDGET_ANDROID
+  if (!nsCRT::strcmp("application-background", aTopic)) {
+    for(PRUint32 i = 0; i < mInstances.Length(); i++) {
+      mInstances[i]->NotifyForeground(false);
+    }
+  }
+  if (!nsCRT::strcmp("application-foreground", aTopic)) {
+    for(PRUint32 i = 0; i < mInstances.Length(); i++) {
+      if (mInstances[i]->IsOnScreen())
+        mInstances[i]->NotifyForeground(true);
+    }
+  }
+  if (!nsCRT::strcmp("memory-pressure", aTopic)) {
+    for(PRUint32 i = 0; i < mInstances.Length(); i++) {
+      mInstances[i]->MemoryPressure();
+    }
+  }
+#endif
   return NS_OK;
 }
 

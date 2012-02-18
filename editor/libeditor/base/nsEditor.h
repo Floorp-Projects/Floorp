@@ -757,6 +757,20 @@ public:
   // added here.
   void OnFocus(nsIDOMEventTarget* aFocusEventTarget);
 
+  // Used to insert content from a data transfer into the editable area.
+  // This is called for each item in the data transfer, with the index of
+  // each item passed as aIndex.
+  virtual nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
+                                          PRInt32 aIndex,
+                                          nsIDOMDocument *aSourceDoc,
+                                          nsIDOMNode *aDestinationNode,
+                                          PRInt32 aDestOffset,
+                                          bool aDoDeleteSelection) = 0;
+
+  virtual nsresult InsertFromDrop(nsIDOMEvent* aDropEvent) = 0;
+
+  virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode) { return nsnull; }
+
 protected:
 
   PRUint32        mModCount;     // number of modifications (for undo/redo stack)

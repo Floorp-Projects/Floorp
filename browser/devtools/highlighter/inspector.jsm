@@ -763,6 +763,9 @@ InspectorUI.prototype = {
       this.boundRuleViewChanged = this.ruleViewChanged.bind(this);
       this.ruleView.element.addEventListener("CssRuleViewChanged",
                                              this.boundRuleViewChanged);
+      this.cssRuleViewBoundCSSLinkClicked = this.ruleViewCSSLinkClicked.bind(this);
+      this.ruleView.element.addEventListener("CssRuleViewCSSLinkClicked",
+                                             this.cssRuleViewBoundCSSLinkClicked);
 
       doc.documentElement.appendChild(this.ruleView.element);
       this.ruleView.highlight(this.selection);
@@ -801,6 +804,30 @@ InspectorUI.prototype = {
   },
 
   /**
+   * When a css link is clicked this method is called in order to either:
+   *   1. Open the link in view source (for element style attributes)
+   *   2. Open the link in the style editor
+   *
+   * @param aEvent The event containing the style rule to act on
+   */
+  ruleViewCSSLinkClicked: function(aEvent)
+  {
+    if (!this.chromeWin) {
+      return;
+    }
+
+    let rule = aEvent.detail.rule;
+    let styleSheet = rule.sheet;
+
+    if (styleSheet) {
+      this.chromeWin.StyleEditor.openChrome(styleSheet, rule.ruleLine);
+    } else {
+      let href = rule.elementStyle.element.ownerDocument.location.href;
+      this.chromeWin.openUILinkIn("view-source:" + href, "window");
+    }
+  },
+
+  /**
    * Destroy the rule view.
    */
   destroyRuleView: function IUI_destroyRuleView()
@@ -811,6 +838,8 @@ InspectorUI.prototype = {
     if (this.ruleView) {
       this.ruleView.element.removeEventListener("CssRuleViewChanged",
                                                 this.boundRuleViewChanged);
+      this.ruleView.element.removeEventListener("CssRuleViewCSSLinkClicked",
+                                                this.cssRuleViewBoundCSSLinkClicked);
       delete boundRuleViewChanged;
       this.ruleView.clear();
       delete this.ruleView;

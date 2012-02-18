@@ -43,37 +43,41 @@ function testSelectLine() {
       ok(gDebugger.editor.getText().search(/debugger/) != -1,
         "The correct script was loaded initially.");
 
-      // getCaretPosition is 0-based.
-      is(gDebugger.editor.getCaretPosition().line, 5,
-         "The correct line is selected.");
+      // Yield control back to the event loop so that the debugger has a
+      // chance to highlight the proper line.
+      executeSoon(function(){
+        // getCaretPosition is 0-based.
+        is(gDebugger.editor.getCaretPosition().line, 5,
+           "The correct line is selected.");
 
-      gDebugger.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
-                                        function onChange() {
-        gDebugger.editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
-                                             onChange);
-        ok(gDebugger.editor.getText().search(/debugger/) == -1,
-          "The second script is no longer displayed.");
+        gDebugger.editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
+                                          function onChange() {
+          gDebugger.editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
+                                               onChange);
+          ok(gDebugger.editor.getText().search(/debugger/) == -1,
+            "The second script is no longer displayed.");
 
-        ok(gDebugger.editor.getText().search(/firstCall/) != -1,
-          "The first script is displayed.");
+          ok(gDebugger.editor.getText().search(/firstCall/) != -1,
+            "The first script is displayed.");
 
-        // Yield control back to the event loop so that the debugger has a
-        // chance to highlight the proper line.
-        executeSoon(function(){
-          // getCaretPosition is 0-based.
-          is(gDebugger.editor.getCaretPosition().line, 4,
-             "The correct line is selected.");
+          // Yield control back to the event loop so that the debugger has a
+          // chance to highlight the proper line.
+          executeSoon(function(){
+            // getCaretPosition is 0-based.
+            is(gDebugger.editor.getCaretPosition().line, 4,
+               "The correct line is selected.");
 
-          gDebugger.StackFrames.activeThread.resume(function() {
-            removeTab(gTab);
-            finish();
+            gDebugger.StackFrames.activeThread.resume(function() {
+              removeTab(gTab);
+              finish();
+            });
           });
         });
-      });
 
-      // Click the oldest stack frame.
-      let element = gDebugger.document.getElementById("stackframe-3");
-      EventUtils.synthesizeMouseAtCenter(element, {}, gDebugger);
+        // Click the oldest stack frame.
+        let element = gDebugger.document.getElementById("stackframe-3");
+        EventUtils.synthesizeMouseAtCenter(element, {}, gDebugger);
+      });
     }}, 0);
   });
 

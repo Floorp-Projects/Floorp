@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=611138
 <head>
   <title>Generic tests for SVG animated length lists</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="MutationEventChecker.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -86,17 +87,25 @@ function run_tests()
   ok(list.numberOfItems == 1 && list.getItem(0) == seg,
     'initialize should be able initialize an invalid path with a non-moveto item');
 
+  // Test mutation events
+
+  eventChecker = new MutationEventChecker;
   d = 'M0,0 L12,34'
   path.setAttribute('d', d);
-  function check_old_value(e) {
-    is(e.target, path, 'check mutation event is for expected node');
-    is(e.attrName, 'd', 'check mutation event is for expected attribute');
-    is(e.prevValue, d, 'check old attribute value is correctly reported');
-    isnot(e.newValue, d, 'check attribute value has changed');
-  }
-  path.addEventListener('DOMAttrModified', check_old_value, false);
-  list.getItem(1).y = 35;
-  path.removeEventListener('DOMAttrModified', check_old_value, false);
+  eventChecker.watchAttr(path, "d");
+
+  // -- Actual changes
+  eventChecker.expect("modify modify modify");
+  list[0].x = 10;
+  list[0].y = 5;
+  path.setAttribute("d", "M20,5 L12,34");
+
+  // -- Redundant changes
+  eventChecker.expect("");
+  list[0].x = 20;
+  list[1].y = 34;
+  path.setAttribute("d", "M20,5 L12,34");
+  eventChecker.finish();
 
   SimpleTest.finish();
 }

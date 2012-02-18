@@ -445,7 +445,7 @@
           return this.getAttribute("color");
         ]]></getter>
         <setter><![CDATA[
-          this.mColorBox.setAttribute("style", "background-color: " + val);
+          this.mColorBox.style.backgroundColor = val;
           this.setAttribute("color", val);
           return val;
         ]]></setter>

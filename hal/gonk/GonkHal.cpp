@@ -256,6 +256,10 @@ DisableBatteryNotifications()
 void
 GetCurrentBatteryInformation(hal::BatteryInformation *aBatteryInfo)
 {
+  static const int BATTERY_NOT_CHARGING = 0;
+  static const int BATTERY_CHARGING_USB = 1;
+  static const int BATTERY_CHARGING_AC  = 2;
+
   FILE *capacityFile = fopen("/sys/class/power_supply/battery/capacity", "r");
   double capacity = dom::battery::kDefaultLevel * 100;
   if (capacityFile) {
@@ -264,14 +268,42 @@ GetCurrentBatteryInformation(hal::BatteryInformation *aBatteryInfo)
   }
 
   FILE *chargingFile = fopen("/sys/class/power_supply/battery/charging_source", "r");
-  int chargingSrc = 1;
+  int chargingSrc = BATTERY_CHARGING_USB;
+  bool done = false;
   if (chargingFile) {
     fscanf(chargingFile, "%d", &chargingSrc);
     fclose(chargingFile);
+    done = true;
   }
 
+  if (!done) {
+    // toro devices support
+    chargingFile = fopen("/sys/class/power_supply/battery/status", "r");
+    if (chargingFile) {
+      char status[16];
+      fscanf(chargingFile, "%s", &status);
+      if (!strcmp(status, "Charging") || !strcmp(status, "Full")) {
+        // no way here to know if we're charging from USB or AC.
+        chargingSrc = BATTERY_CHARGING_USB;
+      } else {
+        chargingSrc = BATTERY_NOT_CHARGING;
+      }
+      fclose(chargingFile);
+      done = true;
+    }
+  }
+
+  #ifdef DEBUG
+  if (chargingSrc != BATTERY_NOT_CHARGING &&
+      chargingSrc != BATTERY_CHARGING_USB &&
+      chargingSrc != BATTERY_CHARGING_AC) {
+    HAL_LOG(("charging_source contained unknown value: %d", chargingSrc));
+  }
+  #endif
+
   aBatteryInfo->level() = capacity / 100;
-  aBatteryInfo->charging() = chargingSrc == 1;
+  aBatteryInfo->charging() = (chargingSrc == BATTERY_CHARGING_USB ||
+                              chargingSrc == BATTERY_CHARGING_AC);
   aBatteryInfo->remainingTime() = dom::battery::kUnknownRemainingTime;
 }
 

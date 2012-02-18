@@ -41,6 +41,7 @@ package org.mozilla.gecko.sync.repositories.domain;
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
@@ -224,7 +225,7 @@ public class BookmarkRecord extends Record {
   }
 
   private void trace(String s) {
-    Utils.trace(LOG_TAG, s);
+    Logger.trace(LOG_TAG, s);
   }
 
   @Override

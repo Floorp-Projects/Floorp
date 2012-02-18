@@ -50,6 +50,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		matrixUtils.js \
+		MutationEventChecker.js \
 		test_a_href_01.xhtml \
 		test_a_href_02.xhtml \
 		a_href_destination.svg \
@@ -65,6 +66,7 @@ _TEST_FILES = \
 		bbox-helper.svg \
 		bounds-helper.svg \
 		test_dataTypes.html \
+		test_dataTypesModEvents.html \
 		dataTypes-helper.svg \
 		getCTM-helper.svg \
 		test_getCTM.html \
@@ -88,7 +90,9 @@ _TEST_FILES = \
 		test_SVGLengthList.xhtml \
 		test_SVGLengthList-2.xhtml \
 		test_SVGMatrix.xhtml \
+		test_SVGNumberList.xhtml \
 		test_SVGPathSegList.xhtml \
+		test_SVGPointList.xhtml \
 		test_SVGStyleElement.xhtml \
 		test_SVGStringList.xhtml \
 		test_SVGTransformList.xhtml \

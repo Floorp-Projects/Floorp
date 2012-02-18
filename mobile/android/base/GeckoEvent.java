@@ -87,6 +87,8 @@ public class GeckoEvent {
     private static final int VISITED = 21;
     private static final int NETWORK_CHANGED = 22;
     private static final int PROXIMITY_EVENT = 23;
+    private static final int ACTIVITY_RESUMING = 24;
+    private static final int SCREENSHOT = 25;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -139,16 +141,28 @@ public class GeckoEvent {
         mType = evType;
     }
 
-    public static GeckoEvent createPauseEvent() {
-        return new GeckoEvent(ACTIVITY_PAUSING);
+    public static GeckoEvent createPauseEvent(int activityDepth) {
+        GeckoEvent event = new GeckoEvent(ACTIVITY_PAUSING);
+        event.mFlags = activityDepth > 0 ? 1 : 0;
+        return event;
     }
 
-    public static GeckoEvent createStoppingEvent() {
-        return new GeckoEvent(ACTIVITY_STOPPING);
+    public static GeckoEvent createResumeEvent(int activityDepth) {
+        GeckoEvent event = new GeckoEvent(ACTIVITY_RESUMING);
+        event.mFlags = activityDepth > 0 ? 1 : 0;
+        return event;
     }
 
-    public static GeckoEvent createStartEvent() {
-        return new GeckoEvent(ACTIVITY_START);
+    public static GeckoEvent createStoppingEvent(int activityDepth) {
+        GeckoEvent event = new GeckoEvent(ACTIVITY_STOPPING);
+        event.mFlags = activityDepth > 0 ? 1 : 0;
+        return event;
+    }
+
+    public static GeckoEvent createStartEvent(int activityDepth) {
+        GeckoEvent event = new GeckoEvent(ACTIVITY_START);
+        event.mFlags = activityDepth > 0 ? 1 : 0;
+        return event;
     }
 
     public static GeckoEvent createShutdownEvent() {
@@ -384,6 +398,15 @@ public class GeckoEvent {
         GeckoEvent event = new GeckoEvent(NETWORK_CHANGED);
         event.mBandwidth = bandwidth;
         event.mCanBeMetered = canBeMetered;
+        return event;
+    }
+
+    public static GeckoEvent createScreenshotEvent(int tabId, int sw, int sh, int dw, int dh) {
+        GeckoEvent event = new GeckoEvent(SCREENSHOT);
+        event.mPoints = new Point[2];
+        event.mPoints[0] = new Point(sw, sh);
+        event.mPoints[1] = new Point(dw, dh);
+        event.mMetaState = tabId;
         return event;
     }
 }

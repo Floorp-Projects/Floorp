@@ -46,6 +46,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
@@ -53,8 +54,8 @@ import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.util.Log;
 
 public class RepoUtils {
 
@@ -165,6 +166,7 @@ public class RepoUtils {
       return this.query(null, projection, selection, selectionArgs, sortOrder);
     }
 
+    // For ContentProvider queries.
     public Cursor query(String label, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
       String logLabel = (label == null) ? this.tag : this.tag + label;
       long queryStart = android.os.SystemClock.uptimeMillis();
@@ -174,10 +176,32 @@ public class RepoUtils {
       return c;
     }
 
+    // For SQLiteOpenHelper queries.
+    public Cursor query(SQLiteDatabase db, String label, String table, String[] columns,
+        String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
+      String logLabel = (label == null) ? this.tag : this.tag + label;
+      long queryStart = android.os.SystemClock.uptimeMillis();
+      Cursor c = db.query(table, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
+      long queryEnd   = android.os.SystemClock.uptimeMillis();
+      RepoUtils.queryTimeLogger(logLabel, queryStart, queryEnd);
+      return c;
+    }
+
     public Cursor safeQuery(String label, String[] projection, String selection, String[] selectionArgs, String sortOrder) throws NullCursorException {
       Cursor c = this.query(label, projection, selection, selectionArgs, sortOrder);
       if (c == null) {
-        Log.e(tag, "Got null cursor exception in " + tag + ((label == null) ? "" : label));
+        Logger.error(tag, "Got null cursor exception in " + tag + ((label == null) ? "" : label));
+        throw new NullCursorException(null);
+      }
+      return c;
+    }
+
+    public Cursor safeQuery(SQLiteDatabase db, String label, String table, String[] columns,
+        String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) throws NullCursorException  {
+      Cursor c = this.query(db, label, table, columns, selection, selectionArgs,
+          groupBy, having, orderBy, limit);
+      if (c == null) {
+        Logger.error(tag, "Got null cursor exception in " + tag + ((label == null) ? "" : label));
         throw new NullCursorException(null);
       }
       return c;
@@ -206,7 +230,7 @@ public class RepoUtils {
     try {
       return (JSONArray) new JSONParser().parse(getStringFromCursor(cur, colId));
     } catch (ParseException e) {
-      Log.e(LOG_TAG, "JSON parsing error for " + colId, e);
+      Logger.error(LOG_TAG, "JSON parsing error for " + colId, e);
       return null;
     }
   }
@@ -223,7 +247,7 @@ public class RepoUtils {
     final String guid = rec.guid;
     if (guid == null) {
       // Oh dear.
-      Log.e(LOG_TAG, "No guid in computeParentFields!");
+      Logger.error(LOG_TAG, "No guid in computeParentFields!");
       return null;
     }
 
@@ -232,13 +256,13 @@ public class RepoUtils {
       // No magic parent. Use whatever the caller suggests.
       realParent = suggestedParentID;
     } else {
-      Log.d(LOG_TAG, "Ignoring suggested parent ID " + suggestedParentID +
-                       " for " + guid + "; using " + realParent);
+      Logger.debug(LOG_TAG, "Ignoring suggested parent ID " + suggestedParentID +
+                           " for " + guid + "; using " + realParent);
     }
 
     if (realParent == null) {
       // Oh dear.
-      Log.e(LOG_TAG, "No parent for record " + guid);
+      Logger.error(LOG_TAG, "No parent for record " + guid);
       return null;
     }
 
@@ -283,18 +307,24 @@ public class RepoUtils {
 
   private static BookmarkRecord logBookmark(BookmarkRecord rec) {
     try {
-      Log.d(LOG_TAG, "Returning bookmark record " + rec.guid + " (" + rec.androidID +
-          ", " + rec.parentName + ":" + rec.parentID + ")");
-      Log.d(LOG_TAG, "> Title:            " + rec.title);
-      Log.d(LOG_TAG, "> Type:             " + rec.type);
-      Log.d(LOG_TAG, "> URI:              " + rec.bookmarkURI);
-      Log.d(LOG_TAG, "> Android position: " + rec.androidPosition);
-      Log.d(LOG_TAG, "> Position:         " + rec.pos);
-      if (rec.isFolder()) {
-        Log.d(LOG_TAG, "FOLDER: Children are " + (rec.children == null ? "null" : rec.children.toJSONString()));
+      Logger.debug(LOG_TAG, "Returning bookmark record " + rec.guid + " (" + rec.androidID +
+                           ", parent " + rec.parentID + ")");
+      if (Logger.LOG_PERSONAL_INFORMATION) {
+        Logger.pii(LOG_TAG, "> Parent name:      " + rec.parentName);
+        Logger.pii(LOG_TAG, "> Title:            " + rec.title);
+        Logger.pii(LOG_TAG, "> Type:             " + rec.type);
+        Logger.pii(LOG_TAG, "> URI:              " + rec.bookmarkURI);
+        Logger.pii(LOG_TAG, "> Android position: " + rec.androidPosition);
+        Logger.pii(LOG_TAG, "> Position:         " + rec.pos);
+        if (rec.isFolder()) {
+          Logger.pii(LOG_TAG, "FOLDER: Children are " +
+                             (rec.children == null ?
+                                 "null" :
+                                 rec.children.toJSONString()));
+        }
       }
     } catch (Exception e) {
-      Log.d(LOG_TAG, "Exception logging bookmark record " + rec, e);
+      Logger.debug(LOG_TAG, "Exception logging bookmark record " + rec, e);
     }
     return rec;
   }
@@ -319,13 +349,15 @@ public class RepoUtils {
 
   private static HistoryRecord logHistory(HistoryRecord rec) {
     try {
-      Log.d(LOG_TAG, "Returning history record " + rec.guid + " (" + rec.androidID + ")");
-      Log.d(LOG_TAG, "> Title:            " + rec.title);
-      Log.d(LOG_TAG, "> URI:              " + rec.histURI);
-      Log.d(LOG_TAG, "> Visited:          " + rec.fennecDateVisited);
-      Log.d(LOG_TAG, "> Visits:           " + rec.fennecVisitCount);
+      Logger.debug(LOG_TAG, "Returning history record " + rec.guid + " (" + rec.androidID + ")");
+      Logger.debug(LOG_TAG, "> Visited:          " + rec.fennecDateVisited);
+      Logger.debug(LOG_TAG, "> Visits:           " + rec.fennecVisitCount);
+      if (Logger.LOG_PERSONAL_INFORMATION) {
+        Logger.pii(LOG_TAG, "> Title:            " + rec.title);
+        Logger.pii(LOG_TAG, "> URI:              " + rec.histURI);
+      }
     } catch (Exception e) {
-      Log.d(LOG_TAG, "Exception logging bookmark record " + rec, e);
+      Logger.debug(LOG_TAG, "Exception logging bookmark record " + rec, e);
     }
     return rec;
   }
@@ -356,7 +388,7 @@ public class RepoUtils {
   
   public static void queryTimeLogger(String methodCallingQuery, long queryStart, long queryEnd) {
     long elapsedTime = queryEnd - queryStart;
-    Log.i(LOG_TAG, "Query timer: " + methodCallingQuery + " took " + elapsedTime + "ms.");
+    Logger.debug(LOG_TAG, "Query timer: " + methodCallingQuery + " took " + elapsedTime + "ms.");
   }
 
   public static boolean stringsEqual(String a, String b) {

@@ -95,7 +95,8 @@ nsAppShell::nsAppShell()
       mCondLock("nsAppShell.mCondLock"),
       mQueueCond(mCondLock, "nsAppShell.mQueueCond"),
       mNumDraws(0),
-      mNumViewports(0)
+      mNumViewports(0),
+      mPendingOrientationEvents(false)
 {
     gAppShell = this;
 }
@@ -342,6 +343,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
                                                  -curEvent->Alpha(),
                                                  curEvent->Beta(),
                                                  curEvent->Gamma());
+        mPendingOrientationEvents = false;
         break;
 
     case AndroidGeckoEvent::LOCATION_EVENT: {
@@ -370,6 +372,9 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     }
 
     case AndroidGeckoEvent::ACTIVITY_STOPPING: {
+        if (curEvent->Flags() > 0)
+            break;
+
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
         NS_NAMED_LITERAL_STRING(minimize, "heap-minimize");
@@ -395,6 +400,14 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     }
 
     case AndroidGeckoEvent::ACTIVITY_PAUSING: {
+        if (curEvent->Flags() == 0) {
+            // We aren't transferring to one of our own activities, so set
+            // background status
+            nsCOMPtr<nsIObserverService> obsServ =
+                mozilla::services::GetObserverService();
+            obsServ->NotifyObservers(nsnull, "application-background", nsnull);
+        }
+
         // We really want to send a notification like profile-before-change,
         // but profile-before-change ends up shutting some things down instead
         // of flushing data
@@ -413,10 +426,30 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     }
 
     case AndroidGeckoEvent::ACTIVITY_START: {
+        if (curEvent->Flags() > 0)
+            break;
+
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
         obsServ->NotifyObservers(nsnull, "application-foreground", nsnull);
 
+        break;
+    }
+
+    case AndroidGeckoEvent::SCREENSHOT: {
+        if (!mBrowserApp)
+            break;
+
+        AndroidBridge* bridge = AndroidBridge::Bridge();
+        if (!bridge)
+            break;
+
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        mBrowserApp->GetWindowForTab(curEvent->MetaState(), getter_AddRefs(domWindow));
+        nsTArray<nsIntPoint> points = curEvent->Points();
+        NS_ASSERTION(points.Length() != 2, "Screenshot event does not have enough coordinates");
+        if (domWindow)
+            bridge->TakeScreenshot(domWindow, 0, 0, points[0].x, points[0].y, points[1].x, points[1].y, curEvent->MetaState());
         break;
     }
 
@@ -480,6 +513,17 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     case AndroidGeckoEvent::NETWORK_CHANGED: {
         hal::NotifyNetworkChange(hal::NetworkInformation(curEvent->Bandwidth(),
                                                          curEvent->CanBeMetered()));
+        break;
+    }
+
+    case AndroidGeckoEvent::ACTIVITY_RESUMING: {
+        if (curEvent->Flags() == 0) {
+            // We didn't return from one of our own activities, so restore
+            // to foreground status
+            nsCOMPtr<nsIObserverService> obsServ =
+                mozilla::services::GetObserverService();
+            obsServ->NotifyObservers(nsnull, "application-foreground", nsnull);
+        }
         break;
     }
 
@@ -547,6 +591,10 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                     delete event;
                 }
             }
+        } else if (ae->Type() == AndroidGeckoEvent::ORIENTATION_EVENT) {
+            if (!mPendingOrientationEvents)
+                 mEventQueue.AppendElement(ae);
+            mPendingOrientationEvents = true;
         } else {
             mEventQueue.AppendElement(ae);
         }

@@ -1527,6 +1527,9 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
   else if (WinHasOption(aFeatures, "alwaysRaised", 0, nsnull))
     chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
 
+  chromeFlags |= WinHasOption(aFeatures, "macsuppressanimation", 0, nsnull) ?
+    nsIWebBrowserChrome::CHROME_MAC_SUPPRESS_ANIMATION : 0;
+
   chromeFlags |= WinHasOption(aFeatures, "chrome", 0, nsnull) ?
     nsIWebBrowserChrome::CHROME_OPENAS_CHROME : 0;
   chromeFlags |= WinHasOption(aFeatures, "extrachrome", 0, nsnull) ?
