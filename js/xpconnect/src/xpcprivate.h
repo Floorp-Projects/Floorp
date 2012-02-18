@@ -318,7 +318,8 @@ typedef nsDataHashtable<xpc::PtrAndPrincipalHashKey, JSCompartment *> XPCCompart
     return (result || !src) ? NS_OK : NS_ERROR_OUT_OF_MEMORY
 
 
-#define WRAPPER_SLOTS (JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1))
+#define WRAPPER_SLOTS (JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | \
+                       JSCLASS_HAS_RESERVED_SLOTS(1))
 
 #define INVALID_OBJECT ((JSObject *)1)
 
@@ -520,6 +521,7 @@ public:
     JSBool IsShuttingDown() const {return mShuttingDown;}
 
     void EnsureGCBeforeCC() { mNeedGCBeforeCC = true; }
+    void ClearGCBeforeCC() { mNeedGCBeforeCC = false; }
 
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
@@ -1351,7 +1353,8 @@ private:
 // These are the various JSClasses and callbacks whose use that required
 // visibility from more than one .cpp file.
 
-extern js::Class XPC_WN_NoHelper_JSClass;
+struct XPCWrappedNativeJSClass;
+extern XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass;
 extern js::Class XPC_WN_NoMods_WithCall_Proto_JSClass;
 extern js::Class XPC_WN_NoMods_NoCall_Proto_JSClass;
 extern js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass;
@@ -2035,7 +2038,10 @@ public:
 // was a big problem when wrappers are reparented to different scopes (and
 // thus different protos (the DOM does this).
 
-struct XPCNativeScriptableSharedJSClass
+// We maintain the invariant that every JSClass for which ext.isWrappedNative
+// is true is a contained in an instance of this struct, and can thus be cast
+// to it.
+struct XPCWrappedNativeJSClass
 {
     js::Class base;
     PRUint32 interfacesBitmap;
@@ -2077,7 +2083,7 @@ public:
 
 private:
     XPCNativeScriptableFlags mFlags;
-    XPCNativeScriptableSharedJSClass mJSClass;
+    XPCWrappedNativeJSClass  mJSClass;
     JSBool                   mCanBeSlim;
 };
 

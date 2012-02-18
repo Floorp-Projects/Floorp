@@ -319,7 +319,7 @@ void
 Bindings::trace(JSTracer *trc)
 {
     if (lastBinding)
-        MarkShape(trc, lastBinding, "shape");
+        MarkShape(trc, &lastBinding, "shape");
 }
 
 #ifdef JS_CRASH_DIAGNOSTICS
@@ -1903,6 +1903,6 @@ JSScript::markTrapClosures(JSTracer *trc)
     for (unsigned i = 0; i < length; i++) {
         BreakpointSite *site = debug->breakpoints[i];
         if (site && site->trapHandler)
-            MarkValue(trc, site->trapClosure, "trap closure");
+            MarkValue(trc, &site->trapClosure, "trap closure");
     }
 }

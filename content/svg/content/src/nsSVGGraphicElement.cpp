@@ -189,9 +189,24 @@ nsSVGGraphicElement::IsEventName(nsIAtom* aName)
 }
 
 gfxMatrix
-nsSVGGraphicElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
+nsSVGGraphicElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
+                                              TransformTypes aWhich) const
 {
+  NS_ABORT_IF_FALSE(aWhich != eChildToUserSpace || aMatrix.IsIdentity(),
+                    "Skipping eUserSpaceToParent transforms makes no sense");
+
   gfxMatrix result(aMatrix);
+
+  if (aWhich == eChildToUserSpace) {
+    // We don't have anything to prepend.
+    // eChildToUserSpace is not the common case, which is why we return
+    // 'result' to benefit from NRVO rather than returning aMatrix before
+    // creating 'result'.
+    return result;
+  }
+
+  NS_ABORT_IF_FALSE(aWhich == eAllTransforms || aWhich == eUserSpaceToParent,
+                    "Unknown TransformTypes");
 
   // animateMotion's resulting transform is supposed to apply *on top of*
   // any transformations from the |transform| attribute. So since we're

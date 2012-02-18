@@ -63,7 +63,7 @@ public class Synchronizer {
   public class SynchronizerDelegateSessionDelegate implements
       SynchronizerSessionDelegate {
 
-    private static final String LOG_TAG = "SynchronizerDelegateSessionDelegate";
+    private static final String LOG_TAG = "SyncDelSDelegate";
     private SynchronizerDelegate synchronizerDelegate;
     private SynchronizerSession  session;
 

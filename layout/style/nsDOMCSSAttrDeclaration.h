@@ -66,8 +66,8 @@ public:
   ~nsDOMCSSAttributeDeclaration();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMCSSAttributeDeclaration,
-                                           nsICSSDeclaration)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(nsDOMCSSAttributeDeclaration,
+                                                     nsICSSDeclaration)
 
   // If GetCSSDeclaration returns non-null, then the decl it returns
   // is owned by our current style rule.

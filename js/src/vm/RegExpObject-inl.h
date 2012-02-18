@@ -81,6 +81,14 @@ RegExpObject::getShared(JSContext *cx)
 }
 
 inline void
+RegExpObject::setShared(JSContext *cx, RegExpShared *shared)
+{
+    if (shared)
+        shared->prepareForUse(cx);
+    JSObject::setPrivate(shared);
+}
+
+inline void
 RegExpObject::setLastIndex(const Value &v)
 {
     setSlot(LAST_INDEX_SLOT, v);
@@ -146,6 +154,12 @@ RegExpToShared(JSContext *cx, JSObject &obj)
     if (obj.isRegExp())
         return obj.asRegExp().getShared(cx);
     return Proxy::regexp_toShared(cx, &obj);
+}
+
+inline void
+RegExpShared::prepareForUse(JSContext *cx)
+{
+    gcNumberWhenUsed = cx->runtime->gcNumber;
 }
 
 } /* namespace js */

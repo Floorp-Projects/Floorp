@@ -999,7 +999,7 @@ class StackFrame
         return !!(flags_ & HAS_RVAL);
     }
 
-    const Value &returnValue() {
+    Value &returnValue() {
         if (!(flags_ & HAS_RVAL))
             rval_.setUndefined();
         return rval_;
@@ -1554,6 +1554,9 @@ class StackSpace
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
     void mark(JSTracer *trc);
     void markFrameSlots(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsbytecode *pc);
+
+    /* Called during GC: sets active flag on compartments with active frames. */
+    void markActiveCompartments();
 
     /* We only report the committed size;  uncommitted size is uninteresting. */
     JS_FRIEND_API(size_t) sizeOfCommitted();

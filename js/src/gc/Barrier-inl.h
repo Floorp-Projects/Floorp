@@ -134,8 +134,11 @@ inline void
 HeapValue::writeBarrierPre(JSCompartment *comp, const Value &value)
 {
 #ifdef JSGC_INCREMENTAL
-    if (comp->needsBarrier())
-        js::gc::MarkValueUnbarriered(comp->barrierTracer(), value, "write barrier");
+    if (comp->needsBarrier()) {
+        Value tmp(value);
+        js::gc::MarkValueUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        JS_ASSERT(tmp == value);
+    }
 #endif
 }
 
@@ -261,6 +264,31 @@ HeapId::operator=(const HeapId &v)
     value = v.value;
     post();
     return *this;
+}
+
+inline const Value &
+ReadBarrieredValue::get() const
+{
+    if (value.isObject())
+        JSObject::readBarrier(&value.toObject());
+    else if (value.isString())
+        JSString::readBarrier(value.toString());
+    else
+        JS_ASSERT(!value.isMarkable());
+
+    return value;
+}
+
+inline
+ReadBarrieredValue::operator const Value &() const
+{
+    return get();
+}
+
+inline JSObject &
+ReadBarrieredValue::toObject() const
+{
+    return get().toObject();
 }
 
 } /* namespace js */

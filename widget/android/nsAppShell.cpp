@@ -95,7 +95,8 @@ nsAppShell::nsAppShell()
       mCondLock("nsAppShell.mCondLock"),
       mQueueCond(mCondLock, "nsAppShell.mQueueCond"),
       mNumDraws(0),
-      mNumViewports(0)
+      mNumViewports(0),
+      mPendingOrientationEvents(false)
 {
     gAppShell = this;
 }
@@ -342,6 +343,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
                                                  -curEvent->Alpha(),
                                                  curEvent->Beta(),
                                                  curEvent->Gamma());
+        mPendingOrientationEvents = false;
         break;
 
     case AndroidGeckoEvent::LOCATION_EVENT: {
@@ -431,6 +433,23 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             mozilla::services::GetObserverService();
         obsServ->NotifyObservers(nsnull, "application-foreground", nsnull);
 
+        break;
+    }
+
+    case AndroidGeckoEvent::SCREENSHOT: {
+        if (!mBrowserApp)
+            break;
+
+        AndroidBridge* bridge = AndroidBridge::Bridge();
+        if (!bridge)
+            break;
+
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        mBrowserApp->GetWindowForTab(curEvent->MetaState(), getter_AddRefs(domWindow));
+        nsTArray<nsIntPoint> points = curEvent->Points();
+        NS_ASSERTION(points.Length() != 2, "Screenshot event does not have enough coordinates");
+        if (domWindow)
+            bridge->TakeScreenshot(domWindow, 0, 0, points[0].x, points[0].y, points[1].x, points[1].y, curEvent->MetaState());
         break;
     }
 
@@ -572,6 +591,10 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                     delete event;
                 }
             }
+        } else if (ae->Type() == AndroidGeckoEvent::ORIENTATION_EVENT) {
+            if (!mPendingOrientationEvents)
+                 mEventQueue.AppendElement(ae);
+            mPendingOrientationEvents = true;
         } else {
             mEventQueue.AppendElement(ae);
         }

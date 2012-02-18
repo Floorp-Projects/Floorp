@@ -1390,7 +1390,19 @@ void nsPluginInstanceOwner::CARefresh(nsITimer *aTimer, void *aClosure) {
   }
 }
 
-void nsPluginInstanceOwner::AddToCARefreshTimer(nsPluginInstanceOwner *aPluginInstance) {
+void nsPluginInstanceOwner::AddToCARefreshTimer() {
+  if (!mInstance) {
+    return;
+  }
+
+  // Flash invokes InvalidateRect for us.
+  const char* mime = nsnull;
+  if (NS_SUCCEEDED(mInstance->GetMIMEType(&mime)) && mime) {
+    if (strcmp(mime, "application/x-shockwave-flash") == 0) {
+      return;
+    }
+  }
+
   if (!sCARefreshListeners) {
     sCARefreshListeners = new nsTArray<nsPluginInstanceOwner*>();
     if (!sCARefreshListeners) {
@@ -1398,9 +1410,11 @@ void nsPluginInstanceOwner::AddToCARefreshTimer(nsPluginInstanceOwner *aPluginIn
     }
   }
 
-  NS_ASSERTION(!sCARefreshListeners->Contains(aPluginInstance), 
-      "pluginInstanceOwner already registered as a listener");
-  sCARefreshListeners->AppendElement(aPluginInstance);
+  if (sCARefreshListeners->Contains(this)) {
+    return;
+  }
+
+  sCARefreshListeners->AppendElement(this);
 
   if (!sCATimer) {
     sCATimer = new nsCOMPtr<nsITimer>();
@@ -1416,12 +1430,12 @@ void nsPluginInstanceOwner::AddToCARefreshTimer(nsPluginInstanceOwner *aPluginIn
   }
 }
 
-void nsPluginInstanceOwner::RemoveFromCARefreshTimer(nsPluginInstanceOwner *aPluginInstance) {
-  if (!sCARefreshListeners || sCARefreshListeners->Contains(aPluginInstance) == false) {
+void nsPluginInstanceOwner::RemoveFromCARefreshTimer() {
+  if (!sCARefreshListeners || sCARefreshListeners->Contains(this) == false) {
     return;
   }
 
-  sCARefreshListeners->RemoveElement(aPluginInstance);
+  sCARefreshListeners->RemoveElement(this);
 
   if (sCARefreshListeners->Length() == 0) {
     if (sCATimer) {
@@ -1432,21 +1446,6 @@ void nsPluginInstanceOwner::RemoveFromCARefreshTimer(nsPluginInstanceOwner *aPlu
     delete sCARefreshListeners;
     sCARefreshListeners = NULL;
   }
-}
-
-void nsPluginInstanceOwner::SetupCARefresh()
-{
-  if (!mInstance) {
-    return;
-  }
-
-  const char* mime = nsnull;
-  if (NS_SUCCEEDED(mInstance->GetMIMEType(&mime)) && mime) {
-    // Flash invokes InvalidateRect for us.
-    if (strcmp(mime, "application/x-shockwave-flash") != 0) {
-    AddToCARefreshTimer(this);
-  }
-}
 }
 
 void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
@@ -2699,7 +2698,7 @@ nsPluginInstanceOwner::Destroy()
   CancelTimer();
 #endif
 #ifdef XP_MACOSX
-  RemoveFromCARefreshTimer(this);
+  RemoveFromCARefreshTimer();
   if (mColorProfile)
     ::CGColorSpaceRelease(mColorProfile);  
 #endif
@@ -3277,7 +3276,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 {
   NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
 
-    nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_FAILURE;
   
   // Can't call this twice!
   if (mWidget) {
@@ -3318,6 +3317,21 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
     mWidget->EnableDragDrop(true);
     mWidget->Show(false);
     mWidget->Enable(false);
+
+#ifdef XP_MACOSX
+    // Now that we have a widget we want to set the event model before
+    // any events are processed.
+    nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+    if (!pluginWidget) {
+      return NS_ERROR_FAILURE;
+    }
+    pluginWidget->SetPluginEventModel(GetEventModel());
+    pluginWidget->SetPluginDrawingModel(GetDrawingModel());
+
+    if (GetDrawingModel() == NPDrawingModelCoreAnimation) {
+      AddToCARefreshTimer();
+    }
+#endif
   }
 
   if (mObjectFrame) {
@@ -3669,10 +3683,13 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
       container->SetCurrentImage(nsnull);
     }
 
-    // If we had an old frame and we're not going to have a new one then
-    // we should unregister for some things.
+#if defined(XP_MACOSX) && !defined(NP_NO_QUICKDRAW)
     if (!aFrame) {
-      // Unregister scroll position listeners
+      // At this point we had a frame but it is going away and we're not getting a new one.
+      // Unregister for a scroll position listening, which is only required for Carbon
+      // event model plugins on Mac OS X. It's OK to unregister when we didn't register,
+      // so don't be strict about unregistering. Better to unregister when we didn't have to
+      // than to not unregister when we should.
       for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
         nsIScrollableFrame* sf = do_QueryFrame(f);
         if (sf) {
@@ -3680,21 +3697,28 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
         }
       }
     }
+#endif
 
     // Make sure the old frame isn't holding a reference to us.
     mObjectFrame->SetInstanceOwner(nsnull);
   } else {
+    // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
+    // Note that we probably have a crash bug in the way we register/unregister, bug 723190.
+    // Bug 723190 is mitigated by limiting registration to Carbon event model plugins.
+#if defined(XP_MACOSX) && !defined(NP_NO_QUICKDRAW)
     if (aFrame) {
-      // We didn't have an object frame before but we do now!
-      // We need to register a scroll position listener on every scrollable
-      // frame up to the top
-      for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-        nsIScrollableFrame* sf = do_QueryFrame(f);
-        if (sf) {
-          sf->AddScrollPositionListener(this);
+      // We didn't have an object frame before but we do now. We need to register a scroll
+      // position listener on every scrollable frame up to the top.
+      if (GetEventModel() == NPEventModelCarbon) {
+        for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+          nsIScrollableFrame* sf = do_QueryFrame(f);
+          if (sf) {
+            sf->AddScrollPositionListener(this);
+          }
         }
       }
     }
+#endif
   }
 
   // Swap in the new frame (or no frame)

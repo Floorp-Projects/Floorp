@@ -1,0 +1,42 @@
+<head>
+  <title>Do plugin stream requests send the Referer header correctly?</title>
+  <script type="application/javascript"
+	  src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+
+<body onload="runTests()">
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var pending = 2;
+  function testDone() {
+    --pending;
+    if (0 == pending)
+      SimpleTest.finish()
+  }
+
+  function runTests() {
+    var p = document.getElementById('plugin1');
+
+    ok(p.streamTest('plugin-stream-referer.sjs', false, null, null,
+                    function(r, t) {
+                      is(r, 0, "GET plugin-stream-referer.sjs");
+                      is(t, "Referer found: " + window.location,
+                         "GET Referer correct");
+                      testDone();
+                    }, null, true), "referer GET");
+
+    ok(p.streamTest('plugin-stream-referer.sjs', true, "Dummy Data", null,
+                    function(r, t) {
+                      is(r, 0, "POST plugin-stream-referer.sjs");
+                      is(t, "No Referer found", "POST Referer absent");
+                      testDone();
+                    }, null, true), "referer POST");
+  }
+  </script>
+

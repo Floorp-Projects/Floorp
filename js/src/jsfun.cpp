@@ -100,12 +100,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-inline JSObject *
-JSObject::getThrowTypeError() const
-{
-    return global().getThrowTypeError();
-}
-
 JSBool
 js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
 {
@@ -475,8 +469,8 @@ strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject 
         }
 
         attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
-        getter = CastAsPropertyOp(argsobj.getThrowTypeError());
-        setter = CastAsStrictPropertyOp(argsobj.getThrowTypeError());
+        getter = CastAsPropertyOp(argsobj.global().getThrowTypeError());
+        setter = CastAsStrictPropertyOp(argsobj.global().getThrowTypeError());
     }
 
     Value undef = UndefinedValue();
@@ -530,7 +524,7 @@ args_trace(JSTracer *trc, JSObject *obj)
 {
     ArgumentsObject &argsobj = obj->asArguments();
     ArgumentsData *data = argsobj.data();
-    MarkValue(trc, data->callee, js_callee_str);
+    MarkValue(trc, &data->callee, js_callee_str);
     MarkValueRange(trc, argsobj.initialLength(), data->slots, js_arguments_str);
 
     /*
@@ -545,7 +539,7 @@ args_trace(JSTracer *trc, JSObject *obj)
 #if JS_HAS_GENERATORS
     StackFrame *fp = argsobj.maybeStackFrame();
     if (fp && fp->isFloatingGenerator())
-        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
+        MarkObject(trc, &js_FloatingFrameToGenerator(fp)->obj, "generator object");
 #endif
 }
 
@@ -557,7 +551,7 @@ args_trace(JSTracer *trc, JSObject *obj)
  */
 Class js::NormalArgumentsObjectClass = {
     "Arguments",
-    JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(NormalArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_FOR_OF_ITERATION,
@@ -593,7 +587,7 @@ Class js::NormalArgumentsObjectClass = {
  */
 Class js::StrictArgumentsObjectClass = {
     "Arguments",
-    JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(StrictArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_FOR_OF_ITERATION,
@@ -942,13 +936,13 @@ call_trace(JSTracer *trc, JSObject *obj)
 #if JS_HAS_GENERATORS
     StackFrame *fp = (StackFrame *) obj->getPrivate();
     if (fp && fp->isFloatingGenerator())
-        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
+        MarkObject(trc, &js_FloatingFrameToGenerator(fp)->obj, "generator object");
 #endif
 }
 
 JS_PUBLIC_DATA(Class) js::CallClass = {
     "Call",
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS) |
     JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,         /* addProperty */
@@ -1329,7 +1323,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             StrictPropertyOp setter;
             uintN attrs = JSPROP_PERMANENT;
             if (fun->isInterpreted() ? fun->inStrictMode() : fun->isBoundFunction()) {
-                JSObject *throwTypeError = fun->getThrowTypeError();
+                JSObject *throwTypeError = fun->global().getThrowTypeError();
 
                 getter = CastAsPropertyOp(throwTypeError);
                 setter = CastAsStrictPropertyOp(throwTypeError);
@@ -1471,7 +1465,7 @@ JSFunction::trace(JSTracer *trc)
 
     if (isInterpreted()) {
         if (script())
-            MarkScript(trc, script(), "script");
+            MarkScript(trc, &script(), "script");
         if (environment())
             MarkObjectUnbarriered(trc, environment(), "fun_callscope");
     }
@@ -1505,7 +1499,7 @@ JSFunction::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
  */
 JS_FRIEND_DATA(Class) js::FunctionClass = {
     js_Function_str,
-    JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */

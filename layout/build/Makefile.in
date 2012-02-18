@@ -148,10 +148,6 @@ LOCAL_INCLUDES	+= \
 	$(NULL)
 endif
 
-ifdef MOZ_B2G_BT #{
-SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/bluetooth/$(LIB_PREFIX)dombluetooth_s.$(LIB_SUFFIX)
-endif #}
-
 ifdef MOZ_B2G_RIL #{
 SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/system/b2g/$(LIB_PREFIX)domsystemb2g_s.$(LIB_SUFFIX)
 endif #}
@@ -276,8 +272,5 @@ ifdef MOZ_B2G_RIL #{
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/system/b2g
 endif #}
 
-ifdef MOZ_B2G_BT #{
-LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/bluetooth
-endif #}
 
 DEFINES += -D_IMPL_NS_LAYOUT

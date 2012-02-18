@@ -78,8 +78,8 @@ public:
    * aDataTransfer - the dataTransfer for the drag event.
    * aCanDrag - [out] set to true if the drag may proceed, false to stop the
    *            drag entirely
-   * aDragSelection - [out] set to true to indicate that a selection is being
-   *                  dragged, rather than a specific node
+   * aSelection - [out] set to the selection being dragged, or null if no
+   *                    selection is being dragged.
    * aDragNode - [out] the link, image or area being dragged, or null if the
    *             drag occurred on another element.
    */
@@ -89,7 +89,7 @@ public:
                               bool aIsAltKeyPressed,
                               nsDOMDataTransfer* aDataTransfer,
                               bool* aCanDrag,
-                              bool* aDragSelection,
+                              nsISelection** aSelection,
                               nsIContent** aDragNode);
 };
 

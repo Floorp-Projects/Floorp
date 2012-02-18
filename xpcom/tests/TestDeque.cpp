@@ -52,7 +52,6 @@ private:
   int AssignFlaw();
   int TestRemove();
 };
-static _TestDeque sTestDeque;
 
 class _Dealloc: public nsDequeFunctor {
   virtual void* operator()(void* aObject) {
