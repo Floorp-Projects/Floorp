@@ -247,7 +247,7 @@ class Assembler : public AssemblerX86Shared
     static IonCode *CodeFromJump(IonCode *code, uint8 *jump);
 
   private:
-    void writeRelocation(JmpSrc src);
+    void writeRelocation(JmpSrc src, Relocation::Kind reloc);
     void addPendingJump(JmpSrc src, void *target, Relocation::Kind reloc);
 
   protected:
