@@ -259,7 +259,6 @@ class ExceptionHandler {
   const char* next_minidump_id_c_;
 
   const bool handler_installed_;
-  void* signal_stack;  // the handler stack.
   HandlerCallback crash_handler_;
 
   // The global exception handler stack. This is need becuase there may exist

@@ -67,6 +67,9 @@
 .helplink:visited {
   text-decoration: none;
 }
+.link:hover {
+  text-decoration: underline;
+}
 
 .helplink {
   display: block;
@@ -135,6 +138,7 @@
 .rule-link {
   text-align: end;
   -moz-padding-start: 10px;
+  cursor: pointer;
 }
 
 /* This rule is necessary because Templater.jsm breaks LTR TDs in RTL docs */
@@ -200,7 +204,13 @@
 
 .ruleview-rule-source {
   background-color: -moz-dialog;
+  color: #0091ff;
   padding: 2px 5px;
+  cursor: pointer;
+}
+
+.ruleview-rule-source:hover {
+  text-decoration: underline;
 }
 
 .ruleview-code {

@@ -2195,7 +2195,7 @@ TypeCompartment::nukeTypes(JSContext *cx)
 
 #ifdef JS_THREADSAFE
     AutoLockGC maybeLock;
-    if (!cx->runtime->gcMarkAndSweep)
+    if (!cx->runtime->gcRunning)
         maybeLock.lock(cx->runtime);
 #endif
 
@@ -2618,7 +2618,7 @@ struct types::ObjectTableKey
     typedef JSObject * Lookup;
 
     static inline uint32_t hash(JSObject *obj) {
-        return (uint32_t) (JSID_BITS(obj->lastProperty()->propid()) ^
+        return (uint32_t) (JSID_BITS(obj->lastProperty()->propid().get()) ^
                          obj->slotSpan() ^ obj->numFixedSlots() ^
                          ((uint32_t)(size_t)obj->getProto() >> 2));
     }

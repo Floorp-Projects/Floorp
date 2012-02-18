@@ -110,7 +110,8 @@ public:
     STARTED, // Started
     CLONED, // SetSessionInfoCalled, Start not called
     FAILED, // The autdio session failed to start
-    STOPPED // Stop called
+    STOPPED, // Stop called
+    AUDIO_SESSION_DISCONNECTED // Audio session disconnected
   };
 protected:
   nsRefPtr<IAudioSessionControl> mAudioSessionControl;
@@ -206,7 +207,9 @@ AudioSession::QueryInterface(REFIID iid, void **ppv)
 nsresult
 AudioSession::Start()
 {
-  NS_ABORT_IF_FALSE(mState == UNINITIALIZED || mState == CLONED,
+  NS_ABORT_IF_FALSE(mState == UNINITIALIZED || 
+                    mState == CLONED ||
+                    mState == AUDIO_SESSION_DISCONNECTED,
                     "State invariants violated");
 
   const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
@@ -453,6 +456,8 @@ AudioSession::OnSessionDisconnectedInternal()
   mAudioSessionControl->UnregisterAudioSessionNotification(this);
   mAudioSessionControl = nsnull;
 
+  mState = AUDIO_SESSION_DISCONNECTED;
+  CoUninitialize();
   Start(); // If it fails there's not much we can do.
   return NS_OK;
 }

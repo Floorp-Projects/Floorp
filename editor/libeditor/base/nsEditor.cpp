@@ -1191,25 +1191,6 @@ nsEditor::CanPasteTransferable(nsITransferable *aTransferable, bool *aCanPaste)
   return NS_ERROR_NOT_IMPLEMENTED; 
 }
 
-NS_IMETHODIMP
-nsEditor::CanDrag(nsIDOMEvent *aEvent, bool *aCanDrag)
-{
-  return NS_ERROR_NOT_IMPLEMENTED; 
-}
-
-NS_IMETHODIMP
-nsEditor::DoDrag(nsIDOMEvent *aEvent)
-{
-  return NS_ERROR_NOT_IMPLEMENTED; 
-}
-
-NS_IMETHODIMP
-nsEditor::InsertFromDrop(nsIDOMEvent *aEvent)
-{
-  return NS_ERROR_NOT_IMPLEMENTED; 
-}
-
-
 NS_IMETHODIMP 
 nsEditor::SetAttribute(nsIDOMElement *aElement, const nsAString & aAttribute, const nsAString & aValue)
 {

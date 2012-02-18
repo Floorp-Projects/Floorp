@@ -393,10 +393,24 @@ HRESULT
 WinUtils::SHCreateItemFromParsingName(PCWSTR pszPath, IBindCtx *pbc,
                                       REFIID riid, void **ppv)
 {
-  NS_ENSURE_TRUE(sCreateItemFromParsingName, E_FAIL);
+  if (!VistaCreateItemFromParsingNameInit())
+    return E_FAIL;
   return sCreateItemFromParsingName(pszPath, pbc, riid, ppv);
 }
 
+/* static */
+bool
+WinUtils::GetShellItemPath(IShellItem* aItem,
+                           nsString& aResultString)
+{
+  NS_ENSURE_TRUE(aItem, false);
+  LPWSTR str = NULL;
+  if (FAILED(aItem->GetDisplayName(SIGDN_FILESYSPATH, &str)))
+    return false;
+  aResultString.Assign(str);
+  CoTaskMemFree(str);
+  return !aResultString.IsEmpty();
+}
 
 } // namespace widget
 } // namespace mozilla

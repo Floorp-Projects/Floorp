@@ -623,25 +623,7 @@ abstract public class GeckoApp
             int sh = forceBigSceenshot ? mLayerClient.getHeight(): tab.getMinScreenshotHeight();
             int dw = forceBigSceenshot ? sw : tab.getThumbnailWidth();
             int dh = forceBigSceenshot ? sh : tab.getThumbnailHeight();
-            try {
-                JSONObject message = new JSONObject();
-                message.put("tabID", tab.getId());
-
-                JSONObject source = new JSONObject();
-                source.put("width", sw);
-                source.put("height", sh);
-                message.put("source", source);
-
-                JSONObject destination = new JSONObject();
-                destination.put("width", dw);
-                destination.put("height", dh);
-                message.put("destination", destination);
-
-                String json = message.toString();
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot", json));
-            } catch(JSONException jsonEx) {
-                Log.w(LOGTAG, "Constructing the JSON data for Tab:Screenshot event failed", jsonEx);
-            }
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), sw, sh, dw, dh));
         }
     }
     
@@ -1645,7 +1627,8 @@ abstract public class GeckoApp
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-                window.getDecorView().setSystemUiVisibility(fullscreen ? 1 : 0);
+                if (Build.VERSION.SDK_INT >= 11)
+                    window.getDecorView().setSystemUiVisibility(fullscreen ? 1 : 0);
             }
         });
     }

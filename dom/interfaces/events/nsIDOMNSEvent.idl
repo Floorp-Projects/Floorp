@@ -44,7 +44,7 @@
 #endif
 %}
 
-[scriptable, uuid(9be8096b-f795-4045-9664-0c275f36fe5b)]
+[scriptable, uuid(07F905C1-9170-4103-86CA-766374DA149A)]
 interface nsIDOMNSEvent : nsISupports
 {
   const long MOUSEDOWN    = 0x00000001;
@@ -97,12 +97,6 @@ interface nsIDOMNSEvent : nsISupports
    * contain anonymous content.
    */
   readonly attribute nsIDOMEventTarget  explicitOriginalTarget;
-  /* XXX This is TEMPORARY.  
-   * The original target, without any retargeting (like textnode retargeting).
-   * This really needs to be in .originalTarget, but this is a less risky way of
-   * fixing it.
-   */
-  [noscript] readonly attribute nsIDOMEventTarget  tmpRealOriginalTarget;
 
   /**
    * @deprecated Use nsIDOMEvent::stopPropagation.

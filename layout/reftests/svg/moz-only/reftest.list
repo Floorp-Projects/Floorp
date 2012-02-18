@@ -18,4 +18,5 @@ fails == xbl-grad-ref--grad-in-resources-02.svg pass.svg
 == feImage-zoom-01a.svg                         feImage-zoom-01-ref.svg
 == feImage-zoom-01b.svg                         feImage-zoom-01-ref.svg
 == foreignObject-zoom-01.svg                    pass.svg
+== zoom-invalidation-01.svg                     pass.svg
 skip == zoomed-svg-with-viewBox-01.svg          zoomed-svg-with-viewBox-01-ref.svg

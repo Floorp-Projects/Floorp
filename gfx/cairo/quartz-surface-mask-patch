@@ -1,0 +1,79 @@
+diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+--- a/gfx/cairo/cairo/src/cairo-quartz-surface.c
++++ b/gfx/cairo/cairo/src/cairo-quartz-surface.c
+@@ -128,20 +128,22 @@ CG_EXTERN CGImageRef CGBitmapContextCrea
+  */
+ static void (*CGContextClipToMaskPtr) (CGContextRef, CGRect, CGImageRef) = NULL;
+ static void (*CGContextDrawTiledImagePtr) (CGContextRef, CGRect, CGImageRef) = NULL;
+ static unsigned int (*CGContextGetTypePtr) (CGContextRef) = NULL;
+ static void (*CGContextSetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
+ static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
+ static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
+ static CGPathRef (*CGContextCopyPathPtr) (CGContextRef) = NULL;
+ static CGFloat (*CGContextGetAlphaPtr) (CGContextRef) = NULL;
+ 
++static SInt32 _cairo_quartz_osx_version = 0x0;
++
+ static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
+ 
+ /*
+  * Utility functions
+  */
+ 
+ #ifdef QUARTZ_DEBUG
+ static void quartz_surface_to_png (cairo_quartz_surface_t *nq, char *dest);
+ static void quartz_image_to_png (CGImageRef, char *dest);
+ #endif
+@@ -163,20 +165,25 @@ static void quartz_ensure_symbols(void)
+ 
+     CGContextClipToMaskPtr = dlsym(RTLD_DEFAULT, "CGContextClipToMask");
+     CGContextDrawTiledImagePtr = dlsym(RTLD_DEFAULT, "CGContextDrawTiledImage");
+     CGContextGetTypePtr = dlsym(RTLD_DEFAULT, "CGContextGetType");
+     CGContextSetShouldAntialiasFontsPtr = dlsym(RTLD_DEFAULT, "CGContextSetShouldAntialiasFonts");
+     CGContextCopyPathPtr = dlsym(RTLD_DEFAULT, "CGContextCopyPath");
+     CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
+     CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
+     CGContextGetAlphaPtr = dlsym(RTLD_DEFAULT, "CGContextGetAlpha");
+ 
++    if (Gestalt(gestaltSystemVersion, &_cairo_quartz_osx_version) != noErr) {
++        // assume 10.5
++        _cairo_quartz_osx_version = 0x1050;
++    }
++
+     _cairo_quartz_symbol_lookup_done = TRUE;
+ }
+ 
+ CGImageRef
+ _cairo_quartz_create_cgimage (cairo_format_t format,
+ 			      unsigned int width,
+ 			      unsigned int height,
+ 			      unsigned int stride,
+ 			      void *data,
+ 			      cairo_bool_t interpolate,
+@@ -3028,22 +3035,25 @@ static cairo_int_status_t
+ 	CGContextSetAlpha (surface->cgContext, solid_mask->color.alpha);
+ 	rv = _cairo_quartz_surface_paint_cg (surface, op, source, clip);
+ 	CGContextSetAlpha (surface->cgContext, 1.0);
+ 
+ 	return rv;
+     }
+ 
+     /* If we have CGContextClipToMask, we can do more complex masks */
+     if (CGContextClipToMaskPtr) {
+ 	/* For these, we can skip creating a temporary surface, since we already have one */
+-	if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE)
++	/* For some reason this doesn't work reliably on OS X 10.5.  See bug 721663. */
++	if (_cairo_quartz_osx_version >= 0x1060 && mask->type == CAIRO_PATTERN_TYPE_SURFACE &&
++	    mask->extend == CAIRO_EXTEND_NONE) {
+ 	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask, clip);
++	}
+ 
+ 	return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask, clip);
+     }
+ 
+     /* So, CGContextClipToMask is not present in 10.3.9, so we're
+      * doomed; if we have imageData, we can do fallback, otherwise
+      * just pretend success.
+      */
+     if (surface->imageData)
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;

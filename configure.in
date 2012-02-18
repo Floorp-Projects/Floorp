@@ -3343,6 +3343,7 @@ AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(VISIBILITY_FLAGS)
 
 MOZ_GCC_PR49911
+MOZ_COMPILER_OPTS
 
 dnl Check for __force_align_arg_pointer__ for SSE2 on gcc
 dnl ========================================================
@@ -4091,6 +4092,56 @@ if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
   esac
 fi
 
+dnl Using the custom linker on ARMv6 requires 16k alignment of ELF segments.
+if test -n "$MOZ_LINKER"; then
+  if test "$CPU_ARCH" = arm; then
+    dnl Determine the target ARM architecture (5 for ARMv5, v5T, v5E, etc.; 6 for ARMv6, v6K, etc.)
+    ARM_ARCH=`${CC-cc} ${CFLAGS} -dM -E - < /dev/null | sed -n 's/.*__ARM_ARCH_\([[0-9]]*\).*/\1/p'`
+    dnl When building for < ARMv7, we need to ensure 16k alignment of ELF segments
+    if test -n "$ARM_ARCH" && test "$ARM_ARCH" -lt 7; then
+      LDFLAGS="$LDFLAGS -Wl,-z,max-page-size=0x4000"
+      _SUBDIR_LDFLAGS="$_SUBDIR_LDFLAGS -Wl,-z,max-page-size=0x4000"
+    fi
+  fi
+fi
+
+dnl The custom linker doesn't support text relocations, but NDK >= r6b
+dnl creates some (http://code.google.com/p/android/issues/detail?id=23203)
+dnl We however want to avoid these text relocations, and this can be done
+dnl by making gcc not link crtbegin and crtend. In the broken NDKs, crtend
+dnl doesn't contain anything at all, beside placeholders for some sections,
+dnl and crtbegin only contains a finalizer function that calls
+dnl __cxa_finalize. The custom linker actually takes care of calling
+dnl __cxa_finalize when the library doesn't call it itself, which makes it
+dnl safe not to link crtbegin. Besides, previous versions of the NDK didn't
+dnl link crtbegin and crtend at all.
+if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$OS_TARGET" = "Android"; then
+  AC_CACHE_CHECK([whether the CRT objects have text relocations],
+    ac_cv_crt_has_text_relocations,
+    [echo 'int foo() { return 0; }' > conftest.cpp
+     if AC_TRY_COMMAND(${CXX-g++} -o conftest${DLL_SUFFIX} $CXXFLAGS $DSO_LDOPTS $LDFLAGS conftest.cpp $LIBS 1>&5) &&
+        test -s conftest${DLL_SUFFIX}; then
+       if readelf -d conftest${DLL_SUFFIX} | grep TEXTREL > /dev/null; then
+         ac_cv_crt_has_text_relocations=yes
+       else
+         ac_cv_crt_has_text_relocations=no
+       fi
+     else
+       AC_ERROR([couldn't compile a simple C file])
+     fi
+     rm -rf conftest*])
+  if test "$ac_cv_crt_has_text_relocations" = yes; then
+    dnl While we want libraries to skip the CRT files, we don't want
+    dnl executables to be treated the same way. We thus set the flag
+    dnl in DSO_LDOPTS and not LDFLAGS. However, to pass it to nspr,
+    dnl we need to use LDFLAGS because nspr doesn't inherit DSO_LDOPTS.
+    dnl Using LDFLAGS in nspr is safe, since we only really build
+    dnl libraries there.
+    DSO_LDOPTS="$DSO_LDOPTS -nostartfiles"
+    NSPR_LDFLAGS=-nostartfiles
+  fi
+fi
+
 dnl Check for the existence of various allocation headers/functions
 
 MALLOC_H=
@@ -4612,6 +4663,7 @@ LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
 LIBJPEG_TURBO_X86_ASM=
 LIBJPEG_TURBO_X64_ASM=
+LIBJPEG_TURBO_ARM_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
@@ -4927,7 +4979,6 @@ cairo-gonk)
     MOZ_PDF_PRINTING=1
     MOZ_B2G_RIL=1
     MOZ_TOUCH=1
-    MOZ_B2G_BT=1
     ;;
 
 esac
@@ -6171,38 +6222,51 @@ if test -n "$MOZ_LIBJPEG_TURBO"; then
     LIBJPEG_TURBO_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64 -DMSVC"
     LIBJPEG_TURBO_X64_ASM=1
   ;;
+  *:arm*)
+    LIBJPEG_TURBO_ASFLAGS="-march=armv7-a -mfpu=neon"
+    LIBJPEG_TURBO_ARM_ASM=1
+  ;;
   esac
 
 fi
 
-dnl If we're on a system which supports libjpeg-turbo's asm routines and
-dnl --disable-libjpeg-turbo wasn't passed, check for yasm, and error out if it
-dnl doesn't exist or we have too old of a version.
+dnl If we're on an x86 or x64 system which supports libjpeg-turbo's asm routines
+dnl and --disable-libjpeg-turbo wasn't passed, check for Yasm, and error out if
+dnl it doesn't exist or we have too old of a version.
 if test -n "$LIBJPEG_TURBO_X86_ASM" -o -n "$LIBJPEG_TURBO_X64_ASM" ; then
-    AC_MSG_CHECKING([for YASM assembler])
+    AC_MSG_CHECKING([for Yasm assembler])
     AC_CHECK_PROGS(LIBJPEG_TURBO_AS, yasm, "")
 
     if test -z "$LIBJPEG_TURBO_AS" ; then
-        AC_MSG_ERROR([yasm is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you do not appear to have yasm installed.  Either install it or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+        AC_MSG_ERROR([Yasm is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you do not appear to have Yasm installed.  Either install it or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
     fi
 
     dnl Check that we have the right yasm version.  We require 1.0.1 or newer
     dnl on Linux and 1.1 or newer everywhere else.
     if test "$OS_ARCH" = "Linux" ; then
         if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -eq "0" -a "$_YASM_RELEASE" -lt "1" \) ; then
-            AC_MSG_ERROR([yasm 1.0.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.$_YASM_RELEASE.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+            AC_MSG_ERROR([Yasm 1.0.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.$_YASM_RELEASE.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
         fi
     else
         if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
-            AC_MSG_ERROR([yasm 1.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+            AC_MSG_ERROR([Yasm 1.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
         fi
     fi
+fi
+
+dnl If we're on an ARM system which supports libjpeg-turbo's asm routines and
+dnl --disable-libjpeg-turbo wasn't passed, use the C compiler as the assembler.
+if test -n "$LIBJPEG_TURBO_ARM_ASM" ; then
+    echo "Using $AS as the assembler for ARM code."
+    LIBJPEG_TURBO_AS=$AS
 fi
 
 if test -n "$LIBJPEG_TURBO_X86_ASM"; then
     AC_DEFINE(LIBJPEG_TURBO_X86_ASM)
 elif test -n "$LIBJPEG_TURBO_X64_ASM"; then
     AC_DEFINE(LIBJPEG_TURBO_X64_ASM)
+elif test -n "$LIBJPEG_TURBO_ARM_ASM"; then
+    AC_DEFINE(LIBJPEG_TURBO_ARM_ASM)
 elif test -n "$MOZ_LIBJPEG_TURBO"; then
     dnl Warn if we're not building the optimized routines, even though the user
     dnl didn't specify --disable-libjpeg-turbo.
@@ -7599,18 +7663,6 @@ fi
 AC_SUBST(MOZ_B2G_RIL)
 
 dnl ========================================================
-dnl = Enable Bluetooth Interface for B2G (Gonk usually)
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(b2g-bt,
-[  --enable-b2g-bt      Set compile flags necessary for compiling Bluetooth API for B2G ],
-    MOZ_B2G_BT=1,
-    MOZ_B2G_BT= )
-if test -n "$MOZ_B2G_BT"; then
-   AC_DEFINE(MOZ_B2G_BT)
-fi
-AC_SUBST(MOZ_B2G_BT)
-
-dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
@@ -8585,8 +8637,6 @@ AC_SUBST(MOZ_APP_VERSION)
 AC_DEFINE_UNQUOTED(MOZ_UA_FIREFOX_VERSION, "$FIREFOX_VERSION")
 AC_DEFINE_UNQUOTED(FIREFOX_VERSION,$FIREFOX_VERSION)
 AC_SUBST(FIREFOX_VERSION)
-AC_DEFINE_UNQUOTED(MOZ_UA_BUILDID, "$MOZ_UA_BUILDID")
-AC_SUBST(MOZ_UA_BUILDID)
 
 # We can't use the static application.ini data when building against
 # a libxul SDK.
@@ -8756,6 +8806,7 @@ AC_SUBST(LIBJPEG_TURBO_AS)
 AC_SUBST(LIBJPEG_TURBO_ASFLAGS)
 AC_SUBST(LIBJPEG_TURBO_X86_ASM)
 AC_SUBST(LIBJPEG_TURBO_X64_ASM)
+AC_SUBST(LIBJPEG_TURBO_ARM_ASM)
 
 AC_MSG_CHECKING([for posix_fallocate])
 AC_TRY_LINK([#define _XOPEN_SOURCE 600
@@ -9090,7 +9141,11 @@ if test -z "$MOZ_NATIVE_NSPR"; then
       _SAVE_CPPFLAGS="$CPPFLAGS"
       export CPPFLAGS="-include $_topsrcdir/mozglue/linker/dladdr.h $CPPFLAGS"
     fi
+    _SAVE_LDFLAGS="$LDFLAGS"
+    export LDFLAGS="$LDFLAGS $NSPR_LDFLAGS"
     AC_OUTPUT_SUBDIRS(nsprpub)
+    unset LDFLAGS
+    LDFLAGS="$_SAVE_LDFLAGS"
     if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$ac_cv_func_dladdr" = no; then
       unset CPPFLAGS
       CPPFLAGS="$_SAVE_CFLAGS"

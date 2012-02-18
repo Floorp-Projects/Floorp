@@ -37,6 +37,7 @@ function runTest()
   var g4 = doc.getElementById("g4");
   var sym = doc.getElementById("sym");
   var symbolRect = doc.getElementById("symbolRect");
+  var fO = doc.getElementById("fO");
   /* Tests the consistency with nearestViewportElement
      (code is from test_viewport.html) */
   // root.nearestViewportElement == null
@@ -60,6 +61,9 @@ function runTest()
   // symbolRect.nearestViewportElement == sym
   is((function(){try{return symbolRect.getCTM().e}catch(e){return e}})(), 70, "symbolRect.getCTM().e");
   is((function(){try{return symbolRect.getCTM().f}catch(e){return e}})(), 80, "symbolRect.getCTM().f");
+  // fO.nearestViewportElement = <svg> with no 'id'
+  is((function(){try{return fO.getCTM().e}catch(e){return e}})(), 2, "fO.getCTM().e");
+  is((function(){try{return fO.getCTM().f}catch(e){return e}})(), 3, "fO.getCTM().f");
 
   /* Tests the consistency with farthestViewportElement
      (code is from test_viewport.html) */
@@ -83,6 +87,9 @@ function runTest()
   // symbolRect.farthestViewportElement == root
   is((function(){try{return symbolRect.getScreenCTM().e}catch(e){return e}})(), 85, "symbolRect.getScreenCTM().e");
   is((function(){try{return symbolRect.getScreenCTM().f}catch(e){return e}})(), 108, "symbolRect.getScreenCTM().f");
+  // fO.farthestViewportElement == root
+  is((function(){try{return fO.getScreenCTM().e}catch(e){return e}})(), 16, "symbolRect.getScreenCTM().e");
+  is((function(){try{return fO.getScreenCTM().f}catch(e){return e}})(), 29, "symbolRect.getScreenCTM().f");
 
   SimpleTest.finish();
 }

@@ -202,16 +202,20 @@ WatchpointMap::markIteratively(JSTracer *trc)
         bool objectIsLive = !IsAboutToBeFinalized(e.key.object);
         if (objectIsLive || e.value.held) {
             if (!objectIsLive) {
-                MarkObject(trc, e.key.object, "held Watchpoint object");
+                HeapPtrObject tmp(e.key.object);
+                MarkObject(trc, &tmp, "held Watchpoint object");
+                JS_ASSERT(tmp == e.key.object);
                 marked = true;
             }
 
             const HeapId &id = e.key.id;
             JS_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
-            MarkId(trc, id, "WatchKey::id");
+            HeapId tmp(id.get());
+            MarkId(trc, &tmp, "WatchKey::id");
+            JS_ASSERT(tmp.get() == id.get());
 
             if (e.value.closure && IsAboutToBeFinalized(e.value.closure)) {
-                MarkObject(trc, e.value.closure, "Watchpoint::closure");
+                MarkObject(trc, &e.value.closure, "Watchpoint::closure");
                 marked = true;
             }
         }
@@ -224,13 +228,17 @@ WatchpointMap::markAll(JSTracer *trc)
 {
     for (Map::Range r = map.all(); !r.empty(); r.popFront()) {
         Map::Entry &e = r.front();
-        MarkObject(trc, e.key.object, "held Watchpoint object");
+        HeapPtrObject tmpObj(e.key.object);
+        MarkObject(trc, &tmpObj, "held Watchpoint object");
+        JS_ASSERT(tmpObj == e.key.object);
 
         const HeapId &id = e.key.id;
         JS_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
-        MarkId(trc, id, "WatchKey::id");
+        HeapId tmpId(id.get());
+        MarkId(trc, &tmpId, "WatchKey::id");
+        JS_ASSERT(tmpId.get() == id.get());
 
-        MarkObject(trc, e.value.closure, "Watchpoint::closure");
+        MarkObject(trc, &e.value.closure, "Watchpoint::closure");
     }
 }
 
