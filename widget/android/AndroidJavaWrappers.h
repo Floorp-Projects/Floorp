@@ -56,6 +56,8 @@
 #endif
 #endif
 
+struct ANativeWindow;
+
 namespace mozilla {
 
 class AndroidGeckoGLLayerClient;
@@ -153,6 +155,23 @@ protected:
     static jfieldID jTopField;
 };
 
+class AndroidSurfaceView : public WrappedJavaObject {
+public:
+    static void InitSurfaceViewClass(JNIEnv *jEnv);
+
+    AndroidSurfaceView() {}
+    AndroidSurfaceView(JNIEnv *jEnv, jobject jobj) {
+        Init(jEnv, jobj);
+    }
+
+    void Init(JNIEnv *jEnv, jobject jobj);
+    ANativeWindow* GetNativeWindow();
+
+private:
+    static jclass jSurfaceViewClass;
+    static jfieldID jNativeSurfaceField;
+};
+
 class AndroidGeckoLayerClient : public WrappedJavaObject {
 public:
     static void InitGeckoLayerClientClass(JNIEnv *jEnv);
@@ -248,6 +267,8 @@ public:
     void CreateFrame(AndroidLayerRendererFrame& aFrame);
     void ActivateProgram();
     void DeactivateProgram();
+    void CreateSurfaceViewForBackingSurface(AndroidSurfaceView& aSurfaceView, int aWidth,
+                                            int aHeight);
 
 private:
     static jclass jGeckoGLLayerClientClass;
@@ -255,6 +276,7 @@ private:
     static jmethodID jCreateFrameMethod;
     static jmethodID jActivateProgramMethod;
     static jmethodID jDeactivateProgramMethod;
+    static jmethodID jCreateSurfaceViewForBackingSurfaceMethod;
 
     AndroidGeckoGLLayerClientViewTransformGetter mViewTransformGetter;
 };
