@@ -331,7 +331,7 @@ CodeGeneratorARM::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
-    masm.as_vabs(input, output);
+    masm.as_vabs(output, input);
     return true;
 }
 
