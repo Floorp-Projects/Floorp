@@ -1636,6 +1636,24 @@ abstract public class GeckoApp
         }
     }
 
+    public void addSurfaceViewForBackingSurface(SurfaceView surfaceView, int width, int height) {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+        int x = metrics.widthPixels - 16, y = metrics.heightPixels - 16;
+        AbsoluteLayout.LayoutParams layoutParams =
+            new AbsoluteLayout.LayoutParams(width, height, x, y);
+        mPluginContainer.addView(surfaceView, layoutParams);
+    }
+
+    public void removeSurfaceViewForBackingSurface(SurfaceView surfaceView) {
+        mPluginContainer.removeView(surfaceView);
+    }
+
+    public void moveSurfaceViewForBackingSurfaceOffScreen(SurfaceView surfaceView) {
+        // TODO
+    }
+
     public void setFullScreen(final boolean fullscreen) {
         mMainHandler.post(new Runnable() { 
             public void run() {
