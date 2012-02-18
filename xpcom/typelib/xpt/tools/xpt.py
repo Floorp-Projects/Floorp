@@ -870,6 +870,7 @@ class Interface(object):
         self._descriptor_offset = 0
         self._name_offset = 0
         self._namespace_offset = 0
+        self.xpt_filename = None
 
     def __repr__(self):
         return "Interface('%s', '%s', '%s', methods=%s)" % (self.name, self.iid, self.namespace, self.methods)
@@ -1095,6 +1096,7 @@ class Typelib(object):
                 namespace = Typelib.read_string(map, data_pool_offset, ide[2])
                 iface = Interface(name, iid, namespace)
                 iface._descriptor_offset = ide[3]
+                iface.xpt_filename = xpt.filename
                 xpt.interfaces.append(iface)
             for iface in xpt.interfaces:
                 iface.read_descriptor(xpt, map, data_pool_offset)
@@ -1217,7 +1219,8 @@ class Typelib(object):
                             raise DataError, \
                                   "Typelibs contain definitions of interface %s" \
                                     " with different IIDs (%s (%s) vs %s (%s))!" % \
-                                    (i.name, i.iid, other.filename, j.iid, self.filename)
+                                    (i.name, i.iid, i.xpt_filename or other.filename, \
+                                             j.iid, j.xpt_filename or self.filename)
                 elif i.iid == j.iid and i.iid != Interface.UNRESOLVED_IID:
                     # Same IID but different names: raise an exception.
                     # self.* is the (target) Typelib being merged into,
@@ -1225,7 +1228,8 @@ class Typelib(object):
                     raise DataError, \
                           "Typelibs contain definitions of interface %s" \
                             " with different names (%s (%s) vs %s (%s))!" % \
-                            (i.iid, i.name, other.filename, j.name, self.filename)
+                            (i.iid, i.name, i.xpt_filename or other.filename, \
+                                    j.name, j.xpt_filename or self.filename)
             if not merged:
                 # No partially matching interfaces, so just take this interface
                 self.interfaces.append(i)
