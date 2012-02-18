@@ -67,10 +67,6 @@
 /* from widget */
 #if defined(MOZ_WIDGET_ANDROID)
 #include "AndroidBridge.h"
-#include "AndroidBackingSurface.h"
-
-#define EGL_NATIVE_BUFFER_ANDROID 0x3140
-#define EGL_IMAGE_PRESERVED_KHR   0x30D2
 #endif
 #include <android/log.h>
 #endif
@@ -159,7 +155,7 @@ public:
 
 #include "gfxCrashReporterUtils.h"
 
-#if defined(MOZ_PLATFORM_MAEMO) || defined(MOZ_WIDGET_ANDROID)
+#ifdef MOZ_PLATFORM_MAEMO
 static bool gUseBackingSurface = true;
 #else
 static bool gUseBackingSurface = false;
@@ -1551,9 +1547,6 @@ public:
         , mTexture(aTexture)
         , mImageKHR(nsnull)
         , mTextureState(Created)
-#ifdef MOZ_WIDGET_ANDROID
-        , mBuffer(nsnull)
-#endif
         , mBound(false)
         , mIsLocked(false)
     {
@@ -1888,12 +1881,6 @@ public:
             LOCAL_EGL_NONE
         };
 
-#ifdef MOZ_WIDGET_ANDROID
-        nsRefPtr<gfxImageSurface> surface = LockAndroidBackingBuffer(mBuffer, mSize);
-        mIsLocked = true;
-        return surface.forget();
-#else
-
         sEGLLibrary.fLockSurfaceKHR(EGL_DISPLAY(), mSurface, lock_attribs);
 
         mIsLocked = true;
@@ -1913,7 +1900,6 @@ public:
                                 mUpdateFormat);
 
         return sharedImage.forget();
-#endif
     }
 
     virtual void UnlockSurface()
@@ -1923,12 +1909,7 @@ public:
             return;
         }
 
-#ifdef MOZ_WIDGET_ANDROID
-        UnlockAndroidBackingBuffer(mBuffer);
-#else
         sEGLLibrary.fUnlockSurfaceKHR(EGL_DISPLAY(), mSurface);
-#endif
-
         mIsLocked = false;
     }
 
@@ -1984,18 +1965,7 @@ public:
         DestroyEGLSurface();
         mBackingSurface = nsnull;
 
-#if defined(MOZ_WIDGET_ANDROID)
-        CreateAndroidBackingSurface(aSize, mBackingSurface, mSurface, mBuffer);
-
-        const int eglImageAttributes[] = { EGL_IMAGE_PRESERVED_KHR, 1, 0, 0 };
-
-        mImageKHR = sEGLLibrary.fCreateImageKHR(EGL_DISPLAY(), EGL_NO_CONTEXT,
-                                                EGL_NATIVE_BUFFER_ANDROID, mBuffer,
-                                                eglImageAttributes);
-
-        mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-        sEGLLibrary.fImageTargetTexture2DOES(LOCAL_GL_TEXTURE_2D, mImageKHR);
-#elif defined(MOZ_X11)
+#ifdef MOZ_X11
         Display* dpy = DefaultXDisplay();
         XRenderPictFormat* renderFMT =
             gfxXlibSurface::FindRenderFormat(dpy, mUpdateFormat);
@@ -2057,10 +2027,6 @@ protected:
     EGLImageKHR mImageKHR;
     TextureState mTextureState;
 
-#ifdef MOZ_WIDGET_ANDROID
-    EGLClientBuffer mBuffer;
-#endif
-
     bool mBound;
     bool mIsLocked;
 
@@ -2077,7 +2043,6 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
                                  bool aUseNearestFilter)
 {
     nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType, aUseNearestFilter);
-    //nsRefPtr<TextureImage> t = TileGenFunc(aSize, aContentType, aUseNearestFilter);
     return t.forget();
 };
 
