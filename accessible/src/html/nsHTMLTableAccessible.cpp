@@ -1521,30 +1521,17 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
     RETURN_LAYOUT_ANSWER(false, ">= kMaxLayoutRows (20) and non-bordered");
   }
 
-  // Check for very wide table
-  nsAutoString styledWidth;
-  GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("width"), styledWidth);
-  if (styledWidth.EqualsLiteral("100%")) {
-    RETURN_LAYOUT_ANSWER(true, "<=4 columns and 100% width");
-  }
-  if (styledWidth.Find(NS_LITERAL_STRING("px"))) { // Hardcoded in pixels
-    nsIFrame *tableFrame = GetFrame();
-    NS_ENSURE_TRUE(tableFrame , NS_ERROR_FAILURE);
-    nsSize tableSize  = tableFrame->GetSize();
-
-    nsDocAccessible* docAccessible = Document();
-    NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
-    nsIFrame *docFrame = docAccessible->GetFrame();
-    NS_ENSURE_TRUE(docFrame , NS_ERROR_FAILURE);
-
-    nsSize docSize = docFrame->GetSize();
-    if (docSize.width > 0) {
-      PRInt32 percentageOfDocWidth = (100 * tableSize.width) / docSize.width;
-      if (percentageOfDocWidth > 95) {
-        // 3-4 columns, no borders, not a lot of rows, and 95% of the doc's width
-        // Probably for layout
-        RETURN_LAYOUT_ANSWER(true, "<=4 columns, width hardcoded in pixels and 95% of document width");
-      }
+  // Check for very wide table.
+  nsIFrame* documentFrame = Document()->GetFrame();
+  nsSize documentSize = documentFrame->GetSize();
+  if (documentSize.width > 0) {
+    nsSize tableSize = GetFrame()->GetSize();
+    PRInt32 percentageOfDocWidth = (100 * tableSize.width) / documentSize.width;
+    if (percentageOfDocWidth > 95) {
+      // 3-4 columns, no borders, not a lot of rows, and 95% of the doc's width
+      // Probably for layout
+      RETURN_LAYOUT_ANSWER(true,
+                           "<= 4 columns, table width is 95% of document width");
     }
   }
 
