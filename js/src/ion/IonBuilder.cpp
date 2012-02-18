@@ -2334,6 +2334,11 @@ IonBuilder::makeInliningDecision(uint32 argc, InliningData *data)
         return true;
     }
 
+    if (!oracle->canInlineCall(script, pc)) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to uninlineable call site");
+        return true;
+    }
+
     JSFunction *inlineFunc = NULL;
     if (!getInliningTarget(argc, pc, &inlineFunc))
         return false;
