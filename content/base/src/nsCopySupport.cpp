@@ -91,10 +91,6 @@ static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_CID(kHTMLConverterCID,        NS_HTMLFORMATCONVERTER_CID);
 
-// private clipboard data flavors for html copy, used by editor when pasting
-#define kHTMLContext   "text/_moz_htmlcontext"
-#define kHTMLInfo      "text/_moz_htmlinfo"
-
 // copy string data onto the transferable
 static nsresult AppendString(nsITransferable *aTransferable,
                              const nsAString& aString,

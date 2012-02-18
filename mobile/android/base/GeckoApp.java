@@ -626,25 +626,7 @@ abstract public class GeckoApp
             int sh = forceBigSceenshot ? mSoftwareLayerClient.getHeight(): tab.getMinScreenshotHeight();
             int dw = forceBigSceenshot ? sw : tab.getThumbnailWidth();
             int dh = forceBigSceenshot ? sh : tab.getThumbnailHeight();
-            try {
-                JSONObject message = new JSONObject();
-                message.put("tabID", tab.getId());
-
-                JSONObject source = new JSONObject();
-                source.put("width", sw);
-                source.put("height", sh);
-                message.put("source", source);
-
-                JSONObject destination = new JSONObject();
-                destination.put("width", dw);
-                destination.put("height", dh);
-                message.put("destination", destination);
-
-                String json = message.toString();
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot", json));
-            } catch(JSONException jsonEx) {
-                Log.w(LOGTAG, "Constructing the JSON data for Tab:Screenshot event failed", jsonEx);
-            }
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), sw, sh, dw, dh));
         }
     }
     

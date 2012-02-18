@@ -56,6 +56,7 @@ _CHROME_TEST_FILES = \
 		test_selection_move_commands.xul \
                 test_bug46555.html \
 		test_bug646194.xul \
+		test_dragdrop.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
