@@ -406,6 +406,7 @@ class HeapId
     bool operator!=(jsid id) const { return value != id; }
 
     jsid get() const { return value; }
+    jsid *unsafeGet() { return &value; }
     operator jsid() const { return value; }
 
   private:
