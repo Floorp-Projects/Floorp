@@ -49,6 +49,7 @@ import android.view.View;
 import android.widget.TextView;
 
 public class SetupSuccessActivity extends Activity {
+  @SuppressWarnings("unused")
   private final static String LOG_TAG = "SetupSuccessActivity";
   private TextView setupSubtitle;
   private Context mContext;

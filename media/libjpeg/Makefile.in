@@ -103,6 +103,7 @@ CSRCS		+= \
 		jcphuff.c \
 		jcprepct.c \
 		jcsample.c \
+		jctrans.c \
 		$(NULL)
 
 AS=$(LIBJPEG_TURBO_AS)
@@ -115,14 +116,20 @@ ifeq ($(AS),yasm)
 endif
 
 # No SIMD support?
-ifeq (,$(LIBJPEG_TURBO_X86_ASM)$(LIBJPEG_TURBO_X64_ASM))
+ifeq (,$(LIBJPEG_TURBO_X86_ASM)$(LIBJPEG_TURBO_X64_ASM)$(LIBJPEG_TURBO_ARM_ASM))
   CSRCS += jsimd_none.c
+endif
+
+ifeq (1,$(LIBJPEG_TURBO_ARM_ASM))
+  CSRCS += simd/jsimd_arm.c
+  SSRCS += simd/jsimd_arm_neon.S
 endif
 
 ifeq (1,$(LIBJPEG_TURBO_X64_ASM))
   CSRCS   += simd/jsimd_x86_64.c
   ASFILES += \
 	simd/jccolss2-64.asm \
+	simd/jcgrass2-64.asm \
 	simd/jcqnts2f-64.asm \
 	simd/jcqnts2i-64.asm \
 	simd/jcsamss2-64.asm \
@@ -144,6 +151,8 @@ ifeq (1,$(LIBJPEG_TURBO_X86_ASM))
   ASFILES += \
 	simd/jccolmmx.asm \
 	simd/jccolss2.asm \
+	simd/jcgrammx.asm \
+	simd/jcgrass2.asm \
 	simd/jcqnt3dn.asm \
 	simd/jcqntmmx.asm \
 	simd/jcqnts2f.asm \
@@ -176,14 +185,14 @@ ifeq (1,$(LIBJPEG_TURBO_X86_ASM))
 	$(NULL)
 endif
 
-EXPORTS		= \
-		jconfig.h \
-		jerror.h \
-		jinclude.h \
-		jmorecfg.h \
-		jpegint.h \
-		jpeglib.h \
-		$(NULL)
+EXPORTS	= \
+	jconfig.h \
+	jerror.h \
+	jinclude.h \
+	jmorecfg.h \
+	jpegint.h \
+	jpeglib.h \
+	$(NULL)
 
 # need static lib for some of the libimg componentry to link properly
 FORCE_STATIC_LIB = 1

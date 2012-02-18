@@ -1,0 +1,151 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Autocomplete Widget Test 5"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<textbox id="autocomplete" type="autocomplete"
+         autocompletesearch="simple"
+         ontextentered="checkTextEntered();"
+         ontextreverted="checkTextReverted();"
+         onsearchbegin="checkSearchBegin();"
+         onsearchcomplete="checkSearchCompleted();"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+const ACR = Components.interfaces.nsIAutoCompleteResult;
+
+// This result can't be constructed in-line, because otherwise we leak memory.
+function nsAutoCompleteSimpleResult(aString)
+{
+  this.searchString = aString;
+  this.searchResult = ACR.RESULT_SUCCESS;
+  this.matchCount = 1;
+  this._param = "SUCCESS";
+}
+
+nsAutoCompleteSimpleResult.prototype = {
+ _param: "",
+ searchString: null,
+ searchResult: ACR.RESULT_FAILURE,
+ defaultIndex: -1,
+ errorDescription: null,
+ matchCount: 0,
+ getValueAt: function() { return this._param; },
+ getCommentAt: function() { return null; },
+ getStyleAt: function() { return null; },
+ getImageAt: function() { return null; },
+ getLabelAt: function() { return null; },
+ removeValueAt: function() {}
+};
+
+// A basic autocomplete implementation that either returns one result or none
+var autoCompleteSimpleID = Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca");
+var autoCompleteSimpleName = "@mozilla.org/autocomplete/search;1?name=simple"
+var autoCompleteSimple = {
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsISupports) ||
+        iid.equals(Components.interfaces.nsIFactory) ||
+        iid.equals(Components.interfaces.nsIAutoCompleteSearch))
+      return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  startSearch: function(aString, aParam, aResult, aListener) {
+    var result = new nsAutoCompleteSimpleResult(aString);
+    aListener.onSearchResult(this, result);
+  },
+
+  stopSearch: function() {}
+};
+
+var componentManager = Components.manager
+                                 .QueryInterface(Components.interfaces.nsIComponentRegistrar);
+componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete",
+                                 autoCompleteSimpleName, autoCompleteSimple);
+
+SimpleTest.waitForExplicitFinish();
+setTimeout(startTest, 0);
+
+function startTest() {
+  let autocomplete = $("autocomplete");
+
+  // blur the field to ensure that the popup is closed and that the previous
+  // search has stopped, then start a new search.
+  autocomplete.blur();
+  autocomplete.focus();
+  synthesizeKey("r", {});
+}
+
+let hasTextEntered = false;
+let hasSearchBegun = false;
+
+function checkSearchBegin() {
+  hasSearchBegun = true;
+}
+
+let test = 0;
+function checkSearchCompleted() {
+  is(hasSearchBegun, true, "onsearchbegin handler has been correctly called.");
+
+  if (test == 0) {
+    hasSearchBegun = false;
+    synthesizeKey("VK_RETURN", { });
+  } else if (test == 1) {
+    hasSearchBegun = false;
+    synthesizeKey("VK_ESCAPE", { });
+  } else {
+    throw "checkSearchCompleted should only be called twice.";
+  }
+}
+
+function checkTextEntered() {
+  is(test, 0, "checkTextEntered should be reached from first test.");
+  is(hasSearchBegun, false, "onsearchbegin handler should not be called on text revert.");
+
+  // fire second test
+  test++;
+
+  let autocomplete = $("autocomplete");
+  autocomplete.textValue = "";
+  autocomplete.blur();
+  autocomplete.focus();
+  synthesizeKey("r", {});
+}
+
+function checkTextReverted() {
+  is(test, 1, "checkTextReverted should be the second test reached.");
+  is(hasSearchBegun, false, "onsearchbegin handler should not be called on text revert.");
+
+  setTimeout(function() {
+    // Unregister the factory so that we don't get in the way of other tests
+    componentManager.unregisterFactory(autoCompleteSimpleID, autoCompleteSimple);
+    SimpleTest.finish();
+  }, 0);
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

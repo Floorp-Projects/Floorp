@@ -9053,7 +9053,14 @@ XPCOMUtils.defineLazyGetter(Scratchpad, "ScratchpadManager", function() {
 
 var StyleEditor = {
   prefEnabledName: "devtools.styleeditor.enabled",
-  openChrome: function SE_openChrome()
+  /**
+   * Opens the style editor. If the UI is already open, it will be focused.
+   *
+   * @param {CSSStyleSheet} [aSelectedStyleSheet] default Stylesheet.
+   * @param {Number} [aLine] Line to which the caret should be moved (one-indexed).
+   * @param {Number} [aCol] Column to which the caret should be moved (one-indexed).
+   */
+  openChrome: function SE_openChrome(aSelectedStyleSheet, aLine, aCol)
   {
     const CHROME_URL = "chrome://browser/content/styleeditor.xul";
     const CHROME_WINDOW_TYPE = "Tools:StyleEditor";
@@ -9067,14 +9074,23 @@ var StyleEditor = {
     while (enumerator.hasMoreElements()) {
       var win = enumerator.getNext();
       if (win.styleEditorChrome.contentWindowID == contentWindowID) {
+        if (aSelectedStyleSheet) {
+          win.styleEditorChrome.selectStyleSheet(aSelectedStyleSheet, aLine, aCol);
+        }
         win.focus();
         return win;
       }
     }
 
+    let args = {
+      contentWindow: contentWindow,
+      selectedStyleSheet: aSelectedStyleSheet,
+      line: aLine,
+      col: aCol
+    };
+    args.wrappedJSObject = args;
     let chromeWindow = Services.ww.openWindow(null, CHROME_URL, "_blank",
-                                              CHROME_WINDOW_FLAGS,
-                                              contentWindow);
+                                              CHROME_WINDOW_FLAGS, args);
     chromeWindow.focus();
     return chromeWindow;
   }

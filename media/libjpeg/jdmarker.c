@@ -2,6 +2,7 @@
  * jdmarker.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
+ * Copyright (C) 2012, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -322,13 +323,16 @@ get_sos (j_decompress_ptr cinfo)
 
   /* Collect the component-spec parameters */
 
+  for (i = 0; i < cinfo->num_components; i++)
+    cinfo->cur_comp_info[i] = NULL;
+
   for (i = 0; i < n; i++) {
     INPUT_BYTE(cinfo, cc, return FALSE);
     INPUT_BYTE(cinfo, c, return FALSE);
     
     for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
 	 ci++, compptr++) {
-      if (cc == compptr->component_id)
+      if (cc == compptr->component_id && !cinfo->cur_comp_info[ci])
 	goto id_found;
     }
 

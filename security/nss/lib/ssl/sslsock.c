@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.81 2012/02/11 13:20:53 kaie%kuix.de Exp $ */
+/* $Id: sslsock.c,v 1.82 2012/02/15 21:52:08 kaie%kuix.de Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -1964,8 +1964,23 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
 	 * the caller to poll the socket unless there is pending write data.
 	 */
 	if (ss->lastWriteBlocked && ss->pendingBuf.len != 0) {
+	    /* Ignore any newly-received data on the socket, but do wait for
+	     * the socket to become writable again. Here, it is OK for an error
+	     * to be detected, because our logic for sending pending write data
+	     * will allow us to report the error to the caller without the risk
+	     * of the application spinning.
+	     */
 	    new_flags &= (PR_POLL_WRITE | PR_POLL_EXCEPT);
 	} else {
+	    /* Unfortunately, clearing new_flags will make it impossible for
+	     * the application to detect errors that it would otherwise be
+	     * able to detect with PR_POLL_EXCEPT, until the asynchronous
+	     * callback completes. However, we must clear all the flags to
+	     * prevent the application from spinning (alternating between
+	     * calling PR_Poll that would return PR_POLL_EXCEPT, and send/recv
+	     * which won't actually report the I/O error while we are waiting
+	     * for the asynchronous callback to complete).
+	     */
 	    new_flags = 0;
 	}
     }

@@ -12,11 +12,15 @@ interface nsIAndroidDrawMetadataProvider : nsISupports {
   boolean paintingSuppressed();
 };
 
+[scriptable, uuid(d10377b4-1c90-493a-a532-63cb3f16ee2b)]
+interface nsIAndroidBrowserApp : nsISupports {
+  nsIDOMWindow getWindowForTab(in PRInt32 tabId);
+};
+
 [scriptable, uuid(7dd8441a-4f38-49b2-bd90-da69d02a96cf)]
 interface nsIAndroidBridge : nsISupports
 {
   AString handleGeckoMessage(in AString message);
   void setDrawMetadataProvider(in nsIAndroidDrawMetadataProvider provider);
-  void takeScreenshot(in nsIDOMWindow win, in PRInt32 srcX, in PRInt32 srcY, in PRInt32 srcW, in PRInt32 srcH, 
-		      in PRInt32 dstW, in PRInt32 dstH, in PRInt32 tabId);
+  attribute nsIAndroidBrowserApp browserApp;
 };

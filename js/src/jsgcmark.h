@@ -45,8 +45,8 @@ namespace gc {
  * defined for marking arrays of object pointers.
  */
 #define DeclMarker(base, type)                                                                    \
-void Mark##base(JSTracer *trc, const HeapPtr<type> &thing, const char *name);                     \
-void Mark##base##Root(JSTracer *trc, type *thing, const char *name);                              \
+void Mark##base(JSTracer *trc, HeapPtr<type> *thing, const char *name);                           \
+void Mark##base##Root(JSTracer *trc, type **thingp, const char *name);                            \
 void Mark##base##Unbarriered(JSTracer *trc, type *thing, const char *name);                       \
 void Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *thing, const char *name);        \
 void Mark##base##RootRange(JSTracer *trc, size_t len, type **thing, const char *name);
@@ -83,10 +83,10 @@ MarkGCThingRoot(JSTracer *trc, void *thing, const char *name);
 /*** ID Marking ***/
 
 void
-MarkId(JSTracer *trc, const HeapId &id, const char *name);
+MarkId(JSTracer *trc, HeapId *id, const char *name);
 
 void
-MarkIdRoot(JSTracer *trc, const jsid &id, const char *name);
+MarkIdRoot(JSTracer *trc, jsid *id, const char *name);
 
 void
 MarkIdRange(JSTracer *trc, size_t len, js::HeapId *vec, const char *name);
@@ -97,39 +97,35 @@ MarkIdRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name);
 /*** Value Marking ***/
 
 void
-MarkValue(JSTracer *trc, const js::HeapValue &v, const char *name);
+MarkValue(JSTracer *trc, HeapValue *v, const char *name);
 
 void
-MarkValueRange(JSTracer *trc, size_t len, const HeapValue *vec, const char *name);
+MarkValueRange(JSTracer *trc, size_t len, HeapValue *vec, const char *name);
 
 void
-MarkValueRoot(JSTracer *trc, const Value &v, const char *name);
+MarkValueRoot(JSTracer *trc, Value *v, const char *name);
 
 void
-MarkValueRootRange(JSTracer *trc, size_t len, const Value *vec, const char *name);
+MarkValueRootRange(JSTracer *trc, size_t len, Value *vec, const char *name);
 
 inline void
-MarkValueRootRange(JSTracer *trc, const Value *begin, const Value *end, const char *name)
+MarkValueRootRange(JSTracer *trc, Value *begin, Value *end, const char *name)
 {
     MarkValueRootRange(trc, end - begin, begin, name);
 }
 
 /*** Special Cases ***/
 
-/* TypeNewObject contains a HeapPtr<const Shape> that needs a unique cast. */
-void
-MarkShape(JSTracer *trc, const HeapPtr<const Shape> &thing, const char *name);
-
 /* Direct value access used by the write barriers and the methodjit */
 void
-MarkValueUnbarriered(JSTracer *trc, const js::Value &v, const char *name);
+MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name);
 
 /*
  * Mark a value that may be in a different compartment from the compartment
  * being GC'd. (Although it won't be marked if it's in the wrong compartment.)
  */
 void
-MarkCrossCompartmentValue(JSTracer *trc, const js::HeapValue &v, const char *name);
+MarkCrossCompartmentValue(JSTracer *trc, HeapValue *v, const char *name);
 
 /*
  * MarkChildren<JSObject> is exposed solely for preWriteBarrier on
@@ -144,34 +140,38 @@ MarkChildren(JSTracer *trc, JSObject *obj);
  * JS_TraceShapeCycleCollectorChildren.
  */
 void
-MarkCycleCollectorChildren(JSTracer *trc, const Shape *shape);
+MarkCycleCollectorChildren(JSTracer *trc, Shape *shape);
+
+void
+PushArena(GCMarker *gcmarker, ArenaHeader *aheader);
 
 /*** Generic ***/
+
 /*
  * The Mark() functions interface should only be used by code that must be
  * templated.  Other uses should use the more specific, type-named functions.
  */
 
 inline void
-Mark(JSTracer *trc, const js::HeapValue &v, const char *name)
+Mark(JSTracer *trc, HeapValue *v, const char *name)
 {
     MarkValue(trc, v, name);
 }
 
 inline void
-Mark(JSTracer *trc, const HeapPtr<JSObject> &o, const char *name)
+Mark(JSTracer *trc, HeapPtr<JSObject> *o, const char *name)
 {
     MarkObject(trc, o, name);
 }
 
 inline void
-Mark(JSTracer *trc, const HeapPtr<JSXML> &xml, const char *name)
+Mark(JSTracer *trc, HeapPtr<JSXML> *xml, const char *name)
 {
     MarkXML(trc, xml, name);
 }
 
 inline bool
-IsMarked(const js::Value &v)
+IsMarked(const Value &v)
 {
     if (v.isMarkable())
         return !IsAboutToBeFinalized(v);

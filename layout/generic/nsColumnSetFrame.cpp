@@ -366,7 +366,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
 
   bool isBalancing = colStyle->mColumnFill == NS_STYLE_COLUMN_FILL_BALANCE;
   if (isBalancing) {
-    const PRUint32 MAX_NESTED_COLUMN_BALANCING = 5;
+    const PRUint32 MAX_NESTED_COLUMN_BALANCING = 2;
     PRUint32 cnt = 1;
     for (const nsHTMLReflowState* rs = aReflowState.parentReflowState;
          rs && cnt < MAX_NESTED_COLUMN_BALANCING;

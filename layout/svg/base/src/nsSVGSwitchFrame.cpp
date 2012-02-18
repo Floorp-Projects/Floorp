@@ -208,7 +208,7 @@ nsSVGSwitchFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     gfxMatrix transform = aToBBoxUserspace;
     if (content->IsSVG()) {
       transform = static_cast<nsSVGElement*>(content)->
-                    PrependLocalTransformTo(aToBBoxUserspace);
+                    PrependLocalTransformsTo(aToBBoxUserspace);
     }
     return svgKid->GetBBoxContribution(transform, aFlags);
   }
