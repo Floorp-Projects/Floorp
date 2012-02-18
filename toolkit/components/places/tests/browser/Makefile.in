@@ -17,6 +17,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_bug646422.js \
 	browser_bug680727.js \
 	browser_colorAnalyzer.js \
+	browser_favicon_privatebrowsing.js \
 	browser_notfound.js \
 	browser_redirect.js \
 	browser_visituri.js \
@@ -46,6 +47,8 @@ MOCHITEST_FILES = \
 	visituri/redirect_twice.sjs \
 	visituri/redirect_once.sjs \
 	visituri/final.html \
+	favicon-normal32.png \
+	favicon.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
