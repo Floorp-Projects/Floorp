@@ -1939,10 +1939,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       needToRecoverState = false;
 
       // Update aState.mPrevChild as if we had reflowed all of the frames in
-      // this line.  This is expensive in some cases, since it requires
-      // walking |GetNextSibling|.
+      // this line.
       if (line->IsDirty())
-        aState.mPrevChild = line.prev()->LastChild();
+        NS_ASSERTION(line->mFirstChild->GetPrevSibling() ==
+                     line.prev()->LastChild(), "unexpected line frames");
+        aState.mPrevChild = line->mFirstChild->GetPrevSibling();
     }
 
     // Now repair the line and update |aState.mY| by calling
@@ -2132,9 +2133,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     aState.ReconstructMarginAbove(line);
 
     // Update aState.mPrevChild as if we had reflowed all of the frames in
-    // the last line.  This is expensive in some cases, since it requires
-    // walking |GetNextSibling|.
-    aState.mPrevChild = line.prev()->LastChild();
+    // the last line.
+    NS_ASSERTION(line == line_end || line->mFirstChild->GetPrevSibling() ==
+                 line.prev()->LastChild(), "unexpected line frames");
+    aState.mPrevChild =
+      line == line_end ? mFrames.LastChild() : line->mFirstChild->GetPrevSibling();
   }
 
   // Should we really have to do this?
@@ -4396,7 +4399,12 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
       if (firstLine) {
         mFrames.Clear();
       } else {
-        mFrames.RemoveFramesAfter(aLineBefore->LastChild());
+        nsIFrame* f = overBegin->mFirstChild;
+        nsIFrame* lineBeforeLastFrame =
+          f ? f->GetPrevSibling() : aLineBefore->LastChild();
+        NS_ASSERTION(!f || lineBeforeLastFrame == aLineBefore->LastChild(),
+                     "unexpected line frames");
+        mFrames.RemoveFramesAfter(lineBeforeLastFrame);
       }
       if (!overflowLines->empty()) {
         // XXXbz If we switch overflow lines to nsFrameList, we should
@@ -4713,7 +4721,9 @@ nsBlockFrame::AppendFrames(ChildListID  aListID,
   }
 
   // Find the proper last-child for where the append should go
-  nsIFrame* lastKid = mLines.empty() ? nsnull : mLines.back()->LastChild();
+  nsIFrame* lastKid = mFrames.LastChild();
+  NS_ASSERTION((mLines.empty() ? nsnull : mLines.back()->LastChild()) ==
+               lastKid, "out-of-sync mLines / mFrames");
 
   // Add frames after the last child
 #ifdef NOISY_REFLOW_REASON
@@ -5394,8 +5404,16 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
 
     // If the frame being deleted is the last one on the line then
     // optimize away the line->Contains(next-in-flow) call below.
-    bool isLastFrameOnLine = (1 == line->GetChildCount() ||
-                                line->LastChild() == aDeletedFrame);
+    bool isLastFrameOnLine = 1 == line->GetChildCount();
+    if (!isLastFrameOnLine) {
+      line_iterator next = line.next();
+      nsIFrame* lastFrame = next != line_end ?
+        next->mFirstChild->GetPrevSibling() :
+        (searchingOverflowList ? line->LastChild() : mFrames.LastChild());
+      NS_ASSERTION(next == line_end || lastFrame == line->LastChild(),
+                   "unexpected line frames");
+      isLastFrameOnLine = lastFrame == aDeletedFrame;
+    }
 
     // Remove aDeletedFrame from the line
     nsIFrame* nextFrame = aDeletedFrame->GetNextSibling();
