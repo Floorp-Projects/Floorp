@@ -342,6 +342,17 @@ TypeInferenceOracle::getCallReturn(JSScript *script, jsbytecode *pc)
 }
 
 bool
+TypeInferenceOracle::canInlineCall(JSScript *caller, jsbytecode *pc)
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_CALL);
+
+    Bytecode *code = caller->analysis()->maybeCode(pc);
+    if (code->monitoredTypes || code->monitoredTypesReturn || caller->analysis()->typeBarriers(cx, pc))
+        return false;
+    return true;
+}
+
+bool
 TypeInferenceOracle::canEnterInlinedScript(JSScript *inlineScript)
 {
     return inlineScript->hasAnalysis() && inlineScript->analysis()->ranInference() &&
