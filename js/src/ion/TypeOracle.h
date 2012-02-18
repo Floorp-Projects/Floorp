@@ -162,7 +162,9 @@ class TypeOracle
     virtual types::TypeSet *getCallReturn(JSScript *script, jsbytecode *pc) {
         return NULL;
     }
-
+    virtual bool canInlineCall(JSScript *caller, jsbytecode *pc) {
+        return false;
+    }
     virtual bool canEnterInlinedScript(JSScript *callee) {
         return false;
     }
@@ -236,6 +238,7 @@ class TypeInferenceOracle : public TypeOracle
     MIRType elementWrite(JSScript *script, jsbytecode *pc);
     bool arrayPrototypeHasIndexedProperty();
     bool canInlineCalls();
+    bool canInlineCall(JSScript *caller, jsbytecode *pc);
     bool canEnterInlinedScript(JSScript *inlineScript);
 };
 
