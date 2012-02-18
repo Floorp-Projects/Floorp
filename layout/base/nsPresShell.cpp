@@ -688,8 +688,6 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
   return PL_DHASH_NEXT;
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(GfxTextrunWordCacheMallocSizeOf, "gfx/textrun-word-cache")
-
 NS_IMETHODIMP
 PresShell::MemoryReporter::GetName(nsACString &aName)
 {
