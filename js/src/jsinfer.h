@@ -668,7 +668,7 @@ struct TypeNewScript
      * Shape to use for newly constructed objects. Reflects all definite
      * properties the object will have.
      */
-    HeapPtr<const Shape> shape;
+    HeapPtrShape  shape;
 
     /*
      * Order in which properties become initialized. We need this in case a

@@ -1062,7 +1062,7 @@ JSObject::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *n
 {
     JS_ASSERT_IF(oldShape != lastProperty(),
                  inDictionaryMode() &&
-                 nativeLookup(cx, oldShape->maybePropid()) == oldShape);
+                 nativeLookup(cx, oldShape->propidRef()) == oldShape);
 
     JSObject *self = this;
 
@@ -1086,7 +1086,7 @@ JSObject::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *n
     PropertyTable &table = self->lastProperty()->table();
     Shape **spp = oldShape->isEmptyShape()
                   ? NULL
-                  : table.search(oldShape->maybePropid(), false);
+                  : table.search(oldShape->propidRef(), false);
 
     /*
      * Splice the new shape into the same position as the old shape, preserving

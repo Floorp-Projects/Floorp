@@ -83,10 +83,10 @@ MarkGCThingRoot(JSTracer *trc, void *thing, const char *name);
 /*** ID Marking ***/
 
 void
-MarkId(JSTracer *trc, const HeapId &id, const char *name);
+MarkId(JSTracer *trc, HeapId *id, const char *name);
 
 void
-MarkIdRoot(JSTracer *trc, const jsid &id, const char *name);
+MarkIdRoot(JSTracer *trc, jsid *id, const char *name);
 
 void
 MarkIdRange(JSTracer *trc, size_t len, js::HeapId *vec, const char *name);
@@ -116,10 +116,6 @@ MarkValueRootRange(JSTracer *trc, Value *begin, Value *end, const char *name)
 
 /*** Special Cases ***/
 
-/* TypeNewObject contains a HeapPtr<const Shape> that needs a unique cast. */
-void
-MarkShape(JSTracer *trc, HeapPtr<const Shape> *thing, const char *name);
-
 /* Direct value access used by the write barriers and the methodjit */
 void
 MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name);
@@ -144,7 +140,7 @@ MarkChildren(JSTracer *trc, JSObject *obj);
  * JS_TraceShapeCycleCollectorChildren.
  */
 void
-MarkCycleCollectorChildren(JSTracer *trc, const Shape *shape);
+MarkCycleCollectorChildren(JSTracer *trc, Shape *shape);
 
 void
 PushArena(GCMarker *gcmarker, ArenaHeader *aheader);
