@@ -134,9 +134,6 @@ public abstract class Layer {
             throw new RuntimeException("endTransaction() called outside a transaction");
         mInTransaction = false;
         mTransactionLock.unlock();
-
-        if (mView != null)
-            mView.requestRender();
     }
 
     /** Returns true if the layer is currently in a transaction and false otherwise. */
