@@ -37,7 +37,7 @@ function initEditor()
   editor = new SourceEditor();
   let config = {
     showLineNumbers: true,
-    placeholderText: "foobarbaz",
+    initialText: "foobarbaz",
     tabSize: 7,
     expandTab: true,
   };
@@ -54,7 +54,7 @@ function editorLoaded()
 
   editor.focus();
 
-  is(editor.getMode(), SourceEditor.DEFAULTS.MODE, "default editor mode");
+  is(editor.getMode(), SourceEditor.DEFAULTS.mode, "default editor mode");
 
   // Test general editing methods.
 
