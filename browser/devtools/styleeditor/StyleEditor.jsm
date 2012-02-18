@@ -146,7 +146,7 @@ StyleEditor.prototype = {
    */
   get styleSheet()
   {
-    assert(this._styleSheet, "StyleSheet must be loaded first.")
+    assert(this._styleSheet, "StyleSheet must be loaded first.");
     return this._styleSheet;
   },
 
@@ -921,9 +921,11 @@ StyleEditor.prototype = {
       aArgs.unshift(this);
     }
 
+    // copy the list of listeners to allow adding/removing listeners in handlers
+    let listeners = this._actionListeners.concat();
     // trigger all listeners that have this action handler
-    for (let i = 0; i < this._actionListeners.length; ++i) {
-      let listener = this._actionListeners[i];
+    for (let i = 0; i < listeners.length; ++i) {
+      let listener = listeners[i];
       let actionHandler = listener["on" + aName];
       if (actionHandler) {
         actionHandler.apply(listener, aArgs);

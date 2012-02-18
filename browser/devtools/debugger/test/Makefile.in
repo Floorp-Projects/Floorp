@@ -72,6 +72,7 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_pause-resume.js \
 	browser_dbg_update-editor-mode.js \
 	browser_dbg_select-line.js \
+	browser_dbg_clean-exit.js \
 	head.js \
 	$(NULL)
 
