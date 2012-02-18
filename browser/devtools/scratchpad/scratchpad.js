@@ -806,7 +806,7 @@ var Scratchpad = {
     let config = {
       mode: SourceEditor.MODES.JAVASCRIPT,
       showLineNumbers: true,
-      placeholderText: initialText
+      initialText: initialText,
     };
 
     let editorPlaceholder = document.getElementById("scratchpad-editor");
