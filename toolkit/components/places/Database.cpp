@@ -744,6 +744,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 12 uses schema version 17.
 
+      if (currentSchemaVersion < 18) {
+        rv = MigrateV18Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 13 uses schema version 18.
+
       // Schema Upgrades must add migration code here.
 
       rv = UpdateBookmarkRootTitles();
@@ -789,8 +796,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
     // moz_hosts.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_HOSTS);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HOSTS_FRECENCYHOST);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_bookmarks.
@@ -961,7 +966,9 @@ Database::InitTempTriggers()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERUPDATE_TRIGGER);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERUPDATE_TYPED_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1675,8 +1682,6 @@ Database::MigrateV17Up()
     // Add the moz_hosts table so we can get hostnames for URL autocomplete.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_HOSTS);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_HOSTS_FRECENCYHOST);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Fill the moz_hosts table with all the domains in moz_places.
@@ -1695,6 +1700,50 @@ Database::MigrateV17Up()
 
   nsCOMPtr<mozIStoragePendingStatement> ps;
   rv = fillHostsStmt->ExecuteAsync(nsnull, getter_AddRefs(ps));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV18Up()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // moz_hosts should distinguish on typed entries.
+
+  // Check if the profile already has a typed column.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT typed FROM moz_hosts"
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_hosts ADD COLUMN typed NOT NULL DEFAULT 0"
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // With the addition of the typed column the covering index loses its
+  // advantages.  On the other side querying on host and (optionally) typed
+  // largely restricts the number of results, making scans decently fast.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP INDEX IF EXISTS moz_hosts_frecencyhostindex"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Update typed data.
+  nsCOMPtr<mozIStorageAsyncStatement> updateTypedStmt;
+  rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_hosts SET typed = 1 WHERE host IN ( "
+      "SELECT fixup_url(get_unreversed_host(rev_host)) "
+      "FROM moz_places WHERE typed = 1 "
+    ") "
+  ), getter_AddRefs(updateTypedStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = updateTypedStmt->ExecuteAsync(nsnull, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

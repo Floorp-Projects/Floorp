@@ -426,6 +426,10 @@ pref("media.realtime_decoder.enabled", true);
 // by bug 710563.
 pref("layout.frame_rate.precise", true);
 
+// Temporary remote js console hack
+pref("b2g.remote-js.enabled", true);
+pref("b2g.remote-js.port", 9999);
+
 // Screen timeout in minutes
 pref("power.screen.timeout", 60);
 

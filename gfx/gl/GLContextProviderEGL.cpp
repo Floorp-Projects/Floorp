@@ -1133,10 +1133,18 @@ public:
         // still expensive.
 #ifndef MOZ_WIDGET_QT
         if (!mSurface) {
-            EGLConfig config;
-            CreateConfig(&config);
-            mSurface = CreateSurfaceForWindow(NULL, config);
-            aForce = true;
+            // We need to be able to bind the surface when we don't
+            // have access to a surface. We wont be drawing to the screen
+            // but we will be able to do things like resource releases.
+            succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
+                                                 EGL_NO_SURFACE, EGL_NO_SURFACE,
+                                                 EGL_NO_CONTEXT);
+            if (!succeeded && sEGLLibrary.fGetError() == LOCAL_EGL_CONTEXT_LOST) {
+                mContextLost = true;
+                NS_WARNING("EGL context has been lost.");
+            }
+            NS_ASSERTION(succeeded, "Failed to make GL context current!");
+            return succeeded;
         }
 #endif
         if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {

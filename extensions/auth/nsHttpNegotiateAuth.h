@@ -58,6 +58,9 @@ private:
     // returns the value of the given boolean pref
     bool TestBoolPref(const char *pref);
 
+    // tests if the host part of an uri is fully qualified
+    bool TestNonFqdn(nsIURI *uri);
+
     // returns true if URI is accepted by the list of hosts in the pref
     bool TestPref(nsIURI *, const char *pref);
 

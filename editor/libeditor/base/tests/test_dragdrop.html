@@ -1,0 +1,163 @@
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+</head>
+
+<body>
+  <span id="text" style="font-size: 40px;">Some Text</span>
+
+  <input id="input" value="Drag Me">
+  <textarea id="textarea">Some Text To Drag</textarea>
+  <p id="contenteditable" contenteditable="true">This is some <b id="bold">editable</b> text.</p>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// This listener allows us to clear the default data for the selection added for the drag.
+var shouldClear = false;
+window.addEventListener("dragstart", function (event) { if (shouldClear) event.dataTransfer.clearData() }, true);
+
+function doTest()
+{
+  const htmlContextData = { type: 'text/_moz_htmlcontext',
+                            data: '<html><body></body></html>' };
+  const htmlInfoData = { type: 'text/_moz_htmlinfo', data: '0,0' };
+  const htmlData = { type: 'text/html', data: '<span id="text" style="font-size: 40px;">Some Text</span>' };
+
+  const htmlContextDataEditable = { type: 'text/_moz_htmlcontext',
+                                    data: '<html><body><p id="contenteditable" contenteditable="true"></p></body></html>' };
+
+  var text = document.getElementById("text");
+  var input = document.getElementById("input");
+  var contenteditable = document.getElementById("contenteditable");
+
+  var selection = window.getSelection();
+
+  // -------- Test dragging regular text
+  selection.selectAllChildren(text);
+  var result = synthesizeDragStart(text, [[htmlContextData, htmlInfoData, htmlData,
+                                           {type: "text/plain", data: "Some Text"}]], window, 40, 10);
+  ok(!result, "Test dragging regular text");
+
+  // -------- Test dragging text from an <input>
+  input.setSelectionRange(1, 4);
+  result = synthesizeDragStart(input, [[{type: "text/plain", data: "rag"}]], window, 25, 6);
+  ok(!result, "Test dragging input");
+
+  // -------- Test dragging text from a <textarea>
+  textarea.setSelectionRange(1, 7);
+  result = synthesizeDragStart(textarea, [[{type: "text/plain", data: "ome Te"}]], window, 25, 6);
+  ok(!result, "Test dragging textarea");
+  textarea.blur();
+
+  // -------- Test dragging text from a contenteditable
+  selection.selectAllChildren(contenteditable.childNodes[1]);
+  result = synthesizeDragStart(contenteditable.childNodes[1],
+                               [[htmlContextDataEditable, htmlInfoData,
+                                {type: 'text/html', data: '<b id="bold">editable</b>' },
+                                {type: "text/plain", data: "editable"}]], window, 5, 6);
+  ok(!result, "Test dragging contenteditable");
+  contenteditable.blur();
+
+  // -------- Test dragging regular text of text/html to <input>
+
+  selection.selectAllChildren(text);
+  input.value = "";
+  synthesizeDrop(text, input, [], "copy");
+  is(input.value, "Some Text", "Drag text/html onto input");
+
+  // -------- Test dragging regular text of text/html to disabled <input>
+
+  selection.selectAllChildren(text);
+  input.value = "";
+  input.disabled = true;
+  synthesizeDrop(text, input, [], "copy");
+  is(input.value, "", "Drag text/html onto disabled input");
+  input.disabled = false;
+
+  // -------- Test dragging regular text of text/html to readonly <input>
+
+  selection.selectAllChildren(text);
+  input.readOnly = true;
+  synthesizeDrop(text, input, [], "copy");
+  is(input.value, "", "Drag text/html onto readonly input");
+  input.readOnly = false;
+
+  // -------- Test dragging regular text of text/html to <input>. This sets
+  //          shouldClear to true so that the default drag data is not present
+  //          and we can use the data passed to synthesizeDrop. This allows
+  //          testing of a drop with just text/html.
+  shouldClear = true;
+  selection.selectAllChildren(text);
+  input.value = "";
+  synthesizeDrop(text, input, [[{type: "text/html", data: "Some <b>Bold<b> Text"}]], "copy");
+  is(input.value, "", "Drag text/html onto input");
+
+  // -------- Test dragging regular text of text/plain and text/html to <input>
+
+  selection.selectAllChildren(text);
+  input.value = "";
+  synthesizeDrop(text, input, [[{type: "text/html", data: "Some <b>Bold<b> Text"},
+                                {type: "text/plain", data: "Some Plain Text"}]], "copy");
+  is(input.value, "Some Plain Text", "Drag text/html and text/plain onto input");
+
+  // -------- Test dragging regular text of text/plain to <textarea>
+
+// XXXndeakin Can't test textareas due to some event handling issue
+//  selection.selectAllChildren(text);
+//  synthesizeDrop(text, textarea, [[{type: "text/plain", data: "Somewhat Longer Text"}]], "copy");
+//  is(textarea.value, "Somewhat Longer Text", "Drag text/plain onto textarea");
+
+  // -------- Test dragging regular text of text/plain to contenteditable
+
+  selection.selectAllChildren(text);
+  synthesizeDrop(text, contenteditable, [[{type: "text/plain", data: "Sample Text"}]], "copy");
+  is(contenteditable.childNodes.length, 3, "Drag text/plain onto contenteditable child nodes");
+  is(contenteditable.textContent, "This is some editable text.Sample Text",
+                                  "Drag text/plain onto contenteditable text");
+
+  // -------- Test dragging regular text of text/html to contenteditable
+
+  selection.selectAllChildren(text);
+  synthesizeDrop(text, contenteditable, [[{type: "text/html", data: "Sample <i>Italic</i> Text"}]], "copy");
+  is(contenteditable.childNodes.length, 6, "Drag text/html onto contenteditable child nodes");
+  is(contenteditable.childNodes[4].tagName, "I", "Drag text/html onto contenteditable italic");
+  is(contenteditable.childNodes[4].textContent, "Italic", "Drag text/html onto contenteditable italic text");
+
+  // -------- Test dragging contenteditable to <input>
+
+  selection.selectAllChildren(document.getElementById("bold"));
+  synthesizeDrop(bold, input, [[{type: "text/html", data: "<b>editable</b>"},
+                                {type: "text/plain", data: "editable"}]], "copy");
+  is(input.value, "Some Plain Texteditable", "Move text/html and text/plain from contenteditable onto input");
+
+  // -------- Test dragging contenteditable to contenteditable
+
+  shouldClear = false;
+
+  selection.selectAllChildren(contenteditable.childNodes[4]);
+  synthesizeDrop(contenteditable.childNodes[4], contenteditable, [], "copy");
+  is(contenteditable.childNodes.length, 7, "Move text/html and text/plain from contenteditable onto itself child nodes");
+  is(contenteditable.childNodes[6].tagName, "I", "Move text/html and text/plain from contenteditable onto itself italic");
+  is(contenteditable.childNodes[6].textContent, "Italic", "Move text/html and text/plain from contenteditable onto itself text");
+
+  // We'd test 'move' here as well as 'copy', but that requires knowledge of
+  // the source of the drag which drag simulation doesn't provide.
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(doTest);
+
+</script>
+</body>
+</html>

@@ -566,12 +566,14 @@ public class GeckoAppShell
             mInputConnection.notifyIMEChange(text, start, end, newEnd);
     }
 
-    public static void notifyScreenShot(ByteBuffer data, int tabId, int width, int height) {
-        final Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-        b.copyPixelsFromBuffer(data);
-        final Tab tab = Tabs.getInstance().getTab(tabId);
+    public static void notifyScreenShot(final ByteBuffer data, final int tabId,
+                                        final int width, final int height) {
         getHandler().post(new Runnable() {
             public void run() {
+                Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+                b.copyPixelsFromBuffer(data);
+                freeDirectBuffer(data);
+                final Tab tab = Tabs.getInstance().getTab(tabId);
                 GeckoApp.mAppContext.processThumbnail(tab, b, null);
             }
         });

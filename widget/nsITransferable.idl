@@ -63,6 +63,13 @@
 #define kNativeImageMime            "application/x-moz-nativeimage"
 #define kNativeHTMLMime             "application/x-moz-nativehtml"
 
+// These are used to indicate the context for a fragment of HTML source, such
+// that some parent structure and style can be preserved. kHTMLContext
+// contains the serialized ancestor elements, whereas kHTMLInfo are numbers
+// identifying where in the context the fragment was from.
+#define kHTMLContext   "text/_moz_htmlcontext"
+#define kHTMLInfo      "text/_moz_htmlinfo"
+
 // the source URL for a file promise
 #define kFilePromiseURLMime         "application/x-moz-file-promise-url"
 // the destination filename for a file promise
