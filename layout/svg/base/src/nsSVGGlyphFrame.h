@@ -269,7 +269,7 @@ protected:
 
 private:
   DrawMode SetupCairoState(gfxContext *aContext,
-                           nsRefPtr<gfxPattern> *aStrokePattern);
+                           gfxPattern **aStrokePattern);
 };
 
 #endif
