@@ -146,7 +146,7 @@ HashableValue::equals(const HashableValue &other) const
 
 Class MapObject::class_ = {
     "Map",
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
@@ -297,7 +297,7 @@ js_InitMapClass(JSContext *cx, JSObject *obj)
 
 Class SetObject::class_ = {
     "Set",
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Set),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */

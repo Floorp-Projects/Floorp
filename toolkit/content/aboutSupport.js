@@ -116,6 +116,7 @@ window.onload = function () {
   populatePreferencesSection();
   populateExtensionsSection();
   populateGraphicsSection();
+  populateJavaScriptSection();
 }
 
 function populateExtensionsSection() {
@@ -380,6 +381,13 @@ function populateGraphicsSection() {
       createElement("td", msg),
     ])
   ]);
+}
+
+function populateJavaScriptSection() {
+  let enabled = window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils)
+        .isIncrementalGCEnabled();
+  document.getElementById("javascript-incremental-gc").textContent = enabled ? "1" : "0";
 }
 
 function getPrefValue(aName) {
