@@ -124,6 +124,8 @@ public:
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
 
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
   static const MappedAttributeEntry sFillStrokeMap[];
   static const MappedAttributeEntry sGraphicsMap[];
   static const MappedAttributeEntry sTextContentElementsMap[];

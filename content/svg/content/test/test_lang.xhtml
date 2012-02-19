@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=721920
+-->
+<head>
+  <title>Test for Bug 721920</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+
+svg text { word-spacing: 1em; }
+
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=721920">Mozilla Bug 721920</a>
+<p id="display">
+  <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+    <g lang="zh-Hans">
+      <text id="s0" y="40" style="font-size: 0">汉字</text>
+      <text id="s4" y="80" style="font-size: 4px">汉字</text>
+      <text id="s12" y="120" style="font-size: 12px">汉字</text>
+      <text id="s28" y="160" style="font-size: 28px">汉字</text>
+    </g>
+  </svg>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+//<![CDATA[
+
+/** Test for Bug 721920 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var elts = [
+  document.getElementById("s0"),
+  document.getElementById("s4"),
+  document.getElementById("s12"),
+  document.getElementById("s28")
+];
+
+function fs(idx) {
+  // The computed font size actually *doesn't* currently reflect the
+  // minimum font size preference, but things in em units do.  Hence
+  // why we use word-spacing here.
+  // test_bug401046.html uses margin-bottom instead, but there's an
+  // SVG bug that prevents that working in SVG (bug 728723).
+  return getComputedStyle(elts[idx], "").wordSpacing;
+}
+
+SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.zh-CN']]}, step1);
+
+function step1() {
+    is(fs(0), "0px", "at min font size 0, 0px should compute to 0px");
+    is(fs(1), "4px", "at min font size 0, 4px should compute to 4px");
+    is(fs(2), "12px", "at min font size 0, 12px should compute to 12px");
+    is(fs(3), "28px", "at min font size 0, 28px should compute to 28px");
+
+    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.zh-CN', 7]]}, step2);
+}
+
+function step2() {
+    is(fs(0), "0px", "at min font size 7, 0px should compute to 0px");
+    is(fs(1), "7px", "at min font size 7, 4px should compute to 7px");
+    is(fs(2), "12px", "at min font size 7, 12px should compute to 12px");
+    is(fs(3), "28px", "at min font size 7, 28px should compute to 28px");
+
+    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.zh-CN', 18]]}, step3);
+}
+
+function step3() {
+    is(fs(0), "0px", "at min font size 18, 0px should compute to 0px");
+    is(fs(1), "18px", "at min font size 18, 4px should compute to 18px");
+    is(fs(2), "18px", "at min font size 18, 12px should compute to 18px");
+    is(fs(3), "28px", "at min font size 18, 28px should compute to 28px");
+
+    SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.zh-CN']]}, SimpleTest.finish);
+}
+
+//]]>
+</script>
+</pre>
+</body>
+</html>
+
