@@ -32,6 +32,21 @@ fails-if(Android) == viewport-translucent-color-3.html viewport-translucent-colo
 == background-clip-1.html background-clip-1-ref.html
 == background-clip-2.html background-clip-2-ref.html
 
+== background-position-1a.html background-position-1-ref.html
+== background-position-1b.html background-position-1-ref.html
+== background-position-1c.html background-position-1-ref.html
+== background-position-2a.html background-position-2-ref.html
+== background-position-2b.html background-position-2-ref.html
+== background-position-3a.html background-position-3-ref.html
+== background-position-3b.html background-position-3-ref.html
+== background-position-4a.html background-position-4-ref.html
+== background-position-4b.html background-position-4-ref.html
+== background-position-4c.html background-position-4-ref.html
+== background-position-5.html background-position-5-ref.html
+== background-position-6.html background-position-6-ref.html
+== background-position-7.html background-position-7-ref.html
+== background-position-8.html background-position-8-ref.html
+
 == background-size-auto-auto.html background-size-auto-ref.html
 == background-size-auto.html background-size-auto-ref.html
 == background-size-contain.html background-size-contain-ref.html
