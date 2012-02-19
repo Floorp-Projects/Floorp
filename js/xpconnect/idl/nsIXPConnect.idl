@@ -398,7 +398,7 @@ enum nsGCType {
 };
 %}
 
-[uuid(686bb1d0-4711-11e1-b86c-0800200c9a66)]
+[uuid(e92bf5e0-494c-11e1-b86c-0800200c9a66)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -733,6 +733,12 @@ interface nsIXPConnect : nsISupports
      * Use the nsGCType enum for the kind.
      */
     void GarbageCollect(in PRUint32 reason, in PRUint32 kind);
+
+    /**
+     * Signals a good place to do an incremental GC slice, because the
+     * browser is drawing a frame.
+     */
+    void NotifyDidPaint();
 
     /**
      * Define quick stubs on the given object, @a proto.

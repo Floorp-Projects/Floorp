@@ -1,5 +1,6 @@
 function test() {
   waitForExplicitFinish();
+
   gBrowser.selectedTab = gBrowser.addTab();
 
   SpecialPowers.setIntPref("ui.tooltipDelay", 0);
@@ -60,8 +61,10 @@ function test() {
     EventUtils.synthesizeMouseAtCenter(p1, { type: "mousemove" }, win);
   }
 
-  gBrowser.selectedBrowser.addEventListener("load",
-    function () { setTimeout(onLoad, 0); }, true);
+  gBrowser.selectedBrowser.addEventListener("load", function loadListener() {
+    gBrowser.selectedBrowser.removeEventListener("load", loadListener, true);
+    setTimeout(onLoad, 0);
+  }, true);
 
   content.location = "data:text/html," +
     "<p id=\"p1\" title=\"tooltip is here\">This paragraph has a tooltip.</p>" +

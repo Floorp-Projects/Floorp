@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <dlfcn.h>
+#include "android/log.h"
 #include "cutils/properties.h"
 
 #include "base/basictypes.h"
@@ -12,6 +13,7 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsRawStructs.h"
+#include "prinit.h"
 
 #define USE_GS2_LIBCAMERA
 #define CameraHardwareInterface CameraHardwareInterface_SGS2
@@ -48,11 +50,11 @@ using namespace mozilla;
 
 class CameraHardwareInterface {
   public:
-    typedef enum {
+    enum Type {
       CAMERA_SGS2,
       CAMERA_MAGURO,
       CAMERA_DEFAULT
-    } Type;
+    };
 
     static Type getType() {
       char propValue[PROPERTY_VALUE_MAX];
@@ -60,7 +62,7 @@ class CameraHardwareInterface {
       if (!strcmp(propValue, "GT-I9100"))
         return CAMERA_SGS2;
 
-      if (!strcmp(propValue, "MSM7627A_SKU1") || !strcmp(propValue, "MSM7627A_SKU3"))
+      if (!strcmp(propValue, "msm7627a_sku1") || !strcmp(propValue, "MSM7627A_SKU3"))
         return CAMERA_MAGURO;
 
       printf_stderr("CameraHardwareInterface : unsupported camera for device %s\n", propValue);
@@ -89,30 +91,25 @@ class CameraHardwareInterface {
     CameraHardwareInterface(PRUint32 aCamera = 0) { };
 };
 
-class DlopenWrapper {
-  public:
-    DlopenWrapper() : mHandle(nsnull) { };
+// Intentionally not trying to dlclose() this handle.  That's playing
+// Russian roulette with security bugs.
+static void* sCameraLib;
+static PRCallOnceType sInitCameraLib;
 
-    DlopenWrapper(const char* aLibrary) : mHandle(nsnull) {
-      mHandle = dlopen(aLibrary, RTLD_LAZY);
-    };
+static PRStatus
+InitCameraLib()
+{
+  sCameraLib = dlopen("/system/lib/libcamera.so", RTLD_LAZY);
+  // We might fail to open the camera lib.  That's OK.
+  return PR_SUCCESS;
+}
 
-    ~DlopenWrapper() {
-      if (mHandle)
-        dlclose(mHandle);
-    };
-
-    bool opened() {
-      return mHandle != nsnull;
-    };
-    
-    void* dlsym(const char* aFunction) {
-      return ::dlsym(mHandle, aFunction);
-    };
-
-  protected:
-    void* mHandle;
-};
+static void*
+GetCameraLibHandle()
+{
+  PR_CallOnce(&sInitCameraLib, InitCameraLib);
+  return sCameraLib;
+}
 
 template<class T> class CameraImpl : public CameraHardwareInterface {
   public:
@@ -121,14 +118,13 @@ template<class T> class CameraImpl : public CameraHardwareInterface {
     typedef sp<T> (*HAL_openCameraHardware_MAGURO)(int, int);
 
     CameraImpl(PRUint32 aCamera = 0) : mOk(false), mCamera(nsnull) {
-      DlopenWrapper wrapper("/system/lib/libcamera.so");
-
-      if (!wrapper.opened())
+      void* cameraLib = GetCameraLibHandle();
+      if (!cameraLib) {
+        printf_stderr("CameraImpl: Failed to dlopen() camera library.");
         return;
+      }
 
-      mOk = true;
-
-      void *hal = wrapper.dlsym("HAL_openCameraHardware");
+      void *hal = dlsym(cameraLib, "HAL_openCameraHardware");
       HAL_openCameraHardware_DEFAULT funct0;
       HAL_openCameraHardware_SGS2 funct1;
       HAL_openCameraHardware_MAGURO funct2;
@@ -145,6 +141,11 @@ template<class T> class CameraImpl : public CameraHardwareInterface {
           funct0 = reinterpret_cast<HAL_openCameraHardware_DEFAULT> (hal);  
           mCamera = funct0(aCamera);
           break;
+      }
+
+      mOk = mCamera != nsnull;
+      if (!mOk) {
+        printf_stderr("CameraImpl: HAL_openCameraHardware() returned NULL (no camera interface).");
       }
     }
 
@@ -251,12 +252,11 @@ GonkCameraInputStream::DataCallback(int32_t aMsgType, const sp<IMemory>& aDataPt
 PRUint32
 GonkCameraInputStream::getNumberOfCameras() {
   typedef int (*HAL_getNumberOfCamerasFunct)(void);
-  DlopenWrapper wrapper("/system/lib/libcamera.so");
-
-  if (!wrapper.opened())
+  void* cameraLib = GetCameraLibHandle();
+  if (!cameraLib)
     return 0;
   
-  void *hal = wrapper.dlsym("HAL_getNumberOfCameras");
+  void *hal = dlsym(cameraLib, "HAL_getNumberOfCameras");
   if (nsnull == hal)
     return 0;
 

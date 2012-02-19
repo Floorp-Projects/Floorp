@@ -868,7 +868,7 @@ struct JSObject : js::gc::Cell
         return type_;
     }
 
-    const js::HeapPtr<js::types::TypeObject> &typeFromGC() const {
+    js::HeapPtr<js::types::TypeObject> &typeFromGC() {
         /* Direct field access for use by GC. */
         return type_;
     }
@@ -954,6 +954,7 @@ struct JSObject : js::gc::Cell
     inline bool hasPrivate() const;
     inline void *getPrivate() const;
     inline void setPrivate(void *data);
+    inline void initPrivate(void *data);
 
     /* Access private data for an object with a known number of fixed slots. */
     inline void *getPrivate(size_t nfixed) const;
@@ -1355,6 +1356,7 @@ struct JSObject : js::gc::Cell
 
     static inline void writeBarrierPre(JSObject *obj);
     static inline void writeBarrierPost(JSObject *obj, void *addr);
+    static inline void readBarrier(JSObject *obj);
     inline void privateWriteBarrierPre(void **oldval);
     inline void privateWriteBarrierPost(void **oldval);
 
