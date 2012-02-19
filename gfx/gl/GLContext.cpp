@@ -511,8 +511,14 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
         mMaxTextureImageSize = mMaxTextureSize;
 
+        // BGRA ReadPixels support - in particular, what is returned for
+        // GL_IMPLEMENTATION_COLOR_READ_FORMAT et al - is only guaranteed to be
+        // accurate for what's currently bound to the context. It seems that,
+        // after we initialize, we bind something incompatible with the BGRA
+        // pixel format on at least some devices.
+        // For now, just disable this code altogether.
         mSupport_ES_ReadPixels_BGRA_UByte = false;
-        if (mIsGLES2) {
+        if (false) {
             if (IsExtensionSupported(gl::GLContext::EXT_bgra)) {
                 mSupport_ES_ReadPixels_BGRA_UByte = true;
             } else if (IsExtensionSupported(gl::GLContext::EXT_read_format_bgra) ||
