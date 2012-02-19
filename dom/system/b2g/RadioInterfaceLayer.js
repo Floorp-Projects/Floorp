@@ -59,10 +59,15 @@ const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
 
 const kSmsReceivedObserverTopic          = "sms-received";
 const DOM_SMS_DELIVERY_RECEIVED          = "received";
+const DOM_SMS_DELIVERY_SENT              = "sent";
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
                                    "@mozilla.org/sms/smsservice;1",
                                    "nsISmsService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gSmsRequestManager",
+                                   "@mozilla.org/sms/smsrequestmanager;1",
+                                   "nsISmsRequestManager");
 
 function convertRILCallState(state) {
   switch (state) {
@@ -201,6 +206,9 @@ RadioInterfaceLayer.prototype = {
       case "sms-received":
         this.handleSmsReceived(message);
         return;
+      case "sms-sent":
+        this.handleSmsSent(message);
+        return;
       case "datacallstatechange":
         this.handleDataCallState(message.datacall);
         break;
@@ -310,6 +318,18 @@ RadioInterfaceLayer.prototype = {
     Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
   },
 
+  handleSmsSent: function handleSmsSent(message) {
+    let message = gSmsService.createSmsMessage(-1,
+                                               DOM_SMS_DELIVERY_SENT,
+                                               message.SMSC,
+                                               message.number,
+                                               message.body,
+                                               Date.now());
+    //TODO At this point we should save the sms into the DB (bug 712809)
+    //TODO handle errors (bug XXX)
+    gSmsRequestManager.notifySmsSent(message.requestId, message);
+  },
+
   /**
    * Handle data call state changes.
    */
@@ -402,10 +422,12 @@ RadioInterfaceLayer.prototype = {
     return Math.ceil(text.length / 160);
   },
 
-  sendSMS: function sendSMS(number, message) {
+  sendSMS: function sendSMS(number, message, requestId, processId) {
     this.worker.postMessage({type: "sendSMS",
                              number: number,
-                             body: message});
+                             body: message,
+                             requestId: requestId,
+                             processId: processId});
   },
 
   _callbacks: null,
