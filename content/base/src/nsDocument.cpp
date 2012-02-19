@@ -8532,7 +8532,7 @@ public:
   NS_IMETHOD Run()
   {
     if (mDoc->GetWindow()) {
-      mDoc->GetWindow()->SetFullScreen(mValue);
+      mDoc->GetWindow()->SetFullScreenInternal(mValue, false);
     }
     return NS_OK;
   }
