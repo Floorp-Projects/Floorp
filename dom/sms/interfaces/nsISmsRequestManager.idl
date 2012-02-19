@@ -25,11 +25,11 @@ interface nsISmsRequestManager : nsISupports
    * Make sure to keep this list in sync with the list in:
    * embedding/android/GeckoSmsManager.java
    */
-  const unsigned short NO_ERROR        = 0;
-  const unsigned short NO_SIGNAL_ERROR = 1;
-  const unsigned short NOT_FOUND_ERROR = 2;
-  const unsigned short UNKNOWN_ERROR   = 3;
-  const unsigned short INTERNAL_ERROR  = 4;
+  const unsigned short SUCCESS_NO_ERROR = 0;
+  const unsigned short NO_SIGNAL_ERROR  = 1;
+  const unsigned short NOT_FOUND_ERROR  = 2;
+  const unsigned short UNKNOWN_ERROR    = 3;
+  const unsigned short INTERNAL_ERROR   = 4;
 
   /**
    * Create a new request object.
