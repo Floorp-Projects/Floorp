@@ -289,8 +289,6 @@ public:
 
   bool ShouldClipSubdocument() { return mClipSubdocument; }
 
-  bool ShouldClampScrollPosition() { return mClampScrollPosition; }
-
 private:
 
   bool ShouldUseRemoteProcess();
@@ -344,7 +342,6 @@ private:
   bool mRemoteBrowserShown : 1;
   bool mRemoteFrame : 1;
   bool mClipSubdocument : 1;
-  bool mClampScrollPosition : 1;
 
   // XXX leaking
   nsCOMPtr<nsIObserver> mChildHost;
