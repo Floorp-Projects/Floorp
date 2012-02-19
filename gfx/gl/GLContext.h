@@ -703,6 +703,7 @@ public:
 
     enum {
         RendererAdreno200,
+        RendererAdreno205,
         RendererSGX540,
         RendererOther
     };
@@ -716,6 +717,7 @@ public:
     }
 
     bool CanUploadSubTextures();
+    bool CanUploadNonPowerOfTwo();
     bool WantsSmallTiles();
 
     /**
