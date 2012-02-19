@@ -93,45 +93,6 @@ function bindDOMWindowUtils(aWindow) {
   return target;
 }
 
-function Observer(specialPowers, aTopic, aCallback, aIsPref) {
-  this._sp = specialPowers;
-  this._topic = aTopic;
-  this._callback = aCallback;
-  this._isPref = aIsPref;
-}
-
-Observer.prototype = {
-  _sp: null,
-  _topic: null,
-  _callback: null,
-  _isPref: false,
-
-  observe: function(aSubject, aTopic, aData) {
-    if ((!this._isPref && aTopic == this._topic) ||
-        (this._isPref && aTopic == "nsPref:changed")) {
-      if (aData == this._topic) {
-       this.cleanup();
-        /* The callback must execute asynchronously after all the preference observers have run */
-        content.window.setTimeout(this._callback, 0);
-        content.window.setTimeout(this._sp._finishPrefEnv, 0);
-      }
-    }
-  },
-
-  cleanup: function() {
-    if (this._isPref) {
-      var os = Cc["@mozilla.org/preferences-service;1"].getService()
-               .QueryInterface(Ci.nsIPrefBranch);
-      os.removeObserver(this._topic, this);
-    } else {
-      var os = Cc["@mozilla.org/observer-service;1"]
-              .getService(Ci.nsIObserverService)
-              .QueryInterface(Ci.nsIObserverService);
-      os.removeObserver(this, this._topic);
-    }
-  },
-};
-
 function isWrappable(x) {
   if (typeof x === "object")
     return x !== null;
@@ -618,7 +579,19 @@ SpecialPowersAPI.prototype = {
     var callback = transaction[1];
 
     var lastPref = pendingActions[pendingActions.length-1];
-    this._addObserver(lastPref.name, callback, true);
+
+    var pb = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    var self = this;
+    pb.addObserver(lastPref.name, function prefObs(subject, topic, data) {
+      pb.removeObserver(lastPref.name, prefObs);
+
+      content.window.setTimeout(callback, 0);
+      content.window.setTimeout(function () {
+        self._applyingPrefs = false;
+        // Now apply any prefs that may have been queued while we were applying
+        self._applyPrefs();
+      }, 0);
+    }, false);
 
     for (var idx in pendingActions) {
       var pref = pendingActions[idx];
@@ -628,31 +601,6 @@ SpecialPowersAPI.prototype = {
         this.clearUserPref(pref.name);
       }
     }
-  },
-
-  _addObserver: function(aTopic, aCallback, aIsPref) {
-    var observer = new Observer(this, aTopic, aCallback, aIsPref);
-
-    if (aIsPref) {
-      var os = Cc["@mozilla.org/preferences-service;1"].getService()
-               .QueryInterface(Ci.nsIPrefBranch);	
-      os.addObserver(aTopic, observer, false);
-    } else {
-      var os = Cc["@mozilla.org/observer-service;1"]
-              .getService(Ci.nsIObserverService)
-              .QueryInterface(Ci.nsIObserverService);
-      os.addObserver(observer, aTopic, false);
-    }
-  },
-
-  /* called from the observer when we get a pref:changed.  */
-  _finishPrefEnv: function() {
-    /*
-      Any subsequent pref environment pushes that occurred while waiting 
-      for the preference update are pending, and will now be executed.
-    */
-    this.wrappedJSObject.SpecialPowers._applyingPrefs = false;
-    this.wrappedJSObject.SpecialPowers._applyPrefs();
   },
 
   addObserver: function(obs, notification, weak) {
