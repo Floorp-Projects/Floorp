@@ -169,6 +169,7 @@ class RegExpObject : public JSObject
     inline RegExpShared &shared() const;
     inline RegExpShared *maybeShared();
     inline RegExpShared *getShared(JSContext *cx);
+    inline void setShared(JSContext *cx, RegExpShared *shared);
 
   private:
     friend class RegExpObjectBuilder;
@@ -190,6 +191,9 @@ class RegExpObject : public JSObject
 
     RegExpObject() MOZ_DELETE;
     RegExpObject &operator=(const RegExpObject &reo) MOZ_DELETE;
+
+    /* Call setShared in preference to setPrivate. */
+    void setPrivate(void *priv) MOZ_DELETE;
 };
 
 class RegExpObjectBuilder
@@ -293,7 +297,26 @@ class RegExpCode
 
 }  /* namespace detail */
 
-/* The compiled representation of a regexp. */
+/*
+ * A RegExpShared is the compiled representation of a regexp. A RegExpShared is
+ * pointed to by potentially multiple RegExpObjects. Additionally, C++ code may
+ * have pointers to RegExpShareds on the stack. The RegExpShareds are tracked in
+ * a RegExpCompartment hashtable, and most are destroyed on every GC.
+ *
+ * During a GC, the trace hook for RegExpObject clears any pointers to
+ * RegExpShareds so that there will be no dangling pointers when they are
+ * deleted. However, some RegExpShareds are not deleted:
+ *
+ *   1. Any RegExpShared with pointers from the C++ stack is not deleted.
+ *   2. Any RegExpShared that was installed in a RegExpObject during an
+ *      incremental GC is not deleted. This is because the RegExpObject may have
+ *      been traced through before the new RegExpShared was installed, in which
+ *      case deleting the RegExpShared would turn the RegExpObject's reference
+ *      into a dangling pointer
+ *
+ * The activeUseCount and gcNumberWhenUsed fields are used to track these two
+ * conditions.
+ */
 class RegExpShared
 {
     friend class RegExpCompartment;
@@ -301,11 +324,12 @@ class RegExpShared
     detail::RegExpCode code;
     uintN              parenCount;
     RegExpFlag         flags;
-    size_t             activeUseCount;
+    size_t             activeUseCount;   /* See comment above. */
+    uint64_t           gcNumberWhenUsed; /* See comment above. */
 
     bool compile(JSContext *cx, JSAtom *source);
 
-    RegExpShared(RegExpFlag flags);
+    RegExpShared(JSRuntime *rt, RegExpFlag flags);
     JS_DECLARE_ALLOCATION_FRIENDS_FOR_PRIVATE_CONSTRUCTOR;
 
   public:
@@ -337,6 +361,9 @@ class RegExpShared
         RegExpShared *operator->() { JS_ASSERT(initialized()); return re_; }
         RegExpShared &operator*() { JS_ASSERT(initialized()); return *re_; }
     };
+
+    /* Called when a RegExpShared is installed into a RegExpObject. */
+    inline void prepareForUse(JSContext *cx);
 
     /* Primary interface: run this regular expression on the given string. */
 
@@ -388,7 +415,7 @@ class RegExpCompartment
     ~RegExpCompartment();
 
     bool init(JSContext *cx);
-    void purge();
+    void sweep(JSRuntime *rt);
 
     /* Return a regexp corresponding to the given (source, flags) pair. */
     RegExpShared *get(JSContext *cx, JSAtom *source, RegExpFlag flags);

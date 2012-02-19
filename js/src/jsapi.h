@@ -1029,7 +1029,7 @@ class AutoEnumStateRooter : private AutoGCRooter
   protected:
     void trace(JSTracer *trc);
 
-    JSObject * const obj;
+    JSObject *obj;
 
   private:
     Value stateValue;
@@ -1428,8 +1428,11 @@ typedef JSBool
 (* JSContextCallback)(JSContext *cx, uintN contextOp);
 
 typedef enum JSGCStatus {
+    /* These callbacks happen outside the GC lock. */
     JSGC_BEGIN,
     JSGC_END,
+
+    /* These callbacks happen within the GC lock. */
     JSGC_MARK_END,
     JSGC_FINALIZE_END
 } JSGCStatus;
@@ -3290,7 +3293,10 @@ typedef enum JSGCParamKey {
     JSGC_UNUSED_CHUNKS = 7,
 
     /* Total number of allocated GC chunks. */
-    JSGC_TOTAL_CHUNKS = 8
+    JSGC_TOTAL_CHUNKS = 8,
+
+    /* Max milliseconds to spend in an incremental GC slice. */
+    JSGC_SLICE_TIME_BUDGET = 9
 } JSGCParamKey;
 
 typedef enum JSGCMode {
@@ -3298,7 +3304,13 @@ typedef enum JSGCMode {
     JSGC_MODE_GLOBAL = 0,
 
     /* Perform per-compartment GCs until too much garbage has accumulated. */
-    JSGC_MODE_COMPARTMENT = 1
+    JSGC_MODE_COMPARTMENT = 1,
+
+    /*
+     * Collect in short time slices rather than all at once. Implies
+     * JSGC_MODE_COMPARTMENT.
+     */
+    JSGC_MODE_INCREMENTAL = 2
 } JSGCMode;
 
 extern JS_PUBLIC_API(void)
@@ -3393,6 +3405,8 @@ struct JSClass {
                                                    object in prototype chain
                                                    passed in via *objp in/out
                                                    parameter */
+#define JSCLASS_IMPLEMENTS_BARRIERS     (1<<5)  /* Correctly implements GC read
+                                                   and write barriers */
 #define JSCLASS_DOCUMENT_OBSERVER       (1<<6)  /* DOM document observer */
 
 /*
