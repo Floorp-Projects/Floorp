@@ -233,6 +233,10 @@ pref("gfx.canvas.azure.enabled", true);
 #endif
 #endif
 
+#ifdef ANDROID
+pref("gfx.textures.poweroftwo.force-enabled", false);
+#endif
+
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
 
