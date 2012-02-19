@@ -54,6 +54,7 @@
 #include "LayerManagerOGLShaders.h"
 
 #include "gfxContext.h"
+#include "gfxUtils.h"
 #include "nsIWidget.h"
 
 #include "GLContext.h"
@@ -73,6 +74,7 @@
 namespace mozilla {
 namespace layers {
 
+using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
 #ifdef CHECK_CURRENT_PROGRAM
@@ -693,16 +695,22 @@ LayerManagerOGL::BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
 
   GLContext::RectTriangles rects;
 
+  nsIntSize realTexSize = aTexSize;
+  if (!mGLContext->CanUploadNonPowerOfTwo()) {
+    realTexSize = nsIntSize(NextPowerOfTwo(aTexSize.width),
+                            NextPowerOfTwo(aTexSize.height));
+  }
+
   if (aWrapMode == LOCAL_GL_REPEAT) {
     rects.addRect(/* dest rectangle */
                   0.0f, 0.0f, 1.0f, 1.0f,
                   /* tex coords */
-                  aTexCoordRect.x / GLfloat(aTexSize.width),
-                  aTexCoordRect.y / GLfloat(aTexSize.height),
-                  aTexCoordRect.XMost() / GLfloat(aTexSize.width),
-                  aTexCoordRect.YMost() / GLfloat(aTexSize.height));
+                  aTexCoordRect.x / GLfloat(realTexSize.width),
+                  aTexCoordRect.y / GLfloat(realTexSize.height),
+                  aTexCoordRect.XMost() / GLfloat(realTexSize.width),
+                  aTexCoordRect.YMost() / GLfloat(realTexSize.height));
   } else {
-    GLContext::DecomposeIntoNoRepeatTriangles(aTexCoordRect, aTexSize, rects);
+    GLContext::DecomposeIntoNoRepeatTriangles(aTexCoordRect, realTexSize, rects);
   }
 
   mGLContext->fVertexAttribPointer(vertAttribIndex, 2,
