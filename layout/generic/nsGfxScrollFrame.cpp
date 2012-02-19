@@ -1550,12 +1550,7 @@ void
 nsGfxScrollFrameInner::ScrollTo(nsPoint aScrollPosition,
                                 nsIScrollableFrame::ScrollMode aMode)
 {
-  nsSubDocumentFrame* subdocFrame = static_cast<nsSubDocumentFrame*>
-    (nsLayoutUtils::GetCrossDocParentFrame(mOuter->PresContext()->PresShell()->GetRootFrame()));
-  if (!subdocFrame || subdocFrame->ShouldClampScrollPosition())
-    mDestination = ClampScrollPosition(aScrollPosition);
-  else
-    mDestination = aScrollPosition;
+  mDestination = ClampScrollPosition(aScrollPosition);
 
   if (aMode == nsIScrollableFrame::INSTANT) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
@@ -1817,23 +1812,17 @@ ClampInt(nscoord aLower, nscoord aVal, nscoord aUpper, nscoord aAppUnitsPerPixel
 }
 
 nsPoint
-nsGfxScrollFrameInner::RestrictToDevPixels(const nsPoint& aPt,
-                                           nsIntPoint* aPtDevPx,
-                                           bool aShouldClamp) const
+nsGfxScrollFrameInner::ClampAndRestrictToDevPixels(const nsPoint& aPt,
+                                                   nsIntPoint* aPtDevPx) const
 {
   nsPresContext* presContext = mOuter->PresContext();
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   // Convert to device pixels so we scroll to an integer offset of device
   // pixels. But we also need to make sure that our position remains
   // inside the allowed region.
-  if (aShouldClamp) {
-    nsRect scrollRange = GetScrollRange();
-    *aPtDevPx = nsIntPoint(ClampInt(scrollRange.x, aPt.x, scrollRange.XMost(), appUnitsPerDevPixel),
-                           ClampInt(scrollRange.y, aPt.y, scrollRange.YMost(), appUnitsPerDevPixel));
-  } else {
-    *aPtDevPx = nsIntPoint(NSAppUnitsToIntPixels(aPt.x, appUnitsPerDevPixel),
-                           NSAppUnitsToIntPixels(aPt.y, appUnitsPerDevPixel));
-  }
+  nsRect scrollRange = GetScrollRange();
+  *aPtDevPx = nsIntPoint(ClampInt(scrollRange.x, aPt.x, scrollRange.XMost(), appUnitsPerDevPixel),
+                         ClampInt(scrollRange.y, aPt.y, scrollRange.YMost(), appUnitsPerDevPixel));
   return nsPoint(NSIntPixelsToAppUnits(aPtDevPx->x, appUnitsPerDevPixel),
                  NSIntPixelsToAppUnits(aPtDevPx->y, appUnitsPerDevPixel));
 }
@@ -1869,10 +1858,7 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
   nsPresContext* presContext = mOuter->PresContext();
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsIntPoint ptDevPx;
-
-  nsSubDocumentFrame* subdocFrame = static_cast<nsSubDocumentFrame*>
-    (nsLayoutUtils::GetCrossDocParentFrame(presContext->PresShell()->GetRootFrame()));
-  nsPoint pt = RestrictToDevPixels(aPt, &ptDevPx, !subdocFrame || subdocFrame->ShouldClampScrollPosition());
+  nsPoint pt = ClampAndRestrictToDevPixels(aPt, &ptDevPx);
 
   nsPoint curPos = GetScrollPosition();
   if (pt == curPos) {
