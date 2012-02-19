@@ -46,9 +46,9 @@ function test() {
       // principal, e.g. javascript:
       expectUncaughtException();
       let originalHandler = homeButtonObserver.onDrop;
-      homeButtonObserver.onDrop = function () {
+      homeButtonObserver.onDrop = function (aEvent) {
         info("homeButtonObserver.onDrop called");
-        originalHandler();
+        originalHandler(aEvent);
       };
       registerCleanupFunction(function () {
         homeButtonObserver.onDrop = originalHandler;
