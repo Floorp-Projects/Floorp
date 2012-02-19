@@ -975,8 +975,8 @@ PresShell::~PresShell()
                "post-reflow queues not empty.  This means we're leaking");
 
 #ifdef DEBUG
-  NS_ASSERTION(mPresArenaAllocCount == 0,
-               "Some pres arena objects were not freed");
+  MOZ_ASSERT(mPresArenaAllocCount == 0,
+             "Some pres arena objects were not freed");
 #endif
 
   delete mStyleSet;
