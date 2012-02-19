@@ -45,14 +45,14 @@ registerCleanupFunction(function() {
 });
 
 function openDocument(aURI, aCallback) {
-  let tab = window.gBrowser.addTab(aURI);
+  let tab = gBrowser.addTab(aURI);
   let browser = tab.linkedBrowser;
   browser.addEventListener("DOMContentLoaded", function pageLoadedListener() {
     browser.removeEventListener("DOMContentLoaded", pageLoadedListener, false);
     aCallback(tab);
   }, false);
   registerCleanupFunction(function() {
-    window.gBrowser.removeTab(tab);
+    gBrowser.removeTab(tab);
   });
 }
 
