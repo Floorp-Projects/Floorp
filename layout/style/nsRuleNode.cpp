@@ -4794,62 +4794,93 @@ struct BackgroundItemComputer<nsCSSValueList, nsStyleImage>
   }
 };
 
-struct BackgroundPositionAxis {
-  nsCSSValue nsCSSValuePairList::*specified;
-  nsStyleBackground::Position::PositionCoord
-    nsStyleBackground::Position::*result;
-};
+/* Helper function for
+ * BackgroundItemComputer<nsCSSValue, nsStyleBackground::Position>
+ * It computes a single PositionCoord from an nsCSSValue object
+ * (contained in a list).
+ */
+typedef nsStyleBackground::Position::PositionCoord PositionCoord;
+static void
+ComputeBackgroundPositionCoord(nsStyleContext* aStyleContext,
+                               const nsCSSValue& aEdge,
+                               const nsCSSValue& aOffset,
+                               PositionCoord* aResult,
+                               bool& aCanStoreInRuleTree)
+{
+  if (eCSSUnit_Percent == aOffset.GetUnit()) {
+    aResult->mLength = 0;
+    aResult->mPercent = aOffset.GetPercentValue();
+    aResult->mHasPercent = true;
+  } else if (aOffset.IsLengthUnit()) {
+    aResult->mLength = CalcLength(aOffset, aStyleContext,
+                                  aStyleContext->PresContext(),
+                                  aCanStoreInRuleTree);
+    aResult->mPercent = 0.0f;
+    aResult->mHasPercent = false;
+  } else if (aOffset.IsCalcUnit()) {
+    LengthPercentPairCalcOps ops(aStyleContext,
+                                 aStyleContext->PresContext(),
+                                 aCanStoreInRuleTree);
+    nsRuleNode::ComputedCalc vals = ComputeCalc(aOffset, ops);
+    aResult->mLength = vals.mLength;
+    aResult->mPercent = vals.mPercent;
+    aResult->mHasPercent = ops.mHasPercent;
+  } else {
+    aResult->mLength = 0;
+    aResult->mPercent = 0.0f;
+    aResult->mHasPercent = false;
+    NS_ASSERTION(aOffset.GetUnit() == eCSSUnit_Null, "unexpected unit");
+  }
 
-static const BackgroundPositionAxis gBGPosAxes[] = {
-  { &nsCSSValuePairList::mXValue,
-    &nsStyleBackground::Position::mXPosition },
-  { &nsCSSValuePairList::mYValue,
-    &nsStyleBackground::Position::mYPosition }
-};
+  if (eCSSUnit_Enumerated == aEdge.GetUnit()) {
+    int sign;
+    if (aEdge.GetIntValue() & (NS_STYLE_BG_POSITION_BOTTOM |
+                               NS_STYLE_BG_POSITION_RIGHT)) {
+      sign = -1;
+    } else {
+      sign = 1;
+    }
+    aResult->mPercent = GetFloatFromBoxPosition(aEdge.GetIntValue()) +
+                        sign * aResult->mPercent;
+    aResult->mLength = sign * aResult->mLength;
+    aResult->mHasPercent = true;
+  } else {
+    NS_ASSERTION(eCSSUnit_Null == aEdge.GetUnit(), "unexpected unit");
+  }
+}
 
 template <>
-struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
+struct BackgroundItemComputer<nsCSSValueList, nsStyleBackground::Position>
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
-                           const nsCSSValuePairList* aSpecifiedValue,
+                           const nsCSSValueList* aSpecifiedValue,
                            nsStyleBackground::Position& aComputedValue,
                            bool& aCanStoreInRuleTree)
   {
-    nsStyleBackground::Position &position = aComputedValue;
-    for (const BackgroundPositionAxis *axis = gBGPosAxes,
-                        *axis_end = ArrayEnd(gBGPosAxes);
-         axis < axis_end; ++axis) {
-      const nsCSSValue &specified = aSpecifiedValue->*(axis->specified);
-      if (eCSSUnit_Percent == specified.GetUnit()) {
-        (position.*(axis->result)).mLength = 0;
-        (position.*(axis->result)).mPercent = specified.GetPercentValue();
-        (position.*(axis->result)).mHasPercent = true;
-      }
-      else if (specified.IsLengthUnit()) {
-        (position.*(axis->result)).mLength =
-          CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
-                     aCanStoreInRuleTree);
-        (position.*(axis->result)).mPercent = 0.0f;
-        (position.*(axis->result)).mHasPercent = false;
-      }
-      else if (specified.IsCalcUnit()) {
-        LengthPercentPairCalcOps ops(aStyleContext,
-                                     aStyleContext->PresContext(),
-                                     aCanStoreInRuleTree);
-        nsRuleNode::ComputedCalc vals = ComputeCalc(specified, ops);
-        (position.*(axis->result)).mLength = vals.mLength;
-        (position.*(axis->result)).mPercent = vals.mPercent;
-        (position.*(axis->result)).mHasPercent = ops.mHasPercent;
-      }
-      else if (eCSSUnit_Enumerated == specified.GetUnit()) {
-        (position.*(axis->result)).mLength = 0;
-        (position.*(axis->result)).mPercent =
-          GetFloatFromBoxPosition(specified.GetIntValue());
-        (position.*(axis->result)).mHasPercent = true;
-      } else {
-        NS_NOTREACHED("unexpected unit");
-      }
-    }
+    NS_ASSERTION(aSpecifiedValue->mValue.GetUnit() == eCSSUnit_Array, "bg-position not an array");
+
+    nsRefPtr<nsCSSValue::Array> bgPositionArray =
+                                  aSpecifiedValue->mValue.GetArrayValue();
+    const nsCSSValue &xEdge   = bgPositionArray->Item(0);
+    const nsCSSValue &xOffset = bgPositionArray->Item(1);
+    const nsCSSValue &yEdge   = bgPositionArray->Item(2);
+    const nsCSSValue &yOffset = bgPositionArray->Item(3);
+
+    NS_ASSERTION((eCSSUnit_Enumerated == xEdge.GetUnit()  ||
+                  eCSSUnit_Null       == xEdge.GetUnit()) &&
+                 (eCSSUnit_Enumerated == yEdge.GetUnit()  ||
+                  eCSSUnit_Null       == yEdge.GetUnit()) &&
+                  eCSSUnit_Enumerated != xOffset.GetUnit()  &&
+                  eCSSUnit_Enumerated != yOffset.GetUnit(),
+                  "Invalid background position");
+
+    ComputeBackgroundPositionCoord(aStyleContext, xEdge, xOffset,
+                                   &aComputedValue.mXPosition,
+                                   aCanStoreInRuleTree);
+
+    ComputeBackgroundPositionCoord(aStyleContext, yEdge, yOffset,
+                                   &aComputedValue.mYPosition,
+                                   aCanStoreInRuleTree);
   }
 };
 
@@ -5186,12 +5217,12 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
   // background-position: enum, length, percent (flags), inherit [pair list]
   nsStyleBackground::Position initialPosition;
   initialPosition.SetInitialValues();
-  SetBackgroundPairList(aContext, *aRuleData->ValueForBackgroundPosition(),
-                        bg->mLayers,
-                        parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
-                        initialPosition, parentBG->mPositionCount,
-                        bg->mPositionCount, maxItemCount, rebuild,
-                        canStoreInRuleTree);
+  SetBackgroundList(aContext, *aRuleData->ValueForBackgroundPosition(),
+                    bg->mLayers,
+                    parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
+                    initialPosition, parentBG->mPositionCount,
+                    bg->mPositionCount, maxItemCount, rebuild,
+                    canStoreInRuleTree);
 
   // background-size: enum, length, auto, inherit, initial [pair list]
   nsStyleBackground::Size initialSize;
