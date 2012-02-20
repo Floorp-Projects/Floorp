@@ -382,6 +382,12 @@
     var gInitQueue = null;
     function initTests()
     {
+      if (SEAMONKEY) {
+        todo(false, "Skipping this test on SeaMonkey ftb. (Bug 718237)");
+        SimpleTest.finish();
+        return;
+      }
+
       // register 'test-a11y-search' autocomplete search
       initAutoComplete([ "hello", "hi" ],
                        [ "Beep beep'm beep beep yeah", "Baby you can drive my car" ]);

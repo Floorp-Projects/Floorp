@@ -52,7 +52,7 @@
         };
 
         // SeaMonkey and Firefox tabbrowser UIs differ.
-        if ("restoreTab" in tabBrowser) {
+        if (SEAMONKEY) {
           SimpleTest.ok(true, "Testing SeaMonkey tabbrowser UI.");
 
           tabsAccTree.children.splice(0, 0,
