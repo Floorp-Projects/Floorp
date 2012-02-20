@@ -78,7 +78,6 @@
 #include "nsIJARURI.h"
 #include "nsNetUtil.h"
 #include "nsDOMFile.h"
-#include "jsxdrapi.h"
 #include "jsprf.h"
 #include "nsJSPrincipals.h"
 // For reporting errors with the console service
