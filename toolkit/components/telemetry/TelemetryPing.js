@@ -117,7 +117,7 @@ function getSimpleMeasurements() {
   } catch (ex) {}
 
   if (si.process) {
-    for each (let field in Object.keys(si))]) {
+    for each (let field in Object.keys(si)) {
       if (field == "process")
         continue;
       ret[field] = si[field] - si.process
