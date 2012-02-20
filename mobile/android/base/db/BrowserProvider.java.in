@@ -355,7 +355,7 @@ public class BrowserProvider extends ContentProvider {
             values.put(Bookmarks.POSITION, position);
 
             // Set the parent to 0, which sync assumes is the root
-            values.put(Bookmarks.PARENT, 0);
+            values.put(Bookmarks.PARENT, Bookmarks.FIXED_ROOT_ID);
 
             String title = mContext.getResources().getString(titleId);
             values.put(Bookmarks.TITLE, title);
