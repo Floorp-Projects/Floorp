@@ -132,10 +132,6 @@ endif
 endif
 endif
 
-ifdef MOZ_JAVA_COMPOSITOR
-DEFINES += -DMOZ_JAVA_COMPOSITOR
-endif
-
 LOCAL_INCLUDES += \
   -DSK_BUILD_FOR_ANDROID_NDK \
   -I$(topsrcdir)/widget/android \
