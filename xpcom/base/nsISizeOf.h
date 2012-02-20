@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 sts=2 expandtab
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -15,13 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is the
- * Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * The Initial Developer of the Original Code is
+ * mozilla.org
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com> (Original author)
+ *   Nicholas Nethercote <nnethercote@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,39 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * This wraps nsSimpleURI so that all calls to it are done on the main thread.
- */
+#ifndef nsISizeOf_h___
+#define nsISizeOf_h___
 
-#ifndef __nsNullPrincipalURI_h__
-#define __nsNullPrincipalURI_h__
+#include "nsISupports.h"
 
-#include "nsIURI.h"
-#include "nsISizeOf.h"
-#include "nsAutoPtr.h"
-#include "nsString.h"
+#define NS_ISIZEOF_IID \
+  {0x61d05579, 0xd7ec, 0x485c, \
+    { 0xa4, 0x0c, 0x31, 0xc7, 0x9a, 0x5c, 0xf9, 0xf3 }}
 
-// {51fcd543-3b52-41f7-b91b-6b54102236e6}
-#define NS_NULLPRINCIPALURI_IMPLEMENTATION_CID \
-  {0x51fcd543, 0x3b52, 0x41f7, \
-    {0xb9, 0x1b, 0x6b, 0x54, 0x10, 0x22, 0x36, 0xe6} }
-
-class nsNullPrincipalURI : public nsIURI
-                         , public nsISizeOf
+class nsISizeOf : public nsISupports
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIURI
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISIZEOF_IID)
 
-  // nsISizeOf
-  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  /**
+   * Measures the size of the things pointed to by the object.
+   */
+  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
 
-  nsNullPrincipalURI(const nsCString &aSpec);
-
-private:
-  nsCString mScheme;
-  nsCString mPath;
+  /**
+   * Like SizeOfExcludingThis, but also includes the size of the object itself.
+   */
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
 };
 
-#endif // __nsNullPrincipalURI_h__
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISizeOf, NS_ISIZEOF_IID)
+
+#endif /* nsISizeOf_h___ */

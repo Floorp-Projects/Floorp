@@ -88,6 +88,7 @@ EXPORTS		= \
 		nsDebugImpl.h \
 		nsIAllocator.h \
 		nsIID.h \
+		nsISizeOf.h \
 		nsISupportsObsolete.h \
 		nsStackWalk.h \
 		nsTraceRefcntImpl.h \
