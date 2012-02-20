@@ -63,6 +63,10 @@ const gVerbose = location.href === "about:memory?verbose" ||
 
 let gChildMemoryListener = undefined;
 
+// This is a useful function and an efficient way to implement it.
+String.prototype.startsWith =
+  function(s) { return this.lastIndexOf(s, 0) === 0; }
+
 //---------------------------------------------------------------------------
 
 // Forward slashes in URLs in paths are represented with backslashes to avoid
@@ -101,10 +105,10 @@ function addChildObserversAndUpdate(aUpdateFn)
 
 function onLoad()
 {
-  if (location.href.indexOf("about:memory") === 0) {
+  if (location.href.startsWith("about:memory")) {
     document.title = "about:memory";
     onLoadAboutMemory();
-  } else if (location.href.indexOf("about:compartment") === 0) {
+  } else if (location.href.startsWith("about:compartment")) {
     document.title = "about:compartments";
     onLoadAboutCompartments();
   } else {
@@ -452,7 +456,7 @@ Report.prototype = {
   treeNameMatches: function(aTreeName) {
     // Nb: the '/' must be present, because we have a KIND_OTHER reporter
     // called "explicit" which is not part of the "explicit" tree.
-    return this._unsafePath.indexOf(aTreeName) === 0 &&
+    return this._unsafePath.startsWith(aTreeName) &&
            this._unsafePath.charAt(aTreeName.length) === '/';
   }
 };
@@ -466,8 +470,8 @@ function getReportsByProcess(aMgr)
 
   function ignoreSingle(aPath) 
   {
-    return (aPath.indexOf("smaps/") === 0 && !gVerbose) ||
-           (aPath.indexOf("compartments/") === 0)
+    return (aPath.startsWith("smaps/") && !gVerbose) ||
+           (aPath.startsWith("compartments/"))
   }
 
   function ignoreMulti(aName)
@@ -1525,7 +1529,7 @@ function getCompartmentsByProcess(aMgr)
 
   function ignoreSingle(aPath) 
   {
-    return aPath.indexOf("compartments/") !== 0;
+    return !aPath.startsWith("compartments/");
   }
 
   function ignoreMulti(aName)
@@ -1560,7 +1564,7 @@ function getCompartmentsByProcess(aMgr)
       // These null principal compartments are user compartments according to
       // the JS engine, but they look odd being shown with content
       // compartments, so we put them in the system compartments list.
-      if (unsafeNames[2].indexOf("moz-nullprincipal:{") === 0) {
+      if (unsafeNames[2].startsWith("moz-nullprincipal:{")) {
         isSystemCompartment = true;
       }
 
