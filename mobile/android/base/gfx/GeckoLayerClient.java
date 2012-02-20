@@ -407,7 +407,6 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
             new ViewportMetrics(mLayerController.getViewportMetrics());
 
         PointF viewportOffset = viewportMetrics.getOptimumViewportOffset(mBufferSize);
-        viewportMetrics.setViewportOffset(viewportOffset);
         viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(viewportMetrics));

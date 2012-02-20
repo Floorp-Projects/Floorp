@@ -1454,7 +1454,7 @@ function Tab(aURL, aParams) {
   this.id = 0;
   this.showProgress = true;
   this.create(aURL, aParams);
-  this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
+  this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight,
                      pageWidth: gScreenWidth, pageHeight: gScreenHeight, zoom: 1.0 };
   this.viewportExcess = { x: 0, y: 0 };
   this.documentIdForCurrentViewport = null;
@@ -1605,12 +1605,6 @@ Tab.prototype = {
     let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
 
-    if (aViewport.offsetX != this._viewport.offsetX) {
-      this._viewport.offsetX = aViewport.offsetX;
-    }
-    if (aViewport.offsetY != this._viewport.offsetY) {
-      this._viewport.offsetY = aViewport.offsetY;
-    }
     if (Math.abs(zoom - this._viewport.zoom) >= 1e-6) {
       this._viewport.zoom = zoom;
       cwu.setResolution(zoom, zoom);
@@ -1682,7 +1676,6 @@ Tab.prototype = {
 
     this.viewportExcess = { x: 0, y: 0 };
     this.viewport = { x: xpos, y: ypos,
-                      offsetX: 0, offsetY: 0,
                       width: this._viewport.width, height: this._viewport.height,
                       pageWidth: gScreenWidth, pageHeight: gScreenHeight,
                       zoom: zoom };
@@ -2483,8 +2476,8 @@ const ElementTouchHelper = {
 
     let viewport = tab.viewport;
     return [
-        ((aX - tab.viewportExcess.x) * viewport.zoom + viewport.offsetX),
-        ((aY - tab.viewportExcess.y) * viewport.zoom + viewport.offsetY)
+        ((aX - tab.viewportExcess.x) * viewport.zoom),
+        ((aY - tab.viewportExcess.y) * viewport.zoom)
     ];
   },
 
@@ -2502,8 +2495,8 @@ const ElementTouchHelper = {
 
     let viewport = tab.viewport;
     return [
-        (aX - viewport.offsetX)/viewport.zoom + tab.viewportExcess.x,
-        (aY - viewport.offsetY)/viewport.zoom + tab.viewportExcess.y
+        aX/viewport.zoom + tab.viewportExcess.x,
+        aY/viewport.zoom + tab.viewportExcess.y
     ];
   },
 
