@@ -57,6 +57,10 @@ public:
    NS_IMETHOD NormalizeUnicodeNFC( const nsAString& aSrc, nsAString& aDest);
    NS_IMETHOD NormalizeUnicodeNFKD( const nsAString& aSrc, nsAString& aDest);
    NS_IMETHOD NormalizeUnicodeNFKC( const nsAString& aSrc, nsAString& aDest);
+
+   // low-level access to the composition data needed for HarfBuzz callbacks
+   static bool Compose(PRUint32 a, PRUint32 b, PRUint32 *ab);
+   static bool DecomposeNonRecursively(PRUint32 comp, PRUint32 *c1, PRUint32 *c2);
 };
 
 #endif //nsUnicodeNormalizer_h__
