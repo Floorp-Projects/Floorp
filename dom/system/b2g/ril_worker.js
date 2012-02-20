@@ -64,7 +64,10 @@
 
 importScripts("ril_consts.js", "systemlibs.js");
 
-let DEBUG = false;
+// We leave this as 'undefined' instead of setting it to 'false'. That
+// way an outer scope can define it to 'true' (e.g. for testing purposes)
+// without us overriding that here.
+let DEBUG;
 
 const INT32_MAX   = 2147483647;
 const UINT8_SIZE  = 1;
