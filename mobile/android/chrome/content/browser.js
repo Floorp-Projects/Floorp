@@ -1622,6 +1622,19 @@ Tab.prototype = {
                                  this.browser.contentDocument.documentElement);
   },
 
+  updateTransform: function() {
+    let hasZoom = (Math.abs(this._viewport.zoom - 1.0) >= 1e-6);
+    let x = this._viewport.offsetX + Math.round(-this.viewportExcess.x * this._viewport.zoom);
+    let y = this._viewport.offsetY + Math.round(-this.viewportExcess.y * this._viewport.zoom);
+    let transform =
+      "translate(" + x + "px, " +
+                     y + "px)";
+    if (hasZoom)
+      transform += " scale(" + this._viewport.zoom + ")";
+
+    this.browser.style.MozTransform = transform;
+  },
+
   get viewport() {
     // Update the viewport to current dimensions
     this._viewport.x = (this.browser.contentWindow.scrollX +
