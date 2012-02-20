@@ -366,6 +366,9 @@ public class LayerController {
         // Undo the transforms.
         PointF origin = mViewportMetrics.getOrigin();
         PointF newPoint = new PointF(origin.x, origin.y);
+        float zoom = mViewportMetrics.getZoomFactor();
+        viewPoint.x /= zoom;
+        viewPoint.y /= zoom;
         newPoint.offset(viewPoint.x, viewPoint.y);
 
         Point rootOrigin = mRootLayer.getOrigin();
