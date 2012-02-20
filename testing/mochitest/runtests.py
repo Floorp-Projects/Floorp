@@ -248,6 +248,11 @@ class MochitestOptions(optparse.OptionParser):
                     help = "JSON list of tests that we want to not run, cannot be specified with --run-only-tests.")
     defaults["excludeTests"] = None
 
+    self.add_option("--failure-file",
+                    action = "store", type="string", dest = "failureFile",
+                    help = "Filename of the output file where we can store a .json list of failures to be run in the future with --run-only-tests.")
+    defaults["failureFile"] = None
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -314,13 +319,13 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
     if options.runOnlyTests != None and options.excludeTests != None:
       self.error("We can only support --run-only-tests OR --exclude-tests, not both.")
       
-    if (options.runOnlyTests):
-      if (not os.path.exists(os.path.join(os.path.dirname(__file__), options.runOnlyTests))):
-        self.error("unable to find --run-only-tests file '%s'" % (options.runOnlyTests));
+    if options.runOnlyTests:
+      if not os.path.exists(os.path.abspath(options.runOnlyTests)):
+        self.error("unable to find --run-only-tests file '%s'" % options.runOnlyTests);
         
-    if (options.excludeTests):
-      if (not os.path.exists(os.path.join(os.path.dirname(__file__), options.excludeTests))):
-        self.error("unable to find --exclude-tests file '%s'" % (options.excludeTests));
+    if options.excludeTests:
+      if not os.path.exists(os.path.abspath(options.excludeTests)):
+        self.error("unable to find --exclude-tests file '%s'" % options.excludeTests);
 
     return options
 
@@ -594,6 +599,8 @@ class Mochitest(object):
         self.urlOpts.append("testname=%s" % ("/").join([self.TEST_PATH, options.testPath]))
       if options.runOnlyTests:
         self.urlOpts.append("runOnlyTests=%s" % options.runOnlyTests)
+      if options.failureFile:
+        self.urlOpts.append("failureFile=%s" % options.failureFile)
       elif options.excludeTests:
         self.urlOpts.append("excludeTests=%s" % options.excludeTests)
 
