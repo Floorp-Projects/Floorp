@@ -18,10 +18,17 @@ function closeViewSourceWindow(aWindow, aCallback) {
   Services.wm.addListener({
     onCloseWindow: function() {
       Services.wm.removeListener(this);
-      aCallback();
+      executeSoon(aCallback);
     }
   });
   aWindow.close();
+}
+
+function testViewSourceWindow(aURI, aTestCallback, aCloseCallback) {
+  openViewSourceWindow(aURI, function(aWindow) {
+    aTestCallback(aWindow);
+    closeViewSourceWindow(aWindow, aCloseCallback);
+  });
 }
 
 function openViewPartialSourceWindow(aReference, aCallback) {
