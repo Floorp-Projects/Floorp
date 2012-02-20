@@ -81,6 +81,7 @@ NS_INTERFACE_TABLE_TO_MAP_SEGUE
   if (aIID.Equals(kThisSimpleURIImplementationCID))
     foundInterface = static_cast<nsIURI*>(this);
   else
+  NS_INTERFACE_MAP_ENTRY(nsISizeOf)
 NS_INTERFACE_MAP_END
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -656,3 +657,21 @@ nsSimpleURI::SetMutable(bool value)
     mMutable = value;
     return NS_OK;
 }
+
+//----------------------------------------------------------------------------
+// nsSimpleURI::nsISizeOf
+//----------------------------------------------------------------------------
+
+size_t 
+nsSimpleURI::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return mScheme.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
+         mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
+         mRef.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
+size_t
+nsSimpleURI::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+

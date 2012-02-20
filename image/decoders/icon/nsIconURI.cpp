@@ -98,7 +98,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsMozIconURI, nsIMozIconURI, nsIURI)
 #define MOZICON_SCHEME_LEN (sizeof(MOZICON_SCHEME) - 1)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsURI methods:
+// nsIURI methods:
 
 NS_IMETHODIMP
 nsMozIconURI::GetSpec(nsACString &aSpec)
