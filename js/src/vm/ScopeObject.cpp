@@ -42,12 +42,10 @@
 #include "jscompartment.h"
 #include "jsiter.h"
 #include "jsscope.h"
-#if JS_HAS_XDR
-#include "jsxdrapi.h"
-#endif
 
 #include "GlobalObject.h"
 #include "ScopeObject.h"
+#include "Xdr.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -936,8 +934,6 @@ Class js::BlockClass = {
     JS_ConvertStub
 };
 
-#if JS_HAS_XDR
-
 #define NO_PARENT_INDEX UINT32_MAX
 
 static uint32_t
@@ -957,16 +953,17 @@ FindObjectIndex(JSObjectArray *array, JSObject *obj)
     return NO_PARENT_INDEX;
 }
 
+template<XDRMode mode>
 bool
-js::XDRStaticBlockObject(JSXDRState *xdr, JSScript *script, StaticBlockObject **objp)
+js::XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObject **objp)
 {
-    JSContext *cx = xdr->cx;
+    JSContext *cx = xdr->cx();
 
     StaticBlockObject *obj = NULL;
     uint32_t parentId = 0;
     uint32_t count = 0;
     uint32_t depthAndCount = 0;
-    if (xdr->mode == JSXDR_ENCODE) {
+    if (mode == XDR_ENCODE) {
         obj = *objp;
         parentId = JSScript::isValidOffset(script->objectsOffset)
                    ? FindObjectIndex(script->objects(), obj->enclosingBlock())
@@ -979,10 +976,10 @@ js::XDRStaticBlockObject(JSXDRState *xdr, JSScript *script, StaticBlockObject **
     }
 
     /* First, XDR the parent atomid. */
-    if (!JS_XDRUint32(xdr, &parentId))
+    if (!xdr->codeUint32(&parentId))
         return false;
 
-    if (xdr->mode == JSXDR_DECODE) {
+    if (mode == XDR_DECODE) {
         obj = StaticBlockObject::create(cx);
         if (!obj)
             return false;
@@ -1000,10 +997,10 @@ js::XDRStaticBlockObject(JSXDRState *xdr, JSScript *script, StaticBlockObject **
 
     AutoObjectRooter tvr(cx, obj);
 
-    if (!JS_XDRUint32(xdr, &depthAndCount))
+    if (!xdr->codeUint32(&depthAndCount))
         return false;
 
-    if (xdr->mode == JSXDR_DECODE) {
+    if (mode == XDR_DECODE) {
         uint32_t depth = uint16_t(depthAndCount >> 16);
         count = uint16_t(depthAndCount);
         obj->setStackDepth(depth);
@@ -1014,7 +1011,7 @@ js::XDRStaticBlockObject(JSXDRState *xdr, JSScript *script, StaticBlockObject **
          */
         for (unsigned i = 0; i < count; i++) {
             JSAtom *atom;
-            if (!js_XDRAtom(xdr, &atom))
+            if (!XDRAtom(xdr, &atom))
                 return false;
 
             /* The empty string indicates an int id. */
@@ -1054,11 +1051,15 @@ js::XDRStaticBlockObject(JSXDRState *xdr, JSScript *script, StaticBlockObject **
                            ? JSID_TO_ATOM(propid)
                            : cx->runtime->emptyString;
 
-            if (!js_XDRAtom(xdr, &atom))
+            if (!XDRAtom(xdr, &atom))
                 return false;
         }
     }
     return true;
 }
 
-#endif  /* JS_HAS_XDR */
+template bool
+js::XDRStaticBlockObject(XDRState<XDR_ENCODE> *xdr, JSScript *script, StaticBlockObject **objp);
+
+template bool
+js::XDRStaticBlockObject(XDRState<XDR_DECODE> *xdr, JSScript *script, StaticBlockObject **objp);
