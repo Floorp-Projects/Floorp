@@ -92,6 +92,7 @@
 #include "js/MemoryMetrics.h"
 #include "mozilla/Util.h"
 #include "yarr/BumpPointerAllocator.h"
+#include "vm/MethodGuard.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
