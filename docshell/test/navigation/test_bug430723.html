@@ -63,7 +63,7 @@ var step1 =function() {
   
   // Navigate down and up.
   is(testWindow.document.body.scrollTop, 0,
-     "Page1: Ensure we scrollpane is at the top before we start scrolling.");
+     "Page1: Ensure the scrollpane is at the top before we start scrolling.");
   testWindow.addEventListener("scroll", function () {
     testWindow.removeEventListener("scroll", arguments.callee, true);
     isnot(testWindow.document.body.scrollTop, 0,
@@ -91,11 +91,11 @@ var step2 =function() {
 
   // Scroll around a bit.
   is(testWindow.document.body.scrollTop, 0,
-     "Page2: Ensure we scrollpane is at the top before we start scrolling.");
+     "Page2: Ensure the scrollpane is at the top before we start scrolling.");
 
   var count = 0;
   testWindow.addEventListener("scroll", function () {
-    if (++count < 4) {
+    if (++count < 2) {
       SimpleTest.executeSoon(function () { sendKey('DOWN', testWindow); });
     } else {
       testWindow.removeEventListener("scroll", arguments.callee, true);

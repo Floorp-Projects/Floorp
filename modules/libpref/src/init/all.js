@@ -297,6 +297,8 @@ pref("toolkit.autocomplete.richBoundaryCutoff", 200);
 
 pref("toolkit.scrollbox.smoothScroll", true);
 pref("toolkit.scrollbox.scrollIncrement", 20);
+// Make sure to update NS_DEFAULT_VERTICAL_SCROLL_DISTANCE if changing this default.
+pref("toolkit.scrollbox.verticalScrollDistance", 3);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
 // Telemetry
