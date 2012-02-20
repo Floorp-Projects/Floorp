@@ -41,6 +41,7 @@
 #include "nsIServiceManager.h"
 #include "nsNativeThemeColors.h"
 #include "nsStyleConsts.h"
+#include "gfxFont.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -467,4 +468,123 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
   }
 
   return res;
+}
+
+// copied from gfxQuartzFontCache.mm, maybe should go in a Cocoa utils
+// file somewhere
+static void GetStringForNSString(const NSString *aSrc, nsAString& aDest)
+{
+    aDest.SetLength([aSrc length]);
+    [aSrc getCharacters:aDest.BeginWriting()];
+}
+
+bool
+nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
+                           gfxFontStyle &aFontStyle)
+{
+    // hack for now
+    if (aID == eFont_Window || aID == eFont_Document) {
+        aFontStyle.style      = FONT_STYLE_NORMAL;
+        aFontStyle.weight     = FONT_WEIGHT_NORMAL;
+        aFontStyle.stretch    = NS_FONT_STRETCH_NORMAL;
+        aFontStyle.size       = 14;
+        aFontStyle.systemFont = true;
+
+        aFontName.AssignLiteral("sans-serif");
+        return true;
+    }
+
+/* possibilities, see NSFont Class Reference:
+    [NSFont boldSystemFontOfSize:     0.0]
+    [NSFont controlContentFontOfSize: 0.0]
+    [NSFont labelFontOfSize:          0.0]
+    [NSFont menuBarFontOfSize:        0.0]
+    [NSFont menuFontOfSize:           0.0]
+    [NSFont messageFontOfSize:        0.0]
+    [NSFont paletteFontOfSize:        0.0]
+    [NSFont systemFontOfSize:         0.0]
+    [NSFont titleBarFontOfSize:       0.0]
+    [NSFont toolTipsFontOfSize:       0.0]
+    [NSFont userFixedPitchFontOfSize: 0.0]
+    [NSFont userFontOfSize:           0.0]
+    [NSFont systemFontOfSize:         [NSFont smallSystemFontSize]]
+    [NSFont boldSystemFontOfSize:     [NSFont smallSystemFontSize]]
+*/
+
+    NSFont *font = nsnull;
+    switch (aID) {
+        // css2
+        case eFont_Caption:
+            font = [NSFont systemFontOfSize:0.0];
+            break;
+        case eFont_Icon: // used in urlbar; tried labelFont, but too small
+            font = [NSFont controlContentFontOfSize:0.0];
+            break;
+        case eFont_Menu:
+            font = [NSFont systemFontOfSize:0.0];
+            break;
+        case eFont_MessageBox:
+            font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+            break;
+        case eFont_SmallCaption:
+            font = [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]];
+            break;
+        case eFont_StatusBar:
+            font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+            break;
+        // css3
+        //case eFont_Window:     = 'sans-serif'
+        //case eFont_Document:   = 'sans-serif'
+        case eFont_Workspace:
+            font = [NSFont controlContentFontOfSize:0.0];
+            break;
+        case eFont_Desktop:
+            font = [NSFont controlContentFontOfSize:0.0];
+            break;
+        case eFont_Info:
+            font = [NSFont controlContentFontOfSize:0.0];
+            break;
+        case eFont_Dialog:
+            font = [NSFont systemFontOfSize:0.0];
+            break;
+        case eFont_Button:
+            font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+            break;
+        case eFont_PullDownMenu:
+            font = [NSFont menuBarFontOfSize:0.0];
+            break;
+        case eFont_List:
+            font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+            break;
+        case eFont_Field:
+            font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+            break;
+        // moz
+        case eFont_Tooltips:
+            font = [NSFont toolTipsFontOfSize:0.0];
+            break;
+        case eFont_Widget:
+            font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+            break;
+    }
+
+    if (!font) {
+        NS_WARNING("failed to find a system font!");
+        return false;
+    }
+
+    NSFontSymbolicTraits traits = [[font fontDescriptor] symbolicTraits];
+    aFontStyle.style =
+        (traits & NSFontItalicTrait) ?  FONT_STYLE_ITALIC : FONT_STYLE_NORMAL;
+    aFontStyle.weight =
+        (traits & NSFontBoldTrait) ? FONT_WEIGHT_BOLD : FONT_WEIGHT_NORMAL;
+    aFontStyle.stretch =
+        (traits & NSFontExpandedTrait) ?
+            NS_FONT_STRETCH_EXPANDED : (traits & NSFontCondensedTrait) ?
+                NS_FONT_STRETCH_CONDENSED : NS_FONT_STRETCH_NORMAL;
+    aFontStyle.size = [font pointSize];
+    aFontStyle.systemFont = true;
+
+    GetStringForNSString([font familyName], aFontName);
+    return true;
 }

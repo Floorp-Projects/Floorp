@@ -2681,70 +2681,73 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
                                  aFont->mLanguage);
 
   // -moz-system-font: enum (never inherit!)
-  nsFont systemFont;
+  PR_STATIC_ASSERT(
+    NS_STYLE_FONT_CAPTION        == LookAndFeel::eFont_Caption &&
+    NS_STYLE_FONT_ICON           == LookAndFeel::eFont_Icon &&
+    NS_STYLE_FONT_MENU           == LookAndFeel::eFont_Menu &&
+    NS_STYLE_FONT_MESSAGE_BOX    == LookAndFeel::eFont_MessageBox &&
+    NS_STYLE_FONT_SMALL_CAPTION  == LookAndFeel::eFont_SmallCaption &&
+    NS_STYLE_FONT_STATUS_BAR     == LookAndFeel::eFont_StatusBar &&
+    NS_STYLE_FONT_WINDOW         == LookAndFeel::eFont_Window &&
+    NS_STYLE_FONT_DOCUMENT       == LookAndFeel::eFont_Document &&
+    NS_STYLE_FONT_WORKSPACE      == LookAndFeel::eFont_Workspace &&
+    NS_STYLE_FONT_DESKTOP        == LookAndFeel::eFont_Desktop &&
+    NS_STYLE_FONT_INFO           == LookAndFeel::eFont_Info &&
+    NS_STYLE_FONT_DIALOG         == LookAndFeel::eFont_Dialog &&
+    NS_STYLE_FONT_BUTTON         == LookAndFeel::eFont_Button &&
+    NS_STYLE_FONT_PULL_DOWN_MENU == LookAndFeel::eFont_PullDownMenu &&
+    NS_STYLE_FONT_LIST           == LookAndFeel::eFont_List &&
+    NS_STYLE_FONT_FIELD          == LookAndFeel::eFont_Field);
+
+  // Fall back to defaultVariableFont.
+  nsFont systemFont = *defaultVariableFont;
   const nsCSSValue* systemFontValue = aRuleData->ValueForSystemFont();
   if (eCSSUnit_Enumerated == systemFontValue->GetUnit()) {
-    nsSystemFontID sysID;
-    switch (systemFontValue->GetIntValue()) {
-      case NS_STYLE_FONT_CAPTION:       sysID = eSystemFont_Caption;      break;    // css2
-      case NS_STYLE_FONT_ICON:          sysID = eSystemFont_Icon;         break;
-      case NS_STYLE_FONT_MENU:          sysID = eSystemFont_Menu;         break;
-      case NS_STYLE_FONT_MESSAGE_BOX:   sysID = eSystemFont_MessageBox;   break;
-      case NS_STYLE_FONT_SMALL_CAPTION: sysID = eSystemFont_SmallCaption; break;
-      case NS_STYLE_FONT_STATUS_BAR:    sysID = eSystemFont_StatusBar;    break;
-      case NS_STYLE_FONT_WINDOW:        sysID = eSystemFont_Window;       break;    // css3
-      case NS_STYLE_FONT_DOCUMENT:      sysID = eSystemFont_Document;     break;
-      case NS_STYLE_FONT_WORKSPACE:     sysID = eSystemFont_Workspace;    break;
-      case NS_STYLE_FONT_DESKTOP:       sysID = eSystemFont_Desktop;      break;
-      case NS_STYLE_FONT_INFO:          sysID = eSystemFont_Info;         break;
-      case NS_STYLE_FONT_DIALOG:        sysID = eSystemFont_Dialog;       break;
-      case NS_STYLE_FONT_BUTTON:        sysID = eSystemFont_Button;       break;
-      case NS_STYLE_FONT_PULL_DOWN_MENU:sysID = eSystemFont_PullDownMenu; break;
-      case NS_STYLE_FONT_LIST:          sysID = eSystemFont_List;         break;
-      case NS_STYLE_FONT_FIELD:         sysID = eSystemFont_Field;        break;
-    }
-
-    // GetSystemFont sets the font face but not necessarily the size
-    // XXX Or at least it used to -- no longer true for thebes.  Maybe
-    // it should be again, though.
-    systemFont.size = defaultVariableFont->size;
-
-    if (NS_FAILED(aPresContext->DeviceContext()->GetSystemFont(sysID,
-                                                               &systemFont))) {
-        systemFont.name = defaultVariableFont->name;
-    }
-
-    // XXXldb All of this platform-specific stuff should be in the
-    // nsDeviceContext implementations, not here.
+    gfxFontStyle fontStyle;
+    LookAndFeel::FontID fontID =
+      (LookAndFeel::FontID)systemFontValue->GetIntValue();
+    if (LookAndFeel::GetFont(fontID, systemFont.name, fontStyle)) {
+      systemFont.style = fontStyle.style;
+      systemFont.systemFont = fontStyle.systemFont;
+      systemFont.variant = NS_FONT_VARIANT_NORMAL;
+      systemFont.weight = fontStyle.weight;
+      systemFont.stretch = fontStyle.stretch;
+      systemFont.decorations = NS_FONT_DECORATION_NONE;
+      systemFont.size = NSFloatPixelsToAppUnits(fontStyle.size,
+                                                aPresContext->DeviceContext()->
+                                                UnscaledAppUnitsPerDevPixel());
+      //systemFont.langGroup = fontStyle.langGroup;
+      systemFont.sizeAdjust = fontStyle.sizeAdjust;
 
 #ifdef XP_WIN
-    //
-    // As far as I can tell the system default fonts and sizes for
-    // on MS-Windows for Buttons, Listboxes/Comboxes and Text Fields are
-    // all pre-determined and cannot be changed by either the control panel
-    // or programmtically.
-    //
-    switch (sysID) {
-      // Fields (text fields)
-      // Button and Selects (listboxes/comboboxes)
-      //    We use whatever font is defined by the system. Which it appears
-      //    (and the assumption is) it is always a proportional font. Then we
-      //    always use 2 points smaller than what the browser has defined as
-      //    the default proportional font.
-      case eSystemFont_Field:
-      case eSystemFont_Button:
-      case eSystemFont_List:
+      // XXXldb This platform-specific stuff should be in the
+      // LookAndFeel implementation, not here.
+      // XXXzw Should we even still *have* this code?  It looks to be making
+      // old, probably obsolete assumptions.
+
+      // As far as I can tell the system default fonts and sizes
+      // on MS-Windows for Buttons, Listboxes/Comboxes and Text Fields are
+      // all pre-determined and cannot be changed by either the control panel
+      // or programmtically.
+      switch (fontID) {
+        // Fields (text fields)
+        // Button and Selects (listboxes/comboboxes)
+        //    We use whatever font is defined by the system. Which it appears
+        //    (and the assumption is) it is always a proportional font. Then we
+        //    always use 2 points smaller than what the browser has defined as
+        //    the default proportional font.
+      case LookAndFeel::eFont_Field:
+      case LookAndFeel::eFont_Button:
+      case LookAndFeel::eFont_List:
         // Assumption: system defined font is proportional
         systemFont.size =
-          NS_MAX(defaultVariableFont->size - nsPresContext::CSSPointsToAppUnits(2), 0);
+          NS_MAX(defaultVariableFont->size -
+                 nsPresContext::CSSPointsToAppUnits(2), 0);
         break;
-    }
+      }
 #endif
-  } else {
-    // In case somebody explicitly used -moz-use-system-font.
-    systemFont = *defaultVariableFont;
+    }
   }
-
 
   // font-family: string list, enum, inherit
   const nsCSSValue* familyValue = aRuleData->ValueForFontFamily();
