@@ -341,28 +341,35 @@ public class BrowserProvider extends ContentProvider {
             createBookmarksWithImagesView(db);
             createHistoryWithImagesView(db);
 
-            createMobileBookmarksFolder(db);
+            createOrUpdateSpecialFolder(db, Bookmarks.MOBILE_FOLDER_GUID,
+                R.string.bookmarks_folder_mobile, 0);
 
             // FIXME: Create default bookmarks here
         }
 
-        private void createMobileBookmarksFolder(SQLiteDatabase db) {
+        private void createOrUpdateSpecialFolder(SQLiteDatabase db,
+                String guid, int titleId, int position) {
             ContentValues values = new ContentValues();
-            values.put(Bookmarks.GUID, Bookmarks.MOBILE_FOLDER_GUID);
+            values.put(Bookmarks.GUID, guid);
             values.put(Bookmarks.IS_FOLDER, 1);
-            values.put(Bookmarks.POSITION, 0);
+            values.put(Bookmarks.POSITION, position);
 
             // Set the parent to 0, which sync assumes is the root
             values.put(Bookmarks.PARENT, 0);
 
-            String title = mContext.getResources().getString(R.string.bookmarks_folder_mobile);
+            String title = mContext.getResources().getString(titleId);
             values.put(Bookmarks.TITLE, title);
 
             long now = System.currentTimeMillis();
             values.put(Bookmarks.DATE_CREATED, now);
             values.put(Bookmarks.DATE_MODIFIED, now);
 
-            db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.GUID, values);
+            int updated = db.update(TABLE_BOOKMARKS, values,
+                                    Bookmarks.GUID + " = ?",
+                                    new String[] { guid });
+
+            if (updated == 0)
+                db.insert(TABLE_BOOKMARKS, Bookmarks.GUID, values);
         }
 
         @Override
