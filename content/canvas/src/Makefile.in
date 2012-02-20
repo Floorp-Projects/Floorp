@@ -68,6 +68,7 @@ CPPSRCS += \
 	WebGLContext.cpp \
 	WebGLContextGL.cpp \
 	WebGLContextUtils.cpp \
+	WebGLContextReporter.cpp \
 	WebGLContextValidate.cpp \
 	WebGLExtensionStandardDerivatives.cpp \
 	WebGLExtensionLoseContext.cpp \
