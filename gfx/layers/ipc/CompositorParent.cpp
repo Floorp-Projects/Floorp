@@ -199,8 +199,8 @@ CompositorParent::Composite()
 }
 
 #ifdef MOZ_WIDGET_ANDROID
-// Do a breadth-first search to find the first layer in the tree with a
-// displayport set.
+// Do a breadth-first search to find the first layer in the tree that is
+// scrollable.
 Layer*
 CompositorParent::GetPrimaryScrollableLayer()
 {
@@ -215,7 +215,7 @@ CompositorParent::GetPrimaryScrollableLayer()
     }
 
     const FrameMetrics& frameMetrics = containerLayer->GetFrameMetrics();
-    if (!frameMetrics.mDisplayPort.IsEmpty()) {
+    if (frameMetrics.IsScrollable()) {
       return containerLayer;
     }
 
@@ -271,19 +271,27 @@ CompositorParent::TransformShadowTree()
   const FrameMetrics* metrics = &container->GetFrameMetrics();
   const gfx3DMatrix& currentTransform = layer->GetTransform();
 
-  float tempScaleDiffX = GetXScale(mLayerManager->GetRoot()->GetTransform()) * mXScale;
-  float tempScaleDiffY = GetYScale(mLayerManager->GetRoot()->GetTransform()) * mYScale;
+  if (metrics && metrics->IsScrollable()) {
+    float tempScaleDiffX = GetXScale(mLayerManager->GetRoot()->GetTransform()) * mXScale;
+    float tempScaleDiffY = GetYScale(mLayerManager->GetRoot()->GetTransform()) * mYScale;
 
-  nsIntPoint metricsScrollOffset = metrics->mViewportScrollOffset;
+    nsIntPoint metricsScrollOffset = metrics->mViewportScrollOffset;
 
-  nsIntPoint scrollCompensation(
-    (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
-    (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
-  ViewTransform treeTransform(-scrollCompensation, mXScale,
+    nsIntPoint scrollCompensation(
+      (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
+      (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
+    ViewTransform treeTransform(-scrollCompensation, mXScale,
                               mYScale);
-  shadowTransform = gfx3DMatrix(treeTransform) * currentTransform;
+    shadowTransform = gfx3DMatrix(treeTransform) * currentTransform;
 
-  shadow->SetShadowTransform(shadowTransform);
+    shadow->SetShadowTransform(shadowTransform);
+  } else {
+    ViewTransform treeTransform(nsIntPoint(0,0), mXScale,
+                              mYScale);
+    shadowTransform = gfx3DMatrix(treeTransform) * currentTransform;
+
+    shadow->SetShadowTransform(shadowTransform);
+  }
 #endif
 }
 
