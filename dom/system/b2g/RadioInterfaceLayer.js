@@ -319,15 +319,15 @@ RadioInterfaceLayer.prototype = {
   },
 
   handleSmsSent: function handleSmsSent(message) {
-    let message = gSmsService.createSmsMessage(-1,
-                                               DOM_SMS_DELIVERY_SENT,
-                                               message.SMSC,
-                                               message.number,
-                                               message.body,
-                                               Date.now());
+    let sms = gSmsService.createSmsMessage(-1,
+                                           DOM_SMS_DELIVERY_SENT,
+                                           null,
+                                           message.number,
+                                           message.body,
+                                           Date.now());
     //TODO At this point we should save the sms into the DB (bug 712809)
-    //TODO handle errors (bug XXX)
-    gSmsRequestManager.notifySmsSent(message.requestId, message);
+    //TODO handle errors (bug 727319)
+    gSmsRequestManager.notifySmsSent(message.requestId, sms);
   },
 
   /**
