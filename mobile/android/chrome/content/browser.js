@@ -433,7 +433,7 @@ var BrowserApp = {
 
     aTab.setActive(true);
     aTab.updateViewport(false);
-    this.deck.selectedPanel = aTab.vbox;
+    this.deck.selectedPanel = aTab.browser;
   },
 
   get selectedBrowser() {
@@ -1451,7 +1451,6 @@ let gScreenHeight = 1;
 
 function Tab(aURL, aParams) {
   this.browser = null;
-  this.vbox = null;
   this.id = 0;
   this.showProgress = true;
   this.create(aURL, aParams);
@@ -1471,16 +1470,10 @@ Tab.prototype = {
 
     aParams = aParams || {};
 
-    this.vbox = document.createElement("vbox");
-    this.vbox.align = "start";
-    BrowserApp.deck.appendChild(this.vbox);
-
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content-targetable");
     this.setBrowserSize(980, 480);
-    this.browser.style.width = gScreenWidth + "px";
-    this.browser.style.height = gScreenHeight + "px";
-    this.vbox.appendChild(this.browser);
+    BrowserApp.deck.appendChild(this.browser);
 
     this.browser.stop();
 
@@ -1571,11 +1564,10 @@ Tab.prototype = {
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
     let selectedPanel = BrowserApp.deck.selectedPanel;
-    BrowserApp.deck.removeChild(this.vbox);
+    BrowserApp.deck.removeChild(this.browser);
     BrowserApp.deck.selectedPanel = selectedPanel;
 
     this.browser = null;
-    this.vbox = null;
     this.documentIdForCurrentViewport = null;
   },
 
