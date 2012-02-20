@@ -1001,6 +1001,10 @@ nsSVGSVGElement::GetViewBoxTransform() const
     viewportHeight = mViewportHeight;
   }
 
+  if (viewportWidth <= 0.0f || viewportHeight <= 0.0f) {
+    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+  }
+
   nsSVGViewBoxRect viewBox;
   if (mViewBox.IsValid()) {
     viewBox = mViewBox.GetAnimValue();

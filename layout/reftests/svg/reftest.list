@@ -121,6 +121,7 @@ random == dynamic-use-nested-01.svg dynamic-use-nested-01-ref.svg # bug 467498
 == fallback-color-02a.svg fallback-color-02-ref.svg
 == fallback-color-02b.svg fallback-color-02-ref.svg
 == fallback-color-03.svg pass.svg
+== fallback-color-04.svg pass.svg
 == filter-basic-01.svg pass.svg
 == filter-basic-02.svg pass.svg
 == filter-basic-03.svg pass.svg
@@ -152,6 +153,9 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == gr
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == gradient-live-01d.svg gradient-live-01-ref.svg # bug 696674
 fails == inline-in-xul-basic-01.xul pass.svg
 == invalid-text-01.svg pass.svg
+== lang-attribute-01.svg pass.svg
+== lang-attribute-02.svg pass.svg
+== lang-attribute-03.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg
 == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg

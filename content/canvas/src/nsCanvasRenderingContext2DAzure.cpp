@@ -1292,25 +1292,23 @@ nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt3
   mWidth = width;
   mHeight = height;
 
-  mTarget = target;
+  // This first time this is called on this object is via
+  // nsHTMLCanvasElement::GetContext. If target was non-null then mTarget is
+  // non-null, otherwise we'll return an error here and GetContext won't
+  // return this context object and we'll never enter this code again.
+  // All other times this method is called, if target is null then
+  // mTarget won't be changed, i.e. it will remain non-null, or else it
+  // will be set to non-null.
+  // In all cases, any usable canvas context will have non-null mTarget.
+
+  if (target) {
+    mValid = true;
+    mTarget = target;
+  } else {
+    mValid = false;
+  }
 
   mResetLayer = true;
-
-  /* Create dummy surfaces here - target can be null when a canvas was created
-   * that is too large to support.
-   */
-  if (!target)
-  {
-    mTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(IntSize(1, 1), FORMAT_B8G8R8A8);
-    if (!mTarget) {
-      // SupportsAzure() is controlled by the "gfx.canvas.azure.prefer-skia"
-      // pref so that may be the reason rather than an OOM.
-      mValid = false;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  } else {
-    mValid = true;
-  }
 
   // set up the initial canvas defaults
   mStyleStack.Clear();
@@ -1325,11 +1323,12 @@ nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt3
   state->colorStyles[STYLE_STROKE] = NS_RGB(0,0,0);
   state->shadowColor = NS_RGBA(0,0,0,0);
 
-  mTarget->ClearRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
-    
-  // always force a redraw, because if the surface dimensions were reset
-  // then the surface became cleared, and we need to redraw everything.
-  Redraw();
+  if (mTarget) {
+    mTarget->ClearRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+    // always force a redraw, because if the surface dimensions were reset
+    // then the surface became cleared, and we need to redraw everything.
+    Redraw();
+  }
 
   return mValid ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
