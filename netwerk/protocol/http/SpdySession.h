@@ -105,7 +105,7 @@ public:
     CONTROL_TYPE_LAST = 10
   };
 
-  enum
+  enum rstReason
   {
     RST_PROTOCOL_ERROR = 1,
     RST_INVALID_STREAM = 2,
@@ -181,6 +181,7 @@ private:
     PROCESSING_CONTROL_RST_STREAM
   };
 
+  nsresult    HandleSynReplyForValidStream();
   PRUint32    GetWriteQueueSize();
   void        ChangeDownstreamState(enum stateType);
   void        ResetDownstreamState();
@@ -192,7 +193,7 @@ private:
   void        GeneratePing(PRUint32);
   void        GenerateRstStream(PRUint32, PRUint32);
   void        GenerateGoAway();
-  void        CleanupStream(SpdyStream *, nsresult);
+  void        CleanupStream(SpdyStream *, nsresult, rstReason);
 
   void        SetWriteCallbacks();
   void        FlushOutputQueue();

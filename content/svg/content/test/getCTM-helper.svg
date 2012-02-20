@@ -17,6 +17,9 @@
     <svg id="inner" x="30" y="40" width="100" height="100">
       <g id="g1"/>
     </svg>
+    <svg id="inner-2" viewBox="0 0 10 10" width="-10" height="10">
+      <g id="g5"/>
+    </svg>
     <foreignObject id="fO" x="30" y="40" width="100" height="100" transform="translate(1, 1)">
       <!-- current layout implementation ignores x="50" and y="60".
            thus, I made getCTM and getScreenCTM do the same. -->

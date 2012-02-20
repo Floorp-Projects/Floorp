@@ -721,15 +721,17 @@ SpdySession::GenerateGoAway()
 }
 
 void
-SpdySession::CleanupStream(SpdyStream *aStream, nsresult aResult)
+SpdySession::CleanupStream(SpdyStream *aStream, nsresult aResult,
+                           rstReason aResetCode)
 {
   NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
   LOG3(("SpdySession::CleanupStream %p %p 0x%x %X\n",
         this, aStream, aStream->StreamID(), aResult));
 
   if (!aStream->RecvdFin() && aStream->StreamID()) {
-    LOG3(("Stream had not processed recv FIN, sending RST"));
-    GenerateRstStream(RST_CANCEL, aStream->StreamID());
+    LOG3(("Stream had not processed recv FIN, sending RST code %X\n",
+          aResetCode));
+    GenerateRstStream(aResetCode, aStream->StreamID());
     --mConcurrent;
     ProcessPending();
   }
@@ -842,9 +844,21 @@ SpdySession::HandleSynReply(SpdySession *self)
   if (self->mInputFrameDataSize < 8) {
     LOG3(("SpdySession::HandleSynReply %p SYN REPLY too short data=%d",
           self, self->mInputFrameDataSize));
+    // A framing error is a session wide error that cannot be recovered
     return NS_ERROR_ILLEGAL_VALUE;
   }
   
+  // Uncompress the headers into mDecompressBuffer, leaving them in
+  // spdy format for the time being. Make certain to do this
+  // step before any error handling that might abort the stream but not
+  // the session becuase the session compression context will become
+  // inconsistent if all of the compressed data is not processed.
+  if (NS_FAILED(self->DownstreamUncompress(self->mInputFrameBuffer + 14,
+                                           self->mInputFrameDataSize - 6))) {
+    LOG(("SpdySession::HandleSynReply uncompress failed\n"));
+    return NS_ERROR_FAILURE;
+  }
+
   PRUint32 streamID =
     PR_ntohl(reinterpret_cast<PRUint32 *>(self->mInputFrameBuffer.get())[2]);
   self->mInputFrameDataStream = self->mStreamIDHash.Get(streamID);
@@ -854,81 +868,81 @@ SpdySession::HandleSynReply(SpdySession *self)
           self->mNextStreamID));
     if (streamID >= self->mNextStreamID)
       self->GenerateRstStream(RST_INVALID_STREAM, streamID);
-    
-    // It is likely that this is a reply to a stream ID that has been canceled.
-    // For the most part we would like to ignore it, but the header needs to be
-    // be parsed to keep the compression context synchronized
-    self->DownstreamUncompress(self->mInputFrameBuffer + 14,
-                               self->mInputFrameDataSize - 6);
+
     self->ResetDownstreamState();
     return NS_OK;
   }
 
-  self->mInputFrameDataStream->UpdateTransportReadEvents(
-    self->mInputFrameDataSize);
+  nsresult rv = self->HandleSynReplyForValidStream();
+  if (rv == NS_ERROR_ILLEGAL_VALUE) {
+    LOG3(("SpdySession::HandleSynReply %p PROTOCOL_ERROR detected 0x%X\n",
+          self, streamID));
+    self->CleanupStream(self->mInputFrameDataStream, rv, RST_PROTOCOL_ERROR);
+    self->ResetDownstreamState();
+    rv = NS_OK;
+  }
 
-  if (self->mInputFrameDataStream->GetFullyOpen()) {
+  return rv;
+}
+
+// HandleSynReplyForValidStream() returns NS_ERROR_ILLEGAL_VALUE when the stream
+// should be reset with a PROTOCOL_ERROR, NS_OK when the SYN_REPLY was
+// fine, and any other error is fatal to the session.
+nsresult
+SpdySession::HandleSynReplyForValidStream()
+{
+  if (mInputFrameDataStream->GetFullyOpen()) {
     // "If an endpoint receives multiple SYN_REPLY frames for the same active
     // stream ID, it must drop the stream, and send a RST_STREAM for the
     // stream with the error PROTOCOL_ERROR."
     //
-    // In addition to that we abort the session - this is a serious protocol
-    // violation.
-
-    self->GenerateRstStream(RST_PROTOCOL_ERROR, streamID);
-    return NS_ERROR_ILLEGAL_VALUE;
+    // If the stream is open then just RST_STREAM and move on, otherwise
+    // abort the session
+    return mInputFrameDataStream->RecvdFin() ?
+      NS_ERROR_ALREADY_OPENED : NS_ERROR_ILLEGAL_VALUE;
   }
-  self->mInputFrameDataStream->SetFullyOpen();
+  mInputFrameDataStream->SetFullyOpen();
 
-  self->mInputFrameDataLast = self->mInputFrameBuffer[4] & kFlag_Data_FIN;
+  mInputFrameDataLast = mInputFrameBuffer[4] & kFlag_Data_FIN;
 
-  if (self->mInputFrameBuffer[4] & kFlag_Data_UNI) {
+  if (mInputFrameBuffer[4] & kFlag_Data_UNI) {
     LOG3(("SynReply had unidirectional flag set on it - nonsensical"));
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  LOG3(("SpdySession::HandleSynReply %p SYN_REPLY for 0x%X fin=%d",
-        self, streamID, self->mInputFrameDataLast));
-  
-  // The spdystream needs to see flattened http headers
-  // The Frame Buffer currently holds the complete SYN_REPLY
-  // frame. The interesting data is at offset 14, where the
-  // compressed name/value header block lives.
-  // We unpack that into the mDecompressBuffer - we can't do
-  // it streamed because the version and status information
-  // is not guaranteed to be first. This is then finally
-  // converted to HTTP format in mFlatHTTPResponseHeaders
-
-  nsresult rv = self->DownstreamUncompress(self->mInputFrameBuffer + 14,
-                                           self->mInputFrameDataSize - 6);
-  if (NS_FAILED(rv)) {
-    LOG(("SpdySession::HandleSynReply uncompress failed\n"));
-    return rv;
-  }
+  LOG3(("SpdySession::HandleSynReplyForValidStream %p SYN_REPLY for 0x%X "
+        "fin=%d",
+        this, mInputFrameDataStream->StreamID(), mInputFrameDataLast));
   
   Telemetry::Accumulate(Telemetry::SPDY_SYN_REPLY_SIZE,
-                        self->mInputFrameDataSize - 6);
-  if (self->mDecompressBufferUsed) {
+                        mInputFrameDataSize - 6);
+  if (mDecompressBufferUsed) {
     PRUint32 ratio =
-      (self->mInputFrameDataSize - 6) * 100 / self->mDecompressBufferUsed;
+      (mInputFrameDataSize - 6) * 100 / mDecompressBufferUsed;
     Telemetry::Accumulate(Telemetry::SPDY_SYN_REPLY_RATIO, ratio);
   }
 
   // status and version are required.
   nsDependentCSubstring status, version;
-  rv = self->FindHeader(NS_LITERAL_CSTRING("status"), status);
+  nsresult rv = FindHeader(NS_LITERAL_CSTRING("status"), status);
+  if (NS_FAILED(rv))
+    return (rv == NS_ERROR_NOT_AVAILABLE) ? NS_ERROR_ILLEGAL_VALUE : rv;
+
+  rv = FindHeader(NS_LITERAL_CSTRING("version"), version);
+  if (NS_FAILED(rv))
+    return (rv == NS_ERROR_NOT_AVAILABLE) ? NS_ERROR_ILLEGAL_VALUE : rv;
+
+  // The spdystream needs to see flattened http headers
+  // Uncompressed spdy format headers currently live in
+  // mDeccompressBuffer - convert that to HTTP format in
+  // mFlatHTTPResponseHeaders in ConvertHeaders()
+
+  rv = ConvertHeaders(status, version);
   if (NS_FAILED(rv))
     return rv;
 
-  rv = self->FindHeader(NS_LITERAL_CSTRING("version"), version);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = self->ConvertHeaders(status, version);
-  if (NS_FAILED(rv))
-    return rv;
-
-  self->ChangeDownstreamState(PROCESSING_CONTROL_SYN_REPLY);
+  mInputFrameDataStream->UpdateTransportReadEvents(mInputFrameDataSize);
+  ChangeDownstreamState(PROCESSING_CONTROL_SYN_REPLY);
   return NS_OK;
 }
 
@@ -1474,7 +1488,7 @@ SpdySession::WriteSegments(nsAHttpSegmentWriter *writer,
     // mInputFrameDataStream is reset by ChangeDownstreamState
     SpdyStream *stream = mInputFrameDataStream;
     ResetDownstreamState();
-    CleanupStream(stream, rv);
+    CleanupStream(stream, rv, RST_CANCEL);
     return NS_OK;
   }
 
@@ -1491,13 +1505,13 @@ SpdySession::WriteSegments(nsAHttpSegmentWriter *writer,
       SpdyStream *stream = mInputFrameDataStream;
       if (mInputFrameDataRead == mInputFrameDataSize)
         ResetDownstreamState();
-      CleanupStream(stream, NS_OK);
+      CleanupStream(stream, NS_OK, RST_CANCEL);
       NS_ABORT_IF_FALSE(!mNeedsCleanup, "double cleanup out of data frame");
       return NS_OK;
     }
     
     if (mNeedsCleanup) {
-      CleanupStream(mNeedsCleanup, NS_OK);
+      CleanupStream(mNeedsCleanup, NS_OK, RST_CANCEL);
       mNeedsCleanup = nsnull;
     }
 
@@ -1622,7 +1636,7 @@ SpdySession::CloseTransaction(nsAHttpTransaction *aTransaction,
   LOG3(("SpdySession::CloseTranscation probably a cancel. "
         "this=%p, trans=%p, result=%x, streamID=0x%X stream=%p",
         this, aTransaction, aResult, stream->StreamID(), stream));
-  CleanupStream(stream, aResult);
+  CleanupStream(stream, aResult, RST_CANCEL);
   ResumeRecv();
 }
 
