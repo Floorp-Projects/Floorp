@@ -88,6 +88,11 @@ public:
   virtual nsresult GetIntImpl(IntID aID, PRInt32 &aResult);
   virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
 
+  // This one is different: there are no override prefs (fixme?), so
+  // there is no XP implementation, only per-system impls.
+  virtual bool GetFontImpl(FontID aID, nsString& aName,
+                           gfxFontStyle& aStyle) = 0;
+
   virtual void RefreshImpl();
 
   virtual PRUnichar GetPasswordCharacterImpl()
