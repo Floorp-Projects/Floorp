@@ -181,9 +181,9 @@
   /* Toolbar shadow behind tabs */
   /* This code is only needed for restored windows (i.e. sizemode=normal)
      because of the border radius on the toolbar below the tab bar. */
-  #main-window[sizemode=normal][tabsontop=true] #nav-bar:not(:-moz-lwtheme),
-  #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme),
-  #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
+  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > #nav-bar:not(:-moz-lwtheme),
+  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme),
+  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
   #main-window[sizemode=normal][tabsontop=true][disablechrome] #navigator-toolbox:not(:-moz-lwtheme)::after {
     border-top: 1px solid @toolbarShadowColor@;
     border-top-left-radius: 3.5px;

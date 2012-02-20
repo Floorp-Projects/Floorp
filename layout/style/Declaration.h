@@ -118,6 +118,7 @@ public:
   /**
    * Transfer all of the state from |aExpandedData| into this declaration.
    * After calling, |aExpandedData| should be in its initial state.
+   * Callers must make sure mOrder is updated as necessary.
    */
   void CompressFrom(nsCSSExpandedDataBlock *aExpandedData) {
     NS_ABORT_IF_FALSE(!mData, "oops");

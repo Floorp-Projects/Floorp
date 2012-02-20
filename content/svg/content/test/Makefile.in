@@ -74,6 +74,7 @@ _TEST_FILES = \
 		test_getSubStringLength.xhtml \
 		getSubStringLength-helper.svg \
 		test_isSupported.xhtml \
+		test_lang.xhtml \
 		test_nonAnimStrings.xhtml \
 		test_pathAnimInterpolation.xhtml \
 		test_pathSeg.xhtml \

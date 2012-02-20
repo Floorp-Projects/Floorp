@@ -908,6 +908,15 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(bool)
+nsSVGElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  if (name == nsGkAtoms::lang) {
+    return true;
+  }
+  return nsSVGElementBase::IsAttributeMapped(name);
+}
+
 // PresentationAttributes-FillStroke
 /* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sFillStrokeMap[] = {
@@ -1155,9 +1164,24 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
   // Get the nsCSSProperty ID for our mapped attribute.
   nsCSSProperty propertyID =
     nsCSSProps::LookupProperty(nsDependentAtomString(aMappedAttrName));
-  bool changed; // outparam for ParseProperty. (ignored)
-  mParser.ParseProperty(propertyID, aMappedAttrValue, mDocURI, mBaseURI,
-                        mNodePrincipal, mDecl, &changed, false);
+  if (propertyID != eCSSProperty_UNKNOWN) {
+    bool changed; // outparam for ParseProperty. (ignored)
+    mParser.ParseProperty(propertyID, aMappedAttrValue, mDocURI, mBaseURI,
+                          mNodePrincipal, mDecl, &changed, false);
+    return;
+  }
+  NS_ABORT_IF_FALSE(aMappedAttrName == nsGkAtoms::lang,
+                    "Only 'lang' should be unrecognized!");
+  // nsCSSParser doesn't know about 'lang', so we need to handle it specially.
+  if (aMappedAttrName == nsGkAtoms::lang) {
+    propertyID = eCSSProperty__x_lang;
+    nsCSSExpandedDataBlock block;
+    mDecl->ExpandTo(&block);
+    nsCSSValue cssValue(PromiseFlatString(aMappedAttrValue), eCSSUnit_Ident);
+    block.AddLonghandProperty(propertyID, cssValue);
+    mDecl->ValueAppended(propertyID);
+    mDecl->CompressFrom(&block);
+  }
 }
 
 already_AddRefed<css::StyleRule>
@@ -1202,6 +1226,16 @@ nsSVGElement::UpdateContentStyleRule()
     const nsAttrName* attrName = mAttrsAndChildren.AttrNameAt(i);
     if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom()))
       continue;
+
+    if (attrName->NamespaceID() != kNameSpaceID_None &&
+        !attrName->Equals(nsGkAtoms::lang, kNameSpaceID_XML)) {
+      continue;
+    }
+
+    if (attrName->Equals(nsGkAtoms::lang, kNameSpaceID_None) &&
+        HasAttr(kNameSpaceID_XML, nsGkAtoms::lang)) {
+      continue; // xml:lang has precedence
+    }
 
     if (Tag() == nsGkAtoms::svg) {
       // Special case: we don't want <svg> 'width'/'height' mapped into style
