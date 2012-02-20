@@ -130,7 +130,9 @@ public:
     return mImageSurface;
   }
 
-  PRUint32 EstimateMemoryUsed(gfxASurface::MemoryLocation aLocation) const;
+  size_t SizeOfExcludingThisWithComputedFallbackIfHeap(
+           gfxASurface::MemoryLocation aLocation,
+           nsMallocSizeOfFun aMallocSizeOf) const;
 
   PRUint8 GetPaletteDepth() const { return mPaletteDepth; }
 
@@ -196,7 +198,6 @@ private: // data
 #ifdef XP_WIN
   bool mIsDDBSurface;
 #endif
-
 };
 
 #endif /* imgFrame_h */

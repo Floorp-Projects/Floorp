@@ -58,13 +58,18 @@ Image::Image(imgStatusTracker* aStatusTracker) :
 }
 
 PRUint32
-Image::GetDataSize()
+Image::SizeOfData()
 {
   if (mError)
     return 0;
   
-  return GetSourceHeapSize() + GetDecodedHeapSize() +
-         GetDecodedNonheapSize() + GetDecodedOutOfProcessSize();
+  // This is not used by memory reporters, but for sizing the cache, which is
+  // why it uses |moz_malloc_size_of| rather than an
+  // |NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN|.
+  return PRUint32(HeapSizeOfSourceWithComputedFallback(moz_malloc_size_of) +
+                  HeapSizeOfDecodedWithComputedFallback(moz_malloc_size_of) +
+                  NonHeapSizeOfDecoded() +
+                  OutOfProcessSizeOfDecoded());
 }
 
 // Translates a mimetype into a concrete decoder
