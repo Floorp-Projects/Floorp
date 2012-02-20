@@ -62,7 +62,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gl {
 
-#ifdef DEBUG
+#if 1
 // see comment near declaration in GLContext.h. Should be thread-local.
 GLContext* GLContext::sCurrentGLContext = nsnull;
 #endif
@@ -426,7 +426,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
     }
 
     if (mInitialized) {
-#ifdef DEBUG
+#if 1
         static bool once = false;
         if (!once) {
             const char *vendors[VendorOther] = {
@@ -545,7 +545,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         UpdateActualFormat();
     }
 
-#ifdef DEBUG
+#if 1
     if (PR_GetEnv("MOZ_GL_DEBUG"))
         sDebugMode |= DebugEnabled;
 
@@ -576,7 +576,7 @@ GLContext::InitExtensions()
     const GLubyte *extensions = fGetString(LOCAL_GL_EXTENSIONS);
     char *exts = strdup((char *)extensions);
 
-#ifdef DEBUG
+#if 1
     static bool once = false;
 #else
     const bool once = true;
@@ -610,7 +610,7 @@ GLContext::InitExtensions()
 
     free(exts);
 
-#ifdef DEBUG
+#if 1
     once = true;
 #endif
 }
@@ -1459,7 +1459,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("DrawFBO: Incomplete");
-#ifdef DEBUG
+#if 1
         printf_stderr("Framebuffer status: %X\n", status);
 #endif
         framebuffersComplete = false;
@@ -1469,7 +1469,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("ReadFBO: Incomplete");
-#ifdef DEBUG
+#if 1
         printf_stderr("Framebuffer status: %X\n", status);
 #endif
         framebuffersComplete = false;
@@ -1531,7 +1531,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
 
     mActualFormat = cf;
 
-#ifdef DEBUG
+#if 1
     if (DebugMode()) {
         printf_stderr("Resized %dx%d offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d samples: %d\n",
                       mOffscreenActualSize.width, mOffscreenActualSize.height,
@@ -2719,7 +2719,7 @@ GLContext::SetBlitFramebufferForDestTexture(GLuint aTexture)
     }
 }
 
-#ifdef DEBUG
+#if 1
 
 void
 GLContext::CreatedProgram(GLContext *aOrigin, GLuint aName)
