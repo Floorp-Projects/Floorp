@@ -323,14 +323,6 @@ class DebugScript
     BreakpointSite  *breakpoints[1];
 };
 
-/*
- * NB: after a successful JSXDR_DECODE, js_XDRScript callers must do any
- * required subsequent set-up of owning function or script object and then call
- * js_CallNewScriptHook.
- */
-extern JSBool
-XDRScript(JSXDRState *xdr, JSScript **scriptp);
-
 } /* namespace js */
 
 static const uint32_t JS_SCRIPT_COOKIE = 0xc00cee;
@@ -355,8 +347,6 @@ struct JSScript : public js::gc::Cell
                                JSVersion version);
 
     static JSScript *NewScriptFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
-
-    friend JSBool js::XDRScript(JSXDRState *, JSScript **);
 
 #ifdef JS_CRASH_DIAGNOSTICS
     /*
@@ -444,6 +434,10 @@ struct JSScript : public js::gc::Cell
     bool needsArgsObj() const { JS_ASSERT(analyzedArgsUsage()); return needsArgsObj_; }
     void setNeedsArgsObj(bool needsArgsObj);
     bool applySpeculationFailed(JSContext *cx);
+
+    void setMayNeedArgsObj() {
+        mayNeedArgsObj_ = true;
+    }
 
     uint32_t        natoms;     /* length of atoms array */
     uint16_t        nslots;     /* vars plus maximum stack depth */
@@ -890,6 +884,15 @@ CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_C
 extern JSScript *
 CloneScript(JSContext *cx, JSScript *script);
 
-}
+/*
+ * NB: after a successful XDR_DECODE, XDRScript callers must do any required
+ * subsequent set-up of owning function or script object and then call
+ * js_CallNewScriptHook.
+ */
+template<XDRMode mode>
+bool
+XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript);
+
+} /* namespace js */
 
 #endif /* jsscript_h___ */
