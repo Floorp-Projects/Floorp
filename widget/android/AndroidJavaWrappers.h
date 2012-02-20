@@ -546,8 +546,6 @@ public:
     nsGeoPositionAddress* GeoAddress() { return mGeoAddress; }
     double Bandwidth() { return mBandwidth; }
     bool CanBeMetered() { return mCanBeMetered; }
-    int TabId() { return mTabId; }
-    void DoCallback(const nsAString& data);
 
 protected:
     int mAction;
@@ -573,7 +571,6 @@ protected:
     nsRefPtr<nsGeoPositionAddress> mGeoAddress;
     double mBandwidth;
     bool mCanBeMetered;
-    int mTabId;
 
     void ReadIntArray(nsTArray<int> &aVals,
                       JNIEnv *jenv,
@@ -628,9 +625,6 @@ protected:
 
     static jfieldID jBandwidthField;
     static jfieldID jCanBeMeteredField;
-    static jfieldID jTabIdField;
-    
-    static jmethodID jDoCallbackMethod;
 
 public:
     enum {
@@ -659,7 +653,6 @@ public:
         PROXIMITY_EVENT = 23,
         ACTIVITY_RESUMING = 24,
         SCREENSHOT = 25,
-        META_VIEWPORT_QUERY = 26,
         dummy_java_enum_list_end
     };
 
