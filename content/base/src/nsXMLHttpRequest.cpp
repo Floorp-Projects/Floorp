@@ -1280,8 +1280,10 @@ nsXMLHttpRequest::CloseRequestWithError(const nsAString& aType,
   mState |= aFlag;
 
   // If we're in the destructor, don't risk dispatching an event.
-  if (mState & XML_HTTP_REQUEST_DELETED)
+  if (mState & XML_HTTP_REQUEST_DELETED) {
+    mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
     return;
+  }
 
   if (!(mState & (XML_HTTP_REQUEST_UNSENT |
                   XML_HTTP_REQUEST_OPENED |
