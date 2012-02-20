@@ -5531,6 +5531,15 @@ if test -n "$MOZ_ANDROID_HISTORY"; then
      AC_DEFINE(MOZ_ANDROID_HISTORY)
 fi
 
+
+dnl ========================================================
+dnl = Build with the Android Java compositor
+dnl ========================================================
+if test -n "$MOZ_JAVA_COMPOSITOR"; then
+     dnl Do this if defined in confvars.sh
+     AC_DEFINE(MOZ_JAVA_COMPOSITOR)
+fi
+
 dnl ========================================================
 dnl = Disable WebSMS backend
 dnl ========================================================
