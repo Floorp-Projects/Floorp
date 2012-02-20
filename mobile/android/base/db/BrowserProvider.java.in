@@ -244,10 +244,7 @@ public class BrowserProvider extends ContentProvider {
             super(context, databasePath, null, DATABASE_VERSION);
         }
 
-        @Override
-        public void onCreate(SQLiteDatabase db) {
-            debug("Creating browser.db: " + db.getPath());
-
+        private void createBookmarksTable(SQLiteDatabase db) {
             debug("Creating " + TABLE_BOOKMARKS + " table");
             db.execSQL("CREATE TABLE " + TABLE_BOOKMARKS + "(" +
                     Bookmarks._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -271,7 +268,9 @@ public class BrowserProvider extends ContentProvider {
                     + Bookmarks.GUID + ")");
             db.execSQL("CREATE INDEX bookmarks_modified_index ON " + TABLE_BOOKMARKS + "("
                     + Bookmarks.DATE_MODIFIED + ")");
+        }
 
+        private void createHistoryTable(SQLiteDatabase db) {
             debug("Creating " + TABLE_HISTORY + " table");
             db.execSQL("CREATE TABLE " + TABLE_HISTORY + "(" +
                     History._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -293,7 +292,9 @@ public class BrowserProvider extends ContentProvider {
                     + History.DATE_MODIFIED + ")");
             db.execSQL("CREATE INDEX history_visited_index ON " + TABLE_HISTORY + "("
                     + History.DATE_LAST_VISITED + ")");
+        }
 
+        private void createImagesTable(SQLiteDatabase db) {
             debug("Creating " + TABLE_IMAGES + " table");
             db.execSQL("CREATE TABLE " + TABLE_IMAGES + " (" +
                     Images._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -313,16 +314,32 @@ public class BrowserProvider extends ContentProvider {
                     + Images.GUID + ")");
             db.execSQL("CREATE INDEX images_modified_index ON " + TABLE_IMAGES + "("
                     + Images.DATE_MODIFIED + ")");
+        }
 
+        private void createBookmarksWithImagesView(SQLiteDatabase db) {
             db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_BOOKMARKS, "*") +
                     ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
                     TABLE_BOOKMARKS_JOIN_IMAGES);
+        }
 
+        private void createHistoryWithImagesView(SQLiteDatabase db) {
             db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_HISTORY_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_HISTORY, "*") +
                     ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
                     TABLE_HISTORY_JOIN_IMAGES);
+        }
+
+        @Override
+        public void onCreate(SQLiteDatabase db) {
+            debug("Creating browser.db: " + db.getPath());
+
+            createBookmarksTable(db);
+            createHistoryTable(db);
+            createImagesTable(db);
+
+            createBookmarksWithImagesView(db);
+            createHistoryWithImagesView(db);
 
             createMobileBookmarksFolder(db);
 
