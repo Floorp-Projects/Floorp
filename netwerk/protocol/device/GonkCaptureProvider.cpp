@@ -275,7 +275,7 @@ GonkCameraInputStream::Init(nsACString& aContentType, nsCaptureParams* aParams)
   mHeight = aParams->height;
   mCamera = aParams->camera;
 
-  PRUint32 maxNumCameras = 2;//getNumberOfCameras();
+  PRUint32 maxNumCameras = getNumberOfCameras();
 
   if (maxNumCameras == 0)
     return NS_ERROR_FAILURE;
