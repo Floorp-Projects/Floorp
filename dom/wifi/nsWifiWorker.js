@@ -640,6 +640,42 @@ var WifiManager = (function() {
     return true;
   }
 
+  function killSupplicant(callback) {
+    // It is interesting to note that this function does exactly what
+    // wifi_stop_supplicant does. Unforunately, on the Galaxy S2, Samsung
+    // changed that function in a way that means that it doesn't recognize
+    // wpa_supplicant as already running. Therefore, we have to roll our own
+    // version here.
+    var count = 0;
+    var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    function tick() {
+      getProperty("init.svc.wpa_supplicant", "stopped", function (result) {
+        if (result === null) {
+          callback(false);
+          return;
+        }
+        if (result === "stopped" || ++count >= 5) {
+          // Either we succeeded or ran out of time.
+          timer = null;
+          callback(count < 5);
+          return;
+        }
+
+        // Else it's still running, continue waiting.
+        timer.initWithCallback(tick, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+      });
+    }
+
+    setProperty("ctl.stop", "wpa_supplicant", tick);
+  }
+
+  function prepareForStartup(callback) {
+    stopDhcp(manager.ifname, function() {
+      // Ignore any errors.
+      killSupplicant(callback);
+    });
+  }
+
   // Initial state
   var airplaneMode = false;
 
@@ -651,24 +687,29 @@ var WifiManager = (function() {
     if (enable && airplaneMode)
       return false;
     if (enable) {
-      loadDriver(function (status) {
-        if (status < 0) {
-          callback(status);
+      // Kill any existing connections if necessary.
+      getProperty("wifi.interface", "tiwlan0", function (ifname) {
+        if (!ifname) {
+          callback(-1);
           return;
         }
-        startSupplicant(function (status) {
-          if (status < 0) {
-            callback(status);
-            return;
-          }
-          getProperty("wifi.interface", "tiwlan0", function (ifname) {
-            if (!ifname) {
-              callback(-1);
+        manager.ifname = ifname;
+
+        prepareForStartup(function() {
+          // Ignore errors...
+          loadDriver(function (status) {
+            if (status < 0) {
+              callback(status);
               return;
             }
-            manager.ifname = ifname;
-            enableInterface(ifname, function (ok) {
-              callback(ok ? 0 : -1);
+            startSupplicant(function (status) {
+              if (status < 0) {
+                callback(status);
+                return;
+              }
+              enableInterface(ifname, function (ok) {
+                callback(ok ? 0 : -1);
+              });
             });
           });
         });
