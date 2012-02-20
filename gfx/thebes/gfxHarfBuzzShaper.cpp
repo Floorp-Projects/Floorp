@@ -50,13 +50,13 @@
 #include "gfxHarfBuzzShaper.h"
 #include "gfxFontUtils.h"
 #include "gfxUnicodeProperties.h"
+#include "nsUnicodeNormalizer.h"
 
 #include "harfbuzz/hb-unicode.h"
 #include "harfbuzz/hb-ot.h"
 
 #include "cairo.h"
 
-#include "nsUnicodeRange.h"
 #include "nsCRT.h"
 
 #if defined(XP_WIN)
@@ -700,6 +700,26 @@ HBGetEastAsianWidth(hb_unicode_funcs_t *ufuncs, hb_codepoint_t aCh, void *user_d
     return gfxUnicodeProperties::GetEastAsianWidth(aCh);
 }
 
+static hb_bool_t
+HBUnicodeCompose(hb_unicode_funcs_t *ufuncs,
+                 hb_codepoint_t      a,
+                 hb_codepoint_t      b,
+                 hb_codepoint_t     *ab,
+                 void               *user_data)
+{
+    return nsUnicodeNormalizer::Compose(a, b, ab);
+}
+
+static hb_bool_t
+HBUnicodeDecompose(hb_unicode_funcs_t *ufuncs,
+                   hb_codepoint_t      ab,
+                   hb_codepoint_t     *a,
+                   hb_codepoint_t     *b,
+                   void               *user_data)
+{
+    return nsUnicodeNormalizer::DecomposeNonRecursively(ab, a, b);
+}
+
 /*
  * gfxFontShaper override to initialize the text run using HarfBuzz
  */
@@ -753,6 +773,12 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
             hb_unicode_funcs_set_eastasian_width_func(sHBUnicodeFuncs,
                                                       HBGetEastAsianWidth,
                                                       nsnull, nsnull);
+            hb_unicode_funcs_set_compose_func(sHBUnicodeFuncs,
+                                              HBUnicodeCompose,
+                                              nsnull, nsnull);
+            hb_unicode_funcs_set_decompose_func(sHBUnicodeFuncs,
+                                                HBUnicodeDecompose,
+                                                nsnull, nsnull);
         }
 
         mHBFace = hb_face_create_for_tables(HBGetTable, this, nsnull);
