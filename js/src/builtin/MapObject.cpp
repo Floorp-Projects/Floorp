@@ -45,6 +45,7 @@
 #include "jsobj.h"
 
 #include "vm/GlobalObject.h"
+#include "vm/MethodGuard.h"
 #include "vm/Stack.h"
 
 #include "jsobjinlines.h"
