@@ -68,12 +68,8 @@ public class NinePatchTileLayer extends TileLayer {
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         GLES20.glEnable(GLES20.GL_BLEND);
 
-        try {
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getTextureID());
-            drawPatches(context);
-        } finally {
-            GLES20.glDisable(GLES20.GL_BLEND);
-        }
+	GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getTextureID());
+	drawPatches(context);
     }
 
     private void drawPatches(RenderContext context) {
