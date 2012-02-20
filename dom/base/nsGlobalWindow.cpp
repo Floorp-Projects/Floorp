@@ -1049,10 +1049,6 @@ nsGlobalWindow::~nsGlobalWindow()
     }
   }
 
-  if (IsInnerWindow() && mDocument) {
-    mDoc->MarkAsOrphan();
-  }
-
   mDocument = nsnull;           // Forces Release
   mDoc = nsnull;
 
@@ -1315,8 +1311,6 @@ nsGlobalWindow::FreeInnerObjects(bool aClearScope)
 
     // Remember the document's principal.
     mDocumentPrincipal = mDoc->NodePrincipal();
-
-    mDoc->MarkAsOrphan();
   }
 
 #ifdef DEBUG
@@ -2268,14 +2262,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                            html_doc);
   }
 
-  aDocument->SetScriptGlobalObject(newInnerWindow);
+  if (aDocument) {
+    aDocument->SetScriptGlobalObject(newInnerWindow);
+  }
 
   if (!aState) {
     if (reUseInnerWindow) {
       if (newInnerWindow->mDoc != aDocument) {
-        newInnerWindow->mDoc->MarkAsOrphan();
-        aDocument->MarkAsNonOrphan();
-
         newInnerWindow->mDocument = do_QueryInterface(aDocument);
         newInnerWindow->mDoc = aDocument;
 
@@ -2393,9 +2386,6 @@ nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
     PR_LogPrint("DOMWINDOW %p SetNewDocument %s", this, spec.get());
   }
 #endif
-
-  MOZ_ASSERT(aDocument->IsOrphan(), "New document must be orphan!");
-  aDocument->MarkAsNonOrphan();
 
   mDocument = do_QueryInterface(aDocument);
   mDoc = aDocument;
