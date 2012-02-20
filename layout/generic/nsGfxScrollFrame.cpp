@@ -2076,7 +2076,7 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
      (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
       styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
      (scrollRange.width > 0 ||
-      scrollRange.height > 0) &&
+      scrollRange.height > 0 || usingDisplayport) &&
      (usingDisplayport || !mIsRoot ||
       !mOuter->PresContext()->IsRootContentDocument()));
 
