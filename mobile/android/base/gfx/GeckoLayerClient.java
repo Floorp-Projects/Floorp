@@ -185,7 +185,7 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
             if (!bufferRect.intersect(currentRect)) {
                 // If there's no intersection, we have no need to render anything,
                 // but make sure to update the viewport size.
-                mTileLayer.beginTransaction(mLayerController.getView());
+                mTileLayer.beginTransaction();
                 try {
                     updateViewport(true);
                 } finally {
@@ -196,7 +196,7 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
             bufferRect.offset(Math.round(-currentOrigin.x), Math.round(-currentOrigin.y));
         }
 
-        mTileLayer.beginTransaction(mLayerController.getView());
+        mTileLayer.beginTransaction();
 
         // Be sure to adjust the buffer size; if it's not at least as large as the viewport size,
         // ViewportMetrics.getOptimumViewportOffset() gets awfully confused and severe display
