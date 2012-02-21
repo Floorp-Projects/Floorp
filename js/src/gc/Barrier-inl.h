@@ -266,6 +266,31 @@ HeapId::operator=(const HeapId &v)
     return *this;
 }
 
+inline const Value &
+ReadBarrieredValue::get() const
+{
+    if (value.isObject())
+        JSObject::readBarrier(&value.toObject());
+    else if (value.isString())
+        JSString::readBarrier(value.toString());
+    else
+        JS_ASSERT(!value.isMarkable());
+
+    return value;
+}
+
+inline
+ReadBarrieredValue::operator const Value &() const
+{
+    return get();
+}
+
+inline JSObject &
+ReadBarrieredValue::toObject() const
+{
+    return get().toObject();
+}
+
 } /* namespace js */
 
 #endif /* jsgc_barrier_inl_h___ */

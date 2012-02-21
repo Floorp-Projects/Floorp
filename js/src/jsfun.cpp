@@ -71,8 +71,9 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
-#include "vm/ScopeObject.h"
 #include "vm/Debugger.h"
+#include "vm/MethodGuard.h"
+#include "vm/ScopeObject.h"
 
 #if JS_HAS_GENERATORS
 # include "jsiter.h"
@@ -91,8 +92,8 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
-#include "vm/ScopeObject-inl.h"
 #include "vm/ArgumentsObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace mozilla;
@@ -539,7 +540,7 @@ args_trace(JSTracer *trc, JSObject *obj)
 #if JS_HAS_GENERATORS
     StackFrame *fp = argsobj.maybeStackFrame();
     if (fp && fp->isFloatingGenerator())
-        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
+        MarkObject(trc, &js_FloatingFrameToGenerator(fp)->obj, "generator object");
 #endif
 }
 
@@ -551,7 +552,7 @@ args_trace(JSTracer *trc, JSObject *obj)
  */
 Class js::NormalArgumentsObjectClass = {
     "Arguments",
-    JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(NormalArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_FOR_OF_ITERATION,
@@ -587,7 +588,7 @@ Class js::NormalArgumentsObjectClass = {
  */
 Class js::StrictArgumentsObjectClass = {
     "Arguments",
-    JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(StrictArgumentsObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) |
     JSCLASS_FOR_OF_ITERATION,
@@ -936,13 +937,13 @@ call_trace(JSTracer *trc, JSObject *obj)
 #if JS_HAS_GENERATORS
     StackFrame *fp = (StackFrame *) obj->getPrivate();
     if (fp && fp->isFloatingGenerator())
-        MarkObject(trc, js_FloatingFrameToGenerator(fp)->obj, "generator object");
+        MarkObject(trc, &js_FloatingFrameToGenerator(fp)->obj, "generator object");
 #endif
 }
 
 JS_PUBLIC_DATA(Class) js::CallClass = {
     "Call",
-    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS) |
     JSCLASS_NEW_RESOLVE | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,         /* addProperty */
@@ -1465,7 +1466,7 @@ JSFunction::trace(JSTracer *trc)
 
     if (isInterpreted()) {
         if (script())
-            MarkScript(trc, script(), "script");
+            MarkScript(trc, &script(), "script");
         if (environment())
             MarkObjectUnbarriered(trc, environment(), "fun_callscope");
     }
@@ -1499,7 +1500,7 @@ JSFunction::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
  */
 JS_FRIEND_DATA(Class) js::FunctionClass = {
     js_Function_str,
-    JSCLASS_NEW_RESOLVE |
+    JSCLASS_NEW_RESOLVE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */

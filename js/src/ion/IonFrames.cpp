@@ -307,11 +307,19 @@ MarkCalleeToken(JSTracer *trc, CalleeToken token)
 {
     switch (GetCalleeTokenTag(token)) {
       case CalleeToken_Function:
-        MarkObjectRoot(trc, CalleeTokenToFunction(token), "ion-callee");
+      {
+        JSFunction *fun = CalleeTokenToFunction(token);
+        MarkObjectRoot(trc, &fun, "ion-callee");
+        JS_ASSERT(fun == CalleeTokenToFunction(token));
         break;
+      }
       case CalleeToken_Script:
-        MarkScriptRoot(trc, CalleeTokenToScript(token), "ion-entry");
+      {
+        JSScript *script = CalleeTokenToScript(token);
+        MarkScriptRoot(trc, &script, "ion-entry");
+        JS_ASSERT(script == CalleeTokenToScript(token));
         break;
+      }
       default:
         JS_NOT_REACHED("unknown callee token type");
     }

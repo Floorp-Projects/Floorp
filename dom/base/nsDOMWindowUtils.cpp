@@ -603,7 +603,7 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
   }
   event.touches.SetCapacity(aCount);
   PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
-  for (int i = 0; i < aCount; ++i) {
+  for (PRUint32 i = 0; i < aCount; ++i) {
     nsIntPoint pt(0, 0);
     pt.x =
       NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aXs[i]) + offset.x,
@@ -2088,6 +2088,13 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName,
 
   *aRefCnt = *aDBRefCnt = *aSliceRefCnt = -1;
   *aResult = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::IsIncrementalGCEnabled(JSContext* cx, bool* aResult)
+{
+  *aResult = js::IsIncrementalGCEnabled(JS_GetRuntime(cx));
   return NS_OK;
 }
 

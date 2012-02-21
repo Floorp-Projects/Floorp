@@ -40,7 +40,7 @@ diff -ru a/csu/Makefile b/csu/Makefile
 diff -ru a/elf/Makefile b/elf/Makefile
 --- a/elf/Makefile	2008-10-31 16:35:11.000000000 -0400
 +++ b/elf/Makefile	2012-02-16 12:20:00.038593752 -0500
-@@ -295,20 +295,13 @@
+@@ -295,18 +295,11 @@
  z-now-yes = -Wl,-z,now
  
  $(objpfx)ld.so: $(objpfx)librtld.os $(ld-map)
@@ -58,12 +58,33 @@ diff -ru a/elf/Makefile b/elf/Makefile
 -	rm -f $@.lds
 +		  -Wl,-soname=$(rtld-installed-name)			\
 +		  -Wl,-defsym=_begin=0
- 	readelf -s $@ \
--	  | awk '($$7 ~ /^UND(|EF)$$/ && $$1 != "0:" && $$4 != "REGISTER") { print; p=1 } END { exit p != 0 }'
-+	  | $(AWK) '($$7 ~ /^UND(|EF)$$/ && $$1 != "0:" && $$4 != "REGISTER") { print; p=1 } END { exit p != 0 }'
  
  # interp.c exists just to get this string into the libraries.
  CFLAGS-interp.c = -D'RUNTIME_LINKER="$(slibdir)/$(rtld-installed-name)"' \
+diff -ru a/localedata/Makefile b/localedata/Makefile
+--- a/localedata/Makefile	2006-04-26 01:14:03.000000000 -0400
++++ b/localedata/Makefile	2012-02-17 10:31:24.592345047 -0500
+@@ -113,7 +113,7 @@
+ 	$(make-target-directory)
+ 	rm -f $(@:.gz=) $@
+ 	$(INSTALL_DATA) $< $(@:.gz=)
+-	gzip -9 $(@:.gz=)
++	gzip -9n $(@:.gz=)
+ 
+ # Install the locale source files in the appropriate directory.
+ $(inst_i18ndir)/locales/%: locales/% $(+force); $(do-install)
+diff -ru a/Makeconfig b/Makeconfig
+--- a/Makeconfig	2006-07-10 17:42:27.000000000 -0400
++++ b/Makeconfig	2012-02-17 08:28:31.859584817 -0500
+@@ -674,7 +674,7 @@
+ 	   $(foreach lib,$(libof-$(basename $(@F))) \
+ 		         $(libof-$(<F)) $(libof-$(@F)),$(CPPFLAGS-$(lib))) \
+ 	   $(CPPFLAGS-$(<F)) $(CPPFLAGS-$(@F)) $(CPPFLAGS-$(basename $(@F)))
+-override CFLAGS	= -std=gnu99 \
++override CFLAGS	= -std=gnu99 -fgnu89-inline \
+ 		  $(filter-out %frame-pointer,$(+cflags)) $(+gccwarn-c) \
+ 		  $(sysdep-CFLAGS) $(CFLAGS-$(suffix $@)) $(CFLAGS-$(<F)) \
+ 		  $(CFLAGS-$(@F))
 diff -ru a/Makerules b/Makerules
 --- a/Makerules	2011-01-17 23:34:07.000000000 -0500
 +++ b/Makerules	2012-01-30 08:47:56.565068903 -0500

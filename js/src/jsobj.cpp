@@ -90,9 +90,7 @@
 #include "jsscriptinlines.h"
 #include "jsstrinlines.h"
 
-#include "vm/BooleanObject-inl.h"
-#include "vm/NumberObject-inl.h"
-#include "vm/StringObject-inl.h"
+#include "vm/MethodGuard-inl.h"
 
 #if JS_HAS_GENERATORS
 #include "jsiter.h"
@@ -414,8 +412,11 @@ js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map)
      * with otherwise unreachable objects. But this is way too complex
      * to justify spending efforts.
      */
-    for (JSSharpTable::Range r = map->table.all(); !r.empty(); r.popFront())
-        MarkObjectRoot(trc, r.front().key, "sharp table entry");
+    for (JSSharpTable::Range r = map->table.all(); !r.empty(); r.popFront()) {
+        JSObject *tmp = r.front().key;
+        MarkObjectRoot(trc, &tmp, "sharp table entry");
+        JS_ASSERT(tmp == r.front().key);
+    }
 }
 
 #if JS_HAS_TOSOURCE
@@ -2760,6 +2761,13 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type, JSObject *parent
     if (!obj)
         return NULL;
 
+    /*
+     * This will cancel an already-running incremental GC from doing any more
+     * slices, and it will prevent any future incremental GCs.
+     */
+    if (clasp->trace && !(clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS))
+        cx->runtime->gcIncrementalEnabled = false;
+
     Probes::createObject(cx, obj);
     return obj;
 }
@@ -3472,7 +3480,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         a->slots = reserved.newaslots;
         a->initSlotRange(0, reserved.bvals.begin(), bcap);
         if (a->hasPrivate())
-            a->setPrivate(bpriv);
+            a->initPrivate(bpriv);
 
         if (b->isNative())
             b->shape_->setNumFixedSlots(reserved.newbfixed);
@@ -3482,7 +3490,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         b->slots = reserved.newbslots;
         b->initSlotRange(0, reserved.avals.begin(), acap);
         if (b->hasPrivate())
-            b->setPrivate(apriv);
+            b->initPrivate(apriv);
 
         /* Make sure the destructor for reserved doesn't free the slots. */
         reserved.newaslots = NULL;
@@ -6349,49 +6357,6 @@ js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool strict, 
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_GETTER_ONLY);
     return JS_FALSE;
-}
-
-void
-js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp)
-{
-    Value &thisv = call.thisv();
-
-#ifdef DEBUG
-    if (thisv.isObject()) {
-        JS_ASSERT(thisv.toObject().getClass() != clasp ||
-                  !thisv.toObject().getProto() ||
-                  thisv.toObject().getProto()->getClass() != clasp);
-    } else if (thisv.isString()) {
-        JS_ASSERT(clasp != &StringClass);
-    } else if (thisv.isNumber()) {
-        JS_ASSERT(clasp != &NumberClass);
-    } else if (thisv.isBoolean()) {
-        JS_ASSERT(clasp != &BooleanClass);
-    } else {
-        JS_ASSERT(thisv.isUndefined() || thisv.isNull());
-    }
-#endif
-
-    if (JSFunction *fun = js_ValueToFunction(cx, &call.calleev(), 0)) {
-        JSAutoByteString funNameBytes;
-        if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                                 clasp->name, funName, InformalValueTypeName(thisv));
-        }
-    }
-}
-
-bool
-js::HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Native native, Class *clasp)
-{
-    if (args.thisv().isObject()) {
-        JSObject &thisObj = args.thisv().toObject();
-        if (thisObj.isProxy())
-            return Proxy::nativeCall(cx, &thisObj, clasp, native, args);
-    }
-
-    ReportIncompatibleMethod(cx, args, clasp);
-    return false;
 }
 
 #ifdef DEBUG

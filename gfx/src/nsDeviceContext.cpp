@@ -54,39 +54,18 @@
 
 #include "gfxImageSurface.h"
 
+#if !XP_MACOSX
+#include "gfxPDFSurface.h"
+#endif
+
 #ifdef MOZ_ENABLE_GTK2
-#include "nsSystemFontsGTK2.h"
-#include "gfxPDFSurface.h"
 #include "gfxPSSurface.h"
-static nsSystemFontsGTK2 *gSystemFonts = nsnull;
 #elif XP_WIN
-#include "nsSystemFontsWin.h"
 #include "gfxWindowsSurface.h"
-#include "gfxPDFSurface.h"
-static nsSystemFontsWin *gSystemFonts = nsnull;
 #elif defined(XP_OS2)
-#include "nsSystemFontsOS2.h"
 #include "gfxOS2Surface.h"
-#include "gfxPDFSurface.h"
-static nsSystemFontsOS2 *gSystemFonts = nsnull;
 #elif XP_MACOSX
-#include "nsSystemFontsMac.h"
 #include "gfxQuartzSurface.h"
-static nsSystemFontsMac *gSystemFonts = nsnull;
-#elif defined(MOZ_WIDGET_QT)
-#include "nsSystemFontsQt.h"
-#include "gfxPDFSurface.h"
-static nsSystemFontsQt *gSystemFonts = nsnull;
-#elif defined(MOZ_WIDGET_ANDROID)
-#include "nsSystemFontsAndroid.h"
-#include "gfxPDFSurface.h"
-static nsSystemFontsAndroid *gSystemFonts = nsnull;
-#elif defined(MOZ_WIDGET_GONK)
-#include "nsSystemFontsAndroid.h"
-#include "gfxPDFSurface.h"
-static nsSystemFontsAndroid *gSystemFonts = nsnull;
-#else
-#error Need to declare gSystemFonts!
 #endif
 
 using namespace mozilla;
@@ -450,55 +429,6 @@ nsDeviceContext::CreateRenderingContext(nsRenderingContext *&aContext)
     NS_ADDREF(aContext);
 
     return NS_OK;
-}
-
-/* static */ void
-nsDeviceContext::ClearCachedSystemFonts()
-{
-    if (gSystemFonts) {
-        delete gSystemFonts;
-        gSystemFonts = nsnull;
-    }
-}
-
-nsresult
-nsDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
-{
-    if (!gSystemFonts) {
-#ifdef MOZ_ENABLE_GTK2
-        gSystemFonts = new nsSystemFontsGTK2();
-#elif XP_WIN
-        gSystemFonts = new nsSystemFontsWin();
-#elif XP_OS2
-        gSystemFonts = new nsSystemFontsOS2();
-#elif XP_MACOSX
-        gSystemFonts = new nsSystemFontsMac();
-#elif defined(MOZ_WIDGET_QT)
-        gSystemFonts = new nsSystemFontsQt();
-#elif defined(ANDROID)
-        gSystemFonts = new nsSystemFontsAndroid();
-#else
-#error Need to know how to create gSystemFonts, fix me!
-#endif
-    }
-
-    nsString fontName;
-    gfxFontStyle fontStyle;
-    nsresult rv = gSystemFonts->GetSystemFont(aID, &fontName, &fontStyle);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aFont->name = fontName;
-    aFont->style = fontStyle.style;
-    aFont->systemFont = fontStyle.systemFont;
-    aFont->variant = NS_FONT_VARIANT_NORMAL;
-    aFont->weight = fontStyle.weight;
-    aFont->stretch = fontStyle.stretch;
-    aFont->decorations = NS_FONT_DECORATION_NONE;
-    aFont->size = NSFloatPixelsToAppUnits(fontStyle.size, UnscaledAppUnitsPerDevPixel());
-    //aFont->langGroup = fontStyle.langGroup;
-    aFont->sizeAdjust = fontStyle.sizeAdjust;
-
-    return rv;
 }
 
 nsresult

@@ -88,7 +88,6 @@ using namespace mozilla;
 
 nsPlaintextEditor::nsPlaintextEditor()
 : nsEditor()
-, mIgnoreSpuriousDragEvent(false)
 , mRules(nsnull)
 , mWrapToWindow(false)
 , mWrapColumn(0)

@@ -969,10 +969,14 @@ nsHTMLScrollFrame::GetFrameName(nsAString& aResult) const
 already_AddRefed<nsAccessible>
 nsHTMLScrollFrame::CreateAccessible()
 {
-  if (!IsFocusable()) {
+  // Create an accessible regardless of focusable state because the state can be
+  // changed during frame life cycle without any notifications to accessibility.
+  if (mContent->IsRootOfNativeAnonymousSubtree() ||
+      GetScrollbarStyles() == nsIScrollableFrame::
+        ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN) ) {
     return nsnull;
   }
-  // Focusable via CSS, so needs to be in accessibility hierarchy
+
   nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
     return accService->CreateHyperTextAccessible(mContent,
@@ -1546,7 +1550,11 @@ void
 nsGfxScrollFrameInner::ScrollTo(nsPoint aScrollPosition,
                                 nsIScrollableFrame::ScrollMode aMode)
 {
-  mDestination = ClampScrollPosition(aScrollPosition);
+  if (ShouldClampScrollPosition()) {
+    mDestination = ClampScrollPosition(aScrollPosition);
+  } else {
+    mDestination = aScrollPosition;
+  }
 
   if (aMode == nsIScrollableFrame::INSTANT) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
@@ -1709,6 +1717,15 @@ bool nsGfxScrollFrameInner::IsIgnoringViewportClipping() const
   return subdocFrame && !subdocFrame->ShouldClipSubdocument();
 }
 
+bool nsGfxScrollFrameInner::ShouldClampScrollPosition() const
+{
+  if (!mIsRoot)
+    return true;
+  nsSubDocumentFrame* subdocFrame = static_cast<nsSubDocumentFrame*>
+    (nsLayoutUtils::GetCrossDocParentFrame(mOuter->PresContext()->PresShell()->GetRootFrame()));
+  return !subdocFrame || subdocFrame->ShouldClampScrollPosition();
+}
+
 bool nsGfxScrollFrameInner::IsAlwaysActive() const
 {
   // The root scrollframe for a non-chrome document which is the direct
@@ -1808,17 +1825,23 @@ ClampInt(nscoord aLower, nscoord aVal, nscoord aUpper, nscoord aAppUnitsPerPixel
 }
 
 nsPoint
-nsGfxScrollFrameInner::ClampAndRestrictToDevPixels(const nsPoint& aPt,
-                                                   nsIntPoint* aPtDevPx) const
+nsGfxScrollFrameInner::RestrictToDevPixels(const nsPoint& aPt,
+                                           nsIntPoint* aPtDevPx,
+                                           bool aShouldClamp) const
 {
   nsPresContext* presContext = mOuter->PresContext();
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   // Convert to device pixels so we scroll to an integer offset of device
   // pixels. But we also need to make sure that our position remains
   // inside the allowed region.
-  nsRect scrollRange = GetScrollRange();
-  *aPtDevPx = nsIntPoint(ClampInt(scrollRange.x, aPt.x, scrollRange.XMost(), appUnitsPerDevPixel),
-                         ClampInt(scrollRange.y, aPt.y, scrollRange.YMost(), appUnitsPerDevPixel));
+  if (aShouldClamp) {
+    nsRect scrollRange = GetScrollRange();
+    *aPtDevPx = nsIntPoint(ClampInt(scrollRange.x, aPt.x, scrollRange.XMost(), appUnitsPerDevPixel),
+                           ClampInt(scrollRange.y, aPt.y, scrollRange.YMost(), appUnitsPerDevPixel));
+  } else {
+    *aPtDevPx = nsIntPoint(NSAppUnitsToIntPixels(aPt.x, appUnitsPerDevPixel),
+                           NSAppUnitsToIntPixels(aPt.y, appUnitsPerDevPixel));
+  }
   return nsPoint(NSIntPixelsToAppUnits(aPtDevPx->x, appUnitsPerDevPixel),
                  NSIntPixelsToAppUnits(aPtDevPx->y, appUnitsPerDevPixel));
 }
@@ -1854,7 +1877,8 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
   nsPresContext* presContext = mOuter->PresContext();
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsIntPoint ptDevPx;
-  nsPoint pt = ClampAndRestrictToDevPixels(aPt, &ptDevPx);
+
+  nsPoint pt = RestrictToDevPixels(aPt, &ptDevPx, ShouldClampScrollPosition());
 
   nsPoint curPos = GetScrollPosition();
   if (pt == curPos) {

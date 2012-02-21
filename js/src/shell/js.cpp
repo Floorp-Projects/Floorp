@@ -1287,6 +1287,7 @@ static const struct ParamPair {
     {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
     {"gcBytes",             JSGC_BYTES},
     {"gcNumber",            JSGC_NUMBER},
+    {"sliceTimeBudget",     JSGC_SLICE_TIME_BUDGET}
 };
 
 static JSBool
@@ -1428,6 +1429,35 @@ ScheduleGC(JSContext *cx, uintN argc, jsval *vp)
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
+
+static JSBool
+VerifyBarriers(JSContext *cx, uintN argc, jsval *vp)
+{
+    gc::VerifyBarriers(cx);
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
+
+static JSBool
+GCSlice(JSContext *cx, uintN argc, jsval *vp)
+{
+    uint32_t budget;
+
+    if (argc != 1) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                             (argc < 1)
+                             ? JSSMSG_NOT_ENOUGH_ARGS
+                             : JSSMSG_TOO_MANY_ARGS,
+                             "gcslice");
+        return JS_FALSE;
+    }
+    if (!JS_ValueToECMAUint32(cx, vp[2], &budget))
+        return JS_FALSE;
+
+    GCDebugSlice(cx, budget);
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
 #endif /* JS_GC_ZEAL */
 
 typedef struct JSCountHeapNode JSCountHeapNode;
@@ -1474,7 +1504,7 @@ CountHeapNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     if (node) {
         countTracer->recycleList = node->next;
     } else {
-        node = (JSCountHeapNode *) JS_malloc(trc->context, sizeof *node);
+        node = (JSCountHeapNode *) js_malloc(sizeof *node);
         if (!node) {
             countTracer->ok = JS_FALSE;
             return;
@@ -1576,7 +1606,7 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
     }
     while ((node = countTracer.recycleList) != NULL) {
         countTracer.recycleList = node->next;
-        JS_free(cx, node);
+        js_free(node);
     }
     JS_DHashTableFinish(&countTracer.visited);
 
@@ -4002,6 +4032,8 @@ static JSFunctionSpec shell_functions[] = {
 #ifdef JS_GC_ZEAL
     JS_FN("gczeal",         GCZeal,         2,0),
     JS_FN("schedulegc",     ScheduleGC,     1,0),
+    JS_FN("verifybarriers", VerifyBarriers, 0,0),
+    JS_FN("gcslice",        GCSlice,        1,0),
 #endif
     JS_FN("internalConst",  InternalConst,  1,0),
     JS_FN("setDebug",       SetDebug,       1,0),
@@ -4115,6 +4147,8 @@ static const char *const shell_help_messages[] = {
 "                         How zealous the garbage collector should be",
 "schedulegc(num, [compartmentGC?])\n"
 "                         Schedule a GC to happen after num allocations",
+"verifybarriers()         Start or end a run of the write barrier verifier",
+"gcslice(n)               Run an incremental GC slice that marks ~n objects",
 #endif
 "internalConst(name)\n"
 "  Query an internal constant for the engine. See InternalConst source for the\n"
@@ -5541,7 +5575,7 @@ main(int argc, char **argv, char **envp)
     if (!cx)
         return 1;
 
-    JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_COMPARTMENT);
+    JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
     JS_SetGCParameterForThread(cx, JSGC_MAX_CODE_CACHE_BYTES, 16 * 1024 * 1024);
 
     /* Must be done before creating the global object */

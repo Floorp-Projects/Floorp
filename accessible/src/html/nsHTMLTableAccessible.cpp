@@ -1494,28 +1494,24 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
    * Rules for non-bordered tables with 2-4 columns and 2+ rows from here on forward
    */
 
-  // Check for styled background color across the row
-  // Alternating background color is a common way 
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-  nsCOMPtr<nsIDOMElement> tableElt(do_QueryInterface(mContent));    
-  tableElt->GetElementsByTagName(NS_LITERAL_STRING("tr"), getter_AddRefs(nodeList));
-  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
-  PRUint32 length;
-  nodeList->GetLength(&length);
-  nsAutoString color, lastRowColor;
-  for (PRUint32 rowCount = 0; rowCount < length; rowCount ++) {
-    nsCOMPtr<nsIDOMNode> rowNode;
-    nodeList->Item(rowCount, getter_AddRefs(rowNode));
-    nsCOMPtr<nsIContent> rowContent(do_QueryInterface(rowNode));
-
-    nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl =
-      nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), rowContent);
-    NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
-
-    lastRowColor = color;
-    styleDecl->GetPropertyValue(NS_LITERAL_STRING("background-color"), color);
-    if (rowCount > 0 && false == lastRowColor.Equals(color)) {
-      RETURN_LAYOUT_ANSWER(false, "2 styles of row background color, non-bordered");
+  // Check for styled background color across rows (alternating background
+  // color is a common feature for data tables).
+  PRUint32 childCount = GetChildCount();
+  nsAutoString rowColor, prevRowColor;
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible* child = GetChildAt(childIdx);
+    if (child->Role() == roles::ROW) {
+      nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl =
+        nsCoreUtils::GetComputedStyleDeclaration(EmptyString(),
+                                                 child->GetContent());
+      if (styleDecl) {
+        prevRowColor = rowColor;
+        styleDecl->GetPropertyValue(NS_LITERAL_STRING("background-color"),
+                                    rowColor);
+        if (childIdx > 0 && !prevRowColor.Equals(rowColor)) {
+          RETURN_LAYOUT_ANSWER(false, "2 styles of row background color, non-bordered");
+        }
+      }
     }
   }
 
@@ -1525,30 +1521,17 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
     RETURN_LAYOUT_ANSWER(false, ">= kMaxLayoutRows (20) and non-bordered");
   }
 
-  // Check for very wide table
-  nsAutoString styledWidth;
-  GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("width"), styledWidth);
-  if (styledWidth.EqualsLiteral("100%")) {
-    RETURN_LAYOUT_ANSWER(true, "<=4 columns and 100% width");
-  }
-  if (styledWidth.Find(NS_LITERAL_STRING("px"))) { // Hardcoded in pixels
-    nsIFrame *tableFrame = GetFrame();
-    NS_ENSURE_TRUE(tableFrame , NS_ERROR_FAILURE);
-    nsSize tableSize  = tableFrame->GetSize();
-
-    nsDocAccessible* docAccessible = Document();
-    NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
-    nsIFrame *docFrame = docAccessible->GetFrame();
-    NS_ENSURE_TRUE(docFrame , NS_ERROR_FAILURE);
-
-    nsSize docSize = docFrame->GetSize();
-    if (docSize.width > 0) {
-      PRInt32 percentageOfDocWidth = (100 * tableSize.width) / docSize.width;
-      if (percentageOfDocWidth > 95) {
-        // 3-4 columns, no borders, not a lot of rows, and 95% of the doc's width
-        // Probably for layout
-        RETURN_LAYOUT_ANSWER(true, "<=4 columns, width hardcoded in pixels and 95% of document width");
-      }
+  // Check for very wide table.
+  nsIFrame* documentFrame = Document()->GetFrame();
+  nsSize documentSize = documentFrame->GetSize();
+  if (documentSize.width > 0) {
+    nsSize tableSize = GetFrame()->GetSize();
+    PRInt32 percentageOfDocWidth = (100 * tableSize.width) / documentSize.width;
+    if (percentageOfDocWidth > 95) {
+      // 3-4 columns, no borders, not a lot of rows, and 95% of the doc's width
+      // Probably for layout
+      RETURN_LAYOUT_ANSWER(true,
+                           "<= 4 columns, table width is 95% of document width");
     }
   }
 

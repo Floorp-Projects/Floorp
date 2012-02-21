@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const CURRENT_SCHEMA_VERSION = 17;
+const CURRENT_SCHEMA_VERSION = 18;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
@@ -642,6 +642,21 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments)
     }
   });
   commit.finalize();
+}
+
+/**
+ * Shutdowns Places, invoking the callback when the connection has been closed.
+ *
+ * @param aCallback
+ *        Function to be called when done.
+ */
+function waitForConnectionClosed(aCallback)
+{
+  Services.obs.addObserver(function WFCCCallback() {
+    Services.obs.removeObserver(WFCCCallback, "places-connection-closed");
+    aCallback();
+  }, "places-connection-closed", false);
+  shutdownPlaces();
 }
 
 /**

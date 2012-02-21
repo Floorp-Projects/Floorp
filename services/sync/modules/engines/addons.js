@@ -317,12 +317,12 @@ AddonsStore.prototype = {
    * Provides core Store API to create/install an add-on from a record.
    */
   create: function create(record) {
-    // Ideally, we'd set syncGUID and userDisabled on install. For now, we
-    // make the changes post-installation.
-    // TODO Set syncGUID and userDisabled in one step, during install.
-
     let cb = Async.makeSpinningCallback();
-    this.installAddonsFromIDs([record.addonID], cb);
+    this.installAddons([{
+      id:       record.addonID,
+      syncGUID: record.id,
+      enabled:  record.enabled
+    }], cb);
 
     // This will throw if there was an error. This will get caught by the sync
     // engine and the record will try to be applied later.
@@ -342,12 +342,6 @@ AddonsStore.prototype = {
     }
 
     this._log.info("Add-on installed: " + record.addonID);
-    this._log.info("Setting add-on Sync GUID to remote: " + record.id);
-    addon.syncGUID = record.id;
-
-    cb = Async.makeSpinningCallback();
-    this.updateUserDisabled(addon, !record.enabled, cb);
-    cb.wait();
   },
 
   /**
@@ -682,6 +676,13 @@ AddonsStore.prototype = {
   /**
    * Installs an add-on from an AddonSearchResult instance.
    *
+   * The options argument defines extra options to control the install.
+   * Recognized keys in this map are:
+   *
+   *   syncGUID - Sync GUID to use for the new add-on.
+   *   enabled - Boolean indicating whether the add-on should be enabled upon
+   *             install.
+   *
    * When complete it calls a callback with 2 arguments, error and result.
    *
    * If error is falsy, result is an object. If error is truthy, result is
@@ -695,11 +696,13 @@ AddonsStore.prototype = {
    *
    * @param addon
    *        AddonSearchResult to install add-on from.
+   * @param options
+   *        Object with additional metadata describing how to install add-on.
    * @param cb
    *        Function to be invoked with result of operation.
    */
   installAddonFromSearchResult:
-    function installAddonFromSearchResult(addon, cb) {
+    function installAddonFromSearchResult(addon, options, cb) {
     this._log.info("Trying to install add-on from search result: " + addon.id);
 
     this.getInstallFromSearchResult(addon, function(error, install) {
@@ -715,8 +718,28 @@ AddonsStore.prototype = {
 
       try {
         this._log.info("Installing " + addon.id);
+        let log = this._log;
 
         let listener = {
+          onInstallStarted: function(install) {
+            if (!options) {
+              return;
+            }
+
+            if (options.syncGUID) {
+              log.info("Setting syncGUID of " + install.name  +": " +
+                       options.syncGUID);
+              install.addon.syncGUID = options.syncGUID;
+            }
+
+            // We only need to change userDisabled if it is disabled because
+            // enabled is the default.
+            if ("enabled" in options && !options.enabled) {
+              log.info("Marking add-on as disabled for install: " +
+                       install.name);
+              install.addon.userDisabled = true;
+            }
+          },
           onInstallEnded: function(install, addon) {
             install.removeListener(listener);
 
@@ -892,7 +915,14 @@ AddonsStore.prototype = {
   },
 
   /**
-   * Installs multiple add-ons specified by their IDs.
+   * Installs multiple add-ons specified by metadata.
+   *
+   * The first argument is an array of objects. Each object must have the
+   * following keys:
+   *
+   *   id - public ID of the add-on to install.
+   *   syncGUID - syncGUID for new add-on.
+   *   enabled - boolean indicating whether the add-on should be enabled.
    *
    * The callback will be called when activity on all add-ons is complete. The
    * callback receives 2 arguments, error and result.
@@ -908,14 +938,19 @@ AddonsStore.prototype = {
    *   errors        Array of errors encountered. Only has elements if error is
    *                 truthy.
    *
-   * @param ids
-   *        Array of add-on string IDs to install.
+   * @param installs
+   *        Array of objects describing add-ons to install.
    * @param cb
    *        Function to be called when all actions are complete.
    */
-  installAddonsFromIDs: function installAddonsFromIDs(ids, cb) {
+  installAddons: function installAddons(installs, cb) {
     if (!cb) {
       throw new Error("Invalid argument: cb is not defined.");
+    }
+
+    let ids = [];
+    for each (let addon in installs) {
+      ids.push(addon.id);
     }
 
     AddonRepository.getAddonsByIDs(ids, {
@@ -1009,7 +1044,15 @@ AddonsStore.prototype = {
         // Start all the installs asynchronously. They will report back to us
         // as they finish, eventually triggering the global callback.
         for each (let addon in toInstall) {
-          this.installAddonFromSearchResult(addon, installCallback);
+          let options = {};
+          for each (let install in installs) {
+            if (install.id == addon.id) {
+              options = install;
+              break;
+            }
+          }
+
+          this.installAddonFromSearchResult(addon, options, installCallback);
         }
 
       }.bind(this),

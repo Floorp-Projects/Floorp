@@ -37,13 +37,15 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!-- This file is used for both about:memory and about:compartments. -->
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>about:memory</title>
+    <!-- the <title> is filled in by aboutMemory.js -->
     <link rel="stylesheet" href="chrome://global/skin/aboutMemory.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css"/>
-    <script type="text/javascript" src="chrome://global/content/aboutMemory.js"/>
+    <script type="text/javascript;version=1.8" src="chrome://global/content/aboutMemory.js"/>
   </head>
 
-  <body id="content" onload="onLoad()" onunload="onUnload()"></body>
+  <body onload="onLoad()" onunload="onUnload()"></body>
 </html>

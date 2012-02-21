@@ -911,6 +911,8 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 #ifdef XPC_TRACK_DEFERRED_RELEASES
             printf("XPC - End deferred Releases\n");
 #endif
+
+            self->GetXPConnect()->ClearGCBeforeCC();
             break;
         }
         default:
@@ -1209,7 +1211,7 @@ XPCJSRuntime::~XPCJSRuntime()
 namespace xpc {
 
 void*
-GetCompartmentName(JSContext *cx, JSCompartment *c)
+GetCompartmentNameHelper(JSContext *cx, JSCompartment *c, bool getAddress)
 {
     nsCString* name = new nsCString();
     if (js::IsAtomsCompartmentFor(cx, c)) {
@@ -1218,10 +1220,10 @@ GetCompartmentName(JSContext *cx, JSCompartment *c)
         if (principals->codebase) {
             name->Assign(principals->codebase);
 
-            // If it's the system compartment, append the address.
-            // This means that multiple system compartments (and there
-            // can be many) can be distinguished.
-            if (js::IsSystemCompartment(c)) {
+            // If it's the system compartment and |getAddress| is true, append
+            // the address.  This means that multiple system compartments (and
+            // there can be many) can be distinguished.
+            if (getAddress && js::IsSystemCompartment(c)) {
                 xpc::CompartmentPrivate *compartmentPrivate =
                     static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, c));
                 if (compartmentPrivate &&
@@ -1247,6 +1249,18 @@ GetCompartmentName(JSContext *cx, JSCompartment *c)
         name->AssignLiteral("null-principal");
     }
     return name;
+}
+
+void*
+GetCompartmentName(JSContext *cx, JSCompartment *c)
+{
+    return GetCompartmentNameHelper(cx, c, /* get address = */false);
+}
+
+void*
+GetCompartmentNameAndAddress(JSContext *cx, JSCompartment *c)
+{
+    return GetCompartmentNameHelper(cx, c, /* get address = */true);
 }
 
 void
@@ -1370,7 +1384,7 @@ GetJSUserCompartmentCount()
 
 // Nb: js-system-compartment-count + js-user-compartment-count could be
 // different to the number of compartments reported by
-// XPConnectJSCompartmentsMultiReporter if a garbage collection occurred
+// JSMemoryMultiReporter if a garbage collection occurred
 // between them being consulted.  We could move these reporters into
 // XPConnectJSCompartmentCount to avoid that problem, but then we couldn't
 // easily report them via telemetry, so we live with the small risk of
@@ -1703,7 +1717,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats, const nsACStri
 
     // gcTotal is the sum of everything we've reported for the GC heap.  It
     // should equal rtStats.gcHeapChunkTotal.
-    JS_ASSERT(gcTotal == rtStats.gcHeapChunkTotal);
+    JS_ASSERT(size_t(gcTotal) == rtStats.gcHeapChunkTotal);
 }
 
 } // namespace memory
@@ -1712,7 +1726,77 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats, const nsACStri
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf, "js")
 
-class XPConnectJSCompartmentsMultiReporter : public nsIMemoryMultiReporter
+class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
+{
+  public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD GetName(nsACString &name)
+    {
+        name.AssignLiteral("compartments");
+        return NS_OK;
+    }
+
+    typedef js::Vector<nsCString, 0, js::SystemAllocPolicy> Paths; 
+
+    static void CompartmentCallback(JSContext *cx, void* data, JSCompartment *c)
+    {
+        Paths *paths = static_cast<Paths *>(data);
+        nsCString *name =
+            static_cast<nsCString *>(xpc::GetCompartmentName(cx, c));
+        nsCString path;
+        if (js::IsSystemCompartment(c))
+            path = NS_LITERAL_CSTRING("compartments/system/") + *name;
+        else
+            path = NS_LITERAL_CSTRING("compartments/user/") + *name;
+        if (!paths->append(path))
+            return;     // silent failure, but it's very unlikely
+
+        xpc::DestroyCompartmentName(name);
+    }
+
+    NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *callback,
+                              nsISupports *closure)
+    {
+        // First we collect the compartment paths.  Then we report them.  Doing
+        // the two steps interleaved is a bad idea, because calling |callback|
+        // from within CompartmentCallback() leads to all manner of assertions.
+
+        // Collect.
+        XPCJSRuntime *xpcrt = nsXPConnect::GetRuntimeInstance();
+        JSContext *cx = JS_NewContext(xpcrt->GetJSRuntime(), 0);
+        if (!cx)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        Paths paths; 
+        JS_IterateCompartments(cx, &paths, CompartmentCallback);
+        JS_DestroyContextNoGC(cx);
+
+        // Report.
+        for (size_t i = 0; i < paths.length(); i++)
+            // These ones don't need a description, hence the "".
+            ReportMemory(paths[i],
+                         nsIMemoryReporter::KIND_OTHER,
+                         nsIMemoryReporter::UNITS_COUNT,
+                         1, "", callback, closure);
+
+        return NS_OK;
+    }
+
+    NS_IMETHOD
+    GetExplicitNonHeap(PRInt64 *n)
+    {
+        // This reporter does neither "explicit" nor NONHEAP measurements.
+        *n = 0;
+        return NS_OK;
+    }
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(JSCompartmentsMultiReporter
+                              , nsIMemoryMultiReporter
+                              )
+
+class JSMemoryMultiReporter : public nsIMemoryMultiReporter
 {
 public:
     NS_DECL_ISUPPORTS
@@ -1733,7 +1817,7 @@ public:
         // the callback.  Separating these steps is important because the
         // callback may be a JS function, and executing JS while getting these
         // stats seems like a bad idea.
-        JS::RuntimeStats rtStats(JsMallocSizeOf, xpc::GetCompartmentName,
+        JS::RuntimeStats rtStats(JsMallocSizeOf, xpc::GetCompartmentNameAndAddress,
                                  xpc::DestroyCompartmentName);
         if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats))
             return NS_ERROR_FAILURE;
@@ -1859,7 +1943,7 @@ public:
     }
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(XPConnectJSCompartmentsMultiReporter
+NS_IMPL_THREADSAFE_ISUPPORTS1(JSMemoryMultiReporter
                               , nsIMemoryMultiReporter
                               )
 
@@ -1889,6 +1973,18 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
         break;
       case JS_TELEMETRY_GC_SWEEP_MS:
         Telemetry::Accumulate(Telemetry::GC_SWEEP_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_SLICE_MS:
+        Telemetry::Accumulate(Telemetry::GC_SLICE_MS, sample);
+        break;
+      case JS_TELEMETRY_GC_MMU_50:
+        Telemetry::Accumulate(Telemetry::GC_MMU_50, sample);
+        break;
+      case JS_TELEMETRY_GC_RESET:
+        Telemetry::Accumulate(Telemetry::GC_RESET, sample);
+        break;
+      case JS_TELEMETRY_GC_INCREMENTAL_DISABLED:
+        Telemetry::Accumulate(Telemetry::GC_INCREMENTAL_DISABLED, sample);
         break;
     }
 }
@@ -1987,7 +2083,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
-        NS_RegisterMemoryMultiReporter(new XPConnectJSCompartmentsMultiReporter);
+        NS_RegisterMemoryMultiReporter(new JSMemoryMultiReporter);
+        NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
     }
 
     if (!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
@@ -2073,7 +2170,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
         ok = mozilla::dom::binding::DefineStaticJSVals(cx);
         if (!ok)
             return false;
-        
+
         ok = DefineStaticDictionaryJSVals(cx);
     }
     if (!ok)

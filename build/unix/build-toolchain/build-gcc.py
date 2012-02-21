@@ -154,7 +154,7 @@ def build_source_dir(prefix, version):
     return source_dir + '/' + prefix + version
 
 binutils_version = "2.21.1"
-glibc_version = "2.7" #FIXME: should probably use 2.5.1
+glibc_version = "2.5.1"
 tar_version = "1.26"
 make_version = "3.81"
 gcc_version = "4.5.2"
@@ -224,7 +224,7 @@ build_one_stage({"CC": "gcc", "CXX" : "g++"}, stage1_dir, True)
 
 stage1_tool_inst_dir = stage1_dir + '/inst'
 stage2_dir = build_dir + '/stage2'
-build_one_stage({"CC"     : stage1_tool_inst_dir + "/bin/gcc",
+build_one_stage({"CC"     : stage1_tool_inst_dir + "/bin/gcc -fgnu89-inline",
                  "CXX"    : stage1_tool_inst_dir + "/bin/g++",
                  "AR"     : stage1_tool_inst_dir + "/bin/ar",
                  "RANLIB" : "true" },

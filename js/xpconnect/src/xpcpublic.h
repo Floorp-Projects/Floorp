@@ -75,7 +75,8 @@ xpc_CreateMTGlobalObject(JSContext *cx, JSClass *clasp,
 
 #define XPCONNECT_GLOBAL_FLAGS                                                \
     JSCLASS_XPCONNECT_GLOBAL | JSCLASS_HAS_PRIVATE |                          \
-    JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(1)
+    JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_IMPLEMENTS_BARRIERS |            \
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(1)
 
 void
 TraceXPCGlobal(JSTracer *trc, JSObject *obj);
@@ -182,8 +183,12 @@ xpc_UnmarkGrayObjectRecursive(JSObject* obj);
 inline void
 xpc_UnmarkGrayObject(JSObject *obj)
 {
-    if (obj && xpc_IsGrayGCThing(obj))
-        xpc_UnmarkGrayObjectRecursive(obj);
+    if (obj) {
+        if (xpc_IsGrayGCThing(obj))
+            xpc_UnmarkGrayObjectRecursive(obj);
+        else if (js::IsIncrementalBarrierNeededOnObject(obj))
+            js::IncrementalReferenceBarrier(obj);
+    }
 }
 
 // If aVariant is an XPCVariant, this marks the object to be in aGeneration.
@@ -214,7 +219,8 @@ bool Base64Decode(JSContext *cx, JS::Value val, JS::Value *out);
  * Note, the ownership of the string buffer may be moved from str to rval.
  * If that happens, str will point to an empty string after this call.
  */
-bool StringToJsval(JSContext *cx, nsString &str, JS::Value *rval);
+bool StringToJsval(JSContext *cx, nsAString &str, JS::Value *rval);
+bool NonVoidStringToJsval(JSContext *cx, nsAString &str, JS::Value *rval);
 
 void *GetCompartmentName(JSContext *cx, JSCompartment *c);
 void DestroyCompartmentName(void *string);

@@ -123,7 +123,9 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
 
   // XXX Unsafe to assume successful allocation
   mPageData = new nsSharedPageData();
-  mPageData->mHeadFootFont = new nsFont(*PresContext()->GetDefaultFont(kGenericFont_serif));
+  mPageData->mHeadFootFont =
+    new nsFont(*PresContext()->GetDefaultFont(kGenericFont_serif,
+                                              aContext->GetStyleFont()->mLanguage));
   mPageData->mHeadFootFont->size = nsPresContext::CSSPointsToAppUnits(10);
 
   nsresult rv;

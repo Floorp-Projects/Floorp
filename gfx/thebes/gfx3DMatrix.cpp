@@ -714,8 +714,9 @@ gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
 bool
 gfx3DMatrix::CanDraw2D(gfxMatrix* aMatrix) const
 {
-  if (_14 != 0.0f || _24 != 0.0f ||
-      _34 != 0.0f || _44 != 1.0f) {
+  if (_14 != 0.0f ||
+      _24 != 0.0f ||
+      _44 != 1.0f) {
     return false;
   }
   if (aMatrix) {

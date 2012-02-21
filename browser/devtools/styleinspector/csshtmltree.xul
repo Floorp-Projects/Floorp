@@ -114,7 +114,7 @@ To visually debug the templates without running firefox, alter the display:none
             ${selector.humanReadableText(__element)}
           </td>
           <td class="rule-link">
-            <a target="_blank" href="view-source:${selector.selectorInfo.href}" class="link"
+            <a target="_blank" onclick="${selector.openStyleEditor}" class="link"
                title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
           </td>
         </tr>

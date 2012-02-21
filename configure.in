@@ -225,14 +225,7 @@ if test -n "$L10NBASEDIR"; then
     if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
         AC_MSG_ERROR([--with-l10n-base must specify a path])
     elif test -d "$L10NBASEDIR"; then
-        case "$host_os" in
-        mingw*)
-            L10NBASEDIR=`cd "$L10NBASEDIR" && pwd -W`
-            ;;
-        *)
-            L10NBASEDIR=`cd "$L10NBASEDIR" && pwd`
-            ;;
-        esac
+        L10NBASEDIR=`cd "$L10NBASEDIR" && pwd`
     else
         AC_MSG_ERROR([Invalid value --with-l10n-base, $L10NBASEDIR doesn't exist])
     fi
@@ -2266,6 +2259,7 @@ fi
 
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
+MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`
 
 dnl Get version of various core apps from the version files.
 FIREFOX_VERSION=`cat $_topsrcdir/browser/config/version.txt`
@@ -2276,6 +2270,7 @@ fi
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
+AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
 
 MOZ_DOING_LTO(lto_is_enabled)
 
@@ -4092,6 +4087,56 @@ if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
   esac
 fi
 
+dnl Using the custom linker on ARMv6 requires 16k alignment of ELF segments.
+if test -n "$MOZ_LINKER"; then
+  if test "$CPU_ARCH" = arm; then
+    dnl Determine the target ARM architecture (5 for ARMv5, v5T, v5E, etc.; 6 for ARMv6, v6K, etc.)
+    ARM_ARCH=`${CC-cc} ${CFLAGS} -dM -E - < /dev/null | sed -n 's/.*__ARM_ARCH_\([[0-9]]*\).*/\1/p'`
+    dnl When building for < ARMv7, we need to ensure 16k alignment of ELF segments
+    if test -n "$ARM_ARCH" && test "$ARM_ARCH" -lt 7; then
+      LDFLAGS="$LDFLAGS -Wl,-z,max-page-size=0x4000"
+      _SUBDIR_LDFLAGS="$_SUBDIR_LDFLAGS -Wl,-z,max-page-size=0x4000"
+    fi
+  fi
+fi
+
+dnl The custom linker doesn't support text relocations, but NDK >= r6b
+dnl creates some (http://code.google.com/p/android/issues/detail?id=23203)
+dnl We however want to avoid these text relocations, and this can be done
+dnl by making gcc not link crtbegin and crtend. In the broken NDKs, crtend
+dnl doesn't contain anything at all, beside placeholders for some sections,
+dnl and crtbegin only contains a finalizer function that calls
+dnl __cxa_finalize. The custom linker actually takes care of calling
+dnl __cxa_finalize when the library doesn't call it itself, which makes it
+dnl safe not to link crtbegin. Besides, previous versions of the NDK didn't
+dnl link crtbegin and crtend at all.
+if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$OS_TARGET" = "Android"; then
+  AC_CACHE_CHECK([whether the CRT objects have text relocations],
+    ac_cv_crt_has_text_relocations,
+    [echo 'int foo() { return 0; }' > conftest.cpp
+     if AC_TRY_COMMAND(${CXX-g++} -o conftest${DLL_SUFFIX} $CXXFLAGS $DSO_LDOPTS $LDFLAGS conftest.cpp $LIBS 1>&5) &&
+        test -s conftest${DLL_SUFFIX}; then
+       if readelf -d conftest${DLL_SUFFIX} | grep TEXTREL > /dev/null; then
+         ac_cv_crt_has_text_relocations=yes
+       else
+         ac_cv_crt_has_text_relocations=no
+       fi
+     else
+       AC_ERROR([couldn't compile a simple C file])
+     fi
+     rm -rf conftest*])
+  if test "$ac_cv_crt_has_text_relocations" = yes; then
+    dnl While we want libraries to skip the CRT files, we don't want
+    dnl executables to be treated the same way. We thus set the flag
+    dnl in DSO_LDOPTS and not LDFLAGS. However, to pass it to nspr,
+    dnl we need to use LDFLAGS because nspr doesn't inherit DSO_LDOPTS.
+    dnl Using LDFLAGS in nspr is safe, since we only really build
+    dnl libraries there.
+    DSO_LDOPTS="$DSO_LDOPTS -nostartfiles"
+    NSPR_LDFLAGS=-nostartfiles
+  fi
+fi
+
 dnl Check for the existence of various allocation headers/functions
 
 MALLOC_H=
@@ -4929,7 +4974,6 @@ cairo-gonk)
     MOZ_PDF_PRINTING=1
     MOZ_B2G_RIL=1
     MOZ_TOUCH=1
-    MOZ_B2G_BT=1
     ;;
 
 esac
@@ -5480,6 +5524,15 @@ dnl ========================================================
 if test -n "$MOZ_ANDROID_HISTORY"; then
      dnl Do this if defined in confvars.sh
      AC_DEFINE(MOZ_ANDROID_HISTORY)
+fi
+
+
+dnl ========================================================
+dnl = Build with the Android Java compositor
+dnl ========================================================
+if test -n "$MOZ_JAVA_COMPOSITOR"; then
+     dnl Do this if defined in confvars.sh
+     AC_DEFINE(MOZ_JAVA_COMPOSITOR)
 fi
 
 dnl ========================================================
@@ -9106,7 +9159,11 @@ if test -z "$MOZ_NATIVE_NSPR"; then
       _SAVE_CPPFLAGS="$CPPFLAGS"
       export CPPFLAGS="-include $_topsrcdir/mozglue/linker/dladdr.h $CPPFLAGS"
     fi
+    _SAVE_LDFLAGS="$LDFLAGS"
+    export LDFLAGS="$LDFLAGS $NSPR_LDFLAGS"
     AC_OUTPUT_SUBDIRS(nsprpub)
+    unset LDFLAGS
+    LDFLAGS="$_SAVE_LDFLAGS"
     if test -n "$MOZ_LINKER" -a -z "$MOZ_OLD_LINKER" -a "$ac_cv_func_dladdr" = no; then
       unset CPPFLAGS
       CPPFLAGS="$_SAVE_CFLAGS"
