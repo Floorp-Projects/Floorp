@@ -49,7 +49,7 @@
         <EditText
           android:id="@+id/pair_row3"
           style="@style/SyncEditPin"
-          android:imeOptions="actionDone" />
+          android:imeOptions="actionDone|flagNoExtractUi" />
       </LinearLayout>
 
       <LinearLayout

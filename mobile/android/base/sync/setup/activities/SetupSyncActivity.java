@@ -107,7 +107,6 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     mContext = getApplicationContext();
     Log.d(LOG_TAG, "AccountManager.get(" + mContext + ")");
     mAccountManager = AccountManager.get(mContext);
-
   }
 
   @Override
@@ -165,7 +164,6 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     setIntent(intent);
   }
 
-
   /* Click Handlers */
   public void manualClickHandler(View target) {
     Intent accountIntent = new Intent(this, AccountActivity.class);
@@ -179,6 +177,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
   }
 
   public void connectClickHandler(View target) {
+    Log.d(LOG_TAG, "Connect clicked.");
     // Set UI feedback.
     pinError.setVisibility(View.INVISIBLE);
     enablePinEntry(false);
@@ -190,6 +189,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     pin += row2.getText().toString() + row3.getText().toString();
 
     // Start J-PAKE.
+    Log.d(LOG_TAG, "Starting J-PAKE...");
     jClient = new JPakeClient(this);
     jClient.pairWithPin(pin, false);
   }
@@ -429,6 +429,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
   }
 
   private void displayPairWithPin() {
+    Log.d(LOG_TAG, "PairWithPin initiated.");
     setContentView(R.layout.sync_setup_pair);
     connectButton = (Button) findViewById(R.id.pair_button_connect);
     pinError = (LinearLayout) findViewById(R.id.pair_error);
@@ -440,10 +441,10 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     row1.addTextChangedListener(new TextWatcher() {
       @Override
       public void afterTextChanged(Editable s) {
-        if (s.length() == 4) {
-          row2.requestFocus();
-        }
-        activateButton(connectButton, pinEntryCompleted());
+         activateButton(connectButton, pinEntryCompleted());
+         if (s.length() == 4) {
+           row2.requestFocus();
+         }
       }
 
       @Override
@@ -459,10 +460,10 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     row2.addTextChangedListener(new TextWatcher() {
       @Override
       public void afterTextChanged(Editable s) {
+        activateButton(connectButton, pinEntryCompleted());
         if (s.length() == 4) {
           row3.requestFocus();
         }
-        activateButton(connectButton, pinEntryCompleted());
       }
 
       @Override
@@ -495,6 +496,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
   }
 
   private void displayReceiveNoPin() {
+    Log.d(LOG_TAG, "ReceiveNoPin initiated");
     setContentView(R.layout.sync_setup);
 
     // Set up UI.

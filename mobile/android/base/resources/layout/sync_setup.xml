@@ -19,7 +19,7 @@
     android:layout_below="@id/setup_top"
     android:layout_above="@+id/setup_bottom" >
 
-    <RelativeLayout
+    <LinearLayout
         style="@style/SyncLayout.Vertical"
         android:layout_height="fill_parent"
         android:padding="15dp" >
@@ -34,7 +34,6 @@
       <TextView
         android:id="@+id/setup_subtitle"
         style="@style/SyncTextItem"
-        android:layout_below="@id/setup_header"
         android:gravity="left"
         android:layout_marginTop="2dp"
         android:text="@string/sync_subtitle_connect" />
@@ -42,15 +41,15 @@
       <TextView
         android:id="@+id/setup_showme"
         style="@style/SyncLinkItem"
-        android:layout_below="@id/setup_subtitle"
         android:layout_marginTop="2dp"
         android:onClick="showClickHandler"
         android:text="@string/sync_link_show" />
 
       <LinearLayout
         style="@style/SyncLayout"
-        android:layout_below="@id/setup_showme"
+        android:layout_height="wrap_content"
         android:paddingTop="30dp"
+        android:paddingBottom="30dp"
         android:paddingLeft="-15dp"
         android:orientation="vertical" >
         <TextView
@@ -63,16 +62,14 @@
           android:id="@+id/text_pin3"
           style="@style/SyncPinText" />
       </LinearLayout>
-
       <TextView
         android:id="@+id/link_nodevice"
         style="@style/SyncLinkItem"
-        android:layout_alignParentBottom="true"
         android:gravity="center"
         android:paddingBottom="5dp"
         android:onClick="manualClickHandler"
         android:text="@string/sync_link_advancedsetup" />
-    </RelativeLayout>
+    </LinearLayout>
   </ScrollView>
   <LinearLayout
     android:id="@id/setup_bottom"
