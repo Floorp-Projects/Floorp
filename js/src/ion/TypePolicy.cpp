@@ -278,6 +278,9 @@ StringPolicy::staticAdjustInputs(MInstruction *def)
     return true;
 }
 
+template class IntPolicy<0>;
+template class IntPolicy<1>;
+
 template <unsigned Op>
 bool
 IntPolicy<Op>::staticAdjustInputs(MInstruction *def)
