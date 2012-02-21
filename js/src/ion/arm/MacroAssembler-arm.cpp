@@ -966,6 +966,12 @@ MacroAssemblerARM::ma_vmov(FloatRegister src, FloatRegister dest)
 }
 
 void
+MacroAssemblerARM::ma_vneg(FloatRegister src, FloatRegister dest)
+{
+    as_vneg(dest, src);
+}
+
+void
 MacroAssemblerARM::ma_vimm(double value, FloatRegister dest)
 {
     jsdpun dpun;
@@ -995,6 +1001,12 @@ MacroAssemblerARM::ma_vcmp(FloatRegister src1, FloatRegister src2)
     as_vcmp(VFPRegister(src1), VFPRegister(src2));
 }
 void
+MacroAssemblerARM::ma_vcmpz(FloatRegister src1)
+{
+    as_vcmpz(VFPRegister(src1));
+}
+
+void
 MacroAssemblerARM::ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest)
 {
     as_vcvt(VFPRegister(dest).sintOverlay(), VFPRegister(src));
@@ -1004,10 +1016,17 @@ MacroAssemblerARM::ma_vcvt_I32_F64(FloatRegister dest, FloatRegister src)
 {
     as_vcvt(VFPRegister(dest), VFPRegister(src).sintOverlay());
 }
+
 void
 MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest)
 {
     as_vxfer(dest, InvalidReg, VFPRegister(src).singleOverlay(), FloatToCore);
+}
+
+void
+MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest1, Register dest2)
+{
+    as_vxfer(dest1, dest2, VFPRegister(src), FloatToCore);
 }
 void
 MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, FloatRegister rt, Condition cc)
@@ -1568,6 +1587,9 @@ MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index, const 
     bind(&end);
 }
 
+// This functon almost certainly should not be called.
+// It has two uses in indep code, loading NaN, and loading 0.0
+// loading 1.0, then subtracting from itself will almost certainly be faster.
 void
 MacroAssemblerARMCompat::loadStaticDouble(const double *dp, const FloatRegister &dest)
 {
