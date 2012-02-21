@@ -501,7 +501,7 @@ static inline int backup_file(const char *name)
     return rename(name, fname.c_str());
 }
 
-void do_file(const char *name, bool backup = false)
+void do_file(const char *name, bool backup = false, bool force = false)
 {
     std::ifstream file(name, std::ios::in|std::ios::binary);
     Elf *elf = new Elf(file);
@@ -531,7 +531,7 @@ void do_file(const char *name, bool backup = false)
         break;
     }
     if (exit == 0) {
-        if (elf->getSize() >= size) {
+        if (!force && (elf->getSize() >= size)) {
             fprintf(stderr, "No gain. Skipping\n");
         } else if (backup && backup_file(name) != 0) {
             fprintf(stderr, "Couln't create backup file\n");
@@ -548,14 +548,17 @@ int main(int argc, char *argv[])
 {
     int arg;
     bool backup = false;
+    bool force = false;
     char *lastSlash = rindex(argv[0], '/');
     if (lastSlash != NULL)
         rundir = strndup(argv[0], lastSlash - argv[0]);
     for (arg = 1; arg < argc; arg++) {
-        if (strcmp(argv[arg], "-b") == 0)
+        if (strcmp(argv[arg], "-f") == 0)
+            force = true;
+        else if (strcmp(argv[arg], "-b") == 0)
             backup = true;
         else
-            do_file(argv[arg], backup);
+            do_file(argv[arg], backup, force);
     }
 
     free(rundir);
