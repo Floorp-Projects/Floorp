@@ -361,14 +361,7 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
     }
 
     public Bitmap getBitmap() {
-        Log.e(LOGTAG, "### getBitmap");
-        IntSize size = getBufferSize();
-        try {
-            return Bitmap.createBitmap(size.width, size.height, Bitmap.Config.RGB_565);
-        } catch (OutOfMemoryError oom) {
-            Log.e(LOGTAG, "Unable to create bitmap", oom);
-            return null;
-        }
+        return null;
     }
 
     public void render() {
