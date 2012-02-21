@@ -5347,6 +5347,12 @@ static nsIView* FindViewContaining(nsIView* aView, nsPoint aPt)
 void
 PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
 {
+  // If drag session has started, we shouldn't synthesize mousemove event.
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  if (dragSession) {
+    return;
+  }
+
   // allow new event to be posted while handling this one only if the
   // source of the event is a scroll (to prevent infinite reflow loops)
   if (aFromScroll) {
