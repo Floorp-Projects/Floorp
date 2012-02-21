@@ -2069,8 +2069,7 @@ let Phone = {
     //TODO: verify values on 'options'
     //TODO: the data encoding and length in octets should eventually be
     // computed on the mainthread and passed down to us.
-    options.dcs = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-    options.bodyLengthInOctets = Math.ceil(options.body.length * 7 / 8);
+    GsmPDUHelper.calculateUserDataLength(options);
     RIL.sendSMS(options);
   },
 
@@ -2341,13 +2340,22 @@ let GsmPDUHelper = {
   /**
    * Read user data and decode as a UCS2 string.
    *
-   * @param length
-   *        XXX TODO
+   * @param numOctets
+   *        num of octets to read as UCS2 string.
    *
    * @return a string.
    */
-  readUCS2String: function readUCS2String(length) {
-    //TODO bug 712804
+  readUCS2String: function readUCS2String(numOctets) {
+    let str = "";
+    let length = numOctets / 2;
+    for (let i = 0; i < length; ++i) {
+      let code = (this.readHexOctet() << 8) | this.readHexOctet();
+      str += String.fromCharCode(code);
+    }
+
+    if (DEBUG) debug("Read UCS2 string: " + str);
+
+    return str;
   },
 
   /**
@@ -2357,14 +2365,50 @@ let GsmPDUHelper = {
    *        Message string to encode as UCS2 in hex-encoded octets.
    */
   writeUCS2String: function writeUCS2String(message) {
-    //TODO bug 712804
+    for (let i = 0; i < message.length; ++i) {
+      let code = message.charCodeAt(i);
+      this.writeHexOctet((code >> 8) & 0xFF);
+      this.writeHexOctet(code & 0xFF);
+    }
+  },
+
+  /**
+   * Calculate user data length and its encoding.
+   *
+   * The `options` parameter object should contain the `body` attribute, and
+   * the `dcs`, `bodyLengthInOctets` attributes will be set as return:
+   *
+   * @param body
+   *        String containing the message body.
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param bodyLengthInOctets
+   *        Byte length of the message body when encoded with the given DCS.
+   */
+  calculateUserDataLength: function calculateUserDataLength(options) {
+    //TODO: support language tables, see bug 729876
+    //TODO: support multipart SMS, see bug 712933
+    let needUCS2 = false;
+    for (let i = 0; i < options.body.length; ++i) {
+      if (options.body.charCodeAt(i) >= 128) {
+        needUCS2 = true;
+        break;
+      }
+    }
+
+    if (needUCS2) {
+      options.dcs = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+      options.bodyLengthInOctets = options.body.length * 2;
+    } else {
+      options.dcs = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+      options.bodyLengthInOctets = Math.ceil(options.body.length * 7 / 8);
+    }
   },
 
   /**
    * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
    * (UCS2) data.
-   *
-   * TODO: This function currently supports only the default alphabet.
    */
   readUserData: function readUserData(length, codingScheme) {
     if (DEBUG) {
