@@ -884,52 +884,9 @@ LIRGenerator::visitFunctionEnvironment(MFunctionEnvironment *ins)
 }
 
 bool
-LIRGenerator::emitWriteBarrier(MInstruction *ins, MDefinition *input)
-{
-#ifdef JSGC_INCREMENTAL
-    JS_ASSERT(GetIonContext()->cx->compartment->needsBarrier());
-
-    switch (input->type()) {
-      // Possible GCThings.
-      case MIRType_Value: {
-        LInstruction *barrier = new LWriteBarrierV;
-        if (!useBox(barrier, LWriteBarrierV::Input, input))
-            return false;
-        add(barrier, ins);
-        break;
-      }
-
-      // Known GCThings.
-      case MIRType_String:
-      case MIRType_Object:
-        add(new LWriteBarrierT(useRegisterOrConstant(input)), ins);
-        break;
-
-      // Known non-GCThings.
-      case MIRType_Undefined:
-      case MIRType_Null:
-      case MIRType_Boolean:
-      case MIRType_Int32:
-      case MIRType_Double:
-        break;
-
-      // Nonsensical input.
-      default:
-        JS_NOT_REACHED("Unexpected MIRType.");
-    }
-#endif
-    return true;
-}
-
-bool
 LIRGenerator::visitStoreSlot(MStoreSlot *ins)
 {
     LInstruction *lir;
-
-#ifdef JSGC_INCREMENTAL
-    if (ins->needsBarrier() && !emitWriteBarrier(ins, ins->value()))
-        return false;
-#endif
 
     switch (ins->value()->type()) {
       case MIRType_Value:
@@ -1087,11 +1044,6 @@ LIRGenerator::visitStoreElement(MStoreElement *ins)
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
 
-#ifdef JSGC_INCREMENTAL
-    if (ins->needsBarrier() && !emitWriteBarrier(ins, ins->value()))
-        return false;
-#endif
-
     const LUse elements = useRegister(ins->elements());
     const LAllocation index = useRegisterOrConstant(ins->index());
 
@@ -1117,11 +1069,6 @@ LIRGenerator::visitStoreElementHole(MStoreElementHole *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
-
-#ifdef JSGC_INCREMENTAL
-    if (ins->needsBarrier() && !emitWriteBarrier(ins, ins->value()))
-        return false;
-#endif
 
     const LUse object = useRegister(ins->object());
     const LUse elements = useRegister(ins->elements());

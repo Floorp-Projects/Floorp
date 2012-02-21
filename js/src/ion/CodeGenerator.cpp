@@ -447,6 +447,9 @@ CodeGenerator::visitStoreSlotV(LStoreSlotV *store)
 
     const ValueOperand value = ToValue(store, LStoreSlotV::Value);
 
+    if (store->mir()->needsBarrier())
+       masm.emitPreBarrier(Address(base, offset), JSVAL_TYPE_UNKNOWN);
+
     masm.storeValue(value, Address(base, offset));
     return true;
 }
@@ -1148,6 +1151,9 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
 bool
 CodeGenerator::visitStoreElementT(LStoreElementT *store)
 {
+    if (store->mir()->needsBarrier())
+       emitPreBarrier(ToRegister(store->elements()), store->index(), store->mir()->elementType());
+
     storeElementTyped(store->value(), store->mir()->value()->type(), store->mir()->elementType(),
                       ToRegister(store->elements()), store->index());
     return true;
@@ -1158,6 +1164,9 @@ CodeGenerator::visitStoreElementV(LStoreElementV *lir)
 {
     const ValueOperand value = ToValue(lir, LStoreElementV::Value);
     Register elements = ToRegister(lir->elements());
+
+    if (lir->mir()->needsBarrier())
+        emitPreBarrier(elements, lir->index(), MIRType_Value);
 
     if (lir->index()->isConstant())
         masm.storeValue(value, Address(elements, ToInt32(lir->index()) * sizeof(js::Value)));
@@ -1179,6 +1188,9 @@ CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT *lir)
     // OOL path if index >= initializedLength.
     Address initLength(elements, ObjectElements::offsetOfInitializedLength());
     masm.branchKey(Assembler::BelowOrEqual, initLength, ToInt32Key(index), ool->entry());
+
+    if (lir->mir()->needsBarrier())
+        emitPreBarrier(elements, index, lir->mir()->elementType());
 
     masm.bind(ool->rejoinStore());
     storeElementTyped(lir->value(), lir->mir()->value()->type(), lir->mir()->elementType(),
@@ -1202,6 +1214,9 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
     // OOL path if index >= initializedLength.
     Address initLength(elements, ObjectElements::offsetOfInitializedLength());
     masm.branchKey(Assembler::BelowOrEqual, initLength, ToInt32Key(index), ool->entry());
+
+    if (lir->mir()->needsBarrier())
+        emitPreBarrier(elements, index, lir->mir()->elementType());
 
     masm.bind(ool->rejoinStore());
     if (lir->index()->isConstant())
@@ -1584,7 +1599,12 @@ CodeGenerator::visitStoreFixedSlotV(LStoreFixedSlotV *ins)
     size_t slot = ins->mir()->slot();
 
     const ValueOperand value = ToValue(ins, LStoreFixedSlotV::Value);
-    masm.storeValue(value, Address(obj, JSObject::getFixedSlotOffset(slot)));
+
+    Address address(obj, JSObject::getFixedSlotOffset(slot));
+    if (ins->mir()->needsBarrier())
+        masm.emitPreBarrier(address, JSVAL_TYPE_UNKNOWN);
+
+    masm.storeValue(value, address);
 
     return true;
 }
@@ -1602,7 +1622,11 @@ CodeGenerator::visitStoreFixedSlotT(LStoreFixedSlotT *ins)
                               ? ConstantOrRegister(*value->toConstant())
                               : TypedOrValueRegister(valueType, ToAnyRegister(value));
 
-    masm.storeConstantOrRegister(nvalue, Address(obj, JSObject::getFixedSlotOffset(slot)));
+    Address address(obj, JSObject::getFixedSlotOffset(slot));
+    if (ins->mir()->needsBarrier())
+        masm.emitPreBarrier(address, JSVAL_TYPE_UNKNOWN);
+
+    masm.storeConstantOrRegister(nvalue, address);
 
     return true;
 }

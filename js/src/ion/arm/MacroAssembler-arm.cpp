@@ -1477,6 +1477,24 @@ MacroAssemblerARMCompat::testMagic(Assembler::Condition cond, const Register &ta
 }
 
 Assembler::Condition
+MacroAssemblerARMCompat::testGCThing(Assembler::Condition cond, const Address &address)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, ScratchRegister);
+    ma_cmp(ScratchRegister, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    return cond;
+}
+
+Assembler::Condition
+MacroAssemblerARMCompat::testGCThing(Assembler::Condition cond, const BaseIndex &address)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, ScratchRegister);
+    ma_cmp(ScratchRegister, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+    return cond;
+}
+
+Assembler::Condition
 MacroAssemblerARMCompat::testNumber(Condition cond, const Register &tag)
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);
@@ -1631,12 +1649,21 @@ MacroAssemblerARMCompat::extractObject(const Address &address, Register scratch)
     ma_ldr(payloadOf(address), scratch);
     return scratch;
 }
+
 Register
 MacroAssemblerARMCompat::extractTag(const Address &address, Register scratch)
 {
     ma_ldr(tagOf(address), scratch);
     return scratch;
 }
+
+Register
+MacroAssemblerARMCompat::extractTag(const BaseIndex &address, Register scratch)
+{
+    ma_alu(address.base, lsl(address.index, address.scale), scratch, op_add, NoSetCond);
+    return extractTag(Address(scratch, address.offset), scratch);
+}
+
 void
 MacroAssemblerARMCompat::moveValue(const Value &val, Register type, Register data) {
     jsval_layout jv = JSVAL_TO_IMPL(val);

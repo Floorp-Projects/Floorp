@@ -86,6 +86,8 @@ static const Register CallTempReg1 = r6;
 static const Register CallTempReg2 = r7;
 static const Register CallTempReg3 = r8;
 
+static const Register PreBarrierReg = r1;
+
 static const Register InvalidReg = { Registers::invalid_reg };
 static const FloatRegister InvalidFloatReg = { FloatRegisters::invalid_freg };
 

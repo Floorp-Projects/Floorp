@@ -155,7 +155,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
     bool visitStoreSlotT(LStoreSlotT *load);
-    bool visitWriteBarrierT(LWriteBarrierT *barrier);
 
     bool visitLoadElementT(LLoadElementT *load);
 

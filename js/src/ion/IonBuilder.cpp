@@ -3126,14 +3126,9 @@ IonBuilder::jsop_setgname(JSAtom *atom)
     MStoreSlot *store = MStoreSlot::New(slots, shape->slot() - globalObj->numFixedSlots(), value);
     current->add(store);
 
-#ifdef JSGC_INCREMENTAL
     // Determine whether write barrier is required.
-    if (cx->compartment->needsBarrier() &&
-        (!propertyTypes || propertyTypes->needsBarrier(cx)))
-    {
+    if (cx->compartment->needsBarrier() && (!propertyTypes || propertyTypes->needsBarrier(cx)))
         store->setNeedsBarrier(true);
-    }
-#endif
 
     if (!resumeAfter(store))
         return false;
@@ -3369,11 +3364,9 @@ IonBuilder::jsop_setelem_dense()
             return false;
     }
 
-#ifdef JSGC_INCREMENTAL
     // Determine whether a write barrier is required.
-    if (cx->compartment->needsBarrier() && oracle->propertyWriteNeedsBarrier(script, pc, JSID_VOID))
+    if (cx->compartment->needsBarrier() && oracle->elementWriteNeedsBarrier(script, pc))
         store->setNeedsBarrier(true);
-#endif
 
     if (elementType != MIRType_None && packed)
         store->setElementType(elementType);
@@ -3431,8 +3424,8 @@ IonBuilder::jsop_length_fastPath()
     return false;
 }
 
-inline bool
-GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom, size_t *slotp)
+inline types::TypeSet *
+GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom)
 {
     if (!types || types->unknownObject() || types->getObjectCount() != 1)
         return false;
@@ -3454,9 +3447,7 @@ GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom, size_t *slot
     }
 
     types->addFreeze(cx);
-
-    *slotp = propertyTypes->definiteSlot();
-    return true;
+    return propertyTypes;
 }
 
 bool
@@ -3517,9 +3508,8 @@ IonBuilder::jsop_getprop(JSAtom *atom)
         }
     }
 
-    size_t slot;
-    if (GetDefiniteSlot(cx, unaryTypes.inTypes, atom, &slot)) {
-        MLoadFixedSlot *fixed = MLoadFixedSlot::New(obj, slot);
+    if (types::TypeSet *propTypes = GetDefiniteSlot(cx, unaryTypes.inTypes, atom)) {
+        MLoadFixedSlot *fixed = MLoadFixedSlot::New(obj, propTypes->definiteSlot());
         if (!barrier)
             fixed->setResultType(unary.rval);
 
@@ -3567,11 +3557,12 @@ IonBuilder::jsop_setprop(JSAtom *atom)
     TypeOracle::BinaryTypes binaryTypes = oracle->binaryTypes(script, pc);
 
     if (!monitored) {
-        size_t slot;
-        if (GetDefiniteSlot(cx, binaryTypes.lhsTypes, atom, &slot)) {
-            MStoreFixedSlot *fixed = MStoreFixedSlot::New(obj, value, slot);
+        if (types::TypeSet *propTypes = GetDefiniteSlot(cx, binaryTypes.lhsTypes, atom)) {
+            MStoreFixedSlot *fixed = MStoreFixedSlot::New(obj, value, propTypes->definiteSlot());
             current->add(fixed);
             current->push(value);
+            if (cx->compartment->needsBarrier() && propTypes->needsBarrier(cx))
+                fixed->setNeedsBarrier();
             return resumeAfter(fixed);
         }
     }
@@ -3579,10 +3570,17 @@ IonBuilder::jsop_setprop(JSAtom *atom)
     oracle->binaryOp(script, pc);
 
     MSetPropertyInstruction *ins;
-    if (monitored)
+    if (monitored) {
         ins = MCallSetProperty::New(obj, value, atom, script->strictModeCode);
-    else
+    } else {
         ins = MSetPropertyCache::New(obj, value, atom, script->strictModeCode);
+
+        jsid id = ATOM_TO_JSID(atom);
+        if (cx->compartment->needsBarrier() &&
+            (!binaryTypes.lhsTypes || binaryTypes.lhsTypes->propertyNeedsBarrier(cx, id))) {
+            ins->setNeedsBarrier();
+        }
+    }
 
     current->add(ins);
     current->push(value);

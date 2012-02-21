@@ -88,6 +88,9 @@ class IonCompartment
     // Thunk that invalides an (Ion compiled) caller on the Ion stack.
     ReadBarriered<IonCode> invalidator_;
 
+    // Thunk that calls the GC pre barrier.
+    ReadBarriered<IonCode> preBarrier_;
+
     // Map VMFunction addresses to the IonCode of the wrapper.
     VMWrapperMap *functionWrappers_;
 
@@ -99,6 +102,7 @@ class IonCompartment
     IonCode *generateBailoutTable(JSContext *cx, uint32 frameClass);
     IonCode *generateBailoutHandler(JSContext *cx);
     IonCode *generateInvalidator(JSContext *cx);
+    IonCode *generatePreBarrier(JSContext *cx);
 
   public:
     IonCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
@@ -165,6 +169,15 @@ class IonCompartment
                 return NULL;
         }
         return osrPrologue_.get()->as<DoOsrIonCode>();
+    }
+
+    IonCode *preBarrier(JSContext *cx) {
+        if (!preBarrier_) {
+            preBarrier_ = generatePreBarrier(cx);
+            if (!preBarrier_)
+                return NULL;
+        }
+        return preBarrier_;
     }
 };
 

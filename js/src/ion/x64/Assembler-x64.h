@@ -117,6 +117,8 @@ static const Register OsrFrameReg = r10;
 static const Register OsrFrameReg = ArgReg5;
 #endif
 
+static const Register PreBarrierReg = rdx;
+
 // GCC stack is aligned on 16 bytes, but we don't maintain the invariant in
 // jitted code.
 static const uint32 StackAlignment = 16;

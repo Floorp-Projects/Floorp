@@ -188,6 +188,8 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
         MarkIonCodeRoot(trc, argumentsRectifier_.unsafeGet(), "argumentsRectifier");
     if (invalidator_)
         MarkIonCodeRoot(trc, invalidator_.unsafeGet(), "invalidator");
+    if (preBarrier_)
+        MarkIonCodeRoot(trc, preBarrier_.unsafeGet(), "preBarrier");
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
         if (bailoutTables_[i])
             MarkIonCodeRoot(trc, bailoutTables_[i].unsafeGet(), "bailoutTable");
@@ -210,6 +212,8 @@ IonCompartment::sweep(JSContext *cx)
         argumentsRectifier_ = NULL;
     if (invalidator_ && IsAboutToBeFinalized(invalidator_))
         invalidator_ = NULL;
+    if (preBarrier_ && IsAboutToBeFinalized(preBarrier_))
+        preBarrier_ = NULL;
 
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
         if (bailoutTables_[i] && IsAboutToBeFinalized(bailoutTables_[i]))
@@ -1141,5 +1145,11 @@ ion::FinishInvalidation(JSContext *cx, JSScript *script)
 
     /* In all cases, NULL out script->ion to avoid re-entry. */
     script->ion = NULL;
+}
+
+void
+ion::MarkFromIon(JSCompartment *comp, Value *vp)
+{
+    gc::MarkValueUnbarriered(comp->barrierTracer(), vp, "write barrier");
 }
 

@@ -171,6 +171,7 @@ bool SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 void Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
 void InvalidateAll(JSContext *cx, JSCompartment *comp);
 void FinishInvalidation(JSContext *cx, JSScript *script);
+void MarkFromIon(JSCompartment *comp, Value *vp);
 
 static inline bool IsEnabled()
 {
