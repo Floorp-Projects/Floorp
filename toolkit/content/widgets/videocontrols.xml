@@ -1407,6 +1407,9 @@
 
             <vbox class="controlsOverlay">
                 <spacer class="controlsSpacer" flex="1"/>
+                <box flex="1" hidden="true">
+                    <box class="clickToPlay" hidden="true" flex="1"/>
+                </box>
                 <vbox class="controlBar" hidden="true">
                     <hbox class="buttonsBar">
                         <spacer flex="1"/>
