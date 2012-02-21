@@ -49,14 +49,16 @@
 
 class nsWindowSizes {
 public:
-    nsWindowSizes(nsMallocSizeOfFun aMallocSizeOf)
-    : mMallocSizeOf(aMallocSizeOf),
-      mDOM(0),
-      mStyleSheets(0)
-    {}
+    nsWindowSizes(nsMallocSizeOfFun aMallocSizeOf) {
+      memset(this, 0, sizeof(nsWindowSizes));
+      mMallocSizeOf = aMallocSizeOf;
+    }
     nsMallocSizeOfFun mMallocSizeOf;
     size_t mDOM;
     size_t mStyleSheets;
+    size_t mLayoutArenas;
+    size_t mLayoutStyleSets;
+    size_t mLayoutTextRuns;
 };
 
 class nsDOMMemoryMultiReporter: public nsIMemoryMultiReporter

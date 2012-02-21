@@ -144,8 +144,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID    \
-        { 0x87719fd6, 0xe50c, 0x4d72, \
-          { 0xbd, 0x55, 0x05, 0xf9, 0x5f, 0x33, 0x9e, 0xf2 } }
+        { 0x4dc4db09, 0x03d4, 0x4427, \
+          { 0xbe, 0xfb, 0xc9, 0x29, 0xac, 0x5c, 0x62, 0xab } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -1176,6 +1176,11 @@ public:
   virtual bool IsVisible() = 0;
   virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange) = 0;
 
+  virtual void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                   size_t *aArenasSize,
+                                   size_t *aStyleSetsSize,
+                                   size_t *aTextRunsSize) const = 0;
+
   /**
    * Refresh observer management.
    */
@@ -1282,10 +1287,6 @@ protected:
   // less pixels in the given dimension.
   float                     mXResolution;
   float                     mYResolution;
-
-  // Live pres shells, for memory and other tracking
-  typedef nsPtrHashKey<nsIPresShell> PresShellPtrKey;
-  static nsTHashtable<PresShellPtrKey> *sLiveShells;
 
   static nsIContent* gKeyDownTarget;
 };
