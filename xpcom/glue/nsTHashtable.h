@@ -286,7 +286,7 @@ public:
    * @return    the summed size of all the entries
    */
   size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                             nsMallocSizeOfFun mallocSizeOf, void *userArg = NULL)
+                             nsMallocSizeOfFun mallocSizeOf, void *userArg = NULL) const
   {
     if (IsInitialized()) {
       s_SizeOfArgs args = { sizeOfEntryExcludingThis, userArg };
