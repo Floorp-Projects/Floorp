@@ -146,6 +146,7 @@ TreePanel.prototype = {
       this.treeIFrame.setAttribute("id", "inspector-tree-iframe");
       this.treeIFrame.flex = 1;
       this.treeIFrame.setAttribute("type", "content");
+      this.treeIFrame.setAttribute("context", "inspector-node-popup");
     }
 
     let treeBox = null;
@@ -606,6 +607,20 @@ TreePanel.prototype = {
       }
     }
     return null;
+  },
+
+  /**
+   * Remove a node box from the tree view.
+   * @param aElement
+   *        The DOM node to remove from the HTML IOBox.
+   */
+  deleteChildBox: function TP_deleteChildBox(aElement)
+  {
+    let childBox = this.ioBox.findObjectBox(aElement);
+    if (!childBox) {
+      return;
+    }
+    childBox.parentNode.removeChild(childBox);
   },
 
   /**

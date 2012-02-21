@@ -156,6 +156,12 @@
              oncommand="Tilt.initialize();"/>
     <command id="Inspector:HTMLPanel"
              oncommand="InspectorUI.toggleHTMLPanel();"/>
+    <command id="Inspector:CopyInner"
+             oncommand="InspectorUI.copyInnerHTML();"/>
+    <command id="Inspector:CopyOuter"
+             oncommand="InspectorUI.copyOuterHTML();"/>
+    <command id="Inspector:DeleteNode"
+             oncommand="InspectorUI.deleteNode();"/>
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
