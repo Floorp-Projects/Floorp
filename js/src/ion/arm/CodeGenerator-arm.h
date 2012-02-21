@@ -89,6 +89,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     bool emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
     void emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
+    void emitRoundDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
     // Emits a conditional set.
     void emitSet(Assembler::Condition cond, const Register &dest);

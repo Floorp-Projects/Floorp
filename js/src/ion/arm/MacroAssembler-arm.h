@@ -282,11 +282,13 @@ class MacroAssemblerARM : public Assembler
     void ma_vmul(FloatRegister src1, FloatRegister src2, FloatRegister dst);
     void ma_vdiv(FloatRegister src1, FloatRegister src2, FloatRegister dst);
 
+    void ma_vneg(FloatRegister src, FloatRegister dest);
     void ma_vmov(FloatRegister src, FloatRegister dest);
 
     void ma_vimm(double value, FloatRegister dest);
 
     void ma_vcmp(FloatRegister src1, FloatRegister src2);
+    void ma_vcmpz(FloatRegister src1);
 
     // source is F64, dest is I32
     void ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest);
@@ -295,6 +297,7 @@ class MacroAssemblerARM : public Assembler
     void ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest);
 
     void ma_vxfer(FloatRegister src, Register dest);
+    void ma_vxfer(FloatRegister src, Register dest1, Register dest2);
 
     void ma_vdtr(LoadStore ls, const Operand &addr, FloatRegister dest, Condition cc = Always);
 
