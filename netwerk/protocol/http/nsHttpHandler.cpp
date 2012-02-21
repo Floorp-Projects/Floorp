@@ -270,7 +270,7 @@ nsHttpHandler::Init()
         PrefsChanged(prefBranch, nsnull);
     }
 
-    mMisc.AssignLiteral("rv:" MOZILLA_VERSION);
+    mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
 
     nsCOMPtr<nsIXULAppInfo> appInfo =
         do_GetService("@mozilla.org/xre/app-info;1");
@@ -308,7 +308,7 @@ nsHttpHandler::Init()
     if (NS_FAILED(rv)) return rv;
 
 #ifdef ANDROID
-    mProductSub.AssignLiteral(MOZ_APP_UA_VERSION);
+    mProductSub.AssignLiteral(MOZILLA_UAVERSION);
 #else
     mProductSub.AssignLiteral(MOZ_UA_BUILDID);
 #endif
