@@ -2319,15 +2319,14 @@ WebSocketChannel::Close(PRUint16 code, const nsACString & reason)
   LOG(("WebSocketChannel::Close() %p\n", this));
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
 
+  if (mRequestedClose) {
+    return NS_OK;
+  }
+
   if (!mTransport) {
     LOG(("WebSocketChannel::Close() without transport - aborting."));
     AbortSession(NS_ERROR_NOT_CONNECTED);
     return NS_ERROR_NOT_CONNECTED;
-  }
-
-  if (mRequestedClose) {
-    LOG(("WebSocketChannel:: Double close error\n"));
-    return NS_ERROR_UNEXPECTED;
   }
 
   // The API requires the UTF-8 string to be 123 or less bytes
