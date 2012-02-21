@@ -95,7 +95,7 @@ test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
 	@echo === --disable-elf-hack until this is fixed.
 	@echo ===
 	@rm -f $@.bak
-	$(CURDIR)/elfhack -b $@
+	$(CURDIR)/elfhack -b -f $@
 	# Fail if the backup file doesn't exist
 	[ -f "$@.bak" ]
 	# Fail if the new library doesn't contain less relocations
