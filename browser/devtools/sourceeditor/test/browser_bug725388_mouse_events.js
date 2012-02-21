@@ -37,22 +37,30 @@ function initEditor()
 
 function editorLoaded()
 {
+  editor.focus();
+  testWin.resizeBy(1, 2);
+
   let text = "BrowserBug - 725388";
   editor.setText(text);
 
   let target = editor.editorElement;
   let targetWin = target.ownerDocument.defaultView;
 
+  let eventsFired = 0;
+
+  let done = function() {
+    eventsFired++;
+    if (eventsFired == 3) {
+      executeSoon(testEnd);
+    }
+  };
+
   let mMoveHandler = function(aEvent) {
     editor.removeEventListener(SourceEditor.EVENTS.MOUSE_MOVE, mMoveHandler);
 
     is(aEvent.event.type, "mousemove", "MouseMove event fired.");
 
-    editor.addEventListener(SourceEditor.EVENTS.MOUSE_OVER, mOverHandler);
-    waitForFocus(function() {
-      EventUtils.synthesizeMouse(target, 10, 10, {type: "mouseover"},
-                                 targetWin);
-    });
+    executeSoon(done);
   };
 
   let mOverHandler = function(aEvent) {
@@ -60,26 +68,28 @@ function editorLoaded()
 
     is(aEvent.event.type, "mouseover", "MouseOver event fired.");
 
-    editor.addEventListener(SourceEditor.EVENTS.MOUSE_OUT, mOutHandler);
-    waitForFocus(function() {
-      EventUtils.synthesizeMouse(target, -10, -10, {type: "mouseout"},
-                                 targetWin);
-    }, targetWin);
+    executeSoon(done);
   };
 
   let mOutHandler = function(aEvent) {
     editor.removeEventListener(SourceEditor.EVENTS.MOUSE_OUT, mOutHandler);
 
     is(aEvent.event.type, "mouseout", "MouseOut event fired.");
-    executeSoon(testEnd);
+
+    executeSoon(done);
   };
 
+  editor.addEventListener(SourceEditor.EVENTS.MOUSE_OVER, mOverHandler);
   editor.addEventListener(SourceEditor.EVENTS.MOUSE_MOVE, mMoveHandler);
+  editor.addEventListener(SourceEditor.EVENTS.MOUSE_OUT, mOutHandler);
 
-  editor.focus();
   waitForFocus(function() {
-  EventUtils.synthesizeMouse(target, 1, 1, {type: "mousemove"},
-                             targetWin);
+    EventUtils.synthesizeMouse(target, 10, 10, {type: "mouseover"},
+                               targetWin);
+    EventUtils.synthesizeMouse(target, 15, 17, {type: "mousemove"},
+                               targetWin);
+    EventUtils.synthesizeMouse(target, -10, -10, {type: "mouseout"},
+                               targetWin);
   }, targetWin);
 }
 
