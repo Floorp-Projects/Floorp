@@ -97,8 +97,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
     bool visitStoreSlotT(LStoreSlotT *store);
-    bool visitWriteBarrierV(LWriteBarrierV *barrier);
-    bool visitWriteBarrierT(LWriteBarrierT *barrier);
     bool visitLoadElementT(LLoadElementT *load);
     bool visitImplicitThis(LImplicitThis *lir);
     bool visitRecompileCheck(LRecompileCheck *lir);

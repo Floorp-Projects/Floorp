@@ -275,6 +275,9 @@ CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
     MIRType valueType = store->mir()->value()->type();
     MIRType slotType = store->mir()->slotType();
 
+    if (store->mir()->needsBarrier())
+        masm.emitPreBarrier(Address(base, offset), ValueTypeFromMIRType(slotType));
+
     storeUnboxedValue(value, valueType, Operand(base, offset), slotType);
     return true;
 }
@@ -296,35 +299,6 @@ CodeGeneratorX64::storeElementTyped(const LAllocation *value, MIRType valueType,
 {
     Operand dest = createArrayElementOperand(elements, index);
     storeUnboxedValue(value, valueType, dest, elementType);
-}
-
-bool
-CodeGeneratorX64::visitWriteBarrierV(LWriteBarrierV *barrier)
-{
-    // TODO: Perform C++ call to some WriteBarrier stub.
-    // For now, we just guard and breakpoint on failure.
-
-    const ValueOperand value = ToValue(barrier, LWriteBarrierV::Input);
-
-    Label skipBarrier;
-    masm.branchTestGCThing(Assembler::NotEqual, value, &skipBarrier);
-    {
-        masm.breakpoint();
-        masm.breakpoint();
-    }
-    masm.bind(&skipBarrier);
-
-    return true;
-}
-
-bool
-CodeGeneratorX64::visitWriteBarrierT(LWriteBarrierT *barrier)
-{
-    // TODO: Perform C++ call to some WriteBarrier stub.
-    // For now, we just breakpoint.
-    masm.breakpoint();
-    masm.breakpoint();
-    return true;
 }
 
 bool

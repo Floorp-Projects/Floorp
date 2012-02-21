@@ -49,6 +49,7 @@
 #elif defined(JS_CPU_ARM)
 # include "ion/arm/MacroAssembler-arm.h"
 #endif
+#include "ion/IonCompartment.h"
 
 #include "jsscope.h"
 
@@ -79,15 +80,18 @@ class MacroAssembler : public MacroAssemblerSpecific
     };
 
     AutoRooter autoRooter_;
+    bool enoughMemory_;
 
   public:
     MacroAssembler()
-      : autoRooter_(GetIonContext()->cx, thisFromCtor())
+      : autoRooter_(GetIonContext()->cx, thisFromCtor()),
+        enoughMemory_(true)
     {
     }
 
     MacroAssembler(JSContext *cx)
-      : autoRooter_(cx, thisFromCtor())
+      : autoRooter_(cx, thisFromCtor()),
+        enoughMemory_(true)
     {
     }
 
@@ -97,6 +101,10 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     size_t instructionsSize() const {
         return size();
+    }
+
+    bool oom() const {
+        return !enoughMemory_ || MacroAssemblerSpecific::oom();
     }
 
     // Emits a test of a value against all types in a TypeSet. A scratch
@@ -273,6 +281,33 @@ class MacroAssembler : public MacroAssemblerSpecific
             branch32(cond, dest, key.reg(), label);
         else
             branch32(cond, dest, Imm32(key.constant()), label);
+    }
+
+    template <typename T>
+    void emitPreBarrier(const T &address, JSValueType type) {
+        JS_ASSERT(type == JSVAL_TYPE_UNKNOWN ||
+                  type == JSVAL_TYPE_STRING ||
+                  type == JSVAL_TYPE_OBJECT);
+
+        Label done;
+        if (type == JSVAL_TYPE_UNKNOWN)
+            branchTestGCThing(Assembler::NotEqual, address, &done);
+
+        Push(PreBarrierReg);
+        computeEffectiveAddress(address, PreBarrierReg);
+
+        JSContext *cx = GetIonContext()->cx;
+        IonCode *preBarrier = cx->compartment->ionCompartment()->preBarrier(cx);
+        if (!preBarrier) {
+            enoughMemory_ = false;
+            return;
+        }
+
+        call(preBarrier);
+        Pop(PreBarrierReg);
+
+        if (type == JSVAL_TYPE_UNKNOWN)
+            bind(&done);
     }
 };
 

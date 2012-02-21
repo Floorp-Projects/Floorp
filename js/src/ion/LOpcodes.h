@@ -112,8 +112,6 @@
     _(StoreSlotT)                   \
     _(GuardShape)                   \
     _(GuardClass)                   \
-    _(WriteBarrierV)                \
-    _(WriteBarrierT)                \
     _(TypeBarrier)                  \
     _(InitializedLength)            \
     _(BoundsCheck)                  \

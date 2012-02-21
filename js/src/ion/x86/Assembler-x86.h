@@ -75,6 +75,7 @@ static const Register CallTempReg2 = ebx;
 static const Register CallTempReg3 = ecx;
 
 static const Register OsrFrameReg = edx;
+static const Register PreBarrierReg = edx;
 
 // GCC stack is aligned on 16 bytes, but we don't maintain the invariant in
 // jitted code.

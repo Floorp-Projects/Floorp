@@ -2870,10 +2870,11 @@ class MLoadFixedSlot : public MUnaryInstruction, public SingleObjectPolicy
 
 class MStoreFixedSlot : public MBinaryInstruction, public SingleObjectPolicy
 {
+    bool needsBarrier_;
     size_t slot_;
 
     MStoreFixedSlot(MDefinition *obj, MDefinition *rval, size_t slot)
-      : MBinaryInstruction(obj, rval), slot_(slot)
+      : MBinaryInstruction(obj, rval), needsBarrier_(false), slot_(slot)
     {}
 
   public:
@@ -2899,6 +2900,12 @@ class MStoreFixedSlot : public MBinaryInstruction, public SingleObjectPolicy
 
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::Slot);
+    }
+    bool needsBarrier() const {
+        return needsBarrier_;
+    }
+    void setNeedsBarrier() {
+        needsBarrier_ = true;
     }
 };
 
@@ -3201,12 +3208,13 @@ class MSetPropertyInstruction : public MBinaryInstruction
 {
     JSAtom *atom_;
     bool strict_;
+    bool needsBarrier_;
 
   protected:
     MSetPropertyInstruction(MDefinition *obj, MDefinition *value, JSAtom *atom,
                         bool strict)
       : MBinaryInstruction(obj, value),
-        atom_(atom), strict_(strict)
+        atom_(atom), strict_(strict), needsBarrier_(true)
     {}
 
   public:
@@ -3221,6 +3229,12 @@ class MSetPropertyInstruction : public MBinaryInstruction
     }
     bool strict() const {
         return strict_;
+    }
+    bool needsBarrier() const {
+        return needsBarrier_;
+    }
+    void setNeedsBarrier() {
+        needsBarrier_ = true;
     }
 };
 

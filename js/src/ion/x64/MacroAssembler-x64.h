@@ -258,6 +258,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         splitTag(src, ScratchReg);
         return testGCThing(cond, ScratchReg);
     }
+    Condition testGCThing(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testGCThing(cond, ScratchReg);
+    }
+    Condition testGCThing(Condition cond, const BaseIndex &src) {
+        splitTag(src, ScratchReg);
+        return testGCThing(cond, ScratchReg);
+    }
 
     void cmpPtr(const Register &lhs, const ImmWord rhs) {
         JS_ASSERT(lhs != ScratchReg);
@@ -366,9 +374,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             movq(src, dest);
         shrq(Imm32(JSVAL_TAG_SHIFT), dest);
     }
-
     void splitTag(const ValueOperand &operand, const Register &dest) {
         splitTag(operand.valueReg(), dest);
+    }
+    void splitTag(const Address &operand, const Register &dest) {
+        movq(Operand(operand), dest);
+        shrq(Imm32(JSVAL_TAG_SHIFT), dest);
+    }
+    void splitTag(const BaseIndex &operand, const Register &dest) {
+        movq(Operand(operand), dest);
+        shrq(Imm32(JSVAL_TAG_SHIFT), dest);
     }
 
     // Extracts the tag of a value and places it in ScratchReg.
@@ -452,7 +467,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cond = testObject(cond, src);
         j(cond, label);
     }
-    void branchTestGCThing(Condition cond, const ValueOperand &src, Label *label) {
+    template <typename T>
+    void branchTestGCThing(Condition cond, const T &src, Label *label) {
         cond = testGCThing(cond, src);
         j(cond, label);
     }

@@ -1944,33 +1944,6 @@ class LCallIteratorEnd : public LCallInstructionHelper<0, 1, 0>
     }
 };
 
-// Mark a Value if it is a GCThing.
-class LWriteBarrierV : public LInstructionHelper<0, BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(WriteBarrierV);
-
-    LWriteBarrierV()
-    { }
-
-    static const size_t Input = 0;
-};
-
-// Mark a GCThing.
-class LWriteBarrierT : public LInstructionHelper<0, 1, 0>
-{
-  public:
-    LIR_HEADER(WriteBarrierT);
-
-    LWriteBarrierT(const LAllocation &value) {
-        setOperand(0, value);
-    }
-
-    const LAllocation *value() {
-        return getOperand(0);
-    }
-};
-
 // Guard that a value is in a TypeSet.
 class LTypeBarrier : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1>
 {
