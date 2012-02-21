@@ -42,6 +42,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -738,6 +739,46 @@ InspectorUI.prototype = {
     }
   },
 
+  /**
+   * Copy the innerHTML of the selected Node to the clipboard. Called via the
+   * Inspector:CopyInner command.
+   */
+  copyInnerHTML: function IUI_copyInnerHTML()
+  {
+    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+                    getService(Ci.nsIClipboardHelper);
+    clipboard.copyString(this.selection.innerHTML);
+  },
+
+  /**
+   * Copy the outerHTML of the selected Node to the clipboard. Called via the
+   * Inspector:CopyOuter command.
+   */
+  copyOuterHTML: function IUI_copyOuterHTML()
+  {
+    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+                    getService(Ci.nsIClipboardHelper);
+    clipboard.copyString(this.selection.outerHTML);
+  },
+
+  /**
+   * Delete the selected node. Called via the Inspector:DeleteNode command.
+   */
+  deleteNode: function IUI_deleteNode()
+  {
+    let selection = this.selection;
+    let parent = this.selection.parentNode;
+
+    // remove the node from the treepanel
+    this.treePanel.deleteChildBox(selection);
+
+    // remove the node from content
+    parent.removeChild(selection);
+    this.breadcrumbs.invalidateHierarchy();
+
+    // select the parent node in the highlighter, treepanel, breadcrumbs
+    this.inspectNode(parent);
+  },
 
   /////////////////////////////////////////////////////////////////////////
   //// CssRuleView methods

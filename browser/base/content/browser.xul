@@ -243,6 +243,22 @@
       </hbox>
     </panel>
 
+    <menupopup id="inspector-node-popup">
+      <menuitem id="inspectorHTMLCopyInner"
+                label="&inspectorHTMLCopyInner.label;"
+                accesskey="&inspectorHTMLCopyInner.accesskey;"
+                command="Inspector:CopyInner"/>
+      <menuitem id="inspectorHTMLCopyOuter"
+                label="&inspectorHTMLCopyOuter.label;"
+                accesskey="&inspectorHTMLCopyOuter.accesskey;"
+                command="Inspector:CopyOuter"/>
+      <menuseparator/>
+      <menuitem id="inspectorHTMLDelete"
+                label="&inspectorHTMLDelete.label;"
+                accesskey="&inspectorHTMLDelete.accesskey;"
+                command="Inspector:DeleteNode"/>
+    </menupopup>
+
     <menupopup id="toolbar-context-menu"
                onpopupshowing="onViewToolbarsPopupShowing(event);">
       <menuseparator/>
