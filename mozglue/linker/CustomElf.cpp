@@ -628,7 +628,8 @@ CustomElf::RelocateJumps()
       symptr = GetSymbolPtrInDeps(strtab.GetStringAt(sym.st_name));
 
     if (symptr == NULL) {
-      log("%s: Error: relocation to NULL @0x%08" PRIxAddr, GetPath(), rel->r_offset);
+      log("%s: Error: relocation to NULL @0x%08" PRIxAddr " for symbol \"%s\"",
+          GetPath(), rel->r_offset, strtab.GetStringAt(sym.st_name));
       return false;
     }
     /* Apply relocation */

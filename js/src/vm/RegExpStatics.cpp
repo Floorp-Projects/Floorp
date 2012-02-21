@@ -80,11 +80,9 @@ Class js::RegExpStaticsClass = {
     JS_ResolveStub,
     JS_ConvertStub,
     resc_finalize,
-    NULL,                    /* reserved0   */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
-    NULL,                    /* xdrObject   */
     NULL,                    /* hasInstance */
     resc_trace
 };
