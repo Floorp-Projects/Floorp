@@ -558,6 +558,9 @@ GLContext::InitExtensions()
 {
     MakeCurrent();
     const GLubyte *extensions = fGetString(LOCAL_GL_EXTENSIONS);
+    if (!extensions)
+        return;
+
     char *exts = strdup((char *)extensions);
 
 #ifdef DEBUG

@@ -102,6 +102,8 @@ public class BrowserContract {
     public static final class Bookmarks implements CommonColumns, URLColumns, ImageColumns, SyncColumns {
         private Bookmarks() {}
 
+        public static final int FIXED_ROOT_ID = 0;
+
         public static final String MOBILE_FOLDER_GUID = "mobile";
         public static final String PLACES_FOLDER_GUID = "places";
         public static final String MENU_FOLDER_GUID = "menu";

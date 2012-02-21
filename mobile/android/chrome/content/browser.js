@@ -2087,7 +2087,7 @@ Tab.prototype = {
     let minScale = this.getPageZoomLevel(screenW);
     viewportH = Math.max(viewportH, screenH / minScale);
 
-    let oldBrowserWidth = parseInt(this.browser.style.width);
+    let oldBrowserWidth = parseInt(this.browser.style.minWidth);
     this.setBrowserSize(viewportW, viewportH);
 
     // Avoid having the scroll position jump around after device rotation.
@@ -2111,7 +2111,7 @@ Tab.prototype = {
     if ("defaultZoom" in md && md.defaultZoom)
       return md.defaultZoom;
 
-    let browserWidth = parseInt(this.browser.style.width);
+    let browserWidth = parseInt(this.browser.style.minWidth);
     return gScreenWidth / browserWidth;
   },
 
@@ -2125,8 +2125,10 @@ Tab.prototype = {
   },
 
   setBrowserSize: function(aWidth, aHeight) {
-    this.browser.style.width = aWidth + "px";
-    this.browser.style.height = aHeight + "px";
+    // Using min width/height so as not to conflict with the fullscreen style rule.
+    // See Bug #709813.
+    this.browser.style.minWidth = aWidth + "px";
+    this.browser.style.minHeight = aHeight + "px";
   },
 
   getRequestLoadContext: function(aRequest) {

@@ -64,7 +64,10 @@
 
 importScripts("ril_consts.js", "systemlibs.js");
 
-let DEBUG = false;
+// We leave this as 'undefined' instead of setting it to 'false'. That
+// way an outer scope can define it to 'true' (e.g. for testing purposes)
+// without us overriding that here.
+let DEBUG;
 
 const INT32_MAX   = 2147483647;
 const UINT8_SIZE  = 1;
@@ -107,6 +110,9 @@ let Buf = {
 
     // How many bytes we've read for this parcel so far.
     this.readIncoming = 0;
+
+    // How many bytes available as parcel data.
+    this.readAvailable = 0;
 
     // Size of the incoming parcel. If this is zero, we're expecting a new
     // parcel.
@@ -192,11 +198,20 @@ let Buf = {
    * These are all little endian, apart from readParcelSize();
    */
 
-  readUint8: function readUint8() {
+  readUint8Unchecked: function readUint8Unchecked() {
     let value = this.incomingBytes[this.incomingReadIndex];
     this.incomingReadIndex = (this.incomingReadIndex + 1) %
                              this.INCOMING_BUFFER_LENGTH;
     return value;
+  },
+
+  readUint8: function readUint8() {
+    if (!this.readAvailable) {
+      throw new Error("Trying to read data beyond the parcel end!");
+    }
+
+    this.readAvailable--;
+    return this.readUint8Unchecked();
   },
 
   readUint16: function readUint16() {
@@ -251,8 +266,10 @@ let Buf = {
   },
 
   readParcelSize: function readParcelSize() {
-    return this.readUint8() << 24 | this.readUint8() << 16 |
-           this.readUint8() <<  8 | this.readUint8();
+    return this.readUint8Unchecked() << 24 |
+           this.readUint8Unchecked() << 16 |
+           this.readUint8Unchecked() <<  8 |
+           this.readUint8Unchecked();
   },
 
   /**
@@ -412,6 +429,7 @@ let Buf = {
 
       if (DEBUG) debug("We have at least one complete parcel.");
       try {
+        this.readAvailable = this.currentParcelSize;
         this.processParcel();
       } catch (ex) {
         if (DEBUG) debug("Parcel handling threw " + ex + "\n" + ex.stack);
@@ -427,6 +445,7 @@ let Buf = {
         this.incomingReadIndex = expectedAfterIndex;
       }
       this.readIncoming -= this.currentParcelSize;
+      this.readAvailable = 0;
       this.currentParcelSize = 0;
     }
   },
@@ -436,13 +455,11 @@ let Buf = {
    */
   processParcel: function processParcel() {
     let response_type = this.readUint32();
-    let length = this.readIncoming - UINT32_SIZE;
 
     let request_type, options;
     if (response_type == RESPONSE_TYPE_SOLICITED) {
       let token = this.readUint32();
       let error = this.readUint32();
-      length -= 2 * UINT32_SIZE;
 
       options = this.tokenRequestMap[token];
       request_type = options.rilRequestType;
@@ -462,14 +479,13 @@ let Buf = {
       this.lastSolicitedToken = token;
     } else if (response_type == RESPONSE_TYPE_UNSOLICITED) {
       request_type = this.readUint32();
-      length -= UINT32_SIZE;
       if (DEBUG) debug("Unsolicited response for request type " + request_type);
     } else {
       if (DEBUG) debug("Unknown response type: " + response_type);
       return;
     }
 
-    RIL.handleParcel(request_type, length, options);
+    RIL.handleParcel(request_type, this.readAvailable, options);
   },
 
   /**

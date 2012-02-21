@@ -70,6 +70,7 @@
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "vm/GlobalObject.h"
+#include "vm/MethodGuard.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"

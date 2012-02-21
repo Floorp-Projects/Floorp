@@ -44,19 +44,18 @@
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
-#include "nsEventShell.h"
-
 #include "nsAccEvent.h"
 #include "nsAccessibleRelation.h"
 #include "nsAccessibilityService.h"
 #include "nsAccTreeWalker.h"
 #include "nsIAccessibleRelation.h"
+#include "nsEventShell.h"
 #include "nsRootAccessible.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
+#include "StyleInfo.h"
 
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSPrimitiveValue.h"
@@ -1442,49 +1441,40 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
     startContent = parentDoc->FindContentForSubDocument(doc);      
   }
 
-  // Expose 'display' attribute.
+  if (!mContent->IsElement())
+    return NS_OK;
+
+  // CSS style based object attributes.
   nsAutoString value;
-  nsresult rv = GetComputedStyleValue(EmptyString(),
-                                      NS_LITERAL_STRING("display"),
-                                      value);
-  if (NS_SUCCEEDED(rv))
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::display, value);
+  StyleInfo styleInfo(mContent->AsElement(), mDoc->PresShell());
+
+  // Expose 'display' attribute.
+  styleInfo.Display(value);
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::display, value);
 
   // Expose 'text-align' attribute.
-  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("text-align"),
-                             value);
-  if (NS_SUCCEEDED(rv))
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textAlign, value);
+  styleInfo.TextAlign(value);
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textAlign, value);
 
   // Expose 'text-indent' attribute.
-  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("text-indent"),
-                             value);
-  if (NS_SUCCEEDED(rv))
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textIndent, value);
+  styleInfo.TextIndent(value);
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textIndent, value);
 
   // Expose 'margin-left' attribute.
-  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-left"),
-                             value);
-  if (NS_SUCCEEDED(rv))
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginLeft, value);
+  styleInfo.MarginLeft(value);
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginLeft, value);
 
   // Expose 'margin-right' attribute.
-  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-right"),
-                             value);
-  if (NS_SUCCEEDED(rv))
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginRight, value);
+  styleInfo.MarginRight(value);
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginRight, value);
 
   // Expose 'margin-top' attribute.
-  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-top"),
-                             value);
-  if (NS_SUCCEEDED(rv))
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginTop, value);
+  styleInfo.MarginTop(value);
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginTop, value);
 
   // Expose 'margin-bottom' attribute.
-  rv = GetComputedStyleValue(EmptyString(), NS_LITERAL_STRING("margin-bottom"),
-                             value);
-  if (NS_SUCCEEDED(rv))
-    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginBottom, value);
+  styleInfo.MarginBottom(value);
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginBottom, value);
 
   // Expose draggable object attribute?
   nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);

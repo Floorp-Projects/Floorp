@@ -54,6 +54,8 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/MethodGuard-inl.h"
+
 using namespace js;
 
 namespace js {

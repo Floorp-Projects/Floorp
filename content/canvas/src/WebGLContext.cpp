@@ -75,133 +75,6 @@ using namespace mozilla;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
 
-WebGLMemoryReporter* WebGLMemoryReporter::sUniqueInstance = nsnull;
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLTextureMemoryUsed,
-                             "webgl-texture-memory",
-                             KIND_OTHER,
-                             UNITS_BYTES,
-                             WebGLMemoryReporter::GetTextureMemoryUsed,
-                             "Memory used by WebGL textures. The OpenGL implementation is free to store these textures in either video memory or main memory. This measurement is only a lower bound, actual memory usage may be higher for example if the storage is strided.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLTextureCount,
-                             "webgl-texture-count",
-                             KIND_OTHER,
-                             UNITS_COUNT,
-                             WebGLMemoryReporter::GetTextureCount,
-                             "Number of WebGL textures.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferMemoryUsed,
-                             "webgl-buffer-memory",
-                             KIND_OTHER,
-                             UNITS_BYTES,
-                             WebGLMemoryReporter::GetBufferMemoryUsed,
-                             "Memory used by WebGL buffers. The OpenGL implementation is free to store these buffers in either video memory or main memory. This measurement is only a lower bound, actual memory usage may be higher for example if the storage is strided.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferCacheMemoryUsed,
-                             "explicit/webgl/buffer-cache-memory",
-                             KIND_HEAP,
-                             UNITS_BYTES,
-                             WebGLMemoryReporter::GetBufferCacheMemoryUsed,
-                             "Memory used by WebGL buffer caches. The WebGL implementation caches the contents of element array buffers only. This adds up with the webgl-buffer-memory value, but contrary to it, this one represents bytes on the heap, not managed by OpenGL.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLBufferCount,
-                             "webgl-buffer-count",
-                             KIND_OTHER,
-                             UNITS_COUNT,
-                             WebGLMemoryReporter::GetBufferCount,
-                             "Number of WebGL buffers.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLRenderbufferMemoryUsed,
-                             "webgl-renderbuffer-memory",
-                             KIND_OTHER,
-                             UNITS_BYTES,
-                             WebGLMemoryReporter::GetRenderbufferMemoryUsed,
-                             "Memory used by WebGL renderbuffers. The OpenGL implementation is free to store these renderbuffers in either video memory or main memory. This measurement is only a lower bound, actual memory usage may be higher for example if the storage is strided.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLRenderbufferCount,
-                             "webgl-renderbuffer-count",
-                             KIND_OTHER,
-                             UNITS_COUNT,
-                             WebGLMemoryReporter::GetRenderbufferCount,
-                             "Number of WebGL renderbuffers.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLShaderSourcesSize,
-                             "explicit/webgl/shader-sources-size",
-                             KIND_HEAP,
-                             UNITS_BYTES,
-                             WebGLMemoryReporter::GetShaderSourcesSize,
-                             "Combined size of WebGL shader ASCII sources, cached on the heap. This should always be at most a few kilobytes, or dozen kilobytes for very shader-intensive WebGL demos.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLShaderTranslationLogsSize,
-                             "explicit/webgl/shader-translationlogs-size",
-                             KIND_HEAP,
-                             UNITS_BYTES,
-                             WebGLMemoryReporter::GetShaderTranslationLogsSize,
-                             "Combined size of WebGL shader ASCII translation logs, cached on the heap.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLShaderCount,
-                             "webgl-shader-count",
-                             KIND_OTHER,
-                             UNITS_COUNT,
-                             WebGLMemoryReporter::GetShaderCount,
-                             "Number of WebGL shaders.")
-
-NS_MEMORY_REPORTER_IMPLEMENT(WebGLContextCount,
-                             "webgl-context-count",
-                             KIND_OTHER,
-                             UNITS_COUNT,
-                             WebGLMemoryReporter::GetContextCount,
-                             "Number of WebGL contexts.")
-
-WebGLMemoryReporter* WebGLMemoryReporter::UniqueInstance()
-{
-    if (!sUniqueInstance) {
-        sUniqueInstance = new WebGLMemoryReporter;
-    }
-    return sUniqueInstance;
-}
-
-WebGLMemoryReporter::WebGLMemoryReporter()
-    : mTextureMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLTextureMemoryUsed))
-    , mTextureCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLTextureCount))
-    , mBufferMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLBufferMemoryUsed))
-    , mBufferCacheMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLBufferCacheMemoryUsed))
-    , mBufferCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLBufferCount))
-    , mRenderbufferMemoryUsageReporter(new NS_MEMORY_REPORTER_NAME(WebGLRenderbufferMemoryUsed))
-    , mRenderbufferCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLRenderbufferCount))
-    , mShaderSourcesSizeReporter(new NS_MEMORY_REPORTER_NAME(WebGLShaderSourcesSize))
-    , mShaderTranslationLogsSizeReporter(new NS_MEMORY_REPORTER_NAME(WebGLShaderTranslationLogsSize))
-    , mShaderCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLShaderCount))
-    , mContextCountReporter(new NS_MEMORY_REPORTER_NAME(WebGLContextCount))
-{
-    NS_RegisterMemoryReporter(mTextureMemoryUsageReporter);
-    NS_RegisterMemoryReporter(mTextureCountReporter);
-    NS_RegisterMemoryReporter(mBufferMemoryUsageReporter);
-    NS_RegisterMemoryReporter(mBufferCacheMemoryUsageReporter);    
-    NS_RegisterMemoryReporter(mBufferCountReporter);
-    NS_RegisterMemoryReporter(mRenderbufferMemoryUsageReporter);
-    NS_RegisterMemoryReporter(mRenderbufferCountReporter);
-    NS_RegisterMemoryReporter(mShaderSourcesSizeReporter);
-    NS_RegisterMemoryReporter(mShaderTranslationLogsSizeReporter);
-    NS_RegisterMemoryReporter(mShaderCountReporter);
-    NS_RegisterMemoryReporter(mContextCountReporter);
-}
-
-WebGLMemoryReporter::~WebGLMemoryReporter()
-{
-    NS_UnregisterMemoryReporter(mTextureMemoryUsageReporter);
-    NS_UnregisterMemoryReporter(mTextureCountReporter);
-    NS_UnregisterMemoryReporter(mBufferMemoryUsageReporter);
-    NS_UnregisterMemoryReporter(mBufferCacheMemoryUsageReporter);
-    NS_UnregisterMemoryReporter(mBufferCountReporter);
-    NS_UnregisterMemoryReporter(mRenderbufferMemoryUsageReporter);
-    NS_UnregisterMemoryReporter(mRenderbufferCountReporter);
-    NS_UnregisterMemoryReporter(mShaderSourcesSizeReporter);
-    NS_UnregisterMemoryReporter(mShaderTranslationLogsSizeReporter);
-    NS_UnregisterMemoryReporter(mShaderCountReporter);
-    NS_UnregisterMemoryReporter(mContextCountReporter);
-}
 
 nsresult NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** aResult);
 
@@ -289,7 +162,7 @@ WebGLContext::WebGLContext()
     mPixelStorePackAlignment = 4;
     mPixelStoreUnpackAlignment = 4;
 
-    WebGLMemoryReporter::AddWebGLContext(this);
+    WebGLMemoryMultiReporterWrapper::AddWebGLContext(this);
 
     mAllowRestore = true;
     mRobustnessTimerRunning = false;
@@ -303,7 +176,7 @@ WebGLContext::WebGLContext()
 WebGLContext::~WebGLContext()
 {
     DestroyResourcesAndContext();
-    WebGLMemoryReporter::RemoveWebGLContext(this);
+    WebGLMemoryMultiReporterWrapper::RemoveWebGLContext(this);
     TerminateRobustnessTimer();
     mContextRestorer = nsnull;
 }
