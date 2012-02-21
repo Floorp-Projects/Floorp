@@ -620,6 +620,34 @@ LIRGenerator::visitConcat(MConcat *ins)
 }
 
 bool
+LIRGenerator::visitCharCodeAt(MCharCodeAt *ins)
+{
+    MDefinition *str = ins->getOperand(0);
+    MDefinition *idx = ins->getOperand(1);
+
+    JS_ASSERT(str->type() == MIRType_String);
+    JS_ASSERT(idx->type() == MIRType_Int32);
+
+    LCharCodeAt *lir = new LCharCodeAt(useRegister(str), useRegister(idx));
+    if (!define(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitFromCharCode(MFromCharCode *ins)
+{
+    MDefinition *code = ins->getOperand(0);
+
+    JS_ASSERT(code->type() == MIRType_Int32);
+
+    LFromCharCode *lir = new LFromCharCode(useRegister(code));
+    if (!define(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitStart(MStart *start)
 {
     // Create a snapshot that captures the initial state of the function.
