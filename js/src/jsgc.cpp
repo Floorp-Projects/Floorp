@@ -4547,12 +4547,7 @@ JS_IterateCompartments(JSContext *cx, void *data,
 
     AutoLockGC lock(rt);
     AutoHeapSession session(cx);
-#ifdef JS_THREADSAFE
-    rt->gcHelperThread.waitBackgroundSweepEnd();
-#endif
-    AutoUnlockGC unlock(rt);
 
-    AutoCopyFreeListToArenas copy(rt);
     for (CompartmentsIter c(rt); !c.done(); c.next())
         (*compartmentCallback)(cx, data, c);
 }
