@@ -88,18 +88,11 @@ AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr)
   return true;
 }
 
-struct WindowTotals
-{
-  WindowTotals() : mDom(0), mStyleSheets(0) {}
-  size_t mDom;
-  size_t mStyleSheets;
-};
-
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMStyleMallocSizeOf, "dom+style")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMStyleMallocSizeOf, "windows")
 
 static void
 CollectWindowReports(nsGlobalWindow *aWindow,
-                     WindowTotals *aWindowTotals,
+                     nsWindowSizes *aWindowTotalSizes,
                      nsIMemoryMultiReporterCallback *aCb,
                      nsISupports *aClosure)
 {
@@ -126,7 +119,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   // The path we give to the reporter callback for inner windows are
   // as follows:
   //
-  //   explicit/dom+style/window-objects/<category>/top=<top-outer-id> (inner=<top-inner-id>)/inner-window(id=<id>, uri=<uri>)
+  //   explicit/window-objects/<category>/top=<top-outer-id> (inner=<top-inner-id>)/inner-window(id=<id>, uri=<uri>)
   //
   // Where:
   // - <category> is active, cached, or other, as described above.
@@ -145,12 +138,12 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   //
   // For outer windows we simply use:
   // 
-  //   explicit/dom+style/window-objects/<category>/outer-windows
+  //   explicit/window-objects/<category>/outer-windows
   //
   // Which gives us simple counts of how many outer windows (and their
   // combined sizes) per category.
 
-  nsCAutoString windowPath("explicit/dom+style/window-objects/");
+  nsCAutoString windowPath("explicit/window-objects/");
 
   nsIDocShell *docShell = aWindow->GetDocShell();
 
@@ -199,28 +192,40 @@ CollectWindowReports(nsGlobalWindow *aWindow,
     windowPath += NS_LITERAL_CSTRING("outer-windows");
   }
 
-  if (windowSizes.mDOM > 0) {
-    nsCAutoString domPath(windowPath);
-    domPath += "/dom";
-    NS_NAMED_LITERAL_CSTRING(kWindowDesc,
-                             "Memory used by a window and the DOM within it.");
-    aCb->Callback(EmptyCString(), domPath, nsIMemoryReporter::KIND_HEAP,
-                  nsIMemoryReporter::UNITS_BYTES, windowSizes.mDOM,
-                  kWindowDesc, aClosure);
-    aWindowTotals->mDom += windowSizes.mDOM;
-  }
+#define REPORT(_path1, _path2, _amount, _desc)                                \
+  do {                                                                        \
+    if (_amount > 0) {                                                        \
+        nsCAutoString path(_path1);                                           \
+        path += _path2;                                                       \
+        aCb->Callback(EmptyCString(), path, nsIMemoryReporter::KIND_HEAP,     \
+                      nsIMemoryReporter::UNITS_BYTES, _amount,                \
+                      NS_LITERAL_CSTRING(_desc), aClosure);                   \
+    }                                                                         \
+  } while (0)
 
-  if (windowSizes.mStyleSheets > 0) {
-    nsCAutoString styleSheetsPath(windowPath);
-    styleSheetsPath += "/style-sheets";
-    NS_NAMED_LITERAL_CSTRING(kStyleSheetsDesc,
-                             "Memory used by style sheets within a window.");
-    aCb->Callback(EmptyCString(), styleSheetsPath,
-                  nsIMemoryReporter::KIND_HEAP,
-                  nsIMemoryReporter::UNITS_BYTES, windowSizes.mStyleSheets,
-                  kStyleSheetsDesc, aClosure);
-    aWindowTotals->mStyleSheets += windowSizes.mStyleSheets;
-  }
+  REPORT(windowPath, "/dom", windowSizes.mDOM,
+         "Memory used by a window and the DOM within it.");
+  aWindowTotalSizes->mDOM += windowSizes.mDOM;
+
+  REPORT(windowPath, "/style-sheets", windowSizes.mStyleSheets,
+         "Memory used by style sheets within a window.");
+  aWindowTotalSizes->mStyleSheets += windowSizes.mStyleSheets;
+
+  REPORT(windowPath, "/layout/arenas", windowSizes.mLayoutArenas,
+         "Memory used by layout PresShell, PresContext, and other related "
+         "areas within a window.");
+  aWindowTotalSizes->mLayoutArenas += windowSizes.mLayoutArenas;
+
+  REPORT(windowPath, "/layout/style-sets", windowSizes.mLayoutStyleSets,
+         "Memory used by style sets within a window.");
+  aWindowTotalSizes->mLayoutStyleSets += windowSizes.mLayoutStyleSets;
+
+  REPORT(windowPath, "/layout/text-runs", windowSizes.mLayoutTextRuns,
+         "Memory used for text-runs (glyph layout) in the PresShell's frame "
+         "tree, within a window.");
+  aWindowTotalSizes->mLayoutTextRuns += windowSizes.mLayoutTextRuns;
+
+#undef REPORT
 }
 
 typedef nsTArray< nsRefPtr<nsGlobalWindow> > WindowArray;
@@ -237,7 +242,7 @@ GetWindows(const PRUint64& aId, nsGlobalWindow*& aWindow, void* aClosure)
 NS_IMETHODIMP
 nsDOMMemoryMultiReporter::GetName(nsACString &aName)
 {
-  aName.AssignLiteral("dom+style");
+  aName.AssignLiteral("window-objects");
   return NS_OK;
 }
 
@@ -257,27 +262,42 @@ nsDOMMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   // Collect window memory usage.
   nsRefPtr<nsGlobalWindow> *w = windows.Elements();
   nsRefPtr<nsGlobalWindow> *end = w + windows.Length();
-  WindowTotals windowTotals;
+  nsWindowSizes windowTotalSizes(NULL);
   for (; w != end; ++w) {
-    CollectWindowReports(*w, &windowTotals, aCb, aClosure);
+    CollectWindowReports(*w, &windowTotalSizes, aCb, aClosure);
   }
 
-  NS_NAMED_LITERAL_CSTRING(kDomTotalWindowsDesc,
-    "Memory used for the DOM within windows.  This is the sum of all windows' "
-    "'dom' numbers.");
-  aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING("dom-total-window"),
-                nsIMemoryReporter::KIND_OTHER,
-                nsIMemoryReporter::UNITS_BYTES, windowTotals.mDom,
-                kDomTotalWindowsDesc, aClosure);
+#define REPORT(_path, _amount, _desc)                                         \
+  do {                                                                        \
+    aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),                  \
+                  nsIMemoryReporter::KIND_OTHER,                              \
+                  nsIMemoryReporter::UNITS_BYTES, _amount,                    \
+                  NS_LITERAL_CSTRING(_desc), aClosure);                       \
+  } while (0)
 
-  NS_NAMED_LITERAL_CSTRING(kLayoutTotalWindowStyleSheetsDesc,
-    "Memory used for style sheets within windows.  This is the sum of all windows' "
-    "'style-sheets' numbers.");
-  aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING("style-sheets-total-window"),
-                nsIMemoryReporter::KIND_OTHER,
-                nsIMemoryReporter::UNITS_BYTES, windowTotals.mStyleSheets,
-                kLayoutTotalWindowStyleSheetsDesc, aClosure);
+  REPORT("window-objects-dom", windowTotalSizes.mDOM, 
+         "Memory used for the DOM within windows. "
+         "This is the sum of all windows' 'dom' numbers.");
+    
+  REPORT("window-objects-style-sheets", windowTotalSizes.mStyleSheets, 
+         "Memory used for style sheets within windows. "
+         "This is the sum of all windows' 'style-sheets' numbers.");
+    
+  REPORT("window-objects-layout-arenas", windowTotalSizes.mLayoutArenas, 
+         "Memory used by layout PresShell, PresContext, and other related "
+         "areas within windows. This is the sum of all windows' "
+         "'layout/arenas' numbers.");
+    
+  REPORT("window-objects-layout-style-sets", windowTotalSizes.mLayoutStyleSets, 
+         "Memory used for style sets within windows. "
+         "This is the sum of all windows' 'layout/style-sets' numbers.");
+    
+  REPORT("window-objects-layout-text-runs", windowTotalSizes.mLayoutTextRuns, 
+         "Memory used for text runs within windows. "
+         "This is the sum of all windows' 'layout/text-runs' numbers.");
 
+#undef REPORT
+    
   return NS_OK;
 }
 

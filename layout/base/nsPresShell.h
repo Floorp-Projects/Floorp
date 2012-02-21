@@ -901,26 +901,11 @@ private:
 
 public:
 
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
-    size_t n = 0;
-
-    n += aMallocSizeOf(this);
-    n += mStackArena.SizeOfExcludingThis(aMallocSizeOf);
-    n += mFrameArena.SizeOfExcludingThis(aMallocSizeOf);
-
-    return n;
-  }
-
-  size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf);
-
-  class MemoryReporter : public nsIMemoryMultiReporter
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIMEMORYMULTIREPORTER
-  protected:
-    static PLDHashOperator SizeEnumerator(PresShellPtrKey *aEntry, void *userArg);
-  };
+  void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                           size_t *aArenasSize,
+                           size_t *aStyleSetsSize,
+                           size_t *aTextRunsSize) const;
+  size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
 
 protected:
   void QueryIsActive();
