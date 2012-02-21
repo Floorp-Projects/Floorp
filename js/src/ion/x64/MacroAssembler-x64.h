@@ -591,6 +591,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         testl(operand.valueReg(), operand.valueReg());
         j(truthy ? NonZero : Zero, label);
     }
+    // This returns the tag in ScratchReg.
+    Condition testStringTruthy(bool truthy, const ValueOperand &value) {
+        unboxString(value, ScratchReg);
+
+        Operand lengthAndFlags(ScratchReg, JSString::offsetOfLengthAndFlags());
+        movq(lengthAndFlags, ScratchReg);
+        shrq(Imm32(JSString::LENGTH_SHIFT), ScratchReg);
+        testq(ScratchReg, ScratchReg);
+        return truthy ? Assembler::NonZero : Assembler::Zero;
+    }
+
+
     void loadInt32OrDouble(const Operand &operand, const FloatRegister &dest) {
         Label notInt32, end;
         movq(operand, ScratchReg);

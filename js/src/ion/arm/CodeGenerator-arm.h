@@ -133,7 +133,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     // Functions for LTestVAndBranch.
     Register splitTagForTest(const ValueOperand &value);
-    Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
                            const Register &elements, const LAllocation *index);
