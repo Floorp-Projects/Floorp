@@ -1319,54 +1319,47 @@ nsXMLHttpRequest::Abort()
   return NS_OK;
 }
 
-/* string getAllResponseHeaders (); */
+/* DOMString getAllResponseHeaders(); */
 NS_IMETHODIMP
-nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
+nsXMLHttpRequest::GetAllResponseHeaders(nsAString& aResponseHeaders)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = nsnull;
+  aResponseHeaders.Truncate();
 
   // If the state is UNSENT or OPENED,
   // return the empty string and terminate these steps.
   if (mState & (XML_HTTP_REQUEST_UNSENT |
                 XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT)) {
-    *_retval = ToNewCString(EmptyString());
     return NS_OK;
   }
 
   if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
-    *_retval = ToNewCString(EmptyString());
     return NS_OK;
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
-
-  if (httpChannel) {
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel()) {
     nsRefPtr<nsHeaderVisitor> visitor = new nsHeaderVisitor();
-    nsresult rv = httpChannel->VisitResponseHeaders(visitor);
-    if (NS_SUCCEEDED(rv))
-      *_retval = ToNewCString(visitor->Headers());
-  } else if (mChannel) {
-    // Even non-http channels supply content type.
-    nsCString value;
-    if (NS_SUCCEEDED(mChannel->GetContentType(value))) {
-      nsCString headers;
-      headers.Append("Content-Type: ");
-      headers.Append(value);
-      if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) &&
-          !value.IsEmpty()) {
-        headers.Append(";charset=");
-        headers.Append(value);
-      }
-      headers.Append('\n');
-      *_retval = ToNewCString(headers);
+    if (NS_SUCCEEDED(httpChannel->VisitResponseHeaders(visitor))) {
+      aResponseHeaders = NS_ConvertUTF8toUTF16(visitor->Headers());
     }
+    return NS_OK;
   }
 
-  if (!*_retval) {
-    *_retval = ToNewCString(EmptyString());
+  if (!mChannel) {
+    return NS_OK;
   }
 
+  // Even non-http channels supply content type.
+  nsCAutoString value;
+  if (NS_SUCCEEDED(mChannel->GetContentType(value))) {
+    aResponseHeaders.AppendLiteral("Content-Type: ");
+    aResponseHeaders.Append(NS_ConvertUTF8toUTF16(value));
+    if (NS_SUCCEEDED(mChannel->GetContentCharset(value)) &&
+        !value.IsEmpty()) {
+      aResponseHeaders.AppendLiteral(";charset=");
+      aResponseHeaders.Append(NS_ConvertUTF8toUTF16(value));
+    }
+    aResponseHeaders.Append('\n');
+  }
   return NS_OK;
 }
 

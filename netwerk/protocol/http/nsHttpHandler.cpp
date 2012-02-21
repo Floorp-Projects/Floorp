@@ -270,7 +270,7 @@ nsHttpHandler::Init()
         PrefsChanged(prefBranch, nsnull);
     }
 
-    mMisc.AssignLiteral("rv:" MOZILLA_VERSION);
+    mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
 
     nsCOMPtr<nsIXULAppInfo> appInfo =
         do_GetService("@mozilla.org/xre/app-info;1");
@@ -307,7 +307,15 @@ nsHttpHandler::Init()
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
-    mProductSub.AssignLiteral(MOZILLA_VERSION);
+#ifdef ANDROID
+    mProductSub.AssignLiteral(MOZILLA_UAVERSION);
+#else
+    mProductSub.AssignLiteral(MOZ_UA_BUILDID);
+#endif
+    if (mProductSub.IsEmpty() && appInfo)
+        appInfo->GetPlatformBuildID(mProductSub);
+    if (mProductSub.Length() > 8)
+        mProductSub.SetLength(8);
 
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category

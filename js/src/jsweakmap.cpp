@@ -121,16 +121,14 @@ GetKeyArg(JSContext *cx, CallArgs &args)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return NULL;
     }
-    JSObject *key = &vp->toObject();
-    if (!key)
-        return NULL;
+    JSObject &key = vp->toObject();
 
     // If the key is from another compartment, and we store the wrapper as the key
     // the wrapper might be GC-ed since it is not strong referenced (Bug 673468).
     // To avoid this we always use the unwrapped object as the key instead of its
     // security wrapper. This also means that if the keys are ever exposed they must
     // be re-wrapped (see: JS_NondeterministicGetWeakMapKeys).
-    return JS_UnwrapObject(key);
+    return JS_UnwrapObject(&key);
 }
 
 static JSBool
