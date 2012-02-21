@@ -525,6 +525,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         testl(operand.payloadReg(), operand.payloadReg());
         j(truthy ? NonZero : Zero, label);
     }
+    Condition testStringTruthy(bool truthy, const ValueOperand &value) {
+        Register string = value.payloadReg();
+        Operand lengthAndFlags(string, JSString::offsetOfLengthAndFlags());
+
+        size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
+        testl(lengthAndFlags, Imm32(mask));
+        return truthy ? Assembler::NonZero : Assembler::Zero;
+    }
+
+
     void loadInt32OrDouble(const Operand &operand, const FloatRegister &dest) {
         Label notInt32, end;
         branchTestInt32(Assembler::NotEqual, operand, &notInt32);

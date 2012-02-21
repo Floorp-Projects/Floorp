@@ -216,7 +216,7 @@ CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
     // Test if a string is non-empty.
     Label notString;
     masm.branchTestString(Assembler::NotEqual, tag, &notString);
-    cond = testStringTruthy(false, value);
+    cond = masm.testStringTruthy(false, value);
     masm.j(cond, lir->ifFalse());
     masm.jump(lir->ifTrue());
     masm.bind(&notString);

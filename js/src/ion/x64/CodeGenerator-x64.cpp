@@ -181,18 +181,6 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
     return true;
 }
 
-Assembler::Condition
-CodeGeneratorX64::testStringTruthy(bool truthy, const ValueOperand &value)
-{
-    masm.unboxString(value, ScratchReg);
-
-    Operand lengthAndFlags(ScratchReg, JSString::offsetOfLengthAndFlags());
-    masm.movq(lengthAndFlags, ScratchReg);
-    masm.shrq(Imm32(JSString::LENGTH_SHIFT), ScratchReg);
-    masm.testq(ScratchReg, ScratchReg);
-    return truthy ? Assembler::NonZero : Assembler::Zero;
-}
-
 bool
 CodeGeneratorX64::visitLoadSlotV(LLoadSlotV *load)
 {

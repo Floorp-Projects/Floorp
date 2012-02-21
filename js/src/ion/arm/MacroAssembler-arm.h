@@ -507,6 +507,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand);
     Condition testBooleanTruthy(bool truthy, const ValueOperand &operand);
     Condition testDoubleTruthy(bool truthy, const FloatRegister &reg);
+    Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
     template<typename T>
     void branchTestInt32(Condition cond, const T & t, Label *label) {
