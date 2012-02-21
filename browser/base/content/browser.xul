@@ -1055,11 +1055,7 @@
   <svg:svg height="0">
     <svg:mask id="winstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
-      <svg:circle cx="-0.46" cy="0.5" r="0.63"/>
-    </svg:mask>
-    <svg:mask id="winstripe-keyhole-forward-mask-hover" maskContentUnits="objectBoundingBox">
-      <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
-      <svg:circle cx="-0.35" cy="0.5" r="0.58"/>
+      <svg:circle cx="-0.34" cy="0.5" r="0.61"/>
     </svg:mask>
     <svg:mask id="winstripe-urlbar-back-button-mask" maskContentUnits="userSpaceOnUse">
       <svg:rect x="0" y="0" width="10000" height="50" fill="white"/>
