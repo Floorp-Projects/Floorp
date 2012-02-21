@@ -49,6 +49,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/StdInt.h"
+#include "mozilla/Util.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -307,9 +308,8 @@ void StateMachineTracker::EnsureGlobalStateMachine()
   ReentrantMonitorAutoEnter mon(mMonitor);
   if (mStateMachineCount == 0) {
     NS_ASSERTION(!mStateMachineThread, "Should have null state machine thread!");
-    nsresult res = NS_NewThread(&mStateMachineThread,
-                                nsnull);
-    NS_ABORT_IF_FALSE(NS_SUCCEEDED(res), "Can't create media state machine thread");
+    DebugOnly<nsresult> rv = NS_NewThread(&mStateMachineThread, nsnull);
+    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't create media state machine thread");
   }
   mStateMachineCount++;
 }

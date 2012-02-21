@@ -52,7 +52,6 @@ const nsIDocShellTreeItem    = Components.interfaces.nsIDocShellTreeItem;
 const nsIDOMChromeWindow     = Components.interfaces.nsIDOMChromeWindow;
 const nsIDOMWindow           = Components.interfaces.nsIDOMWindow;
 const nsIFileURL             = Components.interfaces.nsIFileURL;
-const nsIHttpProtocolHandler = Components.interfaces.nsIHttpProtocolHandler;
 const nsIInterfaceRequestor  = Components.interfaces.nsIInterfaceRequestor;
 const nsINetUtil             = Components.interfaces.nsINetUtil;
 const nsIPrefBranch          = Components.interfaces.nsIPrefBranch;
@@ -65,13 +64,12 @@ const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
 const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
 const nsIBrowserSearchService = Components.interfaces.nsIBrowserSearchService;
 const nsICommandLineValidator = Components.interfaces.nsICommandLineValidator;
-const nsIXULAppInfo          = Components.interfaces.nsIXULAppInfo;
 
 const NS_BINDING_ABORTED = Components.results.NS_BINDING_ABORTED;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
 const NS_ERROR_ABORT = Components.results.NS_ERROR_ABORT;
 
-const URI_INHERITS_SECURITY_CONTEXT = nsIHttpProtocolHandler
+const URI_INHERITS_SECURITY_CONTEXT = Components.interfaces.nsIHttpProtocolHandler
                                         .URI_INHERITS_SECURITY_CONTEXT;
 
 function shouldLoadURI(aURI) {
@@ -137,16 +135,14 @@ function needHomepageOverride(prefb) {
   if (savedmstone == "ignore")
     return OVERRIDE_NONE;
 
-  var mstone = Components.classes["@mozilla.org/network/protocol;1?name=http"]
-                         .getService(nsIHttpProtocolHandler).misc;
+  var mstone = Services.appinfo.platformVersion;
 
   var savedBuildID = null;
   try {
     savedBuildID = prefb.getCharPref("browser.startup.homepage_override.buildID");
   } catch (e) {}
 
-  var buildID =  Components.classes["@mozilla.org/xre/app-info;1"]
-                           .getService(nsIXULAppInfo).platformBuildID;
+  var buildID = Services.appinfo.platformBuildID;
 
   if (mstone != savedmstone) {
     // Bug 462254. Previous releases had a default pref to suppress the EULA
