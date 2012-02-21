@@ -961,6 +961,8 @@ pref("network.IDN.whitelist.xn--mgbqly7c0a67fbc", true);
 pref("network.IDN.whitelist.xn--mgbqly7cvafr", true);
 // sy, Syria, .<Souria>
 pref("network.IDN.whitelist.xn--ogbpf8fl", true);
+// th, Thailand, .<Thai>
+pref("network.IDN.whitelist.xn--o3cw4h", true);
 // tw, Taiwan, <.Taiwan> with variants
 pref("network.IDN.whitelist.xn--kpry57d", true);  // Traditional
 pref("network.IDN.whitelist.xn--kprw13d", true);  // Simplified
