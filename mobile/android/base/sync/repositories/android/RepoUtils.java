@@ -1,40 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Jason Voll <jvoll@mozilla.com>
- *   Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.repositories.android;
 
@@ -162,49 +128,45 @@ public class RepoUtils {
       this.tag     = tag;
     }
 
-    public Cursor query(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-      return this.query(null, projection, selection, selectionArgs, sortOrder);
-    }
-
     // For ContentProvider queries.
-    public Cursor query(String label, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-      String logLabel = (label == null) ? this.tag : this.tag + label;
+    public Cursor safeQuery(String label, String[] projection,
+                            String selection, String[] selectionArgs, String sortOrder) throws NullCursorException {
       long queryStart = android.os.SystemClock.uptimeMillis();
       Cursor c = context.getContentResolver().query(uri, projection, selection, selectionArgs, sortOrder);
-      long queryEnd   = android.os.SystemClock.uptimeMillis();
-      RepoUtils.queryTimeLogger(logLabel, queryStart, queryEnd);
-      return c;
+      return checkAndLogCursor(label, queryStart, c);
+    }
+
+    public Cursor safeQuery(String[] projection, String selection, String[] selectionArgs, String sortOrder) throws NullCursorException {
+      return this.safeQuery(null, projection, selection, selectionArgs, sortOrder);
     }
 
     // For SQLiteOpenHelper queries.
-    public Cursor query(SQLiteDatabase db, String label, String table, String[] columns,
-        String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) {
-      String logLabel = (label == null) ? this.tag : this.tag + label;
+    public Cursor safeQuery(SQLiteDatabase db, String label, String table, String[] columns,
+                            String selection, String[] selectionArgs,
+                            String groupBy, String having, String orderBy, String limit) throws NullCursorException {
       long queryStart = android.os.SystemClock.uptimeMillis();
       Cursor c = db.query(table, columns, selection, selectionArgs, groupBy, having, orderBy, limit);
-      long queryEnd   = android.os.SystemClock.uptimeMillis();
-      RepoUtils.queryTimeLogger(logLabel, queryStart, queryEnd);
-      return c;
-    }
-
-    public Cursor safeQuery(String label, String[] projection, String selection, String[] selectionArgs, String sortOrder) throws NullCursorException {
-      Cursor c = this.query(label, projection, selection, selectionArgs, sortOrder);
-      if (c == null) {
-        Logger.error(tag, "Got null cursor exception in " + tag + ((label == null) ? "" : label));
-        throw new NullCursorException(null);
-      }
-      return c;
+      return checkAndLogCursor(label, queryStart, c);
     }
 
     public Cursor safeQuery(SQLiteDatabase db, String label, String table, String[] columns,
-        String selection, String[] selectionArgs, String groupBy, String having, String orderBy, String limit) throws NullCursorException  {
-      Cursor c = this.query(db, label, table, columns, selection, selectionArgs,
-          groupBy, having, orderBy, limit);
-      if (c == null) {
-        Logger.error(tag, "Got null cursor exception in " + tag + ((label == null) ? "" : label));
+                            String selection, String[] selectionArgs) throws NullCursorException {
+      return safeQuery(db, label, table, columns, selection, selectionArgs, null, null, null, null);
+    }
+
+    private Cursor checkAndLogCursor(String label, long queryStart, Cursor c) throws NullCursorException {
+      long queryEnd = android.os.SystemClock.uptimeMillis();
+      String logLabel = (label == null) ? tag : (tag + label);
+      RepoUtils.queryTimeLogger(logLabel, queryStart, queryEnd);
+      return checkNullCursor(logLabel, c);
+    }
+
+    public Cursor checkNullCursor(String logLabel, Cursor cursor) throws NullCursorException {
+      if (cursor == null) {
+        Logger.error(tag, "Got null cursor exception in " + logLabel);
         throw new NullCursorException(null);
       }
-      return c;
+      return cursor;
     }
   }
 
