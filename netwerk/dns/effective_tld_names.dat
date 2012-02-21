@@ -631,6 +631,7 @@ gouv.ci
 
 // ck : http://en.wikipedia.org/wiki/.ck
 *.ck
+!www.ck
 
 // cl : http://en.wikipedia.org/wiki/.cl
 cl
@@ -1032,6 +1033,7 @@ gs
 
 // gt : http://www.gt/politicas.html
 *.gt
+!www.gt
 
 // gu : http://gadao.gov.gu/registration.txt
 *.gu
