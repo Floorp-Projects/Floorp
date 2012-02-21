@@ -1760,28 +1760,35 @@ class BindNameCompiler : public PICStubCompiler
 
         BindNameLabels &labels = pic.bindNameLabels();
 
+        if (!IsCacheableNonGlobalScope(scopeChain))
+            return disable("non-cacheable obj at start of scope chain");
+
         /* Guard on the shape of the scope chain. */
         masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), pic.objReg);
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump firstShape = masm.branchPtr(Assembler::NotEqual, pic.shapeReg,
                                          ImmPtr(scopeChain->lastProperty()));
 
-        /* Walk up the scope chain. */
-        JSObject *tobj = scopeChain;
-        Address parent(pic.objReg, ScopeObject::offsetOfEnclosingScope());
-        while (tobj && tobj != obj) {
-            if (!IsCacheableNonGlobalScope(tobj))
-                return disable("non-cacheable obj in scope chain");
-            masm.loadPayload(parent, pic.objReg);
-            masm.loadShape(pic.objReg, pic.shapeReg);
-            Jump shapeTest = masm.branchPtr(Assembler::NotEqual, pic.shapeReg,
-                                            ImmPtr(tobj->lastProperty()));
-            if (!fails.append(shapeTest))
-                return error();
-            tobj = &tobj->asScope().enclosingScope();
+        if (scopeChain != obj) {
+            /* Walk up the scope chain. */
+            JSObject *tobj = &scopeChain->asScope().enclosingScope();
+            Address parent(pic.objReg, ScopeObject::offsetOfEnclosingScope());
+            while (tobj) {
+                if (!IsCacheableNonGlobalScope(tobj))
+                    return disable("non-cacheable obj in scope chain");
+                masm.loadPayload(parent, pic.objReg);
+                masm.loadShape(pic.objReg, pic.shapeReg);
+                Jump shapeTest = masm.branchPtr(Assembler::NotEqual, pic.shapeReg,
+                                                ImmPtr(tobj->lastProperty()));
+                if (!fails.append(shapeTest))
+                    return error();
+                if (tobj == obj)
+                    break;
+                tobj = &tobj->asScope().enclosingScope();
+            }
+            if (tobj != obj)
+                return disable("indirect hit");
         }
-        if (tobj != obj)
-            return disable("indirect hit");
 
         Jump done = masm.jump();
 
