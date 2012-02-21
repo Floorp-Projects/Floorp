@@ -177,10 +177,10 @@ public class ProfileMigrator {
     }
 
     public void launch() {
-        new PlacesTask().run();
+        new PlacesRunnable().run();
     }
 
-    private class PlacesTask implements Runnable {
+    private class PlacesRunnable implements Runnable {
         private Map<Long, Long> mRerootMap;
 
         protected Uri getBookmarksUri() {
