@@ -172,10 +172,17 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
     // scope chain via BLOCK opcodes. In such cases keep the default
     // environment-of-callee scope.
     Value scopeChainv = iter.read();
-    if (scopeChainv.isObject())
-        fp->setScopeChainNoCallObj(scopeChainv.toObject());
-    else
+    if (scopeChainv.isObject()) {
+        // Temporary workaround for bug 724788 - the arguments check runs
+        // before the scope chain has been set, so in this case, we cheat and
+        // use the initial scope chain of the function object.
+        if (iter.bailoutKind() != Bailout_ArgumentCheck)
+            fp->setScopeChainNoCallObj(scopeChainv.toObject());
+        else
+            scopeChainv = ObjectValue(*fp->fun()->environment());
+    } else {
         JS_ASSERT(scopeChainv.isUndefined());
+    }
 
     if (fp->isFunctionFrame()) {
         Value thisv = iter.read();
