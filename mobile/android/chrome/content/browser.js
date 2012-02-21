@@ -833,44 +833,6 @@ var BrowserApp = {
       tab.userScrollPos.x = win.scrollX;
       tab.userScrollPos.y = win.scrollY;
 
-      // note that:
-      // 1. because of the way we do zooming using a CSS transform, gecko does not take into
-      // account the effect of the zoom on the viewport size.
-      // 2. if the input element is near the bottom/right of the page (less than one viewport
-      // height/width away from the bottom/right), the scrollIntoView call will make gecko scroll to the
-      // bottom/right of the page in an attempt to align the input field with the top of the viewport.
-      // however, since gecko doesn't know about the zoom, what it thinks is the "bottom/right of
-      // the page" isn't actually the bottom/right of the page at the current zoom level, and we 
-      // need to adjust this further.
-      // 3. we can't actually adjust this by changing the window scroll position, as gecko already thinks
-      // we're at the bottom/right, so instead we do it by changing the viewportExcess on the tab and
-      // moving the browser element.
-
-      let visibleContentWidth = tab._viewport.width / tab._viewport.zoom;
-      let visibleContentHeight = tab._viewport.height / tab._viewport.zoom;
-      // get the rect that the focused element occupies relative to what gecko thinks the viewport is,
-      // and adjust it by viewportExcess to so that it is relative to what the user sees as the viewport.
-      let focusedRect = focused.getBoundingClientRect();
-      focusedRect = {
-        left: focusedRect.left - tab.viewportExcess.x,
-        right: focusedRect.right - tab.viewportExcess.x,
-        top: focusedRect.top - tab.viewportExcess.y,
-        bottom: focusedRect.bottom - tab.viewportExcess.y
-      };
-      if (focusedRect.right >= visibleContentWidth && focusedRect.left > 0) {
-        // the element is too far off the right side, so we need to scroll to the right more
-        tab.viewportExcess.x += Math.min(focusedRect.left, focusedRect.right - visibleContentWidth);
-      } else if (focusedRect.left < 0) {
-        // the element is too far off the left side, so we need to scroll to the left more
-        tab.viewportExcess.x += focusedRect.left;
-      }
-      if (focusedRect.bottom >= visibleContentHeight && focusedRect.top > 0) {
-        // the element is too far down, so we need to scroll down more
-        tab.viewportExcess.y += Math.min(focusedRect.top, focusedRect.bottom - visibleContentHeight);
-      } else if (focusedRect.top < 0) {
-        // the element is too far up, so we need to scroll up more
-        tab.viewportExcess.y += focusedRect.top;
-      }
       // finally, let java know where we ended up
       tab.sendViewportUpdate();
     }
@@ -1456,7 +1418,6 @@ function Tab(aURL, aParams) {
   this.create(aURL, aParams);
   this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight,
                      pageWidth: gScreenWidth, pageHeight: gScreenHeight, zoom: 1.0 };
-  this.viewportExcess = { x: 0, y: 0 };
   this.documentIdForCurrentViewport = null;
   this.userScrollPos = { x: 0, y: 0 };
   this._pluginCount = 0;
@@ -1618,10 +1579,8 @@ Tab.prototype = {
 
   get viewport() {
     // Update the viewport to current dimensions
-    this._viewport.x = (this.browser.contentWindow.scrollX +
-                        this.viewportExcess.x) || 0;
-    this._viewport.y = (this.browser.contentWindow.scrollY +
-                        this.viewportExcess.y) || 0;
+    this._viewport.x = this.browser.contentWindow.scrollX || 0;
+    this._viewport.y = this.browser.contentWindow.scrollY || 0;
 
     // Transform coordinates based on zoom
     this._viewport.x = Math.round(this._viewport.x * this._viewport.zoom);
@@ -1674,7 +1633,6 @@ Tab.prototype = {
     let xpos = ((aReset && win) ? win.scrollX * zoom : this._viewport.x);
     let ypos = ((aReset && win) ? win.scrollY * zoom : this._viewport.y);
 
-    this.viewportExcess = { x: 0, y: 0 };
     this.viewport = { x: xpos, y: ypos,
                       width: this._viewport.width, height: this._viewport.height,
                       pageWidth: gScreenWidth, pageHeight: gScreenHeight,
@@ -2476,8 +2434,8 @@ const ElementTouchHelper = {
 
     let viewport = tab.viewport;
     return [
-        ((aX - tab.viewportExcess.x) * viewport.zoom),
-        ((aY - tab.viewportExcess.y) * viewport.zoom)
+        (aX * viewport.zoom),
+        (aY * viewport.zoom)
     ];
   },
 
@@ -2495,8 +2453,8 @@ const ElementTouchHelper = {
 
     let viewport = tab.viewport;
     return [
-        aX/viewport.zoom + tab.viewportExcess.x,
-        aY/viewport.zoom + tab.viewportExcess.y
+        aX/viewport.zoom,
+        aY/viewport.zoom
     ];
   },
 
