@@ -831,8 +831,8 @@ var BrowserApp = {
       // As Gecko isn't aware of the zoom level we're drawing with, the element may not entirely be in view
       // yet. Check for that, and scroll some extra to compensate, if necessary.
       let focusedRect = focused.getBoundingClientRect();
-      let visibleContentWidth = tab._viewport.width / tab._viewport.zoom;
-      let visibleContentHeight = tab._viewport.height / tab._viewport.zoom;
+      let visibleContentWidth = gScreenWidth / tab._zoom;
+      let visibleContentHeight = gScreenHeight / tab._zoom;
 
       let positionChanged = false;
       let scrollX = win.scrollX;
@@ -1448,8 +1448,7 @@ function Tab(aURL, aParams) {
   this.id = 0;
   this.showProgress = true;
   this.create(aURL, aParams);
-  this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight,
-                     pageWidth: gScreenWidth, pageHeight: gScreenHeight, zoom: 1.0 };
+  this._zoom = 1.0;
   this.documentIdForCurrentViewport = null;
   this.userScrollPos = { x: 0, y: 0 };
   this._pluginCount = 0;
@@ -1590,16 +1589,16 @@ Tab.prototype = {
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
 
-    this._viewport.width = gScreenWidth = aViewport.width;
-    this._viewport.height = gScreenHeight = aViewport.height;
+    gScreenWidth = aViewport.width;
+    gScreenHeight = aViewport.height;
     dump("### gScreenWidth = " + gScreenWidth + "\n");
 
     let zoom = aViewport.zoom;
     let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
 
-    if (Math.abs(zoom - this._viewport.zoom) >= 1e-6) {
-      this._viewport.zoom = zoom;
+    if (Math.abs(zoom - this._zoom) >= 1e-6) {
+      this._zoom = zoom;
       cwu.setResolution(zoom, zoom);
     }
 
@@ -1610,17 +1609,25 @@ Tab.prototype = {
   },
 
   get viewport() {
+    let viewport = {
+      width: gScreenWidth,
+      height: gScreenHeight,
+      pageWidth: gScreenWidth,
+      pageHeight: gScreenHeight,
+      zoom: this._zoom
+    };
+
     // Update the viewport to current dimensions
-    this._viewport.x = this.browser.contentWindow.scrollX || 0;
-    this._viewport.y = this.browser.contentWindow.scrollY || 0;
+    viewport.x = this.browser.contentWindow.scrollX || 0;
+    viewport.y = this.browser.contentWindow.scrollY || 0;
 
     // Transform coordinates based on zoom
-    this._viewport.x = Math.round(this._viewport.x * this._viewport.zoom);
-    this._viewport.y = Math.round(this._viewport.y * this._viewport.zoom);
+    viewport.x = Math.round(viewport.x * viewport.zoom);
+    viewport.y = Math.round(viewport.y * viewport.zoom);
 
     let doc = this.browser.contentDocument;
     if (doc != null) {
-      let pageWidth = this._viewport.width, pageHeight = this._viewport.height;
+      let pageWidth = viewport.width, pageHeight = viewport.height;
       if (doc instanceof SVGDocument) {
         let rect = doc.rootElement.getBoundingClientRect();
         // we need to add rect.left and rect.top twice so that the SVG is drawn
@@ -1637,8 +1644,8 @@ Tab.prototype = {
       }
 
       /* Transform the page width and height based on the zoom factor. */
-      pageWidth *= this._viewport.zoom;
-      pageHeight *= this._viewport.zoom;
+      pageWidth *= viewport.zoom;
+      pageHeight *= viewport.zoom;
 
       /*
        * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
@@ -1646,29 +1653,23 @@ Tab.prototype = {
        * send updates regardless of page size; we'll zoom to fit the content as needed.
        */
       if (doc.readyState === 'complete' || (pageWidth >= gScreenWidth && pageHeight >= gScreenHeight)) {
-        this._viewport.pageWidth = pageWidth;
-        this._viewport.pageHeight = pageHeight;
+        viewport.pageWidth = pageWidth;
+        viewport.pageHeight = pageHeight;
       }
     }
 
-    return this._viewport;
+    return viewport;
   },
 
   updateViewport: function(aReset, aZoomLevel) {
     dump("### JS side updateViewport " + aReset + " zoom " + aZoomLevel + "\n");
 
-    if (!aZoomLevel)
-      aZoomLevel = this.getDefaultZoomLevel();
+    if (aReset) {
+      if (!aZoomLevel)
+        aZoomLevel = this.getDefaultZoomLevel();
+      this._zoom = aZoomLevel;
+    }
 
-    let win = this.browser.contentWindow;
-    let zoom = (aReset ? aZoomLevel : this._viewport.zoom);
-    let xpos = ((aReset && win) ? win.scrollX * zoom : this._viewport.x);
-    let ypos = ((aReset && win) ? win.scrollY * zoom : this._viewport.y);
-
-    this.viewport = { x: xpos, y: ypos,
-                      width: this._viewport.width, height: this._viewport.height,
-                      pageWidth: gScreenWidth, pageHeight: gScreenHeight,
-                      zoom: zoom };
     this.sendViewportUpdate();
   },
 
@@ -2012,8 +2013,8 @@ Tab.prototype = {
     if (!browser)
       return;
 
-    let screenW = this._viewport.width;
-    let screenH = this._viewport.height;
+    let screenW = gScreenWidth;
+    let screenH = gScreenHeight;
     let viewportW, viewportH;
 
     let metadata = this.metadata;
@@ -2045,7 +2046,7 @@ Tab.prototype = {
 
     // Make sure the viewport height is not shorter than the window when
     // the page is zoomed out to show its full width.
-    let minScale = this.getPageZoomLevel(screenW);
+    let minScale = this.getPageZoomLevel();
     viewportH = Math.max(viewportH, screenH / minScale);
 
     let oldBrowserWidth = this.browserWidth;
@@ -2062,8 +2063,7 @@ Tab.prototype = {
     if (viewportW == oldBrowserWidth)
       return;
 
-    let viewport = this.viewport;
-    let newZoom = oldBrowserWidth * viewport.zoom / viewportW;
+    let newZoom = oldBrowserWidth * this._zoom / viewportW;
     this.updateViewport(true, newZoom);
   },
 
@@ -2082,7 +2082,7 @@ Tab.prototype = {
     if (!this.browser.contentDocument || !this.browser.contentDocument.body)
       return 1.0;
 
-    return this._viewport.width / this.browser.contentDocument.body.clientWidth;
+    return gScreenWidth / this.browser.contentDocument.body.clientWidth;
   },
 
   setBrowserSize: function(aWidth, aHeight) {
@@ -2264,7 +2264,7 @@ var BrowserEventHandler = {
     let rect = {};
     let win = BrowserApp.selectedBrowser.contentWindow;
     
-    let zoom = BrowserApp.selectedTab._viewport.zoom;
+    let zoom = BrowserApp.selectedTab._zoom;
     let element = ElementTouchHelper.anyElementFromPoint(win, data.x, data.y);
     if (!element) {
       this._zoomOut();
@@ -2281,7 +2281,7 @@ var BrowserEventHandler = {
       this._zoomedToElement = element;
       rect = ElementTouchHelper.getBoundingContentRect(element);
 
-      let zoom = BrowserApp.selectedTab.viewport.zoom;
+      let zoom = BrowserApp.selectedTab._zoom;
       rect.x *= zoom;
       rect.y *= zoom;
       rect.w *= zoom;
@@ -2745,14 +2745,15 @@ var FormAssistant = {
         let suggestions = this._getAutocompleteSuggestions(currentElement.value, currentElement);
 
         let rect = ElementTouchHelper.getBoundingContentRect(currentElement);
-        let viewport = BrowserApp.selectedTab.viewport;
+        let zoom = BrowserApp.selectedTab._zoom;
+        let win  = BrowserApp.selectedTab.browser.contentWindow;
 
         sendMessageToJava({
           gecko: {
             type:  "FormAssist:AutoComplete",
             suggestions: suggestions,
-            rect: [rect.x - (viewport.x / viewport.zoom), rect.y - (viewport.y / viewport.zoom), rect.w, rect.h],
-            zoom: viewport.zoom
+            rect: [rect.x - (win.scrollX / zoom), rect.y - (win.scrollY / zoom), rect.w, rect.h],
+            zoom: zoom
           }
         });
     }
