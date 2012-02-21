@@ -64,6 +64,7 @@ foreignObject {
 
 *|*::-moz-svg-foreign-content {
   display: block !important;
-  position: static !important;
+  /* We need to be an absolute container */
+  position: relative !important;
   text-indent: 0;
 }
