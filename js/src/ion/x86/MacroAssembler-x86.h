@@ -351,6 +351,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         framePushed_ -= amount;
     }
 
+    void addPtr(const Register &src, const Register &dest) {
+        addl(src, dest);
+    }
     void addPtr(Imm32 imm, const Register &dest) {
         addl(imm, dest);
     }
@@ -385,6 +388,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void loadPtr(const Address &address, Register dest) {
         movl(Operand(address), dest);
+    }
+    void loadPtr(const BaseIndex &src, Register dest) {
+        movl(Operand(src), dest);
     }
     void loadPtr(ImmWord imm, Register dest) {
         movl(Operand(imm.asPointer()), dest);
@@ -573,6 +579,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     void rshiftPtr(Imm32 imm, const Register &dest) {
         shrl(imm, dest);
+    }
+    void lshiftPtr(Imm32 imm, const Register &dest) {
+        shll(imm, dest);
     }
 
     void loadInstructionPointerAfterCall(const Register &dest) {

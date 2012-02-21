@@ -578,6 +578,7 @@ MacroAssemblerARM::ma_cmp(Register src1, Imm32 imm, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, op_cmp, SetCond, c);
 }
+
 void
 MacroAssemblerARM::ma_cmp(Register src1, ImmGCPtr ptr, Condition c)
 {
@@ -605,6 +606,7 @@ MacroAssemblerARM::ma_cmp(Register src1, Register src2, Condition c)
 {
     as_cmp(src1, O2Reg(src2), c);
 }
+
     // test for equality, (src1^src2)
 void
 MacroAssemblerARM::ma_teq(Register src1, Imm32 imm, Condition c)
@@ -1221,6 +1223,26 @@ MacroAssemblerARMCompat::load16(const Address &address, const Register &dest)
 }
 
 void
+MacroAssemblerARMCompat::load16(const BaseIndex &src, const Register &dest)
+{
+    Register index = src.index;
+
+    // We don't have LSL on index register yet.
+    if (src.scale != TimesOne) {
+        ma_lsl(Imm32::ShiftOf(src.scale), index, ScratchRegister);
+        index = ScratchRegister;
+    }
+    if (src.offset != 0) {
+        if (index != ScratchRegister) {
+            ma_mov(index, ScratchRegister);
+            index = ScratchRegister;
+        }
+        ma_add(Imm32(src.offset), index);
+    }
+    ma_ldrh(EDtrAddr(src.base, EDtrOffReg(index)), dest);
+}
+
+void
 MacroAssemblerARMCompat::load32(const Address &address, const Register &dest)
 {
     loadPtr(address, dest);
@@ -1236,6 +1258,20 @@ void
 MacroAssemblerARMCompat::loadPtr(const Address &address, const Register &dest)
 {
     ma_ldr(Operand(address), dest);
+}
+
+void
+MacroAssemblerARMCompat::loadPtr(const BaseIndex &src, const Register &dest)
+{
+    Register base = src.base;
+    uint32 scale = Imm32::ShiftOf(src.scale).value;
+
+    if (src.offset != 0) {
+        ma_mov(base, ScratchRegister);
+        base = ScratchRegister;
+        ma_add(Imm32(src.offset), base);
+    }
+    ma_ldr(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
 }
 void
 MacroAssemblerARMCompat::loadPtr(const ImmWord &imm, const Register &dest)
@@ -1255,6 +1291,12 @@ void
 MacroAssemblerARMCompat::loadPrivate(const Address &address, const Register &dest)
 {
     ma_ldr(payloadOf(address), dest);
+}
+
+void
+MacroAssemblerARMCompat::store16(const Register &src, const Address &address)
+{
+    ma_dataTransferN(IsStore, 16, false, address.base, Imm32(address.offset), src);
 }
 
 void

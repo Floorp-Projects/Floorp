@@ -120,6 +120,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitBinaryV(LBinaryV *lir);
     bool visitCompareV(LCompareV *lir);
     bool visitConcat(LConcat *lir);
+    bool visitCharCodeAt(LCharCodeAt *lir);
+    bool visitFromCharCode(LFromCharCode *lir);
     bool visitFunctionEnvironment(LFunctionEnvironment *lir);
     bool visitCallGetProperty(LCallGetProperty *lir);
     bool visitCallGetName(LCallGetName *lir);

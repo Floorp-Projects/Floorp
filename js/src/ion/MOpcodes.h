@@ -79,6 +79,8 @@ namespace ion {
     _(Div)                                                                  \
     _(Mod)                                                                  \
     _(Concat)                                                               \
+    _(CharCodeAt)                                                           \
+    _(FromCharCode)                                                         \
     _(Return)                                                               \
     _(Throw)                                                                \
     _(Copy)                                                                 \

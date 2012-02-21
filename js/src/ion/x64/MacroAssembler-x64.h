@@ -307,6 +307,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         framePushed_ -= amount;
     }
 
+    void addPtr(const Register &src, const Register &dest) {
+        addq(src, dest);
+    }
     void addPtr(Imm32 imm, const Register &dest) {
         addq(imm, dest);
     }
@@ -353,6 +356,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadPtr(const Address &address, Register dest) {
         movq(Operand(address), dest);
     }
+    void loadPtr(const BaseIndex &src, Register dest) {
+        movq(Operand(src), dest);
+	}
     void loadPrivate(const Address &src, Register dest) {
         loadPtr(src, dest);
         shlq(Imm32(1), dest);
@@ -362,6 +368,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void rshiftPtr(Imm32 imm, const Register &dest) {
         shrq(imm, dest);
+    }
+    void lshiftPtr(Imm32 imm, const Register &dest) {
+        shlq(imm, dest);
     }
 
     void setStackArg(const Register &reg, uint32 arg) {

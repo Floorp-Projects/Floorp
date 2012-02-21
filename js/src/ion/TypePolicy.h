@@ -159,7 +159,38 @@ class SingleObjectPolicy : public ObjectPolicy
 class StringPolicy : public BoxInputsPolicy
 {
   public:
-    bool adjustInputs(MInstruction *def);
+    static bool staticAdjustInputs(MInstruction *def);
+    bool adjustInputs(MInstruction *def) {
+        return staticAdjustInputs(def);
+    }
+};
+
+// Expect an Int for operand Op. If the input is a Value, it is unboxed.
+template <unsigned Op>
+class IntPolicy : public BoxInputsPolicy
+{
+  public:
+    static bool staticAdjustInputs(MInstruction *def);
+    bool adjustInputs(MInstruction *def) {
+        return staticAdjustInputs(def);
+    }
+};
+
+template class IntPolicy<0>;
+template class IntPolicy<1>;
+
+// Combine multiple policies.
+template <class Lhs, class Rhs>
+class MixPolicy
+  : public BoxInputsPolicy
+{
+  public:
+    static bool staticAdjustInputs(MInstruction *def) {
+        return Lhs::staticAdjustInputs(def) && Rhs::staticAdjustInputs(def);
+    }
+    virtual bool adjustInputs(MInstruction *def) {
+        return staticAdjustInputs(def);
+    }
 };
 
 class CallSetElementPolicy : public SingleObjectPolicy

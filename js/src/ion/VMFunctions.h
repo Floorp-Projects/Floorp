@@ -177,6 +177,7 @@ template <class> struct TypeToDataType { /* Unexpected return type for a VMFunct
 template <> struct TypeToDataType<bool> { static const DataType result = Type_Bool; };
 template <> struct TypeToDataType<JSObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSString *> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<JSFixedString *> { static const DataType result = Type_Object; };
 
 // Convert argument types to properties of the argument known by the jit.
 template <class T> struct TypeToArgProperties {
