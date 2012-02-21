@@ -339,14 +339,17 @@ function test6()
     if (counter == 5) {
       ok(e.data == "あいうえお", "test-6 counter 5 data ok");
       ws.close();
-      doTest(7);
     } else {
       ok(e.data == counter+1, "bad counter");
       counter += 2;
       ws.send(counter);
     }
   }
-  ws.onclose = shouldCloseCleanly;
+  ws.onclose = function(e)
+  {
+    shouldCloseCleanly(e);
+    doTest(7);
+  };
 }
 
 function test7()
