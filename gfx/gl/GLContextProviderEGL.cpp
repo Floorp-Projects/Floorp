@@ -252,7 +252,7 @@ is_power_of_two(int v)
     return (v & (v-1)) == 0;
 }
 
-#if 1
+#ifdef DEBUG
 #undef BEFORE_GL_CALL
 #undef AFTER_GL_CALL
 
@@ -997,7 +997,7 @@ public:
         // any EGL contexts will always be GLESv2
         SetIsGLES2(true);
 
-#if 1
+#ifdef DEBUG
         printf_stderr("Initializing context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
     }
@@ -1012,7 +1012,7 @@ public:
         if (mPlatformContext)
             return;
 
-#if 1
+#ifdef DEBUG
         printf_stderr("Destroying context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
 
@@ -2216,7 +2216,7 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
 {
     EGLSurface surface;
 
-#if 1
+#ifdef DEBUG
     sEGLLibrary.DumpEGLConfig(config);
 #endif
 
@@ -2425,7 +2425,7 @@ TRY_ATTRIBS_AGAIN:
     // XXX do some smarter matching here, perhaps instead of the more complex
     // minimum overrides above
     config = configs[0];
-#if 1
+#ifdef DEBUG
     sEGLLibrary.DumpEGLConfig(config);
 #endif
 
