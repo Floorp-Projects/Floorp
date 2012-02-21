@@ -603,7 +603,7 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
   }
   event.touches.SetCapacity(aCount);
   PRInt32 appPerDev = presContext->AppUnitsPerDevPixel();
-  for (int i = 0; i < aCount; ++i) {
+  for (PRUint32 i = 0; i < aCount; ++i) {
     nsIntPoint pt(0, 0);
     pt.x =
       NSAppUnitsToIntPixels(nsPresContext::CSSPixelsToAppUnits(aXs[i]) + offset.x,
