@@ -39,6 +39,7 @@
 
 #include "xpt_xdr.h"
 #include "nspr.h"
+#include "nscore.h"
 #include <string.h>             /* strchr */
 
 static PRBool
@@ -143,7 +144,7 @@ XPT_HashTableDestroy(XPTHashTable *table) {
 static void *
 XPT_HashTableAdd(XPTHashTable *table, void *key, void *value) {
     XPTHashRecord **bucketloc = table->buckets +
-        (((PRUint32)key) % XPT_HASHSIZE);
+        (NS_PTR_TO_UINT32(key) % XPT_HASHSIZE);
     XPTHashRecord *bucket;
 
     while (*bucketloc != NULL)
@@ -159,7 +160,7 @@ XPT_HashTableAdd(XPTHashTable *table, void *key, void *value) {
 
 static void *
 XPT_HashTableLookup(XPTHashTable *table, void *key) {
-    XPTHashRecord *bucket = table->buckets[(PRUint32)key % XPT_HASHSIZE];
+    XPTHashRecord *bucket = table->buckets[NS_PTR_TO_UINT32(key) % XPT_HASHSIZE];
     while (bucket != NULL) {
         if (bucket->key == key)
             return bucket->value;
@@ -483,27 +484,29 @@ XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp)
 XPT_PUBLIC_API(PRUint32)
 XPT_GetOffsetForAddr(XPTCursor *cursor, void *addr)
 {
-    return (PRUint32)XPT_HashTableLookup(cursor->state->pool->offset_map, addr);
+    XPTHashTable *table = cursor->state->pool->offset_map;
+    return NS_PTR_TO_UINT32(XPT_HashTableLookup(table, addr));
 }
 
 XPT_PUBLIC_API(PRBool)
 XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, PRUint32 offset)
 {
     return XPT_HashTableAdd(cursor->state->pool->offset_map,
-                            addr, (void *)offset) != NULL;
+                            addr, NS_INT32_TO_PTR(offset)) != NULL;
 }
 
 XPT_PUBLIC_API(PRBool)
 XPT_SetAddrForOffset(XPTCursor *cursor, PRUint32 offset, void *addr)
 {
     return XPT_HashTableAdd(cursor->state->pool->offset_map,
-                            (void *)offset, addr) != NULL;
+                            NS_INT32_TO_PTR(offset), addr) != NULL;
 }
 
 XPT_PUBLIC_API(void *)
 XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset)
 {
-    return XPT_HashTableLookup(cursor->state->pool->offset_map, (void *)offset);
+    return XPT_HashTableLookup(cursor->state->pool->offset_map,
+                               NS_INT32_TO_PTR(offset));
 }
 
 /* Used by XPT_PREAMBLE_NO_ALLOC. */
