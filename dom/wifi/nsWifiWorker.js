@@ -732,7 +732,7 @@ var WifiManager = (function() {
   manager.reassociate = reassociateCommand;
 
   var networkConfigurationFields = ["ssid", "bssid", "psk", "wep_key0", "wep_key1", "wep_key2", "wep_key3",
-                                    "wep_tx_keyidx", "priority", "key_mgmt", "scan_ssid"];
+                                    "wep_tx_keyidx", "priority", "key_mgmt", "scan_ssid", "disabled"];
 
   manager.getNetworkConfiguration = function(config, callback) {
     var netId = config.netId;
@@ -879,35 +879,27 @@ function nsWifiWorker() {
     // TODO Remove me in favor of UI and a way to select a network.
 
     debug("Haven't connected to a network, trying a default (for now)");
-    var name = "Mozilla";
-    var net = self.networks[name];
-    if (net && (net.flags && net.flags !== "[IBSS]")) {
-      debug("Network Mozilla exists, but is encrypted");
-      net = null;
-    }
+    var configs = [
+      { "ssid": '"mozilla demo"', "key_mgmt": "NONE", "disabled": 0 },
+      { "ssid": '"Mozilla"', "key_mgmt": "NONE", "disabled": 0 },
+      { "ssid": '"Mozilla Guest"', "key_mgmt": "NONE", "scan_ssid": 1, "disabled": 0 },
+    ];
 
-    var config = Object.create(null);
-    if (!net) {
-      name = "Mozilla Guest";
-      net = self.networks[name];
-      if (!net || (net.flags && net.flags !== "[IBSS]")) {
-        debug("Can't find either network, trying to force 'Mozilla Guest'");
-        config.scan_ssid = 1;
-      }
-    }
+    var i = 0;
+    function addThem() {
+      WifiManager.addNetwork(configs[i++], function(ok) {
+        if (!ok) {
+          debug("Unable to add the network!");
+          return;
+        }
 
-    config.ssid = '"' + name + '"';
-    config.key_mgmt = "NONE";
-    WifiManager.addNetwork(config, function(ok) {
-      if (!ok) {
-        debug("Unable to add the network!");
-        return;
-      }
-
-      WifiManager.enableNetwork(config.netId, false, function(ok) {
-        debug((ok ? "Successfully enabled " : "Didn't enable ") + name);
+        if (i < configs.length) {
+          addThem();
+          return;
+        }
       });
-    });
+    }
+    addThem();
   }
   this.waitForScan(connectToMozilla);
 
