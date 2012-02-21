@@ -122,6 +122,8 @@ static const FloatRegister d15 = {FloatRegisters::d15};
 static const uint32 StackAlignment = 8;
 static const bool StackKeptAligned = true;
 
+static const Scale ScalePointer = TimesFour;
+
 class Instruction;
 class InstBranchImm;
 uint32 RM(Register r);

@@ -2019,6 +2019,48 @@ class MConcat
     }
 };
 
+class MCharCodeAt
+  : public MBinaryInstruction,
+    public MixPolicy<StringPolicy, IntPolicy<1> >
+{
+  public:
+    MCharCodeAt(MDefinition *str, MDefinition *index)
+        : MBinaryInstruction(str, index)
+    {
+        setMovable();
+        setResultType(MIRType_Int32);
+    }
+
+    INSTRUCTION_HEADER(CharCodeAt);
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
+class MFromCharCode
+  : public MUnaryInstruction,
+    public IntPolicy<0>
+{
+  public:
+    MFromCharCode(MDefinition *code)
+      : MUnaryInstruction(code)
+    {
+        setMovable();
+        setResultType(MIRType_String);
+    }
+
+    INSTRUCTION_HEADER(FromCharCode);
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
 {
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;

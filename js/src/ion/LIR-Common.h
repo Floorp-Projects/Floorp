@@ -898,6 +898,46 @@ class LConcat : public LCallInstructionHelper<1, 2, 0>
     }
 };
 
+// Get uint16 character code from a string.
+class LCharCodeAt : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(CharCodeAt);
+
+    LCharCodeAt(const LAllocation &str, const LAllocation &index) {
+        setOperand(0, str);
+        setOperand(1, index);
+    }
+
+    const LAllocation *str() {
+        return this->getOperand(0);
+    }
+    const LAllocation *index() {
+        return this->getOperand(1);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
+};
+
+// Convert uint16 character code to a string.
+class LFromCharCode : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(FromCharCode);
+
+    LFromCharCode(const LAllocation &code) {
+        setOperand(0, code);
+    }
+
+    const LAllocation *code() {
+        return this->getOperand(0);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
+};
+
 // Convert a 32-bit integer to a double.
 class LInt32ToDouble : public LInstructionHelper<1, 1, 0>
 {

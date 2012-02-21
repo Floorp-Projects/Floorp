@@ -48,6 +48,13 @@
 namespace js {
 namespace ion {
 
+enum Scale {
+    TimesOne,
+    TimesTwo,
+    TimesFour,
+    TimesEight
+};
+
 // Used for 32-bit immediates which do not require relocation.
 struct Imm32
 {
@@ -55,6 +62,23 @@ struct Imm32
 
     explicit Imm32(int32_t value) : value(value)
     { }
+
+    static inline Imm32 ShiftOf(enum Scale s) {
+        switch (s) {
+          case TimesOne:
+            return Imm32(0);
+          case TimesTwo:
+            return Imm32(1);
+          case TimesFour:
+            return Imm32(2);
+          case TimesEight:
+            return Imm32(3);
+        };
+    }
+
+    static inline Imm32 FactorOf(enum Scale s) {
+        return Imm32(1 << ShiftOf(s).value);
+    }
 };
 
 // Pointer-sized immediate.
@@ -92,13 +116,6 @@ struct Address
     { }
 
     Address() { PodZero(this); }
-};
-
-enum Scale {
-    TimesOne,
-    TimesTwo,
-    TimesFour,
-    TimesEight
 };
 
 // Specifies an address computed in the form of a register base and a constant,
