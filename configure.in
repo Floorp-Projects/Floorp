@@ -9200,22 +9200,20 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     rm -f config/autoconf.mk.bak
 fi
 
-if test -n "$direct_nspr_config"; then
-    dnl ========================================================
-    dnl = Setup a nice relatively clean build environment for
-    dnl = sub-configures.
-    dnl ========================================================
-    CC="$_SUBDIR_CC"
-    CXX="$_SUBDIR_CXX"
-    CFLAGS="$_SUBDIR_CFLAGS"
-    CPPFLAGS="$_SUBDIR_CPPFLAGS"
-    CXXFLAGS="$_SUBDIR_CXXFLAGS"
-    LDFLAGS="$_SUBDIR_LDFLAGS"
-    HOST_CC="$_SUBDIR_HOST_CC"
-    HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
-    HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
-    RC=
-fi
+dnl ========================================================
+dnl = Setup a nice relatively clean build environment for
+dnl = sub-configures.
+dnl ========================================================
+export CC="$_SUBDIR_CC"
+export CXX="$_SUBDIR_CXX"
+export CFLAGS="$_SUBDIR_CFLAGS"
+export CPPFLAGS="$_SUBDIR_CPPFLAGS"
+export CXXFLAGS="$_SUBDIR_CXXFLAGS"
+export LDFLAGS="$_SUBDIR_LDFLAGS"
+export HOST_CC="$_SUBDIR_HOST_CC"
+export HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
+export HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
+export RC=
 
 # Run the SpiderMonkey 'configure' script.
 dist=$MOZ_BUILD_ROOT/dist
