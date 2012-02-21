@@ -916,11 +916,11 @@ public:
 
 class GetAllResponseHeadersRunnable : public WorkerThreadProxySyncRunnable
 {
-  nsCString& mResponseHeaders;
+  nsString& mResponseHeaders;
 
 public:
   GetAllResponseHeadersRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-                                nsCString& aResponseHeaders)
+                                nsString& aResponseHeaders)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy),
     mResponseHeaders(aResponseHeaders)
   { }
@@ -929,7 +929,7 @@ public:
   MainThreadRun()
   {
     nsresult rv =
-      mProxy->mXHR->GetAllResponseHeaders(getter_Copies(mResponseHeaders));
+      mProxy->mXHR->GetAllResponseHeaders(mResponseHeaders);
     return GetDOMExceptionCodeFromResult(rv);
   }
 };
@@ -1613,15 +1613,15 @@ XMLHttpRequestPrivate::GetAllResponseHeaders(JSContext* aCx)
     return nsnull;
   }
 
-  nsCString responseHeaders;
+  nsString responseHeaders;
   nsRefPtr<GetAllResponseHeadersRunnable> runnable =
     new GetAllResponseHeadersRunnable(mWorkerPrivate, mProxy, responseHeaders);
   if (!runnable->Dispatch(aCx)) {
     return nsnull;
   }
 
-  return JS_NewStringCopyN(aCx, responseHeaders.get(),
-                           responseHeaders.Length());
+  return JS_NewUCStringCopyN(aCx, responseHeaders.get(),
+                             responseHeaders.Length());
 }
 
 JSString*

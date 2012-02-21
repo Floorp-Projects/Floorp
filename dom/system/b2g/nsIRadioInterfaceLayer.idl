@@ -116,7 +116,7 @@ interface nsIRILDataCallback : nsISupports
                            in unsigned long length);
 };
 
-[scriptable, uuid(9b7e3a01-9c45-4af3-81bb-1bf08a842226)]
+[scriptable, uuid(aeb7ffe7-7d3a-4b7d-9b59-b6d3ae1c72ed)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -177,7 +177,7 @@ interface nsIRadioInterfaceLayer : nsISupports
   void deactivateDataCall(in DOMString cid,
                           in DOMString reason);
   void getDataCallList();
-  
+
   void registerDataCallCallback(in nsIRILDataCallback callback);
   void unregisterDataCallCallback(in nsIRILDataCallback callback);
 
@@ -185,5 +185,8 @@ interface nsIRadioInterfaceLayer : nsISupports
    * SMS-related functionality.
    */
   unsigned short getNumberOfMessagesForText(in DOMString text);
-  void sendSMS(in DOMString number, in DOMString message);
+  void sendSMS(in DOMString number,
+               in DOMString message,
+               in long requestId,
+               in unsigned long long processId);
 };

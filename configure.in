@@ -225,14 +225,7 @@ if test -n "$L10NBASEDIR"; then
     if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
         AC_MSG_ERROR([--with-l10n-base must specify a path])
     elif test -d "$L10NBASEDIR"; then
-        case "$host_os" in
-        mingw*)
-            L10NBASEDIR=`cd "$L10NBASEDIR" && pwd -W`
-            ;;
-        *)
-            L10NBASEDIR=`cd "$L10NBASEDIR" && pwd`
-            ;;
-        esac
+        L10NBASEDIR=`cd "$L10NBASEDIR" && pwd`
     else
         AC_MSG_ERROR([Invalid value --with-l10n-base, $L10NBASEDIR doesn't exist])
     fi
@@ -2266,6 +2259,7 @@ fi
 
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
+MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`
 
 dnl Get version of various core apps from the version files.
 FIREFOX_VERSION=`cat $_topsrcdir/browser/config/version.txt`
@@ -2276,6 +2270,7 @@ fi
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
+AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
 
 MOZ_DOING_LTO(lto_is_enabled)
 
@@ -5531,6 +5526,15 @@ if test -n "$MOZ_ANDROID_HISTORY"; then
      AC_DEFINE(MOZ_ANDROID_HISTORY)
 fi
 
+
+dnl ========================================================
+dnl = Build with the Android Java compositor
+dnl ========================================================
+if test -n "$MOZ_JAVA_COMPOSITOR"; then
+     dnl Do this if defined in confvars.sh
+     AC_DEFINE(MOZ_JAVA_COMPOSITOR)
+fi
+
 dnl ========================================================
 dnl = Disable WebSMS backend
 dnl ========================================================
@@ -7663,6 +7667,18 @@ fi
 AC_SUBST(MOZ_B2G_RIL)
 
 dnl ========================================================
+dnl = Enable Bluetooth Interface for B2G (Gonk usually)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(b2g-bt,
+[  --enable-b2g-bt      Set compile flags necessary for compiling Bluetooth API for B2G ],
+    MOZ_B2G_BT=1,
+    MOZ_B2G_BT= )
+if test -n "$MOZ_B2G_BT"; then
+   AC_DEFINE(MOZ_B2G_BT)
+fi
+AC_SUBST(MOZ_B2G_BT)
+
+dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
@@ -8637,6 +8653,8 @@ AC_SUBST(MOZ_APP_VERSION)
 AC_DEFINE_UNQUOTED(MOZ_UA_FIREFOX_VERSION, "$FIREFOX_VERSION")
 AC_DEFINE_UNQUOTED(FIREFOX_VERSION,$FIREFOX_VERSION)
 AC_SUBST(FIREFOX_VERSION)
+AC_DEFINE_UNQUOTED(MOZ_UA_BUILDID, "$MOZ_UA_BUILDID")
+AC_SUBST(MOZ_UA_BUILDID)
 
 # We can't use the static application.ini data when building against
 # a libxul SDK.

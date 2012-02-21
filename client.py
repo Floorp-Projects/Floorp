@@ -5,6 +5,7 @@ NSS_DIRS  = (('dbm', 'mozilla/dbm'),
              ('security/nss', 'mozilla/security/nss'),
              ('security/coreconf', 'mozilla/security/coreconf'),
              ('security/dbm', 'mozilla/security/dbm'))
+NSSCKBI_DIRS = (('security/nss/lib/ckfw/builtins', 'mozilla/security/nss/lib/ckfw/builtins'),)
 LIBFFI_DIRS = (('js/ctypes/libffi', 'libffi'),)
 
 CVSROOT_MOZILLA = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'
@@ -91,6 +92,13 @@ elif action in ('update_nss'):
         options.cvsroot = os.environ.get('CVSROOT', CVSROOT_MOZILLA)
     do_cvs_export(NSS_DIRS, tag, options.cvsroot, options.cvs)
     print >>file("security/nss/TAG-INFO", "w"), tag
+    print >>file("security/nss/TAG-INFO-CKBI", "w"), tag
+elif action in ('update_nssckbi'):
+    tag, = args[1:]
+    if not options.cvsroot:
+        options.cvsroot = os.environ.get('CVSROOT', CVSROOT_MOZILLA)
+    do_cvs_export(NSSCKBI_DIRS, tag, options.cvsroot, options.cvs)
+    print >>file("security/nss/TAG-INFO-CKBI", "w"), tag
 elif action in ('update_libffi'):
     tag, = args[1:]
     if not options.cvsroot:

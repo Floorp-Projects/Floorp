@@ -1,0 +1,80 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMMozSmsMessage;
+interface nsIDOMMozSmsRequest;
+interface nsPIDOMWindow;
+interface nsIScriptContext;
+
+%{C++
+#define SMS_REQUEST_MANAGER_CID \
+{ 0xa97a3129, 0x1e0b, 0x45da,    \
+{ 0xa3, 0x85, 0xcf, 0xe5, 0xb0, 0xb1, 0xc4, 0x8f } }
+#define SMS_REQUEST_MANAGER_CONTRACTID "@mozilla.org/sms/smsrequestmanager;1"
+%}
+
+[scriptable, uuid(1638b963-3a45-4937-b6a9-280c1bfb166c)]
+interface nsISmsRequestManager : nsISupports
+{
+
+  /**
+   * All SMS related errors that could apply to SmsRequest objects.
+   * Make sure to keep this list in sync with the list in:
+   * embedding/android/GeckoSmsManager.java
+   */
+  const unsigned short SUCCESS_NO_ERROR = 0;
+  const unsigned short NO_SIGNAL_ERROR  = 1;
+  const unsigned short NOT_FOUND_ERROR  = 2;
+  const unsigned short UNKNOWN_ERROR    = 3;
+  const unsigned short INTERNAL_ERROR   = 4;
+
+  /**
+   * Create a new request object.
+   *
+   * @return the request ID.
+   */
+  long createRequest(in nsPIDOMWindow aWindow,
+                     in nsIScriptContext aScriptContext,
+                     out nsIDOMMozSmsRequest aRequest);
+
+  /**
+   * Track an already existing request object.
+   *
+   * @return the request ID.
+   */
+  long addRequest(in nsIDOMMozSmsRequest aRequest);
+
+  void notifySmsSent(in long aRequestId,
+                     in nsIDOMMozSmsMessage aMessage);
+
+  void notifySmsSendFailed(in long aRequestId,
+                           in long aError);
+
+  void notifyGotSms(in long aRequestId,
+                    in nsIDOMMozSmsMessage aMessage);
+
+  void notifyGetSmsFailed(in long aRequestId,
+                          in long aError);
+
+  void notifySmsDeleted(in long aRequestId,
+                        in bool aDeleted);
+
+  void notifySmsDeleteFailed(in long aRequestId,
+                             in long aError);
+
+  void notifyNoMessageInList(in long aRequestId);
+
+  void notifyCreateMessageList(in long aRequestId,
+                               in long aListId,
+                               in nsIDOMMozSmsMessage aMessage);
+
+  void notifyGotNextMessage(in long aRequestId,
+                            in nsIDOMMozSmsMessage aMessage);
+
+  void notifyReadMessageListFailed(in long aRequestId,
+                                   in long aError);
+
+};

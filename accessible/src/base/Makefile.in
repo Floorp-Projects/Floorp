@@ -76,6 +76,7 @@ CPPSRCS = \
   nsTextAccessible.cpp \
   nsTextEquivUtils.cpp \
   nsTextAttrs.cpp \
+  StyleInfo.cpp \
   TextUpdater.cpp \
   $(NULL)
 
@@ -107,6 +108,7 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xul \
   -I$(srcdir)/../../../layout/generic \
+  -I$(srcdir)/../../../layout/style \
   -I$(srcdir)/../../../layout/xul/base/src \
   -I$(srcdir)/../xforms \
   $(NULL)

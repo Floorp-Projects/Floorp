@@ -127,6 +127,7 @@
 #include "methodjit/StubCalls-inl.h"
 
 #include "vm/ArgumentsObject.h"
+#include "vm/MethodGuard.h"
 
 #include "ds/Sort.h"
 
