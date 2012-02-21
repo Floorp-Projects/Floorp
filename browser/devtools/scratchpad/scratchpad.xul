@@ -83,6 +83,7 @@
   <command id="sp-cmd-webConsole" oncommand="Scratchpad.openWebConsole();"/>
   <command id="sp-cmd-undo" oncommand="Scratchpad.undo();" disabled="true"/>
   <command id="sp-cmd-redo" oncommand="Scratchpad.redo();" disabled="true"/>
+  <command id="sp-cmd-documentationLink" oncommand="Scratchpad.openDocumentationPage();"/>
 </commandset>
 
 <keyset id="sp-keyset">
@@ -171,6 +172,9 @@
        key="&gotoLineCmd.key;"
        command="cmd_gotoLine"
        modifiers="accel"/>
+  <key id="key_openHelp"
+       keycode="VK_F1"
+       command="sp-cmd-documentationLink"/>
 </keyset>
 
 
@@ -314,6 +318,24 @@
                 label="&browserContext.label;"
                 accesskey="&browserContext.accesskey;"
                 type="radio"/>
+    </menupopup>
+  </menu>
+
+#ifdef XP_WIN
+  <menu id="sp-help-menu"
+        label="&helpMenu.label;"
+        accesskey="&helpMenuWin.accesskey;">
+#else
+  <menu id="sp-help-menu"
+        label="&helpMenu.label;"
+        accesskey="&helpMenu.accesskey;">
+#endif
+    <menupopup id="sp-menu-help">
+      <menuitem id="sp-menu-documentation"
+                label="&documentationLink.label;"
+                accesskey="&documentationLink.accesskey;"
+                command="sp-cmd-documentationLink"
+                key="key_openHelp"/>
     </menupopup>
   </menu>
 </menubar>
