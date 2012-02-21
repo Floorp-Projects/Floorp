@@ -176,9 +176,6 @@ class IntPolicy : public BoxInputsPolicy
     }
 };
 
-template class IntPolicy<0>;
-template class IntPolicy<1>;
-
 // Combine multiple policies.
 template <class Lhs, class Rhs>
 class MixPolicy
