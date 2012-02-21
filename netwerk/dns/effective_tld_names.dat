@@ -3848,8 +3848,16 @@ belau.pw
 // py : http://www.nic.py/faq_a.html#faq_b
 *.py
 
-// qa : http://www.qatar.net.qa/services/virtual.htm
-*.qa
+// qa : http://domains.qa/en/
+qa
+com.qa
+edu.qa
+gov.qa
+mil.qa
+name.qa
+net.qa
+org.qa
+sch.qa
 
 // re : http://www.afnic.re/obtenir/chartes/nommage-re/annexe-descriptifs
 re
