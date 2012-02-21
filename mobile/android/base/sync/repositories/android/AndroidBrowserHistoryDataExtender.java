@@ -172,7 +172,7 @@ public class AndroidBrowserHistoryDataExtender extends SQLiteOpenHelper {
     SQLiteDatabase db = this.getCachedReadableDatabase();
     Cursor cur = queryHelper.safeQuery(db, ".fetch", TBL_HISTORY_EXT,
         TBL_COLUMNS,
-        where, args, null, null, null, null);
+        where, args);
     return cur;
   }
 
@@ -213,12 +213,9 @@ public class AndroidBrowserHistoryDataExtender extends SQLiteOpenHelper {
    */
   public Cursor fetchAll() throws NullCursorException {
     SQLiteDatabase db = this.getCachedReadableDatabase();
-    Cursor cur = db.query(TBL_HISTORY_EXT,
+    Cursor cur = queryHelper.safeQuery(db, ".fetchAll", TBL_HISTORY_EXT,
         TBL_COLUMNS,
-        null, null, null, null, null);
-    if (cur == null) {
-      throw new NullCursorException(null);
-    }
+        null, null);
     return cur;
   }
 }
