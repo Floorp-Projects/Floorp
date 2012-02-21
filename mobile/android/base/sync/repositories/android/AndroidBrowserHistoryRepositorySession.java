@@ -92,25 +92,10 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
     return ((AndroidBrowserHistoryDataAccessor) dbHelper).getHistoryDataExtender();
   }
 
-  private JSONArray visitsForGUID(String guid) throws NullCursorException {
-    Log.d(LOG_TAG, "Fetching visits for GUID " + guid);
-    Cursor visits = getDataExtender().fetch(guid);
-    try {
-      if (!visits.moveToFirst()) {
-        // Cursor is empty.
-        return new JSONArray();
-      } else {
-        return RepoUtils.getJSONArrayFromCursor(visits, AndroidBrowserHistoryDataExtender.COL_VISITS);
-      }
-    } finally {
-      visits.close();
-    }
-  }
-
   private Record addVisitsToRecord(Record record) throws NullCursorException {
     Log.d(LOG_TAG, "Adding visits for GUID " + record.guid);
     HistoryRecord hist = (HistoryRecord) record;
-    JSONArray visitsArray = visitsForGUID(hist.guid);
+    JSONArray visitsArray = getDataExtender().visitsForGUID(hist.guid);
     long missingRecords = hist.fennecVisitCount - visitsArray.size();
 
     // Note that Fennec visit times are milliseconds, and we are working
