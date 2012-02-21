@@ -2194,11 +2194,9 @@ Class js::ArrayBufferClass = {
     JS_ResolveStub,
     JS_ConvertStub,
     NULL,           /* finalize    */
-    NULL,           /* reserved0   */
     NULL,           /* checkAccess */
     NULL,           /* call        */
     NULL,           /* construct   */
-    NULL,           /* xdrObject   */
     NULL,           /* hasInstance */
     ArrayBuffer::obj_trace,
     JS_NULL_CLASS_EXT,
@@ -2312,11 +2310,9 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
     JS_ResolveStub,                                                            \
     JS_ConvertStub,                                                            \
     NULL,                    /* finalize    */                                 \
-    NULL,                    /* reserved0   */                                 \
     NULL,                    /* checkAccess */                                 \
     NULL,                    /* call        */                                 \
     NULL,                    /* construct   */                                 \
-    NULL,                    /* xdrObject   */                                 \
     NULL,                    /* hasInstance */                                 \
     _typedArray::obj_trace,  /* trace       */                                 \
     {                                                                          \

@@ -1270,16 +1270,14 @@ JSClass ThreadPool::jsClass = {
     "ThreadPool", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
-    NULL, NULL, NULL, NULL,
-    NULL, NULL, jsTraceThreadPool, NULL
+    NULL, NULL, NULL, NULL, jsTraceThreadPool
 };
 
 JSClass Worker::jsWorkerClass = {
     "Worker", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
-    NULL, NULL, NULL, NULL,
-    NULL, NULL, jsTraceWorker, NULL
+    NULL, NULL, NULL, NULL, jsTraceWorker
 };
 
 JSFunctionSpec Worker::jsMethods[3] = {

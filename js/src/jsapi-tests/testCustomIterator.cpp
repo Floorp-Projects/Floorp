@@ -35,11 +35,9 @@ js::Class HasCustomIterClass = {
     JS_ResolveStub,
     JS_ConvertStub,
     NULL,
-    NULL, /* reserved0 */
     NULL, /* checkAccess */
     NULL, /* call */
     NULL, /* construct */
-    NULL, /* xdrObject */
     NULL, /* hasInstance */
     NULL, /* mark */
     {

@@ -104,11 +104,9 @@ Class js::ErrorClass = {
     (JSResolveOp)exn_resolve,
     JS_ConvertStub,
     exn_finalize,
-    NULL,                 /* reserved0   */
     NULL,                 /* checkAccess */
     NULL,                 /* call        */
     NULL,                 /* construct   */
-    NULL,                 /* xdrObject   */
     NULL,                 /* hasInstance */
     exn_trace
 };

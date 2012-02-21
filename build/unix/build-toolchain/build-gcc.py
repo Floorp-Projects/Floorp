@@ -80,9 +80,15 @@ def build_glibc_aux(stage_dir, inst_dir):
                   ["--disable-profile",
                    "--enable-add-ons=nptl",
                    "--without-selinux",
-                   "--enable-kernel=2.6.18",
+                   "--enable-kernel=%s" % linux_version,
                    "--libdir=%s/lib64" % inst_dir,
                    "--prefix=%s" % inst_dir])
+
+def build_linux_headers(inst_dir):
+    run_in(linux_source_dir, [old_make, "headers_check"])
+    run_in(linux_source_dir, [old_make, "INSTALL_HDR_PATH=dest",
+                               "headers_install"])
+    shutil.move(linux_source_dir + "/dest", inst_dir)
 
 def build_one_stage(env, stage_dir, is_stage_one):
     def f():
@@ -108,6 +114,7 @@ def build_one_stage_aux(stage_dir, is_stage_one):
                    "--with-mpfr=%s" % lib_inst_dir])
 
     tool_inst_dir = stage_dir + '/inst'
+    build_linux_headers(tool_inst_dir)
 
     binutils_build_dir = stage_dir + '/binutils'
     build_package(binutils_source_dir, binutils_build_dir,
@@ -119,17 +126,15 @@ def build_one_stage_aux(stage_dir, is_stage_one):
                           "--with-gmp=%s" % lib_inst_dir,
                           "--with-mpfr=%s" % lib_inst_dir,
                           "--with-mpc=%s" % lib_inst_dir,
+                          "--enable-languages=c,c++",
+                          "--disable-multilib",
                           "--disable-bootstrap"]
     if is_stage_one:
-        gcc_configure_args.append("--enable-languages=c")
-        gcc_configure_args.append("--disable-multilib")
         # We build the stage1 gcc without shared libraries. Otherwise its
         # libgcc.so would depend on the system libc.so, which causes problems
         # when it tries to use that libgcc.so and the libc we are about to
         # build.
         gcc_configure_args.append("--disable-shared")
-    else:
-        gcc_configure_args.append("--enable-languages=c,c++")
 
     build_package(gcc_source_dir, gcc_build_dir, gcc_configure_args)
 
@@ -155,6 +160,7 @@ def build_source_dir(prefix, version):
 
 binutils_version = "2.21.1"
 glibc_version = "2.5.1"
+linux_version = "2.6.18"
 tar_version = "1.26"
 make_version = "3.81"
 gcc_version = "4.5.2"
@@ -166,6 +172,8 @@ binutils_source_uri = "http://ftp.gnu.org/gnu/binutils/binutils-%sa.tar.bz2" % \
     binutils_version
 glibc_source_uri = "http://ftp.gnu.org/gnu/glibc/glibc-%s.tar.bz2" % \
     glibc_version
+linux_source_uri = "http://www.kernel.org/pub/linux/kernel/v2.6/linux-%s.tar.bz2" % \
+    linux_version
 tar_source_uri = "http://ftp.gnu.org/gnu/tar/tar-%s.tar.bz2" % \
     tar_version
 make_source_uri = "http://ftp.gnu.org/gnu/make/make-%s.tar.bz2" % \
@@ -180,6 +188,7 @@ mpc_source_uri = "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % \
 
 binutils_source_tar = download_uri(binutils_source_uri)
 glibc_source_tar = download_uri(glibc_source_uri)
+linux_source_tar = download_uri(linux_source_uri)
 tar_source_tar = download_uri(tar_source_uri)
 make_source_tar = download_uri(make_source_uri)
 mpc_source_tar = download_uri(mpc_source_uri)
@@ -189,6 +198,7 @@ gcc_source_tar = download_uri(gcc_source_uri)
 
 binutils_source_dir  = build_source_dir('binutils-', binutils_version)
 glibc_source_dir  = build_source_dir('glibc-', glibc_version)
+linux_source_dir  = build_source_dir('linux-', linux_version)
 tar_source_dir  = build_source_dir('tar-', tar_version)
 make_source_dir  = build_source_dir('make-', make_version)
 mpc_source_dir  = build_source_dir('mpc-', mpc_version)
@@ -201,6 +211,7 @@ if not os.path.exists(source_dir):
     extract(binutils_source_tar, source_dir)
     patch('binutils-deterministic.patch', 1, binutils_source_dir)
     extract(glibc_source_tar, source_dir)
+    extract(linux_source_tar, source_dir)
     patch('glibc-deterministic.patch', 1, glibc_source_dir)
     run_in(glibc_source_dir, ["autoconf"])
     extract(tar_source_tar, source_dir)
