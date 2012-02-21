@@ -2093,6 +2093,7 @@ Tab.prototype = {
         if (contentDocument == this.browser.contentDocument) {
           ViewportHandler.updateMetadata(this);
           this.documentIdForCurrentViewport = ViewportHandler.getIdForDocument(contentDocument);
+          sendMessageToJava({ gecko: { type: "Viewport:UpdateAndDraw" } });
         }
         break;
     }
