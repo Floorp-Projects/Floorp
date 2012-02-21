@@ -217,7 +217,7 @@ public class MultiTileLayer extends Layer {
         IntSize size = getSize();
         for (SubTile layer : mTiles) {
             if (!inTransaction) {
-                layer.beginTransaction(null);
+                layer.beginTransaction();
             }
 
             if (origin != null) {
@@ -246,11 +246,11 @@ public class MultiTileLayer extends Layer {
     }
 
     @Override
-    public void beginTransaction(LayerView aView) {
-        super.beginTransaction(aView);
+    public void beginTransaction() {
+        super.beginTransaction();
 
         for (SubTile layer : mTiles) {
-            layer.beginTransaction(aView);
+            layer.beginTransaction();
         }
     }
 
