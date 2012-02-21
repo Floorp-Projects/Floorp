@@ -42,7 +42,7 @@
 // For the front end see: https://github.com/staktrace/rendertrace
 
 // Uncomment this line to enable RENDERTRACE
-#define MOZ_RENDERTRACE
+//#define MOZ_RENDERTRACE
 #ifdef MOZ_RENDERTRACE
 
 #include "gfx3DMatrix.h"
