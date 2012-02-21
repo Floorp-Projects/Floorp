@@ -746,16 +746,14 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
         }
     }
 
-    if (!mFind) {
-        mFind = do_CreateInstance(NS_FIND_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+    nsCOMPtr<nsIFind> find = do_CreateInstance(NS_FIND_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    (void) mFind->SetCaseSensitive(mMatchCase);
-    (void) mFind->SetFindBackwards(mFindBackwards);
+    (void) find->SetCaseSensitive(mMatchCase);
+    (void) find->SetFindBackwards(mFindBackwards);
 
     // XXX Make and set a line breaker here, once that's implemented.
-    (void) mFind->SetWordBreaker(0);
+    (void) find->SetWordBreaker(0);
 
     // Now make sure the content (for actual finding) and frame (for
     // selection) models are up to date.
@@ -787,8 +785,8 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv =  mFind->Find(mSearchString.get(), searchRange, startPt, endPt,
-                      getter_AddRefs(foundRange));
+    rv =  find->Find(mSearchString.get(), searchRange, startPt, endPt,
+                     getter_AddRefs(foundRange));
 
     if (NS_SUCCEEDED(rv) && foundRange)
     {
