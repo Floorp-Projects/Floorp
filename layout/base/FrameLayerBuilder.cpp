@@ -1700,13 +1700,13 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   }
 
   gfxMatrix transform2d;
-  bool canDraw2D = transform.CanDraw2D(&transform2d);
+  bool is2D = transform.Is2D(&transform2d);
   gfxSize scale;
   bool isRetained = aLayerBuilder->GetRetainingLayerManager() == aLayer->Manager();
   // Only fiddle with scale factors for the retaining layer manager, since
   // it only matters for retained layers
   // XXX Should we do something for 3D transforms?
-  if (canDraw2D && isRetained) {
+  if (is2D && isRetained) {
     //Scale factors are normalized to a power of 2 to reduce the number of resolution changes
     scale = transform2d.ScaleFactors(true);
     // For frames with a changing transform that's not just a translation,
@@ -1756,7 +1756,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       result.mInActiveTransformedSubtree = true;
     }
   }
-  if (isRetained && (!canDraw2D || transform2d.HasNonIntegerTranslation())) {
+  if (isRetained && (!is2D || transform2d.HasNonIntegerTranslation())) {
     result.mDisableSubpixelAntialiasingInDescendants = true;
   }
   return result;
