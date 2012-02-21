@@ -108,7 +108,7 @@ function onLoad()
   if (location.href.startsWith("about:memory")) {
     document.title = "about:memory";
     onLoadAboutMemory();
-  } else if (location.href.startsWith("about:compartment")) {
+  } else if (location.href.startsWith("about:compartments")) {
     document.title = "about:compartments";
     onLoadAboutCompartments();
   } else {
