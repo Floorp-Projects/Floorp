@@ -38,7 +38,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, function, uuid(1b24469d-cfb7-4667-aaf0-c1d17289ae7c)]
+[scriptable, uuid(1b24469d-cfb7-4667-aaf0-c1d17289ae7c)]
 interface nsIDOMMozSmsRequest : nsIDOMEventTarget
 {
   // Returns whether "processing" or "done".

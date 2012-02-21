@@ -40,7 +40,7 @@ interface nsIDOMEventListener;
 interface nsIDOMMozSmsRequest;
 interface nsIDOMMozSmsFilter;
 
-[scriptable, function, uuid(c9916dce-2947-41bb-95c2-818f792a020c)]
+[scriptable, uuid(c9916dce-2947-41bb-95c2-818f792a020c)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short      getNumberOfMessagesForText(in DOMString text);
