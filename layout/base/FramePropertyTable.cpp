@@ -258,4 +258,18 @@ FramePropertyTable::DeleteAll()
   mEntries.EnumerateEntries(DeleteEnumerator, nsnull);
 }
 
+size_t
+FramePropertyTable::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return mEntries.SizeOfExcludingThis(SizeOfPropertyTableEntryExcludingThis,
+                                      aMallocSizeOf);
+}
+
+/* static */ size_t
+FramePropertyTable::SizeOfPropertyTableEntryExcludingThis(Entry* aEntry,
+                      nsMallocSizeOfFun aMallocSizeOf, void *)
+{
+  return aEntry->mProp.SizeOfExcludingThis(aMallocSizeOf);
+}
+
 }
