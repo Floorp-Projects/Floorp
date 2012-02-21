@@ -194,6 +194,11 @@ case "$target" in
         esac
     fi
     if test -z "$MIDL"; then MIDL=midl; fi
+
+    # need override this flag since we don't use $(LDFLAGS) for this.
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
     ;;
 *-darwin*)
     # prefer gcc-4.2 to default cc on older xcode
@@ -2044,7 +2049,15 @@ case "$host" in
     esac
 
     case "${host_cpu}" in
+    i*86)
+        if test -n "$_WIN32_MSVC"; then
+            HOST_LDFLAGS="$HOST_LDFLAGS -MACHINE:X86"
+        fi
+        ;;
     x86_64)
+        if test -n "$_WIN32_MSVC"; then
+            HOST_LDFLAGS="$HOST_LDFLAGS -MACHINE:X64"
+        fi
         HOST_CFLAGS="$HOST_CFLAGS -D_AMD64_"
         ;;
     esac
@@ -2491,12 +2504,17 @@ ia64*-hpux*)
         if test -n "$GNU_CC"; then
             CFLAGS="$CFLAGS -mstackrealign -fno-keep-inline-dllexport"
             CXXFLAGS="$CXXFLAGS -mstackrealign -fno-keep-inline-dllexport"
+        else
+            DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
         fi
 
         MOZ_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
     x86_64-*)
+        if test -n "$_WIN32_MSVC"; then
+            DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X64"
+        fi
         AC_DEFINE(_AMD64_)
         ;;
     *)
