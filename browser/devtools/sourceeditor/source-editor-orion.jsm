@@ -550,7 +550,7 @@ SourceEditor.prototype = {
    */
   undo: function SE_undo()
   {
-    this._undoStack.undo();
+    return this._undoStack.undo();
   },
 
   /**
@@ -558,7 +558,7 @@ SourceEditor.prototype = {
    */
   redo: function SE_redo()
   {
-    this._undoStack.redo();
+    return this._undoStack.redo();
   },
 
   /**
@@ -875,7 +875,7 @@ SourceEditor.prototype = {
           window.require("orion/editor/textMateStyler").TextMateStyler;
         let HtmlGrammar =
           window.require("orion/editor/htmlGrammar").HtmlGrammar;
-        this._styler = new TextMateStyler(this._view, new HtmlGrammar().grammar);
+        this._styler = new TextMateStyler(this._view, new HtmlGrammar());
         break;
     }
 
