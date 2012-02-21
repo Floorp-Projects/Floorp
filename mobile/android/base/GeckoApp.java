@@ -573,6 +573,9 @@ abstract public class GeckoApp
         }
 
         public void run() {
+            if (mSoftwareLayerClient == null)
+                return;
+
             synchronized (mSoftwareLayerClient) {
                 if (!Tabs.getInstance().isSelectedTab(mThumbnailTab))
                     return;
