@@ -36,6 +36,7 @@
 
 from optparse import OptionParser
 from mozprofile import FirefoxProfile, ThunderbirdProfile, Profile
+from mozprofile.permissions import ServerLocations
 from mozrunner import FirefoxRunner, ThunderbirdRunner, Runner
 from mozhttpd import MozHttpd
 from manifestparser import TestManifest
@@ -68,8 +69,22 @@ class Peptest():
         self.logger = mozlog.getLogger('PEP')
 
         # create the profile
+        enable_proxy = False
+        locations = ServerLocations()
+        if self.options.proxyLocations:
+            if not self.options.serverPath:
+                self.logger.warning('Can\'t set up proxy without server path')
+            else:
+                enable_proxy = True
+                locations.read(self.options.proxyLocations, False)
+                locations.add_host(host='127.0.0.1',
+                                   port=self.options.serverPort,
+                                   options='primary,privileged')
+
         self.profile = self.profile_class(profile=self.options.profilePath,
-                                          addons=[os.path.join(here, 'extension')])
+                                          addons=[os.path.join(here, 'extension')],
+                                          locations=locations,
+                                          proxy=enable_proxy)
 
         # fork a server to serve the test related files
         if self.options.serverPath:
@@ -143,7 +158,8 @@ class Peptest():
             return
         self.logger.debug('Starting server on port ' + str(self.options.serverPort))
         self.server = MozHttpd(port=self.options.serverPort,
-                               docroot=self.options.serverPath)
+                               docroot=self.options.serverPath,
+                               proxy_host_dirs=self.options.proxyHostDirs)
         self.server.start(block=False)
 
     def stop(self):
@@ -301,6 +317,20 @@ class PeptestOptions(OptionParser):
                         default=None,
                         help="path to the profile to use. "
                              "If none specified, a temporary profile is created")
+
+        self.add_option("--proxy",
+                        action="store", type="string", dest="proxyLocations",
+                        default=None,
+                        help="path to a server-location file specifying "
+                             "domains to proxy. --server-path must also be "
+                             "specified.")
+
+        self.add_option("--proxy-host-dirs",
+                        action="store_true", dest="proxyHostDirs",
+                        default=False,
+                        help="proxied requests are served from directories "
+                             "named by requested host. --proxy must also be "
+                             "specified.")
 
         self.add_option("--server-port",
                         action="store", type="int", dest="serverPort",

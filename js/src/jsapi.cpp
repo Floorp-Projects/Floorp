@@ -92,6 +92,7 @@
 #include "js/MemoryMetrics.h"
 #include "mozilla/Util.h"
 #include "yarr/BumpPointerAllocator.h"
+#include "vm/MethodGuard.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -993,30 +994,6 @@ JS_PUBLIC_API(void)
 JS_SetRuntimePrivate(JSRuntime *rt, void *data)
 {
     rt->data = data;
-}
-
-JS_PUBLIC_API(size_t)
-JS::SystemCompartmentCount(const JSRuntime *rt)
-{
-    size_t n = 0;
-    for (size_t i = 0; i < rt->compartments.length(); i++) {
-        if (rt->compartments[i]->isSystemCompartment) {
-            ++n;
-        }
-    }
-    return n;
-}
-
-JS_PUBLIC_API(size_t)
-JS::UserCompartmentCount(const JSRuntime *rt)
-{
-    size_t n = 0;
-    for (size_t i = 0; i < rt->compartments.length(); i++) {
-        if (!rt->compartments[i]->isSystemCompartment) {
-            ++n;
-        }
-    }
-    return n;
 }
 
 #ifdef JS_THREADSAFE

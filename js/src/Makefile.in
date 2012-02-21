@@ -153,6 +153,7 @@ CPPSRCS		= \
 		ScopeObject.cpp \
 		Debugger.cpp \
 		GlobalObject.cpp \
+		MethodGuard.cpp \
 		Stack.cpp \
 		String.cpp \
 		BytecodeCompiler.cpp \

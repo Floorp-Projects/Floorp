@@ -740,6 +740,13 @@ LookAndFeel::GetFloat(FloatID aID, float* aResult)
 }
 
 // static
+bool
+LookAndFeel::GetFont(FontID aID, nsString& aName, gfxFontStyle& aStyle)
+{
+  return nsLookAndFeel::GetInstance()->GetFontImpl(aID, aName, aStyle);
+}
+
+// static
 PRUnichar
 LookAndFeel::GetPasswordCharacter()
 {

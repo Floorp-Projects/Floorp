@@ -45,8 +45,7 @@
 #include "nsDebug.h"
 #include "nsColor.h"
 
-// for |#ifdef NS_DEBUG|
-struct nsSize;
+struct gfxFontStyle;
 
 namespace mozilla {
 
@@ -434,6 +433,31 @@ public:
     eFloatID_CaretAspectRatio
   };
 
+  // These constants must be kept in 1:1 correspondence with the
+  // NS_STYLE_FONT_* system font constants.
+  enum FontID {
+    eFont_Caption = 1,     // css2
+    eFont_Icon,
+    eFont_Menu,
+    eFont_MessageBox,
+    eFont_SmallCaption,
+    eFont_StatusBar,
+
+    eFont_Window,          // css3
+    eFont_Document,
+    eFont_Workspace,
+    eFont_Desktop,
+    eFont_Info,
+    eFont_Dialog,
+    eFont_Button,
+    eFont_PullDownMenu,
+    eFont_List,
+    eFont_Field,
+
+    eFont_Tooltips,        // moz
+    eFont_Widget
+  };
+
   /**
    * GetColor() return a native color value (might be overwritten by prefs) for
    * aID.  Some platforms don't return an error even if the index doesn't
@@ -488,6 +512,17 @@ public:
     }
     return result;
   }
+
+  /**
+   * Retrieve the name and style of a system-theme font.  Returns true
+   * if the system theme specifies this font, false if a default should
+   * be used.  In the latter case neither aName nor aStyle is modified.
+   *
+   * @param aID    Which system-theme font is wanted.
+   * @param aName  The name of the font to use.
+   * @param aStyle Styling to apply to the font.
+   */
+  static bool GetFont(FontID aID, nsString& aName, gfxFontStyle& aStyle);
 
   /**
    * GetPasswordCharacter() returns a unicode character which should be used

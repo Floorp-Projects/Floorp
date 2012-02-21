@@ -47,6 +47,8 @@ public:
   virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
   virtual nsresult GetIntImpl(IntID aID, PRInt32 &aResult);
   virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
+  virtual bool GetFontImpl(FontID aID, nsString& aFontName,
+                           gfxFontStyle& aFontStyle);
 };
 
 #endif
