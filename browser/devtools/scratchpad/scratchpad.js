@@ -1068,7 +1068,15 @@ var Scratchpad = {
         handler.apply(observer, aArgs);
       }
     }
-  }
+  },
+
+  openDocumentationPage: function SP_openDocumentationPage()
+  {
+    let url = this.strings.GetStringFromName("help.openDocumentationPage");
+    let newTab = this.gBrowser.addTab(url);
+    this.browserWindow.focus();
+    this.gBrowser.selectedTab = newTab;
+  },
 };
 
 XPCOMUtils.defineLazyGetter(Scratchpad, "strings", function () {
