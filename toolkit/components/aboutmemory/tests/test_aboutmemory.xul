@@ -14,21 +14,21 @@
   <![CDATA[
   const Cc = Components.classes;
   const Ci = Components.interfaces;
-  var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
   // Access mgr.explicit and mgr.resident just to make sure they don't crash.
   // We can't check their actual values because they're non-deterministic.
-  var dummy = mgr.explicit;
+  let dummy = mgr.explicit;
   dummy = mgr.resident;
 
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
-  var e = mgr.enumerateReporters();
-  var realReporters = [];
+  let e = mgr.enumerateReporters();
+  let realReporters = [];
   dummy = 0;
   while (e.hasMoreElements()) {
-    var r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     // Get the |amount| field, even though we don't use it, just to test
     // that the reporter doesn't crash or anything.
     dummy += r.amount;
@@ -36,10 +36,10 @@
     realReporters.push(r);
   }
   e = mgr.enumerateMultiReporters();
-  var realMultiReporters = [];
-  var dummy = 0;
+  let realMultiReporters = [];
+  let dummy = 0;
   while (e.hasMoreElements()) {
-    var r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
     // Call collectReports, even though we don't use its results, just to
     // test that the multi-reporter doesn't crash or anything.  And likewise
     // for the |explicitNonHeap| field.
@@ -77,7 +77,7 @@
     return f2(aProcess, aPath, aKind, BYTES, aAmount);
   }
 
-  var fakeReporters = [
+  let fakeReporters = [
     f("", "heap-allocated",     OTHER,   500 * MB),
     f("", "heap-unallocated",   OTHER,   100 * MB),
     f("", "explicit/a",         HEAP,    222 * MB),
@@ -89,52 +89,71 @@
     f("", "explicit/g/b",       HEAP,      5 * MB),
     f("", "explicit/g/other",   HEAP,      4 * MB),
     f("", "other1",             OTHER,   111 * MB),
-    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888)
+    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888),
+    // These compartments ones shouldn't be displayed.
+    f("", "compartments/user/foo",   OTHER, COUNT, 1),
+    f("", "compartments/system/foo", OTHER, COUNT, 1)
   ];
-  var fakeMultiReporters = [
-     { name: "fake1",
-       collectReports: function(cbObj, closure) {
-          function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
-          f("explicit/c/d",     NONHEAP, BYTES,  13 * MB),
-          f("explicit/c/d",     NONHEAP, BYTES,  10 * MB), // dup
-          f("explicit/c/other", NONHEAP, BYTES,  77 * MB),
-          f("explicit/cc",      NONHEAP, BYTES,  13 * MB);
-          f("explicit/cc",      NONHEAP, BYTES,  10 * MB); // dup
-          f("explicit/d",       NONHEAP, BYTES, 499 * KB); // omitted
-          f("explicit/e",       NONHEAP, BYTES, 100 * KB); // omitted
-          f("explicit/f/g/h/i", HEAP,    BYTES,  20 * MB);
-       },
-       explicitNonHeap: (100 + 13 + 10)*MB + (499 + 100)*KB
-     },
-     { name: "fake2",
-       collectReports: function(cbObj, closure) {
-          function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
-          f("other3",           OTHER,   COUNT, 777);
-          f("other2",           OTHER,   BYTES, 222 * MB);
-          f("perc2",            OTHER,   PERCENTAGE, 10000);
-          f("perc1",            OTHER,   PERCENTAGE, 4567);
-       },
-       explicitNonHeap: 0
-     },
-     { name: "smaps",
-       collectReports: function(cbObj, closure) {
-          // The amounts are given in pages, so multiply here by 4kb.
-          function f(p, a) { cbObj.callback("", p, NONHEAP, BYTES, a * 4 * KB, "(desc)", closure); }
-          f("smaps/vsize/a",     24);
-          f("smaps/swap/a",       1);
-          f("smaps/swap/a",       2);
-          f("smaps/vsize/a",      19);
-          f("smaps/swap/b/c",     10);
-          f("smaps/resident/a",   42);
-          f("smaps/pss/a",        43);
-       },
-       explicitNonHeap: 0
-     }
+  let fakeMultiReporters = [
+    { name: "fake1",
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP, aK, aU, aA) {
+          aCbObj.callback("", aP, aK, aU, aA, "(desc)", aClosure);
+        }
+        f("explicit/c/d",     NONHEAP, BYTES,  13 * MB),
+        f("explicit/c/d",     NONHEAP, BYTES,  10 * MB), // dup
+        f("explicit/c/other", NONHEAP, BYTES,  77 * MB),
+        f("explicit/cc",      NONHEAP, BYTES,  13 * MB);
+        f("explicit/cc",      NONHEAP, BYTES,  10 * MB); // dup
+        f("explicit/d",       NONHEAP, BYTES, 499 * KB); // omitted
+        f("explicit/e",       NONHEAP, BYTES, 100 * KB); // omitted
+        f("explicit/f/g/h/i", HEAP,    BYTES,  20 * MB);
+      },
+      explicitNonHeap: (100 + 13 + 10)*MB + (499 + 100)*KB
+    },
+    { name: "fake2",
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP, aK, aU, aA) {
+          aCbObj.callback("", aP, aK, aU, aA, "(desc)", aClosure);
+        }
+        f("other3",           OTHER,   COUNT, 777);
+        f("other2",           OTHER,   BYTES, 222 * MB);
+        f("perc2",            OTHER,   PERCENTAGE, 10000);
+        f("perc1",            OTHER,   PERCENTAGE, 4567);
+      },
+      explicitNonHeap: 0
+    },
+    { name: "smaps",
+      collectReports: function(aCbObj, aClosure) {
+        // The amounts are given in pages, so multiply here by 4kb.
+        function f(aP, aA) {
+          aCbObj.callback("", aP, NONHEAP, BYTES, aA * 4 * KB, "(desc)", aClosure);
+        }
+        f("smaps/vsize/a",     24);
+        f("smaps/swap/a",       1);
+        f("smaps/swap/a",       2);
+        f("smaps/vsize/a",      19);
+        f("smaps/swap/b/c",     10);
+        f("smaps/resident/a",   42);
+        f("smaps/pss/a",        43);
+      },
+      explicitNonHeap: 0
+    },
+    { name: "compartments",
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP) {
+          aCbObj.callback("", aP, OTHER, COUNT, 1, "", aClosure);
+        }
+        f("compartments/user/bar");
+        f("compartments/system/bar");
+      },
+      explicitNonHeap: 0
+    }
   ];
-  for (var i = 0; i < fakeReporters.length; i++) {
+  for (let i = 0; i < fakeReporters.length; i++) {
     mgr.registerReporter(fakeReporters[i]);
   }
-  for (var i = 0; i < fakeMultiReporters.length; i++) {
+  for (let i = 0; i < fakeMultiReporters.length; i++) {
     mgr.registerMultiReporter(fakeMultiReporters[i]);
   }
 
@@ -145,7 +164,7 @@
   // and subsequent processes.
   is(mgr.explicit, 500*MB + (100 + 13 + 10)*MB + 599*KB, "mgr.explicit");
  
-  var fakeReporters2 = [
+  let fakeReporters2 = [
     f("2nd", "heap-allocated",  OTHER,  1000 * MB),
     f("2nd", "heap-unallocated",OTHER,   100 * MB),
     f("2nd", "explicit/a/b/c",  HEAP,    497 * MB),
@@ -159,6 +178,13 @@
     f("2nd", "danger<script>window.alert(1)</script>",
                                 OTHER,   666 * MB),
     f("2nd", "other1",          OTHER,   111 * MB),
+    // Even though the "smaps" reporter is a multi-reporter, if its in a
+    // child process it'll be passed to the main process as single reports.
+    // The fact that we skip the "smaps" multi-reporter in the main
+    // process won't cause these to be skipped;  the fall-back skipping will
+    // be hit instead.
+    f("2nd", "smaps/vsize/e",   NONHEAP, 24*4*KB),
+    f("2nd", "smaps/vsize/f",   NONHEAP, 24*4*KB),
 
     // kUnknown should be handled gracefully for "heap-allocated", non-leaf
     // reporters, leaf-reporters, "other" reporters, and duplicated reporters.
@@ -205,28 +231,10 @@
     f("5th", "explicit/b/c/g/h", NONHEAP,  10 * KB),
     f("5th", "explicit/b/c/i/j", NONHEAP,   5 * KB)
   ];
-  var fakeMultiReporters2 = [
-     // Because this multi-reporter is in a child process, the fact that we
-     // skip the "smaps" multi-reporter in the parent process won't cause
-     // these to be skipped;  the fall-back skipping will be hit instead.
-     { name: "smaps",
-       collectReports: function(cbObj, closure) {
-          // The amounts are given in pages, so multiply here by 4kb.
-          function f(p, a) { cbObj.callback("2nd", p, NONHEAP, BYTES, a * 4 * KB, "(desc)", closure); }
-          f("smaps/vsize/a",     24);
-          f("smaps/vsize/b",     24);
-       },
-       explicitNonHeap: 0
-     }
-  ];
-  for (var i = 0; i < fakeReporters2.length; i++) {
+  for (let i = 0; i < fakeReporters2.length; i++) {
     mgr.registerReporter(fakeReporters2[i]);
   }
-  for (var i = 0; i < fakeMultiReporters2.length; i++) {
-    mgr.registerMultiReporter(fakeMultiReporters2[i]);
-  }
   fakeReporters = fakeReporters.concat(fakeReporters2);
-  fakeMultiReporters = fakeMultiReporters.concat(fakeMultiReporters2);
   ]]>
   </script>
 
@@ -235,7 +243,7 @@
 
   <script type="application/javascript">
   <![CDATA[
-  var amExpectedText =
+  let amExpectedText =
 "\
 Main Process\n\
 \n\
@@ -375,7 +383,7 @@ Other Measurements\n\
 \n\
 ";
 
-  var amvExpectedText =
+  let amvExpectedText =
 "\
 Main Process\n\
 \n\
@@ -539,60 +547,52 @@ Other Measurements\n\
     // Unregister fake reporters and multi-reporters, re-register the real
     // reporters and multi-reporters, just in case subsequent tests rely on
     // them.
-    for (var i = 0; i < fakeReporters.length; i++) {
+    for (let i = 0; i < fakeReporters.length; i++) {
       mgr.unregisterReporter(fakeReporters[i]);
     }
-    for (var i = 0; i < fakeMultiReporters.length; i++) {
+    for (let i = 0; i < fakeMultiReporters.length; i++) {
       mgr.unregisterMultiReporter(fakeMultiReporters[i]);
     }
-    for (var i = 0; i < realReporters.length; i++) {
+    for (let i = 0; i < realReporters.length; i++) {
       mgr.registerReporter(realReporters[i]);
     }
-    for (var i = 0; i < realMultiReporters.length; i++) {
+    for (let i = 0; i < realMultiReporters.length; i++) {
       mgr.registerMultiReporter(realMultiReporters[i]);
     }
     SimpleTest.finish();
   }
 
-  var gHaveDumped = false;
-
-  function checkClipboard(actual, expected) {
-    if (actual != expected) {
-      if (!gHaveDumped) {
-        dump("******EXPECTED******\n");
-        dump(expected);
-        dump("*******ACTUAL*******\n");
-        dump(actual);
-        dump("********************\n");
-        gHaveDumped = true;
-      }
-      return false;
-    }
-    return true;
-  }
-
   // Cut+paste the entire page and check that the cut text matches what we
   // expect.  This tests the output in general and also that the cutting and
   // pasting works as expected.
-  function test(aFrame, aExpectedText, aNext) {
+  function test(aFrameId, aExpected, aNext) {
     SimpleTest.executeSoon(function() {
-      document.getElementById(aFrame).focus();
+      let mostRecentActual;
+      document.getElementById(aFrameId).focus();
       SimpleTest.waitForClipboard(
-        function(actual) { return checkClipboard(actual, aExpectedText) },
+        function(aActual) {
+          mostRecentActual = aActual;
+          return aActual === aExpected;
+        },
         function() {
           synthesizeKey("A", {accelKey: true});
           synthesizeKey("C", {accelKey: true});
         },
         aNext,
         function() {
-          ok(false, "pasted text doesn't match for " + aFrame);
+          ok(false, "pasted text doesn't match for " + aFrameId);
+          dump("******EXPECTED******\n");
+          dump(aExpected);
+          dump("*******ACTUAL*******\n");
+          dump(mostRecentActual);
+          dump("********************\n");
           finish();
         }
       );
     });
   }
 
-  addLoadEvent(function() {
+  SimpleTest.waitForFocus(function() {
     test(
       "amFrame",
       amExpectedText,

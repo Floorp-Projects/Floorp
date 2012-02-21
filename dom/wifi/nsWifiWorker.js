@@ -640,6 +640,42 @@ var WifiManager = (function() {
     return true;
   }
 
+  function killSupplicant(callback) {
+    // It is interesting to note that this function does exactly what
+    // wifi_stop_supplicant does. Unforunately, on the Galaxy S2, Samsung
+    // changed that function in a way that means that it doesn't recognize
+    // wpa_supplicant as already running. Therefore, we have to roll our own
+    // version here.
+    var count = 0;
+    var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    function tick() {
+      getProperty("init.svc.wpa_supplicant", "stopped", function (result) {
+        if (result === null) {
+          callback(false);
+          return;
+        }
+        if (result === "stopped" || ++count >= 5) {
+          // Either we succeeded or ran out of time.
+          timer = null;
+          callback(count < 5);
+          return;
+        }
+
+        // Else it's still running, continue waiting.
+        timer.initWithCallback(tick, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+      });
+    }
+
+    setProperty("ctl.stop", "wpa_supplicant", tick);
+  }
+
+  function prepareForStartup(callback) {
+    stopDhcp(manager.ifname, function() {
+      // Ignore any errors.
+      killSupplicant(callback);
+    });
+  }
+
   // Initial state
   var airplaneMode = false;
 
@@ -651,24 +687,29 @@ var WifiManager = (function() {
     if (enable && airplaneMode)
       return false;
     if (enable) {
-      loadDriver(function (status) {
-        if (status < 0) {
-          callback(status);
+      // Kill any existing connections if necessary.
+      getProperty("wifi.interface", "tiwlan0", function (ifname) {
+        if (!ifname) {
+          callback(-1);
           return;
         }
-        startSupplicant(function (status) {
-          if (status < 0) {
-            callback(status);
-            return;
-          }
-          getProperty("wifi.interface", "tiwlan0", function (ifname) {
-            if (!ifname) {
-              callback(-1);
+        manager.ifname = ifname;
+
+        prepareForStartup(function() {
+          // Ignore errors...
+          loadDriver(function (status) {
+            if (status < 0) {
+              callback(status);
               return;
             }
-            manager.ifname = ifname;
-            enableInterface(ifname, function (ok) {
-              callback(ok ? 0 : -1);
+            startSupplicant(function (status) {
+              if (status < 0) {
+                callback(status);
+                return;
+              }
+              enableInterface(ifname, function (ok) {
+                callback(ok ? 0 : -1);
+              });
             });
           });
         });
@@ -691,7 +732,7 @@ var WifiManager = (function() {
   manager.reassociate = reassociateCommand;
 
   var networkConfigurationFields = ["ssid", "bssid", "psk", "wep_key0", "wep_key1", "wep_key2", "wep_key3",
-                                    "wep_tx_keyidx", "priority", "key_mgmt", "scan_ssid"];
+                                    "wep_tx_keyidx", "priority", "key_mgmt", "scan_ssid", "disabled"];
 
   manager.getNetworkConfiguration = function(config, callback) {
     var netId = config.netId;
@@ -795,6 +836,15 @@ var WifiManager = (function() {
   return manager;
 })();
 
+function WifiNetwork(ssid, bssid, flags, signal) {
+  this.ssid = ssid;
+  this.bssid = bssid;
+  this.flags = flags;
+  this.signal = Number(signal);
+}
+
+WifiNetwork.prototype.QueryInterface = XPCOMUtils.generateQI([Ci.nsIWifiNetwork]);
+
 function nsWifiWorker() {
   WifiManager.onsupplicantconnection = function() {
     debug("Connected to supplicant");
@@ -806,48 +856,53 @@ function nsWifiWorker() {
     debug("Couldn't connect to supplicant");
   }
 
-  var state;
+  var self = this;
+
+  this.state = null;
+  this.networks = Object.create(null);
   WifiManager.onstatechange = function() {
-    debug("State change: " + state + " -> " + this.state);
-    if (state === "SCANNING" && this.state === "INACTIVE") {
-      // We're not trying to connect so try to find an open Mozilla network.
-      // TODO Remove me in favor of UI and a way to select a network.
+    debug("State change: " + self.state + " -> " + this.state);
+    self.state = this.state;
 
-      debug("Haven't connected to a network, trying a default (for now)");
-      var name = "Mozilla";
-      var net = networks[name];
-      if (net && (net[1] && net[1] !== "[IBSS]")) {
-        debug("Network Mozilla exists, but is encrypted");
-        net = null;
-      }
-      if (!net) {
-        name = "Mozilla Guest";
-        net = networks[name];
-        if (!net || (net[1] && net[1] !== "[IBSS]")) {
-          debug("Network Mozilla Guest doesn't exist or is encrypted");
-          return;
-        }
-      }
+    // TODO Worth adding a more generic API for this?
+    if (self.state === "INACTIVE" && connectToMozilla.waiting)
+      connectToMozilla();
+  }
 
-      var config = Object.create(null);
-      config["ssid"] = '"' + name + '"';
-      config["key_mgmt"] = "NONE";
-      WifiManager.addNetwork(config, function(ok) {
+  function connectToMozilla() {
+    if (self.state !== "INACTIVE") {
+      connectToMozilla.waiting = true;
+      return;
+    }
+
+    // We're not trying to connect so try to find an open Mozilla network.
+    // TODO Remove me in favor of UI and a way to select a network.
+
+    debug("Haven't connected to a network, trying a default (for now)");
+    var configs = [
+      { "ssid": '"mozilla demo"', "key_mgmt": "NONE", "disabled": 0 },
+      { "ssid": '"Mozilla"', "key_mgmt": "NONE", "disabled": 0 },
+      { "ssid": '"Mozilla Guest"', "key_mgmt": "NONE", "scan_ssid": 1, "disabled": 0 },
+    ];
+
+    var i = 0;
+    function addThem() {
+      WifiManager.addNetwork(configs[i++], function(ok) {
         if (!ok) {
           debug("Unable to add the network!");
           return;
         }
 
-        WifiManager.enableNetwork(config.netId, false, function(ok) {
-          debug((ok ? "Successfully enabled " : "Didn't enable ") + name);
-        });
+        if (i < configs.length) {
+          addThem();
+          return;
+        }
       });
     }
-
-    state = this.state;
+    addThem();
   }
+  this.waitForScan(connectToMozilla);
 
-  var networks = Object.create(null);
   WifiManager.onscanresultsavailable = function() {
     debug("Scan results are available! Asking for them.");
     WifiManager.getScanResults(function(r) {
@@ -855,11 +910,17 @@ function nsWifiWorker() {
       // NB: Skip the header line.
       for (let i = 1; i < lines.length; ++i) {
         // bssid / frequency / signal level / flags / ssid
-        var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s+(.*)/.exec(lines[i])
-        if (match)
-          networks[match[5]] = [match[1], match[4]];
-        else
+        var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s+(.*)/.exec(lines[i]);
+
+        // TODO Choose bssid based on strength?
+        if (match && match[5])
+          self.networks[match[5]] = new WifiNetwork(match[5], match[1], match[4], match[3]);
+        else if (!match)
           debug("Match didn't find anything for: " + lines[i]);
+      }
+
+      if (self.wantScanResults) {
+        self.wantScanResults();
       }
     });
   }
@@ -884,6 +945,18 @@ nsWifiWorker.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder,
                                          Ci.nsIWifi]),
+
+  // Internal methods.
+  waitForScan: function(callback) {
+    if (this.wantScanResults) {
+      var older = this.wantScanResults;
+      this.wantScanResults = function() { callback(); older(); };
+    } else {
+      this.wantScanResults = callback;
+    }
+  },
+
+  // nsIWifi
 
   setWifiEnabled: function(enable) {
     WifiManager.setWifiEnabled(enable, function (ok) {

@@ -452,16 +452,31 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
   NS_ABORT_IF_FALSE(!mTxInlineFrame[4],
                     "Size greater than 24 bits");
   
-  // For methods other than POST and PUT, we will set the fin bit
-  // right on the syn stream packet.
+  // Determine whether to put the fin bit on the syn stream frame or whether
+  // to wait for a data packet to put it on.
 
-  if (mTransaction->RequestHead()->Method() != nsHttp::Post &&
-      mTransaction->RequestHead()->Method() != nsHttp::Put &&
-      mTransaction->RequestHead()->Method() != nsHttp::Options) {
+  if (mTransaction->RequestHead()->Method() == nsHttp::Get ||
+      mTransaction->RequestHead()->Method() == nsHttp::Connect ||
+      mTransaction->RequestHead()->Method() == nsHttp::Head) {
+    // for GET, CONNECT, and HEAD place the fin bit right on the
+    // syn stream packet
+
     mSentFinOnData = 1;
     mTxInlineFrame[4] = SpdySession::kFlag_Data_FIN;
   }
-
+  else if (mTransaction->RequestHead()->Method() == nsHttp::Post ||
+           mTransaction->RequestHead()->Method() == nsHttp::Put ||
+           mTransaction->RequestHead()->Method() == nsHttp::Options) {
+    // place fin in a data frame even for 0 length messages, I've seen
+    // the google gateway be unhappy with fin-on-syn for 0 length POST
+  }
+  else if (!mRequestBodyLenRemaining) {
+    // for other HTTP extension methods, rely on the content-length
+    // to determine whether or not to put fin on syn
+    mSentFinOnData = 1;
+    mTxInlineFrame[4] = SpdySession::kFlag_Data_FIN;
+  }
+  
   Telemetry::Accumulate(Telemetry::SPDY_SYN_SIZE, mTxInlineFrameUsed - 18);
 
   // The size of the input headers is approximate

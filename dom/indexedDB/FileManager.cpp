@@ -42,7 +42,9 @@
 #include "mozIStorageServiceQuotaManagement.h"
 #include "mozIStorageStatement.h"
 #include "nsISimpleEnumerator.h"
+
 #include "mozStorageCID.h"
+#include "mozStorageHelper.h"
 #include "nsContentUtils.h"
 
 #include "FileInfo.h"
@@ -92,6 +94,8 @@ FileManager::Init(nsIFile* aDirectory,
     rv = aDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  mozStorageTransaction transaction(aConnection, false);
 
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE VIRTUAL TABLE fs USING filesystem;"
@@ -151,6 +155,7 @@ FileManager::Init(nsIFile* aDirectory,
   rv = aDirectory->GetPath(mDirectoryPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  transaction.Commit();
   return NS_OK;
 }
 

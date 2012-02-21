@@ -81,6 +81,7 @@
 #include "jsobjinlines.h"
 #include "jsautooplen.h"        // generated headers last
 
+#include "vm/MethodGuard-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 #include "vm/StringObject-inl.h"

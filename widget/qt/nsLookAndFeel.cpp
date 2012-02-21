@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,24 +38,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <QPalette>
+// Qt headers must be included before anything that might pull in our
+// malloc wrappers.
 #include <QApplication>
+#include <QFont>
+#include <QPalette>
 #include <QStyle>
-
-#include "nsLookAndFeel.h"
-#include "nsStyleConsts.h"
-
-#include <qglobal.h>
 
 #undef NS_LOOKANDFEEL_DEBUG
 #ifdef NS_LOOKANDFEEL_DEBUG
 #include <QDebug>
 #endif
 
-#define QCOLOR_TO_NS_RGB(c) \
-    ((nscolor)NS_RGB(c.red(),c.green(),c.blue()))
+#include "nsLookAndFeel.h"
+#include "nsStyleConsts.h"
 
-nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
+#include <qglobal.h>
+
+#define QCOLOR_TO_NS_RGB(c)                     \
+  ((nscolor)NS_RGB(c.red(),c.green(),c.blue()))
+
+nsLookAndFeel::nsLookAndFeel()
+  : nsXPLookAndFeel(),
+    mDefaultFontCached(false), mButtonFontCached(false),
+    mFieldFontCached(false), mMenuFontCached(false)
 {
 }
 
@@ -259,8 +265,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Text));
       break;
 
-     // from the CSS3 working draft (not yet finalized)
-     // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
+      // from the CSS3 working draft (not yet finalized)
+      // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
 
     case eColorID__moz_buttondefault:
       aColor = QCOLOR_TO_NS_RGB(palette.color(QPalette::Normal, QPalette::Button));
@@ -307,36 +313,36 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
 
 #ifdef NS_LOOKANDFEEL_DEBUG
 static const char *metricToString[] = {
-    "eIntID_CaretBlinkTime",
-    "eIntID_CaretWidth",
-    "eIntID_ShowCaretDuringSelection",
-    "eIntID_SelectTextfieldsOnKeyFocus",
-    "eIntID_SubmenuDelay",
-    "eIntID_MenusCanOverlapOSBar",
-    "eIntID_SkipNavigatingDisabledMenuItem",
-    "eIntID_DragThresholdX",
-    "eIntID_DragThresholdY",
-    "eIntID_UseAccessibilityTheme",
-    "eIntID_ScrollArrowStyle",
-    "eIntID_ScrollSliderStyle",
-    "eIntID_ScrollButtonLeftMouseButtonAction",
-    "eIntID_ScrollButtonMiddleMouseButtonAction",
-    "eIntID_ScrollButtonRightMouseButtonAction",
-    "eIntID_TreeOpenDelay",
-    "eIntID_TreeCloseDelay",
-    "eIntID_TreeLazyScrollDelay",
-    "eIntID_TreeScrollDelay",
-    "eIntID_TreeScrollLinesMax",
-    "eIntID_TabFocusModel",
-    "eIntID_WindowsDefaultTheme",
-    "eIntID_AlertNotificationOrigin",
-    "eIntID_ScrollToClick",
-    "eIntID_IMERawInputUnderlineStyle",
-    "eIntID_IMESelectedRawTextUnderlineStyle",
-    "eIntID_IMEConvertedTextUnderlineStyle",
-    "eIntID_IMESelectedConvertedTextUnderline",
-    "eIntID_ImagesInMenus"
-    };
+  "eIntID_CaretBlinkTime",
+  "eIntID_CaretWidth",
+  "eIntID_ShowCaretDuringSelection",
+  "eIntID_SelectTextfieldsOnKeyFocus",
+  "eIntID_SubmenuDelay",
+  "eIntID_MenusCanOverlapOSBar",
+  "eIntID_SkipNavigatingDisabledMenuItem",
+  "eIntID_DragThresholdX",
+  "eIntID_DragThresholdY",
+  "eIntID_UseAccessibilityTheme",
+  "eIntID_ScrollArrowStyle",
+  "eIntID_ScrollSliderStyle",
+  "eIntID_ScrollButtonLeftMouseButtonAction",
+  "eIntID_ScrollButtonMiddleMouseButtonAction",
+  "eIntID_ScrollButtonRightMouseButtonAction",
+  "eIntID_TreeOpenDelay",
+  "eIntID_TreeCloseDelay",
+  "eIntID_TreeLazyScrollDelay",
+  "eIntID_TreeScrollDelay",
+  "eIntID_TreeScrollLinesMax",
+  "eIntID_TabFocusModel",
+  "eIntID_WindowsDefaultTheme",
+  "eIntID_AlertNotificationOrigin",
+  "eIntID_ScrollToClick",
+  "eIntID_IMERawInputUnderlineStyle",
+  "eIntID_IMESelectedRawTextUnderlineStyle",
+  "eIntID_IMEConvertedTextUnderlineStyle",
+  "eIntID_IMESelectedConvertedTextUnderline",
+  "eIntID_ImagesInMenus"
+};
 #endif
 
 nsresult
@@ -348,7 +354,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
 
   nsresult res = nsXPLookAndFeel::GetIntImpl(aID, aResult);
   if (NS_SUCCEEDED(res))
-      return res;
+    return res;
 
   res = NS_OK;
 
@@ -425,7 +431,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
 
 #ifdef NS_LOOKANDFEEL_DEBUG
 static const char *floatMetricToString[] = {
-    "eFloatID_IMEUnderlineRelativeSize"
+  "eFloatID_IMEUnderlineRelativeSize"
 };
 #endif
 
@@ -438,7 +444,7 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 
   nsresult res = nsXPLookAndFeel::GetFloatImpl(aID, aResult);
   if (NS_SUCCEEDED(res))
-      return res;
+    return res;
   res = NS_OK;
 
   switch (aID) {
@@ -456,4 +462,100 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
       break;
   }
   return res;
+}
+
+static void
+GetSystemFontInfo(const char *aClassName, nsString *aFontName,
+                  gfxFontStyle *aFontStyle)
+{
+  QFont qFont = QApplication::font(aClassName);
+
+  NS_NAMED_LITERAL_STRING(quote, "\"");
+  nsString family((PRUnichar*)qFont.family().data());
+  *aFontName = quote + family + quote;
+
+  aFontStyle->systemFont = true;
+  aFontStyle->style = FONT_STYLE_NORMAL;
+  aFontStyle->weight = qFont.weight();
+  // FIXME: Set aFontStyle->stretch correctly!
+  aFontStyle->stretch = NS_FONT_STRETCH_NORMAL;
+  // use pixel size directly if it is set, otherwise compute from point size
+  if (qFont.pixelSize() != -1) {
+    aFontStyle->size = qFont.pixelSize();
+  } else {
+    aFontStyle->size = qFont.pointSizeF() * 96.0f / 72.0f;
+  }
+}
+
+bool
+nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
+                           gfxFontStyle& aFontStyle)
+{
+  const char *className = NULL;
+  nsString *cachedFontName = NULL;
+  gfxFontStyle *cachedFontStyle = NULL;
+  bool *isCached = NULL;
+
+  switch (aID) {
+    case eFont_Menu:         // css2
+    case eFont_PullDownMenu: // css3
+      cachedFontName = &mMenuFontName;
+      cachedFontStyle = &mMenuFontStyle;
+      isCached = &mMenuFontCached;
+      className = "QAction";
+      break;
+
+    case eFont_Field:        // css3
+    case eFont_List:         // css3
+      cachedFontName = &mFieldFontName;
+      cachedFontStyle = &mFieldFontStyle;
+      isCached = &mFieldFontCached;
+      className = "QlineEdit";
+      break;
+
+    case eFont_Button:       // css3
+      cachedFontName = &mButtonFontName;
+      cachedFontStyle = &mButtonFontStyle;
+      isCached = &mButtonFontCached;
+      className = "QPushButton";
+      break;
+
+    case eFont_Caption:      // css2
+    case eFont_Icon:         // css2
+    case eFont_MessageBox:   // css2
+    case eFont_SmallCaption: // css2
+    case eFont_StatusBar:    // css2
+    case eFont_Window:       // css3
+    case eFont_Document:     // css3
+    case eFont_Workspace:    // css3
+    case eFont_Desktop:      // css3
+    case eFont_Info:         // css3
+    case eFont_Dialog:       // css3
+    case eFont_Tooltips:     // moz
+    case eFont_Widget:       // moz
+      cachedFontName = &mDefaultFontName;
+      cachedFontStyle = &mDefaultFontStyle;
+      isCached = &mDefaultFontCached;
+      className = "Qlabel";
+      break;
+  }
+
+  if (!*isCached) {
+    GetSystemFontInfo(className, cachedFontName, cachedFontStyle);
+    *isCached = true;
+  }
+
+  aFontName = *cachedFontName;
+  aFontStyle = *cachedFontStyle;
+  return true;
+}
+
+void
+nsLookAndFeel::RefreshImpl()
+{
+  nsXPLookAndFeel::RefreshImpl();
+  mDefaultFontCached = false;
+  mButtonFontCached = false;
+  mFieldFontCached = false;
+  mMenuFontCached = false;
 }

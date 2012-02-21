@@ -120,6 +120,10 @@ ThreadActor.prototype = {
   },
 
   disconnect: function TA_disconnect() {
+    if (this._state == "paused") {
+      this.onResume();
+    }
+
     this._state = "exited";
     if (this.dbg) {
       this.dbg.enabled = false;

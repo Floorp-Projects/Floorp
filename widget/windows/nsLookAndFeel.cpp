@@ -46,9 +46,11 @@
 #include "nsStyleConsts.h"
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
+#include "gfxFont.h"
 #include "WinUtils.h"
 
 using namespace mozilla::widget;
+using mozilla::LookAndFeel;
 
 typedef UINT (CALLBACK *SHAppBarMessagePtr)(DWORD, PAPPBARDATA);
 SHAppBarMessagePtr gSHAppBarMessage = NULL;
@@ -519,6 +521,143 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
         res = NS_ERROR_FAILURE;
     }
   return res;
+}
+
+static bool
+GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
+               nsString &aFontName,
+               gfxFontStyle &aFontStyle)
+{
+  LOGFONTW* ptrLogFont = NULL;
+  LOGFONTW logFont;
+  NONCLIENTMETRICSW ncm;
+  HGDIOBJ hGDI;
+  PRUnichar name[LF_FACESIZE];
+
+  // Depending on which stock font we want, there are three different
+  // places we might have to look it up.
+  switch (anID) {
+  case LookAndFeel::eFont_Icon:
+    if (!::SystemParametersInfoW(SPI_GETICONTITLELOGFONT,
+                                 sizeof(logFont), (PVOID)&logFont, 0))
+      return false;
+
+    ptrLogFont = &logFont;
+    break;
+
+  case LookAndFeel::eFont_Menu:
+  case LookAndFeel::eFont_MessageBox:
+  case LookAndFeel::eFont_SmallCaption:
+  case LookAndFeel::eFont_StatusBar:
+  case LookAndFeel::eFont_Tooltips:
+    ncm.cbSize = sizeof(NONCLIENTMETRICSW);
+    if (!::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
+                                 sizeof(ncm), (PVOID)&ncm, 0))
+      return false;
+
+    switch (anID) {
+    case LookAndFeel::eFont_Menu:
+      ptrLogFont = &ncm.lfMenuFont;
+      break;
+    case LookAndFeel::eFont_MessageBox:
+      ptrLogFont = &ncm.lfMessageFont;
+      break;
+    case LookAndFeel::eFont_SmallCaption:
+      ptrLogFont = &ncm.lfSmCaptionFont;
+      break;
+    case LookAndFeel::eFont_StatusBar:
+    case LookAndFeel::eFont_Tooltips:
+      ptrLogFont = &ncm.lfStatusFont;
+      break;
+    }
+    break;
+
+  case LookAndFeel::eFont_Widget:
+  case LookAndFeel::eFont_Window:      // css3
+  case LookAndFeel::eFont_Document:
+  case LookAndFeel::eFont_Workspace:
+  case LookAndFeel::eFont_Desktop:
+  case LookAndFeel::eFont_Info:
+  case LookAndFeel::eFont_Dialog:
+  case LookAndFeel::eFont_Button:
+  case LookAndFeel::eFont_PullDownMenu:
+  case LookAndFeel::eFont_List:
+  case LookAndFeel::eFont_Field:
+  case LookAndFeel::eFont_Caption:
+    hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
+    if (!hGDI)
+      return false;
+
+    if (::GetObjectW(hGDI, sizeof(logFont), &logFont) <= 0)
+      return false;
+
+    ptrLogFont = &logFont;
+    break;
+  }
+
+  // FIXME?: mPixelScale is currently hardcoded to 1.
+  float mPixelScale = 1.0f;
+
+  // The lfHeight is in pixels, and it needs to be adjusted for the
+  // device it will be displayed on.
+  // Screens and Printers will differ in DPI
+  //
+  // So this accounts for the difference in the DeviceContexts
+  // The mPixelScale will be a "1" for the screen and could be
+  // any value when going to a printer, for example mPixleScale is
+  // 6.25 when going to a 600dpi printer.
+  // round, but take into account whether it is negative
+  float pixelHeight = -ptrLogFont->lfHeight;
+  if (pixelHeight < 0) {
+    HFONT hFont = ::CreateFontIndirectW(ptrLogFont);
+    if (!hFont)
+      return false;
+    HGDIOBJ hObject = ::SelectObject(aHDC, hFont);
+    TEXTMETRIC tm;
+    ::GetTextMetrics(aHDC, &tm);
+    ::SelectObject(aHDC, hObject);
+    ::DeleteObject(hFont);
+    pixelHeight = tm.tmAscent;
+  }
+  pixelHeight *= mPixelScale;
+
+  // we have problem on Simplified Chinese system because the system
+  // report the default font size is 8 points. but if we use 8, the text
+  // display very ugly. force it to be at 9 points (12 pixels) on that
+  // system (cp936), but leave other sizes alone.
+  if (pixelHeight < 12 && ::GetACP() == 936)
+    pixelHeight = 12;
+
+  aFontStyle.size = pixelHeight;
+
+  // FIXME: What about oblique?
+  aFontStyle.style =
+    (ptrLogFont->lfItalic) ? FONT_STYLE_ITALIC : FONT_STYLE_NORMAL;
+
+  // FIXME: Other weights?
+  aFontStyle.weight =
+    (ptrLogFont->lfWeight == FW_BOLD ? FONT_WEIGHT_BOLD : FONT_WEIGHT_NORMAL);
+
+  // FIXME: Set aFontStyle->stretch correctly!
+  aFontStyle.stretch = NS_FONT_STRETCH_NORMAL;
+
+  aFontStyle.systemFont = true;
+
+  name[0] = 0;
+  memcpy(name, ptrLogFont->lfFaceName, LF_FACESIZE*sizeof(PRUnichar));
+  aFontName = name;
+
+  return true;
+}
+
+bool
+nsLookAndFeel::GetFontImpl(FontID anID, nsString &aFontName,
+                           gfxFontStyle &aFontStyle)
+{
+  HDC tdc = GetDC(NULL);
+  bool status = GetSysFontInfo(tdc, anID, aFontName, aFontStyle);
+  ReleaseDC(NULL, tdc);
+  return status;
 }
 
 /* virtual */

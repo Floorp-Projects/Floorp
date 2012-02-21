@@ -156,6 +156,9 @@ function doApply(fun, invocant, args) {
   return Function.prototype.apply.call(fun, invocant, args);
 }
 
+// Use a weak map to cache wrappers. This allows the wrappers to preserve identity.
+var wrapperCache = WeakMap();
+
 function wrapPrivileged(obj) {
 
   // Primitives pass straight through.
@@ -166,10 +169,15 @@ function wrapPrivileged(obj) {
   if (isWrapper(obj))
     throw "Trying to double-wrap object!";
 
+  // Try the cache.
+  if (wrapperCache.has(obj))
+    return wrapperCache.get(obj);
+
   // Make our core wrapper object.
   var handler = new SpecialPowersHandler(obj);
 
   // If the object is callable, make a function proxy.
+  var wrapper;
   if (typeof obj === "function") {
     var callTrap = function() {
       // The invocant and arguments may or may not be wrappers. Unwrap them if necessary.
@@ -193,11 +201,16 @@ function wrapPrivileged(obj) {
       return wrapPrivileged(new FakeConstructor());
     };
 
-    return Proxy.createFunction(handler, callTrap, constructTrap);
+    wrapper = Proxy.createFunction(handler, callTrap, constructTrap);
+  }
+  // Otherwise, just make a regular object proxy.
+  else {
+    wrapper = Proxy.create(handler);
   }
 
-  // Otherwise, just make a regular object proxy.
-  return Proxy.create(handler);
+  // Cache the wrapper and return it.
+  wrapperCache.set(obj, wrapper);
+  return wrapper;
 };
 
 function unwrapPrivileged(x) {
@@ -407,9 +420,6 @@ SpecialPowersAPI.prototype = {
    * call to SpecialPowers.wrap(), the wrapper layer is transitively maintained.
    *
    * Known Issues:
-   *
-   *  - The wrapping function does not preserve identity, so
-   *    SpecialPowers.wrap(foo) !== SpecialPowers.wrap(foo). See bug 718543.
    *
    *  - The wrapper cannot see expando properties on unprivileged DOM objects.
    *    That is to say, the wrapper uses Xray delegation.

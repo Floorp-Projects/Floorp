@@ -5,6 +5,10 @@
  * This file tests the validity of various triggers that add remove hosts from moz_hosts
  */
 
+XPCOMUtils.defineLazyServiceGetter(this, "gHistory",
+                                   "@mozilla.org/browser/history;1",
+                                   "mozIAsyncHistory");
+
 // add some visits and remove them, add a bookmark,
 // change its uri, then remove it, and
 // for each change check that moz_hosts has correctly been updated.
@@ -28,10 +32,10 @@ function isHostInMozPlaces(aURI)
   return result;
 }
 
-function isHostInMozHosts(aURI)
+function isHostInMozHosts(aURI, aTyped)
 {
   let stmt = DBConn().createStatement(
-    "SELECT host "
+    "SELECT host, typed "
     + "FROM moz_hosts "
     + "WHERE host = :host"
   );
@@ -39,7 +43,10 @@ function isHostInMozHosts(aURI)
   stmt.params.host = aURI.host;
   while(stmt.executeStep()) {
     if (stmt.row.host == aURI.host) {
-      result = true;
+      if (aTyped != null)
+        result = aTyped == stmt.row.typed;
+      else
+        result = true;
       break;
     }
   }
@@ -49,12 +56,15 @@ function isHostInMozHosts(aURI)
 
 let urls = [{uri: NetUtil.newURI("http://visit1.mozilla.org"),
              expected: "visit1.mozilla.org",
+             typed: 0
             },
             {uri: NetUtil.newURI("http://visit2.mozilla.org"),
              expected: "visit2.mozilla.org",
+             typed: 0
             },
             {uri: NetUtil.newURI("http://www.foo.mozilla.org"),
              expected: "foo.mozilla.org",
+             typed: 1
             },
            ];
 
@@ -75,15 +85,11 @@ function test_moz_hosts_update()
                   uri: url.uri,
                   title: "test for " + url.url,
                   visits: [
-                    new VisitInfo(),
+                    new VisitInfo(url.typed ? TRANSITION_TYPED : undefined),
                   ],
     };
     places.push(place);
   });
-
-  XPCOMUtils.defineLazyServiceGetter(this, "gHistory",
-                                     "@mozilla.org/browser/history;1",
-                                     "mozIAsyncHistory");
 
   gHistory.updatePlaces(places, {
     handleResult: function () {
@@ -92,10 +98,11 @@ function test_moz_hosts_update()
       do_throw("gHistory.updatePlaces() failed");
     },
     handleCompletion: function () {
-      do_check_true(isHostInMozHosts(urls[0].uri));
-      do_check_true(isHostInMozHosts(urls[1].uri));
+      do_check_true(isHostInMozHosts(urls[0].uri, urls[0].typed));
+      do_check_true(isHostInMozHosts(urls[1].uri, urls[1].typed));
       // strip the WWW from the url before testing...
-      do_check_true(isHostInMozHosts(NetUtil.newURI("http://foo.mozilla.org")));
+      do_check_true(isHostInMozHosts(NetUtil.newURI("http://foo.mozilla.org"),
+                                     urls[2].typed));
       run_next_test();
     }
   });
@@ -148,7 +155,29 @@ function test_bookmark_removal()
     do_check_false(isHostInMozHosts(newUri));
     run_next_test();
   });
+}
 
+function test_moz_hosts_typed_update()
+{
+  const TEST_URI = NetUtil.newURI("http://typed.mozilla.com");
+  let places = [{ uri: TEST_URI
+                , title: "test for " + TEST_URI.spec
+                , visits: [ new VisitInfo(TRANSITION_LINK)
+                          , new VisitInfo(TRANSITION_TYPED)
+                          ]
+                }];
+
+  gHistory.updatePlaces(places, {
+    handleResult: function () {
+    },
+    handleError: function () {
+      do_throw("gHistory.updatePlaces() failed");
+    },
+    handleCompletion: function () {
+      do_check_true(isHostInMozHosts(TEST_URI, true));
+      run_next_test();
+    }
+  });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +188,7 @@ function test_bookmark_removal()
   test_remove_places,
   test_bookmark_changes,
   test_bookmark_removal,
+  test_moz_hosts_typed_update,
 ].forEach(add_test);
 
 function run_test()

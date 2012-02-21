@@ -62,7 +62,8 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
-  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
+  virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
+                      TransformTypes aWhich = eAllTransforms) const;
   virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix);
 
   virtual mozilla::SVGAnimatedTransformList* GetAnimatedTransformList();

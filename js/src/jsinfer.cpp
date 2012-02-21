@@ -1450,7 +1450,8 @@ public:
         : TypeConstraint("freezeTypeTag"), info(info), typeUnknown(false)
     {}
 
-    void newType(JSContext *cx, TypeSet *source, Type type) {
+    void newType(JSContext *cx, TypeSet *source, Type type)
+    {
         if (typeUnknown)
             return;
 
@@ -2199,7 +2200,7 @@ TypeCompartment::nukeTypes(JSContext *cx)
 
 #ifdef JS_THREADSAFE
     AutoLockGC maybeLock;
-    if (!cx->runtime->gcMarkAndSweep)
+    if (!cx->runtime->gcRunning)
         maybeLock.lock(cx->runtime);
 #endif
 
@@ -2220,7 +2221,6 @@ TypeCompartment::nukeTypes(JSContext *cx)
 
     ReleaseAllJITCode(cx, cx->compartment, false);
 #endif /* JS_METHODJIT */
-
 }
 
 void
@@ -2627,7 +2627,7 @@ struct types::ObjectTableKey
     typedef JSObject * Lookup;
 
     static inline uint32_t hash(JSObject *obj) {
-        return (uint32_t) (JSID_BITS(obj->lastProperty()->propid()) ^
+        return (uint32_t) (JSID_BITS(obj->lastProperty()->propid().get()) ^
                          obj->slotSpan() ^ obj->numFixedSlots() ^
                          ((uint32_t)(size_t)obj->getProto() >> 2));
     }

@@ -124,6 +124,8 @@ public:
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
 
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
   static const MappedAttributeEntry sFillStrokeMap[];
   static const MappedAttributeEntry sGraphicsMap[];
   static const MappedAttributeEntry sTextContentElementsMap[];
@@ -151,11 +153,36 @@ public:
   // nsnull for outer <svg> or SVG without an <svg> parent (invalid SVG).
   nsSVGSVGElement* GetCtx() const;
 
+  enum TransformTypes {
+     eAllTransforms
+    ,eUserSpaceToParent
+    ,eChildToUserSpace
+  };
   /**
-   * Returns aMatrix post-multiplied by the transform from the userspace
-   * established by this element to the userspace established by its parent.
+   * Returns aMatrix pre-multiplied by (explicit or implicit) transforms that
+   * are introduced by attributes on this element.
+   *
+   * If aWhich is eAllTransforms, then all the transforms from the coordinate
+   * space established by this element for its children to the coordinate
+   * space established by this element's parent element for this element, are
+   * included.
+   *
+   * If aWhich is eUserSpaceToParent, then only the transforms from this
+   * element's userspace to the coordinate space established by its parent is
+   * included. This includes any transforms introduced by the 'transform'
+   * attribute, transform animations and animateMotion, but not any offsets
+   * due to e.g. 'x'/'y' attributes, or any transform due to a 'viewBox'
+   * attribute. (SVG userspace is defined to be the coordinate space in which
+   * coordinates on an element apply.)
+   *
+   * If aWhich is eChildToUserSpace, then only the transforms from the
+   * coordinate space established by this element for its childre to this
+   * elements userspace are included. This includes any offsets due to e.g.
+   * 'x'/'y' attributes, and any transform due to a 'viewBox' attribute, but
+   * does not include any transforms due to the 'transform' attribute.
    */
-  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix) const;
+  virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
+                      TransformTypes aWhich = eAllTransforms) const;
 
   // Setter for to set the current <animateMotion> transformation
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that
@@ -208,22 +235,22 @@ public:
                            PRUint8 aAttrEnum,
                            const nsAttrValue& aEmptyOrOldValue);
 
-  virtual void DidAnimateLength(PRUint8 aAttrEnum);
-  virtual void DidAnimateNumber(PRUint8 aAttrEnum);
-  virtual void DidAnimateNumberPair(PRUint8 aAttrEnum);
-  virtual void DidAnimateInteger(PRUint8 aAttrEnum);
-  virtual void DidAnimateIntegerPair(PRUint8 aAttrEnum);
-  virtual void DidAnimateAngle(PRUint8 aAttrEnum);
-  virtual void DidAnimateBoolean(PRUint8 aAttrEnum);
-  virtual void DidAnimateEnum(PRUint8 aAttrEnum);
-  virtual void DidAnimateViewBox();
-  virtual void DidAnimatePreserveAspectRatio();
-  virtual void DidAnimateNumberList(PRUint8 aAttrEnum);
-  virtual void DidAnimateLengthList(PRUint8 aAttrEnum);
-  virtual void DidAnimatePointList();
-  virtual void DidAnimatePathSegList();
-  virtual void DidAnimateTransformList();
-  virtual void DidAnimateString(PRUint8 aAttrEnum);
+  void DidAnimateLength(PRUint8 aAttrEnum);
+  void DidAnimateNumber(PRUint8 aAttrEnum);
+  void DidAnimateNumberPair(PRUint8 aAttrEnum);
+  void DidAnimateInteger(PRUint8 aAttrEnum);
+  void DidAnimateIntegerPair(PRUint8 aAttrEnum);
+  void DidAnimateAngle(PRUint8 aAttrEnum);
+  void DidAnimateBoolean(PRUint8 aAttrEnum);
+  void DidAnimateEnum(PRUint8 aAttrEnum);
+  void DidAnimateViewBox();
+  void DidAnimatePreserveAspectRatio();
+  void DidAnimateNumberList(PRUint8 aAttrEnum);
+  void DidAnimateLengthList(PRUint8 aAttrEnum);
+  void DidAnimatePointList();
+  void DidAnimatePathSegList();
+  void DidAnimateTransformList();
+  void DidAnimateString(PRUint8 aAttrEnum);
 
   nsSVGLength2* GetAnimatedLength(const nsIAtom *aAttrName);
   void GetAnimatedLengthValues(float *aFirst, ...);

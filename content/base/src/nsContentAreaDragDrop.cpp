@@ -48,6 +48,7 @@
 #include "nsCopySupport.h"
 #include "nsIDOMUIEvent.h"
 #include "nsISelection.h"
+#include "nsISelectionController.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMEvent.h"
@@ -70,6 +71,7 @@
 #include "nsIDocShell.h"
 #include "nsIContent.h"
 #include "nsIImageLoadingContent.h"
+#include "nsITextControlElement.h"
 #include "nsUnicharUtils.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
@@ -84,37 +86,6 @@
 #include "imgIRequest.h"
 #include "nsDOMDataTransfer.h"
 
-// private clipboard data flavors for html copy, used by editor when pasting
-#define kHTMLContext   "text/_moz_htmlcontext"
-#define kHTMLInfo      "text/_moz_htmlinfo"
-
-// if aNode is null, use the selection from the window
-static nsresult
-GetTransferableForNodeOrSelection(nsIDOMWindow*     aWindow,
-                                  nsIContent*       aNode,
-                                  nsITransferable** aTransferable)
-{
-  NS_ENSURE_ARG_POINTER(aWindow);
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aWindow->GetDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-
-  nsresult rv;
-  if (aNode) {
-    rv = nsCopySupport::GetTransferableForNode(aNode, doc, aTransferable);
-  } else {
-    nsCOMPtr<nsISelection> selection;
-    aWindow->GetSelection(getter_AddRefs(selection));
-    rv = nsCopySupport::GetTransferableForSelection(selection, doc,
-                                                    aTransferable);
-  }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-  return rv;
-}
-
 class NS_STACK_CLASS DragDataProducer
 {
 public:
@@ -124,7 +95,7 @@ public:
                    bool aIsAltKeyPressed);
   nsresult Produce(nsDOMDataTransfer* aDataTransfer,
                    bool* aCanDrag,
-                   bool* aDragSelection,
+                   nsISelection** aSelection,
                    nsIContent** aDragNode);
 
 private:
@@ -172,7 +143,7 @@ nsContentAreaDragDrop::GetDragData(nsIDOMWindow* aWindow,
                                    bool aIsAltKeyPressed,
                                    nsDOMDataTransfer* aDataTransfer,
                                    bool* aCanDrag,
-                                   bool* aDragSelection,
+                                   nsISelection** aSelection,
                                    nsIContent** aDragNode)
 {
   NS_ENSURE_TRUE(aSelectionTargetNode, NS_ERROR_INVALID_ARG);
@@ -181,7 +152,7 @@ nsContentAreaDragDrop::GetDragData(nsIDOMWindow* aWindow,
 
   DragDataProducer
     provider(aWindow, aTarget, aSelectionTargetNode, aIsAltKeyPressed);
-  return provider.Produce(aDataTransfer, aCanDrag, aDragSelection, aDragNode);
+  return provider.Produce(aDataTransfer, aCanDrag, aSelection, aDragNode);
 }
 
 
@@ -412,10 +383,10 @@ DragDataProducer::GetNodeString(nsIContent* inNode,
 nsresult
 DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
                           bool* aCanDrag,
-                          bool* aDragSelection,
+                          nsISelection** aSelection,
                           nsIContent** aDragNode)
 {
-  NS_PRECONDITION(aCanDrag && aDragSelection && aDataTransfer && aDragNode,
+  NS_PRECONDITION(aCanDrag && aSelection && aDataTransfer && aDragNode,
                   "null pointer passed to Produce");
   NS_ASSERTION(mWindow, "window not set");
   NS_ASSERTION(mSelectionTargetNode, "selection target node should have been set");
@@ -424,33 +395,72 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
 
   nsresult rv;
   nsIContent* dragNode = nsnull;
+  *aSelection = nsnull;
 
-  // find the selection to see what we could be dragging and if
-  // what we're dragging is in what is selected.
+  // Find the selection to see what we could be dragging and if what we're
+  // dragging is in what is selected. If this is an editable textbox, use
+  // the textbox's selection, otherwise use the window's selection.
   nsCOMPtr<nsISelection> selection;
-  mWindow->GetSelection(getter_AddRefs(selection));
-  if (!selection) {
-    return NS_OK;
-  }
-
-  // check if the node is inside a form control. If so, dragging will be
-  // handled in editor code (nsPlaintextDataTransfer::DoDrag). Don't set
-  // aCanDrag to false however, as we still want to allow the drag.
-  nsCOMPtr<nsIContent> findFormNode = mSelectionTargetNode;
-  nsIContent* findFormParent = findFormNode->GetParent();
-  while (findFormParent) {
-    nsCOMPtr<nsIFormControl> form(do_QueryInterface(findFormParent));
-    if (form && !form->AllowDraggableChildren()) {
-      return NS_OK;
+  nsIContent* editingElement = mSelectionTargetNode->IsEditable() ?
+                               mSelectionTargetNode->GetEditingHost() : nsnull;
+  nsCOMPtr<nsITextControlElement> textControl(do_QueryInterface(editingElement));
+  if (textControl) {
+    nsISelectionController* selcon = textControl->GetSelectionController();
+    if (selcon) {
+      selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+      if (!selection)
+        return NS_OK;
     }
-    findFormParent = findFormParent->GetParent();
+  }
+  else {
+    mWindow->GetSelection(getter_AddRefs(selection));
+    if (!selection)
+      return NS_OK;
+
+    // Check if the node is inside a form control. Don't set aCanDrag to false
+    //however, as we still want to allow the drag.
+    nsCOMPtr<nsIContent> findFormNode = mSelectionTargetNode;
+    nsIContent* findFormParent = findFormNode->GetParent();
+    while (findFormParent) {
+      nsCOMPtr<nsIFormControl> form(do_QueryInterface(findFormParent));
+      if (form && !form->AllowDraggableChildren()) {
+        return NS_OK;
+      }
+      findFormParent = findFormParent->GetParent();
+    }
   }
     
   // if set, serialize the content under this node
   nsCOMPtr<nsIContent> nodeToSerialize;
-  *aDragSelection = false;
 
-  {
+  bool isChromeShell = false;
+  nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(mWindow);
+  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
+  if (dsti) {
+    PRInt32 type = -1;
+    if (NS_SUCCEEDED(dsti->GetItemType(&type)) &&
+        type == nsIDocShellTreeItem::typeChrome) {
+      isChromeShell = true;
+    }
+  }
+
+  // In chrome shells, only allow dragging inside editable areas.
+  if (isChromeShell && !editingElement)
+    return NS_OK;
+
+  if (isChromeShell && textControl) {
+    // Only use the selection if it isn't collapsed.
+    bool isCollapsed = false;
+    selection->GetIsCollapsed(&isCollapsed);
+    if (!isCollapsed)
+      selection.swap(*aSelection);
+  }
+  else {
+    // In content shells, a number of checks are made below to determine
+    // whether an image or a link is being dragged. If so, add additional
+    // data to the data transfer. This is also done for chrome shells, but
+    // only when in a non-textbox editor.
+
     bool haveSelectedContent = false;
 
     // possible parent link node
@@ -490,7 +500,7 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
         return NS_OK;
       }
 
-      *aDragSelection = true;
+      selection.swap(*aSelection);
     } else if (selectedImageOrLinkNode) {
       // an image is selected
       image = do_QueryInterface(selectedImageOrLinkNode);
@@ -660,20 +670,28 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
     }
   }
 
-  if (nodeToSerialize || *aDragSelection) {
-    // if we have selected text, use it in preference to the node
-    if (*aDragSelection) {
-      nodeToSerialize = nsnull;
-    }
-
+  if (nodeToSerialize || *aSelection) {
     mHtmlString.Truncate();
     mContextString.Truncate();
     mInfoString.Truncate();
     mTitleString.Truncate();
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mWindow->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+    // if we have selected text, use it in preference to the node
     nsCOMPtr<nsITransferable> transferable;
-    rv = ::GetTransferableForNodeOrSelection(mWindow, nodeToSerialize,
-                                             getter_AddRefs(transferable));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (*aSelection) {
+      rv = nsCopySupport::GetTransferableForSelection(*aSelection, doc,
+                                                      getter_AddRefs(transferable));
+    }
+    else {
+      rv = nsCopySupport::GetTransferableForNode(nodeToSerialize, doc,
+                                                 getter_AddRefs(transferable));
+    }
+
     nsCOMPtr<nsISupportsString> data;
     PRUint32 dataSize;
     rv = transferable->GetTransferData(kHTMLMime, getter_AddRefs(data), &dataSize);
@@ -747,15 +765,17 @@ DragDataProducer::AddStringsToDataTransfer(nsIContent* aDragNode,
     AddString(aDataTransfer, NS_LITERAL_STRING("text/uri-list"), mUrlString, principal);
   }
 
-  // add a special flavor, even if we don't have html context data
-  AddString(aDataTransfer, NS_LITERAL_STRING(kHTMLContext), mContextString, principal);
+  // add a special flavor for the html context data
+  if (!mContextString.IsEmpty())
+    AddString(aDataTransfer, NS_LITERAL_STRING(kHTMLContext), mContextString, principal);
 
   // add a special flavor if we have html info data
   if (!mInfoString.IsEmpty())
     AddString(aDataTransfer, NS_LITERAL_STRING(kHTMLInfo), mInfoString, principal);
 
   // add the full html
-  AddString(aDataTransfer, NS_LITERAL_STRING(kHTMLMime), mHtmlString, principal);
+  if (!mHtmlString.IsEmpty())
+    AddString(aDataTransfer, NS_LITERAL_STRING(kHTMLMime), mHtmlString, principal);
 
   // add the plain text. we use the url for text/plain data if an anchor is
   // being dragged, rather than the title text of the link or the alt text for

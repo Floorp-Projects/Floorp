@@ -385,17 +385,16 @@ var tests = [
       v.preload = "metadata";
     },
   },
-  
   {
-    // 13. Change preload value from metadata to none after load started,
-    // should still load up to metadata, should not halt immediately.
-    loadeddata:
+    // 13. Change preload value from auto to none after specifying a src
+    // should load according to preload none, no buffering should have taken place
+    suspend:
     function(e) {
       var v = e.target;
       is(v._gotLoadStart, true, "(13) Must get loadstart.");
-      is(v._gotLoadedMetaData, true, "(13) Must get loadedmetadata.");
-      ok(v.readyState >= v.HAVE_CURRENT_DATA, "(13) ReadyState must be >= HAVE_CURRENT_DATA.");
-      is(v.networkState, v.NETWORK_IDLE, "(13) NetworkState must be NETWORK_IDLE.");
+      is(v._gotLoadedMetaData, false, "(13) Must not get loadedmetadata.");
+      is(v.readyState, v.HAVE_NOTHING, "(13) ReadyState must be HAVE_NOTHING");
+      is(v.networkState, v.NETWORK_IDLE, "(13) NetworkState must be NETWORK_IDLE");
       maybeFinish(v, 13);
     },
 
@@ -403,14 +402,15 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v.preload = "metadata";
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
-      v.addEventListener("loadeddata", this.loadeddata, false);
-      v.src = test.name; // Causes implicit load.
-      document.body.appendChild(v);
+      v.preload = "auto";
+      v.src = test.name;
       v.preload = "none";
-    },
+      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
+      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
+      v.addEventListener("suspend", this.suspend, false);
+      document.body.appendChild(v); // Causes implicit load, should load according to preload none
+      var s = document.createElement("source");
+    }
   },
   {
     // 14. Add preload:metadata video with src to document. Play(), should play through.
@@ -521,7 +521,35 @@ var tests = [
       document.body.appendChild(v);
       v.play(); // Should cause preload:none to be overridden.
     },  
+  },
+  {
+    // 19. Set preload='auto' on first video source then switching preload='none' and swapping the video source to another.
+    // The second video should not start playing as it's preload state has been changed to 'none' from 'auto'
+    loadedmetadata: function(e) {
+      var v = e.target;
+      is(v.preload === "auto", true, "(19) preload is initially auto");
+      setTimeout(function() {
+        // set preload state to none and switch video sources
+        v.preload="none";
+        v.src = test.name + "?asdf";
+        setTimeout(function() {
+          is(v.readyState === 0, true, "(19) no buffering has taken place");
+          maybeFinish(v, 19);
+        }, 2000);
+      }, 2000);
+
+    },
+
+    setup:
+    function(v) {
+      var that = this;
+      v.preload = "auto";
+      v.src = test.name;
+      // add a listener for when the video has loaded, so we know preload auto has worked
+      v.addEventListener( "loadedmetadata", this.loadedmetadata, false);
+      document.body.appendChild(v);
     }
+  }
 ];
 
 var iterationCount = 0;

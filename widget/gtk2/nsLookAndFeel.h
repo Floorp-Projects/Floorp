@@ -39,9 +39,12 @@
 
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
+
 #include "nsXPLookAndFeel.h"
 #include "nsCOMPtr.h"
-#include <gtk/gtk.h>
+#include "gfxFont.h"
+
+struct _GtkStyle;
 
 class nsLookAndFeel: public nsXPLookAndFeel {
 public:
@@ -51,12 +54,29 @@ public:
     virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
     virtual nsresult GetIntImpl(IntID aID, PRInt32 &aResult);
     virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
+    virtual bool GetFontImpl(FontID aID, nsString& aFontName,
+                             gfxFontStyle& aFontStyle);
+
     virtual void RefreshImpl();
     virtual PRUnichar GetPasswordCharacterImpl();
     virtual bool GetEchoPasswordImpl();
 
 protected:
-    GtkStyle *mStyle;
+    struct _GtkStyle *mStyle;
+
+    // Cached fonts
+    bool mDefaultFontCached;
+    bool mButtonFontCached;
+    bool mFieldFontCached;
+    bool mMenuFontCached;
+    nsString mDefaultFontName;
+    nsString mButtonFontName;
+    nsString mFieldFontName;
+    nsString mMenuFontName;
+    gfxFontStyle mDefaultFontStyle;
+    gfxFontStyle mButtonFontStyle;
+    gfxFontStyle mFieldFontStyle;
+    gfxFontStyle mMenuFontStyle;
 
     // Cached colors, we have to create a dummy widget to actually
     // get the style
@@ -82,28 +102,7 @@ protected:
     static bool    sMenuSupportsDrag;
 
     static void InitLookAndFeel();
-    void InitWidget() {
-        NS_ASSERTION(!mStyle, "already initialized");
-        // GtkInvisibles come with a refcount that is not floating
-        // (since their initialization code calls g_object_ref_sink) and
-        // their destroy code releases that reference (which means they
-        // have to be explicitly destroyed, since calling unref enough
-        // to cause destruction would lead to *another* unref).
-        // However, this combination means that it's actually still ok
-        // to use the normal pattern, which is to g_object_ref_sink
-        // after construction, and then destroy *and* unref when we're
-        // done.  (Though we could skip the g_object_ref_sink and the
-        // corresponding g_object_unref, but that's particular to
-        // GtkInvisibles and GtkWindows.)
-        GtkWidget *widget = gtk_invisible_new();
-        g_object_ref_sink(widget); // effectively g_object_ref (see above)
-
-        gtk_widget_ensure_style(widget);
-        mStyle = gtk_style_copy(gtk_widget_get_style(widget));
-
-        gtk_widget_destroy(widget);
-        g_object_unref(widget);
-    }
+    void InitWidget();
 };
 
 #endif

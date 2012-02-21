@@ -562,6 +562,10 @@ struct Shape : public js::gc::Cell
         return parent;
     }
 
+    HeapPtrShape &previousRef() {
+        return parent;
+    }
+
     class Range {
       protected:
         friend struct Shape;
@@ -770,8 +774,12 @@ struct Shape : public js::gc::Cell
         slotInfo = slotInfo | ((count + 1) << LINEAR_SEARCHES_SHIFT);
     }
 
-    jsid propid() const { JS_ASSERT(!isEmptyShape()); return maybePropid(); }
-    const HeapId &maybePropid() const { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
+    const HeapId &propid() const {
+        JS_ASSERT(!isEmptyShape());
+        JS_ASSERT(!JSID_IS_VOID(propid_));
+        return propid_;
+    }
+    HeapId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
 
     int16_t shortid() const { JS_ASSERT(hasShortID()); return maybeShortid(); }
     int16_t maybeShortid() const { return shortid_; }
@@ -995,7 +1003,7 @@ struct StackShape
 
     StackShape(const Shape *shape)
       : base(shape->base()->unowned()),
-        propid(shape->maybePropid()),
+        propid(const_cast<Shape *>(shape)->propidRef()),
         slot_(shape->slotInfo & Shape::SLOT_MASK),
         attrs(shape->attrs),
         flags(shape->flags),
@@ -1081,7 +1089,7 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
                 return SHAPE_FETCH(spp);
             }
         }
-        /* 
+        /*
          * No table built -- there weren't enough entries, or OOM occurred.
          * Don't increment numLinearSearches, to keep hasTable() false.
          */
@@ -1091,7 +1099,7 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
     }
 
     for (Shape *shape = start; shape; shape = shape->parent) {
-        if (shape->maybePropid() == id)
+        if (shape->propidRef() == id)
             return shape;
     }
 
