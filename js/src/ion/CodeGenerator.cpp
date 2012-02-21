@@ -1035,6 +1035,68 @@ CodeGenerator::visitConcat(LConcat *lir)
 }
 
 bool
+CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
+{
+    Register str = ToRegister(lir->str());
+    Register index = ToRegister(lir->index());
+    Register output = ToRegister(lir->output());
+
+    typedef bool (*pf)(JSContext *, JSString *);
+    static const VMFunction ensureLinearInfo = FunctionInfo<pf>(JSString::ensureLinear);
+    OutOfLineCode *ool = oolCallVM(ensureLinearInfo, lir, (ArgList(), str), StoreNothing());
+    if (!ool)
+        return false;
+
+    Address lengthAndFlagsAddr(str, JSString::offsetOfLengthAndFlags());
+    masm.loadPtr(lengthAndFlagsAddr, output);
+
+    JS_ASSERT(JSString::LINEAR_FLAGS == 0);
+    masm.branchTest32(Assembler::NonZero, output, Imm32(JSString::LINEAR_MASK), ool->entry());
+    masm.bind(ool->rejoin());
+
+    // getChars
+    Address charsAddr(str, JSString::offsetOfChars());
+    masm.loadPtr(charsAddr, output);
+    masm.load16(BaseIndex(output, index, TimesTwo, 0), output);
+
+    return true;
+}
+
+bool
+CodeGenerator::visitFromCharCode(LFromCharCode *lir)
+{
+    Register code = ToRegister(lir->code());
+    Register output = ToRegister(lir->output());
+
+    // This static variable would be used by js_NewString as an initial buffer.
+    Label fast;
+    masm.cmpPtr(code, ImmWord(StaticStrings::UNIT_STATIC_LIMIT));
+    masm.j(Assembler::Below, &fast);
+
+    // Store the code in the tmpString. This assume that jitted codes are not
+    // running concurently.
+    static jschar tmpString[2] = {0, 0};
+    Register tmpStringAddr = output;
+    masm.movePtr(ImmWord(tmpString), tmpStringAddr);
+    masm.store16(code, Address(tmpStringAddr, 0));
+
+    // Copy the tmpString to a newly allocated string.
+    typedef JSFixedString *(*pf)(JSContext *, const jschar *, size_t);
+    static const VMFunction newStringCopyNInfo = FunctionInfo<pf>(js_NewStringCopyN);
+    OutOfLineCode *ool = oolCallVM(newStringCopyNInfo, lir, (ArgList(), tmpStringAddr, Imm32(1)),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    masm.jump(ool->entry());
+    masm.bind(&fast);
+    masm.movePtr(ImmWord(&gen->cx->runtime->staticStrings.unitStaticTable), output);
+    masm.loadPtr(BaseIndex(output, code, ScalePointer), output);
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
 CodeGenerator::visitInitializedLength(LInitializedLength *lir)
 {
     Address initLength(ToRegister(lir->elements()), ObjectElements::offsetOfInitializedLength());

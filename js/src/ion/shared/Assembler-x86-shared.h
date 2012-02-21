@@ -265,12 +265,37 @@ class AssemblerX86Shared
           case Operand::REG_DISP:
             masm.movzwl_mr(src.disp(), src.base(), dest.code());
             break;
+          case Operand::SCALE:
+            masm.movzwl_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
     void load16(const Address &src, const Register &dest) {
         load16(Operand(src), dest);
+    }
+    void load16(const BaseIndex &src, const Register &dest) {
+        load16(Operand(src), dest);
+    }
+
+    void store16(const Register &src, const Operand &dest) {
+        switch (dest.kind()) {
+          case Operand::REG_DISP:
+            masm.movw_rm(src.code(), dest.disp(), dest.base());
+            break;
+          case Operand::SCALE:
+            masm.movw_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
+    void store16(const Register &src, const Address &dest) {
+        store16(src, Operand(dest));
+    }
+    void store16(const Register &src, const BaseIndex &dest) {
+        store16(src, Operand(dest));
     }
 
   protected:

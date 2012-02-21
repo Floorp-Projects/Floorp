@@ -266,7 +266,7 @@ SingleObjectPolicy::adjustInputs(MInstruction *def)
 }
 
 bool
-StringPolicy::adjustInputs(MInstruction *def)
+StringPolicy::staticAdjustInputs(MInstruction *def)
 {
     MDefinition *in = def->getOperand(0);
     if (in->type() == MIRType_String)
@@ -275,6 +275,20 @@ StringPolicy::adjustInputs(MInstruction *def)
     MUnbox *replace = MUnbox::New(in, MIRType_String, MUnbox::Fallible);
     def->block()->insertBefore(def, replace);
     def->replaceOperand(0, replace);
+    return true;
+}
+
+template <unsigned Op>
+bool
+IntPolicy<Op>::staticAdjustInputs(MInstruction *def)
+{
+    MDefinition *in = def->getOperand(Op);
+    if (in->type() == MIRType_Int32)
+        return true;
+
+    MUnbox *replace = MUnbox::New(in, MIRType_Int32, MUnbox::Fallible);
+    def->block()->insertBefore(def, replace);
+    def->replaceOperand(Op, replace);
     return true;
 }
 
