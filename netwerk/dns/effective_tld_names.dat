@@ -256,8 +256,30 @@ info.at
 priv.at
 
 // au : http://en.wikipedia.org/wiki/.au
-*.au
-// au geographical names (vic.au etc... are covered above)
+// http://www.auda.org.au/
+// 2LDs
+com.au
+net.au
+org.au
+edu.au
+gov.au
+csiro.au
+asn.au
+id.au
+// Historic 2LDs (closed to new registration, but sites still exist)
+info.au
+conf.au
+oz.au
+// CGDNs - http://www.cgdn.org.au/
+act.au
+nsw.au
+nt.au
+qld.au
+sa.au
+tas.au
+vic.au
+wa.au
+// 3LDs
 act.edu.au
 nsw.edu.au
 nt.edu.au
@@ -275,15 +297,6 @@ sa.gov.au
 tas.gov.au
 vic.gov.au
 wa.gov.au
-// CGDNs - http://www.aucd.org.au/
-act.au
-nsw.au
-nt.au
-qld.au
-sa.au
-tas.au
-vic.au
-wa.au
 
 // aw : http://en.wikipedia.org/wiki/.aw
 aw
