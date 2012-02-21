@@ -61,6 +61,9 @@ fails-if(Android) != textarea-rtl.html textarea-no-resize.html
 == select-boguskids.html select-boguskids-ref.html
 == select-dynamic-boguskids.html select-boguskids-ref.html
 
+asserts(2) == button-first-letter-1.html button-first-letter-1-ref.html
+asserts(1) != button-first-letter-1.html button-first-letter-1-noref.html
+
 # placeholder
 include placeholder/reftest.list
 
