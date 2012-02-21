@@ -401,3 +401,19 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
     //    ... frame ...
     return true;
 }
+
+void
+CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation *index, MIRType type)
+{
+    JSValueType jstype = (type == MIRType_Value)
+                         ? JSVAL_TYPE_UNKNOWN
+                         : ValueTypeFromMIRType(type);
+    if (index->isConstant()) {
+        Address address(base, ToInt32(index) * sizeof(Value));
+        masm.emitPreBarrier(address, jstype);
+    } else {
+        BaseIndex address(base, ToRegister(index), TimesEight);
+        masm.emitPreBarrier(address, jstype);
+    }
+}
+

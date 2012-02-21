@@ -1198,6 +1198,9 @@ CodeGeneratorARM::visitStoreSlotT(LStoreSlotT *store)
     const LAllocation *value = store->value();
     MIRType valueType = store->mir()->value()->type();
 
+    if (store->mir()->needsBarrier())
+        masm.emitPreBarrier(Address(base, offset), ValueTypeFromMIRType(store->mir()->slotType()));
+
     if (valueType == MIRType_Double) {
         masm.ma_vstr(ToFloatRegister(value), Operand(base, offset));
         return true;
@@ -1300,17 +1303,6 @@ CodeGeneratorARM::visitGuardClass(LGuardClass *guard)
     masm.ma_cmp(tmp, Imm32((uint32)guard->mir()->getClass()));
     if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
         return false;
-    return true;
-}
-
-
-bool
-CodeGeneratorARM::visitWriteBarrierT(LWriteBarrierT *barrier)
-{
-    // TODO: Perform C++ call to some WriteBarrier stub.
-    // For now, we just breakpoint.
-    masm.breakpoint();
-    masm.breakpoint();
     return true;
 }
 

@@ -678,3 +678,28 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     return wrapper;
 }
+
+IonCode *
+IonCompartment::generatePreBarrier(JSContext *cx)
+{
+    MacroAssembler masm;
+
+    RegisterSet save(GeneralRegisterSet(Registers::VolatileMask),
+                     FloatRegisterSet(FloatRegisters::VolatileMask));
+    masm.PushRegsInMask(save);
+
+    JS_ASSERT(PreBarrierReg == r1);
+    masm.movePtr(ImmWord(cx->compartment), r0);
+
+    masm.setupUnalignedABICall(2, r2);
+    masm.setABIArg(0, r0);
+    masm.setABIArg(1, r1);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, MarkFromIon));
+
+    masm.PopRegsInMask(save);
+    masm.ret();
+
+    Linker linker(masm);
+    return linker.newCode(cx);
+}
+

@@ -482,6 +482,15 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testNumber(Condition cond, const Register &tag);
     Condition testMagic(Condition cond, const Register &tag);
 
+    Condition testGCThing(Condition cond, const Address &address);
+    Condition testGCThing(Condition cond, const BaseIndex &address);
+
+    template <typename T>
+    void branchTestGCThing(Condition cond, const T &t, Label *label) {
+        Condition c = testGCThing(cond, t);
+        ma_b(label, c);
+    }
+
     // unboxing code
     void unboxInt32(const ValueOperand &operand, const Register &dest);
     void unboxBoolean(const ValueOperand &operand, const Register &dest);
@@ -496,6 +505,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return value.payloadReg();
     }
     Register extractTag(const Address &address, Register scratch);
+    Register extractTag(const BaseIndex &address, Register scratch);
     Register extractTag(const ValueOperand &value, Register scratch) {
         return value.typeReg();
     }
@@ -822,6 +832,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return CodeOffsetLabel(nextOffset().getOffset());
     }
 
+    void computeEffectiveAddress(const Address &address, Register dest) {
+        ma_add(address.base, Imm32(address.offset), dest, NoSetCond);
+    }
+    void computeEffectiveAddress(const BaseIndex &address, Register dest) {
+        ma_alu(address.base, lsl(address.index, address.scale), dest, op_add, NoSetCond);
+        if (address.offset)
+            ma_add(dest, Imm32(address.offset), dest, NoSetCond);
+    }
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;

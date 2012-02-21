@@ -192,6 +192,8 @@ class CodeGeneratorShared : public LInstructionVisitor
     // |returnPointOffset|.
     bool markOsiPoint(LOsiPoint *ins, uint32 *returnPointOffset);
 
+    void emitPreBarrier(Register base, const LAllocation *index, MIRType type);
+
     inline bool isNextBlock(LBlock *block) {
         return (current->mir()->id() + 1 == block->mir()->id());
     }

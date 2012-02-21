@@ -68,6 +68,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Operand tagOf(const Address &address) {
         return Operand(address.base, address.offset + 4);
     }
+    Operand tagOf(const BaseIndex &address) {
+        return Operand(address.base, address.index, address.scale, address.offset + 4);
+    }
 
     // Compute space needed for the function call and set the properties of the
     // callee.  It returns the space which has to be allocated for calling the
@@ -261,6 +264,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Condition testGCThing(Condition cond, const Register &tag) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+        return cond == Equal ? AboveOrEqual : Below;
+    }
+    Condition testGCThing(Condition cond, const Address &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
+        return cond == Equal ? AboveOrEqual : Below;
+    }
+    Condition testGCThing(Condition cond, const BaseIndex &address) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
         return cond == Equal ? AboveOrEqual : Below;
     }
     Condition testMagic(Condition cond, const Register &tag) {
