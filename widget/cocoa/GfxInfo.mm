@@ -450,7 +450,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
     if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
       // Blacklist all ATI cards on OSX, except for
       // 0x6760 and 0x9488
-      if (mAdapterVendorID == GfxDriverInfo::GetDeviceVendor(VendorATI) && 
+      if (mAdapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorATI), nsCaseInsensitiveStringComparator()) && 
           (mAdapterDeviceID.LowerCaseEqualsLiteral("0x6760") ||
            mAdapterDeviceID.LowerCaseEqualsLiteral("0x9488"))) {
         *aStatus = nsIGfxInfo::FEATURE_NO_INFO;

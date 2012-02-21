@@ -963,10 +963,10 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
       return NS_ERROR_FAILURE;
     }
 
-    if (adapterVendorID != GfxDriverInfo::GetDeviceVendor(VendorIntel) &&
-        adapterVendorID != GfxDriverInfo::GetDeviceVendor(VendorNVIDIA) &&
-        adapterVendorID != GfxDriverInfo::GetDeviceVendor(VendorAMD) &&
-        adapterVendorID != GfxDriverInfo::GetDeviceVendor(VendorATI) &&
+    if (!adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorIntel), nsCaseInsensitiveStringComparator()) &&
+        !adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), nsCaseInsensitiveStringComparator()) &&
+        !adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorAMD), nsCaseInsensitiveStringComparator()) &&
+        !adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorATI), nsCaseInsensitiveStringComparator()) &&
         // FIXME - these special hex values are currently used in xpcshell tests introduced by
         // bug 625160 patch 8/8. Maybe these tests need to be adjusted now that we're only whitelisting
         // intel/ati/nvidia.
@@ -988,7 +988,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
     // whitelist them, actually we do know that this combination of device and driver version
     // works well.
     if (mWindowsVersion == gfxWindowsPlatform::kWindowsXP &&
-        adapterVendorID == GfxDriverInfo::GetDeviceVendor(VendorNVIDIA) &&
+        adapterVendorID.Equals(GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), nsCaseInsensitiveStringComparator()) &&
         adapterDeviceID.LowerCaseEqualsLiteral("0x0861") && // GeForce 9400
         driverVersion == V(6,14,11,7756))
     {
