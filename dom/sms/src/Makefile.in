@@ -81,7 +81,6 @@ CPPSRCS = \
   SmsEvent.cpp \
   Constants.cpp \
   SmsChild.cpp \
-  SmsDatabaseService.cpp \
   SmsRequest.cpp \
   SmsRequestManager.cpp \
   SmsFilter.cpp \
@@ -102,6 +101,15 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/telephony \
   -I$(topsrcdir)/dom/system/b2g \
   $(NULL)
+
+EXTRA_COMPONENTS = \
+  ril/SmsDatabaseService.js \
+  ril/SmsDatabaseService.manifest \
+  $(NULL)
+else
+CPPSRCS += \
+  SmsDatabaseService.cpp \
+  $(NULL)  
 endif
 
 include $(topsrcdir)/config/config.mk
