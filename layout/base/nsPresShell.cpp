@@ -688,8 +688,6 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
   return PL_DHASH_NEXT;
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(GfxTextrunWordCacheMallocSizeOf, "gfx/textrun-word-cache")
-
 NS_IMETHODIMP
 PresShell::MemoryReporter::GetName(nsACString &aName)
 {
@@ -977,8 +975,8 @@ PresShell::~PresShell()
                "post-reflow queues not empty.  This means we're leaking");
 
 #ifdef DEBUG
-  NS_ASSERTION(mPresArenaAllocCount == 0,
-               "Some pres arena objects were not freed");
+  MOZ_ASSERT(mPresArenaAllocCount == 0,
+             "Some pres arena objects were not freed");
 #endif
 
   delete mStyleSet;
@@ -5428,6 +5426,24 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
   }
 }
 
+class nsAutoNotifyDidPaint
+{
+public:
+  nsAutoNotifyDidPaint(bool aWillSendDidPaint)
+    : mWillSendDidPaint(aWillSendDidPaint)
+  {
+  }
+  ~nsAutoNotifyDidPaint()
+  {
+    if (!mWillSendDidPaint && nsContentUtils::XPConnect()) {
+      nsContentUtils::XPConnect()->NotifyDidPaint();
+    }
+  }
+
+private:
+  bool mWillSendDidPaint;
+};
+
 void
 PresShell::Paint(nsIView*           aViewToPaint,
                  nsIWidget*         aWidgetToPaint,
@@ -5450,6 +5466,8 @@ PresShell::Paint(nsIView*           aViewToPaint,
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
   NS_ASSERTION(aWidgetToPaint, "Can't paint without a widget");
+
+  nsAutoNotifyDidPaint notifyDidPaint(aWillSendDidPaint);
 
   nsPresContext* presContext = GetPresContext();
   AUTO_LAYOUT_PHASE_ENTRY_POINT(presContext, Paint);
@@ -5744,6 +5762,7 @@ PresShell::RecordMouseLocation(nsGUIEvent* aEvent)
   }
 }
 
+#ifdef MOZ_TOUCH
 static void
 EvictTouchPoint(nsCOMPtr<nsIDOMTouch>& aTouch)
 {
@@ -5791,6 +5810,7 @@ AppendToTouchList(const PRUint32& aKey, nsCOMPtr<nsIDOMTouch>& aData, void *aTou
   touches->AppendElement(aData);
   return PL_DHASH_NEXT;
 }
+#endif // MOZ_TOUCH
 
 nsresult
 PresShell::HandleEvent(nsIFrame        *aFrame,
@@ -7220,6 +7240,10 @@ PresShell::DidPaint()
   // tree is torn down we might not be a root presshell...
   if (rootPresContext == mPresContext) {
     rootPresContext->UpdatePluginGeometry();
+  }
+
+  if (nsContentUtils::XPConnect()) {
+    nsContentUtils::XPConnect()->NotifyDidPaint();
   }
 }
 

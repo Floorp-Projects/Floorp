@@ -100,7 +100,11 @@ enum {
     JS_TELEMETRY_GC_IS_COMPARTMENTAL,
     JS_TELEMETRY_GC_MS,
     JS_TELEMETRY_GC_MARK_MS,
-    JS_TELEMETRY_GC_SWEEP_MS
+    JS_TELEMETRY_GC_SWEEP_MS,
+    JS_TELEMETRY_GC_SLICE_MS,
+    JS_TELEMETRY_GC_MMU_50,
+    JS_TELEMETRY_GC_RESET,
+    JS_TELEMETRY_GC_INCREMENTAL_DISABLED
 };
 
 typedef void
@@ -108,12 +112,6 @@ typedef void
 
 extern JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback);
-
-typedef void
-(* JSGCFinishedCallback)(JSRuntime *rt, JSCompartment *comp, const char *description);
-
-extern JS_FRIEND_API(void)
-JS_SetGCFinishedCallback(JSRuntime *rt, JSGCFinishedCallback callback);
 
 extern JS_FRIEND_API(JSPrincipals *)
 JS_GetCompartmentPrincipals(JSCompartment *compartment);
@@ -703,11 +701,64 @@ CompartmentGCForReason(JSContext *cx, JSCompartment *comp, gcreason::Reason reas
 extern JS_FRIEND_API(void)
 ShrinkingGC(JSContext *cx, gcreason::Reason reason);
 
+extern JS_FRIEND_API(void)
+IncrementalGC(JSContext *cx, gcreason::Reason reason);
+
+extern JS_FRIEND_API(void)
+SetGCSliceTimeBudget(JSContext *cx, int64_t millis);
+
+enum GCProgress {
+    /*
+     * During non-incremental GC, the GC is bracketed by JSGC_CYCLE_BEGIN/END
+     * callbacks. During an incremental GC, the sequence of callbacks is as
+     * follows:
+     *   JSGC_CYCLE_BEGIN, JSGC_SLICE_END  (first slice)
+     *   JSGC_SLICE_BEGIN, JSGC_SLICE_END  (second slice)
+     *   ...
+     *   JSGC_SLICE_BEGIN, JSGC_CYCLE_END  (last slice)
+     */
+
+    GC_CYCLE_BEGIN,
+    GC_SLICE_BEGIN,
+    GC_SLICE_END,
+    GC_CYCLE_END
+};
+
+struct GCDescription {
+    const char *logMessage;
+    bool isCompartment;
+
+    GCDescription(const char *msg, bool isCompartment)
+      : logMessage(msg), isCompartment(isCompartment) {}
+};
+
+typedef void
+(* GCSliceCallback)(JSRuntime *rt, GCProgress progress, const GCDescription &desc);
+
+extern JS_FRIEND_API(GCSliceCallback)
+SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback);
+
+extern JS_FRIEND_API(bool)
+WantGCSlice(JSRuntime *rt);
+
+/*
+ * Signals a good place to do an incremental slice, because the browser is
+ * drawing a frame.
+ */
+extern JS_FRIEND_API(void)
+NotifyDidPaint(JSContext *cx);
+
+extern JS_FRIEND_API(bool)
+IsIncrementalGCEnabled(JSRuntime *rt);
+
 extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime *rt);
 
 extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSContext *cx);
+
+extern JS_FRIEND_API(bool)
+IsIncrementalBarrierNeededOnObject(JSObject *obj);
 
 extern JS_FRIEND_API(void)
 IncrementalReferenceBarrier(void *ptr);

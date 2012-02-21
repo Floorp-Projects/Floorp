@@ -176,23 +176,23 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 
     // These must be available if we could be running JIT code.
     if (enterJIT_)
-        MarkIonCodeRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
+        MarkIonCodeRoot(trc, enterJIT_.unsafeGetAddress(), "enterJIT");
 
     // These need to be here until we can figure out how to make the GC
     // scan these references inside the code generator itself.
     if (osrPrologue_)
-        MarkIonCodeRoot(trc, osrPrologue_.unsafeGet(), "osrPrologue");
+        MarkIonCodeRoot(trc, osrPrologue_.unsafeGetAddress(), "osrPrologue");
     if (bailoutHandler_)
-        MarkIonCodeRoot(trc, bailoutHandler_.unsafeGet(), "bailoutHandler");
+        MarkIonCodeRoot(trc, bailoutHandler_.unsafeGetAddress(), "bailoutHandler");
     if (argumentsRectifier_)
-        MarkIonCodeRoot(trc, argumentsRectifier_.unsafeGet(), "argumentsRectifier");
+        MarkIonCodeRoot(trc, argumentsRectifier_.unsafeGetAddress(), "argumentsRectifier");
     if (invalidator_)
-        MarkIonCodeRoot(trc, invalidator_.unsafeGet(), "invalidator");
+        MarkIonCodeRoot(trc, invalidator_.unsafeGetAddress(), "invalidator");
     if (preBarrier_)
-        MarkIonCodeRoot(trc, preBarrier_.unsafeGet(), "preBarrier");
+        MarkIonCodeRoot(trc, preBarrier_.unsafeGetAddress(), "preBarrier");
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
         if (bailoutTables_[i])
-            MarkIonCodeRoot(trc, bailoutTables_[i].unsafeGet(), "bailoutTable");
+            MarkIonCodeRoot(trc, bailoutTables_[i].unsafeGetAddress(), "bailoutTable");
     }
 
     // functionWrappers_ are not marked because this is a WeakCache of VM
@@ -473,10 +473,10 @@ void
 IonScript::trace(JSTracer *trc)
 {
     if (method_)
-        MarkIonCode(trc, method_, "method");
+        MarkIonCode(trc, &method_, "method");
 
     if (deoptTable_)
-        MarkIonCode(trc, deoptTable_, "deoptimizationTable");
+        MarkIonCode(trc, &deoptTable_, "deoptimizationTable");
 
     for (size_t i = 0; i < numConstants(); i++)
         gc::MarkValue(trc, &getConstant(i), "constant");

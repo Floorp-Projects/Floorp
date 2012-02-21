@@ -327,7 +327,9 @@ nsresult nsBuiltinDecoder::Seek(double aTime)
   PRInt32 range = 0;
   if (!IsInRanges(seekable, aTime, range)) {
     if (range != -1) {
-      if (range + 1 < length) {
+      // |range + 1| can't be negative, because the only possible negative value
+      // for |range| is -1.
+      if (PRUint32(range + 1) < length) {
         double leftBound, rightBound;
         res = seekable.End(range, &leftBound);
         NS_ENSURE_SUCCESS(res, NS_OK);

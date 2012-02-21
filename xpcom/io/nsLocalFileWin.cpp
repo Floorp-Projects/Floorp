@@ -2546,31 +2546,17 @@ nsLocalFile::IsExecutable(bool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsDirectory(bool *_retval)
 {
-  nsresult rv = IsFile(_retval);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  *_retval = !*_retval;
-  return NS_OK;
+    return HasFileAttribute(FILE_ATTRIBUTE_DIRECTORY, _retval);
 }
 
 NS_IMETHODIMP
 nsLocalFile::IsFile(bool *_retval)
 {
-  NS_ENSURE_ARG(_retval);
-  nsresult rv = Resolve();
-  if (NS_FAILED(rv)) {
+    nsresult rv = HasFileAttribute(FILE_ATTRIBUTE_DIRECTORY, _retval);
+    if (NS_SUCCEEDED(rv)) {
+        *_retval = !*_retval;
+    }
     return rv;
-  }
-
-  DWORD attributes = GetFileAttributes(mResolvedPath.get());
-  if (INVALID_FILE_ATTRIBUTES == attributes) {
-    return NS_ERROR_FILE_NOT_FOUND;
-  }
-
-  *_retval = !(attributes & FILE_ATTRIBUTE_DIRECTORY);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2584,16 +2570,17 @@ nsLocalFile::HasFileAttribute(DWORD fileAttrib, bool *_retval)
 {
     NS_ENSURE_ARG(_retval);
 
-    nsresult rv = ResolveAndStat();
-    if (NS_FAILED(rv))
+    nsresult rv = Resolve();
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
-    // get the file attributes for the correct item depending on following symlinks
-    const PRUnichar *filePath = mFollowSymlinks ? 
-                                mResolvedPath.get() : mWorkingPath.get();
-    DWORD word = ::GetFileAttributesW(filePath);
+    DWORD attributes = GetFileAttributesW(mResolvedPath.get());
+    if (INVALID_FILE_ATTRIBUTES == attributes) {
+        return ConvertWinError(GetLastError());
+    }
 
-    *_retval = ((word & fileAttrib) != 0);
+    *_retval = ((attributes & fileAttrib) != 0);
     return NS_OK;
 }
 

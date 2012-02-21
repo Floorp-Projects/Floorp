@@ -8,6 +8,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const CC = Components.Constructor;
+const Cr = Components.results;
 
 const LocalFile = CC('@mozilla.org/file/local;1',
                      'nsILocalFile',
@@ -25,24 +26,16 @@ XPCOMUtils.defineLazyGetter(Services, 'ss', function() {
   return Cc['@mozilla.org/content/style-sheet-service;1']
            .getService(Ci.nsIStyleSheetService);
 });
+
 XPCOMUtils.defineLazyGetter(Services, 'idle', function() {
   return Cc['@mozilla.org/widget/idleservice;1']
            .getService(Ci.nsIIdleService);
 });
 
-// In order to use http:// scheme instead of file:// scheme
-// (that is much more restricted) the following code kick-off
-// a local http server listening on http://127.0.0.1:7777 and
-// http://localhost:7777.
-function startupHttpd(baseDir, port) {
-  const httpdURL = 'chrome://browser/content/httpd.js';
-  let httpd = {};
-  Services.scriptloader.loadSubScript(httpdURL, httpd);
-  let server = new httpd.nsHttpServer();
-  server.registerDirectory('/', new LocalFile(baseDir));
-  server.registerContentType('appcache', 'text/cache-manifest');
-  server.start(port);
-}
+XPCOMUtils.defineLazyServiceGetter(Services, 'fm', function(){
+  return Cc['@mozilla.org/focus-managr;1']
+           .getService(Ci.nsFocusManager);
+});
 
 // FIXME Bug 707625
 // until we have a proper security model, add some rights to
@@ -61,7 +54,6 @@ function addPermissions(urls) {
     });
   });
 }
-
 
 var shell = {
   // FIXME/bug 678695: this should be a system setting
@@ -105,6 +97,7 @@ var shell = {
     window.addEventListener('keypress', this);
     window.addEventListener('MozApplicationManifest', this);
     window.addEventListener("AppCommand", this);
+    window.addEventListener('mozfullscreenchange', this);
     this.contentBrowser.addEventListener('load', this, true);
 
     try {
@@ -112,17 +105,7 @@ var shell = {
 
       let fileScheme = 'file://';
       if (homeURL.substring(0, fileScheme.length) == fileScheme) {
-        homeURL = homeURL.replace(fileScheme, '');
-
-        let baseDir = homeURL.split('/');
-        baseDir.pop();
-        baseDir = baseDir.join('/');
-
-        const SERVER_PORT = 6666;
-        startupHttpd(baseDir, SERVER_PORT);
-
-        let baseHost = 'http://localhost';
-        homeURL = homeURL.replace(baseDir, baseHost + ':' + SERVER_PORT);
+        homeURL = 'http://localhost:7777' + homeURL.replace(fileScheme, '');
       }
       addPermissions([homeURL]);
     } catch (e) {
@@ -130,12 +113,12 @@ var shell = {
       return alert(msg);
     }
 
-    // Load webapi+apps.js as a frame script
+    // Load webapi.js as a frame script
     let frameScriptUrl = 'chrome://browser/content/webapi.js';
     try {
       messageManager.loadFrameScript(frameScriptUrl, true);
     } catch (e) {
-      dump('Error when loading ' + frameScriptUrl + ' as a frame script: ' + e + '\n');
+      dump('Error loading ' + frameScriptUrl + ' as a frame script: ' + e + '\n');
     }
 
     let browser = this.contentBrowser;
@@ -242,6 +225,14 @@ var shell = {
             this.changeVolume(-1);
             break;
         }
+        break;
+
+      case 'mozfullscreenchange':
+        // When the screen goes fullscreen make sure to set the focus to the
+        // main window so noboby can prevent the ESC key to get out fullscreen
+        // mode
+        if (document.mozFullScreen)
+          Services.fm.focusedWindow = window;
         break;
       case 'load':
         this.contentBrowser.removeEventListener('load', this, true);
@@ -363,3 +354,50 @@ Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
                " in " + (message.functionName || "anonymous") + ": ";
   Services.console.logStringMessage(prefix + Array.join(message.arguments, " "));
 }, "console-api-log-event", false);
+
+(function Repl() {
+  if (!Services.prefs.getBoolPref('b2g.remote-js.enabled')) {
+    return;
+  }
+  const prompt = 'JS> ';
+  let output;
+  let reader = {
+    onInputStreamReady : function repl_readInput(input) {
+      let sin = Cc['@mozilla.org/scriptableinputstream;1']
+                  .createInstance(Ci.nsIScriptableInputStream);
+      sin.init(input);
+      try {
+        let val = eval(sin.read(sin.available()));
+        let ret = (typeof val === 'undefined') ? 'undefined\n' : val + '\n';
+        output.write(ret, ret.length);
+        // TODO: check if socket has been closed
+      } catch (e) {
+        if (e.result === Cr.NS_BASE_STREAM_CLOSED ||
+            (typeof e === 'object' && e.result === Cr.NS_BASE_STREAM_CLOSED)) {
+          return;
+        }
+        let message = (typeof e === 'object') ? e.message + '\n' : e + '\n';
+        output.write(message, message.length);
+      }
+      output.write(prompt, prompt.length);
+      input.asyncWait(reader, 0, 0, Services.tm.mainThread);
+    }
+  }
+  let listener = {
+    onSocketAccepted: function repl_acceptConnection(serverSocket, clientSocket) {
+      dump('Accepted connection on ' + clientSocket.host + '\n');
+      let input = clientSocket.openInputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0)
+                              .QueryInterface(Ci.nsIAsyncInputStream);
+      output = clientSocket.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
+      output.write(prompt, prompt.length);
+      input.asyncWait(reader, 0, 0, Services.tm.mainThread);
+    }
+  }
+  let serverPort = Services.prefs.getIntPref('b2g.remote-js.port');
+  let serverSocket = Cc['@mozilla.org/network/server-socket;1']
+                       .createInstance(Ci.nsIServerSocket);
+  serverSocket.init(serverPort, true, -1);
+  dump('Opened socket on ' + serverSocket.port + '\n');
+  serverSocket.asyncListen(listener);
+})();
+

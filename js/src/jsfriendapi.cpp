@@ -132,7 +132,7 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
 JS_FRIEND_API(void)
 js::GCForReason(JSContext *cx, gcreason::Reason reason)
 {
-    js_GC(cx, NULL, GC_NORMAL, reason);
+    GC(cx, NULL, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
@@ -141,13 +141,19 @@ js::CompartmentGCForReason(JSContext *cx, JSCompartment *comp, gcreason::Reason 
     /* We cannot GC the atoms compartment alone; use a full GC instead. */
     JS_ASSERT(comp != cx->runtime->atomsCompartment);
 
-    js_GC(cx, comp, GC_NORMAL, reason);
+    GC(cx, comp, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
 js::ShrinkingGC(JSContext *cx, gcreason::Reason reason)
 {
-    js_GC(cx, NULL, GC_SHRINK, reason);
+    GC(cx, NULL, GC_SHRINK, reason);
+}
+
+JS_FRIEND_API(void)
+js::IncrementalGC(JSContext *cx, gcreason::Reason reason)
+{
+    GCSlice(cx, NULL, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
@@ -171,7 +177,7 @@ JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc)
 JS_FRIEND_API(void)
 JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape)
 {
-    MarkCycleCollectorChildren(trc, (const Shape *)shape);
+    MarkCycleCollectorChildren(trc, (Shape *)shape);
 }
 
 AutoPreserveCompartment::AutoPreserveCompartment(JSContext *cx
@@ -401,12 +407,6 @@ JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallba
     rt->telemetryCallback = callback;
 }
 
-JS_FRIEND_API(void)
-JS_SetGCFinishedCallback(JSRuntime *rt, JSGCFinishedCallback callback)
-{
-    rt->gcFinishedCallback = callback;
-}
-
 #ifdef DEBUG
 JS_FRIEND_API(void)
 js_DumpString(JSString *str)
@@ -551,39 +551,6 @@ js::DumpHeapComplete(JSContext *cx, FILE *fp)
 
 namespace js {
 
-JS_FRIEND_API(bool)
-IsIncrementalBarrierNeeded(JSRuntime *rt)
-{
-    return !!rt->gcIncrementalTracer && !rt->gcRunning;
-}
-
-JS_FRIEND_API(bool)
-IsIncrementalBarrierNeeded(JSContext *cx)
-{
-    return IsIncrementalBarrierNeeded(cx->runtime);
-}
-
-extern JS_FRIEND_API(void)
-IncrementalReferenceBarrier(void *ptr)
-{
-    if (!ptr)
-        return;
-    JS_ASSERT(!static_cast<gc::Cell *>(ptr)->compartment()->rt->gcRunning);
-    uint32_t kind = gc::GetGCThingTraceKind(ptr);
-    if (kind == JSTRACE_OBJECT)
-        JSObject::writeBarrierPre((JSObject *) ptr);
-    else if (kind == JSTRACE_STRING)
-        JSString::writeBarrierPre((JSString *) ptr);
-    else
-        JS_NOT_REACHED("invalid trace kind");
-}
-
-extern JS_FRIEND_API(void)
-IncrementalValueBarrier(const Value &v)
-{
-    HeapValue::writeBarrierPre(v);
-}
-
 /* static */ void
 AutoLockGC::LockGC(JSRuntime *rt)
 {
@@ -717,6 +684,92 @@ JS_FRIEND_API(size_t)
 SizeOfJSContext()
 {
     return sizeof(JSContext);
+}
+
+JS_FRIEND_API(GCSliceCallback)
+SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
+{
+    GCSliceCallback old = rt->gcSliceCallback;
+    rt->gcSliceCallback = callback;
+    return old;
+}
+
+JS_FRIEND_API(bool)
+WantGCSlice(JSRuntime *rt)
+{
+    if (rt->gcZeal() == gc::ZealFrameVerifierValue || rt->gcZeal() == gc::ZealFrameGCValue)
+        return true;
+
+    if (rt->gcIncrementalState != gc::NO_INCREMENTAL)
+        return true;
+
+    return false;
+}
+
+JS_FRIEND_API(void)
+NotifyDidPaint(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+
+    if (rt->gcZeal() == gc::ZealFrameVerifierValue) {
+        gc::VerifyBarriers(cx);
+        return;
+    }
+
+    if (rt->gcZeal() == gc::ZealFrameGCValue) {
+        GCSlice(cx, NULL, GC_NORMAL, gcreason::REFRESH_FRAME);
+        return;
+    }
+
+    if (rt->gcIncrementalState != gc::NO_INCREMENTAL && !rt->gcInterFrameGC)
+        GCSlice(cx, rt->gcIncrementalCompartment, GC_NORMAL, gcreason::REFRESH_FRAME);
+
+    rt->gcInterFrameGC = false;
+}
+
+extern JS_FRIEND_API(bool)
+IsIncrementalGCEnabled(JSRuntime *rt)
+{
+    return rt->gcIncrementalEnabled;
+}
+
+JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSRuntime *rt)
+{
+    return (rt->gcIncrementalState == gc::MARK && !rt->gcRunning);
+}
+
+JS_FRIEND_API(bool)
+IsIncrementalBarrierNeeded(JSContext *cx)
+{
+    return IsIncrementalBarrierNeeded(cx->runtime);
+}
+
+JS_FRIEND_API(bool)
+IsIncrementalBarrierNeededOnObject(JSObject *obj)
+{
+    return obj->compartment()->needsBarrier();
+}
+
+extern JS_FRIEND_API(void)
+IncrementalReferenceBarrier(void *ptr)
+{
+    if (!ptr)
+        return;
+    JS_ASSERT(!static_cast<gc::Cell *>(ptr)->compartment()->rt->gcRunning);
+    uint32_t kind = gc::GetGCThingTraceKind(ptr);
+    if (kind == JSTRACE_OBJECT)
+        JSObject::writeBarrierPre((JSObject *) ptr);
+    else if (kind == JSTRACE_STRING)
+        JSString::writeBarrierPre((JSString *) ptr);
+    else
+        JS_NOT_REACHED("invalid trace kind");
+}
+
+extern JS_FRIEND_API(void)
+IncrementalValueBarrier(const Value &v)
+{
+    HeapValue::writeBarrierPre(v);
 }
 
 } // namespace js

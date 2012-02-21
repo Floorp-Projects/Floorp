@@ -46,7 +46,7 @@ pref("browser.homescreenURL", "file:///data/local/homescreen.html,file:///system
 #endif
 
 // URL for the dialer application.
-pref("dom.telephony.app.phone.url", "http://localhost:6666/apps/dialer/dialer.html");
+pref("dom.telephony.app.phone.url", "http://localhost:7777/data/local/apps/dialer/dialer.html");
 
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
@@ -404,11 +404,11 @@ pref("browser.link.open_newwindow.restriction", 0);
 
 // Enable browser frame
 pref("dom.mozBrowserFramesEnabled", true);
-pref("dom.mozBrowserFramesWhitelist", "http://localhost:6666");
+pref("dom.mozBrowserFramesWhitelist", "http://localhost:7777");
 
 // Temporary permission hack for WebSMS
 pref("dom.sms.enabled", true);
-pref("dom.sms.whitelist", "file://,http://localhost:6666");
+pref("dom.sms.whitelist", "file://,http://localhost:7777");
 
 // Ignore X-Frame-Options headers.
 pref("b2g.ignoreXFrameOptions", true);
@@ -425,6 +425,10 @@ pref("media.realtime_decoder.enabled", true);
 // secondary bug isn't really worth investigating since it's obseleted
 // by bug 710563.
 pref("layout.frame_rate.precise", true);
+
+// Temporary remote js console hack
+pref("b2g.remote-js.enabled", true);
+pref("b2g.remote-js.port", 9999);
 
 // Screen timeout in minutes
 pref("power.screen.timeout", 60);

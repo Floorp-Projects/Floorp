@@ -112,16 +112,28 @@ NS_IMETHODIMP nsSVGForeignObjectElement::GetHeight(nsIDOMSVGAnimatedLength * *aH
 // nsSVGElement methods
 
 /* virtual */ gfxMatrix
-nsSVGForeignObjectElement::PrependLocalTransformTo(const gfxMatrix &aMatrix) const
+nsSVGForeignObjectElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
+                                                    TransformTypes aWhich) const
 {
+  NS_ABORT_IF_FALSE(aWhich != eChildToUserSpace || aMatrix.IsIdentity(),
+                    "Skipping eUserSpaceToParent transforms makes no sense");
+
   // 'transform' attribute:
-  gfxMatrix matrix = nsSVGForeignObjectElementBase::PrependLocalTransformTo(aMatrix);
-  
-  // now translate by our 'x' and 'y':
+  gfxMatrix fromUserSpace =
+    nsSVGForeignObjectElementBase::PrependLocalTransformsTo(aMatrix, aWhich);
+  if (aWhich == eUserSpaceToParent) {
+    return fromUserSpace;
+  }
+  // our 'x' and 'y' attributes:
   float x, y;
   const_cast<nsSVGForeignObjectElement*>(this)->
     GetAnimatedLengthValues(&x, &y, nsnull);
-  return gfxMatrix().Translate(gfxPoint(x, y)) * matrix;
+  gfxMatrix toUserSpace = gfxMatrix().Translate(gfxPoint(x, y));
+  if (aWhich == eChildToUserSpace) {
+    return toUserSpace;
+  }
+  NS_ABORT_IF_FALSE(aWhich == eAllTransforms, "Unknown TransformTypes");
+  return toUserSpace * fromUserSpace;
 }
 
 //----------------------------------------------------------------------

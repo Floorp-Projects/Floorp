@@ -70,6 +70,12 @@ function nextTest() {
   }
 }
 
+try {
+  window.fullScreen = true;
+} catch (e) {
+}
+is(window.fullScreen, false, "Shouldn't be able to set window fullscreen from content");
+
 addLoadEvent(nextTest);
 SimpleTest.waitForExplicitFinish();
 

@@ -1550,22 +1550,33 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine, const nsLineList* aLineList)
   return NS_OK;
 }
 
+/**
+ * Test whether lines are certain to be aligned left so that we can make
+ * resizing optimizations
+ */
+bool static inline IsAlignedLeft(const PRUint8 aAlignment,
+                                 const PRUint8 aDirection,
+                                 const PRUint8 aUnicodeBidi)
+{
+  return (NS_STYLE_TEXT_ALIGN_LEFT == aAlignment ||
+          ((NS_STYLE_TEXT_ALIGN_DEFAULT == aAlignment &&
+            NS_STYLE_DIRECTION_LTR == aDirection) ||
+           (NS_STYLE_TEXT_ALIGN_END == aAlignment &&
+            NS_STYLE_DIRECTION_RTL == aDirection)) &&
+          !(NS_STYLE_UNICODE_BIDI_PLAINTEXT & aUnicodeBidi));
+}
+
 nsresult
 nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 {
   const nsStyleText* styleText = GetStyleText();
+  const nsStyleTextReset* styleTextReset = GetStyleTextReset();
   // See if we can try and avoid marking all the lines as dirty
   bool tryAndSkipLines =
       // The text must be left-aligned.
-      (NS_STYLE_TEXT_ALIGN_LEFT == styleText->mTextAlign ||
-       (NS_STYLE_TEXT_ALIGN_DEFAULT == styleText->mTextAlign &&
-        NS_STYLE_DIRECTION_LTR ==
-          aState.mReflowState.mStyleVisibility->mDirection &&
-        !(NS_STYLE_UNICODE_BIDI_PLAINTEXT &
-          GetStyleTextReset()->mUnicodeBidi)) ||
-       (NS_STYLE_TEXT_ALIGN_END == styleText->mTextAlign &&
-        NS_STYLE_DIRECTION_RTL ==
-          aState.mReflowState.mStyleVisibility->mDirection)) &&
+    IsAlignedLeft(styleText->mTextAlign, 
+                  aState.mReflowState.mStyleVisibility->mDirection,
+                  styleTextReset->mUnicodeBidi) &&
       // The left content-edge must be a constant distance from the left
       // border-edge.
       !GetStylePadding()->mPadding.GetLeft().HasPercent();
@@ -1600,16 +1611,23 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
     }
 #endif
 
+    // The last line might not be aligned left even if the rest of the block is
+    bool skipLastLine = NS_STYLE_TEXT_ALIGN_AUTO == styleText->mTextAlignLast ||
+      IsAlignedLeft(styleText->mTextAlignLast,
+                    aState.mReflowState.mStyleVisibility->mDirection,
+                    styleTextReset->mUnicodeBidi);
+
     for (line_iterator line = begin_lines(), line_end = end_lines();
          line != line_end;
          ++line)
     {
       // We let child blocks make their own decisions the same
       // way we are here.
+      bool isLastLine = line == mLines.back() && !GetNextInFlow();
       if (line->IsBlock() ||
           line->HasFloats() ||
-          ((line != mLines.back() || GetNextInFlow()) // not the last line
-           && !line->HasBreakAfter()) ||
+          (!isLastLine && !line->HasBreakAfter()) ||
+          ((isLastLine || !line->IsLineWrapped()) && !skipLastLine) ||
           line->ResizeReflowOptimizationDisabled() ||
           line->IsImpactedByFloat() ||
           (line->mBounds.XMost() > newAvailWidth)) {
@@ -1625,13 +1643,14 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 #ifdef DEBUG
       if (gNoisyReflow && !line->IsDirty()) {
         IndentBy(stdout, gNoiseIndent + 1);
-        printf("skipped: line=%p next=%p %s %s%s%s breakTypeBefore/After=%d/%d xmost=%d\n",
+        printf("skipped: line=%p next=%p %s %s%s%s%s breakTypeBefore/After=%d/%d xmost=%d\n",
            static_cast<void*>(line.get()),
            static_cast<void*>((line.next() != end_lines() ? line.next().get() : nsnull)),
            line->IsBlock() ? "block" : "inline",
            line->HasBreakAfter() ? "has-break-after " : "",
            line->HasFloats() ? "has-floats " : "",
            line->IsImpactedByFloat() ? "impacted " : "",
+           skipLastLine ? "last-line-left-aligned " : "",
            line->GetBreakTypeBefore(), line->GetBreakTypeAfter(),
            line->mBounds.XMost());
       }
@@ -1939,10 +1958,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       needToRecoverState = false;
 
       // Update aState.mPrevChild as if we had reflowed all of the frames in
-      // this line.  This is expensive in some cases, since it requires
-      // walking |GetNextSibling|.
+      // this line.
       if (line->IsDirty())
-        aState.mPrevChild = line.prev()->LastChild();
+        NS_ASSERTION(line->mFirstChild->GetPrevSibling() ==
+                     line.prev()->LastChild(), "unexpected line frames");
+        aState.mPrevChild = line->mFirstChild->GetPrevSibling();
     }
 
     // Now repair the line and update |aState.mY| by calling
@@ -2132,9 +2152,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     aState.ReconstructMarginAbove(line);
 
     // Update aState.mPrevChild as if we had reflowed all of the frames in
-    // the last line.  This is expensive in some cases, since it requires
-    // walking |GetNextSibling|.
-    aState.mPrevChild = line.prev()->LastChild();
+    // the last line.
+    NS_ASSERTION(line == line_end || line->mFirstChild->GetPrevSibling() ==
+                 line.prev()->LastChild(), "unexpected line frames");
+    aState.mPrevChild =
+      line == line_end ? mFrames.LastChild() : line->mFirstChild->GetPrevSibling();
   }
 
   // Should we really have to do this?
@@ -4396,7 +4418,12 @@ nsBlockFrame::PushLines(nsBlockReflowState&  aState,
       if (firstLine) {
         mFrames.Clear();
       } else {
-        mFrames.RemoveFramesAfter(aLineBefore->LastChild());
+        nsIFrame* f = overBegin->mFirstChild;
+        nsIFrame* lineBeforeLastFrame =
+          f ? f->GetPrevSibling() : aLineBefore->LastChild();
+        NS_ASSERTION(!f || lineBeforeLastFrame == aLineBefore->LastChild(),
+                     "unexpected line frames");
+        mFrames.RemoveFramesAfter(lineBeforeLastFrame);
       }
       if (!overflowLines->empty()) {
         // XXXbz If we switch overflow lines to nsFrameList, we should
@@ -4713,7 +4740,9 @@ nsBlockFrame::AppendFrames(ChildListID  aListID,
   }
 
   // Find the proper last-child for where the append should go
-  nsIFrame* lastKid = mLines.empty() ? nsnull : mLines.back()->LastChild();
+  nsIFrame* lastKid = mFrames.LastChild();
+  NS_ASSERTION((mLines.empty() ? nsnull : mLines.back()->LastChild()) ==
+               lastKid, "out-of-sync mLines / mFrames");
 
   // Add frames after the last child
 #ifdef NOISY_REFLOW_REASON
@@ -5394,8 +5423,16 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
 
     // If the frame being deleted is the last one on the line then
     // optimize away the line->Contains(next-in-flow) call below.
-    bool isLastFrameOnLine = (1 == line->GetChildCount() ||
-                                line->LastChild() == aDeletedFrame);
+    bool isLastFrameOnLine = 1 == line->GetChildCount();
+    if (!isLastFrameOnLine) {
+      line_iterator next = line.next();
+      nsIFrame* lastFrame = next != line_end ?
+        next->mFirstChild->GetPrevSibling() :
+        (searchingOverflowList ? line->LastChild() : mFrames.LastChild());
+      NS_ASSERTION(next == line_end || lastFrame == line->LastChild(),
+                   "unexpected line frames");
+      isLastFrameOnLine = lastFrame == aDeletedFrame;
+    }
 
     // Remove aDeletedFrame from the line
     nsIFrame* nextFrame = aDeletedFrame->GetNextSibling();
