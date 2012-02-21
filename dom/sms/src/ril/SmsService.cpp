@@ -89,7 +89,7 @@ SmsService::Send(const nsAString& aNumber,
     return NS_OK;
   }
 
-  mRIL->SendSMS(aNumber, aMessage);
+  mRIL->SendSMS(aNumber, aMessage, aRequestId, aProcessId);
   return NS_OK;
 }
 

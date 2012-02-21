@@ -64,7 +64,10 @@
 
 importScripts("ril_consts.js", "systemlibs.js");
 
-let DEBUG = false;
+// We leave this as 'undefined' instead of setting it to 'false'. That
+// way an outer scope can define it to 'true' (e.g. for testing purposes)
+// without us overriding that here.
+let DEBUG;
 
 const INT32_MAX   = 2147483647;
 const UINT8_SIZE  = 1;
@@ -107,6 +110,9 @@ let Buf = {
 
     // How many bytes we've read for this parcel so far.
     this.readIncoming = 0;
+
+    // How many bytes available as parcel data.
+    this.readAvailable = 0;
 
     // Size of the incoming parcel. If this is zero, we're expecting a new
     // parcel.
@@ -192,11 +198,20 @@ let Buf = {
    * These are all little endian, apart from readParcelSize();
    */
 
-  readUint8: function readUint8() {
+  readUint8Unchecked: function readUint8Unchecked() {
     let value = this.incomingBytes[this.incomingReadIndex];
     this.incomingReadIndex = (this.incomingReadIndex + 1) %
                              this.INCOMING_BUFFER_LENGTH;
     return value;
+  },
+
+  readUint8: function readUint8() {
+    if (!this.readAvailable) {
+      throw new Error("Trying to read data beyond the parcel end!");
+    }
+
+    this.readAvailable--;
+    return this.readUint8Unchecked();
   },
 
   readUint16: function readUint16() {
@@ -251,8 +266,10 @@ let Buf = {
   },
 
   readParcelSize: function readParcelSize() {
-    return this.readUint8() << 24 | this.readUint8() << 16 |
-           this.readUint8() <<  8 | this.readUint8();
+    return this.readUint8Unchecked() << 24 |
+           this.readUint8Unchecked() << 16 |
+           this.readUint8Unchecked() <<  8 |
+           this.readUint8Unchecked();
   },
 
   /**
@@ -412,6 +429,7 @@ let Buf = {
 
       if (DEBUG) debug("We have at least one complete parcel.");
       try {
+        this.readAvailable = this.currentParcelSize;
         this.processParcel();
       } catch (ex) {
         if (DEBUG) debug("Parcel handling threw " + ex + "\n" + ex.stack);
@@ -427,6 +445,7 @@ let Buf = {
         this.incomingReadIndex = expectedAfterIndex;
       }
       this.readIncoming -= this.currentParcelSize;
+      this.readAvailable = 0;
       this.currentParcelSize = 0;
     }
   },
@@ -436,14 +455,14 @@ let Buf = {
    */
   processParcel: function processParcel() {
     let response_type = this.readUint32();
-    let length = this.readIncoming - UINT32_SIZE;
 
-    let request_type;
+    let request_type, options;
     if (response_type == RESPONSE_TYPE_SOLICITED) {
       let token = this.readUint32();
       let error = this.readUint32();
-      length -= 2 * UINT32_SIZE;
-      request_type = this.tokenRequestMap[token];
+
+      options = this.tokenRequestMap[token];
+      request_type = options.rilRequestType;
       if (error) {
         //TODO
         if (DEBUG) {
@@ -460,14 +479,13 @@ let Buf = {
       this.lastSolicitedToken = token;
     } else if (response_type == RESPONSE_TYPE_UNSOLICITED) {
       request_type = this.readUint32();
-      length -= UINT32_SIZE;
       if (DEBUG) debug("Unsolicited response for request type " + request_type);
     } else {
       if (DEBUG) debug("Unknown response type: " + response_type);
       return;
     }
 
-    RIL.handleParcel(request_type, length);
+    RIL.handleParcel(request_type, this.readAvailable, options);
   },
 
   /**
@@ -475,15 +493,23 @@ let Buf = {
    *
    * @param type
    *        Integer specifying the request type.
+   * @param options [optional]
+   *        Object containing information about the request, e.g. the
+   *        original main thread message object that led to the RIL request. 
    */
-  newParcel: function newParcel(type) {
+  newParcel: function newParcel(type, options) {
     if (DEBUG) debug("New outgoing parcel of type " + type);
     // We're going to leave room for the parcel size at the beginning.
     this.outgoingIndex = PARCEL_SIZE_SIZE;
     this.writeUint32(type);
     let token = this.token;
     this.writeUint32(token);
-    this.tokenRequestMap[token] = type;
+
+    if (!options) {
+      options = {};
+    }
+    options.rilRequestType = type;
+    this.tokenRequestMap[token] = options;
     this.token++;
     return token;
   },
@@ -753,9 +779,11 @@ let RIL = {
   /**
    * Send an SMS.
    *
-   * @param smscPDU
+   * The `options` parameter object should contain the following attributes:
+   *
+   * @param SMSC
    *        String containing the SMSC PDU in hex format.
-   * @param address
+   * @param number
    *        String containing the recipients address.
    * @param body
    *        String containing the message body.
@@ -765,15 +793,18 @@ let RIL = {
    * @param bodyLengthInOctets
    *        Byte length of the message body when encoded with the given DCS.
    */
-  sendSMS: function sendSMS(smscPDU, address, body, dcs, bodyLengthInOctets) {
-    let token = Buf.newParcel(REQUEST_SEND_SMS);
+  sendSMS: function sendSMS(options) {
+    let token = Buf.newParcel(REQUEST_SEND_SMS, options);
     //TODO we want to map token to the input values so that on the
     // response from the RIL device we know which SMS request was successful
     // or not. Maybe we should build that functionality into newParcel() and
     // handle it within tokenRequestMap[].
     Buf.writeUint32(2);
-    Buf.writeString(smscPDU);
-    GsmPDUHelper.writeMessage(address, body, dcs, bodyLengthInOctets);
+    Buf.writeString(options.SMSC);
+    GsmPDUHelper.writeMessage(options.number,
+                              options.body,
+                              options.dcs,
+                              options.bodyLengthInOctets);
     Buf.sendParcel();
   },
 
@@ -907,11 +938,11 @@ let RIL = {
    * _is_ the method name, so that's easy.
    */
 
-  handleParcel: function handleParcel(request_type, length) {
+  handleParcel: function handleParcel(request_type, length, options) {
     let method = this[request_type];
     if (typeof method == "function") {
       if (DEBUG) debug("Handling parcel as " + method.name);
-      method.call(this, length);
+      method.call(this, length, options);
     }
   }
 };
@@ -1064,11 +1095,11 @@ RIL[REQUEST_RADIO_POWER] = null;
 RIL[REQUEST_DTMF] = function REQUEST_DTMF() {
   Phone.onSendTone();
 };
-RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS() {
-  let messageRef = Buf.readUint32();
-  let ackPDU = Buf.readString();
-  let errorCode = Buf.readUint32();
-  Phone.onSendSMS(messageRef, ackPDU, errorCode);
+RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
+  options.messageRef = Buf.readUint32();
+  options.ackPDU = Buf.readString();
+  options.errorCode = Buf.readUint32();
+  Phone.onSendSMS(options);
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
 RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL() {
@@ -1753,8 +1784,9 @@ let Phone = {
   onSetSMSCAddress: function onSetSMSCAddress() {
   },
 
-  onSendSMS: function onSendSMS(messageRef, ackPDU, errorCode) {
-    //TODO
+  onSendSMS: function onSendSMS(options) {
+    options.type = "sms-sent";
+    this.sendDOMMessage(options);
   },
 
   onNewSMS: function onNewSMS(payloadLength) {
@@ -2013,6 +2045,10 @@ let Phone = {
    *        String containing the recipient number.
    * @param body
    *        String containing the message text.
+   * @param requestId
+   *        String identifying the sms request used by the SmsRequestManager.
+   * @param processId
+   *        String containing the processId for the SmsRequestManager.
    */
   sendSMS: function sendSMS(options) {
     // Get the SMS Center address
@@ -2025,12 +2061,17 @@ let Phone = {
       }
       return;
     }
+    // We explicitly save this information on the options object so that we
+    // can refer to it later, in particular on the main thread (where this
+    // object may get sent eventually.)
+    options.SMSC = this.SMSC;
+
     //TODO: verify values on 'options'
     //TODO: the data encoding and length in octets should eventually be
     // computed on the mainthread and passed down to us.
-    RIL.sendSMS(this.SMSC, options.number, options.body,
-                PDU_DCS_MSG_CODING_7BITS_ALPHABET, //TODO: hard-coded for now,
-                Math.ceil(options.body.length * 7 / 8)); //TODO: ditto
+    options.dcs = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+    options.bodyLengthInOctets = Math.ceil(options.body.length * 7 / 8);
+    RIL.sendSMS(options);
   },
 
   /**

@@ -2690,6 +2690,18 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
 JS_BEGIN_EXTERN_C
 #endif
 
+typedef void (*JSIterateCompartmentCallback)(JSContext *cx, void *data,
+              JSCompartment *compartment);
+
+/*
+ * This function calls |compartmentCallback| on every compartment.  Beware that
+ * there is no guarantee that the compartment will survive after the callback
+ * returns.
+ */
+extern JS_PUBLIC_API(void)
+JS_IterateCompartments(JSContext *cx, void *data,
+                       JSIterateCompartmentCallback compartmentCallback);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalObject(JSContext *cx);
 

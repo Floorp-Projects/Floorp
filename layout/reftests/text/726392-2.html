@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+ <head>
+  <meta charset="utf-8">
+  <title>Bug 726392</title>
+  <style type="text/css">
+   p { margin: 0; }
+   .alignLeft { text-align: left; }
+   .alignRight { text-align: right; }
+   .alignCenter { text-align: center; }
+   .alignJustify { text-align: justify; }
+   .alignStart { text-align: start; }
+   .alignEnd { text-align: end; }
+   .alignLastAuto { -moz-text-align-last: auto; }
+   .alignLastLeft { -moz-text-align-last: left; }
+   .alignLastRight { -moz-text-align-last: right; }
+   .alignLastCenter { -moz-text-align-last: center; }
+   .alignLastJustify { -moz-text-align-last: justify; }
+   .alignLastStart { -moz-text-align-last: start; }
+   .alignLastEnd { -moz-text-align-last: end; }
+  </style>
+</head>
+ <body>
+ <div id="e" style="width:50%">
+  <p dir="rtl" class="alignLeft alignLastAuto">בדיקה</p>
+  <p dir="rtl" class="alignLeft alignLastLeft">בדיקה</p>
+  <p dir="rtl" class="alignLeft alignLastRight">בדיקה</p>
+  <p dir="rtl" class="alignLeft alignLastCenter">בדיקה</p>
+  <p dir="rtl" class="alignLeft alignLastJustify">בדיקה</p>
+  <p dir="rtl" class="alignLeft alignLastStart">בדיקה</p>
+  <p dir="rtl" class="alignLeft alignLastEnd">בדיקה</p>
+  <p dir="rtl" class="alignJustify alignLastAuto">בדיקה</p>
+  <p dir="rtl" class="alignJustify alignLastLeft">בדיקה</p>
+  <p dir="rtl" class="alignJustify alignLastRight">בדיקה</p>
+  <p dir="rtl" class="alignJustify alignLastCenter">בדיקה</p>
+  <p dir="rtl" class="alignJustify alignLastJustify">בדיקה</p>
+  <p dir="rtl" class="alignJustify alignLastStart">בדיקה</p>
+  <p dir="rtl" class="alignJustify alignLastEnd">בדיקה</p>
+  <p dir="rtl" class="alignStart alignLastAuto">בדיקה</p>
+  <p dir="rtl" class="alignStart alignLastLeft">בדיקה</p>
+  <p dir="rtl" class="alignStart alignLastRight">בדיקה</p>
+  <p dir="rtl" class="alignStart alignLastCenter">בדיקה</p>
+  <p dir="rtl" class="alignStart alignLastJustify">בדיקה</p>
+  <p dir="rtl" class="alignStart alignLastStart">בדיקה</p>
+  <p dir="rtl" class="alignStart alignLastEnd">בדיקה</p>
+  <p dir="rtl" class="alignEnd alignLastAuto">בדיקה</p>
+  <p dir="rtl" class="alignEnd alignLastLeft">בדיקה</p>
+  <p dir="rtl" class="alignEnd alignLastRight">בדיקה</p>
+  <p dir="rtl" class="alignEnd alignLastCenter">בדיקה</p>
+  <p dir="rtl" class="alignEnd alignLastJustify">בדיקה</p>
+  <p dir="rtl" class="alignEnd alignLastStart">בדיקה</p>
+  <p dir="rtl" class="alignEnd alignLastEnd">בדיקה</p>
+ </div>
+<script type="text/javascript">
+function resizeElements()
+{
+  var enclosingDiv = document.getElementById("e");
+  enclosingDiv.style.width = "100%";
+  document.documentElement.removeAttribute("class");
+}
+
+document.addEventListener("MozReftestInvalidate", resizeElements, false);
+</script>
+
+</body>
+</html>

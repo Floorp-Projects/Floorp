@@ -1230,13 +1230,34 @@ JITScript::patchEdge(const CrossChunkEdge &edge, void *label)
 {
     if (edge.sourceJump1 || edge.sourceJump2) {
         JITChunk *sourceChunk = chunk(script->code + edge.source);
-        JSC::CodeLocationLabel targetLabel(label);
         ic::Repatcher repatch(sourceChunk);
 
+#ifdef JS_CPU_X64
+        JS_ASSERT(edge.sourceTrampoline);
+
+        static const uint32_t JUMP_LENGTH = 10;
+
+        if (edge.sourceJump1) {
+            JSC::CodeLocationLabel targetLabel(VerifyRange(edge.sourceJump1, JUMP_LENGTH, label, 0)
+                                               ? label
+                                               : edge.sourceTrampoline);
+            repatch.relink(JSC::CodeLocationJump(edge.sourceJump1), targetLabel);
+        }
+        if (edge.sourceJump2) {
+            JSC::CodeLocationLabel targetLabel(VerifyRange(edge.sourceJump2, JUMP_LENGTH, label, 0)
+                                               ? label
+                                               : edge.sourceTrampoline);
+            repatch.relink(JSC::CodeLocationJump(edge.sourceJump2), targetLabel);
+        }
+        JSC::CodeLocationDataLabelPtr sourcePatch((char*)edge.sourceTrampoline + JUMP_LENGTH);
+        repatch.repatch(sourcePatch, label);
+#else
+        JSC::CodeLocationLabel targetLabel(label);
         if (edge.sourceJump1)
             repatch.relink(JSC::CodeLocationJump(edge.sourceJump1), targetLabel);
         if (edge.sourceJump2)
             repatch.relink(JSC::CodeLocationJump(edge.sourceJump2), targetLabel);
+#endif
     }
     if (edge.jumpTableEntries) {
         for (unsigned i = 0; i < edge.jumpTableEntries->length(); i++)
@@ -1317,6 +1338,9 @@ JITScript::destroyChunk(JSContext *cx, unsigned chunkIndex, bool resetUses)
             CrossChunkEdge &edge = edges[i];
             if (edge.source >= desc.begin && edge.source < desc.end) {
                 edge.sourceJump1 = edge.sourceJump2 = NULL;
+#ifdef JS_CPU_X64
+                edge.sourceTrampoline = NULL;
+#endif
                 if (edge.jumpTableEntries) {
                     cx->delete_(edge.jumpTableEntries);
                     edge.jumpTableEntries = NULL;

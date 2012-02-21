@@ -743,25 +743,16 @@ gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
 
         if (aMatchData->mFontToMatch) { 
             const gfxFontStyle *style = aMatchData->mFontToMatch->GetStyle();
-            
-            // italics
+
+            // matching italics takes precedence over weight
             bool wantItalic =
                 ((style->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0);
             if (fe->IsItalic() == wantItalic) {
-                rank += 5;
+                rank += 10;
             }
-            
-            // weight
-            PRInt32 targetWeight = style->ComputeWeight() * 100;
 
-            PRInt32 entryWeight = fe->Weight();
-            if (entryWeight == targetWeight) {
-                rank += 5;
-            } else {
-                PRUint32 diffWeight = abs(entryWeight - targetWeight);
-                if (diffWeight <= 100)  // favor faces close in weight
-                    rank += 2;
-            }
+            // measure of closeness of weight to the desired value
+            rank += 9 - abs(fe->Weight() / 100 - style->ComputeWeight());
         } else {
             // if no font to match, prefer non-bold, non-italic fonts
             if (!fe->IsItalic()) {
@@ -1117,6 +1108,7 @@ gfxFontCache::NotifyReleased(gfxFont *aFont)
 void
 gfxFontCache::NotifyExpired(gfxFont *aFont)
 {
+    aFont->ClearCachedWords();
     RemoveObject(aFont);
     DestroyFont(aFont);
 }

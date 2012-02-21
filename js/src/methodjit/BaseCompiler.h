@@ -100,6 +100,20 @@ class BaseCompiler : public MacroAssemblerTypedefs
     { }
 };
 
+#ifdef JS_CPU_X64
+inline bool
+VerifyRange(void *start1, size_t size1, void *start2, size_t size2)
+{
+    uintptr_t end1 = uintptr_t(start1) + size1;
+    uintptr_t end2 = uintptr_t(start2) + size2;
+
+    uintptr_t lowest = JS_MIN(uintptr_t(start1), uintptr_t(start2));
+    uintptr_t highest = JS_MAX(end1, end2);
+
+    return (highest - lowest < INT_MAX);
+}
+#endif
+
 // This class wraps JSC::LinkBuffer for Mozilla-specific memory handling.
 // Every return |false| guarantees an OOM that has been correctly propagated,
 // and should continue to propagate.
@@ -128,13 +142,7 @@ class LinkerHelper : public JSC::LinkBuffer
         verifiedRange = true;
 #endif
 #ifdef JS_CPU_X64
-        uintptr_t lowest = JS_MIN(uintptr_t(m_code), uintptr_t(other.start()));
-
-        uintptr_t myEnd = uintptr_t(m_code) + m_size;
-        uintptr_t otherEnd = uintptr_t(other.start()) + other.size();
-        uintptr_t highest = JS_MAX(myEnd, otherEnd);
-
-        return (highest - lowest < INT_MAX);
+        return VerifyRange(m_code, m_size, other.start(), other.size());
 #else
         return true;
 #endif

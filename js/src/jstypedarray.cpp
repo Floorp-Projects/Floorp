@@ -67,6 +67,8 @@
 #include "jsobjinlines.h"
 #include "jstypedarrayinlines.h"
 
+#include "vm/MethodGuard-inl.h"
+
 using namespace mozilla;
 using namespace js;
 using namespace js::gc;

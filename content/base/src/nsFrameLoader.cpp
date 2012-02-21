@@ -76,6 +76,7 @@
 #include "nsFrameLoader.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsDOMError.h"
 #include "nsGUIEvent.h"
@@ -330,6 +331,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mRemoteBrowserShown(false)
   , mRemoteFrame(false)
   , mClipSubdocument(true)
+  , mClampScrollPosition(true)
   , mCurrentRemoteFrame(nsnull)
   , mRemoteBrowser(nsnull)
   , mRenderMode(RENDER_MODE_DEFAULT)
@@ -1748,6 +1750,38 @@ nsFrameLoader::SetClipSubdocument(bool aClip)
         if (subdocRootScrollFrame) {
           frame->PresContext()->PresShell()->
             FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetClampScrollPosition(bool* aResult)
+{
+  *aResult = mClampScrollPosition;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::SetClampScrollPosition(bool aClamp)
+{
+  mClampScrollPosition = aClamp;
+
+  // When turning clamping on, make sure the current position is clamped.
+  if (aClamp) {
+    nsIFrame* frame = GetPrimaryFrameOfOwningContent();
+    if (frame) {
+      nsSubDocumentFrame* subdocFrame = do_QueryFrame(frame);
+      if (subdocFrame) {
+        nsIFrame* subdocRootFrame = subdocFrame->GetSubdocumentRootFrame();
+        if (subdocRootFrame) {
+          nsIScrollableFrame* subdocRootScrollFrame = subdocRootFrame->PresContext()->PresShell()->
+            GetRootScrollFrameAsScrollable();
+          if (subdocRootScrollFrame) {
+            subdocRootScrollFrame->ScrollTo(subdocRootScrollFrame->GetScrollPosition(), nsIScrollableFrame::INSTANT);
+          }
         }
       }
     }

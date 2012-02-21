@@ -80,8 +80,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x1352de12, 0x7a07, 0x4610, \
-  { 0x93, 0xd5, 0xb8, 0x76, 0xfe, 0x93, 0x09, 0x50 } }
+{ 0x9aef58e9, 0x5225, 0x4e58, \
+  { 0x9a, 0xfb, 0xe6, 0x63, 0x97, 0x1d, 0x86, 0x88 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -456,6 +456,13 @@ public:
   {
     return mMayHaveTouchEventListener;
   }
+
+  /**
+   * Moves the top-level window into fullscreen mode if aIsFullScreen is true,
+   * otherwise exits fullscreen. If aRequireTrust is true, this method only
+   * changes window state in a context trusted for write.
+   */
+  virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust) = 0;
 
   /**
    * Call this to indicate that some node (this window, its document,

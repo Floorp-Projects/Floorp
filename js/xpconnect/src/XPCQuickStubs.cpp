@@ -1048,14 +1048,20 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, const PRUnichar **pst
 namespace xpc {
 
 bool
-StringToJsval(JSContext *cx, nsString &str, JS::Value *rval)
+StringToJsval(JSContext *cx, nsAString &str, JS::Value *rval)
 {
     // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
     if (str.IsVoid()) {
         *rval = JSVAL_NULL;
         return true;
     }
+    return NonVoidStringToJsval(cx, str, rval);
+}
 
+bool
+NonVoidStringToJsval(JSContext *cx, nsAString &str, JS::Value *rval)
+{
+    MOZ_ASSERT(!str.IsVoid());
     nsStringBuffer* sharedBuffer;
     jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer);
     if (JSVAL_IS_NULL(jsstr))

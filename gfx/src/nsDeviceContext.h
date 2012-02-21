@@ -51,29 +51,6 @@ class nsIAtom;
 class nsFontCache;
 class gfxUserFontSet;
 
-typedef enum {
-    eSystemFont_Caption,         // css2
-    eSystemFont_Icon,
-    eSystemFont_Menu,
-    eSystemFont_MessageBox,
-    eSystemFont_SmallCaption,
-    eSystemFont_StatusBar,
-
-    eSystemFont_Window,          // css3
-    eSystemFont_Document,
-    eSystemFont_Workspace,
-    eSystemFont_Desktop,
-    eSystemFont_Info,
-    eSystemFont_Dialog,
-    eSystemFont_Button,
-    eSystemFont_PullDownMenu,
-    eSystemFont_List,
-    eSystemFont_Field,
-
-    eSystemFont_Tooltips,        // moz
-    eSystemFont_Widget
-} nsSystemFontID;
-
 class nsDeviceContext
 {
 public:
@@ -149,22 +126,6 @@ public:
      */
     PRInt32 UnscaledAppUnitsPerDevPixel() const
     { return mAppUnitsPerDevNotScaledPixel; }
-
-    /**
-     * Fill in an nsFont based on the ID of a system font.  This function
-     * may or may not fill in the size, so the size should be set to a
-     * reasonable default before calling.
-     *
-     * @param aID    The system font ID.
-     * @param aInfo  The font structure to be filled in.
-     * @return error status
-     */
-    nsresult GetSystemFont(nsSystemFontID aID, nsFont *aFont) const;
-
-    /**
-     * Clear cached system fonts (refresh from theme when requested).
-     */
-    static void ClearCachedSystemFonts();
 
     /**
      * Get the nsFontMetrics that describe the properties of

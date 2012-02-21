@@ -133,7 +133,7 @@ Addon.prototype = {
     // API is broken, it should ideally be caught by an xpcshell test. But, if
     // TPS tests fail, it's all the same: a genuite reported error.
     let store = Engines.get("addons")._store;
-    store.installAddonsFromIDs([this.id], cb);
+    store.installAddons([{id: this.id}], cb);
     let result = cb.wait();
 
     Logger.AssertEqual(1, result.installedIDs.length, "Exactly 1 add-on was installed.");
