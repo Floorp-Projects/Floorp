@@ -349,7 +349,8 @@ class MMListenerRemover
 {
 public:
   MMListenerRemover(nsFrameMessageManager* aMM)
-  : mMM(aMM), mWasHandlingMessage(aMM->mHandlingMessage)
+    : mWasHandlingMessage(aMM->mHandlingMessage)
+    , mMM(aMM)
   {
     mMM->mHandlingMessage = true;
   }
