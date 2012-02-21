@@ -5133,11 +5133,9 @@ NS_IMETHODIMP
 nsDocument::GetDefaultView(nsIDOMWindow** aDefaultView)
 {
   *aDefaultView = nsnull;
-  nsPIDOMWindow* win = GetWindow();
-  if (!win) {
-    return NS_OK;
-  }
-  return CallQueryInterface(win, aDefaultView);
+  nsCOMPtr<nsPIDOMWindow> win = GetWindow();
+  win.forget(aDefaultView);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
