@@ -51,7 +51,6 @@ use vars qw(
             $MICRO_VERSION
             $opt_debug
             $opt_template
-            $opt_uaversion
             $opt_help
             );
 
@@ -61,7 +60,7 @@ push(@INC,$SCRIPTDIR);
 
 require "Moz/Milestone.pm";
 
-&GetOptions('topsrcdir=s' => \$TOPSRCDIR, 'srcdir=s' => \$SRCDIR, 'objdir=s' => \$OBJDIR, 'debug', 'help', 'template', 'uaversion');
+&GetOptions('topsrcdir=s' => \$TOPSRCDIR, 'srcdir=s' => \$SRCDIR, 'objdir=s' => \$OBJDIR, 'debug', 'help', 'template');
 
 if (defined($opt_help)) {
     &usage();
@@ -101,19 +100,13 @@ if (defined(@TEMPLATE_FILE)) {
       warn("$0:  No such file $TFILE!\n");
     }
   }
-} elsif(defined($opt_uaversion)) {
-  my $uaversion = Moz::Milestone::getMilestoneMajor($milestone) . "." .
-                   Moz::Milestone::getMilestoneMinor($milestone);
-  # strip off trailing pre-release indicators
-  $uaversion =~ s/[a-z]+\d*$//;
-  print "$uaversion\n";
 } else {
   print "$milestone\n";
 }
 
 sub usage() {
   print <<END
-`milestone.pl [--topsrcdir TOPSRCDIR] [--objdir OBJDIR] [--srcdir SRCDIR] --template [file list] --uaversion`  # will build file list from .tmpl files
+`milestone.pl [--topsrcdir TOPSRCDIR] [--objdir OBJDIR] [--srcdir SRCDIR] --template [file list]`  # will build file list from .tmpl files
 END
     ;
 }

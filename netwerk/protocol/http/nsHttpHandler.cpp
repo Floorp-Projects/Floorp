@@ -270,7 +270,7 @@ nsHttpHandler::Init()
         PrefsChanged(prefBranch, nsnull);
     }
 
-    mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
+    mMisc.AssignLiteral("rv:" MOZILLA_VERSION);
 
     nsCOMPtr<nsIXULAppInfo> appInfo =
         do_GetService("@mozilla.org/xre/app-info;1");
@@ -307,7 +307,7 @@ nsHttpHandler::Init()
     rv = InitConnectionMgr();
     if (NS_FAILED(rv)) return rv;
 
-    mProductSub.AssignLiteral(MOZILLA_UAVERSION);
+    mProductSub.AssignLiteral(MOZILLA_VERSION);
 
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category
