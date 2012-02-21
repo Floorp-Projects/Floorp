@@ -9,6 +9,7 @@ import java.util.HashMap;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.jpake.JPakeClient;
 import org.mozilla.gecko.sync.jpake.JPakeNoActivePairingException;
 import org.mozilla.gecko.sync.setup.Constants;
@@ -84,10 +85,20 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
       setContentView(R.layout.sync_setup_nointernet);
       return;
     }
-    
-    // Check whether Sync accounts exist; if not, display J-PAKE PIN.
-    Account[] accts = mAccountManager.getAccountsByType(Constants.ACCOUNTTYPE_SYNC);
 
+    // Check whether Sync accounts exist; if not, display J-PAKE PIN.
+    // Run this on a separate thread to comply with Strict Mode thread policies.
+    ThreadPool.run(new Runnable() {
+      @Override
+      public void run() {
+        Account[] accts = mAccountManager.getAccountsByType(Constants.ACCOUNTTYPE_SYNC);
+        finishResume(accts);
+      }
+    });
+  }
+
+  public void finishResume(Account[] accts) {
+    Logger.debug(LOG_TAG, "Finishing Resume after fetching accounts.");
     if (accts.length == 0) { // Start J-PAKE for pairing if no accounts present.
       Logger.debug(LOG_TAG, "No accounts; starting J-PAKE receiver.");
       displayReceiveNoPin();
@@ -112,18 +123,26 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
         return;
       }
     }
+    
+    runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        Logger.debug(LOG_TAG, "Only one account supported. Redirecting.");
+        // Display toast for "Only one account supported."
+        // Redirect to account management.
+        Toast toast = Toast.makeText(mContext,
+            R.string.sync_notification_oneaccount, Toast.LENGTH_LONG);
+        toast.show();
 
-    Logger.debug(LOG_TAG, "Only one account supported. Redirecting.");
-    // Display toast for "Only one account supported." and redirect to account management.
-    Toast toast = Toast.makeText(mContext, R.string.sync_notification_oneaccount, Toast.LENGTH_LONG);
-    toast.show();
+        Intent intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
+        intent.setFlags(Constants.FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION);
+        startActivity(intent);
 
-    Intent intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
-    intent.setFlags(Constants.FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION);
-    startActivity(intent);
-
-    finish();
+        finish();
+      }
+    });
   }
+
 
   @Override
   public void onPause() {
@@ -418,92 +437,113 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     return false;
   }
 
+  /**
+   * Displays layout for entering a PIN from another device.
+   * A Sync Account has already been set up.
+   */
   private void displayPairWithPin() {
     Logger.debug(LOG_TAG, "PairWithPin initiated.");
-    setContentView(R.layout.sync_setup_pair);
-    connectButton = (Button) findViewById(R.id.pair_button_connect);
-    pinError = (LinearLayout) findViewById(R.id.pair_error);
-
-    row1 = (EditText) findViewById(R.id.pair_row1);
-    row2 = (EditText) findViewById(R.id.pair_row2);
-    row3 = (EditText) findViewById(R.id.pair_row3);
-
-    row1.addTextChangedListener(new TextWatcher() {
-      @Override
-      public void afterTextChanged(Editable s) {
-         activateButton(connectButton, pinEntryCompleted());
-         if (s.length() == 4) {
-           row2.requestFocus();
-         }
-      }
+    runOnUiThread(new Runnable() {
 
       @Override
-      public void beforeTextChanged(CharSequence s, int start, int count,
-          int after) {
-      }
+      public void run() {
+        setContentView(R.layout.sync_setup_pair);
+        connectButton = (Button) findViewById(R.id.pair_button_connect);
+        pinError = (LinearLayout) findViewById(R.id.pair_error);
 
-      @Override
-      public void onTextChanged(CharSequence s, int start, int before, int count) {
-      }
-    });
+        row1 = (EditText) findViewById(R.id.pair_row1);
+        row2 = (EditText) findViewById(R.id.pair_row2);
+        row3 = (EditText) findViewById(R.id.pair_row3);
 
-    row2.addTextChangedListener(new TextWatcher() {
-      @Override
-      public void afterTextChanged(Editable s) {
-        activateButton(connectButton, pinEntryCompleted());
-        if (s.length() == 4) {
-          row3.requestFocus();
-        }
-      }
+        row1.addTextChangedListener(new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable s) {
+             activateButton(connectButton, pinEntryCompleted());
+             if (s.length() == 4) {
+               row2.requestFocus();
+             }
+          }
 
-      @Override
-      public void beforeTextChanged(CharSequence s, int start, int count,
-          int after) {
-      }
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count,
+              int after) {
+          }
 
-      @Override
-      public void onTextChanged(CharSequence s, int start, int before, int count) {
-      }
-    });
+          @Override
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+          }
 
-    row3.addTextChangedListener(new TextWatcher() {
-      @Override
-      public void afterTextChanged(Editable s) {
-        activateButton(connectButton, pinEntryCompleted());
-      }
+        });
+        row2.addTextChangedListener(new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable s) {
+            activateButton(connectButton, pinEntryCompleted());
+            if (s.length() == 4) {
+              row3.requestFocus();
+            }
+          }
 
-      @Override
-      public void beforeTextChanged(CharSequence s, int start, int count,
-          int after) {
-      }
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count,
+              int after) {
+          }
 
-      @Override
-      public void onTextChanged(CharSequence s, int start, int before, int count) {
+          @Override
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+          }
+
+        });
+
+        row3.addTextChangedListener(new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable s) {
+            activateButton(connectButton, pinEntryCompleted());
+          }
+
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count,
+              int after) {
+          }
+
+          @Override
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+          }
+        });
       }
     });
   }
 
+  /**
+   * Displays layout with PIN for pairing with another device.
+   * No Sync Account has been set up yet.
+   */
   private void displayReceiveNoPin() {
     Logger.debug(LOG_TAG, "ReceiveNoPin initiated");
-    setContentView(R.layout.sync_setup);
+    runOnUiThread(new Runnable(){
 
-    // Set up UI.
-    setupTitleView = ((TextView) findViewById(R.id.setup_title));
-    setupSubtitleView = (TextView) findViewById(R.id.setup_subtitle);
-    setupNoDeviceLinkTitleView = (TextView) findViewById(R.id.link_nodevice);
-    pinTextView1 = ((TextView) findViewById(R.id.text_pin1));
-    pinTextView2 = ((TextView) findViewById(R.id.text_pin2));
-    pinTextView3 = ((TextView) findViewById(R.id.text_pin3));
+      @Override
+      public void run() {
+        setContentView(R.layout.sync_setup);
 
-    // UI checks.
-    if (setupTitleView == null) {
-      Logger.error(LOG_TAG, "No title view.");
-    }
-    if (setupSubtitleView == null) {
-      Logger.error(LOG_TAG, "No subtitle view.");
-    }
-    if (setupNoDeviceLinkTitleView == null) {
-      Logger.error(LOG_TAG, "No 'no device' link view.");
-    }
+        // Set up UI.
+        setupTitleView = ((TextView) findViewById(R.id.setup_title));
+        setupSubtitleView = (TextView) findViewById(R.id.setup_subtitle);
+        setupNoDeviceLinkTitleView = (TextView) findViewById(R.id.link_nodevice);
+        pinTextView1 = ((TextView) findViewById(R.id.text_pin1));
+        pinTextView2 = ((TextView) findViewById(R.id.text_pin2));
+        pinTextView3 = ((TextView) findViewById(R.id.text_pin3));
+
+        // UI checks.
+        if (setupTitleView == null) {
+          Logger.error(LOG_TAG, "No title view.");
+        }
+        if (setupSubtitleView == null) {
+          Logger.error(LOG_TAG, "No subtitle view.");
+        }
+        if (setupNoDeviceLinkTitleView == null) {
+          Logger.error(LOG_TAG, "No 'no device' link view.");
+        }
+      }
+    });
   }
 }
