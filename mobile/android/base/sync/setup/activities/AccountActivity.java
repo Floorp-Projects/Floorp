@@ -38,6 +38,8 @@
 
 package org.mozilla.gecko.sync.setup.activities;
 
+import java.util.Locale;
+
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.Authorities;
@@ -142,7 +144,7 @@ public class AccountActivity extends AccountAuthenticatorActivity {
    */
   public void connectClickHandler(View target) {
     Log.d(LOG_TAG, "connectClickHandler for view " + target);
-    username = usernameInput.getText().toString();
+    username = usernameInput.getText().toString().toLowerCase(Locale.US);
     password = passwordInput.getText().toString();
     key = synckeyInput.getText().toString();
     if (serverCheckbox.isChecked()) {

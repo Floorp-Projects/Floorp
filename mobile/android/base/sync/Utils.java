@@ -45,6 +45,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashMap;
+import java.util.Locale;
 
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
@@ -219,7 +220,7 @@ public class Utils {
 
   public static String sha1Base32(String utf8)
       throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    return new Base32().encodeAsString(sha1(utf8)).toLowerCase();
+    return new Base32().encodeAsString(sha1(utf8)).toLowerCase(Locale.US);
   }
 
   public static String getPrefsPath(String username, String serverURL)
