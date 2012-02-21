@@ -2093,6 +2093,13 @@ Tab.prototype = {
         if (contentDocument == this.browser.contentDocument) {
           ViewportHandler.updateMetadata(this);
           this.documentIdForCurrentViewport = ViewportHandler.getIdForDocument(contentDocument);
+          // FIXME: This is a workaround for the fact that we suppress draw events.
+          // This means we need to retrigger a draw event here since we might
+          // have suppressed a draw event before documentIdForCurrentViewport
+          // got updated. The real fix is to get rid of suppressing draw events
+          // based on the value of documentIdForCurrentViewport, which we
+          // can do once the docshell and the browser element are aware 
+          // of the existence of <meta viewport>. 
           sendMessageToJava({ gecko: { type: "Viewport:UpdateAndDraw" } });
         }
         break;
