@@ -38,8 +38,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// for strtod()
+#include <stdlib.h>
+
 #include "nsLookAndFeel.h"
+
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
+
+#ifdef MOZ_PANGO
+#include <pango/pango.h>
+#include <pango/pango-fontmap.h>
+#endif
+
+#include <fontconfig/fontconfig.h>
+#include "gfxPlatformGtk.h"
 
 #include "gtkdrawing.h"
 #include "nsStyleConsts.h"
@@ -49,6 +62,8 @@
 #include "nsIPropertyBag2.h"
 #include "nsLiteralString.h"
 #endif
+
+using mozilla::LookAndFeel;
 
 #define GDK_COLOR_TO_NS_RGB(c) \
     ((nscolor) NS_RGB(c.red>>8, c.green>>8, c.blue>>8))
@@ -73,14 +88,12 @@ PRUnichar nsLookAndFeel::sInvisibleCharacter = PRUnichar('*');
 float     nsLookAndFeel::sCaretRatio = 0;
 bool      nsLookAndFeel::sMenuSupportsDrag = false;
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
+nsLookAndFeel::nsLookAndFeel()
+    : nsXPLookAndFeel(),
+      mStyle(nsnull),
+      mDefaultFontCached(false), mButtonFontCached(false),
+      mFieldFontCached(false), mMenuFontCached(false)
 {
-    mStyle = nsnull;
     InitWidget();
 
     static bool sInitialized = false;
@@ -617,6 +630,189 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
     return res;
 }
 
+#ifdef MOZ_PANGO
+static void
+GetSystemFontInfo(GtkWidget *aWidget,
+                  nsString *aFontName,
+                  gfxFontStyle *aFontStyle)
+{
+    GtkSettings *settings = gtk_widget_get_settings(aWidget);
+
+    aFontStyle->style       = FONT_STYLE_NORMAL;
+
+    gchar *fontname;
+    g_object_get(settings, "gtk-font-name", &fontname, NULL);
+
+    PangoFontDescription *desc;
+    desc = pango_font_description_from_string(fontname);
+
+    aFontStyle->systemFont = true;
+
+    g_free(fontname);
+
+    NS_NAMED_LITERAL_STRING(quote, "\"");
+    NS_ConvertUTF8toUTF16 family(pango_font_description_get_family(desc));
+    *aFontName = quote + family + quote;
+
+    aFontStyle->weight = pango_font_description_get_weight(desc);
+
+    // FIXME: Set aFontStyle->stretch correctly!
+    aFontStyle->stretch = NS_FONT_STRETCH_NORMAL;
+
+    float size = float(pango_font_description_get_size(desc)) / PANGO_SCALE;
+
+    // |size| is now either pixels or pango-points (not Mozilla-points!)
+
+    if (!pango_font_description_get_size_is_absolute(desc)) {
+        // |size| is in pango-points, so convert to pixels.
+        size *= float(gfxPlatformGtk::GetDPI()) / POINTS_PER_INCH_FLOAT;
+    }
+
+    // |size| is now pixels
+
+    aFontStyle->size = size;
+
+    pango_font_description_free(desc);
+}
+
+static void
+GetSystemFontInfo(LookAndFeel::FontID aID,
+                  nsString *aFontName,
+                  gfxFontStyle *aFontStyle)
+{
+    if (aID == LookAndFeel::eFont_Widget) {
+        GtkWidget *label = gtk_label_new("M");
+        GtkWidget *parent = gtk_fixed_new();
+        GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
+
+        gtk_container_add(GTK_CONTAINER(parent), label);
+        gtk_container_add(GTK_CONTAINER(window), parent);
+
+        gtk_widget_ensure_style(label);
+        GetSystemFontInfo(label, aFontName, aFontStyle);
+        gtk_widget_destroy(window);  // no unref, windows are different
+
+    } else if (aID == LookAndFeel::eFont_Button) {
+        GtkWidget *label = gtk_label_new("M");
+        GtkWidget *parent = gtk_fixed_new();
+        GtkWidget *button = gtk_button_new();
+        GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
+
+        gtk_container_add(GTK_CONTAINER(button), label);
+        gtk_container_add(GTK_CONTAINER(parent), button);
+        gtk_container_add(GTK_CONTAINER(window), parent);
+
+        gtk_widget_ensure_style(label);
+        GetSystemFontInfo(label, aFontName, aFontStyle);
+        gtk_widget_destroy(window);  // no unref, windows are different
+
+    } else if (aID == LookAndFeel::eFont_Field) {
+        GtkWidget *entry = gtk_entry_new();
+        GtkWidget *parent = gtk_fixed_new();
+        GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
+
+        gtk_container_add(GTK_CONTAINER(parent), entry);
+        gtk_container_add(GTK_CONTAINER(window), parent);
+
+        gtk_widget_ensure_style(entry);
+        GetSystemFontInfo(entry, aFontName, aFontStyle);
+        gtk_widget_destroy(window);  // no unref, windows are different
+
+    } else {
+        NS_ABORT_IF_FALSE(aID == LookAndFeel::eFont_Menu, "unexpected font ID");
+        GtkWidget *accel_label = gtk_accel_label_new("M");
+        GtkWidget *menuitem = gtk_menu_item_new();
+        GtkWidget *menu = gtk_menu_new();
+        g_object_ref_sink(GTK_OBJECT(menu));
+
+        gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
+        gtk_menu_shell_append((GtkMenuShell *)GTK_MENU(menu), menuitem);
+
+        gtk_widget_ensure_style(accel_label);
+        GetSystemFontInfo(accel_label, aFontName, aFontStyle);
+        g_object_unref(menu);
+    }
+}
+
+#else // not MOZ_PANGO
+
+static void
+GetSystemFontInfo(LookAndFeel::FontID /*unused */,
+                  nsString *aFontName,
+                  gfxFontStyle *aFontStyle)
+{
+    /* FIXME: DFB FT2 Hardcoding the system font info for now. */
+    aFontStyle->style      = FONT_STYLE_NORMAL;
+    aFontStyle->weight     = 400;
+    aFontStyle->size       = 40/3;
+    aFontStyle->stretch    = NS_FONT_STRETCH_NORMAL;
+    aFontStyle->systemFont = true;
+    aFontName->AssignLiteral("\"Sans\"");
+}
+
+#endif // not MOZ_PANGO
+
+bool
+nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
+                           gfxFontStyle& aFontStyle)
+{
+  nsString *cachedFontName = NULL;
+  gfxFontStyle *cachedFontStyle = NULL;
+  bool *isCached = NULL;
+
+  switch (aID) {
+    case eFont_Menu:         // css2
+    case eFont_PullDownMenu: // css3
+      cachedFontName = &mMenuFontName;
+      cachedFontStyle = &mMenuFontStyle;
+      isCached = &mMenuFontCached;
+      aID = eFont_Menu;
+      break;
+
+    case eFont_Field:        // css3
+    case eFont_List:         // css3
+      cachedFontName = &mFieldFontName;
+      cachedFontStyle = &mFieldFontStyle;
+      isCached = &mFieldFontCached;
+      aID = eFont_Field;
+      break;
+
+    case eFont_Button:       // css3
+      cachedFontName = &mButtonFontName;
+      cachedFontStyle = &mButtonFontStyle;
+      isCached = &mButtonFontCached;
+      break;
+
+    case eFont_Caption:      // css2
+    case eFont_Icon:         // css2
+    case eFont_MessageBox:   // css2
+    case eFont_SmallCaption: // css2
+    case eFont_StatusBar:    // css2
+    case eFont_Window:       // css3
+    case eFont_Document:     // css3
+    case eFont_Workspace:    // css3
+    case eFont_Desktop:      // css3
+    case eFont_Info:         // css3
+    case eFont_Dialog:       // css3
+    case eFont_Tooltips:     // moz
+    case eFont_Widget:       // moz
+      cachedFontName = &mDefaultFontName;
+      cachedFontStyle = &mDefaultFontStyle;
+      isCached = &mDefaultFontCached;
+      aID = eFont_Widget;
+      break;
+  }
+
+  if (!*isCached) {
+    GetSystemFontInfo(aID, cachedFontName, cachedFontStyle);
+    *isCached = true;
+  }
+
+  aFontName = *cachedFontName;
+  aFontStyle = *cachedFontStyle;
+  return true;
+}
+
 void
 nsLookAndFeel::InitLookAndFeel()
 {
@@ -799,6 +995,31 @@ nsLookAndFeel::InitLookAndFeel()
     gtk_widget_destroy(window);
 }
 
+void
+nsLookAndFeel::InitWidget()
+{
+    NS_ASSERTION(!mStyle, "already initialized");
+    // GtkInvisibles come with a refcount that is not floating
+    // (since their initialization code calls g_object_ref_sink) and
+    // their destroy code releases that reference (which means they
+    // have to be explicitly destroyed, since calling unref enough
+    // to cause destruction would lead to *another* unref).
+    // However, this combination means that it's actually still ok
+    // to use the normal pattern, which is to g_object_ref_sink
+    // after construction, and then destroy *and* unref when we're
+    // done.  (Though we could skip the g_object_ref_sink and the
+    // corresponding g_object_unref, but that's particular to
+    // GtkInvisibles and GtkWindows.)
+    GtkWidget *widget = gtk_invisible_new();
+    g_object_ref_sink(widget); // effectively g_object_ref (see above)
+
+    gtk_widget_ensure_style(widget);
+    mStyle = gtk_style_copy(gtk_widget_get_style(widget));
+
+    gtk_widget_destroy(widget);
+    g_object_unref(widget);
+}
+
 // virtual
 PRUnichar
 nsLookAndFeel::GetPasswordCharacterImpl()
@@ -811,9 +1032,14 @@ nsLookAndFeel::RefreshImpl()
 {
     nsXPLookAndFeel::RefreshImpl();
 
+    mDefaultFontCached = false;
+    mButtonFontCached = false;
+    mFieldFontCached = false;
+    mMenuFontCached = false;
+
     g_object_unref(mStyle);
     mStyle = nsnull;
- 
+
     InitWidget();
     InitLookAndFeel();
 }

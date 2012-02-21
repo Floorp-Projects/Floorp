@@ -41,6 +41,7 @@
 #include "nsContentUtils.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsIDOMSmsCursor.h"
+#include "nsISmsRequestManager.h"
 
 DOMCI_DATA(MozSmsRequest, mozilla::dom::sms::SmsRequest)
 
@@ -92,7 +93,7 @@ NS_IMPL_EVENT_HANDLER(SmsRequest, error)
 SmsRequest::SmsRequest(nsPIDOMWindow* aWindow, nsIScriptContext* aScriptContext)
   : mResult(JSVAL_VOID)
   , mResultRooted(false)
-  , mError(eNoError)
+  , mError(nsISmsRequestManager::SUCCESS_NO_ERROR)
   , mDone(false)
 {
   // Those vars come from nsDOMEventTargetHelper.
@@ -112,7 +113,8 @@ SmsRequest::Reset()
 {
   NS_ASSERTION(mDone, "mDone should be true if we try to reset!");
   NS_ASSERTION(mResult != JSVAL_VOID, "mResult should be set if we try to reset!");
-  NS_ASSERTION(mError == eNoError, "There should be no error if we try to reset!");
+  NS_ASSERTION(mError == nsISmsRequestManager::SUCCESS_NO_ERROR,
+               "There should be no error if we try to reset!");
 
   if (mResultRooted) {
     UnrootResult();
@@ -148,7 +150,8 @@ void
 SmsRequest::SetSuccess(bool aResult)
 {
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
-  NS_PRECONDITION(mError == eNoError, "mError shouldn't have been set!");
+  NS_PRECONDITION(mError == nsISmsRequestManager::SUCCESS_NO_ERROR,
+                  "mError shouldn't have been set!");
   NS_PRECONDITION(mResult == JSVAL_NULL, "mResult shouldn't have been set!");
 
   mResult.setBoolean(aResult);
@@ -174,7 +177,8 @@ bool
 SmsRequest::SetSuccessInternal(nsISupports* aObject)
 {
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
-  NS_PRECONDITION(mError == eNoError, "mError shouldn't have been set!");
+  NS_PRECONDITION(mError == nsISmsRequestManager::SUCCESS_NO_ERROR,
+                  "mError shouldn't have been set!");
   NS_PRECONDITION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
 
   JSContext* cx = mScriptContext->GetNativeContext();
@@ -186,7 +190,7 @@ SmsRequest::SetSuccessInternal(nsISupports* aObject)
   JSAutoRequest ar(cx);
   JSAutoEnterCompartment ac;
   if (!ac.enter(cx, global)) {
-    SetError(eInternalError);
+    SetError(nsISmsRequestManager::INTERNAL_ERROR);
     return false;
   }
 
@@ -195,7 +199,7 @@ SmsRequest::SetSuccessInternal(nsISupports* aObject)
   if (NS_FAILED(nsContentUtils::WrapNative(cx, global, aObject, &mResult))) {
     UnrootResult();
     mResult = JSVAL_VOID;
-    SetError(eInternalError);
+    SetError(nsISmsRequestManager::INTERNAL_ERROR);
     return false;
   }
 
@@ -204,10 +208,11 @@ SmsRequest::SetSuccessInternal(nsISupports* aObject)
 }
 
 void
-SmsRequest::SetError(ErrorType aError)
+SmsRequest::SetError(PRInt32 aError)
 {
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
-  NS_PRECONDITION(mError == eNoError, "mError shouldn't have been set!");
+  NS_PRECONDITION(mError == nsISmsRequestManager::SUCCESS_NO_ERROR,
+                  "mError shouldn't have been set!");
   NS_PRECONDITION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
 
   mDone = true;
@@ -231,32 +236,35 @@ NS_IMETHODIMP
 SmsRequest::GetError(nsAString& aError)
 {
   if (!mDone) {
-    NS_ASSERTION(mError == eNoError,
+    NS_ASSERTION(mError == nsISmsRequestManager::SUCCESS_NO_ERROR,
                  "There should be no error if the request is still processing!");
 
     SetDOMStringToNull(aError);
     return NS_OK;
   }
 
-  NS_ASSERTION(mError == eNoError || mResult == JSVAL_VOID,
+  NS_ASSERTION(mError == nsISmsRequestManager::SUCCESS_NO_ERROR ||
+               mResult == JSVAL_VOID,
                "mResult should be void when there is an error!");
 
   switch (mError) {
-    case eNoError:
+    case nsISmsRequestManager::SUCCESS_NO_ERROR:
       SetDOMStringToNull(aError);
       break;
-    case eNoSignalError:
+    case nsISmsRequestManager::NO_SIGNAL_ERROR:
       aError.AssignLiteral("NoSignalError");
       break;
-    case eNotFoundError:
+    case nsISmsRequestManager::NOT_FOUND_ERROR:
       aError.AssignLiteral("NotFoundError");
       break;
-    case eUnknownError:
+    case nsISmsRequestManager::UNKNOWN_ERROR:
       aError.AssignLiteral("UnknownError");
       break;
-    case eInternalError:
+    case nsISmsRequestManager::INTERNAL_ERROR:
       aError.AssignLiteral("InternalError");
       break;
+    default:
+      MOZ_ASSERT(false, "Unknown error value.");
   }
 
   return NS_OK;

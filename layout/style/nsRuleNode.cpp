@@ -1982,7 +1982,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
     {
       nsStyleFont* fontData = new (mPresContext) nsStyleFont(mPresContext);
       if (NS_LIKELY(fontData != nsnull)) {
-        nscoord minimumFontSize = mPresContext->MinFontSize();
+        nscoord minimumFontSize = mPresContext->MinFontSize(fontData->mLanguage);
 
         if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
           fontData->mFont.size = NS_MAX(fontData->mSize, minimumFontSize);
@@ -2543,7 +2543,7 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
 {
   bool zoom = false;
   PRInt32 baseSize = (PRInt32) aPresContext->
-    GetDefaultFont(aFont->mGenericID)->size;
+    GetDefaultFont(aFont->mGenericID, aFont->mLanguage)->size;
   const nsCSSValue* sizeValue = aRuleData->ValueForFontSize();
   if (eCSSUnit_Enumerated == sizeValue->GetUnit()) {
     PRInt32 value = sizeValue->GetIntValue();
@@ -2654,7 +2654,6 @@ static PRInt8 ClampTo8Bit(PRInt32 aValue) {
 
 /* static */ void
 nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
-                    nscoord aMinFontSize,
                     PRUint8 aGenericFontID, const nsRuleData* aRuleData,
                     const nsStyleFont* aParentFont,
                     nsStyleFont* aFont, bool aUsedStartStruct,
@@ -2662,12 +2661,12 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 {
   bool atRoot = !aContext->GetParent();
 
-  // mLanguage must be set before before any of the CalcLengthWith (direct
-  // calls or calls via SetFontSize) for the cases where |aParentFont| is the
-  // same as |aFont|.
+  // mLanguage must be set before before any of the CalcLengthWith calls
+  // (direct calls or calls via SetFontSize) for the cases where |aParentFont|
+  // is the same as |aFont|.
   //
   // -x-lang: string, inherit
-  // this is not a real CSS property, it is a html attribute mapped to CSS
+  // This is not a real CSS property, it is an HTML attribute mapped to CSS.
   const nsCSSValue* langValue = aRuleData->ValueForLang();
   if (eCSSUnit_Ident == langValue->GetUnit()) {
     nsAutoString lang;
@@ -2678,73 +2677,77 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   }
 
   const nsFont* defaultVariableFont =
-    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID);
+    aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                                 aFont->mLanguage);
 
   // -moz-system-font: enum (never inherit!)
-  nsFont systemFont;
+  PR_STATIC_ASSERT(
+    NS_STYLE_FONT_CAPTION        == LookAndFeel::eFont_Caption &&
+    NS_STYLE_FONT_ICON           == LookAndFeel::eFont_Icon &&
+    NS_STYLE_FONT_MENU           == LookAndFeel::eFont_Menu &&
+    NS_STYLE_FONT_MESSAGE_BOX    == LookAndFeel::eFont_MessageBox &&
+    NS_STYLE_FONT_SMALL_CAPTION  == LookAndFeel::eFont_SmallCaption &&
+    NS_STYLE_FONT_STATUS_BAR     == LookAndFeel::eFont_StatusBar &&
+    NS_STYLE_FONT_WINDOW         == LookAndFeel::eFont_Window &&
+    NS_STYLE_FONT_DOCUMENT       == LookAndFeel::eFont_Document &&
+    NS_STYLE_FONT_WORKSPACE      == LookAndFeel::eFont_Workspace &&
+    NS_STYLE_FONT_DESKTOP        == LookAndFeel::eFont_Desktop &&
+    NS_STYLE_FONT_INFO           == LookAndFeel::eFont_Info &&
+    NS_STYLE_FONT_DIALOG         == LookAndFeel::eFont_Dialog &&
+    NS_STYLE_FONT_BUTTON         == LookAndFeel::eFont_Button &&
+    NS_STYLE_FONT_PULL_DOWN_MENU == LookAndFeel::eFont_PullDownMenu &&
+    NS_STYLE_FONT_LIST           == LookAndFeel::eFont_List &&
+    NS_STYLE_FONT_FIELD          == LookAndFeel::eFont_Field);
+
+  // Fall back to defaultVariableFont.
+  nsFont systemFont = *defaultVariableFont;
   const nsCSSValue* systemFontValue = aRuleData->ValueForSystemFont();
   if (eCSSUnit_Enumerated == systemFontValue->GetUnit()) {
-    nsSystemFontID sysID;
-    switch (systemFontValue->GetIntValue()) {
-      case NS_STYLE_FONT_CAPTION:       sysID = eSystemFont_Caption;      break;    // css2
-      case NS_STYLE_FONT_ICON:          sysID = eSystemFont_Icon;         break;
-      case NS_STYLE_FONT_MENU:          sysID = eSystemFont_Menu;         break;
-      case NS_STYLE_FONT_MESSAGE_BOX:   sysID = eSystemFont_MessageBox;   break;
-      case NS_STYLE_FONT_SMALL_CAPTION: sysID = eSystemFont_SmallCaption; break;
-      case NS_STYLE_FONT_STATUS_BAR:    sysID = eSystemFont_StatusBar;    break;
-      case NS_STYLE_FONT_WINDOW:        sysID = eSystemFont_Window;       break;    // css3
-      case NS_STYLE_FONT_DOCUMENT:      sysID = eSystemFont_Document;     break;
-      case NS_STYLE_FONT_WORKSPACE:     sysID = eSystemFont_Workspace;    break;
-      case NS_STYLE_FONT_DESKTOP:       sysID = eSystemFont_Desktop;      break;
-      case NS_STYLE_FONT_INFO:          sysID = eSystemFont_Info;         break;
-      case NS_STYLE_FONT_DIALOG:        sysID = eSystemFont_Dialog;       break;
-      case NS_STYLE_FONT_BUTTON:        sysID = eSystemFont_Button;       break;
-      case NS_STYLE_FONT_PULL_DOWN_MENU:sysID = eSystemFont_PullDownMenu; break;
-      case NS_STYLE_FONT_LIST:          sysID = eSystemFont_List;         break;
-      case NS_STYLE_FONT_FIELD:         sysID = eSystemFont_Field;        break;
-    }
-
-    // GetSystemFont sets the font face but not necessarily the size
-    // XXX Or at least it used to -- no longer true for thebes.  Maybe
-    // it should be again, though.
-    systemFont.size = defaultVariableFont->size;
-
-    if (NS_FAILED(aPresContext->DeviceContext()->GetSystemFont(sysID,
-                                                               &systemFont))) {
-        systemFont.name = defaultVariableFont->name;
-    }
-
-    // XXXldb All of this platform-specific stuff should be in the
-    // nsDeviceContext implementations, not here.
+    gfxFontStyle fontStyle;
+    LookAndFeel::FontID fontID =
+      (LookAndFeel::FontID)systemFontValue->GetIntValue();
+    if (LookAndFeel::GetFont(fontID, systemFont.name, fontStyle)) {
+      systemFont.style = fontStyle.style;
+      systemFont.systemFont = fontStyle.systemFont;
+      systemFont.variant = NS_FONT_VARIANT_NORMAL;
+      systemFont.weight = fontStyle.weight;
+      systemFont.stretch = fontStyle.stretch;
+      systemFont.decorations = NS_FONT_DECORATION_NONE;
+      systemFont.size = NSFloatPixelsToAppUnits(fontStyle.size,
+                                                aPresContext->DeviceContext()->
+                                                UnscaledAppUnitsPerDevPixel());
+      //systemFont.langGroup = fontStyle.langGroup;
+      systemFont.sizeAdjust = fontStyle.sizeAdjust;
 
 #ifdef XP_WIN
-    //
-    // As far as I can tell the system default fonts and sizes for
-    // on MS-Windows for Buttons, Listboxes/Comboxes and Text Fields are
-    // all pre-determined and cannot be changed by either the control panel
-    // or programmtically.
-    //
-    switch (sysID) {
-      // Fields (text fields)
-      // Button and Selects (listboxes/comboboxes)
-      //    We use whatever font is defined by the system. Which it appears
-      //    (and the assumption is) it is always a proportional font. Then we
-      //    always use 2 points smaller than what the browser has defined as
-      //    the default proportional font.
-      case eSystemFont_Field:
-      case eSystemFont_Button:
-      case eSystemFont_List:
+      // XXXldb This platform-specific stuff should be in the
+      // LookAndFeel implementation, not here.
+      // XXXzw Should we even still *have* this code?  It looks to be making
+      // old, probably obsolete assumptions.
+
+      // As far as I can tell the system default fonts and sizes
+      // on MS-Windows for Buttons, Listboxes/Comboxes and Text Fields are
+      // all pre-determined and cannot be changed by either the control panel
+      // or programmtically.
+      switch (fontID) {
+        // Fields (text fields)
+        // Button and Selects (listboxes/comboboxes)
+        //    We use whatever font is defined by the system. Which it appears
+        //    (and the assumption is) it is always a proportional font. Then we
+        //    always use 2 points smaller than what the browser has defined as
+        //    the default proportional font.
+      case LookAndFeel::eFont_Field:
+      case LookAndFeel::eFont_Button:
+      case LookAndFeel::eFont_List:
         // Assumption: system defined font is proportional
         systemFont.size =
-          NS_MAX(defaultVariableFont->size - nsPresContext::CSSPointsToAppUnits(2), 0);
+          NS_MAX(defaultVariableFont->size -
+                 nsPresContext::CSSPointsToAppUnits(2), 0);
         break;
-    }
+      }
 #endif
-  } else {
-    // In case somebody explicitly used -moz-use-system-font.
-    systemFont = *defaultVariableFont;
+    }
   }
-
 
   // font-family: string list, enum, inherit
   const nsCSSValue* familyValue = aRuleData->ValueForFontFamily();
@@ -2958,12 +2961,21 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   NS_ASSERTION(aFont->mScriptUnconstrainedSize <= aFont->mSize,
                "scriptminsize should never be making things bigger");
 
+  nscoord fontSize = aFont->mSize;
+
   // enforce the user' specified minimum font-size on the value that we expose
-  // (but don't change font-size:0)
-  if (0 < aFont->mSize && aFont->mSize < aMinFontSize)
-    aFont->mFont.size = aMinFontSize;
-  else
-    aFont->mFont.size = aFont->mSize;
+  // (but don't change font-size:0, since that would unhide hidden text)
+  if (fontSize > 0) {
+    nscoord minFontSize = aPresContext->MinFontSize(aFont->mLanguage);
+    if (minFontSize < 0) {
+      minFontSize = 0;
+    }
+    if (fontSize < minFontSize && !aPresContext->IsChrome()) {
+      // override the minimum font-size constraint
+      fontSize = minFontSize;
+    }
+  }
+  aFont->mFont.size = fontSize;
 
   // font-size-adjust: number, none, inherit, initial, -moz-system-font
   const nsCSSValue* sizeAdjustValue = aRuleData->ValueForFontSizeAdjust();
@@ -2975,6 +2987,8 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
               SETFCT_NONE);
 }
 
+// This should die (bug 380915).
+//
 // SetGenericFont:
 //  - backtrack to an ancestor with the same generic font name (possibly
 //    up to the root where default values come from the presentation context)
@@ -2982,7 +2996,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 /* static */ void
 nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
                            nsStyleContext* aContext,
-                           PRUint8 aGenericFontID, nscoord aMinFontSize,
+                           PRUint8 aGenericFontID,
                            nsStyleFont* aFont)
 {
   // walk up the contexts until a context with the desired generic font
@@ -3003,7 +3017,8 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
   // If we stopped earlier because we reached the root of the style tree,
   // we will start with the default generic font from the presentation
   // context. Otherwise we start with the higher context.
-  const nsFont* defaultFont = aPresContext->GetDefaultFont(aGenericFontID);
+  const nsFont* defaultFont =
+    aPresContext->GetDefaultFont(aGenericFontID, aFont->mLanguage);
   nsStyleFont parentFont(*defaultFont, aPresContext);
   if (higherContext) {
     const nsStyleFont* tmpFont = higherContext->GetStyleFont();
@@ -3053,7 +3068,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     if (i != 0)
       ruleData.ValueForFontFamily()->Reset();
 
-    nsRuleNode::SetFont(aPresContext, context, aMinFontSize,
+    nsRuleNode::SetFont(aPresContext, context,
                         aGenericFontID, &ruleData, &parentFont, aFont,
                         false, dummy);
 
@@ -3099,24 +3114,16 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
   // (although there is a pretty good chance they'll fully specify it
   // using the 'font' shorthand).
 
-  // See if there is a minimum font-size constraint to honor
-  nscoord minimumFontSize = mPresContext->MinFontSize();
-
-  if (minimumFontSize < 0)
-    minimumFontSize = 0;
-
   bool useDocumentFonts =
     mPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
 
   // See if we are in the chrome
   // We only need to know this to determine if we have to use the
-  // document fonts (overriding the useDocumentFonts flag), or to
-  // determine if we have to override the minimum font-size constraint.
-  if ((!useDocumentFonts || minimumFontSize > 0) && mPresContext->IsChrome()) {
+  // document fonts (overriding the useDocumentFonts flag).
+  if (!useDocumentFonts && mPresContext->IsChrome()) {
     // if we are not using document fonts, but this is a XUL document,
     // then we use the document fonts anyway
     useDocumentFonts = true;
-    minimumFontSize = 0;
   }
 
   // Figure out if we are a generic font
@@ -3157,7 +3164,7 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
   // Now compute our font struct
   if (generic == kGenericFont_NONE) {
     // continue the normal processing
-    nsRuleNode::SetFont(mPresContext, aContext, minimumFontSize, generic,
+    nsRuleNode::SetFont(mPresContext, aContext, generic,
                         aRuleData, parentFont, font,
                         aStartStruct != nsnull, canStoreInRuleTree);
   }
@@ -3165,7 +3172,7 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
     // re-calculate the font as a generic font
     canStoreInRuleTree = false;
     nsRuleNode::SetGenericFont(mPresContext, aContext, generic,
-                               minimumFontSize, font);
+                               font);
   }
 
   COMPUTE_END_INHERITED(Font, font)
@@ -3326,14 +3333,12 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
         !lineHeightValue->IsRelativeLengthUnit()) {
       nscoord lh = nsStyleFont::ZoomText(mPresContext,
                                          text->mLineHeight.GetCoordValue());
-      nscoord minimumFontSize = mPresContext->MinFontSize();
+
+      canStoreInRuleTree = false;
+      const nsStyleFont *font = aContext->GetStyleFont();
+      nscoord minimumFontSize = mPresContext->MinFontSize(font->mLanguage);
 
       if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
-        // If we applied a minimum font size, scale the line height by
-        // the same ratio.  (If we *might* have applied a minimum font
-        // size, we can't cache in the rule tree.)
-        canStoreInRuleTree = false;
-        const nsStyleFont *font = aContext->GetStyleFont();
         if (font->mSize != 0) {
           lh = nscoord(float(lh) * float(font->mFont.size) / float(font->mSize));
         } else {
@@ -4792,62 +4797,93 @@ struct BackgroundItemComputer<nsCSSValueList, nsStyleImage>
   }
 };
 
-struct BackgroundPositionAxis {
-  nsCSSValue nsCSSValuePairList::*specified;
-  nsStyleBackground::Position::PositionCoord
-    nsStyleBackground::Position::*result;
-};
+/* Helper function for
+ * BackgroundItemComputer<nsCSSValue, nsStyleBackground::Position>
+ * It computes a single PositionCoord from an nsCSSValue object
+ * (contained in a list).
+ */
+typedef nsStyleBackground::Position::PositionCoord PositionCoord;
+static void
+ComputeBackgroundPositionCoord(nsStyleContext* aStyleContext,
+                               const nsCSSValue& aEdge,
+                               const nsCSSValue& aOffset,
+                               PositionCoord* aResult,
+                               bool& aCanStoreInRuleTree)
+{
+  if (eCSSUnit_Percent == aOffset.GetUnit()) {
+    aResult->mLength = 0;
+    aResult->mPercent = aOffset.GetPercentValue();
+    aResult->mHasPercent = true;
+  } else if (aOffset.IsLengthUnit()) {
+    aResult->mLength = CalcLength(aOffset, aStyleContext,
+                                  aStyleContext->PresContext(),
+                                  aCanStoreInRuleTree);
+    aResult->mPercent = 0.0f;
+    aResult->mHasPercent = false;
+  } else if (aOffset.IsCalcUnit()) {
+    LengthPercentPairCalcOps ops(aStyleContext,
+                                 aStyleContext->PresContext(),
+                                 aCanStoreInRuleTree);
+    nsRuleNode::ComputedCalc vals = ComputeCalc(aOffset, ops);
+    aResult->mLength = vals.mLength;
+    aResult->mPercent = vals.mPercent;
+    aResult->mHasPercent = ops.mHasPercent;
+  } else {
+    aResult->mLength = 0;
+    aResult->mPercent = 0.0f;
+    aResult->mHasPercent = false;
+    NS_ASSERTION(aOffset.GetUnit() == eCSSUnit_Null, "unexpected unit");
+  }
 
-static const BackgroundPositionAxis gBGPosAxes[] = {
-  { &nsCSSValuePairList::mXValue,
-    &nsStyleBackground::Position::mXPosition },
-  { &nsCSSValuePairList::mYValue,
-    &nsStyleBackground::Position::mYPosition }
-};
+  if (eCSSUnit_Enumerated == aEdge.GetUnit()) {
+    int sign;
+    if (aEdge.GetIntValue() & (NS_STYLE_BG_POSITION_BOTTOM |
+                               NS_STYLE_BG_POSITION_RIGHT)) {
+      sign = -1;
+    } else {
+      sign = 1;
+    }
+    aResult->mPercent = GetFloatFromBoxPosition(aEdge.GetIntValue()) +
+                        sign * aResult->mPercent;
+    aResult->mLength = sign * aResult->mLength;
+    aResult->mHasPercent = true;
+  } else {
+    NS_ASSERTION(eCSSUnit_Null == aEdge.GetUnit(), "unexpected unit");
+  }
+}
 
 template <>
-struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Position>
+struct BackgroundItemComputer<nsCSSValueList, nsStyleBackground::Position>
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
-                           const nsCSSValuePairList* aSpecifiedValue,
+                           const nsCSSValueList* aSpecifiedValue,
                            nsStyleBackground::Position& aComputedValue,
                            bool& aCanStoreInRuleTree)
   {
-    nsStyleBackground::Position &position = aComputedValue;
-    for (const BackgroundPositionAxis *axis = gBGPosAxes,
-                        *axis_end = ArrayEnd(gBGPosAxes);
-         axis < axis_end; ++axis) {
-      const nsCSSValue &specified = aSpecifiedValue->*(axis->specified);
-      if (eCSSUnit_Percent == specified.GetUnit()) {
-        (position.*(axis->result)).mLength = 0;
-        (position.*(axis->result)).mPercent = specified.GetPercentValue();
-        (position.*(axis->result)).mHasPercent = true;
-      }
-      else if (specified.IsLengthUnit()) {
-        (position.*(axis->result)).mLength =
-          CalcLength(specified, aStyleContext, aStyleContext->PresContext(),
-                     aCanStoreInRuleTree);
-        (position.*(axis->result)).mPercent = 0.0f;
-        (position.*(axis->result)).mHasPercent = false;
-      }
-      else if (specified.IsCalcUnit()) {
-        LengthPercentPairCalcOps ops(aStyleContext,
-                                     aStyleContext->PresContext(),
-                                     aCanStoreInRuleTree);
-        nsRuleNode::ComputedCalc vals = ComputeCalc(specified, ops);
-        (position.*(axis->result)).mLength = vals.mLength;
-        (position.*(axis->result)).mPercent = vals.mPercent;
-        (position.*(axis->result)).mHasPercent = ops.mHasPercent;
-      }
-      else if (eCSSUnit_Enumerated == specified.GetUnit()) {
-        (position.*(axis->result)).mLength = 0;
-        (position.*(axis->result)).mPercent =
-          GetFloatFromBoxPosition(specified.GetIntValue());
-        (position.*(axis->result)).mHasPercent = true;
-      } else {
-        NS_NOTREACHED("unexpected unit");
-      }
-    }
+    NS_ASSERTION(aSpecifiedValue->mValue.GetUnit() == eCSSUnit_Array, "bg-position not an array");
+
+    nsRefPtr<nsCSSValue::Array> bgPositionArray =
+                                  aSpecifiedValue->mValue.GetArrayValue();
+    const nsCSSValue &xEdge   = bgPositionArray->Item(0);
+    const nsCSSValue &xOffset = bgPositionArray->Item(1);
+    const nsCSSValue &yEdge   = bgPositionArray->Item(2);
+    const nsCSSValue &yOffset = bgPositionArray->Item(3);
+
+    NS_ASSERTION((eCSSUnit_Enumerated == xEdge.GetUnit()  ||
+                  eCSSUnit_Null       == xEdge.GetUnit()) &&
+                 (eCSSUnit_Enumerated == yEdge.GetUnit()  ||
+                  eCSSUnit_Null       == yEdge.GetUnit()) &&
+                  eCSSUnit_Enumerated != xOffset.GetUnit()  &&
+                  eCSSUnit_Enumerated != yOffset.GetUnit(),
+                  "Invalid background position");
+
+    ComputeBackgroundPositionCoord(aStyleContext, xEdge, xOffset,
+                                   &aComputedValue.mXPosition,
+                                   aCanStoreInRuleTree);
+
+    ComputeBackgroundPositionCoord(aStyleContext, yEdge, yOffset,
+                                   &aComputedValue.mYPosition,
+                                   aCanStoreInRuleTree);
   }
 };
 
@@ -5184,12 +5220,12 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
   // background-position: enum, length, percent (flags), inherit [pair list]
   nsStyleBackground::Position initialPosition;
   initialPosition.SetInitialValues();
-  SetBackgroundPairList(aContext, *aRuleData->ValueForBackgroundPosition(),
-                        bg->mLayers,
-                        parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
-                        initialPosition, parentBG->mPositionCount,
-                        bg->mPositionCount, maxItemCount, rebuild,
-                        canStoreInRuleTree);
+  SetBackgroundList(aContext, *aRuleData->ValueForBackgroundPosition(),
+                    bg->mLayers,
+                    parentBG->mLayers, &nsStyleBackground::Layer::mPosition,
+                    initialPosition, parentBG->mPositionCount,
+                    bg->mPositionCount, maxItemCount, rebuild,
+                    canStoreInRuleTree);
 
   // background-size: enum, length, auto, inherit, initial [pair list]
   nsStyleBackground::Size initialSize;

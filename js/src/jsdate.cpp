@@ -79,6 +79,7 @@
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
+#include "vm/MethodGuard-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace mozilla;

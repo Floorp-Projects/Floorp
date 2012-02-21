@@ -54,7 +54,7 @@ XPIDLSRCS = \
 	nsIFontEnumerator.idl \
 	nsIScriptableRegion.idl \
 	$(NULL)
-        
+
 EXPORTS	= \
 	gfxCore.h \
 	gfxCrashReporterUtils.h \
@@ -101,34 +101,6 @@ CPPSRCS = \
 
 ifdef MOZ_X11
 CPPSRCS += X11Util.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-CPPSRCS += nsSystemFontsAndroid.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-CPPSRCS += nsSystemFontsAndroid.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS = nsSystemFontsMac.mm
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-CPPSRCS += nsSystemFontsGTK2.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-CPPSRCS += nsSystemFontsOS2.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += nsSystemFontsQt.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS += nsSystemFontsWin.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk

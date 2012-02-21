@@ -454,7 +454,7 @@ add_test(function test_source_uri_rewrite() {
 
   let installCalled = false;
   store.__proto__.installAddonFromSearchResult =
-    function testInstallAddon(addon, cb) {
+    function testInstallAddon(addon, metadata, cb) {
 
     do_check_eq("http://127.0.0.1:8888/require.xpi?src=sync",
                 addon.sourceURI.spec);
@@ -472,7 +472,7 @@ add_test(function test_source_uri_rewrite() {
   let server = createAndStartHTTPServer(HTTP_PORT);
 
   let installCallback = Async.makeSpinningCallback();
-  store.installAddonsFromIDs(["rewrite@tests.mozilla.org"], installCallback);
+  store.installAddons([{id: "rewrite@tests.mozilla.org"}], installCallback);
 
   installCallback.wait();
   do_check_true(installCalled);
@@ -492,7 +492,7 @@ add_test(function test_handle_empty_source_uri() {
   const ID = "missing-sourceuri@tests.mozilla.org";
 
   let cb = Async.makeSpinningCallback();
-  store.installAddonsFromIDs([ID], cb);
+  store.installAddons([{id: ID}], cb);
   let result = cb.wait();
 
   do_check_true("installedIDs" in result);

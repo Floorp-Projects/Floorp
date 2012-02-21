@@ -25,24 +25,24 @@
   const Cu = Components.utils;
 
   // Make a fake DB file.
-  var file = Cc["@mozilla.org/file/directory_service;1"].
+  let file = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).
              get("ProfD", Ci.nsIFile);
   file.append("test_sqliteMultiReporter-fake-DB-tmp.sqlite");
 
   // Open and close the DB.
-  var storage = Cc["@mozilla.org/storage/service;1"].
+  let storage = Cc["@mozilla.org/storage/service;1"].
                 getService(Ci.mozIStorageService);
-  var db = storage.openDatabase(file);
+  let db = storage.openDatabase(file);
   db.close();
 
   // Invoke all the multi-reporters.  The SQLite multi-reporter is among
   // them.  It shouldn't crash.
-  var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
   e = mgr.enumerateMultiReporters();
   while (e.hasMoreElements()) {
-    var r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
     r.collectReports(function(){}, null);
   }
 

@@ -50,6 +50,8 @@
 #include "jsproxy.h"
 #include "jsscope.h"
 
+#include "vm/MethodGuard.h"
+
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"

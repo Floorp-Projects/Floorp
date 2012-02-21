@@ -285,7 +285,7 @@ nsSelectMoveScrollCommand::DoCommand(const char *aCommandName, nsISupports *aCom
     }
   }
 
-  for (int i = 0; i < mozilla::ArrayLength(browseCommands); i++) {
+  for (size_t i = 0; i < ArrayLength(browseCommands); i++) {
     bool forward = !strcmp(aCommandName, browseCommands[i].forward);
     if (forward || !strcmp(aCommandName, browseCommands[i].reverse)) {
       if (caretOn && browseCommands[i].move &&

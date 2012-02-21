@@ -71,8 +71,9 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
-#include "vm/ScopeObject.h"
 #include "vm/Debugger.h"
+#include "vm/MethodGuard.h"
+#include "vm/ScopeObject.h"
 
 #if JS_HAS_GENERATORS
 # include "jsiter.h"
@@ -91,8 +92,8 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
-#include "vm/ScopeObject-inl.h"
 #include "vm/ArgumentsObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace mozilla;

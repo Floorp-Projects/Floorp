@@ -16,21 +16,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=401046
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=401046">Mozilla Bug 401046</a>
-<!-- FIXME tried changing the zh-CN pref instead of x-western, but the language
-     is based only on the document *charset* -->
-<!--
 <p id="display" lang="zh-Hans">
   <span id="s0" style="font-size: 0">汉字</span>
   <span id="s4" style="font-size: 4px">汉字</span>
   <span id="s12" style="font-size: 12px">汉字</span>
   <span id="s28" style="font-size: 28px">汉字</span>
-</p>
--->
-<p id="display">
-  <span id="s0" style="font-size: 0">Ép</span>
-  <span id="s4" style="font-size: 4px">Ép</span>
-  <span id="s12" style="font-size: 12px">Ép</span>
-  <span id="s28" style="font-size: 28px">Ép</span>
 </p>
 <div id="content" style="display: none">
   
@@ -56,7 +46,7 @@ function fs(idx) {
   return getComputedStyle(elts[idx], "").marginBottom;
 }
 
-SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.x-western']]}, step1);
+SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.zh-CN']]}, step1);
 
 function step1() {
     is(fs(0), "0px", "at min font size 0, 0px should compute to 0px");
@@ -64,7 +54,7 @@ function step1() {
     is(fs(2), "12px", "at min font size 0, 12px should compute to 12px");
     is(fs(3), "28px", "at min font size 0, 28px should compute to 28px");
 
-    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.x-western', 7]]}, step2);
+    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.zh-CN', 7]]}, step2);
 }
 
 function step2() {
@@ -73,7 +63,7 @@ function step2() {
     is(fs(2), "12px", "at min font size 7, 12px should compute to 12px");
     is(fs(3), "28px", "at min font size 7, 28px should compute to 28px");
 
-    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.x-western', 18]]}, step3);
+    SpecialPowers.pushPrefEnv({'set': [['font.minimum-size.zh-CN', 18]]}, step3);
 }
 
 function step3() {
@@ -82,7 +72,7 @@ function step3() {
     is(fs(2), "18px", "at min font size 18, 12px should compute to 18px");
     is(fs(3), "28px", "at min font size 18, 28px should compute to 28px");
 
-    SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.x-western']]}, SimpleTest.finish);
+    SpecialPowers.pushPrefEnv({'clear': [['font.minimum-size.zh-CN']]}, SimpleTest.finish);
 }
 
 </script>

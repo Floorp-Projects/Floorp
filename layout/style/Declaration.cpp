@@ -411,9 +411,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       const nsCSSValueList *attachment =
         data->ValueFor(eCSSProperty_background_attachment)->
         GetListValue();
-      const nsCSSValuePairList *position =
+      const nsCSSValueList *position =
         data->ValueFor(eCSSProperty_background_position)->
-        GetPairListValue();
+        GetListValue();
       const nsCSSValueList *clip =
         data->ValueFor(eCSSProperty_background_clip)->
         GetListValue();
@@ -437,11 +437,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         attachment->mValue.AppendToString(eCSSProperty_background_attachment,
                                           aValue);
         aValue.Append(PRUnichar(' '));
-        position->mXValue.AppendToString(eCSSProperty_background_position,
-                                         aValue);
-        aValue.Append(PRUnichar(' '));
-        position->mYValue.AppendToString(eCSSProperty_background_position,
-                                         aValue);
+        position->mValue.AppendToString(eCSSProperty_background_position,
+                                        aValue);
+        
         NS_ABORT_IF_FALSE(clip->mValue.GetUnit() == eCSSUnit_Enumerated &&
                           origin->mValue.GetUnit() == eCSSUnit_Enumerated,
                           "should not be inherit/initial within list and "
