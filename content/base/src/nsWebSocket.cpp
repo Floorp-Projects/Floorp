@@ -377,14 +377,28 @@ nsWebSocket::OnServerClose(nsISupports *aContext, PRUint16 aCode,
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 
+  NS_ABORT_IF_FALSE(mReadyState != nsIWebSocket::CONNECTING,
+                    "Received server close before connected?");
+
+  if (mReadyState == nsIWebSocket::CLOSED) {
+    NS_WARNING("Received server close after already closed!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   // store code/string for onclose DOM event
   mCloseEventCode = aCode;
   CopyUTF8toUTF16(aReason, mCloseEventReason);
 
-  // Send reciprocal Close frame.
-  // 5.5.1: "When sending a Close frame in response, the endpoint typically
-  // echos the status code it received"
-  CloseConnection(aCode, aReason);
+  if (mReadyState == nsIWebSocket::OPEN) {
+    // Send reciprocal Close frame.
+    // 5.5.1: "When sending a Close frame in response, the endpoint typically
+    // echos the status code it received"
+    CloseConnection(aCode, aReason);
+  } else {
+    // Nothing else to do: OnStop does the rest of the work.
+    NS_ASSERTION (mReadyState == nsIWebSocket::CLOSING, "unknown state");
+    NS_ASSERTION(!mDisconnected, "should not be disconnected during CLOSING");
+  }
 
   return NS_OK;
 }
