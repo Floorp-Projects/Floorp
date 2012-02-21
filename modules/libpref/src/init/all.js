@@ -952,6 +952,8 @@ pref("network.IDN.whitelist.xn--fzc2c9e2c", true);
 pref("network.IDN.whitelist.xn--xkc2al3hye2a", true);
 // qa, Qatar, .<Qatar>
 pref("network.IDN.whitelist.xn--wgbl6a", true);
+// rs, Serbia, .<Srb>
+pref("network.IDN.whitelist.xn--90a3ac", true);
 // ru, Russian Federation, .<RF>
 pref("network.IDN.whitelist.xn--p1ai", true);
 // sa, Saudi Arabia, .<al-Saudiah> with variants
