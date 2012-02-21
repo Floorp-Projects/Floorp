@@ -78,9 +78,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     ValueOperand ToValue(LInstruction *ins, size_t pos);
     ValueOperand ToOutValue(LInstruction *ins);
 
-    // Functions for LTestVAndBranch.
-    Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);
-
     void storeElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
                            const Register &elements, const LAllocation *index);
 

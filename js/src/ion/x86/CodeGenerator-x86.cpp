@@ -198,17 +198,6 @@ CodeGeneratorX86::visitDouble(LDouble *ins)
     return true;
 }
 
-Assembler::Condition
-CodeGeneratorX86::testStringTruthy(bool truthy, const ValueOperand &value)
-{
-    Register string = value.payloadReg();
-    Operand lengthAndFlags(string, JSString::offsetOfLengthAndFlags());
-
-    size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
-    masm.testl(lengthAndFlags, Imm32(mask));
-    return truthy ? Assembler::NonZero : Assembler::Zero;
-}
-
 bool
 CodeGeneratorX86::visitLoadSlotV(LLoadSlotV *load)
 {

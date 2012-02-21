@@ -2007,6 +2007,19 @@ MacroAssemblerARMCompat::handleException()
     // We're going to be returning by the ion calling convention, which returns
     // by ??? (for now, I think ldr pc, [sp]!)
     as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
-    //ret();
+
 }
 
+Assembler::Condition
+MacroAssemblerARMCompat::testStringTruthy(bool truthy, const ValueOperand &value)
+{
+    Register string = value.payloadReg();
+
+    size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
+    ma_dtr(IsLoad, string, Imm32(JSString::offsetOfLengthAndFlags()), ScratchRegister);
+    // Bit clear into the scratch register. This is done because there is performs the operation
+    // dest <- src1 & ~ src2. There is no instruction that does this without writing
+    // the result somewhere, so the Scratch Register is sacrificed.
+    ma_bic(Imm32(~mask), ScratchRegister, SetCond);
+    return truthy ? Assembler::NonZero : Assembler::Zero;
+}

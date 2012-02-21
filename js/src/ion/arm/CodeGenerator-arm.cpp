@@ -1086,22 +1086,6 @@ CodeGeneratorARM::splitTagForTest(const ValueOperand &value)
 {
     return value.typeReg();
 }
-Assembler::Condition
-CodeGeneratorARM::testStringTruthy(bool truthy, const ValueOperand &value)
-{
-    Register string = value.payloadReg();
-    // OOPS.  It looks like we need a register to clobber here, and X86 doesn't
-    // it also appears as if the type register is safe to clob here (at least in
-    // the only case where this is presently called).  An actual temp register
-    // should be reserved so this is not broken for other uses.
-    Register tmp = value.typeReg();
-    //DTRAddr lengthAndFlags = DTRAddr(string, DtrOffImm(JSString::offsetOfLengthAndFlags()));
-
-    size_t mask = (0xFFFFFFFF << JSString::LENGTH_SHIFT);
-    masm.ma_dtr(IsLoad, string, Imm32(JSString::offsetOfLengthAndFlags()), tmp);
-    masm.ma_tst(tmp, Imm32(mask));
-    return truthy ? Assembler::NonZero : Assembler::Zero;
-}
 
 bool
 CodeGeneratorARM::visitTestDAndBranch(LTestDAndBranch *test)
