@@ -173,7 +173,6 @@ SendMessage(const char *msg, const char *base64Cert, char ** _retval)
   NSSCMSEnvelopedData *env;
   NSSCMSContentInfo *cinfo;
   NSSCMSRecipientInfo *rcpt;
-  SECItem item;
   SECItem output;
   PLArenaPool *arena = PORT_NewArena(1024);
   SECStatus s;
@@ -218,8 +217,6 @@ SendMessage(const char *msg, const char *base64Cert, char ** _retval)
   }
 
   cinfo = NSS_CMSEnvelopedData_GetContentInfo(env);
-  item.data = (unsigned char *)msg;
-  item.len = strlen(msg);  /* XPCOM equiv?? */
   s = NSS_CMSContentInfo_SetContent_Data(cmsMsg, cinfo, 0, false);
   if (s != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSSecureMessage::SendMessage - can't set content data\n"));
