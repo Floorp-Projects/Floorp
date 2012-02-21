@@ -201,17 +201,9 @@ public abstract class TileLayer extends Layer {
         bindAndSetGLParameters();
 
         if (newlyCreated || dirtyRect.contains(bufferRect)) {
-            if (mSize.equals(bufferSize)) {
-                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width,
-                                    mSize.height, 0, glInfo.format, glInfo.type, imageBuffer);
-                return;
-            } else {
-                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width,
-                                    mSize.height, 0, glInfo.format, glInfo.type, null);
-                GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, bufferSize.width,
-                                       bufferSize.height, glInfo.format, glInfo.type, imageBuffer);
-                return;
-            }
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width,
+                                mSize.height, 0, glInfo.format, glInfo.type, imageBuffer);
+            return;
         }
 
         // Make sure that the dirty region intersects with the buffer rect,
