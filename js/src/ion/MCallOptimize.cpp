@@ -163,6 +163,55 @@ IonBuilder::optimizeNativeCall(uint32 argc)
             }
         }
         // TODO: js_math_ceil
+
+        // Compile any of the 3 because  charAt = fromCharCode . charCodeAt
+        if (native == js_str_charCodeAt || native == js_str_charAt ||
+            native == js::str_fromCharCode) {
+
+            if (native == js_str_charCodeAt) {
+                if (returnType != MIRType_Int32 || thisType != MIRType_String ||
+                    arg1Type != MIRType_Int32) {
+                    return false;
+                }
+            }
+
+            if (native == js_str_charAt) {
+                if (returnType != MIRType_String || thisType != MIRType_String ||
+                    arg1Type != MIRType_Int32) {
+                    return false;
+                }
+            }
+
+            if (native == js::str_fromCharCode) {
+                // argThis == MPassArg(MConstant(String))
+                if (returnType != MIRType_String || arg1Type != MIRType_Int32)
+                    return false;
+            }
+
+            if (!discardCall(argc, argv, current))
+                return false;
+            MDefinition *str = argv[0];
+            MDefinition *indexOrCode = argv[1];
+            MInstruction *ins = MToInt32::New(indexOrCode);
+            current->add(ins);
+            indexOrCode = ins;
+
+            if (native == js_str_charCodeAt || native == js_str_charAt) {
+                MStringLength *length = MStringLength::New(str);
+                MBoundsCheck *boundsCheck = MBoundsCheck::New(indexOrCode, length);
+                current->add(length);
+                current->add(boundsCheck);
+                ins = new MCharCodeAt(str, indexOrCode);
+                current->add(ins);
+                indexOrCode = ins;
+            }
+            if (native == js::str_fromCharCode || native == js_str_charAt) {
+                ins = new MFromCharCode(indexOrCode);
+                current->add(ins);
+            }
+            current->push(ins);
+            return true;
+        }
         return false;
     }
 

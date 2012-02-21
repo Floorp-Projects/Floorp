@@ -153,6 +153,10 @@ class MacroAssemblerX86Shared : public Assembler
         testl(lhs, rhs);
         j(cond, label);
     }
+    void branchTest32(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
+        testl(lhs, imm);
+        j(cond, label);
+    }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
         testl(Operand(address), imm);
         j(cond, label);
