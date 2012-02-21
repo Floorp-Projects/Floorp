@@ -64,7 +64,7 @@ foreignObject {
 
 *|*::-moz-svg-foreign-content {
   display: block !important;
-  /* We need to be an absolute container */
-  position: relative !important;
+  /* We need to be an absolute and fixed container */
+  -moz-transform: translate(0) !important;
   text-indent: 0;
 }
