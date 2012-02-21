@@ -213,10 +213,11 @@ public class LayerController {
         Log.d(LOGTAG, "setViewportSize: " + mViewportMetrics);
         setForceRedraw();
 
-        if (mLayerClient != null)
+        if (mLayerClient != null) {
+            notifyLayerClientOfGeometryChange();
             mLayerClient.viewportSizeChanged();
+        }
 
-        notifyLayerClientOfGeometryChange();
         mPanZoomController.abortAnimation();
         mView.requestRender();
     }
