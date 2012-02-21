@@ -562,7 +562,7 @@ HistoryMenu.prototype = {
     undoMenu.removeAttribute("disabled");
 
     // populate menu
-    var undoItems = eval("(" + this._ss.getClosedTabData(window) + ")");
+    var undoItems = JSON.parse(this._ss.getClosedTabData(window));
     for (var i = 0; i < undoItems.length; i++) {
       var m = document.createElement("menuitem");
       m.setAttribute("label", undoItems[i].title);
