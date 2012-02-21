@@ -45,7 +45,7 @@ interface nsIDOMElement;
  * permission to perform a privileged operation such as
  * geolocation.
  */
-[scriptable, function, uuid(E79C7063-DBAB-45E3-8A98-D0142E1ABC9A)]
+[scriptable, uuid(E79C7063-DBAB-45E3-8A98-D0142E1ABC9A)]
 interface nsIContentPermissionRequest : nsISupports {
 
   /**
