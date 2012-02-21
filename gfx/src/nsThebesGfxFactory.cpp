@@ -43,7 +43,6 @@
 #include "nsThebesFontEnumerator.h"
 #include "nsScriptableRegion.h"
 
-#include "nsDeviceContext.h"
 #include "gfxPlatform.h"
 
 // This class doesn't do anything; its only purpose is to give
@@ -100,7 +99,6 @@ static const mozilla::Module::ContractIDEntry kThebesContracts[] = {
 static void
 nsThebesGfxModuleDtor()
 {
-    nsDeviceContext::ClearCachedSystemFonts();
     gfxPlatform::Shutdown();
 }
 

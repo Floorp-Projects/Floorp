@@ -28,6 +28,26 @@ function testAbsentAttrs(aAccOrElmOrID, aAbsentAttrs)
 }
 
 /**
+ * Test CSS based object attributes.
+ */
+function testCSSAttrs(aID)
+{
+  var node = document.getElementById(aID);
+  var computedStyle = document.defaultView.getComputedStyle(node, "");
+
+  var attrs = {
+    "display": computedStyle.display,
+    "text-align": computedStyle.textAlign,
+    "text-indent": computedStyle.textIndent,
+    "margin-left": computedStyle.marginLeft,
+    "margin-right": computedStyle.marginRight,
+    "margin-top": computedStyle.marginTop,
+    "margin-bottom": computedStyle.marginBottom
+  };
+  testAttrs(aID, attrs, true);
+}
+
+/**
  * Test group object attributes (posinset, setsize and level) and
  * nsIAccessible::groupPosition() method.
  *

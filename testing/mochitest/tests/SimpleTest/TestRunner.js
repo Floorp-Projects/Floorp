@@ -133,6 +133,28 @@ TestRunner._currentLoop = 0;
 TestRunner.onComplete = null;
 
 /**
+ * Adds a failed test case to a list so we can rerun only the failed tests
+ **/
+TestRunner._failedTests = {};
+TestRunner._failureFile = "";
+
+TestRunner.addFailedTest = function(testName) {
+    if (TestRunner._failedTests[testName] == undefined) {
+        TestRunner._failedTests[testName] = "";
+    }
+};
+
+TestRunner.setFailureFile = function(fileName) {
+    TestRunner._failureFile = fileName;
+}
+
+TestRunner.generateFailureList = function() {
+    var failures = new SpecialPowersLogger(TestRunner._failureFile);
+    failures.log(JSON.stringify(TestRunner._failedTests));
+    failures.close();
+};
+
+/**
  * If logEnabled is true, this is the logger that will be used.
 **/
 TestRunner.logger = LogController;
@@ -346,6 +368,7 @@ TestRunner.runNextTest = function() {
           if (TestRunner.onComplete)
             TestRunner.onComplete();
        }
+       TestRunner.generateFailureList();
     }
 };
 

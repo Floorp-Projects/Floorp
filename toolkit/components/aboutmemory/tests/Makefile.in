@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _CHROME_FILES	= \
+		test_aboutcompartments.xul \
 		test_aboutmemory.xul \
 		test_aboutmemory2.xul \
 		test_sqliteMultiReporter.xul \

@@ -41,6 +41,7 @@
 #include "nsStyleConsts.h"
 #include "nsXULAppAPI.h"
 #include "nsLookAndFeel.h"
+#include "gfxFont.h"
 
 using namespace mozilla;
 using mozilla::dom::ContentChild;
@@ -469,6 +470,20 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
             break;
     }
     return rv;
+}
+
+/*virtual*/
+bool
+nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
+                           gfxFontStyle& aFontStyle)
+{
+    aFontName.AssignLiteral("\"Droid Sans\"");
+    aFontStyle.style = NS_FONT_STYLE_NORMAL;
+    aFontStyle.weight = NS_FONT_WEIGHT_NORMAL;
+    aFontStyle.stretch = NS_FONT_STRETCH_NORMAL;
+    aFontStyle.size = 9.0 * 96.0f / 72.0f;
+    aFontStyle.systemFont = true;
+    return true;
 }
 
 /*virtual*/

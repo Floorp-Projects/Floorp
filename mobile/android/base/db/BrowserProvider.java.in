@@ -42,7 +42,9 @@ package @ANDROID_PACKAGE_NAME@.db;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import org.mozilla.gecko.GeckoAppShell;
@@ -65,6 +67,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -80,7 +83,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 1;
+    static final int DATABASE_VERSION = 2;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -91,6 +94,8 @@ public class BrowserProvider extends ContentProvider {
     static final String TABLE_BOOKMARKS = "bookmarks";
     static final String TABLE_HISTORY = "history";
     static final String TABLE_IMAGES = "images";
+
+    static final String TABLE_BOOKMARKS_TMP = TABLE_BOOKMARKS + "_tmp";
 
     static final String VIEW_BOOKMARKS_WITH_IMAGES = "bookmarks_with_images";
     static final String VIEW_HISTORY_WITH_IMAGES = "history_with_images";
@@ -244,11 +249,17 @@ public class BrowserProvider extends ContentProvider {
             super(context, databasePath, null, DATABASE_VERSION);
         }
 
-        @Override
-        public void onCreate(SQLiteDatabase db) {
-            debug("Creating browser.db: " + db.getPath());
-
+        private void createBookmarksTable(SQLiteDatabase db) {
             debug("Creating " + TABLE_BOOKMARKS + " table");
+
+            // Android versions older than Froyo ship with an sqlite
+            // that doesn't support foreign keys.
+            String foreignKeyOnParent = null;
+            if (Build.VERSION.SDK_INT >= 8) {
+                foreignKeyOnParent = ", FOREIGN KEY (" + Bookmarks.PARENT +
+                    ") REFERENCES " + TABLE_BOOKMARKS + "(" + Bookmarks._ID + ")";
+            }
+
             db.execSQL("CREATE TABLE " + TABLE_BOOKMARKS + "(" +
                     Bookmarks._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     Bookmarks.TITLE + " TEXT," +
@@ -263,6 +274,7 @@ public class BrowserProvider extends ContentProvider {
                     Bookmarks.DATE_MODIFIED + " INTEGER," +
                     Bookmarks.GUID + " TEXT," +
                     Bookmarks.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
+                    (foreignKeyOnParent != null ? foreignKeyOnParent : "") +
                     ");");
 
             db.execSQL("CREATE INDEX bookmarks_url_index ON " + TABLE_BOOKMARKS + "("
@@ -271,7 +283,9 @@ public class BrowserProvider extends ContentProvider {
                     + Bookmarks.GUID + ")");
             db.execSQL("CREATE INDEX bookmarks_modified_index ON " + TABLE_BOOKMARKS + "("
                     + Bookmarks.DATE_MODIFIED + ")");
+        }
 
+        private void createHistoryTable(SQLiteDatabase db) {
             debug("Creating " + TABLE_HISTORY + " table");
             db.execSQL("CREATE TABLE " + TABLE_HISTORY + "(" +
                     History._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -293,7 +307,9 @@ public class BrowserProvider extends ContentProvider {
                     + History.DATE_MODIFIED + ")");
             db.execSQL("CREATE INDEX history_visited_index ON " + TABLE_HISTORY + "("
                     + History.DATE_LAST_VISITED + ")");
+        }
 
+        private void createImagesTable(SQLiteDatabase db) {
             debug("Creating " + TABLE_IMAGES + " table");
             db.execSQL("CREATE TABLE " + TABLE_IMAGES + " (" +
                     Images._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -313,39 +329,213 @@ public class BrowserProvider extends ContentProvider {
                     + Images.GUID + ")");
             db.execSQL("CREATE INDEX images_modified_index ON " + TABLE_IMAGES + "("
                     + Images.DATE_MODIFIED + ")");
+        }
 
+        private void createBookmarksWithImagesView(SQLiteDatabase db) {
             db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_BOOKMARKS, "*") +
                     ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
                     TABLE_BOOKMARKS_JOIN_IMAGES);
+        }
 
+        private void createHistoryWithImagesView(SQLiteDatabase db) {
             db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_HISTORY_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_HISTORY, "*") +
                     ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
                     TABLE_HISTORY_JOIN_IMAGES);
-
-            createMobileBookmarksFolder(db);
-
-            // FIXME: Create default bookmarks here
         }
 
-        private void createMobileBookmarksFolder(SQLiteDatabase db) {
+        @Override
+        public void onCreate(SQLiteDatabase db) {
+            debug("Creating browser.db: " + db.getPath());
+
+            createBookmarksTable(db);
+            createHistoryTable(db);
+            createImagesTable(db);
+
+            createBookmarksWithImagesView(db);
+            createHistoryWithImagesView(db);
+
+            createOrUpdateSpecialFolder(db, Bookmarks.PLACES_FOLDER_GUID,
+                R.string.bookmarks_folder_places, 0);
+
+            createOrUpdateAllSpecialFolders(db);
+
+            // FIXME: Create default bookmarks here (bug 728224)
+        }
+
+        private void createOrUpdateAllSpecialFolders(SQLiteDatabase db) {
+            createOrUpdateSpecialFolder(db, Bookmarks.MOBILE_FOLDER_GUID,
+                R.string.bookmarks_folder_mobile, 0);
+            createOrUpdateSpecialFolder(db, Bookmarks.TOOLBAR_FOLDER_GUID,
+                R.string.bookmarks_folder_toolbar, 1);
+            createOrUpdateSpecialFolder(db, Bookmarks.MENU_FOLDER_GUID,
+                R.string.bookmarks_folder_menu, 2);
+            createOrUpdateSpecialFolder(db, Bookmarks.TAGS_FOLDER_GUID,
+                R.string.bookmarks_folder_tags, 3);
+            createOrUpdateSpecialFolder(db, Bookmarks.UNFILED_FOLDER_GUID,
+                R.string.bookmarks_folder_unfiled, 4);
+        }
+
+        private void createOrUpdateSpecialFolder(SQLiteDatabase db,
+                String guid, int titleId, int position) {
             ContentValues values = new ContentValues();
-            values.put(Bookmarks.GUID, Bookmarks.MOBILE_FOLDER_GUID);
+            values.put(Bookmarks.GUID, guid);
             values.put(Bookmarks.IS_FOLDER, 1);
-            values.put(Bookmarks.POSITION, 0);
+            values.put(Bookmarks.POSITION, position);
+
+            if (guid.equals(Bookmarks.PLACES_FOLDER_GUID))
+                values.put(Bookmarks._ID, Bookmarks.FIXED_ROOT_ID);
 
             // Set the parent to 0, which sync assumes is the root
-            values.put(Bookmarks.PARENT, 0);
+            values.put(Bookmarks.PARENT, Bookmarks.FIXED_ROOT_ID);
 
-            String title = mContext.getResources().getString(R.string.bookmarks_folder_mobile);
+            String title = mContext.getResources().getString(titleId);
             values.put(Bookmarks.TITLE, title);
 
             long now = System.currentTimeMillis();
             values.put(Bookmarks.DATE_CREATED, now);
             values.put(Bookmarks.DATE_MODIFIED, now);
 
-            db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.GUID, values);
+            int updated = db.update(TABLE_BOOKMARKS, values,
+                                    Bookmarks.GUID + " = ?",
+                                    new String[] { guid });
+
+            if (updated == 0) {
+                db.insert(TABLE_BOOKMARKS, Bookmarks.GUID, values);
+                debug("Inserted special folder: " + guid);
+            } else {
+                debug("Updated special folder: " + guid);
+            }
+        }
+
+        private boolean isSpecialFolder(ContentValues values) {
+            String guid = values.getAsString(Bookmarks.GUID);
+            if (guid == null)
+                return false;
+
+            return guid.equals(Bookmarks.MOBILE_FOLDER_GUID) ||
+                   guid.equals(Bookmarks.MENU_FOLDER_GUID) ||
+                   guid.equals(Bookmarks.TOOLBAR_FOLDER_GUID) ||
+                   guid.equals(Bookmarks.UNFILED_FOLDER_GUID) ||
+                   guid.equals(Bookmarks.TAGS_FOLDER_GUID);
+        }
+
+        private void migrateBookmarkFolder(SQLiteDatabase db, int folderId) {
+            Cursor c = null;
+
+            debug("Migrating bookmark folder with id = " + folderId);
+
+            String selection = Bookmarks.PARENT + " = " + folderId;
+            String[] selectionArgs = null;
+
+            boolean isRootFolder = (folderId == Bookmarks.FIXED_ROOT_ID);
+
+            // If we're loading the root folder, we have to account for
+            // any previously created special folder that was created without
+            // setting a parent id (e.g. mobile folder) and making sure we're
+            // not adding any infinite recursion as root's parent is root itself.
+            if (isRootFolder) {
+                selection = Bookmarks.GUID + " != ?" + " AND (" +
+                            selection + " OR " + Bookmarks.PARENT + " = NULL)";
+                selectionArgs = new String[] { Bookmarks.PLACES_FOLDER_GUID };
+            }
+
+            List<Integer> subFolders = new ArrayList<Integer>();
+            List<ContentValues> invalidSpecialEntries = new ArrayList<ContentValues>();
+
+            try {
+                c = db.query(TABLE_BOOKMARKS_TMP,
+                             null,
+                             selection,
+                             selectionArgs,
+                             null, null, null);
+
+                // The key point here is that bookmarks should be added in
+                // parent order to avoid any problems with the foreign key
+                // in Bookmarks.PARENT.
+                while (c.moveToNext()) {
+                    ContentValues values = new ContentValues();
+
+                    // We're using a null projection in the query which
+                    // means we're getting all columns from the table.
+                    // It's safe to simply transform the row into the
+                    // values to be inserted on the new table.
+                    DatabaseUtils.cursorRowToContentValues(c, values);
+
+                    boolean isSpecialFolder = isSpecialFolder(values);
+
+                    // The mobile folder used to be created with PARENT = NULL.
+                    // We want fix that here.
+                    if (values.getAsLong(Bookmarks.PARENT) == null && isSpecialFolder)
+                        values.put(Bookmarks.PARENT, Bookmarks.FIXED_ROOT_ID);
+
+                    if (isRootFolder && !isSpecialFolder) {
+                        invalidSpecialEntries.add(values);
+                        continue;
+                    }
+
+                    debug("Migrating bookmark: " + values.getAsString(Bookmarks.TITLE));
+                    db.insert(TABLE_BOOKMARKS, Bookmarks.URL, values);
+
+                    Integer isFolder = values.getAsInteger(Bookmarks.IS_FOLDER);
+                    if (isFolder != null && isFolder == 1)
+                        subFolders.add(values.getAsInteger(Bookmarks._ID));
+                }
+            } finally {
+                if (c != null)
+                    c.close();
+            }
+
+            // At this point is safe to assume that the mobile folder is
+            // in the new table given that we've always created it on
+            // database creation time.
+            final int nInvalidSpecialEntries = invalidSpecialEntries.size();
+            if (nInvalidSpecialEntries > 0) {
+                Long mobileFolderId = guidToID(db, Bookmarks.MOBILE_FOLDER_GUID);
+
+                debug("Found " + nInvalidSpecialEntries + " invalid special folder entries");
+                for (int i = 0; i < nInvalidSpecialEntries; i++) {
+                    ContentValues values = invalidSpecialEntries.get(i);
+                    values.put(Bookmarks.PARENT, mobileFolderId);
+
+                    db.insert(TABLE_BOOKMARKS, Bookmarks.URL, values);
+                }
+            }
+
+            final int nSubFolders = subFolders.size();
+            for (int i = 0; i < nSubFolders; i++) {
+                int subFolderId = subFolders.get(i);
+                migrateBookmarkFolder(db, subFolderId);
+            }
+        }
+
+        private void upgradeDatabaseFrom1to2(SQLiteDatabase db) {
+            debug("Renaming bookmarks table to " + TABLE_BOOKMARKS_TMP);
+            db.execSQL("ALTER TABLE " + TABLE_BOOKMARKS +
+                       " RENAME TO " + TABLE_BOOKMARKS_TMP);
+
+            debug("Dropping views and indexes related to " + TABLE_BOOKMARKS);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES);
+
+            db.execSQL("DROP INDEX IF EXISTS bookmarks_url_index");
+            db.execSQL("DROP INDEX IF EXISTS bookmarks_guid_index");
+            db.execSQL("DROP INDEX IF EXISTS bookmarks_modified_index");
+
+            createBookmarksTable(db);
+            createBookmarksWithImagesView(db);
+
+            createOrUpdateSpecialFolder(db, Bookmarks.PLACES_FOLDER_GUID,
+                R.string.bookmarks_folder_places, 0);
+
+            migrateBookmarkFolder(db, Bookmarks.FIXED_ROOT_ID);
+
+            // Ensure all special folders exist and have the
+            // right folder hierarchy.
+            createOrUpdateAllSpecialFolders(db);
+
+            debug("Dropping bookmarks temporary table");
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_BOOKMARKS_TMP);
         }
 
         @Override
@@ -353,7 +543,19 @@ public class BrowserProvider extends ContentProvider {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
                     oldVersion + " to " + newVersion);
 
-            // Do nothing for now
+            db.beginTransaction();
+
+            // We have to do incremental upgrades until we reach the current
+            // database schema version.
+            for (int v = oldVersion + 1; v <= newVersion; v++) {
+                switch(v) {
+                    case 2:
+                        upgradeDatabaseFrom1to2(db);
+                        break;
+                 }
+             }
+
+             db.endTransaction();
         }
 
         @Override
@@ -381,6 +583,26 @@ public class BrowserProvider extends ContentProvider {
                         cursor.close();
                 }
             }
+        }
+    }
+
+    private Long guidToID(SQLiteDatabase db, String guid) {
+        Cursor c = null;
+
+        try {
+            c = db.query(TABLE_BOOKMARKS,
+                         new String[] { Bookmarks._ID },
+                         Bookmarks.GUID + " = ?",
+                         new String[] { guid },
+                         null, null, null);
+
+            if (c == null || !c.moveToFirst())
+                return null;
+
+            return c.getLong(c.getColumnIndex(Bookmarks._ID));
+        } finally {
+            if (c != null)
+                c.close();
         }
     }
 

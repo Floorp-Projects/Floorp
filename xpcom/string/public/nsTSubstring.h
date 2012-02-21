@@ -595,27 +595,14 @@ class nsTSubstring_CharT
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
 
       size_t SizeOfExcludingThisMustBeUnshared(nsMallocSizeOfFun mallocSizeOf)
-      {
-        NS_ASSERTION(!(mFlags & F_SHARED), "string is shared");
-        return mallocSizeOf(mData);
-      }
-
+        const;
       size_t SizeOfIncludingThisMustBeUnshared(nsMallocSizeOfFun mallocSizeOf)
-      {
-        return mallocSizeOf(this) + SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
-      }
+        const;
 
       size_t SizeOfExcludingThisIfUnshared(nsMallocSizeOfFun mallocSizeOf)
-      {
-        if (mFlags & F_SHARED)
-          return 0;
-        return mallocSizeOf(mData);
-      }
-
+        const;
       size_t SizeOfIncludingThisIfUnshared(nsMallocSizeOfFun mallocSizeOf)
-      {
-        return mallocSizeOf(this) + SizeOfExcludingThisIfUnshared(mallocSizeOf);
-      }
+        const;
 
     protected:
 

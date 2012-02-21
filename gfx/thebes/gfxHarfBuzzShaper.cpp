@@ -50,13 +50,13 @@
 #include "gfxHarfBuzzShaper.h"
 #include "gfxFontUtils.h"
 #include "gfxUnicodeProperties.h"
+#include "nsUnicodeNormalizer.h"
 
 #include "harfbuzz/hb-unicode.h"
 #include "harfbuzz/hb-ot.h"
 
 #include "cairo.h"
 
-#include "nsUnicodeRange.h"
 #include "nsCRT.h"
 
 #if defined(XP_WIN)
@@ -700,6 +700,140 @@ HBGetEastAsianWidth(hb_unicode_funcs_t *ufuncs, hb_codepoint_t aCh, void *user_d
     return gfxUnicodeProperties::GetEastAsianWidth(aCh);
 }
 
+// Hebrew presentation forms with dagesh, for characters 0x05D0..0x05EA;
+// note that some letters do not have a dagesh presForm encoded
+static const PRUnichar sDageshForms[0x05EA - 0x05D0 + 1] = {
+    0xFB30, // ALEF
+    0xFB31, // BET
+    0xFB32, // GIMEL
+    0xFB33, // DALET
+    0xFB34, // HE
+    0xFB35, // VAV
+    0xFB36, // ZAYIN
+    0, // HET
+    0xFB38, // TET
+    0xFB39, // YOD
+    0xFB3A, // FINAL KAF
+    0xFB3B, // KAF
+    0xFB3C, // LAMED
+    0, // FINAL MEM
+    0xFB3E, // MEM
+    0, // FINAL NUN
+    0xFB40, // NUN
+    0xFB41, // SAMEKH
+    0, // AYIN
+    0xFB43, // FINAL PE
+    0xFB44, // PE
+    0, // FINAL TSADI
+    0xFB46, // TSADI
+    0xFB47, // QOF
+    0xFB48, // RESH
+    0xFB49, // SHIN
+    0xFB4A // TAV
+};
+
+static hb_bool_t
+HBUnicodeCompose(hb_unicode_funcs_t *ufuncs,
+                 hb_codepoint_t      a,
+                 hb_codepoint_t      b,
+                 hb_codepoint_t     *ab,
+                 void               *user_data)
+{
+    hb_bool_t found = nsUnicodeNormalizer::Compose(a, b, ab);
+
+    if (!found && (b & 0x1fff80) == 0x0580) {
+        // special-case Hebrew presentation forms that are excluded from
+        // standard normalization, but wanted for old fonts
+        switch (b) {
+        case 0x05B4: // HIRIQ
+            if (a == 0x05D9) { // YOD
+                *ab = 0xFB1D;
+                found = true;
+            }
+            break;
+        case 0x05B7: // patah
+            if (a == 0x05F2) { // YIDDISH YOD YOD
+                *ab = 0xFB1F;
+                found = true;
+            } else if (a == 0x05D0) { // ALEF
+                *ab = 0xFB2E;
+                found = true;
+            }
+            break;
+        case 0x05B8: // QAMATS
+            if (a == 0x05D0) { // ALEF
+                *ab = 0xFB2F;
+                found = true;
+            }
+            break;
+        case 0x05B9: // HOLAM
+            if (a == 0x05D5) { // VAV
+                *ab = 0xFB4B;
+                found = true;
+            }
+            break;
+        case 0x05BC: // DAGESH
+            if (a >= 0x05D0 && a <= 0x05EA) {
+                *ab = sDageshForms[a - 0x05D0];
+                found = (*ab != 0);
+            } else if (a == 0xFB2A) { // SHIN WITH SHIN DOT
+                *ab = 0xFB2C;
+                found = true;
+            } else if (a == 0xFB2B) { // SHIN WITH SIN DOT
+                *ab = 0xFB2D;
+                found = true;
+            }
+            break;
+        case 0x05BF: // RAFE
+            switch (a) {
+            case 0x05D1: // BET
+                *ab = 0xFB4C;
+                found = true;
+                break;
+            case 0x05DB: // KAF
+                *ab = 0xFB4D;
+                found = true;
+                break;
+            case 0x05E4: // PE
+                *ab = 0xFB4E;
+                found = true;
+                break;
+            }
+            break;
+        case 0x05C1: // SHIN DOT
+            if (a == 0x05E9) { // SHIN
+                *ab = 0xFB2A;
+                found = true;
+            } else if (a == 0xFB49) { // SHIN WITH DAGESH
+                *ab = 0xFB2C;
+                found = true;
+            }
+            break;
+        case 0x05C2: // SIN DOT
+            if (a == 0x05E9) { // SHIN
+                *ab = 0xFB2B;
+                found = true;
+            } else if (a == 0xFB49) { // SHIN WITH DAGESH
+                *ab = 0xFB2D;
+                found = true;
+            }
+            break;
+        }
+    }
+
+    return found;
+}
+
+static hb_bool_t
+HBUnicodeDecompose(hb_unicode_funcs_t *ufuncs,
+                   hb_codepoint_t      ab,
+                   hb_codepoint_t     *a,
+                   hb_codepoint_t     *b,
+                   void               *user_data)
+{
+    return nsUnicodeNormalizer::DecomposeNonRecursively(ab, a, b);
+}
+
 /*
  * gfxFontShaper override to initialize the text run using HarfBuzz
  */
@@ -753,6 +887,12 @@ gfxHarfBuzzShaper::ShapeWord(gfxContext      *aContext,
             hb_unicode_funcs_set_eastasian_width_func(sHBUnicodeFuncs,
                                                       HBGetEastAsianWidth,
                                                       nsnull, nsnull);
+            hb_unicode_funcs_set_compose_func(sHBUnicodeFuncs,
+                                              HBUnicodeCompose,
+                                              nsnull, nsnull);
+            hb_unicode_funcs_set_decompose_func(sHBUnicodeFuncs,
+                                                HBUnicodeDecompose,
+                                                nsnull, nsnull);
         }
 
         mHBFace = hb_face_create_for_tables(HBGetTable, this, nsnull);
