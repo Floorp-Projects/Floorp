@@ -4952,8 +4952,10 @@ nsCSSFrameConstructor::ConstructSVGForeignObjectFrame(nsFrameConstructorState& a
   }
 
   nsFrameItems childItems;
-  // Claim to be relatively positioned so that we end up being the
+  // We should be relatively positioned so that we end up being the
   // absolute containing block.
+  const nsStyleDisplay* disp = innerPseudoStyle->GetStyleDisplay();
+  NS_ASSERTION(disp->IsPositioned(), "How did this get to not be positioned?");
   rv = ConstructBlock(aState, innerPseudoStyle->GetStyleDisplay(), content,
                       newFrame, newFrame, innerPseudoStyle,
                       &blockFrame, childItems, true,
