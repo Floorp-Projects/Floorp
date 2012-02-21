@@ -88,7 +88,6 @@
 #include "nsStyleSet.h"
 #include "prlog.h"
 #include "nsIObserverService.h"
-#include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Element.h"
@@ -1080,63 +1079,6 @@ RuleCascadeData::AttributeListFor(nsIAtom* aAttribute)
   return &entry->mSelectors;
 }
 
-class nsPrivateBrowsingObserver : nsIObserver,
-                                  nsSupportsWeakReference
-{
-public:
-  nsPrivateBrowsingObserver();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  void Init();
-  bool InPrivateBrowsing() const { return mInPrivateBrowsing; }
-
-private:
-  bool mInPrivateBrowsing;
-};
-
-NS_IMPL_ISUPPORTS2(nsPrivateBrowsingObserver, nsIObserver, nsISupportsWeakReference)
-
-nsPrivateBrowsingObserver::nsPrivateBrowsingObserver()
-  : mInPrivateBrowsing(false)
-{
-}
-
-void
-nsPrivateBrowsingObserver::Init()
-{
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->AddObserver(this, "profile-after-change", true);
-    observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
-  }
-}
-
-nsresult
-nsPrivateBrowsingObserver::Observe(nsISupports *aSubject,
-                                   const char *aTopic,
-                                   const PRUnichar *aData)
-{
-  if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
-    if (!nsCRT::strcmp(aData, NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).get())) {
-      mInPrivateBrowsing = true;
-    } else {
-      mInPrivateBrowsing = false;
-    }
-  }
-  else if (!strcmp(aTopic, "profile-after-change")) {
-    nsCOMPtr<nsIPrivateBrowsingService> pbService =
-      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-    if (pbService)
-      pbService->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
-  }
-  return NS_OK;
-}
-
-static nsPrivateBrowsingObserver *gPrivateBrowsingObserver = nsnull;
-
 // -------------------------------
 // CSS Style rule processor implementation
 //
@@ -1169,11 +1111,6 @@ nsCSSRuleProcessor::Startup()
 {
   Preferences::AddBoolVarCache(&gSupportVisitedPseudo, VISITED_PSEUDO_PREF,
                                true);
-
-  gPrivateBrowsingObserver = new nsPrivateBrowsingObserver();
-  NS_ENSURE_TRUE(gPrivateBrowsingObserver, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(gPrivateBrowsingObserver);
-  gPrivateBrowsingObserver->Init();
 
   return NS_OK;
 }
@@ -1311,8 +1248,6 @@ nsCSSRuleProcessor::FreeSystemMetrics()
 nsCSSRuleProcessor::Shutdown()
 {
   FreeSystemMetrics();
-  // Make sure we don't crash if Shutdown is called before Init
-  NS_IF_RELEASE(gPrivateBrowsingObserver);
 }
 
 /* static */ bool
@@ -1336,7 +1271,7 @@ nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 
 /* static */
 nsEventStates
-nsCSSRuleProcessor::GetContentState(Element* aElement)
+nsCSSRuleProcessor::GetContentState(Element* aElement, const TreeMatchContext& aTreeMatchContext)
 {
   nsEventStates state = aElement->StyleState();
 
@@ -1347,7 +1282,7 @@ nsCSSRuleProcessor::GetContentState(Element* aElement)
   if (state.HasState(NS_EVENT_STATE_VISITED) &&
       (!gSupportVisitedPseudo ||
        aElement->OwnerDoc()->IsBeingUsedAsImage() ||
-       gPrivateBrowsingObserver->InPrivateBrowsing())) {
+       aTreeMatchContext.mUsingPrivateBrowsing)) {
     state &= ~NS_EVENT_STATE_VISITED;
     state |= NS_EVENT_STATE_UNVISITED;
   }
@@ -1366,10 +1301,11 @@ nsCSSRuleProcessor::IsLink(Element* aElement)
 nsEventStates
 nsCSSRuleProcessor::GetContentStateForVisitedHandling(
                      Element* aElement,
+                     const TreeMatchContext& aTreeMatchContext,
                      nsRuleWalker::VisitedHandlingType aVisitedHandling,
                      bool aIsRelevantLink)
 {
-  nsEventStates contentState = GetContentState(aElement);
+  nsEventStates contentState = GetContentState(aElement, aTreeMatchContext);
   if (contentState.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)) {
     NS_ABORT_IF_FALSE(IsLink(aElement), "IsLink() should match state");
     contentState &= ~(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED);
@@ -2131,6 +2067,7 @@ static bool SelectorMatches(Element* aElement,
           nsEventStates contentState =
             nsCSSRuleProcessor::GetContentStateForVisitedHandling(
                                          aElement,
+                                         aTreeMatchContext,
                                          aTreeMatchContext.VisitedHandling(),
                                          aNodeMatchContext.mIsRelevantLink);
           if (!contentState.HasAtLeastOneOfStates(statesToCheck)) {
