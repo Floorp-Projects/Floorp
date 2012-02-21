@@ -349,12 +349,10 @@ Class js::WeakMapClass = {
     JS_ResolveStub,
     JS_ConvertStub,
     WeakMap_finalize,
-    NULL,                    /* reserved0   */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
     NULL,                    /* xdrObject   */
-    NULL,                    /* hasInstance */
     WeakMap_mark
 };
 

@@ -33,7 +33,7 @@ class DeviceManagerADB(DeviceManager):
       self.verifyRunAs(packageName)
     except:
       self.useRunAs = False
-      self.packageName = None
+      self.packageName = packageName
     try:
       self.verifyZip()
     except:
@@ -684,7 +684,13 @@ class DeviceManagerADB(DeviceManager):
     if (packageName and self.isCpAvailable() and devroot):
       tmpDir = self.getTempDir()
 
-      self.checkCmd(["shell", "run-as", packageName, "mkdir", devroot + "/sanity"])
+      # The problem here is that run-as doesn't cause a non-zero exit code
+      # when failing because of a non-existent or non-debuggable package :(
+      runAsOut = self.runCmd(["shell", "run-as", packageName, "mkdir", devroot + "/sanity"]).communicate()[0]
+      if runAsOut.startswith("run-as:") and ("not debuggable" in runAsOut[0] or
+                                             "is unknown" in runAsOut[0]):
+        raise DMError("run-as failed sanity check")
+
       self.checkCmd(["push", os.path.abspath(sys.argv[0]), tmpDir + "/tmpfile"])
       if self.useDDCopy:
         self.checkCmd(["shell", "run-as", packageName, "dd", "if=" + tmpDir + "/tmpfile", "of=" + devroot + "/sanity/tmpfile"])

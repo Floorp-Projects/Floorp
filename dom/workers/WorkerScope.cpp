@@ -68,7 +68,7 @@
 #include "WorkerInlines.h"
 
 #define PROPERTY_FLAGS \
-  JSPROP_ENUMERATE | JSPROP_SHARED
+  (JSPROP_ENUMERATE | JSPROP_SHARED)
 
 #define FUNCTION_FLAGS \
   JSPROP_ENUMERATE
@@ -802,7 +802,7 @@ JSClass DedicatedWorkerGlobalScope::sClass = {
   JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_RESOLVE,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub, reinterpret_cast<JSResolveOp>(Resolve), JS_ConvertStub,
-  Finalize, NULL, NULL, NULL, NULL, NULL, NULL, Trace, NULL
+  Finalize, NULL, NULL, NULL, NULL, Trace
 };
 
 JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
