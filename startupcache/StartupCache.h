@@ -164,7 +164,12 @@ private:
   StartupCache();
   ~StartupCache();
 
-  nsresult LoadArchive();
+  enum TelemetrifyAge {
+    IGNORE_AGE = 0,
+    RECORD_AGE = 1
+  };
+
+  nsresult LoadArchive(enum TelemetrifyAge flag);
   nsresult Init();
   void WriteToDisk();
   nsresult ResetStartupWriteTimer();
