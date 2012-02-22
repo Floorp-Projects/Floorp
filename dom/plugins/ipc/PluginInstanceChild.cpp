@@ -2542,13 +2542,13 @@ PluginInstanceChild::MaybeCreatePlatformHelperSurface(void)
         return false;
     }
 
+#ifdef MOZ_X11
 #ifdef MOZ_PLATFORM_MAEMO
     // On maemo plugins support non-default visual rendering
     bool supportNonDefaultVisual = true;
 #else
     bool supportNonDefaultVisual = false;
 #endif
-#ifdef MOZ_X11
     Screen* screen = DefaultScreenOfDisplay(mWsInfo.display);
     Visual* defaultVisual = DefaultVisualOfScreen(screen);
     Visual* visual = nsnull;
