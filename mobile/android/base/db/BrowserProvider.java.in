@@ -124,20 +124,12 @@ public class BrowserProvider extends ContentProvider {
     static final String DEFAULT_HISTORY_SORT_ORDER = History.DATE_LAST_VISITED + " DESC";
 
     static final String TABLE_BOOKMARKS_JOIN_IMAGES = TABLE_BOOKMARKS + " LEFT OUTER JOIN " +
-            "(SELECT " + Images.URL + ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
-            TABLE_IMAGES + ", " + TABLE_BOOKMARKS + " WHERE " +
-            qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
-            qualifyColumn(TABLE_IMAGES, Images.URL) + ") AS bookmark_images ON " +
-            qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
-            qualifyColumn("bookmark_images", Images.URL);
+            TABLE_IMAGES + " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
+            qualifyColumn(TABLE_IMAGES, Images.URL);
 
     static final String TABLE_HISTORY_JOIN_IMAGES = TABLE_HISTORY + " LEFT OUTER JOIN " +
-            "(SELECT " + Images.URL + ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
-            TABLE_IMAGES + ", " + TABLE_HISTORY + " WHERE " +
-            qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
-            qualifyColumn(TABLE_IMAGES, Images.URL) + ") AS history_images ON " +
-            qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
-            qualifyColumn("history_images", Images.URL);
+            TABLE_IMAGES + " ON " + qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
+            qualifyColumn(TABLE_IMAGES, Images.URL);
 
     static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
@@ -332,6 +324,8 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void createBookmarksWithImagesView(SQLiteDatabase db) {
+            debug("Creating " + VIEW_BOOKMARKS_WITH_IMAGES + " view");
+
             db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_BOOKMARKS, "*") +
                     ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
@@ -339,6 +333,8 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void createHistoryWithImagesView(SQLiteDatabase db) {
+            debug("Creating " + VIEW_HISTORY_WITH_IMAGES + " view");
+
             db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_HISTORY_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_HISTORY, "*") +
                     ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
@@ -538,6 +534,18 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_BOOKMARKS_TMP);
         }
 
+        private void upgradeDatabaseFrom2to3(SQLiteDatabase db) {
+            debug("Dropping view: " + VIEW_BOOKMARKS_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES);
+
+            createBookmarksWithImagesView(db);
+
+            debug("Dropping view: " + VIEW_HISTORY_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_HISTORY_WITH_IMAGES);
+
+            createHistoryWithImagesView(db);
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -551,6 +559,10 @@ public class BrowserProvider extends ContentProvider {
                 switch(v) {
                     case 2:
                         upgradeDatabaseFrom1to2(db);
+                        break;
+
+                    case 3:
+                        upgradeDatabaseFrom2to3(db);
                         break;
                  }
              }
