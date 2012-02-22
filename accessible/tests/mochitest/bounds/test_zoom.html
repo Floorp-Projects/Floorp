@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Accessible boundaries when page is zoomed</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+  <script type="application/javascript"
+          src="../browser.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // If your patch changes UI or default styles then please tweek the numbers.
+    // Accessibility exposes coordinates and size in device pixels while DOM
+    // operates with CSS pixels. Thus it seems we don't have another way for
+    // accessibility testing rather than numbers hardcode.
+    ////////////////////////////////////////////////////////////////////////////
+
+    function doTest()
+    {
+      var [outerX, outerY] = getBounds(getAccessible(currentTabDocument()).parent);
+
+      var p1 = currentTabDocument().body.firstElementChild;
+      var p2 = currentTabDocument().body.lastElementChild;
+
+      var deltaX = 8, deltaY = 8, indentY = 16, w = 584, h = (WIN ? 20 : 19);
+      testBounds(p1, outerX + deltaX, outerY + deltaY, w, h);
+      testBounds(p2, outerX + deltaX, outerY + deltaY + h + indentY, w, h);
+
+      var docShell = currentTabWindow().
+        QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+        getInterface(Components.interfaces.nsIWebNavigation).
+        QueryInterface(Components.interfaces.nsIDocShell);
+      var docViewer = docShell.contentViewer.
+        QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+      docViewer.fullZoom = 2.0;
+
+      testBounds(p1, outerX + deltaX * 2, outerY + deltaY * 2, w * 2, h * 2);
+      testBounds(p2, outerX + deltaX * 2, outerY + (deltaY + h + indentY) * 2,
+                 w * 2, h * 2);
+
+      closeBrowserWindow();
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    openBrowserWindow(doTest,
+                      "data:text/html,<html><body><p>para 1</p><p>para 2</p></body></html>",
+                      { left: 0, top: 0, width: 600, height: 600 });
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=650241"
+     title="Location returned by accessibles incorrect when page zoomed">
+    Mozilla Bug 650241
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>
