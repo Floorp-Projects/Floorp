@@ -736,6 +736,8 @@ ContextStack::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *iag)
     if (!firstUnused)
         return false;
 
+    MakeRangeGCSafe(firstUnused, argc);
+
     ImplicitCast<CallArgs>(*iag) = CallArgsFromVp(argc, firstUnused);
 
     seg_->pushCall(*iag);

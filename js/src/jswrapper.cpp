@@ -792,9 +792,9 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *cla
     if (!Wrapper::nativeCall(cx, wrapper, clasp, native, dstArgs))
         return false;
 
+    srcArgs.rval() = dstArgs.rval();
     dstArgs.pop();
     call.leave();
-    srcArgs.rval() = dstArgs.rval();
     return call.origin->wrap(cx, &srcArgs.rval());
 }
 
