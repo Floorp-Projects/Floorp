@@ -40,7 +40,6 @@
 #include "prio.h"
 #include "prtypes.h"
 #include "pldhash.h"
-#include "nsXPCOMStrings.h"
 #include "mozilla/scache/StartupCache.h"
 
 #include "nsAutoPtr.h"
@@ -67,7 +66,6 @@
 #include "mozilla/Omnijar.h"
 #include "prenv.h"
 #include "mozilla/FunctionTimer.h"
-#include "mozilla/Telemetry.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "nsIProtocolHandler.h"
@@ -239,7 +237,7 @@ StartupCache::Init()
                                      false);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = LoadArchive(RECORD_AGE);
+  rv = LoadArchive();
   
   // Sometimes we don't have a cache yet, that's ok.
   // If it's corrupted, just remove it and start over.
@@ -260,7 +258,7 @@ StartupCache::Init()
  * LoadArchive can be called from the main thread or while reloading cache on write thread.
  */
 nsresult
-StartupCache::LoadArchive(enum TelemetrifyAge flag)
+StartupCache::LoadArchive() 
 {
   bool exists;
   mArchive = NULL;
@@ -269,34 +267,7 @@ StartupCache::LoadArchive(enum TelemetrifyAge flag)
     return NS_ERROR_FILE_NOT_FOUND;
   
   mArchive = new nsZipArchive();
-  rv = mArchive->OpenArchive(mFile);
-  if (NS_FAILED(rv) || flag == IGNORE_AGE)
-    return rv;
-
-  nsCString comment;
-  if (!mArchive->GetComment(comment)) {
-    return rv;
-  }
-
-  const char *data;
-  size_t len = NS_CStringGetData(comment, &data);
-  PRTime creationStamp;
-  // We might not have a comment if the startup cache file was created
-  // before we started recording creation times in the comment.
-  if (len == sizeof(creationStamp)) {
-    memcpy(&creationStamp, data, len);
-    PRTime current = PR_Now();
-    PRInt64 diff = current - creationStamp;
-
-    // We can't use AccumulateTimeDelta here because we have no way of
-    // reifying a TimeStamp from creationStamp.
-    PRInt64 usec_per_hour = PR_USEC_PER_SEC * PRInt64(3600);
-    PRInt64 hour_diff = (diff + usec_per_hour - 1) / usec_per_hour;
-    mozilla::Telemetry::Accumulate(Telemetry::STARTUP_CACHE_AGE_HOURS,
-                                   hour_diff);
-  }
-
-  return rv;
+  return mArchive->OpenArchive(mFile);
 }
 
 namespace {
@@ -464,17 +435,6 @@ StartupCache::WriteToDisk()
     return;
   } 
 
-  // If we didn't have an mArchive member, that means that we failed to
-  // open the startup cache for reading.  Therefore, we need to record
-  // the time of creation in a zipfile comment; this will be useful for
-  // Telemetry statistics.
-  PRTime now = PR_Now();
-  if (!mArchive) {
-    nsCString comment;
-    comment.Assign((char *)&now, sizeof(now));
-    zipW->SetComment(comment);
-  }
-
   nsCOMPtr<nsIStringInputStream> stream 
     = do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
   if (NS_FAILED(rv)) {
@@ -485,7 +445,7 @@ StartupCache::WriteToDisk()
   CacheWriteHolder holder;
   holder.stream = stream;
   holder.writer = zipW;
-  holder.time = now;
+  holder.time = PR_Now();
 
   mTable.Enumerate(CacheCloseHelper, &holder);
 
@@ -493,8 +453,8 @@ StartupCache::WriteToDisk()
   mArchive = NULL;
   zipW->Close();
 
-  // Our reader's view of the archive is outdated now, reload it.
-  LoadArchive(IGNORE_AGE);
+  // our reader's view of the archive is outdated now, reload it.
+  LoadArchive();
   
   return;
 }
@@ -506,7 +466,7 @@ StartupCache::InvalidateCache()
   mTable.Clear();
   mArchive = NULL;
   mFile->Remove(false);
-  LoadArchive(IGNORE_AGE);
+  LoadArchive();
 }
 
 /*
