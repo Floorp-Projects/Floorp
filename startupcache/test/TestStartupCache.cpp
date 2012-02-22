@@ -53,6 +53,8 @@
 #include "nsStringAPI.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsITelemetry.h"
+#include "jsapi.h"
 
 namespace mozilla {
 namespace scache {
@@ -316,6 +318,83 @@ TestEarlyShutdown() {
   return NS_OK;
 }
 
+bool
+SetupJS(JSContext **cxp)
+{
+  JSRuntime *rt = JS_NewRuntime(32 * 1024 * 1024);
+  if (!rt)
+    return false;
+  JSContext *cx = JS_NewContext(rt, 8192);
+  if (!cx)
+    return false;
+  *cxp = cx;
+  return true;
+}
+
+bool
+GetHistogramCounts(const char *testmsg, JSContext *cx, jsval *counts)
+{
+  nsCOMPtr<nsITelemetry> telemetry = do_GetService("@mozilla.org/base/telemetry;1");
+  NS_NAMED_LITERAL_CSTRING(histogram_id, "STARTUP_CACHE_AGE_HOURS");
+  JS::AutoValueRooter h(cx);
+  nsresult trv = telemetry->GetHistogramById(histogram_id, cx, h.addr());
+  if (NS_FAILED(trv)) {
+    fail("%s: couldn't get histogram", testmsg);
+    return false;
+  }
+  passed(testmsg);
+
+  JS::AutoValueRooter snapshot_val(cx);
+  JSFunction *snapshot_fn = NULL;
+  JS::AutoValueRooter ss(cx);
+  return (JS_GetProperty(cx, JSVAL_TO_OBJECT(h.value()), "snapshot",
+                         snapshot_val.addr())
+          && (snapshot_fn = JS_ValueToFunction(cx, snapshot_val.value()))
+          && JS::Call(cx, JSVAL_TO_OBJECT(h.value()),
+                      snapshot_fn, 0, NULL, ss.addr())
+          && JS_GetProperty(cx, JSVAL_TO_OBJECT(ss.value()),
+                            "counts", counts));
+}
+
+nsresult
+CompareCountArrays(JSContext *cx, JSObject *before, JSObject *after)
+{
+  jsuint before_size, after_size;
+  if (!(JS_GetArrayLength(cx, before, &before_size)
+        && JS_GetArrayLength(cx, after, &after_size))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (before_size != after_size) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  for (jsuint i = 0; i < before_size; ++i) {
+    jsval before_num, after_num;
+
+    if (!(JS_GetElement(cx, before, i, &before_num)
+          && JS_GetElement(cx, after, i, &after_num))) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    JSBool same = JS_TRUE;
+    if (!JS_LooselyEqual(cx, before_num, after_num, &same)) {
+      return NS_ERROR_UNEXPECTED;
+    } else {
+      if (same) {
+        continue;
+      } else {
+        // Some element of the histograms's count arrays differed.
+        // That's a good thing!
+        return NS_OK;
+      }
+    }
+  }
+
+  // All of the elements of the histograms's count arrays differed.
+  // Not good, we should have recorded something.
+  return NS_ERROR_FAILURE;
+}
 
 int main(int argc, char** argv)
 {
@@ -327,6 +406,46 @@ int main(int argc, char** argv)
   prefs->SetIntPref("hangmonitor.timeout", 0);
   
   int rv = 0;
+  // nsITelemetry doesn't have a nice C++ interface.
+  JSContext *cx;
+  bool use_js = true;
+  if (!SetupJS(&cx))
+    use_js = false;
+
+  JSAutoRequest req(cx);
+  static JSClass global_class = {
+    "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub,  JS_PropertyStub,
+    JS_PropertyStub,  JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,
+    JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+  };
+  JSObject *glob = nsnull;
+  if (use_js)
+    glob = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
+  if (!glob)
+    use_js = false;
+  JSCrossCompartmentCall *compartment = nsnull;
+  if (use_js)
+    compartment = JS_EnterCrossCompartmentCall(cx, glob);
+  if (!compartment)
+    use_js = false;
+  if (use_js && !JS_InitStandardClasses(cx, glob))
+    use_js = false;
+
+  JS::AutoValueRooter before_counts(cx);
+  if (use_js && !GetHistogramCounts("STARTUP_CACHE_AGE_HOURS histogram before test",
+                                 cx, before_counts.addr()))
+    use_js = false;
+  
+  nsresult scrv;
+  nsCOMPtr<nsIStartupCache> sc 
+    = do_GetService("@mozilla.org/startupcache/cache;1", &scrv);
+  if (NS_FAILED(scrv))
+    rv = 1;
+  else
+    sc->RecordAgesAlways();
   if (NS_FAILED(TestStartupWriteRead()))
     rv = 1;
   if (NS_FAILED(TestWriteInvalidateRead()))
@@ -335,6 +454,32 @@ int main(int argc, char** argv)
     rv = 1;
   if (NS_FAILED(TestEarlyShutdown()))
     rv = 1;
-  
+
+  JS::AutoValueRooter after_counts(cx);
+  if (use_js && !GetHistogramCounts("STARTUP_CACHE_AGE_HOURS histogram after test",
+                                    cx, after_counts.addr()))
+    use_js = false;
+
+  if (!use_js) {
+    fail("couldn't check histogram recording");
+    rv = 1;
+  } else {
+    nsresult compare = CompareCountArrays(cx,
+                                          JSVAL_TO_OBJECT(before_counts.value()),
+                                          JSVAL_TO_OBJECT(after_counts.value()));
+    if (compare == NS_ERROR_UNEXPECTED) {
+      fail("count comparison error");
+      rv = 1;
+    } else if (compare == NS_ERROR_FAILURE) {
+      fail("histogram didn't record samples");
+      rv = 1;
+    } else {
+      passed("histogram records samples");
+    }
+  }
+
+  if (use_js)
+    JS_LeaveCrossCompartmentCall(compartment);
+
   return rv;
 }
