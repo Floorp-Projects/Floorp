@@ -76,7 +76,6 @@ jfieldID AndroidGeckoEvent::jLocationField = 0;
 jfieldID AndroidGeckoEvent::jAddressField = 0;
 jfieldID AndroidGeckoEvent::jBandwidthField = 0;
 jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
-jfieldID AndroidGeckoEvent::jTabIdField = 0;
 jmethodID AndroidGeckoEvent::jDoCallbackMethod = 0;
 
 jclass AndroidPoint::jPointClass = 0;
@@ -211,7 +210,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jBandwidthField = getField("mBandwidth", "D");
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
 
-    jTabIdField = getField("mTabId", "I");
     jDoCallbackMethod = getMethod("doCallback", "(Ljava/lang/String;)V");
 }
 
@@ -601,10 +599,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             ReadCharactersField(jenv);
             break;
         }
-
-        case META_VIEWPORT_QUERY:
-            mTabId = jenv->GetIntField(jobj, jTabIdField);
-            break;
 
         case VIEWPORT:
         case BROADCAST: {

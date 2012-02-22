@@ -60,7 +60,7 @@
 #include <android/log.h>
 #include <pthread.h>
 #include <wchar.h>
-#include "nsContentUtils.h"
+
 #ifdef MOZ_ANDROID_HISTORY
 #include "nsAndroidHistory.h"
 #endif
@@ -454,31 +454,6 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     }
 
 
-    case AndroidGeckoEvent::META_VIEWPORT_QUERY:
-    {
-        nsCOMPtr<nsIDOMWindow> domWindow;
-        mBrowserApp->GetWindowForTab(curEvent->TabId(), getter_AddRefs(domWindow));
-        if (!domWindow)
-            break;
-        nsCOMPtr<nsIDOMDocument> domDocument;
-        domWindow->GetDocument(getter_AddRefs(domDocument));
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDocument);
-        ViewportInfo vi = nsContentUtils::GetViewportInfo(doc);
-        nsAutoString data;
-        data.AppendLiteral("{");
-        data.AppendPrintf("\"defaultZoom\": %f,", vi.defaultZoom);
-        data.AppendPrintf("\"minZoom\": %f,", vi.minZoom);
-        data.AppendPrintf("\"maxZoom\": %f,", vi.maxZoom);
-        data.AppendPrintf("\"width\": %d,", vi.width);
-        data.AppendPrintf("\"height\": %d,", vi.height);
-        data.AppendPrintf("\"autoSize\": %s,", vi.autoSize ? "true" : "false");
-        data.AppendPrintf("\"allowZoom\": %s,", vi.allowZoom ? "true" : "false");
-        data.AppendPrintf("\"autoScale\": %s", vi.autoScale ? "true" : "false");
-        data.AppendLiteral("}");
-
-        curEvent->DoCallback(data);
-    }
-        break;
     case AndroidGeckoEvent::VIEWPORT:
     case AndroidGeckoEvent::BROADCAST: {
 

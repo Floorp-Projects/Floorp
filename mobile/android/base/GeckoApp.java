@@ -1302,16 +1302,6 @@ abstract public class GeckoApp
             Runnable r = new SessionSnapshotRunnable(tab);
             GeckoAppShell.getHandler().postDelayed(r, 500);
         }
-
-        GeckoAppShell.sendEventToGecko(
-            GeckoEvent.createMetaViewportQueryEvent(tab.getId(),
-                new GeckoEvent.Callback() {
-                    public void callback(GeckoEvent ev, String data) {
-                        Log.i(LOGTAG, "Meta Viewport Data:" + data);
-                        // To do: do something with this data
-                    } 
-                })
-            );
     }
 
     void handleShowToast(final String message, final String duration) {
