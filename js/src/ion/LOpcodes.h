@@ -116,6 +116,7 @@
     _(GuardClass)                   \
     _(TypeBarrier)                  \
     _(InitializedLength)            \
+    _(SetInitializedLength)         \
     _(BoundsCheck)                  \
     _(BoundsCheckRange)             \
     _(BoundsCheckLower)             \

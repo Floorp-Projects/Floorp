@@ -1105,6 +1105,19 @@ CodeGenerator::visitInitializedLength(LInitializedLength *lir)
 }
 
 bool
+CodeGenerator::visitSetInitializedLength(LSetInitializedLength *lir)
+{
+    Address initLength(ToRegister(lir->elements()), ObjectElements::offsetOfInitializedLength());
+    Int32Key index = ToInt32Key(lir->index());
+
+    masm.bumpKey(&index, 1);
+    masm.storeKey(index, initLength);
+    // Restore register value if it is used/captured after.
+    masm.bumpKey(&index, -1);
+    return true;
+}
+
+bool
 CodeGenerator::visitNotV(LNotV *ins)
 {
     typedef bool (*pf)(JSContext *, const Value &, JSBool *);
