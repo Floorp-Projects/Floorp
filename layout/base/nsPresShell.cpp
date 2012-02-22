@@ -2469,8 +2469,8 @@ PresShell::ScrollLine(bool aForward)
   nsIScrollableFrame* scrollFrame =
     GetFrameToScrollAsScrollable(nsIPresShell::eVertical);
   if (scrollFrame) {
-    // Scroll 2 lines at a time to improve scrolling speed.
-    PRInt32 lineCount = 2;
+    PRInt32 lineCount = Preferences::GetInt("toolkit.scrollbox.verticalScrollDistance",
+                                            NS_DEFAULT_VERTICAL_SCROLL_DISTANCE);
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? lineCount : -lineCount),
                           nsIScrollableFrame::LINES,
                           nsIScrollableFrame::SMOOTH);

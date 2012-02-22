@@ -806,7 +806,7 @@ var Scratchpad = {
     let config = {
       mode: SourceEditor.MODES.JAVASCRIPT,
       showLineNumbers: true,
-      placeholderText: initialText
+      initialText: initialText,
     };
 
     let editorPlaceholder = document.getElementById("scratchpad-editor");
@@ -1068,7 +1068,15 @@ var Scratchpad = {
         handler.apply(observer, aArgs);
       }
     }
-  }
+  },
+
+  openDocumentationPage: function SP_openDocumentationPage()
+  {
+    let url = this.strings.GetStringFromName("help.openDocumentationPage");
+    let newTab = this.gBrowser.addTab(url);
+    this.browserWindow.focus();
+    this.gBrowser.selectedTab = newTab;
+  },
 };
 
 XPCOMUtils.defineLazyGetter(Scratchpad, "strings", function () {
