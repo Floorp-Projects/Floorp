@@ -26,10 +26,16 @@ public:
 
   virtual void *mmap(const void *addr, size_t length, int prot, int flags,
                      off_t offset) = 0;
+
+private:
   virtual void munmap(void *addr, size_t length) {
     ::munmap(addr, length);
   }
+  /* Limit use of Mappable::munmap to classes that keep track of the address
+   * and size of the mapping. This allows to ignore ::munmap return value. */
+  friend class Mappable1stPagePtr;
 
+public:
   /**
    * Indicate to a Mappable instance that no further mmap is going to happen.
    */
