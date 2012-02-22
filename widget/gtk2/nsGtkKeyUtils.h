@@ -39,8 +39,63 @@
 #ifndef __nsGdkKeyUtils_h__
 #define __nsGdkKeyUtils_h__
 
+#include "nsEvent.h"
+
+#include <gdk/gdk.h>
+
 int      GdkKeyCodeToDOMKeyCode     (int aKeysym);
 int      DOMKeyCodeToGdkKeyCode     (int aKeysym);
 PRUint32 nsConvertCharCodeToUnicode (GdkEventKey* aEvent);
+
+namespace mozilla {
+namespace widget {
+
+/**
+ *  KeymapWrapper is a wrapper class of GdkKeymap.  GdkKeymap doesn't support
+ *  all our needs, therefore, we need to access lower level APIs.
+ *  But such code is usually complex and might be slow.  Against such issues,
+ *  we should cache some information.
+ *
+ *  This class provides only static methods.  The methods is using internal
+ *  singleton instance which is initialized by default GdkKeymap.  When the
+ *  GdkKeymap is destroyed, the singleton instance will be destroyed.
+ */
+
+class KeymapWrapper
+{
+protected:
+
+    /**
+     * GetInstance() returns a KeymapWrapper instance.
+     *
+     * @return                  A singleton instance of KeymapWrapper.
+     */
+    static KeymapWrapper* GetInstance();
+
+    KeymapWrapper();
+    ~KeymapWrapper();
+
+    bool mInitialized;
+
+    /**
+     * mGdkKeymap is a wrapped instance by this class.
+     */
+    GdkKeymap* mGdkKeymap;
+
+    /**
+     * Pointer of the singleton instance.
+     */
+    static KeymapWrapper* sInstance;
+
+    /**
+     * Signal handlers.
+     */
+    static void OnKeysChanged(GdkKeymap* aKeymap, KeymapWrapper* aKeymapWrapper);
+    static void OnDestroyKeymap(KeymapWrapper* aKeymapWrapper,
+                                GdkKeymap *aGdkKeymap);
+};
+
+} // namespace widget
+} // namespace mozilla
 
 #endif /* __nsGdkKeyUtils_h__ */
