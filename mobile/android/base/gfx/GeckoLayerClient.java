@@ -64,21 +64,21 @@ public class GeckoLayerClient implements GeckoEventListener,
                                          VirtualLayer.Listener {
     private static final String LOGTAG = "GeckoLayerClient";
 
-    protected LayerController mLayerController;
+    private LayerController mLayerController;
     private LayerRenderer mLayerRenderer;
     private boolean mLayerRendererInitialized;
 
-    protected IntSize mScreenSize;
-    protected IntSize mWindowSize;
-    protected IntSize mBufferSize;
+    private IntSize mScreenSize;
+    private IntSize mWindowSize;
+    private IntSize mBufferSize;
 
-    protected Layer mTileLayer;
+    private Layer mTileLayer;
 
     /* The viewport that Gecko is currently displaying. */
-    protected ViewportMetrics mGeckoViewport;
+    private ViewportMetrics mGeckoViewport;
 
     /* The viewport that Gecko will display when drawing is finished */
-    protected ViewportMetrics mNewGeckoViewport;
+    private ViewportMetrics mNewGeckoViewport;
 
     private static final long MIN_VIEWPORT_CHANGE_DELAY = 25L;
     private long mLastViewportChangeTime;
@@ -105,7 +105,7 @@ public class GeckoLayerClient implements GeckoEventListener,
     }
 
     /** Attaches the root layer to the layer controller so that Gecko appears. */
-    public void setLayerController(LayerController layerController) {
+    void setLayerController(LayerController layerController) {
         mLayerController = layerController;
 
         layerController.setRoot(mTileLayer);
@@ -116,7 +116,7 @@ public class GeckoLayerClient implements GeckoEventListener,
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
 
-        sendResizeEventIfNecessary();
+        sendResizeEventIfNecessary(false);
 
         LayerView view = layerController.getView();
         view.setListener(this);
@@ -213,9 +213,6 @@ public class GeckoLayerClient implements GeckoEventListener,
             try {
                 updateViewport(!mUpdateViewportOnEndDraw);
                 mUpdateViewportOnEndDraw = false;
-
-                Rect rect = new Rect(x, y, x + width, y + height);
-                updateLayerAfterDraw(rect);
             } finally {
                 mTileLayer.endTransaction();
             }
@@ -228,7 +225,7 @@ public class GeckoLayerClient implements GeckoEventListener,
         }
     }
 
-    protected void updateViewport(boolean onlyUpdatePageSize) {
+    private void updateViewport(boolean onlyUpdatePageSize) {
         // save and restore the viewport size stored in java; never let the
         // JS-side viewport dimensions override the java-side ones because
         // java is the One True Source of this information, and allowing JS
@@ -241,7 +238,9 @@ public class GeckoLayerClient implements GeckoEventListener,
         mTileLayer.setOrigin(PointUtils.round(displayportOrigin));
         mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
 
-        this.tileLayerUpdated();
+        // Set the new origin and resolution instantly.
+        mTileLayer.performUpdates(null);
+
         Log.e(LOGTAG, "### updateViewport onlyUpdatePageSize=" + onlyUpdatePageSize +
               " getTileViewport " + mGeckoViewport);
 
@@ -258,7 +257,7 @@ public class GeckoLayerClient implements GeckoEventListener,
     }
 
     /* Informs Gecko that the screen size has changed. */
-    protected void sendResizeEventIfNecessary(boolean force) {
+    private void sendResizeEventIfNecessary(boolean force) {
         Log.d(LOGTAG, "### sendResizeEventIfNecessary " + force);
 
         DisplayMetrics metrics = new DisplayMetrics();
@@ -310,7 +309,7 @@ public class GeckoLayerClient implements GeckoEventListener,
         return Color.rgb(r, g, b);
     }
 
-    protected boolean handleDirectTextureChange(boolean hasDirectTexture) {
+    private boolean handleDirectTextureChange(boolean hasDirectTexture) {
         if (mTileLayer != null) {
             return false;
         }
@@ -326,34 +325,15 @@ public class GeckoLayerClient implements GeckoEventListener,
         return true;
     }
 
-    protected void updateLayerAfterDraw(Rect updatedRect) {
-        Log.e(LOGTAG, "### updateLayerAfterDraw");
-        // Nothing to do.
-    }
-
-    protected IntSize getBufferSize() {
+    private IntSize getBufferSize() {
         View view = mLayerController.getView();
         IntSize size = new IntSize(view.getWidth(), view.getHeight());
         Log.e(LOGTAG, "### getBufferSize " + size);
         return size;
     }
 
-    protected IntSize getTileSize() {
-        Log.e(LOGTAG, "### getTileSize " + getBufferSize());
-        return getBufferSize();
-    }
-
-    protected void tileLayerUpdated() {
-        // Set the new origin and resolution instantly.
-        mTileLayer.performUpdates(null);
-    }
-
     public Bitmap getBitmap() {
         return null;
-    }
-
-    public void render() {
-        adjustViewportWithThrottling();
     }
 
     private void adjustViewportWithThrottling() {
@@ -379,7 +359,7 @@ public class GeckoLayerClient implements GeckoEventListener,
         adjustViewport();
     }
 
-    public void viewportSizeChanged() {
+    void viewportSizeChanged() {
         mViewportSizeChanged = true;
     }
 
@@ -398,6 +378,7 @@ public class GeckoLayerClient implements GeckoEventListener,
         mLastViewportChangeTime = System.currentTimeMillis();
     }
 
+    /** Implementation of GeckoEventListener. */
     public void handleMessage(String event, JSONObject message) {
         if ("Viewport:UpdateAndDraw".equals(event)) {
             Log.e(LOGTAG, "### Java side Viewport:UpdateAndDraw()!");
@@ -412,10 +393,10 @@ public class GeckoLayerClient implements GeckoEventListener,
         }
     }
 
-    public void geometryChanged() {
+    void geometryChanged() {
         /* Let Gecko know if the screensize has changed */
-        sendResizeEventIfNecessary();
-        render();
+        sendResizeEventIfNecessary(false);
+        adjustViewportWithThrottling();
     }
 
     public int getWidth() {
@@ -431,10 +412,6 @@ public class GeckoLayerClient implements GeckoEventListener,
         if (mGeckoViewport != null)
             return new ViewportMetrics(mGeckoViewport);
         return null;
-    }
-
-    private void sendResizeEventIfNecessary() {
-        sendResizeEventIfNecessary(false);
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
@@ -480,6 +457,7 @@ public class GeckoLayerClient implements GeckoEventListener,
     public void deactivateProgram() {
         mLayerRenderer.deactivateProgram();
     }
+
     /** Implementation of FlexibleGLSurfaceView.Listener */
     public void renderRequested() {
         Log.e(LOGTAG, "### Render requested, scheduling composite");
