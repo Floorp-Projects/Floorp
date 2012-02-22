@@ -86,10 +86,12 @@ public:
   , mappable(mappable)
   { }
 
+private:
+  friend class GenericMappedPtr<Mappable1stPagePtr>;
   void munmap(void *buf, size_t length) {
     mappable->munmap(buf, length);
   }
-private:
+
   Mappable *mappable;
 };
 
