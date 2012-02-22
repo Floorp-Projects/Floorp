@@ -40,6 +40,7 @@
 #define __nsGdkKeyUtils_h__
 
 #include "nsEvent.h"
+#include "nsTArray.h"
 
 #include <gdk/gdk.h>
 
@@ -63,6 +64,30 @@ namespace widget {
 
 class KeymapWrapper
 {
+public:
+    /**
+     * Modifier is list of modifiers which we support in widget level.
+     */
+    enum Modifier {
+        NOT_MODIFIER       = 0x0000,
+        CAPS_LOCK          = 0x0001,
+        NUM_LOCK           = 0x0002,
+        SCROLL_LOCK        = 0x0004,
+        SHIFT              = 0x0008,
+        CTRL               = 0x0010,
+        ALT                = 0x0020,
+        SUPER              = 0x0040,
+        HYPER              = 0x0080,
+        META               = 0x0100,
+        ALTGR              = 0x0200
+    };
+
+    /**
+     * Modifiers is used for combination of Modifier.
+     * E.g., |Modifiers modifiers = (SHIFT | CTRL);| means Shift and Ctrl.
+     */
+    typedef PRUint32 Modifiers;
+
 protected:
 
     /**
@@ -76,6 +101,63 @@ protected:
     ~KeymapWrapper();
 
     bool mInitialized;
+
+    /**
+     * Initializing methods.
+     */
+    void Init();
+    void InitBySystemSettings();
+
+    /**
+     * mModifierKeys stores each hardware key information.
+     */
+    struct ModifierKey {
+        guint mHardwareKeycode;
+        guint mMask;
+
+        ModifierKey(guint aHardwareKeycode) :
+          mHardwareKeycode(aHardwareKeycode), mMask(0)
+        {
+        }
+    };
+    nsTArray<ModifierKey> mModifierKeys;
+
+    /**
+     * GetModifierKey() returns modifier key information of the hardware
+     * keycode.  If the key isn't a modifier key, returns NULL.
+     */
+    ModifierKey* GetModifierKey(guint aHardwareKeycode);
+
+    /**
+     * mModifierMasks is bit masks for each modifier.  The index should be one
+     * of ModifierIndex values.
+     */
+    enum ModifierIndex {
+        INDEX_NUM_LOCK,
+        INDEX_SCROLL_LOCK,
+        INDEX_ALT,
+        INDEX_SUPER,
+        INDEX_HYPER,
+        INDEX_META,
+        INDEX_ALTGR,
+        COUNT_OF_MODIFIER_INDEX
+    };
+    guint mModifierMasks[COUNT_OF_MODIFIER_INDEX];
+
+    guint GetModifierMask(Modifier aModifier) const;
+
+    /**
+     * @param aGdkKeyval        A GDK defined modifier key value such as
+     *                          GDK_Shift_L.
+     * @return                  Returns Modifier values for aGdkKeyval.
+     *                          If the given key code isn't a modifier key,
+     *                          returns NOT_MODIFIER.
+     */
+    static Modifier GetModifierForGDKKeyval(guint aGdkKeyval);
+
+#ifdef PR_LOGGING
+    static const char* GetModifierName(Modifier aModifier);
+#endif // PR_LOGGING
 
     /**
      * mGdkKeymap is a wrapped instance by this class.
