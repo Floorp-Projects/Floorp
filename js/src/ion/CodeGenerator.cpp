@@ -1022,6 +1022,87 @@ CodeGenerator::visitCompareV(LCompareV *lir)
 }
 
 bool
+CodeGenerator::visitIsNullOrUndefined(LIsNullOrUndefined *lir)
+{
+    JSOp op = lir->mir()->jsop();
+    MIRType specialization = lir->mir()->specialization();
+    JS_ASSERT(IsNullOrUndefined(specialization));
+
+    const ValueOperand value = ToValue(lir, LIsNullOrUndefined::Value);
+    Register output = ToRegister(lir->output());
+
+    if (op == JSOP_EQ || op == JSOP_NE) {
+        Register tag = masm.splitTagForTest(value);
+
+        Label nullOrUndefined, done;
+        masm.branchTestNull(Assembler::Equal, tag, &nullOrUndefined);
+        masm.branchTestUndefined(Assembler::Equal, tag, &nullOrUndefined);
+
+        masm.move32(Imm32(op == JSOP_NE), output);
+        masm.jump(&done);
+
+        masm.bind(&nullOrUndefined);
+        masm.move32(Imm32(op == JSOP_EQ), output);
+        masm.bind(&done);
+        return true;
+    }
+
+    JS_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
+
+    Assembler::Condition cond = JSOpToCondition(op);
+    if (specialization == MIRType_Null)
+        cond = masm.testNull(cond, value);
+    else
+        cond = masm.testUndefined(cond, value);
+
+    emitSet(cond, output);
+    return true;
+}
+
+bool
+CodeGenerator::visitIsNullOrUndefinedAndBranch(LIsNullOrUndefinedAndBranch *lir)
+{
+    JSOp op = lir->mir()->jsop();
+    MIRType specialization = lir->mir()->specialization();
+    JS_ASSERT(IsNullOrUndefined(specialization));
+
+    const ValueOperand value = ToValue(lir, LIsNullOrUndefinedAndBranch::Value);
+
+    if (op == JSOP_EQ || op == JSOP_NE) {
+        MBasicBlock *ifTrue;
+        MBasicBlock *ifFalse;
+
+        if (op == JSOP_EQ) {
+            ifTrue = lir->ifTrue();
+            ifFalse = lir->ifFalse();
+        } else {
+            // Swap branches.
+            ifTrue = lir->ifFalse();
+            ifFalse = lir->ifTrue();
+            op = JSOP_EQ;
+        }
+
+        Register tag = masm.splitTagForTest(value);
+        masm.branchTestNull(Assembler::Equal, tag, ifTrue->lir()->label());
+
+        Assembler::Condition cond = masm.testUndefined(Assembler::Equal, tag);
+        emitBranch(cond, ifTrue, ifFalse);
+        return true;
+    }
+
+    JS_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
+
+    Assembler::Condition cond = JSOpToCondition(op);
+    if (specialization == MIRType_Null)
+        cond = masm.testNull(cond, value);
+    else
+        cond = masm.testUndefined(cond, value);
+
+    emitBranch(cond, lir->ifTrue(), lir->ifFalse());
+    return true;
+}
+
+bool
 CodeGenerator::visitConcat(LConcat *lir)
 {
     typedef JSString *(*pf)(JSContext *, JSString *, JSString *);

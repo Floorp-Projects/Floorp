@@ -672,11 +672,18 @@ MCompare::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
     MIRType rhs = MIRTypeFromValueType(b.rhsTypes->getKnownTypeTag(cx));
 
     if ((lhs == MIRType_Int32 && rhs == MIRType_Int32) ||
-        (lhs == MIRType_Boolean && rhs == MIRType_Boolean)) {
+        (lhs == MIRType_Boolean && rhs == MIRType_Boolean))
+    {
         specialization_ = MIRType_Int32;
-    } else if (IsNumberType(lhs) && IsNumberType(rhs)) {
+        return;
+    }
+    if (IsNumberType(lhs) && IsNumberType(rhs)) {
         specialization_ = MIRType_Double;
-    } else if (jsop() == JSOP_EQ || jsop() == JSOP_NE) {
+        return;
+    }
+    if (jsop() == JSOP_STRICTEQ || jsop() == JSOP_EQ ||
+        jsop() == JSOP_STRICTNE || jsop() == JSOP_NE)
+    {
         if (lhs == MIRType_Object && rhs == MIRType_Object) {
             if (b.lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) ||
                 b.rhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY))
@@ -684,6 +691,22 @@ MCompare::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
                 return;
             }
             specialization_ = MIRType_Object;
+            return;
+        }
+
+        if (IsNullOrUndefined(lhs)) {
+            // Lowering expects the rhs to be null/undefined, so we have to
+            // swap the operands. This is necessary since we may not know which
+            // operand was null/undefined during lowering (both operands may have
+            // MIRType_Value).
+            specialization_ = lhs;
+            swapOperands();
+            return;
+        }
+
+        if (IsNullOrUndefined(rhs)) {
+            specialization_ = rhs;
+            return;
         }
     }
 }

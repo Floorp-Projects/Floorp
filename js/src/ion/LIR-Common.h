@@ -659,6 +659,46 @@ class LCompareDAndBranch : public LInstructionHelper<0, 2, 0>
     }
 };
 
+class LIsNullOrUndefined : public LInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(IsNullOrUndefined);
+
+    static const size_t Value = 0;
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
+class LIsNullOrUndefinedAndBranch : public LInstructionHelper<0, BOX_PIECES, 0>
+{
+    MBasicBlock *ifTrue_;
+    MBasicBlock *ifFalse_;
+
+  public:
+    LIR_HEADER(IsNullOrUndefinedAndBranch);
+
+    LIsNullOrUndefinedAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : ifTrue_(ifTrue), ifFalse_(ifFalse)
+    { }
+
+    static const size_t Value = 0;
+
+    MBasicBlock *ifTrue() const {
+        return ifTrue_;
+    }
+    MBasicBlock *ifFalse() const {
+        return ifFalse_;
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
 // Not operation on an integer.
 class LNotI : public LInstructionHelper<1, 1, 0>
 {
