@@ -646,5 +646,40 @@ KeymapWrapper::OnKeysChanged(GdkKeymap *aGdkKeymap,
     sInstance->mInitialized = false;
 }
 
+/* static */ guint
+KeymapWrapper::GetCurrentModifierState()
+{
+    GdkModifierType modifiers;
+    gdk_display_get_pointer(gdk_display_get_default(),
+                            NULL, NULL, NULL, &modifiers);
+    return static_cast<guint>(modifiers);
+}
+
+/* static */ bool
+KeymapWrapper::AreModifiersCurrentlyActive(Modifiers aModifiers)
+{
+    KeymapWrapper* keymapWrapper = GetInstance();
+    guint modifierState = GetCurrentModifierState();
+    return keymapWrapper->AreModifiersActive(aModifiers, modifierState);
+}
+
+bool
+KeymapWrapper::AreModifiersActive(Modifiers aModifiers,
+                                  guint aModifierState) const
+{
+    NS_ENSURE_TRUE(aModifiers, false);
+    for (PRUint32 i = 0; i < sizeof(Modifier) * 8 && aModifiers; i++) {
+        Modifier modifier = static_cast<Modifier>(1 << i);
+        if (!(aModifiers & modifier)) {
+            continue;
+        }
+        if (!(aModifierState & GetModifierMask(modifier))) {
+            return false;
+        }
+        aModifiers &= ~modifier;
+    }
+    return true;
+}
+
 } // namespace widget
 } // namespace mozilla
