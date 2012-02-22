@@ -990,7 +990,7 @@ AndroidBridge::SetSurfaceView(jobject obj)
 void
 AndroidBridge::SetLayerClient(jobject obj)
 {
-    AndroidGeckoGLLayerClient *client = new AndroidGeckoGLLayerClient();
+    AndroidGeckoLayerClient *client = new AndroidGeckoLayerClient();
     client->Init(obj);
     mLayerClient = client;
 }

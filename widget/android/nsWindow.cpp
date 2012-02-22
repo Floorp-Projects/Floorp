@@ -2390,13 +2390,12 @@ nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {
     AndroidBridge::AutoLocalJNIFrame jniFrame(GetJNIForThread());
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
-    AndroidGeckoGLLayerClient& glClient = static_cast<AndroidGeckoGLLayerClient&>(client);
-    glClient.CreateFrame(mLayerRendererFrame);
+    client.CreateFrame(mLayerRendererFrame);
 
-    glClient.ActivateProgram();
+    client.ActivateProgram();
     mLayerRendererFrame.BeginDrawing();
     mLayerRendererFrame.DrawBackground();
-    glClient.DeactivateProgram();
+    client.DeactivateProgram();
 }
 
 void
@@ -2406,12 +2405,11 @@ nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {
                       "Frame should have been created in DrawWindowUnderlay()!");
 
     AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
-    AndroidGeckoGLLayerClient& glClient = static_cast<AndroidGeckoGLLayerClient&>(client);
 
-    glClient.ActivateProgram();
+    client.ActivateProgram();
     mLayerRendererFrame.DrawForeground();
     mLayerRendererFrame.EndDrawing();
-    glClient.DeactivateProgram();
+    client.DeactivateProgram();
 
     mLayerRendererFrame.Dispose();
 }
