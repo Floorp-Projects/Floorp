@@ -206,7 +206,7 @@ public:
 #ifdef ANDROID
   ~_MappableBuffer() {
     /* Free the additional page we allocated. See _MappableBuffer::Create */
-    munmap(this + ((GetLength() + PAGE_SIZE) & ~(PAGE_SIZE - 1)), PAGE_SIZE);
+    ::munmap(this + ((GetLength() + PAGE_SIZE) & ~(PAGE_SIZE - 1)), PAGE_SIZE);
   }
 #endif
 

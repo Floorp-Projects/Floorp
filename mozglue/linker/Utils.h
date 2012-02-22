@@ -247,6 +247,8 @@ struct MappedPtr: public GenericMappedPtr<MappedPtr>
   : GenericMappedPtr<MappedPtr>(buf, length) { }
   MappedPtr(): GenericMappedPtr<MappedPtr>() { }
 
+private:
+  friend class GenericMappedPtr<MappedPtr>;
   void munmap(void *buf, size_t length)
   {
     ::munmap(buf, length);
