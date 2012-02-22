@@ -127,7 +127,6 @@ public class GeckoEvent {
     public boolean mCanBeMetered;
 
     public int mNativeWindow;
-    public int mTabId;
 
     public GeckoEvent() {
         mType = NATIVE_POKE;

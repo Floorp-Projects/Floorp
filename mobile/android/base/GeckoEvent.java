@@ -93,7 +93,6 @@ public class GeckoEvent {
     private static final int PROXIMITY_EVENT = 23;
     private static final int ACTIVITY_RESUMING = 24;
     private static final int SCREENSHOT = 25;
-    private static final int META_VIEWPORT_QUERY = 26;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -141,7 +140,6 @@ public class GeckoEvent {
     public boolean mCanBeMetered;
 
     public int mNativeWindow;
-    public int mTabId;
 
     Callback mCallback;
 
@@ -387,13 +385,6 @@ public class GeckoEvent {
         GeckoEvent event = new GeckoEvent(VIEWPORT);
         event.mCharacters = "Viewport:Change";
         event.mCharactersExtra = viewport.toJSON();
-        return event;
-    }
-
-    public static GeckoEvent createMetaViewportQueryEvent(int tabId, Callback callback) {
-        GeckoEvent event = new GeckoEvent(META_VIEWPORT_QUERY);
-        event.mCallback = callback;
-        event.mTabId = tabId;
         return event;
     }
 
