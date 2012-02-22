@@ -45,7 +45,7 @@
     <item name="android:gravity">center_horizontal</item>
     <item name="android:ems">4</item>
     <item name="android:maxLength">4</item>
-    <item name="android:imeOptions">actionNext</item>
+    <item name="android:imeOptions">actionNext|flagNoExtractUi</item>
   </style>
 
   <!-- Theme Styles -->

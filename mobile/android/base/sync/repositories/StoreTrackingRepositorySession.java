@@ -56,7 +56,7 @@ public abstract class StoreTrackingRepositorySession extends RepositorySession {
 
   @Override
   public void finish(RepositorySessionFinishDelegate delegate) {
-    this.storeTracker = null;
     super.finish(delegate);
+    this.storeTracker = null;
   }
 }

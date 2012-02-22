@@ -95,10 +95,10 @@ public:
                 PRUint32 aFlags);
   void GetCurrentFrameRect(nsIntRect& aRect);
 
-  virtual PRUint32 GetDecodedHeapSize();
-  virtual PRUint32 GetDecodedNonheapSize();
-  virtual PRUint32 GetDecodedOutOfProcessSize();
-  virtual PRUint32 GetSourceHeapSize();
+  virtual size_t HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const;
+  virtual size_t HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const;
+  virtual size_t NonHeapSizeOfDecoded() const;
+  virtual size_t OutOfProcessSizeOfDecoded() const;
 
   // Callback for SVGRootRenderingObserver
   void InvalidateObserver();

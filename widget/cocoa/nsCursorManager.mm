@@ -298,8 +298,8 @@ static const nsCursor sCustomCursor = eCursorCount;
   }
 
   // if the hotspot is nonsensical, make it 0,0
-  aHotspotX = (aHotspotX < 0 || aHotspotX > (PRUint32) width - 1) ? 0 :aHotspotX;
-  aHotspotY = (aHotspotY < 0 || aHotspotY > (PRUint32) height - 1) ? 0 :aHotspotY;
+  aHotspotX = (aHotspotX > (PRUint32)width - 1) ? 0 : aHotspotX;
+  aHotspotY = (aHotspotY > (PRUint32)height - 1) ? 0 : aHotspotY;
 
   NSPoint hotSpot = ::NSMakePoint(aHotspotX, aHotspotY);
   [self setMacCursor:[nsMacCursor cursorWithCursor:[[NSCursor alloc] initWithImage:cursorImage hotSpot:hotSpot] type:sCustomCursor]];

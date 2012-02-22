@@ -69,6 +69,7 @@
 #ifndef MOZ_OLD_LINKER
 #include "ElfLoader.h"
 #endif
+#include "application.ini.h"
 
 /* Android headers don't define RUSAGE_THREAD */
 #ifndef RUSAGE_THREAD
@@ -282,7 +283,6 @@ Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one
 }
 
 SHELL_WRAPPER0(nativeInit)
-SHELL_WRAPPER1(nativeRun, jstring)
 SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
 SHELL_WRAPPER0(processNextNativeEvent)
 SHELL_WRAPPER1(setSurfaceView, jobject)
@@ -694,7 +694,6 @@ loadGeckoLibs(const char *apkName)
 
 #define GETFUNC(name) f_ ## name = (name ## _t) __wrap_dlsym(xul_handle, "Java_org_mozilla_gecko_GeckoAppShell_" #name)
   GETFUNC(nativeInit);
-  GETFUNC(nativeRun);
   GETFUNC(notifyGeckoOfEvent);
   GETFUNC(processNextNativeEvent);
   GETFUNC(setSurfaceView);
@@ -811,6 +810,25 @@ Java_org_mozilla_gecko_GeckoAppShell_loadSQLiteLibsNative(JNIEnv *jenv, jclass j
 
   loadSQLiteLibs(str);
   jenv->ReleaseStringUTFChars(jApkName, str);
+}
+
+typedef void (*GeckoStart_t)(void *, const nsXREAppData *);
+
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_nativeRun(JNIEnv *jenv, jclass jc, jstring jargs)
+{
+  GeckoStart_t GeckoStart = (GeckoStart_t) __wrap_dlsym(xul_handle, "GeckoStart");
+  if (GeckoStart == NULL)
+    return;
+  // XXX: java doesn't give us true UTF8, we should figure out something
+  // better to do here
+  int len = jenv->GetStringUTFLength(jargs);
+  // GeckoStart needs to write in the args buffer, so we need a copy.
+  char *args = (char *) malloc(len + 1);
+  jenv->GetStringUTFRegion(jargs, 0, len, args);
+  args[len] = '\0';
+  GeckoStart(args, &sAppData);
+  free(args);
 }
 
 typedef int GeckoProcessType;

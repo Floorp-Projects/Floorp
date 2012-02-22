@@ -174,8 +174,6 @@ static GdkWindow *get_inner_gdk_window (GdkWindow *aWindow,
                                         gint *retx, gint *rety);
 
 static inline bool is_context_menu_key(const nsKeyEvent& inKeyEvent);
-static void   key_event_to_context_menu_event(nsMouseEvent &aEvent,
-                                              GdkEventKey *aGdkEvent);
 
 static int    is_parent_ungrab_enter(GdkEventCrossing *aEvent);
 static int    is_parent_grab_leave(GdkEventCrossing *aEvent);
@@ -270,14 +268,6 @@ static void    drag_data_received_event_cb(GtkWidget *aWidget,
                                            guint aInfo,
                                            guint32 aTime,
                                            gpointer aData);
-
-static GdkModifierType gdk_keyboard_get_modifiers();
-#ifdef MOZ_X11
-static bool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
-                                            PRUint32* aCapsLockMask,
-                                            PRUint32* aNumLockMask,
-                                            PRUint32* aScrollLockMask);
-#endif /* MOZ_X11 */
 
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
@@ -474,59 +464,6 @@ nsWindow::CommonCreate(nsIWidget *aParent, bool aListenForResizes)
     mParent = aParent;
     mListenForResizes = aListenForResizes;
     mCreated = true;
-}
-
-void
-nsWindow::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
-{
-    aEvent.keyCode   = GdkKeyCodeToDOMKeyCode(aGdkEvent->keyval);
-    // NOTE: The state of given key event indicates adjacent state of
-    // modifier keys.  E.g., even if the event is Shift key press event,
-    // the bit for Shift is still false.  By the same token, even if the
-    // event is Shift key release event, the bit for Shift is still true.
-    // Unfortunately, gdk_keyboard_get_modifiers() returns current modifier
-    // state.  It means if there're some pending modifier key press or
-    // key release events, the result isn't what we want.
-    // Temporarily, we should compute the state only when the key event
-    // is GDK_KEY_PRESS.
-    guint modifierState = aGdkEvent->state;
-    guint changingMask = 0;
-    switch (aEvent.keyCode) {
-        case NS_VK_SHIFT:
-            changingMask = GDK_SHIFT_MASK;
-            break;
-        case NS_VK_CONTROL:
-            changingMask = GDK_CONTROL_MASK;
-            break;
-        case NS_VK_ALT:
-            changingMask = GDK_MOD1_MASK;
-            break;
-        case NS_VK_META:
-            changingMask = GDK_MOD4_MASK;
-            break;
-    }
-    if (changingMask != 0) {
-        // This key event is caused by pressing or releasing a modifier key.
-        if (aGdkEvent->type == GDK_KEY_PRESS) {
-            // If new modifier key is pressed, add the pressed mod mask.
-            modifierState |= changingMask;
-        } else {
-            // XXX If we could know the modifier keys state at the key release
-            // event, we should cut out changingMask from modifierState.
-        }
-    }
-    aEvent.isShift   = (modifierState & GDK_SHIFT_MASK) != 0;
-    aEvent.isControl = (modifierState & GDK_CONTROL_MASK) != 0;
-    aEvent.isAlt     = (modifierState & GDK_MOD1_MASK) != 0;
-    aEvent.isMeta    = (modifierState & GDK_MOD4_MASK) != 0;
-
-    // The transformations above and in gdk for the keyval are not invertible
-    // so link to the GdkEvent (which will vanish soon after return from the
-    // event callback) to give plugins access to hardware_keycode and state.
-    // (An XEvent would be nice but the GdkEvent is good enough.)
-    aEvent.pluginEvent = (void *)aGdkEvent;
-
-    aEvent.time      = aGdkEvent->time;
 }
 
 void
@@ -2033,7 +1970,7 @@ nsWindow::HasPendingInputEvent()
 // Paint flashing code (disabled for cairo - see below)
 
 #define CAPS_LOCK_IS_ON \
-(gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
+(KeymapWrapper::AreModifiersCurrentlyActive(KeymapWrapper::CAPS_LOCK))
 
 #define WANT_PAINT_FLASHING \
 (debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
@@ -2617,29 +2554,20 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
       mLastMotionPressure = pressure;
     event.pressure = mLastMotionPressure;
 
+    guint modifierState;
     if (synthEvent) {
 #ifdef MOZ_X11
         event.refPoint.x = nscoord(xevent.xmotion.x);
         event.refPoint.y = nscoord(xevent.xmotion.y);
 
-        event.isShift   = (xevent.xmotion.state & GDK_SHIFT_MASK)
-            ? true : false;
-        event.isControl = (xevent.xmotion.state & GDK_CONTROL_MASK)
-            ? true : false;
-        event.isAlt     = (xevent.xmotion.state & GDK_MOD1_MASK)
-            ? true : false;
+        modifierState = xevent.xmotion.state;
 
         event.time = xevent.xmotion.time;
 #else
         event.refPoint.x = nscoord(aEvent->x);
         event.refPoint.y = nscoord(aEvent->y);
 
-        event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-            ? true : false;
-        event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-            ? true : false;
-        event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-            ? true : false;
+        modifierState = aEvent->state;
 
         event.time = aEvent->time;
 #endif /* MOZ_X11 */
@@ -2654,15 +2582,12 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
             event.refPoint = point - WidgetToScreenOffset();
         }
 
-        event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-            ? true : false;
-        event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-            ? true : false;
-        event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-            ? true : false;
+        modifierState = aEvent->state;
 
         event.time = aEvent->time;
     }
+
+    KeymapWrapper::InitInputEvent(event, modifierState);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -2736,10 +2661,7 @@ nsWindow::InitButtonEvent(nsMouseEvent &aEvent,
         aEvent.refPoint = point - WidgetToScreenOffset();
     }
 
-    aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK) != 0;
-    aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK) != 0;
-    aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK) != 0;
-    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK) != 0;
+    KeymapWrapper::InitInputEvent(aEvent, aGdkEvent->state);
 
     aEvent.time = aGdkEvent->time;
 
@@ -2823,10 +2745,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
             // XXX Why is this delta value different from the scroll event?
             event.delta = (aEvent->button == 6) ? -2 : 2;
 
-            event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;
-            event.isControl = (aEvent->state & GDK_CONTROL_MASK) != 0;
-            event.isAlt     = (aEvent->state & GDK_MOD1_MASK) != 0;
-            event.isMeta    = (aEvent->state & GDK_MOD4_MASK) != 0;
+            KeymapWrapper::InitInputEvent(event, aEvent->state);
 
             event.time = aEvent->time;
 
@@ -2999,54 +2918,12 @@ nsWindow::DispatchContentCommandEvent(PRInt32 aMsg)
   return TRUE;
 }
 
-static PRUint32
-GetCharCodeFor(const GdkEventKey *aEvent, guint aShiftState,
-               gint aGroup)
-{
-    guint keyval;
-    GdkKeymap *keymap = gdk_keymap_get_default();
-
-    if (gdk_keymap_translate_keyboard_state(keymap, aEvent->hardware_keycode,
-                                            GdkModifierType(aShiftState),
-                                            aGroup,
-                                            &keyval, NULL, NULL, NULL)) {
-        GdkEventKey tmpEvent = *aEvent;
-        tmpEvent.state = guint(aShiftState);
-        tmpEvent.keyval = keyval;
-        tmpEvent.group = aGroup;
-        return nsConvertCharCodeToUnicode(&tmpEvent);
-    }
-    return 0;
-}
-
-static gint
-GetKeyLevel(GdkEventKey *aEvent)
-{
-    gint level;
-    GdkKeymap *keymap = gdk_keymap_get_default();
-
-    if (!gdk_keymap_translate_keyboard_state(keymap,
-                                             aEvent->hardware_keycode,
-                                             GdkModifierType(aEvent->state),
-                                             aEvent->group,
-                                             NULL, NULL, &level, NULL))
-        return -1;
-    return level;
-}
-
-static bool
-IsBasicLatinLetterOrNumeral(PRUint32 aChar)
-{
-    return (aChar >= 'a' && aChar <= 'z') ||
-           (aChar >= 'A' && aChar <= 'Z') ||
-           (aChar >= '0' && aChar <= '9');
-}
-
 static bool
 IsCtrlAltTab(GdkEventKey *aEvent)
 {
     return aEvent->keyval == GDK_Tab &&
-        aEvent->state & GDK_CONTROL_MASK && aEvent->state & GDK_MOD1_MASK;
+        KeymapWrapper::AreModifiersActive(
+            KeymapWrapper::CTRL | KeymapWrapper::ALT, aEvent->state);
 }
 
 bool
@@ -3063,7 +2940,7 @@ nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, bool *aCancelled)
     // send the key down event
     nsEventStatus status;
     nsKeyEvent downEvent(true, NS_KEY_DOWN, this);
-    InitKeyEvent(downEvent, aEvent);
+    KeymapWrapper::InitKeyEvent(downEvent, aEvent);
     DispatchEvent(&downEvent, status);
     *aCancelled = (status == nsEventStatus_eConsumeNoDefault);
     return true;
@@ -3120,14 +2997,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // TODO: Instead of selectively excluding some keys from NS_KEY_PRESS events,
     //       we should instead selectively include (as per MSDN spec; no official
     //       spec covers KeyPress events).
-    if (aEvent->keyval == GDK_Shift_L
-        || aEvent->keyval == GDK_Shift_R
-        || aEvent->keyval == GDK_Control_L
-        || aEvent->keyval == GDK_Control_R
-        || aEvent->keyval == GDK_Alt_L
-        || aEvent->keyval == GDK_Alt_R
-        || aEvent->keyval == GDK_Meta_L
-        || aEvent->keyval == GDK_Meta_R) {
+    if (!KeymapWrapper::IsKeyPressEventNecessary(aEvent)) {
         return TRUE;
     }
 
@@ -3168,88 +3038,10 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 #endif /* MOZ_X11 */
 
     nsKeyEvent event(true, NS_KEY_PRESS, this);
-    InitKeyEvent(event, aEvent);
+    KeymapWrapper::InitKeyEvent(event, aEvent);
     if (isKeyDownCancelled) {
       // If prevent default set for onkeydown, do the same for onkeypress
       event.flags |= NS_EVENT_FLAG_NO_DEFAULT;
-    }
-    event.charCode = nsConvertCharCodeToUnicode(aEvent);
-    if (event.charCode) {
-        event.keyCode = 0;
-        gint level = GetKeyLevel(aEvent);
-        if ((event.isControl || event.isAlt || event.isMeta) &&
-            (level == 0 || level == 1)) {
-            guint baseState =
-                aEvent->state & ~(GDK_SHIFT_MASK | GDK_CONTROL_MASK |
-                                  GDK_MOD1_MASK | GDK_MOD4_MASK);
-            // We shold send both shifted char and unshifted char,
-            // all keyboard layout users can use all keys.
-            // Don't change event.charCode. On some keyboard layouts,
-            // ctrl/alt/meta keys are used for inputting some characters.
-            nsAlternativeCharCode altCharCodes(0, 0);
-            // unshifted charcode of current keyboard layout.
-            altCharCodes.mUnshiftedCharCode =
-                GetCharCodeFor(aEvent, baseState, aEvent->group);
-            bool isLatin = (altCharCodes.mUnshiftedCharCode <= 0xFF);
-            // shifted charcode of current keyboard layout.
-            altCharCodes.mShiftedCharCode =
-                GetCharCodeFor(aEvent, baseState | GDK_SHIFT_MASK,
-                               aEvent->group);
-            isLatin = isLatin && (altCharCodes.mShiftedCharCode <= 0xFF);
-            if (altCharCodes.mUnshiftedCharCode ||
-                altCharCodes.mShiftedCharCode) {
-                event.alternativeCharCodes.AppendElement(altCharCodes);
-            }
-
-            if (!isLatin) {
-                // Next, find latin inputtable keyboard layout.
-                GdkKeymapKey *keys;
-                gint count;
-                gint minGroup = -1;
-                if (gdk_keymap_get_entries_for_keyval(NULL, GDK_a,
-                                                      &keys, &count)) {
-                    // find the minimum number group for latin inputtable layout
-                    for (gint i = 0; i < count && minGroup != 0; ++i) {
-                        if (keys[i].level != 0 && keys[i].level != 1)
-                            continue;
-                        if (minGroup >= 0 && keys[i].group > minGroup)
-                            continue;
-                        minGroup = keys[i].group;
-                    }
-                    g_free(keys);
-                }
-                if (minGroup >= 0) {
-                    PRUint32 unmodifiedCh =
-                               event.isShift ? altCharCodes.mShiftedCharCode :
-                                               altCharCodes.mUnshiftedCharCode;
-                    // unshifted charcode of found keyboard layout.
-                    PRUint32 ch =
-                        GetCharCodeFor(aEvent, baseState, minGroup);
-                    altCharCodes.mUnshiftedCharCode =
-                        IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
-                    // shifted charcode of found keyboard layout.
-                    ch = GetCharCodeFor(aEvent, baseState | GDK_SHIFT_MASK,
-                                        minGroup);
-                    altCharCodes.mShiftedCharCode =
-                        IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
-                    if (altCharCodes.mUnshiftedCharCode ||
-                        altCharCodes.mShiftedCharCode) {
-                        event.alternativeCharCodes.AppendElement(altCharCodes);
-                    }
-                    // If the charCode is not Latin, and the level is 0 or 1,
-                    // we should replace the charCode to Latin char if Alt and
-                    // Meta keys are not pressed. (Alt should be sent the
-                    // localized char for accesskey like handling of Web
-                    // Applications.)
-                    ch = event.isShift ? altCharCodes.mShiftedCharCode :
-                                         altCharCodes.mUnshiftedCharCode;
-                    if (ch && !(event.isAlt || event.isMeta) &&
-                        event.charCode == unmodifiedCh) {
-                        event.charCode = ch;
-                    }
-                }
-            }
-        }
     }
 
     // before we dispatch a key, check if it's the context menu key.
@@ -3258,7 +3050,11 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         nsMouseEvent contextMenuEvent(true, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal,
                                       nsMouseEvent::eContextMenuKey);
-        key_event_to_context_menu_event(contextMenuEvent, aEvent);
+
+        contextMenuEvent.refPoint = nsIntPoint(0, 0);
+        contextMenuEvent.time = aEvent->time;
+        contextMenuEvent.clickCount = 1;
+        KeymapWrapper::InitInputEvent(contextMenuEvent, aEvent->state);
         DispatchEvent(&contextMenuEvent, status);
     }
     else {
@@ -3298,7 +3094,7 @@ nsWindow::OnKeyReleaseEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
 
     // send the key event as a key up event
     nsKeyEvent event(true, NS_KEY_UP, this);
-    InitKeyEvent(event, aEvent);
+    KeymapWrapper::InitKeyEvent(event, aEvent);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -3352,10 +3148,7 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
         event.refPoint = point - WidgetToScreenOffset();
     }
 
-    event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;
-    event.isControl = (aEvent->state & GDK_CONTROL_MASK) != 0;
-    event.isAlt     = (aEvent->state & GDK_MOD1_MASK) != 0;
-    event.isMeta    = (aEvent->state & GDK_MOD4_MASK) != 0;
+    KeymapWrapper::InitInputEvent(event, aEvent->state);
 
     event.time = aEvent->time;
 
@@ -6128,12 +5921,8 @@ void
 nsWindow::InitDragEvent(nsDragEvent &aEvent)
 {
     // set the keyboard modifiers
-    GdkModifierType state = (GdkModifierType)0;
-    gdk_display_get_pointer(gdk_display_get_default(), NULL, NULL, NULL, &state);
-    aEvent.isShift = (state & GDK_SHIFT_MASK) ? true : false;
-    aEvent.isControl = (state & GDK_CONTROL_MASK) ? true : false;
-    aEvent.isAlt = (state & GDK_MOD1_MASK) ? true : false;
-    aEvent.isMeta = false; // GTK+ doesn't support the meta key
+    guint modifierState = KeymapWrapper::GetCurrentModifierState();
+    KeymapWrapper::InitInputEvent(aEvent, modifierState);
 }
 
 // This will update the drag action based on the information in the
@@ -6317,19 +6106,6 @@ is_context_menu_key(const nsKeyEvent& aKeyEvent)
              !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt));
 }
 
-static void
-key_event_to_context_menu_event(nsMouseEvent &aEvent,
-                                GdkEventKey *aGdkEvent)
-{
-    aEvent.refPoint = nsIntPoint(0, 0);
-    aEvent.isShift = false;
-    aEvent.isControl = false;
-    aEvent.isAlt = false;
-    aEvent.isMeta = false;
-    aEvent.time = aGdkEvent->time;
-    aEvent.clickCount = 1;
-}
-
 static int
 is_parent_ungrab_enter(GdkEventCrossing *aEvent)
 {
@@ -6346,76 +6122,6 @@ is_parent_grab_leave(GdkEventCrossing *aEvent)
         ((GDK_NOTIFY_ANCESTOR == aEvent->detail) ||
             (GDK_NOTIFY_VIRTUAL == aEvent->detail));
 }
-
-static GdkModifierType
-gdk_keyboard_get_modifiers()
-{
-    GdkModifierType m = (GdkModifierType) 0;
-
-    gdk_window_get_pointer(NULL, NULL, NULL, &m);
-
-    return m;
-}
-
-#ifdef MOZ_X11
-// Get the modifier masks for GDK_Caps_Lock, GDK_Num_Lock and GDK_Scroll_Lock.
-// Return true on success, false on error.
-static bool
-gdk_keyboard_get_modmap_masks(Display*  aDisplay,
-                              PRUint32* aCapsLockMask,
-                              PRUint32* aNumLockMask,
-                              PRUint32* aScrollLockMask)
-{
-    *aCapsLockMask = 0;
-    *aNumLockMask = 0;
-    *aScrollLockMask = 0;
-
-    int min_keycode = 0;
-    int max_keycode = 0;
-    XDisplayKeycodes(aDisplay, &min_keycode, &max_keycode);
-
-    int keysyms_per_keycode = 0;
-    KeySym* xkeymap = XGetKeyboardMapping(aDisplay, min_keycode,
-                                          max_keycode - min_keycode + 1,
-                                          &keysyms_per_keycode);
-    if (!xkeymap) {
-        return false;
-    }
-
-    XModifierKeymap* xmodmap = XGetModifierMapping(aDisplay);
-    if (!xmodmap) {
-        XFree(xkeymap);
-        return false;
-    }
-
-    /*
-      The modifiermap member of the XModifierKeymap structure contains 8 sets
-      of max_keypermod KeyCodes, one for each modifier in the order Shift,
-      Lock, Control, Mod1, Mod2, Mod3, Mod4, and Mod5.
-      Only nonzero KeyCodes have meaning in each set, and zero KeyCodes are ignored.
-    */
-    const unsigned int map_size = 8 * xmodmap->max_keypermod;
-    for (unsigned int i = 0; i < map_size; i++) {
-        KeyCode keycode = xmodmap->modifiermap[i];
-        if (!keycode || keycode < min_keycode || keycode > max_keycode)
-            continue;
-
-        const KeySym* syms = xkeymap + (keycode - min_keycode) * keysyms_per_keycode;
-        const unsigned int mask = 1 << (i / xmodmap->max_keypermod);
-        for (int j = 0; j < keysyms_per_keycode; j++) {
-            switch (syms[j]) {
-                case GDK_Caps_Lock:   *aCapsLockMask |= mask;   break;
-                case GDK_Num_Lock:    *aNumLockMask |= mask;    break;
-                case GDK_Scroll_Lock: *aScrollLockMask |= mask; break;
-            }
-        }
-    }
-
-    XFreeModifiermap(xmodmap);
-    XFree(xkeymap);
-    return true;
-}
-#endif /* MOZ_X11 */
 
 #ifdef ACCESSIBILITY
 void
@@ -6554,30 +6260,17 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState)
 {
     NS_ENSURE_ARG_POINTER(aLEDState);
 
-#ifdef MOZ_X11
-
-    GdkModifierType modifiers = gdk_keyboard_get_modifiers();
-    PRUint32 capsLockMask, numLockMask, scrollLockMask;
-    bool foundMasks = gdk_keyboard_get_modmap_masks(
-                          GDK_WINDOW_XDISPLAY(mGdkWindow),
-                          &capsLockMask, &numLockMask, &scrollLockMask);
-    if (!foundMasks)
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    PRUint32 mask = 0;
+    KeymapWrapper::Modifiers modifier;
     switch (aKeyCode) {
-        case NS_VK_CAPS_LOCK:   mask = capsLockMask;   break;
-        case NS_VK_NUM_LOCK:    mask = numLockMask;    break;
-        case NS_VK_SCROLL_LOCK: mask = scrollLockMask; break;
+        case NS_VK_CAPS_LOCK:   modifier = KeymapWrapper::CAPS_LOCK;   break;
+        case NS_VK_NUM_LOCK:    modifier = KeymapWrapper::NUM_LOCK;    break;
+        case NS_VK_SCROLL_LOCK: modifier = KeymapWrapper::SCROLL_LOCK; break;
+        default: return NS_ERROR_INVALID_ARG;
     }
-    if (mask == 0)
-        return NS_ERROR_NOT_IMPLEMENTED;
 
-    *aLEDState = (modifiers & mask) != 0;
+    *aLEDState =
+        KeymapWrapper::AreModifiersCurrentlyActive(modifier);
     return NS_OK;
-#else
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif /* MOZ_X11 */
 }
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)

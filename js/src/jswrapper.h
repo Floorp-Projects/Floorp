@@ -209,7 +209,15 @@ extern JSObject *
 TransparentObjectWrapper(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
                          uintN flags);
 
-JS_FRIEND_API(bool) IsWrapper(const JSObject *obj);
+// Proxy family for wrappers. Public so that IsWrapper() can be fully inlined by
+// jsfriendapi users.
+extern JS_FRIEND_DATA(int) sWrapperFamily;
+
+inline bool
+IsWrapper(const JSObject *obj)
+{
+    return IsProxy(obj) && GetProxyHandler(obj)->family() == &sWrapperFamily;
+}
 
 // Given a JSObject, returns that object stripped of wrappers. If
 // stopAtOuter is true, then this returns the outer window if it was
