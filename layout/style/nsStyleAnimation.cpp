@@ -880,12 +880,6 @@ AddCSSValuePixelPercentCalc(const PRUint32 aValueRestrictions,
                                aResult);
       break;
     default:
-      NS_ABORT_IF_FALSE(false,
-                        nsPrintfCString(32,
-                                        "unexpected unit %d, from %d and %d",
-                                        aCommonUnit,
-                                        aValue1.GetUnit(),
-                                        aValue2.GetUnit()).get());
       return false;
   }
 
@@ -1822,6 +1816,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                                          aCoeff1, pair1->*member,
                                          aCoeff2, pair2->*member,
                                          result->*member) ) {
+          NS_ABORT_IF_FALSE(false, "unexpected unit");
           return false;
         }
       }
@@ -1864,6 +1859,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                                          aCoeff1, &triplet1->*member,
                                          aCoeff2, &triplet2->*member,
                                          result->*member) ) {
+          NS_ABORT_IF_FALSE(false, "unexpected unit");
           return false;
         }
       }
