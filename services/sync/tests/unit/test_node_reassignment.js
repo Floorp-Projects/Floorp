@@ -76,8 +76,8 @@ function prepareServer() {
   Service.username   = "johndoe";
   Service.passphrase = "abcdeabcdeabcdeabcdeabcdea";
   Service.password   = "ilovejane";
-  Service.serverURL  = "http://localhost:8080/";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL  = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   do_check_eq(Service.userAPI, "http://localhost:8080/user/1.0/");
   let server = new SyncServer();

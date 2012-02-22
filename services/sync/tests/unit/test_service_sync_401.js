@@ -32,8 +32,8 @@ function run_test() {
 
   try {
     _("Set up test fixtures.");
-    Weave.Service.serverURL = "http://localhost:8080/";
-    Weave.Service.clusterURL = "http://localhost:8080/";
+    Weave.Service.serverURL = TEST_SERVER_URL;
+    Weave.Service.clusterURL = TEST_CLUSTER_URL;
     Weave.Service.username = "johndoe";
     Weave.Service.password = "ilovejane";
     Weave.Service.passphrase = "foo";

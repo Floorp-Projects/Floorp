@@ -158,7 +158,8 @@ function test_resetClient() {
 function test_wipeServer() {
   _("SyncEngine.wipeServer deletes server data and resets the client.");
   let syncTesting = new SyncTestingInfrastructure();
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
+  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
   let engine = makeSteamEngine();
 
   const PAYLOAD = 42;

@@ -2,6 +2,8 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/service.js");
 
+const TEST_GET_URL = "http://localhost:8080/1.1/johndoe/storage/meta/global";
+
 function test_resource_user_agent() {
   let meta_global = new ServerWBO('global');
 
@@ -23,8 +25,8 @@ function test_resource_user_agent() {
     "/1.1/johndoe/storage/meta/global": uaHandler(meta_global.handler()),
   });
 
-  Weave.Service.serverURL  = "http://localhost:8080/";
-  Weave.Service.clusterURL = "http://localhost:8080/";
+  Weave.Service.serverURL  = TEST_SERVER_URL;
+  Weave.Service.clusterURL = TEST_CLUSTER_URL;
   Weave.Service.username   = "johndoe";
   Weave.Service.password   = "ilovejane";
 
@@ -43,7 +45,7 @@ function test_resource_user_agent() {
 
   function test_desktop_post(next) {
     _("Testing direct Resource POST.");
-    let r = new AsyncResource("http://localhost:8080/1.1/johndoe/storage/meta/global");
+    let r = new AsyncResource(TEST_GET_URL);
     r.post("foo=bar", function (error, content) {
       _("User-Agent: " + ua);
       do_check_eq(ua, expectedUA + ".desktop");
@@ -55,7 +57,7 @@ function test_resource_user_agent() {
   function test_desktop_get(next) {
     _("Testing async.");
     Svc.Prefs.set("client.type", "desktop");
-    let r = new AsyncResource("http://localhost:8080/1.1/johndoe/storage/meta/global");
+    let r = new AsyncResource(TEST_GET_URL);
     r.get(function(error, content) {
       _("User-Agent: " + ua);
       do_check_eq(ua, expectedUA + ".desktop");
@@ -67,7 +69,7 @@ function test_resource_user_agent() {
   function test_mobile_get(next) {
     _("Testing mobile.");
     Svc.Prefs.set("client.type", "mobile");
-    let r = new AsyncResource("http://localhost:8080/1.1/johndoe/storage/meta/global");
+    let r = new AsyncResource(TEST_GET_URL);
     r.get(function (error, content) {
       _("User-Agent: " + ua);
       do_check_eq(ua, expectedUA + ".mobile");

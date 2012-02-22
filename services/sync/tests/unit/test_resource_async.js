@@ -4,6 +4,9 @@ Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
+const RES_UPLOAD_URL = "http://localhost:8080/upload";
+const RES_HEADERS_URL = "http://localhost:8080/headers";
+
 let logger;
 
 let fetched = false;
@@ -322,7 +325,7 @@ add_test(function test_get_404() {
 
 add_test(function test_put_string() {
   _("PUT to a resource (string)");
-  let res_upload = new AsyncResource("http://localhost:8080/upload");
+  let res_upload = new AsyncResource(RES_UPLOAD_URL);
   res_upload.put(JSON.stringify(sample_data), function(error, content) {
     do_check_eq(error, null);
     do_check_eq(content, "Valid data upload via PUT");
@@ -334,7 +337,7 @@ add_test(function test_put_string() {
 
 add_test(function test_put_object() {
   _("PUT to a resource (object)");
-  let res_upload = new AsyncResource("http://localhost:8080/upload");
+  let res_upload = new AsyncResource(RES_UPLOAD_URL);
   res_upload.put(sample_data, function (error, content) {
     do_check_eq(error, null);
     do_check_eq(content, "Valid data upload via PUT");
@@ -346,7 +349,7 @@ add_test(function test_put_object() {
 
 add_test(function test_put_data_string() {
   _("PUT without data arg (uses resource.data) (string)");
-  let res_upload = new AsyncResource("http://localhost:8080/upload");
+  let res_upload = new AsyncResource(RES_UPLOAD_URL);
   res_upload.data = JSON.stringify(sample_data);
   res_upload.put(function (error, content) {
     do_check_eq(error, null);
@@ -359,7 +362,7 @@ add_test(function test_put_data_string() {
 
 add_test(function test_put_data_object() {
   _("PUT without data arg (uses resource.data) (object)");
-  let res_upload = new AsyncResource("http://localhost:8080/upload");
+  let res_upload = new AsyncResource(RES_UPLOAD_URL);
   res_upload.data = sample_data;
   res_upload.put(function (error, content) {
     do_check_eq(error, null);
@@ -372,7 +375,7 @@ add_test(function test_put_data_object() {
 
 add_test(function test_post_string() {
   _("POST to a resource (string)");
-  let res_upload = new AsyncResource("http://localhost:8080/upload");
+  let res_upload = new AsyncResource(RES_UPLOAD_URL);
   res_upload.post(JSON.stringify(sample_data), function (error, content) {
     do_check_eq(error, null);
     do_check_eq(content, "Valid data upload via POST");
@@ -384,7 +387,7 @@ add_test(function test_post_string() {
 
 add_test(function test_post_object() {
   _("POST to a resource (object)");
-  let res_upload = new AsyncResource("http://localhost:8080/upload");
+  let res_upload = new AsyncResource(RES_UPLOAD_URL);
   res_upload.post(sample_data, function (error, content) {
     do_check_eq(error, null);
     do_check_eq(content, "Valid data upload via POST");
@@ -396,7 +399,7 @@ add_test(function test_post_object() {
 
 add_test(function test_post_data_string() {
   _("POST without data arg (uses resource.data) (string)");
-  let res_upload = new AsyncResource("http://localhost:8080/upload");
+  let res_upload = new AsyncResource(RES_UPLOAD_URL);
   res_upload.data = JSON.stringify(sample_data);
   res_upload.post(function (error, content) {
     do_check_eq(error, null);
@@ -409,7 +412,7 @@ add_test(function test_post_data_string() {
 
 add_test(function test_post_data_object() {
   _("POST without data arg (uses resource.data) (object)");
-  let res_upload = new AsyncResource("http://localhost:8080/upload");
+  let res_upload = new AsyncResource(RES_UPLOAD_URL);
   res_upload.data = sample_data;
   res_upload.post(function (error, content) {
     do_check_eq(error, null);
@@ -458,7 +461,7 @@ add_test(function test_weave_timestamp() {
 
 add_test(function test_get_no_headers() {
   _("GET: no special request headers");
-  let res_headers = new AsyncResource("http://localhost:8080/headers");
+  let res_headers = new AsyncResource(RES_HEADERS_URL);
   res_headers.get(function (error, content) {
     do_check_eq(error, null);
     do_check_eq(content, '{}');
@@ -468,7 +471,7 @@ add_test(function test_get_no_headers() {
 
 add_test(function test_put_default_content_type() {
   _("PUT: Content-Type defaults to text/plain");
-  let res_headers = new AsyncResource("http://localhost:8080/headers");
+  let res_headers = new AsyncResource(RES_HEADERS_URL);
   res_headers.put('data', function (error, content) {
     do_check_eq(error, null);
     do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
@@ -478,7 +481,7 @@ add_test(function test_put_default_content_type() {
 
 add_test(function test_post_default_content_type() {
   _("POST: Content-Type defaults to text/plain");
-  let res_headers = new AsyncResource("http://localhost:8080/headers");
+  let res_headers = new AsyncResource(RES_HEADERS_URL);
   res_headers.post('data', function (error, content) {
     do_check_eq(error, null);
     do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
@@ -488,7 +491,7 @@ add_test(function test_post_default_content_type() {
 
 add_test(function test_setHeader() {
   _("setHeader(): setting simple header");
-  let res_headers = new AsyncResource("http://localhost:8080/headers");
+  let res_headers = new AsyncResource(RES_HEADERS_URL);
   res_headers.setHeader('X-What-Is-Weave', 'awesome');
   do_check_eq(res_headers.headers['x-what-is-weave'], 'awesome');
   res_headers.get(function (error, content) {
@@ -500,7 +503,7 @@ add_test(function test_setHeader() {
 
 add_test(function test_setHeader_overwrite() {
   _("setHeader(): setting multiple headers, overwriting existing header");
-  let res_headers = new AsyncResource("http://localhost:8080/headers");
+  let res_headers = new AsyncResource(RES_HEADERS_URL);
   res_headers.setHeader('X-WHAT-is-Weave', 'more awesomer');
   res_headers.setHeader('X-Another-Header', 'hello world');
   do_check_eq(res_headers.headers['x-what-is-weave'], 'more awesomer');
@@ -516,7 +519,7 @@ add_test(function test_setHeader_overwrite() {
 
 add_test(function test_headers_object() {
   _("Setting headers object");
-  let res_headers = new AsyncResource("http://localhost:8080/headers");
+  let res_headers = new AsyncResource(RES_HEADERS_URL);
   res_headers.headers = {};
   res_headers.get(function (error, content) {
     do_check_eq(error, null);
@@ -527,7 +530,7 @@ add_test(function test_headers_object() {
 
 add_test(function test_put_override_content_type() {
   _("PUT: override default Content-Type");
-  let res_headers = new AsyncResource("http://localhost:8080/headers");
+  let res_headers = new AsyncResource(RES_HEADERS_URL);
   res_headers.setHeader('Content-Type', 'application/foobar');
   do_check_eq(res_headers.headers['content-type'], 'application/foobar');
   res_headers.put('data', function (error, content) {
@@ -539,7 +542,7 @@ add_test(function test_put_override_content_type() {
 
 add_test(function test_post_override_content_type() {
   _("POST: override default Content-Type");
-  let res_headers = new AsyncResource("http://localhost:8080/headers");
+  let res_headers = new AsyncResource(RES_HEADERS_URL);
   res_headers.setHeader('Content-Type', 'application/foobar');
   res_headers.post('data', function (error, content) {
     do_check_eq(error, null);
