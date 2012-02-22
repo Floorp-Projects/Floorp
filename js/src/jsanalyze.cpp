@@ -618,7 +618,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
 
           default:
-            isCompileable = isInlineable = false;
+            if (!(js_CodeSpec[op].format & JOF_DECOMPOSE))
+                isCompileable = isInlineable = false;
             break;
         }
 
