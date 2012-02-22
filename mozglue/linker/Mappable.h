@@ -37,6 +37,13 @@ private:
 
 public:
   /**
+   * Ensures the availability of the memory pages for the page(s) containing
+   * the given address. Returns whether the pages were successfully made
+   * available.
+   */
+  virtual bool ensure(const void *addr) { return true; }
+
+  /**
    * Indicate to a Mappable instance that no further mmap is going to happen.
    */
   virtual void finalize() = 0;

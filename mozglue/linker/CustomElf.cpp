@@ -84,7 +84,10 @@ public:
   : GenericMappedPtr<Mappable1stPagePtr>(
       mappable->mmap(NULL, PAGE_SIZE, PROT_READ, MAP_PRIVATE, 0), PAGE_SIZE)
   , mappable(mappable)
-  { }
+  {
+    /* Ensure the content of this page */
+    mappable->ensure(*this);
+  }
 
 private:
   friend class GenericMappedPtr<Mappable1stPagePtr>;
@@ -300,6 +303,11 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
       return FunctionPtr(&ElfLoader::__wrap_cxa_finalize);
     if (strcmp(symbol + 2, "dso_handle") == 0)
       return const_cast<CustomElf *>(this);
+  } else if (symbol[0] == 's' && symbol[1] == 'i') {
+    if (strcmp(symbol + 2, "gnal") == 0)
+      return FunctionPtr(__wrap_signal);
+    if (strcmp(symbol + 2, "gaction") == 0)
+      return FunctionPtr(__wrap_sigaction);
   }
 
   void *sym;

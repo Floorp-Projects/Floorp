@@ -211,6 +211,7 @@ class Mappable;
 class CustomElf: public LibHandle, private ElfLoader::link_map
 {
   friend class ElfLoader;
+  friend class SEGVHandler;
 public:
   /**
    * Returns a new CustomElf using the given file descriptor to map ELF
