@@ -469,7 +469,7 @@ nsWindow::CommonCreate(nsIWidget *aParent, bool aListenForResizes)
 void
 nsWindow::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
 {
-    aEvent.keyCode   = GdkKeyCodeToDOMKeyCode(aGdkEvent->keyval);
+    aEvent.keyCode   = KeymapWrapper::ComputeDOMKeyCode(aGdkEvent->keyval);
     // NOTE: The state of given key event indicates adjacent state of
     // modifier keys.  E.g., even if the event is Shift key press event,
     // the bit for Shift is still false.  By the same token, even if the
