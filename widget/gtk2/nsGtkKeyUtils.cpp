@@ -60,9 +60,8 @@ PRLogModuleInfo* gKeymapWrapperLog = nsnull;
 
 #include "mozilla/Util.h"
 
-using namespace mozilla;
-
-#define MAX_UNICODE 0x10FFFF
+namespace mozilla {
+namespace widget {
 
 struct KeyPair {
     PRUint32 DOMKeyCode;
@@ -196,72 +195,6 @@ static const KeyPair kSunKeyPairs[] = {
     {NS_VK_F11, 0x1005ff10 }, //Sun F11 key generates SunF36(0x1005ff10) keysym
     {NS_VK_F12, 0x1005ff11 }  //Sun F12 key generates SunF37(0x1005ff11) keysym
 };
-
-
-// Convert gdk key event keyvals to char codes if printable, 0 otherwise
-PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aEvent)
-{
-    // Anything above 0xf000 is considered a non-printable
-    // Exception: directly encoded UCS characters
-    if (aEvent->keyval > 0xf000 && (aEvent->keyval & 0xff000000) != 0x01000000) {
-
-        // Keypad keys are an exception: they return a value different
-        // from their non-keypad equivalents, but mozilla doesn't distinguish.
-        switch (aEvent->keyval)
-            {
-            case GDK_KP_Space:
-                return ' ';
-            case GDK_KP_Equal:
-                return '=';
-            case GDK_KP_Multiply:
-                return '*';
-            case GDK_KP_Add:
-                return '+';
-            case GDK_KP_Separator:
-                return ',';
-            case GDK_KP_Subtract:
-                return '-';
-            case GDK_KP_Decimal:
-                return '.';
-            case GDK_KP_Divide:
-                return '/';
-            case GDK_KP_0:
-                return '0';
-            case GDK_KP_1:
-                return '1';
-            case GDK_KP_2:
-                return '2';
-            case GDK_KP_3:
-                return '3';
-            case GDK_KP_4:
-                return '4';
-            case GDK_KP_5:
-                return '5';
-            case GDK_KP_6:
-                return '6';
-            case GDK_KP_7:
-                return '7';
-            case GDK_KP_8:
-                return '8';
-            case GDK_KP_9:
-                return '9';
-            }
-
-        // non-printables
-        return 0;
-    }
-
-    // we're supposedly printable, let's try to convert
-    long ucs = keysym2ucs(aEvent->keyval);
-    if ((ucs != -1) && (ucs < MAX_UNICODE))
-        return ucs;
-
-    // I guess we couldn't convert
-    return 0;
-}
-
-namespace mozilla {
-namespace widget {
 
 #define MOZ_MODIFIER_KEYS "MozKeymapWrapper"
 
@@ -716,6 +649,297 @@ KeymapWrapper::GuessGDKKeyval(PRUint32 aDOMKeyCode)
     }
 
     return 0;
+}
+
+/* static */ void
+KeymapWrapper::InitKeyEvent(nsKeyEvent& aKeyEvent,
+                            GdkEventKey* aGdkKeyEvent)
+{
+    KeymapWrapper* keymapWrapper = GetInstance();
+
+    aKeyEvent.keyCode = ComputeDOMKeyCode(aGdkKeyEvent->keyval);
+
+    // NOTE: The state of given key event indicates adjacent state of
+    // modifier keys.  E.g., even if the event is Shift key press event,
+    // the bit for Shift is still false.  By the same token, even if the
+    // event is Shift key release event, the bit for Shift is still true.
+    // Unfortunately, gdk_keyboard_get_modifiers() returns current modifier
+    // state.  It means if there're some pending modifier key press or
+    // key release events, the result isn't what we want.
+    // Temporarily, we should compute the state only when the key event
+    // is GDK_KEY_PRESS.
+    // XXX If we could know the modifier keys state at the key release event,
+    //     we should cut out changingMask from modifierState.
+    guint modifierState = aGdkKeyEvent->state;
+    if (aGdkKeyEvent->is_modifier && aGdkKeyEvent->type == GDK_KEY_PRESS) {
+        ModifierKey* modifierKey =
+            keymapWrapper->GetModifierKey(aGdkKeyEvent->hardware_keycode);
+        if (modifierKey) {
+            // If new modifier key is pressed, add the pressed mod mask.
+            modifierState |= modifierKey->mMask;
+        }
+    }
+    InitInputEvent(aKeyEvent, modifierState);
+
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+        ("KeymapWrapper(%p): InitKeyEvent, modifierState=0x%08X "
+         "aGdkKeyEvent={ type=%s, keyval=%s(0x%X), state=0x%08X, "
+         "hardware_keycode=0x%08X, is_modifier=%s } "
+         "aKeyEvent={ message=%s, isShift=%s, isControl=%s, "
+         "isAlt=%s, isMeta=%s }",
+         keymapWrapper, modifierState,
+         ((aGdkKeyEvent->type == GDK_KEY_PRESS) ?
+               "GDK_KEY_PRESS" : "GDK_KEY_RELEASE"),
+         gdk_keyval_name(aGdkKeyEvent->keyval),
+         aGdkKeyEvent->keyval, aGdkKeyEvent->state,
+         aGdkKeyEvent->hardware_keycode,
+         GetBoolName(aGdkKeyEvent->is_modifier),
+         ((aKeyEvent.message == NS_KEY_DOWN) ? "NS_KEY_DOWN" :
+               (aKeyEvent.message == NS_KEY_PRESS) ? "NS_KEY_PRESS" :
+                                                      "NS_KEY_UP"),
+         GetBoolName(aKeyEvent.isShift), GetBoolName(aKeyEvent.isControl),
+         GetBoolName(aKeyEvent.isAlt), GetBoolName(aKeyEvent.isMeta)));
+
+    if (aKeyEvent.message == NS_KEY_PRESS) {
+        keymapWrapper->InitKeypressEvent(aKeyEvent, aGdkKeyEvent);
+    }
+
+    // The transformations above and in gdk for the keyval are not invertible
+    // so link to the GdkEvent (which will vanish soon after return from the
+    // event callback) to give plugins access to hardware_keycode and state.
+    // (An XEvent would be nice but the GdkEvent is good enough.)
+    aKeyEvent.pluginEvent = (void *)aGdkKeyEvent;
+    aKeyEvent.time = aGdkKeyEvent->time;
+}
+
+/* static */ PRUint32
+KeymapWrapper::GetCharCodeFor(const GdkEventKey *aGdkKeyEvent)
+{
+    // Anything above 0xf000 is considered a non-printable
+    // Exception: directly encoded UCS characters
+    if (aGdkKeyEvent->keyval > 0xf000 &&
+        (aGdkKeyEvent->keyval & 0xff000000) != 0x01000000) {
+        // Keypad keys are an exception: they return a value different
+        // from their non-keypad equivalents, but mozilla doesn't distinguish.
+        switch (aGdkKeyEvent->keyval) {
+            case GDK_KP_Space:              return ' ';
+            case GDK_KP_Equal:              return '=';
+            case GDK_KP_Multiply:           return '*';
+            case GDK_KP_Add:                return '+';
+            case GDK_KP_Separator:          return ',';
+            case GDK_KP_Subtract:           return '-';
+            case GDK_KP_Decimal:            return '.';
+            case GDK_KP_Divide:             return '/';
+            case GDK_KP_0:                  return '0';
+            case GDK_KP_1:                  return '1';
+            case GDK_KP_2:                  return '2';
+            case GDK_KP_3:                  return '3';
+            case GDK_KP_4:                  return '4';
+            case GDK_KP_5:                  return '5';
+            case GDK_KP_6:                  return '6';
+            case GDK_KP_7:                  return '7';
+            case GDK_KP_8:                  return '8';
+            case GDK_KP_9:                  return '9';
+            default:                        return 0; // non-printables
+        }
+    }
+
+    static const long MAX_UNICODE = 0x10FFFF;
+
+    // we're supposedly printable, let's try to convert
+    long ucs = keysym2ucs(aGdkKeyEvent->keyval);
+    if ((ucs != -1) && (ucs < MAX_UNICODE)) {
+         return ucs;
+    }
+
+    // I guess we couldn't convert
+    return 0;
+}
+
+PRUint32
+KeymapWrapper::GetCharCodeFor(const GdkEventKey *aGdkKeyEvent,
+                              guint aModifierState,
+                              gint aGroup)
+{
+    guint keyval;
+    if (!gdk_keymap_translate_keyboard_state(mGdkKeymap,
+             aGdkKeyEvent->hardware_keycode,
+             GdkModifierType(aModifierState),
+             aGroup, &keyval, NULL, NULL, NULL)) {
+        return 0;
+    }
+    GdkEventKey tmpEvent = *aGdkKeyEvent;
+    tmpEvent.state = aModifierState;
+    tmpEvent.keyval = keyval;
+    tmpEvent.group = aGroup;
+    return GetCharCodeFor(&tmpEvent);
+}
+
+
+gint
+KeymapWrapper::GetKeyLevel(GdkEventKey *aGdkKeyEvent)
+{
+    gint level;
+    if (!gdk_keymap_translate_keyboard_state(mGdkKeymap,
+             aGdkKeyEvent->hardware_keycode,
+             GdkModifierType(aGdkKeyEvent->state),
+             aGdkKeyEvent->group, NULL, NULL, &level, NULL)) {
+        return -1;
+    }
+    return level;
+}
+
+/* static */ PRBool
+KeymapWrapper::IsBasicLatinLetterOrNumeral(PRUint32 aCharCode)
+{
+    return (aCharCode >= 'a' && aCharCode <= 'z') ||
+           (aCharCode >= 'A' && aCharCode <= 'Z') ||
+           (aCharCode >= '0' && aCharCode <= '9');
+}
+
+void
+KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
+                                 GdkEventKey* aGdkKeyEvent)
+{
+    NS_ENSURE_TRUE(aKeyEvent.message == NS_KEY_PRESS, );
+
+    aKeyEvent.charCode = GetCharCodeFor(aGdkKeyEvent);
+    if (!aKeyEvent.charCode) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+            ("KeymapWrapper(%p): InitKeypressEvent, "
+             "keyCode=0x%02X, charCode=0x%08X",
+             this, aKeyEvent.keyCode, aKeyEvent.charCode));
+        return;
+    }
+
+    // If the event causes inputting a character, keyCode must be zero.
+    aKeyEvent.keyCode = 0;
+
+    // If Ctrl or Alt or Meta is pressed, we need to append the key details
+    // for handling shortcut key.  Otherwise, we have no additional work.
+    if (!aKeyEvent.isControl && !aKeyEvent.isAlt && !aKeyEvent.isMeta) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+            ("KeymapWrapper(%p): InitKeypressEvent, "
+             "keyCode=0x%02X, charCode=0x%08X",
+             this, aKeyEvent.keyCode, aKeyEvent.charCode));
+        return;
+    }
+
+    gint level = GetKeyLevel(aGdkKeyEvent);
+    if (level != 0 && level != 1) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+            ("KeymapWrapper(%p): InitKeypressEvent, "
+             "keyCode=0x%02X, charCode=0x%08X, level=%d",
+             this, aKeyEvent.keyCode, aKeyEvent.charCode, level));
+        return;
+    }
+
+    guint baseState = aGdkKeyEvent->state &
+        ~(GetModifierMask(SHIFT) | GetModifierMask(CTRL) |
+          GetModifierMask(ALT) | GetModifierMask(META) |
+          GetModifierMask(SUPER) | GetModifierMask(HYPER));
+
+    // We shold send both shifted char and unshifted char, all keyboard layout
+    // users can use all keys.  Don't change event.charCode. On some keyboard
+    // layouts, Ctrl/Alt/Meta keys are used for inputting some characters.
+    nsAlternativeCharCode altCharCodes(0, 0);
+    // unshifted charcode of current keyboard layout.
+    altCharCodes.mUnshiftedCharCode =
+        GetCharCodeFor(aGdkKeyEvent, baseState, aGdkKeyEvent->group);
+    PRBool isLatin = (altCharCodes.mUnshiftedCharCode <= 0xFF);
+    // shifted charcode of current keyboard layout.
+    altCharCodes.mShiftedCharCode =
+        GetCharCodeFor(aGdkKeyEvent,
+                       baseState | GetModifierMask(SHIFT),
+                       aGdkKeyEvent->group);
+    isLatin = isLatin && (altCharCodes.mShiftedCharCode <= 0xFF);
+    if (altCharCodes.mUnshiftedCharCode || altCharCodes.mShiftedCharCode) {
+        aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
+    }
+
+    // If current keyboard layout can input Latin characters, we don't need
+    // more information.
+    if (isLatin) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+            ("KeymapWrapper(%p): InitKeypressEvent, keyCode=0x%02X, "
+             "charCode=0x%08X, level=%d, altCharCodes={ "
+             "mUnshiftedCharCode=0x%08X, mShiftedCharCode=0x%08X }",
+             this, aKeyEvent.keyCode, aKeyEvent.charCode, level,
+             altCharCodes.mUnshiftedCharCode, altCharCodes.mShiftedCharCode));
+        return;
+    }
+
+    // Next, find Latin inputtable keyboard layout.
+    GdkKeymapKey *keys;
+    gint count;
+    gint minGroup = -1;
+    if (gdk_keymap_get_entries_for_keyval(mGdkKeymap, GDK_a, &keys, &count)) {
+        // find the minimum number group for latin inputtable layout
+        for (gint i = 0; i < count && minGroup != 0; ++i) {
+            if (keys[i].level != 0 && keys[i].level != 1) {
+                continue;
+            }
+            if (minGroup >= 0 && keys[i].group > minGroup) {
+                continue;
+            }
+            minGroup = keys[i].group;
+        }
+        g_free(keys);
+    }
+
+    if (minGroup < 0) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+            ("KeymapWrapper(%p): InitKeypressEvent, "
+             "Latin keyboard layout isn't found: "
+             "keyCode=0x%02X, charCode=0x%08X, level=%d, "
+             "altCharCodes={ mUnshiftedCharCode=0x%08X, "
+             "mShiftedCharCode=0x%08X }",
+             this, aKeyEvent.keyCode, aKeyEvent.charCode, level,
+             altCharCodes.mUnshiftedCharCode, altCharCodes.mShiftedCharCode));
+        return;
+    }
+
+    nsAlternativeCharCode altLatinCharCodes(0, 0);
+    PRUint32 unmodifiedCh =
+        aKeyEvent.isShift ? altCharCodes.mShiftedCharCode :
+                            altCharCodes.mUnshiftedCharCode;
+
+    // unshifted charcode of found keyboard layout.
+    PRUint32 ch = GetCharCodeFor(aGdkKeyEvent, baseState, minGroup);
+    altLatinCharCodes.mUnshiftedCharCode =
+        IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
+    // shifted charcode of found keyboard layout.
+    ch = GetCharCodeFor(aGdkKeyEvent,
+                        baseState | GetModifierMask(SHIFT),
+                        minGroup);
+    altLatinCharCodes.mShiftedCharCode =
+        IsBasicLatinLetterOrNumeral(ch) ? ch : 0;
+    if (altLatinCharCodes.mUnshiftedCharCode ||
+        altLatinCharCodes.mShiftedCharCode) {
+        aKeyEvent.alternativeCharCodes.AppendElement(altLatinCharCodes);
+    }
+    // If the charCode is not Latin, and the level is 0 or 1, we should
+    // replace the charCode to Latin char if Alt and Meta keys are not
+    // pressed. (Alt should be sent the localized char for accesskey
+    // like handling of Web Applications.)
+    ch = aKeyEvent.isShift ? altLatinCharCodes.mShiftedCharCode :
+                             altLatinCharCodes.mUnshiftedCharCode;
+    if (ch && !(aKeyEvent.isAlt || aKeyEvent.isMeta) &&
+        aKeyEvent.charCode == unmodifiedCh) {
+        aKeyEvent.charCode = ch;
+    }
+
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+        ("KeymapWrapper(%p): InitKeypressEvent, "
+         "keyCode=0x%02X, charCode=0x%08X, level=%d, minGroup=%d, "
+         "altCharCodes={ mUnshiftedCharCode=0x%08X, "
+         "mShiftedCharCode=0x%08X } "
+         "altLatinCharCodes={ mUnshiftedCharCode=0x%08X, "
+         "mShiftedCharCode=0x%08X }",
+         this, aKeyEvent.keyCode, aKeyEvent.charCode, level, minGroup,
+         altCharCodes.mUnshiftedCharCode, altCharCodes.mShiftedCharCode,
+         altLatinCharCodes.mUnshiftedCharCode,
+         altLatinCharCodes.mShiftedCharCode));
 }
 
 } // namespace widget
