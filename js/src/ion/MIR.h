@@ -1120,6 +1120,11 @@ class MBinaryInstruction : public MAryInstruction<2>
 
         return op() ^ lhs->valueNumber() ^ rhs->valueNumber();
     }
+    void swapOperands() {
+        MDefinition *temp = getOperand(0);
+        replaceOperand(0, getOperand(1));
+        replaceOperand(1, temp);
+    }
 
     bool congruentTo(MDefinition *const &ins) const
     {

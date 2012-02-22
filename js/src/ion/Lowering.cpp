@@ -277,7 +277,15 @@ LIRGenerator::visitTest(MTest *test)
             return add(new LCompareDAndBranch(comp->jsop(), useRegister(left),
                                               useRegister(right), ifTrue, ifFalse));
         }
-        // :TODO: implment LCompareVAndBranch. Bug: 679804
+
+        // The second operand has known null/undefined type, so just test the
+        // first operand.
+        if (IsNullOrUndefined(comp->specialization())) {
+            LIsNullOrUndefinedAndBranch *lir = new LIsNullOrUndefinedAndBranch(ifTrue, ifFalse);
+            if (!useBox(lir, LIsNullOrUndefinedAndBranch::Value, comp->getOperand(0)))
+                return false;
+            return add(lir, comp);
+        }
     }
 
     if (opd->type() == MIRType_Double)
@@ -285,6 +293,26 @@ LIRGenerator::visitTest(MTest *test)
 
     JS_ASSERT(opd->type() == MIRType_Int32 || opd->type() == MIRType_Boolean);
     return add(new LTestIAndBranch(useRegister(opd), ifTrue, ifFalse));
+}
+
+static inline bool
+CanEmitCompareAtUses(MInstruction *ins)
+{
+    if (!ins->canEmitAtUses())
+        return false;
+
+    bool foundTest = false;
+    for (MUseIterator iter(ins->usesBegin()); iter != ins->usesEnd(); iter++) {
+        MNode *node = iter->node();
+        if (!node->isDefinition())
+            return false;
+        if (!node->toDefinition()->isTest())
+            return false;
+        if (foundTest)
+            return false;
+        foundTest = true;
+    }
+    return true;
 }
 
 bool
@@ -298,18 +326,7 @@ LIRGenerator::visitCompare(MCompare *comp)
         // If it is, then we willl emit an LCompare*AndBranch instruction in place
         // of this compare and any test that uses this compare. Thus, we can
         // ignore this Compare.
-        bool willOptimize = true;
-        for (MUseIterator iter(comp->usesBegin()); iter!= comp->usesEnd(); iter++) {
-            MNode *node = iter->node();
-            if (node->isResumePoint() ||
-                (node->isDefinition() && !node->toDefinition()->isControlInstruction()))
-            {
-                willOptimize = false;
-                break;
-            }
-        }
-
-        if (willOptimize && comp->canEmitAtUses())
+        if (CanEmitCompareAtUses(comp))
             return emitAtUses(comp);
 
         if (comp->specialization() == MIRType_Int32 || comp->specialization() == MIRType_Object) {
@@ -322,6 +339,13 @@ LIRGenerator::visitCompare(MCompare *comp)
 
         if (comp->specialization() == MIRType_Double)
             return define(new LCompareD(comp->jsop(), useRegister(left), useRegister(right)), comp);
+
+        JS_ASSERT(IsNullOrUndefined(comp->specialization()));
+
+        LIsNullOrUndefined *lir = new LIsNullOrUndefined();
+        if (!useBox(lir, LIsNullOrUndefined::Value, comp->getOperand(0)))
+            return false;
+        return define(lir, comp);
     }
 
     LCompareV *lir = new LCompareV(comp->jsop());
