@@ -58,7 +58,7 @@
 
 namespace mozilla {
 
-class AndroidGeckoGLLayerClient;
+class AndroidGeckoLayerClient;
 
 void InitAndroidJavaWrappers(JNIEnv *jEnv);
 
@@ -153,26 +153,6 @@ protected:
     static jfieldID jTopField;
 };
 
-class AndroidGeckoLayerClient : public WrappedJavaObject {
-public:
-    static void InitGeckoLayerClientClass(JNIEnv *jEnv);
-
-    void Init(jobject jobj);
-
-    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight,
-                      nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture);
-    void EndDrawing(const nsIntRect &aRect);
-
-protected:
-    AndroidGeckoLayerClient() {
-        // You shouldn't directly instantiate one of these; instead use one of the concrete derived
-        // classes.
-    }
-
-    static jclass jGeckoLayerClientClass;
-    static jmethodID jBeginDrawingMethod;
-    static jmethodID jEndDrawingMethod;
-};
 
 /** A callback that retrieves the view transform. */
 class AndroidViewTransformGetter
@@ -181,15 +161,15 @@ public:
     virtual void operator()(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY) = 0;
 };
 
-class AndroidGeckoGLLayerClientViewTransformGetter : public AndroidViewTransformGetter {
+class AndroidGeckoLayerClientViewTransformGetter : public AndroidViewTransformGetter {
 public:
-    AndroidGeckoGLLayerClientViewTransformGetter(AndroidGeckoGLLayerClient& aLayerClient)
+    AndroidGeckoLayerClientViewTransformGetter(AndroidGeckoLayerClient& aLayerClient)
     : mLayerClient(aLayerClient) {}
 
     virtual void operator()(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 
 private:
-    AndroidGeckoGLLayerClient& mLayerClient;
+    AndroidGeckoLayerClient& mLayerClient;
 };
 
 class AndroidViewTransform : public WrappedJavaObject {
@@ -232,31 +212,36 @@ private:
     static jmethodID jEndDrawingMethod;
 };
 
-class AndroidGeckoGLLayerClient : public AndroidGeckoLayerClient {
+class AndroidGeckoLayerClient : public WrappedJavaObject {
 public:
-    static void InitGeckoGLLayerClientClass(JNIEnv *jEnv);
+    static void InitGeckoLayerClientClass(JNIEnv *jEnv);
 
     void Init(jobject jobj);
 
-    AndroidGeckoGLLayerClient()
+    AndroidGeckoLayerClient()
     : mViewTransformGetter(*this) {}
 
-    AndroidGeckoGLLayerClient(jobject jobj)
+    AndroidGeckoLayerClient(jobject jobj)
     : mViewTransformGetter(*this) { Init(jobj); }
 
+    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight,
+                      nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture);
+    void EndDrawing(const nsIntRect &aRect);
     void GetViewTransform(AndroidViewTransform& aViewTransform);
     void CreateFrame(AndroidLayerRendererFrame& aFrame);
     void ActivateProgram();
     void DeactivateProgram();
 
-private:
-    static jclass jGeckoGLLayerClientClass;
+protected:
+    static jclass jGeckoLayerClientClass;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jEndDrawingMethod;
     static jmethodID jGetViewTransformMethod;
     static jmethodID jCreateFrameMethod;
     static jmethodID jActivateProgramMethod;
     static jmethodID jDeactivateProgramMethod;
 
-    AndroidGeckoGLLayerClientViewTransformGetter mViewTransformGetter;
+    AndroidGeckoLayerClientViewTransformGetter mViewTransformGetter;
 };
 
 class AndroidGeckoSurfaceView : public WrappedJavaObject

@@ -59,13 +59,14 @@ import android.view.View;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class GeckoLayerClient implements GeckoEventListener,
-                                                  FlexibleGLSurfaceView.Listener,
-                                                  VirtualLayer.Listener {
+public class GeckoLayerClient implements GeckoEventListener,
+                                         FlexibleGLSurfaceView.Listener,
+                                         VirtualLayer.Listener {
     private static final String LOGTAG = "GeckoLayerClient";
 
     protected LayerController mLayerController;
-    protected LayerRenderer mLayerRenderer;
+    private LayerRenderer mLayerRenderer;
+    private boolean mLayerRendererInitialized;
 
     protected IntSize mScreenSize;
     protected IntSize mWindowSize;
@@ -436,6 +437,49 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
         sendResizeEventIfNecessary(false);
     }
 
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    public ViewTransform getViewTransform() {
+        Log.e(LOGTAG, "### getViewTransform()");
+
+        // NB: We don't begin a transaction here because this can be called in a synchronous
+        // manner between beginDrawing() and endDrawing(), and that will cause a deadlock.
+
+        synchronized (mLayerController) {
+            ViewportMetrics viewportMetrics = mLayerController.getViewportMetrics();
+            PointF viewportOrigin = viewportMetrics.getOrigin();
+            Point tileOrigin = mTileLayer.getOrigin();
+            float scrollX = viewportOrigin.x; 
+            float scrollY = viewportOrigin.y;
+            float zoomFactor = viewportMetrics.getZoomFactor();
+            Log.e(LOGTAG, "### Viewport metrics = " + viewportMetrics + " tile reso = " +
+                  mTileLayer.getResolution());
+            return new ViewTransform(scrollX, scrollY, zoomFactor);
+        }
+    }
+
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    public LayerRenderer.Frame createFrame() {
+        // Create the shaders and textures if necessary.
+        if (!mLayerRendererInitialized) {
+            mLayerRenderer.createProgram();
+            mLayerRendererInitialized = true;
+        }
+
+        // Build the contexts and create the frame.
+        Layer.RenderContext pageContext = mLayerRenderer.createPageContext();
+        Layer.RenderContext screenContext = mLayerRenderer.createScreenContext();
+        return mLayerRenderer.createFrame(pageContext, screenContext);
+    }
+
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    public void activateProgram() {
+        mLayerRenderer.activateProgram();
+    }
+
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    public void deactivateProgram() {
+        mLayerRenderer.deactivateProgram();
+    }
     /** Implementation of FlexibleGLSurfaceView.Listener */
     public void renderRequested() {
         Log.e(LOGTAG, "### Render requested, scheduling composite");
