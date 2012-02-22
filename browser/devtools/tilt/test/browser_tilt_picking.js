@@ -28,8 +28,6 @@ function test() {
             {
               ok(data.index > 0,
                 "Simply picking a node didn't work properly.");
-              ok(!presenter._highlight.disabled,
-                "After only picking a node, it shouldn't be highlighted.");
 
               Services.obs.addObserver(cleanup, DESTROYED, false);
               InspectorUI.closeInspectorUI();
