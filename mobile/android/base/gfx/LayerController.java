@@ -206,7 +206,15 @@ public class LayerController {
             }
         }
 
-        PointF newFocus = new PointF(size.width / 2.0f, size.height / 2.0f);
+        // For rotations, we want the focus point to be at the top left.
+        boolean rotation = (size.width > oldWidth && size.height < oldHeight) ||
+                           (size.width < oldWidth && size.height > oldHeight);
+        PointF newFocus;
+        if (rotation) {
+            newFocus = new PointF(0, 0);
+        } else {
+            newFocus = new PointF(size.width / 2.0f, size.height / 2.0f);
+        }
         float newZoomFactor = size.width * oldZoomFactor / oldWidth;
         mViewportMetrics.scaleTo(newZoomFactor, newFocus);
 
