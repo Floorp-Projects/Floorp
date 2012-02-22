@@ -64,7 +64,7 @@ public:
     /**
      * Compute an our DOM keycode from a GDK keyval.
      */
-    static PRUint32 ComputeDOMKeyCode(guint aGDKKeyval);
+    static PRUint32 ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent);
 
     /**
      * Returns a GDK keyval which is related to the aDOMKeyCode.  However,
