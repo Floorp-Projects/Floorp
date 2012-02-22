@@ -34,6 +34,7 @@ CPPSRCS += \
   ElfLoader.cpp \
   CustomElf.cpp \
   Mappable.cpp \
+  SeekableZStream.cpp \
   $(NULL)
 endif
 
