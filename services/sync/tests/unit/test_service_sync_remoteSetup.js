@@ -61,8 +61,8 @@ function run_test() {
 
   try {
     _("Log in.");
-    Weave.Service.serverURL = "http://localhost:8080/";
-    Weave.Service.clusterURL = "http://localhost:8080/";
+    Weave.Service.serverURL = TEST_SERVER_URL;
+    Weave.Service.clusterURL = TEST_CLUSTER_URL;
     
     _("Checking Status.sync with no credentials.");
     Weave.Service.verifyAndFetchSymmetricKeys();
@@ -77,8 +77,8 @@ function run_test() {
     let syncKey = Weave.Service.passphrase;
     Weave.Service.startOver();
 
-    Weave.Service.serverURL = "http://localhost:8080/";
-    Weave.Service.clusterURL = "http://localhost:8080/";
+    Weave.Service.serverURL = TEST_SERVER_URL;
+    Weave.Service.clusterURL = TEST_CLUSTER_URL;
     Weave.Service.login("johndoe", "ilovejane", syncKey);
     do_check_true(Weave.Service.isLoggedIn);
 

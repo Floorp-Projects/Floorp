@@ -39,8 +39,8 @@ add_test(function test_offline() {
 });
 
 function setup() {
-  Service.serverURL = "http://localhost:8080/";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   let janeHelper = track_collections_helper();
   let janeU      = janeHelper.with_updated_collection;

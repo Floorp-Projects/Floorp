@@ -107,8 +107,8 @@ add_test(function test_annotation_uploaded() {
 
   _("Sync record to the server.");
   Svc.Prefs.set("username", "foo");
-  Service.serverURL = "http://localhost:8080/";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   let server = serverForFoo(engine);
   let collection = server.user("foo").collection("bookmarks");
@@ -193,8 +193,8 @@ add_test(function test_smart_bookmarks_duped() {
   
   _("Prepare sync.");
   Svc.Prefs.set("username", "foo");
-  Service.serverURL = "http://localhost:8080/";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   let server = serverForFoo(engine);
   let collection = server.user("foo").collection("bookmarks");

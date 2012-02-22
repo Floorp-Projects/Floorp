@@ -64,7 +64,7 @@ function test() {
   let testState = {
     windows: [
       { tabs: [{ entries: [{ url: "http://example.com/" }] }], selected: 1 },
-      { tabs: [{ entries: [{ url: "about:robots"        }] }], selected: 1 },
+      { tabs: [{ entries: [{ url: "about:mozilla"       }] }], selected: 1 },
     ],
     // make sure the first window is focused, otherwise when restoring the
     // old state, the first window is closed and the test harness gets unloaded
