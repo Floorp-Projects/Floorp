@@ -387,7 +387,7 @@ public:
    * to a window of the given dimensions.
    */
   void SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTransformPolicy);
-  
+
   /**
    * Setup World transform matrix.
    * Transform will be ignored if it is not PreservesAxisAlignedRectangles

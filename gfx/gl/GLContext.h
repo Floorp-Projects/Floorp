@@ -697,11 +697,14 @@ public:
         VendorNVIDIA,
         VendorATI,
         VendorQualcomm,
+        VendorImagination,
         VendorOther
     };
 
     enum {
         RendererAdreno200,
+        RendererAdreno205,
+        RendererSGX540,
         RendererOther
     };
 
@@ -714,6 +717,8 @@ public:
     }
 
     bool CanUploadSubTextures();
+    bool CanUploadNonPowerOfTwo();
+    bool WantsSmallTiles();
 
     /**
      * If this context wraps a double-buffered target, swap the back
