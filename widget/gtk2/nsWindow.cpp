@@ -174,8 +174,6 @@ static GdkWindow *get_inner_gdk_window (GdkWindow *aWindow,
                                         gint *retx, gint *rety);
 
 static inline bool is_context_menu_key(const nsKeyEvent& inKeyEvent);
-static void   key_event_to_context_menu_event(nsMouseEvent &aEvent,
-                                              GdkEventKey *aGdkEvent);
 
 static int    is_parent_ungrab_enter(GdkEventCrossing *aEvent);
 static int    is_parent_grab_leave(GdkEventCrossing *aEvent);
@@ -507,10 +505,7 @@ nsWindow::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
             // event, we should cut out changingMask from modifierState.
         }
     }
-    aEvent.isShift   = (modifierState & GDK_SHIFT_MASK) != 0;
-    aEvent.isControl = (modifierState & GDK_CONTROL_MASK) != 0;
-    aEvent.isAlt     = (modifierState & GDK_MOD1_MASK) != 0;
-    aEvent.isMeta    = (modifierState & GDK_MOD4_MASK) != 0;
+    KeymapWrapper::InitInputEvent(aEvent, modifierState);
 
     // The transformations above and in gdk for the keyval are not invertible
     // so link to the GdkEvent (which will vanish soon after return from the
@@ -2609,29 +2604,20 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
       mLastMotionPressure = pressure;
     event.pressure = mLastMotionPressure;
 
+    guint modifierState;
     if (synthEvent) {
 #ifdef MOZ_X11
         event.refPoint.x = nscoord(xevent.xmotion.x);
         event.refPoint.y = nscoord(xevent.xmotion.y);
 
-        event.isShift   = (xevent.xmotion.state & GDK_SHIFT_MASK)
-            ? true : false;
-        event.isControl = (xevent.xmotion.state & GDK_CONTROL_MASK)
-            ? true : false;
-        event.isAlt     = (xevent.xmotion.state & GDK_MOD1_MASK)
-            ? true : false;
+        modifierState = xevent.xmotion.state;
 
         event.time = xevent.xmotion.time;
 #else
         event.refPoint.x = nscoord(aEvent->x);
         event.refPoint.y = nscoord(aEvent->y);
 
-        event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-            ? true : false;
-        event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-            ? true : false;
-        event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-            ? true : false;
+        modifierState = aEvent->state;
 
         event.time = aEvent->time;
 #endif /* MOZ_X11 */
@@ -2646,15 +2632,12 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
             event.refPoint = point - WidgetToScreenOffset();
         }
 
-        event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-            ? true : false;
-        event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-            ? true : false;
-        event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-            ? true : false;
+        modifierState = aEvent->state;
 
         event.time = aEvent->time;
     }
+
+    KeymapWrapper::InitInputEvent(event, modifierState);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -2728,10 +2711,7 @@ nsWindow::InitButtonEvent(nsMouseEvent &aEvent,
         aEvent.refPoint = point - WidgetToScreenOffset();
     }
 
-    aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK) != 0;
-    aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK) != 0;
-    aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK) != 0;
-    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK) != 0;
+    KeymapWrapper::InitInputEvent(aEvent, aGdkEvent->state);
 
     aEvent.time = aGdkEvent->time;
 
@@ -2815,10 +2795,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
             // XXX Why is this delta value different from the scroll event?
             event.delta = (aEvent->button == 6) ? -2 : 2;
 
-            event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;
-            event.isControl = (aEvent->state & GDK_CONTROL_MASK) != 0;
-            event.isAlt     = (aEvent->state & GDK_MOD1_MASK) != 0;
-            event.isMeta    = (aEvent->state & GDK_MOD4_MASK) != 0;
+            KeymapWrapper::InitInputEvent(event, aEvent->state);
 
             event.time = aEvent->time;
 
@@ -3250,7 +3227,11 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         nsMouseEvent contextMenuEvent(true, NS_CONTEXTMENU, this,
                                       nsMouseEvent::eReal,
                                       nsMouseEvent::eContextMenuKey);
-        key_event_to_context_menu_event(contextMenuEvent, aEvent);
+
+        contextMenuEvent.refPoint = nsIntPoint(0, 0);
+        contextMenuEvent.time = aEvent->time;
+        contextMenuEvent.clickCount = 1;
+        KeymapWrapper::InitInputEvent(contextMenuEvent, aEvent->state);
         DispatchEvent(&contextMenuEvent, status);
     }
     else {
@@ -3344,10 +3325,7 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
         event.refPoint = point - WidgetToScreenOffset();
     }
 
-    event.isShift   = (aEvent->state & GDK_SHIFT_MASK) != 0;
-    event.isControl = (aEvent->state & GDK_CONTROL_MASK) != 0;
-    event.isAlt     = (aEvent->state & GDK_MOD1_MASK) != 0;
-    event.isMeta    = (aEvent->state & GDK_MOD4_MASK) != 0;
+    KeymapWrapper::InitInputEvent(event, aEvent->state);
 
     event.time = aEvent->time;
 
@@ -6120,12 +6098,8 @@ void
 nsWindow::InitDragEvent(nsDragEvent &aEvent)
 {
     // set the keyboard modifiers
-    GdkModifierType state = (GdkModifierType)0;
-    gdk_display_get_pointer(gdk_display_get_default(), NULL, NULL, NULL, &state);
-    aEvent.isShift = (state & GDK_SHIFT_MASK) ? true : false;
-    aEvent.isControl = (state & GDK_CONTROL_MASK) ? true : false;
-    aEvent.isAlt = (state & GDK_MOD1_MASK) ? true : false;
-    aEvent.isMeta = false; // GTK+ doesn't support the meta key
+    guint modifierState = KeymapWrapper::GetCurrentModifierState();
+    KeymapWrapper::InitInputEvent(aEvent, modifierState);
 }
 
 // This will update the drag action based on the information in the
@@ -6307,19 +6281,6 @@ is_context_menu_key(const nsKeyEvent& aKeyEvent)
              !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt) ||
             (aKeyEvent.keyCode == NS_VK_CONTEXT_MENU && !aKeyEvent.isShift &&
              !aKeyEvent.isControl && !aKeyEvent.isMeta && !aKeyEvent.isAlt));
-}
-
-static void
-key_event_to_context_menu_event(nsMouseEvent &aEvent,
-                                GdkEventKey *aGdkEvent)
-{
-    aEvent.refPoint = nsIntPoint(0, 0);
-    aEvent.isShift = false;
-    aEvent.isControl = false;
-    aEvent.isAlt = false;
-    aEvent.isMeta = false;
-    aEvent.time = aGdkEvent->time;
-    aEvent.clickCount = 1;
 }
 
 static int
