@@ -271,14 +271,6 @@ static void    drag_data_received_event_cb(GtkWidget *aWidget,
                                            guint32 aTime,
                                            gpointer aData);
 
-static GdkModifierType gdk_keyboard_get_modifiers();
-#ifdef MOZ_X11
-static bool gdk_keyboard_get_modmap_masks(Display*  aDisplay,
-                                            PRUint32* aCapsLockMask,
-                                            PRUint32* aNumLockMask,
-                                            PRUint32* aScrollLockMask);
-#endif /* MOZ_X11 */
-
 /* initialization static functions */
 static nsresult    initialize_prefs        (void);
 
@@ -2033,7 +2025,7 @@ nsWindow::HasPendingInputEvent()
 // Paint flashing code (disabled for cairo - see below)
 
 #define CAPS_LOCK_IS_ON \
-(gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
+(KeymapWrapper::AreModifiersCurrentlyActive(KeymapWrapper::CAPS_LOCK))
 
 #define WANT_PAINT_FLASHING \
 (debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
@@ -6347,76 +6339,6 @@ is_parent_grab_leave(GdkEventCrossing *aEvent)
             (GDK_NOTIFY_VIRTUAL == aEvent->detail));
 }
 
-static GdkModifierType
-gdk_keyboard_get_modifiers()
-{
-    GdkModifierType m = (GdkModifierType) 0;
-
-    gdk_window_get_pointer(NULL, NULL, NULL, &m);
-
-    return m;
-}
-
-#ifdef MOZ_X11
-// Get the modifier masks for GDK_Caps_Lock, GDK_Num_Lock and GDK_Scroll_Lock.
-// Return true on success, false on error.
-static bool
-gdk_keyboard_get_modmap_masks(Display*  aDisplay,
-                              PRUint32* aCapsLockMask,
-                              PRUint32* aNumLockMask,
-                              PRUint32* aScrollLockMask)
-{
-    *aCapsLockMask = 0;
-    *aNumLockMask = 0;
-    *aScrollLockMask = 0;
-
-    int min_keycode = 0;
-    int max_keycode = 0;
-    XDisplayKeycodes(aDisplay, &min_keycode, &max_keycode);
-
-    int keysyms_per_keycode = 0;
-    KeySym* xkeymap = XGetKeyboardMapping(aDisplay, min_keycode,
-                                          max_keycode - min_keycode + 1,
-                                          &keysyms_per_keycode);
-    if (!xkeymap) {
-        return false;
-    }
-
-    XModifierKeymap* xmodmap = XGetModifierMapping(aDisplay);
-    if (!xmodmap) {
-        XFree(xkeymap);
-        return false;
-    }
-
-    /*
-      The modifiermap member of the XModifierKeymap structure contains 8 sets
-      of max_keypermod KeyCodes, one for each modifier in the order Shift,
-      Lock, Control, Mod1, Mod2, Mod3, Mod4, and Mod5.
-      Only nonzero KeyCodes have meaning in each set, and zero KeyCodes are ignored.
-    */
-    const unsigned int map_size = 8 * xmodmap->max_keypermod;
-    for (unsigned int i = 0; i < map_size; i++) {
-        KeyCode keycode = xmodmap->modifiermap[i];
-        if (!keycode || keycode < min_keycode || keycode > max_keycode)
-            continue;
-
-        const KeySym* syms = xkeymap + (keycode - min_keycode) * keysyms_per_keycode;
-        const unsigned int mask = 1 << (i / xmodmap->max_keypermod);
-        for (int j = 0; j < keysyms_per_keycode; j++) {
-            switch (syms[j]) {
-                case GDK_Caps_Lock:   *aCapsLockMask |= mask;   break;
-                case GDK_Num_Lock:    *aNumLockMask |= mask;    break;
-                case GDK_Scroll_Lock: *aScrollLockMask |= mask; break;
-            }
-        }
-    }
-
-    XFreeModifiermap(xmodmap);
-    XFree(xkeymap);
-    return true;
-}
-#endif /* MOZ_X11 */
-
 #ifdef ACCESSIBILITY
 void
 nsWindow::CreateRootAccessible()
@@ -6554,30 +6476,17 @@ nsWindow::GetToggledKeyState(PRUint32 aKeyCode, bool* aLEDState)
 {
     NS_ENSURE_ARG_POINTER(aLEDState);
 
-#ifdef MOZ_X11
-
-    GdkModifierType modifiers = gdk_keyboard_get_modifiers();
-    PRUint32 capsLockMask, numLockMask, scrollLockMask;
-    bool foundMasks = gdk_keyboard_get_modmap_masks(
-                          GDK_WINDOW_XDISPLAY(mGdkWindow),
-                          &capsLockMask, &numLockMask, &scrollLockMask);
-    if (!foundMasks)
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    PRUint32 mask = 0;
+    KeymapWrapper::Modifiers modifier;
     switch (aKeyCode) {
-        case NS_VK_CAPS_LOCK:   mask = capsLockMask;   break;
-        case NS_VK_NUM_LOCK:    mask = numLockMask;    break;
-        case NS_VK_SCROLL_LOCK: mask = scrollLockMask; break;
+        case NS_VK_CAPS_LOCK:   modifier = KeymapWrapper::CAPS_LOCK;   break;
+        case NS_VK_NUM_LOCK:    modifier = KeymapWrapper::NUM_LOCK;    break;
+        case NS_VK_SCROLL_LOCK: modifier = KeymapWrapper::SCROLL_LOCK; break;
+        default: return NS_ERROR_INVALID_ARG;
     }
-    if (mask == 0)
-        return NS_ERROR_NOT_IMPLEMENTED;
 
-    *aLEDState = (modifiers & mask) != 0;
+    *aLEDState =
+        KeymapWrapper::AreModifiersCurrentlyActive(modifier);
     return NS_OK;
-#else
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif /* MOZ_X11 */
 }
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
