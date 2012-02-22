@@ -6,7 +6,9 @@
 #define Mappable_h
 
 #include <sys/types.h>
+#include <pthread.h>
 #include "Zip.h"
+#include "SeekableZStream.h"
 #include "mozilla/RefPtr.h"
 #include "zlib.h"
 
@@ -153,6 +155,86 @@ private:
 
   /* Zlib data */
   z_stream zStream;
+};
+
+/**
+ * Mappable implementation for seekable zStreams.
+ * Inflates the mapped bits in a temporary buffer, on demand.
+ */
+class MappableSeekableZStream: public Mappable
+{
+public:
+  ~MappableSeekableZStream();
+
+  /**
+   * Create a MappableSeekableZStream instance for the given Zip stream. The
+   * name argument is used for an appropriately named temporary file, and the
+   * Zip instance is given for the MappableSeekableZStream to keep a reference
+   * of it.
+   */
+  static MappableSeekableZStream *Create(const char *name, Zip *zip,
+                                         Zip::Stream *stream);
+
+  /* Inherited from Mappable */
+  virtual void *mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
+  virtual void munmap(void *addr, size_t length);
+  virtual void finalize();
+  virtual bool ensure(const void *addr);
+
+private:
+  MappableSeekableZStream(Zip *zip);
+
+  /* Zip reference */
+  mozilla::RefPtr<Zip> zip;
+
+  /* Decompression buffer */
+  AutoDeletePtr<_MappableBuffer> buffer;
+
+  /* Seekable ZStream */
+  SeekableZStream zStream;
+
+  /* Keep track of mappings performed with MappableSeekableZStream::mmap so
+   * that they can be realized by MappableSeekableZStream::ensure.
+   * Values stored in the struct are those passed to mmap */
+  struct LazyMap
+  {
+    const void *addr;
+    size_t length;
+    int prot;
+    off_t offset;
+
+    /* Returns addr + length, as a pointer */
+    const void *end() const {
+      return reinterpret_cast<const void *>
+             (reinterpret_cast<const unsigned char *>(addr) + length);
+    }
+
+    /* Returns offset + length */
+    const off_t endOffset() const {
+      return offset + length;
+    }
+
+    /* Returns the offset corresponding to the given address */
+    const off_t offsetOf(const void *ptr) const {
+      return reinterpret_cast<uintptr_t>(ptr)
+             - reinterpret_cast<uintptr_t>(addr) + offset;
+    }
+
+    /* Returns whether the given address is in the LazyMap range */
+    const bool Contains(const void *ptr) const {
+      return (ptr >= addr) && (ptr < end());
+    }
+  };
+
+  /* List of all mappings */
+  std::vector<LazyMap> lazyMaps;
+
+  /* Array keeping track of which chunks have already been decompressed.
+   * Each value is the number of pages decompressed for the given chunk. */
+  AutoDeleteArray<unsigned char> chunkAvail;
+
+  /* Mutex protecting decompression */
+  pthread_mutex_t mutex;
 };
 
 #endif /* Mappable_h */

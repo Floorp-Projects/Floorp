@@ -226,17 +226,19 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
     zip = zips.GetZip(zip_path);
     Zip::Stream s;
     if (zip && zip->GetStream(subpath, &s)) {
-      if (s.GetType() == Zip::Stream::DEFLATE) {
-        /* When the MOZ_LINKER_EXTRACT environment variable is set to "1",
-         * compressed libraries are going to be (temporarily) extracted as
-         * files, in the directory pointed by the MOZ_LINKER_CACHE
-         * environment variable. */
-        const char *extract = getenv("MOZ_LINKER_EXTRACT");
-        if (extract && !strncmp(extract, "1", 2 /* Including '\0' */))
-          mappable = MappableExtractFile::Create(name, &s);
-        /* The above may fail in some cases. */
-        if (!mappable)
+      /* When the MOZ_LINKER_EXTRACT environment variable is set to "1",
+       * compressed libraries are going to be (temporarily) extracted as
+       * files, in the directory pointed by the MOZ_LINKER_CACHE
+       * environment variable. */
+      const char *extract = getenv("MOZ_LINKER_EXTRACT");
+      if (extract && !strncmp(extract, "1", 2 /* Including '\0' */))
+        mappable = MappableExtractFile::Create(name, &s);
+      if (!mappable) {
+        if (s.GetType() == Zip::Stream::DEFLATE) {
           mappable = MappableDeflate::Create(name, zip, &s);
+        } else if (s.GetType() == Zip::Stream::STORE) {
+          mappable = MappableSeekableZStream::Create(name, zip, &s);
+        }
       }
     }
   }
