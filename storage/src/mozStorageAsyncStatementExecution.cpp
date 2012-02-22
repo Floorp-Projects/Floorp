@@ -215,14 +215,7 @@ AsyncExecuteStatements::execute(StatementDataArray &aStatements,
 
   // Dispatch it to the background
   nsIEventTarget *target = aConnection->getAsyncExecutionTarget();
-
-  // If we don't have a valid target, this is a bug somewhere else. In the past,
-  // this assert found cases where a Run method would schedule a new statement
-  // without checking if asyncClose had been called. The caller must prevent
-  // that from happening or, if the work is not critical, just avoid creating
-  // the new statement during shutdown. See bug 718449 for an example.
-  MOZ_ASSERT(target);
-
+  NS_ENSURE_TRUE(target, NS_ERROR_NOT_AVAILABLE);
   nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
