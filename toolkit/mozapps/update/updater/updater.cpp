@@ -2312,6 +2312,95 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
   return rv;
 }
 
+#elif defined(SOLARIS)
+int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
+{
+  int rv = OK;
+  NS_tchar searchpath[MAXPATHLEN];
+  NS_tchar foundpath[MAXPATHLEN];
+  struct {
+    dirent dent_buffer;
+    char chars[MAXNAMLEN];
+  } ent_buf;
+  struct dirent* ent;
+
+
+  NS_tsnprintf(searchpath, sizeof(searchpath)/sizeof(searchpath[0]), NS_T("%s"),
+               dirpath);
+  // Remove the trailing slash so the paths don't contain double slashes. The
+  // existence of the slash has already been checked in DoUpdate.
+  searchpath[NS_tstrlen(searchpath) - 1] = NS_T('\0');
+
+  DIR* dir = opendir(searchpath);
+  if (!dir) {
+    LOG(("add_dir_entries error on opendir: " LOG_S ", err: %d\n", searchpath,
+         errno));
+    return UNEXPECTED_ERROR;
+  }
+
+  while (readdir_r(dir, (dirent *)&ent_buf, &ent) == 0 && ent) {
+    if ((strcmp(ent->d_name, ".") == 0) ||
+        (strcmp(ent->d_name, "..") == 0))
+      continue;
+
+    NS_tsnprintf(foundpath, sizeof(foundpath)/sizeof(foundpath[0]),
+                 NS_T("%s%s"), dirpath, ent->d_name);
+    struct stat64 st_buf;
+    int test = stat64(foundpath, &st_buf);
+    if (test) {
+      closedir(dir);
+      return UNEXPECTED_ERROR;
+    }
+    if (S_ISDIR(st_buf.st_mode)) {
+      NS_tsnprintf(foundpath, sizeof(foundpath)/sizeof(foundpath[0]),
+                   NS_T("%s/"), foundpath);
+      // Recurse into the directory.
+      rv = add_dir_entries(foundpath, list);
+      if (rv) {
+        LOG(("add_dir_entries error: " LOG_S ", err: %d\n", foundpath, rv));
+        closedir(dir);
+        return rv;
+      }
+    } else {
+      // Add the file to be removed to the ActionList.
+      NS_tchar *quotedpath = get_quoted_path(foundpath);
+      if (!quotedpath) {
+        closedir(dir);
+        return PARSE_ERROR;
+      }
+
+      Action *action = new RemoveFile();
+      rv = action->Parse(quotedpath);
+      if (rv) {
+        LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d\n",
+             quotedpath, rv));
+        closedir(dir);
+        return rv;
+      }
+
+      list->Append(action);
+    }
+  }
+  closedir(dir);
+
+  // Add the directory to be removed to the ActionList.
+  NS_tchar *quotedpath = get_quoted_path(dirpath);
+  if (!quotedpath)
+    return PARSE_ERROR;
+
+  Action *action = new RemoveDir();
+  rv = action->Parse(quotedpath);
+  if (rv) {
+    LOG(("add_dir_entries Parse error on close: " LOG_S ", err: %d\n",
+         quotedpath, rv));
+  }
+  else {
+    list->Append(action);
+  }
+
+  return rv;
+}
+
 #else
 
 int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
