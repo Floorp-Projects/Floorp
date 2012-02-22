@@ -499,6 +499,17 @@ class Vector : private AllocPolicy
      * shifting existing elements from |t + 1| onward one position lower.
      */
     void erase(T *t);
+
+    /*
+     * Measure the size of the Vector's heap-allocated storage.
+     */
+    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const;
+
+    /* 
+     * Like sizeOfExcludingThis, but also measures the size of the Vector
+     * object (which must be heap-allocated) itself.
+     */
+    size_t sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const;
 };
 
 /* This does the re-entrancy check plus several other sanity checks. */
@@ -994,6 +1005,20 @@ Vector<T,N,AP>::replaceRawBuffer(T *p, size_t length)
 #ifdef DEBUG
     mReserved = length;
 #endif
+}
+
+template <class T, size_t N, class AP>
+inline size_t
+Vector<T,N,AP>::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
+{
+    return usingInlineStorage() ? 0 : mallocSizeOf(beginNoCheck());
+}
+
+template <class T, size_t N, class AP>
+inline size_t
+Vector<T,N,AP>::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const
+{
+    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
 }
 
 }  /* namespace js */
