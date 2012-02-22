@@ -88,6 +88,27 @@ public:
      */
     typedef PRUint32 Modifiers;
 
+    /**
+     * GetCurrentModifierState() returns current modifier key state.
+     * The "current" means actual state of hardware keyboard when this is
+     * called.  I.e., if some key events are not still dispatched by GDK,
+     * the state may mismatch with GdkEventKey::state.
+     *
+     * @return                  Current modifier key state.
+     */
+    static guint GetCurrentModifierState();
+
+    /**
+     * AreModifiersCurrentlyActive() checks the "current" modifier state
+     * on aGdkWindow with the keymap of the singleton instance.
+     *
+     * @param aModifiers        One or more of Modifier values except
+     *                          NOT_MODIFIER.
+     * @return                  TRUE if all of modifieres in aModifiers are
+     *                          active.  Otherwise, FALSE.
+     */
+    static bool AreModifiersCurrentlyActive(Modifiers aModifiers);
+
 protected:
 
     /**
@@ -158,6 +179,20 @@ protected:
 #ifdef PR_LOGGING
     static const char* GetModifierName(Modifier aModifier);
 #endif // PR_LOGGING
+
+    /**
+     * AreModifiersActive() just checks whether aModifierState indicates
+     * all modifiers in aModifiers are active or not.
+     *
+     * @param aModifiers        One or more of Modifier values except
+     *                          NOT_MODIFIER.
+     * @param aModifierState    GDK's modifier states.
+     * @return                  TRUE if aGdkModifierType indecates all of
+     *                          modifieres in aModifier are active.
+     *                          Otherwise, FALSE.
+     */
+    bool AreModifiersActive(Modifiers aModifiers,
+                            guint aModifierState) const;
 
     /**
      * mGdkKeymap is a wrapped instance by this class.
