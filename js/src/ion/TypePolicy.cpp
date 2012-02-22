@@ -132,6 +132,15 @@ ComparePolicy::adjustInputs(MInstruction *def)
     if (specialization_ == MIRType_None)
         return BoxInputsPolicy::adjustInputs(def);
 
+    if (IsNullOrUndefined(specialization_)) {
+        // The first operand is the value we want to test against null or
+        // undefined.
+        MDefinition *op = def->getOperand(0);
+        if (op->type() != MIRType_Value)
+            def->replaceOperand(0, boxAt(def, op));
+        return true;
+    }
+
     for (size_t i = 0; i < 2; i++) {
         MDefinition *in = def->getOperand(i);
         if (in->type() == specialization_)

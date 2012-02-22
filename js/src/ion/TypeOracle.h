@@ -344,6 +344,12 @@ IsNumberType(MIRType type)
     return type == MIRType_Int32 || type == MIRType_Double;
 }
 
+static inline bool
+IsNullOrUndefined(MIRType type)
+{
+    return type == MIRType_Null || type == MIRType_Undefined;
+}
+
 } /* ion */
 } /* js */
 
