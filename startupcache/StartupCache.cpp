@@ -154,6 +154,7 @@ StartupCache::InitSingleton()
 
 StartupCache* StartupCache::gStartupCache;
 bool StartupCache::gShutdownInitiated;
+enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCache::IGNORE_AGE;
 
 StartupCache::StartupCache() 
   : mArchive(NULL), mStartupWriteInitiated(false), mWriteThread(NULL),
@@ -494,7 +495,7 @@ StartupCache::WriteToDisk()
   zipW->Close();
 
   // Our reader's view of the archive is outdated now, reload it.
-  LoadArchive(IGNORE_AGE);
+  LoadArchive(gPostFlushAgeAction);
   
   return;
 }
@@ -506,7 +507,7 @@ StartupCache::InvalidateCache()
   mTable.Clear();
   mArchive = NULL;
   mFile->Remove(false);
-  LoadArchive(IGNORE_AGE);
+  LoadArchive(gPostFlushAgeAction);
 }
 
 /*
@@ -599,6 +600,13 @@ StartupCache::ResetStartupWriteTimer()
   // Wait for 10 seconds, then write out the cache.
   mTimer->InitWithFuncCallback(StartupCache::WriteTimeout, this, 60000,
                                nsITimer::TYPE_ONE_SHOT);
+  return NS_OK;
+}
+
+nsresult
+StartupCache::RecordAgesAlways()
+{
+  gPostFlushAgeAction = RECORD_AGE;
   return NS_OK;
 }
 
@@ -779,6 +787,12 @@ StartupCacheWrapper::GetObserver(nsIObserver** obv) {
   }
   NS_ADDREF(*obv = sc->mListener);
   return NS_OK;
+}
+
+nsresult
+StartupCacheWrapper::RecordAgesAlways() {
+  StartupCache *sc = StartupCache::GetSingleton();
+  return sc ? sc->RecordAgesAlways() : NS_ERROR_NOT_INITIALIZED;
 }
 
 } // namespace scache
