@@ -16,16 +16,13 @@
     function doTest()
     {
       // Hit testing. See bug #726097
-      var nodeObj = { value: null };
-      var hititem = getAccessible("hititem", null, nodeObj);
-      var [deltaX, deltaY] = getScreenCoords(nodeObj.value);
+      var hititem = getAccessible("hititem");
       var hittest = getAccessible("hittest");
 
-      var hitX = {}, hitY = {}, hitWidth = {}, hitHeight = {};
-      hititem.getBounds(hitX, hitY, hitWidth, hitHeight);
+      var [hitX, hitY, hitWidth, hitHeight] = getBounds(hititem);
+      var tgtX = hitX + hitWidth / 2;
+      var tgtY = hitY + hitHeight / 2;
 
-      var tgtX = deltaX + (hitWidth.value / 2);
-      var tgtY = deltaY + (hitHeight.value / 2);
       var rootAcc = getRootAccessible();
       var docAcc = getAccessible(document);
       var outerDocAcc = docAcc.parent;

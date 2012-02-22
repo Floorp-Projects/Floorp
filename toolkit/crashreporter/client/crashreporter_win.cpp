@@ -145,7 +145,7 @@ static void DoInitCommonControls()
   ic.dwICC = ICC_PROGRESS_CLASS;
   InitCommonControlsEx(&ic);
   // also get the rich edit control
-  LoadLibrary(L"riched20.dll");
+  LoadLibrary(L"Msftedit.dll");
 }
 
 static bool GetBoolValue(HKEY hRegKey, LPCTSTR valueName, DWORD* value)
@@ -1067,6 +1067,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
     description += Str(ST_CRASHREPORTERDESCRIPTION);
     SetDlgItemText(hwndDlg, IDC_DESCRIPTIONTEXT, description.c_str());
 
+
     // Make the title bold.
     CHARFORMAT fmt = { 0, };
     fmt.cbSize = sizeof(fmt);
@@ -1077,9 +1078,12 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
     SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT, EM_SETCHARFORMAT,
                        SCF_SELECTION, (LPARAM)&fmt);
     SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT, EM_SETSEL, 0, 0);
-
+    // Force redraw.
     SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT,
                        EM_SETTARGETDEVICE, (WPARAM)NULL, 0);
+    // Force resize.
+    SendDlgItemMessage(hwndDlg, IDC_DESCRIPTIONTEXT,
+                       EM_REQUESTRESIZE, 0, 0);
 
     // if no URL was given, hide the URL checkbox
     if (gQueryParameters.find(L"URL") == gQueryParameters.end()) {

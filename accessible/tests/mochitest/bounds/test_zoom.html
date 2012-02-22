@@ -18,24 +18,13 @@
           src="../browser.js"></script>
 
   <script type="application/javascript">
-
-    ////////////////////////////////////////////////////////////////////////////
-    // If your patch changes UI or default styles then please tweek the numbers.
-    // Accessibility exposes coordinates and size in device pixels while DOM
-    // operates with CSS pixels. Thus it seems we don't have another way for
-    // accessibility testing rather than numbers hardcode.
-    ////////////////////////////////////////////////////////////////////////////
-
     function doTest()
     {
-      var [outerX, outerY] = getBounds(getAccessible(currentTabDocument()).parent);
-
       var p1 = currentTabDocument().body.firstElementChild;
       var p2 = currentTabDocument().body.lastElementChild;
 
-      var deltaX = 8, deltaY = 8, indentY = 16, w = 584, h = (WIN ? 20 : 19);
-      testBounds(p1, outerX + deltaX, outerY + deltaY, w, h);
-      testBounds(p2, outerX + deltaX, outerY + deltaY + h + indentY, w, h);
+      testBounds(p1);
+      testBounds(p2);
 
       var docShell = currentTabWindow().
         QueryInterface(Components.interfaces.nsIInterfaceRequestor).
@@ -45,9 +34,8 @@
         QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
       docViewer.fullZoom = 2.0;
 
-      testBounds(p1, outerX + deltaX * 2, outerY + deltaY * 2, w * 2, h * 2);
-      testBounds(p2, outerX + deltaX * 2, outerY + (deltaY + h + indentY) * 2,
-                 w * 2, h * 2);
+      testBounds(p1);
+      testBounds(p2);
 
       closeBrowserWindow();
       SimpleTest.finish();
