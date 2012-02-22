@@ -158,10 +158,8 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
         Rect bufferRect = new Rect(0, 0, width, height);
 
         if (!mUpdateViewportOnEndDraw) {
-            // First, find out our ideal displayport. We do this by taking the
-            // clamped viewport origin and taking away the optimum viewport offset.
-            // This would be what we would send to Gecko if adjustViewport were
-            // called now.
+            // First, find out our ideal displayport. This would be what we would
+            // send to Gecko if adjustViewport were called now.
             ViewportMetrics currentMetrics = mLayerController.getViewportMetrics();
             PointF currentBestOrigin = RectUtils.getOrigin(currentMetrics.getClampedViewport());
 
@@ -173,9 +171,11 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
             bufferRect = RectUtils.round(new RectF(currentOrigin.x, currentOrigin.y,
                                                    currentOrigin.x + width, currentOrigin.y + height));
 
+            int area = width * height;
 
             // Take the intersection of the two as the area we're interested in rendering.
             if (!bufferRect.intersect(currentRect)) {
+                Log.w(LOGTAG, "Prediction would avoid useless paint of " + area + " pixels (100.0%)");
                 // If there's no intersection, we have no need to render anything,
                 // but make sure to update the viewport size.
                 mTileLayer.beginTransaction();
@@ -186,6 +186,10 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
                 }
                 return null;
             }
+
+            int wasted = area - (bufferRect.width() * bufferRect.height());
+            Log.w(LOGTAG, "Prediction would avoid useless paint of " + wasted + " pixels (" + ((float)wasted * 100.0f / area) + "%)");
+
             bufferRect.offset(Math.round(-currentOrigin.x), Math.round(-currentOrigin.y));
         }
 
