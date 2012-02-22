@@ -719,10 +719,6 @@ ToIdOperation(JSContext *cx, const Value &objval, const Value &idval, Value *res
 static JS_ALWAYS_INLINE bool
 GetObjectElementOperation(JSContext *cx, JSObject *obj, const Value &rref, Value *res)
 {
-    JSScript *script;
-    jsbytecode *pc;
-    types::TypeScript::GetPcScript(cx, &script, &pc);
-
     uint32_t index;
     if (IsDefinitelyIndex(rref, &index)) {
         do {
@@ -740,6 +736,10 @@ GetObjectElementOperation(JSContext *cx, JSObject *obj, const Value &rref, Value
                 return false;
         } while(0);
     } else {
+        JSScript *script;
+        jsbytecode *pc;
+        types::TypeScript::GetPcScript(cx, &script, &pc);
+
         if (script->hasAnalysis())
             script->analysis()->getCode(pc).getStringElement = true;
 
@@ -764,7 +764,6 @@ GetObjectElementOperation(JSContext *cx, JSObject *obj, const Value &rref, Value
     }
 
     assertSameCompartment(cx, *res);
-    types::TypeScript::Monitor(cx, script, pc, *res);
     return true;
 }
 
@@ -779,7 +778,6 @@ GetElementOperation(JSContext *cx, const Value &lref, const Value &rref, Value *
             if (!str)
                 return false;
             res->setString(str);
-            types::TypeScript::Monitor(cx, *res);
             return true;
         }
     }
@@ -787,7 +785,6 @@ GetElementOperation(JSContext *cx, const Value &lref, const Value &rref, Value *
     if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
         if (rref.isInt32() && size_t(rref.toInt32()) < cx->regs().fp()->numActualArgs()) {
             *res = cx->regs().fp()->canonicalActualArg(rref.toInt32());
-            types::TypeScript::Monitor(cx, *res);
             return true;
         }
         types::MarkArgumentsCreated(cx, cx->fp()->script());
