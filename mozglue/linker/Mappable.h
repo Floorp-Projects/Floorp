@@ -49,6 +49,16 @@ public:
    * Indicate to a Mappable instance that no further mmap is going to happen.
    */
   virtual void finalize() = 0;
+
+  /**
+   * Shows some stats about the Mappable instance.
+   * Meant for MappableSeekableZStream only.
+   * As Mappables don't keep track of what they are instanciated for, the name
+   * argument is used to make the stats logging useful to the reader. The when
+   * argument is to be used by the caller to give an identifier of the when
+   * the stats call is made.
+   */
+  virtual void stats(const char *when, const char *name) const { }
 };
 
 /**
@@ -180,6 +190,7 @@ public:
   virtual void munmap(void *addr, size_t length);
   virtual void finalize();
   virtual bool ensure(const void *addr);
+  virtual void stats(const char *when, const char *name) const;
 
 private:
   MappableSeekableZStream(Zip *zip);
@@ -232,6 +243,9 @@ private:
   /* Array keeping track of which chunks have already been decompressed.
    * Each value is the number of pages decompressed for the given chunk. */
   AutoDeleteArray<unsigned char> chunkAvail;
+
+  /* Number of chunks that have already been decompressed. */
+  size_t chunkAvailNum;
 
   /* Mutex protecting decompression */
   pthread_mutex_t mutex;

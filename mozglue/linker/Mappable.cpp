@@ -350,7 +350,7 @@ MappableSeekableZStream::Create(const char *name, Zip *zip,
 }
 
 MappableSeekableZStream::MappableSeekableZStream(Zip *zip)
-: zip(zip) { }
+: zip(zip), chunkAvailNum(0) { }
 
 MappableSeekableZStream::~MappableSeekableZStream()
 {
@@ -473,6 +473,10 @@ MappableSeekableZStream::ensure(const void *addr)
                  reinterpret_cast<uintptr_t>(*buffer + (chunkStart + length)), 0);
     }
 #endif
+    /* Only count if we haven't already decompressed parts of the chunk */
+    if (chunkAvail[chunk] == 0)
+      chunkAvailNum++;
+
     chunkAvail[chunk] = (length + PAGE_SIZE - 1) / PAGE_SIZE;
   }
 
@@ -497,4 +501,26 @@ MappableSeekableZStream::ensure(const void *addr)
 
   log("mprotect failed");
   return false;
+}
+
+void
+MappableSeekableZStream::stats(const char *when, const char *name) const
+{
+  size_t nEntries = zStream.GetChunksNum();
+  debug("%s: %s; %ld/%ld chunks decompressed",
+        name, when, chunkAvailNum, nEntries);
+
+  size_t len = 64;
+  AutoDeleteArray<char> map = new char[len + 3];
+  map[0] = '[';
+
+  for (size_t i = 0, j = 1; i < nEntries; i++, j++) {
+    map[j] = chunkAvail[i] ? '*' : '_';
+    if ((j == len) || (i == nEntries - 1)) {
+      map[j + 1] = ']';
+      map[j + 2] = '\0';
+      debug("%s", static_cast<char *>(map));
+      j = 0;
+    }
+  }
 }

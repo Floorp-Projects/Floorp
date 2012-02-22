@@ -345,6 +345,15 @@ ElfLoader::~ElfLoader()
   }
 }
 
+void
+ElfLoader::stats(const char *when)
+{
+  for (LibHandleList::iterator it = Singleton.handles.begin();
+       it < Singleton.handles.end(); ++it)
+    if (!(*it)->IsSystemElf())
+      static_cast<CustomElf *>(*it)->stats(when);
+}
+
 #ifdef __ARM_EABI__
 int
 ElfLoader::__wrap_aeabi_atexit(void *that, ElfLoader::Destructor destructor,

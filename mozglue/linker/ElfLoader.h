@@ -284,6 +284,13 @@ private:
 
 protected:
   friend class CustomElf;
+  /**
+   * Show some stats about Mappables in CustomElfs. The when argument is to
+   * be used by the caller to give an identifier of the when the stats call
+   * is made.
+   */
+  static void stats(const char *when);
+
   /* Definition of static destructors as to be used for C++ ABI compatibility */
   typedef void (*Destructor)(void *object);
 
