@@ -205,6 +205,9 @@ let UI = {
       });
 
       iQ(gTabViewFrame.contentDocument).dblclick(function(e) {
+        if (e.originalTarget.id != "content")
+          return;
+
         // Create a group with one tab on double click
         let box =
           new Rect(e.clientX - Math.floor(TabItems.tabWidth/2),
