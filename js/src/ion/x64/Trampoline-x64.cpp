@@ -620,8 +620,8 @@ IonCompartment::generatePreBarrier(JSContext *cx)
 {
     MacroAssembler masm;
 
-    RegisterSet regs(GeneralRegisterSet(Registers::VolatileMask),
-                     FloatRegisterSet(FloatRegisters::VolatileMask));
+    RegisterSet regs = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
+                                   FloatRegisterSet(FloatRegisters::VolatileMask));
     masm.PushRegsInMask(regs);
 
     JS_ASSERT(PreBarrierReg == rdx);
