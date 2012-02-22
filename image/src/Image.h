@@ -97,15 +97,15 @@ public:
    * The size, in bytes, occupied by the significant data portions of the image.
    * This includes both compressed source data and decoded frames.
    */
-  PRUint32 GetDataSize();
+  PRUint32 SizeOfData();
 
   /**
-   * The components that make up GetDataSize().
+   * The components that make up SizeOfData().
    */      
-  virtual PRUint32 GetDecodedHeapSize() = 0;
-  virtual PRUint32 GetDecodedNonheapSize() = 0;
-  virtual PRUint32 GetDecodedOutOfProcessSize() = 0;
-  virtual PRUint32 GetSourceHeapSize() = 0;
+  virtual size_t HeapSizeOfSourceWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+  virtual size_t HeapSizeOfDecodedWithComputedFallback(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+  virtual size_t NonHeapSizeOfDecoded() const = 0;
+  virtual size_t OutOfProcessSizeOfDecoded() const = 0;
 
   // Mimetype translation
   enum eDecoderType {

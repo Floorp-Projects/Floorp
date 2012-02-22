@@ -118,6 +118,7 @@ EXPORTS	= \
   nsXPCOMCIDInternal.h \
   xrecore.h \
   nsXULAppAPI.h \
+  nsXREAppData.h \
   $(NULL)
 
 EXPORTS_mozilla = \

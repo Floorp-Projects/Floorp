@@ -2925,6 +2925,10 @@ ia64*-hpux*)
 esac
 
 AC_SUBST(MOZ_LINKER)
+if test -n "$MOZ_LINKER"; then
+  AC_DEFINE(MOZ_LINKER)
+fi
+AC_SUBST(MOZ_ENABLE_SZIP)
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
 dnl if any other platforms need to override this in the future.

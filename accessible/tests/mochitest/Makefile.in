@@ -45,6 +45,7 @@ relativesrcdir  = accessible
 DIRS	= \
   actions \
   attributes \
+  bounds \
   editabletext \
   elm \
   events \

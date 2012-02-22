@@ -86,6 +86,7 @@ _TEST_FILES = \
         test_dynUnsecurePicturePreload.html \
         test_innerHtmlDelayedUnsecurePicture.html \
         test_innerHtmlUnsecurePicture.html \
+        test_javascriptPicture.html \
         test_secureAll.html \
         test_securePicture.html \
         test_unsecureBackground.html \

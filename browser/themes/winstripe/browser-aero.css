@@ -174,8 +174,8 @@
   }
 
   #main-window[sizemode=normal][tabsontop=false] #PersonalToolbar:not(:-moz-lwtheme) {
-    border-top-left-radius: 3.5px;
-    border-top-right-radius: 3.5px;
+    border-top-left-radius: 2.5px;
+    border-top-right-radius: 2.5px;
   }
 
   /* Toolbar shadow behind tabs */
@@ -186,8 +186,8 @@
   #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme),
   #main-window[sizemode=normal][tabsontop=true][disablechrome] #navigator-toolbox:not(:-moz-lwtheme)::after {
     border-top: 1px solid @toolbarShadowColor@;
-    border-top-left-radius: 3.5px;
-    border-top-right-radius: 3.5px;
+    border-top-left-radius: 2.5px;
+    border-top-right-radius: 2.5px;
     background-clip: padding-box;
   }
   #main-window[sizemode=normal] #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {

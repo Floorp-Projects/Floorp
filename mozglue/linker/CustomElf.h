@@ -211,6 +211,7 @@ class Mappable;
 class CustomElf: public LibHandle, private ElfLoader::link_map
 {
   friend class ElfLoader;
+  friend class SEGVHandler;
 public:
   /**
    * Returns a new CustomElf using the given file descriptor to map ELF
@@ -230,6 +231,13 @@ public:
   virtual ~CustomElf();
   virtual void *GetSymbolPtr(const char *symbol) const;
   virtual bool Contains(void *addr) const;
+
+  /**
+   * Shows some stats about the Mappable instance. The when argument is to be
+   * used by the caller to give an identifier of the when the stats call is
+   * made.
+   */
+  void stats(const char *when) const;
 
 private:
   /**
@@ -325,6 +333,7 @@ private:
       void (*func)(void);
     } f;
     f.ptr = ptr;
+    debug("%s: Calling function @%p", GetPath(), ptr);
     f.func();
   }
 

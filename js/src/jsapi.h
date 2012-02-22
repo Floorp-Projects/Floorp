@@ -2745,6 +2745,13 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
                   JSObject **objp);
 
 /*
+ * Returns the original value of |Function.prototype| from the global object in
+ * which |forObj| was created.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_GetFunctionPrototype(JSContext *cx, JSObject *forObj);
+
+/*
  * Returns the original value of |Object.prototype| from the global object in
  * which |forObj| was created.
  */

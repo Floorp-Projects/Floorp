@@ -84,12 +84,17 @@ public:
   : GenericMappedPtr<Mappable1stPagePtr>(
       mappable->mmap(NULL, PAGE_SIZE, PROT_READ, MAP_PRIVATE, 0), PAGE_SIZE)
   , mappable(mappable)
-  { }
+  {
+    /* Ensure the content of this page */
+    mappable->ensure(*this);
+  }
 
+private:
+  friend class GenericMappedPtr<Mappable1stPagePtr>;
   void munmap(void *buf, size_t length) {
     mappable->munmap(buf, length);
   }
-private:
+
   Mappable *mappable;
 };
 
@@ -213,6 +218,7 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
   if (!elf->InitDyn(dyn))
     return NULL;
 
+  elf->stats("oneLibLoaded");
   debug("CustomElf::Load(\"%s\", %x) = %p", path, flags,
         static_cast<void *>(elf));
   return elf;
@@ -298,6 +304,13 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
       return FunctionPtr(&ElfLoader::__wrap_cxa_finalize);
     if (strcmp(symbol + 2, "dso_handle") == 0)
       return const_cast<CustomElf *>(this);
+    if (strcmp(symbol + 2, "moz_linker_stats") == 0)
+      return FunctionPtr(&ElfLoader::stats);
+  } else if (symbol[0] == 's' && symbol[1] == 'i') {
+    if (strcmp(symbol + 2, "gnal") == 0)
+      return FunctionPtr(__wrap_signal);
+    if (strcmp(symbol + 2, "gaction") == 0)
+      return FunctionPtr(__wrap_sigaction);
   }
 
   void *sym;
@@ -358,6 +371,12 @@ bool
 CustomElf::Contains(void *addr) const
 {
   return base.Contains(addr);
+}
+
+void
+CustomElf::stats(const char *when) const
+{
+  mappable->stats(when, GetPath());
 }
 
 bool

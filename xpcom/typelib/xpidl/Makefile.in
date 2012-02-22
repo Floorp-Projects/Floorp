@@ -48,6 +48,8 @@ SDK_BINARY = \
   $(topsrcdir)/xpcom/idl-parser/xpidl.py \
   $(topsrcdir)/xpcom/idl-parser/header.py \
   $(topsrcdir)/xpcom/idl-parser/typelib.py \
+  $(DEPTH)/xpcom/idl-parser/xpidllex.py \
+  $(DEPTH)/xpcom/idl-parser/xpidlyacc.py \
   $(NULL)
 
 $(SDK_BIN_DIR)/ply::
