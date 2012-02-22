@@ -345,10 +345,100 @@ namespace widget {
 
 KeymapWrapper* KeymapWrapper::sInstance = nsnull;
 
+#ifdef PR_LOGGING
+
+/* static */ const char*
+KeymapWrapper::GetModifierName(Modifier aModifier)
+{
+    switch (aModifier) {
+        case CAPS_LOCK:    return "CapsLock";
+        case NUM_LOCK:     return "NumLock";
+        case SCROLL_LOCK:  return "ScrollLock";
+        case SHIFT:        return "Shift";
+        case CTRL:         return "Ctrl";
+        case ALT:          return "Alt";
+        case SUPER:        return "Super";
+        case HYPER:        return "Hyper";
+        case META:         return "Meta";
+        case ALTGR:        return "AltGr";
+        case NOT_MODIFIER: return "NotModifier";
+        default:           return "InvalidValue";
+    }
+}
+
+#endif // PR_LOGGING
+
+/* static */ KeymapWrapper::Modifier
+KeymapWrapper::GetModifierForGDKKeyval(guint aGdkKeyval)
+{
+    switch (aGdkKeyval) {
+        case GDK_Caps_Lock:        return CAPS_LOCK;
+        case GDK_Num_Lock:         return NUM_LOCK;
+        case GDK_Scroll_Lock:      return SCROLL_LOCK;
+        case GDK_Shift_L:
+        case GDK_Shift_R:          return SHIFT;
+        case GDK_Control_L:
+        case GDK_Control_R:        return CTRL;
+        case GDK_Alt_L:
+        case GDK_Alt_R:            return ALT;
+        case GDK_Super_L:
+        case GDK_Super_R:          return SUPER;
+        case GDK_Hyper_L:
+        case GDK_Hyper_R:          return HYPER;
+        case GDK_Meta_L:
+        case GDK_Meta_R:           return META;
+        case GDK_ISO_Level3_Shift:
+        case GDK_Mode_switch:      return ALTGR;
+        default:                   return NOT_MODIFIER;
+    }
+}
+
+guint
+KeymapWrapper::GetModifierMask(Modifier aModifier) const
+{
+    switch (aModifier) {
+        case CAPS_LOCK:
+            return GDK_LOCK_MASK;
+        case NUM_LOCK:
+            return mModifierMasks[INDEX_NUM_LOCK];
+        case SCROLL_LOCK:
+            return mModifierMasks[INDEX_SCROLL_LOCK];
+        case SHIFT:
+            return GDK_SHIFT_MASK;
+        case CTRL:
+            return GDK_CONTROL_MASK;
+        case ALT:
+            return mModifierMasks[INDEX_ALT];
+        case SUPER:
+            return mModifierMasks[INDEX_SUPER];
+        case HYPER:
+            return mModifierMasks[INDEX_HYPER];
+        case META:
+            return mModifierMasks[INDEX_META];
+        case ALTGR:
+            return mModifierMasks[INDEX_ALTGR];
+        default:
+            return 0;
+    }
+}
+
+KeymapWrapper::ModifierKey*
+KeymapWrapper::GetModifierKey(guint aHardwareKeycode)
+{
+    for (PRUint32 i = 0; i < mModifierKeys.Length(); i++) {
+        ModifierKey& key = mModifierKeys[i];
+        if (key.mHardwareKeycode == aHardwareKeycode) {
+            return &key;
+        }
+    }
+    return nsnull;
+}
+
 /* static */ KeymapWrapper*
 KeymapWrapper::GetInstance()
 {
     if (sInstance) {
+        sInstance->Init();
         return sInstance;
     }
 
@@ -374,6 +464,151 @@ KeymapWrapper::KeymapWrapper() :
     // This is necessary for catching the destroying timing.
     g_object_weak_ref(G_OBJECT(mGdkKeymap),
                       (GWeakNotify)OnDestroyKeymap, this);
+
+    Init();
+}
+
+void
+KeymapWrapper::Init()
+{
+    if (mInitialized) {
+        return;
+    }
+    mInitialized = true;
+
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+        ("KeymapWrapper(%p): Init, mGdkKeymap=%p",
+         this, mGdkKeymap));
+
+    mModifierKeys.Clear();
+    memset(mModifierMasks, 0, sizeof(mModifierMasks));
+
+    InitBySystemSettings();
+
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+        ("KeymapWrapper(%p): Init, CapsLock=0x%X, NumLock=0x%X, "
+         "ScrollLock=0x%X, AltGr=0x%X, Shift=0x%X, Ctrl=0x%X, Alt=0x%X, "
+         "Meta=0x%X, Super=0x%X, Hyper=0x%X",
+         this,
+         GetModifierMask(CAPS_LOCK), GetModifierMask(NUM_LOCK),
+         GetModifierMask(SCROLL_LOCK), GetModifierMask(ALTGR),
+         GetModifierMask(SHIFT), GetModifierMask(CTRL),
+         GetModifierMask(ALT), GetModifierMask(META),
+         GetModifierMask(SUPER), GetModifierMask(HYPER)));
+}
+
+void
+KeymapWrapper::InitBySystemSettings()
+{
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+      ("KeymapWrapper(%p): InitBySystemSettings, mGdkKeymap=%p",
+       this, mGdkKeymap));
+
+    Display* display =
+        gdk_x11_display_get_xdisplay(gdk_display_get_default());
+
+    int min_keycode = 0;
+    int max_keycode = 0;
+    XDisplayKeycodes(display, &min_keycode, &max_keycode);
+
+    int keysyms_per_keycode = 0;
+    KeySym* xkeymap = XGetKeyboardMapping(display, min_keycode,
+                                          max_keycode - min_keycode + 1,
+                                          &keysyms_per_keycode);
+    if (!xkeymap) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+            ("KeymapWrapper(%p): InitBySystemSettings, "
+             "Failed due to null xkeymap", this));
+        return;
+    }
+
+    XModifierKeymap* xmodmap = XGetModifierMapping(display);
+    if (!xmodmap) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+            ("KeymapWrapper(%p): InitBySystemSettings, "
+             "Failed due to null xmodmap", this));
+        XFree(xkeymap);
+        return;
+    }
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+        ("KeymapWrapper(%p): InitBySystemSettings, min_keycode=%d, "
+         "max_keycode=%d, keysyms_per_keycode=%d, max_keypermod=%d",
+         this, min_keycode, max_keycode, keysyms_per_keycode,
+         xmodmap->max_keypermod));
+
+    // The modifiermap member of the XModifierKeymap structure contains 8 sets
+    // of max_keypermod KeyCodes, one for each modifier in the order Shift,
+    // Lock, Control, Mod1, Mod2, Mod3, Mod4, and Mod5.
+    // Only nonzero KeyCodes have meaning in each set, and zero KeyCodes are
+    // ignored.
+
+    // Note that two or more modifiers may use one modifier flag.  E.g.,
+    // on Ubuntu 10.10, Alt and Meta share the Mod1 in default settings.
+    //  And also Super and Hyper share the Mod4.
+
+    const PRUint32 map_size = 8 * xmodmap->max_keypermod;
+    for (PRUint32 i = 0; i < map_size; i++) {
+        KeyCode keycode = xmodmap->modifiermap[i];
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+            ("KeymapWrapper(%p): InitBySystemSettings, "
+             "  i=%d, keycode=0x%08X",
+             this, i, keycode));
+        if (!keycode || keycode < min_keycode || keycode > max_keycode) {
+            continue;
+        }
+
+        ModifierKey* modifierKey = GetModifierKey(keycode);
+        if (!modifierKey) {
+            modifierKey = mModifierKeys.AppendElement(ModifierKey(keycode));
+        }
+
+        const KeySym* syms =
+            xkeymap + (keycode - min_keycode) * keysyms_per_keycode;
+        const PRUint32 bit = i / xmodmap->max_keypermod;
+        modifierKey->mMask |= 1 << bit;
+        for (PRInt32 j = 0; j < keysyms_per_keycode; j++) {
+            Modifier modifier = GetModifierForGDKKeyval(syms[j]);
+            PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+                ("KeymapWrapper(%p): InitBySystemSettings, "
+                 "    bit=%d, j=%d, syms[j]=%s(0x%X), modifier=%s",
+                 this, bit, j, gdk_keyval_name(syms[j]), syms[j],
+                 GetModifierName(modifier)));
+
+            ModifierIndex index;
+            switch (modifier) {
+                case NUM_LOCK:
+                    index = INDEX_NUM_LOCK;
+                    break;
+                case SCROLL_LOCK:
+                    index = INDEX_SCROLL_LOCK;
+                    break;
+                case ALT:
+                    index = INDEX_ALT;
+                    break;
+                case SUPER:
+                    index = INDEX_SUPER;
+                    break;
+                case HYPER:
+                    index = INDEX_HYPER;
+                    break;
+                case META:
+                    index = INDEX_META;
+                    break;
+                case ALTGR:
+                    index = INDEX_ALTGR;
+                    break;
+                default:
+                    // NOTE: We always use GDK_SHIFT_MASK, GDK_CONTROL_MASK and
+                    //       GDK_LOCK_MASK for SHIFT, CTRL and CAPS_LOCK.
+                    //       This is standard manners of GTK application.
+                    continue;
+            }
+            mModifierMasks[index] |= 1 << bit;
+        }
+    }
+
+    XFreeModifiermap(xmodmap);
+    XFree(xkeymap);
 }
 
 KeymapWrapper::~KeymapWrapper()
