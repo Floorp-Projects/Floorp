@@ -135,7 +135,7 @@ public class GeckoLayerClient implements GeckoEventListener,
         // If the viewport has changed but we still don't have the latest viewport
         // from Gecko, ignore the viewport passed to us from Gecko since that is going
         // to be wrong.
-        if (!mFirstPaint && mIgnorePaintsPendingViewportSizeChange && !mUpdateViewportOnEndDraw) {
+        if (!mFirstPaint && mIgnorePaintsPendingViewportSizeChange) {
             return null;
         }
         mFirstPaint = false;
