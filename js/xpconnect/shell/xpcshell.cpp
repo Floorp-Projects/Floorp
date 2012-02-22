@@ -1760,10 +1760,6 @@ main(int argc, char **argv, char **envp)
     setbuf(stdout, 0);
 #endif
 
-#ifdef XRE_HAS_DLL_BLOCKLIST
-    XRE_SetupDllBlocklist();
-#endif
-
     gErrFile = stderr;
     gOutFile = stdout;
     gInFile = stdin;
