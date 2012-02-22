@@ -59,9 +59,9 @@ IonCode *
 IonCompartment::generateOsrPrologue(JSContext *cx)
 {
     MacroAssembler masm(cx);
-    
+
 #if defined(_WIN64)
-    const Operand fp = Operand(rbp, 16 + ShadowStackSpace);
+    const Operand fp = Operand(rsp, 16 + ShadowStackSpace);
     masm.movq(fp, OsrFrameReg);
 #else
     JS_ASSERT(OsrFrameReg == ArgReg5); // Nothing to do.
@@ -91,7 +91,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     const Register reg_argv = ArgReg2;
     const Register reg_vp   = ArgReg3;
 #if defined(_WIN64)
-    const Operand token = Operand(rbp, 8 + ShadowStackSpace);
+    const Operand token = Operand(rbp, 16 + ShadowStackSpace);
     // OsrFrameReg (r10 on WIN64) may not be used below.
 #else
     const Register token = ArgReg4;
