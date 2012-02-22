@@ -218,17 +218,6 @@ nsAccessibilityService::CreateOuterDocAccessible(nsIContent* aContent,
 }
 
 already_AddRefed<nsAccessible>
-nsAccessibilityService::CreateHTML4ButtonAccessible(nsIContent* aContent,
-                                                    nsIPresShell* aPresShell)
-{
-  nsAccessible* accessible = 
-    new nsHTML4ButtonAccessible(aContent, 
-                                nsAccUtils::GetDocAccessibleFor(aPresShell));
-  NS_ADDREF(accessible);
-  return accessible;
-}
-
-already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateHTMLButtonAccessible(nsIContent* aContent,
                                                    nsIPresShell* aPresShell)
 {
