@@ -22,6 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,6 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prlog.h"
+
+#include "nsGtkKeyUtils.h"
+
 #include <gdk/gdkkeysyms.h>
 #ifndef GDK_Sleep
 #define GDK_Sleep 0x1008ff2f
@@ -48,6 +53,10 @@
 #endif /* MOZ_X11 */
 #include "nsGUIEvent.h"
 #include "keysym2ucs.h"
+
+#ifdef PR_LOGGING
+PRLogModuleInfo* gKeymapWrapperLog = nsnull;
+#endif // PR_LOGGING
 
 #include "mozilla/Util.h"
 
@@ -328,3 +337,79 @@ PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aEvent)
     // I guess we couldn't convert
     return 0;
 }
+
+namespace mozilla {
+namespace widget {
+
+#define MOZ_MODIFIER_KEYS "MozKeymapWrapper"
+
+KeymapWrapper* KeymapWrapper::sInstance = nsnull;
+
+/* static */ KeymapWrapper*
+KeymapWrapper::GetInstance()
+{
+    if (sInstance) {
+        return sInstance;
+    }
+
+    sInstance = new KeymapWrapper();
+    return sInstance;
+}
+
+KeymapWrapper::KeymapWrapper() :
+    mInitialized(false), mGdkKeymap(gdk_keymap_get_default())
+{
+#ifdef PR_LOGGING
+    if (!gKeymapWrapperLog) {
+        gKeymapWrapperLog = PR_NewLogModule("KeymapWrapperWidgets");
+    }
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+        ("KeymapWrapper(%p): Constructor, mGdkKeymap=%p",
+         this, mGdkKeymap));
+#endif // PR_LOGGING
+
+    g_signal_connect(mGdkKeymap, "keys-changed",
+                     (GCallback)OnKeysChanged, this);
+
+    // This is necessary for catching the destroying timing.
+    g_object_weak_ref(G_OBJECT(mGdkKeymap),
+                      (GWeakNotify)OnDestroyKeymap, this);
+}
+
+KeymapWrapper::~KeymapWrapper()
+{
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+        ("KeymapWrapper(%p): Destructor", this));
+}
+
+/* static */ void
+KeymapWrapper::OnDestroyKeymap(KeymapWrapper* aKeymapWrapper,
+                               GdkKeymap *aGdkKeymap)
+{
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+        ("KeymapWrapper: OnDestroyKeymap, aGdkKeymap=%p, aKeymapWrapper=%p",
+         aGdkKeymap, aKeymapWrapper));
+    MOZ_ASSERT(aKeymapWrapper == sInstance,
+               "Desroying unexpected instance");
+    delete sInstance;
+    sInstance = nsnull;
+}
+
+/* static */ void
+KeymapWrapper::OnKeysChanged(GdkKeymap *aGdkKeymap,
+                             KeymapWrapper* aKeymapWrapper)
+{
+    PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+        ("KeymapWrapper: OnKeysChanged, aGdkKeymap=%p, aKeymapWrapper=%p",
+         aGdkKeymap, aKeymapWrapper));
+
+    MOZ_ASSERT(sInstance == aKeymapWrapper,
+               "This instance must be the singleton instance");
+
+    // We cannot reintialize here becasue we don't have GdkWindow which is using
+    // the GdkKeymap.  We'll reinitialize it when next GetInstance() is called.
+    sInstance->mInitialized = false;
+}
+
+} // namespace widget
+} // namespace mozilla
