@@ -135,11 +135,6 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
             return null;
         }
 
-        if (!shouldDrawProceed(tileWidth, tileHeight)) {
-            Log.e(LOGTAG, "### Cancelling draw due to shouldDrawProceed()");
-            return null;
-        }
-
         try {
             JSONObject viewportObject = new JSONObject(metadata);
             mNewGeckoViewport = new ViewportMetrics(viewportObject);
@@ -316,7 +311,6 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
     }
 
     protected boolean handleDirectTextureChange(boolean hasDirectTexture) {
-        Log.e(LOGTAG, "### handleDirectTextureChange");
         if (mTileLayer != null) {
             return false;
         }
@@ -329,12 +323,6 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
         mTileLayer = virtualLayer;
 
         sendResizeEventIfNecessary(true);
-        return true;
-    }
-
-    protected boolean shouldDrawProceed(int tileWidth, int tileHeight) {
-        Log.e(LOGTAG, "### shouldDrawProceed");
-        // Always draw.
         return true;
     }
 
