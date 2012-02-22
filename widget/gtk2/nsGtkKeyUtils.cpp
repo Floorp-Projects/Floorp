@@ -64,16 +64,16 @@ using namespace mozilla;
 
 #define MAX_UNICODE 0x10FFFF
 
-struct nsKeyConverter {
-    int vkCode; // Platform independent key code
-    int keysym; // GDK keysym key code
+struct KeyPair {
+    PRUint32 DOMKeyCode;
+    guint GDKKeyval;
 };
 
 //
 // Netscape keycodes are defined in widget/public/nsGUIEvent.h
 // GTK keycodes are defined in <gdk/gdkkeysyms.h>
 //
-struct nsKeyConverter nsKeycodes[] = {
+static const KeyPair kKeyPairs[] = {
     { NS_VK_CANCEL,     GDK_Cancel },
     { NS_VK_BACK,       GDK_BackSpace },
     { NS_VK_TAB,        GDK_Tab },
@@ -192,89 +192,11 @@ struct nsKeyConverter nsKeycodes[] = {
 };
 
 // map Sun Keyboard special keysyms on to NS_VK keys
-struct nsKeyConverter nsSunKeycodes[] = {
+static const KeyPair kSunKeyPairs[] = {
     {NS_VK_F11, 0x1005ff10 }, //Sun F11 key generates SunF36(0x1005ff10) keysym
     {NS_VK_F12, 0x1005ff11 }  //Sun F12 key generates SunF37(0x1005ff11) keysym
 };
 
-int
-GdkKeyCodeToDOMKeyCode(int aKeysym)
-{
-    unsigned int i;
-
-    // First, try to handle alphanumeric input, not listed in nsKeycodes:
-    // most likely, more letters will be getting typed in than things in
-    // the key list, so we will look through these first.
-
-    // since X has different key symbols for upper and lowercase letters and
-    // mozilla does not, convert gdk's to mozilla's
-    if (aKeysym >= GDK_a && aKeysym <= GDK_z)
-        return aKeysym - GDK_a + NS_VK_A;
-    if (aKeysym >= GDK_A && aKeysym <= GDK_Z)
-        return aKeysym - GDK_A + NS_VK_A;
-
-    // numbers
-    if (aKeysym >= GDK_0 && aKeysym <= GDK_9)
-        return aKeysym - GDK_0 + NS_VK_0;
-
-    // keypad numbers
-    if (aKeysym >= GDK_KP_0 && aKeysym <= GDK_KP_9)
-        return aKeysym - GDK_KP_0 + NS_VK_NUMPAD0;
-
-    // map Sun Keyboard special keysyms
-    for (i = 0; i < ArrayLength(nsSunKeycodes); i++) {
-        if (nsSunKeycodes[i].keysym == aKeysym)
-            return(nsSunKeycodes[i].vkCode);
-    }
-
-    // misc other things
-    for (i = 0; i < ArrayLength(nsKeycodes); i++) {
-        if (nsKeycodes[i].keysym == aKeysym)
-            return(nsKeycodes[i].vkCode);
-    }
-
-    // function keys
-    if (aKeysym >= GDK_F1 && aKeysym <= GDK_F24)
-        return aKeysym - GDK_F1 + NS_VK_F1;
-
-    return((int)0);
-}
-
-int
-DOMKeyCodeToGdkKeyCode(int aKeysym)
-{
-    unsigned int i;
-
-    // First, try to handle alphanumeric input, not listed in nsKeycodes:
-    // most likely, more letters will be getting typed in than things in
-    // the key list, so we will look through these first.
-
-    if (aKeysym >= NS_VK_A && aKeysym <= NS_VK_Z)
-      // gdk and DOM both use the ASCII codes for these keys.
-      return aKeysym;
-
-    // numbers
-    if (aKeysym >= NS_VK_0 && aKeysym <= NS_VK_9)
-      // gdk and DOM both use the ASCII codes for these keys.
-      return aKeysym - GDK_0 + NS_VK_0;
-
-    // keypad numbers
-    if (aKeysym >= NS_VK_NUMPAD0 && aKeysym <= NS_VK_NUMPAD9)
-      return aKeysym - NS_VK_NUMPAD0 + GDK_KP_0;
-
-    // misc other things
-    for (i = 0; i < ArrayLength(nsKeycodes); ++i) {
-      if (nsKeycodes[i].vkCode == aKeysym) {
-        return nsKeycodes[i].keysym;
-      }
-    }
-
-    // function keys
-    if (aKeysym >= NS_VK_F1 && aKeysym <= NS_VK_F9)
-      return aKeysym - NS_VK_F1 + GDK_F1;
-
-    return 0;
-}
 
 // Convert gdk key event keyvals to char codes if printable, 0 otherwise
 PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aEvent)
@@ -708,6 +630,92 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
          keymapWrapper, aModifierState,
          GetBoolName(aInputEvent.isShift), GetBoolName(aInputEvent.isControl),
          GetBoolName(aInputEvent.isAlt), GetBoolName(aInputEvent.isMeta)));
+}
+
+/* static */ PRUint32
+KeymapWrapper::ComputeDOMKeyCode(guint aGDKKeyval)
+{
+    // First, try to handle alphanumeric input, not listed in nsKeycodes:
+    // most likely, more letters will be getting typed in than things in
+    // the key list, so we will look through these first.
+
+    // since X has different key symbols for upper and lowercase letters and
+    // mozilla does not, convert gdk's to mozilla's
+    if (aGDKKeyval >= GDK_a && aGDKKeyval <= GDK_z) {
+        return aGDKKeyval - GDK_a + NS_VK_A;
+    }
+    if (aGDKKeyval >= GDK_A && aGDKKeyval <= GDK_Z) {
+        return aGDKKeyval - GDK_A + NS_VK_A;
+    }
+
+    // numbers
+    if (aGDKKeyval >= GDK_0 && aGDKKeyval <= GDK_9) {
+        return aGDKKeyval - GDK_0 + NS_VK_0;
+    }
+
+    // keypad numbers
+    if (aGDKKeyval >= GDK_KP_0 && aGDKKeyval <= GDK_KP_9) {
+        return aGDKKeyval - GDK_KP_0 + NS_VK_NUMPAD0;
+    }
+
+    // map Sun Keyboard special keysyms
+    for (PRUint32 i = 0; i < ArrayLength(kSunKeyPairs); i++) {
+        if (kSunKeyPairs[i].GDKKeyval == aGDKKeyval) {
+            return kSunKeyPairs[i].DOMKeyCode;
+        }
+    }
+
+    // misc other things
+    for (PRUint32 i = 0; i < ArrayLength(kKeyPairs); i++) {
+        if (kKeyPairs[i].GDKKeyval == aGDKKeyval) {
+            return kKeyPairs[i].DOMKeyCode;
+        }
+    }
+
+    // function keys
+    if (aGDKKeyval >= GDK_F1 && aGDKKeyval <= GDK_F24) {
+        return aGDKKeyval - GDK_F1 + NS_VK_F1;
+    }
+
+    return 0;
+}
+
+/* static */ guint
+KeymapWrapper::GuessGDKKeyval(PRUint32 aDOMKeyCode)
+{
+    // First, try to handle alphanumeric input, not listed in nsKeycodes:
+    // most likely, more letters will be getting typed in than things in
+    // the key list, so we will look through these first.
+
+    if (aDOMKeyCode >= NS_VK_A && aDOMKeyCode <= NS_VK_Z) {
+        // gdk and DOM both use the ASCII codes for these keys.
+        return aDOMKeyCode;
+    }
+
+    // numbers
+    if (aDOMKeyCode >= NS_VK_0 && aDOMKeyCode <= NS_VK_9) {
+        // gdk and DOM both use the ASCII codes for these keys.
+        return aDOMKeyCode - NS_VK_0 + GDK_0;
+    }
+
+    // keypad numbers
+    if (aDOMKeyCode >= NS_VK_NUMPAD0 && aDOMKeyCode <= NS_VK_NUMPAD9) {
+        return aDOMKeyCode - NS_VK_NUMPAD0 + GDK_KP_0;
+    }
+
+    // misc other things
+    for (PRUint32 i = 0; i < ArrayLength(kKeyPairs); ++i) {
+        if (kKeyPairs[i].DOMKeyCode == aDOMKeyCode) {
+            return kKeyPairs[i].GDKKeyval;
+        }
+    }
+
+    // function keys
+    if (aDOMKeyCode >= NS_VK_F1 && aDOMKeyCode <= NS_VK_F9) {
+        return aDOMKeyCode - NS_VK_F1 + GDK_F1;
+    }
+
+    return 0;
 }
 
 } // namespace widget
