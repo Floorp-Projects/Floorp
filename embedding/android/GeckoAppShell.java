@@ -1560,9 +1560,6 @@ public class GeckoAppShell
         getMainHandler().post(new GeckoRunnableCallback());
     }
 
-    public static void doEventCallback(GeckoEvent event, String data) {
-    }
-    
     public static android.hardware.Camera sCamera = null;
     
     static native void cameraCallbackBridge(byte[] data);
