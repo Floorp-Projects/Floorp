@@ -42,7 +42,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.FloatSize;
-import org.mozilla.gecko.gfx.GeckoGLLayerClient;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
@@ -1781,14 +1780,11 @@ abstract public class GeckoApp
 
         if (mLayerController == null) {
             /*
-             * Create a layer client so that Gecko will have a buffer to draw into, but don't hook
-             * it up to the layer controller yet.
-             *
-             * TODO: Switch between software and GL appropriately.
+             * Create a layer client, but don't hook it up to the layer controller yet.
              */
-            Log.e(LOGTAG, "### Creating GeckoGLLayerClient");
-            mLayerClient = new GeckoGLLayerClient(this);
-            Log.e(LOGTAG, "### Done creating GeckoGLLayerClient");
+            Log.e(LOGTAG, "### Creating GeckoLayerClient");
+            mLayerClient = new GeckoLayerClient(this);
+            Log.e(LOGTAG, "### Done creating GeckoLayerClient");
 
             /*
              * Hook a placeholder layer client up to the layer controller so that the user can pan

@@ -110,7 +110,6 @@ FENNEC_JAVA_FILES = \
   gfx/CheckerboardImage.java \
   gfx/FlexibleGLSurfaceView.java \
   gfx/FloatSize.java \
-  gfx/GeckoGLLayerClient.java \
   gfx/GeckoLayerClient.java \
   gfx/GLController.java \
   gfx/GLThread.java \

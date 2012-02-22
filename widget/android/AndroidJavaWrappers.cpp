@@ -113,12 +113,10 @@ jmethodID AndroidAddress::jGetThoroughfareMethod;
 jclass AndroidGeckoLayerClient::jGeckoLayerClientClass = 0;
 jmethodID AndroidGeckoLayerClient::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoLayerClient::jEndDrawingMethod = 0;
-
-jclass AndroidGeckoGLLayerClient::jGeckoGLLayerClientClass = 0;
-jmethodID AndroidGeckoGLLayerClient::jGetViewTransformMethod = 0;
-jmethodID AndroidGeckoGLLayerClient::jCreateFrameMethod = 0;
-jmethodID AndroidGeckoGLLayerClient::jActivateProgramMethod = 0;
-jmethodID AndroidGeckoGLLayerClient::jDeactivateProgramMethod = 0;
+jmethodID AndroidGeckoLayerClient::jGetViewTransformMethod = 0;
+jmethodID AndroidGeckoLayerClient::jCreateFrameMethod = 0;
+jmethodID AndroidGeckoLayerClient::jActivateProgramMethod = 0;
+jmethodID AndroidGeckoLayerClient::jDeactivateProgramMethod = 0;
 
 jclass AndroidLayerRendererFrame::jLayerRendererFrameClass = 0;
 jmethodID AndroidLayerRendererFrame::jBeginDrawingMethod = 0;
@@ -162,7 +160,6 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidAddress::InitAddressClass(jEnv);
     AndroidRect::InitRectClass(jEnv);
     AndroidGeckoLayerClient::InitGeckoLayerClientClass(jEnv);
-    AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(jEnv);
     AndroidLayerRendererFrame::InitLayerRendererFrameClass(jEnv);
     AndroidViewTransform::InitViewTransformClass(jEnv);
     AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
@@ -352,17 +349,6 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 
     jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Landroid/graphics/Rect;");
     jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
-#endif
-}
-
-void
-AndroidGeckoGLLayerClient::InitGeckoGLLayerClientClass(JNIEnv *jEnv)
-{
-#ifdef MOZ_JAVA_COMPOSITOR
-    initInit();
-
-    jGeckoGLLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoGLLayerClient");
-
     jGetViewTransformMethod = getMethod("getViewTransform",
                                         "()Lorg/mozilla/gecko/gfx/ViewTransform;");
     jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
@@ -690,7 +676,7 @@ AndroidGeckoEvent::DoCallback(const nsAString& data) {
 }
 
 void
-AndroidGeckoGLLayerClient::Init(jobject jobj)
+AndroidGeckoLayerClient::Init(jobject jobj)
 {
     NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
     wrapped_obj = jobj;
@@ -854,7 +840,7 @@ AndroidGeckoSurfaceView::GetSurfaceHolder()
 }
 
 void
-AndroidGeckoGLLayerClient::GetViewTransform(AndroidViewTransform& aViewTransform)
+AndroidGeckoLayerClient::GetViewTransform(AndroidViewTransform& aViewTransform)
 {
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at GetViewTransform()!");
@@ -868,7 +854,7 @@ AndroidGeckoGLLayerClient::GetViewTransform(AndroidViewTransform& aViewTransform
 }
 
 void
-AndroidGeckoGLLayerClient::CreateFrame(AndroidLayerRendererFrame& aFrame)
+AndroidGeckoLayerClient::CreateFrame(AndroidLayerRendererFrame& aFrame)
 {
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at CreateFrame()!");
@@ -882,7 +868,7 @@ AndroidGeckoGLLayerClient::CreateFrame(AndroidLayerRendererFrame& aFrame)
 }
 
 void
-AndroidGeckoGLLayerClient::ActivateProgram()
+AndroidGeckoLayerClient::ActivateProgram()
 {
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at ActivateProgram()!");
@@ -894,7 +880,7 @@ AndroidGeckoGLLayerClient::ActivateProgram()
 }
 
 void
-AndroidGeckoGLLayerClient::DeactivateProgram()
+AndroidGeckoLayerClient::DeactivateProgram()
 {
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at DeactivateProgram()!");
@@ -981,7 +967,7 @@ AndroidViewTransform::GetScale()
 }
 
 void
-AndroidGeckoGLLayerClientViewTransformGetter::operator()(nsIntPoint& aScrollOffset, float& aScaleX,
+AndroidGeckoLayerClientViewTransformGetter::operator()(nsIntPoint& aScrollOffset, float& aScaleX,
                                                          float& aScaleY)
 {
     AndroidViewTransform viewTransform;
