@@ -590,6 +590,10 @@ TiltVisualizer.Presenter.prototype = {
     if (!this._initialSelection) {
       this._initialSelection = true;
       this.highlightNode(this.chromeWindow.InspectorUI.selection);
+
+      if (this._currentSelection === 0) { // if the "html" node is selected
+        this._highlight.disabled = true;
+      }
     }
 
     // configure the required mesh transformations and background only once
@@ -1605,7 +1609,10 @@ TiltVisualizer.Arcball.prototype = {
       (additionalTrans[1] - deltaAdditionalTrans[1]) * ARCBALL_SENSITIVITY;
 
     // create an additional rotation based on the key events
-    quat4.fromEuler(deltaAdditionalRot[0], deltaAdditionalRot[1], 0, deltaRot);
+    quat4.fromEuler(
+      deltaAdditionalRot[0],
+      deltaAdditionalRot[1],
+      deltaAdditionalRot[2], deltaRot);
 
     // create an additional translation based on the key events
     vec3.set([deltaAdditionalTrans[0], deltaAdditionalTrans[1], 0], deltaTrans);
@@ -1804,6 +1811,32 @@ TiltVisualizer.Arcball.prototype = {
   {
     this._rotating = false;
     this._mouseButton = -1;
+  },
+
+  /**
+   * Incremental translation method.
+   *
+   * @param {Array} aTranslation
+   *                the translation ammount on the [x, y] axis
+   */
+  translate: function TVP_translate(aTranslation)
+  {
+    this._additionalTrans[0] += aTranslation[0];
+    this._additionalTrans[1] += aTranslation[1];
+  },
+
+  /**
+   * Incremental rotation method.
+   *
+   * @param {Array} aRotation
+   *                the rotation ammount along the [x, y, z] axis
+   */
+  rotate: function TVP_rotate(aRotation)
+  {
+    // explicitly rotate along y, x, z values because they're eulerian angles
+    this._additionalRot[0] += TiltMath.radians(aRotation[1]);
+    this._additionalRot[1] += TiltMath.radians(aRotation[0]);
+    this._additionalRot[2] += TiltMath.radians(aRotation[2]);
   },
 
   /**
