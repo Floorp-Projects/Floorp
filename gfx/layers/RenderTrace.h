@@ -43,13 +43,12 @@
 
 // Uncomment this line to enable RENDERTRACE
 //#define MOZ_RENDERTRACE
-#ifdef MOZ_RENDERTRACE
-
-#include "gfx3DMatrix.h"
-#include "nsRect.h"
 
 #ifndef GFX_RENDERTRACE_H
 #define GFX_RENDERTRACE_H
+
+#include "gfx3DMatrix.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace layers {
@@ -61,9 +60,19 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor, gfx3DMatrix aRootTrans
 void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, nsIntRect aRect);
 void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor);
 
+#ifndef MOZ_RENDERTRACE
+inline void RenderTraceLayers(Layer *aLayer, const char *aColor, gfx3DMatrix aRootTransform, bool aReset)
+{}
+
+inline void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, nsIntRect aRect)
+{}
+
+inline void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor)
+{}
+
+#endif // MOZ_RENDERTRACE
+
 }
 }
 
 #endif //GFX_RENDERTRACE_H
-
-#endif // MOZ_RENDERTRACE
