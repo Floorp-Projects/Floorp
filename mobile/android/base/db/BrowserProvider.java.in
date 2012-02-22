@@ -105,6 +105,7 @@ public class BrowserProvider extends ContentProvider {
     static final int BOOKMARKS_ID = 101;
     static final int BOOKMARKS_FOLDER_ID = 102;
     static final int BOOKMARKS_PARENT = 103;
+    static final int BOOKMARKS_POSITIONS = 104;
 
     // History matches
     static final int HISTORY = 200;
@@ -145,6 +146,7 @@ public class BrowserProvider extends ContentProvider {
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks", BOOKMARKS);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/#", BOOKMARKS_ID);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/parents", BOOKMARKS_PARENT);
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/positions", BOOKMARKS_POSITIONS);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/folder/#", BOOKMARKS_FOLDER_ID);
 
         map = BOOKMARKS_PROJECTION_MAP;
@@ -1045,6 +1047,21 @@ public class BrowserProvider extends ContentProvider {
         int updated = 0;
 
         switch (match) {
+            // We provide a dedicated (hacky) API for callers to bulk-update the positions of
+            // folder children by passing an array of GUID strings as `selectionArgs`.
+            // Each child will have its position column set to its index in the provided array.
+            //
+            // This avoids callers having to issue a large number of UPDATE queries through
+            // the usual channels. See Bug 728783.
+            //
+            // Note that this is decidedly not a general-purpose API; use at your own risk.
+            // `values` and `selection` are ignored.
+            case BOOKMARKS_POSITIONS: {
+                debug("Update on BOOKMARKS_POSITIONS: " + uri);
+                updated = updateBookmarkPositions(uri, selectionArgs);
+                break;
+            }
+
             case BOOKMARKS_PARENT: {
                 debug("Update on BOOKMARKS_PARENT: " + uri);
                 updated = updateBookmarkParents(uri, values, selection, selectionArgs);
@@ -1256,6 +1273,50 @@ public class BrowserProvider extends ContentProvider {
         }
 
         return count;
+    }
+
+    /**
+     * Construct an update expression that will modify the positions of
+     * records in-place.
+     *
+     * The provided selectionArgs is expected to be an implicit mapping from
+     * GUID to new position.
+     */
+    int updateBookmarkPositions(Uri uri, String[] guids) {
+        if (guids == null)
+            return 0;
+
+        int guidsCount = guids.length;
+        if (guidsCount == 0)
+            return 0;
+
+        // Each must appear twice: once in a CASE, and once in the IN clause.
+        String[] args = new String[guidsCount * 2];
+        System.arraycopy(guids, 0, args, 0, guidsCount);
+        System.arraycopy(guids, 0, args, guidsCount, guidsCount);
+
+        StringBuilder b = new StringBuilder("UPDATE " + TABLE_BOOKMARKS +
+                                            " SET " + Bookmarks.POSITION + " = CASE guid");
+
+        int i = 0;
+        for (; i < guids.length; ++i) {
+            if (guids[i] == null) {
+                // We don't want to issue the query if not every GUID is specified.
+                debug("updateBookmarkPositions called with null GUID at index " + i);
+                return 0;
+            }
+            b.append(" WHEN ? THEN " + i);
+        }
+        b.append(" END WHERE " + Bookmarks.GUID + " IN (");
+        i = 1;
+        while (i++ < guidsCount) {
+            b.append("?, ");
+        }
+        b.append("?)");
+        getWritableDatabase(uri).execSQL(b.toString(), args);
+
+        // We can't easily get a modified count without calling something like changes().
+        return guidsCount;
     }
 
     /**
