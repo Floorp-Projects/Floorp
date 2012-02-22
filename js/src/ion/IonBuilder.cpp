@@ -3467,22 +3467,22 @@ inline types::TypeSet *
 GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom)
 {
     if (!types || types->unknownObject() || types->getObjectCount() != 1)
-        return false;
+        return NULL;
 
     types::TypeObject *type = types->getTypeObject(0);
     if (!type || type->unknownProperties())
-        return false;
+        return NULL;
 
     jsid id = ATOM_TO_JSID(atom);
     if (id != types::MakeTypeId(cx, id))
-        return false;
+        return NULL;
 
     types::TypeSet *propertyTypes = type->getProperty(cx, id, false);
     if (!propertyTypes ||
         !propertyTypes->isDefiniteProperty() ||
         propertyTypes->isOwnProperty(cx, type, true))
     {
-        return false;
+        return NULL;
     }
 
     types->addFreeze(cx);
