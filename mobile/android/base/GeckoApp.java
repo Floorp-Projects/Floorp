@@ -642,7 +642,8 @@ abstract public class GeckoApp
             }
             mLastScreen = compressed;
         }
-        if (thumbnailTab.getURL().equals("about:home")) {
+
+        if ("about:home".equals(thumbnailTab.getURL())) {
             thumbnailTab.updateThumbnail(null);
             return;
         }
