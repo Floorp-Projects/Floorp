@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.84 $ $Date: 2012/01/17 22:02:37 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.84 $ $Date: 2012/01/17 22:02:37 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.85 $ $Date: 2012/02/18 21:41:45 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.85 $ $Date: 2012/02/18 21:41:45 $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -1075,6 +1075,12 @@ static const CK_ATTRIBUTE_TYPE nss_builtins_types_338 [] = {
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_339 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_CERT_SHA1_HASH,  CKA_CERT_MD5_HASH,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING,  CKA_TRUST_STEP_UP_APPROVED
 };
+static const CK_ATTRIBUTE_TYPE nss_builtins_types_340 [] = {
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING,  CKA_TRUST_STEP_UP_APPROVED
+};
+static const CK_ATTRIBUTE_TYPE nss_builtins_types_341 [] = {
+ CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_ISSUER,  CKA_SERIAL_NUMBER,  CKA_TRUST_SERVER_AUTH,  CKA_TRUST_EMAIL_PROTECTION,  CKA_TRUST_CODE_SIGNING,  CKA_TRUST_STEP_UP_APPROVED
+};
 #ifdef DEBUG
 static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&cko_data, (PRUint32)sizeof(CK_OBJECT_CLASS) },
@@ -1083,7 +1089,7 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.84 $ $Date: 2012/01/17 22:02:37 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.84 $ $Date: 2012/01/17 22:02:37 $", (PRUint32)160 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.85 $ $Date: 2012/02/18 21:41:45 $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.85 $ $Date: 2012/02/18 21:41:45 $", (PRUint32)160 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
@@ -22713,6 +22719,56 @@ static const NSSItem nss_builtins_items_339 [] = {
   { (void *)&ckt_nss_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
 };
+static const NSSItem nss_builtins_items_340 [] = {
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
+  { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
+  { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
+  { (void *)"MITM subCA 1 issued by Trustwave", (PRUint32)33 },
+  { (void *)"\060\201\253\061\013\060\011\006\003\125\004\006\023\002\125\123"
+"\061\021\060\017\006\003\125\004\010\023\010\111\154\154\151\156"
+"\157\151\163\061\020\060\016\006\003\125\004\007\023\007\103\150"
+"\151\143\141\147\157\061\041\060\037\006\003\125\004\012\023\030"
+"\124\162\165\163\164\167\141\166\145\040\110\157\154\144\151\156"
+"\147\163\054\040\111\156\143\056\061\063\060\061\006\003\125\004"
+"\003\023\052\124\162\165\163\164\167\141\166\145\040\117\162\147"
+"\141\156\151\172\141\164\151\157\156\040\111\163\163\165\151\156"
+"\147\040\103\101\054\040\114\145\166\145\154\040\062\061\037\060"
+"\035\006\011\052\206\110\206\367\015\001\011\001\026\020\143\141"
+"\100\164\162\165\163\164\167\141\166\145\056\143\157\155"
+, (PRUint32)174 },
+  { (void *)"\002\004\153\111\322\005"
+, (PRUint32)6 },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
+};
+static const NSSItem nss_builtins_items_341 [] = {
+  { (void *)&cko_nss_trust, (PRUint32)sizeof(CK_OBJECT_CLASS) },
+  { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
+  { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
+  { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
+  { (void *)"MITM subCA 2 issued by Trustwave", (PRUint32)33 },
+  { (void *)"\060\201\253\061\013\060\011\006\003\125\004\006\023\002\125\123"
+"\061\021\060\017\006\003\125\004\010\023\010\111\154\154\151\156"
+"\157\151\163\061\020\060\016\006\003\125\004\007\023\007\103\150"
+"\151\143\141\147\157\061\041\060\037\006\003\125\004\012\023\030"
+"\124\162\165\163\164\167\141\166\145\040\110\157\154\144\151\156"
+"\147\163\054\040\111\156\143\056\061\063\060\061\006\003\125\004"
+"\003\023\052\124\162\165\163\164\167\141\166\145\040\117\162\147"
+"\141\156\151\172\141\164\151\157\156\040\111\163\163\165\151\156"
+"\147\040\103\101\054\040\114\145\166\145\154\040\062\061\037\060"
+"\035\006\011\052\206\110\206\367\015\001\011\001\026\020\143\141"
+"\100\164\162\165\163\164\167\141\166\145\056\143\157\155"
+, (PRUint32)174 },
+  { (void *)"\002\004\153\111\322\006"
+, (PRUint32)6 },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_nss_not_trusted, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) }
+};
 
 builtinsInternalObject
 nss_builtins_data[] = {
@@ -23057,11 +23113,13 @@ nss_builtins_data[] = {
   { 11, nss_builtins_types_336, nss_builtins_items_336, {NULL} },
   { 13, nss_builtins_types_337, nss_builtins_items_337, {NULL} },
   { 11, nss_builtins_types_338, nss_builtins_items_338, {NULL} },
-  { 13, nss_builtins_types_339, nss_builtins_items_339, {NULL} }
+  { 13, nss_builtins_types_339, nss_builtins_items_339, {NULL} },
+  { 11, nss_builtins_types_340, nss_builtins_items_340, {NULL} },
+  { 11, nss_builtins_types_341, nss_builtins_items_341, {NULL} }
 };
 const PRUint32
 #ifdef DEBUG
-  nss_builtins_nObjects = 339+1;
+  nss_builtins_nObjects = 341+1;
 #else
-  nss_builtins_nObjects = 339;
+  nss_builtins_nObjects = 341;
 #endif /* DEBUG */
