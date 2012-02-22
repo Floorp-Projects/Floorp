@@ -53,7 +53,6 @@ body {
 		font-size: 16px;
 		padding: 6px 20px 20px 20px;
 		border-radius: 0.5em;
-		-webkit-border-radius: 0.5em;
 		background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
 		/* display: inline; */
 	}
@@ -114,7 +113,6 @@ body {
 	padding: 8px 12px;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
-	-webkit-border-radius: 0.5em;
 	box-shadow: 
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
 		inset rgba(255, 255, 255, 1) 0 3px 1px,
@@ -133,7 +131,6 @@ body {
 	width: 240px;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
-	-webkit-border-radius: 0.5em;
 	box-shadow: 
 		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
 		inset rgba(255, 255, 255, 1) 0 3px 1px,
@@ -152,7 +149,6 @@ body {
 	margin: 24px auto;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
-	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
 	box-shadow: 
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
@@ -174,7 +170,6 @@ body {
 	margin: 8px auto;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
-	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout.png') no-repeat top center;
 	box-shadow: 
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
@@ -191,7 +186,6 @@ body {
 	margin: 8px auto;
 	color: rgba(0, 0, 0, 0.8);
 	border-radius: 0.5em;
-	-webkit-border-radius: 0.5em;
 	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/images/callout_continue.png') no-repeat top center;
 	box-shadow: 
 		inset rgba(185, 221, 234, 0.2) 0 -10px 8.5px,
@@ -238,7 +232,6 @@ body {
 	width: 800px;
 	text-align: left;
 	border-radius: 0.25em;
-	-webkit-border-radius: 0.25em;
 	border-top: 1px solid #adb6ba;
 	border-left: 1px solid #adb6ba;
 	border-right: 1px solid #adb6ba;
