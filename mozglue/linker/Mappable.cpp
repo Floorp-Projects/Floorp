@@ -12,6 +12,7 @@
 #ifdef ANDROID
 #include <linux/ashmem.h>
 #endif
+#include <sys/stat.h>
 #include "ElfLoader.h"
 #include "SeekableZStream.h"
 #include "Logging.h"
@@ -24,7 +25,8 @@
 #define PAGE_MASK (~ (PAGE_SIZE - 1))
 #endif
 
-MappableFile *MappableFile::Create(const char *path)
+Mappable *
+MappableFile::Create(const char *path)
 {
   int fd = open(path, O_RDONLY);
   if (fd != -1)
@@ -62,8 +64,8 @@ MappableFile::finalize()
   fd = -1;
 }
 
-MappableExtractFile *
-MappableExtractFile::Create(const char *name, Zip::Stream *stream)
+Mappable *
+MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
 {
   const char *cachePath = getenv("MOZ_LINKER_CACHE");
   if (!cachePath || !*cachePath) {
@@ -73,7 +75,16 @@ MappableExtractFile::Create(const char *name, Zip::Stream *stream)
   }
   AutoDeleteArray<char> path = new char[strlen(cachePath) + strlen(name) + 2];
   sprintf(path, "%s/%s", cachePath, name);
-  debug("Extracting to %s", (char *)path);
+  struct stat cacheStat;
+  if (stat(path, &cacheStat) == 0) {
+    struct stat zipStat;
+    stat(zip->GetName(), &zipStat);
+    if (cacheStat.st_mtime > zipStat.st_mtime) {
+      debug("Reusing %s", static_cast<char *>(path));
+      return MappableFile::Create(path);
+    }
+  }
+  debug("Extracting to %s", static_cast<char *>(path));
   AutoCloseFD fd = open(path, O_TRUNC | O_RDWR | O_CREAT | O_NOATIME,
                               S_IRUSR | S_IWUSR);
   if (fd == -1) {
@@ -246,7 +257,7 @@ private:
 };
 
 
-MappableDeflate *
+Mappable *
 MappableDeflate::Create(const char *name, Zip *zip, Zip::Stream *stream)
 {
   MOZ_ASSERT(stream->GetType() == Zip::Stream::DEFLATE);
@@ -324,7 +335,7 @@ MappableDeflate::finalize()
   zip = NULL;
 }
 
-MappableSeekableZStream *
+Mappable *
 MappableSeekableZStream::Create(const char *name, Zip *zip,
                                 Zip::Stream *stream)
 {
