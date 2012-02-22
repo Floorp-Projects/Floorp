@@ -518,22 +518,23 @@ KeymapWrapper::GetCurrentModifierState()
 /* static */ bool
 KeymapWrapper::AreModifiersCurrentlyActive(Modifiers aModifiers)
 {
-    KeymapWrapper* keymapWrapper = GetInstance();
     guint modifierState = GetCurrentModifierState();
-    return keymapWrapper->AreModifiersActive(aModifiers, modifierState);
+    return AreModifiersActive(aModifiers, modifierState);
 }
 
-bool
+/* static */ bool
 KeymapWrapper::AreModifiersActive(Modifiers aModifiers,
-                                  guint aModifierState) const
+                                  guint aModifierState)
 {
     NS_ENSURE_TRUE(aModifiers, false);
+
+    KeymapWrapper* keymapWrapper = GetInstance();
     for (PRUint32 i = 0; i < sizeof(Modifier) * 8 && aModifiers; i++) {
         Modifier modifier = static_cast<Modifier>(1 << i);
         if (!(aModifiers & modifier)) {
             continue;
         }
-        if (!(aModifierState & GetModifierMask(modifier))) {
+        if (!(aModifierState & keymapWrapper->GetModifierMask(modifier))) {
             return false;
         }
         aModifiers &= ~modifier;

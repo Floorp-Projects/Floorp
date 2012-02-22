@@ -2922,7 +2922,8 @@ static bool
 IsCtrlAltTab(GdkEventKey *aEvent)
 {
     return aEvent->keyval == GDK_Tab &&
-        aEvent->state & GDK_CONTROL_MASK && aEvent->state & GDK_MOD1_MASK;
+        KeymapWrapper::AreModifiersActive(
+            KeymapWrapper::CTRL | KeymapWrapper::ALT, aEvent->state);
 }
 
 bool
