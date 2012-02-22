@@ -1302,6 +1302,25 @@ class LInitializedLength : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Set a dense array's initialized length to an elements vector.
+class LSetInitializedLength : public LInstructionHelper<0, 2, 0>
+{
+  public:
+    LIR_HEADER(SetInitializedLength);
+
+    LSetInitializedLength(const LAllocation &elements, const LAllocation &index) {
+        setOperand(0, elements);
+        setOperand(1, index);
+    }
+
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LAllocation *index() {
+        return getOperand(1);
+    }
+};
+
 // Read length field of an object element.
 class LArrayLength : public LInstructionHelper<1, 1, 0>
 {

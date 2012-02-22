@@ -719,6 +719,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NEWARRAY:
         return jsop_newarray(GET_UINT24(pc));
 
+      case JSOP_INITELEM:
+        return jsop_initelem();
+
       case JSOP_ENDINIT:
         return true;
 
@@ -2574,6 +2577,42 @@ IonBuilder::jsop_newarray(uint32 count)
     if (!resumeAfter(ins))
         return false;
     return true;
+}
+
+bool
+IonBuilder::jsop_initelem()
+{
+    if (oracle->propertyWriteCanSpecialize(script, pc)) {
+        if (oracle->elementWriteIsDense(script, pc))
+            return jsop_initelem_dense();
+    }
+
+    return abort("NYI: JSOP_INITELEM supports for non dense objects/arrays.");
+}
+
+bool
+IonBuilder::jsop_initelem_dense()
+{
+    MDefinition *value = current->pop();
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    // Get the elements vector.
+    MElements *elements = MElements::New(obj);
+    current->add(elements);
+
+    // Store the value.
+    MStoreElement *store = MStoreElement::New(elements, id, value);
+    current->add(store);
+
+    // Update the length.
+    MSetInitializedLength *initLength = MSetInitializedLength::New(elements, id);
+    current->add(initLength);
+
+    if (!resumeAfter(initLength))
+        return false;
+
+   return true;
 }
 
 MBasicBlock *
