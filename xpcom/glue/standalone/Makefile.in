@@ -53,12 +53,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../build \
 		$(NULL)
 
-ifdef MOZ_LINKER
-ifeq ($(OS_TARGET),Linux)
-DEFINES += -DMOZ_LINKER
-endif
-endif
-
 ifeq (Darwin,$(OS_ARCH))
 ifeq (uikit,$(MOZ_WIDGET_TOOLKIT))
 LINKSRC = nsGlueLinkingDlopen.cpp
