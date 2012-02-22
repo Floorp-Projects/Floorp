@@ -18,8 +18,8 @@ function shared_setup() {
   hmacErrorCount = 0;
 
   // Do not instantiate SyncTestingInfrastructure; we need real crypto.
-  Service.serverURL  = "http://localhost:8080/";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL  = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
   Service.username   = "foo";
   Service.password   = "foo";
   Service.passphrase = "aabcdeabcdeabcdeabcdeabcde";
