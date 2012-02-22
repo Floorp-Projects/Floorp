@@ -118,6 +118,20 @@ public:
     static bool AreModifiersCurrentlyActive(Modifiers aModifiers);
 
     /**
+     * AreModifiersActive() just checks whether aModifierState indicates
+     * all modifiers in aModifiers are active or not.
+     *
+     * @param aModifiers        One or more of Modifier values except
+     *                          NOT_MODIFIER.
+     * @param aModifierState    GDK's modifier states.
+     * @return                  TRUE if aGdkModifierType indecates all of
+     *                          modifiers in aModifier are active.
+     *                          Otherwise, FALSE.
+     */
+    static bool AreModifiersActive(Modifiers aModifiers,
+                                   guint aModifierState);
+
+    /**
      * InitInputEvent() initializes the aInputEvent with aModifierState.
      */
     static void InitInputEvent(nsInputEvent& aInputEvent,
@@ -209,20 +223,6 @@ protected:
 #ifdef PR_LOGGING
     static const char* GetModifierName(Modifier aModifier);
 #endif // PR_LOGGING
-
-    /**
-     * AreModifiersActive() just checks whether aModifierState indicates
-     * all modifiers in aModifiers are active or not.
-     *
-     * @param aModifiers        One or more of Modifier values except
-     *                          NOT_MODIFIER.
-     * @param aModifierState    GDK's modifier states.
-     * @return                  TRUE if aGdkModifierType indecates all of
-     *                          modifieres in aModifier are active.
-     *                          Otherwise, FALSE.
-     */
-    bool AreModifiersActive(Modifiers aModifiers,
-                            guint aModifierState) const;
 
     /**
      * mGdkKeymap is a wrapped instance by this class.
