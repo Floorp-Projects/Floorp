@@ -566,6 +566,8 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
         case eFont_Widget:
             font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
             break;
+        default:
+            break;
     }
 
     if (!font) {

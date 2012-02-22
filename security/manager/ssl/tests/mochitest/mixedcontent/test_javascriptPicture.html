@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Secure img load</title>
+  <script type="text/javascript" src="/MochiKit/Base.js"></script>
+  <script type="text/javascript" src="/MochiKit/DOM.js"></script>
+  <script type="text/javascript" src="/MochiKit/Style.js"></script>
+  <script type="text/javascript" src="/MochiKit/Signal.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mixedContentTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <script class="testbody" type="text/javascript">
+
+  function runTest()
+  {
+    isSecurityState("secure", "javascript: <img> should not break security");
+    finish();
+  }
+
+  function afterNavigationTest()
+  {
+    isSecurityState("secure", "Still secure after renavigation");
+    finish();
+  }
+
+  </script>
+</head>
+
+<body>
+  <img src="javascript:'Random data'" />
+</body>
+</html>

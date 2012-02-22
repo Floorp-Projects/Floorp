@@ -3661,7 +3661,7 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
     return;
   }
 
-  // Deal with things that depend on whether or not we used to have a frame.
+  // If we already have a frame that is changing or going away...
   if (mObjectFrame) {
     // We have an old frame.
     // Drop image reference because the child may destroy the surface after we return.
@@ -3683,42 +3683,21 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
       container->SetCurrentImage(nsnull);
     }
 
+    // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
 #if defined(XP_MACOSX) && !defined(NP_NO_QUICKDRAW)
-    if (!aFrame) {
-      // At this point we had a frame but it is going away and we're not getting a new one.
-      // Unregister for a scroll position listening, which is only required for Carbon
-      // event model plugins on Mac OS X. It's OK to unregister when we didn't register,
-      // so don't be strict about unregistering. Better to unregister when we didn't have to
-      // than to not unregister when we should.
-      for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-        nsIScrollableFrame* sf = do_QueryFrame(f);
-        if (sf) {
-          sf->RemoveScrollPositionListener(this);
-        }
+    // Our frame is changing or going away, unregister for a scroll position listening.
+    // It's OK to unregister when we didn't register, so don't be strict about unregistering.
+    // Better to unregister when we didn't have to than to not unregister when we should.
+    for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+      nsIScrollableFrame* sf = do_QueryFrame(f);
+      if (sf) {
+        sf->RemoveScrollPositionListener(this);
       }
     }
 #endif
 
     // Make sure the old frame isn't holding a reference to us.
     mObjectFrame->SetInstanceOwner(nsnull);
-  } else {
-    // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
-    // Note that we probably have a crash bug in the way we register/unregister, bug 723190.
-    // Bug 723190 is mitigated by limiting registration to Carbon event model plugins.
-#if defined(XP_MACOSX) && !defined(NP_NO_QUICKDRAW)
-    if (aFrame) {
-      // We didn't have an object frame before but we do now. We need to register a scroll
-      // position listener on every scrollable frame up to the top.
-      if (GetEventModel() == NPEventModelCarbon) {
-        for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-          nsIScrollableFrame* sf = do_QueryFrame(f);
-          if (sf) {
-            sf->AddScrollPositionListener(this);
-          }
-        }
-      }
-    }
-#endif
   }
 
   // Swap in the new frame (or no frame)
@@ -3734,6 +3713,19 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
     }
     mObjectFrame->FixupWindow(mObjectFrame->GetContentRectRelativeToSelf().Size());
     mObjectFrame->Invalidate(mObjectFrame->GetContentRectRelativeToSelf());
+
+    // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
+#if defined(XP_MACOSX) && !defined(NP_NO_QUICKDRAW)
+    // We need to register as a scroll position listener on every scrollable frame up to the top.
+    if (GetEventModel() == NPEventModelCarbon) {
+      for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+        nsIScrollableFrame* sf = do_QueryFrame(f);
+        if (sf) {
+          sf->AddScrollPositionListener(this);
+        }
+      }
+    }
+#endif
   }
 }
 

@@ -16,7 +16,7 @@
  * we can use direct type, but on others, we want to have a special class
  * to handle conversion and alignment issues.
  */
-#if defined(__i386__) || defined(__x86_64__)
+#if !defined(DEBUG) && (defined(__i386__) || defined(__x86_64__))
 typedef uint16_t le_uint16;
 typedef uint32_t le_uint32;
 #else
@@ -29,17 +29,43 @@ template <> struct UInt<16> { typedef uint16_t Type; };
 template <> struct UInt<32> { typedef uint32_t Type; };
 
 /**
- * Template to read 2 n-bit sized words as a 2*n-bit sized word, doing
+ * Template to access 2 n-bit sized words as a 2*n-bit sized word, doing
  * conversion from little endian and avoiding alignment issues.
  */
 template <typename T>
 class le_to_cpu
 {
 public:
-  operator typename UInt<16 * sizeof(T)>::Type() const
+  typedef typename UInt<16 * sizeof(T)>::Type Type;
+
+  operator Type() const
   {
     return (b << (sizeof(T) * 8)) | a;
   }
+
+  const le_to_cpu& operator =(const Type &v)
+  {
+    a = v & ((1 << (sizeof(T) * 8)) - 1);
+    b = v >> (sizeof(T) * 8);
+    return *this;
+  }
+
+  le_to_cpu() { }
+  le_to_cpu(const Type &v)
+  {
+    operator =(v);
+  }
+
+  const le_to_cpu& operator +=(const Type &v)
+  {
+    return operator =(operator Type() + v);
+  }
+
+  const le_to_cpu& operator ++(int)
+  {
+    return operator =(operator Type() + 1);
+  }
+
 private:
   T a, b;
 };
@@ -247,6 +273,8 @@ struct MappedPtr: public GenericMappedPtr<MappedPtr>
   : GenericMappedPtr<MappedPtr>(buf, length) { }
   MappedPtr(): GenericMappedPtr<MappedPtr>() { }
 
+private:
+  friend class GenericMappedPtr<MappedPtr>;
   void munmap(void *buf, size_t length)
   {
     ::munmap(buf, length);

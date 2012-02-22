@@ -1121,6 +1121,20 @@ var NativeWindow = {
                  sharing.shareWithDefault(url, "text/plain", title);
                });
 
+      this.add(Strings.browser.GetStringFromName("contextmenu.bookmarkLink"),
+               this.linkBookmarkableContext,
+               function(aTarget) {
+                 let url = NativeWindow.contextmenus._getLinkURL(aTarget);
+                 let title = aTarget.textContent || aTarget.title || url;
+                 sendMessageToJava({
+                   gecko: {
+                     type: "Bookmark:Insert",
+                     url: url,
+                     title: title
+                   }
+                 });
+               });
+
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
                this.SelectorContext("video:not(:-moz-full-screen)"),
                function(aTarget) {
@@ -1186,23 +1200,9 @@ var NativeWindow = {
 
     linkOpenableContext: {
       matches: function linkOpenableContextMatches(aElement) {
-        if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
-            ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
-            (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
-            aElement instanceof Ci.nsIDOMHTMLLinkElement ||
-            aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
-          let uri;
-          try {
-            let url = NativeWindow.contextmenus._getLinkURL(aElement);
-            uri = Services.io.newURI(url, null, null);
-          } catch (e) {
-            return false;
-          }
-
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri) {
           let scheme = uri.scheme;
-          if (!scheme)
-            return false;
-
           let dontOpen = /^(mailto|javascript|news|snews)$/;
           return (scheme && !dontOpen.test(scheme));
         }
@@ -1212,25 +1212,23 @@ var NativeWindow = {
 
     linkShareableContext: {
       matches: function linkShareableContextMatches(aElement) {
-        if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
-            ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
-            (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
-            aElement instanceof Ci.nsIDOMHTMLLinkElement ||
-            aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
-          let uri;
-          try {
-            let url = NativeWindow.contextmenus._getLinkURL(aElement);
-            uri = Services.io.newURI(url, null, null);
-          } catch (e) {
-            return false;
-          }
-
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri) {
           let scheme = uri.scheme;
-          if (!scheme)
-            return false;
-
           let dontShare = /^(chrome|about|file|javascript|resource)$/;
           return (scheme && !dontShare.test(scheme));
+        }
+        return false;
+      }
+    },
+
+    linkBookmarkableContext: {
+      matches: function linkBookmarkableContextMatches(aElement) {
+        let uri = NativeWindow.contextmenus._getLink(aElement);
+        if (uri) {
+          let scheme = uri.scheme;
+          let dontBookmark = /^(mailto)$/;
+          return (scheme && !dontBookmark.test(scheme));
         }
         return false;
       }
@@ -1346,6 +1344,20 @@ var NativeWindow = {
 
     makeURI: function makeURI(aURL, aOriginCharset, aBaseURI) {
       return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
+    },
+
+    _getLink: function(aElement) {
+      if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
+          ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
+          (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href) ||
+          aElement instanceof Ci.nsIDOMHTMLLinkElement ||
+          aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
+        try {
+          let url = NativeWindow.contextmenus._getLinkURL(aElement);
+          return Services.io.newURI(url, null, null);
+        } catch (e) {}
+      }
+      return null;
     },
 
     _getLinkURL: function ch_getLinkURL(aLink) {
