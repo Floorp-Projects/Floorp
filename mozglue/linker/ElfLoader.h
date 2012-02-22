@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <dlfcn.h>
+#include <signal.h>
 #include "mozilla/RefPtr.h"
 #include "Zip.h"
 
@@ -28,6 +29,10 @@ extern "C" {
   } Dl_info;
 #endif
   int __wrap_dladdr(void *addr, Dl_info *info);
+
+  sighandler_t __wrap_signal(int signum, sighandler_t handler);
+  int __wrap_sigaction(int signum, const struct sigaction *act,
+                       struct sigaction *oldact);
 }
 
 /**
@@ -119,6 +124,7 @@ protected:
    */
   friend class ElfLoader;
   friend class CustomElf;
+  friend class SEGVHandler;
   virtual bool IsSystemElf() const { return false; }
 
 private:
@@ -174,9 +180,56 @@ private:
 };
 
 /**
+ * The ElfLoader registers its own SIGSEGV handler to handle segmentation
+ * faults within the address space of the loaded libraries. It however
+ * allows a handler to be set for faults in other places, and redispatches
+ * to the handler set through signal() or sigaction(). We assume no system
+ * library loaded with system dlopen is going to call signal or sigaction
+ * for SIGSEGV.
+ */
+class SEGVHandler
+{
+protected:
+  SEGVHandler();
+  ~SEGVHandler();
+
+private:
+  friend sighandler_t __wrap_signal(int signum, sighandler_t handler);
+  friend int __wrap_sigaction(int signum, const struct sigaction *act,
+                              struct sigaction *oldact);
+
+  /**
+   * SIGSEGV handler registered with __wrap_signal or __wrap_sigaction.
+   */
+  struct sigaction action;
+  
+  /**
+   * ElfLoader SIGSEGV handler.
+   */
+  static void handler(int signum, siginfo_t *info, void *context);
+
+  /**
+   * Size of the alternative stack. The printf family requires more than 8KB
+   * of stack, and our signal handler may print a few things.
+   */
+  static const size_t stackSize = 12 * 1024;
+
+  /**
+   * Alternative stack information used before initialization.
+   */
+  stack_t oldStack;
+
+  /**
+   * Pointer to an alternative stack for signals. Only set if oldStack is
+   * not set or not big enough.
+   */
+  MappedPtr stackPtr;
+};
+
+/**
  * Elf Loader class in charge of loading and bookkeeping libraries.
  */
-class ElfLoader
+class ElfLoader: public SEGVHandler
 {
 public:
   /**
