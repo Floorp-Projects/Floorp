@@ -1260,8 +1260,8 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() {
             public void run() {
                 Tab tab = Tabs.getInstance().getTab(tabId);
-                mDoorHangerPopup.addDoorHanger(message, value, buttons,
-                                                           tab, options);
+                if (tab != null)
+                    mDoorHangerPopup.addDoorHanger(message, value, buttons, tab, options);
             }
         });
     }
