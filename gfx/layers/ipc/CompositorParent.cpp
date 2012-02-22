@@ -43,6 +43,7 @@
 #include "LayerManagerOGL.h"
 #include "nsIWidget.h"
 #include "nsGkAtoms.h"
+#include "RenderTrace.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
 #include "AndroidBridge.h"
@@ -177,16 +178,14 @@ CompositorParent::Composite()
     return;
   }
 
-#ifdef MOZ_RENDERTRACE
-  Layer* aLayer = mLayerManager->GetRoot();
-  mozilla::layers::RenderTraceLayers(aLayer, "0000");
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
   RequestViewTransform();
   printf_stderr("Correcting for position fixed %i, %i\n", -mScrollOffset.x, -mScrollOffset.y);
   TransformShadowTree();
 #endif
+
+  Layer* aLayer = mLayerManager->GetRoot();
+  mozilla::layers::RenderTraceLayers(aLayer, "0000");
 
   mLayerManager->EndEmptyTransaction();
 

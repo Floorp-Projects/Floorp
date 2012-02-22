@@ -690,9 +690,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
     nsIntRegion toDraw = IntersectWithClip(GetEffectiveVisibleRegion(), aContext);
 
-#ifdef MOZ_RENDERTRACE
     RenderTraceInvalidateStart(this, "FF00", toDraw.GetBounds());
-#endif
 
     if (!toDraw.IsEmpty() && !IsHidden()) {
       if (!aCallback) {
@@ -730,9 +728,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       aContext->Restore();
     }
 
-#ifdef MOZ_RENDERTRACE
     RenderTraceInvalidateEnd(this, "FF00");
-#endif
     return;
   }
 
@@ -759,9 +755,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       nsIntRegion extendedDrawRegion = state.mRegionToDraw;
       SetAntialiasingFlags(this, state.mContext);
 
-#ifdef MOZ_RENDERTRACE
       RenderTraceInvalidateStart(this, "FF00", state.mRegionToDraw.GetBounds());
-#endif
 
       PaintBuffer(state.mContext,
                   state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
@@ -769,9 +763,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
                   aCallback, aCallbackData);
       Mutated();
 
-#ifdef MOZ_RENDERTRACE
       RenderTraceInvalidateEnd(this, "FF00");
-#endif
     } else {
       // It's possible that state.mRegionToInvalidate is nonempty here,
       // if we are shrinking the valid region to nothing.
@@ -1617,10 +1609,8 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
   mPhase = PHASE_DRAWING;
 #endif
 
-#ifdef MOZ_RENDERTRACE
   Layer* aLayer = GetRoot();
   RenderTraceLayers(aLayer, "FF00");
-#endif
 
   mTransactionIncomplete = false;
 
