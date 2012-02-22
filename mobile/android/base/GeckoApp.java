@@ -570,7 +570,7 @@ abstract public class GeckoApp
         }
 
         public void run() {
-            if (mLayerClient == null) {
+            if (mLayerClient == null)
                 return;
 
             synchronized (mLayerClient) {
