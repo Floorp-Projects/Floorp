@@ -41,8 +41,17 @@
 #ifndef mozilla_layers_CompositorParent_h
 #define mozilla_layers_CompositorParent_h
 
+// Enable this pref to turn on compositor performance warning.
+// This will print warnings if the compositor isn't meeting
+// it's responsiveness objectives:
+//    1) Compose a frame within 15ms of receiving a ScheduleCompositeCall
+//    2) Unless a frame was composited within the throttle threshold in
+//       which the deadline will be 15ms + throttle threshold
+#define COMPOSITOR_PERFORMANCE_WARNING
+
 #include "mozilla/layers/PCompositorParent.h"
 #include "mozilla/layers/PLayersParent.h"
+#include "base/thread.h"
 #include "ShadowLayersManager.h"
 
 class nsIWidget;
@@ -51,6 +60,26 @@ namespace mozilla {
 namespace layers {
 
 class LayerManager;
+
+// Represents (affine) transforms that are calculated from a content view.
+struct ViewTransform {
+  ViewTransform(nsIntPoint aTranslation = nsIntPoint(0, 0), float aXScale = 1, float aYScale = 1)
+    : mTranslation(aTranslation)
+    , mXScale(aXScale)
+    , mYScale(aYScale)
+  {}
+
+  operator gfx3DMatrix() const
+  {
+    return
+      gfx3DMatrix::ScalingMatrix(mXScale, mYScale, 1) *
+      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0);
+  }
+
+  nsIntPoint mTranslation;
+  float mXScale;
+  float mYScale;
+};
 
 class CompositorParent : public PCompositorParent,
                          public ShadowLayersManager
@@ -67,17 +96,53 @@ public:
 
   LayerManager* GetLayerManager() { return mLayerManager; }
 
+  void SetTransformation(float aScale, nsIntPoint aScrollOffset);
+  void AsyncRender();
+
+  // Can be called from any thread
+  void ScheduleRenderOnCompositorThread(::base::Thread &aCompositorThread);
+  void SchedulePauseOnCompositorThread(::base::Thread &aCompositorThread);
+  void ScheduleResumeOnCompositorThread(::base::Thread &aCompositorThread);
+
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
 
 private:
-  void ScheduleComposition();
+  void PauseComposition();
+  void ResumeComposition();
+
   void Composite();
+  void ScheduleComposition();
+  void TransformShadowTree();
+
+  // Platform specific functions
+#ifdef MOZ_WIDGET_ANDROID
+  /**
+   * Asks Java for the viewport position and updates the world transform
+   * accordingly.
+   */
+  void RequestViewTransform();
+
+  /**
+   * Does a breadth-first search to find the first layer in the tree with a
+   * displayport set.
+   */
+  Layer* GetPrimaryScrollableLayer();
+#endif
 
   nsRefPtr<LayerManager> mLayerManager;
-  bool mStopped;
   nsIWidget* mWidget;
+  CancelableTask *mCurrentCompositeTask;
+  TimeStamp mLastCompose;
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  TimeStamp mExpectedComposeTime;
+#endif
+
+  bool mPaused;
+  float mXScale;
+  float mYScale;
+  nsIntPoint mScrollOffset;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

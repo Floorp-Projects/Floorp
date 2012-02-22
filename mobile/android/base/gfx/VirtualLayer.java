@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Patrick Walton <pcwalton@mozilla.com>
+ *   Chris Lord <chrislord.net@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,40 +38,43 @@
 
 package org.mozilla.gecko.gfx;
 
-/**
- * A layer client provides tiles and manages other information used by the layer controller.
- */
-public abstract class LayerClient {
-    private LayerController mLayerController;
+import android.graphics.Point;
 
-    public abstract void geometryChanged();
-    public abstract void viewportSizeChanged();
-    protected abstract void render();
+public class VirtualLayer extends Layer {
+    private Listener mListener;
+    private IntSize mSize;
 
-    public LayerController getLayerController() { return mLayerController; }
-    public void setLayerController(LayerController layerController) {
-        mLayerController = layerController;
+    public void setListener(Listener listener) {
+        mListener = listener;
     }
 
-    /**
-     * A utility function for calling Layer.beginTransaction with the
-     * appropriate LayerView.
-     */
-    public void beginTransaction(Layer aLayer) {
-        if (mLayerController != null) {
-            LayerView view = mLayerController.getView();
-            if (view != null) {
-                aLayer.beginTransaction(view);
-                return;
-            }
+    @Override
+    public void draw(RenderContext context) {
+        // No-op.
+    }
+
+    @Override
+    public IntSize getSize() {
+        return mSize;
+    }
+
+    public void setSize(IntSize size) {
+        mSize = size;
+    }
+
+    @Override
+    protected boolean performUpdates(RenderContext context) {
+        boolean dimensionsChanged = dimensionChangesPending();
+        boolean result = super.performUpdates(context);
+        if (dimensionsChanged && mListener != null) {
+            mListener.dimensionsChanged(getOrigin(), getResolution());
         }
 
-        aLayer.beginTransaction();
+        return result;
     }
 
-    // Included for symmetry.
-    public void endTransaction(Layer aLayer) {
-        aLayer.endTransaction();
+    public interface Listener {
+        void dimensionsChanged(Point newOrigin, float newResolution);
     }
 }
 

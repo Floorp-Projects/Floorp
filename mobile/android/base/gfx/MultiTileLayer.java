@@ -1,4 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ /* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Chris Lord <chrislord.net@gmail.com>
+ *   Arkady Blyakher <rkadyb@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,8 +47,8 @@ import android.graphics.RectF;
 import android.graphics.Region;
 import android.util.Log;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import javax.microedition.khronos.opengles.GL10;
 
 /**
  * Encapsulates the logic needed to draw a layer made of multiple tiles.
@@ -157,8 +158,8 @@ public class MultiTileLayer extends Layer {
     }
 
     @Override
-    protected boolean performUpdates(GL10 gl, RenderContext context) {
-        super.performUpdates(gl, context);
+    protected boolean performUpdates(RenderContext context) {
+        super.performUpdates(context);
 
         validateTiles();
 
@@ -171,7 +172,7 @@ public class MultiTileLayer extends Layer {
             // up-to-date.
             boolean invalid = layer.getSkipTextureUpdate();
             layer.setSkipTextureUpdate(true);
-            layer.performUpdates(gl, context);
+            layer.performUpdates(context);
 
             RectF layerBounds = layer.getBounds(context, new FloatSize(layer.getSize()));
             boolean isDirty = layer.isDirty();
@@ -187,7 +188,7 @@ public class MultiTileLayer extends Layer {
                     // update it immediately.
                     layer.setSkipTextureUpdate(false);
                     screenUpdateDone = true;
-                    layer.performUpdates(gl, context);
+                    layer.performUpdates(context);
                     invalid = false;
                 }
             }
@@ -205,7 +206,7 @@ public class MultiTileLayer extends Layer {
         // upload-related hitches.
         if (!screenUpdateDone && firstDirtyTile != null) {
             firstDirtyTile.setSkipTextureUpdate(false);
-            firstDirtyTile.performUpdates(gl, context);
+            firstDirtyTile.performUpdates(context);
             dirtyTiles --;
         }
 
@@ -216,7 +217,7 @@ public class MultiTileLayer extends Layer {
         IntSize size = getSize();
         for (SubTile layer : mTiles) {
             if (!inTransaction) {
-                layer.beginTransaction(null);
+                layer.beginTransaction();
             }
 
             if (origin != null) {
@@ -245,11 +246,11 @@ public class MultiTileLayer extends Layer {
     }
 
     @Override
-    public void beginTransaction(LayerView aView) {
-        super.beginTransaction(aView);
+    public void beginTransaction() {
+        super.beginTransaction();
 
         for (SubTile layer : mTiles) {
-            layer.beginTransaction(aView);
+            layer.beginTransaction();
         }
     }
 

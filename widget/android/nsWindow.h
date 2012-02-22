@@ -47,6 +47,11 @@
 #include "nsAccessible.h"
 #endif
 
+#ifdef MOZ_JAVA_COMPOSITOR
+#include "AndroidJavaWrappers.h"
+#include "Layers.h"
+#endif
+
 class gfxASurface;
 class nsIdleService;
 
@@ -179,6 +184,9 @@ public:
 #ifdef MOZ_JAVA_COMPOSITOR
     static void BindToTexture();
     static bool HasDirectTexture();
+
+    virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
+    virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
 #endif
 
 protected:
@@ -246,6 +254,10 @@ private:
      */
     nsAccessible *DispatchAccessibleEvent();
 #endif // ACCESSIBILITY
+
+#ifdef MOZ_JAVA_COMPOSITOR
+    mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
+#endif
 };
 
 #endif /* NSWINDOW_H_ */

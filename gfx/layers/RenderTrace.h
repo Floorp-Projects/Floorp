@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set sw=2 ts=2 et tw=80 : */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,16 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Content App.
+ * The Original Code is Mozilla Corporation code.
  *
- * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Benoit Girard <bgirard@mozilla.com>
- *   Ali Juma <ajuma@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,57 +35,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "CompositorChild.h"
-#include "CompositorParent.h"
-#include "LayerManagerOGL.h"
-#include "mozilla/layers/ShadowLayersChild.h"
+// This is a general tool that will let you visualize platform operation.
+// Currently used for the layer system, the general syntax allows this
+// tools to be adapted to trace other operations.
+//
+// For the front end see: https://github.com/staktrace/rendertrace
 
-using mozilla::layers::ShadowLayersChild;
+// Uncomment this line to enable RENDERTRACE
+//#define MOZ_RENDERTRACE
+
+#ifndef GFX_RENDERTRACE_H
+#define GFX_RENDERTRACE_H
+
+#include "gfx3DMatrix.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace layers {
 
-CompositorChild::CompositorChild(LayerManager *aLayerManager)
-  : mLayerManager(aLayerManager)
-{
-  MOZ_COUNT_CTOR(CompositorChild);
+class Layer;
+
+void RenderTraceLayers(Layer *aLayer, const char *aColor, gfx3DMatrix aRootTransform = gfx3DMatrix(), bool aReset = true);
+
+void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, nsIntRect aRect);
+void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor);
+
+#ifndef MOZ_RENDERTRACE
+inline void RenderTraceLayers(Layer *aLayer, const char *aColor, gfx3DMatrix aRootTransform, bool aReset)
+{}
+
+inline void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, nsIntRect aRect)
+{}
+
+inline void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor)
+{}
+
+#endif // MOZ_RENDERTRACE
+
+}
 }
 
-CompositorChild::~CompositorChild()
-{
-  MOZ_COUNT_DTOR(CompositorChild);
-}
-
-void
-CompositorChild::Destroy()
-{
-  mLayerManager = NULL;
-  size_t numChildren = ManagedPLayersChild().Length();
-  NS_ABORT_IF_FALSE(0 == numChildren || 1 == numChildren,
-                    "compositor must only have 0 or 1 layer forwarder");
-
-  if (numChildren) {
-    ShadowLayersChild* layers =
-      static_cast<ShadowLayersChild*>(ManagedPLayersChild()[0]);
-    layers->Destroy();
-  }
-  printf_stderr("Destroy compositor\n");
-  SendStop();
-}
-
-PLayersChild*
-CompositorChild::AllocPLayers(const LayersBackend &backend)
-{
-  return new ShadowLayersChild();
-}
-
-bool
-CompositorChild::DeallocPLayers(PLayersChild* actor)
-{
-  delete actor;
-  return true;
-}
-
-} // namespace layers
-} // namespace mozilla
-
+#endif //GFX_RENDERTRACE_H

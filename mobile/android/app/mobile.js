@@ -593,6 +593,9 @@ pref("layers.acceleration.disabled", false);
 pref("layers.acceleration.disabled", true);
 #endif
 
+pref("layers.offmainthreadcomposition.enabled", true);
+pref("layers.acceleration.draw-fps", true);
+
 pref("notification.feature.enabled", true);
 
 // prevent tooltips from showing up
