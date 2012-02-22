@@ -309,6 +309,12 @@ DIST_FILES += \
   recommended-addons.json \
   $(NULL)
 
+ifdef MOZ_ENABLE_SZIP
+SZIP_LIBRARIES = \
+  libxul.so \
+  $(NULL)
+endif
+
 NON_DIST_FILES = \
   classes.dex \
   $(NULL)
@@ -354,6 +360,7 @@ endif
 
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
+  $(foreach lib,$(SZIP_LIBRARIES),host/bin/szip $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib) $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib:.so=.sz) && mv $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib:.so=.sz) $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib) && ) \
   make -C $(GECKO_APP_AP_PATH) gecko.ap_ && \
   cp $(GECKO_APP_AP_PATH)/gecko.ap_ $(_ABS_DIST) && \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
@@ -366,7 +373,8 @@ INNER_MAKE_PACKAGE	= \
     done && \
     unzip -o $(_ABS_DIST)/gecko.ap_ && \
     rm $(_ABS_DIST)/gecko.ap_ && \
-    $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) && \
+    $(if $(SZIP_LIBRARIES),$(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(SZIP_LIBRARIES) && ) \
+    $(ZIP) -r9D $(_ABS_DIST)/gecko.ap_ $(DIST_FILES) -x $(NON_DIST_FILES) $(SZIP_LIBRARIES) && \
     $(ZIP) -0 $(_ABS_DIST)/gecko.ap_ $(OMNIJAR_NAME)) && \
   rm -f $(_ABS_DIST)/gecko.apk && \
   $(APKBUILDER) $(_ABS_DIST)/gecko.apk -v $(APKBUILDER_FLAGS) -z $(_ABS_DIST)/gecko.ap_ -f $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/classes.dex && \
