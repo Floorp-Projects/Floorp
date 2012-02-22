@@ -108,12 +108,15 @@ FENNEC_JAVA_FILES = \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
   gfx/CheckerboardImage.java \
+  gfx/FlexibleGLSurfaceView.java \
   gfx/FloatSize.java \
-  gfx/GeckoSoftwareLayerClient.java \
+  gfx/GeckoGLLayerClient.java \
+  gfx/GeckoLayerClient.java \
+  gfx/GLController.java \
+  gfx/GLThread.java \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \
   gfx/Layer.java \
-  gfx/LayerClient.java \
   gfx/LayerController.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
@@ -130,7 +133,9 @@ FENNEC_JAVA_FILES = \
   gfx/TextureGenerator.java \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
+  gfx/ViewTransform.java \
   gfx/ViewportMetrics.java \
+  gfx/VirtualLayer.java \
   gfx/WidgetTileLayer.java \
   ui/Axis.java \
   ui/PanZoomController.java \

@@ -2067,16 +2067,18 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Since making new layers is expensive, only use nsDisplayScrollLayer
-  // if the area is scrollable.
+  // if the area is scrollable and there's a displayport (or we're the content
+  // process).
   nsRect scrollRange = GetScrollRange();
   ScrollbarStyles styles = GetScrollbarStylesFromFrame();
   mShouldBuildLayer =
-     (XRE_GetProcessType() == GeckoProcessType_Content &&
+     ((XRE_GetProcessType() == GeckoProcessType_Content || usingDisplayport) &&
      (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
       styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
      (scrollRange.width > 0 ||
-      scrollRange.height > 0) &&
-     (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
+      scrollRange.height > 0 || usingDisplayport) &&
+     (usingDisplayport || !mIsRoot ||
+      !mOuter->PresContext()->IsRootContentDocument()));
 
   if (ShouldBuildLayer()) {
     // ScrollLayerWrapper must always be created because it initializes the

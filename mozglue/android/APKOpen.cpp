@@ -286,7 +286,7 @@ SHELL_WRAPPER0(nativeInit)
 SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
 SHELL_WRAPPER0(processNextNativeEvent)
 SHELL_WRAPPER1(setSurfaceView, jobject)
-SHELL_WRAPPER1(setSoftwareLayerClient, jobject)
+SHELL_WRAPPER2(setLayerClient, jobject, jint)
 SHELL_WRAPPER0(onResume)
 SHELL_WRAPPER0(onLowMemory)
 SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
@@ -298,6 +298,9 @@ SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble)
 SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong)
 SHELL_WRAPPER0(bindWidgetTexture)
+SHELL_WRAPPER0(scheduleComposite)
+SHELL_WRAPPER0(schedulePauseComposition)
+SHELL_WRAPPER0(scheduleResumeComposition)
 SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong)
 SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong)
@@ -697,7 +700,7 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(notifyGeckoOfEvent);
   GETFUNC(processNextNativeEvent);
   GETFUNC(setSurfaceView);
-  GETFUNC(setSoftwareLayerClient);
+  GETFUNC(setLayerClient);
   GETFUNC(onResume);
   GETFUNC(onLowMemory);
   GETFUNC(callObserver);
@@ -709,6 +712,9 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(notifyBatteryChange);
   GETFUNC(notifySmsReceived);
   GETFUNC(bindWidgetTexture);
+  GETFUNC(scheduleComposite);
+  GETFUNC(schedulePauseComposition);
+  GETFUNC(scheduleResumeComposition);
   GETFUNC(saveMessageInSentbox);
   GETFUNC(notifySmsSent);
   GETFUNC(notifySmsDelivered);
