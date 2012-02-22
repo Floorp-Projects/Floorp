@@ -314,7 +314,7 @@ nsresult
 nsHTMLButtonAccessible::GetNameInternal(nsAString& aName)
 {
   nsAccessible::GetNameInternal(aName);
-  if (!aName.IsEmpty())
+  if (!aName.IsEmpty() || mContent->Tag() != nsGkAtoms::input)
     return NS_OK;
 
   // No name from HTML or ARIA
@@ -348,71 +348,6 @@ nsHTMLButtonAccessible::GetNameInternal(nsAString& aName)
 
 bool
 nsHTMLButtonAccessible::IsWidget() const
-{
-  return true;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTML4ButtonAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-nsHTML4ButtonAccessible::
-  nsHTML4ButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
-{
-}
-
-PRUint8
-nsHTML4ButtonAccessible::ActionCount()
-{
-  return 1;
-}
-
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
-{
-  if (aIndex == eAction_Click) {
-    aName.AssignLiteral("press"); 
-    return NS_OK;
-  }
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP
-nsHTML4ButtonAccessible::DoAction(PRUint8 aIndex)
-{
-  if (aIndex != 0)
-    return NS_ERROR_INVALID_ARG;
-
-  DoCommand();
-  return NS_OK;
-}
-
-role
-nsHTML4ButtonAccessible::NativeRole()
-{
-  return roles::PUSHBUTTON;
-}
-
-PRUint64
-nsHTML4ButtonAccessible::NativeState()
-{
-  PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
-
-  state |= states::FOCUSABLE;
-
-  nsEventStates elmState = mContent->AsElement()->State();
-  if (elmState.HasState(NS_EVENT_STATE_DEFAULT))
-    state |= states::DEFAULT;
-
-  return state;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsHTML4ButtonAccessible: Widgets
-
-bool
-nsHTML4ButtonAccessible::IsWidget() const
 {
   return true;
 }

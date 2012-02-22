@@ -42,15 +42,19 @@
 #include "secasn1.h"
 #include "pkcs11t.h"
 
+SEC_BEGIN_PROTOS
+
 /* find a better home for these... */
 extern const SEC_ASN1Template SECKEY_PointerToEncryptedPrivateKeyInfoTemplate[];
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PointerToEncryptedPrivateKeyInfoTemplate;
+SEC_ASN1_CHOOSER_DECLARE(SECKEY_PointerToEncryptedPrivateKeyInfoTemplate)
 extern const SEC_ASN1Template SECKEY_EncryptedPrivateKeyInfoTemplate[];
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_EncryptedPrivateKeyInfoTemplate;
+SEC_ASN1_CHOOSER_DECLARE(SECKEY_EncryptedPrivateKeyInfoTemplate)
 extern const SEC_ASN1Template SECKEY_PrivateKeyInfoTemplate[];
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PrivateKeyInfoTemplate;
+SEC_ASN1_CHOOSER_DECLARE(SECKEY_PrivateKeyInfoTemplate)
 extern const SEC_ASN1Template SECKEY_PointerToPrivateKeyInfoTemplate[];
-extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PointerToPrivateKeyInfoTemplate;
+SEC_ASN1_CHOOSER_DECLARE(SECKEY_PointerToPrivateKeyInfoTemplate)
+
+SEC_END_PROTOS
 
 /* PKCS11 needs to be included */
 typedef struct SECMODModuleStr SECMODModule;

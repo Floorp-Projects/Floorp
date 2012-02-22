@@ -45,9 +45,11 @@
 
 interface nsIDOMMozSmsFilter;
 
-[scriptable, function, uuid(3ddf7dc3-626c-47ee-8b41-3f55d5af49c9)]
+[scriptable, function, uuid(86b3b538-359d-40b0-acdf-8dfd698ff117)]
 interface nsISmsDatabaseService : nsISupports
 {
+  // Takes some information required to save the message and returns its id.
+  long saveReceivedMessage(in DOMString aSender, in DOMString aBody, in unsigned long long aDate);
   // Takes some information required to save the message and returns its id.
   long saveSentMessage(in DOMString aReceiver, in DOMString aBody, in unsigned long long aDate);
 

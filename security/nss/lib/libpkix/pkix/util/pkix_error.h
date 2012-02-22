@@ -53,7 +53,7 @@ extern "C" {
 struct PKIX_ErrorStruct {
         PKIX_ERRORCODE errCode;
         PKIX_ERRORCLASS errClass;  /* was formerly "code" */
-        PKIX_UInt32 plErr;
+        PKIX_Int32 plErr;
         PKIX_Error *cause;
         PKIX_PL_Object *info;
 };
