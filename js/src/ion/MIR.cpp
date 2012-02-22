@@ -854,6 +854,21 @@ MToInt32::foldsTo(bool useValueNumbers)
     MDefinition *input = getOperand(0);
     if (input->type() == MIRType_Int32)
         return input;
+    return this;
+}
+
+MDefinition *
+MTruncateToInt32::foldsTo(bool useValueNumbers)
+{
+    MDefinition *input = getOperand(0);
+    if (input->type() == MIRType_Int32)
+        return input;
+
+    if (input->type() == MIRType_Double && input->isConstant()) {
+        const Value &v = input->toConstant()->value();
+        uint32 ret = js_DoubleToECMAInt32(v.toDouble());
+        return MConstant::New(Int32Value(ret));
+    }
 
     return this;
 }
