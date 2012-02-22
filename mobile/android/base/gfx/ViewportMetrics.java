@@ -64,11 +64,6 @@ public class ViewportMetrics {
     private RectF mViewportRect;
     private float mZoomFactor;
 
-    // A scale from -1,-1 to 1,1 that represents what edge of the displayport
-    // we want the viewport to be biased towards.
-    private PointF mViewportBias;
-    private static final float MAX_BIAS = 0.8f;
-
     public ViewportMetrics() {
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -76,14 +71,12 @@ public class ViewportMetrics {
         mPageSize = new FloatSize(metrics.widthPixels, metrics.heightPixels);
         mViewportRect = new RectF(0, 0, metrics.widthPixels, metrics.heightPixels);
         mZoomFactor = 1.0f;
-        mViewportBias = new PointF(0.0f, 0.0f);
     }
 
     public ViewportMetrics(ViewportMetrics viewport) {
         mPageSize = new FloatSize(viewport.getPageSize());
         mViewportRect = new RectF(viewport.getViewport());
         mZoomFactor = viewport.getZoomFactor();
-        mViewportBias = viewport.mViewportBias;
     }
 
     public ViewportMetrics(JSONObject json) throws JSONException {
@@ -98,32 +91,6 @@ public class ViewportMetrics {
         mPageSize = new FloatSize(pageWidth, pageHeight);
         mViewportRect = new RectF(x, y, x + width, y + height);
         mZoomFactor = zoom;
-        mViewportBias = new PointF(0.0f, 0.0f);
-    }
-
-    public PointF getOptimumViewportOffset(IntSize displayportSize) {
-        RectF viewport = getClampedViewport();
-
-        FloatSize bufferSpace = new FloatSize(displayportSize.width - viewport.width(),
-                                            displayportSize.height - viewport.height());
-        PointF optimumOffset =
-            new PointF(bufferSpace.width * ((mViewportBias.x + 1.0f) / 2.0f),
-                       bufferSpace.height * ((mViewportBias.y + 1.0f) / 2.0f));
-
-        // Make sure this offset won't cause wasted pixels in the displayport
-        // (i.e. make sure the resultant displayport intersects with the page
-        //  as much as possible)
-        if (viewport.left - optimumOffset.x < 0)
-          optimumOffset.x = viewport.left;
-        else if ((bufferSpace.width - optimumOffset.x) + viewport.right > mPageSize.width)
-          optimumOffset.x = bufferSpace.width - (mPageSize.width - viewport.right);
-
-        if (viewport.top - optimumOffset.y < 0)
-          optimumOffset.y = viewport.top;
-        else if ((bufferSpace.height - optimumOffset.y) + viewport.bottom > mPageSize.height)
-          optimumOffset.y = bufferSpace.height - (mPageSize.height - viewport.bottom);
-
-        return new PointF(Math.round(optimumOffset.x), Math.round(optimumOffset.y));
     }
 
     public PointF getOrigin() {
@@ -180,23 +147,6 @@ public class ViewportMetrics {
     }
 
     public void setOrigin(PointF origin) {
-        // When the origin is set, we compare it with the last value set and
-        // change the viewport bias accordingly, so that any viewport based
-        // on these metrics will have a larger buffer in the direction of
-        // movement.
-
-        // XXX Note the comment about bug #524925 in getOptimumViewportOffset.
-        //     Ideally, the viewport bias would be a sliding scale, but we
-        //     don't want to change it too often at the moment.
-        if (FloatUtils.fuzzyEquals(origin.x, mViewportRect.left))
-            mViewportBias.x = 0;
-        else
-            mViewportBias.x = ((mViewportRect.left - origin.x) > 0) ? MAX_BIAS : -MAX_BIAS;
-        if (FloatUtils.fuzzyEquals(origin.y, mViewportRect.top))
-            mViewportBias.y = 0;
-        else
-            mViewportBias.y = ((mViewportRect.top - origin.y) > 0) ? MAX_BIAS : -MAX_BIAS;
-
         mViewportRect.set(origin.x, origin.y,
                           origin.x + mViewportRect.width(),
                           origin.y + mViewportRect.height());
@@ -227,15 +177,6 @@ public class ViewportMetrics {
         setOrigin(origin);
 
         mZoomFactor = newZoomFactor;
-
-        // Similar to setOrigin, set the viewport bias based on the focal point
-        // of the zoom so that a viewport based on these metrics will have a
-        // larger buffer based on the direction of movement when scaling.
-        //
-        // This is biased towards scaling outwards, as zooming in doesn't
-        // really require a viewport bias.
-        mViewportBias.set(((focus.x / mViewportRect.width()) * (2.0f * MAX_BIAS)) - MAX_BIAS,
-                          ((focus.y / mViewportRect.height()) * (2.0f * MAX_BIAS)) - MAX_BIAS);
     }
 
     /*

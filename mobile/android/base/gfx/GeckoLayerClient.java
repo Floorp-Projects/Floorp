@@ -164,8 +164,6 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
             // called now.
             ViewportMetrics currentMetrics = mLayerController.getViewportMetrics();
             PointF currentBestOrigin = RectUtils.getOrigin(currentMetrics.getClampedViewport());
-            PointF viewportOffset = currentMetrics.getOptimumViewportOffset(new IntSize(width, height));
-            currentBestOrigin.offset(-viewportOffset.x, -viewportOffset.y);
 
             Rect currentRect = RectUtils.round(new RectF(currentBestOrigin.x, currentBestOrigin.y,
                                                          currentBestOrigin.x + width, currentBestOrigin.y + height));
@@ -193,9 +191,6 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
 
         mTileLayer.beginTransaction();
 
-        // Be sure to adjust the buffer size; if it's not at least as large as the viewport size,
-        // ViewportMetrics.getOptimumViewportOffset() gets awfully confused and severe display
-        // corruption results!
         if (mBufferSize.width != width || mBufferSize.height != height) {
             mBufferSize = new IntSize(width, height);
         }
@@ -387,7 +382,6 @@ public abstract class GeckoLayerClient implements GeckoEventListener,
         ViewportMetrics viewportMetrics =
             new ViewportMetrics(mLayerController.getViewportMetrics());
 
-        PointF viewportOffset = viewportMetrics.getOptimumViewportOffset(mBufferSize);
         viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(viewportMetrics));
