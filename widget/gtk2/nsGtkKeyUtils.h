@@ -133,6 +133,12 @@ public:
      */
     static void InitKeyEvent(nsKeyEvent& aKeyEvent, GdkEventKey* aGdkKeyEvent);
 
+    /**
+     * IsKeyPressEventNecessary() returns TRUE when aGdkKeyEvent should cause
+     * a DOM keypress event.  Otherwise, FALSE.
+     */
+    static bool IsKeyPressEventNecessary(GdkEventKey* aGdkKeyEvent);
+
 protected:
 
     /**
