@@ -567,48 +567,69 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
 }
 
 /* static */ PRUint32
-KeymapWrapper::ComputeDOMKeyCode(guint aGDKKeyval)
+KeymapWrapper::ComputeDOMKeyCode(const GdkEventKey* aGdkKeyEvent)
 {
+    guint keyval = aGdkKeyEvent->keyval;
+
     // First, try to handle alphanumeric input, not listed in nsKeycodes:
     // most likely, more letters will be getting typed in than things in
     // the key list, so we will look through these first.
 
     // since X has different key symbols for upper and lowercase letters and
     // mozilla does not, convert gdk's to mozilla's
-    if (aGDKKeyval >= GDK_a && aGDKKeyval <= GDK_z) {
-        return aGDKKeyval - GDK_a + NS_VK_A;
+    if (keyval >= GDK_a && keyval <= GDK_z) {
+        return keyval - GDK_a + NS_VK_A;
     }
-    if (aGDKKeyval >= GDK_A && aGDKKeyval <= GDK_Z) {
-        return aGDKKeyval - GDK_A + NS_VK_A;
+    if (keyval >= GDK_A && keyval <= GDK_Z) {
+        return keyval - GDK_A + NS_VK_A;
     }
 
     // numbers
-    if (aGDKKeyval >= GDK_0 && aGDKKeyval <= GDK_9) {
-        return aGDKKeyval - GDK_0 + NS_VK_0;
+    if (keyval >= GDK_0 && keyval <= GDK_9) {
+        return keyval - GDK_0 + NS_VK_0;
     }
 
     // keypad numbers
-    if (aGDKKeyval >= GDK_KP_0 && aGDKKeyval <= GDK_KP_9) {
-        return aGDKKeyval - GDK_KP_0 + NS_VK_NUMPAD0;
+    if (keyval >= GDK_KP_0 && keyval <= GDK_KP_9) {
+        return keyval - GDK_KP_0 + NS_VK_NUMPAD0;
+    }
+
+    // If the keyval indicates it's a modifier key, we should use unshifted
+    // key's modifier keyval.
+    if (GetModifierForGDKKeyval(keyval)) {
+        KeymapWrapper* keymapWrapper = GetInstance();
+        GdkKeymapKey key;
+        key.keycode = aGdkKeyEvent->hardware_keycode;
+        key.group = aGdkKeyEvent->group;
+        key.level = 0;
+        guint unshiftedKeyval =
+            gdk_keymap_lookup_key(keymapWrapper->mGdkKeymap, &key);
+        // But if the unshifted keyval isn't a modifier key, we shouldn't use
+        // it.  E.g., Japanese keyboard layout's Shift + Eisu-Toggle key is
+        // CapsLock.  This is an actual rare case, Windows uses different
+        // keycode for a physical key for different shift key state.
+        if (GetModifierForGDKKeyval(unshiftedKeyval)) {
+            keyval = unshiftedKeyval;
+        }
     }
 
     // map Sun Keyboard special keysyms
     for (PRUint32 i = 0; i < ArrayLength(kSunKeyPairs); i++) {
-        if (kSunKeyPairs[i].GDKKeyval == aGDKKeyval) {
+        if (kSunKeyPairs[i].GDKKeyval == keyval) {
             return kSunKeyPairs[i].DOMKeyCode;
         }
     }
 
     // misc other things
     for (PRUint32 i = 0; i < ArrayLength(kKeyPairs); i++) {
-        if (kKeyPairs[i].GDKKeyval == aGDKKeyval) {
+        if (kKeyPairs[i].GDKKeyval == keyval) {
             return kKeyPairs[i].DOMKeyCode;
         }
     }
 
     // function keys
-    if (aGDKKeyval >= GDK_F1 && aGDKKeyval <= GDK_F24) {
-        return aGDKKeyval - GDK_F1 + NS_VK_F1;
+    if (keyval >= GDK_F1 && keyval <= GDK_F24) {
+        return keyval - GDK_F1 + NS_VK_F1;
     }
 
     return 0;
@@ -658,7 +679,7 @@ KeymapWrapper::InitKeyEvent(nsKeyEvent& aKeyEvent,
 {
     KeymapWrapper* keymapWrapper = GetInstance();
 
-    aKeyEvent.keyCode = ComputeDOMKeyCode(aGdkKeyEvent->keyval);
+    aKeyEvent.keyCode = ComputeDOMKeyCode(aGdkKeyEvent);
 
     // NOTE: The state of given key event indicates adjacent state of
     // modifier keys.  E.g., even if the event is Shift key press event,
@@ -947,7 +968,7 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
 KeymapWrapper::IsKeyPressEventNecessary(GdkEventKey* aGdkKeyEvent)
 {
     // If this is a modifier key event, we shouldn't send keypress event.
-    switch (ComputeDOMKeyCode(aGdkKeyEvent->keyval)) {
+    switch (ComputeDOMKeyCode(aGdkKeyEvent)) {
         case NS_VK_SHIFT:
         case NS_VK_CONTROL:
         case NS_VK_META:
