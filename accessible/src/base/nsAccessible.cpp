@@ -1060,7 +1060,8 @@ nsAccessible::GetBounds(PRInt32* aX, PRInt32* aY,
   *aHeight = presContext->AppUnitsToDevPixels(unionRectTwips.height);
 
   // We have the union of the rectangle, now we need to put it in absolute screen coords
-  nsIntRect orgRectPixels = boundingFrame->GetScreenRectExternal();
+  nsIntRect orgRectPixels = boundingFrame->GetScreenRectInAppUnits().
+    ToNearestPixels(presContext->AppUnitsPerDevPixel());
   *aX += orgRectPixels.x;
   *aY += orgRectPixels.y;
 
