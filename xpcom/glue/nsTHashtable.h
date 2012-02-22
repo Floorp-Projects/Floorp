@@ -172,6 +172,16 @@ public:
   }
 
   /**
+   * Return true if an entry for the given key exists, false otherwise.
+   * @param     aKey the key to retrieve
+   * @return    true if the key exists, false if the key doesn't exist
+   */
+  bool Contains(KeyType aKey) const
+  {
+    return !!GetEntry(aKey);
+  }
+
+  /**
    * Get the entry associated with a key, or create a new entry,
    * @param     aKey the key to retrieve
    * @return    pointer to the entry class retreived; nsnull only if memory
