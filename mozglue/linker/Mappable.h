@@ -72,7 +72,7 @@ public:
   /**
    * Create a MappableFile instance for the given file path.
    */
-  static MappableFile *Create(const char *path);
+  static Mappable *Create(const char *path);
 
   /* Inherited from Mappable */
   virtual void *mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
@@ -99,14 +99,8 @@ public:
    * Create a MappableExtractFile instance for the given Zip stream. The name
    * argument is used to create the cache file in the cache directory.
    */
-  static MappableExtractFile *Create(const char *name, Zip::Stream *stream);
+  static Mappable *Create(const char *name, Zip *zip, Zip::Stream *stream);
 
-  /**
-   * Returns the path of the extracted file.
-   */
-  char *GetPath() {
-    return path;
-  }
 private:
   MappableExtractFile(int fd, char *path)
   : MappableFile(fd), path(path), pid(getpid()) { }
@@ -148,7 +142,7 @@ public:
    * argument is used for an appropriately named temporary file, and the Zip
    * instance is given for the MappableDeflate to keep a reference of it.
    */
-  static MappableDeflate *Create(const char *name, Zip *zip, Zip::Stream *stream);
+  static Mappable *Create(const char *name, Zip *zip, Zip::Stream *stream);
 
   /* Inherited from Mappable */
   virtual void *mmap(const void *addr, size_t length, int prot, int flags, off_t offset);
@@ -182,7 +176,7 @@ public:
    * Zip instance is given for the MappableSeekableZStream to keep a reference
    * of it.
    */
-  static MappableSeekableZStream *Create(const char *name, Zip *zip,
+  static Mappable *Create(const char *name, Zip *zip,
                                          Zip::Stream *stream);
 
   /* Inherited from Mappable */
