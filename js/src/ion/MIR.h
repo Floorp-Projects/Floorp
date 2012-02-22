@@ -1502,6 +1502,9 @@ class MTruncateToInt32 : public MUnaryInstruction
     MDefinition *input() const {
         return getOperand(0);
     }
+
+    MDefinition *foldsTo(bool useValueNumbers);
+
     bool congruentTo(MDefinition *const &ins) const {
         return congruentIfOperandsEqual(ins);
     }
