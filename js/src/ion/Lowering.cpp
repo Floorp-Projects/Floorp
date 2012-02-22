@@ -962,6 +962,17 @@ LIRGenerator::visitInitializedLength(MInitializedLength *ins)
 }
 
 bool
+LIRGenerator::visitSetInitializedLength(MSetInitializedLength *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    JS_ASSERT(ins->index()->isConstant());
+    return add(new LSetInitializedLength(useRegister(ins->elements()),
+                                         useRegisterOrConstant(ins->index())), ins);
+}
+
+bool
 LIRGenerator::visitNot(MNot *ins)
 {
     MDefinition *op = ins->operand();
