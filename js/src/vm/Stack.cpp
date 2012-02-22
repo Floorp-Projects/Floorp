@@ -413,7 +413,6 @@ StackSpace::init()
     trustedEnd_ = base_ + CAPACITY_VALS;
     conservativeEnd_ = defaultEnd_ = trustedEnd_ - BUFFER_VALS;
 #endif
-    Debug_SetValueRangeToCrashOnTouch(base_, trustedEnd_);
     assertInvariants();
     return true;
 }
@@ -737,8 +736,6 @@ ContextStack::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *iag)
     if (!firstUnused)
         return false;
 
-    MakeRangeGCSafe(firstUnused, argc);
-
     ImplicitCast<CallArgs>(*iag) = CallArgsFromVp(argc, firstUnused);
 
     seg_->pushCall(*iag);
@@ -754,19 +751,9 @@ ContextStack::popInvokeArgs(const InvokeArgsGuard &iag)
     JS_ASSERT(onTop());
     JS_ASSERT(space().firstUnused() == seg_->calls().end());
 
-    Value *oldend = seg_->end();
-    Value *oldbeg;
-
     seg_->popCall();
-    if (iag.pushedSeg_) {
-        oldbeg = reinterpret_cast<Value *>(seg_);
+    if (iag.pushedSeg_)
         popSegment();
-    } else {
-        oldbeg = seg_->end();
-    }
-
-    if (seg_)
-        Debug_SetValueRangeToCrashOnTouch(oldbeg, oldend);
 }
 
 bool
@@ -879,19 +866,9 @@ ContextStack::popFrame(const FrameGuard &fg)
     if (fg.regs_.fp()->isNonEvalFunctionFrame())
         fg.regs_.fp()->functionEpilogue();
 
-    Value *oldend = seg_->end();
-    Value *oldbeg;
-
     seg_->popRegs(fg.prevRegs_);
-    if (fg.pushedSeg_) {
-        oldbeg = reinterpret_cast<Value *>(seg_);
+    if (fg.pushedSeg_)
         popSegment();
-    } else {
-        oldbeg = seg_->end();
-    }
-
-    if (seg_)
-        Debug_SetValueRangeToCrashOnTouch(oldbeg, oldend);
 
     /*
      * NB: this code can call out and observe the stack (e.g., through GC), so
