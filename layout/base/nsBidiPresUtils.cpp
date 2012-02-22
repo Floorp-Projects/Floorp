@@ -99,8 +99,8 @@ struct BidiParagraphData {
         NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
       // unicode-bidi: plaintext: the Bidi algorithm will determine the
       // directionality of the paragraph according to the first strong
-      // directional character.
-      mParaLevel = styleDirectionIsRTL ? NSBIDI_DEFAULT_RTL : NSBIDI_DEFAULT_LTR;
+      // directional character, defaulting to LTR if there is none.
+      mParaLevel = NSBIDI_DEFAULT_LTR;
     } else {
       mParaLevel = styleDirectionIsRTL ? NSBIDI_RTL : NSBIDI_LTR;
     }
@@ -151,13 +151,13 @@ struct BidiParagraphData {
     mIsVisual = aBpd->mIsVisual;
     mParaLevel = aBpd->mParaLevel;
 
-    // If the containing paragraph has a level of NSBIDI_DEFAULT_LTR/RTL, set
-    // the sub-paragraph to the corresponding non-default level (We can't use
-    // GetParaLevel, because the containing paragraph hasn't yet been through
-    // bidi resolution
-    if (IS_DEFAULT_LEVEL(mParaLevel)) {
-      mParaLevel = (mParaLevel == NSBIDI_DEFAULT_RTL) ? NSBIDI_RTL : NSBIDI_LTR;
-    }                    
+    // If the containing paragraph has a level of NSBIDI_DEFAULT_LTR, set
+    // the sub-paragraph to NSBIDI_LTR (we can't use GetParaLevel to find the
+    // resolved paragraph level, because the containing paragraph hasn't yet
+    // been through bidi resolution
+    if (mParaLevel == NSBIDI_DEFAULT_LTR) {
+      mParaLevel = NSBIDI_LTR;
+    }
     mReset = false;
   }
 
@@ -210,7 +210,7 @@ struct BidiParagraphData {
   }
 
   /**
-   * mParaLevel can be NSBIDI_DEFAULT_LTR or NSBIDI_DEFAULT_RTL.
+   * mParaLevel can be NSBIDI_DEFAULT_LTR as well as NSBIDI_LTR or NSBIDI_RTL.
    * GetParaLevel() returns the actual (resolved) paragraph level which is
    * always either NSBIDI_LTR or NSBIDI_RTL
    */
