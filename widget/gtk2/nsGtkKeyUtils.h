@@ -44,8 +44,6 @@
 
 #include <gdk/gdk.h>
 
-PRUint32 nsConvertCharCodeToUnicode (GdkEventKey* aEvent);
-
 namespace mozilla {
 namespace widget {
 
@@ -124,6 +122,16 @@ public:
      */
     static void InitInputEvent(nsInputEvent& aInputEvent,
                                guint aModifierState);
+
+    /**
+     * InitKeyEvent() intializes aKeyEvent's modifier key related members
+     * and keycode related values.
+     *
+     * @param aKeyEvent         It's an nsKeyEvent which needs to be
+     *                          initialized.
+     * @param aGdkKeyEvent      A native GDK key event.
+     */
+    static void InitKeyEvent(nsKeyEvent& aKeyEvent, GdkEventKey* aGdkKeyEvent);
 
 protected:
 
@@ -226,6 +234,53 @@ protected:
     static void OnKeysChanged(GdkKeymap* aKeymap, KeymapWrapper* aKeymapWrapper);
     static void OnDestroyKeymap(KeymapWrapper* aKeymapWrapper,
                                 GdkKeymap *aGdkKeymap);
+
+    /**
+     * GetCharCodeFor() Computes what character is inputted by the key event
+     * with aModifierState and aGroup.
+     *
+     * @param aGdkKeyEvent      Native key event, must not be NULL.
+     * @param aModifierState    Combination of GdkModifierType which you
+     *                          want to test with aGdkKeyEvent.
+     * @param aGroup            Set group in the mGdkKeymap.
+     * @return                  charCode which is inputted by aGdkKeyEvent.
+     *                          If failed, this returns 0.
+     */
+    static PRUint32 GetCharCodeFor(const GdkEventKey *aGdkKeyEvent);
+    PRUint32 GetCharCodeFor(const GdkEventKey *aGdkKeyEvent,
+                            guint aModifierState,
+                            gint aGroup);
+
+    /**
+     * GetKeyLevel() returns level of the aGdkKeyEvent in mGdkKeymap.
+     *
+     * @param aGdkKeyEvent      Native key event, must not be NULL.
+     * @return                  Using level.  Typically, this is 0 or 1.
+     *                          If failed, this returns -1.
+     */
+    gint GetKeyLevel(GdkEventKey *aGdkKeyEvent);
+
+    /**
+     * IsBasicLatinLetterOrNumeral() Checks whether the aCharCode is an
+     * alphabet or a numeric character in ASCII.
+     *
+     * @param aCharCode         Charcode which you want to test.
+     * @return                  TRUE if aCharCode is an alphabet or a numeric
+     *                          in ASCII range.  Otherwise, FALSE.
+     */
+    static PRBool IsBasicLatinLetterOrNumeral(PRUint32 aCharCode);
+
+    /**
+     * InitKeypressEvent() intializes keyCode, charCode and
+     * alternativeCharCodes of keypress event.
+     *
+     * @param aKeyEvent         An NS_KEY_PRESS event, must not be NULL.
+     *                          The modifier related members and keyCode must
+     *                          be initialized already.
+     * @param aGdkKeyEvent      A native key event which causes dispatching
+     *                          aKeyEvent.
+     */
+    void InitKeypressEvent(nsKeyEvent& aKeyEvent, GdkEventKey* aGdkKeyEvent);
 };
 
 } // namespace widget
