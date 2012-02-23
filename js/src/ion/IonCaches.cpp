@@ -95,48 +95,113 @@ CodeOffsetLabel::fixup(MacroAssembler *masm)
 
 static const size_t MAX_STUBS = 16;
 
+static void
+GeneratePrototypeGuards(JSContext *cx, MacroAssembler &masm, JSObject *obj, JSObject *holder,
+                        Register objectReg, Register scratchReg, Label *failures)
+{
+    JS_ASSERT(obj != holder);
+
+    if (obj->hasUncacheableProto()) {
+        // Note: objectReg and scratchReg may be the same register, so we cannot
+        // use objectReg in the rest of this function.
+        masm.loadPtr(Address(objectReg, JSObject::offsetOfType()), scratchReg);
+        Address proto(scratchReg, offsetof(types::TypeObject, proto));
+        masm.branchPtr(Assembler::NotEqual, proto, ImmGCPtr(obj->getProto()), failures);
+    }
+
+    JSObject *pobj = obj->getProto();
+    while (pobj != holder) {
+        if (pobj->hasUncacheableProto()) {
+            if (pobj->hasSingletonType()) {
+                types::TypeObject *type = pobj->getType(cx);
+                masm.movePtr(ImmGCPtr(type), scratchReg);
+                Address proto(scratchReg, offsetof(types::TypeObject, proto));
+                masm.branchPtr(Assembler::NotEqual, proto, ImmGCPtr(obj->getProto()), failures);
+            } else {
+                masm.movePtr(ImmGCPtr(pobj), scratchReg);
+                Address objType(scratchReg, JSObject::offsetOfType());
+                masm.branchPtr(Assembler::NotEqual, objType, ImmGCPtr(pobj->type()), failures);
+            }
+        }
+        pobj = pobj->getProto();
+    }
+}
+
 bool
-IonCacheGetProperty::attachNative(JSContext *cx, JSObject *obj, const Shape *shape)
+IonCacheGetProperty::attachNative(JSContext *cx, JSObject *obj, JSObject *holder, const Shape *shape)
 {
     MacroAssembler masm;
 
-    Label exit_;
+    Label failures;
     CodeOffsetJump exitOffset =
         masm.branchPtrWithPatch(Assembler::NotEqual,
                                 Address(object(), JSObject::offsetOfShape()),
                                 ImmGCPtr(obj->lastProperty()),
-                                &exit_);
-    masm.bind(&exit_);
+                                &failures);
 
-    if (obj->isFixedSlot(shape->slot())) {
-        Address addr(object(), JSObject::getFixedSlotOffset(shape->slot()));
+    bool restoreScratch = false;
+    Register scratchReg = Register::FromCode(0); // Quell compiler warning.
+
+    // If we need a scratch register, use either an output register or the object
+    // register (and restore it afterwards). After this point, we cannot jump
+    // directly to |failures| since we may still have to pop the object register.
+    Label prototypeFailures;
+    if (obj != holder || !holder->isFixedSlot(shape->slot())) {
+        if (output().hasValue()) {
+            scratchReg = output().valueReg().scratchReg();
+        } else if (output().type() == MIRType_Double) {
+            scratchReg = object();
+            masm.push(scratchReg);
+            restoreScratch = true;
+        } else {
+            scratchReg = output().typedReg().gpr();
+        }
+    }
+
+    Register holderReg;
+    if (obj != holder) {
+        // Note: this may clobber the object register if it's used as scratch.
+        GeneratePrototypeGuards(cx, masm, obj, holder, object(), scratchReg, &prototypeFailures);
+
+        // Guard on the holder's shape.
+        holderReg = scratchReg;
+        masm.movePtr(ImmGCPtr(holder), holderReg);
+        masm.branchPtr(Assembler::NotEqual,
+                       Address(holderReg, JSObject::offsetOfShape()),
+                       ImmGCPtr(holder->lastProperty()),
+                       &prototypeFailures);
+    } else {
+        holderReg = object();
+    }
+
+    if (holder->isFixedSlot(shape->slot())) {
+        Address addr(holderReg, JSObject::getFixedSlotOffset(shape->slot()));
         masm.loadTypedOrValue(addr, output());
     } else {
-        bool restoreSlots = false;
-        Register slotsReg;
+        masm.loadPtr(Address(holderReg, JSObject::offsetOfSlots()), scratchReg);
 
-        if (output().hasValue()) {
-            slotsReg = output().valueReg().scratchReg();
-        } else if (output().type() == MIRType_Double) {
-            slotsReg = object();
-            masm.Push(slotsReg);
-            restoreSlots = true;
-        } else {
-            slotsReg = output().typedReg().gpr();
-        }
-
-        masm.loadPtr(Address(object(), JSObject::offsetOfSlots()), slotsReg);
-
-        Address addr(slotsReg, obj->dynamicSlotIndex(shape->slot()) * sizeof(Value));
+        Address addr(scratchReg, holder->dynamicSlotIndex(shape->slot()) * sizeof(Value));
         masm.loadTypedOrValue(addr, output());
-
-        if (restoreSlots)
-            masm.Pop(slotsReg);
     }
+
+    if (restoreScratch)
+        masm.pop(scratchReg);
 
     Label rejoin_;
     CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin_);
     masm.bind(&rejoin_);
+
+    if (obj != holder) {
+        masm.bind(&prototypeFailures);
+        if (restoreScratch)
+            masm.pop(scratchReg);
+        masm.bind(&failures);
+        Label exit_;
+        exitOffset = masm.jumpWithPatch(&exit_);
+        masm.bind(&exit_);
+    } else {
+        masm.bind(&failures);
+    }
 
     Linker linker(masm);
     IonCode *code = linker.newCode(cx);
@@ -151,6 +216,23 @@ IonCacheGetProperty::attachNative(JSContext *cx, JSObject *obj, const Shape *sha
 
     IonSpew(IonSpew_InlineCaches, "Generated native GETPROP stub at %p", code->raw());
 
+    return true;
+}
+
+static bool
+IsCacheableProtoChain(JSObject *obj, JSObject *holder)
+{
+    while (obj != holder) {
+        /*
+         * We cannot assume that we find the holder object on the prototype
+         * chain and must check for null proto. The prototype chain can be
+         * altered during the lookupProperty call.
+         */
+        JSObject *proto = obj->getProto();
+        if (!proto || !proto->isNative())
+            return false;
+        obj = proto;
+    }
     return true;
 }
 
@@ -170,9 +252,16 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
         jsid id = ATOM_TO_JSID(atom);
         id = js_CheckForStringIndex(id);
 
-        const Shape *shape = obj->nativeLookup(cx, id);
-        if (shape && shape->hasSlot() && shape->hasDefaultGetter() && !shape->isMethod()) {
-            if (!cache.attachNative(cx, obj, shape))
+        JSObject *holder;
+        JSProperty *prop;
+        if (!obj->lookupProperty(cx, atom->asPropertyName(), &holder, &prop))
+            return false;
+
+        const Shape *shape = (const Shape *)prop;
+        if (shape && IsCacheableProtoChain(obj, holder) &&
+            shape->hasSlot() && shape->hasDefaultGetter() && !shape->isMethod())
+        {
+            if (!cache.attachNative(cx, obj, holder, shape))
                 return false;
         }
     }
