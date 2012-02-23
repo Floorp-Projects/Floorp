@@ -359,13 +359,13 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     public void onSurfaceChanged(GL10 gl, final int width, final int height) {
         GLES20.glViewport(0, 0, width, height);
+        moveFrameRateLayer(width, height);
 
         // updating the state in the view/controller/client should be
         // done on the main UI thread, not the GL renderer thread
         mView.post(new Runnable() {
             public void run() {
                 mView.setViewportSize(new IntSize(width, height));
-                moveFrameRateLayer(width, height);
             }
         });
 
