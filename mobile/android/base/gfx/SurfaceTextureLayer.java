@@ -141,7 +141,7 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     }
 
     public void update(Point origin, IntSize size, float resolution, boolean inverted, boolean blend) {
-        beginTransaction();
+        beginTransaction(); // this is called on the Gecko thread
 
         setOrigin(origin);
         setResolution(resolution);
