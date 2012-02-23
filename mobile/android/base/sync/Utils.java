@@ -44,8 +44,9 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Locale;
+import java.util.TreeMap;
 
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
@@ -234,37 +235,12 @@ public class Utils {
     return context.getSharedPreferences(prefsPath, SHARED_PREFERENCES_MODE);
   }
 
-  /**
-   * Populate null slots in the provided array from keys in the provided Map.
-   * Set values in the map to be the new indices.
-   *
-   * @param dest
-   * @param source
-   * @throws Exception
-   */
-  public static void fillArraySpaces(String[] dest, HashMap<String, Long> source) throws Exception {
-    int i = 0;
-    int c = dest.length;
-    int needed = source.size();
-    if (needed == 0) {
-      return;
+  public static void addToIndexBucketMap(TreeMap<Long, ArrayList<String>> map, long index, String value) {
+    ArrayList<String> bucket = map.get(index);
+    if (bucket == null) {
+      bucket = new ArrayList<String>();
     }
-    if (needed > c) {
-      throw new Exception("Need " + needed + " array spaces, have no more than " + c);
-    }
-    for (String key : source.keySet()) {
-      while (i < c) {
-        if (dest[i] == null) {
-          // Great!
-          dest[i] = key;
-          source.put(key, (long) i);
-          break;
-        }
-        ++i;
-      }
-    }
-    if (i >= c) {
-      throw new Exception("Could not fill array spaces.");
-    }
+    bucket.add(value);
+    map.put(index, bucket);
   }
 }

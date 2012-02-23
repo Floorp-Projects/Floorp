@@ -27,7 +27,12 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   }
 
   @Override
-  protected Record recordFromMirrorCursor(Cursor cur) {
+  protected Record retrieveDuringStore(Cursor cur) {
+    return RepoUtils.historyFromMirrorCursor(cur);
+  }
+
+  @Override
+  protected Record retrieveDuringFetch(Cursor cur) {
     return RepoUtils.historyFromMirrorCursor(cur);
   }
 
