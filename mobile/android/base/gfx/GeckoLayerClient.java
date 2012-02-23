@@ -60,8 +60,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GeckoLayerClient implements GeckoEventListener,
-                                         FlexibleGLSurfaceView.Listener,
-                                         VirtualLayer.Listener {
+                                         FlexibleGLSurfaceView.Listener {
     private static final String LOGTAG = "GeckoLayerClient";
 
     private LayerController mLayerController;
@@ -121,8 +120,6 @@ public class GeckoLayerClient implements GeckoEventListener,
         sendResizeEventIfNecessary(false);
 
         LayerView view = layerController.getView();
-        view.setListener(this);
-
         mLayerRenderer = new LayerRenderer(view);
     }
 
@@ -326,7 +323,6 @@ public class GeckoLayerClient implements GeckoEventListener,
 
         Log.e(LOGTAG, "### Creating virtual layer");
         VirtualLayer virtualLayer = new VirtualLayer();
-        virtualLayer.setListener(this);
         virtualLayer.setSize(getBufferSize());
         mLayerController.setRoot(virtualLayer);
         mTileLayer = virtualLayer;
@@ -494,11 +490,6 @@ public class GeckoLayerClient implements GeckoEventListener,
         mLayerController.setViewportSize(new FloatSize(width, height));
         compositionResumeRequested();
         renderRequested();
-    }
-
-    /** Implementation of VirtualLayer.Listener */
-    public void dimensionsChanged(Point newOrigin, float newResolution) {
-        Log.e(LOGTAG, "### dimensionsChanged " + newOrigin + " " + newResolution);
     }
 
     /** Used by robocop for testing purposes. Not for production use! This is called via reflection by robocop. */
