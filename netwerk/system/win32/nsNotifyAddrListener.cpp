@@ -177,13 +177,6 @@ nsNotifyAddrListener::Observe(nsISupports *subject,
 nsresult
 nsNotifyAddrListener::Init(void)
 {
-    // XXX this call is very expensive (~650 milliseconds), so we
-    //     don't want to call it synchronously.  Instead, we just
-    //     start up assuming we have a network link, but we'll
-    //     report that the status isn't known.
-    //
-    // CheckLinkStatus();
-
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (!observerService)
@@ -413,9 +406,19 @@ nsNotifyAddrListener::CheckLinkStatus(void)
     DWORD ret;
     const char *event;
 
-    ret = CheckAdaptersAddresses();
-    if (ret != ERROR_SUCCESS)
-        mLinkUp = true; // I can't tell, so assume there's a link
+    // This call is very expensive (~650 milliseconds), so we don't want to
+    // call it synchronously. Instead, we just start up assuming we have a
+    // network link, but we'll report that the status is unknown.
+    if (NS_IsMainThread()) {
+        NS_WARNING("CheckLinkStatus called on main thread! No check "
+                   "performed. Assuming link is up, status is unknown.");
+        mLinkUp = true;
+    } else {
+        ret = CheckAdaptersAddresses();
+        if (ret != ERROR_SUCCESS) {
+            mLinkUp = true;
+        }
+    }
 
     if (mStatusKnown)
         event = mLinkUp ? NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN;
