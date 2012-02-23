@@ -589,7 +589,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
      *     null returned above or in the #else
      */
     if (!fp->hasCallObj() && fp->isNonEvalFunctionFrame())
-        return CreateFunCallObject(cx, fp);
+        return CallObject::createForFunction(cx, fp);
     return &fp->callObj();
 }
 
@@ -844,10 +844,10 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
               |  (!shape->writable()  ? JSPD_READONLY  : 0)
               |  (!shape->configurable() ? JSPD_PERMANENT : 0);
     pd->spare = 0;
-    if (shape->getter() == GetCallArg) {
+    if (shape->getter() == CallObject::getArgOp) {
         pd->slot = shape->shortid();
         pd->flags |= JSPD_ARGUMENT;
-    } else if (shape->getter() == GetCallVar) {
+    } else if (shape->getter() == CallObject::getVarOp) {
         pd->slot = shape->shortid();
         pd->flags |= JSPD_VARIABLE;
     } else {
