@@ -13,6 +13,8 @@
 
 #include "ObjectImpl.h"
 
+#include "gc/Barrier-inl.h"
+
 #include "ObjectImpl-inl.h"
 
 using namespace js;
@@ -22,6 +24,41 @@ static ObjectElements emptyElementsHeader(0, 0);
 /* Objects with no elements share one empty set of elements. */
 HeapSlot *js::emptyObjectElements =
     reinterpret_cast<HeapSlot *>(uintptr_t(&emptyElementsHeader) + sizeof(ObjectElements));
+
+void
+js::ObjectImpl::initSlotRange(size_t start, const Value *vector, size_t length)
+{
+    JSCompartment *comp = compartment();
+    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+    for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
+        sp->init(comp, this->asObjectPtr(), start++, *vector++);
+    for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
+        sp->init(comp, this->asObjectPtr(), start++, *vector++);
+}
+
+void
+js::ObjectImpl::copySlotRange(size_t start, const Value *vector, size_t length)
+{
+    JSCompartment *comp = compartment();
+    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+    for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
+        sp->set(comp, this->asObjectPtr(), start++, *vector++);
+    for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
+        sp->set(comp, this->asObjectPtr(), start++, *vector++);
+}
+
+#ifdef DEBUG
+bool
+js::ObjectImpl::slotInRange(unsigned slot, SentinelAllowed sentinel) const
+{
+    size_t capacity = numFixedSlots() + numDynamicSlots();
+    if (sentinel == SENTINEL_ALLOWED)
+        return slot <= capacity;
+    return slot < capacity;
+}
+#endif /* DEBUG */
 
 #if defined(_MSC_VER) && _MSC_VER >= 1500
 /*

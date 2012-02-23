@@ -372,12 +372,6 @@ JSObject::dynamicSlotIndex(size_t slot)
     return slot - numFixedSlots();
 }
 
-inline size_t
-JSObject::numDynamicSlots() const
-{
-    return dynamicSlotsCount(numFixedSlots(), slotSpan());
-}
-
 inline void
 JSObject::setLastPropertyInfallible(const js::Shape *shape)
 {
@@ -512,13 +506,6 @@ JSObject::setDenseArrayLength(uint32_t length)
     getElementsHeader()->length = length;
 }
 
-inline uint32_t
-JSObject::getDenseArrayInitializedLength()
-{
-    JS_ASSERT(isDenseArray());
-    return getElementsHeader()->initializedLength;
-}
-
 inline void
 JSObject::setDenseArrayInitializedLength(uint32_t length)
 {
@@ -541,20 +528,6 @@ JSObject::ensureElements(JSContext *cx, uint32_t capacity)
     if (capacity > getDenseArrayCapacity())
         return growElements(cx, capacity);
     return true;
-}
-
-inline js::HeapSlotArray
-JSObject::getDenseArrayElements()
-{
-    JS_ASSERT(isDenseArray());
-    return js::HeapSlotArray(elements);
-}
-
-inline const js::Value &
-JSObject::getDenseArrayElement(unsigned idx)
-{
-    JS_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
-    return elements[idx];
 }
 
 inline void
@@ -932,25 +905,6 @@ inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
 inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 inline bool JSObject::isXML() const { return hasClass(&js::XMLClass); }
 
-inline bool JSObject::isArray() const
-{
-    return isSlowArray() || isDenseArray();
-}
-
-inline bool JSObject::isDenseArray() const
-{
-    bool result = hasClass(&js::ArrayClass);
-    JS_ASSERT_IF(result, elements != js::emptyObjectElements);
-    return result;
-}
-
-inline bool JSObject::isSlowArray() const
-{
-    bool result = hasClass(&js::SlowArrayClass);
-    JS_ASSERT_IF(result, elements != js::emptyObjectElements);
-    return result;
-}
-
 inline bool
 JSObject::isXMLId() const
 {
@@ -965,60 +919,6 @@ JSObject::isQName() const
     return hasClass(&js::QNameClass)
         || hasClass(&js::AttributeNameClass)
         || hasClass(&js::AnyNameClass);
-}
-
-inline void
-JSObject::getSlotRangeUnchecked(size_t start, size_t length,
-                                js::HeapSlot **fixedStart, js::HeapSlot **fixedEnd,
-                                js::HeapSlot **slotsStart, js::HeapSlot **slotsEnd)
-{
-    JS_ASSERT(!isDenseArray());
-
-    size_t fixed = numFixedSlots();
-    if (start < fixed) {
-        if (start + length < fixed) {
-            *fixedStart = &fixedSlots()[start];
-            *fixedEnd = &fixedSlots()[start + length];
-            *slotsStart = *slotsEnd = NULL;
-        } else {
-            size_t localCopy = fixed - start;
-            *fixedStart = &fixedSlots()[start];
-            *fixedEnd = &fixedSlots()[start + localCopy];
-            *slotsStart = &slots[0];
-            *slotsEnd = &slots[length - localCopy];
-        }
-    } else {
-        *fixedStart = *fixedEnd = NULL;
-        *slotsStart = &slots[start - fixed];
-        *slotsEnd = &slots[start - fixed + length];
-    }
-}
-
-inline void
-JSObject::getSlotRange(size_t start, size_t length,
-                       js::HeapSlot **fixedStart, js::HeapSlot **fixedEnd,
-                       js::HeapSlot **slotsStart, js::HeapSlot **slotsEnd)
-{
-    JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
-    getSlotRangeUnchecked(start, length, fixedStart, fixedEnd, slotsStart, slotsEnd);
-}
-
-inline void
-JSObject::initializeSlotRange(size_t start, size_t length)
-{
-    /*
-     * No bounds check, as this is used when the object's shape does not
-     * reflect its allocated slots (updateSlotsForSpan).
-     */
-    js::HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
-    getSlotRangeUnchecked(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
-
-    JSCompartment *comp = compartment();
-    size_t offset = start;
-    for (js::HeapSlot *sp = fixedStart; sp != fixedEnd; sp++)
-        sp->init(comp, this, offset++, js::UndefinedValue());
-    for (js::HeapSlot *sp = slotsStart; sp != slotsEnd; sp++)
-        sp->init(comp, this, offset++, js::UndefinedValue());
 }
 
 /* static */ inline JSObject *
@@ -1122,14 +1022,6 @@ JSObject::principals(JSContext *cx)
     if (JSObjectPrincipalsFinder find = cx->runtime->securityCallbacks->findObjectPrincipals)
         return find(this);
     return cx->compartment ? cx->compartment->principals : NULL;
-}
-
-inline uint32_t
-JSObject::slotSpan() const
-{
-    if (inDictionaryMode())
-        return lastProperty()->base()->slotSpan();
-    return lastProperty()->slotSpan();
 }
 
 inline js::HeapSlot &

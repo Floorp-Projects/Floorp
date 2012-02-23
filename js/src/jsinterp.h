@@ -374,22 +374,6 @@ Debug_SetValueRangeToCrashOnTouch(HeapValue *vec, size_t len)
 #endif
 }
 
-static JS_ALWAYS_INLINE void
-Debug_SetSlotRangeToCrashOnTouch(HeapSlot *vec, size_t len)
-{
-#ifdef DEBUG
-    Debug_SetValueRangeToCrashOnTouch((Value *) vec, len);
-#endif
-}
-
-static JS_ALWAYS_INLINE void
-Debug_SetSlotRangeToCrashOnTouch(HeapSlot *begin, HeapSlot *end)
-{
-#ifdef DEBUG
-    Debug_SetValueRangeToCrashOnTouch((Value *) begin, end - begin);
-#endif
-}
-
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */
