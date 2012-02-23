@@ -38,6 +38,8 @@
 
 package org.mozilla.gecko.gfx;
 
+import android.graphics.Point;
+
 public class VirtualLayer extends Layer {
     private IntSize mSize;
 
@@ -53,6 +55,26 @@ public class VirtualLayer extends Layer {
 
     public void setSize(IntSize size) {
         mSize = size;
+    }
+
+    void setOriginAndResolution(Point newOrigin, float newResolution) {
+        // This is an optimized version of the following code:
+        // beginTransaction();
+        // try {
+        //     setOrigin(newOrigin);
+        //     setResolution(newResolution);
+        //     performUpdates(null);
+        // } finally {
+        //     endTransaction();
+        // }
+
+        // it is safe to drop the transaction lock in this instance (i.e. for the
+        // VirtualLayer that is just a shadow of what gecko is painting) because
+        // the origin and resolution of this layer are never used for anything
+        // meaningful.
+
+        mOrigin = newOrigin;
+        mResolution = newResolution;
     }
 }
 
