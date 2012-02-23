@@ -693,8 +693,8 @@
             if (aURI && this.mFaviconService) {
               if (!(aURI instanceof Ci.nsIURI))
                 aURI = makeURI(aURI);
-              this.mFaviconService.setAndLoadFaviconForPage(browser.currentURI,
-                                                            aURI, false);
+              this.mFaviconService.setAndFetchFaviconForPage(browser.currentURI,
+                                                             aURI, false);
             }
 
             if ((browser.mIconURL || "") != aTab.getAttribute("image")) {
