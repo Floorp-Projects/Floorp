@@ -160,7 +160,7 @@ public class ScrollbarLayer extends TileLayer {
         if (FloatUtils.fuzzyEquals(mOpacity, 0.0f)) {
             return false;
         }
-        beginTransaction();
+        beginTransaction(); // called on compositor thread
         try {
             setOpacity(Math.max(mOpacity - FADE_AMOUNT, 0.0f));
             invalidate();
@@ -179,7 +179,7 @@ public class ScrollbarLayer extends TileLayer {
         if (FloatUtils.fuzzyEquals(mOpacity, 1.0f)) {
             return false;
         }
-        beginTransaction();
+        beginTransaction(); // called on compositor thread
         try {
             setOpacity(1.0f);
             invalidate();

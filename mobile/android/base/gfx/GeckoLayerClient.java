@@ -188,7 +188,7 @@ public class GeckoLayerClient implements GeckoEventListener,
                 Log.w(LOGTAG, "Prediction would avoid useless paint of " + area + " pixels (100.0%)");
                 // If there's no intersection, we have no need to render anything,
                 // but make sure to update the viewport size.
-                mTileLayer.beginTransaction();
+                mTileLayer.beginTransaction();      // Called on gecko thread
                 try {
                     updateViewport(true);
                 } finally {
@@ -203,7 +203,7 @@ public class GeckoLayerClient implements GeckoEventListener,
             bufferRect.offset(Math.round(-currentOrigin.x), Math.round(-currentOrigin.y));
         }
 
-        mTileLayer.beginTransaction();
+        mTileLayer.beginTransaction();  // Called on gecko thread
 
         if (mBufferSize.width != width || mBufferSize.height != height) {
             mBufferSize = new IntSize(width, height);
