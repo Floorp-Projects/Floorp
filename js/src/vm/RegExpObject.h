@@ -421,7 +421,7 @@ class RegExpObject : public JSObject
 
     inline void shared(RegExpGuard *g) const;
     inline bool getShared(JSContext *cx, RegExpGuard *g);
-    inline void setShared(JSContext *cx, RegExpShared *shared);
+    inline void setShared(JSContext *cx, RegExpShared &shared);
 
   private:
     friend class RegExpObjectBuilder;

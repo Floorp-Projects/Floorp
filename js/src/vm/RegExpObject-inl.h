@@ -83,11 +83,10 @@ RegExpObject::getShared(JSContext *cx, RegExpGuard *g)
 }
 
 inline void
-RegExpObject::setShared(JSContext *cx, RegExpShared *shared)
+RegExpObject::setShared(JSContext *cx, RegExpShared &shared)
 {
-    if (shared)
-        shared->prepareForUse(cx);
-    JSObject::setPrivate(shared);
+    shared.prepareForUse(cx);
+    JSObject::setPrivate(&shared);
 }
 
 inline void
