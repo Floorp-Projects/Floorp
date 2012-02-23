@@ -74,6 +74,8 @@ _TEST_FILES = \
 		test_moving_xhr.xul \
 		test_nodesFromRect.html \
 		489127.html \
+		test_focus_docnav.xul \
+		window_focus_docnav.xul \
 		$(NULL)
 
 ifeq (WINNT,$(OS_ARCH))
