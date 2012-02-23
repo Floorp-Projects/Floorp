@@ -3427,25 +3427,6 @@ AC_CHECK_FUNCS([fchmod flockfile getc_unlocked _getc_nolock getpagesize \
                 lchown localtime_r lstat64 memmove random rint sbrk snprintf \
                 stat64 statvfs statvfs64 strerror strtok_r truncate64])
 
-dnl check for clock_gettime(), the CLOCK_MONOTONIC clock, and -lrt
-_SAVE_LDFLAGS=$LDFLAGS
-LDFLAGS="$LDFLAGS -lrt"
-AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC) and -lrt,
-               ac_cv_have_clock_monotonic,
-               [AC_TRY_LINK([#include <time.h>],
-                            [ struct timespec ts;
-                              clock_gettime(CLOCK_MONOTONIC, &ts); ],
-                            ac_cv_have_clock_monotonic=yes,
-                            ac_cv_have_clock_monotonic=no)])
-LDFLAGS=$_SAVE_LDFLAGS
-if test "$ac_cv_have_clock_monotonic" = "yes"; then
-    HAVE_CLOCK_MONOTONIC=1
-    REALTIME_LIBS=-lrt
-    AC_DEFINE(HAVE_CLOCK_MONOTONIC)
-    AC_SUBST(HAVE_CLOCK_MONOTONIC)
-    AC_SUBST(REALTIME_LIBS)
-fi
-
 dnl Windows functions, for mingw.
 AC_TRY_LINK([#include <windows.h>],
              [SYSTEMTIME st;FILETIME ft;SystemTimeToFileTime(&st,&ft);],
