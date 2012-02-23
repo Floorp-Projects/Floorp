@@ -1987,10 +1987,6 @@ panel[dimmed="true"] {
   border-top: 1px solid hsla(210, 8%, 5%, .65);
 }
 
-#inspector-toolbar[treepanel-open] {
-  padding-top: 0;
-}
-
 #devtools-side-splitter {
   -moz-appearance: none;
   border: 0;
@@ -2004,15 +2000,6 @@ panel[dimmed="true"] {
 
 #devtools-sidebar-box {
   background-color: -moz-Field;
-}
-
-/* Highlighter - toolbar resizer */
-
-#inspector-top-resizer {
-  -moz-appearance: none;
-  cursor: n-resize;
-  background: none;
-  height: 4px;
 }
 
 /* Highlighter - Node Infobar */
@@ -2254,4 +2241,16 @@ html|*#highlighter-nodeinfobar-id {
 .inspector-breadcrumbs-button[siblings-menu-open]:last-of-type[checked]:-moz-locale-dir(rtl),
 .inspector-breadcrumbs-button:last-of-type[checked]:hover:active:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/devtools/breadcrumbs/rtl-end-selected-pressed.png") 1 13 2 13 fill stretch;
+}
+
+/* Highlighter toolbar - HTML Tree */
+
+#inspector-tree-splitter {
+  -moz-appearance: none;
+  border-top: 1px solid black;
+  border-bottom-width: 0;
+  min-height: 3px;
+  height: 3px;
+  margin-bottom: -3px;
+  position: relative;
 }
