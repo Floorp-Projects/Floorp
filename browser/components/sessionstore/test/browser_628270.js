@@ -20,7 +20,7 @@ function test() {
   assertNumberOfTabs(1, "we start off with one tab");
 
   // setup
-  let tab = gBrowser.addTab("about:robots");
+  let tab = gBrowser.addTab("about:mozilla");
 
   whenTabIsLoaded(tab, function () {
     // hide the newly created tab
@@ -35,7 +35,7 @@ function test() {
 
     // check that everything was restored correctly, clean up and finish
     whenTabIsLoaded(tab, function () {
-      is(tab.linkedBrowser.currentURI.spec, "about:robots", "restored tab has correct url");
+      is(tab.linkedBrowser.currentURI.spec, "about:mozilla", "restored tab has correct url");
 
       gBrowser.removeTab(tab);
       finish();
