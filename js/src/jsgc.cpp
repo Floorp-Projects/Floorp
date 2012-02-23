@@ -4322,7 +4322,12 @@ EndVerifyBarriers(JSContext *cx)
     if (!trc)
         return;
 
+    /*
+     * We need to bump gcNumber so that the methodjit knows that jitcode has
+     * been discarded.
+     */
     JS_ASSERT(trc->number == rt->gcNumber);
+    rt->gcNumber++;
 
     /* We need to disable barriers before tracing, which may invoke barriers. */
     for (CompartmentsIter c(rt); !c.done(); c.next())
