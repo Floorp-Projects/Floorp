@@ -11,6 +11,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
+                   .getService(Ci.inIDOMUtils);
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -634,16 +637,7 @@ StyleEditor.prototype = {
     if (this.sourceEditor) {
       this._state.text = this.sourceEditor.getText();
     }
-    let source = this._state.text;
-    let oldNode = this.styleSheet.ownerNode;
-    let oldIndex = this.styleSheetIndex;
-    let content = this.contentDocument;
-    let newNode = content.createElement("style");
-    newNode.setAttribute("type", "text/css");
-    newNode.appendChild(content.createTextNode(source));
-    oldNode.parentNode.replaceChild(newNode, oldNode);
-
-    this._styleSheet = content.styleSheets[oldIndex];
+    DOMUtils.parseStyleSheet(this.styleSheet, this._state.text);
     this._persistExpando();
 
     if (!TRANSITIONS_ENABLED) {
@@ -651,6 +645,8 @@ StyleEditor.prototype = {
       this._triggerAction("Commit");
       return;
     }
+
+    let content = this.contentDocument;
 
     // Insert the global transition rule
     // Use a ref count to make sure we do not add it multiple times.. and remove
