@@ -460,12 +460,19 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
   @Override
   protected boolean checkRecordType(Record record) {
-    BookmarkRecord bmk = (BookmarkRecord) record;
-    if (bmk.type.equalsIgnoreCase(AndroidBrowserBookmarksDataAccessor.TYPE_BOOKMARK) ||
-        bmk.type.equalsIgnoreCase(AndroidBrowserBookmarksDataAccessor.TYPE_FOLDER)) {
+    if (!(record instanceof BookmarkRecord)) {
+      return false;
+    }
+    if (record.deleted) {
       return true;
     }
-    Logger.info(LOG_TAG, "Ignoring record with guid: " + record.guid + " and type: " + ((BookmarkRecord)record).type);
+    BookmarkRecord bmk = (BookmarkRecord) record;
+
+    if (bmk.isBookmark() ||
+        bmk.isFolder()) {
+      return true;
+    }
+    Logger.info(LOG_TAG, "Ignoring record with guid: " + bmk.guid + " and type: " + bmk.type);
     return false;
   }
   
