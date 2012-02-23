@@ -232,7 +232,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
 
     // TODO: don't clear the auth token unless we have a sync error.
     Log.i(LOG_TAG, "Got onPerformSync. Extras bundle is " + extras);
-    Log.d(LOG_TAG, "Extras clusterURL: " + extras.getString("clusterURL"));
     Log.i(LOG_TAG, "Account name: " + account.name);
 
     // TODO: don't always invalidate; use getShouldInvalidateAuthToken.
