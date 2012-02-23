@@ -187,7 +187,7 @@ struct SharedContext {
 
 #undef INFUNC
 
-    unsigned argumentsLocalSlot() const;
+    unsigned argumentsLocal() const;
 
     bool inFunction() const { return !!fun_; }
 

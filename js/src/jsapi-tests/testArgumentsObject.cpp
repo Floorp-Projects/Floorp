@@ -97,7 +97,7 @@ ExhaustiveTest(const char funcode[])
     for (size_t i = 0; i <= ArgCount; i++) {
         for (size_t j = 0; j <= ArgCount - i; j++) {
             ClearElements(elems);
-            CHECK(argsobj.getElements(i, j, elems));
+            CHECK(argsobj.maybeGetElements(i, j, elems));
             for (size_t k = 0; k < j; k++)
                 CHECK_SAME(elems[k], INT_TO_JSVAL(i + k));
             for (size_t k = j; k < MAX_ELEMS - 1; k++)
