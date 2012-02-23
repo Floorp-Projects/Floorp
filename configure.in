@@ -1049,6 +1049,16 @@ if test -z "$PYTHON"; then
     AC_MSG_ERROR([python was not found in \$PATH])
 fi
 
+MOZ_ARG_WITH_BOOL(system-ply,
+[  --with-system-ply       Use system installed python ply library],
+    [if $PYTHON -c 'import ply' 2>&5; then
+         MOZ_SYSTEM_PLY=1
+     else
+         AC_MSG_ERROR([python ply library is not found but --with-system-ply was requested])
+     fi])
+
+AC_SUBST(MOZ_SYSTEM_PLY)
+
 if test -z "$COMPILE_ENVIRONMENT"; then
     NSINSTALL_BIN='$(PYTHON) $(topsrcdir)/config/nsinstall.py'
 fi
