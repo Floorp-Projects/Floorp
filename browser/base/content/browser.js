@@ -4043,7 +4043,9 @@ var FullScreen = {
     gBrowser.tabContainer.addEventListener("TabSelect", this.exitDomFullScreen);
 
     // Exit DOM full-screen mode when the browser window loses focus (ALT+TAB, etc).
-    window.addEventListener("deactivate", this.exitDomFullScreen, true);
+    if (gPrefService.getBoolPref("full-screen-api.exit-on-deactivate")) {
+      window.addEventListener("deactivate", this.exitDomFullScreen, true);
+    }
 
     // Cancel any "hide the toolbar" animation which is in progress, and make
     // the toolbar hide immediately.

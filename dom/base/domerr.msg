@@ -38,36 +38,38 @@
 /* Error Message definitions. */
 
 
-/* DOM error codes from http://www.w3.org/TR/REC-DOM-Level-1/ */
+/* DOM error codes from http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception */
 
-DOM_MSG_DEF(NS_ERROR_DOM_INDEX_SIZE_ERR, "Index or size is negative or greater than the allowed amount")
-DOM_MSG_DEF(NS_ERROR_DOM_DOMSTRING_SIZE_ERR, "The specified range of text does not fit in a DOM string")
-DOM_MSG_DEF(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR, "Node cannot be inserted at the specified point in the hierarchy")
-DOM_MSG_DEF(NS_ERROR_DOM_WRONG_DOCUMENT_ERR, "Node cannot be used in a document other than the one in which it was created")
-DOM_MSG_DEF(NS_ERROR_DOM_INVALID_CHARACTER_ERR, "String contains an invalid character")
-DOM_MSG_DEF(NS_ERROR_DOM_NO_DATA_ALLOWED_ERR, "Node does not contain data")
-DOM_MSG_DEF(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR, "Modifications are not allowed for this document")
-DOM_MSG_DEF(NS_ERROR_DOM_NOT_FOUND_ERR, "Node was not found")
-DOM_MSG_DEF(NS_ERROR_DOM_NOT_SUPPORTED_ERR, "Operation is not supported")
-DOM_MSG_DEF(NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR, "Attribute already in use")
-
-/* DOM error codes from http://www.w3.org/TR/DOM-Level-2/ */
-
-DOM_MSG_DEF(NS_ERROR_DOM_INVALID_ACCESS_ERR, "A parameter or an operation is not supported by the underlying object")
-DOM_MSG_DEF(NS_ERROR_DOM_INVALID_MODIFICATION_ERR, "An attempt was made to modify the type of the underlying objec")
-DOM_MSG_DEF(NS_ERROR_DOM_INVALID_STATE_ERR, "An attempt was made to use an object that is not, or is no longer, usable")
-DOM_MSG_DEF(NS_ERROR_DOM_NAMESPACE_ERR, "An attempt was made to create or change an object in a way which is incorrect with regard to namespaces")
-DOM_MSG_DEF(NS_ERROR_DOM_SYNTAX_ERR, "An invalid or illegal string was specified")
+DOM_MSG_DEF_(INDEX_SIZE_ERR, "IndexSizeError", "Index or size is negative or greater than the allowed amount")
+DOM_MSG_DEF_(DOMSTRING_SIZE_ERR, "DOMStringSizeError", "The specified range of text does not fit in a DOM string")
+DOM_MSG_DEF_(HIERARCHY_REQUEST_ERR, "HierarchyRequestError", "Node cannot be inserted at the specified point in the hierarchy")
+DOM_MSG_DEF_(WRONG_DOCUMENT_ERR, "WrongDocumentError", "Node cannot be used in a document other than the one in which it was created")
+DOM_MSG_DEF_(INVALID_CHARACTER_ERR, "InvalidCharacterError", "String contains an invalid character")
+DOM_MSG_DEF_(NO_DATA_ALLOWED_ERR, "NoDataAllowedError", "Node does not contain data")
+DOM_MSG_DEF_(NO_MODIFICATION_ALLOWED_ERR, "NoModificationAllowedError", "Modifications are not allowed for this document")
+DOM_MSG_DEF_(NOT_FOUND_ERR, "NotFoundError", "Node was not found")
+DOM_MSG_DEF_(NOT_SUPPORTED_ERR, "NotSupportedError", "Operation is not supported")
+DOM_MSG_DEF_(INUSE_ATTRIBUTE_ERR, "InUseAttributeError", "Attribute already in use")
+DOM_MSG_DEF_(INVALID_STATE_ERR, "InvalidStateError", "An attempt was made to use an object that is not, or is no longer, usable")
+DOM_MSG_DEF_(SYNTAX_ERR, "SyntaxError", "An invalid or illegal string was specified")
+DOM_MSG_DEF_(INVALID_MODIFICATION_ERR, "InvalidModificationError", "An attempt was made to modify the type of the underlying objec")
+DOM_MSG_DEF_(NAMESPACE_ERR, "NamespaceError", "An attempt was made to create or change an object in a way which is incorrect with regard to namespaces")
+DOM_MSG_DEF_(INVALID_ACCESS_ERR, "InvalidAccessError", "A parameter or an operation is not supported by the underlying object")
+DOM_MSG_DEF_(VALIDATION_ERR, "ValidationError", "A call to a method would make the Node invalid with respect to \"partial validity\", so the operation was not done")
+DOM_MSG_DEF_(TYPE_MISMATCH_ERR, "TypeMismatchError", "The type of an object is incompatible with the expected type of the parameter associated to the object")
+DOM_MSG_DEF_(SECURITY_ERR, "SecurityError", "The operation is insecure.")
+DOM_MSG_DEF_(NETWORK_ERR, "NetworkError", "A network error occurred.")
+DOM_MSG_DEF_(ABORT_ERR, "AbortError", "The operation was aborted. ")
+DOM_MSG_DEF_(URL_MISMATCH_ERR, "URLMismatchError", "The given URL does not match another URL.")
+DOM_MSG_DEF_(QUOTA_EXCEEDED_ERR, "QuotaExceededError", "The quota has been exceeded.")
+DOM_MSG_DEF_(TIMEOUT_ERR, "TimeoutError", "The operation timed out.")
+DOM_MSG_DEF_(INVALID_NODE_TYPE_ERR, "InvalidNodeTypeError", "The supplied node is incorrect or has an incorrect ancestor for this operation.")
+DOM_MSG_DEF_(DATA_CLONE_ERR, "DataCloneError", "The object could not be cloned.")
 
 /* DOM error codes from http://www.w3.org/TR/DOM-Level-2/range.html */
 
 DOM_MSG_DEF(NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR, "The boundary-points of a range does not meet specific requirements.")
 DOM_MSG_DEF(NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR, "The container of an boundary-point of a range is being set to either a node of an invalid type or a node with an ancestor of an invalid type.")
-
-/* DOM error codes from http://www.w3.org/TR/DOM-Level-3/ */
-
-DOM_MSG_DEF(NS_ERROR_DOM_VALIDATION_ERR, "A call to a method would make the Node invalid with respect to \"partial validity\", so the operation was not done")
-DOM_MSG_DEF(NS_ERROR_DOM_TYPE_MISMATCH_ERR, "The type of an object is incompatible with the expected type of the parameter associated to the object")
 
 /* SVG DOM error codes from http://www.w3.org/TR/SVG11/svgdom.html */
 
@@ -79,10 +81,6 @@ DOM_MSG_DEF(NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE, "The matrix could not be com
 
 DOM_MSG_DEF(NS_ERROR_DOM_INVALID_EXPRESSION_ERR, "The expression is not a legal expression.")
 DOM_MSG_DEF(NS_ERROR_DOM_TYPE_ERR, "The expression cannot be converted to return the specified type.")
-
-/* HTML5 error codes http://dev.w3.org/html5/spec/Overview.html */
-
-DOM_MSG_DEF(NS_ERROR_DOM_DATA_CLONE_ERR, "The object could not be cloned.")
 
 /* IndexedDB error codes http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html */
 
@@ -105,7 +103,6 @@ DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_DEADLOCK_ERR, "The current transaction was au
 /* DOM error codes defined by us */
 
 /* XXX string should be specified by norris */
-DOM_MSG_DEF(NS_ERROR_DOM_SECURITY_ERR, "Security error")
 DOM_MSG_DEF(NS_ERROR_DOM_SECMAN_ERR, "Unable to obtain security manager")
 DOM_MSG_DEF(NS_ERROR_DOM_WRONG_TYPE_ERR, "Object is of wrong type")
 DOM_MSG_DEF(NS_ERROR_DOM_NOT_OBJECT_ERR, "Parameter is not an object")
