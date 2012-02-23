@@ -25,6 +25,72 @@ static ObjectElements emptyElementsHeader(0, 0);
 HeapSlot *js::emptyObjectElements =
     reinterpret_cast<HeapSlot *>(uintptr_t(&emptyElementsHeader) + sizeof(ObjectElements));
 
+#ifdef DEBUG
+void
+js::ObjectImpl::checkShapeConsistency()
+{
+    static int throttle = -1;
+    if (throttle < 0) {
+        if (const char *var = getenv("JS_CHECK_SHAPE_THROTTLE"))
+            throttle = atoi(var);
+        if (throttle < 0)
+            throttle = 0;
+    }
+    if (throttle == 0)
+        return;
+
+    MOZ_ASSERT(isNative());
+
+    Shape *shape = lastProperty();
+    Shape *prev = NULL;
+
+    if (inDictionaryMode()) {
+        MOZ_ASSERT(shape->hasTable());
+
+        PropertyTable &table = shape->table();
+        for (uint32_t fslot = table.freelist; fslot != SHAPE_INVALID_SLOT;
+             fslot = getSlot(fslot).toPrivateUint32()) {
+            MOZ_ASSERT(fslot < slotSpan());
+        }
+
+        for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
+            MOZ_ASSERT_IF(shape != lastProperty(), !shape->hasTable());
+
+            Shape **spp = table.search(shape->propid(), false);
+            MOZ_ASSERT(SHAPE_FETCH(spp) == shape);
+        }
+
+        shape = lastProperty();
+        for (int n = throttle; --n >= 0 && shape; shape = shape->parent) {
+            MOZ_ASSERT_IF(shape->slot() != SHAPE_INVALID_SLOT, shape->slot() < slotSpan());
+            if (!prev) {
+                MOZ_ASSERT(shape == lastProperty());
+                MOZ_ASSERT(shape->listp == &shape_);
+            } else {
+                MOZ_ASSERT(shape->listp == &prev->parent);
+            }
+            prev = shape;
+        }
+    } else {
+        for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
+            if (shape->hasTable()) {
+                PropertyTable &table = shape->table();
+                MOZ_ASSERT(shape->parent);
+                for (Shape::Range r(shape); !r.empty(); r.popFront()) {
+                    Shape **spp = table.search(r.front().propid(), false);
+                    MOZ_ASSERT(SHAPE_FETCH(spp) == &r.front());
+                }
+            }
+            if (prev) {
+                MOZ_ASSERT(prev->maybeSlot() >= shape->maybeSlot());
+                shape->kids.checkConsistency(prev);
+            }
+            prev = shape;
+        }
+    }
+}
+#endif
+
 void
 js::ObjectImpl::initSlotRange(size_t start, const Value *vector, size_t length)
 {

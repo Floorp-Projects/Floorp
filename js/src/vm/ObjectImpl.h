@@ -155,6 +155,12 @@ class ObjectImpl : public gc::Cell
     HeapSlot *slots;     /* Slots for object properties. */
     HeapSlot *elements;  /* Slots for object elements. */
 
+#ifdef DEBUG
+    void checkShapeConsistency();
+#else
+    void checkShapeConsistency() { }
+#endif
+
   private:
     static void staticAsserts() {
         MOZ_STATIC_ASSERT(sizeof(ObjectImpl) == sizeof(shadow::Object),
