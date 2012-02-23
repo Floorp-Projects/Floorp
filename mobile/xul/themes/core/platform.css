@@ -78,7 +78,7 @@ textbox {
 textbox:not([type="number"]) {
   min-height: @textbox_height@;
   border: @border_width_small@ solid #cacdd5;
-  -moz-border-radius: @border_radius_normal@;
+  border-radius: @border_radius_normal@;
   -moz-border-top-colors: -moz-initial;
   -moz-border-right-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
@@ -548,7 +548,7 @@ progressmeter {
   -moz-border-right-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
-  -moz-border-radius: @border_radius_normal@;
+  border-radius: @border_radius_normal@;
 }
 
 .progress-bar {

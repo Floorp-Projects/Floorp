@@ -71,8 +71,7 @@ PathBuilderCG::BezierTo(const Point &aCP1,
 
   if (CGPathIsEmpty(mCGPath))
     MoveTo(aCP1);
-  else
-    CGPathAddCurveToPoint(mCGPath, NULL,
+  CGPathAddCurveToPoint(mCGPath, NULL,
                           aCP1.x, aCP1.y,
                           aCP2.x, aCP2.y,
                           aCP3.x, aCP3.y);
@@ -85,8 +84,7 @@ PathBuilderCG::QuadraticBezierTo(const Point &aCP1,
 {
   if (CGPathIsEmpty(mCGPath))
     MoveTo(aCP1);
-  else
-    CGPathAddQuadCurveToPoint(mCGPath, NULL,
+  CGPathAddQuadCurveToPoint(mCGPath, NULL,
                               aCP1.x, aCP1.y,
                               aCP2.x, aCP2.y);
 }
