@@ -288,6 +288,18 @@ var BrowserApp = {
         gScreenHeight = window.arguments[3];
     }
 
+    // Monitor window size changes
+    window.addEventListener("resize", function() {
+      if (gScreenWidth != window.outerWidth || gScreenHeight != window.outerHeight) {
+        gScreenWidth = window.outerWidth;
+        gScreenHeight = window.outerHeight;
+        BrowserApp.selectedTab.refreshDisplayPort();
+
+        // Java pauses updates until we confirm we have the new display size
+        sendMessageToJava({ gecko: { type: "Viewport:UpdateAndDraw" } });
+      }
+    }, false);
+
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
 
@@ -432,6 +444,7 @@ var BrowserApp = {
       return;
 
     aTab.setActive(true);
+    aTab.refreshDisplayPort();
     aTab.updateViewport(false);
     this.deck.selectedPanel = aTab.browser;
   },
@@ -1590,6 +1603,20 @@ Tab.prototype = {
     }
   },
 
+  refreshDisplayPort: function refreshDisplayPort() {
+    if (this._zoom <= 0)
+      return;
+
+    dump("### Setting displayport, screen-size = " + gScreenWidth + "x" + gScreenHeight + ", zoom = " + this._zoom);
+    let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+    cwu.setResolution(this._zoom, this._zoom);
+    cwu.setDisplayPortForElement(-kBufferAmount / this._zoom, -kBufferAmount / this._zoom,
+                                 (gScreenWidth + kBufferAmount * 2) / this._zoom,
+                                 (gScreenHeight + kBufferAmount * 2) / this._zoom,
+                                 this.browser.contentDocument.documentElement);
+  },
+
   set viewport(aViewport) {
     // Transform coordinates based on zoom
     aViewport.x /= aViewport.zoom;
@@ -1601,23 +1628,12 @@ Tab.prototype = {
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
 
-    gScreenWidth = aViewport.width;
-    gScreenHeight = aViewport.height;
-    dump("### gScreenWidth = " + gScreenWidth + "\n");
-
+    // Set zoom level
     let zoom = aViewport.zoom;
-    let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils);
-
     if (Math.abs(zoom - this._zoom) >= 1e-6) {
       this._zoom = zoom;
-      cwu.setResolution(zoom, zoom);
+      this.refreshDisplayPort();
     }
-
-    cwu.setDisplayPortForElement(-kBufferAmount / zoom, -kBufferAmount / zoom,
-                                 (gScreenWidth + kBufferAmount * 2) / zoom,
-                                 (gScreenHeight + kBufferAmount * 2) / zoom,
-                                 this.browser.contentDocument.documentElement);
   },
 
   get viewport() {
@@ -1680,6 +1696,7 @@ Tab.prototype = {
       if (!aZoomLevel)
         aZoomLevel = this.getDefaultZoomLevel();
       this._zoom = aZoomLevel;
+      this.refreshDisplayPort();
     }
 
     this.sendViewportUpdate();
@@ -2145,6 +2162,7 @@ Tab.prototype = {
           // can do once the docshell and the browser element are aware 
           // of the existence of <meta viewport>. 
           sendMessageToJava({ gecko: { type: "Viewport:UpdateAndDraw" } });
+          this.refreshDisplayPort();
         }
         break;
     }
