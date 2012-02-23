@@ -520,7 +520,7 @@ IonScript::copySafepointIndices(const SafepointIndex *si, MacroAssembler &masm)
     SafepointIndex *table = safepointIndices();
     memcpy(table, si, safepointIndexEntries_ * sizeof(SafepointIndex));
     for (size_t i = 0; i < safepointIndexEntries_; i++)
-        table[i].adjustDisplacement(masm.actualOffset((uint8*)table[i].displacement()));
+        table[i].adjustDisplacement(masm.actualOffset(table[i].displacement()));
 }
 
 void

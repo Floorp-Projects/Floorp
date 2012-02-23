@@ -1592,7 +1592,7 @@ CodeGenerator::generate()
     script->ion->setInvalidationEpilogueDataOffset(invalidateEpilogueData_.offset());
     script->ion->setOsrPc(gen->info().osrPc());
     script->ion->setOsrEntryOffset(getOsrEntryOffset());
-    ptrdiff_t real_invalidate = masm.actualOffset((uint8 *)invalidate_.offset());
+    ptrdiff_t real_invalidate = masm.actualOffset(invalidate_.offset());
     script->ion->setInvalidationEpilogueOffset(real_invalidate);
 
     script->ion->setMethod(code);
