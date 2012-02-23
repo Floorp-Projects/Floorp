@@ -5192,8 +5192,8 @@ NestingPrologue(JSContext *cx, StackFrame *fp)
         }
 
         nesting->activeCall = &fp->callObj();
-        nesting->argArray = fp->formalArgs();
-        nesting->varArray = fp->slots();
+        nesting->argArray = Valueify(nesting->activeCall->argArray());
+        nesting->varArray = Valueify(nesting->activeCall->varArray());
     }
 
     /* Maintain stack frame count for the function. */

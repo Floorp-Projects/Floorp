@@ -186,7 +186,7 @@ struct SharedContext {
     void setFunDefinitelyNeedsArgsObj()     { JS_ASSERT(cxFlags.funArgumentsHasLocalBinding);
                                               cxFlags.funDefinitelyNeedsArgsObj   = true; }
 
-    unsigned argumentsLocalSlot() const;
+    unsigned argumentsLocal() const;
 
     JSFunction *fun() const {
         JS_ASSERT(inFunction);
