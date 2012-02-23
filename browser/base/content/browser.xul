@@ -994,45 +994,38 @@
              class="devtools-toolbar"
              nowindowdrag="true"
              hidden="true">
-      <vbox flex="1">
-        <resizer id="inspector-top-resizer" flex="1" 
-                 dir="top" disabled="true"
-                 element="inspector-tree-box"/>
-        <hbox>
 #ifdef XP_MACOSX
-          <toolbarbutton id="highlighter-closebutton"
-                         oncommand="InspectorUI.closeInspectorUI(false);"
-                         tooltiptext="&inspectCloseButton.tooltiptext;"/>
+      <toolbarbutton id="highlighter-closebutton"
+                     oncommand="InspectorUI.closeInspectorUI(false);"
+                     tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
-          <toolbarbutton id="inspector-inspect-toolbutton"
-                         class="devtools-toolbarbutton"
-                         label="&inspectButton.label;"
-                         accesskey="&inspectButton.accesskey;"
-                         command="Inspector:Inspect"/>
-          <arrowscrollbox id="inspector-breadcrumbs"
-                          flex="1" orient="horizontal"
-                          clicktoscroll="true"/>
-          <hbox id="inspector-tools">
-            <toolbarbutton id="inspector-3D-button"
-                           class="devtools-toolbarbutton"
-                           hidden="true"
-                           label="&inspect3DViewButton.label;"
-                           accesskey="&inspect3DViewButton.accesskey;"
-                           command="Inspector:Tilt"/>
-            <toolbarbutton id="inspector-style-button"
-                           class="devtools-toolbarbutton"
-                           label="&inspectStyleButton.label;"
-                           accesskey="&inspectStyleButton.accesskey;"
-                           command="Inspector:Sidebar"/>
-            <!-- registered tools go here -->
-          </hbox>
+      <toolbarbutton id="inspector-inspect-toolbutton"
+                     class="devtools-toolbarbutton"
+                     label="&inspectButton.label;"
+                     accesskey="&inspectButton.accesskey;"
+                     command="Inspector:Inspect"/>
+      <arrowscrollbox id="inspector-breadcrumbs"
+                      flex="1" orient="horizontal"
+                      clicktoscroll="true"/>
+      <hbox id="inspector-tools">
+        <toolbarbutton id="inspector-3D-button"
+                       class="devtools-toolbarbutton"
+                       hidden="true"
+                       label="&inspect3DViewButton.label;"
+                       accesskey="&inspect3DViewButton.accesskey;"
+                       command="Inspector:Tilt"/>
+        <toolbarbutton id="inspector-style-button"
+                       class="devtools-toolbarbutton"
+                       label="&inspectStyleButton.label;"
+                       accesskey="&inspectStyleButton.accesskey;"
+                       command="Inspector:Sidebar"/>
+        <!-- registered tools go here -->
+      </hbox>
 #ifndef XP_MACOSX
-          <toolbarbutton id="highlighter-closebutton"
-                         oncommand="InspectorUI.closeInspectorUI(false);"
-                         tooltiptext="&inspectCloseButton.tooltiptext;"/>
+      <toolbarbutton id="highlighter-closebutton"
+                     oncommand="InspectorUI.closeInspectorUI(false);"
+                     tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
-        </hbox>
-      </vbox>
     </toolbar>
     <toolbar id="addon-bar"
              toolbarname="&addonBarCmd.label;" accesskey="&addonBarCmd.accesskey;"

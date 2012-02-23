@@ -2734,12 +2734,6 @@ panel[dimmed="true"] {
   padding-right: 18px; /* use -moz-padding-end when/if bug 631729 gets fixed */
 }
 
-#inspector-toolbar[treepanel-open] {
-  padding-top: 0;
-  padding-right: 0;
-  -moz-padding-end: 4px;
-}
-
 #devtools-side-splitter {
   background-image: none !important;
   border: 0;
@@ -2753,15 +2747,6 @@ panel[dimmed="true"] {
 
 #devtools-sidebar-box {
   background-color: -moz-Field;
-}
-
-/* Highlighter - toolbar resizer */
-
-#inspector-top-resizer {
-  -moz-appearance: none;
-  cursor: n-resize;
-  background: none;
-  height: 4px;
 }
 
 /* Highlighter - Node Infobar */
@@ -2997,4 +2982,16 @@ html|*#highlighter-nodeinfobar-id {
 .inspector-breadcrumbs-button[siblings-menu-open]:last-of-type[checked]:-moz-locale-dir(rtl),
 .inspector-breadcrumbs-button:last-of-type[checked]:hover:active:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/devtools/breadcrumbs/rtl-end-selected-pressed.png") 1 13 2 13 fill stretch;
+}
+
+/* Highlighter toolbar - HTML Tree */
+
+#inspector-tree-splitter {
+  -moz-appearance: none;
+  border-top: 1px solid black;
+  border-bottom-width: 0;
+  min-height: 3px;
+  height: 3px;
+  margin-bottom: -3px;
+  position: relative;
 }
