@@ -242,7 +242,7 @@ class IonCacheGetProperty : public IonCache
     JSAtom *atom() const { return u.getprop.atom; }
     TypedOrValueRegister output() const { return u.getprop.output.data(); }
 
-    bool attachNative(JSContext *cx, JSObject *obj, const Shape *shape);
+    bool attachNative(JSContext *cx, JSObject *obj, JSObject *holder, const Shape *shape);
 };
 
 class IonCacheSetProperty : public IonCache
