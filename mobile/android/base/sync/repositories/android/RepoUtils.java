@@ -4,17 +4,11 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
-import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 
@@ -26,89 +20,6 @@ import android.net.Uri;
 public class RepoUtils {
 
   private static final String LOG_TAG = "RepoUtils";
-
-  /**
-   * An array of known-special GUIDs.
-   */
-  public static String[] SPECIAL_GUIDS = new String[] {
-    // Mobile and desktop places roots have to come first.
-    "mobile",
-    "places",
-    "toolbar",
-    "menu",
-    "unfiled"
-  };
-
-  /**
-   * = A note about folder mapping =
-   *
-   * Note that _none_ of Places's folders actually have a special GUID. They're all
-   * randomly generated. Special folders are indicated by membership in the
-   * moz_bookmarks_roots table, and by having the parent `1`.
-   *
-   * Additionally, the mobile root is annotated. In Firefox Sync, PlacesUtils is
-   * used to find the IDs of these special folders.
-   *
-   * Sync skips over `places` and `tags` when finding IDs.
-   *
-   * We need to consume records with these various guids, producing a local
-   * representation which we are able to stably map upstream.
-   *
-   * That is:
-   *
-   * * We should not upload a `places` record or a `tags` record.
-   * * We can stably _store_ menu/toolbar/unfiled/mobile as special GUIDs, and set
-     * their parent ID as appropriate on upload.
-   *
-   *
-   * = Places folders =
-   *
-   * guid        root_name   folder_id   parent
-   * ----------  ----------  ----------  ----------
-   * ?           places      1           0
-   * ?           menu        2           1
-   * ?           toolbar     3           1
-   * ?           tags        4           1
-   * ?           unfiled     5           1
-   *
-   * ?           mobile*     474         1
-   *
-   *
-   * = Fennec folders =
-   *
-   * guid        folder_id   parent
-   * ----------  ----------  ----------
-   * mobile      ?           0
-   *
-  */
-  public static final Map<String, String> SPECIAL_GUID_PARENTS;
-  static {
-    HashMap<String, String> m = new HashMap<String, String>();
-    m.put("places",  null);
-    m.put("menu",    "places");
-    m.put("toolbar", "places");
-    m.put("tags",    "places");
-    m.put("unfiled", "places");
-    m.put("mobile",  "places");
-    SPECIAL_GUID_PARENTS = Collections.unmodifiableMap(m);
-  }
-
-  /**
-   * A map of guids to their localized name strings.
-   */
-  // Oh, if only we could make this final and initialize it in the static initializer.
-  public static Map<String, String> SPECIAL_GUIDS_MAP;
-  public static void initialize(Context context) {
-    if (SPECIAL_GUIDS_MAP == null) {
-      HashMap<String, String> m = new HashMap<String, String>();
-      m.put("menu",    context.getString(R.string.bookmarks_folder_menu));
-      m.put("places",  context.getString(R.string.bookmarks_folder_places));
-      m.put("toolbar", context.getString(R.string.bookmarks_folder_toolbar));
-      m.put("unfiled", context.getString(R.string.bookmarks_folder_unfiled));
-      m.put("mobile",  context.getString(R.string.bookmarks_folder_mobile));
-      SPECIAL_GUIDS_MAP = Collections.unmodifiableMap(m);
-    }
-  }
 
   /**
    * A helper class for monotonous SQL querying. Does timing and logging,
@@ -203,97 +114,6 @@ public class RepoUtils {
     String path = uri.getPath();
     int lastSlash = path.lastIndexOf('/');
     return Long.parseLong(path.substring(lastSlash + 1));
-  }
-
-  public static BookmarkRecord computeParentFields(BookmarkRecord rec, String suggestedParentGUID, String suggestedParentName) {
-    final String guid = rec.guid;
-    if (guid == null) {
-      // Oh dear.
-      Logger.error(LOG_TAG, "No guid in computeParentFields!");
-      return null;
-    }
-
-    String realParent = SPECIAL_GUID_PARENTS.get(guid);
-    if (realParent == null) {
-      // No magic parent. Use whatever the caller suggests.
-      realParent = suggestedParentGUID;
-    } else {
-      Logger.debug(LOG_TAG, "Ignoring suggested parent ID " + suggestedParentGUID +
-                           " for " + guid + "; using " + realParent);
-    }
-
-    if (realParent == null) {
-      // Oh dear.
-      Logger.error(LOG_TAG, "No parent for record " + guid);
-      return null;
-    }
-
-    // Always set the parent name for special folders back to default.
-    String parentName = SPECIAL_GUIDS_MAP.get(realParent);
-    if (parentName == null) {
-      parentName = suggestedParentName;
-    }
-
-    rec.parentID = realParent;
-    rec.parentName = parentName;
-    return rec;
-  }
-
-  // Create a BookmarkRecord object from a cursor on a row containing a Fennec bookmark.
-  public static BookmarkRecord bookmarkFromMirrorCursor(Cursor cur, String parentGUID, String parentName, JSONArray children) {
-
-    String guid = getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
-    String collection = "bookmarks";
-    long lastModified = getLongFromCursor(cur, BrowserContract.SyncColumns.DATE_MODIFIED);
-    boolean deleted   = getLongFromCursor(cur, BrowserContract.SyncColumns.IS_DELETED) == 1 ? true : false;
-    boolean isFolder  = getIntFromCursor(cur, BrowserContract.Bookmarks.IS_FOLDER) == 1;
-    BookmarkRecord rec = new BookmarkRecord(guid, collection, lastModified, deleted);
-
-    rec.title = getStringFromCursor(cur, BrowserContract.Bookmarks.TITLE);
-    rec.bookmarkURI = getStringFromCursor(cur, BrowserContract.Bookmarks.URL);
-    rec.description = getStringFromCursor(cur, BrowserContract.Bookmarks.DESCRIPTION);
-    rec.tags = getJSONArrayFromCursor(cur, BrowserContract.Bookmarks.TAGS);
-    rec.keyword = getStringFromCursor(cur, BrowserContract.Bookmarks.KEYWORD);
-    rec.type = isFolder ? AndroidBrowserBookmarksDataAccessor.TYPE_FOLDER :
-                          AndroidBrowserBookmarksDataAccessor.TYPE_BOOKMARK;
-
-    rec.androidID = getLongFromCursor(cur, BrowserContract.Bookmarks._ID);
-    rec.androidPosition = getLongFromCursor(cur, BrowserContract.Bookmarks.POSITION);
-    rec.children = children;
-
-    // Need to restore the parentId since it isn't stored in content provider.
-    // We also take this opportunity to fix up parents for special folders,
-    // allowing us to map between the hierarchies used by Fennec and Places.
-    BookmarkRecord withParentFields = computeParentFields(rec, parentGUID, parentName);
-    if (withParentFields == null) {
-      // Oh dear. Something went wrong.
-      return null;
-    }
-    return logBookmark(withParentFields);
-  }
-
-  private static BookmarkRecord logBookmark(BookmarkRecord rec) {
-    try {
-      Logger.debug(LOG_TAG, "Returning bookmark record " + rec.guid + " (" + rec.androidID +
-                           ", parent " + rec.parentID + ")");
-      if (Logger.LOG_PERSONAL_INFORMATION) {
-        Logger.pii(LOG_TAG, "> Parent name:      " + rec.parentName);
-        Logger.pii(LOG_TAG, "> Title:            " + rec.title);
-        Logger.pii(LOG_TAG, "> Type:             " + rec.type);
-        Logger.pii(LOG_TAG, "> URI:              " + rec.bookmarkURI);
-        Logger.pii(LOG_TAG, "> Android position: " + rec.androidPosition);
-        Logger.pii(LOG_TAG, "> Position:         " + rec.pos);
-        if (rec.isFolder()) {
-          Logger.pii(LOG_TAG, "FOLDER: Children are " +
-                             (rec.children == null ?
-                                 "null" :
-                                 rec.children.toJSONString()));
-        }
-      }
-    } catch (Exception e) {
-      Logger.debug(LOG_TAG, "Exception logging bookmark record " + rec, e);
-    }
-    return rec;
   }
 
   //Create a HistoryRecord object from a cursor on a row with a Moz History record in it

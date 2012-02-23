@@ -20,7 +20,12 @@ public class AndroidBrowserPasswordsRepositorySession extends
   }
 
   @Override
-  protected Record recordFromMirrorCursor(Cursor cur) {
+  protected Record retrieveDuringStore(Cursor cur) {
+    return RepoUtils.passwordFromMirrorCursor(cur);
+  }
+
+  @Override
+  protected Record retrieveDuringFetch(Cursor cur) {
     return RepoUtils.passwordFromMirrorCursor(cur);
   }
 
