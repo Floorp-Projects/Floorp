@@ -264,7 +264,12 @@ public class RepoUtils {
     // Need to restore the parentId since it isn't stored in content provider.
     // We also take this opportunity to fix up parents for special folders,
     // allowing us to map between the hierarchies used by Fennec and Places.
-    return logBookmark(computeParentFields(rec, parentId, parentName));
+    BookmarkRecord withParentFields = computeParentFields(rec, parentGUID, parentName);
+    if (withParentFields == null) {
+      // Oh dear. Something went wrong.
+      return null;
+    }
+    return logBookmark(withParentFields);
   }
 
   private static BookmarkRecord logBookmark(BookmarkRecord rec) {
