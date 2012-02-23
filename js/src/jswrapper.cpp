@@ -330,10 +330,10 @@ Wrapper::fun_toString(JSContext *cx, JSObject *wrapper, uintN indent)
     return str;
 }
 
-RegExpShared *
-Wrapper::regexp_toShared(JSContext *cx, JSObject *wrapper)
+bool
+Wrapper::regexp_toShared(JSContext *cx, JSObject *wrapper, RegExpGuard *g)
 {
-    return wrappedObject(wrapper)->asRegExp().getShared(cx);
+    return wrappedObject(wrapper)->asRegExp().getShared(cx, g);
 }
 
 bool
@@ -908,10 +908,10 @@ SecurityWrapper<Base>::objectClassIs(JSObject *obj, ESClassValue classValue, JSC
 }
 
 template <class Base>
-RegExpShared *
-SecurityWrapper<Base>::regexp_toShared(JSContext *cx, JSObject *obj)
+bool
+SecurityWrapper<Base>::regexp_toShared(JSContext *cx, JSObject *obj, RegExpGuard *g)
 {
-    return Base::regexp_toShared(cx, obj);
+    return Base::regexp_toShared(cx, obj, g);
 }
 
 

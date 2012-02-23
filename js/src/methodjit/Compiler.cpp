@@ -6944,7 +6944,8 @@ mjit::Compiler::jsop_regexp()
      * RegExpShared. We don't do this during an incremental
      * GC, since we don't discard JIT code after every marking slice.
      */
-    if (!reobj->getShared(cx))
+    RegExpGuard g;
+    if (!reobj->getShared(cx, &g))
         return false;
 
     RegisterID result = frame.allocReg();
