@@ -50,7 +50,6 @@ namespace hal_impl {
 
 static nsCOMPtr<nsITimer> sUpdateTimer;
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 /* Power Event API is Vista or later */
 typedef HPOWERNOTIFY (WINAPI *REGISTERPOWERSETTINGNOTIFICATION) (HANDLE, LPCGUID, DWORD);
 typedef BOOL (WINAPI *UNREGISTERPOWERSETTINGNOTIFICATION) (HPOWERNOTIFY);
@@ -59,8 +58,6 @@ static UNREGISTERPOWERSETTINGNOTIFICATION sUnregisterPowerSettingNotification = 
 static HPOWERNOTIFY sPowerHandle = nsnull;
 static HPOWERNOTIFY sCapacityHandle = nsnull;
 static HWND sHWnd = nsnull;
-#endif
-
 
 static bool
 IsVistaOrLater()
@@ -91,7 +88,6 @@ UpdateHandler(nsITimer* aTimer, void* aClosure) {
   }
 }
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 static
 LRESULT CALLBACK
 BatteryWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -107,12 +103,10 @@ BatteryWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   hal::NotifyBatteryChange(currentInfo);
   return TRUE;
 }
-#endif
 
 void
 EnableBatteryNotifications()
 {
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (IsVistaOrLater()) {
     // RegisterPowerSettingNotification is from Vista or later.
     // Use this API if available.
@@ -163,7 +157,6 @@ EnableBatteryNotifications()
                                         &GUID_BATTERY_PERCENTAGE_REMAINING,
                                         DEVICE_NOTIFY_WINDOW_HANDLE);
   } else
-#endif
   {
     // for Windows 2000 and Windwos XP.  If we remove Windows XP support,
     // we should remove timer-based power notification
@@ -181,7 +174,6 @@ EnableBatteryNotifications()
 void
 DisableBatteryNotifications()
 {
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (IsVistaOrLater()) {
     if (sPowerHandle) {
       sUnregisterPowerSettingNotification(sPowerHandle);
@@ -198,7 +190,6 @@ DisableBatteryNotifications()
       sHWnd = nsnull;
     }
   } else
-#endif
   {
     if (sUpdateTimer) {
       sUpdateTimer->Cancel();

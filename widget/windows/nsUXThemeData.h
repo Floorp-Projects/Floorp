@@ -45,9 +45,7 @@
 #include "nscore.h"
 #include "mozilla/LookAndFeel.h"
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 #include <dwmapi.h>
-#endif
 
 #include "nsWindowDefs.h"
 
@@ -62,10 +60,8 @@
 #define WM_DWMSENDICONICLIVEPREVIEWBITMAP 0x0326
 #endif
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 #define DWMWA_FORCE_ICONIC_REPRESENTATION 7
 #define DWMWA_HAS_ICONIC_BITMAP           10
-#endif
 
 enum nsUXThemeClass {
   eUXButton = 0,
@@ -115,18 +111,14 @@ enum WindowsThemeColor {
 
 class nsUXThemeData {
   static HMODULE sThemeDLL;
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
    static HMODULE sDwmDLL;
-#endif
   static HANDLE sThemes[eUXNumClasses];
   
   static const wchar_t *GetClassName(nsUXThemeClass);
 
 public:
   static const PRUnichar kThemeLibraryName[];
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
    static const PRUnichar kDwmLibraryName[];
-#endif
   static BOOL sFlatMenus;
   static bool sTitlebarInfoPopulatedAero;
   static bool sTitlebarInfoPopulatedThemed;
@@ -139,9 +131,7 @@ public:
   static void Invalidate();
   static HANDLE GetTheme(nsUXThemeClass cls);
   static HMODULE GetThemeDLL();
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   static HMODULE GetDwmDLL();
-#endif
 
   // nsWindow calls this to update desktop settings info
   static void InitTitlebarInfo();
@@ -209,7 +199,6 @@ public:
   static GetThemeSysColorPtr getThemeSysColor;
   static IsThemeBackgroundPartiallyTransparentPtr isThemeBackgroundPartiallyTransparent;
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // dwmapi.dll function typedefs and declarations
   typedef HRESULT (WINAPI*DwmExtendFrameIntoClientAreaProc)(HWND hWnd, const MARGINS *pMarInset);
   typedef HRESULT (WINAPI*DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
@@ -228,7 +217,6 @@ public:
   static DwmSetWindowAttributeProc dwmSetWindowAttributePtr;
   static DwmInvalidateIconicBitmapsProc dwmInvalidateIconicBitmapsPtr;
   static DwmDefWindowProcProc dwmDwmDefWindowProcPtr;
-#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 
   // This method returns the cached compositor state. Most
   // callers should call without the argument. The cache
@@ -238,11 +226,9 @@ public:
   // composition transition.
   static bool CheckForCompositor(bool aUpdateCache = false) {
     static BOOL sCachedValue = FALSE;
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
     if(aUpdateCache && dwmIsCompositionEnabledPtr) {
       dwmIsCompositionEnabledPtr(&sCachedValue);
     }
-#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
     return (sCachedValue != FALSE);
   }
 };
