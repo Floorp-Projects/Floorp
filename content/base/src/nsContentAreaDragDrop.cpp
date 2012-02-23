@@ -691,6 +691,7 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
       rv = nsCopySupport::GetTransferableForNode(nodeToSerialize, doc,
                                                  getter_AddRefs(transferable));
     }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISupportsString> data;
     PRUint32 dataSize;
