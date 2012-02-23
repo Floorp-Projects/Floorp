@@ -161,10 +161,21 @@ ComparePolicy::adjustInputs(MInstruction *def)
         if (in->type() == MIRType_Object || in->type() == MIRType_String)
             in = boxAt(def, in);
 
-        if (specialization_ == MIRType_Double)
+        switch (specialization_) {
+          case MIRType_Double:
             replace = MToDouble::New(in);
-        else
+            break;
+          case MIRType_Int32:
+          case MIRType_Boolean:
             replace = MToInt32::New(in);
+            break;
+          case MIRType_Object:
+            replace = MUnbox::New(in, MIRType_Object, MUnbox::Infallible);
+            break;
+          default:
+            JS_NOT_REACHED("Unknown compare specialization");
+            return false;
+        }
 
         def->block()->insertBefore(def, replace);
         def->replaceOperand(i, replace);

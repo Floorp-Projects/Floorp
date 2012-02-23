@@ -321,7 +321,8 @@ TypeSet *
 TypeInferenceOracle::getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc)
 {
     JS_ASSERT(caller == this->script);
-    JS_ASSERT(JSOp(*pc) == JSOP_CALL || JSOp(*pc) == JSOP_NEW);
+    JS_ASSERT(JSOp(*pc) == JSOP_CALL || JSOp(*pc) == JSOP_NEW ||
+              JSOp(*pc) == JSOP_FUNCALL || JSOp(*pc) == JSOP_FUNAPPLY);
 
     ScriptAnalysis *analysis = script->analysis();
     return analysis->poppedTypes(pc, argc + 1);
@@ -344,7 +345,7 @@ TypeInferenceOracle::getCallReturn(JSScript *script, jsbytecode *pc)
 bool
 TypeInferenceOracle::canInlineCall(JSScript *caller, jsbytecode *pc)
 {
-    JS_ASSERT(JSOp(*pc) == JSOP_CALL);
+    JS_ASSERT(JSOp(*pc) == JSOP_CALL || JSOp(*pc) == JSOP_FUNCALL || JSOp(*pc) == JSOP_FUNAPPLY);
 
     Bytecode *code = caller->analysis()->maybeCode(pc);
     if (code->monitoredTypes || code->monitoredTypesReturn || caller->analysis()->typeBarriers(cx, pc))
