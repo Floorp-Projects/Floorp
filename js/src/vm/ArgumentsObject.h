@@ -16,16 +16,24 @@ namespace js {
  * ArgumentsData stores the initial indexed arguments provided to the
  * corresponding and that function itself.  It is used to store arguments[i]
  * and arguments.callee -- up until the corresponding property is modified,
- * when the relevant value is overwritten with MagicValue(JS_ARGS_HOLE) to
- * memorialize the modification.
+ * when the relevant value is flagged to memorialize the modification.
  */
 struct ArgumentsData
 {
     /*
-     * arguments.callee, or MagicValue(JS_ARGS_HOLE) if arguments.callee has
-     * been modified.
+     * numArgs = Max(numFormalArgs, numActualArgs)
+     * The array 'args' has numArgs elements.
+     */
+    unsigned    numArgs;
+
+    /*
+     * arguments.callee, or MagicValue(JS_OVERWRITTEN_CALLEE) if
+     * arguments.callee has been modified.
      */
     HeapValue   callee;
+
+    /* The script for the function containing this arguments object. */
+    JSScript    *script;
 
     /*
      * Pointer to an array of bits indicating, for every argument in 'slots',
@@ -34,17 +42,25 @@ struct ArgumentsData
     size_t      *deletedBits;
 
     /*
-     * Values of the arguments for this object, or MagicValue(JS_ARGS_HOLE) if
-     * the indexed argument has been modified.
+     * This array holds either the current argument value or the magic value
+     * JS_FORWARD_TO_CALL_OBJECT. The latter means that the function has both a
+     * CallObject and an ArgumentsObject AND the particular formal variable is
+     * aliased by the CallObject. In such cases, the CallObject holds the
+     * canonical value so any element access to the arguments object should
+     * load the value out of the CallObject (which is pointed to by
+     * MAYBE_CALL_SLOT).
      */
-    HeapValue   slots[1];
+    HeapValue   args[1];
+
+    /* For jit use: */
+    static ptrdiff_t offsetOfArgs() { return offsetof(ArgumentsData, args); }
 };
 
 /*
  * ArgumentsObject instances represent |arguments| objects created to store
  * function arguments when a function is called.  It's expensive to create such
- * objects if they're never used, so they're only created lazily.  (See
- * js::StackFrame::setArgsObj and friends.)
+ * objects if they're never used, so they're only created when they are
+ * potentially used.
  *
  * Arguments objects are complicated because, for non-strict mode code, they
  * must alias any named arguments which were provided to the function.  Gnarly
@@ -75,43 +91,27 @@ struct ArgumentsData
  *     been modified, then the current value of arguments.length is stored in
  *     another slot associated with a new property.
  *   DATA_SLOT
- *     Stores an ArgumentsData* storing argument values and the callee, or
- *     sentinels for any of these if the corresponding property is modified.
- *     Use callee() to access the callee/sentinel, and use
- *     element/addressOfElement/setElement to access the values stored in
- *     the ArgumentsData.  If you're simply looking to get arguments[i],
- *     however, use getElement or getElements to avoid spreading arguments
- *     object implementation details around too much.
- *   STACK_FRAME_SLOT
- *     Stores the function's stack frame for non-strict arguments objects until
- *     the function returns, when it is replaced with null.  When an arguments
- *     object is created on-trace its private is JS_ARGUMENTS_OBJECT_ON_TRACE,
- *     and when the trace exits its private is replaced with the stack frame or
- *     null, as appropriate. This slot is used by strict arguments objects as
- *     well, but the slot is always null. Conceptually it would be better to
- *     remove this oddity, but preserving it allows us to work with arguments
- *     objects of either kind more abstractly, so we keep it for now.
+ *     Stores an ArgumentsData*, described above.
  */
 class ArgumentsObject : public JSObject
 {
+  protected:
     static const uint32_t INITIAL_LENGTH_SLOT = 0;
     static const uint32_t DATA_SLOT = 1;
-    static const uint32_t STACK_FRAME_SLOT = 2;
+    static const uint32_t MAYBE_CALL_SLOT = 2;
 
-    /* Lower-order bit stolen from the length slot. */
     static const uint32_t LENGTH_OVERRIDDEN_BIT = 0x1;
     static const uint32_t PACKED_BITS_COUNT = 1;
 
-    void initInitialLength(uint32_t length);
-    void initData(ArgumentsData *data);
-    static ArgumentsObject *create(JSContext *cx, uint32_t argc, HandleObject callee);
+    static ArgumentsObject *create(JSContext *cx, StackFrame *fp);
+    inline ArgumentsData *data() const;
 
   public:
     static const uint32_t RESERVED_SLOTS = 3;
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
 
     /* Create an arguments object for a frame that is expecting them. */
-    static ArgumentsObject *create(JSContext *cx, StackFrame *fp);
+    static ArgumentsObject *createExpected(JSContext *cx, StackFrame *fp);
 
     /*
      * Purposefully disconnect the returned arguments object from the frame
@@ -127,32 +127,12 @@ class ArgumentsObject : public JSObject
      */
     inline uint32_t initialLength() const;
 
+    /* The script for the function containing this arguments object. */
+    JSScript *containingScript() const;
+
     /* True iff arguments.length has been assigned or its attributes changed. */
     inline bool hasOverriddenLength() const;
     inline void markLengthOverridden();
-
-    /*
-     * Attempt to speedily and efficiently access the i-th element of this
-     * arguments object.  Return true if the element was speedily returned.
-     * Return false if the element must be looked up more slowly using
-     * getProperty or some similar method.
-     *
-     * NB: Returning false does not indicate error!
-     */
-    inline bool getElement(uint32_t i, js::Value *vp);
-
-    /*
-     * Attempt to speedily and efficiently get elements [start, start + count)
-     * of this arguments object into the locations starting at |vp|.  Return
-     * true if all elements were copied.  Return false if the elements must be
-     * gotten more slowly, perhaps using a getProperty or some similar method
-     * in a loop.
-     *
-     * NB: Returning false does not indicate error!
-     */
-    inline bool getElements(uint32_t start, uint32_t count, js::Value *vp);
-
-    inline js::ArgumentsData *data() const;
 
     /*
      * Because the arguments object is a real object, its elements may be
@@ -172,18 +152,51 @@ class ArgumentsObject : public JSObject
     inline bool isAnyElementDeleted() const;
     inline void markElementDeleted(uint32_t i);
 
-    inline const js::Value &element(uint32_t i) const;
-    inline void setElement(uint32_t i, const js::Value &v);
+    /*
+     * An ArgumentsObject serves two roles:
+     *  - a real object, accessed through regular object operations, e.g..,
+     *    JSObject::getElement corresponding to 'arguments[i]';
+     *  - a VM-internal data structure, storing the value of arguments (formal
+     *    and actual) that are accessed directly by the VM when a reading the
+     *    value of a formal parameter.
+     * There are two ways to access the ArgumentsData::args corresponding to
+     * these two use cases:
+     *  - object access should use elements(i) which will take care of
+     *    forwarding when the value is JS_FORWARD_TO_CALL_OBJECT;
+     *  - VM argument access should use arg(i) which will assert that the
+     *    value is not JS_FORWARD_TO_CALL_OBJECT (since, if such forwarding was
+     *    needed, the frontend should have emitted JSOP_GETALIASEDVAR.
+     */
+    inline const Value &element(uint32_t i) const;
+    inline void setElement(uint32_t i, const Value &v);
+    inline const Value &arg(unsigned i) const;
+    inline void setArg(unsigned i, const Value &v);
 
-    /* The stack frame for this ArgumentsObject, if the frame is still active. */
-    inline js::StackFrame *maybeStackFrame() const;
-    inline void setStackFrame(js::StackFrame *frame);
+    /*
+     * Attempt to speedily and efficiently access the i-th element of this
+     * arguments object.  Return true if the element was speedily returned.
+     * Return false if the element must be looked up more slowly using
+     * getProperty or some similar method. The second overload copies the
+     * elements [start, start + count) into the locations starting at 'vp'.
+     *
+     * NB: Returning false does not indicate error!
+     */
+    inline bool maybeGetElement(uint32_t i, Value *vp);
+    inline bool maybeGetElements(uint32_t start, uint32_t count, js::Value *vp);
 
     /*
      * Measures things hanging off this ArgumentsObject that are counted by the
      * |miscSize| argument in JSObject::sizeOfExcludingThis().
      */
     inline size_t sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const;
+
+    static void finalize(FreeOp *fop, JSObject *obj);
+    static void trace(JSTracer *trc, JSObject *obj);
+
+    /* For jit use: */
+    static size_t getDataSlotOffset() {
+        return getFixedSlotOffset(DATA_SLOT);
+    }
 };
 
 class NormalArgumentsObject : public ArgumentsObject

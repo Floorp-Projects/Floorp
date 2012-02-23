@@ -3241,7 +3241,7 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
 
     /* Finalize unreachable (key,value) pairs in all weak maps. */
     WeakMapBase::sweepAll(&rt->gcMarker);
-    rt->debugScopes->sweep();
+    rt->debugScopes->sweep(rt);
 
     SweepAtomState(rt);
 

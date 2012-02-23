@@ -109,7 +109,7 @@ struct VMFrame
     Value        *stackLimit;
     StackFrame   *entryfp;
     FrameRegs    *oldregs;
-    JSRejoinState stubRejoin;  /* How to rejoin if inside a call from an IC stub. */
+    FrameRejoinState stubRejoin;  /* How to rejoin if inside a call from an IC stub. */
 
 #if defined(JS_CPU_X86)
     void         *unused0, *unused1;  /* For 16 byte alignment */
@@ -294,9 +294,6 @@ enum RejoinState {
     REJOIN_PUSH_BOOLEAN,
     REJOIN_PUSH_OBJECT,
 
-    /* Call returns an object, which should be assigned to a local per the current bytecode. */
-    REJOIN_DEFLOCALFUN,
-
     /*
      * During the prologue of constructing scripts, after the function's
      * .prototype property has been fetched.
@@ -310,9 +307,10 @@ enum RejoinState {
     REJOIN_CHECK_ARGUMENTS,
 
     /*
-     * The script's jitcode was discarded after marking an outer function as
-     * reentrant or due to a GC while creating a call object.
+     * The script's jitcode was discarded during one of the following steps of
+     * a frame's prologue.
      */
+    REJOIN_EVAL_PROLOGUE,
     REJOIN_FUNCTION_PROLOGUE,
 
     /*
@@ -339,14 +337,14 @@ enum RejoinState {
 };
 
 /* Get the rejoin state for a StackFrame after returning from a scripted call. */
-static inline JSRejoinState
+static inline FrameRejoinState
 ScriptedRejoin(uint32_t pcOffset)
 {
     return REJOIN_SCRIPTED | (pcOffset << 1);
 }
 
 /* Get the rejoin state for a StackFrame after returning from a stub call. */
-static inline JSRejoinState
+static inline FrameRejoinState
 StubRejoin(RejoinState rejoin)
 {
     return rejoin << 1;

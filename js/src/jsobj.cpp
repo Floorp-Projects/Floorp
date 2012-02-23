@@ -2849,6 +2849,7 @@ js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc
     JS_ASSERT(type->proto->hasNewType(type));
     JS_ASSERT(parent);
 
+    JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
     if (CanBeFinalizedInBackground(kind, &ObjectClass))
         kind = GetBackgroundAllocKind(kind);
 
@@ -3870,14 +3871,6 @@ JSObject::growSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
     JS_ASSERT(newCount > oldCount);
     JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
     JS_ASSERT(!isDenseArray());
-
-    /*
-     * Slots are only allocated for call objects when new properties are
-     * added to them, which can only happen while the call is still on the
-     * stack (and an eval, DEFFUN, etc. happens). We thus do not need to
-     * worry about updating any active outer function args/vars.
-     */
-    JS_ASSERT_IF(isCall(), asCall().maybeStackFrame() != NULL);
 
     /*
      * Slot capacities are determined by the span of allocated objects. Due to
@@ -6245,15 +6238,9 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             }
         }
         if (fp->hasArgs()) {
-            fprintf(stderr, "  actuals: %p (%u) ", (void *) fp->actualArgs(), (unsigned) fp->numActualArgs());
-            fprintf(stderr, "  formals: %p (%u)\n", (void *) fp->formalArgs(), (unsigned) fp->numFormalArgs());
+            fprintf(stderr, "  actuals: %p (%u) ", (void *) fp->actuals(), (unsigned) fp->numActualArgs());
+            fprintf(stderr, "  formals: %p (%u)\n", (void *) fp->formals(), (unsigned) fp->numFormalArgs());
         }
-        if (fp->hasCallObj()) {
-            fprintf(stderr, "  has call obj: ");
-            dumpValue(ObjectValue(fp->callObj()));
-            fprintf(stderr, "\n");
-        }
-        MaybeDumpObject("argsobj", fp->maybeArgsObj());
         MaybeDumpObject("blockChain", fp->maybeBlockChain());
         if (!fp->isDummyFrame()) {
             MaybeDumpValue("this", fp->thisValue());

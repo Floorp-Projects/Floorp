@@ -223,6 +223,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
     JS_ASSERT(fp == cx->fp());
     JS_ASSERT(fp->script() == script);
     JS_ASSERT_IF(!fp->isGeneratorFrame(), cx->regs().pc == script->code);
+    JS_ASSERT_IF(fp->isEvalFrame(), script->isActiveEval);
 #ifdef JS_METHODJIT_SPEW
     JMCheckLogging();
 #endif
@@ -317,16 +318,11 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (!cx->stack.pushInvokeFrame(cx, args, initial, &ifg))
         return false;
 
-    /* Now that the new frame is rooted, maybe create a call object. */
-    StackFrame *fp = ifg.fp();
-    if (!fp->functionPrologue(cx))
-        return false;
-
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
-    JSBool ok = RunScript(cx, fun->script(), fp);
+    JSBool ok = RunScript(cx, fun->script(), ifg.fp());
 
     /* Propagate the return value out. */
-    args.rval() = fp->returnValue();
+    args.rval() = ifg.fp()->returnValue();
     JS_ASSERT_IF(ok && construct, !args.rval().isPrimitive());
     return ok;
 }
@@ -453,29 +449,15 @@ js::ExecuteKernel(JSContext *cx, JSScript *script_, JSObject &scopeChain, const 
 
     if (!script->ensureRanAnalysis(cx, &scopeChain))
         return false;
-
-    /* Give strict mode eval its own fresh lexical environment. */
-    StackFrame *fp = efg.fp();
-    if (fp->isStrictEvalFrame() && !CallObject::createForStrictEval(cx, fp))
-        return false;
+    TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 
     Probes::startExecution(cx, script);
-
-    TypeScript::SetThis(cx, script, fp->thisValue());
-
-    bool ok = RunScript(cx, script, fp);
-
-    if (fp->isStrictEvalFrame()) {
-        if (cx->compartment->debugMode())
-            cx->runtime->debugScopes->onPopStrictEvalScope(fp);
-        js_PutCallObject(fp, fp->callObj());
-    }
-
+    bool ok = RunScript(cx, script, efg.fp());
     Probes::stopExecution(cx, script);
 
     /* Propgate the return value out. */
     if (result)
-        *result = fp->returnValue();
+        *result = efg.fp()->returnValue();
     return ok;
 }
 
@@ -698,7 +680,7 @@ EnterWith(JSContext *cx, int stackIndex)
     StackFrame *fp = cx->fp();
     Value *sp = cx->regs().sp;
     JS_ASSERT(stackIndex < 0);
-    JS_ASSERT(fp->base() <= sp + stackIndex);
+    JS_ASSERT(int(cx->regs().stackDepth()) + stackIndex >= 0);
 
     RootedObject obj(cx);
     if (sp[-1].isObject()) {
@@ -706,17 +688,17 @@ EnterWith(JSContext *cx, int stackIndex)
     } else {
         obj = js_ValueToNonNullObject(cx, sp[-1]);
         if (!obj)
-            return JS_FALSE;
+            return false;
         sp[-1].setObject(*obj);
     }
 
-    JSObject *withobj = WithObject::create(cx, obj, fp->scopeChain(),
-                                           sp + stackIndex - fp->base());
+    WithObject *withobj = WithObject::create(cx, obj, fp->scopeChain(),
+                                             cx->regs().stackDepth() + stackIndex);
     if (!withobj)
-        return JS_FALSE;
+        return false;
 
-    fp->setScopeChain(*withobj);
-    return JS_TRUE;
+    fp->pushOnScopeChain(*withobj);
+    return true;
 }
 
 /* Unwind block and scope chains to match the given depth. */
@@ -724,7 +706,7 @@ void
 js::UnwindScope(JSContext *cx, uint32_t stackDepth)
 {
     StackFrame *fp = cx->fp();
-    JS_ASSERT(fp->base() + stackDepth <= cx->regs().sp);
+    JS_ASSERT(stackDepth <= cx->regs().stackDepth());
 
     for (ScopeIter si(fp); !si.done(); si = si.enclosing()) {
         switch (si.type()) {
@@ -753,7 +735,7 @@ js::UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs)
     for (TryNoteIter tni(regs); !tni.done(); ++tni) {
         JSTryNote *tn = *tni;
         if (tn->kind == JSTRY_ITER) {
-            Value *sp = regs.fp()->base() + tn->stackDepth;
+            Value *sp = regs.spForStackDepth(tn->stackDepth);
             UnwindIteratorForUncatchableException(cx, &sp[-1].toObject());
         }
     }
@@ -813,7 +795,7 @@ TryNoteIter::settle()
          * depth exceeding the current one and this condition is what we use to
          * filter them out.
          */
-        if (tn->stackDepth <= regs.sp - regs.fp()->base())
+        if (tn->stackDepth <= regs.stackDepth())
             break;
     }
 }
@@ -848,36 +830,6 @@ DoIncDec(JSContext *cx, JSScript *script, jsbytecode *pc, const Value &v, Value 
 
     TypeScript::MonitorOverflow(cx, script, pc);
     return true;
-}
-
-static inline void
-CheckLocalAccess(StackFrame *fp, unsigned index, bool aliased = false)
-{
-#ifdef DEBUG
-    if (index < fp->numFixed()) {
-        JS_ASSERT(fp->script()->varIsAliased(index) == aliased);
-    } else {
-        unsigned depth = index - fp->numFixed();
-        for (StaticBlockObject *b = fp->maybeBlockChain(); b; b = b->enclosingBlock()) {
-            if (b->containsVarAtDepth(depth)) {
-                JS_ASSERT(b->isAliased(depth - b->stackDepth()) == aliased);
-                return;
-            }
-        }
-        /*
-         * Unfortunately, strange uses of JSOP_GETLOCAL (e.g., comprehensions
-         * and group assignment) access slots above script->nfixed and not in
-         * any block so we cannot use JS_NOT_REACHED here.
-         */
-    }
-#endif
-}
-
-static inline void
-CheckArgAccess(StackFrame *fp, unsigned index)
-{
-    JS_ASSERT(fp->script()->formalLivesInArgumentsObject(index) ==
-              fp->script()->argsObjAliasesFormals());
 }
 
 #define PUSH_COPY(v)             do { *regs.sp++ = v; assertSameCompartment(cx, regs.sp[-1]); } while (0)
@@ -1222,7 +1174,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define RESTORE_INTERP_VARS()                                                 \
     JS_BEGIN_MACRO                                                            \
         SET_SCRIPT(regs.fp()->script());                                      \
-        argv = regs.fp()->maybeFormalArgs();                                  \
         atoms = FrameAtomBase(cx, regs.fp());                                 \
         JS_ASSERT(&cx->regs() == &regs);                                      \
     JS_END_MACRO
@@ -1285,7 +1236,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     JSRuntime *const rt = cx->runtime;
     Rooted<JSScript*> script(cx);
     SET_SCRIPT(regs.fp()->script());
-    Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
     /*
@@ -1320,8 +1270,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
-        JS_ASSERT((size_t) (regs.pc - script->code) <= script->length);
-        JS_ASSERT((size_t) (regs.sp - regs.fp()->base()) <= StackDepth(script));
+        JS_ASSERT(size_t(regs.pc - script->code) <= script->length);
+        JS_ASSERT(regs.stackDepth() <= script->nslots);
 
         /*
          * To support generator_throw and to catch ignored exceptions,
@@ -1338,8 +1288,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         StackFrame *fp = regs.fp();
-        JS_ASSERT_IF(!fp->isGeneratorFrame(), regs.pc == script->code);
-        if (!ScriptPrologueOrGeneratorResume(cx, fp, UseNewTypeAtEntry(cx, fp)))
+        if (!fp->isGeneratorFrame() && !fp->prologue(cx, UseNewTypeAtEntry(cx, fp)))
             goto error;
         if (cx->compartment->debugMode()) {
             JSTrapStatus status = ScriptDebugPrologue(cx, fp);
@@ -1574,25 +1523,12 @@ BEGIN_CASE(JSOP_POP)
 END_CASE(JSOP_POP)
 
 BEGIN_CASE(JSOP_POPN)
-{
+    JS_ASSERT(GET_UINT16(regs.pc) <= regs.stackDepth());
     regs.sp -= GET_UINT16(regs.pc);
 #ifdef DEBUG
-    JS_ASSERT(regs.fp()->base() <= regs.sp);
-    StaticBlockObject *block = regs.fp()->maybeBlockChain();
-    JS_ASSERT_IF(block,
-                 block->stackDepth() + block->slotCount()
-                 <= (size_t) (regs.sp - regs.fp()->base()));
-    for (JSObject *obj = regs.fp()->scopeChain(); obj; obj = obj->enclosingScope()) {
-        if (!obj->isBlock() || !obj->isWith())
-            continue;
-        if (obj->getPrivate() != js_FloatingFrameIfGenerator(cx, regs.fp()))
-            break;
-        JS_ASSERT(regs.fp()->base() + obj->asBlock().stackDepth()
-                  + (obj->isBlock() ? obj->asBlock().slotCount() : 1)
-                  <= regs.sp);
-    }
+    if (StaticBlockObject *block = regs.fp()->maybeBlockChain())
+        JS_ASSERT(regs.stackDepth() >= block->stackDepth() + block->slotCount());
 #endif
-}
 END_CASE(JSOP_POPN)
 
 BEGIN_CASE(JSOP_SETRVAL)
@@ -1639,14 +1575,13 @@ BEGIN_CASE(JSOP_STOP)
     if (entryFrame != regs.fp())
   inline_return:
     {
-        AssertValidFunctionScopeChainAtExit(regs.fp());
-
         if (cx->compartment->debugMode())
             interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
 
-        interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
+        if (!regs.fp()->isYielding())
+            regs.fp()->epilogue(cx);
 
-        /* The JIT inlines ScriptEpilogue. */
+        /* The JIT inlines the epilogue. */
 #ifdef JS_METHODJIT
   jit_return:
 #endif
@@ -1679,7 +1614,7 @@ BEGIN_CASE(JSOP_STOP)
         regs.pc += JSOP_CALL_LENGTH;
         goto error;
     } else {
-        JS_ASSERT(regs.sp == regs.fp()->base());
+        JS_ASSERT(regs.stackDepth() == 0);
     }
     interpReturnOK = true;
     goto exit;
@@ -1796,7 +1731,7 @@ END_CASE(JSOP_IN)
 
 BEGIN_CASE(JSOP_ITER)
 {
-    JS_ASSERT(regs.sp > regs.fp()->base());
+    JS_ASSERT(regs.stackDepth() >= 1);
     uint8_t flags = GET_UINT8(regs.pc);
     if (!ValueToIterator(cx, flags, &regs.sp[-1]))
         goto error;
@@ -1807,7 +1742,7 @@ END_CASE(JSOP_ITER)
 
 BEGIN_CASE(JSOP_MOREITER)
 {
-    JS_ASSERT(regs.sp - 1 >= regs.fp()->base());
+    JS_ASSERT(regs.stackDepth() >= 1);
     JS_ASSERT(regs.sp[-1].isObject());
     PUSH_NULL();
     bool cond;
@@ -1820,8 +1755,8 @@ END_CASE(JSOP_MOREITER)
 
 BEGIN_CASE(JSOP_ITERNEXT)
 {
+    JS_ASSERT(regs.stackDepth() >= unsigned(GET_INT8(regs.pc)));
     Value *itervp = regs.sp - GET_INT8(regs.pc);
-    JS_ASSERT(itervp >= regs.fp()->base());
     JS_ASSERT(itervp->isObject());
     PUSH_NULL();
     if (!IteratorNext(cx, &itervp->toObject(), &regs.sp[-1]))
@@ -1831,7 +1766,7 @@ END_CASE(JSOP_ITERNEXT)
 
 BEGIN_CASE(JSOP_ENDITER)
 {
-    JS_ASSERT(regs.sp - 1 >= regs.fp()->base());
+    JS_ASSERT(regs.stackDepth() >= 1);
     bool ok = CloseIterator(cx, &regs.sp[-1].toObject());
     regs.sp--;
     if (!ok)
@@ -1841,7 +1776,7 @@ END_CASE(JSOP_ENDITER)
 
 BEGIN_CASE(JSOP_DUP)
 {
-    JS_ASSERT(regs.sp > regs.fp()->base());
+    JS_ASSERT(regs.stackDepth() >= 1);
     const Value &rref = regs.sp[-1];
     PUSH_COPY(rref);
 }
@@ -1849,7 +1784,7 @@ END_CASE(JSOP_DUP)
 
 BEGIN_CASE(JSOP_DUP2)
 {
-    JS_ASSERT(regs.sp - 2 >= regs.fp()->base());
+    JS_ASSERT(regs.stackDepth() >= 2);
     const Value &lref = regs.sp[-2];
     const Value &rref = regs.sp[-1];
     PUSH_COPY(lref);
@@ -1859,7 +1794,7 @@ END_CASE(JSOP_DUP2)
 
 BEGIN_CASE(JSOP_SWAP)
 {
-    JS_ASSERT(regs.sp - 2 >= regs.fp()->base());
+    JS_ASSERT(regs.stackDepth() >= 2);
     Value &lref = regs.sp[-2];
     Value &rref = regs.sp[-1];
     lref.swap(rref);
@@ -1869,7 +1804,7 @@ END_CASE(JSOP_SWAP)
 BEGIN_CASE(JSOP_PICK)
 {
     unsigned i = GET_UINT8(regs.pc);
-    JS_ASSERT(regs.sp - (i + 1) >= regs.fp()->base());
+    JS_ASSERT(regs.stackDepth() >= i + 1);
     Value lval = regs.sp[-int(i + 1)];
     memmove(regs.sp - (i + 1), regs.sp - i, sizeof(Value) * i);
     regs.sp[-1] = lval;
@@ -2355,10 +2290,17 @@ BEGIN_CASE(JSOP_INCARG)
 BEGIN_CASE(JSOP_ARGINC)
 {
     unsigned i = GET_ARGNO(regs.pc);
-    CheckArgAccess(regs.fp(), i);
-    Value &arg = regs.fp()->formalArg(i);
-    if (!DoIncDec(cx, script, regs.pc, arg, &arg, &regs.sp[0]))
-        goto error;
+    if (script->argsObjAliasesFormals()) {
+        const Value &arg = regs.fp()->argsObj().arg(i);
+        Value v;
+        if (!DoIncDec(cx, script, regs.pc, arg, &v, &regs.sp[0]))
+            goto error;
+        regs.fp()->argsObj().setArg(i, v);
+    } else {
+        Value &arg = regs.fp()->unaliasedFormal(i);
+        if (!DoIncDec(cx, script, regs.pc, arg, &arg, &regs.sp[0]))
+            goto error;
+    }
     regs.sp++;
 }
 END_CASE(JSOP_ARGINC);
@@ -2369,8 +2311,7 @@ BEGIN_CASE(JSOP_INCLOCAL)
 BEGIN_CASE(JSOP_LOCALINC)
 {
     unsigned i = GET_SLOTNO(regs.pc);
-    CheckLocalAccess(regs.fp(), i);
-    Value &local = regs.fp()->localSlot(i);
+    Value &local = regs.fp()->unaliasedLocal(i);
     if (!DoIncDec(cx, script, regs.pc, local, &local, &regs.sp[0]))
         goto error;
     regs.sp++;
@@ -2481,13 +2422,12 @@ BEGIN_CASE(JSOP_NEW)
 BEGIN_CASE(JSOP_CALL)
 BEGIN_CASE(JSOP_FUNCALL)
 {
+    JS_ASSERT(regs.stackDepth() >= 2 + GET_ARGC(regs.pc));
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-    JS_ASSERT(args.base() >= regs.fp()->base());
 
     bool construct = (*regs.pc == JSOP_NEW);
 
     RootedFunction &fun = rootFunction0;
-
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
     if (!IsFunctionObject(args.calleev(), fun.address()) || !fun->isInterpretedConstructor()) {
         if (construct) {
@@ -2521,10 +2461,6 @@ BEGIN_CASE(JSOP_FUNCALL)
         goto error;
 
     RESTORE_INTERP_VARS();
-
-    if (!regs.fp()->functionPrologue(cx))
-        goto error;
-
     RESET_USE_METHODJIT();
 
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
@@ -2547,7 +2483,7 @@ BEGIN_CASE(JSOP_FUNCALL)
     }
 #endif
 
-    if (!ScriptPrologue(cx, regs.fp(), newType))
+    if (!regs.fp()->prologue(cx, newType))
         goto error;
 
     if (cx->compartment->debugMode()) {
@@ -2804,7 +2740,7 @@ END_CASE(JSOP_ACTUALSFILLED)
 BEGIN_CASE(JSOP_ARGUMENTS)
     JS_ASSERT(!regs.fp()->fun()->hasRest());
     if (script->needsArgsObj()) {
-        ArgumentsObject *obj = ArgumentsObject::create(cx, regs.fp());
+        ArgumentsObject *obj = ArgumentsObject::createExpected(cx, regs.fp());
         if (!obj)
             goto error;
         PUSH_COPY(ObjectValue(*obj));
@@ -2843,16 +2779,20 @@ BEGIN_CASE(JSOP_GETARG)
 BEGIN_CASE(JSOP_CALLARG)
 {
     unsigned i = GET_ARGNO(regs.pc);
-    CheckArgAccess(regs.fp(), i);
-    PUSH_COPY(regs.fp()->formalArg(i));
+    if (script->argsObjAliasesFormals())
+        PUSH_COPY(regs.fp()->argsObj().arg(i));
+    else
+        PUSH_COPY(regs.fp()->unaliasedFormal(i));
 }
 END_CASE(JSOP_GETARG)
 
 BEGIN_CASE(JSOP_SETARG)
 {
     unsigned i = GET_ARGNO(regs.pc);
-    CheckArgAccess(regs.fp(), i);
-    regs.fp()->formalArg(i) = regs.sp[-1];
+    if (script->argsObjAliasesFormals())
+        regs.fp()->argsObj().setArg(i, regs.sp[-1]);
+    else
+        regs.fp()->unaliasedFormal(i) = regs.sp[-1];
 }
 END_CASE(JSOP_SETARG)
 
@@ -2860,8 +2800,7 @@ BEGIN_CASE(JSOP_GETLOCAL)
 BEGIN_CASE(JSOP_CALLLOCAL)
 {
     unsigned i = GET_SLOTNO(regs.pc);
-    CheckLocalAccess(regs.fp(), i);
-    PUSH_COPY_SKIP_CHECK(regs.fp()->localSlot(i));
+    PUSH_COPY_SKIP_CHECK(regs.fp()->unaliasedLocal(i));
 
     /*
      * Skip the same-compartment assertion if the local will be immediately
@@ -2877,8 +2816,7 @@ END_CASE(JSOP_GETLOCAL)
 BEGIN_CASE(JSOP_SETLOCAL)
 {
     unsigned i = GET_SLOTNO(regs.pc);
-    CheckLocalAccess(regs.fp(), i);
-    regs.fp()->localSlot(i) = regs.sp[-1];
+    regs.fp()->unaliasedLocal(i) = regs.sp[-1];
 }
 END_CASE(JSOP_SETLOCAL)
 
@@ -3025,7 +2963,7 @@ END_CASE(JSOP_LAMBDA)
 
 BEGIN_CASE(JSOP_CALLEE)
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
-    PUSH_COPY(argv[-2]);
+    PUSH_COPY(regs.fp()->calleev());
 END_CASE(JSOP_CALLEE)
 
 BEGIN_CASE(JSOP_GETTER)
@@ -3057,7 +2995,7 @@ BEGIN_CASE(JSOP_SETTER)
 
       case JSOP_INITPROP:
       {
-        JS_ASSERT(regs.sp - regs.fp()->base() >= 2);
+        JS_ASSERT(regs.stackDepth() >= 2);
         rval = regs.sp[-1];
         i = -1;
         PropertyName *name;
@@ -3067,8 +3005,7 @@ BEGIN_CASE(JSOP_SETTER)
       }
       default:
         JS_ASSERT(op2 == JSOP_INITELEM);
-
-        JS_ASSERT(regs.sp - regs.fp()->base() >= 3);
+        JS_ASSERT(regs.stackDepth() >= 3);
         rval = regs.sp[-1];
         id = JSID_VOID;
         i = -2;
@@ -3186,7 +3123,7 @@ END_CASE(JSOP_NEWOBJECT)
 BEGIN_CASE(JSOP_ENDINIT)
 {
     /* FIXME remove JSOP_ENDINIT bug 588522 */
-    JS_ASSERT(regs.sp - regs.fp()->base() >= 1);
+    JS_ASSERT(regs.stackDepth() >= 1);
     JS_ASSERT(regs.sp[-1].isObject());
 }
 END_CASE(JSOP_ENDINIT)
@@ -3194,7 +3131,7 @@ END_CASE(JSOP_ENDINIT)
 BEGIN_CASE(JSOP_INITPROP)
 {
     /* Load the property's initial value into rval. */
-    JS_ASSERT(regs.sp - regs.fp()->base() >= 2);
+    JS_ASSERT(regs.stackDepth() >= 2);
     Value rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
@@ -3222,7 +3159,7 @@ END_CASE(JSOP_INITPROP);
 BEGIN_CASE(JSOP_INITELEM)
 {
     /* Pop the element's value into rval. */
-    JS_ASSERT(regs.sp - regs.fp()->base() >= 3);
+    JS_ASSERT(regs.stackDepth() >= 3);
     const Value &rref = regs.sp[-1];
 
     RootedObject &obj = rootObject0;
@@ -3708,24 +3645,17 @@ BEGIN_CASE(JSOP_ENTERLET1)
 {
     StaticBlockObject &blockObj = script->getObject(GET_UINT32_INDEX(regs.pc))->asStaticBlock();
 
+    if (op == JSOP_ENTERBLOCK) {
+        JS_ASSERT(regs.stackDepth() == blockObj.stackDepth());
+        JS_ASSERT(regs.stackDepth() + blockObj.slotCount() <= script->nslots);
+        Value *vp = regs.sp + blockObj.slotCount();
+        SetValueRangeToUndefined(regs.sp, vp);
+        regs.sp = vp;
+    }
+
     /* Clone block iff there are any closed-over variables. */
     if (!regs.fp()->pushBlock(cx, blockObj))
         goto error;
-
-    if (op == JSOP_ENTERBLOCK) {
-        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() == regs.sp);
-        Value *vp = regs.sp + blockObj.slotCount();
-        JS_ASSERT(regs.sp < vp);
-        JS_ASSERT(vp <= regs.fp()->slots() + script->nslots);
-        SetValueRangeToUndefined(regs.sp, vp);
-        regs.sp = vp;
-    } else if (op == JSOP_ENTERLET0) {
-        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
-                  == regs.sp);
-    } else if (op == JSOP_ENTERLET1) {
-        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
-                  == regs.sp - 1);
-    }
 }
 END_CASE(JSOP_ENTERBLOCK)
 
@@ -3740,12 +3670,12 @@ BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
     if (op == JSOP_LEAVEBLOCK) {
         /* Pop the block's slots. */
         regs.sp -= GET_UINT16(regs.pc);
-        JS_ASSERT(regs.fp()->base() + blockDepth == regs.sp);
+        JS_ASSERT(regs.stackDepth() == blockDepth);
     } else if (op == JSOP_LEAVEBLOCKEXPR) {
         /* Pop the block's slots maintaining the topmost expr. */
         Value *vp = &regs.sp[-1];
         regs.sp -= GET_UINT16(regs.pc);
-        JS_ASSERT(regs.fp()->base() + blockDepth == regs.sp - 1);
+        JS_ASSERT(regs.stackDepth() == blockDepth + 1);
         regs.sp[-1] = *vp;
     } else {
         /* Another op will pop; nothing to do here. */
@@ -3759,11 +3689,13 @@ END_CASE(JSOP_LEAVEBLOCK)
 BEGIN_CASE(JSOP_GENERATOR)
 {
     JS_ASSERT(!cx->isExceptionPending());
+    regs.fp()->initGeneratorFrame();
     regs.pc += JSOP_GENERATOR_LENGTH;
     JSObject *obj = js_NewGenerator(cx);
     if (!obj)
         goto error;
     regs.fp()->setReturnValue(ObjectValue(*obj));
+    regs.fp()->setYielding();
     interpReturnOK = true;
     if (entryFrame != regs.fp())
         goto inline_return;
@@ -3773,9 +3705,9 @@ BEGIN_CASE(JSOP_GENERATOR)
 BEGIN_CASE(JSOP_YIELD)
     JS_ASSERT(!cx->isExceptionPending());
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
-    if (cx->generatorFor(regs.fp())->state == JSGEN_CLOSING) {
-        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD,
-                            JSDVG_SEARCH_STACK, argv[-2], NULL);
+    if (cx->innermostGenerator()->state == JSGEN_CLOSING) {
+        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK,
+                            ObjectValue(regs.fp()->callee()), NULL);
         goto error;
     }
     regs.fp()->setReturnValue(regs.sp[-1]);
@@ -3789,9 +3721,8 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
     uint32_t slot = GET_UINT16(regs.pc);
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
-    CheckLocalAccess(regs.fp(), slot);
     RootedObject &obj = rootObject0;
-    obj = &regs.fp()->slots()[slot].toObject();
+    obj = &regs.fp()->unaliasedLocal(slot).toObject();
     if (!js_NewbornArrayPush(cx, obj, regs.sp[-1]))
         goto error;
     regs.sp--;
@@ -3907,7 +3838,7 @@ END_CASE(JSOP_ARRAYPUSH)
              * the for-in loop.
              */
             regs.pc = (script)->main() + tn->start + tn->length;
-            regs.sp = regs.fp()->base() + tn->stackDepth;
+            regs.sp = regs.spForStackDepth(tn->stackDepth);
 
             switch (tn->kind) {
               case JSTRY_CATCH:
@@ -3977,18 +3908,9 @@ END_CASE(JSOP_ARRAYPUSH)
   exit:
     if (cx->compartment->debugMode())
         interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
-    interpReturnOK = ScriptEpilogueOrGeneratorYield(cx, regs.fp(), interpReturnOK);
+    if (!regs.fp()->isYielding())
+        regs.fp()->epilogue(cx);
     regs.fp()->setFinishedInInterpreter();
-
-#ifdef DEBUG
-    JS_ASSERT(entryFrame == regs.fp());
-    if (regs.fp()->isFunctionFrame())
-        AssertValidFunctionScopeChainAtExit(regs.fp());
-    else if (regs.fp()->isEvalFrame())
-        AssertValidEvalFrameScopeChainAtExit(regs.fp());
-    else if (!regs.fp()->isGeneratorFrame())
-        JS_ASSERT(!regs.fp()->scopeChain()->isScope());
-#endif
 
 #ifdef JS_METHODJIT
     /*
