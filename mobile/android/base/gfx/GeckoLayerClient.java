@@ -202,8 +202,6 @@ public class GeckoLayerClient implements GeckoEventListener,
             bufferRect.offset(Math.round(-currentOrigin.x), Math.round(-currentOrigin.y));
         }
 
-        mTileLayer.beginTransaction();  // Called on gecko thread
-
         if (mBufferSize.width != width || mBufferSize.height != height) {
             mBufferSize = new IntSize(width, height);
         }
@@ -217,6 +215,7 @@ public class GeckoLayerClient implements GeckoEventListener,
      * a little more JNI magic.
      */
     public void endDrawing(int x, int y, int width, int height) {
+        mTileLayer.beginTransaction();  // Called on gecko thread
         synchronized (mLayerController) {
             try {
                 updateViewport(!mUpdateViewportOnEndDraw);
