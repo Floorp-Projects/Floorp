@@ -436,6 +436,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(imm, ScratchRegister);
         ma_push(ScratchRegister);
     }
+    void push(const Register &reg) {
+        ma_push(reg);
+    }
+    void pop(const Register &reg) {
+        ma_pop(reg);
+    }
 
     CodeOffsetLabel pushWithPatch(ImmWord imm) {
         CodeOffsetLabel label = currentOffset();
