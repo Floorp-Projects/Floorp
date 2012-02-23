@@ -3505,7 +3505,8 @@ class MStringLength
 
 // Inlined assembly version of the math function calls.
 class MRound
-  : public MUnaryInstruction
+  : public MUnaryInstruction,
+    public DoublePolicy<0>
 {
   public:
     enum RoundingMode {
@@ -3537,9 +3538,11 @@ class MRound
     RoundingMode mode() const {
         return mode_;
     }
-
-    virtual AliasSet getAliasSet() const {
+    AliasSet getAliasSet() const {
         return AliasSet::None();
+    }
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 

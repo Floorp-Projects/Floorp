@@ -176,6 +176,17 @@ class IntPolicy : public BoxInputsPolicy
     }
 };
 
+// Expect a double for operand Op. If the input is a Value, it is unboxed.
+template <unsigned Op>
+class DoublePolicy : public BoxInputsPolicy
+{
+  public:
+    static bool staticAdjustInputs(MInstruction *def);
+    bool adjustInputs(MInstruction *def) {
+        return staticAdjustInputs(def);
+    }
+};
+
 // Combine multiple policies.
 template <class Lhs, class Rhs>
 class MixPolicy
