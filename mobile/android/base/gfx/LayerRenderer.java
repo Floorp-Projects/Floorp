@@ -655,9 +655,9 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             if (mShowFrameRate) {
                 updateDroppedFrames(mFrameStartTime);
 
-		GLES20.glEnable(GLES20.GL_BLEND);
-		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-		mFrameRateLayer.draw(mScreenContext);
+                GLES20.glEnable(GLES20.GL_BLEND);
+                GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+                mFrameRateLayer.draw(mScreenContext);
             }
         }
 
