@@ -53,7 +53,6 @@ include $(topsrcdir)/dom/dom-config.mk
 CPPSRCS = \
   Telephony.cpp \
   TelephonyCall.cpp \
-  TelephonyCallArray.cpp \
   CallEvent.cpp \
   $(NULL)
 
@@ -64,7 +63,10 @@ XPIDLSRCS = \
   nsIDOMCallEvent.idl \
   $(NULL)
 
-# Needed for dombindings.h
-LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src
+#LOCAL_INCLUDES = \
+#  -I$(topsrcdir)/dom/base \
+#  -I$(topsrcdir)/dom/system/b2g \
+#  -I$(topsrcdir)/content/events/src \
+#  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
