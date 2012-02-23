@@ -186,13 +186,8 @@ public class GeckoLayerClient implements GeckoEventListener,
             if (!bufferRect.intersect(currentRect)) {
                 Log.w(LOGTAG, "Prediction would avoid useless paint of " + area + " pixels (100.0%)");
                 // If there's no intersection, we have no need to render anything,
-                // but make sure to update the viewport size.
-                mTileLayer.beginTransaction();      // Called on gecko thread
-                try {
-                    updateViewport(true);
-                } finally {
-                    mTileLayer.endTransaction();
-                }
+                // but make sure to update the page size.
+                updateViewport(true);
                 return null;
             }
 
@@ -215,15 +210,8 @@ public class GeckoLayerClient implements GeckoEventListener,
      * a little more JNI magic.
      */
     public void endDrawing(int x, int y, int width, int height) {
-        mTileLayer.beginTransaction();  // Called on gecko thread
-        synchronized (mLayerController) {
-            try {
-                updateViewport(!mUpdateViewportOnEndDraw);
-                mUpdateViewportOnEndDraw = false;
-            } finally {
-                mTileLayer.endTransaction();
-            }
-        }
+        updateViewport(!mUpdateViewportOnEndDraw);
+        mUpdateViewportOnEndDraw = false;
         Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
 
         /* Used by robocop for testing purposes */
@@ -233,33 +221,40 @@ public class GeckoLayerClient implements GeckoEventListener,
     }
 
     private void updateViewport(boolean onlyUpdatePageSize) {
-        // save and restore the viewport size stored in java; never let the
-        // JS-side viewport dimensions override the java-side ones because
-        // java is the One True Source of this information, and allowing JS
-        // to override can lead to race conditions where this data gets clobbered.
-        FloatSize viewportSize = mLayerController.getViewportSize();
-        mGeckoViewport = mNewGeckoViewport;
-        mGeckoViewport.setSize(viewportSize);
+        mTileLayer.beginTransaction(); // Called on gecko thread
+        try {
+            synchronized (mLayerController) {
+                // save and restore the viewport size stored in java; never let the
+                // JS-side viewport dimensions override the java-side ones because
+                // java is the One True Source of this information, and allowing JS
+                // to override can lead to race conditions where this data gets clobbered.
+                FloatSize viewportSize = mLayerController.getViewportSize();
+                mGeckoViewport = mNewGeckoViewport;
+                mGeckoViewport.setSize(viewportSize);
 
-        PointF origin = mGeckoViewport.getOrigin();
-        mTileLayer.setOrigin(PointUtils.round(origin));
-        mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
+                PointF origin = mGeckoViewport.getOrigin();
+                mTileLayer.setOrigin(PointUtils.round(origin));
+                mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
 
-        // Set the new origin and resolution instantly.
-        mTileLayer.performUpdates(null);
+                // Set the new origin and resolution instantly.
+                mTileLayer.performUpdates(null);
 
-        Log.e(LOGTAG, "### updateViewport onlyUpdatePageSize=" + onlyUpdatePageSize +
-              " getTileViewport " + mGeckoViewport);
+                Log.e(LOGTAG, "### updateViewport onlyUpdatePageSize=" + onlyUpdatePageSize +
+                      " getTileViewport " + mGeckoViewport);
 
-        if (onlyUpdatePageSize) {
-            // Don't adjust page size when zooming unless zoom levels are
-            // approximately equal.
-            if (FloatUtils.fuzzyEquals(mLayerController.getZoomFactor(),
-                    mGeckoViewport.getZoomFactor()))
-                mLayerController.setPageSize(mGeckoViewport.getPageSize());
-        } else {
-            mLayerController.setViewportMetrics(mGeckoViewport);
-            mLayerController.abortPanZoomAnimation();
+                if (onlyUpdatePageSize) {
+                    // Don't adjust page size when zooming unless zoom levels are
+                    // approximately equal.
+                    if (FloatUtils.fuzzyEquals(mLayerController.getZoomFactor(),
+                            mGeckoViewport.getZoomFactor()))
+                        mLayerController.setPageSize(mGeckoViewport.getPageSize());
+                } else {
+                    mLayerController.setViewportMetrics(mGeckoViewport);
+                    mLayerController.abortPanZoomAnimation();
+                }
+            }
+        } finally {
+            mTileLayer.endTransaction();
         }
     }
 
