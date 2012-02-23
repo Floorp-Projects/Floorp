@@ -452,6 +452,6 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 void
 OsiIndex::fixUpOffset(MacroAssembler &masm)
 {
-    returnPointDisplacement_ = (uint32)masm.actualOffset((uint8*)returnPointDisplacement_);
+    returnPointDisplacement_ = masm.actualOffset(returnPointDisplacement_);
 }
 

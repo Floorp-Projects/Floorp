@@ -1025,8 +1025,8 @@ class LSafepoint : public TempObject
         osiReturnPointOffset_ = osiReturnPointOffset;
     }
     void fixupOffset(MacroAssembler *masm) {
-        osiReturnPointOffset_ = masm->actualOffset((uint8*)osiReturnPointOffset_);
-        safepointOffset_ = masm->actualOffset((uint8*)safepointOffset_);
+        osiReturnPointOffset_ = masm->actualOffset(osiReturnPointOffset_);
+        safepointOffset_ = masm->actualOffset(safepointOffset_);
     }
 };
 
