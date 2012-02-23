@@ -181,7 +181,7 @@ image.study-result {
     color: white;
     font-weight: bold;
     padding: 2px;
-    -moz-border-radius: 100%;
+    border-radius: 100%;
     margin-right: 25px;
     margin-bottom: 13px;
 }

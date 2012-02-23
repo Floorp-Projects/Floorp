@@ -44,7 +44,7 @@
 #ifndef downloadmanager___h___
 #define downloadmanager___h___
 
-#if defined(XP_WIN) && (MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN)
+#if defined(XP_WIN)
 #define DOWNLOAD_SCANNER
 #endif
 

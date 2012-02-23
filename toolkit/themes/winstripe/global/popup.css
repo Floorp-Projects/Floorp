@@ -170,7 +170,7 @@ panel[type="arrow"] {
     background-clip: padding-box;
     margin: 4px;
     border: 2px solid;
-    -moz-border-radius: 2px;
+    border-radius: 2px;
     -moz-border-top-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
     -moz-border-left-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);
     -moz-border-bottom-colors: rgba(255,255,255,.6) rgba(0,0,0,.7);

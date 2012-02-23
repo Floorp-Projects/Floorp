@@ -23,6 +23,29 @@ function testChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild,
 }
 
 /**
+ * Test if getChildAtPoint returns the given child and grand child accessibles
+ * at coordinates of child accessible (direct and deep hit test).
+ */
+function hitTest(aContainerID, aChildID, aGrandChildID)
+{
+  var container = getAccessible(aContainerID);
+  var child = getAccessible(aChildID);
+  var grandChild = getAccessible(aGrandChildID);
+
+  var [x, y] = getBoundsForDOMElm(child);
+
+  var actualChild = container.getChildAtPoint(x + 1, y + 1);
+  is(actualChild, child,
+     "Wrong child, expected: " + prettyName(child) +
+     ", got: " + prettyName(actualChild));
+
+  var actualGrandChild = container.getDeepestChildAtPoint(x + 1, y + 1);
+  is(actualGrandChild, grandChild,
+     "Wrong deepest child, expected: " + prettyName(grandChild) +
+     ", got: " + prettyName(actualGrandChild));
+}
+
+/**
  * Return child accessible at the given point.
  *
  * @param aIdentifier        [in] accessible identifier
