@@ -902,6 +902,7 @@ class ScriptAnalysis
     bool addsScopeObjects_:1;
     bool localsAliasStack_:1;
     bool isInlineable:1;
+    bool isCompileable:1;
     bool canTrackVars:1;
 
     uint32_t numReturnSites_;
@@ -937,6 +938,7 @@ class ScriptAnalysis
     bool failed() const { return hadFailure; }
     bool inlineable() const { return isInlineable; }
     bool inlineable(uint32_t argc) const { return isInlineable && argc == script->function()->nargs; }
+    bool compileable() { return isCompileable; }
 
     /* Whether there are POPV/SETRVAL bytecodes which can write to the frame's rval. */
     bool usesReturnValue() const { return usesReturnValue_; }

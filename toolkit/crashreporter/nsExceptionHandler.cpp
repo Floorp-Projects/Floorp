@@ -770,7 +770,6 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
 #ifdef XP_WIN32
   MINIDUMP_TYPE minidump_type = MiniDumpNormal;
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // Try to determine what version of dbghelp.dll we're using.
   // MinidumpWithFullMemoryInfo is only available in 6.1.x or newer.
 
@@ -793,7 +792,6 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
       }
     }
   }
-#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 #endif // XP_WIN32
 
   // now set the exception handler
