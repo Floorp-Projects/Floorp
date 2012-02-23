@@ -14,10 +14,162 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsgcmark.h"
+#include "jsinterp.h"
 
 #include "js/TemplateLib.h"
 
 #include "ObjectImpl.h"
+
+namespace js {
+
+static JS_ALWAYS_INLINE void
+Debug_SetSlotRangeToCrashOnTouch(HeapSlot *vec, size_t len)
+{
+#ifdef DEBUG
+    Debug_SetValueRangeToCrashOnTouch((Value *) vec, len);
+#endif
+}
+
+static JS_ALWAYS_INLINE void
+Debug_SetSlotRangeToCrashOnTouch(HeapSlot *begin, HeapSlot *end)
+{
+#ifdef DEBUG
+    Debug_SetValueRangeToCrashOnTouch((Value *) begin, end - begin);
+#endif
+}
+
+} // namespace js
+
+inline bool
+js::ObjectImpl::isExtensible() const
+{
+    return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
+}
+
+inline bool
+js::ObjectImpl::isDenseArray() const
+{
+    bool result = hasClass(&ArrayClass);
+    MOZ_ASSERT_IF(result, elements != emptyObjectElements);
+    return result;
+}
+
+inline bool
+js::ObjectImpl::isSlowArray() const
+{
+    bool result = hasClass(&SlowArrayClass);
+    MOZ_ASSERT_IF(result, elements != emptyObjectElements);
+    return result;
+}
+
+inline bool
+js::ObjectImpl::isArray() const
+{
+    return isSlowArray() || isDenseArray();
+}
+
+inline uint32_t
+js::ObjectImpl::getDenseArrayInitializedLength()
+{
+    MOZ_ASSERT(isDenseArray());
+    return getElementsHeader()->initializedLength;
+}
+
+inline js::HeapSlotArray
+js::ObjectImpl::getDenseArrayElements()
+{
+    MOZ_ASSERT(isDenseArray());
+    return HeapSlotArray(elements);
+}
+
+inline const js::Value &
+js::ObjectImpl::getDenseArrayElement(unsigned idx)
+{
+    MOZ_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
+    return elements[idx];
+}
+
+inline void
+js::ObjectImpl::getSlotRangeUnchecked(size_t start, size_t length,
+                                      HeapSlot **fixedStart, HeapSlot **fixedEnd,
+                                      HeapSlot **slotsStart, HeapSlot **slotsEnd)
+{
+    MOZ_ASSERT(!isDenseArray());
+    MOZ_ASSERT(start + length >= start);
+
+    size_t fixed = numFixedSlots();
+    if (start < fixed) {
+        if (start + length < fixed) {
+            *fixedStart = &fixedSlots()[start];
+            *fixedEnd = &fixedSlots()[start + length];
+            *slotsStart = *slotsEnd = NULL;
+        } else {
+            size_t localCopy = fixed - start;
+            *fixedStart = &fixedSlots()[start];
+            *fixedEnd = &fixedSlots()[start + localCopy];
+            *slotsStart = &slots[0];
+            *slotsEnd = &slots[length - localCopy];
+        }
+    } else {
+        *fixedStart = *fixedEnd = NULL;
+        *slotsStart = &slots[start - fixed];
+        *slotsEnd = &slots[start - fixed + length];
+    }
+}
+
+inline void
+js::ObjectImpl::getSlotRange(size_t start, size_t length,
+                             HeapSlot **fixedStart, HeapSlot **fixedEnd,
+                             HeapSlot **slotsStart, HeapSlot **slotsEnd)
+{
+    MOZ_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
+    getSlotRangeUnchecked(start, length, fixedStart, fixedEnd, slotsStart, slotsEnd);
+}
+
+inline void
+js::ObjectImpl::invalidateSlotRange(size_t start, size_t length)
+{
+#ifdef DEBUG
+    MOZ_ASSERT(!isDenseArray());
+
+    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+    Debug_SetSlotRangeToCrashOnTouch(fixedStart, fixedEnd);
+    Debug_SetSlotRangeToCrashOnTouch(slotsStart, slotsEnd);
+#endif /* DEBUG */
+}
+
+inline void
+js::ObjectImpl::initializeSlotRange(size_t start, size_t length)
+{
+    /*
+     * No bounds check, as this is used when the object's shape does not
+     * reflect its allocated slots (updateSlotsForSpan).
+     */
+    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    getSlotRangeUnchecked(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+
+    JSCompartment *comp = compartment();
+    size_t offset = start;
+    for (HeapSlot *sp = fixedStart; sp < fixedEnd; sp++)
+        sp->init(comp, this->asObjectPtr(), offset++, UndefinedValue());
+    for (HeapSlot *sp = slotsStart; sp < slotsEnd; sp++)
+        sp->init(comp, this->asObjectPtr(), offset++, UndefinedValue());
+}
+
+inline uint32_t
+js::ObjectImpl::slotSpan() const
+{
+    if (inDictionaryMode())
+        return lastProperty()->base()->slotSpan();
+    return lastProperty()->slotSpan();
+}
+
+inline size_t
+js::ObjectImpl::numDynamicSlots() const
+{
+    return dynamicSlotsCount(numFixedSlots(), slotSpan());
+}
 
 inline bool
 js::ObjectImpl::isNative() const
@@ -136,12 +288,6 @@ js::ObjectImpl::writeBarrierPre(ObjectImpl *obj)
 /* static */ inline void
 js::ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *addr)
 {
-}
-
-inline bool
-js::ObjectImpl::isExtensible() const
-{
-    return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
 }
 
 #endif /* ObjectImpl_inl_h__ */
