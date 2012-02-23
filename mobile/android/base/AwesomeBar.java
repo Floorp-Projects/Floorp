@@ -163,17 +163,27 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
 
         mText.setOnKeyPreImeListener(new AwesomeBarEditText.OnKeyPreImeListener() {
             public boolean onKeyPreIme(View v, int keyCode, KeyEvent event) {
-                InputMethodManager imm =
-                        (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                // We only want to process one event per tap
+                if (event.getAction() != KeyEvent.ACTION_DOWN)
+                    return false;
 
-                if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
                     openUserEnteredAndFinish(mText.getText().toString());
                     return true;
                 }
 
                 // If input method is in fullscreen mode, we want to dismiss
                 // it instead of closing awesomebar straight away.
-                if (!imm.isFullscreenMode() && keyCode == KeyEvent.KEYCODE_BACK) {
+                InputMethodManager imm =
+                        (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (keyCode == KeyEvent.KEYCODE_BACK && !imm.isFullscreenMode()) {
+                    // Let mAwesomeTabs try to handle the back press, since we may be in a
+                    // bookmarks sub-folder.
+                    if (mAwesomeTabs.onBackPressed())
+                        return true;
+
+                    // If mAwesomeTabs.onBackPressed() returned false, we didn't move up
+                    // a folder level, so just exit the activity.
                     cancelAndFinish();
                     return true;
                 }
