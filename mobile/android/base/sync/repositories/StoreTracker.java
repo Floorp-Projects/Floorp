@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.sync.repositories;
 
+import java.util.Iterator;
+
 /**
  * Our hacky version of transactional semantics. The goal is to prevent
  * the following situation:
@@ -75,4 +77,6 @@ public interface StoreTracker {
   public boolean untrackStoredForExclusion(String guid);
 
   public RecordFilter getFilter();
+
+  public Iterator<String> recordsTrackedForExclusion();
 }
