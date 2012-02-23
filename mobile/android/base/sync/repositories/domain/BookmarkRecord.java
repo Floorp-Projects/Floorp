@@ -150,9 +150,13 @@ public class BookmarkRecord extends Record {
     this.guid = payload.guid;
     checkGUIDs(p);
 
+    final Object del = p.get("deleted");
+    if (del instanceof Boolean) {
+      this.deleted = (Boolean) del;
+    }
+
     this.collection    = payload.collection;
     this.lastModified  = payload.lastModified;
-    this.deleted       = payload.deleted;
 
     this.type          = (String) p.get("type");
     this.title         = (String) p.get("title");
@@ -209,18 +213,23 @@ public class BookmarkRecord extends Record {
     CryptoRecord rec = new CryptoRecord(this);
     rec.payload = new ExtendedJSONObject();
     rec.payload.put("id", this.guid);
-    rec.payload.put("type", this.type);
-    rec.payload.put("title", this.title);
-    rec.payload.put("description", this.description);
-    rec.payload.put("parentid", this.parentID);
-    rec.payload.put("parentName", this.parentName);
-    if (isBookmark()) {
-      rec.payload.put("bmkUri", bookmarkURI);
-      rec.payload.put("keyword", keyword);
-      rec.payload.put("tags", this.tags);
-    }
-    if (isFolder()) {
-      rec.payload.put("children", this.children);
+
+    if (this.deleted) {
+      rec.payload.put("deleted", true);
+    } else {
+      putPayload(rec, "type", this.type);
+      putPayload(rec, "title", this.title);
+      putPayload(rec, "description", this.description);
+      putPayload(rec, "parentid", this.parentID);
+      putPayload(rec, "parentName", this.parentName);
+
+      if (isBookmark()) {
+        rec.payload.put("bmkUri", bookmarkURI);
+        rec.payload.put("keyword", keyword);
+        rec.payload.put("tags", this.tags);
+      } else if (isFolder()) {
+        rec.payload.put("children", this.children);
+      }
     }
     return rec;
   }
