@@ -110,9 +110,6 @@ unsigned char *_mbsstr( const unsigned char *str,
 #define DRIVE_REMOTE 4
 #endif
 
-ILCreateFromPathWPtr nsLocalFile::sILCreateFromPathW = NULL;
-SHOpenFolderAndSelectItemsPtr nsLocalFile::sSHOpenFolderAndSelectItems = NULL;
-
 class nsDriveEnumerator : public nsISimpleEnumerator
 {
 public:
@@ -2763,19 +2760,6 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 }   
 
 /* attrib unsigned long fileAttributesWin; */
-static bool IsXPOrGreater()
-{
-    OSVERSIONINFO osvi;
-
-    ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-
-    GetVersionEx(&osvi);
-
-    return ((osvi.dwMajorVersion > 5) ||
-       ((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion >= 1)));
-}
-
 NS_IMETHODIMP
 nsLocalFile::GetFileAttributesWin(PRUint32 *aAttribs)
 {
@@ -2797,85 +2781,31 @@ nsLocalFile::SetFileAttributesWin(PRUint32 aAttribs)
     if (dwAttrs == INVALID_FILE_ATTRIBUTES)
       return NS_ERROR_FILE_INVALID_PATH;
 
-    if (IsXPOrGreater()) {
-      if (aAttribs & WFA_SEARCH_INDEXED) {
-          dwAttrs &= ~FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
-      } else {
-          dwAttrs |= FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
-      }
+    if (aAttribs & WFA_SEARCH_INDEXED) {
+        dwAttrs &= ~FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
+    } else {
+        dwAttrs |= FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
     }
 
     if (SetFileAttributesW(mWorkingPath.get(), dwAttrs) == 0)
       return NS_ERROR_FAILURE;
     return NS_OK;
-}   
+}
 
 
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
-    // make sure mResolvedPath is set
-    nsresult rv = ResolveAndStat();
-    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
-        return rv;
-
-    // First try revealing with the shell, and if that fails fall back
-    // to the classic way using explorer.exe command line parameters
-    rv = RevealUsingShell();
-    if (NS_FAILED(rv)) {
-      rv = RevealClassic();
-    }
-
-    return rv;
-}
-
-nsresult
-nsLocalFile::RevealClassic()
-{
-  // use the full path to explorer for security
-  nsCOMPtr<nsILocalFile> winDir;
-  nsresult rv = GetSpecialSystemDirectory(Win_WindowsDirectory, getter_AddRefs(winDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoString explorerPath;
-  rv = winDir->GetPath(explorerPath);  
-  NS_ENSURE_SUCCESS(rv, rv);
-  explorerPath.AppendLiteral("\\explorer.exe");
-
-  // Always open a new window for files because Win2K doesn't appear to select
-  // the file if a window showing that folder was already open. If the resolved 
-  // path is a directory then instead of opening the parent and selecting it, 
-  // we open the directory itself.
-  nsAutoString explorerParams;
-  if (mFileInfo64.type != PR_FILE_DIRECTORY) // valid because we ResolveAndStat above
-    explorerParams.AppendLiteral("/n,/select,");
-  explorerParams.Append(L'\"');
-  explorerParams.Append(mResolvedPath);
-  explorerParams.Append(L'\"');
-
-  if (::ShellExecuteW(NULL, L"open", explorerPath.get(), explorerParams.get(),
-    NULL, SW_SHOWNORMAL) <= (HINSTANCE) 32)
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-nsresult 
-nsLocalFile::RevealUsingShell()
-{
-  // All of these shell32.dll related pointers should be non NULL 
-  // on XP and later.
-  if (!sILCreateFromPathW || !sSHOpenFolderAndSelectItems) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool isDirectory;
+  // make sure mResolvedPath is set
+  bool isDirectory = false;
   nsresult rv = IsDirectory(&isDirectory);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
+      return rv;
 
   HRESULT hr;
   if (isDirectory) {
     // We have a directory so we should open the directory itself.
-    ITEMIDLIST *dir = sILCreateFromPathW(mResolvedPath.get());
+    ITEMIDLIST *dir = ILCreateFromPathW(mResolvedPath.get());
     if (!dir) {
       return NS_ERROR_FAILURE;
     }
@@ -2884,7 +2814,7 @@ nsLocalFile::RevealUsingShell()
     UINT count = ArrayLength(selection);
 
     //Perform the open of the directory.
-    hr = sSHOpenFolderAndSelectItems(dir, count, selection, 0);
+    hr = SHOpenFolderAndSelectItems(dir, count, selection, 0);
     CoTaskMemFree(dir);
   }
   else {
@@ -2897,13 +2827,13 @@ nsLocalFile::RevealUsingShell()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We have a file so we should open the parent directory.
-    ITEMIDLIST *dir = sILCreateFromPathW(parentDirectoryPath.get());
+    ITEMIDLIST *dir = ILCreateFromPathW(parentDirectoryPath.get());
     if (!dir) {
       return NS_ERROR_FAILURE;
     }
 
     // Set the item in the directory to select to the file we want to reveal.
-    ITEMIDLIST *item = sILCreateFromPathW(mResolvedPath.get());
+    ITEMIDLIST *item = ILCreateFromPathW(mResolvedPath.get());
     if (!item) {
       CoTaskMemFree(dir);
       return NS_ERROR_FAILURE;
@@ -2913,7 +2843,7 @@ nsLocalFile::RevealUsingShell()
     UINT count = ArrayLength(selection);
 
     //Perform the selection of the file.
-    hr = sSHOpenFolderAndSelectItems(dir, count, selection, 0);
+    hr = SHOpenFolderAndSelectItems(dir, count, selection, 0);
 
     CoTaskMemFree(dir);
     CoTaskMemFree(item);
@@ -3222,21 +3152,6 @@ nsLocalFile::GlobalInit()
 {
     nsresult rv = NS_CreateShortcutResolver();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Shortcut resolver could not be created");
-
-    // shell32.dll should be loaded already, so we are not actually 
-    // loading the library here.
-    HMODULE hLibShell = GetModuleHandleW(L"shell32.dll");
-    if (hLibShell) {
-      // ILCreateFromPathW is available in XP and up.
-      sILCreateFromPathW = (ILCreateFromPathWPtr) 
-                            GetProcAddress(hLibShell, 
-                                           "ILCreateFromPathW");
-
-      // SHOpenFolderAndSelectItems is available in XP and up.
-      sSHOpenFolderAndSelectItems = (SHOpenFolderAndSelectItemsPtr) 
-                                     GetProcAddress(hLibShell, 
-                                                    "SHOpenFolderAndSelectItems");
-    }
 }
 
 void
