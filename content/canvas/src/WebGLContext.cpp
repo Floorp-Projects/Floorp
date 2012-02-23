@@ -500,11 +500,6 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
             }
         }
     }
-
-    if (gl && gl->IsANGLE() && !gl->GetD3DShareHandle()) {
-        NS_NOTREACHED("ANGLE should always provide d3d share handles!");
-        gl = nsnull;
-    }
 #endif
 
     // try the default provider, whatever that is
