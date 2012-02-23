@@ -42,6 +42,7 @@
 
 interface nsIDOMEventListener;
 interface nsIDOMTelephonyCall;
+interface nsIDOMTelephonyCallArray;
 
 [scriptable, builtinclass, uuid(047be0d8-a9cd-49aa-8948-2f60ff3a7a18)]
 interface nsIDOMTelephony : nsIDOMEventTarget
@@ -56,7 +57,7 @@ interface nsIDOMTelephony : nsIDOMEventTarget
   attribute jsval active;
 
   // Array of all calls that are currently connected.
-  readonly attribute jsval calls;
+  readonly attribute nsIDOMTelephonyCallArray calls;
 
   void startTone(in DOMString tone);
   void stopTone();

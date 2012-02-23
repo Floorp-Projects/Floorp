@@ -53,71 +53,17 @@
 
 #include "CallEvent.h"
 #include "TelephonyCall.h"
+#include "TelephonyCallArray.h"
 
 USING_TELEPHONY_NAMESPACE
 using mozilla::Preferences;
 
 #define DOM_TELEPHONY_APP_PHONE_URL_PREF "dom.telephony.app.phone.url"
 
-namespace {
-
-template <class T>
-inline nsresult
-nsTArrayToJSArray(JSContext* aCx, JSObject* aGlobal,
-                  const nsTArray<nsRefPtr<T> >& aSourceArray,
-                  JSObject** aResultArray)
-{
-  NS_ASSERTION(aCx, "Null context!");
-  NS_ASSERTION(aGlobal, "Null global!");
-
-  JSAutoRequest ar(aCx);
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(aCx, aGlobal)) {
-    NS_WARNING("Failed to enter compartment!");
-    return NS_ERROR_FAILURE;
-  }
-
-  JSObject* arrayObj;
-
-  if (aSourceArray.IsEmpty()) {
-    arrayObj = JS_NewArrayObject(aCx, 0, nsnull);
-  } else {
-    nsTArray<jsval> valArray;
-    valArray.SetLength(aSourceArray.Length());
-
-    for (PRUint32 index = 0; index < valArray.Length(); index++) {
-      nsISupports* obj = aSourceArray[index]->ToISupports();
-      nsresult rv =
-        nsContentUtils::WrapNative(aCx, aGlobal, obj, &valArray[index]);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    arrayObj = JS_NewArrayObject(aCx, valArray.Length(), valArray.Elements());
-  }
-
-  if (!arrayObj) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // XXX This is not what Jonas wants. He wants it to be live.
-  if (!JS_FreezeObject(aCx, arrayObj)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aResultArray = arrayObj;
-  return NS_OK;
-}
-
-} // anonymous namespace
-
 Telephony::~Telephony()
 {
   if (mRIL && mRILTelephonyCallback) {
     mRIL->UnregisterCallback(mRILTelephonyCallback);
-  }
-
-  if (mRooted) {
-    NS_DROP_JS_OBJECTS(this, Telephony);
   }
 }
 
@@ -164,25 +110,22 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Telephony)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Telephony,
                                                   nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(incoming)
   for (PRUint32 index = 0; index < tmp->mCalls.Length(); index++) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCalls[i]");
     cb.NoteXPCOMChild(tmp->mCalls[index]->ToISupports());
   }
+  if (tmp->mCallsArray) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCallsArray);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(Telephony,
-                                               nsDOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mCallsArray, "mCallsArray")
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Telephony,
                                                 nsDOMEventTargetHelper)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(incoming)
   tmp->mCalls.Clear();
   tmp->mActiveCall = nsnull;
-  tmp->mCallsArray = nsnull;
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCallsArray)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Telephony)
@@ -306,24 +249,17 @@ Telephony::SetActive(const jsval& aActive)
 }
 
 NS_IMETHODIMP
-Telephony::GetCalls(jsval* aCalls)
+Telephony::GetCalls(nsIDOMTelephonyCallArray** aCalls)
 {
-  JSObject* calls = mCallsArray;
+  nsRefPtr<TelephonyCallArray> calls = mCallsArray;
   if (!calls) {
-    nsresult rv =
-      nsTArrayToJSArray(mScriptContext->GetNativeContext(),
-                        mScriptContext->GetNativeGlobal(), mCalls, &calls);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!mRooted) {
-      NS_HOLD_JS_OBJECTS(this, Telephony);
-      mRooted = true;
-    }
+    calls = TelephonyCallArray::Create(this);
+    NS_ASSERTION(calls, "This should never fail!");
 
     mCallsArray = calls;
   }
 
-  aCalls->setObject(*calls);
+  calls.forget(aCalls);
   return NS_OK;
 }
 
