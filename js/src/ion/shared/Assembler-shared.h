@@ -74,6 +74,8 @@ struct Imm32
           case TimesEight:
             return Imm32(3);
         };
+        JS_NOT_REACHED("Invalid scale");
+        return Imm32(-1);
     }
 
     static inline Imm32 FactorOf(enum Scale s) {
