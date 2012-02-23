@@ -81,6 +81,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
 
   private static final int     SHARED_PREFERENCES_MODE = 0;
   private static final int     BACKOFF_PAD_SECONDS = 5;
+  private static final int     MINIMUM_SYNC_INTERVAL_MILLISECONDS = 5 * 60 * 1000;   // 5 minutes.
 
   private final AccountManager mAccountManager;
   private final Context        mContext;
@@ -222,12 +223,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
                             final SyncResult syncResult) {
     Utils.reseedSharedRandom(); // Make sure we don't work with the same random seed for too long.
 
+    boolean force = (extras != null) && (extras.getBoolean("force", false));
     long delay = delayMilliseconds();
     if (delay > 0) {
-      Log.i(LOG_TAG, "Not syncing: must wait another " + delay + "ms.");
-      long remainingSeconds = delay / 1000;
-      syncResult.delayUntil = remainingSeconds + BACKOFF_PAD_SECONDS;
-      return;
+      if (force) {
+        Log.i(LOG_TAG, "Forced sync: overruling remaining backoff of " + delay + "ms.");
+      } else {
+        Log.i(LOG_TAG, "Not syncing: must wait another " + delay + "ms.");
+        long remainingSeconds = delay / 1000;
+        syncResult.delayUntil = remainingSeconds + BACKOFF_PAD_SECONDS;
+        return;
+      }
     }
 
     // TODO: don't clear the auth token unless we have a sync error.
@@ -300,6 +306,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
       Log.i(LOG_TAG, "Waiting on sync monitor.");
       try {
         syncMonitor.wait();
+        long next = System.currentTimeMillis() + MINIMUM_SYNC_INTERVAL_MILLISECONDS;
+        Log.i(LOG_TAG, "Setting minimum next sync time to " + next);
+        extendEarliestNextSync(next);
       } catch (InterruptedException e) {
         Log.i(LOG_TAG, "Waiting on sync monitor interrupted.", e);
       }
@@ -338,7 +347,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
                                                     keyBundle, this, this.mContext, extras);
 
     globalSession.start();
-
   }
 
   private void notifyMonitor() {
