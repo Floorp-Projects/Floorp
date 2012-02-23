@@ -60,10 +60,7 @@ JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
 
 RegExpObjectBuilder::RegExpObjectBuilder(JSContext *cx, RegExpObject *reobj)
   : cx(cx), reobj_(reobj)
-{
-    if (reobj_)
-        reobj_->setShared(cx, NULL);
-}
+{}
 
 bool
 RegExpObjectBuilder::getOrCreate()
@@ -103,7 +100,7 @@ RegExpObjectBuilder::build(JSAtom *source, RegExpShared &shared)
     if (!reobj_->init(cx, source, shared.getFlags()))
         return NULL;
 
-    reobj_->setShared(cx, &shared);
+    reobj_->setShared(cx, shared);
     return reobj_;
 }
 
@@ -400,7 +397,7 @@ RegExpObject::createShared(JSContext *cx, RegExpGuard *g)
     if (!cx->compartment->regExps.get(cx, getSource(), getFlags(), g))
         return false;
 
-    setShared(cx, &**g);
+    setShared(cx, **g);
     return true;
 }
 
@@ -467,7 +464,12 @@ RegExpObject::init(JSContext *cx, JSAtom *source, RegExpFlag flags)
                                  MULTILINE_FLAG_SLOT);
     JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(atomState->stickyAtom))->slot() == STICKY_FLAG_SLOT);
 
-    JS_ASSERT(!maybeShared());
+    /*
+     * If this is a re-initialization with an existing RegExpShared, 'flags'
+     * may not match getShared()->flags, so forget the RegExpShared.
+     */
+    JSObject::setPrivate(NULL);
+
     zeroLastIndex();
     setSource(source);
     setGlobal(flags & GlobalFlag);
