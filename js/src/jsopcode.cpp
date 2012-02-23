@@ -519,7 +519,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
         ScopeCoordinate sc(pc);
-        Sprint(sp, " %s (hops = %u, slot = %u)", bytes.ptr(), sc.hops, sc.binding);
+        Sprint(sp, " %s (hops = %u, slot = %u)", bytes.ptr(), sc.hops, sc.slot);
         break;
       }
 
@@ -1407,6 +1407,12 @@ static inline void
 AddParenSlop(SprintStack *ss)
 {
     ss->sprinter.reserveAndClear(PAREN_SLOP);
+}
+
+static unsigned
+StackDepth(JSScript *script)
+{
+    return script->nslots - script->nfixed;
 }
 
 static JSBool
@@ -5707,7 +5713,7 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
              * calculated value matching v under assumption that it is
              * it that caused exception, see bug 328664.
              */
-            Value *stackBase = fp->base();
+            Value *stackBase = cx->regs().spForStackDepth(0);
             Value *sp = cx->regs().sp;
             do {
                 if (sp == stackBase) {

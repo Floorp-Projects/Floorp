@@ -399,7 +399,7 @@ GetElement(JSContext *cx, JSObject *obj, IndexType index, JSBool *hole, Value *v
         return JS_TRUE;
     }
     if (obj->isArguments()) {
-        if (obj->asArguments().getElement(uint32_t(index), vp)) {
+        if (obj->asArguments().maybeGetElement(uint32_t(index), vp)) {
             *hole = JS_FALSE;
             return true;
         }
@@ -438,7 +438,7 @@ GetElements(JSContext *cx, HandleObject aobj, uint32_t length, Value *vp)
     if (aobj->isArguments()) {
         ArgumentsObject &argsobj = aobj->asArguments();
         if (!argsobj.hasOverriddenLength()) {
-            if (argsobj.getElements(0, length, vp))
+            if (argsobj.maybeGetElements(0, length, vp))
                 return true;
         }
     }

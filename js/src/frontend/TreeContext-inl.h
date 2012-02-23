@@ -54,7 +54,8 @@ SharedContext::needStrictChecks() {
 }
 
 inline unsigned
-SharedContext::argumentsLocalSlot() const {
+SharedContext::argumentsLocal() const
+{
     PropertyName *arguments = context->runtime->atomState.argumentsAtom;
     unsigned slot;
     DebugOnly<BindingKind> kind = bindings.lookup(context, arguments, &slot);
