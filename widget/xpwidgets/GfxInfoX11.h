@@ -100,7 +100,7 @@ private:
   nsCString mAdapterDescription;
   bool mIsMesa, mIsNVIDIA, mIsFGLRX;
   bool mHasTextureFromPixmap;
-  int mMajorVersion, mMinorVersion, mRevisionVersion;
+  int mGLMajorVersion, mMajorVersion, mMinorVersion, mRevisionVersion;
 
   void AddCrashReportAnnotations();
 };
