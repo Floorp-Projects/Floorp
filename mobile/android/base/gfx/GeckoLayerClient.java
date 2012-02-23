@@ -176,7 +176,7 @@ public class GeckoLayerClient implements GeckoEventListener,
                                                          currentBestOrigin.x + width, currentBestOrigin.y + height));
 
             // Second, store Gecko's displayport.
-            PointF currentOrigin = mNewGeckoViewport.getDisplayportOrigin();
+            PointF currentOrigin = mNewGeckoViewport.getOrigin();
             bufferRect = RectUtils.round(new RectF(currentOrigin.x, currentOrigin.y,
                                                    currentOrigin.x + width, currentOrigin.y + height));
 
@@ -242,8 +242,8 @@ public class GeckoLayerClient implements GeckoEventListener,
         mGeckoViewport = mNewGeckoViewport;
         mGeckoViewport.setSize(viewportSize);
 
-        PointF displayportOrigin = mGeckoViewport.getDisplayportOrigin();
-        mTileLayer.setOrigin(PointUtils.round(displayportOrigin));
+        PointF origin = mGeckoViewport.getOrigin();
+        mTileLayer.setOrigin(PointUtils.round(origin));
         mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
 
         // Set the new origin and resolution instantly.
