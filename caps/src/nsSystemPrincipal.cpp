@@ -121,7 +121,7 @@ nsSystemPrincipal::EqualsIgnoringDomain(nsIPrincipal *other, bool *result)
 NS_IMETHODIMP
 nsSystemPrincipal::Subsumes(nsIPrincipal *other, bool *result)
 {
-    *result = PR_TRUE;
+    *result = true;
     return NS_OK;
 }
 
