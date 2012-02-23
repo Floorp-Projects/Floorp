@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.sync.repositories;
 
+import java.util.Iterator;
+
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
@@ -55,6 +57,14 @@ public abstract class StoreTrackingRepositorySession extends RepositorySession {
 
     Logger.debug(LOG_TAG, "Un-tracking record " + record.guid + ".");
     this.storeTracker.untrackStoredForExclusion(record.guid);
+  }
+
+  @Override
+  public Iterator<String> getTrackedRecordIDs() {
+    if (this.storeTracker == null) {
+      throw new IllegalStateException("Store tracker not yet initialized!");
+    }
+    return this.storeTracker.recordsTrackedForExclusion();
   }
 
   @Override

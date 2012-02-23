@@ -38,6 +38,8 @@
 
 package org.mozilla.gecko.sync.repositories;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -354,5 +356,10 @@ public abstract class RepositorySession {
   }
 
   protected synchronized void untrackRecord(Record record) {
+  }
+
+  // Ah, Java. You wretched creature.
+  public Iterator<String> getTrackedRecordIDs() {
+    return new ArrayList<String>().iterator();
   }
 }
