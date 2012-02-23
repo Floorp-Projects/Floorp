@@ -255,11 +255,11 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
          */
         RegExpFlag flags;
         {
-            RegExpShared *shared = RegExpToShared(cx, sourceObj);
-            if (!shared)
+            RegExpGuard g;
+            if (!RegExpToShared(cx, sourceObj, &g))
                 return false;
 
-            flags = shared->getFlags();
+            flags = g->getFlags();
         }
 
         /*
@@ -542,18 +542,18 @@ StartsWithGreedyStar(JSAtom *source)
 #endif
 }
 
-static inline RegExpShared *
-GetSharedForGreedyStar(JSContext *cx, JSAtom *source, RegExpFlag flags)
+static inline bool
+GetSharedForGreedyStar(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g)
 {
-    if (RegExpShared *hit = cx->compartment->regExps.lookupHack(cx, source, flags))
-        return hit;
+    if (cx->compartment->regExps.lookupHack(source, flags, cx, g))
+        return true;
 
     JSAtom *hackedSource = js_AtomizeChars(cx, source->chars() + ArrayLength(GreedyStarChars),
                                            source->length() - ArrayLength(GreedyStarChars));
     if (!hackedSource)
-        return NULL;
+        return false;
 
-    return cx->compartment->regExps.getHack(cx, source, hackedSource, flags);
+    return cx->compartment->regExps.getHack(cx, source, hackedSource, flags, g);
 }
 
 /*
@@ -575,16 +575,15 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
 
     RegExpObject &reobj = obj->asRegExp();
 
-    RegExpShared *shared;
-    if (StartsWithGreedyStar(reobj.getSource()))
-        shared = GetSharedForGreedyStar(cx, reobj.getSource(), reobj.getFlags());
-    else
-        shared = reobj.getShared(cx);
+    RegExpGuard re;
+    if (StartsWithGreedyStar(reobj.getSource())) {
+        if (!GetSharedForGreedyStar(cx, reobj.getSource(), reobj.getFlags(), &re))
+            return false;
+    } else {
+        if (!reobj.getShared(cx, &re))
+            return false;
+    }
 
-    if (!shared)
-        return false;
-
-    RegExpShared::Guard re(*shared);
     RegExpStatics *res = cx->regExpStatics();
 
     /* Step 2. */
