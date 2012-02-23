@@ -538,7 +538,6 @@ DOMCI_CLASS(CustomEvent)
 #ifdef MOZ_B2G_RIL
 DOMCI_CLASS(Telephony)
 DOMCI_CLASS(TelephonyCall)
-DOMCI_CLASS(TelephonyCallArray)
 DOMCI_CLASS(CallEvent)
 #endif
 
