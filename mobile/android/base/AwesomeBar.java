@@ -409,23 +409,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         Object selectedItem = null;
         String title = "";
 
-        if (list == findViewById(R.id.all_pages_list)) {
-            if (!(menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
-                Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
-                return;
-            }
-
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            selectedItem = list.getItemAtPosition(info.position);
-
-            if (!(selectedItem instanceof Cursor)) {
-                Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
-                return;
-            }
-
-            Cursor cursor = (Cursor) selectedItem;
-            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-        } else {
+        if (list == findViewById(R.id.history_list)) {
             if (!(menuInfo instanceof ExpandableListView.ExpandableListContextMenuInfo)) {
                 Log.e(LOGTAG, "menuInfo is not ExpandableListContextMenuInfo");
                 return;
@@ -442,15 +426,31 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             ExpandableListView exList = (ExpandableListView) list;
             selectedItem = exList.getExpandableListAdapter().getChild(groupPosition, childPosition);
 
-            if (exList == findViewById(R.id.bookmarks_list)) {
-                // The bookmarks list is backed by a SimpleCursorTreeAdapter
-                Cursor cursor = (Cursor) selectedItem;
-                title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-            } else {
-                // The history list is backed by a SimpleExpandableListAdapter
-                @SuppressWarnings("rawtypes")
-                Map map = (Map) selectedItem;
-                title = (String) map.get(URLColumns.TITLE);
+            // The history list is backed by a SimpleExpandableListAdapter
+            @SuppressWarnings("rawtypes")
+            Map map = (Map) selectedItem;
+            title = (String) map.get(URLColumns.TITLE);
+        } else {
+            if (!(menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
+                Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
+                return;
+            }
+
+            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+            selectedItem = list.getItemAtPosition(info.position);
+
+            if (!(selectedItem instanceof Cursor)) {
+                Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
+                return;
+            }
+
+            Cursor cursor = (Cursor) selectedItem;
+            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
+
+            // Don't show the context menu for folders
+            if (list == findViewById(R.id.bookmarks_list) &&
+                cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.IS_FOLDER)) == 1) {
+                selectedItem = null;
             }
         }
 
