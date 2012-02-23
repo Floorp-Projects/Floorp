@@ -140,11 +140,14 @@ enum BailoutKind
     // barrier.
     Bailout_TypeBarrier,
 
+    // A bailout required to monitor the result of a VM call.
+    Bailout_Monitor,
+
     // A bailout to trigger recompilation to inline calls when the script is hot.
     Bailout_RecompileCheck
 };
 
-static const uint32 BAILOUT_KIND_BITS = 2;
+static const uint32 BAILOUT_KIND_BITS = 3;
 static const uint32 BAILOUT_RESUME_BITS = 1;
 
 // Keep this arbitrarily small for now, for testing.
@@ -156,7 +159,8 @@ static const uint32 BAILOUT_RETURN_OK = 0;
 static const uint32 BAILOUT_RETURN_FATAL_ERROR = 1;
 static const uint32 BAILOUT_RETURN_ARGUMENT_CHECK = 2;
 static const uint32 BAILOUT_RETURN_TYPE_BARRIER = 3;
-static const uint32 BAILOUT_RETURN_RECOMPILE_CHECK = 4;
+static const uint32 BAILOUT_RETURN_MONITOR = 4;
+static const uint32 BAILOUT_RETURN_RECOMPILE_CHECK = 5;
 
 // Attached to the compartment for easy passing through from ::Bailout to
 // ::ThunkToInterpreter.

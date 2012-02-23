@@ -495,6 +495,19 @@ CodeGenerator::visitTypeBarrier(LTypeBarrier *lir)
 }
 
 bool
+CodeGenerator::visitMonitorTypes(LMonitorTypes *lir)
+{
+    ValueOperand operand = ToValue(lir, LMonitorTypes::Input);
+    Register scratch = ToRegister(lir->temp());
+
+    Label mismatched;
+    masm.guardTypeSet(operand, lir->mir()->typeSet(), scratch, &mismatched);
+    if (!bailoutFrom(&mismatched, lir->snapshot()))
+        return false;
+    return true;
+}
+
+bool
 CodeGenerator::visitCallNative(LCallNative *call)
 {
     JSFunction *target = call->function();

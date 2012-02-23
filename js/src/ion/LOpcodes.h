@@ -117,6 +117,7 @@
     _(GuardShape)                   \
     _(GuardClass)                   \
     _(TypeBarrier)                  \
+    _(MonitorTypes)                 \
     _(InitializedLength)            \
     _(SetInitializedLength)         \
     _(BoundsCheck)                  \
