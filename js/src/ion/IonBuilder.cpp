@@ -2190,9 +2190,18 @@ IonBuilder::jsop_pos()
         return true;
     }
 
-    MInstruction *ins = MToDouble::New(value);
+    MToDouble *ins = MToDouble::New(value);
     current->add(ins);
     current->push(ins);
+
+    // If the expected type is >= string, we compile this as a more expensive
+    // variant and consider it effectful.
+    if (types.ival >= MIRType_String) {
+       ins->unspecialize();
+       if (!resumeAfter(ins))
+           return false;
+    }
+
     return true;
 }
 
