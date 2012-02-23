@@ -688,7 +688,7 @@ protected:
 
 public:
   nsNPAPIStreamWrapper(nsIOutputStream* stream);
-  ~nsNPAPIStreamWrapper();
+  virtual ~nsNPAPIStreamWrapper();
 
   void GetStream(nsIOutputStream* &result);
   NPStream* GetNPStream() { return &fNPStream; }

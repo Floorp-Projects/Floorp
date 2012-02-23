@@ -63,8 +63,8 @@ add_test(function v4_upgrade() {
     Status.resetSync();
     
     _("Logging in.");
-    Weave.Service.serverURL = "http://localhost:8080/";
-    Weave.Service.clusterURL = "http://localhost:8080/";
+    Weave.Service.serverURL = TEST_SERVER_URL;
+    Weave.Service.clusterURL = TEST_CLUSTER_URL;
     
     Weave.Service.login("johndoe", "ilovejane", passphrase);
     do_check_true(Weave.Service.isLoggedIn);
@@ -99,8 +99,8 @@ add_test(function v4_upgrade() {
     _("Syncing afresh...");
     Weave.Service.logout();
     CollectionKeys.clear();
-    Weave.Service.serverURL = "http://localhost:8080/";
-    Weave.Service.clusterURL = "http://localhost:8080/";
+    Weave.Service.serverURL = TEST_SERVER_URL;
+    Weave.Service.clusterURL = TEST_CLUSTER_URL;
     meta_global.payload = JSON.stringify({"syncID": "foooooooooooooobbbbbbbbbbbb",
                                           "storageVersion": STORAGE_VERSION});
     collections.meta = Date.now() / 1000;
@@ -239,8 +239,8 @@ add_test(function v5_upgrade() {
     Weave.Service.password = "ilovejane";
     Weave.Service.passphrase = passphrase;
     
-    Weave.Service.serverURL = "http://localhost:8080/";
-    Weave.Service.clusterURL = "http://localhost:8080/";
+    Weave.Service.serverURL = TEST_SERVER_URL;
+    Weave.Service.clusterURL = TEST_CLUSTER_URL;
     
     //
     // Test an upgrade where the contents of the server would cause us to error

@@ -13,7 +13,7 @@
   -moz-box-flex: 1;
   font-size: 16pt;
   padding: 10px;
-  background-color: #34353a;
+  background-color: rgba(50,50,50,0.8);
   border-radius: 8px;
   width: 100%;
 }
@@ -82,7 +82,7 @@
 
 .bufferBar,
 .progressBar {
-  margin: 9px 0px 11px 0px;
+  margin: 11px 0px 9px 0px;
   height: 8px
 }
 
@@ -101,7 +101,10 @@
 
 .scrubber .scale-thumb {
   display: -moz-box;
+  margin: 0px !important;
+  padding: 0px !important;
   background: url("chrome://browser/skin/images/scrubber-hdpi.png") no-repeat;
+  background-size: 32px 32px;
   height: 32px;
   width: 32px;
 }

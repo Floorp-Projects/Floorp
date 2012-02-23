@@ -142,7 +142,7 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
   SECItem keyItem = {siBuffer, nsnull, 0};
   SECItem *dummy;
   CERTIssuerAndSN issuerSN;
-  unsigned long moduleID,slotID;
+  //unsigned long moduleID,slotID;
   *_cert = nsnull; 
   if (!aDBkey || !*aDBkey)
     return NS_ERROR_INVALID_ARG;
@@ -156,8 +156,8 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
 
   CERTCertificate *cert;
   // someday maybe we can speed up the search using the moduleID and slotID
-  moduleID = NS_NSS_GET_LONG(keyItem.data);
-  slotID = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG]);
+  // moduleID = NS_NSS_GET_LONG(keyItem.data);
+  // slotID = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG]);
 
   // build the issuer/SN structure
   issuerSN.serialNumber.len = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG*2]);
@@ -1254,7 +1254,6 @@ GetOCSPResponders (CERTCertificate *aCert,
   char *serviceURL = nsnull;
   char *nickname = nsnull;
   PRUint32 i, count;
-  nsresult rv;
 
   // Are we interested in this cert //
   if (!nsOCSPResponder::IncludeCert(aCert)) {
@@ -1276,7 +1275,7 @@ GetOCSPResponders (CERTCertificate *aCert,
   nsMemory::Free(url);
 
   // Sort the items according to nickname //
-  rv = array->GetLength(&count);
+  array->GetLength(&count);
   for (i=0; i < count; ++i) {
     nsCOMPtr<nsIOCSPResponder> entry = do_QueryElementAt(array, i);
     if (nsOCSPResponder::CompareEntries(new_entry, entry) < 0) {
@@ -1340,7 +1339,6 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
                                  PRUnichar  ***_certNames)
 {
   nsNSSShutDownPreventionLock locker;
-  nsresult rv;
   CERTCertListNode *node;
   PRUint32 numcerts = 0, i=0;
   PRUnichar **tmpArray = NULL;
@@ -1364,7 +1362,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
       char *dbkey = NULL;
       char *namestr = NULL;
       nsAutoString certstr;
-      rv = pipCert.GetDbKey(&dbkey);
+      pipCert.GetDbKey(&dbkey);
       nsAutoString keystr = NS_ConvertASCIItoUTF16(dbkey);
       PR_FREEIF(dbkey);
       if (type == nsIX509Cert::EMAIL_CERT) {

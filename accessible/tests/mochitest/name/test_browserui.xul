@@ -55,8 +55,9 @@
       this.check = function switchTab_check(aEvent)
       {
         var title = getAccessible(browserDocument()).name;
-        ok(title.indexOf(aEvent.accessible.name) != -1,
-           "Window title contains the name of active tab document");
+        isnot(title.indexOf(aEvent.accessible.name), -1,
+              "Window title contains the name of active tab document" +
+              " (Is '" + aEvent.accessible.name + "' in '" + title + "'?)");
       }
 
       this.getID = function switchTab_getID() { return "switch tab"; }

@@ -46,6 +46,16 @@ namespace sms {
 NS_IMPL_ISUPPORTS1(SmsDatabaseService, nsISmsDatabaseService)
 
 NS_IMETHODIMP
+SmsDatabaseService::SaveReceivedMessage(const nsAString& aSender,
+                                        const nsAString& aBody,
+                                        PRUint64 aDate, PRInt32* aId)
+{
+  // The Android stock SMS app does this already.
+  *aId = -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 SmsDatabaseService::SaveSentMessage(const nsAString& aReceiver,
                                     const nsAString& aBody,
                                     PRUint64 aDate, PRInt32* aId)

@@ -142,12 +142,10 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
 
   // Ensure the picture size specified in the headers can be extracted out of
   // the frame we've been supplied without indexing out of bounds.
-  PRUint32 xLimit;
-  PRUint32 yLimit;
-  if (!AddOverflow32(aPicture.x, aPicture.width, xLimit) ||
-      xLimit > aBuffer.mPlanes[0].mStride ||
-      !AddOverflow32(aPicture.y, aPicture.height, yLimit) ||
-      yLimit > aBuffer.mPlanes[0].mHeight)
+  CheckedUint32 xLimit = aPicture.x + CheckedUint32(aPicture.width);
+  CheckedUint32 yLimit = aPicture.y + CheckedUint32(aPicture.height);
+  if (!xLimit.valid() || xLimit.value() > aBuffer.mPlanes[0].mStride ||
+      !yLimit.valid() || yLimit.value() > aBuffer.mPlanes[0].mHeight)
   {
     // The specified picture dimensions can't be contained inside the video
     // frame, we'll stomp memory if we try to copy it. Fail.
@@ -312,10 +310,6 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
 
   if (HasAudio()) {
     // Decode audio forward to the seek target.
-    PRInt64 targetFrame = 0;
-    if (!UsecsToFrames(aTarget, mInfo.mAudioRate, targetFrame)) {
-      return NS_ERROR_FAILURE;
-    }
     bool eof = false;
     while (HasAudio() && !eof) {
       while (!eof && mAudioQueue.GetSize() == 0) {
@@ -330,18 +324,19 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
       const AudioData* audio = mAudioQueue.PeekFront();
       if (!audio)
         break;
-      PRInt64 startFrame = 0;
-      if (!UsecsToFrames(audio->mTime, mInfo.mAudioRate, startFrame)) {
+      CheckedInt64 startFrame = UsecsToFrames(audio->mTime, mInfo.mAudioRate);
+      CheckedInt64 targetFrame = UsecsToFrames(aTarget, mInfo.mAudioRate);
+      if (!startFrame.valid() || !targetFrame.valid()) {
         return NS_ERROR_FAILURE;
       }
-      if (startFrame + audio->mFrames <= targetFrame) {
+      if (startFrame.value() + audio->mFrames <= targetFrame.value()) {
         // Our seek target lies after the frames in this AudioData. Pop it
         // off the queue, and keep decoding forwards.
         delete mAudioQueue.PopFront();
         audio = nsnull;
         continue;
       }
-      if (startFrame > targetFrame) {
+      if (startFrame.value() > targetFrame.value()) {
         // The seek target doesn't lie in the audio block just after the last
         // audio frames we've seen which were before the seek target. This
         // could have been the first audio data we've seen after seek, i.e. the
@@ -356,10 +351,12 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
       // The seek target lies somewhere in this AudioData's frames, strip off
       // any frames which lie before the seek target, so we'll begin playback
       // exactly at the seek target.
-      NS_ASSERTION(targetFrame >= startFrame, "Target must at or be after data start.");
-      NS_ASSERTION(targetFrame < startFrame + audio->mFrames, "Data must end after target.");
+      NS_ASSERTION(targetFrame.value() >= startFrame.value(),
+                   "Target must at or be after data start.");
+      NS_ASSERTION(targetFrame.value() < startFrame.value() + audio->mFrames,
+                   "Data must end after target.");
 
-      PRInt64 framesToPrune = targetFrame - startFrame;
+      PRInt64 framesToPrune = targetFrame.value() - startFrame.value();
       if (framesToPrune > audio->mFrames) {
         // We've messed up somehow. Don't try to trim frames, the |frames|
         // variable below will overflow.
@@ -372,13 +369,13 @@ nsresult nsBuiltinDecoderReader::DecodeToTarget(PRInt64 aTarget)
       memcpy(audioData.get(),
              audio->mAudioData.get() + (framesToPrune * channels),
              frames * channels * sizeof(AudioDataValue));
-      PRInt64 duration;
-      if (!FramesToUsecs(frames, mInfo.mAudioRate, duration)) {
+      CheckedInt64 duration = FramesToUsecs(frames, mInfo.mAudioRate);
+      if (!duration.valid()) {
         return NS_ERROR_FAILURE;
       }
       nsAutoPtr<AudioData> data(new AudioData(audio->mOffset,
                                               aTarget,
-                                              duration,
+                                              duration.value(),
                                               frames,
                                               audioData.forget(),
                                               channels));

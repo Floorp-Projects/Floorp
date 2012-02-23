@@ -147,6 +147,9 @@ fails-if(Android) == filter-extref-differentOrigin-01.svg pass.svg # Bug 695385
 == foreignObject-start-hidden-01.svg pass.svg # followup from Bug 596765
 == foreignObject-start-hidden-02.svg pass.svg
 == foreignObject-style-change-01.svg pass.svg
+== foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01-ref.html
+== foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
+== foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == getElementById-a-element-01.svg pass.svg
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == gradient-live-01a.svg gradient-live-01-ref.svg # bug 696674
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == gradient-live-01b.svg gradient-live-01-ref.svg # bug 696674

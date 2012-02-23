@@ -39,8 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "application.ini.h"
-
 #include <android/log.h>
 
 #include <jni.h>
@@ -59,6 +57,14 @@
 
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, MOZ_APP_NAME, args)
 
+// We need to put Gecko on a even more separate thread, because
+// otherwise this JNI method never returns; this leads to problems
+// with local references overrunning the local refs table, among
+// other things, since GC can't ever run on them.
+
+// Note that we don't have xpcom initialized yet, so we can't use the
+// thread manager for this.  Instead, we use pthreads directly.
+
 struct AutoAttachJavaThread {
     AutoAttachJavaThread() {
         attached = mozilla_AndroidBridge_SetMainThread((void*)pthread_self());
@@ -71,8 +77,8 @@ struct AutoAttachJavaThread {
     bool attached;
 };
 
-static void*
-GeckoStart(void *data)
+extern "C" NS_EXPORT void
+GeckoStart(void *data, const nsXREAppData *appData)
 {
 #ifdef MOZ_CRASHREPORTER
     const struct mapping_info *info = getLibraryMapping();
@@ -85,11 +91,11 @@ GeckoStart(void *data)
 
     AutoAttachJavaThread attacher;
     if (!attacher.attached)
-        return 0;
+        return;
 
     if (!data) {
         LOG("Failed to get arguments for GeckoStart\n");
-        return 0;
+        return;
     }
 
     nsTArray<char *> targs;
@@ -100,7 +106,7 @@ GeckoStart(void *data)
     }
     targs.AppendElement(static_cast<char *>(nsnull));
 
-    int result = XRE_main(targs.Length() - 1, targs.Elements(), &sAppData);
+    int result = XRE_main(targs.Length() - 1, targs.Elements(), appData);
 
     if (result)
         LOG("XRE_main returned %d", result);
@@ -109,26 +115,5 @@ GeckoStart(void *data)
 
     free(targs[0]);
     nsMemory::Free(data);
-    return 0;
+    return;
 }
-
-extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_nativeRun(JNIEnv *jenv, jclass jc, jstring jargs)
-{
-    // We need to put Gecko on a even more separate thread, because
-    // otherwise this JNI method never returns; this leads to problems
-    // with local references overrunning the local refs table, among
-    // other things, since GC can't ever run on them.
-
-    // Note that we don't have xpcom initialized yet, so we can't use the
-    // thread manager for this.  Instead, we use pthreads directly.
-
-    nsAutoString wargs;
-    int len = jenv->GetStringLength(jargs);
-    wargs.SetLength(jenv->GetStringLength(jargs));
-    jenv->GetStringRegion(jargs, 0, len, wargs.BeginWriting());
-    char *args = ToNewUTF8String(wargs);
-
-    GeckoStart(args);
-}
-

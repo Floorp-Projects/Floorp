@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Accessible boundaries when page is zoomed</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+  <script type="application/javascript"
+          src="../browser.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var p1 = currentTabDocument().body.firstElementChild;
+      var p2 = currentTabDocument().body.lastElementChild;
+
+      testBounds(p1);
+      testBounds(p2);
+
+      var docShell = currentTabWindow().
+        QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+        getInterface(Components.interfaces.nsIWebNavigation).
+        QueryInterface(Components.interfaces.nsIDocShell);
+      var docViewer = docShell.contentViewer.
+        QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+      docViewer.fullZoom = 2.0;
+
+      testBounds(p1);
+      testBounds(p2);
+
+      closeBrowserWindow();
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    openBrowserWindow(doTest,
+                      "data:text/html,<html><body><p>para 1</p><p>para 2</p></body></html>",
+                      { left: 0, top: 0, width: 600, height: 600 });
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=650241"
+     title="Location returned by accessibles incorrect when page zoomed">
+    Mozilla Bug 650241
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

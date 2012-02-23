@@ -3537,20 +3537,16 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   if (mViewCallback) {
     // A subset of events are sent to the base xul window first
     switch(event->message) {
-      // send to the base window (view mgr ignores these for the view)
-      case NS_UISTATECHANGED:
-      case NS_DESTROY:
-      case NS_SETZLEVEL:
-      case NS_XUL_CLOSE:
-      case NS_MOVE:
-        (*mEventCallback)(event); // web shell / xul window
-        return NS_OK;
-
       // sent to the base window, then to the view
       case NS_SIZE:
       case NS_DEACTIVATE:
       case NS_ACTIVATE:
       case NS_SIZEMODE:
+      case NS_UISTATECHANGED:
+      case NS_DESTROY:
+      case NS_SETZLEVEL:
+      case NS_XUL_CLOSE:
+      case NS_MOVE:
         (*mEventCallback)(event); // web shell / xul window
         break;
     };

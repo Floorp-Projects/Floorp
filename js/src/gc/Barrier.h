@@ -329,6 +329,7 @@ class HeapValue
     bool isFalse() const { return value.isFalse(); }
     bool isNumber() const { return value.isNumber(); }
     bool isInt32() const { return value.isInt32(); }
+    bool isDouble() const { return value.isDouble(); }
     bool isString() const { return value.isString(); }
     bool isObject() const { return value.isObject(); }
     bool isMagic(JSWhyMagic why) const { return value.isMagic(why); }

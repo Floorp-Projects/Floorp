@@ -727,6 +727,11 @@ private:
      would have been scrollable but has been forced to be
      non-scrollable due to being in a paginated context. */
 #define FCDATA_FORCED_NON_SCROLLABLE_BLOCK 0x20000
+  /* If FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS is set, then create a
+     block formatting context wrapper around the kids of this frame
+     using the FrameConstructionData's mPseudoAtom for its anonymous
+     box type. */
+#define FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS 0x40000
 
   /* Structure representing information about how a frame should be
      constructed.  */
@@ -745,6 +750,9 @@ private:
       FrameConstructionDataGetter mDataGetter;
     } mFunc;
     FrameFullConstructor mFullConstructor;
+    // For cases when FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS is set, the
+    // anonymous box type to use for that wrapper.
+    nsICSSAnonBoxPseudo * const * const mAnonBoxPseudo;
   };
 
   /* Structure representing a mapping of an atom to a FrameConstructionData.
@@ -1130,15 +1138,6 @@ protected:
                                             nsIFrame**       aPlaceholderFrame);
 
 private:
-  // ConstructButtonFrame puts the new frame in aFrameItems and
-  // handles the kids of the button.
-  nsresult ConstructButtonFrame(nsFrameConstructorState& aState,
-                                FrameConstructionItem&    aItem,
-                                nsIFrame*                aParentFrame,
-                                const nsStyleDisplay*    aStyleDisplay,
-                                nsFrameItems&            aFrameItems,
-                                nsIFrame**               aNewFrame);
-
   // ConstructSelectFrame puts the new frame in aFrameItems and
   // handles the kids of the select.
   nsresult ConstructSelectFrame(nsFrameConstructorState& aState,
@@ -1328,13 +1327,6 @@ private:
                                                   nsIFrame* aParentFrame,
                                                   nsStyleContext* aStyleContext);
 
-  nsresult ConstructSVGForeignObjectFrame(nsFrameConstructorState& aState,
-                                          FrameConstructionItem&   aItem,
-                                          nsIFrame* aParentFrame,
-                                          const nsStyleDisplay* aStyleDisplay,
-                                          nsFrameItems& aFrameItems,
-                                          nsIFrame** aNewFrame);
-
   /* Not static because it does PropagateScrollToViewport.  If this
      changes, make this static */
   const FrameConstructionData*
@@ -1388,6 +1380,9 @@ private:
    *        styles on the parent.
    * @param aPendingBinding Make sure to push this into aState before doing any
    *        child item construction.
+   * @param aPossiblyLeafFrame if non-null, this should be used for the isLeaf
+   *        test and the anonymous content creation.  If null, aFrame will be
+   *        used.
    */
   nsresult ProcessChildren(nsFrameConstructorState& aState,
                            nsIContent*              aContent,
@@ -1396,7 +1391,8 @@ private:
                            const bool               aCanHaveGeneratedContent,
                            nsFrameItems&            aFrameItems,
                            const bool               aAllowBlockStyles,
-                           PendingBinding*          aPendingBinding);
+                           PendingBinding*          aPendingBinding,
+                           nsIFrame*                aPossiblyLeafFrame = nsnull);
 
   nsIFrame* GetFrameFor(nsIContent* aContent);
 

@@ -80,7 +80,16 @@ function flipBackslashes(aUnsafeStr)
 function assert(aCond, aMsg)
 {
   if (!aCond) {
-    throw("assertion failed: " + aMsg);
+    reportAssertionFailure(aMsg)
+    throw("aboutMemory.js assertion failed: " + aMsg);
+  }
+}
+
+function reportAssertionFailure(aMsg)
+{
+  var debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+  if (debug.isDebugBuild) {
+    debug.assertion(aMsg, "false", "aboutMemory.js", 0);
   }
 }
 
@@ -108,7 +117,7 @@ function onLoad()
   if (location.href.startsWith("about:memory")) {
     document.title = "about:memory";
     onLoadAboutMemory();
-  } else if (location.href.startsWith("about:compartment")) {
+  } else if (location.href.startsWith("about:compartments")) {
     document.title = "about:compartments";
     onLoadAboutCompartments();
   } else {
@@ -576,7 +585,7 @@ function buildTree(aReports, aTreeName)
     }
   }
   if (!foundReport) {
-    assert(aTreeName !== 'explicit');
+    assert(aTreeName !== 'explicit', "aTreeName !== 'explicit'");
     return null;
   }
 
@@ -1254,10 +1263,11 @@ function appendTreeElements(aPOuter, aT, aProcess)
     if (aT._amount === treeBytes) {
       percText = "100.0";
     } else {
-      let perc = (100 * aT._amount / treeBytes);
-      if (!(0 <= perc && perc <= 100)) {
+      if (!(0 <= aT._amount && aT._amount <= treeBytes)) {
         tIsInvalid = true;
         gUnsafePathsWithInvalidValuesForThisProcess.push(unsafePath);
+        reportAssertionFailure("Invalid value for " +
+                               flipBackslashes(unsafePath));
       }
       percText = (100 * aT._amount / treeBytes).toFixed(2);
       percText = pad(percText, 5, '0');
@@ -1416,7 +1426,7 @@ function appendOtherElements(aP, aReportsByProcess)
     if (!r._done) {
       assert(r._kind === KIND_OTHER,
              "_kind !== KIND_OTHER for " + flipBackslashes(r._unsafePath));
-      assert(r._nMerged === undefined);  // we don't allow dup'd OTHER Reports
+      assert(r._nMerged === undefined, "dup'd OTHER report");
       let o = new OtherReport(r._unsafePath, r._units, r._amount,
                               r._description);
       otherReports.push(o);
@@ -1434,6 +1444,8 @@ function appendOtherElements(aP, aReportsByProcess)
     let oIsInvalid = o.isInvalid();
     if (oIsInvalid) {
       gUnsafePathsWithInvalidValuesForThisProcess.push(o._unsafePath);
+      reportAssertionFailure("Invalid value for " +
+                             flipBackslashes(o._unsafePath));
     }
     appendMrValueSpan(pre, pad(o._asString, maxStringLength, ' '), oIsInvalid);
     appendMrNameSpan(pre, KIND_OTHER, kNoKids, o._description, o._unsafePath,

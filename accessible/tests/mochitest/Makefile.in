@@ -45,10 +45,12 @@ relativesrcdir  = accessible
 DIRS	= \
   actions \
   attributes \
+  bounds \
   editabletext \
   elm \
   events \
   focus \
+  hittest \
   hyperlink \
   hypertext \
   name \
@@ -96,8 +98,6 @@ _TEST_FILES =\
 		test_aria_roles.xul \
 		test_aria_token_attrs.html \
 		test_bug420863.html \
-		test_childAtPoint.html \
-		test_childAtPoint.xul \
 		test_descr.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleImage.html \

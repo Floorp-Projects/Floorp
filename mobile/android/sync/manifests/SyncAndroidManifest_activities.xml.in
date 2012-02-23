@@ -1,7 +1,6 @@
         <activity
             android:icon="@drawable/sync_ic_launcher"
             android:label="@string/sync_app_name"
-            android:screenOrientation="portrait"
             android:configChanges="orientation"
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:taskAffinity="org.mozilla.gecko.sync.setup"

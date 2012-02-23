@@ -795,18 +795,23 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-  if (channel)
-  {
+  if (channel) {
     channel->GetURI(getter_AddRefs(uri));
-    if (uri)
-    {
-      bool vs;
-      if (NS_SUCCEEDED(uri->SchemeIs("javascript", &vs)) && vs)
-      {
-        // We ignore the progress events for javascript URLs.
-        // If a document loading gets triggered, we will see more events.
-        return NS_OK;
-      }
+  }
+
+  nsCOMPtr<imgIRequest> imgRequest(do_QueryInterface(aRequest));
+  if (imgRequest) {
+    NS_ASSERTION(!channel, "How did that happen, exactly?");
+    // for image requests, we get the URI from here
+    imgRequest->GetURI(getter_AddRefs(uri));
+  }
+  
+  if (uri) {
+    bool vs;
+    if (NS_SUCCEEDED(uri->SchemeIs("javascript", &vs)) && vs) {
+      // We ignore the progress events for javascript URLs.
+      // If a document loading gets triggered, we will see more events.
+      return NS_OK;
     }
   }
 
@@ -842,11 +847,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   bool isSubDocumentRelevant = true;
 
   // We are only interested in requests that load in the browser window...
-  nsCOMPtr<imgIRequest> imgRequest(do_QueryInterface(aRequest));
-  if (imgRequest) {
-    // for image requests, we get the URI from here
-    imgRequest->GetURI(getter_AddRefs(uri));
-  } else { // is not imgRequest
+  if (!imgRequest) { // is not imgRequest
     nsCOMPtr<nsIHttpChannel> httpRequest(do_QueryInterface(aRequest));
     if (!httpRequest) {
       nsCOMPtr<nsIFileChannel> fileRequest(do_QueryInterface(aRequest));
