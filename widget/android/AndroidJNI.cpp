@@ -104,7 +104,6 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyReadingMessageListFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
-    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv* jenv, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(JNIEnv* jenv, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv* jenv, jclass);
@@ -891,12 +890,6 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyReadingMessageListFailed(JNIEnv* jenv
 }
 
 #ifdef MOZ_JAVA_COMPOSITOR
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass)
-{
-    nsWindow::BindToTexture();
-}
 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv*, jclass)

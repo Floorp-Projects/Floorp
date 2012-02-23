@@ -347,7 +347,7 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
 
-    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;Z)Landroid/graphics/Rect;");
+    jBeginDrawingMethod = getMethod("beginDrawing", "(IIIILjava/lang/String;)Landroid/graphics/Rect;");
     jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
     jGetViewTransformMethod = getMethod("getViewTransform",
                                         "()Lorg/mozilla/gecko/gfx/ViewTransform;");
@@ -765,7 +765,7 @@ AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
 
 bool
 AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight,
-                                      nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture)
+                                      nsIntRect &aDirtyRect, const nsAString &aMetadata)
 {
     NS_ASSERTION(!isNull(), "BeginDrawing() called on null layer client!");
     JNIEnv *env = AndroidBridge::GetJNIEnv();
@@ -777,7 +777,7 @@ AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, int aTileWidth, i
 
     jobject rectObject = env->CallObjectMethod(wrapped_obj, jBeginDrawingMethod,
                                                aWidth, aHeight, aTileWidth, aTileHeight,
-                                               jMetadata, aHasDirectTexture);
+                                               jMetadata);
 
     if (rectObject == nsnull)
         return false;

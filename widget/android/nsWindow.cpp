@@ -98,12 +98,6 @@ bool nsWindow::sAccessibilityEnabled = false;
 #ifdef MOZ_JAVA_COMPOSITOR
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
-#include "AndroidDirectTexture.h"
-
-static AndroidDirectTexture* sDirectTexture = new AndroidDirectTexture(2048, 2048,
-        AndroidGraphicBuffer::UsageSoftwareWrite | AndroidGraphicBuffer::UsageTexture,
-        gfxASurface::ImageFormatRGB16_565);
-
 #endif
 
 
@@ -842,71 +836,6 @@ nsWindow::GetThebesSurface()
     return new gfxImageSurface(gfxIntSize(5,5), gfxImageSurface::ImageFormatRGB24);
 }
 
-#ifdef MOZ_JAVA_COMPOSITOR
-
-void
-nsWindow::BindToTexture()
-{
-    sDirectTexture->Bind();
-}
-
-bool
-nsWindow::HasDirectTexture()
-{
-  // XXX: Checking fix me
-  // This is currently causes some crashes so disable it for now
-  if (true)
-    return false;
-
-  static bool sTestedDirectTexture = false;
-  static bool sHasDirectTexture = false;
-
-  // If we already tested, return early
-  if (sTestedDirectTexture)
-    return sHasDirectTexture;
-
-  sTestedDirectTexture = true;
-
-  nsAutoString board;
-  AndroidGraphicBuffer* buffer = NULL;
-  unsigned char* bits = NULL;
-
-  if (AndroidGraphicBuffer::IsBlacklisted()) {
-    ALOG("device is blacklisted for direct texture");
-    goto cleanup;
-  }
-
-  buffer = new AndroidGraphicBuffer(512, 512,
-      AndroidGraphicBuffer::UsageSoftwareWrite | AndroidGraphicBuffer::UsageTexture,
-      gfxASurface::ImageFormatRGB16_565);
-
-  if (buffer->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, &bits) != 0 || !bits) {
-    ALOG("failed to lock graphic buffer");
-    buffer->Unlock();
-    goto cleanup;
-  }
-
-  if (buffer->Unlock() != 0) {
-    ALOG("failed to unlock graphic buffer");
-    goto cleanup;
-  }
-
-  if (!buffer->Reallocate(1024, 1024, gfxASurface::ImageFormatRGB16_565)) {
-    ALOG("failed to reallocate graphic buffer");
-    goto cleanup;
-  }
-
-  sHasDirectTexture = true;
-
-cleanup:
-  if (buffer)
-    delete buffer;
-
-  return sHasDirectTexture;
-}
-
-#endif
-
 void
 nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 {
@@ -1288,31 +1217,18 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     AndroidGeckoLayerClient &client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height,
                              gAndroidTileSize.width, gAndroidTileSize.height,
-                             dirtyRect, metadata, HasDirectTexture())) {
+                             dirtyRect, metadata)) {
         __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### BeginDrawing returned false!");
         return;
     }
 
     unsigned char *bits = NULL;
-    if (HasDirectTexture()) {
-      __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Have direct texture!");
-      if (sDirectTexture->Width() != gAndroidBounds.width ||
-          sDirectTexture->Height() != gAndroidBounds.height) {
-        sDirectTexture->Reallocate(gAndroidBounds.width, gAndroidBounds.height);
-      }
-
-      sDirectTexture->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, dirtyRect, &bits);
-    }
 
     if (targetSurface->CairoStatus()) {
         ALOG("### Failed to create a valid surface from the bitmap");
     } else {
         __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling DrawTo()!");
         DrawTo(targetSurface, dirtyRect);
-    }
-
-    if (HasDirectTexture()) {
-        sDirectTexture->Unlock();
     }
 
     __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling EndDrawing()!");
