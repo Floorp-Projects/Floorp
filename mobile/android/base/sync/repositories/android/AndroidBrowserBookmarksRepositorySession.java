@@ -709,23 +709,31 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         try {
           final long folderID = getIDForGUID(guid);
           JSONArray inDB = getChildrenArray(folderID, false);
-          int added = 0;
-          for (Object o : inDB) {
-            if (!onServer.contains(o)) {
-              onServer.add(o);
-              added++;
+
+          // If the local children and the remote children are already
+          // the same, then we don't need to bump the modified time of the
+          // parent: we wouldn't upload a different record, so avoid the cycle.
+          if (!Utils.sameArrays(onServer, inDB)) {
+            int added = 0;
+            for (Object o : inDB) {
+              if (!onServer.contains(o)) {
+                onServer.add(o);
+                added++;
+              }
             }
+            Logger.debug(LOG_TAG, "Added " + added + " items locally.");
+            dataAccessor.bumpModified(folderID, now());
+            // Wow, this is spectacularly wasteful.
+            Logger.debug(LOG_TAG, "Untracking " + guid);
+            final Record record = retrieveByGUIDDuringStore(guid);
+            if (record == null) {
+              return;
+            }
+            untrackRecord(record);
           }
-          Logger.debug(LOG_TAG, "Added " + added + " items locally.");
+          // Until getChildrenArray can tell us if it needed to make
+          // any changes at all, always update positions.
           dataAccessor.updatePositions(new ArrayList<String>(onServer));
-          dataAccessor.bumpModified(folderID, now());
-          // Wow, this is spectacularly wasteful.
-          Logger.debug(LOG_TAG, "Untracking " + guid);
-          final Record record = retrieveByGUIDDuringStore(guid);
-          if (record == null) {
-            return;
-          }
-          untrackRecord(record);
         } catch (Exception e) {
           Logger.warn(LOG_TAG, "Error repositioning children for " + guid, e);
         }
