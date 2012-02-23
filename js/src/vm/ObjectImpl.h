@@ -258,6 +258,8 @@ class ObjectImpl : public gc::Cell
         return shape_;
     }
 
+    inline bool isNative() const;
+
     types::TypeObject *type() const {
         MOZ_ASSERT(!hasLazyType());
         return type_;
@@ -284,8 +286,6 @@ class ObjectImpl : public gc::Cell
     /* Compute dynamicSlotsCount() for this object. */
     inline size_t numDynamicSlots() const;
 
-    inline bool isNative() const;
-
     const Shape * nativeLookup(JSContext *cx, jsid id);
 
     inline Class *getClass() const;
@@ -310,6 +310,58 @@ class ObjectImpl : public gc::Cell
      * a doubly-linked list.
      */
     inline bool inDictionaryMode() const;
+
+    const Value &getSlot(unsigned slot) const {
+        MOZ_ASSERT(slotInRange(slot));
+        size_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots()[slot];
+        return slots[slot - fixed];
+    }
+
+    HeapSlot *getSlotAddressUnchecked(unsigned slot) {
+        size_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots() + slot;
+        return slots + (slot - fixed);
+    }
+
+    HeapSlot *getSlotAddress(unsigned slot) {
+        /*
+         * This can be used to get the address of the end of the slots for the
+         * object, which may be necessary when fetching zero-length arrays of
+         * slots (e.g. for callObjVarArray).
+         */
+        MOZ_ASSERT(slotInRange(slot, SENTINEL_ALLOWED));
+        return getSlotAddressUnchecked(slot);
+    }
+
+    HeapSlot &getSlotRef(unsigned slot) {
+        MOZ_ASSERT(slotInRange(slot));
+        return *getSlotAddress(slot);
+    }
+
+    inline HeapSlot &nativeGetSlotRef(unsigned slot);
+    inline const Value &nativeGetSlot(unsigned slot) const;
+
+    inline void setSlot(unsigned slot, const Value &value);
+    inline void initSlot(unsigned slot, const Value &value);
+    inline void initSlotUnchecked(unsigned slot, const Value &value);
+
+    /* For slots which are known to always be fixed, due to the way they are allocated. */
+
+    HeapSlot &getFixedSlotRef(unsigned slot) {
+        MOZ_ASSERT(slot < numFixedSlots());
+        return fixedSlots()[slot];
+    }
+
+    const Value &getFixedSlot(unsigned slot) const {
+        MOZ_ASSERT(slot < numFixedSlots());
+        return fixedSlots()[slot];
+    }
+
+    inline void setFixedSlot(unsigned slot, const Value &value);
+    inline void initFixedSlot(unsigned slot, const Value &value);
 
     /*
      * Get the number of dynamic slots to allocate to cover the properties in
