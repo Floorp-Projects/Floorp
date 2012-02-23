@@ -69,6 +69,15 @@ BoxInputsPolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
+SimplePolicy::adjustInputs(MInstruction *def)
+{
+    if (specialized())
+        return true;
+
+    return BoxInputsPolicy::adjustInputs(def);
+}
+
+bool
 ArithPolicy::adjustInputs(MInstruction *ins)
 {
     if (specialization_ == MIRType_None)
