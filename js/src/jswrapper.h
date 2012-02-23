@@ -94,7 +94,7 @@ class JS_FRIEND_API(Wrapper) : public ProxyHandler
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx) MOZ_OVERRIDE;
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, uintN indent) MOZ_OVERRIDE;
-    virtual RegExpShared *regexp_toShared(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
+    virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JSObject *wrapper, JSType hint, Value *vp) MOZ_OVERRIDE;
     virtual bool iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp) MOZ_OVERRIDE;
 
@@ -181,7 +181,7 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
 
     virtual bool nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args) MOZ_OVERRIDE;
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx) MOZ_OVERRIDE;
-    virtual RegExpShared *regexp_toShared(JSContext *cx, JSObject *proxy) MOZ_OVERRIDE;
+    virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g) MOZ_OVERRIDE;
 };
 
 typedef SecurityWrapper<Wrapper> SameCompartmentSecurityWrapper;
