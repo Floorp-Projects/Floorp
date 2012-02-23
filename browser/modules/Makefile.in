@@ -52,6 +52,7 @@ EXTRA_JS_MODULES = \
 	NewTabUtils.jsm \
 	offlineAppCache.jsm \
 	TelemetryTimestamps.jsm \
+	KeywordURLResetPrompter.jsm \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
