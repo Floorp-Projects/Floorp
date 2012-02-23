@@ -437,7 +437,6 @@ public class GeckoLayerClient implements GeckoEventListener,
         synchronized (mLayerController) {
             ViewportMetrics viewportMetrics = mLayerController.getViewportMetrics();
             PointF viewportOrigin = viewportMetrics.getOrigin();
-            Point tileOrigin = mTileLayer.getOrigin();
             float scrollX = viewportOrigin.x; 
             float scrollY = viewportOrigin.y;
             float zoomFactor = viewportMetrics.getZoomFactor();
