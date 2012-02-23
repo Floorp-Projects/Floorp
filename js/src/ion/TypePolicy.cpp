@@ -304,6 +304,22 @@ IntPolicy<Op>::staticAdjustInputs(MInstruction *def)
 template bool IntPolicy<0>::staticAdjustInputs(MInstruction *def);
 template bool IntPolicy<1>::staticAdjustInputs(MInstruction *def);
 
+template <unsigned Op>
+bool
+DoublePolicy<Op>::staticAdjustInputs(MInstruction *def)
+{
+    MDefinition *in = def->getOperand(Op);
+    if (in->type() == MIRType_Double)
+        return true;
+
+    MToDouble *replace = MToDouble::New(in);
+    def->block()->insertBefore(def, replace);
+    def->replaceOperand(Op, replace);
+    return true;
+}
+
+template bool DoublePolicy<0>::staticAdjustInputs(MInstruction *def);
+
 bool
 CallPolicy::adjustInputs(MInstruction *ins)
 {
