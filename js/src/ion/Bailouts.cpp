@@ -317,6 +317,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
         return BAILOUT_RETURN_TYPE_BARRIER;
       case Bailout_ArgumentCheck:
         return BAILOUT_RETURN_ARGUMENT_CHECK;
+      case Bailout_Monitor:
+        return BAILOUT_RETURN_MONITOR;
       case Bailout_RecompileCheck:
         return BAILOUT_RETURN_RECOMPILE_CHECK;
     }
@@ -423,6 +425,13 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
     }
 
+    // If invalidation was triggered inside a stub call, we may still have to
+    // monitor the result, since the bailout happens before the MMonitorTypes
+    // instruction is executed.
+    jsbytecode *pc = activation->bailout()->bailoutPc();
+    if (js_CodeSpec[*pc].format & JOF_TYPESET)
+        types::TypeScript::Monitor(cx, cx->fp()->script(), pc, cx->regs().sp[-1]);
+
     in.ionScript()->decref(cx);
 
     if (retval != BAILOUT_RETURN_FATAL_ERROR)
@@ -473,7 +482,10 @@ ion::ReflowTypeInfo(uint32 bailoutResult)
             script->lineno, pc - script->code);
 
     types::AutoEnterTypeInference enter(cx);
-    script->analysis()->breakTypeBarriers(cx, pc - script->code, false);
+    if (bailoutResult == BAILOUT_RETURN_TYPE_BARRIER)
+        script->analysis()->breakTypeBarriers(cx, pc - script->code, false);
+    else
+        JS_ASSERT(bailoutResult == BAILOUT_RETURN_MONITOR);
 
     // When a type barrier fails, the bad value is at the top of the stack.
     Value &result = cx->regs().sp[-1];

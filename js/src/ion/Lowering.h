@@ -159,6 +159,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitFunctionEnvironment(MFunctionEnvironment *ins);
     bool visitStoreSlot(MStoreSlot *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);
+    bool visitMonitorTypes(MMonitorTypes *ins);
     bool visitArrayLength(MArrayLength *ins);
     bool visitInitializedLength(MInitializedLength *ins);
     bool visitSetInitializedLength(MSetInitializedLength *ins);
