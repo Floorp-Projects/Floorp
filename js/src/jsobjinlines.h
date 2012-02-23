@@ -1024,22 +1024,6 @@ JSObject::principals(JSContext *cx)
     return cx->compartment ? cx->compartment->principals : NULL;
 }
 
-inline js::HeapSlot &
-JSObject::nativeGetSlotRef(unsigned slot)
-{
-    JS_ASSERT(isNative());
-    JS_ASSERT(slot < slotSpan());
-    return getSlotRef(slot);
-}
-
-inline const js::Value &
-JSObject::nativeGetSlot(unsigned slot) const
-{
-    JS_ASSERT(isNative());
-    JS_ASSERT(slot < slotSpan());
-    return getSlot(slot);
-}
-
 inline JSFunction *
 JSObject::nativeGetMethod(const js::Shape *shape) const
 {
@@ -1881,41 +1865,6 @@ js_PurgeScopeChain(JSContext *cx, JSObject *obj, jsid id)
     if (obj->isDelegate())
         return js_PurgeScopeChainHelper(cx, obj, id);
     return true;
-}
-
-inline void
-JSObject::setSlot(unsigned slot, const js::Value &value)
-{
-    JS_ASSERT(slotInRange(slot));
-    getSlotRef(slot).set(this, slot, value);
-}
-
-inline void
-JSObject::initSlot(unsigned slot, const js::Value &value)
-{
-    JS_ASSERT(getSlot(slot).isUndefined() || getSlot(slot).isMagic(JS_ARRAY_HOLE));
-    JS_ASSERT(slotInRange(slot));
-    initSlotUnchecked(slot, value);
-}
-
-inline void
-JSObject::initSlotUnchecked(unsigned slot, const js::Value &value)
-{
-    getSlotAddressUnchecked(slot)->init(this, slot, value);
-}
-
-inline void
-JSObject::setFixedSlot(unsigned slot, const js::Value &value)
-{
-    JS_ASSERT(slot < numFixedSlots());
-    fixedSlots()[slot].set(this, slot, value);
-}
-
-inline void
-JSObject::initFixedSlot(unsigned slot, const js::Value &value)
-{
-    JS_ASSERT(slot < numFixedSlots());
-    fixedSlots()[slot].init(this, slot, value);
 }
 
 #endif /* jsobjinlines_h___ */
