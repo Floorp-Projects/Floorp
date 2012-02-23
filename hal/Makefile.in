@@ -105,7 +105,7 @@ CPPSRCS += \
 endif
 
 ifneq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
-CPPSRCS += FallbackLights.cpp
+CPPSRCS += FallbackLights.cpp FallbackTime.cpp
 endif #}
 
 include $(topsrcdir)/config/config.mk

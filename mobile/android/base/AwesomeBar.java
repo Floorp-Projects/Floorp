@@ -89,6 +89,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     static final String CURRENT_URL_KEY = "currenturl";
     static final String TYPE_KEY = "type";
     static final String SEARCH_KEY = "search";
+    static final String USER_ENTERED_KEY = "user_entered";
     static enum Type { ADD, EDIT };
 
     private String mType;
@@ -132,7 +133,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
 
         mGoButton.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                openUrlAndFinish(mText.getText().toString());
+                openUserEnteredAndFinish(mText.getText().toString());
             }
         });
 
@@ -166,7 +167,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                         (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
                 if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    openUrlAndFinish(mText.getText().toString());
+                    openUserEnteredAndFinish(mText.getText().toString());
                     return true;
                 }
 
@@ -206,7 +207,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                     if (event.getAction() != KeyEvent.ACTION_DOWN)
                         return true;
 
-                    openUrlAndFinish(mText.getText().toString());
+                    openUserEnteredAndFinish(mText.getText().toString());
                     return true;
                 } else {
                     return false;
@@ -317,6 +318,13 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     }
 
     private void openUrlAndFinish(String url) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(URL_KEY, url);
+        resultIntent.putExtra(TYPE_KEY, mType);
+        finishWithResult(resultIntent);
+    }
+
+    private void openUserEnteredAndFinish(String url) {
         int index = url.indexOf(' ');
         if (index != -1) {
             String keywordUrl = BrowserDB.getUrlForKeyword(mResolver, url.substring(0, index));
@@ -329,6 +337,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
         resultIntent.putExtra(TYPE_KEY, mType);
+        resultIntent.putExtra(USER_ENTERED_KEY, true);
         finishWithResult(resultIntent);
     }
 

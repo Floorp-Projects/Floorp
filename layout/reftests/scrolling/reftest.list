@@ -12,3 +12,4 @@ HTTP == transformed-1.html transformed-1.html?ref
 HTTP == transformed-1.html?up transformed-1.html?ref
 == uncovering-1.html uncovering-1-ref.html
 == uncovering-2.html uncovering-2-ref.html
+== less-than-scrollbar-height.html less-than-scrollbar-height-ref.html

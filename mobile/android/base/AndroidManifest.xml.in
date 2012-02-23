@@ -103,6 +103,12 @@
             </intent-filter>
         </activity>
 
+        <!-- Masquerade as the Resolver so that we can be opened from the Marketplace. -->
+        <activity-alias
+            android:name="com.android.internal.app.ResolverActivity"
+            android:targetActivity=".App"
+            android:exported="true" />
+
         <receiver android:name="NotificationHandler">
             <intent-filter>
                 <action android:name="org.mozilla.gecko.ACTION_ALERT_CLICK" />

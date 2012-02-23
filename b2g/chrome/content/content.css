@@ -107,6 +107,6 @@ xul|thumb {
   -moz-border-right-colors: none !important;
   -moz-border-left-colors: none !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  -moz-border-radius: 3px;
+  border-radius: 3px;
 }
 

@@ -218,6 +218,19 @@ void GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo);
 void NotifyNetworkChange(const hal::NetworkInformation& aNetworkInfo);
 
 /**
+ * Adjusting system clock.
+ * @param aDeltaMilliseconds The difference compared with current system clock.
+ */
+void AdjustSystemClock(int32_t aDeltaMilliseconds);
+
+/**
+ * Set timezone
+ * @param aTimezoneSpec The definition can be found in 
+ * http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+ */
+void SetTimezone(const nsCString& aTimezoneSpec);
+
+/**
  * Reboot the device.
  */
 void Reboot();
