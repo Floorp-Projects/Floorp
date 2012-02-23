@@ -633,11 +633,18 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         // (or spend 4 instructions making the comparison :()
         // since I wish to get this tested, I'm using a register that should not be used.
         // when everything breaks, this is probably the cause
+        // See also branchPtr.
         ma_ldr(addr, lr);
         ma_cmp(lr, ptr);
         CodeOffsetJump ret(nextOffset().getOffset());
         ma_b(label, cond);
         return ret;
+    }
+    void branchPtr(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
+        // See the comment in branchPtrWithPatch.
+        ma_ldr(addr, lr);
+        ma_cmp(lr, ptr);
+        ma_b(label, cond);
     }
 
     void loadUnboxedValue(Address address, AnyRegister dest) {
