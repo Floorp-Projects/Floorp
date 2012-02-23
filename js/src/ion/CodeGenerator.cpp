@@ -2013,6 +2013,31 @@ CodeGenerator::visitBitNotV(LBitNotV *lir)
     return callVM(info, lir);
 }
 
+bool
+CodeGenerator::visitBitOpV(LBitOpV *lir)
+{
+    typedef bool (*pf)(JSContext *, const Value &, const Value &, int *p);
+    static const VMFunction BitAndInfo = FunctionInfo<pf>(BitAnd);
+    static const VMFunction BitOrInfo = FunctionInfo<pf>(BitOr);
+    static const VMFunction BitXorInfo = FunctionInfo<pf>(BitXor);
+
+    pushArg(ToValue(lir, LBitOpV::LhsInput));
+    pushArg(ToValue(lir, LBitOpV::RhsInput));
+
+    switch (lir->jsop()) {
+      case JSOP_BITAND:
+        return callVM(BitAndInfo, lir);
+      case JSOP_BITOR:
+        return callVM(BitOrInfo, lir);
+      case JSOP_BITXOR:
+        return callVM(BitXorInfo, lir);
+      default:
+        break;
+    }
+    JS_NOT_REACHED("unexpected bitop");
+    return false;
+}
+
 class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator>
 {
     LTypeOfV *ins_;

@@ -895,6 +895,36 @@ BitNot(JSContext *cx, const Value &in, int *out)
     return true;
 }
 
+static JS_ALWAYS_INLINE bool
+BitXor(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+{
+    int left, right;
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+        return false;
+    *out = left ^ right;
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
+BitOr(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+{
+    int left, right;
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+        return false;
+    *out = left | right;
+    return true;
+}
+
+static JS_ALWAYS_INLINE bool
+BitAnd(JSContext *cx, const Value &lhs, const Value &rhs, int *out)
+{
+    int left, right;
+    if (!ToInt32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
+        return false;
+    *out = left & right;
+    return true;
+}
+
 #undef RELATIONAL_OP
 
 }  /* namespace js */

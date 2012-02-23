@@ -64,7 +64,8 @@
     _(StackArg)                     \
     _(BitNotI)                      \
     _(BitNotV)                      \
-    _(BitOp)                        \
+    _(BitOpI)                       \
+    _(BitOpV)                       \
     _(ShiftOp)                      \
     _(Return)                       \
     _(Throw)                        \

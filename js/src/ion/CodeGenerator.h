@@ -148,6 +148,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallIteratorEnd(LCallIteratorEnd *lir);
     bool visitCallSetProperty(LCallSetProperty *ins);
     bool visitBitNotV(LBitNotV *lir);
+    bool visitBitOpV(LBitOpV *lir);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);

@@ -2113,6 +2113,9 @@ IonBuilder::jsop_bitop(JSOp op)
     ins->infer(oracle->binaryOp(script, pc));
 
     current->push(ins);
+    if (ins->isEffectful() && !resumeAfter(ins))
+        return false;
+
     return true;
 }
 

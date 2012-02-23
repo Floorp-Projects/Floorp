@@ -594,7 +594,6 @@ JSVAL_IS_SPECIFIC_INT32_IMPL(jsval_layout l, int32_t i32)
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, JSBool b)
 {
-    JS_ASSERT_IF(l.s.tag == JSVAL_TAG_BOOLEAN, l.s.payload.boo == !!l.s.payload.boo);
     return (l.s.tag == JSVAL_TAG_BOOLEAN) && (l.s.payload.boo == b);
 }
 

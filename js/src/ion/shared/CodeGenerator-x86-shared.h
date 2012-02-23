@@ -123,7 +123,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitDivI(LDivI *ins);
     virtual bool visitModI(LModI *ins);
     virtual bool visitBitNotI(LBitNotI *ins);
-    virtual bool visitBitOp(LBitOp *ins);
+    virtual bool visitBitOpI(LBitOpI *ins);
     virtual bool visitShiftOp(LShiftOp *ins);
     virtual bool visitMoveGroup(LMoveGroup *group);
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
