@@ -37,6 +37,14 @@
 
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
+// Some tests here assume that all restored tabs are loaded without waiting for
+// the user to bring them to the foreground. We ensure this by resetting the
+// related preference (see the "firefox.js" defaults file for details).
+Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", false);
+registerCleanupFunction(function () {
+  Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
+});
+
 // This assumes that tests will at least have some state/entries
 function waitForBrowserState(aState, aSetStateCallback) {
   let windows = [window];
