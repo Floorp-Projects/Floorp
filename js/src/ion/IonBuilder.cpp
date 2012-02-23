@@ -726,6 +726,8 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_CALL:
+      case JSOP_FUNCALL:
+      case JSOP_FUNAPPLY:
         return jsop_call(GET_ARGC(pc), false);
 
       case JSOP_NEW:
