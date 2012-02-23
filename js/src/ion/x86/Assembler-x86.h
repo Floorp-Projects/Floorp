@@ -333,6 +333,10 @@ class Assembler : public AssemblerX86Shared
             masm.cmpl_im_force32(imm.value, op.disp(), op.base());
             writeDataRelocation(masm.currentOffset());
             break;
+          case Operand::ADDRESS:
+            masm.cmpl_im(imm.value, op.address());
+            writeDataRelocation(masm.currentOffset());
+            break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
