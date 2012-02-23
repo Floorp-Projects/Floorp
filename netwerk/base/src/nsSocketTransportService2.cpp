@@ -960,18 +960,8 @@ nsSocketTransportService::DiscoverMaxCount()
             gMaxCount = rlimitData.rlim_cur - 250;
 
 #elif defined(XP_WIN) && !defined(WIN_CE)
-    // win 95, 98, etc had a limit of 100 - so we will just
-    // use the historical 50 in every case older than XP (0x501).
     // >= XP is confirmed to have at least 1000
-
-    OSVERSIONINFO osInfo = { sizeof(OSVERSIONINFO) };
-    if (GetVersionEx(&osInfo)) {
-        PRInt32 version = 
-            (osInfo.dwMajorVersion & 0xff) << 8 | 
-            (osInfo.dwMinorVersion & 0xff);
-        if (version >= 0x501)                    /* xp or later */
-            gMaxCount = SOCKET_LIMIT_TARGET;
-    }
+    gMaxCount = SOCKET_LIMIT_TARGET;
 #else
     // other platforms are harder to test - so leave at safe legacy value
 #endif
