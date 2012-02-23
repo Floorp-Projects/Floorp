@@ -17,7 +17,7 @@
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,38 +37,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_telephony_telephonycommon_h__
-#define mozilla_dom_telephony_telephonycommon_h__
+#ifndef mozilla_dom_telephony_telephonycallarray_h__
+#define mozilla_dom_telephony_telephonycallarray_h__
 
-#include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsDebug.h"
-#include "nsDOMEventTargetHelper.h"
-#include "nsStringGlue.h"
-#include "nsTArray.h"
+#include "TelephonyCommon.h"
 
-#define BEGIN_TELEPHONY_NAMESPACE \
-  namespace mozilla { namespace dom { namespace telephony {
-#define END_TELEPHONY_NAMESPACE \
-  } /* namespace telephony */ } /* namespace dom */ } /* namespace mozilla */
-#define USING_TELEPHONY_NAMESPACE \
-  using namespace mozilla::dom::telephony;
-
-class nsIDOMTelephony;
-class nsIDOMTelephonyCall;
+#include "nsIDOMTelephonyCallArray.h"
 
 BEGIN_TELEPHONY_NAMESPACE
 
-enum {
-  kOutgoingPlaceholderCallIndex = PR_UINT32_MAX
-};
+class TelephonyCallArray : public nsIDOMTelephonyCallArray,
+                           public nsWrapperCache
+{
+  nsRefPtr<Telephony> mTelephony;
 
-class Telephony;
-class TelephonyCall;
-class TelephonyCallArray;
-class CallEvent;
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSIDOMTELEPHONYCALLARRAY
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TelephonyCallArray)
+
+  static already_AddRefed<TelephonyCallArray>
+  Create(Telephony* aTelephony);
+
+  nsISupports*
+  GetParentObject() const;
+
+  virtual JSObject*
+  WrapObject(JSContext* aCx, XPCWrappedNativeScope* aScope, bool* aTriedToWrap);
+
+private:
+  TelephonyCallArray(Telephony* aTelephony);
+  ~TelephonyCallArray();
+};
 
 END_TELEPHONY_NAMESPACE
 
-#endif // mozilla_dom_telephony_telephonycommon_h__
+#endif // mozilla_dom_telephony_telephonycallarray_h__

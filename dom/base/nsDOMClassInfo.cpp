@@ -529,6 +529,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #ifdef MOZ_B2G_RIL
 #include "Telephony.h"
 #include "TelephonyCall.h"
+#include "TelephonyCallArray.h"
 #include "CallEvent.h"
 #endif
 
@@ -1629,6 +1630,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TelephonyCall, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(TelephonyCallArray, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CallEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
@@ -4369,6 +4372,10 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(TelephonyCall, nsIDOMTelephonyCall)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTelephonyCall)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(TelephonyCallArray, nsIDOMTelephonyCallArray)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTelephonyCallArray)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CallEvent, nsIDOMCallEvent)
