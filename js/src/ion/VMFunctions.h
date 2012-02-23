@@ -159,6 +159,14 @@ struct VMFunction
         return stackSlots;
     }
 
+    VMFunction()
+      : wrapped(NULL),
+        explicitArgs(0),
+        argumentProperties(0),
+        outParam(Type_Void),
+        returnType(Type_Void)
+    {
+    }
 
     VMFunction(void *wrapped, uint32 explicitArgs, uint32 argumentProperties, DataType outParam, DataType returnType)
       : wrapped(wrapped),

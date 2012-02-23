@@ -641,7 +641,7 @@ CodeGeneratorX86Shared::visitBitNotI(LBitNotI *ins)
 }
 
 bool
-CodeGeneratorX86Shared::visitBitOp(LBitOp *ins)
+CodeGeneratorX86Shared::visitBitOpI(LBitOpI *ins)
 {
     const LAllocation *lhs = ins->getOperand(0);
     const LAllocation *rhs = ins->getOperand(1);
