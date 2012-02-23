@@ -74,7 +74,7 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     private boolean mBlend;
     private boolean mNewBlend;
 
-	private FloatBuffer textureBuffer;
+    private FloatBuffer textureBuffer;
     private FloatBuffer textureBufferInverted;
 
     public SurfaceTextureLayer(int textureId) {
@@ -95,19 +95,19 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         mSurface = tmp;
 
         float textureMap[] = {
-                0.0f, 1.0f,	// top left
-                0.0f, 0.0f,	// bottom left
-                1.0f, 1.0f,	// top right
-                1.0f, 0.0f,	// bottom right
+                0.0f, 1.0f, // top left
+                0.0f, 0.0f, // bottom left
+                1.0f, 1.0f, // top right
+                1.0f, 0.0f, // bottom right
         };
 
         textureBuffer = createBuffer(textureMap);
 
         float textureMapInverted[] = {
-                0.0f, 0.0f,	// bottom left
-                0.0f, 1.0f,	// top left
-                1.0f, 0.0f,	// bottom right
-                1.0f, 1.0f,	// top right
+                0.0f, 0.0f, // bottom left
+                0.0f, 1.0f, // top left
+                1.0f, 0.0f, // bottom right
+                1.0f, 1.0f, // top right
         };
 
         textureBufferInverted = createBuffer(textureMapInverted);
@@ -130,12 +130,12 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
 
     private FloatBuffer createBuffer(float[] input) {
         // a float has 4 bytes so we allocate for each coordinate 4 bytes
-		ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length * 4);
-		byteBuffer.order(ByteOrder.nativeOrder());
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length * 4);
+        byteBuffer.order(ByteOrder.nativeOrder());
 
         FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
         floatBuffer.put(input);
-		floatBuffer.position(0);
+        floatBuffer.position(0);
 
         return floatBuffer;
     }
