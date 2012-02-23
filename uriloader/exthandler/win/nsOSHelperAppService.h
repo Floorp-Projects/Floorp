@@ -94,9 +94,7 @@ protected:
   static bool typeFromExtEquals(const PRUnichar* aExt, const char *aType);
 
 private:
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   IApplicationAssociationRegistration* mAppAssoc;
-#endif
 };
 
 #endif // nsOSHelperAppService_h__

@@ -257,7 +257,6 @@ static PRInt64 GetVsize()
   return s.ullTotalVirtual - s.ullAvailVirtual;
 }
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 static PRInt64 GetPrivate()
 {
     PROCESS_MEMORY_COUNTERS_EX pmcex;
@@ -278,7 +277,6 @@ NS_MEMORY_REPORTER_IMPLEMENT(Private,
     "Memory that cannot be shared with other processes, including memory that "
     "is committed and marked MEM_PRIVATE, data that is not mapped, and "
     "executable pages that have been written to.")
-#endif
 
 static PRInt64 GetResident()
 {
@@ -582,7 +580,7 @@ nsMemoryReporterManager::Init()
     REGISTER(PageFaultsHard);
 #endif
 
-#if defined(XP_WIN) && MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+#if defined(XP_WIN)
     REGISTER(Private);
 #endif
 
