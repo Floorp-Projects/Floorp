@@ -928,6 +928,7 @@ function nsWifiWorker() {
     WifiManager.getMacAddress(function (mac) {
       debug("Got mac: " + mac);
     });
+    connectToMozilla();
   }
   WifiManager.onsupplicantlost = function() {
     debug("Couldn't connect to supplicant");
@@ -938,10 +939,6 @@ function nsWifiWorker() {
   this.networks = Object.create(null);
   WifiManager.onstatechange = function() {
     debug("State change: " + this.prevState + " -> " + this.state);
-
-    // TODO Worth adding a more generic API for this?
-    if (this.state === "INACTIVE")
-      connectToMozilla();
   }
 
   function connectToMozilla() {
