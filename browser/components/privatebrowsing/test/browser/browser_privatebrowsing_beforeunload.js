@@ -60,11 +60,11 @@ function test() {
   Services.obs.addObserver(promptObserver, "common-dialog-loaded", false);
 
   waitForExplicitFinish();
-  let browser1 = gBrowser.getBrowserForTab(gBrowser.addTab());
+  let browser1 = gBrowser.addTab().linkedBrowser;
   browser1.addEventListener("load", function() {
     browser1.removeEventListener("load", arguments.callee, true);
 
-    let browser2 = gBrowser.getBrowserForTab(gBrowser.addTab());
+    let browser2 = gBrowser.addTab().linkedBrowser;
     browser2.addEventListener("load", function() {
       browser2.removeEventListener("load", arguments.callee, true);
 
@@ -75,11 +75,11 @@ function test() {
       is(confirmCalls, 1, "Only one confirm box should be shown");
       is(gBrowser.tabs.length, 3,
          "No tabs should be closed because private browsing mode transition was canceled");
-      is(gBrowser.getBrowserForTab(gBrowser.tabContainer.firstChild).currentURI.spec, "about:blank",
+      is(gBrowser.tabContainer.firstChild.linkedBrowser.currentURI.spec, "about:blank",
          "The first tab should be a blank tab");
-      is(gBrowser.getBrowserForTab(gBrowser.tabContainer.firstChild.nextSibling).currentURI.spec, TEST_PAGE_1,
+      is(gBrowser.tabContainer.firstChild.nextSibling.linkedBrowser.currentURI.spec, TEST_PAGE_1,
          "The middle tab should be the same one we opened");
-      is(gBrowser.getBrowserForTab(gBrowser.tabContainer.lastChild).currentURI.spec, TEST_PAGE_2,
+      is(gBrowser.tabContainer.lastChild.linkedBrowser.currentURI.spec, TEST_PAGE_2,
          "The last tab should be the same one we opened");
       is(rejectDialog, 0, "Only one confirm dialog should have been rejected");
 
@@ -113,11 +113,16 @@ function test() {
             is(confirmCalls, 1, "Only one confirm box should be shown");
             is(gBrowser.tabs.length, 2,
                "No tabs should be closed because private browsing mode transition was canceled");
-            is(gBrowser.getBrowserForTab(gBrowser.tabContainer.firstChild).currentURI.spec, TEST_PAGE_1,
+            is(gBrowser.tabContainer.firstChild.linkedBrowser.currentURI.spec, TEST_PAGE_1,
                "The first tab should be the same one we opened");
-            is(gBrowser.getBrowserForTab(gBrowser.tabContainer.lastChild).currentURI.spec, TEST_PAGE_2,
+            is(gBrowser.tabContainer.lastChild.linkedBrowser.currentURI.spec, TEST_PAGE_2,
                "The last tab should be the same one we opened");
             is(rejectDialog, 0, "Only one confirm dialog should have been rejected");
+
+            // Ensure that all restored tabs are loaded without waiting for the
+            // user to bring them to the foreground, by resetting the related
+            // preference (see the "firefox.js" defaults file for details).
+            Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", false);
 
             confirmCalls = 0;
             acceptDialog = 2;
@@ -135,11 +140,11 @@ function test() {
               if (++loads != 3)
                 return;
 
-              is(gBrowser.getBrowserForTab(gBrowser.tabContainer.firstChild).currentURI.spec, "about:blank",
+              is(gBrowser.tabContainer.firstChild.linkedBrowser.currentURI.spec, "about:blank",
                  "The first tab should be a blank tab");
-              is(gBrowser.getBrowserForTab(gBrowser.tabContainer.firstChild.nextSibling).currentURI.spec, TEST_PAGE_1,
+              is(gBrowser.tabContainer.firstChild.nextSibling.linkedBrowser.currentURI.spec, TEST_PAGE_1,
                  "The middle tab should be the same one we opened");
-              is(gBrowser.getBrowserForTab(gBrowser.tabContainer.lastChild).currentURI.spec, TEST_PAGE_2,
+              is(gBrowser.tabContainer.lastChild.linkedBrowser.currentURI.spec, TEST_PAGE_2,
                  "The last tab should be the same one we opened");
               is(acceptDialog, 0, "Two confirm dialogs should have been accepted");
               is(acceptDialog, 0, "Two prompts should have been raised");
@@ -150,6 +155,7 @@ function test() {
               gBrowser.getBrowserAtIndex(gBrowser.tabContainer.selectedIndex).contentWindow.focus();
 
               Services.obs.removeObserver(promptObserver, "common-dialog-loaded", false);
+              Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
               finish();
             }
             for (let i = 0; i < gBrowser.browsers.length; ++i)
