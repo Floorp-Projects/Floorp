@@ -71,7 +71,7 @@ public class GeckoLayerClient implements GeckoEventListener,
     private IntSize mWindowSize;
     private IntSize mBufferSize;
 
-    private Layer mTileLayer;
+    private VirtualLayer mRootLayer;
 
     /* The viewport that Gecko is currently displaying. */
     private ViewportMetrics mGeckoViewport;
@@ -109,7 +109,7 @@ public class GeckoLayerClient implements GeckoEventListener,
     void setLayerController(LayerController layerController) {
         mLayerController = layerController;
 
-        layerController.setRoot(mTileLayer);
+        layerController.setRoot(mRootLayer);
         if (mGeckoViewport != null) {
             layerController.setViewportMetrics(mGeckoViewport);
         }
@@ -221,7 +221,7 @@ public class GeckoLayerClient implements GeckoEventListener,
     }
 
     private void updateViewport(boolean onlyUpdatePageSize) {
-        mTileLayer.beginTransaction(); // Called on gecko thread
+        mRootLayer.beginTransaction(); // Called on gecko thread
         try {
             synchronized (mLayerController) {
                 // save and restore the viewport size stored in java; never let the
@@ -233,11 +233,11 @@ public class GeckoLayerClient implements GeckoEventListener,
                 mGeckoViewport.setSize(viewportSize);
 
                 PointF origin = mGeckoViewport.getOrigin();
-                mTileLayer.setOrigin(PointUtils.round(origin));
-                mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
+                mRootLayer.setOrigin(PointUtils.round(origin));
+                mRootLayer.setResolution(mGeckoViewport.getZoomFactor());
 
                 // Set the new origin and resolution instantly.
-                mTileLayer.performUpdates(null);
+                mRootLayer.performUpdates(null);
 
                 Log.e(LOGTAG, "### updateViewport onlyUpdatePageSize=" + onlyUpdatePageSize +
                       " getTileViewport " + mGeckoViewport);
@@ -254,7 +254,7 @@ public class GeckoLayerClient implements GeckoEventListener,
                 }
             }
         } finally {
-            mTileLayer.endTransaction();
+            mRootLayer.endTransaction();
         }
     }
 
@@ -312,7 +312,7 @@ public class GeckoLayerClient implements GeckoEventListener,
     }
 
     private boolean initializeVirtualLayer() {
-        if (mTileLayer != null) {
+        if (mRootLayer != null) {
             return false;
         }
 
@@ -320,7 +320,7 @@ public class GeckoLayerClient implements GeckoEventListener,
         VirtualLayer virtualLayer = new VirtualLayer();
         virtualLayer.setSize(getBufferSize());
         mLayerController.setRoot(virtualLayer);
-        mTileLayer = virtualLayer;
+        mRootLayer = virtualLayer;
 
         sendResizeEventIfNecessary(true);
         return true;
@@ -432,7 +432,7 @@ public class GeckoLayerClient implements GeckoEventListener,
             float scrollY = viewportOrigin.y;
             float zoomFactor = viewportMetrics.getZoomFactor();
             Log.e(LOGTAG, "### Viewport metrics = " + viewportMetrics + " tile reso = " +
-                  mTileLayer.getResolution());
+                  mRootLayer.getResolution());
             return new ViewTransform(scrollX, scrollY, zoomFactor);
         }
     }
