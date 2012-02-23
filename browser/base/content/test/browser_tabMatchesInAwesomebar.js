@@ -77,6 +77,11 @@ var gTestSteps = [
     ps.setBoolPref("browser.privatebrowsing.keep_current_session", true);
     ps.setBoolPref("browser.tabs.warnOnClose", false);
 
+    // Make sure that all restored tabs are loaded without waiting for the user
+    // to bring them to the foreground. We ensure this by resetting the
+    // related preference (see the "firefox.js" defaults file for details).
+    ps.setBoolPref("browser.sessionstore.restore_on_demand", false);
+
     gPrivateBrowsing.privateBrowsingEnabled = true;
 
     executeSoon(function() {
@@ -89,12 +94,8 @@ var gTestSteps = [
 
     executeSoon(function() {
       let ps = Services.prefs;
-      try {
-        ps.clearUserPref("browser.privatebrowsing.keep_current_session");
-      } catch (ex) {}
-      try {
-        ps.clearUserPref("browser.tabs.warnOnClose");
-      } catch (ex) {}
+      ps.clearUserPref("browser.privatebrowsing.keep_current_session");
+      ps.clearUserPref("browser.tabs.warnOnClose");
 
       ensure_opentabs_match_db(nextStep);
     });
@@ -169,12 +170,8 @@ var gTestSteps = [
       Services.obs.removeObserver(arguments.callee, "private-browsing-transition-complete");
 
       let ps = Services.prefs;
-      try {
-        ps.clearUserPref("browser.privatebrowsing.keep_current_session");
-      } catch (ex) {}
-      try {
-        ps.clearUserPref("browser.tabs.warnOnClose");
-      } catch (ex) {}
+      ps.clearUserPref("browser.privatebrowsing.keep_current_session");
+      ps.clearUserPref("browser.tabs.warnOnClose");
 
       for (let i = 1; i < gBrowser.tabs.length; i++)
         waitForRestoredTab(gBrowser.tabs[i]);
@@ -185,6 +182,9 @@ var gTestSteps = [
   },
   function() {
     info("Running step 13 - close all tabs");
+
+    Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");
+
     gBrowser.addTab("about:blank", {skipAnimation: true});
     while (gBrowser.tabs.length > 1) {
       info("Removing tab: " + gBrowser.tabs[0].linkedBrowser.currentURI.spec);
