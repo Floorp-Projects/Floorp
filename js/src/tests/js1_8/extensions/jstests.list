@@ -20,7 +20,7 @@ script regress-422269.js
 skip script regress-445818.js
 skip script regress-446169-01.js
 skip script regress-446169-02.js
-fails-if(!xulRuntime.shell) script regress-452476.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR
+skip-if(Android) script regress-452476.js # bug - nsIDOMWindow.crypto throws NS_ERROR_NOT_IMPLEMENTED on Android
 script regress-452913.js
 script regress-454744.js
 script regress-455973.js
@@ -34,7 +34,7 @@ script regress-473040.js
 skip script regress-475971.js
 skip-if(!xulRuntime.shell) slow script regress-476414-01.js
 skip-if(!xulRuntime.shell) slow script regress-476414-02.js
-fails-if(!xulRuntime.shell) script regress-476427.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR
+skip-if(Android) script regress-476427.js # bug - nsIDOMWindow.crypto throws NS_ERROR_NOT_IMPLEMENTED on Android
 script regress-476653.js
 skip-if(Android) script regress-476869.js
 script regress-476871-02.js
