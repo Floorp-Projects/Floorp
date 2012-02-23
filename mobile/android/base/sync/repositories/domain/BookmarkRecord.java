@@ -44,6 +44,7 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.repositories.android.AndroidBrowserBookmarksDataAccessor;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 
 import android.util.Log;
@@ -196,11 +197,11 @@ public class BookmarkRecord extends Record {
   }
 
   public boolean isBookmark() {
-    return "bookmark".equals(this.type);
+    return AndroidBrowserBookmarksDataAccessor.TYPE_BOOKMARK.equalsIgnoreCase(this.type);
   }
 
   public boolean isFolder() {
-    return "folder".equals(this.type);
+    return AndroidBrowserBookmarksDataAccessor.TYPE_FOLDER.equalsIgnoreCase(this.type);
   }
 
   @Override
