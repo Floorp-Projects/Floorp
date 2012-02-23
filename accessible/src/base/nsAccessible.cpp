@@ -838,9 +838,9 @@ nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
 
   nsPresContext *presContext = frame->PresContext();
 
-  nsIntRect screenRect = frame->GetScreenRectExternal();
-  nsPoint offset(presContext->DevPixelsToAppUnits(aX - screenRect.x),
-                 presContext->DevPixelsToAppUnits(aY - screenRect.y));
+  nsRect screenRect = frame->GetScreenRectInAppUnits();
+  nsPoint offset(presContext->DevPixelsToAppUnits(aX) - screenRect.x,
+                 presContext->DevPixelsToAppUnits(aY) - screenRect.y);
 
   nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
   nsIFrame *foundFrame = presShell->GetFrameForPoint(frame, offset);

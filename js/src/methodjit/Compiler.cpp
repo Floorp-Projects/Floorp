@@ -81,14 +81,6 @@ using namespace js::analyze;
             return retval;                                      \
     JS_END_MACRO
 
-#if defined(JS_METHODJIT_SPEW)
-static const char *OpcodeNames[] = {
-# define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) #name,
-# include "jsopcode.tbl"
-# undef OPDEF
-};
-#endif
-
 /*
  * Number of times a script must be called or had a backedge before we try to
  * inline its calls.
@@ -177,13 +169,14 @@ mjit::Compiler::checkAnalysis(JSScript *script)
         return Compile_Abort;
     }
 
-    if (JSOp(*script->code) == JSOP_GENERATOR) {
-        JaegerSpew(JSpew_Abort, "script is a generator\n");
+    if (!script->ensureRanAnalysis(cx, NULL))
+        return Compile_Error;
+
+    if (!script->analysis()->compileable()) {
+        JaegerSpew(JSpew_Abort, "script has uncompileable opcodes\n");
         return Compile_Abort;
     }
 
-    if (!script->ensureRanAnalysis(cx, NULL))
-        return Compile_Error;
     if (cx->typeInferenceEnabled() && !script->ensureRanInference(cx))
         return Compile_Error;
 
@@ -3258,12 +3251,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_DEBUGGER)
 
           default:
-           /* Sorry, this opcode isn't implemented yet. */
-#ifdef JS_METHODJIT_SPEW
-            JaegerSpew(JSpew_Abort, "opcode %s not handled yet (%s line %d)\n", OpcodeNames[op],
-                       script->filename, js_PCToLineNumber(cx, script, PC));
-#endif
-            return Compile_Abort;
+            JS_NOT_REACHED("Opcode not implemented");
         }
 
     /**********************

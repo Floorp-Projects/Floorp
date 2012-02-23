@@ -41,7 +41,7 @@ interface nsIDOMGeoPositionOptions;
 interface nsIDOMGeoPositionCallback;
 interface nsIDOMGeoPositionErrorCallback;
 
-[scriptable, function, uuid(37687DAF-B85F-4E4D-8881-85A0AD24CF78)]
+[scriptable, uuid(37687DAF-B85F-4E4D-8881-85A0AD24CF78)]
 interface nsIDOMGeoGeolocation : nsISupports
 {
   void getCurrentPosition(in nsIDOMGeoPositionCallback successCallback,

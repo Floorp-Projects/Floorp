@@ -197,6 +197,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     bool heavyweight = script->function() && script->function()->isHeavyweight();
 
+    isCompileable = true;
+
     isInlineable = true;
     if (script->nClosedArgs || script->nClosedVars || heavyweight ||
         script->usesEval || script->usesArguments || cx->compartment->debugMode()) {
@@ -330,13 +332,14 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             isInlineable = false;
             break;
 
+          case JSOP_QNAMEPART:
+          case JSOP_QNAMECONST:
+            isCompileable = false;
           case JSOP_NAME:
           case JSOP_CALLNAME:
           case JSOP_BINDNAME:
           case JSOP_SETNAME:
           case JSOP_DELNAME:
-          case JSOP_QNAMEPART:
-          case JSOP_QNAMECONST:
             checkAliasedName(cx, pc);
             usesScopeChain_ = true;
             isInlineable = false;
@@ -358,7 +361,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_ENTERWITH:
             addsScopeObjects_ = true;
-            isInlineable = canTrackVars = false;
+            isCompileable = isInlineable = canTrackVars = false;
             break;
 
           case JSOP_ENTERLET0:
@@ -483,7 +486,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_DECLOCAL:
           case JSOP_LOCALINC:
           case JSOP_LOCALDEC:
-          case JSOP_SETLOCAL: {
+          case JSOP_SETLOCAL:
+          case JSOP_SETLOCALPOP: {
             uint32_t local = GET_SLOTNO(pc);
             if (local >= script->nfixed) {
                 localsAliasStack_ = true;
@@ -517,7 +521,105 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             isInlineable = false;
             break;
 
+          /* Additional opcodes which can be both compiled both normally and inline. */
+          case JSOP_NOP:
+          case JSOP_UNDEFINED:
+          case JSOP_GOTO:
+          case JSOP_DEFAULT:
+          case JSOP_IFEQ:
+          case JSOP_IFNE:
+          case JSOP_ITERNEXT:
+          case JSOP_DUP:
+          case JSOP_DUP2:
+          case JSOP_SWAP:
+          case JSOP_PICK:
+          case JSOP_BITOR:
+          case JSOP_BITXOR:
+          case JSOP_BITAND:
+          case JSOP_LT:
+          case JSOP_LE:
+          case JSOP_GT:
+          case JSOP_GE:
+          case JSOP_EQ:
+          case JSOP_NE:
+          case JSOP_LSH:
+          case JSOP_RSH:
+          case JSOP_URSH:
+          case JSOP_ADD:
+          case JSOP_SUB:
+          case JSOP_MUL:
+          case JSOP_DIV:
+          case JSOP_MOD:
+          case JSOP_NOT:
+          case JSOP_BITNOT:
+          case JSOP_NEG:
+          case JSOP_POS:
+          case JSOP_DELPROP:
+          case JSOP_DELELEM:
+          case JSOP_TYPEOF:
+          case JSOP_TYPEOFEXPR:
+          case JSOP_VOID:
+          case JSOP_GETPROP:
+          case JSOP_CALLPROP:
+          case JSOP_LENGTH:
+          case JSOP_GETELEM:
+          case JSOP_CALLELEM:
+          case JSOP_TOID:
+          case JSOP_SETELEM:
+          case JSOP_IMPLICITTHIS:
+          case JSOP_DOUBLE:
+          case JSOP_STRING:
+          case JSOP_ZERO:
+          case JSOP_ONE:
+          case JSOP_NULL:
+          case JSOP_FALSE:
+          case JSOP_TRUE:
+          case JSOP_OR:
+          case JSOP_AND:
+          case JSOP_CASE:
+          case JSOP_STRICTEQ:
+          case JSOP_STRICTNE:
+          case JSOP_ITER:
+          case JSOP_MOREITER:
+          case JSOP_ENDITER:
+          case JSOP_POP:
+          case JSOP_GETARG:
+          case JSOP_CALLARG:
+          case JSOP_BINDGNAME:
+          case JSOP_UINT16:
+          case JSOP_NEWINIT:
+          case JSOP_NEWARRAY:
+          case JSOP_NEWOBJECT:
+          case JSOP_ENDINIT:
+          case JSOP_INITMETHOD:
+          case JSOP_INITPROP:
+          case JSOP_INITELEM:
+          case JSOP_SETPROP:
+          case JSOP_SETMETHOD:
+          case JSOP_IN:
+          case JSOP_INSTANCEOF:
+          case JSOP_LINENO:
+          case JSOP_ENUMELEM:
+          case JSOP_CONDSWITCH:
+          case JSOP_LABEL:
+          case JSOP_RETRVAL:
+          case JSOP_GETGNAME:
+          case JSOP_CALLGNAME:
+          case JSOP_SETGNAME:
+          case JSOP_REGEXP:
+          case JSOP_OBJECT:
+          case JSOP_UINT24:
+          case JSOP_GETXPROP:
+          case JSOP_INT8:
+          case JSOP_INT32:
+          case JSOP_HOLE:
+          case JSOP_LOOPHEAD:
+          case JSOP_LOOPENTRY:
+            break;
+
           default:
+            if (!(js_CodeSpec[op].format & JOF_DECOMPOSE))
+                isCompileable = isInlineable = false;
             break;
         }
 

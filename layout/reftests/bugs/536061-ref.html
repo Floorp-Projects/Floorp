@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <title>Bugs with -moz-transform: rotate() and -moz-box-shadow</title>
+  <title>Bugs with -moz-transform: rotate() and box-shadow</title>
 
   <style>
     body {
@@ -17,7 +17,7 @@
         margin: 0;
         height:16px;
         width: 300px;
-        -moz-box-shadow: 0 0 .7em black;
+        box-shadow: 0 0 .7em black;
         border: 1px black solid;
     }
     .vlabel {
@@ -27,7 +27,7 @@
         margin: 0;
         width: 16px;
         height: 300px;
-        -moz-box-shadow: 0 0 .7em black;
+        box-shadow: 0 0 .7em black;
         border: 1px black solid;
     }
   </style>
@@ -36,10 +36,10 @@
 <body>
 
 <p class="label"></p>
-<p class="label" style="top: 400px; -moz-box-shadow:none; outline: 3px dashed blue;"></p>
-<p class="vlabel" style="-moz-box-shadow:none; outline: 3px dashed blue;"></p>
+<p class="label" style="top: 400px; box-shadow:none; outline: 3px dashed blue;"></p>
+<p class="vlabel" style="box-shadow:none; outline: 3px dashed blue;"></p>
 <p class="vlabel" style="left:102px; "></p>
-<p class="vlabel" style="top:454px; -moz-box-shadow:none; outline: 3px dashed blue; "></p>
+<p class="vlabel" style="top:454px; box-shadow:none; outline: 3px dashed blue; "></p>
 <p class="vlabel" style="top:454px; left:102px;"></p>
 
 <!-- cover a few shadow corners which are a bit different -->

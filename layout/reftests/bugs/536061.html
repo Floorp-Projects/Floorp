@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <title>Bugs with -moz-transform: rotate() and -moz-box-shadow</title>
+  <title>Bugs with -moz-transform: rotate() and box-shadow</title>
 
   <style>
     body {
@@ -18,7 +18,7 @@
         height: 16px;
         width: 300px;
         -moz-transform: translate(96px);
-        -moz-box-shadow: 0 0 .7em black;
+        box-shadow: 0 0 .7em black;
         border: 1px black solid;
     }
     .vlabel {
@@ -28,7 +28,7 @@
         margin: 0;
         width: 16px;
         height: 300px;
-        -moz-box-shadow: 0 0 .7em black;
+        box-shadow: 0 0 .7em black;
         border: 1px black solid;
     }
   </style>
@@ -37,10 +37,10 @@
 <body>
 
 <p class="label"></p>
-<p class="label" style="top: 400px; -moz-box-shadow:none; outline: 3px dashed blue;"></p>
-<p class="label" style="left:-100px; top: 200px; -moz-box-shadow:none; outline: 3px dashed blue; -moz-transform: rotate(90deg);"></p>
+<p class="label" style="top: 400px; box-shadow:none; outline: 3px dashed blue;"></p>
+<p class="label" style="left:-100px; top: 200px; box-shadow:none; outline: 3px dashed blue; -moz-transform: rotate(90deg);"></p>
 <p class="label" style="left:-40px; top: 200px; -moz-transform: rotate(90deg);"></p>
-<p class="label" style="left:-100px; top: 200px; -moz-box-shadow:none; outline: 3px dashed blue; -moz-transform: translate(0,396px) rotate(90deg);"></p>
+<p class="label" style="left:-100px; top: 200px; box-shadow:none; outline: 3px dashed blue; -moz-transform: translate(0,396px) rotate(90deg);"></p>
 <p class="label" style="left:-40px; top: 200px; -moz-transform: translate(0,396px) rotate(90deg);"></p>
 
 <!-- cover a few shadow corners which are a bit different -->

@@ -47,7 +47,7 @@
   -moz-border-bottom-colors: none !important;
   -moz-border-right-colors: none !important;
   -moz-border-left-colors: none !important;
-  -moz-border-radius: @border_radius_tiny@;
+  border-radius: @border_radius_tiny@;
   border: @border_width_tiny@ solid rgba(255, 255, 255, 0.4) !important;
 }
 

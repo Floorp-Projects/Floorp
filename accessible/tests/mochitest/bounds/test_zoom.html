@@ -20,19 +20,14 @@
   <script type="application/javascript">
     function doTest()
     {
-      var p1 = currentTabDocument().body.firstElementChild;
-      var p2 = currentTabDocument().body.lastElementChild;
+      var tabDocument = currentTabDocument();
+      var p1 = tabDocument.body.firstElementChild;
+      var p2 = tabDocument.body.lastElementChild;
 
       testBounds(p1);
       testBounds(p2);
 
-      var docShell = currentTabWindow().
-        QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-        getInterface(Components.interfaces.nsIWebNavigation).
-        QueryInterface(Components.interfaces.nsIDocShell);
-      var docViewer = docShell.contentViewer.
-        QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
-      docViewer.fullZoom = 2.0;
+      zoomDocument(tabDocument, 2.0);
 
       testBounds(p1);
       testBounds(p2);
