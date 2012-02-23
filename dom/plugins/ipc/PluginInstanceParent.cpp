@@ -129,20 +129,6 @@ PluginInstanceParent::Init()
     return !!mScriptableObjects.Init();
 }
 
-namespace {
-
-PLDHashOperator
-ActorCollect(const void* aKey,
-             PluginScriptableObjectParent* aData,
-             void* aUserData)
-{
-    nsTArray<PluginScriptableObjectParent*>* objects =
-        reinterpret_cast<nsTArray<PluginScriptableObjectParent*>*>(aUserData);
-    return objects->AppendElement(aData) ? PL_DHASH_NEXT : PL_DHASH_STOP;
-}
-
-} // anonymous namespace
-
 void
 PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
 {

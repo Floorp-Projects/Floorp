@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessible::childAtPoint() from browser tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // Hit testing. See bug #726097
+      var hititem = getAccessible("hititem");
+      var hittest = getAccessible("hittest");
+
+      var [hitX, hitY, hitWidth, hitHeight] = getBounds(hititem);
+      var tgtX = hitX + hitWidth / 2;
+      var tgtY = hitY + hitHeight / 2;
+
+      var rootAcc = getRootAccessible();
+      var docAcc = getAccessible(document);
+      var outerDocAcc = docAcc.parent;
+
+      var hitAcc = rootAcc.getDeepestChildAtPoint(tgtX, tgtY);
+      is(hitAcc, hititem, "Hit match at " + tgtX + "," + tgtY + 
+                          ". Found: " + prettyName(hitAcc));
+      var hitAcc2 = docAcc.getDeepestChildAtPoint(tgtX, tgtY);
+      is(hitAcc, hitAcc2, "Hit match at " + tgtX + "," + tgtY + 
+                          ". Found: " + prettyName(hitAcc2));
+
+      hitAcc = outerDocAcc.getChildAtPoint(tgtX, tgtY);
+      is(hitAcc, docAcc, "Hit match at " + tgtX + "," + tgtY + 
+                         ". Found: " + prettyName(hitAcc));
+      hitAcc = docAcc.getChildAtPoint(tgtX, tgtY);
+      is(hitAcc, hittest, "Hit match at " + tgtX + "," + tgtY + 
+                          ". Found: " + prettyName(hitAcc));
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=726097"
+     title="nsIAccessible::childAtPoint() from browser tests">Mozilla Bug 726097</a>
+
+  <div id="hittest">
+    <div id="hititem"><span role="image">img</span>item</div>
+  </div>
+</body>
+</html>

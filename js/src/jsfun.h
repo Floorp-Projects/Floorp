@@ -437,8 +437,12 @@ js_PutArgsObject(js::StackFrame *fp);
 inline bool
 js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->atom; }
 
+namespace js {
+
 extern JSBool
-js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
+XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
+
+} /* namespace js */
 
 extern JSBool
 js_fun_apply(JSContext *cx, uintN argc, js::Value *vp);

@@ -65,7 +65,7 @@ function run_test() {
   Service.username = "johndoe";
   Service.password = JAPANESE;
   Service.passphrase = "cantentsveryrelevantabbbb";
-  Service.serverURL = "http://localhost:8080/";
+  Service.serverURL = TEST_SERVER_URL;
 
   try {
     _("Try to log in with the password.");

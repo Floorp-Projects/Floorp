@@ -236,7 +236,7 @@ urn.arpa
 as
 gov.as
 
-// asia: http://en.wikipedia.org/wiki/.asia
+// asia : http://en.wikipedia.org/wiki/.asia
 asia
 
 // at : http://en.wikipedia.org/wiki/.at
@@ -256,8 +256,30 @@ info.at
 priv.at
 
 // au : http://en.wikipedia.org/wiki/.au
-*.au
-// au geographical names (vic.au etc... are covered above)
+// http://www.auda.org.au/
+// 2LDs
+com.au
+net.au
+org.au
+edu.au
+gov.au
+csiro.au
+asn.au
+id.au
+// Historic 2LDs (closed to new registration, but sites still exist)
+info.au
+conf.au
+oz.au
+// CGDNs - http://www.cgdn.org.au/
+act.au
+nsw.au
+nt.au
+qld.au
+sa.au
+tas.au
+vic.au
+wa.au
+// 3LDs
 act.edu.au
 nsw.edu.au
 nt.edu.au
@@ -275,15 +297,6 @@ sa.gov.au
 tas.gov.au
 vic.gov.au
 wa.gov.au
-// CGDNs - http://www.aucd.org.au/
-act.au
-nsw.au
-nt.au
-qld.au
-sa.au
-tas.au
-vic.au
-wa.au
 
 // aw : http://en.wikipedia.org/wiki/.aw
 aw
@@ -574,6 +587,9 @@ yk.ca
 // see also: http://registry.gc.ca/en/SubdomainFAQ
 gc.ca
 
+// co.ca: http://registry.co.ca
+co.ca
+
 // cat : http://en.wikipedia.org/wiki/.cat
 cat
 
@@ -615,11 +631,14 @@ gouv.ci
 
 // ck : http://en.wikipedia.org/wiki/.ck
 *.ck
+!www.ck
 
 // cl : http://en.wikipedia.org/wiki/.cl
 cl
 gov.cl
 gob.cl
+co.cl
+mil.cl
 
 // cm : http://en.wikipedia.org/wiki/.cm
 cm
@@ -1014,6 +1033,7 @@ gs
 
 // gt : http://www.gt/politicas.html
 *.gt
+!www.gt
 
 // gu : http://gadao.gov.gu/registration.txt
 *.gu
@@ -1840,9 +1860,6 @@ assn.lk
 grp.lk
 hotel.lk
 
-// local : http://en.wikipedia.org/wiki/.local
-local
-
 // lr : http://psg.com/dns/lr/lr.txt
 // Submitted by registry <randy@psg.com> 2008-06-17
 com.lr
@@ -2646,6 +2663,7 @@ net
 // CentralNic names : http://www.centralnic.com/names/domains
 // Submitted by registry <gavin.brown@centralnic.com> 2008-06-17
 gb.net
+jp.net
 se.net
 uk.net
 
@@ -3830,8 +3848,16 @@ belau.pw
 // py : http://www.nic.py/faq_a.html#faq_b
 *.py
 
-// qa : http://www.qatar.net.qa/services/virtual.htm
-*.qa
+// qa : http://domains.qa/en/
+qa
+com.qa
+edu.qa
+gov.qa
+mil.qa
+name.qa
+net.qa
+org.qa
+sch.qa
 
 // re : http://www.afnic.re/obtenir/chartes/nommage-re/annexe-descriptifs
 re
@@ -4400,6 +4426,10 @@ zp.ua
 zhitomir.ua
 zt.ua
 
+// Private registries in .ua
+co.ua
+pp.ua
+
 // ug : http://www.registry.co.ug/
 ug
 co.ug
@@ -4902,9 +4932,6 @@ xxx
 
 // ye : http://www.y.net.ye/services/domain_name.htm
 *.ye
-
-// yu : http://www.nic.yu/pravilnik-e.html
-*.yu
 
 // za : http://www.zadna.org.za/slds.html
 *.za

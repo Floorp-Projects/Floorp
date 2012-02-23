@@ -12,7 +12,8 @@ add_test(function test_processIncoming_mobile_history_batched() {
 
   let FAKE_DOWNLOAD_LIMIT = 100;
   
-  Svc.Prefs.set("clusterURL", "http://localhost:8080/");
+  Svc.Prefs.set("serverURL", TEST_SERVER_URL);
+  Svc.Prefs.set("clusterURL", TEST_CLUSTER_URL);
   Svc.Prefs.set("username", "foo");
   Svc.Prefs.set("client.type", "mobile");
   PlacesUtils.history.removeAllPages();

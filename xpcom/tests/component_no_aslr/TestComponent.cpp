@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,12 +14,13 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
+ *   Suresh Duddu <dp@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,24 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_SmsDatabaseService_h
-#define mozilla_dom_sms_SmsDatabaseService_h
+#include "mozilla/ModuleUtils.h"
 
-#include "nsISmsDatabaseService.h"
+#define NS_TESTING_CID \
+{ 0x335fb596, 0xe52d, 0x418f, \
+  { 0xb0, 0x1c, 0x1b, 0xf1, 0x6c, 0xe5, 0xe7, 0xe4 } }
 
-namespace mozilla {
-namespace dom {
-namespace sms {
+NS_DEFINE_NAMED_CID(NS_TESTING_CID);
 
-class SmsDatabaseService : public nsISmsDatabaseService
+static nsresult
+DummyConstructorFunc(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISMSDATABASESERVICE
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static const mozilla::Module::CIDEntry kTestCIDs[] = {
+  { &kNS_TESTING_CID, false, NULL, DummyConstructorFunc },
+  { NULL }
 };
 
-} // namespace sms
-} // namespace dom
-} // namespace mozilla
+static const mozilla::Module kTestModule = {
+  mozilla::Module::kVersion,
+  kTestCIDs
+};
 
-#endif // mozilla_dom_sms_SmsDatabaseService_h
+NSMODULE_DEFN(dummy) = &kTestModule;
+
+  

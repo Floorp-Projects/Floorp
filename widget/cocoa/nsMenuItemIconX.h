@@ -60,7 +60,7 @@ public:
                   nsIContent*    aContent,
                   NSMenuItem*    aNativeMenuItem);
 private:
-  ~nsMenuItemIconX();
+  virtual ~nsMenuItemIconX();
 
 public:
   NS_DECL_ISUPPORTS

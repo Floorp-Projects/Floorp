@@ -1335,6 +1335,9 @@ public:
   {
   }
 
+  ChannelRedirectProxyCallback() {}
+  virtual ~ChannelRedirectProxyCallback() {}
+
   NS_DECL_ISUPPORTS
 
   NS_IMETHODIMP OnRedirectVerifyCallback(nsresult result)

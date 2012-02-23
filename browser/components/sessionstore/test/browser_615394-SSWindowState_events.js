@@ -40,7 +40,7 @@ const testState = {
   windows: [{
     tabs: [
       { entries: [{ url: "about:blank" }] },
-      { entries: [{ url: "about:robots" }] }
+      { entries: [{ url: "about:rights" }] }
     ]
   }]
 };
@@ -174,7 +174,7 @@ function test_duplicateTab() {
     is(busyEventCount, 1);
     is(readyEventCount, 1);
     is(ss.getTabValue(newTab, "baz"), "qux");
-    is(newTab.linkedBrowser.currentURI.spec, "about:robots");
+    is(newTab.linkedBrowser.currentURI.spec, "about:rights");
 
     window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
     window.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
@@ -215,7 +215,7 @@ function test_undoCloseTab() {
     is(busyEventCount, 1);
     is(readyEventCount, 1);
     is(ss.getTabValue(reopenedTab, "baz"), "qux");
-    is(reopenedTab.linkedBrowser.currentURI.spec, "about:robots");
+    is(reopenedTab.linkedBrowser.currentURI.spec, "about:rights");
 
     window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
     window.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);

@@ -26,7 +26,7 @@ function run_test() {
     "/user/1.0/vz6fhecgw5t3sgx3a4cektoiokyczkqd": send(500, "Server Error", "Server Error")
   });
   try {
-    Service.serverURL = "http://localhost:8080/";
+    Service.serverURL = TEST_SERVER_URL;
 
     _("Create an account.");
     let res = Service.createAccount("john@doe.com", "mysecretpw",

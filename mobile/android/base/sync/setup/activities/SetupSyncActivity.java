@@ -1,40 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Chenxia Liu <liuche@mozilla.com>
- *  Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.setup.activities;
 
@@ -42,6 +8,8 @@ import java.util.HashMap;
 
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.sync.Logger;
+import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.jpake.JPakeClient;
 import org.mozilla.gecko.sync.jpake.JPakeNoActivePairingException;
 import org.mozilla.gecko.sync.setup.Constants;
@@ -58,7 +26,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -67,9 +34,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class SetupSyncActivity extends AccountAuthenticatorActivity {
-  private final static String LOG_TAG     = "SetupSync";
+  private final static String LOG_TAG = "SetupSync";
 
-  private boolean             pairWithPin = false;
+  private boolean pairWithPin = false;
 
   // UI elements for pairing through PIN entry.
   private EditText            row1;
@@ -93,38 +60,52 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
 
   public SetupSyncActivity() {
     super();
-    Log.i(LOG_TAG, "SetupSyncActivity constructor called.");
+    Logger.info(LOG_TAG, "SetupSyncActivity constructor called.");
   }
 
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState) {
     setTheme(R.style.SyncTheme);
-    Log.i(LOG_TAG, "Called SetupSyncActivity.onCreate.");
+    Logger.info(LOG_TAG, "Called SetupSyncActivity.onCreate.");
     super.onCreate(savedInstanceState);
 
     // Set Activity variables.
     mContext = getApplicationContext();
-    Log.d(LOG_TAG, "AccountManager.get(" + mContext + ")");
+    Logger.debug(LOG_TAG, "AccountManager.get(" + mContext + ")");
     mAccountManager = AccountManager.get(mContext);
-
   }
 
   @Override
   public void onResume() {
-    Log.i(LOG_TAG, "Called SetupSyncActivity.onResume.");
+    Logger.info(LOG_TAG, "Called SetupSyncActivity.onResume.");
     super.onResume();
 
     if (!hasInternet()) {
       setContentView(R.layout.sync_setup_nointernet);
       return;
     }
-    
-    // Check whether Sync accounts exist; if not, display J-PAKE PIN.
-    Account[] accts = mAccountManager.getAccountsByType(Constants.ACCOUNTTYPE_SYNC);
 
+    // Check whether Sync accounts exist; if not, display J-PAKE PIN.
+    // Run this on a separate thread to comply with Strict Mode thread policies.
+    ThreadPool.run(new Runnable() {
+      @Override
+      public void run() {
+        Account[] accts = mAccountManager.getAccountsByType(Constants.ACCOUNTTYPE_SYNC);
+        finishResume(accts);
+      }
+    });
+  }
+
+  public void finishResume(Account[] accts) {
+    Logger.debug(LOG_TAG, "Finishing Resume after fetching accounts.");
     if (accts.length == 0) { // Start J-PAKE for pairing if no accounts present.
+      Logger.debug(LOG_TAG, "No accounts; starting J-PAKE receiver.");
       displayReceiveNoPin();
+      if (jClient != null) {
+        // Mark previous J-PAKE as finished. Don't bother propagating back up to this Activity.
+        jClient.finished = true;
+      }
       jClient = new JPakeClient(this);
       jClient.receiveNoPin();
       return;
@@ -133,23 +114,35 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     // Set layout based on starting Intent.
     Bundle extras = this.getIntent().getExtras();
     if (extras != null) {
+      Logger.debug(LOG_TAG, "SetupSync with extras.");
       boolean isSetup = extras.getBoolean(Constants.INTENT_EXTRA_IS_SETUP);
       if (!isSetup) {
+        Logger.debug(LOG_TAG, "Account exists; Pair a Device started.");
         pairWithPin = true;
         displayPairWithPin();
         return;
       }
     }
-    // Display toast for "Only one account supported." and redirect to account management.
-    Toast toast = Toast.makeText(mContext, R.string.sync_notification_oneaccount, Toast.LENGTH_LONG);
-    toast.show();
+    
+    runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        Logger.debug(LOG_TAG, "Only one account supported. Redirecting.");
+        // Display toast for "Only one account supported."
+        // Redirect to account management.
+        Toast toast = Toast.makeText(mContext,
+            R.string.sync_notification_oneaccount, Toast.LENGTH_LONG);
+        toast.show();
 
-    Intent intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
-    intent.setFlags(Constants.FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION);
-    startActivity(intent);
+        Intent intent = new Intent(Settings.ACTION_SYNC_SETTINGS);
+        intent.setFlags(Constants.FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION);
+        startActivity(intent);
 
-    finish();
+        finish();
+      }
+    });
   }
+
 
   @Override
   public void onPause() {
@@ -165,7 +158,6 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     setIntent(intent);
   }
 
-
   /* Click Handlers */
   public void manualClickHandler(View target) {
     Intent accountIntent = new Intent(this, AccountActivity.class);
@@ -179,6 +171,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
   }
 
   public void connectClickHandler(View target) {
+    Logger.debug(LOG_TAG, "Connect clicked.");
     // Set UI feedback.
     pinError.setVisibility(View.INVISIBLE);
     enablePinEntry(false);
@@ -190,10 +183,19 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     pin += row2.getText().toString() + row3.getText().toString();
 
     // Start J-PAKE.
+    if (jClient != null) {
+      // Cancel previous J-PAKE exchange.
+      jClient.finished = true;
+    }
     jClient = new JPakeClient(this);
-    jClient.pairWithPin(pin, false);
+    jClient.pairWithPin(pin);
   }
 
+  /**
+   * Handler when "Show me how" link is clicked.
+   * @param target
+   *          View that received the click.
+   */
   public void showClickHandler(View target) {
     Uri uri = null;
     // TODO: fetch these from fennec
@@ -206,9 +208,15 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
   }
 
   /* Controller methods */
+
+  /**
+   * Display generated PIN to user.
+   * @param pin
+   *          12-character string generated for J-PAKE.
+   */
   public void displayPin(String pin) {
     if (pin == null) {
-      Log.w(LOG_TAG, "Asked to display null pin.");
+      Logger.warn(LOG_TAG, "Asked to display null pin.");
       return;
     }
     // Format PIN for display.
@@ -224,7 +232,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
         TextView view2 = pinTextView2;
         TextView view3 = pinTextView3;
         if (view1 == null || view2 == null || view3 == null) {
-          Log.w(LOG_TAG, "Couldn't find view to display PIN.");
+          Logger.warn(LOG_TAG, "Couldn't find view to display PIN.");
           return;
         }
         view1.setText(pin1);
@@ -234,12 +242,17 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     });
   }
 
+  /**
+   * Abort current J-PAKE pairing. Clear forms/restart pairing.
+   * @param error
+   */
   public void displayAbort(String error) {
     if (!Constants.JPAKE_ERROR_USERABORT.equals(error) && !hasInternet()) {
       setContentView(R.layout.sync_setup_nointernet);
       return;
     }
     if (pairWithPin) {
+      // Clear PIN entries and display error.
       runOnUiThread(new Runnable() {
         @Override
         public void run() {
@@ -257,7 +270,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     }
 
     // Start new JPakeClient for restarting J-PAKE.
-    Log.d(LOG_TAG, "abort reason: " + error);
+    Logger.debug(LOG_TAG, "abort reason: " + error);
     if (!Constants.JPAKE_ERROR_USERABORT.equals(error)) {
       jClient = new JPakeClient(this);
       runOnUiThread(new Runnable() {
@@ -285,7 +298,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     fields.put(Constants.JSON_KEY_PASSWORD, password);
     fields.put(Constants.JSON_KEY_SERVER,   serverURL);
 
-    Log.d(LOG_TAG, "Extracted account data: " + jAccount.toJSONString());
+    Logger.debug(LOG_TAG, "Extracted account data: " + jAccount.toJSONString());
     return jAccount;
   }
 
@@ -294,21 +307,11 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
    * link to a Sync account. Display "waiting for other device" dialog.
    */
   public void onPaired() {
-    if (!pairWithPin) {
-      runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          setContentView(R.layout.sync_setup_jpake_waiting);
-        }
-      });
-      return;
-    }
-
     // Extract Sync account data.
     Account[] accts = mAccountManager.getAccountsByType(Constants.ACCOUNTTYPE_SYNC);
     if (accts.length == 0) {
       // Error, no account present.
-      Log.e(LOG_TAG, "No accounts present.");
+      Logger.error(LOG_TAG, "No accounts present.");
       displayAbort(Constants.JPAKE_ERROR_INVALID);
       return;
     }
@@ -324,8 +327,8 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
     try {
       jClient.sendAndComplete(jAccount);
     } catch (JPakeNoActivePairingException e) {
-      Log.e(LOG_TAG, "No active J-PAKE pairing.", e);
-      // TODO: some user-visible action!
+      Logger.error(LOG_TAG, "No active J-PAKE pairing.", e);
+      displayAbort(Constants.JPAKE_ERROR_INVALID);
     }
   }
 
@@ -334,8 +337,14 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
    * pairing, does not require UI feedback to user.
    */
   public void onPairingStart() {
-    if (pairWithPin) {
-      // TODO: add in functionality if/when adding pairWithPIN.
+    if (!pairWithPin) {
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          setContentView(R.layout.sync_setup_jpake_waiting);
+        }
+      });
+      return;
     }
   }
 
@@ -352,7 +361,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
       String syncKey      = (String) jCreds.get(Constants.JSON_KEY_SYNCKEY);
       String serverURL    = (String) jCreds.get(Constants.JSON_KEY_SERVER);
 
-      Log.d(LOG_TAG, "Using account manager " + mAccountManager);
+      Logger.debug(LOG_TAG, "Using account manager " + mAccountManager);
       final Intent intent = AccountActivity.createAccount(mContext, mAccountManager,
                                                           accountName,
                                                           syncKey, password, serverURL);
@@ -416,104 +425,125 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
   }
 
   private boolean hasInternet() {
-    Log.d(LOG_TAG, "Checking internet connectivity.");
+    Logger.debug(LOG_TAG, "Checking internet connectivity.");
     ConnectivityManager connManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
     NetworkInfo mobile = connManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
 
     if (wifi.isConnected() || mobile.isConnected()) {
-      Log.d(LOG_TAG, "Internet connected.");
+      Logger.debug(LOG_TAG, "Internet connected.");
       return true;
     }
     return false;
   }
 
+  /**
+   * Displays layout for entering a PIN from another device.
+   * A Sync Account has already been set up.
+   */
   private void displayPairWithPin() {
-    setContentView(R.layout.sync_setup_pair);
-    connectButton = (Button) findViewById(R.id.pair_button_connect);
-    pinError = (LinearLayout) findViewById(R.id.pair_error);
-
-    row1 = (EditText) findViewById(R.id.pair_row1);
-    row2 = (EditText) findViewById(R.id.pair_row2);
-    row3 = (EditText) findViewById(R.id.pair_row3);
-
-    row1.addTextChangedListener(new TextWatcher() {
-      @Override
-      public void afterTextChanged(Editable s) {
-        if (s.length() == 4) {
-          row2.requestFocus();
-        }
-        activateButton(connectButton, pinEntryCompleted());
-      }
+    Logger.debug(LOG_TAG, "PairWithPin initiated.");
+    runOnUiThread(new Runnable() {
 
       @Override
-      public void beforeTextChanged(CharSequence s, int start, int count,
-          int after) {
+      public void run() {
+        setContentView(R.layout.sync_setup_pair);
+        connectButton = (Button) findViewById(R.id.pair_button_connect);
+        pinError = (LinearLayout) findViewById(R.id.pair_error);
+
+        row1 = (EditText) findViewById(R.id.pair_row1);
+        row2 = (EditText) findViewById(R.id.pair_row2);
+        row3 = (EditText) findViewById(R.id.pair_row3);
+
+        row1.addTextChangedListener(new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable s) {
+             activateButton(connectButton, pinEntryCompleted());
+             if (s.length() == 4) {
+               row2.requestFocus();
+             }
+          }
+
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count,
+              int after) {
+          }
+
+          @Override
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+          }
+
+        });
+        row2.addTextChangedListener(new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable s) {
+            activateButton(connectButton, pinEntryCompleted());
+            if (s.length() == 4) {
+              row3.requestFocus();
+            }
+          }
+
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count,
+              int after) {
+          }
+
+          @Override
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+          }
+
+        });
+
+        row3.addTextChangedListener(new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable s) {
+            activateButton(connectButton, pinEntryCompleted());
+          }
+
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count,
+              int after) {
+          }
+
+          @Override
+          public void onTextChanged(CharSequence s, int start, int before, int count) {
+          }
+        });
       }
-
-      @Override
-      public void onTextChanged(CharSequence s, int start, int before, int count) {
-      }
-
-    });
-    row2.addTextChangedListener(new TextWatcher() {
-      @Override
-      public void afterTextChanged(Editable s) {
-        if (s.length() == 4) {
-          row3.requestFocus();
-        }
-        activateButton(connectButton, pinEntryCompleted());
-      }
-
-      @Override
-      public void beforeTextChanged(CharSequence s, int start, int count,
-          int after) {
-      }
-
-      @Override
-      public void onTextChanged(CharSequence s, int start, int before, int count) {
-      }
-
-    });
-
-    row3.addTextChangedListener(new TextWatcher() {
-      @Override
-      public void afterTextChanged(Editable s) {
-        activateButton(connectButton, pinEntryCompleted());
-      }
-
-      @Override
-      public void beforeTextChanged(CharSequence s, int start, int count,
-          int after) {
-      }
-
-      @Override
-      public void onTextChanged(CharSequence s, int start, int before, int count) {
-      }
-
     });
   }
 
+  /**
+   * Displays layout with PIN for pairing with another device.
+   * No Sync Account has been set up yet.
+   */
   private void displayReceiveNoPin() {
-    setContentView(R.layout.sync_setup);
+    Logger.debug(LOG_TAG, "ReceiveNoPin initiated");
+    runOnUiThread(new Runnable(){
 
-    // Set up UI.
-    setupTitleView = ((TextView) findViewById(R.id.setup_title));
-    setupSubtitleView = (TextView) findViewById(R.id.setup_subtitle);
-    setupNoDeviceLinkTitleView = (TextView) findViewById(R.id.link_nodevice);
-    pinTextView1 = ((TextView) findViewById(R.id.text_pin1));
-    pinTextView2 = ((TextView) findViewById(R.id.text_pin2));
-    pinTextView3 = ((TextView) findViewById(R.id.text_pin3));
+      @Override
+      public void run() {
+        setContentView(R.layout.sync_setup);
 
-    // UI checks.
-    if (setupTitleView == null) {
-      Log.e(LOG_TAG, "No title view.");
-    }
-    if (setupSubtitleView == null) {
-      Log.e(LOG_TAG, "No subtitle view.");
-    }
-    if (setupNoDeviceLinkTitleView == null) {
-      Log.e(LOG_TAG, "No 'no device' link view.");
-    }
+        // Set up UI.
+        setupTitleView = ((TextView) findViewById(R.id.setup_title));
+        setupSubtitleView = (TextView) findViewById(R.id.setup_subtitle);
+        setupNoDeviceLinkTitleView = (TextView) findViewById(R.id.link_nodevice);
+        pinTextView1 = ((TextView) findViewById(R.id.text_pin1));
+        pinTextView2 = ((TextView) findViewById(R.id.text_pin2));
+        pinTextView3 = ((TextView) findViewById(R.id.text_pin3));
+
+        // UI checks.
+        if (setupTitleView == null) {
+          Logger.error(LOG_TAG, "No title view.");
+        }
+        if (setupSubtitleView == null) {
+          Logger.error(LOG_TAG, "No subtitle view.");
+        }
+        if (setupNoDeviceLinkTitleView == null) {
+          Logger.error(LOG_TAG, "No 'no device' link view.");
+        }
+      }
+    });
   }
 }

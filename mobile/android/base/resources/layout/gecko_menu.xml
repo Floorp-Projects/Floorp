@@ -38,5 +38,6 @@
           android:title="@string/settings" />
 
     <item android:id="@+id/quit"
-          android:title="@string/quit" />
+          android:title="@string/quit"
+          android:orderInCategory="10" />
 </menu>

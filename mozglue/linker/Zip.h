@@ -142,6 +142,7 @@ private:
 
 /* All the following types need to be packed */
 #pragma pack(1)
+public:
   /**
    * A Zip archive is an aggregate of entities which all start with a
    * signature giving their type. This template is to be used as a base
@@ -162,10 +163,13 @@ private:
         return ret;
       return NULL;
     }
+
+    SignedEntity(uint32_t magic): signature(magic) { }
   private:
     le_uint32 signature;
   };
 
+private:
   /**
    * Header used to describe a Local File entry. The header is followed by
    * the file name and an extra field, then by the data stream.
