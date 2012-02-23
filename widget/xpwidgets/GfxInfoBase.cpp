@@ -288,9 +288,7 @@ BlacklistNodeToTextValue(nsIDOMNode *aBlacklistNode, nsAString& aValue)
 static OperatingSystem
 BlacklistOSToOperatingSystem(const nsAString& os)
 {
-  if (os == NS_LITERAL_STRING("WINNT 5.0"))
-    return DRIVER_OS_WINDOWS_2000;
-  else if (os == NS_LITERAL_STRING("WINNT 5.1"))
+  if (os == NS_LITERAL_STRING("WINNT 5.1"))
     return DRIVER_OS_WINDOWS_XP;
   else if (os == NS_LITERAL_STRING("WINNT 5.2"))
     return DRIVER_OS_WINDOWS_SERVER_2003;

@@ -70,22 +70,6 @@ static void SanitizeEnvironmentVariables()
   }
 }
 
-// Sets the directory from which DLLs can be loaded if the SetDllDirectory OS
-// API is available.
-// You must call SanitizeEnvironmentVariables before this function when calling
-// it the first time.
-static inline void NS_SetDllDirectory(const WCHAR *aDllDirectory)
-{
-  typedef BOOL
-  (WINAPI *pfnSetDllDirectory) (LPCWSTR);
-  pfnSetDllDirectory setDllDirectory = nsnull;
-  setDllDirectory = reinterpret_cast<pfnSetDllDirectory>
-      (GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "SetDllDirectoryW"));
-  if (setDllDirectory) {
-    setDllDirectory(aDllDirectory);
-  }
-}
-
 }
 
 #endif
