@@ -87,7 +87,7 @@ public class PlaceholderLayerClient {
         BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
         SingleTileLayer tileLayer = new SingleTileLayer(image);
 
-        tileLayer.beginTransaction();
+        tileLayer.beginTransaction();   // calling thread irrelevant; nobody else has a ref to tileLayer yet
         try {
             tileLayer.setOrigin(PointUtils.round(mViewport.getDisplayportOrigin()));
         } finally {
