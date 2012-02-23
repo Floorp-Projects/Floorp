@@ -1518,7 +1518,7 @@ abstract public class GeckoApp
             return;
         }
 
-        PointF origin = metrics.getDisplayportOrigin();
+        PointF origin = metrics.getOrigin();
         x = x + (int)origin.x;
         y = y + (int)origin.y;
 
@@ -2794,7 +2794,7 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     }
 
     public void reset(int aX, int aY, int aWidth, int aHeight, ViewportMetrics aViewport) {
-        PointF origin = aViewport.getDisplayportOrigin();
+        PointF origin = aViewport.getOrigin();
 
         x = mOriginalX = aX + (int)origin.x;
         y = mOriginalY = aY + (int)origin.y;
@@ -2820,8 +2820,8 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     }
 
     public void reposition(ViewportMetrics viewport) {
-        PointF targetOrigin = viewport.getDisplayportOrigin();
-        PointF originalOrigin = mOriginalViewport.getDisplayportOrigin();
+        PointF targetOrigin = viewport.getOrigin();
+        PointF originalOrigin = mOriginalViewport.getOrigin();
 
         Point offset = new Point(Math.round(originalOrigin.x - targetOrigin.x),
                                  Math.round(originalOrigin.y - targetOrigin.y));

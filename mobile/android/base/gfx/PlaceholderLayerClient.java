@@ -89,7 +89,7 @@ public class PlaceholderLayerClient {
 
         tileLayer.beginTransaction();   // calling thread irrelevant; nobody else has a ref to tileLayer yet
         try {
-            tileLayer.setOrigin(PointUtils.round(mViewport.getDisplayportOrigin()));
+            tileLayer.setOrigin(PointUtils.round(mViewport.getOrigin()));
         } finally {
             tileLayer.endTransaction();
         }
