@@ -859,7 +859,7 @@ cert_PkixErrorToNssCode(
     void *plContext)
 {
     int errLevel = 0;
-    PKIX_UInt32 nssErr = 0;
+    PKIX_Int32 nssErr = 0;
     PKIX_Error *errPtr = error;
 
     PKIX_ENTER(CERTVFYPKIX, "cert_PkixErrorToNssCode");

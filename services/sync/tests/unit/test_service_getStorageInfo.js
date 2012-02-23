@@ -13,7 +13,8 @@ let collections = {steam:  65.11328,
 function run_test() {
   Service.username = "johndoe";
   Service.password = "ilovejane";
-  Service.clusterURL = "http://localhost:8080/";
+  Service.serverURL = TEST_SERVER_URL;
+  Service.clusterURL = TEST_CLUSTER_URL;
 
   Log4Moz.repository.getLogger("Sync.Service").level = Log4Moz.Level.Trace;
   Log4Moz.repository.getLogger("Sync.StorageRequest").level = Log4Moz.Level.Trace;

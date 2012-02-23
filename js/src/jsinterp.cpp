@@ -2653,6 +2653,7 @@ BEGIN_CASE(JSOP_GETELEM)
     Value &rref = regs.sp[-1];
     if (!GetElementOperation(cx, lref, rref, &regs.sp[-2]))
         goto error;
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-2]);
     regs.sp--;
 }
 END_CASE(JSOP_GETELEM)

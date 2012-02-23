@@ -257,6 +257,14 @@ public abstract class RepositorySession {
     return status == SessionStatus.ACTIVE;
   }
 
+  public SessionStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(SessionStatus status) {
+    this.status = status;
+  }
+
   public void abort() {
     // TODO: do something here.
     status = SessionStatus.ABORTED;

@@ -59,6 +59,10 @@ class nsNativeMenuServiceX : public nsINativeMenuService
 {
 public:
   NS_DECL_ISUPPORTS
+
+  nsNativeMenuServiceX() {}
+  virtual ~nsNativeMenuServiceX() {}
+
   NS_IMETHOD CreateNativeMenuBar(nsIWidget* aParent, nsIContent* aMenuBarNode);
 };
 

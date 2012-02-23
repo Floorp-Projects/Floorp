@@ -55,8 +55,8 @@ add_test(function test_locally_changed_keys() {
     Weave.Service.password = "ilovejane";
     Weave.Service.passphrase = passphrase;
     
-    Weave.Service.serverURL = "http://localhost:8080/";
-    Weave.Service.clusterURL = "http://localhost:8080/";
+    Weave.Service.serverURL = TEST_SERVER_URL;
+    Weave.Service.clusterURL = TEST_CLUSTER_URL;
     
     Engines.register(HistoryEngine);
     Weave.Service._registerEngines();

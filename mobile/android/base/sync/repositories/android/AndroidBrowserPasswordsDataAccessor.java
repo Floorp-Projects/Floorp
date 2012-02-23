@@ -52,22 +52,22 @@ public class AndroidBrowserPasswordsDataAccessor extends AndroidBrowserRepositor
 
   @Override
   protected ContentValues getContentValues(Record record) {
-    ContentValues cv = new ContentValues();
     PasswordRecord rec = (PasswordRecord) record;
-    cv.put(PasswordColumns.HOSTNAME, rec.hostname);
-    cv.put(PasswordColumns.HTTP_REALM, rec.httpRealm);
+
+    ContentValues cv = new ContentValues();
+    cv.put(PasswordColumns.GUID,            rec.guid);
+    cv.put(PasswordColumns.HOSTNAME,        rec.hostname);
+    cv.put(PasswordColumns.HTTP_REALM,      rec.httpRealm);
     cv.put(PasswordColumns.FORM_SUBMIT_URL, rec.formSubmitURL);
-    cv.put(PasswordColumns.USERNAME_FIELD, rec.usernameField);
-    cv.put(PasswordColumns.PASSWORD_FIELD, rec.passwordField);
-    cv.put(PasswordColumns.GUID,          rec.guid);
+    cv.put(PasswordColumns.USERNAME_FIELD,  rec.usernameField);
+    cv.put(PasswordColumns.PASSWORD_FIELD,  rec.passwordField);
     
-    // TODO Do encryption of username/password here
-    // Bug 711636
-    cv.put(PasswordColumns.ENC_TYPE, rec.encType);
+    // TODO Do encryption of username/password here. Bug 711636
+    cv.put(PasswordColumns.ENC_TYPE,           rec.encType);
     cv.put(PasswordColumns.ENCRYPTED_USERNAME, rec.username);
     cv.put(PasswordColumns.ENCRYPTED_PASSWORD, rec.password);
     
-    cv.put(PasswordColumns.TIMES_USED, rec.timesUsed);
+    cv.put(PasswordColumns.TIMES_USED,     rec.timesUsed);
     cv.put(PasswordColumns.TIME_LAST_USED, rec.timeLastUsed);
     return cv;
   }
@@ -81,5 +81,4 @@ public class AndroidBrowserPasswordsDataAccessor extends AndroidBrowserRepositor
   protected String[] getAllColumns() {
     return BrowserContract.Passwords.PasswordColumns;
   }
-  
 }

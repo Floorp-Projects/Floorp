@@ -34,17 +34,14 @@ function testChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild,
  */
 function getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild)
 {
-  var nodeObj = { value: null };
-  var acc = getAccessible(aIdentifier, null, nodeObj);
-  var node = nodeObj.value;
-
-  if (!acc || !node)
+  var acc = getAccessible(aIdentifier);
+  if (!acc)
     return;
 
-  var [deltaX, deltaY] = getScreenCoords(node);
+  var [screenX, screenY] = getBoundsForDOMElm(acc.DOMNode);
 
-  var x = deltaX + aX;
-  var y = deltaY + aY;
+  var x = screenX + aX;
+  var y = screenY + aY;
 
   try {
     if (aFindDeepestChild)
@@ -56,24 +53,47 @@ function getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild)
 }
 
 /**
- * Return DOM node coordinates relative screen as pair (x, y).
+ * Test the accessible boundaries.
  */
-function getScreenCoords(aNode)
+function testBounds(aID)
 {
-  if (aNode instanceof nsIDOMXULElement)
-    return [node.boxObject.screenX, node.boxObject.screenY];
+  var [expectedX, expectedY, expectedWidth, expectedHeight] =
+    getBoundsForDOMElm(aID);
 
-  // Ugly hack until bug 486200 is fixed.
-  const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-  var descr = document.createElementNS(XUL_NS, "description");
-  descr.setAttribute("value", "helper description");
-  aNode.parentNode.appendChild(descr);
-  var descrBoxObject = descr.boxObject;
-  var descrRect = descr.getBoundingClientRect();
-  var deltaX = descrBoxObject.screenX - descrRect.left;
-  var deltaY = descrBoxObject.screenY - descrRect.top;
-  aNode.parentNode.removeChild(descr);
+  var [x, y, width, height] = getBounds(aID);
+  is(x, expectedX, "Wrong x coordinate of " + prettyName(aID));
+  is(y, expectedY, "Wrong y coordinate of " + prettyName(aID));
+  is(width, expectedWidth, "Wrong width of " + prettyName(aID));
+  is(height, expectedHeight, "Wrong height of " + prettyName(aID));
+}
 
-  var rect = aNode.getBoundingClientRect();
-  return [rect.left + deltaX, rect.top + deltaY];
+/**
+ * Return the accessible coordinates and size relative to the screen.
+ */
+function getBounds(aID)
+{
+  var accessible = getAccessible(aID);
+  var x = {}, y = {}, width = {}, height = {};
+  accessible.getBounds(x, y, width, height);
+  return [x.value, y.value, width.value, height.value];
+}
+
+/**
+ * Return DOM node coordinates relative the screen and its size in device
+ * pixels.
+ */
+function getBoundsForDOMElm(aID)
+{
+  var elm = getNode(aID);
+  var elmWindow = elm.ownerDocument.defaultView;
+  var winUtil = elmWindow.
+    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+    getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+  var ratio = winUtil.screenPixelsPerCSSPixel;
+  var rect = elm.getBoundingClientRect();
+  return [ (rect.left + elmWindow.mozInnerScreenX) * ratio,
+           (rect.top + elmWindow.mozInnerScreenY) * ratio,
+           rect.width * ratio,
+           rect.height * ratio ];
 }

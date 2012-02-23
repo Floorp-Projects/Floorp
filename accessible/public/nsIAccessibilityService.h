@@ -91,10 +91,6 @@ public:
   virtual already_AddRefed<nsAccessible>
     CreateHTMLBRAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
   virtual already_AddRefed<nsAccessible>
-    CreateHTML4ButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
-    CreateHTMLButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
-  virtual already_AddRefed<nsAccessible>
     CreateHTMLCaptionAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;
   virtual already_AddRefed<nsAccessible>
     CreateHTMLCheckboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell) = 0;

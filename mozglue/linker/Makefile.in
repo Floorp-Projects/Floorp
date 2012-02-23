@@ -19,10 +19,22 @@ CPPSRCS = \
   $(NULL)
 
 ifndef MOZ_OLD_LINKER
+HOST_PROGRAM = szip
+
+HOST_CPPSRCS = \
+  szip.cpp \
+  Assertions.cpp \
+  $(NULL)
+
+VPATH += $(topsrcdir)/mfbt
+
+HOST_LIBS = -lz
+
 CPPSRCS += \
   ElfLoader.cpp \
   CustomElf.cpp \
   Mappable.cpp \
+  SeekableZStream.cpp \
   $(NULL)
 endif
 
