@@ -792,7 +792,9 @@ EXPAND_LD = $(EXPAND_LIBS_EXEC) --uselist $(if $(REORDER),--reorder $(REORDER))-
 EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) --uselist $(if $(REORDER),--reorder $(REORDER))-- $(MKSHLIB)
 
 ifdef STDCXX_COMPAT
+ifneq ($(OS_ARCH),Darwin)
 CHECK_STDCXX = objdump -p $(1) | grep -e 'GLIBCXX_3\.4\.\(9\|[1-9][0-9]\)' > /dev/null && echo "TEST-UNEXPECTED-FAIL | | We don't want these libstdc++ symbols to be used:" && objdump -T $(1) | grep -e 'GLIBCXX_3\.4\.\(9\|[1-9][0-9]\)' && exit 1 || exit 0
+endif
 endif
 
 # autoconf.mk sets OBJ_SUFFIX to an error to avoid use before including
