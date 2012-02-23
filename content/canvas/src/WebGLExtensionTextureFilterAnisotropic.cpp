@@ -16,11 +16,11 @@
  *
  * The Initial Developer of the Original Code is
  *   Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
+ *   Florian Boesch <pyalot@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,47 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef WEBGLEXTENSIONS_H_
-#define WEBGLEXTENSIONS_H_
+#include <stdarg.h>
 
-namespace mozilla {
+#include "WebGLContext.h"
+#include "WebGLExtensions.h"
 
-class WebGLExtensionLoseContext :
-    public nsIWebGLExtensionLoseContext,
-    public WebGLExtension
+#include "nsContentUtils.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+
+NS_INTERFACE_MAP_BEGIN(WebGLExtensionTextureFilterAnisotropic)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtensionTextureFilterAnisotropic)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, WebGLExtension)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtensionTextureFilterAnisotropic)
+NS_INTERFACE_MAP_END_INHERITING(WebGLExtension)
+
+WebGLExtensionTextureFilterAnisotropic::WebGLExtensionTextureFilterAnisotropic(WebGLContext* context) :
+    WebGLExtension(context)
 {
-public:
-    WebGLExtensionLoseContext(WebGLContext*);
-    virtual ~WebGLExtensionLoseContext();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLEXTENSIONLOSECONTEXT
-};
-
-class WebGLExtensionStandardDerivatives :
-    public nsIWebGLExtensionStandardDerivatives,
-    public WebGLExtension
-{
-public:
-    WebGLExtensionStandardDerivatives(WebGLContext* context);
-    virtual ~WebGLExtensionStandardDerivatives();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLEXTENSION
-};
-
-class WebGLExtensionTextureFilterAnisotropic :
-    public nsIWebGLExtensionTextureFilterAnisotropic,
-    public WebGLExtension
-{
-public:
-    WebGLExtensionTextureFilterAnisotropic(WebGLContext* context);
-    virtual ~WebGLExtensionTextureFilterAnisotropic();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBGLEXTENSION
-};
 
 }
 
-#endif // WEBGLEXTENSIONS_H_
+WebGLExtensionTextureFilterAnisotropic::~WebGLExtensionTextureFilterAnisotropic()
+{
+
+}
