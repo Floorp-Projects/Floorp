@@ -797,8 +797,8 @@ JSRuntime::JSRuntime()
 #ifdef DEBUG
     noGCOrAllocationCheck(0),
 #endif
-    jitHardening(false),
     inOOMReport(0),
+    jitHardening(false),
     ionTop(NULL),
     ionJSContext(NULL),
     ionStackLimit(0),
