@@ -9,7 +9,6 @@
 #define ScopeObject_h___
 
 #include "jscntxt.h"
-#include "jsiter.h"
 #include "jsobj.h"
 #include "jsweakmap.h"
 
@@ -29,10 +28,7 @@ namespace js {
 struct ScopeCoordinate
 {
     uint16_t hops;
-    uint16_t binding;
-
-    /* XXX this will be removed with the last patch of bug 659577. */
-    uint16_t frameBinding;
+    uint16_t slot;
 
     inline ScopeCoordinate(jsbytecode *pc);
     inline ScopeCoordinate() {}
@@ -88,13 +84,13 @@ ScopeCoordinateName(JSScript *script, jsbytecode *pc);
 
 class ScopeObject : public JSObject
 {
-    /* Use maybeStackFrame() instead. */
-    void *getPrivate() const;
-
   protected:
     static const uint32_t SCOPE_CHAIN_SLOT = 0;
 
   public:
+    /* Number of reserved slots for both CallObject and BlockObject. */
+    static const uint32_t CALL_BLOCK_RESERVED_SLOTS = 2;
+
     /*
      * Since every scope chain terminates with a global object and GlobalObject
      * does not derive ScopeObject (it has a completely different layout), the
@@ -112,14 +108,6 @@ class ScopeObject : public JSObject
     inline const Value &aliasedVar(ScopeCoordinate sc);
     inline void setAliasedVar(ScopeCoordinate sc, const Value &v);
 
-    /*
-     * The stack frame for this scope object, if the frame is still active.
-     * Note: these members may not be called for a StaticBlockObject or
-     * WithObject.
-     */
-    inline StackFrame *maybeStackFrame() const;
-    inline void setStackFrame(StackFrame *frame);
-
     /* For jit access. */
     static inline size_t offsetOfEnclosingScope();
 };
@@ -129,10 +117,10 @@ class CallObject : public ScopeObject
     static const uint32_t CALLEE_SLOT = 1;
 
     static CallObject *
-    create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleObject callee);
+    create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee);
 
   public:
-    static const uint32_t RESERVED_SLOTS = 3;
+    static const uint32_t RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
 
     static CallObject *createForFunction(JSContext *cx, StackFrame *fp);
     static CallObject *createForStrictEval(JSContext *cx, StackFrame *fp);
@@ -149,14 +137,12 @@ class CallObject : public ScopeObject
     inline void setCallee(JSObject *callee);
 
     /* Returns the formal argument at the given index. */
-    inline const Value &arg(unsigned i) const;
-    inline void setArg(unsigned i, const Value &v);
-    inline void initArgUnchecked(unsigned i, const Value &v);
+    inline const Value &arg(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
+    inline void setArg(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
     /* Returns the variable at the given index. */
-    inline const Value &var(unsigned i) const;
-    inline void setVar(unsigned i, const Value &v);
-    inline void initVarUnchecked(unsigned i, const Value &v);
+    inline const Value &var(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
+    inline void setVar(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
     /*
      * Get the actual arrays of arguments and variables. Only call if type
@@ -166,15 +152,8 @@ class CallObject : public ScopeObject
     inline HeapSlotArray argArray();
     inline HeapSlotArray varArray();
 
-    inline void copyValues(unsigned nargs, Value *argv, unsigned nvars, Value *slots);
-
-    static JSBool getArgOp(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-    static JSBool getVarOp(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
     static JSBool setArgOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
     static JSBool setVarOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
-
-    /* Return whether this environment contains 'name' and, if so, its value. */
-    bool containsVarOrArg(PropertyName *name, Value *vp, JSContext *cx);
 
     /* Copy in all the unaliased formals and locals. */
     void copyUnaliasedValues(StackFrame *fp);
@@ -202,10 +181,6 @@ class NestedScopeObject : public ScopeObject
 
 class WithObject : public NestedScopeObject
 {
-    /* These ScopeObject operations are not valid on a with object. */
-    js::StackFrame *maybeStackFrame() const;
-    void setStackFrame(StackFrame *frame);
-
     static const unsigned THIS_SLOT = 2;
 
     /* Use WithObject::object() instead. */
@@ -213,7 +188,7 @@ class WithObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 3;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
 
     static WithObject *
     create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth);
@@ -228,11 +203,18 @@ class WithObject : public NestedScopeObject
 class BlockObject : public NestedScopeObject
 {
   public:
-    static const unsigned RESERVED_SLOTS = 2;
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
+    static const unsigned RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
 
     /* Return the number of variables associated with this block. */
     inline uint32_t slotCount() const;
+
+    /*
+     * Return the local corresponding to the ith binding where i is in the
+     * range [0, slotCount()) and the return local index is in the range
+     * [script->nfixed, script->nfixed + script->nslots).
+     */
+    unsigned slotToFrameLocal(JSScript *script, unsigned i);
 
   protected:
     /* Blocks contain an object slot for each slot i: 0 <= i < slotCount. */
@@ -242,10 +224,6 @@ class BlockObject : public NestedScopeObject
 
 class StaticBlockObject : public BlockObject
 {
-    /* These ScopeObject operations are not valid on a static block object. */
-    StackFrame *maybeStackFrame() const;
-    void setStackFrame(StackFrame *frame);
-
   public:
     static StaticBlockObject *create(JSContext *cx);
 
@@ -273,7 +251,7 @@ class StaticBlockObject : public BlockObject
      * A static block object is cloned (when entering the block) iff some
      * variable of the block isAliased.
      */
-    bool needsClone() const;
+    bool needsClone();
 
     const Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
 };
@@ -287,18 +265,9 @@ class ClonedBlockObject : public BlockObject
     /* The static block from which this block was cloned. */
     StaticBlockObject &staticBlock() const;
 
-    /*
-     * When this block's stack slots are about to be popped, 'put' must be
-     * called to copy the slot values into this block's object slots.
-     */
-    void put(StackFrame *fp);
-
     /* Assuming 'put' has been called, return the value of the ith let var. */
-    const Value &var(unsigned i);
-    void setVar(unsigned i, const Value &v);
-
-    /* Return whether this environment contains 'name' and, if so, its value. */
-    bool containsVar(PropertyName *name, Value *vp, JSContext *cx);
+    const Value &var(unsigned i, MaybeCheckAliasing = CHECK_ALIASING);
+    void setVar(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
     /* Copy in all the unaliased formals and locals. */
     void copyUnaliasedValues(StackFrame *fp);
@@ -470,7 +439,7 @@ class DebugScopes
     bool init();
 
     void mark(JSTracer *trc);
-    void sweep();
+    void sweep(JSRuntime *rt);
 
     DebugScopeObject *hasDebugScope(JSContext *cx, ScopeObject &scope) const;
     bool addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &debugScope);
