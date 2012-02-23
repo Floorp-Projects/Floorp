@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.TreeMap;
 
+import org.json.simple.JSONArray;
 import org.mozilla.apache.commons.codec.binary.Base32;
 import org.mozilla.apache.commons.codec.binary.Base64;
 
@@ -242,5 +243,49 @@ public class Utils {
     }
     bucket.add(value);
     map.put(index, bucket);
+  }
+
+  /**
+   * Yes, an equality method that's null-safe.
+   *
+   * @param a
+   * @param b
+   * @return
+   */
+  private static boolean same(Object a, Object b) {
+    if (a == b) {
+      return true;
+    }
+    if (a == null || b == null) {
+      return false;      // If both null, case above applies.
+    }
+    return a.equals(b);
+  }
+
+  /**
+   * Return true if the two arrays are both null, or are both arrays
+   * containing the same elements in the same order.
+   *
+   * @param a
+   * @param b
+   * @return
+   */
+  public static boolean sameArrays(JSONArray a, JSONArray b) {
+    if (a == b) {
+      return true;
+    }
+    if (a == null || b == null) {
+      return false;
+    }
+    final int size = a.size();
+    if (size != b.size()) {
+      return false;
+    }
+    for (int i = 0; i < size; ++i) {
+      if (!same(a.get(i), b.get(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 }
