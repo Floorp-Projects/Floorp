@@ -57,8 +57,12 @@ CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 {
     JS_ASSERT(!absolute);
     size_t new_off = (size_t)raw_;
-    if (masm != NULL)
-        new_off = masm->actualOffset(raw_);
+    if (masm != NULL) {
+#ifdef JS_CPU_X64
+        JS_ASSERT((uint64_t)raw_ <= UINT32_MAX);
+#endif
+        new_off = masm->actualOffset((uintptr_t)raw_);
+    }
     raw_ = code->raw() + new_off;
 #ifdef JS_CPU_X64
     jumpTableEntry_ = Assembler::PatchableJumpAddress(code, (size_t) jumpTableEntry_);
@@ -71,8 +75,12 @@ CodeLocationLabel::repoint(IonCode *code, MacroAssembler *masm)
 {
      JS_ASSERT(!absolute);
      size_t new_off = (size_t)raw_;
-    if (masm != NULL)
-        new_off = masm->actualOffset(raw_);
+     if (masm != NULL) {
+#ifdef JS_CPU_X64
+        JS_ASSERT((uint64_t)raw_ <= UINT32_MAX);
+#endif
+        new_off = masm->actualOffset((uintptr_t)raw_);
+     }
      JS_ASSERT(new_off < code->instructionsSize());
 
      raw_ = code->raw() + new_off;
@@ -82,7 +90,7 @@ CodeLocationLabel::repoint(IonCode *code, MacroAssembler *masm)
 void
 CodeOffsetLabel::fixup(MacroAssembler *masm)
 {
-     offset_ = (size_t)masm->actualOffset((uint8*)offset_);
+     offset_ = masm->actualOffset(offset_);
 }
 
 static const size_t MAX_STUBS = 16;

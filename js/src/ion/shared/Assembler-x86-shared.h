@@ -880,8 +880,8 @@ class AssemblerX86Shared
     }
 
     // Defined for compatibility with ARM's assembler
-    ptrdiff_t actualOffset(uint8* x) {
-        return (ptrdiff_t)x;
+    uint32 actualOffset(uint32 x) {
+        return x;
     }
 
     void flushBuffer() {

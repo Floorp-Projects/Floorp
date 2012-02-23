@@ -78,7 +78,7 @@ class DeferredJumpTable : public DeferredData
             Label *caseheader = caseblock->label();
 
             uint32 offset = caseheader->offset();
-            *jumpData = (void *)(code->raw() + masm->actualOffset((uint8*)offset));
+            *jumpData = (void *)(code->raw() + masm->actualOffset(offset));
             jumpData++;
         }
     }
