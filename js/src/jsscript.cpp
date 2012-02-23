@@ -429,7 +429,7 @@ XDRScriptConst(JSXDRState *xdr, HeapValue *vp)
     }
     return true;
 }
- 
+
 static const char *
 SaveScriptFilename(JSContext *cx, const char *filename);
 
@@ -823,8 +823,8 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         } while (tn != tnfirst);
     }
 
-    if (nconsts) { 
-        HeapValue *vector = script->consts()->vector; 
+    if (nconsts) {
+        HeapValue *vector = script->consts()->vector;
         for (i = 0; i != nconsts; ++i) {
             if (!XDRScriptConst(xdr, &vector[i]))
                 return false;
@@ -923,7 +923,19 @@ SaveScriptFilename(JSContext *cx, const char *filename)
         }
     }
 
-    return (*p)->filename;
+    ScriptFilenameEntry *sfe = *p;
+#ifdef JSGC_INCREMENTAL
+    /*
+     * During the IGC we need to ensure that filename is marked whenever it is
+     * accessed even if the name was already in the table. At this point old
+     * scripts or exceptions pointing to the filename may no longer be
+     * reachable.
+     */
+    if (comp->needsBarrier() && !sfe->marked)
+        sfe->marked = true;
+#endif
+
+    return sfe->filename;
 }
 
 } /* namespace js */
