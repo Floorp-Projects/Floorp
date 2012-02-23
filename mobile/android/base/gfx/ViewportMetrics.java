@@ -97,11 +97,6 @@ public class ViewportMetrics {
         return new PointF(mViewportRect.left, mViewportRect.top);
     }
 
-    public PointF getDisplayportOrigin() {
-        return new PointF(mViewportRect.left,
-                          mViewportRect.top);
-    }
-
     public FloatSize getSize() {
         return new FloatSize(mViewportRect.width(), mViewportRect.height());
     }
