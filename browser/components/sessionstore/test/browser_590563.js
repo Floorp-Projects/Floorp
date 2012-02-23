@@ -5,7 +5,7 @@ function test() {
   let oldState = {
     windows: [{
       tabs: [
-        { entries: [{ url: "about:robots" }], hidden: true },
+        { entries: [{ url: "about:mozilla" }], hidden: true },
         { entries: [{ url: "about:blank" }], hidden: false }
       ]
     }]
