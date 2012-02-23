@@ -182,10 +182,6 @@ public abstract class Layer {
         return true;
     }
 
-    protected boolean dimensionChangesPending() {
-        return (mNewOrigin != null) || (mNewResolution != 0.0f);
-    }
-
     public static class RenderContext {
         public final RectF viewport;
         public final FloatSize pageSize;
