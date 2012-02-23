@@ -117,6 +117,12 @@ function doTest()
 //  synthesizeDrop(text, textarea, [[{type: "text/plain", data: "Somewhat Longer Text"}]], "copy");
 //  is(textarea.value, "Somewhat Longer Text", "Drag text/plain onto textarea");
 
+  // -------- Test dragging special text type of text/plain to contenteditable
+
+  selection.selectAllChildren(text);
+  synthesizeDrop(text, input, [[{type: "text/x-moz-text-internal", data: "Some Special Text"}]], "copy");
+  is(input.value, "Some Plain Text", "Drag text/x-moz-text-internal onto input");
+
   // -------- Test dragging regular text of text/plain to contenteditable
 
   selection.selectAllChildren(text);
