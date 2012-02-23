@@ -182,9 +182,6 @@ public:
 #endif
 
 #ifdef MOZ_JAVA_COMPOSITOR
-    static void BindToTexture();
-    static bool HasDirectTexture();
-
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
 #endif

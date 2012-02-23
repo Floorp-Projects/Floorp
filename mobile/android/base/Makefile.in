@@ -134,7 +134,6 @@ FENNEC_JAVA_FILES = \
   gfx/ViewTransform.java \
   gfx/ViewportMetrics.java \
   gfx/VirtualLayer.java \
-  gfx/WidgetTileLayer.java \
   ui/Axis.java \
   ui/PanZoomController.java \
   ui/SimpleScaleGestureDetector.java \
