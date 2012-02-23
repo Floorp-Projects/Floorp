@@ -3624,12 +3624,12 @@ function FillHistoryMenu(aParent) {
     item.setAttribute("index", j);
 
     if (j != index) {
-      try {
-        let iconURL = Cc["@mozilla.org/browser/favicon-service;1"]
-                         .getService(Ci.nsIFaviconService)
-                         .getFaviconForPage(entry.URI).spec;
+      function FHM_getFaviconURLCallback(aURI) {
+        let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
         item.style.listStyleImage = "url(" + iconURL + ")";
-      } catch (ex) {}
+      }
+      PlacesUtils.favicons.getFaviconURLForPage(entry.URI,
+                                                FHM_getFaviconURLCallback);
     }
 
     if (j < index) {
