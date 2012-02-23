@@ -52,6 +52,10 @@
 #include <windows.h>
 #endif
 
+#ifdef DEBUG
+#include "mozilla/Monitor.h"
+#endif
+
 #include "GLDefs.h"
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
@@ -604,7 +608,13 @@ public:
 
     bool MakeCurrent(bool aForce = false) {
 #ifdef DEBUG
-        sCurrentGLContext = this;
+        MonitorAutoLock lock(sCurrentGLContextMonitor);
+        GLContext *currentGLContext = NULL;
+
+        if (sCurrentGLContextTLS == -1)
+            PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, NULL);
+
+        PR_SetThreadPrivate(sCurrentGLContextTLS, this);
 #endif
         return MakeCurrentImpl(aForce);
     }
@@ -1509,10 +1519,13 @@ protected:
     GLContextSymbols mSymbols;
 
 #ifdef DEBUG
-    // this should be thread-local, but that is slightly annoying to implement because on Mac
-    // we don't have any __thread-like keyword. So for now, MOZ_GL_DEBUG assumes (and asserts)
-    // that only the main thread is doing OpenGL calls.
-    static THEBES_API GLContext* sCurrentGLContext;
+    // GLDebugMode will check that we don't send call
+    // to a GLContext that isn't current on the current
+    // thread.
+    // Store the current context when binding to thread local
+    // storage to support DebugMode on an arbitrary thread.
+    static Monitor sCurrentGLContextMonitor;
+    static PRUintn sCurrentGLContextTLS;
 #endif
 
     void UpdateActualFormat();
@@ -1636,21 +1649,18 @@ public:
 
     void BeforeGLCall(const char* glFunction) {
         if (DebugMode()) {
-            // since the static member variable sCurrentGLContext is not thread-local as it should,
-            // we have to assert that we're in the main thread. Note that sCurrentGLContext is only used
-            // for the OpenGL debug mode.
-            if (!NS_IsMainThread()) {
-                NS_ERROR("OpenGL call from non-main thread. While this is fine in itself, "
-                         "the OpenGL debug mode, which is currently enabled, doesn't support this. "
-                         "It needs to be patched by making GLContext::sCurrentGLContext be thread-local.\n");
-                NS_ABORT();
-            }
+            MonitorAutoLock lock(sCurrentGLContextMonitor);
+            GLContext *currentGLContext = NULL;
+
+            if (sCurrentGLContextTLS != -1)
+                currentGLContext = (GLContext*)PR_GetThreadPrivate(sCurrentGLContextTLS);
+
             if (DebugMode() & DebugTrace)
                 printf_stderr("[gl:%p] > %s\n", this, glFunction);
-            if (this != sCurrentGLContext) {
+            if (this != currentGLContext) {
                 printf_stderr("Fatal: %s called on non-current context %p. "
                               "The current context for this thread is %p.\n",
-                               glFunction, this, sCurrentGLContext);
+                               glFunction, this, currentGLContext);
                 NS_ABORT();
             }
         }
