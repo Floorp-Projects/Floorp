@@ -3688,6 +3688,39 @@ class MTypeBarrier : public MUnaryInstruction
     }
 };
 
+// Like MTypeBarrier, guard that the value is in the given type set. This is
+// used after some VM calls (like GetElement) to avoid the slower calls to
+// TypeScript::Monitor inside these stubs.
+class MMonitorTypes : public MUnaryInstruction
+{
+    types::TypeSet *typeSet_;
+
+    MMonitorTypes(MDefinition *def, types::TypeSet *types)
+      : MUnaryInstruction(def),
+        typeSet_(types)
+    {
+        setResultType(MIRType_Value);
+        setGuard();
+        JS_ASSERT(!types->unknown());
+    }
+
+  public:
+    INSTRUCTION_HEADER(MonitorTypes);
+
+    static MMonitorTypes *New(MDefinition *def, types::TypeSet *types) {
+        return new MMonitorTypes(def, types);
+    }
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    types::TypeSet *typeSet() const {
+        return typeSet_;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 // A resume point contains the information needed to reconstruct the interpreter
 // state from a position in the JIT. See the big comment near resumeAfter() in
 // IonBuilder.cpp.

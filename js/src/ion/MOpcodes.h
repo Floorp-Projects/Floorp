@@ -105,6 +105,7 @@ namespace ion {
     _(StoreSlot)                                                            \
     _(FunctionEnvironment)                                                  \
     _(TypeBarrier)                                                          \
+    _(MonitorTypes)                                                         \
     _(GetPropertyCache)                                                     \
     _(GuardShape)                                                           \
     _(GuardClass)                                                           \

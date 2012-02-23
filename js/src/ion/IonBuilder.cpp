@@ -3037,6 +3037,18 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
     return true;
 }
 
+// Test the type of values returned by a VM call. This is an optimized version
+// of calling TypeScript::Monitor inside such stubs.
+void
+IonBuilder::monitorResult(MInstruction *ins, types::TypeSet *types)
+{
+    if (!types || types->unknown())
+        return;
+
+    MInstruction *monitor = MMonitorTypes::New(ins, types);
+    current->add(monitor);
+}
+
 bool
 IonBuilder::jsop_getgname(JSAtom *atom)
 {
@@ -3219,6 +3231,8 @@ IonBuilder::jsop_getname(JSAtom *atom)
 
     types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
     types::TypeSet *types = oracle->propertyRead(script, pc);
+
+    monitorResult(ins, types);
     return pushTypeBarrier(ins, types, barrier);
 }
 
@@ -3258,6 +3272,8 @@ IonBuilder::jsop_getelem()
 
     types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
     types::TypeSet *types = oracle->propertyRead(script, pc);
+
+    monitorResult(ins, types);
     return pushTypeBarrier(ins, types, barrier);
 }
 
@@ -3577,6 +3593,8 @@ IonBuilder::jsop_getprop(JSAtom *atom)
     if (!resumeAfter(ins))
         return false;
 
+    if (ins->isCallGetProperty())
+        monitorResult(ins, types);
     return pushTypeBarrier(ins, types, barrier);
 }
 

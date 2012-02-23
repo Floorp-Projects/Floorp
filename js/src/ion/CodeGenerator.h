@@ -101,6 +101,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitElements(LElements *lir);
     bool visitFlatClosureUpvars(LFlatClosureUpvars *lir);
     bool visitTypeBarrier(LTypeBarrier *lir);
+    bool visitMonitorTypes(LMonitorTypes *lir);
     bool visitCallNative(LCallNative *lir);
     bool visitCallGeneric(LCallGeneric *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);

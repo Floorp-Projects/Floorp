@@ -278,6 +278,7 @@ class IonBuilder : public MIRGenerator
     void rewriteParameters();
     bool pushConstant(const Value &v);
     bool pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::TypeSet *observed);
+    void monitorResult(MInstruction *ins, types::TypeSet *types);
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);

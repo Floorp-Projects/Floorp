@@ -230,7 +230,8 @@ GenerateBailoutTail(MacroAssembler &masm)
     // - 0x1: error (handle exception)
     // - 0x2: reflow args
     // - 0x3: reflow barrier
-    // - 0x4: recompile to inline calls
+    // - 0x4: monitor types
+    // - 0x5: recompile to inline calls
 
     masm.cmpl(rax, Imm32(BAILOUT_RETURN_FATAL_ERROR));
     masm.j(Assembler::LessThan, &interpret);
