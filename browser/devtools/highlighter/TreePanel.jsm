@@ -221,12 +221,9 @@ TreePanel.prototype = {
   openDocked: function TP_openDocked()
   {
     let treeBox = null;
-    let toolbar = this.IUI.toolbar.nextSibling; // Addons bar, typically
-    let toolbarParent =
-      this.IUI.browser.ownerDocument.getElementById("browser-bottombox");
     treeBox = this.document.createElement("vbox");
     treeBox.id = "inspector-tree-box";
-    treeBox.state = "open"; // for the registerTools API.
+    treeBox.state = "open";
     try {
       treeBox.height =
         Services.prefs.getIntPref("devtools.inspector.htmlHeight");
@@ -235,10 +232,13 @@ TreePanel.prototype = {
     }
 
     treeBox.minHeight = 64;
-    treeBox.flex = 1;
-    toolbarParent.insertBefore(treeBox, toolbar);
 
-    this.IUI.toolbar.setAttribute("treepanel-open", "true");
+    this.splitter = this.document.createElement("splitter");
+    this.splitter.id = "inspector-tree-splitter";
+
+    let container = this.document.getElementById("appcontent");
+    container.appendChild(this.splitter);
+    container.appendChild(treeBox);
 
     treeBox.appendChild(this.treeIFrame);
 
@@ -266,11 +266,10 @@ TreePanel.prototype = {
   close: function TP_close()
   {
     if (this.openInDock) {
-      this.IUI.toolbar.removeAttribute("treepanel-open");
-
       let treeBox = this.container;
       Services.prefs.setIntPref("devtools.inspector.htmlHeight", treeBox.height);
       let treeBoxParent = treeBox.parentNode;
+      treeBoxParent.removeChild(this.splitter);
       treeBoxParent.removeChild(treeBox);
     } else {
       this.container.hidePopup();
