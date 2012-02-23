@@ -912,7 +912,7 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     FrameRegs &regs = f.regs;
 
     /* Pop the element's value into rval. */
-    JS_ASSERT(regs.sp - f.fp()->base() >= 3);
+    JS_ASSERT(regs.stackDepth() >= 3);
     const Value &rref = regs.sp[-1];
 
     /* Find the object being initialized at top of stack. */
@@ -1020,7 +1020,7 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     FrameRegs &regs = f.regs;
 
     /* Load the property's initial value into rval. */
-    JS_ASSERT(regs.sp - f.fp()->base() >= 2);
+    JS_ASSERT(regs.stackDepth() >= 2);
     Value rval;
     rval = regs.sp[-1];
 
@@ -1048,7 +1048,7 @@ stubs::InitProp(VMFrame &f, PropertyName *name)
 void JS_FASTCALL
 stubs::IterNext(VMFrame &f, int32_t offset)
 {
-    JS_ASSERT(f.regs.sp - offset >= f.fp()->base());
+    JS_ASSERT(f.regs.stackDepth() >= unsigned(offset));
     JS_ASSERT(f.regs.sp[-offset].isObject());
 
     JSObject *iterobj = &f.regs.sp[-offset].toObject();
@@ -1061,7 +1061,7 @@ stubs::IterNext(VMFrame &f, int32_t offset)
 JSBool JS_FASTCALL
 stubs::IterMore(VMFrame &f)
 {
-    JS_ASSERT(f.regs.sp - 1 >= f.fp()->base());
+    JS_ASSERT(f.regs.stackDepth() >= 1);
     JS_ASSERT(f.regs.sp[-1].isObject());
 
     Value v;
@@ -1075,7 +1075,7 @@ stubs::IterMore(VMFrame &f)
 void JS_FASTCALL
 stubs::EndIter(VMFrame &f)
 {
-    JS_ASSERT(f.regs.sp - 1 >= f.fp()->base());
+    JS_ASSERT(f.regs.stackDepth() >= 1);
     if (!CloseIterator(f.cx, &f.regs.sp[-1].toObject()))
         THROW();
 }
@@ -1125,7 +1125,7 @@ stubs::Throw(VMFrame &f)
 void JS_FASTCALL
 stubs::Arguments(VMFrame &f)
 {
-    ArgumentsObject *obj = ArgumentsObject::create(f.cx, f.fp());
+    ArgumentsObject *obj = ArgumentsObject::createExpected(f.cx, f.fp());
     if (!obj)
         THROW();
     f.regs.sp[0] = ObjectValue(*obj);
@@ -1173,27 +1173,21 @@ void JS_FASTCALL
 stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
     FrameRegs &regs = f.regs;
-    StackFrame *fp = f.fp();
     JS_ASSERT(!f.regs.inlined());
 
     StaticBlockObject &blockObj = obj->asStaticBlock();
-    if (!fp->pushBlock(f.cx, blockObj))
-        THROW();
 
     if (*regs.pc == JSOP_ENTERBLOCK) {
-        JS_ASSERT(fp->base() + blockObj.stackDepth() == regs.sp);
+        JS_ASSERT(regs.stackDepth() == blockObj.stackDepth());
+        JS_ASSERT(regs.stackDepth() + blockObj.slotCount() <= f.fp()->script()->nslots);
         Value *vp = regs.sp + blockObj.slotCount();
-        JS_ASSERT(regs.sp < vp);
-        JS_ASSERT(vp <= fp->slots() + fp->script()->nslots);
         SetValueRangeToUndefined(regs.sp, vp);
         regs.sp = vp;
-    } else if (*regs.pc == JSOP_ENTERLET0) {
-        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
-                  == regs.sp);
-    } else if (*regs.pc == JSOP_ENTERLET1) {
-        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
-                  == regs.sp - 1);
     }
+
+    /* Clone block iff there are any closed-over variables. */
+    if (!regs.fp()->pushBlock(f.cx, blockObj))
+        THROW();
 }
 
 void JS_FASTCALL
@@ -1522,7 +1516,7 @@ stubs::CheckArgumentTypes(VMFrame &f)
         if (!f.fp()->isConstructing())
             TypeScript::SetThis(f.cx, script, fp->thisValue());
         for (unsigned i = 0; i < fun->nargs; i++)
-            TypeScript::SetArgument(f.cx, script, i, fp->formalArg(i));
+            TypeScript::SetArgument(f.cx, script, i, fp->unaliasedFormal(i, DONT_CHECK_ALIASING));
     }
 
     if (monitor.recompiled())
@@ -1552,7 +1546,7 @@ stubs::AssertArgumentTypes(VMFrame &f)
     }
 
     for (unsigned i = 0; i < fun->nargs; i++) {
-        Type type = GetValueType(f.cx, fp->formalArg(i));
+        Type type = GetValueType(f.cx, fp->unaliasedFormal(i, DONT_CHECK_ALIASING));
         if (!TypeScript::ArgTypes(script, i)->hasType(type))
             TypeFailure(f.cx, "Missing type for arg %d: %s", i, TypeString(type));
     }
@@ -1609,16 +1603,29 @@ stubs::Exception(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::FunctionFramePrologue(VMFrame &f)
+stubs::StrictEvalPrologue(VMFrame &f)
 {
-    if (!f.fp()->functionPrologue(f.cx))
+    if (!f.fp()->jitStrictEvalPrologue(f.cx))
         THROW();
 }
 
 void JS_FASTCALL
-stubs::FunctionFrameEpilogue(VMFrame &f)
+stubs::HeavyweightFunctionPrologue(VMFrame &f)
 {
-    f.fp()->functionEpilogue(f.cx);
+    if (!f.fp()->jitHeavyweightFunctionPrologue(f.cx))
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::TypeNestingPrologue(VMFrame &f)
+{
+    f.fp()->jitTypeNestingPrologue(f.cx);
+}
+
+void JS_FASTCALL
+stubs::Epilogue(VMFrame &f)
+{
+    f.fp()->epilogue(f.cx);
 }
 
 void JS_FASTCALL
@@ -1626,17 +1633,15 @@ stubs::AnyFrameEpilogue(VMFrame &f)
 {
     /*
      * On the normal execution path, emitReturn calls ScriptDebugEpilogue
-     * and inlines ScriptEpilogue. This function implements forced early
+     * and inlines epilogue. This function implements forced early
      * returns, so it must have the same effect.
      */
     bool ok = true;
     if (f.cx->compartment->debugMode())
         ok = js::ScriptDebugEpilogue(f.cx, f.fp(), ok);
-    ok = ScriptEpilogue(f.cx, f.fp(), ok);
+    f.fp()->epilogue(f.cx);
     if (!ok)
         THROW();
-    if (f.fp()->isNonEvalFunctionFrame())
-        f.fp()->functionEpilogue(f.cx);
 }
 
 template <bool Clamped>

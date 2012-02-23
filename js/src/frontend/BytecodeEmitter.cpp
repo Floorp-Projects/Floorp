@@ -843,7 +843,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmitter *bc
         maybeBlockIndex = bce->objectList.indexOf(bce->sc->blockChain);
 
     bool decomposed = js_CodeSpec[op].format & JOF_DECOMPOSE;
-    unsigned n = 2 * sizeof(uint16_t) + sizeof(uint32_t) + sizeof(uint16_t) + (decomposed ? 1 : 0);
+    unsigned n = 2 * sizeof(uint16_t) + sizeof(uint32_t) + (decomposed ? 1 : 0);
     JS_ASSERT(int(n) + 1 /* op */ == js_CodeSpec[op].length);
 
     ptrdiff_t off = EmitN(cx, bce, op, n);
@@ -853,11 +853,9 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmitter *bc
     jsbytecode *pc = bce->code(off);
     SET_UINT16(pc, sc.hops);
     pc += sizeof(uint16_t);
-    SET_UINT16(pc, sc.binding);
+    SET_UINT16(pc, sc.slot);
     pc += sizeof(uint16_t);
     SET_UINT32_INDEX(pc, maybeBlockIndex);
-    pc += sizeof(uint32_t);
-    SET_UINT16(pc, sc.frameBinding);
     return true;
 }
 
@@ -888,15 +886,13 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
     if (JOF_OPTYPE(pn->getOp()) == JOF_QARG) {
         JS_ASSERT(bce->sc->funIsHeavyweight());
         sc.hops = ClonedBlockDepth(bce);
-        sc.binding = bce->sc->bindings.argToBinding(pn->pn_cookie.slot());
-        sc.frameBinding = sc.binding;
+        sc.slot = bce->sc->bindings.argToSlot(pn->pn_cookie.slot());
     } else {
         JS_ASSERT(JOF_OPTYPE(pn->getOp()) == JOF_LOCAL || pn->isKind(PNK_FUNCTION));
         unsigned local = pn->pn_cookie.slot();
-        sc.frameBinding = bce->sc->bindings.localToBinding(local);
         if (local < bce->sc->bindings.numVars()) {
             sc.hops = ClonedBlockDepth(bce);
-            sc.binding = sc.frameBinding;
+            sc.slot = bce->sc->bindings.localToSlot(local);
         } else {
             unsigned depth = local - bce->sc->bindings.numVars();
             unsigned hops = 0;
@@ -907,7 +903,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
                 b = b->enclosingBlock();
             }
             sc.hops = hops;
-            sc.binding = depth - b->stackDepth();
+            sc.slot = depth - b->stackDepth();
         }
     }
 
@@ -2637,12 +2633,11 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         if (bce->sc->bindingsAccessedDynamically()) {
             ScopeCoordinate sc;
             sc.hops = 0;
-            sc.binding = bce->sc->bindings.localToBinding(bce->sc->argumentsLocalSlot());
-            sc.frameBinding = sc.binding;
+            sc.slot = bce->sc->bindings.localToSlot(bce->sc->argumentsLocal());
             if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
                 return false;
         } else {
-            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bce->sc->argumentsLocalSlot(), bce))
+            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bce->sc->argumentsLocal(), bce))
                 return false;
         }
         if (Emit1(cx, bce, JSOP_POP) < 0)

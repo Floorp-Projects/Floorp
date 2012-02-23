@@ -1077,60 +1077,22 @@ mjit::Compiler::generatePrologue()
 
         markUndefinedLocals();
 
-        types::TypeScriptNesting *nesting = script->nesting();
-
         /*
-         * Run the function prologue if necessary. This is always done in a
-         * stub for heavyweight functions (including nesting outer functions).
+         * Load the scope chain into the frame if it will be needed by NAME
+         * opcodes or by the nesting prologue below. The scope chain is always
+         * set for global and eval frames, and will have been set by
+         * HeavyweightFunctionPrologue for heavyweight function frames.
          */
-        JS_ASSERT_IF(nesting && nesting->children, script->function()->isHeavyweight());
-        if (script->function()->isHeavyweight()) {
-            prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::FunctionFramePrologue, REJOIN_FUNCTION_PROLOGUE);
-        } else {
-            /*
-             * Load the scope chain into the frame if it will be needed by NAME
-             * opcodes or by the nesting prologue below. The scope chain is
-             * always set for global and eval frames, and will have been set by
-             * CreateFunCallObject for heavyweight function frames.
-             */
-            if (analysis->usesScopeChain() || nesting) {
-                RegisterID t0 = Registers::ReturnReg;
-                Jump hasScope = masm.branchTest32(Assembler::NonZero,
-                                                  FrameFlagsAddress(), Imm32(StackFrame::HAS_SCOPECHAIN));
-                masm.loadPayload(Address(JSFrameReg, StackFrame::offsetOfCallee(script->function())), t0);
-                masm.loadPtr(Address(t0, JSFunction::offsetOfEnvironment()), t0);
-                masm.storePtr(t0, Address(JSFrameReg, StackFrame::offsetOfScopeChain()));
-                hasScope.linkTo(masm.label(), &masm);
-            }
-
-            if (nesting) {
-                /*
-                 * Inline the common case for the nesting prologue: the
-                 * function is a non-heavyweight inner function with no
-                 * children of its own. We ensure during inference that the
-                 * outer function does not add scope objects for 'let' or
-                 * 'with', so that the frame's scope chain will be
-                 * the parent's call object, and if it differs from the
-                 * parent's current activation then the parent is reentrant.
-                 */
-                JSScript *parent = nesting->parent;
-                JS_ASSERT(parent);
-                JS_ASSERT_IF(parent->hasAnalysis() && parent->analysis()->ranBytecode(),
-                             !parent->analysis()->addsScopeObjects());
-
-                RegisterID t0 = Registers::ReturnReg;
-                masm.move(ImmPtr(&parent->nesting()->activeCall), t0);
-                masm.loadPtr(Address(t0), t0);
-
-                Address scopeChain(JSFrameReg, StackFrame::offsetOfScopeChain());
-                Jump mismatch = masm.branchPtr(Assembler::NotEqual, t0, scopeChain);
-                masm.add32(Imm32(1), AbsoluteAddress(&nesting->activeFrames));
-
-                stubcc.linkExitDirect(mismatch, stubcc.masm.label());
-                OOL_STUBCALL(stubs::FunctionFramePrologue, REJOIN_FUNCTION_PROLOGUE);
-                stubcc.crossJump(stubcc.masm.jump(), masm.label());
-            }
+        if (!script->function()->isHeavyweight() &&
+            (analysis->usesScopeChain() || script->nesting()))
+        {
+            RegisterID t0 = Registers::ReturnReg;
+            Jump hasScope = masm.branchTest32(Assembler::NonZero,
+                                              FrameFlagsAddress(), Imm32(StackFrame::HAS_SCOPECHAIN));
+            masm.loadPayload(Address(JSFrameReg, StackFrame::offsetOfCallee(script->function())), t0);
+            masm.loadPtr(Address(t0, JSFunction::offsetOfEnvironment()), t0);
+            masm.storePtr(t0, Address(JSFrameReg, StackFrame::offsetOfScopeChain()));
+            hasScope.linkTo(masm.label(), &masm);
         }
 
         /*
@@ -1161,9 +1123,50 @@ mjit::Compiler::generatePrologue()
         ensureDoubleArguments();
     }
 
-    if (isConstructing) {
-        if (!constructThis())
-            return Compile_Error;
+    /* Inline StackFrame::prologue. */
+    if (script->isActiveEval && script->strictModeCode) {
+        prepareStubCall(Uses(0));
+        INLINE_STUBCALL(stubs::StrictEvalPrologue, REJOIN_EVAL_PROLOGUE);
+    } else if (script->function()) {
+        if (script->function()->isHeavyweight()) {
+            prepareStubCall(Uses(0));
+            INLINE_STUBCALL(stubs::HeavyweightFunctionPrologue, REJOIN_FUNCTION_PROLOGUE);
+        } else if (types::TypeScriptNesting *nesting = script->nesting()) {
+            /*
+             * Inline the common case for the nesting prologue: the
+             * function is a non-heavyweight inner function with no
+             * children of its own. We ensure during inference that the
+             * outer function does not add scope objects for 'let' or
+             * 'with', so that the frame's scope chain will be
+             * the parent's call object, and if it differs from the
+             * parent's current activation then the parent is reentrant.
+             */
+            JSScript *parent = nesting->parent;
+            JS_ASSERT(parent);
+            JS_ASSERT_IF(parent->hasAnalysis() && parent->analysis()->ranBytecode(),
+                         !parent->analysis()->addsScopeObjects());
+
+            RegisterID t0 = Registers::ReturnReg;
+            masm.move(ImmPtr(&parent->nesting()->activeCall), t0);
+            masm.loadPtr(Address(t0), t0);
+
+            Address scopeChain(JSFrameReg, StackFrame::offsetOfScopeChain());
+            Jump mismatch = masm.branchPtr(Assembler::NotEqual, t0, scopeChain);
+            masm.add32(Imm32(1), AbsoluteAddress(&nesting->activeFrames));
+
+            masm.load32(FrameFlagsAddress(), t0);
+            masm.or32(Imm32(StackFrame::HAS_NESTING), t0);
+            masm.store32(t0, FrameFlagsAddress());
+
+            stubcc.linkExitDirect(mismatch, stubcc.masm.label());
+            OOL_STUBCALL(stubs::TypeNestingPrologue, REJOIN_FUNCTION_PROLOGUE);
+            stubcc.crossJump(stubcc.masm.jump(), masm.label());
+        }
+
+        if (isConstructing) {
+            if (!constructThis())
+                return Compile_Error;
+        }
     }
 
     if (debugMode()) {
@@ -1209,8 +1212,8 @@ void
 mjit::Compiler::markUndefinedLocals()
 {
     /*
-     * Set locals to undefined, as in initCallFrameLatePrologue.
-     * Skip locals which aren't closed and are known to be defined before used,
+     * Set locals to undefined. Skip locals which aren't closed and are known
+     * to be defined before used,
      */
     for (uint32_t i = 0; i < script->nfixed; i++)
         markUndefinedLocal(0, i);
@@ -2803,6 +2806,8 @@ mjit::Compiler::generateMethod()
             uint32_t arg = GET_SLOTNO(PC);
             if (JSObject *singleton = pushedSingleton(0))
                 frame.push(ObjectValue(*singleton));
+            else if (script->argsObjAliasesFormals())
+                jsop_aliasedArg(arg, /* get = */ true);
             else
                 frame.pushArg(arg);
           }
@@ -2816,7 +2821,13 @@ mjit::Compiler::generateMethod()
           {
             jsbytecode *next = &PC[JSOP_SETARG_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            frame.storeArg(GET_SLOTNO(PC), pop);
+
+            uint32_t arg = GET_SLOTNO(PC);
+            if (script->argsObjAliasesFormals())
+                jsop_aliasedArg(arg, /* get = */ false, pop);
+            else
+                frame.storeArg(arg, pop);
+
             updateVarType();
 
             if (pop) {
@@ -2827,26 +2838,11 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_SETARG)
 
+          BEGIN_CASE(JSOP_GETLOCAL)
+          BEGIN_CASE(JSOP_CALLLOCAL)
           BEGIN_CASE(JSOP_GETALIASEDVAR)
           BEGIN_CASE(JSOP_CALLALIASEDVAR)
           {
-            /* This is all temporary until bug 659577. */
-            if (JSObject *singleton = pushedSingleton(0)) {
-                frame.push(ObjectValue(*singleton));
-            } else {
-                ScopeCoordinate sc = ScopeCoordinate(PC);
-                if (script->bindings.bindingIsArg(sc.frameBinding))
-                    frame.pushArg(script->bindings.bindingToArg(sc.frameBinding));
-                else
-                    frame.pushLocal(script->bindings.bindingToLocal(sc.frameBinding));
-            }
-          }
-          END_CASE(JSOP_GETALIASEDVAR)
-
-          BEGIN_CASE(JSOP_GETLOCAL)
-          BEGIN_CASE(JSOP_CALLLOCAL)
-          {
-
             /*
              * Update the var type unless we are about to pop the variable.
              * Sync is not guaranteed for types of dead locals, and GETLOCAL
@@ -2855,46 +2851,37 @@ mjit::Compiler::generateMethod()
             jsbytecode *next = &PC[JSOP_GETLOCAL_LENGTH];
             if (JSOp(*next) != JSOP_POP || analysis->jumpTarget(next))
                 restoreVarType();
-            uint32_t slot = GET_SLOTNO(PC);
             if (JSObject *singleton = pushedSingleton(0))
                 frame.push(ObjectValue(*singleton));
+            else if (JOF_OPTYPE(*PC) == JOF_SCOPECOORD)
+                jsop_aliasedVar(ScopeCoordinate(PC), /* get = */ true);
             else
-                frame.pushLocal(slot);
+                frame.pushLocal(GET_SLOTNO(PC));
+
+            PC += GetBytecodeLength(PC);
+            break;
           }
           END_CASE(JSOP_GETLOCAL)
 
+          BEGIN_CASE(JSOP_SETLOCAL)
           BEGIN_CASE(JSOP_SETALIASEDVAR)
           {
-            /* This is all temporary until bug 659577. */
-            jsbytecode *next = &PC[JSOP_SETALIASEDVAR_LENGTH];
+            jsbytecode *next = &PC[GetBytecodeLength(PC)];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            ScopeCoordinate sc = ScopeCoordinate(PC);
-            if (script->bindings.bindingIsArg(sc.frameBinding))
-                frame.storeArg(script->bindings.bindingToArg(sc.frameBinding), pop);
+            if (JOF_OPTYPE(*PC) == JOF_SCOPECOORD)
+                jsop_aliasedVar(ScopeCoordinate(PC), /* get = */ false, pop);
             else
-                frame.storeLocal(script->bindings.bindingToLocal(sc.frameBinding), pop);
+                frame.storeLocal(GET_SLOTNO(PC), pop);
             updateVarType();
 
             if (pop) {
                 frame.pop();
-                PC += JSOP_SETALIASEDVAR_LENGTH + JSOP_POP_LENGTH;
+                PC = next + JSOP_POP_LENGTH;
                 break;
             }
-          }
-          END_CASE(JSOP_SETALIASEDVAR)
 
-          BEGIN_CASE(JSOP_SETLOCAL)
-          {
-            jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
-            bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
-            frame.storeLocal(GET_SLOTNO(PC), pop);
-            updateVarType();
-
-            if (pop) {
-                frame.pop();
-                PC += JSOP_SETLOCAL_LENGTH + JSOP_POP_LENGTH;
-                break;
-            }
+            PC = next;
+            break;
           }
           END_CASE(JSOP_SETLOCAL)
 
@@ -3792,47 +3779,12 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
         return;
     }
 
-    /*
-     * Outside the mjit, activation objects (call objects and arguments objects) are put
-     * by ContextStack::pop* members. For JSOP_RETURN, the interpreter only calls
-     * popInlineFrame if fp != entryFrame since the VM protocol is that Invoke/Execute are
-     * responsible for pushing/popping the initial frame. However, an mjit function
-     * epilogue doesn't treat the initial StackFrame of its VMFrame specially: it always
-     * puts activation objects. And furthermore, if the last mjit frame throws, the mjit
-     * does *not* put the activation objects. So we can't assume any particular state of
-     * puttedness upon exit from the mjit.
-     *
-     * To avoid double-putting, EnterMethodJIT calls updateEpilogueFlags to clear the
-     * entry frame's hasArgsObj() and hasCallObj() flags if the given objects have already
-     * been put.
-     */
-    if (script->function()) {
-        types::TypeScriptNesting *nesting = script->nesting();
-        if (script->function()->isHeavyweight() || script->needsArgsObj() ||
-            (nesting && nesting->children) || debugMode())
-        {
-            prepareStubCall(Uses(fe ? 1 : 0));
-            INLINE_STUBCALL(stubs::FunctionFrameEpilogue, REJOIN_NONE);
-        } else {
-            /* if hasCallObj() */
-            Jump putObjs = masm.branchTest32(Assembler::NonZero,
-                                             Address(JSFrameReg, StackFrame::offsetOfFlags()),
-                                             Imm32(StackFrame::HAS_CALL_OBJ));
-            stubcc.linkExit(putObjs, Uses(frame.frameSlots()));
-
-            stubcc.leave();
-            OOL_STUBCALL(stubs::FunctionFrameEpilogue, REJOIN_NONE);
-
-            emitReturnValue(&stubcc.masm, fe);
-            emitFinalReturn(stubcc.masm);
-
-            /*
-             * Do frame count balancing inline for inner functions in a nesting
-             * with no children of their own.
-             */
-            if (nesting)
-                masm.sub32(Imm32(1), AbsoluteAddress(&nesting->activeFrames));
-        }
+    /* Inline StackFrame::epilogue. */
+    if (debugMode()) {
+        prepareStubCall(Uses(0));
+        INLINE_STUBCALL(stubs::Epilogue, REJOIN_NONE);
+    } else if (script->function() && script->nesting()) {
+        masm.sub32(Imm32(1), AbsoluteAddress(&script->nesting()->activeFrames));
     }
 
     emitReturnValue(&masm, fe);
@@ -5718,7 +5670,7 @@ mjit::Compiler::jsop_bindname(PropertyName *name)
             analysis->resolveNameAccess(cx, NameToId(name), true);
         if (access.nesting) {
             RegisterID reg = frame.allocReg();
-            JSObject **pobj = &access.nesting->activeCall;
+            CallObject **pobj = &access.nesting->activeCall;
             masm.move(ImmPtr(pobj), reg);
             masm.loadPtr(Address(reg), reg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, reg);
@@ -5828,6 +5780,100 @@ mjit::Compiler::jsop_bindname(PropertyName *name)
     stubcc.rejoin(Changes(1));
 }
 #endif
+
+void
+mjit::Compiler::jsop_aliasedArg(unsigned arg, bool get, bool poppedAfter)
+{
+    RegisterID reg = frame.allocReg();
+    masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfArgsObj()), reg);
+    size_t dataOff = ArgumentsObject::getDataSlotOffset();
+    masm.loadPrivate(Address(reg, dataOff), reg);
+    int32_t argsOff = ArgumentsData::offsetOfArgs() + arg * sizeof(Value);
+    masm.addPtr(Imm32(argsOff), reg, reg);
+    if (get) {
+        FrameEntry *fe = frame.getArg(arg);
+        JSValueType type = fe->isTypeKnown() ? fe->getKnownType() : JSVAL_TYPE_UNKNOWN;
+        frame.push(Address(reg), type, true /* = reuseBase */);
+    } else {
+#ifdef JSGC_INCREMENTAL_MJ
+        if (cx->compartment->needsBarrier()) {
+            /* Write barrier. */
+            stubcc.linkExit(masm.testGCThing(Address(reg)), Uses(0));
+            stubcc.leave();
+            stubcc.masm.move(reg, Registers::ArgReg1);
+            OOL_STUBCALL(stubs::GCThingWriteBarrier, REJOIN_NONE);
+            stubcc.rejoin(Changes(0));
+        }
+#endif
+        frame.storeTo(frame.peek(-1), Address(reg), poppedAfter);
+        frame.freeReg(reg);
+    }
+}
+
+void
+mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
+{
+    RegisterID reg = frame.allocReg();
+    masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), reg);
+    for (unsigned i = 0; i < sc.hops; i++)
+        masm.loadPayload(Address(reg, ScopeObject::offsetOfEnclosingScope()), reg);
+
+    unsigned slot = ScopeObject::CALL_BLOCK_RESERVED_SLOTS + sc.slot;
+
+    /*
+     * TODO bug 753158: Call and Block objects should use the same layout
+     * strategy: up to the maximum numFixedSlots and overflow (if any) in
+     * dynamic slots. For now, we special case for different layouts:
+     */
+    Address addr;
+    if (ScopeCoordinateBlockChain(script, PC)) {
+        /*
+         * Block objects use a fixed AllocKind which means an invariant number
+         * of fixed slots. Any slot below the fixed slot count is inline, any
+         * slot over is in the dynamic slots.
+         */
+        uint32_t nfixed = gc::GetGCKindSlots(BlockObject::FINALIZE_KIND);
+        if (nfixed <= slot) {
+            masm.loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);
+            addr = Address(reg, (slot - nfixed) * sizeof(Value));
+        } else {
+            addr = Address(reg, JSObject::getFixedSlotOffset(slot));
+        }
+    } else {
+        /*
+         * Using special-case hackery in Shape::getChildBinding, CallObject
+         * slots are either altogether in fixed slots or altogether in dynamic
+         * slots (by having numFixed == RESERVED_SLOTS).
+         */
+        if (script->bindings.lastShape()->numFixedSlots() <= slot) {
+            masm.loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);
+            addr = Address(reg, sc.slot * sizeof(Value));
+        } else {
+            addr = Address(reg, JSObject::getFixedSlotOffset(slot));
+        }
+    }
+
+    if (get) {
+        FrameEntry *fe = script->bindings.slotIsLocal(sc.slot)
+                         ? frame.getLocal(script->bindings.slotToLocal(sc.slot))
+                         : frame.getArg(script->bindings.slotToArg(sc.slot));
+        JSValueType type = fe->isTypeKnown() ? fe->getKnownType() : JSVAL_TYPE_UNKNOWN;
+        frame.push(addr, type, true /* = reuseBase */);
+    } else {
+#ifdef JSGC_INCREMENTAL_MJ
+        if (cx->compartment->needsBarrier()) {
+            /* Write barrier. */
+            stubcc.linkExit(masm.testGCThing(addr), Uses(0));
+            stubcc.leave();
+            stubcc.masm.addPtr(Imm32(addr.offset), addr.base, Registers::ArgReg1);
+            OOL_STUBCALL(stubs::GCThingWriteBarrier, REJOIN_NONE);
+            stubcc.rejoin(Changes(0));
+        }
+#endif
+        frame.storeTo(frame.peek(-1), addr, poppedAfter);
+        frame.freeReg(reg);
+    }
+}
 
 void
 mjit::Compiler::jsop_this()
