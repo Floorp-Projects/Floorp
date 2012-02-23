@@ -538,7 +538,7 @@ CodeGeneratorARM::visitBitNotI(LBitNotI *ins)
 }
 
 bool
-CodeGeneratorARM::visitBitOp(LBitOp *ins)
+CodeGeneratorARM::visitBitOpI(LBitOpI *ins)
 {
     const LAllocation *lhs = ins->getOperand(0);
     const LAllocation *rhs = ins->getOperand(1);

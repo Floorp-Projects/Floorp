@@ -750,7 +750,7 @@ class LBitNotI : public LInstructionHelper<1, 1, 0>
     LIR_HEADER(BitNotI);
 };
 
-// Call a stub to perform a binary operation.
+// Call a VM function to perform a BITNOT operation.
 class LBitNotV : public LCallInstructionHelper<1, BOX_PIECES, 0>
 {
   public:
@@ -761,20 +761,40 @@ class LBitNotV : public LCallInstructionHelper<1, BOX_PIECES, 0>
 
 // Binary bitwise operation, taking two 32-bit integers as inputs and returning
 // a 32-bit integer result as an output.
-class LBitOp : public LInstructionHelper<1, 2, 0>
+class LBitOpI : public LInstructionHelper<1, 2, 0>
 {
     JSOp op_;
 
   public:
-    LIR_HEADER(BitOp);
+    LIR_HEADER(BitOpI);
 
-    LBitOp(JSOp op)
+    LBitOpI(JSOp op)
       : op_(op)
     { }
 
     JSOp bitop() {
         return op_;
     }
+};
+
+// Call a VM function to perform a bitwise operation.
+class LBitOpV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
+{
+    JSOp jsop_;
+
+  public:
+    LIR_HEADER(BitOpV);
+
+    LBitOpV(JSOp jsop)
+      : jsop_(jsop)
+    { }
+
+    JSOp jsop() const {
+        return jsop_;
+    }
+
+    static const size_t LhsInput = 0;
+    static const size_t RhsInput = BOX_PIECES;
 };
 
 // Shift operation, taking two 32-bit integers as inputs and returning
@@ -895,7 +915,7 @@ class LMathD : public LBinaryMath<0>
     }
 };
 
-// Call a stub to perform a binary operation.
+// Call a VM function to perform a binary operation.
 class LBinaryV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 {
     JSOp jsop_;
@@ -1906,7 +1926,7 @@ class LCallGetNameTypeOf : public LCallInstructionHelper<BOX_PIECES, 1, 0>
     }
 };
 
-// Call a js::GetElement stub.
+// Call js::GetElement.
 class LCallGetElement : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 {
   public:
@@ -1917,7 +1937,7 @@ class LCallGetElement : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES
     static const size_t RhsInput = BOX_PIECES;
 };
 
-// Call a js::SetElement stub.
+// Call js::SetElement.
 class LCallSetElement : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0>
 {
   public:
@@ -1928,7 +1948,7 @@ class LCallSetElement : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0>
     static const size_t Value = 1 + BOX_PIECES;
 };
 
-// Call a stub to perform a property or name assignment of a generic value.
+// Call a VM function to perform a property or name assignment of a generic value.
 class LCallSetProperty : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
 {
   public:

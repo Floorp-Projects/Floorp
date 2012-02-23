@@ -254,7 +254,7 @@ LIRGeneratorARM::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mi
         // If our operand isn't a constant, then we want to strip off any
         // unnecessary bits.  We do this by generating an AND LInstruction
         // and dumping it into the instruction stream right before the shift.
-        LBitOp *LAnd = new LBitOp(JSOP_BITAND);
+        LBitOpI *LAnd = new LBitOpI(JSOP_BITAND);
         LAnd->setOperand(0, useRegister(rhs));
         LAnd->setOperand(1, LConstantIndex::FromIndex(0x1f));
         LAnd->setDef(0, LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));

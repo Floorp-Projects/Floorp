@@ -377,11 +377,16 @@ LIRGenerator::lowerBitOp(JSOp op, MInstruction *ins)
 
     if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
         ReorderCommutative(&lhs, &rhs);
-        return lowerForALU(new LBitOp(op), ins, lhs, rhs);
+        return lowerForALU(new LBitOpI(op), ins, lhs, rhs);
     }
 
-    JS_NOT_REACHED("NYI");
-    return false;
+    LBitOpV *lir = new LBitOpV(op);
+    if (!useBox(lir, LBitOpV::LhsInput, lhs))
+        return false;
+    if (!useBox(lir, LBitOpV::RhsInput, rhs))
+        return false;
+
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
@@ -1024,7 +1029,7 @@ LIRGenerator::visitNot(MNot *ins)
       case MIRType_Boolean: {
         MConstant *cons = MConstant::New(Int32Value(1));
         ins->block()->insertBefore(ins, cons);
-        return lowerForALU(new LBitOp(JSOP_BITXOR), ins, op, cons);
+        return lowerForALU(new LBitOpI(JSOP_BITXOR), ins, op, cons);
       }
       case MIRType_Int32: {
         return define(new LNotI(useRegister(op)), ins);
