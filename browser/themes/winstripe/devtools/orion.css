@@ -11,26 +11,91 @@
 .view {
   color: black; /* Default text color */
   background: #f0f0ff; /* Background of the editor */
-  padding-left: 0;
+  padding-left: 4px;
 }
 
 .readonly > .view {
   background: #f0f0ff;
 }
 
-/* One line */
-.viewContent > div {
-  padding-left: 4px; /* Margin between the ruler and the editor */
-}
-
-/* Styles for the line number ruler */
-.rulerLines {
-  border-right: 1px solid #b4c4d3;
+.ruler {
   background: #cddae5;
   color: #7a8a99;
+}
+.ruler.annotations {
+  width: 16px;
+  padding-left: 4px;
+}
+.ruler.lines {
+  border-right: 1px solid #b4c4d3;
+  min-width: 1.4em;
   padding-left: 4px;
   padding-right: 4px;
   text-align: end;
+}
+
+.ruler.linesWithAnnotations {
+  min-width: 0;
+  padding-left: 0;
+}
+
+.ruler.overview {
+  border-left: 1px solid #b4c4d3;
+  width: 14px;
+  text-align: start;
+}
+
+/* Styles for the annotation ruler (first line) */
+.annotationHTML {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.annotationHTML.task {
+  background-image: url("chrome://browser/skin/devtools/orion-task.png");
+}
+.annotationHTML.breakpoint {
+  background-image: url("chrome://browser/skin/devtools/orion-breakpoint.png");
+}
+
+/* Styles for the overview ruler  */
+.annotationOverview {
+  cursor: pointer;
+  border-radius: 2px;
+  left: 2px;
+  width: 8px;
+}
+.annotationOverview.task {
+  background-color: lightgreen;
+  border: 1px solid green;
+}
+.annotationOverview.breakpoint {
+  background-color: lightblue;
+  border: 1px solid blue;
+}
+.annotationOverview.currentBracket {
+  background-color: lightgray;
+  border: 1px solid red;
+}
+.annotationOverview.matchingBracket {
+  background-color: lightgray;
+  border: 1px solid red;
+}
+
+/* Styles for text range */
+.annotationRange {
+  background-repeat: repeat-x;
+  background-position: left bottom;
+}
+.annotationRange.task {
+  outline: 1px dashed rgba(0, 255, 0, 0.5);
+}
+.annotationRange.matchingBracket {
+  outline: 1px solid grey;
 }
 
 .token_singleline_comment {
@@ -81,11 +146,13 @@
   background-position: left center;
 }
 
-.line_caret { /* Current line */
+.line_caret,
+.annotationLine.currentLine { /* Current line */
   background: #dae2ee; /* lighter than the background */
 }
 
-.readonly .line_caret {
+.readonly .line_caret,
+.readonly .annotationLine.currentLine {
   background: #cddae5; /* a bit darker than the background */
 }
 
@@ -114,8 +181,4 @@
 .invalid {
   color: red;
   font-weight: bold;
-}
-
-.annotationRange.matchingBracket {
-  outline: 1px solid grey;
 }
