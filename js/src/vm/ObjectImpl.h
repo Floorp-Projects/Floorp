@@ -19,6 +19,8 @@
 
 namespace js {
 
+class ObjectImpl;
+
 /*
  * Header structure for object element arrays. This structure is immediately
  * followed by an array of elements, with the elements member in an object
@@ -28,6 +30,7 @@ namespace js {
 class ObjectElements
 {
     friend struct ::JSObject;
+    friend class ObjectImpl;
 
     /* Number of allocated slots. */
     uint32_t capacity;
@@ -171,10 +174,71 @@ class ObjectImpl : public gc::Cell
 
     JSObject * asObjectPtr() { return reinterpret_cast<JSObject *>(this); }
 
+    /* These functions are public, and they should remain public. */
+
+  public:
+    JSObject * getProto() const {
+        return type_->proto;
+    }
+
+    inline bool isExtensible() const;
+
+    /*
+     * XXX Once the property/element split of bug 586842 is complete, these
+     *     methods should move back to JSObject.
+     */
+    inline bool isDenseArray() const;
+    inline bool isSlowArray() const;
+    inline bool isArray() const;
+
+    inline HeapSlotArray getDenseArrayElements();
+    inline const Value & getDenseArrayElement(unsigned idx);
+    inline uint32_t getDenseArrayInitializedLength();
+
+  private:
+    /*
+     * Get internal pointers to the range of values starting at start and
+     * running for length.
+     */
+    inline void getSlotRangeUnchecked(size_t start, size_t length,
+                                      HeapSlot **fixedStart, HeapSlot **fixedEnd,
+                                      HeapSlot **slotsStart, HeapSlot **slotsEnd);
+    inline void getSlotRange(size_t start, size_t length,
+                             HeapSlot **fixedStart, HeapSlot **fixedEnd,
+                             HeapSlot **slotsStart, HeapSlot **slotsEnd);
+
   protected:
     friend struct GCMarker;
     friend struct Shape;
     friend class NewObjectCache;
+
+    inline void invalidateSlotRange(size_t start, size_t count);
+    inline void initializeSlotRange(size_t start, size_t count);
+
+    /*
+     * Initialize a flat array of slots to this object at a start slot.  The
+     * caller must ensure that are enough slots.
+     */
+    void initSlotRange(size_t start, const Value *vector, size_t length);
+
+    /*
+     * Copy a flat array of slots to this object at a start slot. Caller must
+     * ensure there are enough slots in this object.
+     */
+    void copySlotRange(size_t start, const Value *vector, size_t length);
+
+#ifdef DEBUG
+    enum SentinelAllowed {
+        SENTINEL_NOT_ALLOWED,
+        SENTINEL_ALLOWED
+    };
+
+    /*
+     * Check that slot is in range for the object's allocated slots.
+     * If sentinelAllowed then slot may equal the slot capacity.
+     */
+    bool slotInRange(unsigned slot, SentinelAllowed sentinel = SENTINEL_NOT_ALLOWED) const;
+#endif
 
     /* Minimum size for dynamically allocated slots. */
     static const uint32_t SLOT_CAPACITY_MIN = 8;
@@ -214,6 +278,11 @@ class ObjectImpl : public gc::Cell
      * might have a lazy type, use getType() below, otherwise type().
      */
     bool hasLazyType() const { return type_->lazy(); }
+
+    inline uint32_t slotSpan() const;
+
+    /* Compute dynamicSlotsCount() for this object. */
+    inline size_t numDynamicSlots() const;
 
     inline bool isNative() const;
 
@@ -304,15 +373,6 @@ class ObjectImpl : public gc::Cell
     }
     static size_t getPrivateDataOffset(size_t nfixed) { return getFixedSlotOffset(nfixed); }
     static size_t offsetOfSlots() { return offsetof(ObjectImpl, slots); }
-
-    /* These functions are public, and they should remain public. */
-
-  public:
-    JSObject * getProto() const {
-        return type_->proto;
-    }
-
-    inline bool isExtensible() const;
 };
 
 } /* namespace js */
