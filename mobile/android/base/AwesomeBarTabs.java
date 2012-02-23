@@ -227,9 +227,15 @@ public class AwesomeBarTabs extends TabHost {
             mRefreshTask.execute();
         }
 
-        public void moveToParentFolder() {
+        // Returns false if there is no parent folder to move to
+        public boolean moveToParentFolder() {
+            // If we're already at the root, we can't move to a parent folder
+            if (mParentStack.size() == 1)
+                return false;
+
             mParentStack.pop();
             refreshCurrentFolder();
+            return true;
         }
 
         public void moveToChildFolder(int folderId, String folderTitle) {
@@ -308,6 +314,16 @@ public class AwesomeBarTabs extends TabHost {
                 }
             }
         }
+    }
+
+    // This method checks to see if we're in a bookmark sub-folder. If we are,
+    // it will go up a level and return true. Otherwise it will return false.
+    public boolean onBackPressed() {
+        // If we're not in the bookmarks tab, we have nothing to do
+        if (!getCurrentTabTag().equals(BOOKMARKS_TAB))
+            return false;
+
+        return mBookmarksAdapter.moveToParentFolder();
     }
 
     private class BookmarksQueryTask extends AsyncTask<Void, Void, Cursor> {
