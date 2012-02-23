@@ -868,10 +868,10 @@ public class AwesomeBarTabs extends TabHost {
         mAllPagesCursorAdapter.filter(searchTerm);
     }
 
-    public void setSearchEngines(JSONArray engines) {
-        mSearchEngines = engines;
+    public void setSearchEngines(final JSONArray engines) {
         GeckoAppShell.getMainHandler().post(new Runnable() {
             public void run() {
+                mSearchEngines = engines;
                 mAllPagesCursorAdapter.notifyDataSetChanged();
             }
         });
