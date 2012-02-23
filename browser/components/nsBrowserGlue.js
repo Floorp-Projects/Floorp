@@ -1,3 +1,4 @@
+# -*- indent-tabs-mode: nil -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -774,16 +775,69 @@ BrowserGlue.prototype = {
     const PREF_TELEMETRY_REJECTED  = "toolkit.telemetry.rejected";
     const PREF_TELEMETRY_INFOURL  = "toolkit.telemetry.infoURL";
     const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
+    const PREF_TELEMETRY_ENABLED_BY_DEFAULT = "toolkit.telemetry.enabledByDefault";
+    const PREF_TELEMETRY_NOTIFIED_OPTOUT = "toolkit.telemetry.notifiedOptOut";
     // This is used to reprompt users when privacy message changes
     const TELEMETRY_PROMPT_REV = 2;
 
-    function appendTelemetryNotification(notifyBox, message, buttons, hideclose) {
+    // Stick notifications onto the selected tab of the active browser window.
+    var win = this.getMostRecentBrowserWindow();
+    var tabbrowser = win.gBrowser;
+    var notifyBox = tabbrowser.getNotificationBox();
+
+    var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    var brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+    var productName = brandBundle.GetStringFromName("brandFullName");
+    var serverOwner = Services.prefs.getCharPref(PREF_TELEMETRY_SERVER_OWNER);
+
+    function appendTelemetryNotification(message, buttons, hideclose) {
       let notification = notifyBox.appendNotification(message, "telemetry", null,
-						      notifyBox.PRIORITY_INFO_LOW,
-						      buttons);
-      notification.setAttribute("hideclose", hideclose);
+                                                      notifyBox.PRIORITY_INFO_LOW,
+                                                      buttons);
+      if (hideclose)
+        notification.setAttribute("hideclose", hideclose);
       notification.persistence = -1;  // Until user closes it
       return notification;
+    }
+
+    function appendLearnMoreLink(notification) {
+      let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      let link = notification.ownerDocument.createElementNS(XULNS, "label");
+      link.className = "text-link telemetry-text-link";
+      link.setAttribute("value", browserBundle.GetStringFromName("telemetryLinkLabel"));
+      let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
+      description.appendChild(link);
+      return link;
+    }
+
+    var telemetryEnabledByDefault = false;
+    try {
+      telemetryEnabledByDefault = Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED_BY_DEFAULT);
+    } catch(e) {}
+    if (telemetryEnabledByDefault) {
+      var telemetryNotifiedOptOut = false;
+      try {
+        telemetryNotifiedOptOut = Services.prefs.getBoolPref(PREF_TELEMETRY_NOTIFIED_OPTOUT);
+      } catch(e) {}
+      if (telemetryNotifiedOptOut)
+        return;
+
+      var telemetryPrompt = browserBundle.formatStringFromName("telemetryOptOutPrompt",
+                                                               [productName, serverOwner, productName], 3);
+
+      Services.prefs.setBoolPref(PREF_TELEMETRY_NOTIFIED_OPTOUT, true);
+
+      let notification = appendTelemetryNotification(telemetryPrompt, null, false);
+      let link = appendLearnMoreLink(notification);
+      link.addEventListener('click', function() {
+        // Open the learn more url in a new tab
+        let url = Services.urlFormatter.formatURLPref("app.support.baseURL");
+        url += "how-can-i-help-submitting-performance-data";
+        tabbrowser.selectedTab = tabbrowser.addTab(url);
+        // Remove the notification on which the user clicked
+        notification.parentNode.removeNotification(notification, true);
+      }, false);
+      return;
     }
 
     var telemetryPrompted = null;
@@ -798,17 +852,7 @@ BrowserGlue.prototype = {
     Services.prefs.clearUserPref(PREF_TELEMETRY_PROMPTED);
     Services.prefs.clearUserPref(PREF_TELEMETRY_ENABLED);
     
-    // Stick the notification onto the selected tab of the active browser window.
-    var win = this.getMostRecentBrowserWindow();
-    var browser = win.gBrowser; // for closure in notification bar callback
-    var notifyBox = browser.getNotificationBox();
-
-    var browserBundle   = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-    var brandBundle     = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-
-    var productName        = brandBundle.GetStringFromName("brandFullName");
-    var serverOwner        = Services.prefs.getCharPref(PREF_TELEMETRY_SERVER_OWNER);
-    var telemetryPrompt    = browserBundle.formatStringFromName("telemetryPrompt", [productName, serverOwner], 2);
+    var telemetryPrompt = browserBundle.formatStringFromName("telemetryPrompt", [productName, serverOwner], 2);
 
     var buttons = [
                     {
@@ -832,23 +876,17 @@ BrowserGlue.prototype = {
     // Set pref to indicate we've shown the notification.
     Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
 
-    let notification = appendTelemetryNotification(notifyBox, telemetryPrompt,
-						   buttons, true);
-    let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    let link = notification.ownerDocument.createElementNS(XULNS, "label");
-    link.className = "text-link telemetry-text-link";
-    link.setAttribute("value", browserBundle.GetStringFromName("telemetryLinkLabel"));
+    let notification = appendTelemetryNotification(telemetryPrompt, buttons, true);
+    let link = appendLearnMoreLink(notification);
     link.addEventListener('click', function() {
       // Open the learn more url in a new tab
-      browser.selectedTab = browser.addTab(Services.prefs.getCharPref(PREF_TELEMETRY_INFOURL));
+      tabbrowser.selectedTab = tabbrowser.addTab(Services.prefs.getCharPref(PREF_TELEMETRY_INFOURL));
       // Remove the notification on which the user clicked
       notification.parentNode.removeNotification(notification, true);
       // Add a new notification to that tab, with no "Learn more" link
-      notifyBox = browser.getNotificationBox();
-      appendTelemetryNotification(notifyBox, telemetryPrompt, buttons, true);
+      notifyBox = tabbrowser.getNotificationBox();
+      appendTelemetryNotification(telemetryPrompt, buttons, true);
     }, false);
-    let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
-    description.appendChild(link);
   },
 #endif
 
