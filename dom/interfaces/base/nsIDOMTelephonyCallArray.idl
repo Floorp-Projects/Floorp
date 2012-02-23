@@ -17,7 +17,7 @@
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,38 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_telephony_telephonycommon_h__
-#define mozilla_dom_telephony_telephonycommon_h__
+#include "nsISupports.idl"
 
-#include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsDebug.h"
-#include "nsDOMEventTargetHelper.h"
-#include "nsStringGlue.h"
-#include "nsTArray.h"
+interface nsIDOMTelephonyCall;
 
-#define BEGIN_TELEPHONY_NAMESPACE \
-  namespace mozilla { namespace dom { namespace telephony {
-#define END_TELEPHONY_NAMESPACE \
-  } /* namespace telephony */ } /* namespace dom */ } /* namespace mozilla */
-#define USING_TELEPHONY_NAMESPACE \
-  using namespace mozilla::dom::telephony;
+[scriptable, builtinclass, uuid(5a0dfc8f-1bca-4922-82b2-f86721edf72a)]
+interface nsIDOMTelephonyCallArray : nsISupports
+{
+  readonly attribute unsigned long length;
 
-class nsIDOMTelephony;
-class nsIDOMTelephonyCall;
-
-BEGIN_TELEPHONY_NAMESPACE
-
-enum {
-  kOutgoingPlaceholderCallIndex = PR_UINT32_MAX
+  [getter, noscript, notxpcom, nostdcall]
+  nsIDOMTelephonyCall getCallAt(in unsigned long index);
 };
-
-class Telephony;
-class TelephonyCall;
-class TelephonyCallArray;
-class CallEvent;
-
-END_TELEPHONY_NAMESPACE
-
-#endif // mozilla_dom_telephony_telephonycommon_h__

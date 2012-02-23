@@ -43,6 +43,7 @@
 
 #include "Telephony.h"
 #include "TelephonyCall.h"
+#include "TelephonyCallArray.h"
 
 USING_TELEPHONY_NAMESPACE
 
