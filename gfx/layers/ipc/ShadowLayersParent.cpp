@@ -323,7 +323,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         static_cast<ShadowThebesLayer*>(shadow->AsLayer());
       const ThebesBuffer& newFront = op.newFrontBuffer();
 
-      RenderTraceInvalidateStart(thebes, "00FF", op.updatedRegion().GetBounds());
+      RenderTraceInvalidateStart(thebes, "FF00FF", op.updatedRegion().GetBounds());
 
       OptionalThebesBuffer newBack;
       nsIntRegion newValidRegion;
@@ -338,7 +338,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
           newBack, newValidRegion,
           readonlyFront, frontUpdatedRegion));
 
-      RenderTraceInvalidateEnd(thebes, "00FF");
+      RenderTraceInvalidateEnd(thebes, "FF00FF");
       break;
     }
     case Edit::TOpPaintCanvas: {
@@ -349,7 +349,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowCanvasLayer* canvas =
         static_cast<ShadowCanvasLayer*>(shadow->AsLayer());
 
-      RenderTraceInvalidateStart(canvas, "00FF", canvas->GetVisibleRegion().GetBounds());
+      RenderTraceInvalidateStart(canvas, "FF00FF", canvas->GetVisibleRegion().GetBounds());
 
       canvas->SetAllocator(this);
       CanvasSurface newBack;
@@ -358,7 +358,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       replyv.push_back(OpBufferSwap(shadow, NULL,
                                     newBack));
 
-      RenderTraceInvalidateEnd(canvas, "00FF");
+      RenderTraceInvalidateEnd(canvas, "FF00FF");
       break;
     }
     case Edit::TOpPaintImage: {
@@ -369,11 +369,15 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowImageLayer* image =
         static_cast<ShadowImageLayer*>(shadow->AsLayer());
 
+      RenderTraceInvalidateStart(image, "FF00FF", image->GetVisibleRegion().GetBounds());
+
       image->SetAllocator(this);
       SharedImage newBack;
       image->Swap(op.newFrontBuffer(), &newBack);
       replyv.push_back(OpImageSwap(shadow, NULL,
                                    newBack));
+
+      RenderTraceInvalidateEnd(image, "FF00FF");
 
       break;
     }

@@ -690,7 +690,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
     nsIntRegion toDraw = IntersectWithClip(GetEffectiveVisibleRegion(), aContext);
 
-    RenderTraceInvalidateStart(this, "FF00", toDraw.GetBounds());
+    RenderTraceInvalidateStart(this, "FFFF00", toDraw.GetBounds());
 
     if (!toDraw.IsEmpty() && !IsHidden()) {
       if (!aCallback) {
@@ -728,7 +728,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       aContext->Restore();
     }
 
-    RenderTraceInvalidateEnd(this, "FF00");
+    RenderTraceInvalidateEnd(this, "FFFF00");
     return;
   }
 
@@ -755,7 +755,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       nsIntRegion extendedDrawRegion = state.mRegionToDraw;
       SetAntialiasingFlags(this, state.mContext);
 
-      RenderTraceInvalidateStart(this, "FF00", state.mRegionToDraw.GetBounds());
+      RenderTraceInvalidateStart(this, "FFFF00", state.mRegionToDraw.GetBounds());
 
       PaintBuffer(state.mContext,
                   state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
@@ -763,7 +763,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
                   aCallback, aCallbackData);
       Mutated();
 
-      RenderTraceInvalidateEnd(this, "FF00");
+      RenderTraceInvalidateEnd(this, "FFFF00");
     } else {
       // It's possible that state.mRegionToInvalidate is nonempty here,
       // if we are shrinking the valid region to nothing.
