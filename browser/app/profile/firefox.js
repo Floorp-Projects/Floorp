@@ -759,12 +759,6 @@ pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 // the database.
 pref("urlclassifier.confirm-age", 2700);
 
-// Maximum size of the sqlite3 cache during an update, in bytes
-pref("urlclassifier.updatecachemax", 41943040);
-
-// Maximum size of the sqlite3 cache for lookups, in bytes
-pref("urlclassifier.lookupcachemax", 1048576);
-
 // URL for checking the reason for a malware warning.
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 

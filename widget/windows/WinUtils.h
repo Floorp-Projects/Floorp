@@ -63,7 +63,6 @@ namespace widget {
 class WinUtils {
 public:
   enum WinVersion {
-    WIN2K_VERSION     = 0x500,
     WINXP_VERSION     = 0x501,
     WIN2K3_VERSION    = 0x502,
     VISTA_VERSION     = 0x600,
