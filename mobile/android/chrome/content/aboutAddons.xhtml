@@ -100,7 +100,9 @@
       <img class="favicon"/>
       <div class="inner">
         <div class="details">
-          <div class="title"></div><div class="version"></div><div class="tag"></div>
+          <div class="tag"></div>
+          <div class="title"></div>
+          <div class="version"></div>
         </div>
         <div class="description-full"></div>
       </div>
@@ -201,6 +203,11 @@
         details.className = "details";
         inner.appendChild(details);
 
+        let tagPart = document.createElement("div");
+        tagPart.textContent = gStringBundle.GetStringFromName("addonType." + aAddon.type);
+        tagPart.className = "tag";
+        details.appendChild(tagPart);
+
         let titlePart = document.createElement("div");
         titlePart.textContent = aAddon.name;
         titlePart.className = "title";
@@ -210,11 +217,6 @@
         versionPart.textContent = aAddon.version;
         versionPart.className = "version";
         details.appendChild(versionPart);
-
-        let tagPart = document.createElement("div");
-        tagPart.textContent = gStringBundle.GetStringFromName("addonType." + aAddon.type);
-        tagPart.className = "tag";
-        details.appendChild(tagPart);
 
         if ("description" in aAddon) {
           let descPart = document.createElement("div");
