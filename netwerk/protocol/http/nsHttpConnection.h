@@ -158,6 +158,9 @@ public:
 
     bool UsingSpdy() { return mUsingSpdy; }
 
+    // When the connection is active this is called every 15 seconds
+    void  ReadTimeoutTick(PRIntervalTime now);
+
 private:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStartSSL();
