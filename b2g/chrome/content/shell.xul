@@ -28,6 +28,10 @@
     <command id="cmd_close" oncommand="CommandUpdater.doCommand(this.id);"/>
   </commandset>
 
-  <browser id="homescreen" type="content-primary" flex="1" style="overflow: hidden;"/>
+  <browser id="homescreen"
+           type="content-primary"
+           flex="1"
+           style="overflow: hidden;"
+           src="data:text/html;base64,PCFET0NUWVBFIGh0bWw+PGh0bWw+PGJvZHkgc3R5bGU9ImJhY2tncm91bmQ6YmxhY2s7Ij48L2JvZHk+PC9odG1sPgo="/>
 </window>
 
