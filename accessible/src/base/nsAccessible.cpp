@@ -854,9 +854,10 @@ nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
   nsDocAccessible* contentDocAcc = GetAccService()->
     GetDocAccessible(content->OwnerDoc());
 
-  // contentDocAcc in some circumstances can be NULL
-  // See https://bugzilla.mozilla.org/show_bug.cgi?id=729861
-  NS_ENSURE_TRUE(contentDocAcc, fallbackAnswer);
+  // contentDocAcc in some circumstances can be NULL. See bug 729861
+  NS_ASSERTION(contentDocAcc, "could not get the document accessible");
+  if (!contentDocAcc)
+    return fallbackAnswer;
 
   nsAccessible* accessible = contentDocAcc->GetAccessibleOrContainer(content);
   if (!accessible)
