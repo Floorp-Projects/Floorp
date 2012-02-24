@@ -45,6 +45,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsLayoutUtils.h"
+#include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -262,9 +263,7 @@ nsScreen::GetAvailRect(nsRect& aRect)
 
 namespace {
 
-bool
-IsChromeType(nsIDocShell *aDocShell)
-{
+bool IsWhiteListed(nsIDocShell *aDocShell) {
   nsCOMPtr<nsIDocShellTreeItem> ds = do_QueryInterface(aDocShell);
   if (!ds) {
     return false;
@@ -272,7 +271,21 @@ IsChromeType(nsIDocShell *aDocShell)
 
   PRInt32 itemType;
   ds->GetItemType(&itemType);
-  return itemType == nsIDocShellTreeItem::typeChrome;
+  if (itemType == nsIDocShellTreeItem::typeChrome) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_GetInterface(aDocShell);
+  nsIPrincipal *principal = doc->NodePrincipal();
+
+  nsCOMPtr<nsIURI> principalURI;
+  principal->GetURI(getter_AddRefs(principalURI));
+  if (nsContentUtils::URIIsChromeOrInPref(principalURI,
+                                          "dom.mozScreenWhitelist")) {
+    return true;
+  }
+
+  return false;
 }
 
 } // anonymous namespace
@@ -280,7 +293,7 @@ IsChromeType(nsIDocShell *aDocShell)
 nsresult
 nsScreen::GetMozEnabled(bool *aEnabled)
 {
-  if (!sAllowScreenEnabledProperty || !IsChromeType(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || !IsWhiteListed(mDocShell)) {
     *aEnabled = true;
     return NS_OK;
   }
@@ -292,7 +305,7 @@ nsScreen::GetMozEnabled(bool *aEnabled)
 nsresult
 nsScreen::SetMozEnabled(bool aEnabled)
 {
-  if (!sAllowScreenEnabledProperty || !IsChromeType(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || !IsWhiteListed(mDocShell)) {
     return NS_OK;
   }
 
@@ -305,7 +318,7 @@ nsScreen::SetMozEnabled(bool aEnabled)
 nsresult
 nsScreen::GetMozBrightness(double *aBrightness)
 {
-  if (!sAllowScreenBrightnessProperty || !IsChromeType(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || !IsWhiteListed(mDocShell)) {
     *aBrightness = 1;
     return NS_OK;
   }
@@ -317,7 +330,7 @@ nsScreen::GetMozBrightness(double *aBrightness)
 nsresult
 nsScreen::SetMozBrightness(double aBrightness)
 {
-  if (!sAllowScreenBrightnessProperty || !IsChromeType(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || !IsWhiteListed(mDocShell)) {
     return NS_OK;
   }
 
