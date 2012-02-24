@@ -43,6 +43,7 @@
 #include "ShadowLayersParent.h"
 #include "ShadowLayerParent.h"
 #include "ShadowLayers.h"
+#include "RenderTrace.h"
 
 #include "mozilla/unused.h"
 
@@ -149,6 +150,10 @@ bool
 ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                InfallibleTArray<EditReply>* reply)
 {
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  TimeStamp updateStart = TimeStamp::Now();
+#endif
+
   MOZ_LAYERS_LOG(("[ParentSide] received txn with %d edits", cset.Length()));
 
   if (mDestroyed || layer_manager()->IsDestroyed()) {
@@ -318,6 +323,8 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         static_cast<ShadowThebesLayer*>(shadow->AsLayer());
       const ThebesBuffer& newFront = op.newFrontBuffer();
 
+      RenderTraceInvalidateStart(thebes, "FF00FF", op.updatedRegion().GetBounds());
+
       OptionalThebesBuffer newBack;
       nsIntRegion newValidRegion;
       OptionalThebesBuffer readonlyFront;
@@ -330,6 +337,8 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
           shadow, NULL,
           newBack, newValidRegion,
           readonlyFront, frontUpdatedRegion));
+
+      RenderTraceInvalidateEnd(thebes, "FF00FF");
       break;
     }
     case Edit::TOpPaintCanvas: {
@@ -340,6 +349,8 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowCanvasLayer* canvas =
         static_cast<ShadowCanvasLayer*>(shadow->AsLayer());
 
+      RenderTraceInvalidateStart(canvas, "FF00FF", canvas->GetVisibleRegion().GetBounds());
+
       canvas->SetAllocator(this);
       CanvasSurface newBack;
       canvas->Swap(op.newFrontBuffer(), op.needYFlip(), &newBack);
@@ -347,6 +358,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       replyv.push_back(OpBufferSwap(shadow, NULL,
                                     newBack));
 
+      RenderTraceInvalidateEnd(canvas, "FF00FF");
       break;
     }
     case Edit::TOpPaintImage: {
@@ -357,11 +369,15 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowImageLayer* image =
         static_cast<ShadowImageLayer*>(shadow->AsLayer());
 
+      RenderTraceInvalidateStart(image, "FF00FF", image->GetVisibleRegion().GetBounds());
+
       image->SetAllocator(this);
       SharedImage newBack;
       image->Swap(op.newFrontBuffer(), &newBack);
       replyv.push_back(OpImageSwap(shadow, NULL,
                                    newBack));
+
+      RenderTraceInvalidateEnd(image, "FF00FF");
 
       break;
     }
@@ -384,6 +400,11 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
 
   mShadowLayersManager->ShadowLayersUpdated();
+
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  printf_stderr("Compositor: Layers update took %i ms (blocking gecko).\n",
+                (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds());
+#endif
 
   return true;
 }

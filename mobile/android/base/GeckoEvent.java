@@ -62,6 +62,10 @@ import android.util.Log;
  */
 
 public class GeckoEvent {
+    public interface Callback {
+        public void callback(GeckoEvent event, String jsonData);
+    }
+
     private static final String LOGTAG = "GeckoEvent";
 
     private static final int INVALID = -1;
@@ -136,6 +140,8 @@ public class GeckoEvent {
     public boolean mCanBeMetered;
 
     public int mNativeWindow;
+
+    Callback mCallback;
 
     private GeckoEvent(int evType) {
         mType = evType;
@@ -359,12 +365,11 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createSizeChangedEvent(int w, int h, int screenw, int screenh, int tilew, int tileh) {
+    public static GeckoEvent createSizeChangedEvent(int w, int h, int screenw, int screenh) {
         GeckoEvent event = new GeckoEvent(SIZE_CHANGED);
-        event.mPoints = new Point[3];
+        event.mPoints = new Point[2];
         event.mPoints[0] = new Point(w, h);
         event.mPoints[1] = new Point(screenw, screenh);
-        event.mPoints[2] = new Point(tilew, tileh);
         return event;
     }
 
@@ -408,5 +413,11 @@ public class GeckoEvent {
         event.mPoints[1] = new Point(dw, dh);
         event.mMetaState = tabId;
         return event;
+    }
+
+    public void doCallback(String jsonData) {
+        if (mCallback != null) {
+            mCallback.callback(this, jsonData);
+        }
     }
 }

@@ -19,7 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   James Willcox <jwillcox@mozilla.com>
+ *   Patrick Walton <pcwalton@mozilla.com>
+ *   Chris Lord <chrislord.net@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,37 +38,43 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.opengl.GLES20;
-import java.util.Stack;
+import android.graphics.Point;
 
-public class TextureGenerator {
-    private static final int MIN_TEXTURES = 5;
+public class VirtualLayer extends Layer {
+    private IntSize mSize;
 
-    private static TextureGenerator sSharedInstance;
-    private Stack<Integer> mTextureIds;
-
-    private TextureGenerator() { mTextureIds = new Stack<Integer>(); }
-
-    public static TextureGenerator get() {
-        if (sSharedInstance == null)
-            sSharedInstance = new TextureGenerator();
-        return sSharedInstance;
+    @Override
+    public void draw(RenderContext context) {
+        // No-op.
     }
 
-    public synchronized int take() {
-        if (mTextureIds.empty())
-            return 0;
-
-        return (int)mTextureIds.pop();
+    @Override
+    public IntSize getSize() {
+        return mSize;
     }
 
-    public synchronized void fill() {
-        int[] textures = new int[1];
-        while (mTextureIds.size() < MIN_TEXTURES) {
-            GLES20.glGenTextures(1, textures, 0);
-            mTextureIds.push(textures[0]);
-        }
+    public void setSize(IntSize size) {
+        mSize = size;
+    }
+
+    void setOriginAndResolution(Point newOrigin, float newResolution) {
+        // This is an optimized version of the following code:
+        // beginTransaction();
+        // try {
+        //     setOrigin(newOrigin);
+        //     setResolution(newResolution);
+        //     performUpdates(null);
+        // } finally {
+        //     endTransaction();
+        // }
+
+        // it is safe to drop the transaction lock in this instance (i.e. for the
+        // VirtualLayer that is just a shadow of what gecko is painting) because
+        // the origin and resolution of this layer are never used for anything
+        // meaningful.
+
+        mOrigin = newOrigin;
+        mResolution = newResolution;
     }
 }
-
 

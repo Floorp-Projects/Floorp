@@ -78,7 +78,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_nativeInit(JNIEnv *, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv *, jclass, jobject event);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv *, jclass);
-    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_setSoftwareLayerClient(JNIEnv *jenv, jclass, jobject sv);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_setLayerClient(JNIEnv *jenv, jclass, jobject sv);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobject sv);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_onLowMemory(JNIEnv *, jclass);
@@ -104,8 +104,11 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyReadingMessageListFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
-    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv* jenv, jclass);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(JNIEnv* jenv, jclass);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv* jenv, jclass);
 #endif
+
 }
 
 
@@ -142,9 +145,9 @@ Java_org_mozilla_gecko_GeckoAppShell_setSurfaceView(JNIEnv *jenv, jclass, jobjec
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_setSoftwareLayerClient(JNIEnv *jenv, jclass, jobject obj)
+Java_org_mozilla_gecko_GeckoAppShell_setLayerClient(JNIEnv *jenv, jclass, jobject obj)
 {
-    AndroidBridge::Bridge()->SetSoftwareLayerClient(jenv->NewGlobalRef(obj));
+    AndroidBridge::Bridge()->SetLayerClient(jenv->NewGlobalRef(obj));
 }
 
 NS_EXPORT void JNICALL
@@ -889,9 +892,24 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyReadingMessageListFailed(JNIEnv* jenv
 #ifdef MOZ_JAVA_COMPOSITOR
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass)
+Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv*, jclass)
 {
-    nsWindow::BindToTexture();
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### scheduleComposite()");
+    AndroidBridge::Bridge()->ScheduleComposite();
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(JNIEnv*, jclass)
+{
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### schedulePauseComposition()");
+    AndroidBridge::Bridge()->SchedulePauseComposition();
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv*, jclass)
+{
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### scheduleResumeComposition()");
+    AndroidBridge::Bridge()->ScheduleResumeComposition();
 }
 
 #endif
