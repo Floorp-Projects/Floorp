@@ -377,6 +377,12 @@ nsPrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
   return Equals(aOther, aResult);
 }
 
+NS_IMETHODIMP
+nsPrincipal::SubsumesIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
+{
+  return EqualsIgnoringDomain(aOther, aResult);
+}
+
 static bool
 URIIsLocalFile(nsIURI *aURI)
 {

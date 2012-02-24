@@ -240,6 +240,20 @@ public abstract class Record {
     }
   }
 
+  /**
+   * Utility for safely populating an output CryptoRecord.
+   *
+   * @param rec
+   * @param key
+   * @param value
+   */
+  protected void putPayload(CryptoRecord rec, String key, String value) {
+    if (value == null) {
+      return;
+    }
+    rec.payload.put(key, value);
+  }
+
   protected void checkGUIDs(ExtendedJSONObject payload) {
     String payloadGUID = (String) payload.get("id");
     if (this.guid == null ||

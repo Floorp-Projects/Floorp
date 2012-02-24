@@ -2726,7 +2726,8 @@ nsComputedDOMStyle::DoGetDirection()
   return val;
 }
 
-PR_STATIC_ASSERT(NS_STYLE_UNICODE_BIDI_NORMAL == 0);
+MOZ_STATIC_ASSERT(NS_STYLE_UNICODE_BIDI_NORMAL == 0,
+                  "unicode-bidi style constants not as expected");
 
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetUnicodeBidi()
@@ -3414,7 +3415,9 @@ nsComputedDOMStyle::GetAbsoluteOffset(mozilla::css::Side aSide)
   return val;
 }
 
-PR_STATIC_ASSERT((NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3));
+MOZ_STATIC_ASSERT(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
+                  NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3,
+                  "box side constants not as expected for NS_OPPOSITE_SIDE");
 #define NS_OPPOSITE_SIDE(s_) mozilla::css::Side(((s_) + 2) & 3)
 
 nsIDOMCSSValue*

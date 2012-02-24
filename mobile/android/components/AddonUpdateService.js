@@ -208,8 +208,7 @@ var RecommendedSearchResults = {
           id: aAddon.id,
           name: aAddon.name,
           version: aAddon.version,
-          description: aAddon.description,
-          averageRating: aAddon.averageRating,
+          homepageURL: aAddon.homepageURL.replace(/^https/, "http"),
           iconURL: aAddon.iconURL.replace(/^https/, "http")
         })
       });
