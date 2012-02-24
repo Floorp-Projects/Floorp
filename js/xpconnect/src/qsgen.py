@@ -466,13 +466,13 @@ argumentUnboxingTemplates = {
         "        return JS_FALSE;\n",
 
     'float':
-        "    double ${name}_dbl;\n"
+        "    jsdouble ${name}_dbl;\n"
         "    if (!JS_ValueToNumber(cx, ${argVal}, &${name}_dbl))\n"
         "        return JS_FALSE;\n"
         "    float ${name} = (float) ${name}_dbl;\n",
 
     'double':
-        "    double ${name};\n"
+        "    jsdouble ${name};\n"
         "    if (!JS_ValueToNumber(cx, ${argVal}, &${name}))\n"
         "        return JS_FALSE;\n",
 

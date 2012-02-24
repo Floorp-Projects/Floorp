@@ -232,7 +232,7 @@ js_ValueToBoolean(const Value &v)
     if (v.isNullOrUndefined())
         return JS_FALSE;
     if (v.isDouble()) {
-        double d;
+        jsdouble d;
 
         d = v.toDouble();
         return !JSDOUBLE_IS_NaN(d) && d != 0;

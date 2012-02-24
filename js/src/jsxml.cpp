@@ -5242,7 +5242,7 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
     JSObject *vobj;
     JSBool ok;
     JSString *str, *vstr;
-    double d, d2;
+    jsdouble d, d2;
 
     JSObject *obj;
     jsval v;
