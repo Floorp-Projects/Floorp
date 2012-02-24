@@ -171,6 +171,7 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) == anim-path-d-01.svg an
 == anim-remove-7.svg anim-standard-ref.svg
 == anim-remove-8css.svg anim-standard-ref.svg
 == anim-remove-8xml.svg anim-standard-ref.svg
+== anim-remove-9.svg anim-standard-ref.svg
 == anim-retarget-1.svg anim-standard-ref.svg
 == anim-retarget-2.svg anim-standard-ref.svg
 == anim-retarget-3.svg anim-standard-ref.svg
