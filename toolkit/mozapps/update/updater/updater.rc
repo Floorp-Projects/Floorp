@@ -52,6 +52,8 @@ IDR_PRIMARY_CERT TYPE_CERT "dep1.der"
 IDR_BACKUP_CERT TYPE_CERT  "dep2.der"
 #endif
 
+IDR_XPCSHELL_CERT TYPE_CERT "xpcshellCertificate.der"
+ 
 
 /////////////////////////////////////////////////////////////////////////////
 //
