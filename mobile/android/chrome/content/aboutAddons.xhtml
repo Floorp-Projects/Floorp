@@ -146,6 +146,7 @@
 
       AddonManager.addInstallListener(Addons);
       Addons.getAddons();
+      showList();
     }
 
     function uninit() {
@@ -172,12 +173,16 @@
         let detailItem = document.querySelector("#addons-details > .addon-item");
         detailItem.addon = null;
 
-        // Hide the detail page and show the list
-        let details = document.querySelector("#addons-details");
-        details.style.display = "none";
-        let list = document.querySelector("#addons-list");
-        list.style.display = "block";
+        showList();
       }
+    }
+
+    function showList() {
+      // Hide the detail page and show the list
+      let details = document.querySelector("#addons-details");
+      details.style.display = "none";
+      let list = document.querySelector("#addons-list");
+      list.style.display = "block";
     }
 
     var Addons = {
@@ -277,9 +282,6 @@
             let item = self._createItemForAddon(aAddons[i]);
             list.appendChild(item);
           }
-
-          list.style.display = "block";
-          document.getElementById("addons-header").setAttribute("showlist", "true");
 
           // Load the search engines
           let defaults = Services.search.getDefaultEngines({ }).map(function (e) e.name);
