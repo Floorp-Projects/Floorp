@@ -37,6 +37,23 @@ XPCOMUtils.defineLazyServiceGetter(Services, 'fm', function(){
            .getService(Ci.nsFocusManager);
 });
 
+
+#ifndef MOZ_WIDGET_GONK
+// In order to use http:// scheme instead of file:// scheme
+// (that is much more restricted) the following code kick-off
+// a local http server listening on http://127.0.0.1:7777 and
+// http://localhost:7777.
+function startupHttpd(baseDir, port) {
+  const httpdURL = 'chrome://browser/content/httpd.js';
+  let httpd = {};
+  Services.scriptloader.loadSubScript(httpdURL, httpd);
+  let server = new httpd.nsHttpServer();
+  server.registerDirectory('/', new LocalFile(baseDir));
+  server.registerContentType('appcache', 'text/cache-manifest');
+  server.start(port);
+}
+#endif
+
 // FIXME Bug 707625
 // until we have a proper security model, add some rights to
 // the pre-installed web applications
@@ -105,7 +122,21 @@ var shell = {
 
       let fileScheme = 'file://';
       if (homeURL.substring(0, fileScheme.length) == fileScheme) {
+#ifndef MOZ_WIDGET_GONK
+        homeURL = homeURL.replace(fileScheme, '');
+
+        let baseDir = homeURL.split('/');
+        baseDir.pop();
+        baseDir = baseDir.join('/');
+
+        const SERVER_PORT = 7777;
+        startupHttpd(baseDir, SERVER_PORT);
+
+        let baseHost = 'http://localhost';
+        homeURL = homeURL.replace(baseDir, baseHost + ':' + SERVER_PORT);
+#else
         homeURL = 'http://localhost:7777' + homeURL.replace(fileScheme, '');
+#endif
       }
       addPermissions([homeURL]);
     } catch (e) {
