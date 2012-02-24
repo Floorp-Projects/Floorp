@@ -247,6 +247,24 @@ public:
    */
   bool UpdateCachedTarget(const nsSMILTargetIdentifier& aNewTarget);
 
+  /**
+   * Returns true if this function was skipped in the previous sample (because
+   * there was a higher-priority non-additive animation). If a skipped animation
+   * function is later used, then the animation sandwich must be recomposited.
+   */
+  bool WasSkippedInPrevSample() const {
+    return mWasSkippedInPrevSample;
+  }
+
+  /**
+   * Mark this animation function as having been skipped. By marking the
+   * function as skipped, if it is used in a subsequent sample we'll know to
+   * recomposite the sandwich.
+   */
+  void SetWasSkipped() {
+    mWasSkippedInPrevSample = true;
+  }
+
   // Comparator utility class, used for sorting nsSMILAnimationFunctions
   class Comparator {
     public:
@@ -466,12 +484,13 @@ protected:
   nsSMILWeakTargetIdentifier    mLastTarget;
 
   // Boolean flags
-  bool                          mIsActive:1;
-  bool                          mIsFrozen:1;
-  bool                          mLastValue:1;
-  bool                          mHasChanged:1;
-  bool                          mValueNeedsReparsingEverySample:1;
-  bool                          mPrevSampleWasSingleValueAnimation:1;
+  bool mIsActive:1;
+  bool mIsFrozen:1;
+  bool mLastValue:1;
+  bool mHasChanged:1;
+  bool mValueNeedsReparsingEverySample:1;
+  bool mPrevSampleWasSingleValueAnimation:1;
+  bool mWasSkippedInPrevSample:1;
 };
 
 #endif // NS_SMILANIMATIONFUNCTION_H_

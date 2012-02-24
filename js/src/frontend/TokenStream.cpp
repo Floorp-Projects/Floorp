@@ -155,7 +155,7 @@ js::IsIdentifier(JSLinearString *str)
 /* Initialize members that aren't initialized in |init|. */
 TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin)
   : tokens(), cursor(), lookahead(), flags(), listenerTSData(), tokenbuf(cx),
-    cx(cx), originPrincipals(originPrin ? originPrin : prin)
+    cx(cx), originPrincipals(JSScript::normalizeOriginPrincipals(prin, originPrin))
 {
     if (originPrincipals)
         JSPRINCIPALS_HOLD(cx, originPrincipals);

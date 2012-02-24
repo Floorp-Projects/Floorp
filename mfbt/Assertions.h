@@ -43,6 +43,7 @@
 #ifndef mozilla_Assertions_h_
 #define mozilla_Assertions_h_
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
 /*
@@ -222,6 +223,21 @@ MOZ_Assert(const char* s, const char* file, int ln);
 #  define MOZ_ASSERT_IF(cond, expr)  ((void)0)
 #endif
 
+/* MOZ_NOT_REACHED_MARKER() expands (in compilers which support it) to an
+ * expression which states that it is undefined behavior for the compiler to
+ * reach this point. Most code should probably use the higher level
+ * MOZ_NOT_REACHED (which expands to this when appropriate).
+ */
+#if defined(__clang__)
+#  define MOZ_NOT_REACHED_MARKER() __builtin_unreachable()
+#elif defined(__GNUC__)
+#  if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5)
+#    define MOZ_NOT_REACHED_MARKER() __builtin_unreachable()
+#  endif
+#elif defined(_MSC_VER)
+# define MOZ_NOT_REACHED_MARKER() __assume(0)
+#endif
+
 /*
  * MOZ_NOT_REACHED(reason) indicates that the given point can't be reached
  * during execution: simply reaching that point in execution is a bug.  It takes
@@ -239,10 +255,39 @@ MOZ_Assert(const char* s, const char* file, int ln);
  *       MOZ_NOT_REACHED("boolean literal that's not true or false?");
  *   }
  */
-#ifdef DEBUG
-#  define MOZ_NOT_REACHED(reason)    MOZ_Assert(reason, __FILE__, __LINE__)
+#if defined(MOZ_NOT_REACHED_MARKER)
+#  if defined(DEBUG)
+#    define MOZ_NOT_REACHED(reason)  do { \
+                                       MOZ_Assert(reason, __FILE__, __LINE__); \
+                                       MOZ_NOT_REACHED_MARKER();        \
+                                     } while (0)
+#  else
+#    define MOZ_NOT_REACHED(reason)  MOZ_NOT_REACHED_MARKER()
+#  endif
 #else
-#  define MOZ_NOT_REACHED(reason)    ((void)0)
+#  if defined(__GNUC__)
+     /*
+      * On older versions of gcc we need to call a noreturn function to mark the
+      * code as unreachable. Since what we want is an unreachable version of
+      * MOZ_Assert, we use an asm label
+      * (http://gcc.gnu.org/onlinedocs/gcc-4.6.2/gcc/Asm-Labels.html) to create
+      * a new declaration to the same symbol. MOZ_ASSERT_NR should only be
+      * used via this macro, as it is a very specific hack to older versions of
+      * gcc.
+      */
+#    define MOZ_GETASMPREFIX2(X) #X
+#    define MOZ_GETASMPREFIX(X) MOZ_GETASMPREFIX2(X)
+#    define MOZ_ASMPREFIX MOZ_GETASMPREFIX(__USER_LABEL_PREFIX__)
+     extern MOZ_NORETURN MFBT_API(void)
+     MOZ_ASSERT_NR(const char* s, const char* file, int ln) \
+       asm (MOZ_ASMPREFIX "MOZ_Assert");
+
+#    define MOZ_NOT_REACHED(reason)    MOZ_ASSERT_NR(reason, __FILE__, __LINE__)
+#  elif defined(DEBUG)
+#    define MOZ_NOT_REACHED(reason)    MOZ_Assert(reason, __FILE__, __LINE__)
+#  else
+#    define MOZ_NOT_REACHED(reason)    ((void)0)
+#  endif
 #endif
 
 /*

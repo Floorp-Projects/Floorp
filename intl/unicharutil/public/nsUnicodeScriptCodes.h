@@ -34,14 +34,14 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * Derived from the Unicode Character Database by genUnicodeScriptData.pl
+ * Derived from the Unicode Character Database by genUnicodePropertyData.pl
  *
  * For Unicode terms of use, see http://www.unicode.org/terms_of_use.html
  *
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Created on Mon Feb 13 09:25:50 2012 from UCD data files with version info:
+ * Created on Thu Feb 23 13:15:51 2012 from UCD data files with version info:
  *
 
 # Date: 2012-01-26, 22:03:00 GMT [KW]
@@ -74,8 +74,8 @@ for the Unicode Character Database (UCD) for Unicode 6.1.0.
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
 
-#ifndef GFX_UNICODE_SCRIPT_CODES
-#define GFX_UNICODE_SCRIPT_CODES
+#ifndef NS_UNICODE_SCRIPT_CODES
+#define NS_UNICODE_SCRIPT_CODES
 enum {
   MOZ_SCRIPT_COMMON = 0,
   MOZ_SCRIPT_INHERITED = 1,

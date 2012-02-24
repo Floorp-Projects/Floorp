@@ -142,6 +142,8 @@ Boolean(JSContext *cx, uintN argc, Value *vp)
 
     if (IsConstructing(vp)) {
         JSObject *obj = BooleanObject::create(cx, b);
+        if (!obj)
+            return false;
         args.rval().setObject(*obj);
     } else {
         args.rval().setBoolean(b);
