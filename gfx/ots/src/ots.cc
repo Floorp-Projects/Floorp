@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <map>
 #include <vector>
 
@@ -28,9 +29,12 @@ struct OpenTypeTable {
   uint32_t uncompressed_length;
 };
 
-// Round a value up to the nearest multiple of 4. Note that this can overflow
-// and return zero.
+// Round a value up to the nearest multiple of 4. Don't round the value in the
+// case that rounding up overflows.
 template<typename T> T Round4(T value) {
+  if (std::numeric_limits<T>::max() - value < 3) {
+    return value;
+  }
   return (value + 3) & ~3;
 }
 
@@ -280,7 +284,7 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
     return OTS_FAILURE();
   }
 
-  if (!file.ReadU16(&header->num_tables)) {
+  if (!file.ReadU16(&header->num_tables) || !header->num_tables) {
     return OTS_FAILURE();
   }
 
@@ -289,18 +293,52 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
     return OTS_FAILURE();
   }
 
-  // We don't care about these fields of the header:
-  //   uint32_t uncompressed_size;
-  //   uint16_t major_version, minor_version
-  //   uint32_t meta_offset, meta_length, meta_length_orig
-  //   uint32_t priv_offset, priv_length
-  if (!file.Skip(6 * 4 + 2 * 2)) {
+  uint32_t reported_total_sfnt_size;
+  if (!file.ReadU32(&reported_total_sfnt_size)) {
     return OTS_FAILURE();
+  }
+
+  // We don't care about these fields of the header:
+  //   uint16_t major_version, minor_version
+  if (!file.Skip(2 * 2)) {
+    return OTS_FAILURE();
+  }
+
+  // Checks metadata block size.
+  uint32_t meta_offset;
+  uint32_t meta_length;
+  uint32_t meta_length_orig;
+  if (!file.ReadU32(&meta_offset) ||
+      !file.ReadU32(&meta_length) ||
+      !file.ReadU32(&meta_length_orig)) {
+    return OTS_FAILURE();
+  }
+  if (meta_offset) {
+    if (meta_offset >= length || length - meta_offset < meta_length) {
+      return OTS_FAILURE();
+    }
+  }
+
+  // Checks private data block size.
+  uint32_t priv_offset;
+  uint32_t priv_length;
+  if (!file.ReadU32(&priv_offset) ||
+      !file.ReadU32(&priv_length)) {
+    return OTS_FAILURE();
+  }
+  if (priv_offset) {
+    if (priv_offset >= length || length - priv_offset < priv_length) {
+      return OTS_FAILURE();
+    }
   }
 
   // Next up is the list of tables.
   std::vector<OpenTypeTable> tables;
 
+  uint32_t first_index = 0;
+  uint32_t last_index = 0;
+  // Size of sfnt header plus size of table records.
+  uint64_t total_sfnt_size = 12 + 16 * header->num_tables;
   for (unsigned i = 0; i < header->num_tables; ++i) {
     OpenTypeTable table;
     if (!file.ReadTag(&table.tag) ||
@@ -311,7 +349,60 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
       return OTS_FAILURE();
     }
 
+    total_sfnt_size += Round4(table.uncompressed_length);
+    if (total_sfnt_size > std::numeric_limits<uint32_t>::max()) {
+      return OTS_FAILURE();
+    }
     tables.push_back(table);
+    if (i == 0 || tables[first_index].offset > table.offset)
+      first_index = i;
+    if (i == 0 || tables[last_index].offset < table.offset)
+      last_index = i;
+  }
+
+  if (reported_total_sfnt_size != total_sfnt_size) {
+    return OTS_FAILURE();
+  }
+
+  // Table data must follow immediately after the header.
+  if (tables[first_index].offset != Round4(file.offset())) {
+    return OTS_FAILURE();
+  }
+
+  if (tables[last_index].offset >= length ||
+      length - tables[last_index].offset < tables[last_index].length) {
+    return OTS_FAILURE();
+  }
+  // Blocks must follow immediately after the previous block.
+  // (Except for padding with a maximum of three null bytes)
+  uint64_t block_end = Round4(
+      static_cast<uint64_t>(tables[last_index].offset) +
+      static_cast<uint64_t>(tables[last_index].length));
+  if (block_end > std::numeric_limits<uint32_t>::max()) {
+    return OTS_FAILURE();
+  }
+  if (meta_offset) {
+    if (block_end != meta_offset) {
+      return OTS_FAILURE();
+    }
+    block_end = Round4(static_cast<uint64_t>(meta_offset) +
+                       static_cast<uint64_t>(meta_length));
+    if (block_end > std::numeric_limits<uint32_t>::max()) {
+      return OTS_FAILURE();
+    }
+  }
+  if (priv_offset) {
+    if (block_end != priv_offset) {
+      return OTS_FAILURE();
+    }
+    block_end = Round4(static_cast<uint64_t>(priv_offset) +
+                       static_cast<uint64_t>(priv_length));
+    if (block_end > std::numeric_limits<uint32_t>::max()) {
+      return OTS_FAILURE();
+    }
+  }
+  if (block_end != Round4(length)) {
+    return OTS_FAILURE();
   }
 
   return ProcessGeneric(header, output, data, length, tables, file);
@@ -378,11 +469,11 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
     }
     // since we required that the file be < 1GB in length, and that the table
     // length is < 1GB, the following addtion doesn't overflow
-    const uint32_t end_byte = Round4(tables[i].offset + tables[i].length);
+    const uint32_t end_byte = tables[i].offset + tables[i].length;
     // Some fonts which are automatically generated by a font generator
     // called TTX seems not to add 0-padding to the final table. It might be
     // ok to accept these fonts so we round up the length of the font file.
-    if (!end_byte || end_byte > Round4(length)) {
+    if (!end_byte || end_byte > length) {
       return OTS_FAILURE();
     }
   }
