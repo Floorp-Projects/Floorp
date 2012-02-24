@@ -429,7 +429,6 @@ Debugger::Debugger(JSContext *cx, JSObject *dbg)
     assertSameCompartment(cx, dbg);
 
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
     JS_APPEND_LINK(&link, &rt->debuggerList);
     JS_INIT_CLIST(&breakpoints);
 }
