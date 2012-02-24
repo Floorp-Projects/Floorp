@@ -1138,7 +1138,7 @@ public:
             // but we will be able to do things like resource releases.
             succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                                  EGL_NO_SURFACE, EGL_NO_SURFACE,
-                                                 EGL_NO_CONTEXT);
+                                                 mContext);
             if (!succeeded && sEGLLibrary.fGetError() == LOCAL_EGL_CONTEXT_LOST) {
                 mContextLost = true;
                 NS_WARNING("EGL context has been lost.");
