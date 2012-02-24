@@ -59,6 +59,7 @@ IS_COMPONENT = 1
 XPIDLSRCS += \
   mozIAsyncHistory.idl \
   mozIAsyncFavicons.idl \
+  mozIAsyncLivemarks.idl \
   mozIPlacesAutoComplete.idl \
   nsIAnnotationService.idl \
   nsIBrowserHistory.idl \
