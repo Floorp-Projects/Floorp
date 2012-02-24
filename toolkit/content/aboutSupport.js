@@ -38,6 +38,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -113,6 +114,7 @@ window.onload = function () {
   document.getElementById("version-box").textContent = version;
 
   // Update the other sections.
+  populateResetBox();
   populatePreferencesSection();
   populateExtensionsSection();
   populateGraphicsSection();
@@ -560,4 +562,52 @@ function openProfileDirectory() {
   let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");
   new nsLocalFile(profileDir).reveal();
+}
+
+/**
+ * Profile reset is only supported for the default profile if the appropriate migrator exists.
+ */
+function populateResetBox() {
+  let profileService = Cc["@mozilla.org/toolkit/profile-service;1"]
+                         .getService(Ci.nsIToolkitProfileService);
+  let currentProfileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+
+#expand const MOZ_APP_NAME = "__MOZ_APP_NAME__";
+#expand const MOZ_BUILD_APP = "__MOZ_BUILD_APP__";
+
+  // Only show the reset box for the default profile if the self-migrator used for reset exists.
+  try {
+    if (!currentProfileDir.equals(profileService.selectedProfile.rootDir) ||
+        !("@mozilla.org/profile/migrator;1?app=" + MOZ_BUILD_APP + "&type=" + MOZ_APP_NAME in Cc))
+      return;
+    document.getElementById("reset-box").style.visibility = "visible";
+  } catch (e) {
+    // Catch exception when there is no selected profile.
+    Cu.reportError(e);
+  }
+}
+
+/**
+ * Restart the application to reset the profile.
+ */
+function resetProfileAndRestart() {
+  let branding = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+  let brandShortName = branding.GetStringFromName("brandShortName");
+
+  // Prompt the user to confirm.
+  let retVals = {
+    reset: false,
+  };
+  window.openDialog("chrome://global/content/resetProfile.xul", null,
+                    "chrome,modal,centerscreen,titlebar,dialog=yes", retVals);
+  if (!retVals.reset)
+    return;
+
+  // Set the reset profile environment variable.
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
+  env.set("MOZ_RESET_PROFILE_RESTART", "1");
+
+  let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+  appStartup.quit(Ci.nsIAppStartup.eForceQuit | Ci.nsIAppStartup.eRestart);
 }

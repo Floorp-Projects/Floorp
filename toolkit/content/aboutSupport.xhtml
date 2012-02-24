@@ -42,6 +42,7 @@
   <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
   <!ENTITY % aboutSupportDTD SYSTEM "chrome://global/locale/aboutSupport.dtd"> %aboutSupportDTD;
+  <!ENTITY % resetProfileDTD SYSTEM "chrome://global/locale/resetProfile.dtd"> %resetProfileDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -56,6 +57,14 @@
   </head>
 
   <body dir="&locale.dir;">
+
+    <div id="reset-box" style="visibility: hidden">
+      <h3>&resetProfile.title;</h3>
+      <p>&resetProfile.description;</p>
+      <button onclick="resetProfileAndRestart()">
+        &resetProfile.button.label;
+      </button>
+    </div>
 
     <h1>
       &aboutSupport.pageTitle;
