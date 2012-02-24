@@ -2180,7 +2180,11 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
 
         // We need to establish a small non-zero idle timeout so the connection
         // mgr perceives this socket as suitable for persistent connection reuse
-        conn->SetIdleTimeout(NS_MIN((PRUint16) 5, gHttpHandler->IdleTimeout()));
+        const PRIntervalTime k5Sec = PR_SecondsToInterval(5);
+        if (k5Sec < gHttpHandler->IdleTimeout())
+            conn->SetIdleTimeout(k5Sec);
+        else
+            conn->SetIdleTimeout(gHttpHandler->IdleTimeout());
 
         // After about 1 second allow for the possibility of restarting a
         // transaction due to server close. Keep at sub 1 second as that is the
