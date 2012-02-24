@@ -57,6 +57,13 @@ typedef struct MarItem_ {
   char name[1];           /* file path */
 } MarItem;
 
+#define TABLESIZE 256
+
+struct MarFile_ {
+  FILE *fp;
+  MarItem *item_table[TABLESIZE];
+};
+
 typedef struct MarFile_ MarFile;
 
 /**
@@ -136,6 +143,25 @@ int mar_create(const char *dest, int numfiles, char **files);
  * @returns         A non-zero value if an error occurs.
  */
 int mar_extract(const char *path);
+
+/**
+ * Verifies the embedded signature for the specified mar file.
+ * We do not check that the certificate was issued by any trusted authority. 
+ * We assume it to be self-signed.  We do not check whether the certificate 
+ * is valid for this usage.
+ * 
+ * @param mar            The already opened MAR file.
+ * @param certData       The certificate file data.
+ * @param sizeOfCertData The size of the cert data.
+ * @return 0 on success
+ *         a negative number if there was an error
+ *         a positive number if the signature does not verify
+ */
+#ifdef XP_WIN
+int mar_verify_signatureW(MarFile *mar, 
+                          const char *certData,
+                          PRUint32 sizeOfCertData);
+#endif
 
 #ifdef __cplusplus
 }
