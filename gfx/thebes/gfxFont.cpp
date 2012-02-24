@@ -62,7 +62,7 @@
 #include "gfxUserFontSet.h"
 #include "gfxPlatformFontList.h"
 #include "gfxScriptItemizer.h"
-#include "gfxUnicodeProperties.h"
+#include "nsUnicodeProperties.h"
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
 #include "nsUnicodeRange.h"
@@ -83,6 +83,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::unicode;
 using mozilla::services::GetObserverService;
 
 gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
@@ -723,7 +724,7 @@ gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
             if (NS_UNLIKELY(log)) {
                 PRUint32 charRange = gfxFontUtils::CharRangeBit(aMatchData->mCh);
                 PRUint32 unicodeRange = FindCharUnicodeRange(aMatchData->mCh);
-                PRUint32 script = gfxUnicodeProperties::GetScriptCode(aMatchData->mCh);
+                PRUint32 script = GetScriptCode(aMatchData->mCh);
                 PR_LOG(log, PR_LOG_DEBUG,\
                        ("(textrun-systemfallback-fonts) char: u+%6.6x "
                         "char-range: %d unicode-range: %d script: %d match: [%s]\n",
@@ -1878,7 +1879,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
 static bool
 IsClusterExtender(PRUint32 aUSV)
 {
-    PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(aUSV);
+    PRUint8 category = GetGeneralCategory(aUSV);
     return ((category >= HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK &&
              category <= HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) ||
             (aUSV >= 0x200c && aUSV <= 0x200d) || // ZWJ, ZWNJ
@@ -3332,7 +3333,7 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
         // Don't switch fonts for control characters, regardless of
         // whether they are present in the current font, as they won't
         // actually be rendered (see bug 716229)
-        PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(aCh);
+        PRUint8 category = GetGeneralCategory(aCh);
         if (category == HB_UNICODE_GENERAL_CATEGORY_CONTROL) {
             selectedFont = aPrevMatchedFont;
             return selectedFont.forget();
@@ -3406,7 +3407,7 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
 
     // for known "space" characters, don't do a full system-fallback search;
     // we'll synthesize appropriate-width spaces instead of missing-glyph boxes
-    if (gfxUnicodeProperties::GetGeneralCategory(aCh) ==
+    if (GetGeneralCategory(aCh) ==
             HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR &&
         GetFontAt(0)->SynthesizeSpaceWidth(aCh) >= 0.0)
     {
@@ -3796,7 +3797,7 @@ gfxShapedWord::SetupClusterBoundaries(CompressedGlyph *aGlyphs,
     gfxTextRun::CompressedGlyph extendCluster;
     extendCluster.SetComplex(false, true, 0);
 
-    gfxUnicodeProperties::HSType hangulState = gfxUnicodeProperties::HST_NONE;
+    HSType hangulState = HST_NONE;
 
     for (PRUint32 i = 0; i < aLength; ++i) {
         bool surrogatePair = false;
@@ -3808,8 +3809,8 @@ gfxShapedWord::SetupClusterBoundaries(CompressedGlyph *aGlyphs,
             surrogatePair = true;
         }
 
-        PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(ch);
-        gfxUnicodeProperties::HSType hangulType = gfxUnicodeProperties::HST_NONE;
+        PRUint8 category = GetGeneralCategory(ch);
+        HSType hangulType = HST_NONE;
 
         // combining marks extend the cluster
         if (IsClusterExtender(ch)) {
@@ -3850,25 +3851,25 @@ gfxShapedWord::SetupClusterBoundaries(CompressedGlyph *aGlyphs,
                 (ch >= 0xac00 && ch <= 0xd7ff))
             {
                 // no break within Hangul syllables
-                hangulType = gfxUnicodeProperties::GetHangulSyllableType(ch);
+                hangulType = GetHangulSyllableType(ch);
                 switch (hangulType) {
-                case gfxUnicodeProperties::HST_L:
-                case gfxUnicodeProperties::HST_LV:
-                case gfxUnicodeProperties::HST_LVT:
-                    if (hangulState == gfxUnicodeProperties::HST_L) {
+                case HST_L:
+                case HST_LV:
+                case HST_LVT:
+                    if (hangulState == HST_L) {
                         aGlyphs[i] = extendCluster;
                     }
                     break;
-                case gfxUnicodeProperties::HST_V:
-                    if ( (hangulState != gfxUnicodeProperties::HST_NONE) &&
-                        !(hangulState & gfxUnicodeProperties::HST_T))
+                case HST_V:
+                    if ( (hangulState != HST_NONE) &&
+                        !(hangulState & HST_T))
                     {
                         aGlyphs[i] = extendCluster;
                     }
                     break;
-                case gfxUnicodeProperties::HST_T:
-                    if (hangulState & (gfxUnicodeProperties::HST_V |
-                                       gfxUnicodeProperties::HST_T))
+                case HST_T:
+                    if (hangulState & (HST_V |
+                                       HST_T))
                     {
                         aGlyphs[i] = extendCluster;
                     }
@@ -5021,7 +5022,7 @@ gfxTextRun::SetGlyphs(PRUint32 aIndex, CompressedGlyph aGlyph,
 void
 gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
 {
-    PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(aChar);
+    PRUint8 category = GetGeneralCategory(aChar);
     if (category >= HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK &&
         category <= HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
     {

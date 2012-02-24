@@ -122,6 +122,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsLWBrkCIID.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
+#include "nsUnicodeProperties.h"
 #include "jsdbgapi.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIDOMDocumentXBL.h"
@@ -154,7 +155,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValue.h"
 #include "nsReferencedElement.h"
-#include "nsIUGenCategory.h"
 #include "nsIDragService.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -260,7 +260,6 @@ nsIContentPolicy *nsContentUtils::sContentPolicyService;
 bool nsContentUtils::sTriedToGetContentPolicy = false;
 nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
-nsIUGenCategory *nsContentUtils::sGenCat;
 nsIScriptRuntime *nsContentUtils::sScriptRuntimes[NS_STID_ARRAY_UBOUND];
 PRInt32 nsContentUtils::sScriptRootCount[NS_STID_ARRAY_UBOUND];
 PRUint32 nsContentUtils::sJSGCThingRootCount;
@@ -387,9 +386,6 @@ nsContentUtils::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CallGetService(NS_UNICHARCATEGORY_CONTRACTID, &sGenCat);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!InitializeEventTable())
@@ -977,7 +973,7 @@ nsContentUtils::IsPunctuationMarkAt(const nsTextFragment* aFrag, PRUint32 aOffse
 // static
 bool nsContentUtils::IsAlphanumeric(PRUint32 aChar)
 {
-  nsIUGenCategory::nsUGenCategory cat = sGenCat->Get(aChar);
+  nsIUGenCategory::nsUGenCategory cat = mozilla::unicode::GetGenCategory(aChar);
 
   return (cat == nsIUGenCategory::kLetter || cat == nsIUGenCategory::kNumber);
 }
@@ -1138,7 +1134,6 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sLineBreaker);
   NS_IF_RELEASE(sWordBreaker);
-  NS_IF_RELEASE(sGenCat);
 #ifdef MOZ_XTF
   NS_IF_RELEASE(sXTFService);
 #endif
