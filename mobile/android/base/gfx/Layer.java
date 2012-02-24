@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Patrick Walton <pcwalton@mozilla.com>
  *   Chris Lord <chrislord.net@gmail.com>
+ *   Arkady Blyakher <rkadyb@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,8 +44,8 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.util.Log;
+import java.nio.FloatBuffer;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.microedition.khronos.opengles.GL10;
 import org.mozilla.gecko.FloatUtils;
 
 public abstract class Layer {
@@ -52,7 +53,6 @@ public abstract class Layer {
     private boolean mInTransaction;
     private Point mNewOrigin;
     private float mNewResolution;
-    private LayerView mView;
 
     protected Point mOrigin;
     protected float mResolution;
@@ -67,7 +67,7 @@ public abstract class Layer {
      * Updates the layer. This returns false if there is still work to be done
      * after this update.
      */
-    public final boolean update(GL10 gl, RenderContext context) {
+    public final boolean update(RenderContext context) {
         if (mTransactionLock.isHeldByCurrentThread()) {
             throw new RuntimeException("draw() called while transaction lock held by this " +
                                        "thread?!");
@@ -75,7 +75,7 @@ public abstract class Layer {
 
         if (mTransactionLock.tryLock()) {
             try {
-                return performUpdates(gl, context);
+                return performUpdates(context);
             } finally {
                 mTransactionLock.unlock();
             }
@@ -114,17 +114,12 @@ public abstract class Layer {
      *
      * This function may block, so you should never call this on the main UI thread.
      */
-    public void beginTransaction(LayerView aView) {
+    public void beginTransaction() {
         if (mTransactionLock.isHeldByCurrentThread())
             throw new RuntimeException("Nested transactions are not supported");
         mTransactionLock.lock();
-        mView = aView;
         mInTransaction = true;
         mNewResolution = mResolution;
-    }
-
-    public void beginTransaction() {
-        beginTransaction(null);
     }
 
     /** Call this when you're done modifying the layer. */
@@ -133,9 +128,6 @@ public abstract class Layer {
             throw new RuntimeException("endTransaction() called outside a transaction");
         mInTransaction = false;
         mTransactionLock.unlock();
-
-        if (mView != null)
-            mView.requestRender();
     }
 
     /** Returns true if the layer is currently in a transaction and false otherwise. */
@@ -177,7 +169,7 @@ public abstract class Layer {
      * superclass implementation. Returns false if there is still work to be done after this
      * update is complete.
      */
-    protected boolean performUpdates(GL10 gl, RenderContext context) {
+    protected boolean performUpdates(RenderContext context) {
         if (mNewOrigin != null) {
             mOrigin = mNewOrigin;
             mNewOrigin = null;
@@ -194,11 +186,18 @@ public abstract class Layer {
         public final RectF viewport;
         public final FloatSize pageSize;
         public final float zoomFactor;
+        public final int positionHandle;
+        public final int textureHandle;
+        public final FloatBuffer coordBuffer;
 
-        public RenderContext(RectF aViewport, FloatSize aPageSize, float aZoomFactor) {
+        public RenderContext(RectF aViewport, FloatSize aPageSize, float aZoomFactor,
+                             int aPositionHandle, int aTextureHandle, FloatBuffer aCoordBuffer) {
             viewport = aViewport;
             pageSize = aPageSize;
             zoomFactor = aZoomFactor;
+            positionHandle = aPositionHandle;
+            textureHandle = aTextureHandle;
+            coordBuffer = aCoordBuffer;
         }
 
         public boolean fuzzyEquals(RenderContext other) {

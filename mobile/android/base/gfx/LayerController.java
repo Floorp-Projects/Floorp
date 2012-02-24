@@ -40,8 +40,6 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.gfx.LayerClient;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import org.mozilla.gecko.GeckoApp;
@@ -88,11 +86,11 @@ public class LayerController {
      */
 
     private OnTouchListener mOnTouchListener;       /* The touch listener. */
-    private LayerClient mLayerClient;               /* The layer client. */
+    private GeckoLayerClient mLayerClient;          /* The layer client. */
 
     /* The new color for the checkerboard. */
     private int mCheckerboardColor;
-    private boolean mCheckerboardShouldShowChecks;
+    private boolean mCheckerboardShouldShowChecks = true;
 
     private boolean mForceRedraw;
 
@@ -127,7 +125,7 @@ public class LayerController {
 
     public void setRoot(Layer layer) { mRootLayer = layer; }
 
-    public void setLayerClient(LayerClient layerClient) {
+    public void setLayerClient(GeckoLayerClient layerClient) {
         mLayerClient = layerClient;
         layerClient.setLayerController(this);
     }
@@ -136,7 +134,6 @@ public class LayerController {
         mForceRedraw = true;
     }
 
-    public LayerClient getLayerClient()           { return mLayerClient; }
     public Layer getRoot()                        { return mRootLayer; }
     public LayerView getView()                    { return mView; }
     public Context getContext()                   { return mContext; }
@@ -209,17 +206,26 @@ public class LayerController {
             }
         }
 
-        PointF newFocus = new PointF(size.width / 2.0f, size.height / 2.0f);
+        // For rotations, we want the focus point to be at the top left.
+        boolean rotation = (size.width > oldWidth && size.height < oldHeight) ||
+                           (size.width < oldWidth && size.height > oldHeight);
+        PointF newFocus;
+        if (rotation) {
+            newFocus = new PointF(0, 0);
+        } else {
+            newFocus = new PointF(size.width / 2.0f, size.height / 2.0f);
+        }
         float newZoomFactor = size.width * oldZoomFactor / oldWidth;
         mViewportMetrics.scaleTo(newZoomFactor, newFocus);
 
         Log.d(LOGTAG, "setViewportSize: " + mViewportMetrics);
         setForceRedraw();
 
-        if (mLayerClient != null)
+        if (mLayerClient != null) {
+            notifyLayerClientOfGeometryChange();
             mLayerClient.viewportSizeChanged();
+        }
 
-        notifyLayerClientOfGeometryChange();
         mPanZoomController.abortAnimation();
         mView.requestRender();
     }
@@ -244,7 +250,7 @@ public class LayerController {
         mViewportMetrics.setPageSize(size);
         Log.d(LOGTAG, "setPageSize: " + mViewportMetrics);
 
-        // Page size is owned by the LayerClient, so no need to notify it of
+        // Page size is owned by the layer client, so no need to notify it of
         // this change.
 
         mView.post(new Runnable() {
@@ -320,12 +326,15 @@ public class LayerController {
      * would prefer that the action didn't take place.
      */
     public boolean getRedrawHint() {
+        // FIXME: Allow redraw while a finger is down, but only if we're about to checkerboard.
+        // This requires fixing aboutToCheckerboard() to know about the new buffer size.
+
         if (mForceRedraw) {
             mForceRedraw = false;
             return true;
         }
 
-        return aboutToCheckerboard() && mPanZoomController.getRedrawHint();
+        return mPanZoomController.getRedrawHint();
     }
 
     private RectF getTileRect() {
@@ -366,6 +375,9 @@ public class LayerController {
         // Undo the transforms.
         PointF origin = mViewportMetrics.getOrigin();
         PointF newPoint = new PointF(origin.x, origin.y);
+        float zoom = mViewportMetrics.getZoomFactor();
+        viewPoint.x /= zoom;
+        viewPoint.y /= zoom;
         newPoint.offset(viewPoint.x, viewPoint.y);
 
         Point rootOrigin = mRootLayer.getOrigin();

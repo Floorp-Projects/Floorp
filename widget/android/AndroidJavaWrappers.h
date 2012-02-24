@@ -58,6 +58,8 @@
 
 namespace mozilla {
 
+class AndroidGeckoLayerClient;
+
 void InitAndroidJavaWrappers(JNIEnv *jEnv);
 
 /*
@@ -151,31 +153,95 @@ protected:
     static jfieldID jTopField;
 };
 
-class AndroidGeckoSoftwareLayerClient : public WrappedJavaObject {
+
+/** A callback that retrieves the view transform. */
+class AndroidViewTransformGetter
+{
 public:
-    static void InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv);
- 
-     void Init(jobject jobj);
- 
-    AndroidGeckoSoftwareLayerClient() {}
-    AndroidGeckoSoftwareLayerClient(jobject jobj) { Init(jobj); }
-
-    jobject LockBuffer();
-    unsigned char *LockBufferBits();
-    void UnlockBuffer();
-    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture);
-    void EndDrawing(const nsIntRect &aRect);
-
-private:
-    static jclass jGeckoSoftwareLayerClientClass;
-    static jmethodID jLockBufferMethod;
-    static jmethodID jUnlockBufferMethod;
-
-protected:
-     static jmethodID jBeginDrawingMethod;
-     static jmethodID jEndDrawingMethod;
+    virtual void operator()(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY) = 0;
 };
 
+class AndroidGeckoLayerClientViewTransformGetter : public AndroidViewTransformGetter {
+public:
+    AndroidGeckoLayerClientViewTransformGetter(AndroidGeckoLayerClient& aLayerClient)
+    : mLayerClient(aLayerClient) {}
+
+    virtual void operator()(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+
+private:
+    AndroidGeckoLayerClient& mLayerClient;
+};
+
+class AndroidViewTransform : public WrappedJavaObject {
+public:
+    static void InitViewTransformClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+
+    AndroidViewTransform() {}
+    AndroidViewTransform(jobject jobj) { Init(jobj); }
+
+    float GetX();
+    float GetY();
+    float GetScale();
+
+private:
+    static jclass jViewTransformClass;
+    static jfieldID jXField;
+    static jfieldID jYField;
+    static jfieldID jScaleField;
+};
+
+class AndroidLayerRendererFrame : public WrappedJavaObject {
+public:
+    static void InitLayerRendererFrameClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+    void Dispose();
+
+    void BeginDrawing();
+    void DrawBackground();
+    void DrawForeground();
+    void EndDrawing();
+
+private:
+    static jclass jLayerRendererFrameClass;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jDrawBackgroundMethod;
+    static jmethodID jDrawForegroundMethod;
+    static jmethodID jEndDrawingMethod;
+};
+
+class AndroidGeckoLayerClient : public WrappedJavaObject {
+public:
+    static void InitGeckoLayerClientClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+
+    AndroidGeckoLayerClient()
+    : mViewTransformGetter(*this) {}
+
+    AndroidGeckoLayerClient(jobject jobj)
+    : mViewTransformGetter(*this) { Init(jobj); }
+
+    bool BeginDrawing(int aWidth, int aHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata);
+    void EndDrawing();
+    void GetViewTransform(AndroidViewTransform& aViewTransform);
+    void CreateFrame(AndroidLayerRendererFrame& aFrame);
+    void ActivateProgram();
+    void DeactivateProgram();
+
+protected:
+    static jclass jGeckoLayerClientClass;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jEndDrawingMethod;
+    static jmethodID jGetViewTransformMethod;
+    static jmethodID jCreateFrameMethod;
+    static jmethodID jActivateProgramMethod;
+    static jmethodID jDeactivateProgramMethod;
+
+    AndroidGeckoLayerClientViewTransformGetter mViewTransformGetter;
+};
 
 class AndroidGeckoSurfaceView : public WrappedJavaObject
 {
@@ -425,6 +491,8 @@ public:
         Init(aResizeEvent);
     }
 
+    ~AndroidGeckoEvent();
+
     void Init(JNIEnv *jenv, jobject jobj);
     void Init(int aType);
     void Init(int x1, int y1, int x2, int y2);
@@ -464,6 +532,7 @@ public:
     nsGeoPositionAddress* GeoAddress() { return mGeoAddress; }
     double Bandwidth() { return mBandwidth; }
     bool CanBeMetered() { return mCanBeMetered; }
+    void DoCallback(const nsAString& data);
 
 protected:
     int mAction;
@@ -543,6 +612,8 @@ protected:
 
     static jfieldID jBandwidthField;
     static jfieldID jCanBeMeteredField;
+    
+    static jmethodID jDoCallbackMethod;
 
 public:
     enum {

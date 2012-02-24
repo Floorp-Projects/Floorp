@@ -42,7 +42,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.FloatSize;
-import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
+import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.gfx.LayerController;
@@ -143,7 +143,7 @@ abstract public class GeckoApp
     private Address  mLastGeoAddress;
     private static LayerController mLayerController;
     private static PlaceholderLayerClient mPlaceholderLayerClient;
-    private static GeckoSoftwareLayerClient mSoftwareLayerClient;
+    private static GeckoLayerClient mLayerClient;
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
 
@@ -546,10 +546,6 @@ abstract public class GeckoApp
         }
     }
 
-    public String getLastViewport() {
-        return mLastViewport;
-    }
-
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         if (mOwnActivityDepth > 0)
@@ -573,21 +569,18 @@ abstract public class GeckoApp
         }
 
         public void run() {
-            if (mSoftwareLayerClient == null)
+            if (mLayerClient == null)
                 return;
 
-            synchronized (mSoftwareLayerClient) {
+            synchronized (mLayerClient) {
                 if (!Tabs.getInstance().isSelectedTab(mThumbnailTab))
-                    return;
-
-                if (getLayerController().getLayerClient() != mSoftwareLayerClient)
                     return;
 
                 HistoryEntry lastHistoryEntry = mThumbnailTab.getLastHistoryEntry();
                 if (lastHistoryEntry == null)
                     return;
 
-                ViewportMetrics viewportMetrics = mSoftwareLayerClient.getGeckoViewportMetrics();
+                ViewportMetrics viewportMetrics = mLayerClient.getGeckoViewportMetrics();
                 // If we don't have viewport metrics, the screenshot won't be right so bail
                 if (viewportMetrics == null)
                     return;
@@ -609,8 +602,7 @@ abstract public class GeckoApp
 
     void getAndProcessThumbnailForTab(final Tab tab, boolean forceBigSceenshot) {
         boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
-        final Bitmap bitmap = isSelectedTab ?
-            mSoftwareLayerClient.getBitmap() : null;
+        final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
         
         if (bitmap != null) {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -625,8 +617,8 @@ abstract public class GeckoApp
             }
 
             mLastScreen = null;
-            int sw = forceBigSceenshot ? mSoftwareLayerClient.getWidth() : tab.getMinScreenshotWidth();
-            int sh = forceBigSceenshot ? mSoftwareLayerClient.getHeight(): tab.getMinScreenshotHeight();
+            int sw = forceBigSceenshot ? mLayerClient.getWidth() : tab.getMinScreenshotWidth();
+            int sh = forceBigSceenshot ? mLayerClient.getHeight(): tab.getMinScreenshotHeight();
             int dw = forceBigSceenshot ? sw : tab.getThumbnailWidth();
             int dh = forceBigSceenshot ? sh : tab.getThumbnailHeight();
             GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), sw, sh, dw, dh));
@@ -1526,7 +1518,7 @@ abstract public class GeckoApp
             return;
         }
 
-        PointF origin = metrics.getDisplayportOrigin();
+        PointF origin = metrics.getOrigin();
         x = x + (int)origin.x;
         y = y + (int)origin.y;
 
@@ -1788,10 +1780,11 @@ abstract public class GeckoApp
 
         if (mLayerController == null) {
             /*
-             * Create a layer client so that Gecko will have a buffer to draw into, but don't hook
-             * it up to the layer controller yet.
+             * Create a layer client, but don't hook it up to the layer controller yet.
              */
-            mSoftwareLayerClient = new GeckoSoftwareLayerClient(this);
+            Log.e(LOGTAG, "### Creating GeckoLayerClient");
+            mLayerClient = new GeckoLayerClient(this);
+            Log.e(LOGTAG, "### Done creating GeckoLayerClient");
 
             /*
              * Hook a placeholder layer client up to the layer controller so that the user can pan
@@ -1803,8 +1796,7 @@ abstract public class GeckoApp
              * run experience, perhaps?
              */
             mLayerController = new LayerController(this);
-            mPlaceholderLayerClient = PlaceholderLayerClient.createInstance(this);
-            mLayerController.setLayerClient(mPlaceholderLayerClient);
+            mPlaceholderLayerClient = new PlaceholderLayerClient(mLayerController, mLastViewport);
 
             mGeckoLayout.addView(mLayerController.getView(), 0);
         }
@@ -2663,7 +2655,7 @@ abstract public class GeckoApp
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
     }
 
-    public GeckoSoftwareLayerClient getSoftwareLayerClient() { return mSoftwareLayerClient; }
+    public GeckoLayerClient getLayerClient() { return mLayerClient; }
     public LayerController getLayerController() { return mLayerController; }
 
     // accelerometer
@@ -2742,7 +2734,7 @@ abstract public class GeckoApp
             mPlaceholderLayerClient.destroy();
 
         LayerController layerController = getLayerController();
-        layerController.setLayerClient(mSoftwareLayerClient);
+        layerController.setLayerClient(mLayerClient);
     }
 
     public class GeckoAppHandler extends Handler {
@@ -2804,7 +2796,7 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     }
 
     public void reset(int aX, int aY, int aWidth, int aHeight, ViewportMetrics aViewport) {
-        PointF origin = aViewport.getDisplayportOrigin();
+        PointF origin = aViewport.getOrigin();
 
         x = mOriginalX = aX + (int)origin.x;
         y = mOriginalY = aY + (int)origin.y;
@@ -2830,8 +2822,8 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     }
 
     public void reposition(ViewportMetrics viewport) {
-        PointF targetOrigin = viewport.getDisplayportOrigin();
-        PointF originalOrigin = mOriginalViewport.getDisplayportOrigin();
+        PointF targetOrigin = viewport.getOrigin();
+        PointF originalOrigin = mOriginalViewport.getOrigin();
 
         Point offset = new Point(Math.round(originalOrigin.x - targetOrigin.x),
                                  Math.round(originalOrigin.y - targetOrigin.y));

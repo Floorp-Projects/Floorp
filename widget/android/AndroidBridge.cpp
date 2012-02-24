@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
+#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorParent.h"
+
 #include <android/log.h>
 #include <dlfcn.h>
 
@@ -186,6 +190,12 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jEGLConfigImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLConfigImpl"));
     jEGLDisplayImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLDisplayImpl"));
 
+#ifdef MOZ_JAVA_COMPOSITOR
+    jFlexSurfaceView = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("org/mozilla/gecko/gfx/FlexibleGLSurfaceView"));
+
+    AndroidGLController::Init(jEnv);
+    AndroidEGLObject::Init(jEnv);
+#endif
     InitAndroidJavaWrappers(jEnv);
 
     // jEnv should NOT be cached here by anything -- the jEnv here
@@ -978,9 +988,11 @@ AndroidBridge::SetSurfaceView(jobject obj)
 }
 
 void
-AndroidBridge::SetSoftwareLayerClient(jobject obj)
+AndroidBridge::SetLayerClient(jobject obj)
 {
-    mSoftwareLayerClient.Init(obj);
+    AndroidGeckoLayerClient *client = new AndroidGeckoLayerClient();
+    client->Init(obj);
+    mLayerClient = client;
 }
 
 void
@@ -1000,11 +1012,10 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
 {
     ALOG_BRIDGE("AndroidBridge::CallEglCreateWindowSurface");
 
-    JNIEnv *env = GetJNIEnv();
+    // Called off the main thread by the compositor
+    JNIEnv *env = GetJNIForThread();
     if (!env)
         return NULL;
-
-    AutoLocalJNIFrame jniFrame(env); 
 
     /*
      * This is basically:
@@ -1043,6 +1054,36 @@ AndroidBridge::CallEglCreateWindowSurface(void *dpy, void *config, AndroidGeckoS
     jint realSurface = env->GetIntField(surf, sfield);
 
     return (void*) realSurface;
+}
+
+static AndroidGLController sController;
+
+void
+AndroidBridge::RegisterCompositor()
+{
+    ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
+    JNIEnv *env = GetJNIForThread();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env, 3);
+
+    jmethodID registerCompositor = env->GetStaticMethodID(jFlexSurfaceView, "registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
+
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### registerCxxCompositor()");
+    jobject glController = env->CallStaticObjectMethod(jFlexSurfaceView, registerCompositor);
+
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Acquire()");
+    sController.Acquire(env, glController);
+    sController.SetGLVersion(2);
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "Registered Compositor");
+}
+
+EGLSurface
+AndroidBridge::ProvideEGLSurface()
+{
+    sController.WaitForValidSurface();
+    return sController.ProvideEGLSurface();
 }
 
 bool
@@ -1804,6 +1845,64 @@ AndroidBridge::IsTablet()
         return false;
 
     return env->CallStaticBooleanMethod(mGeckoAppShellClass, jIsTablet);
+}
+
+void
+AndroidBridge::SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
+                                   ::base::Thread* aCompositorThread)
+{
+    mCompositorParent = aCompositorParent;
+    mCompositorThread = aCompositorThread;
+}
+
+void
+AndroidBridge::ScheduleComposite()
+{
+    if (mCompositorParent) {
+        mCompositorParent->ScheduleRenderOnCompositorThread(*mCompositorThread);
+    }
+}
+
+void
+AndroidBridge::SchedulePauseComposition()
+{
+    if (mCompositorParent) {
+        mCompositorParent->SchedulePauseOnCompositorThread(*mCompositorThread);
+    }
+}
+
+void
+AndroidBridge::ScheduleResumeComposition()
+{
+    if (mCompositorParent) {
+        mCompositorParent->ScheduleResumeOnCompositorThread(*mCompositorThread);
+    }
+}
+
+void
+AndroidBridge::SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter)
+{
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### SetViewTransformGetter()");
+    mViewTransformGetter = &aViewTransformGetter;
+}
+
+void
+AndroidBridge::GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+{
+    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### GetViewTransform()");
+    if (mViewTransformGetter) {
+        (*mViewTransformGetter)(aScrollOffset, aScaleX, aScaleY);
+    }
+}
+
+AndroidBridge::AndroidBridge()
+: mLayerClient(NULL)
+, mViewTransformGetter(NULL)
+{
+}
+
+AndroidBridge::~AndroidBridge()
+{
 }
 
 /* Implementation file */

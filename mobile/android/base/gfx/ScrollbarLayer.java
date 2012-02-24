@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Kartikaya Gupta <kgupta@mozilla.com>
+ *   Arkady Blyakher <rkadyb@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,11 +46,10 @@ import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.opengl.GLES11;
-import android.opengl.GLES11Ext;
+import android.opengl.GLES20;
 import android.util.Log;
 import java.nio.ByteBuffer;
-import javax.microedition.khronos.opengles.GL10;
+import java.nio.FloatBuffer;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoAppShell;
 
@@ -64,18 +64,62 @@ public class ScrollbarLayer extends TileLayer {
     private static final int BAR_SIZE = 6;
     private static final int CAP_RADIUS = (BAR_SIZE / 2);
 
-    private static final int[] CROPRECT_MIDPIXEL = new int[] { CAP_RADIUS, CAP_RADIUS, 1, 1 };
-    private static final int[] CROPRECT_TOPCAP = new int[] { 0, CAP_RADIUS, BAR_SIZE, -CAP_RADIUS };
-    private static final int[] CROPRECT_BOTTOMCAP = new int[] { 0, BAR_SIZE, BAR_SIZE, -CAP_RADIUS };
-    private static final int[] CROPRECT_LEFTCAP = new int[] { 0, BAR_SIZE, CAP_RADIUS, -BAR_SIZE };
-    private static final int[] CROPRECT_RIGHTCAP = new int[] { CAP_RADIUS, BAR_SIZE, CAP_RADIUS, -BAR_SIZE };
-
     private final boolean mVertical;
     private final ByteBuffer mBuffer;
     private final Bitmap mBitmap;
     private final Canvas mCanvas;
     private float mOpacity;
     private boolean mFinalized = false;
+
+    // Dimensions of the texture image
+    private static final float TEX_HEIGHT = 8.0f;
+    private static final float TEX_WIDTH = 8.0f;
+
+    // Texture coordinates for the scrollbar's body
+    // We take a 1x1 pixel from the center of the image and scale it to become the bar
+    private static final float[] BODY_TEX_COORDS = {
+        // x, y
+        CAP_RADIUS/TEX_WIDTH, CAP_RADIUS/TEX_HEIGHT,
+        CAP_RADIUS/TEX_WIDTH, (CAP_RADIUS+1)/TEX_HEIGHT,
+        (CAP_RADIUS+1)/TEX_WIDTH, CAP_RADIUS/TEX_HEIGHT,
+        (CAP_RADIUS+1)/TEX_WIDTH, (CAP_RADIUS+1)/TEX_HEIGHT
+    };
+
+    // Texture coordinates for the top cap of the scrollbar
+    private static final float[] TOP_CAP_TEX_COORDS = {
+        // x, y
+        0                 , 1.0f - CAP_RADIUS/TEX_HEIGHT,
+        0                 , 1.0f,
+        BAR_SIZE/TEX_WIDTH, 1.0f - CAP_RADIUS/TEX_HEIGHT,
+        BAR_SIZE/TEX_WIDTH, 1.0f
+    };
+
+    // Texture coordinates for the bottom cap of the scrollbar
+    private static final float[] BOT_CAP_TEX_COORDS = {
+        // x, y
+        0                 , 1.0f - BAR_SIZE/TEX_HEIGHT,
+        0                 , 1.0f - CAP_RADIUS/TEX_HEIGHT,
+        BAR_SIZE/TEX_WIDTH, 1.0f - BAR_SIZE/TEX_HEIGHT,
+        BAR_SIZE/TEX_WIDTH, 1.0f - CAP_RADIUS/TEX_HEIGHT
+    };
+
+    // Texture coordinates for the left cap of the scrollbar
+    private static final float[] LEFT_CAP_TEX_COORDS = {
+        // x, y
+        0                   , 1.0f - BAR_SIZE/TEX_HEIGHT,
+        0                   , 1.0f,
+        CAP_RADIUS/TEX_WIDTH, 1.0f - BAR_SIZE/TEX_HEIGHT,
+        CAP_RADIUS/TEX_WIDTH, 1.0f
+    };
+
+    // Texture coordinates for the right cap of the scrollbar
+    private static final float[] RIGHT_CAP_TEX_COORDS = {
+        // x, y
+        CAP_RADIUS/TEX_WIDTH, 1.0f - BAR_SIZE/TEX_HEIGHT,
+        CAP_RADIUS/TEX_WIDTH, 1.0f,
+        BAR_SIZE/TEX_WIDTH  , 1.0f - BAR_SIZE/TEX_HEIGHT,
+        BAR_SIZE/TEX_WIDTH  , 1.0f
+    };
 
     private ScrollbarLayer(CairoImage image, boolean vertical, ByteBuffer buffer) {
         super(false, image);
@@ -97,13 +141,13 @@ public class ScrollbarLayer extends TileLayer {
         }
     }
 
-
     public static ScrollbarLayer create(boolean vertical) {
         // just create an empty image for now, it will get drawn
         // on demand anyway
         int imageSize = IntSize.nextPowerOfTwo(BAR_SIZE);
         ByteBuffer buffer = GeckoAppShell.allocateDirectBuffer(imageSize * imageSize * 4);
-        CairoImage image = new BufferedCairoImage(buffer, imageSize, imageSize, CairoImage.FORMAT_ARGB32);
+        CairoImage image = new BufferedCairoImage(buffer, imageSize, imageSize,
+                                                  CairoImage.FORMAT_ARGB32);
         return new ScrollbarLayer(image, vertical, buffer);
     }
 
@@ -116,7 +160,7 @@ public class ScrollbarLayer extends TileLayer {
         if (FloatUtils.fuzzyEquals(mOpacity, 0.0f)) {
             return false;
         }
-        beginTransaction();
+        beginTransaction(); // called on compositor thread
         try {
             setOpacity(Math.max(mOpacity - FADE_AMOUNT, 0.0f));
             invalidate();
@@ -135,7 +179,7 @@ public class ScrollbarLayer extends TileLayer {
         if (FloatUtils.fuzzyEquals(mOpacity, 1.0f)) {
             return false;
         }
-        beginTransaction();
+        beginTransaction(); // called on compositor thread
         try {
             setOpacity(1.0f);
             invalidate();
@@ -165,37 +209,194 @@ public class ScrollbarLayer extends TileLayer {
         if (!initialized())
             return;
 
-        try {
-            GLES11.glEnable(GL10.GL_BLEND);
-            GLES11.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
-            Rect rect = RectUtils.round(mVertical ? getVerticalRect(context) : getHorizontalRect(context));
-            GLES11.glBindTexture(GL10.GL_TEXTURE_2D, getTextureID());
+        Rect rect = RectUtils.round(mVertical
+                ? getVerticalRect(context)
+                : getHorizontalRect(context));
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getTextureID());
 
-            float viewHeight = context.viewport.height();
+        float viewWidth = context.viewport.width();
+        float viewHeight = context.viewport.height();
 
-            // for the body of the scrollbar, we take a 1x1 pixel from the center of the image
-            // and scale it to become the bar
-            GLES11.glTexParameteriv(GL10.GL_TEXTURE_2D, GLES11Ext.GL_TEXTURE_CROP_RECT_OES, CROPRECT_MIDPIXEL, 0);
-            GLES11Ext.glDrawTexfOES(rect.left, viewHeight - rect.bottom, 0.0f, rect.width(), rect.height());
+        float top = viewHeight - rect.top;
+        float bot = viewHeight - rect.bottom;
 
-            if (mVertical) {
-                // top endcap
-                GLES11.glTexParameteriv(GL10.GL_TEXTURE_2D, GLES11Ext.GL_TEXTURE_CROP_RECT_OES, CROPRECT_TOPCAP, 0);
-                GLES11Ext.glDrawTexfOES(rect.left, viewHeight - rect.top, 0.0f, BAR_SIZE, CAP_RADIUS);
-                // bottom endcap
-                GLES11.glTexParameteriv(GL10.GL_TEXTURE_2D, GLES11Ext.GL_TEXTURE_CROP_RECT_OES, CROPRECT_BOTTOMCAP, 0);
-                GLES11Ext.glDrawTexfOES(rect.left, viewHeight - (rect.bottom + CAP_RADIUS), 0.0f, BAR_SIZE, CAP_RADIUS);
-            } else {
-                // left endcap
-                GLES11.glTexParameteriv(GL10.GL_TEXTURE_2D, GLES11Ext.GL_TEXTURE_CROP_RECT_OES, CROPRECT_LEFTCAP, 0);
-                GLES11Ext.glDrawTexfOES(rect.left - CAP_RADIUS, viewHeight - rect.bottom, 0.0f, CAP_RADIUS, BAR_SIZE);
-                // right endcap
-                GLES11.glTexParameteriv(GL10.GL_TEXTURE_2D, GLES11Ext.GL_TEXTURE_CROP_RECT_OES, CROPRECT_RIGHTCAP, 0);
-                GLES11Ext.glDrawTexfOES(rect.right, viewHeight - rect.bottom, 0.0f, CAP_RADIUS, BAR_SIZE);
-            }
-        } finally {
-            GLES11.glDisable(GL10.GL_BLEND);
+        // Coordinates for the scrollbar's body combined with the texture coordinates
+        float[] bodyCoords = {
+            // x, y, z, texture_x, texture_y
+            rect.left/viewWidth, bot/viewHeight, 0,
+            BODY_TEX_COORDS[0], BODY_TEX_COORDS[1],
+
+            rect.left/viewWidth, (bot+rect.height())/viewHeight, 0,
+            BODY_TEX_COORDS[2], BODY_TEX_COORDS[3],
+
+            (rect.left+rect.width())/viewWidth, bot/viewHeight, 0,
+            BODY_TEX_COORDS[4], BODY_TEX_COORDS[5],
+
+            (rect.left+rect.width())/viewWidth, (bot+rect.height())/viewHeight, 0,
+            BODY_TEX_COORDS[6], BODY_TEX_COORDS[7]
+        };
+
+        // Get the buffer and handles from the context
+        FloatBuffer coordBuffer = context.coordBuffer;
+        int positionHandle = context.positionHandle;
+        int textureHandle = context.textureHandle;
+
+        // Make sure we are at position zero in the buffer in case other draw methods did not
+        // clean up after themselves
+        coordBuffer.position(0);
+        coordBuffer.put(bodyCoords);
+
+        // Vertex coordinates are x,y,z starting at position 0 into the buffer.
+        coordBuffer.position(0);
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
+                coordBuffer);
+
+        // Texture coordinates are texture_x, texture_y starting at position 3 into the buffer.
+        coordBuffer.position(3);
+        GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
+                coordBuffer);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+
+        // Reset the position in the buffer for the next set of vertex and texture coordinates.
+        coordBuffer.position(0);
+
+        if (mVertical) {
+            // top endcap
+            float[] topCap = {
+                // x, y, z, texture_x, texture_y
+                rect.left/viewWidth, top/viewHeight, 0,
+                TOP_CAP_TEX_COORDS[0], TOP_CAP_TEX_COORDS[1],
+
+                rect.left/viewWidth, (top+CAP_RADIUS)/viewHeight, 0,
+                TOP_CAP_TEX_COORDS[2], TOP_CAP_TEX_COORDS[3],
+
+                (rect.left+BAR_SIZE)/viewWidth, top/viewHeight, 0,
+                TOP_CAP_TEX_COORDS[4], TOP_CAP_TEX_COORDS[5],
+
+                (rect.left+BAR_SIZE)/viewWidth, (top+CAP_RADIUS)/viewHeight, 0,
+                TOP_CAP_TEX_COORDS[6], TOP_CAP_TEX_COORDS[7]
+            };
+
+            coordBuffer.put(topCap);
+
+            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
+            coordBuffer.position(0);
+            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
+                    coordBuffer);
+
+            // Texture coordinates are texture_x, texture_y starting at position 3 into the
+            // buffer.
+            coordBuffer.position(3);
+            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
+                    coordBuffer);
+
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+
+            // Reset the position in the buffer for the next set of vertex and texture
+            // coordinates.
+            coordBuffer.position(0);
+
+            // bottom endcap
+            float[] botCap = {
+                // x, y, z, texture_x, texture_y
+                rect.left/viewWidth, (bot-CAP_RADIUS)/viewHeight, 0,
+                BOT_CAP_TEX_COORDS[0], BOT_CAP_TEX_COORDS[1],
+
+                rect.left/viewWidth, (bot)/viewHeight, 0,
+                BOT_CAP_TEX_COORDS[2], BOT_CAP_TEX_COORDS[3],
+
+                (rect.left+BAR_SIZE)/viewWidth, (bot-CAP_RADIUS)/viewHeight, 0,
+                BOT_CAP_TEX_COORDS[4], BOT_CAP_TEX_COORDS[5],
+
+                (rect.left+BAR_SIZE)/viewWidth, (bot)/viewHeight, 0,
+                BOT_CAP_TEX_COORDS[6], BOT_CAP_TEX_COORDS[7]
+            };
+
+            coordBuffer.put(botCap);
+
+            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
+            coordBuffer.position(0);
+            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
+                    coordBuffer);
+
+            // Texture coordinates are texture_x, texture_y starting at position 3 into the
+            // buffer.
+            coordBuffer.position(3);
+            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
+                    coordBuffer);
+
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+
+            // Reset the position in the buffer for the next set of vertex and texture
+            // coordinates.
+            coordBuffer.position(0);
+        } else {
+            // left endcap
+            float[] leftCap = {
+                // x, y, z, texture_x, texture_y
+                (rect.left-CAP_RADIUS)/viewWidth, bot/viewHeight, 0,
+                LEFT_CAP_TEX_COORDS[0], LEFT_CAP_TEX_COORDS[1],
+                (rect.left-CAP_RADIUS)/viewWidth, (bot+BAR_SIZE)/viewHeight, 0,
+                LEFT_CAP_TEX_COORDS[2], LEFT_CAP_TEX_COORDS[3],
+                (rect.left)/viewWidth, bot/viewHeight, 0, LEFT_CAP_TEX_COORDS[4],
+                LEFT_CAP_TEX_COORDS[5],
+                (rect.left)/viewWidth, (bot+BAR_SIZE)/viewHeight, 0,
+                LEFT_CAP_TEX_COORDS[6], LEFT_CAP_TEX_COORDS[7]
+            };
+
+            coordBuffer.put(leftCap);
+
+            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
+            coordBuffer.position(0);
+            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
+                    coordBuffer);
+
+            // Texture coordinates are texture_x, texture_y starting at position 3 into the
+            // buffer.
+            coordBuffer.position(3);
+            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
+                    coordBuffer);
+
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+
+            // Reset the position in the buffer for the next set of vertex and texture
+            // coordinates.
+            coordBuffer.position(0);
+
+            // right endcap
+            float[] rightCap = {
+                // x, y, z, texture_x, texture_y
+                rect.right/viewWidth, (bot)/viewHeight, 0,
+                RIGHT_CAP_TEX_COORDS[0], RIGHT_CAP_TEX_COORDS[1],
+
+                rect.right/viewWidth, (bot+BAR_SIZE)/viewHeight, 0,
+                RIGHT_CAP_TEX_COORDS[2], RIGHT_CAP_TEX_COORDS[3],
+
+                (rect.right+CAP_RADIUS)/viewWidth, (bot)/viewHeight, 0,
+                RIGHT_CAP_TEX_COORDS[4], RIGHT_CAP_TEX_COORDS[5],
+
+                (rect.right+CAP_RADIUS)/viewWidth, (bot+BAR_SIZE)/viewHeight, 0,
+                RIGHT_CAP_TEX_COORDS[6], RIGHT_CAP_TEX_COORDS[7]
+            };
+
+            coordBuffer.put(rightCap);
+
+            // Vertex coordinates are x,y,z starting at position 0 into the buffer.
+            coordBuffer.position(0);
+            GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 20,
+                    coordBuffer);
+
+            // Texture coordinates are texture_x, texture_y starting at position 3 into the
+            // buffer.
+            coordBuffer.position(3);
+            GLES20.glVertexAttribPointer(textureHandle, 2, GLES20.GL_FLOAT, false, 20,
+                    coordBuffer);
+
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
         }
     }
 
