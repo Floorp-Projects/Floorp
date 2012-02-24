@@ -39,16 +39,25 @@
 #define NS_UNICODEPROPERTIES_H
 
 #include "prtypes.h"
+#include "nsIUGenCategory.h"
 
 namespace mozilla {
 
 namespace unicode {
 
+extern nsIUGenCategory::nsUGenCategory sDetailedToGeneralCategory[];
+
 PRUint32 GetMirroredChar(PRUint32 aCh);
 
 PRUint8 GetCombiningClass(PRUint32 aCh);
 
+// returns the detailed General Category in terms of HB_UNICODE_* values
 PRUint8 GetGeneralCategory(PRUint32 aCh);
+
+// returns the simplified Gen Category as defined in nsIUGenCategory
+inline nsIUGenCategory::nsUGenCategory GetGenCategory(PRUint32 aCh) {
+  return sDetailedToGeneralCategory[GetGeneralCategory(aCh)];
+}
 
 PRUint8 GetEastAsianWidth(PRUint32 aCh);
 
