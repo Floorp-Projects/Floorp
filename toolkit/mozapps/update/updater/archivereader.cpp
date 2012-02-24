@@ -42,6 +42,12 @@
 #include "bzlib.h"
 #include "archivereader.h"
 #include "errors.h"
+#include "nsAlgorithm.h"
+#include "updatehelper.h"
+
+#define UPDATER_NO_STRING_GLUE_STL
+#include "../../../../xpcom/build/nsVersionComparator.cpp"
+#undef UPDATER_NO_STRING_GLUE_STL
 
 #if defined(XP_UNIX)
 # include <sys/types.h>
@@ -113,7 +119,7 @@ VerifyLoadedCert(MarFile *archive, int name, int type)
     return CERT_LOAD_ERROR;
   }
 
-  if (!archive || mar_verify_signatureW(archive, data, size)) {
+  if (mar_verify_signatureW(archive, data, size)) {
     return CERT_VERIFY_ERROR;
   }
 
@@ -133,6 +139,10 @@ VerifyLoadedCert(MarFile *archive, int name, int type)
 int
 ArchiveReader::VerifySignature()
 {
+  if (!mArchive) {
+    return ARCHIVE_NOT_OPEN;
+  }
+
 #ifdef XP_WIN
   int rv = VerifyLoadedCert(mArchive, IDR_PRIMARY_CERT, TYPE_CERT);
   if (rv != OK) {
@@ -142,6 +152,70 @@ ArchiveReader::VerifySignature()
 #else
   return OK;
 #endif
+}
+
+/**
+ * Verifies that the MAR file matches the current product, channel, and version
+ * 
+ * @param MARChannelID   The MAR channel name to use, only updates from MARs
+ *                       with a matching MAR channel name will succeed.
+ *                       If an empty string is passed, no check will be done
+ *                       for the channel name in the product information block.
+ * @param appVersion     The application version to use, only MARs with an
+ *                       application version >= to appVersion will be applied.
+ * @return OK on success
+ *         COULD_NOT_READ_PRODUCT_INFO_BLOCK if the product info block 
+ *                                           could not be read.
+ *         MARCHANNEL_MISMATCH_ERROR         if update-settings.ini's MAR 
+ *                                           channel ID doesn't match the MAR
+ *                                           file's MAR channel ID. 
+ *         VERSION_DOWNGRADE_ERROR           if the application version for
+ *                                           this updater is newer than the
+ *                                           one in the MAR.
+ */
+int
+ArchiveReader::VerifyProductInformation(const char *MARChannelID, 
+                                        const char *appVersion)
+{
+  if (!mArchive) {
+    return ARCHIVE_NOT_OPEN;
+  }
+
+  ProductInformationBlock productInfoBlock;
+  int rv = mar_read_product_info_block(mArchive, 
+                                       &productInfoBlock);
+  if (rv != OK) {
+    return COULD_NOT_READ_PRODUCT_INFO_BLOCK_ERROR;
+  }
+
+  // Only check the MAR channel name if specified, it should be passed in from
+  // the update-settings.ini file.
+  if (MARChannelID && strlen(MARChannelID)) {
+    if (rv == OK && strcmp(MARChannelID, productInfoBlock.MARChannelID)) {
+      rv = MAR_CHANNEL_MISMATCH_ERROR;
+    }
+  }
+
+  if (rv == OK) {
+    /* Compare both versions to ensure we don't have a downgrade
+        1 if appVersion is older than productInfoBlock.productVersion
+        -1 if appVersion is newer than productInfoBlock.productVersion 
+        0 if appVersion is the same as productInfoBlock.productVersion 
+       This even works with strings like:
+        - 12.0a1 being older than 12.0a2
+        - 12.0a2 being older than 12.0b1
+        - 12.0a1 being older than 12.0
+        - 12.0 being older than 12.1a1 */
+    int versionCompareResult = 
+      NS_CompareVersions(appVersion, productInfoBlock.productVersion);
+    if (-1 == versionCompareResult) {
+      rv = VERSION_DOWNGRADE_ERROR;
+    }
+  }
+
+  free((void *)productInfoBlock.MARChannelID);
+  free((void *)productInfoBlock.productVersion);
+  return rv;
 }
 
 int
