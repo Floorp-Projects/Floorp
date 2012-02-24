@@ -244,10 +244,12 @@ var shell = {
       case 'AppCommand':
         switch (evt.command) {
           case 'Menu':
-            this.sendEvent(content, 'menu');
+            if (Services.prefs.getBoolPref('b2g.keys.menu.enabled'))
+              this.sendEvent(content, 'menu');
             break;
           case 'Search':
-            this.toggleDebug();
+            if (Services.prefs.getBoolPref('b2g.keys.search.enabled'))
+              this.toggleDebug();
             break;
           case 'VolumeUp':
             this.changeVolume(1);
