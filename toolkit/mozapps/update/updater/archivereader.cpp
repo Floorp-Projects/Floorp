@@ -168,6 +168,8 @@ ArchiveReader::VerifySignature()
  *                       with a matching MAR channel name will succeed.
  *                       If an empty string is passed, no check will be done
  *                       for the channel name in the product information block.
+ *                       If a comma separated list of values is passed then
+ *                       one value must match.
  * @param appVersion     The application version to use, only MARs with an
  *                       application version >= to appVersion will be applied.
  * @return OK on success
@@ -198,8 +200,20 @@ ArchiveReader::VerifyProductInformation(const char *MARChannelID,
   // Only check the MAR channel name if specified, it should be passed in from
   // the update-settings.ini file.
   if (MARChannelID && strlen(MARChannelID)) {
-    if (rv == OK && strcmp(MARChannelID, productInfoBlock.MARChannelID)) {
-      rv = MAR_CHANNEL_MISMATCH_ERROR;
+    // Check for at least one match in the comma separated list of values.
+    const char *delimiter = " ,\t";
+    // Make a copy of the string in case a read only memory buffer 
+    // was specified.  strtok modifies the input buffer.
+    char channelCopy[512] = { 0 };
+    strncpy(channelCopy, MARChannelID, sizeof(channelCopy) - 1);
+    char *channel = strtok(channelCopy, delimiter);
+    rv = MAR_CHANNEL_MISMATCH_ERROR;
+    while(channel) {
+      if (!strcmp(channel, productInfoBlock.MARChannelID)) {
+        rv = OK;
+        break;
+      }
+      channel = strtok(NULL, delimiter);
     }
   }
 

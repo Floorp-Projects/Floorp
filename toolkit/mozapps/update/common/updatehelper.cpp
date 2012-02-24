@@ -574,8 +574,8 @@ WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds)
  *
  * @param process The process to check for existance
  * @return ERROR_NOT_FOUND if the process was not found
- * @       ERROR_SUCCESS if the process was found and there were no errors
- * @       Other Win32 system error code for other errors
+ *         ERROR_SUCCESS if the process was found and there were no errors
+ *         Other Win32 system error code for other errors
 **/
 DWORD
 IsProcessRunning(LPCWSTR filename)

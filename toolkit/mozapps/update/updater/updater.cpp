@@ -1541,7 +1541,7 @@ WaitForServiceFinishThread(void *param)
 #endif
 
 /**
- * This function reads in the MAR_CHANNEL_ID from update-settings.ini
+ * This function reads in the ACCEPTED_MAR_CHANNEL_IDS from update-settings.ini
  *
  * @param path    The path to the ini file that is to be read
  * @param results A pointer to the location to store the read strings
@@ -1551,7 +1551,7 @@ static int
 ReadMARChannelIDs(const NS_tchar *path, MARChannelStringTable *results)
 {
   const unsigned int kNumStrings = 1;
-  const char *kUpdaterKeys = "MAR_CHANNEL_ID\0";
+  const char *kUpdaterKeys = "ACCEPTED_MAR_CHANNEL_IDS\0";
   char updater_strings[kNumStrings][MAX_TEXT_LEN];
 
   int result = ReadStrings(path, kUpdaterKeys, kNumStrings,
