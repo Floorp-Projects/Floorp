@@ -348,7 +348,7 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
 
     jBeginDrawingMethod = getMethod("beginDrawing", "(IILjava/lang/String;)Landroid/graphics/Rect;");
-    jEndDrawingMethod = getMethod("endDrawing", "(IIII)V");
+    jEndDrawingMethod = getMethod("endDrawing", "()V");
     jGetViewTransformMethod = getMethod("getViewTransform",
                                         "()Lorg/mozilla/gecko/gfx/ViewTransform;");
     jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
@@ -790,7 +790,7 @@ AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, nsIntRect &aDirty
 }
 
 void
-AndroidGeckoLayerClient::EndDrawing(const nsIntRect &aRect)
+AndroidGeckoLayerClient::EndDrawing()
 {
     NS_ASSERTION(!isNull(), "EndDrawing() called on null layer client!");
     JNIEnv *env = AndroidBridge::GetJNIEnv();
@@ -798,8 +798,7 @@ AndroidGeckoLayerClient::EndDrawing(const nsIntRect &aRect)
         return;
 
     AndroidBridge::AutoLocalJNIFrame(env, 1);
-    return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod, aRect.x, aRect.y, aRect.width,
-                               aRect.height);
+    return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
 }
 
 jobject

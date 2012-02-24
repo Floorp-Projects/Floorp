@@ -203,19 +203,15 @@ public class GeckoLayerClient implements GeckoEventListener,
         return bufferRect;
     }
 
-    /** This function is invoked by Gecko via JNI; be careful when modifying signature.
-     *
-     * TODO: Would be cleaner if this took an android.graphics.Rect instead, but that would require
-     * a little more JNI magic.
-     */
-    public void endDrawing(int x, int y, int width, int height) {
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    public void endDrawing() {
         updateViewport(!mUpdateViewportOnEndDraw);
         mUpdateViewportOnEndDraw = false;
         Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
 
         /* Used by robocop for testing purposes */
         if (mDrawListener != null) {
-            mDrawListener.drawFinished(x, y, width, height);
+            mDrawListener.drawFinished();
         }
     }
 
@@ -486,7 +482,7 @@ public class GeckoLayerClient implements GeckoEventListener,
 
     /** Used by robocop for testing purposes. Not for production use! This is used via reflection by robocop. */
     public interface DrawListener {
-        public void drawFinished(int x, int y, int width, int height);
+        public void drawFinished();
     }
 }
 

@@ -225,7 +225,7 @@ public:
     : mViewTransformGetter(*this) { Init(jobj); }
 
     bool BeginDrawing(int aWidth, int aHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata);
-    void EndDrawing(const nsIntRect &aRect);
+    void EndDrawing();
     void GetViewTransform(AndroidViewTransform& aViewTransform);
     void CreateFrame(AndroidLayerRendererFrame& aFrame);
     void ActivateProgram();
