@@ -536,15 +536,6 @@ MBasicBlock::peek(int32 depth)
 }
 
 void
-MBasicBlock::remove(MInstruction *ins)
-{
-    for (size_t i = 0; i < ins->numOperands(); i++)
-        ins->replaceOperand(i, NULL);
-
-    instructions_.remove(ins);
-}
-
-void
 MBasicBlock::discardLastIns()
 {
     JS_ASSERT(lastIns_);
@@ -553,9 +544,24 @@ MBasicBlock::discardLastIns()
 }
 
 void
+MBasicBlock::moveBefore(MInstruction *at, MInstruction *ins)
+{
+    // Remove |ins| from the current block.
+    JS_ASSERT(ins->block() == this);
+    instructions_.remove(ins);
+
+    // Insert into new block, which may be distinct.
+    // Uses and operands are untouched.
+    at->block()->insertBefore(at, ins);
+}
+
+void
 MBasicBlock::discard(MInstruction *ins)
 {
-    remove(ins);
+    for (size_t i = 0; i < ins->numOperands(); i++)
+        ins->replaceOperand(i, NULL);
+
+    instructions_.remove(ins);
 }
 
 MInstructionIterator

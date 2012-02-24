@@ -2485,7 +2485,7 @@ IonBuilder::jsop_call(uint32 argc, bool constructing)
         MPassArg *newthis = MPassArg::New(magic);
         oldarg->block()->insertBefore(oldarg, newthis);
 
-        oldarg->block()->remove(oldarg);
+        oldarg->block()->discard(oldarg);
         current->push(newthis);
     }
 

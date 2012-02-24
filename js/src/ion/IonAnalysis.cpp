@@ -737,36 +737,57 @@ ion::FindNaturalLoops(MIRGraph &graph)
     return true;
 }
 
+#ifdef DEBUG
+static bool
+CheckSuccessorImpliesPredecessor(MBasicBlock *A, MBasicBlock *B)
+{
+    // Assuming B = succ(A), verify A = pred(B).
+    for (size_t i = 0; i < B->numPredecessors(); i++) {
+        if (A == B->getPredecessor(i))
+            return true;
+    }
+    return false;
+}
+
+static bool
+CheckPredecessorImpliesSuccessor(MBasicBlock *A, MBasicBlock *B)
+{
+    // Assuming B = pred(A), verify A = succ(B).
+    for (size_t i = 0; i < B->numSuccessors(); i++) {
+        if (A == B->getSuccessor(i))
+            return true;
+    }
+    return false;
+}
+
+static bool
+CheckMarkedAsUse(MInstruction *ins, MDefinition *operand)
+{
+    for (MUseIterator i = operand->usesBegin(); i != operand->usesEnd(); i++) {
+        if (i->node()->isDefinition()) {
+            if (ins == i->node()->toDefinition());
+                return true;
+        }
+    }
+    return false;
+}
+#endif // DEBUG
+
 void
 ion::AssertGraphCoherency(MIRGraph &graph)
 {
 #ifdef DEBUG
     // Assert successor and predecessor list coherency.
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
-        // B = succ(A) must imply A = pred(B).
-        for (size_t i = 0; i < block->numSuccessors(); i++) {
-            MBasicBlock *succ = block->getSuccessor(i);
-            int found = 0;
+        for (size_t i = 0; i < block->numSuccessors(); i++)
+            JS_ASSERT(CheckSuccessorImpliesPredecessor(*block, block->getSuccessor(i)));
 
-            for (size_t j = 0; j < succ->numPredecessors(); j++) {
-                if (succ->getPredecessor(j) == *block)
-                    found++;
-            }
+        for (size_t i = 0; i < block->numPredecessors(); i++)
+            JS_ASSERT(CheckPredecessorImpliesSuccessor(*block, block->getPredecessor(i)));
 
-            JS_ASSERT(found == 1);
-        }
-
-        // A = pred(B) must imply B = succ(A).
-        for (size_t i = 0; i < block->numPredecessors(); i++) {
-            MBasicBlock *pred = block->getPredecessor(i);
-            int found = 0;
-
-            for (size_t j = 0; j < pred->numSuccessors(); j++) {
-                if (pred->getSuccessor(j) == *block)
-                    found++;
-            }
-
-            JS_ASSERT(found == 1);
+        for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
+            for (uint32 i = 0; i < ins->numOperands(); i++)
+                JS_ASSERT(CheckMarkedAsUse(*ins, ins->getOperand(i)));
         }
     }
 #endif
