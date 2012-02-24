@@ -1875,8 +1875,9 @@ SliceBudget::checkOverBudget()
     return over;
 }
 
-GCMarker::GCMarker()
-  : color(BLACK),
+GCMarker::GCMarker(size_t sizeLimit)
+  : stack(sizeLimit),
+    color(BLACK),
     started(false),
     unmarkedArenaStackTop(NULL),
     markLaterArenas(0),
@@ -2115,6 +2116,15 @@ GCMarker::GrayCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     GCMarker *gcmarker = static_cast<GCMarker *>(trc);
     gcmarker->appendGrayRoot(*thingp, kind);
+}
+
+void
+SetMarkStackLimit(JSRuntime *rt, size_t limit)
+{
+    JS_ASSERT(!rt->gcRunning);
+    rt->gcMarker.setSizeLimit(limit);
+    for (CompartmentsIter c(rt); !c.done(); c.next())
+        c->barrierMarker_.setSizeLimit(limit);
 }
 
 } /* namespace js */
