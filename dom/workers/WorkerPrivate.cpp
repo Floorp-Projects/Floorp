@@ -2925,7 +2925,7 @@ WorkerPrivate::Dispatch(WorkerRunnable* aEvent, EventQueue* aQueue)
     }
 
     if (aQueue == &mControlQueue && mJSContext) {
-      JS_TriggerOperationCallback(mJSContext);
+      JS_TriggerOperationCallback(JS_GetRuntime(mJSContext));
     }
 
     mCondVar.Notify();
