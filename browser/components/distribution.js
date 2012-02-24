@@ -45,6 +45,10 @@ const Cu = Components.utils;
 const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC =
   "distribution-customization-complete";
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+
 function DistributionCustomizer() {
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(Ci.nsIProperties);
@@ -76,27 +80,6 @@ DistributionCustomizer.prototype = {
     }
     this.__defineGetter__("_locale", function() locale);
     return this._locale;
-  },
-
-  get _bmSvc() {
-    let svc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-    this.__defineGetter__("_bmSvc", function() svc);
-    return this._bmSvc;
-  },
-
-  get _annoSvc() {
-    let svc = Cc["@mozilla.org/browser/annotation-service;1"].
-              getService(Ci.nsIAnnotationService);
-    this.__defineGetter__("_annoSvc", function() svc);
-    return this._annoSvc;
-  },
-
-  get _livemarkSvc() {
-    let svc = Cc["@mozilla.org/browser/livemark-service;2"].
-              getService(Ci.nsILivemarkService);
-    this.__defineGetter__("_livemarkSvc", function() svc);
-    return this._livemarkSvc;
   },
 
   get _prefSvc() {
@@ -167,7 +150,7 @@ DistributionCustomizer.prototype = {
       if (!items[iid])
         continue;
 
-      let index = this._bmSvc.DEFAULT_INDEX;
+      let index = PlacesUtils.bookmarks.DEFAULT_INDEX;
       let newId;
 
       switch (items[iid]["type"]) {
@@ -178,23 +161,25 @@ DistributionCustomizer.prototype = {
         if (iid < defaultItemId)
           index = prependIndex++;
 
-        newId = this._bmSvc.createFolder(parentId, items[iid]["title"], index);
+        newId = PlacesUtils.bookmarks.createFolder(parentId,
+                                                   items[iid]["title"],
+                                                   index);
 
         this._parseBookmarksSection(newId, "BookmarksFolder-" +
                                     items[iid]["folderId"]);
 
         if (items[iid]["description"])
-          this._annoSvc.setItemAnnotation(newId,
-                                          "bookmarkProperties/description",
-                                          items[iid]["description"], 0,
-                                          this._annoSvc.EXPIRE_NEVER);
+          PlacesUtils.annotations.setItemAnnotation(newId,
+                                                    "bookmarkProperties/description",
+                                                    items[iid]["description"], 0,
+                                                    PlacesUtils.annotations.EXPIRE_NEVER);
 
         break;
 
       case "separator":
         if (iid < defaultItemId)
           index = prependIndex++;
-        this._bmSvc.insertSeparator(parentId, index);
+        PlacesUtils.bookmarks.insertSeparator(parentId, index);
         break;
 
       case "livemark":
@@ -202,12 +187,12 @@ DistributionCustomizer.prototype = {
           index = prependIndex++;
 
         // Don't bother updating the livemark contents on creation.
-        newId = this._livemarkSvc.
-          createLivemarkFolderOnly(parentId,
-                                   items[iid]["title"],
-                                   this._makeURI(items[iid]["siteLink"]),
-                                   this._makeURI(items[iid]["feedLink"]),
-                                   index);
+        PlacesUtils.livemarks.addLivemark({ title: items[iid]["title"]
+                                          , parentId: parentId
+                                          , index: index
+                                          , feedURI: this._makeURI(items[iid]["feedLink"])
+                                          , siteURI: this._makeURI(items[iid]["siteLink"])
+                                          });
         break;
 
       case "bookmark":
@@ -215,15 +200,15 @@ DistributionCustomizer.prototype = {
         if (iid < defaultItemId)
           index = prependIndex++;
 
-        newId = this._bmSvc.insertBookmark(parentId,
-                                           this._makeURI(items[iid]["link"]),
-                                           index, items[iid]["title"]);
+        newId = PlacesUtils.bookmarks.insertBookmark(parentId,
+                                                     this._makeURI(items[iid]["link"]),
+                                                     index, items[iid]["title"]);
 
         if (items[iid]["description"])
-          this._annoSvc.setItemAnnotation(newId,
-                                          "bookmarkProperties/description",
-                                          items[iid]["description"], 0,
-                                          this._annoSvc.EXPIRE_NEVER);
+          PlacesUtils.annotations.setItemAnnotation(newId,
+                                                    "bookmarkProperties/description",
+                                                    items[iid]["description"], 0,
+                                                    PlacesUtils.annotations.EXPIRE_NEVER);
 
         break;
       }
@@ -277,10 +262,10 @@ DistributionCustomizer.prototype = {
 
     if (!bmProcessed) {
       if (sections["BookmarksMenu"])
-        this._parseBookmarksSection(this._bmSvc.bookmarksMenuFolder,
+        this._parseBookmarksSection(PlacesUtils.bookmarksMenuFolderId,
                                     "BookmarksMenu");
       if (sections["BookmarksToolbar"])
-        this._parseBookmarksSection(this._bmSvc.toolbarFolder,
+        this._parseBookmarksSection(PlacesUtils.toolbarFolderId,
                                     "BookmarksToolbar");
       this._prefs.setBoolPref(bmProcessedPref, true);
     }
