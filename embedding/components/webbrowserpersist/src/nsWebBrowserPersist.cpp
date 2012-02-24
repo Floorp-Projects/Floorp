@@ -2970,7 +2970,7 @@ nsWebBrowserPersist::GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
 {
     if (!(mPersistFlags & PERSIST_FLAGS_FIXUP_ORIGINAL_DOM))
     {
-        nsresult rv = aNodeIn->CloneNode(false, aNodeOut);
+        nsresult rv = aNodeIn->CloneNode(false, 1, aNodeOut);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     else

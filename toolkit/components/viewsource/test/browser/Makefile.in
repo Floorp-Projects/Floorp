@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_CHROME_FILES   = \
                 browser_bug699356.js \
                 browser_bug713810.js \
+                browser_contextmenu.js \
                 browser_viewsourceprefs.js \
                 browser_viewsourceprefs_nonhtml.js \
                 head.js \

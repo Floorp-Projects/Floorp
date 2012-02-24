@@ -38,6 +38,8 @@
 
 package org.mozilla.gecko.sync.repositories;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -49,8 +51,6 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSince
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
-
-import android.util.Log;
 
 /**
  * A RepositorySession is created and used thusly:
@@ -75,10 +75,6 @@ public abstract class RepositorySession {
   }
 
   private static final String LOG_TAG = "RepositorySession";
-
-  private static void error(String message) {
-    Logger.error(LOG_TAG, message);
-  }
 
   protected static void trace(String message) {
     Logger.trace(LOG_TAG, message);
@@ -141,7 +137,7 @@ public abstract class RepositorySession {
    * Store success calls are not guaranteed.
    */
   public void setStoreDelegate(RepositorySessionStoreDelegate delegate) {
-    Log.d(LOG_TAG, "Setting store delegate to " + delegate);
+    Logger.debug(LOG_TAG, "Setting store delegate to " + delegate);
     this.delegate = delegate;
   }
   public abstract void store(Record record) throws NoStoreDelegateException;
@@ -154,7 +150,7 @@ public abstract class RepositorySession {
   }
 
   public void storeDone(final long end) {
-    Log.d(LOG_TAG, "Scheduling onStoreCompleted for after storing is done.");
+    Logger.debug(LOG_TAG, "Scheduling onStoreCompleted for after storing is done.");
     Runnable command = new Runnable() {
       @Override
       public void run() {
@@ -189,7 +185,7 @@ public abstract class RepositorySession {
     if (this.status == SessionStatus.UNSTARTED) {
       this.status = SessionStatus.ACTIVE;
     } else {
-      error("Tried to begin() an already active or finished session");
+      Logger.error(LOG_TAG, "Tried to begin() an already active or finished session");
       throw new InvalidSessionTransitionException(null);
     }
   }
@@ -220,11 +216,11 @@ public abstract class RepositorySession {
    * @return
    */
   protected RepositorySessionBundle getBundle(RepositorySessionBundle optional) {
-    System.out.println("RepositorySession.getBundle(optional).");
+    Logger.debug(LOG_TAG, "RepositorySession.getBundle(optional).");
     // Why don't we just persist the old bundle?
     RepositorySessionBundle bundle = (optional == null) ? new RepositorySessionBundle() : optional;
     bundle.put("timestamp", this.lastSyncTimestamp);
-    System.out.println("Setting bundle timestamp to " + this.lastSyncTimestamp);
+    Logger.debug(LOG_TAG, "Setting bundle timestamp to " + this.lastSyncTimestamp);
     return bundle;
   }
 
@@ -244,11 +240,11 @@ public abstract class RepositorySession {
       this.status = SessionStatus.DONE;
       delegate.deferredFinishDelegate(delegateQueue).onFinishSucceeded(this, this.getBundle(null));
     } else {
-      Log.e(LOG_TAG, "Tried to finish() an unstarted or already finished session");
+      Logger.error(LOG_TAG, "Tried to finish() an unstarted or already finished session");
       Exception e = new InvalidSessionTransitionException(null);
       delegate.deferredFinishDelegate(delegateQueue).onFinishFailed(e);
     }
-    Log.i(LOG_TAG, "Shutting down work queues.");
+    Logger.info(LOG_TAG, "Shutting down work queues.");
  //   storeWorkQueue.shutdown();
  //   delegateQueue.shutdown();
   }
@@ -311,11 +307,11 @@ public abstract class RepositorySession {
                                     final Record localRecord,
                                     final long lastRemoteRetrieval,
                                     final long lastLocalRetrieval) {
-    Log.d(LOG_TAG, "Reconciling remote " + remoteRecord.guid + " against local " + localRecord.guid);
+    Logger.debug(LOG_TAG, "Reconciling remote " + remoteRecord.guid + " against local " + localRecord.guid);
 
     if (localRecord.equalPayloads(remoteRecord)) {
       if (remoteRecord.lastModified > localRecord.lastModified) {
-        Log.d(LOG_TAG, "Records are equal. No record application needed.");
+        Logger.debug(LOG_TAG, "Records are equal. No record application needed.");
         return null;
       }
 
@@ -329,7 +325,7 @@ public abstract class RepositorySession {
     // * The modified times of each record (interpreted through the lens of clock skew);
     // * ...
     boolean localIsMoreRecent = localRecord.lastModified > remoteRecord.lastModified;
-    Log.d(LOG_TAG, "Local record is more recent? " + localIsMoreRecent);
+    Logger.debug(LOG_TAG, "Local record is more recent? " + localIsMoreRecent);
     Record donor = localIsMoreRecent ? localRecord : remoteRecord;
 
     // Modify the local record to match the remote record's GUID and values.
@@ -357,5 +353,13 @@ public abstract class RepositorySession {
    * @param record
    */
   protected synchronized void trackRecord(Record record) {
+  }
+
+  protected synchronized void untrackRecord(Record record) {
+  }
+
+  // Ah, Java. You wretched creature.
+  public Iterator<String> getTrackedRecordIDs() {
+    return new ArrayList<String>().iterator();
   }
 }

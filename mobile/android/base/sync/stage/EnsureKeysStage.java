@@ -1,39 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.stage;
 
@@ -47,13 +14,12 @@ import org.mozilla.gecko.sync.CollectionKeys;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.delegates.KeyUploadDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
-
-import android.util.Log;
 
 public class EnsureKeysStage implements GlobalSyncStage, SyncStorageRequestDelegate, KeyUploadDelegate {
   private static final String LOG_TAG = "EnsureKeysStage";
@@ -90,7 +56,9 @@ public class EnsureKeysStage implements GlobalSyncStage, SyncStorageRequestDeleg
     CollectionKeys k = new CollectionKeys();
     try {
       ExtendedJSONObject body = response.jsonObjectBody();
-      Log.i(LOG_TAG, "Fetched keys: " + body.toJSONString());
+      if (Logger.LOG_PERSONAL_INFORMATION) {
+        Logger.pii(LOG_TAG, "Fetched keys: " + body.toJSONString());
+      }
       k.setKeyPairsFromWBO(CryptoRecord.fromJSONRecord(body), session.config.syncKeyBundle);
 
     } catch (IllegalStateException e) {
@@ -111,7 +79,7 @@ public class EnsureKeysStage implements GlobalSyncStage, SyncStorageRequestDeleg
       return;
     }
 
-    Log.i("rnewman", "Setting keys. Yay!");
+    Logger.trace(LOG_TAG, "Setting keys.");
     session.setCollectionKeys(k);
     session.advance();
   }
@@ -124,7 +92,7 @@ public class EnsureKeysStage implements GlobalSyncStage, SyncStorageRequestDeleg
     }
 
     int statusCode = response.getStatusCode();
-    Log.i(LOG_TAG, "Got " + statusCode + " fetching keys.");
+    Logger.debug(LOG_TAG, "Got " + statusCode + " fetching keys.");
     if (statusCode == 404) {
       // No keys. Generate and upload, then refetch.
       CryptoRecord keysWBO;
@@ -158,7 +126,7 @@ public class EnsureKeysStage implements GlobalSyncStage, SyncStorageRequestDeleg
 
   @Override
   public void onKeysUploaded() {
-    Log.i(LOG_TAG, "New keys uploaded. Starting stage again to fetch them.");
+    Logger.debug(LOG_TAG, "New keys uploaded. Starting stage again to fetch them.");
     try {
       this.execute(this.session);
     } catch (NoSuchStageException e) {
@@ -168,8 +136,7 @@ public class EnsureKeysStage implements GlobalSyncStage, SyncStorageRequestDeleg
 
   @Override
   public void onKeyUploadFailed(Exception e) {
-    Log.i(LOG_TAG, "Key upload failed. Aborting sync.");
+    Logger.warn(LOG_TAG, "Key upload failed. Aborting sync.");
     session.abort(e, "Key upload failed.");
   }
-
 }

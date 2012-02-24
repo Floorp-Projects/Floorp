@@ -168,6 +168,13 @@ interface nsIWebGLExtensionLoseContext : nsIWebGLExtension
   void restoreContext();
 };
 
+[scriptable, uuid(73bfb64d-94bd-4a7a-9eab-6b6d32e57aa0)]
+interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
+{
+  const WebGLenum TEXTURE_MAX_ANISOTROPY = 0x84FE;
+  const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY = 0x84FF;
+};
+
 [scriptable, builtinclass, uuid(f000afac-11b3-4c06-a35f-8db411f1cf54)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
