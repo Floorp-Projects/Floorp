@@ -142,6 +142,12 @@ class Bytecode
     bool getStringElement:1; /* GETELEM which has accessed string properties. */
     bool accessGetter: 1;    /* Property read on a shape with a getter hook. */
 
+    /*
+     * Switch target other than the last one, which shares its pending values
+     * with a later offset during SSA analysis.
+     */
+    bool switchSharesPending : 1;
+
     /* Stack depth before this opcode. */
     uint32_t stackDepth;
 
@@ -1107,10 +1113,7 @@ class ScriptAnalysis
     {
         SSAUseChain *uses = useChain(SSAValue::PushedValue(pc - script->code, 0));
         JS_ASSERT(uses && uses->popped);
-        JS_ASSERT_IF(uses->next,
-                     !uses->next->next &&
-                     uses->next->popped &&
-                     script->code[uses->next->offset] == JSOP_SWAP);
+        JS_ASSERT(js_CodeSpec[script->code[uses->offset]].format & JOF_INVOKE);
         return script->code + uses->offset;
     }
 
@@ -1190,6 +1193,19 @@ class ScriptAnalysis
     inline void extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end);
     inline void ensureVariable(LifetimeVariable &var, unsigned until);
 
+    /* Current value for a variable or stack value, as tracked during SSA. */
+    struct SSAValueInfo
+    {
+        SSAValue v;
+
+        /*
+         * Sizes of branchTargets the last time this slot was written. Branches less
+         * than this threshold do not need to be inspected if the slot is written
+         * again, as they will already reflect the slot's value at the branch.
+         */
+        int32_t branchSize;
+    };
+
     /* SSA helpers */
     bool makePhi(JSContext *cx, uint32_t slot, uint32_t offset, SSAValue *pv);
     void insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v);
@@ -1197,18 +1213,16 @@ class ScriptAnalysis
     void checkPendingValue(JSContext *cx, const SSAValue &v, uint32_t slot,
                            Vector<SlotValue> *pending);
     void checkBranchTarget(JSContext *cx, uint32_t targetOffset, Vector<uint32_t> &branchTargets,
-                           SSAValue *values, uint32_t stackDepth);
+                           SSAValueInfo *values, uint32_t stackDepth,
+                           Vector<SlotValue> **ppending = NULL, uint32_t *ppendingOffset = NULL);
     void checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
                               Vector<uint32_t> &exceptionTargets);
-    void mergeBranchTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
-                           const Vector<uint32_t> &branchTargets);
+    void mergeBranchTarget(JSContext *cx, SSAValueInfo &value, uint32_t slot,
+                           const Vector<uint32_t> &branchTargets, uint32_t currentOffset);
     void mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
                               const Vector<uint32_t> &exceptionTargets);
-    void mergeAllExceptionTargets(JSContext *cx, SSAValue *values,
+    void mergeAllExceptionTargets(JSContext *cx, SSAValueInfo *values,
                                   const Vector<uint32_t> &exceptionTargets);
-    bool removeBranchTarget(Vector<uint32_t> &branchTargets,
-                            Vector<uint32_t> &exceptionTargets,
-                            uint32_t offset);
     void freezeNewValues(JSContext *cx, uint32_t offset);
 
     struct TypeInferenceState {

@@ -390,6 +390,7 @@ pref("layers.acceleration.force-enabled", true);
 // screen.enabled and screen.brightness properties.
 pref("dom.screenEnabledProperty.enabled", true);
 pref("dom.screenBrightnessProperty.enabled", true);
+pref("dom.mozScreenWhitelist", "http://localhost:7777");
 
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window
@@ -427,6 +428,10 @@ pref("layout.frame_rate.precise", true);
 // Temporary remote js console hack
 pref("b2g.remote-js.enabled", true);
 pref("b2g.remote-js.port", 9999);
+
+// Handle hardware buttons in the b2g chrome package
+pref("b2g.keys.menu.enabled", true);
+pref("b2g.keys.search.enabled", false);
 
 // Screen timeout in minutes
 pref("power.screen.timeout", 60);

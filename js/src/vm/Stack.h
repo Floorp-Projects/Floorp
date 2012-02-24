@@ -95,10 +95,10 @@ namespace detail {
  *
  * SpiderMonkey uses a per-thread stack to store the activation records,
  * parameters, locals, and expression temporaries for the stack of actively
- * executing scripts, functions and generators. The per-thread stack is owned
- * by the StackSpace object stored in the thread's ThreadData.
+ * executing scripts, functions and generators. The stack is owned by the
+ * StackSpace object stored in the runtime.
  *
- * The per-thread stack is subdivided into contiguous segments of memory which
+ * The stack is subdivided into contiguous segments of memory which
  * have a memory layout invariant that allows fixed offsets to be used for stack
  * access (by jit code) as well as fast call/return. This memory layout is
  * encapsulated by a set of types that describe different regions of memory.
