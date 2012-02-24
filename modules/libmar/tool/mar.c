@@ -60,7 +60,8 @@ int mar_repackage_and_sign(const char *NSSConfigDir,
 
 static void print_usage() {
   printf("usage:\n");
-  printf("  mar [-C workingDir] {-c|-x|-t} archive.mar [files...]\n");
+  printf("  mar [-H MARChannelID] [-V ProductVersion] [-C workingDir] "
+         "{-c|-x|-t|-T} archive.mar [files...]\n");
 #ifndef NO_SIGN_VERIFY
   printf("  mar [-C workingDir] -d NSSConfigDir -n certname -s "
          "archive.mar out_signed_archive.mar\n");
@@ -72,6 +73,8 @@ static void print_usage() {
     "-v signed_archive.mar\n");
 #endif
 #endif
+  printf("  mar [-H MARChannelID] [-V ProductVersion] [-C workingDir] "
+         "-i unsigned_archive_to_refresh.mar\n");
 }
 
 static int mar_test_callback(MarFile *mar, 
@@ -98,6 +101,8 @@ static int mar_test(const char *path) {
 int main(int argc, char **argv) {
   char *NSSConfigDir = NULL;
   char *certName = NULL;
+  char *MARChannelID = MAR_CHANNEL_ID;
+  char *productVersion = MOZ_APP_VERSION;
 #if defined(XP_WIN) && !defined(MAR_NSS) && !defined(NO_SIGN_VERIFY)
   HANDLE certFile;
   DWORD fileSize;
@@ -114,7 +119,8 @@ int main(int argc, char **argv) {
   while (argc > 0) {
     if (argv[1][0] == '-' && (argv[1][1] == 'c' || 
         argv[1][1] == 't' || argv[1][1] == 'x' || 
-        argv[1][1] == 'v' || argv[1][1] == 's')) {
+        argv[1][1] == 'v' || argv[1][1] == 's' ||
+        argv[1][1] == 'i' || argv[1][1] == 'T')) {
       break;
     /* -C workingdirectory */
     } else if (argv[1][0] == '-' && argv[1][1] == 'C') {
@@ -140,7 +146,18 @@ int main(int argc, char **argv) {
       certName = argv[2];
       argv += 2;
       argc -= 2;
-    } else {
+    /* MAR channel ID */
+    } else if (argv[1][0] == '-' && argv[1][1] == 'H') {
+      MARChannelID = argv[2];
+      argv += 2;
+      argc -= 2;
+    /* Product Version */
+    } else if (argv[1][0] == '-' && argv[1][1] == 'V') {
+      productVersion = argv[2];
+      argv += 2;
+      argc -= 2;
+    }
+    else {
       print_usage();
       return -1;
     }
@@ -152,10 +169,56 @@ int main(int argc, char **argv) {
   }
 
   switch (argv[1][1]) {
-  case 'c':
-    return mar_create(argv[2], argc - 3, argv + 3);
+  case 'c': {
+    struct ProductInformationBlock infoBlock;
+    infoBlock.MARChannelID = MARChannelID;
+    infoBlock.productVersion = productVersion;
+    return mar_create(argv[2], argc - 3, argv + 3, &infoBlock);
+  }
+  case 'i': {
+    struct ProductInformationBlock infoBlock;
+    infoBlock.MARChannelID = MARChannelID;
+    infoBlock.productVersion = productVersion;
+    return refresh_product_info_block(argv[2], &infoBlock);
+  }
+  case 'T': {
+    int rv;
+    struct ProductInformationBlock infoBlock;
+    int hasSignatureBlock, numSignatures, 
+      hasAdditionalBlock, numAdditionalBlocks;
+    if (!get_mar_file_info(argv[2], 
+                           &hasSignatureBlock,
+                           &numSignatures,
+                           &hasAdditionalBlock, 
+                           NULL, &numAdditionalBlocks)) {
+      if (hasSignatureBlock) {
+        printf("Signature block found with %d signature%s\n", 
+               numSignatures, 
+               numSignatures != 1 ? "s" : "");
+      }
+      if (hasAdditionalBlock) {
+        printf("%d additional block%s found:\n", 
+               numAdditionalBlocks,
+               numAdditionalBlocks != 1 ? "s" : "");
+      }
+
+      rv = read_product_info_block(argv[2], &infoBlock);
+      if (!rv) {
+        printf("  - Product Information Block:\n");
+        printf("    - MAR channel name: %s\n"
+               "    - Product version: %s\n",
+               infoBlock.MARChannelID,
+               infoBlock.productVersion);
+        free((void *)infoBlock.MARChannelID);
+        free((void *)infoBlock.productVersion);
+      }
+     }
+    printf("\n");
+    // The fall through from 'T' to 't' is intentional
+  }
   case 't':
     return mar_test(argv[2]);
+
   case 'x':
     return mar_extract(argv[2]);
 
@@ -190,13 +253,13 @@ int main(int argc, char **argv) {
     CloseHandle(certFile);
 
     if (mar_verify_signature(argv[2], certBuffer, fileSize, NULL)) {
-      int oldMar = 0;
+      /* Determine if the source MAR file has the new fields for signing */
+      int hasSignatureBlock;
       free(certBuffer);
-
-      /* Determine if the source MAR file has the new fields for signing or not */
-      if (is_old_mar(argv[2], &oldMar)) {
+      if (get_mar_file_info(argv[2], &hasSignatureBlock, 
+                            NULL, NULL, NULL, NULL)) {
         fprintf(stderr, "ERROR: could not determine if MAR is old or new.\n");
-      } else if (oldMar) {
+      } else if (!hasSignatureBlock) {
         fprintf(stderr, "ERROR: The MAR file is in the old format so has"
                         " no signature to verify.\n");
       }

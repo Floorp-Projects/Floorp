@@ -46,6 +46,11 @@
 extern "C" {
 #endif
 
+struct ProductInformationBlock {
+  const char *MARChannelID;
+  const char *productVersion;
+};
+
 /**
  * The MAR item data structure.
  */
@@ -71,7 +76,7 @@ typedef struct MarFile_ MarFile;
  * @param mar       The MAR file being visited.
  * @param item      The MAR item being visited.
  * @param data      The data parameter passed by the caller of mar_enum_items.
- * @returns         A non-zero value to stop enumerating.
+ * @return          A non-zero value to stop enumerating.
  */
 typedef int (* MarItemCallback)(MarFile *mar, const MarItem *item, void *data);
 
@@ -79,7 +84,7 @@ typedef int (* MarItemCallback)(MarFile *mar, const MarItem *item, void *data);
  * Open a MAR file for reading.
  * @param path      Specifies the path to the MAR file to open.  This path must
  *                  be compatible with fopen.
- * @returns         NULL if an error occurs.
+ * @return          NULL if an error occurs.
  */
 MarFile *mar_open(const char *path);
 
@@ -97,7 +102,7 @@ void mar_close(MarFile *mar);
  * Find an item in the MAR file by name.
  * @param mar       The MarFile object to query.
  * @param item      The name of the item to query.
- * @returns         A const reference to a MAR item or NULL if not found.
+ * @return          A const reference to a MAR item or NULL if not found.
  */
 const MarItem *mar_find_item(MarFile *mar, const char *item);
 
@@ -107,7 +112,7 @@ const MarItem *mar_find_item(MarFile *mar, const char *item);
  * @param callback  The function to call for each MAR item.
  * @param data      A caller specified value that is passed along to the
  *                  callback function.
- * @returns         Zero if the enumeration ran to completion.  Otherwise, any
+ * @return          0 if the enumeration ran to completion.  Otherwise, any
  *                  non-zero return value from the callback is returned.
  */
 int mar_enum_items(MarFile *mar, MarItemCallback callback, void *data);
@@ -119,7 +124,7 @@ int mar_enum_items(MarFile *mar, MarItemCallback callback, void *data);
  * @param offset    The byte offset relative to the start of the item.
  * @param buf       A pointer to a buffer to copy the data into.
  * @param bufsize   The length of the buffer to copy the data into.
- * @returns         The number of bytes written or a negative value if an
+ * @return          The number of bytes written or a negative value if an
  *                  error occurs.
  */
 int mar_read(MarFile *mar, const MarItem *item, int offset, char *buf,
@@ -132,15 +137,19 @@ int mar_read(MarFile *mar, const MarItem *item, int offset, char *buf,
  * @param numfiles  The number of files to store in the archive.
  * @param files     The list of null-terminated file paths.  Each file
  *                  path must be compatible with fopen.
- * @returns         A non-zero value if an error occurs.
+ * @param infoBlock The information to store in the product information block.
+ * @return          A non-zero value if an error occurs.
  */
-int mar_create(const char *dest, int numfiles, char **files);
+int mar_create(const char *dest, 
+               int numfiles, 
+               char **files, 
+               struct ProductInformationBlock *infoBlock);
 
 /**
  * Extract a MAR file to the current working directory.
  * @param path      The path to the MAR file to extract.  This path must be
  *                  compatible with fopen.
- * @returns         A non-zero value if an error occurs.
+ * @return          A non-zero value if an error occurs.
  */
 int mar_extract(const char *path);
 
@@ -162,6 +171,18 @@ int mar_verify_signatureW(MarFile *mar,
                           const char *certData,
                           PRUint32 sizeOfCertData);
 #endif
+
+/** 
+ * Reads the product info block from the MAR file's additional block section.
+ * The caller is responsible for freeing the fields in infoBlock
+ * if the return is successful.
+ *
+ * @param infoBlock Out parameter for where to store the result to
+ * @return 0 on success, -1 on failure
+*/
+int
+mar_read_product_info_block(MarFile *mar, 
+                            struct ProductInformationBlock *infoBlock);
 
 #ifdef __cplusplus
 }
