@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 var bmsvc = PlacesUtils.bookmarks;
-var lmsvc = PlacesUtils.livemarks;
 var ptSvc = PlacesUIUtils.ptm;
 var tagssvc = PlacesUtils.tagging;
 var annosvc = PlacesUtils.annotations;
@@ -418,84 +417,6 @@ function run_test() {
   do_check_eq(observer._itemChangedId, bkmk1Id);
   do_check_eq(observer._itemChangedProperty, "keyword");
   do_check_eq(observer._itemChangedValue, ""); 
-
-  // Testing create livemark
-  var txn12 = ptSvc.createLivemark(uri("http://feeduri.com"),
-                                   uri("http://siteuri.com"),
-                                   "Livemark1", root);
-  txn12.doTransaction();
-  var lvmkId = observer._itemAddedId;
-  do_check_true(lmsvc.isLivemark(lvmkId));
-  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
-  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
-  txn12.undoTransaction();
-  do_check_false(lmsvc.isLivemark(lvmkId));
-  txn12.redoTransaction();
-  lvmkId = observer._itemAddedId;
-  do_check_true(lmsvc.isLivemark(lvmkId));
-  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
-  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
-
-  // editLivemarkSiteURI
-  var txn13 = ptSvc.editLivemarkSiteURI(lvmkId, uri("http://new-siteuri.com/"));
-  txn13.doTransaction();
-  do_check_eq(observer._itemChangedId, lvmkId);
-  do_check_eq(observer._itemChangedProperty, "livemark/siteURI");
-  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://new-siteuri.com/");
-  txn13.undoTransaction();
-  do_check_eq(observer._itemChangedId, lvmkId);
-  do_check_eq(observer._itemChangedProperty, "livemark/siteURI");
-  do_check_eq(observer._itemChangedValue, "");
-  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
-  txn13.redoTransaction();
-  do_check_eq(observer._itemChangedId, lvmkId);
-  do_check_eq(observer._itemChangedProperty, "livemark/siteURI");
-  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://new-siteuri.com/");
-  txn13.undoTransaction();
-  do_check_eq(observer._itemChangedId, lvmkId);
-  do_check_eq(observer._itemChangedProperty, "livemark/siteURI");
-  do_check_eq(observer._itemChangedValue, "");
-  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
-
-  // editLivemarkFeedURI
-  var txn14 = ptSvc.editLivemarkFeedURI(lvmkId, uri("http://new-feeduri.com/"));
-  txn14.doTransaction();
-  do_check_eq(observer._itemChangedId, lvmkId);
-  do_check_eq(observer._itemChangedProperty, "livemark/feedURI");
-  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://new-feeduri.com/");
-  txn14.undoTransaction();
-  do_check_eq(observer._itemChangedId, lvmkId);
-  do_check_eq(observer._itemChangedProperty, "livemark/feedURI");
-  do_check_eq(observer._itemChangedValue, "");
-  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
-  txn14.redoTransaction();
-  do_check_eq(observer._itemChangedId, lvmkId);
-  do_check_eq(observer._itemChangedProperty, "livemark/feedURI");
-  do_check_eq(observer._itemChangedValue, "");
-  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://new-feeduri.com/");
-  txn14.undoTransaction();
-  do_check_eq(observer._itemChangedId, lvmkId);
-  do_check_eq(observer._itemChangedProperty, "livemark/feedURI");
-  do_check_eq(observer._itemChangedValue, "");
-  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
-
-  // Testing remove livemark
-  // Set an annotation and check that we don't lose it on undo
-  annosvc.setItemAnnotation(lvmkId, "livemark/testAnno", "testAnno",
-                            0, annosvc.EXPIRE_NEVER);
-  var txn15 = ptSvc.removeItem(lvmkId);
-  txn15.doTransaction();
-  do_check_false(lmsvc.isLivemark(lvmkId));
-  do_check_eq(observer._itemRemovedId, lvmkId);
-  txn15.undoTransaction();
-  lvmkId = observer._itemAddedId;
-  do_check_true(lmsvc.isLivemark(lvmkId));
-  do_check_eq(lmsvc.getSiteURI(lvmkId).spec, "http://siteuri.com/");
-  do_check_eq(lmsvc.getFeedURI(lvmkId).spec, "http://feeduri.com/");
-  do_check_eq(annosvc.getItemAnnotation(lvmkId, "livemark/testAnno"), "testAnno");
-  txn15.redoTransaction();
-  do_check_false(lmsvc.isLivemark(lvmkId));
-  do_check_eq(observer._itemRemovedId, lvmkId);
 
   // Test LoadInSidebar transaction.
   var txn16 = ptSvc.setLoadInSidebar(bkmk1Id, true);

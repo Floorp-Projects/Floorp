@@ -44,70 +44,6 @@
  * https://bugzilla.mozilla.org/show_bug.cgi?id=412132
  */
 
-add_test(function unvisited_bookmarked_livemarkItem()
-{
-  do_log_info("Frecency of unvisited, separately bookmarked livemark item's " +
-              "URI should be zero after bookmark's URI changed.");
-
-  // Add livemark and bookmark.  Bookmark's URI is the URI of the livemark's
-  // only item.
-  const TEST_URI = NetUtil.newURI("http://example.com/livemark-item");
-  createLivemark(TEST_URI);
-  let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                TEST_URI,
-                                                PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                "bookmark title");
-  waitForAsyncUpdates(function ()
-  {
-    do_log_info("Bookmarked => frecency of URI should be != 0.");
-    do_check_neq(frecencyForUrl(TEST_URI), 0);
-
-    PlacesUtils.bookmarks.changeBookmarkURI(id, NetUtil.newURI("http://example.com/new-uri"));
-
-    waitForAsyncUpdates(function ()
-    {
-      do_log_info("URI's only bookmark is now unvisited livemark item => frecency = 0");
-      do_check_eq(frecencyForUrl(TEST_URI), 0);
-
-      remove_all_bookmarks();
-      waitForClearHistory(run_next_test);
-    });
-  });
-});
-
-add_test(function visited_bookmarked_livemarkItem()
-{
-  do_log_info("Frecency of visited, separately bookmarked livemark item's " +
-              "URI should not be zero after bookmark's URI changed.");
-
-  // Add livemark and bookmark.  Bookmark's URI is the URI of the livemark's
-  // only item.
-  const TEST_URI = NetUtil.newURI("http://example.com/livemark-item");
-  createLivemark(TEST_URI);
-  let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                TEST_URI,
-                                                PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                "bookmark title");
-  waitForAsyncUpdates(function ()
-  {
-    do_log_info("Bookmarked => frecency of URI should be != 0");
-    do_check_neq(frecencyForUrl(TEST_URI), 0);
-
-    visit(TEST_URI);
-
-    PlacesUtils.bookmarks.changeBookmarkURI(id, uri("http://example.com/new-uri"));
-
-    waitForAsyncUpdates(function ()
-    {
-      do_log_info("URI's only bookmark is now *visited* livemark item => frecency != 0");
-      do_check_neq(frecencyForUrl(TEST_URI), 0);
-
-      remove_all_bookmarks();
-      waitForClearHistory(run_next_test);
-    });
-  });
-});
-
 add_test(function changeuri_unvisited_bookmark()
 {
   do_log_info("After changing URI of bookmark, frecency of bookmark's " +
@@ -231,25 +167,6 @@ add_test(function changeuri_nonexistent_bookmark()
 });
 
 ///////////////////////////////////////////////////////////////////////////////
-
-/**
- * Creates a livemark with a single child item.
- *
- * @param  aChildURI
- *         the URI of the livemark's single child item
- * @return the item ID of the single child item
- */
-function createLivemark(aChildURI)
-{
-  let livemarkId = PlacesUtils.livemarks.createLivemarkFolderOnly(
-    PlacesUtils.unfiledBookmarksFolderId, "livemark title",
-    uri("http://example.com/"), uri("http://example.com/rdf"), -1
-  );
-  return PlacesUtils.bookmarks.insertBookmark(livemarkId,
-                                              aChildURI,
-                                              PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                              "livemark item title");
-}
 
 /**
  * Adds a visit for aURI.
