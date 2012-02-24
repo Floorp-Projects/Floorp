@@ -144,7 +144,8 @@
   
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-  <menupopup id="viewSourceContextMenu">
+  <menupopup id="viewSourceContextMenu"
+             onpopupshowing="contextMenuShowing();">
     <menuitem id="context-back"
               label="&backCmd.label;"
               accesskey="&backCmd.accesskey;"
@@ -159,6 +160,14 @@
     <menuitem id="cMenu_findAgain"/>
     <menuseparator/>
     <menuitem id="cMenu_copy"/>
+    <menuitem id="context-copyLink"
+              label="&copyLinkCmd.label;"
+              accesskey="&copyLinkCmd.accesskey;"
+              oncommand="contextMenuCopyLinkOrEmail();"/>
+    <menuitem id="context-copyEmail"
+              label="&copyEmailCmd.label;"
+              accesskey="&copyEmailCmd.accesskey;"
+              oncommand="contextMenuCopyLinkOrEmail();"/>
     <menuseparator/>
     <menuitem id="cMenu_selectAll"/>
   </menupopup>

@@ -176,7 +176,7 @@ public class CryptoRecord extends Record {
     if (jsonRecord.containsKey(KEY_MODIFIED)) {
       record.lastModified = jsonRecord.getTimestamp(KEY_MODIFIED);
     }
-    if (jsonRecord.containsKey(KEY_SORTINDEX )) {
+    if (jsonRecord.containsKey(KEY_SORTINDEX)) {
       record.sortIndex = jsonRecord.getLong(KEY_SORTINDEX);
     }
     // TODO: deleted?

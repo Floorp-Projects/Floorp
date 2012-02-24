@@ -47,7 +47,8 @@ var gGoToLine = 0;
 
 [
   ["gBrowser",          "content"],
-  ["gViewSourceBundle", "viewSourceBundle"]
+  ["gViewSourceBundle", "viewSourceBundle"],
+  ["gContextMenu",      "viewSourceContextMenu"]
 ].forEach(function ([name, id]) {
   window.__defineGetter__(name, function () {
     var element = document.getElementById(id);
@@ -797,3 +798,25 @@ function FillInHTMLTooltip(tipElement)
   return retVal;
 }
 
+function contextMenuShowing() {
+  var isLink = false;
+  var isEmail = false;
+  if (gContextMenu.triggerNode && gContextMenu.triggerNode.localName == 'a') {
+    if (gContextMenu.triggerNode.href.indexOf('view-source:') == 0)
+      isLink = true;
+    if (gContextMenu.triggerNode.href.indexOf('mailto:') == 0)
+      isEmail = true;
+  }
+  document.getElementById('context-copyLink').hidden = !isLink;
+  document.getElementById('context-copyEmail').hidden = !isEmail;
+}
+
+function contextMenuCopyLinkOrEmail() {
+  if (!gContextMenu.triggerNode)
+    return;
+
+  var href = gContextMenu.triggerNode.href;
+  var clipboard = Cc['@mozilla.org/widget/clipboardhelper;1'].
+                  getService(Ci.nsIClipboardHelper);
+  clipboard.copyString(href.substring(href.indexOf(':') + 1));
+}

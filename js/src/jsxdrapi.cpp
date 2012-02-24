@@ -237,7 +237,9 @@ JS_XDRInitBase(JSXDRState *xdr, JSXDRMode mode, JSContext *cx)
     xdr->mode = mode;
     xdr->cx = cx;
     xdr->userdata = NULL;
-    xdr->state = NULL;
+    xdr->sharedFilename = NULL;
+    xdr->principals = NULL;
+    xdr->originPrincipals = NULL;
 }
 
 JS_PUBLIC_API(JSXDRState *)
@@ -394,19 +396,6 @@ JS_XDRCString(JSXDRState *xdr, char **sp)
     return JS_TRUE;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_XDRCStringOrNull(JSXDRState *xdr, char **sp)
-{
-    uint32_t null = (*sp == NULL);
-    if (!JS_XDRUint32(xdr, &null))
-        return JS_FALSE;
-    if (null) {
-        *sp = NULL;
-        return JS_TRUE;
-    }
-    return JS_XDRCString(xdr, sp);
-}
-
 static JSBool
 XDRChars(JSXDRState *xdr, jschar *chars, uint32_t nchars)
 {
@@ -543,44 +532,100 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
     return JS_TRUE;
 }
 
-XDRScriptState::XDRScriptState(JSXDRState *x)
-    : xdr(x)
-    , filename(NULL)
-    , filenameSaved(false)
+static bool
+XDRPrincipals(JSXDRState *xdr)
 {
-    JS_ASSERT(!xdr->state);
+    const uint8_t HAS_PRINCIPALS   = 1;
+    const uint8_t HAS_ORIGIN       = 2;
 
-    xdr->state = this;
+    uint8_t flags = 0;
+    if (xdr->mode == JSXDR_ENCODE) {
+        if (xdr->principals)
+            flags |= HAS_PRINCIPALS;
+
+        /*
+         * For the common case when principals == originPrincipals we want to
+         * avoid serializing the same principal twice. As originPrincipals are
+         * normalized and principals imply originPrincipals we simply set
+         * HAS_ORIGIN only if originPrincipals is set and different from
+         * principals. During decoding we re-normalize originPrincipals.
+         */
+        JS_ASSERT_IF(xdr->principals, xdr->originPrincipals);
+        if (xdr->originPrincipals && xdr->originPrincipals != xdr->principals)
+            flags |= HAS_ORIGIN;
+    }
+
+    if (!JS_XDRUint8(xdr, &flags))
+        return false;
+
+    if (flags & (HAS_PRINCIPALS | HAS_ORIGIN)) {
+        JSSecurityCallbacks *scb = JS_GetSecurityCallbacks(xdr->cx);
+        if (xdr->mode == JSXDR_DECODE) {
+            if (!scb || !scb->principalsTranscoder) {
+                JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
+                                     JSMSG_CANT_DECODE_PRINCIPALS);
+                return false;
+            }
+        } else {
+            JS_ASSERT(scb);
+            JS_ASSERT(scb->principalsTranscoder);
+        }
+
+        if (flags & HAS_PRINCIPALS) {
+            if (!scb->principalsTranscoder(xdr, &xdr->principals))
+                return false;
+        }
+
+        if (flags & HAS_ORIGIN) {
+            if (!scb->principalsTranscoder(xdr, &xdr->originPrincipals))
+                return false;
+        } else if (xdr->mode == JSXDR_DECODE && xdr->principals) {
+            xdr->originPrincipals = xdr->principals;
+            JSPRINCIPALS_HOLD(xdr->cx, xdr->principals);
+        }
+    }
+
+    return true;
 }
 
-XDRScriptState::~XDRScriptState()
-{
-    xdr->state = NULL;
-    if (xdr->mode == JSXDR_DECODE && filename && !filenameSaved)
-        xdr->cx->free_((void *)filename);
-}
+namespace {
+
+struct AutoDropXDRPrincipals {
+    JSXDRState *const xdr;
+
+    AutoDropXDRPrincipals(JSXDRState *xdr)
+      : xdr(xdr) { }
+
+    ~AutoDropXDRPrincipals() {
+        if (xdr->mode == JSXDR_DECODE) {
+            if (xdr->principals)
+                JSPRINCIPALS_DROP(xdr->cx, xdr->principals);
+            if (xdr->originPrincipals)
+                JSPRINCIPALS_DROP(xdr->cx, xdr->originPrincipals);
+        }
+        xdr->principals = NULL;
+        xdr->originPrincipals = NULL;
+    }
+};
+
+} /* namespace anonymous */
 
 JS_PUBLIC_API(JSBool)
 JS_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 {
-    XDRScriptState fstate(xdr);
-
+    AutoDropXDRPrincipals drop(xdr);
     if (xdr->mode == JSXDR_ENCODE) {
-        JSFunction* fun = (*objp)->toFunction();
-        fstate.filename = fun->script()->filename;
+        JSScript *script = (*objp)->toFunction()->script();
+        xdr->principals = script->principals;
+        xdr->originPrincipals = script->originPrincipals;
     }
 
-    if (!JS_XDRCStringOrNull(xdr, (char **) &fstate.filename))
-        return false;
-
-    return XDRFunctionObject(xdr, objp);
+    return XDRPrincipals(xdr) && XDRFunctionObject(xdr, objp);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
-    JS_ASSERT(!xdr->state);
-
     JSScript *script;
     uint32_t magic;
     uint32_t bytecodeVer;
@@ -605,17 +650,16 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         return false;
     }
 
-    XDRScriptState state(xdr);
-    if (!xdr->state)
-        return false;
-
-    if (xdr->mode == JSXDR_ENCODE)
-        state.filename = script->filename;
-    if (!JS_XDRCStringOrNull(xdr, (char **) &state.filename))
-        return false;
-
-    if (!XDRScript(xdr, &script))
-        return false;
+    {
+        AutoDropXDRPrincipals drop(xdr);
+        if (xdr->mode == JSXDR_ENCODE) {
+            xdr->principals = script->principals;
+            xdr->originPrincipals = script->originPrincipals;
+        }
+        
+        if (!XDRPrincipals(xdr) || !XDRScript(xdr, &script))
+            return false;
+    }
 
     if (xdr->mode == JSXDR_DECODE) {
         JS_ASSERT(!script->compileAndGo);

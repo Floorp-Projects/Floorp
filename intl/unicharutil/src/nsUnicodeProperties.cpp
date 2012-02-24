@@ -35,18 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "gfxUnicodeProperties.h"
-#include "gfxUnicodePropertyData.cpp"
+#include "nsUnicodeProperties.h"
+#include "nsUnicodeScriptCodes.h"
+#include "nsUnicodePropertyData.cpp"
 
 #include "mozilla/Util.h"
 #include "nsMemory.h"
 
 #include "harfbuzz/hb-unicode.h"
 
-using namespace mozilla;
-
 #define UNICODE_BMP_LIMIT 0x10000
 #define UNICODE_LIMIT     0x110000
+
+namespace mozilla {
+
+namespace unicode {
 
 /*
 To store properties for a million Unicode codepoints compactly, we use
@@ -69,8 +72,45 @@ to provide the most compact storage, depending on the distribution
 of values.
 */
 
+nsIUGenCategory::nsUGenCategory sDetailedToGeneralCategory[] = {
+  /*
+   * The order here corresponds to the HB_UNICODE_GENERAL_CATEGORY_* constants
+   * of the hb_unicode_general_category_t enum in gfx/harfbuzz/src/hb-common.h.
+   */
+  /* CONTROL */             nsIUGenCategory::kOther,
+  /* FORMAT */              nsIUGenCategory::kOther,
+  /* UNASSIGNED */          nsIUGenCategory::kOther,
+  /* PRIVATE_USE */         nsIUGenCategory::kOther,
+  /* SURROGATE */           nsIUGenCategory::kOther,
+  /* LOWERCASE_LETTER */    nsIUGenCategory::kLetter,
+  /* MODIFIER_LETTER */     nsIUGenCategory::kLetter,
+  /* OTHER_LETTER */        nsIUGenCategory::kLetter,
+  /* TITLECASE_LETTER */    nsIUGenCategory::kLetter,
+  /* UPPERCASE_LETTER */    nsIUGenCategory::kLetter,
+  /* COMBINING_MARK */      nsIUGenCategory::kMark,
+  /* ENCLOSING_MARK */      nsIUGenCategory::kMark,
+  /* NON_SPACING_MARK */    nsIUGenCategory::kMark,
+  /* DECIMAL_NUMBER */      nsIUGenCategory::kNumber,
+  /* LETTER_NUMBER */       nsIUGenCategory::kNumber,
+  /* OTHER_NUMBER */        nsIUGenCategory::kNumber,
+  /* CONNECT_PUNCTUATION */ nsIUGenCategory::kPunctuation,
+  /* DASH_PUNCTUATION */    nsIUGenCategory::kPunctuation,
+  /* CLOSE_PUNCTUATION */   nsIUGenCategory::kPunctuation,
+  /* FINAL_PUNCTUATION */   nsIUGenCategory::kPunctuation,
+  /* INITIAL_PUNCTUATION */ nsIUGenCategory::kPunctuation,
+  /* OTHER_PUNCTUATION */   nsIUGenCategory::kPunctuation,
+  /* OPEN_PUNCTUATION */    nsIUGenCategory::kPunctuation,
+  /* CURRENCY_SYMBOL */     nsIUGenCategory::kSymbol,
+  /* MODIFIER_SYMBOL */     nsIUGenCategory::kSymbol,
+  /* MATH_SYMBOL */         nsIUGenCategory::kSymbol,
+  /* OTHER_SYMBOL */        nsIUGenCategory::kSymbol,
+  /* LINE_SEPARATOR */      nsIUGenCategory::kSeparator,
+  /* PARAGRAPH_SEPARATOR */ nsIUGenCategory::kSeparator,
+  /* SPACE_SEPARATOR */     nsIUGenCategory::kSeparator
+};
+
 PRUint32
-gfxUnicodeProperties::GetMirroredChar(PRUint32 aCh)
+GetMirroredChar(PRUint32 aCh)
 {
     // all mirrored chars are in plane 0
     if (aCh < UNICODE_BMP_LIMIT) {
@@ -90,7 +130,7 @@ gfxUnicodeProperties::GetMirroredChar(PRUint32 aCh)
 }
 
 PRUint8
-gfxUnicodeProperties::GetCombiningClass(PRUint32 aCh)
+GetCombiningClass(PRUint32 aCh)
 {
     if (aCh < UNICODE_BMP_LIMIT) {
         return sCClassValues[sCClassPages[0][aCh >> kCClassCharBits]]
@@ -106,7 +146,7 @@ gfxUnicodeProperties::GetCombiningClass(PRUint32 aCh)
 }
 
 PRUint8
-gfxUnicodeProperties::GetGeneralCategory(PRUint32 aCh)
+GetGeneralCategory(PRUint32 aCh)
 {
     if (aCh < UNICODE_BMP_LIMIT) {
         return sCatEAWValues[sCatEAWPages[0][aCh >> kCatEAWCharBits]]
@@ -122,7 +162,7 @@ gfxUnicodeProperties::GetGeneralCategory(PRUint32 aCh)
 }
 
 PRUint8
-gfxUnicodeProperties::GetEastAsianWidth(PRUint32 aCh)
+GetEastAsianWidth(PRUint32 aCh)
 {
     if (aCh < UNICODE_BMP_LIMIT) {
         return sCatEAWValues[sCatEAWPages[0][aCh >> kCatEAWCharBits]]
@@ -138,7 +178,7 @@ gfxUnicodeProperties::GetEastAsianWidth(PRUint32 aCh)
 }
 
 PRInt32
-gfxUnicodeProperties::GetScriptCode(PRUint32 aCh)
+GetScriptCode(PRUint32 aCh)
 {
     if (aCh < UNICODE_BMP_LIMIT) {
         return sScriptValues[sScriptPages[0][aCh >> kScriptCharBits]]
@@ -154,7 +194,7 @@ gfxUnicodeProperties::GetScriptCode(PRUint32 aCh)
 }
 
 PRUint32
-gfxUnicodeProperties::GetScriptTagForCode(PRInt32 aScriptCode)
+GetScriptTagForCode(PRInt32 aScriptCode)
 {
     // this will safely return 0 for negative script codes, too :)
     if (PRUint32(aScriptCode) > ArrayLength(sScriptCodeToTag)) {
@@ -163,8 +203,8 @@ gfxUnicodeProperties::GetScriptTagForCode(PRInt32 aScriptCode)
     return sScriptCodeToTag[aScriptCode];
 }
 
-gfxUnicodeProperties::HSType
-gfxUnicodeProperties::GetHangulSyllableType(PRUint32 aCh)
+HSType
+GetHangulSyllableType(PRUint32 aCh)
 {
     // all Hangul chars are in plane 0
     if (aCh < UNICODE_BMP_LIMIT) {
@@ -183,7 +223,7 @@ gfxUnicodeProperties::GetHangulSyllableType(PRUint32 aCh)
 // preference to decide whether to use the harfbuzz shaper.
 //
 PRInt32
-gfxUnicodeProperties::ScriptShapingType(PRInt32 aScriptCode)
+ScriptShapingType(PRInt32 aScriptCode)
 {
     switch (aScriptCode) {
     default:
@@ -231,3 +271,7 @@ gfxUnicodeProperties::ScriptShapingType(PRInt32 aScriptCode)
         return SHAPING_INDIC; // scripts that require Indic or other "special" shaping
     }
 }
+
+} // end namespace unicode
+
+} // end namespace mozilla

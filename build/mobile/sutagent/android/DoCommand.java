@@ -136,12 +136,13 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.05";
+    private final String prgVersion = "SUTAgentAndroid Version 1.06";
 
     public enum Command
         {
         RUN ("run"),
         EXEC ("exec"),
+        EXECCWD ("execcwd"),
         ENVRUN ("envrun"),
         KILL ("kill"),
         PS ("ps"),
@@ -692,7 +693,25 @@ public class DoCommand {
                         theArgs[lcv - 1] = Argv[lcv];
                         }
 
-                    strReturn = StartPrg2(theArgs, cmdOut);
+                    strReturn = StartPrg2(theArgs, cmdOut, null);
+                    }
+                else
+                    {
+                    strReturn = sErrorPrefix + "Wrong number of arguments for " + Argv[0] + " command!";
+                    }
+                break;
+
+            case EXECCWD:
+                if (Argc >= 3)
+                    {
+                    String [] theArgs = new String [Argc - 2];
+
+                    for (int lcv = 2; lcv < Argc; lcv++)
+                        {
+                        theArgs[lcv - 2] = Argv[lcv];
+                        }
+
+                    strReturn = StartPrg2(theArgs, cmdOut, Argv[1]);
                     }
                 else
                     {
@@ -1262,6 +1281,11 @@ private void CancelNotification()
         {
         String    sRet = null;
 
+        File tmpFile = new java.io.File("/data/local/tests");
+        if (tmpFile.exists() && tmpFile.isDirectory()) 
+            {
+            return("/data/local");
+            }
         if (Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED))
             {
             sRet = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -3463,7 +3487,7 @@ private void CancelNotification()
         return (sRet);
         }
 
-    public String StartPrg2(String [] progArray, OutputStream out)
+    public String StartPrg2(String [] progArray, OutputStream out, String cwd)
         {
         String sRet = "";
 
@@ -3553,7 +3577,15 @@ private void CancelNotification()
 
             if (theArgs[0].contains("/") || theArgs[0].contains("\\") || !theArgs[0].contains("."))
                 {
-                pProc = Runtime.getRuntime().exec(theArgs, envArray);
+                if (cwd != null)
+                    {
+                    File f = new File(cwd);
+                    pProc = Runtime.getRuntime().exec(theArgs, envArray, f);
+                    }
+                else
+                    {
+                    pProc = Runtime.getRuntime().exec(theArgs, envArray);
+                    }
 
                 RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
                 outThrd.start();

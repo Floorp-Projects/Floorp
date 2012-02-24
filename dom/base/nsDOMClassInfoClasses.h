@@ -486,6 +486,7 @@ DOMCI_CLASS(WebGLShaderPrecisionFormat)
 DOMCI_CLASS(WebGLActiveInfo)
 DOMCI_CLASS(WebGLExtension)
 DOMCI_CLASS(WebGLExtensionStandardDerivatives)
+DOMCI_CLASS(WebGLExtensionTextureFilterAnisotropic)
 DOMCI_CLASS(WebGLExtensionLoseContext)
 
 DOMCI_CLASS(PaintRequest)
@@ -545,3 +546,4 @@ DOMCI_CLASS(BluetoothAdapter)
 #endif
 
 DOMCI_CLASS(DOMError)
+DOMCI_CLASS(DOMRequest)
