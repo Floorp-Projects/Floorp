@@ -43,7 +43,6 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
-#include "nsDOMMemoryReporter.h"
 
 using namespace mozilla;
 

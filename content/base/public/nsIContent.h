@@ -43,7 +43,6 @@
 #include "nsChangeHint.h"
 #include "nsINode.h"
 #include "nsIDocument.h" // for IsInHTMLDocument
-#include "nsDOMMemoryReporter.h"
 
 // Forward declarations
 class nsIAtom;

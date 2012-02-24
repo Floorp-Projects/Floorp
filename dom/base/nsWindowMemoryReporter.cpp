@@ -35,22 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsDOMMemoryReporter.h"
+#include "nsWindowMemoryReporter.h"
 #include "nsGlobalWindow.h"
 
 
-nsDOMMemoryMultiReporter::nsDOMMemoryMultiReporter()
+nsWindowMemoryReporter::nsWindowMemoryReporter()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsDOMMemoryMultiReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(nsWindowMemoryReporter, nsIMemoryMultiReporter)
 
 /* static */
 void
-nsDOMMemoryMultiReporter::Init()
+nsWindowMemoryReporter::Init()
 {
   // The memory reporter manager is going to own this object.
-  NS_RegisterMemoryMultiReporter(new nsDOMMemoryMultiReporter());
+  NS_RegisterMemoryMultiReporter(new nsWindowMemoryReporter());
 }
 
 static bool
@@ -240,15 +240,15 @@ GetWindows(const PRUint64& aId, nsGlobalWindow*& aWindow, void* aClosure)
 }
 
 NS_IMETHODIMP
-nsDOMMemoryMultiReporter::GetName(nsACString &aName)
+nsWindowMemoryReporter::GetName(nsACString &aName)
 {
   aName.AssignLiteral("window-objects");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
-                                         nsISupports* aClosure)
+nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
+                                       nsISupports* aClosure)
 {
   nsGlobalWindow::WindowByIdTable* windowsById =
     nsGlobalWindow::GetWindowsTable();
@@ -302,7 +302,7 @@ nsDOMMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
 }
 
 NS_IMETHODIMP
-nsDOMMemoryMultiReporter::GetExplicitNonHeap(PRInt64* aAmount)
+nsWindowMemoryReporter::GetExplicitNonHeap(PRInt64* aAmount)
 {
   // This reporter only measures heap memory.
   *aAmount = 0;
