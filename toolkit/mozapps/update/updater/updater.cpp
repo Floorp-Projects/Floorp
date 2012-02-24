@@ -1674,15 +1674,7 @@ int NS_main(int argc, NS_tchar **argv)
   // Our tests run with a different apply directory for each test.
   // We use this registry key on our test slaves to store the 
   // allowed name/issuers.
-  HKEY testOnlyFallbackKey;
-  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
-                    TEST_ONLY_FALLBACK_KEY_PATH, 0,
-                    KEY_READ | KEY_WOW64_64KEY, 
-                    &testOnlyFallbackKey) == ERROR_SUCCESS) {
-    testOnlyFallbackKeyExists = true;
-    RegCloseKey(testOnlyFallbackKey);
-  }
-
+  testOnlyFallbackKeyExists = DoesFallbackKeyExist();
 #endif
 #endif
 
