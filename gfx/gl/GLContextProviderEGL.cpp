@@ -267,15 +267,6 @@ is_power_of_two(int v)
 static void BeforeGLCall(const char* glFunction)
 {
     if (GLContext::DebugMode()) {
-        // since the static member variable sCurrentGLContext is not thread-local as it should,
-        // we have to assert that we're in the main thread. Note that sCurrentGLContext is only used
-        // for the OpenGL debug mode.
-        if (!NS_IsMainThread()) {
-            NS_ERROR("OpenGL call from non-main thread. While this is fine in itself, "
-                     "the OpenGL debug mode, which is currently enabled, doesn't support this. "
-                     "It needs to be patched by making GLContext::sCurrentGLContext be thread-local.\n");
-            NS_ABORT();
-        }
         if (GLContext::DebugMode() & GLContext::DebugTrace)
             printf_stderr("[egl] > %s\n", glFunction);
     }
