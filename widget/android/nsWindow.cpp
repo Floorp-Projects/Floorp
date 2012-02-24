@@ -823,18 +823,6 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
     return mLayerManager;
 }
 
-gfxASurface*
-nsWindow::GetThebesSurface()
-{
-    /* This is really a dummy surface; this is only used when doing reflow, because
-     * we need a RenderingContext to measure text against.
-     */
-
-    // XXX this really wants to return already_AddRefed, but this only really gets used
-    // on direct assignment to a gfxASurface
-    return new gfxImageSurface(gfxIntSize(5,5), gfxImageSurface::ImageFormatRGB24);
-}
-
 void
 nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 {
@@ -1183,16 +1171,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     event.region = tileRect;
 #endif
 
-    static unsigned char *bits2 = NULL;
-    static gfxIntSize bitsSize(0, 0);
-    if (bitsSize.width != gAndroidBounds.width || bitsSize.height != gAndroidBounds.height) {
-        if (bits2) {
-            delete[] bits2;
-        }
-        bits2 = new unsigned char[gAndroidBounds.width * gAndroidBounds.height * 2];
-        bitsSize = gAndroidBounds;
-    }
-
+    static unsigned char *bits2 = new unsigned char[32 * 32 * 2];
     nsRefPtr<gfxImageSurface> targetSurface =
         new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * 2,
                             gfxASurface::ImageFormatRGB16_565);
@@ -1216,8 +1195,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### BeginDrawing returned false!");
         return;
     }
-
-    unsigned char *bits = NULL;
 
     if (targetSurface->CairoStatus()) {
         ALOG("### Failed to create a valid surface from the bitmap");
