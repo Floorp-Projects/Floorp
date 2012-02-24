@@ -71,7 +71,6 @@
 #include "nsUnicodeRange.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
-#include "nsIUGenCategory.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsILocaleService.h"
 
