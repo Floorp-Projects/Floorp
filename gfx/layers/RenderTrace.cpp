@@ -97,6 +97,20 @@ void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor) {
   RenderTraceInvalidateStart(aLayer, aColor, nsIntRect());
 }
 
+void renderTraceEventStart(const char *aComment, const char *aColor) {
+  printf_stderr("%s RENDERTRACE %u fillrect #%s 0 0 10 10\n",
+    aComment, (int)PR_IntervalNow(), aColor);
+}
+
+void renderTraceEventEnd(const char *aComment, const char *aColor) {
+  printf_stderr("%s RENDERTRACE %u fillrect #%s 0 0 0 0\n",
+    aComment, (int)PR_IntervalNow(), aColor);
+}
+
+void renderTraceEventEnd(const char *aColor) {
+  renderTraceEventEnd("", aColor);
+}
+
 }
 }
 
