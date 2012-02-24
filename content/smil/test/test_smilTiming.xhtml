@@ -43,7 +43,8 @@ function main() {
   is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
 
   var tests =
-    [ testOffsetStartup,
+    [ testListSyntax,
+      testOffsetStartup,
       testMultipleBegins,
       testNegativeBegins,
       testSorting
@@ -60,6 +61,40 @@ function main() {
 function checkSample(time, expectedValue) {
   svg.setCurrentTime(time);
   is(circle.cx.animVal.value, expectedValue);
+}
+
+function getStartTime(anim) {
+  var startTime;
+  try {
+    startTime = anim.getStartTime();
+  } catch(e) {
+    if (e.code == DOMException.INVALID_STATE_ERR) {
+      startTime = 'none';
+    } else {
+      ok(false, "Unexpected exception: " + e);
+    }
+  }
+  return startTime;
+}
+
+function testListSyntax() {
+  var specs = [ [ '0', 0 ],
+                [ '3;', 3 ],
+                [ '3; ', 3 ],
+                [ '3 ; ', 3 ],
+                [ '3;;', 'none' ],
+                [ '3;; ', 'none' ],
+                [ ';3', 'none' ],
+                [ ' ;3', 'none' ],
+                [ '3;4', 3 ],
+                [ ' 3 ; 4 ', 3 ] ];
+  for (var i = 0; i < specs.length; i++) {
+    var anim = createAnim()
+    anim.setAttribute('begin', specs[i][0]);
+    is(getStartTime(anim), specs[i][1],
+       "Got unexpected start time for " + specs[i][0]);
+    removeAnim(anim);
+  }
 }
 
 function testOffsetStartup(anim) {

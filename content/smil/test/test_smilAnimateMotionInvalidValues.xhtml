@@ -64,6 +64,13 @@ function testAttr(aAttrName, aAttrValueArray, aIsValid, aIsTodo)
       // our value is rejected.
       anim.setAttribute("rotate", Math.PI/4);
       componentsToCheck = CTMUtil.CTM_COMPONENTS_ALL;
+      if (aAttrName == "keyPoints") {
+        // Add three times so we can test a greater range of values for
+        // keyPoints
+        anim.setAttribute("values", "0 0; 25 25; 50 50");
+        anim.setAttribute("keyTimes", "0; 0.5; 1");
+        anim.setAttribute("calcMode", "discrete");
+      }
     }
 
     var curCTM = gRect.getCTM();
@@ -157,6 +164,9 @@ function main()
   testAttr("path", gValidPath, true, false);
   testAttr("path", gInvalidPath, false, false);
   testAttr("path", gValidPathWithErrors, true, false);
+
+  testAttr("keyPoints", gValidKeyPoints, true, false);
+  testAttr("keyPoints", gInvalidKeyPoints, false, false);
 
   testMpathElem(gValidPath, true, false);
   testMpathElem(gInvalidPath, false, false);
