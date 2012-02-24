@@ -255,6 +255,17 @@ public:
    */
   void NotifyItemChanged(const ItemChangeData& aData);
 
+  /**
+   * Recursively builds an array of descendant folders inside a given folder.
+   *
+   * @param aFolderId
+   *        The folder to fetch descendants from.
+   * @param aDescendantFoldersArray
+   *        Output array to put descendant folders id.
+   */
+  nsresult GetDescendantFolders(PRInt64 aFolderId,
+                                nsTArray<PRInt64>& aDescendantFoldersArray);
+
 private:
   static nsNavBookmarks* gBookmarksService;
 
