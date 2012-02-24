@@ -5117,7 +5117,9 @@ GetNearestBlockContainer(nsIFrame* frame)
   // another such pseudo, this shouldn't cause anything bad to happen.
   // Also the anonymous blocks inside table cells are not containing blocks.
   while (frame->IsFrameOfType(nsIFrame::eLineParticipant) ||
-         frame->IsBlockWrapper()) {
+         frame->IsBlockWrapper() ||
+         // Table rows are not containing blocks either
+         frame->GetType() == nsGkAtoms::tableRowFrame) {
     frame = frame->GetParent();
     NS_ASSERTION(frame, "How come we got to the root frame without seeing a containing block?");
   }
