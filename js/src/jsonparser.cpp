@@ -217,7 +217,7 @@ JSONParser::readNumber()
     /* Fast path: no fractional or exponent part. */
     if (current == end || (*current != '.' && *current != 'e' && *current != 'E')) {
         const jschar *dummy;
-        jsdouble d;
+        double d;
         if (!GetPrefixInteger(cx, digitStart.get(), current.get(), 10, &dummy, &d))
             return token(OOM);
         JS_ASSERT(current == dummy);
@@ -262,7 +262,7 @@ JSONParser::readNumber()
         }
     }
 
-    jsdouble d;
+    double d;
     const jschar *finish;
     if (!js_strtod(cx, digitStart.get(), current.get(), &finish, &d))
         return token(OOM);

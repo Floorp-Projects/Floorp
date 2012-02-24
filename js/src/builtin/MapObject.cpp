@@ -86,7 +86,7 @@ HashableValue::setValue(JSContext *cx, const Value &v)
             return false;
         value = StringValue(str);
     } else if (v.isDouble()) {
-        jsdouble d = v.toDouble();
+        double d = v.toDouble();
         int32_t i;
         if (JSDOUBLE_IS_INT32(d, &i)) {
             /* Normalize int32-valued doubles to int32 for faster hashing and testing. */
