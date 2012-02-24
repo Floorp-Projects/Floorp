@@ -62,6 +62,7 @@ IonBuilder::IonBuilder(JSContext *cx, JSObject *scopeChain, TempAllocator &temp,
     initialScopeChain_(scopeChain),
     loopDepth_(loopDepth),
     callerResumePoint_(NULL),
+    callerBuilder_(NULL),
     oracle(oracle),
     inliningDepth(inliningDepth)
 {
@@ -173,6 +174,16 @@ IonBuilder::getInliningTarget(uint32 argc, jsbytecode *pc, JSFunction **out)
 
     JSScript *inlineScript = fun->script();
 
+    // Allow inlining of recursive calls, but only one level deep.
+    IonBuilder *builder = callerBuilder_;
+    while (builder) {
+        if (builder->script == inlineScript) {
+            IonSpew(IonSpew_Inlining, "Not inlining recursive call");
+            return true;
+        }
+        builder = builder->callerBuilder_;
+    }
+
     bool canInline = oracle->canEnterInlinedScript(inlineScript);
 
     if (!canInline) {
@@ -281,8 +292,8 @@ IonBuilder::build()
 }
 
 bool
-IonBuilder::buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
-                        MDefinitionVector &argv)
+IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
+                        MDefinition *thisDefn, MDefinitionVector &argv)
 {
     current = newBlock(pc);
     if (!current)
@@ -291,6 +302,7 @@ IonBuilder::buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
     IonSpew(IonSpew_MIR, "Inlining script %s:%d (%p)",
             script->filename, script->lineno, (void *) script);
 
+    callerBuilder_ = callerBuilder;
     callerResumePoint_ = callerResumePoint;
     MBasicBlock *predecessor = callerResumePoint->block();
     predecessor->end(MGoto::New(current));
@@ -2264,10 +2276,10 @@ IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder, InliningDat
     MDefinition *thisDefn = argv[0];
 
     // Build the graph.
-    if (!inlineBuilder.buildInline(inlineResumePoint, thisDefn, argv))
+    if (!inlineBuilder.buildInline(this, inlineResumePoint, thisDefn, argv))
         return false;
 
-    MIRGraphExits &exits = inlineBuilder.graph().getExitAccumulator();
+    MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
 
     // Create a |bottom| block for all the callee subgraph exits to jump to.
     JS_ASSERT(*pc == JSOP_CALL);
@@ -2330,14 +2342,16 @@ IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder, InliningDat
 
 class AutoAccumulateExits
 {
-    MIRGraph &graph;
+    MIRGraph &graph_;
+    MIRGraphExits *prev_;
 
   public:
-    AutoAccumulateExits(MIRGraph &graph, MIRGraphExits &exits) : graph(graph) {
-        graph.setExitAccumulator(&exits);
+    AutoAccumulateExits(MIRGraph &graph, MIRGraphExits &exits) : graph_(graph) {
+        prev_ = graph_.exitAccumulator();
+        graph_.setExitAccumulator(&exits);
     }
     ~AutoAccumulateExits() {
-        graph.setExitAccumulator(NULL);
+        graph_.setExitAccumulator(prev_);
     }
 };
 
@@ -2377,7 +2391,7 @@ IonBuilder::maybeInline(uint32 argc)
     if (!makeInliningDecision(argc, &data))
         return InliningStatus_Error;
 
-    if (!data.shouldInline || inliningDepth >= 1)
+    if (!data.shouldInline || inliningDepth >= 2)
         return InliningStatus_NotInlined;
 
     IonSpew(IonSpew_Inlining, "Recursively building");
