@@ -30,6 +30,103 @@ function main() {
 
   var testCases = Array();
 
+  const secPerMin = 60;
+  const secPerHour = secPerMin * 60;
+
+  // In the following tests that compare start times, getStartTime will round
+  // the start time to three decimal places since we expect our implementation
+  // to be millisecond accurate.
+
+  // Offset syntax
+  // -- Basic tests, sign and whitespace
+  testCases.push(StartTimeTest('3s', 3));
+  testCases.push(StartTimeTest('0s', 0));
+  testCases.push(StartTimeTest('+2s', 2));
+  testCases.push(StartTimeTest('-1s\t\r', -1));
+  testCases.push(StartTimeTest('- 1s', -1));
+  testCases.push(StartTimeTest('  -1s', -1));
+  testCases.push(StartTimeTest(' - 1s', -1));
+  testCases.push(StartTimeTest(' \t\n\r-1s', -1));
+  testCases.push(StartTimeTest('+\n5s', 5));
+  testCases.push(StartTimeTest('-\n5s', -5));
+  testCases.push(StartTimeTest('\t 5s', 5));
+  // -- These tests are from SMILANIM 3.6.7
+  testCases.push(StartTimeTest('02:30:03', 2*secPerHour + 30*secPerMin + 3));
+  testCases.push(StartTimeTest('50:00:10.25', 50*secPerHour + 10.25));
+  testCases.push(StartTimeTest('02:33', 2*secPerMin + 33));
+  testCases.push(StartTimeTest('00:10.5', 10.5));
+  testCases.push(StartTimeTest('3.2h', 3.2*secPerHour));
+  testCases.push(StartTimeTest('45min', 45*secPerMin));
+  testCases.push(StartTimeTest('30s', 30));
+  testCases.push(StartTimeTest('5ms', 0.005));
+  testCases.push(StartTimeTest('12.467', 12.467));
+  testCases.push(StartTimeTest('00.5s', 0.5));
+  testCases.push(StartTimeTest('00:00.005', 0.005));
+  // -- Additional tests
+  testCases.push(StartTimeTest('61:59:59', 61*secPerHour + 59*secPerMin + 59));
+  testCases.push(StartTimeTest('02:59.999999999999999999999', 3*secPerMin));
+  testCases.push(StartTimeTest('1234:23:45',
+                               1234*secPerHour + 23*secPerMin + 45));
+  testCases.push(StartTimeTest('61min', 61*secPerMin));
+  testCases.push(StartTimeTest('0:30:03', 30*secPerMin + 3));
+  // -- Fractional precision
+  testCases.push(StartTimeTest('25.4567', 25.457));
+  testCases.push(StartTimeTest('0.123456789', 0.123));
+  testCases.push(StartTimeTest('0.00000000000000000000001', 0));
+  testCases.push(StartTimeTest('-0.00000000000000000000001', 0));
+  testCases.push(StartTimeTest('0.0009', 0.001));
+  testCases.push(StartTimeTest('0.99999999999999999999999999999999999999', 1));
+  testCases.push(StartTimeTest('23.4567ms', 0.023));
+  testCases.push(StartTimeTest('23.7ms', 0.024));
+  // -- Test errors
+  testCases.push(StartTimeTest(' + +3s', 'none'));
+  testCases.push(StartTimeTest(' +-3s', 'none'));
+  testCases.push(StartTimeTest('1:12:12:12', 'none'));
+  testCases.push(StartTimeTest('4:50:60', 'none'));
+  testCases.push(StartTimeTest('4:60:0', 'none'));
+  testCases.push(StartTimeTest('4:60', 'none'));
+  testCases.push(StartTimeTest('4:-1:00', 'none'));
+  testCases.push(StartTimeTest('4 5m', 'none'));
+  testCases.push(StartTimeTest('4 5ms', 'none'));
+  testCases.push(StartTimeTest('02:3:03', 'none'));
+  testCases.push(StartTimeTest('45.7 s', 'none'));
+  testCases.push(StartTimeTest(' 3 h ', 'none'));
+  testCases.push(StartTimeTest('2:33 ', 'none'));
+  testCases.push(StartTimeTest('02:33 2', 'none'));
+  testCases.push(StartTimeTest('\u000B 02:33', 'none'));
+  testCases.push(StartTimeTest('h', 'none'));
+  testCases.push(StartTimeTest('23.s', 'none'));
+  testCases.push(StartTimeTest('23.', 'none'));
+  testCases.push(StartTimeTest('23.54.2s', 'none'));
+  testCases.push(StartTimeTest('23sec', 'none'));
+  testCases.push(StartTimeTest('five', 'none'));
+  testCases.push(StartTimeTest('', 'none'));
+  testCases.push(StartTimeTest('02:33s', 'none'));
+  testCases.push(StartTimeTest('02:33 s', 'none'));
+  testCases.push(StartTimeTest('2.54e6', 'none'));
+  testCases.push(StartTimeTest('02.5:33', 'none'));
+  testCases.push(StartTimeTest('2:-45:33', 'none'));
+  testCases.push(StartTimeTest('2:4.5:33', 'none'));
+  testCases.push(StartTimeTest('45m', 'none'));
+  testCases.push(StartTimeTest(':20:30', 'none'));
+  testCases.push(StartTimeTest('1.5:30', 'none'));
+  testCases.push(StartTimeTest('15:-30', 'none'));
+  testCases.push(StartTimeTest('::30', 'none'));
+  testCases.push(StartTimeTest('15:30s', 'none'));
+  testCases.push(StartTimeTest('2:1.:30', 'none'));
+  testCases.push(StartTimeTest('2:.1:30', 'none'));
+  testCases.push(StartTimeTest('2.0:15:30', 'none'));
+  testCases.push(StartTimeTest('2.:15:30', 'none'));
+  testCases.push(StartTimeTest('.2:15:30', 'none'));
+  testCases.push(StartTimeTest('70:15', 'none'));
+  testCases.push(StartTimeTest('media', 'none'));
+  testCases.push(StartTimeTest('5mi', 'none'));
+  testCases.push(StartTimeTest('5hours', 'none'));
+  testCases.push(StartTimeTest('h05:30', 'none'));
+  testCases.push(StartTimeTest('05:40\x9A', 'none'));
+  testCases.push(StartTimeTest('05:40\u30D5', 'none'));
+  testCases.push(StartTimeTest('05:40β', 'none'));
+
   // List syntax
   testCases.push(StartTimeTest('3', 3));
   testCases.push(StartTimeTest('3;', 3));
