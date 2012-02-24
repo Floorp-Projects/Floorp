@@ -93,12 +93,12 @@ ValueIsLength(JSContext *cx, const Value &v, jsuint *len)
     }
 
     if (v.isDouble()) {
-        jsdouble d = v.toDouble();
+        double d = v.toDouble();
         if (JSDOUBLE_IS_NaN(d))
             return false;
 
         jsuint length = jsuint(d);
-        if (d != jsdouble(length))
+        if (d != double(length))
             return false;
 
         *len = length;
@@ -951,7 +951,7 @@ js_TypedArray_uint8_clamp_double(const double x)
     if (x > 255)
         return 255;
 
-    jsdouble toTruncate = x + 0.5;
+    double toTruncate = x + 0.5;
     uint8_t y = uint8_t(toTruncate);
 
     /*
@@ -987,7 +987,7 @@ struct uint8_clamped {
     uint8_clamped(int8_t x)     { *this = x; }
     uint8_clamped(int16_t x)    { *this = x; }
     uint8_clamped(int32_t x)    { *this = x; }
-    uint8_clamped(jsdouble x) { *this = x; }
+    uint8_clamped(double x)     { *this = x; }
 
     inline uint8_clamped& operator= (const uint8_clamped& x) {
         val = x.val;
@@ -1032,7 +1032,7 @@ struct uint8_clamped {
         return *this;
     }
 
-    inline uint8_clamped& operator= (const jsdouble x) {
+    inline uint8_clamped& operator= (const double x) {
         val = uint8_t(js_TypedArray_uint8_clamp_double(x));
         return *this;
     }
@@ -1209,7 +1209,7 @@ class TypedArrayTemplate
             return true;
         }
 
-        jsdouble d;
+        double d;
         if (vp->isDouble()) {
             d = vp->toDouble();
         } else if (vp->isNull()) {
@@ -1811,7 +1811,7 @@ class TypedArrayTemplate
          * are treated identically.
          */
         if (v.isPrimitive() && !v.isMagic() && !v.isUndefined()) {
-            jsdouble dval;
+            double dval;
             JS_ALWAYS_TRUE(ToNumber(cx, v, &dval));
             return nativeFromDouble(dval);
         }

@@ -469,7 +469,7 @@ livemarkInfoToJSVal(PRInt64 aId,
   NS_ENSURE_TRUE(obj, JSVAL_NULL); 
 
   jsval id;
-  NS_ENSURE_TRUE(JS_NewNumberValue(cx, jsdouble(aId), &id), JSVAL_NULL);
+  NS_ENSURE_TRUE(JS_NewNumberValue(cx, double(aId), &id), JSVAL_NULL);
 
   JSString* guid = JS_NewStringCopyN(cx, PromiseFlatCString(aGUID).get(),
                                      aGUID.Length());
@@ -480,7 +480,7 @@ livemarkInfoToJSVal(PRInt64 aId,
   NS_ENSURE_TRUE(title, JSVAL_NULL); 
 
   jsval parentId;
-  NS_ENSURE_TRUE(JS_NewNumberValue(cx, jsdouble(aParentId), &parentId), JSVAL_NULL);
+  NS_ENSURE_TRUE(JS_NewNumberValue(cx, double(aParentId), &parentId), JSVAL_NULL);
 
   jsval feedURI;
   rv = nsContentUtils::WrapNative(cx, JS_GetGlobalForScopeChain(cx),

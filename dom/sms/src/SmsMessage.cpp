@@ -108,7 +108,7 @@ SmsMessage::Create(PRInt32 aId,
     if (!aTimestamp.isNumber()) {
       return NS_ERROR_INVALID_ARG;
     }
-    jsdouble number = aTimestamp.toNumber();
+    double number = aTimestamp.toNumber();
     if (static_cast<PRUint64>(number) != number) {
       return NS_ERROR_INVALID_ARG;
     }

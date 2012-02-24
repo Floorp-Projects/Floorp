@@ -141,7 +141,7 @@ extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
 extern JSBool
-js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length);
+js_SetLengthProperty(JSContext *cx, JSObject *obj, double length);
 
 namespace js {
 
