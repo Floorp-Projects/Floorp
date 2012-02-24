@@ -49,8 +49,6 @@ var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
 var as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
-var lms = Cc["@mozilla.org/browser/livemark-service;2"].
-          getService(Ci.nsILivemarkService);
 var icos = Cc["@mozilla.org/browser/favicon-service;1"].
            getService(Ci.nsIFaviconService);
 var ps = Cc["@mozilla.org/preferences-service;1"].
@@ -65,8 +63,9 @@ const POST_DATA_ANNO = "bookmarkProperties/POSTData";
 const TEST_FAVICON_PAGE_URL = "http://en-US.www.mozilla.com/en-US/firefox/central/";
 const TEST_FAVICON_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg==";
 
-// main
 function run_test() {
+  do_test_pending();
+
   // avoid creating the places smart folder during tests
   ps.setIntPref("browser.places.smartBookmarksVersion", -1);
 
@@ -79,38 +78,41 @@ function run_test() {
   // Check that every bookmark is correct
   // Corrupt bookmarks should not have been imported
   database_check();
+  waitForAsyncUpdates(function() {
+    // Create corruption in database
+    var corruptItemId = bs.insertBookmark(bs.toolbarFolder,
+                                          uri("http://test.mozilla.org"),
+                                          bs.DEFAULT_INDEX, "We love belugas");
+    var stmt = dbConn.createStatement("UPDATE moz_bookmarks SET fk = NULL WHERE id = :itemId");
+    stmt.params.itemId = corruptItemId;
+    stmt.execute();
+    stmt.finalize();
 
-  // Create corruption in database
-  var corruptItemId = bs.insertBookmark(bs.toolbarFolder,
-                                        uri("http://test.mozilla.org"),
-                                        bs.DEFAULT_INDEX, "We love belugas");
-  var stmt = dbConn.createStatement("UPDATE moz_bookmarks SET fk = NULL WHERE id = :itemId");
-  stmt.params.itemId = corruptItemId;
-  stmt.execute();
-  stmt.finalize();
+    // Export bookmarks
+    var bookmarksFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    bookmarksFile.append("bookmarks.exported.html");
+    if (bookmarksFile.exists())
+      bookmarksFile.remove(false);
+    bookmarksFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
+    if (!bookmarksFile.exists())
+      do_throw("couldn't create file: bookmarks.exported.html");
+    try {
+      ies.exportHTMLToFile(bookmarksFile);
+    } catch(ex) { do_throw("couldn't export to bookmarks.exported.html: " + ex); }
 
-  // Export bookmarks
-  var bookmarksFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-  bookmarksFile.append("bookmarks.exported.html");
-  if (bookmarksFile.exists())
-    bookmarksFile.remove(false);
-  bookmarksFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
-  if (!bookmarksFile.exists())
-    do_throw("couldn't create file: bookmarks.exported.html");
-  try {
-    ies.exportHTMLToFile(bookmarksFile);
-  } catch(ex) { do_throw("couldn't export to bookmarks.exported.html: " + ex); }
+    // Clear all bookmarks
+    remove_all_bookmarks();
 
-  // Clear all bookmarks
-  remove_all_bookmarks();
+    // Import bookmarks
+    try {
+      ies.importHTMLFromFile(bookmarksFile, true);
+    } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
 
-  // Import bookmarks
-  try {
-    ies.importHTMLFromFile(bookmarksFile, true);
-  } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
+    // Check that every bookmark is correct
+    database_check();
 
-  // Check that every bookmark is correct
-  database_check();
+    waitForAsyncUpdates(do_test_finished);
+  });
 }
 
 /*
@@ -192,14 +194,16 @@ function database_check() {
   var livemark = toolbar.getChild(1);
   // title
   do_check_eq("Latest Headlines", livemark.title);
-  // livemark check
-  do_check_true(lms.isLivemark(livemark.itemId));
-  // site url
-  do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
-              lms.getSiteURI(livemark.itemId).spec);
-  // feed url
-  do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
-              lms.getFeedURI(livemark.itemId).spec);
+  PlacesUtils.livemarks.getLivemark(
+    { id: livemark.itemId },
+    function (aStatus, aLivemark) {
+      do_check_true(Components.isSuccessCode(aStatus));
+      do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
+                  aLivemark.siteURI.spec);
+      do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
+                  aLivemark.feedURI.spec);
+    }
+  );
 
   // cleanup
   toolbar.containerOpen = false;

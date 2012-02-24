@@ -39,28 +39,6 @@
 
 let mDBConn = DBConn();
 
-function add_fake_livemark() {
-  let lmId = PlacesUtils.livemarks.createLivemarkFolderOnly(
-    PlacesUtils.toolbarFolderId, "Livemark",
-    uri("http://www.mozilla.org/"), uri("http://www.mozilla.org/test.xml"),
-    PlacesUtils.bookmarks.DEFAULT_INDEX
-  );
-  // Add a visited child.
-  PlacesUtils.bookmarks.insertBookmark(lmId,
-                                       uri("http://visited.livemark.com/"),
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       "visited");
-  PlacesUtils.history.addVisit(uri("http://visited.livemark.com/"),
-                               Date.now(), null,
-                               Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
-                               false, 0);
-  // Add an unvisited child.
-  PlacesUtils.bookmarks.insertBookmark(lmId,
-                                       uri("http://unvisited.livemark.com/"),
-                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       "unvisited");
-}
-
 let historyObserver = {
   onBeginUpdateBatch: function() {},
   onEndUpdateBatch: function() {},
@@ -143,17 +121,6 @@ let historyObserver = {
         do_check_false(stmt.executeStep());
         stmt.finalize();
 
-        // Check that livemarks children don't have frecency <> 0
-        stmt = mDBConn.createStatement(
-          "SELECT h.id FROM moz_places h " +
-          "JOIN moz_bookmarks b ON h.id = b.fk " +
-          "JOIN moz_bookmarks bp ON bp.id = b.parent " +
-          "JOIN moz_items_annos t ON t.item_id = bp.id " +
-          "JOIN moz_anno_attributes n ON t.anno_attribute_id = n.id " +
-          "WHERE n.name = 'livemark/feedURI' AND h.frecency <> 0 LIMIT 1");
-        do_check_false(stmt.executeStep());
-        stmt.finalize();
-
         do_test_finished();
       });
     }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
@@ -178,8 +145,6 @@ function run_test() {
 }
 
 function continue_test() {
-  // Add a livemark with a visited and an unvisited child
-  add_fake_livemark();
   PlacesUtils.history.addVisit(uri("http://typed.mozilla.org/"), Date.now(),
                                null, Ci.nsINavHistoryService.TRANSITION_TYPED,
                                false, 0);
