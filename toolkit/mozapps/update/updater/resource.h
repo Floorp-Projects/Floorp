@@ -10,6 +10,7 @@
 #define IDR_PRIMARY_CERT                1004
 #define IDR_BACKUP_CERT                 1005
 #define IDS_UPDATER_IDENTITY            1006
+#define IDR_XPCSHELL_CERT               1007
 
 // Next default values for new objects
 // 
@@ -17,7 +18,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        102
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1007
+#define _APS_NEXT_CONTROL_VALUE         1008
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

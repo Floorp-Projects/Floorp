@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include "shlobj.h"
 #include "updatehelper.h"
+#include "pathhash.h"
 
 // Needed for PathAppendW
 #include <shlwapi.h>
@@ -337,7 +338,7 @@ StartServiceCommand(int argc, LPCWSTR* argv)
  * @return ERROR_SUCCESS if successful
  */
 DWORD
-LaunchServiceSoftwareUpdateCommand(DWORD argc, LPCWSTR* argv)
+LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR* argv)
 {
   // The service command is the same as the updater.exe command line except 
   // it has 2 extra args: 1) The Path to udpater.exe, and 2) the command 
@@ -630,4 +631,24 @@ WaitForProcessExit(LPCWSTR filename, DWORD maxSeconds)
   }
 
   return applicationRunningError;
+}
+
+/**
+ *  Determines if the fallback key exists or not
+ *
+ *  @return TRUE if the fallback key exists and there was no error checking
+*/
+BOOL
+DoesFallbackKeyExist()
+{
+  HKEY testOnlyFallbackKey;
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+                    TEST_ONLY_FALLBACK_KEY_PATH, 0,
+                    KEY_READ | KEY_WOW64_64KEY, 
+                    &testOnlyFallbackKey) != ERROR_SUCCESS) {
+    return FALSE;
+  }
+
+  RegCloseKey(testOnlyFallbackKey);
+  return TRUE;
 }
