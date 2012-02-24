@@ -1541,9 +1541,13 @@ UpdateThreadFunc(void *param)
                NS_T("%s/update.mar"), gSourcePath);
 
   rv = gArchiveReader.Open(dataFile);
+
+  #ifdef MOZ_VERIFY_MAR_SIGNATURE
   if (rv == OK) {
     rv = gArchiveReader.VerifySignature();
   }
+  #endif
+
   if (rv == OK) {
     rv = DoUpdate();
     gArchiveReader.Close();
