@@ -51,7 +51,6 @@
 #include "nsNavHistory.h"
 
 #include "mozIPlacesAutoComplete.h"
-#include "nsILivemarkService.h"
 #include "nsNavBookmarks.h"
 #include "nsAnnotationService.h"
 #include "nsFaviconService.h"
@@ -1198,18 +1197,10 @@ nsNavHistory::GetHasHistoryEntries(bool* aHasEntries)
 nsresult
 nsNavHistory::invalidateFrecencies(const nsCString& aPlaceIdsQueryString)
 {
-  // Exclude place: queries and unvisited livemark children from autocomplete,
-  // by setting their frecency to zero.
+  // Exclude place: queries by setting their frecency to zero.
   nsCAutoString invalideFrecenciesSQLFragment(
     "UPDATE moz_places SET frecency = (CASE "
       "WHEN url BETWEEN 'place:' AND 'place;' "
-      "THEN 0 "
-      "WHEN id IN (SELECT b.fk FROM moz_bookmarks b "
-                  "JOIN moz_bookmarks bp ON bp.id = b.parent "
-                  "JOIN moz_items_annos a ON a.item_id = bp.id "
-                  "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id "
-                  "WHERE b.fk = moz_places.id AND visit_count = 0 "
-                    "AND n.name = :anno_name) "
       "THEN 0 "
       "ELSE -1 "
       "END) "
@@ -1226,13 +1217,8 @@ nsNavHistory::invalidateFrecencies(const nsCString& aPlaceIdsQueryString)
   );
   NS_ENSURE_STATE(stmt);
 
-  nsresult rv = stmt->BindUTF8StringByName(
-     NS_LITERAL_CSTRING("anno_name"), NS_LITERAL_CSTRING(LMANNO_FEEDURI)
-   );
-   NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = stmt->ExecuteAsync(nsnull, getter_AddRefs(ps));
+  nsresult rv = stmt->ExecuteAsync(nsnull, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
