@@ -69,7 +69,7 @@ interface nsIProfileStartup : nsISupports
  * @client   Toolkit (Startup code)
  * @obtainable service, contractid("@mozilla.org/toolkit/profile-migrator;1")
  */
-[scriptable, uuid(24ce8b9d-b7ff-4279-aef4-26e158f03e34)]
+[scriptable, uuid(3df284a5-2258-4d46-a664-761ecdc04c22)]
 interface nsIProfileMigrator : nsISupports 
 {
   /**
@@ -86,10 +86,13 @@ interface nsIProfileMigrator : nsISupports
    * If your migrator needs to access services that use the profile (to
    * set profile prefs or bookmarks, for example), use aStartup.doStartup.
    *
+   * @param  aStartup nsIProfileStartup object to use during migration.
+   * @param  aKey     optional key of a migrator to use to skip source selection.
+   *
    * @note The startup code ignores COM exceptions thrown from this method.
    */
-  void migrate(in nsIProfileStartup aStartup);
-};  
+  void migrate(in nsIProfileStartup aStartup, in ACString aKey);
+};
 
 %{C++
 #define NS_PROFILEMIGRATOR_CONTRACTID "@mozilla.org/toolkit/profile-migrator;1"
