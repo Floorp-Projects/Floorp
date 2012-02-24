@@ -47,34 +47,30 @@ namespace layers {
 
 static int colorId = 0;
 
-// This should be done in the printf but android's printf is buggy
-const char* colors[] = {
-    "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
-    "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"
-    };
-
-const char* layerName[] = {
-    "CANVAS", "COLOR", "CONTAINER", "IMAGE", "READBACK", "SHADOW", "THEBES"
-    };
-
 static gfx3DMatrix GetRootTransform(Layer *aLayer) {
-  if (aLayer->GetParent() != NULL)
-    return GetRootTransform(aLayer->GetParent()) * aLayer->GetTransform();
-  return aLayer->GetTransform();
+  gfx3DMatrix layerTrans = aLayer->GetTransform();
+  if (aLayer->GetParent() != NULL) {
+    return GetRootTransform(aLayer->GetParent()) * layerTrans.ProjectTo2D();
+  }
+  return layerTrans.ProjectTo2D();
 }
 
-void RenderTraceLayers(Layer *aLayer, const char *aColor, gfx3DMatrix aRootTransform, bool aReset) {
+void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx3DMatrix aRootTransform, bool aReset) {
   if (!aLayer)
     return;
 
   gfx3DMatrix trans = aRootTransform * aLayer->GetTransform();
   nsIntRect clipRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
-  clipRect.MoveBy((int)trans.ProjectTo2D()[3][0], (int)trans.ProjectTo2D()[3][1]);
+  gfxRect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+  trans.TransformBounds(rect);
 
-  printf_stderr("%s RENDERTRACE %u rect #%s%s %i %i %i %i\n",
-    layerName[aLayer->GetType()], (int)PR_IntervalNow(),
-    colors[colorId%19], aColor,
-    clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+  if (strcmp(aLayer->Name(), "ContainerLayer") != 0 &&
+      strcmp(aLayer->Name(), "ShadowContainerLayer") != 0) {
+    printf_stderr("%s RENDERTRACE %u rect #%02X%s %i %i %i %i\n",
+      aLayer->Name(), (int)PR_IntervalNow(),
+      colorId, aColor,
+      (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+  }
 
   colorId++;
 
@@ -86,14 +82,15 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor, gfx3DMatrix aRootTrans
   if (aReset) colorId = 0;
 }
 
-void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, nsIntRect aRect) {
+void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const nsIntRect aRect) {
   gfx3DMatrix trans = GetRootTransform(aLayer);
-  aRect.MoveBy((int)trans.ProjectTo2D()[3][0], (int)trans.ProjectTo2D()[3][1]);
+  gfxRect rect(aRect.x, aRect.y, aRect.width, aRect.height);
+  trans.TransformBounds(rect);
 
-  printf_stderr("%s RENDERTRACE %u fillrect #%s%s %i %i %i %i\n",
-    layerName[aLayer->GetType()], (int)PR_IntervalNow(),
-    "FF", aColor,
-    aRect.x, aRect.y, aRect.width, aRect.height);
+  printf_stderr("%s RENDERTRACE %u fillrect #%s %i %i %i %i\n",
+    aLayer->Name(), (int)PR_IntervalNow(),
+    aColor,
+    (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
 }
 void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor) {
   // Clear with an empty rect
