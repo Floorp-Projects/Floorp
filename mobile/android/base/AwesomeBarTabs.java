@@ -214,7 +214,7 @@ public class AwesomeBarTabs extends TabHost {
 
             // Add the root folder to the stack
             Pair<Integer, String> rootFolder = new Pair<Integer, String>(Bookmarks.FIXED_ROOT_ID, "");
-            mParentStack.push(rootFolder);
+            mParentStack.addFirst(rootFolder);
         }
 
         public void refreshCurrentFolder() {
@@ -233,14 +233,14 @@ public class AwesomeBarTabs extends TabHost {
             if (mParentStack.size() == 1)
                 return false;
 
-            mParentStack.pop();
+            mParentStack.removeFirst();
             refreshCurrentFolder();
             return true;
         }
 
         public void moveToChildFolder(int folderId, String folderTitle) {
             Pair<Integer, String> folderPair = new Pair<Integer, String>(folderId, folderTitle);
-            mParentStack.push(folderPair);
+            mParentStack.addFirst(folderPair);
             refreshCurrentFolder();
         }
 
