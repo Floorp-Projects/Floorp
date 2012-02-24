@@ -39,23 +39,15 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include "mar.h"
 #include "mar_private.h"
+#include "mar.h"
 
 #ifdef XP_WIN
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
 #endif
-
-#define TABLESIZE 256
-
-struct MarFile_ {
-  FILE *fp;
-  MarItem *item_table[TABLESIZE];
-};
 
 /* this is the same hash algorithm used by nsZipArchive.cpp */
 static PRUint32 mar_hash_name(const char *name) {
@@ -290,4 +282,69 @@ int mar_read(MarFile *mar, const MarItem *item, int offset, char *buf,
     return -1;
 
   return fread(buf, 1, nr, mar->fp);
+}
+
+/**
+ * Determines if the MAR file is new or old.
+ * 
+ * @param path   The path of the MAR file to check.
+ * @param oldMar An out parameter specifying if the MAR file is new or old.
+ * @return A non-zero value if an error occurred and the information 
+           cannot be determined.
+ */
+int is_old_mar(const char *path, int *oldMar)
+{
+  PRUint32 offsetToIndex, offsetToContent, oldPos;
+  FILE *fp;
+  
+  if (!oldMar) {
+    return -1;
+  }
+
+  fp = fopen(path, "rb");
+  if (!fp) {
+    return -1;
+  }
+
+  oldPos = ftell(fp);
+
+  /* Skip to the start of the offset index */
+  if (fseek(fp, MAR_ID_SIZE, SEEK_SET)) {
+    return -1;
+  }
+
+  /* Read the offset to the index. */
+  if (fread(&offsetToIndex, sizeof(offsetToIndex), 1, fp) != 1)
+    return -1;
+  offsetToIndex = ntohl(offsetToIndex);
+
+  /* Skip to the first index entry past the index size field 
+     We do it in 2 calls because offsetToIndex + sizeof(PRUint32) 
+     could oerflow in theory. */
+  if (fseek(fp, offsetToIndex, SEEK_SET)) {
+    return -1;
+  }
+
+  if (fseek(fp, sizeof(PRUint32), SEEK_CUR)) {
+    return -1;
+  }
+
+  /* Read the offset to content field. */
+  if (fread(&offsetToContent, sizeof(offsetToContent), 1, fp) != 1)
+    return -1;
+  offsetToContent = ntohl(offsetToContent);
+
+  /* Check if we have a new or old MAR file */
+  if (offsetToContent == MAR_ID_SIZE + sizeof(PRUint32)) {
+    *oldMar = 1;
+  } else {
+    *oldMar = 0;
+  }
+
+  /* Restore back our old position */
+  if (fseek(fp, oldPos, SEEK_SET)) {
+    return -1;
+  }
+
+  return 0;
 }

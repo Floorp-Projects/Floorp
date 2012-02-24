@@ -40,10 +40,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include "mar.h"
 #include "mar_private.h"
+#include "mar.h"
 
 #ifdef XP_WIN
 #include <winsock2.h>
@@ -127,7 +126,8 @@ static int mar_concat_file(FILE *fp, const char *path) {
 
 int mar_create(const char *dest, int num_files, char **files) {
   struct MarItemStack stack;
-  PRUint32 offset_to_index = 0, size_of_index;
+  PRUint32 offset_to_index = 0, size_of_index, num_signatures;
+  PRUint64 size_of_entire_MAR = 0;
   struct stat st;
   FILE *fp;
   int i, rv = -1;
@@ -145,7 +145,21 @@ int mar_create(const char *dest, int num_files, char **files) {
   if (fwrite(&offset_to_index, sizeof(PRUint32), 1, fp) != 1)
     goto failure;
 
-  stack.last_offset = MAR_ID_SIZE + sizeof(PRUint32);
+  stack.last_offset = MAR_ID_SIZE + 
+                      sizeof(num_signatures) + 
+                      sizeof(offset_to_index) +
+                      sizeof(size_of_entire_MAR);
+
+  /* We will circle back on this at the end of the MAR creation to fill it */
+  if (fwrite(&size_of_entire_MAR, sizeof(size_of_entire_MAR), 1, fp) != 1) {
+    goto failure;
+  }
+
+  /* Write out the number of signatures, for now only at most 1 is supported */
+  num_signatures = 0;
+  if (fwrite(&num_signatures, sizeof(num_signatures), 1, fp) != 1) {
+    goto failure;
+  }
 
   for (i = 0; i < num_files; ++i) {
     if (stat(files[i], &st)) {
@@ -168,12 +182,27 @@ int mar_create(const char *dest, int num_files, char **files) {
   if (fwrite(stack.head, stack.size_used, 1, fp) != 1)
     goto failure;
 
+  /* To protect against invalid MAR files, we assumes that the MAR file 
+     size is less than or equal to MAX_SIZE_OF_MAR_FILE. */
+  if (ftell(fp) > MAX_SIZE_OF_MAR_FILE) {
+    goto failure;
+  }
+
   /* write out offset to index file in network byte order */
   offset_to_index = htonl(stack.last_offset);
   if (fseek(fp, MAR_ID_SIZE, SEEK_SET))
     goto failure;
   if (fwrite(&offset_to_index, sizeof(offset_to_index), 1, fp) != 1)
     goto failure;
+  offset_to_index = ntohl(stack.last_offset);
+  
+  size_of_entire_MAR = ((PRUint64)stack.last_offset) +
+                       stack.size_used +
+                       sizeof(size_of_index);
+  size_of_entire_MAR = HOST_TO_NETWORK64(size_of_entire_MAR);
+  if (fwrite(&size_of_entire_MAR, sizeof(size_of_entire_MAR), 1, fp) != 1)
+    goto failure;
+  size_of_entire_MAR = NETWORK_TO_HOST64(size_of_entire_MAR);
 
   rv = 0;
 failure: 
