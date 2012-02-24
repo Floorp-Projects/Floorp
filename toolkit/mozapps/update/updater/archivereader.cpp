@@ -54,6 +54,96 @@ static int outbuf_size = 262144;
 static char *inbuf  = NULL;
 static char *outbuf = NULL;
 
+#ifdef XP_WIN
+#include "resource.h"
+
+/**
+ * Obtains the data of the specified resource name and type.
+ *
+ * @param  name The name ID of the resource
+ * @param  type The type ID of the resource
+ * @param  data Out parameter which sets the pointer to a buffer containing
+ *                  the needed data.
+ * @param  size Out parameter which sets the size of the returned data buffer 
+ * @return TRUE on success
+*/
+BOOL
+LoadFileInResource(int name, int type, const char *&data, DWORD& size)
+{
+  HMODULE handle = GetModuleHandle(NULL);
+  if (!handle) {
+    return FALSE;
+  }
+
+  HRSRC resourceInfoBlockHandle = FindResource(handle, 
+                                               MAKEINTRESOURCE(name),
+                                               MAKEINTRESOURCE(type));
+  if (!resourceInfoBlockHandle) {
+    FreeLibrary(handle);
+    return FALSE;
+  }
+
+  HGLOBAL resourceHandle = LoadResource(handle, resourceInfoBlockHandle);
+  if (!resourceHandle) {
+    FreeLibrary(handle);
+    return FALSE;
+  }
+
+  size = SizeofResource(handle, resourceInfoBlockHandle);
+  data = static_cast<const char*>(::LockResource(resourceHandle));
+  FreeLibrary(handle);
+  return TRUE;
+}
+
+/**
+ * Performs a verification on the opened MAR file with the passed in
+ * certificate name ID and type ID.
+ *
+ * @param  archive   The MAR file to verify the signature on
+ * @param  name      The name ID of the resource
+ * @param  type      THe type ID of the resource
+ * @return OK on success, CERT_LOAD_ERROR or CERT_VERIFY_ERROR on failure.
+*/
+int
+VerifyLoadedCert(MarFile *archive, int name, int type)
+{
+  DWORD size = 0;
+  const char *data = NULL;
+  if (!LoadFileInResource(name, type, data, size) || !data || !size) {
+    return CERT_LOAD_ERROR;
+  }
+
+  if (!archive || mar_verify_signatureW(archive, data, size)) {
+    return CERT_VERIFY_ERROR;
+  }
+
+  return OK;
+}
+#endif
+
+
+/**
+ * Performs a verification on the opened MAR file.  Both the primary and backup 
+ * keys stored are stored in the current process and at least the primary key 
+ * will be tried.  Success will be returned as long as one of the two 
+ * signatures verify.
+ *
+ * @return OK on success
+*/
+int
+ArchiveReader::VerifySignature()
+{
+#ifdef XP_WIN
+  int rv = VerifyLoadedCert(mArchive, IDR_PRIMARY_CERT, TYPE_CERT);
+  if (rv != OK) {
+    rv = VerifyLoadedCert(mArchive, IDR_BACKUP_CERT, TYPE_CERT);
+  }
+  return rv;
+#else
+  return OK;
+#endif
+}
+
 int
 ArchiveReader::Open(const NS_tchar *path)
 {

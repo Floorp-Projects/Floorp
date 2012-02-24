@@ -1535,11 +1535,15 @@ UpdateThreadFunc(void *param)
 {
   // open ZIP archive and process...
 
+  int rv;
   NS_tchar dataFile[MAXPATHLEN];
   NS_tsnprintf(dataFile, sizeof(dataFile)/sizeof(dataFile[0]),
                NS_T("%s/update.mar"), gSourcePath);
 
-  int rv = gArchiveReader.Open(dataFile);
+  rv = gArchiveReader.Open(dataFile);
+  if (rv == OK) {
+    rv = gArchiveReader.VerifySignature();
+  }
   if (rv == OK) {
     rv = DoUpdate();
     gArchiveReader.Close();
@@ -2011,7 +2015,7 @@ int NS_main(int argc, NS_tchar **argv)
     const int max_retries = 10;
     int retries = 1;
     do {
-      // By opening a file handle wihout FILE_SHARE_READ to the callback
+      // By opening a file handle without FILE_SHARE_READ to the callback
       // executable, the OS will prevent launching the process while it is
       // being updated.
       callbackFile = CreateFileW(argv[callbackIndex],

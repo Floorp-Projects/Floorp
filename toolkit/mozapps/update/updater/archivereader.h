@@ -56,6 +56,7 @@ public:
   ~ArchiveReader() { Close(); }
 
   int Open(const NS_tchar *path);
+  int VerifySignature();
   void Close();
 
   int ExtractFile(const char *item, const NS_tchar *destination);

@@ -6,6 +6,9 @@
 #define IDC_PROGRESS                    1000
 #define IDC_INFO                        1002
 #define IDI_DIALOG                      1003
+#define TYPE_CERT                       512
+#define IDR_PRIMARY_CERT                1004
+#define IDR_BACKUP_CERT                 1005
 #define IDS_UPDATER_IDENTITY            1006
 
 // Next default values for new objects
