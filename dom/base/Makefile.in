@@ -47,6 +47,10 @@ LIBRARY_NAME	= jsdombase_s
 LIBXUL_LIBRARY	= 1
 FORCE_STATIC_LIB = 1
 
+DIRS = \
+  test \
+  $(NULL)
+
 EXTRA_PP_COMPONENTS = \
 		ConsoleAPI.js \
 		ConsoleAPI.manifest \
@@ -67,6 +71,7 @@ endif
 
 XPIDLSRCS = \
   nsIDOMDOMError.idl \
+  nsIDOMDOMRequest.idl \
   nsIEntropyCollector.idl \
   nsIScriptChannel.idl \
   $(NULL)
@@ -105,6 +110,7 @@ EXPORTS = \
 EXPORTS_NAMESPACES = mozilla/dom
 EXPORTS_mozilla/dom = \
   DOMError.h \
+  DOMRequest.h \
   StructuredCloneTags.h \
   $(NULL)
 
@@ -135,6 +141,7 @@ CPPSRCS =			\
 	nsPerformance.cpp	\
 	nsDOMMemoryReporter.cpp \
 	DOMError.cpp \
+	DOMRequest.cpp \
 	Navigator.cpp \
 	$(NULL)
 

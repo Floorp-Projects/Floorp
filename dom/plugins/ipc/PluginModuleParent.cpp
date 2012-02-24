@@ -776,7 +776,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
     if (!CallNP_Initialize(error))
         return NS_ERROR_FAILURE;
 
-#if defined XP_WIN && MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+#if defined XP_WIN
     // Send the info needed to join the chrome process's audio session to the
     // plugin process
     nsID id;

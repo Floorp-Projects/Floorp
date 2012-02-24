@@ -931,7 +931,7 @@ sec_pkcs12_decode_start_asafes_cinfo(SEC_PKCS12DecoderContext *p12dcx)
 	goto loser;
     }
   
-    /* open the temp file for writing, if the filter functions were set */ 
+    /* open the temp file for writing, if the digest functions were set */ 
     if(p12dcx->dOpen && (*p12dcx->dOpen)(p12dcx->dArg, PR_FALSE) 
 				!= SECSuccess) {
 	p12dcx->errorValue = PORT_GetError();

@@ -50,7 +50,7 @@ _TEST_FILES =\
 		test_aria.html \
 		test_general.html \
 		test_general.xul \
-		test_inputs.html \
+		test_controls.html \
 		test_keys_menu.xul \
 		test_keys.html \
 		test_link.html \

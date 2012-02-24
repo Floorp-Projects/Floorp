@@ -398,11 +398,11 @@ nsTArray_base<Alloc>::SwapArrayElements(nsTArray_base<Allocator>& other,
   }
 
   // Allocate temporary storage for the smaller of the two arrays.  We want to
-  // allocate this space on the stack, unless it's very large.  Sounds like a
+  // allocate this space on the stack, if it's not too large.  Sounds like a
   // job for AutoTArray!  (One of the two arrays we're swapping is using an
   // auto buffer, so we're likely not allocating a lot of space here.  But one
   // could, in theory, allocate a huge AutoTArray on the heap.)
-  nsAutoTArray<PRUint8, 8192, Alloc> temp;
+  nsAutoTArray<PRUint8, 64, Alloc> temp;
   if (!temp.SetCapacity(smallerLength * elemSize)) {
     return false;
   }

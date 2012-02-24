@@ -211,7 +211,7 @@ arrowbox {
 %ifndef honeycomb
 @media (min-width: @tablet_panel_minwidth@) {
   #awesome-panels {
-    -moz-box-shadow: 0px 0px @shadow_width_small@ black;
+    box-shadow: 0px 0px @shadow_width_small@ black;
   }
   #search-engines-popup {
     max-width: -moz-calc(@tablet_panel_minwidth@);

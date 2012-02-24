@@ -625,7 +625,7 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 {
     AssertPluginThread();
 
-#if defined XP_WIN && MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+#if defined XP_WIN
     mozilla::widget::StopAudioSession();
 #endif
 
@@ -689,7 +689,7 @@ PluginModuleChild::RecvSetAudioSessionData(const nsID& aId,
                                            const nsString& aDisplayName,
                                            const nsString& aIconPath)
 {
-#if !defined XP_WIN || MOZ_WINSDK_TARGETVER < MOZ_NTDDI_LONGHORN
+#if !defined XP_WIN
     NS_RUNTIMEABORT("Not Reached!");
     return false;
 #else

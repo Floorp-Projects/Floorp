@@ -1690,7 +1690,8 @@ Database::MigrateV17Up()
     "INSERT OR IGNORE INTO moz_hosts (host, frecency) "
         "SELECT fixup_url(get_unreversed_host(h.rev_host)) AS host, "
                "(SELECT MAX(frecency) FROM moz_places "
-                "WHERE rev_host = h.rev_host OR rev_host = h.rev_host || 'www.'"
+                "WHERE rev_host = get_unreversed_host(host || '.') || '.' "
+                   "OR rev_host = get_unreversed_host(host || '.') || '.www.') "
                ") AS frecency "
         "FROM moz_places h "
         "WHERE LENGTH(h.rev_host) > 1 "
@@ -1767,7 +1768,8 @@ Database::Shutdown()
   nsRefPtr<BlockingConnectionCloseCallback> closeListener =
     new BlockingConnectionCloseCallback();
   (void)mMainConn->AsyncClose(closeListener);
-  closeListener->Spin();
+  // The spinning is temporarily disabled. See bug 728653.
+  //closeListener->Spin();
 
   // Don't set this earlier, otherwise some internal helper used on shutdown
   // may bail out.

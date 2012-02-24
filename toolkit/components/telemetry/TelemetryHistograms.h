@@ -131,6 +131,7 @@ HISTOGRAM(MAC_INITFONTLIST_TOTAL, 1, 30000, 10, EXPONENTIAL, "gfxMacPlatformFont
 
 HISTOGRAM(SYSTEM_FONT_FALLBACK, 1, 100000, 50, EXPONENTIAL, "System font fallback (us)")
 HISTOGRAM(SYSTEM_FONT_FALLBACK_FIRST, 1, 40000, 20, EXPONENTIAL, "System font fallback, first call (ms)")
+HISTOGRAM(STARTUP_CACHE_AGE_HOURS, 1, 3000, 20, EXPONENTIAL, "Startup cache age (hours)")
 
 /**
  * Word cache - one count for overall lookups, the other for the number of times a word is found

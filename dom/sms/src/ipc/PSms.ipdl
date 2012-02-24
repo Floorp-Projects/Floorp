@@ -109,6 +109,9 @@ parent:
     SendMessage(nsString aNumber, nsString aMessage, PRInt32 aRequestId,
                 PRUint64 aProcessId);
 
+    sync SaveReceivedMessage(nsString aSender, nsString aBody, PRUint64 aDate)
+        returns (PRInt32 aId);
+
     sync SaveSentMessage(nsString aReceiver, nsString aBody, PRUint64 aDate)
         returns (PRInt32 aId);
 

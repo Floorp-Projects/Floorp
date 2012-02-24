@@ -68,25 +68,19 @@ static nsresult GetExtensionFromWindowsMimeDatabase(const nsACString& aMimeType,
 
 nsOSHelperAppService::nsOSHelperAppService() : 
   nsExternalHelperAppService()
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   , mAppAssoc(nsnull)
-#endif
 {
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   CoInitialize(NULL);
   CoCreateInstance(CLSID_ApplicationAssociationRegistration, NULL, CLSCTX_INPROC,
                    IID_IApplicationAssociationRegistration, (void**)&mAppAssoc);
-#endif
 }
 
 nsOSHelperAppService::~nsOSHelperAppService()
 {
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (mAppAssoc)
     mAppAssoc->Release();
   mAppAssoc = nsnull;
   CoUninitialize();
-#endif
 }
 
 // The windows registry provides a mime database key which lists a set of mime types and corresponding "Extension" values. 
@@ -159,7 +153,6 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
   *aHandlerExists = false;
   if (aProtocolScheme && *aProtocolScheme)
   {
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
     // Vista: use new application association interface
     if (mAppAssoc) {
       PRUnichar * pResult = nsnull;
@@ -174,7 +167,6 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
       }
       return NS_OK;
     }
-#endif
 
     HKEY hKey;
     LONG err = ::RegOpenKeyExW(HKEY_CLASSES_ROOT,
@@ -203,7 +195,6 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
 
   NS_ConvertASCIItoUTF16 buf(aScheme);
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // Vista: use new application association interface
   if (mAppAssoc) {
     PRUnichar * pResult = nsnull;
@@ -220,7 +211,6 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
     }
     return NS_ERROR_NOT_AVAILABLE;
   }
-#endif
 
   nsCOMPtr<nsIFile> app;
   GetDefaultAppInfo(buf, _retval, getter_AddRefs(app));
@@ -555,7 +545,6 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   nsAutoString appInfo;
   bool found;
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   // Retrieve the default application for this extension
   if (mAppAssoc) {
     // Vista: use the new application association COM interfaces
@@ -575,7 +564,6 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
     }
   } 
   else
-#endif
   {
     found = NS_SUCCEEDED(regKey->ReadStringValue(EmptyString(), 
                                                  appInfo));

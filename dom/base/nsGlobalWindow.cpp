@@ -1321,6 +1321,7 @@ nsGlobalWindow::FreeInnerObjects(bool aClearScope)
   // Remove our reference to the document and the document principal.
   mDocument = nsnull;
   mDoc = nsnull;
+  mFocusedNode = nsnull;
 
   if (mApplicationCache) {
     static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())->Disconnect();
@@ -2389,6 +2390,7 @@ nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 
   mDocument = do_QueryInterface(aDocument);
   mDoc = aDocument;
+  mFocusedNode = nsnull;
   mLocalStorage = nsnull;
   mSessionStorage = nsnull;
 
@@ -2450,6 +2452,7 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
       // Release our document reference
       mDocument = nsnull;
       mDoc = nsnull;
+      mFocusedNode = nsnull;
     }
 
     if (mContext) {
@@ -7751,9 +7754,16 @@ nsGlobalWindow::SetFocusedNode(nsIContent* aNode,
 {
   FORWARD_TO_INNER_VOID(SetFocusedNode, (aNode, aFocusMethod, aNeedsFocus));
 
-  NS_ASSERTION(!aNode || aNode->GetCurrentDoc() == mDoc,
-               "setting focus to a node from the wrong document");
+  if (aNode && aNode->GetCurrentDoc() != mDoc) {
+    NS_WARNING("Trying to set focus to a node from a wrong document");
+    return;
+  }
 
+  if (mCleanedUp) {
+    NS_ASSERTION(!aNode, "Trying to focus cleaned up window!");
+    aNode = nsnull;
+    aNeedsFocus = false;
+  }
   if (mFocusedNode != aNode) {
     UpdateCanvasFocus(false, aNode);
     mFocusedNode = aNode;
@@ -7857,6 +7867,10 @@ nsGlobalWindow::TakeFocus(bool aFocus, PRUint32 aFocusMethod)
 {
   FORWARD_TO_INNER(TakeFocus, (aFocus, aFocusMethod), false);
 
+  if (mCleanedUp) {
+    return false;
+  }
+  
   if (aFocus)
     mFocusMethod = aFocusMethod & FOCUSMETHOD_MASK;
 

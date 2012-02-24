@@ -834,7 +834,6 @@ if [ "$ENABLE_TESTS" ]; then
     layout/style/test/Makefile
     layout/style/test/chrome/Makefile
     layout/tables/test/Makefile
-    layout/tools/pageloader/Makefile
     layout/tools/reftest/Makefile
     layout/xul/base/test/Makefile
     layout/xul/test/Makefile

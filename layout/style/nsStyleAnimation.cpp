@@ -880,12 +880,6 @@ AddCSSValuePixelPercentCalc(const PRUint32 aValueRestrictions,
                                aResult);
       break;
     default:
-      NS_ABORT_IF_FALSE(false,
-                        nsPrintfCString(32,
-                                        "unexpected unit %d, from %d and %d",
-                                        aCommonUnit,
-                                        aValue1.GetUnit(),
-                                        aValue2.GetUnit()).get());
       return false;
   }
 
@@ -1822,6 +1816,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                                          aCoeff1, pair1->*member,
                                          aCoeff2, pair2->*member,
                                          result->*member) ) {
+          NS_ABORT_IF_FALSE(false, "unexpected unit");
           return false;
         }
       }
@@ -1864,6 +1859,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
                                          aCoeff1, &triplet1->*member,
                                          aCoeff2, &triplet2->*member,
                                          result->*member) ) {
+          NS_ABORT_IF_FALSE(false, "unexpected unit");
           return false;
         }
       }
@@ -2797,8 +2793,9 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty_font_stretch: {
           PRInt16 stretch =
             static_cast<const nsStyleFont*>(styleStruct)->mFont.stretch;
-          PR_STATIC_ASSERT(NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED == -4);
-          PR_STATIC_ASSERT(NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED == 4);
+          MOZ_STATIC_ASSERT(NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED == -4 &&
+                            NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED == 4,
+                            "font stretch constants not as expected");
           if (stretch < NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED ||
               stretch > NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED) {
             return false;
@@ -3021,13 +3018,13 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
     case eStyleAnimType_Sides_Right:
     case eStyleAnimType_Sides_Bottom:
     case eStyleAnimType_Sides_Left: {
-      PR_STATIC_ASSERT(0 == NS_SIDE_TOP);
-      PR_STATIC_ASSERT(eStyleAnimType_Sides_Right - eStyleAnimType_Sides_Top
-                         == NS_SIDE_RIGHT);
-      PR_STATIC_ASSERT(eStyleAnimType_Sides_Bottom - eStyleAnimType_Sides_Top
-                         == NS_SIDE_BOTTOM);
-      PR_STATIC_ASSERT(eStyleAnimType_Sides_Left - eStyleAnimType_Sides_Top
-                         == NS_SIDE_LEFT);
+      MOZ_STATIC_ASSERT(
+       NS_SIDE_TOP    == eStyleAnimType_Sides_Top   -eStyleAnimType_Sides_Top &&
+       NS_SIDE_RIGHT  == eStyleAnimType_Sides_Right -eStyleAnimType_Sides_Top &&
+       NS_SIDE_BOTTOM == eStyleAnimType_Sides_Bottom-eStyleAnimType_Sides_Top &&
+       NS_SIDE_LEFT   == eStyleAnimType_Sides_Left  -eStyleAnimType_Sides_Top,
+       "box side constants out of sync with animation side constants");
+
       const nsStyleCoord &coord = static_cast<const nsStyleSides*>(
         StyleDataAtOffset(styleStruct, ssOffset))->
           Get(mozilla::css::Side(animType - eStyleAnimType_Sides_Top));
@@ -3037,16 +3034,17 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
     case eStyleAnimType_Corner_TopRight:
     case eStyleAnimType_Corner_BottomRight:
     case eStyleAnimType_Corner_BottomLeft: {
-      PR_STATIC_ASSERT(0 == NS_CORNER_TOP_LEFT);
-      PR_STATIC_ASSERT(eStyleAnimType_Corner_TopRight -
-                         eStyleAnimType_Corner_TopLeft
-                       == NS_CORNER_TOP_RIGHT);
-      PR_STATIC_ASSERT(eStyleAnimType_Corner_BottomRight -
-                         eStyleAnimType_Corner_TopLeft
-                       == NS_CORNER_BOTTOM_RIGHT);
-      PR_STATIC_ASSERT(eStyleAnimType_Corner_BottomLeft -
-                         eStyleAnimType_Corner_TopLeft
-                       == NS_CORNER_BOTTOM_LEFT);
+      MOZ_STATIC_ASSERT(
+       NS_CORNER_TOP_LEFT     == eStyleAnimType_Corner_TopLeft -
+                                 eStyleAnimType_Corner_TopLeft        &&
+       NS_CORNER_TOP_RIGHT    == eStyleAnimType_Corner_TopRight -
+                                 eStyleAnimType_Corner_TopLeft        &&
+       NS_CORNER_BOTTOM_RIGHT == eStyleAnimType_Corner_BottomRight -
+                                 eStyleAnimType_Corner_TopLeft        &&
+       NS_CORNER_BOTTOM_LEFT  == eStyleAnimType_Corner_BottomLeft -
+                                 eStyleAnimType_Corner_TopLeft,
+       "box corner constants out of sync with animation corner constants");
+
       const nsStyleCorners *corners = static_cast<const nsStyleCorners*>(
         StyleDataAtOffset(styleStruct, ssOffset));
       PRUint8 fullCorner = animType - eStyleAnimType_Corner_TopLeft;

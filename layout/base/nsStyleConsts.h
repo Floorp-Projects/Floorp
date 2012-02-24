@@ -644,6 +644,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE    NS_FONT_DECORATION_UNDERLINE
 #define NS_STYLE_TEXT_DECORATION_LINE_OVERLINE     NS_FONT_DECORATION_OVERLINE
 #define NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH NS_FONT_DECORATION_LINE_THROUGH
+#define NS_STYLE_TEXT_DECORATION_LINE_BLINK        0x08
 #define NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS 0x10
 // OVERRIDE_ALL does not occur in stylesheets; it only comes from HTML
 // attribute mapping (and thus appears in computed data)

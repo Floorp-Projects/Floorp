@@ -229,6 +229,7 @@ public:
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent);
 
     QWidget* GetViewWidget();
+    virtual PRUint32 GetGLFrameBufferFormat() MOZ_OVERRIDE;
 
 protected:
     nsCOMPtr<nsIWidget> mParent;

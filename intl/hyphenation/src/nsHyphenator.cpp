@@ -38,7 +38,7 @@
 #include "nsHyphenator.h"
 #include "nsIFile.h"
 #include "nsUTF8Utils.h"
-#include "nsIUGenCategory.h"
+#include "nsUnicodeProperties.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsIURI.h"
 
@@ -58,8 +58,6 @@ nsHyphenator::nsHyphenator(nsIURI *aURI)
     printf("loaded hyphenation patterns from %s\n", uriSpec.get());
   }
 #endif
-  mCategories = do_GetService(NS_UNICHARCATEGORY_CONTRACTID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get category service");
 }
 
 nsHyphenator::~nsHyphenator()
@@ -73,7 +71,7 @@ nsHyphenator::~nsHyphenator()
 bool
 nsHyphenator::IsValid()
 {
-  return (mDict != nsnull) && (mCategories != nsnull);
+  return (mDict != nsnull);
 }
 
 nsresult
@@ -101,7 +99,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
       }
     }
 
-    nsIUGenCategory::nsUGenCategory cat = mCategories->Get(ch);
+    nsIUGenCategory::nsUGenCategory cat = mozilla::unicode::GetGenCategory(ch);
     if (cat == nsIUGenCategory::kLetter || cat == nsIUGenCategory::kMark) {
       if (!inWord) {
         inWord = true;

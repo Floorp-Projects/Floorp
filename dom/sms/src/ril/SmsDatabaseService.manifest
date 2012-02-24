@@ -1,0 +1,3 @@
+component {a1fa610c-eb6c-4ac2-878f-b005d5e89249} SmsDatabaseService.js
+contract @mozilla.org/sms/rilsmsdatabaseservice;1 {a1fa610c-eb6c-4ac2-878f-b005d5e89249}
+category profile-after-change SmsDatabaseService @mozilla.org/sms/rilsmsdatabaseservice;1

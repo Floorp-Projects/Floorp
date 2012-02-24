@@ -78,8 +78,8 @@
  */
 
 #include "gfxScriptItemizer.h"
-#include "gfxUnicodeProperties.h"
 #include "gfxFontUtils.h" // for the FindHighestBit function
+#include "nsUnicodeProperties.h"
 
 #include "nsCharTraits.h"
 
@@ -281,7 +281,7 @@ gfxScriptItemizer::Next(PRUint32& aRunStart, PRUint32& aRunLimit,
                 }
             }
 
-            sc = gfxUnicodeProperties::GetScriptCode(ch);
+            sc = mozilla::unicode::GetScriptCode(ch);
 
             pairIndex = getPairIndex(ch);
 

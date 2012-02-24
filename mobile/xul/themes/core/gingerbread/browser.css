@@ -76,7 +76,7 @@ toolbarbutton.urlbar-button {
 
 #tool-app-switch:hover:active {
   background-color: @color_background_highlight@ !important;
-  -moz-border-radius-bottomright: @border_radius_small@;
+  border-bottom-right-radius: @border_radius_small@;
 }
 
 #toolbar-main[fullscreen="true"] #tool-app-switch:not(:-moz-system-metric(maemo-classic)) {
@@ -100,11 +100,11 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-app-close:hover:active:-moz-locale-dir(ltr) {
-  -moz-border-radius-bottomleft: @border_radius_small@;
+  border-bottom-left-radius: @border_radius_small@;
 }
 
 #tool-app-close:hover:active:-moz-locale-dir(rtl) {
-  -moz-border-radius-bottomright: @border_radius_small@;
+  border-bottom-right-radius: @border_radius_small@;
 }
 
 %if MOZ_PLATFORM_MAEMO != 6
@@ -364,7 +364,7 @@ toolbarbutton.urlbar-button {
 }
 
 .panel-close:hover:active:-moz-locale-dir(ltr) {
-  -moz-border-radius-bottomleft: @border_radius_small@;
+  border-bottom-left-radius: @border_radius_small@;
 }
 
 .panel-close:-moz-locale-dir(rtl) {
@@ -372,7 +372,7 @@ toolbarbutton.urlbar-button {
 }
 
 .panel-close:hover:active:-moz-locale-dir(rtl) {
-  -moz-border-radius-bottomright: @border_radius_small@;
+  border-bottom-right-radius: @border_radius_small@;
 }
 %endif
 
@@ -806,7 +806,7 @@ placeitem[src=""] .bookmark-item-container > image {
   -moz-transition: opacity 1s ease;
   background-color: #c90707;
   border: @border_width_tiny@ solid #951919;
-  -moz-border-radius: @border_radius_tiny@;
+  border-radius: @border_radius_tiny@;
   content: attr(badge);
   font-size: @font_xtiny@ !important;
   font-weight: bolder;

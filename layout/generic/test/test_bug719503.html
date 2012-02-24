@@ -1,0 +1,20 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=719503
+-->
+<title>Test for Bug 719503</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=719503">Mozilla Bug 719503</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script>
+try {
+  getSelection().collapse(document.head, 0);
+  getSelection().deleteFromDocument();
+} catch(e) {
+  ok(false, "Exception thrown");
+}
+ok(true, "Passed, no exception");
+</script>

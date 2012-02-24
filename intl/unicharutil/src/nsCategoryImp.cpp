@@ -40,7 +40,7 @@
 #include "nsUUDll.h"
 #include "nsISupports.h"
 #include "nsCategoryImp.h"
-#include "cattable.h"
+#include "nsUnicodeProperties.h"
 
 static nsCategoryImp gCategoryImp;
 
@@ -63,5 +63,5 @@ nsCategoryImp* nsCategoryImp::GetInstance()
 
 nsIUGenCategory::nsUGenCategory nsCategoryImp::Get(PRUint32 aChar)
 {
-  return nsUGenCategory(GetCat(aChar));
+  return mozilla::unicode::GetGenCategory(aChar);
 }

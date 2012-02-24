@@ -83,7 +83,7 @@
 #include "mozilla/StdInt.h"
 #include "prtypes.h"
 #include "harfbuzz/hb.h"
-#include "gfxUnicodeScriptCodes.h"
+#include "nsUnicodeScriptCodes.h"
 
 #define PAREN_STACK_DEPTH 32
 

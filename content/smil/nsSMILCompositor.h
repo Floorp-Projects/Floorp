@@ -131,7 +131,7 @@ public:
   bool mForceCompositing;
 
   // Cached base value, so we can detect & force-recompose when it changes
-  // from one sample to the next.  (nsSMILAnimationController copies this
+  // from one sample to the next. (nsSMILAnimationController copies this
   // forward from the previous sample's compositor.)
   nsAutoPtr<nsSMILValue> mCachedBaseValue;
 };

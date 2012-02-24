@@ -4,7 +4,7 @@
 function test() {
   let state = { windows: [{ tabs: [
       {entries: [{url: "about:mozilla"}], hidden: true},
-      {entries: [{url: "about:robots"}], hidden: true}
+      {entries: [{url: "about:rights"}], hidden: true}
   ] }] };
 
   waitForExplicitFinish();

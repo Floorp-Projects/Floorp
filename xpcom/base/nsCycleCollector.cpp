@@ -1112,7 +1112,7 @@ struct nsCycleCollector
     bool mCollectionInProgress;
     bool mScanInProgress;
     bool mFollowupCollection;
-    PRUint32 mCollectedObjects;
+    nsCycleCollectorResults *mResults;
     TimeStamp mCollectionStart;
 
     nsCycleCollectionLanguageRuntime *mRuntimes[nsIProgrammingLanguage::MAX+1];
@@ -1159,11 +1159,13 @@ struct nsCycleCollector
     nsPurpleBufferEntry* Suspect2(nsISupports *n);
     bool Forget2(nsPurpleBufferEntry *e);
 
-    PRUint32 Collect(PRUint32 aTryCollections,
-                     nsICycleCollectorListener *aListener);
+    void Collect(nsCycleCollectorResults *aResults,
+                 PRUint32 aTryCollections,
+                 nsICycleCollectorListener *aListener);
 
     // Prepare for and cleanup after one or more collection(s).
-    bool PrepareForCollection(nsTArray<PtrInfo*> *aWhiteNodes);
+    bool PrepareForCollection(nsCycleCollectorResults *aResults,
+                              nsTArray<PtrInfo*> *aWhiteNodes);
     void GCIfNeeded(bool aForceGC);
     void CleanupAfterCollection();
 
@@ -2394,6 +2396,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
                  "FinishCollection wasn't called?");
 
     mWhiteNodes->SetCapacity(mWhiteNodeCount);
+    PRUint32 numWhiteGCed = 0;
 
     NodePool::Enumerator etor(mGraph.mNodes);
     while (!etor.IsDone())
@@ -2404,9 +2407,21 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
             if (NS_FAILED(rv)) {
                 Fault("Failed root call while unlinking", pinfo);
                 mWhiteNodes->RemoveElementAt(mWhiteNodes->Length() - 1);
+            } else if (pinfo->mRefCount == 0) {
+                // only JS objects have a refcount of 0
+                ++numWhiteGCed;
             }
         }
     }
+
+    PRUint32 count = mWhiteNodes->Length();
+    NS_ASSERTION(numWhiteGCed <= count,
+                 "More freed GCed nodes than total freed nodes.");
+    if (mResults) {
+        mResults->mFreedRefCounted += count - numWhiteGCed;
+        mResults->mFreedGCed += numWhiteGCed;
+    }
+
     timeLog.Checkpoint("CollectWhite::Root");
 
     if (mBeforeUnlinkCB) {
@@ -2418,17 +2433,15 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     _CrtMemCheckpoint(&ms1);
 #endif
 
-    PRUint32 i, count = mWhiteNodes->Length();
-
     if (aListener) {
-        for (i = 0; i < count; ++i) {
+        for (PRUint32 i = 0; i < count; ++i) {
             PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
             aListener->DescribeGarbage((PRUint64)pinfo->mPointer);
         }
         aListener->End();
     }
 
-    for (i = 0; i < count; ++i) {
+    for (PRUint32 i = 0; i < count; ++i) {
         PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
         rv = pinfo->mParticipant->Unlink(pinfo->mPointer);
         if (NS_FAILED(rv)) {
@@ -2445,7 +2458,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     }
     timeLog.Checkpoint("CollectWhite::Unlink");
 
-    for (i = 0; i < count; ++i) {
+    for (PRUint32 i = 0; i < count; ++i) {
         PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
         rv = pinfo->mParticipant->Unroot(pinfo->mPointer);
         if (NS_FAILED(rv))
@@ -2459,7 +2472,6 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
         mStats.mFreedBytes += (ms1.lTotalCount - ms2.lTotalCount);
 #endif
 
-    mCollectedObjects += count;
     return count > 0;
 }
 
@@ -2662,10 +2674,10 @@ InitMemHook(void)
 // Collector implementation
 ////////////////////////////////////////////////////////////////////////
 
-nsCycleCollector::nsCycleCollector() : 
+nsCycleCollector::nsCycleCollector() :
     mCollectionInProgress(false),
     mScanInProgress(false),
-    mCollectedObjects(0),
+    mResults(nsnull),
     mWhiteNodes(nsnull),
     mWhiteNodeCount(0),
     mVisitedRefCounted(0),
@@ -3036,6 +3048,8 @@ nsCycleCollector::GCIfNeeded(bool aForceGC)
         Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_NEED_GC, needGC);
         if (!needGC)
             return;
+        if (mResults)
+            mResults->mForcedGC = true;
     }
 
     TimeLog timeLog;
@@ -3048,7 +3062,8 @@ nsCycleCollector::GCIfNeeded(bool aForceGC)
 }
 
 bool
-nsCycleCollector::PrepareForCollection(nsTArray<PtrInfo*> *aWhiteNodes)
+nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
+                                       nsTArray<PtrInfo*> *aWhiteNodes)
 {
 #if defined(DEBUG_CC) && !defined(__MINGW32__)
     if (!mParams.mDoNothing && mParams.mHookMalloc)
@@ -3073,8 +3088,8 @@ nsCycleCollector::PrepareForCollection(nsTArray<PtrInfo*> *aWhiteNodes)
         obs->NotifyObservers(nsnull, "cycle-collector-begin", nsnull);
 
     mFollowupCollection = false;
-    mCollectedObjects = 0;
 
+    mResults = aResults;
     mWhiteNodes = aWhiteNodes;
 
     timeLog.Checkpoint("PrepareForCollection()");
@@ -3098,10 +3113,21 @@ nsCycleCollector::CleanupAfterCollection()
     PRUint32 interval = (PRUint32) ((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: total cycle collector time was %ums\n", interval);
-    printf("cc: visited %u ref counted and %u GCed objects, freed %d.\n",
-           mVisitedRefCounted, mVisitedGCed, mWhiteNodeCount);
+    if (mResults) {
+        printf("cc: visited %u ref counted and %u GCed objects, freed %d ref counted and %d GCed objects.\n",
+               mVisitedRefCounted, mVisitedGCed,
+               mResults->mFreedRefCounted, mResults->mFreedGCed);
+    } else {
+        printf("cc: visited %u ref counted and %u GCed objects, freed %d.\n",
+               mVisitedRefCounted, mVisitedGCed, mWhiteNodeCount);
+    }
     printf("cc: \n");
 #endif
+    if (mResults) {
+        mResults->mVisitedRefCounted = mVisitedRefCounted;
+        mResults->mVisitedGCed = mVisitedGCed;
+        mResults = nsnull;
+    }
     Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR, interval);
     Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_VISITED_REF_COUNTED, mVisitedRefCounted);
     Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_VISITED_GCED, mVisitedGCed);
@@ -3112,14 +3138,15 @@ nsCycleCollector::CleanupAfterCollection()
 #endif
 }
 
-PRUint32
-nsCycleCollector::Collect(PRUint32 aTryCollections,
+void
+nsCycleCollector::Collect(nsCycleCollectorResults *aResults,
+                          PRUint32 aTryCollections,
                           nsICycleCollectorListener *aListener)
 {
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
 
-    if (!PrepareForCollection(&whiteNodes))
-        return 0;
+    if (!PrepareForCollection(aResults, &whiteNodes))
+        return;
 
     PRUint32 totalCollections = 0;
     while (aTryCollections > totalCollections) {
@@ -3135,8 +3162,6 @@ nsCycleCollector::Collect(PRUint32 aTryCollections,
     }
 
     CleanupAfterCollection();
-
-    return mCollectedObjects;
 }
 
 bool
@@ -3313,7 +3338,7 @@ nsCycleCollector::Shutdown()
     if (mParams.mLogGraphs) {
         listener = new nsCycleCollectorLogger();
     }
-    Collect(SHUTDOWN_COLLECTIONS(mParams), listener);
+    Collect(nsnull, SHUTDOWN_COLLECTIONS(mParams), listener);
 
 #ifdef DEBUG_CC
     GCGraphBuilder builder(mGraph, mRuntimes, nsnull);
@@ -3919,7 +3944,8 @@ public:
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     }
 
-    PRUint32 Collect(nsICycleCollectorListener* aListener)
+    void Collect(nsCycleCollectorResults *aResults,
+                 nsICycleCollectorListener *aListener)
     {
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -3934,11 +3960,11 @@ public:
         MutexAutoLock autoLock(mLock);
 
         if (!mRunning)
-            return 0;
+            return;
 
         nsAutoTArray<PtrInfo*, 4000> whiteNodes;
-        if (!mCollector->PrepareForCollection(&whiteNodes))
-            return 0;
+        if (!mCollector->PrepareForCollection(aResults, &whiteNodes))
+            return;
 
         NS_ASSERTION(!mListener, "Should have cleared this already!");
         if (aListener && NS_FAILED(aListener->Begin()))
@@ -3956,14 +3982,9 @@ public:
         mListener = nsnull;
 
         if (mCollected) {
-            mCollected = mCollector->FinishCollection(aListener);
-
+            mCollector->FinishCollection(aListener);
             mCollector->CleanupAfterCollection();
-
-            return mCollected ? mCollector->mCollectedObjects : 0;
         }
-
-        return 0;
     }
 
     void Shutdown()
@@ -4037,8 +4058,9 @@ nsCycleCollector_forgetSkippable()
     }
 }
 
-PRUint32
-nsCycleCollector_collect(nsICycleCollectorListener *aListener)
+void
+nsCycleCollector_collect(nsCycleCollectorResults *aResults,
+                         nsICycleCollectorListener *aListener)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     SAMPLE_LABEL("CC", "nsCycleCollector_collect");
@@ -4047,9 +4069,11 @@ nsCycleCollector_collect(nsICycleCollectorListener *aListener)
         listener = new nsCycleCollectorLogger();
     }
 
-    if (sCollectorRunner)
-        return sCollectorRunner->Collect(listener);
-    return sCollector ? sCollector->Collect(1, listener) : 0;
+    if (sCollectorRunner) {
+        sCollectorRunner->Collect(aResults, listener);
+    } else if (sCollector) {
+        sCollector->Collect(aResults, 1, listener);
+    }
 }
 
 void

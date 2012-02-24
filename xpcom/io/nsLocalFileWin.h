@@ -56,11 +56,6 @@
 
 #include <sys/stat.h>
 
-typedef LPITEMIDLIST (WINAPI *ILCreateFromPathWPtr)(PCWSTR);
-typedef HRESULT (WINAPI *SHOpenFolderAndSelectItemsPtr)(PCIDLIST_ABSOLUTE, UINT, 
-                                                        PCUITEMID_CHILD_ARRAY,
-                                                        DWORD);
-
 class nsLocalFile : public nsILocalFileWin,
                     public nsIHashable
 {
@@ -135,11 +130,6 @@ private:
     nsresult HasFileAttribute(DWORD fileAttrib, bool *_retval);
     nsresult AppendInternal(const nsAFlatString &node,
                             bool multipleComponents);
-    nsresult RevealClassic(); // Reveals the path using explorer.exe cmdline
-    nsresult RevealUsingShell(); // Uses newer shell API to reveal the path
-
-    static ILCreateFromPathWPtr sILCreateFromPathW;
-    static SHOpenFolderAndSelectItemsPtr sSHOpenFolderAndSelectItems;
 };
 
 #endif

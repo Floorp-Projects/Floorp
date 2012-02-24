@@ -750,6 +750,19 @@ nsEditor::EnableUndo(bool aEnable)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEditor::GetNumberOfUndoItems(PRInt32* aNumItems)
+{
+  *aNumItems = 0;
+  return mTxnMgr ? mTxnMgr->GetNumberOfUndoItems(aNumItems) : NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::GetNumberOfRedoItems(PRInt32* aNumItems)
+{
+  *aNumItems = 0;
+  return mTxnMgr ? mTxnMgr->GetNumberOfRedoItems(aNumItems) : NS_OK;
+}
 
 NS_IMETHODIMP
 nsEditor::GetTransactionManager(nsITransactionManager* *aTxnManager)

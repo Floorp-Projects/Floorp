@@ -803,6 +803,11 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
         }
       }
     }
+    nsCOMPtr<nsIDOMDocument> document;
+    docShellElement->GetOwnerDocument(getter_AddRefs(document));
+    if (document) {
+      return document->SetTitle(title);
+    }
   }
 
   return mXULWindow->SetTitle(title.get());

@@ -401,6 +401,8 @@
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/RadioInterfaceLayer.manifest
 @BINPATH@/components/RadioInterfaceLayer.js
+@BINPATH@/components/SmsDatabaseService.manifest
+@BINPATH@/components/SmsDatabaseService.js
 @BINPATH@/components/nsWifiWorker.js
 @BINPATH@/components/nsWifiWorker.manifest
 #endif

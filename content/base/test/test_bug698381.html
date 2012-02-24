@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+    https://bugzilla.mozilla.org/show_bug.cgi?id=698381
+  -->
+  <head>
+    <title>Test for Bug 698381</title>
+    <script type="text/javascript"
+      src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"
+      type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css"
+      href="/tests/SimpleTest/test.css" />
+  </head>
+  <body onload="runTests();">
+    <a target="_blank"
+      href="https://bugzilla.mozilla.org/show_bug.cgi?id=698381">
+      Mozilla Bug 698381</a>
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <div id="noChildren" style="display: none"></div>
+    <div id="hasChildren" style="display: none">
+      <div id="childOne" style="display: none"></div>
+    </div>
+    <pre id="test">
+      <script type="text/javascript">
+        /*
+          Checks to see if default parameter handling is correct when 0
+          parameters are passed.
+
+          If none are passed, then Node.cloneNode should default aDeep
+          to true.
+        */
+        SimpleTest.waitForExplicitFinish();
+
+        var hasChildren = document.getElementById("hasChildren"),
+            noChildren = document.getElementById("noChildren"),
+            clonedNode;
+
+        function runTests() {
+
+          // Test Node.cloneNode when no arguments are given
+          clonedNode = hasChildren.cloneNode();
+          is(clonedNode.hasChildNodes(), true, "Node.cloneNode with true " +
+            "default on a node with children clones the child nodes.");
+
+          clonedNode = noChildren.cloneNode();
+          is(clonedNode.hasChildNodes(), false, "Node.cloneNode with true " +
+            "default on a node without children doesn't clone child nodes." );
+
+          SimpleTest.finish();
+        }
+      </script>
+    </pre>
+  </body>
+</html>

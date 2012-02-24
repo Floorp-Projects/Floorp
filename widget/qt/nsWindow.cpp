@@ -3310,3 +3310,19 @@ nsWindow::UserActivity()
     mIdleService->ResetIdleTimeOut();
   }
 }
+
+PRUint32
+nsWindow::GetGLFrameBufferFormat()
+{
+    if (mLayerManager &&
+        mLayerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+        // On maemo the hardware fb has RGB format.
+#ifdef MOZ_PLATFORM_MAEMO
+        return LOCAL_GL_RGB;
+#else
+        return LOCAL_GL_RGBA;
+#endif
+    }
+    return LOCAL_GL_NONE;
+}
+

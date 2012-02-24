@@ -627,6 +627,18 @@ MOZ_WIN_MEM_TRY_BEGIN
   if (sig != ENDSIG)
     return NS_ERROR_FILE_CORRUPTED;
 
+  // Make the comment available for consumers.
+  if (endp - buf >= ZIPEND_SIZE) {
+    ZipEnd *zipend = (ZipEnd *)buf;
+
+    buf += ZIPEND_SIZE;
+    PRUint16 commentlen = xtoint(zipend->commentfield_len);
+    if (endp - buf >= commentlen) {
+      mCommentPtr = (const char *)buf;
+      mCommentLen = commentlen;
+    }
+  }
+
 MOZ_WIN_MEM_TRY_CATCH(return NS_ERROR_FAILURE)
   return NS_OK;
 }
@@ -741,6 +753,15 @@ MOZ_WIN_MEM_TRY_BEGIN
 
   return data + offset;
 MOZ_WIN_MEM_TRY_CATCH(return nsnull)
+}
+
+// nsZipArchive::GetComment
+bool nsZipArchive::GetComment(nsACString &aComment)
+{
+MOZ_WIN_MEM_TRY_BEGIN
+  aComment.Assign(mCommentPtr, mCommentLen);
+MOZ_WIN_MEM_TRY_CATCH(return false)
+  return true;
 }
 
 //---------------------------------------------

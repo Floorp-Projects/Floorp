@@ -1,6 +1,0 @@
-pageloader.jar:
-% content pageloader %content/
-* content/quit.js (quit.js)
-* content/pageloader.js (pageloader.js)
-  content/pageloader.xul (pageloader.xul)
-* content/report.js (report.js)
