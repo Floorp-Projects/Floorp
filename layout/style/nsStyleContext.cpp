@@ -75,8 +75,11 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
     mBits(((PRUint32)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT),
     mRefCnt(0)
 {
-  PR_STATIC_ASSERT((PR_UINT32_MAX >> NS_STYLE_CONTEXT_TYPE_SHIFT) >=
-                   nsCSSPseudoElements::ePseudo_MAX);
+  // This check has to be done "backward", because if it were written the
+  // more natural way it wouldn't fail even when it needed to.
+  MOZ_STATIC_ASSERT((PR_UINT32_MAX >> NS_STYLE_CONTEXT_TYPE_SHIFT) >=
+                    nsCSSPseudoElements::ePseudo_MAX,
+                    "pseudo element bits no longer fit in a PRUint32");
 
   mNextSibling = this;
   mPrevSibling = this;

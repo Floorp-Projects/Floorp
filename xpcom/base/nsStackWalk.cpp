@@ -208,14 +208,12 @@ StackWalkInitCriticalAddress()
 #include "mozilla/FunctionTimer.h"
 
 #include "nspr.h"
-#if defined(_M_IX86) || defined(_M_AMD64)
 #include <imagehlp.h>
 // We need a way to know if we are building for WXP (or later), as if we are, we
 // need to use the newer 64-bit APIs. API_VERSION_NUMBER seems to fit the bill.
 // A value of 9 indicates we want to use the new APIs.
-#if API_VERSION_NUMBER >= 9
-#define USING_WXP_VERSION 1
-#endif
+#if API_VERSION_NUMBER < 9
+#error Too old imagehlp.h
 #endif
 
 // Define these as static pointers so that we can load the DLL on the
@@ -226,115 +224,11 @@ StackWalkInitCriticalAddress()
 //
 PR_BEGIN_EXTERN_C
 
-typedef DWORD (__stdcall *SYMSETOPTIONSPROC)(DWORD);
-extern SYMSETOPTIONSPROC _SymSetOptions;
-
-typedef BOOL (__stdcall *SYMINITIALIZEPROC)(HANDLE, LPSTR, BOOL);
-extern SYMINITIALIZEPROC _SymInitialize;
-
-typedef BOOL (__stdcall *SYMCLEANUPPROC)(HANDLE);
-extern SYMCLEANUPPROC _SymCleanup;
-
-typedef BOOL (__stdcall *STACKWALKPROC)(DWORD,
-                                        HANDLE,
-                                        HANDLE,
-                                        LPSTACKFRAME,
-                                        LPVOID,
-                                        PREAD_PROCESS_MEMORY_ROUTINE,
-                                        PFUNCTION_TABLE_ACCESS_ROUTINE,
-                                        PGET_MODULE_BASE_ROUTINE,
-                                        PTRANSLATE_ADDRESS_ROUTINE);
-extern  STACKWALKPROC _StackWalk;
-
-#ifdef USING_WXP_VERSION
-typedef BOOL (__stdcall *STACKWALKPROC64)(DWORD,
-                                          HANDLE,
-                                          HANDLE,
-                                          LPSTACKFRAME64,
-                                          PVOID,
-                                          PREAD_PROCESS_MEMORY_ROUTINE64,
-                                          PFUNCTION_TABLE_ACCESS_ROUTINE64,
-                                          PGET_MODULE_BASE_ROUTINE64,
-                                          PTRANSLATE_ADDRESS_ROUTINE64);
-extern  STACKWALKPROC64 _StackWalk64;
-#endif
-
-typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC)(HANDLE, DWORD);
-extern  SYMFUNCTIONTABLEACCESSPROC _SymFunctionTableAccess;
-
-#ifdef USING_WXP_VERSION
-typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC64)(HANDLE, DWORD64);
-extern  SYMFUNCTIONTABLEACCESSPROC64 _SymFunctionTableAccess64;
-#endif
-
-typedef DWORD (__stdcall *SYMGETMODULEBASEPROC)(HANDLE, DWORD);
-extern  SYMGETMODULEBASEPROC _SymGetModuleBase;
-
-#ifdef USING_WXP_VERSION
-typedef DWORD64 (__stdcall *SYMGETMODULEBASEPROC64)(HANDLE, DWORD64);
-extern  SYMGETMODULEBASEPROC64 _SymGetModuleBase64;
-#endif
-
-typedef BOOL (__stdcall *SYMGETSYMFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_SYMBOL);
-extern  SYMGETSYMFROMADDRPROC _SymGetSymFromAddr;
-
-#ifdef USING_WXP_VERSION
-typedef BOOL (__stdcall *SYMFROMADDRPROC)(HANDLE, DWORD64, PDWORD64, PSYMBOL_INFO);
-extern  SYMFROMADDRPROC _SymFromAddr;
-#endif
-
-typedef DWORD ( __stdcall *SYMLOADMODULE)(HANDLE, HANDLE, PSTR, PSTR, DWORD, DWORD);
-extern  SYMLOADMODULE _SymLoadModule;
-
-#ifdef USING_WXP_VERSION
-typedef DWORD ( __stdcall *SYMLOADMODULE64)(HANDLE, HANDLE, PCSTR, PCSTR, DWORD64, DWORD);
-extern  SYMLOADMODULE64 _SymLoadModule64;
-#endif
-
-typedef DWORD ( __stdcall *SYMUNDNAME)(PIMAGEHLP_SYMBOL, PSTR, DWORD);
-extern  SYMUNDNAME _SymUnDName;
-
-typedef DWORD ( __stdcall *SYMGETMODULEINFO)( HANDLE, DWORD, PIMAGEHLP_MODULE);
-extern  SYMGETMODULEINFO _SymGetModuleInfo;
-
-#ifdef USING_WXP_VERSION
-typedef BOOL ( __stdcall *SYMGETMODULEINFO64)( HANDLE, DWORD64, PIMAGEHLP_MODULE64);
-extern  SYMGETMODULEINFO64 _SymGetModuleInfo64;
-#endif
-
-typedef BOOL ( __stdcall *ENUMLOADEDMODULES)( HANDLE, PENUMLOADED_MODULES_CALLBACK, PVOID);
-extern  ENUMLOADEDMODULES _EnumerateLoadedModules;
-
-#ifdef USING_WXP_VERSION
-typedef BOOL ( __stdcall *ENUMLOADEDMODULES64)( HANDLE, PENUMLOADED_MODULES_CALLBACK64, PVOID);
-extern  ENUMLOADEDMODULES64 _EnumerateLoadedModules64;
-#endif
-
-typedef BOOL (__stdcall *SYMGETLINEFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_LINE);
-extern  SYMGETLINEFROMADDRPROC _SymGetLineFromAddr;
-
-#ifdef USING_WXP_VERSION
-typedef BOOL (__stdcall *SYMGETLINEFROMADDRPROC64)(HANDLE, DWORD64, PDWORD, PIMAGEHLP_LINE64);
-extern  SYMGETLINEFROMADDRPROC64 _SymGetLineFromAddr64;
-#endif
-
 extern HANDLE hStackWalkMutex; 
 
 bool EnsureSymInitialized();
 
 bool EnsureImageHlpInitialized();
-
-/*
- * SymGetModuleInfoEspecial
- *
- * Attempt to determine the module information.
- * Bug 112196 says this DLL may not have been loaded at the time
- *  SymInitialize was called, and thus the module information
- *  and symbol information is not available.
- * This code rectifies that problem.
- * Line information is optional.
- */
-BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo, PIMAGEHLP_LINE aLineInfo);
 
 struct WalkStackData {
   PRUint32 skipFrames;
@@ -351,81 +245,7 @@ struct WalkStackData {
 void PrintError(char *prefix, WalkStackData* data);
 unsigned int WINAPI WalkStackThread(void* data);
 void WalkStackMain64(struct WalkStackData* data);
-#if !defined(_WIN64)
-void WalkStackMain(struct WalkStackData* data);
-#endif
 
-
-// Define these as static pointers so that we can load the DLL on the
-// fly (and not introduce a link-time dependency on it). Tip o' the
-// hat to Matt Pietrick for this idea. See:
-//
-//   http://msdn.microsoft.com/library/periodic/period97/F1/D3/S245C6.htm
-//
-
-SYMSETOPTIONSPROC _SymSetOptions;
-
-SYMINITIALIZEPROC _SymInitialize;
-
-SYMCLEANUPPROC _SymCleanup;
-
-STACKWALKPROC _StackWalk;
-#ifdef USING_WXP_VERSION
-STACKWALKPROC64 _StackWalk64;
-#else
-#define _StackWalk64 0
-#endif
-
-SYMFUNCTIONTABLEACCESSPROC _SymFunctionTableAccess;
-#ifdef USING_WXP_VERSION
-SYMFUNCTIONTABLEACCESSPROC64 _SymFunctionTableAccess64;
-#else
-#define _SymFunctionTableAccess64 0
-#endif
-
-SYMGETMODULEBASEPROC _SymGetModuleBase;
-#ifdef USING_WXP_VERSION
-SYMGETMODULEBASEPROC64 _SymGetModuleBase64;
-#else
-#define _SymGetModuleBase64 0
-#endif
-
-SYMGETSYMFROMADDRPROC _SymGetSymFromAddr;
-#ifdef USING_WXP_VERSION
-SYMFROMADDRPROC _SymFromAddr;
-#else
-#define _SymFromAddr 0
-#endif
-
-SYMLOADMODULE _SymLoadModule;
-#ifdef USING_WXP_VERSION
-SYMLOADMODULE64 _SymLoadModule64;
-#else
-#define _SymLoadModule64 0
-#endif
-
-SYMUNDNAME _SymUnDName;
-
-SYMGETMODULEINFO _SymGetModuleInfo;
-#ifdef USING_WXP_VERSION
-SYMGETMODULEINFO64 _SymGetModuleInfo64;
-#else
-#define _SymGetModuleInfo64 0
-#endif
-
-ENUMLOADEDMODULES _EnumerateLoadedModules;
-#ifdef USING_WXP_VERSION
-ENUMLOADEDMODULES64 _EnumerateLoadedModules64;
-#else
-#define _EnumerateLoadedModules64 0
-#endif
-
-SYMGETLINEFROMADDRPROC _SymGetLineFromAddr;
-#ifdef USING_WXP_VERSION
-SYMGETLINEFROMADDRPROC64 _SymGetLineFromAddr64;
-#else
-#define _SymGetLineFromAddr64 0
-#endif
 
 DWORD gStackWalkThread;
 CRITICAL_SECTION gDbgHelpCS;
@@ -485,79 +305,12 @@ EnsureImageHlpInitialized()
 
     ::InitializeCriticalSection(&gDbgHelpCS);
 
-    HMODULE module = ::LoadLibraryW(L"DBGHELP.DLL");
-    if (!module) {
-        module = ::LoadLibraryW(L"IMAGEHLP.DLL");
-        if (!module) return false;
-    }
-
-    _SymSetOptions = (SYMSETOPTIONSPROC) ::GetProcAddress(module, "SymSetOptions");
-    if (!_SymSetOptions) return false;
-
-    _SymInitialize = (SYMINITIALIZEPROC) ::GetProcAddress(module, "SymInitialize");
-    if (!_SymInitialize) return false;
-
-    _SymCleanup = (SYMCLEANUPPROC)GetProcAddress(module, "SymCleanup");
-    if (!_SymCleanup) return false;
-
-#ifdef USING_WXP_VERSION
-    _StackWalk64 = (STACKWALKPROC64)GetProcAddress(module, "StackWalk64");
-#endif
-    _StackWalk = (STACKWALKPROC)GetProcAddress(module, "StackWalk");
-    if (!_StackWalk64  && !_StackWalk) return false;
-
-#ifdef USING_WXP_VERSION
-    _SymFunctionTableAccess64 = (SYMFUNCTIONTABLEACCESSPROC64) GetProcAddress(module, "SymFunctionTableAccess64");
-#endif
-    _SymFunctionTableAccess = (SYMFUNCTIONTABLEACCESSPROC) GetProcAddress(module, "SymFunctionTableAccess");
-    if (!_SymFunctionTableAccess64 && !_SymFunctionTableAccess) return false;
-
-#ifdef USING_WXP_VERSION
-    _SymGetModuleBase64 = (SYMGETMODULEBASEPROC64)GetProcAddress(module, "SymGetModuleBase64");
-#endif
-    _SymGetModuleBase = (SYMGETMODULEBASEPROC)GetProcAddress(module, "SymGetModuleBase");
-    if (!_SymGetModuleBase64 && !_SymGetModuleBase) return false;
-
-    _SymGetSymFromAddr = (SYMGETSYMFROMADDRPROC)GetProcAddress(module, "SymGetSymFromAddr");
-#ifdef USING_WXP_VERSION
-    _SymFromAddr = (SYMFROMADDRPROC)GetProcAddress(module, "SymFromAddr");
-#endif
-    if (!_SymFromAddr && !_SymGetSymFromAddr) return false;
-
-#ifdef USING_WXP_VERSION
-    _SymLoadModule64 = (SYMLOADMODULE64)GetProcAddress(module, "SymLoadModule64");
-#endif
-    _SymLoadModule = (SYMLOADMODULE)GetProcAddress(module, "SymLoadModule");
-    if (!_SymLoadModule64 && !_SymLoadModule) return false;
-
-    _SymUnDName = (SYMUNDNAME)GetProcAddress(module, "SymUnDName");
-    if (!_SymUnDName) return false;
-
-#ifdef USING_WXP_VERSION
-    _SymGetModuleInfo64 = (SYMGETMODULEINFO64)GetProcAddress(module, "SymGetModuleInfo64");
-#endif
-    _SymGetModuleInfo = (SYMGETMODULEINFO)GetProcAddress(module, "SymGetModuleInfo");
-    if (!_SymGetModuleInfo64 && !_SymGetModuleInfo) return false;
-
-#ifdef USING_WXP_VERSION
-    _EnumerateLoadedModules64 = (ENUMLOADEDMODULES64)GetProcAddress(module, "EnumerateLoadedModules64");
-#endif
-    _EnumerateLoadedModules = (ENUMLOADEDMODULES)GetProcAddress(module, "EnumerateLoadedModules");
-    if (!_EnumerateLoadedModules64 && !_EnumerateLoadedModules) return false;
-
-#ifdef USING_WXP_VERSION
-    _SymGetLineFromAddr64 = (SYMGETLINEFROMADDRPROC64)GetProcAddress(module, "SymGetLineFromAddr64");
-#endif
-    _SymGetLineFromAddr = (SYMGETLINEFROMADDRPROC)GetProcAddress(module, "SymGetLineFromAddr");
-    if (!_SymGetLineFromAddr64 && !_SymGetLineFromAddr) return false;
-
     return gInitialized = true;
 }
 
 void
 WalkStackMain64(struct WalkStackData* data)
 {
-#ifdef USING_WXP_VERSION
     // Get the context information for the thread. That way we will
     // know where our sp, fp, pc, etc. are and can fill in the
     // STACKFRAME64 with the initial values.
@@ -605,7 +358,7 @@ WalkStackMain64(struct WalkStackData* data)
 
         // debug routines are not threadsafe, so grab the lock.
         EnterCriticalSection(&gDbgHelpCS);
-        ok = _StackWalk64(
+        ok = StackWalk64(
 #ifdef _M_AMD64
           IMAGE_FILE_MACHINE_AMD64,
 #elif defined _M_IA64
@@ -620,8 +373,8 @@ WalkStackMain64(struct WalkStackData* data)
           &frame64,
           &context,
           NULL,
-          _SymFunctionTableAccess64, // function table access routine
-          _SymGetModuleBase64,       // module base routine
+          SymFunctionTableAccess64, // function table access routine
+          SymGetModuleBase64,       // module base routine
           0
         );
         LeaveCriticalSection(&gDbgHelpCS);
@@ -649,105 +402,8 @@ WalkStackMain64(struct WalkStackData* data)
             break;
     }
     return;
-#endif
 }
 
-
-#if !defined(_WIN64)
-void
-WalkStackMain(struct WalkStackData* data)
-{
-    // Get the context information for the thread. That way we will
-    // know where our sp, fp, pc, etc. are and can fill in the
-    // STACKFRAME with the initial values.
-    CONTEXT context;
-    HANDLE myProcess = data->process;
-    HANDLE myThread = data->thread;
-    DWORD addr;
-    STACKFRAME frame;
-    int skip = data->skipFrames; // skip our own stack walking frames
-    BOOL ok;
-
-    // Get a context for the specified thread.
-    memset(&context, 0, sizeof(CONTEXT));
-    context.ContextFlags = CONTEXT_FULL;
-    if (!GetThreadContext(myThread, &context)) {
-        PrintError("GetThreadContext");
-        return;
-    }
-
-    // Setup initial stack frame to walk from
-#if defined _M_IX86
-    memset(&frame, 0, sizeof(frame));
-    frame.AddrPC.Offset    = context.Eip;
-    frame.AddrPC.Mode      = AddrModeFlat;
-    frame.AddrStack.Offset = context.Esp;
-    frame.AddrStack.Mode   = AddrModeFlat;
-    frame.AddrFrame.Offset = context.Ebp;
-    frame.AddrFrame.Mode   = AddrModeFlat;
-#else
-    PrintError("Unknown platform. No stack walking.");
-    return;
-#endif
-
-    // Now walk the stack
-    while (1) {
-
-        // debug routines are not threadsafe, so grab the lock.
-        EnterCriticalSection(&gDbgHelpCS);
-        ok = _StackWalk(
-            IMAGE_FILE_MACHINE_I386,
-            myProcess,
-            myThread,
-            &frame,
-            &context,
-            0,                        // read process memory routine
-            _SymFunctionTableAccess,  // function table access routine
-            _SymGetModuleBase,        // module base routine
-            0                         // translate address routine
-          );
-        LeaveCriticalSection(&gDbgHelpCS);
-
-        if (ok)
-            addr = frame.AddrPC.Offset;
-        else {
-            addr = 0;
-            PrintError("WalkStack");
-        }
-
-        if (!ok || (addr == 0)) {
-            break;
-        }
-
-        if (skip-- > 0) {
-            continue;
-        }
-
-        if (data->pc_count < data->pc_size)
-            data->pcs[data->pc_count] = (void*)addr;
-        ++data->pc_count;
-
-        if (frame.AddrReturn.Offset == 0)
-            break;
-    }
-
-    return;
-
-}
-#endif
-
-static
-void PerformStackWalk(struct WalkStackData* data)
-{
-#if defined(_WIN64)
-    WalkStackMain64(data);
-#else
-    if (_StackWalk64)
-        WalkStackMain64(data);
-    else
-        WalkStackMain(data);
-#endif
-}
 
 unsigned int WINAPI
 WalkStackThread(void* aData)
@@ -786,7 +442,7 @@ WalkStackThread(void* aData)
                 PrintError("ThreadSuspend");
             }
             else {
-                PerformStackWalk(data);
+                WalkStackMain64(data);
 
                 ret = ::ResumeThread(data->thread);
                 if (ret == -1) {
@@ -860,7 +516,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     if (aThread) {
         // If we're walking the stack of another thread, we don't need to
         // use a separate walker thread.
-        PerformStackWalk(&data);
+        WalkStackMain64(&data);
     } else {
         data.eventStart = ::CreateEvent(NULL, FALSE /* auto-reset*/,
                               FALSE /* initially non-signaled */, NULL);
@@ -901,44 +557,12 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
 }
 
 
-static BOOL CALLBACK callbackEspecial(
-  PCSTR aModuleName,
-  ULONG aModuleBase,
-  ULONG aModuleSize,
-  PVOID aUserContext)
-{
-    BOOL retval = TRUE;
-    DWORD addr = *(DWORD*)aUserContext;
-
-    /*
-     * You'll want to control this if we are running on an
-     *  architecture where the addresses go the other direction.
-     * Not sure this is even a realistic consideration.
-     */
-    const BOOL addressIncreases = TRUE;
-
-    /*
-     * If it falls inside the known range, load the symbols.
-     */
-    if (addressIncreases
-       ? (addr >= aModuleBase && addr <= (aModuleBase + aModuleSize))
-       : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
-        ) {
-        retval = _SymLoadModule(GetCurrentProcess(), NULL, (PSTR)aModuleName, NULL, aModuleBase, aModuleSize);
-        if (!retval)
-            PrintError("SymLoadModule");
-    }
-
-    return retval;
-}
-
 static BOOL CALLBACK callbackEspecial64(
   PCSTR aModuleName,
   DWORD64 aModuleBase,
   ULONG aModuleSize,
   PVOID aUserContext)
 {
-#ifdef USING_WXP_VERSION
     BOOL retval = TRUE;
     DWORD64 addr = *(DWORD64*)aUserContext;
 
@@ -956,15 +580,12 @@ static BOOL CALLBACK callbackEspecial64(
        ? (addr >= aModuleBase && addr <= (aModuleBase + aModuleSize))
        : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
         ) {
-        retval = _SymLoadModule64(GetCurrentProcess(), NULL, (PSTR)aModuleName, NULL, aModuleBase, aModuleSize);
+        retval = SymLoadModule64(GetCurrentProcess(), NULL, (PSTR)aModuleName, NULL, aModuleBase, aModuleSize);
         if (!retval)
             PrintError("SymLoadModule64");
     }
 
     return retval;
-#else
-    return FALSE;
-#endif
 }
 
 /*
@@ -976,61 +597,6 @@ static BOOL CALLBACK callbackEspecial64(
  *  and symbol information is not available.
  * This code rectifies that problem.
  */
-BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo, PIMAGEHLP_LINE aLineInfo)
-{
-    BOOL retval = FALSE;
-
-    /*
-     * Init the vars if we have em.
-     */
-    aModuleInfo->SizeOfStruct = sizeof(IMAGEHLP_MODULE);
-    if (nsnull != aLineInfo) {
-      aLineInfo->SizeOfStruct = sizeof(IMAGEHLP_LINE);
-    }
-
-    /*
-     * Give it a go.
-     * It may already be loaded.
-     */
-    retval = _SymGetModuleInfo(aProcess, aAddr, aModuleInfo);
-
-    if (FALSE == retval) {
-        BOOL enumRes = FALSE;
-
-        /*
-         * Not loaded, here's the magic.
-         * Go through all the modules.
-         */
-        // Need to cast to PENUMLOADED_MODULES_CALLBACK because the
-        // constness of the first parameter of
-        // PENUMLOADED_MODULES_CALLBACK varies over SDK versions (from
-        // non-const to const over time).  See bug 391848 and bug
-        // 415426.
-        enumRes = _EnumerateLoadedModules(aProcess, (PENUMLOADED_MODULES_CALLBACK)callbackEspecial, (PVOID)&aAddr);
-        if (FALSE != enumRes)
-        {
-            /*
-             * One final go.
-             * If it fails, then well, we have other problems.
-             */
-            retval = _SymGetModuleInfo(aProcess, aAddr, aModuleInfo);
-            if (!retval)
-                PrintError("SymGetModuleInfo");
-        }
-    }
-
-    /*
-     * If we got module info, we may attempt line info as well.
-     * We will not report failure if this does not work.
-     */
-    if (FALSE != retval && nsnull != aLineInfo && nsnull != _SymGetLineFromAddr) {
-        DWORD displacement = 0;
-        BOOL lineRes = FALSE;
-        lineRes = _SymGetLineFromAddr(aProcess, aAddr, &displacement, aLineInfo);
-    }
-
-    return retval;
-}
 
 // New members were added to IMAGEHLP_MODULE64 (that show up in the
 // Platform SDK that ships with VC8, but not the Platform SDK that ships
@@ -1047,7 +613,6 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
 #define NS_IMAGEHLP_MODULE64_SIZE sizeof(IMAGEHLP_MODULE64)
 #endif
 
-#ifdef USING_WXP_VERSION
 BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE64 aModuleInfo, PIMAGEHLP_LINE64 aLineInfo)
 {
     BOOL retval = FALSE;
@@ -1064,7 +629,7 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
      * Give it a go.
      * It may already be loaded.
      */
-    retval = _SymGetModuleInfo64(aProcess, aAddr, aModuleInfo);
+    retval = SymGetModuleInfo64(aProcess, aAddr, aModuleInfo);
 
     if (FALSE == retval) {
         BOOL enumRes = FALSE;
@@ -1078,14 +643,14 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
         // PENUMLOADED_MODULES_CALLBACK64 varies over SDK versions (from
         // non-const to const over time).  See bug 391848 and bug
         // 415426.
-        enumRes = _EnumerateLoadedModules64(aProcess, (PENUMLOADED_MODULES_CALLBACK64)callbackEspecial64, (PVOID)&aAddr);
+        enumRes = EnumerateLoadedModules64(aProcess, (PENUMLOADED_MODULES_CALLBACK64)callbackEspecial64, (PVOID)&aAddr);
         if (FALSE != enumRes)
         {
             /*
              * One final go.
              * If it fails, then well, we have other problems.
              */
-            retval = _SymGetModuleInfo64(aProcess, aAddr, aModuleInfo);
+            retval = SymGetModuleInfo64(aProcess, aAddr, aModuleInfo);
             if (!retval)
                 PrintError("SymGetModuleInfo64");
         }
@@ -1095,10 +660,10 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
      * If we got module info, we may attempt line info as well.
      * We will not report failure if this does not work.
      */
-    if (FALSE != retval && nsnull != aLineInfo && nsnull != _SymGetLineFromAddr64) {
+    if (FALSE != retval && nsnull != aLineInfo) {
         DWORD displacement = 0;
         BOOL lineRes = FALSE;
-        lineRes = _SymGetLineFromAddr64(aProcess, aAddr, &displacement, aLineInfo);
+        lineRes = SymGetLineFromAddr64(aProcess, aAddr, &displacement, aLineInfo);
         if (!lineRes) {
             // Clear out aLineInfo to indicate that it's not valid
             memset(aLineInfo, 0, sizeof(*aLineInfo));
@@ -1107,7 +672,6 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
 
     return retval;
 }
-#endif
 
 bool
 EnsureSymInitialized()
@@ -1123,13 +687,13 @@ EnsureSymInitialized()
     if (!EnsureImageHlpInitialized())
         return false;
 
-    _SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
-    retStat = _SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
+    retStat = SymInitialize(GetCurrentProcess(), NULL, TRUE);
     if (!retStat)
         PrintError("SymInitialize");
 
     gInitialized = retStat;
-    /* XXX At some point we need to arrange to call _SymCleanup */
+    /* XXX At some point we need to arrange to call SymCleanup */
 
     return retStat;
 }
@@ -1154,97 +718,42 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
     // debug routines are not threadsafe, so grab the lock.
     EnterCriticalSection(&gDbgHelpCS);
 
-#ifdef USING_WXP_VERSION
-    if (_StackWalk64) {
-        //
-        // Attempt to load module info before we attempt to resolve the symbol.
-        // This just makes sure we get good info if available.
-        //
+    //
+    // Attempt to load module info before we attempt to resolve the symbol.
+    // This just makes sure we get good info if available.
+    //
 
-        DWORD64 addr = (DWORD64)aPC;
-        IMAGEHLP_MODULE64 modInfo;
-        IMAGEHLP_LINE64 lineInfo;
-        BOOL modInfoRes;
-        modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, &lineInfo);
+    DWORD64 addr = (DWORD64)aPC;
+    IMAGEHLP_MODULE64 modInfo;
+    IMAGEHLP_LINE64 lineInfo;
+    BOOL modInfoRes;
+    modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, &lineInfo);
 
-        if (modInfoRes) {
-            PL_strncpyz(aDetails->library, modInfo.ModuleName,
-                        sizeof(aDetails->library));
-            aDetails->loffset = (char*) aPC - (char*) modInfo.BaseOfImage;
-            
-            if (lineInfo.FileName) {
-                PL_strncpyz(aDetails->filename, lineInfo.FileName,
-                            sizeof(aDetails->filename));
-                aDetails->lineno = lineInfo.LineNumber;
-            }
-        }
-
-        ULONG64 buffer[(sizeof(SYMBOL_INFO) +
-          MAX_SYM_NAME*sizeof(TCHAR) + sizeof(ULONG64) - 1) / sizeof(ULONG64)];
-        PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
-        pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-        pSymbol->MaxNameLen = MAX_SYM_NAME;
-
-        DWORD64 displacement;
-        ok = _SymFromAddr && _SymFromAddr(myProcess, addr, &displacement, pSymbol);
-
-        if (ok) {
-            PL_strncpyz(aDetails->function, pSymbol->Name,
-                        sizeof(aDetails->function));
-            aDetails->foffset = displacement;
-        }
-    } else
-#endif
-    {
-        //
-        // Attempt to load module info before we attempt to resolve the symbol.
-        // This just makes sure we get good info if available.
-        //
-
-        DWORD_PTR addr = (DWORD_PTR)aPC;
-        IMAGEHLP_MODULE modInfo;
-        IMAGEHLP_LINE lineInfo;
-        BOOL modInfoRes;
-        modInfoRes = SymGetModuleInfoEspecial(myProcess, addr, &modInfo, &lineInfo);
-
-        if (modInfoRes) {
-            PL_strncpyz(aDetails->library, modInfo.ModuleName,
-                        sizeof(aDetails->library));
-            aDetails->loffset = (char*) aPC - (char*) modInfo.BaseOfImage;
+    if (modInfoRes) {
+        PL_strncpyz(aDetails->library, modInfo.ModuleName,
+                    sizeof(aDetails->library));
+        aDetails->loffset = (char*) aPC - (char*) modInfo.BaseOfImage;
+        
+        if (lineInfo.FileName) {
             PL_strncpyz(aDetails->filename, lineInfo.FileName,
                         sizeof(aDetails->filename));
             aDetails->lineno = lineInfo.LineNumber;
         }
+    }
 
-#ifdef USING_WXP_VERSION
-        ULONG64 buffer[(sizeof(SYMBOL_INFO) +
-          MAX_SYM_NAME*sizeof(TCHAR) + sizeof(ULONG64) - 1) / sizeof(ULONG64)];
-        PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
-        pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-        pSymbol->MaxNameLen = MAX_SYM_NAME;
+    ULONG64 buffer[(sizeof(SYMBOL_INFO) +
+      MAX_SYM_NAME*sizeof(TCHAR) + sizeof(ULONG64) - 1) / sizeof(ULONG64)];
+    PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
+    pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    pSymbol->MaxNameLen = MAX_SYM_NAME;
 
-        DWORD64 displacement;
+    DWORD64 displacement;
+    ok = SymFromAddr(myProcess, addr, &displacement, pSymbol);
 
-        ok = _SymFromAddr && _SymFromAddr(myProcess, addr, &displacement, pSymbol);
-#else
-        char buf[sizeof(IMAGEHLP_SYMBOL) + 512];
-        PIMAGEHLP_SYMBOL pSymbol = (PIMAGEHLP_SYMBOL) buf;
-        pSymbol->SizeOfStruct = sizeof(buf);
-        pSymbol->MaxNameLength = 512;
-
-        DWORD displacement;
-
-        ok = _SymGetSymFromAddr(myProcess,
-                    frame.AddrPC.Offset,
-                    &displacement,
-                    pSymbol);
-#endif
-
-        if (ok) {
-            PL_strncpyz(aDetails->function, pSymbol->Name,
-                        sizeof(aDetails->function));
-            aDetails->foffset = displacement;
-        }
+    if (ok) {
+        PL_strncpyz(aDetails->function, pSymbol->Name,
+                    sizeof(aDetails->function));
+        aDetails->foffset = displacement;
     }
 
     LeaveCriticalSection(&gDbgHelpCS); // release our lock
@@ -1255,23 +764,12 @@ EXPORT_XPCOM_API(nsresult)
 NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
                             char *aBuffer, PRUint32 aBufferSize)
 {
-#ifdef USING_WXP_VERSION
-    if (_StackWalk64) {
-        if (aDetails->function[0])
-            _snprintf(aBuffer, aBufferSize, "%s!%s+0x%016lX",
-                      aDetails->library, aDetails->function, aDetails->foffset);
-        else
-            _snprintf(aBuffer, aBufferSize, "0x%016lX", aPC);
-    } else {
-#endif
-        if (aDetails->function[0])
-            _snprintf(aBuffer, aBufferSize, "%s!%s+0x%08lX",
-                      aDetails->library, aDetails->function, aDetails->foffset);
-        else
-            _snprintf(aBuffer, aBufferSize, "0x%08lX", aPC);
-#ifdef USING_WXP_VERSION
-    }
-#endif
+    if (aDetails->function[0])
+        _snprintf(aBuffer, aBufferSize, "%s!%s+0x%016lX",
+                  aDetails->library, aDetails->function, aDetails->foffset);
+    else
+        _snprintf(aBuffer, aBufferSize, "0x%016lX", aPC);
+
     aBuffer[aBufferSize - 1] = '\0';
 
     PRUint32 len = strlen(aBuffer);

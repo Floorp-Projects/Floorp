@@ -71,6 +71,7 @@ CPPSRCS += \
 	WebGLContextReporter.cpp \
 	WebGLContextValidate.cpp \
 	WebGLExtensionStandardDerivatives.cpp \
+	WebGLExtensionTextureFilterAnisotropic.cpp \
 	WebGLExtensionLoseContext.cpp \
 	$(NULL)
 

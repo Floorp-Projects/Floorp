@@ -84,6 +84,18 @@ XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
     content.dispatchEvent(event);
   }
 
+  function maybeShowIme(targetElement) {
+    // FIXME/bug 729623: work around apparent bug in the IME manager
+    // in gecko.
+    let readonly = targetElement.getAttribute('readonly');
+    if (readonly)
+      return false;
+
+    let type = targetElement.type;
+    fireEvent('showime', { type: type });
+    return true;
+  }
+
   let constructor = {
     handleEvent: function vkm_handleEvent(evt) {
       switch (evt.type) {
@@ -102,9 +114,7 @@ XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
           if (evt.target != activeElement || isKeyboardOpened)
             return;
 
-          let type = activeElement.type;
-          fireEvent('showime', { type: type });
-          isKeyboardOpened = true;
+          isKeyboardOpened = maybeShowIme(activeElement);
           break;
       }
     },
@@ -112,11 +122,10 @@ XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
       let shouldOpen = parseInt(data);
       if (shouldOpen && !isKeyboardOpened) {
         activeElement = Services.fm.focusedElement;
-        if (!activeElement)
+        if (!activeElement || !maybeShowIme(activeElement)) {
+          activeElement = null;
           return;
-
-        let type = activeElement.type;
-        fireEvent('showime', { type: type });
+        }
       } else if (!shouldOpen && isKeyboardOpened) {
         fireEvent('hideime');
       }

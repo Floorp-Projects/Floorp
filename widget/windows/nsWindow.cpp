@@ -113,6 +113,7 @@
 #include <process.h>
 #include <commctrl.h>
 #include <unknwn.h>
+#include <psapi.h>
 
 #include "prlog.h"
 #include "prtime.h"
@@ -1292,7 +1293,7 @@ void nsWindow::SetThemeRegion()
     RECT rect = {0,0,mBounds.width,mBounds.height};
     
     HDC dc = ::GetDC(mWnd);
-    nsUXThemeData::getThemeBackgroundRegion(nsUXThemeData::GetTheme(eUXTooltip), dc, TTP_STANDARD, TS_NORMAL, &rect, &hRgn);
+    GetThemeBackgroundRegion(nsUXThemeData::GetTheme(eUXTooltip), dc, TTP_STANDARD, TS_NORMAL, &rect, &hRgn);
     if (hRgn) {
       if (!SetWindowRgn(mWnd, hRgn, false)) // do not delete or alter hRgn if accepted.
         DeleteObject(hRgn);
@@ -7442,22 +7443,12 @@ bool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
   return true;
 }
 
-typedef DWORD (WINAPI *GetProcessImageFileNameProc)(HANDLE, LPWSTR, DWORD);
-
 // Determine whether the given HWND is the handle for the Elantech helper
 // window.  The helper window cannot be distinguished based on its
 // window class, so we need to check if it is owned by the helper process,
 // ETDCtrl.exe.
 static bool IsElantechHelperWindow(HWND aHWND)
 {
-  static HMODULE hPSAPI = ::LoadLibraryW(L"psapi.dll");
-  static GetProcessImageFileNameProc pGetProcessImageFileName =
-    reinterpret_cast<GetProcessImageFileNameProc>(::GetProcAddress(hPSAPI, "GetProcessImageFileNameW"));
-
-  if (!pGetProcessImageFileName) {
-    return false;
-  }
-
   const PRUnichar* filenameSuffix = L"\\etdctrl.exe";
   const int filenameSuffixLength = 12;
 
@@ -7469,7 +7460,7 @@ static bool IsElantechHelperWindow(HWND aHWND)
   HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
   if (hProcess) {
     PRUnichar path[256] = {L'\0'};
-    if (pGetProcessImageFileName(hProcess, path, ArrayLength(path))) {
+    if (GetProcessImageFileName(hProcess, path, ArrayLength(path))) {
       int pathLength = lstrlenW(path);
       if (pathLength >= filenameSuffixLength) {
         if (lstrcmpiW(path + pathLength - filenameSuffixLength, filenameSuffix) == 0) {
