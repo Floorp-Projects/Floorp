@@ -165,24 +165,25 @@ var StarUI = {
       return;
     }
 
-    var loadObserver = {
-      _self: this,
-      _itemId: aItemId,
-      _anchorElement: aAnchorElement,
-      _position: aPosition,
-      observe: function (aSubject, aTopic, aData) {
+    this._overlayLoading = true;
+    document.loadOverlay(
+      "chrome://browser/content/places/editBookmarkOverlay.xul",
+      (function (aSubject, aTopic, aData) {
         //XXX We just caused localstore.rdf to be re-applied (bug 640158)
         retrieveToolbarIconsizesFromTheme();
 
-        this._self._overlayLoading = false;
-        this._self._overlayLoaded = true;
-        this._self._doShowEditBookmarkPanel(this._itemId, this._anchorElement,
-                                            this._position);
-      }
-    };
-    this._overlayLoading = true;
-    document.loadOverlay("chrome://browser/content/places/editBookmarkOverlay.xul",
-                         loadObserver);
+        // Move the header (star, title, button) into the grid,
+        // so that it aligns nicely with the other items (bug 484022).
+        let header = this._element("editBookmarkPanelHeader");
+        let rows = this._element("editBookmarkPanelGrid").lastChild;
+        rows.insertBefore(header, rows.firstChild);
+        header.hidden = false;
+
+        this._overlayLoading = false;
+        this._overlayLoaded = true;
+        this._doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition);
+      }).bind(this)
+    );
   },
 
   _doShowEditBookmarkPanel:
@@ -191,13 +192,6 @@ var StarUI = {
       return;
 
     this._blockCommands(); // un-done in the popuphiding handler
-
-    // Move the header (star, title, possibly a button) into the grid,
-    // so that it aligns nicely with the other items (bug 484022).
-    var rows = this._element("editBookmarkPanelGrid").lastChild;
-    var header = this._element("editBookmarkPanelHeader");
-    rows.insertBefore(header, rows.firstChild);
-    header.hidden = false;
 
     // Set panel title:
     // if we are batching, i.e. the bookmark has been added now,

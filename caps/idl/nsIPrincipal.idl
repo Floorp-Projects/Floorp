@@ -52,7 +52,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(B406A2DB-E547-4C95-B8E2-AD09ECB54CE0)]
+[scriptable, uuid(1f83b0e0-6b63-4bdc-a50a-b9afe256bd25)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -205,6 +205,12 @@ interface nsIPrincipal : nsISerializable
      * make some code (e.g. MaybeDowngradeToCodebase) clearer.
      */
     boolean subsumes(in nsIPrincipal other);
+
+    /**
+     * Same as the previous method, subsumes(), but for codebase principals
+     * ignores changes to document.domain.
+     */
+    boolean subsumesIgnoringDomain(in nsIPrincipal other);
 
     /**
      * Checks whether this principal is allowed to load the network resource

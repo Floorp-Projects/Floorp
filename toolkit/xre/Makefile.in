@@ -260,10 +260,6 @@ DEFINES += -DAPP_ID=$(MOZ_APP_ID)
 
 $(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
 
-ifeq ($(OS_TARGET),Android)
-nsAndroidStartup.o: $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
-endif
-
 platform.ini: FORCE
 	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(shell cat $(DEPTH)/config/buildid) $(INIARGS) $(topsrcdir)/config/milestone.txt > $@
 

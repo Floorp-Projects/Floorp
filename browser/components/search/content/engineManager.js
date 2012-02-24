@@ -153,6 +153,7 @@ var gEngineManagerDialog = {
     while (Services.prompt.prompt(window, title, msg, alias, null, {})) {
       var bduplicate = false;
       var eduplicate = false;
+      var dupName = "";
 
       if (alias.value != "") {
         try {
@@ -168,6 +169,7 @@ var gEngineManagerDialog = {
           if (engine.alias == alias.value &&
               engine.name != selectedEngine.name) {
             eduplicate = true;
+            dupName = engine.name;
             break;
           }
         }
@@ -177,8 +179,7 @@ var gEngineManagerDialog = {
       if (eduplicate || bduplicate) {
         var dtitle = strings.getString("duplicateTitle");
         var bmsg = strings.getString("duplicateBookmarkMsg");
-        var emsg = strings.getFormattedString("duplicateEngineMsg",
-                                              [engine.name]);
+        var emsg = strings.getFormattedString("duplicateEngineMsg", [dupName]);
 
         Services.prompt.alert(window, dtitle, eduplicate ? emsg : bmsg);
       } else {

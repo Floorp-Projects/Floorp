@@ -116,7 +116,10 @@ public class HistoryRecord extends Record {
     this.checkGUIDs(p);
 
     this.lastModified  = payload.lastModified;
-    this.deleted       = payload.deleted;
+    final Object del = p.get("deleted");
+    if (del instanceof Boolean) {
+      this.deleted = (Boolean) del;
+    }
 
     this.histURI = (String) p.get("histUri");
     this.title   = (String) p.get("title");
@@ -133,10 +136,15 @@ public class HistoryRecord extends Record {
     CryptoRecord rec = new CryptoRecord(this);
     rec.payload = new ExtendedJSONObject();
     Logger.debug(LOG_TAG, "Getting payload for history record " + this.guid + " (" + this.guid.length() + ").");
-    rec.payload.put("id",      this.guid);
-    rec.payload.put("title",   this.title);
-    rec.payload.put("histUri", this.histURI);             // TODO: encoding?
-    rec.payload.put("visits",  this.visits);
+
+    if (this.deleted) {
+      rec.payload.put("deleted", true);
+    } else {
+      putPayload(rec, "id",      this.guid);
+      putPayload(rec, "title",   this.title);
+      putPayload(rec, "histUri", this.histURI);             // TODO: encoding?
+      rec.payload.put("visits",  this.visits);
+    }
     return rec;
   }
 

@@ -6009,12 +6009,14 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
           NS_NOTREACHED("should be able to parse");
           return false;
         }
-        PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
-                         NS_STYLE_BG_ORIGIN_BORDER);
-        PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING ==
-                         NS_STYLE_BG_ORIGIN_PADDING);
-        PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT ==
-                         NS_STYLE_BG_ORIGIN_CONTENT);
+        MOZ_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
+                          NS_STYLE_BG_ORIGIN_BORDER &&
+                          NS_STYLE_BG_CLIP_PADDING ==
+                          NS_STYLE_BG_ORIGIN_PADDING &&
+                          NS_STYLE_BG_CLIP_CONTENT ==
+                          NS_STYLE_BG_ORIGIN_CONTENT,
+                          "bg-clip and bg-origin style constants must agree");
+
         aState.mClip->mValue = aState.mOrigin->mValue;
       } else {
         if (haveColor)
@@ -8503,22 +8505,20 @@ bool
 CSSParserImpl::ParseTextDecoration()
 {
   enum {
-    eDecorationNone         = 0x00,
-    eDecorationUnderline    = 0x01,
-    eDecorationOverline     = 0x02,
-    eDecorationLineThrough  = 0x04,
-    eDecorationBlink        = 0x08,
-    eDecorationPrefAnchors  = 0x10
+    eDecorationNone         = NS_STYLE_TEXT_DECORATION_LINE_NONE,
+    eDecorationUnderline    = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+    eDecorationOverline     = NS_STYLE_TEXT_DECORATION_LINE_OVERLINE,
+    eDecorationLineThrough  = NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
+    eDecorationBlink        = NS_STYLE_TEXT_DECORATION_LINE_BLINK,
+    eDecorationPrefAnchors  = NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS
   };
-
-  PR_STATIC_ASSERT(eDecorationUnderline ==
-                   NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE);
-  PR_STATIC_ASSERT(eDecorationOverline ==
-                   NS_STYLE_TEXT_DECORATION_LINE_OVERLINE);
-  PR_STATIC_ASSERT(eDecorationLineThrough ==
-                   NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH);
-  PR_STATIC_ASSERT(eDecorationPrefAnchors ==
-                   NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS);
+  MOZ_STATIC_ASSERT((eDecorationNone ^ eDecorationUnderline ^
+                     eDecorationOverline ^ eDecorationLineThrough ^
+                     eDecorationBlink ^ eDecorationPrefAnchors) ==
+                    (eDecorationNone | eDecorationUnderline |
+                     eDecorationOverline | eDecorationLineThrough |
+                     eDecorationBlink | eDecorationPrefAnchors),
+                    "text decoration constants need to be bitmasks");
 
   static const PRInt32 kTextDecorationKTable[] = {
     eCSSKeyword_none,                   eDecorationNone,

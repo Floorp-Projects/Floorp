@@ -323,6 +323,21 @@ bool GetLight(LightType light, hal::LightConfiguration* aConfig)
   RETURN_PROXY_IF_SANDBOXED(GetLight(light, aConfig));
 }
 
+
+void 
+AdjustSystemClock(int32_t aDeltaMilliseconds)
+{
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(AdjustSystemClock(aDeltaMilliseconds));
+}
+
+void 
+SetTimezone(const nsCString& aTimezoneSpec)
+{
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(SetTimezone(aTimezoneSpec));
+}
+
 void
 EnableSensorNotifications(SensorType aSensor) {
   AssertMainThread();

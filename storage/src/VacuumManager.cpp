@@ -151,41 +151,6 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// NotifyCallback
-/**
- * This class handles an async statement execution and notifies completion
- * through a passed in callback.
- * Errors are handled through warnings in HandleError.
- */
-class NotifyCallback : public BaseCallback
-{
-public:
-  NS_IMETHOD HandleCompletion(PRUint16 aReason);
-
-  NotifyCallback(Vacuumer *aVacuumer, bool aVacuumSucceeded);
-
-private:
-  nsCOMPtr<Vacuumer> mVacuumer;
-  bool mVacuumSucceeded;
-};
-
-NotifyCallback::NotifyCallback(Vacuumer *aVacuumer,
-                               bool aVacuumSucceeded)
-  : mVacuumer(aVacuumer)
-  , mVacuumSucceeded(aVacuumSucceeded)
-{
-}
-
-NS_IMETHODIMP
-NotifyCallback::HandleCompletion(PRUint16 aReason)
-{
-  // We succeeded if vacuum succeeded.
-  nsresult rv = mVacuumer->notifyCompletion(mVacuumSucceeded);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 //// Vacuumer implementation.
 
 Vacuumer::Vacuumer(mozIStorageVacuumParticipant *aParticipant)
@@ -196,63 +161,26 @@ Vacuumer::Vacuumer(mozIStorageVacuumParticipant *aParticipant)
 bool
 Vacuumer::execute()
 {
-  NS_PRECONDITION(NS_IsMainThread(), "Must be running on the main thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Must be running on the main thread!");
 
   // Get the connection and check its validity.
   nsresult rv = mParticipant->GetDatabaseConnection(getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, false);
-  bool ready;
+  bool ready = false;
   if (!mDBConn || NS_FAILED(mDBConn->GetConnectionReady(&ready)) || !ready) {
-    NS_WARNING(NS_LITERAL_CSTRING("Unable to get a connection to vacuum database").get());
+    NS_WARNING("Unable to get a connection to vacuum database");
     return false;
   }
 
-  // Compare current page size with the expected one.  Vacuum can change the
-  // page size value if needed.  Even if a vacuum happened recently, if the
-  // page size can be optimized we should do it.
+  // Ask for the expected page size.  Vacuum can change the page size, unless
+  // the database is using WAL journaling.
+  // TODO Bug 634374: figure out a strategy to fix page size with WAL.
   PRInt32 expectedPageSize = 0;
   rv = mParticipant->GetExpectedDatabasePageSize(&expectedPageSize);
   if (NS_FAILED(rv) || expectedPageSize < 512 || expectedPageSize > 65536) {
     NS_WARNING("Invalid page size requested for database, will use default ");
     NS_WARNING(mDBFilename.get());
     expectedPageSize = mozIStorageConnection::DEFAULT_PAGE_SIZE;
-  }
-
-  bool canOptimizePageSize = false;
-  {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size"
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, false);
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, false);
-    NS_ENSURE_TRUE(hasResult, false);
-    PRInt32 currentPageSize;
-    rv = stmt->GetInt32(0, &currentPageSize);
-    NS_ENSURE_SUCCESS(rv, false);
-    NS_ASSERTION(currentPageSize > 0, "Got invalid page size value?");
-    if (currentPageSize != expectedPageSize) {
-      // Check journal mode.  WAL journaling does not allow vacuum to change
-      // the page size.
-      // TODO Bug 634374: figure out a strategy to fix page size with WAL.
-      nsCAutoString journalMode;
-      {
-        nsCOMPtr<mozIStorageStatement> stmt;
-        rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA journal_mode"
-        ), getter_AddRefs(stmt));
-        NS_ENSURE_SUCCESS(rv, false);
-        bool hasResult;
-        rv = stmt->ExecuteStep(&hasResult);
-        NS_ENSURE_SUCCESS(rv, false);
-        NS_ENSURE_TRUE(hasResult, false);
-        rv = stmt->GetUTF8String(0, journalMode);
-        NS_ENSURE_SUCCESS(rv, false);
-      }
-      canOptimizePageSize = !journalMode.EqualsLiteral("wal");
-    }
   }
 
   // Get the database filename.  Last vacuum time is stored under this name
@@ -267,7 +195,7 @@ Vacuumer::execute()
   rv = databaseFile->GetLeafName(databaseFilename);
   NS_ENSURE_SUCCESS(rv, false);
   mDBFilename = NS_ConvertUTF16toUTF8(databaseFilename);
-  NS_ASSERTION(!mDBFilename.IsEmpty(), "Database filename cannot be empty");
+  MOZ_ASSERT(!mDBFilename.IsEmpty(), "Database filename cannot be empty");
 
   // Check interval from last vacuum.
   PRInt32 now = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
@@ -275,9 +203,8 @@ Vacuumer::execute()
   nsCAutoString prefName(PREF_VACUUM_BRANCH);
   prefName += mDBFilename;
   rv = Preferences::GetInt(prefName.get(), &lastVacuum);
-  if (NS_SUCCEEDED(rv) && (now - lastVacuum) < VACUUM_INTERVAL_SECONDS &&
-      !canOptimizePageSize) {
-    // This database was vacuumed recently and has optimal page size, skip it. 
+  if (NS_SUCCEEDED(rv) && (now - lastVacuum) < VACUUM_INTERVAL_SECONDS) {
+    // This database was vacuumed recently, skip it.
     return false;
   }
 
@@ -294,30 +221,29 @@ Vacuumer::execute()
   // Notify a heavy IO task is about to start.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    (void)os->NotifyObservers(nsnull, OBSERVER_TOPIC_HEAVY_IO,
-                              OBSERVER_DATA_VACUUM_BEGIN.get());
+    DebugOnly<nsresult> rv =
+      os->NotifyObservers(nsnull, OBSERVER_TOPIC_HEAVY_IO,
+                          OBSERVER_DATA_VACUUM_BEGIN.get());
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to notify");
   }
 
-  if (canOptimizePageSize) {
-    nsCOMPtr<mozIStorageAsyncStatement> pageSizeStmt;
-    rv = mDBConn->CreateAsyncStatement(nsPrintfCString(
-      MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size = %ld", expectedPageSize
-    ), getter_AddRefs(pageSizeStmt));
-    NS_ENSURE_SUCCESS(rv, false);
-    nsCOMPtr<BaseCallback> callback = new BaseCallback();
-    NS_ENSURE_TRUE(callback, false);
-    nsCOMPtr<mozIStoragePendingStatement> ps;
-    rv = pageSizeStmt->ExecuteAsync(callback, getter_AddRefs(ps));
-    NS_ENSURE_SUCCESS(rv, false);
-  }
+  // Execute the statements separately, since the pragma may conflict with the
+  // vacuum, if they are executed in the same transaction.
+  nsCOMPtr<mozIStorageAsyncStatement> pageSizeStmt;
+  rv = mDBConn->CreateAsyncStatement(nsPrintfCString(
+    MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size = %ld", expectedPageSize
+  ), getter_AddRefs(pageSizeStmt));
+  NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<BaseCallback> callback = new BaseCallback();
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = pageSizeStmt->ExecuteAsync(callback, getter_AddRefs(ps));
+  NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
   rv = mDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "VACUUM"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, false);
-
-  nsCOMPtr<mozIStoragePendingStatement> ps;
   rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -377,10 +303,11 @@ Vacuumer::HandleCompletion(PRUint16 aReason)
   if (aReason == REASON_FINISHED) {
     // Update last vacuum time.
     PRInt32 now = static_cast<PRInt32>(PR_Now() / PR_USEC_PER_SEC);
-    NS_ASSERTION(!mDBFilename.IsEmpty(), "Database filename cannot be empty");
+    MOZ_ASSERT(!mDBFilename.IsEmpty(), "Database filename cannot be empty");
     nsCAutoString prefName(PREF_VACUUM_BRANCH);
     prefName += mDBFilename;
-    (void)Preferences::SetInt(prefName.get(), now);
+    DebugOnly<nsresult> rv = Preferences::SetInt(prefName.get(), now);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to set a preference"); 
   }
 
   notifyCompletion(aReason == REASON_FINISHED);
@@ -433,8 +360,8 @@ VacuumManager::getSingleton()
 VacuumManager::VacuumManager()
   : mParticipants("vacuum-participant")
 {
-  NS_ASSERTION(!gVacuumManager,
-               "Attempting to create two instances of the service!");
+  MOZ_ASSERT(!gVacuumManager,
+             "Attempting to create two instances of the service!");
   gVacuumManager = this;
 }
 
@@ -442,8 +369,8 @@ VacuumManager::~VacuumManager()
 {
   // Remove the static reference to the service.  Check to make sure its us
   // in case somebody creates an extra instance of the service.
-  NS_ASSERTION(gVacuumManager == this,
-               "Deleting a non-singleton instance of the service");
+  MOZ_ASSERT(gVacuumManager == this,
+             "Deleting a non-singleton instance of the service");
   if (gVacuumManager == this) {
     gVacuumManager = nsnull;
   }
@@ -477,7 +404,8 @@ VacuumManager::Observe(nsISupports *aSubject,
         break;
       }
     }
-    (void)Preferences::SetInt(kPrefName, index);
+    DebugOnly<nsresult> rv = Preferences::SetInt(kPrefName, index);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to set a preference");
   }
 
   return NS_OK;

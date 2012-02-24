@@ -493,6 +493,14 @@ public class AboutHomeContent extends ScrollView {
                         String iconUrl = jsonobj.getString("iconURL");
                         String pageUrl = getPageUrlFromIconUrl(iconUrl);
 
+                        final String homepageUrl = jsonobj.getString("homepageURL");
+                        row.setOnClickListener(new View.OnClickListener() {
+                            public void onClick(View v) {
+                                if (mUriLoadCallback != null)
+                                    mUriLoadCallback.callback(homepageUrl);
+                            }
+                        });
+
                         Favicons favicons = GeckoApp.mAppContext.mFavicons;
                         favicons.loadFavicon(pageUrl, iconUrl,
                                     new Favicons.OnFaviconLoadedListener() {

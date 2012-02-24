@@ -41,163 +41,16 @@
 
 #include "mozilla/StdInt.h"
 
-// Adds two 32bit unsigned numbers, retuns true if addition succeeded,
-// or false the if addition would result in an overflow.
-bool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult) {
-  PRUint64 rl = static_cast<PRUint64>(a) + static_cast<PRUint64>(b);
-  if (rl > PR_UINT32_MAX) {
-    return false;
-  }
-  aResult = static_cast<PRUint32>(rl);
-  return true;
-}
-
-bool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult)
-{
-  // 32 bit integer multiplication with overflow checking. Returns true
-  // if the multiplication was successful, or false if the operation resulted
-  // in an integer overflow.
-  PRUint64 a64 = a;
-  PRUint64 b64 = b;
-  PRUint64 r64 = a64 * b64;
-  if (r64 > PR_UINT32_MAX)
-     return false;
-  aResult = static_cast<PRUint32>(r64);
-  return true;
-}
-
-// Adds two 64bit numbers, retuns true if addition succeeded, or false
-// if addition would result in an overflow.
-bool AddOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
-  if (b < 1) {
-    if (INT64_MIN - b <= a) {
-      aResult = a + b;
-      return true;
-    }
-  } else if (INT64_MAX - b >= a) {
-    aResult = a + b;
-    return true;
-  }
-  return false;
-}
-
-// 64 bit integer multiplication with overflow checking. Returns true
-// if the multiplication was successful, or false if the operation resulted
-// in an integer overflow.
-bool MulOverflow(PRInt64 a, PRInt64 b, PRInt64& aResult) {
-  // We break a multiplication a * b into of sign_a * sign_b * abs(a) * abs(b)
-  //
-  // This is equivalent to:
-  //
-  // (sign_a * sign_b) * ((a_hi * 2^32) + a_lo) * ((b_hi * 2^32) + b_lo)
-  //
-  // Which is equivalent to:
-  //
-  // (sign_a * sign_b) *
-  // ((a_hi * b_hi << 64) +
-  //  (a_hi * b_lo << 32) + (a_lo * b_hi << 32) +
-  //   a_lo * b_lo)
-  //
-  // So to check if a*b overflows, we must check each sub part of the above
-  // sum.
-  //
-  // Note: -1 * INT64_MIN == INT64_MIN ; we can't negate INT64_MIN!
-  // Note: Shift of negative numbers is undefined.
-  //
-  // Figure out the sign after multiplication. Then we can just work with
-  // unsigned numbers.
-  PRInt64 sign = (!(a < 0) == !(b < 0)) ? 1 : -1;
-
-  PRInt64 abs_a = (a < 0) ? -a : a;
-  PRInt64 abs_b = (b < 0) ? -b : b;
-
-  if (abs_a < 0) {
-    NS_ASSERTION(a == INT64_MIN, "How else can this happen?");
-    if (b == 0 || b == 1) {
-      aResult = a * b;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  if (abs_b < 0) {
-    NS_ASSERTION(b == INT64_MIN, "How else can this happen?");
-    if (a == 0 || a == 1) {
-      aResult = a * b;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  NS_ASSERTION(abs_a >= 0 && abs_b >= 0, "abs values must be non-negative");
-
-  PRInt64 a_hi = abs_a >> 32;
-  PRInt64 a_lo = abs_a & 0xFFFFFFFF;
-  PRInt64 b_hi = abs_b >> 32;
-  PRInt64 b_lo = abs_b & 0xFFFFFFFF;
-
-  NS_ASSERTION((a_hi<<32) + a_lo == abs_a, "Partition must be correct");
-  NS_ASSERTION((b_hi<<32) + b_lo == abs_b, "Partition must be correct");
-
-  // In the sub-equation (a_hi * b_hi << 64), if a_hi or b_hi
-  // are non-zero, this will overflow as it's shifted by 64.
-  // Abort if this overflows.
-  if (a_hi != 0 && b_hi != 0) {
-    return false;
-  }
-
-  // We can now assume that either a_hi or b_hi is 0.
-  NS_ASSERTION(a_hi == 0 || b_hi == 0, "One of these must be 0");
-
-  // Next we calculate:
-  // (a_hi * b_lo << 32) + (a_lo * b_hi << 32)
-  // We can factor this as:
-  // (a_hi * b_lo + a_lo * b_hi) << 32
-  PRInt64 q = a_hi * b_lo + a_lo * b_hi;
-  if (q > PR_INT32_MAX) {
-    // q will overflow when we shift by 32; abort.
-    return false;
-  }
-  q <<= 32;
-
-  // Both a_lo and b_lo are less than INT32_MAX, so can't overflow.
-  PRUint64 lo = a_lo * b_lo;
-  if (lo > INT64_MAX) {
-    return false;
-  }
-
-  // Add the final result. We must check for overflow during addition.
-  if (!AddOverflow(q, static_cast<PRInt64>(lo), aResult)) {
-    return false;
-  }
-
-  aResult *= sign;
-  NS_ASSERTION(a * b == aResult, "We didn't overflow, but result is wrong!");
-  return true;
-}
-
 // Converts from number of audio frames to microseconds, given the specified
 // audio rate.
-bool FramesToUsecs(PRInt64 aFrames, PRUint32 aRate, PRInt64& aOutUsecs)
-{
-  PRInt64 x;
-  if (!MulOverflow(aFrames, USECS_PER_S, x))
-    return false;
-  aOutUsecs = x / aRate;
-  return true;
+CheckedInt64 FramesToUsecs(PRInt64 aFrames, PRUint32 aRate) {
+  return (CheckedInt64(aFrames) * USECS_PER_S) / aRate;
 }
 
 // Converts from microseconds to number of audio frames, given the specified
 // audio rate.
-bool UsecsToFrames(PRInt64 aUsecs, PRUint32 aRate, PRInt64& aOutFrames)
-{
-  PRInt64 x;
-  if (!MulOverflow(aUsecs, aRate, x))
-    return false;
-  aOutFrames = x / USECS_PER_S;
-  return true;
+CheckedInt64 UsecsToFrames(PRInt64 aUsecs, PRUint32 aRate) {
+  return (CheckedInt64(aUsecs) * aRate) / USECS_PER_S;
 }
 
 static PRInt32 ConditionDimension(float aValue)

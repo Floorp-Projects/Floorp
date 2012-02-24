@@ -135,6 +135,18 @@ GetLight(hal::LightType light, hal::LightConfiguration* aConfig)
   return status;
 }
 
+void 
+AdjustSystemClock(int32_t aDeltaMilliseconds)
+{
+  Hal()->SendAdjustSystemClock(aDeltaMilliseconds);
+}
+
+void
+SetTimezone(const nsCString& aTimezoneSpec)
+{
+  Hal()->SendSetTimezone(nsCString(aTimezoneSpec));
+} 
+
 void
 Reboot()
 {
@@ -286,6 +298,20 @@ public:
   {
     *status = hal::GetLight(aLight, aConfig);
     return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvAdjustSystemClock(const int32_t &aDeltaMilliseconds)
+  {
+    hal::AdjustSystemClock(aDeltaMilliseconds);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool 
+  RecvSetTimezone(const nsCString& aTimezoneSpec)
+  {
+    hal::SetTimezone(aTimezoneSpec);
+    return true;  
   }
 
   NS_OVERRIDE virtual bool

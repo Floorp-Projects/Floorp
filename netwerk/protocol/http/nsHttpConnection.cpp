@@ -153,8 +153,8 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
     NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
 
     mConnInfo = info;
-    mMaxHangTime = maxHangTime;
-    mLastReadTime = NowInSeconds();
+    mMaxHangTime = PR_SecondsToInterval(maxHangTime);
+    mLastReadTime = PR_IntervalNow();
 
     mSocketTransport = transport;
     mSocketIn = instream;
@@ -535,9 +535,7 @@ nsHttpConnection::CanReuse()
     else
         canReuse = IsKeepAlive();
     
-    canReuse = canReuse &&
-        (NowInSeconds() - mLastReadTime < mIdleTimeout) &&
-        IsAlive();
+    canReuse = canReuse && (IdleTime() < mIdleTimeout) && IsAlive();
 
     // An idle persistent connection should not have data waiting to be read
     // before a request is sent. Data here is likely a 408 timeout response
@@ -565,13 +563,27 @@ nsHttpConnection::CanDirectlyActivate()
     return UsingSpdy() && CanReuse() && mSpdySession->RoomForMoreStreams();
 }
 
-PRUint32 nsHttpConnection::TimeToLive()
+PRIntervalTime
+nsHttpConnection::IdleTime()
 {
-    PRInt32 tmp = mIdleTimeout - (NowInSeconds() - mLastReadTime);
-    if (0 > tmp)
-        tmp = 0;
+    return mSpdySession ?
+        mSpdySession->IdleTime() : (PR_IntervalNow() - mLastReadTime);
+}
 
-    return tmp;
+// returns the number of seconds left before the allowable idle period
+// expires, or 0 if the period has already expied.
+PRUint32
+nsHttpConnection::TimeToLive()
+{
+    if (IdleTime() >= mIdleTimeout)
+        return 0;
+    PRUint32 timeToLive = PR_IntervalToSeconds(mIdleTimeout - IdleTime());
+
+    // a positive amount of time can be rounded to 0. Because 0 is used
+    // as the expiration signal, round all values from 0 to 1 up to 1.
+    if (!timeToLive)
+        timeToLive = 1;
+    return timeToLive;
 }
 
 bool
@@ -735,7 +747,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         if (!mUsingSpdy) {
             const char *cp = PL_strcasestr(val, "timeout=");
             if (cp)
-                mIdleTimeout = (PRUint32) atoi(cp + 8);
+                mIdleTimeout = PR_SecondsToInterval((PRUint32) atoi(cp + 8));
             else
                 mIdleTimeout = gHttpHandler->IdleTimeout();
         }
@@ -743,7 +755,8 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             mIdleTimeout = gHttpHandler->SpdyTimeout();
         }
         
-        LOG(("Connection can be reused [this=%x idle-timeout=%u]\n", this, mIdleTimeout));
+        LOG(("Connection can be reused [this=%x idle-timeout=%usec]\n",
+             this, PR_IntervalToSeconds(mIdleTimeout)));
     }
 
     if (!mProxyConnectStream)
@@ -849,6 +862,26 @@ nsHttpConnection::TakeTransport(nsISocketTransport  **aTransport,
     mSocketOut = nsnull;
     
     return NS_OK;
+}
+
+void
+nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
+{
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    // make sure timer didn't tick before Activate()
+    if (!mTransaction)
+        return;
+
+    // Spdy in the future actually should implement some timeout handling
+    // using the SPDY ping frame.
+    if (mSpdySession) {
+        mSpdySession->ReadTimeoutTick(now);
+        return;
+    }
+    
+    // Pending patches places pipeline rescheduling code will go here
+
 }
 
 void
@@ -1136,9 +1169,9 @@ nsHttpConnection::OnSocketReadable()
 {
     LOG(("nsHttpConnection::OnSocketReadable [this=%x]\n", this));
 
-    PRUint32 now = NowInSeconds();
+    PRIntervalTime now = PR_IntervalNow();
 
-    if (mKeepAliveMask && (now - mLastReadTime >= PRUint32(mMaxHangTime))) {
+    if (mKeepAliveMask && ((now - mLastReadTime) >= mMaxHangTime)) {
         LOG(("max hang time exceeded!\n"));
         // give the handler a chance to create a new persistent connection to
         // this host if we've been busy for too long.
@@ -1340,3 +1373,4 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
         return mCallbacks->GetInterface(iid, result);
     return NS_ERROR_NO_INTERFACE;
 }
+

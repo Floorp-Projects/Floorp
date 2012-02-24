@@ -129,7 +129,7 @@ xul|scrollbar xul|thumb {
   -moz-border-right-colors: none !important;
   -moz-border-left-colors: none !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  -moz-border-radius: 3px;
+  border-radius: 3px;
 }
 
 select:not([size]):not([multiple]) > xul|scrollbar,
@@ -148,7 +148,7 @@ button,
 xul|button,
 * > input:not([type="image"]) {
   -moz-appearance: none !important;  /* See bug 598421 for fixing the platform */
-  -moz-border-radius: 3px;
+  border-radius: 3px;
 }
 
 select[size],
@@ -235,7 +235,7 @@ select > button {
   border-width: 0px !important;
   margin: 0px !important;
   padding: 0px !important;
-  -moz-border-radius: 0;
+  border-radius: 0;
   color: #414141;
 
   background-size: 100% 90%;

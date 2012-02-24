@@ -336,7 +336,6 @@ nsWindowsShellService::ShortcutMaintenance()
 bool
 nsWindowsShellService::IsDefaultBrowserVista(bool* aIsDefaultBrowser)
 {
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   IApplicationAssociationRegistration* pAAR;
   
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
@@ -355,7 +354,6 @@ nsWindowsShellService::IsDefaultBrowserVista(bool* aIsDefaultBrowser)
     pAAR->Release();
     return true;
   }
-#endif  
   return false;
 }
 

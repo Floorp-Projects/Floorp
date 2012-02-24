@@ -914,11 +914,14 @@ var BrowserApp = {
 
       // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
       // inheriting the currently loaded document's principal.
+      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+      if (data.userEntered)
+        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER;
+
       let params = {
         selected: true,
         parentId: ("parentId" in data) ? data.parentId : -1,
-        flags: Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER
-             | Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP
+        flags: flags
       };
 
       let url = this.getSearchOrURI(data);

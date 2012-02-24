@@ -48,7 +48,6 @@
 #endif
 #include "gfxWindowsPlatform.h"
 #include "gfxContext.h"
-#include "gfxUnicodeProperties.h"
 
 #include "cairo-win32.h"
 

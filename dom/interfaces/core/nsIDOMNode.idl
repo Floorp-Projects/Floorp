@@ -52,7 +52,7 @@ interface nsIDOMUserDataHandler;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(ce82fb71-60f2-4c38-be31-de5f2f90dada)]
+[scriptable, uuid(5e9bcec9-5928-4f77-8a9c-424ef01c20e1)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
@@ -94,7 +94,8 @@ interface nsIDOMNode : nsISupports
   nsIDOMNode                appendChild(in nsIDOMNode newChild)
                                          raises(DOMException);
   boolean                   hasChildNodes();
-  nsIDOMNode                cloneNode(in boolean deep);
+  // Modified in DOM Level 4:
+  [optional_argc] nsIDOMNode                cloneNode([optional] in boolean deep);
   // Modified in DOM Level 2:
   void                      normalize();
   // Introduced in DOM Level 2:

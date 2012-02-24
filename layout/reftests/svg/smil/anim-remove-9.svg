@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  class="reftest-wait"
+  onload="go()">
+  <!-- Bug 728758 - Removing a stacked animation fails to update -->
+  <!-- In this test we check that removing an animation applied on top of
+       another animation causes the underlying animation's result to show. -->
+  <script>
+    function go() {
+      document.documentElement.pauseAnimations();
+      // Force a sample after starting the bottom animation, but before starting
+      // the top animation.
+      document.documentElement.setCurrentTime(0.5);
+      // Sample again after the top animation has started
+      document.documentElement.setCurrentTime(1);
+      // Remove top animation
+      var anim = document.getElementById("anim");
+      anim.parentNode.removeChild(anim);
+      // Sample again
+      document.documentElement.setCurrentTime(1);
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <rect x="15" y="15" width="200" height="200" fill="orange">
+    <set attributeName="fill" to="blue"/>
+    <set attributeName="fill" to="red" begin="1s" id="anim"/>
+  </rect>
+</svg>

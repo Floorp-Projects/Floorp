@@ -77,7 +77,7 @@ int wmain(int argc, WCHAR **argv)
 {
 #ifndef XRE_DONT_PROTECT_DLL_LOAD
   mozilla::SanitizeEnvironmentVariables();
-  mozilla::NS_SetDllDirectory(L"");
+  SetDllDirectoryW(L"");
 #endif
 
 #ifdef XRE_WANT_DLL_BLOCKLIST

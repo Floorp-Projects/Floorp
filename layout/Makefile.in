@@ -77,7 +77,6 @@ PARALLEL_DIRS += \
   $(NULL)
 
 TOOL_DIRS      += tools/reftest reftests/fonts reftests/fonts/mplus
-DIRS           += tools/pageloader
 
 ifdef MOZ_DEBUG
 DIRS            += tools/layout-debug

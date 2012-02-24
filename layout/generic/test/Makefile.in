@@ -127,6 +127,7 @@ _TEST_FILES = \
   $(srcdir)/../../reftests/backgrounds/fuchsia-32x32.png \
   test_selection_splitText-normalize.html \
   test_bug524925.html \
+  test_bug719503.html \
   $(NULL)
 
 _CHROME_FILES = \

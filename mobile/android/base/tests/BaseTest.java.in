@@ -6,8 +6,10 @@ import @ANDROID_PACKAGE_NAME@.*;
 
 import android.app.Activity;
 import android.app.Instrumentation;
-import android.test.ActivityInstrumentationTestCase2;
 import android.content.Intent;
+import android.os.SystemClock;
+import android.test.ActivityInstrumentationTestCase2;
+
 import java.util.HashMap;
 
 abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
@@ -130,5 +132,20 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
     protected final String getAbsoluteUrl(String url) {
         return mBaseUrl + "/" + url.replaceAll("(^/)", "");
+    }
+
+    protected final boolean waitForTest(BooleanTest t, int timeout) {
+        long end = SystemClock.uptimeMillis() + timeout;
+        while (SystemClock.uptimeMillis() < end) {
+            if (t.test())
+                return true;
+
+            mSolo.sleep(100);
+        }
+        return false;
+    }
+
+    protected interface BooleanTest {
+        public boolean test();
     }
 }

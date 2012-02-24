@@ -3,96 +3,111 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
-import android.os.SystemClock;
 import java.util.ArrayList;
 
 public class testBookmark extends BaseTest {
-    private static final long MAX_WAIT_MS = 10 * 1000; 
+    private static final int MAX_WAIT_MS = 3000; 
+    private static final String ABOUT_HOME_URL = "about:home";
+    private static final String BOOKMARK_URL = "/robocop/robocop_blank_01.html";
 
     public void testBookmark() {
         setTestType("mochitest");
-
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
-        String url = getAbsoluteUrl("/robocop/robocop_blank_02.html");
-        enterUrl(url);
+        setUpBookmark();
 
-        //Click the top item in the awesome list.
-        mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
-        hitEnterAndWait();
+        // Open the bookmark list and check the root folder view
+        ListView bookmarksList = openBookmarksList();
+        checkRootFolderView(bookmarksList);
 
-        //Click the top item in the bookmark list.
-        clickOnAwesomeBar();
-        mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
+        // Move to the "Mobile Bookmarks" folder (the first item is the header view)
+        mSolo.clickInList(2);
 
-        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+        // Check that header view says "Mobile Bookmarks"
+        mAsserter.ok(mSolo.getText("Mobile Bookmarks") != null, "checking that header is correct", "bookmarks folder header is correct");
 
-        boolean selected = selectFirstItemInList();
-        boolean created = false;
-        if (!selected) {
-            //Bookmark selection will fail if there are no bookmarks defined;
-            //create a bookmark and then try selecting again.
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-            getInstrumentation().waitForIdleSync();
-            mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-            mSolo.waitForText("Bookmark");
-            mSolo.clickOnText("Bookmark");
-            created = true;
-            clickOnAwesomeBar();
-            mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
-            contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
-            selected = selectFirstItemInList();
-        }
-        mAsserter.is(selected, true, "Bookmark was selected");
+        // Check that pressing the back buton goes up a folder level
+        mSolo.goBack();
+        checkRootFolderView(bookmarksList);
+        
+        // Move back to the "Mobile Bookmarks" folder
+        mSolo.clickInList(2);
 
-        contentEventExpecter.blockForEvent();
+        // Click on the bookmark we created (the first item is the header view)
+        mSolo.clickInList(2);
 
-        //Items in bookmarks aren't constant so URL can't be tested.
+        // Wait for the bookmarked page to load
+        mActions.expectGeckoEvent("DOMContentLoaded").blockForEvent();
 
-        //If a bookmark was created by this test, remove it now.
-        if (created) {
-            mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-            mSolo.waitForText("Bookmark");
-            mSolo.clickOnText("Bookmark");
-            mAsserter.is(mSolo.waitForText("Bookmark removed"), true, "Bookmark removal verified");
-            //If the test ends too quickly, the bookmark database may not be updated correctly
-            //before the Fennec process is killed, and the item will not be removed. To 
-            //guard against this, navigate back to the bookmarks list and wait until
-            //it is empty.
-            Activity awesomeBarActivity = clickOnAwesomeBar();
-            mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
-            boolean listIsEmpty = false;
-            Element bookmarkList = mDriver.findElement(awesomeBarActivity, "bookmarks_list");
-            while (listIsEmpty == false) {
-                if (bookmarkList != null) {
-                    ArrayList<android.widget.ListView> views = mSolo.getCurrentListViews();
-                    for (android.widget.ListView v : views) {
-                        if (v.getId() == bookmarkList.getId()) {
-                            android.widget.ListAdapter adapter = v.getAdapter();
-                            if (adapter != null && adapter.isEmpty()) {
-                                listIsEmpty = true;
-                            } else {
-                                // wait a little while before trying again
-                                try { Thread.sleep(100); } catch(Exception e) {}
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // Clean up the bookmark we created
+        cleanUpBookmark();
     }
 
-    private boolean selectFirstItemInList() {
-        long waitStart = SystemClock.uptimeMillis();
-        ArrayList<TextView> l = null;
-        while (l == null || l.size() < 1) {
-            if (SystemClock.uptimeMillis() - waitStart > MAX_WAIT_MS) {
-                mAsserter.dumpLog("testBookmark: timed out waiting for list -- no bookmarks defined?");
-                return false;
-            }
-            l = mSolo.clickInList(1);
+    private ListView openBookmarksList() {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+
+        // Click the "Bookmarks" tab to switch to bookmarks list
+        mSolo.clickOnText("Bookmarks");
+
+        Element bookmarkList = mDriver.findElement(awesomeBarActivity, "bookmarks_list");
+        ArrayList<ListView> lists = mSolo.getCurrentListViews();
+        for (ListView list : lists) {
+            if (list.getId() == bookmarkList.getId())
+                return list;
         }
-        return true;
+
+        // Just return null if we can't find the bookmarks list view
+        return null;
+    }
+
+    private void checkRootFolderView(ListView bookmarksList) {
+        mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
+
+        // The root view should have 5 children
+        mAsserter.is(bookmarksList.getChildCount(), 5, "bookmarks list has 5 children (a header and 4 folders)");
+    }
+
+    // This method opens the menu and selects the "Bookmark" menu item
+    private void toggleBookmark() {
+        getInstrumentation().waitForIdleSync();
+        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+        mSolo.waitForText("Bookmark");
+        mSolo.clickOnText("Bookmark");
+    }
+
+    private void setUpBookmark() {
+        // Bookmark a page for the test
+        loadUrl(getAbsoluteUrl(BOOKMARK_URL));
+        toggleBookmark();
+        mAsserter.is(mSolo.waitForText("Bookmark added"), true, "bookmark added sucessfully");
+
+        // Navigate back to about:home for the test
+        loadUrl(ABOUT_HOME_URL);
+    }
+
+    private void cleanUpBookmark() {
+        // Go back to the page we bookmarked
+        loadUrl(getAbsoluteUrl(BOOKMARK_URL));
+        toggleBookmark();
+        mAsserter.is(mSolo.waitForText("Bookmark removed"), true, "bookmark removed successfully");
+
+        //If the test ends too quickly, the bookmark database may not be updated correctly
+        //before the Fennec process is killed, and the item will not be removed. To 
+        //guard against this, navigate back to the bookmarks list and wait until
+        //it is empty.
+        ListView bookmarkList = openBookmarksList();
+
+        // Move to the "Mobile Bookmarks" folder (the first item is the header view)
+        mSolo.clickInList(2);
+
+        final ListAdapter adapter = bookmarkList.getAdapter();
+        waitForTest(new BooleanTest() {
+            public boolean test() {
+                return adapter != null && adapter.isEmpty();
+            }
+        }, MAX_WAIT_MS);
     }
 }
