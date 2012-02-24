@@ -853,6 +853,11 @@ nsAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
   // the DOM parent chain.
   nsDocAccessible* contentDocAcc = GetAccService()->
     GetDocAccessible(content->OwnerDoc());
+
+  // contentDocAcc in some circumstances can be NULL
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=729861
+  NS_ENSURE_TRUE(contentDocAcc, fallbackAnswer);
+
   nsAccessible* accessible = contentDocAcc->GetAccessibleOrContainer(content);
   if (!accessible)
     return fallbackAnswer;
