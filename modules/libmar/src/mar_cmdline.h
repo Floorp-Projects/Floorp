@@ -103,6 +103,18 @@ int
 read_product_info_block(char *path, 
                         struct ProductInformationBlock *infoBlock);
 
+/**
+ * Writes out a copy of the MAR at src but with the signature block stripped.
+ *
+ * @param  src  The path of the source MAR file
+ * @param  dest The path of the MAR file to write out that 
+                has no signature block
+ * @return 0 on success
+ *         -1 on error
+*/
+int
+strip_signature_block(const char *src, const char * dest);
+
 #ifdef __cplusplus
 }
 #endif
