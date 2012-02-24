@@ -871,6 +871,19 @@ SpecialPowersAPI.prototype = {
       removeSystemEventListener(target, type, listener, useCapture);
   },
 
+  getDOMRequestService: function() {
+    var serv = Cc["@mozilla.org/dom/dom-request-service;1"].
+      getService(Ci.nsIDOMRequestService);
+    var res = { __exposedProps__: {} };
+    var props = ["createRequest", "fireError", "fireSuccess"];
+    for (i in props) {
+      let prop = props[i];
+      res[prop] = function() { return serv[prop].apply(serv, arguments) };
+      res.__exposedProps__[prop] = "r";
+    }
+    return res;
+  },
+
   setLogFile: function(path) {
     this._mfl = new MozillaFileLogger(path);
   },

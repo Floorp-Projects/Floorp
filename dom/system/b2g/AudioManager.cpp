@@ -76,6 +76,10 @@ AudioManager::SetMasterVolume(float aMasterVolume)
   if (AudioSystem::setMasterVolume(aMasterVolume)) {
     return NS_ERROR_FAILURE;
   }
+  // For now, just set the voice volume at the same level
+  if (AudioSystem::setVoiceVolume(aMasterVolume)) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 

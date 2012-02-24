@@ -1,0 +1,31 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEventTarget.idl"
+
+interface nsIDOMDOMError;
+interface nsIDOMWindow;
+
+[scriptable, builtinclass, uuid(a3ad2846-ffb2-48d7-a786-2254cb82560d)]
+interface nsIDOMDOMRequest : nsIDOMEventTarget
+{
+  readonly attribute DOMString readyState; // "pending" or "done"
+
+  readonly attribute jsval result;
+  readonly attribute nsIDOMDOMError error;
+
+           attribute nsIDOMEventListener onsuccess;
+           attribute nsIDOMEventListener onerror;
+};
+
+[scriptable, builtinclass, uuid(eebcdf29-f8fa-4c36-bbc7-2146b1cbaf7b)]
+interface nsIDOMRequestService : nsISupports
+{
+  nsIDOMDOMRequest createRequest(in nsIDOMWindow window);
+
+  void fireSuccess(in nsIDOMDOMRequest request, in jsval result);
+  void fireError(in nsIDOMDOMRequest request, in DOMString error);
+};
