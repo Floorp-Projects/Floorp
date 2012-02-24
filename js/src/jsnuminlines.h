@@ -51,12 +51,12 @@ template<typename T> struct NumberTraits { };
 template<> struct NumberTraits<int32_t> {
   static JS_ALWAYS_INLINE int32_t NaN() { return 0; }
   static JS_ALWAYS_INLINE int32_t toSelfType(int32_t i) { return i; }
-  static JS_ALWAYS_INLINE int32_t toSelfType(jsdouble d) { return js_DoubleToECMAUint32(d); }
+  static JS_ALWAYS_INLINE int32_t toSelfType(double d) { return js_DoubleToECMAUint32(d); }
 };
-template<> struct NumberTraits<jsdouble> {
-  static JS_ALWAYS_INLINE jsdouble NaN() { return js_NaN; }
-  static JS_ALWAYS_INLINE jsdouble toSelfType(int32_t i) { return i; }
-  static JS_ALWAYS_INLINE jsdouble toSelfType(jsdouble d) { return d; }
+template<> struct NumberTraits<double> {
+  static JS_ALWAYS_INLINE double NaN() { return js_NaN; }
+  static JS_ALWAYS_INLINE double toSelfType(int32_t i) { return i; }
+  static JS_ALWAYS_INLINE double toSelfType(double d) { return d; }
 };
 
 template<typename T>
