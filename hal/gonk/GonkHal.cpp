@@ -412,6 +412,7 @@ SetScreenBrightness(double brightness)
   aConfig.flashOnMS() = aConfig.flashOffMS() = 0;
   aConfig.color() = color;
   hal::SetLight(hal::eHalLightID_Backlight, aConfig);
+  hal::SetLight(hal::eHalLightID_Buttons, aConfig);
 }
 
 static light_device_t* sLights[hal::eHalLightID_Count];	// will be initialized to NULL

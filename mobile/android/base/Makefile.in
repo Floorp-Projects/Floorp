@@ -221,6 +221,8 @@ RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
   res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar.xml \
+  res/layout/awesomebar_folder_row.xml \
+  res/layout/awesomebar_folder_header_row.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
@@ -289,6 +291,7 @@ RES_DRAWABLE_NODPI = \
 
 RES_DRAWABLE_BASE = \
   res/drawable/favicon.png \
+  res/drawable/folder.png \
   res/drawable/abouthome_icon.png \
   res/drawable/abouthome_logo.png \
   res/drawable/abouthome_separator.9.png \
@@ -335,6 +338,7 @@ RES_DRAWABLE_LDPI = \
 
 RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/favicon.png \
+  res/drawable-hdpi/folder.png \
   res/drawable-hdpi/home_bg.png \
   res/drawable-hdpi/home_star.png \
   res/drawable-hdpi/abouthome_icon.png \
@@ -399,6 +403,7 @@ RES_DRAWABLE_HDPI_V11 = \
 
 RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/favicon.png \
+  res/drawable-xhdpi-v11/folder.png \
   res/drawable-xhdpi-v11/abouthome_icon.png \
   res/drawable-xhdpi-v11/abouthome_logo.png \
   res/drawable-xhdpi-v11/abouthome_separator.9.png \

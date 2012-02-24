@@ -158,7 +158,7 @@ EnableBatteryNotifications()
                                         DEVICE_NOTIFY_WINDOW_HANDLE);
   } else
   {
-    // for Windows 2000 and Windwos XP.  If we remove Windows XP support,
+    // for Windows XP.  If we remove Windows XP support,
     // we should remove timer-based power notification
     sUpdateTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     if (sUpdateTimer) {

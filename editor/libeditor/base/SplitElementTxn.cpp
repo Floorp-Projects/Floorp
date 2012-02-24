@@ -98,7 +98,7 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
   if (!mExistingRightNode || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
   // create a new node
-  nsresult result = mExistingRightNode->CloneNode(false, getter_AddRefs(mNewLeftNode));
+  nsresult result = mExistingRightNode->CloneNode(false, 1, getter_AddRefs(mNewLeftNode));
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewLeftNode)), "could not create element.");
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(mNewLeftNode, NS_ERROR_NULL_POINTER);

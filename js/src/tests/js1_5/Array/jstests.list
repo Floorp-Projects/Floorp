@@ -3,7 +3,7 @@ script 11.1.4.js
 script array-001.js
 random script regress-101964.js # bogus perf test (bug 467263)
 script regress-107138.js
-fails-if(!xulRuntime.shell) script regress-108440.js # bug - NS_ERROR_DOM_NOT_SUPPORTED_ERR line 74
+skip-if(Android) script regress-108440.js # bug - nsIDOMWindow.crypto throws NS_ERROR_NOT_IMPLEMENTED on Android
 script regress-154338.js
 skip-if(xulRuntime.XPCOMABI.match(/x86_64/)||Android) script regress-157652.js # No test results
 script regress-178722.js
