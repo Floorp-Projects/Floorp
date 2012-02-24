@@ -88,7 +88,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 // The dimensions of the current android view
 static gfxIntSize gAndroidBounds = gfxIntSize(0, 0);
-static gfxIntSize gAndroidTileSize = gfxIntSize(0, 0);
 static gfxIntSize gAndroidScreenBounds;
 
 #ifdef ACCESSIBILITY
@@ -857,7 +856,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             }
         case AndroidGeckoEvent::SIZE_CHANGED: {
             nsTArray<nsIntPoint> points = ae->Points();
-            NS_ASSERTION(points.Length() == 3, "Size changed does not have enough coordinates");
+            NS_ASSERTION(points.Length() == 2, "Size changed does not have enough coordinates");
 
             int nw = points[0].x;
             int nh = points[0].y;
@@ -876,9 +875,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                                                     true);
                 }
             }
-
-            gAndroidTileSize.width = points[2].x;
-            gAndroidTileSize.height = points[2].y;
 
             int newScreenWidth = points[1].x;
             int newScreenHeight = points[1].y;
@@ -1216,7 +1212,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     AndroidGeckoLayerClient &client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height,
-                             gAndroidTileSize.width, gAndroidTileSize.height,
                              dirtyRect, metadata)) {
         __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### BeginDrawing returned false!");
         return;

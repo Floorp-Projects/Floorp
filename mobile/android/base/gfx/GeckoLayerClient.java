@@ -126,9 +126,8 @@ public class GeckoLayerClient implements GeckoEventListener,
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
-    public Rect beginDrawing(int width, int height, int tileWidth, int tileHeight,
-                             String metadata) {
-        Log.e(LOGTAG, "### beginDrawing " + width + " " + height + " " + tileWidth + " " + tileHeight);
+    public Rect beginDrawing(int width, int height, String metadata) {
+        Log.e(LOGTAG, "### beginDrawing " + width + " " + height);
 
         // If the viewport has changed but we still don't have the latest viewport
         // from Gecko, ignore the viewport passed to us from Gecko since that is going
@@ -281,9 +280,8 @@ public class GeckoLayerClient implements GeckoEventListener,
         }
 
         IntSize bufferSize = getBufferSize();
-        GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height, // Window (buffer) size
-                                                             mScreenSize.width, mScreenSize.height, // Screen size
-                                                             0, 0);                                 // Tile-size (unused)
+        GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height,  // Window (buffer) size
+                                                             mScreenSize.width, mScreenSize.height); // Screen size
         GeckoAppShell.sendEventToGecko(event);
     }
 

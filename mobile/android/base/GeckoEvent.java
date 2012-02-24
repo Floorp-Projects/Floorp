@@ -365,12 +365,11 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createSizeChangedEvent(int w, int h, int screenw, int screenh, int tilew, int tileh) {
+    public static GeckoEvent createSizeChangedEvent(int w, int h, int screenw, int screenh) {
         GeckoEvent event = new GeckoEvent(SIZE_CHANGED);
-        event.mPoints = new Point[3];
+        event.mPoints = new Point[2];
         event.mPoints[0] = new Point(w, h);
         event.mPoints[1] = new Point(screenw, screenh);
-        event.mPoints[2] = new Point(tilew, tileh);
         return event;
     }
 
