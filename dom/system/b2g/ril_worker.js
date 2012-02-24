@@ -495,7 +495,7 @@ let Buf = {
    *        Integer specifying the request type.
    * @param options [optional]
    *        Object containing information about the request, e.g. the
-   *        original main thread message object that led to the RIL request. 
+   *        original main thread message object that led to the RIL request.
    */
   newParcel: function newParcel(type, options) {
     if (DEBUG) debug("New outgoing parcel of type " + type);
@@ -532,8 +532,8 @@ let Buf = {
     this.outgoingIndex = PARCEL_SIZE_SIZE;
   },
 
-  simpleRequest: function simpleRequest(type) {
-    this.newParcel(type);
+  simpleRequest: function simpleRequest(type, options) {
+    this.newParcel(type, options);
     this.sendParcel();
   }
 };
@@ -570,7 +570,7 @@ let RIL = {
    * Parse an integer from a string, falling back to a default value
    * if the the provided value is not a string or does not contain a valid
    * number.
-   * 
+   *
    * @param string
    *        String to be parsed.
    * @param defaultValue
@@ -848,9 +848,12 @@ let RIL = {
 
   /**
    * Get the Short Message Service Center address.
+   *
+   * @param pendingSMS
+   *        Object containing the parameters of an SMS waiting to be sent.
    */
-  getSMSCAddress: function getSMSCAddress() {
-    Buf.simpleRequest(REQUEST_GET_SMSC_ADDRESS);
+  getSMSCAddress: function getSMSCAddress(pendingSMS) {
+    Buf.simpleRequest(REQUEST_GET_SMSC_ADDRESS, pendingSMS);
   },
 
   /**
@@ -1225,9 +1228,9 @@ RIL[REQUEST_CDMA_WRITE_SMS_TO_RUIM] = null;
 RIL[REQUEST_CDMA_DELETE_SMS_ON_RUIM] = null;
 RIL[REQUEST_DEVICE_IDENTITY] = null;
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
-RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS() {
+RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
   let smsc = Buf.readString();
-  Phone.onGetSMSCAddress(smsc);
+  Phone.onGetSMSCAddress(smsc, options);
 };
 RIL[REQUEST_SET_SMSC_ADDRESS] = function REQUEST_SET_SMSC_ADDRESS() {
   Phone.onSetSMSCAddress();
@@ -1777,8 +1780,17 @@ let Phone = {
   onStopTone: function onStopTone() {
   },
 
-  onGetSMSCAddress: function onGetSMSCAddress(smsc) {
+  onGetSMSCAddress: function onGetSMSCAddress(smsc, options) {
+    //TODO: notify main thread if we fail retrieving the SMSC, especially
+    // if there was a pending SMS (bug 727319).
     this.SMSC = smsc;
+    // If the SMSC was not retrieved on RIL initialization, an attempt to
+    // get it is triggered from this.sendSMS followed by the 'options'
+    // parameter of the SMS, so that we can send it after successfully
+    // retrieving the SMSC.
+    if (smsc && options.body) {
+      this.sendSMS(options);
+    }
   },
 
   onSetSMSCAddress: function onSetSMSCAddress() {
@@ -2053,12 +2065,9 @@ let Phone = {
   sendSMS: function sendSMS(options) {
     // Get the SMS Center address
     if (!this.SMSC) {
-      //TODO: we shouldn't get here, but if we do, we might want to hold on
-      // to the message and retry once we know the SMSC... or just notify an
-      // error to the mainthread and let them deal with retrying?
-      if (DEBUG) {
-        debug("Cannot send the SMS. Need to get the SMSC address first.");
-      }
+      // We request the SMS center address again, passing it the SMS options
+      // in order to try to send it again after retrieving the SMSC number.
+      RIL.getSMSCAddress(options);
       return;
     }
     // We explicitly save this information on the options object so that we
@@ -2069,8 +2078,7 @@ let Phone = {
     //TODO: verify values on 'options'
     //TODO: the data encoding and length in octets should eventually be
     // computed on the mainthread and passed down to us.
-    options.dcs = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-    options.bodyLengthInOctets = Math.ceil(options.body.length * 7 / 8);
+    GsmPDUHelper.calculateUserDataLength(options);
     RIL.sendSMS(options);
   },
 
@@ -2341,13 +2349,22 @@ let GsmPDUHelper = {
   /**
    * Read user data and decode as a UCS2 string.
    *
-   * @param length
-   *        XXX TODO
+   * @param numOctets
+   *        num of octets to read as UCS2 string.
    *
    * @return a string.
    */
-  readUCS2String: function readUCS2String(length) {
-    //TODO bug 712804
+  readUCS2String: function readUCS2String(numOctets) {
+    let str = "";
+    let length = numOctets / 2;
+    for (let i = 0; i < length; ++i) {
+      let code = (this.readHexOctet() << 8) | this.readHexOctet();
+      str += String.fromCharCode(code);
+    }
+
+    if (DEBUG) debug("Read UCS2 string: " + str);
+
+    return str;
   },
 
   /**
@@ -2357,14 +2374,50 @@ let GsmPDUHelper = {
    *        Message string to encode as UCS2 in hex-encoded octets.
    */
   writeUCS2String: function writeUCS2String(message) {
-    //TODO bug 712804
+    for (let i = 0; i < message.length; ++i) {
+      let code = message.charCodeAt(i);
+      this.writeHexOctet((code >> 8) & 0xFF);
+      this.writeHexOctet(code & 0xFF);
+    }
+  },
+
+  /**
+   * Calculate user data length and its encoding.
+   *
+   * The `options` parameter object should contain the `body` attribute, and
+   * the `dcs`, `bodyLengthInOctets` attributes will be set as return:
+   *
+   * @param body
+   *        String containing the message body.
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param bodyLengthInOctets
+   *        Byte length of the message body when encoded with the given DCS.
+   */
+  calculateUserDataLength: function calculateUserDataLength(options) {
+    //TODO: support language tables, see bug 729876
+    //TODO: support multipart SMS, see bug 712933
+    let needUCS2 = false;
+    for (let i = 0; i < options.body.length; ++i) {
+      if (options.body.charCodeAt(i) >= 128) {
+        needUCS2 = true;
+        break;
+      }
+    }
+
+    if (needUCS2) {
+      options.dcs = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+      options.bodyLengthInOctets = options.body.length * 2;
+    } else {
+      options.dcs = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+      options.bodyLengthInOctets = Math.ceil(options.body.length * 7 / 8);
+    }
   },
 
   /**
    * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
    * (UCS2) data.
-   *
-   * TODO: This function currently supports only the default alphabet.
    */
   readUserData: function readUserData(length, codingScheme) {
     if (DEBUG) {

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,18 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is bug 579868 test.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sindre Dammann <sindrebugzilla@gmail.com>
- * Portions created by the Initial Developer are Copyright (C) 2010
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Suresh Duddu <dp@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,34 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function test() {
-  let tab1 = gBrowser.addTab("about:rights");
-  let tab2 = gBrowser.addTab("about:mozilla");
-  tab1.linkedBrowser.addEventListener("load", mainPart, true);
-  waitForExplicitFinish();
+#include "mozilla/ModuleUtils.h"
 
-  function mainPart() {
-    tab1.linkedBrowser.removeEventListener("load", mainPart, true);
+#define NS_TESTING_CID \
+{ 0x335fb596, 0xe52d, 0x418f, \
+  { 0xb0, 0x1c, 0x1b, 0xf1, 0x6c, 0xe5, 0xe7, 0xe4 } }
 
-    // Tell the session storer that the tab is pinned
-    let newTabState = '{"entries":[{"url":"about:rights"}],"pinned":true,"userTypedValue":"Hello World!"}';
-    ss.setTabState(tab1, newTabState);
+NS_DEFINE_NAMED_CID(NS_TESTING_CID);
 
-    // Undo pinning
-    gBrowser.unpinTab(tab1);
-
-    is(tab1.linkedBrowser.__SS_tabStillLoading, true,
-       "_tabStillLoading should be true.");
-
-    // Close and restore tab
-    gBrowser.removeTab(tab1);
-    let savedState = JSON.parse(ss.getClosedTabData(window))[0].state;
-    isnot(savedState.pinned, true, "Pinned should not be true");
-    tab1 = ss.undoCloseTab(window, 0);
-
-    isnot(tab1.pinned, true, "Should not be pinned");
-    gBrowser.removeTab(tab1);
-    gBrowser.removeTab(tab2);
-    finish();
-  }
+static nsresult
+DummyConstructorFunc(nsISupports* aOuter, const nsIID& aIID, void** aResult)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+static const mozilla::Module::CIDEntry kTestCIDs[] = {
+  { &kNS_TESTING_CID, false, NULL, DummyConstructorFunc },
+  { NULL }
+};
+
+static const mozilla::Module kTestModule = {
+  mozilla::Module::kVersion,
+  kTestCIDs
+};
+
+NSMODULE_DEFN(dummy) = &kTestModule;
+
+  
