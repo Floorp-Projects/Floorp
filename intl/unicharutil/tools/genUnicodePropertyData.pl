@@ -41,7 +41,7 @@
 # read from the Unicode Character Database and compiled into multi-level arrays
 # for efficient lookup.
 #
-# To regenerate the tables in gfxUnicodePropertyData.cpp:
+# To regenerate the tables in nsUnicodePropertyData.cpp:
 #
 # (1) Download the current Unicode data files from
 #
@@ -60,20 +60,43 @@
 #
 # (2) Run this tool using a command line of the form
 #
-#         perl genUnicodeScriptData.pl     \
-#                 /path/to/hb-common.h     \
+#         perl genUnicodePropertyData.pl \
+#                 /path/to/hb-common.h   \
 #                 /path/to/UCD-directory
 #
 #     (where hb-common.h is found in the gfx/harfbuzz/src directory).
 #
 #     This will generate (or overwrite!) the files
 #
-#         gfxUnicodePropertyData.cpp
-#         gfxUnicodeScriptCodes.h
+#         nsUnicodePropertyData.cpp
+#         nsUnicodeScriptCodes.h
 #
 #     in the current directory.
 
 use strict;
+
+if ($#ARGV != 1) {
+    print <<__EOT;
+# Run this tool using a command line of the form
+#
+#     perl genUnicodePropertyData.pl \
+#             /path/to/hb-common.h   \
+#             /path/to/UCD-directory
+#
+# where hb-common.h is currently found in the gfx/harfbuzz/src directory,
+# and UCD-directory is a directory containing the current Unicode Character
+# Database files (UnicodeData.txt, etc), available from
+# http://www.unicode.org/Public/UNIDATA/
+#
+# This will generate (or overwrite!) the files
+#
+#     nsUnicodePropertyData.cpp
+#     nsUnicodeScriptCodes.h
+#
+# in the current directory.
+__EOT
+    exit 0;
+}
 
 # load HB_Script and HB_Category constants
 
@@ -89,7 +112,7 @@ my %catCode;
 my @scriptCodeToTag;
 my @scriptCodeToName;
 
-open FH, "< $ARGV[0]" or die "can't open $ARGV[0] (header file hb-unicode.h)\n";
+open FH, "< $ARGV[0]" or die "can't open $ARGV[0] (should be header file hb-common.h)\n";
 while (<FH>) {
     if (m/HB_SCRIPT_([A-Z_]+)\s*=\s*HB_TAG\s*\(('.','.','.','.')\)\s*,/) {
         $scriptCodeToTag[++$sc] = $2;
@@ -294,7 +317,7 @@ close FH;
 
 my $timestamp = gmtime();
 
-open DATA_TABLES, "> gfxUnicodePropertyData.cpp" or die "unable to open gfxUnicodePropertyData.cpp for output";
+open DATA_TABLES, "> nsUnicodePropertyData.cpp" or die "unable to open nsUnicodePropertyData.cpp for output";
 
 my $licenseBlock = q[
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -332,7 +355,7 @@ my $licenseBlock = q[
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * Derived from the Unicode Character Database by genUnicodeScriptData.pl
+ * Derived from the Unicode Character Database by genUnicodePropertyData.pl
  *
  * For Unicode terms of use, see http://www.unicode.org/terms_of_use.html
  *
@@ -486,7 +509,7 @@ __END
 
 close DATA_TABLES;
 
-open HEADER, "> gfxUnicodeScriptCodes.h" or die "unable to open gfxUnicodeScriptCodes.h for output";
+open HEADER, "> nsUnicodeScriptCodes.h" or die "unable to open nsUnicodeScriptCodes.h for output";
 
 print HEADER <<__END;
 $licenseBlock
@@ -500,8 +523,8 @@ $versionInfo
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
 
-#ifndef GFX_UNICODE_SCRIPT_CODES
-#define GFX_UNICODE_SCRIPT_CODES
+#ifndef NS_UNICODE_SCRIPT_CODES
+#define NS_UNICODE_SCRIPT_CODES
 __END
 
 print HEADER "enum {\n";
