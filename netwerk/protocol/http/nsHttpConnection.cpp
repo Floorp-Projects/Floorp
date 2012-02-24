@@ -852,6 +852,26 @@ nsHttpConnection::TakeTransport(nsISocketTransport  **aTransport,
 }
 
 void
+nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
+{
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    // make sure timer didn't tick before Activate()
+    if (!mTransaction)
+        return;
+
+    // Spdy in the future actually should implement some timeout handling
+    // using the SPDY ping frame.
+    if (mSpdySession) {
+        mSpdySession->ReadTimeoutTick(now);
+        return;
+    }
+    
+    // Pending patches places pipeline rescheduling code will go here
+
+}
+
+void
 nsHttpConnection::GetSecurityInfo(nsISupports **secinfo)
 {
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
