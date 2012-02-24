@@ -313,7 +313,7 @@ const KineticPanning = {
     return this.target !== null;
   },
 
-  _target: null,
+  target: null,
   start: function kp_start(target) {
     this.target = target;
 
