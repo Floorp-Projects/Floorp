@@ -173,14 +173,29 @@ nsSMILCompositor::GetFirstFuncToAffectSandwich()
   PRUint32 i;
   for (i = mAnimationFunctions.Length(); i > 0; --i) {
     nsSMILAnimationFunction* curAnimFunc = mAnimationFunctions[i-1];
-    if (curAnimFunc->UpdateCachedTarget(mKey) ||
-        (!mForceCompositing && curAnimFunc->HasChanged())) {
-      mForceCompositing = true;
-    }
+    // In the following, the lack of short-circuit behavior of |= means that we
+    // will ALWAYS run UpdateCachedTarget (even if mForceCompositing is true)
+    // but only call HasChanged and WasSkippedInPrevSample if necessary.  This
+    // is important since we need UpdateCachedTarget to run in order to detect
+    // changes to the target in subsequent samples.
+    mForceCompositing |=
+      curAnimFunc->UpdateCachedTarget(mKey) ||
+      curAnimFunc->HasChanged() ||
+      curAnimFunc->WasSkippedInPrevSample();
 
     if (curAnimFunc->WillReplace()) {
       --i;
       break;
+    }
+  }
+  // Mark remaining animation functions as having been skipped so if we later
+  // use them we'll know to force compositing.
+  // Note that we only really need to do this if something has changed
+  // (otherwise we would have set the flag on a previous sample) and if
+  // something has changed mForceCompositing will be true.
+  if (mForceCompositing) {
+    for (PRUint32 j = i; j > 0; --j) {
+      mAnimationFunctions[j-1]->SetWasSkipped();
     }
   }
   return i;
