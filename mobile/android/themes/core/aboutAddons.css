@@ -98,15 +98,12 @@ body {
 }
 
 .details {
-  display: -moz-box;
-  -moz-box-orient: horizontal;
   width: 100%;
-  margin-top: 8px;
+  padding-top: 8px;
 }
 
 .details > div {
-  display: -moz-box;
-  -moz-box-align: end;
+  display: inline;
 }
 
 .title {
@@ -117,19 +114,15 @@ body {
 .version {
   /* title is not localized, so keep the margin on the left side */
   margin-left: 12px;
-
-  /* push the tag to the end of the box */
-  -moz-box-flex: 1;
-
-  /* compensate for the title baseline */
-  padding-bottom: 1px;
 }
 
 .tag {
-  text-align: end;
+  float: right;
+  margin-left: 12px;
 
   /* compensate for the title baseline */
-  padding-bottom: 1px;
+  position: relative;
+  bottom: -3px;
 }
 
 .description {

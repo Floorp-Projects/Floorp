@@ -100,8 +100,8 @@ public:
     PRUint8        ReferrerLevel()           { return mReferrerLevel; }
     bool           SendSecureXSiteReferrer() { return mSendSecureXSiteReferrer; }
     PRUint8        RedirectionLimit()        { return mRedirectionLimit; }
-    PRUint16       IdleTimeout()             { return mIdleTimeout; }
-    PRUint16       SpdyTimeout()             { return mSpdyTimeout; }
+    PRIntervalTime IdleTimeout()             { return mIdleTimeout; }
+    PRIntervalTime SpdyTimeout()             { return mSpdyTimeout; }
     PRUint16       MaxRequestAttempts()      { return mMaxRequestAttempts; }
     const char    *DefaultSocketType()       { return mDefaultSocketType.get(); /* ok to return null */ }
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
@@ -117,6 +117,8 @@ public:
     bool           CoalesceSpdy() { return mCoalesceSpdy; }
     bool           UseAlternateProtocol() { return mUseAlternateProtocol; }
     PRUint32       SpdySendingChunkSize() { return mSpdySendingChunkSize; }
+    PRIntervalTime SpdyPingThreshold() { return mSpdyPingThreshold; }
+    PRIntervalTime SpdyPingTimeout() { return mSpdyPingTimeout; }
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
 
@@ -269,8 +271,9 @@ private:
 
     bool mFastFallbackToIPv4;
 
-    PRUint16 mIdleTimeout;
-    PRUint16 mSpdyTimeout;
+    PRIntervalTime mIdleTimeout;
+    PRIntervalTime mSpdyTimeout;
+
     PRUint16 mMaxRequestAttempts;
     PRUint16 mMaxRequestDelay;
     PRUint16 mIdleSynTimeout;
@@ -345,6 +348,8 @@ private:
     bool           mCoalesceSpdy;
     bool           mUseAlternateProtocol;
     PRUint32       mSpdySendingChunkSize;
+    PRIntervalTime mSpdyPingThreshold;
+    PRIntervalTime mSpdyPingTimeout;
 };
 
 //-----------------------------------------------------------------------------

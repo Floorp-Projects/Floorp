@@ -1274,7 +1274,10 @@ GC(JSContext *cx, uintN argc, jsval *vp)
 #endif
                 );
 #endif
-    *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, buf));
+    JSString *str = JS_NewStringCopyZ(cx, buf);
+    if (!str)
+        return false;
+    *vp = STRING_TO_JSVAL(str);
     return true;
 }
 

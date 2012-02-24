@@ -157,10 +157,40 @@ Error(JSContext *cx, const char (&input)[N])
     AutoInflatedString str(cx);
     jsval dummy;
     str = input;
-    CHECK(!JS_ParseJSON(cx, str.chars(), str.length(), &dummy));
-    JS_ClearPendingException(cx);
+
+    ContextPrivate p = {0, 0};
+    CHECK(!JS_GetContextPrivate(cx));
+    JS_SetContextPrivate(cx, &p);
+    JSErrorReporter old = JS_SetErrorReporter(cx, reportJSONEror);
+    JSBool ok = JS_ParseJSON(cx, str.chars(), str.length(), &dummy);
+    JS_SetErrorReporter(cx, old);
+    JS_SetContextPrivate(cx, NULL);
+
+    CHECK(!ok);
+    CHECK(!p.unexpectedErrorCount);
+    CHECK(p.expectedErrorCount == 1);
+
+    /* We do not execute JS, so there should be no exception thrown. */
+    CHECK(!JS_IsExceptionPending(cx));
+
     return true;
 }
+
+struct ContextPrivate {
+    unsigned unexpectedErrorCount;
+    unsigned expectedErrorCount;
+};
+
+static void
+reportJSONEror(JSContext *cx, const char *message, JSErrorReport *report)
+{
+    ContextPrivate *p = static_cast<ContextPrivate *>(JS_GetContextPrivate(cx));
+    if (report->errorNumber == JSMSG_JSON_BAD_PARSE)
+        p->expectedErrorCount++;
+    else
+        p->unexpectedErrorCount++;
+}
+
 END_TEST(testParseJSON_error)
 
 static JSBool

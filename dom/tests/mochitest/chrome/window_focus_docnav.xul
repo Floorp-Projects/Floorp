@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window onload="start()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<textbox id="textbox"/>
+
+<panel id="panel2" onpopupshown="runTests(this, 2);" onpopuphidden="document.getElementById('panel').hidePopup()">
+  <textbox id="p2textbox" value="Popup2"/>
+</panel>
+<panel id="panel" onpopupshown="runTests(this, 1);"
+                  onpopuphidden="done()">
+  <textbox id="p1textbox" value="Popup1"/>
+</panel>
+
+<browser id="browser" type="content" src="focus_frameset.html" width="500" height="400"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+var fm = Components.classes["@mozilla.org/focus-manager;1"].
+           getService(Components.interfaces.nsIFocusManager);
+
+function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
+function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
+
+function done()
+{
+  var opener = window.opener;
+  window.close();
+  opener.wrappedJSObject.SimpleTest.finish();
+}
+
+function previous(expectedWindow, expectedElement, desc)
+{
+  synthesizeKey("VK_F6", { shiftKey: true });
+  is(fm.focusedWindow, expectedWindow, desc);
+  is(fm.focusedElement, expectedElement, desc + " element");
+}
+
+function next(expectedWindow, expectedElement, desc)
+{
+  synthesizeKey("VK_F6", { });
+  is(fm.focusedWindow, expectedWindow, desc);
+  is(fm.focusedElement, expectedElement, desc + " element" + "::" + (fm.focusedElement ? fm.focusedElement.parentNode.id : "<none>"));
+}
+
+// This test runs through three cases. Document navigation forward and
+// backward using the F6 key when no popups are open, with one popup open and
+// with two popups open.
+function runTests(panel, popupCount)
+{
+  if (!popupCount || popupCount > 2)
+    popupCount = 0;
+
+  fm.clearFocus(window);
+
+  var childwin = document.getElementById("browser").contentWindow;
+
+  if (popupCount) {
+    if (popupCount == 2) {
+      next(window, document.getElementById("p2textbox").inputField, "First into popup 2 with " + popupCount);
+    }
+
+    next(window, document.getElementById("p1textbox").inputField, "First into popup 1 with " + popupCount);
+  }
+
+  next(childwin.frames[0], childwin.frames[0].document.documentElement, "First with " + popupCount);
+  next(childwin.frames[1], childwin.frames[1].document.documentElement, "Second with " + popupCount);
+  previous(childwin.frames[0], childwin.frames[0].document.documentElement, "Second back with " + popupCount);
+
+  if (popupCount) {
+    previous(window, document.getElementById("p1textbox").inputField, "First back from popup 1 with " + popupCount);
+
+    if (popupCount == 2) {
+      previous(window, document.getElementById("p2textbox").inputField, "First back from popup 2 with " + popupCount);
+    }
+  }
+
+  previous(window, document.getElementById("textbox").inputField, "First back with " + popupCount);
+
+  if (panel == document.getElementById("panel"))
+    document.getElementById("panel2").openPopup(null, "after_start", 100, 20);
+  else if (panel == document.getElementById("panel2"))
+    panel.hidePopup();
+  else
+    document.getElementById("panel").openPopup(null, "after_start");
+}
+
+function start()
+{
+  window.opener.wrappedJSObject.SimpleTest.waitForExplicitFinish();
+  window.opener.wrappedJSObject.SimpleTest.waitForFocus(
+    function() { runTests(null, 0); },
+    document.getElementById("browser").contentWindow);
+}
+
+]]></script>
+
+</window>
