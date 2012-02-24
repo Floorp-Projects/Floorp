@@ -110,8 +110,7 @@ JSClass HolderClass = {
     JSCLASS_HAS_RESERVED_SLOTS(3),
     JS_PropertyStub,        JS_PropertyStub, holder_get,      holder_set,
     JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub,  NULL,
-    NULL,                   NULL,            NULL,            NULL,
-    NULL,                   NULL,            NULL,            NULL
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 }
