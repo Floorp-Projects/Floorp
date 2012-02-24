@@ -777,6 +777,15 @@ BrowserGlue.prototype = {
     // This is used to reprompt users when privacy message changes
     const TELEMETRY_PROMPT_REV = 2;
 
+    function appendTelemetryNotification(notifyBox, message, buttons, hideclose) {
+      let notification = notifyBox.appendNotification(message, "telemetry", null,
+						      notifyBox.PRIORITY_INFO_LOW,
+						      buttons);
+      notification.setAttribute("hideclose", hideclose);
+      notification.persistence = -1;  // Until user closes it
+      return notification;
+    }
+
     var telemetryPrompted = null;
     try {
       telemetryPrompted = Services.prefs.getIntPref(PREF_TELEMETRY_PROMPTED);
@@ -823,10 +832,8 @@ BrowserGlue.prototype = {
     // Set pref to indicate we've shown the notification.
     Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
 
-    var notification = notifyBox.appendNotification(telemetryPrompt, "telemetry", null, notifyBox.PRIORITY_INFO_LOW, buttons);
-    notification.setAttribute("hideclose", true);
-    notification.persistence = -1;  // Until user closes it
-
+    let notification = appendTelemetryNotification(notifyBox, telemetryPrompt,
+						   buttons, true);
     let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     let link = notification.ownerDocument.createElementNS(XULNS, "label");
     link.className = "text-link telemetry-text-link";
@@ -838,8 +845,7 @@ BrowserGlue.prototype = {
       notification.parentNode.removeNotification(notification, true);
       // Add a new notification to that tab, with no "Learn more" link
       notifyBox = browser.getNotificationBox();
-      notification = notifyBox.appendNotification(telemetryPrompt, "telemetry", null, notifyBox.PRIORITY_INFO_LOW, buttons);
-      notification.persistence = -1; // Until user closes it
+      appendTelemetryNotification(notifyBox, telemetryPrompt, buttons, true);
     }, false);
     let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
     description.appendChild(link);
