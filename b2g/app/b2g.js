@@ -389,6 +389,7 @@ pref("layers.acceleration.force-enabled", true);
 // screen.enabled and screen.brightness properties.
 pref("dom.screenEnabledProperty.enabled", true);
 pref("dom.screenBrightnessProperty.enabled", true);
+pref("dom.mozScreenWhitelist", "http://localhost:7777");
 
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window
