@@ -40,8 +40,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
-#include "nsDOMMemoryReporter.h"
-
 
 class nsXMLCDATASection : public nsGenericDOMDataNode,
                           public nsIDOMCDATASection

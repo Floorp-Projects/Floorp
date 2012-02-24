@@ -51,7 +51,6 @@
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsHTMLDNSPrefetch.h"
-#include "nsDOMMemoryReporter.h"
 
 using namespace mozilla::dom;
 

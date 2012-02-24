@@ -42,7 +42,6 @@
 
 #include "nsIContent.h"
 #include "nsEventStates.h"
-#include "nsDOMMemoryReporter.h"
 
 class nsEventStateManager;
 class nsGlobalWindow;

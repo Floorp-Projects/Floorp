@@ -68,7 +68,6 @@
 #include "nsEventStates.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIBFCacheEntry.h"
-#include "nsDOMMemoryReporter.h"
 
 class nsIContent;
 class nsPresContext;
