@@ -68,6 +68,7 @@
 #include "bspatch.h"
 #include "progressui.h"
 #include "archivereader.h"
+#include "readstrings.h"
 #include "errors.h"
 #include "bzlib.h"
 
@@ -189,6 +190,15 @@ public:
 
 private:
   FILE* mFile;
+};
+
+struct MARChannelStringTable {
+  MARChannelStringTable() 
+  {
+    MARChannelID[0] = '\0';
+  }
+
+  char MARChannelID[MAX_TEXT_LEN];
 };
 
 //-----------------------------------------------------------------------------
@@ -1530,6 +1540,29 @@ WaitForServiceFinishThread(void *param)
 }
 #endif
 
+/**
+ * This function reads in the MAR_CHANNEL_ID from update-settings.ini
+ *
+ * @param path    The path to the ini file that is to be read
+ * @param results A pointer to the location to store the read strings
+ * @return OK on success
+ */
+static int
+ReadMARChannelIDs(const NS_tchar *path, MARChannelStringTable *results)
+{
+  const unsigned int kNumStrings = 1;
+  const char *kUpdaterKeys = "MAR_CHANNEL_ID\0";
+  char updater_strings[kNumStrings][MAX_TEXT_LEN];
+
+  int result = ReadStrings(path, kUpdaterKeys, kNumStrings,
+                           updater_strings, "Settings");
+
+  strncpy(results->MARChannelID, updater_strings[0], MAX_TEXT_LEN - 1);
+  results->MARChannelID[MAX_TEXT_LEN - 1] = 0;
+
+  return result;
+}
+
 static void
 UpdateThreadFunc(void *param)
 {
@@ -1547,6 +1580,22 @@ UpdateThreadFunc(void *param)
     rv = gArchiveReader.VerifySignature();
   }
   #endif
+
+  if (rv == OK) {
+    NS_tchar updateSettingsPath[MAX_TEXT_LEN];
+    NS_tsnprintf(updateSettingsPath, 
+                 sizeof(updateSettingsPath) / sizeof(updateSettingsPath[0]),
+                 NS_T("%supdate-settings.ini"), gDestPath);
+    MARChannelStringTable MARStrings;
+    if (ReadMARChannelIDs(updateSettingsPath, &MARStrings) != OK) {
+      // If we can't read from update-settings.ini then we shouldn't impose
+      // a MAR restriction.  Some installatins won't even include this file.
+      MARStrings.MARChannelID[0] = '\0';
+    }
+
+    rv = gArchiveReader.VerifyProductInformation(MARStrings.MARChannelID,
+                                                 MOZ_APP_VERSION);
+  }
 
   if (rv == OK) {
     rv = DoUpdate();
