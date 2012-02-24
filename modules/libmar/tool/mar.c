@@ -65,7 +65,8 @@ static void print_usage() {
 #ifndef NO_SIGN_VERIFY
   printf("  mar [-C workingDir] -d NSSConfigDir -n certname -s "
          "archive.mar out_signed_archive.mar\n");
-
+  printf("  mar [-C workingDir] -r "
+         "signed_input_archive.mar output_archive.mar\n");
 #if defined(XP_WIN) && !defined(MAR_NSS)
   printf("  mar [-C workingDir] -D DERFilePath -v signed_archive.mar\n");
 #else 
@@ -120,7 +121,8 @@ int main(int argc, char **argv) {
     if (argv[1][0] == '-' && (argv[1][1] == 'c' || 
         argv[1][1] == 't' || argv[1][1] == 'x' || 
         argv[1][1] == 'v' || argv[1][1] == 's' ||
-        argv[1][1] == 'i' || argv[1][1] == 'T')) {
+        argv[1][1] == 'i' || argv[1][1] == 'T' ||
+        argv[1][1] == 'r')) {
       break;
     /* -C workingdirectory */
     } else if (argv[1][0] == '-' && argv[1][1] == 'C') {
@@ -289,6 +291,9 @@ int main(int argc, char **argv) {
       return -1;
     }
     return mar_repackage_and_sign(NSSConfigDir, certName, argv[2], argv[3]);
+
+  case 'r':
+    return strip_signature_block(argv[2], argv[3]);
 #endif /* endif NO_SIGN_VERIFY disabled */
 
   default:
