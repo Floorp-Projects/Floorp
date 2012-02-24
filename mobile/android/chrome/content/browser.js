@@ -61,33 +61,6 @@ const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
-// TODO: Take into account ppi in these units?
-
-// The ratio of velocity that is retained every ms.
-const kPanDeceleration = 0.999;
-
-// The number of ms to consider events over for a swipe gesture.
-const kSwipeLength = 500;
-
-// The number of pixels to move before we consider a drag to be more than
-// just a click with jitter.
-const kDragThreshold = 10;
-
-// The number of pixels to move to break out of axis-lock
-const kLockBreakThreshold = 100;
-
-// Minimum speed to move during kinetic panning. 0.015 pixels/ms is roughly
-// equivalent to a pixel every 4 frames at 60fps.
-const kMinKineticSpeed = 0.015;
-
-// Maximum kinetic panning speed. 9 pixels/ms is equivalent to 150 pixels per
-// frame at 60fps.
-const kMaxKineticSpeed = 9;
-
-// The maximum magnitude of disparity allowed between axes acceleration. If
-// it's larger than this, lock the slow-moving axis.
-const kAxisLockRatio = 5;
-
 // The element tag names that are considered to receive input. Mouse-down
 // events directed to one of these are allowed to go through.
 const kElementsReceivingInput = {
