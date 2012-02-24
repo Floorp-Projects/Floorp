@@ -2456,10 +2456,6 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind)
 
 #ifdef DEBUG
 
-#ifdef HAVE_XPCONNECT
-#include "dump_xpc.h"
-#endif
-
 JS_PUBLIC_API(void)
 JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
                        JSGCTraceKind kind, JSBool details)
@@ -2473,20 +2469,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
     switch (kind) {
       case JSTRACE_OBJECT:
       {
-        JSObject *obj = (JSObject *)thing;
-        Class *clasp = obj->getClass();
-
-        name = clasp->name;
-#ifdef HAVE_XPCONNECT
-        if (clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
-            void *privateThing = obj->getPrivate();
-            if (privateThing) {
-                const char *xpcClassName = GetXPCObjectClassName(privateThing);
-                if (xpcClassName)
-                    name = xpcClassName;
-            }
-        }
-#endif
+        name = static_cast<JSObject *>(thing)->getClass()->name;
         break;
       }
 
@@ -2525,36 +2508,39 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
     js_memcpy(buf, name, n + 1);
     buf += n;
     bufsize -= n;
+    *buf = '\0';
 
     if (details && bufsize > 2) {
-        *buf++ = ' ';
-        bufsize--;
-
         switch (kind) {
           case JSTRACE_OBJECT:
           {
-            JSObject  *obj = (JSObject *)thing;
+            JSObject *obj = (JSObject *)thing;
             Class *clasp = obj->getClass();
             if (clasp == &FunctionClass) {
                 JSFunction *fun = obj->toFunction();
                 if (!fun) {
-                    JS_snprintf(buf, bufsize, "<newborn>");
+                    JS_snprintf(buf, bufsize, " <newborn>");
                 } else if (fun != obj) {
-                    JS_snprintf(buf, bufsize, "%p", fun);
+                    JS_snprintf(buf, bufsize, " %p", fun);
                 } else {
-                    if (fun->atom)
+                    if (fun->atom) {
+                        *buf++ = ' ';
+                        bufsize--;
                         PutEscapedString(buf, bufsize, fun->atom, 0);
+                    }
                 }
             } else if (clasp->flags & JSCLASS_HAS_PRIVATE) {
-                JS_snprintf(buf, bufsize, "%p", obj->getPrivate());
+                JS_snprintf(buf, bufsize, " %p", obj->getPrivate());
             } else {
-                JS_snprintf(buf, bufsize, "<no private>");
+                JS_snprintf(buf, bufsize, " <no private>");
             }
             break;
           }
 
           case JSTRACE_STRING:
           {
+            *buf++ = ' ';
+            bufsize--;
             JSString *str = (JSString *)thing;
             if (str->isLinear())
                 PutEscapedString(buf, bufsize, &str->asLinear(), 0);
@@ -2566,7 +2552,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
           case JSTRACE_SCRIPT:
           {
             JSScript *script = static_cast<JSScript *>(thing);
-            JS_snprintf(buf, bufsize, "%s:%u", script->filename, unsigned(script->lineno));
+            JS_snprintf(buf, bufsize, " %s:%u", script->filename, unsigned(script->lineno));
             break;
           }
 
@@ -2581,7 +2567,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
             extern const char *js_xml_class_str[];
             JSXML *xml = (JSXML *)thing;
 
-            JS_snprintf(buf, bufsize, "%s", js_xml_class_str[xml->xml_class]);
+            JS_snprintf(buf, bufsize, " %s", js_xml_class_str[xml->xml_class]);
             break;
           }
 #endif
