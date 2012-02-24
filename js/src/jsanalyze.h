@@ -1113,10 +1113,7 @@ class ScriptAnalysis
     {
         SSAUseChain *uses = useChain(SSAValue::PushedValue(pc - script->code, 0));
         JS_ASSERT(uses && uses->popped);
-        JS_ASSERT_IF(uses->next,
-                     !uses->next->next &&
-                     uses->next->popped &&
-                     script->code[uses->next->offset] == JSOP_SWAP);
+        JS_ASSERT(js_CodeSpec[script->code[uses->offset]].format & JOF_INVOKE);
         return script->code + uses->offset;
     }
 
