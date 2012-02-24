@@ -35,50 +35,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_UNICODEPROPERTIES_H
-#define GFX_UNICODEPROPERTIES_H
+#ifndef NS_UNICODEPROPERTIES_H
+#define NS_UNICODEPROPERTIES_H
 
 #include "prtypes.h"
-#include "gfxTypes.h"
-#include "gfxUnicodeScriptCodes.h"
+#include "nsIUGenCategory.h"
 
-class THEBES_API gfxUnicodeProperties
-{
-public:
-    static PRUint32 GetMirroredChar(PRUint32 aCh);
+namespace mozilla {
 
-    static PRUint8 GetCombiningClass(PRUint32 aCh);
+namespace unicode {
 
-    static PRUint8 GetGeneralCategory(PRUint32 aCh);
+extern nsIUGenCategory::nsUGenCategory sDetailedToGeneralCategory[];
 
-    static PRUint8 GetEastAsianWidth(PRUint32 aCh);
+PRUint32 GetMirroredChar(PRUint32 aCh);
 
-    static PRInt32 GetScriptCode(PRUint32 aCh);
+PRUint8 GetCombiningClass(PRUint32 aCh);
 
-    static PRUint32 GetScriptTagForCode(PRInt32 aScriptCode);
+// returns the detailed General Category in terms of HB_UNICODE_* values
+PRUint8 GetGeneralCategory(PRUint32 aCh);
 
-    enum HSType {
-        HST_NONE = 0x00,
-        HST_L    = 0x01,
-        HST_V    = 0x02,
-        HST_T    = 0x04,
-        HST_LV   = 0x03,
-        HST_LVT  = 0x07
-    };
+// returns the simplified Gen Category as defined in nsIUGenCategory
+inline nsIUGenCategory::nsUGenCategory GetGenCategory(PRUint32 aCh) {
+  return sDetailedToGeneralCategory[GetGeneralCategory(aCh)];
+}
 
-    static HSType GetHangulSyllableType(PRUint32 aCh);
+PRUint8 GetEastAsianWidth(PRUint32 aCh);
 
-    enum ShapingType {
-        SHAPING_DEFAULT   = 0x0001,
-        SHAPING_ARABIC    = 0x0002,
-        SHAPING_HEBREW    = 0x0004,
-        SHAPING_HANGUL    = 0x0008,
-        SHAPING_MONGOLIAN = 0x0010,
-        SHAPING_INDIC     = 0x0020,
-        SHAPING_THAI      = 0x0040
-    };
+PRInt32 GetScriptCode(PRUint32 aCh);
 
-    static PRInt32 ScriptShapingType(PRInt32 aScriptCode);
+PRUint32 GetScriptTagForCode(PRInt32 aScriptCode);
+
+enum HSType {
+    HST_NONE = 0x00,
+    HST_L    = 0x01,
+    HST_V    = 0x02,
+    HST_T    = 0x04,
+    HST_LV   = 0x03,
+    HST_LVT  = 0x07
 };
 
-#endif /* GFX_UNICODEPROPERTIES_H */
+HSType GetHangulSyllableType(PRUint32 aCh);
+
+enum ShapingType {
+    SHAPING_DEFAULT   = 0x0001,
+    SHAPING_ARABIC    = 0x0002,
+    SHAPING_HEBREW    = 0x0004,
+    SHAPING_HANGUL    = 0x0008,
+    SHAPING_MONGOLIAN = 0x0010,
+    SHAPING_INDIC     = 0x0020,
+    SHAPING_THAI      = 0x0040
+};
+
+PRInt32 ScriptShapingType(PRInt32 aScriptCode);
+
+} // end namespace unicode
+
+} // end namespace mozilla
+
+#endif /* NS_UNICODEPROPERTIES_H */
