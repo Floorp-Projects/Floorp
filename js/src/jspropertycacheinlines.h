@@ -46,8 +46,6 @@
 #include "jspropertycache.h"
 #include "jsscope.h"
 
-using namespace js;
-
 /*
  * This method is designed to inline the fast path in js_Interpret, so it makes
  * "just-so" restrictions on parameters, e.g. pobj and obj should not be the
@@ -64,8 +62,8 @@ using namespace js;
  * caches (on all threads) by re-generating JSObject::shape().
  */
 JS_ALWAYS_INLINE void
-PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
-                    JSObject *&pobj, PropertyCacheEntry *&entry, PropertyName *&name)
+js::PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
+                        JSObject *&pobj, PropertyCacheEntry *&entry, PropertyName *&name)
 {
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
 
@@ -95,8 +93,8 @@ PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
 }
 
 JS_ALWAYS_INLINE bool
-PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
-                          PropertyCacheEntry **entryp, JSObject **obj2p, PropertyName **namep)
+js::PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
+                              PropertyCacheEntry **entryp, JSObject **obj2p, PropertyName **namep)
 {
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
 
