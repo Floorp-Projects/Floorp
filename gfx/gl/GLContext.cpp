@@ -2510,9 +2510,9 @@ GLContext::DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
 {
     // normalize this
     nsIntRect tcr(aTexCoordRect);
-    while (tcr.x > aTexSize.width)
+    while (tcr.x >= aTexSize.width)
         tcr.x -= aTexSize.width;
-    while (tcr.y > aTexSize.height)
+    while (tcr.y >= aTexSize.height)
         tcr.y -= aTexSize.height;
 
     // Compute top left and bottom right tex coordinates
