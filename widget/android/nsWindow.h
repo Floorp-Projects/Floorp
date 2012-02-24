@@ -173,7 +173,6 @@ public:
                                    LayersBackend aBackendHint = LayerManager::LAYERS_NONE, 
                                    LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT, 
                                    bool* aAllowRetaining = nsnull);
-    gfxASurface* GetThebesSurface();
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
