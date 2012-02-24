@@ -154,7 +154,7 @@ public class AboutHomeContent extends ScrollView {
                     }
                 });
             }
-        }, GeckoAppShell.getHandler(), true);
+        }, GeckoAppShell.getHandler(), false);
 
         mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
         mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
