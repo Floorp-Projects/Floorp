@@ -43,7 +43,6 @@
 
 #include "nsNavHistory.h"
 #include "nsAnnotationService.h"
-#include "nsILivemarkService.h"
 #include "nsPlacesMacros.h"
 #include "Helpers.h"
 
