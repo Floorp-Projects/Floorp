@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
+  do_test_pending();
+  
   const TEST_URI = NetUtil.newURI("http://moz.org/")
   let observer = {
     QueryInterface: XPCOMUtils.generateQI([
@@ -26,7 +28,19 @@ function run_test() {
   PlacesUtils.addLazyBookmarkObserver(observer);
   PlacesUtils.removeLazyBookmarkObserver(observer);
 
+  // Add a proper lazy observer we will test.
   PlacesUtils.addLazyBookmarkObserver(observer);
+
+  // Check that we don't leak when adding and removing an observer while the
+  // bookmarks service is instantiated but no change happened (bug 721319).
+  PlacesUtils.bookmarks;
+  PlacesUtils.addLazyBookmarkObserver(observer);
+  PlacesUtils.removeLazyBookmarkObserver(observer);
+  try {
+    PlacesUtils.bookmarks.removeObserver(observer);
+    do_throw("Trying to remove a nonexisting observer should throw!");
+  } catch (ex) {}
+
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        TEST_URI,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,

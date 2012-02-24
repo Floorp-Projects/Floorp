@@ -131,7 +131,6 @@ class nsIInterfaceRequestor;
 template<class E> class nsCOMArray;
 template<class K, class V> class nsRefPtrHashtable;
 struct JSRuntime;
-class nsIUGenCategory;
 class nsIWidget;
 class nsIDragSession;
 class nsIPresShell;
@@ -623,11 +622,6 @@ public:
   static nsIWordBreaker* WordBreaker()
   {
     return sWordBreaker;
-  }
-
-  static nsIUGenCategory* GetGenCat()
-  {
-    return sGenCat;
   }
 
   /**
@@ -2017,7 +2011,6 @@ private:
 
   static nsILineBreaker* sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
-  static nsIUGenCategory* sGenCat;
 
   static nsIScriptRuntime* sScriptRuntimes[NS_STID_ARRAY_UBOUND];
   static PRInt32 sScriptRootCount[NS_STID_ARRAY_UBOUND];

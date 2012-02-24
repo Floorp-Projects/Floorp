@@ -75,8 +75,6 @@ EXPORTS	= \
 	gfxSkipChars.h \
 	gfxTeeSurface.h \
 	gfxTypes.h \
-	gfxUnicodeProperties.h \
-	gfxUnicodeScriptCodes.h \
 	gfxUtils.h \
 	gfxUserFontSet.h \
 	nsCoreAnimationSupport.h \
@@ -204,7 +202,6 @@ CPPSRCS	= \
 	gfxTeeSurface.cpp \
 	gfxUserFontSet.cpp \
 	gfxUtils.cpp \
-	gfxUnicodeProperties.cpp \
 	gfxScriptItemizer.cpp \
 	gfxHarfBuzzShaper.cpp \
 	gfxSharedImageSurface.cpp \
