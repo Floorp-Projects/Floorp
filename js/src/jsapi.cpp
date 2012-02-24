@@ -825,6 +825,10 @@ JSRuntime::init(uint32_t maxbytes)
     if (!gcMarker.init())
         return false;
 
+    const char *size = getenv("JSGC_MARK_STACK_LIMIT");
+    if (size)
+        SetMarkStackLimit(this, atoi(size));
+
     if (!(atomsCompartment = this->new_<JSCompartment>(this)) ||
         !atomsCompartment->init(NULL) ||
         !compartments.append(atomsCompartment)) {
@@ -2907,6 +2911,9 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
       case JSGC_SLICE_TIME_BUDGET:
         rt->gcSliceBudget = SliceBudget::TimeBudget(value);
         break;
+      case JSGC_MARK_STACK_LIMIT:
+        js::SetMarkStackLimit(rt, value);
+        break;
       default:
         JS_ASSERT(key == JSGC_MODE);
         rt->gcMode = JSGCMode(value);
@@ -2935,6 +2942,8 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return uint32_t(rt->gcChunkSet.count() + rt->gcChunkPool.getEmptyCount());
       case JSGC_SLICE_TIME_BUDGET:
         return uint32_t(rt->gcSliceBudget > 0 ? rt->gcSliceBudget / PRMJ_USEC_PER_MSEC : 0);
+      case JSGC_MARK_STACK_LIMIT:
+        return rt->gcMarker.sizeLimit();
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return uint32_t(rt->gcNumber);
