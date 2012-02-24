@@ -153,7 +153,7 @@ NS_IMETHODIMP nsXPathNamespace::HasChildNodes(bool *aResult)
 }
 
 /* nsIDOMNode cloneNode (in boolean deep); */
-NS_IMETHODIMP nsXPathNamespace::CloneNode(bool deep, nsIDOMNode **aResult)
+NS_IMETHODIMP nsXPathNamespace::CloneNode(bool deep, PRUint8 aOptionalArgc, nsIDOMNode **aResult)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

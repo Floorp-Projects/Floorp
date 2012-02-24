@@ -1,4 +1,5 @@
 oes-standard-derivatives.html
+ext-texture-filter-anisotropic.html
 oes-texture-float.html
 oes-vertex-array-object.html
 webgl-debug-renderer-info.html

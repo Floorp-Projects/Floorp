@@ -52,6 +52,7 @@ SDK_BINARY = \
   $(DEPTH)/xpcom/idl-parser/xpidlyacc.py \
   $(NULL)
 
+ifndef MOZ_SYSTEM_PLY
 $(SDK_BIN_DIR)/ply::
 	$(NSINSTALL) -D $@
 
@@ -63,6 +64,7 @@ PLY_SRCS = \
 
 export:: $(PLY_SRCS) $(SDK_BIN_DIR)/ply
 	$(INSTALL) $(IFLAGS2) $^
+endif
 
 include $(topsrcdir)/config/rules.mk
 

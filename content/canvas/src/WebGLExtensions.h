@@ -41,9 +41,6 @@
 
 namespace mozilla {
 
-class WebGLExtensionLoseContext;
-class WebGLExtensionStandardDerivatives;
-
 class WebGLExtensionLoseContext :
     public nsIWebGLExtensionLoseContext,
     public WebGLExtension
@@ -63,6 +60,18 @@ class WebGLExtensionStandardDerivatives :
 public:
     WebGLExtensionStandardDerivatives(WebGLContext* context);
     virtual ~WebGLExtensionStandardDerivatives();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBGLEXTENSION
+};
+
+class WebGLExtensionTextureFilterAnisotropic :
+    public nsIWebGLExtensionTextureFilterAnisotropic,
+    public WebGLExtension
+{
+public:
+    WebGLExtensionTextureFilterAnisotropic(WebGLContext* context);
+    virtual ~WebGLExtensionTextureFilterAnisotropic();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLEXTENSION

@@ -3,15 +3,15 @@ script regress-312385-01.js
 script regress-352392.js
 script regress-385393-08.js
 script regress-414098.js
-fails-if(!xulRuntime.shell) script regress-455464-01.js # bug - NS_ERROR_DOM_NOT_SUPPORTED_ERR line 1
-fails-if(!xulRuntime.shell) script regress-455464-02.js # bug - NS_ERROR_DOM_NOT_SUPPORTED_ERR line 49
-fails-if(!xulRuntime.shell) script regress-455464-03.js # bug - NS_ERROR_DOM_NOT_SUPPORTED_ERR line 1
-fails-if(!xulRuntime.shell&&!isDebugBuild) skip-if((!xulRuntime.shell&&isDebugBuild)||Android) script regress-455464-04.js # bug xxx - hangs reftests in debug, ### bug xxx - NS_ERROR_DOM_NOT_SUPPORTED_ERR in opt
+skip-if(Android) script regress-455464-01.js # bug - nsIDOMWindow.crypto throws NS_ERROR_NOT_IMPLEMENTED on Android
+skip-if(Android) script regress-455464-02.js # bug - nsIDOMWindow.crypto throws NS_ERROR_NOT_IMPLEMENTED on Android
+skip-if(Android) script regress-455464-03.js # bug - nsIDOMWindow.crypto throws NS_ERROR_NOT_IMPLEMENTED on Android
+skip-if(Android) script regress-455464-04.js # bug - nsIDOMWindow.crypto throws NS_ERROR_NOT_IMPLEMENTED on Android
 skip-if(!xulRuntime.shell||Android) slow script regress-456826.js # bug 504632
 script regress-457521.js
 script regress-465443.js
 script regress-470310.js
 script regress-472508.js
-fails-if(!xulRuntime.shell) script regress-475144.js # NS_ERROR_DOM_NOT_SUPPORTED_ERR
+skip-if(Android) script regress-475144.js # bug - nsIDOMWindow.crypto throws NS_ERROR_NOT_IMPLEMENTED on Android
 script regress-479567.js
 script regress-565521.js
