@@ -63,8 +63,8 @@ namespace mozilla {
 namespace gl {
 
 #ifdef DEBUG
-Monitor GLContext::sCurrentGLContextMonitor("sCurrentGLContext_monitor");
-PRUintn GLContext::sCurrentGLContextTLS = -1;
+// see comment near declaration in GLContext.h. Should be thread-local.
+GLContext* GLContext::sCurrentGLContext = nsnull;
 #endif
 
 PRUint32 GLContext::sDebugMode = 0;
