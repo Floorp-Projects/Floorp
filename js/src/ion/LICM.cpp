@@ -350,8 +350,7 @@ Loop::hoistInstructions(InstructionQueue &toHoist, InstructionQueue &boundsCheck
         JS_ASSERT(ins->isMovable());
 
         if (checkHotness(ins->block())) {
-            ins->block()->remove(ins);
-            preLoop_->insertBefore(preLoop_->lastIns(), ins);
+            ins->block()->moveBefore(preLoop_->lastIns(), ins);
             ins->setNotLoopInvariant();
         }
     }
