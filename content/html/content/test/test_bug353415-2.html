@@ -5,7 +5,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
-<iframe name="submit_frame" onLoad="doCheck();"></iframe>
+<iframe name="submit_frame"></iframe>
 <form method="get" id="form1" target="submit_frame" action="../../../../../blah">
 <table>
 <tr><td>
@@ -52,13 +52,14 @@
 </table>
 </form>
 <script>
-	document.forms[0].submit();
+  SimpleTest.waitForExplicitFinish();
 
-	SimpleTest.waitForExplicitFinish();
-        function doCheck(){
-		is(frames['submit_frame'].location.href, "http://mochi.test:8888/blah?field1-2=teststring&field2-2=0&field4-2=1&field6-2=3&field7-2=2&field8-2=8&field9-2=9&field12-2=&field1=teststring&field2=0&field4=1&field6=3&field7=2&field8=8&field9=9&field12=&field14=14&field14-2=14", "Submit string was correct.");
-                SimpleTest.finish();
-	}
+  frames['submit_frame'].onload = function() {
+    is(frames['submit_frame'].location.href, "http://mochi.test:8888/blah?field1-2=teststring&field2-2=0&field4-2=1&field6-2=3&field7-2=2&field8-2=8&field9-2=9&field12-2=&field1=teststring&field2=0&field4=1&field6=3&field7=2&field8=8&field9=9&field12=&field14=14&field14-2=14", "Submit string was correct.");
+    SimpleTest.finish();
+  }
+
+  document.forms[0].submit();
 </script>
 </body>
 </html>
