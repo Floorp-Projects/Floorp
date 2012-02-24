@@ -54,6 +54,10 @@ endif
 HOST_PROGRAM = mar$(HOST_BIN_SUFFIX)
 PROGRAM = signmar$(BIN_SUFFIX)
 
+# Don't link the against libmozglue because we don't need it.
+MOZ_GLUE_LDFLAGS =
+MOZ_GLUE_PROGRAM_LDFLAGS =
+
 DEFINES += \
   -DMAR_CHANNEL_ID='"$(MAR_CHANNEL_ID)"' \
   -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"' \

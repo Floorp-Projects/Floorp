@@ -43,7 +43,9 @@
 #include "archivereader.h"
 #include "errors.h"
 #include "nsAlgorithm.h"
+#ifdef XP_WIN
 #include "updatehelper.h"
+#endif
 
 #define UPDATER_NO_STRING_GLUE_STL
 #include "../../../../xpcom/build/nsVersionComparator.cpp"
