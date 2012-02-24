@@ -100,7 +100,9 @@
       <img class="favicon"/>
       <div class="inner">
         <div class="details">
-          <div class="title"></div><div class="version"></div><div class="tag"></div>
+          <div class="tag"></div>
+          <div class="title"></div>
+          <div class="version"></div>
         </div>
         <div class="description-full"></div>
       </div>
@@ -144,6 +146,7 @@
 
       AddonManager.addInstallListener(Addons);
       Addons.getAddons();
+      showList();
     }
 
     function uninit() {
@@ -170,12 +173,16 @@
         let detailItem = document.querySelector("#addons-details > .addon-item");
         detailItem.addon = null;
 
-        // Hide the detail page and show the list
-        let details = document.querySelector("#addons-details");
-        details.style.display = "none";
-        let list = document.querySelector("#addons-list");
-        list.style.display = "block";
+        showList();
       }
+    }
+
+    function showList() {
+      // Hide the detail page and show the list
+      let details = document.querySelector("#addons-details");
+      details.style.display = "none";
+      let list = document.querySelector("#addons-list");
+      list.style.display = "block";
     }
 
     var Addons = {
@@ -201,6 +208,11 @@
         details.className = "details";
         inner.appendChild(details);
 
+        let tagPart = document.createElement("div");
+        tagPart.textContent = gStringBundle.GetStringFromName("addonType." + aAddon.type);
+        tagPart.className = "tag";
+        details.appendChild(tagPart);
+
         let titlePart = document.createElement("div");
         titlePart.textContent = aAddon.name;
         titlePart.className = "title";
@@ -210,11 +222,6 @@
         versionPart.textContent = aAddon.version;
         versionPart.className = "version";
         details.appendChild(versionPart);
-
-        let tagPart = document.createElement("div");
-        tagPart.textContent = gStringBundle.GetStringFromName("addonType." + aAddon.type);
-        tagPart.className = "tag";
-        details.appendChild(tagPart);
 
         if ("description" in aAddon) {
           let descPart = document.createElement("div");
@@ -276,9 +283,6 @@
             list.appendChild(item);
           }
 
-          list.style.display = "block";
-          document.getElementById("addons-header").setAttribute("showlist", "true");
-
           // Load the search engines
           let defaults = Services.search.getDefaultEngines({ }).map(function (e) e.name);
           function isDefault(aEngine)
@@ -325,10 +329,14 @@
         detailItem.setAttribute("isDisabled", aListItem.getAttribute("isDisabled"));
         detailItem.setAttribute("opType", aListItem.getAttribute("opType"));
         detailItem.setAttribute("optionsURL", aListItem.getAttribute("optionsURL"));
-        detailItem.addon = aListItem.addon;
+        let addon = detailItem.addon = aListItem.addon;
 
-        let addon = detailItem.addon;
-        document.querySelector("#addons-details > .addon-item .favicon").setAttribute("src", addon.iconURL);
+        let favicon = document.querySelector("#addons-details > .addon-item .favicon");
+        if (addon.iconURL)
+          favicon.setAttribute("src", addon.iconURL);
+        else
+          favicon.removeAttribute("src");
+
         document.querySelector("#addons-details > .addon-item .title").textContent = addon.name;
         document.querySelector("#addons-details > .addon-item .version").textContent = addon.version;
         document.querySelector("#addons-details > .addon-item .tag").textContent = gStringBundle.GetStringFromName("addonType." + addon.type);

@@ -224,7 +224,6 @@ FirefoxProfileMigrator.prototype = {
   migrate : function Firefox_migrate(aItems, aStartup, aProfile)
   {
     if (aStartup) {
-      aStartup.doStartup();
       this._replaceBookmarks = true;
     }
 
@@ -245,6 +244,11 @@ FirefoxProfileMigrator.prototype = {
 
     if (aItems & MIGRATOR.PASSWORDS)
       this._migratePasswords();
+
+    // The password manager encryption key must be copied before startup.
+    if (aStartup) {
+      aStartup.doStartup();
+    }
 
     if (aItems & MIGRATOR.FORMDATA)
       this._migrateFormData();

@@ -3275,8 +3275,9 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   if (!sCleanupSinceLastGC && aExtraForgetSkippableCalls >= 0) {
     nsCycleCollector_forgetSkippable();
   }
-  PRUint32 collected = nsCycleCollector_collect(aListener);
-  sCCollectedWaitingForGC += collected;
+  nsCycleCollectorResults ccResults;
+  nsCycleCollector_collect(&ccResults, aListener);
+  sCCollectedWaitingForGC += ccResults.mFreedRefCounted + ccResults.mFreedGCed;
 
   // If we collected a substantial amount of cycles, poke the GC since more objects
   // might be unreachable now.
@@ -3303,16 +3304,23 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       sFirstCollectionTime = now;
     }
 
+    nsString gcmsg;
+    if (ccResults.mForcedGC) {
+      gcmsg.AssignLiteral(", forced a GC");
+    }
+
     NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
-      NS_LL("CC(T+%.1f) collected: %lu (%lu waiting for GC), suspected: %lu, duration: %llu ms.\n")
+      NS_LL("CC(T+%.1f) duration: %llums, suspected: %lu, visited: %lu RCed and %lu GCed, collected: %lu RCed and %lu GCed (%lu waiting for GC)%s\n")
       NS_LL("ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, removed: %lu"));
     nsString msg;
     PRUint32 cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
     sMinForgetSkippableTime = (sMinForgetSkippableTime == PR_UINT32_MAX)
       ? 0 : sMinForgetSkippableTime;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
-                                        collected, sCCollectedWaitingForGC, suspected,
-                                        (now - start) / PR_USEC_PER_MSEC,
+                                        (now - start) / PR_USEC_PER_MSEC, suspected,
+                                        ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
+                                        ccResults.mFreedRefCounted, ccResults.mFreedGCed,
+                                        sCCollectedWaitingForGC, gcmsg.get(),
                                         sForgetSkippableBeforeCC,
                                         sMinForgetSkippableTime / PR_USEC_PER_MSEC,
                                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
