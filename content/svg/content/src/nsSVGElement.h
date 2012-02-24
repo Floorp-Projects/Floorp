@@ -49,7 +49,6 @@
 #include "nsChangeHint.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMMemoryReporter.h"
 #include "nsError.h"
 #include "nsGenericElement.h"
 #include "nsISupportsImpl.h"

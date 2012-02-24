@@ -14,7 +14,6 @@
 #include "nsWeakPtr.h"
 #include "nsVariant.h"
 #include "nsContentUtils.h"
-#include "nsDOMMemoryReporter.h"
 #include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
 #include "nsAsyncDOMEvent.h"

@@ -48,7 +48,6 @@
 
 #include "nsString.h"
 #include "nsGenericElement.h"
-#include "nsDOMMemoryReporter.h"
 
 namespace mozilla {
 namespace css {

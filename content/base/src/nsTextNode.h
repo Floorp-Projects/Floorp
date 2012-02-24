@@ -45,7 +45,6 @@
 #include "nsIAttribute.h"
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
-#include "nsDOMMemoryReporter.h"
 
 /**
  * Class used to implement DOM text nodes

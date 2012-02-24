@@ -123,7 +123,7 @@
 
 #include "nsHyphenationManager.h"
 #include "nsEditorSpellCheck.h"
-#include "nsDOMMemoryReporter.h"
+#include "nsWindowMemoryReporter.h"
 
 extern void NS_ShutdownChainItemPool();
 
@@ -268,7 +268,7 @@ nsLayoutStatics::Initialize()
 
   NS_SealStaticAtomTable();
 
-  nsDOMMemoryMultiReporter::Init();
+  nsWindowMemoryReporter::Init();
 
   return NS_OK;
 }
@@ -276,8 +276,8 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
-  // Don't need to shutdown nsDOMMemoryReporter, that will be done by the memory
-  // reporter manager.
+  // Don't need to shutdown nsWindowMemoryReporter, that will be done by the
+  // memory reporter manager.
 
   nsFrameScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
