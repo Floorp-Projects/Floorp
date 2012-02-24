@@ -827,7 +827,7 @@ class Worker MOZ_FINAL : public WorkerParent
         AutoLock hold(lock);
         terminateFlag = true;
         if (current)
-            JS_TriggerOperationCallback(context);
+            JS_TriggerOperationCallback(runtime);
     }
 
     void notifyTerminating() {

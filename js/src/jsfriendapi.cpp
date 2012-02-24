@@ -609,29 +609,6 @@ js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
 
 namespace js {
 
-/* static */ void
-AutoLockGC::LockGC(JSRuntime *rt)
-{
-    JS_ASSERT(rt);
-    JS_LOCK_GC(rt);
-}
-
-/* static */ void
-AutoLockGC::UnlockGC(JSRuntime *rt)
-{
-    JS_ASSERT(rt);
-    JS_UNLOCK_GC(rt);
-}
-
-void
-AutoLockGC::lock(JSRuntime *rt)
-{
-    JS_ASSERT(rt);
-    JS_ASSERT(!runtime);
-    runtime = rt;
-    JS_LOCK_GC(rt);
-}
-
 JS_FRIEND_API(const JSStructuredCloneCallbacks *)
 GetContextStructuredCloneCallbacks(JSContext *cx)
 {
@@ -672,12 +649,6 @@ JS_FRIEND_API(unsigned)
 GetContextOutstandingRequests(const JSContext *cx)
 {
     return cx->outstandingRequests;
-}
-
-JS_FRIEND_API(PRLock *)
-GetRuntimeGCLock(const JSRuntime *rt)
-{
-    return rt->gcLock;
 }
 
 AutoSkipConservativeScan::AutoSkipConservativeScan(JSContext *cx
@@ -724,12 +695,6 @@ JS_FRIEND_API(bool)
 IsContextRunningJS(JSContext *cx)
 {
     return !cx->stack.empty();
-}
-
-JS_FRIEND_API(void)
-TriggerOperationCallback(JSRuntime *rt)
-{
-    rt->triggerOperationCallback();
 }
 
 JS_FRIEND_API(const CompartmentVector&)

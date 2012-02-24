@@ -837,11 +837,14 @@ private:
     XPCRootSetElem *mWrappedJSRoots;
     XPCRootSetElem *mObjectHolderRoots;
     JSDHashTable mJSHolders;
+    PRLock *mWatchdogLock;
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;
     nsTArray<JSGCCallback> extraGCCallbacks;
     bool mWatchdogHibernating;
     PRTime mLastActiveTime; // -1 if active NOW
+
+    friend class AutoLockWatchdog;
 };
 
 /***************************************************************************/

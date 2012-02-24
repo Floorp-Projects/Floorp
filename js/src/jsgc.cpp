@@ -1308,15 +1308,6 @@ js_AddGCThingRoot(JSContext *cx, void **rp, const char *name)
 JS_FRIEND_API(JSBool)
 js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name)
 {
-    /*
-     * Due to the long-standing, but now removed, use of rt->gcLock across the
-     * bulk of js::GC, API users have come to depend on JS_AddRoot etc. locking
-     * properly with a racing GC, without calling JS_AddRoot from a request.
-     * We have to preserve API compatibility here, now that we avoid holding
-     * rt->gcLock across the mark phase (including the root hashtable mark).
-     */
-    AutoLockGC lock(rt);
-
     return !!rt->gcRootsHash.put((void *)vp,
                                  RootInfo(name, JS_GC_ROOT_VALUE_PTR));
 }
@@ -1324,15 +1315,6 @@ js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name)
 JS_FRIEND_API(JSBool)
 js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
 {
-    /*
-     * Due to the long-standing, but now removed, use of rt->gcLock across the
-     * bulk of js::GC, API users have come to depend on JS_AddRoot etc. locking
-     * properly with a racing GC, without calling JS_AddRoot from a request.
-     * We have to preserve API compatibility here, now that we avoid holding
-     * rt->gcLock across the mark phase (including the root hashtable mark).
-     */
-    AutoLockGC lock(rt);
-
     return !!rt->gcRootsHash.put((void *)rp,
                                  RootInfo(name, JS_GC_ROOT_GCTHING_PTR));
 }
@@ -1340,11 +1322,6 @@ js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
 JS_FRIEND_API(JSBool)
 js_RemoveRoot(JSRuntime *rt, void *rp)
 {
-    /*
-     * Due to the JS_RemoveRootRT API, we may be called outside of a request.
-     * Same synchronization drill as above in js_AddRoot.
-     */
-    AutoLockGC lock(rt);
     rt->gcRootsHash.remove(rp);
     rt->gcPoke = JS_TRUE;
     return JS_TRUE;
@@ -1404,7 +1381,6 @@ js_DumpNamedRoots(JSRuntime *rt,
 uint32_t
 js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
 {
-    AutoLockGC lock(rt);
     int ct = 0;
     for (RootEnum e(rt->gcRootsHash); !e.empty(); e.popFront()) {
         RootEntry &entry = e.front();
@@ -1795,7 +1771,6 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
     if (!thing)
         return true;
 
-    AutoLockGC lock(rt);
     if (GCLocks::Ptr p = rt->gcLocksHash.lookupWithDefault(thing, 0)) {
         p->value++;
         return true;
@@ -1810,10 +1785,7 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
     if (!thing)
         return;
 
-    AutoLockGC lock(rt);
-    GCLocks::Ptr p = rt->gcLocksHash.lookup(thing);
-
-    if (p) {
+    if (GCLocks::Ptr p = rt->gcLocksHash.lookup(thing)) {
         rt->gcPoke = true;
         if (--p->value == 0)
             rt->gcLocksHash.remove(p);
@@ -2417,6 +2389,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
         }
     }
 }
+
 void
 TriggerGC(JSRuntime *rt, gcreason::Reason reason)
 {
@@ -2463,7 +2436,7 @@ TriggerCompartmentGC(JSCompartment *comp, gcreason::Reason reason)
     rt->gcIsNeeded = true;
     rt->gcTriggerCompartment = comp;
     rt->gcTriggerReason = reason;
-    comp->rt->triggerOperationCallback();
+    rt->triggerOperationCallback();
 }
 
 void
@@ -4516,7 +4489,6 @@ JS_FRIEND_API(void)
 StartPCCountProfiling(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
 
     if (rt->profilingScripts)
         return;
@@ -4533,7 +4505,6 @@ JS_FRIEND_API(void)
 StopPCCountProfiling(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
 
     if (!rt->profilingScripts)
         return;
@@ -4566,7 +4537,6 @@ JS_FRIEND_API(void)
 PurgePCCounts(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
 
     if (!rt->scriptPCCounters)
         return;
@@ -4585,6 +4555,10 @@ JS_IterateCompartments(JSRuntime *rt, void *data,
 
     AutoLockGC lock(rt);
     AutoHeapSession session(rt);
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
+#endif
+    AutoUnlockGC unlock(rt);
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
         (*compartmentCallback)(rt, data, c);
