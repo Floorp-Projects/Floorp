@@ -2681,7 +2681,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
                                  aFont->mLanguage);
 
   // -moz-system-font: enum (never inherit!)
-  PR_STATIC_ASSERT(
+  MOZ_STATIC_ASSERT(
     NS_STYLE_FONT_CAPTION        == LookAndFeel::eFont_Caption &&
     NS_STYLE_FONT_ICON           == LookAndFeel::eFont_Icon &&
     NS_STYLE_FONT_MENU           == LookAndFeel::eFont_Menu &&
@@ -2697,7 +2697,8 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     NS_STYLE_FONT_BUTTON         == LookAndFeel::eFont_Button &&
     NS_STYLE_FONT_PULL_DOWN_MENU == LookAndFeel::eFont_PullDownMenu &&
     NS_STYLE_FONT_LIST           == LookAndFeel::eFont_List &&
-    NS_STYLE_FONT_FIELD          == LookAndFeel::eFont_Field);
+    NS_STYLE_FONT_FIELD          == LookAndFeel::eFont_Field,
+    "LookAndFeel.h system-font constants out of sync with nsStyleConsts.h");
 
   // Fall back to defaultVariableFont.
   nsFont systemFont = *defaultVariableFont;
@@ -4920,10 +4921,11 @@ struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Size>
         size.*(axis->type) = nsStyleBackground::Size::eAuto;
       }
       else if (eCSSUnit_Enumerated == specified.GetUnit()) {
-        PR_STATIC_ASSERT(nsStyleBackground::Size::eContain ==
-                         NS_STYLE_BG_SIZE_CONTAIN);
-        PR_STATIC_ASSERT(nsStyleBackground::Size::eCover ==
-                         NS_STYLE_BG_SIZE_COVER);
+        MOZ_STATIC_ASSERT(nsStyleBackground::Size::eContain ==
+                          NS_STYLE_BG_SIZE_CONTAIN &&
+                          nsStyleBackground::Size::eCover ==
+                          NS_STYLE_BG_SIZE_COVER,
+                          "background size constants out of sync");
         NS_ABORT_IF_FALSE(specified.GetIntValue() == NS_STYLE_BG_SIZE_CONTAIN ||
                           specified.GetIntValue() == NS_STYLE_BG_SIZE_COVER,
                           "invalid enumerated value for size coordinate");

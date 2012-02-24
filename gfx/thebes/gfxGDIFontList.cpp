@@ -65,6 +65,7 @@
 #include "mozilla/Telemetry.h"
 
 #include <usp10.h>
+#include <t2embapi.h>
 
 using namespace mozilla;
 
@@ -102,50 +103,6 @@ BuildKeyNameFromFontName(nsAString &aName)
 // Implementation of gfxPlatformFontList for Win32 GDI,
 // using GDI font enumeration APIs to get the list of fonts
 
-// from t2embapi.h, included in Platform SDK 6.1 but not 6.0
-
-#ifndef __t2embapi__
-
-#define TTLOAD_PRIVATE                  0x00000001
-#define LICENSE_PREVIEWPRINT            0x0004
-#define E_NONE                          0x0000L
-
-typedef unsigned long( WINAPIV *READEMBEDPROC ) ( void*, void*, const unsigned long );
-
-typedef struct
-{
-    unsigned short usStructSize;    // size in bytes of structure client should set to sizeof(TTLOADINFO)
-    unsigned short usRefStrSize;    // size in wide characters of pusRefStr including NULL terminator
-    unsigned short *pusRefStr;      // reference or actual string.
-}TTLOADINFO;
-
-LONG WINAPI TTLoadEmbeddedFont
-(
-    HANDLE*  phFontReference,           // on completion, contains handle to identify embedded font installed
-                                        // on system
-    ULONG    ulFlags,                   // flags specifying the request 
-    ULONG*   pulPrivStatus,             // on completion, contains the embedding status
-    ULONG    ulPrivs,                   // allows for the reduction of licensing privileges
-    ULONG*   pulStatus,                 // on completion, may contain status flags for request 
-    READEMBEDPROC lpfnReadFromStream,   // callback function for doc/disk reads
-    LPVOID   lpvReadStream,             // the input stream tokin
-    LPWSTR   szWinFamilyName,           // the new 16 bit windows family name can be NULL
-    LPSTR    szMacFamilyName,           // the new 8 bit mac family name can be NULL
-    TTLOADINFO* pTTLoadInfo             // optional security
-);
-
-#endif // __t2embapi__
-
-typedef LONG( WINAPI *TTLoadEmbeddedFontProc ) (HANDLE* phFontReference, ULONG ulFlags, ULONG* pulPrivStatus, ULONG ulPrivs, ULONG* pulStatus, 
-                                             READEMBEDPROC lpfnReadFromStream, LPVOID lpvReadStream, LPWSTR szWinFamilyName, 
-                                             LPSTR szMacFamilyName, TTLOADINFO* pTTLoadInfo);
-
-typedef LONG( WINAPI *TTDeleteEmbeddedFontProc ) (HANDLE hFontReference, ULONG ulFlags, ULONG* pulStatus);
-
-
-static TTLoadEmbeddedFontProc TTLoadEmbeddedFontPtr = nsnull;
-static TTDeleteEmbeddedFontProc TTDeleteEmbeddedFontPtr = nsnull;
-
 class WinUserFontData : public gfxUserFontData {
 public:
     WinUserFontData(HANDLE aFontRef, bool aIsEmbedded)
@@ -157,7 +114,7 @@ public:
         if (mIsEmbedded) {
             ULONG pulStatus;
             LONG err;
-            err = TTDeleteEmbeddedFontPtr(mFontRef, 0, &pulStatus);
+            err = TTDeleteEmbeddedFont(mFontRef, 0, &pulStatus);
 #if DEBUG
             if (err != E_NONE) {
                 char buf[256];
@@ -606,8 +563,6 @@ GDIFontFamily::FindStyleVariations()
 gfxGDIFontList::gfxGDIFontList()
 {
     mFontSubstitutes.Init(50);
-
-    InitializeFontEmbeddingProcs();
 }
 
 static void
@@ -794,15 +749,6 @@ gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
     return fe;
 }
 
-void gfxGDIFontList::InitializeFontEmbeddingProcs()
-{
-    HMODULE fontlib = LoadLibraryW(L"t2embed.dll");
-    if (!fontlib)
-        return;
-    TTLoadEmbeddedFontPtr = (TTLoadEmbeddedFontProc) GetProcAddress(fontlib, "TTLoadEmbeddedFont");
-    TTDeleteEmbeddedFontPtr = (TTDeleteEmbeddedFontProc) GetProcAddress(fontlib, "TTDeleteEmbeddedFont");
-}
-
 // used to control stream read by Windows TTLoadEmbeddedFont API
 
 class EOTFontStreamReader {
@@ -906,10 +852,6 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
     };
     FontDataDeleter autoDelete(aFontData);
 
-    // if calls aren't available, bail
-    if (!TTLoadEmbeddedFontPtr || !TTDeleteEmbeddedFontPtr)
-        return nsnull;
-
     bool hasVertical;
     bool isCFF = gfxFontUtils::IsCffFont(aFontData, hasVertical);
 
@@ -948,11 +890,11 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
             EOTFontStreamReader eotReader(aFontData, aLength, buffer, eotlen,
                                           &overlayNameData);
 
-            ret = TTLoadEmbeddedFontPtr(&fontRef, TTLOAD_PRIVATE, &privStatus,
-                                       LICENSE_PREVIEWPRINT, &pulStatus,
-                                       EOTFontStreamReader::ReadEOTStream,
-                                       &eotReader,
-                                       (PRUnichar*)(fontName.get()), 0, 0);
+            ret = TTLoadEmbeddedFont(&fontRef, TTLOAD_PRIVATE, &privStatus,
+                                     LICENSE_PREVIEWPRINT, &pulStatus,
+                                     EOTFontStreamReader::ReadEOTStream,
+                                     &eotReader,
+                                     (PRUnichar*)(fontName.get()), 0, 0);
             if (ret != E_NONE) {
                 fontRef = nsnull;
                 char buf[256];

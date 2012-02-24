@@ -62,6 +62,20 @@ struct nsCycleCollectionLanguageRuntime
 #endif
 };
 
+// Contains various stats about the cycle collection.
+class nsCycleCollectorResults
+{
+public:
+    nsCycleCollectorResults() :
+        mForcedGC(false), mVisitedRefCounted(0), mVisitedGCed(0),
+        mFreedRefCounted(0), mFreedGCed(0) {}
+    bool mForcedGC;
+    PRUint32 mVisitedRefCounted;
+    PRUint32 mVisitedGCed;
+    PRUint32 mFreedRefCounted;
+    PRUint32 mFreedGCed;
+};
+
 nsresult nsCycleCollector_startup();
 
 typedef void (*CC_BeforeUnlinkCallback)(void);
@@ -76,8 +90,8 @@ void nsCycleCollector_forgetSkippable();
 void nsCycleCollector_logPurpleRemoval(void* aObject);
 #endif
 
-// Returns the number of collected nodes.
-PRUint32 nsCycleCollector_collect(nsICycleCollectorListener *aListener);
+void nsCycleCollector_collect(nsCycleCollectorResults *aResults,
+                              nsICycleCollectorListener *aListener);
 PRUint32 nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdownThreads();
 void nsCycleCollector_shutdown();

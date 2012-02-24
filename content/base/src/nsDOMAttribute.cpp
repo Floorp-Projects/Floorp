@@ -480,9 +480,13 @@ nsDOMAttribute::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::CloneNode(bool aDeep, nsIDOMNode** aResult)
+nsDOMAttribute::CloneNode(bool aDeep, PRUint8 aOptionalArgc, nsIDOMNode** aResult)
 {
   OwnerDoc()->WarnOnceAbout(nsIDocument::eCloneNode);
+
+  if (!aOptionalArgc) {
+    aDeep = true;
+  }
 
   return nsNodeUtils::CloneNodeImpl(this, aDeep, true, aResult);
 }

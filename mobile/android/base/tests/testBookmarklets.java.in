@@ -1,0 +1,80 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.content.ContentValues;
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.Browser;
+
+public class testBookmarklets extends BaseTest {
+    public void testBookmarklets() {
+        final String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        final String title = "alertBookmarklet";
+        final String js = "javascript:alert(12 + .34)";
+        boolean alerted;
+
+        setTestType("mochitest");
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
+        // load a standard page so bookmarklets work
+        loadUrl(url);
+
+        // verify that user-entered bookmarklets do *not* work
+        enterUrl(js);
+        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
+        alerted = waitForTest(new BooleanTest() {
+            public boolean test() {
+                return mSolo.searchButton("OK", true) || mSolo.searchText("12.34", true);
+            }
+        }, 3000);
+        mAsserter.is(alerted, false, "Alert was not shown for user-entered bookmarklet");
+
+        // add the bookmarklet to the database. there's currently no way to
+        // add this using the UI, so we go through the content provider.
+        addOrUpdateBookmarklet(title, js);
+
+        // verify that bookmarklets clicked in awesomescreen work
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
+        getInstrumentation().waitForIdleSync();
+        mSolo.clickOnText(title);
+        alerted = waitForTest(new BooleanTest() {
+            public boolean test() {
+                return mSolo.searchButton("OK", true) && mSolo.searchText("12.34", true);
+            }
+        }, 3000);
+        mAsserter.is(alerted, true, "Alert was shown for clicked bookmarklet");
+    }
+
+    private void addOrUpdateBookmarklet(String title, String url) {
+        ContentResolver resolver = getActivity().getContentResolver();
+        Uri bookmarksUri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
+        bookmarksUri = bookmarksUri.buildUpon().appendQueryParameter("profile", "default").build();
+        long mobileFolderId = -1;
+
+        Cursor c = resolver.query(bookmarksUri,
+                                  new String[] { "_id" },
+                                  "guid = ?",
+                                  new String[] { "mobile" },
+                                  null);
+        if (c.moveToFirst())
+            mobileFolderId = c.getLong(c.getColumnIndexOrThrow("_id"));
+        c.close();
+
+        ContentValues values = new ContentValues();
+        values.put(Browser.BookmarkColumns.TITLE, title);
+        values.put("url", url);
+        values.put("parent", mobileFolderId);
+        values.put("modified", System.currentTimeMillis());
+
+        int updated = resolver.update(bookmarksUri,
+                                      values,
+                                      "url = ?",
+                                      new String[] { url });
+        if (updated == 0)
+            resolver.insert(bookmarksUri, values);
+    }
+}

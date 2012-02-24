@@ -55,7 +55,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(94479B76-7FD7-47D3-BB1E-5B77846339D2)]
+[scriptable, uuid(656005d2-d900-4839-81bf-6274a3c38537)]
 
 interface nsIEditor  : nsISupports
 {
@@ -204,6 +204,16 @@ interface nsIEditor  : nsISupports
     *                 if aEnable is PR_FALSE, returns NS_OK.
     */
   void enableUndo(in boolean enable);
+
+  /**
+   * The number of items on the undo stack.
+   */
+  readonly attribute long numberOfUndoItems;
+
+  /**
+   * The number of items on the redo stack.
+   */
+  readonly attribute long numberOfRedoItems;
 
   /** undo reverses the effects of the last Do operation,
     * if Undo is enabled in the editor.

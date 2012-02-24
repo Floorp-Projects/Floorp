@@ -820,13 +820,15 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ei)
 
     switch (ei) {
         case WebGL_OES_texture_float:
-            MakeContextCurrent();
             isSupported = gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float 
                                                                  : GLContext::ARB_texture_float);
 	    break;
         case WebGL_OES_standard_derivatives:
             // We always support this extension.
             isSupported = true;
+            break;
+        case WebGL_EXT_texture_filter_anisotropic:
+            isSupported = gl->IsExtensionSupported(GLContext::EXT_texture_filter_anisotropic);
             break;
         case WebGL_MOZ_WEBGL_lose_context:
             // We always support this extension.
@@ -860,6 +862,10 @@ WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
         if (IsExtensionSupported(WebGL_OES_standard_derivatives))
             ei = WebGL_OES_standard_derivatives;
     }
+    else if (aName.EqualsLiteral("MOZ_EXT_texture_filter_anisotropic")) {
+        if (IsExtensionSupported(WebGL_EXT_texture_filter_anisotropic))
+            ei = WebGL_EXT_texture_filter_anisotropic;
+    }
     else if (aName.EqualsLiteral("MOZ_WEBGL_lose_context")) {
         if (IsExtensionSupported(WebGL_MOZ_WEBGL_lose_context))
             ei = WebGL_MOZ_WEBGL_lose_context;
@@ -870,6 +876,9 @@ WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
             switch (ei) {
                 case WebGL_OES_standard_derivatives:
                     mEnabledExtensions[ei] = new WebGLExtensionStandardDerivatives(this);
+                    break;
+                case WebGL_EXT_texture_filter_anisotropic:
+                    mEnabledExtensions[ei] = new WebGLExtensionTextureFilterAnisotropic(this);
                     break;
                 case WebGL_MOZ_WEBGL_lose_context:
                     mEnabledExtensions[ei] = new WebGLExtensionLoseContext(this);
@@ -1295,6 +1304,11 @@ NS_INTERFACE_MAP_BEGIN(WebGLExtensionStandardDerivatives)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtensionStandardDerivatives)
 NS_INTERFACE_MAP_END_INHERITING(WebGLExtension)
 
+NS_IMPL_ADDREF(WebGLExtensionTextureFilterAnisotropic)
+NS_IMPL_RELEASE(WebGLExtensionTextureFilterAnisotropic)
+
+DOMCI_DATA(WebGLExtensionTextureFilterAnisotropic, WebGLExtensionTextureFilterAnisotropic)
+
 NS_IMPL_ADDREF(WebGLExtensionLoseContext)
 NS_IMPL_RELEASE(WebGLExtensionLoseContext)
 
@@ -1409,6 +1423,8 @@ WebGLContext::GetSupportedExtensions(nsIVariant **retval)
         extList.InsertElementAt(extList.Length(), "OES_texture_float");
     if (IsExtensionSupported(WebGL_OES_standard_derivatives))
         extList.InsertElementAt(extList.Length(), "OES_standard_derivatives");
+    if (IsExtensionSupported(WebGL_EXT_texture_filter_anisotropic))
+        extList.InsertElementAt(extList.Length(), "MOZ_EXT_texture_filter_anisotropic");
     if (IsExtensionSupported(WebGL_MOZ_WEBGL_lose_context))
         extList.InsertElementAt(extList.Length(), "MOZ_WEBGL_lose_context");
 

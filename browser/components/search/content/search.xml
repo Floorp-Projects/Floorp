@@ -50,9 +50,9 @@
 ]>
 
 <bindings id="SearchBindings"
-      xmlns="http://www.mozilla.org/xbl"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      xmlns:xbl="http://www.mozilla.org/xbl">
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="searchbar">
     <resources>
@@ -96,13 +96,12 @@
           <xul:image class="search-go-button"
                      anonid="search-go-button"
                      onclick="handleSearchCommand(event);"
-                     tooltiptext="&searchEndCap.label;" />
+                     tooltiptext="&searchEndCap.label;"/>
         </xul:hbox>
       </xul:textbox>
     </content>
 
     <implementation implements="nsIObserver">
-
       <constructor><![CDATA[
         if (this.parentNode.parentNode.localName == "toolbarpaletteitem")
           return;
@@ -164,7 +163,7 @@
         <getter><![CDATA[
           var currentEngine = this.searchService.currentEngine;
           // Return a dummy engine if there is no currentEngine
-          return currentEngine || {name:"", uri:null};
+          return currentEngine || {name: "", uri: null};
         ]]></getter>
       </property>
 
@@ -335,7 +334,8 @@
           // indexes as items are removed.
           var items = popup.childNodes;
           for (var i = items.length - 1; i >= 0; i--) {
-            if (items[i].getAttribute("class").indexOf("addengine") != -1)
+            if (items[i].classList.contains("addengine-item") ||
+                items[i].classList.contains("addengine-separator"))
               popup.removeChild(items[i]);
           }
 
@@ -444,7 +444,7 @@
         <body><![CDATA[
           // Find the new index
           var newIndex = this.engines.indexOf(this.currentEngine);
-          newIndex += (isNextEngine) ? 1 : -1;
+          newIndex += isNextEngine ? 1 : -1;
 
           if (newIndex >= 0 && newIndex < this.engines.length)
             this.currentEngine = this.engines[newIndex];
@@ -495,13 +495,12 @@
           openUILinkIn(submission.uri.spec, aWhere, null, submission.postData);
         ]]></body>
       </method>
-
     </implementation>
 
     <handlers>
       <handler event="command"><![CDATA[
         const target = event.originalTarget;
-        if (target.getAttribute("class").indexOf("addengine-item") != -1) {
+        if (target.classList.contains("addengine-item")) {
           var searchService =
             Components.classes["@mozilla.org/browser/search-service;1"]
                       .getService(Components.interfaces.nsIBrowserSearchService);
@@ -719,7 +718,7 @@
         </body>
       </method>
 
-      <!-- overload |onTextEntered| in autocomplete.xml -->
+      <!-- override |onTextEntered| in autocomplete.xml -->
       <method name="onTextEntered">
         <parameter name="aEvent"/>
         <body><![CDATA[

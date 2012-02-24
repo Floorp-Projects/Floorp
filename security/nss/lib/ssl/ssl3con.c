@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.163 2012/02/15 21:52:08 kaie%kuix.de Exp $ */
+/* $Id: ssl3con.c,v 1.164 2012/02/17 09:50:04 kaie%kuix.de Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -4363,6 +4363,12 @@ getWrappingKey( sslSocket *       ss,
     SECStatus                rv;
     SECItem                  wrappedKey;
     SSLWrappedSymWrappingKey wswk;
+#ifdef NSS_ENABLE_ECC
+    PK11SymKey *      Ks = NULL;
+    SECKEYPublicKey   *pubWrapKey = NULL;
+    SECKEYPrivateKey  *privWrapKey = NULL;
+    ECCWrappedKeyInfo *ecWrapped;
+#endif /* NSS_ENABLE_ECC */
 
     svrPrivKey  = ss->serverCerts[exchKeyType].SERVERKEY;
     PORT_Assert(svrPrivKey != NULL);
@@ -4439,13 +4445,6 @@ getWrappingKey( sslSocket *       ss,
 
     /* wrap symmetric wrapping key in server's public key. */
     switch (exchKeyType) {
-#ifdef NSS_ENABLE_ECC
-    PK11SymKey *      Ks = NULL;
-    SECKEYPublicKey   *pubWrapKey = NULL;
-    SECKEYPrivateKey  *privWrapKey = NULL;
-    ECCWrappedKeyInfo *ecWrapped;
-#endif /* NSS_ENABLE_ECC */
-
     case kt_rsa:
 	asymWrapMechanism = CKM_RSA_PKCS;
 	rv = PK11_PubWrapSymKey(asymWrapMechanism, svrPubKey,

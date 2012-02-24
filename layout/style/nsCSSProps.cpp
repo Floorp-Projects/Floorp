@@ -55,7 +55,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
-#include "prlog.h" // for PR_STATIC_ASSERT
 
 using namespace mozilla;
 
@@ -317,21 +316,17 @@ nsCSSProps::ReleaseTable(void)
   }
 }
 
+#if 0 /* aliases code */
 struct CSSPropertyAlias {
-  char name[sizeof("-moz-border-radius-bottomright")];
+  char name[sizeof("-moz-...")];
   nsCSSProperty id;
 };
 
 static const CSSPropertyAlias gAliases[] = {
-  { "-moz-border-radius", eCSSProperty_border_radius },
-  { "-moz-border-radius-bottomleft", eCSSProperty_border_bottom_left_radius },
-  { "-moz-border-radius-bottomright", eCSSProperty_border_bottom_right_radius },
-  { "-moz-border-radius-topleft", eCSSProperty_border_top_left_radius },
-  { "-moz-border-radius-topright", eCSSProperty_border_top_right_radius },
-  { "-moz-box-shadow", eCSSProperty_box_shadow },
   // Don't forget to update the sizeof in CSSPropertyAlias above with the
   // longest string when you add stuff here.
 };
+#endif
 
 nsCSSProperty
 nsCSSProps::LookupProperty(const nsACString& aProperty)
@@ -339,6 +334,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
   NS_ABORT_IF_FALSE(gPropertyTable, "no lookup table, needs addref");
 
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
+#if 0 /* aliases code */
   if (res == eCSSProperty_UNKNOWN) {
     for (const CSSPropertyAlias *alias = gAliases,
                             *alias_end = ArrayEnd(gAliases);
@@ -349,6 +345,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty)
       }
     }
   }
+#endif
   return res;
 }
 
@@ -360,6 +357,7 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
   // converting and avoid a PromiseFlatCString() call.
   NS_ABORT_IF_FALSE(gPropertyTable, "no lookup table, needs addref");
   nsCSSProperty res = nsCSSProperty(gPropertyTable->Lookup(aProperty));
+#if 0 /* aliases code */
   if (res == eCSSProperty_UNKNOWN) {
     for (const CSSPropertyAlias *alias = gAliases,
                             *alias_end = ArrayEnd(gAliases);
@@ -370,6 +368,7 @@ nsCSSProps::LookupProperty(const nsAString& aProperty)
       }
     }
   }
+#endif
   return res;
 }
 
@@ -604,9 +603,10 @@ const PRInt32 nsCSSProps::kBackgroundInlinePolicyKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER);
-PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING);
-PR_STATIC_ASSERT(NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT);
+MOZ_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER &&
+                  NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING &&
+                  NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT,
+                  "bg-clip and bg-origin style constants must agree");
 const PRInt32 nsCSSProps::kBackgroundOriginKTable[] = {
   eCSSKeyword_border_box, NS_STYLE_BG_ORIGIN_BORDER,
   eCSSKeyword_padding_box, NS_STYLE_BG_ORIGIN_PADDING,
@@ -1703,10 +1703,9 @@ static const nsCSSProperty gBorderBottomSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-PR_STATIC_ASSERT(NS_SIDE_TOP == 0);
-PR_STATIC_ASSERT(NS_SIDE_RIGHT == 1);
-PR_STATIC_ASSERT(NS_SIDE_BOTTOM == 2);
-PR_STATIC_ASSERT(NS_SIDE_LEFT == 3);
+MOZ_STATIC_ASSERT(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
+                  NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3,
+                  "box side constants not top/right/bottom/left == 0/1/2/3");
 static const nsCSSProperty gBorderColorSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   // Code relies on these matching the NS_SIDE_* constants.

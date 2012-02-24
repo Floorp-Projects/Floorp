@@ -745,6 +745,7 @@ protected:
     enum WebGLExtensionID {
         WebGL_OES_texture_float,
         WebGL_OES_standard_derivatives,
+        WebGL_EXT_texture_filter_anisotropic,
         WebGL_MOZ_WEBGL_lose_context,
         WebGLExtensionID_Max
     };

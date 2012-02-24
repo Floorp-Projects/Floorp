@@ -3324,6 +3324,9 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
                     return access;
             }
 
+            if (!script->isOuterFunction)
+                return access;
+
             access.script = script;
             access.nesting = script->nesting();
             access.slot = (kind == ARGUMENT) ? ArgSlot(index) : LocalSlot(script, index);

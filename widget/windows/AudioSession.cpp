@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-
 #include <windows.h>
 #include <audiopolicy.h>
 #include <mmdeviceapi.h>
@@ -478,5 +476,3 @@ AudioSession::OnStateChanged(AudioSessionState aState)
 
 } // namespace widget
 } // namespace mozilla
-
-#endif // MOZ_NTDDI_LONGHORN

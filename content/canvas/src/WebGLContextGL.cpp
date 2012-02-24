@@ -2210,6 +2210,15 @@ WebGLContext::GetParameter(PRUint32 pname, nsIVariant **retval)
             break;
 
 // float
+        case LOCAL_GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT:
+            if (mEnabledExtensions[WebGL_EXT_texture_filter_anisotropic]) {
+                GLfloat f = 0.f;
+                gl->fGetFloatv(pname, &f);
+                wrval->SetAsFloat(f);
+            } else {
+                return ErrorInvalidEnum("getParameter: parameter", pname);
+            }
+            break;
         case LOCAL_GL_DEPTH_CLEAR_VALUE:
         case LOCAL_GL_LINE_WIDTH:
         case LOCAL_GL_POLYGON_OFFSET_FACTOR:
@@ -2679,6 +2688,7 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
         return ErrorInvalidOperation("texParameter: no texture is bound to this target");
 
     bool pnameAndParamAreIncompatible = false;
+    bool paramValueInvalid = false;
 
     switch (pname) {
         case LOCAL_GL_TEXTURE_MIN_FILTER:
@@ -2727,18 +2737,33 @@ nsresult WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
                     pnameAndParamAreIncompatible = true;
             }
             break;
+        case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
+            if (mEnabledExtensions[WebGL_EXT_texture_filter_anisotropic]) {
+                if (floatParamPtr && floatParam < 1.f)
+                    paramValueInvalid = true;
+                else if (intParamPtr && intParam < 1)
+                    paramValueInvalid = true;
+            }
+            else
+                pnameAndParamAreIncompatible = true;
+            break;
         default:
             return ErrorInvalidEnumInfo("texParameter: pname", pname);
     }
 
     if (pnameAndParamAreIncompatible) {
-        // note that currently all params are enums, and the tex-input-validation test wants INVALID_ENUM errors
-        // even for texParameterf. why not.
         if (intParamPtr)
             return ErrorInvalidEnum("texParameteri: pname %x and param %x (decimal %d) are mutually incompatible",
                                     pname, intParam, intParam);
         else
-            return ErrorInvalidEnum("texParameterf: pname %x and floating-point param %e are mutually incompatible",
+            return ErrorInvalidEnum("texParameterf: pname %x and param %g are mutually incompatible",
+                                    pname, floatParam);
+    } else if (paramValueInvalid) {
+        if (intParamPtr)
+            return ErrorInvalidValue("texParameteri: pname %x and param %x (decimal %d) is invalid",
+                                    pname, intParam, intParam);
+        else
+            return ErrorInvalidValue("texParameterf: pname %x and param %g is invalid",
                                     pname, floatParam);
     }
 
@@ -2798,6 +2823,15 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname, nsIVariant **re
             gl->fGetTexParameteriv(target, pname, &i);
             wrval->SetAsInt32(i);
         }
+            break;
+        case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
+            if (mEnabledExtensions[WebGL_EXT_texture_filter_anisotropic]) {
+                GLfloat f = 0.f;
+                gl->fGetTexParameterfv(target, pname, &f);
+                wrval->SetAsFloat(f);
+            }
+            else
+                return ErrorInvalidEnumInfo("getTexParameter: parameter", pname);
             break;
 
         default:

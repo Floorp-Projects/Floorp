@@ -48,38 +48,38 @@
  * implementation has become unstable)
  *
  * For more information on this interface please see
- * http://www.w3.org/TR/DOM-Level-3-Core/
+ * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#domexception
  */
 
-[scriptable, uuid(a6cf910a-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(5bd766d3-57a9-4833-995d-dbe21da29595)]
 interface nsIDOMDOMException : nsISupports
 {
   const unsigned short      INDEX_SIZE_ERR                 = 1;
-  const unsigned short      DOMSTRING_SIZE_ERR             = 2;
+  const unsigned short      DOMSTRING_SIZE_ERR             = 2; // historical
   const unsigned short      HIERARCHY_REQUEST_ERR          = 3;
   const unsigned short      WRONG_DOCUMENT_ERR             = 4;
   const unsigned short      INVALID_CHARACTER_ERR          = 5;
-  const unsigned short      NO_DATA_ALLOWED_ERR            = 6;
+  const unsigned short      NO_DATA_ALLOWED_ERR            = 6; // historical
   const unsigned short      NO_MODIFICATION_ALLOWED_ERR    = 7;
   const unsigned short      NOT_FOUND_ERR                  = 8;
   const unsigned short      NOT_SUPPORTED_ERR              = 9;
-  const unsigned short      INUSE_ATTRIBUTE_ERR            = 10;
-  // Introduced in DOM Level 2:
+  const unsigned short      INUSE_ATTRIBUTE_ERR            = 10; // historical
   const unsigned short      INVALID_STATE_ERR              = 11;
-  // Introduced in DOM Level 2:
   const unsigned short      SYNTAX_ERR                     = 12;
-  // Introduced in DOM Level 2:
   const unsigned short      INVALID_MODIFICATION_ERR       = 13;
-  // Introduced in DOM Level 2:
   const unsigned short      NAMESPACE_ERR                  = 14;
-  // Introduced in DOM Level 2:
   const unsigned short      INVALID_ACCESS_ERR             = 15;
-  // Introduced in DOM Level 3:
-  const unsigned short      VALIDATION_ERR                 = 16;
-  // Introduced in DOM Level 3:
+  const unsigned short      VALIDATION_ERR                 = 16; // historical
   const unsigned short      TYPE_MISMATCH_ERR              = 17;
+  const unsigned short      SECURITY_ERR                   = 18;
+  const unsigned short      NETWORK_ERR                    = 19;
+  const unsigned short      ABORT_ERR                      = 20;
+  const unsigned short      URL_MISMATCH_ERR               = 21;
+  const unsigned short      QUOTA_EXCEEDED_ERR             = 22;
+  const unsigned short      TIMEOUT_ERR                    = 23;
+  const unsigned short      INVALID_NODE_TYPE_ERR          = 24;
   const unsigned short      DATA_CLONE_ERR                 = 25;
 
-  readonly attribute unsigned long   code;
+  readonly attribute unsigned short   code;
 };
 

@@ -105,6 +105,7 @@ public class BrowserProvider extends ContentProvider {
     static final int BOOKMARKS_ID = 101;
     static final int BOOKMARKS_FOLDER_ID = 102;
     static final int BOOKMARKS_PARENT = 103;
+    static final int BOOKMARKS_POSITIONS = 104;
 
     // History matches
     static final int HISTORY = 200;
@@ -124,20 +125,12 @@ public class BrowserProvider extends ContentProvider {
     static final String DEFAULT_HISTORY_SORT_ORDER = History.DATE_LAST_VISITED + " DESC";
 
     static final String TABLE_BOOKMARKS_JOIN_IMAGES = TABLE_BOOKMARKS + " LEFT OUTER JOIN " +
-            "(SELECT " + Images.URL + ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
-            TABLE_IMAGES + ", " + TABLE_BOOKMARKS + " WHERE " +
-            qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
-            qualifyColumn(TABLE_IMAGES, Images.URL) + ") AS bookmark_images ON " +
-            qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
-            qualifyColumn("bookmark_images", Images.URL);
+            TABLE_IMAGES + " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
+            qualifyColumn(TABLE_IMAGES, Images.URL);
 
     static final String TABLE_HISTORY_JOIN_IMAGES = TABLE_HISTORY + " LEFT OUTER JOIN " +
-            "(SELECT " + Images.URL + ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
-            TABLE_IMAGES + ", " + TABLE_HISTORY + " WHERE " +
-            qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
-            qualifyColumn(TABLE_IMAGES, Images.URL) + ") AS history_images ON " +
-            qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
-            qualifyColumn("history_images", Images.URL);
+            TABLE_IMAGES + " ON " + qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
+            qualifyColumn(TABLE_IMAGES, Images.URL);
 
     static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
@@ -153,6 +146,7 @@ public class BrowserProvider extends ContentProvider {
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks", BOOKMARKS);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/#", BOOKMARKS_ID);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/parents", BOOKMARKS_PARENT);
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/positions", BOOKMARKS_POSITIONS);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/folder/#", BOOKMARKS_FOLDER_ID);
 
         map = BOOKMARKS_PROJECTION_MAP;
@@ -332,6 +326,8 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void createBookmarksWithImagesView(SQLiteDatabase db) {
+            debug("Creating " + VIEW_BOOKMARKS_WITH_IMAGES + " view");
+
             db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_BOOKMARKS, "*") +
                     ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
@@ -339,6 +335,8 @@ public class BrowserProvider extends ContentProvider {
         }
 
         private void createHistoryWithImagesView(SQLiteDatabase db) {
+            debug("Creating " + VIEW_HISTORY_WITH_IMAGES + " view");
+
             db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_HISTORY_WITH_IMAGES + " AS " +
                     "SELECT " + qualifyColumn(TABLE_HISTORY, "*") +
                     ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
@@ -538,6 +536,18 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_BOOKMARKS_TMP);
         }
 
+        private void upgradeDatabaseFrom2to3(SQLiteDatabase db) {
+            debug("Dropping view: " + VIEW_BOOKMARKS_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES);
+
+            createBookmarksWithImagesView(db);
+
+            debug("Dropping view: " + VIEW_HISTORY_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_HISTORY_WITH_IMAGES);
+
+            createHistoryWithImagesView(db);
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -551,6 +561,10 @@ public class BrowserProvider extends ContentProvider {
                 switch(v) {
                     case 2:
                         upgradeDatabaseFrom1to2(db);
+                        break;
+
+                    case 3:
+                        upgradeDatabaseFrom2to3(db);
                         break;
                  }
              }
@@ -1033,6 +1047,21 @@ public class BrowserProvider extends ContentProvider {
         int updated = 0;
 
         switch (match) {
+            // We provide a dedicated (hacky) API for callers to bulk-update the positions of
+            // folder children by passing an array of GUID strings as `selectionArgs`.
+            // Each child will have its position column set to its index in the provided array.
+            //
+            // This avoids callers having to issue a large number of UPDATE queries through
+            // the usual channels. See Bug 728783.
+            //
+            // Note that this is decidedly not a general-purpose API; use at your own risk.
+            // `values` and `selection` are ignored.
+            case BOOKMARKS_POSITIONS: {
+                debug("Update on BOOKMARKS_POSITIONS: " + uri);
+                updated = updateBookmarkPositions(uri, selectionArgs);
+                break;
+            }
+
             case BOOKMARKS_PARENT: {
                 debug("Update on BOOKMARKS_PARENT: " + uri);
                 updated = updateBookmarkParents(uri, values, selection, selectionArgs);
@@ -1244,6 +1273,50 @@ public class BrowserProvider extends ContentProvider {
         }
 
         return count;
+    }
+
+    /**
+     * Construct an update expression that will modify the positions of
+     * records in-place.
+     *
+     * The provided selectionArgs is expected to be an implicit mapping from
+     * GUID to new position.
+     */
+    int updateBookmarkPositions(Uri uri, String[] guids) {
+        if (guids == null)
+            return 0;
+
+        int guidsCount = guids.length;
+        if (guidsCount == 0)
+            return 0;
+
+        // Each must appear twice: once in a CASE, and once in the IN clause.
+        String[] args = new String[guidsCount * 2];
+        System.arraycopy(guids, 0, args, 0, guidsCount);
+        System.arraycopy(guids, 0, args, guidsCount, guidsCount);
+
+        StringBuilder b = new StringBuilder("UPDATE " + TABLE_BOOKMARKS +
+                                            " SET " + Bookmarks.POSITION + " = CASE guid");
+
+        int i = 0;
+        for (; i < guids.length; ++i) {
+            if (guids[i] == null) {
+                // We don't want to issue the query if not every GUID is specified.
+                debug("updateBookmarkPositions called with null GUID at index " + i);
+                return 0;
+            }
+            b.append(" WHEN ? THEN " + i);
+        }
+        b.append(" END WHERE " + Bookmarks.GUID + " IN (");
+        i = 1;
+        while (i++ < guidsCount) {
+            b.append("?, ");
+        }
+        b.append("?)");
+        getWritableDatabase(uri).execSQL(b.toString(), args);
+
+        // We can't easily get a modified count without calling something like changes().
+        return guidsCount;
     }
 
     /**

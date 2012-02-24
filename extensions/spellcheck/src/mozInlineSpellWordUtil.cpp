@@ -48,6 +48,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLBRElement.h"
 #include "nsUnicharUtilCIID.h"
+#include "nsUnicodeProperties.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIContent.h"
 #include "nsTextFragment.h"
@@ -87,10 +88,6 @@ mozInlineSpellWordUtil::Init(nsWeakPtr aWeakEditor)
 {
   nsresult rv;
 
-  mCategories = do_GetService(NS_UNICHARCATEGORY_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  
   // getting the editor can fail commonly because the editor was detached, so
   // don't assert
   nsCOMPtr<nsIEditor> editor = do_QueryReferent(aWeakEditor, &rv);
@@ -806,7 +803,7 @@ WordSplitState::ClassifyCharacter(PRInt32 aIndex, bool aRecurse) const
   // this will classify the character, we want to treat "ignorable" characters
   // such as soft hyphens as word characters.
   nsIUGenCategory::nsUGenCategory
-    charCategory = mWordUtil->GetCategories()->Get(PRUint32(mDOMWordText[aIndex]));
+    charCategory = mozilla::unicode::GetGenCategory(mDOMWordText[aIndex]);
   if (charCategory == nsIUGenCategory::kLetter ||
       IsIgnorableCharacter(mDOMWordText[aIndex]))
     return CHAR_CLASS_WORD;

@@ -4,10 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+#include "nsIDOMEventTarget.idl"
 
-[scriptable, builtinclass, uuid(29689a22-45ff-4ccf-b552-5364ce3a3642)]
-interface nsIDOMBluetoothAdapter : nsISupports
+interface nsIDOMEventListener;
+
+[scriptable, builtinclass, uuid(3dbaa9f4-5c93-11e1-8592-ff9bfcc3ab4b)]
+interface nsIDOMBluetoothAdapter : nsIDOMEventTarget
 {
   attribute boolean power;
+
+  attribute nsIDOMEventListener onpowered;
 };

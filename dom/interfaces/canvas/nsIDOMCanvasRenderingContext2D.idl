@@ -244,7 +244,7 @@ enum CanvasMultiGetterType {
    * transparent/translucent. It is given as a CSS color string
    * (e.g., rgb() or rgba()).
    *
-   * @param flags Uused to better control the drawWindow call.
+   * @param flags Used to better control the drawWindow call.
    * Flags can be ORed together.
    *
    * Of course, the rendering obeys the current scale, transform and

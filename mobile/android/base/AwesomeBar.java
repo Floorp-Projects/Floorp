@@ -89,6 +89,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     static final String CURRENT_URL_KEY = "currenturl";
     static final String TYPE_KEY = "type";
     static final String SEARCH_KEY = "search";
+    static final String USER_ENTERED_KEY = "user_entered";
     static enum Type { ADD, EDIT };
 
     private String mType;
@@ -132,7 +133,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
 
         mGoButton.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                openUrlAndFinish(mText.getText().toString());
+                openUserEnteredAndFinish(mText.getText().toString());
             }
         });
 
@@ -162,17 +163,27 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
 
         mText.setOnKeyPreImeListener(new AwesomeBarEditText.OnKeyPreImeListener() {
             public boolean onKeyPreIme(View v, int keyCode, KeyEvent event) {
-                InputMethodManager imm =
-                        (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                // We only want to process one event per tap
+                if (event.getAction() != KeyEvent.ACTION_DOWN)
+                    return false;
 
-                if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    openUrlAndFinish(mText.getText().toString());
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                    openUserEnteredAndFinish(mText.getText().toString());
                     return true;
                 }
 
                 // If input method is in fullscreen mode, we want to dismiss
                 // it instead of closing awesomebar straight away.
-                if (!imm.isFullscreenMode() && keyCode == KeyEvent.KEYCODE_BACK) {
+                InputMethodManager imm =
+                        (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (keyCode == KeyEvent.KEYCODE_BACK && !imm.isFullscreenMode()) {
+                    // Let mAwesomeTabs try to handle the back press, since we may be in a
+                    // bookmarks sub-folder.
+                    if (mAwesomeTabs.onBackPressed())
+                        return true;
+
+                    // If mAwesomeTabs.onBackPressed() returned false, we didn't move up
+                    // a folder level, so just exit the activity.
                     cancelAndFinish();
                     return true;
                 }
@@ -206,7 +217,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                     if (event.getAction() != KeyEvent.ACTION_DOWN)
                         return true;
 
-                    openUrlAndFinish(mText.getText().toString());
+                    openUserEnteredAndFinish(mText.getText().toString());
                     return true;
                 } else {
                     return false;
@@ -317,6 +328,13 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     }
 
     private void openUrlAndFinish(String url) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(URL_KEY, url);
+        resultIntent.putExtra(TYPE_KEY, mType);
+        finishWithResult(resultIntent);
+    }
+
+    private void openUserEnteredAndFinish(String url) {
         int index = url.indexOf(' ');
         if (index != -1) {
             String keywordUrl = BrowserDB.getUrlForKeyword(mResolver, url.substring(0, index));
@@ -329,6 +347,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
         resultIntent.putExtra(TYPE_KEY, mType);
+        resultIntent.putExtra(USER_ENTERED_KEY, true);
         finishWithResult(resultIntent);
     }
 
@@ -400,23 +419,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         Object selectedItem = null;
         String title = "";
 
-        if (list == findViewById(R.id.all_pages_list)) {
-            if (!(menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
-                Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
-                return;
-            }
-
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            selectedItem = list.getItemAtPosition(info.position);
-
-            if (!(selectedItem instanceof Cursor)) {
-                Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
-                return;
-            }
-
-            Cursor cursor = (Cursor) selectedItem;
-            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-        } else {
+        if (list == findViewById(R.id.history_list)) {
             if (!(menuInfo instanceof ExpandableListView.ExpandableListContextMenuInfo)) {
                 Log.e(LOGTAG, "menuInfo is not ExpandableListContextMenuInfo");
                 return;
@@ -433,15 +436,31 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             ExpandableListView exList = (ExpandableListView) list;
             selectedItem = exList.getExpandableListAdapter().getChild(groupPosition, childPosition);
 
-            if (exList == findViewById(R.id.bookmarks_list)) {
-                // The bookmarks list is backed by a SimpleCursorTreeAdapter
-                Cursor cursor = (Cursor) selectedItem;
-                title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-            } else {
-                // The history list is backed by a SimpleExpandableListAdapter
-                @SuppressWarnings("rawtypes")
-                Map map = (Map) selectedItem;
-                title = (String) map.get(URLColumns.TITLE);
+            // The history list is backed by a SimpleExpandableListAdapter
+            @SuppressWarnings("rawtypes")
+            Map map = (Map) selectedItem;
+            title = (String) map.get(URLColumns.TITLE);
+        } else {
+            if (!(menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
+                Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
+                return;
+            }
+
+            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+            selectedItem = list.getItemAtPosition(info.position);
+
+            if (!(selectedItem instanceof Cursor)) {
+                Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
+                return;
+            }
+
+            Cursor cursor = (Cursor) selectedItem;
+            title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
+
+            // Don't show the context menu for folders
+            if (list == findViewById(R.id.bookmarks_list) &&
+                cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.IS_FOLDER)) == 1) {
+                selectedItem = null;
             }
         }
 

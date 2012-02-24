@@ -208,7 +208,7 @@ public:
 
     const TString& getTypeName() const
     {
-        assert(typeName);
+        if(!typeName) abort();
         return *typeName;
     }
     void setTypeName(const TString& n)

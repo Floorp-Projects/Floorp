@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=728939
+-->
+<head>
+  <title>Test for Bug 728939</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=728939">Mozilla Bug 728939</a>
+
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+// Called when the popup finishes loading.
+function popupLoaded() {
+  popup.location.hash = '#foo';
+  is(popup.document.URL, popup.location.href, 'After hashchange.');
+
+  popup.history.pushState('', '', 'bar');
+  is(popup.document.URL, popup.location.href, 'After pushState.');
+
+  popup.history.replaceState('', '', 'baz');
+  is(popup.document.URL, popup.location.href, 'After replaceState.');
+
+  popup.close();
+  SimpleTest.finish();
+}
+
+var popup = window.open('file_bug728939.html');
+
+</script>
+</body>
+</html>

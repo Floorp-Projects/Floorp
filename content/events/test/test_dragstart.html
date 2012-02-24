@@ -38,17 +38,17 @@ function afterDragTests()
   checkTypes(gDataTransfer, [], 0, "after dragstart event");
 
   expectError(function() gDataTransfer.setData("text/plain", "Some Text"),
-              "NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR", "setData when read only");
+              "NoModificationAllowedError", "setData when read only");
   expectError(function() gDataTransfer.clearData("text/plain"),
-              "NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR", "clearData when read only");
+              "NoModificationAllowedError", "clearData when read only");
   expectError(function() gDataTransfer.mozSetDataAt("text/plain", "Some Text", 0),
-              "NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR", "setDataAt when read only");
+              "NoModificationAllowedError", "setDataAt when read only");
   expectError(function() gDataTransfer.mozClearDataAt("text/plain", 0),
-              "NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR", "clearDataAt when read only");
+              "NoModificationAllowedError", "clearDataAt when read only");
   expectError(function() gDataTransfer.setDragImage(draggable, 10, 10),
-              "NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR", "setDragImage when read only");
+              "NoModificationAllowedError", "setDragImage when read only");
   expectError(function() gDataTransfer.addElement(draggable),
-              "NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR", "addElement when read only");
+              "NoModificationAllowedError", "addElement when read only");
 
   var evt = document.createEvent("dragevent");
   ok(evt instanceof DragEvent, "synthetic dragevent class")
@@ -154,7 +154,7 @@ function test_DataTransfer(dt)
 
   // calling setDataAt requires an index that is 0 <= index <= dt.itemCount
   expectError(function() dt.mozSetDataAt("text/plain", "Some Text", 1),
-              "NS_ERROR_DOM_INDEX_SIZE_ERR", "setDataAt index too high");
+              "IndexSizeError", "setDataAt index too high");
 
   is(dt.mozUserCancelled, false, "userCancelled");
 
@@ -172,9 +172,9 @@ function test_DataTransfer(dt)
 
   // similar with clearDataAt and getDataAt
   expectError(function() dt.mozGetDataAt("text/plain", 1),
-              "NS_ERROR_DOM_INDEX_SIZE_ERR", "getDataAt index too high");
+              "IndexSizeError", "getDataAt index too high");
   expectError(function() dt.mozClearDataAt("text/plain", 1),
-              "NS_ERROR_DOM_INDEX_SIZE_ERR", "clearDataAt index too high");
+              "IndexSizeError", "clearDataAt index too high");
 
   dt.setData("text/plain", "Sample Text");
   is(dt.mozItemCount, 1, "added plaintext itemCount");
@@ -285,7 +285,7 @@ function test_DataTransfer(dt)
   dt.mozSetDataAt("text/plain", "First Item", 0);
   dt.mozSetDataAt("text/plain", "Second Item", 1);
   expectError(function() dt.mozSetDataAt("text/plain", "Some Text", 3),
-              "NS_ERROR_DOM_INDEX_SIZE_ERR", "setDataAt index too high with two items");
+              "IndexSizeError", "setDataAt index too high with two items");
   is(dt.mozItemCount, 2, "setDataAt item itemCount");
   checkOneDataItem(dt, ["text/plain"], ["First Item"], 0, "setDataAt item at index 0");
   checkOneDataItem(dt, ["text/plain"], ["Second Item"], 1, "setDataAt item at index 1");
@@ -329,7 +329,7 @@ function test_DataTransfer(dt)
                    ["First Item", "Changed with setData"], 0, "clearDataAt last type at index 0");
   checkOneDataItem(dt, ["application/-moz-node"], [draggable], 1, "clearDataAt last type item at index 2");
   expectError(function() dt.mozGetDataAt("text/plain", 2),
-              "NS_ERROR_DOM_INDEX_SIZE_ERR", "getDataAt after item removed index too high");
+              "IndexSizeError", "getDataAt after item removed index too high");
 
   dt.mozSetDataAt("text/unknown", "Unknown type", 2);
   dt.mozSetDataAt("text/unknown", "Unknown type", 1);
@@ -356,7 +356,7 @@ function test_DataTransfer(dt)
                    ["Unknown type"], 1, "clearData type that does not exist item at index 1");
 
   expectError(function() dt.mozClearDataAt("text/plain", 3),
-              "NS_ERROR_DOM_INDEX_SIZE_ERR", "clearData index too high with two items");
+              "IndexSizeError", "clearData index too high with two items");
 
   // ensure that clearData() removes all data associated with the first item
   dt.clearData();

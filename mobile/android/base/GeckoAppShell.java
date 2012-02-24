@@ -399,7 +399,10 @@ public class GeckoAppShell
         GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
 
         File cacheFile = getCacheDir();
-        GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
+        String linkerCache = System.getenv("MOZ_LINKER_CACHE");
+        if (System.getenv("MOZ_LINKER_CACHE") == null) {
+            GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
+        }
 
         File pluginDataDir = GeckoApp.mAppContext.getDir("plugins", 0);
         GeckoAppShell.putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());

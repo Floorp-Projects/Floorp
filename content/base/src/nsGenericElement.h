@@ -437,8 +437,12 @@ public:
   // nsIDOMElement method implementation
   NS_DECL_NSIDOMELEMENT
 
-  nsresult CloneNode(bool aDeep, nsIDOMNode **aResult)
+  nsresult CloneNode(bool aDeep, PRUint8 aOptionalArgc, nsIDOMNode **aResult)
   {
+    if (!aOptionalArgc) {
+      aDeep = true;
+    }
+    
     return nsNodeUtils::CloneNodeImpl(this, aDeep, true, aResult);
   }
 

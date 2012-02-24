@@ -1308,14 +1308,6 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     // tricky...
   }
   else {
-    // If there is an outer script running, propagate the error upwards.
-    // Otherwise we may lose, e.g., the fact that an inner script evaluation
-    // was killed for taking too long and allow the outer script evaluation to
-    // continue.
-    if (mExecuteDepth > 0 || JS_IsRunning(mContext)) {
-      rv = NS_ERROR_FAILURE;
-    }
-
     if (aIsUndefined) {
       *aIsUndefined = true;
     }
@@ -1535,14 +1527,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   }
   else {
-    // If there is an outer script running, propagate the error upwards.
-    // Otherwise we may lose, e.g., the fact that an inner script evaluation
-    // was killed for taking too long and allow the outer script evaluation to
-    // continue.
-    if (mExecuteDepth > 1 || JS_IsRunning(mContext)) {
-      rv = NS_ERROR_FAILURE;
-    }
-
     if (aIsUndefined) {
       *aIsUndefined = true;
     }
@@ -1680,14 +1664,6 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject,
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   } else {
     ReportPendingException();
-
-    // If there is an outer script running, propagate the error upwards.
-    // Otherwise we may lose, e.g., the fact that an inner script evaluation
-    // was killed for taking too long and allow the outer script evaluation to
-    // continue.
-    if (mExecuteDepth > 1 || JS_IsRunning(mContext)) {
-      rv = NS_ERROR_FAILURE;
-    }
 
     if (aIsUndefined) {
       *aIsUndefined = true;
@@ -3157,10 +3133,7 @@ nsJSContext::ScriptEvaluated(bool aTerminated)
 
   JS_MaybeGC(mContext);
 
-  // Be careful to not reset the operation callback if some outer script is
-  // still running. This would allow a script to bypass the slow script check
-  // simply by invoking nested scripts (e.g., through a plugin).
-  if (aTerminated && mExecuteDepth == 0 && !JS_IsRunning(mContext)) {
+  if (aTerminated) {
     mOperationCallbackTime = 0;
     mModalStateTime = 0;
   }
@@ -3302,8 +3275,9 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   if (!sCleanupSinceLastGC && aExtraForgetSkippableCalls >= 0) {
     nsCycleCollector_forgetSkippable();
   }
-  PRUint32 collected = nsCycleCollector_collect(aListener);
-  sCCollectedWaitingForGC += collected;
+  nsCycleCollectorResults ccResults;
+  nsCycleCollector_collect(&ccResults, aListener);
+  sCCollectedWaitingForGC += ccResults.mFreedRefCounted + ccResults.mFreedGCed;
 
   // If we collected a substantial amount of cycles, poke the GC since more objects
   // might be unreachable now.
@@ -3330,16 +3304,23 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       sFirstCollectionTime = now;
     }
 
+    nsString gcmsg;
+    if (ccResults.mForcedGC) {
+      gcmsg.AssignLiteral(", forced a GC");
+    }
+
     NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
-      NS_LL("CC(T+%.1f) collected: %lu (%lu waiting for GC), suspected: %lu, duration: %llu ms.\n")
+      NS_LL("CC(T+%.1f) duration: %llums, suspected: %lu, visited: %lu RCed and %lu GCed, collected: %lu RCed and %lu GCed (%lu waiting for GC)%s\n")
       NS_LL("ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, removed: %lu"));
     nsString msg;
     PRUint32 cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
     sMinForgetSkippableTime = (sMinForgetSkippableTime == PR_UINT32_MAX)
       ? 0 : sMinForgetSkippableTime;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
-                                        collected, sCCollectedWaitingForGC, suspected,
-                                        (now - start) / PR_USEC_PER_MSEC,
+                                        (now - start) / PR_USEC_PER_MSEC, suspected,
+                                        ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
+                                        ccResults.mFreedRefCounted, ccResults.mFreedGCed,
+                                        sCCollectedWaitingForGC, gcmsg.get(),
                                         sForgetSkippableBeforeCC,
                                         sMinForgetSkippableTime / PR_USEC_PER_MSEC,
                                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC,

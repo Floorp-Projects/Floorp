@@ -73,7 +73,7 @@
 
 #include "nsUnicharUtils.h"
 #include "nsUnicodeRange.h"
-#include "gfxUnicodeProperties.h"
+#include "nsUnicodeProperties.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -422,7 +422,7 @@ gfxPlatformFontList::FindFontForChar(const PRUint32 aCh, gfxFont *aPrevFont)
     if (NS_UNLIKELY(log)) {
         PRUint32 charRange = gfxFontUtils::CharRangeBit(aCh);
         PRUint32 unicodeRange = FindCharUnicodeRange(aCh);
-        PRInt32 script = gfxUnicodeProperties::GetScriptCode(aCh);
+        PRInt32 script = mozilla::unicode::GetScriptCode(aCh);
         PR_LOG(log, PR_LOG_DEBUG,\
                ("(textrun-systemfallback) char: u+%6.6x "
                 "char-range: %d unicode-range: %d script: %d match: [%s]"

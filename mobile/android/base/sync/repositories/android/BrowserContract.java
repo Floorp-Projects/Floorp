@@ -112,6 +112,8 @@ public class BrowserContract {
             .buildUpon().appendQueryParameter(PARAM_IS_SYNC, "true")
             .appendQueryParameter(PARAM_SHOW_DELETED, "true")
             .build();
+        public static final Uri PARENTS_CONTENT_URI = Uri.withAppendedPath(CONTENT_URI, "parents");
+        public static final Uri POSITIONS_CONTENT_URI = Uri.withAppendedPath(CONTENT_URI, "positions");
 
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/bookmark";
 

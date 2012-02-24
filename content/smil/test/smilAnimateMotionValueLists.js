@@ -40,6 +40,8 @@
 /* Lists of valid & invalid values for the various <animateMotion> attributes */
 const gValidValues = [
   "10 10",
+  "10 10;",  // Trailing semicolons are allowed
+  "10 10;  ",
   "   10   10em  ",
   "1 2  ; 3,4",
   "1,2;3,4",
@@ -49,7 +51,6 @@ const gValidValues = [
 
 const gInvalidValues = [
   ";10 10",
-  "10 10;",  // We treat semicolon-terminated value-lists as failure cases
   "10 10;;",
   "1 2 3",
   "1 2 3 4",
@@ -127,4 +128,31 @@ const gValidPathWithErrors = [
  "M20 20em",
  "m0 0 L30,,30",
  "M10 10 L50 50 abc",
+];
+
+const gValidKeyPoints = [
+  "0; 0.5; 1",
+  "0;.5;1",
+  "0; 0; 1",
+  "0; 1; 1",
+  "0; 0; 1;", // Trailing semicolons are allowed
+  "0; 0; 1; ",
+  "0; 0.000; 1",
+  "0; 0.000001; 1",
+];
+
+const gInvalidKeyPoints = [
+  "0; 1",
+  "0; 1;",
+  "0",
+  "1",
+  "a",
+  "",
+  "  ",
+  "0; -0.1; 1",
+  "0; 1.1; 1",
+  "0; 0.1; 1.1",
+  "-0.1; 0.1; 1",
+  "0; a; 1",
+  "0;;1",
 ];

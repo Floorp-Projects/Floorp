@@ -615,11 +615,6 @@ nsSMILParserUtils::ParseValuesGeneric(const nsAString& aSpec,
     }
   }
 
-  // Disallow ;-terminated values lists.
-  if (tokenizer.lastTokenEndedWithSeparator()) {
-    return NS_ERROR_FAILURE;
-  }
-
   return NS_OK;
 }
 

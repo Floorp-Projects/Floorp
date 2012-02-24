@@ -18,7 +18,7 @@ try {
   ok(false, "Setting localStorageItem should throw a security exception");
 }
 catch(ex) {
-  is(ex.name, "NS_ERROR_DOM_SECURITY_ERR");
+  is(ex.name, "SecurityError");
 }
 
 try {
@@ -34,7 +34,7 @@ try {
   ok(false, "Setting localStorageItem should throw a security exception");
 }
 catch(ex) {
-  is(ex.name, "NS_ERROR_DOM_SECURITY_ERR");
+  is(ex.name, "SecurityError");
 }
 
 try {

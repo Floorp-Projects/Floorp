@@ -126,6 +126,13 @@ nsSystemPrincipal::Subsumes(nsIPrincipal *other, bool *result)
 }
 
 NS_IMETHODIMP
+nsSystemPrincipal::SubsumesIgnoringDomain(nsIPrincipal *other, bool *result)
+{
+    *result = true;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSystemPrincipal::CheckMayLoad(nsIURI* uri, bool aReport)
 {
     return NS_OK;
