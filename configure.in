@@ -6482,6 +6482,23 @@ if test -n "$MOZ_MAINTENANCE_SERVICE"; then
 fi
 
 dnl ========================================================
+dnl Verify MAR signatures
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(verify-mar,
+[  --enable-verify-mar     Enable verifying MAR signatures],
+    MOZ_VERIFY_MAR_SIGNATURE=1,
+    MOZ_VERIFY_MAR_SIGNATURE= )
+
+if test -n "$MOZ_VERIFY_MAR_SIGNATURE"; then
+  if test "$OS_ARCH" = "WINNT"; then
+    AC_DEFINE(MOZ_VERIFY_MAR_SIGNATURE)
+  else
+    AC_MSG_ERROR([Can only build with --enable-verify-mar with a Windows target])
+  fi
+fi
+
+dnl ========================================================
 dnl Updater
 dnl ========================================================
 
@@ -8589,6 +8606,7 @@ AC_SUBST(MOZ_ONLY_TOUCH_EVENTS)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_MAINTENANCE_SERVICE)
+AC_SUBST(MOZ_VERIFY_MAR_SIGNATURE)
 AC_SUBST(MOZ_UPDATER)
 AC_SUBST(MOZ_ANGLE)
 AC_SUBST(MOZ_DIRECTX_SDK_PATH)
