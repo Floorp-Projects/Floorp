@@ -78,7 +78,15 @@ PR_STATIC_ASSERT(sizeof(BLOCKSIZE) < \
    implementations of the signmar program. */
 #define MAX_SIGNATURE_LENGTH 2048
 
+/* Each additional block has a unique ID.  
+   The product information block has an ID of 1. */
+#define PRODUCT_INFO_BLOCK_ID 1
+
 #define MAR_ITEM_SIZE(namelen) (3*sizeof(PRUint32) + (namelen) + 1)
+
+/* Product Information Block (PIB) constants */
+#define PIB_MAX_MAR_CHANNEL_ID_SIZE 63
+#define PIB_MAX_PRODUCT_VERSION_SIZE 31
 
 /* The mar program is compiled as a host bin so we don't have access to NSPR at
    runtime.  For that reason we use ntohl, htonl, and define HOST_TO_NETWORK64 
