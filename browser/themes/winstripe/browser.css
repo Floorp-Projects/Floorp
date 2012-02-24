@@ -609,8 +609,12 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item[container][livemark] .bookmark-item {
-  list-style-image: url("chrome://browser/skin/livemark-item.png");
-  -moz-image-region: auto;
+  list-style-image: url("chrome://browser/skin/places/livemark-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.bookmark-item[container][livemark] .bookmark-item[visited] {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
 .bookmark-item[container][query] {
