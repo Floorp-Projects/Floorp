@@ -663,6 +663,7 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
     if (!EliminateDeadPhis(graph))
         return false;
     IonSpewPass("Eliminate dead phis");
+    AssertGraphCoherency(graph);
 
     if (!BuildPhiReverseMapping(graph))
         return false;
@@ -670,11 +671,13 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
 
     EliminateCopies(graph);
     IonSpewPass("Eliminate copies");
+    AssertGraphCoherency(graph);
 
     // This pass also removes copies.
     if (!ApplyTypeInformation(graph))
         return false;
     IonSpewPass("Apply types");
+    AssertGraphCoherency(graph);
 
     // Alias analysis is required for LICM and GVN so that we don't move
     // loads across stores.
@@ -683,6 +686,7 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         if (!analysis.analyze())
             return false;
         IonSpewPass("Alias analysis");
+        AssertGraphCoherency(graph);
     }
 
     if (js_IonOptions.gvn) {
@@ -690,17 +694,20 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
         if (!gvn.analyze())
             return false;
         IonSpewPass("GVN");
+        AssertGraphCoherency(graph);
     }
 
     if (!EliminateDeadCode(graph))
         return false;
     IonSpewPass("DCE");
+    AssertGraphCoherency(graph);
 
     if (js_IonOptions.licm) {
         LICM licm(graph);
         if (!licm.analyze())
             return false;
         IonSpewPass("LICM");
+        AssertGraphCoherency(graph);
     }
 
     LIRGraph lir(graph);

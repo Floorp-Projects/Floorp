@@ -60,7 +60,7 @@ IonBuilder::discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *b
         MBasicBlock *block = passArg->block();
         MDefinition *wrapped = passArg->getArgument();
         passArg->replaceAllUsesWith(wrapped);
-        block->remove(passArg);
+        block->discard(passArg);
         argv[i] = wrapped;
     }
 

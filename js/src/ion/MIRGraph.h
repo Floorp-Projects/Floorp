@@ -213,9 +213,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void insertBefore(MInstruction *at, MInstruction *ins);
     void insertAfter(MInstruction *at, MInstruction *ins);
 
-    // Removes an instruction from the instruction list with the intention to
-    // re-insert it at a different location.
-    void remove(MInstruction *ins);
+    // Move an instruction. Movement may cross block boundaries.
+    void moveBefore(MInstruction *at, MInstruction *ins);
 
     // Removes an instruction with the intention to discard it.
     void discard(MInstruction *ins);
