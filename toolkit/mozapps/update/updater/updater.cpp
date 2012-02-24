@@ -1593,7 +1593,6 @@ UpdateThreadFunc(void *param)
     if (rv == OK) {
       rv = gArchiveReader.VerifySignature();
     }
-#endif
 
     if (rv == OK) {
       NS_tchar updateSettingsPath[MAX_TEXT_LEN];
@@ -1610,6 +1609,7 @@ UpdateThreadFunc(void *param)
       rv = gArchiveReader.VerifyProductInformation(MARStrings.MARChannelID,
                                                    MOZ_APP_VERSION);
     }
+#endif
   }
 
   if (rv == OK) {

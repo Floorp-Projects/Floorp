@@ -134,7 +134,6 @@ mar_verify_signature(const char *pathToMARFile,
 
   fp = fopen(pathToMARFile, "rb");
   if (!fp) {
-    fclose(fp);
     fprintf(stderr, "ERROR: Could not open MAR file.\n");
     return CryptoX_Error;
   }
