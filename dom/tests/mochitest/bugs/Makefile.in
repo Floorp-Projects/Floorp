@@ -155,7 +155,6 @@ _TEST_FILES	= \
 		devicemotion_inner.html \
 		test_bug698061.html \
 		test_bug707749.html \
-		test_bug691707.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)
