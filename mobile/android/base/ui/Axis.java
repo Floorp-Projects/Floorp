@@ -61,7 +61,7 @@ abstract class Axis {
     // The rate of deceleration when the surface has overscrolled.
     private static final float OVERSCROLL_DECEL_RATE = 0.04f;
     // The percentage of the surface which can be overscrolled before it must snap back.
-    private static final float SNAP_LIMIT = 0.75f;
+    private static final float SNAP_LIMIT = 0.3f;
 
     // The minimum amount of space that must be present for an axis to be considered scrollable,
     // in pixels.
