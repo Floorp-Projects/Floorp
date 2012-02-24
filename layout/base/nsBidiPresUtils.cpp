@@ -54,7 +54,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsContainerFrame.h"
 #include "nsFirstLetterFrame.h"
-#include "gfxUnicodeProperties.h"
+#include "nsUnicodeProperties.h"
 #include "nsTextFrame.h"
 
 #undef NOISY_BIDI
@@ -2020,7 +2020,7 @@ void nsBidiPresUtils::WriteReverse(const PRUnichar* aSrc,
       UTF32Char = *src;
     }
 
-    UTF32Char = gfxUnicodeProperties::GetMirroredChar(UTF32Char);
+    UTF32Char = mozilla::unicode::GetMirroredChar(UTF32Char);
 
     if (IS_IN_BMP(UTF32Char)) {
       *(dest++) = UTF32Char;

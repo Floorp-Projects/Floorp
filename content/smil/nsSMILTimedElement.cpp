@@ -55,6 +55,7 @@
 #include "nsString.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Util.h"
+#include "nsCharSeparatedTokenizer.h"
 
 using namespace mozilla;
 
@@ -1271,10 +1272,6 @@ nsSMILTimedElement::SetBeginOrEndSpec(const nsAString& aSpec,
                                       bool aIsBegin,
                                       RemovalTestFunction aRemove)
 {
-  PRInt32 start;
-  PRInt32 end = -1;
-  PRInt32 length;
-  nsresult rv = NS_OK;
   TimeValueSpecList& timeSpecsList = aIsBegin ? mBeginSpecs : mEndSpecs;
   InstanceTimeList& instances = aIsBegin ? mBeginInstances : mEndInstances;
 
@@ -1282,17 +1279,20 @@ nsSMILTimedElement::SetBeginOrEndSpec(const nsAString& aSpec,
 
   AutoIntervalUpdateBatcher updateBatcher(*this);
 
-  do {
-    start = end + 1;
-    end = aSpec.FindChar(';', start);
-    length = (end == -1) ? -1 : end - start;
+  nsCharSeparatedTokenizer tokenizer(aSpec, ';');
+  if (!tokenizer.hasMoreTokens()) { // Empty list
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = NS_OK;
+  while (tokenizer.hasMoreTokens() && NS_SUCCEEDED(rv)) {
     nsAutoPtr<nsSMILTimeValueSpec>
       spec(new nsSMILTimeValueSpec(*this, aIsBegin));
-    rv = spec->SetSpec(Substring(aSpec, start, length), aContextNode);
+    rv = spec->SetSpec(tokenizer.nextToken(), aContextNode);
     if (NS_SUCCEEDED(rv)) {
       timeSpecsList.AppendElement(spec.forget());
     }
-  } while (end != -1 && NS_SUCCEEDED(rv));
+  }
 
   if (NS_FAILED(rv)) {
     ClearSpecs(timeSpecsList, instances, aRemove);

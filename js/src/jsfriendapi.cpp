@@ -545,6 +545,7 @@ js::DumpHeapComplete(JSContext *cx, FILE *fp)
     }
 
     dtrc.visited.finish();
+    fflush(dtrc.output);
 }
 
 #endif

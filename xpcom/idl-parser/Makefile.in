@@ -47,10 +47,12 @@ PARSER_SRCS = \
   xpidl.py \
   $(NULL)
 
+ifndef MOZ_SYSTEM_PLY
 PLY_PROGS = \
   $(topsrcdir)/other-licenses/ply/ply/lex.py \
   $(topsrcdir)/other-licenses/ply/ply/yacc.py \
   $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Corporation code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * The Initial Developer of the Original Code is
+ *   Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonathan Kew <jfkthame@gmail.com>
+ *   Florian Boesch <pyalot@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,50 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_UNICODEPROPERTIES_H
-#define GFX_UNICODEPROPERTIES_H
+#include <stdarg.h>
 
-#include "prtypes.h"
-#include "gfxTypes.h"
-#include "gfxUnicodeScriptCodes.h"
+#include "WebGLContext.h"
+#include "WebGLExtensions.h"
 
-class THEBES_API gfxUnicodeProperties
+#include "nsContentUtils.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+
+NS_INTERFACE_MAP_BEGIN(WebGLExtensionTextureFilterAnisotropic)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLExtensionTextureFilterAnisotropic)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, WebGLExtension)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtensionTextureFilterAnisotropic)
+NS_INTERFACE_MAP_END_INHERITING(WebGLExtension)
+
+WebGLExtensionTextureFilterAnisotropic::WebGLExtensionTextureFilterAnisotropic(WebGLContext* context) :
+    WebGLExtension(context)
 {
-public:
-    static PRUint32 GetMirroredChar(PRUint32 aCh);
 
-    static PRUint8 GetCombiningClass(PRUint32 aCh);
+}
 
-    static PRUint8 GetGeneralCategory(PRUint32 aCh);
+WebGLExtensionTextureFilterAnisotropic::~WebGLExtensionTextureFilterAnisotropic()
+{
 
-    static PRUint8 GetEastAsianWidth(PRUint32 aCh);
-
-    static PRInt32 GetScriptCode(PRUint32 aCh);
-
-    static PRUint32 GetScriptTagForCode(PRInt32 aScriptCode);
-
-    enum HSType {
-        HST_NONE = 0x00,
-        HST_L    = 0x01,
-        HST_V    = 0x02,
-        HST_T    = 0x04,
-        HST_LV   = 0x03,
-        HST_LVT  = 0x07
-    };
-
-    static HSType GetHangulSyllableType(PRUint32 aCh);
-
-    enum ShapingType {
-        SHAPING_DEFAULT   = 0x0001,
-        SHAPING_ARABIC    = 0x0002,
-        SHAPING_HEBREW    = 0x0004,
-        SHAPING_HANGUL    = 0x0008,
-        SHAPING_MONGOLIAN = 0x0010,
-        SHAPING_INDIC     = 0x0020,
-        SHAPING_THAI      = 0x0040
-    };
-
-    static PRInt32 ScriptShapingType(PRInt32 aScriptCode);
-};
-
-#endif /* GFX_UNICODEPROPERTIES_H */
+}

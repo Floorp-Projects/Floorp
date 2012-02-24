@@ -1596,7 +1596,7 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
                                            cutValue);
               NS_ENSURE_SUCCESS(rv, rv);
               nsCOMPtr<nsIDOMNode> clone;
-              rv = charData->CloneNode(false, getter_AddRefs(clone));
+              rv = charData->CloneNode(false, 1, getter_AddRefs(clone));
               NS_ENSURE_SUCCESS(rv, rv);
               clone->SetNodeValue(cutValue);
               nodeToResult = clone;
@@ -1656,7 +1656,7 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
       {
         if (retval) {
           nsCOMPtr<nsIDOMNode> clone;
-          rv = node->CloneNode(false, getter_AddRefs(clone));
+          rv = node->CloneNode(false, 1, getter_AddRefs(clone));
           NS_ENSURE_SUCCESS(rv, rv);
           nodeToResult = clone;
         }
@@ -1827,7 +1827,7 @@ nsRange::CloneParentsBetween(nsIDOMNode *aAncestor,
   {
     nsCOMPtr<nsIDOMNode> clone, tmpNode;
 
-    res = parent->CloneNode(false, getter_AddRefs(clone));
+    res = parent->CloneNode(false, 1, getter_AddRefs(clone));
 
     if (NS_FAILED(res)) return res;
     if (!clone)         return NS_ERROR_FAILURE;
@@ -1928,7 +1928,7 @@ nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
     // Clone the current subtree!
 
     nsCOMPtr<nsIDOMNode> clone;
-    res = node->CloneNode(deepClone, getter_AddRefs(clone));
+    res = node->CloneNode(deepClone, 1, getter_AddRefs(clone));
     if (NS_FAILED(res)) return res;
 
     // If it's CharacterData, make sure we only clone what
