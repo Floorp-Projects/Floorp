@@ -193,41 +193,25 @@ NS_IMPL_STRING_ATTR_WITH_FALLBACK(nsHTMLOptionElement, Label, label, GetText)
 NS_IMPL_STRING_ATTR_WITH_FALLBACK(nsHTMLOptionElement, Value, value, GetText)
 NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, Disabled, disabled)
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
 {
-  NS_ENSURE_ARG_POINTER(aIndex);
+  // When the element is not in a list of options, the index is 0.
+  *aIndex = 0;
 
-  *aIndex = -1; // -1 indicates the index was not found
-
-  // Get our containing select content object.
+  // Only select elements can contain a list of options.
   nsHTMLSelectElement* selectElement = GetSelect();
-
-  if (selectElement) {
-    // Get the options from the select object.
-    nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
-    selectElement->GetOptions(getter_AddRefs(options));
-
-    if (options) {
-      // Walk the options to find out where we are in the list (ick, O(n))
-      PRUint32 length = 0;
-      options->GetLength(&length);
-
-      nsCOMPtr<nsIDOMNode> thisOption;
-
-      for (PRUint32 i = 0; i < length; i++) {
-        options->Item(i, getter_AddRefs(thisOption));
-
-        if (thisOption.get() == static_cast<nsIDOMNode *>(this)) {
-          *aIndex = i;
-
-          break;
-        }
-      }
-    }
+  if (!selectElement) {
+    return NS_OK;
   }
 
-  return NS_OK;
+  nsHTMLOptionCollection* options = selectElement->GetOptions();
+  if (!options) {
+    return NS_OK;
+  }
+
+  // aIndex will not be set if GetOptionsIndex fails.
+  return options->GetOptionIndex(this, 0, true, aIndex);
 }
 
 bool

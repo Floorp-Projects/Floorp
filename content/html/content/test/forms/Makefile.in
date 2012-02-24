@@ -64,6 +64,7 @@ _TEST_FILES = \
 		test_maxlength_attribute.html \
 		test_datalist_element.html \
 		test_form_attributes_reflection.html \
+		test_option_index_attribute.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
