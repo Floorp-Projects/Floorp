@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+See those bugs:
+https://bugzilla.mozilla.org/show_bug.cgi?id=720385
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for option.index</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=720385">Mozilla Bug 720385</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <datalist>
+    <option></option>
+    <option></option>
+  </datalist>
+  <select>
+    <option></option>
+    <foo>
+      <option></option>
+      <optgroup>
+        <option></option>
+      </optgroup>
+      <option></option>
+    </foo>
+    <option></option>
+  </select>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 720385 **/
+
+var initialIndexes = [ 0, 0, 0, 1, 2, 3, 4 ];
+var options = document.getElementsByTagName('option');
+
+is(options.length, initialIndexes.length,
+   "Must have " + initialIndexes.length +" options");
+
+for (var i=0; i<options.length; ++i) {
+  is(options[i].index, initialIndexes[i], "test");
+}
+
+var o = document.createElement('option');
+is(o.index, 0, "option outside of a document have index=0");
+
+document.body.appendChild(o);
+is(o.index, 0, "option outside of a select have index=0");
+
+var datalist = document.getElementsByTagName('datalist')[0];
+
+datalist.appendChild(o);
+is(o.index, 0, "option outside of a select have index=0");
+
+datalist.removeChild(o);
+is(o.index, 0, "option outside of a select have index=0");
+
+var select = document.getElementsByTagName('select')[0];
+
+select.appendChild(o);
+is(o.index, 5, "option inside a select have an index");
+
+select.removeChild(select.options[0]);
+is(o.index, 4, "option inside a select have an index");
+
+select.insertBefore(o, select.options[0]);
+is(o.index, 0, "option inside a select have an index");
+
+</script>
+</pre>
+</body>
+</html>
