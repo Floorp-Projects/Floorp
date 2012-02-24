@@ -230,7 +230,7 @@ mar_repackage_and_sign(const char *NSSConfigDir,
     signaturePlaceholderOffset, numBytesToCopy, 
     numChunks, i;
   FILE *fpSrc = NULL, *fpDest = NULL;
-  int rv = -1, oldMar;
+  int rv = -1, hasSignatureBlock;
   SGNContext *ctx = NULL;
   SECItem secItem;
   char buf[BLOCKSIZE];
@@ -268,7 +268,7 @@ mar_repackage_and_sign(const char *NSSConfigDir,
   }
 
   /* Determine if the source MAR file has the new fields for signing or not */
-  if (is_old_mar(src, &oldMar)) {
+  if (get_mar_file_info(src, &hasSignatureBlock, NULL, NULL, NULL, NULL)) {
     fprintf(stderr, "ERROR: could not determine if MAR is old or new.\n");
     goto failure;
   }
@@ -299,7 +299,7 @@ mar_repackage_and_sign(const char *NSSConfigDir,
     goto failure;
   }
 
-  if (!oldMar) {
+  if (hasSignatureBlock) {
     /* Get the MAR length and adjust its size */
     if (fread(&sizeOfEntireMAR, 
               sizeof(sizeOfEntireMAR), 1, fpSrc) != 1) {
@@ -338,7 +338,7 @@ mar_repackage_and_sign(const char *NSSConfigDir,
                            sizeof(signatureLength) +
                            signatureLength;
   dstOffsetToIndex = offsetToIndex;
-  if (oldMar) {
+  if (!hasSignatureBlock) {
     dstOffsetToIndex += sizeof(sizeOfEntireMAR) + sizeof(numSignatures);
   }
   dstOffsetToIndex += signatureSectionLength;
@@ -353,7 +353,7 @@ mar_repackage_and_sign(const char *NSSConfigDir,
 
   /* Write out the new MAR file size */
   sizeOfEntireMAR += signatureSectionLength;
-  if (oldMar) {
+  if (!hasSignatureBlock) {
     sizeOfEntireMAR += sizeof(sizeOfEntireMAR) + sizeof(numSignatures);
   }
 
@@ -445,7 +445,7 @@ mar_repackage_and_sign(const char *NSSConfigDir,
     /* Adjust the offset */
     offsetToContent = (PRUint32 *)indexBufLoc; 
     *offsetToContent = ntohl(*offsetToContent);
-    if (oldMar) {
+    if (!hasSignatureBlock) {
       *offsetToContent += sizeof(sizeOfEntireMAR) + sizeof(numSignatures);
     }
     *offsetToContent += signatureSectionLength;

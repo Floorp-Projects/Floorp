@@ -46,14 +46,30 @@ extern "C" {
 #endif
 
 /**
- * Determines if the MAR file is new or old.
- * 
- * @param path   The path of the MAR file to check.
- * @param oldMar An out parameter specifying if the MAR file is new or old.
- * @return A non-zero value if an error occurred and the information 
-           cannot be determined.
+ * Determines MAR file information.
+ *
+ * @param path                   The path of the MAR file to check.
+ * @param hasSignatureBlock      Optional out parameter specifying if the MAR
+ *                               file is has a signature block or not.
+ * @param numSignatures          Optional out parameter for storing the number
+ *                               of signatures in the MAR file.
+ * @param hasAdditionalBlocks    Optional out parameter specifying if the MAR
+ *                               file has additional blocks or not.
+ * @param offsetAdditionalBlocks Optional out parameter for the offset to the 
+ *                               first additional block. Value is only valid if
+ *                               has_additional_blocks
+ *                               is not equal to 0.
+ * @param numAdditionalBlocks    Optional out parameter for the number of
+ *                               additional blocks.  Value is only valid if
+ *                               has_additional_blocks is not euqal to 0.
+ * @return 0 on success and non-zero on failure.
  */
-int is_old_mar(const char *path, int *oldMar);
+int get_mar_file_info(const char *path, 
+                      int *hasSignatureBlock,
+                      int *numSignatures,
+                      int *hasAdditionalBlocks,
+                      int *offsetAdditionalBlocks,
+                      int *numAdditionalBlocks);
 
 /**
  * Verifies the embedded signature of the specified file path.
@@ -74,6 +90,18 @@ int mar_verify_signature(const char *pathToMAR,
                          const char *certData,
                          PRUint32 sizeOfCertData,
                          const char *certName);
+
+/** 
+ * Reads the product info block from the MAR file's additional block section.
+ * The caller is responsible for freeing the fields in infoBlock
+ * if the return is successful.
+ *
+ * @param infoBlock Out parameter for where to store the result to
+ * @return 0 on success, -1 on failure
+*/
+int
+read_product_info_block(char *path, 
+                        struct ProductInformationBlock *infoBlock);
 
 #ifdef __cplusplus
 }
