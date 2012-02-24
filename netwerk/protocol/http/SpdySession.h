@@ -77,6 +77,10 @@ public:
   bool CanReuse() { return !mShouldGoAway && !mClosed; }
   void DontReuse();
   bool RoomForMoreStreams();
+
+  // When the connection is active this is called every 15 seconds
+  void  ReadTimeoutTick(PRIntervalTime now);
+
   PRUint32 RegisterStreamID(SpdyStream *);
 
   const static PRUint8 kFlag_Control   = 0x80;

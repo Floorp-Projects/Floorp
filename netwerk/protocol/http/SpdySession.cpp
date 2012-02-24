@@ -212,6 +212,12 @@ SpdySession::RoomForMoreStreams()
   return !mShouldGoAway;
 }
 
+void
+SpdySession::ReadTimeoutTick(PRIntervalTime now)
+{
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+}
+
 PRUint32
 SpdySession::RegisterStreamID(SpdyStream *stream)
 {
