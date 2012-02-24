@@ -97,7 +97,6 @@ JS_BEGIN_EXTERN_C
 /* Scalar typedefs. */
 typedef int32_t   jsint;
 typedef uint32_t  jsuint;
-typedef double    jsdouble;
 typedef int32_t   jsrefcount;   /* PRInt32 if JS_THREADSAFE, see jslock.h */
 
 #ifdef WIN32

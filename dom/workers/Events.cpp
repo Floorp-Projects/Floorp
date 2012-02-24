@@ -850,7 +850,7 @@ public:
 
   static JSObject*
   Create(JSContext* aCx, JSObject* aParent, JSString* aType,
-         bool aLengthComputable, jsdouble aLoaded, jsdouble aTotal)
+         bool aLengthComputable, double aLoaded, double aTotal)
   {
     JSString* type = JS_InternJSString(aCx, aType);
     if (!type) {
@@ -907,8 +907,8 @@ private:
   static void
   InitProgressEventCommon(JSObject* aObj, Event* aEvent, JSString* aType,
                           JSBool aBubbles, JSBool aCancelable,
-                          JSBool aLengthComputable, jsdouble aLoaded,
-                          jsdouble aTotal, bool aIsTrusted)
+                          JSBool aLengthComputable, double aLoaded,
+                          double aTotal, bool aIsTrusted)
   {
     Event::InitEventCommon(aObj, aEvent, aType, aBubbles, aCancelable,
                            aIsTrusted);
@@ -967,7 +967,7 @@ private:
 
     JSString* type;
     JSBool bubbles, cancelable, lengthComputable;
-    jsdouble loaded, total;
+    double loaded, total;
     if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "Sbbbdd", &type,
                              &bubbles, &cancelable, &lengthComputable, &loaded,
                              &total)) {
@@ -1065,7 +1065,7 @@ CreateErrorEvent(JSContext* aCx, JSString* aMessage, JSString* aFilename,
 
 JSObject*
 CreateProgressEvent(JSContext* aCx, JSString* aType, bool aLengthComputable,
-                    jsdouble aLoaded, jsdouble aTotal)
+                    double aLoaded, double aTotal)
 {
   JSObject* global = JS_GetGlobalForScopeChain(aCx);
   return ProgressEvent::Create(aCx, global, aType, aLengthComputable, aLoaded,

@@ -248,7 +248,7 @@ Key::DecodeJSVal(const unsigned char*& aPos, const unsigned char* aEnd,
     }
   }
   else if (*aPos - aTypeOffset == eDate) {
-    jsdouble msec = static_cast<jsdouble>(DecodeNumber(aPos, aEnd));
+    double msec = static_cast<double>(DecodeNumber(aPos, aEnd));
     JSObject* date = JS_NewDateObjectMsec(aCx, msec);
     if (!date) {
       NS_WARNING("Failed to make date!");
