@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const CURRENT_SCHEMA_VERSION = 18;
+const CURRENT_SCHEMA_VERSION = 19;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
@@ -74,18 +74,13 @@ XPCOMUtils.defineLazyGetter(this, "FileUtils", function() {
   return FileUtils;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-  return PlacesUtils;
-});
-
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 function LOG(aMsg) {
   aMsg = ("*** PLACES TESTS: " + aMsg);
   Services.console.logStringMessage(aMsg);
   print(aMsg);
 }
-
 
 let gTestDir = do_get_cwd();
 
