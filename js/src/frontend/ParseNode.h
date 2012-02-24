@@ -619,7 +619,7 @@ struct ParseNode {
             AtomDefnMapPtr   defnMap;
             ParseNode        *tree;     /* sub-tree containing name uses */
         } nameset;
-        double        dval;             /* aligned numeric literal value */
+        jsdouble        dval;           /* aligned numeric literal value */
         class {
             friend class LoopControlStatement;
             PropertyName     *label;    /* target of break/continue statement */

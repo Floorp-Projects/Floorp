@@ -285,7 +285,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
     JSBool required;
     char c;
     JSFunction *fun;
-    double d;
+    jsdouble d;
     JSString *str;
     JSObject *obj;
 
@@ -338,13 +338,13 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
                 return JS_FALSE;
             break;
           case 'd':
-            if (!JS_ValueToNumber(cx, *sp, va_arg(ap, double *)))
+            if (!JS_ValueToNumber(cx, *sp, va_arg(ap, jsdouble *)))
                 return JS_FALSE;
             break;
           case 'I':
             if (!JS_ValueToNumber(cx, *sp, &d))
                 return JS_FALSE;
-            *va_arg(ap, double *) = js_DoubleToInteger(d);
+            *va_arg(ap, jsdouble *) = js_DoubleToInteger(d);
             break;
           case 'S':
           case 'W':
@@ -445,7 +445,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
     JSBool ok;
     JSObject *obj;
     JSString *str;
-    double d;
+    jsdouble d;
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -536,7 +536,7 @@ JS_ValueToSource(JSContext *cx, jsval v)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ValueToNumber(JSContext *cx, jsval v, double *dp)
+JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -547,19 +547,19 @@ JS_ValueToNumber(JSContext *cx, jsval v, double *dp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DoubleIsInt32(double d, jsint *ip)
+JS_DoubleIsInt32(jsdouble d, jsint *ip)
 {
     return JSDOUBLE_IS_INT32(d, (int32_t *)ip);
 }
 
 JS_PUBLIC_API(int32_t)
-JS_DoubleToInt32(double d)
+JS_DoubleToInt32(jsdouble d)
 {
     return js_DoubleToECMAInt32(d);
 }
 
 JS_PUBLIC_API(uint32_t)
-JS_DoubleToUint32(double d)
+JS_DoubleToUint32(jsdouble d)
 {
     return js_DoubleToECMAUint32(d);
 }
@@ -2248,7 +2248,7 @@ JS_strdup(JSContext *cx, const char *s)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_NewNumberValue(JSContext *cx, double d, jsval *rval)
+JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 {
     AssertNoGC(cx);
     d = JS_CANONICALIZE_NAN(d);
@@ -6285,7 +6285,7 @@ JS_NewDateObject(JSContext *cx, int year, int mon, int mday, int hour, int min, 
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewDateObjectMsec(JSContext *cx, double msec)
+JS_NewDateObjectMsec(JSContext *cx, jsdouble msec)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);

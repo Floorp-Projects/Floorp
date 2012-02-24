@@ -1065,7 +1065,7 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
          * We assume that calloc aligns on sizeof(Value) if the size we ask to
          * allocate divides sizeof(Value).
          */
-        JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
+        JS_STATIC_ASSERT(sizeof(Value) == sizeof(jsdouble));
         data = static_cast<uint8_t *>(cx->calloc_(JS_ROUNDUP(size, sizeof(Value))));
         if (!data)
             return NULL;
