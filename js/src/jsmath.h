@@ -115,10 +115,10 @@ js_math_sqrt(JSContext *cx, uintN argc, js::Value *vp);
 extern JSBool
 js_math_pow(JSContext *cx, uintN argc, js::Value *vp);
 
-extern jsdouble
-js_math_ceil_impl(jsdouble x);
+extern double
+js_math_ceil_impl(double x);
 
-extern jsdouble
-js_math_floor_impl(jsdouble x);
+extern double
+js_math_floor_impl(double x);
 
 #endif /* jsmath_h___ */

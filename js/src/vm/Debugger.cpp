@@ -1967,7 +1967,7 @@ DebuggerScript_getLineCount(JSContext *cx, uintN argc, Value *vp)
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getLineCount", args, obj, script);
 
     uintN maxLine = js_GetScriptLineExtent(script);
-    args.rval().setNumber(jsdouble(maxLine));
+    args.rval().setNumber(double(maxLine));
     return true;
 }
 
@@ -2243,7 +2243,7 @@ DebuggerScript_getLineOffsets(JSContext *cx, uintN argc, Value *vp)
     size_t lineno;
     bool ok = false;
     if (args[0].isNumber()) {
-        jsdouble d = args[0].toNumber();
+        double d = args[0].toNumber();
         lineno = size_t(d);
         ok = (lineno == d);
     }

@@ -210,12 +210,12 @@ struct JSDProfileData
     uintN    callCount;
     uintN    recurseDepth;
     uintN    maxRecurseDepth;
-    jsdouble minExecutionTime;
-    jsdouble maxExecutionTime;
-    jsdouble totalExecutionTime;
-    jsdouble minOwnExecutionTime;
-    jsdouble maxOwnExecutionTime;
-    jsdouble totalOwnExecutionTime;
+    double minExecutionTime;
+    double maxExecutionTime;
+    double totalExecutionTime;
+    double minOwnExecutionTime;
+    double maxOwnExecutionTime;
+    double totalOwnExecutionTime;
 };
 
 struct JSDSourceText
@@ -417,22 +417,22 @@ jsd_GetScriptCallCount(JSDContext* jsdc, JSDScript *script);
 extern  uintN
 jsd_GetScriptMaxRecurseDepth(JSDContext* jsdc, JSDScript *script);
 
-extern jsdouble
+extern double
 jsd_GetScriptMinExecutionTime(JSDContext* jsdc, JSDScript *script);
 
-extern jsdouble
+extern double
 jsd_GetScriptMaxExecutionTime(JSDContext* jsdc, JSDScript *script);
 
-extern jsdouble
+extern double
 jsd_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script);
 
-extern jsdouble
+extern double
 jsd_GetScriptMinOwnExecutionTime(JSDContext* jsdc, JSDScript *script);
 
-extern jsdouble
+extern double
 jsd_GetScriptMaxOwnExecutionTime(JSDContext* jsdc, JSDScript *script);
 
-extern jsdouble
+extern double
 jsd_GetScriptTotalOwnExecutionTime(JSDContext* jsdc, JSDScript *script);
 
 extern void
@@ -972,7 +972,7 @@ jsd_GetValueBoolean(JSDContext* jsdc, JSDValue* jsdval);
 extern int32_t
 jsd_GetValueInt(JSDContext* jsdc, JSDValue* jsdval);
 
-extern jsdouble
+extern double
 jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval);
 
 extern JSString*

@@ -900,7 +900,7 @@ SwapBytes(PRUint32 u)
 #endif
 }
 
-static inline jsdouble
+static inline double
 SwapBytes(PRUint64 u)
 {
 #ifdef IS_BIG_ENDIAN
@@ -913,7 +913,7 @@ SwapBytes(PRUint64 u)
          ((u & 0x00ff000000000000LLU) >> 40) |
          ((u & 0xff00000000000000LLU) >> 56);
 #else
-  return jsdouble(u);
+  return double(u);
 #endif
 }
 
@@ -2019,7 +2019,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
       // This is a duplicate of the js engine's byte munging here
       union {
-        jsdouble d;
+        double d;
         PRUint64 u;
       } pun;
     
@@ -2851,5 +2851,5 @@ nsresult
 CountHelper::GetSuccessResult(JSContext* aCx,
                               jsval* aVal)
 {
-  return JS_NewNumberValue(aCx, static_cast<jsdouble>(mCount), aVal);
+  return JS_NewNumberValue(aCx, static_cast<double>(mCount), aVal);
 }
