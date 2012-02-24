@@ -56,6 +56,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import android.hardware.Camera;
 
+// TODO: Port this to GLES 2.0.
 public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrameAvailableListener {
     private static final String LOGTAG = "SurfaceTextureLayer";
     private static final int LOCAL_GL_TEXTURE_EXTERNAL_OES = 0x00008d65; // This is only defined in API level 15 for some reason (Android 4.0.3)
@@ -73,7 +74,7 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     private boolean mBlend;
     private boolean mNewBlend;
 
-	private FloatBuffer textureBuffer;
+    private FloatBuffer textureBuffer;
     private FloatBuffer textureBufferInverted;
 
     public SurfaceTextureLayer(int textureId) {
@@ -94,19 +95,19 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         mSurface = tmp;
 
         float textureMap[] = {
-                0.0f, 1.0f,	// top left
-                0.0f, 0.0f,	// bottom left
-                1.0f, 1.0f,	// top right
-                1.0f, 0.0f,	// bottom right
+                0.0f, 1.0f, // top left
+                0.0f, 0.0f, // bottom left
+                1.0f, 1.0f, // top right
+                1.0f, 0.0f, // bottom right
         };
 
         textureBuffer = createBuffer(textureMap);
 
         float textureMapInverted[] = {
-                0.0f, 0.0f,	// bottom left
-                0.0f, 1.0f,	// top left
-                1.0f, 0.0f,	// bottom right
-                1.0f, 1.0f,	// top right
+                0.0f, 0.0f, // bottom left
+                0.0f, 1.0f, // top left
+                1.0f, 0.0f, // bottom right
+                1.0f, 1.0f, // top right
         };
 
         textureBufferInverted = createBuffer(textureMapInverted);
@@ -129,18 +130,18 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
 
     private FloatBuffer createBuffer(float[] input) {
         // a float has 4 bytes so we allocate for each coordinate 4 bytes
-		ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length * 4);
-		byteBuffer.order(ByteOrder.nativeOrder());
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(input.length * 4);
+        byteBuffer.order(ByteOrder.nativeOrder());
 
         FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
         floatBuffer.put(input);
-		floatBuffer.position(0);
+        floatBuffer.position(0);
 
         return floatBuffer;
     }
 
     public void update(Point origin, IntSize size, float resolution, boolean inverted, boolean blend) {
-        beginTransaction(null);
+        beginTransaction(); // this is called on the Gecko thread
 
         setOrigin(origin);
         setResolution(resolution);
@@ -173,8 +174,8 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     }
 
     @Override
-    protected boolean performUpdates(GL10 gl, RenderContext context) {
-        super.performUpdates(gl, context);
+    protected boolean performUpdates(RenderContext context) {
+        super.performUpdates(context);
 
         if (mNewSize != null) {
             mSize = mNewSize;
@@ -184,10 +185,10 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         mInverted = mNewInverted;
         mBlend = mNewBlend;
 
-        gl.glEnable(LOCAL_GL_TEXTURE_EXTERNAL_OES);
-        gl.glBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, mTextureId);
+        GLES11.glEnable(LOCAL_GL_TEXTURE_EXTERNAL_OES);
+        GLES11.glBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, mTextureId);
         mSurfaceTexture.updateTexImage();
-        gl.glDisable(LOCAL_GL_TEXTURE_EXTERNAL_OES);
+        GLES11.glDisable(LOCAL_GL_TEXTURE_EXTERNAL_OES);
 
         // FIXME: we should return true and rely on onFrameAvailable, but
         // that isn't working for some reason
@@ -257,10 +258,6 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         GLES11.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
         GLES11.glDisable(LOCAL_GL_TEXTURE_EXTERNAL_OES);
         GLES11.glLoadIdentity();
-
-        if (mBlend) {
-            GLES11.glDisable(GL10.GL_BLEND);
-        }
     }
 
     public SurfaceTexture getSurfaceTexture() {

@@ -37,40 +37,15 @@
 
 package org.mozilla.gecko.gfx;
 
-/**
- * A layer client provides tiles and manages other information used by the layer controller.
- */
-public abstract class LayerClient {
-    private LayerController mLayerController;
+public class ViewTransform {
+    public float x;
+    public float y;
+    public float scale;
 
-    public abstract void geometryChanged();
-    public abstract void viewportSizeChanged();
-    protected abstract void render();
-
-    public LayerController getLayerController() { return mLayerController; }
-    public void setLayerController(LayerController layerController) {
-        mLayerController = layerController;
-    }
-
-    /**
-     * A utility function for calling Layer.beginTransaction with the
-     * appropriate LayerView.
-     */
-    public void beginTransaction(Layer aLayer) {
-        if (mLayerController != null) {
-            LayerView view = mLayerController.getView();
-            if (view != null) {
-                aLayer.beginTransaction(view);
-                return;
-            }
-        }
-
-        aLayer.beginTransaction();
-    }
-
-    // Included for symmetry.
-    public void endTransaction(Layer aLayer) {
-        aLayer.endTransaction();
+    public ViewTransform(float inX, float inY, float inScale) {
+        x = inX;
+        y = inY;
+        scale = inScale;
     }
 }
 
