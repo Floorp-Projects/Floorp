@@ -325,10 +325,14 @@
         detailItem.setAttribute("isDisabled", aListItem.getAttribute("isDisabled"));
         detailItem.setAttribute("opType", aListItem.getAttribute("opType"));
         detailItem.setAttribute("optionsURL", aListItem.getAttribute("optionsURL"));
-        detailItem.addon = aListItem.addon;
+        let addon = detailItem.addon = aListItem.addon;
 
-        let addon = detailItem.addon;
-        document.querySelector("#addons-details > .addon-item .favicon").setAttribute("src", addon.iconURL);
+        let favicon = document.querySelector("#addons-details > .addon-item .favicon");
+        if (addon.iconURL)
+          favicon.setAttribute("src", addon.iconURL);
+        else
+          favicon.removeAttribute("src");
+
         document.querySelector("#addons-details > .addon-item .title").textContent = addon.name;
         document.querySelector("#addons-details > .addon-item .version").textContent = addon.version;
         document.querySelector("#addons-details > .addon-item .tag").textContent = gStringBundle.GetStringFromName("addonType." + addon.type);
