@@ -1,0 +1,170 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for SMIL values</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=557885">Mozilla Bug
+  474742</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg" width="120px" height="120px">
+  <circle cx="-100" cy="20" r="15" fill="blue" id="circle"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+/** Test for SMIL values **/
+
+var gSvg = document.getElementById("svg");
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  gSvg.pauseAnimations();
+
+  var testCases = Array();
+
+  // Single value
+  testCases.push({
+    'attr' : { 'values': 'a' },
+    'times': [ [ 0, 'a' ] ]
+  });
+
+  // The parsing below is based on the following discussion:
+  //
+  //   http://lists.w3.org/Archives/Public/www-svg/2011Nov/0136.html
+  //
+  // In summary:
+  // * Values lists are semi-colon delimited and semi-colon terminated.
+  // * However, if there are extra non-whitespace characters after the final
+  //   semi-colon then there's an implied semi-colon at the end.
+  //
+  // This differs to what is specified in SVG 1.1 but is consistent with the
+  // majority of browsers and with existing content (particularly that generated
+  // by Ikivo Animator).
+
+  // Trailing semi-colon
+  testCases.push({
+    'attr' : { 'values': 'a;' },
+    'times': [ [ 0, 'a' ], [ 10, 'a' ] ]
+  });
+
+  // Trailing semi-colon + whitespace
+  testCases.push({
+    'attr' : { 'values': 'a; ' },
+    'times': [ [ 0, 'a' ], [ 10, 'a' ] ]
+  });
+
+  // Whitespace + trailing semi-colon
+  testCases.push({
+    'attr' : { 'values': 'a ;' },
+    'times': [ [ 0, 'a' ], [ 10, 'a' ] ]
+  });
+
+  // Empty at end
+  testCases.push({
+    'attr' : { 'values': 'a;;' },
+    'times': [ [ 0, 'a' ], [ 5, '' ], [ 10, '' ] ]
+  });
+
+  // Empty at end + whitespace
+  testCases.push({
+    'attr' : { 'values': 'a;; ' },
+    'times': [ [ 0, 'a' ], [ 4, 'a' ], [ 5, '' ], [ 10, '' ] ]
+  });
+
+  // Empty in middle
+  testCases.push({
+    'attr' : { 'values': 'a;;b' },
+    'times': [ [ 0, 'a' ], [ 5, '' ], [ 10, 'b' ] ]
+  });
+
+  // Empty in middle + trailing semi-colon
+  testCases.push({
+    'attr' : { 'values': 'a;;b;' },
+    'times': [ [ 0, 'a' ], [ 5, '' ], [ 10, 'b' ] ]
+  });
+
+  // Whitespace in middle
+  testCases.push({
+    'attr' : { 'values': 'a; ;b' },
+    'times': [ [ 0, 'a' ], [ 5, '' ], [ 10, 'b' ] ]
+  });
+
+  // Empty at start
+  testCases.push({
+    'attr' : { 'values': ';a' },
+    'times': [ [ 0, '' ], [ 5, 'a' ], [ 10, 'a' ] ]
+  });
+
+  // Whitespace at start
+  testCases.push({
+    'attr' : { 'values': ' ;a' },
+    'times': [ [ 0, '' ], [ 5, 'a' ], [ 10, 'a' ] ]
+  });
+
+  // Embedded whitespace
+  testCases.push({
+    'attr' : { 'values': ' a b ; c d ' },
+    'times': [ [ 0, 'a b' ], [ 5, 'c d' ], [ 10, 'c d' ] ]
+  });
+
+  // Whitespace only
+  testCases.push({
+    'attr' : { 'values': '  ' },
+    'times': [ [ 0, '' ], [ 10, '' ] ]
+  });
+
+  for (var i = 0; i < testCases.length; i++) {
+    gSvg.setCurrentTime(0);
+    var test = testCases[i];
+
+    // Create animation elements
+    var anim = createAnim(test.attr);
+
+    // Run samples
+    for (var j = 0; j < test.times.length; j++) {
+      var curSample = test.times[j];
+      gSvg.setCurrentTime(curSample[0]);
+      checkSample(anim, curSample[1], curSample[0], i);
+    }
+
+    anim.parentNode.removeChild(anim);
+  }
+
+  SimpleTest.finish();
+}
+
+function createAnim(attr)
+{
+  const svgns = "http://www.w3.org/2000/svg";
+  var anim = document.createElementNS(svgns, 'animate');
+  anim.setAttribute('attributeName','class');
+  anim.setAttribute('dur','10s');
+  anim.setAttribute('begin','0s');
+  anim.setAttribute('fill','freeze');
+  for (name in attr) {
+    anim.setAttribute(name, attr[name]);
+  }
+  return document.getElementById('circle').appendChild(anim);
+}
+
+function checkSample(anim, expectedValue, sampleTime, caseNum)
+{
+  var msg = "Test case " + caseNum +
+    " (values: '" + anim.getAttribute('values') + "')," +
+    "t=" + sampleTime +
+    ": Unexpected sample value:";
+  is(anim.targetElement.className.animVal, expectedValue, msg);
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>
