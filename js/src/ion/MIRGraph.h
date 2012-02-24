@@ -487,7 +487,7 @@ class MIRGraph
 {
     InlineList<MBasicBlock> blocks_;
     TempAllocator &alloc_;
-    MIRGraphExits *exitAccumulator;
+    MIRGraphExits *exitAccumulator_;
     uint32 blockIdGen_;
     uint32 idGen_;
     MBasicBlock *osrBlock_;
@@ -499,7 +499,7 @@ class MIRGraph
   public:
     MIRGraph(TempAllocator &alloc)
       : alloc_(alloc),
-        exitAccumulator(NULL),
+        exitAccumulator_(NULL),
         blockIdGen_(0),
         idGen_(0),
         osrBlock_(NULL),
@@ -518,19 +518,17 @@ class MIRGraph
     void unmarkBlocks();
 
     void setExitAccumulator(MIRGraphExits *accum) {
-        exitAccumulator = accum;
+        exitAccumulator_ = accum;
     }
-
-    MIRGraphExits &getExitAccumulator() {
-        JS_ASSERT(exitAccumulator);
-        return *exitAccumulator;
+    MIRGraphExits *exitAccumulator() const {
+        return exitAccumulator_;
     }
 
     bool addExit(MBasicBlock *exitBlock) {
-        if (!exitAccumulator)
+        if (!exitAccumulator_)
             return true;
 
-        return exitAccumulator->append(exitBlock);
+        return exitAccumulator_->append(exitBlock);
     }
 
     MBasicBlock *entryBlock() {

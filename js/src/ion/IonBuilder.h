@@ -191,7 +191,7 @@ class IonBuilder : public MIRGenerator
                TypeOracle *oracle, CompileInfo &info, size_t inliningDepth = 0, uint32 loopDepth = 0);
 
     bool build();
-    bool buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
+    bool buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint, MDefinition *thisDefn,
                      MDefinitionVector &args);
 
   private:
@@ -359,6 +359,7 @@ class IonBuilder : public MIRGenerator
     jsbytecode *callerPC() {
         return callerResumePoint_ ? callerResumePoint_->pc() : NULL;
     }
+    IonBuilder *callerBuilder_;
 
     Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
     Vector<ControlFlowInfo, 4, IonAllocPolicy> loops_;
