@@ -936,6 +936,7 @@
                 togglePause : function () {
                     if (this.video.paused || this.video.ended) {
                         this._triggeredByControls = true;
+                        this.hideClickToPlay();
                         this.video.play();
                     } else {
                         this.video.pause();
@@ -980,7 +981,19 @@
                         this.fullscreenButton.removeAttribute("fullscreened");
                 },
 
-                handleClickToPlay : function () {
+                clickToPlayClickHandler : function(e) {
+                    if (e.button != 0 || this.hasError())
+                        return;
+                    // Read defaultPrevented asynchronously, since Web content
+                    // may want to consume the "click" event but will only
+                    // receive it after us.
+                    let self = this;
+                    setTimeout(function clickToPlayCallback() {
+                        if (!e.defaultPrevented)
+                            self.togglePause();
+                    }, 0);
+                },
+                hideClickToPlay : function () {
                     let videoHeight = this.video.clientHeight;
                     let videoWidth = this.video.clientWidth;
 
@@ -995,7 +1008,6 @@
                         this.clickToPlay.removeAttribute("immediate");
                     }
                     this.clickToPlay.setAttribute("fadeout", "true");
-                    this.togglePause();
                 },
 
                 setPlayButtonState : function(aPaused) {
@@ -1348,28 +1360,8 @@
                     addListener(this.muteButton, "command", this.toggleMute);
                     addListener(this.playButton, "command", this.togglePause);
                     addListener(this.fullscreenButton, "command", this.toggleFullscreen);
-                    addListener(this.clickToPlay, "click", function clickToPlayClickHandler(e) {
-                      if (e.button != 0 || self.hasError())
-                        return;
-                      // Read defaultPrevented asynchronously, since Web content
-                      // may want to consume the "click" event but will only
-                      // receive it after us.
-                      setTimeout(function clickToPlayCallback() {
-                        if (!e.defaultPrevented)
-                          self.handleClickToPlay();
-                      }, 0);
-                    });
-                    addListener(this.controlsSpacer, "click", function(e) {
-                      if (e.button != 0 || self.hasError())
-                        return;
-                      // Read defaultPrevented asynchronously, since Web content
-                      // may want to consume the "click" event but will only
-                      // receive it after us (bug 693014).
-                      setTimeout(function togglePauseCallback() {
-                        if (!e.defaultPrevented)
-                          self.togglePause();
-                      }, 0);
-                    });
+                    addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
+                    addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
 
                     if (!this.isAudioOnly) {
                       addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
