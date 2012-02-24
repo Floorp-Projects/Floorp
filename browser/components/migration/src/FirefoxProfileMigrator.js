@@ -227,6 +227,12 @@ FirefoxProfileMigrator.prototype = {
       this._replaceBookmarks = true;
     }
 
+    // Ensure that aProfile is not the current profile.
+    if (this._paths.currentProfile.path === this._sourceProfile.path) {
+      throw new Exception("Source and destination profiles are the same");
+      return;
+    }
+
     Services.obs.notifyObservers(null, "Migration:Started", null);
 
     // Reset pending count.  If this count becomes 0, "Migration:Ended"
@@ -278,6 +284,11 @@ FirefoxProfileMigrator.prototype = {
     this._sourceProfile.initWithPath(aProfile);
 
     let result = 0;
+
+    // Ensure that aProfile is not the current profile.
+    if (this._paths.currentProfile.path === this._sourceProfile.path)
+      return result;
+
     if (!this._sourceProfile.exists() || !this._sourceProfile.isReadable()) {
       Cu.reportError("source profile directory doesn't exist or is not readable");
       return result;
