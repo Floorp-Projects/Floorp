@@ -87,6 +87,8 @@ using namespace mozilla;
 static PRLogModuleInfo *nsNativeModuleLoaderLog =
     PR_NewLogModule("nsNativeModuleLoader");
 
+bool gInXPCOMLoadOnMainThread = false;
+
 #define LOG(level, args) PR_LOG(nsNativeModuleLoaderLog, level, args)
 
 NS_IMPL_QUERY_INTERFACE1(nsNativeModuleLoader, 
@@ -167,7 +169,9 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
 
     // We haven't loaded this module before
 
+    gInXPCOMLoadOnMainThread = true;
     rv = file->Load(&data.library);
+    gInXPCOMLoadOnMainThread = false;
 
     if (NS_FAILED(rv)) {
         char errorMsg[1024] = "<unknown; can't get error from NSPR>";
