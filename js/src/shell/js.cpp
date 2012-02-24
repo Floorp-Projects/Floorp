@@ -150,8 +150,8 @@ static uintptr_t gStackBase;
  * Limit the timeout to 30 minutes to prevent an overflow on platfoms
  * that represent the time internally in microseconds using 32-bit int.
  */
-static double MAX_TIMEOUT_INTERVAL = 1800.0;
-static double gTimeoutInterval = -1.0;
+static jsdouble MAX_TIMEOUT_INTERVAL = 1800.0;
+static jsdouble gTimeoutInterval = -1.0;
 static volatile bool gCanceled = false;
 
 static bool enableMethodJit = false;
@@ -161,7 +161,7 @@ static bool enableDisassemblyDumps = false;
 static bool printTiming = false;
 
 static JSBool
-SetTimeoutValue(JSContext *cx, double t);
+SetTimeoutValue(JSContext *cx, jsdouble t);
 
 static bool
 InitWatchdog(JSRuntime *rt);
@@ -170,7 +170,7 @@ static void
 KillWatchdog();
 
 static bool
-ScheduleWatchdog(JSRuntime *rt, double t);
+ScheduleWatchdog(JSRuntime *rt, jsdouble t);
 
 static void
 CancelExecution(JSRuntime *rt);
@@ -683,7 +683,7 @@ Version(JSContext *cx, uintN argc, jsval *vp)
         if (JSVAL_IS_INT(argv[0])) {
             v = JSVAL_TO_INT(argv[0]);
         } else if (JSVAL_IS_DOUBLE(argv[0])) {
-            double fv = JSVAL_TO_DOUBLE(argv[0]);
+            jsdouble fv = JSVAL_TO_DOUBLE(argv[0]);
             if (int32_t(fv) == fv)
                 v = int32_t(fv);
         }
@@ -1113,7 +1113,7 @@ PutStr(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 Now(JSContext *cx, uintN argc, jsval *vp)
 {
-    double now = PRMJ_Now() / double(PRMJ_USEC_PER_MSEC);
+    jsdouble now = PRMJ_Now() / double(PRMJ_USEC_PER_MSEC);
     JS_SET_RVAL(cx, vp, DOUBLE_TO_JSVAL(now));
     return true;
 }
@@ -1613,7 +1613,7 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
     }
     JS_DHashTableFinish(&countTracer.visited);
 
-    return countTracer.ok && JS_NewNumberValue(cx, (double) counter, vp);
+    return countTracer.ok && JS_NewNumberValue(cx, (jsdouble) counter, vp);
 }
 
 static jsrefcount finalizeCount = 0;
@@ -2659,7 +2659,7 @@ ZZ_formatter(JSContext *cx, const char *format, JSBool fromJS, jsval **vpp,
 {
     jsval *vp;
     va_list ap;
-    double re, im;
+    jsdouble re, im;
 
     printf("entering ZZ_formatter");
     vp = *vpp;
@@ -2669,11 +2669,11 @@ ZZ_formatter(JSContext *cx, const char *format, JSBool fromJS, jsval **vpp,
             return JS_FALSE;
         if (!JS_ValueToNumber(cx, vp[1], &im))
             return JS_FALSE;
-        *va_arg(ap, double *) = re;
-        *va_arg(ap, double *) = im;
+        *va_arg(ap, jsdouble *) = re;
+        *va_arg(ap, jsdouble *) = im;
     } else {
-        re = va_arg(ap, double);
-        im = va_arg(ap, double);
+        re = va_arg(ap, jsdouble);
+        im = va_arg(ap, jsdouble);
         if (!JS_NewNumberValue(cx, re, &vp[0]))
             return JS_FALSE;
         if (!JS_NewNumberValue(cx, im, &vp[1]))
@@ -2692,7 +2692,7 @@ ConvertArgs(JSContext *cx, uintN argc, jsval *vp)
     jschar c = 0;
     int32_t i = 0, j = 0;
     uint32_t u = 0;
-    double d = 0, I = 0, re = 0, im = 0;
+    jsdouble d = 0, I = 0, re = 0, im = 0;
     JSString *str = NULL;
     jschar *w = NULL;
     JSObject *obj2 = NULL;
@@ -3318,7 +3318,7 @@ Sleep_fn(JSContext *cx, uintN argc, jsval *vp)
     if (argc == 0) {
         t_ticks = 0;
     } else {
-        double t_secs;
+        jsdouble t_secs;
 
         if (!JS_ValueToNumber(cx, argc == 0 ? JSVAL_VOID : vp[2], &t_secs))
             return JS_FALSE;
@@ -3426,7 +3426,7 @@ WatchdogMain(void *arg)
 }
 
 static bool
-ScheduleWatchdog(JSRuntime *rt, double t)
+ScheduleWatchdog(JSRuntime *rt, jsdouble t)
 {
     if (t <= 0) {
         PR_Lock(gWatchdogLock);
@@ -3495,7 +3495,7 @@ KillWatchdog()
 }
 
 static bool
-ScheduleWatchdog(JSRuntime *rt, double t)
+ScheduleWatchdog(JSRuntime *rt, jsdouble t)
 {
 #ifdef XP_WIN
     if (gTimerHandle) {
@@ -3552,7 +3552,7 @@ CancelExecution(JSRuntime *rt)
 }
 
 static JSBool
-SetTimeoutValue(JSContext *cx, double t)
+SetTimeoutValue(JSContext *cx, jsdouble t)
 {
     /* NB: The next condition also filter out NaNs. */
     if (!(t <= MAX_TIMEOUT_INTERVAL)) {
@@ -3578,7 +3578,7 @@ Timeout(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    double t;
+    jsdouble t;
     if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t))
         return JS_FALSE;
 
@@ -3912,7 +3912,7 @@ MJitChunkLimit(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
-    double t;
+    jsdouble t;
     if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t))
         return JS_FALSE;
 

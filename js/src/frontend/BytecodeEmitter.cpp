@@ -2301,7 +2301,7 @@ EmitElemIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 }
 
 static JSBool
-EmitNumberOp(JSContext *cx, double dval, BytecodeEmitter *bce)
+EmitNumberOp(JSContext *cx, jsdouble dval, BytecodeEmitter *bce)
 {
     int32_t ival;
     uint32_t u;
