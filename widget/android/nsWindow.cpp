@@ -1227,7 +1227,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     }
 
     __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling EndDrawing()!");
-    client.EndDrawing(dirtyRect);
+    client.EndDrawing();
     return;
 #endif
 
