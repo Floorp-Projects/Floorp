@@ -634,10 +634,15 @@
                     }
                     for each (let event in this.videoEvents)
                         this.video.removeEventListener(event, this, false);
+
+                    for each(let element in this.controlListeners)
+                        element.item.removeEventListener(element.event, element.func, false);
+                    
+                    delete this.controlListeners;
+
                     this.video.removeEventListener("media-showStatistics", this._handleCustomEventsBound, false);
                     delete this._handleCustomEventsBound;
-                    this.video.ownerDocument.removeEventListener("mozfullscreenchange", this._setFullscreenButtonStateBound, false);
-                    delete this._setFullscreenButtonStateBound;
+
                     this.log("--- videocontrols terminated ---");
                 },
 
@@ -1330,10 +1335,20 @@
                         this.video.addEventListener(event, this, (event == "error") ? true : false);
 
                     var self = this;
-                    this.muteButton.addEventListener("command", function() { self.toggleMute(); }, false);
-                    this.playButton.addEventListener("command", function() { self.togglePause(); }, false);
-                    this.fullscreenButton.addEventListener("command", function() { self.toggleFullscreen(); }, false );
-                    this.clickToPlay.addEventListener("click", function clickToPlayClickHandler(e) {
+
+                    this.controlListeners = [];
+
+                    // Helper function to add an event listener to the given element
+                    function addListener(elem, eventName, func) {
+                      let boundFunc = func.bind(self);
+                      self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
+                      elem.addEventListener(eventName, boundFunc, false);
+                    }
+
+                    addListener(this.muteButton, "command", this.toggleMute);
+                    addListener(this.playButton, "command", this.togglePause);
+                    addListener(this.fullscreenButton, "command", this.toggleFullscreen);
+                    addListener(this.clickToPlay, "click", function clickToPlayClickHandler(e) {
                       if (e.button != 0 || self.hasError())
                         return;
                       // Read defaultPrevented asynchronously, since Web content
@@ -1343,9 +1358,8 @@
                         if (!e.defaultPrevented)
                           self.handleClickToPlay();
                       }, 0);
-                    }, false);
-
-                    this.controlsSpacer.addEventListener("click", function spacerClickHandler(e) {
+                    });
+                    addListener(this.controlsSpacer, "click", function(e) {
                       if (e.button != 0 || self.hasError())
                         return;
                       // Read defaultPrevented asynchronously, since Web content
@@ -1355,22 +1369,22 @@
                         if (!e.defaultPrevented)
                           self.togglePause();
                       }, 0);
-                    }, false);
+                    });
 
                     if (!this.isAudioOnly) {
-                      this.muteButton.addEventListener("mouseover",  function(e) { self.onVolumeMouseInOut(e); }, false);
-                      this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);
-                      this.volumeStack.addEventListener("mouseover", function(e) { self.onVolumeMouseInOut(e); }, false);
-                      this.volumeStack.addEventListener("mouseout",  function(e) { self.onVolumeMouseInOut(e); }, false);
+                      addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
+                      addListener(this.muteButton, "mouseout", this.onVolumeMouseInOut);
+                      addListener(this.volumeStack, "mouseover", this.onVolumeMouseInOut);
+                      addListener(this.volumeStack, "mouseout", this.onVolumeMouseInOut);
                     }
 
-                    this.videocontrols.addEventListener("transitionend", function(e) { self.onTransitionEnd(e); }, false);
-                    this._setFullscreenButtonStateBound = this.setFullscreenButtonState.bind(this);
-                    this.video.ownerDocument.addEventListener("mozfullscreenchange", this._setFullscreenButtonStateBound, false);
+                    addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
+                    addListener(this.video.ownerDocument, "mozfullscreenchange", this.setFullscreenButtonState);
 
                     // Make the <video> element keyboard accessible.
                     this.video.setAttribute("tabindex", 0);
-                    this.video.addEventListener("keypress", function (e) { self.keyHandler(e) }, false);
+
+                    addListener(this.video, "keypress", this.keyHandler);
 
                     this.log("--- videocontrols initialized ---");
                 }
