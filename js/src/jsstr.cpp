@@ -1178,7 +1178,7 @@ str_indexOf(JSContext *cx, uintN argc, Value *vp)
                 textlen -= start;
             }
         } else {
-            jsdouble d;
+            double d;
             if (!ToInteger(cx, args[1], &d))
                 return false;
             if (d <= 0) {
@@ -2556,7 +2556,7 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32_t limit;
     if (args.length() > 1 && !args[1].isUndefined()) {
-        jsdouble d;
+        double d;
         if (!ToNumber(cx, args[1], &d))
             return false;
         limit = js_DoubleToECMAUint32(d);

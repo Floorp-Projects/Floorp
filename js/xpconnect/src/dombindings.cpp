@@ -603,7 +603,7 @@ IdToInt32(JSContext *cx, jsid id)
     JSAutoRequest ar(cx);
 
     jsval idval;
-    jsdouble array_index;
+    double array_index;
     int32_t i;
     if (!::JS_IdToValue(cx, id, &idval) ||
         !::JS_ValueToNumber(cx, idval, &array_index) ||

@@ -1598,7 +1598,7 @@ CompareTableEntries(const TableEntry &a, const TableEntry &b, bool *lessOrEqualp
 static ptrdiff_t
 SprintDoubleValue(Sprinter *sp, jsval v, JSOp *opp)
 {
-    jsdouble d;
+    double d;
     ptrdiff_t todo;
     char *s;
 

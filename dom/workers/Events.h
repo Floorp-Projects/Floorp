@@ -69,7 +69,7 @@ CreateErrorEvent(JSContext* aCx, JSString* aMessage, JSString* aFilename,
 
 JSObject*
 CreateProgressEvent(JSContext* aCx, JSString* aType, bool aLengthComputable,
-                    jsdouble aLoaded, jsdouble aTotal);
+                    double aLoaded, double aTotal);
 
 bool
 IsSupportedEventClass(JSObject* aEvent);
