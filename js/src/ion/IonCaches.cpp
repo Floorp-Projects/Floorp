@@ -239,7 +239,9 @@ IsCacheableProtoChain(JSObject *obj, JSObject *holder)
 bool
 js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp)
 {
-    IonScript *ion = GetTopIonFrame(cx);
+    JSScript *script = GetTopIonJSScript(cx);
+    IonScript *ion = script->ionScript();
+
     IonCacheGetProperty &cache = ion->getCache(cacheIndex).toGetProperty();
     JSAtom *atom = cache.atom();
 
@@ -269,17 +271,15 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     if (!obj->getGeneric(cx, obj, ATOM_TO_JSID(atom), vp))
         return false;
 
-    JSScript *script;
-    jsbytecode *pc;
-    cache.getScriptedLocation(&script, &pc);
+    types::TypeScript::Monitor(cx, script, cache.getScriptedLocation(), *vp);
 
-    // For now, all caches are impure.
-    JS_ASSERT(script);
-
-    types::TypeScript::Monitor(cx, script, pc, *vp);
+    // If we've been invalidated, override the return value (bug 728188).
+    if (script->ion != ion)
+        cx->runtime->setIonReturnOverride(*vp);
 
     return true;
 }
+
 void
 IonCache::updateBaseAddress(IonCode *code, MacroAssembler &masm)
 {
@@ -336,7 +336,7 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Sh
 bool
 js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value value)
 {
-    IonScript *ion = GetTopIonFrame(cx);
+    IonScript *ion = GetTopIonJSScript(cx)->ion;
     IonCacheSetProperty &cache = ion->getCache(cacheIndex).toSetProperty();
     JSAtom *atom = cache.atom();
 
