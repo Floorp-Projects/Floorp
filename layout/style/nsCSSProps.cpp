@@ -658,10 +658,16 @@ const PRInt32 nsCSSProps::kBackgroundPositionKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kBackgroundRepeatKTable[] = {
-  eCSSKeyword_no_repeat,  NS_STYLE_BG_REPEAT_OFF,
-  eCSSKeyword_repeat,     NS_STYLE_BG_REPEAT_XY,
-  eCSSKeyword_repeat_x,   NS_STYLE_BG_REPEAT_X,
-  eCSSKeyword_repeat_y,   NS_STYLE_BG_REPEAT_Y,
+  eCSSKeyword_no_repeat,  NS_STYLE_BG_REPEAT_NO_REPEAT,
+  eCSSKeyword_repeat,     NS_STYLE_BG_REPEAT_REPEAT,
+  eCSSKeyword_repeat_x,   NS_STYLE_BG_REPEAT_REPEAT_X,
+  eCSSKeyword_repeat_y,   NS_STYLE_BG_REPEAT_REPEAT_Y,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kBackgroundRepeatPartKTable[] = {
+  eCSSKeyword_no_repeat,  NS_STYLE_BG_REPEAT_NO_REPEAT,
+  eCSSKeyword_repeat,     NS_STYLE_BG_REPEAT_REPEAT,
   eCSSKeyword_UNKNOWN,-1
 };
 
