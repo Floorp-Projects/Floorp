@@ -119,9 +119,9 @@ function testCreateNew()
       waitForEditorBlur(aEditor, function() {
         expectChange();
         is(textProp.value, "#XYZ", "Text prop should have been changed.");
-        finishTest();
+        is(textProp.editor._validate(), false, "#XYZ should not be a valid entry");
+        testEditProperty();
       });
-
       aEditor.input.blur();
     });
     EventUtils.synthesizeKey("VK_RETURN", {}, ruleDialog);
@@ -131,6 +131,39 @@ function testCreateNew()
                              { },
                              ruleDialog);
 }
+
+function testEditProperty()
+{
+  let idRuleEditor = ruleView.element.children[1]._ruleEditor;
+  let propEditor = idRuleEditor.rule.textProps[0].editor;
+  waitForEditorFocus(propEditor.element, function onNewElement(aEditor) {
+    is(propEditor.nameSpan.inplaceEditor, aEditor, "Next focused editor should be the name editor.");
+    let input = aEditor.input;
+    waitForEditorFocus(propEditor.element, function onNewName(aEditor) {
+      expectChange();
+      input = aEditor.input;
+      is(propEditor.valueSpan.inplaceEditor, aEditor, "Focus should have moved to the value.");
+
+      waitForEditorBlur(aEditor, function() {
+        expectChange();
+        let value = idRuleEditor.rule.style.getPropertyValue("border-color");
+        is(value, "red", "border-color should have been set.");
+        is(propEditor._validate(), true, "red should be a valid entry");
+        finishTest();
+      });
+
+      for each (let ch in "red;") {
+        EventUtils.sendChar(ch, ruleDialog);
+      }
+    });
+    for each (let ch in "border-color:") {
+      EventUtils.sendChar(ch, ruleDialog);
+    }
+  });
+
+  EventUtils.synthesizeMouse(propEditor.nameSpan, 1, 1,
+                             { },
+                             ruleDialog);}
 
 function finishTest()
 {
