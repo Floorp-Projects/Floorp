@@ -1493,11 +1493,11 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
   if (aGradient->mToCorner) {
     AppendCSSGradientToBoxPosition(aGradient, aString, needSep);
   } else {
-    if (aGradient->mBgPosX.mUnit != eStyleUnit_None) {
+    if (aGradient->mBgPosX.GetUnit() != eStyleUnit_None) {
       AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
       needSep = true;
     }
-    if (aGradient->mBgPosY.mUnit != eStyleUnit_None) {
+    if (aGradient->mBgPosY.GetUnit() != eStyleUnit_None) {
       if (needSep) {
         aString.AppendLiteral(" ");
       }
@@ -1505,14 +1505,14 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
       needSep = true;
     }
   }
-  if (aGradient->mAngle.mUnit != eStyleUnit_None) {
+  if (aGradient->mAngle.GetUnit() != eStyleUnit_None) {
     if (needSep) {
       aString.AppendLiteral(" ");
     }
     tmpVal->SetNumber(aGradient->mAngle.GetAngleValue());
     tmpVal->GetCssText(tokenString);
     aString.Append(tokenString);
-    switch (aGradient->mAngle.mUnit) {
+    switch (aGradient->mAngle.GetUnit()) {
     case eStyleUnit_Degree: aString.AppendLiteral("deg"); break;
     case eStyleUnit_Grad: aString.AppendLiteral("grad"); break;
     case eStyleUnit_Radian: aString.AppendLiteral("rad"); break;
@@ -1550,7 +1550,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     tmpVal->GetCssText(tokenString);
     aString.Append(tokenString);
 
-    if (aGradient->mStops[i].mLocation.mUnit != eStyleUnit_None) {
+    if (aGradient->mStops[i].mLocation.GetUnit() != eStyleUnit_None) {
       aString.AppendLiteral(" ");
       AppendCSSGradientLength(aGradient->mStops[i].mLocation, tmpVal, aString);
     }
