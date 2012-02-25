@@ -106,10 +106,14 @@
       gQueue.push(new synthContextMenu(editableDoc, new contextMenuChecker()));
       gQueue.push(new synthDownKey(editableDoc, new focusContextMenuItemChecker()));
       gQueue.push(new synthEscapeKey(editableDoc, new focusChecker(editableDoc)));
+      if (SEAMONKEY) {
+        todo(false, "shift tab from editable document fails on (Windows) SeaMonkey! (Bug 718235)");
+      } else {
       if (LINUX)
-        todo(false, "shift tab from editable document Fails on linux!");
+        todo(false, "shift tab from editable document fails on linux!");
       else
         gQueue.push(new synthShiftTab("link", new focusChecker("link")));
+      } // ! SEAMONKEY
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
