@@ -1869,7 +1869,7 @@ LoopState::analyzeLoopBody(unsigned frame)
 
           case JSOP_SETPROP:
           case JSOP_SETMETHOD: {
-            JSAtom *atom = script->getAtom(js_GetIndexFromBytecode(script, pc, 0));
+            JSAtom *atom = script->getAtom(GET_UINT32_INDEX(pc));
             jsid id = MakeTypeId(cx, ATOM_TO_JSID(atom));
 
             TypeSet *objTypes = analysis->poppedTypes(pc, 1);
@@ -2181,7 +2181,7 @@ LoopState::getEntryValue(const CrossSSAValue &iv, uint32_t *pslot, int32_t *pcon
       }
 
       case JSOP_GETPROP: {
-        JSAtom *atom = script->getAtom(js_GetIndexFromBytecode(script, pc, 0));
+        JSAtom *atom = script->getAtom(GET_UINT32_INDEX(pc));
         jsid id = ATOM_TO_JSID(atom);
         CrossSSAValue objcv(cv.frame, analysis->poppedValue(v.pushedOffset(), 0));
         FrameEntry *tmp = invariantProperty(objcv, id);

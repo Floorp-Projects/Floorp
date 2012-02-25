@@ -40,6 +40,13 @@
 
 #include "nsISupports.idl"
 
+/**
+ * WARNING:
+ *
+ * This interface is deprecated and will be removed in a future release.
+ * Use the mozIAsyncLivemarks interface instead.
+ */
+
 interface nsIURI;
 interface nsINavBookmarksService;
 
@@ -50,11 +57,19 @@ interface nsILivemarkService : nsISupports
    * Starts the livemark refresh timer.
    * Being able to manually control this allows activity such
    * as bookmarks import to occur without kicking off HTTP traffic.
+   *
+   * @note This is a no-op and exists just as a compatibility shim.
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
    */
   void start();
 
   /**
    * Stop the livemark refresh timer.
+   *
+   * @note This is a no-op and exists just as a compatibility shim.
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
    */
   void stopUpdateLivemarks();
 
@@ -67,6 +82,8 @@ interface nsILivemarkService : nsISupports
    * @param index       The index to insert at, or
    *                    nsINavBookmarksService.DEFAULT_INDEX to append.
    * @returns the ID of the folder for the livemark
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
    */
   long long createLivemark(in long long folder,
                            in AString name,
@@ -93,6 +110,8 @@ interface nsILivemarkService : nsISupports
    *          false otherwise
    *
    * @throws NS_ERROR_INVALID_ARG if the folder ID isn't known
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
    */
   boolean isLivemark(in long long folder);
 
@@ -103,6 +122,8 @@ interface nsILivemarkService : nsISupports
    *        Feed URI to look for.
    *
    * @returns the found livemark folder id, or -1 if nothing was found.
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
    */
   long long getLivemarkIdForFeedURI(in nsIURI aFeedURI);
 
@@ -118,6 +139,8 @@ interface nsILivemarkService : nsISupports
    *         a folder that isn't a livemark container
    * @throws NS_ERROR_MALFORMED_URI if the site URI annotation has
    *         somehow been corrupted (and can't be turned into an nsIURI)
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
    */
   nsIURI getSiteURI(in long long container);
 
@@ -131,6 +154,10 @@ interface nsILivemarkService : nsISupports
    * @throws NS_ERROR_INVALID_ARG if the folder ID isn't known or identifies
    *         a folder that isn't a livemark container; also if the siteURI
    *         argument isn't a valid nsIURI object (or null)
+   *
+   * @note This is a no-op and exists just as a compatibility shim.
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
    */
   void setSiteURI(in long long container, in nsIURI siteURI);
 
@@ -147,6 +174,8 @@ interface nsILivemarkService : nsISupports
    *         a folder that isn't a livemark container
    * @throws NS_ERROR_MALFORMED_URI if the site URI annotation has
    *         somehow been corrupted (and can't be turned into an nsIURI)
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
    */
   nsIURI getFeedURI(in long long container);
 
@@ -163,18 +192,26 @@ interface nsILivemarkService : nsISupports
    * @throws NS_ERROR_INVALID_ARG if the folder ID isn't known or identifies
    *         a folder that isn't a livemark container; also if the feedURI
    *         argument isn't a valid nsIURI object
+   *
+   * @note This is a no-op and exists just as a compatibility shim.
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
    */
   void setFeedURI(in long long container, in nsIURI feedURI);
 
-	/**
-	 * Reloads all livemark subscriptions, whether or not they've expired.
-	 */
+  /**
+   * Reloads all livemark subscriptions, whether or not they've expired.
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
+   */
   void reloadAllLivemarks();
 
-	/**
-	 * Reloads the livemark with this folder ID, whether or not it's expired.
-	 * @param folderID		The ID of the folder to be reloaded
-	 */
+  /**
+   * Reloads the livemark with this folder ID, whether or not it's expired.
+   * @param folderID The ID of the folder to be reloaded
+   *
+   * @deprecated use the mozIAsyncLivemarks interface instead.
+   */
   void reloadLivemarkFolder(in long long folderID);
 };
 

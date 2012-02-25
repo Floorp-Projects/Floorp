@@ -473,7 +473,7 @@ JS_XDRStringOrNull(JSXDRState *xdr, JSString **strp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_XDRDouble(JSXDRState *xdr, jsdouble *dp)
+JS_XDRDouble(JSXDRState *xdr, double *dp)
 {
     jsdpun u;
 

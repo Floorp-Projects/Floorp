@@ -195,11 +195,11 @@ CanonicalizeNan(double d)
 }
 
 bool
-SCInput::readDouble(jsdouble *p)
+SCInput::readDouble(double *p)
 {
     union {
         uint64_t u;
-        jsdouble d;
+        double d;
     } pun;
     if (!read(&pun.u))
         return false;
@@ -265,7 +265,7 @@ SCOutput::writePair(uint32_t tag, uint32_t data)
 {
     /*
      * As it happens, the tag word appears after the data word in the output.
-     * This is because exponents occupy the last 2 bytes of jsdoubles on the
+     * This is because exponents occupy the last 2 bytes of doubles on the
      * little-endian platforms we care most about.
      *
      * For example, JSVAL_TRUE is written using writePair(SCTAG_BOOLEAN, 1).
@@ -276,35 +276,35 @@ SCOutput::writePair(uint32_t tag, uint32_t data)
 }
 
 static inline uint64_t
-ReinterpretDoubleAsUInt64(jsdouble d)
+ReinterpretDoubleAsUInt64(double d)
 {
     union {
-        jsdouble d;
+        double d;
         uint64_t u;
     } pun;
     pun.d = d;
     return pun.u;
 }
 
-static inline jsdouble
+static inline double
 ReinterpretUInt64AsDouble(uint64_t u)
 {
     union {
         uint64_t u;
-        jsdouble d;
+        double d;
     } pun;
     pun.u = u;
     return pun.d;
 }
 
-static inline jsdouble
+static inline double
 ReinterpretPairAsDouble(uint32_t tag, uint32_t data)
 {
     return ReinterpretUInt64AsDouble(PairToUInt64(tag, data));
 }
 
 bool
-SCOutput::writeDouble(jsdouble d)
+SCOutput::writeDouble(double d)
 {
     return write(ReinterpretDoubleAsUInt64(CanonicalizeNan(d)));
 }
@@ -530,7 +530,7 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
             return out.writePair(SCTAG_REGEXP_OBJECT, reobj.getFlags()) &&
                    writeString(SCTAG_STRING, reobj.getSource());
         } else if (obj->isDate()) {
-            jsdouble d = js_DateGetMsecSinceEpoch(context(), obj);
+            double d = js_DateGetMsecSinceEpoch(context(), obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
         } else if (obj->isObject() || obj->isArray()) {
             return startObject(obj);
@@ -603,7 +603,7 @@ JSStructuredCloneWriter::write(const Value &v)
 }
 
 bool
-JSStructuredCloneReader::checkDouble(jsdouble d)
+JSStructuredCloneReader::checkDouble(double d)
 {
     jsval_layout l;
     l.asDouble = d;
@@ -731,7 +731,7 @@ JSStructuredCloneReader::startRead(Value *vp)
       }
 
       case SCTAG_NUMBER_OBJECT: {
-        jsdouble d;
+        double d;
         if (!in.readDouble(&d) || !checkDouble(d))
             return false;
         vp->setDouble(d);
@@ -741,7 +741,7 @@ JSStructuredCloneReader::startRead(Value *vp)
       }
 
       case SCTAG_DATE_OBJECT: {
-        jsdouble d;
+        double d;
         if (!in.readDouble(&d) || !checkDouble(d))
             return false;
         if (d == d && d != TIMECLIP(d)) {
@@ -808,7 +808,7 @@ JSStructuredCloneReader::startRead(Value *vp)
 
       default: {
         if (tag <= SCTAG_FLOAT_MAX) {
-            jsdouble d = ReinterpretPairAsDouble(tag, data);
+            double d = ReinterpretPairAsDouble(tag, data);
             if (!checkDouble(d))
                 return false;
             vp->setNumber(d);
