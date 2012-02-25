@@ -388,6 +388,11 @@ MarkIonActivation(JSTracer *trc, uint8 *top)
           case IonFrame_JS:
             MarkIonJSFrame(trc, frames);
             break;
+          case IonFrame_Rectifier:
+            // We don't bother marking rectifier frames; its data is duplicated
+            // in the callee, and upon returning from the call, the rectifier's
+            // local storage is immediately removed.
+            break;
           default:
             JS_NOT_REACHED("unexpected frame type");
             break;
