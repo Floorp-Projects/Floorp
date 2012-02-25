@@ -79,6 +79,7 @@
 <!ENTITY char_encoding "Character Encoding">
 
 <!ENTITY share "Share">
+<!ENTITY share_title "Share via">
 <!ENTITY save_as_pdf "Save as PDF">
 
 <!ENTITY contextmenu_open_new_tab "Open in New Tab">
