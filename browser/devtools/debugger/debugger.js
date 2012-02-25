@@ -370,10 +370,12 @@ var StackFrames = {
    */
   _addFramePanel: function SF_addFramePanel(aFrame) {
     let depth = aFrame.depth;
-    let idText = "#" + aFrame.depth + " ";
-    let nameText = this._frameTitle(aFrame);
+    let label = SourceScripts._getScriptLabel(aFrame.where.url);
 
-    let panel = DebuggerView.Stackframes.addFrame(depth, idText, nameText);
+    let startText = this._frameTitle(aFrame);
+    let endText = label + ":" + aFrame.where.line;
+
+    let panel = DebuggerView.Stackframes.addFrame(depth, startText, endText);
 
     if (panel) {
       panel.stackFrame = aFrame;
@@ -397,7 +399,7 @@ var StackFrames = {
    */
   _frameTitle: function SF_frameTitle(aFrame) {
     if (aFrame.type == "call") {
-      return aFrame["calleeName"] ? aFrame["calleeName"] + "()" : "(anonymous)";
+      return aFrame["calleeName"] ? aFrame["calleeName"] : "(anonymous)";
     }
 
     return "(" + aFrame.type + ")";
