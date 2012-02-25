@@ -98,6 +98,7 @@ public:
         SetOriginServer(nsDependentCString(host), port);
     }
     
+    // OK to treat this as an infalible allocation
     nsHttpConnectionInfo* Clone() const;
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host().get() : nsnull; }
