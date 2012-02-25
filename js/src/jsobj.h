@@ -561,8 +561,6 @@ struct JSObject : public js::ObjectImpl
     bool hasDynamicSlots() const { return slots != NULL; }
 
   protected:
-    inline bool hasContiguousSlots(size_t start, size_t count) const;
-
     inline bool updateSlotsForSpan(JSContext *cx, size_t oldSpan, size_t newSpan);
 
   public:

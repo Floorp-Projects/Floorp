@@ -126,6 +126,17 @@ js::ObjectImpl::getSlotRange(size_t start, size_t length,
     getSlotRangeUnchecked(start, length, fixedStart, fixedEnd, slotsStart, slotsEnd);
 }
 
+inline bool
+js::ObjectImpl::hasContiguousSlots(size_t start, size_t count) const
+{
+    /*
+     * Check that the range [start, start+count) is either all inline or all
+     * out of line.
+     */
+    MOZ_ASSERT(slotInRange(start + count, SENTINEL_ALLOWED));
+    return start + count <= numFixedSlots() || start >= numFixedSlots();
+}
+
 inline void
 js::ObjectImpl::invalidateSlotRange(size_t start, size_t length)
 {
