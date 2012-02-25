@@ -1171,7 +1171,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     event.region = tileRect;
 #endif
 
-    static unsigned char *bits2 = new unsigned char[32 * 32 * 2];
+    static unsigned char bits2[32 * 32 * 2];
     nsRefPtr<gfxImageSurface> targetSurface =
         new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * 2,
                             gfxASurface::ImageFormatRGB16_565);
