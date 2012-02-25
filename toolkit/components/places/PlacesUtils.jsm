@@ -2236,7 +2236,7 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "livemarks", function() {
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
   let tm = Cc["@mozilla.org/transactionmanager;1"].
-           getService(Ci.nsITransactionManager);
+           createInstance(Ci.nsITransactionManager);
   tm.AddListener(PlacesUtils);
   this.registerShutdownFunction(function () {
     // Clear all references to local transactions in the transaction manager,
