@@ -870,7 +870,8 @@ InspectorUI.prototype = {
     let parent = this.selection.parentNode;
 
     // remove the node from the treepanel
-    this.treePanel.deleteChildBox(selection);
+    if (this.treePanel.isOpen())
+      this.treePanel.deleteChildBox(selection);
 
     // remove the node from content
     parent.removeChild(selection);
