@@ -406,9 +406,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       const nsCSSValueList *image =
         data->ValueFor(eCSSProperty_background_image)->
         GetListValue();
-      const nsCSSValueList *repeat =
+      const nsCSSValuePairList *repeat =
         data->ValueFor(eCSSProperty_background_repeat)->
-        GetListValue();
+        GetPairListValue();
       const nsCSSValueList *attachment =
         data->ValueFor(eCSSProperty_background_attachment)->
         GetListValue();
@@ -433,7 +433,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         }
         image->mValue.AppendToString(eCSSProperty_background_image, aValue);
         aValue.Append(PRUnichar(' '));
-        repeat->mValue.AppendToString(eCSSProperty_background_repeat, aValue);
+        repeat->mXValue.AppendToString(eCSSProperty_background_repeat, aValue);
+        if (repeat->mYValue.GetUnit() != eCSSUnit_Null) {
+          repeat->mYValue.AppendToString(eCSSProperty_background_repeat, aValue);
+        }
         aValue.Append(PRUnichar(' '));
         attachment->mValue.AppendToString(eCSSProperty_background_attachment,
                                           aValue);

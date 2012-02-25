@@ -341,6 +341,7 @@ public:
   static const PRInt32 kBackgroundOriginKTable[];
   static const PRInt32 kBackgroundPositionKTable[];
   static const PRInt32 kBackgroundRepeatKTable[];
+  static const PRInt32 kBackgroundRepeatPartKTable[];
   static const PRInt32 kBackgroundSizeKTable[];
   static const PRInt32 kBorderCollapseKTable[];
   static const PRInt32 kBorderColorKTable[];

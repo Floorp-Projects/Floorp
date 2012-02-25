@@ -1721,9 +1721,49 @@ nsComputedDOMStyle::DoGetBackgroundPosition()
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetBackgroundRepeat()
 {
-  return GetBackgroundList(&nsStyleBackground::Layer::mRepeat,
-                           &nsStyleBackground::mRepeatCount,
-                           nsCSSProps::kBackgroundRepeatKTable);
+  const nsStyleBackground* bg = GetStyleBackground();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(true);
+
+  for (PRUint32 i = 0, i_end = bg->mRepeatCount; i < i_end; ++i) {
+    nsDOMCSSValueList *itemList = GetROCSSValueList(false);
+    valueList->AppendCSSValue(itemList);
+
+    nsROCSSPrimitiveValue *valX = GetROCSSPrimitiveValue();
+    itemList->AppendCSSValue(valX);
+
+    const PRUint8& xRepeat = bg->mLayers[i].mRepeat.mXRepeat;
+    const PRUint8& yRepeat = bg->mLayers[i].mRepeat.mYRepeat;
+
+    bool hasContraction = true;
+    PRUintn contraction;
+    if (xRepeat == yRepeat) {
+      contraction = xRepeat;
+    } else if (xRepeat == NS_STYLE_BG_REPEAT_REPEAT &&
+               yRepeat == NS_STYLE_BG_REPEAT_NO_REPEAT) {
+      contraction = NS_STYLE_BG_REPEAT_REPEAT_X;
+    } else if (xRepeat == NS_STYLE_BG_REPEAT_NO_REPEAT &&
+               yRepeat == NS_STYLE_BG_REPEAT_REPEAT) {
+      contraction = NS_STYLE_BG_REPEAT_REPEAT_Y;
+    } else {
+      hasContraction = false;
+    }
+
+    if (hasContraction) {
+      valX->SetIdent(nsCSSProps::ValueToKeywordEnum(contraction,
+                                         nsCSSProps::kBackgroundRepeatKTable));
+    } else {
+      nsROCSSPrimitiveValue *valY = GetROCSSPrimitiveValue();
+      itemList->AppendCSSValue(valY);
+      
+      valX->SetIdent(nsCSSProps::ValueToKeywordEnum(xRepeat,
+                                          nsCSSProps::kBackgroundRepeatKTable));
+      valY->SetIdent(nsCSSProps::ValueToKeywordEnum(yRepeat,
+                                          nsCSSProps::kBackgroundRepeatKTable));
+    }
+  }
+
+  return valueList;
 }
 
 nsIDOMCSSValue*
