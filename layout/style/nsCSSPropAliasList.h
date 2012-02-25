@@ -63,9 +63,3 @@
 
  ******/
 
-CSS_PROP_ALIAS(-moz-opacity, opacity, MozOpacity)
-CSS_PROP_ALIAS(-moz-outline, outline, MozOutline)
-CSS_PROP_ALIAS(-moz-outline-color, outline_color, MozOutlineColor)
-CSS_PROP_ALIAS(-moz-outline-style, outline_style, MozOutlineStyle)
-CSS_PROP_ALIAS(-moz-outline-width, outline_width, MozOutlineWidth)
-CSS_PROP_ALIAS(-moz-outline-offset, outline_offset, MozOutlineOffset)
