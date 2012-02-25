@@ -1875,8 +1875,9 @@ SliceBudget::checkOverBudget()
     return over;
 }
 
-GCMarker::GCMarker()
-  : color(BLACK),
+GCMarker::GCMarker(size_t sizeLimit)
+  : stack(sizeLimit),
+    color(BLACK),
     started(false),
     unmarkedArenaStackTop(NULL),
     markLaterArenas(0),
@@ -2115,6 +2116,15 @@ GCMarker::GrayCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     GCMarker *gcmarker = static_cast<GCMarker *>(trc);
     gcmarker->appendGrayRoot(*thingp, kind);
+}
+
+void
+SetMarkStackLimit(JSRuntime *rt, size_t limit)
+{
+    JS_ASSERT(!rt->gcRunning);
+    rt->gcMarker.setSizeLimit(limit);
+    for (CompartmentsIter c(rt); !c.done(); c.next())
+        c->barrierMarker_.setSizeLimit(limit);
 }
 
 } /* namespace js */
@@ -3059,9 +3069,32 @@ EndMarkPhase(JSContext *cx)
 static void
 ValidateIncrementalMarking(JSContext *cx)
 {
+    typedef HashMap<Chunk *, uintptr_t *, GCChunkHasher, SystemAllocPolicy> BitmapMap;
+    BitmapMap map;
+    if (!map.init())
+        return;
+
     JSRuntime *rt = cx->runtime;
     FullGCMarker *gcmarker = &rt->gcMarker;
 
+    /* Save existing mark bits */
+    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront()) {
+        ChunkBitmap *bitmap = &r.front()->bitmap;
+        uintptr_t *entry = (uintptr_t *)js_malloc(sizeof(bitmap->bitmap));
+        if (!entry)
+            return;
+
+        memcpy(entry, bitmap->bitmap, sizeof(bitmap->bitmap));
+        if (!map.putNew(r.front(), entry))
+            return;
+    }
+
+    /*
+     * After this point, the function should run to completion, so we shouldn't
+     * do anything fallible.
+     */
+
+    /* Re-do all the marking, but non-incrementally. */
     js::gc::State state = rt->gcIncrementalState;
     rt->gcIncrementalState = NO_INCREMENTAL;
 
@@ -3071,18 +3104,6 @@ ValidateIncrementalMarking(JSContext *cx)
     JS_ASSERT(gcmarker->isDrained());
     gcmarker->reset();
 
-    typedef HashMap<Chunk *, uintptr_t *> BitmapMap;
-    BitmapMap map(cx);
-    map.init();
-
-    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront()) {
-        ChunkBitmap *bitmap = &r.front()->bitmap;
-        uintptr_t *entry = (uintptr_t *)js_malloc(sizeof(bitmap->bitmap));
-        if (entry)
-            memcpy(entry, bitmap->bitmap, sizeof(bitmap->bitmap));
-        map.putNew(r.front(), entry);
-    }
-
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         r.front()->bitmap.clear();
 
@@ -3091,14 +3112,12 @@ ValidateIncrementalMarking(JSContext *cx)
     rt->gcMarker.drainMarkStack(budget);
     MarkGrayAndWeak(cx);
 
+    /* Now verify that we have the same mark bits as before. */
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront()) {
         Chunk *chunk = r.front();
         ChunkBitmap *bitmap = &chunk->bitmap;
         uintptr_t *entry = map.lookup(r.front())->value;
         ChunkBitmap incBitmap;
-
-        if (!entry)
-            continue;
 
         memcpy(incBitmap.bitmap, entry, sizeof(incBitmap.bitmap));
         js_free(entry);

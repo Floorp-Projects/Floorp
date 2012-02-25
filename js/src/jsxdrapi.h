@@ -158,7 +158,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_XDRStringOrNull(JSXDRState *xdr, JSString **strp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRDouble(JSXDRState *xdr, jsdouble *dp);
+JS_XDRDouble(JSXDRState *xdr, double *dp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
@@ -192,7 +192,7 @@ JS_XDRScript(JSXDRState *xdr, JSScript **scriptp);
  * and saved versions. If deserialization fails, the data should be
  * invalidated if possible.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 108)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 109)
 
 JS_END_EXTERN_C
 

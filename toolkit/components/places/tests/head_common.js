@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const CURRENT_SCHEMA_VERSION = 18;
+const CURRENT_SCHEMA_VERSION = 19;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
@@ -74,18 +74,13 @@ XPCOMUtils.defineLazyGetter(this, "FileUtils", function() {
   return FileUtils;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-  return PlacesUtils;
-});
-
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 function LOG(aMsg) {
   aMsg = ("*** PLACES TESTS: " + aMsg);
   Services.console.logStringMessage(aMsg);
   print(aMsg);
 }
-
 
 let gTestDir = do_get_cwd();
 
@@ -717,6 +712,53 @@ function do_check_guid_for_uri(aURI,
 {
   let caller = Components.stack.caller;
   let guid = do_get_guid_for_uri(aURI, caller);
+  if (aGUID) {
+    do_check_valid_places_guid(aGUID, caller);
+    do_check_eq(guid, aGUID, caller);
+  }
+}
+
+/**
+ * Retrieves the guid for a given bookmark.
+ *
+ * @param aId
+ *        The bookmark id to check.
+ * @param [optional] aStack
+ *        The stack frame used to report the error.
+ * @return the associated the guid.
+ */
+function do_get_guid_for_bookmark(aId,
+                                  aStack)
+{
+  if (!aStack) {
+    aStack = Components.stack.caller;
+  }
+  let stmt = DBConn().createStatement(
+    "SELECT guid "
+  + "FROM moz_bookmarks "
+  + "WHERE id = :item_id "
+  );
+  stmt.params.item_id = aId;
+  do_check_true(stmt.executeStep(), aStack);
+  let guid = stmt.row.guid;
+  stmt.finalize();
+  do_check_valid_places_guid(guid, aStack);
+  return guid;
+}
+
+/**
+ * Tests that a guid was set in moz_places for a given bookmark.
+ *
+ * @param aId
+ *        The bookmark id to check.
+ * @param [optional] aGUID
+ *        The expected guid in the database.
+ */
+function do_check_guid_for_bookmark(aId,
+                                    aGUID)
+{
+  let caller = Components.stack.caller;
+  let guid = do_get_guid_for_bookmark(aId, caller);
   if (aGUID) {
     do_check_valid_places_guid(aGUID, caller);
     do_check_eq(guid, aGUID, caller);

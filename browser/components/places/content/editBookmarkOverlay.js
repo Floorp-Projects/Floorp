@@ -1,39 +1,6 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Places Bookmark Properties dialog.
- *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2006
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Asaf Romano <mano@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const LAST_USED_ANNO = "bookmarkPropertiesDialog/folderLastUsed";
 const MAX_FOLDER_ITEM_IN_MENU_LIST = 5;
@@ -52,6 +19,7 @@ var gEditItemOverlay = {
   _observersAdded: false,
   _staticFoldersListBuilt: false,
   _initialized: false,
+  _titleOverride: "",
 
   // the first field which was edited after this panel was initialized for
   // a certain item
@@ -80,6 +48,8 @@ var gEditItemOverlay = {
       this._hiddenRows.splice(0, this._hiddenRows.length);
     // force-read-only
     this._readOnly = aInfo && aInfo.forceReadOnly;
+    this._titleOverride = aInfo && aInfo.titleOverride ? aInfo.titleOverride
+                                                       : "";
   },
 
   _showHideRows: function EIO__showHideRows() {
@@ -160,32 +130,34 @@ var gEditItemOverlay = {
     }
     else {
       this._itemId = aFor;
+      // We can't store information on invalid itemIds.
+      this._readOnly = this._readOnly || this._itemId == -1;
+
       var containerId = PlacesUtils.bookmarks.getFolderIdForItem(this._itemId);
       this._itemType = PlacesUtils.bookmarks.getItemType(this._itemId);
       if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK) {
         this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
-        if (!this._readOnly) // If readOnly wasn't forced through aInfo
-          this._readOnly = PlacesUtils.itemIsLivemark(containerId);
         this._initTextField("keywordField",
                             PlacesUtils.bookmarks
                                        .getKeywordForBookmark(this._itemId));
-        // Load In Sidebar checkbox
         this._element("loadInSidebarCheckbox").checked =
           PlacesUtils.annotations.itemHasAnnotation(this._itemId,
                                                     PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
       }
       else {
-        if (!this._readOnly) // If readOnly wasn't forced through aInfo
-          this._readOnly = false;
-
         this._uri = null;
-        this._isLivemark = PlacesUtils.itemIsLivemark(this._itemId);
-        if (this._isLivemark) {
-          var feedURI = PlacesUtils.livemarks.getFeedURI(this._itemId);
-          var siteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
-          this._initTextField("feedLocationField", feedURI.spec);
-          this._initTextField("siteLocationField", siteURI ? siteURI.spec : "");
-        }
+        this._isLivemark = false;
+        PlacesUtils.livemarks.getLivemark(
+          {id: this._itemId },
+          (function (aStatus, aLivemark) {
+            if (Components.isSuccessCode(aStatus)) {
+              this._isLivemark = true;
+              this._initTextField("feedLocationField", aLivemark.feedURI.spec, true);
+              this._initTextField("siteLocationField", aLivemark.siteURI ? aLivemark.siteURI.spec : "", true);
+              this._showHideRows();
+            }
+          }).bind(this)
+        );
       }
 
       // folder picker
@@ -379,10 +351,17 @@ var gEditItemOverlay = {
   },
 
   _getItemStaticTitle: function EIO__getItemStaticTitle() {
-    if (this._itemId == -1)
-      return PlacesUtils.history.getPageTitle(this._uri);
+    if (this._titleOverride)
+      return this._titleOverride;
 
-    return PlacesUtils.bookmarks.getItemTitle(this._itemId);
+    let title = "";
+    if (this._itemId == -1) {
+      title = PlacesUtils.history.getPageTitle(this._uri);
+    }
+    else {
+      title = PlacesUtils.bookmarks.getItemTitle(this._itemId);
+    }
+    return title;
   },
 
   _initNamePicker: function EIO_initNamePicker() {
@@ -425,6 +404,8 @@ var gEditItemOverlay = {
     this._multiEdit = false;
     this._firstEditedField = "";
     this._initialized = false;
+    this._titleOverride = "";
+    this._readOnly = false;
   },
 
   onTagsFieldBlur: function EIO_onTagsFieldBlur() {
@@ -595,36 +576,6 @@ var gEditItemOverlay = {
       var txn = PlacesUIUtils.ptm.editBookmarkKeyword(this._itemId, keyword);
       PlacesUIUtils.ptm.doTransaction(txn);
     }
-  },
-
-  onFeedLocationFieldBlur: function EIO_onFeedLocationFieldBlur() {
-    var uri;
-    try {
-      uri = PlacesUIUtils.createFixedURI(this._element("feedLocationField").value);
-    }
-    catch(ex) { return; }
-
-    var currentFeedURI = PlacesUtils.livemarks.getFeedURI(this._itemId);
-    if (!currentFeedURI.equals(uri)) {
-      var txn = PlacesUIUtils.ptm.editLivemarkFeedURI(this._itemId, uri);
-      PlacesUIUtils.ptm.doTransaction(txn);
-    }
-  },
-
-  onSiteLocationFieldBlur: function EIO_onSiteLocationFieldBlur() {
-    var uri = null;
-    try {
-      uri = PlacesUIUtils.createFixedURI(this._element("siteLocationField").value);
-    }
-    catch(ex) {  }
-
-    var currentSiteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
-    if ((!uri && !currentSiteURI) ||
-        (uri && currentSiteURI && currentSiteURI.equals(uri))) {
-      return;
-    }
-    var txn = PlacesUIUtils.ptm.editLivemarkSiteURI(this._itemId, uri);
-    PlacesUIUtils.ptm.doTransaction(txn);
   },
 
   onLoadInSidebarCheckboxCommand:
@@ -1019,15 +970,19 @@ var gEditItemOverlay = {
                                                   PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
       break;
     case PlacesUtils.LMANNO_FEEDURI:
-      var feedURISpec = PlacesUtils.livemarks.getFeedURI(this._itemId).spec;
-      this._initTextField("feedLocationField", feedURISpec);
+      let feedURISpec =
+        PlacesUtils.annotations.getItemAnnotation(this._itemId,
+                                                  PlacesUtils.LMANNO_FEEDURI);
+      this._initTextField("feedLocationField", feedURISpec, true);
       break;
     case PlacesUtils.LMANNO_SITEURI:
-      var siteURISpec = "";
-      var siteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
-      if (siteURI)
-        siteURISpec = siteURI.spec;
-      this._initTextField("siteLocationField", siteURISpec);
+      let siteURISpec = "";
+      try {
+        siteURISpec =
+          PlacesUtils.annotations.getItemAnnotation(this._itemId,
+                                                    PlacesUtils.LMANNO_SITEURI);
+      } catch (ex) {}
+      this._initTextField("siteLocationField", siteURISpec, true);
       break;
     }
   },

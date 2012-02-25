@@ -140,7 +140,7 @@ private:
       ThrowFileExceptionForCode(aCx, FILE_NOT_READABLE_ERR);
     }
 
-    if (!JS_NewNumberValue(aCx, jsdouble(size), aVp)) {
+    if (!JS_NewNumberValue(aCx, double(size), aVp)) {
       return false;
     }
 
@@ -183,7 +183,7 @@ private:
       return false;
     }
 
-    jsdouble start = 0, end = 0;
+    double start = 0, end = 0;
     JSString* jsContentType = JS_GetEmptyString(JS_GetRuntime(aCx));
     if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "/IIS", &start,
                              &end, &jsContentType)) {

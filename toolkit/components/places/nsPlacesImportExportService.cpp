@@ -106,8 +106,10 @@
 #include "nsISupportsPrimitives.h"
 #include "nsPlacesMacros.h"
 #include "mozilla/Util.h"
+#include "Helpers.h"
 
 using namespace mozilla;
+using namespace mozilla::places;
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -142,6 +144,9 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define RESTORE_FAILED_NSIOBSERVER_TOPIC "bookmarks-restore-failed"
 #define RESTORE_NSIOBSERVER_DATA NS_LITERAL_STRING("html")
 #define RESTORE_INITIAL_NSIOBSERVER_DATA NS_LITERAL_STRING("html-initial")
+
+#define LMANNO_FEEDURI "livemark/feedURI"
+#define LMANNO_SITEURI "livemark/siteURI"
 
 // define to get debugging messages on console about import/export
 //#define DEBUG_IMPORT
@@ -378,7 +383,7 @@ protected:
   nsCOMPtr<nsINavBookmarksService> mBookmarksService;
   nsCOMPtr<nsINavHistoryService> mHistoryService;
   nsCOMPtr<nsIAnnotationService> mAnnotationService;
-  nsCOMPtr<nsILivemarkService> mLivemarkService;
+  nsCOMPtr<mozIAsyncLivemarks> mLivemarkService;
 
   // If set, we will move root items to from their existing position
   // in the hierarchy, to where we find them in the bookmarks file
@@ -982,30 +987,19 @@ BookmarkContentSink::HandleLinkEnd()
   if (frame.mPreviousFeed) {
     // The is a live bookmark.  We create it here since in HandleLinkBegin we
     // don't know the title.
+    jsval livemark = livemarkInfoToJSVal(
+      0, EmptyCString(), frame.mPreviousText, frame.mContainerID,
+      mBookmarksService->DEFAULT_INDEX, frame.mPreviousFeed, frame.mPreviousLink
+    );
 
-    if (mIsImportDefaults) {
-      // Create the live bookmark but don't update it immediately.
-      rv = mLivemarkService->CreateLivemarkFolderOnly(frame.mContainerID,
-                                                      frame.mPreviousText,
-                                                      frame.mPreviousLink,
-                                                      frame.mPreviousFeed,
-                                                      -1,
-                                                      &frame.mPreviousId);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "CreateLivemarkFolderOnly failed!");
-    }
-    else {
-      rv = mLivemarkService->CreateLivemark(frame.mContainerID,
-                                            frame.mPreviousText,
-                                            frame.mPreviousLink,
-                                            frame.mPreviousFeed,
-                                            -1,
-                                            &frame.mPreviousId);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "CreateLivemark failed!");
-    }
+    // Create the live bookmark.
+    rv = mLivemarkService->AddLivemark(livemark, nsnull);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "AddLivemark failed!");
+
 #ifdef DEBUG_IMPORT
     PrintNesting();
-    printf("Created livemark '%s' %lld\n",
-           NS_ConvertUTF16toUTF8(frame.mPreviousText).get(), frame.mPreviousId);
+    printf("Created livemark '%s'\n",
+           NS_ConvertUTF16toUTF8(frame.mPreviousText).get());
 #endif
   }
   else if (frame.mPreviousLink) {
@@ -1852,36 +1846,31 @@ nsPlacesImportExportService::WriteLivemark(nsINavHistoryResultNode* aFolder, con
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get feed URI
-  nsCOMPtr<nsIURI> feedURI;
-  rv = mLivemarkService->GetFeedURI(folderId, getter_AddRefs(feedURI));
+  nsString feedSpec;
+  rv = mAnnotationService->GetItemAnnotationString(folderId,
+                                                   NS_LITERAL_CSTRING(LMANNO_FEEDURI),
+                                                   feedSpec);
+  
   NS_ENSURE_SUCCESS(rv, rv);
-  if (feedURI) {
-    nsCString feedSpec;
-    rv = feedURI->GetSpec(feedSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    // write feed URI
-    rv = aOutput->Write(kFeedURIAttribute, sizeof(kFeedURIAttribute)-1, &dummy);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = WriteEscapedUrl(feedSpec, aOutput);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  // write feed URI
+  rv = aOutput->Write(kFeedURIAttribute, sizeof(kFeedURIAttribute)-1, &dummy);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = WriteEscapedUrl(NS_ConvertUTF16toUTF8(feedSpec), aOutput);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // get the optional site URI
-  nsCOMPtr<nsIURI> siteURI;
-  rv = mLivemarkService->GetSiteURI(folderId, getter_AddRefs(siteURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (siteURI) {
-    nsCString siteSpec;
-    rv = siteURI->GetSpec(siteSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+  nsString siteSpec;
+  rv = mAnnotationService->GetItemAnnotationString(folderId,
+                                                   NS_LITERAL_CSTRING(LMANNO_SITEURI),
+                                                   siteSpec);
+  if (NS_SUCCEEDED(rv) && !siteSpec.IsEmpty()) {
     // write site URI
     rv = aOutput->Write(kHrefAttribute, sizeof(kHrefAttribute)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = WriteEscapedUrl(siteSpec, aOutput);
+    rv = WriteEscapedUrl(NS_ConvertUTF16toUTF8(siteSpec), aOutput);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2023,9 +2012,13 @@ nsPlacesImportExportService::WriteContainerContents(nsINavHistoryResultNode* aFo
       rv = child->GetItemId(&childFolderId);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // it could be a regular folder or it could be a livemark
+      // it could be a regular folder or it could be a livemark.
+      // Livemarks service is async, for now just workaround using annotations
+      // service.
       bool isLivemark;
-      rv = mLivemarkService->IsLivemark(childFolderId, &isLivemark);
+      nsresult rv = mAnnotationService->ItemHasAnnotation(childFolderId,
+                                                          NS_LITERAL_CSTRING(LMANNO_FEEDURI),
+                                                          &isLivemark);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (isLivemark)

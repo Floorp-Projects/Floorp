@@ -285,7 +285,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
     JSBool required;
     char c;
     JSFunction *fun;
-    jsdouble d;
+    double d;
     JSString *str;
     JSObject *obj;
 
@@ -338,13 +338,13 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
                 return JS_FALSE;
             break;
           case 'd':
-            if (!JS_ValueToNumber(cx, *sp, va_arg(ap, jsdouble *)))
+            if (!JS_ValueToNumber(cx, *sp, va_arg(ap, double *)))
                 return JS_FALSE;
             break;
           case 'I':
             if (!JS_ValueToNumber(cx, *sp, &d))
                 return JS_FALSE;
-            *va_arg(ap, jsdouble *) = js_DoubleToInteger(d);
+            *va_arg(ap, double *) = js_DoubleToInteger(d);
             break;
           case 'S':
           case 'W':
@@ -445,7 +445,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
     JSBool ok;
     JSObject *obj;
     JSString *str;
-    jsdouble d;
+    double d;
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -536,7 +536,7 @@ JS_ValueToSource(JSContext *cx, jsval v)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
+JS_ValueToNumber(JSContext *cx, jsval v, double *dp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -547,19 +547,19 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DoubleIsInt32(jsdouble d, jsint *ip)
+JS_DoubleIsInt32(double d, jsint *ip)
 {
     return JSDOUBLE_IS_INT32(d, (int32_t *)ip);
 }
 
 JS_PUBLIC_API(int32_t)
-JS_DoubleToInt32(jsdouble d)
+JS_DoubleToInt32(double d)
 {
     return js_DoubleToECMAInt32(d);
 }
 
 JS_PUBLIC_API(uint32_t)
-JS_DoubleToUint32(jsdouble d)
+JS_DoubleToUint32(double d)
 {
     return js_DoubleToECMAUint32(d);
 }
@@ -824,6 +824,10 @@ JSRuntime::init(uint32_t maxbytes)
 
     if (!gcMarker.init())
         return false;
+
+    const char *size = getenv("JSGC_MARK_STACK_LIMIT");
+    if (size)
+        SetMarkStackLimit(this, atoi(size));
 
     if (!(atomsCompartment = this->new_<JSCompartment>(this)) ||
         !atomsCompartment->init(NULL) ||
@@ -2244,7 +2248,7 @@ JS_strdup(JSContext *cx, const char *s)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
+JS_NewNumberValue(JSContext *cx, double d, jsval *rval)
 {
     AssertNoGC(cx);
     d = JS_CANONICALIZE_NAN(d);
@@ -2907,6 +2911,9 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
       case JSGC_SLICE_TIME_BUDGET:
         rt->gcSliceBudget = SliceBudget::TimeBudget(value);
         break;
+      case JSGC_MARK_STACK_LIMIT:
+        js::SetMarkStackLimit(rt, value);
+        break;
       default:
         JS_ASSERT(key == JSGC_MODE);
         rt->gcMode = JSGCMode(value);
@@ -2935,6 +2942,8 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return uint32_t(rt->gcChunkSet.count() + rt->gcChunkPool.getEmptyCount());
       case JSGC_SLICE_TIME_BUDGET:
         return uint32_t(rt->gcSliceBudget > 0 ? rt->gcSliceBudget / PRMJ_USEC_PER_MSEC : 0);
+      case JSGC_MARK_STACK_LIMIT:
+        return rt->gcMarker.sizeLimit();
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return uint32_t(rt->gcNumber);
@@ -6276,7 +6285,7 @@ JS_NewDateObject(JSContext *cx, int year, int mon, int mday, int hour, int min, 
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewDateObjectMsec(JSContext *cx, jsdouble msec)
+JS_NewDateObjectMsec(JSContext *cx, double msec)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
