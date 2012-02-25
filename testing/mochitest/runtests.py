@@ -675,6 +675,12 @@ class Mochitest(object):
     else:
       timeout = 330.0 # default JS harness timeout is 300 seconds
 
+    # it's a debug build, we can parse leaked DOMWindows and docShells
+    if Automation.IS_DEBUG_BUILD:
+      logger = ShutdownLeakLogger(self.automation.log)
+    else:
+      logger = None
+
     if options.vmwareRecording:
       self.startVMwareRecording(options);
 
@@ -688,6 +694,7 @@ class Mochitest(object):
                                   certPath=options.certPath,
                                   debuggerInfo=debuggerInfo,
                                   symbolsPath=options.symbolsPath,
+                                  logger = logger,
                                   timeout = timeout)
     except KeyboardInterrupt:
       self.automation.log.info("INFO | runtests.py | Received keyboard interrupt.\n");
@@ -702,6 +709,10 @@ class Mochitest(object):
     self.stopWebServer(options)
     self.stopWebSocketServer(options)
     processLeakLog(self.leak_report_file, options.leakThreshold)
+
+    if logger:
+      logger.parse()
+
     self.automation.log.info("\nINFO | runtests.py | Running tests: end.")
 
     if manifest is not None:
