@@ -11,11 +11,6 @@
 #include <windows.h>
 #define AVVENDOR
 #include <msoav.h>
-// To cope with both msvs8 header and sdk6 header
-#ifdef _WIN32_IE_IE60SP2
-#undef _WIN32_IE
-#define _WIN32_IE _WIN32_IE_IE60SP2
-#endif
 #include <shlobj.h>
 
 #include "nsAutoPtr.h"
