@@ -2709,6 +2709,10 @@ html|*#highlighter-nodeinfobar-id {
   color: hsl(90, 79%, 52%);
 }
 
+html|*#highlighter-nodeinfobar-pseudo-classes {
+  color: hsl(20, 100%, 70%);
+}
+
 /* Highlighter - Node Infobar - box & arrow */
 
 #highlighter-nodeinfobar {
@@ -2813,9 +2817,17 @@ html|*#highlighter-nodeinfobar-id {
   color: hsl(200,100%,70%);
 }
 
+.inspector-breadcrumbs-button[checked] > .inspector-breadcrumbs-pseudo-classes {
+  color: hsl(20, 100%, 70%);
+}
+
 .inspector-breadcrumbs-id,
 .inspector-breadcrumbs-classes {
   color: #8d99a6;
+}
+
+.inspector-breadcrumbs-pseudo-classes {
+  color: hsl(20, 100%, 85%);
 }
 
 /* Highlighter toolbar - breadcrumbs - LTR */
