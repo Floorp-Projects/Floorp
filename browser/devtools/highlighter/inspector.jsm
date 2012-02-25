@@ -83,6 +83,8 @@ const INSPECTOR_NOTIFICATIONS = {
   EDITOR_SAVED: "inspector-editor-saved",
 };
 
+const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
+
 ///////////////////////////////////////////////////////////////////////////
 //// InspectorUI
 
@@ -362,6 +364,7 @@ InspectorUI.prototype = {
       show: this.openRuleView,
       hide: this.closeRuleView,
       onSelect: this.selectInRuleView,
+      onChanged: this.changeInRuleView,
       panel: null,
       unregister: this.destroyRuleView,
       sidebar: true,
@@ -481,6 +484,7 @@ InspectorUI.prototype = {
     if (!aKeepStore) {
       this.store.deleteStore(this.winID);
       this.win.removeEventListener("pagehide", this, true);
+      this.clearPseudoClassLocks();
     } else {
       // Update the store before closing.
       if (this.selection) {
@@ -566,7 +570,7 @@ InspectorUI.prototype = {
     this.inspecting = false;
     this.toolsDim(false);
     if (this.highlighter.getNode()) {
-      this.select(this.highlighter.getNode(), true, true, !aPreventScroll);
+      this.select(this.highlighter.getNode(), true, !aPreventScroll);
     } else {
       this.select(null, true, true);
     }
@@ -574,15 +578,17 @@ InspectorUI.prototype = {
   },
 
   /**
-   * Select an object in the tree view.
+   * Select an object in the inspector.
    * @param aNode
    *        node to inspect
    * @param forceUpdate
    *        force an update?
    * @param aScroll boolean
    *        scroll the tree panel?
+   * @param aFrom [optional] string
+   *        which part of the UI the selection occured from
    */
-  select: function IUI_select(aNode, forceUpdate, aScroll)
+  select: function IUI_select(aNode, forceUpdate, aScroll, aFrom)
   {
     // if currently editing an attribute value, using the
     // highlighter dismisses the editor
@@ -593,6 +599,10 @@ InspectorUI.prototype = {
       aNode = this.defaultSelection;
 
     if (forceUpdate || aNode != this.selection) {
+      if (aFrom != "breadcrumbs") {
+        this.clearPseudoClassLocks();
+      }
+      
       this.selection = aNode;
       if (!this.inspecting) {
         this.highlighter.highlight(this.selection);
@@ -605,6 +615,41 @@ InspectorUI.prototype = {
 
     this.toolsSelect(aScroll);
   },
+  
+  /**
+   * Toggle the pseudo-class lock on the currently inspected element. If the
+   * pseudo-class is :hover or :active, that pseudo-class will also be toggled
+   * on every ancestor of the element, mirroring real :hover and :active
+   * behavior.
+   * 
+   * @param aPseudo the pseudo-class lock to toggle, e.g. ":hover"
+   */
+  togglePseudoClassLock: function IUI_togglePseudoClassLock(aPseudo)
+  {
+    if (DOMUtils.hasPseudoClassLock(this.selection, aPseudo)) {
+      this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
+        DOMUtils.removePseudoClassLock(crumb.node, aPseudo);
+      });
+    } else {
+      let hierarchical = aPseudo == ":hover" || aPseudo == ":active";
+      let node = this.selection;
+      do {
+        DOMUtils.addPseudoClassLock(node, aPseudo);
+        node = node.parentNode;
+      } while (hierarchical && node.parentNode)
+    }
+    this.nodeChanged();
+  },
+
+  /**
+   * Clear all pseudo-class locks applied to elements in the node hierarchy
+   */
+  clearPseudoClassLocks: function IUI_clearPseudoClassLocks()
+  {
+    this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
+      DOMUtils.clearPseudoClassLocks(crumb.node);
+    });
+  },
 
   /**
    * Called when the highlighted node is changed by a tool.
@@ -616,6 +661,7 @@ InspectorUI.prototype = {
   nodeChanged: function IUI_nodeChanged(aUpdater)
   {
     this.highlighter.invalidateSize();
+    this.breadcrumbs.updateSelectors();
     this.toolsOnChanged(aUpdater);
   },
 
@@ -639,6 +685,10 @@ InspectorUI.prototype = {
 
     this.highlighter.addListener("nodeselected", function() {
       self.select(self.highlighter.getNode(), false, false);
+    });
+
+    this.highlighter.addListener("pseudoclasstoggled", function(aPseudo) {
+      self.togglePseudoClassLock(aPseudo);
     });
 
     if (this.store.getValue(this.winID, "inspecting")) {
@@ -910,6 +960,15 @@ InspectorUI.prototype = {
   {
     if (this.ruleView)
       this.ruleView.highlight(aNode);
+  },
+  
+  /**
+   * Update the rules for the current node in the Css Rule View.
+   */
+  changeInRuleView: function IUI_selectInRuleView()
+  {
+    if (this.ruleView)
+      this.ruleView.nodeChanged();
   },
 
   ruleViewChanged: function IUI_ruleViewChanged()
@@ -1336,7 +1395,7 @@ InspectorUI.prototype = {
   toolsOnChanged: function IUI_toolsChanged(aUpdater)
   {
     this.toolsDo(function IUI_toolsOnChanged(aTool) {
-      if (aTool.isOpen && ("onChanged" in aTool) && aTool != aUpdater) {
+      if (("onChanged" in aTool) && aTool != aUpdater) {
         aTool.onChanged.call(aTool.context);
       }
     });
@@ -1730,6 +1789,13 @@ HTMLBreadcrumbs.prototype = {
     for (let i = 0; i < aNode.classList.length; i++) {
       text += "." + aNode.classList[i];
     }
+    for (let i = 0; i < PSEUDO_CLASSES.length; i++) {
+      let pseudo = PSEUDO_CLASSES[i];
+      if (DOMUtils.hasPseudoClassLock(aNode, pseudo)) {
+        text += pseudo;  
+      }      
+    }
+
     return text;
   },
 
@@ -1755,6 +1821,9 @@ HTMLBreadcrumbs.prototype = {
 
     let classesLabel = this.IUI.chromeDoc.createElement("label");
     classesLabel.className = "inspector-breadcrumbs-classes plain";
+    
+    let pseudosLabel = this.IUI.chromeDoc.createElement("label");
+    pseudosLabel.className = "inspector-breadcrumbs-pseudo-classes plain";
 
     tagLabel.textContent = aNode.tagName.toLowerCase();
     idLabel.textContent = aNode.id ? ("#" + aNode.id) : "";
@@ -1765,9 +1834,15 @@ HTMLBreadcrumbs.prototype = {
     }
     classesLabel.textContent = classesText;
 
+    let pseudos = PSEUDO_CLASSES.filter(function(pseudo) {
+      return DOMUtils.hasPseudoClassLock(aNode, pseudo);
+    }, this);
+    pseudosLabel.textContent = pseudos.join("");
+
     fragment.appendChild(tagLabel);
     fragment.appendChild(idLabel);
     fragment.appendChild(classesLabel);
+    fragment.appendChild(pseudosLabel);
 
     return fragment;
   },
@@ -1807,7 +1882,7 @@ HTMLBreadcrumbs.prototype = {
 
         item.onmouseup = (function(aNode) {
           return function() {
-            inspector.select(aNode, true, true);
+            inspector.select(aNode, true, true, "breadcrumbs");
           }
         })(nodes[i]);
 
@@ -1961,7 +2036,7 @@ HTMLBreadcrumbs.prototype = {
 
     button.onBreadcrumbsClick = function onBreadcrumbsClick() {
       inspector.stopInspecting();
-      inspector.select(aNode, true, true);
+      inspector.select(aNode, true, true, "breadcrumbs");
     };
 
     button.onclick = (function _onBreadcrumbsRightClick(aEvent) {
@@ -2076,6 +2151,20 @@ HTMLBreadcrumbs.prototype = {
     let element = this.nodeHierarchy[this.currentIndex].button;
     scrollbox.ensureElementIsVisible(element);
   },
+  
+  updateSelectors: function BC_updateSelectors()
+  {
+    for (let i = this.nodeHierarchy.length - 1; i >= 0; i--) {
+      let crumb = this.nodeHierarchy[i];
+      let button = crumb.button;
+
+      while(button.hasChildNodes()) {
+        button.removeChild(button.firstChild);
+      }
+      button.appendChild(this.prettyPrintNodeAsXUL(crumb.node));
+      button.setAttribute("tooltiptext", this.prettyPrintNodeAsText(crumb.node));
+    }
+  },
 
   /**
    * Update the breadcrumbs display when a new node is selected.
@@ -2117,6 +2206,8 @@ HTMLBreadcrumbs.prototype = {
 
     // Make sure the selected node and its neighbours are visible.
     this.scroll();
+
+    this.updateSelectors();
   },
 
 }
@@ -2136,3 +2227,6 @@ XPCOMUtils.defineLazyGetter(this, "StyleInspector", function () {
   return obj.StyleInspector;
 });
 
+XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+});
