@@ -1,0 +1,17 @@
+<html>
+<body>
+  <canvas width="500" height="500"></canvas>
+<script>
+  var canvas = document.getElementsByTagName('canvas')[0];
+  var ctx = canvas.getContext('2d');
+
+  var lineargradient = ctx.createLinearGradient(000,000,500,500);
+  lineargradient.addColorStop(0,'red');
+  lineargradient.addColorStop(1,'black');
+  ctx.fillStyle = lineargradient;
+  ctx.beginPath();
+  ctx.rect(00, 00, 250, 250);
+  ctx.fill();
+</script>
+</body>
+</html>
