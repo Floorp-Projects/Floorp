@@ -1003,6 +1003,12 @@ TextPropertyEditor.prototype = {
 
     appendText(this.element, ";");
 
+    this.warning = createChild(this.element, "div", {
+      hidden: "",
+      class: "ruleview-warning",
+      title: CssLogic.l10n("rule.warning.title"),
+    });
+
     // Holds the viewers for the computed properties.
     // will be populated in |_updateComputed|.
     this.computed = createChild(this.element, "ul", {
@@ -1038,6 +1044,7 @@ TextPropertyEditor.prototype = {
       val += " !" + this.prop.priority;
     }
     this.valueSpan.textContent = val;
+    this.warning.hidden = this._validate();
 
     // Populate the computed styles.
     this._updateComputed();
@@ -1172,6 +1179,23 @@ TextPropertyEditor.prototype = {
     } else {
       this.prop.setValue(this.committed.value, this.committed.priority);
     }
+  },
+
+  /**
+   * Validate this property.
+   *
+   * @returns {Boolean}
+   *          True if the property value is valid, false otherwise.
+   */
+  _validate: function TextPropertyEditor_validate()
+  {
+    let name = this.prop.name;
+    let value = this.prop.value;
+    let style = this.doc.createElementNS(HTML_NS, "div").style;
+
+    style.setProperty(name, value, null);
+
+    return !!style.getPropertyValue(name);
   },
 };
 
