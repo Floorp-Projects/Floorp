@@ -442,17 +442,6 @@ JSObject::initReservedSlot(unsigned index, const js::Value &v)
     initSlot(index, v);
 }
 
-inline bool
-JSObject::hasContiguousSlots(size_t start, size_t count) const
-{
-    /*
-     * Check that the range [start, start+count) is either all inline or all
-     * out of line.
-     */
-    JS_ASSERT(slotInRange(start + count, SENTINEL_ALLOWED));
-    return (start + count <= numFixedSlots()) || (start >= numFixedSlots());
-}
-
 inline void
 JSObject::prepareSlotRangeForOverwrite(size_t start, size_t end)
 {
