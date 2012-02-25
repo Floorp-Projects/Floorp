@@ -150,35 +150,35 @@ DebuggerView.Stackframes = {
    *
    * @param number aDepth
    *        The frame depth specified by the debugger.
-   * @param string aFrameIdText
-   *        The id to be displayed in the list.
    * @param string aFrameNameText
    *        The name to be displayed in the list.
+   * @param string aFrameDetailsText
+   *        The details to be displayed in the list.
    * @return object
    *         The newly created html node representing the added frame.
    */
-  addFrame: function DVF_addFrame(aDepth, aFrameIdText, aFrameNameText) {
+  addFrame: function DVF_addFrame(aDepth, aFrameNameText, aFrameDetailsText) {
     // make sure we don't duplicate anything
     if (document.getElementById("stackframe-" + aDepth)) {
       return null;
     }
 
     let frame = document.createElement("div");
-    let frameId = document.createElement("span");
     let frameName = document.createElement("span");
+    let frameDetails = document.createElement("span");
 
     // create a list item to be added to the stackframes container
     frame.id = "stackframe-" + aDepth;
     frame.className = "dbg-stackframe list-item";
 
-    // this list should display the id and name of the frame
-    frameId.className = "dbg-stackframe-id";
+    // this list should display the name and details for the frame
     frameName.className = "dbg-stackframe-name";
-    frameId.appendChild(document.createTextNode(aFrameIdText));
+    frameDetails.className = "dbg-stackframe-details";
     frameName.appendChild(document.createTextNode(aFrameNameText));
+    frameDetails.appendChild(document.createTextNode(aFrameDetailsText));
 
-    frame.appendChild(frameId);
     frame.appendChild(frameName);
+    frame.appendChild(frameDetails);
 
     this._frames.appendChild(frame);
 
