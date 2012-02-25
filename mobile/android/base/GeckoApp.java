@@ -2136,10 +2136,6 @@ abstract public class GeckoApp
             refreshActionBar();
         }
 
-        // Just in case. Normally we start in onNewIntent
-        if (checkLaunchState(LaunchState.Launching))
-            onNewIntent(getIntent());
-
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
         GeckoNetworkManager.getInstance().start();
 
