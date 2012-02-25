@@ -66,6 +66,7 @@ LIBS += \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
+LIBS += $(DEPTH)/modules/libmar/verify/$(LIB_PREFIX)verifymar.$(LIB_SUFFIX)
 USE_STATIC_LIBS = 1
 HAVE_PROGRESSUI = 1
 RCINCLUDE = updater.rc
@@ -111,7 +112,10 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DNS_NO_XPCOM
+DEFINES += -DNS_NO_XPCOM \
+  -DMAR_CHANNEL_ID='"$(MAR_CHANNEL_ID)"' \
+  -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"' \
+  $(NULL)
 
 ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
@@ -139,4 +143,18 @@ ifeq (,$(filter-out WINNT,$(OS_ARCH)))
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_LIBS += $(call EXPAND_LIBNAME,crypt32)
+EXTRA_LIBS += $(call EXPAND_LIBNAME,advapi32)
+endif
+
 CXXFLAGS += $(BZ2_CFLAGS)
+
+ifneq (,$(filter beta release esr,$(MOZ_UPDATE_CHANNEL)))
+RCFLAGS += -DMAR_SIGNING_RELEASE_BETA=1
+else
+ifneq (,$(filter nightly aurora nightly-elm nightly-profiling nightly-oak,$(MOZ_UPDATE_CHANNEL)))
+RCFLAGS += -DMAR_SIGNING_AURORA_NIGHTLY=1
+endif
+endif
+
