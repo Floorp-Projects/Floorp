@@ -126,3 +126,5 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 
 HTTP == root-background-1.html root-background-ref.html
 HTTP != root-background-1.html about:blank
+
+== background-repeat-1-ref.html background-repeat-1.html
