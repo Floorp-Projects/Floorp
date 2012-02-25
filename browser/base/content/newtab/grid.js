@@ -23,8 +23,10 @@ let gGrid = {
    * All cells contained in the grid.
    */
   get cells() {
+    let cells = [];
     let children = this.node.querySelectorAll("li");
-    let cells = [new Cell(this, child) for each (child in children)];
+    for (let i = 0; i < children.length; i++)
+      cells.push(new Cell(this, children[i]));
 
     // Replace the getter with our cached value.
     Object.defineProperty(this, "cells", {value: cells, enumerable: true});
