@@ -80,7 +80,6 @@ ifdef MOZ_UPDATER
 ifndef MOZ_NATIVE_BZ2
 tier_platform_dirs += modules/libbz2
 endif
-tier_platform_dirs += modules/libmar
 tier_platform_dirs += other-licenses/bsdiff
 endif
 
@@ -212,13 +211,17 @@ ifdef MOZ_SPELLCHECK
 tier_platform_dirs	+= extensions/spellcheck
 endif
 
-tier_platform_dirs	+= toolkit
-
 ifdef MOZ_PSM
 tier_platform_dirs	+= security/manager
 else
 tier_platform_dirs	+= security/manager/boot/public security/manager/ssl/public
 endif
+
+ifdef MOZ_UPDATER
+tier_platform_dirs += modules/libmar
+endif
+
+tier_platform_dirs	+= toolkit
 
 ifdef MOZ_PREF_EXTENSIONS
 tier_platform_dirs += extensions/pref

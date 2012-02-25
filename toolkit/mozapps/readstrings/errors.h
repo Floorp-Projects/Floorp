@@ -56,6 +56,13 @@
 #define UPDATER_QUOTED_PATH_MEM_ERROR 14
 #define BAD_ACTION_ERROR 15
 #define STRING_CONVERSION_ERROR 16
+#define CERT_LOAD_ERROR 17
+#define CERT_HANDLING_ERROR 18
+#define CERT_VERIFY_ERROR 19
+#define ARCHIVE_NOT_OPEN 20
+#define COULD_NOT_READ_PRODUCT_INFO_BLOCK_ERROR 21
+#define MAR_CHANNEL_MISMATCH_ERROR 22
+#define VERSION_DOWNGRADE_ERROR 23
 
 // The following error codes are only used by updater.exe
 // when a fallback key exists and XPCShell tests are being run.
