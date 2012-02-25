@@ -493,7 +493,7 @@ RES_MENU = \
   $(NULL)
 
 RES_MENU_V11 = \
-  res/menu-V11/gecko_menu.xml \
+  res/menu-v11/gecko_menu.xml \
   $(NULL)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
