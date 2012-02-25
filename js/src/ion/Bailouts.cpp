@@ -91,6 +91,11 @@ class IonBailoutIterator
     {
     }
 
+    Value readBogus() {
+        reader_.readSlot();
+        return UndefinedValue();
+    }
+
     Value read() {
         SnapshotReader::Slot slot = reader_.readSlot();
         switch (slot.mode()) {
@@ -148,11 +153,13 @@ class IonBailoutIterator
         return reader_.bailoutKind();
     }
     bool resumeAfter() const {
-        if (reader_.remainingFrameCount() > 1)
+        if (hasNextFrame())
             return false;
         return reader_.resumeAfter();
     }
-
+    bool hasNextFrame() const {
+        return reader_.remainingFrameCount() > 1;
+    }
     bool nextFrame() {
         reader_.finishReadingFrame();
         return reader_.remainingFrameCount() > 0;
@@ -207,7 +214,18 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
     IonSpew(IonSpew_Bailouts, " pushing %u expression stack slots", exprStackSlots);
     FrameRegs &regs = cx->regs();
     for (uint32 i = 0; i < exprStackSlots; i++) {
-        Value v = iter.read();
+        Value v;
+
+        // If coming from an invalidation bailout, and this is the topmost
+        // value, and a value override has been specified, don't read from the
+        // iterator. Otherwise, we risk using a garbage value. Note if we take
+        // this path, the iterator is not advanced, so this *must* be the last
+        // value.
+        if (!iter.hasNextFrame() && i == exprStackSlots - 1 && cx->runtime->hasIonReturnOverride())
+            v = iter.readBogus();
+        else
+            v = iter.read();
+
         *regs.sp++ = v;
     }
     uintN pcOff = iter.pcOffset();
@@ -433,6 +451,9 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         types::TypeScript::Monitor(cx, cx->fp()->script(), pc, cx->regs().sp[-1]);
 
     in.ionScript()->decref(cx);
+
+    if (cx->runtime->hasIonReturnOverride())
+        cx->regs().sp[-1] = cx->runtime->takeIonReturnOverride();
 
     if (retval != BAILOUT_RETURN_FATAL_ERROR)
         return retval;

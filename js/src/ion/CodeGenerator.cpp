@@ -1887,7 +1887,7 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
                               masm.labelForPatch(), liveRegs,
                               objReg, mir->atom(), output);
 
-    cache.setScriptedLocation(mir->script(), mir->pc());
+    cache.setScriptedLocation(mir->pc());
     size_t cacheIndex = allocateCache(cache);
 
     saveLive(ins_);
