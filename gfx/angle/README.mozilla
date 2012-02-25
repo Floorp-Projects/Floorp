@@ -10,6 +10,8 @@ In this order:
   angle-limit-identifiers-to-250-chars.patch - see bug 675625
   angle-use-xmalloc.patch - see bug 680840. Can drop this patch whenever the new preprocessor lands.
   angle-castrate-bug-241.patch - see bug 699033 / angle bug 241
+  angle-enforce-readpixels-spec.patch - see bug 724476.
+  angle-impl-read-bgra.patch - see bug 724476.
 
 In addition to these patches, the Makefile.in files are ours, they're not present in upsteam ANGLE.
 

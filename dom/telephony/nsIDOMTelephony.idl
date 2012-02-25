@@ -43,7 +43,7 @@
 interface nsIDOMEventListener;
 interface nsIDOMTelephonyCall;
 
-[scriptable, builtinclass, uuid(047be0d8-a9cd-49aa-8948-2f60ff3a7a18)]
+[scriptable, builtinclass, uuid(0de46b73-be83-4970-ad15-45f92cb0902a)]
 interface nsIDOMTelephony : nsIDOMEventTarget
 {
   nsIDOMTelephonyCall dial(in DOMString number);
@@ -53,16 +53,14 @@ interface nsIDOMTelephony : nsIDOMEventTarget
 
   // The call that is "active", i.e. receives microphone input and tones
   // generated via startTone.
-  attribute jsval active;
+  readonly attribute jsval active;
 
   // Array of all calls that are currently connected.
   readonly attribute jsval calls;
 
   void startTone(in DOMString tone);
   void stopTone();
-  void sendTones(in DOMString tones,
-                 [optional] in unsigned long toneDuration,
-                 [optional] in unsigned long intervalDuration);
 
   attribute nsIDOMEventListener onincoming;
+  attribute nsIDOMEventListener oncallschanged;
 };

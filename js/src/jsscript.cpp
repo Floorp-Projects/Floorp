@@ -1065,7 +1065,7 @@ JSScript::NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t
          * We assume that calloc aligns on sizeof(Value) if the size we ask to
          * allocate divides sizeof(Value).
          */
-        JS_STATIC_ASSERT(sizeof(Value) == sizeof(jsdouble));
+        JS_STATIC_ASSERT(sizeof(Value) == sizeof(double));
         data = static_cast<uint8_t *>(cx->calloc_(JS_ROUNDUP(size, sizeof(Value))));
         if (!data)
             return NULL;
@@ -1581,9 +1581,6 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
      * Special case: function definition needs no line number note because
      * the function's script contains its starting line number.
      */
-    JSOp op = JSOp(*pc);
-    if (js_CodeSpec[op].format & JOF_INDEXBASE)
-        pc += js_CodeSpec[op].length;
     if (*pc == JSOP_DEFFUN)
         return script->getFunction(GET_UINT32_INDEX(pc))->script()->lineno;
 

@@ -278,7 +278,8 @@
       <method name="onTextReverted">
         <body><![CDATA[
           if (this._textRevertedHandler)
-            this._textRevertedHandler();
+            return this._textRevertedHandler();
+          return false;
         ]]></body>
       </method>
 

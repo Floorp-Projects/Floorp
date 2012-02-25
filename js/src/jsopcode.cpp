@@ -144,33 +144,6 @@ Dup(const char *chars, DupBuffer *cb)
     return cb->append(chars, strlen(chars) + 1);
 }
 
-uintN
-js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff)
-{
-    JSOp op = JSOp(*pc);
-    JS_ASSERT(js_CodeSpec[op].length >= 1 + pcoff + UINT16_LEN);
-    JS_ASSERT(js_CodeSpec[op].format & JOF_ATOM);
-
-    /*
-     * We need to detect index base prefix. It presents when resetbase
-     * follows the bytecode.
-     */
-    uintN span = js_CodeSpec[op].length;
-    uintN base = 0;
-    if (pc - script->code + span < script->length) {
-        JSOp next = JSOp(pc[span]);
-        if (next == JSOP_RESETBASE) {
-            JS_ASSERT(JSOp(pc[-JSOP_INDEXBASE_LENGTH]) == JSOP_INDEXBASE);
-            base = GET_INDEXBASE(pc - JSOP_INDEXBASE_LENGTH);
-        } else if (next == JSOP_RESETBASE0) {
-            JSOp prev = JSOp(pc[-1]);
-            JS_ASSERT(JSOP_INDEXBASE1 <= prev && prev <= JSOP_INDEXBASE3);
-            base = (prev - JSOP_INDEXBASE1 + 1) << 16;
-        }
-    }
-    return base + GET_UINT16(pc + pcoff);
-}
-
 size_t
 js_GetVariableBytecodeLength(jsbytecode *pc)
 {
@@ -194,7 +167,7 @@ js_GetVariableBytecodeLength(jsbytecode *pc)
         JS_ASSERT(op == JSOP_LOOKUPSWITCH);
         pc += JUMP_OFFSET_LEN;
         ncases = GET_UINT16(pc);
-        return 1 + JUMP_OFFSET_LEN + INDEX_LEN + ncases * (INDEX_LEN + JUMP_OFFSET_LEN);
+        return 1 + JUMP_OFFSET_LEN + UINT16_LEN + ncases * (UINT32_INDEX_LEN + JUMP_OFFSET_LEN);
     }
 }
 
@@ -568,20 +541,20 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       }
 
       case JOF_ATOM: {
-        uintN index = js_GetIndexFromBytecode(script, pc, 0);
-        jsval v;
-        if (op == JSOP_DOUBLE) {
-            v = script->getConst(index);
-        } else {
-            JSAtom *atom = script->getAtom(index);
-            v = STRING_TO_JSVAL(atom);
-        }
-        {
-            JSAutoByteString bytes;
-            if (!ToDisassemblySource(cx, v, &bytes))
-                return 0;
-            Sprint(sp, " %s", bytes.ptr());
-        }
+        Value v = StringValue(script->getAtom(GET_UINT32_INDEX(pc)));
+        JSAutoByteString bytes;
+        if (!ToDisassemblySource(cx, v, &bytes))
+            return 0;
+        Sprint(sp, " %s", bytes.ptr());
+        break;
+      }
+
+      case JOF_DOUBLE: {
+        Value v = script->getConst(GET_UINT32_INDEX(pc));
+        JSAutoByteString bytes;
+        if (!ToDisassemblySource(cx, v, &bytes))
+            return 0;
+        Sprint(sp, " %s", bytes.ptr());
         break;
       }
 
@@ -641,8 +614,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += UINT16_LEN;
         Sprint(sp, " offset %d npairs %u", intN(off), uintN(npairs));
         while (npairs) {
-            uint16_t constIndex = GET_INDEX(pc2);
-            pc2 += INDEX_LEN;
+            uint32_t constIndex = GET_UINT32_INDEX(pc2);
+            pc2 += UINT32_INDEX_LEN;
             off = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
 
@@ -1598,7 +1571,7 @@ CompareTableEntries(const TableEntry &a, const TableEntry &b, bool *lessOrEqualp
 static ptrdiff_t
 SprintDoubleValue(Sprinter *sp, jsval v, JSOp *opp)
 {
-    jsdouble d;
+    double d;
     ptrdiff_t todo;
     char *s;
 
@@ -1894,8 +1867,7 @@ IsVarSlot(JSPrinter *jp, jsbytecode *pc, jsint *indexp)
     return JS_FALSE;
 }
 
-#define LOAD_ATOM(PCOFF)                                                      \
-    GET_ATOM_FROM_BYTECODE(jp->script, pc, PCOFF, atom)
+#define LOAD_ATOM(PCOFF) (atom = (jp->script->getAtom(GET_UINT32_INDEX((pc) + PCOFF))))
 
 typedef Vector<JSAtom *, 8> AtomVector;
 typedef AtomVector::Range AtomRange;
@@ -2143,7 +2115,7 @@ DecompileDestructuring(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
           case JSOP_INT32:  d = i = GET_INT32(pc);  goto do_getelem;
 
           case JSOP_DOUBLE:
-            GET_DOUBLE_FROM_BYTECODE(jp->script, pc, 0, d);
+            d = jp->script->getConst(GET_UINT32_INDEX(pc)).toDouble();
             LOCAL_ASSERT(JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d));
             i = (jsint)d;
 
@@ -2717,18 +2689,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
         lastop = saveop;
         op = (JSOp) *pc;
         cs = &js_CodeSpec[op];
-        if (cs->format & JOF_INDEXBASE) {
-            /*
-             * The decompiler uses js_GetIndexFromBytecode to get atoms and
-             * ignores these suffix/prefix bytecodes, thus simplifying code
-             * that must process JSOP_GETTER/JSOP_SETTER prefixes.
-             */
-            pc += cs->length;
-            if (pc >= endpc)
-                break;
-            op = (JSOp) *pc;
-            cs = &js_CodeSpec[op];
-        }
         saveop = op;
         len = oplen = cs->length;
         nuses = StackUses(jp->script, pc);
@@ -4740,9 +4700,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_DOUBLE:
               {
-                double d;
-                GET_DOUBLE_FROM_BYTECODE(jp->script, pc, 0, d);
-                val = DOUBLE_TO_JSVAL(d);
+                val = jp->script->getConst(GET_UINT32_INDEX(pc));
                 todo = SprintDoubleValue(&ss->sprinter, val, &saveop);
                 break;
               }
@@ -5020,8 +4978,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     } else {
                         table[k].label = NULL;
                     }
-                    uint16_t constIndex = GET_INDEX(pc2);
-                    pc2 += INDEX_LEN;
+                    uint32_t constIndex = GET_UINT32_INDEX(pc2);
+                    pc2 += UINT32_INDEX_LEN;
                     off2 = GET_JUMP_OFFSET(pc2);
                     pc2 += JUMP_OFFSET_LEN;
                     table[k].key = jp->script->getConst(constIndex);

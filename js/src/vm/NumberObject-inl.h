@@ -53,7 +53,7 @@ JSObject::asNumber()
 namespace js {
 
 inline NumberObject *
-NumberObject::create(JSContext *cx, jsdouble d)
+NumberObject::create(JSContext *cx, double d)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &NumberClass);
     if (!obj)
@@ -64,7 +64,7 @@ NumberObject::create(JSContext *cx, jsdouble d)
 }
 
 inline NumberObject *
-NumberObject::createWithProto(JSContext *cx, jsdouble d, JSObject &proto)
+NumberObject::createWithProto(JSContext *cx, double d, JSObject &proto)
 {
     JSObject *obj = NewObjectWithClassProto(cx, &NumberClass, &proto, NULL,
                                             gc::GetGCObjectKind(RESERVED_SLOTS));

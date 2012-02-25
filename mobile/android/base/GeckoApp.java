@@ -390,7 +390,7 @@ abstract public class GeckoApp
     {
         sMenu = menu;
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.layout.gecko_menu, menu);
+        inflater.inflate(R.menu.gecko_menu, menu);
         return true;
     }
 
@@ -436,7 +436,6 @@ abstract public class GeckoApp
         MenuItem forward = aMenu.findItem(R.id.forward);
         MenuItem share = aMenu.findItem(R.id.share);
         MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
-        MenuItem downloads = aMenu.findItem(R.id.downloads);
         MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
 
         if (tab == null) {
@@ -469,10 +468,6 @@ abstract public class GeckoApp
         // Disable save as PDF for about:home and xul pages
         saveAsPDF.setEnabled(!(tab.getURL().equals("about:home") ||
                                tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
-
-        // DownloadManager support is tied to level 12 and higher
-        if (Build.VERSION.SDK_INT < 12)
-            downloads.setVisible(false);
 
         charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
 
@@ -2135,10 +2130,6 @@ abstract public class GeckoApp
             mOrientation = newOrientation;
             refreshActionBar();
         }
-
-        // Just in case. Normally we start in onNewIntent
-        if (checkLaunchState(LaunchState.Launching))
-            onNewIntent(getIntent());
 
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
         GeckoNetworkManager.getInstance().start();

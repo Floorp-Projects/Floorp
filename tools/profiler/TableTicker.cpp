@@ -516,11 +516,8 @@ unsigned int sCurrentEventGeneration = 0;
 void TableTicker::Tick(TickSample* sample)
 {
   // Marker(s) come before the sample
-  int i = 0;
-  const char *marker = mStack->getMarker(i++);
-  for (int i = 0; marker != NULL; i++) {
-    mProfile.addTag(ProfileEntry('m', marker));
-    marker = mStack->getMarker(i++);
+  for (int i = 0; mStack->getMarker(i) != NULL; i++) {
+    mProfile.addTag(ProfileEntry('m', mStack->getMarker(i)));
   }
   mStack->mQueueClearMarker = true;
 

@@ -26,61 +26,61 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 
-let gLivemarkId = -1;
-
 function runTest() {
   const FEEDSPEC = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/bad_links.atom";
-
-  let bookmarksObserver = {
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsINavBookmarkObserver
-    ]),
-
-    onItemAdded: function (aItemId, aParentId, aIndex, aItemType, aURI) {
-      if (aURI.spec == "http://example.org/last")
-        this._updateFinished = true;
-    },
-    onEndUpdateBatch: function () {
-      if (this._updateFinished) {
-        PlacesUtils.bookmarks.removeObserver(this);
-        setTimeout(continueTest, 0);
-      }
-    },
-    onBeginUpdateBatch: function () {},
-    onBeforeItemRemoved: function () {},
-    onItemRemoved: function () {},
-    onItemChanged: function () {},
-    onItemVisited: function () {},
-    onItemMoved: function () {},
-  };
-
-  gLivemarkId = PlacesUtils.livemarks.createLivemarkFolderOnly(
-    PlacesUtils.toolbarFolderId, "foo", NetUtil.newURI("http://mochi.test/"),
-    NetUtil.newURI(FEEDSPEC), PlacesUtils.bookmarks.DEFAULT_INDEX
-  );
-  PlacesUtils.bookmarks.addObserver(bookmarksObserver, false);
-  PlacesUtils.livemarks.reloadLivemarkFolder(gLivemarkId);
-}
-
-function continueTest() {
   const GOOD_URLS = ["http://example.org/first", "http://example.org/last"];
 
-  let options = PlacesUtils.history.getNewQueryOptions();
-  let query = PlacesUtils.history.getNewQuery();
-  query.setFolders([gLivemarkId], 1);
-  let root = PlacesUtils.history.executeQuery(query, options).root;
-  root.containerOpen = true;
+  PlacesUtils.livemarks.addLivemark(
+    { title: "foo"
+    , parentId: PlacesUtils.toolbarFolderId
+    , index: PlacesUtils.bookmarks.DEFAULT_INDEX
+    , feedURI: NetUtil.newURI(FEEDSPEC)
+    , siteURI: NetUtil.newURI("http:/mochi.test/")
+    },
+    function (aStatus, aLivemark) {
+      ok(Components.isSuccessCode(aStatus), "Get livemark");
 
-  let cc = root.childCount;
-  is(cc, 2, "failed to create the two good livemark items");
-  for (let i = 0; i < cc; ++i) {
-    let node = root.getChild(i);
-    ok(GOOD_URLS.indexOf(node.uri) != -1, "livemark item created with bad uri " + node.uri);
-  }
+      waitForLivemarkLoad(aLivemark, function (aLivemark) {
+        let nodes = aLivemark.getNodesForContainer({});
 
-  root.containerOpen = false;
-  PlacesUtils.bookmarks.removeItem(gLivemarkId);
-  SimpleTest.finish();
+        is(nodes.length, 2, "Created the two good livemark items");
+        for (let i = 0; i < nodes.length; ++i) {
+          let node = nodes[i];
+          ok(GOOD_URLS.indexOf(node.uri) != -1, "livemark item created with bad uri " + node.uri);
+        }
+
+        PlacesUtils.bookmarks.removeItem(aLivemark.id);
+        SimpleTest.finish();
+      });
+    }
+  );
+}
+
+function waitForLivemarkLoad(aLivemark, aCallback) {
+  // Don't need a real node here.
+  let node = {};
+  let resultObserver = {
+    nodeInserted: function() {},
+    nodeRemoved: function() {},
+    nodeAnnotationChanged: function() {},
+    nodeTitleChanged: function() {},
+    nodeHistoryDetailsChanged: function() {},
+    nodeReplaced: function() {},
+    nodeMoved: function() {},
+    ontainerStateChanged: function () {},
+    sortingChanged: function() {},
+    batching: function() {},
+    invalidateContainer: function(node) {
+      isnot(aLivemark.status, Ci.mozILivemark.STATUS_FAILED,
+            "Loading livemark should success");
+      if (aLivemark.status == Ci.mozILivemark.STATUS_READY) {
+        aLivemark.unregisterForUpdates(node, resultObserver);
+        aCallback(aLivemark);
+      }
+    }
+  };
+  aLivemark.registerForUpdates(node, resultObserver);
+  aLivemark.reload();
 }
 
 ]]>

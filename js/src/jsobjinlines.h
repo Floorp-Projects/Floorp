@@ -80,8 +80,10 @@
 #include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
-#include "vm/String-inl.h"
+
+#include "vm/ObjectImpl-inl.h"
 #include "vm/RegExpStatics-inl.h"
+#include "vm/String-inl.h"
 
 inline bool
 JSObject::hasPrivate() const
@@ -361,20 +363,6 @@ JSObject::dynamicSlotIndex(size_t slot)
 {
     JS_ASSERT(!isDenseArray() && slot >= numFixedSlots());
     return slot - numFixedSlots();
-}
-
-/*static*/ inline size_t
-JSObject::dynamicSlotsCount(size_t nfixed, size_t span)
-{
-    if (span <= nfixed)
-        return 0;
-    span -= nfixed;
-    if (span <= SLOT_CAPACITY_MIN)
-        return SLOT_CAPACITY_MIN;
-
-    size_t slots = js::RoundUpPow2(span);
-    JS_ASSERT(slots >= span);
-    return slots;
 }
 
 inline size_t
@@ -866,11 +854,6 @@ inline bool JSObject::setSystem(JSContext *cx)
     return setFlag(cx, js::BaseShape::SYSTEM);
 }
 
-inline bool JSObject::isDelegate() const
-{
-    return lastProperty()->hasObjectFlag(js::BaseShape::DELEGATE);
-}
-
 inline bool JSObject::setDelegate(JSContext *cx)
 {
     return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
@@ -899,11 +882,6 @@ inline bool JSObject::hasUncacheableProto() const
 inline bool JSObject::setUncacheableProto(JSContext *cx)
 {
     return setFlag(cx, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
-}
-
-inline bool JSObject::isExtensible() const
-{
-    return !lastProperty()->hasObjectFlag(js::BaseShape::NOT_EXTENSIBLE);
 }
 
 inline bool JSObject::isBoundFunction() const
@@ -1172,12 +1150,6 @@ JSObject::nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js:
 }
 
 inline bool
-JSObject::isNative() const
-{
-    return lastProperty()->isNative();
-}
-
-inline bool
 JSObject::nativeContains(JSContext *cx, jsid id)
 {
     return nativeLookup(cx, id) != NULL;
@@ -1195,12 +1167,6 @@ JSObject::nativeEmpty() const
     return lastProperty()->isEmptyShape();
 }
 
-inline bool
-JSObject::inDictionaryMode() const
-{
-    return lastProperty()->inDictionary();
-}
-
 inline uint32_t
 JSObject::propertyCount() const
 {
@@ -1211,12 +1177,6 @@ inline bool
 JSObject::hasPropertyTable() const
 {
     return lastProperty()->hasTable();
-}
-
-inline size_t
-JSObject::sizeOfThis() const
-{
-    return arenaHeader()->getThingSize();
 }
 
 inline size_t
@@ -2038,59 +1998,6 @@ JSObject::initFixedSlot(uintN slot, const js::Value &value)
 {
     JS_ASSERT(slot < numFixedSlots());
     fixedSlots()[slot].init(value);
-}
-
-inline void
-JSObject::privateWriteBarrierPre(void **old)
-{
-#ifdef JSGC_INCREMENTAL
-    JSCompartment *comp = compartment();
-    if (comp->needsBarrier()) {
-        if (*old && getClass()->trace)
-            getClass()->trace(comp->barrierTracer(), this);
-    }
-#endif
-}
-
-inline void
-JSObject::privateWriteBarrierPost(void **old)
-{
-}
-
-inline void
-JSObject::writeBarrierPre(JSObject *obj)
-{
-#ifdef JSGC_INCREMENTAL
-    /*
-     * This would normally be a null test, but TypeScript::global uses 0x1 as a
-     * special value.
-     */
-    if (uintptr_t(obj) < 32)
-        return;
-
-    JSCompartment *comp = obj->compartment();
-    if (comp->needsBarrier()) {
-        JS_ASSERT(!comp->rt->gcRunning);
-        MarkObjectUnbarriered(comp->barrierTracer(), obj, "write barrier");
-    }
-#endif
-}
-
-inline void
-JSObject::readBarrier(JSObject *obj)
-{
-#ifdef JSGC_INCREMENTAL
-    JSCompartment *comp = obj->compartment();
-    if (comp->needsBarrier()) {
-        JS_ASSERT(!comp->rt->gcRunning);
-        MarkObjectUnbarriered(comp->barrierTracer(), obj, "read barrier");
-    }
-#endif
-}
-
-inline void
-JSObject::writeBarrierPost(JSObject *obj, void *addr)
-{
 }
 
 #endif /* jsobjinlines_h___ */

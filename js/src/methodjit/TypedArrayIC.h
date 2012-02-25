@@ -82,10 +82,10 @@ ConstantFoldForFloatArray(JSContext *cx, ValueRemat *vr)
     if (vr->knownType() == JSVAL_TYPE_DOUBLE)
         return true;
 
-    jsdouble d = 0;
+    double d = 0;
     Value v = vr->value();
     if (v.isString()) {
-        if (!StringToNumberType<jsdouble>(cx, v.toString(), &d))
+        if (!StringToNumberType<double>(cx, v.toString(), &d))
             return false;
     } else if (v.isBoolean()) {
         d = v.toBoolean() ? 1 : 0;
