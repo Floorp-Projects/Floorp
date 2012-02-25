@@ -128,6 +128,8 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define NETWORK_ENABLEIDN       "network.enableIDN"
 #define BROWSER_PREF_PREFIX     "browser.cache."
 #define DONOTTRACK_HEADER_ENABLED "privacy.donottrackheader.enabled"
+#define TELEMETRY_ENABLED        "toolkit.telemetry.enabled"
+#define ALLOW_EXPERIMENTS        "network.allow-experiments"
 
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
@@ -200,6 +202,8 @@ nsHttpHandler::nsHttpHandler()
     , mSendSecureXSiteReferrer(true)
     , mEnablePersistentHttpsCaching(false)
     , mDoNotTrackEnabled(false)
+    , mTelemetryEnabled(false)
+    , mAllowExperiments(true)
     , mEnableSpdy(false)
     , mCoalesceSpdy(true)
     , mUseAlternateProtocol(false)
@@ -268,6 +272,7 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(NETWORK_ENABLEIDN, this, true);
         prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, true);
         prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, true);
+        prefBranch->AddObserver(TELEMETRY_ENABLED, this, true);
 
         PrefsChanged(prefBranch, nsnull);
     }
@@ -536,6 +541,27 @@ nsHttpHandler::GetIOService(nsIIOService** result)
     return NS_OK;
 }
 
+PRUint32
+nsHttpHandler::Get32BitsOfPseudoRandom()
+{
+    // only confirm rand seeding on socket thread
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    // rand() provides different amounts of PRNG on different platforms.
+    // 15 or 31 bits are common amounts.
+
+    PR_STATIC_ASSERT(RAND_MAX >= 0xfff);
+    
+#if RAND_MAX < 0xffffU
+    return ((PRUint16) rand() << 20) |
+            (((PRUint16) rand() & 0xfff) << 8) |
+            ((PRUint16) rand() & 0xff);
+#elif RAND_MAX < 0xffffffffU
+    return ((PRUint16) rand() << 16) | ((PRUint16) rand() & 0xffff);
+#else
+    return (PRUint32) rand();
+#endif
+}
 
 void
 nsHttpHandler::NotifyObservers(nsIHttpChannel *chan, const char *event)
@@ -1184,6 +1210,30 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(DONOTTRACK_HEADER_ENABLED, &cVar);
         if (NS_SUCCEEDED(rv)) {
             mDoNotTrackEnabled = cVar;
+        }
+    }
+
+    //
+    // Telemetry
+    //
+
+    if (PREF_CHANGED(TELEMETRY_ENABLED)) {
+        cVar = false;
+        rv = prefs->GetBoolPref(TELEMETRY_ENABLED, &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mTelemetryEnabled = cVar;
+        }
+    }
+
+    //
+    // network.allow-experiments
+    //
+
+    if (PREF_CHANGED(ALLOW_EXPERIMENTS)) {
+        cVar = true;
+        rv = prefs->GetBoolPref(ALLOW_EXPERIMENTS, &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mAllowExperiments = cVar;
         }
     }
 
