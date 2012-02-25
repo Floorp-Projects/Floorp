@@ -554,6 +554,10 @@ struct JSScript : public js::gc::Cell {
     bool hasIonScript() const {
         return ion && ion != ION_DISABLED_SCRIPT;
     }
+    js::ion::IonScript *ionScript() const {
+        JS_ASSERT(hasIonScript());
+        return ion;
+    }
 
   private:
     js::DebugScript     *debug;
