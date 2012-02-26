@@ -2665,6 +2665,7 @@ ia64*-hpux*)
     case "$host" in
     *-mingw*)
         MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
+        L10NBASEDIR=`cd $L10NBASEDIR && pwd -W`
         ;;
     esac
 
