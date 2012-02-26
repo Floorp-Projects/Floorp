@@ -632,9 +632,6 @@ nsSocketTransportService::Run()
     nsCOMPtr<nsIThreadInternal> threadInt = do_QueryInterface(thread);
     threadInt->SetObserver(this);
 
-    // make sure the pseudo random number generator is seeded on this thread
-    srand(PR_Now());
-
     for (;;) {
         bool pendingEvents = false;
         thread->HasPendingEvents(&pendingEvents);
