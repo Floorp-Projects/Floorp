@@ -50,6 +50,7 @@ EXTRA_JS_MODULES = \
 		AutocompletePopup.jsm \
 		gcli.jsm \
 		GcliCommands.jsm \
+		GcliTiltCommands.jsm \
 		$(NULL)
 
 EXTRA_PP_JS_MODULES = \
