@@ -2155,6 +2155,7 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
          * that mark callbacks are not in place during compartment GCs.
          */
         JSTracer checker;
+        JS_ASSERT(trc->runtime == trc->context->runtime);
         JS_TracerInit(&checker, trc->context, EmptyMarkCallback);
         ConservativeGCTest test = MarkIfGCThingWord(&checker, reinterpret_cast<uintptr_t>(ptr));
         if (test != CGCT_VALID && entry.value.name) {
@@ -3497,6 +3498,7 @@ IncrementalGCSlice(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
         if (!rt->gcMarker.hasBufferedGrayRoots())
             sliceBudget.reset();
 
+        rt->gcMarker.context = cx;
         bool finished = rt->gcMarker.drainMarkStack(sliceBudget);
 
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
