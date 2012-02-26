@@ -397,9 +397,11 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private void moveFrameRateLayer(int width, int height) {
         mFrameRateLayer.beginTransaction();     // called on compositor thread
         try {
-            Point origin = new Point(width - FRAME_RATE_METER_WIDTH - 8,
-                                     height - FRAME_RATE_METER_HEIGHT + 8);
-            mFrameRateLayer.setOrigin(origin);
+            Rect position = new Rect(width - FRAME_RATE_METER_WIDTH - 8,
+                                    height - FRAME_RATE_METER_HEIGHT + 8,
+                                    width - 8,
+                                    height + 8);
+            mFrameRateLayer.setPosition(position);
         } finally {
             mFrameRateLayer.endTransaction();
         }

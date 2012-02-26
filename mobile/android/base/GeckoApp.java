@@ -1527,7 +1527,7 @@ abstract public class GeckoApp
         if (layer == null)
             return;
 
-        layer.update(new Point(x, y), new IntSize(w, h), metrics.getZoomFactor(), inverted, blend);
+        layer.update(new Rect(x, y, x + w, y + h), metrics.getZoomFactor(), inverted, blend);
         layerView.addLayer(layer);
 
         // FIXME: shouldn't be necessary, layer will request
