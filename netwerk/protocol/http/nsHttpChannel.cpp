@@ -70,7 +70,6 @@
 #include "nsDOMError.h"
 #include "nsAlgorithm.h"
 #include "sampler.h"
-#include "NullHttpTransaction.h"
 
 using namespace mozilla;
 
@@ -231,16 +230,6 @@ nsHttpChannel::Connect(bool firstTime)
 
     // true when called from AsyncOpen
     if (firstTime) {
-
-        // Before we take the latency hit of dealing with the cache, try and
-        // get the TCP (and SSL) handshakes going so they can overlap.
-        nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        NS_NewNotificationCallbacksAggregation(mCallbacks, mLoadGroup,
-                                               getter_AddRefs(callbacks));
-        if (callbacks)
-            gHttpHandler->SpeculativeConnect(mConnectionInfo,
-                                             callbacks, NS_GetCurrentThread());
-
         // are we offline?
         bool offline = gIOService->IsOffline();
         if (offline)
