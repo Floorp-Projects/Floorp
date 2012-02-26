@@ -347,7 +347,7 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
 
-    jBeginDrawingMethod = getMethod("beginDrawing", "(IILjava/lang/String;)Landroid/graphics/Rect;");
+    jBeginDrawingMethod = getMethod("beginDrawing", "(IILjava/lang/String;)Z");
     jEndDrawingMethod = getMethod("endDrawing", "()V");
     jGetViewTransformMethod = getMethod("getViewTransform",
                                         "()Lorg/mozilla/gecko/gfx/ViewTransform;");
@@ -764,7 +764,7 @@ AndroidGeckoSurfaceView::Draw2D(jobject buffer, int stride)
 }
 
 bool
-AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata)
+AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata)
 {
     NS_ASSERTION(!isNull(), "BeginDrawing() called on null layer client!");
     JNIEnv *env = AndroidBridge::GetJNIEnv();
@@ -774,19 +774,7 @@ AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, nsIntRect &aDirty
     AndroidBridge::AutoLocalJNIFrame(env, 1);
     jstring jMetadata = env->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
 
-    jobject rectObject = env->CallObjectMethod(wrapped_obj, jBeginDrawingMethod,
-                                               aWidth, aHeight,
-                                               jMetadata);
-
-    if (rectObject == nsnull)
-        return false;
-
-    AndroidRect rect(env, rectObject);
-    nsIntRect newDirtyRect = aDirtyRect.Intersect(nsIntRect(rect.Top(), rect.Left(),
-                                                            rect.Width(), rect.Height()));
-    aDirtyRect.SetRect(newDirtyRect.x, newDirtyRect.y, newDirtyRect.width, newDirtyRect.height);
-
-    return true;
+    return env->CallBooleanMethod(wrapped_obj, jBeginDrawingMethod, aWidth, aHeight, jMetadata);
 }
 
 void

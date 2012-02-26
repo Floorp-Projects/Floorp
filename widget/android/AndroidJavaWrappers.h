@@ -224,7 +224,7 @@ public:
     AndroidGeckoLayerClient(jobject jobj)
     : mViewTransformGetter(*this) { Init(jobj); }
 
-    bool BeginDrawing(int aWidth, int aHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata);
+    bool BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata);
     void EndDrawing();
     void GetViewTransform(AndroidViewTransform& aViewTransform);
     void CreateFrame(AndroidLayerRendererFrame& aFrame);

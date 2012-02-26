@@ -1190,8 +1190,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
 
     AndroidGeckoLayerClient &client = AndroidBridge::Bridge()->GetLayerClient();
-    if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height,
-                             dirtyRect, metadata)) {
+    if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height, metadata)) {
         __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### BeginDrawing returned false!");
         return;
     }
