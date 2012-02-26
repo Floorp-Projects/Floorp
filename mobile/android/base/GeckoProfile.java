@@ -157,6 +157,11 @@ public final class GeckoProfile {
         if (Build.VERSION.SDK_INT < 8) {
             return true;
         }
+        // if there is no external storage dir, then we're definitely on internal storage
+        File externalDir = mContext.getExternalFilesDir(null);
+        if (externalDir == null) {
+            return true;
+        }
         // otherwise, check app install location to see if it is on internal storage
         String resourcePath = mContext.getPackageResourcePath();
         if (resourcePath.startsWith("/data") || resourcePath.startsWith("/system")) {
