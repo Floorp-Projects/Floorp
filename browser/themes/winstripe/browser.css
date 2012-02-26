@@ -2687,10 +2687,6 @@ panel[dimmed="true"] {
   border-top: 1px solid hsla(211,68%,6%,.65) !important;
 }
 
-#inspector-toolbar[treepanel-open] {
-  padding-top: 0;
-}
-
 #devtools-side-splitter {
   border: 0;
   -moz-border-start: 1px solid #242b33;
@@ -2705,15 +2701,6 @@ panel[dimmed="true"] {
   background-color: -moz-Field;
 }
 
-/* Highlighter - toolbar resizer */
-
-#inspector-top-resizer {
-  -moz-appearance: none;
-  cursor: n-resize;
-  background: none;
-  height: 4px;
-}
-
 /* Highlighter - Node Infobar */
 
 /* Highlighter - Node Infobar - text */
@@ -2724,6 +2711,10 @@ html|*#highlighter-nodeinfobar-tagname {
 
 html|*#highlighter-nodeinfobar-id {
   color: hsl(90, 79%, 52%);
+}
+
+html|*#highlighter-nodeinfobar-pseudo-classes {
+  color: hsl(20, 100%, 70%);
 }
 
 /* Highlighter - Node Infobar - box & arrow */
@@ -2830,9 +2821,17 @@ html|*#highlighter-nodeinfobar-id {
   color: hsl(200,100%,70%);
 }
 
+.inspector-breadcrumbs-button[checked] > .inspector-breadcrumbs-pseudo-classes {
+  color: hsl(20, 100%, 70%);
+}
+
 .inspector-breadcrumbs-id,
 .inspector-breadcrumbs-classes {
   color: #8d99a6;
+}
+
+.inspector-breadcrumbs-pseudo-classes {
+  color: hsl(20, 100%, 85%);
 }
 
 /* Highlighter toolbar - breadcrumbs - LTR */
@@ -2953,4 +2952,16 @@ html|*#highlighter-nodeinfobar-id {
 .inspector-breadcrumbs-button[siblings-menu-open]:last-of-type[checked]:-moz-locale-dir(rtl),
 .inspector-breadcrumbs-button:last-of-type[checked]:hover:active:-moz-locale-dir(rtl) {
   -moz-border-image: url("chrome://browser/skin/devtools/breadcrumbs/rtl-end-selected-pressed.png") 2 13 2 13 fill stretch;
+}
+
+/* Highlighter toolbar - HTML Tree */
+
+#inspector-tree-splitter {
+  -moz-appearance: none;
+  border-top: 1px solid black;
+  border-bottom-width: 0;
+  min-height: 3px;
+  height: 3px;
+  margin-bottom: -3px;
+  position: relative;
 }
