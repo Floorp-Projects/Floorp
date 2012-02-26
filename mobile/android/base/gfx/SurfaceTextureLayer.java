@@ -66,9 +66,6 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     private int mTextureId;
     private boolean mHaveFrame;
 
-    private IntSize mSize;
-    private IntSize mNewSize;
-
     private boolean mInverted;
     private boolean mNewInverted;
     private boolean mBlend;
@@ -140,21 +137,17 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         return floatBuffer;
     }
 
-    public void update(Point origin, IntSize size, float resolution, boolean inverted, boolean blend) {
+    public void update(Rect position, float resolution, boolean inverted, boolean blend) {
         beginTransaction(); // this is called on the Gecko thread
 
-        setOrigin(origin);
+        setPosition(position);
         setResolution(resolution);
 
-        mNewSize = size;
         mNewInverted = inverted;
         mNewBlend = blend;
 
         endTransaction();
     }
-
-    @Override
-    public IntSize getSize() { return mSize; }
 
     @Override
     protected void finalize() throws Throwable {
@@ -176,11 +169,6 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
     @Override
     protected boolean performUpdates(RenderContext context) {
         super.performUpdates(context);
-
-        if (mNewSize != null) {
-            mSize = mNewSize;
-            mNewSize = null;
-        }
 
         mInverted = mNewInverted;
         mBlend = mNewBlend;
@@ -218,8 +206,7 @@ public class SurfaceTextureLayer extends Layer implements SurfaceTexture.OnFrame
         GLES11.glLoadMatrixf(matrix, 0);
 
         // Figure out vertices to put the texture in the right spot on the screen
-        IntSize size = getSize();
-        RectF bounds = getBounds(context, new FloatSize(size));
+        RectF bounds = getBounds(context);
         RectF viewport = context.viewport;
         bounds.offset(-viewport.left, -viewport.top);
 

@@ -41,6 +41,8 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,7 +91,8 @@ public class PlaceholderLayerClient {
 
         tileLayer.beginTransaction();   // calling thread irrelevant; nobody else has a ref to tileLayer yet
         try {
-            tileLayer.setOrigin(PointUtils.round(mViewport.getOrigin()));
+            Point origin = PointUtils.round(mViewport.getOrigin());
+            tileLayer.setPosition(new Rect(origin.x, origin.y, origin.x + mWidth, origin.y + mHeight));
         } finally {
             tileLayer.endTransaction();
         }
