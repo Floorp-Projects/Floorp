@@ -83,11 +83,11 @@ FENNEC_JAVA_FILES = \
   GeckoAsyncTask.java \
   GeckoBatteryManager.java \
   GeckoConnectivityReceiver.java \
-  GeckoDirProvider.java \
   GeckoEvent.java \
   GeckoEventListener.java \
   GeckoInputConnection.java \
   GeckoPreferences.java \
+  GeckoProfile.java \
   GeckoStateListDrawable.java \
   GeckoThread.java \
   GlobalHistory.java \
