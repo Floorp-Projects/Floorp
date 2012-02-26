@@ -125,7 +125,7 @@ abstract public class GeckoApp
     public static Menu sMenu;
     private static GeckoThread sGeckoThread = null;
     public GeckoAppHandler mMainHandler;
-    private File mProfileDir;
+    private GeckoProfile mProfile;
     public static boolean sIsGeckoReady = false;
     public static int mOrientation;
 
@@ -847,21 +847,6 @@ abstract public class GeckoApp
 
             return mStartupMode;
         }
-    }
-
-    public File getProfileDir() {
-        return getProfileDir("default");
-    }
-
-    public File getProfileDir(final String profileName) {
-        if (mProfileDir != null)
-            return mProfileDir;
-        try {
-            mProfileDir = GeckoDirProvider.getProfileDir(mAppContext, profileName);
-        } catch (IOException ex) {
-            Log.e(LOGTAG, "Error getting profile dir.", ex);
-        }
-        return mProfileDir;
     }
 
     void addTab() {
@@ -1714,7 +1699,7 @@ abstract public class GeckoApp
             Pattern p = Pattern.compile("(?:-profile\\s*)(\\w*)(\\s*)");
             Matcher m = p.matcher(args);
             if (m.find()) {
-                mProfileDir = new File(m.group(1));
+                mProfile = GeckoProfile.get(this, m.group(1));
                 mLastTitle = null;
                 mLastViewport = null;
                 mLastScreen = null;
@@ -1736,13 +1721,7 @@ abstract public class GeckoApp
 
         if (passedUri == null || passedUri.equals("about:home")) {
             // show about:home if we aren't restoring previous session
-            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start check sessionstore.js exists");
-            File profileDir = getProfileDir();
-            boolean sessionExists = false;
-            if (profileDir != null)
-                sessionExists = new File(profileDir, "sessionstore.js").exists();
-            Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - finish check sessionstore.js exists");
-            if (!sessionExists) {
+            if (! getProfile().hasSession()) {
                 mBrowserToolbar.updateTabCount(1);
                 showAboutHome();
             }
@@ -1890,6 +1869,14 @@ abstract public class GeckoApp
                 checkMigrateProfile();
             }
         }, 50);
+    }
+
+    public GeckoProfile getProfile() {
+        // fall back to default profile if we didn't load a specific one
+        if (mProfile == null) {
+            mProfile = GeckoProfile.get(this);
+        }
+        return mProfile;
     }
 
     /**
@@ -2371,7 +2358,7 @@ abstract public class GeckoApp
     }
 
     private void checkMigrateProfile() {
-        File profileDir = getProfileDir();
+        File profileDir = getProfile().getDir();
         long currentTime = SystemClock.uptimeMillis();
 
         if (profileDir != null) {
