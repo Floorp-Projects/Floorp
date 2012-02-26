@@ -754,7 +754,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     self.log.info("Can't trigger Breakpad, just killing process")
     proc.kill()
 
-  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath, logger = None):
+  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath, logger):
     """ Look for timeout or crashes and return the status after the process terminates """
     stackFixerProcess = None
     stackFixerFunction = None
