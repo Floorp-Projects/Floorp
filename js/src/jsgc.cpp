@@ -3099,9 +3099,6 @@ ValidateIncrementalMarking(JSContext *cx)
     js::gc::State state = rt->gcIncrementalState;
     rt->gcIncrementalState = NO_INCREMENTAL;
 
-    /* As we're re-doing marking, we need to reset the weak map list. */
-    WeakMapBase::resetWeakMapList(rt);
-
     JS_ASSERT(gcmarker->isDrained());
     gcmarker->reset();
 
