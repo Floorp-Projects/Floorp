@@ -107,7 +107,10 @@ private:
     WE = 3,
     DOLPHIN = 4,
     SEROTEK = 5,
-    COBRA = 6
+    COBRA = 6,
+    ZOOMTEXT = 7,
+    KAZAGURU = 8,
+    YOUDAO = 9
   };
 
 private:
