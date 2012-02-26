@@ -39,8 +39,7 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.graphics.Point;
-import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
 import android.util.Log;
@@ -51,15 +50,23 @@ import org.mozilla.gecko.FloatUtils;
 public abstract class Layer {
     private final ReentrantLock mTransactionLock;
     private boolean mInTransaction;
-    private Point mNewOrigin;
+    private Rect mNewPosition;
     private float mNewResolution;
 
-    protected Point mOrigin;
+    protected Rect mPosition;
     protected float mResolution;
 
     public Layer() {
+        this(null);
+    }
+
+    public Layer(IntSize size) {
         mTransactionLock = new ReentrantLock();
-        mOrigin = new Point(0, 0);
+        if (size == null) {
+            mPosition = new Rect(0, 0, 0, 0);
+        } else {
+            mPosition = new Rect(0, 0, size.width, size.height);
+        }
         mResolution = 1.0f;
     }
 
@@ -87,15 +94,9 @@ public abstract class Layer {
     /** Subclasses override this function to draw the layer. */
     public abstract void draw(RenderContext context);
 
-    /** Subclasses override this function to provide access to the size of the layer. */
-    public abstract IntSize getSize();
-
     /** Given the intrinsic size of the layer, returns the pixel boundaries of the layer rect. */
-    protected RectF getBounds(RenderContext context, FloatSize size) {
-        float scaleFactor = context.zoomFactor / mResolution;
-        float x = mOrigin.x * scaleFactor, y = mOrigin.y * scaleFactor;
-        float width = size.width * scaleFactor, height = size.height * scaleFactor;
-        return new RectF(x, y, x + width, y + height);
+    protected RectF getBounds(RenderContext context) {
+        return RectUtils.scale(new RectF(mPosition), context.zoomFactor / mResolution);
     }
 
     /**
@@ -104,7 +105,7 @@ public abstract class Layer {
      * may be overridden.
      */
     public Region getValidRegion(RenderContext context) {
-        return new Region(RectUtils.round(getBounds(context, new FloatSize(getSize()))));
+        return new Region(RectUtils.round(getBounds(context)));
     }
 
     /**
@@ -135,16 +136,16 @@ public abstract class Layer {
         return mInTransaction;
     }
 
-    /** Returns the current layer origin. */
-    public Point getOrigin() {
-        return mOrigin;
+    /** Returns the current layer position. */
+    public Rect getPosition() {
+        return mPosition;
     }
 
-    /** Sets the origin. Only valid inside a transaction. */
-    public void setOrigin(Point newOrigin) {
+    /** Sets the position. Only valid inside a transaction. */
+    public void setPosition(Rect newPosition) {
         if (!mInTransaction)
-            throw new RuntimeException("setOrigin() is only valid inside a transaction");
-        mNewOrigin = newOrigin;
+            throw new RuntimeException("setPosition() is only valid inside a transaction");
+        mNewPosition = newPosition;
     }
 
     /** Returns the current layer's resolution. */
@@ -170,9 +171,9 @@ public abstract class Layer {
      * update is complete.
      */
     protected boolean performUpdates(RenderContext context) {
-        if (mNewOrigin != null) {
-            mOrigin = mNewOrigin;
-            mNewOrigin = null;
+        if (mNewPosition != null) {
+            mPosition = mNewPosition;
+            mNewPosition = null;
         }
         if (mNewResolution != 0.0f) {
             mResolution = mNewResolution;

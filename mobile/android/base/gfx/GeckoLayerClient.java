@@ -189,8 +189,8 @@ public class GeckoLayerClient implements GeckoEventListener,
             mGeckoViewport = mNewGeckoViewport;
             mGeckoViewport.setSize(viewportSize);
 
-            PointF origin = mGeckoViewport.getOrigin();
-            mRootLayer.setOriginAndResolution(PointUtils.round(origin), mGeckoViewport.getZoomFactor());
+            RectF position = mGeckoViewport.getViewport();
+            mRootLayer.setPositionAndResolution(RectUtils.round(position), mGeckoViewport.getZoomFactor());
 
             // Set the new origin and resolution instantly.
             mRootLayer.performUpdates(null);
@@ -239,7 +239,6 @@ public class GeckoLayerClient implements GeckoEventListener,
             Log.i(LOGTAG, "### Window-size changed to " + mWindowSize);
         }
 
-        IntSize bufferSize = getBufferSize();
         GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height,  // Window (buffer) size
                                                              mScreenSize.width, mScreenSize.height); // Screen size
         GeckoAppShell.sendEventToGecko(event);
@@ -269,8 +268,7 @@ public class GeckoLayerClient implements GeckoEventListener,
         }
 
         Log.e(LOGTAG, "### Creating virtual layer");
-        VirtualLayer virtualLayer = new VirtualLayer();
-        virtualLayer.setSize(getBufferSize());
+        VirtualLayer virtualLayer = new VirtualLayer(getBufferSize());
         mLayerController.setRoot(virtualLayer);
         mRootLayer = virtualLayer;
 

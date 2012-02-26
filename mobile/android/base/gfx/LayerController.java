@@ -337,15 +337,6 @@ public class LayerController {
         return mPanZoomController.getRedrawHint();
     }
 
-    private RectF getTileRect() {
-        if (mRootLayer == null)
-            return new RectF();
-
-        float x = mRootLayer.getOrigin().x, y = mRootLayer.getOrigin().y;
-        IntSize layerSize = mRootLayer.getSize();
-        return new RectF(x, y, x + layerSize.width, y + layerSize.height);
-    }
-
     // Returns true if a checkerboard is about to be visible.
     private boolean aboutToCheckerboard() {
         // Increase the size of the viewport (and clamp to page boundaries), and
@@ -358,7 +349,8 @@ public class LayerController {
         if (adjustedViewport.right > pageSize.width) adjustedViewport.right = pageSize.width;
         if (adjustedViewport.bottom > pageSize.height) adjustedViewport.bottom = pageSize.height;
 
-        return !getTileRect().contains(adjustedViewport);
+        RectF tileRect = (mRootLayer == null ? new RectF() : new RectF(mRootLayer.getPosition()));
+        return !tileRect.contains(adjustedViewport);
     }
 
     /**
@@ -380,8 +372,8 @@ public class LayerController {
         viewPoint.y /= zoom;
         newPoint.offset(viewPoint.x, viewPoint.y);
 
-        Point rootOrigin = mRootLayer.getOrigin();
-        newPoint.offset(-rootOrigin.x, -rootOrigin.y);
+        Rect rootPosition = mRootLayer.getPosition();
+        newPoint.offset(-rootPosition.left, -rootPosition.top);
 
         return newPoint;
     }

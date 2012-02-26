@@ -64,17 +64,14 @@ public abstract class TileLayer extends Layer {
     private int[] mTextureIDs;
 
     public TileLayer(boolean repeat, CairoImage image) {
+        super(image.getSize());
+
         mRepeat = repeat;
         mImage = image;
         mSize = new IntSize(0, 0);
         mSkipTextureUpdate = false;
-
-        IntSize bufferSize = mImage.getSize();
         mDirtyRect = new Rect();
     }
-
-    @Override
-    public IntSize getSize() { return mImage.getSize(); }
 
     protected boolean repeats() { return mRepeat; }
     protected int getTextureID() { return mTextureIDs[0]; }
@@ -84,6 +81,14 @@ public abstract class TileLayer extends Layer {
     protected void finalize() throws Throwable {
         if (mTextureIDs != null)
             TextureReaper.get().add(mTextureIDs);
+    }
+
+    @Override
+    public void setPosition(Rect newPosition) {
+        if (newPosition.width() != mImage.getSize().width || newPosition.height() != mImage.getSize().height) {
+            throw new RuntimeException("Error: changing the size of a tile layer is not allowed!");
+        }
+        super.setPosition(newPosition);
     }
 
     /**
