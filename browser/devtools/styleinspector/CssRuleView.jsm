@@ -116,7 +116,7 @@ function ElementStyle(aElement, aStore)
   // how their .style attribute reflects them as computed values.
   this.dummyElement = doc.createElementNS(this.element.namespaceURI,
                                           this.element.tagName);
-  this._populate();
+  this.populate();
 }
 // We're exporting _ElementStyle for unit tests.
 var _ElementStyle = ElementStyle;
@@ -147,7 +147,7 @@ ElementStyle.prototype = {
    * Refresh the list of rules to be displayed for the active element.
    * Upon completion, this.rules[] will hold a list of Rule objects.
    */
-  _populate: function ElementStyle_populate()
+  populate: function ElementStyle_populate()
   {
     this.rules = [];
 
@@ -713,15 +713,33 @@ CssRuleView.prototype = {
 
     this._createEditors();
   },
+  
+  /**
+   * Update the rules for the currently highlighted element.
+   */
+  nodeChanged: function CssRuleView_nodeChanged()
+  {
+    this._clearRules();
+    this._elementStyle.populate();
+    this._createEditors();
+  },  
+
+  /**
+   * Clear the rules.
+   */
+  _clearRules: function CssRuleView_clearRules()
+  {
+    while (this.element.hasChildNodes()) {
+      this.element.removeChild(this.element.lastChild);
+    }
+  },
 
   /**
    * Clear the rule view.
    */
   clear: function CssRuleView_clear()
   {
-    while (this.element.hasChildNodes()) {
-      this.element.removeChild(this.element.lastChild);
-    }
+    this._clearRules();
     this._viewedElement = null;
     this._elementStyle = null;
   },
