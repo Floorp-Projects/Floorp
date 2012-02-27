@@ -388,6 +388,7 @@ FormHistory.prototype = {
             stmt.executeStep();
             this.sendIntNotification("removeEntriesByTimeframe", beginTime, endTime);
         } catch (e) {
+            this.dbConnection.rollbackTransaction();
             this.log("removeEntriesByTimeframe failed: " + e);
             throw e;
         } finally {
