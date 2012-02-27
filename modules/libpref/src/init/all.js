@@ -817,6 +817,8 @@ pref("network.http.spdy.chunk-size", 4096);
 pref("network.http.spdy.timeout", 180);
 pref("network.http.spdy.coalesce-hostnames", true);
 pref("network.http.spdy.use-alternate-protocol", true);
+pref("network.http.spdy.ping-threshold", 44);
+pref("network.http.spdy.ping-timeout", 8);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
@@ -928,6 +930,7 @@ pref("network.IDN.whitelist.pl", true);
 pref("network.IDN.whitelist.pr", true);
 pref("network.IDN.whitelist.se", true);
 pref("network.IDN.whitelist.sh", true);
+pref("network.IDN.whitelist.si", true);
 pref("network.IDN.whitelist.th", true);
 pref("network.IDN.whitelist.tm", true);
 pref("network.IDN.whitelist.tw", true);

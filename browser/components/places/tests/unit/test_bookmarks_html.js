@@ -83,7 +83,6 @@ let test_bookmarks = {
       icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAHWSURBVHjaYvz//z8DJQAggJiQOe/fv2fv7Oz8rays/N+VkfG/iYnJfyD/1+rVq7ffu3dPFpsBAAHEAHIBCJ85c8bN2Nj4vwsDw/8zQLwKiO8CcRoQu0DxqlWrdsHUwzBAAIGJmTNnPgYa9j8UqhFElwPxf2MIDeIrKSn9FwSJoRkAEEAM0DD4DzMAyPi/G+QKY4hh5WAXGf8PDQ0FGwJ22d27CjADAAIIrLmjo+MXA9R2kAHvGBA2wwx6B8W7od6CeQcggKCmCEL8bgwxYCbUIGTDVkHDBia+CuotgACCueD3TDQN75D4xmAvCoK9ARMHBzAw0AECiBHkAlC0Mdy7x9ABNA3obAZXIAa6iKEcGlMVQHwWyjYuL2d4v2cPg8vZswx7gHyAAAK7AOif7SAbOqCmn4Ha3AHFsIDtgPq/vLz8P4MSkJ2W9h8ggBjevXvHDo4FQUQg/kdypqCg4H8lUIACnQ/SOBMYI8bAsAJFPcj1AAEEjwVQqLpAbXmH5BJjqI0gi9DTAAgDBBCcAVLkgmQ7yKCZxpCQxqUZhAECCJ4XgMl493ug21ZD+aDAXH0WLM4A9MZPXJkJIIAwTAR5pQMalaCABQUULttBGCCAGCnNzgABBgAMJ5THwGvJLAAAAABJRU5ErkJggg=="
     },
     { title: "Latest Headlines",
-      description: "Livemark test comment",
       url: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
       feedUrl: "http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
     }
@@ -105,6 +104,10 @@ let importer = Cc["@mozilla.org/browser/places/import-export-service;1"].
 
 function run_test()
 {
+  run_next_test();
+}
+
+add_test(function setup() {
   // Avoid creating smart bookmarks during the test.
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
 
@@ -131,16 +134,20 @@ function run_test()
     importer.importHTMLFromFile(gBookmarksFileOld, true);
   } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
 
-  testImportedBookmarks();
+  waitForAsyncUpdates(function () {
+    testImportedBookmarks();
 
-  // Prepare for next tests.
-  try {
-    importer.exportHTMLToFile(gBookmarksFileNew);
-  } catch(ex) { do_throw("couldn't export to file: " + ex); }
+    // Prepare for next tests.
+    try {
+      importer.exportHTMLToFile(gBookmarksFileNew);
+    } catch(ex) { do_throw("couldn't export to file: " + ex); }
 
-  remove_all_bookmarks();
-  run_next_test();
-}
+    waitForAsyncUpdates(function () {
+      remove_all_bookmarks();
+      run_next_test();
+    });
+  });
+});
 
 add_test(function test_import_new()
 {
@@ -152,10 +159,14 @@ add_test(function test_import_new()
     importer.importHTMLFromFile(gBookmarksFileNew, true);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
 
-  testImportedBookmarks();
+  waitForAsyncUpdates(function () {
+    testImportedBookmarks();
 
-  remove_all_bookmarks();
-  run_next_test();
+    waitForAsyncUpdates(function () {
+      remove_all_bookmarks();
+      run_next_test();
+    });
+  });
 });
 
 add_test(function test_emptytitle_export()
@@ -189,18 +200,22 @@ add_test(function test_emptytitle_export()
     importer.importHTMLFromFile(gBookmarksFileNew, true);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
 
-  testImportedBookmarks();
+  waitForAsyncUpdates(function () {
+    testImportedBookmarks();
 
-  // Cleanup.
-  test_bookmarks.unfiled.pop();
-  PlacesUtils.bookmarks.removeItem(id);
+    // Cleanup.
+    test_bookmarks.unfiled.pop();
+    PlacesUtils.bookmarks.removeItem(id);
 
-  try {
-    importer.exportHTMLToFile(gBookmarksFileNew);
-  } catch(ex) { do_throw("couldn't export to file: " + ex); }
+    try {
+      importer.exportHTMLToFile(gBookmarksFileNew);
+    } catch(ex) { do_throw("couldn't export to file: " + ex); }
 
-  remove_all_bookmarks();
-  run_next_test();
+    waitForAsyncUpdates(function () {
+      remove_all_bookmarks();
+      run_next_test();
+    });
+  });
 });
 
 add_test(function test_import_preplaces_to_folder()
@@ -218,11 +233,15 @@ add_test(function test_import_preplaces_to_folder()
     importer.importHTMLFromFileToFolder(gBookmarksFileOld, testFolder, false);
   } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
 
-  // Import-to-folder creates subfolders for toolbar and unfiled.
-  testImportedBookmarksToFolder(testFolder);
+  waitForAsyncUpdates(function () {
+    // Import-to-folder creates subfolders for toolbar and unfiled.
+    testImportedBookmarksToFolder(testFolder);
 
-  remove_all_bookmarks();
-  run_next_test();
+    waitForAsyncUpdates(function () {
+      remove_all_bookmarks();
+      run_next_test();
+    });
+  });
 });
 
 add_test(function test_import_to_folder()
@@ -240,11 +259,15 @@ add_test(function test_import_to_folder()
     importer.importHTMLFromFileToFolder(gBookmarksFileNew, testFolder, false);
   } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
 
-  // Import-to-folder creates subfolders for toolbar and unfiled.
-  testImportedBookmarksToFolder(testFolder);
+  waitForAsyncUpdates(function () {
+    // Import-to-folder creates subfolders for toolbar and unfiled.
+    testImportedBookmarksToFolder(testFolder);
 
-  remove_all_bookmarks();
-  run_next_test();
+    waitForAsyncUpdates(function () {
+      remove_all_bookmarks();
+      run_next_test();
+    });
+  });
 });
 
 add_test(function test_import_ontop()
@@ -267,10 +290,14 @@ add_test(function test_import_ontop()
     importer.importHTMLFromFile(gBookmarksFileNew, true);
   } catch(ex) { do_throw("couldn't import the exported file: " + ex); }
 
-  testImportedBookmarks();
+  waitForAsyncUpdates(function () {
+    testImportedBookmarks();
 
-  remove_all_bookmarks();
-  run_next_test();
+    waitForAsyncUpdates(function () {
+      remove_all_bookmarks();
+      run_next_test();
+    });
+  });
 });
 
 function testImportedBookmarks()
@@ -350,8 +377,14 @@ function checkItem(aExpected, aNode)
                       aExpected.lastModified);
         break;
       case "url":
-        if (!PlacesUtils.livemarks.isLivemark(id))
-          do_check_eq(aNode.uri, aExpected.url);
+        PlacesUtils.livemarks.getLivemark(
+          { id: id },
+          function (aStatus, aLivemark) {
+            if (!Components.isSuccessCode(aStatus)) {
+              do_check_eq(aNode.uri, aExpected.url);
+            }
+          }
+        );
         break;
       case "icon":
         let faviconURI = PlacesUtils.favicons.getFaviconForPage(
@@ -378,11 +411,14 @@ function checkItem(aExpected, aNode)
                     aExpected.charset);
         break;
       case "feedUrl":
-        do_check_true(PlacesUtils.livemarks.isLivemark(id));
-        do_check_eq(PlacesUtils.livemarks.getSiteURI(id).spec,
-                    aExpected.url);
-        do_check_eq(PlacesUtils.livemarks.getFeedURI(id).spec,
-                    aExpected.feedUrl);
+        PlacesUtils.livemarks.getLivemark(
+          { id: id },
+          function (aStatus, aLivemark) {
+            do_check_true(Components.isSuccessCode(aStatus));
+            do_check_eq(aLivemark.siteURI.spec, aExpected.url);
+            do_check_eq(aLivemark.feedURI.spec, Expected.feedUrl);
+          }
+        );
         break;
       case "children":
         let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);

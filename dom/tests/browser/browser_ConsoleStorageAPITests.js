@@ -24,7 +24,6 @@ var ConsoleObserver = {
     if (aTopic == "console-storage-cache-event") {
       apiCallCount ++;
       if (apiCallCount == 4) {
-        // remove the observer so we don't trigger this test again
         Services.obs.removeObserver(this, "console-storage-cache-event");
 
         try {
@@ -42,12 +41,13 @@ var ConsoleObserver = {
         // make sure a closed window's events are in fact removed from the
         // storage cache
         win.console.log("adding a new event");
-
-        // close the window - the storage cache should now be empty
+        // Close the window.
         gBrowser.removeTab(tab, {animate: false});
-
+        // Ensure actual window destruction is not delayed (too long).
         window.QueryInterface(Ci.nsIInterfaceRequestor)
               .getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
+        // Ensure "inner-window-destroyed" event is processed,
+        // so the storage cache is cleared.
         executeSoon(function () {
           // use the old windowID again to see if we have any stray cached messages
           messages = ConsoleAPIStorage.getEvents(windowID);
@@ -71,6 +71,12 @@ function tearDown()
 
 function test()
 {
+  // Don't cache removed tabs, so "clear console cache on tab close" triggers.
+  Services.prefs.setIntPref("browser.tabs.max_tabs_undo", 0);
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("browser.tabs.max_tabs_undo");
+  });
+
   registerCleanupFunction(tearDown);
 
   ConsoleObserver.init();

@@ -964,8 +964,8 @@ EOF
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
-    # Require OS features provided by IE 5.0
-    AC_DEFINE_UNQUOTED(_WIN32_IE,0x0500)
+    # Require OS features provided by IE 6.0 SP2 (XP SP2)
+    AC_DEFINE_UNQUOTED(_WIN32_IE,0x0603)
 
     # If the maximum version supported by this SDK is lower than the target
     # version, error out
@@ -6482,6 +6482,23 @@ if test -n "$MOZ_MAINTENANCE_SERVICE"; then
 fi
 
 dnl ========================================================
+dnl Verify MAR signatures
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(verify-mar,
+[  --enable-verify-mar     Enable verifying MAR signatures],
+    MOZ_VERIFY_MAR_SIGNATURE=1,
+    MOZ_VERIFY_MAR_SIGNATURE= )
+
+if test -n "$MOZ_VERIFY_MAR_SIGNATURE"; then
+  if test "$OS_ARCH" = "WINNT"; then
+    AC_DEFINE(MOZ_VERIFY_MAR_SIGNATURE)
+  else
+    AC_MSG_ERROR([Can only build with --enable-verify-mar with a Windows target])
+  fi
+fi
+
+dnl ========================================================
 dnl Updater
 dnl ========================================================
 
@@ -8265,12 +8282,6 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
     AC_SUBST(CAIRO_FT_CFLAGS)
 
-    if test "$MOZ_DEBUG"; then
-      SANITY_CHECKING_FEATURE="#define CAIRO_DO_SANITY_CHECKING 1"
-    else
-      SANITY_CHECKING_FEATURE="#undef CAIRO_DO_SANITY_CHECKING"
-    fi
-
     AC_SUBST(PS_SURFACE_FEATURE)
     AC_SUBST(PDF_SURFACE_FEATURE)
     AC_SUBST(SVG_SURFACE_FEATURE)
@@ -8278,7 +8289,6 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(XLIB_XRENDER_SURFACE_FEATURE)
     AC_SUBST(QUARTZ_SURFACE_FEATURE)
     AC_SUBST(QUARTZ_IMAGE_SURFACE_FEATURE)
-    AC_SUBST(XCB_SURFACE_FEATURE)
     AC_SUBST(WIN32_SURFACE_FEATURE)
     AC_SUBST(OS2_SURFACE_FEATURE)
     AC_SUBST(DIRECTFB_SURFACE_FEATURE)
@@ -8589,6 +8599,7 @@ AC_SUBST(MOZ_ONLY_TOUCH_EVENTS)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_MAINTENANCE_SERVICE)
+AC_SUBST(MOZ_VERIFY_MAR_SIGNATURE)
 AC_SUBST(MOZ_UPDATER)
 AC_SUBST(MOZ_ANGLE)
 AC_SUBST(MOZ_DIRECTX_SDK_PATH)
@@ -8676,6 +8687,8 @@ AC_SUBST(MOZ_APP_BASENAME)
 AC_SUBST(MOZ_APP_VENDOR)
 AC_SUBST(MOZ_APP_PROFILE)
 AC_SUBST(MOZ_APP_ID)
+AC_SUBST(MAR_CHANNEL_ID)
+AC_SUBST(ACCEPTED_MAR_CHANNEL_IDS)
 AC_SUBST(MOZ_PROFILE_MIGRATOR)
 AC_SUBST(MOZ_EXTENSION_MANAGER)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_NAME, "$MOZ_APP_UA_NAME")

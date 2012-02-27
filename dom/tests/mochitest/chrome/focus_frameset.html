@@ -3,7 +3,8 @@
 <script type="application/javascript"
         src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <script>
-SimpleTest.waitForFocus(function () opener.framesetWindowLoaded(window));
+if (opener)
+  SimpleTest.waitForFocus(function () opener.framesetWindowLoaded(window));
 </script>
 
 <frameset rows="30%, 70%">

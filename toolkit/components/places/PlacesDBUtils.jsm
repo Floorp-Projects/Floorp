@@ -611,18 +611,6 @@ let PlacesDBUtils = {
       "DROP TABLE moz_bm_reindex_temp "
     ));
 
-    // D.11 remove old livemarks status items
-    //      Livemark status items are now static but some livemark has still old
-    //      status items bookmarks inside it. We should remove them.
-    let removeLivemarkStaticItems = DBConn.createAsyncStatement(
-      "DELETE FROM moz_bookmarks WHERE type = :bookmark_type AND fk IN ( " +
-        "SELECT id FROM moz_places WHERE url = :lmloading OR url = :lmfailed " +
-      ")");
-    removeLivemarkStaticItems.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
-    removeLivemarkStaticItems.params["lmloading"] = "about:livemark-loading";
-    removeLivemarkStaticItems.params["lmfailed"] = "about:livemark-failed";
-    cleanupStatements.push(removeLivemarkStaticItems);
-
     // D.12 Fix empty-named tags.
     //      Tags were allowed to have empty names due to a UI bug.  Fix them
     //      replacing their title with "(notitle)".

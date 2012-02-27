@@ -1606,14 +1606,23 @@ var gCSSProperties = {
 		domProp: "backgroundRepeat",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "repeat" ],
+		initial_values: [ "repeat", "repeat repeat" ],
 		other_values: [ "repeat-x", "repeat-y", "no-repeat",
 			"repeat-x, repeat-x",
 			"repeat, no-repeat",
 			"repeat-y, no-repeat, repeat-y",
-			"repeat, repeat, repeat"
+			"repeat, repeat, repeat",
+			"repeat no-repeat",
+			"no-repeat repeat",
+			"no-repeat no-repeat",
+			"repeat repeat, repeat repeat",
 		],
-		invalid_values: [ "repeat repeat" ]
+		invalid_values: [ "repeat repeat repeat", 
+		                  "repeat-x repeat-y",
+		                  "repeat repeat-x", 
+		                  "repeat repeat-y",
+		                  "repeat-x repeat", 
+		                  "repeat-y repeat" ]
 	},
 	"background-size": {
 		domProp: "backgroundSize",

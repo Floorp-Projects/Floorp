@@ -91,6 +91,7 @@ _TEST_FILES = \
 	  test_smilTiming.xhtml \
 	  test_smilTimingZeroIntervals.xhtml \
 	  test_smilUpdatedInterval.xhtml \
+	  test_smilValues.xhtml \
 	  test_smilXHR.xhtml \
 	  $(NULL)
 

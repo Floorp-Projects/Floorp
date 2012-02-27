@@ -46,6 +46,6 @@
  */
 #include "jstypes.h"
 
-typedef JSIntn intN;
-typedef JSUintn uintN;
+typedef int intN;
+typedef unsigned uintN;
 #endif /* jscompat_h___ */

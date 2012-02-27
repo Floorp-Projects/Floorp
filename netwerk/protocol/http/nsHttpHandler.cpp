@@ -174,8 +174,8 @@ nsHttpHandler::nsHttpHandler()
     , mProxyCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
     , mFastFallbackToIPv4(false)
-    , mIdleTimeout(10)
-    , mSpdyTimeout(180)
+    , mIdleTimeout(PR_SecondsToInterval(10))
+    , mSpdyTimeout(PR_SecondsToInterval(180))
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
     , mIdleSynTimeout(250)
@@ -204,6 +204,8 @@ nsHttpHandler::nsHttpHandler()
     , mCoalesceSpdy(true)
     , mUseAlternateProtocol(false)
     , mSpdySendingChunkSize(SpdySession::kSendingChunkSize)
+    , mSpdyPingThreshold(PR_SecondsToInterval(44))
+    , mSpdyPingTimeout(PR_SecondsToInterval(8))
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -840,7 +842,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("keep-alive.timeout"))) {
         rv = prefs->GetIntPref(HTTP_PREF("keep-alive.timeout"), &val);
         if (NS_SUCCEEDED(rv))
-            mIdleTimeout = (PRUint16) clamped(val, 1, 0xffff);
+            mIdleTimeout = PR_SecondsToInterval(clamped(val, 1, 0xffff));
     }
 
     if (PREF_CHANGED(HTTP_PREF("request.max-attempts"))) {
@@ -1111,13 +1113,31 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("spdy.timeout"))) {
         rv = prefs->GetIntPref(HTTP_PREF("spdy.timeout"), &val);
         if (NS_SUCCEEDED(rv))
-            mSpdyTimeout = (PRUint16) clamped(val, 1, 0xffff);
+            mSpdyTimeout = PR_SecondsToInterval(clamped(val, 1, 0xffff));
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.chunk-size"))) {
         rv = prefs->GetIntPref(HTTP_PREF("spdy.chunk-size"), &val);
         if (NS_SUCCEEDED(rv))
             mSpdySendingChunkSize = (PRUint32) clamped(val, 1, 0x7fffffff);
+    }
+
+    // The amount of idle seconds on a spdy connection before initiating a
+    // server ping. 0 will disable.
+    if (PREF_CHANGED(HTTP_PREF("spdy.ping-threshold"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("spdy.ping-threshold"), &val);
+        if (NS_SUCCEEDED(rv))
+            mSpdyPingThreshold =
+                PR_SecondsToInterval((PRUint16) clamped(val, 0, 0x7fffffff));
+    }
+
+    // The amount of seconds to wait for a spdy ping response before
+    // closing the session.
+    if (PREF_CHANGED(HTTP_PREF("spdy.ping-timeout"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("spdy.ping-timeout"), &val);
+        if (NS_SUCCEEDED(rv))
+            mSpdyPingTimeout =
+                PR_SecondsToInterval((PRUint16) clamped(val, 0, 0x7fffffff));
     }
 
     //

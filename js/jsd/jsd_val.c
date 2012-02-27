@@ -197,7 +197,7 @@ jsd_GetValueInt(JSDContext* jsdc, JSDValue* jsdval)
     return JSVAL_TO_INT(val);
 }
 
-jsdouble
+double
 jsd_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 {
     if(!JSVAL_IS_DOUBLE(jsdval->val))
