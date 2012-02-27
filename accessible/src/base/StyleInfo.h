@@ -60,6 +60,8 @@ public:
   void MarginTop(nsAString& aValue) { Margin(css::eSideTop, aValue); }
   void MarginBottom(nsAString& aValue) { Margin(css::eSideBottom, aValue); }
 
+  static void Format(const nscolor& aValue, nsString& aFormattedValue);
+
 private:
   StyleInfo() MOZ_DELETE;
   StyleInfo(const StyleInfo&) MOZ_DELETE;

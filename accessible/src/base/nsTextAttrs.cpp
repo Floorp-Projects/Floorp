@@ -41,11 +41,15 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsHyperTextAccessibleWrap.h"
+#include "StyleInfo.h"
 
 #include "gfxFont.h"
 #include "gfxUserFontSet.h"
 #include "nsFontMetrics.h"
 #include "nsLayoutUtils.h"
+
+using namespace mozilla;
+using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constants and structures
@@ -70,7 +74,6 @@ const char* const kCopyValue = nsnull;
 static nsCSSTextAttrMapItem gCSSTextAttrsMap[] =
 {
   // CSS name            CSS value        Attribute name                                Attribute value
-  { "color",             kAnyValue,       &nsGkAtoms::color,                 kCopyValue },
   { "font-family",       kAnyValue,       &nsGkAtoms::font_family,            kCopyValue },
   { "font-style",        kAnyValue,       &nsGkAtoms::font_style,             kCopyValue },
   { "text-decoration",   "line-through",  &nsGkAtoms::textLineThroughStyle,  "solid" },
@@ -154,33 +157,33 @@ nsTextAttrsMgr::GetAttributes(nsIPersistentProperties *aAttributes,
   nsLangTextAttr langTextAttr(mHyperTextAcc, hyperTextElm, offsetNode);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&langTextAttr));
 
-  // "color" text attribute
-  nsCSSTextAttr colorTextAttr(0, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&colorTextAttr));
-
   // "font-family" text attribute
-  nsCSSTextAttr fontFamilyTextAttr(1, hyperTextElm, offsetElm);
+  nsCSSTextAttr fontFamilyTextAttr(0, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontFamilyTextAttr));
 
   // "font-style" text attribute
-  nsCSSTextAttr fontStyleTextAttr(2, hyperTextElm, offsetElm);
+  nsCSSTextAttr fontStyleTextAttr(1, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontStyleTextAttr));
 
   // "text-line-through-style" text attribute
-  nsCSSTextAttr lineThroughTextAttr(3, hyperTextElm, offsetElm);
+  nsCSSTextAttr lineThroughTextAttr(2, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&lineThroughTextAttr));
 
   // "text-underline-style" text attribute
-  nsCSSTextAttr underlineTextAttr(4, hyperTextElm, offsetElm);
+  nsCSSTextAttr underlineTextAttr(3, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&underlineTextAttr));
 
   // "text-position" text attribute
-  nsCSSTextAttr posTextAttr(5, hyperTextElm, offsetElm);
+  nsCSSTextAttr posTextAttr(4, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&posTextAttr));
 
   // "background-color" text attribute
   nsBGColorTextAttr bgColorTextAttr(rootFrame, frame);
   textAttrArray.AppendElement(static_cast<nsITextAttr*>(&bgColorTextAttr));
+
+  // "color" text attribute
+  ColorTextAttr colorTextAttr(rootFrame, frame);
+  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&colorTextAttr));
 
   // "font-size" text attribute
   nsFontSizeTextAttr fontSizeTextAttr(rootFrame, frame);
@@ -363,7 +366,7 @@ nsCSSTextAttr::Format(const nsAutoString& aValue, nsAString& aFormattedValue)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsBackgroundTextAttr
+// nsBGColorTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
 nsBGColorTextAttr::nsBGColorTextAttr(nsIFrame *aRootFrame, nsIFrame *aFrame) :
@@ -387,16 +390,8 @@ nsBGColorTextAttr::GetValueFor(nsIContent *aContent, nscolor *aValue)
 void
 nsBGColorTextAttr::Format(const nscolor& aValue, nsAString& aFormattedValue)
 {
-  // Combine the string like rgb(R, G, B) from nscolor.
   nsAutoString value;
-  value.AppendLiteral("rgb(");
-  value.AppendInt(NS_GET_R(aValue));
-  value.AppendLiteral(", ");
-  value.AppendInt(NS_GET_G(aValue));
-  value.AppendLiteral(", ");
-  value.AppendInt(NS_GET_B(aValue));
-  value.Append(')');
-
+  StyleInfo::Format(aValue, value);
   aFormattedValue = value;
 }
 
@@ -423,6 +418,43 @@ nsBGColorTextAttr::GetColor(nsIFrame *aFrame, nscolor *aColor)
     return false;
 
   return GetColor(parentFrame, aColor);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// ColorTextAttr
+////////////////////////////////////////////////////////////////////////////////
+
+ColorTextAttr::ColorTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
+  nsTextAttr<nscolor>(!aFrame)
+{
+  mRootNativeValue = aRootFrame->GetStyleColor()->mColor;
+  mIsRootDefined = true;
+
+  if (aFrame) {
+    mNativeValue = aFrame->GetStyleColor()->mColor;
+    mIsDefined = true;
+  }
+}
+
+bool
+ColorTextAttr::GetValueFor(nsIContent* aContent, nscolor* aValue)
+{
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  if (frame) {
+    *aValue = frame->GetStyleColor()->mColor;
+    return true;
+  }
+
+  return false;
+}
+
+void
+ColorTextAttr::Format(const nscolor& aValue, nsAString& aFormattedValue)
+{
+  nsAutoString value;
+  StyleInfo::Format(aValue, value);
+  aFormattedValue = value;
 }
 
 
