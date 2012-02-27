@@ -2999,27 +2999,19 @@ class MGetPropertyCache
     public SingleObjectPolicy
 {
     JSAtom *atom_;
-    JSScript *script_;
-    jsbytecode *pc_;
 
-    MGetPropertyCache(MDefinition *obj, JSAtom *atom, JSScript *script, jsbytecode *pc)
+    MGetPropertyCache(MDefinition *obj, JSAtom *atom)
       : MUnaryInstruction(obj),
-        atom_(atom),
-        script_(script),
-        pc_(pc)
+        atom_(atom)
     {
-        // For now, all caches are impure and require a script/pc.
-        JS_ASSERT(script);
-
         setResultType(MIRType_Value);
     }
 
   public:
     INSTRUCTION_HEADER(GetPropertyCache);
 
-    static MGetPropertyCache *New(MDefinition *obj, JSAtom *atom,
-                                  JSScript *script, jsbytecode *pc) {
-        return new MGetPropertyCache(obj, atom, script, pc);
+    static MGetPropertyCache *New(MDefinition *obj, JSAtom *atom) {
+        return new MGetPropertyCache(obj, atom);
     }
 
     MDefinition *object() const {
@@ -3027,12 +3019,6 @@ class MGetPropertyCache
     }
     JSAtom *atom() const {
         return atom_;
-    }
-    JSScript *script() const {
-        return script_;
-    }
-    jsbytecode *pc() const {
-        return pc_;
     }
     TypePolicy *typePolicy() { return this; }
 };

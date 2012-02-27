@@ -123,7 +123,6 @@ MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind)
   : graph_(graph),
     info_(info),
-    slots_(NULL),
     stackPosition_(info_.firstStackSlot()),
     lastIns_(NULL),
     pc_(pc),
@@ -146,8 +145,7 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
 bool
 MBasicBlock::init()
 {
-    slots_ = graph().allocate<StackSlot>(info_.nslots());
-    if (!slots_)
+    if (!slots_.init(info_.nslots()))
         return false;
     return true;
 }
@@ -171,6 +169,8 @@ MBasicBlock::inherit(MBasicBlock *pred)
         uint32_t stackDepth = info().script()->analysis()->getCode(pc()).stackDepth;
         stackPosition_ = info().firstStackSlot() + stackDepth;
     }
+
+    JS_ASSERT(info_.nslots() >= stackPosition_);
 
     // Propagate the caller resume point from the inherited block.
     MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : NULL;
