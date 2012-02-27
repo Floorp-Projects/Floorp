@@ -464,7 +464,9 @@ class XPCShellTests(object):
         failure.setAttribute("message", result["failure"]["message"])
 
         # Lossy translation but required to not break CDATA.
-        cdata = result["failure"]["text"].replace("]]>", "]] >")
+        cdata = result["failure"]["text"]
+        if cdata is not None:
+            cdata = cdata.replace("]]>", "]] >")
         text = doc.createCDATASection(cdata)
         failure.appendChild(text)
         testcase.appendChild(failure)
