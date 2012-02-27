@@ -152,8 +152,6 @@ private:
     {
         return StoreURIAttributeNS(aNode, "", aAttribute, aNeedsPersisting, aData);
     }
-    bool GetQuotedAttributeValue(
-    const nsAString &aSource, const nsAString &aAttribute, nsAString &aValue);
     bool DocumentEncoderExists(const PRUnichar *aContentType);
 
     nsresult GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
