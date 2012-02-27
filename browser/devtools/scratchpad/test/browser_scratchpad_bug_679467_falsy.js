@@ -30,25 +30,25 @@ function verifyFalsies(sp)
 {
   sp.setText("undefined");
   sp.display();
-  is(sp.selectedText, "/*\nundefined\n*/", "'undefined' is displayed");
+  is(sp.selectedText, "\n/*\nundefined\n*/", "'undefined' is displayed");
 
   sp.setText("false");
   sp.display();
-  is(sp.selectedText, "/*\nfalse\n*/", "'false' is displayed");
+  is(sp.selectedText, "\n/*\nfalse\n*/", "'false' is displayed");
 
   sp.setText("0");
   sp.display();
-  is(sp.selectedText, "/*\n0\n*/", "'0' is displayed");
+  is(sp.selectedText, "\n/*\n0\n*/", "'0' is displayed");
 
   sp.setText("null");
   sp.display();
-  is(sp.selectedText, "/*\nnull\n*/", "'null' is displayed");
+  is(sp.selectedText, "\n/*\nnull\n*/", "'null' is displayed");
 
   sp.setText("NaN");
   sp.display();
-  is(sp.selectedText, "/*\nNaN\n*/", "'NaN' is displayed");
+  is(sp.selectedText, "\n/*\nNaN\n*/", "'NaN' is displayed");
 
   sp.setText("''");
   sp.display();
-  is(sp.selectedText, "/*\n\n*/", "empty string is displayed");
+  is(sp.selectedText, "\n/*\n\n*/", "empty string is displayed");
 }

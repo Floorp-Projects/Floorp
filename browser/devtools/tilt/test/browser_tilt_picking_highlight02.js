@@ -23,7 +23,7 @@ function test() {
         presenter = instance.presenter;
         Services.obs.addObserver(whenHighlighting, HIGHLIGHTING, false);
 
-        presenter.onSetupMesh = function() {
+        presenter._onSetupMesh = function() {
           presenter.highlightNodeAt(presenter.canvas.width / 2, 10);
         };
       }
@@ -34,7 +34,7 @@ function test() {
 function whenHighlighting() {
   ok(presenter._currentSelection > 0,
     "Highlighting a node didn't work properly.");
-  ok(!presenter.highlight.disabled,
+  ok(!presenter._highlight.disabled,
     "After highlighting a node, it should be highlighted. D'oh.");
 
   executeSoon(function() {
@@ -46,7 +46,7 @@ function whenHighlighting() {
 function whenUnhighlighting() {
   ok(presenter._currentSelection < 0,
     "Unhighlighting a should remove the current selection.");
-  ok(presenter.highlight.disabled,
+  ok(presenter._highlight.disabled,
     "After unhighlighting a node, it shouldn't be highlighted anymore. D'oh.");
 
   executeSoon(function() {

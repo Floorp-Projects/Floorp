@@ -152,7 +152,7 @@ class JSONParser
         return String;
     }
 
-    Token numberToken(jsdouble d) {
+    Token numberToken(double d) {
         this->v = js::NumberValue(d);
 #ifdef DEBUG
         lastToken = Number;

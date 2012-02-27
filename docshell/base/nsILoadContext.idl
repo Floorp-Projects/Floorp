@@ -88,4 +88,15 @@ interface nsILoadContext : nsISupports
    * Attribute that determines if private browsing should be used.
    */
   attribute boolean usePrivateBrowsing;
+
+%{C++
+  /**
+   * De-XPCOMed getter to make call-sites cleaner.
+   */
+  bool UsePrivateBrowsing() {
+    bool usingPB;
+    GetUsePrivateBrowsing(&usingPB);
+    return usingPB;
+  }
+%}
 };

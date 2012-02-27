@@ -56,10 +56,10 @@
  * a11y telemetry
  */
 HISTOGRAM_BOOLEAN(A11Y_INSTANTIATED, "has accessibility support been instantiated")
-HISTOGRAM(A11Y_CONSUMERS, 1, 6, 7, LINEAR, "Accessibility client by enum id")
-HISTOGRAM_BOOLEAN(ISIMPLE_DOM_USAGE, "have the ISimpleDOM* accessibility interfaces been used")
-HISTOGRAM_BOOLEAN(IACCESSIBLE_TABLE_USAGE, "has the IAccessibleTable accessibility interface been used")
-HISTOGRAM_BOOLEAN(XFORMS_ACCESSIBLE_USED, "has XForms accessibility been instantiated")
+HISTOGRAM(A11Y_CONSUMERS, 1, 9, 10, LINEAR, "Accessibility client by enum id")
+HISTOGRAM_BOOLEAN(A11Y_ISIMPLEDOM_USAGE, "have the ISimpleDOM* accessibility interfaces been used")
+HISTOGRAM_BOOLEAN(A11Y_IATABLE_USAGE, "has the IAccessibleTable accessibility interface been used")
+HISTOGRAM_BOOLEAN(A11Y_XFORMS_USAGE, "has XForms accessibility been instantiated")
 
 /**
  * Cycle collector telemetry

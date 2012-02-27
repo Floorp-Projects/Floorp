@@ -1967,7 +1967,7 @@ DebuggerScript_getLineCount(JSContext *cx, uintN argc, Value *vp)
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getLineCount", args, obj, script);
 
     uintN maxLine = js_GetScriptLineExtent(script);
-    args.rval().setNumber(jsdouble(maxLine));
+    args.rval().setNumber(double(maxLine));
     return true;
 }
 
@@ -2160,7 +2160,7 @@ class FlowGraphSummary : public Vector<size_t> {
 
                 for (jsint i = 0; i < ncases; i++) {
                     if (op == JSOP_LOOKUPSWITCH)
-                        pc += INDEX_LEN;
+                        pc += UINT32_INDEX_LEN;
                     size_t target = offset + GET_JUMP_OFFSET(pc);
                     addEdge(lineno, target);
                     pc += step;
@@ -2243,7 +2243,7 @@ DebuggerScript_getLineOffsets(JSContext *cx, uintN argc, Value *vp)
     size_t lineno;
     bool ok = false;
     if (args[0].isNumber()) {
-        jsdouble d = args[0].toNumber();
+        double d = args[0].toNumber();
         lineno = size_t(d);
         ok = (lineno == d);
     }

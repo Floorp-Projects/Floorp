@@ -1103,7 +1103,6 @@ exports.testIncompleteMultiMatch = function() {
   test.is(Status.ERROR, status);
   test.is(-1, assignC.paramIndex);
   test.ok(assignC.getPredictions().length > 0);
-  test.ok(assignC.getPredictions().length < 20); // could break ...
   verifyPredictionsContains('tsv', assignC.getPredictions());
   verifyPredictionsContains('tsr', assignC.getPredictions());
   test.is(null, requ.commandAssignment.getValue());

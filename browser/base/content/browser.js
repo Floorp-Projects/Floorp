@@ -1653,12 +1653,6 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
   gPrefService.addObserver(allTabs.prefName, allTabs, false);
 
-  // Delayed initialization of the livemarks update timer.
-  // Livemark updates don't need to start until after bookmark UI
-  // such as the toolbar has initialized. Starting 5 seconds after
-  // delayedStartup in order to stagger this before the download manager starts.
-  setTimeout(function() PlacesUtils.livemarks.start(), 5000);
-
   // Initialize the download manager some time after the app starts so that
   // auto-resume downloads begin (such as after crashing or quitting with
   // active downloads) and speeds up the first-load of the download manager UI.
@@ -1668,12 +1662,14 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     gDownloadMgr = Cc["@mozilla.org/download-manager;1"].
                    getService(Ci.nsIDownloadManager);
 
+#ifdef XP_WIN
     if (Win7Features) {
       let tempScope = {};
       Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm",
                 tempScope);
       tempScope.DownloadTaskbarProgress.onBrowserWindowLoad(window);
     }
+#endif
   }, 10000);
 
 #ifndef XP_MACOSX
@@ -3630,12 +3626,12 @@ function FillHistoryMenu(aParent) {
     item.setAttribute("index", j);
 
     if (j != index) {
-      try {
-        let iconURL = Cc["@mozilla.org/browser/favicon-service;1"]
-                         .getService(Ci.nsIFaviconService)
-                         .getFaviconForPage(entry.URI).spec;
+      function FHM_getFaviconURLCallback(aURI) {
+        let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
         item.style.listStyleImage = "url(" + iconURL + ")";
-      } catch (ex) {}
+      }
+      PlacesUtils.favicons.getFaviconURLForPage(entry.URI,
+                                                FHM_getFaviconURLCallback);
     }
 
     if (j < index) {
@@ -6998,11 +6994,13 @@ function getPluginInfo(pluginElement)
 
 var gPluginHandler = {
 
+#ifdef MOZ_CRASHREPORTER
   get CrashSubmit() {
     delete this.CrashSubmit;
     Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
     return this.CrashSubmit;
   },
+#endif
 
   // Map the plugin's name to a filtered version more suitable for user UI.
   makeNicePluginName : function (aName, aFilename) {
@@ -7142,6 +7140,7 @@ var gPluginHandler = {
     BrowserOpenAddonsMgr("addons://list/plugin");
   },
 
+#ifdef MOZ_CRASHREPORTER
   // Callback for user clicking "submit a report" link
   submitReport : function(pluginDumpID, browserDumpID) {
     // The crash reporter wants a DOM element it can append an IFRAME to,
@@ -7150,6 +7149,7 @@ var gPluginHandler = {
     if (browserDumpID)
       this.CrashSubmit.submit(browserDumpID);
   },
+#endif
 
   // Callback for user clicking a "reload page" link
   reloadPage: function (browser) {

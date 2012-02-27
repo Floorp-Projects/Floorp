@@ -292,7 +292,7 @@ GetIntFromJSObject(JSContext* aCtx,
   NS_ENSURE_ARG(JSVAL_IS_PRIMITIVE(value));
   NS_ENSURE_ARG(JSVAL_IS_NUMBER(value));
 
-  jsdouble num;
+  double num;
   rc = JS_ValueToNumber(aCtx, value, &num);
   NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
   NS_ENSURE_ARG(IntType(num) == num);

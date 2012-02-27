@@ -40,13 +40,13 @@ function runTests()
   is(content.wrappedJSObject.foobarBug636725, 3,
      "display() updated window.foobarBug636725");
 
-  is(sp.getText(), "++window.foobarBug636725/*\n3\n*/",
+  is(sp.getText(), "++window.foobarBug636725\n/*\n3\n*/",
      "display() shows evaluation result in the textbox");
 
-  is(sp.selectedText, "/*\n3\n*/", "selectedText is correct");
+  is(sp.selectedText, "\n/*\n3\n*/", "selectedText is correct");
   let selection = sp.getSelectionRange();
   is(selection.start, 24, "selection.start is correct");
-  is(selection.end, 31, "selection.end is correct");
+  is(selection.end, 32, "selection.end is correct");
 
   // Test selection run() and display().
 
@@ -94,16 +94,16 @@ function runTests()
      "display() worked for the selected range");
 
   is(sp.getText(), "window.foobarBug636725" +
-                   "/*\na\n*/" +
+                   "\n/*\na\n*/" +
                    " = 'c';\n" +
                    "window.foobarBug636725 = 'b';",
      "display() shows evaluation result in the textbox");
 
-  is(sp.selectedText, "/*\na\n*/", "selectedText is correct");
+  is(sp.selectedText, "\n/*\na\n*/", "selectedText is correct");
 
   selection = sp.getSelectionRange();
   is(selection.start, 22, "selection.start is correct");
-  is(selection.end, 29, "selection.end is correct");
+  is(selection.end, 30, "selection.end is correct");
 
   sp.deselect();
 

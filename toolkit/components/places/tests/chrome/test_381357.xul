@@ -4,7 +4,8 @@
   href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <window title="Add Livemarks from RSS feed served as text/html"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="runTest()">
   <script type="application/javascript"
    src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
@@ -21,56 +22,64 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 
-function uri(spec) {
-  return iosvc.newURI(spec, null, null);
+function runTest() {
+  const FEEDSPEC = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/rss_as_html.rss";
+
+  PlacesUtils.livemarks.addLivemark(
+    { title: "foo"
+    , parentId: PlacesUtils.toolbarFolderId
+    , index: PlacesUtils.bookmarks.DEFAULT_INDEX
+    , feedURI: NetUtil.newURI(FEEDSPEC)
+    , siteURI: NetUtil.newURI("http:/mochi.test/")
+    },
+    function (aStatus, aLivemark) {
+      ok(Components.isSuccessCode(aStatus), "Get livemark");
+
+      waitForLivemarkLoad(aLivemark, function (aLivemark) {
+        let nodes = aLivemark.getNodesForContainer({});
+        ok(Components.isSuccessCode(aStatus), "Get livemark entries");
+
+        is(nodes[0].title, "The First Title",
+           "livemark site URI set to value in feed");
+
+        PlacesUtils.bookmarks.removeItem(aLivemark.id);
+        SimpleTest.finish();
+      });
+    }
+  );
 }
 
-var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
-              getService(Ci.nsILivemarkService);
-var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-                getService(Ci.nsINavHistoryService);
-
-var toolbarFolderId = bmsvc.toolbarFolder;
-
-var observer =
-{
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsINavBookmarkObserver) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  // nsINavBookmarkObserve
-  onBeginUpdateBatch: function(){},
-  onEndUpdateBatch: function(){
-  },
-  onItemAdded: function(itemId, folder, index, itemType, uri, title) {
-    if (title == "The First Title") {
-      ok(true, "Item with title loaded");
-      bmsvc.removeObserver(this);
-      SimpleTest.finish();
+function waitForLivemarkLoad(aLivemark, aCallback) {
+  // Don't need a real node here.
+  let node = {};
+  let resultObserver = {
+    nodeInserted: function() {},
+    nodeRemoved: function() {},
+    nodeAnnotationChanged: function() {},
+    nodeTitleChanged: function() {},
+    nodeHistoryDetailsChanged: function() {},
+    nodeReplaced: function() {},
+    nodeMoved: function() {},
+    ontainerStateChanged: function () {},
+    sortingChanged: function() {},
+    batching: function() {},
+    invalidateContainer: function(node) {
+      isnot(aLivemark.status, Ci.mozILivemark.STATUS_FAILED,
+            "Loading livemark should success");
+      if (aLivemark.status == Ci.mozILivemark.STATUS_READY) {
+        aLivemark.unregisterForUpdates(node, resultObserver);
+        aCallback(aLivemark);
+      }
     }
-  },
-  onBeforeItemRemoved: function(){},
-  onItemRemoved: function(){},
-  onItemChanged: function(){},
-  onItemVisited: function(){},
-  onItemMoved: function(){},
+  };
+  aLivemark.registerForUpdates(node, resultObserver);
+  aLivemark.reload();
+}
 
-};
-
-const FEEDSPEC = "http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/rss_as_html.rss";
-
-gLivemarkId = lmsvc.createLivemarkFolderOnly(toolbarFolderId, "foo",
-                                             uri("http:/mochi.test/"),
-                                             uri(FEEDSPEC), -1);
-bmsvc.addObserver(observer, false);
-lmsvc.reloadLivemarkFolder(gLivemarkId);
 ]]>
 </script>
 
