@@ -87,7 +87,7 @@ def firstCap(str):
     return str[0].upper() + str[1:]
 
 class DOMClass(UserDict.DictMixin):
-    def __init__(self, name, nativeClass):
+    def __init__(self, name, nativeClass, prefable):
         self.name = name
         self.base = None
         self.isBase = False
@@ -98,6 +98,7 @@ class DOMClass(UserDict.DictMixin):
         self.nameSetter = None
         self.stringifier = False
         self.members = set()
+        self.prefable = prefable
 
     @staticmethod
     def getterNativeType(getter):
@@ -236,7 +237,10 @@ class Configuration:
             raise UserError(filename + ": `%s` was not defined." % name)
         self.classes = {}
         for clazz in config['classes']:
-            self.classes[clazz] = DOMClass(name=clazz, nativeClass=config['classes'][clazz])
+            self.classes[clazz] = DOMClass(name=clazz, nativeClass=config['classes'][clazz], prefable=False)
+        if 'prefableClasses' in config:
+            for clazz in config['prefableClasses']:
+                self.classes[clazz] = DOMClass(name=clazz, nativeClass=config['prefableClasses'][clazz], prefable=True)
         # optional settings
         self.customInheritance = config.get('customInheritance', {})
         self.derivedClasses = {}
@@ -477,6 +481,21 @@ derivedClassTemplate = (
 "}\n"
 "\n")
 
+prefableClassTemplate = (
+"template<>\n"
+"JSObject *\n"
+"${name}Wrapper::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)\n"
+"{\n"
+"    if (!scope->NewDOMBindingsEnabled()) {\n"
+"        *enabled = false;\n"
+"        return NULL;\n"
+"    }\n"
+"\n"
+"    *enabled = true;\n"
+"    return getPrototype(cx, scope);\n"
+"}\n"
+"\n")
+
 toStringTemplate = (
 "template<>\n"
 "JSString *\n"
@@ -689,6 +708,8 @@ def writeStubFile(filename, config, interfaces):
                 checkproxyhandlers = "||\n".join(map(lambda d: "           %sWrapper::proxyHandlerIsList(handler)" % d, derivedClasses))
                 castproxyhandlers = "\n".join(map(lambda d: "    if (%sWrapper::proxyHandlerIsList(handler))\n        return %sWrapper::getNative(obj);\n" % (d, d), derivedClasses))
                 f.write(string.Template(derivedClassTemplate).substitute(clazz, checkproxyhandlers=checkproxyhandlers, castproxyhandlers=castproxyhandlers))
+            if clazz.prefable:
+                f.write(string.Template(prefableClassTemplate).substitute(clazz))
             methodsList = []
             propertiesList = []
             if clazz.stringifier:
