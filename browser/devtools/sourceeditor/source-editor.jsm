@@ -199,6 +199,22 @@ SourceEditor.DEFAULTS = {
    * @type array
    */
   keys: null,
+
+  /**
+   * The editor context menu you want to display when the user right-clicks
+   * within the editor. This property can be:
+   *   - a string that tells the ID of the xul:menupopup you want. This needs to
+   *   be available within the editor parentElement.ownerDocument.
+   *   - an nsIDOMElement object reference pointing to the xul:menupopup you
+   *   want to open when the contextmenu event is fired.
+   *
+   * Set this property to a falsey value to disable the default context menu.
+   *
+   * @see SourceEditor.EVENTS.CONTEXT_MENU for more control over the contextmenu
+   * event.
+   * @type string|nsIDOMElement
+   */
+  contextMenu: "sourceEditorContextMenu",
 };
 
 /**
@@ -216,6 +232,8 @@ SourceEditor.EVENTS = {
    *   This value comes from the DOM contextmenu event.screenX property.
    *   - screenY - the pointer location on the y axis, relative to the screen.
    *   This value comes from the DOM contextmenu event.screenY property.
+   *
+   * @see SourceEditor.DEFAULTS.contextMenu
    */
   CONTEXT_MENU: "ContextMenu",
 
@@ -312,6 +330,12 @@ function extend(aDestination, aSource)
  * Add methods common to all components.
  */
 extend(SourceEditor.prototype, {
+  // Expose the static constants on the SourceEditor instances.
+  EVENTS: SourceEditor.EVENTS,
+  MODES: SourceEditor.MODES,
+  THEMES: SourceEditor.THEMES,
+  DEFAULTS: SourceEditor.DEFAULTS,
+
   _lastFind: null,
 
   /**

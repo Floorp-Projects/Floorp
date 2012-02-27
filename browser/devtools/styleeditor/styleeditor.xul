@@ -45,6 +45,8 @@
 <?xml-stylesheet href="chrome://browser/skin/devtools/splitview.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/styleeditor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/styleeditor.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/source-editor-overlay.xul"?>
 <xul:window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns="http://www.w3.org/1999/xhtml"
         id="style-editor-chrome-window"
@@ -54,10 +56,18 @@
         persist="screenX screenY width height sizemode">
 <xul:script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 
+<xul:popupset id="style-editor-popups">
+  <xul:menupopup id="sourceEditorContextMenu"/>
+</xul:popupset>
+
+<xul:commandset id="editMenuCommands"/>
+<xul:commandset id="sourceEditorCommands"/>
 <xul:commandset id="style-editor-commandset">
   <xul:command id="style-editor-cmd-close" oncommand="window.close();"/>
 </xul:commandset>
 
+<xul:keyset id="editMenuKeys"/>
+<xul:keyset id="sourceEditorKeys"/>
 <xul:keyset id="style-editor-keyset">
   <xul:key id="style-editor-key-close"
            key="&closeCmd.key;"
