@@ -3536,25 +3536,9 @@ GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom)
 bool
 IonBuilder::jsop_not()
 {
-    MIRType type = oracle->unaryOp(script, pc).ival;
-
-    // Pop input
     MDefinition *value = current->pop();
 
-    // Get the String length for String operands
-    if (type == MIRType_String) {
-        MStringLength *len = MStringLength::New(value);
-        current->add(len);
-
-        type = MIRType_Int32;
-        value = len;
-    }
-
-    // Create instruction
     MNot *ins = new MNot(value);
-    ins->infer(type);
-
-    // Add instruction to current block
     current->add(ins);
     current->push(ins);
     return true;
