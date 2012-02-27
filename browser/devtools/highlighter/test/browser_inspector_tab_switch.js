@@ -96,6 +96,7 @@ function inspectorTabOpen2()
   executeSoon(function() {
     Services.obs.addObserver(inspectorUIOpen2,
       InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
+    clearUserPrefs();
     InspectorUI.openInspectorUI();
   });
 }
@@ -136,7 +137,7 @@ function inspectorFocusTab1()
   Services.obs.addObserver(inspectorOpenTreePanelTab1,
     InspectorUI.INSPECTOR_NOTIFICATIONS.TREEPANELREADY, false);
 
-  InspectorUI.treePanel.open();
+  InspectorUI.toggleHTMLPanel();
 }
 
 function inspectorOpenTreePanelTab1()
@@ -153,7 +154,7 @@ function inspectorOpenTreePanelTab1()
 
   executeSoon(function() {
     InspectorUI.showSidebar();
-    InspectorUI.toolShow(InspectorUI.stylePanel.registrationObject);
+    InspectorUI.activateSidebarPanel("styleinspector");
   });
 }
 
