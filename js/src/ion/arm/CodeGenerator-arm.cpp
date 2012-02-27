@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=79:
  *
@@ -1337,6 +1336,9 @@ CodeGeneratorARM::generateInvalidateEpilogue()
     // Push the Ion script onto the stack (when we determine what that pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
     IonCode *thunk = gen->cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(gen->cx);
+    if (!thunk)
+        return false;
+
     masm.branch(thunk);
 
     // We should never reach this point in JIT code -- the invalidation thunk should
