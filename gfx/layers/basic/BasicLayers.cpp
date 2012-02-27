@@ -1841,6 +1841,8 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                               void* aCallbackData,
                               ReadbackProcessor* aReadback)
 {
+  RenderTraceScope trace("BasicLayerManager::PaintLayer", "707070");
+
   const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
   const gfx3DMatrix& effectiveTransform = aLayer->GetEffectiveTransform();
   BasicContainerLayer* container = static_cast<BasicContainerLayer*>(aLayer);
