@@ -96,6 +96,7 @@ FENNEC_JAVA_FILES = \
   ProfileMigrator.java \
   PromptService.java \
   sqlite/ByteBufferInputStream.java \
+  sqlite/MatrixBlobCursor.java \
   sqlite/SQLiteBridge.java \
   sqlite/SQLiteBridgeException.java \
   SetupScreen.java \

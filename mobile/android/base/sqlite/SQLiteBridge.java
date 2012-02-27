@@ -5,9 +5,9 @@
 package org.mozilla.gecko.sqlite;
 
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
+import org.mozilla.gecko.sqlite.MatrixBlobCursor;
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.MatrixCursor;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -54,13 +54,13 @@ public class SQLiteBridge {
     // Executes a simple line of sql.
     public void execSQL(String sql)
                 throws SQLiteBridgeException {
-        query(sql, null);
+        internalQuery(sql, null);
     }
 
     // Executes a simple line of sql. Allow you to bind arguments
     public void execSQL(String sql, String[] bindArgs)
                 throws SQLiteBridgeException {
-        query(sql, bindArgs);
+        internalQuery(sql, bindArgs);
     }
 
     // Executes a DELETE statement on the database
@@ -72,7 +72,7 @@ public class SQLiteBridge {
             sb.append(" WHERE " + whereClause);
         }
 
-        query(sb.toString(), whereArgs);
+        internalQuery(sb.toString(), whereArgs);
         return mQueryResults[kResultRowsChanged].intValue();
     }
 
@@ -114,10 +114,16 @@ public class SQLiteBridge {
             sb.append(" " + limit);
         }
 
-        ArrayList<Object[]> results;
-        results = query(sb.toString(), selectionArgs);
+        return rawQuery(sb.toString(), selectionArgs);
+    }
 
-        MatrixCursor cursor = new MatrixCursor(mColumns.toArray(new String[0]));
+    public Cursor rawQuery(String sql, String[] selectionArgs)
+        throws SQLiteBridgeException {
+        ArrayList<Object[]> results;
+        results = internalQuery(sql, selectionArgs);
+
+        MatrixBlobCursor cursor =
+            new MatrixBlobCursor(mColumns.toArray(new String[0]));
         try {
             for (Object resultRow: results) {
                 Object[] resultColumns = (Object[])resultRow;
@@ -160,7 +166,7 @@ public class SQLiteBridge {
 
         String[] binds = new String[valueBinds.size()];
         valueBinds.toArray(binds);
-        query(sb.toString(), binds);
+        internalQuery(sb.toString(), binds);
         return mQueryResults[kResultInsertRowId];
     }
 
@@ -195,14 +201,14 @@ public class SQLiteBridge {
         String[] binds = new String[valueNames.size()];
         valueNames.toArray(binds);
 
-        query(sb.toString(), binds);
+        internalQuery(sb.toString(), binds);
         return mQueryResults[kResultRowsChanged].intValue();
     }
 
     public int getVersion()
                throws SQLiteBridgeException {
         ArrayList<Object[]> results = null;
-        results = query("PRAGMA user_version");
+        results = internalQuery("PRAGMA user_version", null);
         int ret = -1;
         if (results != null) {
             for (Object resultRow: results) {
@@ -214,11 +220,6 @@ public class SQLiteBridge {
         return ret;
     }
 
-    // Do an SQL query without parameters
-    public ArrayList<Object[]> query(String aQuery) throws SQLiteBridgeException {
-        return query(aQuery, null);
-    }
-
     // Do an SQL query, substituting the parameters in the query with the passed
     // parameters. The parameters are subsituded in order, so named parameters
     // are not supported.
@@ -226,7 +227,7 @@ public class SQLiteBridge {
     // row being an entry in the ArrayList, and each column being one Object
     // in the Object[] array. The columns are of type null,
     // direct ByteBuffer (BLOB), or String (everything else).
-    public ArrayList<Object[]> query(String aQuery, String[] aParams)
+    private ArrayList<Object[]> internalQuery(String aQuery, String[] aParams)
         throws SQLiteBridgeException {
         ArrayList<Object[]> result = new ArrayList<Object[]>();
         mQueryResults = new Long[2];
@@ -235,12 +236,6 @@ public class SQLiteBridge {
         sqliteCall(mDb, aQuery, aParams, mColumns, mQueryResults, result);
 
         return result;
-    }
-
-    // Gets the index in the row Object[] for the given column name.
-    // Returns -1 if not found.
-    public int getColumnIndex(String aColumnName) {
-        return mColumns.lastIndexOf(aColumnName);
     }
 
     // nop, provided for API compatibility with SQLiteDatabase.
