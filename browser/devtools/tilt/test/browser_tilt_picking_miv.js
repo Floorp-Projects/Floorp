@@ -28,7 +28,7 @@ function test() {
           let contentDocument = presenter.contentWindow.document;
           let div = contentDocument.getElementById("far-far-away");
 
-          presenter.highlightNode(div, "moveIntoView");
+          presenter.highlightNode(div);
         };
       }
     });
@@ -40,20 +40,22 @@ function whenHighlighting() {
     "Highlighting a node didn't work properly.");
   ok(!presenter._highlight.disabled,
     "After highlighting a node, it should be highlighted. D'oh.");
-  ok(presenter.controller.arcball._resetInProgress,
-    "Highlighting a node that's not already visible should trigger a reset!");
+  ok(!presenter.controller.arcball._resetInProgress,
+    "Highlighting a node that's not already visible shouldn't trigger a reset " +
+    "without this being explicitly requested!");
 
-  executeSoon(function() {
-    Services.obs.addObserver(whenUnhighlighting, UNHIGHLIGHTING, false);
-    presenter.highlightNode(null);
-  });
+  EventUtils.sendKey("F");
+  executeSoon(whenBringingIntoView);
 }
 
-function whenUnhighlighting() {
-  ok(presenter._currentSelection < 0,
-    "Unhighlighting a should remove the current selection.");
-  ok(presenter._highlight.disabled,
-    "After unhighlighting a node, it shouldn't be highlighted anymore. D'oh.");
+function whenBringingIntoView() {
+  ok(presenter._currentSelection > 0,
+    "The node should still be selected.");
+  ok(!presenter._highlight.disabled,
+    "The node should still be highlighted");
+  ok(presenter.controller.arcball._resetInProgress,
+    "Highlighting a node that's not already visible should trigger a reset " +
+    "when this is being explicitly requested!");
 
   executeSoon(function() {
     Services.obs.addObserver(cleanup, DESTROYED, false);
@@ -63,7 +65,6 @@ function whenUnhighlighting() {
 
 function cleanup() {
   Services.obs.removeObserver(whenHighlighting, HIGHLIGHTING);
-  Services.obs.removeObserver(whenUnhighlighting, UNHIGHLIGHTING);
   Services.obs.removeObserver(cleanup, DESTROYED);
   gBrowser.removeCurrentTab();
   finish();

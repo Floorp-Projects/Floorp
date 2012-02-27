@@ -41,6 +41,16 @@ let tempScope = {};
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
 let LayoutHelpers = tempScope.LayoutHelpers;
 
+// Clear preferences that may be set during the course of tests.
+function clearUserPrefs()
+{
+  Services.prefs.clearUserPref("devtools.inspector.htmlPanelOpen");
+  Services.prefs.clearUserPref("devtools.inspector.sidebarOpen");
+  Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
+}
+
+registerCleanupFunction(clearUserPrefs);
+
 function isHighlighting()
 {
   let veil = InspectorUI.highlighter.veilTransparentBox;
@@ -78,3 +88,4 @@ function midPoint(aPointA, aPointB)
   pointC.y = (aPointB.y - aPointA.y) / 2 + aPointA.y;
   return pointC;
 }
+

@@ -80,6 +80,7 @@ _BROWSER_TEST_FILES = \
 	browser_tilt_picking_highlight01.js \
 	browser_tilt_picking_highlight02.js \
 	browser_tilt_picking_highlight03.js \
+	browser_tilt_picking_miv.js \
 	browser_tilt_utils01.js \
 	browser_tilt_utils02.js \
 	browser_tilt_utils03.js \

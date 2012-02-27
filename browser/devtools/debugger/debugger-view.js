@@ -349,7 +349,7 @@ DebuggerView.Properties = {
     }
 
     // compute the id of the element if not specified
-    aId = aId || (aName + "-scope");
+    aId = aId || (aName.toLowerCase().trim().replace(" ", "-") + "-scope");
 
     // contains generic nodes and functionality
     let element = this._createPropertyElement(aName, aId, "scope", this._vars);
@@ -541,12 +541,12 @@ DebuggerView.Properties = {
    *        An array containing the key and grip properties, specifying
    *        the value and/or type & class of the variable (if the type
    *        is not specified, it will be inferred from the value).
-   *        e.g. ["someProp0": 42]
-   *             ["someProp1": true]
-   *             ["someProp2": "nasu"]
-   *             ["someProp3": { type: "undefined" }]
-   *             ["someProp4": { type: "null" }]
-   *             ["someProp5": { type: "object", class: "Object" }]
+   *        e.g. ["someProp0", 42]
+   *             ["someProp1", true]
+   *             ["someProp2", "nasu"]
+   *             ["someProp3", { type: "undefined" }]
+   *             ["someProp4", { type: "null" }]
+   *             ["someProp5", { type: "object", class: "Object" }]
    * @param string aName
    *        Optional, the property name.
    * @paarm string aId
