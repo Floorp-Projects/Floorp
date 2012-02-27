@@ -42,9 +42,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.json.simple.JSONArray;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
-import org.mozilla.gecko.sync.repositories.android.BrowserContract.Bookmarks;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
@@ -77,11 +77,11 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
 
   @Override
   protected Uri getUri() {
-    return BrowserContract.Bookmarks.CONTENT_URI;
+    return BrowserContractHelpers.BOOKMARKS_CONTENT_URI;
   }
 
   protected Uri getPositionsUri() {
-    return BrowserContract.Bookmarks.POSITIONS_CONTENT_URI;
+    return BrowserContractHelpers.BOOKMARKS_POSITIONS_CONTENT_URI;
   }
 
   protected Cursor getGuidsIDsForFolders() throws NullCursorException {
@@ -113,10 +113,10 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
    */
   public int bumpModified(long id, long modified) {
     Logger.debug(LOG_TAG, "Bumping modified for " + id + " to " + modified);
-    String where = Bookmarks._ID + " = ?";
+    String where = BrowserContract.Bookmarks._ID + " = ?";
     String[] selectionArgs = new String[] { String.valueOf(id) };
     ContentValues values = new ContentValues();
-    values.put(Bookmarks.DATE_MODIFIED, modified);
+    values.put(BrowserContract.Bookmarks.DATE_MODIFIED, modified);
 
     return context.getContentResolver().update(getUri(), values, where, selectionArgs);
   }
@@ -251,6 +251,6 @@ public class AndroidBrowserBookmarksDataAccessor extends AndroidBrowserRepositor
   
   @Override
   protected String[] getAllColumns() {
-    return BrowserContract.Bookmarks.BookmarkColumns;
+    return BrowserContractHelpers.BookmarkColumns;
   }
 }
