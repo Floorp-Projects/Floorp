@@ -24,9 +24,13 @@ public class BrowserContractHelpers extends BrowserContract {
   public static final Uri BOOKMARKS_POSITIONS_CONTENT_URI  = withSyncAndDeleted(Bookmarks.POSITIONS_CONTENT_URI);
   public static final Uri HISTORY_CONTENT_URI              = withSyncAndDeleted(History.CONTENT_URI);
   public static final Uri SCHEMA_CONTENT_URI               = withSyncAndDeleted(Schema.CONTENT_URI);
+
+  public static final Uri PASSWORDS_CONTENT_URI            = null;
+  /*
   public static final Uri PASSWORDS_CONTENT_URI            = withSyncAndDeleted(Passwords.CONTENT_URI);
   public static final Uri FORM_HISTORY_CONTENT_URI         = withSyncAndDeleted(FormHistory.CONTENT_URI);
   public static final Uri DELETED_FORM_HISTORY_CONTENT_URI = withSyncAndDeleted(DeletedFormHistory.CONTENT_URI);
+   */
 
   public static final String[] PasswordColumns = new String[] {
     CommonColumns._ID,
