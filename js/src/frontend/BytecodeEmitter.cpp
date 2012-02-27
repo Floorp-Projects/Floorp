@@ -3700,7 +3700,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
                 if (lhs->isOp(JSOP_CALLEE)) {
                     if (Emit1(cx, bce, JSOP_CALLEE) < 0)
                         return false;
-                } else if (lhs->isOp(JSOP_NAME)) {
+                } else if (lhs->isOp(JSOP_NAME) || lhs->isOp(JSOP_GETGNAME)) {
                     if (!EmitIndex32(cx, lhs->getOp(), atomIndex, bce))
                         return false;
                 } else {

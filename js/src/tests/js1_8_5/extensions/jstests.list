@@ -61,3 +61,4 @@ script regress-691746.js
 script regress-697515.js
 script correct-this-for-nonnatives-on-array-proto-chain.js
 script toSource-0.js
+script compound-assign-const.js
