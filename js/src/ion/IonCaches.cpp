@@ -271,7 +271,12 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     if (!obj->getGeneric(cx, obj, ATOM_TO_JSID(atom), vp))
         return false;
 
-    types::TypeScript::Monitor(cx, script, cache.getScriptedLocation(), *vp);
+    {
+        JSScript *script;
+        jsbytecode *pc;
+        cache.getScriptedLocation(&script, &pc);
+        types::TypeScript::Monitor(cx, script, pc, *vp);
+    }
 
     // If we've been invalidated, override the return value (bug 728188).
     if (script->ion != ion)
