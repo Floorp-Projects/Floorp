@@ -59,7 +59,7 @@ body {
   overflow: auto;
   font-family: Lucida Grande, sans-serif;
   font-size: 11px;
-  border-top: 1px solid #BBB9BA;
+  padding-top: 5px;
 }
 
 h1 {

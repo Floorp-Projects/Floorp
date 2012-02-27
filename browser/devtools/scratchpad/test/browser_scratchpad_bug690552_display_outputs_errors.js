@@ -21,7 +21,7 @@ function runTests()
   var scratchpad = gScratchpadWindow.Scratchpad;
 
   var message = "\"Hello World!\""
-  var openComment = "/*\n";
+  var openComment = "\n/*\n";
   var closeComment = "\n*/";
   var error = "throw new Error(\"Ouch!\")";
   let messageArray = {};
