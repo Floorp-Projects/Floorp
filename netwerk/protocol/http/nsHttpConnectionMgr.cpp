@@ -581,12 +581,11 @@ nsHttpConnectionMgr::ReportSpdyAlternateProtocol(nsHttpConnection *conn)
     if (mAlternateProtocolHash.Contains(hostPortKey))
         return;
     
-    if (mAlternateProtocolHash.mHashTable.entryCount > 2000)
-        PL_DHashTableEnumerate(&mAlternateProtocolHash.mHashTable,
-                               &nsHttpConnectionMgr::TrimAlternateProtocolHash,
-                               this);
+    if (mAlternateProtocolHash.Count() > 2000)
+        mAlternateProtocolHash.EnumerateEntries(&TrimAlternateProtocolHash,
+						this);
     
-    mAlternateProtocolHash.Put(hostPortKey);
+    mAlternateProtocolHash.PutEntry(hostPortKey);
 }
 
 void
@@ -596,18 +595,16 @@ nsHttpConnectionMgr::RemoveSpdyAlternateProtocol(nsACString &hostPortKey)
     // it is read from both the main and the network thread.
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-    return mAlternateProtocolHash.Remove(hostPortKey);
+    return mAlternateProtocolHash.RemoveEntry(hostPortKey);
 }
 
 PLDHashOperator
-nsHttpConnectionMgr::TrimAlternateProtocolHash(PLDHashTable *table,
-                                               PLDHashEntryHdr *hdr,
-                                               PRUint32 number,
+nsHttpConnectionMgr::TrimAlternateProtocolHash(nsCStringHashKey *entry,
                                                void *closure)
 {
     nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
     
-    if (self->mAlternateProtocolHash.mHashTable.entryCount > 2000)
+    if (self->mAlternateProtocolHash.Count() > 2000)
         return PL_DHASH_REMOVE;
     return PL_DHASH_STOP;
 }
