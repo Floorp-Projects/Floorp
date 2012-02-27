@@ -30,6 +30,7 @@
     locale/browser/devtools/styleinspector.dtd        (%chrome/browser/devtools/styleinspector.dtd)
     locale/browser/devtools/webConsole.dtd            (%chrome/browser/devtools/webConsole.dtd)
     locale/browser/devtools/sourceeditor.properties   (%chrome/browser/devtools/sourceeditor.properties)
+    locale/browser/devtools/sourceeditor.dtd          (%chrome/browser/devtools/sourceeditor.dtd)
     locale/browser/newTab.dtd                      (%chrome/browser/newTab.dtd)
     locale/browser/newTab.properties               (%chrome/browser/newTab.properties)
     locale/browser/openLocation.dtd                (%chrome/browser/openLocation.dtd)

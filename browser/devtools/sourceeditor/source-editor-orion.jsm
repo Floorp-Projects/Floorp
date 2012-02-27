@@ -147,6 +147,7 @@ function SourceEditor() {
 
   this._onOrionSelection = this._onOrionSelection.bind(this);
   this._onTextChanged = this._onTextChanged.bind(this);
+  this._onOrionContextMenu = this._onOrionContextMenu.bind(this);
 
   this._eventTarget = {};
   this._eventListenersQueue = [];
@@ -173,6 +174,7 @@ SourceEditor.prototype = {
   _iframeWindow: null,
   _eventTarget: null,
   _eventListenersQueue: null,
+  _contextMenu: null,
   _dirty: false,
 
   /**
@@ -286,6 +288,17 @@ SourceEditor.prototype = {
     }
     this.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
                            this._onTextChanged);
+
+    if (typeof config.contextMenu == "string") {
+      let chromeDocument = this.parentElement.ownerDocument;
+      this._contextMenu = chromeDocument.getElementById(config.contextMenu);
+    } else if (typeof config.contextMenu == "object" ) {
+      this._contextMenu = config._contextMenu;
+    }
+    if (this._contextMenu) {
+      this.addEventListener(SourceEditor.EVENTS.CONTEXT_MENU,
+                            this._onOrionContextMenu);
+    }
 
     let KeyBinding = window.require("orion/textview/keyBinding").KeyBinding;
     let TextDND = window.require("orion/textview/textDND").TextDND;
@@ -606,6 +619,22 @@ SourceEditor.prototype = {
   },
 
   /**
+   * The Orion contextmenu event handler. This method opens the default or
+   * the custom context menu popup at the pointer location.
+   *
+   * @param object aEvent
+   *        The contextmenu event object coming from Orion. This object should
+   *        hold the screenX and screenY properties.
+   */
+  _onOrionContextMenu: function SE__onOrionContextMenu(aEvent)
+  {
+    if (this._contextMenu.state == "closed") {
+      this._contextMenu.openPopupAtScreen(aEvent.screenX || 0,
+                                          aEvent.screenY || 0, true);
+    }
+  },
+
+  /**
    * Update the dirty state of the editor based on the undo stack.
    * @private
    */
@@ -893,18 +922,28 @@ SourceEditor.prototype = {
 
   /**
    * Undo a change in the editor.
+   *
+   * @return boolean
+   *         True if there was a change undone, false otherwise.
    */
   undo: function SE_undo()
   {
-    return this._undoStack.undo();
+    let result = this._undoStack.undo();
+    this.ui._onUndoRedo();
+    return result;
   },
 
   /**
    * Redo a change in the editor.
+   *
+   * @return boolean
+   *         True if there was a change redone, false otherwise.
    */
   redo: function SE_redo()
   {
-    return this._undoStack.redo();
+    let result = this._undoStack.redo();
+    this.ui._onUndoRedo();
+    return result;
   },
 
   /**
@@ -936,6 +975,7 @@ SourceEditor.prototype = {
   {
     this._undoStack.reset();
     this._updateDirty();
+    this.ui._onUndoRedo();
   },
 
   /**
@@ -1403,6 +1443,13 @@ SourceEditor.prototype = {
     this.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED,
                              this._onTextChanged);
     this._onTextChanged = null;
+
+    if (this._contextMenu) {
+      this.removeEventListener(SourceEditor.EVENTS.CONTEXT_MENU,
+                               this._onOrionContextMenu);
+      this._contextMenu = null;
+    }
+    this._onOrionContextMenu = null;
 
     if (this._primarySelectionTimeout) {
       let window = this.parentElement.ownerDocument.defaultView;

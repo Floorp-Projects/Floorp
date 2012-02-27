@@ -831,6 +831,7 @@ var Scratchpad = {
       mode: SourceEditor.MODES.JAVASCRIPT,
       showLineNumbers: true,
       initialText: initialText,
+      contextMenu: "scratchpad-text-popup",
     };
 
     let editorPlaceholder = document.getElementById("scratchpad-editor");
@@ -848,8 +849,6 @@ var Scratchpad = {
    */
   _onEditorLoad: function SP__onEditorLoad(aState)
   {
-    this.editor.addEventListener(SourceEditor.EVENTS.CONTEXT_MENU,
-                                 this.onContextMenu);
     this.editor.addEventListener(SourceEditor.EVENTS.DIRTY_CHANGED,
                                  this._onDirtyChanged);
     this.editor.focus();
@@ -877,22 +876,6 @@ var Scratchpad = {
   },
 
   /**
-   * The contextmenu event handler for the source editor. This method opens the
-   * Scratchpad context menu popup at the pointer location.
-   *
-   * @param object aEvent
-   *        An event object coming from the SourceEditor. This object needs to
-   *        hold the screenX and screenY properties.
-   */
-  onContextMenu: function SP_onContextMenu(aEvent)
-  {
-    let menu = document.getElementById("scratchpad-text-popup");
-    if (menu.state == "closed") {
-      menu.openPopupAtScreen(aEvent.screenX, aEvent.screenY, true);
-    }
-  },
-
-  /**
    * The Source Editor DirtyChanged event handler. This function updates the
    * Scratchpad window title to show an asterisk when there are unsaved changes.
    *
@@ -904,23 +887,6 @@ var Scratchpad = {
   _onDirtyChanged: function SP__onDirtyChanged(aEvent)
   {
     Scratchpad._updateTitle();
-  },
-
-  /**
-   * The popupshowing event handler for the Edit menu. This method updates the
-   * enabled/disabled state of the Undo and Redo commands, based on the editor
-   * state such that the menu items render correctly for the user when the menu
-   * shows.
-   */
-  onEditPopupShowing: function SP_onEditPopupShowing()
-  {
-    goUpdateGlobalEditMenuItems();
-
-    let undo = document.getElementById("sp-cmd-undo");
-    undo.setAttribute("disabled", !this.editor.canUndo());
-
-    let redo = document.getElementById("sp-cmd-redo");
-    redo.setAttribute("disabled", !this.editor.canRedo());
   },
 
   /**
@@ -954,8 +920,6 @@ var Scratchpad = {
     this.resetContext();
     this.editor.removeEventListener(SourceEditor.EVENTS.DIRTY_CHANGED,
                                     this._onDirtyChanged);
-    this.editor.removeEventListener(SourceEditor.EVENTS.CONTEXT_MENU,
-                                    this.onContextMenu);
     this.editor.destroy();
     this.editor = null;
     this.initialized = false;
