@@ -148,45 +148,6 @@ function startToolTests(evt)
   ok(!tool2.isOpen, "Panel 2 is closed");
   ok(tool3.isOpen, "Panel 3 is open");
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    waitForFocus(testSecondTab, content);
-  }, true);
-
-  content.location = "data:text/html,registertool new tab test for inspector";
-}
-
-function testSecondTab()
-{
-  info("Opened second tab");
-  info("Checking panel states 5");
-
-  let tools = InspectorUI.tools;
-  ok(!(tool1 in tools), "Panel 1 not in tools");
-  ok(!(tool2 in tools), "Panel 2 not in tools");
-  ok(!(tool3 in tools), "Panel 3 not in tools");
-
-  info("Closing current tab");
-  Services.obs.addObserver(testOriginalTab, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED, false);
-  gBrowser.removeCurrentTab();
-}
-
-function testOriginalTab()
-{
-  Services.obs.removeObserver(testOriginalTab, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
-  info("Checking panel states 6");
-
-  info("Tools: " + InspectorUI.tools);
-  // reacquaint ourselves with our tools
-  tool1 = InspectorUI.tools["tool_1"];
-  tool2 = InspectorUI.tools["tool_2"];
-  tool3 = InspectorUI.tools["tool_3"];
-
-  ok(tool1.isOpen, "Panel 1 is open after reactivation");
-  ok(!tool2.isOpen, "Panel 2 is closed after reactivation");
-  ok(tool3.isOpen, "Panel 3 is open after reactivation");
-
   Services.obs.addObserver(unregisterTools, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
   InspectorUI.closeInspectorUI(true);
 }
