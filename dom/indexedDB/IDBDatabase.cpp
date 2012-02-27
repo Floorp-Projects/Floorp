@@ -164,7 +164,9 @@ IDBDatabase::Create(IDBWrapperCache* aOwnerCache,
 
   db->mScriptContext = aOwnerCache->GetScriptContext();
   db->mOwner = aOwnerCache->GetOwner();
-  db->mScriptOwner = aOwnerCache->GetScriptOwner();
+  if (!db->SetScriptOwner(aOwnerCache->GetScriptOwner())) {
+    return nsnull;
+  }
 
   db->mDatabaseId = databaseInfo->id;
   db->mName = databaseInfo->name;
