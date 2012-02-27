@@ -33,7 +33,7 @@ import java.util.Arrays;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
-import android.util.Base64;
+import org.mozilla.apache.commons.codec.binary.Base64;
 import ch.boye.httpclientandroidlib.util.EncodingUtils;
 
 /**
@@ -612,8 +612,8 @@ final class NTLMEngineImpl implements NTLMEngine {
 
         /** Constructor to use when message contents are known */
         NTLMMessage(String messageBody, int expectedType) throws NTLMEngineException {
-            messageContents = Base64.decode(EncodingUtils.getBytes(messageBody,
-                    DEFAULT_CHARSET), Base64.NO_WRAP);
+            messageContents = Base64.decodeBase64(EncodingUtils.getBytes(messageBody,
+                    DEFAULT_CHARSET));
             // Look for NTLM message
             if (messageContents.length < SIGNATURE.length)
                 throw new NTLMEngineException("NTLM message decoding error - packet too short");
@@ -746,7 +746,7 @@ final class NTLMEngineImpl implements NTLMEngine {
             } else {
                 resp = messageContents;
             }
-            return EncodingUtils.getAsciiString(Base64.encode(resp, Base64.NO_WRAP));
+            return EncodingUtils.getAsciiString(Base64.encodeBase64(resp));
         }
 
     }
