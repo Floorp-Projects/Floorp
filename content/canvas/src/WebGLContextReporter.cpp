@@ -42,7 +42,7 @@
 using namespace mozilla;
 
 
-class WebGLMemoryMultiReporter : public nsIMemoryMultiReporter 
+class WebGLMemoryMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter 
 {
   public:
     NS_DECL_ISUPPORTS
