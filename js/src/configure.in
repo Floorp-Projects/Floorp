@@ -309,7 +309,7 @@ if test -n "$gonkdir" ; then
     STLPORT_CPPFLAGS="-I$gonkdir/external/stlport/stlport"
     STLPORT_LIBS="-lstlport"
 
-    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/system/core/include -I$gonkdir/bionic $STLPORT_CPPFLAGS $CPPFLAGS"
+    CPPFLAGS="-DANDROID -isystem $gonkdir/bionic/libc/include/ -isystem $gonkdir/bionic/libc/kernel/common -isystem $gonkdir/bionic/libc/arch-arm/include -isystem $gonkdir/bionic/libc/kernel/arch-arm -isystem $gonkdir/bionic/libm/include -isystem $gonkdir/frameworks/base/native/include -isystem $gonkdir/system/core/include -isystem $gonkdir/bionic $STLPORT_CPPFLAGS $CPPFLAGS"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
     LIBS="$LIBS $STLPORT_LIBS"
@@ -424,9 +424,9 @@ case "$target" in
     RANLIB="$android_toolchain"/bin/"$android_tool_prefix"-ranlib
     STRIP="$android_toolchain"/bin/"$android_tool_prefix"-strip
 
-    CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CXXFLAGS"
+    CPPFLAGS="-isystem $android_platform/usr/include $CPPFLAGS"
+    CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
 
     dnl Add -llog by default, since we use it all over the place.
     dnl Add --allow-shlib-undefined, because libGLESv2 links to an
@@ -1729,15 +1729,15 @@ if test "$OS_TARGET" = "Android"; then
        if test ! -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/libstdc++.a" ; then
           AC_MSG_ERROR([Cannot find path to libstdc++ (NDK version >= 5?)])
        fi
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/gnu-libstdc++/include -I$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
+       STLPORT_CPPFLAGS="-isystem $android_ndk/sources/cxx-stl/gnu-libstdc++/include -isystem $android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH/include -D_GLIBCXX_PERMIT_BACKWARD_HASH"
        STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/gnu-libstdc++/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstdc++"
     elif test -e "$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
+       STLPORT_CPPFLAGS="-isystem $android_ndk/sources/cxx-stl/stlport/stlport"
        STLPORT_LDFLAGS="-L$android_ndk/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/"
        STLPORT_LIBS="-lstlport_static"
     elif  test -e "$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH/libstlport_static.a" ; then
-       STLPORT_CPPFLAGS="-I$android_ndk/sources/cxx-stl/stlport/stlport"
+       STLPORT_CPPFLAGS="-isystem $android_ndk/sources/cxx-stl/stlport/stlport"
        STLPORT_LDFLAGS="-L$android_ndk/tmp/ndk-digit/build/install/sources/cxx-stl/stlport/libs/$ANDROID_CPU_ARCH"
        STLPORT_LIBS="-lstlport_static"
     elif test "$target" != "arm-android-eabi"; then
