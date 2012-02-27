@@ -79,20 +79,22 @@ ValueIsLength(JSContext *cx, const Value &v, uint32_t *len)
 /*
  * Convert |v| to an array index for an array of length |length| per
  * the Typed Array Specification section 7.0, |subarray|. If successful,
- * the output value is in the range [0, length).
+ * the output value is in the range [0, length].
  */
 static bool
-ToClampedIndex(JSContext *cx, const Value &v, int32_t length, int32_t *out)
+ToClampedIndex(JSContext *cx, const Value &v, uint32_t length, uint32_t *out)
 {
-    if (!ToInt32(cx, v, out))
+    int32_t result;
+    if (!ToInt32(cx, v, &result))
         return false;
-    if (*out < 0) {
-        *out += length;
-        if (*out < 0)
-            *out = 0;
-    } else if (*out > length) {
-        *out = length;
+    if (result < 0) {
+        result += length;
+        if (result < 0)
+            result = 0;
+    } else if (uint32_t(result) > length) {
+        result = length;
     }
+    *out = uint32_t(result);
     return true;
 }
 
@@ -143,8 +145,8 @@ ArrayBufferObject::fun_slice(JSContext *cx, unsigned argc, Value *vp)
     ArrayBufferObject &arrayBuffer = thisObj->asArrayBuffer();
 
     // these are the default values
-    int32_t length = int32_t(arrayBuffer.byteLength());
-    int32_t begin = 0, end = length;
+    uint32_t length = arrayBuffer.byteLength();
+    uint32_t begin = 0, end = length;
 
     if (args.length() > 0) {
         if (!ToClampedIndex(cx, args[0], length, &begin))
@@ -1582,8 +1584,8 @@ class TypedArrayTemplate
             return true;
 
         // these are the default values
-        int32_t begin = 0, end = getLength(tarray);
-        int32_t length = int32_t(getLength(tarray));
+        uint32_t begin = 0, end = getLength(tarray);
+        uint32_t length = getLength(tarray);
 
         if (args.length() > 0) {
             if (!ToClampedIndex(cx, args[0], length, &begin))
@@ -1602,6 +1604,66 @@ class TypedArrayTemplate
         if (!nobj)
             return false;
         args.rval().setObject(*nobj);
+        return true;
+    }
+
+    /* move(begin, end, dest) */
+    static JSBool
+    fun_move(JSContext *cx, unsigned argc, Value *vp)
+    {
+        CallArgs args = CallArgsFromVp(argc, vp);
+
+        JSObject *obj;
+        if (!NonGenericMethodGuard(cx, args, fun_move, fastClass(), &obj))
+            return false;
+        if (!obj)
+            return true;
+
+        if (args.length() < 3) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
+            return false;
+        }
+
+        uint32_t srcBegin;
+        uint32_t srcEnd;
+        uint32_t dest;
+
+        JSObject *tarray = getTypedArray(obj);
+        uint32_t length = getLength(tarray);
+        if (!ToClampedIndex(cx, args[0], length, &srcBegin) ||
+            !ToClampedIndex(cx, args[1], length, &srcEnd) ||
+            !ToClampedIndex(cx, args[2], length, &dest) ||
+            srcBegin > srcEnd)
+        {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
+            return false;
+        }
+
+        uint32_t nelts = srcEnd - srcBegin;
+
+        JS_ASSERT(dest + nelts >= dest);
+        if (dest + nelts > length) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TYPED_ARRAY_BAD_ARGS);
+            return false;
+        }
+
+        uint32_t byteDest = dest * sizeof(NativeType);
+        uint32_t byteSrc = srcBegin * sizeof(NativeType);
+        uint32_t byteSize = nelts * sizeof(NativeType);
+
+        DebugOnly<uint32_t> viewByteLength = getByteLength(tarray);
+        JS_ASSERT(byteDest <= viewByteLength);
+        JS_ASSERT(byteSrc <= viewByteLength);
+        JS_ASSERT(byteDest + byteSize <= viewByteLength);
+        JS_ASSERT(byteSrc + byteSize <= viewByteLength);
+
+        // Should not overflow because size is limited to 2^31
+        JS_ASSERT(byteDest + byteSize >= byteDest);
+        JS_ASSERT(byteSrc + byteSize >= byteSrc);
+
+        uint8_t *data = static_cast<uint8_t*>(getDataOffset(tarray));
+        memmove(&data[byteDest], &data[byteSrc], byteSize);
+        args.rval().setUndefined();
         return true;
     }
 
@@ -2909,6 +2971,7 @@ JSPropertySpec TypedArray::jsprops[] = {
 JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
     JS_FN("subarray", _typedArray::fun_subarray, 2, JSFUN_GENERIC_NATIVE),     \
     JS_FN("set", _typedArray::fun_set, 2, JSFUN_GENERIC_NATIVE),               \
+    JS_FN("move", _typedArray::fun_move, 3, JSFUN_GENERIC_NATIVE),             \
     JS_FS_END                                                                  \
 }
 
