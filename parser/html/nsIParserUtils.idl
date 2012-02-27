@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Non-Web HTML parser functionality to Firefox extensions and XULRunner apps. 
+ * Don't use this from within Gecko--use nsContentUtils directly instead.
+ */
+[scriptable, uuid(290f49bb-0619-4bda-8006-ab31bec7231a)]
+interface nsIParserUtils : nsISupports
+{
+  /**
+   * Convert HTML to plain text.
+   *
+   * @param src the HTML source to parse (C++ callers are allowed but not
+   *            required to use the same string for the return value.)
+   * @param flags conversion option flags defined in nsIDocumentEncoder
+   * @param wrapCol number of characters per line; 0 for no auto-wrapping
+   */
+  AString convertToPlainText(in AString src,
+                             in unsigned long flags,
+                             in unsigned long wrapCol);
+};
