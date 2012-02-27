@@ -364,9 +364,9 @@ nsAccDocManager::CreateDocOrRootAccessible(nsIDocument *aDocument)
       aDocument->IsResourceDoc() || !aDocument->IsActive())
     return nsnull;
 
-  // Ignore documents without presshell.
-  nsIPresShell *presShell = aDocument->GetShell();
-  if (!presShell)
+  // Ignore documents without presshell and not having root frame.
+  nsIPresShell* presShell = aDocument->GetShell();
+  if (!presShell || !presShell->GetRootFrame())
     return nsnull;
 
   // Do not create document accessible until role content is loaded, otherwise
