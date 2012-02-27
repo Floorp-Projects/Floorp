@@ -45,6 +45,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/layers/RenderTrace.h"
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
@@ -941,7 +942,9 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             break;
 
         case AndroidGeckoEvent::DRAW:
+            layers::renderTraceEventStart("Global draw start", "414141");
             win->OnDraw(ae);
+            layers::renderTraceEventEnd("414141");
             break;
 
         case AndroidGeckoEvent::IME_EVENT:
@@ -1017,6 +1020,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface)
 bool
 nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
 {
+    mozilla::layers::RenderTraceScope trace("DrawTo", "717171");
     if (!mIsVisible)
         return false;
 
@@ -1049,6 +1053,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
                 {
+                    mozilla::layers::RenderTraceScope trace2("Basic DrawTo", "727272");
                     AutoLayerManagerSetup
                       setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
 
@@ -1150,6 +1155,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
         AndroidBridge::Bridge()->GetDrawMetadataProvider();
 
+    layers::renderTraceEventStart("Check supress", "424242");
     bool paintingSuppressed = false;
     if (metadataProvider) {
         metadataProvider->PaintingSuppressed(&paintingSuppressed);
@@ -1158,11 +1164,14 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Painting suppressed!");
         return;
     }
+    layers::renderTraceEventEnd("Check supress", "424242");
 
+    layers::renderTraceEventStart("Get Drawable", "424343");
     nsAutoString metadata;
     if (metadataProvider) {
         metadataProvider->GetDrawMetadata(metadata);
     }
+    layers::renderTraceEventEnd("Get Drawable", "424343");
 
 #if 0
     // BEGIN HACK: gl layers
@@ -1171,10 +1180,12 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     event.region = tileRect;
 #endif
 
+    layers::renderTraceEventStart("Get surface", "424545");
     static unsigned char bits2[32 * 32 * 2];
     nsRefPtr<gfxImageSurface> targetSurface =
         new gfxImageSurface(bits2, gfxIntSize(32, 32), 32 * 2,
                             gfxASurface::ImageFormatRGB16_565);
+    layers::renderTraceEventEnd("Get surface", "424545");
 
 #if 0
     nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
@@ -1187,6 +1198,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     // END HACK: gl layers
 #endif
 
+    layers::renderTraceEventStart("Check Bridge", "434444");
     nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
 
     AndroidGeckoLayerClient &client = AndroidBridge::Bridge()->GetLayerClient();
@@ -1194,16 +1206,21 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### BeginDrawing returned false!");
         return;
     }
+    layers::renderTraceEventEnd("Check Bridge", "434444");
 
+    layers::renderTraceEventStart("Widget draw to", "434646");
     if (targetSurface->CairoStatus()) {
         ALOG("### Failed to create a valid surface from the bitmap");
     } else {
         __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling DrawTo()!");
         DrawTo(targetSurface, dirtyRect);
     }
+    layers::renderTraceEventEnd("Widget draw to", "434646");
 
     __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling EndDrawing()!");
+    layers::renderTraceEventStart("Widget draw to", "434747");
     client.EndDrawing();
+    layers::renderTraceEventEnd("Widget draw to", "434747");
     return;
 #endif
 
