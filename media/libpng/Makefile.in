@@ -59,7 +59,7 @@ CSRCS		= \
 		pngtrans.c \
 		$(NULL)
 
-# These files enable support for reading/writting PNGs
+# These files enable support for reading/writing PNGs
 CSRCS		+= \
 		pngpread.c \
 		pngread.c \
