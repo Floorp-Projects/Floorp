@@ -72,3 +72,10 @@ interface nsIScriptableUnescapeHTML : nsISupports
                                        in nsIURI baseURI,
                                        in nsIDOMElement element);
 };
+
+%{ C++
+#define NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID \
+  "@mozilla.org/feed-unescapehtml;1"
+#define NS_SCRIPTABLEUNESCAPEHTML_CID  \
+{ 0x10f2f5f0, 0xf103, 0x4901, { 0x98, 0x0f, 0xba, 0x11, 0xbd, 0x70, 0xd6, 0x0d} }
+%}

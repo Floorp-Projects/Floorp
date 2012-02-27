@@ -62,14 +62,14 @@
 #include "nsHTMLParts.h"
 #include "nsContentCID.h"
 #include "nsIScriptableUnescapeHTML.h"
-#include "nsScriptableUnescapeHTML.h"
+#include "nsParserUtils.h"
 #include "nsAutoPtr.h"
 #include "nsTreeSanitizer.h"
 #include "nsHtml5Module.h"
 
 #define XHTML_DIV_TAG "div xmlns=\"http://www.w3.org/1999/xhtml\""
 
-NS_IMPL_ISUPPORTS2(nsScriptableUnescapeHTML,
+NS_IMPL_ISUPPORTS2(nsParserUtils,
                    nsIScriptableUnescapeHTML,
                    nsIParserUtils)
 
@@ -78,10 +78,10 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 
 NS_IMETHODIMP
-nsScriptableUnescapeHTML::ConvertToPlainText(const nsAString & aFromStr,
-                                             PRUint32 aFlags,
-                                             PRUint32 aWrapCol,
-                                             nsAString & aToStr)
+nsParserUtils::ConvertToPlainText(const nsAString & aFromStr,
+                                           PRUint32 aFlags,
+                                           PRUint32 aWrapCol,
+                                           nsAString & aToStr)
 {
   return nsContentUtils::ConvertToPlainText(aFromStr,
     aToStr,
@@ -90,8 +90,8 @@ nsScriptableUnescapeHTML::ConvertToPlainText(const nsAString & aFromStr,
 }
 
 NS_IMETHODIMP
-nsScriptableUnescapeHTML::Unescape(const nsAString & aFromStr,
-                                   nsAString & aToStr)
+nsParserUtils::Unescape(const nsAString & aFromStr,
+                                 nsAString & aToStr)
 {
   return nsContentUtils::ConvertToPlainText(aFromStr,
     aToStr,
@@ -104,11 +104,11 @@ nsScriptableUnescapeHTML::Unescape(const nsAString & aFromStr,
 // creates a fragment, but doesn't go to all the effort to preserve
 // context like innerHTML does, because feed DOMs shouldn't have that.
 NS_IMETHODIMP
-nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
-                                        bool aIsXML,
-                                        nsIURI* aBaseURI,
-                                        nsIDOMElement* aContextElement,
-                                        nsIDOMDocumentFragment** aReturn)
+nsParserUtils::ParseFragment(const nsAString &aFragment,
+                                      bool aIsXML,
+                                      nsIURI* aBaseURI,
+                                      nsIDOMElement* aContextElement,
+                                      nsIDOMDocumentFragment** aReturn)
 {
   NS_ENSURE_ARG(aContextElement);
   *aReturn = nsnull;
