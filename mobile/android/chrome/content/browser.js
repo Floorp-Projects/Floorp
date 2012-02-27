@@ -261,18 +261,6 @@ var BrowserApp = {
         gScreenHeight = window.arguments[3];
     }
 
-    // Monitor window size changes
-    window.addEventListener("resize", function() {
-      if (gScreenWidth != window.outerWidth || gScreenHeight != window.outerHeight) {
-        gScreenWidth = window.outerWidth;
-        gScreenHeight = window.outerHeight;
-        BrowserApp.selectedTab.refreshDisplayPort();
-
-        // Java pauses updates until we confirm we have the new display size
-        sendMessageToJava({ gecko: { type: "Viewport:UpdateAndDraw" } });
-      }
-    }, false);
-
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
 
@@ -2013,6 +2001,15 @@ Tab.prototype = {
 
   /** Update viewport when the metadata or the window size changes. */
   updateViewportSize: function updateViewportSize() {
+    // When this function gets called on window resize, we must execute
+    // this.updateViewport(true, ?) so that refreshDisplayPort is called.
+    // Ensure that when making changes to this function that code path
+    // is not accidentally removed (the call to updateViewport is at the
+    // very end).
+
+    gScreenWidth = window.outerWidth;
+    gScreenHeight = window.outerHeight;
+
     let browser = this.browser;
     if (!browser)
       return;
