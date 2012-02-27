@@ -2589,7 +2589,9 @@ class MArrayLength
 };
 
 // Perform !-operation
-class MNot : public MUnaryInstruction
+class MNot
+  : public MUnaryInstruction,
+    public TestPolicy
 {
     MIRType specialization_;
 
@@ -2609,13 +2611,11 @@ class MNot : public MUnaryInstruction
         return getOperand(0);
     }
 
-    void infer(MIRType type);
-    MIRType specialization() const {
-        return specialization_;
-    }
-
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
+    }
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 
