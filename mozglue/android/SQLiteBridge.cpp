@@ -121,17 +121,34 @@ JNI_Setup(JNIEnv* jenv)
 {
     if (initialized) return;
 
-    objectClass       = jenv->FindClass("java/lang/Object");
-    stringClass       = jenv->FindClass("java/lang/String");
-    byteBufferClass   = jenv->FindClass("java/nio/ByteBuffer");
-    cursorClass       = jenv->FindClass("org/mozilla/gecko/sqlite/MatrixBlobCursor");
+    jclass lObjectClass       = jenv->FindClass("java/lang/Object");
+    jclass lStringClass       = jenv->FindClass("java/lang/String");
+    jclass lByteBufferClass   = jenv->FindClass("java/nio/ByteBuffer");
+    jclass lCursorClass       = jenv->FindClass("org/mozilla/gecko/sqlite/MatrixBlobCursor");
+
+    if (lStringClass == NULL
+        || lObjectClass == NULL
+        || lByteBufferClass == NULL
+        || lCursorClass == NULL) {
+        LOG("Error finding classes");
+        JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException",
+                  "FindClass error");
+        return;
+    }
+
+    // Those are only local references. Make them global so they work
+    // across calls and threads.
+    objectClass = (jclass)jenv->NewGlobalRef(lObjectClass);
+    stringClass = (jclass)jenv->NewGlobalRef(lStringClass);
+    byteBufferClass = (jclass)jenv->NewGlobalRef(lByteBufferClass);
+    cursorClass = (jclass)jenv->NewGlobalRef(lCursorClass);
 
     if (stringClass == NULL || objectClass == NULL
         || byteBufferClass == NULL
         || cursorClass == NULL) {
-        LOG("Error finding classes");
+        LOG("Error getting global references");
         JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException",
-                  "FindClass error");
+                  "NewGlobalRef error");
         return;
     }
 
