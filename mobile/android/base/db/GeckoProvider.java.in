@@ -1,0 +1,282 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.db;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.IllegalArgumentException;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Random;
+
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoEventListener;
+import org.mozilla.gecko.db.BrowserContract.CommonColumns;
+import org.mozilla.gecko.db.DBUtils;
+import org.mozilla.gecko.db.BrowserContract.Passwords;
+import org.mozilla.gecko.db.BrowserContract.DeletedPasswords;
+import org.mozilla.gecko.db.BrowserContract.SyncColumns;
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.sqlite.SQLiteBridge;
+import org.mozilla.gecko.sqlite.SQLiteBridgeException;
+import org.mozilla.gecko.sync.Utils;
+
+import android.content.ContentProvider;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.UriMatcher;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteQueryBuilder;
+import android.net.Uri;
+import android.os.Build;
+import android.text.TextUtils;
+import android.util.Log;
+
+/*
+ * Provides a basic ContentProvider that sets up and sends queries through
+ * SQLiteBridge. Content providers should extend this by setting the appropriate
+ * table and version numbers in onCreate, and implementing the abstract methods:
+ *
+ *  public abstract String getTable(Uri uri);
+ *  public abstract String getSortOrder(Uri uri, String aRequested);
+ *  public abstract void setupDefaults(Uri uri, ContentValues values);
+ *  public abstract void initGecko();
+ */
+
+public abstract class GeckoProvider extends ContentProvider {
+    private String mLogTag = "GeckoPasswordsProvider";
+    private String mDBName = "";
+    private int mDBVersion = 0;
+    private HashMap<String, SQLiteBridge> mDatabasePerProfile;
+    protected Context mContext = null;
+
+    protected void setLogTag(String aLogTag) {
+        mLogTag = aLogTag;
+    }
+
+    protected String getLogTag() {
+        return mLogTag;
+    }
+
+    protected void setDBName(String aDBName) {
+        mDBName = aDBName;
+    }
+
+    protected String getDBName() {
+        return mDBName;
+    }
+
+    protected void setDBVersion(int aVersion) {
+        mDBVersion = aVersion;
+    }
+
+    protected int getDBVersion() {
+        return mDBVersion;
+    }
+
+    private SQLiteBridge getDB(Context context, final String databasePath) {
+        SQLiteBridge bridge = null;
+
+        boolean dbNeedsSetup = true;
+        try {
+            bridge = new SQLiteBridge(databasePath);
+            int version = bridge.getVersion();
+            Log.i(mLogTag, version + " == " + mDBVersion);
+            dbNeedsSetup = version != mDBVersion;
+        } catch(SQLiteBridgeException ex) {
+            // this will throw if the database can't be found
+            // we should attempt to set it up if Gecko is running
+            dbNeedsSetup = true;
+            Log.e(mLogTag, "Error getting version ", ex);
+
+            // if Gecko is not running, we should bail out. Otherwise we try to
+            // let Gecko build the database for us
+            if (!GeckoApp.checkLaunchState(GeckoApp.LaunchState.GeckoRunning)) {
+                Log.e(mLogTag, "Can not set up database. Gecko is not running");
+                return null;
+            }
+        }
+
+        // If the database is not set up yet, or is the wrong schema version, we send an initialize
+        // call to Gecko. Gecko will handle building the database file correctly, as well as any
+        // migrations that are necessary
+        if (dbNeedsSetup) {
+            Log.i(mLogTag, "Sending init to gecko");
+            bridge = null;
+            initGecko();
+        }
+        mDatabasePerProfile.put(databasePath, bridge);
+
+        return bridge;
+    }
+
+    private SQLiteBridge getDatabaseForProfile(String profile) {
+        if (TextUtils.isEmpty(profile)) {
+            Log.d(mLogTag, "No profile provided, using default");
+            profile = BrowserContract.DEFAULT_PROFILE;
+        }
+
+        SQLiteBridge db = null;
+        synchronized (this) {
+          db = mDatabasePerProfile.get(profile);
+          if (db == null) {
+              db = getDB(mContext, getDatabasePathForProfile(profile));
+          }
+        }
+
+        Log.d(mLogTag, "Successfully created database helper for profile: " + profile);
+        return db;
+    }
+
+    private SQLiteBridge getDatabaseForPath(String profilePath) {
+        SQLiteBridge db = null;
+        synchronized (this) {
+            db = mDatabasePerProfile.get(profilePath);
+            if (db == null) {
+                File profileDir = new File(profilePath, mDBName);
+                db = getDB(mContext, profileDir.getPath());
+            }
+        }
+
+        Log.d(mLogTag, "Successfully created database helper for path: " + profilePath);
+        return db;
+    }
+
+    private String getDatabasePathForProfile(String profile) {
+        File profileDir = GeckoProfile.get(mContext, profile).getDir();
+        if (profileDir == null) {
+            Log.d(mLogTag, "Couldn't find directory for profile: " + profile);
+            return null;
+        }
+
+        Log.d(mLogTag, "Using path: " + profileDir.getPath());
+        String databasePath = new File(profileDir, mDBName).getAbsolutePath();
+        return databasePath;
+    }
+
+    private SQLiteBridge getDatabase(Uri uri) {
+        String profile = null;
+        String profilePath = null;
+
+        profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+        profilePath = uri.getQueryParameter(BrowserContract.PARAM_PROFILE_PATH);
+
+        // Testing will specify the absolute profile path
+        if (profilePath != null)
+          return getDatabaseForPath(profilePath);
+        return getDatabaseForProfile(profile);
+    }
+
+    @Override
+    public boolean onCreate() {
+        mContext = getContext();
+        synchronized (this) {
+            mDatabasePerProfile = new HashMap<String, SQLiteBridge>();
+        }
+        return true;
+    }
+
+    @Override
+    public String getType(Uri uri) {
+        return null;
+    }
+
+    @Override
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        int deleted = 0;
+        final SQLiteBridge db = getDatabase(uri);
+        if (db == null)
+            return deleted;
+
+        try {
+            deleted = db.delete(getTable(uri), selection, selectionArgs);
+        } catch (SQLiteBridgeException ex) {
+            Log.e(mLogTag, "Error deleting record", ex);
+        }
+
+        return deleted;
+    }
+
+    @Override
+    public Uri insert(Uri uri, ContentValues values) {
+        long id = -1;
+        final SQLiteBridge db = getDatabase(uri);
+
+        // If we can not get a SQLiteBridge instance, its likely that the database
+        // has not been set up and Gecko is not running. We return null and expect
+        // callers to try again later
+        if (db == null)
+            return null;
+
+        setupDefaults(uri, values);
+
+        try {
+            id = db.insert(getTable(uri), null, values);
+        } catch(SQLiteBridgeException ex) {
+            Log.e(mLogTag, "Error inserting in db", ex);
+        }
+
+        return ContentUris.withAppendedId(uri, id);
+    }
+
+    @Override
+    public int update(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs) {
+        int updated = 0;
+        final SQLiteBridge db = getDatabase(uri);
+
+        // If we can not get a SQLiteBridge instance, its likely that the database
+        // has not been set up and Gecko is not running. We return null and expect
+        // callers to try again later
+        if (db == null)
+            return updated;
+
+        try {
+            updated = db.update(getTable(uri), values, selection, selectionArgs);
+        } catch(SQLiteBridgeException ex) {
+            Log.e(mLogTag, "Error updating table", ex);
+        }
+
+        return updated;
+    }
+
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection,
+            String[] selectionArgs, String sortOrder) {
+        Cursor cursor = null;
+        final SQLiteBridge db = getDatabase(uri);
+
+        // If we can not get a SQLiteBridge instance, its likely that the database
+        // has not been set up and Gecko is not running. We return null and expect
+        // callers to try again later
+        if (db == null)
+            return cursor;
+
+        sortOrder = getSortOrder(uri, sortOrder);
+
+        try {
+            cursor = db.query(getTable(uri), projection, selection, selectionArgs, null, null, sortOrder, null);
+        } catch (SQLiteBridgeException ex) {
+            Log.e(mLogTag, "Error querying database", ex);
+        }
+
+        return cursor;
+    }
+
+    public abstract String getTable(Uri uri);
+
+    public abstract String getSortOrder(Uri uri, String aRequested);
+
+    public abstract void setupDefaults(Uri uri, ContentValues values);
+
+    public abstract void initGecko();
+}
