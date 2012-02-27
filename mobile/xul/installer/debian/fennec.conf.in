@@ -6,10 +6,10 @@
 
     <backup-scripts>
         <backup-script-name>
-        /usr/share/@MOZ_APP_NAME@/backup
+        @installdir@/share/@MOZ_APP_NAME@/backup
         </backup-script-name>
         <restore-script-name>
-        /usr/share/@MOZ_APP_NAME@/restore
+        @installdir@/share/@MOZ_APP_NAME@/restore
         </restore-script-name>
     </backup-scripts>
 
