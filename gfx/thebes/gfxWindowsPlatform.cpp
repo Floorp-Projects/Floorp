@@ -501,7 +501,7 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
         mD2DDevice = nsnull;
     }
 
-    mozilla::ScopedGfxFeatureReporter reporter("D2D");
+    mozilla::ScopedGfxFeatureReporter reporter("D2D", aAttemptForce);
 
     HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
     D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)

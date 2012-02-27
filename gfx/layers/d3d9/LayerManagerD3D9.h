@@ -103,7 +103,7 @@ public:
    *
    * \return True is initialization was succesful, false when it was not.
    */
-  bool Initialize();
+  bool Initialize(bool force = false);
 
   /*
    * Sets the clipping region for this layer manager. This is important on
