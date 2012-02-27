@@ -917,12 +917,6 @@ MNot::foldsTo(bool useValueNumbers)
     return this;
 }
 
-void
-MNot::infer(const MIRType type)
-{
-    specialization_ = type;
-}
-
 HashNumber
 MBoundsCheck::valueHash() const
 {
