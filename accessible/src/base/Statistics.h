@@ -60,7 +60,7 @@ namespace statistics {
   {
     static bool firstTime = true;
     if (firstTime) {
-      Telemetry::Accumulate(Telemetry::ISIMPLE_DOM_USAGE, 1);
+      Telemetry::Accumulate(Telemetry::A11Y_ISIMPLEDOM_USAGE, 1);
       firstTime = false;
     }
   }
@@ -69,13 +69,13 @@ namespace statistics {
    * Report that IAccessibleTable has been used.
    */
   inline void IAccessibleTableUsed()
-    { Telemetry::Accumulate(Telemetry::IACCESSIBLE_TABLE_USAGE, 1); }
+    { Telemetry::Accumulate(Telemetry::A11Y_IATABLE_USAGE, 1); }
 
   /**
    * Report that XForms accessibility has been instantiated.
    */
   inline void XFormsAccessibleUsed()
-    { Telemetry::Accumulate(Telemetry::XFORMS_ACCESSIBLE_USED, 1); }
+    { Telemetry::Accumulate(Telemetry::A11Y_XFORMS_USAGE, 1); }
 
 } // namespace statistics
 } // namespace a11y

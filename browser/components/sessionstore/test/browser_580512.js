@@ -40,7 +40,7 @@ function openWinWithCb(cb, argURIs, expectedURIs) {
   if (!expectedURIs)
     expectedURIs = argURIs;
 
-  var win = openDialog("chrome://browser/content/", "_blank",
+  var win = openDialog(getBrowserURL(), "_blank",
                        "chrome,all,dialog=no", argURIs.join("|"));
 
   win.addEventListener("load", function () {

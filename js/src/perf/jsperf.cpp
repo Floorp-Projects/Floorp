@@ -91,7 +91,7 @@ pm_finalize(JSContext* cx, JSObject* obj)
         PerfMeasurement* p = GetPM(cx, obj, #name);                     \
         if (!p)                                                         \
             return JS_FALSE;                                            \
-        return JS_NewNumberValue(cx, jsdouble(p->name), vp);            \
+        return JS_NewNumberValue(cx, double(p->name), vp);              \
     }
 
 GETTER(cpu_cycles)

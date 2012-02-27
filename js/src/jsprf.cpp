@@ -580,7 +580,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
                 nas[ cn ].type = TYPE_UINT32;
             } else if (sizeof(void *) == sizeof(int64_t)) {
                 nas[ cn ].type = TYPE_UINT64;
-            } else if (sizeof(void *) == sizeof(JSIntn)) {
+            } else if (sizeof(void *) == sizeof(int)) {
                 nas[ cn ].type = TYPE_UINTN;
             } else {
                 nas[ cn ].type = TYPE_UNKNOWN;
@@ -642,7 +642,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
         case TYPE_INT16:
         case TYPE_UINT16:
         case TYPE_INTN:
-        case TYPE_UINTN:                (void)va_arg( ap, JSIntn );             break;
+        case TYPE_UINTN:                (void)va_arg( ap, int );             break;
 
         case TYPE_INT32:                (void)va_arg( ap, int32_t );            break;
 
@@ -656,7 +656,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 
         case TYPE_WSTRING:      (void)va_arg( ap, jschar* );            break;
 
-        case TYPE_INTSTR:       (void)va_arg( ap, JSIntn* );            break;
+        case TYPE_INTSTR:       (void)va_arg( ap, int* );            break;
 
         case TYPE_DOUBLE:       (void)va_arg( ap, double );             break;
 

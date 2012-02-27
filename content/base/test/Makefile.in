@@ -486,8 +486,13 @@ _TEST_FILES2 = \
 		test_blobbuilder.html \
 		fileutils.js \
 		test_bug338583.html \
+		test_EventSource_redirects.html \
 		eventsource.resource \
 		eventsource.resource^headers^ \
+		eventsource_redirect.resource \
+		eventsource_redirect.resource^headers^ \
+		eventsource_redirect_to.resource \
+		eventsource_redirect_to.resource^headers^ \
 		badContentType.eventsource \
 		badContentType.eventsource^headers^ \
 		badEventFieldName.eventsource \

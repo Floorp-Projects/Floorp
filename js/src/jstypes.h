@@ -220,19 +220,6 @@
 JS_BEGIN_EXTERN_C
 
 /************************************************************************
-** TYPES:       JSUintn
-**              JSIntn
-** DESCRIPTION:
-**  The JSIntn types are most appropriate for automatic variables. They are
-**      guaranteed to be at least 16 bits, though various architectures may
-**      define them to be wider (e.g., 32 or even 64 bits). These types are
-**      never valid for fields of a structure.
-************************************************************************/
-
-typedef int JSIntn;
-typedef unsigned int JSUintn;
-
-/************************************************************************
 ** TYPES:       JSBool
 ** DESCRIPTION:
 **  Use JSBool for variables and parameter types. Use JS_FALSE and JS_TRUE
@@ -240,9 +227,9 @@ typedef unsigned int JSUintn;
 **      'if (bool)', 'while (!bool)', '(bool) ? x : y' etc., to test booleans
 **      just as you would C int-valued conditions.
 ************************************************************************/
-typedef JSIntn JSBool;
-#define JS_TRUE (JSIntn)1
-#define JS_FALSE (JSIntn)0
+typedef int JSBool;
+#define JS_TRUE (int)1
+#define JS_FALSE (int)0
 
 /************************************************************************
 ** TYPES:       JSPackedBool

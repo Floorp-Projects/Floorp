@@ -1992,6 +1992,8 @@ nsHTMLOptionCollection::GetOptionIndex(mozilla::dom::Element* aOption,
                                        bool aForward,
                                        PRInt32* aIndex)
 {
+  // NOTE: aIndex shouldn't be set if the returned value isn't NS_OK.
+
   PRInt32 index;
 
   // Make the common case fast

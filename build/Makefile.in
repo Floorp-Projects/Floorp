@@ -68,6 +68,10 @@ endif
 ifdef MOZ_APP_BASENAME
 DIST_FILES = application.ini
 
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+DIST_FILES += update-settings.ini
+endif
+
 ifdef LIBXUL_SDK
 GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
 APP_INI_DEPS = $(LIBXUL_DIST)/bin/platform.ini
@@ -99,6 +103,8 @@ DEFINES += \
   -DMOZ_APP_BASENAME="$(MOZ_APP_BASENAME)" \
   -DMOZ_APP_VENDOR="$(MOZ_APP_VENDOR)" \
   -DMOZ_APP_ID="$(MOZ_APP_ID)" \
+  -DMAR_CHANNEL_ID="$(MAR_CHANNEL_ID)" \
+  -DACCEPTED_MAR_CHANNEL_IDS="$(ACCEPTED_MAR_CHANNEL_IDS)" \
   $(NULL)
 
 ifdef MOZ_APP_PROFILE
@@ -152,6 +158,12 @@ leaktest.py: leaktest.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $^ > $@
 	chmod +x $@
 GARBAGE += leaktest.py
+
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+update-settings.ini: update-settings.ini.in $(APP_INI_DEPS)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+GARBAGE += update-settings.ini
+endif
 
 ifdef MOZ_APP_BASENAME
 application.ini: application.ini.in $(APP_INI_DEPS)
