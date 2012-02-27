@@ -40,7 +40,6 @@
 #include "nsString.h"
 #include "nsBidiUtils.h"
 #include "nsMathUtils.h"
-#include "nsHashSets.h"
 
 #include "gfxTypes.h"
 
