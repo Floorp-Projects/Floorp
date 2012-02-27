@@ -689,7 +689,7 @@ struct JSRuntime : js::RuntimeFriendFields
     }
 
     void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
-                             size_t *regexpCode, size_t *stackCommitted);
+                             size_t *regexpCode, size_t *stackCommitted, size_t *gcMarker);
 
     void purge(JSContext *cx);
 };
