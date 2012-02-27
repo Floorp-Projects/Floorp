@@ -1685,6 +1685,11 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats, const nsACStri
                       "hardly costs anything.",
                       callback, closure);
 
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/gc-marker"),
+                      nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeGCMarker,
+                      "Memory used for the GC mark stack and gray roots.",
+                      callback, closure);
+
     ReportGCHeapBytes(pathPrefix +
                       NS_LITERAL_CSTRING("gc-heap-chunk-dirty-unused"),
                       &gcTotal, rtStats.gcHeapChunkDirtyUnused,
