@@ -13,6 +13,12 @@ function test() {
 
 function check_load(aCallback) {
   gBrowser.addEventListener("load", function(aEvent) {
+    // SeaMonkey needs to deal with intermediate "about:blank" document(s).
+    if (!aEvent.target.location) {
+      info("Ignoring about:blank load. (Expected (a few times) on SeaMonkey only.)");
+      return;
+    }
+
     gBrowser.removeEventListener("load", arguments.callee, true);
 
     // Let the load handler complete
