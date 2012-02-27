@@ -305,13 +305,13 @@ JSObject::willBeSparseDenseArray(uintN requiredCapacity, uintN newElementsHint)
 }
 
 static bool
-ReallyBigIndexToId(JSContext* cx, jsdouble index, jsid* idp)
+ReallyBigIndexToId(JSContext* cx, double index, jsid* idp)
 {
     return js_ValueToStringId(cx, DoubleValue(index), idp);
 }
 
 static bool
-IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
+IndexToId(JSContext* cx, JSObject* obj, double index, JSBool* hole, jsid* idp,
           JSBool createAtom = JS_FALSE)
 {
     if (index <= JSID_INT_MAX) {
@@ -363,7 +363,7 @@ JSObject::arrayGetOwnDataElement(JSContext *cx, size_t i, Value *vp)
  * properly rooted and can be used as GC-protected storage for temporaries.
  */
 static inline JSBool
-DoGetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp)
+DoGetElement(JSContext *cx, JSObject *obj, double index, JSBool *hole, Value *vp)
 {
     AutoIdRooter idr(cx);
 
@@ -468,7 +468,7 @@ GetElements(JSContext *cx, JSObject *aobj, jsuint length, Value *vp)
  * Set the value of the property at the given index to v assuming v is rooted.
  */
 static JSBool
-SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
+SetArrayElement(JSContext *cx, JSObject *obj, double index, const Value &v)
 {
     JS_ASSERT(index >= 0);
 
@@ -519,7 +519,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
  * - Return -1 if an exception occurs (that is, [[Delete]] would throw).
  */
 static int
-DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index, bool strict)
+DeleteArrayElement(JSContext *cx, JSObject *obj, double index, bool strict)
 {
     JS_ASSERT(index >= 0);
     JS_ASSERT(floor(index) == index);
@@ -554,7 +554,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index, bool strict)
  * its value to v assuming v is rooted.
  */
 static JSBool
-SetOrDeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index,
+SetOrDeleteArrayElement(JSContext *cx, JSObject *obj, double index,
                         JSBool hole, const Value &v)
 {
     if (hole) {
@@ -565,7 +565,7 @@ SetOrDeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index,
 }
 
 JSBool
-js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
+js_SetLengthProperty(JSContext *cx, JSObject *obj, double length)
 {
     Value v = NumberValue(length);
 
@@ -604,7 +604,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
     if (!ToUint32(cx, *vp, &newlen))
         return false;
 
-    jsdouble d;
+    double d;
     if (!ToNumber(cx, *vp, &d))
         return false;
 
@@ -2168,7 +2168,7 @@ SortComparatorFunction::operator()(const Value &a, const Value &b, bool *lessOrE
     if (!Invoke(cx, ag))
         return false;
 
-    jsdouble cmp;
+    double cmp;
     if (!ToNumber(cx, ag.rval(), &cmp))
         return false;
 
@@ -2374,7 +2374,7 @@ array_push_slowly(JSContext *cx, JSObject *obj, CallArgs &args)
         return false;
 
     /* Per ECMA-262, return the new array length. */
-    jsdouble newlength = length + jsdouble(args.length());
+    double newlength = length + double(args.length());
     args.rval().setNumber(newlength);
     return js_SetLengthProperty(cx, obj, newlength);
 }
@@ -2593,7 +2593,7 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
-    jsdouble newlen = length;
+    double newlen = length;
     if (args.length() > 0) {
         /* Slide up the array to make room for all args at the bottom. */
         if (length > 0) {
@@ -2617,8 +2617,8 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
             } while (false);
 
             if (!optimized) {
-                jsdouble last = length;
-                jsdouble upperIndex = last + args.length();
+                double last = length;
+                double upperIndex = last + args.length();
                 AutoValueRooter tvr(cx);
                 do {
                     --last, --upperIndex;
@@ -2731,7 +2731,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     /* Step 7. */
     uint32_t actualDeleteCount;
     if (argc != 1) {
-        jsdouble deleteCountDouble;
+        double deleteCountDouble;
         if (!ToInteger(cx, argc >= 2 ? args[1] : Int32Value(0), &deleteCountDouble))
             return false;
         actualDeleteCount = JS_MIN(JS_MAX(deleteCountDouble, 0), len - actualStart);
@@ -2853,9 +2853,9 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
             if (cx->typeInferenceEnabled())
                 obj->setDenseArrayInitializedLength(len + itemCount - actualDeleteCount);
         } else {
-            for (jsdouble k = len - actualDeleteCount; k > actualStart; k--) {
-                jsdouble from = k + actualDeleteCount - 1;
-                jsdouble to = k + itemCount - 1;
+            for (double k = len - actualDeleteCount; k > actualStart; k--) {
+                double from = k + actualDeleteCount - 1;
+                double to = k + itemCount - 1;
 
                 JSBool hole;
                 Value fromValue;
@@ -2879,7 +2879,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Step 16. */
-    jsdouble finalLength = jsdouble(len) - actualDeleteCount + itemCount;
+    double finalLength = double(len) - actualDeleteCount + itemCount;
     if (!js_SetLengthProperty(cx, obj, finalLength))
         return false;
 
@@ -3014,7 +3014,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
     end = length;
 
     if (args.length() > 0) {
-        jsdouble d;
+        double d;
         if (!ToInteger(cx, args[0], &d))
             return false;
         if (d < 0) {
@@ -3097,7 +3097,7 @@ array_indexOfHelper(JSContext *cx, IndexOfKind mode, CallArgs &args)
         i = (mode == LastIndexOf) ? length - 1 : 0;
         tosearch = (args.length() != 0) ? args[0] : UndefinedValue();
     } else {
-        jsdouble start;
+        double start;
 
         tosearch = args[0];
         if (!ToInteger(cx, args[1], &start))
@@ -3663,9 +3663,9 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
         }
         length = uint32_t(i);
     } else {
-        jsdouble d = args[0].toDouble();
+        double d = args[0].toDouble();
         length = js_DoubleToECMAUint32(d);
-        if (d != jsdouble(length)) {
+        if (d != double(length)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_ARRAY_LENGTH);
             return false;
         }

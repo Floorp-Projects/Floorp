@@ -1493,11 +1493,11 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
   if (aGradient->mToCorner) {
     AppendCSSGradientToBoxPosition(aGradient, aString, needSep);
   } else {
-    if (aGradient->mBgPosX.mUnit != eStyleUnit_None) {
+    if (aGradient->mBgPosX.GetUnit() != eStyleUnit_None) {
       AppendCSSGradientLength(aGradient->mBgPosX, tmpVal, aString);
       needSep = true;
     }
-    if (aGradient->mBgPosY.mUnit != eStyleUnit_None) {
+    if (aGradient->mBgPosY.GetUnit() != eStyleUnit_None) {
       if (needSep) {
         aString.AppendLiteral(" ");
       }
@@ -1505,14 +1505,14 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
       needSep = true;
     }
   }
-  if (aGradient->mAngle.mUnit != eStyleUnit_None) {
+  if (aGradient->mAngle.GetUnit() != eStyleUnit_None) {
     if (needSep) {
       aString.AppendLiteral(" ");
     }
     tmpVal->SetNumber(aGradient->mAngle.GetAngleValue());
     tmpVal->GetCssText(tokenString);
     aString.Append(tokenString);
-    switch (aGradient->mAngle.mUnit) {
+    switch (aGradient->mAngle.GetUnit()) {
     case eStyleUnit_Degree: aString.AppendLiteral("deg"); break;
     case eStyleUnit_Grad: aString.AppendLiteral("grad"); break;
     case eStyleUnit_Radian: aString.AppendLiteral("rad"); break;
@@ -1550,7 +1550,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     tmpVal->GetCssText(tokenString);
     aString.Append(tokenString);
 
-    if (aGradient->mStops[i].mLocation.mUnit != eStyleUnit_None) {
+    if (aGradient->mStops[i].mLocation.GetUnit() != eStyleUnit_None) {
       aString.AppendLiteral(" ");
       AppendCSSGradientLength(aGradient->mStops[i].mLocation, tmpVal, aString);
     }
@@ -1721,9 +1721,49 @@ nsComputedDOMStyle::DoGetBackgroundPosition()
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetBackgroundRepeat()
 {
-  return GetBackgroundList(&nsStyleBackground::Layer::mRepeat,
-                           &nsStyleBackground::mRepeatCount,
-                           nsCSSProps::kBackgroundRepeatKTable);
+  const nsStyleBackground* bg = GetStyleBackground();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(true);
+
+  for (PRUint32 i = 0, i_end = bg->mRepeatCount; i < i_end; ++i) {
+    nsDOMCSSValueList *itemList = GetROCSSValueList(false);
+    valueList->AppendCSSValue(itemList);
+
+    nsROCSSPrimitiveValue *valX = GetROCSSPrimitiveValue();
+    itemList->AppendCSSValue(valX);
+
+    const PRUint8& xRepeat = bg->mLayers[i].mRepeat.mXRepeat;
+    const PRUint8& yRepeat = bg->mLayers[i].mRepeat.mYRepeat;
+
+    bool hasContraction = true;
+    PRUintn contraction;
+    if (xRepeat == yRepeat) {
+      contraction = xRepeat;
+    } else if (xRepeat == NS_STYLE_BG_REPEAT_REPEAT &&
+               yRepeat == NS_STYLE_BG_REPEAT_NO_REPEAT) {
+      contraction = NS_STYLE_BG_REPEAT_REPEAT_X;
+    } else if (xRepeat == NS_STYLE_BG_REPEAT_NO_REPEAT &&
+               yRepeat == NS_STYLE_BG_REPEAT_REPEAT) {
+      contraction = NS_STYLE_BG_REPEAT_REPEAT_Y;
+    } else {
+      hasContraction = false;
+    }
+
+    if (hasContraction) {
+      valX->SetIdent(nsCSSProps::ValueToKeywordEnum(contraction,
+                                         nsCSSProps::kBackgroundRepeatKTable));
+    } else {
+      nsROCSSPrimitiveValue *valY = GetROCSSPrimitiveValue();
+      itemList->AppendCSSValue(valY);
+      
+      valX->SetIdent(nsCSSProps::ValueToKeywordEnum(xRepeat,
+                                          nsCSSProps::kBackgroundRepeatKTable));
+      valY->SetIdent(nsCSSProps::ValueToKeywordEnum(yRepeat,
+                                          nsCSSProps::kBackgroundRepeatKTable));
+    }
+  }
+
+  return valueList;
 }
 
 nsIDOMCSSValue*

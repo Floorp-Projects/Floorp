@@ -94,6 +94,8 @@ RandomizeIsBrokenImpl()
 static bool
 RandomizeIsBroken()
 {
+    // Use the compiler's intrinsic guards for |static type value = expr| to avoid some potential
+    // races if runtimes are created from multiple threads.
     static int result = RandomizeIsBrokenImpl();
     return !!result;
 }

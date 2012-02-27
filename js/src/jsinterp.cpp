@@ -1335,6 +1335,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 # define END_CASE_LEN3      len = 3; goto advance_pc;
 # define END_CASE_LEN4      len = 4; goto advance_pc;
 # define END_CASE_LEN5      len = 5; goto advance_pc;
+# define END_CASE_LEN6      len = 6; goto advance_pc;
 # define END_CASE_LEN7      len = 7; goto advance_pc;
 # define END_VARLEN_CASE    goto advance_pc;
 # define ADD_EMPTY_CASE(OP) BEGIN_CASE(OP)
@@ -1347,8 +1348,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT((size_t)(atoms - script->atoms) <                           \
-                  (size_t)(script->natoms - GET_INDEX(regs.pc + PCOFF)));     \
-        atom = atoms[GET_INDEX(regs.pc + PCOFF)];                             \
+                  (size_t)(script->natoms - GET_UINT32_INDEX(regs.pc + PCOFF)));\
+        atom = atoms[GET_UINT32_INDEX(regs.pc + PCOFF)];                      \
     JS_END_MACRO
 
 #define LOAD_NAME(PCOFF, name)                                                \
@@ -1358,11 +1359,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         name = atom->asPropertyName();                                        \
     JS_END_MACRO
 
-#define GET_FULL_INDEX(PCOFF)                                                 \
-    (atoms - script->atoms + GET_INDEX(regs.pc + (PCOFF)))
-
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
-    (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
+    (dbl = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
 
 #if defined(JS_METHODJIT)
     bool useMethodJIT = false;
@@ -1674,6 +1672,12 @@ ADD_EMPTY_CASE(JSOP_UNUSED14)
 ADD_EMPTY_CASE(JSOP_UNUSED15)
 ADD_EMPTY_CASE(JSOP_UNUSED16)
 ADD_EMPTY_CASE(JSOP_UNUSED17)
+ADD_EMPTY_CASE(JSOP_UNUSED18)
+ADD_EMPTY_CASE(JSOP_UNUSED19)
+ADD_EMPTY_CASE(JSOP_UNUSED20)
+ADD_EMPTY_CASE(JSOP_UNUSED21)
+ADD_EMPTY_CASE(JSOP_UNUSED22)
+ADD_EMPTY_CASE(JSOP_UNUSED23)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -2367,7 +2371,7 @@ BEGIN_CASE(JSOP_NEG)
     /*
      * When the operand is int jsval, INT32_FITS_IN_JSVAL(i) implies
      * INT32_FITS_IN_JSVAL(-i) unless i is 0 or INT32_MIN when the
-     * results, -0.0 or INT32_MAX + 1, are jsdouble values.
+     * results, -0.0 or INT32_MAX + 1, are double values.
      */
     Value ref = regs.sp[-1];
     int32_t i;
@@ -2824,25 +2828,6 @@ BEGIN_CASE(JSOP_INT32)
     PUSH_INT32(GET_INT32(regs.pc));
 END_CASE(JSOP_INT32)
 
-BEGIN_CASE(JSOP_INDEXBASE)
-    /*
-     * Here atoms can exceed script->natoms as we use atoms as a
-     * segment register for object literals as well.
-     */
-    atoms += GET_INDEXBASE(regs.pc);
-END_CASE(JSOP_INDEXBASE)
-
-BEGIN_CASE(JSOP_INDEXBASE1)
-BEGIN_CASE(JSOP_INDEXBASE2)
-BEGIN_CASE(JSOP_INDEXBASE3)
-    atoms += (op - JSOP_INDEXBASE1 + 1) << 16;
-END_CASE(JSOP_INDEXBASE3)
-
-BEGIN_CASE(JSOP_RESETBASE0)
-BEGIN_CASE(JSOP_RESETBASE)
-    atoms = script->atoms;
-END_CASE(JSOP_RESETBASE)
-
 BEGIN_CASE(JSOP_DOUBLE)
 {
     double dbl;
@@ -2968,9 +2953,9 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
     bool match;
 #define SEARCH_PAIRS(MATCH_CODE)                                              \
     for (;;) {                                                                \
-        Value rval = script->getConst(GET_INDEX(pc2));                        \
+        Value rval = script->getConst(GET_UINT32_INDEX(pc2));                 \
         MATCH_CODE                                                            \
-        pc2 += INDEX_LEN;                                                     \
+        pc2 += UINT32_INDEX_LEN;                                              \
         if (match)                                                            \
             break;                                                            \
         pc2 += off;                                                           \
@@ -3070,7 +3055,7 @@ END_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
 {
-    PropertyName *dn = atoms[GET_INDEX(regs.pc)]->asPropertyName();
+    PropertyName *dn = atoms[GET_UINT32_INDEX(regs.pc)]->asPropertyName();
 
     /* ES5 10.5 step 8 (with subsequent errata). */
     uintN attrs = JSPROP_ENUMERATE;
@@ -3273,7 +3258,8 @@ BEGIN_CASE(JSOP_LAMBDA)
                     JSObject *obj2 = &lref.toObject();
                     JS_ASSERT(obj2->isObject());
 #endif
-                    JS_ASSERT(fun->methodAtom() == script->getAtom(GET_FULL_INDEX(JSOP_LAMBDA_LENGTH)));
+                    JS_ASSERT(fun->methodAtom() ==
+                              script->getAtom(GET_UINT32_INDEX(regs.pc + JSOP_LAMBDA_LENGTH)));
                     break;
                 }
 
@@ -3284,7 +3270,8 @@ BEGIN_CASE(JSOP_LAMBDA)
 #endif
                     const Value &lref = regs.sp[-1];
                     if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
-                        JS_ASSERT(fun->methodAtom() == script->getAtom(GET_FULL_INDEX(JSOP_LAMBDA_LENGTH)));
+                        JS_ASSERT(fun->methodAtom() ==
+                                  script->getAtom(GET_UINT32_INDEX(regs.pc + JSOP_LAMBDA_LENGTH)));
                         break;
                     }
                 } else if (op2 == JSOP_CALL) {
@@ -3360,23 +3347,12 @@ END_CASE(JSOP_CALLEE)
 BEGIN_CASE(JSOP_GETTER)
 BEGIN_CASE(JSOP_SETTER)
 {
-  do_getter_setter:
     JSOp op2 = JSOp(*++regs.pc);
     jsid id;
     Value rval;
     jsint i;
     JSObject *obj;
     switch (op2) {
-      case JSOP_INDEXBASE:
-        atoms += GET_INDEXBASE(regs.pc);
-        regs.pc += JSOP_INDEXBASE_LENGTH - 1;
-        goto do_getter_setter;
-      case JSOP_INDEXBASE1:
-      case JSOP_INDEXBASE2:
-      case JSOP_INDEXBASE3:
-        atoms += (op2 - JSOP_INDEXBASE1 + 1) << 16;
-        goto do_getter_setter;
-
       case JSOP_SETNAME:
       case JSOP_SETPROP:
       {
@@ -4000,10 +3976,8 @@ BEGIN_CASE(JSOP_XMLCDATA)
 {
     JS_ASSERT(!script->strictModeCode);
 
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
-    JSString *str = atom;
-    JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, str);
+    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(regs.pc));
+    JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, atom);
     if (!obj)
         goto error;
     PUSH_OBJECT(*obj);
@@ -4014,10 +3988,8 @@ BEGIN_CASE(JSOP_XMLCOMMENT)
 {
     JS_ASSERT(!script->strictModeCode);
 
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
-    JSString *str = atom;
-    JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, str);
+    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(regs.pc));
+    JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, atom);
     if (!obj)
         goto error;
     PUSH_OBJECT(*obj);
@@ -4028,12 +4000,10 @@ BEGIN_CASE(JSOP_XMLPI)
 {
     JS_ASSERT(!script->strictModeCode);
 
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
-    JSString *str = atom;
+    JSAtom *atom = script->getAtom(GET_UINT32_INDEX(regs.pc));
     Value rval = regs.sp[-1];
     JSString *str2 = rval.toString();
-    JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION, str, str2);
+    JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION, atom, str2);
     if (!obj)
         goto error;
     regs.sp[-1].setObject(*obj);

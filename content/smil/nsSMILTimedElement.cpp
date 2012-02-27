@@ -2200,11 +2200,8 @@ nsSMILTimedElement::GetNextMilestone(nsSMILMilestone& aNextMilestone) const
 
   case STATE_POSTACTIVE:
     return false;
-
-  default:
-    NS_ABORT_IF_FALSE(false, "Invalid element state");
-    return false;
   }
+  MOZ_NOT_REACHED("Invalid element state");
 }
 
 void
@@ -2275,11 +2272,8 @@ nsSMILTimedElement::GetEffectiveBeginInstance() const
       const nsSMILInterval* prevInterval = GetPreviousInterval();
       return prevInterval ? prevInterval->Begin() : nsnull;
     }
-
-  default:
-    NS_NOTREACHED("Invalid element state");
-    return nsnull;
   }
+  MOZ_NOT_REACHED("Invalid element state");
 }
 
 const nsSMILInterval*

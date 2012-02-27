@@ -785,7 +785,8 @@ nsDocShell::nsDocShell():
   // We're counting the number of |nsDocShells| to help find leaks
   ++gNumberOfDocShells;
   if (!PR_GetEnv("MOZ_QUIET")) {
-      printf("++DOCSHELL %p == %ld\n", (void*) this, gNumberOfDocShells);
+      printf("++DOCSHELL %p == %ld [id = %ld]\n", (void*) this,
+             gNumberOfDocShells, mHistoryID);
   }
 #endif
 }
@@ -813,7 +814,8 @@ nsDocShell::~nsDocShell()
     // We're counting the number of |nsDocShells| to help find leaks
     --gNumberOfDocShells;
     if (!PR_GetEnv("MOZ_QUIET")) {
-        printf("--DOCSHELL %p == %ld\n", (void*) this, gNumberOfDocShells);
+        printf("--DOCSHELL %p == %ld [id = %ld]\n", (void*) this,
+               gNumberOfDocShells, mHistoryID);
     }
 #endif
 }
