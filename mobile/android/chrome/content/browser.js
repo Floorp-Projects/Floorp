@@ -933,7 +933,6 @@ var BrowserApp = {
       browser.contentDocument.mozCancelFullScreen();
     } else if (aTopic == "Viewport:Change") {
       this.selectedTab.viewport = JSON.parse(aData);
-      ViewportHandler.onResize();
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
@@ -3090,7 +3089,7 @@ var ViewportHandler = {
         break;
 
       case "resize":
-        this.onResize();
+        BrowserApp.selectedTab.updateViewportSize();
         break;
     }
   },
@@ -3164,10 +3163,6 @@ var ViewportHandler = {
       allowZoom: allowZoom,
       autoScale: true
     };
-  },
-
-  onResize: function onResize() {
-    BrowserApp.selectedTab.updateViewportSize();
   },
 
   clamp: function(num, min, max) {
