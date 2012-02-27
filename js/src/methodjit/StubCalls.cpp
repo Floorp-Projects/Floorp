@@ -1115,7 +1115,7 @@ stubs::LambdaJoinableForInit(VMFrame &f, JSFunction *fun)
 {
     JS_ASSERT(fun->joinable());
     DebugOnly<jsbytecode*> nextpc = f.regs.pc + JSOP_LAMBDA_LENGTH;
-    JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_SLOTNO(nextpc)));
+    JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_UINT32_INDEX(nextpc)));
     return fun;
 }
 
@@ -1126,7 +1126,7 @@ stubs::LambdaJoinableForSet(VMFrame &f, JSFunction *fun)
     const Value &lref = f.regs.sp[-1];
     if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
         DebugOnly<jsbytecode*> nextpc = f.regs.pc + JSOP_LAMBDA_LENGTH;
-        JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_SLOTNO(nextpc)));
+        JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_UINT32_INDEX(nextpc)));
         return fun;
     }
     return Lambda(f, fun);
@@ -1518,8 +1518,8 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
         if (!str)
             THROWV(NULL);
         for (uint32_t i = 1; i <= npairs; i++) {
-            Value rval = script->getConst(GET_INDEX(pc));
-            pc += INDEX_LEN;
+            Value rval = script->getConst(GET_UINT32_INDEX(pc));
+            pc += UINT32_INDEX_LEN;
             if (rval.isString()) {
                 JSLinearString *rhs = &rval.toString()->asLinear();
                 if (rhs == str || EqualStrings(str, rhs))
@@ -1530,16 +1530,16 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
     } else if (lval.isNumber()) {
         double d = lval.toNumber();
         for (uint32_t i = 1; i <= npairs; i++) {
-            Value rval = script->getConst(GET_INDEX(pc));
-            pc += INDEX_LEN;
+            Value rval = script->getConst(GET_UINT32_INDEX(pc));
+            pc += UINT32_INDEX_LEN;
             if (rval.isNumber() && d == rval.toNumber())
                 return FindNativeCode(f, jpc + GET_JUMP_OFFSET(pc));
             pc += JUMP_OFFSET_LEN;
         }
     } else {
         for (uint32_t i = 1; i <= npairs; i++) {
-            Value rval = script->getConst(GET_INDEX(pc));
-            pc += INDEX_LEN;
+            Value rval = script->getConst(GET_UINT32_INDEX(pc));
+            pc += UINT32_INDEX_LEN;
             if (lval == rval)
                 return FindNativeCode(f, jpc + GET_JUMP_OFFSET(pc));
             pc += JUMP_OFFSET_LEN;
@@ -1563,7 +1563,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
     /* Note: compiler adjusts the stack beforehand. */
     Value rval = f.regs.sp[-1];
 
-    jsint tableIdx;
+    int32_t tableIdx;
     if (rval.isInt32()) {
         tableIdx = rval.toInt32();
     } else if (rval.isDouble()) {
@@ -1571,7 +1571,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
         if (d == 0) {
             /* Treat -0 (double) as 0. */
             tableIdx = 0;
-        } else if (!JSDOUBLE_IS_INT32(d, (int32_t *)&tableIdx)) {
+        } else if (!JSDOUBLE_IS_INT32(d, &tableIdx)) {
             goto finally;
         }
     } else {

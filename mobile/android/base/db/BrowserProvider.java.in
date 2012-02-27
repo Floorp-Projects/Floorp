@@ -47,8 +47,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoDirProvider;
+import org.mozilla.gecko.GeckoBackgroundThread;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
@@ -654,13 +654,7 @@ public class BrowserProvider extends ContentProvider {
             return "browser-" + profile + ".db";
         }
 
-        File profileDir = null;
-        try {
-            profileDir = GeckoDirProvider.getProfileDir(mContext, profile);
-        } catch (IOException ex) {
-            Log.e(LOGTAG, "Error getting profile dir", ex);
-        }
-
+        File profileDir = GeckoProfile.get(mContext, profile).getDir();
         if (profileDir == null) {
             debug("Couldn't find directory for profile: " + profile);
             return null;
@@ -750,11 +744,12 @@ public class BrowserProvider extends ContentProvider {
     public boolean onCreate() {
         debug("Creating BrowserProvider");
 
-        GeckoAppShell.getHandler().post(new Runnable() {
+        GeckoBackgroundThread.post(new Runnable() {
+            @Override
             public void run() {
                 // Kick this off early. It is synchronized so that other callers will wait
                 try {
-                    GeckoDirProvider.getProfileDir(getContext());
+                    GeckoProfile.get(getContext()).getDir();
                 } catch (Exception ex) {
                     Log.e(LOGTAG, "Error getting profile dir", ex);
                 }

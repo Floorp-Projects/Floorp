@@ -19,7 +19,6 @@ function test() {
     chromeWindow: window,
     contentWindow: gBrowser.selectedBrowser.contentWindow,
     parentNode: gBrowser.selectedBrowser.parentNode,
-    requestAnimationFrame: window.mozRequestAnimationFrame,
     inspectorUI: window.InspectorUI,
 
     onError: function onWebGLError()
@@ -71,33 +70,33 @@ function test() {
 }
 
 function testPresenter(presenter) {
-  ok(presenter.renderer,
+  ok(presenter._renderer,
     "The presenter renderer wasn't initialized properly.");
-  ok(presenter.visualizationProgram,
+  ok(presenter._visualizationProgram,
     "The presenter visualizationProgram wasn't initialized properly.");
-  ok(presenter.texture,
+  ok(presenter._texture,
     "The presenter texture wasn't initialized properly.");
-  ok(!presenter.meshStacks,
+  ok(!presenter._meshStacks,
     "The presenter meshStacks shouldn't be initialized yet.");
-  ok(!presenter.meshWireframe,
+  ok(!presenter._meshWireframe,
     "The presenter meshWireframe shouldn't be initialized yet.");
-  ok(presenter.traverseData,
+  ok(presenter._traverseData,
     "The presenter nodesInformation wasn't initialized properly.");
-  ok(presenter.highlight,
+  ok(presenter._highlight,
     "The presenter highlight wasn't initialized properly.");
-  ok(presenter.highlight.disabled,
-    "The presenter highlight should be initially disabled");
-  ok(isApproxVec(presenter.highlight.v0, [0, 0, 0]),
+  ok(presenter._highlight.disabled,
+    "The presenter highlight should be initially disabled.");
+  ok(isApproxVec(presenter._highlight.v0, [0, 0, 0]),
     "The presenter highlight first vertex should be initially zeroed.");
-  ok(isApproxVec(presenter.highlight.v1, [0, 0, 0]),
+  ok(isApproxVec(presenter._highlight.v1, [0, 0, 0]),
     "The presenter highlight second vertex should be initially zeroed.");
-  ok(isApproxVec(presenter.highlight.v2, [0, 0, 0]),
+  ok(isApproxVec(presenter._highlight.v2, [0, 0, 0]),
     "The presenter highlight third vertex should be initially zeroed.");
-  ok(isApproxVec(presenter.highlight.v3, [0, 0, 0]),
+  ok(isApproxVec(presenter._highlight.v3, [0, 0, 0]),
     "The presenter highlight fourth vertex should be initially zeroed.");
   ok(presenter.transforms,
     "The presenter transforms wasn't initialized properly.");
-  ok(isApproxVec(presenter.transforms.zoom, 1),
+  is(presenter.transforms.zoom, 1,
     "The presenter transforms zoom should be initially 1.");
   ok(isApproxVec(presenter.transforms.offset, [0, 0, 0]),
     "The presenter transforms offset should be initially zeroed.");
@@ -113,7 +112,7 @@ function testPresenter(presenter) {
     "The presenter transforms translation wasn't modified as it should");
   ok(isApproxVec(presenter.transforms.rotation, [5, 6, 7, 8]),
     "The presenter transforms rotation wasn't modified as it should");
-  ok(presenter.redraw,
+  ok(presenter._redraw,
     "The new transforms should have issued a redraw request.");
 }
 

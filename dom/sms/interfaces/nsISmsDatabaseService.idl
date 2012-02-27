@@ -45,7 +45,7 @@
 
 interface nsIDOMMozSmsFilter;
 
-[scriptable, function, uuid(86b3b538-359d-40b0-acdf-8dfd698ff117)]
+[scriptable, uuid(86b3b538-359d-40b0-acdf-8dfd698ff117)]
 interface nsISmsDatabaseService : nsISupports
 {
   // Takes some information required to save the message and returns its id.

@@ -603,7 +603,7 @@ IdToInt32(JSContext *cx, jsid id)
     JSAutoRequest ar(cx);
 
     jsval idval;
-    jsdouble array_index;
+    double array_index;
     int32_t i;
     if (!::JS_IdToValue(cx, id, &idval) ||
         !::JS_ValueToNumber(cx, idval, &array_index) ||
@@ -852,8 +852,9 @@ template<class LC>
 bool
 ListBase<LC>::enumerate(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 {
-    // FIXME: enumerate proto as well
-    return getOwnPropertyNames(cx, proxy, props);
+    JSObject *proto = JS_GetPrototype(proxy);
+    return getOwnPropertyNames(cx, proxy, props) &&
+           (!proto || js::GetPropertyNames(cx, proto, 0, &props));
 }
 
 template<class LC>

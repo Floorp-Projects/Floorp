@@ -104,6 +104,10 @@ function run_test() {
   updaterIni.append(FILE_UPDATER_INI);
   writeFile(updaterIni, updaterIniContents);
 
+  let updateSettingsIni = processDir.clone();
+  updateSettingsIni.append(UPDATE_SETTINGS_INI_FILE);
+  writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
+
   let launchBin = getLaunchBin();
   let args = getProcessArgs();
   logTestInfo("launching " + launchBin.path + " " + args.join(" "));

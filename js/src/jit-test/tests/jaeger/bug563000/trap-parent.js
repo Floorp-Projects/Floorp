@@ -3,7 +3,7 @@ setDebug(true);
 x = "notset";
 function child() {
   /* JSOP_STOP in parent. */
-  trap(parent, 19, "success()");
+  trap(parent, 27, "success()");
 }
 function parent() {
   child();
@@ -13,5 +13,6 @@ function success() {
   x = "success";
 }
 
+dis(parent);
 parent()
 assertEq(x, "success");

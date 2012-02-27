@@ -168,7 +168,6 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_EXCLUDE_ITEMS "excludeItems"
 #define QUERYKEY_EXCLUDE_QUERIES "excludeQueries"
 #define QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS "excludeReadOnlyFolders"
-#define QUERYKEY_EXCLUDE_ITEM_IF_PARENT_HAS_ANNOTATION "excludeItemIfParentHasAnnotation"
 #define QUERYKEY_EXPAND_QUERIES "expandQueries"
 #define QUERYKEY_FORCE_ORIGINAL_TITLE "originalTitle"
 #define QUERYKEY_INCLUDE_HIDDEN "includeHidden"
@@ -583,18 +582,6 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
     queryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS "=1");
   }
 
-  // exclude item if parent has annotation
-  nsCAutoString parentAnnotationToExclude;
-  if (NS_SUCCEEDED(options->GetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude)) &&
-      !parentAnnotationToExclude.IsEmpty()) {
-    nsCString escaped;
-    if (!NS_Escape(parentAnnotationToExclude, escaped, url_XAlphas))
-      return NS_ERROR_OUT_OF_MEMORY;
-    AppendAmpersandIfNonempty(queryString);
-    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXCLUDE_ITEM_IF_PARENT_HAS_ANNOTATION "=");
-    queryString.Append(escaped);
-  }
-
   // expand queries
   if (!options->ExpandQueries()) {
     AppendAmpersandIfNonempty(queryString);
@@ -880,13 +867,6 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_EXCLUDE_READ_ONLY_FOLDERS)) {
       SetOptionsKeyBool(kvp.value, aOptions,
                         &nsINavHistoryQueryOptions::SetExcludeReadOnlyFolders);
-
-    // exclude item if parent has annotation
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_EXCLUDE_ITEM_IF_PARENT_HAS_ANNOTATION)) {
-      nsCString parentAnnotationToExclude = kvp.value;
-      NS_UnescapeURL(parentAnnotationToExclude);
-      rv = aOptions->SetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude);
-      NS_ENSURE_SUCCESS(rv, rv);
 
     // expand queries
     } else if (kvp.key.EqualsLiteral(QUERYKEY_EXPAND_QUERIES)) {
@@ -1510,19 +1490,6 @@ NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetExcludeReadOnlyFolders(bool aExclude)
 {
   mExcludeReadOnlyFolders = aExclude;
-  return NS_OK;
-}
-
-// excludeItemIfParentHasAnnotation
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::GetExcludeItemIfParentHasAnnotation(nsACString& _result) {
-  _result.Assign(mParentAnnotationToExclude);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNavHistoryQueryOptions::SetExcludeItemIfParentHasAnnotation(const nsACString& aParentAnnotationToExclude) {
-  mParentAnnotationToExclude.Assign(aParentAnnotationToExclude);
   return NS_OK;
 }
 

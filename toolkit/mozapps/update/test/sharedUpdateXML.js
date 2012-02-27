@@ -11,7 +11,7 @@
  * features greater than JavaScript 1.7.
  */
 
-const FILE_SIMPLE_MAR = "simple.mar";
+const FILE_SIMPLE_MAR = "simple_no_pib.mar";
 
 const SIZE_SIMPLE_MAR = "351";
 

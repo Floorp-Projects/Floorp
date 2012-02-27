@@ -64,6 +64,9 @@ public class testBookmark extends BaseTest {
     }
 
     private void checkRootFolderView(ListView bookmarksList) {
+        // Wait for the folders to be displayed
+        mSolo.waitForText("Mobile Bookmarks");
+
         mAsserter.ok(bookmarksList != null, "checking that bookmarks list exists", "bookmarks list exists");
 
         // The root view should have 5 children

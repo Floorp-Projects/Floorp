@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<!--
+spec: http://dev.w3.org/csswg/css3-background/#the-background-repeat
+-->
+<head>
+<title>background-repeat single value mapping</title>
+<style>
+div
+{
+    width: 128px;
+    height: 128px;
+    background-image: url(aqua-yellow-32x32.png);
+    border: 1px solid black;
+}
+#no_repeat
+{
+    background-repeat: no-repeat no-repeat; /* no-repeat */
+}
+#repeat
+{
+    background-repeat: repeat repeat;  /* repeat */
+}
+#repeat_x
+{
+    background-repeat: repeat no-repeat; /* repeat-x */
+}
+#repeat_y
+{
+    background-repeat: no-repeat repeat; /* repeat-y */
+}
+</style>
+</head>
+<body>
+    <div id="no_repeat"></div>
+    <div id="repeat"></div>
+    <div id="repeat_x"></div>
+    <div id="repeat_y"></div>
+</body>
+</html>
+
+

@@ -87,7 +87,7 @@ void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
     JSObject &obj = f.fp()->scopeChain().global();
-    PropertyName *name = f.script()->getName(GET_INDEX(f.pc()));
+    PropertyName *name = f.script()->getName(GET_UINT32_INDEX(f.pc()));
 
     RecompilationMonitor monitor(f.cx);
 
@@ -126,7 +126,7 @@ template <JSBool strict>
 static void JS_FASTCALL
 DisabledSetGlobal(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    stubs::SetGlobalName<strict>(f, f.script()->getName(GET_INDEX(f.pc())));
+    stubs::SetGlobalName<strict>(f, f.script()->getName(GET_UINT32_INDEX(f.pc())));
 }
 
 template void JS_FASTCALL DisabledSetGlobal<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
@@ -193,7 +193,7 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
     JSObject &obj = f.fp()->scopeChain().global();
     JSScript *script = f.script();
-    PropertyName *name = script->getName(GET_INDEX(f.pc()));
+    PropertyName *name = script->getName(GET_UINT32_INDEX(f.pc()));
 
     RecompilationMonitor monitor(f.cx);
 

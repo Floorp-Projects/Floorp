@@ -89,8 +89,7 @@ class Element;
 } // namespace mozilla
 
 enum {
-  // This bit will be set if the node has a listener manager in the listener
-  // manager hash
+  // This bit will be set if the node has a listener manager.
   NODE_HAS_LISTENERMANAGER =     0x00000001U,
 
   // Whether this node has had any properties set on it
@@ -1308,6 +1307,7 @@ public:
     { SetBoolFlag(NodeIsPurpleRoot, aValue); }
   bool IsPurpleRoot() const { return GetBoolFlag(NodeIsPurpleRoot); }
 
+  bool HasListenerManager() { return HasFlag(NODE_HAS_LISTENERMANAGER); }
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetInDocument() { SetBoolFlag(IsInDocument); }

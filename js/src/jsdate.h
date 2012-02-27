@@ -64,7 +64,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj);
  * since the epoch.
  */
 extern JS_FRIEND_API(JSObject*)
-js_NewDateObjectMsec(JSContext* cx, jsdouble msec_time);
+js_NewDateObjectMsec(JSContext* cx, double msec_time);
 
 /*
  * Construct a new Date Object from an exploded local time value.
