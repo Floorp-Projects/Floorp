@@ -1508,6 +1508,13 @@ public class BrowserProvider extends ContentProvider {
         ContentValues values = new ContentValues();
         values.put(History.IS_DELETED, 1);
 
+        // Wipe sensitive data.
+        values.putNull(History.TITLE);
+        values.put(History.URL, "");          // Column is NOT NULL.
+        values.put(History.DATE_CREATED, 0);
+        values.put(History.DATE_LAST_VISITED, 0);
+        values.put(History.VISITS, 0);
+
         cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
         return updateHistory(uri, values, selection, selectionArgs);
     }
