@@ -128,7 +128,6 @@ struct RuntimeStats
       , runtimeTemporary(0)
       , runtimeRegexpCode(0)
       , runtimeStackCommitted(0)
-      , runtimeGCMarker(0)
       , gcHeapChunkTotal(0)
       , gcHeapChunkCleanUnused(0)
       , gcHeapChunkDirtyUnused(0)
@@ -160,7 +159,6 @@ struct RuntimeStats
     size_t runtimeTemporary;
     size_t runtimeRegexpCode;
     size_t runtimeStackCommitted;
-    size_t runtimeGCMarker;
     size_t gcHeapChunkTotal;
     size_t gcHeapChunkCleanUnused;
     size_t gcHeapChunkDirtyUnused;

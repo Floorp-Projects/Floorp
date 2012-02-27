@@ -95,7 +95,7 @@ using namespace js::gc;
 
 void
 JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
-                               size_t *regexpCode, size_t *stackCommitted, size_t *gcMarkerSize)
+                               size_t *regexpCode, size_t *stackCommitted)
 {
     if (normal)
         *normal = mallocSizeOf(dtoaState);
@@ -113,9 +113,6 @@ JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, s
 
     if (stackCommitted)
         *stackCommitted = stackSpace.sizeOfCommitted();
-
-    if (gcMarkerSize)
-        *gcMarkerSize = gcMarker.sizeOfExcludingThis(mallocSizeOf);
 }
 
 JS_FRIEND_API(void)

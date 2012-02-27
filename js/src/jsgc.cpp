@@ -2118,13 +2118,6 @@ GCMarker::GrayCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     gcmarker->appendGrayRoot(*thingp, kind);
 }
 
-size_t
-GCMarker::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
-{
-    return stack.sizeOfExcludingThis(mallocSizeOf) +
-           grayRoots.sizeOfExcludingThis(mallocSizeOf);
-}
-
 void
 SetMarkStackLimit(JSRuntime *rt, size_t limit)
 {
