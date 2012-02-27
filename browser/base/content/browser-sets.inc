@@ -25,6 +25,7 @@
 #   Shawn Wilsher <me@shawnwilsher.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #   Rob Campbell <rcampbell@mozilla.com>
+#   Paul Rouget <paul@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -153,6 +154,14 @@
              oncommand="InspectorUI.toggleSidebar();"/>
     <command id="Inspector:Tilt"
              oncommand="Tilt.initialize();"/>
+    <command id="Inspector:HTMLPanel"
+             oncommand="InspectorUI.toggleHTMLPanel();"/>
+    <command id="Inspector:CopyInner"
+             oncommand="InspectorUI.copyInnerHTML();"/>
+    <command id="Inspector:CopyOuter"
+             oncommand="InspectorUI.copyOuterHTML();"/>
+    <command id="Inspector:DeleteNode"
+             oncommand="InspectorUI.deleteNode();"/>
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
@@ -167,7 +176,7 @@
                  type="checkbox" group="sidebar"
                  sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="toggleSidebar('viewHistorySidebar');"/>
-                 
+
     <broadcaster id="viewWebPanelsSidebar" autoCheck="false"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
                  oncommand="toggleSidebar('viewWebPanelsSidebar');"/>
