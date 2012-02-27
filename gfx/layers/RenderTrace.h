@@ -64,6 +64,22 @@ void renderTraceEventStart(const char *aComment, const char *aColor);
 void renderTraceEventEnd(const char *aComment, const char *aColor);
 void renderTraceEventEnd(const char *aColor);
 
+struct RenderTraceScope {
+public:
+  RenderTraceScope(const char *aComment, const char *aColor)
+    : mComment(aComment)
+    , mColor(aColor)
+  {
+    renderTraceEventStart(mComment, mColor);
+  }
+  ~RenderTraceScope() {
+    renderTraceEventEnd(mComment, mColor);
+  }
+private:
+  const char *mComment;
+  const char *mColor;
+};
+
 #ifndef MOZ_RENDERTRACE
 inline void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx3DMatrix aRootTransform, bool aReset)
 {}
