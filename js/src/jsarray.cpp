@@ -1389,7 +1389,8 @@ JSObject::makeDenseArraySlow(JSContext *cx)
      */
     if (!AddLengthProperty(cx, this)) {
         this->shape_ = oldShape;
-        cx->free_(getElementsHeader());
+        if (elements != emptyObjectElements)
+            cx->free_(getElementsHeader());
         elements = elems;
         return false;
     }
