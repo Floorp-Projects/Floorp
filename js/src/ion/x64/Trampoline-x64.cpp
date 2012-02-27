@@ -321,9 +321,7 @@ IonCompartment::generateInvalidator(JSContext *cx)
     GenerateBailoutTail(masm);
 
     Linker linker(masm);
-    IonCode *code = linker.newCode(cx);
-    IonSpew(IonSpew_Invalidate, "   invalidation thunk created at %p", (void *) code->raw());
-    return code;
+    return linker.newCode(cx);
 }
 
 IonCode *
