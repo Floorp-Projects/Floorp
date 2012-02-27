@@ -88,7 +88,9 @@ IDBRequest::Create(nsISupports* aSource,
   request->mTransaction = aTransaction;
   request->mScriptContext = aOwnerCache->GetScriptContext();
   request->mOwner = aOwnerCache->GetOwner();
-  request->mScriptOwner = aOwnerCache->GetScriptOwner();
+  if (!request->SetScriptOwner(aOwnerCache->GetScriptOwner())) {
+    return nsnull;
+  }
 
   return request.forget();
 }
@@ -129,7 +131,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
 
   // Otherwise we need to get the result from the helper.
   JSContext* cx;
-  if (mScriptOwner) {
+  if (GetScriptOwner()) {
     nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
     NS_ASSERTION(cxStack, "Failed to get thread context stack!");
 
@@ -317,7 +319,9 @@ IDBOpenDBRequest::Create(nsIScriptContext* aScriptContext,
 
   request->mScriptContext = aScriptContext;
   request->mOwner = aOwner;
-  request->mScriptOwner = aScriptOwner;
+  if (!request->SetScriptOwner(aScriptOwner)) {
+    return nsnull;
+  }
 
   return request.forget();
 }

@@ -684,11 +684,6 @@ public:
   NS_IMETHOD PreCreate(nsISupports *aNativeObj, JSContext *aCx,
                        JSObject *aGlobalObj, JSObject **aParentObj);
 
-  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *aWrapper, JSContext *aCx,
-                         JSObject *aObj, jsid aId, jsval *aVp, bool *aRetval);
-
-  virtual void PreserveWrapper(nsISupports *aNative);
-
   static nsIClassInfo *doCreate(nsDOMClassInfoData *aData)
   {
     return new IDBEventTargetSH(aData);
@@ -7698,25 +7693,6 @@ IDBEventTargetSH::PreCreate(nsISupports *aNativeObj, JSContext *aCx,
   JSObject *parent = target->GetParentObject();
   *aParentObj = parent ? parent : aGlobalObj;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBEventTargetSH::AddProperty(nsIXPConnectWrappedNative *aWrapper,
-                              JSContext *aCx, JSObject *aObj, jsid aId,
-                              jsval *aVp, bool *aRetval)
-{
-  if (aId != sAddEventListener_id) {
-    IDBEventTargetSH::PreserveWrapper(GetNative(aWrapper, aObj));
-  }
-
-  return NS_OK;
-}
-
-void
-IDBEventTargetSH::PreserveWrapper(nsISupports *aNative)
-{
-  IDBWrapperCache *target = IDBWrapperCache::FromSupports(aNative);
-  nsContentUtils::PreserveWrapper(aNative, target);
 }
 
 // Element helper
