@@ -110,3 +110,16 @@ StyleInfo::Margin(css::Side aSide, nsAString& aValue)
   aValue.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(coordVal));
   aValue.AppendLiteral("px");
 }
+
+void
+StyleInfo::Format(const nscolor& aValue, nsString& aFormattedValue)
+{
+  // Combine the string like rgb(R, G, B) from nscolor.
+  aFormattedValue.AppendLiteral("rgb(");
+  aFormattedValue.AppendInt(NS_GET_R(aValue));
+  aFormattedValue.AppendLiteral(", ");
+  aFormattedValue.AppendInt(NS_GET_G(aValue));
+  aFormattedValue.AppendLiteral(", ");
+  aFormattedValue.AppendInt(NS_GET_B(aValue));
+  aFormattedValue.Append(')');
+}
