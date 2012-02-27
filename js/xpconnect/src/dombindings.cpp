@@ -431,20 +431,6 @@ interface_hasInstance(JSContext *cx, JSObject *obj, const JS::Value *vp, JSBool 
     return true;
 }
 
-template<class LC>
-JSObject *
-ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)
-{
-    if (!scope->NewDOMBindingsEnabled()) {
-        *enabled = false;
-        return NULL;
-    }
-
-    *enabled = true;
-
-    return getPrototype(cx, scope);
-}
-
 enum {
     USE_CACHE = 0,
     CHECK_CACHE = 1,
