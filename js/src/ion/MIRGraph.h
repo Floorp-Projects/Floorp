@@ -447,7 +447,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     InlineList<MInstruction> instructions_;
     Vector<MBasicBlock *, 1, IonAllocPolicy> predecessors_;
     InlineForwardList<MPhi> phis_;
-    StackSlot *slots_;
+    FixedList<StackSlot> slots_;
     uint32 stackPosition_;
     MControlInstruction *lastIns_;
     jsbytecode *pc_;

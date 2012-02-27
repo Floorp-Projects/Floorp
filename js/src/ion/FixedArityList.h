@@ -99,7 +99,7 @@ class FixedList
         if (length == 0)
             return true;
 
-        list_ = (T *)GetIonContext()->temp->allocate(length * sizeof(T *));
+        list_ = (T *)GetIonContext()->temp->allocate(length * sizeof(T));
         return list_ != NULL;
     }
 

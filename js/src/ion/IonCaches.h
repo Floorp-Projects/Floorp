@@ -151,6 +151,7 @@ class IonCache
     RegisterSet liveRegs;
 
     // Location of this operation, NULL for idempotent caches.
+    JSScript *script;
     jsbytecode *pc;
 
     void init(Kind kind, RegisterSet liveRegs,
@@ -201,12 +202,14 @@ class IonCache
         return * (IonCacheSetProperty *) this;
     }
 
-    void setScriptedLocation(jsbytecode *pc) {
+    void setScriptedLocation(JSScript *script, jsbytecode *pc) {
+        this->script = script;
         this->pc = pc;
     }
 
-    jsbytecode *getScriptedLocation() {
-        return pc;
+    void getScriptedLocation(JSScript **pscript, jsbytecode **ppc) {
+        *pscript = script;
+        *ppc = pc;
     }
 };
 
