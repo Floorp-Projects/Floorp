@@ -1662,12 +1662,14 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     gDownloadMgr = Cc["@mozilla.org/download-manager;1"].
                    getService(Ci.nsIDownloadManager);
 
+#ifdef XP_WIN
     if (Win7Features) {
       let tempScope = {};
       Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm",
                 tempScope);
       tempScope.DownloadTaskbarProgress.onBrowserWindowLoad(window);
     }
+#endif
   }, 10000);
 
 #ifndef XP_MACOSX
@@ -6992,11 +6994,13 @@ function getPluginInfo(pluginElement)
 
 var gPluginHandler = {
 
+#ifdef MOZ_CRASHREPORTER
   get CrashSubmit() {
     delete this.CrashSubmit;
     Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
     return this.CrashSubmit;
   },
+#endif
 
   // Map the plugin's name to a filtered version more suitable for user UI.
   makeNicePluginName : function (aName, aFilename) {
@@ -7136,6 +7140,7 @@ var gPluginHandler = {
     BrowserOpenAddonsMgr("addons://list/plugin");
   },
 
+#ifdef MOZ_CRASHREPORTER
   // Callback for user clicking "submit a report" link
   submitReport : function(pluginDumpID, browserDumpID) {
     // The crash reporter wants a DOM element it can append an IFRAME to,
@@ -7144,6 +7149,7 @@ var gPluginHandler = {
     if (browserDumpID)
       this.CrashSubmit.submit(browserDumpID);
   },
+#endif
 
   // Callback for user clicking a "reload page" link
   reloadPage: function (browser) {
