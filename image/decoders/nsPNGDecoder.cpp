@@ -550,7 +550,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   }
 
   if (bit_depth == 16)
-    png_set_strip_16(png_ptr);
+    png_set_scale_16(png_ptr);
 
   qcms_data_type inType;
   PRUint32 intent = -1;

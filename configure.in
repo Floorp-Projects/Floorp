@@ -108,7 +108,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10401
+MOZPNG=10509
 MOZZLIB=0x1230
 NSPR_VERSION=4
 NSS_VERSION=3
