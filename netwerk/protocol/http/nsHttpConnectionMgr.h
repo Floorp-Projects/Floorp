@@ -49,7 +49,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsISocketTransportService.h"
-#include "nsHashSets.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -425,10 +424,9 @@ private:
     nsClassHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
 
     // mAlternateProtocolHash is used only for spdy/2 upgrades for now
-    nsCStringHashSet mAlternateProtocolHash; // protected by the monitor
-    static PLDHashOperator TrimAlternateProtocolHash(PLDHashTable *table,
-                                                     PLDHashEntryHdr *hdr,
-                                                     PRUint32 number,
+    // protected by the monitor
+    nsTHashtable<nsCStringHashKey> mAlternateProtocolHash;
+    static PLDHashOperator TrimAlternateProtocolHash(nsCStringHashKey *entry,
                                                      void *closure);
     // Read Timeout Tick handlers
     void ActivateTimeoutTick();
