@@ -46,7 +46,6 @@ import org.mozilla.gecko.gfx.LayerView;
 import java.io.*;
 import java.lang.reflect.*;
 import java.nio.*;
-import java.nio.channels.*;
 import java.text.*;
 import java.util.*;
 import java.util.zip.*;
@@ -263,106 +262,15 @@ public class GeckoAppShell
         return sFreeSpace;
     }
 
-    static boolean moveFile(File inFile, File outFile)
-    {
-        Log.i(LOGTAG, "moving " + inFile + " to " + outFile);
-        if (outFile.isDirectory())
-            outFile = new File(outFile, inFile.getName());
-        try {
-            if (inFile.renameTo(outFile))
-                return true;
-        } catch (SecurityException se) {
-            Log.w(LOGTAG, "error trying to rename file", se);
-        }
-        try {
-            long lastModified = inFile.lastModified();
-            outFile.createNewFile();
-            // so copy it instead
-            FileChannel inChannel = new FileInputStream(inFile).getChannel();
-            FileChannel outChannel = new FileOutputStream(outFile).getChannel();
-            long size = inChannel.size();
-            long transferred = inChannel.transferTo(0, size, outChannel);
-            inChannel.close();
-            outChannel.close();
-            outFile.setLastModified(lastModified);
-
-            if (transferred == size)
-                inFile.delete();
-            else
-                return false;
-        } catch (Exception e) {
-            Log.e(LOGTAG, "exception while moving file: ", e);
-            try {
-                outFile.delete();
-            } catch (SecurityException se) {
-                Log.w(LOGTAG, "error trying to delete file", se);
-            }
-            return false;
-        }
-        return true;
-    }
-
-    static boolean moveDir(File from, File to) {
-        try {
-            to.mkdirs();
-            if (from.renameTo(to))
-                return true;
-        } catch (SecurityException se) {
-            Log.w(LOGTAG, "error trying to rename file", se);
-        }
-        File[] files = from.listFiles();
-        boolean retVal = true;
-        if (files == null)
-            return false;
-        try {
-            Iterator<File> fileIterator = Arrays.asList(files).iterator();
-            while (fileIterator.hasNext()) {
-                File file = fileIterator.next();
-                File dest = new File(to, file.getName());
-                if (file.isDirectory())
-                    retVal = moveDir(file, dest) ? retVal : false;
-                else
-                    retVal = moveFile(file, dest) ? retVal : false;
-            }
-            from.delete();
-        } catch(Exception e) {
-            Log.e(LOGTAG, "error trying to move file", e);
-        }
-        return retVal;
-    }
-
     // java-side stuff
     public static boolean loadLibsSetup(String apkName) {
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
         GeckoApp geckoApp = GeckoApp.mAppContext;
-        String homeDir;
-        sHomeDir = GeckoDirProvider.getFilesDir(geckoApp);
-        homeDir = sHomeDir.getPath();
+        GeckoProfile profile = geckoApp.getProfile();
+        profile.moveProfilesToAppInstallLocation();
 
-        // handle the application being moved to phone from sdcard
-        File profileDir = new File(homeDir, "mozilla");
-        File oldHome = new File("/data/data/" + 
-                    GeckoApp.mAppContext.getPackageName() + "/mozilla");
-        if (oldHome.exists())
-            moveDir(oldHome, profileDir);
-
-        if (Build.VERSION.SDK_INT < 8 ||
-            geckoApp.getApplication().getPackageResourcePath().startsWith("/data") ||
-            geckoApp.getApplication().getPackageResourcePath().startsWith("/system")) {
-            if (Build.VERSION.SDK_INT >= 8) {
-                File extHome =  geckoApp.getExternalFilesDir(null);
-                File extProf = new File (extHome, "mozilla");
-                if (extHome != null && extProf != null && extProf.exists())
-                    moveDir(extProf, profileDir);
-            }
-        } else {
-            File intHome =  geckoApp.getFilesDir();
-            File intProf = new File(intHome, "mozilla");
-            if (intHome != null && intProf != null && intProf.exists())
-                moveDir(intProf, profileDir);
-        }
         try {
             String[] dirs = GeckoApp.mAppContext.getPluginDirectories();
             StringBuffer pluginSearchPath = new StringBuffer();
@@ -376,7 +284,7 @@ public class GeckoAppShell
             Log.i(LOGTAG, "exception getting plugin dirs", ex);
         }
 
-        GeckoAppShell.putenv("HOME=" + homeDir);
+        GeckoAppShell.putenv("HOME=" + profile.getFilesDir().getPath());
         GeckoAppShell.putenv("GRE_HOME=" + GeckoApp.sGREDir.getPath());
         Intent i = geckoApp.getIntent();
         String env = i.getStringExtra("env0");
@@ -897,10 +805,12 @@ public class GeckoAppShell
                                    String aClassName, String aAction, String aTitle) {
         Intent intent = getIntentForActionString(aAction);
         if (aAction.equalsIgnoreCase(Intent.ACTION_SEND)) {
-            intent.putExtra(Intent.EXTRA_TEXT, aUriSpec);
-            intent.putExtra(Intent.EXTRA_SUBJECT, aTitle);
+            Intent shareIntent = getIntentForActionString(aAction);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, aUriSpec);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, aTitle);
             if (aMimeType != null && aMimeType.length() > 0)
-                intent.setType(aMimeType);
+                shareIntent.setType(aMimeType);
+            intent = Intent.createChooser(shareIntent, GeckoApp.mAppContext.getResources().getString(R.string.share_title)); 
         } else if (aMimeType.length() > 0) {
             intent.setDataAndType(Uri.parse(aUriSpec), aMimeType);
         } else {

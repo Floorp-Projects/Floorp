@@ -387,6 +387,7 @@ extractFile(const char * path, Zip::Stream &s)
 }
 #endif
 
+#if defined(MOZ_CRASHREPORTER) || defined(MOZ_OLD_LINKER)
 static void
 extractLib(Zip::Stream &s, void * dest)
 {
@@ -414,10 +415,10 @@ extractLib(Zip::Stream &s, void * dest)
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "inflateEnd failed: %s", strm.msg);
 
   if (strm.total_out != s.GetUncompressedSize())
-    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "File not fully uncompressed! %d / %d", strm.total_out, s.GetUncompressedSize());
+    __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "File not fully uncompressed! %lu / %d", strm.total_out, s.GetUncompressedSize());
 }
+#endif
 
-static int cache_count = 0;
 static struct lib_cache_info *cache_mapping = NULL;
 
 NS_EXPORT const struct lib_cache_info *
@@ -427,6 +428,9 @@ getLibraryCache()
 }
 
 #ifdef MOZ_OLD_LINKER
+
+static int cache_count = 0;
+
 static void
 ensureLibCache()
 {
@@ -726,7 +730,7 @@ loadGeckoLibs(const char *apkName)
   gettimeofday(&t1, 0);
   struct rusage usage2;
   getrusage(RUSAGE_THREAD, &usage2);
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %dms total, %dms user, %dms system, %d faults",
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %ldms total, %ldms user, %ldms system, %ld faults",
                       (t1.tv_sec - t0.tv_sec)*1000 + (t1.tv_usec - t0.tv_usec)/1000, 
                       (usage2.ru_utime.tv_sec - usage1.ru_utime.tv_sec)*1000 + (usage2.ru_utime.tv_usec - usage1.ru_utime.tv_usec)/1000,
                       (usage2.ru_stime.tv_sec - usage1.ru_stime.tv_sec)*1000 + (usage2.ru_stime.tv_usec - usage1.ru_stime.tv_usec)/1000,

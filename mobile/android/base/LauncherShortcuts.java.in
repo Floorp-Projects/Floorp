@@ -147,47 +147,15 @@ public class LauncherShortcuts extends Activity {
             mWebappsList = null;
             
             Context context = getApplicationContext();
-            
-            File home = new File(context.getFilesDir(), "mozilla");
-            if (!home.exists())
-                home = new File(context.getExternalFilesDir(null).getPath(), "mozilla");
-            
-            if (!home.exists())
-                return null;
-
-            File profile = null;
-            String[] files = home.list();
-            for (String file : files) {
-                if (file.endsWith(".default")) {
-                    profile = new File(home, file);
-                    break;
-                }
+            GeckoProfile profile = GeckoProfile.get(context);
+            String webappsJson = null;
+            try {
+                webappsJson = profile.readFile("webapps" + File.separatorChar + "webapps.json");
+            } catch (IOException ioe) {
+                // unable to load the file, leave webappsJson as null
             }
 
-            if (profile == null)
-                return null;
-
-            // Save the folder path to be used during click event
-            mWebappsFolder = new File(profile, "webapps");
-            if (!mWebappsFolder.exists())
-                return null;
-
-            File webapps = new File(mWebappsFolder, "webapps.json");
-            if (!webapps.exists())
-                return null;
-
-            // Parse the contents into a string
-            String webappsJson = new String();
-            try {
-                BufferedReader in = new BufferedReader(new FileReader(webapps));
-                String line = new String();
-                
-                while ((line = in.readLine()) != null) {
-                    webappsJson += line;
-                }
-            } catch (IOException e) { }
-
-            if (webappsJson.length() == 0)
+            if (TextUtils.isEmpty(webappsJson))
                 return null;
             
             mWebappsList = new ArrayList<HashMap<String, String>>();

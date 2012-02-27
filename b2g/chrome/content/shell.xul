@@ -20,11 +20,18 @@
 #ifndef MOZ_TOUCH
   <script type="application/javascript" src="chrome://browser/content/touch.js"/>
 #endif
+#ifndef MOZ_WIDGET_GONK
+  <script type="application/javascript" src="chrome://browser/content/httpd.js"/>
+#endif
 
   <commandset id="mainCommandSet">
     <command id="cmd_close" oncommand="CommandUpdater.doCommand(this.id);"/>
   </commandset>
 
-  <browser id="homescreen" type="content-primary" flex="1" style="overflow: hidden;"/>
+  <browser id="homescreen"
+           type="content-primary"
+           flex="1"
+           style="overflow: hidden;"
+           src="data:text/html,%3C!DOCTYPE html>%3Cbody style='background:black;'>"/>
 </window>
 

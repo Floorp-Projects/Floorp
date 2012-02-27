@@ -5,7 +5,7 @@ function main() { x = "failure"; }
 function success() { x = "success"; }
 
 /* The JSOP_STOP in main. */
-trap(main, 10, "success()");
+trap(main, 16, "success()");
 main();
 
 assertEq(x, "success");

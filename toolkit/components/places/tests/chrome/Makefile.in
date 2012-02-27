@@ -54,10 +54,10 @@ _HTTP_FILES	= \
 		$(NULL)
 
 _CHROME_FILES	= \
-		test_329534.xul \
 		test_371798.xul \
 		test_342484.xul \
 		test_341972a.xul \
+		test_341972b.xul \
 		test_favicon_annotations.xul \
 		test_303567.xul \
 		test_381357.xul \

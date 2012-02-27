@@ -410,6 +410,12 @@ private:
     // Timer for next pruning of dead connections.
     nsCOMPtr<nsITimer> mTimer;
 
+    // A 1s tick to call nsHttpConnection::ReadTimeoutTick on
+    // active http/1 connections. Disabled when there are no
+    // active connections.
+    nsCOMPtr<nsITimer> mReadTimeoutTick;
+    bool mReadTimeoutTickArmed;
+
     //
     // the connection table
     //
@@ -424,6 +430,12 @@ private:
                                                      PLDHashEntryHdr *hdr,
                                                      PRUint32 number,
                                                      void *closure);
+    // Read Timeout Tick handlers
+    void ActivateTimeoutTick();
+    void ReadTimeoutTick();
+    static PLDHashOperator ReadTimeoutTickCB(const nsACString &key,
+                                             nsAutoPtr<nsConnectionEntry> &ent,
+                                             void *closure);
 };
 
 #endif // !nsHttpConnectionMgr_h__

@@ -1218,7 +1218,7 @@ nsOfflineCacheDevice::InitActiveCaches()
     nsCString clientID;
     statement->GetUTF8String(1, clientID);
 
-    mActiveCaches.Put(clientID);
+    mActiveCaches.PutEntry(clientID);
     mActiveCachesByGroup.Put(group, new nsCString(clientID));
 
     rv = statement->ExecuteStep(&hasRows);
@@ -2182,7 +2182,7 @@ nsOfflineCacheDevice::DeactivateGroup(const nsACString &group)
 
   if (mActiveCachesByGroup.Get(group, &active))
   {
-    mActiveCaches.Remove(*active);
+    mActiveCaches.RemoveEntry(*active);
     mActiveCachesByGroup.Remove(group);
     active = nsnull;
   }
@@ -2323,14 +2323,14 @@ nsOfflineCacheDevice::ActivateCache(const nsCSubstring &group,
   nsCString *active;
   if (mActiveCachesByGroup.Get(group, &active))
   {
-    mActiveCaches.Remove(*active);
+    mActiveCaches.RemoveEntry(*active);
     mActiveCachesByGroup.Remove(group);
     active = nsnull;
   }
 
   if (!clientID.IsEmpty())
   {
-    mActiveCaches.Put(clientID);
+    mActiveCaches.PutEntry(clientID);
     mActiveCachesByGroup.Put(group, new nsCString(clientID));
   }
 

@@ -54,7 +54,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsContainerFrame.h"
 #include "nsFirstLetterFrame.h"
-#include "gfxUnicodeProperties.h"
+#include "nsUnicodeProperties.h"
 #include "nsTextFrame.h"
 
 #undef NOISY_BIDI
@@ -63,6 +63,7 @@
 using namespace mozilla;
 
 static const PRUnichar kSpace            = 0x0020;
+static const PRUnichar kZWSP             = 0x200B;
 static const PRUnichar kLineSeparator    = 0x2028;
 static const PRUnichar kObjectSubstitute = 0xFFFC;
 static const PRUnichar kLRE              = 0x202A;
@@ -1092,7 +1093,10 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
         // other frame type -- see the Unicode Bidi Algorithm:
         // "...inline objects (such as graphics) are treated as if they are ...
         // U+FFFC"
-        aBpd->AppendUnichar(kObjectSubstitute);
+        // <wbr>, however, is treated as U+200B ZERO WIDTH SPACE. See
+        // http://dev.w3.org/html5/spec/Overview.html#phrasing-content-1
+        aBpd->AppendUnichar(content->IsHTML(nsGkAtoms::wbr) ?
+                            kZWSP : kObjectSubstitute);
         if (!frame->GetStyleContext()->GetStyleDisplay()->IsInlineOutside()) {
           // if it is not inline, end the paragraph
           ResolveParagraphWithinBlock(aBlockFrame, aBpd);
@@ -2020,7 +2024,7 @@ void nsBidiPresUtils::WriteReverse(const PRUnichar* aSrc,
       UTF32Char = *src;
     }
 
-    UTF32Char = gfxUnicodeProperties::GetMirroredChar(UTF32Char);
+    UTF32Char = mozilla::unicode::GetMirroredChar(UTF32Char);
 
     if (IS_IN_BMP(UTF32Char)) {
       *(dest++) = UTF32Char;

@@ -1,0 +1,200 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "jsapi.h"
+%}
+
+interface nsIURI;
+
+interface mozILivemarkCallback;
+interface mozILivemarkInfo;
+interface mozILivemark;
+
+interface nsINavHistoryResultObserver;
+
+[scriptable, uuid(addaa7c5-bd85-4c83-9c21-81c8a825c358)]
+interface mozIAsyncLivemarks : nsISupports
+{
+  /**
+   * Creates a new livemark
+   *
+   * @param aLivemarkInfo
+   *        mozILivemarkInfo object containing at least title, parentId,
+   *        index and feedURI of the livemark to create.
+   * @param [optional] aCallback
+   *        Invoked when the creation process is done.  In case of failure will
+   *        receive an error code.
+   *
+   * @throws NS_ERROR_INVALID_ARG if the supplied information is insufficient
+   *         for the creation.
+   */
+  void addLivemark(in jsval aLivemarkInfo,
+                   [optional]in mozILivemarkCallback aCallback);
+
+  /**
+   * Removes an existing livemark.
+   *
+   * @param aLivemarkInfo
+   *        mozILivemarkInfo object containing either an id or a guid of the
+   *        livemark to remove.
+   * @param [optional] aCallback
+   *        Invoked when the removal process is done.  In case of failure will
+   *        receive an error code.
+   *
+   * @throws NS_ERROR_INVALID_ARG if the id/guid is invalid.
+   */
+  void removeLivemark(in jsval aLivemarkInfo,
+                      [optional]in mozILivemarkCallback aCallback);
+
+  /**
+   * Gets an existing livemark.
+   *
+   * @param aLivemarkInfo
+   *        mozILivemarkInfo object containing either an id or a guid of the
+   *        livemark to retrieve.
+   * @param aCallback
+   *        Invoked when the fetching process is done.  In case of failure will
+   *        receive an error code.
+   *
+   * @throws NS_ERROR_INVALID_ARG if the id/guid is invalid or an invalid
+   *         callback is provided.
+   */
+  void getLivemark(in jsval aLivemarkInfo,
+                   in mozILivemarkCallback aCallback);
+
+  /**
+   * Forces a reload of all livemarks, whether or not they've expired.
+   */
+  void reloadLivemarks();
+};
+
+[scriptable, function, uuid(62a426f9-39a6-42f0-ad48-b7404d48188f)]
+interface mozILivemarkCallback : nsISupports
+{
+  /**
+   * Invoked when a livemark is added, removed or retrieved.
+   *
+   * @param aStatus
+   *        Whether the request was completed successfully.
+   *        Use Components.isSuccessCode(aStatus) to check this.
+   * @param aLivemark
+   *        A mozILivemark object representing the livemark, or null on removal.
+   */
+  void onCompletion(in nsresult aStatus,
+                    in mozILivemark aLivemark);
+};
+
+[scriptable, uuid(6e40d5b1-ce48-4458-8b68-6bee17d30ef3)]
+interface mozILivemarkInfo : nsISupports
+{
+  /**
+   * Id of the bookmarks folder representing this livemark.
+   */
+  readonly attribute long long id;
+
+  /**
+   * The globally unique identifier of this livemark.
+   */
+  readonly attribute ACString guid;
+
+  /**
+   * Title of this livemark.
+   */
+  readonly attribute AString title;
+
+  /**
+   * Id of the bookmarks parent folder containing this livemark.
+   */
+  readonly attribute long long parentId;
+
+  /**
+   * The position of this livemark in the bookmarks parent folder.
+   */
+  readonly attribute long index;
+
+  /**
+   * Time this livemark's details were last modified.  Doesn't track changes to
+   * the livemark contents.
+   */
+  readonly attribute PRTime lastModified;
+
+  /**
+   * The URI of the syndication feed associated with this livemark.
+   */
+  readonly attribute nsIURI feedURI;
+
+  /**
+   * The URI of the website associated with this livemark.
+   */
+  readonly attribute nsIURI siteURI;
+};
+
+[scriptable, uuid(9f6fdfae-db9a-4bd8-bde1-148758cf1b18)]
+interface mozILivemark : mozILivemarkInfo
+{
+  // Indicates the livemark is inactive.
+  const unsigned short STATUS_READY = 0;
+  // Indicates the livemark is fetching new contents.
+  const unsigned short STATUS_LOADING = 1;
+  // Indicates the livemark failed to fetch new contents.
+  const unsigned short STATUS_FAILED = 2;
+
+  /**
+   * Status of this livemark.  One of the STATUS_* constants above.
+   */
+  readonly attribute unsigned short status;
+
+  /**
+   * Reload livemark contents if they are expired or if forced to do so.
+   *
+   * @param [optional]aForceUpdate
+   *        If set to true forces a reload even if contents are still valid.
+   *
+   * @note The update process is asynchronous, it's possible to register a
+   *       result observer to be notified of updated contents through
+   *       registerForUpdates.
+   */
+  void reload([optional]in boolean aForceUpdate);
+
+  /**
+   * Returns an array of nsINavHistoryResultNode objects, representing children
+   * of this livemark.  The nodes will have aContainerNode as parent.
+   *
+   * @param aContainerNode
+   *        Object implementing nsINavHistoryContainerResultNode, to be used as
+   *        parent of the livemark nodes.
+   */
+  jsval getNodesForContainer(in jsval aContainerNode);
+
+  /**
+   * Registers a container node for updates on this livemark.
+   * When the livemark contents change, an invalidateContainer(aContainerNode)
+   * request is sent to aResultObserver.
+   *
+   * @param aContainerNode
+   *        Object implementing nsINavHistoryContainerResultNode, representing
+   *        this livemark.
+   * @param aResultObserver
+   *        The nsINavHistoryResultObserver that should be notified of changes
+   *        to the livemark contents.
+   */
+  void registerForUpdates(in jsval aContainerNode,
+                          in nsINavHistoryResultObserver aResultObserver);
+
+  /**
+   * Unregisters a previously registered container node.
+   *
+   * @param aContainerNode
+   *        Object implementing nsINavHistoryContainerResultNode, representing
+   *        this livemark.
+   *
+   * @note it's suggested to always unregister containers that are no more used,
+   *       to free up the associated resources.  A good time to do so is when
+   *       the container gets closed.
+   */
+  void unregisterForUpdates(in jsval aContainerNode);
+};

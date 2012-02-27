@@ -111,7 +111,12 @@ public:
   inline nsStyleCoord(const nsStyleCoord& aCopy);
   inline nsStyleCoord(const nsStyleUnion& aValue, nsStyleUnit aUnit);
 
-  nsStyleCoord&  operator=(const nsStyleCoord& aCopy);
+  nsStyleCoord&  operator=(const nsStyleCoord& aOther)
+  {
+    mUnit = aOther.mUnit;
+    mValue = aOther.mValue;
+    return *this;
+  }
   bool           operator==(const nsStyleCoord& aOther) const;
   bool           operator!=(const nsStyleCoord& aOther) const;
 
@@ -174,7 +179,7 @@ public:
   void  SetNoneValue();
   void  SetCalcValue(Calc* aValue);
 
-public: // FIXME: private!
+private:
   nsStyleUnit   mUnit;
   nsStyleUnion  mValue;
 };
@@ -273,9 +278,8 @@ inline nsStyleCoord::nsStyleCoord(const nsStyleCoord& aCopy)
 }
 
 inline nsStyleCoord::nsStyleCoord(const nsStyleUnion& aValue, nsStyleUnit aUnit)
-  : mUnit(aUnit)
+  : mUnit(aUnit), mValue(aValue)
 {
-  memcpy(&mValue, &aValue, sizeof(nsStyleUnion));
 }
 
 inline bool nsStyleCoord::operator!=(const nsStyleCoord& aOther) const
@@ -343,7 +347,7 @@ inline nsStyleCoord::Calc* nsStyleCoord::GetCalcValue() const
 
 inline void nsStyleCoord::GetUnionValue(nsStyleUnion& aValue) const
 {
-  memcpy(&aValue, &mValue, sizeof(nsStyleUnion));
+  aValue = mValue;
 }
 
 // -------------------------

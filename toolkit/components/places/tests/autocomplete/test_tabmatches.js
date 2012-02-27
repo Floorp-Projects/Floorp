@@ -45,8 +45,8 @@ let kURIs = [
   "moz-action:switchtab,http://abc.com/",
   "http://xyz.net/",
   "moz-action:switchtab,http://xyz.net/",
-  "about:robots",
-  "moz-action:switchtab,about:robots",
+  "about:mozilla",
+  "moz-action:switchtab,about:mozilla",
   "data:text/html,test",
   "moz-action:switchtab,data:text/html,test"
 ];
@@ -54,7 +54,7 @@ let kURIs = [
 let kTitles = [
   "ABC rocks",
   "xyz.net - we're better than ABC",
-  "about:robots",
+  "about:mozilla",
   "data:text/html,test"
 ];
 
@@ -98,9 +98,9 @@ let gTests = [
     addOpenPages(0, 1);
    }],
   ["6: tab match with not-addable pages",
-   "robots", [5]],
+   "mozilla", [5]],
   ["7: tab match with not-addable pages and restriction character",
-   gTabRestrictChar + " robots", [5]],
+   gTabRestrictChar + " mozilla", [5]],
   ["8: tab match with not-addable pages and only restriction character",
    gTabRestrictChar, [1, 5, 7]],
 ];

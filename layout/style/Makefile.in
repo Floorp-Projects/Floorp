@@ -60,6 +60,7 @@ EXPORTS		= \
 		nsCSSKeywordList.h \
 		nsCSSKeywords.h \
 		nsCSSParser.h \
+		nsCSSPropAliasList.h \
 		nsCSSPropList.h \
 		nsCSSProperty.h \
 		nsCSSProps.h \
