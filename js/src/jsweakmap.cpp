@@ -318,7 +318,7 @@ WeakMap_finalize(JSContext *cx, JSObject *obj)
         map->check();
 #ifdef DEBUG
         map->~ObjectValueMap();
-        memset(map, 0xdc, sizeof(ObjectValueMap));
+        memset(static_cast<void *>(map), 0xdc, sizeof(*map));
         cx->free_(map);
 #else
         cx->delete_(map);

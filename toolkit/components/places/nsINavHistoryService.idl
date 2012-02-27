@@ -1040,7 +1040,7 @@ interface nsINavHistoryQuery : nsISupports
 /**
  * This object represents the global options for executing a query.
  */
-[scriptable, uuid(2d8ff86b-f8c2-451c-8a1a-1ff0749a074e)]
+[scriptable, uuid(d46a1ae7-aef8-47a2-9a5c-e6347253f9b2)]
 interface nsINavHistoryQueryOptions : nsISupports
 {
   /**
@@ -1187,15 +1187,6 @@ interface nsINavHistoryQueryOptions : nsISupports
    * queries (such as "folders with annotation X").
    */
   attribute boolean excludeReadOnlyFolders;
-
-  /**
-   * This option excludes items from a bookmarks query
-   * if the parent of the item has this annotation.
-   * An example is to exclude livemark items
-   * (parent folders have the "livemark/feedURI" annotation)
-   * Ignored for queries over history.
-   */
-  attribute AUTF8String excludeItemIfParentHasAnnotation;
 
   /**
    * When set, allows items with "place:" URIs to appear as containers,

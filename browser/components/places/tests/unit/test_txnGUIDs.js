@@ -41,47 +41,65 @@
  * This test will ensure any transactions service that is going to create
  * a new item, won't replace the GUID when undoing and redoing the action.
  */
-var bmsvc = PlacesUtils.bookmarks;
-var txnsvc = PlacesUIUtils.ptm;
 
 function test_GUID_persistance(aTxn) {
   aTxn.doTransaction();
-  var itemId = bmsvc.getIdForItemAt(bmsvc.unfiledBookmarksFolder, 0);
-  var GUID = bmsvc.getItemGUID(itemId);
-  aTxn.undoTransaction();
-  aTxn.redoTransaction();
-  do_check_eq(GUID, bmsvc.getItemGUID(itemId));
-  aTxn.undoTransaction();
+  waitForAsyncUpdates(function () {
+    let itemId = PlacesUtils.bookmarks
+                            .getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
+    let GUID = PlacesUtils.bookmarks.getItemGUID(itemId);
+    aTxn.undoTransaction();
+    aTxn.redoTransaction();
+    waitForAsyncUpdates(function() {
+      let itemId = PlacesUtils.bookmarks
+                              .getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId, 0);
+      do_check_eq(GUID, PlacesUtils.bookmarks.getItemGUID(itemId));
+      aTxn.undoTransaction();
+      waitForAsyncUpdates(run_next_test);
+    });
+  });
 }
 
 function run_test() {
-  // Create folder.
-  var createFolderTxn = txnsvc.createFolder("Test folder",
-                                            bmsvc.unfiledBookmarksFolder,
-                                            bmsvc.DEFAULT_INDEX);
-  test_GUID_persistance(createFolderTxn);
-
-  // Create bookmark.
-  var createBookmarkTxn = txnsvc.createItem(uri("http://www.example.com"),
-                                            bmsvc.unfiledBookmarksFolder,
-                                            bmsvc.DEFAULT_INDEX,
-                                            "Test bookmark");
-  test_GUID_persistance(createBookmarkTxn);
-
-  // Create separator.
-  var createSeparatorTxn = txnsvc.createSeparator(bmsvc.unfiledBookmarksFolder,
-                                                  bmsvc.DEFAULT_INDEX);
-  test_GUID_persistance(createFolderTxn);
-
-  // Create livemark.
-  var createLivemarkTxn = txnsvc.createLivemark(uri("http://feeduri.com"),
-                                               uri("http://siteuri.com"),
-                                               "Test livemark",
-                                               bmsvc.unfiledBookmarksFolder,
-                                               bmsvc.DEFAULT_INDEX);
-  test_GUID_persistance(createLivemarkTxn);
-
-  // Tag URI.
-  var tagURITxn = txnsvc.tagURI(uri("http://www.example.com"), ["foo"]);
-  test_GUID_persistance(tagURITxn);
+  run_next_test();
 }
+
+add_test(function create_folder() {
+  let createFolderTxn = new PlacesCreateFolderTransaction(
+    "Test folder", PlacesUtils.unfiledBookmarksFolderId,
+    PlacesUtils.bookmarks.DEFAULT_INDEX
+  );
+  test_GUID_persistance(createFolderTxn);
+});
+
+add_test(function create_bookmark() {
+  let createBookmarkTxn = new PlacesCreateBookmarkTransaction(
+    NetUtil.newURI("http://www.example.com"), PlacesUtils.unfiledBookmarksFolderId,
+    PlacesUtils.bookmarks.DEFAULT_INDEX, "Test bookmark"
+  );
+  test_GUID_persistance(createBookmarkTxn);
+});
+  
+add_test(function create_separator() {
+  let createSeparatorTxn = new PlacesCreateSeparatorTransaction(
+    PlacesUtils.unfiledBookmarksFolderId, PlacesUtils.bookmarks.DEFAULT_INDEX
+  );
+  test_GUID_persistance(createSeparatorTxn);
+});
+
+add_test(function tag_uri() {
+  let tagURITxn = new PlacesTagURITransaction(
+    NetUtil.newURI("http://www.example.com"), ["foo"]
+  );
+  test_GUID_persistance(tagURITxn);
+});
+
+add_test(function create_livemark() {
+  let createLivemarkTxn = new PlacesCreateLivemarkTransaction(
+    NetUtil.newURI("http://feeduri.com"), NetUtil.newURI("http://siteuri.com"),
+    "Test livemark", PlacesUtils.unfiledBookmarksFolderId,
+    PlacesUtils.bookmarks.DEFAULT_INDEX
+  );
+  test_GUID_persistance(createLivemarkTxn);
+});
+

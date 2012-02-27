@@ -367,7 +367,7 @@ jsd_GetScriptMaxRecurseDepth(JSDContext* jsdc, JSDScript *script)
     return 0;
 }
 
-jsdouble
+double
 jsd_GetScriptMinExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     if (script->profileData)
@@ -376,7 +376,7 @@ jsd_GetScriptMinExecutionTime(JSDContext* jsdc, JSDScript *script)
     return 0.0;
 }
 
-jsdouble
+double
 jsd_GetScriptMaxExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     if (script->profileData)
@@ -385,7 +385,7 @@ jsd_GetScriptMaxExecutionTime(JSDContext* jsdc, JSDScript *script)
     return 0.0;
 }
 
-jsdouble
+double
 jsd_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     if (script->profileData)
@@ -394,7 +394,7 @@ jsd_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script)
     return 0.0;
 }
 
-jsdouble
+double
 jsd_GetScriptMinOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     if (script->profileData)
@@ -403,7 +403,7 @@ jsd_GetScriptMinOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
     return 0.0;
 }
 
-jsdouble
+double
 jsd_GetScriptMaxOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     if (script->profileData)
@@ -412,7 +412,7 @@ jsd_GetScriptMaxOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
     return 0.0;
 }
 
-jsdouble
+double
 jsd_GetScriptTotalOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     if (script->profileData)

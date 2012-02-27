@@ -281,7 +281,7 @@ gfxPlatformFontList::LoadBadUnderlineList()
     for (PRUint32 i = 0; i < numFonts; i++) {
         nsAutoString key;
         GenerateFontListKey(blacklist[i], key);
-        mBadUnderlineFamilyNames.Put(key);
+        mBadUnderlineFamilyNames.PutEntry(key);
     }
 }
 

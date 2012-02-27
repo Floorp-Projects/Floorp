@@ -3,7 +3,7 @@ setDebug(true);
 x = "notset";
 function main() {
   /* The JSOP_STOP in main. */
-  a = { valueOf: function () { trap(main, 61, "success()"); } };
+  a = { valueOf: function () { trap(main, 85, "success()"); } };
   b = "";
   eval();
   a + b;

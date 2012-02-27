@@ -1636,6 +1636,7 @@ nsDocument::~nsDocument()
 
   if (mListenerManager) {
     mListenerManager->Disconnect();
+    UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
   if (mScriptLoader) {
@@ -1950,6 +1951,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   if (tmp->mListenerManager) {
     tmp->mListenerManager->Disconnect();
+    tmp->UnsetFlags(NODE_HAS_LISTENERMANAGER);
     tmp->mListenerManager = nsnull;
   }
 
@@ -6215,6 +6217,7 @@ nsDocument::GetListenerManager(bool aCreateIfNotFound)
   if (!mListenerManager && aCreateIfNotFound) {
     mListenerManager =
       new nsEventListenerManager(static_cast<nsIDOMEventTarget*>(this));
+    SetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
   return mListenerManager;

@@ -63,7 +63,6 @@
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsHashSets.h"
 #include "nsCRT.h"
 #include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
@@ -1798,7 +1797,7 @@ nsSSLIOLayerHelpers::rememberTolerantSite(nsNSSSocketInfo *socketInfo)
   getSiteKey(socketInfo, key);
 
   MutexAutoLock lock(*mutex);
-  nsSSLIOLayerHelpers::mTLSTolerantSites->Put(key);
+  nsSSLIOLayerHelpers::mTLSTolerantSites->PutEntry(key);
 }
 
 static PRStatus PR_CALLBACK
@@ -2139,10 +2138,10 @@ bool nsSSLIOLayerHelpers::nsSSLIOLayerInitialized = false;
 PRDescIdentity nsSSLIOLayerHelpers::nsSSLIOLayerIdentity;
 PRIOMethods nsSSLIOLayerHelpers::nsSSLIOLayerMethods;
 Mutex *nsSSLIOLayerHelpers::mutex = nsnull;
-nsCStringHashSet *nsSSLIOLayerHelpers::mTLSIntolerantSites = nsnull;
-nsCStringHashSet *nsSSLIOLayerHelpers::mTLSTolerantSites = nsnull;
+nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mTLSIntolerantSites = nsnull;
+nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mTLSTolerantSites = nsnull;
 nsPSMRememberCertErrorsTable *nsSSLIOLayerHelpers::mHostsWithCertErrors = nsnull;
-nsCStringHashSet *nsSSLIOLayerHelpers::mRenegoUnrestrictedSites = nsnull;
+nsTHashtable<nsCStringHashKey> *nsSSLIOLayerHelpers::mRenegoUnrestrictedSites = nsnull;
 bool nsSSLIOLayerHelpers::mTreatUnsafeNegotiationAsBroken = false;
 PRInt32 nsSSLIOLayerHelpers::mWarnLevelMissingRFC5746 = 1;
 
@@ -2341,13 +2340,13 @@ nsresult nsSSLIOLayerHelpers::Init()
 
   mutex = new Mutex("nsSSLIOLayerHelpers.mutex");
 
-  mTLSIntolerantSites = new nsCStringHashSet();
+  mTLSIntolerantSites = new nsTHashtable<nsCStringHashKey>();
   if (!mTLSIntolerantSites)
     return NS_ERROR_OUT_OF_MEMORY;
 
   mTLSIntolerantSites->Init(1);
 
-  mTLSTolerantSites = new nsCStringHashSet();
+  mTLSTolerantSites = new nsTHashtable<nsCStringHashKey>();
   if (!mTLSTolerantSites)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2356,7 +2355,7 @@ nsresult nsSSLIOLayerHelpers::Init()
   // the rate of hashtable array reallocation.
   mTLSTolerantSites->Init(16);
 
-  mRenegoUnrestrictedSites = new nsCStringHashSet();
+  mRenegoUnrestrictedSites = new nsTHashtable<nsCStringHashKey>();
   if (!mRenegoUnrestrictedSites)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2376,13 +2375,13 @@ void nsSSLIOLayerHelpers::addIntolerantSite(const nsCString &str)
   MutexAutoLock lock(*mutex);
   // Remember intolerant site only if it is not known as tolerant
   if (!mTLSTolerantSites->Contains(str))
-    nsSSLIOLayerHelpers::mTLSIntolerantSites->Put(str);
+    nsSSLIOLayerHelpers::mTLSIntolerantSites->PutEntry(str);
 }
 
 void nsSSLIOLayerHelpers::removeIntolerantSite(const nsCString &str)
 {
   MutexAutoLock lock(*mutex);
-  nsSSLIOLayerHelpers::mTLSIntolerantSites->Remove(str);
+  nsSSLIOLayerHelpers::mTLSIntolerantSites->RemoveEntry(str);
 }
 
 bool nsSSLIOLayerHelpers::isKnownAsIntolerantSite(const nsCString &str)
@@ -2400,7 +2399,7 @@ void nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(const nsCString &str)
     mRenegoUnrestrictedSites = nsnull;
   }
 
-  mRenegoUnrestrictedSites = new nsCStringHashSet();
+  mRenegoUnrestrictedSites = new nsTHashtable<nsCStringHashKey>();
   if (!mRenegoUnrestrictedSites)
     return;
   
@@ -2411,7 +2410,7 @@ void nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(const nsCString &str)
   while (toker.hasMoreTokens()) {
     const nsCSubstring &host = toker.nextToken();
     if (!host.IsEmpty()) {
-      mRenegoUnrestrictedSites->Put(host);
+      mRenegoUnrestrictedSites->PutEntry(host);
     }
   }
 }

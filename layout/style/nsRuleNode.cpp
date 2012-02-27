@@ -4786,6 +4786,59 @@ struct BackgroundItemComputer<nsCSSValueList, PRUint8>
 };
 
 template <>
+struct BackgroundItemComputer<nsCSSValuePairList, nsStyleBackground::Repeat>
+{
+  static void ComputeValue(nsStyleContext* aStyleContext,
+                           const nsCSSValuePairList* aSpecifiedValue,
+                           nsStyleBackground::Repeat& aComputedValue,
+                           bool& aCanStoreInRuleTree)
+  {
+    NS_ASSERTION(aSpecifiedValue->mXValue.GetUnit() == eCSSUnit_Enumerated &&
+                 (aSpecifiedValue->mYValue.GetUnit() == eCSSUnit_Enumerated ||
+                  aSpecifiedValue->mYValue.GetUnit() == eCSSUnit_Null),
+                 "Invalid unit");
+    
+    bool hasContraction = true;
+    PRUint8 value = aSpecifiedValue->mXValue.GetIntValue();
+    switch (value) {
+    case NS_STYLE_BG_REPEAT_REPEAT_X:
+      aComputedValue.mXRepeat = NS_STYLE_BG_REPEAT_REPEAT;
+      aComputedValue.mYRepeat = NS_STYLE_BG_REPEAT_NO_REPEAT;
+      break;
+    case NS_STYLE_BG_REPEAT_REPEAT_Y:
+      aComputedValue.mXRepeat = NS_STYLE_BG_REPEAT_NO_REPEAT;
+      aComputedValue.mYRepeat = NS_STYLE_BG_REPEAT_REPEAT;
+      break;
+    default:
+      aComputedValue.mXRepeat = value;
+      hasContraction = false;
+      break;
+    }
+    
+    if (hasContraction) {
+      NS_ASSERTION(aSpecifiedValue->mYValue.GetUnit() == eCSSUnit_Null,
+                   "Invalid unit.");
+      return;
+    }
+    
+    switch (aSpecifiedValue->mYValue.GetUnit()) {
+    case eCSSUnit_Null:
+      aComputedValue.mYRepeat = aComputedValue.mXRepeat;
+      break;
+    case eCSSUnit_Enumerated:
+      value = aSpecifiedValue->mYValue.GetIntValue();
+      NS_ASSERTION(value == NS_STYLE_BG_REPEAT_NO_REPEAT ||
+                   value == NS_STYLE_BG_REPEAT_REPEAT, "Unexpected value");
+      aComputedValue.mYRepeat = value;
+      break;
+    default:
+      NS_NOTREACHED("Unexpected CSS value");
+      break;
+    }
+  }
+};
+
+template <>
 struct BackgroundItemComputer<nsCSSValueList, nsStyleImage>
 {
   static void ComputeValue(nsStyleContext* aStyleContext,
@@ -5181,12 +5234,15 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
                     initialImage, parentBG->mImageCount, bg->mImageCount,
                     maxItemCount, rebuild, canStoreInRuleTree);
 
-  // background-repeat: enum, inherit, initial [list]
-  SetBackgroundList(aContext, *aRuleData->ValueForBackgroundRepeat(),
-                    bg->mLayers,
-                    parentBG->mLayers, &nsStyleBackground::Layer::mRepeat,
-                    PRUint8(NS_STYLE_BG_REPEAT_XY), parentBG->mRepeatCount,
-                    bg->mRepeatCount, maxItemCount, rebuild, canStoreInRuleTree);
+  // background-repeat: enum, inherit, initial [pair list]
+  nsStyleBackground::Repeat initialRepeat;
+  initialRepeat.SetInitialValues();
+  SetBackgroundPairList(aContext, *aRuleData->ValueForBackgroundRepeat(),
+                        bg->mLayers,
+                        parentBG->mLayers, &nsStyleBackground::Layer::mRepeat,
+                        initialRepeat, parentBG->mRepeatCount,
+                        bg->mRepeatCount, maxItemCount, rebuild, 
+                        canStoreInRuleTree);
 
   // background-attachment: enum, inherit, initial [list]
   SetBackgroundList(aContext, *aRuleData->ValueForBackgroundAttachment(),

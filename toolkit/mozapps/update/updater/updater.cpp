@@ -68,6 +68,7 @@
 #include "bspatch.h"
 #include "progressui.h"
 #include "archivereader.h"
+#include "readstrings.h"
 #include "errors.h"
 #include "bzlib.h"
 
@@ -189,6 +190,15 @@ public:
 
 private:
   FILE* mFile;
+};
+
+struct MARChannelStringTable {
+  MARChannelStringTable() 
+  {
+    MARChannelID[0] = '\0';
+  }
+
+  char MARChannelID[MAX_TEXT_LEN];
 };
 
 //-----------------------------------------------------------------------------
@@ -1530,16 +1540,78 @@ WaitForServiceFinishThread(void *param)
 }
 #endif
 
+/**
+ * This function reads in the ACCEPTED_MAR_CHANNEL_IDS from update-settings.ini
+ *
+ * @param path    The path to the ini file that is to be read
+ * @param results A pointer to the location to store the read strings
+ * @return OK on success
+ */
+static int
+ReadMARChannelIDs(const NS_tchar *path, MARChannelStringTable *results)
+{
+  const unsigned int kNumStrings = 1;
+  const char *kUpdaterKeys = "ACCEPTED_MAR_CHANNEL_IDS\0";
+  char updater_strings[kNumStrings][MAX_TEXT_LEN];
+
+  int result = ReadStrings(path, kUpdaterKeys, kNumStrings,
+                           updater_strings, "Settings");
+
+  strncpy(results->MARChannelID, updater_strings[0], MAX_TEXT_LEN - 1);
+  results->MARChannelID[MAX_TEXT_LEN - 1] = 0;
+
+  return result;
+}
+
+struct UpdateThreadData 
+{
+  UpdateThreadData(bool performMARChecks) :
+    mPerformMARChecks(performMARChecks)
+  {
+  }
+
+  bool mPerformMARChecks;
+};
+
 static void
 UpdateThreadFunc(void *param)
 {
+  UpdateThreadData *threadData = reinterpret_cast<UpdateThreadData*>(param);
+  bool performMARChecks = threadData && threadData->mPerformMARChecks;
+  delete threadData;
+  
   // open ZIP archive and process...
-
+  int rv;
   NS_tchar dataFile[MAXPATHLEN];
   NS_tsnprintf(dataFile, sizeof(dataFile)/sizeof(dataFile[0]),
                NS_T("%s/update.mar"), gSourcePath);
 
-  int rv = gArchiveReader.Open(dataFile);
+  rv = gArchiveReader.Open(dataFile);
+
+  if (performMARChecks) {
+#ifdef MOZ_VERIFY_MAR_SIGNATURE
+    if (rv == OK) {
+      rv = gArchiveReader.VerifySignature();
+    }
+
+    if (rv == OK) {
+      NS_tchar updateSettingsPath[MAX_TEXT_LEN];
+      NS_tsnprintf(updateSettingsPath, 
+                   sizeof(updateSettingsPath) / sizeof(updateSettingsPath[0]),
+                   NS_T("%supdate-settings.ini"), gDestPath);
+      MARChannelStringTable MARStrings;
+      if (ReadMARChannelIDs(updateSettingsPath, &MARStrings) != OK) {
+        // If we can't read from update-settings.ini then we shouldn't impose
+        // a MAR restriction.  Some installations won't even include this file.
+        MARStrings.MARChannelID[0] = '\0';
+      }
+
+      rv = gArchiveReader.VerifyProductInformation(MARStrings.MARChannelID,
+                                                   MOZ_APP_VERSION);
+    }
+#endif
+  }
+
   if (rv == OK) {
     rv = DoUpdate();
     gArchiveReader.Close();
@@ -1617,15 +1689,7 @@ int NS_main(int argc, NS_tchar **argv)
   // Our tests run with a different apply directory for each test.
   // We use this registry key on our test slaves to store the 
   // allowed name/issuers.
-  HKEY testOnlyFallbackKey;
-  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
-                    TEST_ONLY_FALLBACK_KEY_PATH, 0,
-                    KEY_READ | KEY_WOW64_64KEY, 
-                    &testOnlyFallbackKey) == ERROR_SUCCESS) {
-    testOnlyFallbackKeyExists = true;
-    RegCloseKey(testOnlyFallbackKey);
-  }
-
+  testOnlyFallbackKeyExists = DoesFallbackKeyExist();
 #endif
 #endif
 
@@ -2011,7 +2075,7 @@ int NS_main(int argc, NS_tchar **argv)
     const int max_retries = 10;
     int retries = 1;
     do {
-      // By opening a file handle wihout FILE_SHARE_READ to the callback
+      // By opening a file handle without FILE_SHARE_READ to the callback
       // executable, the OS will prevent launching the process while it is
       // being updated.
       callbackFile = CreateFileW(argv[callbackIndex],
@@ -2059,7 +2123,7 @@ int NS_main(int argc, NS_tchar **argv)
   // before QuitProgressUI has been called, so wait for UpdateThreadFunc to
   // terminate.
   Thread t;
-  if (t.Run(UpdateThreadFunc, NULL) == 0) {
+  if (t.Run(UpdateThreadFunc, new UpdateThreadData(usingService)) == 0) {
     ShowProgressUI();
   }
   t.Join();

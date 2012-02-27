@@ -541,6 +541,28 @@ CustomElf::InitDyn(const Phdr *pt_dyn)
         debug_dyn("DT_FINI_ARRAYSZ", dyn);
         fini_array.InitSize(dyn->d_un.d_val);
         break;
+      case DT_PLTREL:
+        if (dyn->d_un.d_val != RELOC()) {
+          log("%s: Error: DT_PLTREL is not " STR_RELOC(), GetPath());
+          return false;
+        }
+        break;
+      case DT_SONAME: /* Should match GetName(), but doesn't matter */
+      case DT_SYMBOLIC: /* Indicates internal symbols should be looked up in
+                         * the library itself first instead of the executable,
+                         * which is actually what this linker does by default */
+      case RELOC(COUNT): /* Indicates how many relocations are relative, which
+                          * is usually used to skip relocations on prelinked
+                          * libraries. They are not supported anyways. */
+      case UNSUPPORTED_RELOC(COUNT): /* This should error out, but it doesn't
+                                      * really matter. */
+      case DT_VERSYM: /* DT_VER* entries are used for symbol versioning, which */
+      case DT_VERDEF: /* this linker doesn't support yet. */
+      case DT_VERDEFNUM:
+      case DT_VERNEED:
+      case DT_VERNEEDNUM:
+        /* Ignored */
+        break;
       default:
         log("%s: Warning: dynamic header type #%" PRIxAddr" not handled",
             GetPath(), dyn->d_tag);

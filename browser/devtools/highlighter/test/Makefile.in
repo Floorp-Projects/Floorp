@@ -70,6 +70,9 @@ _BROWSER_FILES = \
 		browser_inspector_ruleviewstore.js \
 		browser_inspector_duplicate_ruleview.js \
 		browser_inspector_invalidate.js \
+		browser_inspector_sidebarstate.js \
+		browser_inspector_treePanel_menu.js \
+		browser_inspector_pseudoclass_lock.js \
 		head.js \
 		$(NULL)
 

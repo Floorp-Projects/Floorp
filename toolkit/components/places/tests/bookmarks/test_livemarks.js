@@ -37,58 +37,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Get livemark service
-try {
-  var lmsvc = Cc["@mozilla.org/browser/livemark-service;2"].
-              getService(Ci.nsILivemarkService);
-} catch(ex) {
-  do_throw("Could not get livemark-service\n");
-} 
+// This tests the deprecated livemarks interface.
 
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-} catch(ex) {
-  do_throw("Could not get nav-bookmarks-service\n");
-}
+function run_test()
+{
+  let livemarkId = PlacesUtils.livemarks.createLivemarkFolderOnly(
+    PlacesUtils.bookmarksMenuFolderId, "foo", uri("http://example.com/"),
+    uri("http://example.com/rss.xml"), PlacesUtils.bookmarks.DEFAULT_INDEX
+  );
 
-// get bookmarks root index
-var root = bmsvc.bookmarksMenuFolder;
-
-// main
-function run_test() {
-  var livemarkId = 
-    lmsvc.createLivemarkFolderOnly(root, "foo",
-                                   uri("http://example.com/"),
-                                   uri("http://example.com/rss.xml"), -1);
-
-  do_check_true(lmsvc.isLivemark(livemarkId));
-  do_check_true(lmsvc.getSiteURI(livemarkId).spec == "http://example.com/");
-  do_check_true(lmsvc.getFeedURI(livemarkId).spec == "http://example.com/rss.xml");
-  do_check_true(bmsvc.getFolderReadonly(livemarkId));
-
-  lmsvc.setSiteURI(livemarkId, uri("http://foo.example.com/"));
-  do_check_true(lmsvc.getSiteURI(livemarkId).spec == "http://foo.example.com/");
-  
-  lmsvc.setFeedURI(livemarkId, uri("http://foo.example.com/rss.xml"));
-  do_check_true(lmsvc.getFeedURI(livemarkId).spec == "http://foo.example.com/rss.xml");
+  do_check_true(PlacesUtils.livemarks.isLivemark(livemarkId));
+  do_check_eq(PlacesUtils.livemarks.getSiteURI(livemarkId).spec, "http://example.com/");
+  do_check_eq(PlacesUtils.livemarks.getFeedURI(livemarkId).spec, "http://example.com/rss.xml");
+  do_check_true(PlacesUtils.bookmarks.getFolderReadonly(livemarkId));
 
   // Make sure we can't add a livemark to a livemark
-  var livemarkId2 = null;
+  let livemarkId2 = null;
   try {
-    var livemarkId2 = lmsvc.createLivemark(livemarkId, "foo", uri("http://example.com/"), 
-                                           uri("http://example.com/rss.xml"), -1);
+    let livemarkId2 = PlacesUtils.livemarks.createLivemark(
+      livemarkId, "foo", uri("http://example.com/"),
+      uri("http://example.com/rss.xml"), PlacesUtils.bookmarks.DEFAULT_INDEX
+    );
   } catch (ex) {
     livemarkId2 = null;
   }
   do_check_true(livemarkId2 == null);
   
   // make sure it didn't screw up the first one
-  do_check_true(lmsvc.isLivemark(livemarkId));
-  
+  do_check_true(PlacesUtils.livemarks.isLivemark(livemarkId));
+
+  do_check_eq(
+    PlacesUtils.livemarks.getLivemarkIdForFeedURI(uri("http://example.com/rss.xml")),
+    livemarkId
+  );
+
   // make sure folders don't get counted as bookmarks
   // create folder
-  var randomFolder = bmsvc.createFolder(root, "Random", -1);
-  do_check_true(!lmsvc.isLivemark(randomFolder));
+  let randomFolder = PlacesUtils.bookmarks.createFolder(
+    PlacesUtils.bookmarksMenuFolderId, "Random",
+    PlacesUtils.bookmarks.DEFAULT_INDEX
+  );
+  do_check_true(!PlacesUtils.livemarks.isLivemark(randomFolder));
 }

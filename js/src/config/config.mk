@@ -82,6 +82,7 @@ check-variable = $(if $(filter-out 0 1,$(words $($(x))z)),$(error Spaces are not
 $(foreach x,$(CHECK_VARS),$(check-variable))
 
 core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1)))
+core_realpath = $(if $(realpath $(1)),$(realpath $(1)),$(call core_abspath,$(1)))
 
 nullstr :=
 space :=$(nullstr) # EOL
@@ -726,7 +727,7 @@ ifndef L10NBASEDIR
 L10NBASEDIR = $(error L10NBASEDIR not defined by configure)
 endif
 
-EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(L10NBASEDIR)/$(AB_CD)/$(subst /locales,,$(1)))
+EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(call core_realpath,$(L10NBASEDIR))/$(AB_CD)/$(subst /locales,,$(1)))
 
 ifdef relativesrcdir
 LOCALE_SRCDIR = $(call EXPAND_LOCALE_SRCDIR,$(relativesrcdir))
