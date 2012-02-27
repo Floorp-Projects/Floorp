@@ -1,6 +1,6 @@
 This is the Sanitiser for OpenType project, from http://code.google.com/p/ots/.
 
-Current revision: r77
+Current revision: r81
 
 Applied local patches:
     ots-fix-vc10.patch - workaround for VS10 STL wrappers (bug 602558)

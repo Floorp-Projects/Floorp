@@ -61,6 +61,8 @@
 #include "jscell.h"
 
 #include "gc/Barrier.h"
+
+#include "vm/ObjectImpl.h"
 #include "vm/String.h"
 
 namespace js {
@@ -391,142 +393,33 @@ class StringObject;
 class RegExpObject;
 class WithObject;
 
-/*
- * Header structure for object element arrays. This structure is immediately
- * followed by an array of elements, with the elements member in an object
- * pointing to the beginning of that array (the end of this structure).
- * See below for usage of this structure.
- */
-class ObjectElements
-{
-    friend struct ::JSObject;
-
-    /* Number of allocated slots. */
-    uint32_t capacity;
-
-    /*
-     * Number of initialized elements. This is <= the capacity, and for arrays
-     * is <= the length. Memory for elements above the initialized length is
-     * uninitialized, but values between the initialized length and the proper
-     * length are conceptually holes.
-     */
-    uint32_t initializedLength;
-
-    /* 'length' property of array objects, unused for other objects. */
-    uint32_t length;
-
-    /* :XXX: bug 586842 store state about sparse slots. */
-    uint32_t unused;
-
-    void staticAsserts() {
-        JS_STATIC_ASSERT(sizeof(ObjectElements) == VALUES_PER_HEADER * sizeof(Value));
-    }
-
-  public:
-
-    ObjectElements(uint32_t capacity, uint32_t length)
-        : capacity(capacity), initializedLength(0), length(length)
-    {}
-
-    HeapValue * elements() { return (HeapValue *)(uintptr_t(this) + sizeof(ObjectElements)); }
-    static ObjectElements * fromElements(HeapValue *elems) {
-        return (ObjectElements *)(uintptr_t(elems) - sizeof(ObjectElements));
-    }
-
-    static int offsetOfCapacity() {
-        return (int)offsetof(ObjectElements, capacity) - (int)sizeof(ObjectElements);
-    }
-    static int offsetOfInitializedLength() {
-        return (int)offsetof(ObjectElements, initializedLength) - (int)sizeof(ObjectElements);
-    }
-    static int offsetOfLength() {
-        return (int)offsetof(ObjectElements, length) - (int)sizeof(ObjectElements);
-    }
-
-    static const size_t VALUES_PER_HEADER = 2;
-};
-
-/* Shared singleton for objects with no elements. */
-extern HeapValue *emptyObjectElements;
-
 }  /* namespace js */
 
 /*
- * JSObject struct. The JSFunction struct is an extension of this struct
- * allocated from a larger GC size-class.
+ * The public interface for an object.
  *
- * The |shape_| member stores the shape of the object, which includes the
- * object's class and the layout of all its properties.
+ * Implementation of the underlying structure occurs in ObjectImpl, from which
+ * this struct inherits.  This inheritance is currently public, but it will
+ * eventually be made protected.  For full details, see vm/ObjectImpl.{h,cpp}.
  *
- * The type member stores the type of the object, which contains its prototype
- * object and the possible types of its properties.
- *
- * The rest of the object stores its named properties and indexed elements.
- * These are stored separately from one another. Objects are followed by an
- * variable-sized array of values for inline storage, which may be used by
- * either properties of native objects (fixed slots) or by elements.
- *
- * Two native objects with the same shape are guaranteed to have the same
- * number of fixed slots.
- *
- * Named property storage can be split between fixed slots and a dynamically
- * allocated array (the slots member). For an object with N fixed slots, shapes
- * with slots [0..N-1] are stored in the fixed slots, and the remainder are
- * stored in the dynamic array. If all properties fit in the fixed slots, the
- * 'slots' member is NULL.
- *
- * Elements are indexed via the 'elements' member. This member can point to
- * either the shared emptyObjectElements singleton, into the inline value array
- * (the address of the third value, to leave room for a ObjectElements header;
- * in this case numFixedSlots() is zero) or to a dynamically allocated array.
- *
- * Only certain combinations of properties and elements storage are currently
- * possible. This will be changing soon :XXX: bug 586842.
- *
- * - For objects other than arrays and typed arrays, the elements are empty.
- *
- * - For 'slow' arrays, both elements and properties are used, but the
- *   elements have zero capacity --- only the length member is used.
- *
- * - For dense arrays, elements are used and properties are not used.
- *
- * - For typed array buffers, elements are used and properties are not used.
- *   The data indexed by the elements do not represent Values, but primitive
- *   unboxed integers or floating point values.
+ * The JSFunction struct is an extension of this struct allocated from a larger
+ * GC size-class.
  */
-struct JSObject : js::gc::Cell
+struct JSObject : public js::ObjectImpl
 {
   private:
     friend struct js::Shape;
     friend struct js::GCMarker;
     friend class  js::NewObjectCache;
 
-    /*
-     * Shape of the object, encodes the layout of the object's properties and
-     * all other information about its structure. See jsscope.h.
-     */
-    js::HeapPtrShape shape_;
-
 #ifdef DEBUG
     void checkShapeConsistency();
 #endif
-
-    /*
-     * The object's type and prototype. For objects with the LAZY_TYPE flag
-     * set, this is the prototype's default 'new' type and can only be used
-     * to get that prototype.
-     */
-    js::HeapPtrTypeObject type_;
 
     /* Make the type object to use for LAZY_TYPE objects. */
     void makeLazyType(JSContext *cx);
 
   public:
-    inline js::Shape *lastProperty() const {
-        JS_ASSERT(shape_);
-        return shape_;
-    }
-
     /*
      * Update the last property, keeping the number of allocated slots in sync
      * with the object's new slot span.
@@ -564,40 +457,13 @@ struct JSObject : js::gc::Cell
      */
     bool setSlotSpan(JSContext *cx, uint32_t span);
 
-    static inline size_t offsetOfShape() { return offsetof(JSObject, shape_); }
-    inline js::HeapPtrShape *addressOfShape() { return &shape_; }
-
-    const js::Shape *nativeLookup(JSContext *cx, jsid id);
-
     inline bool nativeContains(JSContext *cx, jsid id);
     inline bool nativeContains(JSContext *cx, const js::Shape &shape);
 
     /* Upper bound on the number of elements in an object. */
     static const uint32_t NELEMENTS_LIMIT = JS_BIT(28);
 
-  private:
-    js::HeapValue   *slots;     /* Slots for object properties. */
-    js::HeapValue   *elements;  /* Slots for object elements. */
-
   public:
-
-    inline bool isNative() const;
-
-    inline js::Class *getClass() const;
-    inline JSClass *getJSClass() const;
-    inline bool hasClass(const js::Class *c) const;
-    inline const js::ObjectOps *getOps() const;
-
-    /*
-     * An object is a delegate if it is on another object's prototype or scope
-     * chain, and therefore the delegate might be asked implicitly to get or
-     * set a property on behalf of another object. Delegates may be accessed
-     * directly too, as may any object, but only those objects linked after the
-     * head of any prototype or scope chain are flagged as delegates. This
-     * definition helps to optimize shape-based property cache invalidation
-     * (see Purge{Scope,Proto}Chain in jsobj.cpp).
-     */
-    inline bool isDelegate() const;
     inline bool setDelegate(JSContext *cx);
 
     inline bool isBoundFunction() const;
@@ -663,31 +529,19 @@ struct JSObject : js::gc::Cell
     /* Whether there may be indexed properties on this object. */
     inline bool isIndexed() const;
 
-    /*
-     * Return true if this object is a native one that has been converted from
-     * shared-immutable prototype-rooted shape storage to dictionary-shapes in
-     * a doubly-linked list.
-     */
-    inline bool inDictionaryMode() const;
-
     inline uint32_t propertyCount() const;
 
     inline bool hasPropertyTable() const;
 
-    inline size_t sizeOfThis() const;
     inline size_t computedSizeOfThisSlotsElements() const;
 
     inline void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
                                     size_t *slotsSize, size_t *elementsSize,
                                     size_t *miscSize) const;
 
-    inline size_t numFixedSlots() const;
-
     static const uint32_t MAX_FIXED_SLOTS = 16;
 
   private:
-    inline js::HeapValue* fixedSlots() const;
-
     /*
      * Get internal pointers to the range of values starting at start and
      * running for length.
@@ -708,14 +562,6 @@ struct JSObject : js::gc::Cell
     /* Get a raw pointer to the object's properties. */
     inline const js::HeapValue *getRawSlots();
 
-    /* JIT Accessors */
-    static inline size_t getFixedSlotOffset(size_t slot);
-    static inline size_t getPrivateDataOffset(size_t nfixed);
-    static inline size_t offsetOfSlots() { return offsetof(JSObject, slots); }
-
-    /* Minimum size for dynamically allocated slots. */
-    static const uint32_t SLOT_CAPACITY_MIN = 8;
-
     /*
      * Grow or shrink slots immediately before changing the slot span.
      * The number of allocated slots is not stored explicitly, and changes to
@@ -725,14 +571,6 @@ struct JSObject : js::gc::Cell
     void shrinkSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount);
 
     bool hasDynamicSlots() const { return slots != NULL; }
-
-    /*
-     * Get the number of dynamic slots to allocate to cover the properties in
-     * an object with the given number of fixed slots and slot span. The slot
-     * capacity is not stored explicitly, and the allocated size of the slot
-     * array is kept in sync with this count.
-     */
-    static inline size_t dynamicSlotsCount(size_t nfixed, size_t span);
 
     /* Compute dynamicSlotsCount() for this object. */
     inline size_t numDynamicSlots() const;
@@ -844,18 +682,6 @@ struct JSObject : js::gc::Cell
     inline void initFixedSlot(uintN slot, const js::Value &value);
 
     /*
-     * Whether this is the only object which has its specified type. This
-     * object will have its type constructed lazily as needed by analysis.
-     */
-    bool hasSingletonType() const { return !!type_->singleton; }
-
-    /*
-     * Whether the object's type has not been constructed yet. If an object
-     * might have a lazy type, use getType() below, otherwise type().
-     */
-    bool hasLazyType() const { return type_->lazy(); }
-
-    /*
      * Marks this object as having a singleton type, and leave the type lazy.
      * Constructs a new, unique shape for the object.
      */
@@ -863,18 +689,10 @@ struct JSObject : js::gc::Cell
 
     inline js::types::TypeObject *getType(JSContext *cx);
 
-    js::types::TypeObject *type() const {
-        JS_ASSERT(!hasLazyType());
-        return type_;
-    }
-
     js::HeapPtr<js::types::TypeObject> &typeFromGC() {
         /* Direct field access for use by GC. */
         return type_;
     }
-
-    static inline size_t offsetOfType() { return offsetof(JSObject, type_); }
-    inline js::HeapPtrTypeObject *addressOfType() { return &type_; }
 
     inline void setType(js::types::TypeObject *newType);
 
@@ -905,10 +723,6 @@ struct JSObject : js::gc::Cell
      * or the global object.
      */
     bool shouldSplicePrototype(JSContext *cx);
-
-    JSObject * getProto() const {
-        return type_->proto;
-    }
 
     /*
      * Parents and scope chains.
@@ -988,7 +802,6 @@ struct JSObject : js::gc::Cell
     inline void *&privateRef(uint32_t nfixed) const;
 
   public:
-    inline bool isExtensible() const;
     bool preventExtensions(JSContext *cx, js::AutoIdVector *props);
 
     /* ES5 15.2.3.8: non-extensible, all props non-configurable */
@@ -1001,37 +814,9 @@ struct JSObject : js::gc::Cell
 
     /* Accessors for elements. */
 
-    js::ObjectElements *getElementsHeader() const {
-        return js::ObjectElements::fromElements(elements);
-    }
-
     inline bool ensureElements(JSContext *cx, uintN cap);
     bool growElements(JSContext *cx, uintN cap);
     void shrinkElements(JSContext *cx, uintN cap);
-
-    inline js::HeapValue* fixedElements() const {
-        JS_STATIC_ASSERT(2 * sizeof(js::Value) == sizeof(js::ObjectElements));
-        return &fixedSlots()[2];
-    }
-
-    void setFixedElements() { this->elements = fixedElements(); }
-
-    inline bool hasDynamicElements() const {
-        /*
-         * Note: for objects with zero fixed slots this could potentially give
-         * a spurious 'true' result, if the end of this object is exactly
-         * aligned with the end of its arena and dynamic slots are allocated
-         * immediately afterwards. Such cases cannot occur for dense arrays
-         * (which have at least two fixed slots) and can only result in a leak.
-         */
-        return elements != js::emptyObjectElements && elements != fixedElements();
-    }
-
-    /* JIT Accessors */
-    static inline size_t offsetOfElements() { return offsetof(JSObject, elements); }
-    static inline size_t offsetOfFixedElements() {
-        return sizeof(JSObject) + sizeof(js::ObjectElements);
-    }
 
     inline js::ElementIteratorObject *asElementIterator();
 
@@ -1206,7 +991,6 @@ struct JSObject : js::gc::Cell
     void freeSlot(JSContext *cx, uint32_t slot);
 
   public:
-    bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotConfigurable(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotExtensible(JSContext *cx, uintN report = JSREPORT_ERROR);
 
@@ -1354,12 +1138,6 @@ struct JSObject : js::gc::Cell
 
     inline void initArrayClass();
 
-    static inline void writeBarrierPre(JSObject *obj);
-    static inline void writeBarrierPost(JSObject *obj, void *addr);
-    static inline void readBarrier(JSObject *obj);
-    inline void privateWriteBarrierPre(void **oldval);
-    inline void privateWriteBarrierPost(void **oldval);
-
     /*
      * In addition to the generic object interface provided by JSObject,
      * specific types of objects may provide additional operations. To access,
@@ -1464,13 +1242,12 @@ struct JSObject : js::gc::Cell
 
   private:
     static void staticAsserts() {
-        /* Check alignment for any fixed slots allocated after the object. */
-        JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0);
-
-        JS_STATIC_ASSERT(offsetof(JSObject, shape_) == offsetof(js::shadow::Object, shape));
-        JS_STATIC_ASSERT(offsetof(JSObject, slots) == offsetof(js::shadow::Object, slots));
-        JS_STATIC_ASSERT(offsetof(JSObject, type_) == offsetof(js::shadow::Object, type));
-        JS_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::shadow::Object));
+        MOZ_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::shadow::Object),
+                          "shadow interface must match actual interface");
+        MOZ_STATIC_ASSERT(sizeof(JSObject) == sizeof(js::ObjectImpl),
+                          "JSObject itself must not have any fields");
+        MOZ_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0,
+                          "fixed slots after an object must be aligned");
     }
 };
 
@@ -1489,28 +1266,6 @@ static JS_ALWAYS_INLINE bool
 operator!=(const JSObject &lhs, const JSObject &rhs)
 {
     return &lhs != &rhs;
-}
-
-inline js::HeapValue*
-JSObject::fixedSlots() const
-{
-    return (js::HeapValue *) (uintptr_t(this) + sizeof(JSObject));
-}
-
-inline size_t
-JSObject::numFixedSlots() const
-{
-    return reinterpret_cast<const js::shadow::Object *>(this)->numFixedSlots();
-}
-
-/* static */ inline size_t
-JSObject::getFixedSlotOffset(size_t slot) {
-    return sizeof(JSObject) + (slot * sizeof(js::Value));
-}
-
-/* static */ inline size_t
-JSObject::getPrivateDataOffset(size_t nfixed) {
-    return getFixedSlotOffset(nfixed);
 }
 
 struct JSObject_Slots2 : JSObject { js::Value fslots[2]; };

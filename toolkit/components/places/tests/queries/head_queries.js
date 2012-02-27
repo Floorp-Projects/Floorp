@@ -200,11 +200,12 @@ function populateDB(aArray) {
           }
 
           if (qdata.isLivemark) {
-            PlacesUtils.livemarks.createLivemark(qdata.parentFolder,
-                                                 qdata.title,
-                                                 uri(qdata.uri),
-                                                 uri(qdata.feedURI),
-                                                 qdata.index);
+            PlacesUtils.livemarks.addLivemark({ title: qdata.title
+                                              , parentId: qdata.parentFolder
+                                              , index: qdata.index
+                                              , feedURI: uri(qdata.feedURI)
+                                              , siteURI: uri(qdata.uri)
+                                              });
           }
 
           if (qdata.isBookmark) {

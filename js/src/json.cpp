@@ -709,7 +709,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
     if (space.isObject()) {
         JSObject &spaceObj = space.toObject();
         if (ObjectClassIs(spaceObj, ESClass_Number, cx)) {
-            jsdouble d;
+            double d;
             if (!ToNumber(cx, space, &d))
                 return false;
             space = NumberValue(d);
@@ -725,7 +725,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
 
     if (space.isNumber()) {
         /* Step 6. */
-        jsdouble d;
+        double d;
         JS_ALWAYS_TRUE(ToInteger(cx, space, &d));
         d = JS_MIN(10, d);
         if (d >= 1 && !gap.appendN(' ', uint32_t(d)))

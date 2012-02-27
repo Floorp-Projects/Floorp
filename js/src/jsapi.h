@@ -1662,7 +1662,7 @@ JSVAL_IS_DOUBLE(jsval v)
     return JSVAL_IS_DOUBLE_IMPL(JSVAL_TO_IMPL(v));
 }
 
-static JS_ALWAYS_INLINE jsdouble
+static JS_ALWAYS_INLINE double
 JSVAL_TO_DOUBLE(jsval v)
 {
     jsval_layout l;
@@ -1672,7 +1672,7 @@ JSVAL_TO_DOUBLE(jsval v)
 }
 
 static JS_ALWAYS_INLINE jsval
-DOUBLE_TO_JSVAL(jsdouble d)
+DOUBLE_TO_JSVAL(double d)
 {
     /* This is a manually inlined version of:
      *    d = JS_CANONICALIZE_NAN(d);
@@ -1692,7 +1692,7 @@ UINT_TO_JSVAL(uint32_t i)
 {
     if (i <= JSVAL_INT_MAX)
         return INT_TO_JSVAL((int32_t)i);
-    return DOUBLE_TO_JSVAL((jsdouble)i);
+    return DOUBLE_TO_JSVAL((double)i);
 }
 
 static JS_ALWAYS_INLINE JSBool
@@ -2131,8 +2131,8 @@ JS_GetEmptyString(JSRuntime *rt);
  *   i      int32_t         ECMA int32_t
  *   u      uint32_t        ECMA uint32_t
  *   j      int32_t         Rounded int32_t (coordinate)
- *   d      jsdouble        IEEE double
- *   I      jsdouble        Integral IEEE double
+ *   d      double          IEEE double
+ *   I      double          Integral IEEE double
  *   S      JSString *      Unicode string, accessed by a JSString pointer
  *   W      jschar *        Unicode character vector, 0-terminated (W for wide)
  *   o      JSObject *      Object reference
@@ -2233,16 +2233,16 @@ extern JS_PUBLIC_API(JSString *)
 JS_ValueToSource(JSContext *cx, jsval v);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
+JS_ValueToNumber(JSContext *cx, jsval v, double *dp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DoubleIsInt32(jsdouble d, jsint *ip);
+JS_DoubleIsInt32(double d, jsint *ip);
 
 extern JS_PUBLIC_API(int32_t)
-JS_DoubleToInt32(jsdouble d);
+JS_DoubleToInt32(double d);
 
 extern JS_PUBLIC_API(uint32_t)
-JS_DoubleToUint32(jsdouble d);
+JS_DoubleToUint32(double d);
 
 /*
  * Convert a value to a number, then to an int32_t, according to the ECMA rules
@@ -2894,7 +2894,7 @@ extern JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s);
 
 extern JS_PUBLIC_API(JSBool)
-JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
+JS_NewNumberValue(JSContext *cx, double d, jsval *rval);
 
 /*
  * A GC root is a pointer to a jsval, JSObject * or JSString * that itself
@@ -3308,7 +3308,10 @@ typedef enum JSGCParamKey {
     JSGC_TOTAL_CHUNKS = 8,
 
     /* Max milliseconds to spend in an incremental GC slice. */
-    JSGC_SLICE_TIME_BUDGET = 9
+    JSGC_SLICE_TIME_BUDGET = 9,
+
+    /* Maximum size the GC mark stack can grow to. */
+    JSGC_MARK_STACK_LIMIT = 10
 } JSGCParamKey;
 
 typedef enum JSGCMode {
@@ -3593,7 +3596,7 @@ extern JS_PUBLIC_API(void)
 JS_FinalizeStub(JSContext *cx, JSObject *obj);
 
 struct JSConstDoubleSpec {
-    jsdouble        dval;
+    double          dval;
     const char      *name;
     uint8_t         flags;
     uint8_t         spare[3];
@@ -4258,6 +4261,17 @@ JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                        const jschar *chars, size_t length,
                                        const char *filename, uintN lineno,
                                        JSVersion version);
+/*
+ * If originPrincipals is null, then the value of principals is used as origin
+ * principals for the compiled script.
+ */
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
+                                             JSPrincipals *principals,
+                                             JSPrincipals *originPrincipals,
+                                             const jschar *chars, size_t length,
+                                             const char *filename, uintN lineno,
+                                             JSVersion version);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileUTF8File(JSContext *cx, JSObject *obj, const char *filename);
@@ -4422,7 +4436,8 @@ JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
  * A script's originPrincipals may be retrieved through the debug API (via
  * JS_GetScriptOriginPrincipals) and the originPrincipals are transitively
  * assigned to any nested scripts (including scripts dynamically created via
- * eval and the Function constructor).
+ * eval and the Function constructor). If originPrincipals is null, then the
+ * value of principals is used as origin principals for the script.
  */
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
@@ -5157,7 +5172,7 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewDateObject(JSContext *cx, int year, int mon, int mday, int hour, int min, int sec);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewDateObjectMsec(JSContext *cx, jsdouble msec);
+JS_NewDateObjectMsec(JSContext *cx, double msec);
 
 /*
  * Infallible predicate to test whether obj is a date object.

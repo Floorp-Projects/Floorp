@@ -187,7 +187,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                         hookresult = JS_TRUE;
                     } else if (!pdata->recurseDepth && pdata->lastCallStart) {
                         int64_t now, ll_delta;
-                        jsdouble delta;
+                        double delta;
                         now = JS_Now();
                         ll_delta = now - pdata->lastCallStart;
                         delta = ll_delta;

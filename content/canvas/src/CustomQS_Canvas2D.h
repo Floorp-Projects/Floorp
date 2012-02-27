@@ -272,7 +272,7 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
         return CreateImageData(cx, data_width, data_height, NULL, 0, 0, vp);
     }
 
-    jsdouble width, height;
+    double width, height;
     if (!JS_ValueToNumber(cx, argv[0], &width) ||
         !JS_ValueToNumber(cx, argv[1], &height))
         return false;
@@ -311,7 +311,7 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    jsdouble xd, yd, width, height;
+    double xd, yd, width, height;
     if (!JS_ValueToNumber(cx, argv[0], &xd) ||
         !JS_ValueToNumber(cx, argv[1], &yd) ||
         !JS_ValueToNumber(cx, argv[2], &width) ||

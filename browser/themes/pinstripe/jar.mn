@@ -29,7 +29,6 @@ browser.jar:
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
   skin/classic/browser/page-livemarks.png
-  skin/classic/browser/livemark-item.png
   skin/classic/browser/pageInfo.css
   skin/classic/browser/Privacy-16.png
   skin/classic/browser/Privacy-48.png
@@ -90,6 +89,7 @@ browser.jar:
   skin/classic/browser/places/expander-closed.png           (places/expander-closed.png)
   skin/classic/browser/places/expander-open-active.png      (places/expander-open-active.png)
   skin/classic/browser/places/expander-open.png             (places/expander-open.png)
+  skin/classic/browser/places/livemark-item.png             (places/livemark-item.png)
   skin/classic/browser/preferences/alwaysAsk.png            (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/application.png          (preferences/application.png)
   skin/classic/browser/preferences/Options.png              (preferences/Options.png)

@@ -464,12 +464,16 @@ pref("dom.ipc.content.nice", 1);
 // product URLs
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "http://crash-stats.mozilla.com/report/index/");
-pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 pref("app.support.baseURL", "http://support.mozilla.org/mobile");
 pref("app.feedbackURL", "http://input.mozilla.com/feedback/");
 pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/m/privacy.html");
 pref("app.creditsURL", "http://www.mozilla.org/credits/");
 pref("app.channelURL", "http://www.mozilla.org/%LOCALE%/firefox/channel/");
+#if MOZ_UPDATE_CHANNEL == aurora
+pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/auroranotes/");
+#else
+pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
+#endif
 #if MOZ_UPDATE_CHANNEL == beta
 pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");

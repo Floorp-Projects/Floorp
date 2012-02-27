@@ -468,7 +468,7 @@ TelemetryPing.prototype = {
     request.mozBackgroundRequest = true;
     request.open("POST", url, true);
     request.overrideMimeType("text/plain");
-    request.setRequestHeader("Content-Type", "application/json");
+    request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
 
     let startTime = new Date();
 
@@ -486,9 +486,37 @@ TelemetryPing.prototype = {
     request.addEventListener("error", function(aEvent) finishRequest(request.channel), false);
     request.addEventListener("load", function(aEvent) finishRequest(request.channel), false);
 
-    request.send(data.payload);
+    request.setRequestHeader("Content-Encoding", "gzip");
+    let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
+                        .createInstance(Ci.nsIStringInputStream);
+    payloadStream.data = this.gzipCompressString(data.payload);
+    request.send(payloadStream);
   },
-  
+
+  gzipCompressString: function gzipCompressString(string) {
+    let observer = {
+      buffer: "",
+      onStreamComplete: function(loader, context, status, length, result) {
+	this.buffer = String.fromCharCode.apply(this, result);
+      }
+    };
+
+    let scs = Cc["@mozilla.org/streamConverters;1"]
+              .getService(Ci.nsIStreamConverterService);
+    let listener = Cc["@mozilla.org/network/stream-loader;1"]
+                  .createInstance(Ci.nsIStreamLoader);
+    listener.init(observer);
+    let converter = scs.asyncConvertData("uncompressed", "gzip",
+                                         listener, null);
+    let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
+                       .createInstance(Ci.nsIStringInputStream);
+    stringStream.data = string;
+    converter.onStartRequest(null, null);
+    converter.onDataAvailable(null, null, stringStream, 0, string.length);
+    converter.onStopRequest(null, null, null);
+    return observer.buffer;
+  },
+
   attachObservers: function attachObservers() {
     if (!this._initialized)
       return;

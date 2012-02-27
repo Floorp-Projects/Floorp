@@ -73,6 +73,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),
     principals(NULL),
     needsBarrier_(false),
+    barrierMarker_(rt->gcMarker.sizeLimit()),
     gcBytes(0),
     gcTriggerBytes(0),
     gcLastBytes(0),

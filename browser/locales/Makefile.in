@@ -169,11 +169,11 @@ libs:: $(addsuffix .xml,$(SEARCH_PLUGINS))
 	done
 
 install:: $(addsuffix .xml,$(SEARCH_PLUGINS))
-	$(NSINSTALL) -D $(DESTDIR)$mozappdir/searchplugins
+	$(NSINSTALL) -D $(DESTDIR)$(mozappdir)/searchplugins
 	for i in $^; do \
 	  SEARCH_PLUGIN_BASE=`basename $$SEARCH_PLUGIN`;\
 	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-	    $$SEARCH_PLUGIN > $(DESTDIR)$mozappdir/searchplugins/$$SEARCH_PLUGIN_BASE; \
+	    $$SEARCH_PLUGIN > $(DESTDIR)$(mozappdir)/searchplugins/$$SEARCH_PLUGIN_BASE; \
 	done
 
 

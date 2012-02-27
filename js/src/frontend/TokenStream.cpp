@@ -155,7 +155,7 @@ js::IsIdentifier(JSLinearString *str)
 /* Initialize members that aren't initialized in |init|. */
 TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin)
   : tokens(), cursor(), lookahead(), flags(), listenerTSData(), tokenbuf(cx),
-    cx(cx), originPrincipals(originPrin ? originPrin : prin)
+    cx(cx), originPrincipals(JSScript::normalizeOriginPrincipals(prin, originPrin))
 {
     if (originPrincipals)
         JSPRINCIPALS_HOLD(cx, originPrincipals);
@@ -1732,7 +1732,7 @@ TokenStream::getTokenInternal()
          * chars, so we don't need to use tokenbuf.  Instead we can just
          * convert the jschars in userbuf directly to the numeric value.
          */
-        jsdouble dval;
+        double dval;
         const jschar *dummy;
         if (!hasFracOrExp) {
             if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), 10, &dummy, &dval))
@@ -1823,7 +1823,7 @@ TokenStream::getTokenInternal()
             goto error;
         }
 
-        jsdouble dval;
+        double dval;
         const jschar *dummy;
         if (!GetPrefixInteger(cx, numStart, userbuf.addressOfNextRawChar(), radix, &dummy, &dval))
             goto error;

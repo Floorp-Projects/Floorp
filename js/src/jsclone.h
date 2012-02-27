@@ -63,7 +63,7 @@ struct SCOutput {
 
     bool write(uint64_t u);
     bool writePair(uint32_t tag, uint32_t data);
-    bool writeDouble(jsdouble d);
+    bool writeDouble(double d);
     bool writeBytes(const void *p, size_t nbytes);
     bool writeChars(const jschar *p, size_t nchars);
 
@@ -87,7 +87,7 @@ struct SCInput {
 
     bool read(uint64_t *p);
     bool readPair(uint32_t *tagp, uint32_t *datap);
-    bool readDouble(jsdouble *p);
+    bool readDouble(double *p);
     bool readBytes(void *p, size_t nbytes);
     bool readChars(jschar *p, size_t nchars);
 
@@ -100,7 +100,7 @@ struct SCInput {
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(jschar) == 2);
         JS_STATIC_ASSERT(sizeof(uint32_t) == 4);
-        JS_STATIC_ASSERT(sizeof(jsdouble) == 8);
+        JS_STATIC_ASSERT(sizeof(double) == 8);
     }
 
     JSContext *cx;
@@ -123,7 +123,7 @@ struct JSStructuredCloneReader {
   private:
     JSContext *context() { return in.context(); }
 
-    bool checkDouble(jsdouble d);
+    bool checkDouble(double d);
     JSString *readString(uint32_t nchars);
     bool readTypedArray(uint32_t tag, uint32_t nelems, js::Value *vp);
     bool readArrayBuffer(uint32_t nbytes, js::Value *vp);

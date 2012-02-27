@@ -799,7 +799,7 @@ pref("browser.sessionstore.max_resumed_crashes", 1);
 // focused (also applies to tabs that aren't visible). When false, the values
 // for MAX_CONCURRENT_TAB_RESTORES and restore_hidden_tabs are respected.
 // Selected tabs are always restored regardless of this pref.
-pref("browser.sessionstore.restore_on_demand", false);
+pref("browser.sessionstore.restore_on_demand", true);
 // Whether to automatically restore hidden tabs (i.e., tabs in other tab groups) or not
 pref("browser.sessionstore.restore_hidden_tabs", false);
 // If restore_on_demand is set, pinned tabs are restored on startup by default.
