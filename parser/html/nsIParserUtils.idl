@@ -23,3 +23,10 @@ interface nsIParserUtils : nsISupports
                              in unsigned long flags,
                              in unsigned long wrapCol);
 };
+
+%{ C++
+#define NS_PARSERUTILS_CONTRACTID \
+    "@mozilla.org/parserutils;1"
+#define NS_PARSERUTILS_CID  \
+{ 0xaf7b24cb, 0x893f, 0x41bb, { 0x96, 0x1f, 0x5a, 0x69, 0x38, 0x8e, 0x27, 0xc3 } }
+%}

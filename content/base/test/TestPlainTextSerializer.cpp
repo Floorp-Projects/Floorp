@@ -42,7 +42,6 @@
 #include "nsIDocumentEncoder.h"
 #include "nsCRT.h"
 #include "nsIParserUtils.h"
-#include "nsToolkitCompsCID.h"
 
 void
 ConvertBufToPlainText(nsString &aConBuf, int aFlag)
