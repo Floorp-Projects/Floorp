@@ -67,10 +67,13 @@ CPPSRCS = \
 
 EXTRA_COMPONENTS = \
   nsFormAutoComplete.js \
-  nsFormHistory.js \
   nsInputListAutoComplete.js \
   satchel.manifest \
   $(NULL)
+
+EXTRA_PP_COMPONENTS = \
+	nsFormHistory.js \
+	$(NULL)
 
 EXTRA_JS_MODULES = \
   nsFormAutoCompleteResult.jsm \
