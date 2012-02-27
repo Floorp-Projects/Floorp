@@ -95,10 +95,12 @@ void setup_sqlite_functions(void *sqlite_handle)
 static bool initialized = false;
 static jclass stringClass;
 static jclass objectClass;
+static jclass longClass;
 static jclass byteBufferClass;
 static jclass arrayListClass;
 static jmethodID jByteBufferAllocateDirect;
 static jmethodID jArrayListAdd;
+static jmethodID jLongConstructor;
 static jobject jNull;
 
 static void
@@ -123,12 +125,14 @@ JNI_Setup(JNIEnv* jenv)
 
     objectClass     = jenv->FindClass("java/lang/Object");
     stringClass     = jenv->FindClass("java/lang/String");
+    longClass       = jenv->FindClass("java/lang/Long");
     byteBufferClass = jenv->FindClass("java/nio/ByteBuffer");
     arrayListClass  = jenv->FindClass("java/util/ArrayList");
     jNull           = jenv->NewGlobalRef(NULL);
 
     if (stringClass == NULL || objectClass == NULL
-        || byteBufferClass == NULL || arrayListClass == NULL) {
+        || byteBufferClass == NULL || arrayListClass == NULL
+        || longClass == NULL) {
         LOG("Error finding classes");
         JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException",
                   "FindClass error");
@@ -141,8 +145,13 @@ JNI_Setup(JNIEnv* jenv)
     // boolean add(Object o)
     jArrayListAdd =
         jenv->GetMethodID(arrayListClass, "add", "(Ljava/lang/Object;)Z");
+    // new Long(long i)
+    jLongConstructor =
+        jenv->GetMethodID(longClass, "<init>", "(J)V");
 
-    if (jByteBufferAllocateDirect == NULL || jArrayListAdd == NULL) {
+    if (jByteBufferAllocateDirect == NULL
+        || jArrayListAdd == NULL
+        || jLongConstructor == NULL) {
         LOG("Error finding methods");
         JNI_Throw(jenv, "org/mozilla/gecko/sqlite/SQLiteBridgeException",
                   "GetMethodId error");
@@ -158,6 +167,7 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCall(JNIEnv* jenv, jclass,
                                                       jstring jQuery,
                                                       jobjectArray jParams,
                                                       jobject jColumns,
+                                                      jobjectArray jQueryRes,
                                                       jobject jArrayList)
 {
     JNI_Setup(jenv);
@@ -244,29 +254,17 @@ Java_org_mozilla_gecko_sqlite_SQLiteBridge_sqliteCall(JNIEnv* jenv, jclass,
         jenv->DeleteLocalRef(jStr);
     }
 
-    // if the statement doesn't return any results, instead return the id and number of changed rows
-    if (rc == SQLITE_DONE) {
-        jclass integerClass = jenv->FindClass("java/lang/Integer");
-        jmethodID intConstructor = jenv->GetMethodID(integerClass, "<init>", "(I)V");
-        
-        jobjectArray jRow = jenv->NewObjectArray(2, objectClass, NULL);
-        if (jRow == NULL) {
-            asprintf(&errorMsg, "Can't allocate jRow Object[]\n");
-            goto error_close;
-        }
-
-        int id = f_sqlite3_last_insert_rowid(db);
-        jobject jId = jenv->NewObject(integerClass, intConstructor, id);
-        jenv->SetObjectArrayElement(jRow, 0, jId);
+    // Return the id and number of changed rows in jQueryRes
+    {
+        long id = f_sqlite3_last_insert_rowid(db);
+        jobject jId = jenv->NewObject(longClass, jLongConstructor, id);
+        jenv->SetObjectArrayElement(jQueryRes, 0, jId);
         jenv->DeleteLocalRef(jId);
 
-        int changed = f_sqlite3_changes(db);
-        jobject jChanged = jenv->NewObject(integerClass, intConstructor, changed);
-        jenv->SetObjectArrayElement(jRow, 1, jChanged);
+        long changed = f_sqlite3_changes(db);
+        jobject jChanged = jenv->NewObject(longClass, jLongConstructor, changed);
+        jenv->SetObjectArrayElement(jQueryRes, 1, jChanged);
         jenv->DeleteLocalRef(jChanged);
-
-        jenv->CallBooleanMethod(jArrayList, jArrayListAdd, jRow);
-        jenv->DeleteLocalRef(jRow);
     }
 
     // For each row, add an Object[] to the passed ArrayList,
