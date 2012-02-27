@@ -1941,6 +1941,32 @@ public:
    */
   static bool URIIsChromeOrInPref(nsIURI *aURI, const char *aPref);
 
+  /**
+   * This will parse aSource, to extract the value of the pseudo attribute
+   * with the name specified in aName. See
+   * http://www.w3.org/TR/xml-stylesheet/#NT-StyleSheetPI for the specification
+   * which is used to parse aSource.
+   *
+   * @param aSource the string to parse
+   * @param aName the name of the attribute to get the value for
+   * @param aValue [out] the value for the attribute with name specified in
+   *                     aAttribute. Empty if the attribute isn't present.
+   * @return true     if the attribute exists and was successfully parsed.
+   *         false if the attribute doesn't exist, or has a malformed
+   *                  value, such as an unknown or unterminated entity.
+   */
+  static bool GetPseudoAttributeValue(const nsString& aSource, nsIAtom *aName,
+                                      nsAString& aValue);
+
+  /**
+   * Returns true if the language name is a version of JavaScript and
+   * false otherwise
+   */
+  static bool IsJavaScriptLanguage(const nsString& aName, PRUint32 *aVerFlags);
+
+  static void SplitMimeType(const nsAString& aValue, nsString& aType,
+                            nsString& aParams);
+
 private:
   static bool InitializeEventTable();
 
