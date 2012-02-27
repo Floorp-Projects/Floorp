@@ -3927,7 +3927,8 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
 /* static */
 nsresult
 nsContentUtils::ParseDocumentHTML(const nsAString& aSourceBuffer,
-                                  nsIDocument* aTargetDocument)
+                                  nsIDocument* aTargetDocument,
+                                  bool aScriptingEnabledForNoscriptParsing)
 {
   if (nsContentUtils::sFragmentParsingActive) {
     NS_NOTREACHED("Re-entrant fragment parsing attempted.");
@@ -3941,7 +3942,8 @@ nsContentUtils::ParseDocumentHTML(const nsAString& aSourceBuffer,
   }
   nsresult rv =
     sHTMLFragmentParser->ParseDocument(aSourceBuffer,
-                                       aTargetDocument);
+                                       aTargetDocument,
+                                       aScriptingEnabledForNoscriptParsing);
   return rv;
 }
 
@@ -3992,6 +3994,44 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   return rv;
 }
 
+/* static */
+nsresult
+nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
+                                   nsAString& aResultBuffer,
+                                   PRUint32 aFlags,
+                                   PRUint32 aWrapCol)
+{
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), "about:blank");
+  nsCOMPtr<nsIPrincipal> principal =
+    do_CreateInstance("@mozilla.org/nullprincipal;1");
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  nsresult rv = nsContentUtils::CreateDocument(EmptyString(),
+                                               EmptyString(),
+                                               nsnull,
+                                               uri,
+                                               uri,
+                                               principal,
+                                               nsnull,
+                                               DocumentFlavorHTML,
+                                               getter_AddRefs(domDocument));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+  rv = nsContentUtils::ParseDocumentHTML(aSourceBuffer, document,
+    !(aFlags & nsIDocumentEncoder::OutputNoScriptContent));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(
+    "@mozilla.org/layout/documentEncoder;1?type=text/plain");
+
+  rv = encoder->Init(domDocument, NS_LITERAL_STRING("text/plain"), aFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  encoder->SetWrapColumn(aWrapCol);
+
+  return encoder->EncodeToString(aResultBuffer);
+}
 
 /* static */
 nsresult

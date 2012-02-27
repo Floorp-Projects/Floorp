@@ -41,20 +41,31 @@ interface nsIDOMDocumentFragment;
 interface nsIURI;
 
 /**
- * A utility class that unescapes HTML strings.
+ * A utility class for HTML parsing in the feed processor.
  */
 [scriptable, uuid(3ab244a9-f09d-44da-9e3f-ee4d67367f2d)]
 interface nsIScriptableUnescapeHTML : nsISupports 
 {
   /** 
-   * Converts all entities to Unicode.
+   * Converts HTML to plain text. This is equivalent to calling
+   * nsIParserUtils::convertToPlainText(src, 
+   *   nsIDocumentEncoder::OutputSelectionOnly |
+   *   nsIDocumentEncoder::OutputAbsoluteLinks, 0).
    *
-   * @param src The HTML string to escape.
+   * You should most likely call nsIParserUtils::convertToPlainText()
+   * instead of calling this method.
+   *
+   * @param src The HTML string to convert to plain text.
    */ 
   AString unescape(in AString src);
         
   /**
-   * Appends the text to the element.
+   * Parses markup into a sanitized document fragment.
+   *
+   * @param fragment the input markup
+   * @param isXML true if |fragment| is XML and false if HTML
+   * @param baseURI the base URL for this fragment
+   * @param element the context node for the fragment parsing algorithm
    */
   nsIDOMDocumentFragment parseFragment(in AString fragment,
                                        in boolean isXML,
