@@ -2412,6 +2412,11 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
 
     barrier = cx->typeLifoAlloc().new_<TypeBarrier>(target, type, (JSObject *) NULL, JSID_VOID);
 
+    if (!barrier) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
     barrier->next = code.typeBarriers;
     code.typeBarriers = barrier;
 }
@@ -2437,6 +2442,11 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
 
     TypeBarrier *barrier = cx->typeLifoAlloc().new_<TypeBarrier>(target, Type::UndefinedType(),
                               singleton, singletonId);
+
+    if (!barrier) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
 
     barrier->next = code.typeBarriers;
     code.typeBarriers = barrier;
