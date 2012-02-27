@@ -70,9 +70,9 @@ LayerManagerD3D9::~LayerManagerD3D9()
 }
 
 bool
-LayerManagerD3D9::Initialize()
+LayerManagerD3D9::Initialize(bool force)
 {
-  ScopedGfxFeatureReporter reporter("D3D9 Layers");
+  ScopedGfxFeatureReporter reporter("D3D9 Layers", force);
 
   /* XXX: this preference and blacklist code should move out of the layer manager */
   bool forceAccelerate =
