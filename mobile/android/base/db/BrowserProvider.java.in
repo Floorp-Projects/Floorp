@@ -1501,15 +1501,15 @@ public class BrowserProvider extends ContentProvider {
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_HISTORY, selection, selectionArgs);
-        } else {
-            debug("Marking history entry as deleted for URI: " + uri);
-
-            ContentValues values = new ContentValues();
-            values.put(History.IS_DELETED, 1);
-
-            cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
-            return updateHistory(uri, values, selection, selectionArgs);
         }
+
+        debug("Marking history entry as deleted for URI: " + uri);
+
+        ContentValues values = new ContentValues();
+        values.put(History.IS_DELETED, 1);
+
+        cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
+        return updateHistory(uri, values, selection, selectionArgs);
     }
 
     int deleteBookmarks(Uri uri, String selection, String[] selectionArgs) {
@@ -1519,15 +1519,15 @@ public class BrowserProvider extends ContentProvider {
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_BOOKMARKS, selection, selectionArgs);
-        } else {
-            debug("Marking bookmarks as deleted for URI: " + uri);
-
-            ContentValues values = new ContentValues();
-            values.put(Bookmarks.IS_DELETED, 1);
-
-            cleanupSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
-            return updateBookmarks(uri, values, selection, selectionArgs);
         }
+
+        debug("Marking bookmarks as deleted for URI: " + uri);
+
+        ContentValues values = new ContentValues();
+        values.put(Bookmarks.IS_DELETED, 1);
+
+        cleanupSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
+        return updateBookmarks(uri, values, selection, selectionArgs);
     }
 
     int deleteImages(Uri uri, String selection, String[] selectionArgs) {
@@ -1537,15 +1537,15 @@ public class BrowserProvider extends ContentProvider {
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_IMAGES, selection, null);
-        } else {
-            debug("Marking images as deleted for URI: " + uri);
-
-            ContentValues values = new ContentValues();
-            values.put(History.IS_DELETED, 1);
-
-            cleanupSomeDeletedRecords(uri, Images.CONTENT_URI, TABLE_IMAGES);
-            return updateExistingImage(uri, values, selection, null);
         }
+
+        debug("Marking images as deleted for URI: " + uri);
+
+        ContentValues values = new ContentValues();
+        values.put(History.IS_DELETED, 1);
+
+        cleanupSomeDeletedRecords(uri, Images.CONTENT_URI, TABLE_IMAGES);
+        return updateExistingImage(uri, values, selection, null);
     }
 
     int deleteUnusedImages(Uri uri) {
