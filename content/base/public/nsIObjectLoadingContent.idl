@@ -42,6 +42,7 @@ interface nsIObjectFrame;
 interface nsIPluginTag;
 interface nsIDOMElement;
 interface nsIDOMClientRect;
+interface nsIURI;
 
 %{C++
 #include "nsNPAPIPluginInstance.h"
@@ -51,7 +52,7 @@ interface nsIDOMClientRect;
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(6D8914C7-0E22-4452-8962-11B69BBE84D7)]
+[scriptable, uuid(3FF07AB3-5BAC-4D98-9549-5BD15CCEBCD3)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -78,6 +79,14 @@ interface nsIObjectLoadingContent : nsISupports
    * TYPE_NULL will be returned.
    */
   unsigned long getContentTypeForMIMEType(in AUTF8String aMimeType);
+
+  /**
+  * Gets the base URI to be used for this object. This differs from
+  * nsIContent::GetBaseURI in that it takes codebase attributes into
+  * account. The MIME type is required as some plugins (java) calculate
+  * this differently.
+  */
+  nsIURI GetObjectBaseURI(in ACString aMimeType);
 
   /**
    * Returns the plugin instance if it has already been instantiated. This
