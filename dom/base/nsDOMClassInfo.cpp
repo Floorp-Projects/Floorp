@@ -4472,7 +4472,7 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsid id, bool *aIsNumber)
       JSAutoRequest ar(cx);
 
       jsval idval;
-      jsdouble array_index;
+      double array_index;
       if (!::JS_IdToValue(cx, id, &idval) ||
           !::JS_ValueToNumber(cx, idval, &array_index) ||
           !::JS_DoubleIsInt32(array_index, &i)) {

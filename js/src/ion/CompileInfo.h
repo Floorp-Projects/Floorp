@@ -97,10 +97,10 @@ class CompileInfo
     // Script accessors based on PC.
 
     JSAtom *getAtom(jsbytecode *pc) const {
-        return script_->getAtom(GET_INDEX(pc));
+        return script_->getAtom(GET_UINT32_INDEX(pc));
     }
     RegExpObject *getRegExp(jsbytecode *pc) const {
-        return script_->getRegExp(GET_INDEX(pc));
+        return script_->getRegExp(GET_UINT32_INDEX(pc));
     }
     JSObject *getObject(jsbytecode *pc) const {
         return script_->getObject(GET_UINT32_INDEX(pc));
@@ -109,7 +109,7 @@ class CompileInfo
         return script_->getFunction(GET_UINT32_INDEX(pc));
     }
     const Value &getConst(jsbytecode *pc) const {
-        return script_->getConst(GET_INDEX(pc));
+        return script_->getConst(GET_UINT32_INDEX(pc));
     }
     jssrcnote *getNote(JSContext *cx, jsbytecode *pc) const {
         return js_GetSrcNoteCached(cx, script(), pc);

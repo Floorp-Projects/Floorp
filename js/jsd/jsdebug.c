@@ -211,42 +211,42 @@ JSD_GetScriptMaxRecurseDepth(JSDContext* jsdc, JSDScript *script)
 }
     
 
-JSD_PUBLIC_API(jsdouble)
+JSD_PUBLIC_API(double)
 JSD_GetScriptMinExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetScriptMinExecutionTime(jsdc, script);
 }
     
-JSD_PUBLIC_API(jsdouble)
+JSD_PUBLIC_API(double)
 JSD_GetScriptMaxExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetScriptMaxExecutionTime(jsdc, script);
 }
 
-JSD_PUBLIC_API(jsdouble)
+JSD_PUBLIC_API(double)
 JSD_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetScriptTotalExecutionTime(jsdc, script);
 }
 
-JSD_PUBLIC_API(jsdouble)
+JSD_PUBLIC_API(double)
 JSD_GetScriptMinOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetScriptMinOwnExecutionTime(jsdc, script);
 }
     
-JSD_PUBLIC_API(jsdouble)
+JSD_PUBLIC_API(double)
 JSD_GetScriptMaxOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetScriptMaxOwnExecutionTime(jsdc, script);
 }
 
-JSD_PUBLIC_API(jsdouble)
+JSD_PUBLIC_API(double)
 JSD_GetScriptTotalOwnExecutionTime(JSDContext* jsdc, JSDScript *script)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -1110,7 +1110,7 @@ JSD_GetValueInt(JSDContext* jsdc, JSDValue* jsdval)
     return jsd_GetValueInt(jsdc, jsdval);
 }
 
-JSD_PUBLIC_API(jsdouble)
+JSD_PUBLIC_API(double)
 JSD_GetValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);

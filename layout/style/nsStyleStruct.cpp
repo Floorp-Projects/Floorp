@@ -1977,6 +1977,13 @@ nsStyleBackground::Size::operator==(const Size& aOther) const
          (mHeightType != eLengthPercentage || mHeight == aOther.mHeight);
 }
 
+void
+nsStyleBackground::Repeat::SetInitialValues() 
+{
+  mXRepeat = NS_STYLE_BG_REPEAT_REPEAT;
+  mYRepeat = NS_STYLE_BG_REPEAT_REPEAT;
+}
+
 nsStyleBackground::Layer::Layer()
 {
 }
@@ -1991,7 +1998,7 @@ nsStyleBackground::Layer::SetInitialValues()
   mAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   mClip = NS_STYLE_BG_CLIP_BORDER;
   mOrigin = NS_STYLE_BG_ORIGIN_PADDING;
-  mRepeat = NS_STYLE_BG_REPEAT_XY;
+  mRepeat.SetInitialValues();
   mPosition.SetInitialValues();
   mSize.SetInitialValues();
   mImage.SetNull();

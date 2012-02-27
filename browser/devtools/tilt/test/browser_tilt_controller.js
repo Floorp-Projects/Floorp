@@ -47,7 +47,7 @@ function test() {
 
           EventUtils.synthesizeKey("VK_A", { type: "keydown" });
           EventUtils.synthesizeKey("VK_LEFT", { type: "keydown" });
-          instance.controller.update();
+          instance.controller._update();
 
           ok(!isEqualVec(tran(), prev_tran),
             "After a translation key is pressed, the vector should change.");
@@ -58,7 +58,7 @@ function test() {
 
 
           cancellingEvent();
-          instance.controller.update();
+          instance.controller._update();
 
           ok(!isEqualVec(tran(), prev_tran),
             "Even if the canvas lost focus, the vector has some inertia.");
@@ -70,7 +70,7 @@ function test() {
 
           while (!isEqualVec(tran(), prev_tran) ||
                  !isEqualVec(rot(), prev_rot)) {
-            instance.controller.update();
+            instance.controller._update();
             save();
           }
 

@@ -5,7 +5,7 @@ x = "notset";
 function child() {
   x = "failure1";
   /* JSOP_STOP in parent. */
-  trap(parent, 10, "success()");
+  trap(parent, 16, "success()");
 }
 
 function parent() {

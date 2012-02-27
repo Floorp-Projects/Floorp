@@ -363,13 +363,10 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
   CSS_PROP(name_, id_, method_, flags_, X, X, X, X, X)
 #include "nsCSSPropList.h"
 
-// Aliases
-CSS_PROP(X, opacity, MozOpacity, X, X, X, X, X, X)
-CSS_PROP(X, outline, MozOutline, X, X, X, X, X, X)
-CSS_PROP(X, outline_color, MozOutlineColor, X, X, X, X, X, X)
-CSS_PROP(X, outline_style, MozOutlineStyle, X, X, X, X, X, X)
-CSS_PROP(X, outline_width, MozOutlineWidth, X, X, X, X, X, X)
-CSS_PROP(X, outline_offset, MozOutlineOffset, X, X, X, X, X, X)
+#define CSS_PROP_ALIAS(aliasname_, propid_, aliasmethod_) \
+  CSS_PROP(X, propid_, aliasmethod_, X, X, X, X, X, X)
+#include "nsCSSPropAliasList.h"
+#undef CSS_PROP_ALIAS
 
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL

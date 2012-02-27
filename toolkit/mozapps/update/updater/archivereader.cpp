@@ -42,6 +42,14 @@
 #include "bzlib.h"
 #include "archivereader.h"
 #include "errors.h"
+#include "nsAlgorithm.h"
+#ifdef XP_WIN
+#include "updatehelper.h"
+#endif
+
+#define UPDATER_NO_STRING_GLUE_STL
+#include "../../../../xpcom/build/nsVersionComparator.cpp"
+#undef UPDATER_NO_STRING_GLUE_STL
 
 #if defined(XP_UNIX)
 # include <sys/types.h>
@@ -53,6 +61,185 @@ static int inbuf_size  = 262144;
 static int outbuf_size = 262144;
 static char *inbuf  = NULL;
 static char *outbuf = NULL;
+
+#ifdef XP_WIN
+#include "resource.h"
+
+/**
+ * Obtains the data of the specified resource name and type.
+ *
+ * @param  name The name ID of the resource
+ * @param  type The type ID of the resource
+ * @param  data Out parameter which sets the pointer to a buffer containing
+ *                  the needed data.
+ * @param  size Out parameter which sets the size of the returned data buffer 
+ * @return TRUE on success
+*/
+BOOL
+LoadFileInResource(int name, int type, const char *&data, DWORD& size)
+{
+  HMODULE handle = GetModuleHandle(NULL);
+  if (!handle) {
+    return FALSE;
+  }
+
+  HRSRC resourceInfoBlockHandle = FindResource(handle, 
+                                               MAKEINTRESOURCE(name),
+                                               MAKEINTRESOURCE(type));
+  if (!resourceInfoBlockHandle) {
+    FreeLibrary(handle);
+    return FALSE;
+  }
+
+  HGLOBAL resourceHandle = LoadResource(handle, resourceInfoBlockHandle);
+  if (!resourceHandle) {
+    FreeLibrary(handle);
+    return FALSE;
+  }
+
+  size = SizeofResource(handle, resourceInfoBlockHandle);
+  data = static_cast<const char*>(::LockResource(resourceHandle));
+  FreeLibrary(handle);
+  return TRUE;
+}
+
+/**
+ * Performs a verification on the opened MAR file with the passed in
+ * certificate name ID and type ID.
+ *
+ * @param  archive   The MAR file to verify the signature on
+ * @param  name      The name ID of the resource
+ * @param  type      THe type ID of the resource
+ * @return OK on success, CERT_LOAD_ERROR or CERT_VERIFY_ERROR on failure.
+*/
+int
+VerifyLoadedCert(MarFile *archive, int name, int type)
+{
+  DWORD size = 0;
+  const char *data = NULL;
+  if (!LoadFileInResource(name, type, data, size) || !data || !size) {
+    return CERT_LOAD_ERROR;
+  }
+
+  if (mar_verify_signatureW(archive, data, size)) {
+    return CERT_VERIFY_ERROR;
+  }
+
+  return OK;
+}
+#endif
+
+
+/**
+ * Performs a verification on the opened MAR file.  Both the primary and backup 
+ * keys stored are stored in the current process and at least the primary key 
+ * will be tried.  Success will be returned as long as one of the two 
+ * signatures verify.
+ *
+ * @return OK on success
+*/
+int
+ArchiveReader::VerifySignature()
+{
+  if (!mArchive) {
+    return ARCHIVE_NOT_OPEN;
+  }
+
+#ifdef XP_WIN
+  // If the fallback key exists we're running an XPCShell test and we should
+  // use the XPCShell specific cert for the signed MAR.
+  int rv;
+  if (DoesFallbackKeyExist()) {
+    rv = VerifyLoadedCert(mArchive, IDR_XPCSHELL_CERT, TYPE_CERT);
+  } else {
+    rv = VerifyLoadedCert(mArchive, IDR_PRIMARY_CERT, TYPE_CERT);
+    if (rv != OK) {
+      rv = VerifyLoadedCert(mArchive, IDR_BACKUP_CERT, TYPE_CERT);
+    }
+  }
+  return rv;
+#else
+  return OK;
+#endif
+}
+
+/**
+ * Verifies that the MAR file matches the current product, channel, and version
+ * 
+ * @param MARChannelID   The MAR channel name to use, only updates from MARs
+ *                       with a matching MAR channel name will succeed.
+ *                       If an empty string is passed, no check will be done
+ *                       for the channel name in the product information block.
+ *                       If a comma separated list of values is passed then
+ *                       one value must match.
+ * @param appVersion     The application version to use, only MARs with an
+ *                       application version >= to appVersion will be applied.
+ * @return OK on success
+ *         COULD_NOT_READ_PRODUCT_INFO_BLOCK if the product info block 
+ *                                           could not be read.
+ *         MARCHANNEL_MISMATCH_ERROR         if update-settings.ini's MAR 
+ *                                           channel ID doesn't match the MAR
+ *                                           file's MAR channel ID. 
+ *         VERSION_DOWNGRADE_ERROR           if the application version for
+ *                                           this updater is newer than the
+ *                                           one in the MAR.
+ */
+int
+ArchiveReader::VerifyProductInformation(const char *MARChannelID, 
+                                        const char *appVersion)
+{
+  if (!mArchive) {
+    return ARCHIVE_NOT_OPEN;
+  }
+
+  ProductInformationBlock productInfoBlock;
+  int rv = mar_read_product_info_block(mArchive, 
+                                       &productInfoBlock);
+  if (rv != OK) {
+    return COULD_NOT_READ_PRODUCT_INFO_BLOCK_ERROR;
+  }
+
+  // Only check the MAR channel name if specified, it should be passed in from
+  // the update-settings.ini file.
+  if (MARChannelID && strlen(MARChannelID)) {
+    // Check for at least one match in the comma separated list of values.
+    const char *delimiter = " ,\t";
+    // Make a copy of the string in case a read only memory buffer 
+    // was specified.  strtok modifies the input buffer.
+    char channelCopy[512] = { 0 };
+    strncpy(channelCopy, MARChannelID, sizeof(channelCopy) - 1);
+    char *channel = strtok(channelCopy, delimiter);
+    rv = MAR_CHANNEL_MISMATCH_ERROR;
+    while(channel) {
+      if (!strcmp(channel, productInfoBlock.MARChannelID)) {
+        rv = OK;
+        break;
+      }
+      channel = strtok(NULL, delimiter);
+    }
+  }
+
+  if (rv == OK) {
+    /* Compare both versions to ensure we don't have a downgrade
+        1 if appVersion is older than productInfoBlock.productVersion
+        -1 if appVersion is newer than productInfoBlock.productVersion 
+        0 if appVersion is the same as productInfoBlock.productVersion 
+       This even works with strings like:
+        - 12.0a1 being older than 12.0a2
+        - 12.0a2 being older than 12.0b1
+        - 12.0a1 being older than 12.0
+        - 12.0 being older than 12.1a1 */
+    int versionCompareResult = 
+      NS_CompareVersions(appVersion, productInfoBlock.productVersion);
+    if (-1 == versionCompareResult) {
+      rv = VERSION_DOWNGRADE_ERROR;
+    }
+  }
+
+  free((void *)productInfoBlock.MARChannelID);
+  free((void *)productInfoBlock.productVersion);
+  return rv;
+}
 
 int
 ArchiveReader::Open(const NS_tchar *path)

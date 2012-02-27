@@ -1268,7 +1268,8 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
     nsNodeUtils::TraverseUserData(tmp, cb);
   }
 
-  if (tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {
+  if (tmp->NodeType() != nsIDOMNode::DOCUMENT_NODE &&
+      tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {
     nsContentUtils::TraverseListenerManager(tmp, cb);
   }
 
@@ -1286,7 +1287,8 @@ nsINode::Unlink(nsINode *tmp)
     slots->Unlink();
   }
 
-  if (tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {
+  if (tmp->NodeType() != nsIDOMNode::DOCUMENT_NODE &&
+      tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {
     nsContentUtils::RemoveListenerManager(tmp);
     tmp->UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
@@ -3375,7 +3377,7 @@ nsIContent::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   //FIXME! Document how this event retargeting works, Bug 329124.
   aVisitor.mCanHandle = true;
-  aVisitor.mMayHaveListenerManager = HasFlag(NODE_HAS_LISTENERMANAGER);
+  aVisitor.mMayHaveListenerManager = HasListenerManager();
 
   // Don't propagate mouseover and mouseout events when mouse is moving
   // inside native anonymous content.
@@ -4628,7 +4630,7 @@ ShouldClearPurple(nsIContent* aContent)
     return true;
   }
 
-  if (aContent->GetListenerManager(false)) {
+  if (aContent->HasListenerManager()) {
     return true;
   }
 

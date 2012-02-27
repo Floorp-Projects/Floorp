@@ -120,8 +120,8 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char *aFromType,
 
     if (!PL_strncasecmp(aToType, ZLIB_TYPE, sizeof(ZLIB_TYPE)-1))
         mWrapMode = WRAP_ZLIB;
-    else if (!PL_strcasecmp(aFromType, GZIP_TYPE) ||
-             !PL_strcasecmp(aFromType, X_GZIP_TYPE))
+    else if (!PL_strcasecmp(aToType, GZIP_TYPE) ||
+             !PL_strcasecmp(aToType, X_GZIP_TYPE))
         mWrapMode = WRAP_GZIP;
     else
         mWrapMode = WRAP_NONE;

@@ -35,9 +35,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=583533
     var modifier = Components.classes["@mozilla.org/preferences-service;1"]
                                       .getService(Components.interfaces.nsIPrefBranch)
                                       .getIntPref("ui.key.contentAccess");
-                                      
-    var domEvent = Components.interfaces.nsIDOMNSEvent;
-    
+
     var isShift;
     var isAlt;
     var isControl;
@@ -45,14 +43,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=583533
 
     is(modifier < 16 && modifier >= 0, true, "Modifier in range");
 
-    if (modifier & domEvent.META_MASK)
+    // There are no consts for the mask of this prefs.
+    if (modifier & 8) {
         isMeta = true;
-    if (modifier & domEvent.SHIFT_MASK)
+    }
+    if (modifier & 1) {
         isShift = true;
-    if (modifier & domEvent.CONTROL_MASK)
+    }
+    if (modifier & 2) {
         isControl = true;
-    if (modifier & domEvent.ALT_MASK)
+    }
+    if (modifier & 4) {
         isAlt = true;
+    }
 
     var label = "";
 

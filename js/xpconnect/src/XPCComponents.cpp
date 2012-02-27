@@ -1428,7 +1428,7 @@ nsXPCComponents_Results::NewResolve(nsIXPConnectWrappedNative *wrapper,
                 jsval val;
 
                 *objp = obj;
-                if (!JS_NewNumberValue(cx, (jsdouble)rv, &val) ||
+                if (!JS_NewNumberValue(cx, (double)rv, &val) ||
                     !JS_DefinePropertyById(cx, obj, id, val,
                                            nsnull, nsnull,
                                            JSPROP_ENUMERATE |
@@ -4165,7 +4165,7 @@ nsXPCComponents::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
     nsresult rv = NS_OK;
     if (doResult) {
-        if (!JS_NewNumberValue(cx, (jsdouble) res, vp))
+        if (!JS_NewNumberValue(cx, (double) res, vp))
             return NS_ERROR_OUT_OF_MEMORY;
         rv = NS_SUCCESS_I_DID_SOMETHING;
     }

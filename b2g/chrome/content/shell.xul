@@ -32,6 +32,6 @@
            type="content-primary"
            flex="1"
            style="overflow: hidden;"
-           src="data:text/html;base64,PCFET0NUWVBFIGh0bWw+PGh0bWw+PGJvZHkgc3R5bGU9ImJhY2tncm91bmQ6YmxhY2s7Ij48L2JvZHk+PC9odG1sPgo="/>
+           src="data:text/html,%3C!DOCTYPE html>%3Cbody style='background:black;'>"/>
 </window>
 
