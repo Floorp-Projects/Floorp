@@ -1840,6 +1840,8 @@ class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
           case LInstruction::LOp_SetPropertyCacheT:
           case LInstruction::LOp_SetPropertyCacheV:
             return codegen->visitOutOfLineSetPropertyCache(this);
+          case LInstruction::LOp_BindNameCache:
+            return codegen->visitOutOfLineBindNameCache(this);
           default:
             JS_NOT_REACHED("Bad instruction");
             return false;
@@ -1887,8 +1889,6 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
         mir = ins->mir();
     }
 
-    liveRegs.maybeTake(output);
-
     IonCacheGetProperty cache(ool->getInlineJump(), ool->getInlineLabel(),
                               masm.labelForPatch(), liveRegs,
                               objReg, mir->atom(), output);
@@ -1913,6 +1913,39 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
 
     return true;
 }
+
+bool
+CodeGenerator::visitOutOfLineBindNameCache(OutOfLineCache *ool)
+{
+    LBindNameCache *ins = ool->cache()->toBindNameCache();
+    Register scopeChain = ToRegister(ins->scopeChain());
+    Register output = ToRegister(ins->output());
+
+    RegisterSet liveRegs = ins->safepoint()->liveRegs();
+
+    const MBindNameCache *mir = ins->mir();
+    IonCacheBindName cache(ool->getInlineJump(), ool->getInlineLabel(),
+                           masm.labelForPatch(), liveRegs,
+                           scopeChain, mir->name(), output);
+    cache.setScriptedLocation(mir->script(), mir->pc());
+    size_t cacheIndex = allocateCache(cache);
+
+    saveLive(ins);
+
+    typedef JSObject *(*pf)(JSContext *, size_t, JSObject *);
+    static const VMFunction BindNameCacheInfo = FunctionInfo<pf>(BindNameCache);
+
+    pushArg(scopeChain);
+    pushArg(Imm32(cacheIndex));
+    if (!callVM(BindNameCacheInfo, ins))
+        return false;
+
+    masm.storeCallResult(output);
+    restoreLive(ins);
+
+    masm.jump(ool->rejoin());
+    return true;
+};
 
 ConstantOrRegister
 CodeGenerator::getSetPropertyValue(LInstruction *ins)

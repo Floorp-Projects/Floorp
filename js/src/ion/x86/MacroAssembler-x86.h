@@ -371,8 +371,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         jump(label);
         return CodeOffsetJump(size());
     }
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
-        branchPtr(cond, addr, ptr, label);
+    template <typename S, typename T>
+    CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, Label *label) {
+        branchPtr(cond, lhs, ptr, label);
         return CodeOffsetJump(size());
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {

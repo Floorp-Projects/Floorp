@@ -771,6 +771,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_CALLNAME:
         return jsop_getname(info().getAtom(pc));
 
+      case JSOP_BINDNAME:
+        return jsop_bindname(info().getName(pc));
+
       case JSOP_GETFCSLOT:
       case JSOP_CALLFCSLOT:
         return jsop_getfcslot(GET_UINT16(pc));
@@ -3321,6 +3324,20 @@ IonBuilder::jsop_getname(JSAtom *atom)
 
     monitorResult(ins, types);
     return pushTypeBarrier(ins, types, barrier);
+}
+
+bool
+IonBuilder::jsop_bindname(PropertyName *name)
+{
+    JS_ASSERT(script->analysis()->usesScopeChain());
+
+    MDefinition *scopeChain = current->getSlot(info().scopeChainSlot());
+    MBindNameCache *ins = MBindNameCache::New(scopeChain, name, script, pc);
+
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
 }
 
 bool
