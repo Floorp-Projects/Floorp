@@ -632,8 +632,6 @@ inline bool
 RegExpCompartment::get(JSContext *cx, JSAtom *keyAtom, JSAtom *source, RegExpFlag flags, Type type,
                        RegExpGuard *g)
 {
-    DebugOnly<uint64_t> gcNumberBefore = cx->runtime->gcNumber;
-
     Key key(keyAtom, flags, type);
     Map::AddPtr p = map_.lookupForAdd(key);
     if (p) {
@@ -648,13 +646,8 @@ RegExpCompartment::get(JSContext *cx, JSAtom *keyAtom, JSAtom *source, RegExpFla
     if (!shared->compile(cx, source))
         goto error;
 
-    /*
-     * The compilation path only mallocs so cannot GC. Thus, it is safe to add
-     * the regexp directly.
-     */
-    JS_ASSERT(cx->runtime->gcNumber == gcNumberBefore);
-
-    if (!map_.add(p, key, shared))
+    /* Re-lookup in case there was a GC. */
+    if (!map_.relookupOrAdd(p, key, shared))
         goto error;
 
     /*
