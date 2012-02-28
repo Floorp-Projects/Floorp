@@ -235,6 +235,7 @@ HISTOGRAM(DNS_FAILED_LOOKUP_TIME, 1, 60000, 50, EXPONENTIAL, "Time for an unsucc
 
 HISTOGRAM(FIND_PLUGINS, 1, 3000, 10, EXPONENTIAL, "Time spent scanning filesystem for plugins (ms)")
 HISTOGRAM(CHECK_JAVA_ENABLED, 1, 3000, 10, EXPONENTIAL, "Time spent checking if Java is enabled (ms)")
+HISTOGRAM(PLUGIN_SHUTDOWN_MS, 1, 5000, 20, EXPONENTIAL, "Time spent shutting down plugins (ms)")
 
 /* Define 2 histograms: MOZ_SQLITE_(NAME)_MS and
  * MOZ_SQLITE_(NAME)_MAIN_THREAD_MS. These are meant to be used by
