@@ -78,7 +78,7 @@ class DeviceManagerADB(DeviceManager):
     # to get it
     # FIXME: this function buffers all output of the command into memory,
     # always. :(
-    cmdline = subprocess.list2cmdline(cmd) + "; echo $?"
+    cmdline = " ".join(cmd) + "; echo $?"
 
     # prepend cwd and env to command if necessary
     if cwd:
