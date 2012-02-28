@@ -1230,7 +1230,7 @@ stubs::GetPropNoCache(VMFrame &f, PropertyName *name)
 void JS_FASTCALL
 stubs::Iter(VMFrame &f, uint32_t flags)
 {
-    if (!js_ValueToIterator(f.cx, flags, &f.regs.sp[-1]))
+    if (!ValueToIterator(f.cx, flags, &f.regs.sp[-1]))
         THROW();
     JS_ASSERT(!f.regs.sp[-1].isPrimitive());
 }
@@ -1305,7 +1305,7 @@ void JS_FASTCALL
 stubs::EndIter(VMFrame &f)
 {
     JS_ASSERT(f.regs.sp - 1 >= f.fp()->base());
-    if (!js_CloseIterator(f.cx, &f.regs.sp[-1].toObject()))
+    if (!CloseIterator(f.cx, &f.regs.sp[-1].toObject()))
         THROW();
 }
 

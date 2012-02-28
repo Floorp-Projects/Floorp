@@ -151,14 +151,11 @@ top:
                    * adjustment and regs.sp[1] after, to save and restore the
                    * pending exception.
                    */
-                  Value v = cx->getPendingException();
                   JS_ASSERT(JSOp(*pc) == JSOP_ENDITER);
-                  cx->clearPendingException();
-                  bool ok = !!js_CloseIterator(cx, &cx->regs().sp[-1].toObject());
+                  bool ok = UnwindIteratorForException(cx, &cx->regs().sp[-1].toObject());
                   cx->regs().sp -= 1;
                   if (!ok)
                       goto top;
-                  cx->setPendingException(v);
                 }
             }
         }
