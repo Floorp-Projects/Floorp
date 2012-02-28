@@ -267,15 +267,6 @@ nsSVGImageElement::ConstructPath(gfxContext *aCtx)
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-/* virtual */ bool
-nsSVGImageElement::HasValidDimensions() const
-{
-  return mLengthAttributes[WIDTH].IsExplicitlySet() &&
-         mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
-         mLengthAttributes[HEIGHT].IsExplicitlySet() &&
-         mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() > 0;
-}
-
 nsSVGElement::LengthAttributesInfo
 nsSVGImageElement::GetLengthInfo()
 {

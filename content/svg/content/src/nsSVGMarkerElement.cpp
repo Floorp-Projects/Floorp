@@ -306,15 +306,6 @@ nsSVGMarkerElement::SetParentCoordCtxProvider(nsSVGSVGElement *aContext)
   mViewBoxToViewportTransform = nsnull;
 }
 
-/* virtual */ bool
-nsSVGMarkerElement::HasValidDimensions() const
-{
-  return (!mLengthAttributes[MARKERWIDTH].IsExplicitlySet() ||
-           mLengthAttributes[MARKERWIDTH].GetAnimValInSpecifiedUnits() > 0) &&
-         (!mLengthAttributes[MARKERHEIGHT].IsExplicitlySet() || 
-           mLengthAttributes[MARKERHEIGHT].GetAnimValInSpecifiedUnits() > 0);
-}
-
 nsSVGElement::LengthAttributesInfo
 nsSVGMarkerElement::GetLengthInfo()
 {
