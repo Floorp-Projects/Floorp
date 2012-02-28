@@ -67,6 +67,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.zip.Adler32;
 import java.util.zip.CheckedInputStream;
@@ -136,7 +137,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.06";
+    private final String prgVersion = "SUTAgentAndroid Version 1.07";
 
     public enum Command
         {
@@ -2449,6 +2450,48 @@ private void CancelNotification()
                     }
                 }
             }
+        else
+            {
+            // To kill processes other than Java applications - processes
+            // like xpcshell - a different strategy is necessary: use ps
+            // to find the process' PID.
+            try
+                {
+                pProc = Runtime.getRuntime().exec("ps");
+                RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
+                outThrd.start();
+                outThrd.join(10000);
+                sTmp = outThrd.strOutput;
+                StringTokenizer stokLines = new StringTokenizer(sTmp, "\n");
+                while(stokLines.hasMoreTokens())
+                    {
+                    String sLine = stokLines.nextToken();
+                    StringTokenizer stokColumns = new StringTokenizer(sLine, " \t\n");
+                    stokColumns.nextToken();
+                    String sPid = stokColumns.nextToken();
+                    stokColumns.nextToken();
+                    stokColumns.nextToken();
+                    stokColumns.nextToken();
+                    stokColumns.nextToken();
+                    stokColumns.nextToken();
+                    stokColumns.nextToken();
+                    String sName = null;
+                    if (stokColumns.hasMoreTokens())
+                        {
+                        sName = stokColumns.nextToken();
+                        if (sName.contains(sProcName))
+                            {
+                            NewKillProc(sPid, out);
+                            sRet = "Successfully killed " + sPid + " " + sName + "\n";
+                            }
+                        }
+                    }
+                }
+            catch (Exception e)
+                {
+                e.printStackTrace();
+                }
+            }
 
         return (sRet);
         }
@@ -2872,15 +2915,10 @@ private void CancelNotification()
     public String NewKillProc(String sProcId, OutputStream out)
         {
         String sRet = "";
-        String [] theArgs = new String [3];
-
-        theArgs[0] = "su";
-        theArgs[1] = "-c";
-        theArgs[2] = "kill " + sProcId;
 
         try
             {
-            pProc = Runtime.getRuntime().exec(theArgs);
+            pProc = Runtime.getRuntime().exec("kill "+sProcId);
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
             outThrd.join(5000);
