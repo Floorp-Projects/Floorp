@@ -54,7 +54,6 @@
 #include "jsval.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
-#include "jsobj.h"
 #include "jsarray.h"
 #include "jsnum.h"
 
