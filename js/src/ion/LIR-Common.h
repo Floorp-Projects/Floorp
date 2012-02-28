@@ -1762,6 +1762,25 @@ class LGetPropertyCacheT : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LBindNameCache : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(BindNameCache);
+
+    LBindNameCache(const LAllocation &scopeChain) {
+        setOperand(0, scopeChain);
+    }
+    const LAllocation *scopeChain() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+    const MBindNameCache *mir() const {
+        return mir_->toBindNameCache();
+    }
+};
+
 // Load a value from an object's dslots or a slots vector.
 class LLoadSlotV : public LInstructionHelper<BOX_PIECES, 1, 0>
 {

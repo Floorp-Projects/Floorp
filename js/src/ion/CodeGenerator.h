@@ -156,14 +156,19 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool visitUnboxDouble(LUnboxDouble *lir);
     bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
+    bool visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool);
+
     bool visitOutOfLineCacheGetProperty(OutOfLineCache *ool);
     bool visitOutOfLineSetPropertyCache(OutOfLineCache *ool);
-    bool visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool);
+    bool visitOutOfLineBindNameCache(OutOfLineCache *ool);
 
     bool visitGetPropertyCacheV(LGetPropertyCacheV *ins) {
         return visitCache(ins);
     }
     bool visitGetPropertyCacheT(LGetPropertyCacheT *ins) {
+        return visitCache(ins);
+    }
+    bool visitBindNameCache(LBindNameCache *ins) {
         return visitCache(ins);
     }
     bool visitSetPropertyCacheV(LSetPropertyCacheV *ins) {
