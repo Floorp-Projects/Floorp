@@ -102,6 +102,30 @@ WeakMapBase::resetWeakMapList(JSRuntime *rt)
     }
 }
 
+bool
+WeakMapBase::saveWeakMapList(JSRuntime *rt, WeakMapVector &vector)
+{
+    WeakMapBase *m = rt->gcWeakMapList;
+    while (m) {
+        if (!vector.append(m))
+            return false;
+        m = m->next;
+    }
+    return true;
+}
+
+void
+WeakMapBase::restoreWeakMapList(JSRuntime *rt, WeakMapVector &vector)
+{
+    JS_ASSERT(!rt->gcWeakMapList);
+    for (WeakMapBase **p = vector.begin(); p != vector.end(); p++) {
+        WeakMapBase *m = *p;
+        JS_ASSERT(m->next == WeakMapNotInList);
+        m->next = rt->gcWeakMapList;
+        rt->gcWeakMapList = m;
+    }
+}
+
 } /* namespace js */
 
 typedef WeakMap<HeapPtr<JSObject>, HeapValue> ObjectValueMap;

@@ -1506,6 +1506,8 @@
             },
 
             hideControls : function() {
+              if (!this.Utils.dynamicControls)
+                  return;
               this.Utils.startFadeOut(this.Utils.controlBar);
               if (this.firstShow)
                 this.videocontrols.addEventListener("transitionend", this, false);

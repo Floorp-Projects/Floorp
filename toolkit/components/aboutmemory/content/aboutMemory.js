@@ -58,8 +58,13 @@ const UNITS_PERCENTAGE       = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
 // Because about:memory and about:compartments are non-standard URLs,
 // location.search is undefined, so we have to use location.href here.
-const gVerbose = location.href === "about:memory?verbose" ||
-                 location.href === "about:compartments?verbose";
+// The toLowerCase() calls ensure that addresses like "ABOUT:MEMORY" work.
+let gVerbose;
+{
+  let split = document.location.href.split('?');
+  document.title = split[0].toLowerCase();
+  gVerbose = split.length == 2 && split[1].toLowerCase() == 'verbose';
+}
 
 let gChildMemoryListener = undefined;
 
@@ -114,11 +119,9 @@ function addChildObserversAndUpdate(aUpdateFn)
 
 function onLoad()
 {
-  if (location.href.startsWith("about:memory")) {
-    document.title = "about:memory";
+  if (document.title === "about:memory") {
     onLoadAboutMemory();
-  } else if (location.href.startsWith("about:compartments")) {
-    document.title = "about:compartments";
+  } else if (document.title === "about:compartments") {
     onLoadAboutCompartments();
   } else {
     assert(false, "Unknown location");
@@ -1468,8 +1471,12 @@ function appendSectionHeader(aP, aText)
 
 function onLoadAboutCompartments()
 {
-  // Minimize memory usage before generating the page in an attempt to collect
-  // any dead compartments.
+  // First generate the page, then minimize memory usage to collect any dead
+  // compartments, then update the page.  The first generation step may sound
+  // unnecessary, but it avoids a short delay in showing content when the page
+  // is loaded, which makes test_aboutcompartments.xul more reliable (see bug
+  // 729018 for details).
+  updateAboutCompartments();
   minimizeMemoryUsage3x(
     function() { addChildObserversAndUpdate(updateAboutCompartments); });
 }
@@ -1510,12 +1517,6 @@ function updateAboutCompartments()
     let a = appendElementWithText(div1, "a", "option", "More verbose");
     a.href = "about:compartments?verbose";
   }
-
-  // Dispatch a "bodygenerated" event to indicate that the DOM has finished
-  // generating.  This is used by tests.
-  let e = document.createEvent("Event");
-  e.initEvent("bodygenerated", false, false);
-  document.dispatchEvent(e);
 }
 
 //---------------------------------------------------------------------------

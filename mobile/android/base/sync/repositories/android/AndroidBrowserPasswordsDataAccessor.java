@@ -74,11 +74,11 @@ public class AndroidBrowserPasswordsDataAccessor extends AndroidBrowserRepositor
 
   @Override
   protected Uri getUri() {
-    return BrowserContract.Passwords.CONTENT_URI;
+    return BrowserContractHelpers.PASSWORDS_CONTENT_URI;
   }
 
   @Override
   protected String[] getAllColumns() {
-    return BrowserContract.Passwords.PasswordColumns;
+    return BrowserContractHelpers.PasswordColumns;
   }
 }

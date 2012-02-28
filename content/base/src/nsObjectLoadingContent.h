@@ -151,7 +151,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     void NotifyOwnerDocumentActivityChanged();
 
-    bool SrcStreamLoadInitiated() { return mSrcStreamLoadInitiated; };
+    bool SrcStreamLoading() { return mSrcStreamLoading; };
 
   protected:
     /**
@@ -401,9 +401,12 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // This is used for click-to-play plugins.
     bool                        mShouldPlay : 1;
 
-    // Used to indicate that a stream for a src/data attribute has been
-    // initiated so that we don't do it twice.
-    bool mSrcStreamLoadInitiated;
+    // Used to track when we might try to instantiate a plugin instance based on
+    // a src data stream being delivered to this object. When this is true we don't
+    // want plugin instance instantiation code to attempt to load src data again or
+    // we'll deliver duplicate streams. Should be cleared when we are not loading
+    // src data.
+    bool mSrcStreamLoading;
 
     // A specific state that caused us to fallback
     PluginSupportState          mFallbackReason;

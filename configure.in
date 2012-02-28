@@ -318,7 +318,7 @@ if test -n "$gonkdir" ; then
     STLPORT_CPPFLAGS="-I$gonkdir/ndk/sources/cxx-stl/stlport/stlport/"
     STLPORT_LIBS="-lstlport"
 
-    CPPFLAGS="-DANDROID -isystem $gonkdir/bionic/libc/include/ -isystem $gonkdir/bionic/libc/kernel/common -isystem $gonkdir/bionic/libc/arch-arm/include -isystem $gonkdir/bionic/libc/kernel/arch-arm -isystem $gonkdir/bionic/libm/include -isystem $gonkdir/frameworks/base/opengl/include -isystem $gonkdir/frameworks/base/native/include -isystem $gonkdir/hardware/libhardware/include -isystem $gonkdir/hardware/libhardware_legacy/include -isystem $gonkdir/system/core/include -isystem $gonkdir/bionic -isystem $gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS -isystem $gonkdir/frameworks/base/services/sensorservice"
+    CPPFLAGS="-DANDROID -I$gonkdir/bionic/libc/include/ -I$gonkdir/bionic/libc/kernel/common -I$gonkdir/bionic/libc/arch-arm/include -I$gonkdir/bionic/libc/kernel/arch-arm -I$gonkdir/bionic/libm/include -I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/hardware/libhardware_legacy/include -I$gonkdir/system/core/include -I$gonkdir/bionic -I$gonkdir/frameworks/base/include $STLPORT_CPPFLAGS $CPPFLAGS -I$gonkdir/frameworks/base/services/sensorservice"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
     LIBS="$LIBS $STLPORT_LIBS"
@@ -6500,6 +6500,23 @@ if test -n "$MOZ_VERIFY_MAR_SIGNATURE"; then
 fi
 
 dnl ========================================================
+dnl Enable building the signmar program.
+dnl This option is much different than the --enable-verify-mar option.
+dnl --enable-verify-mar is for enabling the verification check on MAR
+dnl files in the updater.  The --enable-signmar option is for building
+dnl the signmar program.
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(sign-mar,
+[  --enable-signmar     Enable building the signmar program],
+    MOZ_ENABLE_SIGNMAR=1,
+    MOZ_ENABLE_SIGNMAR= )
+
+if test -n "$MOZ_ENABLE_SIGNMAR"; then
+  AC_DEFINE(MOZ_ENABLE_SIGNMAR)
+fi
+
+dnl ========================================================
 dnl Updater
 dnl ========================================================
 
@@ -8601,6 +8618,7 @@ AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_MAINTENANCE_SERVICE)
 AC_SUBST(MOZ_VERIFY_MAR_SIGNATURE)
+AC_SUBST(MOZ_ENABLE_SIGNMAR)
 AC_SUBST(MOZ_UPDATER)
 AC_SUBST(MOZ_ANGLE)
 AC_SUBST(MOZ_DIRECTX_SDK_PATH)

@@ -202,6 +202,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "SearchEngines:Get", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
+    Services.obs.addObserver(this, "FormHistory:Init", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -929,6 +930,13 @@ var BrowserApp = {
       storage.init();
 
       sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
+      Services.obs.removeObserver(this, "Passwords:Init", false);
+    } else if (aTopic == "FormHistory:Init") {
+      var fh = Components.classes["@mozilla.org/satchel/form-history;1"].  
+        getService(Components.interfaces.nsIFormHistory2);
+      var db = fh.DBConnection;
+      sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
+      Services.obs.removeObserver(this, "FormHistory:Init", false);
     } else if (aTopic == "sessionstore-state-purge-complete") {
       sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
     }
