@@ -133,6 +133,9 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify);
 
+  // nsSVGSVGElement methods:
+  virtual bool HasValidDimensions() const;
+
   // public helpers
   gfxMatrix GetMarkerTransform(float aStrokeWidth,
                                float aX, float aY, float aAutoAngle);

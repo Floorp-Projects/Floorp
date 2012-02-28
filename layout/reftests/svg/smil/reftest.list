@@ -95,6 +95,7 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-length-reset-01.svg lime.svg
 == anim-nonpixel-length-reset-01.svg lime.svg
 == anim-use-length-01.svg lime.svg
+== anim-use-length-02.svg lime.svg
 
 # animate some <number> attributes:
 == anim-feComponentTransfer-01.svg lime.svg
