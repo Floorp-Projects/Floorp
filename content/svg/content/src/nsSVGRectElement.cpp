@@ -67,6 +67,9 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGRectElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGRectElementBase::)
 
+  // nsSVGSVGElement methods:
+  virtual bool HasValidDimensions() const;
+
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(gfxContext *aCtx);
 
@@ -163,6 +166,15 @@ NS_IMETHODIMP nsSVGRectElement::GetRy(nsIDOMSVGAnimatedLength * *aRy)
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
+
+/* virtual */ bool
+nsSVGRectElement::HasValidDimensions() const
+{
+  return mLengthAttributes[WIDTH].IsExplicitlySet() &&
+         mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
+         mLengthAttributes[HEIGHT].IsExplicitlySet() &&
+         mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() > 0;
+}
 
 nsSVGElement::LengthAttributesInfo
 nsSVGRectElement::GetLengthInfo()
