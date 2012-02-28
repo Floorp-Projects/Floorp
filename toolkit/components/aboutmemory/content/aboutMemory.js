@@ -1468,8 +1468,12 @@ function appendSectionHeader(aP, aText)
 
 function onLoadAboutCompartments()
 {
-  // Minimize memory usage before generating the page in an attempt to collect
-  // any dead compartments.
+  // First generate the page, then minimize memory usage to collect any dead
+  // compartments, then update the page.  The first generation step may sound
+  // unnecessary, but it avoids a short delay in showing content when the page
+  // is loaded, which makes test_aboutcompartments.xul more reliable (see bug
+  // 729018 for details).
+  updateAboutCompartments();
   minimizeMemoryUsage3x(
     function() { addChildObserversAndUpdate(updateAboutCompartments); });
 }
@@ -1510,12 +1514,6 @@ function updateAboutCompartments()
     let a = appendElementWithText(div1, "a", "option", "More verbose");
     a.href = "about:compartments?verbose";
   }
-
-  // Dispatch a "bodygenerated" event to indicate that the DOM has finished
-  // generating.  This is used by tests.
-  let e = document.createEvent("Event");
-  e.initEvent("bodygenerated", false, false);
-  document.dispatchEvent(e);
 }
 
 //---------------------------------------------------------------------------
