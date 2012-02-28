@@ -1160,7 +1160,7 @@ BindKnownGlobal(JSContext *cx, BytecodeEmitter *bce, ParseNode *dn, ParseNode *p
 
         // Otherwise, find the atom's index by using the originating bce's
         // global use table.
-        index = globalbce->globalUses[dn->pn_cookie.asInteger()].slot;
+        index = globalbce->globalUses[dn->pn_cookie.slot()].slot;
     }
 
     if (!bce->addGlobalUse(atom, index, &pn->pn_cookie))
@@ -1350,7 +1350,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
 
         /* Optimize accesses to undeclared globals. */
-        if (!bce->mightAliasLocals() && !TryConvertToGname(bce, pn, &op))
+        if (!TryConvertToGname(bce, pn, &op))
             return JS_TRUE;
 
         jsatomid _;
@@ -1852,7 +1852,7 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool callContex
     } else {
         if (!pn->pn_cookie.isFree()) {
             JS_ASSERT(JOF_OPTYPE(op) != JOF_ATOM);
-            EMIT_UINT16_IMM_OP(op, pn->pn_cookie.asInteger());
+            EMIT_UINT16_IMM_OP(op, pn->pn_cookie.slot());
         } else {
             if (!EmitAtomOp(cx, pn, op, bce))
                 return JS_FALSE;
@@ -3019,14 +3019,14 @@ EmitDestructuringLHS(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
 
           case JSOP_SETLOCAL:
           {
-            jsuint slot = pn->pn_cookie.asInteger();
+            uint16_t slot = pn->pn_cookie.slot();
             EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, slot);
             break;
           }
 
           case JSOP_SETARG:
           {
-            jsuint slot = pn->pn_cookie.asInteger();
+            uint16_t slot = pn->pn_cookie.slot();
             EMIT_UINT16_IMM_OP(pn->getOp(), slot);
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return JS_FALSE;
@@ -3658,7 +3658,8 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         if (!BindNameToSlot(cx, bce, lhs))
             return false;
         if (!lhs->pn_cookie.isFree()) {
-            atomIndex = lhs->pn_cookie.asInteger();
+            JS_ASSERT(lhs->pn_cookie.level() == 0);
+            atomIndex = lhs->pn_cookie.slot();
         } else {
             if (!bce->makeAtomIndex(lhs->pn_atom, &atomIndex))
                 return false;
