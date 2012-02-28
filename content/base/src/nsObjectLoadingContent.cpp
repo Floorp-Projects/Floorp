@@ -904,22 +904,25 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
 
   if (mFinalListener) {
     mType = newType;
+
     mSrcStreamLoading = true;
     rv = mFinalListener->OnStartRequest(aRequest, aContext);
     mSrcStreamLoading = false;
-    if (NS_FAILED(rv)) {
-#ifdef XP_MACOSX
-      // Shockwave on Mac is special and returns an error here even when it
-      // handles the content
-      if (mContentType.EqualsLiteral("application/x-director")) {
-        rv = NS_OK; // otherwise, the AutoFallback will make us fall back
+
+    if (NS_SUCCEEDED(rv)) {
+      // Plugins need to set up for NPRuntime.
+      if (mType == eType_Plugin) {
+        NotifyContentObjectWrapper();
+      }
+    } else {
+      // Plugins don't fall back if there is an error here.
+      if (mType == eType_Plugin) {
+        rv = NS_OK; // this is necessary to avoid auto-fallback
         return NS_BINDING_ABORTED;
       }
-#endif
       Fallback(false);
-    } else if (mType == eType_Plugin) {
-      NotifyContentObjectWrapper();
     }
+
     return rv;
   }
 
