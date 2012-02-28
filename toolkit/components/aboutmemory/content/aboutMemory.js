@@ -58,8 +58,13 @@ const UNITS_PERCENTAGE       = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
 
 // Because about:memory and about:compartments are non-standard URLs,
 // location.search is undefined, so we have to use location.href here.
-const gVerbose = location.href === "about:memory?verbose" ||
-                 location.href === "about:compartments?verbose";
+// The toLowerCase() calls ensure that addresses like "ABOUT:MEMORY" work.
+let gVerbose;
+{
+  let split = document.location.href.split('?');
+  document.title = split[0].toLowerCase();
+  gVerbose = split.length == 2 && split[1].toLowerCase() == 'verbose';
+}
 
 let gChildMemoryListener = undefined;
 
@@ -114,11 +119,9 @@ function addChildObserversAndUpdate(aUpdateFn)
 
 function onLoad()
 {
-  if (location.href.startsWith("about:memory")) {
-    document.title = "about:memory";
+  if (document.title === "about:memory") {
     onLoadAboutMemory();
-  } else if (location.href.startsWith("about:compartments")) {
-    document.title = "about:compartments";
+  } else if (document.title === "about:compartments") {
     onLoadAboutCompartments();
   } else {
     assert(false, "Unknown location");

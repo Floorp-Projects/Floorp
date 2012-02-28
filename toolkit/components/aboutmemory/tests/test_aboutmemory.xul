@@ -239,7 +239,8 @@
   </script>
 
   <iframe id="amFrame"  height="400" src="about:memory"></iframe>
-  <iframe id="amvFrame" height="400" src="about:memory?verbose"></iframe>
+  <!-- vary the capitalization to make sure that works -->
+  <iframe id="amvFrame" height="400" src="About:Memory?verbose"></iframe>
 
   <script type="application/javascript">
   <![CDATA[
@@ -567,6 +568,7 @@ Other Measurements\n\
   // pasting works as expected.
   function test(aFrameId, aExpected, aNext) {
     SimpleTest.executeSoon(function() {
+      ok(document.title === "about:memory", "document.title is correct");
       let mostRecentActual;
       document.getElementById(aFrameId).focus();
       SimpleTest.waitForClipboard(
