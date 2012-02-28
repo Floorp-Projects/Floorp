@@ -1537,7 +1537,7 @@ bool
 CodeGenerator::visitCallIteratorEnd(LCallIteratorEnd *lir)
 {
     typedef bool (*pf)(JSContext *, JSObject *);
-    static const VMFunction Info = FunctionInfo<pf>(js_CloseIterator);
+    static const VMFunction Info = FunctionInfo<pf>(CloseIterator);
 
     const Register objReg = ToRegister(lir->getOperand(0));
 
@@ -1945,7 +1945,7 @@ CodeGenerator::visitOutOfLineBindNameCache(OutOfLineCache *ool)
 
     masm.jump(ool->rejoin());
     return true;
-};
+}
 
 ConstantOrRegister
 CodeGenerator::getSetPropertyValue(LInstruction *ins)

@@ -1696,6 +1696,14 @@ struct MarkStack {
         limit = newStack + newcap;
         return true;
     }
+
+    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
+        size_t n = 0;
+        if (stack != ballast)
+            n += mallocSizeOf(stack);
+        n += mallocSizeOf(ballast);
+        return n;
+    }
 };
 
 /*
@@ -1837,6 +1845,8 @@ struct GCMarker : public JSTracer {
     void markBufferedGrayRoots();
 
     static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
+
+    size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const;
 
     MarkStack<uintptr_t> stack;
 

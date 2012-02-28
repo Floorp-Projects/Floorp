@@ -821,9 +821,17 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
     }
     PRInt64 explicitNonHeapMultiSize2 = wrappedExplicitNonHeapMultiSize2->mValue;
 
-    // Check the two measurements give the same result.
-    NS_ASSERTION(explicitNonHeapMultiSize == explicitNonHeapMultiSize2,
-                 "The two measurements of 'explicit' memory usage don't match");
+    // Check the two measurements give the same result.  This was an
+    // NS_ASSERTION but they occasionally don't match due to races (bug
+    // 728990).
+    if (explicitNonHeapMultiSize != explicitNonHeapMultiSize2) {
+        char *msg = PR_smprintf("The two measurements of 'explicit' memory "
+                                "usage don't match (%lld vs %lld)",
+                                explicitNonHeapMultiSize,
+                                explicitNonHeapMultiSize2);
+        NS_WARNING(msg);
+        PR_smprintf_free(msg);
+    }
 #endif
 
     *aExplicit = heapAllocated + explicitNonHeapNormalSize + explicitNonHeapMultiSize;

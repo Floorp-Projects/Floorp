@@ -168,21 +168,20 @@ struct StmtInfo {
 #define TCF_IN_FOR_INIT         0x10 /* parsing init expr of for; exclude 'in' */
 #define TCF_FUN_SETS_OUTER_NAME 0x20 /* function set outer name (lexical or free) */
 #define TCF_FUN_PARAM_ARGUMENTS 0x40 /* function has parameter named arguments */
-#define TCF_FUN_USES_ARGUMENTS  0x80 /* function uses arguments except as a
+#define TCF_FUN_LOCAL_ARGUMENTS 0x80 /* function has local named arguments */
+#define TCF_FUN_USES_ARGUMENTS 0x100 /* function uses arguments except as a
                                         parameter name */
-#define TCF_FUN_HEAVYWEIGHT    0x100 /* function needs Call object per call */
-#define TCF_FUN_IS_GENERATOR   0x200 /* parsed yield statement in function */
-#define TCF_FUN_USES_OWN_NAME  0x400 /* named function expression that uses its
+#define TCF_FUN_HEAVYWEIGHT    0x200 /* function needs Call object per call */
+#define TCF_FUN_IS_GENERATOR   0x400 /* parsed yield statement in function */
+#define TCF_FUN_USES_OWN_NAME  0x800 /* named function expression that uses its
                                         own name */
-#define TCF_HAS_FUNCTION_STMT  0x800 /* block contains a function statement */
-#define TCF_GENEXP_LAMBDA     0x1000 /* flag lambda from generator expression */
-#define TCF_COMPILE_N_GO      0x2000 /* compile-and-go mode of script, can
+#define TCF_HAS_FUNCTION_STMT 0x1000 /* block contains a function statement */
+#define TCF_GENEXP_LAMBDA     0x2000 /* flag lambda from generator expression */
+#define TCF_COMPILE_N_GO      0x4000 /* compile-and-go mode of script, can
                                         optimize name references based on scope
                                         chain */
-#define TCF_NO_SCRIPT_RVAL    0x4000 /* API caller does not want result value
+#define TCF_NO_SCRIPT_RVAL    0x8000 /* API caller does not want result value
                                         from global script */
-/* bit 0x8000 is unused */
-
 /*
  * Set when parsing a declaration-like destructuring pattern.  This
  * flag causes PrimaryExpr to create PN_NAME parse nodes for variable
@@ -273,6 +272,7 @@ struct StmtInfo {
 #define TCF_FUN_FLAGS           (TCF_FUN_SETS_OUTER_NAME |                    \
                                  TCF_FUN_USES_ARGUMENTS  |                    \
                                  TCF_FUN_PARAM_ARGUMENTS |                    \
+                                 TCF_FUN_LOCAL_ARGUMENTS |                    \
                                  TCF_FUN_HEAVYWEIGHT     |                    \
                                  TCF_FUN_IS_GENERATOR    |                    \
                                  TCF_FUN_USES_OWN_NAME   |                    \
@@ -432,6 +432,15 @@ struct TreeContext {                /* tree context for semantic checks */
     bool mutatesParameter() const {
         JS_ASSERT(inFunction());
         return flags & TCF_FUN_MUTATES_PARAMETER;
+    }
+
+    bool mayOverwriteArguments() const {
+        JS_ASSERT(inFunction());
+        JS_ASSERT_IF(inStrictMode(),
+                     !(flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_LOCAL_ARGUMENTS)));
+        return !inStrictMode() &&
+               (callsEval() ||
+                flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_LOCAL_ARGUMENTS));
     }
 
     void noteArgumentsNameUse(ParseNode *node) {
