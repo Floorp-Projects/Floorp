@@ -181,19 +181,22 @@ VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVecto
 bool
 EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector &props, js::Value *vp);
 
-}
-
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
  * contain JSITER_ENUMERATE if js_ValueToIterator is called when enumerating
  * for-in semantics are required, and when the caller can guarantee that the
  * iterator will never be exposed to scripts.
  */
-extern JS_FRIEND_API(JSBool)
-js_ValueToIterator(JSContext *cx, uintN flags, js::Value *vp);
+extern JSBool
+ValueToIterator(JSContext *cx, uintN flags, js::Value *vp);
 
-extern JS_FRIEND_API(JSBool)
-js_CloseIterator(JSContext *cx, JSObject *iterObj);
+extern bool
+CloseIterator(JSContext *cx, JSObject *iterObj);
+
+extern bool
+UnwindIteratorForException(JSContext *cx, JSObject *obj);
+
+}
 
 extern bool
 js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);

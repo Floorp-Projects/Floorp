@@ -656,7 +656,7 @@ struct AutoCloseIterator
 {
     AutoCloseIterator(JSContext *cx, JSObject *obj) : cx(cx), obj(obj) {}
 
-    ~AutoCloseIterator() { if (obj) js_CloseIterator(cx, obj); }
+    ~AutoCloseIterator() { if (obj) CloseIterator(cx, obj); }
 
     void clear() { obj = NULL; }
 
@@ -701,7 +701,7 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
     }
 
     close.clear();
-    if (!js_CloseIterator(cx, iterObj))
+    if (!CloseIterator(cx, iterObj))
         return false;
 
     if (isKeyIter)

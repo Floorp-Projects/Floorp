@@ -1967,7 +1967,7 @@ BEGIN_CASE(JSOP_ITER)
 {
     JS_ASSERT(regs.sp > regs.fp()->base());
     uint8_t flags = GET_UINT8(regs.pc);
-    if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
+    if (!ValueToIterator(cx, flags, &regs.sp[-1]))
         goto error;
     CHECK_INTERRUPT_HANDLER();
     JS_ASSERT(!regs.sp[-1].isPrimitive());
@@ -2001,7 +2001,7 @@ END_CASE(JSOP_ITERNEXT)
 BEGIN_CASE(JSOP_ENDITER)
 {
     JS_ASSERT(regs.sp - 1 >= regs.fp()->base());
-    bool ok = !!js_CloseIterator(cx, &regs.sp[-1].toObject());
+    bool ok = CloseIterator(cx, &regs.sp[-1].toObject());
     regs.sp--;
     if (!ok)
         goto error;
@@ -4330,13 +4330,10 @@ END_CASE(JSOP_ARRAYPUSH)
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
                 JS_ASSERT(JSOp(*regs.pc) == JSOP_ENDITER);
-                Value v = cx->getPendingException();
-                cx->clearPendingException();
-                bool ok = js_CloseIterator(cx, &regs.sp[-1].toObject());
+                bool ok = UnwindIteratorForException(cx, &regs.sp[-1].toObject());
                 regs.sp -= 1;
                 if (!ok)
                     goto error;
-                cx->setPendingException(v);
               }
            }
         } while (++tn != tnlimit);
