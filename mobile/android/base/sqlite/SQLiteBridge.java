@@ -5,9 +5,9 @@
 package org.mozilla.gecko.sqlite;
 
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
+import org.mozilla.gecko.sqlite.MatrixBlobCursor;
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.MatrixCursor;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -26,16 +26,20 @@ import java.util.Set;
  */
 public class SQLiteBridge {
     private static final String LOGTAG = "SQLiteBridge";
+
     // Path to the database. We reopen it every query.
     private String mDb;
-    // Remember column names from last query result.
-    private ArrayList<String> mColumns;
+
+    // Values remembered after a query.
+    private long[] mQueryResults;
+
+    private static final int RESULT_INSERT_ROW_ID = 0;
+    private static final int RESULT_ROWS_CHANGED = 1;
 
     // JNI code in $(topdir)/mozglue/android/..
-    private static native void sqliteCall(String aDb, String aQuery,
-                                          String[] aParams,
-                                          ArrayList<String> aColumns,
-                                          ArrayList<Object[]> aRes)
+    private static native MatrixBlobCursor sqliteCall(String aDb, String aQuery,
+                                                      String[] aParams,
+                                                      long[] aUpdateResult)
         throws SQLiteBridgeException;
 
     // Takes the path to the database we want to access.
@@ -46,21 +50,13 @@ public class SQLiteBridge {
     // Executes a simple line of sql.
     public void execSQL(String sql)
                 throws SQLiteBridgeException {
-        try {
-            query(sql, null);
-        } catch(SQLiteBridgeException ex) {
-            throw ex;
-        }
+        internalQuery(sql, null);
     }
 
     // Executes a simple line of sql. Allow you to bind arguments
     public void execSQL(String sql, String[] bindArgs)
                 throws SQLiteBridgeException {
-        try {
-            query(sql, bindArgs);
-        } catch(SQLiteBridgeException ex) {
-            throw ex;
-        }
+        internalQuery(sql, bindArgs);
     }
 
     // Executes a DELETE statement on the database
@@ -72,11 +68,8 @@ public class SQLiteBridge {
             sb.append(" WHERE " + whereClause);
         }
 
-        try {
-            return getIntResult(sb.toString(), whereArgs, 1);
-        } catch(SQLiteBridgeException ex) {
-            throw ex;
-        }
+        internalQuery(sb.toString(), whereArgs);
+        return (int)mQueryResults[RESULT_ROWS_CHANGED];
     }
 
     public Cursor query(String table,
@@ -117,28 +110,12 @@ public class SQLiteBridge {
             sb.append(" " + limit);
         }
 
-        ArrayList<Object[]> results;
-        try {
-            mColumns = null;
+        return rawQuery(sb.toString(), selectionArgs);
+    }
 
-            results = query(sb.toString(), selectionArgs);
-
-        } catch(SQLiteBridgeException ex) {
-            throw ex;
-        }
-
-        MatrixCursor cursor = new MatrixCursor(mColumns.toArray(new String[0]));
-        try {
-            for (Object resultRow: results) {
-                Object[] resultColumns = (Object[])resultRow;
-                if (resultColumns.length == mColumns.size())
-                    cursor.addRow(resultColumns);
-            }
-        } catch(IllegalArgumentException ex) {
-            Log.e(LOGTAG, "Error getting rows", ex);
-        }
-
-        return cursor;
+    public Cursor rawQuery(String sql, String[] selectionArgs)
+        throws SQLiteBridgeException {
+        return internalQuery(sql, selectionArgs);
     }
 
     public long insert(String table, String nullColumnHack, ContentValues values)
@@ -170,11 +147,8 @@ public class SQLiteBridge {
 
         String[] binds = new String[valueBinds.size()];
         valueBinds.toArray(binds);
-        try {
-            return getIntResult(sb.toString(), binds, 0);
-        } catch (SQLiteBridgeException ex) {
-            throw ex;
-        }
+        internalQuery(sb.toString(), binds);
+        return mQueryResults[RESULT_INSERT_ROW_ID];
     }
 
     public int update(String table, ContentValues values, String whereClause, String[] whereArgs)
@@ -207,78 +181,30 @@ public class SQLiteBridge {
 
         String[] binds = new String[valueNames.size()];
         valueNames.toArray(binds);
-        try {
-            return getIntResult(sb.toString(), binds, 1);
-        } catch (SQLiteBridgeException ex) {
-            throw ex;
-        }
-    }
 
-    private int getIntResult(String query, String[] params, int resultIndex)
-               throws SQLiteBridgeException {
-        ArrayList<Object[]> results = null;
-        try {
-            mColumns = null;
-            results = query(query, params);
-        } catch(SQLiteBridgeException ex) {
-            throw ex;
-        }
-
-        if (results != null) {
-            for (Object resultRow: results) {
-                Object[] resultColumns = (Object[])resultRow;
-                return ((Number)resultColumns[resultIndex]).intValue();
-            }
-        }
-        return -1;
+        internalQuery(sb.toString(), binds);
+        return (int)mQueryResults[RESULT_ROWS_CHANGED];
     }
 
     public int getVersion()
                throws SQLiteBridgeException {
-        ArrayList<Object[]> results = null;
-        try {
-            mColumns = null;
-            results = query("PRAGMA user_version");
-        } catch(SQLiteBridgeException ex) {
-            throw ex;
-        }
+        Cursor cursor = internalQuery("PRAGMA user_version", null);
         int ret = -1;
-        if (results != null) {
-            for (Object resultRow: results) {
-                Object[] resultColumns = (Object[])resultRow;
-                String version = (String)resultColumns[0];
-                ret = Integer.parseInt(version);
-            }
+        if (cursor != null) {
+            cursor.moveToFirst();
+            String version = cursor.getString(0);
+            ret = Integer.parseInt(version);
         }
         return ret;
-    }
-
-
-    // Do an SQL query without parameters
-    public ArrayList<Object[]> query(String aQuery) throws SQLiteBridgeException {
-        String[] params = new String[0];
-        return query(aQuery, params);
     }
 
     // Do an SQL query, substituting the parameters in the query with the passed
     // parameters. The parameters are subsituded in order, so named parameters
     // are not supported.
-    // The result is returned as an ArrayList<Object[]>, with each
-    // row being an entry in the ArrayList, and each column being one Object
-    // in the Object[] array. The columns are of type null,
-    // direct ByteBuffer (BLOB), or String (everything else).
-    public ArrayList<Object[]> query(String aQuery, String[] aParams)
+    private Cursor internalQuery(String aQuery, String[] aParams)
         throws SQLiteBridgeException {
-        ArrayList<Object[]> result = new ArrayList<Object[]>();
-        mColumns = new ArrayList<String>();
-        sqliteCall(mDb, aQuery, aParams, mColumns, result);
-        return result;
-    }
-
-    // Gets the index in the row Object[] for the given column name.
-    // Returns -1 if not found.
-    public int getColumnIndex(String aColumnName) {
-        return mColumns.lastIndexOf(aColumnName);
+        mQueryResults = new long[2];
+        return sqliteCall(mDb, aQuery, aParams, mQueryResults);
     }
 
     // nop, provided for API compatibility with SQLiteDatabase.

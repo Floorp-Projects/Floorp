@@ -794,6 +794,10 @@ protected:
     return this;
   }
 
+  nsresult GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
+                                      const nsAString& aLocalName,
+                                      nsIDOMAttr** aReturn);
+
 public:
   // Because of a bug in MS C++ compiler nsDOMSlots must be declared public,
   // otherwise nsXULElement::nsXULSlots doesn't compile.

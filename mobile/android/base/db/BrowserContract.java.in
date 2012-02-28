@@ -46,16 +46,21 @@ public class BrowserContract {
     public static final String PASSWORDS_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.passwords";
 
     public static final String DELETED_PASSWORDS_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.deleted-passwords";
+    public static final String FORM_HISTORY_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.formhistory";
+    public static final String DELETED_FORM_HISTORY_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.deleted-formhistory";
 
     public static final Uri AUTHORITY_URI = Uri.parse("content://" + AUTHORITY);
     
     public static final Uri PASSWORDS_AUTHORITY_URI = Uri.parse("content://" + PASSWORDS_AUTHORITY);
 
     public static final Uri DELETED_PASSWORDS_AUTHORITY_URI = Uri.parse("content://" + DELETED_PASSWORDS_AUTHORITY);
+    public static final Uri FORM_HISTORY_AUTHORITY_URI = Uri.parse("content://" + FORM_HISTORY_AUTHORITY);
+    public static final Uri DELETED_FORM_HISTORY_AUTHORITY_URI = Uri.parse("content://" + DELETED_FORM_HISTORY_AUTHORITY);
 
     public static final String DEFAULT_PROFILE = "default";
 
     public static final String PARAM_PROFILE = "profile";
+    public static final String PARAM_PROFILE_PATH = "profilePath";
 
     public static final String PARAM_LIMIT = "limit";
 
@@ -87,6 +92,14 @@ public class BrowserContract {
         public static final String FAVICON = "favicon";
 
         public static final String THUMBNAIL = "thumbnail";
+    }
+
+    public interface DeletedColumns {
+        public static final String ID = "id";
+
+        public static final String GUID = "guid";
+
+        public static final String TIME_DELETED = "timeDeleted";
     }
 
     public static final class Images implements CommonColumns, ImageColumns, SyncColumns {
@@ -190,17 +203,39 @@ public class BrowserContract {
         public static final String TIMES_USED = "timesUsed";
     }
 
-    public static final class DeletedPasswords implements CommonColumns, SyncColumns {
+    public static final class DeletedPasswords implements DeletedColumns {
         private DeletedPasswords() {}
 
-        public static final Uri CONTENT_URI = Uri.withAppendedPath(DELETED_PASSWORDS_AUTHORITY_URI, "deleted-passwords");
-
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/deleted-passwords";
+    }
+
+    public static final class FormHistory {
+        private FormHistory() {}
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(FORM_HISTORY_AUTHORITY_URI, "formhistory");
+
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/formhistory";
 
         public static final String ID = "id";
 
-        public static final String GUID = "guid";
+        public static final String FIELD_NAME = "fieldname";
 
-        public static final String TIME_DELETED = "timeDeleted";
+        public static final String VALUE = "value";
+
+        public static final String TIMES_USED = "timesUsed";
+
+        public static final String FIRST_USED = "firstUsed";
+
+        public static final String LAST_USED = "lastUsed";
+
+        public static final String GUID = "guid";
+    }
+
+    public static final class DeletedFormHistory implements DeletedColumns {
+        private DeletedFormHistory() {}
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(DELETED_FORM_HISTORY_AUTHORITY_URI, "deleted-formhistory");
+
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/deleted-formhistory";
     }
 }

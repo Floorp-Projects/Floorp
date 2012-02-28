@@ -123,7 +123,8 @@
   </script>
 
   <iframe id="acFrame"  height="400" src="about:compartments"></iframe>
-  <iframe id="acvFrame" height="400" src="about:compartments?verbose"></iframe>
+  <!-- vary the capitalization to make sure that works -->
+  <iframe id="acvFrame" height="400" src="abouT:compartMENTS?veRBOse"></iframe>
 
   <script type="application/javascript">
   <![CDATA[
@@ -178,8 +179,9 @@ child-system-compartment\n\
   // expect.  This tests the output in general and also that the cutting and
   // pasting works as expected.
   function test(aFrameId, aExpected, aNext) {
+    ok(document.title === "about:compartments", "document.title is correct");
     let frame = document.getElementById(aFrameId);
-    let handler = function() {
+    SimpleTest.executeSoon(function() {
       frame.focus();
       SimpleTest.waitForClipboard(
         function(aActual) {
@@ -201,11 +203,7 @@ child-system-compartment\n\
           finish();
         }
       );
-    };
-    // about:compartment dispatches a "bodygenerated" event to the document
-    // when it's finished generating its DOM.  If we don't wait for that we end
-    // up copying an empty page.
-    frame.contentDocument.addEventListener("bodygenerated", handler, false);
+    });
   }
 
   SimpleTest.waitForFocus(function() {

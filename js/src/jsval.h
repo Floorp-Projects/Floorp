@@ -291,6 +291,7 @@ typedef enum JSWhyMagic
     JS_ARG_POISON,               /* used in debug builds to catch tracing errors */
     JS_SERIALIZE_NO_NODE,        /* an empty subnode in the AST serializer */
     JS_LAZY_ARGUMENTS,           /* lazy arguments value on the stack */
+    JS_UNASSIGNED_ARGUMENTS,     /* the initial value of callobj.arguments */
     JS_IS_CONSTRUCTING,          /* magic value passed to natives to indicate construction */
     JS_ION_ERROR,                /* error while running Ion code */
     JS_GENERIC_MAGIC             /* for local use */

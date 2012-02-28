@@ -1,5 +1,7 @@
 #filter substitution
+#if MOZ_PLATFORM_MAEMO == 5
 @installdir@/fennec /usr/bin/fennec
 /usr/share/applications/hildon/fennec.desktop etc/others-menu/0112_fennec.desktop
+#endif
 
 

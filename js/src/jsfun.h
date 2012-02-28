@@ -362,30 +362,6 @@ js_PutCallObject(js::StackFrame *fp);
 
 namespace js {
 
-CallObject *
-CreateFunCallObject(JSContext *cx, StackFrame *fp);
-
-CallObject *
-CreateEvalCallObject(JSContext *cx, StackFrame *fp);
-
-extern JSBool
-GetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
-
-extern JSBool
-GetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
-
-extern JSBool
-GetCallUpvar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
-
-extern JSBool
-SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
-
-extern JSBool
-SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
-
-extern JSBool
-SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
-
 /*
  * Function extended with reserved slots for use by various kinds of functions.
  * Most functions do not have these extensions, but enough are that efficient
@@ -415,9 +391,6 @@ JSFunction::toExtended() const
     return static_cast<const js::FunctionExtended *>(this);
 }
 
-extern JSBool
-js_GetArgsValue(JSContext *cx, js::StackFrame *fp, js::Value *vp);
-
 /*
  * Get the arguments object for the given frame.  If the frame is strict mode
  * code, its current arguments will be copied into the arguments object.
@@ -428,7 +401,7 @@ js_GetArgsValue(JSContext *cx, js::StackFrame *fp, js::Value *vp);
  *     named parameter by synthesizing an arguments access at the start of the
  *     function.
  */
-extern JSObject *
+extern js::ArgumentsObject *
 js_GetArgsObject(JSContext *cx, js::StackFrame *fp);
 
 extern void
