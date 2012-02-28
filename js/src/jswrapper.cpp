@@ -363,7 +363,7 @@ Wrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *vp)
 void
 Wrapper::trace(JSTracer *trc, JSObject *wrapper)
 {
-    MarkValue(trc, &wrapper->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "wrappedObject");
+    MarkSlot(trc, &wrapper->getReservedSlotRef(JSSLOT_PROXY_PRIVATE), "wrappedObject");
 }
 
 JSObject *
@@ -656,7 +656,7 @@ struct AutoCloseIterator
 {
     AutoCloseIterator(JSContext *cx, JSObject *obj) : cx(cx), obj(obj) {}
 
-    ~AutoCloseIterator() { if (obj) js_CloseIterator(cx, obj); }
+    ~AutoCloseIterator() { if (obj) CloseIterator(cx, obj); }
 
     void clear() { obj = NULL; }
 
@@ -701,7 +701,7 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
     }
 
     close.clear();
-    if (!js_CloseIterator(cx, iterObj))
+    if (!CloseIterator(cx, iterObj))
         return false;
 
     if (isKeyIter)
@@ -871,8 +871,8 @@ CrossCompartmentWrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *v
 void
 CrossCompartmentWrapper::trace(JSTracer *trc, JSObject *wrapper)
 {
-    MarkCrossCompartmentValue(trc, &wrapper->getReservedSlotRef(JSSLOT_PROXY_PRIVATE),
-                              "wrappedObject");
+    MarkCrossCompartmentSlot(trc, &wrapper->getReservedSlotRef(JSSLOT_PROXY_PRIVATE),
+                             "wrappedObject");
 }
 
 CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);

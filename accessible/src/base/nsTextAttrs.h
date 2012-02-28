@@ -308,6 +308,25 @@ private:
 
 
 /**
+ * Class is used for the work with 'color' text attribute in nsTextAttrsMgr
+ * class.
+ */
+class ColorTextAttr : public nsTextAttr<nscolor>
+{
+public:
+  ColorTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame);
+
+  // nsITextAttr
+  virtual nsIAtom* GetName() const { return nsGkAtoms::color; }
+
+protected:
+  // nsTextAttr
+  virtual bool GetValueFor(nsIContent* aContent, nscolor* aValue);
+  virtual void Format(const nscolor& aValue, nsAString& aFormattedValue);
+};
+
+
+/**
  * Class is used for the work with "font-size" text attribute in nsTextAttrsMgr
  * class.
  */

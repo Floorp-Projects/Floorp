@@ -477,13 +477,6 @@ js_RevertVersion(JSContext *cx);
 extern JS_PUBLIC_API(const JSDebugHooks *)
 JS_GetGlobalDebugHooks(JSRuntime *rt);
 
-extern JS_PUBLIC_API(JSDebugHooks *)
-JS_SetContextDebugHooks(JSContext *cx, const JSDebugHooks *hooks);
-
-/* Disable debug hooks for this context. */
-extern JS_PUBLIC_API(JSDebugHooks *)
-JS_ClearContextDebugHooks(JSContext *cx);
-
 /**
  * Start any profilers that are available and have been configured on for this
  * platform. This is NOT thread safe.

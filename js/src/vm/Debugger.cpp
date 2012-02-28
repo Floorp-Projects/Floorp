@@ -2494,7 +2494,7 @@ static Env *
 Frame_GetEnv(JSContext *cx, StackFrame *fp)
 {
     assertSameCompartment(cx, fp);
-    if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj() && !CreateFunCallObject(cx, fp))
+    if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj() && !CallObject::createForFunction(cx, fp))
         return NULL;
     return GetScopeChain(cx, fp);
 }

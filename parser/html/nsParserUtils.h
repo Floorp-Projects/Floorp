@@ -34,30 +34,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsParserUtils_h_
+#define nsParserUtils_h_
 
-interface nsIDOMElement;
-interface nsIDOMDocumentFragment;
-interface nsIURI;
+#include "nsIScriptableUnescapeHTML.h"
+#include "nsIParserUtils.h"
 
-/**
- * A utility class that unescapes HTML strings.
- */
-[scriptable, uuid(3ab244a9-f09d-44da-9e3f-ee4d67367f2d)]
-interface nsIScriptableUnescapeHTML : nsISupports 
+class nsParserUtils : public nsIScriptableUnescapeHTML,
+                               public nsIParserUtils
 {
-  /** 
-   * Converts all entities to Unicode.
-   *
-   * @param src The HTML string to escape.
-   */ 
-  AString unescape(in AString src);
-        
-  /**
-   * Appends the text to the element.
-   */
-  nsIDOMDocumentFragment parseFragment(in AString fragment,
-                                       in boolean isXML,
-                                       in nsIURI baseURI,
-                                       in nsIDOMElement element);
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISCRIPTABLEUNESCAPEHTML
+  NS_DECL_NSIPARSERUTILS
 };
+
+#endif // nsParserUtils_h_

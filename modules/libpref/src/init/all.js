@@ -682,6 +682,11 @@ pref("security.fileuri.strict_origin_policy", true);
 // prevents necko connecting to ports 1-5 unless the protocol
 // overrides.
 
+// Allow necko to do A/B testing. Will generally only happen if
+// telemetry is also enabled as otherwise there is no way to report
+// the results
+pref("network.allow-experiments", true);
+
 // Default action for unlisted external protocol handlers
 pref("network.protocol-handler.external-default", true);      // OK to load
 pref("network.protocol-handler.warn-external-default", true); // warn before load

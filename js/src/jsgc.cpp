@@ -2118,6 +2118,13 @@ GCMarker::GrayCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     gcmarker->appendGrayRoot(*thingp, kind);
 }
 
+size_t
+GCMarker::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const
+{
+    return stack.sizeOfExcludingThis(mallocSizeOf) +
+           grayRoots.sizeOfExcludingThis(mallocSizeOf);
+}
+
 void
 SetMarkStackLimit(JSRuntime *rt, size_t limit)
 {
@@ -3078,7 +3085,7 @@ ValidateIncrementalMarking(JSContext *cx)
     JSRuntime *rt = cx->runtime;
     FullGCMarker *gcmarker = &rt->gcMarker;
 
-    /* Save existing mark bits */
+    /* Save existing mark bits. */
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront()) {
         ChunkBitmap *bitmap = &r.front()->bitmap;
         uintptr_t *entry = (uintptr_t *)js_malloc(sizeof(bitmap->bitmap));
@@ -3090,6 +3097,11 @@ ValidateIncrementalMarking(JSContext *cx)
             return;
     }
 
+    /* Save the existing weakmaps. */
+    WeakMapVector weakmaps;
+    if (!WeakMapBase::saveWeakMapList(rt, weakmaps))
+        return;
+
     /*
      * After this point, the function should run to completion, so we shouldn't
      * do anything fallible.
@@ -3098,6 +3110,9 @@ ValidateIncrementalMarking(JSContext *cx)
     /* Re-do all the marking, but non-incrementally. */
     js::gc::State state = rt->gcIncrementalState;
     rt->gcIncrementalState = NO_INCREMENTAL;
+
+    /* As we're re-doing marking, we need to reset the weak map list. */
+    WeakMapBase::resetWeakMapList(rt);
 
     JS_ASSERT(gcmarker->isDrained());
     gcmarker->reset();
@@ -3145,6 +3160,10 @@ ValidateIncrementalMarking(JSContext *cx)
 
         memcpy(bitmap->bitmap, incBitmap.bitmap, sizeof(incBitmap.bitmap));
     }
+
+    /* Restore the weak map list. */
+    WeakMapBase::resetWeakMapList(rt);
+    WeakMapBase::restoreWeakMapList(rt, weakmaps);
 
     rt->gcIncrementalState = state;
 }

@@ -1625,14 +1625,25 @@ public class GeckoAppShell
             if (mEventListeners == null)
                 return "";
 
-            if (!mEventListeners.containsKey(type))
-                return "";
-            
             ArrayList<GeckoEventListener> listeners = mEventListeners.get(type);
-            Iterator<GeckoEventListener> items = listeners.iterator();
-            while (items.hasNext()) {
-                items.next().handleMessage(type, geckoObject);
+            if (listeners == null)
+                return "";
+
+            String response = null;
+
+            for (GeckoEventListener listener : listeners) {
+                listener.handleMessage(type, geckoObject);
+                if (listener instanceof GeckoEventResponder) {
+                    String newResponse = ((GeckoEventResponder)listener).getResponse();
+                    if (response != null && newResponse != null) {
+                        Log.e(LOGTAG, "Received two responses for message of type " + type);
+                    }
+                    response = newResponse;
+                }
             }
+
+            if (response != null)
+                return response;
 
         } catch (Exception e) {
             Log.i(LOGTAG, "handleGeckoMessage throws " + e);
