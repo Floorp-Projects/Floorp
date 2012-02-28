@@ -58,7 +58,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jstypedarray.h"
-#include "jsutil.h"
 
 #include "vm/GlobalObject.h"
 

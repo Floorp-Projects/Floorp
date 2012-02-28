@@ -56,7 +56,6 @@
 #include "jsscriptinlines.h"
 #include "InlineFrameAssembler.h"
 #include "jscompartment.h"
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 
 #include "builtin/RegExp.h"
