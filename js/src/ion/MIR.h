@@ -2593,8 +2593,6 @@ class MNot
   : public MUnaryInstruction,
     public TestPolicy
 {
-    MIRType specialization_;
-
   public:
     MNot(MDefinition *elements)
       : MUnaryInstruction(elements)
