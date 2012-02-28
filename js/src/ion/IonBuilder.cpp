@@ -1275,7 +1275,7 @@ IonBuilder::processDeferredContinues(CFGState &state)
     if (state.loop.continues) {
         DeferredEdge *edge = state.loop.continues;
 
-        MBasicBlock *update = newBlock(edge->block, pc);
+        MBasicBlock *update = newBlock(edge->block, loops_.back().continuepc);
         if (!update)
             return false;
 
