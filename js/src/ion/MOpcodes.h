@@ -92,6 +92,7 @@ namespace ion {
     _(TruncateToInt32)                                                      \
     _(ToString)                                                             \
     _(NewArray)                                                             \
+    _(NewObject)                                                            \
     _(Start)                                                                \
     _(OsrEntry)                                                             \
     _(RegExp)                                                               \

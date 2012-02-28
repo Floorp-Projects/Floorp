@@ -235,6 +235,16 @@ class LNewArray : public LCallInstructionHelper<1, 0, 0>
     }
 };
 
+class LNewObject : public LCallInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(NewObject);
+
+    MNewObject *mir() const {
+        return mir_->toNewObject();
+    }
+};
+
 class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
 {
   public:

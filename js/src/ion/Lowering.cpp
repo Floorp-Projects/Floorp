@@ -144,6 +144,13 @@ LIRGenerator::visitNewArray(MNewArray *ins)
 }
 
 bool
+LIRGenerator::visitNewObject(MNewObject *ins)
+{
+    LNewObject *lir = new LNewObject();
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitPrepareCall(MPrepareCall *ins)
 {
     allocateArguments(ins->argc());
