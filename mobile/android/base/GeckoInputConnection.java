@@ -79,6 +79,37 @@ public class GeckoInputConnection
     private static final boolean DEBUG = false;
     protected static final String LOGTAG = "GeckoInputConnection";
 
+    // IME stuff
+    public static final int IME_STATE_DISABLED = 0;
+    public static final int IME_STATE_ENABLED = 1;
+    public static final int IME_STATE_PASSWORD = 2;
+    public static final int IME_STATE_PLUGIN = 3;
+
+    private static final int NOTIFY_IME_RESETINPUTSTATE = 0;
+    private static final int NOTIFY_IME_SETOPENSTATE = 1;
+    private static final int NOTIFY_IME_CANCELCOMPOSITION = 2;
+    private static final int NOTIFY_IME_FOCUSCHANGE = 3;
+
+    private static final CharacterStyle COMPOSING_SPAN = new UnderlineSpan();
+    private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
+    private static int mIMEState;
+    private static String mIMETypeHint;
+    private static String mIMEActionHint;
+    private static boolean mIMELandscapeFS;
+
+    // Is a composition active?
+    private boolean mComposing;
+    private int mCompositionStart = -1;
+    private KeyListener mKeyListener;
+    private Editable mEditable;
+    private Editable.Factory mEditableFactory;
+    private boolean mBatchMode;
+    private ExtractedTextRequest mUpdateRequest;
+    private final ExtractedText mUpdateExtract = new ExtractedText();
+    private int mSelectionStart;
+    private int mSelectionLength;
+    private final SynchronousQueue<String> mQueryResult = new SynchronousQueue<String>();
+
     public static GeckoInputConnection create(View targetView) {
         if (DEBUG)
             return new DebugGeckoInputConnection(targetView);
@@ -88,7 +119,6 @@ public class GeckoInputConnection
 
     protected GeckoInputConnection(View targetView) {
         super(targetView, true);
-        mQueryResult = new SynchronousQueue<String>();
 
         mEditableFactory = Editable.Factory.getInstance();
         initEditable("");
@@ -845,19 +875,13 @@ public class GeckoInputConnection
         }
     }
 
-    static private final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
-
-    static private final int NOTIFY_IME_RESETINPUTSTATE = 0;
-    static private final int NOTIFY_IME_SETOPENSTATE = 1;
-    static private final int NOTIFY_IME_CANCELCOMPOSITION = 2;
-    static private final int NOTIFY_IME_FOCUSCHANGE = 3;
-
     /* Delay updating IME states (see bug 573800) */
     private static final class IMEStateUpdater extends TimerTask {
-        static private IMEStateUpdater instance;
-        private boolean mEnable, mReset;
+        private static IMEStateUpdater instance;
+        private boolean mEnable;
+        private boolean mReset;
 
-        static private IMEStateUpdater getInstance() {
+        private static IMEStateUpdater getInstance() {
             if (instance == null) {
                 instance = new IMEStateUpdater();
                 mIMETimer.schedule(instance, 200);
@@ -865,11 +889,11 @@ public class GeckoInputConnection
             return instance;
         }
 
-        static public synchronized void enableIME() {
+        public static synchronized void enableIME() {
             getInstance().mEnable = true;
         }
 
-        static public synchronized void resetIME() {
+        public static synchronized void resetIME() {
             getInstance().mReset = true;
         }
 
@@ -924,34 +948,6 @@ public class GeckoInputConnection
             setSelection(length, length);
         }
     }
-
-    // Is a composition active?
-    private boolean mComposing;
-    private int mCompositionStart = -1;
-
-    // IME stuff
-    public static final int IME_STATE_DISABLED = 0;
-    public static final int IME_STATE_ENABLED = 1;
-    public static final int IME_STATE_PASSWORD = 2;
-    public static final int IME_STATE_PLUGIN = 3;
-
-    final CharacterStyle COMPOSING_SPAN = new UnderlineSpan();
-
-    KeyListener mKeyListener;
-    Editable mEditable;
-    Editable.Factory mEditableFactory;
-    static int mIMEState;
-    static String mIMETypeHint;
-    static String mIMEActionHint;
-    static boolean mIMELandscapeFS;
-
-    private boolean mBatchMode;
-
-    ExtractedTextRequest mUpdateRequest;
-    final ExtractedText mUpdateExtract = new ExtractedText();
-
-    int mSelectionStart, mSelectionLength;
-    SynchronousQueue<String> mQueryResult;
 }
 
 class DebugGeckoInputConnection extends GeckoInputConnection {
