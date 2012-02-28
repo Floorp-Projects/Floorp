@@ -1218,9 +1218,9 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     layers::renderTraceEventEnd("Widget draw to", "434646");
 
     __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling EndDrawing()!");
-    layers::renderTraceEventStart("Widget draw to", "434747");
+    layers::renderTraceEventStart("Widget end draw", "434747");
     client.EndDrawing();
-    layers::renderTraceEventEnd("Widget draw to", "434747");
+    layers::renderTraceEventEnd("Widget end draw", "434747");
     return;
 #endif
 
