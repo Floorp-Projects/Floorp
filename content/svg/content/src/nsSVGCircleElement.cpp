@@ -67,9 +67,6 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGCircleElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGCircleElementBase::)
 
-  // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const;
-
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(gfxContext *aCtx);
 
@@ -145,13 +142,6 @@ NS_IMETHODIMP nsSVGCircleElement::GetR(nsIDOMSVGAnimatedLength * *aR)
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
-
-/* virtual */ bool
-nsSVGCircleElement::HasValidDimensions() const
-{
-  return mLengthAttributes[R].IsExplicitlySet() &&
-         mLengthAttributes[R].GetAnimValInSpecifiedUnits() > 0;
-}
 
 nsSVGElement::LengthAttributesInfo
 nsSVGCircleElement::GetLengthInfo()

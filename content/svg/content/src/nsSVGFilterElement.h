@@ -83,9 +83,6 @@ public:
   void Invalidate();
 
   virtual nsXPCClassInfo* GetClassInfo();
-
-  // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const;
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();

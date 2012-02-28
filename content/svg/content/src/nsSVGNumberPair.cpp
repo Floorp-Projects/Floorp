@@ -239,10 +239,8 @@ void
 nsSVGNumberPair::SMILNumberPair::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
+    mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
     mVal->mIsAnimated = false;
-    mVal->mAnimVal[0] = mVal->mBaseVal[0];
-    mVal->mAnimVal[1] = mVal->mBaseVal[1];
-    mSVGElement->DidAnimateNumberPair(mVal->mAttrEnum);
   }
 }
 

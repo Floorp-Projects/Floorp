@@ -320,8 +320,8 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
   float x, y, width, height;
   nsSVGImageElement *imgElem = static_cast<nsSVGImageElement*>(mContent);
   imgElem->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
-  NS_ASSERTION(width >= 0 && height >= 0,
-               "Should only be painting things with valid width/height");
+  if (width <= 0 || height <= 0)
+    return NS_OK;
 
   if (!mImageContainer) {
     nsCOMPtr<imgIRequest> currentRequest;

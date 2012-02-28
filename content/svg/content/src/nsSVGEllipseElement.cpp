@@ -68,9 +68,6 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGEllipseElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGEllipseElementBase::)
 
-  // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const;
-
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(gfxContext *aCtx);
 
@@ -153,15 +150,6 @@ NS_IMETHODIMP nsSVGEllipseElement::GetRy(nsIDOMSVGAnimatedLength * *aRy)
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
-
-/* virtual */ bool
-nsSVGEllipseElement::HasValidDimensions() const
-{
-  return mLengthAttributes[RX].IsExplicitlySet() &&
-         mLengthAttributes[RX].GetAnimValInSpecifiedUnits() > 0 &&
-         mLengthAttributes[RY].IsExplicitlySet() &&
-         mLengthAttributes[RY].GetAnimValInSpecifiedUnits() > 0;
-}
 
 nsSVGElement::LengthAttributesInfo
 nsSVGEllipseElement::GetLengthInfo()

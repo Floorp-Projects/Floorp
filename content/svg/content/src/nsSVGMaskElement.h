@@ -76,9 +76,6 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
-
-  // nsSVGSVGElement methods:
-  virtual bool HasValidDimensions() const;
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();

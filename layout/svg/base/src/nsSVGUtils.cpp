@@ -1001,12 +1001,6 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
   if (opacity == 0.0f)
     return;
 
-  const nsIContent* content = aFrame->GetContent();
-  if (content->IsSVG() &&
-      !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
-    return;
-  }
-
   /* Properties are added lazily and may have been removed by a restyle,
      so make sure all applicable ones are set again. */
 
@@ -1165,9 +1159,9 @@ nsSVGUtils::HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint)
        current = current->GetPrevSibling()) {
     nsISVGChildFrame* SVGFrame = do_QueryFrame(current);
     if (SVGFrame) {
-      result = SVGFrame->GetFrameForPoint(aPoint);
-      if (result)
-        break;
+       result = SVGFrame->GetFrameForPoint(aPoint);
+       if (result)
+         break;
     }
   }
 
@@ -1399,18 +1393,13 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, PRUint32 aFlags)
       }
       svg = do_QueryFrame(aFrame);
     }
-    nsIContent* content = aFrame->GetContent();
-    if (content->IsSVG() &&
-        !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
-      return bbox;
-    }
     gfxMatrix matrix;
     if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
       // The spec says getBBox "Returns the tight bounding box in *current user
       // space*". So we should really be doing this for all elements, but that
       // needs investigation to check that we won't break too much content.
-      NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
-      nsSVGElement *element = static_cast<nsSVGElement*>(content);
+      NS_ABORT_IF_FALSE(aFrame->GetContent()->IsSVG(), "bad cast");
+      nsSVGElement *element = static_cast<nsSVGElement*>(aFrame->GetContent());
       matrix = element->PrependLocalTransformsTo(matrix,
                           nsSVGElement::eChildToUserSpace);
     }
