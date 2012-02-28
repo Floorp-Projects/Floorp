@@ -5,7 +5,8 @@ Cu.import("resource://services-sync/async.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
-var btoa;
+let btoa;
+let atob;
 
 let provider = {
   getFile: function(prop, persistent) {
@@ -39,6 +40,7 @@ function waitForZeroTimer(callback) {
 }
 
 btoa = Cu.import("resource://services-sync/log4moz.js").btoa;
+atob = Cu.import("resource://services-sync/log4moz.js").atob;
 function getTestLogger(component) {
   return Log4Moz.repository.getLogger("Testing");
 }

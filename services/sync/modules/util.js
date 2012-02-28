@@ -755,6 +755,130 @@ let Utils = {
     return Utils.encodeKeyBase32(atob(encodedKey));
   },
 
+  /**
+   * Compute the HTTP MAC SHA-1 for an HTTP request.
+   *
+   * @param  identifier
+   *         (string) MAC Key Identifier.
+   * @param  key
+   *         (string) MAC Key.
+   * @param  method
+   *         (string) HTTP request method.
+   * @param  URI
+   *         (nsIURI) HTTP request URI.
+   * @param  extra
+   *         (object) Optional extra parameters. Valid keys are:
+   *           nonce_bytes - How many bytes the nonce should be. This defaults
+   *             to 8. Note that this many bytes are Base64 encoded, so the
+   *             string length of the nonce will be longer than this value.
+   *           ts - Timestamp to use. Should only be defined for testing.
+   *           nonce - String nonce. Should only be defined for testing as this
+   *             function will generate a cryptographically secure random one
+   *             if not defined.
+   *           ext - Extra string to be included in MAC. Per the HTTP MAC spec,
+   *             the format is undefined and thus application specific.
+   * @returns
+   *         (object) Contains results of operation and input arguments (for
+   *           symmetry). The object has the following keys:
+   *
+   *           identifier - (string) MAC Key Identifier (from arguments).
+   *           key - (string) MAC Key (from arguments).
+   *           method - (string) HTTP request method (from arguments).
+   *           hostname - (string) HTTP hostname used (derived from arguments).
+   *           port - (string) HTTP port number used (derived from arguments).
+   *           mac - (string) Raw HMAC digest bytes.
+   *           getHeader - (function) Call to obtain the string Authorization
+   *             header value for this invocation.
+   *           nonce - (string) Nonce value used.
+   *           ts - (number) Integer seconds since Unix epoch that was used.
+   */
+  computeHTTPMACSHA1: function computeHTTPMACSHA1(identifier, key, method,
+                                                  uri, extra) {
+    let ts = (extra && extra.ts) ? extra.ts : Math.floor(Date.now() / 1000);
+    let nonce_bytes = (extra && extra.nonce_bytes > 0) ? extra.nonce_bytes : 8;
+
+    // We are allowed to use more than the Base64 alphabet if we want.
+    let nonce = (extra && extra.nonce)
+                ? extra.nonce
+                : btoa(Utils.generateRandomBytes(nonce_bytes));
+
+    let host = uri.asciiHost;
+    let port;
+    let usedMethod = method.toUpperCase();
+
+    if (uri.port != -1) {
+      port = uri.port;
+    } else if (uri.scheme == "http") {
+      port = "80";
+    } else if (uri.scheme == "https") {
+      port = "443";
+    } else {
+      throw new Error("Unsupported URI scheme: " + uri.scheme);
+    }
+
+    let ext = (extra && extra.ext) ? extra.ext : "";
+
+    let requestString = ts.toString(10) + "\n" +
+                        nonce           + "\n" +
+                        usedMethod      + "\n" +
+                        uri.path        + "\n" +
+                        host            + "\n" +
+                        port            + "\n" +
+                        ext             + "\n";
+
+    let hasher = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1,
+                                      Utils.makeHMACKey(key));
+    let mac = Utils.digestBytes(requestString, hasher);
+
+    function getHeader() {
+      return Utils.getHTTPMACSHA1Header(this.identifier, this.ts, this.nonce,
+                                        this.mac, this.ext);
+    }
+
+    return {
+      identifier: identifier,
+      key:        key,
+      method:     usedMethod,
+      hostname:   host,
+      port:       port,
+      mac:        mac,
+      nonce:      nonce,
+      ts:         ts,
+      ext:        ext,
+      getHeader:  getHeader
+    };
+  },
+
+  /**
+   * Obtain the HTTP MAC Authorization header value from fields.
+   *
+   * @param  identifier
+   *         (string) MAC key identifier.
+   * @param  ts
+   *         (number) Integer seconds since Unix epoch.
+   * @param  nonce
+   *         (string) Nonce value.
+   * @param  mac
+   *         (string) Computed HMAC digest (raw bytes).
+   * @param  ext
+   *         (optional) (string) Extra string content.
+   * @returns
+   *         (string) Value to put in Authorization header.
+   */
+  getHTTPMACSHA1Header: function getHTTPMACSHA1Header(identifier, ts, nonce,
+                                                      mac, ext) {
+    let header ='MAC id="' + identifier + '", ' +
+                'ts="'     + ts         + '", ' +
+                'nonce="'  + nonce      + '", ' +
+                'mac="'    + btoa(mac)  + '"';
+
+    if (!ext) {
+      return header;
+    }
+
+    return header += ', ext="' + ext +'"';
+  },
+
   makeURI: function Weave_makeURI(URIString) {
     if (!URIString)
       return null;
