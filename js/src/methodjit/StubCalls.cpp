@@ -231,7 +231,7 @@ stubs::SetElem(VMFrame &f)
     if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
         THROW();
 
-    TypeScript::MonitorAssign(cx, f.script(), f.pc(), obj, id, rval);
+    TypeScript::MonitorAssign(cx, obj, id);
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {

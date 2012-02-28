@@ -798,12 +798,9 @@ GetElementOperation(JSContext *cx, const Value &lref, const Value &rref, Value *
 }
 
 static JS_ALWAYS_INLINE bool
-SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &value)
+SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &value, bool strict)
 {
-    JSScript *script;
-    jsbytecode *pc;
-    types::TypeScript::GetPcScript(cx, &script, &pc);
-    types::TypeScript::MonitorAssign(cx, script, pc, obj, id, value);
+    types::TypeScript::MonitorAssign(cx, obj, id);
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
@@ -819,6 +816,10 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &va
                 obj->setDenseArrayElementWithType(cx, i, value);
                 return true;
             } else {
+                JSScript *script;
+                jsbytecode *pc;
+                types::TypeScript::GetPcScript(cx, &script, &pc);
+
                 if (script->hasAnalysis())
                     script->analysis()->getCode(pc).arrayWriteHole = true;
             }
@@ -826,7 +827,7 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &va
     } while (0);
 
     Value tmp = value;
-    return obj->setGeneric(cx, id, &tmp, script->strictModeCode);
+    return obj->setGeneric(cx, id, &tmp, strict);
 }
 
 #define RELATIONAL_OP(OP)                                                     \
