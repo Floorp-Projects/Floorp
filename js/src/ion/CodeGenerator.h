@@ -105,7 +105,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallNative(LCallNative *lir);
     bool visitCallGeneric(LCallGeneric *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
-    bool visitNewArray(LNewArray *builder);
+    bool visitNewArray(LNewArray *lir);
+    bool visitNewObject(LNewObject *lir);
     bool visitArrayLength(LArrayLength *lir);
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);

@@ -899,21 +899,27 @@ CodeGenerator::generateBody()
 }
 
 bool
-CodeGenerator::visitNewArray(LNewArray *ins)
+CodeGenerator::visitNewArray(LNewArray *lir)
 {
     typedef JSObject *(*pf)(JSContext *, uint32, types::TypeObject *);
     static const VMFunction NewInitArrayInfo = FunctionInfo<pf>(NewInitArray);
 
-    // ReturnReg is used for the returned value, so we don't care using it
-    // because it would be erased by the function call.
-    const Register type = ReturnReg;
-    masm.movePtr(ImmWord(ins->mir()->type()), type);
-
-    pushArg(type);
-    pushArg(Imm32(ins->mir()->count()));
-    if (!callVM(NewInitArrayInfo, ins))
+    pushArg(ImmGCPtr(lir->mir()->type()));
+    pushArg(Imm32(lir->mir()->count()));
+    if (!callVM(NewInitArrayInfo, lir))
         return false;
     return true;
+}
+
+bool
+CodeGenerator::visitNewObject(LNewObject *lir)
+{
+    typedef JSObject *(*pf)(JSContext *, JSObject *, types::TypeObject *);
+    static const VMFunction Info = FunctionInfo<pf>(CopyInitializerObject);
+
+    pushArg(ImmGCPtr(lir->mir()->type()));
+    pushArg(ImmGCPtr(lir->mir()->baseObj()));
+    return callVM(Info, lir);
 }
 
 bool
