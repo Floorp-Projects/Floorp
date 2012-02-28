@@ -49,7 +49,6 @@
 #include "nsParserCIID.h"
 #include "nsContentUtils.h"
 #include "nsIContentSink.h"
-#include "nsIHTMLToTextSink.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIFragmentContentSink.h"
@@ -63,60 +62,53 @@
 #include "nsHTMLParts.h"
 #include "nsContentCID.h"
 #include "nsIScriptableUnescapeHTML.h"
-#include "nsScriptableUnescapeHTML.h"
+#include "nsParserUtils.h"
 #include "nsAutoPtr.h"
 #include "nsTreeSanitizer.h"
 #include "nsHtml5Module.h"
 
 #define XHTML_DIV_TAG "div xmlns=\"http://www.w3.org/1999/xhtml\""
 
-NS_IMPL_ISUPPORTS1(nsScriptableUnescapeHTML, nsIScriptableUnescapeHTML)
+NS_IMPL_ISUPPORTS2(nsParserUtils,
+                   nsIScriptableUnescapeHTML,
+                   nsIParserUtils)
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
-// From /widget/HTMLConverter
-//
-// Takes HTML and converts it to plain text but in unicode.
-//
+
+
 NS_IMETHODIMP
-nsScriptableUnescapeHTML::Unescape(const nsAString & aFromStr, 
-                                   nsAString & aToStr)
+nsParserUtils::ConvertToPlainText(const nsAString & aFromStr,
+                                           PRUint32 aFlags,
+                                           PRUint32 aWrapCol,
+                                           nsAString & aToStr)
 {
-  // create the parser to do the conversion.
-  aToStr.SetLength(0);
-  nsresult rv;
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  return nsContentUtils::ConvertToPlainText(aFromStr,
+    aToStr,
+    aFlags,
+    aWrapCol);
+}
 
-  // convert it!
-  nsCOMPtr<nsIContentSink> sink;
-
-  sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID);
-  NS_ENSURE_TRUE(sink, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
-  NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
-
-  textSink->Initialize(&aToStr, nsIDocumentEncoder::OutputSelectionOnly
-                       | nsIDocumentEncoder::OutputAbsoluteLinks, 0);
-
-  parser->SetContentSink(sink);
-
-  parser->Parse(aFromStr, 0, NS_LITERAL_CSTRING("text/html"),
-                true, eDTDMode_fragment);
-
-  return NS_OK;
+NS_IMETHODIMP
+nsParserUtils::Unescape(const nsAString & aFromStr,
+                                 nsAString & aToStr)
+{
+  return nsContentUtils::ConvertToPlainText(aFromStr,
+    aToStr,
+    nsIDocumentEncoder::OutputSelectionOnly |
+    nsIDocumentEncoder::OutputAbsoluteLinks,
+    0);
 }
 
 // The feed version of nsContentUtils::CreateContextualFragment It
 // creates a fragment, but doesn't go to all the effort to preserve
 // context like innerHTML does, because feed DOMs shouldn't have that.
 NS_IMETHODIMP
-nsScriptableUnescapeHTML::ParseFragment(const nsAString &aFragment,
-                                        bool aIsXML,
-                                        nsIURI* aBaseURI,
-                                        nsIDOMElement* aContextElement,
-                                        nsIDOMDocumentFragment** aReturn)
+nsParserUtils::ParseFragment(const nsAString &aFragment,
+                                      bool aIsXML,
+                                      nsIURI* aBaseURI,
+                                      nsIDOMElement* aContextElement,
+                                      nsIDOMDocumentFragment** aReturn)
 {
   NS_ENSURE_ARG(aContextElement);
   *aReturn = nsnull;

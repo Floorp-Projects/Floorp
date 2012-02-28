@@ -160,7 +160,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
     JSObject *limitBlock, *limitClone;
     if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj()) {
         JS_ASSERT_IF(fp->scopeChain().isClonedBlock(), fp->scopeChain().getPrivate() != fp);
-        if (!CreateFunCallObject(cx, fp))
+        if (!CallObject::createForFunction(cx, fp))
             return NULL;
 
         /* We know we must clone everything on blockChain. */
@@ -646,7 +646,7 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
 
     /* Give strict mode eval its own fresh lexical environment. */
     StackFrame *fp = efg.fp();
-    if (fp->isStrictEvalFrame() && !CreateEvalCallObject(cx, fp))
+    if (fp->isStrictEvalFrame() && !CallObject::createForStrictEval(cx, fp))
         return false;
 
     Probes::startExecution(cx, script);
@@ -1444,7 +1444,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define CHECK_INTERRUPT_HANDLER()                                             \
     JS_BEGIN_MACRO                                                            \
-        if (cx->debugHooks->interruptHook)                                    \
+        if (cx->runtime->debugHooks.interruptHook)                            \
             ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
@@ -1591,12 +1591,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             moreInterrupts = true;
         }
 
-        JSInterruptHook hook = cx->debugHooks->interruptHook;
+        JSInterruptHook hook = cx->runtime->debugHooks.interruptHook;
         if (hook || script->stepModeEnabled()) {
             Value rval;
             JSTrapStatus status = JSTRAP_CONTINUE;
             if (hook)
-                status = hook(cx, script, regs.pc, &rval, cx->debugHooks->interruptHookData);
+                status = hook(cx, script, regs.pc, &rval, cx->runtime->debugHooks.interruptHookData);
             if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
                 status = Debugger::onSingleStep(cx, &rval);
             switch (status) {
@@ -1967,7 +1967,7 @@ BEGIN_CASE(JSOP_ITER)
 {
     JS_ASSERT(regs.sp > regs.fp()->base());
     uint8_t flags = GET_UINT8(regs.pc);
-    if (!js_ValueToIterator(cx, flags, &regs.sp[-1]))
+    if (!ValueToIterator(cx, flags, &regs.sp[-1]))
         goto error;
     CHECK_INTERRUPT_HANDLER();
     JS_ASSERT(!regs.sp[-1].isPrimitive());
@@ -2001,7 +2001,7 @@ END_CASE(JSOP_ITERNEXT)
 BEGIN_CASE(JSOP_ENDITER)
 {
     JS_ASSERT(regs.sp - 1 >= regs.fp()->base());
-    bool ok = !!js_CloseIterator(cx, &regs.sp[-1].toObject());
+    bool ok = CloseIterator(cx, &regs.sp[-1].toObject());
     regs.sp--;
     if (!ok)
         goto error;
@@ -3000,14 +3000,18 @@ BEGIN_CASE(JSOP_ARGUMENTS)
         if (!script->ensureRanInference(cx))
             goto error;
         if (script->createdArgs) {
-            if (!js_GetArgsValue(cx, regs.fp(), &rval))
+            ArgumentsObject *arguments = js_GetArgsObject(cx, regs.fp());
+            if (!arguments)
                 goto error;
+            rval = ObjectValue(*arguments);
         } else {
             rval = MagicValue(JS_LAZY_ARGUMENTS);
         }
     } else {
-        if (!js_GetArgsValue(cx, regs.fp(), &rval))
+        ArgumentsObject *arguments = js_GetArgsObject(cx, regs.fp());
+        if (!arguments)
             goto error;
+        rval = ObjectValue(*arguments);
     }
     PUSH_COPY(rval);
 }
@@ -3667,8 +3671,8 @@ BEGIN_CASE(JSOP_DEBUGGER)
 {
     JSTrapStatus st = JSTRAP_CONTINUE;
     Value rval;
-    if (JSDebuggerHandler handler = cx->debugHooks->debuggerHandler)
-        st = handler(cx, script, regs.pc, &rval, cx->debugHooks->debuggerHandlerData);
+    if (JSDebuggerHandler handler = cx->runtime->debugHooks.debuggerHandler)
+        st = handler(cx, script, regs.pc, &rval, cx->runtime->debugHooks.debuggerHandlerData);
     if (st == JSTRAP_CONTINUE)
         st = Debugger::onDebuggerStatement(cx, &rval);
     switch (st) {
@@ -4227,13 +4231,13 @@ END_CASE(JSOP_ARRAYPUSH)
         atoms = script->atoms;
 
         /* Call debugger throw hook if set. */
-        if (cx->debugHooks->throwHook || !cx->compartment->getDebuggees().empty()) {
+        if (cx->runtime->debugHooks.throwHook || !cx->compartment->getDebuggees().empty()) {
             Value rval;
             JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
             if (st == JSTRAP_CONTINUE) {
-                handler = cx->debugHooks->throwHook;
+                handler = cx->runtime->debugHooks.throwHook;
                 if (handler)
-                    st = handler(cx, script, regs.pc, &rval, cx->debugHooks->throwHookData);
+                    st = handler(cx, script, regs.pc, &rval, cx->runtime->debugHooks.throwHookData);
             }
 
             switch (st) {
@@ -4330,13 +4334,10 @@ END_CASE(JSOP_ARRAYPUSH)
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
                 JS_ASSERT(JSOp(*regs.pc) == JSOP_ENDITER);
-                Value v = cx->getPendingException();
-                cx->clearPendingException();
-                bool ok = js_CloseIterator(cx, &regs.sp[-1].toObject());
+                bool ok = UnwindIteratorForException(cx, &regs.sp[-1].toObject());
                 regs.sp -= 1;
                 if (!ok)
                     goto error;
-                cx->setPendingException(v);
               }
            }
         } while (++tn != tnlimit);

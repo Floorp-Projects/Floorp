@@ -1688,10 +1688,8 @@ types::MarkArgumentsCreated(JSContext *cx, JSScript *script)
              */
             Value *sp = fp->base() + analysis->getCode(iter.pc()).stackDepth;
             for (Value *vp = fp->slots(); vp < sp; vp++) {
-                if (vp->isParticularMagic(JS_LAZY_ARGUMENTS)) {
-                    if (!js_GetArgsValue(cx, fp, vp))
-                        vp->setNull();
-                }
+                if (vp->isParticularMagic(JS_LAZY_ARGUMENTS))
+                    *vp = ObjectOrNullValue(js_GetArgsObject(cx, fp));
             }
         }
     }
@@ -2412,6 +2410,11 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
 
     barrier = cx->typeLifoAlloc().new_<TypeBarrier>(target, type, (JSObject *) NULL, JSID_VOID);
 
+    if (!barrier) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
     barrier->next = code.typeBarriers;
     code.typeBarriers = barrier;
 }
@@ -2437,6 +2440,11 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
 
     TypeBarrier *barrier = cx->typeLifoAlloc().new_<TypeBarrier>(target, Type::UndefinedType(),
                               singleton, singletonId);
+
+    if (!barrier) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
 
     barrier->next = code.typeBarriers;
     code.typeBarriers = barrier;

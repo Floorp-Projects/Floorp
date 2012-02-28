@@ -243,6 +243,8 @@ UpdateDecomposeLength(BytecodeEmitter *bce, uintN start)
 ptrdiff_t
 frontend::Emit1(JSContext *cx, BytecodeEmitter *bce, JSOp op)
 {
+    JS_ASSERT_IF(op == JSOP_ARGUMENTS, !bce->mayOverwriteArguments());
+
     ptrdiff_t offset = EmitCheck(cx, bce, 1);
 
     if (offset >= 0) {
@@ -981,6 +983,14 @@ EmitSlotObjectOp(JSContext *cx, JSOp op, uintN slot, uint32_t index, BytecodeEmi
     pc += SLOTNO_LEN;
     SET_UINT32_INDEX(pc, index);
     return true;
+}
+
+static bool
+EmitArguments(JSContext *cx, BytecodeEmitter *bce)
+{
+    if (!bce->mayOverwriteArguments())
+        return Emit1(cx, bce, JSOP_ARGUMENTS) >= 0;
+    return EmitAtomOp(cx, cx->runtime->atomState.argumentsAtom, JSOP_NAME, bce);
 }
 
 bool
@@ -1833,7 +1843,10 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool callContex
         }
     }
 
-    if (op == JSOP_ARGUMENTS || op == JSOP_CALLEE) {
+    if (op == JSOP_ARGUMENTS) {
+        if (!EmitArguments(cx, bce))
+            return JS_FALSE;
+    } else if (op == JSOP_CALLEE) {
         if (Emit1(cx, bce, op) < 0)
             return JS_FALSE;
     } else {
@@ -3589,7 +3602,7 @@ EmitVariables(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption 
             return JS_FALSE;
         }
         if (op == JSOP_ARGUMENTS) {
-            if (Emit1(cx, bce, op) < 0)
+            if (!EmitArguments(cx, bce))
                 return JS_FALSE;
         } else if (!pn2->pn_cookie.isFree()) {
             EMIT_UINT16_IMM_OP(op, atomIndex);
@@ -3700,7 +3713,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
                 if (lhs->isOp(JSOP_CALLEE)) {
                     if (Emit1(cx, bce, JSOP_CALLEE) < 0)
                         return false;
-                } else if (lhs->isOp(JSOP_NAME)) {
+                } else if (lhs->isOp(JSOP_NAME) || lhs->isOp(JSOP_GETGNAME)) {
                     if (!EmitIndex32(cx, lhs->getOp(), atomIndex, bce))
                         return false;
                 } else {

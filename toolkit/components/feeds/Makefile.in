@@ -63,11 +63,6 @@ XPIDLSRCS = \
   nsIFeedProcessor.idl \
   nsIFeedResult.idl \
   nsIFeedTextConstruct.idl \
-  nsIScriptableUnescapeHTML.idl \
-  $(NULL)
-
-CPPSRCS = \
-  nsScriptableUnescapeHTML.cpp \
   $(NULL)
 
 EXTRA_COMPONENTS = FeedProcessor.js FeedProcessor.manifest

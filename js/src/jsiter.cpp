@@ -829,7 +829,7 @@ Iterator(JSContext *cx, uintN argc, Value *vp)
     bool keyonly = argc >= 2 ? js_ValueToBoolean(argv[1]) : false;
     uintN flags = JSITER_OWNONLY | (keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE));
     *vp = argc >= 1 ? argv[0] : UndefinedValue();
-    return js_ValueToIterator(cx, flags, vp);
+    return ValueToIterator(cx, flags, vp);
 }
 
 JSBool
@@ -871,12 +871,19 @@ static JSFunctionSpec iterator_methods[] = {
     JS_FS_END
 };
 
+#if JS_HAS_GENERATORS
+static JSBool
+CloseGenerator(JSContext *cx, JSObject *genobj);
+#endif
+
+namespace js {
+
 /*
  * Call ToObject(v).__iterator__(keyonly) if ToObject(v).__iterator__ exists.
  * Otherwise construct the default iterator.
  */
-JS_FRIEND_API(JSBool)
-js_ValueToIterator(JSContext *cx, uintN flags, Value *vp)
+JSBool
+ValueToIterator(JSContext *cx, uintN flags, Value *vp)
 {
     /* JSITER_KEYVALUE must always come with JSITER_FOREACH */
     JS_ASSERT_IF(flags & JSITER_KEYVALUE, flags & JSITER_FOREACH);
@@ -914,13 +921,8 @@ js_ValueToIterator(JSContext *cx, uintN flags, Value *vp)
     return GetIterator(cx, obj, flags, vp);
 }
 
-#if JS_HAS_GENERATORS
-static JSBool
-CloseGenerator(JSContext *cx, JSObject *genobj);
-#endif
-
-JS_FRIEND_API(JSBool)
-js_CloseIterator(JSContext *cx, JSObject *obj)
+bool
+CloseIterator(JSContext *cx, JSObject *obj)
 {
     cx->iterValue.setMagic(JS_NO_ITER_VALUE);
 
@@ -949,6 +951,19 @@ js_CloseIterator(JSContext *cx, JSObject *obj)
 #endif
     return JS_TRUE;
 }
+
+bool
+UnwindIteratorForException(JSContext *cx, JSObject *obj)
+{
+    Value v = cx->getPendingException();
+    cx->clearPendingException();
+    if (!CloseIterator(cx, obj))
+        return false;
+    cx->setPendingException(v);
+    return true;
+}
+
+} // namespace js
 
 /*
  * Suppress enumeration of deleted properties. This function must be called
