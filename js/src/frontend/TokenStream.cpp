@@ -178,8 +178,8 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     prevLinebase = NULL;
     sourceMap = NULL;
 
-    JSSourceHandler listener = cx->debugHooks->sourceHandler;
-    void *listenerData = cx->debugHooks->sourceHandlerData;
+    JSSourceHandler listener = cx->runtime->debugHooks.sourceHandler;
+    void *listenerData = cx->runtime->debugHooks.sourceHandlerData;
 
     if (listener)
         listener(fn, ln, base, length, &listenerTSData, listenerData);
@@ -521,8 +521,8 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorN
          * sending the error on to the regular error reporter.
          */
         bool reportError = true;
-        if (JSDebugErrorHook hook = cx->debugHooks->debugErrorHook)
-            reportError = hook(cx, message, &report, cx->debugHooks->debugErrorHookData);
+        if (JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook)
+            reportError = hook(cx, message, &report, cx->runtime->debugHooks.debugErrorHookData);
 
         /* Report the error */
         if (reportError && cx->errorReporter)
