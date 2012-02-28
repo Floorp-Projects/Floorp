@@ -38,6 +38,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.IntSize;
+import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ViewportMetrics;
 import android.os.*;
 import android.app.*;
@@ -380,10 +381,17 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createViewportEvent(ViewportMetrics viewport) {
+    public static GeckoEvent createViewportEvent(ViewportMetrics viewport, Rect displayPortMargins) {
         GeckoEvent event = new GeckoEvent(VIEWPORT);
         event.mCharacters = "Viewport:Change";
-        event.mCharactersExtra = viewport.toJSON();
+        PointF origin = viewport.getOrigin();
+        StringBuffer sb = new StringBuffer(256);
+        sb.append("{ \"x\" : ").append(origin.x)
+          .append(", \"y\" : ").append(origin.y)
+          .append(", \"zoom\" : ").append(viewport.getZoomFactor())
+          .append(", \"displayPortMargins\" :").append(RectUtils.toJSON(displayPortMargins))
+          .append('}');
+        event.mCharactersExtra = sb.toString();
         return event;
     }
 

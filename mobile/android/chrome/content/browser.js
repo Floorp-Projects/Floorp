@@ -75,9 +75,6 @@ const kElementsReceivingInput = {
     video: true
 };
 
-// How many pixels on each axis to buffer.
-const kBufferAmount = 600;
-
 // Whether we're using GL layers.
 const kUsingGLLayers = true;
 
@@ -406,7 +403,6 @@ var BrowserApp = {
       return;
 
     aTab.setActive(true);
-    aTab.refreshDisplayPort();
     aTab.updateViewport(false);
     this.deck.selectedPanel = aTab.browser;
   },
@@ -1574,7 +1570,7 @@ Tab.prototype = {
     }
   },
 
-  refreshDisplayPort: function refreshDisplayPort() {
+  refreshDisplayPort: function(aDisplayPortMargins) {
     if (this._zoom <= 0)
       return;
 
@@ -1583,16 +1579,19 @@ Tab.prototype = {
     // we need to avoid having a display port that is larger than the page, or we will end up
     // painting things outside the page bounds (bug 729169)
 
-    // figure out how much of kBufferAmount we can actually use on the horizontal axis
-    let xBufferAmount = Math.min(kBufferAmount, Math.max(0, viewport.pageWidth - viewport.width));
+    let requestedXAmount = Math.max(0, aDisplayPortMargins.left + aDisplayPortMargins.right);
+    let requestedYAmount = Math.max(0, aDisplayPortMargins.top + aDisplayPortMargins.bottom);
+
+    // figure out how much of the specified buffer amount we can actually use on the horizontal axis
+    let xBufferAmount = Math.min(requestedXAmount, Math.max(0, viewport.pageWidth - viewport.width));
     // if we reduced the buffer amount on the horizontal axis, we should take that saved memory and
     // use it on the vertical axis
-    let savedPixels = (kBufferAmount - xBufferAmount) * (viewport.height + kBufferAmount);
+    let savedPixels = (requestedXAmount - xBufferAmount) * (viewport.height + requestedYAmount);
     let extraYAmount = Math.floor(savedPixels / (viewport.width + xBufferAmount));
-    let yBufferAmount = Math.min(kBufferAmount + extraYAmount, Math.max(0, viewport.pageHeight - viewport.height));
+    let yBufferAmount = Math.min(requestedYAmount + extraYAmount, Math.max(0, viewport.pageHeight - viewport.height));
     // and the reverse - if we shrunk the buffer on the vertical axis we can add it to the horizontal
-    if (xBufferAmount == kBufferAmount && yBufferAmount < kBufferAmount) {
-        savedPixels = (kBufferAmount - yBufferAmount) * (viewport.width + xBufferAmount);
+    if (xBufferAmount == requestedXAmount && yBufferAmount < requestedYAmount) {
+        savedPixels = (requestedYAmount - yBufferAmount) * (viewport.width + xBufferAmount);
         let extraXAmount = Math.floor(savedPixels / (viewport.height + yBufferAmount));
         xBufferAmount = Math.min(xBufferAmount + extraXAmount, Math.max(0, viewport.pageWidth - viewport.width));
     }
@@ -1601,24 +1600,29 @@ Tab.prototype = {
     // the page bounds, ensuring we use all of the available buffer amounts on one side or the other
     // on any given axis. (i.e. if we're scrolled to the top of the page, the vertical buffer is
     // entirely below the visible viewport, but if we're halfway down the page, the vertical buffer
-    // is split between the top and the bottom).
-    let leftMargin = Math.max(0, viewport.x);
-    let rightMargin = Math.max(0, viewport.pageWidth - (viewport.x + viewport.width));
-    if (leftMargin < (xBufferAmount / 2)) {
+    // is split as specified in the aDisplayPortMargins parameter).
+    let leftMargin = Math.min(aDisplayPortMargins.left, Math.max(0, viewport.x));
+    let rightMargin = Math.min(aDisplayPortMargins.right, Math.max(0, viewport.pageWidth - (viewport.x + viewport.width)));
+    if (leftMargin < aDisplayPortMargins.left) {
       rightMargin = xBufferAmount - leftMargin;
-    } else if (rightMargin < (xBufferAmount / 2)) {
+    } else if (rightMargin < aDisplayPortMargins.right) {
       leftMargin = xBufferAmount - rightMargin;
-    } else {
-      leftMargin = rightMargin = xBufferAmount / 2;
+    } else if (Math.abs(leftMargin + rightMargin - xBufferAmount) >= 1e-6) {
+      let delta = xBufferAmount - leftMargin - rightMargin;
+      leftMargin += delta / 2;
+      rightMargin += delta / 2;
     }
-    let topMargin = Math.max(0, viewport.y);
-    let bottomMargin = Math.max(0, viewport.pageHeight - (viewport.y + viewport.height));
-    if (topMargin < (yBufferAmount / 2)) {
+
+    let topMargin = Math.min(aDisplayPortMargins.top, Math.max(0, viewport.y));
+    let bottomMargin = Math.min(aDisplayPortMargins.bottom, Math.max(0, viewport.pageHeight - (viewport.y + viewport.height)));
+    if (topMargin < aDisplayPortMargins.top) {
       bottomMargin = yBufferAmount - topMargin;
-    } else if (bottomMargin < (yBufferAmount / 2)) {
+    } else if (bottomMargin < aDisplayPortMargins.bottom) {
       topMargin = yBufferAmount - bottomMargin;
-    } else {
-      topMargin = bottomMargin = yBufferAmount / 2;
+    } else if (Math.abs(topMargin + bottomMargin - yBufferAmount) >= 1e-6) {
+      let delta = yBufferAmount - topMargin - bottomMargin;
+      topMargin += delta / 2;
+      bottomMargin += delta / 2;
     }
 
     dump("### displayport margins=(" + leftMargin + ", " + topMargin + ", " + rightMargin + ", " + bottomMargin + ") at zoom=" + viewport.zoom
@@ -1659,7 +1663,7 @@ Tab.prototype = {
     }
 
     // always refresh display port when we scroll so that we can clip it to page bounds
-    this.refreshDisplayPort();
+    this.refreshDisplayPort(aViewport.displayPortMargins);
   },
 
   get viewport() {
@@ -1722,7 +1726,6 @@ Tab.prototype = {
       if (!aZoomLevel)
         aZoomLevel = this.getDefaultZoomLevel();
       this._zoom = aZoomLevel;
-      this.refreshDisplayPort();
     }
 
     this.sendViewportUpdate();
@@ -1731,11 +1734,17 @@ Tab.prototype = {
   sendViewportUpdate: function() {
     if (BrowserApp.selectedTab != this)
       return;
-    sendMessageToJava({
+    this.sendViewportMessage("Viewport:UpdateAndDraw");
+  },
+
+  sendViewportMessage: function(msg) {
+    let displayPortMargins = sendMessageToJava({
       gecko: {
-        type: "Viewport:UpdateAndDraw"
+        type: msg
       }
     });
+    if (displayPortMargins != null)
+      this.refreshDisplayPort(JSON.parse(displayPortMargins));
   },
 
   handleEvent: function(aEvent) {
@@ -1854,11 +1863,7 @@ Tab.prototype = {
       case "scroll": {
         let win = this.browser.contentWindow;
         if (this.userScrollPos.x != win.scrollX || this.userScrollPos.y != win.scrollY) {
-          sendMessageToJava({
-            gecko: {
-              type: "Viewport:UpdateLater"
-            }
-          });
+          this.sendViewportMessage("Viewport:UpdateLater");
         }
         break;
       }
@@ -2202,8 +2207,7 @@ Tab.prototype = {
           // based on the value of documentIdForCurrentViewport, which we
           // can do once the docshell and the browser element are aware 
           // of the existence of <meta viewport>. 
-          sendMessageToJava({ gecko: { type: "Viewport:UpdateAndDraw" } });
-          this.refreshDisplayPort();
+          this.sendViewportMessage("Viewport:UpdateAndDraw");
         }
         break;
     }
