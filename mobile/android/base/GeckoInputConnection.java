@@ -38,24 +38,39 @@
 
 package org.mozilla.gecko;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
+import android.R;
+import android.content.Context;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.Selection;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.text.method.KeyListener;
+import android.text.method.TextKeyListener;
+import android.text.style.BackgroundColorSpan;
+import android.text.style.CharacterStyle;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.UnderlineSpan;
+import android.util.Log;
+import android.util.LogPrinter;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.CompletionInfo;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.ExtractedText;
+import android.view.inputmethod.ExtractedTextRequest;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 
-import android.os.*;
-import android.app.*;
-import android.text.*;
-import android.text.style.*;
-import android.view.*;
-import android.view.inputmethod.*;
-import android.content.*;
-import android.R;
-import android.text.method.TextKeyListener;
-import android.text.method.KeyListener;
-import android.util.*;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.SynchronousQueue;
 
 public class GeckoInputConnection
     extends BaseInputConnection
