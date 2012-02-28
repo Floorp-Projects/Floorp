@@ -40,7 +40,7 @@
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/aboutSyncTabs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/aboutSyncTabs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/sync/aboutSyncTabs.css" type="text/css"?>
 
 <!DOCTYPE window [
   <!ENTITY % aboutSyncTabsDTD SYSTEM "chrome://browser/locale/aboutSyncTabs.dtd">
@@ -53,7 +53,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         title="&tabs.otherComputers.label;">
-  <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutSyncTabs.js"/>
+  <script type="application/javascript;version=1.8" src="chrome://browser/content/sync/aboutSyncTabs.js"/>
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <html:head>
     <html:link rel="icon" href="chrome://browser/skin/sync-16.png"/>

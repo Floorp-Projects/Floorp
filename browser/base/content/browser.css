@@ -329,12 +329,12 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 %ifdef MOZ_SERVICES_SYNC
 /* Sync notification UI */
 #sync-notifications {
-  -moz-binding: url("chrome://browser/content/syncNotification.xml#notificationbox");
+  -moz-binding: url("chrome://browser/content/sync/notification.xml#notificationbox");
   overflow-y: visible !important;
 }
 
 #sync-notifications notification {
-  -moz-binding: url("chrome://browser/content/syncNotification.xml#notification");
+  -moz-binding: url("chrome://browser/content/sync/notification.xml#notification");
 }
 %endif
 

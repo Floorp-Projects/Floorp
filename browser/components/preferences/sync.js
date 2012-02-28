@@ -157,7 +157,7 @@ let gSyncPane = {
     if (win)
       win.focus();
     else {
-      window.openDialog("chrome://browser/content/syncSetup.xul",
+      window.openDialog("chrome://browser/content/sync/setup.xul",
                         "weaveSetup", "centerscreen,chrome,resizable=no",
                         wizardType);
     }
@@ -168,7 +168,7 @@ let gSyncPane = {
     if (win)
       win.focus();
     else 
-      window.openDialog("chrome://browser/content/syncQuota.xul", "",
+      window.openDialog("chrome://browser/content/sync/quota.xul", "",
                         "centerscreen,chrome,dialog,modal");
   },
 
@@ -180,7 +180,7 @@ let gSyncPane = {
     if (win)
       win.focus();
     else 
-      window.openDialog("chrome://browser/content/syncAddDevice.xul",
+      window.openDialog("chrome://browser/content/sync/addDevice.xul",
                         "syncAddDevice", "centerscreen,chrome,resizable=no");
   },
 
