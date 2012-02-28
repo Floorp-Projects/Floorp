@@ -48,7 +48,6 @@
 #include "jsxml.h"
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
-#include "jsiter.h"
 #include "jstypes.h"
 #include "vm/Debugger.h"
 #include "vm/String.h"

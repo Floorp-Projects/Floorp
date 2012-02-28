@@ -48,7 +48,6 @@
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/CodeLocation.h"
-#include "jsiter.h"
 #include "jstypes.h"
 #include "methodjit/StubCalls.h"
 #include "methodjit/MonoIC.h"

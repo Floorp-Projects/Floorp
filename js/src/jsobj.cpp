@@ -84,6 +84,7 @@
 #include "js/MemoryMetrics.h"
 
 #include "jsarrayinlines.h"
+#include "jsatominlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
@@ -92,10 +93,6 @@
 
 #include "vm/MethodGuard-inl.h"
 
-#if JS_HAS_GENERATORS
-#include "jsiter.h"
-#endif
-
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
@@ -103,10 +100,6 @@
 #if JS_HAS_XDR
 #include "jsxdrapi.h"
 #endif
-
-#include "jsatominlines.h"
-#include "jsobjinlines.h"
-#include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
 
