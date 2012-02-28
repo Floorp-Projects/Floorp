@@ -3401,6 +3401,7 @@ BasicShadowLayerManager::EndEmptyTransaction()
 void
 BasicShadowLayerManager::ForwardTransaction()
 {
+  RenderTraceScope rendertrace("Foward Transaction", "000090");
 #ifdef DEBUG
   mPhase = PHASE_FORWARD;
 #endif
