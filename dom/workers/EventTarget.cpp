@@ -91,7 +91,7 @@ GetPrivate(JSObject* aObj)
 }
 
 JSBool
-Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
 {
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                        gClass.name);
@@ -156,7 +156,7 @@ EventTarget::FromJSObject(JSObject* aObj)
 
 // static
 JSBool
-EventTarget::AddEventListener(JSContext* aCx, uintN aArgc, jsval* aVp)
+EventTarget::AddEventListener(JSContext* aCx, unsigned aArgc, jsval* aVp)
 {
   JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
   if (!obj) {
@@ -191,7 +191,7 @@ EventTarget::AddEventListener(JSContext* aCx, uintN aArgc, jsval* aVp)
 
 // static
 JSBool
-EventTarget::RemoveEventListener(JSContext* aCx, uintN aArgc, jsval* aVp)
+EventTarget::RemoveEventListener(JSContext* aCx, unsigned aArgc, jsval* aVp)
 {
   JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
   if (!obj) {
@@ -226,7 +226,7 @@ EventTarget::RemoveEventListener(JSContext* aCx, uintN aArgc, jsval* aVp)
 
 // static
 JSBool
-EventTarget::DispatchEvent(JSContext* aCx, uintN aArgc, jsval* aVp)
+EventTarget::DispatchEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
 {
   JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
   if (!obj) {

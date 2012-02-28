@@ -575,7 +575,7 @@ class SetPropCompiler : public PICStubCompiler
             const Shape *initialShape = obj->lastProperty();
             uint32_t slots = obj->numDynamicSlots();
 
-            uintN flags = 0;
+            unsigned flags = 0;
             PropertyOp getter = clasp->getProperty;
 
             if (pic.kind == ic::PICInfo::SETMETHOD) {

@@ -101,7 +101,7 @@ struct Parser : private AutoGCRooter
      * tempLifoAlloc and save the pointer beyond the next Parser destructor
      * invocation.
      */
-    bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
+    bool init(const jschar *base, size_t length, const char *filename, unsigned lineno,
               JSVersion version);
 
     void setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin);
@@ -139,7 +139,7 @@ struct Parser : private AutoGCRooter
     /*
      * Report a parse (compile) error.
      */
-    inline bool reportErrorNumber(ParseNode *pn, uintN flags, uintN errorNumber, ...);
+    inline bool reportErrorNumber(ParseNode *pn, unsigned flags, unsigned errorNumber, ...);
 
   private:
     ParseNode *allocParseNode(size_t size) {
@@ -248,7 +248,7 @@ struct Parser : private AutoGCRooter
     ParseNode *unaryOpExpr(ParseNodeKind kind, JSOp op);
 
     ParseNode *condition();
-    ParseNode *comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
+    ParseNode *comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
                                  ParseNodeKind kind = PNK_SEMI, JSOp op = JSOP_NOP);
     ParseNode *generatorExpr(ParseNode *kid);
     JSBool argumentList(ParseNode *listNode);
@@ -284,7 +284,7 @@ struct Parser : private AutoGCRooter
 };
 
 inline bool
-Parser::reportErrorNumber(ParseNode *pn, uintN flags, uintN errorNumber, ...)
+Parser::reportErrorNumber(ParseNode *pn, unsigned flags, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
@@ -297,7 +297,7 @@ bool
 CheckStrictParameters(JSContext *cx, TreeContext *tc);
 
 bool
-DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc);
+DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, TreeContext *tc);
 
 } /* namespace js */
 

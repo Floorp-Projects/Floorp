@@ -50,10 +50,10 @@ namespace js {
 class BooleanObject : public JSObject
 {
     /* Stores this Boolean object's [[PrimitiveValue]]. */
-    static const uintN PRIMITIVE_VALUE_SLOT = 0;
+    static const unsigned PRIMITIVE_VALUE_SLOT = 0;
 
   public:
-    static const uintN RESERVED_SLOTS = 1;
+    static const unsigned RESERVED_SLOTS = 1;
 
     /*
      * Creates a new Boolean object boxing the given primitive bool.  The

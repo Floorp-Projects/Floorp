@@ -8,7 +8,7 @@ const size_t N = 1000;
 static jsval argv[N];
 
 static JSBool
-constructHook(JSContext *cx, uintN argc, jsval *vp)
+constructHook(JSContext *cx, unsigned argc, jsval *vp)
 {
     // Check that arguments were passed properly from JS_New.
     JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));

@@ -190,16 +190,16 @@ typedef JSBool
                     JSProperty **propp);
 typedef JSBool
 (* DefineGenericOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
-                    PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
 (* DefinePropOp)(JSContext *cx, JSObject *obj, PropertyName *name, const Value *value,
-                 PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+                 PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
 (* DefineElementOp)(JSContext *cx, JSObject *obj, uint32_t index, const Value *value,
-                    PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
 (* DefineSpecialOp)(JSContext *cx, JSObject *obj, SpecialId sid, const Value *value,
-                    PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 typedef JSBool
 (* GenericIdOp)(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
 typedef JSBool
@@ -219,13 +219,13 @@ typedef JSBool
 typedef JSBool
 (* StrictSpecialIdOp)(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool strict);
 typedef JSBool
-(* GenericAttributesOp)(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp);
+(* GenericAttributesOp)(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp);
 typedef JSBool
-(* PropertyAttributesOp)(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp);
+(* PropertyAttributesOp)(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp);
 typedef JSBool
-(* ElementAttributesOp)(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp);
+(* ElementAttributesOp)(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp);
 typedef JSBool
-(* SpecialAttributesOp)(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp);
+(* SpecialAttributesOp)(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp);
 typedef JSBool
 (* DeletePropertyOp)(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JSBool strict);
 typedef JSBool

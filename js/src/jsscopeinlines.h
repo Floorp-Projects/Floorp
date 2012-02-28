@@ -267,7 +267,7 @@ Shape::matches(const StackShape &other) const
 
 inline bool
 Shape::matchesParamsAfterId(BaseShape *base, uint32_t aslot,
-                            uintN aattrs, uintN aflags, intN ashortid) const
+                            unsigned aattrs, unsigned aflags, int ashortid) const
 {
     return base->unowned() == this->base()->unowned() &&
            maybeSlot() == aslot &&

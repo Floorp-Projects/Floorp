@@ -171,7 +171,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 {
     JS_ASSERT(cx->compartment == this);
 
-    uintN flags = 0;
+    unsigned flags = 0;
 
     JS_CHECK_RECURSION(cx, return false);
 
@@ -641,7 +641,7 @@ bool
 JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
 {
     bool enabledBefore = debugMode();
-    bool enabledAfter = (debugModeBits & ~uintN(DebugFromC)) || b;
+    bool enabledAfter = (debugModeBits & ~unsigned(DebugFromC)) || b;
 
     // Debug mode can be enabled only when no scripts from the target
     // compartment are on the stack. It would even be incorrect to discard just
@@ -662,7 +662,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
         }
     }
 
-    debugModeBits = (debugModeBits & ~uintN(DebugFromC)) | (b ? DebugFromC : 0);
+    debugModeBits = (debugModeBits & ~unsigned(DebugFromC)) | (b ? DebugFromC : 0);
     JS_ASSERT(debugMode() == enabledAfter);
     if (enabledBefore != enabledAfter)
         updateForDebugMode(cx);

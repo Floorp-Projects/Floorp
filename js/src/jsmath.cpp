@@ -117,7 +117,7 @@ Class js::MathClass = {
 };
 
 JSBool
-js_math_abs(JSContext *cx, uintN argc, Value *vp)
+js_math_abs(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -133,7 +133,7 @@ js_math_abs(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-math_acos(JSContext *cx, uintN argc, Value *vp)
+math_acos(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -158,7 +158,7 @@ math_acos(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-math_asin(JSContext *cx, uintN argc, Value *vp)
+math_asin(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -183,7 +183,7 @@ math_asin(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-math_atan(JSContext *cx, uintN argc, Value *vp)
+math_atan(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -232,7 +232,7 @@ math_atan2_kernel(double x, double y)
 }
 
 static JSBool
-math_atan2(JSContext *cx, uintN argc, Value *vp)
+math_atan2(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, y, z;
 
@@ -258,7 +258,7 @@ js_math_ceil_impl(double x)
 }
 
 JSBool
-js_math_ceil(JSContext *cx, uintN argc, Value *vp)
+js_math_ceil(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -274,7 +274,7 @@ js_math_ceil(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-math_cos(JSContext *cx, uintN argc, Value *vp)
+math_cos(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -307,7 +307,7 @@ math_exp_body(double d)
 }
 
 static JSBool
-math_exp(JSContext *cx, uintN argc, Value *vp)
+math_exp(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -332,7 +332,7 @@ js_math_floor_impl(double x)
 }
 
 JSBool
-js_math_floor(JSContext *cx, uintN argc, Value *vp)
+js_math_floor(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -348,7 +348,7 @@ js_math_floor(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-math_log(JSContext *cx, uintN argc, Value *vp)
+math_log(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -373,11 +373,11 @@ math_log(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-js_math_max(JSContext *cx, uintN argc, Value *vp)
+js_math_max(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z = js_NegativeInfinity;
     Value *argv;
-    uintN i;
+    unsigned i;
 
     if (argc == 0) {
         vp->setDouble(js_NegativeInfinity);
@@ -403,11 +403,11 @@ js_math_max(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-js_math_min(JSContext *cx, uintN argc, Value *vp)
+js_math_min(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z = js_PositiveInfinity;
     Value *argv;
-    uintN i;
+    unsigned i;
 
     if (argc == 0) {
         vp->setDouble(js_PositiveInfinity);
@@ -461,7 +461,7 @@ powi(double x, jsint y)
 }
 
 JSBool
-js_math_pow(JSContext *cx, uintN argc, Value *vp)
+js_math_pow(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, y, z;
 
@@ -552,7 +552,7 @@ random_nextDouble(JSContext *cx)
 }
 
 static JSBool
-math_random(JSContext *cx, uintN argc, Value *vp)
+math_random(JSContext *cx, unsigned argc, Value *vp)
 {
     double z = random_nextDouble(cx);
     vp->setDouble(z);
@@ -576,7 +576,7 @@ js_copysign(double x, double y)
 
 
 JSBool /* ES5 15.8.2.15. */
-js_math_round(JSContext *cx, uintN argc, Value *vp)
+js_math_round(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -610,7 +610,7 @@ js_math_round(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-math_sin(JSContext *cx, uintN argc, Value *vp)
+math_sin(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -629,7 +629,7 @@ math_sin(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-js_math_sqrt(JSContext *cx, uintN argc, Value *vp)
+js_math_sqrt(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -648,7 +648,7 @@ js_math_sqrt(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-math_tan(JSContext *cx, uintN argc, Value *vp)
+math_tan(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -668,7 +668,7 @@ math_tan(JSContext *cx, uintN argc, Value *vp)
 
 #if JS_HAS_TOSOURCE
 static JSBool
-math_toSource(JSContext *cx, uintN argc, Value *vp)
+math_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     vp->setString(CLASS_ATOM(cx, Math));
     return JS_TRUE;

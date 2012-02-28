@@ -229,7 +229,7 @@ DetachedWrappedNativeProtoMarker(JSDHashTable *table, JSDHashEntryHdr *hdr,
 
 // GCCallback calls are chained
 static JSBool
-ContextCallback(JSContext *cx, uintN operation)
+ContextCallback(JSContext *cx, unsigned operation)
 {
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if (self) {
@@ -249,7 +249,7 @@ xpc::CompartmentPrivate::~CompartmentPrivate()
 }
 
 static JSBool
-CompartmentCallback(JSContext *cx, JSCompartment *compartment, uintN op)
+CompartmentCallback(JSContext *cx, JSCompartment *compartment, unsigned op)
 {
     JS_ASSERT(op == JSCOMPARTMENT_DESTROY);
 
@@ -2164,7 +2164,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
             // Scope the JSAutoRequest so it goes out of scope before calling
             // mozilla::dom::binding::DefineStaticJSVals.
             JSAutoRequest ar(cx);
-            for (uintN i = 0; i < IDX_TOTAL_COUNT; i++) {
+            for (unsigned i = 0; i < IDX_TOTAL_COUNT; i++) {
                 JSString* str = JS_InternString(cx, mStrings[i]);
                 if (!str || !JS_ValueToId(cx, STRING_TO_JSVAL(str), &mStrIDs[i])) {
                     mStrIDs[0] = JSID_VOID;

@@ -732,7 +732,7 @@ LoadWorkerScript(JSContext* aCx)
 }
 
 bool
-Load(JSContext* aCx, uintN aURLCount, jsval* aURLs)
+Load(JSContext* aCx, unsigned aURLCount, jsval* aURLs)
 {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   NS_ASSERTION(worker, "This should never be null!");
@@ -750,7 +750,7 @@ Load(JSContext* aCx, uintN aURLCount, jsval* aURLs)
   nsTArray<ScriptLoadInfo> loadInfos;
   loadInfos.SetLength(PRUint32(aURLCount));
 
-  for (uintN index = 0; index < aURLCount; index++) {
+  for (unsigned index = 0; index < aURLCount; index++) {
     JSString* str = JS_ValueToString(aCx, aURLs[index]);
     if (!str) {
       return false;

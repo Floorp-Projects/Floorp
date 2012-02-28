@@ -6,7 +6,7 @@
 #include "jsxdrapi.h"
 
 static JSBool
-native(JSContext *cx, uintN argc, jsval *vp)
+native(JSContext *cx, unsigned argc, jsval *vp)
 {
     return JS_TRUE;
 }
@@ -45,7 +45,7 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_PERMANENT));
 
     JSBool found = JS_FALSE;
-    uintN attrs = 0;
+    unsigned attrs = 0;
     CHECK(JS_GetPropertyAttributes(cx, JSVAL_TO_OBJECT(vobj), PROPERTY_NAME,
                                    &attrs, &found));
     CHECK(found);

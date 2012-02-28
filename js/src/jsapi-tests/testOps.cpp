@@ -23,7 +23,7 @@ static JSClass myClass = {
 };
 
 static JSBool
-createMyObject(JSContext* context, uintN argc, jsval *vp)
+createMyObject(JSContext* context, unsigned argc, jsval *vp)
 {
     JS_BeginRequest(context);
 

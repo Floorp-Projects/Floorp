@@ -50,11 +50,11 @@ namespace js {
 
 class StringObject : public JSObject
 {
-    static const uintN PRIMITIVE_VALUE_SLOT = 0;
-    static const uintN LENGTH_SLOT = 1;
+    static const unsigned PRIMITIVE_VALUE_SLOT = 0;
+    static const unsigned LENGTH_SLOT = 1;
 
   public:
-    static const uintN RESERVED_SLOTS = 2;
+    static const unsigned RESERVED_SLOTS = 2;
 
     /*
      * Creates a new String object boxing the given string.  The object's

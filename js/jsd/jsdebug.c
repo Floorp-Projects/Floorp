@@ -79,13 +79,13 @@ JSD_DebuggerUnpause(JSDContext* jsdc)
     jsd_DebuggerUnpause(jsdc);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetMajorVersion(void)
 {
     return JSD_MAJOR_VERSION;
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetMinorVersion(void)
 {
     return JSD_MINOR_VERSION;
@@ -196,14 +196,14 @@ JSD_SetScriptFlags(JSDContext *jsdc, JSDScript *script, uint32_t flags)
     jsd_SetScriptFlags(jsdc, script, flags);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetScriptCallCount(JSDContext* jsdc, JSDScript *script)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_GetScriptCallCount(jsdc, script);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetScriptMaxRecurseDepth(JSDContext* jsdc, JSDScript *script)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -310,7 +310,7 @@ JSD_GetScriptFunctionId(JSDContext* jsdc, JSDScript *jsdscript)
     return jsd_GetScriptFunctionId(jsdc, jsdscript);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetScriptBaseLineNumber(JSDContext* jsdc, JSDScript *jsdscript)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -318,7 +318,7 @@ JSD_GetScriptBaseLineNumber(JSDContext* jsdc, JSDScript *jsdscript)
     return jsd_GetScriptBaseLineNumber(jsdc, jsdscript);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetScriptLineExtent(JSDContext* jsdc, JSDScript *jsdscript)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -341,14 +341,14 @@ JSD_GetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc* hook, void** callerdata)
 }
 
 JSD_PUBLIC_API(uintptr_t)
-JSD_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line)
+JSD_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, unsigned line)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JSD_ASSERT_VALID_SCRIPT(jsdscript);
     return jsd_GetClosestPC(jsdc, jsdscript, line);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -358,8 +358,8 @@ JSD_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc)
 
 JSD_PUBLIC_API(JSBool)
 JSD_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
-               uintN startLine, uintN maxLines,
-               uintN* count, uintN** lines, uintptr_t** pcs)
+               unsigned startLine, unsigned maxLines,
+               unsigned* count, unsigned** lines, uintptr_t** pcs)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JSD_ASSERT_VALID_SCRIPT(jsdscript);
@@ -370,7 +370,7 @@ JSD_PUBLIC_API(void)
 JSD_ScriptCreated(JSDContext* jsdc,
                   JSContext   *cx,
                   const char  *filename,    /* URL this script loads from */
-                  uintN       lineno,       /* line where this script starts */
+                  unsigned       lineno,       /* line where this script starts */
                   JSScript    *script,
                   JSFunction  *fun)
 {
@@ -429,7 +429,7 @@ JSD_GetSourceURL(JSDContext* jsdc, JSDSourceText* jsdsrc)
 
 JSD_PUBLIC_API(JSBool)
 JSD_GetSourceText(JSDContext* jsdc, JSDSourceText* jsdsrc,
-                  const char** ppBuf, intN* pLen)
+                  const char** ppBuf, int* pLen)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JSD_ASSERT_VALID_SOURCE_TEXT(jsdsrc);
@@ -471,7 +471,7 @@ JSD_SetSourceDirty(JSDContext* jsdc, JSDSourceText* jsdsrc, JSBool dirty)
     jsd_SetSourceDirty(jsdc, jsdsrc, dirty);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetSourceAlterCount(JSDContext* jsdc, JSDSourceText* jsdsrc)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -479,7 +479,7 @@ JSD_GetSourceAlterCount(JSDContext* jsdc, JSDSourceText* jsdsrc)
     return jsd_GetSourceAlterCount(jsdc, jsdsrc);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_IncrementSourceAlterCount(JSDContext* jsdc, JSDSourceText* jsdsrc)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -684,7 +684,7 @@ JSD_ClearFunctionHook(JSDContext* jsdc)
 /***************************************************************************/
 /* Stack Frame functions */
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetCountOfStackFrames(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -790,8 +790,8 @@ JSD_PUBLIC_API(JSBool)
 JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  JSDThreadState* jsdthreadstate,
                                  JSDStackFrameInfo* jsdframe,
-                                 const jschar *bytes, uintN length,
-                                 const char *filename, uintN lineno, jsval *rval)
+                                 const jschar *bytes, unsigned length,
+                                 const char *filename, unsigned lineno, jsval *rval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JS_ASSERT(bytes);
@@ -808,8 +808,8 @@ JSD_PUBLIC_API(JSBool)
 JSD_AttemptUCScriptInStackFrame(JSDContext* jsdc,
                                 JSDThreadState* jsdthreadstate,
                                 JSDStackFrameInfo* jsdframe,
-                                const jschar *bytes, uintN length,
-                                const char *filename, uintN lineno,
+                                const jschar *bytes, unsigned length,
+                                const char *filename, unsigned lineno,
                                 jsval *rval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -827,8 +827,8 @@ JSD_PUBLIC_API(JSBool)
 JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDThreadState* jsdthreadstate,
                                JSDStackFrameInfo* jsdframe,
-                               const char *bytes, uintN length,
-                               const char *filename, uintN lineno, jsval *rval)
+                               const char *bytes, unsigned length,
+                               const char *filename, unsigned lineno, jsval *rval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JS_ASSERT(bytes);
@@ -845,8 +845,8 @@ JSD_PUBLIC_API(JSBool)
 JSD_AttemptScriptInStackFrame(JSDContext* jsdc,
                               JSDThreadState* jsdthreadstate,
                               JSDStackFrameInfo* jsdframe,
-                              const char *bytes, uintN length,
-                              const char *filename, uintN lineno, jsval *rval)
+                              const char *bytes, unsigned length,
+                              const char *filename, unsigned lineno, jsval *rval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JS_ASSERT(bytes);
@@ -1144,7 +1144,7 @@ JSD_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 
 /**************************************************/
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetCountOfProperties(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -1243,7 +1243,7 @@ JSD_GetPropertyAlias(JSDContext* jsdc, JSDProperty* jsdprop)
     return jsd_GetPropertyAlias(jsdc, jsdprop);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetPropertyFlags(JSDContext* jsdc, JSDProperty* jsdprop)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -1251,7 +1251,7 @@ JSD_GetPropertyFlags(JSDContext* jsdc, JSDProperty* jsdprop)
     return jsd_GetPropertyFlags(jsdc, jsdprop);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetPropertyVarArgSlot(JSDContext* jsdc, JSDProperty* jsdprop)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -1300,7 +1300,7 @@ JSD_GetObjectNewURL(JSDContext* jsdc, JSDObject* jsdobj)
     return jsd_GetObjectNewURL(jsdc, jsdobj);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetObjectNewLineNumber(JSDContext* jsdc, JSDObject* jsdobj)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -1316,7 +1316,7 @@ JSD_GetObjectConstructorURL(JSDContext* jsdc, JSDObject* jsdobj)
     return jsd_GetObjectConstructorURL(jsdc, jsdobj);
 }
 
-JSD_PUBLIC_API(uintN)
+JSD_PUBLIC_API(unsigned)
 JSD_GetObjectConstructorLineNumber(JSDContext* jsdc, JSDObject* jsdobj)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -1388,7 +1388,7 @@ JSDLW_ForceLoadSource( JSDContext* jsdc, JSDSourceText* jsdsrc )
 
 JSD_PUBLIC_API(JSBool)
 JSDLW_RawToProcessedLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
-                               uintN lineIn, uintN* lineOut)
+                               unsigned lineIn, unsigned* lineOut)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JSD_ASSERT_VALID_SCRIPT(jsdscript);
@@ -1397,7 +1397,7 @@ JSDLW_RawToProcessedLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
 
 JSD_PUBLIC_API(JSBool)
 JSDLW_ProcessedToRawLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
-                               uintN lineIn, uintN* lineOut)
+                               unsigned lineIn, unsigned* lineOut)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JSD_ASSERT_VALID_SCRIPT(jsdscript);

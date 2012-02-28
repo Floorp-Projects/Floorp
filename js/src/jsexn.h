@@ -88,7 +88,7 @@ js_ErrorFromException(JSContext *cx, jsval exn);
 
 extern const JSErrorFormatString *
 js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
-                            const uintN errorNumber);
+                            const unsigned errorNumber);
 
 /*
  * Make a copy of errobj parented to scope.
@@ -102,7 +102,7 @@ extern JSObject *
 js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope);
 
 static JS_INLINE JSProtoKey
-GetExceptionProtoKey(intN exn)
+GetExceptionProtoKey(int exn)
 {
     JS_ASSERT(JSEXN_ERR <= exn);
     JS_ASSERT(exn < JSEXN_LIMIT);

@@ -16,7 +16,7 @@ static JSBool test_prop_get( JSContext *cx, JSObject *obj, jsid id, jsval *vp )
 }
 
 static JSBool
-PTest(JSContext* cx, uintN argc, jsval *vp)
+PTest(JSContext* cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_NewObjectForConstructor(cx, vp);
     if (!obj)
@@ -40,7 +40,7 @@ static JSClass ptestClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-static JSBool test_fn(JSContext *cx, uintN argc, jsval *vp)
+static JSBool test_fn(JSContext *cx, unsigned argc, jsval *vp)
 {
     called_test_fn++;
     return JS_TRUE;

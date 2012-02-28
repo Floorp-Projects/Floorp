@@ -3108,7 +3108,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETFCSLOT)
           BEGIN_CASE(JSOP_CALLFCSLOT)
           {
-            uintN index = GET_UINT16(PC);
+            unsigned index = GET_UINT16(PC);
 
             // Load the callee's payload into a register.
             frame.pushCallee();
@@ -6062,7 +6062,7 @@ mjit::Compiler::jsop_this()
 }
 
 bool
-mjit::Compiler::iter(uintN flags)
+mjit::Compiler::iter(unsigned flags)
 {
     FrameEntry *fe = frame.peek(-1);
 

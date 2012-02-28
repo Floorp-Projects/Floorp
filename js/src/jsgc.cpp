@@ -1415,7 +1415,7 @@ js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
         RootEntry &entry = e.front();
 
         ct++;
-        intN mapflags = map(entry.key, entry.value.type, entry.value.name, data);
+        int mapflags = map(entry.key, entry.value.type, entry.value.name, data);
 
         if (mapflags & JS_MAP_GCROOT_REMOVE)
             e.removeFront();

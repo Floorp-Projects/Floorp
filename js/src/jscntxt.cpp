@@ -465,7 +465,7 @@ js_ReportAllocationOverflow(JSContext *maybecx)
  * otherwise, adjust *flags as appropriate and return false.
  */
 static bool
-checkReportFlags(JSContext *cx, uintN *flags)
+checkReportFlags(JSContext *cx, unsigned *flags)
 {
     if (JSREPORT_IS_STRICT_MODE_ERROR(*flags)) {
         /*
@@ -494,7 +494,7 @@ checkReportFlags(JSContext *cx, uintN *flags)
 }
 
 JSBool
-js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
+js_ReportErrorVA(JSContext *cx, unsigned flags, const char *format, va_list ap)
 {
     char *message;
     jschar *ucmessage;
@@ -537,7 +537,7 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
  */
 JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
-                        void *userRef, const uintN errorNumber,
+                        void *userRef, const unsigned errorNumber,
                         char **messagep, JSErrorReport *reportp,
                         bool charArgs, va_list ap)
 {
@@ -688,8 +688,8 @@ error:
 }
 
 JSBool
-js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
-                       void *userRef, const uintN errorNumber,
+js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
+                       void *userRef, const unsigned errorNumber,
                        JSBool charArgs, va_list ap)
 {
     JSErrorReport report;
@@ -767,7 +767,7 @@ js_ReportIsNotDefined(JSContext *cx, const char *name)
 }
 
 JSBool
-js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, const Value &v,
+js_ReportIsNullOrUndefined(JSContext *cx, int spindex, const Value &v,
                            JSString *fallback)
 {
     char *bytes;
@@ -801,7 +801,7 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, const Value &v,
 }
 
 void
-js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
+js_ReportMissingArg(JSContext *cx, const Value &v, unsigned arg)
 {
     char argbuf[11];
     char *bytes;
@@ -823,8 +823,8 @@ js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
 }
 
 JSBool
-js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
-                         intN spindex, const Value &v, JSString *fallback,
+js_ReportValueErrorFlags(JSContext *cx, unsigned flags, const unsigned errorNumber,
+                         int spindex, const Value &v, JSString *fallback,
                          const char *arg1, const char *arg2)
 {
     char *bytes;
@@ -850,7 +850,7 @@ JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
 };
 
 JS_FRIEND_API(const JSErrorFormatString *)
-js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
+js_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber)
 {
     if ((errorNumber > 0) && (errorNumber < JSErr_Limit))
         return &js_ErrorFormatString[errorNumber];

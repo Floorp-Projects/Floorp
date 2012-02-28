@@ -49,7 +49,7 @@ namespace xpc {
 
 class NoWaiverWrapper : public js::CrossCompartmentWrapper {
   public:
-    NoWaiverWrapper(uintN flags);
+    NoWaiverWrapper(unsigned flags);
     virtual ~NoWaiverWrapper();
 
     virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp) MOZ_OVERRIDE;
@@ -60,7 +60,7 @@ class NoWaiverWrapper : public js::CrossCompartmentWrapper {
 
 class CrossOriginWrapper : public NoWaiverWrapper {
   public:
-    CrossOriginWrapper(uintN flags);
+    CrossOriginWrapper(unsigned flags);
     virtual ~CrossOriginWrapper();
 
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,
@@ -70,9 +70,9 @@ class CrossOriginWrapper : public NoWaiverWrapper {
     virtual bool get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id,
                      js::Value *vp) MOZ_OVERRIDE;
 
-    virtual bool call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value *vp) MOZ_OVERRIDE;
+    virtual bool call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp) MOZ_OVERRIDE;
     virtual bool construct(JSContext *cx, JSObject *wrapper,
-                           uintN argc, js::Value *argv, js::Value *rval) MOZ_OVERRIDE;
+                           unsigned argc, js::Value *argv, js::Value *rval) MOZ_OVERRIDE;
 
     static CrossOriginWrapper singleton;
 };

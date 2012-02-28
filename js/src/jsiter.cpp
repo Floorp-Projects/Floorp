@@ -198,7 +198,7 @@ NewKeyValuePair(JSContext *cx, jsid id, const Value &val, Value *rval)
 
 static inline bool
 Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
-          bool enumerable, uintN flags, IdSet& ht, AutoIdVector *props)
+          bool enumerable, unsigned flags, IdSet& ht, AutoIdVector *props)
 {
     JS_ASSERT_IF(flags & JSITER_OWNONLY, obj == pobj);
 
@@ -235,7 +235,7 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
 }
 
 static bool
-EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags, IdSet &ht,
+EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, unsigned flags, IdSet &ht,
                           AutoIdVector *props)
 {
     RootObject objRoot(cx, &obj);
@@ -261,7 +261,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
 }
 
 static bool
-EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
+EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, unsigned flags,
                               IdSet &ht, AutoIdVector *props)
 {
     if (!Enumerate(cx, obj, pobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), false,
@@ -315,7 +315,7 @@ struct SortComparatorIds
 #endif /* JS_MORE_DETERMINISTIC */
 
 static bool
-Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
+Snapshot(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
 {
     IdSet ht(cx);
     if (!ht.init(32))
@@ -435,7 +435,7 @@ js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 }
 
 JS_FRIEND_API(bool)
-js::GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
+js::GetPropertyNames(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
 {
     return Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
 }
@@ -443,7 +443,7 @@ js::GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *pr
 size_t sCustomIteratorCount = 0;
 
 static inline bool
-GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
+GetCustomIterator(JSContext *cx, JSObject *obj, unsigned flags, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -510,7 +510,7 @@ Compare(T *a, T *b, size_t c)
 }
 
 static inline JSObject *
-NewIteratorObject(JSContext *cx, uintN flags)
+NewIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
         RootedVarTypeObject type(cx);
@@ -561,7 +561,7 @@ NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVe
 }
 
 inline void
-NativeIterator::init(JSObject *obj, uintN flags, uint32_t slength, uint32_t key)
+NativeIterator::init(JSObject *obj, unsigned flags, uint32_t slength, uint32_t key)
 {
     this->obj.init(obj);
     this->flags = flags;
@@ -584,7 +584,7 @@ RegisterEnumerator(JSContext *cx, JSObject *iterobj, NativeIterator *ni)
 }
 
 static inline bool
-VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &keys,
+VectorToKeyIterator(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector &keys,
                     uint32_t slength, uint32_t key, Value *vp)
 {
     JS_ASSERT(!(flags & JSITER_FOREACH));
@@ -631,13 +631,13 @@ VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &key
 namespace js {
 
 bool
-VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &props, Value *vp)
+VectorToKeyIterator(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector &props, Value *vp)
 {
     return VectorToKeyIterator(cx, obj, flags, props, 0, 0, vp);
 }
 
 bool
-VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &keys,
+VectorToValueIterator(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector &keys,
                       Value *vp)
 {
     JS_ASSERT(flags & JSITER_FOREACH);
@@ -665,7 +665,7 @@ VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &k
 }
 
 bool
-EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &props, Value *vp)
+EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector &props, Value *vp)
 {
     if (!(flags & JSITER_FOREACH))
         return VectorToKeyIterator(cx, obj, flags, props, vp);
@@ -682,7 +682,7 @@ UpdateNativeIterator(NativeIterator *ni, JSObject *obj)
 }
 
 bool
-GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
+GetIterator(JSContext *cx, JSObject *obj, unsigned flags, Value *vp)
 {
     Vector<const Shape *, 8> shapes(cx);
     uint32_t key = 0;
@@ -823,11 +823,11 @@ iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 }
 
 static JSBool
-Iterator(JSContext *cx, uintN argc, Value *vp)
+Iterator(JSContext *cx, unsigned argc, Value *vp)
 {
     Value *argv = JS_ARGV(cx, vp);
     bool keyonly = argc >= 2 ? js_ValueToBoolean(argv[1]) : false;
-    uintN flags = JSITER_OWNONLY | (keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE));
+    unsigned flags = JSITER_OWNONLY | (keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE));
     *vp = argc >= 1 ? argv[0] : UndefinedValue();
     return ValueToIterator(cx, flags, vp);
 }
@@ -844,7 +844,7 @@ js_ThrowStopIteration(JSContext *cx)
 }
 
 static JSBool
-iterator_next(JSContext *cx, uintN argc, Value *vp)
+iterator_next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -883,7 +883,7 @@ namespace js {
  * Otherwise construct the default iterator.
  */
 JSBool
-ValueToIterator(JSContext *cx, uintN flags, Value *vp)
+ValueToIterator(JSContext *cx, unsigned flags, Value *vp)
 {
     /* JSITER_KEYVALUE must always come with JSITER_FOREACH */
     JS_ASSERT_IF(flags & JSITER_KEYVALUE, flags & JSITER_FOREACH);
@@ -1012,7 +1012,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, StringPredicate pred
                         if (!proto->lookupGeneric(cx, id, &obj2, &prop))
                             return false;
                         if (prop) {
-                            uintN attrs;
+                            unsigned attrs;
                             if (obj2->isNative())
                                 attrs = ((Shape *) prop)->attributes();
                             else if (!obj2->getGenericAttributes(cx, id, &attrs))
@@ -1478,10 +1478,10 @@ js_NewGenerator(JSContext *cx)
 
     /* Load and compute stack slot counts. */
     Value *stackvp = stackfp->actualArgs() - 2;
-    uintN vplen = stackfp->formalArgsEnd() - stackvp;
+    unsigned vplen = stackfp->formalArgsEnd() - stackvp;
 
     /* Compute JSGenerator size. */
-    uintN nbytes = sizeof(JSGenerator) +
+    unsigned nbytes = sizeof(JSGenerator) +
                    (-1 + /* one Value included in JSGenerator */
                     vplen +
                     VALUES_PER_STACK_FRAME +
@@ -1662,7 +1662,7 @@ CloseGenerator(JSContext *cx, JSObject *obj)
  * Common subroutine of generator_(next|send|throw|close) methods.
  */
 static JSBool
-generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN argc)
+generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, unsigned argc)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1722,25 +1722,25 @@ generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, uintN ar
 }
 
 static JSBool
-generator_send(JSContext *cx, uintN argc, Value *vp)
+generator_send(JSContext *cx, unsigned argc, Value *vp)
 {
     return generator_op(cx, generator_send, JSGENOP_SEND, vp, argc);
 }
 
 static JSBool
-generator_next(JSContext *cx, uintN argc, Value *vp)
+generator_next(JSContext *cx, unsigned argc, Value *vp)
 {
     return generator_op(cx, generator_next, JSGENOP_NEXT, vp, argc);
 }
 
 static JSBool
-generator_throw(JSContext *cx, uintN argc, Value *vp)
+generator_throw(JSContext *cx, unsigned argc, Value *vp)
 {
     return generator_op(cx, generator_throw, JSGENOP_THROW, vp, argc);
 }
 
 static JSBool
-generator_close(JSContext *cx, uintN argc, Value *vp)
+generator_close(JSContext *cx, unsigned argc, Value *vp)
 {
     return generator_op(cx, generator_close, JSGENOP_CLOSE, vp, argc);
 }

@@ -73,17 +73,17 @@ class JS_FRIEND_API(ProxyHandler) {
     virtual bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
                      Value *vp);
     virtual bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props);
-    virtual bool iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp);
+    virtual bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp);
 
     /* Spidermonkey extensions. */
-    virtual bool call(JSContext *cx, JSObject *proxy, uintN argc, Value *vp);
-    virtual bool construct(JSContext *cx, JSObject *proxy, uintN argc, Value *argv, Value *rval);
+    virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
+    virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
     virtual bool nativeCall(JSContext *cx, JSObject *proxy, Class *clasp, Native native, CallArgs args);
     virtual bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp);
     virtual JSType typeOf(JSContext *cx, JSObject *proxy);
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);
     virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
-    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
+    virtual JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent);
     virtual bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
     virtual bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
     virtual bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);
@@ -128,17 +128,17 @@ class Proxy {
     static bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
                     Value *vp);
     static bool keys(JSContext *cx, JSObject *proxy, AutoIdVector &props);
-    static bool iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp);
+    static bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp);
 
     /* Spidermonkey extensions. */
-    static bool call(JSContext *cx, JSObject *proxy, uintN argc, Value *vp);
-    static bool construct(JSContext *cx, JSObject *proxy, uintN argc, Value *argv, Value *rval);
+    static bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
+    static bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
     static bool nativeCall(JSContext *cx, JSObject *proxy, Class *clasp, Native native, CallArgs args);
     static bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp);
     static JSType typeOf(JSContext *cx, JSObject *proxy);
     static bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);
     static JSString *obj_toString(JSContext *cx, JSObject *proxy);
-    static JSString *fun_toString(JSContext *cx, JSObject *proxy, uintN indent);
+    static JSString *fun_toString(JSContext *cx, JSObject *proxy, unsigned indent);
     static bool regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g);
     static bool defaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp);
     static bool iteratorNext(JSContext *cx, JSObject *proxy, Value *vp);

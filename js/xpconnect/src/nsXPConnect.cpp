@@ -2804,7 +2804,7 @@ nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
     if (!obj)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    uintN attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+    unsigned attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
     size_t i = JS_GetE4XObjectsCreated(cx);
     jsval v = DOUBLE_TO_JSVAL(i);

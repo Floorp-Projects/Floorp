@@ -196,7 +196,7 @@ mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 }
 
 static JSBool
-Dump(JSContext *cx, uintN argc, jsval *vp)
+Dump(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSString *str;
     if (!argc)
@@ -221,7 +221,7 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Debug(JSContext *cx, uintN argc, jsval *vp)
+Debug(JSContext *cx, unsigned argc, jsval *vp)
 {
 #ifdef DEBUG
     return Dump(cx, argc, vp);
@@ -231,7 +231,7 @@ Debug(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Atob(JSContext *cx, uintN argc, jsval *vp)
+Atob(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!argc)
         return true;
@@ -240,7 +240,7 @@ Atob(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Btoa(JSContext *cx, uintN argc, jsval *vp)
+Btoa(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!argc)
         return true;
@@ -249,7 +249,7 @@ Btoa(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-File(JSContext *cx, uintN argc, jsval *vp)
+File(JSContext *cx, unsigned argc, jsval *vp)
 {
     nsresult rv;
 

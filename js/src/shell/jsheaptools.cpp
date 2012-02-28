@@ -551,7 +551,7 @@ ReferenceFinder::findReferences(JSObject *target)
 
 /* See help(findReferences). */
 JSBool
-FindReferences(JSContext *cx, uintN argc, jsval *vp)
+FindReferences(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
