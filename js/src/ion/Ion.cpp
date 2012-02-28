@@ -262,7 +262,8 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
     entryfp_(fp),
     bailout_(NULL),
     prevIonTop_(cx->runtime->ionTop),
-    prevIonJSContext_(cx->runtime->ionJSContext)
+    prevIonJSContext_(cx->runtime->ionJSContext),
+    savedEnumerators_(cx->enumerators)
 {
     fp->setRunningInIon();
     cx->runtime->ionJSContext = cx;
@@ -274,6 +275,7 @@ IonActivation::~IonActivation()
 {
     JS_ASSERT(cx_->runtime->ionActivation == this);
     JS_ASSERT(!bailout_);
+    JS_ASSERT(cx_->enumerators == savedEnumerators_);
 
     entryfp_->clearRunningInIon();
     cx_->runtime->ionActivation = prev();
