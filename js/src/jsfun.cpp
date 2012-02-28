@@ -1086,11 +1086,6 @@ fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 inline void
 JSFunction::trace(JSTracer *trc)
 {
-    if (isFlatClosure() && hasFlatClosureUpvars()) {
-        if (HeapValue *upvars = getFlatClosureUpvars())
-            MarkValueRange(trc, script()->bindings.countUpvars(), upvars, "upvars");
-    }
-
     if (isExtended()) {
         MarkValueRange(trc, ArrayLength(toExtended()->extendedSlots),
                        toExtended()->extendedSlots, "nativeReserved");
@@ -1113,21 +1108,6 @@ fun_trace(JSTracer *trc, JSObject *obj)
     obj->toFunction()->trace(trc);
 }
 
-static void
-fun_finalize(JSContext *cx, JSObject *obj)
-{
-    if (obj->toFunction()->isFlatClosure())
-        obj->toFunction()->finalizeUpvars();
-}
-
-size_t
-JSFunction::sizeOfMisc(JSMallocSizeOfFun mallocSizeOf) const
-{
-    return (isFlatClosure() && hasFlatClosureUpvars()) ?
-           mallocSizeOf(getFlatClosureUpvars()) :
-           0;
-}
-
 /*
  * Reserve two slots in all function objects for XPConnect.  Note that this
  * does not bloat every instance, only those on which reserved slots are set,
@@ -1144,7 +1124,7 @@ JS_FRIEND_DATA(Class) js::FunctionClass = {
     fun_enumerate,
     (JSResolveOp)fun_resolve,
     JS_ConvertStub,
-    fun_finalize,
+    NULL,                    /* finalize    */
     NULL,                    /* checkAccess */
     NULL,                    /* call        */
     NULL,                    /* construct   */
@@ -1879,59 +1859,6 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
         }
     }
     return clone;
-}
-
-/*
- * Create a new flat closure, but don't initialize the imported upvar
- * values. The tracer calls this function and then initializes the upvar
- * slots on trace.
- */
-JSFunction * JS_FASTCALL
-js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
-{
-    JS_ASSERT(fun->isFlatClosure());
-    JS_ASSERT(JSScript::isValidOffset(fun->script()->upvarsOffset) ==
-              fun->script()->bindings.hasUpvars());
-    JS_ASSERT_IF(JSScript::isValidOffset(fun->script()->upvarsOffset),
-                 fun->script()->upvars()->length == fun->script()->bindings.countUpvars());
-
-    JSFunction *closure = CloneFunctionObject(cx, fun, scopeChain, JSFunction::ExtendedFinalizeKind);
-    if (!closure)
-        return closure;
-
-    uint32_t nslots = fun->script()->bindings.countUpvars();
-    if (nslots == 0)
-        return closure;
-
-    HeapValue *data = (HeapValue *) cx->malloc_(nslots * sizeof(HeapValue));
-    if (!data)
-        return NULL;
-
-    closure->setExtendedSlot(JSFunction::FLAT_CLOSURE_UPVARS_SLOT, PrivateValue(data));
-    return closure;
-}
-
-JSFunction *
-js_NewFlatClosure(JSContext *cx, JSFunction *fun)
-{
-    /*
-     * Flat closures cannot yet be partial, that is, all upvars must be copied,
-     * or the closure won't be flattened. Therefore they do not need to search
-     * enclosing scope objects via JSOP_NAME, etc.
-     */
-    JSObject *scopeChain = &cx->fp()->scopeChain();
-
-    JSFunction *closure = js_AllocFlatClosure(cx, fun, scopeChain);
-    if (!closure || !fun->script()->bindings.hasUpvars())
-        return closure;
-
-    unsigned level = fun->script()->staticLevel;
-    JSUpvarArray *uva = fun->script()->upvars();
-
-    for (uint32_t i = 0, n = uva->length; i < n; i++)
-        closure->initFlatClosureUpvar(i, GetUpvar(cx, level, uva->vector[i]));
-
-    return closure;
 }
 
 JSFunction *

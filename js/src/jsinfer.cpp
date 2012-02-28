@@ -3629,14 +3629,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         poppedTypes(pc, 0)->addSubset(cx, &pushed[0]);
         break;
 
-      case JSOP_GETXPROP:
-      case JSOP_GETFCSLOT:
-      case JSOP_CALLFCSLOT: {
+      case JSOP_GETXPROP: {
         TypeSet *seen = bytecodeTypes(pc);
         addTypeBarrier(cx, pc, seen, Type::UnknownType());
         seen->addSubset(cx, &pushed[0]);
-        if (op == JSOP_CALLFCSLOT)
-            pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType());
         break;
       }
 
@@ -3803,17 +3799,15 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_LAMBDA:
-      case JSOP_LAMBDA_FC:
       case JSOP_DEFFUN:
-      case JSOP_DEFLOCALFUN:
-      case JSOP_DEFLOCALFUN_FC: {
-        unsigned off = (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) ? SLOTNO_LEN : 0;
+      case JSOP_DEFLOCALFUN: {
+        unsigned off = op == JSOP_DEFLOCALFUN ? SLOTNO_LEN : 0;
         JSObject *obj = script->getObject(GET_UINT32_INDEX(pc + off));
 
         TypeSet *res = NULL;
-        if (op == JSOP_LAMBDA || op == JSOP_LAMBDA_FC) {
+        if (op == JSOP_LAMBDA) {
             res = &pushed[0];
-        } else if (op == JSOP_DEFLOCALFUN || op == JSOP_DEFLOCALFUN_FC) {
+        } else if (op == JSOP_DEFLOCALFUN) {
             uint32_t slot = GetBytecodeSlot(script, pc);
             if (trackSlot(slot)) {
                 res = &pushed[0];
