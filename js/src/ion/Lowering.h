@@ -112,6 +112,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitCallee(MCallee *callee);
     bool visitGoto(MGoto *ins);
     bool visitNewArray(MNewArray *ins);
+    bool visitNewObject(MNewObject *ins);
     bool visitCheckOverRecursed(MCheckOverRecursed *ins);
     bool visitDefVar(MDefVar *ins);
     bool visitPrepareCall(MPrepareCall *ins);

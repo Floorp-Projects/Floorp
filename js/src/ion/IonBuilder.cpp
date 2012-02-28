@@ -731,6 +731,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NEWARRAY:
         return jsop_newarray(GET_UINT24(pc));
 
+      case JSOP_NEWOBJECT:
+        return jsop_newobject(info().getObject(pc));
+
       case JSOP_INITELEM:
         return jsop_initelem();
 
@@ -2605,6 +2608,24 @@ IonBuilder::jsop_newarray(uint32 count)
     if (!resumeAfter(ins))
         return false;
     return true;
+}
+
+bool
+IonBuilder::jsop_newobject(JSObject *baseObj)
+{
+    // Don't bake in the TypeObject for non-CNG scripts.
+    JS_ASSERT(script->hasGlobal());
+
+    types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Object);
+    if (!type)
+        return false;
+
+    MNewObject *ins = MNewObject::New(baseObj, type);
+
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
 }
 
 bool

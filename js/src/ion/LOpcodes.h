@@ -56,6 +56,7 @@
     _(TableSwitch)                  \
     _(Goto)                         \
     _(NewArray)                     \
+    _(NewObject)                    \
     _(CheckOverRecursed)            \
     _(RecompileCheck)               \
     _(DefVar)                       \
