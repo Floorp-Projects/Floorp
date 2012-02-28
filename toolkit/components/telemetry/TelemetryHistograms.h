@@ -223,6 +223,8 @@ HISTOGRAM(CACHE_MEMORY_SEARCH, 1, 100, 100, LINEAR, "Time to search memory cache
 HISTOGRAM(CACHE_DISK_SEARCH, 1, 100, 100, LINEAR, "Time to search disk cache (ms)")
 HISTOGRAM(CACHE_OFFLINE_SEARCH, 1, 100, 100, LINEAR, "Time to search offline cache (ms)")
 HISTOGRAM(HTTP_DISK_CACHE_OVERHEAD, 1, 32000000, 100, EXPONENTIAL, "HTTP Disk cache memory overhead (bytes)")
+HISTOGRAM(CACHE_SERVICE_LOCK_WAIT, 1, 10000, 10000, LINEAR, "Time spent waiting on the cache service lock (ms)")
+HISTOGRAM(CACHE_SERVICE_LOCK_WAIT_MAINTHREAD, 1, 10000, 10000, LINEAR, "Time spent waiting on the cache service lock on the main thread (ms)")
 
 HISTOGRAM(DNS_LOOKUP_METHOD, 1, 7, 7, LINEAR, "DNS Lookup Type (hit, renewal, negative-hit, literal, overflow, network-first, network-shared)")
 HISTOGRAM(DNS_CLEANUP_AGE, 1, 1440, 50, EXPONENTIAL, "DNS Cache Entry Age at Removal Time (minutes)")
