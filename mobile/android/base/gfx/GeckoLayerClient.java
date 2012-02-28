@@ -42,7 +42,7 @@ import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.GeckoEventListener;
+import org.mozilla.gecko.GeckoEventResponder;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.content.Context;
@@ -59,9 +59,11 @@ import android.view.View;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class GeckoLayerClient implements GeckoEventListener,
+public class GeckoLayerClient implements GeckoEventResponder,
                                          FlexibleGLSurfaceView.Listener {
     private static final String LOGTAG = "GeckoLayerClient";
+
+    private static final int DEFAULT_DISPLAY_PORT_MARGIN = 300;
 
     private LayerController mLayerController;
     private LayerRenderer mLayerRenderer;
@@ -70,6 +72,7 @@ public class GeckoLayerClient implements GeckoEventListener,
     private IntSize mScreenSize;
     private IntSize mWindowSize;
     private IntSize mBufferSize;
+    private Rect mDisplayPortMargins;
 
     private VirtualLayer mRootLayer;
 
@@ -103,6 +106,10 @@ public class GeckoLayerClient implements GeckoEventListener,
     public GeckoLayerClient(Context context) {
         mScreenSize = new IntSize(0, 0);
         mBufferSize = new IntSize(0, 0);
+        mDisplayPortMargins = new Rect(DEFAULT_DISPLAY_PORT_MARGIN,
+                                       DEFAULT_DISPLAY_PORT_MARGIN,
+                                       DEFAULT_DISPLAY_PORT_MARGIN,
+                                       DEFAULT_DISPLAY_PORT_MARGIN);
     }
 
     /** Attaches the root layer to the layer controller so that Gecko appears. */
@@ -318,7 +325,7 @@ public class GeckoLayerClient implements GeckoEventListener,
 
         viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(viewportMetrics));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(viewportMetrics, mDisplayPortMargins));
         if (mViewportSizeChanged) {
             mViewportSizeChanged = false;
             GeckoAppShell.viewSizeChanged();
@@ -327,7 +334,7 @@ public class GeckoLayerClient implements GeckoEventListener,
         mLastViewportChangeTime = System.currentTimeMillis();
     }
 
-    /** Implementation of GeckoEventListener. */
+    /** Implementation of GeckoEventResponder/GeckoEventListener. */
     public void handleMessage(String event, JSONObject message) {
         if ("Viewport:UpdateAndDraw".equals(event)) {
             Log.e(LOGTAG, "### Java side Viewport:UpdateAndDraw()!");
@@ -342,6 +349,15 @@ public class GeckoLayerClient implements GeckoEventListener,
             mUpdateViewportOnEndDraw = true;
             mIgnorePaintsPendingViewportSizeChange = false;
         }
+    }
+
+    /** Implementation of GeckoEventResponder. */
+    public String getResponse() {
+        // We are responding to the events handled in handleMessage() above with
+        // the display port margins we want. Note that both messages we are currently
+        // handling (Viewport:UpdateAndDraw and Viewport:UpdateLater) require this
+        // response, so we can just return this indiscriminately.
+        return RectUtils.toJSON(mDisplayPortMargins);
     }
 
     void geometryChanged() {
