@@ -156,10 +156,10 @@ CleanFunctionList(ParseNodeAllocator *allocator, FunctionBox **funboxHead)
  * the upvars contained by funbox and its peers. If there are no upvars, return
  * FREE_STATIC_LEVEL. Thus this function never returns 0.
  */
-static uintN
+static unsigned
 FindFunArgs(FunctionBox *funbox, int level, FunctionBoxQueue *queue)
 {
-    uintN allskipmin = UpvarCookie::FREE_LEVEL;
+    unsigned allskipmin = UpvarCookie::FREE_LEVEL;
 
     do {
         ParseNode *fn = funbox->node;
@@ -191,7 +191,7 @@ FindFunArgs(FunctionBox *funbox, int level, FunctionBoxQueue *queue)
          * an upvar, whether used directly by fun, or indirectly by a function
          * nested in fun.
          */
-        uintN skipmin = UpvarCookie::FREE_LEVEL;
+        unsigned skipmin = UpvarCookie::FREE_LEVEL;
         ParseNode *pn = fn->pn_body;
 
         if (pn->isKind(PNK_UPVARS)) {
@@ -203,12 +203,12 @@ FindFunArgs(FunctionBox *funbox, int level, FunctionBoxQueue *queue)
                 Definition *lexdep = defn->resolve();
 
                 if (!lexdep->isFreeVar()) {
-                    uintN upvarLevel = lexdep->frameLevel();
+                    unsigned upvarLevel = lexdep->frameLevel();
 
                     if (int(upvarLevel) <= fnlevel)
                         fn->setFunArg();
 
-                    uintN skip = (funbox->level + 1) - upvarLevel;
+                    unsigned skip = (funbox->level + 1) - upvarLevel;
                     if (skip < skipmin)
                         skipmin = skip;
                 }
@@ -232,7 +232,7 @@ FindFunArgs(FunctionBox *funbox, int level, FunctionBoxQueue *queue)
          * cumulative skipmin to be relative to the current static level.
          */
         if (funbox->kids) {
-            uintN kidskipmin = FindFunArgs(funbox->kids, fnlevel, queue);
+            unsigned kidskipmin = FindFunArgs(funbox->kids, fnlevel, queue);
 
             JS_ASSERT(kidskipmin != 0);
             if (kidskipmin != UpvarCookie::FREE_LEVEL) {
@@ -304,8 +304,8 @@ MarkFunArgs(JSContext *cx, FunctionBox *funbox, uint32_t functionCount)
                          * See bug 545980.
                          */
                         afunbox = funbox;
-                        uintN calleeLevel = lexdep->pn_cookie.level();
-                        uintN staticLevel = afunbox->level + 1U;
+                        unsigned calleeLevel = lexdep->pn_cookie.level();
+                        unsigned staticLevel = afunbox->level + 1U;
                         while (staticLevel != calleeLevel) {
                             afunbox = afunbox->parent;
                             --staticLevel;
@@ -367,7 +367,7 @@ CanFlattenUpvar(Definition *dn, FunctionBox *funbox, uint32_t tcflags)
      * unsafe (z could name a global setter that calls its argument).
      */
     FunctionBox *afunbox = funbox;
-    uintN dnLevel = dn->frameLevel();
+    unsigned dnLevel = dn->frameLevel();
 
     JS_ASSERT(dnLevel <= funbox->level);
     while (afunbox->level != dnLevel) {
@@ -489,7 +489,7 @@ CanFlattenUpvar(Definition *dn, FunctionBox *funbox, uint32_t tcflags)
 static void
 FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags)
 {
-    uintN dnLevel = dn->frameLevel();
+    unsigned dnLevel = dn->frameLevel();
 
     while ((funbox = funbox->parent) != NULL) {
         /*

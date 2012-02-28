@@ -51,7 +51,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSObject* obj    /* = nsnull    */,
                                JSObject* funobj /* = nsnull    */,
                                jsid name        /* = JSID_VOID */,
-                               uintN argc       /* = NO_ARGS   */,
+                               unsigned argc       /* = NO_ARGS   */,
                                jsval *argv      /* = nsnull    */,
                                jsval *rval      /* = nsnull    */)
     :   mState(INIT_FAILED),
@@ -98,7 +98,7 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
                      JSObject* funobj,
                      WrapperInitOptions wrapperInitOptions,
                      jsid name,
-                     uintN argc,
+                     unsigned argc,
                      jsval *argv,
                      jsval *rval)
 {
@@ -267,7 +267,7 @@ XPCCallContext::SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
 }
 
 void
-XPCCallContext::SetArgsAndResultPtr(uintN argc,
+XPCCallContext::SetArgsAndResultPtr(unsigned argc,
                                     jsval *argv,
                                     jsval *rval)
 {

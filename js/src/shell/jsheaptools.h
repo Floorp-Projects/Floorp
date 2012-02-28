@@ -44,7 +44,7 @@
 #include "jsapi.h"
 
 #ifdef DEBUG
-JSBool FindReferences(JSContext *cx, uintN argc, jsval *vp);
+JSBool FindReferences(JSContext *cx, unsigned argc, jsval *vp);
 #endif /* DEBUG */
 
 #endif /* jsheaptools_h___ */

@@ -724,7 +724,7 @@ class Worker MOZ_FINAL : public WorkerParent
         return !w->checkTermination();
     }
 
-    static JSBool jsResolveGlobal(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+    static JSBool jsResolveGlobal(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                                   JSObject **objp)
     {
         JSBool resolved;
@@ -737,9 +737,9 @@ class Worker MOZ_FINAL : public WorkerParent
         return true;
     }
 
-    static JSBool jsPostMessageToParent(JSContext *cx, uintN argc, jsval *vp);
-    static JSBool jsPostMessageToChild(JSContext *cx, uintN argc, jsval *vp);
-    static JSBool jsTerminate(JSContext *cx, uintN argc, jsval *vp);
+    static JSBool jsPostMessageToParent(JSContext *cx, unsigned argc, jsval *vp);
+    static JSBool jsPostMessageToChild(JSContext *cx, unsigned argc, jsval *vp);
+    static JSBool jsTerminate(JSContext *cx, unsigned argc, jsval *vp);
 
     bool checkTermination() {
         AutoLock hold(lock);
@@ -863,7 +863,7 @@ class Worker MOZ_FINAL : public WorkerParent
         return true;
     }
 
-    static JSBool jsConstruct(JSContext *cx, uintN argc, jsval *vp) {
+    static JSBool jsConstruct(JSContext *cx, unsigned argc, jsval *vp) {
         /*
          * We pretend to implement write barriers on shell workers (by setting
          * the JSCLASS_IMPLEMENTS_BARRIERS), but we don't. So we immediately
@@ -1199,7 +1199,7 @@ Worker::processOneEvent()
 }
 
 JSBool
-Worker::jsPostMessageToParent(JSContext *cx, uintN argc, jsval *vp)
+Worker::jsPostMessageToParent(JSContext *cx, unsigned argc, jsval *vp)
 {
     jsval workerval = js::GetFunctionNativeReserved(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0);
     Worker *w = (Worker *) JSVAL_TO_PRIVATE(workerval);
@@ -1224,7 +1224,7 @@ Worker::jsPostMessageToParent(JSContext *cx, uintN argc, jsval *vp)
 }
 
 JSBool
-Worker::jsPostMessageToChild(JSContext *cx, uintN argc, jsval *vp)
+Worker::jsPostMessageToChild(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *workerobj = JS_THIS_OBJECT(cx, vp);
     if (!workerobj)
@@ -1249,7 +1249,7 @@ Worker::jsPostMessageToChild(JSContext *cx, uintN argc, jsval *vp)
 }
 
 JSBool
-Worker::jsTerminate(JSContext *cx, uintN argc, jsval *vp)
+Worker::jsTerminate(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
 

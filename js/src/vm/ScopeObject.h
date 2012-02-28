@@ -145,14 +145,14 @@ class CallObject : public ScopeObject
     inline void setArguments(const Value &v);
 
     /* Returns the formal argument at the given index. */
-    inline const Value &arg(uintN i) const;
-    inline void setArg(uintN i, const Value &v);
-    inline void initArgUnchecked(uintN i, const Value &v);
+    inline const Value &arg(unsigned i) const;
+    inline void setArg(unsigned i, const Value &v);
+    inline void initArgUnchecked(unsigned i, const Value &v);
 
     /* Returns the variable at the given index. */
-    inline const Value &var(uintN i) const;
-    inline void setVar(uintN i, const Value &v);
-    inline void initVarUnchecked(uintN i, const Value &v);
+    inline const Value &var(unsigned i) const;
+    inline void setVar(unsigned i, const Value &v);
+    inline void initVarUnchecked(unsigned i, const Value &v);
 
     /*
      * Get the actual arrays of arguments and variables. Only call if type
@@ -162,7 +162,7 @@ class CallObject : public ScopeObject
     inline HeapSlotArray argArray();
     inline HeapSlotArray varArray();
 
-    inline void copyValues(uintN nargs, Value *argv, uintN nvars, Value *slots);
+    inline void copyValues(unsigned nargs, Value *argv, unsigned nvars, Value *slots);
 
     static JSBool getArgumentsOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
     static JSBool setArgumentsOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
@@ -251,7 +251,7 @@ class StaticBlockObject : public BlockObject
     Definition *maybeDefinitionParseNode(unsigned i);
     void poisonDefinitionParseNode(unsigned i);
 
-    const Shape *addVar(JSContext *cx, jsid id, intN index, bool *redeclared);
+    const Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
 };
 
 class ClonedBlockObject : public BlockObject

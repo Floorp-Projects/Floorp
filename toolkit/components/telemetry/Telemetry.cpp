@@ -350,7 +350,7 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
 }
 
 JSBool
-JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
+JSHistogram_Add(JSContext *cx, unsigned argc, jsval *vp)
 {
   if (!argc) {
     JS_ReportError(cx, "Expected one argument");
@@ -385,7 +385,7 @@ JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
 }
 
 JSBool
-JSHistogram_Snapshot(JSContext *cx, uintN argc, jsval *vp)
+JSHistogram_Snapshot(JSContext *cx, unsigned argc, jsval *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {

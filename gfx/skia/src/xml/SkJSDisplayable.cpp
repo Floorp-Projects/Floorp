@@ -64,14 +64,14 @@ public:
     static JSBool SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
     static SkCanvas* gCanvas;
     static SkPaint* gPaint;
-    static JSBool Draw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+    static JSBool Draw(JSContext *cx, JSObject *obj, unsigned argc, jsval *argv, jsval *rval);
     SkDisplayable* fDisplayable;
 };
 
 SkCanvas* SkJSDisplayable::gCanvas;
 SkPaint* SkJSDisplayable::gPaint;
 
-JSBool SkJSDisplayable::Draw(JSContext *cx, JSObject *obj, uintN argc,
+JSBool SkJSDisplayable::Draw(JSContext *cx, JSObject *obj, unsigned argc,
                                     jsval *argv, jsval *rval)
 {
     SkJSDisplayable *p = (SkJSDisplayable*) JS_GetPrivate(cx, obj);
@@ -93,7 +93,7 @@ static JSPropertySpec* gDisplayableProperties[kNumberOfTypes];
 static JSClass gDisplayableClasses[kNumberOfTypes];
 
 #define JS_INIT(_prefix, _class) \
-static JSBool _class##Constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) { \
+static JSBool _class##Constructor(JSContext *cx, JSObject *obj, unsigned argc, jsval *argv, jsval *rval) { \
     SkJSDisplayable* jsDisplayable = new SkJSDisplayable(); \
     jsDisplayable->fDisplayable = new _prefix##_class(); \
     JS_SetPrivate(cx, obj, (void*) jsDisplayable); \

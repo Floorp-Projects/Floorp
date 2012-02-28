@@ -2722,7 +2722,7 @@ CheckUniversalXPConnectForTraceMalloc(JSContext *cx)
 }
 
 static JSBool
-TraceMallocDisable(JSContext *cx, uintN argc, jsval *vp)
+TraceMallocDisable(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2733,7 +2733,7 @@ TraceMallocDisable(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocEnable(JSContext *cx, uintN argc, jsval *vp)
+TraceMallocEnable(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2744,7 +2744,7 @@ TraceMallocEnable(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocOpenLogFile(JSContext *cx, uintN argc, jsval *vp)
+TraceMallocOpenLogFile(JSContext *cx, unsigned argc, jsval *vp)
 {
     int fd;
     JSString *str;
@@ -2772,7 +2772,7 @@ TraceMallocOpenLogFile(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocChangeLogFD(JSContext *cx, uintN argc, jsval *vp)
+TraceMallocChangeLogFD(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2794,7 +2794,7 @@ TraceMallocChangeLogFD(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocCloseLogFD(JSContext *cx, uintN argc, jsval *vp)
+TraceMallocCloseLogFD(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2810,7 +2810,7 @@ TraceMallocCloseLogFD(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocLogTimestamp(JSContext *cx, uintN argc, jsval *vp)
+TraceMallocLogTimestamp(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2827,7 +2827,7 @@ TraceMallocLogTimestamp(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-TraceMallocDumpAllocations(JSContext *cx, uintN argc, jsval *vp)
+TraceMallocDumpAllocations(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
@@ -2875,7 +2875,7 @@ void NS_JProfStopProfiling();
 void NS_JProfClearCircular();
 
 static JSBool
-JProfStartProfilingJS(JSContext *cx, uintN argc, jsval *vp)
+JProfStartProfilingJS(JSContext *cx, unsigned argc, jsval *vp)
 {
   NS_JProfStartProfiling();
   return JS_TRUE;
@@ -2917,7 +2917,7 @@ void NS_JProfStartProfiling()
 }
 
 static JSBool
-JProfStopProfilingJS(JSContext *cx, uintN argc, jsval *vp)
+JProfStopProfilingJS(JSContext *cx, unsigned argc, jsval *vp)
 {
   NS_JProfStopProfiling();
   return JS_TRUE;
@@ -2931,7 +2931,7 @@ NS_JProfStopProfiling()
 }
 
 static JSBool
-JProfClearCircularJS(JSContext *cx, uintN argc, jsval *vp)
+JProfClearCircularJS(JSContext *cx, unsigned argc, jsval *vp)
 {
   NS_JProfClearCircular();
   return JS_TRUE;
@@ -2945,7 +2945,7 @@ NS_JProfClearCircular()
 }
 
 static JSBool
-JProfSaveCircularJS(JSContext *cx, uintN argc, jsval *vp)
+JProfSaveCircularJS(JSContext *cx, unsigned argc, jsval *vp)
 {
   // Not ideal...
   NS_JProfStopProfiling();
@@ -2969,7 +2969,7 @@ static JSFunctionSpec JProfFunctions[] = {
 // how to use DMD.
 
 static JSBool
-DMDCheckJS(JSContext *cx, uintN argc, jsval *vp)
+DMDCheckJS(JSContext *cx, unsigned argc, jsval *vp)
 {
   mozilla::DMDCheckAndDump();
   return JS_TRUE;

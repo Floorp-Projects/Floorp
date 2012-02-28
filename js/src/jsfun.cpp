@@ -159,7 +159,7 @@ struct STATIC_SKIP_INFERENCE PutArg
     PutArg(JSCompartment *comp, HeapValue *dst) : dst(dst), compartment(comp) {}
     HeapValue *dst;
     JSCompartment *compartment;
-    bool operator()(uintN, Value *src) {
+    bool operator()(unsigned, Value *src) {
         JS_ASSERT(dst->isMagic(JS_ARGS_HOLE) || dst->isUndefined());
         if (!dst->isMagic(JS_ARGS_HOLE))
             dst->set(compartment, *src);
@@ -232,7 +232,7 @@ args_delProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     ArgumentsObject &argsobj = obj->asArguments();
     if (JSID_IS_INT(id)) {
-        uintN arg = uintN(JSID_TO_INT(id));
+        unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength())
             argsobj.setElement(arg, MagicValue(JS_ARGS_HOLE));
     } else if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
@@ -255,7 +255,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          * arg can exceed the number of arguments if a script changed the
          * prototype to point to another Arguments object with a bigger argc.
          */
-        uintN arg = uintN(JSID_TO_INT(id));
+        unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength()) {
             JS_ASSERT(!argsobj.element(arg).isMagic(JS_ARGS_HOLE));
             if (StackFrame *fp = argsobj.maybeStackFrame())
@@ -284,7 +284,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     NormalArgumentsObject &argsobj = obj->asNormalArguments();
 
     if (JSID_IS_INT(id)) {
-        uintN arg = uintN(JSID_TO_INT(id));
+        unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength()) {
             if (StackFrame *fp = argsobj.maybeStackFrame()) {
                 JSScript *script = fp->functionScript();
@@ -315,14 +315,14 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 }
 
 static JSBool
-args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+args_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
              JSObject **objp)
 {
     *objp = NULL;
 
     NormalArgumentsObject &argsobj = obj->asNormalArguments();
 
-    uintN attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
+    unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
     if (JSID_IS_INT(id)) {
         uint32_t arg = uint32_t(JSID_TO_INT(id));
         if (arg >= argsobj.initialLength() || argsobj.element(arg).isMagic(JS_ARGS_HOLE))
@@ -386,7 +386,7 @@ StrictArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          * arg can exceed the number of arguments if a script changed the
          * prototype to point to another Arguments object with a bigger argc.
          */
-        uintN arg = uintN(JSID_TO_INT(id));
+        unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength()) {
             const Value &v = argsobj.element(arg);
             if (!v.isMagic(JS_ARGS_HOLE))
@@ -409,7 +409,7 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     StrictArgumentsObject &argsobj = obj->asStrictArguments();
 
     if (JSID_IS_INT(id)) {
-        uintN arg = uintN(JSID_TO_INT(id));
+        unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength()) {
             argsobj.setElement(arg, *vp);
             return true;
@@ -430,13 +430,13 @@ StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 }
 
 static JSBool
-strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
+strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObject **objp)
 {
     *objp = NULL;
 
     StrictArgumentsObject &argsobj = obj->asStrictArguments();
 
-    uintN attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
+    unsigned attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
     PropertyOp getter = StrictArgGetter;
     StrictPropertyOp setter = StrictArgSetter;
 
@@ -844,7 +844,7 @@ fun_enumerate(JSContext *cx, JSObject *obj)
     if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
         return false;
 
-    for (uintN i = 0; i < ArrayLength(poisonPillProps); i++) {
+    for (unsigned i = 0; i < ArrayLength(poisonPillProps); i++) {
         const uint16_t offset = poisonPillProps[i];
         id = ATOM_TO_JSID(OFFSET_TO_ATOM(cx->runtime, offset));
         if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
@@ -901,7 +901,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+fun_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
             JSObject **objp)
 {
     if (!JSID_IS_ATOM(id))
@@ -950,7 +950,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         return true;
     }
 
-    for (uintN i = 0; i < ArrayLength(poisonPillProps); i++) {
+    for (unsigned i = 0; i < ArrayLength(poisonPillProps); i++) {
         const uint16_t offset = poisonPillProps[i];
 
         if (JSID_IS_ATOM(id, OFFSET_TO_ATOM(cx->runtime, offset))) {
@@ -958,7 +958,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
             PropertyOp getter;
             StrictPropertyOp setter;
-            uintN attrs = JSPROP_PERMANENT;
+            unsigned attrs = JSPROP_PERMANENT;
             if (fun->isInterpreted() ? fun->inStrictMode() : fun->isBoundFunction()) {
                 JSObject *throwTypeError = fun->global().getThrowTypeError();
 
@@ -1150,7 +1150,7 @@ JS_FRIEND_DATA(Class) js::FunctionClass = {
 };
 
 JSString *
-fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
+fun_toStringHelper(JSContext *cx, JSObject *obj, unsigned indent)
 {
     if (!obj->isFunction()) {
         if (IsFunctionProxy(obj))
@@ -1193,7 +1193,7 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
 }
 
 static JSBool
-fun_toString(JSContext *cx, uintN argc, Value *vp)
+fun_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_ASSERT(IsFunctionObject(vp[0]));
     uint32_t indent = 0;
@@ -1215,7 +1215,7 @@ fun_toString(JSContext *cx, uintN argc, Value *vp)
 
 #if JS_HAS_TOSOURCE
 static JSBool
-fun_toSource(JSContext *cx, uintN argc, Value *vp)
+fun_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_ASSERT(IsFunctionObject(vp[0]));
 
@@ -1233,7 +1233,7 @@ fun_toSource(JSContext *cx, uintN argc, Value *vp)
 #endif
 
 JSBool
-js_fun_call(JSContext *cx, uintN argc, Value *vp)
+js_fun_call(JSContext *cx, unsigned argc, Value *vp)
 {
     Value fval = vp[1];
 
@@ -1270,7 +1270,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
 
 /* ES5 15.3.4.3 */
 JSBool
-js_fun_apply(JSContext *cx, uintN argc, Value *vp)
+js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
 {
     /* Step 1. */
     Value fval = vp[1];
@@ -1328,7 +1328,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
 namespace js {
 
 JSBool
-CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp);
+CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp);
 
 }
 
@@ -1339,7 +1339,7 @@ static const uint32_t BOUND_FUNCTION_RESERVED_SLOTS = 2;
 
 inline bool
 JSFunction::initBoundFunction(JSContext *cx, const Value &thisArg,
-                              const Value *args, uintN argslen)
+                              const Value *args, unsigned argslen)
 {
     JS_ASSERT(isFunction());
 
@@ -1385,7 +1385,7 @@ JSFunction::getBoundFunctionThis() const
 }
 
 inline const js::Value &
-JSFunction::getBoundFunctionArgument(uintN which) const
+JSFunction::getBoundFunctionArgument(unsigned which) const
 {
     JS_ASSERT(isFunction());
     JS_ASSERT(isBoundFunction());
@@ -1407,7 +1407,7 @@ namespace js {
 
 /* ES5 15.3.4.5.1 and 15.3.4.5.2. */
 JSBool
-CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
+CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 {
     JSFunction *fun = vp[0].toObject().toFunction();
     JS_ASSERT(fun->isBoundFunction());
@@ -1415,7 +1415,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
     bool constructing = IsConstructing(vp);
 
     /* 15.3.4.5.1 step 1, 15.3.4.5.2 step 3. */
-    uintN argslen = fun->getBoundFunctionArgumentCount();
+    unsigned argslen = fun->getBoundFunctionArgumentCount();
 
     if (argc + argslen > StackSpace::ARGS_LENGTH_MAX) {
         js_ReportAllocationOverflow(cx);
@@ -1433,7 +1433,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
-    for (uintN i = 0; i < argslen; i++)
+    for (unsigned i = 0; i < argslen; i++)
         args[i] = fun->getBoundFunctionArgument(i);
     PodCopy(args.array() + argslen, vp + 2, argc);
 
@@ -1454,7 +1454,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 
 #if JS_HAS_GENERATORS
 static JSBool
-fun_isGenerator(JSContext *cx, uintN argc, Value *vp)
+fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 {
     JSFunction *fun;
     if (!IsFunctionObject(vp[1], &fun)) {
@@ -1476,7 +1476,7 @@ fun_isGenerator(JSContext *cx, uintN argc, Value *vp)
 
 /* ES5 15.3.4.5. */
 static JSBool
-fun_bind(JSContext *cx, uintN argc, Value *vp)
+fun_bind(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1494,16 +1494,16 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
 
     /* Step 3. */
     Value *boundArgs = NULL;
-    uintN argslen = 0;
+    unsigned argslen = 0;
     if (args.length() > 1) {
         boundArgs = args.array() + 1;
         argslen = args.length() - 1;
     }
 
     /* Steps 15-16. */
-    uintN length = 0;
+    unsigned length = 0;
     if (target->isFunction()) {
-        uintN nargs = target->toFunction()->nargs;
+        unsigned nargs = target->toFunction()->nargs;
         if (nargs > argslen)
             length = nargs - argslen;
     }
@@ -1565,7 +1565,7 @@ JSFunctionSpec function_methods[] = {
 };
 
 JSBool
-Function(JSContext *cx, uintN argc, Value *vp)
+Function(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1580,12 +1580,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
     Bindings bindings(cx);
 
     const char *filename;
-    uintN lineno;
+    unsigned lineno;
     JSPrincipals *originPrincipals;
     CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals);
     JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
 
-    uintN n = args.length() ? args.length() - 1 : 0;
+    unsigned n = args.length() ? args.length() - 1 : 0;
     if (n > 0) {
         /*
          * Collect the function-argument arguments into one string, separated
@@ -1598,7 +1598,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
          * code.  See ECMA 15.3.2.1.
          */
         size_t args_length = 0;
-        for (uintN i = 0; i < n; i++) {
+        for (unsigned i = 0; i < n; i++) {
             /* Collect the lengths for all the function-argument arguments. */
             JSString *arg = ToString(cx, args[i]);
             if (!arg)
@@ -1642,7 +1642,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         /*
          * Concatenate the arguments into the new string, separated by commas.
          */
-        for (uintN i = 0; i < n; i++) {
+        for (unsigned i = 0; i < n; i++) {
             JSString *arg = args[i].toString();
             size_t arg_length = arg->length();
             const jschar *arg_chars = arg->getChars(cx);
@@ -1770,8 +1770,8 @@ LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
 } /* namespace js */
 
 JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
-               uintN flags, HandleObject parent, JSAtom *atom, js::gc::AllocKind kind)
+js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
+               unsigned flags, HandleObject parent, JSAtom *atom, js::gc::AllocKind kind)
 {
     JS_ASSERT(kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
     JS_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));
@@ -1922,7 +1922,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
     if (!closure || !fun->script()->bindings.hasUpvars())
         return closure;
 
-    uintN level = fun->script()->staticLevel;
+    unsigned level = fun->script()->staticLevel;
     JSUpvarArray *uva = fun->script()->upvars();
 
     for (uint32_t i = 0, n = uva->length; i < n; i++)
@@ -1933,7 +1933,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 
 JSFunction *
 js_DefineFunction(JSContext *cx, HandleObject obj, jsid id, Native native,
-                  uintN nargs, uintN attrs, AllocKind kind)
+                  unsigned nargs, unsigned attrs, AllocKind kind)
 {
     RootId idRoot(cx, &id);
 
@@ -1974,7 +1974,7 @@ js_DefineFunction(JSContext *cx, HandleObject obj, jsid id, Native native,
 JS_STATIC_ASSERT((JSV2F_CONSTRUCT & JSV2F_SEARCH_STACK) == 0);
 
 JSFunction *
-js_ValueToFunction(JSContext *cx, const Value *vp, uintN flags)
+js_ValueToFunction(JSContext *cx, const Value *vp, unsigned flags)
 {
     JSFunction *fun;
     if (!IsFunctionObject(*vp, &fun)) {
@@ -1985,7 +1985,7 @@ js_ValueToFunction(JSContext *cx, const Value *vp, uintN flags)
 }
 
 JSObject *
-js_ValueToCallableObject(JSContext *cx, Value *vp, uintN flags)
+js_ValueToCallableObject(JSContext *cx, Value *vp, unsigned flags)
 {
     if (vp->isObject()) {
         JSObject *callable = &vp->toObject();
@@ -1998,11 +1998,11 @@ js_ValueToCallableObject(JSContext *cx, Value *vp, uintN flags)
 }
 
 void
-js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
+js_ReportIsNotFunction(JSContext *cx, const Value *vp, unsigned flags)
 {
     const char *name = NULL, *source = NULL;
     AutoValueRooter tvr(cx);
-    uintN error = (flags & JSV2F_CONSTRUCT) ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
+    unsigned error = (flags & JSV2F_CONSTRUCT) ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
 
     /*
      * We try to the print the code that produced vp if vp is a value in the
@@ -2020,7 +2020,7 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
 
     FrameRegsIter i(cx);
     if (!i.done()) {
-        uintN depth = js_ReconstructStackDepth(cx, i.fp()->script(), i.pc());
+        unsigned depth = js_ReconstructStackDepth(cx, i.fp()->script(), i.pc());
         Value *simsp = i.fp()->base() + depth;
         if (i.fp()->base() <= vp && vp < Min(simsp, i.sp()))
             spindex = vp - simsp;

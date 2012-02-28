@@ -743,9 +743,9 @@ OptionsSameVersionFlags(uint32_t self, uint32_t other)
  * become invalid.
  */
 namespace VersionFlags {
-static const uintN MASK         = 0x0FFF; /* see JSVersion in jspubtd.h */
-static const uintN HAS_XML      = 0x1000; /* flag induced by XML option */
-static const uintN FULL_MASK    = 0x3FFF;
+static const unsigned MASK         = 0x0FFF; /* see JSVersion in jspubtd.h */
+static const unsigned HAS_XML      = 0x1000; /* flag induced by XML option */
+static const unsigned FULL_MASK    = 0x3FFF;
 }
 
 static inline JSVersion
@@ -785,16 +785,16 @@ VersionHasFlags(JSVersion version)
     return !!VersionExtractFlags(version);
 }
 
-static inline uintN
+static inline unsigned
 VersionFlagsToOptions(JSVersion version)
 {
-    uintN copts = VersionHasXML(version) ? JSOPTION_XML : 0;
+    unsigned copts = VersionHasXML(version) ? JSOPTION_XML : 0;
     JS_ASSERT((copts & JSCOMPILEOPTION_MASK) == copts);
     return copts;
 }
 
 static inline JSVersion
-OptionFlagsToVersion(uintN options, JSVersion version)
+OptionFlagsToVersion(unsigned options, JSVersion version)
 {
     return VersionSetXML(version, OptionsHasXML(options));
 }
@@ -831,7 +831,7 @@ struct JSContext : js::ContextFriendFields
     js::Value           exception;          /* most-recently-thrown exception */
 
     /* Per-context run options. */
-    uintN               runOptions;            /* see jsapi.h for JSOPTION_* */
+    unsigned               runOptions;            /* see jsapi.h for JSOPTION_* */
 
   public:
     int32_t             reportGranularity;  /* see jsprobes.h */
@@ -957,19 +957,19 @@ struct JSContext : js::ContextFriendFields
      */
     inline JSVersion findVersion() const;
 
-    void setRunOptions(uintN ropts) {
+    void setRunOptions(unsigned ropts) {
         JS_ASSERT((ropts & JSRUNOPTION_MASK) == ropts);
         runOptions = ropts;
     }
 
     /* Note: may override the version. */
-    inline void setCompileOptions(uintN newcopts);
+    inline void setCompileOptions(unsigned newcopts);
 
-    uintN getRunOptions() const { return runOptions; }
-    inline uintN getCompileOptions() const;
-    inline uintN allOptions() const;
+    unsigned getRunOptions() const { return runOptions; }
+    inline unsigned getCompileOptions() const;
+    inline unsigned allOptions() const;
 
-    bool hasRunOption(uintN ropt) const {
+    bool hasRunOption(unsigned ropt) const {
         JS_ASSERT((ropt & JSRUNOPTION_MASK) == ropt);
         return !!(runOptions & ropt);
     }
@@ -1017,7 +1017,7 @@ struct JSContext : js::ContextFriendFields
     JSSecurityCallbacks *securityCallbacks;
 
     /* Stored here to avoid passing it around as a parameter. */
-    uintN               resolveFlags;
+    unsigned               resolveFlags;
 
     /* Random number generator state, used by jsmath.cpp. */
     int64_t             rngSeed;
@@ -1127,7 +1127,7 @@ struct JSContext : js::ContextFriendFields
     void purge();
 
     /* For DEBUG. */
-    inline void assertValidStackDepth(uintN depth);
+    inline void assertValidStackDepth(unsigned depth);
 
     bool isExceptionPending() {
         return throwing;
@@ -1150,7 +1150,7 @@ struct JSContext : js::ContextFriendFields
      * When there are compilations active for the context, the GC must not
      * purge the ParseMapPool.
      */
-    uintN activeCompilations;
+    unsigned activeCompilations;
 
 #ifdef DEBUG
     /*
@@ -1330,7 +1330,7 @@ class AutoReleaseNullablePtr {
 class JSAutoResolveFlags
 {
   public:
-    JSAutoResolveFlags(JSContext *cx, uintN flags
+    JSAutoResolveFlags(JSContext *cx, unsigned flags
                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : mContext(cx), mSaved(cx->resolveFlags)
     {
@@ -1342,7 +1342,7 @@ class JSAutoResolveFlags
 
   private:
     JSContext *mContext;
-    uintN mSaved;
+    unsigned mSaved;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -1398,16 +1398,16 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
 
 #ifdef va_start
 extern JSBool
-js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
+js_ReportErrorVA(JSContext *cx, unsigned flags, const char *format, va_list ap);
 
 extern JSBool
-js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
-                       void *userRef, const uintN errorNumber,
+js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
+                       void *userRef, const unsigned errorNumber,
                        JSBool charArgs, va_list ap);
 
 extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
-                        void *userRef, const uintN errorNumber,
+                        void *userRef, const unsigned errorNumber,
                         char **message, JSErrorReport *reportp,
                         bool charArgs, va_list ap);
 #endif
@@ -1432,11 +1432,11 @@ js_ReportIsNotDefined(JSContext *cx, const char *name);
  * Report an attempt to access the property of a null or undefined value (v).
  */
 extern JSBool
-js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, const js::Value &v,
+js_ReportIsNullOrUndefined(JSContext *cx, int spindex, const js::Value &v,
                            JSString *fallback);
 
 extern void
-js_ReportMissingArg(JSContext *cx, const js::Value &v, uintN arg);
+js_ReportMissingArg(JSContext *cx, const js::Value &v, unsigned arg);
 
 /*
  * Report error using js_DecompileValueGenerator(cx, spindex, v, fallback) as
@@ -1444,8 +1444,8 @@ js_ReportMissingArg(JSContext *cx, const js::Value &v, uintN arg);
  * then 3 arguments, use null for arg1 or arg2.
  */
 extern JSBool
-js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
-                         intN spindex, const js::Value &v, JSString *fallback,
+js_ReportValueErrorFlags(JSContext *cx, unsigned flags, const unsigned errorNumber,
+                         int spindex, const js::Value &v, JSString *fallback,
                          const char *arg1, const char *arg2);
 
 #define js_ReportValueError(cx,errorNumber,spindex,v,fallback)                \

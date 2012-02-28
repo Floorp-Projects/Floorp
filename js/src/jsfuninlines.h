@@ -310,7 +310,7 @@ GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
 extern JSFunctionSpec function_methods[];
 
 extern JSBool
-Function(JSContext *cx, uintN argc, Value *vp);
+Function(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool
 IsBuiltinFunctionConstructor(JSFunction *fun);

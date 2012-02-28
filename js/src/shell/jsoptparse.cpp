@@ -104,9 +104,9 @@ OptionParser::error(const char *fmt, ...)
 
 /* Quick and dirty paragraph printer. */
 static void
-PrintParagraph(const char *text, uintN startColno, const uintN limitColno, bool padFirstLine)
+PrintParagraph(const char *text, unsigned startColno, const unsigned limitColno, bool padFirstLine)
 {
-    uintN colno = startColno;
+    unsigned colno = startColno;
     const char *it = text;
 
     if (padFirstLine)

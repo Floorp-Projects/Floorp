@@ -304,7 +304,7 @@ struct JSCompartment
   private:
     enum { DebugFromC = 1, DebugFromJS = 2 };
 
-    uintN                        debugModeBits;  // see debugMode() below
+    unsigned                        debugModeBits;  // see debugMode() below
     
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs

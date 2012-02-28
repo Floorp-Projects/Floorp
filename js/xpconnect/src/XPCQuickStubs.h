@@ -158,7 +158,7 @@ public:
 };
 
 JSBool
-xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN extraFlags,
+xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, unsigned extraFlags,
                        PRUint32 ifacec, const nsIID **interfaces,
                        PRUint32 tableSize, const xpc_qsHashEntry *table,
                        const xpc_qsPropertySpec *propspecs,
@@ -208,13 +208,13 @@ xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
  * See NOTE at xpc_qsThrowGetterSetterFailed.
  */
 void
-xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, uintN paramnum);
+xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, unsigned paramnum);
 
 void
-xpc_qsThrowBadArgWithCcx(XPCCallContext &ccx, nsresult rv, uintN paramnum);
+xpc_qsThrowBadArgWithCcx(XPCCallContext &ccx, nsresult rv, unsigned paramnum);
 
 void
-xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
+xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, unsigned paramnum,
                              const char *ifaceName, const char *memberName);
 
 /**

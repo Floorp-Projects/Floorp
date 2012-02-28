@@ -89,7 +89,7 @@ public:
   }
 
   static JSObject*
-  Create(JSContext* aCx, intN aCode);
+  Create(JSContext* aCx, int aCode);
 
 private:
   DOMException()
@@ -103,7 +103,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -118,7 +118,7 @@ private:
   }
 
   static JSBool
-  ToString(JSContext* aCx, uintN aArgc, jsval* aVp)
+  ToString(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -242,7 +242,7 @@ JSPropertySpec DOMException::sStaticProperties[] = {
 
 // static
 JSObject*
-DOMException::Create(JSContext* aCx, intN aCode)
+DOMException::Create(JSContext* aCx, int aCode)
 {
   JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
   if (!obj) {
@@ -297,7 +297,7 @@ public:
   }
 
   static JSObject*
-  Create(JSContext* aCx, intN aCode);
+  Create(JSContext* aCx, int aCode);
 
 private:
   FileException()
@@ -311,7 +311,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -386,7 +386,7 @@ JSPropertySpec FileException::sStaticProperties[] = {
 
 // static
 JSObject*
-FileException::Create(JSContext* aCx, intN aCode)
+FileException::Create(JSContext* aCx, int aCode)
 {
   JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
   if (!obj) {
@@ -431,7 +431,7 @@ InitClasses(JSContext* aCx, JSObject* aGlobal)
 }
 
 void
-ThrowDOMExceptionForCode(JSContext* aCx, intN aCode)
+ThrowDOMExceptionForCode(JSContext* aCx, int aCode)
 {
   JSObject* exception = DOMException::Create(aCx, aCode);
   JS_ASSERT(exception);
@@ -440,7 +440,7 @@ ThrowDOMExceptionForCode(JSContext* aCx, intN aCode)
 }
 
 void
-ThrowFileExceptionForCode(JSContext* aCx, intN aCode)
+ThrowFileExceptionForCode(JSContext* aCx, int aCode)
 {
   JSObject* exception = FileException::Create(aCx, aCode);
   JS_ASSERT(exception);

@@ -66,7 +66,7 @@ using namespace js;
 /***************************************************************************/
 // stuff used by all
 
-static nsresult ThrowAndFail(uintN errNum, JSContext* cx, bool* retval)
+static nsresult ThrowAndFail(unsigned errNum, JSContext* cx, bool* retval)
 {
     XPCThrower::Throw(errNum, cx);
     *retval = false;
@@ -2769,7 +2769,7 @@ PrincipalHolder::GetPrincipal()
 }
 
 static JSBool
-SandboxDump(JSContext *cx, uintN argc, jsval *vp)
+SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSString *str;
     if (!argc)
@@ -2807,7 +2807,7 @@ SandboxDump(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-SandboxDebug(JSContext *cx, uintN argc, jsval *vp)
+SandboxDebug(JSContext *cx, unsigned argc, jsval *vp)
 {
 #ifdef DEBUG
     return SandboxDump(cx, argc, vp);
@@ -2817,7 +2817,7 @@ SandboxDebug(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-SandboxImport(JSContext *cx, uintN argc, jsval *vp)
+SandboxImport(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *thisobj = JS_THIS_OBJECT(cx, vp);
     if (!thisobj)
@@ -3754,7 +3754,7 @@ nsXPCComponents_Utils::CreateObjectIn(const jsval &vobj, JSContext *cx, jsval *r
 }
 
 JSBool
-FunctionWrapper(JSContext *cx, uintN argc, jsval *vp)
+FunctionWrapper(JSContext *cx, unsigned argc, jsval *vp)
 {
     jsval v = js::GetFunctionNativeReserved(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0);
     NS_ASSERTION(JSVAL_IS_OBJECT(v), "weird function");
@@ -4128,7 +4128,7 @@ nsXPCComponents::NewResolve(nsIXPConnectWrappedNative *wrapper,
     if (!rt)
         return NS_ERROR_FAILURE;
 
-    uintN attrs = 0;
+    unsigned attrs = 0;
 
     if (id == rt->GetStringID(XPCJSRuntime::IDX_LAST_RESULT))
         attrs = JSPROP_READONLY;

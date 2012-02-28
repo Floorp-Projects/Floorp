@@ -78,7 +78,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-ThrowTypeError(JSContext *cx, uintN argc, Value *vp)
+ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
                                  JSMSG_THROW_TYPE_ERROR);
@@ -401,7 +401,7 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
 
 JSFunction *
 GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name,
-                                uintN length, gc::AllocKind kind)
+                                unsigned length, gc::AllocKind kind)
 {
     RootedVarObject self(cx, this);
 
