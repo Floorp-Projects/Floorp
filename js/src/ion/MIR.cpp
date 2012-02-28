@@ -907,11 +907,11 @@ MNot::foldsTo(bool useValueNumbers)
     }
 
     // NOT of an object is always false
-    if (specialization_ == MIRType_Object)
+    if (operand()->type() == MIRType_Object)
         return MConstant::New(BooleanValue(false));
 
     // NOT of an undefined or null value is always true
-    if (specialization_ == MIRType_Undefined || specialization_ == MIRType_Null)
+    if (operand()->type() == MIRType_Undefined || operand()->type() == MIRType_Null)
         return MConstant::New(BooleanValue(true));
 
     return this;
