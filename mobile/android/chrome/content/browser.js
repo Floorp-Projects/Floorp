@@ -2007,6 +2007,12 @@ Tab.prototype = {
     // is not accidentally removed (the call to updateViewport is at the
     // very end).
 
+    if (window.outerWidth == 0 || window.outerHeight == 0) {
+        // this happens sometimes when starting up fennec. we don't want zero
+        // values corrupting our viewport numbers, so ignore this one.
+        return;
+    }
+
     gScreenWidth = window.outerWidth;
     gScreenHeight = window.outerHeight;
 
