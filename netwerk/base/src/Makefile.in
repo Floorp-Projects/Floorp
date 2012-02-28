@@ -86,7 +86,6 @@ CPPSRCS		= \
 		nsURIChecker.cpp \
 		nsURLHelper.cpp \
 		nsURLParsers.cpp \
-		nsNetAddr.cpp \
 		nsNetStrings.cpp \
 		nsBase64Encoder.cpp \
 		nsSerializationHelper.cpp \
