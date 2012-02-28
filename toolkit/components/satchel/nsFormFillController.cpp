@@ -101,26 +101,27 @@ nsFormFillController::nsFormFillController() :
 
 struct PwmgrInputsEnumData
 {
-  PwmgrInputsEnumData(nsIMutationObserver* aMutationObserver, nsIDocument* aDoc)
-  : mMutationObserver(aMutationObserver), mDoc(aDoc) {}
+  PwmgrInputsEnumData(nsFormFillController* aFFC, nsIDocument* aDoc)
+  : mFFC(aFFC), mDoc(aDoc) {}
 
-  nsIMutationObserver* mMutationObserver;
+  nsFormFillController* mFFC;
   nsCOMPtr<nsIDocument> mDoc;
 };
 
 nsFormFillController::~nsFormFillController()
 {
-  PwmgrInputsEnumData ed(this, nsnull);
-  mPwmgrInputs.Enumerate(RemoveForDocumentEnumerator, &ed);
   if (mListNode) {
     mListNode->RemoveMutationObserver(this);
     mListNode = nsnull;
   }
   if (mFocusedInputNode) {
-    mFocusedInputNode->RemoveMutationObserver(this);
+    MaybeRemoveMutationObserver(mFocusedInputNode);
     mFocusedInputNode = nsnull;
     mFocusedInput = nsnull;
   }
+  PwmgrInputsEnumData ed(this, nsnull);
+  mPwmgrInputs.Enumerate(RemoveForDocumentEnumerator, &ed);
+
   // Remove ourselves as a focus listener from all cached docShells
   PRUint32 count;
   mDocShells->Count(&count);
@@ -218,6 +219,17 @@ nsFormFillController::NodeWillBeDestroyed(const nsINode* aNode)
   } else if (aNode == mFocusedInputNode) {
     mFocusedInputNode = nsnull;
     mFocusedInput = nsnull;
+  }
+}
+
+void
+nsFormFillController::MaybeRemoveMutationObserver(nsINode* aNode)
+{
+  // Nodes being tracked in mPwmgrInputs will have their observers removed when
+  // they stop being tracked. 
+  bool dummy;
+  if (!mPwmgrInputs.Get(aNode, &dummy)) {
+    aNode->RemoveMutationObserver(this);
   }
 }
 
@@ -796,7 +808,10 @@ nsFormFillController::RemoveForDocumentEnumerator(const nsINode* aKey,
 {
   PwmgrInputsEnumData* ed = static_cast<PwmgrInputsEnumData*>(aUserData);
   if (aKey && (!ed->mDoc || aKey->OwnerDoc() == ed->mDoc)) {
-    const_cast<nsINode*>(aKey)->RemoveMutationObserver(ed->mMutationObserver);
+    // mFocusedInputNode's observer is tracked separately, don't remove it here.
+    if (aKey != ed->mFFC->mFocusedInputNode) {
+      const_cast<nsINode*>(aKey)->RemoveMutationObserver(ed->mFFC);
+    }
     return PL_DHASH_REMOVE;
   }
   return PL_DHASH_NEXT;
@@ -1105,7 +1120,7 @@ nsFormFillController::StopControllingInput()
     mController->SetInput(nsnull);
 
   if (mFocusedInputNode) {
-    mFocusedInputNode->RemoveMutationObserver(this);
+    MaybeRemoveMutationObserver(mFocusedInputNode);
     mFocusedInputNode = nsnull;
     mFocusedInput = nsnull;
   }

@@ -41,8 +41,6 @@
 #ifndef __WinTaskbar_h__
 #define __WinTaskbar_h__
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
-
 #include <windows.h>
 #include <shobjidl.h>
 #include "nsIWinTaskbar.h"
@@ -73,8 +71,6 @@ private:
 
 } // namespace widget
 } // namespace mozilla
-
-#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 
 #endif /* __WinTaskbar_h__ */
 

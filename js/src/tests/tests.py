@@ -7,6 +7,8 @@ import datetime, os, re, sys, time
 from subprocess import *
 from threading import *
 
+from results import TestOutput
+
 def do_run_cmd(cmd):
     l = [ None, None ]
     th_run_cmd(cmd, l)
@@ -57,7 +59,7 @@ def run_cmd(cmd, timeout=60.0):
                     os.kill(l[0].pid, signal.SIGKILL)
                 time.sleep(.1)
                 timed_out = True
-            except OSError:
+            except OSError, e:
                 # Expecting a "No such process" error
                 pass
     th.join()
@@ -77,8 +79,8 @@ class Test(object):
         return Test.prefix_command(head) + [ '-f', os.path.join(path, 'shell.js') ]
 
     def get_command(self, js_cmd_prefix):
-        dir, filename = os.path.split(self.path)
-        cmd = js_cmd_prefix + Test.prefix_command(dir)
+        dirname, filename = os.path.split(self.path)
+        cmd = js_cmd_prefix + Test.prefix_command(dirname)
         if self.debugMode:
             cmd += [ '-d' ]
         # There is a test that requires the path to start with './'.
@@ -92,6 +94,7 @@ class Test(object):
 
 class TestCase(Test):
     """A test case consisting of a test and an expected result."""
+    js_cmd_prefix = None
 
     def __init__(self, path, enable, expect, random, slow, debugMode):
         Test.__init__(self, path)
@@ -115,77 +118,12 @@ class TestCase(Test):
             ans += ', debugMode'
         return ans
 
-class TestOutput:
-    """Output from a test run."""
-    def __init__(self, test, cmd, out, err, rc, dt, timed_out):
-        self.test = test   # Test
-        self.cmd = cmd     # str:   command line of test
-        self.out = out     # str:   stdout
-        self.err = err     # str:   stderr
-        self.rc = rc       # int:   return code
-        self.dt = dt       # float: run time
-        self.timed_out = timed_out # bool: did the test time out
-
-class NullTestOutput:
-    """Variant of TestOutput that indicates a test was not run."""
-    def __init__(self, test):
-        self.test = test
-        self.cmd = ''
-        self.out = ''
-        self.err = ''
-        self.rc = 0
-        self.dt = 0.0
-        self.timed_out = False
-
-class TestResult:
-    PASS = 'PASS'
-    FAIL = 'FAIL'
-    CRASH = 'CRASH'
-
-    """Classified result from a test run."""
-    def __init__(self, test, result, results):
-        self.test = test
-        self.result = result
-        self.results = results
-
     @classmethod
-    def from_output(cls, output):
-        test = output.test
-        result = None          # str:      overall result, see class-level variables
-        results = []           # (str,str) list: subtest results (pass/fail, message)
-
-        out, rc = output.out, output.rc
-
-        failures = 0
-        passes = 0
-
-        expected_rcs = []
-        if test.path.endswith('-n.js'):
-            expected_rcs.append(3)
-
-        for line in out.split('\n'):
-            if line.startswith(' FAILED!'):
-                failures += 1
-                msg = line[len(' FAILED! '):]
-                results.append((cls.FAIL, msg))
-            elif line.startswith(' PASSED!'):
-                passes += 1
-                msg = line[len(' PASSED! '):]
-                results.append((cls.PASS, msg))
-            else:
-                m = re.match('--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ((?:-|\\d)+) ---', line)
-                if m:
-                    expected_rcs.append(int(m.group(1)))
-
-        if rc and not rc in expected_rcs:
-            if rc == 3:
-                result = cls.FAIL
-            else:
-                result = cls.CRASH
-        else:
-            if (rc or passes > 0) and failures == 0:
-                result = cls.PASS
-            else:
-                result = cls.FAIL
-
-        return cls(test, result, results)
+    def set_js_cmd_prefix(self, js_path, js_args, debugger_prefix):
+        parts = []
+        if debugger_prefix:
+            parts += debugger_prefix
+        parts.append(js_path)
+        if js_args:
+            parts += js_args
+        self.js_cmd_prefix = parts

@@ -972,8 +972,8 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                 if (points.Length() > 0) {
                     pt = points[0];
                 }
-                pt.x = clamped(pt.x, 0, PR_MAX(gAndroidBounds.width - 1, 0));
-                pt.y = clamped(pt.y, 0, PR_MAX(gAndroidBounds.height - 1, 0));
+                pt.x = clamped(pt.x, 0, NS_MAX(gAndroidBounds.width - 1, 0));
+                pt.y = clamped(pt.y, 0, NS_MAX(gAndroidBounds.height - 1, 0));
                 nsWindow *target = win->FindWindowForPoint(pt);
 #if 0
                 ALOG("MOTION_EVENT %f,%f -> %p (visible: %d children: %d)", pt.x, pt.y, (void*)target,

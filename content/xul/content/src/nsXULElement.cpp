@@ -1368,7 +1368,8 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, bool aNotify)
     if (hasMutationListeners) {
         nsAutoString ns;
         nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
-        GetAttributeNodeNS(ns, nsDependentAtomString(aName), getter_AddRefs(attrNode));
+        GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName),
+                                   getter_AddRefs(attrNode));
     }
 
     nsDOMSlots *slots = GetExistingDOMSlots();
