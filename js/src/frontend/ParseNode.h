@@ -51,6 +51,50 @@
 namespace js {
 
 /*
+ * Indicates a location in the stack that an upvar value can be retrieved from
+ * as a two tuple of (level, slot).
+ *
+ * Some existing client code uses the level value as a delta, or level "skip"
+ * quantity. We could probably document that through use of more types at some
+ * point in the future.
+ */
+class UpvarCookie
+{
+    uint32_t value;
+
+    static const uint32_t FREE_VALUE = 0xfffffffful;
+
+    void checkInvariants() {
+        JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32_t));
+        JS_STATIC_ASSERT(UPVAR_LEVEL_LIMIT < FREE_LEVEL);
+    }
+
+  public:
+    /*
+     * All levels above-and-including FREE_LEVEL are reserved so that
+     * FREE_VALUE can be used as a special value.
+     */
+    static const uint16_t FREE_LEVEL = 0x3fff;
+
+    /*
+     * If a function has a higher static level than this limit, we will not
+     * optimize it using UPVAR opcodes.
+     */
+    static const uint16_t UPVAR_LEVEL_LIMIT = 16;
+    static const uint16_t CALLEE_SLOT = 0xffff;
+    static bool isLevelReserved(uint16_t level) { return level >= FREE_LEVEL; }
+
+    bool isFree() const { return value == FREE_VALUE; }
+    /* isFree check should be performed before using these accessors. */
+    uint16_t level() const { JS_ASSERT(!isFree()); return uint16_t(value >> 16); }
+    uint16_t slot() const { JS_ASSERT(!isFree()); return uint16_t(value); }
+
+    void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
+    void set(uint16_t newLevel, uint16_t newSlot) { value = (uint32_t(newLevel) << 16) | newSlot; }
+    void makeFree() { set(0xffff, 0xffff); JS_ASSERT(isFree()); }
+};
+
+/*
  * Parsing builds a tree of nodes that directs code generation.  This tree is
  * not a concrete syntax tree in all respects (for example, || and && are left
  * associative, but (A && B && C) translates into the right-associated tree

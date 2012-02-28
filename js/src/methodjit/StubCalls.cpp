@@ -339,8 +339,6 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
          */
         obj2 = &fp->scopeChain();
     } else {
-        JS_ASSERT(!fun->isFlatClosure());
-
         obj2 = GetScopeChain(cx, fp);
         if (!obj2)
             THROW();
@@ -976,16 +974,6 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     }
 }
 
-void JS_FASTCALL
-stubs::GetUpvar(VMFrame &f, uint32_t ck)
-{
-    /* :FIXME: We can do better, this stub isn't needed. */
-    uint32_t staticLevel = f.script()->staticLevel;
-    UpvarCookie cookie;
-    cookie.fromInteger(ck);
-    f.regs.sp[0] = GetUpvar(f.cx, staticLevel, cookie);
-}
-
 JSObject * JS_FASTCALL
 stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
 {
@@ -997,7 +985,6 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
      * activation.
      */
     JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!fun->isFlatClosure());
 
     JSObject *parent;
     if (fun->isNullClosure()) {
@@ -1013,15 +1000,6 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
 
     JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
 
-    return obj;
-}
-
-JSObject * JS_FASTCALL
-stubs::DefLocalFun_FC(VMFrame &f, JSFunction *fun)
-{
-    JSObject *obj = js_NewFlatClosure(f.cx, fun);
-    if (!obj)
-        THROWV(NULL);
     return obj;
 }
 
@@ -1281,15 +1259,6 @@ stubs::Throw(VMFrame &f)
     JS_ASSERT(!cx->isExceptionPending());
     cx->setPendingException(f.regs.sp[-1]);
     THROW();
-}
-
-JSObject * JS_FASTCALL
-stubs::FlatLambda(VMFrame &f, JSFunction *fun)
-{
-    JSObject *obj = js_NewFlatClosure(f.cx, fun);
-    if (!obj)
-        THROWV(NULL);
-    return obj;
 }
 
 void JS_FASTCALL

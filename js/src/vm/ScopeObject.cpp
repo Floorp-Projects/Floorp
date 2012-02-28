@@ -86,7 +86,7 @@ js_PutCallObject(StackFrame *fp)
         JS_ASSERT(script == callobj.getCalleeFunction()->script());
         JS_ASSERT(script == fun->script());
 
-        unsigned n = bindings.countArgsAndVars();
+        unsigned n = bindings.countLocalNames();
         if (n > 0) {
             uint32_t nvars = bindings.countVars();
             uint32_t nargs = bindings.countArgs();
@@ -333,28 +333,6 @@ CallObject::setArgOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value
 }
 
 JSBool
-CallObject::getUpvarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
-{
-    CallObject &callobj = obj->asCall();
-    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    unsigned i = (uint16_t) JSID_TO_INT(id);
-
-    *vp = callobj.getCallee()->toFunction()->getFlatClosureUpvar(i);
-    return true;
-}
-
-JSBool
-CallObject::setUpvarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
-{
-    CallObject &callobj = obj->asCall();
-    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    unsigned i = (uint16_t) JSID_TO_INT(id);
-
-    callobj.getCallee()->toFunction()->setFlatClosureUpvar(i, *vp);
-    return true;
-}
-
-JSBool
 CallObject::getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
@@ -388,6 +366,22 @@ CallObject::setVarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value
 
     TypeScript::SetLocal(cx, script, i, *vp);
 
+    return true;
+}
+
+bool
+CallObject::containsVarOrArg(PropertyName *name, Value *vp, JSContext *cx)
+{
+    jsid id = ATOM_TO_JSID(name);
+    const Shape *shape = nativeLookup(cx, id);
+    if (!shape)
+        return false;
+
+    PropertyOp op = shape->getterOp();
+    if (op != getVarOp && op != getArgOp)
+        return false;
+
+    JS_ALWAYS_TRUE(op(cx, this, INT_TO_JSID(shape->shortid()), vp));
     return true;
 }
 
@@ -869,6 +863,19 @@ block_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *v
      * The value in *vp will be written back to the slot in obj that was
      * allocated when this let binding was defined.
      */
+    return true;
+}
+
+bool
+ClonedBlockObject::containsVar(PropertyName *name, Value *vp, JSContext *cx)
+{
+    jsid id = ATOM_TO_JSID(name);
+    const Shape *shape = nativeLookup(cx, id);
+    if (!shape)
+        return false;
+
+    JS_ASSERT(shape->getterOp() == block_getProperty);
+    JS_ALWAYS_TRUE(block_getProperty(cx, this, INT_TO_JSID(shape->shortid()), vp));
     return true;
 }
 

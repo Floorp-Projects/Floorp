@@ -3054,25 +3054,6 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_SETCONST)
 
-          BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
-          {
-            uint32_t slot = GET_SLOTNO(PC);
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC + SLOTNO_LEN));
-
-            /* See JSOP_DEFLOCALFUN. */
-            markUndefinedLocal(PC - script->code, slot);
-
-            prepareStubCall(Uses(frame.frameSlots()));
-            masm.move(ImmPtr(fun), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::DefLocalFun_FC, REJOIN_DEFLOCALFUN);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot, true);
-            frame.pop();
-            updateVarType();
-          }
-          END_CASE(JSOP_DEFLOCALFUN_FC)
-
           BEGIN_CASE(JSOP_LAMBDA)
           {
             JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC));
@@ -3116,27 +3097,6 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRY)
             frame.syncAndForgetEverything();
           END_CASE(JSOP_TRY)
-
-          BEGIN_CASE(JSOP_GETFCSLOT)
-          BEGIN_CASE(JSOP_CALLFCSLOT)
-          {
-            unsigned index = GET_UINT16(PC);
-
-            // Load the callee's payload into a register.
-            frame.pushCallee();
-            RegisterID reg = frame.copyDataIntoReg(frame.peek(-1));
-            frame.pop();
-
-            // obj->getFlatClosureUpvars()
-            Address upvarAddress(reg, JSFunction::getFlatClosureUpvarsOffset());
-            masm.loadPrivate(upvarAddress, reg);
-            // push ((Value *) reg)[index]
-
-            BarrierState barrier = pushAddressMaybeBarrier(Address(reg, index * sizeof(Value)),
-                                                           knownPushedType(0), true);
-            finishBarrier(barrier, REJOIN_GETTER, 0);
-          }
-          END_CASE(JSOP_CALLFCSLOT)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
           {
@@ -3236,17 +3196,6 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_HOLE)
             frame.push(MagicValue(JS_ARRAY_HOLE));
           END_CASE(JSOP_HOLE)
-
-          BEGIN_CASE(JSOP_LAMBDA_FC)
-          {
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC));
-            prepareStubCall(Uses(frame.frameSlots()));
-            masm.move(ImmPtr(fun), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::FlatLambda, REJOIN_PUSH_OBJECT);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-          }
-          END_CASE(JSOP_LAMBDA_FC)
 
           BEGIN_CASE(JSOP_LOOPHEAD)
           {

@@ -1093,45 +1093,6 @@ DoIncDec(JSContext *cx, JSScript *script, jsbytecode *pc, const Value &v, Value 
     return true;
 }
 
-const Value &
-js::GetUpvar(JSContext *cx, unsigned closureLevel, UpvarCookie cookie)
-{
-    JS_ASSERT(closureLevel >= cookie.level() && cookie.level() > 0);
-    const unsigned targetLevel = closureLevel - cookie.level();
-
-    StackFrame *fp = FindUpvarFrame(cx, targetLevel);
-    unsigned slot = cookie.slot();
-    const Value *vp;
-
-    if (!fp->isFunctionFrame() || fp->isEvalFrame()) {
-        vp = fp->slots() + fp->numFixed();
-    } else if (slot < fp->numFormalArgs()) {
-        vp = fp->formalArgs();
-    } else if (slot == UpvarCookie::CALLEE_SLOT) {
-        vp = &fp->calleev();
-        slot = 0;
-    } else {
-        slot -= fp->numFormalArgs();
-        JS_ASSERT(slot < fp->numSlots());
-        vp = fp->slots();
-    }
-
-    return vp[slot];
-}
-
-extern StackFrame *
-js::FindUpvarFrame(JSContext *cx, unsigned targetLevel)
-{
-    StackFrame *fp = cx->fp();
-    while (true) {
-        JS_ASSERT(fp && fp->isScriptFrame());
-        if (fp->script()->staticLevel == targetLevel)
-            break;
-        fp = fp->prev();
-    }
-    return fp;
-}
-
 #define PUSH_COPY(v)             do { *regs.sp++ = v; assertSameCompartment(cx, regs.sp[-1]); } while (0)
 #define PUSH_COPY_SKIP_CHECK(v)  *regs.sp++ = v
 #define PUSH_NULL()              regs.sp++->setNull()
@@ -1249,7 +1210,6 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
  * same way as non-call bytecodes.
  */
 JS_STATIC_ASSERT(JSOP_NAME_LENGTH == JSOP_CALLNAME_LENGTH);
-JS_STATIC_ASSERT(JSOP_GETFCSLOT_LENGTH == JSOP_CALLFCSLOT_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETARG_LENGTH == JSOP_CALLARG_LENGTH);
 JS_STATIC_ASSERT(JSOP_GETLOCAL_LENGTH == JSOP_CALLLOCAL_LENGTH);
 JS_STATIC_ASSERT(JSOP_XMLNAME_LENGTH == JSOP_CALLXMLNAME_LENGTH);
@@ -1750,6 +1710,10 @@ ADD_EMPTY_CASE(JSOP_UNUSED20)
 ADD_EMPTY_CASE(JSOP_UNUSED21)
 ADD_EMPTY_CASE(JSOP_UNUSED22)
 ADD_EMPTY_CASE(JSOP_UNUSED23)
+ADD_EMPTY_CASE(JSOP_UNUSED24)
+ADD_EMPTY_CASE(JSOP_UNUSED25)
+ADD_EMPTY_CASE(JSOP_UNUSED26)
+ADD_EMPTY_CASE(JSOP_UNUSED27)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -3056,18 +3020,6 @@ BEGIN_CASE(JSOP_SETLOCAL)
     regs.fp()->localSlot(GET_SLOTNO(regs.pc)) = regs.sp[-1];
 END_CASE(JSOP_SETLOCAL)
 
-BEGIN_CASE(JSOP_GETFCSLOT)
-BEGIN_CASE(JSOP_CALLFCSLOT)
-{
-    JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
-    unsigned index = GET_UINT16(regs.pc);
-    JSObject *obj = &argv[-2].toObject();
-
-    PUSH_COPY(obj->toFunction()->getFlatClosureUpvar(index));
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-}
-END_CASE(JSOP_GETFCSLOT)
-
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
 {
@@ -3108,8 +3060,6 @@ BEGIN_CASE(JSOP_DEFFUN)
          */
         obj2 = &regs.fp()->scopeChain();
     } else {
-        JS_ASSERT(!fun->isFlatClosure());
-
         obj2 = GetScopeChain(cx, regs.fp());
         if (!obj2)
             goto error;
@@ -3214,7 +3164,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
      */
     JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc + SLOTNO_LEN));
     JS_ASSERT(fun->isInterpreted());
-    JS_ASSERT(!fun->isFlatClosure());
 
     JSObject *parent;
     if (fun->isNullClosure()) {
@@ -3233,18 +3182,6 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     regs.fp()->varSlot(GET_SLOTNO(regs.pc)) = ObjectValue(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN)
-
-BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
-{
-    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc + SLOTNO_LEN));
-
-    JSObject *obj = js_NewFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-
-    regs.fp()->varSlot(GET_SLOTNO(regs.pc)) = ObjectValue(*obj);
-}
-END_CASE(JSOP_DEFLOCALFUN_FC)
 
 BEGIN_CASE(JSOP_LAMBDA)
 {
@@ -3341,19 +3278,6 @@ BEGIN_CASE(JSOP_LAMBDA)
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA)
-
-BEGIN_CASE(JSOP_LAMBDA_FC)
-{
-    JSFunction *fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
-
-    JSObject *obj = js_NewFlatClosure(cx, fun);
-    if (!obj)
-        goto error;
-    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
-
-    PUSH_OBJECT(*obj);
-}
-END_CASE(JSOP_LAMBDA_FC)
 
 BEGIN_CASE(JSOP_CALLEE)
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
