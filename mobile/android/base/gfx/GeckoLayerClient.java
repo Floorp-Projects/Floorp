@@ -176,17 +176,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public void endDrawing() {
-        updateViewport(!mUpdateViewportOnEndDraw);
-        mUpdateViewportOnEndDraw = false;
-        Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
-
-        /* Used by robocop for testing purposes */
-        if (mDrawListener != null) {
-            mDrawListener.drawFinished();
-        }
-    }
-
-    private void updateViewport(boolean onlyUpdatePageSize) {
         synchronized (mLayerController) {
             // save and restore the viewport size stored in java; never let the
             // JS-side viewport dimensions override the java-side ones because
@@ -199,19 +188,26 @@ public class GeckoLayerClient implements GeckoEventResponder,
             RectF position = mGeckoViewport.getViewport();
             mRootLayer.setPositionAndResolution(RectUtils.round(position), mGeckoViewport.getZoomFactor());
 
-            Log.e(LOGTAG, "### updateViewport onlyUpdatePageSize=" + onlyUpdatePageSize +
+            Log.e(LOGTAG, "### updateViewport onlyUpdatePageSize=" + !mUpdateViewportOnEndDraw +
                   " getTileViewport " + mGeckoViewport);
 
-            if (onlyUpdatePageSize) {
+            if (mUpdateViewportOnEndDraw) {
+                mLayerController.setViewportMetrics(mGeckoViewport);
+                mLayerController.abortPanZoomAnimation();
+                mUpdateViewportOnEndDraw = false;
+            } else {
                 // Don't adjust page size when zooming unless zoom levels are
                 // approximately equal.
                 if (FloatUtils.fuzzyEquals(mLayerController.getZoomFactor(),
                         mGeckoViewport.getZoomFactor()))
                     mLayerController.setPageSize(mGeckoViewport.getPageSize());
-            } else {
-                mLayerController.setViewportMetrics(mGeckoViewport);
-                mLayerController.abortPanZoomAnimation();
             }
+        }
+
+        Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
+        /* Used by robocop for testing purposes */
+        if (mDrawListener != null) {
+            mDrawListener.drawFinished();
         }
     }
 
