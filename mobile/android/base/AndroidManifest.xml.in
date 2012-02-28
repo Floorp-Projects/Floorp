@@ -9,7 +9,7 @@
       android:sharedUserId="@MOZ_ANDROID_SHARED_ID@"
 #endif
       >
-    <uses-sdk android:minSdkVersion="5"
+    <uses-sdk android:minSdkVersion="8"
               android:targetSdkVersion="11"/>
 
 #include ../sync/manifests/SyncAndroidManifest_permissions.xml.in
