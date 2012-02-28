@@ -250,6 +250,8 @@ if not os.path.exists(source_dir):
     patch('plugin_finish_decl.diff', 0, gcc_source_dir)
     patch('pr49911.diff', 1, gcc_source_dir)
     patch('r159628-r163231-r171807.patch', 1, gcc_source_dir)
+    patch('gcc-fixinc.patch', 1, gcc_source_dir)
+    patch('gcc-include.patch', 1, gcc_source_dir)
 
 if os.path.exists(build_dir):
     shutil.rmtree(build_dir)

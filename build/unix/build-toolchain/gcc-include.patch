@@ -1,0 +1,24 @@
+diff -ru a/configure b/configure
+--- a/configure	2010-10-06 06:29:55.000000000 -0400
++++ b/configure	2012-02-27 20:46:26.303460301 -0500
+@@ -8047,7 +8047,7 @@
+ # being built; programs in there won't even run.
+ if test "${build}" = "${host}" && test -d ${srcdir}/gcc; then
+   # Search for pre-installed headers if nothing else fits.
+-  FLAGS_FOR_TARGET=$FLAGS_FOR_TARGET' -B$(build_tooldir)/bin/ -B$(build_tooldir)/lib/ -isystem $(build_tooldir)/include -isystem $(build_tooldir)/sys-include'
++  FLAGS_FOR_TARGET=$FLAGS_FOR_TARGET' -B$(exec_prefix)/bin/ -B$(exec_prefix)/lib/ -isystem $(exec_prefix)/include -isystem $(exec_prefix)/sys-include'
+ fi
+ 
+ if test "x${use_gnu_ld}" = x &&
+diff -ru a/configure.ac b/configure.ac
+--- a/configure.ac	2010-10-06 06:29:55.000000000 -0400
++++ b/configure.ac	2012-02-27 20:46:22.587442745 -0500
+@@ -3100,7 +3100,7 @@
+ # being built; programs in there won't even run.
+ if test "${build}" = "${host}" && test -d ${srcdir}/gcc; then
+   # Search for pre-installed headers if nothing else fits.
+-  FLAGS_FOR_TARGET=$FLAGS_FOR_TARGET' -B$(build_tooldir)/bin/ -B$(build_tooldir)/lib/ -isystem $(build_tooldir)/include -isystem $(build_tooldir)/sys-include'
++  FLAGS_FOR_TARGET=$FLAGS_FOR_TARGET' -B$(exec_prefix)/bin/ -B$(exec_prefix)/lib/ -isystem $(exec_prefix)/include -isystem $(exec_prefix)/sys-include'
+ fi
+ 
+ if test "x${use_gnu_ld}" = x &&
