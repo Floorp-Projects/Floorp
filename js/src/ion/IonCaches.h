@@ -54,6 +54,7 @@ namespace ion {
 
 class IonCacheGetProperty;
 class IonCacheSetProperty;
+class IonCacheBindName;
 
 // Common structure encoding the state of a polymorphic inline cache contained
 // in the code for an IonScript. IonCaches are used for polymorphic operations
@@ -115,7 +116,8 @@ class IonCache
     enum Kind {
         Invalid = 0,
         GetProperty,
-        SetProperty
+        SetProperty,
+        BindName
     } kind : 8;
 
     bool pure_ : 1;
@@ -144,6 +146,11 @@ class IonCache
             ConstantOrRegisterSpace value;
             bool strict;
         } setprop;
+        struct {
+            Register scopeChain;
+            PropertyName *name;
+            Register output;
+        } bindname;
     } u;
 
     // Registers live after the cache, excluding output registers. The initial
@@ -200,6 +207,11 @@ class IonCache
     IonCacheSetProperty &toSetProperty() {
         JS_ASSERT(kind == SetProperty);
         return * (IonCacheSetProperty *) this;
+    }
+
+    IonCacheBindName &toBindName() {
+        JS_ASSERT(kind == BindName);
+        return * (IonCacheBindName *) this;
     }
 
     void setScriptedLocation(JSScript *script, jsbytecode *pc) {
@@ -271,11 +283,44 @@ class IonCacheSetProperty : public IonCache
     bool attachNativeExisting(JSContext *cx, JSObject *obj, const Shape *shape);
 };
 
+class IonCacheBindName : public IonCache
+{
+  public:
+    IonCacheBindName(CodeOffsetJump initialJump,
+                     CodeOffsetLabel rejoinLabel,
+                     CodeOffsetLabel cacheLabel,
+                     RegisterSet liveRegs,
+                     Register scopeChain, PropertyName *name,
+                     Register output)
+    {
+        init(BindName, liveRegs, initialJump, rejoinLabel, cacheLabel);
+        u.bindname.scopeChain = scopeChain;
+        u.bindname.name = name;
+        u.bindname.output = output;
+    }
+
+    Register scopeChainReg() const {
+        return u.bindname.scopeChain;
+    }
+    PropertyName *name() const {
+        return u.bindname.name;
+    }
+    Register outputReg() const {
+        return u.bindname.output;
+    }
+
+    bool attachGlobal(JSContext *cx, JSObject *scopeChain);
+    bool attachNonGlobal(JSContext *cx, JSObject *scopeChain, JSObject *holder);
+};
+
 bool
 GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp);
 
 bool
 SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value value);
+
+JSObject *
+BindNameCache(JSContext *cx, size_t cacheIndex, JSObject *scopeChain);
 
 } // namespace ion
 } // namespace js

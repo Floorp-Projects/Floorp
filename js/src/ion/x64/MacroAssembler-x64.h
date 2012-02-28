@@ -285,6 +285,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(rhs, ScratchReg);
         cmpq(lhs, ScratchReg);
     }
+    void cmpPtr(const Address &lhs, const ImmGCPtr rhs) {
+        cmpPtr(Operand(lhs), rhs);
+    }
     void cmpPtr(const Register &lhs, const Register &rhs) {
         return cmpq(lhs, rhs);
     }
@@ -327,8 +330,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         JmpSrc src = jmpSrc(label);
         return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
     }
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
-        cmpPtr(Operand(addr), ptr);
+    template <typename S, typename T>
+    CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, Label *label) {
+        cmpPtr(lhs, ptr);
         JmpSrc src = jSrc(cond, label);
         return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
     }

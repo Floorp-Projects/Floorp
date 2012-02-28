@@ -3047,6 +3047,45 @@ class MGetPropertyCache
     TypePolicy *typePolicy() { return this; }
 };
 
+class MBindNameCache
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    PropertyName *name_;
+    JSScript *script_;
+    jsbytecode *pc_;
+
+    MBindNameCache(MDefinition *scopeChain, PropertyName *name, JSScript *script, jsbytecode *pc)
+      : MUnaryInstruction(scopeChain), name_(name), script_(script), pc_(pc)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(BindNameCache);
+
+    static MBindNameCache *New(MDefinition *scopeChain, PropertyName *name, JSScript *script,
+                               jsbytecode *pc) {
+        return new MBindNameCache(scopeChain, name, script, pc);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *scopeChain() const {
+        return getOperand(0);
+    }
+    PropertyName *name() const {
+        return name_;
+    }
+    JSScript *script() const {
+        return script_;
+    }
+    jsbytecode *pc() const {
+        return pc_;
+    }
+};
+
 // Guard on an object's shape.
 class MGuardShape
   : public MUnaryInstruction,

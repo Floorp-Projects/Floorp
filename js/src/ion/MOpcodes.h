@@ -108,6 +108,7 @@ namespace ion {
     _(TypeBarrier)                                                          \
     _(MonitorTypes)                                                         \
     _(GetPropertyCache)                                                     \
+    _(BindNameCache)                                                        \
     _(GuardShape)                                                           \
     _(GuardClass)                                                           \
     _(ArrayLength)                                                          \

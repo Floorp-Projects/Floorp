@@ -1230,6 +1230,16 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 }
 
 bool
+LIRGenerator::visitBindNameCache(MBindNameCache *ins)
+{
+    JS_ASSERT(ins->scopeChain()->type() == MIRType_Object);
+    JS_ASSERT(ins->type() == MIRType_Object);
+
+    LBindNameCache *lir = new LBindNameCache(useRegister(ins->scopeChain()));
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitGuardClass(MGuardClass *ins)
 {
     LDefinition t = temp(LDefinition::GENERAL);

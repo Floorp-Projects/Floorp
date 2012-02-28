@@ -205,6 +205,8 @@ IonCacheGetProperty::attachNative(JSContext *cx, JSObject *obj, JSObject *holder
 
     Linker linker(masm);
     IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
 
     CodeLocationJump rejoinJump(code, rejoinOffset);
     CodeLocationJump exitJump(code, exitOffset);
@@ -324,6 +326,8 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Sh
 
     Linker linker(masm);
     IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
 
     CodeLocationJump rejoinJump(code, rejoinOffset);
     CodeLocationJump exitJump(code, exitOffset);
@@ -361,4 +365,171 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
     }
 
     return obj->setGeneric(cx, ATOM_TO_JSID(atom), &value, cache.strict());
+}
+
+bool
+IonCacheBindName::attachGlobal(JSContext *cx, JSObject *scopeChain)
+{
+    JS_ASSERT(scopeChain->isGlobal());
+
+    MacroAssembler masm;
+
+    // Guard on the scope chain.
+    Label exit_;
+    CodeOffsetJump exitOffset = masm.branchPtrWithPatch(Assembler::NotEqual, scopeChainReg(),
+                                                        ImmGCPtr(scopeChain), &exit_);
+    masm.bind(&exit_);
+    masm.movePtr(ImmGCPtr(scopeChain), outputReg());
+
+    Label rejoin_;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin_);
+    masm.bind(&rejoin_);
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+
+    PatchJump(lastJump(), CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    IonSpew(IonSpew_InlineCaches, "Generated BINDNAME global stub at %p", code->raw());
+    return true;
+}
+
+static void
+GenerateScopeChainGuards(MacroAssembler &masm, JSObject *scopeChain, JSObject *holder,
+                         Register scopeChainReg, Register outputReg, Label *failures)
+{
+    JS_ASSERT(scopeChain != holder);
+
+    // Load the parent of the scope object into outputReg.
+    JSObject *tobj = &scopeChain->asScope().enclosingScope();
+    masm.extractObject(Address(scopeChainReg, ScopeObject::offsetOfEnclosingScope()), outputReg);
+
+    // Walk up the scope chain. Note that IsCacheableScopeChain guarantees the
+    // |tobj == holder| condition terminates the loop.
+    while (true) {
+        JS_ASSERT(IsCacheableNonGlobalScope(tobj));
+
+        // Test intervening shapes.
+        Address shapeAddr(outputReg, JSObject::offsetOfShape());
+        masm.branchPtr(Assembler::NotEqual, shapeAddr, ImmGCPtr(tobj->lastProperty()), failures);
+        if (tobj == holder)
+            break;
+
+        // Load the next link.
+        tobj = &tobj->asScope().enclosingScope();
+        masm.extractObject(Address(outputReg, ScopeObject::offsetOfEnclosingScope()), outputReg);
+    }
+}
+
+bool
+IonCacheBindName::attachNonGlobal(JSContext *cx, JSObject *scopeChain, JSObject *holder)
+{
+    JS_ASSERT(IsCacheableNonGlobalScope(scopeChain));
+
+    MacroAssembler masm;
+
+    // Guard on the shape of the scope chain.
+    Label failures;
+    CodeOffsetJump exitOffset =
+        masm.branchPtrWithPatch(Assembler::NotEqual,
+                                Address(scopeChainReg(), JSObject::offsetOfShape()),
+                                ImmGCPtr(scopeChain->lastProperty()),
+                                &failures);
+
+    if (holder != scopeChain)
+        GenerateScopeChainGuards(masm, scopeChain, holder, scopeChainReg(), outputReg(), &failures);
+    else
+        masm.movePtr(scopeChainReg(), outputReg());
+
+    // At this point outputReg holds the object on which the property
+    // was found, so we're done.
+    Label rejoin_;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin_);
+    masm.bind(&rejoin_);
+
+    // All failures flow to here, so there is a common point to patch.
+    masm.bind(&failures);
+    if (holder != scopeChain) {
+        Label exit_;
+        exitOffset = masm.jumpWithPatch(&exit_);
+        masm.bind(&exit_);
+    }
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+
+    PatchJump(lastJump(), CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    IonSpew(IonSpew_InlineCaches, "Generated BINDNAME non-global stub at %p", code->raw());
+    return true;
+}
+
+static bool
+IsCacheableScopeChain(JSObject *scopeChain, JSObject *holder)
+{
+    do {
+        if (!IsCacheableNonGlobalScope(scopeChain)) {
+            IonSpew(IonSpew_InlineCaches, "Non-cacheable object on scope chain");
+            return false;
+        }
+        scopeChain = &scopeChain->asScope().enclosingScope();
+    } while (scopeChain && scopeChain != holder);
+
+    if (scopeChain != holder) {
+        IonSpew(IonSpew_InlineCaches, "Scope chain indirect hit");
+        return false;
+    }
+
+    return true;
+}
+
+JSObject *
+js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, JSObject *scopeChain)
+{
+    IonScript *ion = GetTopIonJSScript(cx)->ionScript();
+    IonCacheBindName &cache = ion->getCache(cacheIndex).toBindName();
+    PropertyName *name = cache.name();
+
+    JSObject *holder;
+    if (scopeChain->isGlobal()) {
+        holder = scopeChain;
+    } else {
+        holder = FindIdentifierBase(cx, scopeChain, name);
+        if (!holder)
+            return NULL;
+    }
+
+    // Stop generating new stubs once we hit the stub count limit, see
+    // GetPropertyCache.
+    if (cache.stubCount() < MAX_STUBS) {
+        cache.incrementStubCount();
+
+        if (scopeChain->isGlobal()) {
+            if (!cache.attachGlobal(cx, scopeChain))
+                return NULL;
+        } else if (IsCacheableScopeChain(scopeChain, holder)) {
+            if (!cache.attachNonGlobal(cx, scopeChain, holder))
+                return NULL;
+        } else {
+            IonSpew(IonSpew_InlineCaches, "BINDNAME uncacheable scope chain");
+        }
+    }
+
+    return holder;
 }
