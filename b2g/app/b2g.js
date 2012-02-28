@@ -410,6 +410,10 @@ pref("dom.mozBrowserFramesWhitelist", "http://localhost:7777");
 pref("dom.sms.enabled", true);
 pref("dom.sms.whitelist", "file://,http://localhost:7777");
 
+// Temporary permission hack for WebContacts
+pref("dom.mozContacts.enabled", true);
+pref("dom.mozContacts.whitelist", "http://localhost:7777");
+
 // Ignore X-Frame-Options headers.
 pref("b2g.ignoreXFrameOptions", true);
 

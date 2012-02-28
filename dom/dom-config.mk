@@ -4,6 +4,7 @@ DOM_SRCDIRS = \
   dom/power \
   dom/network/src \
   dom/sms/src \
+  dom/contacts \
   dom/src/events \
   dom/src/storage \
   dom/src/offline \
