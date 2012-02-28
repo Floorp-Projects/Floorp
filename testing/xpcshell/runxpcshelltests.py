@@ -39,6 +39,7 @@
 # ***** END LICENSE BLOCK ***** */
 
 import re, sys, os, os.path, logging, shutil, signal, math, time
+import xml.dom.minidom
 from glob import glob
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
@@ -387,12 +388,117 @@ class XPCShellTests(object):
     return ['-e', 'const _TEST_FILE = ["%s"];' %
               replaceBackSlashes(name)]
 
+  def writeXunitResults(self, results, name=None, filename=None, fh=None):
+    """
+      Write Xunit XML from results.
+
+      The function receives an iterable of results dicts. Each dict must have
+      the following keys:
+
+        classname - The "class" name of the test.
+        name - The simple name of the test.
+
+      In addition, it must have one of the following saying how the test
+      executed:
+
+        passed - Boolean indicating whether the test passed. False if it
+          failed.
+        skipped - True if the test was skipped.
+
+      The following keys are optional:
+
+        time - Execution time of the test in decimal seconds.
+        failure - Dict describing test failure. Requires keys:
+          type - String type of failure.
+          message - String describing basic failure.
+          text - Verbose string describing failure.
+
+      Arguments:
+
+      |name|, Name of the test suite. Many tools expect Java class dot notation
+        e.g. dom.simple.foo. A directory with '/' converted to '.' is a good
+        choice.
+      |fh|, File handle to write XML to.
+      |filename|, File name to write XML to.
+      |results|, Iterable of tuples describing the results.
+    """
+    if filename is None and fh is None:
+      raise Exception("One of filename or fh must be defined.")
+
+    if name is None:
+      name = "xpcshell"
+    else:
+      assert isinstance(name, str)
+
+    if filename is not None:
+      fh = open(filename, 'wb')
+
+    doc = xml.dom.minidom.Document()
+    testsuite = doc.createElement("testsuite")
+    testsuite.setAttribute("name", name)
+    doc.appendChild(testsuite)
+
+    total = 0
+    passed = 0
+    failed = 0
+    skipped = 0
+
+    for result in results:
+      total += 1
+
+      if result.get("skipped", None):
+        skipped += 1
+      elif result["passed"]:
+        passed += 1
+      else:
+        failed += 1
+
+      testcase = doc.createElement("testcase")
+      testcase.setAttribute("classname", result["classname"])
+      testcase.setAttribute("name", result["name"])
+
+      if "time" in result:
+        testcase.setAttribute("time", str(result["time"]))
+      else:
+        # It appears most tools expect the time attribute to be present.
+        testcase.setAttribute("time", "0")
+
+      if "failure" in result:
+        failure = doc.createElement("failure")
+        failure.setAttribute("type", str(result["failure"]["type"]))
+        failure.setAttribute("message", result["failure"]["message"])
+
+        # Lossy translation but required to not break CDATA. Also, text could
+        # be None and Python 2.5's minidom doesn't accept None. Later versions
+        # do, however.
+        cdata = result["failure"]["text"]
+        if not isinstance(cdata, str):
+            cdata = ""
+
+        cdata = cdata.replace("]]>", "]] >")
+        text = doc.createCDATASection(cdata)
+        failure.appendChild(text)
+        testcase.appendChild(failure)
+
+      if result.get("skipped", None):
+        e = doc.createElement("skipped")
+        testcase.appendChild(e)
+
+      testsuite.appendChild(testcase)
+
+    testsuite.setAttribute("tests", str(total))
+    testsuite.setAttribute("failures", str(failed))
+    testsuite.setAttribute("skip", str(skipped))
+
+    doc.writexml(fh, addindent="  ", newl="\n", encoding="utf-8")
+
   def runTests(self, xpcshell, xrePath=None, appPath=None, symbolsPath=None,
-               manifest=None, testdirs=[], testPath=None,
+               manifest=None, testdirs=None, testPath=None,
                interactive=False, verbose=False, keepGoing=False, logfiles=True,
                thisChunk=1, totalChunks=1, debugger=None,
                debuggerArgs=None, debuggerInteractive=False,
-               profileName=None, mozInfo=None, shuffle=False, **otherOptions):
+               profileName=None, mozInfo=None, shuffle=False,
+               xunitFilename=None, xunitName=None, **otherOptions):
     """Run xpcshell tests.
 
     |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -417,10 +523,17 @@ class XPCShellTests(object):
       directory if running only a subset of tests.
     |mozInfo|, if set, specifies specifies build configuration information, either as a filename containing JSON, or a dict.
     |shuffle|, if True, execute tests in random order.
+    |xunitFilename|, if set, specifies the filename to which to write xUnit XML
+      results.
+    |xunitName|, if outputting an xUnit XML file, the str value to use for the
+      testsuite name.
     |otherOptions| may be present for the convenience of subclasses
     """
 
-    global gotSIGINT 
+    global gotSIGINT
+
+    if testdirs is None:
+        testdirs = []
 
     self.xpcshell = xpcshell
     self.xrePath = xrePath
@@ -473,6 +586,8 @@ class XPCShellTests(object):
     if shuffle:
       random.shuffle(self.alltests)
 
+    xunitResults = []
+
     for test in self.alltests:
       name = test['path']
       if self.singleFile and not name.endswith(self.singleFile):
@@ -483,11 +598,17 @@ class XPCShellTests(object):
 
       self.testCount += 1
 
+      xunitResult = {"classname": "xpcshell", "name": test["name"]}
+
       # Check for skipped tests
       if 'disabled' in test:
         self.log.info("TEST-INFO | skipping %s | %s" %
                       (name, test['disabled']))
+
+        xunitResult["skipped"] = True
+        xunitResults.append(xunitResult)
         continue
+
       # Check for known-fail tests
       expected = test['expected'] == 'pass'
 
@@ -541,14 +662,29 @@ class XPCShellTests(object):
                                             re.MULTILINE)))
 
         if result != expected:
-          self.log.error("TEST-UNEXPECTED-%s | %s | test failed (with xpcshell return code: %d), see following log:" % ("FAIL" if expected else "PASS", name, self.getReturnCode(proc)))
+          failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")
+          message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
+                        failureType, name, self.getReturnCode(proc))
+          self.log.error(message)
           print_stdout(stdout)
           self.failCount += 1
+          xunitResult["passed"] = False
+
+          xunitResult["failure"] = {
+            "type": failureType,
+            "message": message,
+            "text": stdout
+          }
         else:
-          timeTaken = (time.time() - startTime) * 1000
+          now = time.time()
+          timeTaken = (now - startTime) * 1000
+          xunitResult["time"] = now - startTime
           self.log.info("TEST-%s | %s | test passed (time: %.3fms)" % ("PASS" if expected else "KNOWN-FAIL", name, timeTaken))
           if verbose:
             print_stdout(stdout)
+
+          xunitResult["passed"] = True
+
           if expected:
             self.passCount += 1
           else:
@@ -572,11 +708,23 @@ class XPCShellTests(object):
         if self.profileDir and not self.interactive and not self.singleFile:
           self.removeDir(self.profileDir)
       if gotSIGINT:
+        xunitResult["passed"] = False
+        xunitResult["time"] = "0.0"
+        xunitResult["failure"] = {
+          "type": "SIGINT",
+          "message": "Received SIGINT",
+          "text": "Received SIGINT (control-C) during test execution."
+        }
+
         self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C) during test execution")
         if (keepGoing):
           gotSIGINT = False
         else:
+          xunitResults.append(xunitResult)
           break
+
+      xunitResults.append(xunitResult)
+
     if self.testCount == 0:
       self.log.error("TEST-UNEXPECTED-FAIL | runxpcshelltests.py | No tests run. Did you pass an invalid --test-path?")
       self.failCount = 1
@@ -586,10 +734,15 @@ INFO | Passed: %d
 INFO | Failed: %d
 INFO | Todo: %d""" % (self.passCount, self.failCount, self.todoCount))
 
+    if xunitFilename is not None:
+        self.writeXunitResults(filename=xunitFilename, results=xunitResults,
+                               name=xunitName)
+
     if gotSIGINT and not keepGoing:
       self.log.error("TEST-UNEXPECTED-FAIL | Received SIGINT (control-C), so stopped run. " \
                      "(Use --keep-going to keep running tests after killing one with SIGINT)")
       return False
+
     return self.failCount == 0
 
 class XPCShellOptions(OptionParser):
@@ -637,6 +790,12 @@ class XPCShellOptions(OptionParser):
     self.add_option("--shuffle",
                     action="store_true", dest="shuffle", default=False,
                     help="Execute tests in random order")
+    self.add_option("--xunit-file", dest="xunitFilename",
+                    help="path to file where xUnit results will be written.")
+    self.add_option("--xunit-suite-name", dest="xunitName",
+                    help="name to record for this xUnit test suite. Many "
+                         "tools expect Java class notation, e.g. "
+                         "dom.basic.foo")
 
 def main():
   parser = XPCShellOptions()
