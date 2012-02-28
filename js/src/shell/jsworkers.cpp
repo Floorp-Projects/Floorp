@@ -49,6 +49,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
+#include "jsfriendapi.h"
 #include "jslock.h"
 #include "jsworkers.h"
 
@@ -863,6 +864,13 @@ class Worker MOZ_FINAL : public WorkerParent
     }
 
     static JSBool jsConstruct(JSContext *cx, uintN argc, jsval *vp) {
+        /*
+         * We pretend to implement write barriers on shell workers (by setting
+         * the JSCLASS_IMPLEMENTS_BARRIERS), but we don't. So we immediately
+         * disable incremental GC if shell workers are ever used.
+         */
+        js::DisableIncrementalGC(JS_GetRuntime(cx));
+
         WorkerParent *parent;
         if (!getWorkerParentFromConstructor(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), &parent))
             return false;
@@ -1267,14 +1275,14 @@ Event::trace(JSTracer *trc)
 }
 
 JSClass ThreadPool::jsClass = {
-    "ThreadPool", JSCLASS_HAS_PRIVATE,
+    "ThreadPool", JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
     NULL, NULL, NULL, NULL, jsTraceThreadPool
 };
 
 JSClass Worker::jsWorkerClass = {
-    "Worker", JSCLASS_HAS_PRIVATE,
+    "Worker", JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, jsFinalize,
     NULL, NULL, NULL, NULL, jsTraceWorker
