@@ -1191,6 +1191,7 @@ xpicleanup@BIN_SUFFIX@
   components/fuel.xpt
   components/gfx.xpt
   components/gksvgrenderer.xpt
+  components/html5.xpt
   components/htmlparser.xpt
   components/imgicon.xpt
   components/imglib2.xpt

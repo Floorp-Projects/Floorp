@@ -113,11 +113,11 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
     JS_ASSERT(fp == cx->fp());
 
     if (fp->isFramePushedByExecute()) {
-        if (JSInterpreterHook hook = cx->debugHooks->executeHook)
-            fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->debugHooks->executeHookData));
+        if (JSInterpreterHook hook = cx->runtime->debugHooks.executeHook)
+            fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->runtime->debugHooks.executeHookData));
     } else {
-        if (JSInterpreterHook hook = cx->debugHooks->callHook)
-            fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->debugHooks->callHookData));
+        if (JSInterpreterHook hook = cx->runtime->debugHooks.callHook)
+            fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->runtime->debugHooks.callHookData));
     }
 
     Value rval;
@@ -148,10 +148,10 @@ ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool okArg)
 
     if (void *hookData = fp->maybeHookData()) {
         if (fp->isFramePushedByExecute()) {
-            if (JSInterpreterHook hook = cx->debugHooks->executeHook)
+            if (JSInterpreterHook hook = cx->runtime->debugHooks.executeHook)
                 hook(cx, Jsvalify(fp), false, &ok, hookData);
         } else {
-            if (JSInterpreterHook hook = cx->debugHooks->callHook)
+            if (JSInterpreterHook hook = cx->runtime->debugHooks.callHook)
                 hook(cx, Jsvalify(fp), false, &ok, hookData);
         }
     }
@@ -238,8 +238,8 @@ JS_ClearAllTrapsForCompartment(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_SetInterrupt(JSRuntime *rt, JSInterruptHook hook, void *closure)
 {
-    rt->globalDebugHooks.interruptHook = hook;
-    rt->globalDebugHooks.interruptHookData = closure;
+    rt->debugHooks.interruptHook = hook;
+    rt->debugHooks.interruptHookData = closure;
     return JS_TRUE;
 }
 
@@ -247,11 +247,11 @@ JS_PUBLIC_API(JSBool)
 JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 {
     if (hoop)
-        *hoop = rt->globalDebugHooks.interruptHook;
+        *hoop = rt->debugHooks.interruptHook;
     if (closurep)
-        *closurep = rt->globalDebugHooks.interruptHookData;
-    rt->globalDebugHooks.interruptHook = 0;
-    rt->globalDebugHooks.interruptHookData = 0;
+        *closurep = rt->debugHooks.interruptHookData;
+    rt->debugHooks.interruptHook = 0;
+    rt->debugHooks.interruptHookData = 0;
     return JS_TRUE;
 }
 
@@ -589,7 +589,7 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
      *     null returned above or in the #else
      */
     if (!fp->hasCallObj() && fp->isNonEvalFunctionFrame())
-        return CreateFunCallObject(cx, fp);
+        return CallObject::createForFunction(cx, fp);
     return &fp->callObj();
 }
 
@@ -728,16 +728,16 @@ JS_GetScriptVersion(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(void)
 JS_SetNewScriptHook(JSRuntime *rt, JSNewScriptHook hook, void *callerdata)
 {
-    rt->globalDebugHooks.newScriptHook = hook;
-    rt->globalDebugHooks.newScriptHookData = callerdata;
+    rt->debugHooks.newScriptHook = hook;
+    rt->debugHooks.newScriptHookData = callerdata;
 }
 
 JS_PUBLIC_API(void)
 JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
                         void *callerdata)
 {
-    rt->globalDebugHooks.destroyScriptHook = hook;
-    rt->globalDebugHooks.destroyScriptHookData = callerdata;
+    rt->debugHooks.destroyScriptHook = hook;
+    rt->debugHooks.destroyScriptHookData = callerdata;
 }
 
 /***************************************************************************/
@@ -844,10 +844,10 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
               |  (!shape->writable()  ? JSPD_READONLY  : 0)
               |  (!shape->configurable() ? JSPD_PERMANENT : 0);
     pd->spare = 0;
-    if (shape->getter() == GetCallArg) {
+    if (shape->getter() == CallObject::getArgOp) {
         pd->slot = shape->shortid();
         pd->flags |= JSPD_ARGUMENT;
-    } else if (shape->getter() == GetCallVar) {
+    } else if (shape->getter() == CallObject::getVarOp) {
         pd->slot = shape->shortid();
         pd->flags |= JSPD_VARIABLE;
     } else {
@@ -928,48 +928,48 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 JS_PUBLIC_API(JSBool)
 JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler handler, void *closure)
 {
-    rt->globalDebugHooks.debuggerHandler = handler;
-    rt->globalDebugHooks.debuggerHandlerData = closure;
+    rt->debugHooks.debuggerHandler = handler;
+    rt->debugHooks.debuggerHandlerData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
 {
-    rt->globalDebugHooks.sourceHandler = handler;
-    rt->globalDebugHooks.sourceHandlerData = closure;
+    rt->debugHooks.sourceHandler = handler;
+    rt->debugHooks.sourceHandlerData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
-    rt->globalDebugHooks.executeHook = hook;
-    rt->globalDebugHooks.executeHookData = closure;
+    rt->debugHooks.executeHook = hook;
+    rt->debugHooks.executeHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
-    rt->globalDebugHooks.callHook = hook;
-    rt->globalDebugHooks.callHookData = closure;
+    rt->debugHooks.callHook = hook;
+    rt->debugHooks.callHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetThrowHook(JSRuntime *rt, JSThrowHook hook, void *closure)
 {
-    rt->globalDebugHooks.throwHook = hook;
-    rt->globalDebugHooks.throwHookData = closure;
+    rt->debugHooks.throwHook = hook;
+    rt->debugHooks.throwHookData = closure;
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetDebugErrorHook(JSRuntime *rt, JSDebugErrorHook hook, void *closure)
 {
-    rt->globalDebugHooks.debugErrorHook = hook;
-    rt->globalDebugHooks.debugErrorHookData = closure;
+    rt->debugHooks.debugErrorHook = hook;
+    rt->debugHooks.debugErrorHookData = closure;
     return JS_TRUE;
 }
 
@@ -1086,25 +1086,7 @@ js_RevertVersion(JSContext *cx)
 JS_PUBLIC_API(const JSDebugHooks *)
 JS_GetGlobalDebugHooks(JSRuntime *rt)
 {
-    return &rt->globalDebugHooks;
-}
-
-const JSDebugHooks js_NullDebugHooks = {};
-
-JS_PUBLIC_API(JSDebugHooks *)
-JS_SetContextDebugHooks(JSContext *cx, const JSDebugHooks *hooks)
-{
-    JS_ASSERT(hooks);
-
-    JSDebugHooks *old = const_cast<JSDebugHooks *>(cx->debugHooks);
-    cx->debugHooks = hooks;
-    return old;
-}
-
-JS_PUBLIC_API(JSDebugHooks *)
-JS_ClearContextDebugHooks(JSContext *cx)
-{
-    return JS_SetContextDebugHooks(cx, &js_NullDebugHooks);
+    return &rt->debugHooks;
 }
 
 /************************************************************************/

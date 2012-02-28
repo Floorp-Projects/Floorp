@@ -46,9 +46,6 @@ const Cr = Components.results;
 
 const DB_VERSION = 5; // The database schema version
 
-const ENCTYPE_BASE64 = 0;
-const ENCTYPE_SDR = 1;
-
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -284,10 +281,13 @@ LoginManagerStorage_mozStorage.prototype = {
         // Throws if there are bogus values.
         this._checkLoginValues(login);
 
+        // isEncrypted only set when importing from an legacy (signons3.txt)
+        // format, which only would have used SDR or BASE64 encoding. The
+        // latter of which is handled a little further down.
         if (isEncrypted)
-            [encUsername, encPassword] = [login.username, login.password];
+            [encUsername, encPassword, encType] = [login.username, login.password, Ci.nsILoginManagerCrypto.ENCTYPE_SDR];
         else
-            [encUsername, encPassword] = this._encryptLogin(login);
+            [encUsername, encPassword, encType] = this._encryptLogin(login);
 
         // Clone the login, so we don't modify the caller's object.
         let loginClone = login.clone();
@@ -301,11 +301,10 @@ LoginManagerStorage_mozStorage.prototype = {
             loginClone.guid = this._uuidService.generateUUID().toString();
         }
 
-        // Determine encryption type
-        let encType = ENCTYPE_SDR;
+        // If we're migrating legacy storage, check for base64 logins.
         if (isEncrypted &&
             (encUsername.charAt(0) == '~' || encPassword.charAt(0) == '~'))
-            encType = ENCTYPE_BASE64;
+            encType = this._crypto.ENCTYPE_BASE64;
 
         // Set timestamps
         let currentTime = Date.now();
@@ -484,7 +483,7 @@ LoginManagerStorage_mozStorage.prototype = {
         this._checkLoginValues(newLogin);
 
         // Get the encrypted value of the username and password.
-        let [encUsername, encPassword] = this._encryptLogin(newLogin);
+        let [encUsername, encPassword, encType] = this._encryptLogin(newLogin);
 
         let query =
             "UPDATE moz_logins " +
@@ -513,7 +512,7 @@ LoginManagerStorage_mozStorage.prototype = {
             encryptedUsername:   encUsername,
             encryptedPassword:   encPassword,
             guid:                newLogin.guid,
-            encType:             ENCTYPE_SDR,
+            encType:             encType,
             timeCreated:         newLogin.timeCreated,
             timeLastUsed:        newLogin.timeLastUsed,
             timePasswordChanged: newLogin.timePasswordChanged,
@@ -1167,18 +1166,18 @@ LoginManagerStorage_mozStorage.prototype = {
     /*
      * _encryptLogin
      *
-     * Returns the encrypted username and password for the specified login,
-     * and a boolean indicating if the user canceled the master password entry
-     * (in which case no encrypted values are returned).
+     * Returns the encrypted username, password, and encrypton type for the specified
+     * login. Can throw if the user cancels a master password entry.
      */
     _encryptLogin : function (login) {
         let encUsername = this._crypto.encrypt(login.username);
         let encPassword = this._crypto.encrypt(login.password);
+        let encType     = this._crypto.defaultEncType;
 
         if (!this._base64checked)
             this._reencryptBase64Logins();
 
-        return [encUsername, encPassword];
+        return [encUsername, encPassword, encType];
     },
 
 
@@ -1229,13 +1228,14 @@ LoginManagerStorage_mozStorage.prototype = {
      * prompts for a master password, when set).
      */
     _reencryptBase64Logins : function () {
+        let base64Type = Ci.nsILoginManagerCrypto.ENCTYPE_BASE64;
         this._base64checked = true;
         // Ignore failures, will try again next session...
 
         this.log("Reencrypting Base64 logins");
         let transaction;
         try {
-            let [logins, ids] = this._searchLogins({ encType: ENCTYPE_BASE64 });
+            let [logins, ids] = this._searchLogins({ encType: base64Type });
 
             if (!logins.length)
                 return;
@@ -1251,7 +1251,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
             let encUsername, encPassword, stmt;
             for each (let login in logins) {
-                [encUsername, encPassword] = this._encryptLogin(login);
+                [encUsername, encPassword, encType] = this._encryptLogin(login);
 
                 let query =
                     "UPDATE moz_logins " +
@@ -1262,7 +1262,7 @@ LoginManagerStorage_mozStorage.prototype = {
                 let params = {
                     encryptedUsername: encUsername,
                     encryptedPassword: encPassword,
-                    encType:           ENCTYPE_SDR,
+                    encType:           encType,
                     guid:              login.guid
                 };
                 try {
@@ -1513,9 +1513,9 @@ LoginManagerStorage_mozStorage.prototype = {
                 let params = { id: stmt.row.id };
                 if (stmt.row.encryptedUsername.charAt(0) == '~' ||
                     stmt.row.encryptedPassword.charAt(0) == '~')
-                    params.encType = ENCTYPE_BASE64;
+                    params.encType = Ci.nsILoginManagerCrypto.ENCTYPE_BASE64;
                 else
-                    params.encType = ENCTYPE_SDR;
+                    params.encType = Ci.nsILoginManagerCrypto.ENCTYPE_SDR;
                 logins.push(params);
             }
         } catch (e) {

@@ -49,15 +49,9 @@
 #include "nsITransferable.h" // for mime defs, this is BAD
 
 // HTML convertor stuff
-#include "nsIParser.h"
-#include "nsIDTD.h"
-#include "nsParserCIID.h"
-#include "nsIContentSink.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIHTMLToTextSink.h"
-
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
+#include "nsContentUtils.h"
 
 nsHTMLFormatConverter::nsHTMLFormatConverter()
 {
@@ -272,36 +266,13 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
 NS_IMETHODIMP
 nsHTMLFormatConverter::ConvertFromHTMLToUnicode(const nsAutoString & aFromStr, nsAutoString & aToStr)
 {
-  // create the parser to do the conversion.
-  aToStr.SetLength(0);
-  nsresult rv;
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
-  if ( !parser )
-    return rv;
-
-  // convert it!
-  nsCOMPtr<nsIContentSink> sink;
-
-  sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID);
-  NS_ENSURE_TRUE(sink, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
-  NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
-
-  // We set OutputNoScriptContent and OutputNoFramesContent unconditionally
-  // here because |aFromStr| is already filtered based on user preferences.
-  PRUint32 flags =
+  return nsContentUtils::ConvertToPlainText(aFromStr,
+    aToStr,
     nsIDocumentEncoder::OutputSelectionOnly |
     nsIDocumentEncoder::OutputAbsoluteLinks |
     nsIDocumentEncoder::OutputNoScriptContent |
-    nsIDocumentEncoder::OutputNoFramesContent;
-  textSink->Initialize(&aToStr, flags, 0);
-
-  parser->SetContentSink(sink);
-
-  parser->Parse(aFromStr, 0, NS_LITERAL_CSTRING("text/html"), true, eDTDMode_fragment);
-  
-  return NS_OK;
+    nsIDocumentEncoder::OutputNoFramesContent,
+    0);
 } // ConvertFromHTMLToUnicode
 
 

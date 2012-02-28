@@ -98,9 +98,9 @@ Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
     if (indexp)
         *indexp = shape->shortid();
 
-    if (shape->getter() == GetCallArg)
+    if (shape->getter() == CallObject::getArgOp)
         return ARGUMENT;
-    if (shape->getter() == GetCallUpvar)
+    if (shape->getter() == CallObject::getUpvarOp)
         return UPVAR;
 
     return shape->writable() ? VARIABLE : CONSTANT;
@@ -128,13 +128,13 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         JS_ASSERT(nvars == 0);
         JS_ASSERT(nupvars == 0);
         indexp = &nargs;
-        getter = GetCallArg;
-        setter = SetCallArg;
+        getter = CallObject::getArgOp;
+        setter = CallObject::setArgOp;
         slot += nargs;
     } else if (kind == UPVAR) {
         indexp = &nupvars;
-        getter = GetCallUpvar;
-        setter = SetCallUpvar;
+        getter = CallObject::getUpvarOp;
+        setter = CallObject::setUpvarOp;
         slot = lastBinding->maybeSlot();
         attrs |= JSPROP_SHARED;
     } else {
@@ -142,8 +142,8 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         JS_ASSERT(nupvars == 0);
 
         indexp = &nvars;
-        getter = GetCallVar;
-        setter = SetCallVar;
+        getter = CallObject::getVarOp;
+        setter = CallObject::setVarOp;
         if (kind == CONSTANT)
             attrs |= JSPROP_READONLY;
         slot += nargs + nvars;
@@ -248,9 +248,9 @@ Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
         const Shape &shape = r.front();
         uintN index = uint16_t(shape.shortid());
 
-        if (shape.getter() == GetCallArg) {
+        if (shape.getter() == CallObject::getArgOp) {
             JS_ASSERT(index < nargs);
-        } else if (shape.getter() == GetCallUpvar) {
+        } else if (shape.getter() == CallObject::getUpvarOp) {
             JS_ASSERT(index < nupvars);
             index += nargs + nvars;
         } else {
@@ -262,7 +262,7 @@ Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
             names[index] = JSID_TO_ATOM(shape.propid());
         } else {
             JS_ASSERT(JSID_IS_INT(shape.propid()));
-            JS_ASSERT(shape.getter() == GetCallArg);
+            JS_ASSERT(shape.getter() == CallObject::getArgOp);
             names[index] = NULL;
         }
     }
@@ -282,7 +282,7 @@ Bindings::lastArgument() const
 
     const js::Shape *shape = lastVariable();
     if (nvars > 0) {
-        while (shape->previous() && shape->getter() != GetCallArg)
+        while (shape->previous() && shape->getter() != CallObject::getArgOp)
             shape = shape->previous();
     }
     return shape;
@@ -295,7 +295,7 @@ Bindings::lastVariable() const
 
     const js::Shape *shape = lastUpvar();
     if (nupvars > 0) {
-        while (shape->getter() == GetCallUpvar)
+        while (shape->getter() == CallObject::getUpvarOp)
             shape = shape->previous();
     }
     return shape;
@@ -1433,10 +1433,10 @@ JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 {
     JS_ASSERT(!script->callDestroyHook);
-    if (JSNewScriptHook hook = cx->debugHooks->newScriptHook) {
+    if (JSNewScriptHook hook = cx->runtime->debugHooks.newScriptHook) {
         AutoKeepAtoms keep(cx->runtime);
         hook(cx, script->filename, script->lineno, script, fun,
-             cx->debugHooks->newScriptHookData);
+             cx->runtime->debugHooks.newScriptHookData);
     }
     script->callDestroyHook = true;
 }
@@ -1447,8 +1447,8 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
     if (!script->callDestroyHook)
         return;
 
-    if (JSDestroyScriptHook hook = cx->debugHooks->destroyScriptHook)
-        hook(cx, script, cx->debugHooks->destroyScriptHookData);
+    if (JSDestroyScriptHook hook = cx->runtime->debugHooks.destroyScriptHook)
+        hook(cx, script, cx->runtime->debugHooks.destroyScriptHookData);
     script->callDestroyHook = false;
     JS_ClearScriptTraps(cx, script);
 }
