@@ -75,8 +75,8 @@ const kElementsReceivingInput = {
     video: true
 };
 
-// How many pixels on each side to buffer.
-const kBufferAmount = 300;
+// How many pixels on each axis to buffer.
+const kBufferAmount = 600;
 
 // Whether we're using GL layers.
 const kUsingGLLayers = true;
@@ -1570,13 +1570,63 @@ Tab.prototype = {
     if (this._zoom <= 0)
       return;
 
-    dump("### Setting displayport, screen-size = " + gScreenWidth + "x" + gScreenHeight + ", zoom = " + this._zoom);
+    let viewport = this.viewport;
+
+    // we need to avoid having a display port that is larger than the page, or we will end up
+    // painting things outside the page bounds (bug 729169)
+
+    // figure out how much of kBufferAmount we can actually use on the horizontal axis
+    let xBufferAmount = Math.min(kBufferAmount, Math.max(0, viewport.pageWidth - viewport.width));
+    // if we reduced the buffer amount on the horizontal axis, we should take that saved memory and
+    // use it on the vertical axis
+    let savedPixels = (kBufferAmount - xBufferAmount) * (viewport.height + kBufferAmount);
+    let extraYAmount = Math.floor(savedPixels / (viewport.width + xBufferAmount));
+    let yBufferAmount = Math.min(kBufferAmount + extraYAmount, Math.max(0, viewport.pageHeight - viewport.height));
+    // and the reverse - if we shrunk the buffer on the vertical axis we can add it to the horizontal
+    if (xBufferAmount == kBufferAmount && yBufferAmount < kBufferAmount) {
+        savedPixels = (kBufferAmount - yBufferAmount) * (viewport.width + xBufferAmount);
+        let extraXAmount = Math.floor(savedPixels / (viewport.height + yBufferAmount));
+        xBufferAmount = Math.min(xBufferAmount + extraXAmount, Math.max(0, viewport.pageWidth - viewport.width));
+    }
+
+    // and now calculate the display port margins based on how much buffer we've decided to use and
+    // the page bounds, ensuring we use all of the available buffer amounts on one side or the other
+    // on any given axis. (i.e. if we're scrolled to the top of the page, the vertical buffer is
+    // entirely below the visible viewport, but if we're halfway down the page, the vertical buffer
+    // is split between the top and the bottom).
+    let leftMargin = Math.max(0, viewport.x);
+    let rightMargin = Math.max(0, viewport.pageWidth - (viewport.x + viewport.width));
+    if (leftMargin < (xBufferAmount / 2)) {
+      rightMargin = xBufferAmount - leftMargin;
+    } else if (rightMargin < (xBufferAmount / 2)) {
+      leftMargin = xBufferAmount - rightMargin;
+    } else {
+      leftMargin = rightMargin = xBufferAmount / 2;
+    }
+    let topMargin = Math.max(0, viewport.y);
+    let bottomMargin = Math.max(0, viewport.pageHeight - (viewport.y + viewport.height));
+    if (topMargin < (yBufferAmount / 2)) {
+      bottomMargin = yBufferAmount - topMargin;
+    } else if (bottomMargin < (yBufferAmount / 2)) {
+      topMargin = yBufferAmount - bottomMargin;
+    } else {
+      topMargin = bottomMargin = yBufferAmount / 2;
+    }
+
+    dump("### displayport margins=(" + leftMargin + ", " + topMargin + ", " + rightMargin + ", " + bottomMargin + ") at zoom=" + viewport.zoom
+        + " and buffer amounts=(" + xBufferAmount + ", " + yBufferAmount + ")");
+
+    // note that unless the viewport size changes, or the page dimensions change (either because of
+    // content changes or zooming), the size of the display port should remain constant. this
+    // is intentional to avoid re-creating textures and all sorts of other reallocations in the
+    // draw and composition code.
+
     let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
-    cwu.setResolution(this._zoom, this._zoom);
-    cwu.setDisplayPortForElement(-kBufferAmount / this._zoom, -kBufferAmount / this._zoom,
-                                 (gScreenWidth + kBufferAmount * 2) / this._zoom,
-                                 (gScreenHeight + kBufferAmount * 2) / this._zoom,
+    cwu.setDisplayPortForElement(-leftMargin / viewport.zoom,
+                                 -topMargin / viewport.zoom,
+                                 (leftMargin + viewport.width + rightMargin) / viewport.zoom,
+                                 (topMargin + viewport.height + bottomMargin) / viewport.zoom,
                                  this.browser.contentDocument.documentElement);
   },
 
@@ -1595,8 +1645,13 @@ Tab.prototype = {
     let zoom = aViewport.zoom;
     if (Math.abs(zoom - this._zoom) >= 1e-6) {
       this._zoom = zoom;
-      this.refreshDisplayPort();
+      let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      cwu.setResolution(zoom, zoom);
     }
+
+    // always refresh display port when we scroll so that we can clip it to page bounds
+    this.refreshDisplayPort();
   },
 
   get viewport() {
