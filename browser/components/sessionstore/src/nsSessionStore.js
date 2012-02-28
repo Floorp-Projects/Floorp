@@ -1681,11 +1681,16 @@ SessionStoreService.prototype = {
     // If we're still here, then the window is usable. Look at the open tabs in
     // comparison to home pages. If all the tabs are home pages then we'll end
     // up overwriting all of them. Otherwise we'll just close the tabs that
-    // match home pages.
-    let homePages = aWindow.gHomeButton.getHomePage().split("|");
+    // match home pages. Tabs with the about:blank URI will always be
+    // overwritten.
+    let homePages = ["about:blank"];
     let removableTabs = [];
     let tabbrowser = aWindow.gBrowser;
     let normalTabsLen = tabbrowser.tabs.length - tabbrowser._numPinnedTabs;
+    let startupPref = this._prefBranch.getIntPref("startup.page");
+    if (startupPref == 1)
+      homePages = homePages.concat(aWindow.gHomeButton.getHomePage().split("|"));
+
     for (let i = tabbrowser._numPinnedTabs; i < tabbrowser.tabs.length; i++) {
       let tab = tabbrowser.tabs[i];
       if (homePages.indexOf(tab.linkedBrowser.currentURI.spec) != -1) {

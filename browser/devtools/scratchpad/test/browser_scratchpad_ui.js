@@ -32,8 +32,6 @@ function runTests()
     "sp-text-resetContext": "resetContext",
     "sp-menu-content": "setContentContext",
     "sp-menu-browser": "setBrowserContext",
-    "sp-menu-undo": "undo",
-    "sp-menu-redo": "redo",
   };
 
   let lastMethodCalled = null;

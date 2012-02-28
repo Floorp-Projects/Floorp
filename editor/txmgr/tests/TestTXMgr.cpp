@@ -792,8 +792,6 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Create transaction manager instance ... ");
-
   nsCOMPtr<nsITransactionManager> mgr =
     do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &result);
   if (NS_FAILED(result) || !mgr) {
@@ -801,7 +799,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  printf("passed\n");
+  passed("Create transaction manager instance");
 
   /*******************************************************************
    *
@@ -809,7 +807,6 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Call DoTransaction() with null transaction ... ");
   result = mgr->DoTransaction(0);
 
   if (result != NS_ERROR_NULL_POINTER) {
@@ -817,7 +814,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Call DoTransaction() with null transaction");
 
   /*******************************************************************
    *
@@ -825,7 +822,6 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Call UndoTransaction() with empty undo stack ... ");
   result = mgr->UndoTransaction();
 
   if (NS_FAILED(result)) {
@@ -833,7 +829,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Call UndoTransaction() with empty undo stack");
 
   /*******************************************************************
    *
@@ -841,7 +837,6 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Call RedoTransaction() with empty redo stack ... ");
   result = mgr->RedoTransaction();
 
   if (NS_FAILED(result)) {
@@ -849,7 +844,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Call RedoTransaction() with empty redo stack");
 
   /*******************************************************************
    *
@@ -857,7 +852,6 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Call SetMaxTransactionCount(-1) with empty undo and redo stacks ... ");
   result = mgr->SetMaxTransactionCount(-1);
 
   if (NS_FAILED(result)) {
@@ -865,7 +859,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Call SetMaxTransactionCount(-1) with empty undo and redo stacks");
 
   /*******************************************************************
    *
@@ -873,7 +867,6 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Call SetMaxTransactionCount(0) with empty undo and redo stacks ... ");
   result = mgr->SetMaxTransactionCount(0);
 
   if (NS_FAILED(result)) {
@@ -881,7 +874,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Call SetMaxTransactionCount(0) with empty undo and redo stacks");
 
   /*******************************************************************
    *
@@ -889,7 +882,6 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Call SetMaxTransactionCount(10) with empty undo and redo stacks ... ");
   result = mgr->SetMaxTransactionCount(10);
 
   if (NS_FAILED(result)) {
@@ -897,7 +889,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Call SetMaxTransactionCount(10) with empty undo and redo stacks");
 
   /*******************************************************************
    *
@@ -905,15 +897,13 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Call Clear() with empty undo and redo stack ... ");
-
   result = mgr->Clear();
   if (NS_FAILED(result)) {
     printf("ERROR: Clear on empty undo and redo stack failed. (%d)\n", result);
     return result;
   }
 
-  printf("passed\n");
+  passed("Call Clear() with empty undo and redo stack");
 
   PRInt32 numitems;
 
@@ -923,7 +913,6 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Call GetNumberOfUndoItems() with empty undo stack ... ");
   result = mgr->GetNumberOfUndoItems(&numitems);
 
   if (NS_FAILED(result)) {
@@ -938,7 +927,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Call GetNumberOfUndoItems() with empty undo stack");
 
   /*******************************************************************
    *
@@ -946,7 +935,6 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Call GetNumberOfRedoItems() with empty redo stack ... ");
   result = mgr->GetNumberOfRedoItems(&numitems);
 
   if (NS_FAILED(result)) {
@@ -961,7 +949,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Call GetNumberOfRedoItems() with empty redo stack");
 
   nsITransaction *tx;
 
@@ -970,8 +958,6 @@ quick_test(TestTransactionFactory *factory)
    * Call PeekUndoStack() with an empty undo stack:
    *
    *******************************************************************/
-
-  printf("Call PeekUndoStack() with empty undo stack ... ");
 
   tx = 0;
   result = mgr->PeekUndoStack(&tx);
@@ -988,15 +974,13 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Call PeekUndoStack() with empty undo stack");
 
   /*******************************************************************
    *
    * Call PeekRedoStack() with an empty undo stack:
    *
    *******************************************************************/
-
-  printf("Call PeekRedoStack() with empty undo stack ... ");
 
   tx = 0;
   result = mgr->PeekRedoStack(&tx);
@@ -1013,15 +997,13 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Call PeekRedoStack() with empty undo stack");
 
   /*******************************************************************
    *
    * Call AddListener() with a null listener pointer:
    *
    *******************************************************************/
-
-  printf("Call AddListener() with null listener ... ");
 
   result = mgr->AddListener(0);
 
@@ -1030,15 +1012,13 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Call AddListener() with null listener");
 
   /*******************************************************************
    *
    * Call RemoveListener() with a null listener pointer:
    *
    *******************************************************************/
-
-  printf("Call RemoveListener() with null listener ... ");
 
   result = mgr->RemoveListener(0);
 
@@ -1047,7 +1027,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Call RemoveListener() with null listener");
 
   PRInt32 i;
   TestTransaction *tximpl;
@@ -1062,8 +1042,6 @@ quick_test(TestTransactionFactory *factory)
    * stack. Then clear the undo and redo stacks.
    *
    *******************************************************************/
-
-  printf("Test coalescing of transactions ... ");
 
   result = mgr->SetMaxTransactionCount(10);
 
@@ -1211,7 +1189,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Test coalescing of transactions");
 
   /*******************************************************************
    *
@@ -1219,8 +1197,6 @@ quick_test(TestTransactionFactory *factory)
    * transactions on the undo stack:
    *
    *******************************************************************/
-
-  printf("Execute 20 transactions ... ");
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
@@ -1275,7 +1251,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Execute 20 transactions");
 
   /*******************************************************************
    *
@@ -1283,8 +1259,6 @@ quick_test(TestTransactionFactory *factory)
    * have the same 10 transactions on the undo stack:
    *
    *******************************************************************/
-
-  printf("Execute 20 transient transactions ... ");
 
   u1 = u2 = r1 = r2 = 0;
 
@@ -1387,7 +1361,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Execute 20 transient transactions");
 
   /*******************************************************************
    *
@@ -1395,8 +1369,6 @@ quick_test(TestTransactionFactory *factory)
    * on the undo stack, and 4 on the redo stack:
    *
    *******************************************************************/
-
-  printf("Undo 4 transactions ... ");
 
   for (i = 1; i <= 4; i++) {
     result = mgr->UndoTransaction();
@@ -1434,7 +1406,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Undo 4 transactions");
 
   /*******************************************************************
    *
@@ -1442,8 +1414,6 @@ quick_test(TestTransactionFactory *factory)
    * on the undo stack, and 2 on the redo stack:
    *
    *******************************************************************/
-
-  printf("Redo 2 transactions ... ");
 
   for (i = 1; i <= 2; ++i) {
     result = mgr->RedoTransaction();
@@ -1481,15 +1451,13 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Redo 2 transactions");
 
   /*******************************************************************
    *
    * Execute a new transaction. The redo stack should get pruned!
    *
    *******************************************************************/
-
-  printf("Check if new transactions prune the redo stack ... ");
 
   tximpl = factory->create(mgr, NONE_FLAG);
 
@@ -1543,15 +1511,13 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Check if new transactions prune the redo stack");
 
   /*******************************************************************
    *
    * Undo 4 transactions then clear the undo and redo stacks.
    *
    *******************************************************************/
-
-  printf("Undo 4 transactions then clear the undo and redo stacks ... ");
 
   for (i = 1; i <= 4; ++i) {
     result = mgr->UndoTransaction();
@@ -1624,15 +1590,13 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Undo 4 transactions then clear the undo and redo stacks");
 
   /*******************************************************************
    *
    * Execute 5 transactions.
    *
    *******************************************************************/
-
-  printf("Execute 5 transactions ... ");
 
   for (i = 1; i <= 5; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
@@ -1687,15 +1651,13 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Execute 5 transactions");
 
   /*******************************************************************
    *
    * Test transaction DoTransaction() error:
    *
    *******************************************************************/
-
-  printf("Test transaction DoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_DO_ERROR_FLAG);
 
@@ -1798,15 +1760,13 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test transaction DoTransaction() error");
 
   /*******************************************************************
    *
    * Test transaction UndoTransaction() error:
    *
    *******************************************************************/
-
-  printf("Test transaction UndoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_UNDO_ERROR_FLAG);
 
@@ -1916,15 +1876,13 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test transaction UndoTransaction() error");
 
   /*******************************************************************
    *
    * Test transaction RedoTransaction() error:
    *
    *******************************************************************/
-
-  printf("Test transaction RedoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_REDO_ERROR_FLAG);
 
@@ -2080,7 +2038,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test transaction RedoTransaction() error");
 
   /*******************************************************************
    *
@@ -2089,8 +2047,6 @@ quick_test(TestTransactionFactory *factory)
    * all new commands without pushing them on the undo stack!
    *
    *******************************************************************/
-
-  printf("Test max transaction count of zero ... ");
 
   result = mgr->SetMaxTransactionCount(0);
 
@@ -2180,7 +2136,7 @@ quick_test(TestTransactionFactory *factory)
     }
   }
 
-  printf("passed\n");
+  passed("Test max transaction count of zero");
 
   /*******************************************************************
    *
@@ -2189,8 +2145,6 @@ quick_test(TestTransactionFactory *factory)
    * both the undo and redo stacks causes no pruning of the stacks:
    *
    *******************************************************************/
-
-  printf("Test SetMaxTransactionCount() greater than num stack items ... ");
 
   result = mgr->SetMaxTransactionCount(-1);
 
@@ -2373,7 +2327,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test SetMaxTransactionCount() greater than num stack items");
 
   /*******************************************************************
    *
@@ -2382,8 +2336,6 @@ quick_test(TestTransactionFactory *factory)
    * number of transactions on both the undo and redo stacks:
    *
    *******************************************************************/
-
-  printf("Test SetMaxTransactionCount() pruning undo stack ... ");
 
   u1 = u2 = r1 = r2 = 0;
 
@@ -2468,7 +2420,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test SetMaxTransactionCount() pruning undo stack");
 
   /*******************************************************************
    *
@@ -2477,8 +2429,6 @@ quick_test(TestTransactionFactory *factory)
    * number of transactions on both the undo and redo stacks:
    *
    *******************************************************************/
-
-  printf("Test SetMaxTransactionCount() pruning redo stack ... ");
 
   u1 = u2 = r1 = r2 = 0;
 
@@ -2563,7 +2513,7 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test SetMaxTransactionCount() pruning redo stack");
 
   /*******************************************************************
    *
@@ -2571,8 +2521,6 @@ quick_test(TestTransactionFactory *factory)
    * and redo stack should automatically be released:
    *
    *******************************************************************/
-
-  printf("Release the transaction manager ... ");
 
   result = mgr->SetMaxTransactionCount(-1);
 
@@ -2678,7 +2626,7 @@ quick_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Release the transaction manager");
 
   /*******************************************************************
    *
@@ -2687,16 +2635,14 @@ quick_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Number of transactions created and destroyed match ... ");
-
   if (sConstructorCount != sDestructorCount) {
     printf("ERROR: Transaction constructor count (%d) != destructor count (%d).\n",
            sConstructorCount, sDestructorCount);
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
-  printf("%d transactions processed during quick test.\n", sConstructorCount);
+  passed("Number of transactions created and destroyed match");
+  passed("%d transactions processed during quick test", sConstructorCount);
 
   return NS_OK;
 }
@@ -2774,8 +2720,6 @@ quick_batch_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Create transaction manager instance ... ");
-
   nsCOMPtr<nsITransactionManager> mgr =
     do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &result);
   if (NS_FAILED(result) || !mgr) {
@@ -2783,7 +2727,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  printf("passed\n");
+  passed("Create transaction manager instance");
 
   PRInt32 numitems;
 
@@ -2793,8 +2737,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * throws an error!
    *
    *******************************************************************/
-
-  printf("Test unbalanced EndBatch() with empty undo stack ... ");
 
   result = mgr->GetNumberOfUndoItems(&numitems);
 
@@ -2831,8 +2773,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
-
+  passed("Test unbalanced EndBatch() with empty undo stack");
 
   /*******************************************************************
    *
@@ -2840,8 +2781,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * when it is closed.
    *
    *******************************************************************/
-
-  printf("Test empty batch ... ");
 
   result = mgr->GetNumberOfUndoItems(&numitems);
 
@@ -2899,7 +2838,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test empty batch");
 
   PRInt32 i;
   TestTransaction *tximpl;
@@ -2911,8 +2850,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * transaction on the undo stack:
    *
    *******************************************************************/
-
-  printf("Execute 20 batched transactions ... ");
 
   result = mgr->BeginBatch();
 
@@ -2981,7 +2918,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Execute 20 batched transactions");
 
   nsITransaction *u1, *u2;
   nsITransaction *r1, *r2;
@@ -2992,8 +2929,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * have the same transaction on the undo stack:
    *
    *******************************************************************/
-
-  printf("Execute 20 batched transient transactions ... ");
 
   u1 = u2 = r1 = r2 = 0;
 
@@ -3110,7 +3045,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Execute 20 batched transient transactions");
 
   /*******************************************************************
    *
@@ -3118,8 +3053,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * on the undo stack:
    *
    *******************************************************************/
-
-  printf("Test nested batched transactions ... ");
 
   result = mgr->BeginBatch();
 
@@ -3285,7 +3218,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test nested batched transactions");
 
   /*******************************************************************
    *
@@ -3293,8 +3226,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * transactions on the undo stack and 2 on the redo stack.
    *
    *******************************************************************/
-
-  printf("Undo 2 batch transactions ... ");
 
   for (i = 1; i <= 2; ++i) {
     result = mgr->UndoTransaction();
@@ -3332,7 +3263,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Undo 2 batch transactions");
 
   /*******************************************************************
    *
@@ -3340,9 +3271,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * transactions on the undo stack and 0 on the redo stack.
    *
    *******************************************************************/
-
-
-  printf("Redo 2 batch transactions ... ");
 
   for (i = 1; i <= 2; ++i) {
     result = mgr->RedoTransaction();
@@ -3380,7 +3308,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Redo 2 batch transactions");
 
   /*******************************************************************
    *
@@ -3388,8 +3316,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * on the undo stack, and 1 on the redo stack:
    *
    *******************************************************************/
-
-  printf("Undo a batched transaction that was redone ... ");
 
   result = mgr->UndoTransaction();
 
@@ -3426,7 +3352,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Undo a batched transaction that was redone");
 
   /*******************************************************************
    *
@@ -3434,8 +3360,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * doesn't affect the undo and redo stacks!
    *
    *******************************************************************/
-
-  printf("Test effect of unbalanced EndBatch() on undo and redo stacks ... ");
 
   result = mgr->EndBatch();
 
@@ -3472,7 +3396,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test effect of unbalanced EndBatch() on undo and redo stacks");
 
   /*******************************************************************
    *
@@ -3481,8 +3405,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * stacks.
    *
    *******************************************************************/
-
-  printf("Test effect of empty batch on undo and redo stacks ... ");
 
   result = mgr->BeginBatch();
 
@@ -3554,17 +3476,13 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-
-  printf("passed\n");
-
+  passed("Test effect of empty batch on undo and redo stacks");
 
   /*******************************************************************
    *
    * Execute a new transaction. The redo stack should get pruned!
    *
    *******************************************************************/
-
-  printf("Check if new batched transactions prune the redo stack ... ");
 
   result = mgr->BeginBatch();
 
@@ -3661,15 +3579,13 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Check if new batched transactions prune the redo stack");
 
   /*******************************************************************
    *
    * Call undo.
    *
    *******************************************************************/
-
-  printf("Call undo ... ");
 
   // Move a transaction over to the redo stack, so that we have one
   // transaction on the undo stack, and one on the redo stack!
@@ -3709,16 +3625,13 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Call undo");
 
   /*******************************************************************
    *
    * Test transaction DoTransaction() error:
    *
    *******************************************************************/
-
-  printf("Test transaction DoTransaction() error ... ");
-
 
   tximpl = factory->create(mgr, THROWS_DO_ERROR_FLAG);
 
@@ -3835,15 +3748,13 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test transaction DoTransaction() error");
 
   /*******************************************************************
    *
    * Test transaction UndoTransaction() error:
    *
    *******************************************************************/
-
-  printf("Test transaction UndoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_UNDO_ERROR_FLAG);
 
@@ -3967,15 +3878,13 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test transaction UndoTransaction() error");
 
   /*******************************************************************
    *
    * Test transaction RedoTransaction() error:
    *
    *******************************************************************/
-
-  printf("Test transaction RedoTransaction() error ... ");
 
   tximpl = factory->create(mgr, THROWS_REDO_ERROR_FLAG);
 
@@ -4145,7 +4054,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
+  passed("Test transaction RedoTransaction() error");
 
   /*******************************************************************
    *
@@ -4154,8 +4063,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * all new commands without pushing them on the undo stack!
    *
    *******************************************************************/
-
-  printf("Test max transaction count of zero ... ");
 
   result = mgr->SetMaxTransactionCount(0);
 
@@ -4259,7 +4166,7 @@ quick_batch_test(TestTransactionFactory *factory)
     }
   }
 
-  printf("passed\n");
+  passed("Test max transaction count of zero");
 
   /*******************************************************************
    *
@@ -4267,8 +4174,6 @@ quick_batch_test(TestTransactionFactory *factory)
    * and redo stack should automatically be released:
    *
    *******************************************************************/
-
-  printf("Release the transaction manager ... ");
 
   result = mgr->SetMaxTransactionCount(-1);
 
@@ -4388,7 +4293,7 @@ quick_batch_test(TestTransactionFactory *factory)
     return result;
   }
 
-  printf("passed\n");
+  passed("Release the transaction manager");
 
   /*******************************************************************
    *
@@ -4397,16 +4302,14 @@ quick_batch_test(TestTransactionFactory *factory)
    *
    *******************************************************************/
 
-  printf("Number of transactions created and destroyed match ... ");
-
   if (sConstructorCount != sDestructorCount) {
     printf("ERROR: Transaction constructor count (%d) != destructor count (%d).\n",
            sConstructorCount, sDestructorCount);
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
-  printf("%d transactions processed during quick batch test.\n",
+  passed("Number of transactions created and destroyed match");
+  passed("%d transactions processed during quick batch test",
          sConstructorCount);
 
   return NS_OK;
@@ -4581,6 +4484,8 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
       printf("%i ", j);
   } // for, iterations.
 
+  printf("passed\n");
+
   result = mgr->Clear();
   if (NS_FAILED(result)) {
     printf("ERROR: Clear() failed. (%d)\n", result);
@@ -4593,9 +4498,7 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
     return NS_ERROR_FAILURE;
   }
 
-  printf("passed\n");
-
-  printf("%d transactions processed during stress test.\n", sConstructorCount);
+  passed("%d transactions processed during stress test", sConstructorCount);
 
   return NS_OK;
 }
