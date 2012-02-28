@@ -475,7 +475,7 @@ struct JSRuntime : js::RuntimeFriendFields
     }
 
     /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
-    JSDebugHooks        globalDebugHooks;
+    JSDebugHooks        debugHooks;
 
     /* If true, new compartments are initially in debug mode. */
     bool                debugMode;
@@ -713,8 +713,6 @@ struct JSArgumentFormatMap {
     JSArgumentFormatMap *next;
 };
 #endif
-
-extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
 
 namespace js {
 
@@ -1014,9 +1012,6 @@ struct JSContext : js::ContextFriendFields
 #endif
 
 #endif /* JSGC_ROOT_ANALYSIS */
-
-    /* Debug hooks associated with the current context. */
-    const JSDebugHooks  *debugHooks;
 
     /* Security callbacks that override any defined on the runtime. */
     JSSecurityCallbacks *securityCallbacks;
