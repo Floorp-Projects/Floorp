@@ -211,6 +211,15 @@ public class GeckoLayerClient implements GeckoEventResponder,
         }
     }
 
+    RectF getDisplayPort() {
+        RectF displayPort = new RectF(mRootLayer.getPosition());
+        displayPort.left -= mDisplayPortMargins.left;
+        displayPort.top -= mDisplayPortMargins.top;
+        displayPort.right += mDisplayPortMargins.right;
+        displayPort.bottom += mDisplayPortMargins.bottom;
+        return displayPort;
+    }
+
     /* Informs Gecko that the screen size has changed. */
     private void sendResizeEventIfNecessary(boolean force) {
         Log.d(LOGTAG, "### sendResizeEventIfNecessary " + force);

@@ -326,15 +326,16 @@ public class LayerController {
      * would prefer that the action didn't take place.
      */
     public boolean getRedrawHint() {
-        // FIXME: Allow redraw while a finger is down, but only if we're about to checkerboard.
-        // This requires fixing aboutToCheckerboard() to know about the new buffer size.
-
         if (mForceRedraw) {
             mForceRedraw = false;
             return true;
         }
 
-        return mPanZoomController.getRedrawHint();
+        if (!mPanZoomController.getRedrawHint()) {
+            return false;
+        }
+
+        return aboutToCheckerboard();
     }
 
     // Returns true if a checkerboard is about to be visible.
@@ -349,8 +350,8 @@ public class LayerController {
         if (adjustedViewport.right > pageSize.width) adjustedViewport.right = pageSize.width;
         if (adjustedViewport.bottom > pageSize.height) adjustedViewport.bottom = pageSize.height;
 
-        RectF tileRect = (mRootLayer == null ? new RectF() : new RectF(mRootLayer.getPosition()));
-        return !tileRect.contains(adjustedViewport);
+        RectF displayPort = (mLayerClient == null ? new RectF() : mLayerClient.getDisplayPort());
+        return !displayPort.contains(adjustedViewport);
     }
 
     /**
