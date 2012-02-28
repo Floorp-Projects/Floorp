@@ -59,8 +59,8 @@ import android.util.*;
 
 public class GeckoInputConnection
     extends BaseInputConnection
-    implements TextWatcher, InputConnectionHandler
-{
+    implements TextWatcher, InputConnectionHandler {
+
     private static final boolean DEBUG = false;
     protected static final String LOGTAG = "GeckoInputConnection";
 
@@ -211,9 +211,9 @@ public class GeckoInputConnection
             extract.text = content.toString();
         } catch (IndexOutOfBoundsException iob) {
             Log.d(LOGTAG,
-                  "IndexOutOfBoundsException thrown from getExtractedText(). start: " +
-                  Selection.getSelectionStart(content) +
-                  " end: " + Selection.getSelectionEnd(content));
+                  "IndexOutOfBoundsException thrown from getExtractedText(). start: "
+                  + Selection.getSelectionStart(content)
+                  + " end: " + Selection.getSelectionEnd(content));
             return null;
         }
         return extract;
@@ -234,7 +234,7 @@ public class GeckoInputConnection
     }
 
     private void replaceText(CharSequence text, int newCursorPosition, boolean composing) {
-        if (DEBUG) Log.d(LOGTAG, String.format("IME: replaceText(\"%s\", %d, %s)", text, newCursorPosition, composing?"true":"false"));
+        if (DEBUG) Log.d(LOGTAG, String.format("IME: replaceText(\"%s\", %d, %b)", text, newCursorPosition, composing));
 
         if (text == null)
             text = "";
@@ -243,15 +243,15 @@ public class GeckoInputConnection
         if (content == null) {
             return;
         }
-        
+
         beginBatchEdit();
-        
+
         // delete composing text set previously.
         int a = getComposingSpanStart(content);
         int b = getComposingSpanEnd(content);
 
         if (DEBUG) Log.d(LOGTAG, "Composing span: " + a + " to " + b);
-        
+
         if (b < a) {
             int tmp = a;
             a = b;
@@ -280,15 +280,15 @@ public class GeckoInputConnection
                 sp.setSpan(COMPOSING_SPAN, 0, sp.length(),
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_COMPOSING);
             } else {
-                sp = (Spannable)text;
+                sp = (Spannable) text;
             }
             setComposingSpans(sp);
         }
-        
+
         if (DEBUG) Log.d(LOGTAG, "Replacing from " + a + " to " + b + " with \""
                 + text + "\", composing=" + composing
                 + ", type=" + text.getClass().getCanonicalName());
-        
+
         if (DEBUG) {
             LogPrinter lp = new LogPrinter(Log.VERBOSE, LOGTAG);
             lp.println("Current text:");
@@ -296,7 +296,7 @@ public class GeckoInputConnection
             lp.println("Composing text:");
             TextUtils.dumpSpans(text, lp, "  ");
         }
-        
+
         // Position the cursor appropriately, so that after replacing the
         // desired range of text it will be located in the correct spot.
         // This allows us to deal with filters performing edits on the text
@@ -312,13 +312,13 @@ public class GeckoInputConnection
         Selection.setSelection(content, newCursorPosition);
 
         content.replace(a, b, text);
-        
+
         if (DEBUG) {
             LogPrinter lp = new LogPrinter(Log.VERBOSE, LOGTAG);
             lp.println("Final text:");
             TextUtils.dumpSpans(content, lp, "  ");
         }
-        
+
         endBatchEdit();
     }
 
@@ -342,7 +342,7 @@ public class GeckoInputConnection
 
         if (a < 0 || b < 0)
             return null;
-        
+
         if (b < a) {
             int tmp = a;
             a = b;
@@ -351,7 +351,7 @@ public class GeckoInputConnection
 
         return TextUtils.substring(content, a, b);
     }
-    
+
     public boolean onKeyDel() {
         // Some IMEs don't update us on deletions
         // In that case we are not updated when a composition
@@ -449,8 +449,7 @@ public class GeckoInputConnection
     }
 
     // TextWatcher
-    public void onTextChanged(CharSequence s, int start, int before, int count)
-    {
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
         if (mComposing && mCompositionStart != start) {
             // Changed range is different from the composition, need to reset the composition
             endComposition();
@@ -523,25 +522,20 @@ public class GeckoInputConnection
                     continue;
 
                 // Get and iterate through list of span objects within range
-                CharacterStyle styles[] = span.getSpans(
-                    spanStart, spanEnd, CharacterStyle.class);
+                CharacterStyle[] styles = span.getSpans(spanStart, spanEnd, CharacterStyle.class);
 
                 for (CharacterStyle style : styles) {
                     if (style instanceof UnderlineSpan) {
                         // Text should be underlined
                         rangeStyles |= GeckoEvent.IME_RANGE_UNDERLINE;
-
                     } else if (style instanceof ForegroundColorSpan) {
                         // Text should be of a different foreground color
                         rangeStyles |= GeckoEvent.IME_RANGE_FORECOLOR;
-                        rangeForeColor =
-                            ((ForegroundColorSpan)style).getForegroundColor();
-
+                        rangeForeColor = ((ForegroundColorSpan) style).getForegroundColor();
                     } else if (style instanceof BackgroundColorSpan) {
                         // Text should be of a different background color
                         rangeStyles |= GeckoEvent.IME_RANGE_BACKCOLOR;
-                        rangeBackColor =
-                            ((BackgroundColorSpan)style).getBackgroundColor();
+                        rangeBackColor = ((BackgroundColorSpan) style).getBackgroundColor();
                     }
                 }
 
@@ -557,8 +551,8 @@ public class GeckoInputConnection
                 spanStart = spanEnd;
             } while (spanStart < text.length());
         } else {
-            if (DEBUG) Log.d(LOGTAG, ". . . sendTextToGecko: IME_ADD_RANGE, 0, " + text.length() +
-                                     ", IME_RANGE_RAWINPUT, IME_RANGE_UNDERLINE)");
+            if (DEBUG) Log.d(LOGTAG, ". . . sendTextToGecko: IME_ADD_RANGE, 0, " + text.length()
+                                     + ", IME_RANGE_RAWINPUT, IME_RANGE_UNDERLINE)");
             GeckoAppShell.sendEventToGecko(
                 GeckoEvent.createIMERangeEvent(0, text == null ? 0 : text.length(),
                                                GeckoEvent.IME_RANGE_RAWINPUT,
@@ -573,16 +567,13 @@ public class GeckoInputConnection
                                            text.toString()));
     }
 
-    public void afterTextChanged(Editable s)
-    {
+    public void afterTextChanged(Editable s) {
     }
 
-    public void beforeTextChanged(CharSequence s, int start, int count, int after)
-    {
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
     }
 
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs)
-    {
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
         outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
         outAttrs.actionLabel = null;
@@ -799,8 +790,7 @@ public class GeckoInputConnection
     }
 
     public void notifyIMEEnabled(int state, String typeHint,
-                                        String actionHint, boolean landscapeFS)
-    {
+                                 String actionHint, boolean landscapeFS) {
         View v = GeckoApp.mAppContext.getLayerController().getView();
 
         if (v == null)
@@ -814,7 +804,6 @@ public class GeckoInputConnection
         mIMELandscapeFS = landscapeFS;
         IMEStateUpdater.enableIME();
     }
-
 
     public void notifyIMEChange(String text, int start, int end, int newEnd) {
         View v = GeckoApp.mAppContext.getLayerController().getView();
@@ -837,7 +826,8 @@ public class GeckoInputConnection
         mSelectionLength = selectionLength;
         try {
             mQueryResult.put(result);
-        } catch (InterruptedException e) {}
+        } catch (InterruptedException e) {
+        }
     }
 
     static private final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
@@ -847,10 +837,8 @@ public class GeckoInputConnection
     static private final int NOTIFY_IME_CANCELCOMPOSITION = 2;
     static private final int NOTIFY_IME_FOCUSCHANGE = 3;
 
-
     /* Delay updating IME states (see bug 573800) */
-    private static final class IMEStateUpdater extends TimerTask
-    {
+    private static final class IMEStateUpdater extends TimerTask {
         static private IMEStateUpdater instance;
         private boolean mEnable, mReset;
 
@@ -872,12 +860,12 @@ public class GeckoInputConnection
 
         public void run() {
             if (DEBUG) Log.d(LOGTAG, "IME: run()");
-            synchronized(IMEStateUpdater.class) {
+            synchronized (IMEStateUpdater.class) {
                 instance = null;
             }
 
             View v = GeckoApp.mAppContext.getLayerController().getView();
-            if (DEBUG) Log.d(LOGTAG, "IME: v="+v);
+            if (DEBUG) Log.d(LOGTAG, "IME: v=" + v);
 
             InputMethodManager imm = (InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm == null)
@@ -897,16 +885,14 @@ public class GeckoInputConnection
         }
     }
 
-    public void setEditable(String contents)
-    {
+    public void setEditable(String contents) {
         mEditable.removeSpan(this);
         mEditable.replace(0, mEditable.length(), contents);
         mEditable.setSpan(this, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         Selection.setSelection(mEditable, contents.length());
     }
 
-    public void initEditable(String contents)
-    {
+    public void initEditable(String contents) {
         mEditable = mEditableFactory.newEditable(contents);
         mEditable.setSpan(this, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         Selection.setSelection(mEditable, contents.length());
@@ -953,9 +939,7 @@ public class GeckoInputConnection
     SynchronousQueue<String> mQueryResult;
 }
 
-class DebugGeckoInputConnection
-    extends GeckoInputConnection
-{
+class DebugGeckoInputConnection extends GeckoInputConnection {
     public DebugGeckoInputConnection(View targetView) {
         super(targetView);
     }
@@ -986,7 +970,7 @@ class DebugGeckoInputConnection
 
     @Override
     public boolean deleteSurroundingText(int leftLength, int rightLength) {
-        Log.d(LOGTAG, "IME: deleteSurroundingText(leftLen=" + leftLength +", rightLen=" + rightLength + ")");
+        Log.d(LOGTAG, "IME: deleteSurroundingText(leftLen=" + leftLength + ", rightLen=" + rightLength + ")");
         return super.deleteSurroundingText(leftLength, rightLength);
     }
 
@@ -1059,7 +1043,7 @@ class DebugGeckoInputConnection
         Log.d(LOGTAG, ". . . getComposingText: Composing text = \"" + s + "\"");
         return s;
     }
-    
+
     @Override
     public boolean onKeyDel() {
         Log.d(LOGTAG, "IME: onKeyDel");
@@ -1088,29 +1072,25 @@ class DebugGeckoInputConnection
     }
 
     @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count)
-    {
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
         Log.d(LOGTAG, String.format("IME: onTextChanged(\"%s\" start=%d, before=%d, count=%d)", s, start, before, count));
         super.onTextChanged(s, start, before, count);
     }
 
     @Override
-    public void afterTextChanged(Editable s)
-    {
+    public void afterTextChanged(Editable s) {
         Log.d(LOGTAG, "IME: afterTextChanged(\"" + s + "\")");
         super.afterTextChanged(s);
     }
 
     @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after)
-    {
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         Log.d(LOGTAG, String.format("IME: beforeTextChanged(\"%s\", start=%d, count=%d, after=%d)", s, start, count, after));
         super.beforeTextChanged(s, start, count, after);
     }
 
     @Override
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs)
-    {
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         Log.d(LOGTAG, "IME: handleCreateInputConnection called");
         return super.onCreateInputConnection(outAttrs);
     }
