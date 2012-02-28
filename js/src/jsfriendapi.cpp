@@ -734,6 +734,12 @@ IsIncrementalGCEnabled(JSRuntime *rt)
     return rt->gcIncrementalEnabled;
 }
 
+extern JS_FRIEND_API(void)
+DisableIncrementalGC(JSRuntime *rt)
+{
+    rt->gcIncrementalEnabled = false;
+}
+
 JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime *rt)
 {
