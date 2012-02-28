@@ -126,7 +126,6 @@ void JS_FASTCALL GetElem(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetElem(VMFrame &f);
 void JS_FASTCALL ToId(VMFrame &f);
 void JS_FASTCALL ImplicitThis(VMFrame &f, PropertyName *name);
-void JS_FASTCALL GetUpvar(VMFrame &f, uint32_t index);
 
 template <JSBool strict> void JS_FASTCALL DelProp(VMFrame &f, PropertyName *name);
 template <JSBool strict> void JS_FASTCALL DelElem(VMFrame &f);

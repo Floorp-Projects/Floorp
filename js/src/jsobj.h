@@ -1665,11 +1665,18 @@ js_SetNativeAttributes(JSContext *cx, JSObject *obj, js::Shape *shape,
 namespace js {
 
 /*
- * If obj has an already-resolved data property for methodid, return true and
- * store the property value in *vp.
+ * If obj has an already-resolved data property for id, return true and
+ * store the property value in *vp. This helper assumes the caller has already
+ * called js_CheckForStringIndex.
  */
 extern bool
-HasDataProperty(JSContext *cx, JSObject *obj, jsid methodid, js::Value *vp);
+HasDataProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+
+inline bool
+HasDataProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value *vp)
+{
+    return HasDataProperty(cx, obj, js_CheckForStringIndex(ATOM_TO_JSID(atom)), vp);
+}
 
 extern JSBool
 CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,

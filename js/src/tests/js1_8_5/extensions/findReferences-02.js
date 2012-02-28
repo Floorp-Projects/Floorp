@@ -9,9 +9,6 @@ if (typeof findReferences == "function") {
 
     var o = ({});
 
-    function returnFlat(x) { return function flat() { return x; }; }
-    assertEq(referencesVia(returnFlat(o), 'upvars[0]', o), true);
-
     function returnHeavy(y) { eval(''); return function heavy() { return y; }; }
     assertEq(referencesVia(returnHeavy(o), 'fun_callscope; y', o), true);
     assertEq(referencesVia(returnHeavy(o), 'fun_callscope; shape; base; parent', this), true);

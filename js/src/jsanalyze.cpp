@@ -510,11 +510,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_THROW:
           case JSOP_EXCEPTION:
           case JSOP_DEFLOCALFUN:
-          case JSOP_DEFLOCALFUN_FC:
           case JSOP_LAMBDA:
-          case JSOP_LAMBDA_FC:
-          case JSOP_GETFCSLOT:
-          case JSOP_CALLFCSLOT:
           case JSOP_DEBUGGER:
           case JSOP_FUNCALL:
           case JSOP_FUNAPPLY:
@@ -790,8 +786,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
           case JSOP_SETARG:
           case JSOP_SETLOCAL:
           case JSOP_SETLOCALPOP:
-          case JSOP_DEFLOCALFUN:
-          case JSOP_DEFLOCALFUN_FC: {
+          case JSOP_DEFLOCALFUN: {
             uint32_t slot = GetBytecodeSlot(script, pc);
             if (!slotEscapes(slot))
                 killVariable(cx, lifetimes[slot], offset, saved, savedCount);
