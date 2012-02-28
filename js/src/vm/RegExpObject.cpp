@@ -236,7 +236,7 @@ RegExpCode::reportPCREError(JSContext *cx, int error)
 #endif /* ENABLE_YARR_JIT */
 
 bool
-RegExpCode::compile(JSContext *cx, JSLinearString &pattern, uintN *parenCount, RegExpFlag flags)
+RegExpCode::compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount, RegExpFlag flags)
 {
 #if ENABLE_YARR_JIT
     /* Parse the pattern. */

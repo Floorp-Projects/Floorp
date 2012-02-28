@@ -772,7 +772,7 @@ class CallCompiler : public BaseCompiler
     bool generateNativeStub()
     {
         /* Snapshot the frameDepth before SplatApplyArgs modifies it. */
-        uintN initialFrameDepth = f.regs.sp - f.fp()->slots();
+        unsigned initialFrameDepth = f.regs.sp - f.fp()->slots();
 
         /*
          * SplatApplyArgs has not been called, so we call it here before
@@ -1044,7 +1044,7 @@ ic::NativeNew(VMFrame &f, CallICInfo *ic)
 }
 
 static JS_ALWAYS_INLINE bool
-BumpStack(VMFrame &f, uintN inc)
+BumpStack(VMFrame &f, unsigned inc)
 {
     if (f.regs.sp + inc < f.stackLimit)
         return true;
@@ -1080,7 +1080,7 @@ ic::SplatApplyArgs(VMFrame &f)
         JS_ASSERT(JS_CALLEE(cx, vp).toObject().toFunction()->u.n.native == js_fun_apply);
 
         StackFrame *fp = f.regs.fp();
-        uintN n;
+        unsigned n;
         if (!fp->hasArgsObj()) {
             /* Extract the common/fast path where there is no args obj. */
             n = fp->numActualArgs();
@@ -1094,7 +1094,7 @@ ic::SplatApplyArgs(VMFrame &f)
             JSObject *aobj = &fp->argsObj();
 
             /* Steps 4-5 */
-            uintN length;
+            unsigned length;
             if (!js_GetLengthProperty(cx, aobj, &length))
                 THROWV(false);
 
@@ -1154,7 +1154,7 @@ ic::SplatApplyArgs(VMFrame &f)
         THROWV(false);
     }
 
-    intN delta = length - 1;
+    int delta = length - 1;
     if (delta > 0 && !BumpStack(f, delta))
         THROWV(false);
     f.regs.sp += delta;

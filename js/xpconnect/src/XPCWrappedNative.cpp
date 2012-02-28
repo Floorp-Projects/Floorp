@@ -2024,7 +2024,7 @@ XPCWrappedNative::InitTearOffJSObject(XPCCallContext& ccx,
 
 /***************************************************************************/
 
-static JSBool Throw(uintN errNum, XPCCallContext& ccx)
+static JSBool Throw(unsigned errNum, XPCCallContext& ccx)
 {
     XPCThrower::Throw(errNum, ccx);
     return false;
@@ -2474,7 +2474,7 @@ CallMethodHelper::QueryInterfaceFastPath() const
     }
 
     jsval v = JSVAL_NULL;
-    uintN err;
+    unsigned err;
     JSBool success =
         XPCConvert::NativeData2JS(mCallContext, &v, &qiresult,
                                   nsXPTType::T_INTERFACE_IS,
@@ -2640,7 +2640,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
         return false;
     }
 
-    uintN err;
+    unsigned err;
     if (!XPCConvert::JSData2Native(mCallContext, &dp->val, src, type,
                                    true, &param_iid, &err)) {
         ThrowBadParam(err, i, mCallContext);
@@ -2738,7 +2738,7 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
         !GetInterfaceTypeFromParam(i, datum_type, &param_iid))
         return false;
 
-    uintN err;
+    unsigned err;
 
     if (isArray || isSizedString) {
         if (!GetArraySizeFromParam(i, &array_count))

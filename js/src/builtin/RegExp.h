@@ -69,10 +69,10 @@ ExecuteRegExp(JSContext *cx, RegExpStatics *res, RegExpShared &shared,
               size_t *lastIndex, RegExpExecType type, Value *rval);
 
 extern JSBool
-regexp_exec(JSContext *cx, uintN argc, Value *vp);
+regexp_exec(JSContext *cx, unsigned argc, Value *vp);
 
 extern JSBool
-regexp_test(JSContext *cx, uintN argc, Value *vp);
+regexp_test(JSContext *cx, unsigned argc, Value *vp);
 
 } /* namespace js */
 

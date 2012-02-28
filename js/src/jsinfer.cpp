@@ -3311,7 +3311,7 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
         }
 
         /* Check if the script definitely binds the identifier. */
-        uintN index;
+        unsigned index;
         BindingKind kind = script->bindings.lookup(cx, atom, &index);
         if (kind == ARGUMENT || kind == VARIABLE) {
             TypeObject *obj = script->function()->getType(cx);

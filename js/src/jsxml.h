@@ -147,8 +147,8 @@ typedef enum JSXMLClass {
 #define JSXML_CLASS_HAS_KIDS(class_)    ((class_) < JSXML_CLASS_ATTRIBUTE)
 #define JSXML_CLASS_HAS_VALUE(class_)   ((class_) >= JSXML_CLASS_ATTRIBUTE)
 #define JSXML_CLASS_HAS_NAME(class_)                                          \
-    ((uintN)((class_) - JSXML_CLASS_ELEMENT) <=                               \
-     (uintN)(JSXML_CLASS_PROCESSING_INSTRUCTION - JSXML_CLASS_ELEMENT))
+    ((unsigned)((class_) - JSXML_CLASS_ELEMENT) <=                               \
+     (unsigned)(JSXML_CLASS_PROCESSING_INSTRUCTION - JSXML_CLASS_ELEMENT))
 
 #ifdef DEBUG_notme
 #include "jsclist.h"

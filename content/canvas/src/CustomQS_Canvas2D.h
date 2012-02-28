@@ -246,7 +246,7 @@ GetImageDataDimensions(JSContext *cx, JSObject *dataObject, uint32_t *width, uin
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
 
@@ -292,7 +292,7 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
 
@@ -349,7 +349,7 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
 }
 
 static JSBool
-nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
 

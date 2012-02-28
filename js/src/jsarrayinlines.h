@@ -75,13 +75,13 @@ JSObject::ensureDenseArrayInitializedLength(JSContext *cx, uint32_t index, uint3
 }
 
 inline JSObject::EnsureDenseResult
-JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
+JSObject::ensureDenseArrayElements(JSContext *cx, unsigned index, unsigned extra)
 {
     JS_ASSERT(isDenseArray());
 
-    uintN currentCapacity = getDenseArrayCapacity();
+    unsigned currentCapacity = getDenseArrayCapacity();
 
-    uintN requiredCapacity;
+    unsigned requiredCapacity;
     if (extra == 1) {
         /* Optimize for the common case. */
         if (index < currentCapacity) {

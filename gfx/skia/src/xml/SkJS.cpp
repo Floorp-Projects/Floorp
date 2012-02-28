@@ -84,7 +84,7 @@ global_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **objp)
+global_resolve(JSContext *cx, JSObject *obj, jsval id, unsigned flags, JSObject **objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
     if ((flags & JSRESOLVE_ASSIGNING) == 0) {

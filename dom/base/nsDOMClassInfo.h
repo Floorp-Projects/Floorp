@@ -425,7 +425,7 @@ public:
                          JSObject * obj, JSObject * *_retval);
 
   static JSBool GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
-                                              jsid id, uintN flags,
+                                              jsid id, unsigned flags,
                                               JSObject **objp);
   static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
                                                jsid id, jsval *vp);
@@ -863,16 +863,16 @@ public:
   static JSBool DocumentAllGetProperty(JSContext *cx, JSObject *obj, jsid id,
                                        jsval *vp);
   static JSBool DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsid id,
-                                      uintN flags, JSObject **objp);
+                                      unsigned flags, JSObject **objp);
   static void ReleaseDocument(JSContext *cx, JSObject *obj);
-  static JSBool CallToGetPropMapper(JSContext *cx, uintN argc, jsval *vp);
+  static JSBool CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp);
   static JSBool DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
                                              jsid id, jsval *vp);
   static JSBool DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
-                                            jsid id, uintN flags,
+                                            jsid id, unsigned flags,
                                             JSObject **objp);
   static JSBool DocumentAllTagsNewResolve(JSContext *cx, JSObject *obj,
-                                          jsid id, uintN flags,
+                                          jsid id, unsigned flags,
                                           JSObject **objp);
 
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,

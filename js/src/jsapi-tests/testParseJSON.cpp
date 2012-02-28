@@ -194,7 +194,7 @@ reportJSONEror(JSContext *cx, const char *message, JSErrorReport *report)
 END_TEST(testParseJSON_error)
 
 static JSBool
-Censor(JSContext *cx, uintN argc, jsval *vp)
+Censor(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_ASSERT(argc == 2);
 #ifdef DEBUG

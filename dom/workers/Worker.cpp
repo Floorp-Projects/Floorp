@@ -139,7 +139,7 @@ public:
 
 protected:
   static JSBool
-  ConstructInternal(JSContext* aCx, uintN aArgc, jsval* aVp,
+  ConstructInternal(JSContext* aCx, unsigned aArgc, jsval* aVp,
                     bool aIsChromeWorker)
   {
     if (!aArgc) {
@@ -233,7 +233,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     return ConstructInternal(aCx, aArgc, aVp, false);
   }
@@ -259,7 +259,7 @@ private:
   }
 
   static JSBool
-  Terminate(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Terminate(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -276,7 +276,7 @@ private:
   }
 
   static JSBool
-  PostMessage(JSContext* aCx, uintN aArgc, jsval* aVp)
+  PostMessage(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -387,7 +387,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     return ConstructInternal(aCx, aArgc, aVp, true);
   }

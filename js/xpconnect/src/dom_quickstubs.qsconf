@@ -543,7 +543,7 @@ nsIDOMNode_GetChildNodes_customMethodCallCode = """
 
 nsIDOMHTMLDocument_Write_customMethodCallCode = """
     nsAString &str = arg0;
-    for (uintN i = 1; i < argc; ++i) {
+    for (unsigned i = 1; i < argc; ++i) {
       xpc_qsDOMString next_arg(cx, argv[i], &argv[i],
                                xpc_qsDOMString::eStringify,
                                xpc_qsDOMString::eStringify);

@@ -62,7 +62,7 @@ void *ExecutableAllocator::computeRandomAllocationAddress()
      * bits of randomness in our selection.
      * x64: [2GiB, 4TiB), with 25 bits of randomness.
      */
-    static const uintN chunkBits = 16;
+    static const unsigned chunkBits = 16;
 #if WTF_CPU_X86_64
     static const uintptr_t base = 0x0000000080000000;
     static const uintptr_t mask = 0x000003ffffff0000;

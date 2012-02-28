@@ -80,7 +80,7 @@ protected:
   PRUnichar* mFieldText;
   PRUint32 mFieldTextLength;
   PRUint32 mLineNumber;
-  uintN mJSAttributes;
+  unsigned mJSAttributes;
 };
 
 #endif // nsXBLProtoImplField_h__

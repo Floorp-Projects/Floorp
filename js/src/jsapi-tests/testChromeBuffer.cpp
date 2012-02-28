@@ -30,7 +30,7 @@ JSClass global_class = {
 JS::Anchor<JSObject *> trusted_glob, trusted_fun;
 
 JSBool
-CallTrusted(JSContext *cx, uintN argc, jsval *vp)
+CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!JS_SaveFrameChain(cx))
         return JS_FALSE;

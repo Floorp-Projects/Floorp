@@ -313,10 +313,10 @@ class JSAPITest
 
   protected:
     static JSBool
-    print(JSContext *cx, uintN argc, jsval *vp)
+    print(JSContext *cx, unsigned argc, jsval *vp)
     {
         jsval *argv = JS_ARGV(cx, vp);
-        for (uintN i = 0; i < argc; i++) {
+        for (unsigned i = 0; i < argc; i++) {
             JSString *str = JS_ValueToString(cx, argv[i]);
             if (!str)
                 return JS_FALSE;

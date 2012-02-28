@@ -49,7 +49,7 @@ namespace scriptloader {
 
 bool LoadWorkerScript(JSContext* aCx);
 
-bool Load(JSContext* aCx, uintN aURLCount, jsval* aURLs);
+bool Load(JSContext* aCx, unsigned aURLCount, jsval* aURLs);
 
 } // namespace scriptloader
 

@@ -138,7 +138,7 @@ GetKeyFromJSValOrThrow(JSContext* aCx,
 
 JSBool
 MakeOnlyKeyRange(JSContext* aCx,
-                 uintN aArgc,
+                 unsigned aArgc,
                  jsval* aVp)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -159,7 +159,7 @@ MakeOnlyKeyRange(JSContext* aCx,
 
 JSBool
 MakeLowerBoundKeyRange(JSContext* aCx,
-                       uintN aArgc,
+                       unsigned aArgc,
                        jsval* aVp)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -181,7 +181,7 @@ MakeLowerBoundKeyRange(JSContext* aCx,
 
 JSBool
 MakeUpperBoundKeyRange(JSContext* aCx,
-                       uintN aArgc,
+                       unsigned aArgc,
                        jsval* aVp)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -203,7 +203,7 @@ MakeUpperBoundKeyRange(JSContext* aCx,
 
 JSBool
 MakeBoundKeyRange(JSContext* aCx,
-                  uintN aArgc,
+                  unsigned aArgc,
                   jsval* aVp)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
