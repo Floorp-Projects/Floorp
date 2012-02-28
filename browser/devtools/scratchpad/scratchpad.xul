@@ -81,10 +81,10 @@
   <command id="sp-cmd-resetContext" oncommand="Scratchpad.resetContext();"/>
   <command id="sp-cmd-errorConsole" oncommand="Scratchpad.openErrorConsole();" disabled="true"/>
   <command id="sp-cmd-webConsole" oncommand="Scratchpad.openWebConsole();"/>
-  <command id="sp-cmd-undo" oncommand="Scratchpad.undo();" disabled="true"/>
-  <command id="sp-cmd-redo" oncommand="Scratchpad.redo();" disabled="true"/>
   <command id="sp-cmd-documentationLink" oncommand="Scratchpad.openDocumentationPage();"/>
 </commandset>
+
+<keyset id="sourceEditorKeys"/>
 
 <keyset id="sp-keyset">
   <key id="sp-key-window"
@@ -123,9 +123,9 @@
        modifiers="accel"/>
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
   <key id="key_undo" key="&undoCmd.key;" modifiers="accel"
-       oncommand="Scratchpad.undo();"/>
+       command="se-cmd-undo"/>
   <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift"
-       oncommand="Scratchpad.redo();"/>
+       command="se-cmd-redo"/>
   <key id="sp-key-run"
        key="&run.key;"
        command="sp-cmd-run"
@@ -168,10 +168,6 @@
        command="cmd_findPrevious"
        modifiers="shift"/>
 #endif
-  <key id="key_gotoLine"
-       key="&gotoLineCmd.key;"
-       command="cmd_gotoLine"
-       modifiers="accel"/>
   <key id="key_openHelp"
        keycode="VK_F1"
        command="sp-cmd-documentationLink"/>
@@ -223,17 +219,17 @@
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
     <menupopup id="sp-menu_editpopup"
-               onpopupshowing="Scratchpad.onEditPopupShowing()">
+               onpopupshowing="goUpdateGlobalEditMenuItems()">
       <menuitem id="sp-menu-undo"
                 label="&undoCmd.label;"
                 key="key_undo"
                 accesskey="&undoCmd.accesskey;"
-                command="sp-cmd-undo"/>
+                command="se-cmd-undo"/>
       <menuitem id="sp-menu-redo"
                 label="&redoCmd.label;"
                 key="key_redo"
                 accesskey="&redoCmd.accesskey;"
-                command="sp-cmd-redo"/>
+                command="se-cmd-redo"/>
       <menuseparator/>
       <menuitem id="sp-menu-cut"
                 label="&cutCmd.label;"
