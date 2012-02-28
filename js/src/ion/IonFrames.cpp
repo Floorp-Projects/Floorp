@@ -272,6 +272,12 @@ ion::HandleException(ResumeFromException *rfe)
         ++iter;
     }
 
+    // We need to close all iterators that are open on the stack. Note that we
+    // don't care about the return value; we're in an error, the error state
+    // won't change.
+    while (cx->enumerators != cx->runtime->ionActivation->savedEnumerators())
+        UnwindIteratorForException(cx, cx->enumerators);
+
     rfe->stackPointer = iter.fp();
 }
 

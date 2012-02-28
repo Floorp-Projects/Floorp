@@ -192,10 +192,12 @@ class IonActivation
     BailoutClosure *bailout_;
     uint8 *prevIonTop_;
     JSContext *prevIonJSContext_;
+    JSObject *savedEnumerators_;
 
   public:
     IonActivation(JSContext *cx, StackFrame *fp);
     ~IonActivation();
+
     StackFrame *entryfp() const {
         return entryfp_;
     }
@@ -224,6 +226,9 @@ class IonActivation
     }
     JSCompartment *compartment() const {
         return compartment_;
+    }
+    JSObject *savedEnumerators() const {
+        return savedEnumerators_;
     }
 };
 
