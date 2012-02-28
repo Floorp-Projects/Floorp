@@ -1433,10 +1433,10 @@ JS_FRIEND_API(void)
 js_CallNewScriptHook(JSContext *cx, JSScript *script, JSFunction *fun)
 {
     JS_ASSERT(!script->callDestroyHook);
-    if (JSNewScriptHook hook = cx->debugHooks->newScriptHook) {
+    if (JSNewScriptHook hook = cx->runtime->debugHooks.newScriptHook) {
         AutoKeepAtoms keep(cx->runtime);
         hook(cx, script->filename, script->lineno, script, fun,
-             cx->debugHooks->newScriptHookData);
+             cx->runtime->debugHooks.newScriptHookData);
     }
     script->callDestroyHook = true;
 }
@@ -1447,8 +1447,8 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
     if (!script->callDestroyHook)
         return;
 
-    if (JSDestroyScriptHook hook = cx->debugHooks->destroyScriptHook)
-        hook(cx, script, cx->debugHooks->destroyScriptHookData);
+    if (JSDestroyScriptHook hook = cx->runtime->debugHooks.destroyScriptHook)
+        hook(cx, script, cx->runtime->debugHooks.destroyScriptHookData);
     script->callDestroyHook = false;
     JS_ClearScriptTraps(cx, script);
 }

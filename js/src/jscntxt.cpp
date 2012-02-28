@@ -359,11 +359,9 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
     if (!JS_IsRunning(cx) ||
         !js_ErrorToException(cx, message, reportp, callback, userRef)) {
         js_ReportErrorAgain(cx, message, reportp);
-    } else if (cx->debugHooks->debugErrorHook && cx->errorReporter) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
-        /* test local in case debugErrorHook changed on another thread */
-        if (hook)
-            hook(cx, message, reportp, cx->debugHooks->debugErrorHookData);
+    } else if (JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook) {
+        if (cx->errorReporter)
+            hook(cx, message, reportp, cx->runtime->debugHooks.debugErrorHookData);
     }
 }
 
@@ -422,9 +420,9 @@ js_ReportOutOfMemory(JSContext *cx)
      */
     cx->clearPendingException();
     if (onError) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
+        JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook;
         if (hook &&
-            !hook(cx, msg, &report, cx->debugHooks->debugErrorHookData)) {
+            !hook(cx, msg, &report, cx->runtime->debugHooks.debugErrorHookData)) {
             onError = NULL;
         }
     }
@@ -754,12 +752,9 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
      * sending the error on to the regular ErrorReporter.
      */
     if (onError) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
-        if (hook &&
-            !hook(cx, cx->lastMessage, reportp,
-                  cx->debugHooks->debugErrorHookData)) {
+        JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook;
+        if (hook && !hook(cx, cx->lastMessage, reportp, cx->runtime->debugHooks.debugErrorHookData))
             onError = NULL;
-        }
     }
     if (onError)
         onError(cx, cx->lastMessage, reportp);
@@ -984,7 +979,6 @@ JSContext::JSContext(JSRuntime *rt)
     outstandingRequests(0),
 #endif
     autoGCRooters(NULL),
-    debugHooks(&rt->globalDebugHooks),
     securityCallbacks(NULL),
     resolveFlags(0),
     rngSeed(0),

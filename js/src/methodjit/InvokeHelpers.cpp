@@ -531,13 +531,13 @@ js_InternalThrow(VMFrame &f)
     for (;;) {
         if (cx->isExceptionPending()) {
             // Call the throw hook if necessary
-            JSThrowHook handler = cx->debugHooks->throwHook;
+            JSThrowHook handler = cx->runtime->debugHooks.throwHook;
             if (handler || !cx->compartment->getDebuggees().empty()) {
                 Value rval;
                 JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
                 if (st == JSTRAP_CONTINUE && handler) {
                     st = handler(cx, cx->fp()->script(), cx->regs().pc, &rval,
-                                 cx->debugHooks->throwHookData);
+                                 cx->runtime->debugHooks.throwHookData);
                 }
 
                 switch (st) {
