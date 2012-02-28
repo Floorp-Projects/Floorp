@@ -179,7 +179,7 @@ child-system-compartment\n\
   // pasting works as expected.
   function test(aFrameId, aExpected, aNext) {
     let frame = document.getElementById(aFrameId);
-    let handler = function() {
+    SimpleTest.executeSoon(function() {
       frame.focus();
       SimpleTest.waitForClipboard(
         function(aActual) {
@@ -201,11 +201,7 @@ child-system-compartment\n\
           finish();
         }
       );
-    };
-    // about:compartment dispatches a "bodygenerated" event to the document
-    // when it's finished generating its DOM.  If we don't wait for that we end
-    // up copying an empty page.
-    frame.contentDocument.addEventListener("bodygenerated", handler, false);
+    });
   }
 
   SimpleTest.waitForFocus(function() {
