@@ -2753,7 +2753,7 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type, JSObject *parent
     if (!shape)
         return NULL;
 
-    HeapValue *slots;
+    HeapSlot *slots;
     if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
@@ -3250,8 +3250,8 @@ struct JSObject::TradeGutsReserved {
     int newbfixed;
     Shape *newashape;
     Shape *newbshape;
-    HeapValue *newaslots;
-    HeapValue *newbslots;
+    HeapSlot *newaslots;
+    HeapSlot *newbslots;
 
     TradeGutsReserved(JSContext *cx)
         : cx(cx), avals(cx), bvals(cx),
@@ -3350,16 +3350,16 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *a, JSObject *b,
     unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan());
 
     if (adynamic) {
-        reserved.newaslots = (HeapValue *) cx->malloc_(sizeof(HeapValue) * adynamic);
+        reserved.newaslots = (HeapSlot *) cx->malloc_(sizeof(HeapSlot) * adynamic);
         if (!reserved.newaslots)
             return false;
-        Debug_SetValueRangeToCrashOnTouch(reserved.newaslots, adynamic);
+        Debug_SetSlotRangeToCrashOnTouch(reserved.newaslots, adynamic);
     }
     if (bdynamic) {
-        reserved.newbslots = (HeapValue *) cx->malloc_(sizeof(HeapValue) * bdynamic);
+        reserved.newbslots = (HeapSlot *) cx->malloc_(sizeof(HeapSlot) * bdynamic);
         if (!reserved.newbslots)
             return false;
-        Debug_SetValueRangeToCrashOnTouch(reserved.newbslots, bdynamic);
+        Debug_SetSlotRangeToCrashOnTouch(reserved.newbslots, bdynamic);
     }
 
     return true;
@@ -3421,11 +3421,10 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
          * Trigger post barriers for fixed slots. JSObject bits are barriered
          * below, in common with the other case.
          */
+        JSCompartment *comp = cx->compartment;
         for (size_t i = 0; i < a->numFixedSlots(); ++i) {
-            HeapValue *slotA = &a->getFixedSlotRef(i);
-            HeapValue *slotB = &b->getFixedSlotRef(i);
-            HeapValue::writeBarrierPost(*slotA, slotA);
-            HeapValue::writeBarrierPost(*slotB, slotB);
+            HeapSlot::writeBarrierPost(comp, a, i);
+            HeapSlot::writeBarrierPost(comp, b, i);
         }
 #endif
     } else {
@@ -3816,55 +3815,27 @@ js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto,
 }
 
 void
-JSObject::getSlotRange(size_t start, size_t length,
-                       HeapValue **fixedStart, HeapValue **fixedEnd,
-                       HeapValue **slotsStart, HeapValue **slotsEnd)
-{
-    JS_ASSERT(!isDenseArray());
-    JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
-
-    size_t fixed = numFixedSlots();
-    if (start < fixed) {
-        if (start + length < fixed) {
-            *fixedStart = &fixedSlots()[start];
-            *fixedEnd = &fixedSlots()[start + length];
-            *slotsStart = *slotsEnd = NULL;
-        } else {
-            size_t localCopy = fixed - start;
-            *fixedStart = &fixedSlots()[start];
-            *fixedEnd = &fixedSlots()[start + localCopy];
-            *slotsStart = &slots[0];
-            *slotsEnd = &slots[length - localCopy];
-        }
-    } else {
-        *fixedStart = *fixedEnd = NULL;
-        *slotsStart = &slots[start - fixed];
-        *slotsEnd = &slots[start - fixed + length];
-    }
-}
-
-void
 JSObject::initSlotRange(size_t start, const Value *vector, size_t length)
 {
     JSCompartment *comp = compartment();
-    HeapValue *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
     getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
-    for (HeapValue *vp = fixedStart; vp != fixedEnd; vp++)
-        vp->init(comp, *vector++);
-    for (HeapValue *vp = slotsStart; vp != slotsEnd; vp++)
-        vp->init(comp, *vector++);
+    for (HeapSlot *sp = fixedStart; sp != fixedEnd; sp++)
+        sp->init(comp, this, start++, *vector++);
+    for (HeapSlot *sp = slotsStart; sp != slotsEnd; sp++)
+        sp->init(comp, this, start++, *vector++);
 }
 
 void
 JSObject::copySlotRange(size_t start, const Value *vector, size_t length)
 {
     JSCompartment *comp = compartment();
-    HeapValue *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
     getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
-    for (HeapValue *vp = fixedStart; vp != fixedEnd; vp++)
-        vp->set(comp, *vector++);
-    for (HeapValue *vp = slotsStart; vp != slotsEnd; vp++)
-        vp->set(comp, *vector++);
+    for (HeapSlot *sp = fixedStart; sp != fixedEnd; sp++)
+        sp->set(comp, this, start++, *vector++);
+    for (HeapSlot *sp = slotsStart; sp != slotsEnd; sp++)
+        sp->set(comp, this, start++, *vector++);
 }
 
 inline void
@@ -3873,20 +3844,10 @@ JSObject::invalidateSlotRange(size_t start, size_t length)
 #ifdef DEBUG
     JS_ASSERT(!isDenseArray());
 
-    size_t fixed = numFixedSlots();
-
-    /* No bounds checks, allocated space has been updated but not the shape. */
-    if (start < fixed) {
-        if (start + length < fixed) {
-            Debug_SetValueRangeToCrashOnTouch(fixedSlots() + start, length);
-        } else {
-            size_t localClear = fixed - start;
-            Debug_SetValueRangeToCrashOnTouch(fixedSlots() + start, localClear);
-            Debug_SetValueRangeToCrashOnTouch(slots, length - localClear);
-        }
-    } else {
-        Debug_SetValueRangeToCrashOnTouch(slots + start - fixed, length);
-    }
+    HeapSlot *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+    Debug_SetSlotRangeToCrashOnTouch(fixedStart, fixedEnd);
+    Debug_SetSlotRangeToCrashOnTouch(slotsStart, slotsEnd);
 #endif /* DEBUG */
 }
 
@@ -4006,24 +3967,24 @@ JSObject::growSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
     }
 
     if (!oldCount) {
-        slots = (HeapValue *) cx->malloc_(newCount * sizeof(HeapValue));
+        slots = (HeapSlot *) cx->malloc_(newCount * sizeof(HeapSlot));
         if (!slots)
             return false;
-        Debug_SetValueRangeToCrashOnTouch(slots, newCount);
+        Debug_SetSlotRangeToCrashOnTouch(slots, newCount);
         if (Probes::objectResizeActive())
             Probes::resizeObject(cx, this, oldSize, newSize);
         return true;
     }
 
-    HeapValue *newslots = (HeapValue*) cx->realloc_(slots, oldCount * sizeof(HeapValue),
-                                                    newCount * sizeof(HeapValue));
+    HeapSlot *newslots = (HeapSlot*) cx->realloc_(slots, oldCount * sizeof(HeapSlot),
+                                                  newCount * sizeof(HeapSlot));
     if (!newslots)
         return false;  /* Leave slots at its old size. */
 
     bool changed = slots != newslots;
     slots = newslots;
 
-    Debug_SetValueRangeToCrashOnTouch(slots + oldCount, newCount - oldCount);
+    Debug_SetSlotRangeToCrashOnTouch(slots + oldCount, newCount - oldCount);
 
     /* Changes in the slots of global objects can trigger recompilation. */
     if (changed && isGlobal())
@@ -4063,7 +4024,7 @@ JSObject::shrinkSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
 
     JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
 
-    HeapValue *newslots = (HeapValue*) cx->realloc_(slots, newCount * sizeof(HeapValue));
+    HeapSlot *newslots = (HeapSlot *) cx->realloc_(slots, newCount * sizeof(HeapSlot));
     if (!newslots)
         return;  /* Leave slots at its old size. */
 
@@ -4136,7 +4097,7 @@ JSObject::growElements(JSContext *cx, uintN newcap)
     newheader->capacity = actualCapacity;
     elements = newheader->elements();
 
-    Debug_SetValueRangeToCrashOnTouch(elements + initlen, actualCapacity - initlen);
+    Debug_SetSlotRangeToCrashOnTouch(elements + initlen, actualCapacity - initlen);
 
     if (Probes::objectResizeActive())
         Probes::resizeObject(cx, this, oldSize, computedSizeOfThisSlotsElements());
@@ -6538,8 +6499,6 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
         fprintf(stderr, "  flags:");
         if (fp->isConstructing())
             fprintf(stderr, " constructing");
-        if (fp->hasOverriddenArgs())
-            fprintf(stderr, " overridden_args");
         if (fp->isDebuggerFrame())
             fprintf(stderr, " debugger");
         if (fp->isEvalFrame())

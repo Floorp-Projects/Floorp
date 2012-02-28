@@ -1155,8 +1155,7 @@ mjit::Compiler::generatePrologue()
              * correct if the UNDERFLOW and OVERFLOW flags are not set.
              */
             Jump hasArgs = masm.branchTest32(Assembler::NonZero, FrameFlagsAddress(),
-                                             Imm32(StackFrame::OVERRIDE_ARGS |
-                                                   StackFrame::UNDERFLOW_ARGS |
+                                             Imm32(StackFrame::UNDERFLOW_ARGS |
                                                    StackFrame::OVERFLOW_ARGS |
                                                    StackFrame::HAS_ARGS_OBJ));
             masm.storePtr(ImmPtr((void *)(size_t) script->function()->nargs),
@@ -6395,7 +6394,7 @@ mjit::Compiler::jsop_getgname(uint32_t index)
          */
         const js::Shape *shape = globalObj->nativeLookup(cx, ATOM_TO_JSID(name));
         if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
-            HeapValue *value = &globalObj->getSlotRef(shape->slot());
+            HeapSlot *value = &globalObj->getSlotRef(shape->slot());
             if (!value->isUndefined() &&
                 !propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
                 watchGlobalReallocation();
@@ -6521,7 +6520,7 @@ mjit::Compiler::jsop_setgname(PropertyName *name, bool popGuaranteed)
             shape->writable() && shape->hasSlot() &&
             !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
             watchGlobalReallocation();
-            HeapValue *value = &globalObj->getSlotRef(shape->slot());
+            HeapSlot *value = &globalObj->getSlotRef(shape->slot());
             RegisterID reg = frame.allocReg();
 #ifdef JSGC_INCREMENTAL_MJ
             /* Write barrier. */

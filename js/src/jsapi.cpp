@@ -800,7 +800,7 @@ JSRuntime::JSRuntime()
     JS_INIT_CLIST(&contextList);
     JS_INIT_CLIST(&debuggerList);
 
-    PodZero(&globalDebugHooks);
+    PodZero(&debugHooks);
     PodZero(&atomState);
 
 #if JS_STACK_GROWTH_DIRECTION > 0

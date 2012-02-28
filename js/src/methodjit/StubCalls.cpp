@@ -845,12 +845,12 @@ stubs::Mod(VMFrame &f)
 void JS_FASTCALL
 stubs::DebuggerStatement(VMFrame &f, jsbytecode *pc)
 {
-    JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
+    JSDebuggerHandler handler = f.cx->runtime->debugHooks.debuggerHandler;
     if (handler || !f.cx->compartment->getDebuggees().empty()) {
         JSTrapStatus st = JSTRAP_CONTINUE;
         Value rval;
         if (handler)
-            st = handler(f.cx, f.script(), pc, &rval, f.cx->debugHooks->debuggerHandlerData);
+            st = handler(f.cx, f.script(), pc, &rval, f.cx->runtime->debugHooks.debuggerHandlerData);
         if (st == JSTRAP_CONTINUE)
             st = Debugger::onDebuggerStatement(f.cx, &rval);
 
@@ -908,9 +908,9 @@ stubs::Trap(VMFrame &f, uint32_t trapTypes)
          * single step mode may be paused without recompiling by
          * setting the interruptHook to NULL.
          */
-        JSInterruptHook hook = f.cx->debugHooks->interruptHook;
+        JSInterruptHook hook = f.cx->runtime->debugHooks.interruptHook;
         if (hook)
-            result = hook(f.cx, f.script(), f.pc(), &rval, f.cx->debugHooks->interruptHookData);
+            result = hook(f.cx, f.script(), f.pc(), &rval, f.cx->runtime->debugHooks.interruptHookData);
 
         if (result == JSTRAP_CONTINUE)
             result = Debugger::onSingleStep(f.cx, &rval);
@@ -1230,7 +1230,7 @@ stubs::GetPropNoCache(VMFrame &f, PropertyName *name)
 void JS_FASTCALL
 stubs::Iter(VMFrame &f, uint32_t flags)
 {
-    if (!js_ValueToIterator(f.cx, flags, &f.regs.sp[-1]))
+    if (!ValueToIterator(f.cx, flags, &f.regs.sp[-1]))
         THROW();
     JS_ASSERT(!f.regs.sp[-1].isPrimitive());
 }
@@ -1305,7 +1305,7 @@ void JS_FASTCALL
 stubs::EndIter(VMFrame &f)
 {
     JS_ASSERT(f.regs.sp - 1 >= f.fp()->base());
-    if (!js_CloseIterator(f.cx, &f.regs.sp[-1].toObject()))
+    if (!CloseIterator(f.cx, &f.regs.sp[-1].toObject()))
         THROW();
 }
 
@@ -1363,10 +1363,10 @@ stubs::FlatLambda(VMFrame &f, JSFunction *fun)
 void JS_FASTCALL
 stubs::Arguments(VMFrame &f)
 {
-    Value argsobj;
-    if (!js_GetArgsValue(f.cx, f.fp(), &argsobj))
+    ArgumentsObject *arguments = js_GetArgsObject(f.cx, f.fp());
+    if (!arguments)
         THROW();
-    f.regs.sp[0] = argsobj;
+    f.regs.sp[0] = ObjectValue(*arguments);
 }
 
 JSBool JS_FASTCALL

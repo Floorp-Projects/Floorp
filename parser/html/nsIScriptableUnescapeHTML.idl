@@ -34,16 +34,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsScriptableHTMLUnescape_h__
-#define nsScriptableHTMLUnescape_h__
+#include "nsISupports.idl"
 
-#include "nsIScriptableUnescapeHTML.h"
+interface nsIDOMElement;
+interface nsIDOMDocumentFragment;
+interface nsIURI;
 
-class nsScriptableUnescapeHTML : public nsIScriptableUnescapeHTML
+/**
+ * A utility class for HTML parsing in the feed processor.
+ */
+[scriptable, uuid(3ab244a9-f09d-44da-9e3f-ee4d67367f2d)]
+interface nsIScriptableUnescapeHTML : nsISupports 
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISCRIPTABLEUNESCAPEHTML
+  /** 
+   * Converts HTML to plain text. This is equivalent to calling
+   * nsIParserUtils::convertToPlainText(src, 
+   *   nsIDocumentEncoder::OutputSelectionOnly |
+   *   nsIDocumentEncoder::OutputAbsoluteLinks, 0).
+   *
+   * You should most likely call nsIParserUtils::convertToPlainText()
+   * instead of calling this method.
+   *
+   * @param src The HTML string to convert to plain text.
+   */ 
+  AString unescape(in AString src);
+        
+  /**
+   * Parses markup into a sanitized document fragment.
+   *
+   * @param fragment the input markup
+   * @param isXML true if |fragment| is XML and false if HTML
+   * @param baseURI the base URL for this fragment
+   * @param element the context node for the fragment parsing algorithm
+   */
+  nsIDOMDocumentFragment parseFragment(in AString fragment,
+                                       in boolean isXML,
+                                       in nsIURI baseURI,
+                                       in nsIDOMElement element);
 };
 
-#endif // nsScriptableHTMLUnescape_h__
+%{ C++
+#define NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID \
+  "@mozilla.org/feed-unescapehtml;1"
+#define NS_SCRIPTABLEUNESCAPEHTML_CID  \
+{ 0x10f2f5f0, 0xf103, 0x4901, { 0x98, 0x0f, 0xba, 0x11, 0xbd, 0x70, 0xd6, 0x0d} }
+%}

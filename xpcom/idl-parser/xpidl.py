@@ -531,6 +531,15 @@ class Interface(object):
                     break
             self.doccomments = parent.getName(self.name, None).doccomments
 
+        if self.attributes.function:
+            has_method = False
+            for member in self.members:
+                if member.kind is 'method':
+                    if has_method:
+                        raise IDLError("interface '%s' has multiple methods, but marked 'function'" % self.name, self.location)
+                    else:
+                        has_method = True
+
         parent.setName(self)
         if self.base is not None:
             realbase = parent.getName(self.base, self.location)

@@ -174,11 +174,18 @@
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
 									android:protectionLevel="signature"/>
 
+        <provider android:name="@ANDROID_PACKAGE_NAME@.db.FormHistoryProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.formhistory"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
+									android:protectionLevel="signature"/>
 
 #include ../sync/manifests/SyncAndroidManifest_services.xml.in
     </application>
 
     <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
+                android:protectionLevel="signature"/>
+
+    <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
                 android:protectionLevel="signature"/>
 
 </manifest> 
