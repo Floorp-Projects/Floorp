@@ -43,11 +43,25 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = sign verify src tool
+DIRS = src
 MODULE = libmar_test
 
+ifdef MOZ_ENABLE_SIGNMAR
+DIRS += sign verify
+else
+ifeq ($(OS_ARCH),WINNT)
+# On Windows we don't verify with NSS and updater needs to link to it
+DIRS += verify
+endif
+endif
+
+# If we are building ./sign and ./verify then ./tool must come after it
+DIRS += tool
+
 ifdef ENABLE_TESTS
+ifdef MOZ_ENABLE_SIGNMAR
 DIRS += tests
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
