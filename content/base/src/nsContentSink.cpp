@@ -80,7 +80,6 @@
 #include "nsIPrompt.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsParserUtils.h"
 #include "nsCRT.h"
 #include "nsEscape.h"
 #include "nsWeakReference.h"
@@ -712,7 +711,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
 
   nsAutoString  mimeType;
   nsAutoString  params;
-  nsParserUtils::SplitMimeType(aType, mimeType, params);
+  nsContentUtils::SplitMimeType(aType, mimeType, params);
 
   // see bug 18817
   if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {

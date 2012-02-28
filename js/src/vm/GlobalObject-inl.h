@@ -58,15 +58,12 @@ GlobalObject::initFlags(int32_t flags)
 inline void
 GlobalObject::setDetailsForKey(JSProtoKey key, JSObject *ctor, JSObject *proto)
 {
-    HeapValue &ctorVal = getSlotRef(key);
-    HeapValue &protoVal = getSlotRef(JSProto_LIMIT + key);
-    HeapValue &visibleVal = getSlotRef(2 * JSProto_LIMIT + key);
-    JS_ASSERT(ctorVal.isUndefined());
-    JS_ASSERT(protoVal.isUndefined());
-    JS_ASSERT(visibleVal.isUndefined());
-    ctorVal = ObjectValue(*ctor);
-    protoVal = ObjectValue(*proto);
-    visibleVal = ctorVal;
+    JS_ASSERT(getSlotRef(key).isUndefined());
+    JS_ASSERT(getSlotRef(JSProto_LIMIT + key).isUndefined());
+    JS_ASSERT(getSlotRef(2 * JSProto_LIMIT + key).isUndefined());
+    setSlot(key, ObjectValue(*ctor));
+    setSlot(JSProto_LIMIT + key, ObjectValue(*proto));
+    setSlot(2 * JSProto_LIMIT + key, ObjectValue(*ctor));
 }
 
 inline void
@@ -84,17 +81,15 @@ GlobalObject::setFunctionClassDetails(JSFunction *ctor, JSObject *proto)
 void
 GlobalObject::setThrowTypeError(JSFunction *fun)
 {
-    HeapValue &v = getSlotRef(THROWTYPEERROR);
-    JS_ASSERT(v.isUndefined());
-    v = ObjectValue(*fun);
+    JS_ASSERT(getSlotRef(THROWTYPEERROR).isUndefined());
+    setSlot(THROWTYPEERROR, ObjectValue(*fun));
 }
 
 void
 GlobalObject::setOriginalEval(JSObject *evalobj)
 {
-    HeapValue &v = getSlotRef(EVAL);
-    JS_ASSERT(v.isUndefined());
-    v = ObjectValue(*evalobj);
+    JS_ASSERT(getSlotRef(EVAL).isUndefined());
+    setSlot(EVAL, ObjectValue(*evalobj));
 }
 
 } // namespace js

@@ -7667,19 +7667,8 @@ void nsGlobalWindow::MaybeUpdateTouchState()
   if(this == focusedWindow) {
     UpdateTouchState();
   }
-}
-
-void nsGlobalWindow::UpdateTouchState()
-{
-  FORWARD_TO_INNER_VOID(UpdateTouchState, ());
-
-  nsCOMPtr<nsIWidget> mainWidget = GetMainWidget();
-  if (!mainWidget)
-    return;
 
   if (mMayHaveTouchEventListener) {
-    mainWidget->RegisterTouchWindow();
-
     nsCOMPtr<nsIObserverService> observerService =
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
 
@@ -7688,6 +7677,20 @@ void nsGlobalWindow::UpdateTouchState()
                                        DOM_TOUCH_LISTENER_ADDED,
                                        nsnull);
     }
+  }
+}
+
+void nsGlobalWindow::UpdateTouchState()
+{
+  FORWARD_TO_INNER_VOID(UpdateTouchState, ());
+
+  nsCOMPtr<nsIWidget> mainWidget = GetMainWidget();
+  if (!mainWidget) {
+    return;
+  }
+
+  if (mMayHaveTouchEventListener) {
+    mainWidget->RegisterTouchWindow();
   } else {
     mainWidget->UnregisterTouchWindow();
   }

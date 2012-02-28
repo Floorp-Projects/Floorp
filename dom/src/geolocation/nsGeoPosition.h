@@ -86,7 +86,7 @@ public:
 /**
  * Simple object that holds a single point in space.
  */
-class nsGeoPositionCoords : public nsIDOMGeoPositionCoords
+class nsGeoPositionCoords MOZ_FINAL : public nsIDOMGeoPositionCoords
 {
 public:
   NS_DECL_ISUPPORTS
@@ -96,8 +96,8 @@ public:
                       double aAlt, double aHError,
                       double aVError, double aHeading,
                       double aSpeed);
-private:
   ~nsGeoPositionCoords();
+private:
   const double mLat, mLong, mAlt, mHError, mVError, mHeading, mSpeed;
 };
 
