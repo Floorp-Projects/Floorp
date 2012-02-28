@@ -67,13 +67,15 @@ var gMoveBookmarksDialog = {
       if (this._nodes[i].parent.itemId == selectedFolderID)
         continue;
 
-      transactions.push(new
-        PlacesUIUtils.ptm.moveItem(this._nodes[i].itemId, selectedFolderID, -1));
+      let txn = new PlacesMoveItemTransaction(this._nodes[i].itemId,
+                                              selectedFolderID,
+                                              PlacesUtils.bookmarks.DEFAULT_INDEX);
+      transactions.push(txn);
     }
 
     if (transactions.length != 0) {
-      var txn = PlacesUIUtils.ptm.aggregateTransactions("Move Items", transactions);
-      PlacesUIUtils.ptm.doTransaction(txn);
+      let txn = new PlacesAggregatedTransaction("Move Items", transactions);
+      PlacesUtils.transactionManager.doTransaction(txn);
     }
   },
 

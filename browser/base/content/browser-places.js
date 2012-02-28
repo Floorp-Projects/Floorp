@@ -101,25 +101,25 @@ var StarUI = {
           this._restoreCommandsState();
           this._itemId = -1;
           if (this._batching) {
-            PlacesUIUtils.ptm.endBatch();
+            PlacesUtils.transactionManager.endBatch();
             this._batching = false;
           }
 
           switch (this._actionOnHide) {
             case "cancel": {
-              PlacesUIUtils.ptm.undoTransaction();
+              PlacesUtils.transactionManager.undoTransaction();
               break;
             }
             case "remove": {
               // Remove all bookmarks for the bookmark's url, this also removes
               // the tags for the url.
-              PlacesUIUtils.ptm.beginBatch();
+              PlacesUtils.transactionManager.beginBatch();
               let itemIds = PlacesUtils.getBookmarksForURI(this._uriForRemoval);
               for (let i = 0; i < itemIds.length; i++) {
-                let txn = PlacesUIUtils.ptm.removeItem(itemIds[i]);
-                PlacesUIUtils.ptm.doTransaction(txn);
+                let txn = new PlacesRemoveItemTransaction(itemIds[i]);
+                PlacesUtils.transactionManager.doTransaction(txn);
               }
-              PlacesUIUtils.ptm.endBatch();
+              PlacesUtils.transactionManager.endBatch();
               break;
             }
           }
@@ -275,7 +275,7 @@ var StarUI = {
 
   beginBatch: function SU_beginBatch() {
     if (!this._batching) {
-      PlacesUIUtils.ptm.beginBatch();
+      PlacesUtils.transactionManager.beginBatch();
       this._batching = true;
     }
   }
@@ -325,9 +325,10 @@ var PlacesCommandHook = {
       var parent = aParent != undefined ?
                    aParent : PlacesUtils.unfiledBookmarksFolderId;
       var descAnno = { name: PlacesUIUtils.DESCRIPTION_ANNO, value: description };
-      var txn = PlacesUIUtils.ptm.createItem(uri, parent, -1,
-                                             title, null, [descAnno]);
-      PlacesUIUtils.ptm.doTransaction(txn);
+      var txn = new PlacesCreateBookmarkTransaction(uri, parent, 
+                                                    PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                                    title, null, [descAnno]);
+      PlacesUtils.transactionManager.doTransaction(txn);
       // Set the character-set
       if (charset)
         PlacesUtils.history.setCharsetForURI(uri, charset);

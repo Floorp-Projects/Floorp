@@ -828,11 +828,11 @@ var PlacesOrganizer = {
      return;
 
     // Add the place: uri as a bookmark under the bookmarks root.
-    var txn = PlacesUIUtils.ptm.createItem(placeURI,
-                                           PlacesUtils.bookmarksMenuFolderId,
-                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                           input.value);
-    PlacesUIUtils.ptm.doTransaction(txn);
+    var txn = new PlacesCreateBookmarkTransaction(placeURI,
+                                                  PlacesUtils.bookmarksMenuFolderId,
+                                                  PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                                  input.value);
+    PlacesUtils.transactionManager.doTransaction(txn);
 
     // select and load the new query
     this._places.selectPlaceURI(placeSpec);
