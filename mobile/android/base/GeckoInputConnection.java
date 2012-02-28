@@ -912,6 +912,18 @@ public class GeckoInputConnection
         Selection.setSelection(mEditable, contents.length());
     }
 
+    public void resetSelection() {
+        // An Android framework bug can cause a SpannableStringBuilder crash when focus changes
+        // invalidate text selection offsets. A workaround is to reset selection when the activity
+        // resumes. More info: https://code.google.com/p/android/issues/detail?id=5164
+        Editable content = getEditable();
+        if (content != null) {
+            Log.d(LOGTAG, "IME: resetSelection");
+            int length = content.length();
+            setSelection(length, length);
+        }
+    }
+
     // Is a composition active?
     private boolean mComposing;
     private int mCompositionStart = -1;
