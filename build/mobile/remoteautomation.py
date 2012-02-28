@@ -141,7 +141,7 @@ class RemoteAutomation(Automation):
         nettools = NetworkTools()
         return nettools.getLanIp()
 
-    def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
+    def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = None):
         if stdout == None or stdout == -1 or stdout == subprocess.PIPE:
           stdout = self._remoteLog
 
@@ -151,7 +151,7 @@ class RemoteAutomation(Automation):
     class RProcess(object):
         # device manager process
         dm = None
-        def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
+        def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = None):
             self.dm = dm
             self.stdoutlen = 0
             self.proc = dm.launchProcess(cmd, stdout, cwd, env, True)
