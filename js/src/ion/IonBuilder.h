@@ -314,6 +314,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_newobject(JSObject *baseObj);
     bool jsop_initelem();
     bool jsop_initelem_dense();
+    bool jsop_initprop(JSAtom *atom);
     bool jsop_regexp(RegExpObject *reobj);
     bool jsop_object(JSObject *obj);
     bool jsop_lambda(JSFunction *fun);

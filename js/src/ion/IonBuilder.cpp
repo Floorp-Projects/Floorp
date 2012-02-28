@@ -737,6 +737,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_INITELEM:
         return jsop_initelem();
 
+      case JSOP_INITPROP:
+        return jsop_initprop(info().getAtom(pc));
+
       case JSOP_ENDINIT:
         return true;
 
@@ -2662,6 +2665,41 @@ IonBuilder::jsop_initelem_dense()
         return false;
 
    return true;
+}
+
+bool
+IonBuilder::jsop_initprop(JSAtom *atom)
+{
+    MDefinition *value = current->pop();
+    MDefinition *obj = current->peek(-1);
+
+    JSObject *baseObj = obj->toNewObject()->baseObj();
+
+    if (!oracle->propertyWriteCanSpecialize(script, pc)) {
+        // This should only happen for a few names like __proto__.
+        return abort("INITPROP Monitored initprop");
+    }
+
+    JSObject *holder;
+    JSProperty *prop = NULL;
+    DebugOnly<bool> res = LookupPropertyWithFlags(cx, baseObj, ATOM_TO_JSID(atom),
+                                                  JSRESOLVE_QUALIFIED, &holder, &prop);
+    JS_ASSERT(res && prop && holder == baseObj);
+
+    Shape *shape = (Shape *)prop;
+
+    if (baseObj->isFixedSlot(shape->slot())) {
+        MStoreFixedSlot *store = MStoreFixedSlot::New(obj, value, shape->slot());
+        current->add(store);
+        return resumeAfter(store);
+    }
+
+    MSlots *slots = MSlots::New(obj);
+    current->add(slots);
+
+    MStoreSlot *store = MStoreSlot::New(slots, shape->slot(), value);
+    current->add(store);
+    return resumeAfter(store);
 }
 
 MBasicBlock *
