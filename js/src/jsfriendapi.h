@@ -751,6 +751,9 @@ NotifyDidPaint(JSContext *cx);
 extern JS_FRIEND_API(bool)
 IsIncrementalGCEnabled(JSRuntime *rt);
 
+extern JS_FRIEND_API(void)
+DisableIncrementalGC(JSRuntime *rt);
+
 extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime *rt);
 
