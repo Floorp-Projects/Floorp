@@ -86,7 +86,7 @@ function test() {
                                                   -1,
                                                   true);
   ok(transaction, "create transaction");
-  PlacesUIUtils.ptm.doTransaction(transaction);
+  PlacesUtils.transactionManager.doTransaction(transaction);
   // confirm copy
   is(testRootNode.childCount, 2, "create test folder via copy");
 
@@ -95,11 +95,11 @@ function test() {
   validate(folderBNode);
 
   // undo the transaction, confirm the removal
-  PlacesUIUtils.ptm.undoTransaction();
+  PlacesUtils.transactionManager.undoTransaction();
   is(testRootNode.childCount, 1, "confirm undo removed the copied folder");
 
   // redo the transaction
-  PlacesUIUtils.ptm.redoTransaction();
+  PlacesUtils.transactionManager.redoTransaction();
   is(testRootNode.childCount, 2, "confirm redo re-copied the folder");
   folderBNode = testRootNode.getChild(1);
   validate(folderBNode);
@@ -109,7 +109,7 @@ function test() {
   toolbarNode.containerOpen = false;
 
   // clean up
-  PlacesUIUtils.ptm.undoTransaction();
+  PlacesUtils.transactionManager.undoTransaction();
   PlacesUtils.bookmarks.removeItem(folderAId);
 }
 
