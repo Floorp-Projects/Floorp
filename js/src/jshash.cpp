@@ -83,7 +83,7 @@ DefaultAllocEntry(void *pool, const void *key)
 }
 
 static void
-DefaultFreeEntry(void *pool, JSHashEntry *he, uintN flag)
+DefaultFreeEntry(void *pool, JSHashEntry *he, unsigned flag)
 {
     if (flag == HT_FREE_ENTRY)
         UnwantedForeground::free_(he);

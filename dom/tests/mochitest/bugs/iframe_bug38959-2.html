@@ -1,0 +1,14 @@
+<html>
+<head>
+	<title>Iframe test for bug 38959</title>
+</head>
+<body">
+<script>
+
+x = true;
+window.opener.postMessage(2, "http://mochi.test:8888");
+window.close();
+
+</script>
+</body>
+</html>

@@ -197,31 +197,6 @@ class DeviceManager:
     failure: None
     """
 
-  def communicate(self, process, timeout = 600, interval = 5):
-    """
-    loops until 'process' has exited or 'timeout' seconds is reached
-    loop sleeps for 'interval' seconds between iterations
-    external function
-    returns:
-    success: [file contents, None]
-    failure: [None, None]
-    """
-    
-    timed_out = True
-    if (timeout > 0):
-      total_time = 0
-      while total_time < timeout:
-        time.sleep(interval)
-        if self.processExist(process) == None:
-          timed_out = False
-          break
-        total_time += interval
-
-    if (timed_out == True):
-      return [None, None]
-
-    return [self.getFile(process, "temp.txt"), None]
-
   def processExist(self, appname):
     """
     iterates process list and returns pid if exists, otherwise None
@@ -601,14 +576,14 @@ def _pop_last_line(file):
   bytes_from_end = 1
   file.seek(0, 2)
   length = file.tell() + 1
-  while bytes_from_end <= length:
+  while bytes_from_end < length:
     file.seek((-1)*bytes_from_end, 2)
     data = file.read()
 
-    if bytes_from_end == length and len(data) == 0: # no data, return None
+    if bytes_from_end == length-1 and len(data) == 0: # no data, return None
       return None
 
-    if data[0] == '\n' or bytes_from_end == length:
+    if data[0] == '\n' or bytes_from_end == length-1:
       # found the last line, which should have the return value
       if data[0] == '\n':
         data = data[1:]

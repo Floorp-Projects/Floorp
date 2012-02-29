@@ -16,6 +16,7 @@ const LocalFile = CC('@mozilla.org/file/local;1',
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/ContactService.jsm');
 
 XPCOMUtils.defineLazyGetter(Services, 'env', function() {
   return Cc['@mozilla.org/process/environment;1']
@@ -60,7 +61,7 @@ function startupHttpd(baseDir, port) {
 // XXX never grant 'content-camera' to non-gaia apps
 function addPermissions(urls) {
   let permissions = [
-    'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app', 'content-camera'
+    'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app', 'content-camera', 'webcontacts-manage'
   ];
   urls.forEach(function(url) {
     let uri = Services.io.newURI(url, null, null);

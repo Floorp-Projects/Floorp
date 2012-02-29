@@ -38,6 +38,37 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIFile.idl"
+
+[scriptable, uuid(c177b6b0-5ef1-44f5-bc67-6bcf7d2518e5)]
+interface nsITelemetrySessionData : nsISupports
+{
+  /**
+   * The UUID of our previous session.
+   */
+  readonly attribute ACString uuid;
+
+  /**
+   * An object containing a snapshot from all registered histograms that had
+   * data recorded in the previous session.
+   * { name1: data1, name2: data2, .... }
+   * where the individual dataN are as nsITelemetry.histogramSnapshots.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval snapshots;
+};
+
+[scriptable, function, uuid(aff36c9d-7e4c-41ab-a9b6-53773bbca0cd)]
+interface nsITelemetryLoadSessionDataCallback : nsISupports
+{
+  void handle(in nsITelemetrySessionData data);
+};
+
+[scriptable, function, uuid(40065f26-afd2-4417-93de-c1de9adb1548)]
+interface nsITelemetrySaveSessionDataCallback : nsISupports
+{
+  void handle(in bool success);
+};
 
 [scriptable, uuid(db854295-478d-4de9-8211-d73ed7d81cd0)]
 interface nsITelemetry : nsISupports
@@ -126,6 +157,32 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   jsval getHistogramById(in ACString id);
+
+  /**
+   * Save persistent histograms to the given file.
+   *
+   * @param file - filename for saving
+   * @param uuid - UUID of this session
+   * @param callback - function to be caled when file writing is complete
+   */
+  void saveHistograms(in nsIFile file, in ACString uuid,
+                      in nsITelemetrySaveSessionDataCallback callback,
+                      in bool isSynchronous);
+
+  /* Reconstruct an nsITelemetryDataSession object containing histogram
+   * information from the given file; the file must have been produced
+   * via saveHistograms.
+   *
+   * This method does not modify the histogram information being
+   * collected in the current session.
+   *
+   * The reconstructed object is then passed to the given callback.
+   *
+   * @param file - the file to load histogram information from
+   * @param callback - function to process histogram information
+   */
+  void loadHistograms(in nsIFile file,
+                      in nsITelemetryLoadSessionDataCallback callback);
 
   /**
    * Set this to false to disable gathering of telemetry statistics.

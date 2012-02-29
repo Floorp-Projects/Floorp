@@ -65,11 +65,11 @@ namespace ctypes {
 ** JSAPI function prototypes
 *******************************************************************************/
 
-static JSBool ConstructAbstract(JSContext* cx, uintN argc, jsval* vp);
+static JSBool ConstructAbstract(JSContext* cx, unsigned argc, jsval* vp);
 
 namespace CType {
-  static JSBool ConstructData(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ConstructBasic(JSContext* cx, JSObject* obj, uintN argc, jsval* vp);
+  static JSBool ConstructData(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ConstructBasic(JSContext* cx, JSObject* obj, unsigned argc, jsval* vp);
 
   static void Trace(JSTracer* trc, JSObject* obj);
   static void Finalize(JSContext* cx, JSObject* obj);
@@ -82,15 +82,15 @@ namespace CType {
   static JSBool SizeGetter(JSContext* cx, JSObject* obj, jsid idval,
     jsval* vp);
   static JSBool PtrGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp);
-  static JSBool CreateArray(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool CreateArray(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ToString(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ToSource(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool HasInstance(JSContext* cx, JSObject* obj, const jsval* v, JSBool* bp);
 }
 
 namespace PointerType {
-  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc, jsval* vp);
+  static JSBool Create(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ConstructData(JSContext* cx, JSObject* obj, unsigned argc, jsval* vp);
 
   static JSBool TargetTypeGetter(JSContext* cx, JSObject* obj, jsid idval,
     jsval* vp);
@@ -98,17 +98,17 @@ namespace PointerType {
     jsval* vp);
   static JSBool ContentsSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict,
     jsval* vp);
-  static JSBool IsNull(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Increment(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Decrement(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool IsNull(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool Increment(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool Decrement(JSContext* cx, unsigned argc, jsval* vp);
   // The following is not an instance function, since we don't want to expose arbitrary
   // pointer arithmetic at this moment.
-  static JSBool OffsetBy(JSContext* cx, intN offset, jsval* vp);
+  static JSBool OffsetBy(JSContext* cx, int offset, jsval* vp);
 }
 
 namespace ArrayType {
-  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc, jsval* vp);
+  static JSBool Create(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ConstructData(JSContext* cx, JSObject* obj, unsigned argc, jsval* vp);
 
   static JSBool ElementTypeGetter(JSContext* cx, JSObject* obj, jsid idval,
     jsval* vp);
@@ -116,12 +116,12 @@ namespace ArrayType {
     jsval* vp);
   static JSBool Getter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp);
   static JSBool Setter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict, jsval* vp);
-  static JSBool AddressOfElement(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool AddressOfElement(JSContext* cx, unsigned argc, jsval* vp);
 }
 
 namespace StructType {
-  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ConstructData(JSContext* cx, JSObject* obj, uintN argc, jsval* vp);
+  static JSBool Create(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ConstructData(JSContext* cx, JSObject* obj, unsigned argc, jsval* vp);
 
   static JSBool FieldsArrayGetter(JSContext* cx, JSObject* obj, jsid idval,
     jsval* vp);
@@ -129,16 +129,16 @@ namespace StructType {
     jsval* vp);
   static JSBool FieldSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict,
                             jsval* vp);
-  static JSBool AddressOfField(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Define(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool AddressOfField(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool Define(JSContext* cx, unsigned argc, jsval* vp);
 }
 
 namespace FunctionType {
-  static JSBool Create(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Create(JSContext* cx, unsigned argc, jsval* vp);
   static JSBool ConstructData(JSContext* cx, JSObject* typeObj,
     JSObject* dataObj, JSObject* fnObj, JSObject* thisObj, jsval errVal);
 
-  static JSBool Call(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Call(JSContext* cx, unsigned argc, jsval* vp);
 
   static JSBool ArgTypesGetter(JSContext* cx, JSObject* obj, jsid idval,
     jsval* vp);
@@ -165,9 +165,9 @@ namespace CData {
                             jsval* vp);
   static JSBool ValueSetter(JSContext* cx, JSObject* obj, jsid idval,
                             JSBool strict, jsval* vp);
-  static JSBool Address(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ReadString(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Address(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ReadString(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ToSource(JSContext* cx, unsigned argc, jsval* vp);
 }
 
 // Int64Base provides functions common to Int64 and UInt64.
@@ -177,37 +177,37 @@ namespace Int64Base {
 
   uint64_t GetInt(JSObject* obj);
 
-  JSBool ToString(JSContext* cx, JSObject* obj, uintN argc, jsval* vp,
+  JSBool ToString(JSContext* cx, JSObject* obj, unsigned argc, jsval* vp,
     bool isUnsigned);
 
-  JSBool ToSource(JSContext* cx, JSObject* obj, uintN argc, jsval* vp,
+  JSBool ToSource(JSContext* cx, JSObject* obj, unsigned argc, jsval* vp,
     bool isUnsigned);
 
   static void Finalize(JSContext* cx, JSObject* obj);
 }
 
 namespace Int64 {
-  static JSBool Construct(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Construct(JSContext* cx, unsigned argc, jsval* vp);
 
-  static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ToString(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ToSource(JSContext* cx, unsigned argc, jsval* vp);
 
-  static JSBool Compare(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Lo(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Hi(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Join(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Compare(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool Lo(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool Hi(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool Join(JSContext* cx, unsigned argc, jsval* vp);
 }
 
 namespace UInt64 {
-  static JSBool Construct(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Construct(JSContext* cx, unsigned argc, jsval* vp);
 
-  static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool ToString(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool ToSource(JSContext* cx, unsigned argc, jsval* vp);
 
-  static JSBool Compare(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Lo(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Hi(JSContext* cx, uintN argc, jsval* vp);
-  static JSBool Join(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Compare(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool Lo(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool Hi(JSContext* cx, unsigned argc, jsval* vp);
+  static JSBool Join(JSContext* cx, unsigned argc, jsval* vp);
 }
 
 /*******************************************************************************
@@ -497,7 +497,7 @@ JSErrorFormatString ErrorFormatString[CTYPESERR_LIMIT] = {
 };
 
 const JSErrorFormatString*
-GetErrorMessage(void* userRef, const char* locale, const uintN errorNumber)
+GetErrorMessage(void* userRef, const char* locale, const unsigned errorNumber)
 {
   if (0 < errorNumber && errorNumber < CTYPESERR_LIMIT)
     return &ErrorFormatString[errorNumber];
@@ -2551,7 +2551,7 @@ BuildDataSource(JSContext* cx,
 
 JSBool
 ConstructAbstract(JSContext* cx,
-                  uintN argc,
+                  unsigned argc,
                   jsval* vp)
 {
   // Calling an abstract base class constructor is disallowed.
@@ -2565,7 +2565,7 @@ ConstructAbstract(JSContext* cx,
 
 JSBool
 CType::ConstructData(JSContext* cx,
-                     uintN argc,
+                     unsigned argc,
                      jsval* vp)
 {
   // get the callee object...
@@ -2600,7 +2600,7 @@ CType::ConstructData(JSContext* cx,
 JSBool
 CType::ConstructBasic(JSContext* cx,
                       JSObject* obj,
-                      uintN argc,
+                      unsigned argc,
                       jsval* vp)
 {
   if (argc > 1) {
@@ -3123,7 +3123,7 @@ CType::PtrGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
 }
 
 JSBool
-CType::CreateArray(JSContext* cx, uintN argc, jsval* vp)
+CType::CreateArray(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* baseType = JS_THIS_OBJECT(cx, vp);
   if (!baseType || !CType::IsCType(baseType)) {
@@ -3154,7 +3154,7 @@ CType::CreateArray(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-CType::ToString(JSContext* cx, uintN argc, jsval* vp)
+CType::ToString(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj || !(CType::IsCType(obj) || CType::IsCTypeProto(obj))) {
@@ -3182,7 +3182,7 @@ CType::ToString(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-CType::ToSource(JSContext* cx, uintN argc, jsval* vp)
+CType::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj ||
@@ -3238,7 +3238,7 @@ CType::HasInstance(JSContext* cx, JSObject* obj, const jsval* v, JSBool* bp)
 *******************************************************************************/
 
 JSBool
-PointerType::Create(JSContext* cx, uintN argc, jsval* vp)
+PointerType::Create(JSContext* cx, unsigned argc, jsval* vp)
 {
   // Construct and return a new PointerType object.
   if (argc != 1) {
@@ -3295,7 +3295,7 @@ PointerType::CreateInternal(JSContext* cx, JSObject* baseType)
 JSBool
 PointerType::ConstructData(JSContext* cx,
                            JSObject* obj,
-                           uintN argc,
+                           unsigned argc,
                            jsval* vp)
 {
   if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_pointer) {
@@ -3401,7 +3401,7 @@ PointerType::TargetTypeGetter(JSContext* cx,
 }
 
 JSBool
-PointerType::IsNull(JSContext* cx, uintN argc, jsval* vp)
+PointerType::IsNull(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj || !CData::IsCData(obj)) {
@@ -3423,7 +3423,7 @@ PointerType::IsNull(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-PointerType::OffsetBy(JSContext* cx, intN offset, jsval* vp)
+PointerType::OffsetBy(JSContext* cx, int offset, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj || !CData::IsCData(obj)) {
@@ -3457,13 +3457,13 @@ PointerType::OffsetBy(JSContext* cx, intN offset, jsval* vp)
 }
 
 JSBool
-PointerType::Increment(JSContext* cx, uintN argc, jsval* vp)
+PointerType::Increment(JSContext* cx, unsigned argc, jsval* vp)
 {
   return OffsetBy(cx, 1, vp);
 }
 
 JSBool
-PointerType::Decrement(JSContext* cx, uintN argc, jsval* vp)
+PointerType::Decrement(JSContext* cx, unsigned argc, jsval* vp)
 {
   return OffsetBy(cx, -1, vp);
 }
@@ -3545,7 +3545,7 @@ PointerType::ContentsSetter(JSContext* cx,
 *******************************************************************************/
 
 JSBool
-ArrayType::Create(JSContext* cx, uintN argc, jsval* vp)
+ArrayType::Create(JSContext* cx, unsigned argc, jsval* vp)
 {
   // Construct and return a new ArrayType object.
   if (argc < 1 || argc > 2) {
@@ -3630,7 +3630,7 @@ ArrayType::CreateInternal(JSContext* cx,
 JSBool
 ArrayType::ConstructData(JSContext* cx,
                          JSObject* obj,
-                         uintN argc,
+                         unsigned argc,
                          jsval* vp)
 {
   if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_array) {
@@ -3928,7 +3928,7 @@ ArrayType::Setter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict, jsval
 }
 
 JSBool
-ArrayType::AddressOfElement(JSContext* cx, uintN argc, jsval* vp)
+ArrayType::AddressOfElement(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj || !CData::IsCData(obj)) {
@@ -4065,7 +4065,7 @@ AddFieldToArray(JSContext* cx,
 }
 
 JSBool
-StructType::Create(JSContext* cx, uintN argc, jsval* vp)
+StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
 {
   // Construct and return a new StructType object.
   if (argc < 1 || argc > 2) {
@@ -4304,7 +4304,7 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
 }
 
 JSBool
-StructType::Define(JSContext* cx, uintN argc, jsval* vp)
+StructType::Define(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj ||
@@ -4337,7 +4337,7 @@ StructType::Define(JSContext* cx, uintN argc, jsval* vp)
 JSBool
 StructType::ConstructData(JSContext* cx,
                           JSObject* obj,
-                          uintN argc,
+                          unsigned argc,
                           jsval* vp)
 {
   if (!CType::IsCType(obj) || CType::GetTypeCode(obj) != TYPE_struct) {
@@ -4551,7 +4551,7 @@ StructType::FieldSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict,
 }
 
 JSBool
-StructType::AddressOfField(JSContext* cx, uintN argc, jsval* vp)
+StructType::AddressOfField(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj || !CData::IsCData(obj)) {
@@ -4828,7 +4828,7 @@ NewFunctionInfo(JSContext* cx,
                 jsval abiType,
                 jsval returnType,
                 jsval* argTypes,
-                uintN argLength)
+                unsigned argLength)
 {
   AutoPtr<FunctionInfo> fninfo(cx->new_<FunctionInfo>());
   if (!fninfo) {
@@ -4904,7 +4904,7 @@ NewFunctionInfo(JSContext* cx,
 }
 
 JSBool
-FunctionType::Create(JSContext* cx, uintN argc, jsval* vp)
+FunctionType::Create(JSContext* cx, unsigned argc, jsval* vp)
 {
   // Construct and return a new FunctionType object.
   if (argc < 2 || argc > 3) {
@@ -5059,7 +5059,7 @@ ConvertArgument(JSContext* cx,
 
 JSBool
 FunctionType::Call(JSContext* cx,
-                   uintN argc,
+                   unsigned argc,
                    jsval* vp)
 {
   // get the callee object...
@@ -5740,7 +5740,7 @@ CData::ValueSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict, jsva
 }
 
 JSBool
-CData::Address(JSContext* cx, uintN argc, jsval* vp)
+CData::Address(JSContext* cx, unsigned argc, jsval* vp)
 {
   if (argc != 0) {
     JS_ReportError(cx, "address takes zero arguments");
@@ -5773,7 +5773,7 @@ CData::Address(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-CData::Cast(JSContext* cx, uintN argc, jsval* vp)
+CData::Cast(JSContext* cx, unsigned argc, jsval* vp)
 {
   if (argc != 2) {
     JS_ReportError(cx, "cast takes two arguments");
@@ -5816,7 +5816,7 @@ CData::Cast(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-CData::GetRuntime(JSContext* cx, uintN argc, jsval* vp)
+CData::GetRuntime(JSContext* cx, unsigned argc, jsval* vp)
 {
   if (argc != 1) {
     JS_ReportError(cx, "getRuntime takes one argument");
@@ -5848,7 +5848,7 @@ CData::GetRuntime(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-CData::ReadString(JSContext* cx, uintN argc, jsval* vp)
+CData::ReadString(JSContext* cx, unsigned argc, jsval* vp)
 {
   if (argc != 0) {
     JS_ReportError(cx, "readString takes zero arguments");
@@ -5939,7 +5939,7 @@ CData::ReadString(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-CData::ToSource(JSContext* cx, uintN argc, jsval* vp)
+CData::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 {
   if (argc != 0) {
     JS_ReportError(cx, "toSource takes zero arguments");
@@ -6035,7 +6035,7 @@ Int64Base::GetInt(JSObject* obj) {
 JSBool
 Int64Base::ToString(JSContext* cx,
                     JSObject* obj,
-                    uintN argc,
+                    unsigned argc,
                     jsval* vp,
                     bool isUnsigned)
 {
@@ -6073,7 +6073,7 @@ Int64Base::ToString(JSContext* cx,
 JSBool
 Int64Base::ToSource(JSContext* cx,
                     JSObject* obj,
-                    uintN argc,
+                    unsigned argc,
                     jsval* vp,
                     bool isUnsigned)
 {
@@ -6103,7 +6103,7 @@ Int64Base::ToSource(JSContext* cx,
 
 JSBool
 Int64::Construct(JSContext* cx,
-                 uintN argc,
+                 unsigned argc,
                  jsval* vp)
 {
   // Construct and return a new Int64 object.
@@ -6139,7 +6139,7 @@ Int64::IsInt64(JSObject* obj)
 }
 
 JSBool
-Int64::ToString(JSContext* cx, uintN argc, jsval* vp)
+Int64::ToString(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj || !Int64::IsInt64(obj)) {
@@ -6151,7 +6151,7 @@ Int64::ToString(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-Int64::ToSource(JSContext* cx, uintN argc, jsval* vp)
+Int64::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj || !Int64::IsInt64(obj)) {
@@ -6163,7 +6163,7 @@ Int64::ToSource(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-Int64::Compare(JSContext* cx, uintN argc, jsval* vp)
+Int64::Compare(JSContext* cx, unsigned argc, jsval* vp)
 {
   jsval* argv = JS_ARGV(cx, vp);
   if (argc != 2 ||
@@ -6196,7 +6196,7 @@ Int64::Compare(JSContext* cx, uintN argc, jsval* vp)
 #define INT64_HI(i) ((i) >> 32)
 
 JSBool
-Int64::Lo(JSContext* cx, uintN argc, jsval* vp)
+Int64::Lo(JSContext* cx, unsigned argc, jsval* vp)
 {
   jsval* argv = JS_ARGV(cx, vp);
   if (argc != 1 || JSVAL_IS_PRIMITIVE(argv[0]) ||
@@ -6218,7 +6218,7 @@ Int64::Lo(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-Int64::Hi(JSContext* cx, uintN argc, jsval* vp)
+Int64::Hi(JSContext* cx, unsigned argc, jsval* vp)
 {
   jsval* argv = JS_ARGV(cx, vp);
   if (argc != 1 || JSVAL_IS_PRIMITIVE(argv[0]) ||
@@ -6240,7 +6240,7 @@ Int64::Hi(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-Int64::Join(JSContext* cx, uintN argc, jsval* vp)
+Int64::Join(JSContext* cx, unsigned argc, jsval* vp)
 {
   if (argc != 2) {
     JS_ReportError(cx, "join takes two arguments");
@@ -6274,7 +6274,7 @@ Int64::Join(JSContext* cx, uintN argc, jsval* vp)
 
 JSBool
 UInt64::Construct(JSContext* cx,
-                  uintN argc,
+                  unsigned argc,
                   jsval* vp)
 {
   // Construct and return a new UInt64 object.
@@ -6310,7 +6310,7 @@ UInt64::IsUInt64(JSObject* obj)
 }
 
 JSBool
-UInt64::ToString(JSContext* cx, uintN argc, jsval* vp)
+UInt64::ToString(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj || !UInt64::IsUInt64(obj)) {
@@ -6322,7 +6322,7 @@ UInt64::ToString(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-UInt64::ToSource(JSContext* cx, uintN argc, jsval* vp)
+UInt64::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
   if (!obj || !UInt64::IsUInt64(obj)) {
@@ -6334,7 +6334,7 @@ UInt64::ToSource(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-UInt64::Compare(JSContext* cx, uintN argc, jsval* vp)
+UInt64::Compare(JSContext* cx, unsigned argc, jsval* vp)
 {
   jsval* argv = JS_ARGV(cx, vp);
   if (argc != 2 ||
@@ -6363,7 +6363,7 @@ UInt64::Compare(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-UInt64::Lo(JSContext* cx, uintN argc, jsval* vp)
+UInt64::Lo(JSContext* cx, unsigned argc, jsval* vp)
 {
   jsval* argv = JS_ARGV(cx, vp);
   if (argc != 1 || JSVAL_IS_PRIMITIVE(argv[0]) ||
@@ -6385,7 +6385,7 @@ UInt64::Lo(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-UInt64::Hi(JSContext* cx, uintN argc, jsval* vp)
+UInt64::Hi(JSContext* cx, unsigned argc, jsval* vp)
 {
   jsval* argv = JS_ARGV(cx, vp);
   if (argc != 1 || JSVAL_IS_PRIMITIVE(argv[0]) ||
@@ -6407,7 +6407,7 @@ UInt64::Hi(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
-UInt64::Join(JSContext* cx, uintN argc, jsval* vp)
+UInt64::Join(JSContext* cx, unsigned argc, jsval* vp)
 {
   if (argc != 2) {
     JS_ReportError(cx, "join takes two arguments");

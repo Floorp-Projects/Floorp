@@ -564,9 +564,7 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
 
     static bool gcHasRun = false;
     if (!gcHasRun) {
-        JSRuntime* rt = JS_GetRuntime(mCycleCollectionContext->GetJSContext());
-        if (!rt)
-            NS_RUNTIMEABORT("Failed to get JS runtime!");
+        JSRuntime* rt = GetRuntime()->GetJSRuntime();
         uint32_t gcNumber = JS_GetGCParameter(rt, JSGC_NUMBER);
         if (!gcNumber)
             NS_RUNTIMEABORT("Cannot cycle collect if GC has not run first!");
@@ -598,7 +596,7 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
     NS_ASSERTION(!explainLiveExpectedGarbage, "Didn't call nsXPConnect::Collect()?");
 #endif
 
-    GetRuntime()->AddXPConnectRoots(mCycleCollectionContext->GetJSContext(), cb);
+    GetRuntime()->AddXPConnectRoots(cb);
  
     NoteWeakMapsTracer trc(mCycleCollectionContext->GetJSContext(),
                            TraceWeakMapping, cb);
@@ -1156,8 +1154,7 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     *global = tempGlobal;
     *compartment = js::GetObjectCompartment(tempGlobal);
 
-    js::AutoSwitchCompartment sc(cx, *compartment);
-    JS_SetCompartmentPrivate(cx, *compartment, priv_holder.forget());
+    JS_SetCompartmentPrivate(*compartment, priv_holder.forget());
     return true;
 }
 
@@ -1188,9 +1185,7 @@ TraceXPCGlobal(JSTracer *trc, JSObject *obj)
     }
 #endif
 
-    XPCWrappedNativeScope *scope =
-        XPCWrappedNativeScope::GetNativeScope(trc->context, obj);
-    if (scope)
+    if (XPCWrappedNativeScope *scope = XPCWrappedNativeScope::GetNativeScope(obj))
         scope->TraceDOMPrototypes(trc);
 }
 
@@ -2804,7 +2799,7 @@ nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
     if (!obj)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    uintN attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+    unsigned attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
     size_t i = JS_GetE4XObjectsCreated(cx);
     jsval v = DOUBLE_TO_JSVAL(i);

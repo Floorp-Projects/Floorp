@@ -176,7 +176,7 @@ class RegExpCode
 #endif
     }
 
-    bool compile(JSContext *cx, JSLinearString &pattern, uintN *parenCount, RegExpFlag flags);
+    bool compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount, RegExpFlag flags);
 
 
     RegExpRunStatus
@@ -212,7 +212,7 @@ class RegExpShared
     friend class RegExpGuard;
 
     detail::RegExpCode code;
-    uintN              parenCount;
+    unsigned              parenCount;
     RegExpFlag         flags;
     size_t             activeUseCount;   /* See comment above. */
     uint64_t           gcNumberWhenUsed; /* See comment above. */
@@ -342,15 +342,15 @@ class RegExpObject : public JSObject
 {
     typedef detail::RegExpCode RegExpCode;
 
-    static const uintN LAST_INDEX_SLOT          = 0;
-    static const uintN SOURCE_SLOT              = 1;
-    static const uintN GLOBAL_FLAG_SLOT         = 2;
-    static const uintN IGNORE_CASE_FLAG_SLOT    = 3;
-    static const uintN MULTILINE_FLAG_SLOT      = 4;
-    static const uintN STICKY_FLAG_SLOT         = 5;
+    static const unsigned LAST_INDEX_SLOT          = 0;
+    static const unsigned SOURCE_SLOT              = 1;
+    static const unsigned GLOBAL_FLAG_SLOT         = 2;
+    static const unsigned IGNORE_CASE_FLAG_SLOT    = 3;
+    static const unsigned MULTILINE_FLAG_SLOT      = 4;
+    static const unsigned STICKY_FLAG_SLOT         = 5;
 
   public:
-    static const uintN RESERVED_SLOTS = 6;
+    static const unsigned RESERVED_SLOTS = 6;
 
     /*
      * Note: The regexp statics flags are OR'd into the provided flags,
@@ -400,7 +400,7 @@ class RegExpObject : public JSObject
     inline void setSource(JSAtom *source);
 
     RegExpFlag getFlags() const {
-        uintN flags = 0;
+        unsigned flags = 0;
         flags |= global() ? GlobalFlag : 0;
         flags |= ignoreCase() ? IgnoreCaseFlag : 0;
         flags |= multiline() ? MultilineFlag : 0;

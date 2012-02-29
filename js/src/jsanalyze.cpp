@@ -126,7 +126,7 @@ ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
         atom = script->getAtom(GET_UINT32_INDEX(pc));
     }
 
-    uintN index;
+    unsigned index;
     BindingKind kind = script->bindings.lookup(cx, atom, &index);
 
     if (kind == ARGUMENT)

@@ -613,7 +613,7 @@ private:
     /* Emitting helpers. */
     bool constantFoldBranch(jsbytecode *target, bool taken);
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
-    bool iter(uintN flags);
+    bool iter(unsigned flags);
     void iterNext(ptrdiff_t offset);
     bool iterMore(jsbytecode *target);
     void iterEnd();

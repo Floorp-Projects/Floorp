@@ -53,23 +53,23 @@ namespace {
 
     // Only need one reserved slot because the ObjectWrapperParent* is
     // stored in the private slot.
-    static const uintN sFlagsSlot = 0;
-    static const uintN sNumSlots = 1;
-    static const uintN CPOW_FLAG_RESOLVING = 1 << 0;
+    static const unsigned sFlagsSlot = 0;
+    static const unsigned sNumSlots = 1;
+    static const unsigned CPOW_FLAG_RESOLVING = 1 << 0;
 
     class AutoResolveFlag
     {
         JSObject* mObj;
-        uintN mOldFlags;
+        unsigned mOldFlags;
         JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-        static uintN GetFlags(JSObject* obj) {
+        static unsigned GetFlags(JSObject* obj) {
             jsval v = JS_GetReservedSlot(obj, sFlagsSlot);
             return JSVAL_TO_INT(v);
         }
 
-        static uintN SetFlags(JSObject* obj, uintN flags) {
-            uintN oldFlags = GetFlags(obj);
+        static unsigned SetFlags(JSObject* obj, unsigned flags) {
+            unsigned oldFlags = GetFlags(obj);
             if (oldFlags != flags)
                 JS_SetReservedSlot(obj, sFlagsSlot, INT_TO_JSVAL(flags));
             return oldFlags;
@@ -577,7 +577,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSObject *obj,
 
 /*static*/ JSBool
 ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSObject *obj, jsid id,
-                                     uintN flags, JSObject **objp)
+                                     unsigned flags, JSObject **objp)
 {
     CPOW_LOG(("Calling CPOW_NewResolve (%s)...",
               JSVAL_TO_CSTR(cx, id)));
@@ -639,7 +639,7 @@ ObjectWrapperParent::CPOW_Finalize(JSContext* cx, JSObject* obj)
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_Call(JSContext* cx, uintN argc, jsval* vp)
+ObjectWrapperParent::CPOW_Call(JSContext* cx, unsigned argc, jsval* vp)
 {
     CPOW_LOG(("Calling CPOW_Call..."));
 
@@ -665,7 +665,7 @@ ObjectWrapperParent::CPOW_Call(JSContext* cx, uintN argc, jsval* vp)
 
     InfallibleTArray<JSVariant> in_argv(argc);
     jsval* argv = JS_ARGV(cx, vp);
-    for (uintN i = 0; i < argc; i++)
+    for (unsigned i = 0; i < argc; i++)
         if (!jsval_to_JSVariant(cx, argv[i], in_argv.AppendElement()))
             return JS_FALSE;
 
@@ -679,7 +679,7 @@ ObjectWrapperParent::CPOW_Call(JSContext* cx, uintN argc, jsval* vp)
 }
 
 /*static*/ JSBool
-ObjectWrapperParent::CPOW_Construct(JSContext* cx, uintN argc, jsval* vp)
+ObjectWrapperParent::CPOW_Construct(JSContext* cx, unsigned argc, jsval* vp)
 {
     CPOW_LOG(("Calling CPOW_Construct..."));
     
@@ -691,7 +691,7 @@ ObjectWrapperParent::CPOW_Construct(JSContext* cx, uintN argc, jsval* vp)
 
     InfallibleTArray<JSVariant> in_argv(argc);
     jsval* argv = JS_ARGV(cx, vp);
-    for (uintN i = 0; i < argc; i++)
+    for (unsigned i = 0; i < argc; i++)
         if (!jsval_to_JSVariant(cx, argv[i], in_argv.AppendElement()))
             return JS_FALSE;
 

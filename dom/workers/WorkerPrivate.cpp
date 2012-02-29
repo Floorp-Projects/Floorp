@@ -3479,7 +3479,7 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
 }
 
 bool
-WorkerPrivate::SetTimeout(JSContext* aCx, uintN aArgc, jsval* aVp,
+WorkerPrivate::SetTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp,
                           bool aIsInterval)
 {
   AssertIsOnWorkerThread();
@@ -3541,7 +3541,7 @@ WorkerPrivate::SetTimeout(JSContext* aCx, uintN aArgc, jsval* aVp,
 
     if (aArgc > 2 && JSVAL_IS_OBJECT(newInfo->mTimeoutVal)) {
       nsTArray<jsval> extraArgVals(aArgc - 2);
-      for (uintN index = 2; index < aArgc; index++) {
+      for (unsigned index = 2; index < aArgc; index++) {
         extraArgVals.AppendElement(argv[index]);
       }
       newInfo->mExtraArgVals.SwapElements(extraArgVals);

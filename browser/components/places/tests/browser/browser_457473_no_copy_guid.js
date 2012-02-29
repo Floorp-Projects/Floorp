@@ -85,7 +85,7 @@ function test() {
   ok(transaction, "create transaction");
 
   // execute it, copying to the test root folder
-  PlacesUIUtils.ptm.doTransaction(transaction);
+  PlacesUtils.transactionManager.doTransaction(transaction);
   is(testRootNode.childCount, 2, "create test folder via copy");
 
   // check GUIDs are different
@@ -95,12 +95,12 @@ function test() {
   ok(checkGUIDs(folderBNode, folderBGUIDs, true), "confirm test of new GUIDs");
 
   // undo the transaction, confirm the removal
-  PlacesUIUtils.ptm.undoTransaction();
+  PlacesUtils.transactionManager.undoTransaction();
   is(testRootNode.childCount, 1, "confirm undo removed the copied folder");
 
   // redo the transaction
   // confirming GUIDs persist through undo/redo
-  PlacesUIUtils.ptm.redoTransaction();
+  PlacesUtils.transactionManager.redoTransaction();
   is(testRootNode.childCount, 2, "confirm redo re-copied the folder");
   folderBNode = testRootNode.getChild(1);
   ok(checkGUIDs(folderBNode, folderAGUIDs, false), "folder B GUIDs after undo/redo don't match folder A GUIDs"); // sanity check
@@ -111,7 +111,7 @@ function test() {
   toolbarNode.containerOpen = false;
 
   // clean up
-  PlacesUIUtils.ptm.undoTransaction();
+  PlacesUtils.transactionManager.undoTransaction();
   PlacesUtils.bookmarks.removeItem(testRootId);
 }
 

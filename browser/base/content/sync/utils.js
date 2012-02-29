@@ -76,7 +76,7 @@ let gSyncUtils = {
     }
 
     // Open up the change dialog
-    let changeXUL = "chrome://browser/content/syncGenericChange.xul";
+    let changeXUL = "chrome://browser/content/sync/genericChange.xul";
     let changeOpt = "centerscreen,chrome,resizable=no";
     Services.ww.activeWindow.openDialog(changeXUL, "", changeOpt,
                                         type, duringSetup);
@@ -125,7 +125,7 @@ let gSyncUtils = {
 
     // Create an invisible iframe whose contents we can print.
     let iframe = document.createElement("iframe");
-    iframe.setAttribute("src", "chrome://browser/content/syncKey.xhtml");
+    iframe.setAttribute("src", "chrome://browser/content/sync/key.xhtml");
     iframe.collapsed = true;
     document.documentElement.appendChild(iframe);
     iframe.contentWindow.addEventListener("load", function() {

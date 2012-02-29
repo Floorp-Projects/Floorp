@@ -39,9 +39,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 var bmsvc = PlacesUtils.bookmarks;
-var ptSvc = PlacesUIUtils.ptm;
 var tagssvc = PlacesUtils.tagging;
 var annosvc = PlacesUtils.annotations;
+let txnManager = PlacesUtils.transactionManager;
+const kDESCRIPTION_ANNO = "bookmarkProperties/description";
+const kLOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 
 // create and add bookmarks observer
 var observer = {
@@ -104,19 +106,19 @@ function run_test() {
 
   //Test creating a folder with a description
   const TEST_DESCRIPTION = "this is my test description";
-  var annos = [{ name: PlacesUIUtils.DESCRIPTION_ANNO,
+  var annos = [{ name: kDESCRIPTION_ANNO,
                  type: annosvc.TYPE_STRING,
                 flags: 0,
                 value: TEST_DESCRIPTION,
               expires: annosvc.EXPIRE_NEVER }];
-  var txn1 = ptSvc.createFolder("Testing folder", root, bmStartIndex, annos);
-  ptSvc.doTransaction(txn1);
+  var txn1 = new PlacesCreateFolderTransaction("Testing folder", root, bmStartIndex, annos);
+  txnManager.doTransaction(txn1);
 
   // This checks that calling undoTransaction on an "empty batch" doesn't
   // undo the previous transaction (getItemTitle will fail)
-  ptSvc.beginBatch();
-  ptSvc.endBatch();
-  ptSvc.undoTransaction();
+  txnManager.beginBatch();
+  txnManager.endBatch();
+  txnManager.undoTransaction();
 
   var folderId = observer._itemAddedId;
   do_check_eq(bmsvc.getItemTitle(folderId), "Testing folder");
@@ -124,7 +126,7 @@ function run_test() {
   do_check_eq(observer._itemAddedParent, root);
   do_check_eq(observer._itemAddedId, folderId);
   do_check_eq(TEST_DESCRIPTION, 
-              annosvc.getItemAnnotation(folderId, PlacesUIUtils.DESCRIPTION_ANNO));
+              annosvc.getItemAnnotation(folderId, kDESCRIPTION_ANNO));
 
   txn1.undoTransaction();
   do_check_eq(observer._itemRemovedId, folderId);
@@ -141,8 +143,9 @@ function run_test() {
 
   // Test creating an item
   // Create to Root
-  var txn2 = ptSvc.createItem(uri("http://www.example.com"), root, bmStartIndex, "Testing1");
-  ptSvc.doTransaction(txn2); // Also testing doTransaction
+  var txn2 = new PlacesCreateBookmarkTransaction(uri("http://www.example.com"),
+                                                 root, bmStartIndex, "Testing1");
+  txnManager.doTransaction(txn2); // Also testing doTransaction
   var b = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com")))[0];
   do_check_eq(observer._itemAddedId, b);
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
@@ -163,13 +166,14 @@ function run_test() {
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
 
   // Create item to a folder
-  var txn2a = ptSvc.createFolder("Folder", root, bmStartIndex);
-  ptSvc.doTransaction(txn2a);
+  var txn2a = new PlacesCreateFolderTransaction("Folder", root, bmStartIndex);
+  txnManager.doTransaction(txn2a);
   var fldrId = observer._itemAddedId;
   do_check_eq(bmsvc.getItemTitle(fldrId), "Folder");
 
-  var txn2b = ptSvc.createItem(uri("http://www.example2.com"), fldrId, bmStartIndex, "Testing1b");
-  ptSvc.doTransaction(txn2b);
+  var txn2b = new PlacesCreateBookmarkTransaction(uri("http://www.example2.com"),
+                                                  fldrId, bmStartIndex, "Testing1b");
+  txnManager.doTransaction(txn2b);
   var b2 = (bmsvc.getBookmarkIdsForURI(uri("http://www.example2.com")))[0];
   do_check_eq(observer._itemAddedId, b2);
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
@@ -188,9 +192,17 @@ function run_test() {
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
 
   // Testing moving an item
-  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing2"));
-  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing3"));
-  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.example3.com"), fldrId, -1, "Testing4"));
+  {
+    let txnTesting2 = new PlacesCreateBookmarkTransaction(uri("http://www.example3.com"),
+                                                          root, -1, "Testing2");
+    txnManager.doTransaction(txnTesting2);
+    let txnTesting3 = new PlacesCreateBookmarkTransaction(uri("http://www.example3.com"),
+                                                          root, -1, "Testing3");
+    txnManager.doTransaction(txnTesting3);
+    let txnTesting4 = new PlacesCreateBookmarkTransaction(uri("http://www.example3.com"),
+                                                          fldrId, -1, "Testing4");
+    txnManager.doTransaction(txnTesting4);
+  }
   var bkmkIds = bmsvc.getBookmarkIdsForURI(uri("http://www.example3.com"));
   bkmkIds.sort();
   var bkmk1Id = bkmkIds[0];
@@ -198,7 +210,7 @@ function run_test() {
   var bkmk3Id = bkmkIds[2];
 
   // Moving items between the same folder
-  var txn3 = ptSvc.moveItem(bkmk1Id, root, -1);
+  var txn3 = new PlacesMoveItemTransaction(bkmk1Id, root, -1);
   txn3.doTransaction();
   do_check_eq(observer._itemMovedId, bkmk1Id);
   do_check_eq(observer._itemMovedOldParent, root);
@@ -225,7 +237,7 @@ function run_test() {
   do_check_eq(observer._itemMovedNewIndex, 1);
 
   // Moving items between different folders
-  var txn3b = ptSvc.moveItem(bkmk1Id, fldrId, -1);
+  var txn3b = new PlacesMoveItemTransaction(bkmk1Id, fldrId, -1);
   txn3b.doTransaction();
   do_check_eq(observer._itemMovedId, bkmk1Id);
   do_check_eq(observer._itemMovedOldParent, root);
@@ -252,11 +264,14 @@ function run_test() {
   do_check_eq(observer._itemMovedNewIndex, 1);
 
   // Test Removing a Folder
-  ptSvc.doTransaction(ptSvc.createFolder("Folder2", root, -1));
-  var fldrId2 = observer._itemAddedId;
+  let txnFolder2 = new PlacesCreateFolderTransaction("Folder2",
+                                                     root,
+                                                     bmsvc.DEFAULT_INDEX);
+  txnManager.doTransaction(txnFolder2);
+  let fldrId2 = observer._itemAddedId;
   do_check_eq(bmsvc.getItemTitle(fldrId2), "Folder2");
 
-  var txn4 = ptSvc.removeItem(fldrId2);
+  var txn4 = new PlacesRemoveItemTransaction(fldrId2);
   txn4.doTransaction();
   do_check_eq(observer._itemRemovedId, fldrId2);
   do_check_eq(observer._itemRemovedFolder, root);
@@ -278,7 +293,7 @@ function run_test() {
   // Notice in this case the tag persists since other bookmarks have same uri.
   bmsvc.setKeywordForBookmark(bkmk2Id, "test_keyword");
   tagssvc.tagURI(uri("http://www.example3.com"), ["test-tag"]);
-  var txn5 = ptSvc.removeItem(bkmk2Id);
+  var txn5 = new PlacesRemoveItemTransaction(bkmk2Id);
   txn5.doTransaction();
   do_check_eq(observer._itemRemovedId, bkmk2Id);
   do_check_eq(observer._itemRemovedFolder, root);
@@ -306,12 +321,13 @@ function run_test() {
   {
     // Test removing an item with a tag (last bookmark for a uri).
     let testURI = uri("http://www.taggedbm.com/");
-    ptSvc.doTransaction(
-      ptSvc.createItem(testURI, fldrId, bmStartIndex, "TaggedBm")
-    );
+    let txnTaggedBm = new PlacesCreateBookmarkTransaction(testURI, fldrId,
+                                                          bmStartIndex, "TaggedBm");
+    txnManager.doTransaction(txnTaggedBm);
     tagssvc.tagURI(testURI, ["test-tag"]);
+
     let itemId = observer._itemAddedId;
-    txn = ptSvc.removeItem(itemId);
+    let txn = new PlacesRemoveItemTransaction(itemId);
     txn.doTransaction();
     do_check_true(tagssvc.getTagsForURI(testURI).length == 0);
     txn.undoTransaction();
@@ -324,7 +340,7 @@ function run_test() {
   }
 
   // Test creating a separator
-  var txn6 = ptSvc.createSeparator(root, 1);
+  var txn6 = new PlacesCreateSeparatorTransaction(root, 1);
   txn6.doTransaction();
   var sepId = observer._itemAddedId;
   do_check_eq(observer._itemAddedIndex, 1);
@@ -343,28 +359,30 @@ function run_test() {
   do_check_eq(observer._itemRemovedIndex, 1);
 
   // Test removing a separator
-  ptSvc.doTransaction(ptSvc.createSeparator(root, 1));
-  var sepId2 = observer._itemAddedId;
-  var txn7 = ptSvc.removeItem(sepId2);
-  txn7.doTransaction();
-  do_check_eq(observer._itemRemovedId, sepId2);
-  do_check_eq(observer._itemRemovedFolder, root);
-  do_check_eq(observer._itemRemovedIndex, 1);
-  txn7.undoTransaction();
-  do_check_eq(observer._itemAddedId, sepId2); //New separator created
-  do_check_eq(observer._itemAddedParent, root);
-  do_check_eq(observer._itemAddedIndex, 1);
-  txn7.redoTransaction();
-  do_check_eq(observer._itemRemovedId, sepId2);
-  do_check_eq(observer._itemRemovedFolder, root);
-  do_check_eq(observer._itemRemovedIndex, 1);
-  txn7.undoTransaction();
-  do_check_eq(observer._itemAddedId, sepId2); //New separator created
-  do_check_eq(observer._itemAddedParent, root);
-  do_check_eq(observer._itemAddedIndex, 1);
-
+  {
+    let separatorTxn = new PlacesCreateSeparatorTransaction(root, 1);
+    txnManager.doTransaction(separatorTxn);
+    var sepId2 = observer._itemAddedId;
+    var txn7 = new PlacesRemoveItemTransaction(sepId2);
+    txn7.doTransaction();
+    do_check_eq(observer._itemRemovedId, sepId2);
+    do_check_eq(observer._itemRemovedFolder, root);
+    do_check_eq(observer._itemRemovedIndex, 1);
+    txn7.undoTransaction();
+    do_check_eq(observer._itemAddedId, sepId2); //New separator created
+    do_check_eq(observer._itemAddedParent, root);
+    do_check_eq(observer._itemAddedIndex, 1);
+    txn7.redoTransaction();
+    do_check_eq(observer._itemRemovedId, sepId2);
+    do_check_eq(observer._itemRemovedFolder, root);
+    do_check_eq(observer._itemRemovedIndex, 1);
+    txn7.undoTransaction();
+    do_check_eq(observer._itemAddedId, sepId2); //New separator created
+    do_check_eq(observer._itemAddedParent, root);
+    do_check_eq(observer._itemAddedIndex, 1);
+  }
   // Test editing item title
-  var txn8 = ptSvc.editItemTitle(bkmk1Id, "Testing2_mod");
+  var txn8 = new PlacesEditItemTitleTransaction(bkmk1Id, "Testing2_mod");
   txn8.doTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id); 
   do_check_eq(observer._itemChangedProperty, "title");
@@ -383,7 +401,7 @@ function run_test() {
   do_check_eq(observer._itemChangedValue, "Testing2");
 
   // Test editing item uri
-  var txn9 = ptSvc.editBookmarkURI(bkmk1Id, uri("http://newuri.com"));
+  var txn9 = new PlacesEditBookmarkURITransaction(bkmk1Id, uri("http://newuri.com"));
   txn9.doTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
   do_check_eq(observer._itemChangedProperty, "uri");
@@ -402,13 +420,20 @@ function run_test() {
   do_check_eq(observer._itemChangedValue, "http://www.example3.com/");
   
   // Test edit description transaction.
-  var txn10 = ptSvc.editItemDescription(bkmk1Id, "Description1");
+  let txn10AnnoObj = {
+    name: kDESCRIPTION_ANNO,
+    type: Ci.nsIAnnotationService.TYPE_STRING,
+    flags: 0,
+    value: "Description1",
+    expires: Ci.nsIAnnotationService.EXPIRE_NEVER,
+  };
+  var txn10 = new PlacesSetItemAnnotationTransaction(bkmk1Id, txn10AnnoObj);
   txn10.doTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
-  do_check_eq(observer._itemChangedProperty, PlacesUIUtils.DESCRIPTION_ANNO);
+  do_check_eq(observer._itemChangedProperty, kDESCRIPTION_ANNO);
 
   // Testing edit keyword
-  var txn11 = ptSvc.editBookmarkKeyword(bkmk1Id, "kw1");
+  var txn11 = new PlacesEditBookmarkKeywordTransaction(bkmk1Id, "kw1");
   txn11.doTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
   do_check_eq(observer._itemChangedProperty, "keyword");
@@ -419,14 +444,19 @@ function run_test() {
   do_check_eq(observer._itemChangedValue, ""); 
 
   // Test LoadInSidebar transaction.
-  var txn16 = ptSvc.setLoadInSidebar(bkmk1Id, true);
+  let txn16AnnoObj = { name: kLOAD_IN_SIDEBAR_ANNO,
+                       type: Ci.nsIAnnotationService.TYPE_INT32,
+                       flags: 0,
+                       value: true,
+                       expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+  var txn16 = new PlacesSetItemAnnotationTransaction(bkmk1Id, txn16AnnoObj);
   txn16.doTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
-  do_check_eq(observer._itemChangedProperty, PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
+  do_check_eq(observer._itemChangedProperty, kLOAD_IN_SIDEBAR_ANNO);
   do_check_eq(observer._itemChanged_isAnnotationProperty, true);
   txn16.undoTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
-  do_check_eq(observer._itemChangedProperty, PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
+  do_check_eq(observer._itemChangedProperty, kLOAD_IN_SIDEBAR_ANNO);
   do_check_eq(observer._itemChanged_isAnnotationProperty, true);
 
   // Test generic item annotation
@@ -435,7 +465,7 @@ function run_test() {
                       flags: 0,
                       value: 123,
                       expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
-  var genItemAnnoTxn = ptSvc.setItemAnnotation(bkmk1Id, itemAnnoObj);
+  var genItemAnnoTxn = new PlacesSetItemAnnotationTransaction(bkmk1Id, itemAnnoObj);
   genItemAnnoTxn.doTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
   do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
@@ -459,7 +489,7 @@ function run_test() {
            getService(Ci.nsINavHistoryService);
   hs.addVisit(uri("http://www.mozilla.org/"), Date.now() * 1000, null,
               hs.TRANSITION_TYPED, false, 0);
-  var genPageAnnoTxn = ptSvc.setPageAnnotation(uri("http://www.mozilla.org/"), pageAnnoObj);
+  var genPageAnnoTxn = new PlacesSetPageAnnotationTransaction(uri("http://www.mozilla.org/"), pageAnnoObj);
   genPageAnnoTxn.doTransaction();
   do_check_true(annosvc.pageHasAnnotation(uri("http://www.mozilla.org/"), "testAnno/testInt"));
   genPageAnnoTxn.undoTransaction();
@@ -468,56 +498,70 @@ function run_test() {
   do_check_true(annosvc.pageHasAnnotation(uri("http://www.mozilla.org/"), "testAnno/testInt"));
 
   // sortFolderByName
-  ptSvc.doTransaction(ptSvc.createFolder("Sorting folder", root, bmStartIndex, [], null));
-  var srtFldId = observer._itemAddedId;
-  do_check_eq(bmsvc.getItemTitle(srtFldId), "Sorting folder");
-  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "c"));
-  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "b"));   
-  ptSvc.doTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "a"));
-  var b = bmsvc.getBookmarkIdsForURI(uri("http://www.sortingtest.com"));
-  b.sort();
-  var b1 = b[0];
-  var b2 = b[1];
-  var b3 = b[2];
-  do_check_eq(0, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(2, bmsvc.getItemIndex(b3));
-  var txn17 = ptSvc.sortFolderByName(srtFldId);
-  txn17.doTransaction();
-  do_check_eq(2, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(0, bmsvc.getItemIndex(b3));
-  txn17.undoTransaction();
-  do_check_eq(0, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(2, bmsvc.getItemIndex(b3));
-  txn17.redoTransaction();
-  do_check_eq(2, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(0, bmsvc.getItemIndex(b3));
-  txn17.undoTransaction();
-  do_check_eq(0, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(2, bmsvc.getItemIndex(b3));
+  {
+    let sortFolderTxn = new PlacesCreateFolderTransaction("Sorting folder", root,
+                                                          bmStartIndex, [], null);
+    txnManager.doTransaction(sortFolderTxn);
+    var srtFldId = observer._itemAddedId;
+    do_check_eq(bmsvc.getItemTitle(srtFldId), "Sorting folder");
+    let cTxn = new PlacesCreateBookmarkTransaction(uri("http://www.sortingtest.com"),
+                                                   srtFldId, -1, "c");
+    txnManager.doTransaction(cTxn);
+    let bTxn = new PlacesCreateBookmarkTransaction(uri("http://www.sortingtest.com"),
+                                                   srtFldId, -1, "b");
+    txnManager.doTransaction(bTxn);
+    let aTxn = new PlacesCreateBookmarkTransaction(uri("http://www.sortingtest.com"),
+                                                   srtFldId, bmsvc.DEFAULT_INDEX, "a");
+    txnManager.doTransaction(aTxn);
+
+    var b = bmsvc.getBookmarkIdsForURI(uri("http://www.sortingtest.com"));
+    b.sort();
+    var b1 = b[0];
+    var b2 = b[1];
+    var b3 = b[2];
+    do_check_eq(0, bmsvc.getItemIndex(b1));
+    do_check_eq(1, bmsvc.getItemIndex(b2));
+    do_check_eq(2, bmsvc.getItemIndex(b3));
+    var txn17 = new PlacesSortFolderByNameTransaction(srtFldId);
+    txn17.doTransaction();
+    do_check_eq(2, bmsvc.getItemIndex(b1));
+    do_check_eq(1, bmsvc.getItemIndex(b2));
+    do_check_eq(0, bmsvc.getItemIndex(b3));
+    txn17.undoTransaction();
+    do_check_eq(0, bmsvc.getItemIndex(b1));
+    do_check_eq(1, bmsvc.getItemIndex(b2));
+    do_check_eq(2, bmsvc.getItemIndex(b3));
+    txn17.redoTransaction();
+    do_check_eq(2, bmsvc.getItemIndex(b1));
+    do_check_eq(1, bmsvc.getItemIndex(b2));
+    do_check_eq(0, bmsvc.getItemIndex(b3));
+    txn17.undoTransaction();
+    do_check_eq(0, bmsvc.getItemIndex(b1));
+    do_check_eq(1, bmsvc.getItemIndex(b2));
+    do_check_eq(2, bmsvc.getItemIndex(b3));
+  }
 
   // Testing edit Post Data
-  const POST_DATA_ANNO = "bookmarkProperties/POSTData";
-  var postData = "foo";
-  var postDataURI = uri("http://foo.com");
-  ptSvc.doTransaction(
-    ptSvc.createItem(postDataURI, root, -1, "postdata test", null, null, null));
-  var postDataId = (bmsvc.getBookmarkIdsForURI(postDataURI))[0];
-  var postDataTxn = ptSvc.editBookmarkPostData(postDataId, postData);
-  postDataTxn.doTransaction();
-  do_check_true(annosvc.itemHasAnnotation(postDataId, POST_DATA_ANNO))
-  do_check_eq(annosvc.getItemAnnotation(postDataId, POST_DATA_ANNO), postData);
-  postDataTxn.undoTransaction();
-  do_check_false(annosvc.itemHasAnnotation(postDataId, POST_DATA_ANNO))
+  {
+    const POST_DATA_ANNO = "bookmarkProperties/POSTData";
+    var postData = "foo";
+    var postDataURI = uri("http://foo.com");
+    let txn = new PlacesCreateBookmarkTransaction(postDataURI, root, -1,
+                                                  "postdata test", null, null, null)
+    txnManager.doTransaction(txn);
+    var postDataId = (bmsvc.getBookmarkIdsForURI(postDataURI))[0];
+    var postDataTxn = new PlacesEditBookmarkPostDataTransaction(postDataId, postData);
+    postDataTxn.doTransaction();
+    do_check_true(annosvc.itemHasAnnotation(postDataId, POST_DATA_ANNO))
+    do_check_eq(annosvc.getItemAnnotation(postDataId, POST_DATA_ANNO), postData);
+    postDataTxn.undoTransaction();
+    do_check_false(annosvc.itemHasAnnotation(postDataId, POST_DATA_ANNO))
+  }
 
   // Test editing item date added
   var oldAdded = bmsvc.getItemDateAdded(bkmk1Id);
   var newAdded = Date.now();
-  var eidaTxn = ptSvc.editItemDateAdded(bkmk1Id, newAdded);
+  var eidaTxn = new PlacesEditItemDateAddedTransaction(bkmk1Id, newAdded);
   eidaTxn.doTransaction();
   do_check_eq(newAdded, bmsvc.getItemDateAdded(bkmk1Id));
   eidaTxn.undoTransaction();
@@ -526,7 +570,7 @@ function run_test() {
   // Test editing item last modified 
   var oldModified = bmsvc.getItemLastModified(bkmk1Id);
   var newModified = Date.now();
-  var eilmTxn = ptSvc.editItemLastModified(bkmk1Id, newModified);
+  var eilmTxn = new PlacesEditItemLastModifiedTransaction(bkmk1Id, newModified);
   eilmTxn.doTransaction();
   do_check_eq(newModified, bmsvc.getItemLastModified(bkmk1Id));
   eilmTxn.undoTransaction();
@@ -534,14 +578,14 @@ function run_test() {
 
   // Test tagURI/untagURI
   var tagURI = uri("http://foo.tld");
-  var tagTxn = ptSvc.tagURI(tagURI, ["foo", "bar"]);
+  var tagTxn = new PlacesTagURITransaction(tagURI, ["foo", "bar"]);
   tagTxn.doTransaction();
   do_check_eq(uneval(tagssvc.getTagsForURI(tagURI)), uneval(["bar","foo"]));
   tagTxn.undoTransaction();
   do_check_eq(tagssvc.getTagsForURI(tagURI).length, 0);
   tagTxn.redoTransaction();
   do_check_eq(uneval(tagssvc.getTagsForURI(tagURI)), uneval(["bar","foo"]));
-  var untagTxn = ptSvc.untagURI(tagURI, ["bar"]);
+  var untagTxn = new PlacesUntagURITransaction(tagURI, ["bar"]);
   untagTxn.doTransaction();
   do_check_eq(uneval(tagssvc.getTagsForURI(tagURI)), uneval(["foo"]));
   untagTxn.undoTransaction();
@@ -558,10 +602,15 @@ function run_test() {
   var bkmk3_3Id = bmsvc.createFolder(bkmk3Id, "folder", 2);
 
   var transactions = [];
-  transactions.push(ptSvc.removeItem(bkmk1Id));
-  transactions.push(ptSvc.removeItem(bkmk2Id));
-  transactions.push(ptSvc.removeItem(bkmk3Id));
-  var txn = ptSvc.aggregateTransactions("RemoveItems", transactions);
+  {
+    let txn1 = new PlacesRemoveItemTransaction(bkmk1Id);
+    transactions.push(txn1);
+    let txn2 = new PlacesRemoveItemTransaction(bkmk2Id);
+    transactions.push(txn2);
+    let txn3 = new PlacesRemoveItemTransaction(bkmk3Id);
+    transactions.push(txn3);
+  }
+  var txn = new PlacesAggregatedTransaction("RemoveItems", transactions);
 
   txn.doTransaction();
   do_check_eq(bmsvc.getItemIndex(bkmk1Id), -1);
@@ -632,51 +681,55 @@ function run_test() {
   do_check_eq(observer._itemAddedId, newBkmk1Id);
 
   // Test creating an item with child transactions.
-  var childTxns = [];
-  var newDateAdded = Date.now() - 20000;
-  childTxns.push(ptSvc.editItemDateAdded(null, newDateAdded));
-  var itemChildAnnoObj = { name: "testAnno/testInt",
-                           type: Ci.nsIAnnotationService.TYPE_INT32,
-                           flags: 0,
-                           value: 123,
-                           expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
-  childTxns.push(ptSvc.setItemAnnotation(null, itemChildAnnoObj));
-  var itemWChildTxn = ptSvc.createItem(uri("http://www.example.com"), root,
-                                       bmStartIndex, "Testing1", null, null,
-                                       childTxns);
-  try {
-    ptSvc.doTransaction(itemWChildTxn); // Also testing doTransaction
-    var itemId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com")))[0];
-    do_check_eq(observer._itemAddedId, itemId);
-    do_check_eq(newDateAdded, bmsvc.getItemDateAdded(itemId));
-    do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
-    do_check_eq(observer._itemChanged_isAnnotationProperty, true);
-    do_check_true(annosvc.itemHasAnnotation(itemId, itemChildAnnoObj.name))
-    do_check_eq(annosvc.getItemAnnotation(itemId, itemChildAnnoObj.name),
-                itemChildAnnoObj.value);
-    itemWChildTxn.undoTransaction();
-    do_check_eq(observer._itemRemovedId, itemId);
-    itemWChildTxn.redoTransaction();
-    do_check_true(bmsvc.isBookmarked(uri("http://www.example.com")));
-    var newId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com")))[0];
-    do_check_eq(newDateAdded, bmsvc.getItemDateAdded(newId));
-    do_check_eq(observer._itemAddedId, newId);
-    do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
-    do_check_eq(observer._itemChanged_isAnnotationProperty, true);
-    do_check_true(annosvc.itemHasAnnotation(newId, itemChildAnnoObj.name))
-    do_check_eq(annosvc.getItemAnnotation(newId, itemChildAnnoObj.name),
-                itemChildAnnoObj.value);
-    itemWChildTxn.undoTransaction();
-    do_check_eq(observer._itemRemovedId, newId);
-  } catch (ex) {
-    do_throw("Setting a child transaction in a createItem transaction did throw: " + ex);
+  {
+    var childTxns = [];
+    var newDateAdded = Date.now() - 20000;
+    let editDateAdddedTxn = new PlacesEditItemDateAddedTransaction(null, newDateAdded);
+    childTxns.push(editDateAdddedTxn);
+    var itemChildAnnoObj = { name: "testAnno/testInt",
+                             type: Ci.nsIAnnotationService.TYPE_INT32,
+                             flags: 0,
+                             value: 123,
+                             expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+    let annoTxn = new PlacesSetItemAnnotationTransaction(null, itemChildAnnoObj);
+    childTxns.push(annoTxn);
+    var itemWChildTxn = new PlacesCreateBookmarkTransaction(uri("http://www.example.com"), root,
+                                                            bmStartIndex, "Testing1", null, null,
+                                                            childTxns);
+    try {
+      txnManager.doTransaction(itemWChildTxn); // Also testing doTransaction
+      var itemId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com")))[0];
+      do_check_eq(observer._itemAddedId, itemId);
+      do_check_eq(newDateAdded, bmsvc.getItemDateAdded(itemId));
+      do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
+      do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+      do_check_true(annosvc.itemHasAnnotation(itemId, itemChildAnnoObj.name))
+      do_check_eq(annosvc.getItemAnnotation(itemId, itemChildAnnoObj.name),
+                  itemChildAnnoObj.value);
+      itemWChildTxn.undoTransaction();
+      do_check_eq(observer._itemRemovedId, itemId);
+      itemWChildTxn.redoTransaction();
+      do_check_true(bmsvc.isBookmarked(uri("http://www.example.com")));
+      var newId = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com")))[0];
+      do_check_eq(newDateAdded, bmsvc.getItemDateAdded(newId));
+      do_check_eq(observer._itemAddedId, newId);
+      do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
+      do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+      do_check_true(annosvc.itemHasAnnotation(newId, itemChildAnnoObj.name))
+      do_check_eq(annosvc.getItemAnnotation(newId, itemChildAnnoObj.name),
+                  itemChildAnnoObj.value);
+      itemWChildTxn.undoTransaction();
+      do_check_eq(observer._itemRemovedId, newId);
+    } catch (ex) {
+      do_throw("Setting a child transaction in a createItem transaction did throw: " + ex);
+    }
   }
 
   // Create a folder with child item transactions.
-  var childItemTxn = ptSvc.createItem(uri("http://www.childItem.com"), root, bmStartIndex, "childItem");
-  var folderWChildItemTxn = ptSvc.createFolder("Folder", root, bmStartIndex, null, [childItemTxn]);
+  var childItemTxn = new PlacesCreateBookmarkTransaction(uri("http://www.childItem.com"), root, bmStartIndex, "childItem");
+  var folderWChildItemTxn = new PlacesCreateFolderTransaction("Folder", root, bmStartIndex, null, [childItemTxn]);
   try {
-    ptSvc.doTransaction(folderWChildItemTxn);
+    txnManager.doTransaction(folderWChildItemTxn);
     var childItemId = (bmsvc.getBookmarkIdsForURI(uri("http://www.childItem.com")))[0];
     do_check_eq(observer._itemAddedId, childItemId);
     do_check_eq(observer._itemAddedIndex, 0);

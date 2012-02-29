@@ -1048,7 +1048,6 @@ abstract public class GeckoApp
 
                 final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
                 dialogBuilder.setSingleChoiceItems(titleArray, selected, new AlertDialog.OnClickListener() {
-                    @Override
                     public void onClick(DialogInterface dialog, int which) {
                         try {
                             JSONObject charset = charsets.getJSONObject(which);
@@ -1060,7 +1059,6 @@ abstract public class GeckoApp
                     }
                 });
                 dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
-                    @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                     }
@@ -2110,6 +2108,10 @@ abstract public class GeckoApp
             message.setData(bundle);
             mMainHandler.sendMessage(message);
         }
+
+        // An Android framework bug can cause an IME crash when focus changes invalidate text
+        // selection offsets. A workaround is to reset selection when the activity resumes.
+        GeckoAppShell.resetIMESelection();
 
         int newOrientation = getResources().getConfiguration().orientation;
 
