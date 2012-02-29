@@ -228,21 +228,17 @@ nsXPConnect::ReleaseXPConnectSingleton()
         // force a dump of the JavaScript gc heap if JS is still alive
         // if requested through XPC_SHUTDOWN_HEAP_DUMP environment variable
         {
-            // autoscope
-            XPCCallContext ccx(NATIVE_CALLER);
-            if (ccx.IsValid()) {
-                const char* dumpName = getenv("XPC_SHUTDOWN_HEAP_DUMP");
-                if (dumpName) {
-                    FILE* dumpFile = (*dumpName == '\0' ||
-                                      strcmp(dumpName, "stdout") == 0)
-                                     ? stdout
-                                     : fopen(dumpName, "w");
-                    if (dumpFile) {
-                        JS_DumpHeap(ccx, dumpFile, nsnull, JSTRACE_OBJECT, nsnull,
-                                    static_cast<size_t>(-1), nsnull);
-                        if (dumpFile != stdout)
-                            fclose(dumpFile);
-                    }
+            const char* dumpName = getenv("XPC_SHUTDOWN_HEAP_DUMP");
+            if (dumpName) {
+                FILE* dumpFile = (*dumpName == '\0' ||
+                                  strcmp(dumpName, "stdout") == 0)
+                                 ? stdout
+                                 : fopen(dumpName, "w");
+                if (dumpFile) {
+                    JS_DumpHeap(xpc->GetRuntime()->GetJSRuntime(), dumpFile, nsnull,
+                                JSTRACE_OBJECT, nsnull, static_cast<size_t>(-1), nsnull);
+                    if (dumpFile != stdout)
+                        fclose(dumpFile);
                 }
             }
         }
@@ -499,11 +495,11 @@ TraceWeakMappingChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 
 struct NoteWeakMapsTracer : public js::WeakMapTracer
 {
-    NoteWeakMapsTracer(JSContext *cx, js::WeakMapTraceCallback cb,
+    NoteWeakMapsTracer(JSRuntime *rt, js::WeakMapTraceCallback cb,
                        nsCycleCollectionTraversalCallback &cccb)
-      : js::WeakMapTracer(js::GetRuntime(cx), cb), mCb(cccb), mChildTracer(cccb)
+      : js::WeakMapTracer(rt, cb), mCb(cccb), mChildTracer(cccb)
     {
-        JS_TracerInit(&mChildTracer, cx, TraceWeakMappingChild);
+        JS_TracerInit(&mChildTracer, rt, TraceWeakMappingChild);
     }
     nsCycleCollectionTraversalCallback &mCb;
     NoteWeakMapChildrenTracer mChildTracer;
@@ -598,8 +594,7 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
 
     GetRuntime()->AddXPConnectRoots(cb);
  
-    NoteWeakMapsTracer trc(mCycleCollectionContext->GetJSContext(),
-                           TraceWeakMapping, cb);
+    NoteWeakMapsTracer trc(GetRuntime()->GetJSRuntime(), TraceWeakMapping, cb);
     js::TraceWeakMaps(&trc);
 
     return NS_OK;
@@ -724,7 +719,7 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     void *thing = *thingp;
     int stackDummy;
-    if (!JS_CHECK_STACK_SIZE(js::GetContextStackLimit(trc->context), &stackDummy)) {
+    if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(trc->runtime), &stackDummy)) {
         /*
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.
@@ -753,17 +748,9 @@ xpc_UnmarkGrayObjectRecursive(JSObject *obj)
     // Unmark.
     js::gc::AsCell(obj)->unmark(js::gc::GRAY);
 
-    // Tracing requires a JSContext...
-    JSContext *cx;
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if (!xpc || NS_FAILED(xpc->GetSafeJSContext(&cx)) || !cx) {
-        NS_ERROR("Failed to get safe JSContext!");
-        return;
-    }
-
     // Trace children.
     JSTracer trc;
-    JS_TracerInit(&trc, cx, UnmarkGrayChildren);
+    JS_TracerInit(&trc, JS_GetObjectRuntime(obj), UnmarkGrayChildren);
     JS_TraceChildren(&trc, obj, JSTRACE_OBJECT);
 }
 
@@ -861,8 +848,6 @@ WrapperIsNotMainThreadOnly(XPCWrappedNative *wrapper)
 NS_IMETHODIMP
 nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 {
-    JSContext *cx = mCycleCollectionContext->GetJSContext();
-
     JSGCTraceKind traceKind = js_GetGCThingTraceKind(p);
     JSObject *obj = nsnull;
     js::Class *clazz = nsnull;
@@ -970,7 +955,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 
     TraversalTracer trc(cb);
 
-    JS_TracerInit(&trc, cx, NoteJSChild);
+    JS_TracerInit(&trc, GetRuntime()->GetJSRuntime(), NoteJSChild);
     trc.eagerlyTraceWeakMaps = false;
     JS_TraceChildren(&trc, p, traceKind);
 
@@ -1222,7 +1207,7 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
 #ifdef DEBUG
     if (clasp->flags & JSCLASS_XPCONNECT_GLOBAL) {
         VerifyTraceXPCGlobalCalledTracer trc;
-        JS_TracerInit(&trc.base, cx, VerifyTraceXPCGlobalCalled);
+        JS_TracerInit(&trc.base, JS_GetRuntime(cx), VerifyTraceXPCGlobalCalled);
         trc.ok = false;
         JS_TraceChildren(&trc.base, *global, JSTRACE_OBJECT);
         NS_ABORT_IF_FALSE(trc.ok, "Trace hook needs to call TraceXPCGlobal if JSCLASS_XPCONNECT_GLOBAL is set.");
@@ -2779,13 +2764,12 @@ void
 DumpJSHeap(FILE* file)
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Must dump GC heap on main thread.");
-    JSContext *cx;
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if (!xpc || NS_FAILED(xpc->GetSafeJSContext(&cx)) || !cx) {
-        NS_ERROR("Failed to get safe JSContext!");
+    if (!xpc) {
+        NS_ERROR("Failed to get nsXPConnect instance!");
         return;
     }
-    js::DumpHeapComplete(cx, file);
+    js::DumpHeapComplete(xpc->GetRuntime()->GetJSRuntime(), file);
 }
 #endif
 
