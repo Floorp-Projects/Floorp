@@ -379,6 +379,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
     public LayerRenderer.Frame createFrame() {
         // Create the shaders and textures if necessary.
         if (!mLayerRendererInitialized) {
+            mLayerRenderer.checkMonitoringEnabled();
             mLayerRenderer.createProgram();
             mLayerRendererInitialized = true;
         }
