@@ -130,6 +130,7 @@ SafepointWriter::writeValueSlots(uint32 nslots, uint32 *slots)
     MapSlotsToBitset(frameSlots_, stream_, nslots, slots);
 }
 
+#ifdef DEBUG
 static void
 DumpNunboxPart(const LAllocation &a)
 {
@@ -141,6 +142,7 @@ DumpNunboxPart(const LAllocation &a)
         fprintf(IonSpewFile, "reg %s", a.toGeneralReg()->reg().name());
     }
 }
+#endif // DEBUG
 
 void
 SafepointWriter::writeNunboxParts(uint32 nentries, SafepointNunboxEntry *entries)
