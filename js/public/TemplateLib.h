@@ -165,6 +165,7 @@ template <> struct IsPodType<long>                  { static const bool result =
 template <> struct IsPodType<unsigned long>         { static const bool result = true; };
 template <> struct IsPodType<long long>             { static const bool result = true; };
 template <> struct IsPodType<unsigned long long>    { static const bool result = true; };
+template <> struct IsPodType<bool>                  { static const bool result = true; };
 template <> struct IsPodType<float>                 { static const bool result = true; };
 template <> struct IsPodType<double>                { static const bool result = true; };
 template <> struct IsPodType<wchar_t>               { static const bool result = true; };

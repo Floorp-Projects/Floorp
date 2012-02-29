@@ -846,7 +846,7 @@ struct JSContext : js::ContextFriendFields
      * True if generating an error, to prevent runaway recursion.
      * NB: generatingError packs with throwing below.
      */
-    JSPackedBool        generatingError;
+    bool        generatingError;
 
     /* GC heap compartment. */
     JSCompartment       *compartment;

@@ -6470,7 +6470,7 @@ JS_PUBLIC_API(JSBool)
 JS_ReportPendingException(JSContext *cx)
 {
     JSBool ok;
-    JSPackedBool save;
+    bool save;
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
