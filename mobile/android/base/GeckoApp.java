@@ -910,7 +910,11 @@ abstract public class GeckoApp
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
                 final String title = message.getString("title");
+                final String backgroundColor = message.getString("bgColor");
                 handleContentLoaded(tabId, uri, title);
+                if (getLayerController() != null) {
+                        getLayerController().setCheckerboardColor(backgroundColor);
+                }
                 Log.i(LOGTAG, "URI - " + uri + ", title - " + title);
             } else if (event.equals("DOMTitleChanged")) {
                 final int tabId = message.getInt("tabID");
