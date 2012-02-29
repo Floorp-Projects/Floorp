@@ -250,6 +250,15 @@ TypeAnalyzer::propagateSpecialization(MPhi *phi)
         MPhi *use = iter.def()->toPhi();
         if (!use->triedToSpecialize())
             continue;
+        if (use->type() == MIRType_None) {
+            // We tried to specialize this phi, but were unable to guess its
+            // type. Now that we know the type of one of its operands, we can
+            // specialize it.
+            use->specialize(phi->type());
+            if (!addPhiToWorklist(use))
+                return false;
+            continue;
+        }
         if (use->type() != phi->type()) {
             // This phi in our use chain can now no longer be specialized.
             use->specialize(MIRType_Value);
