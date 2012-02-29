@@ -44,8 +44,6 @@
  * and back conversion package.
  */
 
-#include "jscompat.h"
-
 JS_BEGIN_EXTERN_C
 
 struct DtoaState;
