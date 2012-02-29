@@ -100,6 +100,9 @@ public class AwesomeBarTabs extends TabHost {
     private JSONArray mSearchEngines;
     private ContentResolver mContentResolver;
 
+    private BookmarksQueryTask mBookmarksQueryTask;
+    private HistoryQueryTask mHistoryQueryTask;
+    
     private AwesomeBarCursorAdapter mAllPagesCursorAdapter;
     private BookmarksListAdapter mBookmarksAdapter;
     private SimpleExpandableListAdapter mHistoryAdapter;
@@ -367,6 +370,8 @@ public class AwesomeBarTabs extends TabHost {
             bookmarksList.addHeaderView(headerView, null, true);
 
             bookmarksList.setAdapter(mBookmarksAdapter);
+
+            mBookmarksQueryTask = null;
         }
     }
 
@@ -561,6 +566,8 @@ public class AwesomeBarTabs extends TabHost {
             historyList.setAdapter(mHistoryAdapter);
 
             expandAllGroups(historyList);
+
+            mHistoryQueryTask = null;
         }
     }
 
@@ -708,10 +715,14 @@ public class AwesomeBarTabs extends TabHost {
 
                 // Lazy load bookmarks and history lists. Only query the database
                 // if those lists requested by user.
-                if (tabId.equals(BOOKMARKS_TAB) && mBookmarksAdapter == null) {
-                    new BookmarksQueryTask().execute();
-                } else if (tabId.equals(HISTORY_TAB) && mHistoryAdapter == null) {
-                    new HistoryQueryTask().execute();
+                if (tabId.equals(BOOKMARKS_TAB) && mBookmarksAdapter == null
+                        && mBookmarksQueryTask == null) {
+                    mBookmarksQueryTask = new BookmarksQueryTask();
+                    mBookmarksQueryTask.execute();
+                } else if (tabId.equals(HISTORY_TAB) && mHistoryAdapter == null
+                        && mHistoryQueryTask == null) {
+                    mHistoryQueryTask = new HistoryQueryTask();
+                    mHistoryQueryTask.execute();
                 } else {
                     hideSoftInput = false;
                 }
