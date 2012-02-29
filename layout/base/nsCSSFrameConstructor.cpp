@@ -3540,8 +3540,7 @@ nsCSSFrameConstructor::FindCanvasData(Element* aElement,
   }
 
   static const FrameConstructionData sCanvasData =
-    FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewHTMLCanvasFrame,
-                               nsCSSAnonBoxes::htmlCanvasContent);
+    SIMPLE_FCDATA(NS_NewHTMLCanvasFrame);
   return &sCanvasData;
 }
 
