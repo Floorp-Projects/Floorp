@@ -319,8 +319,10 @@ public class AwesomeBarTabs extends TabHost {
     // This method checks to see if we're in a bookmark sub-folder. If we are,
     // it will go up a level and return true. Otherwise it will return false.
     public boolean onBackPressed() {
-        // If we're not in the bookmarks tab, we have nothing to do
-        if (!getCurrentTabTag().equals(BOOKMARKS_TAB))
+        // If we're not in the bookmarks tab, we have nothing to do. We should
+        // also return false if mBookmarksAdapter hasn't been initialized yet.
+        if (!getCurrentTabTag().equals(BOOKMARKS_TAB) ||
+                mBookmarksAdapter == null)
             return false;
 
         return mBookmarksAdapter.moveToParentFolder();
