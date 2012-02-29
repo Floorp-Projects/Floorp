@@ -47,6 +47,7 @@
 #include "nsIOService.h"
 #include "nsStreamUtils.h"
 #include "nsNetSegmentUtils.h"
+#include "nsNetAddr.h"
 #include "nsTransportUtils.h"
 #include "nsProxyInfo.h"
 #include "nsNetCID.h"
@@ -1956,6 +1957,38 @@ nsSocketTransport::GetSelfAddr(PRNetAddr *addr)
     }
 
     return rv;
+}
+
+/* nsINetAddr getScriptablePeerAddr (); */
+NS_IMETHODIMP
+nsSocketTransport::GetScriptablePeerAddr(nsINetAddr * *addr NS_OUTPARAM)
+{
+    PRNetAddr rawAddr;
+
+    nsresult rv;
+    rv = GetPeerAddr(&rawAddr);
+    if (NS_FAILED(rv))
+        return rv;
+
+    NS_ADDREF(*addr = new nsNetAddr(&rawAddr));
+
+    return NS_OK;
+}
+
+/* nsINetAddr getScriptableSelfAddr (); */
+NS_IMETHODIMP
+nsSocketTransport::GetScriptableSelfAddr(nsINetAddr * *addr NS_OUTPARAM)
+{
+    PRNetAddr rawAddr;
+
+    nsresult rv;
+    rv = GetSelfAddr(&rawAddr);
+    if (NS_FAILED(rv))
+        return rv;
+
+    NS_ADDREF(*addr = new nsNetAddr(&rawAddr));
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
