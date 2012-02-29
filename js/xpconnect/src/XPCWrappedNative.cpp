@@ -81,7 +81,6 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(void *p)
 
 struct TraverseExpandoObjectClosure
 {
-    JSContext *cx;
     XPCWrappedNative *wn;
     nsCycleCollectionTraversalCallback &cb;
 };
@@ -91,7 +90,7 @@ TraverseExpandoObjects(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compart
 {
     TraverseExpandoObjectClosure *closure = static_cast<TraverseExpandoObjectClosure*>(aClosure);
     xpc::CompartmentPrivate *priv =
-        (xpc::CompartmentPrivate *)JS_GetCompartmentPrivate(closure->cx, compartment);
+        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
 
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(closure->cb, "XPCWrappedNative expando object");
     closure->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT,
@@ -142,11 +141,7 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
 
     if (tmp->MightHaveExpandoObject()) {
         XPCJSRuntime *rt = tmp->GetRuntime();
-        TraverseExpandoObjectClosure closure = {
-             rt->GetXPConnect()->GetCycleCollectionContext()->GetJSContext(),
-             tmp,
-             cb
-        };
+        TraverseExpandoObjectClosure closure = { tmp, cb };
         rt->GetCompartmentMap().EnumerateRead(TraverseExpandoObjects, &closure);
     }
 

@@ -173,11 +173,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
     JS_AbortIfWrongThread(rt);
 
-    /*
-     * We need to initialize the new context fully before adding it to the
-     * runtime list. After that it can be accessed from another thread via
-     * js_ContextIterator.
-     */
     JSContext *cx = OffTheBooks::new_<JSContext>(rt);
     if (!cx)
         return NULL;
@@ -299,21 +294,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 #endif
     JS_UNLOCK_GC(rt);
     Foreground::delete_(cx);
-}
-
-JSContext *
-js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
-{
-    JSContext *cx = *iterp;
-
-    Maybe<AutoLockGC> lockIf;
-    if (unlocked)
-        lockIf.construct(rt);
-    cx = JSContext::fromLinkField(cx ? cx->link.next : rt->contextList.next);
-    if (&cx->link == &rt->contextList)
-        cx = NULL;
-    *iterp = cx;
-    return cx;
 }
 
 namespace js {
@@ -978,7 +958,6 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     outstandingRequests(0),
 #endif
-    autoGCRooters(NULL),
     securityCallbacks(NULL),
     resolveFlags(0),
     rngSeed(0),
@@ -1000,9 +979,6 @@ JSContext::JSContext(JSRuntime *rt)
 #endif
 {
     PodZero(&link);
-#ifdef JS_THREADSAFE
-    PodZero(&threadLinks);
-#endif
 #ifdef JSGC_ROOT_ANALYSIS
     PodArrayZero(thingGCRooters);
 #ifdef DEBUG
@@ -1155,16 +1131,6 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
 }
 
 void
-JSRuntime::purge(JSContext *cx)
-{
-    tempLifoAlloc.freeUnused();
-    gsnCache.purge();
-
-    /* FIXME: bug 506341 */
-    propertyCache.purge(cx);
-}
-
-void
 JSContext::purge()
 {
     if (!activeCompilations) {
@@ -1278,9 +1244,6 @@ JSContext::mark(JSTracer *trc)
         MarkObjectRoot(trc, &globalObject, "global object");
     if (isExceptionPending())
         MarkValueRoot(trc, &exception, "exception");
-
-    if (autoGCRooters)
-        autoGCRooters->traceAll(trc);
 
     if (sharpObjectMap.depth > 0)
         js_TraceSharpMap(trc, &sharpObjectMap);

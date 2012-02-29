@@ -569,7 +569,7 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 }
 
 void
-JSCompartment::purge(JSContext *cx)
+JSCompartment::purge()
 {
     dtoaCache.purge();
 
@@ -627,9 +627,9 @@ JSCompartment::allocMathCache(JSContext *cx)
 }
 
 bool
-JSCompartment::hasScriptsOnStack(JSContext *cx)
+JSCompartment::hasScriptsOnStack()
 {
-    for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
+    for (AllFramesIter i(rt->stackSpace); !i.done(); ++i) {
         JSScript *script = i.fp()->maybeScript();
         if (script && script->compartment() == this)
             return true;
@@ -655,7 +655,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
     //
     bool onStack = false;
     if (enabledBefore != enabledAfter) {
-        onStack = hasScriptsOnStack(cx);
+        onStack = hasScriptsOnStack();
         if (b && onStack) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
             return false;
@@ -672,18 +672,17 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
 void
 JSCompartment::updateForDebugMode(JSContext *cx)
 {
-    for (ThreadContextRange r(cx); !r.empty(); r.popFront()) {
-        JSContext *cx = r.front();
-        if (cx->compartment == this) 
-            cx->updateJITEnabled();
+    for (ContextIter acx(rt); !acx.done(); acx.next()) {
+        if (acx->compartment == this) 
+            acx->updateJITEnabled();
     }
 
 #ifdef JS_METHODJIT
     bool enabled = debugMode();
 
     if (enabled) {
-        JS_ASSERT(!hasScriptsOnStack(cx));
-    } else if (hasScriptsOnStack(cx)) {
+        JS_ASSERT(!hasScriptsOnStack());
+    } else if (hasScriptsOnStack()) {
         hasDebugModeCodeToDrop = true;
         return;
     }

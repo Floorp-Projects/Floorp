@@ -255,7 +255,7 @@ extern JS_FRIEND_API(bool)
 IsSystemCompartment(const JSCompartment *compartment);
 
 extern JS_FRIEND_API(bool)
-IsAtomsCompartmentFor(const JSContext *cx, const JSCompartment *c);
+IsAtomsCompartment(const JSCompartment *c);
 
 /*
  * Check whether it is OK to assign an undeclared property with name

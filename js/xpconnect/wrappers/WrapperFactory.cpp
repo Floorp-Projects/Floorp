@@ -101,7 +101,7 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
     {
         // See if we already have a waiver wrapper for this object.
         CompartmentPrivate *priv =
-            (CompartmentPrivate *)JS_GetCompartmentPrivate(cx, js::GetObjectCompartment(obj));
+            (CompartmentPrivate *)JS_GetCompartmentPrivate(js::GetObjectCompartment(obj));
         JSObject *wobj = nsnull;
         if (priv && priv->waiverWrapperMap) {
             wobj = priv->waiverWrapperMap->Find(obj);
@@ -279,7 +279,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
 
     Wrapper *wrapper;
     CompartmentPrivate *targetdata =
-        static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(cx, target));
+        static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(target));
     if (AccessCheck::isChrome(target)) {
         if (AccessCheck::isChrome(origin)) {
             wrapper = &CrossCompartmentWrapper::singleton;
