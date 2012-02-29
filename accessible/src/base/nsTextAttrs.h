@@ -41,16 +41,9 @@
 
 class nsHyperTextAccessible;
 
-
-#include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
-
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIPersistentProperties2.h"
-
-#include "nsCOMPtr.h"
-#include "nsString.h"
 
 class nsITextAttr;
 

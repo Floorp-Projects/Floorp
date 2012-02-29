@@ -46,7 +46,6 @@
 
 #include "AccCollector.h"
 #include "nsAccessibleWrap.h"
-#include "nsTextAttrs.h"
 
 #include "nsFrameSelection.h"
 #include "nsISelectionController.h"
