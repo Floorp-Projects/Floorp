@@ -382,6 +382,26 @@ private:
 
 
 /**
+ * Class is used for the work with "font-style" text attribute in nsTextAttrsMgr
+ * class.
+ */
+class FontStyleTextAttr : public nsTextAttr<nscoord>
+{
+public:
+  FontStyleTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame);
+
+  // nsITextAttr
+  virtual nsIAtom* GetName() const { return nsGkAtoms::font_style; }
+
+protected:
+
+  // nsTextAttr
+  virtual bool GetValueFor(nsIContent* aContent, nscoord* aValue);
+  virtual void Format(const nscoord &aValue, nsAString &aFormattedValue);
+};
+
+
+/**
  * Class is used for the work with "font-weight" text attribute in
  * nsTextAttrsMgr class.
  */
