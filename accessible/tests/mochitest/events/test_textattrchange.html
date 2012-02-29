@@ -49,7 +49,9 @@
 
       this.finalCheck = function spelledTextInvoker_finalCheck()
       {
-        var defAttrs = buildDefaultTextAttrs(this.DOMNode, kInputFontSize);
+        var defAttrs = buildDefaultTextAttrs(this.DOMNode, kInputFontSize,
+                                             kNormalFontWeight,
+                                             kInputFontFamily);
         testDefaultTextAttrs(aID, defAttrs);
 
         var attrs = { };
