@@ -381,7 +381,6 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
         argumentPadding = (fun.explicitStackSlots() * sizeof(void *)) % StackAlignment;
         masm.reserveStack(argumentPadding);
     }
-
     // Call the wrapper function.  The wrapper is in charge to unwind the stack
     // when returning from the call.  Failures are handled with exceptions based
     // on the return value of the C functions.  To guard the outcome of the
