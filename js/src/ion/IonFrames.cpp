@@ -457,7 +457,8 @@ ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 
     // Set the result.
     *scriptRes = script;
-    *pcRes = pc;
+    if (pcRes)
+        *pcRes = pc;
 }
 
 void

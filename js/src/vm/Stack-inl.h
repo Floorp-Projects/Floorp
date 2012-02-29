@@ -597,6 +597,14 @@ ContextStack::currentScript(jsbytecode **ppc) const
     if (!fp)
         return NULL;
 
+#ifdef JS_ION
+    if (regs && regs->fp()->runningInIon()) {
+        JSScript *script = NULL;
+        ion::GetPcScript(cx_, &script, ppc);
+        return script;
+    }
+#endif
+
 #ifdef JS_METHODJIT
     mjit::CallSite *inlined = regs->inlined();
     if (inlined) {
