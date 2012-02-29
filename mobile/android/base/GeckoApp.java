@@ -1957,6 +1957,13 @@ abstract public class GeckoApp
             return;
         }
 
+        // if we were previously OOM killed, we can end up here when launching
+        // from external shortcuts, so set this as the intent for initialization
+        if (!mInitialized) {
+            setIntent(intent);
+            return;
+        }
+
         if (checkLaunchState(LaunchState.Launched)) {
             Uri data = intent.getData();
             Bundle bundle = intent.getExtras();
