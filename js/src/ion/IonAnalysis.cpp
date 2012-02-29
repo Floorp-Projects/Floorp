@@ -774,7 +774,7 @@ CheckMarkedAsUse(MInstruction *ins, MDefinition *operand)
 {
     for (MUseIterator i = operand->usesBegin(); i != operand->usesEnd(); i++) {
         if (i->node()->isDefinition()) {
-            if (ins == i->node()->toDefinition());
+            if (ins == i->node()->toDefinition())
                 return true;
         }
     }
