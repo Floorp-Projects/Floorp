@@ -1632,6 +1632,9 @@ class Assembler
     static void patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue,
                                         ImmWord expectedValue);
     static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
+    static uint32 alignDoubleArg(uint32 offset) {
+        return (offset+1)&~1;
+    }
 }; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.

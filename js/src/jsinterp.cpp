@@ -4552,13 +4552,14 @@ js::LambdaJoinableForSet(JSContext *cx, JSFunction *fun, JSObject *parent, JSObj
 
 template <bool strict>
 bool
-js::SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value value)
+js::SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value)
 {
-    return obj->setGeneric(cx, ATOM_TO_JSID(atom), &value, strict);
+    Value v = value;
+    return obj->setGeneric(cx, ATOM_TO_JSID(atom), &v, strict);
 }
 
-template bool js::SetProperty<true> (JSContext *cx, JSObject *obj, JSAtom *atom, Value value);
-template bool js::SetProperty<false>(JSContext *cx, JSObject *obj, JSAtom *atom, Value value);
+template bool js::SetProperty<true> (JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value);
+template bool js::SetProperty<false>(JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value);
 
 bool
 js::GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res)

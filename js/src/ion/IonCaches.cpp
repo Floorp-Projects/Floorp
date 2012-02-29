@@ -343,12 +343,12 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Sh
 }
 
 bool
-js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value value)
+js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value& value)
 {
     IonScript *ion = GetTopIonJSScript(cx)->ion;
     IonCacheSetProperty &cache = ion->getCache(cacheIndex).toSetProperty();
     JSAtom *atom = cache.atom();
-
+    Value v = value;
     // Stop generating new stubs once we hit the stub count limit, see
     // GetPropertyCache.
     if (cache.stubCount() < MAX_STUBS && obj->isNative()) {
@@ -364,7 +364,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value
         }
     }
 
-    return obj->setGeneric(cx, ATOM_TO_JSID(atom), &value, cache.strict());
+    return obj->setGeneric(cx, ATOM_TO_JSID(atom), &v, cache.strict());
 }
 
 bool

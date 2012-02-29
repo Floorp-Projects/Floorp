@@ -399,7 +399,7 @@ ModValues(JSContext *cx, const Value &lhs, const Value &rhs, Value *res);
 
 template <bool strict>
 bool
-SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value value);
+SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value);
 
 static JS_ALWAYS_INLINE void
 Debug_SetSlotRangeToCrashOnTouch(HeapSlot *vec, size_t len)

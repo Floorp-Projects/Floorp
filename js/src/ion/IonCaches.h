@@ -317,7 +317,7 @@ bool
 GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp);
 
 bool
-SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value value);
+SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &value);
 
 JSObject *
 BindNameCache(JSContext *cx, size_t cacheIndex, JSObject *scopeChain);
