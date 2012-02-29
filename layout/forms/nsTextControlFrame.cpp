@@ -76,7 +76,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
-#include "nsIComponentManager.h"
 
 #include "nsBoxLayoutState.h"
 //for keylistener for "return" check
@@ -96,10 +95,8 @@
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
-#include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 
-#include "nsIEditorObserver.h"
 #include "nsITransactionManager.h"
 #include "nsIDOMText.h" //for multiline getselection
 #include "nsNodeInfoManager.h"
