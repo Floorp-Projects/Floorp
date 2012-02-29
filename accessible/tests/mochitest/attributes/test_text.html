@@ -263,7 +263,7 @@
       // Walk from span with font-style to the one with font-family.
       tempElem = tempElem.nextSibling.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = { "font-family": gComputedStyle.fontFamily };
+      attrs = { "font-family": kMonospaceFontFamily };
       testTextAttrs(ID, 70, attrs, defAttrs, 69, 83);
 
       attrs = {};
@@ -281,6 +281,7 @@
       attrs = {};
       testTextAttrs(ID, 123, attrs, defAttrs, 122, 130);
 
+      //////////////////////////////////////////////////////////////////////////
       // area10, different single style spans in non-styled paragraph
       ID = "area10";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
@@ -316,7 +317,7 @@
       // Walk from span with font-style to the one with font-family.
       tempElem = tempElem.nextSibling.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"font-family": gComputedStyle.fontFamily};
+      attrs = { "font-family": kMonospaceFontFamily };
       testTextAttrs(ID, 71, attrs, defAttrs, 70, 84);
 
       attrs = {};
@@ -334,6 +335,7 @@
       attrs = {};
       testTextAttrs(ID, 124, attrs, defAttrs, 123, 131);
 
+      //////////////////////////////////////////////////////////////////////////
       // area11, "font-weight" tests
       ID = "area11";
       defAttrs = buildDefaultTextAttrs(ID, "12pt", kBoldFontWeight);
@@ -373,7 +375,8 @@
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
 
       ID = "area14";
-      defAttrs = buildDefaultTextAttrs(ID, kInputFontSize);
+      defAttrs = buildDefaultTextAttrs(ID, kInputFontSize,
+                                       kNormalFontWeight, kInputFontFamily);
 
       attrs = { };
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
@@ -404,6 +407,36 @@
       // p
       testTextAttrs(ID, 23, { }, { }, 23, 24);
 
+      //////////////////////////////////////////////////////////////////////////
+      // area16, "font-family" tests
+      ID = "area16";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      attrs = { "font-family": kMonospaceFontFamily };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 4);
+
+      attrs = { };
+      testTextAttrs(ID, 4, attrs, defAttrs, 4, 9);
+
+      attrs = { "font-family": kSerifFontFamily };
+      testTextAttrs(ID, 9, attrs, defAttrs, 9, 13);
+
+      attrs = { };
+      testTextAttrs(ID, 13, attrs, defAttrs, 13, 18);
+
+      attrs = { "font-family": kAbsentFontFamily };
+      testTextAttrs(ID, 18, attrs, defAttrs, 18, 22);
+
+      attrs = { };
+      testTextAttrs(ID, 22, attrs, defAttrs, 22, 27);
+
+      attrs = { "font-family": kCursiveFontFamily };
+      testTextAttrs(ID, 27, attrs, defAttrs, 27, 31);
+
+      attrs = { };
+      testTextAttrs(ID, 31, attrs, defAttrs, 31, 45);
+
       SimpleTest.finish();
     }
 
@@ -417,6 +450,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=345759"
      title="Implement text attributes">
     Mozilla Bug 345759
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=473576"
+     title="font-family text attribute should expose actual font used">
+    Mozilla Bug 473576
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -469,7 +507,7 @@
     <span style="font-size: 120%">bigger</span> smaller
     <span style="background-color: blue;">background blue</span> normal
     <span style="font-style: italic;">Different styling</span> normal
-    <span style="font-family: tahoma;">Different font</span> normal
+    <span style="font-family: monospace;">Different font</span> normal
     <span style="text-decoration: underline;">underlined</span> normal
     <span style="text-decoration: line-through;">strikethrough</span> normal
   </p>
@@ -478,7 +516,7 @@
     <span style="font-size: 120%">bigger</span> smaller
     <span style="background-color: blue;">background blue</span> normal
     <span style="font-style: italic;">Different styling</span> normal
-    <span style="font-family: tahoma;">Different font</span> normal
+    <span style="font-family: monospace;">Different font</span> normal
     <span style="text-decoration: underline;">underlined</span> normal
     <span style="text-decoration: line-through;">strikethrough</span> normal
   </p>
@@ -500,5 +538,13 @@
 
   <!-- *plain*plain**bold*bold*-->
   <div id="area15"><p>embed</p>plain<p>embed</p>plain<p>embed</p><img src="../moz.png" alt="image"/><b>bold</b><p>embed</p><b>bold</b><p>embed</p></div>
+
+  <p id="area16" style="font-family: sans-serif;">
+    <span style="font-family: monospace;">text</span>text
+    <span style="font-family: serif;">text</span>text
+    <span style="font-family: BodoniThatDoesntExist;">text</span>text
+    <span style="font-family: Comic Sans MS, cursive;">text</span>text
+    <span style="font-family: sans-serif, fantasy;">text</span>text
+  </p>
 </body>
 </html>

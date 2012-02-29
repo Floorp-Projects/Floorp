@@ -100,7 +100,6 @@ public:
                          PRInt32 *aEndHTOffset = nsnull);
 
 protected:
-
   /**
    * Calculates range (start and end offsets) of text where the text attributes
    * are stretched. New offsets may be smaller if one of text attributes changes
@@ -323,6 +322,30 @@ protected:
   // nsTextAttr
   virtual bool GetValueFor(nsIContent* aContent, nscolor* aValue);
   virtual void Format(const nscolor& aValue, nsAString& aFormattedValue);
+};
+
+
+/**
+ * Class is used for the work with "font-family" text attribute in
+ * nsTextAttrsMgr class.
+ */
+class FontFamilyTextAttr : public nsTextAttr<nsAutoString>
+{
+public:
+  FontFamilyTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame);
+
+  // nsITextAttr
+  virtual nsIAtom* GetName() const { return nsGkAtoms::font_family; }
+
+protected:
+
+  // nsTextAttr
+  virtual bool GetValueFor(nsIContent* aContent, nsAutoString* aValue);
+  virtual void Format(const nsAutoString& aValue, nsAString& aFormattedValue);
+
+private:
+
+  bool GetFontFamily(nsIFrame* aFrame, nsAutoString& aFamily);
 };
 
 
