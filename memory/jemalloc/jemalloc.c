@@ -989,10 +989,10 @@ struct arena_bin_s {
 };
 
 struct arena_s {
-	/* For bug 703087, we're temporarily adding arena.magic to release
-	   builds. */
+#ifdef MALLOC_DEBUG
 	uint32_t		magic;
 #  define ARENA_MAGIC 0x947d3d24
+#endif
 
 	/* All operations on this arena require that lock be locked. */
 #ifdef MOZ_MEMORY
@@ -4413,15 +4413,7 @@ isalloc_validate(const void *ptr)
 		return (0);
 
 	if (chunk != ptr) {
-		/* For bug 703087, we've temporarily made what is normally a
-		   debug-only assertion here into a fatal assertion. */
-		if (chunk->arena->magic != ARENA_MAGIC) {
-			char* boom = (char*) 0;
-			_malloc_message("isalloc_validate called with invalid pointer. "
-			                "Crashing...\n", "", "", "");
-			*boom = 1;
-		}
-
+		assert(chunk->arena->magic == ARENA_MAGIC);
 		return (arena_salloc(ptr));
 	} else {
 		size_t ret;
@@ -4931,9 +4923,10 @@ arena_new(arena_t *arena)
 #endif
 	}
 
-        /* For bug 703087, we're temporarily adding arena->magic for release
-           builds. */
+#ifdef MALLOC_DEBUG
 	arena->magic = ARENA_MAGIC;
+#endif
+
 	return (false);
 }
 
