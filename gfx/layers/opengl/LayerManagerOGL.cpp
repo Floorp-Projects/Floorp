@@ -674,7 +674,8 @@ void
 LayerManagerOGL::BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
                                                 const nsIntRect& aTexCoordRect,
                                                 const nsIntSize& aTexSize,
-                                                GLenum aWrapMode)
+                                                GLenum aWrapMode /* = LOCAL_GL_REPEAT */,
+                                                bool aFlipped /* = false */)
 {
   GLuint vertAttribIndex =
     aProg->AttribLocation(LayerProgram::VertexAttrib);
@@ -708,9 +709,11 @@ LayerManagerOGL::BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
                   aTexCoordRect.x / GLfloat(realTexSize.width),
                   aTexCoordRect.y / GLfloat(realTexSize.height),
                   aTexCoordRect.XMost() / GLfloat(realTexSize.width),
-                  aTexCoordRect.YMost() / GLfloat(realTexSize.height));
+                  aTexCoordRect.YMost() / GLfloat(realTexSize.height),
+                  aFlipped);
   } else {
-    GLContext::DecomposeIntoNoRepeatTriangles(aTexCoordRect, realTexSize, rects);
+    GLContext::DecomposeIntoNoRepeatTriangles(aTexCoordRect, realTexSize,
+                                              rects, aFlipped);
   }
 
   mGLContext->fVertexAttribPointer(vertAttribIndex, 2,

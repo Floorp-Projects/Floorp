@@ -2455,7 +2455,8 @@ GLContext::TexSubImage2DWithoutUnpackSubimage(GLenum target, GLint level,
 
 void
 GLContext::RectTriangles::addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
-                                  GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1)
+                                  GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1,
+                                  bool flip_y /* = false */)
 {
     vert_coord v;
     v.x = x0; v.y = y0;
@@ -2472,20 +2473,37 @@ GLContext::RectTriangles::addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1
     v.x = x1; v.y = y1;
     vertexCoords.AppendElement(v);
 
-    tex_coord t;
-    t.u = tx0; t.v = ty0;
-    texCoords.AppendElement(t);
-    t.u = tx1; t.v = ty0;
-    texCoords.AppendElement(t);
-    t.u = tx0; t.v = ty1;
-    texCoords.AppendElement(t);
+    if (flip_y) {
+        tex_coord t;
+        t.u = tx0; t.v = ty1;
+        texCoords.AppendElement(t);
+        t.u = tx1; t.v = ty1;
+        texCoords.AppendElement(t);
+        t.u = tx0; t.v = ty0;
+        texCoords.AppendElement(t);
 
-    t.u = tx0; t.v = ty1;
-    texCoords.AppendElement(t);
-    t.u = tx1; t.v = ty0;
-    texCoords.AppendElement(t);
-    t.u = tx1; t.v = ty1;
-    texCoords.AppendElement(t);
+        t.u = tx0; t.v = ty0;
+        texCoords.AppendElement(t);
+        t.u = tx1; t.v = ty1;
+        texCoords.AppendElement(t);
+        t.u = tx1; t.v = ty0;
+        texCoords.AppendElement(t);
+    } else {
+        tex_coord t;
+        t.u = tx0; t.v = ty0;
+        texCoords.AppendElement(t);
+        t.u = tx1; t.v = ty0;
+        texCoords.AppendElement(t);
+        t.u = tx0; t.v = ty1;
+        texCoords.AppendElement(t);
+
+        t.u = tx0; t.v = ty1;
+        texCoords.AppendElement(t);
+        t.u = tx1; t.v = ty0;
+        texCoords.AppendElement(t);
+        t.u = tx1; t.v = ty1;
+        texCoords.AppendElement(t);
+    }
 }
 
 static GLfloat
@@ -2505,7 +2523,8 @@ WrapTexCoord(GLfloat v)
 void
 GLContext::DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
                                           const nsIntSize& aTexSize,
-                                          RectTriangles& aRects)
+                                          RectTriangles& aRects,
+                                          bool aFlipY /* = false */)
 {
     // normalize this
     nsIntRect tcr(aTexCoordRect);
@@ -2574,46 +2593,55 @@ GLContext::DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
         aRects.addRect(0.0f, 0.0f,
                        1.0f, 1.0f,
                        tl[0], tl[1],
-                       br[0], br[1]);
+                       br[0], br[1],
+                       aFlipY);
     } else if (!xwrap && ywrap) {
         GLfloat ymid = (1.0f - tl[1]) / ylen;
         aRects.addRect(0.0f, 0.0f,
                        1.0f, ymid,
                        tl[0], tl[1],
-                       br[0], 1.0f);
+                       br[0], 1.0f,
+                       aFlipY);
         aRects.addRect(0.0f, ymid,
                        1.0f, 1.0f,
                        tl[0], 0.0f,
-                       br[0], br[1]);
+                       br[0], br[1],
+                       aFlipY);
     } else if (xwrap && !ywrap) {
         GLfloat xmid = (1.0f - tl[0]) / xlen;
         aRects.addRect(0.0f, 0.0f,
                        xmid, 1.0f,
                        tl[0], tl[1],
-                       1.0f, br[1]);
+                       1.0f, br[1],
+                       aFlipY);
         aRects.addRect(xmid, 0.0f,
                        1.0f, 1.0f,
                        0.0f, tl[1],
-                       br[0], br[1]);
+                       br[0], br[1],
+                       aFlipY);
     } else {
         GLfloat xmid = (1.0f - tl[0]) / xlen;
         GLfloat ymid = (1.0f - tl[1]) / ylen;
         aRects.addRect(0.0f, 0.0f,
                        xmid, ymid,
                        tl[0], tl[1],
-                       1.0f, 1.0f);
+                       1.0f, 1.0f,
+                       aFlipY);
         aRects.addRect(xmid, 0.0f,
                        1.0f, ymid,
                        0.0f, tl[1],
-                       br[0], 1.0f);
+                       br[0], 1.0f,
+                       aFlipY);
         aRects.addRect(0.0f, ymid,
                        xmid, 1.0f,
                        tl[0], 0.0f,
-                       1.0f, br[1]);
+                       1.0f, br[1],
+                       aFlipY);
         aRects.addRect(xmid, ymid,
                        1.0f, 1.0f,
                        0.0f, 0.0f,
-                       br[0], br[1]);
+                       br[0], br[1],
+                       aFlipY);
     }
 }
 
