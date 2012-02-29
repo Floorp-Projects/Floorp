@@ -43,6 +43,8 @@
 #include "nsHyperTextAccessible.h"
 #include "nsRoleMap.h"
 
+#include "nsIPersistentProperties2.h"
+
 AtkAttributeSet* ConvertToAtkAttributeSet(nsIPersistentProperties* aAttributes);
 
 void
