@@ -3853,8 +3853,11 @@ IonBuilder::jsop_this()
 {
     if (!info().fun())
         return abort("JSOP_THIS outside of a JSFunction.");
-    if (script->strictModeCode)
-        return abort("JSOP_THIS not yet supported in strict-mode");
+
+    if (script->strictModeCode) {
+        current->pushSlot(info().thisSlot());
+        return true;
+    }
 
     types::TypeSet *types = oracle->thisTypeSet(script);
     if (types && types->getKnownTypeTag(cx) == JSVAL_TYPE_OBJECT) {
