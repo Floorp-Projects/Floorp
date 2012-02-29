@@ -112,7 +112,7 @@ StyleInfo::Margin(css::Side aSide, nsAString& aValue)
 }
 
 void
-StyleInfo::Format(const nscolor& aValue, nsString& aFormattedValue)
+StyleInfo::FormatColor(const nscolor& aValue, nsString& aFormattedValue)
 {
   // Combine the string like rgb(R, G, B) from nscolor.
   aFormattedValue.AppendLiteral("rgb(");
@@ -122,4 +122,12 @@ StyleInfo::Format(const nscolor& aValue, nsString& aFormattedValue)
   aFormattedValue.AppendLiteral(", ");
   aFormattedValue.AppendInt(NS_GET_B(aValue));
   aFormattedValue.Append(')');
+}
+
+void
+StyleInfo::FormatFontStyle(const nscoord& aValue, nsAString& aFormattedValue)
+{
+  nsCSSKeyword keyword =
+    nsCSSProps::ValueToKeywordEnum(aValue, nsCSSProps::kFontStyleKTable);
+  AppendUTF8toUTF16(nsCSSKeywords::GetStringValue(keyword), aFormattedValue);
 }
