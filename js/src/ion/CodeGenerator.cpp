@@ -1981,7 +1981,7 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
     pushArg(ImmGCPtr(ins->mir()->atom()));
     pushArg(objReg);
 
-    typedef bool (*pf)(JSContext *, JSObject *, JSAtom *, Value);
+    typedef bool (*pf)(JSContext *, JSObject *, JSAtom *, const Value &);
     if (ins->mir()->strict()) {
         static const VMFunction info = FunctionInfo<pf>(SetProperty<true>);
         if (!callVM(info, ins))
@@ -2019,7 +2019,7 @@ CodeGenerator::visitOutOfLineSetPropertyCache(OutOfLineCache *ool)
     pushArg(objReg);
     pushArg(Imm32(cacheIndex));
 
-    typedef bool (*pf)(JSContext *, size_t, JSObject *, Value);
+    typedef bool (*pf)(JSContext *, size_t, JSObject *, const Value&);
     static const VMFunction info = FunctionInfo<pf>(ion::SetPropertyCache);
 
     if (!callVM(info, ool->cache()))

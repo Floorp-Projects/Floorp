@@ -3689,10 +3689,6 @@ IonBuilder::jsop_getprop(JSAtom *atom)
 bool
 IonBuilder::jsop_setprop(JSAtom *atom)
 {
-    // :FIXME: bug 719433
-#ifdef JS_CPU_ARM
-    return abort("SETPROP on ARM");
-#endif
 
     MDefinition *value = current->pop();
     MDefinition *obj = current->pop();
