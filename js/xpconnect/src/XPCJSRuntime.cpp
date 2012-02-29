@@ -257,9 +257,12 @@ CompartmentCallback(JSContext *cx, JSCompartment *compartment, unsigned op)
     if (!self)
         return true;
 
-    nsAutoPtr<xpc::CompartmentPrivate> priv(static_cast<xpc::CompartmentPrivate*>(JS_SetCompartmentPrivate(cx, compartment, nsnull)));
+    nsAutoPtr<xpc::CompartmentPrivate>
+        priv(static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment)));
     if (!priv)
         return true;
+
+    JS_SetCompartmentPrivate(compartment, nsnull);
 
     xpc::PtrAndPrincipalHashKey *key = priv->key;
     XPCCompartmentMap &map = self->GetCompartmentMap();
@@ -400,8 +403,8 @@ TraceDOMExpandos(nsPtrHashKey<JSObject> *expando, void *aClosure)
 static PLDHashOperator
 TraceCompartment(xpc::PtrAndPrincipalHashKey *aKey, JSCompartment *compartment, void *aClosure)
 {
-    xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
-        JS_GetCompartmentPrivate(static_cast<JSTracer *>(aClosure)->context, compartment);
+    xpc::CompartmentPrivate *priv =
+        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
     if (priv->expandoMap)
         priv->expandoMap->Enumerate(TraceExpandos, aClosure);
     if (priv->domExpandoMap)
@@ -437,7 +440,6 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 
 struct Closure
 {
-    JSContext *cx;
     bool cycleCollectionEnabled;
     nsCycleCollectionTraversalCallback *cb;
 };
@@ -473,7 +475,7 @@ NoteJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
 
 // static
 void
-XPCJSRuntime::SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
+XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
                                    nsCycleCollectionTraversalCallback &cb)
 {
     if (!wrapper->IsValid() || wrapper->IsWrapperExpired())
@@ -494,7 +496,7 @@ static PLDHashOperator
 SuspectExpandos(XPCWrappedNative *wrapper, JSObject *expando, void *arg)
 {
     Closure* closure = static_cast<Closure*>(arg);
-    XPCJSRuntime::SuspectWrappedNative(closure->cx, wrapper, *closure->cb);
+    XPCJSRuntime::SuspectWrappedNative(wrapper, *closure->cb);
 
     return PL_DHASH_NEXT;
 }
@@ -510,9 +512,8 @@ SuspectDOMExpandos(nsPtrHashKey<JSObject> *expando, void *arg)
 static PLDHashOperator
 SuspectCompartment(xpc::PtrAndPrincipalHashKey *key, JSCompartment *compartment, void *arg)
 {
-    Closure* closure = static_cast<Closure*>(arg);
-    xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
-        JS_GetCompartmentPrivate(closure->cx, compartment);
+    xpc::CompartmentPrivate *priv =
+        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
     if (priv->expandoMap)
         priv->expandoMap->EnumerateRead(SuspectExpandos, arg);
     if (priv->domExpandoMap)
@@ -521,8 +522,7 @@ SuspectCompartment(xpc::PtrAndPrincipalHashKey *key, JSCompartment *compartment,
 }
 
 void
-XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
-                                nsCycleCollectionTraversalCallback &cb)
+XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
 {
     // For all JS objects that are held by native objects but aren't held
     // through rooting or locking, we need to add all the native objects that
@@ -540,7 +540,7 @@ XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
 
     XPCAutoLock lock(mMapLock);
 
-    XPCWrappedNativeScope::SuspectAllWrappers(this, cx, cb);
+    XPCWrappedNativeScope::SuspectAllWrappers(this, cb);
 
     for (XPCRootSetElem *e = mVariantRoots; e ; e = e->GetNextRoot()) {
         XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(e);
@@ -570,7 +570,7 @@ XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
         cb.NoteXPCOMRoot(static_cast<nsIXPConnectWrappedJS *>(wrappedJS));
     }
 
-    Closure closure = { cx, true, &cb };
+    Closure closure = { true, &cb };
     if (mJSHolders.ops) {
         JS_DHashTableEnumerate(&mJSHolders, NoteJSHolder, &closure);
     }
@@ -644,8 +644,9 @@ SweepExpandos(XPCWrappedNative *wn, JSObject *&expando, void *arg)
 static PLDHashOperator
 SweepCompartment(nsCStringHashKey& aKey, JSCompartment *compartment, void *aClosure)
 {
-    xpc::CompartmentPrivate *priv = (xpc::CompartmentPrivate *)
-        JS_GetCompartmentPrivate((JSContext *)aClosure, compartment);
+    MOZ_ASSERT(!aClosure);
+    xpc::CompartmentPrivate *priv =
+        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
     if (priv->waiverWrapperMap)
         priv->waiverWrapperMap->Enumerate(SweepWaiverWrappers, nsnull);
     if (priv->expandoMap)
@@ -704,7 +705,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 
             // Sweep compartments.
             self->GetCompartmentMap().EnumerateRead((XPCCompartmentMap::EnumReadFunction)
-                                                    SweepCompartment, cx);
+                                                    SweepCompartment, nsnull);
 
             self->mDoingFinalization = true;
             break;
@@ -1208,13 +1209,11 @@ XPCJSRuntime::~XPCJSRuntime()
     XPCPerThreadData::ShutDown();
 }
 
-namespace xpc {
-
-void*
-GetCompartmentNameHelper(JSContext *cx, JSCompartment *c, bool getAddress)
+static void*
+GetCompartmentNameHelper(JSCompartment *c, bool getAddress)
 {
     nsCString* name = new nsCString();
-    if (js::IsAtomsCompartmentFor(cx, c)) {
+    if (js::IsAtomsCompartment(c)) {
         name->AssignLiteral("atoms");
     } else if (JSPrincipals *principals = JS_GetCompartmentPrincipals(c)) {
         if (principals->codebase) {
@@ -1226,7 +1225,7 @@ GetCompartmentNameHelper(JSContext *cx, JSCompartment *c, bool getAddress)
             // distinguished.
             if (js::IsSystemCompartment(c)) {
                 xpc::CompartmentPrivate *compartmentPrivate =
-                    static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, c));
+                    static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
                 if (compartmentPrivate &&
                     !compartmentPrivate->location.IsEmpty()) {
                     name->AppendLiteral(", ");
@@ -1254,16 +1253,18 @@ GetCompartmentNameHelper(JSContext *cx, JSCompartment *c, bool getAddress)
     return name;
 }
 
+namespace xpc {
+
 void*
 GetCompartmentName(JSContext *cx, JSCompartment *c)
 {
-    return GetCompartmentNameHelper(cx, c, /* get address = */false);
+    return GetCompartmentNameHelper(c, /* get address = */false);
 }
 
 void*
 GetCompartmentNameAndAddress(JSContext *cx, JSCompartment *c)
 {
-    return GetCompartmentNameHelper(cx, c, /* get address = */true);
+    return GetCompartmentNameHelper(c, /* get address = */true);
 }
 
 void

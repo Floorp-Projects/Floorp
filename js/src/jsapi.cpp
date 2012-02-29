@@ -760,6 +760,7 @@ JSRuntime::JSRuntime()
     gcBlackRootsData(NULL),
     gcGrayRootsTraceOp(NULL),
     gcGrayRootsData(NULL),
+    autoGCRooters(NULL),
     scriptPCCounters(NULL),
     NaNValue(UndefinedValue()),
     negativeInfinityValue(UndefinedValue()),
@@ -866,12 +867,11 @@ JSRuntime::~JSRuntime()
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
     if (!JS_CLIST_IS_EMPTY(&contextList)) {
-        JSContext *cx, *iter = NULL;
         unsigned cxcount = 0;
-        while ((cx = js_ContextIterator(this, JS_TRUE, &iter)) != NULL) {
+        for (ContextIter acx(this); !acx.done(); acx.next()) {
             fprintf(stderr,
 "JS API usage error: found live context at %p\n",
-                    (void *) cx);
+                    acx.get());
             cxcount++;
         }
         fprintf(stderr,
@@ -1198,13 +1198,11 @@ JS_GetRuntime(JSContext *cx)
 JS_PUBLIC_API(JSContext *)
 JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 {
-    return js_ContextIterator(rt, JS_TRUE, iterp);
-}
-
-JS_PUBLIC_API(JSContext *)
-JS_ContextIteratorUnlocked(JSRuntime *rt, JSContext **iterp)
-{
-    return js_ContextIterator(rt, JS_FALSE, iterp);
+    JSContext *cx = *iterp;
+    JSCList *next = cx ? cx->link.next : rt->contextList.next;
+    cx = (next == &rt->contextList) ? NULL : JSContext::fromLinkField(next);
+    *iterp = cx;
+    return cx;
 }
 
 JS_PUBLIC_API(JSVersion)
@@ -1479,20 +1477,16 @@ AutoEnterFrameCompartment::enter(JSContext *cx, JSStackFrame *target)
 
 } /* namespace JS */
 
-JS_PUBLIC_API(void *)
-JS_SetCompartmentPrivate(JSContext *cx, JSCompartment *compartment, void *data)
+JS_PUBLIC_API(void)
+JS_SetCompartmentPrivate(JSCompartment *compartment, void *data)
 {
-    CHECK_REQUEST(cx);
-    void *old = compartment->data;
     compartment->data = data;
-    return old;
 }
 
 JS_PUBLIC_API(void *)
-JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment)
+JS_GetCompartmentPrivate(JSCompartment *compartment)
 {
-    CHECK_REQUEST(cx);
-    return js_GetCompartmentPrivate(compartment);
+    return compartment->data;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6633,12 +6627,6 @@ JS_ScheduleGC(JSContext *cx, uint32_t count, JSBool compartment)
 }
 #endif
 
-JS_FRIEND_API(void *)
-js_GetCompartmentPrivate(JSCompartment *compartment)
-{
-    return compartment->data;
-}
-
 /************************************************************************/
 
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && defined(XP_WIN)
@@ -6701,27 +6689,16 @@ JS_CallOnce(JSCallOnceType *once, JSInitCallback func)
 namespace JS {
 
 AutoGCRooter::AutoGCRooter(JSContext *cx, ptrdiff_t tag)
-  : down(cx->autoGCRooters), tag(tag), context(cx)
+  : down(cx->runtime->autoGCRooters), tag(tag), stackTop(&cx->runtime->autoGCRooters)
 {
-    JS_ASSERT(this != cx->autoGCRooters);
-    CHECK_REQUEST(cx);
-    cx->autoGCRooters = this;
-}
-
-AutoGCRooter::~AutoGCRooter()
-{
-    JS_ASSERT(this == context->autoGCRooters);
-    CHECK_REQUEST(context);
-    context->autoGCRooters = down;
+    JS_ASSERT(this != *stackTop);
+    *stackTop = this;
 }
 
 AutoEnumStateRooter::~AutoEnumStateRooter()
 {
-    if (!stateValue.isNull()) {
-        DebugOnly<JSBool> ok =
-            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
-        JS_ASSERT(ok);
-    }
+    if (!stateValue.isNull())
+        MOZ_ALWAYS_TRUE(obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0));
 }
 
 } // namespace JS

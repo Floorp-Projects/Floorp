@@ -457,6 +457,9 @@ struct JSRuntime : js::RuntimeFriendFields
     JSTraceDataOp       gcGrayRootsTraceOp;
     void                *gcGrayRootsData;
 
+    /* Stack of thread-stack-allocated GC roots. */
+    js::AutoGCRooter   *autoGCRooters;
+
     /* Strong references on scripts held for PCCount profiling API. */
     js::ScriptOpcodeCountsVector *scriptPCCounters;
 
@@ -690,8 +693,6 @@ struct JSRuntime : js::RuntimeFriendFields
 
     void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
                              size_t *regexpCode, size_t *stackCommitted, size_t *gcMarker);
-
-    void purge(JSContext *cx);
 };
 
 /* Common macros to access thread-local caches in JSRuntime. */
@@ -985,11 +986,8 @@ struct JSContext : js::ContextFriendFields
     unsigned            outstandingRequests;/* number of JS_BeginRequest calls
                                                without the corresponding
                                                JS_EndRequest. */
-    JSCList             threadLinks;        /* JSThread contextList linkage */
 #endif
 
-    /* Stack of thread-stack-allocated GC roots. */
-    js::AutoGCRooter   *autoGCRooters;
 
 #ifdef JSGC_ROOT_ANALYSIS
 
@@ -1349,24 +1347,38 @@ class JSAutoResolveFlags
 namespace js {
 
 /*
- * Enumerate all contexts in a runtime that are in the same thread as a given
- * context.
+ * Enumerate all contexts in a runtime.
  */
-class ThreadContextRange {
+class ContextIter {
     JSCList *begin;
     JSCList *end;
 
 public:
-    explicit ThreadContextRange(JSContext *cx) {
-        end = &cx->runtime->contextList;
+    explicit ContextIter(JSRuntime *rt) {
+        end = &rt->contextList;
         begin = end->next;
     }
 
-    bool empty() const { return begin == end; }
-    void popFront() { JS_ASSERT(!empty()); begin = begin->next; }
+    bool done() const {
+        return begin == end;
+    }
 
-    JSContext *front() const {
+    void next() {
+        JS_ASSERT(!done());
+        begin = begin->next;
+    }
+
+    JSContext *get() const {
+        JS_ASSERT(!done());
         return JSContext::fromLinkField(begin);
+    }
+
+    operator JSContext *() const {
+        return get();
+    }
+
+    JSContext *operator ->() const {
+        return get();
     }
 };
 
@@ -1388,13 +1400,6 @@ typedef enum JSDestroyContextMode {
 
 extern void
 js_DestroyContext(JSContext *cx, JSDestroyContextMode mode);
-
-/*
- * If unlocked, acquire and release rt->gcLock around *iterp update; otherwise
- * the caller must be holding rt->gcLock.
- */
-extern JSContext *
-js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
 
 #ifdef va_start
 extern JSBool

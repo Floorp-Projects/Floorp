@@ -159,7 +159,7 @@ EnsureExpandoObject(JSContext *cx, JSObject *holder)
     if (expando)
         return expando;
     CompartmentPrivate *priv =
-        (CompartmentPrivate *)JS_GetCompartmentPrivate(cx, js::GetObjectCompartment(holder));
+        (CompartmentPrivate *)JS_GetCompartmentPrivate(js::GetObjectCompartment(holder));
     XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
     expando = priv->LookupExpandoObject(wn);
     if (!expando) {
@@ -1052,7 +1052,7 @@ XrayWrapper<Base>::createHolder(JSContext *cx, JSObject *wrappedNative, JSObject
         return nsnull;
 
     CompartmentPrivate *priv =
-        (CompartmentPrivate *)JS_GetCompartmentPrivate(cx, js::GetObjectCompartment(holder));
+        (CompartmentPrivate *)JS_GetCompartmentPrivate(js::GetObjectCompartment(holder));
     JSObject *inner = JS_ObjectToInnerObject(cx, wrappedNative);
     XPCWrappedNative *wn = GetWrappedNative(inner);
     Value expando = ObjectOrNullValue(priv->LookupExpandoObject(wn));

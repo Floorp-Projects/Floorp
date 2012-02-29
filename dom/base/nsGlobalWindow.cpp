@@ -2091,7 +2091,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
         JSCompartment *compartment = js::GetObjectCompartment(mJSObject);
         xpc::CompartmentPrivate *priv =
-          static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, compartment));
+          static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
         if (priv && priv->waiverWrapperMap) {
           NS_ASSERTION(!JS_IsExceptionPending(cx),
                        "We might overwrite a pending exception!");
