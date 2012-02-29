@@ -913,7 +913,12 @@ abstract public class GeckoApp
                 final String backgroundColor = message.getString("bgColor");
                 handleContentLoaded(tabId, uri, title);
                 if (getLayerController() != null) {
+                    if (backgroundColor != null) {
                         getLayerController().setCheckerboardColor(backgroundColor);
+                    } else {
+                        // Default to black if no color is given
+                        getLayerController().setCheckerboardColor(0);
+                    }
                 }
                 Log.i(LOGTAG, "URI - " + uri + ", title - " + title);
             } else if (event.equals("DOMTitleChanged")) {
