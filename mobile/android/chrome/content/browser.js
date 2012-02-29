@@ -2134,12 +2134,6 @@ Tab.prototype = {
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
 
-    // If the browser width changes, we change the zoom proportionally. This ensures sensible
-    // behavior when rotating the device on pages with automatically-resizing viewports.
-
-    if (viewportW == oldBrowserWidth)
-      return;
-
     let newZoom = oldBrowserWidth * this._zoom / viewportW;
     this.updateViewport(true, newZoom);
   },
@@ -3147,21 +3141,23 @@ var ViewportHandler = {
   },
 
   handleEvent: function handleEvent(aEvent) {
-    let target = aEvent.originalTarget;
-    let document = target.ownerDocument || target;
-    let browser = BrowserApp.getBrowserForDocument(document);
-    let tab = BrowserApp.getTabForBrowser(browser);
-    if (!tab)
-      return;
-
     switch (aEvent.type) {
       case "DOMMetaAdded":
-        if (target.name == "viewport")
+        let target = aEvent.originalTarget;
+        if (target.name != "viewport")
+          break;
+        let document = target.ownerDocument;
+        let browser = BrowserApp.getBrowserForDocument(document);
+        let tab = BrowserApp.getTabForBrowser(browser);
+        if (tab)
           this.updateMetadata(tab);
         break;
 
       case "resize":
-        BrowserApp.selectedTab.updateViewportSize();
+        // check dimensions changed to avoid infinite loop because updateViewportSize
+        // triggers a resize on the content window and will trigger this listener again
+        if (window.outerWidth != gScreenWidth || window.outerHeight != gScreenHeight)
+          BrowserApp.selectedTab.updateViewportSize();
         break;
     }
   },
