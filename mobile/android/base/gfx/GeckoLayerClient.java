@@ -47,7 +47,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -56,8 +55,6 @@ import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class GeckoLayerClient implements GeckoEventResponder,
                                          FlexibleGLSurfaceView.Listener {
@@ -97,8 +94,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
     private boolean mUpdateViewportOnEndDraw;
 
     private String mLastCheckerboardColor;
-
-    private static Pattern sColorPattern;
 
     /* Used by robocop for testing purposes */
     private DrawListener mDrawListener;
@@ -155,13 +150,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
             mNewGeckoViewport = new ViewportMetrics(viewportObject);
 
             Log.e(LOGTAG, "### beginDrawing new Gecko viewport " + mNewGeckoViewport);
-
-            // Update the background color, if it's present.
-            String backgroundColorString = viewportObject.optString("backgroundColor");
-            if (backgroundColorString != null && !backgroundColorString.equals(mLastCheckerboardColor)) {
-                mLastCheckerboardColor = backgroundColorString;
-                mLayerController.setCheckerboardColor(parseColorFromGecko(backgroundColorString));
-            }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Aborting draw, bad viewport description: " + metadata);
             return false;
@@ -251,24 +239,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
         GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height,  // Window (buffer) size
                                                              mScreenSize.width, mScreenSize.height); // Screen size
         GeckoAppShell.sendEventToGecko(event);
-    }
-
-    // Parses a color from an RGB triple of the form "rgb([0-9]+, [0-9]+, [0-9]+)". If the color
-    // cannot be parsed, returns white.
-    private static int parseColorFromGecko(String string) {
-        if (sColorPattern == null) {
-            sColorPattern = Pattern.compile("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)");
-        }
-
-        Matcher matcher = sColorPattern.matcher(string);
-        if (!matcher.matches()) {
-            return Color.WHITE;
-        }
-
-        int r = Integer.parseInt(matcher.group(1));
-        int g = Integer.parseInt(matcher.group(2));
-        int b = Integer.parseInt(matcher.group(3));
-        return Color.rgb(r, g, b);
     }
 
     private boolean initializeVirtualLayer() {
