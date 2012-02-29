@@ -1,20 +1,11 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=344615
--->
 <head>
-  <title>Test for Bug 344615</title>
+  <title>Tests for &lt;input type='url'&gt; validity</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <style>
-    input { background-color: rgb(0,0,0) !important; }
-    input:valid   { background-color: rgb(0,255,0) !important; }
-    input:invalid { background-color: rgb(255,0,0) !important; }
-  </style>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=344615">Mozilla Bug 344615</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   <input type='url' id='i' oninvalid='invalidEventHandler(event);'>
@@ -22,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=344615
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 344615 **/
+/** Tests for <input type='url'> validity **/
 
 // More checks are done in test_bug551670.html.
 
@@ -44,8 +35,7 @@ function checkValidURL(element)
   ok(!gInvalid, "The invalid event should not have been thrown");
   is(element.validationMessage, '',
     "Validation message should be the empty string");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-     "rgb(0, 255, 0)", ":valid pseudo-class should apply");
+  ok(element.mozMatchesSelector(":valid"), ":valid pseudo-class should apply");
 }
 
 function checkInvalidURL(element)
@@ -58,39 +48,40 @@ function checkInvalidURL(element)
   ok(gInvalid, "The invalid event should have been thrown");
   is(element.validationMessage, "Please enter a URL.",
     "Validation message should be related to invalid URL");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-     "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
+  ok(element.mozMatchesSelector(":invalid"),
+     ":invalid pseudo-class should apply");
 }
 
 var url = document.getElementById('i');
-is(url.type, 'url', "url state should be recognized");
 
-// The empty string should not be considered as invalid.
-url.value = '';
-checkValidURL(url);
+var values = [
+  // [ value, validity ]
+  // The empty string should be considered as valid.
+  [ "", true ],
+  [ "foo", false ],
+  [ "http://mozilla.com/", true ],
+  [ "http://mozilla.com", true ],
+  [ "http://mozil\nla\r.com/", true ],
+  [ "  http://mozilla.com/  ", true ],
+  [ "\r  http://mozilla.com/  \n", true ],
+  [ "file:///usr/bin/tulip", true ],
+  [ "../../bar.html", false ],
+  [ "http://mozillá.org", true ],
+  [ "https://mózillä.org", true ],
+  [ "http://mózillä.órg", true ],
+  [ "ht://mózillä.órg", true ],
+  [ "httŭ://mózillä.órg", false ],
+];
 
-// We are only testing obviously (in)valid URI's because the function used
-// to check if an URI is valid is not specific to this functionality.
-url.value = 'foo';
-checkInvalidURL(url);
+values.forEach(function([value, valid]) {
+  url.value = value;
 
-url.value = 'http://mozilla.com/';
-checkValidURL(url);
-
-url.value = 'http://mozil\nla\r.com/';
-checkValidURL(url);
-
-url.value = '  http://mozilla.com/  ';
-checkValidURL(url);
-
-url.value = '\r  http://mozilla.com/  \n';
-checkValidURL(url);
-
-url.value = 'file:///usr/bin/tulip';
-checkValidURL(url);
-
-url.value = '../../bar.html';
-checkInvalidURL(url);
+  if (valid) {
+    checkValidURL(url);
+  } else {
+    checkInvalidURL(url);
+  }
+});
 
 </script>
 </pre>
