@@ -390,29 +390,15 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         int action = event.getAction();
         PointF point = new PointF(event.getX(), event.getY());
 
-        // this will only match the first touchstart in a series
         if ((action & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
+            mView.clearEventQueue();
             initialTouchLocation = point;
             allowDefaultActions = !mWaitForTouchListeners;
-
-            // if we have a timer, this may be a double tap,
-            // cancel the current timer but don't clear the event queue
-            if (allowDefaultTimer != null) {
-              allowDefaultTimer.cancel();
-            } else {
-              // if we don't have a timer, make sure we remove any old events
-              mView.clearEventQueue();
-            }
-            allowDefaultTimer = new Timer();
-            allowDefaultTimer.schedule(new TimerTask() {
+            post(new Runnable() {
                 public void run() {
-                    post(new Runnable() {
-                        public void run() {
-                            preventPanning(false);
-                        }
-                    });
+                    preventPanning(mWaitForTouchListeners);
                 }
-            }, mTimeout);
+            });
         }
 
         // After the initial touch, ignore touch moves until they exceed a minimum distance.
@@ -424,9 +410,47 @@ public class LayerController implements Tabs.OnTabsChangedListener {
             }
         }
 
-        // send the event to content
         if (mOnTouchListener != null)
             mOnTouchListener.onTouch(mView, event);
+
+        if (!mWaitForTouchListeners)
+            return !allowDefaultActions;
+
+        boolean createTimer = false;
+        switch (action & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_MOVE: {
+                if (!inTouchSession && allowDefaultTimer == null) {
+                    inTouchSession = true;
+                    createTimer = true;
+                }
+                break;
+            }
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP: {
+                // if we still have initialTouchLocation, we haven't fired any
+                // touchmove events. We should start the timer to wait for preventDefault
+                // from touchstart. If we don't hear from it we fire mouse events
+                if (initialTouchLocation != null)
+                    createTimer = true;
+                inTouchSession = false;
+            }
+        }
+
+        if (createTimer) {
+            if (allowDefaultTimer != null) {
+              allowDefaultTimer.cancel();
+            }
+            allowDefaultTimer = new Timer();
+            allowDefaultTimer.schedule(new TimerTask() {
+                public void run() {
+                    post(new Runnable() {
+                        public void run() {
+                            preventPanning(false);
+                        }
+                    });
+                }
+            }, PREVENT_DEFAULT_TIMEOUT);
+        }
 
         return !allowDefaultActions;
     }
@@ -434,6 +458,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     public void preventPanning(boolean aValue) {
         if (allowDefaultTimer != null) {
             allowDefaultTimer.cancel();
+            allowDefaultTimer.purge();
             allowDefaultTimer = null;
         }
         if (aValue == allowDefaultActions) {
