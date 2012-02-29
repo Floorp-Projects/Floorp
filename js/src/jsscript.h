@@ -902,6 +902,9 @@ CheckScript(JSScript *script, JSScript *prev)
 extern jssrcnote *
 js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc);
 
+extern unsigned
+js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
+
 extern jsbytecode *
 js_LineNumberToPC(JSScript *script, unsigned lineno);
 
@@ -909,12 +912,6 @@ extern JS_FRIEND_API(unsigned)
 js_GetScriptLineExtent(JSScript *script);
 
 namespace js {
-
-extern unsigned
-PCToLineNumber(JSScript *script, jsbytecode *pc);
-
-extern unsigned
-PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc);
 
 extern unsigned
 CurrentLine(JSContext *cx);

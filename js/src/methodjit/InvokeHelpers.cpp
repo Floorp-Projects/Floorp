@@ -800,7 +800,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
 #ifdef JS_METHODJIT_SPEW
     JaegerSpew(JSpew_Recompile, "interpreter rejoin (file \"%s\") (line \"%d\") (op %s) (opline \"%d\")\n",
-               script->filename, script->lineno, OpcodeNames[op], PCToLineNumber(script, pc));
+               script->filename, script->lineno, OpcodeNames[op], js_PCToLineNumber(cx, script, pc));
 #endif
 
     uint32_t nextDepth = UINT32_MAX;
