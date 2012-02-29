@@ -64,7 +64,7 @@ _BROWSER_TEST_FILES = \
 	browser_library_middleclick.js \
 	browser_library_views_liveupdate.js \
 	browser_views_liveupdate.js \
-	browser_sidebarpanels_click.js \
+	$(warning browser_sidebarpanels_click.js temporarily disabled cause it breaks the treeview, see bug 658744) \
 	sidebarpanels_click_test_page.html \
 	browser_library_infoBox.js \
 	browser_markPageAsFollowedLink.js \
