@@ -231,14 +231,6 @@ typedef int JSBool;
 #define JS_TRUE (int)1
 #define JS_FALSE (int)0
 
-/************************************************************************
-** TYPES:       JSPackedBool
-** DESCRIPTION:
-**  Use JSPackedBool within structs where bitfields are not desireable
-**      but minimum and consistent overhead matters.
-************************************************************************/
-typedef uint8_t JSPackedBool;
-
 /***********************************************************************
 ** MACROS:      JS_LIKELY
 **              JS_UNLIKELY
