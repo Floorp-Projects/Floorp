@@ -3793,41 +3793,38 @@ TraceRuntime(JSTracer *trc)
 
 struct IterateArenaCallbackOp
 {
-    JSContext *cx;
+    JSRuntime *rt;
     void *data;
     IterateArenaCallback callback;
     JSGCTraceKind traceKind;
     size_t thingSize;
-    IterateArenaCallbackOp(JSContext *cx, void *data, IterateArenaCallback callback,
+    IterateArenaCallbackOp(JSRuntime *rt, void *data, IterateArenaCallback callback,
                            JSGCTraceKind traceKind, size_t thingSize)
-        : cx(cx), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
+        : rt(rt), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
     {}
-    void operator()(Arena *arena) { (*callback)(cx, data, arena, traceKind, thingSize); }
+    void operator()(Arena *arena) { (*callback)(rt, data, arena, traceKind, thingSize); }
 };
 
 struct IterateCellCallbackOp
 {
-    JSContext *cx;
+    JSRuntime *rt;
     void *data;
     IterateCellCallback callback;
     JSGCTraceKind traceKind;
     size_t thingSize;
-    IterateCellCallbackOp(JSContext *cx, void *data, IterateCellCallback callback,
+    IterateCellCallbackOp(JSRuntime *rt, void *data, IterateCellCallback callback,
                           JSGCTraceKind traceKind, size_t thingSize)
-        : cx(cx), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
+        : rt(rt), data(data), callback(callback), traceKind(traceKind), thingSize(thingSize)
     {}
-    void operator()(Cell *cell) { (*callback)(cx, data, cell, traceKind, thingSize); }
+    void operator()(Cell *cell) { (*callback)(rt, data, cell, traceKind, thingSize); }
 };
 
 void
-IterateCompartmentsArenasCells(JSContext *cx, void *data,
+IterateCompartmentsArenasCells(JSRuntime *rt, void *data,
                                JSIterateCompartmentCallback compartmentCallback,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback)
 {
-    CHECK_REQUEST(cx);
-
-    JSRuntime *rt = cx->runtime;
     JS_ASSERT(!rt->gcRunning);
 
     AutoLockGC lock(rt);
@@ -3839,25 +3836,22 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
 
     AutoCopyFreeListToArenas copy(rt);
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        (*compartmentCallback)(cx, data, c);
+        (*compartmentCallback)(rt, data, c);
 
         for (size_t thingKind = 0; thingKind != FINALIZE_LIMIT; thingKind++) {
             JSGCTraceKind traceKind = MapAllocToTraceKind(AllocKind(thingKind));
             size_t thingSize = Arena::thingSize(AllocKind(thingKind));
-            IterateArenaCallbackOp arenaOp(cx, data, arenaCallback, traceKind, thingSize);
-            IterateCellCallbackOp cellOp(cx, data, cellCallback, traceKind, thingSize);
+            IterateArenaCallbackOp arenaOp(rt, data, arenaCallback, traceKind, thingSize);
+            IterateCellCallbackOp cellOp(rt, data, cellCallback, traceKind, thingSize);
             ForEachArenaAndCell(c, AllocKind(thingKind), arenaOp, cellOp);
         }
     }
 }
 
 void
-IterateChunks(JSContext *cx, void *data, IterateChunkCallback chunkCallback)
+IterateChunks(JSRuntime *rt, void *data, IterateChunkCallback chunkCallback)
 {
     /* :XXX: Any way to common this preamble with IterateCompartmentsArenasCells? */
-    CHECK_REQUEST(cx);
-
-    JSRuntime *rt = cx->runtime;
     JS_ASSERT(!rt->gcRunning);
 
     AutoLockGC lock(rt);
@@ -3868,17 +3862,14 @@ IterateChunks(JSContext *cx, void *data, IterateChunkCallback chunkCallback)
     AutoUnlockGC unlock(rt);
 
     for (js::GCChunkSet::Range r = rt->gcChunkSet.all(); !r.empty(); r.popFront())
-        chunkCallback(cx, data, r.front());
+        chunkCallback(rt, data, r.front());
 }
 
 void
-IterateCells(JSContext *cx, JSCompartment *compartment, AllocKind thingKind,
+IterateCells(JSRuntime *rt, JSCompartment *compartment, AllocKind thingKind,
              void *data, IterateCellCallback cellCallback)
 {
     /* :XXX: Any way to common this preamble with IterateCompartmentsArenasCells? */
-    CHECK_REQUEST(cx);
-
-    JSRuntime *rt = cx->runtime;
     JS_ASSERT(!rt->gcRunning);
 
     AutoLockGC lock(rt);
@@ -3895,11 +3886,11 @@ IterateCells(JSContext *cx, JSCompartment *compartment, AllocKind thingKind,
 
     if (compartment) {
         for (CellIterUnderGC i(compartment, thingKind); !i.done(); i.next())
-            cellCallback(cx, data, i.getCell(), traceKind, thingSize);
+            cellCallback(rt, data, i.getCell(), traceKind, thingSize);
     } else {
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
             for (CellIterUnderGC i(c, thingKind); !i.done(); i.next())
-                cellCallback(cx, data, i.getCell(), traceKind, thingSize);
+                cellCallback(rt, data, i.getCell(), traceKind, thingSize);
         }
     }
 }
@@ -4456,7 +4447,7 @@ static void ReleaseAllJITCode(JSContext *cx)
 #ifdef JS_METHODJIT
     for (GCCompartmentsIter c(cx->runtime); !c.done(); c.next()) {
         mjit::ClearAllFrames(c);
-        for (CellIter i(cx, c, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        for (CellIter i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             mjit::ReleaseScriptCode(cx, script);
         }
@@ -4537,7 +4528,7 @@ StopPCCountProfiling(JSContext *cx)
         return;
 
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        for (CellIter i(cx, c, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        for (CellIter i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             if (script->pcCounters && script->types) {
                 ScriptOpcodeCountsPair info;
@@ -4569,19 +4560,16 @@ PurgePCCounts(JSContext *cx)
 } /* namespace js */
 
 JS_PUBLIC_API(void)
-JS_IterateCompartments(JSContext *cx, void *data,
+JS_IterateCompartments(JSRuntime *rt, void *data,
                        JSIterateCompartmentCallback compartmentCallback)
 {
-    CHECK_REQUEST(cx);
-
-    JSRuntime *rt = cx->runtime;
     JS_ASSERT(!rt->gcRunning);
 
     AutoLockGC lock(rt);
     AutoHeapSession session(rt);
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
-        (*compartmentCallback)(cx, data, c);
+        (*compartmentCallback)(rt, data, c);
 }
 
 #if JS_HAS_XML_SUPPORT

@@ -1932,10 +1932,10 @@ SetMarkStackLimit(JSRuntime *rt, size_t limit);
 void
 MarkStackRangeConservatively(JSTracer *trc, Value *begin, Value *end);
 
-typedef void (*IterateChunkCallback)(JSContext *cx, void *data, gc::Chunk *chunk);
-typedef void (*IterateArenaCallback)(JSContext *cx, void *data, gc::Arena *arena,
+typedef void (*IterateChunkCallback)(JSRuntime *rt, void *data, gc::Chunk *chunk);
+typedef void (*IterateArenaCallback)(JSRuntime *rt, void *data, gc::Arena *arena,
                                      JSGCTraceKind traceKind, size_t thingSize);
-typedef void (*IterateCellCallback)(JSContext *cx, void *data, void *thing,
+typedef void (*IterateCellCallback)(JSRuntime *rt, void *data, void *thing,
                                     JSGCTraceKind traceKind, size_t thingSize);
 
 /*
@@ -1944,7 +1944,7 @@ typedef void (*IterateCellCallback)(JSContext *cx, void *data, void *thing,
  * cell in the GC heap.
  */
 extern JS_FRIEND_API(void)
-IterateCompartmentsArenasCells(JSContext *cx, void *data,
+IterateCompartmentsArenasCells(JSRuntime *rt, void *data,
                                JSIterateCompartmentCallback compartmentCallback,
                                IterateArenaCallback arenaCallback,
                                IterateCellCallback cellCallback);
@@ -1953,14 +1953,14 @@ IterateCompartmentsArenasCells(JSContext *cx, void *data,
  * Invoke chunkCallback on every in-use chunk.
  */
 extern JS_FRIEND_API(void)
-IterateChunks(JSContext *cx, void *data, IterateChunkCallback chunkCallback);
+IterateChunks(JSRuntime *rt, void *data, IterateChunkCallback chunkCallback);
 
 /*
  * Invoke cellCallback on every in-use object of the specified thing kind for
  * the given compartment or for all compartments if it is null.
  */
 extern JS_FRIEND_API(void)
-IterateCells(JSContext *cx, JSCompartment *compartment, gc::AllocKind thingKind,
+IterateCells(JSRuntime *rt, JSCompartment *compartment, gc::AllocKind thingKind,
              void *data, IterateCellCallback cellCallback);
 
 } /* namespace js */
