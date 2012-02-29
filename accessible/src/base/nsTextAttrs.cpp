@@ -153,43 +153,43 @@ nsTextAttrsMgr::GetAttributes(nsIPersistentProperties *aAttributes,
 
   // "language" text attribute
   nsLangTextAttr langTextAttr(mHyperTextAcc, hyperTextElm, offsetNode);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&langTextAttr));
+  textAttrArray.AppendElement(&langTextAttr);
 
   // "text-line-through-style" text attribute
   nsCSSTextAttr lineThroughTextAttr(0, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&lineThroughTextAttr));
+  textAttrArray.AppendElement(&lineThroughTextAttr);
 
   // "text-underline-style" text attribute
   nsCSSTextAttr underlineTextAttr(1, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&underlineTextAttr));
+  textAttrArray.AppendElement(&underlineTextAttr);
 
   // "text-position" text attribute
   nsCSSTextAttr posTextAttr(2, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&posTextAttr));
+  textAttrArray.AppendElement(&posTextAttr);
 
   // "background-color" text attribute
   nsBGColorTextAttr bgColorTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&bgColorTextAttr));
+  textAttrArray.AppendElement(&bgColorTextAttr);
 
   // "color" text attribute
   ColorTextAttr colorTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&colorTextAttr));
+  textAttrArray.AppendElement(&colorTextAttr);
 
   // "font-family" text attribute
   FontFamilyTextAttr fontFamilyTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontFamilyTextAttr));
+  textAttrArray.AppendElement(&fontFamilyTextAttr);
 
   // "font-size" text attribute
   nsFontSizeTextAttr fontSizeTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontSizeTextAttr));
+  textAttrArray.AppendElement(&fontSizeTextAttr);
 
   // "font-style" text attribute
   FontStyleTextAttr fontStyleTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontStyleTextAttr));
+  textAttrArray.AppendElement(&fontStyleTextAttr);
 
   // "font-weight" text attribute
   nsFontWeightTextAttr fontWeightTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontWeightTextAttr));
+  textAttrArray.AppendElement(&fontWeightTextAttr);
 
   // Expose text attributes if applicable.
   if (aAttributes) {
