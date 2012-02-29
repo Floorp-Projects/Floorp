@@ -43,17 +43,18 @@ function handleRequest(request, response)
           let [name, value] = s.split(': ');
           headers[name] = utf8decode(value);
         });
-	let body = s.substring(headerEnd + 4, s.length - 2);
-	if (!headers["Content-Type"] || headers["Content-Type"] == "text/plain") {
+
+        let body = s.substring(headerEnd + 4, s.length - 2);
+        if (!headers["Content-Type"] || headers["Content-Type"] == "text/plain") {
           // We're assuming UTF8 for now
-	  body = utf8decode(body);
-	}
-	result.push({ headers: headers, body: body});
+          body = utf8decode(body);
+        }
+        result.push({ headers: headers, body: body});
       });
     }
     if (contentTypeParams[''] == "text/plain" &&
         request.queryString == "plain") {
-      result = requestBody;
+      result = utf8decode(requestBody);
     }
     if (contentTypeParams[''] == "application/x-www-form-urlencoded" &&
         request.queryString == "url") {
