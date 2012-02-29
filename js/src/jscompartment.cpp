@@ -689,9 +689,9 @@ JSCompartment::updateForDebugMode(JSContext *cx)
 
     /*
      * Discard JIT code and bytecode analyses for any scripts that change
-     * debugMode. This assumes that 'comp' is in the same thread as 'cx'.
+     * debugMode.
      */
-    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->debugMode != enabled) {
             mjit::ReleaseScriptCode(cx, script);
@@ -739,7 +739,7 @@ JSCompartment::removeDebuggee(JSContext *cx,
 void
 JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler)
 {
-    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasAnyBreakpointsOrStepMode())
             script->clearBreakpointsIn(cx, dbg, handler);
@@ -749,7 +749,7 @@ JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *ha
 void
 JSCompartment::clearTraps(JSContext *cx)
 {
-    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasAnyBreakpointsOrStepMode())
             script->clearTraps(cx);
