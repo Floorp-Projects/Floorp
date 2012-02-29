@@ -88,7 +88,6 @@ static const char sPrintSettingsServiceContractID[] = "@mozilla.org/gfx/printset
 // Print error dialog
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
-#include "nsIStringBundle.h"
 
 // Printing Prompts
 #include "nsIPrintingPromptService.h"
@@ -106,7 +105,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 
 // Misc
 #include "nsISupportsUtils.h"
-#include "nsIFrame.h"
 #include "nsIScriptContext.h"
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
@@ -141,7 +139,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
 #include "nsILayoutHistoryState.h"
 #include "nsFrameManager.h"
@@ -156,7 +153,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewerPrint.h"
 
-#include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
 #include "nsRange.h"
 #include "nsCDefaultURIFixup.h"

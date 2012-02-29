@@ -92,7 +92,6 @@
 #endif
 #include "nsGenericHTMLElement.h"
 #include "imgIRequest.h"
-#include "imgIContainer.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
