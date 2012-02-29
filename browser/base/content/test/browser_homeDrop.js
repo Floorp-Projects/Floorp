@@ -28,7 +28,6 @@ function test() {
     executeSoon(function () {
       let consoleListener = {
         observe: function (m) {
-          info("m.message: " + m.message + "\n");
           if (m.message.indexOf("NS_ERROR_DOM_BAD_URI") > -1) {
             ok(true, "drop was blocked");
             executeSoon(finish);
@@ -45,21 +44,7 @@ function test() {
         // The drop handler throws an exception when dragging URIs that inherit
         // principal, e.g. javascript:
         expectUncaughtException();
-        let originalHandler = homeButtonObserver.onDrop;
-        homeButtonObserver.onDrop = function (aEvent) {
-          info("homeButtonObserver.onDrop called");
-          try {
-            originalHandler(aEvent);
-          } catch (ex) {
-            info("originalHandler threw an exception: " + ex);
-            throw ex;
-          }
-        };
-        registerCleanupFunction(function () {
-          homeButtonObserver.onDrop = originalHandler;
-        });
         chromeUtils.synthesizeDrop(homeButton, homeButton, [[{type: "text/plain", data: "javascript:8888"}]], "copy", window, EventUtils);
-        info("Triggered the second drop of a javascript: URI");
       });
     })
   });
