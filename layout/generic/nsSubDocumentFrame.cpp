@@ -399,6 +399,10 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     childItems.AppendToTop(layerItem);
   }
 
+  if (subdocRootFrame) {
+    aBuilder->LeavePresShell(subdocRootFrame, dirty);
+  }
+
   if (ShouldClipSubdocument()) {
     nsDisplayClip* item =
       new (aBuilder) nsDisplayClip(aBuilder, this, &childItems,
@@ -415,10 +419,6 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   // delete childItems in case of OOM
   childItems.DeleteAll();
-
-  if (subdocRootFrame) {
-    aBuilder->LeavePresShell(subdocRootFrame, dirty);
-  }
 
   return rv;
 }
