@@ -52,7 +52,10 @@ endif
 # would only be used by our build system and should not itself be included in a
 # Mozilla distribution.
 HOST_PROGRAM = mar$(HOST_BIN_SUFFIX)
+
+ifdef MOZ_ENABLE_SIGNMAR
 PROGRAM = signmar$(BIN_SUFFIX)
+endif
 
 # Don't link the against libmozglue because we don't need it.
 MOZ_GLUE_LDFLAGS =
@@ -62,6 +65,12 @@ DEFINES += \
   -DMAR_CHANNEL_ID='"$(MAR_CHANNEL_ID)"' \
   -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"' \
   $(NULL)
+
+ifndef MOZ_ENABLE_SIGNMAR
+DEFINES += \
+  -DNO_SIGN_VERIFY \
+  $(NULL)
+endif
 
 HOST_CFLAGS += \
   -DNO_SIGN_VERIFY \
@@ -74,19 +83,25 @@ HOST_CSRCS = \
 CSRCS = $(HOST_CSRCS)
 
 HOST_LIBS = $(DIST)/host/lib/$(LIB_PREFIX)hostmar.$(LIB_SUFFIX)
-LIBS = $(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
+LIBS = $(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX)
+
+ifdef MOZ_ENABLE_SIGNMAR
+LIBS += \
   $(DEPTH)/modules/libmar/sign/$(LIB_PREFIX)signmar.$(LIB_SUFFIX) \
   $(DEPTH)/modules/libmar/verify/$(LIB_PREFIX)verifymar.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)nssutil3.$(LIB_SUFFIX) \
   $(NSPR_LIBS) \
   $(NULL)
+endif
 
 ifeq ($(HOST_OS_ARCH),WINNT)
 HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME,ws2_32)
 EXTRA_LIBS += $(call EXPAND_LIBNAME,ws2_32)
+ifdef MOZ_ENABLE_SIGNMAR
 EXTRA_LIBS += $(call EXPAND_LIBNAME,crypt32)
 EXTRA_LIBS += $(call EXPAND_LIBNAME,advapi32)
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
