@@ -79,9 +79,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /* The viewport that Gecko will display when drawing is finished */
     private ViewportMetrics mNewGeckoViewport;
 
-    private static final long MIN_VIEWPORT_CHANGE_DELAY = 25L;
-    private long mLastViewportChangeTime;
-    private boolean mPendingViewportAdjust;
     private boolean mViewportSizeChanged;
     private boolean mIgnorePaintsPendingViewportSizeChange;
     private boolean mFirstPaint = true;
@@ -266,29 +263,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
         return null;
     }
 
-    private void adjustViewportWithThrottling() {
-        if (!mLayerController.getRedrawHint())
-            return;
-
-        if (mPendingViewportAdjust)
-            return;
-
-        long timeDelta = System.currentTimeMillis() - mLastViewportChangeTime;
-        if (timeDelta < MIN_VIEWPORT_CHANGE_DELAY) {
-            mLayerController.getView().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        mPendingViewportAdjust = false;
-                        adjustViewport();
-                    }
-                }, MIN_VIEWPORT_CHANGE_DELAY - timeDelta);
-            mPendingViewportAdjust = true;
-            return;
-        }
-
-        adjustViewport();
-    }
-
     void viewportSizeChanged() {
         mViewportSizeChanged = true;
         mIgnorePaintsPendingViewportSizeChange = true;
@@ -305,8 +279,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
             mViewportSizeChanged = false;
             GeckoAppShell.viewSizeChanged();
         }
-
-        mLastViewportChangeTime = System.currentTimeMillis();
     }
 
     /** Implementation of GeckoEventResponder/GeckoEventListener. */
@@ -338,7 +310,8 @@ public class GeckoLayerClient implements GeckoEventResponder,
     void geometryChanged() {
         /* Let Gecko know if the screensize has changed */
         sendResizeEventIfNecessary(false);
-        adjustViewportWithThrottling();
+        if (mLayerController.getRedrawHint())
+            adjustViewport();
     }
 
     public int getWidth() {
