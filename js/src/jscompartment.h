@@ -341,7 +341,7 @@ struct JSCompartment
     void markTypes(JSTracer *trc);
     void discardJitCode(JSContext *cx);
     void sweep(JSContext *cx, bool releaseTypes);
-    void purge(JSContext *cx);
+    void purge();
 
     void setGCLastBytes(size_t lastBytes, js::JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(size_t amount);
@@ -388,12 +388,8 @@ struct JSCompartment
      */
     bool debugMode() const { return !!debugModeBits; }
 
-    /*
-     * True if any scripts from this compartment are on the JS stack in the
-     * calling thread. cx is a context in the calling thread, and it is assumed
-     * that no other thread is using this compartment.
-     */
-    bool hasScriptsOnStack(JSContext *cx);
+    /* True if any scripts from this compartment are on the JS stack. */
+    bool hasScriptsOnStack();
 
   private:
     /* This is called only when debugMode() has just toggled. */

@@ -3053,7 +3053,7 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
     }
 
     xpc::CompartmentPrivate *compartmentPrivate =
-        static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, compartment));
+        static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(compartment));
     compartmentPrivate->location = sandboxName;
 
     return NS_OK;
@@ -3235,7 +3235,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
                 return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
 
             void* privateValue =
-                JS_GetCompartmentPrivate(cx, GetObjectCompartment(unwrapped));
+                JS_GetCompartmentPrivate(GetObjectCompartment(unwrapped));
             xpc::CompartmentPrivate *compartmentPrivate =
                 static_cast<xpc::CompartmentPrivate*>(privateValue);
 
@@ -3556,7 +3556,7 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
             xpc::CompartmentPrivate *sandboxdata =
                 static_cast<xpc::CompartmentPrivate *>
-                           (JS_GetCompartmentPrivate(cx, js::GetObjectCompartment(sandbox)));
+                           (JS_GetCompartmentPrivate(js::GetObjectCompartment(sandbox)));
             if (!ac.enter(cx, callingScope) ||
                 !WrapForSandbox(cx, sandboxdata->wantXrays, &v)) {
                 rv = NS_ERROR_FAILURE;

@@ -263,7 +263,7 @@ PropertyCache::assertEmpty()
 #endif
 
 void
-PropertyCache::purge(JSContext *cx)
+PropertyCache::purge(JSRuntime *rt)
 {
     if (empty) {
         assertEmpty();
@@ -279,10 +279,7 @@ PropertyCache::purge(JSContext *cx)
         fp = fopen("/tmp/propcache.stats", "w");
     if (fp) {
         fputs("Property cache stats for ", fp);
-#ifdef JS_THREADSAFE
-        fprintf(fp, "thread %lu, ", (unsigned long) cx->thread->id);
-#endif
-        fprintf(fp, "GC %lu\n", (unsigned long)cx->runtime->gcNumber);
+        fprintf(fp, "GC %lu\n", (unsigned long)rt->gcNumber);
 
 # define P(mem) fprintf(fp, "%11s %10lu\n", #mem, (unsigned long)mem)
         P(fills);

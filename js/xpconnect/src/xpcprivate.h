@@ -748,8 +748,7 @@ public:
     static void TraceBlackJS(JSTracer* trc, void* data);
     static void TraceGrayJS(JSTracer* trc, void* data);
     void TraceXPConnectRoots(JSTracer *trc);
-    void AddXPConnectRoots(JSContext* cx,
-                           nsCycleCollectionTraversalCallback& cb);
+    void AddXPConnectRoots(nsCycleCollectionTraversalCallback& cb);
     void UnmarkSkippableJSHolders();
 
     static JSBool GCCallback(JSContext *cx, JSGCStatus status);
@@ -761,7 +760,7 @@ public:
     nsresult AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
     nsresult RemoveJSHolder(void* aHolder);
 
-    static void SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
+    static void SuspectWrappedNative(XPCWrappedNative *wrapper,
                                      nsCycleCollectionTraversalCallback &cb);
 
     void DebugDump(PRInt16 depth);
@@ -1556,8 +1555,7 @@ public:
     TraceJS(JSTracer* trc, XPCJSRuntime* rt);
 
     static void
-    SuspectAllWrappers(XPCJSRuntime* rt, JSContext* cx,
-                       nsCycleCollectionTraversalCallback &cb);
+    SuspectAllWrappers(XPCJSRuntime* rt, nsCycleCollectionTraversalCallback &cb);
 
     static void
     FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt);
@@ -1610,7 +1608,7 @@ public:
         return mCachedDOMPrototypes;
     }
 
-    static XPCWrappedNativeScope *GetNativeScope(JSContext *cx, JSObject *obj)
+    static XPCWrappedNativeScope *GetNativeScope(JSObject *obj)
     {
         MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
 

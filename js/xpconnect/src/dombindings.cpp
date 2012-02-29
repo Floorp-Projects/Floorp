@@ -756,7 +756,7 @@ ListBase<LC>::ensureExpandoObject(JSContext *cx, JSObject *obj)
 
         JSCompartment *compartment = js::GetObjectCompartment(obj);
         xpc::CompartmentPrivate *priv =
-            static_cast<xpc::CompartmentPrivate *>(js_GetCompartmentPrivate(compartment));
+            static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
         if (!priv->RegisterDOMExpandoObject(expando))
             return NULL;
 

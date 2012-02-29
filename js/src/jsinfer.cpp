@@ -2193,12 +2193,8 @@ TypeCompartment::nukeTypes(JSContext *cx)
     inferenceEnabled = false;
 
     /* Update the cached inferenceEnabled bit in all contexts. */
-    for (JSCList *cl = cx->runtime->contextList.next;
-         cl != &cx->runtime->contextList;
-         cl = cl->next) {
-        JSContext *cx = JSContext::fromLinkField(cl);
-        cx->setCompartment(cx->compartment);
-    }
+    for (ContextIter acx(cx->runtime); !acx.done(); acx.next())
+        acx->setCompartment(acx->compartment);
 
 #ifdef JS_METHODJIT
 

@@ -1558,7 +1558,7 @@ class StackSpace
 class ContextStack
 {
     StackSegment *seg_;
-    StackSpace *space_;
+    StackSpace *const space_;
     JSContext *cx_;
 
     /*

@@ -823,11 +823,15 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 class JS_PUBLIC_API(AutoGCRooter) {
   public:
     AutoGCRooter(JSContext *cx, ptrdiff_t tag);
-    ~AutoGCRooter();
+
+    ~AutoGCRooter() {
+        JS_ASSERT(this == *stackTop);
+        *stackTop = down;
+    }
 
     /* Implemented in jsgc.cpp. */
     inline void trace(JSTracer *trc);
-    void traceAll(JSTracer *trc);
+    static void traceAll(JSTracer *trc);
 
   protected:
     AutoGCRooter * const down;
@@ -840,8 +844,6 @@ class JS_PUBLIC_API(AutoGCRooter) {
      * memory corruption.
      */
     ptrdiff_t tag;
-
-    JSContext * const context;
 
     enum {
         JSVAL =        -1, /* js::AutoValueRooter */
@@ -863,6 +865,8 @@ class JS_PUBLIC_API(AutoGCRooter) {
     };
 
   private:
+    AutoGCRooter ** const stackTop;
+
     /* No copy or assignment semantics. */
     AutoGCRooter(AutoGCRooter &ida) MOZ_DELETE;
     void operator=(AutoGCRooter &ida) MOZ_DELETE;
@@ -1013,7 +1017,7 @@ class AutoEnumStateRooter : private AutoGCRooter
   public:
     AutoEnumStateRooter(JSContext *cx, JSObject *obj
                         JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue()
+      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue(), context(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(obj);
@@ -1033,6 +1037,7 @@ class AutoEnumStateRooter : private AutoGCRooter
 
   private:
     Value stateValue;
+    JSContext *context;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -2490,9 +2495,6 @@ JS_GetRuntime(JSContext *cx);
 extern JS_PUBLIC_API(JSContext *)
 JS_ContextIterator(JSRuntime *rt, JSContext **iterp);
 
-extern JS_PUBLIC_API(JSContext *)
-JS_ContextIteratorUnlocked(JSRuntime *rt, JSContext **iterp);
-
 extern JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx);
 
@@ -2607,11 +2609,11 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
 extern JS_PUBLIC_API(void)
 JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call);
 
-extern JS_PUBLIC_API(void *)
-JS_SetCompartmentPrivate(JSContext *cx, JSCompartment *compartment, void *data);
+extern JS_PUBLIC_API(void)
+JS_SetCompartmentPrivate(JSCompartment *compartment, void *data);
 
 extern JS_PUBLIC_API(void *)
-JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment);
+JS_GetCompartmentPrivate(JSCompartment *compartment);
 
 extern JS_PUBLIC_API(JSBool)
 JS_WrapObject(JSContext *cx, JSObject **objp);
@@ -2635,9 +2637,6 @@ js_TransplantObjectWithWrapper(JSContext *cx,
                                JSObject *origwrapper,
                                JSObject *targetobj,
                                JSObject *targetwrapper);
-
-extern JS_FRIEND_API(void *)
-js_GetCompartmentPrivate(JSCompartment *compartment);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
@@ -3508,7 +3507,7 @@ namespace JS {
 class AutoIdArray : private AutoGCRooter {
   public:
     AutoIdArray(JSContext *cx, JSIdArray *ida JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, IDARRAY), idArray(ida)
+      : AutoGCRooter(cx, IDARRAY), context(cx), idArray(ida)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -3540,6 +3539,7 @@ class AutoIdArray : private AutoGCRooter {
     inline void trace(JSTracer *trc);
 
   private:
+    JSContext *context;
     JSIdArray *idArray;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
