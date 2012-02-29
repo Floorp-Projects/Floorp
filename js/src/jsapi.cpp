@@ -871,7 +871,7 @@ JSRuntime::~JSRuntime()
         for (ContextIter acx(this); !acx.done(); acx.next()) {
             fprintf(stderr,
 "JS API usage error: found live context at %p\n",
-                    acx.get());
+                    (void *) acx.get());
             cxcount++;
         }
         fprintf(stderr,
