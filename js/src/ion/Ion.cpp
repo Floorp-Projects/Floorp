@@ -275,7 +275,6 @@ IonActivation::~IonActivation()
 {
     JS_ASSERT(cx_->runtime->ionActivation == this);
     JS_ASSERT(!bailout_);
-    JS_ASSERT(cx_->enumerators == savedEnumerators_);
 
     entryfp_->clearRunningInIon();
     cx_->runtime->ionActivation = prev();
