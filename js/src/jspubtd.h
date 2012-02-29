@@ -44,7 +44,6 @@
  * JS public API typedefs.
  */
 #include "jstypes.h"
-#include "jscompat.h"
 
 /*
  * Allow headers to reference JS::Value without #including the whole jsapi.h.
