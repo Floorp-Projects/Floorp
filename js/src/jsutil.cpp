@@ -110,7 +110,6 @@ JS_Assert(const char *s, const char *file, int ln)
 
 #include <math.h>
 #include <string.h>
-#include "jscompat.h"
 
 /*
  * Histogram bins count occurrences of values <= the bin label, as follows:

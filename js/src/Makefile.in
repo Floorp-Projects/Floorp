@@ -188,7 +188,6 @@ INSTALLED_HEADERS = \
 		jsatom.h \
 		jsclass.h \
 		jsclist.h \
-		jscompat.h \
 		jsdbgapi.h \
 		jsdhash.h \
 		jsfriendapi.h \

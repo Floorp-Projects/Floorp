@@ -46,7 +46,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "jstypes.h"
-#include "jscompat.h"
 
 JS_BEGIN_EXTERN_C
 
