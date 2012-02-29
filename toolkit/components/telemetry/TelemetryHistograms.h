@@ -282,6 +282,14 @@ HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL, 1, 10000, 10, EXPONEN
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL_MAIN_THREAD, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::CloseInternal on the main thread (ms)")
 
 /**
+ * Idle service telemetry
+ */
+HISTOGRAM(IDLE_NOTIFY_BACK_MS, 1, 5000, 10, EXPONENTIAL, "Time spent checking for and notifying listeners that the user is back (ms)")
+HISTOGRAM(IDLE_NOTIFY_BACK_LISTENERS, 1, 100, 20, LINEAR, "Number of listeners notified that the user is back")
+HISTOGRAM(IDLE_NOTIFY_IDLE_MS, 1, 5000, 10, EXPONENTIAL, "Time spent checking for and notifying listeners that the user is idle (ms)")
+HISTOGRAM(IDLE_NOTIFY_IDLE_LISTENERS, 1, 100, 20, LINEAR, "Number of listeners notified that the user is idle")
+
+/**
  * Url-Classifier telemetry
  */
 #ifdef MOZ_URL_CLASSIFIER
