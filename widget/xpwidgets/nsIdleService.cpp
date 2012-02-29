@@ -49,6 +49,7 @@
 #include "prinrval.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 
@@ -329,10 +330,11 @@ nsIdleService::ResetIdleTimeOut(PRUint32 idleDeltaInMS)
   }
 
   // Mark all idle services as non-idle, and calculate the next idle timeout.
+  Telemetry::AutoTimer<Telemetry::IDLE_NOTIFY_BACK_MS> timer;
   nsCOMArray<nsIObserver> notifyList;
   mDeltaToNextIdleSwitchInS = PR_UINT32_MAX;
 
-  // Loop trough all listeners, and find any that have detected idle.
+  // Loop through all listeners, and find any that have detected idle.
   for (PRUint32 i = 0; i < mArrayListeners.Length(); i++) {
     IdleListener& curListener = mArrayListeners.ElementAt(i);
 
@@ -354,6 +356,8 @@ nsIdleService::ResetIdleTimeOut(PRUint32 idleDeltaInMS)
   ReconfigureTimer();
 
   PRInt32 numberOfPendingNotifications = notifyList.Count();
+  Telemetry::Accumulate(Telemetry::IDLE_NOTIFY_BACK_LISTENERS,
+                        numberOfPendingNotifications);
 
   // Bail if nothing to do.
   if (!numberOfPendingNotifications) {
@@ -478,6 +482,7 @@ nsIdleService::IdleTimerCallback(void)
   }
 
   // Tell expired listeners they are expired,and find the next timeout
+  Telemetry::AutoTimer<Telemetry::IDLE_NOTIFY_IDLE_MS> timer;
 
   // We need to initialise the time to the next idle switch.
   mDeltaToNextIdleSwitchInS = PR_UINT32_MAX;
@@ -510,6 +515,8 @@ nsIdleService::IdleTimerCallback(void)
   ReconfigureTimer();
 
   PRInt32 numberOfPendingNotifications = notifyList.Count();
+  Telemetry::Accumulate(Telemetry::IDLE_NOTIFY_IDLE_LISTENERS,
+                        numberOfPendingNotifications);
 
   // Bail if nothing to do.
   if (!numberOfPendingNotifications) {
