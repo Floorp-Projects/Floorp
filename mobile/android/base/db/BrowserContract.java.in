@@ -54,6 +54,9 @@ public class BrowserContract {
     public static final String DELETED_FORM_HISTORY_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.deleted-formhistory";
     public static final Uri FORM_HISTORY_AUTHORITY_URI = Uri.parse("content://" + FORM_HISTORY_AUTHORITY);
     public static final Uri DELETED_FORM_HISTORY_AUTHORITY_URI = Uri.parse("content://" + DELETED_FORM_HISTORY_AUTHORITY);
+    
+    public static final String TABS_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.tabs";
+    public static final Uri TABS_AUTHORITY_URI = Uri.parse("content://" + TABS_AUTHORITY);
 
     public static final String DEFAULT_PROFILE = "default";
     public static final String PARAM_PROFILE = "profile";
@@ -186,5 +189,54 @@ public class BrowserContract {
         private DeletedFormHistory() {}
         public static final Uri CONTENT_URI = Uri.withAppendedPath(DELETED_FORM_HISTORY_AUTHORITY_URI, "deleted-formhistory");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/deleted-formhistory";
+    }
+
+    public static final class Tabs implements CommonColumns {
+        private Tabs() {}
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(TABS_AUTHORITY_URI, "tabs");
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/tab";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/tab";
+
+        // Title of the tab.
+        public static final String TITLE = "title";
+        
+        // Topmost URL from the history array. Allows processing of this tab without
+        // parsing that array.
+        public static final String URL = "url";
+
+        // Sync-assigned GUID for client device. NULL for local tabs.
+        public static final String CLIENT_GUID = "client_guid";
+
+        // JSON-encoded array of history URL strings, from most recent to least recent.
+        public static final String HISTORY = "history";
+
+        // Favicon URL for the tab's topmost history entry.
+        public static final String FAVICON = "favicon";
+
+        // Last used time of the tab.
+        public static final String LAST_USED = "last_used";
+
+        // Position of the tab. 0 represents foreground.
+        public static final String POSITION = "position";
+    }
+
+    public static final class Clients {
+        private Clients() {}
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(TABS_AUTHORITY_URI, "clients");
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/client";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/client";
+
+        // Implicit rowid in SQL table.
+        public static final String ROWID = "rowid";
+
+        // Client-provided name string. Could conceivably be null.
+        public static final String NAME = "name";
+
+        // Sync-assigned GUID for client device. NULL for local tabs.
+        public static final String GUID = "guid";
+
+        // Last modified time for the client's tab record. For remote records, a server 
+        // timestamp provided by Sync during insertion.
+        public static final String LAST_MODIFIED = "last_modified";
     }
 }
