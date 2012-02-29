@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsITransport.idl"
+#include "nsINetAddr.idl"
 
 interface nsIInterfaceRequestor;
 
@@ -51,7 +52,7 @@ native PRNetAddr(union PRNetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(19c37caa-fb41-4c32-bbf1-c6b31b75d789)]
+[scriptable, uuid(704c0859-cb64-43bd-bfdf-c8b28427f812)]
 interface nsISocketTransport : nsITransport 
 {
     /**
@@ -75,6 +76,18 @@ interface nsISocketTransport : nsITransport
      * is defined only once a connection has been established.
      */
     [noscript] PRNetAddr getSelfAddr();
+
+    /** 
+     * Returns a scriptable version of getPeerAddr. This attribute is defined
+     * only once a connection has been established.
+     */
+    nsINetAddr getScriptablePeerAddr();
+
+    /** 
+     * Returns a scriptable version of getSelfAddr. This attribute is defined
+     * only once a connection has been established.
+     */
+    nsINetAddr getScriptableSelfAddr();
 
     /**
      * Security info object returned from the secure socket provider.  This
