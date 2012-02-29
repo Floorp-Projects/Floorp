@@ -3379,7 +3379,7 @@ AutoGCSession::~AutoGCSession()
 }
 
 static void
-ResetIncrementalGC(JSRuntime *rt)
+ResetIncrementalGC(JSRuntime *rt, const char *reason)
 {
     if (rt->gcIncrementalState == NO_INCREMENTAL)
         return;
@@ -3398,7 +3398,7 @@ ResetIncrementalGC(JSRuntime *rt)
     rt->gcMarker.stop();
     rt->gcIncrementalState = NO_INCREMENTAL;
 
-    rt->gcStats.reset();
+    rt->gcStats.reset(reason);
 }
 
 class AutoGCSlice {
@@ -3467,8 +3467,6 @@ class AutoCopyFreeListToArenas {
 static void
 IncrementalGCSlice(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
 {
-    JS_ASSERT(budget != SliceBudget::Unlimited);
-
     JSRuntime *rt = cx->runtime;
 
     AutoUnlockGC unlock(rt);
@@ -3543,54 +3541,90 @@ IncrementalGCSlice(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
     }
 }
 
-static bool
+class IncrementalSafety
+{
+    const char *reason_;
+
+    IncrementalSafety(const char *reason) : reason_(reason) {}
+
+  public:
+    static IncrementalSafety Safe() { return IncrementalSafety(NULL); }
+    static IncrementalSafety Unsafe(const char *reason) { return IncrementalSafety(reason); }
+
+    typedef void (IncrementalSafety::* ConvertibleToBool)();
+    void nonNull() {}
+
+    operator ConvertibleToBool() const {
+        return reason_ == NULL ? &IncrementalSafety::nonNull : 0;
+    }
+
+    const char *reason() {
+        JS_ASSERT(reason_);
+        return reason_;
+    }
+};
+
+static IncrementalSafety
 IsIncrementalGCSafe(JSRuntime *rt)
 {
     if (rt->gcCompartmentCreated) {
         rt->gcCompartmentCreated = false;
-        return false;
+        return IncrementalSafety::Unsafe("compartment created");
     }
 
     if (rt->gcKeepAtoms)
-        return false;
+        return IncrementalSafety::Unsafe("gcKeepAtoms set");
 
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->activeAnalysis)
-            return false;
+            return IncrementalSafety::Unsafe("activeAnalysis set");
     }
+
+    if (!rt->gcIncrementalEnabled)
+        return IncrementalSafety::Unsafe("incremental permanently disabled");
+
+    return IncrementalSafety::Safe();
+}
+
+static void
+BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
+{
+    IncrementalSafety safe = IsIncrementalGCSafe(rt);
+    if (!safe) {
+        ResetIncrementalGC(rt, safe.reason());
+        *budget = SliceBudget::Unlimited;
+        rt->gcStats.nonincremental(safe.reason());
+        return;
+    }
+
+    if (rt->gcMode != JSGC_MODE_INCREMENTAL) {
+        ResetIncrementalGC(rt, "GC mode change");
+        *budget = SliceBudget::Unlimited;
+        rt->gcStats.nonincremental("GC mode");
+        return;
+    }
+
+#ifdef ANDROID
+    JS_ASSERT(rt->gcIncrementalState == NO_INCREMENTAL);
+    *budget = SliceBudget::Unlimited;
+    rt->gcStats.nonincremental("Android");
+    return;
+#endif
 
     if (rt->gcIncrementalState != NO_INCREMENTAL &&
         rt->gcCurrentCompartment != rt->gcIncrementalCompartment)
     {
-        return false;
+        ResetIncrementalGC(rt, "compartment change");
+        return;
     }
-
-    if (!rt->gcIncrementalEnabled)
-        return false;
-
-    return true;
-}
-
-static bool
-IsIncrementalGCAllowed(JSRuntime *rt)
-{
-    if (rt->gcMode != JSGC_MODE_INCREMENTAL)
-        return false;
-
-#ifdef ANDROID
-    /* Incremental GC is disabled on Android for now. */
-    return false;
-#endif
-
-    if (!IsIncrementalGCSafe(rt))
-        return false;
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->gcBytes > c->gcTriggerBytes)
-            return false;
+        if (c->gcBytes > c->gcTriggerBytes) {
+            *budget = SliceBudget::Unlimited;
+            rt->gcStats.nonincremental("allocation trigger");
+            return;
+        }
     }
-
-    return true;
 }
 
 /*
@@ -3628,17 +3662,17 @@ GCCycle(JSContext *cx, JSCompartment *comp, int64_t budget, JSGCInvocationKind g
     rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
 #endif
 
-    if (budget != SliceBudget::Unlimited) {
-        if (!IsIncrementalGCAllowed(rt))
-            budget = SliceBudget::Unlimited;
+    if (budget == SliceBudget::Unlimited) {
+        /* If non-incremental GC was requested, reset incremental GC. */
+        ResetIncrementalGC(rt, "requested");
+        rt->gcStats.nonincremental("requested");
+    } else {
+        BudgetIncrementalGC(rt, &budget);
     }
-
-    if (budget == SliceBudget::Unlimited)
-        ResetIncrementalGC(rt);
 
     AutoCopyFreeListToArenas copy(rt);
 
-    if (budget == SliceBudget::Unlimited)
+    if (budget == SliceBudget::Unlimited && rt->gcIncrementalState == NO_INCREMENTAL)
         MarkAndSweep(cx, gckind);
     else
         IncrementalGCSlice(cx, budget, gckind);
