@@ -65,9 +65,9 @@
         onload="gSyncSetup.init()">
 
   <script type="application/javascript"
-          src="chrome://browser/content/syncSetup.js"/>
+          src="chrome://browser/content/sync/setup.js"/>
   <script type="application/javascript"
-          src="chrome://browser/content/syncUtils.js"/>
+          src="chrome://browser/content/sync/utils.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"

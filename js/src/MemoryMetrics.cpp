@@ -217,8 +217,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
         rtStats->runtimeAtomsTable =
             rt->atomState.atoms.sizeOfExcludingThis(rtStats->mallocSizeOf);
 
-        JSContext *acx, *iter = NULL;
-        while ((acx = JS_ContextIteratorUnlocked(rt, &iter)) != NULL)
+        for (ContextIter acx(rt); !acx.done(); acx.next())
             rtStats->runtimeContexts += acx->sizeOfIncludingThis(rtStats->mallocSizeOf);
     }
 

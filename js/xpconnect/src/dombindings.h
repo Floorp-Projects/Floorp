@@ -179,7 +179,7 @@ private:
     struct Methods {
         jsid &id;
         JSNative native;
-        uintN nargs;
+        unsigned nargs;
     };
 
     static Properties sProtoProperties[];
@@ -233,7 +233,7 @@ public:
     bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
              JS::Value *vp);
     bool keys(JSContext *cx, JSObject *proxy, JS::AutoIdVector &props);
-    bool iterate(JSContext *cx, JSObject *proxy, uintN flags, JS::Value *vp);
+    bool iterate(JSContext *cx, JSObject *proxy, unsigned flags, JS::Value *vp);
 
     /* Spidermonkey extensions. */
     bool hasInstance(JSContext *cx, JSObject *proxy, const JS::Value *vp, bool *bp);

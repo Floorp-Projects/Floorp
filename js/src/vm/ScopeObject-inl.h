@@ -122,28 +122,28 @@ CallObject::setArguments(const Value &v)
 }
 
 inline const Value &
-CallObject::arg(uintN i) const
+CallObject::arg(unsigned i) const
 {
     JS_ASSERT(i < getCalleeFunction()->nargs);
     return getSlot(RESERVED_SLOTS + i);
 }
 
 inline void
-CallObject::setArg(uintN i, const Value &v)
+CallObject::setArg(unsigned i, const Value &v)
 {
     JS_ASSERT(i < getCalleeFunction()->nargs);
     setSlot(RESERVED_SLOTS + i, v);
 }
 
 inline void
-CallObject::initArgUnchecked(uintN i, const Value &v)
+CallObject::initArgUnchecked(unsigned i, const Value &v)
 {
     JS_ASSERT(i < getCalleeFunction()->nargs);
     initSlotUnchecked(RESERVED_SLOTS + i, v);
 }
 
 inline const Value &
-CallObject::var(uintN i) const
+CallObject::var(unsigned i) const
 {
     JSFunction *fun = getCalleeFunction();
     JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
@@ -152,7 +152,7 @@ CallObject::var(uintN i) const
 }
 
 inline void
-CallObject::setVar(uintN i, const Value &v)
+CallObject::setVar(unsigned i, const Value &v)
 {
     JSFunction *fun = getCalleeFunction();
     JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
@@ -161,7 +161,7 @@ CallObject::setVar(uintN i, const Value &v)
 }
 
 inline void
-CallObject::initVarUnchecked(uintN i, const Value &v)
+CallObject::initVarUnchecked(unsigned i, const Value &v)
 {
     JSFunction *fun = getCalleeFunction();
     JS_ASSERT(fun->nargs == fun->script()->bindings.countArgs());
@@ -170,7 +170,7 @@ CallObject::initVarUnchecked(uintN i, const Value &v)
 }
 
 inline void
-CallObject::copyValues(uintN nargs, Value *argv, uintN nvars, Value *slots)
+CallObject::copyValues(unsigned nargs, Value *argv, unsigned nvars, Value *slots)
 {
     JS_ASSERT(slotInRange(RESERVED_SLOTS + nargs + nvars, SENTINEL_ALLOWED));
     copySlotRange(RESERVED_SLOTS, argv, nargs);

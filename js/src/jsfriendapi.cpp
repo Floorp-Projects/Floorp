@@ -222,9 +222,9 @@ js::IsSystemCompartment(const JSCompartment *c)
 }
 
 JS_FRIEND_API(bool)
-js::IsAtomsCompartmentFor(const JSContext *cx, const JSCompartment *c)
+js::IsAtomsCompartment(const JSCompartment *c)
 {
-    return c == cx->runtime->atomsCompartment;
+    return c == c->rt->atomsCompartment;
 }
 
 JS_FRIEND_API(bool)
@@ -265,7 +265,7 @@ js::IsOriginalScriptFunction(JSFunction *fun)
 
 JS_FRIEND_API(JSFunction *)
 js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, JSNative call,
-                               uintN nargs, uintN attrs)
+                               unsigned nargs, unsigned attrs)
 {
     RootObject objRoot(cx, &obj);
 
@@ -280,7 +280,7 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, J
 }
 
 JS_FRIEND_API(JSFunction *)
-js::NewFunctionWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags,
+js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
                             JSObject *parent, const char *name)
 {
     RootObject parentRoot(cx, &parent);
@@ -304,7 +304,7 @@ js::NewFunctionWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN f
 }
 
 JS_FRIEND_API(JSFunction *)
-js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSObject *parent,
+js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags, JSObject *parent,
                                 jsid id)
 {
     RootObject parentRoot(cx, &parent);
@@ -320,7 +320,7 @@ js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, uintN nargs, uin
 
 JS_FRIEND_API(JSObject *)
 js::InitClassWithReserved(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-                          JSClass *clasp, JSNative constructor, uintN nargs,
+                          JSClass *clasp, JSNative constructor, unsigned nargs,
                           JSPropertySpec *ps, JSFunctionSpec *fs,
                           JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
@@ -732,6 +732,12 @@ extern JS_FRIEND_API(bool)
 IsIncrementalGCEnabled(JSRuntime *rt)
 {
     return rt->gcIncrementalEnabled;
+}
+
+extern JS_FRIEND_API(void)
+DisableIncrementalGC(JSRuntime *rt)
+{
+    rt->gcIncrementalEnabled = false;
 }
 
 JS_FRIEND_API(bool)

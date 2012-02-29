@@ -41,16 +41,9 @@
 
 class nsHyperTextAccessible;
 
-
-#include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
-
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIPersistentProperties2.h"
-
-#include "nsCOMPtr.h"
-#include "nsString.h"
 
 class nsITextAttr;
 
@@ -100,7 +93,6 @@ public:
                          PRInt32 *aEndHTOffset = nsnull);
 
 protected:
-
   /**
    * Calculates range (start and end offsets) of text where the text attributes
    * are stretched. New offsets may be smaller if one of text attributes changes
@@ -327,6 +319,30 @@ protected:
 
 
 /**
+ * Class is used for the work with "font-family" text attribute in
+ * nsTextAttrsMgr class.
+ */
+class FontFamilyTextAttr : public nsTextAttr<nsAutoString>
+{
+public:
+  FontFamilyTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame);
+
+  // nsITextAttr
+  virtual nsIAtom* GetName() const { return nsGkAtoms::font_family; }
+
+protected:
+
+  // nsTextAttr
+  virtual bool GetValueFor(nsIContent* aContent, nsAutoString* aValue);
+  virtual void Format(const nsAutoString& aValue, nsAString& aFormattedValue);
+
+private:
+
+  bool GetFontFamily(nsIFrame* aFrame, nsAutoString& aFamily);
+};
+
+
+/**
  * Class is used for the work with "font-size" text attribute in nsTextAttrsMgr
  * class.
  */
@@ -355,6 +371,26 @@ private:
    nscoord GetFontSize(nsIFrame *aFrame);
 
   nsDeviceContext *mDC;
+};
+
+
+/**
+ * Class is used for the work with "font-style" text attribute in nsTextAttrsMgr
+ * class.
+ */
+class FontStyleTextAttr : public nsTextAttr<nscoord>
+{
+public:
+  FontStyleTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame);
+
+  // nsITextAttr
+  virtual nsIAtom* GetName() const { return nsGkAtoms::font_style; }
+
+protected:
+
+  // nsTextAttr
+  virtual bool GetValueFor(nsIContent* aContent, nscoord* aValue);
+  virtual void Format(const nscoord &aValue, nsAString &aFormattedValue);
 };
 
 

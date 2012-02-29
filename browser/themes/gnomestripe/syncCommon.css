@@ -1,4 +1,4 @@
-/* The following are used by both syncSetup.xul and syncGenericChange.xul */
+/* The following are used by both sync/setup.xul and sync/genericChange.xul */
 .status {
   color: -moz-dialogtext;
 }
@@ -21,7 +21,7 @@
   list-style-image: url("moz-icon://stock/gtk-dialog-info?size=menu");
 }
 
-/* .data is only used by syncGenericChange.xul, but it seems unnecessary to have
+/* .data is only used by sync/genericChange.xul, but it seems unnecessary to have
    a separate stylesheet for it. */
 .data {
   font-size: 90%;

@@ -41,6 +41,7 @@
 
 #include "mozilla/Util.h"
 #include "nsMemory.h"
+#include "nsCharTraits.h"
 
 #include "harfbuzz/hb-unicode.h"
 
@@ -214,6 +215,15 @@ GetHangulSyllableType(PRUint32 aCh)
     return HST_NONE;
 }
 
+bool
+IsClusterExtender(PRUint32 aCh, PRUint8 aCategory)
+{
+    return ((aCategory >= HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK &&
+             aCategory <= HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) ||
+            (aCh >= 0x200c && aCh <= 0x200d) || // ZWJ, ZWNJ
+            (aCh >= 0xff9e && aCh <= 0xff9f));  // katakana sound marks
+}
+
 // TODO: replace this with a properties file or similar;
 // expect this to evolve as harfbuzz shaping support matures.
 //
@@ -269,6 +279,74 @@ ScriptShapingType(PRInt32 aScriptCode)
     case MOZ_SCRIPT_BATAK:
     case MOZ_SCRIPT_BRAHMI:
         return SHAPING_INDIC; // scripts that require Indic or other "special" shaping
+    }
+}
+
+void
+ClusterIterator::Next()
+{
+    if (AtEnd()) {
+        NS_WARNING("ClusterIterator has already reached the end");
+        return;
+    }
+
+    PRUint32 ch = *mPos++;
+
+    // Handle conjoining Jamo that make Hangul syllables
+    if ((ch & ~0xff) == 0x1100 ||
+        (ch >= 0xa960 && ch <= 0xa97f) ||
+        (ch >= 0xac00 && ch <= 0xd7ff)) {
+        HSType hangulState = GetHangulSyllableType(ch);
+        while (mPos < mLimit) {
+            ch = *mPos;
+            HSType hangulType = GetHangulSyllableType(ch);
+            switch (hangulType) {
+            case HST_L:
+            case HST_LV:
+            case HST_LVT:
+                if (hangulState == HST_L) {
+                    hangulState = hangulType;
+                    mPos++;
+                    continue;
+                }
+                break;
+            case HST_V:
+                if ((hangulState != HST_NONE) && !(hangulState & HST_T)) {
+                    hangulState = hangulType;
+                    mPos++;
+                    continue;
+                }
+                break;
+            case HST_T:
+                if (hangulState & (HST_V | HST_T)) {
+                    hangulState = hangulType;
+                    mPos++;
+                    continue;
+                }
+                break;
+            default:
+                break;
+            }
+            break;
+        }
+    }
+
+    while (mPos < mLimit) {
+        ch = *mPos;
+
+        // Check for surrogate pairs; note that isolated surrogates will just
+        // be treated as generic (non-cluster-extending) characters here,
+        // which is fine for cluster-iterating purposes
+        if (NS_IS_LOW_SURROGATE(ch) &&
+            NS_IS_HIGH_SURROGATE(*(mPos - 1))) {
+            ch = SURROGATE_TO_UCS4(*(mPos - 1), *mPos);
+            mPos++;
+        }
+
+        if (!IsClusterExtender(ch)) {
+            break;
+        }
+        mPos++;
     }
 }
 

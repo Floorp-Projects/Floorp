@@ -188,6 +188,45 @@ function test_privateMode() {
   do_check_neq(uneval(orig), uneval(h.snapshot()));
 }
 
+function generateUUID() {
+  let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+  // strip {}
+  return str.substring(1, str.length - 1);
+}
+
+// Check that we do sane things when saving to disk.
+function test_loadSave()
+{
+  let dirService = Cc["@mozilla.org/file/directory_service;1"]
+                    .getService(Ci.nsIProperties);
+  let tmpDir = dirService.get("TmpD", Ci.nsILocalFile);
+  let tmpFile = tmpDir.clone();
+  tmpFile.append("saved-histograms.dat");
+  if (tmpFile.exists()) {
+    tmpFile.remove(true);
+  }
+
+  let saveFinished = false;
+  let loadFinished = false;
+  let uuid = generateUUID();
+  let loadCallback = function(data) {
+    do_check_true(data != null);
+    do_check_eq(uuid, data.uuid);
+    loadFinished = true;
+    do_test_finished();
+  };
+  let saveCallback = function(success) {
+    do_check_true(success);
+    Telemetry.loadHistograms(tmpFile, loadCallback);
+    saveFinished = true;
+  };
+  do_test_pending();
+  Telemetry.saveHistograms(tmpFile, uuid, saveCallback, false);
+  do_register_cleanup(function () do_check_true(saveFinished));
+  do_register_cleanup(function () do_check_true(loadFinished));
+  do_register_cleanup(function () tmpFile.remove(true));
+}
+
 function run_test()
 {
   let kinds = [Telemetry.HISTOGRAM_EXPONENTIAL, Telemetry.HISTOGRAM_LINEAR]
@@ -205,4 +244,5 @@ function run_test()
   test_getSlowSQL();
   test_privateMode();
   test_addons();
+  test_loadSave();
 }

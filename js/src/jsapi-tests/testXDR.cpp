@@ -10,7 +10,7 @@ static JSScript *
 CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
                                         JSPrincipals *principals, JSPrincipals *originPrincipals,
                                         const char *bytes, size_t nbytes,
-                                        const char *filename, uintN lineno,
+                                        const char *filename, unsigned lineno,
                                         JSVersion version)
 {
     size_t nchars;

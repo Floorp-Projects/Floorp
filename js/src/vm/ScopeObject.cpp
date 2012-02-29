@@ -86,7 +86,7 @@ js_PutCallObject(StackFrame *fp)
         JS_ASSERT(script == callobj.getCalleeFunction()->script());
         JS_ASSERT(script == fun->script());
 
-        uintN n = bindings.countArgsAndVars();
+        unsigned n = bindings.countArgsAndVars();
         if (n > 0) {
             uint32_t nvars = bindings.countVars();
             uint32_t nargs = bindings.countArgs();
@@ -301,7 +301,7 @@ CallObject::getArgOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
     JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16_t) JSID_TO_INT(id);
+    unsigned i = (uint16_t) JSID_TO_INT(id);
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         *vp = fp->formalArg(i);
@@ -315,7 +315,7 @@ CallObject::setArgOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value
 {
     CallObject &callobj = obj->asCall();
     JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16_t) JSID_TO_INT(id);
+    unsigned i = (uint16_t) JSID_TO_INT(id);
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         fp->formalArg(i) = *vp;
@@ -337,7 +337,7 @@ CallObject::getUpvarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
     JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16_t) JSID_TO_INT(id);
+    unsigned i = (uint16_t) JSID_TO_INT(id);
 
     *vp = callobj.getCallee()->toFunction()->getFlatClosureUpvar(i);
     return true;
@@ -348,7 +348,7 @@ CallObject::setUpvarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Val
 {
     CallObject &callobj = obj->asCall();
     JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16_t) JSID_TO_INT(id);
+    unsigned i = (uint16_t) JSID_TO_INT(id);
 
     callobj.getCallee()->toFunction()->setFlatClosureUpvar(i, *vp);
     return true;
@@ -359,7 +359,7 @@ CallObject::getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
     JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16_t) JSID_TO_INT(id);
+    unsigned i = (uint16_t) JSID_TO_INT(id);
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         *vp = fp->varSlot(i);
@@ -374,7 +374,7 @@ CallObject::setVarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value
     CallObject &callobj = obj->asCall();
 
     JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16_t) JSID_TO_INT(id);
+    unsigned i = (uint16_t) JSID_TO_INT(id);
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         fp->varSlot(i) = *vp;
@@ -392,7 +392,7 @@ CallObject::setVarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value
 }
 
 static JSBool
-call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
+call_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObject **objp)
 {
     JS_ASSERT(!obj->getProto());
 
@@ -541,7 +541,7 @@ static JSBool
 with_LookupGeneric(JSContext *cx, JSObject *obj, jsid id, JSObject **objp, JSProperty **propp)
 {
     /* Fixes bug 463997 */
-    uintN flags = cx->resolveFlags;
+    unsigned flags = cx->resolveFlags;
     if (flags == RESOLVE_INFER)
         flags = js_InferFlags(cx, flags);
     flags |= JSRESOLVE_WITH;
@@ -623,49 +623,49 @@ with_SetSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *vp, JSBool s
 }
 
 static JSBool
-with_GetGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+with_GetGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp)
 {
     return obj->asWith().object().getGenericAttributes(cx, id, attrsp);
 }
 
 static JSBool
-with_GetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+with_GetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp)
 {
     return obj->asWith().object().getPropertyAttributes(cx, name, attrsp);
 }
 
 static JSBool
-with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp)
+with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp)
 {
     return obj->asWith().object().getElementAttributes(cx, index, attrsp);
 }
 
 static JSBool
-with_GetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
+with_GetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp)
 {
     return obj->asWith().object().getSpecialAttributes(cx, sid, attrsp);
 }
 
 static JSBool
-with_SetGenericAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
+with_SetGenericAttributes(JSContext *cx, JSObject *obj, jsid id, unsigned *attrsp)
 {
     return obj->asWith().object().setGenericAttributes(cx, id, attrsp);
 }
 
 static JSBool
-with_SetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uintN *attrsp)
+with_SetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, unsigned *attrsp)
 {
     return obj->asWith().object().setPropertyAttributes(cx, name, attrsp);
 }
 
 static JSBool
-with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp)
+with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, unsigned *attrsp)
 {
     return obj->asWith().object().setElementAttributes(cx, index, attrsp);
 }
 
 static JSBool
-with_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *attrsp)
+with_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, unsigned *attrsp)
 {
     return obj->asWith().object().setSpecialAttributes(cx, sid, attrsp);
 }
@@ -834,7 +834,7 @@ block_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * check) certain invariants about obj.
      */
     ClonedBlockObject &block = obj->asClonedBlock();
-    uintN index = (uintN) JSID_TO_INT(id);
+    unsigned index = (unsigned) JSID_TO_INT(id);
     JS_ASSERT(index < block.slotCount());
 
     if (StackFrame *fp = block.maybeStackFrame()) {
@@ -854,7 +854,7 @@ static JSBool
 block_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     ClonedBlockObject &block = obj->asClonedBlock();
-    uintN index = (uintN) JSID_TO_INT(id);
+    unsigned index = (unsigned) JSID_TO_INT(id);
     JS_ASSERT(index < block.slotCount());
 
     if (StackFrame *fp = block.maybeStackFrame()) {
@@ -893,7 +893,7 @@ StaticBlockObject::create(JSContext *cx)
 }
 
 const Shape *
-StaticBlockObject::addVar(JSContext *cx, jsid id, intN index, bool *redeclared)
+StaticBlockObject::addVar(JSContext *cx, jsid id, int index, bool *redeclared)
 {
     JS_ASSERT(JSID_IS_ATOM(id) || (JSID_IS_INT(id) && JSID_TO_INT(id) == index));
 
@@ -1007,7 +1007,7 @@ js::XDRStaticBlockObject(JSXDRState *xdr, JSScript *script, StaticBlockObject **
          * XDR the block object's properties. We know that there are 'count'
          * properties to XDR, stored as id/shortid pairs.
          */
-        for (uintN i = 0; i < count; i++) {
+        for (unsigned i = 0; i < count; i++) {
             JSAtom *atom;
             if (!js_XDRAtom(xdr, &atom))
                 return false;
@@ -1036,10 +1036,10 @@ js::XDRStaticBlockObject(JSXDRState *xdr, JSScript *script, StaticBlockObject **
          * XDR the block object's properties. We know that there are 'count'
          * properties to XDR, stored as id/shortid pairs.
          */
-        for (uintN i = 0; i < count; i++) {
+        for (unsigned i = 0; i < count; i++) {
             const Shape *shape = shapes[i];
             JS_ASSERT(shape->getter() == block_getProperty);
-            JS_ASSERT(uintN(shape->shortid()) == i);
+            JS_ASSERT(unsigned(shape->shortid()) == i);
 
             jsid propid = shape->propid();
             JS_ASSERT(JSID_IS_ATOM(propid) || JSID_IS_INT(propid));

@@ -435,15 +435,18 @@ var gEditItemOverlay = {
           tagsToAdd.push(tags[i]);
       }
 
-      if (tagsToRemove.length > 0)
-        txns.push(PlacesUIUtils.ptm.untagURI(this._uri, tagsToRemove));
-      if (tagsToAdd.length > 0)
-        txns.push(PlacesUIUtils.ptm.tagURI(this._uri, tagsToAdd));
+      if (tagsToRemove.length > 0) {
+        let untagTxn = new PlacesUntagURITransaction(this._uri, tagsToRemove);
+        txns.push(untagTxn);
+      }
+      if (tagsToAdd.length > 0) {
+        let tagTxn = new PlacesTagURITransaction(this._uri, tagsToAdd);
+        txns.push(tagTxn);
+      }
 
       if (txns.length > 0) {
-        var aggregate = PlacesUIUtils.ptm.aggregateTransactions("Update tags",
-                                                                txns);
-        PlacesUIUtils.ptm.doTransaction(aggregate);
+        let aggregate = new PlacesAggregatedTransaction("Update tags", txns);
+        PlacesUtils.transactionManager.doTransaction(aggregate);
 
         // Ensure the tagsField is in sync, clean it up from empty tags
         var tags = PlacesUtils.tagging.getTagsForURI(this._uri).join(", ");
@@ -495,25 +498,31 @@ var gEditItemOverlay = {
       }
 
       if (tagsToAdd.length > 0) {
-        for (i = 0; i < this._uris.length; i++) {
-          if (tagsToAdd[i].length > 0)
-            txns.push(PlacesUIUtils.ptm.tagURI(this._uris[i], tagsToAdd[i]));
+        for (let i = 0; i < this._uris.length; i++) {
+          if (tagsToAdd[i].length > 0) {
+            let tagTxn = new PlacesTagURITransaction(this._uris[i],
+                                                     tagsToAdd[i]);
+            txns.push(tagTxn);
+          }
         }
       }
       if (tagsToRemove.length > 0) {
-        for (var i = 0; i < this._uris.length; i++)
-          txns.push(PlacesUIUtils.ptm.untagURI(this._uris[i], tagsToRemove));
+        for (let i = 0; i < this._uris.length; i++) {
+          let untagTxn = new PlacesUntagURITransaction(this._uris[i],
+                                                       tagsToRemove);
+          txns.push(untagTxn);
+        }
       }
 
       if (txns.length > 0) {
-        var aggregate = PlacesUIUtils.ptm.aggregateTransactions("Update tags",
-                                                                txns);
-        PlacesUIUtils.ptm.doTransaction(aggregate);
+        let aggregate = new PlacesAggregatedTransaction("Update tags", txns);
+        PlacesUtils.transactionManager.doTransaction(aggregate);
 
         this._allTags = tags;
         this._tags = [];
-        for (i = 0; i < this._uris.length; i++)
+        for (let i = 0; i < this._uris.length; i++) {
           this._tags[i] = PlacesUtils.tagging.getTagsForURI(this._uris[i]);
+        }
 
         // Ensure the tagsField is in sync, clean it up from empty tags
         this._initTextField("tagsField", tags, false);
@@ -528,8 +537,6 @@ var gEditItemOverlay = {
       return;
 
     var namePicker = this._element("namePicker")
-    var txns = [];
-    const ptm = PlacesUIUtils.ptm;
 
     // Here we update either the item title or its cached static title
     var newTitle = namePicker.value;
@@ -540,19 +547,21 @@ var gEditItemOverlay = {
     }
     else if (this._getItemStaticTitle() != newTitle) {
       this._mayUpdateFirstEditField("namePicker");
-      txns.push(ptm.editItemTitle(this._itemId, newTitle));
+      let txn = new PlacesEditItemTitleTransaction(this._itemId, newTitle);
+      PlacesUtils.transactionManager.doTransaction(txn);
     }
-
-    var aggregate = ptm.aggregateTransactions("Edit Item Title", txns);
-    ptm.doTransaction(aggregate);
   },
 
   onDescriptionFieldBlur: function EIO_onDescriptionFieldBlur() {
     var description = this._element("descriptionField").value;
     if (description != PlacesUIUtils.getItemDescription(this._itemId)) {
-      var txn = PlacesUIUtils.ptm
-                             .editItemDescription(this._itemId, description);
-      PlacesUIUtils.ptm.doTransaction(txn);
+      var annoObj = { name   : PlacesUIUtils.DESCRIPTION_ANNO,
+                      type   : Ci.nsIAnnotationService.TYPE_STRING,
+                      flags  : 0,
+                      value  : description,
+                      expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+      var txn = new PlacesSetItemAnnotationTransaction(this._itemId, annoObj);
+      PlacesUtils.transactionManager.doTransaction(txn);
     }
   },
 
@@ -564,8 +573,8 @@ var gEditItemOverlay = {
     catch(ex) { return; }
 
     if (!this._uri.equals(uri)) {
-      var txn = PlacesUIUtils.ptm.editBookmarkURI(this._itemId, uri);
-      PlacesUIUtils.ptm.doTransaction(txn);
+      var txn = new PlacesEditBookmarkURITransaction(this._itemId, uri);
+      PlacesUtils.transactionManager.doTransaction(txn);
       this._uri = uri;
     }
   },
@@ -573,17 +582,22 @@ var gEditItemOverlay = {
   onKeywordFieldBlur: function EIO_onKeywordFieldBlur() {
     var keyword = this._element("keywordField").value;
     if (keyword != PlacesUtils.bookmarks.getKeywordForBookmark(this._itemId)) {
-      var txn = PlacesUIUtils.ptm.editBookmarkKeyword(this._itemId, keyword);
-      PlacesUIUtils.ptm.doTransaction(txn);
+      var txn = new PlacesEditBookmarkKeywordTransaction(this._itemId, keyword);
+      PlacesUtils.transactionManager.doTransaction(txn);
     }
   },
 
   onLoadInSidebarCheckboxCommand:
   function EIO_onLoadInSidebarCheckboxCommand() {
     var loadInSidebarChecked = this._element("loadInSidebarCheckbox").checked;
-    var txn = PlacesUIUtils.ptm.setLoadInSidebar(this._itemId,
-                                                 loadInSidebarChecked);
-    PlacesUIUtils.ptm.doTransaction(txn);
+    var annoObj = { name   : PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
+                    type   : Ci.nsIAnnotationService.TYPE_INT32,
+                    flags  : 0,
+                    value  : loadInSidebarChecked,
+                    expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+    var txn = new PlacesSetItemAnnotationTransaction(this._itemId,
+                                                     annoObj);
+    PlacesUtils.transactionManager.doTransaction(txn);
   },
 
   toggleFolderTreeVisibility: function EIO_toggleFolderTreeVisibility() {
@@ -672,8 +686,10 @@ var gEditItemOverlay = {
     // Move the item
     var container = this._getFolderIdFromMenuList();
     if (PlacesUtils.bookmarks.getFolderIdForItem(this._itemId) != container) {
-      var txn = PlacesUIUtils.ptm.moveItem(this._itemId, container, -1);
-      PlacesUIUtils.ptm.doTransaction(txn);
+      var txn = new PlacesMoveItemTransaction(this._itemId, 
+                                              container, 
+                                              PlacesUtils.bookmarks.DEFAULT_INDEX);
+      PlacesUtils.transactionManager.doTransaction(txn);
 
       // Mark the containing folder as recently-used if it isn't in the
       // static list
@@ -720,15 +736,17 @@ var gEditItemOverlay = {
     var anno = this._getLastUsedAnnotationObject(false);
     while (this._recentFolders.length > MAX_FOLDER_ITEM_IN_MENU_LIST) {
       var folderId = this._recentFolders.pop().folderId;
-      txns.push(PlacesUIUtils.ptm.setItemAnnotation(folderId, anno));
+      let annoTxn = new PlacesSetItemAnnotationTransaction(folderId, anno);
+      txns.push(annoTxn);
     }
 
     // Mark folder as recently used
     anno = this._getLastUsedAnnotationObject(true);
-    txns.push(PlacesUIUtils.ptm.setItemAnnotation(aFolderId, anno));
+    let annoTxn = new PlacesSetItemAnnotationTransaction(aFolderId, anno);
+    txns.push(annoTxn);
 
-    var aggregate = PlacesUIUtils.ptm.aggregateTransactions("Update last used folders", txns);
-    PlacesUIUtils.ptm.doTransaction(aggregate);
+    let aggregate = new PlacesAggregatedTransaction("Update last used folders", txns);
+    PlacesUtils.transactionManager.doTransaction(aggregate);
   },
 
   /**
@@ -840,8 +858,8 @@ var gEditItemOverlay = {
 
     // XXXmano: add a separate "New Folder" string at some point...
     var defaultLabel = this._element("newFolderButton").label;
-    var txn = PlacesUIUtils.ptm.createFolder(defaultLabel, ip.itemId, ip.index);
-    PlacesUIUtils.ptm.doTransaction(txn);
+    var txn = new PlacesCreateFolderTransaction(defaultLabel, ip.itemId, ip.index);
+    PlacesUtils.transactionManager.doTransaction(txn);
     this._folderTree.focus();
     this._folderTree.selectItems([this._lastNewItem]);
     this._folderTree.startEditing(this._folderTree.view.selection.currentIndex,
