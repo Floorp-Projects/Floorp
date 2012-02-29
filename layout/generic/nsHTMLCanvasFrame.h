@@ -40,7 +40,7 @@
 #ifndef nsHTMLCanvasFrame_h___
 #define nsHTMLCanvasFrame_h___
 
-#include "nsContainerFrame.h"
+#include "nsSplittableFrame.h"
 #include "nsString.h"
 #include "nsAString.h"
 #include "nsIIOService.h"
@@ -52,7 +52,7 @@ class nsDisplayItem;
 
 nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsHTMLCanvasFrame : public nsContainerFrame
+class nsHTMLCanvasFrame : public nsSplittableFrame
 {
 public:
   typedef mozilla::layers::Layer Layer;
@@ -60,7 +60,7 @@ public:
 
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsHTMLCanvasFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+  nsHTMLCanvasFrame(nsStyleContext* aContext) : nsSplittableFrame(aContext) {}
 
   NS_IMETHOD Init(nsIContent* aContent,
                   nsIFrame*   aParent,
@@ -107,11 +107,6 @@ public:
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-
-  // Inserted child content gets its frames parented by our child block
-  virtual nsIFrame* GetContentInsertionFrame() {
-    return GetFirstPrincipalChild()->GetContentInsertionFrame();
-  }
 
 protected:
   virtual ~nsHTMLCanvasFrame();
