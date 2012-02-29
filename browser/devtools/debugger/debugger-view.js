@@ -1074,9 +1074,25 @@ DebuggerView.Scripts = {
    *
    * @param string aUrl
    *        The script URL.
+   * @return boolean
    */
   contains: function DVS_contains(aUrl) {
     if (this._scripts.getElementsByAttribute("value", aUrl).length > 0) {
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Checks whether the script with the specified label is among the scripts
+   * known to the debugger and shown in the list.
+   *
+   * @param string aLabel
+   *        The script label.
+   * @return boolean
+   */
+  containsLabel: function DVS_containsLabel(aLabel) {
+    if (this._scripts.getElementsByAttribute("label", aLabel).length > 0) {
       return true;
     }
     return false;
@@ -1109,30 +1125,30 @@ DebuggerView.Scripts = {
         break;
       }
     }
-   },
+  },
 
   /**
    * Adds a script to the scripts container.
    * If the script already exists (was previously added), null is returned.
    * Otherwise, the newly created element is returned.
    *
-   * @param string aUrl
-   *        The script url.
+   * @param string aLabel
+   *        The simplified script location to be shown.
    * @param string aScript
    *        The source script.
-   * @param string aScriptNameText
-   *        Optional, title displayed instead of url.
    * @return object
    *         The newly created html node representing the added script.
    */
-  addScript: function DVS_addScript(aUrl, aSource, aScriptNameText) {
+  addScript: function DVS_addScript(aLabel, aScript) {
     // make sure we don't duplicate anything
-    if (this.contains(aUrl)) {
+    if (this.containsLabel(aLabel)) {
       return null;
     }
 
-    let script = this._scripts.appendItem(aScriptNameText || aUrl, aUrl);
-    script.setUserData("sourceScript", aSource, null);
+    let script = this._scripts.appendItem(aLabel, aScript.url);
+    script.setAttribute("tooltiptext", aScript.url);
+    script.setUserData("sourceScript", aScript, null);
+
     this._scripts.selectedItem = script;
     return script;
   },
