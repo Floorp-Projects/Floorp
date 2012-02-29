@@ -2314,7 +2314,7 @@ SetJumpOffsetAt(BytecodeEmitter *bce, ptrdiff_t off)
  * LLVM is deciding to inline this function which uses a lot of stack space
  * into EmitTree which is recursive and uses relatively little stack space.
  */
-moz_NEVER_INLINE static JSBool
+MOZ_NEVER_INLINE static JSBool
 EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JSOp switchOp;
