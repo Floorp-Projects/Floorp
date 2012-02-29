@@ -227,8 +227,8 @@ public class LayerController {
         setForceRedraw();
 
         if (mLayerClient != null) {
-            notifyLayerClientOfGeometryChange();
             mLayerClient.viewportSizeChanged();
+            notifyLayerClientOfGeometryChange();
         }
 
         mPanZoomController.abortAnimation();
