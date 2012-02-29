@@ -343,7 +343,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
             }
             if (fp->isScriptFrame()) {
                 frame.filename = fp->script()->filename;
-                frame.ulineno = PCToLineNumber(fp->script(), i.pc());
+                frame.ulineno = js_PCToLineNumber(cx, fp->script(), i.pc());
             } else {
                 frame.ulineno = 0;
                 frame.filename = NULL;
@@ -783,7 +783,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
         if (!ToUint32(cx, args[2], &lineno))
             return false;
     } else {
-        lineno = iter.done() ? 0 : PCToLineNumber(iter.fp()->script(), iter.pc());
+        lineno = iter.done() ? 0 : js_PCToLineNumber(cx, iter.fp()->script(), iter.pc());
     }
 
     int exnType = args.callee().toFunction()->getExtendedSlot(0).toInt32();
