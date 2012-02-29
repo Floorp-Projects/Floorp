@@ -1426,17 +1426,20 @@ typedef JSBool
 (* JSContextCallback)(JSContext *cx, unsigned contextOp);
 
 typedef enum JSGCStatus {
-    /* These callbacks happen outside the GC lock. */
     JSGC_BEGIN,
-    JSGC_END,
-
-    /* These callbacks happen within the GC lock. */
-    JSGC_MARK_END,
-    JSGC_FINALIZE_END
+    JSGC_END
 } JSGCStatus;
 
-typedef JSBool
-(* JSGCCallback)(JSContext *cx, JSGCStatus status);
+typedef void
+(* JSGCCallback)(JSRuntime *rt, JSGCStatus status);
+
+typedef enum JSFinalizeStatus {
+    JSFINALIZE_START,
+    JSFINALIZE_END
+} JSFinalizeStatus;
+
+typedef void
+(* JSFinalizeCallback)(JSContext *cx, JSFinalizeStatus status);
 
 /*
  * Generic trace operation that calls JS_CallTracer on each traceable thing
@@ -3119,7 +3122,6 @@ typedef void
 
 struct JSTracer {
     JSRuntime           *runtime;
-    JSContext           *context;
     JSTraceCallback     callback;
     JSTraceNamePrinter  debugPrinter;
     const void          *debugPrintArg;
@@ -3218,7 +3220,7 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
  * API for JSTraceCallback implementations.
  */
 extern JS_PUBLIC_API(void)
-JS_TracerInit(JSTracer *trc, JSContext *cx, JSTraceCallback callback);
+JS_TracerInit(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);
 
 extern JS_PUBLIC_API(void)
 JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind);
@@ -3251,7 +3253,7 @@ JS_GetTraceEdgeName(JSTracer *trc, char *buffer, int bufferSize);
  * thingToIgnore:   thing to ignore during the graph traversal when non-null.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, JSGCTraceKind kind,
+JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind kind,
             void *thingToFind, size_t maxDepth, void *thingToIgnore);
 
 #endif
@@ -3268,11 +3270,11 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp);
 extern JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx);
 
-extern JS_PUBLIC_API(JSGCCallback)
-JS_SetGCCallback(JSContext *cx, JSGCCallback cb);
+extern JS_PUBLIC_API(void)
+JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb);
 
-extern JS_PUBLIC_API(JSGCCallback)
-JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
+extern JS_PUBLIC_API(void)
+JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsGCMarkingTracer(JSTracer *trc);
@@ -3707,6 +3709,9 @@ JS_IsExtensible(JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsNative(JSObject *obj);
+
+extern JS_PUBLIC_API(JSRuntime *)
+JS_GetObjectRuntime(JSObject *obj);
 
 /*
  * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default
