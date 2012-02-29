@@ -88,7 +88,8 @@ struct Statistics {
     void beginSlice(JSCompartment *comp, gcreason::Reason reason);
     void endSlice();
 
-    void reset() { wasReset = true; }
+    void reset(const char *reason) { slices.back().resetReason = reason; }
+    void nonincremental(const char *reason) { nonincrementalReason = reason; }
 
     void count(Stat s) {
         JS_ASSERT(s < STAT_LIMIT);
@@ -104,16 +105,17 @@ struct Statistics {
     bool fullFormat;
 
     JSCompartment *compartment;
-    bool wasReset;
+    const char *nonincrementalReason;
 
     struct SliceData {
         SliceData(gcreason::Reason reason, int64_t start)
-          : reason(reason), start(start)
+          : reason(reason), resetReason(NULL), start(start)
         {
             PodArrayZero(phaseTimes);
         }
 
         gcreason::Reason reason;
+        const char *resetReason;
         int64_t start, end;
         int64_t phaseTimes[PHASE_LIMIT];
 

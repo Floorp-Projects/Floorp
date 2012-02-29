@@ -1995,6 +1995,9 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
       case JS_TELEMETRY_GC_INCREMENTAL_DISABLED:
         Telemetry::Accumulate(Telemetry::GC_INCREMENTAL_DISABLED, sample);
         break;
+      case JS_TELEMETRY_GC_NON_INCREMENTAL:
+        Telemetry::Accumulate(Telemetry::GC_NON_INCREMENTAL, sample);
+        break;
     }
 }
 
