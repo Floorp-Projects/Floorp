@@ -1571,18 +1571,28 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 unsigned
-js::PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc)
+js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    unsigned lineno = startLine;
+    /* Cope with StackFrame.pc value prior to entering js_Interpret. */
+    if (!pc)
+        return 0;
 
     /*
-     * Walk through source notes accumulating their deltas, keeping track of
-     * line-number notes, until we pass the note for pc's offset within
-     * script->code.
+     * Special case: function definition needs no line number note because
+     * the function's script contains its starting line number.
      */
+    if (*pc == JSOP_DEFFUN)
+        return script->getFunction(GET_UINT32_INDEX(pc))->script()->lineno;
+
+    /*
+     * General case: walk through source notes accumulating their deltas,
+     * keeping track of line-number notes, until we pass the note for pc's
+     * offset within script->code.
+     */
+    unsigned lineno = script->lineno;
     ptrdiff_t offset = 0;
-    ptrdiff_t target = pc - code;
-    for (jssrcnote *sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+    ptrdiff_t target = pc - script->code;
+    for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         offset += SN_DELTA(sn);
         SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE) {
@@ -1595,18 +1605,7 @@ js::PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbyt
         if (offset > target)
             break;
     }
-
     return lineno;
-}
-
-unsigned
-js::PCToLineNumber(JSScript *script, jsbytecode *pc)
-{
-    /* Cope with StackFrame.pc value prior to entering js_Interpret. */
-    if (!pc)
-        return 0;
-
-    return PCToLineNumber(script->lineno, script->notes(), script->code, pc);
 }
 
 /* The line number limit is the same as the jssrcnote offset limit. */
@@ -1681,7 +1680,7 @@ namespace js {
 unsigned
 CurrentLine(JSContext *cx)
 {
-    return PCToLineNumber(cx->fp()->script(), cx->regs().pc);
+    return js_PCToLineNumber(cx, cx->fp()->script(), cx->regs().pc);
 }
 
 void
@@ -1701,7 +1700,7 @@ CurrentScriptFileLineOriginSlow(JSContext *cx, const char **file, unsigned *line
 
     JSScript *script = iter.fp()->script();
     *file = script->filename;
-    *linenop = PCToLineNumber(iter.fp()->script(), iter.pc());
+    *linenop = js_PCToLineNumber(cx, iter.fp()->script(), iter.pc());
     *origin = script->originPrincipals;
 }
 

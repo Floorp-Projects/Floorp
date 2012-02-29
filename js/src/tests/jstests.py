@@ -3,7 +3,7 @@
 # Test harness for JSTests, controlled by manifest files.
 
 import datetime, os, sys
-from subprocess import list2cmdline, call
+from subprocess import list2cmdline
 
 from results import NullTestOutput
 from tests import TestCase

@@ -485,16 +485,6 @@ struct JSDumpHeapTracer : public JSTracer {
 static void
 DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
-static char
-MarkDescriptor(void *thing)
-{
-    gc::Cell *cell = static_cast<gc::Cell*>(thing);
-    if (cell->isMarked(gc::BLACK))
-        return cell->isMarked(gc::GRAY) ? 'G' : 'B';
-    else
-        return cell->isMarked(gc::GRAY) ? 'X' : 'W';
-}
-
 static void
 DumpHeapPushIfNew(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
