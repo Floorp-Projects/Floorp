@@ -437,7 +437,9 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
       mOGLManager->BindAndDrawQuadWithTextureRect(program,
                                                   nsIntRect(0, 0, mTexImage->GetTileRect().width,
                                                                   mTexImage->GetTileRect().height),
-                                                  mTexImage->GetTileRect().Size());
+                                                  mTexImage->GetTileRect().Size(),
+                                                  mTexImage->GetWrapMode(),
+                                                  mNeedsYFlip);
     } while (mTexImage->NextTile());
   }
 }

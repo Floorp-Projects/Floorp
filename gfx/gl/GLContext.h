@@ -1345,8 +1345,12 @@ public:
     struct RectTriangles {
         RectTriangles() { }
 
+        // Always pass texture coordinates upright. If you want to flip the
+        // texture coordinates emitted to the tex_coords array, set flip_y to
+        // true.
         void addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
-                     GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1);
+                     GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1,
+                     bool flip_y = false);
 
         /**
          * these return a float pointer to the start of each array respectively.
@@ -1377,7 +1381,8 @@ public:
      * Decompose drawing the possibly-wrapped aTexCoordRect rectangle
      * of a texture of aTexSize into one or more rectangles (represented
      * as 2 triangles) and associated tex coordinates, such that
-     * we don't have to use the REPEAT wrap mode.
+     * we don't have to use the REPEAT wrap mode. If aFlipY is true, the
+     * texture coordinates will be specified vertically flipped.
      *
      * The resulting triangle vertex coordinates will be in the space of
      * (0.0, 0.0) to (1.0, 1.0) -- transform the coordinates appropriately
@@ -1388,7 +1393,8 @@ public:
      */
     static void DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
                                                const nsIntSize& aTexSize,
-                                               RectTriangles& aRects);
+                                               RectTriangles& aRects,
+                                               bool aFlipY = false);
 
     /**
      * Known GL extensions that can be queried by
