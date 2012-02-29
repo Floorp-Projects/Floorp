@@ -7,7 +7,7 @@ if test "$CLANG_CXX"; then
     ## returned by C functions. This is possible because we use knowledge about the ABI
     ## to typedef it to a C type with the same layout when the headers are included
     ## from C.
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-return-type-c-linkage"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-unknown-warning-option -Wno-return-type-c-linkage"
 fi
 ])
 
