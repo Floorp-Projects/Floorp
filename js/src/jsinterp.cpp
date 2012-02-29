@@ -397,7 +397,7 @@ js::OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp)
 }
 
 static JSBool
-NoSuchMethod(JSContext *cx, uintN argc, Value *vp)
+NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 {
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, 2, &args))
@@ -523,7 +523,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
 }
 
 bool
-js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Value *argv,
+js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, Value *argv,
            Value *rval)
 {
     InvokeArgsGuard args;
@@ -593,7 +593,7 @@ error:
 }
 
 bool
-js::InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Value *rval)
+js::InvokeConstructor(JSContext *cx, const Value &fval, unsigned argc, Value *argv, Value *rval)
 {
     InvokeArgsGuard args;
     if (!cx->stack.pushInvokeArgs(cx, argc, &args))
@@ -611,7 +611,7 @@ js::InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
 }
 
 bool
-js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc, Value *argv,
+js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, unsigned argc, Value *argv,
                          Value *rval)
 {
     /*
@@ -1005,13 +1005,13 @@ DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
 }
 
 const Value &
-js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
+js::GetUpvar(JSContext *cx, unsigned closureLevel, UpvarCookie cookie)
 {
     JS_ASSERT(closureLevel >= cookie.level() && cookie.level() > 0);
-    const uintN targetLevel = closureLevel - cookie.level();
+    const unsigned targetLevel = closureLevel - cookie.level();
 
     StackFrame *fp = FindUpvarFrame(cx, targetLevel);
-    uintN slot = cookie.slot();
+    unsigned slot = cookie.slot();
     const Value *vp;
 
     if (!fp->isFunctionFrame() || fp->isEvalFrame()) {
@@ -1031,7 +1031,7 @@ js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
 }
 
 extern StackFrame *
-js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
+js::FindUpvarFrame(JSContext *cx, unsigned targetLevel)
 {
     StackFrame *fp = cx->fp();
     while (true) {
@@ -1310,9 +1310,9 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #else /* !JS_THREADED_INTERP */
 
-    register intN switchMask = 0;
-    intN switchOp;
-    typedef GenericInterruptEnabler<intN> InterruptEnabler;
+    register int switchMask = 0;
+    int switchOp;
+    typedef GenericInterruptEnabler<int> InterruptEnabler;
     InterruptEnabler interruptEnabler(&switchMask, -1);
 
 # define DO_OP()            goto do_op
@@ -1565,7 +1565,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
       do_op:
         CHECK_PCCOUNT_INTERRUPTS();
         js::gc::MaybeVerifyBarriers(cx);
-        switchOp = intN(op) | switchMask;
+        switchOp = int(op) | switchMask;
       do_switch:
         switch (switchOp) {
 #endif
@@ -1647,7 +1647,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         JS_EXTENSION_(goto *normalJumpTable[op]);
 #else
         switchMask = moreInterrupts ? -1 : 0;
-        switchOp = intN(op);
+        switchOp = int(op);
         goto do_switch;
 #endif
     }
@@ -1929,7 +1929,7 @@ END_CASE(JSOP_AND)
 #define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(js_CodeSpec[op].length == 1);                               \
-        uintN diff_ = (uintN) GET_UINT8(regs.pc) - (uintN) JSOP_IFEQ;         \
+        unsigned diff_ = (unsigned) GET_UINT8(regs.pc) - (unsigned) JSOP_IFEQ;         \
         if (diff_ <= 1) {                                                     \
             regs.sp -= spdec;                                                 \
             if (cond == (diff_ != 0)) {                                       \
@@ -2641,7 +2641,7 @@ BEGIN_CASE(JSOP_SETELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     Value &value = regs.sp[-1];
-    if (!SetObjectElementOperation(cx, obj, id, value))
+    if (!SetObjectElementOperation(cx, obj, id, value, script->strictModeCode))
         goto error;
     regs.sp[-3] = value;
     regs.sp -= 2;
@@ -3048,7 +3048,7 @@ BEGIN_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_CALLFCSLOT)
 {
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
-    uintN index = GET_UINT16(regs.pc);
+    unsigned index = GET_UINT16(regs.pc);
     JSObject *obj = &argv[-2].toObject();
 
     PUSH_COPY(obj->toFunction()->getFlatClosureUpvar(index));
@@ -3062,7 +3062,7 @@ BEGIN_CASE(JSOP_DEFVAR)
     PropertyName *dn = atoms[GET_UINT32_INDEX(regs.pc)]->asPropertyName();
 
     /* ES5 10.5 step 8 (with subsequent errata). */
-    uintN attrs = JSPROP_ENUMERATE;
+    unsigned attrs = JSPROP_ENUMERATE;
     if (!regs.fp()->isEvalFrame())
         attrs |= JSPROP_PERMANENT;
     if (op == JSOP_DEFCONST)
@@ -3123,7 +3123,7 @@ BEGIN_CASE(JSOP_DEFFUN)
      * ECMA requires functions defined when entering Eval code to be
      * impermanent.
      */
-    uintN attrs = regs.fp()->isEvalFrame()
+    unsigned attrs = regs.fp()->isEvalFrame()
                   ? JSPROP_ENUMERATE
                   : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
@@ -3416,7 +3416,7 @@ BEGIN_CASE(JSOP_SETTER)
      * point of view.
      */
     Value rtmp;
-    uintN attrs;
+    unsigned attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &rtmp, &attrs))
         goto error;
 
@@ -3532,7 +3532,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
     LOAD_ATOM(0, atom);
     jsid id = ATOM_TO_JSID(atom);
 
-    uintN defineHow = (op == JSOP_INITMETHOD) ? DNP_SET_METHOD : 0;
+    unsigned defineHow = (op == JSOP_INITMETHOD) ? DNP_SET_METHOD : 0;
     if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
         ? !js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,

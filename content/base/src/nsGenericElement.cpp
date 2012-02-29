@@ -176,7 +176,7 @@ nsWrapperCache::RemoveExpandoObject()
   if (expando) {
     JSCompartment *compartment = js::GetObjectCompartment(expando);
     xpc::CompartmentPrivate *priv =
-      static_cast<xpc::CompartmentPrivate *>(js_GetCompartmentPrivate(compartment));
+      static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
     priv->RemoveDOMExpandoObject(expando);
   }
 }

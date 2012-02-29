@@ -53,7 +53,7 @@ using namespace js;
 namespace xpc {
 
 template <typename Base, typename Policy>
-FilteringWrapper<Base, Policy>::FilteringWrapper(uintN flags) : Base(flags)
+FilteringWrapper<Base, Policy>::FilteringWrapper(unsigned flags) : Base(flags)
 {
 }
 
@@ -111,7 +111,7 @@ FilteringWrapper<Base, Policy>::keys(JSContext *cx, JSObject *wrapper, AutoIdVec
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
+FilteringWrapper<Base, Policy>::iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *vp)
 {
     // We refuse to trigger the iterator hook across chrome wrappers because
     // we don't know how to censor custom iterator objects. Instead we trigger

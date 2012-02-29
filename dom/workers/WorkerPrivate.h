@@ -655,7 +655,7 @@ public:
   ReportError(JSContext* aCx, const char* aMessage, JSErrorReport* aReport);
 
   bool
-  SetTimeout(JSContext* aCx, uintN aArgc, jsval* aVp, bool aIsInterval);
+  SetTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp, bool aIsInterval);
 
   bool
   ClearTimeout(JSContext* aCx, uint32 aId);

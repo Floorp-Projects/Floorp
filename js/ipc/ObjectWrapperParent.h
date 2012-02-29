@@ -112,7 +112,7 @@ private:
                       jsval *statep, jsid *idp);
 
     static JSBool
-    CPOW_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+    CPOW_NewResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                     JSObject **objp);
 
     static JSBool
@@ -122,10 +122,10 @@ private:
     CPOW_Finalize(JSContext* cx, JSObject* obj);
 
     static JSBool
-    CPOW_Call(JSContext* cx, uintN argc, jsval* vp);
+    CPOW_Call(JSContext* cx, unsigned argc, jsval* vp);
 
     static JSBool
-    CPOW_Construct(JSContext *cx, uintN argc, jsval *vp);
+    CPOW_Construct(JSContext *cx, unsigned argc, jsval *vp);
     
     static JSBool
     CPOW_HasInstance(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);

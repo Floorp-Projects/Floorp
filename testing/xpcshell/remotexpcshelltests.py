@@ -117,9 +117,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         local = os.path.join(localBin, "xpcshell")
         self.device.pushFile(local, self.remoteBinDir)
 
-        local = os.path.join(localBin, "plugin-container")
-        self.device.pushFile(local, self.remoteBinDir)
-
         local = os.path.join(localBin, "components/httpd.js")
         self.device.pushFile(local, self.remoteComponentsDir)
 
@@ -206,46 +203,40 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         return self.profileDir
 
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
-        # Some xpcshell arguments contain characters that are interpretted
-        # by the adb shell; enclose these arguments in quotes.
-        index = 0
-        for part in cmd:
-          if (part.find(" ")>=0 or part.find("(")>=0 or part.find(")")>=0 or part.find("\"")>=0):
-            part = '\''+part+'\''
-            cmd[index] = part
-          index = index + 1
-
-        xpcshell = self.remoteJoin(self.remoteBinDir, "xpcshell")
-
-        shellArgs = "cd "+self.remoteHere
-        shellArgs += "; LD_LIBRARY_PATH="+self.remoteBinDir
-        shellArgs += "; export MOZ_LINKER_CACHE="+self.remoteBinDir
+        cmd[0] = self.remoteJoin(self.remoteBinDir, "xpcshell")
+        env = dict()
+        env["LD_LIBRARY_PATH"]=self.remoteBinDir
+        env["MOZ_LINKER_CACHE"]=self.remoteBinDir
         if (self.appRoot):
-          # xpcshell still runs without GRE_HOME; it may not be necessary
-          shellArgs += "; export GRE_HOME="+self.appRoot
-        shellArgs += "; export XPCSHELL_TEST_PROFILE_DIR="+self.profileDir
-        shellArgs += "; "+xpcshell+" "
-        shellArgs += " ".join(cmd[1:])
-
-        if self.verbose:
-          self.log.info(shellArgs)
-
-        # If the adb version of devicemanager is used and the arguments passed
-        # to adb exceed ~1024 characters, the command may not execute.
-        if len(shellArgs) > 1000:
-          self.log.info("adb command length is excessive and may cause failure")
-
-        proc = self.device.runCmd(["shell", shellArgs])
-        return proc
+          env["GRE_HOME"]=self.appRoot
+        env["XPCSHELL_TEST_PROFILE_DIR"]=self.profileDir
+        outputFile = "xpcshelloutput"
+        f = open(outputFile, "w+")
+        self.shellReturnCode = self.device.shell(cmd, f, cwd=self.remoteHere, env=env)
+        f.close()
+        # The device manager may have timed out waiting for xpcshell. 
+        # Guard against an accumulation of hung processes by killing
+        # them here. Note also that IPC tests may spawn new instances
+        # of xpcshell.
+        self.device.killProcess(cmd[0]);
+        self.device.killProcess("xpcshell");
+        return outputFile
 
     def communicate(self, proc):
-        return proc.communicate()
+        f = open(proc, "r")
+        contents = f.read()
+        f.close()
+        os.remove(proc)
+        return contents, ""
+
+    def getReturnCode(self, proc):
+        if self.shellReturnCode is not None:
+          return int(self.shellReturnCode)
+        else:
+          return -1
 
     def removeDir(self, dirname):
         self.device.removeDir(dirname)
-
-    def getReturnCode(self, proc):
-        return proc.returncode
 
     #TODO: consider creating a separate log dir.  We don't have the test file structure,
     #      so we use filename.log.  Would rather see ./logs/filename.log
