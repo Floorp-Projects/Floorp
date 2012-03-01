@@ -14,7 +14,7 @@
 #define mozilla_BloomFilter_h_
 
 #include "mozilla/Likely.h"
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
 
 #include <string.h>
