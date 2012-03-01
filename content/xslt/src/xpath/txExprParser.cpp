@@ -938,7 +938,7 @@ txExprParser::resolveQName(const nsAString& aQName,
     *aPrefix = 0;
     if (aIsNameTest && aContext->caseInsensitiveNameTests()) {
         nsAutoString lcname;
-        nsContentUtils::ASCIIToLower(aQName, lcname);
+        TX_ToLowerCase(aQName, lcname);
         *aLocalName = NS_NewAtom(lcname);
     }
     else {
