@@ -408,9 +408,10 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
     nsISelectionController* selcon = textControl->GetSelectionController();
     if (selcon) {
       selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-      if (!selection)
-        return NS_OK;
     }
+
+    if (!selection)
+      return NS_OK;
   }
   else {
     mWindow->GetSelection(getter_AddRefs(selection));
@@ -449,11 +450,14 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
     return NS_OK;
 
   if (isChromeShell && textControl) {
-    // Only use the selection if it isn't collapsed.
-    bool isCollapsed = false;
-    selection->GetIsCollapsed(&isCollapsed);
-    if (!isCollapsed)
-      selection.swap(*aSelection);
+    // Only use the selection if the target node is in the selection.
+    bool selectionContainsTarget = false;
+    nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(mSelectionTargetNode);
+    selection->ContainsNode(targetNode, false, &selectionContainsTarget);
+    if (!selectionContainsTarget)
+      return NS_OK;
+
+    selection.swap(*aSelection);
   }
   else {
     // In content shells, a number of checks are made below to determine

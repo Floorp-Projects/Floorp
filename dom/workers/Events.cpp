@@ -238,7 +238,7 @@ protected:
 
 private:
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -280,7 +280,7 @@ private:
   }
 
   static JSBool
-  StopPropagation(JSContext* aCx, uintN aArgc, jsval* aVp)
+  StopPropagation(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -298,7 +298,7 @@ private:
   }
 
   static JSBool
-  StopImmediatePropagation(JSContext* aCx, uintN aArgc, jsval* aVp)
+  StopImmediatePropagation(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -316,7 +316,7 @@ private:
   }
   
   static JSBool
-  PreventDefault(JSContext* aCx, uintN aArgc, jsval* aVp)
+  PreventDefault(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -336,7 +336,7 @@ private:
   }
 
   static JSBool
-  InitEvent(JSContext* aCx, uintN aArgc, jsval* aVp)
+  InitEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -522,7 +522,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -587,7 +587,7 @@ private:
   }
 
   static JSBool
-  InitMessageEvent(JSContext* aCx, uintN aArgc, jsval* aVp)
+  InitMessageEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -738,7 +738,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -772,7 +772,7 @@ private:
   }
 
   static JSBool
-  InitErrorEvent(JSContext* aCx, uintN aArgc, jsval* aVp)
+  InitErrorEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -919,7 +919,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -953,7 +953,7 @@ private:
   }
 
   static JSBool
-  InitProgressEvent(JSContext* aCx, uintN aArgc, jsval* aVp)
+  InitProgressEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {

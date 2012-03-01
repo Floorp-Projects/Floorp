@@ -73,7 +73,6 @@ body {
   border-bottom: 2px solid;
   -moz-border-bottom-colors: #ffffff #bac2ac;
   position: relative;
-  height: 86px;
 }
 
 .addon-item[isDisabled="true"] {
@@ -89,9 +88,8 @@ body {
 
 .inner {
   background-image: url("chrome://browser/skin/images/row-bg-light.png");
-  height: 100%;
-  -moz-padding-start: 8px;
-  -moz-padding-end: 8px;
+  min-height: 70px;
+  padding: 8px;
 
   /* make room for the favicon */
   -moz-margin-start: 82px;
@@ -99,7 +97,6 @@ body {
 
 .details {
   width: 100%;
-  padding-top: 8px;
 }
 
 .details > div {

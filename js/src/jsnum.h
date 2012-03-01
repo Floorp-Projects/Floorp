@@ -323,7 +323,7 @@ ValueToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 }
 
 JSBool
-num_parseInt(JSContext *cx, uintN argc, Value *vp);
+num_parseInt(JSContext *cx, unsigned argc, Value *vp);
 
 }  /* namespace js */
 
@@ -599,7 +599,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
           const jschar **ep, double *dp);
 
 extern JSBool
-js_num_valueOf(JSContext *cx, uintN argc, js::Value *vp);
+js_num_valueOf(JSContext *cx, unsigned argc, js::Value *vp);
 
 namespace js {
 

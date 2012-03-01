@@ -233,7 +233,7 @@ RilClient::OnFileCanReadWithoutBlocking(int fd)
     while (true) {
         if (!mIncoming) {
             mIncoming = new RilRawData();
-            int ret = read(fd, mIncoming->mData, 1024);
+            int ret = read(fd, mIncoming->mData, RilRawData::MAX_DATA_SIZE);
             if (ret <= 0) {
                 LOG("Cannot read from network, error %d\n", ret);
                 // At this point, assume that we can't actually access
@@ -247,7 +247,7 @@ RilClient::OnFileCanReadWithoutBlocking(int fd)
             }
             mIncoming->mSize = ret;
             sConsumer->MessageReceived(mIncoming.forget());
-            if (ret < 1024) {
+            if (ret < RilRawData::MAX_DATA_SIZE) {
                 return;
             }
         }

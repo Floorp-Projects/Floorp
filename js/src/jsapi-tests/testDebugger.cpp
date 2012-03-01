@@ -271,7 +271,7 @@ BEGIN_TEST(testDebugger_singleStepThrow)
     }
 
     static JSBool
-    setStepMode(JSContext *cx, uintN argc, jsval *vp)
+    setStepMode(JSContext *cx, unsigned argc, jsval *vp)
     {
         JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
         JS_ASSERT(fp);

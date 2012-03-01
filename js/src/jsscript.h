@@ -203,9 +203,9 @@ class Bindings {
     uint16_t countVars() const { return nvars; }
     uint16_t countUpvars() const { return nupvars; }
 
-    uintN countArgsAndVars() const { return nargs + nvars; }
+    unsigned countArgsAndVars() const { return nargs + nvars; }
 
-    uintN countLocalNames() const { return nargs + nvars + nupvars; }
+    unsigned countLocalNames() const { return nargs + nvars + nupvars; }
 
     bool hasUpvars() const { return nupvars > 0; }
     bool hasLocalNames() const { return countLocalNames() > 0; }
@@ -283,7 +283,7 @@ class Bindings {
      * exists, *indexp will receive the index of the corresponding argument or
      * variable.
      */
-    BindingKind lookup(JSContext *cx, JSAtom *name, uintN *indexp) const;
+    BindingKind lookup(JSContext *cx, JSAtom *name, unsigned *indexp) const;
 
     /* Convenience method to check for any binding for a name. */
     bool hasBinding(JSContext *cx, JSAtom *name) const {
@@ -853,7 +853,7 @@ struct JSScript : public js::gc::Cell {
 /* If this fails, padding_ can be removed or added. */
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);
 
-static JS_INLINE uintN
+static JS_INLINE unsigned
 StackDepth(JSScript *script)
 {
     return script->nslots - script->nfixed;
@@ -916,18 +916,21 @@ CheckScript(JSScript *script, JSScript *prev)
 extern jssrcnote *
 js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc);
 
-extern uintN
-js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
-
 extern jsbytecode *
-js_LineNumberToPC(JSScript *script, uintN lineno);
+js_LineNumberToPC(JSScript *script, unsigned lineno);
 
-extern JS_FRIEND_API(uintN)
+extern JS_FRIEND_API(unsigned)
 js_GetScriptLineExtent(JSScript *script);
 
 namespace js {
 
-extern uintN
+extern unsigned
+PCToLineNumber(JSScript *script, jsbytecode *pc);
+
+extern unsigned
+PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbytecode *pc);
+
+extern unsigned
 CurrentLine(JSContext *cx);
 
 /*
@@ -945,7 +948,7 @@ enum LineOption {
 };
 
 inline void
-CurrentScriptFileLineOrigin(JSContext *cx, uintN *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
+CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
 extern JSScript *
 CloneScript(JSContext *cx, JSScript *script);

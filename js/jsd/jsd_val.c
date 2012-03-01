@@ -397,7 +397,7 @@ jsd_GetValueWrappedJSVal(JSDContext* jsdc, JSDValue* jsdval)
 }
 
 static JSDProperty* _newProperty(JSDContext* jsdc, JSPropertyDesc* pd,
-                                 uintN additionalFlags)
+                                 unsigned additionalFlags)
 {
     JSDProperty* jsdprop;
 
@@ -444,7 +444,7 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
     JSContext* cx = jsdc->dumbContext;
     JSObject *obj;
     JSPropertyDescArray pda;
-    uintN i;
+    unsigned i;
     JSCrossCompartmentCall *call = NULL;
 
     JS_ASSERT(JS_CLIST_IS_EMPTY(&jsdval->props));
@@ -528,11 +528,11 @@ jsd_RefreshValue(JSDContext* jsdc, JSDValue* jsdval)
 
 /***************************************************************************/
 
-uintN
+unsigned
 jsd_GetCountOfProperties(JSDContext* jsdc, JSDValue* jsdval)
 {
     JSDProperty* jsdprop;
-    uintN count = 0;
+    unsigned count = 0;
 
     if(!(CHECK_BIT_FLAG(jsdval->flags, GOT_PROPS)))
         if(!_buildProps(jsdc, jsdval))
@@ -576,7 +576,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     JSDProperty* jsdprop;
     JSDProperty* iter = NULL;
     JSObject* obj;
-    uintN  attrs = 0;
+    unsigned  attrs = 0;
     JSBool found;
     JSPropertyDesc pd;
     const jschar * nameChars;
@@ -593,7 +593,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
     {
         JSString* propName = jsd_GetValueString(jsdc, jsdprop->name);
         if(propName) {
-            intN result;
+            int result;
             if (JS_CompareStrings(cx, propName, name, &result) && !result)
                 return jsdprop;
         }
@@ -878,13 +878,13 @@ jsd_GetPropertyAlias(JSDContext* jsdc, JSDProperty* jsdprop)
     return jsdprop->alias;
 }
 
-uintN
+unsigned
 jsd_GetPropertyFlags(JSDContext* jsdc, JSDProperty* jsdprop)
 {
     return jsdprop->flags;
 }
 
-uintN
+unsigned
 jsd_GetPropertyVarArgSlot(JSDContext* jsdc, JSDProperty* jsdprop)
 {
     return jsdprop->slot;

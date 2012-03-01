@@ -201,7 +201,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 {
     JS_ASSERT(cx->compartment == this);
 
-    uintN flags = 0;
+    unsigned flags = 0;
 
     JS_CHECK_RECURSION(cx, return false);
 
@@ -596,7 +596,7 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
 }
 
 void
-JSCompartment::purge(JSContext *cx)
+JSCompartment::purge()
 {
     dtoaCache.purge();
 
@@ -654,9 +654,9 @@ JSCompartment::allocMathCache(JSContext *cx)
 }
 
 bool
-JSCompartment::hasScriptsOnStack(JSContext *cx)
+JSCompartment::hasScriptsOnStack()
 {
-    for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
+    for (AllFramesIter i(rt->stackSpace); !i.done(); ++i) {
         JSScript *script = i.fp()->maybeScript();
         if (script && script->compartment() == this)
             return true;
@@ -668,7 +668,7 @@ bool
 JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
 {
     bool enabledBefore = debugMode();
-    bool enabledAfter = (debugModeBits & ~uintN(DebugFromC)) || b;
+    bool enabledAfter = (debugModeBits & ~unsigned(DebugFromC)) || b;
 
     // Debug mode can be enabled only when no scripts from the target
     // compartment are on the stack. It would even be incorrect to discard just
@@ -682,14 +682,14 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
     //
     bool onStack = false;
     if (enabledBefore != enabledAfter) {
-        onStack = hasScriptsOnStack(cx);
+        onStack = hasScriptsOnStack();
         if (b && onStack) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_IDLE);
             return false;
         }
     }
 
-    debugModeBits = (debugModeBits & ~uintN(DebugFromC)) | (b ? DebugFromC : 0);
+    debugModeBits = (debugModeBits & ~unsigned(DebugFromC)) | (b ? DebugFromC : 0);
     JS_ASSERT(debugMode() == enabledAfter);
     if (enabledBefore != enabledAfter)
         updateForDebugMode(cx);
@@ -699,27 +699,26 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b)
 void
 JSCompartment::updateForDebugMode(JSContext *cx)
 {
-    for (ThreadContextRange r(cx); !r.empty(); r.popFront()) {
-        JSContext *cx = r.front();
-        if (cx->compartment == this) 
-            cx->updateJITEnabled();
+    for (ContextIter acx(rt); !acx.done(); acx.next()) {
+        if (acx->compartment == this) 
+            acx->updateJITEnabled();
     }
 
 #ifdef JS_METHODJIT
     bool enabled = debugMode();
 
     if (enabled) {
-        JS_ASSERT(!hasScriptsOnStack(cx));
-    } else if (hasScriptsOnStack(cx)) {
+        JS_ASSERT(!hasScriptsOnStack());
+    } else if (hasScriptsOnStack()) {
         hasDebugModeCodeToDrop = true;
         return;
     }
 
     /*
      * Discard JIT code and bytecode analyses for any scripts that change
-     * debugMode. This assumes that 'comp' is in the same thread as 'cx'.
+     * debugMode.
      */
-    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->debugMode != enabled) {
             mjit::ReleaseScriptCode(cx, script);
@@ -767,7 +766,7 @@ JSCompartment::removeDebuggee(JSContext *cx,
 void
 JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler)
 {
-    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasAnyBreakpointsOrStepMode())
             script->clearBreakpointsIn(cx, dbg, handler);
@@ -777,7 +776,7 @@ JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *ha
 void
 JSCompartment::clearTraps(JSContext *cx)
 {
-    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasAnyBreakpointsOrStepMode())
             script->clearTraps(cx);

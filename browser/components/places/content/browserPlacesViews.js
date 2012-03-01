@@ -1858,13 +1858,16 @@ PlacesMenu.prototype = {
   _onPopupHidden: function PM__onPopupHidden(aEvent) {
     // Avoid handling popuphidden of inner views.
     let popup = aEvent.originalTarget;
-    if (!popup._placesNode || PlacesUIUtils.getViewForNode(popup) != this)
+    let placesNode = popup._placesNode;
+    if (!placesNode || PlacesUIUtils.getViewForNode(popup) != this)
       return;
 
     // UI performance: folder queries are cheap, keep the resultnode open
     // so we don't rebuild its contents whenever the popup is reopened.
-    if (!PlacesUtils.nodeIsFolder(popup._placesNode))
-      popup._placesNode.containerOpen = false;
+    // Though, we want to always close feed containers so their expiration
+    // status will be checked at next opening.
+    if (!PlacesUtils.nodeIsFolder(placesNode) || placesNode._feedURI)
+      placesNode.containerOpen = false;
 
     // The autoopened attribute is set for folders which have been
     // automatically opened when dragged over.  Turn off this attribute

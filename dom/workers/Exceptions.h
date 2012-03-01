@@ -89,10 +89,10 @@ bool
 InitClasses(JSContext* aCx, JSObject* aGlobal);
 
 void
-ThrowDOMExceptionForCode(JSContext* aCx, intN aCode);
+ThrowDOMExceptionForCode(JSContext* aCx, int aCode);
 
 void
-ThrowFileExceptionForCode(JSContext* aCx, intN aCode);
+ThrowFileExceptionForCode(JSContext* aCx, int aCode);
 
 } // namespace exceptions
 

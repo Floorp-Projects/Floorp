@@ -511,7 +511,7 @@ ListBase<LC>::getPrototype(JSContext *cx, XPCWrappedNativeScope *scope)
     for (size_t n = 0; n < sProtoPropertiesCount; ++n) {
         JS_ASSERT(sProtoProperties[n].getter);
         jsid id = sProtoProperties[n].id;
-        uintN attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
+        unsigned attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
         if (!sProtoProperties[n].setter)
             attrs |= JSPROP_READONLY;
         if (!JS_DefinePropertyById(cx, interfacePrototype, id, JSVAL_VOID,
@@ -682,7 +682,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
 
     JSObject *expando;
     if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = getExpandoObject(proxy))) {
-        uintN flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
+        unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
         if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc))
             return false;
         if (desc->obj) {
@@ -756,7 +756,7 @@ ListBase<LC>::ensureExpandoObject(JSContext *cx, JSObject *obj)
 
         JSCompartment *compartment = js::GetObjectCompartment(obj);
         xpc::CompartmentPrivate *priv =
-            static_cast<xpc::CompartmentPrivate *>(js_GetCompartmentPrivate(compartment));
+            static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
         if (!priv->RegisterDOMExpandoObject(expando))
             return NULL;
 
@@ -1250,7 +1250,7 @@ ListBase<LC>::keys(JSContext *cx, JSObject *proxy, AutoIdVector &props)
 
 template<class LC>
 bool
-ListBase<LC>::iterate(JSContext *cx, JSObject *proxy, uintN flags, Value *vp)
+ListBase<LC>::iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp)
 {
     if (flags == JSITER_FOR_OF) {
         JSObject *iterobj = JS_NewElementIterator(cx, proxy);
