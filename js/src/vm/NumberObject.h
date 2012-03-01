@@ -50,10 +50,10 @@ namespace js {
 class NumberObject : public JSObject
 {
     /* Stores this Number object's [[PrimitiveValue]]. */
-    static const uintN PRIMITIVE_VALUE_SLOT = 0;
+    static const unsigned PRIMITIVE_VALUE_SLOT = 0;
 
   public:
-    static const uintN RESERVED_SLOTS = 1;
+    static const unsigned RESERVED_SLOTS = 1;
 
     /*
      * Creates a new Number object boxing the given number.  The object's

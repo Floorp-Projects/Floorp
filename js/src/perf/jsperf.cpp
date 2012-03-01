@@ -52,7 +52,7 @@ static PerfMeasurement* GetPMFromThis(JSContext* cx, jsval* vp);
 // Constructor and destructor
 
 static JSBool
-pm_construct(JSContext* cx, uintN argc, jsval* vp)
+pm_construct(JSContext* cx, unsigned argc, jsval* vp)
 {
     uint32_t mask;
     if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "u", &mask))
@@ -112,7 +112,7 @@ GETTER(eventsMeasured)
 // Calls
 
 static JSBool
-pm_start(JSContext* cx, uintN /*unused*/, jsval* vp)
+pm_start(JSContext* cx, unsigned /*unused*/, jsval* vp)
 {
     PerfMeasurement* p = GetPMFromThis(cx, vp);
     if (!p)
@@ -123,7 +123,7 @@ pm_start(JSContext* cx, uintN /*unused*/, jsval* vp)
 }
 
 static JSBool
-pm_stop(JSContext* cx, uintN /*unused*/, jsval* vp)
+pm_stop(JSContext* cx, unsigned /*unused*/, jsval* vp)
 {
     PerfMeasurement* p = GetPMFromThis(cx, vp);
     if (!p)
@@ -134,7 +134,7 @@ pm_stop(JSContext* cx, uintN /*unused*/, jsval* vp)
 }
 
 static JSBool
-pm_reset(JSContext* cx, uintN /*unused*/, jsval* vp)
+pm_reset(JSContext* cx, unsigned /*unused*/, jsval* vp)
 {
     PerfMeasurement* p = GetPMFromThis(cx, vp);
     if (!p)
@@ -145,7 +145,7 @@ pm_reset(JSContext* cx, uintN /*unused*/, jsval* vp)
 }
 
 static JSBool
-pm_canMeasureSomething(JSContext* cx, uintN /*unused*/, jsval* vp)
+pm_canMeasureSomething(JSContext* cx, unsigned /*unused*/, jsval* vp)
 {
     PerfMeasurement* p = GetPMFromThis(cx, vp);
     if (!p)

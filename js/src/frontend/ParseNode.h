@@ -589,7 +589,7 @@ struct ParseNode {
             ParseNode   *left;
             ParseNode   *right;
             Value       *pval;          /* switch case value */
-            uintN       iflags;         /* JSITER_* flags for PNK_FOR node */
+            unsigned       iflags;         /* JSITER_* flags for PNK_FOR node */
         } binary;
         struct {                        /* one kid if unary */
             ParseNode   *kid;
@@ -753,17 +753,17 @@ struct ParseNode {
 #define PNX_HOLEY      0x400            /* array initialiser has holes */
 #define PNX_NONCONST   0x800            /* initialiser has non-constants */
 
-    uintN frameLevel() const {
+    unsigned frameLevel() const {
         JS_ASSERT(pn_arity == PN_FUNC || pn_arity == PN_NAME);
         return pn_cookie.level();
     }
 
-    uintN frameSlot() const {
+    unsigned frameSlot() const {
         JS_ASSERT(pn_arity == PN_FUNC || pn_arity == PN_NAME);
         return pn_cookie.slot();
     }
 
-    inline bool test(uintN flag) const;
+    inline bool test(unsigned flag) const;
 
     bool isLet() const          { return test(PND_LET); }
     bool isConst() const        { return test(PND_CONST); }
@@ -1480,7 +1480,7 @@ class ParseNodeAllocator {
 };
 
 inline bool
-ParseNode::test(uintN flag) const
+ParseNode::test(unsigned flag) const
 {
     JS_ASSERT(pn_defn || pn_arity == PN_FUNC || pn_arity == PN_NAME);
 #ifdef DEBUG

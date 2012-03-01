@@ -44,7 +44,7 @@
  * JavaScript API.
  */
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -823,11 +823,15 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 class JS_PUBLIC_API(AutoGCRooter) {
   public:
     AutoGCRooter(JSContext *cx, ptrdiff_t tag);
-    ~AutoGCRooter();
+
+    ~AutoGCRooter() {
+        JS_ASSERT(this == *stackTop);
+        *stackTop = down;
+    }
 
     /* Implemented in jsgc.cpp. */
     inline void trace(JSTracer *trc);
-    void traceAll(JSTracer *trc);
+    static void traceAll(JSTracer *trc);
 
   protected:
     AutoGCRooter * const down;
@@ -840,8 +844,6 @@ class JS_PUBLIC_API(AutoGCRooter) {
      * memory corruption.
      */
     ptrdiff_t tag;
-
-    JSContext * const context;
 
     enum {
         JSVAL =        -1, /* js::AutoValueRooter */
@@ -863,6 +865,8 @@ class JS_PUBLIC_API(AutoGCRooter) {
     };
 
   private:
+    AutoGCRooter ** const stackTop;
+
     /* No copy or assignment semantics. */
     AutoGCRooter(AutoGCRooter &ida) MOZ_DELETE;
     void operator=(AutoGCRooter &ida) MOZ_DELETE;
@@ -1013,7 +1017,7 @@ class AutoEnumStateRooter : private AutoGCRooter
   public:
     AutoEnumStateRooter(JSContext *cx, JSObject *obj
                         JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue()
+      : AutoGCRooter(cx, ENUMERATOR), obj(obj), stateValue(), context(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(obj);
@@ -1033,6 +1037,7 @@ class AutoEnumStateRooter : private AutoGCRooter
 
   private:
     Value stateValue;
+    JSContext *context;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -1307,7 +1312,7 @@ typedef JSBool
  * *objp without a new JSClass flag.
  */
 typedef JSBool
-(* JSNewResolveOp)(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+(* JSNewResolveOp)(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                    JSObject **objp);
 
 /*
@@ -1395,7 +1400,7 @@ typedef JSBool
  */
 
 typedef JSBool
-(* JSNative)(JSContext *cx, uintN argc, jsval *vp);
+(* JSNative)(JSContext *cx, unsigned argc, jsval *vp);
 
 /* Callbacks and their arguments. */
 
@@ -1418,7 +1423,7 @@ typedef enum JSContextOp {
  *                      and return true in this case.
  */
 typedef JSBool
-(* JSContextCallback)(JSContext *cx, uintN contextOp);
+(* JSContextCallback)(JSContext *cx, unsigned contextOp);
 
 typedef enum JSGCStatus {
     /* These callbacks happen outside the GC lock. */
@@ -1485,7 +1490,7 @@ typedef struct JSErrorFormatString {
 
 typedef const JSErrorFormatString *
 (* JSErrorCallback)(void *userRef, const char *locale,
-                    const uintN errorNumber);
+                    const unsigned errorNumber);
 
 #ifdef va_start
 #define JS_ARGUMENT_FORMATTER_DEFINED 1
@@ -1547,7 +1552,7 @@ typedef JSBool
  */
 typedef JSObject *
 (* JSWrapObjectCallback)(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
-                         uintN flags);
+                         unsigned flags);
 
 /*
  * Callback used by the wrap hook to ask the embedding to prepare an object
@@ -1555,14 +1560,14 @@ typedef JSObject *
  * or even finding a more suitable object for the new compartment.
  */
 typedef JSObject *
-(* JSPreWrapCallback)(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags);
+(* JSPreWrapCallback)(JSContext *cx, JSObject *scope, JSObject *obj, unsigned flags);
 
 typedef enum {
     JSCOMPARTMENT_DESTROY
 } JSCompartmentOp;
 
 typedef JSBool
-(* JSCompartmentCallback)(JSContext *cx, JSCompartment *compartment, uintN compartmentOp);
+(* JSCompartmentCallback)(JSContext *cx, JSCompartment *compartment, unsigned compartmentOp);
 
 /*
  * Read structured data from the reader r. This hook is used to read a value
@@ -2155,12 +2160,12 @@ JS_GetEmptyString(JSRuntime *rt);
  * unconverted arguments.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
+JS_ConvertArguments(JSContext *cx, unsigned argc, jsval *argv, const char *format,
                     ...);
 
 #ifdef va_start
 extern JS_PUBLIC_API(JSBool)
-JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
+JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv,
                       const char *format, va_list ap);
 #endif
 
@@ -2490,9 +2495,6 @@ JS_GetRuntime(JSContext *cx);
 extern JS_PUBLIC_API(JSContext *)
 JS_ContextIterator(JSRuntime *rt, JSContext **iterp);
 
-extern JS_PUBLIC_API(JSContext *)
-JS_ContextIteratorUnlocked(JSRuntime *rt, JSContext **iterp);
-
 extern JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx);
 
@@ -2607,11 +2609,11 @@ JS_EnterCrossCompartmentCall(JSContext *cx, JSObject *target);
 extern JS_PUBLIC_API(void)
 JS_LeaveCrossCompartmentCall(JSCrossCompartmentCall *call);
 
-extern JS_PUBLIC_API(void *)
-JS_SetCompartmentPrivate(JSContext *cx, JSCompartment *compartment, void *data);
+extern JS_PUBLIC_API(void)
+JS_SetCompartmentPrivate(JSCompartment *compartment, void *data);
 
 extern JS_PUBLIC_API(void *)
-JS_GetCompartmentPrivate(JSContext *cx, JSCompartment *compartment);
+JS_GetCompartmentPrivate(JSCompartment *compartment);
 
 extern JS_PUBLIC_API(JSBool)
 JS_WrapObject(JSContext *cx, JSObject **objp);
@@ -2635,9 +2637,6 @@ js_TransplantObjectWithWrapper(JSContext *cx,
                                JSObject *origwrapper,
                                JSObject *targetobj,
                                JSObject *targetwrapper);
-
-extern JS_FRIEND_API(void *)
-js_GetCompartmentPrivate(JSCompartment *compartment);
 
 #ifdef __cplusplus
 JS_END_EXTERN_C
@@ -2683,8 +2682,7 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
 JS_BEGIN_EXTERN_C
 #endif
 
-typedef void (*JSIterateCompartmentCallback)(JSContext *cx, void *data,
-              JSCompartment *compartment);
+typedef void (*JSIterateCompartmentCallback)(JSRuntime *rt, void *data, JSCompartment *compartment);
 
 /*
  * This function calls |compartmentCallback| on every compartment.  Beware that
@@ -2692,7 +2690,7 @@ typedef void (*JSIterateCompartmentCallback)(JSContext *cx, void *data,
  * returns.
  */
 extern JS_PUBLIC_API(void)
-JS_IterateCompartments(JSContext *cx, void *data,
+JS_IterateCompartments(JSRuntime *rt, void *data,
                        JSIterateCompartmentCallback compartmentCallback);
 
 extern JS_PUBLIC_API(JSObject *)
@@ -3040,7 +3038,7 @@ JS_DumpNamedRoots(JSRuntime *rt,
 #define JS_MAP_GCROOT_STOP      1       /* stop mapping entries */
 #define JS_MAP_GCROOT_REMOVE    2       /* remove and free the current entry */
 
-typedef intN
+typedef int
 (* JSGCRootMapFun)(void *rp, JSGCRootType type, const char *name, void *data);
 
 extern JS_PUBLIC_API(uint32_t)
@@ -3508,7 +3506,7 @@ namespace JS {
 class AutoIdArray : private AutoGCRooter {
   public:
     AutoIdArray(JSContext *cx, JSIdArray *ida JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, IDARRAY), idArray(ida)
+      : AutoGCRooter(cx, IDARRAY), context(cx), idArray(ida)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -3540,6 +3538,7 @@ class AutoIdArray : private AutoGCRooter {
     inline void trace(JSTracer *trc);
 
   private:
+    JSContext *context;
     JSIdArray *idArray;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
@@ -3640,7 +3639,7 @@ struct JSFunctionSpec {
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-             JSClass *clasp, JSNative constructor, uintN nargs,
+             JSClass *clasp, JSNative constructor, unsigned nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
 
@@ -3736,14 +3735,14 @@ JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *parent);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *parent,
-                                uintN argc, jsval *argv);
+                                unsigned argc, jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv);
+JS_New(JSContext *cx, JSObject *ctor, unsigned argc, jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
-                JSObject *proto, uintN attrs);
+                JSObject *proto, unsigned attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds);
@@ -3753,11 +3752,11 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
-                  JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
+                  JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
-                      JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
+                      JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JSBool *bp);
@@ -3770,7 +3769,7 @@ JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JS
  */
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-                         uintN *attrsp, JSBool *foundp);
+                         unsigned *attrsp, JSBool *foundp);
 
 /*
  * The same, but if the property is native, return its getter and setter via
@@ -3780,14 +3779,14 @@ JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
                                    const char *name,
-                                   uintN *attrsp, JSBool *foundp,
+                                   unsigned *attrsp, JSBool *foundp,
                                    JSPropertyOp *getterp,
                                    JSStrictPropertyOp *setterp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj,
                                        jsid id,
-                                       uintN *attrsp, JSBool *foundp,
+                                       unsigned *attrsp, JSBool *foundp,
                                        JSPropertyOp *getterp,
                                        JSStrictPropertyOp *setterp);
 
@@ -3799,13 +3798,13 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj,
  */
 extern JS_PUBLIC_API(JSBool)
 JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-                         uintN attrs, JSBool *foundp);
+                         unsigned attrs, JSBool *foundp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
                             int8_t tinyid, jsval value,
                             JSPropertyOp getter, JSStrictPropertyOp setter,
-                            uintN attrs);
+                            unsigned attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, const char *name,
@@ -3829,19 +3828,19 @@ JS_LookupPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name,
-                           uintN flags, jsval *vp);
+                           unsigned flags, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id,
-                               uintN flags, JSObject **objp, jsval *vp);
+                               unsigned flags, JSObject **objp, jsval *vp);
 
 struct JSPropertyDescriptor {
     JSObject           *obj;
-    uintN              attrs;
+    unsigned              attrs;
     JSPropertyOp       getter;
     JSStrictPropertyOp setter;
     jsval              value;
-    uintN              shortid;
+    unsigned              shortid;
 };
 
 /*
@@ -3850,7 +3849,7 @@ struct JSPropertyDescriptor {
  * then this property was not found on the prototype chain.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                              JSPropertyDescriptor *desc);
 
 extern JS_PUBLIC_API(JSBool)
@@ -3902,7 +3901,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_DefineUCProperty(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, jsval value,
                     JSPropertyOp getter, JSStrictPropertyOp setter,
-                    uintN attrs);
+                    unsigned attrs);
 
 /*
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
@@ -3913,7 +3912,7 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
                            const jschar *name, size_t namelen,
-                           uintN *attrsp, JSBool *foundp);
+                           unsigned *attrsp, JSBool *foundp);
 
 /*
  * The same, but if the property is native, return its getter and setter via
@@ -3923,7 +3922,7 @@ JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
                                      const jschar *name, size_t namelen,
-                                     uintN *attrsp, JSBool *foundp,
+                                     unsigned *attrsp, JSBool *foundp,
                                      JSPropertyOp *getterp,
                                      JSStrictPropertyOp *setterp);
 
@@ -3936,7 +3935,7 @@ JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSBool)
 JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
                            const jschar *name, size_t namelen,
-                           uintN attrs, JSBool *foundp);
+                           unsigned attrs, JSBool *foundp);
 
 
 extern JS_PUBLIC_API(JSBool)
@@ -3944,7 +3943,7 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
                               const jschar *name, size_t namelen,
                               int8_t tinyid, jsval value,
                               JSPropertyOp getter, JSStrictPropertyOp setter,
-                              uintN attrs);
+                              unsigned attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AlreadyHasOwnUCProperty(JSContext *cx, JSObject *obj, const jschar *name,
@@ -3989,7 +3988,7 @@ JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, uint32_t index, jsval value,
-                 JSPropertyOp getter, JSStrictPropertyOp setter, uintN attrs);
+                 JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AlreadyHasOwnElement(JSContext *cx, JSObject *obj, uint32_t index, JSBool *foundp);
@@ -4064,7 +4063,7 @@ JS_ElementIteratorStub(JSContext *cx, JSObject *obj, JSBool keysonly);
 
 extern JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-               jsval *vp, uintN *attrsp);
+               jsval *vp, unsigned *attrsp);
 
 extern JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index);
@@ -4146,7 +4145,7 @@ JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin);
  * Functions and scripts.
  */
 extern JS_PUBLIC_API(JSFunction *)
-JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
+JS_NewFunction(JSContext *cx, JSNative call, unsigned nargs, unsigned flags,
                JSObject *parent, const char *name);
 
 /*
@@ -4154,7 +4153,7 @@ JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
  * be true.
  */
 extern JS_PUBLIC_API(JSFunction *)
-JS_NewFunctionById(JSContext *cx, JSNative call, uintN nargs, uintN flags,
+JS_NewFunctionById(JSContext *cx, JSNative call, unsigned nargs, unsigned flags,
                    JSObject *parent, jsid id);
 
 extern JS_PUBLIC_API(JSObject *)
@@ -4172,7 +4171,7 @@ JS_GetFunctionId(JSFunction *fun);
 /*
  * Return JSFUN_* flags for fun.
  */
-extern JS_PUBLIC_API(uintN)
+extern JS_PUBLIC_API(unsigned)
 JS_GetFunctionFlags(JSFunction *fun);
 
 /*
@@ -4201,16 +4200,16 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
-                  uintN nargs, uintN attrs);
+                  unsigned nargs, unsigned attrs);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineUCFunction(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, JSNative call,
-                    uintN nargs, uintN attrs);
+                    unsigned nargs, unsigned attrs);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
-                      uintN nargs, uintN attrs);
+                      unsigned nargs, unsigned attrs);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
@@ -4229,37 +4228,37 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8,
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileScript(JSContext *cx, JSObject *obj,
                  const char *bytes, size_t length,
-                 const char *filename, uintN lineno);
+                 const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               JSPrincipals *principals,
                               const char *bytes, size_t length,
-                              const char *filename, uintN lineno);
+                              const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                      JSPrincipals *principals,
                                      const char *bytes, size_t length,
-                                     const char *filename, uintN lineno,
+                                     const char *filename, unsigned lineno,
                                      JSVersion version);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScript(JSContext *cx, JSObject *obj,
                    const jschar *chars, size_t length,
-                   const char *filename, uintN lineno);
+                   const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 JSPrincipals *principals,
                                 const jschar *chars, size_t length,
-                                const char *filename, uintN lineno);
+                                const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                        JSPrincipals *principals,
                                        const jschar *chars, size_t length,
-                                       const char *filename, uintN lineno,
+                                       const char *filename, unsigned lineno,
                                        JSVersion version);
 /*
  * If originPrincipals is null, then the value of principals is used as origin
@@ -4270,7 +4269,7 @@ JS_CompileUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
                                              JSPrincipals *principals,
                                              JSPrincipals *originPrincipals,
                                              const jschar *chars, size_t length,
-                                             const char *filename, uintN lineno,
+                                             const char *filename, unsigned lineno,
                                              JSVersion version);
 
 extern JS_PUBLIC_API(JSScript *)
@@ -4296,52 +4295,52 @@ JS_GetGlobalFromScript(JSScript *script);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,
-                   uintN nargs, const char **argnames,
+                   unsigned nargs, const char **argnames,
                    const char *bytes, size_t length,
-                   const char *filename, uintN lineno);
+                   const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                 JSPrincipals *principals, const char *name,
-                                uintN nargs, const char **argnames,
+                                unsigned nargs, const char **argnames,
                                 const char *bytes, size_t length,
-                                const char *filename, uintN lineno);
+                                const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
-                     uintN nargs, const char **argnames,
+                     unsigned nargs, const char **argnames,
                      const jschar *chars, size_t length,
-                     const char *filename, uintN lineno);
+                     const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   JSPrincipals *principals, const char *name,
-                                  uintN nargs, const char **argnames,
+                                  unsigned nargs, const char **argnames,
                                   const jschar *chars, size_t length,
-                                  const char *filename, uintN lineno);
+                                  const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunctionForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                          JSPrincipals *principals, const char *name,
-                                         uintN nargs, const char **argnames,
+                                         unsigned nargs, const char **argnames,
                                          const jschar *chars, size_t length,
-                                         const char *filename, uintN lineno,
+                                         const char *filename, unsigned lineno,
                                          JSVersion version);
 
 extern JS_PUBLIC_API(JSString *)
-JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, uintN indent);
+JS_DecompileScript(JSContext *cx, JSScript *script, const char *name, unsigned indent);
 
 /*
  * API extension: OR this into indent to avoid pretty-printing the decompiled
  * source resulting from JS_DecompileFunction{,Body}.
  */
-#define JS_DONT_PRETTY_PRINT    ((uintN)0x8000)
+#define JS_DONT_PRETTY_PRINT    ((unsigned)0x8000)
 
 extern JS_PUBLIC_API(JSString *)
-JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent);
+JS_DecompileFunction(JSContext *cx, JSFunction *fun, unsigned indent);
 
 extern JS_PUBLIC_API(JSString *)
-JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent);
+JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, unsigned indent);
 
 /*
  * NB: JS_ExecuteScript and the JS_Evaluate*Script* quadruplets use the obj
@@ -4393,42 +4392,42 @@ typedef enum JSExecPart { JSEXEC_PROLOG, JSEXEC_MAIN } JSExecPart;
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateScript(JSContext *cx, JSObject *obj,
-                  const char *bytes, uintN length,
-                  const char *filename, uintN lineno,
+                  const char *bytes, unsigned length,
+                  const char *filename, unsigned lineno,
                   jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj,
                                JSPrincipals *principals,
-                               const char *bytes, uintN length,
-                               const char *filename, uintN lineno,
+                               const char *bytes, unsigned length,
+                               const char *filename, unsigned lineno,
                                jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                       JSPrincipals *principals,
-                                      const char *bytes, uintN length,
-                                      const char *filename, uintN lineno,
+                                      const char *bytes, unsigned length,
+                                      const char *filename, unsigned lineno,
                                       jsval *rval, JSVersion version);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScript(JSContext *cx, JSObject *obj,
-                    const jschar *chars, uintN length,
-                    const char *filename, uintN lineno,
+                    const jschar *chars, unsigned length,
+                    const char *filename, unsigned lineno,
                     jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                  JSPrincipals *principals,
-                                 const jschar *chars, uintN length,
-                                 const char *filename, uintN lineno,
+                                 const jschar *chars, unsigned length,
+                                 const char *filename, unsigned lineno,
                                  jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                         JSPrincipals *principals,
-                                        const jschar *chars, uintN length,
-                                        const char *filename, uintN lineno,
+                                        const jschar *chars, unsigned length,
+                                        const char *filename, unsigned lineno,
                                         jsval *rval, JSVersion version);
 
 /*
@@ -4443,20 +4442,20 @@ extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
                                               JSPrincipals *principals,
                                               JSPrincipals *originPrincipals,
-                                              const jschar *chars, uintN length,
-                                              const char *filename, uintN lineno,
+                                              const jschar *chars, unsigned length,
+                                              const char *filename, unsigned lineno,
                                               jsval *rval, JSVersion version);
 
 extern JS_PUBLIC_API(JSBool)
-JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
+JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, unsigned argc,
                 jsval *argv, jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
-JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
+JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, unsigned argc,
                     jsval *argv, jsval *rval);
 
 extern JS_PUBLIC_API(JSBool)
-JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
+JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, unsigned argc,
                      jsval *argv, jsval *rval);
 
 #ifdef __cplusplus
@@ -4465,25 +4464,25 @@ JS_END_EXTERN_C
 namespace JS {
 
 static inline bool
-Call(JSContext *cx, JSObject *thisObj, JSFunction *fun, uintN argc, jsval *argv, jsval *rval) {
+Call(JSContext *cx, JSObject *thisObj, JSFunction *fun, unsigned argc, jsval *argv, jsval *rval) {
     return !!JS_CallFunction(cx, thisObj, fun, argc, argv, rval);
 }
 
 static inline bool
-Call(JSContext *cx, JSObject *thisObj, const char *name, uintN argc, jsval *argv, jsval *rval) {
+Call(JSContext *cx, JSObject *thisObj, const char *name, unsigned argc, jsval *argv, jsval *rval) {
     return !!JS_CallFunctionName(cx, thisObj, name, argc, argv, rval);
 }
 
 static inline bool
-Call(JSContext *cx, JSObject *thisObj, jsval fun, uintN argc, jsval *argv, jsval *rval) {
+Call(JSContext *cx, JSObject *thisObj, jsval fun, unsigned argc, jsval *argv, jsval *rval) {
     return !!JS_CallFunctionValue(cx, thisObj, fun, argc, argv, rval);
 }
 
 extern JS_PUBLIC_API(bool)
-Call(JSContext *cx, jsval thisv, jsval fun, uintN argc, jsval *argv, jsval *rval);
+Call(JSContext *cx, jsval thisv, jsval fun, unsigned argc, jsval *argv, jsval *rval);
 
 static inline bool
-Call(JSContext *cx, jsval thisv, JSObject *funObj, uintN argc, jsval *argv, jsval *rval) {
+Call(JSContext *cx, jsval thisv, JSObject *funObj, unsigned argc, jsval *argv, jsval *rval) {
     return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), argc, argv, rval);
 }
 
@@ -5073,14 +5072,14 @@ JS_ReportError(JSContext *cx, const char *format, ...);
  */
 extern JS_PUBLIC_API(void)
 JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
-                     void *userRef, const uintN errorNumber, ...);
+                     void *userRef, const unsigned errorNumber, ...);
 
 /*
  * Use an errorNumber to retrieve the format string, args are jschar *
  */
 extern JS_PUBLIC_API(void)
 JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
-                     void *userRef, const uintN errorNumber, ...);
+                     void *userRef, const unsigned errorNumber, ...);
 
 /*
  * As above, but report a warning instead (JSREPORT_IS_WARNING(report.flags)).
@@ -5092,14 +5091,14 @@ extern JS_PUBLIC_API(JSBool)
 JS_ReportWarning(JSContext *cx, const char *format, ...);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ReportErrorFlagsAndNumber(JSContext *cx, uintN flags,
+JS_ReportErrorFlagsAndNumber(JSContext *cx, unsigned flags,
                              JSErrorCallback errorCallback, void *userRef,
-                             const uintN errorNumber, ...);
+                             const unsigned errorNumber, ...);
 
 extern JS_PUBLIC_API(JSBool)
-JS_ReportErrorFlagsAndNumberUC(JSContext *cx, uintN flags,
+JS_ReportErrorFlagsAndNumberUC(JSContext *cx, unsigned flags,
                                JSErrorCallback errorCallback, void *userRef,
-                               const uintN errorNumber, ...);
+                               const unsigned errorNumber, ...);
 
 /*
  * Complain when out of memory.
@@ -5116,13 +5115,13 @@ JS_ReportAllocationOverflow(JSContext *cx);
 struct JSErrorReport {
     const char      *filename;      /* source file name, URL, etc., or null */
     JSPrincipals    *originPrincipals; /* see 'originPrincipals' comment above */
-    uintN           lineno;         /* source line number */
+    unsigned           lineno;         /* source line number */
     const char      *linebuf;       /* offending source line without final \n */
     const char      *tokenptr;      /* pointer to error token in linebuf */
     const jschar    *uclinebuf;     /* unicode (original) line buffer */
     const jschar    *uctokenptr;    /* unicode (original) token pointer */
-    uintN           flags;          /* error/warning, etc. */
-    uintN           errorNumber;    /* the error number, e.g. see js.msg */
+    unsigned           flags;          /* error/warning, etc. */
+    unsigned           errorNumber;    /* the error number, e.g. see js.msg */
     const jschar    *ucmessage;     /* the (default) error message */
     const jschar    **messageArgs;  /* arguments for the error message */
 };
@@ -5191,10 +5190,10 @@ JS_ObjectIsDate(JSContext *cx, JSObject *obj);
 #define JSREG_STICKY    0x08    /* only match starting at lastIndex */
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uintN flags);
+JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, uintN flags);
+JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(void)
 JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, JSBool multiline);
@@ -5209,10 +5208,10 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, s
 /* RegExp interface for clients without a global object. */
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, uintN flags);
+JS_NewRegExpObjectNoStatics(JSContext *cx, char *bytes, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, uintN flags);
+JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(JSBool)
 JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *reobj, jschar *chars, size_t length,
@@ -5221,7 +5220,7 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *reobj, jschar *chars, size_t 
 extern JS_PUBLIC_API(JSBool)
 JS_ObjectIsRegExp(JSContext *cx, JSObject *obj);
 
-extern JS_PUBLIC_API(uintN)
+extern JS_PUBLIC_API(unsigned)
 JS_GetRegExpFlags(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSString *)

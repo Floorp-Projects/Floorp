@@ -101,7 +101,7 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
     {
         // See if we already have a waiver wrapper for this object.
         CompartmentPrivate *priv =
-            (CompartmentPrivate *)JS_GetCompartmentPrivate(cx, js::GetObjectCompartment(obj));
+            (CompartmentPrivate *)JS_GetCompartmentPrivate(js::GetObjectCompartment(obj));
         JSObject *wobj = nsnull;
         if (priv && priv->waiverWrapperMap) {
             wobj = priv->waiverWrapperMap->Find(obj);
@@ -145,7 +145,7 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
 // expects |cx->compartment != obj->compartment()|. The returned object will
 // be in the same compartment as |obj|.
 JSObject *
-WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, uintN flags)
+WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, unsigned flags)
 {
     if (flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {
         JSAutoEnterCompartment ac;
@@ -158,7 +158,7 @@ WrapperFactory::DoubleWrap(JSContext *cx, JSObject *obj, uintN flags)
 }
 
 JSObject *
-WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags)
+WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj, unsigned flags)
 {
     // Don't unwrap an outer window, just double wrap it if needed.
     if (js::GetObjectClass(obj)->ext.innerObject)
@@ -265,7 +265,7 @@ CanXray(JSObject *obj, bool *proxy)
 
 JSObject *
 WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSObject *parent,
-                       uintN flags)
+                       unsigned flags)
 {
     NS_ASSERTION(!IsWrapper(obj) ||
                  GetProxyHandler(obj) == &WaiveXrayWrapperWrapper ||
@@ -279,7 +279,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
 
     Wrapper *wrapper;
     CompartmentPrivate *targetdata =
-        static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(cx, target));
+        static_cast<CompartmentPrivate *>(JS_GetCompartmentPrivate(target));
     if (AccessCheck::isChrome(target)) {
         if (AccessCheck::isChrome(origin)) {
             wrapper = &CrossCompartmentWrapper::singleton;

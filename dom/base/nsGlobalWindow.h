@@ -236,7 +236,7 @@ private:
 class nsOuterWindowProxy : public js::Wrapper
 {
 public:
-  nsOuterWindowProxy() : js::Wrapper((uintN)0) {}
+  nsOuterWindowProxy() : js::Wrapper((unsigned)0) {}
 
   virtual bool isOuterWindow() {
     return true;
@@ -595,11 +595,9 @@ protected:
   virtual ~nsGlobalWindow();
   void CleanUp(bool aIgnoreModalDialog);
   void ClearControllers();
-  static void TryClearWindowScope(nsISupports* aWindow);
-  void ClearScopeWhenAllScriptsStop();
   nsresult FinalClose();
 
-  void FreeInnerObjects(bool aClearScope);
+  void FreeInnerObjects();
   nsGlobalWindow *CallerInnerWindow();
 
   nsresult InnerSetNewDocument(nsIDocument* aDocument);
@@ -677,7 +675,6 @@ protected:
                                     nsIDOMWindow **aReturn);
 
   static void CloseWindow(nsISupports* aWindow);
-  static void ClearWindowScope(nsISupports* aWindow);
 
   // Timeout Functions
   // Language agnostic timeout function (all args passed).

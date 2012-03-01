@@ -64,6 +64,10 @@
 
 #include "CheckedInt.h"
 
+#ifdef XP_MACOSX
+#include "ForceDiscreteGPUHelperCGL.h"
+#endif
+
 /* 
  * Minimum value constants defined in 6.2 State Tables of OpenGL ES - 2.0.25
  *   https://bugzilla.mozilla.org/show_bug.cgi?id=686732
@@ -942,6 +946,16 @@ protected:
     ContextStatus mContextStatus;
     bool mContextLostErrorSet;
     bool mContextLostDueToTest;
+
+#ifdef XP_MACOSX
+    // see bug 713305. This RAII helper guarantees that we're on the discrete GPU, during its lifetime
+    // Debouncing note: we don't want to switch GPUs too frequently, so try to not create and destroy
+    // these objects at high frequency. Having WebGLContext's hold one such object seems fine,
+    // because WebGLContext objects only go away during GC, which shouldn't happen too frequently.
+    // If in the future GC becomes much more frequent, we may have to revisit then (maybe use a timer).
+    ForceDiscreteGPUHelperCGL mForceDiscreteGPUHelper;
+#endif
+
 
 public:
     // console logging helpers

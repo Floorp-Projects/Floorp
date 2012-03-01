@@ -75,8 +75,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xf3840057, 0x4fe5, 0x4f92, \
- { 0xa3, 0xb8, 0x27, 0xd7, 0x44, 0x6f, 0x72, 0x4d } }
+{ 0x6d69fbee, 0x0723, 0x48f5, \
+ { 0x82, 0x48, 0xcd, 0xcf, 0x88, 0xac, 0x25, 0x74 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -426,20 +426,6 @@ public:
    * (successfully) initialized.
    */
   virtual nsresult InitClasses(JSObject* aGlobalObj) = 0;
-
-  /**
-   * Clear the scope object - may be called either as we are being torn down,
-   * or before we are attached to a different document.
-   *
-   * aClearFromProtoChain is probably somewhat JavaScript specific.  It
-   * indicates that the global scope polluter should be removed from the
-   * prototype chain and that the objects in the prototype chain should
-   * also have their scopes cleared.  We don't do this all the time
-   * because the prototype chain is shared between inner and outer
-   * windows, and needs to stay with inner windows that we're keeping
-   * around.
-   */
-  virtual void ClearScope(void* aGlobalObj, bool aClearFromProtoChain) = 0;
 
   /**
    * Tell the context we're about to be reinitialize it.

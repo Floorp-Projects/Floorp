@@ -1363,7 +1363,7 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
             }
 
 
-            uintN ignored;
+            unsigned ignored;
             JSBool found;
 
             // heuristic to see if it might be usable as an xpcexception
