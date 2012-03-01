@@ -928,7 +928,7 @@ nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 nsRange::SetStart(nsINode* aParent, PRInt32 aOffset)
 {
   nsINode* newRoot = IsValidBoundary(aParent);
-  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR);
+  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
   PRInt32 len = GetNodeLength(aParent);
   if (aOffset < 0 || aOffset > len)
@@ -957,7 +957,7 @@ nsRange::SetStartBefore(nsIDOMNode* aSibling)
   nsCOMPtr<nsIDOMNode> parent;
   nsresult rv = aSibling->GetParentNode(getter_AddRefs(parent));
   if (NS_FAILED(rv) || !parent) {
-    return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
   return SetStart(parent, IndexOf(aSibling));
@@ -971,7 +971,7 @@ nsRange::SetStartAfter(nsIDOMNode* aSibling)
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) {
-    return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
   return SetStart(nParent, IndexOf(aSibling) + 1);
@@ -992,7 +992,7 @@ nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 nsRange::SetEnd(nsINode* aParent, PRInt32 aOffset)
 {
   nsINode* newRoot = IsValidBoundary(aParent);
-  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR);
+  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
   PRInt32 len = GetNodeLength(aParent);
   if (aOffset < 0 || aOffset > len) {
@@ -1022,7 +1022,7 @@ nsRange::SetEndBefore(nsIDOMNode* aSibling)
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult rv = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(rv) || !nParent) {
-    return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
   return SetEnd(nParent, IndexOf(aSibling));
@@ -1036,7 +1036,7 @@ nsRange::SetEndAfter(nsIDOMNode* aSibling)
   nsCOMPtr<nsIDOMNode> nParent;
   nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
   if (NS_FAILED(res) || !nParent) {
-    return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
   return SetEnd(nParent, IndexOf(aSibling) + 1);
@@ -1065,15 +1065,15 @@ nsRange::SelectNode(nsIDOMNode* aN)
   VALIDATE_ACCESS(aN);
   
   nsCOMPtr<nsINode> node = do_QueryInterface(aN);
-  NS_ENSURE_TRUE(node, NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR);
+  NS_ENSURE_TRUE(node, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
   nsINode* parent = node->GetNodeParent();
   nsINode* newRoot = IsValidBoundary(parent);
-  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR);
+  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
 
   PRInt32 index = parent->IndexOf(node);
   if (index < 0) {
-    return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+    return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
@@ -1089,7 +1089,7 @@ nsRange::SelectNodeContents(nsIDOMNode* aN)
 
   nsCOMPtr<nsINode> node = do_QueryInterface(aN);
   nsINode* newRoot = IsValidBoundary(node);
-  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR);
+  NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
   
   AutoInvalidateSelection atEndOfBlock(this);
   DoSetRange(node, 0, node, GetNodeLength(node), newRoot);
@@ -2144,7 +2144,7 @@ nsRange::SurroundContents(nsIDOMNode* aNewParent)
   VALIDATE_ACCESS(aNewParent);
 
   NS_ENSURE_TRUE(mRoot, NS_ERROR_DOM_INVALID_STATE_ERR);
-  // BAD_BOUNDARYPOINTS_ERR: Raised if the Range partially selects a non-text
+  // INVALID_STATE_ERROR: Raised if the Range partially selects a non-text
   // node.
   if (mStartParent != mEndParent) {
     bool startIsText = mStartParent->IsNodeOfType(nsINode::eTEXT);
@@ -2160,7 +2160,7 @@ nsRange::SurroundContents(nsIDOMNode* aNewParent)
                    (endIsText &&
                     endGrandParent &&
                     endGrandParent == mStartParent),
-                   NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR);
+                   NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 
   // Extract the contents within the range.
