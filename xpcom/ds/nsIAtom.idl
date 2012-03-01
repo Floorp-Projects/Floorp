@@ -89,6 +89,11 @@ interface nsIAtom : nsISupports
     nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
   }
 
+  /**
+   * A hashcode that is better distributed than the actual atom
+   * pointer, for use in situations that need a well-distributed
+   * hashcode.
+   */
   inline uint32_t hash() const {
     return mHash;
   }
