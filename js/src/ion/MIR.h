@@ -2237,10 +2237,10 @@ class MRecompileCheck : public MNullaryInstruction
 class MDefVar : public MUnaryInstruction
 {
   PropertyName *name_; // Target name to be defined.
-  uintN attrs_; // Attributes to be set.
+  unsigned attrs_; // Attributes to be set.
 
   private:
-    MDefVar(PropertyName *name, uintN attrs, MDefinition *scopeChain)
+    MDefVar(PropertyName *name, unsigned attrs, MDefinition *scopeChain)
       : MUnaryInstruction(scopeChain),
         name_(name),
         attrs_(attrs)
@@ -2250,14 +2250,14 @@ class MDefVar : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(DefVar);
 
-    static MDefVar *New(PropertyName *name, uintN attrs, MDefinition *scopeChain) {
+    static MDefVar *New(PropertyName *name, unsigned attrs, MDefinition *scopeChain) {
         return new MDefVar(name, attrs, scopeChain);
     }
 
     PropertyName *name() const {
         return name_;
     }
-    uintN attrs() const {
+    unsigned attrs() const {
         return attrs_;
     }
     MDefinition *scopeChain() const {

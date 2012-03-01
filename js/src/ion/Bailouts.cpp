@@ -228,14 +228,14 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
 
         *regs.sp++ = v;
     }
-    uintN pcOff = iter.pcOffset();
+    unsigned pcOff = iter.pcOffset();
     regs.pc = fp->script()->code + pcOff;
 
     if (iter.resumeAfter())
         regs.pc = GetNextPc(regs.pc);
 
     IonSpew(IonSpew_Bailouts, " new PC is offset %u within script %p (line %d)",
-            pcOff, (void *)fp->script(), js_PCToLineNumber(cx, fp->script(), regs.pc));
+            pcOff, (void *)fp->script(), PCToLineNumber(fp->script(), regs.pc));
     JS_ASSERT(exprStackSlots == js_ReconstructStackDepth(cx, fp->script(), regs.pc));
 }
 
@@ -466,14 +466,14 @@ static void
 ReflowArgTypes(JSContext *cx)
 {
     StackFrame *fp = cx->fp();
-    uintN nargs = fp->fun()->nargs;
+    unsigned nargs = fp->fun()->nargs;
     JSScript *script = fp->script();
 
     types::AutoEnterTypeInference enter(cx);
 
     if (!fp->isConstructing())
         types::TypeScript::SetThis(cx, script, fp->thisValue());
-    for (uintN i = 0; i < nargs; ++i)
+    for (unsigned i = 0; i < nargs; ++i)
         types::TypeScript::SetArgument(cx, script, i, fp->formalArg(i));
 }
 

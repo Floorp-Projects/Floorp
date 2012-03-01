@@ -530,7 +530,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.checkStackAlignment();
 
     // Native functions have the signature:
-    //  bool (*)(JSContext *, uintN, Value *vp)
+    //  bool (*)(JSContext *, unsigned, Value *vp)
     // Where vp[0] is space for an outparam, vp[1] is |this|, and vp[2] onward
     // are the function arguments.
 
@@ -846,14 +846,14 @@ CodeGenerator::visitDefVar(LDefVar *lir)
     Register scopeChain = ToRegister(lir->getScopeChain());
     Register nameTemp   = ToRegister(lir->nameTemp());
 
-    typedef bool (*pf)(JSContext *, PropertyName *, uintN, JSObject *);
+    typedef bool (*pf)(JSContext *, PropertyName *, unsigned, JSObject *);
     static const VMFunction DefVarOrConstInfo =
         FunctionInfo<pf>(DefVarOrConst);
 
     masm.movePtr(ImmWord(lir->mir()->name()), nameTemp);
 
     pushArg(scopeChain); // JSObject *
-    pushArg(Imm32(lir->mir()->attrs())); // uintN
+    pushArg(Imm32(lir->mir()->attrs())); // unsigned
     pushArg(nameTemp); // PropertyName *
 
     if (!callVM(DefVarOrConstInfo, lir))
