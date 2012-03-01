@@ -2351,11 +2351,11 @@ JS_EndRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_YieldRequest(JSContext *cx);
 
-extern JS_PUBLIC_API(jsrefcount)
+extern JS_PUBLIC_API(unsigned)
 JS_SuspendRequest(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
+JS_ResumeRequest(JSContext *cx, unsigned saveDepth);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsInRequest(JSRuntime *rt);
@@ -2396,7 +2396,7 @@ class JSAutoRequest {
 
   protected:
     JSContext *mContext;
-    jsrefcount mSaveDepth;
+    unsigned  mSaveDepth;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 #if 0
@@ -2428,7 +2428,7 @@ class JSAutoSuspendRequest {
 
   protected:
     JSContext *mContext;
-    jsrefcount mSaveDepth;
+    unsigned mSaveDepth;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 #if 0
@@ -4085,7 +4085,7 @@ struct JSPrincipals {
     char *codebase;
 
     /* Don't call "destroy"; use reference counting macros below. */
-    jsrefcount refcount;
+    int refcount;
 
     void   (* destroy)(JSContext *cx, JSPrincipals *);
     JSBool (* subsume)(JSPrincipals *, JSPrincipals *);
@@ -4095,10 +4095,10 @@ struct JSPrincipals {
 #define JSPRINCIPALS_HOLD(cx, principals)   JS_HoldPrincipals(cx,principals)
 #define JSPRINCIPALS_DROP(cx, principals)   JS_DropPrincipals(cx,principals)
 
-extern JS_PUBLIC_API(jsrefcount)
+extern JS_PUBLIC_API(int)
 JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals);
 
-extern JS_PUBLIC_API(jsrefcount)
+extern JS_PUBLIC_API(int)
 JS_DropPrincipals(JSContext *cx, JSPrincipals *principals);
 
 #else
