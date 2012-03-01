@@ -617,9 +617,8 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
             if (media.IsEmpty()) {
               media = value;
 
-              // The HTML5 spec is formulated in terms of the CSS3 spec,
-              // which specifies that media queries are case insensitive.
-              nsContentUtils::ASCIIToLower(media);
+              // HTML4.0 spec is inconsistent, make it case INSENSITIVE
+              ToLowerCase(media);
             }
           } else if (attr.LowerCaseEqualsLiteral("anchor")) {
             if (anchor.IsEmpty()) {
@@ -758,7 +757,7 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
     nsAutoString result;
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
-      nsContentUtils::ASCIIToLower(header);
+      ToLowerCase(header);
       nsCOMPtr<nsIAtom> fieldAtom(do_GetAtom(header));
       rv = ProcessHeaderData(fieldAtom, result, aContent); 
     }
@@ -770,7 +769,7 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
     nsAutoString result;
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
-      nsContentUtils::ASCIIToLower(result);
+      ToLowerCase(result);
       mDocument->SetHeaderData(nsGkAtoms::handheldFriendly, result);
     }
   }

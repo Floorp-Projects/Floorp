@@ -4423,7 +4423,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
   bool needsLowercase = IsHTML() && !IsLowercaseASCII(aTagName);
   nsAutoString lcTagName;
   if (needsLowercase) {
-    nsContentUtils::ASCIIToLower(aTagName, lcTagName);
+    ToLowerCase(aTagName, lcTagName);
   }
 
   rv = CreateElem(needsLowercase ? lcTagName : aTagName,
