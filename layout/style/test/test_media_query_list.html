@@ -37,18 +37,27 @@ function run() {
   subroot.offsetWidth; // flush layout
 
   function setup_mql(str) {
-    var obj = { str: str, mql: subwin.matchMedia(str), notifyCount: 0 }
-    obj.mql.addListener(function(mql) {
-                          is(mql, obj.mql,
-                             "correct argument to listener: " + obj.str);
-                          ++obj.notifyCount;
-                          // Test the last match result only on odd
-                          // notifications.
-                          if (obj.notifyCount & 1) {
-                            obj.lastOddMatchResult = mql.matches;
-                          }
-                        });
+    var obj = {
+      str: str,
+      mql: subwin.matchMedia(str),
+      notifyCount: 0,
+      listener: function(mql) {
+                  is(mql, obj.mql,
+                     "correct argument to listener: " + obj.str);
+                  ++obj.notifyCount;
+                  // Test the last match result only on odd
+                  // notifications.
+                  if (obj.notifyCount & 1) {
+                    obj.lastOddMatchResult = mql.matches;
+                  }
+                }
+    }
+    obj.mql.addListener(obj.listener);
     return obj;
+  }
+
+  function finish_mql(obj) {
+    obj.mql.removeListener(obj.listener);
   }
 
   var w_exact_w = setup_mql("(width: " + w + "px)");
@@ -131,6 +140,12 @@ function run() {
   check_notify(w_max_10em, 2, "after zoom");
 
   SpecialPowers.setFullZoom(subwin, 1.0);
+
+  finish_mql(w_exact_w);
+  finish_mql(w_min_9em);
+  finish_mql(w_min_10em);
+  finish_mql(w_max_9em);
+  finish_mql(w_max_10em);
 
   // Additional tests of listener mutation.
   (function() {
@@ -249,7 +264,57 @@ function run() {
        "notification order (removal tests)");
   })();
 
-  SimpleTest.finish();
+  /* Bug 716751: null-dereference crash */
+  (function() {
+    iframe.style.width = "200px";
+    subroot.offsetWidth; // flush layout
+
+    var mql = subwin.matchMedia("(min-width: 150px)");
+    mql.addListener(null);
+
+    iframe.style.width = "100px";
+    subroot.offsetWidth; // flush layout
+    // With the bug, we crash here.  No need for test assertions.
+
+    mql.removeListener(null);
+    mql.removeListener(null);
+  })();
+
+  /* Bug 716751: listeners lost due to GC */
+  var gc_received = [];
+  (function() {
+    var received = [];
+    var listener1 = function(mql) {
+      gc_received.push(1);
+    }
+
+    iframe.style.width = "200px";
+    subroot.offsetWidth; // flush layout
+
+    var mql = subwin.matchMedia("(min-width: 150px)");
+    mql.addListener(listener1);
+    is(JSON.stringify(gc_received), "[]", "GC test: before notification");
+
+    iframe.style.width = "100px";
+    subroot.offsetWidth; // flush layout
+
+    is(JSON.stringify(gc_received), "[1]", "GC test: after notification 1");
+
+    // Because of conservative GC, we need to go back to the event loop
+    // to GC properly.
+    setTimeout(step2, 0);
+  })();
+
+  function step2() {
+    SpecialPowers.DOMWindowUtils.garbageCollect();
+
+    iframe.style.width = "200px";
+    subroot.offsetWidth; // flush layout
+
+    is(JSON.stringify(gc_received), "[1,1]", "GC test: after notification 2");
+
+    SimpleTest.finish();
+  }
 }
 
 </script>

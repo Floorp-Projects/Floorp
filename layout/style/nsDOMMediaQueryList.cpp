@@ -74,7 +74,7 @@ if (tmp->mPresContext) {
   PR_REMOVE_LINK(tmp);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPresContext)
 }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mListeners)
+tmp->RemoveAllListeners();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 DOMCI_DATA(MediaQueryList, nsDOMMediaQueryList)
@@ -100,7 +100,7 @@ NS_IMETHODIMP
 nsDOMMediaQueryList::GetMatches(bool *aMatches)
 {
   if (!mMatchesValid) {
-    NS_ABORT_IF_FALSE(mListeners.Length() == 0,
+    NS_ABORT_IF_FALSE(!HasListeners(),
                       "when listeners present, must keep mMatches current");
     RecomputeMatches();
   }
@@ -112,14 +112,29 @@ nsDOMMediaQueryList::GetMatches(bool *aMatches)
 NS_IMETHODIMP
 nsDOMMediaQueryList::AddListener(nsIDOMMediaQueryListListener *aListener)
 {
+  if (!aListener) {
+    return NS_OK;
+  }
+
+  if (!HasListeners()) {
+    // When we have listeners, the pres context owns a reference to
+    // this.  This is a cyclic reference that can only be broken by
+    // cycle collection.
+    NS_ADDREF_THIS();
+  }
+
   if (!mMatchesValid) {
-    NS_ABORT_IF_FALSE(mListeners.Length() == 0,
+    NS_ABORT_IF_FALSE(!HasListeners(),
                       "when listeners present, must keep mMatches current");
     RecomputeMatches();
   }
 
   if (!mListeners.Contains(aListener)) {
     mListeners.AppendElement(aListener);
+    if (!HasListeners()) {
+      // Append failed; undo the AddRef above.
+      NS_RELEASE_THIS();
+    }
   }
   return NS_OK;
 }
@@ -127,10 +142,27 @@ nsDOMMediaQueryList::AddListener(nsIDOMMediaQueryListListener *aListener)
 NS_IMETHODIMP
 nsDOMMediaQueryList::RemoveListener(nsIDOMMediaQueryListListener *aListener)
 {
-  mListeners.RemoveElement(aListener);
+  bool removed = mListeners.RemoveElement(aListener);
   NS_ABORT_IF_FALSE(!mListeners.Contains(aListener),
                     "duplicate occurrence of listeners");
+
+  if (removed && !HasListeners()) {
+    // See NS_ADDREF_THIS() in AddListener.
+    NS_RELEASE_THIS();
+  }
+
   return NS_OK;
+}
+
+void
+nsDOMMediaQueryList::RemoveAllListeners()
+{
+  bool hadListeners = HasListeners();
+  mListeners.Clear();
+  if (hadListeners) {
+    // See NS_ADDREF_THIS() in AddListener.
+    NS_RELEASE_THIS();
+  }
 }
 
 void
