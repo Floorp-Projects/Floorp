@@ -39,7 +39,7 @@
 #ifndef Unicode_h__
 #define Unicode_h__
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 #include "jspubtd.h"
 

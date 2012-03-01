@@ -72,6 +72,7 @@ CSS_ANON_BOX(dropDownList, ":-moz-dropdown-list")
 CSS_ANON_BOX(fieldsetContent, ":-moz-fieldset-content")
 CSS_ANON_BOX(framesetBlank, ":-moz-frameset-blank")
 CSS_ANON_BOX(mozDisplayComboboxControlFrame, ":-moz-display-comboboxcontrol-frame")
+CSS_ANON_BOX(htmlCanvasContent, ":-moz-html-canvas-content")
 
 CSS_ANON_BOX(inlineTable, ":-moz-inline-table")
 CSS_ANON_BOX(table, ":-moz-table")

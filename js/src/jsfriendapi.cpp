@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/GuardObjects.h"
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -485,6 +485,16 @@ struct JSDumpHeapTracer : public JSTracer {
 static void
 DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
+static char
+MarkDescriptor(void *thing)
+{
+    gc::Cell *cell = static_cast<gc::Cell*>(thing);
+    if (cell->isMarked(gc::BLACK))
+        return cell->isMarked(gc::GRAY) ? 'G' : 'B';
+    else
+        return cell->isMarked(gc::GRAY) ? 'X' : 'W';
+}
+
 static void
 DumpHeapPushIfNew(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
@@ -498,7 +508,7 @@ DumpHeapPushIfNew(JSTracer *trc, void **thingp, JSGCTraceKind kind)
      * already seen thing, for complete root information.
      */
     if (dtrc->rootTracing) {
-        fprintf(dtrc->output, "%p %s\n", thing,
+        fprintf(dtrc->output, "%p %c %s\n", thing, MarkDescriptor(thing),
                 JS_GetTraceEdgeName(dtrc, dtrc->buffer, sizeof(dtrc->buffer)));
     }
 
@@ -515,7 +525,7 @@ DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     JS_ASSERT(trc->callback == DumpHeapVisitChild);
     JSDumpHeapTracer *dtrc = static_cast<JSDumpHeapTracer *>(trc);
     const char *edgeName = JS_GetTraceEdgeName(dtrc, dtrc->buffer, sizeof(dtrc->buffer));
-    fprintf(dtrc->output, "> %p %s\n", *thingp, edgeName);
+    fprintf(dtrc->output, "> %p %c %s\n", *thingp, MarkDescriptor(*thingp), edgeName);
     DumpHeapPushIfNew(dtrc, thingp, kind);
 }
 
@@ -540,7 +550,7 @@ js::DumpHeapComplete(JSContext *cx, FILE *fp)
         DumpingChildInfo dci = dtrc.nodes.popCopy();
         JS_PrintTraceThingInfo(dtrc.buffer, sizeof(dtrc.buffer),
                                &dtrc, dci.node, dci.kind, JS_TRUE);
-        fprintf(fp, "%p %s\n", dci.node, dtrc.buffer);
+        fprintf(fp, "%p %c %s\n", dci.node, MarkDescriptor(dci.node), dtrc.buffer);
         JS_TraceChildren(&dtrc, dci.node, dci.kind);
     }
 

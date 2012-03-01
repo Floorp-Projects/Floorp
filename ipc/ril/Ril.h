@@ -47,8 +47,6 @@ namespace base {
 class MessageLoop;
 }
 
-class nsIThread;
-
 namespace mozilla {
 namespace ipc {
 
