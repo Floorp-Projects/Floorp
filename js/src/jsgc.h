@@ -1175,7 +1175,7 @@ struct ArenaLists {
         }
     }
 
-    inline void prepareForIncrementalGC(JSCompartment *comp);
+    inline void prepareForIncrementalGC(JSRuntime *rt);
 
     /*
      * Temporarily copy the free list heads to the arenas so the code can see
@@ -1766,8 +1766,8 @@ struct GCMarker : public JSTracer {
     }
 
   public:
-    explicit GCMarker(size_t sizeLimit);
-    bool init(bool lazy);
+    explicit GCMarker();
+    bool init();
 
     void setSizeLimit(size_t size) { stack.setSizeLimit(size); }
     size_t sizeLimit() const { return stack.sizeLimit; }
@@ -1908,22 +1908,6 @@ struct GCMarker : public JSTracer {
 
     bool grayFailed;
     Vector<GrayRoot, 0, SystemAllocPolicy> grayRoots;
-};
-
-struct BarrierGCMarker : public GCMarker {
-    BarrierGCMarker(size_t sizeLimit) : GCMarker(sizeLimit) {}
-
-    bool init() {
-        return GCMarker::init(true);
-    }
-};
-
-struct FullGCMarker : public GCMarker {
-    FullGCMarker() : GCMarker(size_t(-1)) {}
-
-    bool init() {
-        return GCMarker::init(false);
-    }
 };
 
 void

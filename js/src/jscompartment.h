@@ -193,7 +193,6 @@ struct JSCompartment
     js::gc::ArenaLists           arenas;
 
     bool                         needsBarrier_;
-    js::BarrierGCMarker          barrierMarker_;
 
     bool needsBarrier() {
         return needsBarrier_;
@@ -201,7 +200,7 @@ struct JSCompartment
 
     js::GCMarker *barrierTracer() {
         JS_ASSERT(needsBarrier_);
-        return &barrierMarker_;
+        return &rt->gcMarker;
     }
 
     size_t                       gcBytes;
