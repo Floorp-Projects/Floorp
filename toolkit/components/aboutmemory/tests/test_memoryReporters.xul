@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- This file tests (in a rough fashion) whether the memory reporters are
+       producing sensible results.  test_aboutmemory.xul tests the
+       presentation of memory reports in about:memory. -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  // Nb: this test is all JS and so should be done with an xpcshell test,
+  // but bug 671753 is preventing the memory-reporter-manager from being
+  // accessed from xpcshell.
+
+  "use strict";
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+
+  const kUnknown = -1;
+  const NONHEAP = Ci.nsIMemoryReporter.KIND_NONHEAP;
+  const HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
+  const OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
+
+  const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
+  const COUNT = Ci.nsIMemoryReporter.UNITS_COUNT;
+  const COUNT_CUMULATIVE = Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE;
+  const PERCENTAGE = Ci.nsIMemoryReporter.UNITS_PERCENTAGE;
+
+  let explicitAmounts = [];
+  let vsizeAmounts = [];
+  let residentAmounts = [];
+  let jsGcHeapAmounts = [];
+  let heapAllocatedAmounts = [];
+  let storageSqliteAmounts = [];
+
+  let areJsCompartmentsPresent = false;
+  let isSandboxLocationShown = false;
+  let areLayoutShellsPresent = false;
+  let areDomInnerWindowsPresent = false;
+  let isPlacesPresent = false;
+  let isImagesPresent = false;
+  let isXptiWorkingSetPresent = false;
+  let isAtomTablePresent = false;
+
+  let mySandbox = Components.utils.Sandbox(document.nodePrincipal,
+                    { sandboxName: "this-is-a-sandbox-name" });
+
+  function handleReport(aProcess, aPath, aKind, aUnits, aAmount, aDescription)
+  {
+    // Record the values of some notable reporters.
+    if (aPath === "explicit") {
+      explicitAmounts.push(aAmount);
+    } else if (aPath === "vsize") {
+      vsizeAmounts.push(aAmount);
+    } else if (aPath === "resident") {
+      residentAmounts.push(aAmount);
+    } else if (aPath === "js-gc-heap") {
+      jsGcHeapAmounts.push(aAmount); 
+    } else if (aPath === "heap-allocated") {
+      heapAllocatedAmounts.push(aAmount);
+    } else if (aPath === "storage-sqlite") {
+      storageSqliteAmounts.push(aAmount);
+
+    // Check the presence of some other notable reporters.
+    } else if (aPath.search(/^explicit\/js\/compartment\(/) >= 0) {
+      areJsCompartmentsPresent = true;
+    } else if (aPath.search(/^explicit\/layout\/shell\(/) >= 0) {
+      areLayoutShellsPresent = true;
+    } else if (aPath.search(/^explicit\/dom\+style\/window-objects\/.*inner-window\(/) >= 0) {
+      areDomInnerWindowsPresent = true;
+    } else if (aPath.search(/^explicit\/storage\/sqlite\/places.sqlite/) >= 0) {
+      isPlacesPresent = true;
+    } else if (aPath.search(/^explicit\/images/) >= 0) {
+      isImagesPresent = true;
+    } else if (aPath.search(/^explicit\/xpti-working-set$/) >= 0) {
+      isXptiWorkingSetPresent = true;
+    } else if (aPath.search(/^explicit\/atom-table$/) >= 0) {
+      isAtomTablePresent = true;
+    } else if (aPath === "compartments\/system\/[System Principal], this-is-a-sandbox-name") {
+      // A system compartment with a location (such as a sandbox) should
+      // show that location.
+      isSandboxLocationShown = true;
+    }
+  }
+
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
+
+  // Access mgr.explicit and mgr.resident just to make sure they don't crash.
+  // We can't check their actual values because they're non-deterministic.
+  let dummy = mgr.explicit;
+  dummy = mgr.resident;
+
+  let e = mgr.enumerateReporters();
+  while (e.hasMoreElements()) {
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    handleReport(r.process, r.path, r.kind, r.units, r.amount, r.description);
+  }
+  e = mgr.enumerateMultiReporters();
+  while (e.hasMoreElements()) {
+    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    r.collectReports(handleReport, null);
+
+    // Access |name| and |explicitNonHeap| to make sure they don't crash or
+    // assert.
+    dummy = r.name;
+    dummy = r.explicitNonHeap;
+  }
+
+  function checkSpecialReport(aName, aAmounts)
+  {
+    ok(aAmounts.length == 1, aName + " has exactly 1 report");
+    let n = aAmounts[0];
+    // Check the size is reasonable -- i.e. not ridiculously large or small.
+    ok(n === kUnknown || (100 * 1000 <= n && n <= 10 * 1000 * 1000 * 1000),
+       aName + "'s size is reasonable");
+  }
+
+  checkSpecialReport("explicit",       explicitAmounts);
+  checkSpecialReport("vsize",          vsizeAmounts);
+  checkSpecialReport("resident",       residentAmounts);
+  checkSpecialReport("js-gc-heap",     jsGcHeapAmounts);
+  checkSpecialReport("heap-allocated", heapAllocatedAmounts);
+  checkSpecialReport("storage-sqlite", storageSqliteAmounts);
+
+  ok(areJsCompartmentsPresent,  "js compartments are present");
+  ok(isSandboxLocationShown,    "sandbox locations are present");
+  ok(areLayoutShellsPresent,    "layout shells are present");
+  ok(areDomInnerWindowsPresent, "dom inner-windows are present");
+  ok(isPlacesPresent,           "places is present");
+  ok(isImagesPresent,           "images is present");
+  ok(isXptiWorkingSetPresent,   "xpti-working-set is present");
+  ok(isAtomTablePresent,        "atom-table is present");
+
+  ]]>
+  </script>
+</window>
+
