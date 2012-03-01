@@ -57,7 +57,6 @@
 #include "qcms.h"
 
 #include <dlfcn.h>
-#include "mozilla/gfx/2D.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

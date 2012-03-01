@@ -820,8 +820,8 @@ class TokenStream
     void                *listenerTSData;/* listener data for this TokenStream */
     CharBuffer          tokenbuf;       /* current token string buffer */
     int8_t              oneCharTokens[128];  /* table of one-char tokens */
-    JSPackedBool        maybeEOL[256];       /* probabilistic EOL lookup table */
-    JSPackedBool        maybeStrSpecial[256];/* speeds up string scanning */
+    bool                maybeEOL[256];       /* probabilistic EOL lookup table */
+    bool                maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
     bool                xml;            /* see JSOPTION_XML */
     JSContext           *const cx;

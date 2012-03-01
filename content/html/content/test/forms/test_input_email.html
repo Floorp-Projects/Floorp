@@ -87,6 +87,7 @@ var values = [
   [ 'f\noo@bar.com', true ],
   [ 'f\roo@bar.com', true ],
   [ 'f\r\noo@bar.com', true ],
+  [ 'fü@foo.com', true ],
   // Some checks for the domain part.
   [ 'foo@bar', true ],
   [ 'foo@b', true ],
@@ -104,6 +105,11 @@ var values = [
   [ 'foo@b\rar.com', true ],
   [ 'foo@b\r\nar.com', true ],
   [ 'foo@.', false ],
+  [ 'foo@fü.com', true ],
+  [ 'foo@fu.cüm', true ],
+  // Long strings with UTF-8.
+  [ 'this.is.email.should.be.longer.than.sixty.four.characters.föö@mözillä.tld', true ],
+  [ 'this-is-email-should-be-longer-than-sixty-four-characters-föö@mözillä.tld', true, true ],
 ];
 
 // Multiple values, we don't check e-mail validity, only multiple stuff.
@@ -170,8 +176,13 @@ for each (c in illegalCharacters) {
   values.push(['foo@foo.ba' + c + 'r', false]);
 }
 
-values.forEach(function([value, valid]) {
-  testEmailAddress(email, value, false, valid);
+values.forEach(function([value, valid, todo]) {
+  if (todo === true) {
+    email.value = value;
+    todo_is(email.validity.valid, true, "value should be valid");
+  } else {
+    testEmailAddress(email, value, false, valid);
+  }
 });
 
 multipleValues.forEach(function([value, valid]) {
