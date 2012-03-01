@@ -477,7 +477,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, unsigned flags, Value *vp)
         return false;
     if (vp->isPrimitive()) {
         /*
-         * We are always coming from js_ValueToIterator, and we are no longer on
+         * We are always coming from js::ValueToIterator, and we are no longer on
          * trace, so the object we are iterating over is on top of the stack (-1).
          */
         JSAutoByteString bytes;
