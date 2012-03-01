@@ -6,45 +6,37 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
+  <!-- This file uses fake memory reporters to test the presentation of memory 
+       reports in about:memory.  test_memoryReporters.xul uses the real
+       memory reporters to test whether the memory reporters are producing
+       sensible results. -->
+
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml"></body>
 
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
+  "use strict";
+
   const Cc = Components.classes;
   const Ci = Components.interfaces;
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  // Access mgr.explicit and mgr.resident just to make sure they don't crash.
-  // We can't check their actual values because they're non-deterministic.
-  let dummy = mgr.explicit;
-  dummy = mgr.resident;
-
   // Remove all the real reporters and multi-reporters;  save them to
   // restore at the end.
   let e = mgr.enumerateReporters();
   let realReporters = [];
-  dummy = 0;
   while (e.hasMoreElements()) {
     let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    // Get the |amount| field, even though we don't use it, just to test
-    // that the reporter doesn't crash or anything.
-    dummy += r.amount;
     mgr.unregisterReporter(r);
     realReporters.push(r);
   }
   e = mgr.enumerateMultiReporters();
   let realMultiReporters = [];
-  let dummy = 0;
   while (e.hasMoreElements()) {
     let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
-    // Call collectReports, even though we don't use its results, just to
-    // test that the multi-reporter doesn't crash or anything.  And likewise
-    // for the |explicitNonHeap| field.
-    r.collectReports(function(){}, null);
-    dummy += r.explicitNonHeap;
     mgr.unregisterMultiReporter(r);
     realMultiReporters.push(r);
   }
