@@ -209,8 +209,12 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     ValueMap *map = cx->new_<ValueMap>(cx->runtime);
-    if (!map || !map->init())
+    if (!map)
         return false;
+    if (!map->init()) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
     obj->setPrivate(map);
 
     CallArgsFromVp(argc, vp).rval().setObject(*obj);
@@ -267,7 +271,10 @@ MapObject::set(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_MAP(set, cx, argc, vp, args, map);
     ARG0_KEY(cx, args, key);
-    map.put(key, args.length() > 1 ? args[1] : UndefinedValue());
+    if (!map.put(key, args.length() > 1 ? args[1] : UndefinedValue())) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
     args.rval().setUndefined();
     return true;
 }
@@ -356,8 +363,12 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     ValueSet *set = cx->new_<ValueSet>(cx->runtime);
-    if (!set || !set->init())
+    if (!set)
         return false;
+    if (!set->init()) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
     obj->setPrivate(set);
 
     CallArgsFromVp(argc, vp).rval().setObject(*obj);
@@ -381,8 +392,10 @@ SetObject::add(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_SET(add, cx, argc, vp, args, set);
     ARG0_KEY(cx, args, key);
-    if (!set.put(key))
+    if (!set.put(key)) {
+        js_ReportOutOfMemory(cx);
         return false;
+    }
     args.rval().setUndefined();
     return true;
 }
