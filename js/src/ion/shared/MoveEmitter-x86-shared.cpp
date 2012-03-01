@@ -178,6 +178,12 @@ MoveEmitterX86::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
 void
 MoveEmitterX86::emitMove(const MoveOperand &from, const MoveOperand &to)
 {
+    if (to.isGeneralReg() && to.reg() == spilledReg_) {
+        // If the destination is the spilled register, make sure we
+        // don't re-clobber its value.
+        spilledReg_ = InvalidReg;
+    }
+
     if (from.isGeneralReg()) {
         if (from.reg() == spilledReg_) {
             // If the source is a register that has been spilled, make sure
@@ -187,12 +193,6 @@ MoveEmitterX86::emitMove(const MoveOperand &from, const MoveOperand &to)
         }
         masm.mov(from.reg(), toOperand(to));
     } else if (to.isGeneralReg()) {
-        if (to.reg() == spilledReg_) {
-            // If the destination is the spilled register, make sure we
-            // don't re-clobber its value.
-            spilledReg_ = InvalidReg;
-        }
-
         JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
         if (from.isMemory())
             masm.mov(toOperand(from), to.reg());
