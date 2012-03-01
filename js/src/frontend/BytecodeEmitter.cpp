@@ -5116,6 +5116,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                        "global functions can't have upvars, so they are never flat");
             if (!EmitFunctionOp(cx, JSOP_DEFFUN, index, bce))
                 return false;
+            if (!UpdateLineNumberNotes(cx, bce, pn->pn_pos.begin.lineno))
+                return false;
             bce->switchToMain();
         }
 

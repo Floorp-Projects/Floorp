@@ -316,7 +316,9 @@ var PlacesUtils = {
     switch (aTopic) {
       case this.TOPIC_SHUTDOWN:
         Services.obs.removeObserver(this, this.TOPIC_SHUTDOWN);
-        this._shutdownFunctions.forEach(function (aFunc) aFunc.apply(this), this);
+        while (this._shutdownFunctions.length > 0) {
+          this._shutdownFunctions.shift().apply(this);
+        }
         if (this._bookmarksServiceObserversQueue.length > 0) {
           // Since we are shutting down, there's no reason to add the observers.
           this._bookmarksServiceObserversQueue.length = 0;

@@ -85,6 +85,7 @@ HISTOGRAM(GC_SLICE_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running a JS GC sl
 HISTOGRAM(GC_MMU_50, 1, 100, 20, LINEAR, "Minimum percentage of time spent outside GC over any 50ms window")
 HISTOGRAM_BOOLEAN(GC_RESET, "Was an incremental GC canceled?")
 HISTOGRAM_BOOLEAN(GC_INCREMENTAL_DISABLED, "Is incremental GC permanently disabled?")
+HISTOGRAM_BOOLEAN(GC_NON_INCREMENTAL, "Was the GC non-incremental?")
 
 HISTOGRAM(TELEMETRY_PING, 1, 3000, 10, EXPONENTIAL, "Time taken to submit telemetry info (ms)")
 HISTOGRAM_BOOLEAN(TELEMETRY_SUCCESS,  "Successful telemetry submission")
@@ -234,6 +235,7 @@ HISTOGRAM(DNS_FAILED_LOOKUP_TIME, 1, 60000, 50, EXPONENTIAL, "Time for an unsucc
 
 HISTOGRAM(FIND_PLUGINS, 1, 3000, 10, EXPONENTIAL, "Time spent scanning filesystem for plugins (ms)")
 HISTOGRAM(CHECK_JAVA_ENABLED, 1, 3000, 10, EXPONENTIAL, "Time spent checking if Java is enabled (ms)")
+HISTOGRAM(PLUGIN_SHUTDOWN_MS, 1, 5000, 20, EXPONENTIAL, "Time spent shutting down plugins (ms)")
 
 /* Define 2 histograms: MOZ_SQLITE_(NAME)_MS and
  * MOZ_SQLITE_(NAME)_MAIN_THREAD_MS. These are meant to be used by
@@ -278,6 +280,14 @@ HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE, 1, 10000, 10, EXPONENTIAL, "Ti
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_MAIN_THREAD, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::Close() on the main thread (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::CloseInternal() on non-main thread (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL_MAIN_THREAD, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::CloseInternal on the main thread (ms)")
+
+/**
+ * Idle service telemetry
+ */
+HISTOGRAM(IDLE_NOTIFY_BACK_MS, 1, 5000, 10, EXPONENTIAL, "Time spent checking for and notifying listeners that the user is back (ms)")
+HISTOGRAM(IDLE_NOTIFY_BACK_LISTENERS, 1, 100, 20, LINEAR, "Number of listeners notified that the user is back")
+HISTOGRAM(IDLE_NOTIFY_IDLE_MS, 1, 5000, 10, EXPONENTIAL, "Time spent checking for and notifying listeners that the user is idle (ms)")
+HISTOGRAM(IDLE_NOTIFY_IDLE_LISTENERS, 1, 100, 20, LINEAR, "Number of listeners notified that the user is idle")
 
 /**
  * Url-Classifier telemetry

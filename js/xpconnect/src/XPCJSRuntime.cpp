@@ -1253,18 +1253,18 @@ GetCompartmentNameHelper(JSCompartment *c, bool getAddress)
     return name;
 }
 
+static void*
+GetCompartmentNameAndAddress(JSRuntime *rt, JSCompartment *c)
+{
+    return GetCompartmentNameHelper(c, /* get address = */true);
+}
+
 namespace xpc {
 
 void*
-GetCompartmentName(JSContext *cx, JSCompartment *c)
+GetCompartmentName(JSRuntime *rt, JSCompartment *c)
 {
     return GetCompartmentNameHelper(c, /* get address = */false);
-}
-
-void*
-GetCompartmentNameAndAddress(JSContext *cx, JSCompartment *c)
-{
-    return GetCompartmentNameHelper(c, /* get address = */true);
 }
 
 void
@@ -1748,11 +1748,11 @@ class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
 
     typedef js::Vector<nsCString, 0, js::SystemAllocPolicy> Paths; 
 
-    static void CompartmentCallback(JSContext *cx, void* data, JSCompartment *c)
+    static void CompartmentCallback(JSRuntime *rt, void* data, JSCompartment *c)
     {
         Paths *paths = static_cast<Paths *>(data);
         nsCString *name =
-            static_cast<nsCString *>(xpc::GetCompartmentName(cx, c));
+            static_cast<nsCString *>(xpc::GetCompartmentName(rt, c));
         nsCString path;
         if (js::IsSystemCompartment(c))
             path = NS_LITERAL_CSTRING("compartments/system/") + *name;
@@ -1772,15 +1772,11 @@ class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
         // from within CompartmentCallback() leads to all manner of assertions.
 
         // Collect.
-        XPCJSRuntime *xpcrt = nsXPConnect::GetRuntimeInstance();
-        JSContext *cx = JS_NewContext(xpcrt->GetJSRuntime(), 0);
-        if (!cx)
-            return NS_ERROR_OUT_OF_MEMORY;
-
+ 
         Paths paths; 
-        JS_IterateCompartments(cx, &paths, CompartmentCallback);
-        JS_DestroyContextNoGC(cx);
-
+        JS_IterateCompartments(nsXPConnect::GetRuntimeInstance()->GetJSRuntime(),
+                               &paths, CompartmentCallback);
+ 
         // Report.
         for (size_t i = 0; i < paths.length(); i++)
             // These ones don't need a description, hence the "".
@@ -1826,7 +1822,7 @@ public:
         // the callback.  Separating these steps is important because the
         // callback may be a JS function, and executing JS while getting these
         // stats seems like a bad idea.
-        JS::RuntimeStats rtStats(JsMallocSizeOf, xpc::GetCompartmentNameAndAddress,
+        JS::RuntimeStats rtStats(JsMallocSizeOf, GetCompartmentNameAndAddress,
                                  xpc::DestroyCompartmentName);
         if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats))
             return NS_ERROR_FAILURE;
@@ -1944,10 +1940,7 @@ public:
     GetExplicitNonHeap(PRInt64 *n)
     {
         JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-
-        if (!JS::GetExplicitNonHeapForRuntime(rt, reinterpret_cast<int64_t*>(n), JsMallocSizeOf))
-            return NS_ERROR_FAILURE;
-
+        *reinterpret_cast<int64_t*>(n) = JS::GetExplicitNonHeapForRuntime(rt, JsMallocSizeOf);
         return NS_OK;
     }
 };
@@ -1994,6 +1987,9 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
         break;
       case JS_TELEMETRY_GC_INCREMENTAL_DISABLED:
         Telemetry::Accumulate(Telemetry::GC_INCREMENTAL_DISABLED, sample);
+        break;
+      case JS_TELEMETRY_GC_NON_INCREMENTAL:
+        Telemetry::Accumulate(Telemetry::GC_NON_INCREMENTAL, sample);
         break;
     }
 }
