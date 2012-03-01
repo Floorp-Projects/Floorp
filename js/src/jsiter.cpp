@@ -1157,45 +1157,8 @@ ElementIteratorObject::iteratorNext(JSContext *cx, Value *vp)
     }
 
     JS_ASSERT(i + 1 > i);
-
-    /* Simple fast path for dense arrays. */
-    if (obj->isDenseArray()) {
-        *vp = obj->getDenseArrayElement(i);
-        if (vp->isMagic(JS_ARRAY_HOLE))
-            vp->setUndefined();
-    } else {
-        /* Make a jsid for this index. */
-        jsid id;
-        if (i < uint32_t(INT32_MAX) && INT_FITS_IN_JSID(i)) {
-            id = INT_TO_JSID(i);
-        } else {
-            Value v = DoubleValue(i);
-            if (!js_ValueToStringId(cx, v, &id))
-                goto error;
-        }
-
-        /* Find out if this object has an element i. */
-        bool has;
-        if (obj->isProxy()) {
-            /* js_HasOwnProperty does not work on proxies. */
-            if (!Proxy::hasOwn(cx, obj, id, &has))
-                goto error;
-        } else {
-            JSObject *obj2;
-            JSProperty *prop;
-            if (!js_HasOwnProperty(cx, obj->getOps()->lookupGeneric, obj, id, &obj2, &prop))
-                goto error;
-            has = !!prop;
-        }
-
-        /* Populate *vp. */
-        if (has) {
-            if (!obj->getElement(cx, obj, i, vp))
-                goto error;
-        } else {
-            vp->setUndefined();
-        }
-    }
+    if (!obj->getElement(cx, obj, i, vp))
+        goto error;
 
     /* On success, bump the index. */
     setIndex(i + 1);
