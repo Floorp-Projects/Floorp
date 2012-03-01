@@ -47,6 +47,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =\
 		test_ariadialog.html \
+		test_canvas.html \
 		test_colorpicker.xul \
 		test_cssoverflow.html \
 		test_contextmenu.xul \

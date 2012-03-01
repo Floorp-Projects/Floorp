@@ -74,7 +74,7 @@ for the Unicode Character Database (UCD) for Unicode 6.1.0.
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 #include "harfbuzz/hb-common.h"
 
 static const PRUint32 sScriptCodeToTag[] = {

@@ -1660,8 +1660,8 @@ PlacesTreeView.prototype = {
     // We may only get here if the cell is editable.
     let node = this._rows[aRow];
     if (node.title != aText) {
-      let txn = PlacesUIUtils.ptm.editItemTitle(node.itemId, aText);
-      PlacesUIUtils.ptm.doTransaction(txn);
+      let txn = new PlacesEditItemTitleTransaction(node.itemId, aText);
+      PlacesUtils.transactionManager.doTransaction(txn);
     }
   },
 

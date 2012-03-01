@@ -137,6 +137,7 @@ public class Tabs implements GeckoEventListener {
                     GeckoApp.mBrowserToolbar.setProgressVisibility(tab.isLoading());
                     GeckoApp.mDoorHangerPopup.updatePopup();
                     GeckoApp.mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
+                    notifyListeners(tab, TabEvents.SELECTED);
 
                     if (oldTab != null)
                         GeckoApp.mAppContext.hidePlugins(oldTab, true);
@@ -198,7 +199,7 @@ public class Tabs implements GeckoEventListener {
 
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() { 
             public void run() {
-                GeckoApp.mAppContext.onTabsChanged(tab);
+                notifyListeners(tab, TabEvents.CLOSED);
                 GeckoApp.mBrowserToolbar.updateTabCountAndAnimate(Tabs.getInstance().getCount());
                 GeckoApp.mDoorHangerPopup.updatePopup();
                 GeckoApp.mAppContext.hidePlugins(tab, true);
@@ -310,6 +311,47 @@ public class Tabs implements GeckoEventListener {
                     GeckoApp.mAppContext.getAndProcessThumbnailForTab(tab, false);
                 }
             });
+        }
+    }
+
+    public interface OnTabsChangedListener {
+        public void onTabChanged(Tab tab, TabEvents msg);
+    }
+    
+    private static ArrayList<OnTabsChangedListener> mTabsChangedListeners;
+
+    public static void registerOnTabsChangedListener(OnTabsChangedListener listener) {
+        if (mTabsChangedListeners == null)
+            mTabsChangedListeners = new ArrayList<OnTabsChangedListener>();
+        
+        mTabsChangedListeners.add(listener);
+    }
+
+    public static void unregisterOnTabsChangedListener(OnTabsChangedListener listener) {
+        if (mTabsChangedListeners == null)
+            return;
+        
+        mTabsChangedListeners.remove(listener);
+    }
+
+    public enum TabEvents {
+        CLOSED,
+        START,
+        LOADED,
+        STOP,
+        FAVICON,
+        THUMBNAIL,
+        TITLE,
+        SELECTED
+    }
+
+    public void notifyListeners(Tab tab, TabEvents msg) {
+        if (mTabsChangedListeners == null)
+            return;
+
+        Iterator<OnTabsChangedListener> items = mTabsChangedListeners.iterator();
+        while (items.hasNext()) {
+            items.next().onTabChanged(tab, msg);
         }
     }
 }

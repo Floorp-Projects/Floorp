@@ -339,7 +339,7 @@ static JSRuntime* sHookedRuntime;
 #endif  // DEBUG
 
 static JSBool
-DelocalizeContextCallback(JSContext *cx, uintN contextOp)
+DelocalizeContextCallback(JSContext *cx, unsigned contextOp)
 {
   NS_ABORT_IF_FALSE(JS_GetRuntime(cx) == sHookedRuntime, "unknown runtime!");
 

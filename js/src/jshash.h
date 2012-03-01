@@ -46,7 +46,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "jstypes.h"
-#include "jscompat.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -58,8 +57,8 @@ typedef struct JSHashTable JSHashTable;
 #define JS_GOLDEN_RATIO 0x9E3779B9U
 
 typedef JSHashNumber (* JSHashFunction)(const void *key);
-typedef intN (* JSHashComparator)(const void *v1, const void *v2);
-typedef intN (* JSHashEnumerator)(JSHashEntry *he, intN i, void *arg);
+typedef int (* JSHashComparator)(const void *v1, const void *v2);
+typedef int (* JSHashEnumerator)(JSHashEntry *he, int i, void *arg);
 
 /* Flag bits in JSHashEnumerator's return value */
 #define HT_ENUMERATE_NEXT       0       /* continue enumerating entries */
@@ -70,7 +69,7 @@ typedef struct JSHashAllocOps {
     void *              (*allocTable)(void *pool, size_t size);
     void                (*freeTable)(void *pool, void *item, size_t size);
     JSHashEntry *       (*allocEntry)(void *pool, const void *key);
-    void                (*freeEntry)(void *pool, JSHashEntry *he, uintN flag);
+    void                (*freeEntry)(void *pool, JSHashEntry *he, unsigned flag);
 } JSHashAllocOps;
 
 #define HT_FREE_VALUE   0               /* just free the entry's value */
@@ -132,13 +131,13 @@ JS_HashTableAdd(JSHashTable *ht, const void *key, void *value);
 extern JS_PUBLIC_API(JSBool)
 JS_HashTableRemove(JSHashTable *ht, const void *key);
 
-extern JS_PUBLIC_API(intN)
+extern JS_PUBLIC_API(int)
 JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg);
 
 extern JS_PUBLIC_API(void *)
 JS_HashTableLookup(JSHashTable *ht, const void *key);
 
-extern JS_PUBLIC_API(intN)
+extern JS_PUBLIC_API(int)
 JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp);
 
 /* General-purpose C string hash function. */
@@ -146,7 +145,7 @@ extern JS_PUBLIC_API(JSHashNumber)
 JS_HashString(const void *key);
 
 /* Stub function just returns v1 == v2 */
-extern JS_PUBLIC_API(intN)
+extern JS_PUBLIC_API(int)
 JS_CompareValues(const void *v1, const void *v2);
 
 JS_END_EXTERN_C

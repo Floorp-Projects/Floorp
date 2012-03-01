@@ -8,7 +8,7 @@
 #define __android_log_print(a, ...)
 #endif
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
 #include "mozilla/unused.h"
 #include "mozilla/TimeStamp.h"

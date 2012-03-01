@@ -111,7 +111,7 @@ typedef void
 /* This struct could have more fields in future versions */
 typedef struct
 {
-    uintN              size;       /* size of this struct (init before use)*/
+    unsigned              size;       /* size of this struct (init before use)*/
     JSD_SetContextProc setContext;
 } JSD_UserCallbacks;
 
@@ -173,13 +173,13 @@ JSD_DebuggerUnpause(JSDContext* jsdc);
 /*
 * Get the Major Version (initial JSD release used major version = 1)
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetMajorVersion(void);
 
 /*
 * Get the Minor Version (initial JSD release used minor version = 0)
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetMinorVersion(void);
 
 /*
@@ -321,13 +321,13 @@ JSD_IterateScripts(JSDContext* jsdc, JSDScript **iterp);
 /*
 * Get the number of times this script has been called.
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetScriptCallCount(JSDContext* jsdc, JSDScript *script);
 
 /*
 * Get the max number of times this script called itself, directly or indirectly.
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetScriptMaxRecurseDepth(JSDContext* jsdc, JSDScript *script);
 
 /*
@@ -441,13 +441,13 @@ JSD_GetScriptFunctionId(JSDContext* jsdc, JSDScript *jsdscript);
 * This is one-based -- i.e. the first line of a file is line '1'. This may
 * return 0 if this infomation is unknown.
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetScriptBaseLineNumber(JSDContext* jsdc, JSDScript *jsdscript);
 
 /*
 * Get the count of source lines associated with this script (1 or greater)
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetScriptLineExtent(JSDContext* jsdc, JSDScript *jsdscript);
 
 /*
@@ -486,14 +486,14 @@ JSD_GetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc* hook, void** callerdata)
 * This function can be used to set breakpoints -- see JSD_SetExecutionHook
 */
 extern JSD_PUBLIC_API(uintptr_t)
-JSD_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line);
+JSD_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, unsigned line);
 
 /*
 * Get the source line number for a given 'Program Counter' location.
 * Returns 0 if no source line information is appropriate (or available) for
 * the given pc.
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc);
 
 /*
@@ -504,8 +504,8 @@ JSD_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc);
  */
 extern JSD_PUBLIC_API(JSBool)
 JSD_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
-               uintN startLine, uintN maxLines,
-               uintN* count, uintN** lines, uintptr_t** pcs);
+               unsigned startLine, unsigned maxLines,
+               unsigned* count, unsigned** lines, uintptr_t** pcs);
 
 /* these are only used in cases where scripts are created outside of JS*/
 
@@ -520,7 +520,7 @@ extern JSD_PUBLIC_API(void)
 JSD_ScriptCreated(JSDContext* jsdc,
                   JSContext   *cx,
                   const char  *filename,    /* URL this script loads from */
-                  uintN       lineno,       /* line where this script starts */
+                  unsigned       lineno,       /* line where this script starts */
                   JSScript    *script,
                   JSFunction  *fun);
 
@@ -611,7 +611,7 @@ JSD_GetSourceURL(JSDContext* jsdc, JSDSourceText* jsdsrc);
 */
 extern JSD_PUBLIC_API(JSBool)
 JSD_GetSourceText(JSDContext* jsdc, JSDSourceText* jsdsrc,
-                  const char** ppBuf, intN* pLen);
+                  const char** ppBuf, int* pLen);
 
 /*
 * Clear the text -- delete the text and set the status to JSD_SOURCE_CLEARED.
@@ -650,7 +650,7 @@ JSD_SetSourceDirty(JSDContext* jsdc, JSDSourceText* jsdsrc, JSBool dirty);
 * different from their stored value. Thus they can know if they have stale
 * data or not. NOTE: this value is not gauranteed to start at any given number.
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetSourceAlterCount(JSDContext* jsdc, JSDSourceText* jsdsrc);
 
 /*
@@ -658,7 +658,7 @@ JSD_GetSourceAlterCount(JSDContext* jsdc, JSDSourceText* jsdsrc);
 * normally automatic when the item changes, but a give consumer may want to
 * force this to amke an item appear to have changed even if it has not.
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_IncrementSourceAlterCount(JSDContext* jsdc, JSDSourceText* jsdsrc);
 
 /*
@@ -748,10 +748,10 @@ JSD_AddFullSourceText(JSDContext* jsdc,
 /*
 * Implement a callback of this form in order to hook execution.
 */
-typedef uintN
+typedef unsigned
 (* JSD_ExecutionHookProc)(JSDContext*     jsdc,
                           JSDThreadState* jsdthreadstate,
-                          uintN           type,
+                          unsigned           type,
                           void*           callerdata,
                           jsval*          rval);
 
@@ -770,7 +770,7 @@ typedef uintN
 typedef JSBool
 (* JSD_CallHookProc)(JSDContext*     jsdc,
                      JSDThreadState* jsdthreadstate,
-                     uintN           type,
+                     unsigned           type,
                      void*           callerdata);
 
 /*
@@ -905,7 +905,7 @@ JSD_ClearFunctionHook(JSDContext* jsdc);
 /*
 * Get the count of call stack frames for the given JSDThreadState
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetCountOfStackFrames(JSDContext* jsdc, JSDThreadState* jsdthreadstate);
 
 /*
@@ -1008,8 +1008,8 @@ extern JSD_PUBLIC_API(JSBool)
 JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  JSDThreadState* jsdthreadstate,
                                  JSDStackFrameInfo* jsdframe,
-                                 const jschar *bytes, uintN length,
-                                 const char *filename, uintN lineno,
+                                 const jschar *bytes, unsigned length,
+                                 const char *filename, unsigned lineno,
                                  jsval *rval);
 
 /*
@@ -1019,8 +1019,8 @@ extern JSD_PUBLIC_API(JSBool)
 JSD_AttemptUCScriptInStackFrame(JSDContext* jsdc,
                                 JSDThreadState* jsdthreadstate,
                                 JSDStackFrameInfo* jsdframe,
-                                const jschar *bytes, uintN length,
-                                const char *filename, uintN lineno,
+                                const jschar *bytes, unsigned length,
+                                const char *filename, unsigned lineno,
                                 jsval *rval);
 
 /* single byte character version of JSD_EvaluateUCScriptInStackFrame */
@@ -1028,8 +1028,8 @@ extern JSD_PUBLIC_API(JSBool)
 JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDThreadState* jsdthreadstate,
                                JSDStackFrameInfo* jsdframe,
-                               const char *bytes, uintN length,
-                               const char *filename, uintN lineno, jsval *rval);
+                               const char *bytes, unsigned length,
+                               const char *filename, unsigned lineno, jsval *rval);
 
 /*
 * Same as above, but does not eat exceptions.
@@ -1038,8 +1038,8 @@ extern JSD_PUBLIC_API(JSBool)
 JSD_AttemptScriptInStackFrame(JSDContext* jsdc,
                               JSDThreadState* jsdthreadstate,
                               JSDStackFrameInfo* jsdframe,
-                              const char *bytes, uintN length,
-                              const char *filename, uintN lineno, jsval *rval);
+                              const char *bytes, unsigned length,
+                              const char *filename, unsigned lineno, jsval *rval);
 
 /*
 * Convert the given jsval to a string
@@ -1084,7 +1084,7 @@ JSD_SetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate,
 /*
 * Implement a callback of this form in order to hook the ErrorReporter
 */
-typedef uintN
+typedef unsigned
 (* JSD_ErrorReporter)(JSDContext*     jsdc,
                       JSContext*      cx,
                       const char*     message,
@@ -1327,7 +1327,7 @@ JSD_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval);
 * Return the number of properties for the JSDValue.
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetCountOfProperties(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
@@ -1440,14 +1440,14 @@ JSD_GetPropertyAlias(JSDContext* jsdc, JSDProperty* jsdprop);
 * Get the flags for this property
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetPropertyFlags(JSDContext* jsdc, JSDProperty* jsdprop);
 
 /*
 * Get Variable or Argument slot number (if JSDPD_ARGUMENT or JSDPD_VARIABLE set)
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetPropertyVarArgSlot(JSDContext* jsdc, JSDProperty* jsdprop);
 
 /***************************************************************************/
@@ -1509,7 +1509,7 @@ JSD_GetObjectNewURL(JSDContext* jsdc, JSDObject* jsdobj);
 * created. May be 0 indicating that the line number is unknown.
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetObjectNewLineNumber(JSDContext* jsdc, JSDObject* jsdobj);
 
 /*
@@ -1525,7 +1525,7 @@ JSD_GetObjectConstructorURL(JSDContext* jsdc, JSDObject* jsdobj);
 * created. May be 0 indicating that the line number is unknown.
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(uintN)
+extern JSD_PUBLIC_API(unsigned)
 JSD_GetObjectConstructorLineNumber(JSDContext* jsdc, JSDObject* jsdobj);
 
 /*
@@ -1576,11 +1576,11 @@ JSDLW_ForceLoadSource(JSDContext* jsdc, JSDSourceText* jsdsrc);
 
 extern JSD_PUBLIC_API(JSBool)
 JSDLW_RawToProcessedLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
-                               uintN lineIn, uintN* lineOut);
+                               unsigned lineIn, unsigned* lineOut);
 
 extern JSD_PUBLIC_API(JSBool)
 JSDLW_ProcessedToRawLineNumber(JSDContext* jsdc, JSDScript* jsdscript,
-                               uintN lineIn, uintN* lineOut);
+                               unsigned lineIn, unsigned* lineOut);
 
 #endif
 /***************************************************************************/

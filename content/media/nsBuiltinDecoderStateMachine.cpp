@@ -48,7 +48,7 @@
 #include "nsDeque.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 #include "mozilla/Util.h"
 
 using namespace mozilla;

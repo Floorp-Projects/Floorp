@@ -266,7 +266,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
 
     JSObject *origobj;
     Value v;
-    uintN attrs;
+    unsigned attrs;
     jsid propid;
 
     origobj = obj;
@@ -348,14 +348,14 @@ JS_ClearAllWatchPoints(JSContext *cx)
 
 /************************************************************************/
 
-JS_PUBLIC_API(uintN)
+JS_PUBLIC_API(unsigned)
 JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    return js_PCToLineNumber(cx, script, pc);
+    return js::PCToLineNumber(script, pc);
 }
 
 JS_PUBLIC_API(jsbytecode *)
-JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno)
+JS_LineNumberToPC(JSContext *cx, JSScript *script, unsigned lineno)
 {
     return js_LineNumberToPC(script, lineno);
 }
@@ -368,13 +368,13 @@ JS_EndPC(JSContext *cx, JSScript *script)
 
 JS_PUBLIC_API(JSBool)
 JS_GetLinePCs(JSContext *cx, JSScript *script,
-              uintN startLine, uintN maxLines,
-              uintN* count, uintN** retLines, jsbytecode*** retPCs)
+              unsigned startLine, unsigned maxLines,
+              unsigned* count, unsigned** retLines, jsbytecode*** retPCs)
 {
-    uintN* lines;
+    unsigned* lines;
     jsbytecode** pcs;
     size_t len = (script->length > maxLines ? maxLines : script->length);
-    lines = (uintN*) cx->malloc_(len * sizeof(uintN));
+    lines = (unsigned*) cx->malloc_(len * sizeof(unsigned));
     if (!lines)
         return JS_FALSE;
 
@@ -384,15 +384,15 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
         return JS_FALSE;
     }
 
-    uintN lineno = script->lineno;
-    uintN offset = 0;
-    uintN i = 0;
+    unsigned lineno = script->lineno;
+    unsigned offset = 0;
+    unsigned i = 0;
     for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         offset += SN_DELTA(sn);
         SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
         if (type == SRC_SETLINE || type == SRC_NEWLINE) {
             if (type == SRC_SETLINE)
-                lineno = (uintN) js_GetSrcNoteOffset(sn, 0);
+                lineno = (unsigned) js_GetSrcNoteOffset(sn, 0);
             else
                 lineno++;
 
@@ -419,7 +419,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
     return JS_TRUE;
 }
 
-JS_PUBLIC_API(uintN)
+JS_PUBLIC_API(unsigned)
 JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
 {
     return fun->nargs;
@@ -705,13 +705,13 @@ JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
     return script->sourceMap;
 }
 
-JS_PUBLIC_API(uintN)
+JS_PUBLIC_API(unsigned)
 JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script)
 {
     return script->lineno;
 }
 
-JS_PUBLIC_API(uintN)
+JS_PUBLIC_API(unsigned)
 JS_GetScriptLineExtent(JSContext *cx, JSScript *script)
 {
     return js_GetScriptLineExtent(script);
@@ -744,8 +744,8 @@ JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
 
 JS_PUBLIC_API(JSBool)
 JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
-                          const jschar *chars, uintN length,
-                          const char *filename, uintN lineno,
+                          const jschar *chars, unsigned length,
+                          const char *filename, unsigned lineno,
                           jsval *rval)
 {
     if (!CheckDebugMode(cx))
@@ -765,8 +765,8 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
 
 JS_PUBLIC_API(JSBool)
 JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
-                        const char *bytes, uintN length,
-                        const char *filename, uintN lineno,
+                        const char *bytes, unsigned length,
+                        const char *filename, unsigned lineno,
                         jsval *rval)
 {
     jschar *chars;
@@ -779,7 +779,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
     chars = InflateString(cx, bytes, &len);
     if (!chars)
         return JS_FALSE;
-    length = (uintN) len;
+    length = (unsigned) len;
     ok = JS_EvaluateUCInStackFrame(cx, fp, chars, length, filename, lineno,
                                    rval);
     cx->free_(chars);
@@ -1230,7 +1230,7 @@ JS_DumpProfile(const char *outfile, const char *profileName)
 struct RequiredStringArg {
     JSContext *mCx;
     char *mBytes;
-    RequiredStringArg(JSContext *cx, uintN argc, jsval *vp, size_t argi, const char *caller)
+    RequiredStringArg(JSContext *cx, unsigned argc, jsval *vp, size_t argi, const char *caller)
         : mCx(cx), mBytes(NULL)
     {
         if (argc <= argi) {
@@ -1251,7 +1251,7 @@ struct RequiredStringArg {
 };
 
 static JSBool
-StartProfiling(JSContext *cx, uintN argc, jsval *vp)
+StartProfiling(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc == 0) {
         JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_StartProfiling(NULL)));
@@ -1266,7 +1266,7 @@ StartProfiling(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-StopProfiling(JSContext *cx, uintN argc, jsval *vp)
+StopProfiling(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc == 0) {
         JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_StopProfiling(NULL)));
@@ -1281,7 +1281,7 @@ StopProfiling(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-PauseProfilers(JSContext *cx, uintN argc, jsval *vp)
+PauseProfilers(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc == 0) {
         JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_PauseProfilers(NULL)));
@@ -1296,7 +1296,7 @@ PauseProfilers(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-ResumeProfilers(JSContext *cx, uintN argc, jsval *vp)
+ResumeProfilers(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc == 0) {
         JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(JS_ResumeProfilers(NULL)));
@@ -1312,7 +1312,7 @@ ResumeProfilers(JSContext *cx, uintN argc, jsval *vp)
 
 /* Usage: DumpProfile([filename[, profileName]]) */
 static JSBool
-DumpProfile(JSContext *cx, uintN argc, jsval *vp)
+DumpProfile(JSContext *cx, unsigned argc, jsval *vp)
 {
     bool ret;
     if (argc == 0) {
@@ -1340,7 +1340,7 @@ DumpProfile(JSContext *cx, uintN argc, jsval *vp)
 #ifdef MOZ_SHARK
 
 static JSBool
-IgnoreAndReturnTrue(JSContext *cx, uintN argc, jsval *vp)
+IgnoreAndReturnTrue(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, JSVAL_TRUE);
     return true;
@@ -1350,21 +1350,21 @@ IgnoreAndReturnTrue(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef MOZ_CALLGRIND
 static JSBool
-StartCallgrind(JSContext *cx, uintN argc, jsval *vp)
+StartCallgrind(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_StartCallgrind()));
     return JS_TRUE;
 }
 
 static JSBool
-StopCallgrind(JSContext *cx, uintN argc, jsval *vp)
+StopCallgrind(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_StopCallgrind()));
     return JS_TRUE;
 }
 
 static JSBool
-DumpCallgrind(JSContext *cx, uintN argc, jsval *vp)
+DumpCallgrind(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc == 0) {
         JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_DumpCallgrind(NULL)));
@@ -1382,7 +1382,7 @@ DumpCallgrind(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef MOZ_VTUNE
 static JSBool
-StartVtune(JSContext *cx, uintN argc, jsval *vp)
+StartVtune(JSContext *cx, unsigned argc, jsval *vp)
 {
     RequiredStringArg profileName(cx, argc, vp, 0, "startVtune");
     if (!profileName)
@@ -1392,21 +1392,21 @@ StartVtune(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-StopVtune(JSContext *cx, uintN argc, jsval *vp)
+StopVtune(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_StopVtune()));
     return JS_TRUE;
 }
 
 static JSBool
-PauseVtune(JSContext *cx, uintN argc, jsval *vp)
+PauseVtune(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_PauseVtune()));
     return JS_TRUE;
 }
 
 static JSBool
-ResumeVtune(JSContext *cx, uintN argc, jsval *vp)
+ResumeVtune(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(js_ResumeVtune()));
     return JS_TRUE;
@@ -1629,20 +1629,26 @@ JS_DumpPCCounts(JSContext *cx, JSScript *script)
 #endif
 }
 
+namespace {
+
+typedef Vector<JSScript *, 0, SystemAllocPolicy> ScriptsToDump;
+
 static void
-DumpBytecodeScriptCallback(JSContext *cx, void *data, void *thing,
+DumpBytecodeScriptCallback(JSRuntime *rt, void *data, void *thing,
                            JSGCTraceKind traceKind, size_t thingSize)
 {
     JS_ASSERT(traceKind == JSTRACE_SCRIPT);
     JSScript *script = static_cast<JSScript *>(thing);
-    reinterpret_cast<Vector<JSScript *> *>(data)->append(script);
+    static_cast<ScriptsToDump *>(data)->append(script);
 }
+
+} /* anonymous namespace */
 
 JS_PUBLIC_API(void)
 JS_DumpCompartmentBytecode(JSContext *cx)
 {
-    Vector<JSScript *> scripts(cx);
-    IterateCells(cx, cx->compartment, gc::FINALIZE_SCRIPT, &scripts, DumpBytecodeScriptCallback);
+    ScriptsToDump scripts;
+    IterateCells(cx->runtime, cx->compartment, gc::FINALIZE_SCRIPT, &scripts, DumpBytecodeScriptCallback);
 
     for (size_t i = 0; i < scripts.length(); i++)
         JS_DumpBytecode(cx, scripts[i]);
@@ -1651,7 +1657,7 @@ JS_DumpCompartmentBytecode(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_DumpCompartmentPCCounts(JSContext *cx)
 {
-    for (CellIter i(cx, cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->pcCounters)
             JS_DumpPCCounts(cx, script);

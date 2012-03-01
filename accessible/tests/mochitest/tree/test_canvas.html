@@ -18,13 +18,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495912
   <script type="application/javascript">
     function doTest()
     {
-      var accTree = {
-        role: ROLE_CANVAS,
-        children: [
-        ]
-      };
-      testAccessibleTree("canvas", accTree);
+      var accTree =
+        { CANVAS: [
+          { CHECKBUTTON: [] },
+          { ENTRY: [] }
+        ] };
 
+      testAccessibleTree("canvas", accTree);
       SimpleTest.finish();
     }
 
@@ -42,9 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495912
   <pre id="test">
   </pre>
 
-  <canvas id="canvas" tabindex="0">
-    fallback content.
-  </canvas>
+  <canvas id="canvas" tabindex="0"><input type="checkbox"><input></canvas>
 
   <script type="text/javascript">
     var c=document.getElementById("canvas");

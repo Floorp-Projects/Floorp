@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Canvas subdom mutation</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Invokers
+
+    function addSubtree(aID)
+    {
+      this.node = getNode(aID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, this.node)
+      ];
+
+      this.invoke = function addSubtree_invoke()
+      {
+        // ensure we start with no subtree
+        testAccessibleTree("canvas", { CANVAS: [] });
+        getNode("dialog").style.display = "block";
+      }
+
+      this.finalCheck = function addSubtree_finalCheck() {
+        testAccessibleTree("dialog", { DIALOG: [] });
+      }
+
+      this.getID = function addSubtree_getID()
+      {
+        return "show canvas subdom";
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      // make the subdom come alive!
+      gQueue.push(new addSubtree("dialog"));
+
+      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Expose content in Canvas element"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=495912">
+    Mozilla Bug 495912
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <canvas id="canvas">
+    <div id="dialog" role="dialog" style="display: none;">
+    </div>
+  </canvas>
+
+  <div id="eventdump"></div>
+</body>
+</html>
