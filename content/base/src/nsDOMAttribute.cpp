@@ -211,10 +211,9 @@ nsDOMAttribute::GetNameAtom(nsIContent* aContent)
       aContent->IsInHTMLDocument() &&
       aContent->IsHTML()) {
     nsAutoString name;
-    mNodeInfo->NameAtom()->ToString(name);
-    nsAutoString lower;
-    ToLowerCase(name, lower);
-    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(lower);
+    mNodeInfo->GetName(name);
+    nsContentUtils::ASCIIToLower(name);
+    nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(name);
     nameAtom.swap(result);
   } else {
     nsCOMPtr<nsIAtom> nameAtom = mNodeInfo->NameAtom();
