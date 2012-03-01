@@ -335,7 +335,9 @@ nsDOMAttributeMap::SetNamedItemInternal(nsIDOMNode *aNode,
       else {
         if (mContent->IsInHTMLDocument() &&
             mContent->IsHTML()) {
-          nsContentUtils::ASCIIToLower(name);
+          nsAutoString lower;
+          ToLowerCase(name, lower);
+          name = lower;
         }
 
         rv = mContent->NodeInfo()->NodeInfoManager()->
