@@ -913,6 +913,7 @@ sechash.h
 secoidt.h
 certdb.h
 secerr.h
+nssutil.h
 nssb64.h
 secasn1.h
 secder.h
