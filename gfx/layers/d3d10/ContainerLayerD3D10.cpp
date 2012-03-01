@@ -316,12 +316,12 @@ ContainerLayerD3D10::RenderLayer()
     ID3D10EffectTechnique *technique;
     if (LoadMaskTexture()) {
       if (GetTransform().CanDraw2D()) {
-        technique = effect()->GetTechniqueByName("RenderRGBALayerPremulMask");
+        technique = SelectShader(SHADER_RGBA | SHADER_PREMUL | SHADER_MASK);
       } else {
-        technique = effect()->GetTechniqueByName("RenderRGBALayerPremulMask3D");
+        technique = SelectShader(SHADER_RGBA | SHADER_PREMUL | SHADER_MASK_3D);
       }
     } else {
-      technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
+        technique = SelectShader(SHADER_RGBA | SHADER_PREMUL | SHADER_NO_MASK);
     }
 
     effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
