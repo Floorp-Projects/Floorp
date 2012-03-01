@@ -1073,14 +1073,14 @@ JS_YieldRequest(JSContext *cx)
 #endif
 }
 
-JS_PUBLIC_API(jsrefcount)
+JS_PUBLIC_API(unsigned)
 JS_SuspendRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JSRuntime *rt = cx->runtime;
     JS_ASSERT(rt->onOwnerThread());
 
-    jsrefcount saveDepth = rt->requestDepth;
+    unsigned saveDepth = rt->requestDepth;
     if (!saveDepth)
         return 0;
 
@@ -1094,7 +1094,7 @@ JS_SuspendRequest(JSContext *cx)
 }
 
 JS_PUBLIC_API(void)
-JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
+JS_ResumeRequest(JSContext *cx, unsigned saveDepth)
 {
 #ifdef JS_THREADSAFE
     JSRuntime *rt = cx->runtime;
@@ -4447,16 +4447,16 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
 }
 
 #ifdef JS_THREADSAFE
-JS_PUBLIC_API(jsrefcount)
+JS_PUBLIC_API(unsigned)
 JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals)
 {
     return JS_ATOMIC_INCREMENT(&principals->refcount);
 }
 
-JS_PUBLIC_API(jsrefcount)
+JS_PUBLIC_API(unsigned)
 JS_DropPrincipals(JSContext *cx, JSPrincipals *principals)
 {
-    jsrefcount rc = JS_ATOMIC_DECREMENT(&principals->refcount);
+    unsigned rc = JS_ATOMIC_DECREMENT(&principals->refcount);
     if (rc == 0)
         principals->destroy(cx, principals);
     return rc;

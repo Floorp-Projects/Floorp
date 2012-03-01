@@ -270,10 +270,10 @@ struct JSCompartment
 
 #ifdef DEBUG
     /* Property metering. */
-    jsrefcount                   livePropTreeNodes;
-    jsrefcount                   totalPropTreeNodes;
-    jsrefcount                   propTreeKidsChunks;
-    jsrefcount                   liveDictModeNodes;
+    unsigned                     livePropTreeNodes;
+    unsigned                     totalPropTreeNodes;
+    unsigned                     propTreeKidsChunks;
+    unsigned                     liveDictModeNodes;
 #endif
 
     /* Set of all unowned base shapes in the compartment. */
