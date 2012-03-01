@@ -453,7 +453,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
     // Check for html
     if (aNode.Content()->NodeInfo()->NamespaceEquals(kNameSpaceID_None) &&
         aNode.Content()->IsHTML()) {
-        ToUpperCase(aLocalName);
+        nsContentUtils::ASCIIToUpper(aLocalName);
     }
 }
 
