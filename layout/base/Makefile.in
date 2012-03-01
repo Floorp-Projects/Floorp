@@ -170,6 +170,7 @@ LOCAL_INCLUDES += \
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
 
 DEFINES += -D_IMPL_NS_LAYOUT
+DEFINES += -DHB_DONT_DEFINE_STDINT
 
 ifndef MOZ_XUL
 nsIBoxObject.idl: %: $(topsrcdir)/layout/xul/base/public/%

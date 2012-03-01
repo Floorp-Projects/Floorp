@@ -78,7 +78,7 @@ Class js::BooleanClass = {
 
 #if JS_HAS_TOSOURCE
 static JSBool
-bool_toSource(JSContext *cx, uintN argc, Value *vp)
+bool_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -99,7 +99,7 @@ bool_toSource(JSContext *cx, uintN argc, Value *vp)
 #endif
 
 static JSBool
-bool_toString(JSContext *cx, uintN argc, Value *vp)
+bool_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -112,7 +112,7 @@ bool_toString(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-bool_valueOf(JSContext *cx, uintN argc, Value *vp)
+bool_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -134,7 +134,7 @@ static JSFunctionSpec boolean_methods[] = {
 };
 
 static JSBool
-Boolean(JSContext *cx, uintN argc, Value *vp)
+Boolean(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 

@@ -319,7 +319,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 }
 
 static JSBool
-regexp_compile(JSContext *cx, uintN argc, Value *vp)
+regexp_compile(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -333,7 +333,7 @@ regexp_compile(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-regexp_construct(JSContext *cx, uintN argc, Value *vp)
+regexp_construct(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -356,7 +356,7 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-regexp_toString(JSContext *cx, uintN argc, Value *vp)
+regexp_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -563,7 +563,7 @@ GetSharedForGreedyStar(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGu
  * |execType| to perform this optimization.
  */
 static bool
-ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
+ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -638,14 +638,14 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
 
 /* ES5 15.10.6.2. */
 JSBool
-js::regexp_exec(JSContext *cx, uintN argc, Value *vp)
+js::regexp_exec(JSContext *cx, unsigned argc, Value *vp)
 {
     return ExecuteRegExp(cx, regexp_exec, argc, vp);
 }
 
 /* ES5 15.10.6.3. */
 JSBool
-js::regexp_test(JSContext *cx, uintN argc, Value *vp)
+js::regexp_test(JSContext *cx, unsigned argc, Value *vp)
 {
     if (!ExecuteRegExp(cx, regexp_test, argc, vp))
         return false;

@@ -54,7 +54,6 @@
 #include "jsval.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
-#include "jsobj.h"
 #include "jsarray.h"
 #include "jsnum.h"
 
@@ -190,7 +189,7 @@ class NodeBuilder
 
         if (!userobj) {
             userv.setNull();
-            for (uintN i = 0; i < AST_LIMIT; i++) {
+            for (unsigned i = 0; i < AST_LIMIT; i++) {
                 callbacks[i].setNull();
             }
             return true;
@@ -198,7 +197,7 @@ class NodeBuilder
 
         userv.setObject(*userobj);
 
-        for (uintN i = 0; i < AST_LIMIT; i++) {
+        for (unsigned i = 0; i < AST_LIMIT; i++) {
             Value funv;
 
             const char *name = callbackNames[i];

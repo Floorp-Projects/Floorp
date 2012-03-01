@@ -1,0 +1,59 @@
+<html>
+
+<head>
+  <title>Accessible focus testing in canvas subdom</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+
+  <script type="application/javascript">
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new synthFocus("button"));
+      gQueue.push(new synthTab("button", new focusChecker("textbox")));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     title="Expose content in Canvas element"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=495912">
+    Mozilla Bug 495912
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <canvas>
+    <input id="button" type="button">
+    <input id="textbox">
+  </canvas>
+
+  <div id="eventdump"></div>
+</body>
+</html>

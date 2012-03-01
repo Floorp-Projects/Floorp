@@ -155,6 +155,7 @@ FENNEC_PP_JAVA_FILES = \
   db/BrowserProvider.java \
   db/PasswordsProvider.java \
   db/FormHistoryProvider.java \
+  db/TabsProvider.java \
   db/GeckoProvider.java \
   SmsManager.java \
   $(NULL)

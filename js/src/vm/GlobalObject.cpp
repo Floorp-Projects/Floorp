@@ -78,7 +78,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-ThrowTypeError(JSContext *cx, uintN argc, Value *vp)
+ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
                                  JSMSG_THROW_TYPE_ERROR);
@@ -371,7 +371,7 @@ GlobalObject::clear(JSContext *cx)
      * can directly call scripts which have associated JIT code, and do so
      * without checking whether the script's global has been cleared.
      */
-    for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->compileAndGo && script->hasJITCode() && script->hasClearedGlobal()) {
             mjit::Recompiler::clearStackReferences(cx, script);
@@ -401,7 +401,7 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
 
 JSFunction *
 GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name,
-                                uintN length, gc::AllocKind kind)
+                                unsigned length, gc::AllocKind kind)
 {
     RootedVarObject self(cx, this);
 

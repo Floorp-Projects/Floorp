@@ -202,7 +202,7 @@ MapObject::finalize(JSContext *cx, JSObject *obj)
 }
 
 JSBool
-MapObject::construct(JSContext *cx, uintN argc, Value *vp)
+MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &class_);
     if (!obj)
@@ -241,7 +241,7 @@ MapObject::construct(JSContext *cx, uintN argc, Value *vp)
         return false
 
 JSBool
-MapObject::get(JSContext *cx, uintN argc, Value *vp)
+MapObject::get(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_MAP(get, cx, argc, vp, args, map);
     ARG0_KEY(cx, args, key);
@@ -254,7 +254,7 @@ MapObject::get(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-MapObject::has(JSContext *cx, uintN argc, Value *vp)
+MapObject::has(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_MAP(has, cx, argc, vp, args, map);
     ARG0_KEY(cx, args, key);
@@ -263,7 +263,7 @@ MapObject::has(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-MapObject::set(JSContext *cx, uintN argc, Value *vp)
+MapObject::set(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_MAP(set, cx, argc, vp, args, map);
     ARG0_KEY(cx, args, key);
@@ -273,7 +273,7 @@ MapObject::set(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-MapObject::delete_(JSContext *cx, uintN argc, Value *vp)
+MapObject::delete_(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_MAP(delete_, cx, argc, vp, args, map);
     ARG0_KEY(cx, args, key);
@@ -349,7 +349,7 @@ SetObject::finalize(JSContext *cx, JSObject *obj)
 }
 
 JSBool
-SetObject::construct(JSContext *cx, uintN argc, Value *vp)
+SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &class_);
     if (!obj)
@@ -368,7 +368,7 @@ SetObject::construct(JSContext *cx, uintN argc, Value *vp)
     UNPACK_THIS(SetObject, native, cx, argc, vp, args, set)
 
 JSBool
-SetObject::has(JSContext *cx, uintN argc, Value *vp)
+SetObject::has(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_SET(has, cx, argc, vp, args, set);
     ARG0_KEY(cx, args, key);
@@ -377,7 +377,7 @@ SetObject::has(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-SetObject::add(JSContext *cx, uintN argc, Value *vp)
+SetObject::add(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_SET(add, cx, argc, vp, args, set);
     ARG0_KEY(cx, args, key);
@@ -388,7 +388,7 @@ SetObject::add(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-SetObject::delete_(JSContext *cx, uintN argc, Value *vp)
+SetObject::delete_(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_SET(delete_, cx, argc, vp, args, set);
     ARG0_KEY(cx, args, key);

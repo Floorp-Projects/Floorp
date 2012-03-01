@@ -884,7 +884,7 @@ class ScriptAnalysis
     bool outOfMemory;
     bool hadFailure;
 
-    JSPackedBool *escapedSlots;
+    bool *escapedSlots;
 
     /* Which analyses have been performed. */
     bool ranBytecode_;

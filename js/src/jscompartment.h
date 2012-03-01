@@ -266,8 +266,7 @@ struct JSCompartment
     js::RegExpCompartment        regExps;
 
     size_t sizeOfShapeTable(JSMallocSizeOfFun mallocSizeOf);
-    void sizeOfTypeInferenceData(JSContext *cx, JS::TypeInferenceSizes *stats,
-                                 JSMallocSizeOfFun mallocSizeOf);
+    void sizeOfTypeInferenceData(JS::TypeInferenceSizes *stats, JSMallocSizeOfFun mallocSizeOf);
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.
@@ -308,7 +307,7 @@ struct JSCompartment
   private:
     enum { DebugFromC = 1, DebugFromJS = 2 };
 
-    uintN                        debugModeBits;  // see debugMode() below
+    unsigned                        debugModeBits;  // see debugMode() below
     
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs
@@ -346,7 +345,7 @@ struct JSCompartment
     void markTypes(JSTracer *trc);
     void discardJitCode(JSContext *cx);
     void sweep(JSContext *cx, bool releaseTypes);
-    void purge(JSContext *cx);
+    void purge();
 
     void setGCLastBytes(size_t lastBytes, js::JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(size_t amount);
@@ -393,12 +392,8 @@ struct JSCompartment
      */
     bool debugMode() const { return !!debugModeBits; }
 
-    /*
-     * True if any scripts from this compartment are on the JS stack in the
-     * calling thread. cx is a context in the calling thread, and it is assumed
-     * that no other thread is using this compartment.
-     */
-    bool hasScriptsOnStack(JSContext *cx);
+    /* True if any scripts from this compartment are on the JS stack. */
+    bool hasScriptsOnStack();
 
   private:
     /* This is called only when debugMode() has just toggled. */
