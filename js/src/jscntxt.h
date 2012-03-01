@@ -86,7 +86,7 @@ struct JSSharpInfo {
 typedef js::HashMap<JSObject *, JSSharpInfo> JSSharpTable;
 
 struct JSSharpObjectMap {
-    jsrefcount   depth;
+    unsigned     depth;
     uint32_t     sharpgen;
     JSSharpTable table;
 
@@ -293,7 +293,7 @@ struct JSRuntime : js::RuntimeFriendFields
 
     js::RootedValueMap  gcRootsHash;
     js::GCLocks         gcLocksHash;
-    jsrefcount          gcKeepAtoms;
+    unsigned            gcKeepAtoms;
     size_t              gcBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
