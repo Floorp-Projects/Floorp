@@ -4568,13 +4568,14 @@ js::GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res)
 }
 
 bool
-js::SetObjectElement(JSContext *cx, JSObject *obj, const Value &index, const Value &value)
+js::SetObjectElement(JSContext *cx, JSObject *obj, const Value &index, const Value &value,
+                     JSBool strict)
 {
     jsid id;
     Value indexval = index;
     if (!FetchElementId(cx, obj, indexval, id, &indexval))
         return false;
-    return SetObjectElementOperation(cx, obj, id, value);
+    return SetObjectElementOperation(cx, obj, id, value, strict);
 }
 
 bool

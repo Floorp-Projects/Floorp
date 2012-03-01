@@ -817,12 +817,14 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &va
                 obj->setDenseArrayElementWithType(cx, i, value);
                 return true;
             } else {
-                JSScript *script;
-                jsbytecode *pc;
-                types::TypeScript::GetPcScript(cx, &script, &pc);
+                if (!cx->fp()->runningInIon()) {
+                    JSScript *script;
+                    jsbytecode *pc;
+                    types::TypeScript::GetPcScript(cx, &script, &pc);
 
-                if (script->hasAnalysis())
-                    script->analysis()->getCode(pc).arrayWriteHole = true;
+                    if (script->hasAnalysis())
+                        script->analysis()->getCode(pc).arrayWriteHole = true;
+                }
             }
         }
     } while (0);
