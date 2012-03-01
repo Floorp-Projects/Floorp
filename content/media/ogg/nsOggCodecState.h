@@ -51,7 +51,7 @@
 #include <nsClassHashtable.h>
 #include "VideoUtils.h"
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 // Uncomment the following to validate that we're predicting the number
 // of Vorbis samples in each packet correctly.

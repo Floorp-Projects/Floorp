@@ -40,8 +40,8 @@
 
 /* Implements the C99 <stdint.h> interface for C and C++ code. */
 
-#ifndef mozilla_StdInt_h_
-#define mozilla_StdInt_h_
+#ifndef mozilla_StandardInteger_h_
+#define mozilla_StandardInteger_h_
 
 /*
  * The C99 standard header <stdint.h> exposes typedefs for common fixed-width
@@ -61,17 +61,18 @@
  *   2. Otherwise, if we are compiling with a an MSVC++ version without
  *      <stdint.h>, #include our custom <stdint.h> reimplementation.
  *   3. Otherwise, #include the standard <stdint.h> provided by the compiler.
+ *
+ * Note that we can't call this file "stdint.h" or something case-insensitively
+ * equal to "stdint.h" because then MSVC (and other compilers on
+ * case-insensitive file systems) will include this file, rather than the system
+ * stdint.h, when we ask for <stdint.h> below.
  */
 #if defined(MOZ_CUSTOM_STDINT_H)
 #  include MOZ_CUSTOM_STDINT_H
 #elif defined(_MSC_VER) && _MSC_VER < 1600
 #  include "mozilla/MSStdInt.h"
 #else
-   /*
-    * Don't include <stdint.h>, because on some case-insensitive systems . is
-    * searched for headers before the standard include location.  :-(
-    */
-#  include <sys/../stdint.h>
+#  include <stdint.h>
 #endif
 
-#endif  /* mozilla_StdInt_h_ */
+#endif  /* mozilla_StandardInteger_h_ */

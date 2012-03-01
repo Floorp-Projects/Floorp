@@ -41,7 +41,7 @@
 #include "nsDOMFile.h"
 #include "CheckedInt.h"
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 using namespace mozilla;
 

@@ -30,7 +30,7 @@
 #ifndef PageBlock_h
 #define PageBlock_h
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 #include <stdlib.h>
 #include "assembler/wtf/Platform.h"
