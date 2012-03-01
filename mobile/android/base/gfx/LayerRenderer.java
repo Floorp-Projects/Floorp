@@ -574,6 +574,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void drawBackground() {
             /* Draw the background. */
+            mBackgroundLayer.setMask(getPageRect());
             mBackgroundLayer.draw(mScreenContext);
 
             /* Draw the drop shadow, if we need to. */
@@ -583,8 +584,19 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             if (!untransformedPageRect.contains(mView.getController().getViewport()))
                 mShadowLayer.draw(mPageContext);
 
+            /* Find the area the root layer will render into, to mask the scissor rect */
+            Rect rootMask = null;
+            Layer rootLayer = mView.getController().getRoot();
+            if (rootLayer != null) {
+                RectF rootBounds = rootLayer.getBounds(mPageContext);
+                rootBounds.offset(-mPageContext.viewport.left, -mPageContext.viewport.top);
+                rootMask = new Rect();
+                rootBounds.roundOut(rootMask);
+            }
+
             /* Draw the checkerboard. */
             setScissorRect();
+            mCheckerboardLayer.setMask(rootMask);
             mCheckerboardLayer.draw(mScreenContext);
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
         }
@@ -596,9 +608,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                 return;
             }
 
-            setScissorRect();
             rootLayer.draw(mPageContext);
-            GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
