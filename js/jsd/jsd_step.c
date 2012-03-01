@@ -109,7 +109,7 @@ _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSStackFrame *fp,
 
 JSBool
 _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
-          uintN type, JSD_CallHookProc hook, void *hookData)
+          unsigned type, JSD_CallHookProc hook, void *hookData)
 {
     JSDScript*        jsdscript;
     JSScript*         jsscript;

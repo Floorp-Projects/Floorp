@@ -376,7 +376,7 @@ $versionInfo
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 #include "harfbuzz/hb-common.h"
 
 __END

@@ -56,7 +56,6 @@
 #include "jsscriptinlines.h"
 #include "InlineFrameAssembler.h"
 #include "jscompartment.h"
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 
 #include "builtin/RegExp.h"
@@ -536,6 +535,14 @@ mjit::Compiler::performCompilation()
         if (inlining())
             CHECK_STATUS(scanInlineCalls(CrossScriptSSA::OUTER_FRAME, 0));
         CHECK_STATUS(pushActiveFrame(outerScript, 0));
+
+        if (outerScript->pcCounters || Probes::wantNativeAddressInfo(cx)) {
+            size_t length = ssa.frameLength(ssa.numFrames() - 1);
+            pcLengths = (PCLengthEntry *) OffTheBooks::calloc_(sizeof(pcLengths[0]) * length);
+            if (!pcLengths)
+                return Compile_Error;
+        }
+
         if (chunkIndex == 0)
             CHECK_STATUS(generatePrologue());
         CHECK_STATUS(generateMethod());
@@ -1190,13 +1197,6 @@ mjit::Compiler::generatePrologue()
     }
 
     recompileCheckHelper();
-
-    if (outerScript->pcCounters || Probes::wantNativeAddressInfo(cx)) {
-        size_t length = ssa.frameLength(ssa.numFrames() - 1);
-        pcLengths = (PCLengthEntry *) OffTheBooks::calloc_(sizeof(pcLengths[0]) * length);
-        if (!pcLengths)
-            return Compile_Error;
-    }
 
     return Compile_Okay;
 }
@@ -3108,7 +3108,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETFCSLOT)
           BEGIN_CASE(JSOP_CALLFCSLOT)
           {
-            uintN index = GET_UINT16(PC);
+            unsigned index = GET_UINT16(PC);
 
             // Load the callee's payload into a register.
             frame.pushCallee();
@@ -6062,7 +6062,7 @@ mjit::Compiler::jsop_this()
 }
 
 bool
-mjit::Compiler::iter(uintN flags)
+mjit::Compiler::iter(unsigned flags)
 {
     FrameEntry *fe = frame.peek(-1);
 

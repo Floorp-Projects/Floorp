@@ -316,7 +316,9 @@ var PlacesUtils = {
     switch (aTopic) {
       case this.TOPIC_SHUTDOWN:
         Services.obs.removeObserver(this, this.TOPIC_SHUTDOWN);
-        this._shutdownFunctions.forEach(function (aFunc) aFunc.apply(this), this);
+        while (this._shutdownFunctions.length > 0) {
+          this._shutdownFunctions.shift().apply(this);
+        }
         if (this._bookmarksServiceObserversQueue.length > 0) {
           // Since we are shutting down, there's no reason to add the observers.
           this._bookmarksServiceObserversQueue.length = 0;
@@ -2236,7 +2238,7 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "livemarks", function() {
 
 XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
   let tm = Cc["@mozilla.org/transactionmanager;1"].
-           getService(Ci.nsITransactionManager);
+           createInstance(Ci.nsITransactionManager);
   tm.AddListener(PlacesUtils);
   this.registerShutdownFunction(function () {
     // Clear all references to local transactions in the transaction manager,

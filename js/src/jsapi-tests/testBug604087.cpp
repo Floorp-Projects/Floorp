@@ -36,14 +36,14 @@ wrap(JSContext *cx, JSObject *toWrap, JSObject *target)
 }
 
 static JSObject *
-PreWrap(JSContext *cx, JSObject *scope, JSObject *obj, uintN flags)
+PreWrap(JSContext *cx, JSObject *scope, JSObject *obj, unsigned flags)
 {
     JS_GC(cx);
     return obj;
 }
 
 static JSObject *
-Wrap(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent, uintN flags)
+Wrap(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent, unsigned flags)
 {
     return js::Wrapper::New(cx, obj, proto, parent, &js::CrossCompartmentWrapper::singleton);
 }

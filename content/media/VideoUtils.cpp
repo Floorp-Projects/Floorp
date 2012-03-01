@@ -39,7 +39,7 @@
 #include "nsMathUtils.h"
 #include "prtypes.h"
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 // Converts from number of audio frames to microseconds, given the specified
 // audio rate.

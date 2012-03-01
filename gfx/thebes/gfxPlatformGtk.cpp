@@ -80,11 +80,6 @@
 
 #define GDK_PIXMAP_SIZE_MAX 32767
 
-#ifndef MOZ_PANGO
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#endif
-
 using namespace mozilla;
 using namespace mozilla::gfx;
 
