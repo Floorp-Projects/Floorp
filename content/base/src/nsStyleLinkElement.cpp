@@ -185,7 +185,7 @@ PRUint32 nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
   while (current != done) {
     if (nsContentUtils::IsHTMLWhitespace(*current)) {
       if (inString) {
-        ToLowerCase(Substring(start, current), subString);
+        nsContentUtils::ASCIIToLower(Substring(start, current), subString);
         linkMask |= ToLinkMask(subString);
         inString = false;
       }
@@ -199,8 +199,8 @@ PRUint32 nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes)
     ++current;
   }
   if (inString) {
-    ToLowerCase(Substring(start, current), subString);
-     linkMask |= ToLinkMask(subString);
+    nsContentUtils::ASCIIToLower(Substring(start, current), subString);
+    linkMask |= ToLinkMask(subString);
   }
   return linkMask;
 }

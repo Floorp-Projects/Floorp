@@ -2489,7 +2489,7 @@ nsresult
 nsGenericHTMLElement::SetContentEditable(const nsAString& aContentEditable)
 {
   nsString contentEditable;
-  ToLowerCase(aContentEditable, contentEditable);
+  nsContentUtils::ASCIIToLower(aContentEditable, contentEditable);
 
   if (contentEditable.EqualsLiteral("inherit")) {
     UnsetAttr(kNameSpaceID_None, nsGkAtoms::contenteditable, true);
