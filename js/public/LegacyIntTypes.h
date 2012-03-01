@@ -55,7 +55,7 @@
 #ifndef PROTYPES_H
 #define PROTYPES_H
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 #include "js-config.h"
 

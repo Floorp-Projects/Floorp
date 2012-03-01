@@ -51,7 +51,7 @@ EXPORTS_mozilla += \
   MSStdInt.h \
   RangedPtr.h \
   RefPtr.h \
-  StdInt.h \
+  StandardInteger.h \
   Types.h \
   Util.h \
   $(NULL)
