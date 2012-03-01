@@ -70,11 +70,6 @@
  * barriers. However, they must be marked in the first slice. Roots are things
  * like the C stack and the VM stack, since it would be too expensive to put
  * barriers on them.
- *
- * Write barriers are handled using the compartment's barrierMarker_
- * JSTracer. This includes a per-compartment stack of GC things that have been
- * write-barriered. This stack is processed in each GC slice. The barrierMarker_
- * is also used during write barrier verification (VerifyBarriers below).
  */
 
 #include <math.h>
@@ -1450,14 +1445,14 @@ namespace js {
 namespace gc {
 
 inline void
-ArenaLists::prepareForIncrementalGC(JSCompartment *comp)
+ArenaLists::prepareForIncrementalGC(JSRuntime *rt)
 {
     for (size_t i = 0; i != FINALIZE_LIMIT; ++i) {
         FreeSpan *headSpan = &freeLists[i];
         if (!headSpan->isEmpty()) {
             ArenaHeader *aheader = headSpan->arenaHeader();
             aheader->allocatedDuringIncremental = true;
-            comp->barrierMarker_.delayMarkingArena(aheader);
+            rt->gcMarker.delayMarkingArena(aheader);
         }
     }
 }
@@ -1517,7 +1512,7 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
             aheader->setAsFullyUsed();
             if (JS_UNLIKELY(comp->needsBarrier())) {
                 aheader->allocatedDuringIncremental = true;
-                comp->barrierMarker_.delayMarkingArena(aheader);
+                comp->rt->gcMarker.delayMarkingArena(aheader);
             }
             return freeLists[thingKind].infallibleAllocate(Arena::thingSize(thingKind));
         }
@@ -1546,7 +1541,7 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
 
     if (JS_UNLIKELY(comp->needsBarrier())) {
         aheader->allocatedDuringIncremental = true;
-        comp->barrierMarker_.delayMarkingArena(aheader);
+        comp->rt->gcMarker.delayMarkingArena(aheader);
     }
     aheader->next = al->head;
     if (!al->head) {
@@ -1874,8 +1869,8 @@ SliceBudget::checkOverBudget()
     return over;
 }
 
-GCMarker::GCMarker(size_t sizeLimit)
-  : stack(sizeLimit),
+GCMarker::GCMarker()
+  : stack(size_t(-1)),
     color(BLACK),
     started(false),
     unmarkedArenaStackTop(NULL),
@@ -1885,11 +1880,9 @@ GCMarker::GCMarker(size_t sizeLimit)
 }
 
 bool
-GCMarker::init(bool lazy)
+GCMarker::init()
 {
-    if (!stack.init(lazy ? 0 : MARK_STACK_LENGTH))
-        return false;
-    return true;
+    return stack.init(MARK_STACK_LENGTH);
 }
 
 void
@@ -1926,6 +1919,10 @@ GCMarker::stop()
 
     JS_ASSERT(grayRoots.empty());
     grayFailed = false;
+
+    /* Free non-ballast stack memory. */
+    stack.reset();
+    grayRoots.clearAndFree();
 }
 
 void
@@ -2129,8 +2126,6 @@ SetMarkStackLimit(JSRuntime *rt, size_t limit)
 {
     JS_ASSERT(!rt->gcRunning);
     rt->gcMarker.setSizeLimit(limit);
-    for (CompartmentsIter c(rt); !c.done(); c.next())
-        c->barrierMarker_.setSizeLimit(limit);
 }
 
 } /* namespace js */
@@ -3012,7 +3007,7 @@ MarkWeakReferences(GCMarker *gcmarker)
 static void
 MarkGrayAndWeak(JSRuntime *rt)
 {
-    FullGCMarker *gcmarker = &rt->gcMarker;
+    GCMarker *gcmarker = &rt->gcMarker;
 
     JS_ASSERT(gcmarker->isDrained());
     MarkWeakReferences(gcmarker);
@@ -3074,7 +3069,7 @@ ValidateIncrementalMarking(JSContext *cx)
         return;
 
     JSRuntime *rt = cx->runtime;
-    FullGCMarker *gcmarker = &rt->gcMarker;
+    GCMarker *gcmarker = &rt->gcMarker;
 
     /* Save existing mark bits. */
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront()) {
@@ -3375,11 +3370,9 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
         return;
 
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (!rt->gcIncrementalCompartment || rt->gcIncrementalCompartment == c) {
+        if (!rt->gcIncrementalCompartment || rt->gcIncrementalCompartment == c)
             c->needsBarrier_ = false;
-            c->barrierMarker_.reset();
-            c->barrierMarker_.stop();
-        }
+
         JS_ASSERT(!c->needsBarrier_);
     }
 
@@ -3429,7 +3422,7 @@ AutoGCSlice::~AutoGCSlice()
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         if (rt->gcIncrementalState == MARK) {
             c->needsBarrier_ = true;
-            c->arenas.prepareForIncrementalGC(c);
+            c->arenas.prepareForIncrementalGC(rt);
         } else {
             JS_ASSERT(rt->gcIncrementalState == NO_INCREMENTAL);
 
@@ -3475,10 +3468,8 @@ IncrementalGCSlice(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
         rt->gcMarker.start(rt);
         JS_ASSERT(IS_GC_MARKING_TRACER(&rt->gcMarker));
 
-        for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        for (GCCompartmentsIter c(rt); !c.done(); c.next())
             c->discardJitCode(cx);
-            c->barrierMarker_.start(rt);
-        }
 
         BeginMarkPhase(rt);
 
@@ -3495,15 +3486,8 @@ IncrementalGCSlice(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
 
         bool finished = rt->gcMarker.drainMarkStack(sliceBudget);
 
-        for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            finished &= c->barrierMarker_.drainMarkStack(sliceBudget);
-
         if (finished) {
             JS_ASSERT(rt->gcMarker.isDrained());
-#ifdef DEBUG
-            for (GCCompartmentsIter c(rt); !c.done(); c.next())
-                JS_ASSERT(c->barrierMarker_.isDrained());
-#endif
             if (initialState == MARK && !rt->gcLastMarkSlice)
                 rt->gcLastMarkSlice = true;
             else
@@ -3518,8 +3502,6 @@ IncrementalGCSlice(JSContext *cx, int64_t budget, JSGCInvocationKind gckind)
         rt->gcMarker.stop();
 
         /* JIT code was already discarded during sweeping. */
-        for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            c->barrierMarker_.stop();
 
         rt->gcIncrementalCompartment = NULL;
 
@@ -3938,16 +3920,8 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
              * it. Otherwise we might fail the mark the newly created
              * compartment fully.
              */
-            if (rt->gcIncrementalState == MARK) {
+            if (rt->gcIncrementalState == MARK)
                 rt->gcCompartmentCreated = true;
-
-                /*
-                 * Start the tracer so that it's legal to stop() it when
-                 * resetting the GC.
-                 */
-                if (!rt->gcIncrementalCompartment)
-                    compartment->barrierMarker_.start(rt);
-            }
 
             if (rt->compartments.append(compartment))
                 return compartment;
@@ -4261,10 +4235,10 @@ StartVerifyBarriers(JSContext *cx)
 
     rt->gcVerifyData = trc;
     rt->gcIncrementalState = MARK;
+    rt->gcMarker.start(rt);
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         c->needsBarrier_ = true;
-        c->barrierMarker_.start(rt);
-        c->arenas.prepareForIncrementalGC(c);
+        c->arenas.prepareForIncrementalGC(rt);
     }
 
     return;
@@ -4400,10 +4374,8 @@ EndVerifyBarriers(JSContext *cx)
         }
     }
 
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        c->barrierMarker_.reset();
-        c->barrierMarker_.stop();
-    }
+    rt->gcMarker.reset();
+    rt->gcMarker.stop();
 
     trc->~VerifyTracer();
     js_free(trc);
