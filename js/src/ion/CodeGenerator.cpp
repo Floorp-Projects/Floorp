@@ -1472,9 +1472,10 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
     masm.bind(&callStub);
     saveLive(ins);
 
-    typedef bool (*pf)(JSContext *, JSObject *, const Value &, const Value &);
+    typedef bool (*pf)(JSContext *, JSObject *, const Value &, const Value &, JSBool strict);
     static const VMFunction Info = FunctionInfo<pf>(SetObjectElement);
 
+    pushArg(Imm32(current->mir()->strictModeCode()));
     pushArg(value);
     if (index->isConstant())
         pushArg(*index->toConstant());
@@ -1736,9 +1737,10 @@ CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 bool
 CodeGenerator::visitCallSetElement(LCallSetElement *lir)
 {
-    typedef bool (*pf)(JSContext *, JSObject *, const Value &, const Value &);
+    typedef bool (*pf)(JSContext *, JSObject *, const Value &, const Value &, JSBool strict);
     static const VMFunction SetObjectElementInfo = FunctionInfo<pf>(js::SetObjectElement);
 
+    pushArg(Imm32(current->mir()->strictModeCode()));
     pushArg(ToValue(lir, LCallSetElement::Value));
     pushArg(ToValue(lir, LCallSetElement::Index));
     pushArg(ToRegister(lir->getOperand(0)));
