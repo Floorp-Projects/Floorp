@@ -390,6 +390,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
                                   (void*)NPDrawingModelCoreGraphics);
+        *shmem = null_t();
     } else
 #endif
     if (drawingModel == NPDrawingModelAsyncBitmapSurface) {
