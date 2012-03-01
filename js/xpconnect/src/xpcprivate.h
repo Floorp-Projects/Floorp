@@ -3586,7 +3586,7 @@ struct XPCJSContextInfo {
     bool savedFrameChain;
 
     // Greater than 0 if a request was suspended.
-    jsrefcount suspendDepth;
+    unsigned suspendDepth;
 };
 
 class XPCJSContextStack
