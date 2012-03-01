@@ -90,6 +90,19 @@
 
     <script type="application/javascript;version=1.8"><![CDATA[
       let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils, Cr = Components.results;
+      Cu.import("resource://gre/modules/Services.jsm");
+
+      // Include the build date if this is an "a#" (nightly or aurora) build
+#expand const version = "__MOZ_APP_VERSION__";
+      if (/a\d+$/.test(version)) {
+        let buildID = Services.appinfo.appBuildID;
+        let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) + "-" + buildID.slice(6,8);
+        let br = document.createElement("br");
+        let versionPara = document.getElementById("version");
+        versionPara.appendChild(br);
+        let date = document.createTextNode("(" + buildDate + ")");
+        versionPara.appendChild(date);
+      }
 
       // get URLs from prefs
       try {
