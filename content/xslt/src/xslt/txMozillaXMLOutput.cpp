@@ -160,7 +160,7 @@ txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
 
     if (mOpenedElementIsHTML && aNsID == kNameSpaceID_None) {
         nsAutoString lnameStr;
-        TX_ToLowerCase(aLocalName, lnameStr);
+        nsContentUtils::ASCIIToLower(aLocalName, lnameStr);
         lname = do_GetAtom(lnameStr);
     }
     else {
@@ -499,7 +499,7 @@ txMozillaXMLOutput::startElement(nsIAtom* aPrefix,
         nsId = kNameSpaceID_XHTML;
 
         nsAutoString lnameStr;
-        TX_ToLowerCase(aLocalName, lnameStr);
+        nsContentUtils::ASCIIToLower(aLocalName, lnameStr);
         lname = do_GetAtom(lnameStr);
     }
     else {
