@@ -1619,7 +1619,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     return JS_NewNumberValue(cx, (double) counter, vp);
 }
 
-static unsigned finalizeCount = 0;
+static jsrefcount finalizeCount = 0;
 
 static void
 finalize_counter_finalize(JSContext *cx, JSObject *obj)
