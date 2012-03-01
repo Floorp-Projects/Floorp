@@ -89,8 +89,13 @@ interface nsIAtom : nsISupports
     nsStringBuffer::FromData(mString)->ToString(mLength, aBuf);
   }
 
+  inline uint32_t hash() const {
+    return mHash;
+  }
+
 protected:
   PRUint32 mLength;
+  uint32_t mHash;
   PRUnichar* mString;
 %}
 };
