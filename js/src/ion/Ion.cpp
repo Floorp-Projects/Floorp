@@ -171,10 +171,16 @@ IonCompartment::initialize(JSContext *cx)
 void
 IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 {
+    // This function marks Ion code objects that must be kept alive if there is
+    // any Ion code currently running. These pointers are marked at the start
+    // of incremental GC. Entering Ion code in the middle of an incremental GC
+    // triggers a read barrier on both these pointers, so they will still be
+    // marked in that case.
     if (!compartment->active)
         return;
 
-    // These must be available if we could be running JIT code.
+    // These must be available if we could be running JIT code; they are not
+    // traced as normal through IonCode or IonScript objects
     if (enterJIT_)
         MarkIonCodeRoot(trc, enterJIT_.unsafeGetAddress(), "enterJIT");
 
@@ -182,18 +188,6 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
     // scan these references inside the code generator itself.
     if (osrPrologue_)
         MarkIonCodeRoot(trc, osrPrologue_.unsafeGetAddress(), "osrPrologue");
-    if (bailoutHandler_)
-        MarkIonCodeRoot(trc, bailoutHandler_.unsafeGetAddress(), "bailoutHandler");
-    if (argumentsRectifier_)
-        MarkIonCodeRoot(trc, argumentsRectifier_.unsafeGetAddress(), "argumentsRectifier");
-    if (invalidator_)
-        MarkIonCodeRoot(trc, invalidator_.unsafeGetAddress(), "invalidator");
-    if (preBarrier_)
-        MarkIonCodeRoot(trc, preBarrier_.unsafeGetAddress(), "preBarrier");
-    for (size_t i = 0; i < bailoutTables_.length(); i++) {
-        if (bailoutTables_[i])
-            MarkIonCodeRoot(trc, bailoutTables_[i].unsafeGetAddress(), "bailoutTable");
-    }
 
     // functionWrappers_ are not marked because this is a WeakCache of VM
     // function implementations.
