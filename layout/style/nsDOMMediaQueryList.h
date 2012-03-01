@@ -78,6 +78,10 @@ public:
   // Appends listeners that need notification to aListenersToNotify
   void MediumFeaturesChanged(NotifyList &aListenersToNotify);
 
+  bool HasListeners() const { return !mListeners.IsEmpty(); }
+
+  void RemoveAllListeners();
+
 private:
   void RecomputeMatches();
 
