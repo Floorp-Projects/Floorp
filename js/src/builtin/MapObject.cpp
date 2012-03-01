@@ -165,6 +165,7 @@ Class MapObject::class_ = {
 };
 
 JSFunctionSpec MapObject::methods[] = {
+    JS_FN("size", size, 0, 0),
     JS_FN("get", get, 1, 0),
     JS_FN("has", has, 1, 0),
     JS_FN("set", set, 2, 0),
@@ -245,6 +246,14 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
         return false
 
 JSBool
+MapObject::size(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_MAP(get, cx, argc, vp, args, map);
+    args.rval().setNumber(double(map.count()));
+    return true;
+}
+
+JSBool
 MapObject::get(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_MAP(get, cx, argc, vp, args, map);
@@ -321,6 +330,7 @@ Class SetObject::class_ = {
 };
 
 JSFunctionSpec SetObject::methods[] = {
+    JS_FN("size", size, 0, 0),
     JS_FN("has", has, 1, 0),
     JS_FN("add", add, 1, 0),
     JS_FN("delete", delete_, 1, 0),
@@ -377,6 +387,14 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 
 #define THIS_SET(native, cx, argc, vp, args, set)                             \
     UNPACK_THIS(SetObject, native, cx, argc, vp, args, set)
+
+JSBool
+SetObject::size(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SET(has, cx, argc, vp, args, set);
+    args.rval().setNumber(double(set.count()));
+    return true;
+}
 
 JSBool
 SetObject::has(JSContext *cx, unsigned argc, Value *vp)
