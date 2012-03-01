@@ -251,9 +251,8 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
     obj->setPrivate(map);
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    Value arg = (argc > 0 ? args[0] : UndefinedValue());
-    if (!arg.isUndefined()) {
-        if (!ForOf(cx, arg, AddToMap(map)))
+    if (args.hasDefined(0)) {
+        if (!ForOf(cx, args[0], AddToMap(map)))
             return false;
     }
 
@@ -441,9 +440,8 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
     obj->setPrivate(set);
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    Value arg = (argc > 0 ? args[0] : UndefinedValue());
-    if (!arg.isUndefined()) {
-        if (!ForOf(cx, arg, AddToSet(set)))
+    if (args.hasDefined(0)) {
+        if (!ForOf(cx, args[0], AddToSet(set)))
             return false;
     }
 

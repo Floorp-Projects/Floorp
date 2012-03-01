@@ -1647,7 +1647,7 @@ generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, unsigned
             break;
 
           case JSGENOP_SEND:
-            if (args.length() >= 1 && !args[0].isUndefined()) {
+            if (args.hasDefined(0)) {
                 js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
                                     JSDVG_SEARCH_STACK, args[0], NULL);
                 return false;

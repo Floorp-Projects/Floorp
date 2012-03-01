@@ -2364,18 +2364,19 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
     if (argc == 0) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "Object.create", "0", "s");
-        return JS_FALSE;
+        return false;
     }
 
-    const Value &v = vp[2];
+    CallArgs args = CallArgsFromVp(argc, vp);
+    const Value &v = args[0];
     if (!v.isObjectOrNull()) {
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
         if (!bytes)
-            return JS_FALSE;
+            return false;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                              bytes, "not an object or null");
         JS_free(cx, bytes);
-        return JS_FALSE;
+        return false;
     }
 
     JSObject *proto = v.toObjectOrNull();
@@ -2388,27 +2389,27 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
-    JSObject *obj = NewObjectWithGivenProto(cx, &ObjectClass, proto, &vp->toObject().global());
+    JSObject *obj = NewObjectWithGivenProto(cx, &ObjectClass, proto, &args.callee().global());
     if (!obj)
-        return JS_FALSE;
-    vp->setObject(*obj); /* Root and prepare for eventual return. */
+        return false;
 
     /* Don't track types or array-ness for objects created here. */
     MarkTypeObjectUnknownProperties(cx, obj->type());
 
     /* 15.2.3.5 step 4. */
-    if (argc > 1 && !vp[3].isUndefined()) {
-        if (vp[3].isPrimitive()) {
+    if (args.hasDefined(1)) {
+        if (args[1].isPrimitive()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
-            return JS_FALSE;
+            return false;
         }
 
-        if (!DefineProperties(cx, obj, &vp[3].toObject()))
-            return JS_FALSE;
+        if (!DefineProperties(cx, obj, &args[1].toObject()))
+            return false;
     }
 
     /* 5. Return obj. */
-    return JS_TRUE;
+    args.rval().setObject(*obj);
+    return true;
 }
 
 static JSBool
