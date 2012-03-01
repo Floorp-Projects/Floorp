@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IDBWrapperCache.h"
+#include "nsContentUtils.h"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -18,7 +19,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBWrapperCache,
                                                 nsDOMEventTargetHelper)
-  tmp->mScriptOwner = nsnull;
+  if (tmp->mScriptOwner) {
+    NS_DROP_JS_OBJECTS(tmp, IDBWrapperCache);
+    tmp->mScriptOwner = nsnull;
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(IDBWrapperCache,
@@ -36,3 +40,36 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(IDBWrapperCache, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(IDBWrapperCache, nsDOMEventTargetHelper)
+
+IDBWrapperCache::~IDBWrapperCache()
+{
+  if (mScriptOwner) {
+    NS_DROP_JS_OBJECTS(this, IDBWrapperCache);
+  }
+}
+
+bool
+IDBWrapperCache::SetScriptOwner(JSObject* aScriptOwner)
+{
+  if (!aScriptOwner) {
+    NS_ASSERTION(!mScriptOwner,
+                 "Don't null out existing owner, we need to call "
+                 "DropJSObjects!");
+
+    return true;
+  }
+
+  mScriptOwner = aScriptOwner;
+
+  nsISupports* thisSupports = NS_CYCLE_COLLECTION_UPCAST(this, IDBWrapperCache);
+  nsXPCOMCycleCollectionParticipant* participant;
+  CallQueryInterface(this, &participant);
+  nsresult rv = nsContentUtils::HoldJSObjects(thisSupports, participant);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("nsContentUtils::HoldJSObjects failed.");
+    mScriptOwner = nsnull;
+    return false;
+  }
+
+  return true;
+}

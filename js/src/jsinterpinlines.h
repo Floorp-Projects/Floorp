@@ -173,7 +173,7 @@ ValuePropertyBearer(JSContext *cx, StackFrame *fp, const Value &v, int spindex)
 }
 
 inline bool
-NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, uintN getHow, Value *vp)
+NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const Shape *shape, unsigned getHow, Value *vp)
 {
     if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
         /* Fast path for Object instance properties. */
@@ -259,7 +259,7 @@ GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp
     if (!obj)
         return false;
 
-    uintN flags = (op == JSOP_CALLPROP)
+    unsigned flags = (op == JSOP_CALLPROP)
                   ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                   : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER;
 
@@ -359,7 +359,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
 
     jsid id = ATOM_TO_JSID(name);
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
-        uintN defineHow;
+        unsigned defineHow;
         if (op == JSOP_SETMETHOD)
             defineHow = DNP_CACHE_RESULT | DNP_SET_METHOD;
         else if (op == JSOP_SETNAME)
@@ -439,7 +439,7 @@ NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
 }
 
 inline bool
-DefVarOrConstOperation(JSContext *cx, JSObject &varobj, PropertyName *dn, uintN attrs)
+DefVarOrConstOperation(JSContext *cx, JSObject &varobj, PropertyName *dn, unsigned attrs)
 {
     JS_ASSERT(varobj.isVarObj());
     JS_ASSERT(!varobj.getOps()->defineProperty);
@@ -461,7 +461,7 @@ DefVarOrConstOperation(JSContext *cx, JSObject &varobj, PropertyName *dn, uintN 
          * Extension: ordinarily we'd be done here -- but for |const|.  If we
          * see a redeclaration that's |const|, we consider it a conflict.
          */
-        uintN oldAttrs;
+        unsigned oldAttrs;
         if (!varobj.getPropertyAttributes(cx, dn, &oldAttrs))
             return false;
         if (attrs & JSPROP_READONLY) {
@@ -798,12 +798,9 @@ GetElementOperation(JSContext *cx, const Value &lref, const Value &rref, Value *
 }
 
 static JS_ALWAYS_INLINE bool
-SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &value)
+SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &value, bool strict)
 {
-    JSScript *script;
-    jsbytecode *pc;
-    types::TypeScript::GetPcScript(cx, &script, &pc);
-    types::TypeScript::MonitorAssign(cx, script, pc, obj, id, value);
+    types::TypeScript::MonitorAssign(cx, obj, id);
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
@@ -819,6 +816,10 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &va
                 obj->setDenseArrayElementWithType(cx, i, value);
                 return true;
             } else {
+                JSScript *script;
+                jsbytecode *pc;
+                types::TypeScript::GetPcScript(cx, &script, &pc);
+
                 if (script->hasAnalysis())
                     script->analysis()->getCode(pc).arrayWriteHole = true;
             }
@@ -826,7 +827,7 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &va
     } while (0);
 
     Value tmp = value;
-    return obj->setGeneric(cx, id, &tmp, script->strictModeCode);
+    return obj->setGeneric(cx, id, &tmp, strict);
 }
 
 #define RELATIONAL_OP(OP)                                                     \

@@ -53,7 +53,7 @@
  * the right __STDC_*_MACRO has been defined for each).  These are all usable
  * throughout mfbt code, and throughout Mozilla code more generally.
  */
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 /* Also expose size_t. */
 #include <stddef.h>

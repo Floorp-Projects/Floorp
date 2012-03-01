@@ -124,7 +124,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -139,7 +139,7 @@ private:
   }
 
   static JSBool
-  ToString(JSContext* aCx, uintN aArgc, jsval* aVp)
+  ToString(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {

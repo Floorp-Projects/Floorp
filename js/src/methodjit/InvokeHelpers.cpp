@@ -48,7 +48,6 @@
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/CodeLocation.h"
-#include "jsiter.h"
 #include "jstypes.h"
 #include "methodjit/StubCalls.h"
 #include "methodjit/MonoIC.h"
@@ -801,7 +800,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
 #ifdef JS_METHODJIT_SPEW
     JaegerSpew(JSpew_Recompile, "interpreter rejoin (file \"%s\") (line \"%d\") (op %s) (opline \"%d\")\n",
-               script->filename, script->lineno, OpcodeNames[op], js_PCToLineNumber(cx, script, pc));
+               script->filename, script->lineno, OpcodeNames[op], PCToLineNumber(script, pc));
 #endif
 
     uint32_t nextDepth = UINT32_MAX;

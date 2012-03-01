@@ -74,7 +74,7 @@ public:
 };
 
 JSBool
-PostToRIL(JSContext *cx, uintN argc, jsval *vp)
+PostToRIL(JSContext *cx, unsigned argc, jsval *vp)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
 

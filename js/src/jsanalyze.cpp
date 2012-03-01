@@ -126,7 +126,7 @@ ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
         atom = script->getAtom(GET_UINT32_INDEX(pc));
     }
 
-    uintN index;
+    unsigned index;
     BindingKind kind = script->bindings.lookup(cx, atom, &index);
 
     if (kind == ARGUMENT)
@@ -148,7 +148,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     numSlots = TotalSlots(script);
 
     codeArray = tla.newArray<Bytecode*>(length);
-    escapedSlots = tla.newArray<JSPackedBool>(numSlots);
+    escapedSlots = tla.newArray<bool>(numSlots);
 
     if (!codeArray || !escapedSlots) {
         setOOM(cx);

@@ -106,7 +106,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
 
     // This is a method or attribute - we'll be needing a function object
 
-    intN argc;
+    int argc;
     JSNative callback;
 
     if (IsMethod()) {
@@ -115,7 +115,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
             return false;
 
         // Note: ASSUMES that retval is last arg.
-        argc = (intN) info->GetParamCount();
+        argc = (int) info->GetParamCount();
         if (argc && info->GetParam((uint8_t)(argc-1)).IsRetval())
             argc-- ;
 

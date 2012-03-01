@@ -69,7 +69,7 @@ EnsureSucceededOrThrow(JSContext* aCx, nsresult rv)
     return true;
   }
 
-  intN code = rv == NS_ERROR_FILE_NOT_FOUND ?
+  int code = rv == NS_ERROR_FILE_NOT_FOUND ?
               FILE_NOT_FOUND_ERR :
               FILE_NOT_READABLE_ERR;
   ThrowFileExceptionForCode(aCx, code);
@@ -139,7 +139,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
     if (!obj) {
@@ -165,7 +165,7 @@ private:
   }
 
   static JSBool
-  ReadAsArrayBuffer(JSContext* aCx, uintN aArgc, jsval* aVp)
+  ReadAsArrayBuffer(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -212,7 +212,7 @@ private:
   }
 
   static JSBool
-  ReadAsDataURL(JSContext* aCx, uintN aArgc, jsval* aVp)
+  ReadAsDataURL(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -252,7 +252,7 @@ private:
   }
 
   static JSBool
-  ReadAsBinaryString(JSContext* aCx, uintN aArgc, jsval* aVp)
+  ReadAsBinaryString(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -292,7 +292,7 @@ private:
   }
 
   static JSBool
-  ReadAsText(JSContext* aCx, uintN aArgc, jsval* aVp)
+  ReadAsText(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {

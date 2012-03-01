@@ -73,7 +73,7 @@ nsSecurityNameSet::~nsSecurityNameSet()
 NS_IMPL_ISUPPORTS1(nsSecurityNameSet, nsIScriptExternalNameSet)
 
 static JSString *
-getStringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, uintN argc, jsval *argv)
+getStringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, unsigned argc, jsval *argv)
 {
     if (argc <= argNum || !JSVAL_IS_STRING(argv[argNum])) {
         JS_ReportError(cx, "String argument expected");
@@ -88,7 +88,7 @@ getStringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, uintN argc, jsv
 }
 
 static bool
-getBytesArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, uintN argc, jsval *argv,
+getBytesArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, unsigned argc, jsval *argv,
                  JSAutoByteString *bytes)
 {
     JSString *str = getStringArgument(cx, obj, argNum, argc, argv);
@@ -97,7 +97,7 @@ getBytesArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, uintN argc, jsva
 
 static void
 getUTF8StringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum,
-                      uintN argc, jsval *argv, nsCString& aRetval)
+                      unsigned argc, jsval *argv, nsCString& aRetval)
 {
     aRetval.Truncate();
 
@@ -122,7 +122,7 @@ getUTF8StringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum,
 }
 
 static JSBool
-netscape_security_isPrivilegeEnabled(JSContext *cx, uintN argc, jsval *vp)
+netscape_security_isPrivilegeEnabled(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
@@ -153,7 +153,7 @@ netscape_security_isPrivilegeEnabled(JSContext *cx, uintN argc, jsval *vp)
 
 
 static JSBool
-netscape_security_enablePrivilege(JSContext *cx, uintN argc, jsval *vp)
+netscape_security_enablePrivilege(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
@@ -196,7 +196,7 @@ netscape_security_enablePrivilege(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-netscape_security_disablePrivilege(JSContext *cx, uintN argc, jsval *vp)
+netscape_security_disablePrivilege(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
@@ -222,7 +222,7 @@ netscape_security_disablePrivilege(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-netscape_security_revertPrivilege(JSContext *cx, uintN argc, jsval *vp)
+netscape_security_revertPrivilege(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
@@ -248,7 +248,7 @@ netscape_security_revertPrivilege(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-netscape_security_setCanEnablePrivilege(JSContext *cx, uintN argc, jsval *vp)
+netscape_security_setCanEnablePrivilege(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
@@ -280,7 +280,7 @@ netscape_security_setCanEnablePrivilege(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-netscape_security_invalidate(JSContext *cx, uintN argc, jsval *vp)
+netscape_security_invalidate(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)

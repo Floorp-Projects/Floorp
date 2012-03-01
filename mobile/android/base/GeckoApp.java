@@ -158,12 +158,6 @@ abstract public class GeckoApp
     private static final String HANDLER_MSG_TYPE = "type";
     private static final int HANDLER_MSG_TYPE_INITIALIZE = 1;
 
-    public interface OnTabsChangedListener {
-        public void onTabsChanged(Tab tab);
-    }
-    
-    private static ArrayList<OnTabsChangedListener> mTabsChangedListeners;
-
     static class ExtraMenuItem implements MenuItem.OnMenuItemClickListener {
         String label;
         String icon;
@@ -683,7 +677,7 @@ abstract public class GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setFavicon(tab.getFavicon());
 
-                onTabsChanged(tab);
+                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.FAVICON);
             }
         });
 
@@ -742,7 +736,6 @@ abstract public class GeckoApp
                     mBrowserToolbar.setSecurityMode("unknown");
                     mDoorHangerPopup.updatePopup();
                     mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
-                    mLayerController.setWaitForTouchListeners(false);
 
                     if (tab != null)
                         hidePlugins(tab, true);
@@ -850,30 +843,6 @@ abstract public class GeckoApp
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
         overridePendingTransition(R.anim.grow_fade_in, 0);
-    }
-
-    public static void registerOnTabsChangedListener(OnTabsChangedListener listener) {
-        if (mTabsChangedListeners == null)
-            mTabsChangedListeners = new ArrayList<OnTabsChangedListener>();
-        
-        mTabsChangedListeners.add(listener);
-    }
-
-    public static void unregisterOnTabsChangedListener(OnTabsChangedListener listener) {
-        if (mTabsChangedListeners == null)
-            return;
-        
-        mTabsChangedListeners.remove(listener);
-    }
-
-    public void onTabsChanged(Tab tab) {
-        if (mTabsChangedListeners == null)
-            return;
-
-        Iterator<OnTabsChangedListener> items = mTabsChangedListeners.iterator();
-        while (items.hasNext()) {
-            items.next().onTabsChanged(tab);
-        }
     }
 
     public void handleMessage(String event, JSONObject message) {
@@ -1049,7 +1018,6 @@ abstract public class GeckoApp
 
                 final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
                 dialogBuilder.setSingleChoiceItems(titleArray, selected, new AlertDialog.OnClickListener() {
-                    @Override
                     public void onClick(DialogInterface dialog, int which) {
                         try {
                             JSONObject charset = charsets.getJSONObject(which);
@@ -1061,7 +1029,6 @@ abstract public class GeckoApp
                     }
                 });
                 dialogBuilder.setNegativeButton(R.string.button_cancel, new AlertDialog.OnClickListener() {
-                    @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                     }
@@ -1279,7 +1246,7 @@ abstract public class GeckoApp
                     if (showProgress)
                         mBrowserToolbar.setProgressVisibility(true);
                 }
-                onTabsChanged(tab);
+                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.START);
             }
         });
     }
@@ -1295,7 +1262,7 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setProgressVisibility(false);
-                onTabsChanged(tab);
+                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
             }
         });
 
@@ -1334,7 +1301,7 @@ abstract public class GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
 
-                onTabsChanged(tab);
+                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.LOADED);
             }
         });
     }
@@ -1350,7 +1317,7 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                onTabsChanged(tab);
+                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.TITLE);
             }
         });
     }
@@ -1991,6 +1958,13 @@ abstract public class GeckoApp
             return;
         }
 
+        // if we were previously OOM killed, we can end up here when launching
+        // from external shortcuts, so set this as the intent for initialization
+        if (!mInitialized) {
+            setIntent(intent);
+            return;
+        }
+
         if (checkLaunchState(LaunchState.Launched)) {
             Uri data = intent.getData();
             Bundle bundle = intent.getExtras();
@@ -2111,6 +2085,10 @@ abstract public class GeckoApp
             message.setData(bundle);
             mMainHandler.sendMessage(message);
         }
+
+        // An Android framework bug can cause an IME crash when focus changes invalidate text
+        // selection offsets. A workaround is to reset selection when the activity resumes.
+        GeckoAppShell.resetIMESelection();
 
         int newOrientation = getResources().getConfiguration().orientation;
 

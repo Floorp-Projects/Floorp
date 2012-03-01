@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
   <title>Test for Bug 523771</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=523771">Mozilla Bug 523771</a>
@@ -225,6 +226,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
       <td><button type=foobar ></button></td>
       <td><button type=foobar name="n18_7_&#13;_&#10;_&#13;&#10;_ _&quot;"
                   value="v18_7_&#13;_&#10;_&#13;&#10;_ _&quot;"></button></td>
+    </tr>
+    <tr>
+      <td>&lt;input type='url'&gt;</td>
+      <td><input type=url name="n19_1" value="http://v19_1.org"></td>
+      <td><input type=url name="n19_2" value=""></td>
+      <td><input type=url name="n19_3"></td>
+      <td><input type=url name="" value="http://v19_4.org"></td>
+      <td><input type=url value="http://v19_5.org"></td>
+      <td><input type=url ></td>
+      <td><input type=url name="n19_7_&#13;_&#10;_&#13;&#10;__&quot;"
+                 value="http://v19_7_&#13;_&#10;_&#13;&#10;__&quot;">
+          <!-- Put UTF-8 value in the "strange" column. -->
+          <input type=url name="n19_8" value="http://m&#xf3;zill&auml;.&#xf3;rg"></td>
+    </tr>
+    <tr>
+      <td>&lt;input type='email'&gt;</td>
+      <td><input type=email name="n20_1" value="v20_1@bar"></td>
+      <td><input type=email name="n20_2" value=""></td>
+      <td><input type=email name="n20_3"></td>
+      <td><input type=email name="" value="v20_4@bar"></td>
+      <td><input type=email value="v20_5@bar"></td>
+      <td><input type=email ></td>
+      <td><input type=email name="n20_7_&#13;_&#10;_&#13;&#10;__&quot;"
+                 value="v20_7_&#13;_&#10;_&#13;&#10;__&quot;@bar">
+          <!-- Put UTF-8 value is the "strange" column. -->
+          <input type=email name="n20_8" value="foo@mózillä.órg"></td>
     </tr>
   </table>
   
@@ -452,6 +479,18 @@ var expectedSub = [
   { name: "n13_2", value: "" },
   { name: "n13_3", value: "" },
   { name: "n13_7_\r\n_\r\n_\r\n_ _\"", value: "v13_7____ _\"" },
+  // <input type='url'>
+  { name: "n19_1", value: "http://v19_1.org" },
+  { name: "n19_2", value: "" },
+  { name: "n19_3", value: "" },
+  { name: "n19_7_\r\n_\r\n_\r\n__\"", value: "http://v19_7_____\"" },
+  { name: "n19_8", value: "http://m\xf3zill\xe4.\xf3rg" },
+  // <input type='email'>
+  { name: "n20_1", value: "v20_1@bar" },
+  { name: "n20_2", value: "" },
+  { name: "n20_3", value: "" },
+  { name: "n20_7_\r\n_\r\n_\r\n__\"", value: "v20_7_____\"@bar" },
+  { name: "n20_8", value: "foo@mózillä.órg" },
   // Default button
   // Submit button
   // Button button
@@ -585,9 +624,15 @@ function checkMPSubmission(sub, expected, test) {
   }
 }
 
+function utf8encode(s) {
+  return unescape(encodeURIComponent(s));
+}
+
 function checkURLSubmission(sub, expected) {
   function urlEscape(s) {
-    return escape(s).replace("%20", "+", "g");
+    return escape(utf8encode(s)).replace("%20", "+", "g")
+                                .replace("/", "%2F", "g")
+                                .replace("@", "%40", "g");
   }
 
   subItems = sub.split("&");
@@ -656,9 +701,10 @@ function runTest() {
 
   // multipart/form-data
 
-  // Make normal submission
   var iframe = $("target_iframe");
   iframe.onload = function() { gen.next(); };
+
+  // Make normal submission
   form.submit();
   yield; // Wait for iframe to load as a result of the submission
   var submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
