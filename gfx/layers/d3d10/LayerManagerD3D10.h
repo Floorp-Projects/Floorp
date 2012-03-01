@@ -319,10 +319,33 @@ protected:
   /*
    * Finds a texture for this layer's mask layer (if it has one) and sets it
    * as an input to the shaders.
-   * Returns true if a texture is loaded, false if there was no mask layer, or
-   * a texture for the mask layer could not be loaded.
+   * Returns SHADER_MASK if a texture is loaded, SHADER_NO_MASK if there was no 
+   * mask layer, or a texture for the mask layer could not be loaded.
    */
-  bool LoadMaskTexture();
+  PRUint8 LoadMaskTexture();
+
+  /**
+   * Select a shader technique using a combination of the following flags.
+   * Not all combinations of flags are supported, and might cause an error,
+   * check the fx file to see which shaders exist. In particular, aFlags should
+   * include any combination of the 0x20 bit = 0 flags OR one of the 0x20 bit = 1
+   * flags. Mask flags can be used in either case.
+   */
+  ID3D10EffectTechnique* SelectShader(PRUint8 aFlags);
+  const static PRUint8 SHADER_NO_MASK = 0;
+  const static PRUint8 SHADER_MASK = 0x1;
+  const static PRUint8 SHADER_MASK_3D = 0x2;
+  // 0x20 bit = 0
+  const static PRUint8 SHADER_RGB = 0;
+  const static PRUint8 SHADER_RGBA = 0x4;
+  const static PRUint8 SHADER_NON_PREMUL = 0;
+  const static PRUint8 SHADER_PREMUL = 0x8;
+  const static PRUint8 SHADER_LINEAR = 0;
+  const static PRUint8 SHADER_POINT = 0x10;
+  // 0x20 bit = 1
+  const static PRUint8 SHADER_YCBCR = 0x20;
+  const static PRUint8 SHADER_COMPONENT_ALPHA = 0x24;
+  const static PRUint8 SHADER_SOLID = 0x28;
 
   LayerManagerD3D10 *mD3DManager;
 };

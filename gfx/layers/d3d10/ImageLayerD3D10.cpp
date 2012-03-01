@@ -211,35 +211,14 @@ ImageLayerD3D10::RenderLayer()
       return;
     }
     
-    if (LoadMaskTexture()) {
-      if (hasAlpha) {
-        if (mFilter == gfxPattern::FILTER_NEAREST) {
-          technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPointMask");
-        } else {
-          technique = effect()->GetTechniqueByName("RenderRGBALayerPremulMask");
-        }
-       } else {
-        if (mFilter == gfxPattern::FILTER_NEAREST) {
-          technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPointMask");
-        } else {
-          technique = effect()->GetTechniqueByName("RenderRGBLayerPremulMask");
-        }
-       }
-     } else {
-      if (hasAlpha) {
-        if (mFilter == gfxPattern::FILTER_NEAREST) {
-          technique = effect()->GetTechniqueByName("RenderRGBALayerPremulPoint");
-        } else {
-          technique = effect()->GetTechniqueByName("RenderRGBALayerPremul");
-        }
-       } else {
-        if (mFilter == gfxPattern::FILTER_NEAREST) {
-          technique = effect()->GetTechniqueByName("RenderRGBLayerPremulPoint");
-        } else {
-          technique = effect()->GetTechniqueByName("RenderRGBLayerPremul");
-        }
-      }
-    }
+    PRUint8 shaderFlags = SHADER_PREMUL;
+    shaderFlags |= LoadMaskTexture();
+    shaderFlags |= hasAlpha
+                  ? SHADER_RGBA : SHADER_RGB;
+    shaderFlags |= mFilter == gfxPattern::FILTER_NEAREST
+                  ? SHADER_POINT : SHADER_LINEAR;
+    technique = SelectShader(shaderFlags);
+
 
     effect()->GetVariableByName("tRGB")->AsShaderResource()->SetResource(srView);
 
@@ -275,18 +254,12 @@ ImageLayerD3D10::RenderLayer()
       return;
     }
 
-    bool useMask = LoadMaskTexture();
-
     // TODO: At some point we should try to deal with mFilter here, you don't
     // really want to use point filtering in the case of NEAREST, since that
     // would also use point filtering for Chroma upsampling. Where most likely
     // the user would only want point filtering for final RGB image upsampling.
 
-    if (useMask) {
-      technique = effect()->GetTechniqueByName("RenderYCbCrLayerMask");
-    } else {
-      technique = effect()->GetTechniqueByName("RenderYCbCrLayer");
-    }
+    technique = SelectShader(SHADER_YCBCR | LoadMaskTexture());
 
     effect()->GetVariableByName("tY")->AsShaderResource()->SetResource(data->mYView);
     effect()->GetVariableByName("tCb")->AsShaderResource()->SetResource(data->mCbView);
