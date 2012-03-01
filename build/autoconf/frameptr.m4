@@ -3,8 +3,13 @@ dnl disabling frame pointers in this architecture based on the configure
 dnl options
 
 AC_DEFUN([MOZ_SET_FRAMEPTR_FLAGS], [
+  case "$target" in
+  *android*)
+    unwind_tables="-funwind-tables"
+    ;;
+  esac
   if test "$GNU_CC"; then
-    MOZ_ENABLE_FRAME_PTR="-fno-omit-frame-pointer"
+    MOZ_ENABLE_FRAME_PTR="-fno-omit-frame-pointer $unwind_tables"
     MOZ_DISABLE_FRAME_PTR="-fomit-frame-pointer"
   else
     case "$target" in
