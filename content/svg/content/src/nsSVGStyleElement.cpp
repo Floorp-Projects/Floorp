@@ -337,9 +337,9 @@ nsSVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
   aTitle.Assign(title);
 
   GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
-  // SVG spec refers to the HTML4.0 spec which is inconsistent, make it
-  // case INSENSITIVE
-  ToLowerCase(aMedia);
+  // The SVG spec is formulated in terms of the CSS2 spec,
+  // which specifies that media queries are case insensitive.
+  nsContentUtils::ASCIIToLower(aMedia);
 
   GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
   if (aType.IsEmpty()) {
