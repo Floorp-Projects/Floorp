@@ -437,7 +437,6 @@ struct JSRuntime : js::RuntimeFriendFields
 
     JSGCCallback        gcCallback;
     js::GCSliceCallback gcSliceCallback;
-    JSFinalizeCallback  gcFinalizeCallback;
 
   private:
     /*

@@ -1410,7 +1410,7 @@ GCDebugSlice(JSContext *cx, int64_t objCount);
 namespace js {
 
 void
-InitTracer(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);
+InitTracer(JSTracer *trc, JSRuntime *rt, JSContext *cx, JSTraceCallback callback);
 
 #ifdef JS_THREADSAFE
 
@@ -1772,7 +1772,7 @@ struct GCMarker : public JSTracer {
     void setSizeLimit(size_t size) { stack.setSizeLimit(size); }
     size_t sizeLimit() const { return stack.sizeLimit; }
 
-    void start(JSRuntime *rt);
+    void start(JSRuntime *rt, JSContext *cx);
     void stop();
     void reset();
 
