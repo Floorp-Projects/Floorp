@@ -872,7 +872,10 @@ DrawTargetCG::Init(const IntSize &aSize, SurfaceFormat &)
 {
   // XXX: we should come up with some consistent semantics for dealing
   // with zero area drawtargets
-  if (aSize.width == 0 || aSize.height == 0) {
+  if (aSize.width == 0 || aSize.height == 0 ||
+      // 32767 is the maximum size supported by cairo
+      // we clamp to that to make it easier to interoperate
+      aSize.width > 32767 || aSize.height > 32767) {
     mColorSpace = NULL;
     mCg = NULL;
     mData = NULL;
