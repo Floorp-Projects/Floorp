@@ -455,26 +455,49 @@ ion::ReorderBlocks(MIRGraph &graph)
     // block in pendingNonLoopBlocks.
     Vector<size_t, 4, IonAllocPolicy> loops;
 
+    Vector<MBasicBlock *, 4, IonAllocPolicy> headers;
+
     while (!done.empty()) {
         current = done.popFront();
         current->unmark();
 
         if (current->isLoopHeader()) {
-            loopDepth = current->loopDepth();
-            if (!loops.append(pendingNonLoopBlocks.length()))
-                return false;
+            if (current->loopDepth() > loopDepth) {
+                // Start processing a nested loop.
+                loopDepth = current->loopDepth();
+                if (!loops.append(pendingNonLoopBlocks.length()))
+                    return false;
+                if (!headers.append(current))
+                    return false;
+            } else {
+                // The current loop is followed by another loop. Finish the current
+                // loop first.
+                JS_ASSERT(current->loopDepth() == loopDepth);
+                if (!pendingNonLoopBlocks.append(current))
+                    return false;
+                continue;
+            }
         }
 
-        if (current->isLoopBackedge() && current->loopDepth() == loopDepth) {
-            loopDepth--;
-            graph.addBlock(current);
+        if (current->isLoopBackedge()) {
+            if (current->loopHeaderOfBackedge() == headers.back()) {
+                loopDepth--;
+                headers.popBack();
 
-            // Re-visit all blocks we were not allowed to insert before the
-            // current backedge.
-            size_t nblocks = pendingNonLoopBlocks.length() - loops.popCopy();
-            for (size_t i = 0; i < nblocks; i++)
-                done.pushFront(pendingNonLoopBlocks.popCopy());
-            continue;
+                graph.addBlock(current);
+
+                // Re-visit all blocks we were not allowed to insert before the
+                // current backedge.
+                size_t nblocks = pendingNonLoopBlocks.length() - loops.popCopy();
+                for (size_t i = 0; i < nblocks; i++)
+                    done.pushFront(pendingNonLoopBlocks.popCopy());
+                continue;
+            } else {
+                // This backedge belongs to another loop, don't add it now.
+                if (!pendingNonLoopBlocks.append(current))
+                    return false;
+                continue;
+            }
         } else if (current->loopDepth() < loopDepth) {
             // We are not allowed to insert this loop successor block before the
             // backedge. Add it to the pending list so that we can insert it
@@ -488,6 +511,7 @@ ion::ReorderBlocks(MIRGraph &graph)
     }
 
     JS_ASSERT(loopDepth == 0);
+    JS_ASSERT(headers.empty());
     JS_ASSERT(pendingNonLoopBlocks.empty());
     JS_ASSERT(graph.numBlocks() == numBlocks);
 
