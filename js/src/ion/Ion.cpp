@@ -522,7 +522,7 @@ void
 IonScript::copyOsiIndices(const OsiIndex *oi, MacroAssembler &masm)
 {
     memcpy(osiIndices(), oi, osiIndexEntries_ * sizeof(OsiIndex));
-    for (int i = 0; i < osiIndexEntries_; i++)
+    for (unsigned i = 0; i < osiIndexEntries_; i++)
         osiIndices()[i].fixUpOffset(masm);
 }
 

@@ -263,7 +263,7 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
     if (bailouts_.length() >= BAILOUT_TABLE_SIZE)
         return false;
 
-    uintN bailoutId = bailouts_.length();
+    unsigned bailoutId = bailouts_.length();
     snapshot->setBailoutId(bailoutId);
     IonSpew(IonSpew_Snapshots, "Assigned snapshot bailout id %u", bailoutId);
     return bailouts_.append(snapshot->snapshotOffset());

@@ -88,7 +88,7 @@ ReportOverRecursed(JSContext *cx)
 }
 
 bool
-DefVarOrConst(JSContext *cx, PropertyName *dn, uintN attrs, JSObject *scopeChain)
+DefVarOrConst(JSContext *cx, PropertyName *dn, unsigned attrs, JSObject *scopeChain)
 {
     // Given the ScopeChain, extract the VarObj.
     JSObject *obj = scopeChain;

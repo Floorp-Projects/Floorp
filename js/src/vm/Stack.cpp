@@ -841,8 +841,8 @@ StackFrame *
 ContextStack::pushBailoutFrame(JSContext *cx, JSFunction &fun,
                                JSScript *script, BailoutFrameGuard *bfg)
 {
-    uintN formalArgs = fun.nargs + 2;
-    uintN nvars = formalArgs + VALUES_PER_STACK_FRAME + script->nslots;
+    unsigned formalArgs = fun.nargs + 2;
+    unsigned nvars = formalArgs + VALUES_PER_STACK_FRAME + script->nslots;
     Value *firstUnused = ensureOnTop(cx, DONT_REPORT_ERROR, nvars, CAN_EXTEND, &bfg->pushedSeg_);
     if (!firstUnused)
         return NULL;
@@ -864,7 +864,7 @@ ContextStack::pushBailoutFrame(JSContext *cx, JSScript *script, JSObject &scopeC
                                const Value &thisv, BailoutFrameGuard *bfg)
 {
     StackFrame *prev = maybefp();
-    uintN nvars = 2 /* callee, this */ + VALUES_PER_STACK_FRAME + script->nslots;
+    unsigned nvars = 2 /* callee, this */ + VALUES_PER_STACK_FRAME + script->nslots;
     Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &bfg->pushedSeg_);
     if (!firstUnused)
         return NULL;

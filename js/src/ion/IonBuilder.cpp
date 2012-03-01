@@ -76,7 +76,7 @@ IonBuilder::abort(const char *message, ...)
     va_start(ap, message);
     abortFmt(message, ap);
     va_end(ap);
-    IonSpew(IonSpew_Abort, "aborted @ %s:%d", script->filename, js_PCToLineNumber(cx, script, pc));
+    IonSpew(IonSpew_Abort, "aborted @ %s:%d", script->filename, PCToLineNumber(script, pc));
     return false;
 }
 
@@ -3827,7 +3827,7 @@ IonBuilder::jsop_defvar(uint32 index)
     PropertyName *name = script->getName(index);
 
     // Bake in attrs.
-    uintN attrs = JSPROP_ENUMERATE;
+    unsigned attrs = JSPROP_ENUMERATE;
     // isEvalFrame() requires  attrs |= JSPROP_PERMANENT.
     if (JSOp(*pc) == JSOP_DEFCONST)
         attrs |= JSPROP_READONLY;
