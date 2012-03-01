@@ -70,7 +70,6 @@ interface nsIDOMClientRectList;
 
 // Needed for raises() in our IDL
 interface DOMException;
-interface RangeException;
 
 // Style Sheets
 interface nsIDOMStyleSheetList;
