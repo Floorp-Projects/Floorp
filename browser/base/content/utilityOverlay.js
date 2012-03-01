@@ -147,7 +147,7 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
 #endif
     return shift ? "tabshifted" : "tab";
 
-  if (alt)
+  if (alt && getBoolPref("browser.altClickSave", false))
     return "save";
 
   if (shift || (middle && !middleUsesTabs))

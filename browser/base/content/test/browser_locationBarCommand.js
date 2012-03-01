@@ -9,6 +9,12 @@ let gFocusManager = Cc["@mozilla.org/focus-manager;1"].
 
 function test() {
   waitForExplicitFinish();
+
+  registerCleanupFunction(function () {
+    Services.prefs.clearUserPref("browser.altClickSave");
+  });
+  Services.prefs.setBoolPref("browser.altClickSave", true);
+
   runAltLeftClickTest();
 }
 
