@@ -9,6 +9,7 @@ function testcase(obj, fn) {
 }
 
 function test(obj) {
+    testcase(obj, Map.prototype.size);
     testcase(obj, Map.prototype.get, "x");
     testcase(obj, Map.prototype.has, "x");
     testcase(obj, Map.prototype.set, "x", 1);
