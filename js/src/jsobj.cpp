@@ -1188,16 +1188,16 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
 {
     if (argc <= 1) {
         js_ReportMissingArg(cx, *vp, 1);
-        return JS_FALSE;
+        return false;
     }
 
     JSObject *callable = js_ValueToCallableObject(cx, &vp[3], 0);
     if (!callable)
-        return JS_FALSE;
+        return false;
 
     jsid propid;
     if (!ValueToId(cx, vp[2], &propid))
-        return JS_FALSE;
+        return false;
 
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
@@ -1206,14 +1206,12 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
     Value tmp;
     unsigned attrs;
     if (!CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs))
-        return JS_FALSE;
+        return false;
 
     vp->setUndefined();
 
-    if (attrs & JSPROP_READONLY)
-        return JS_TRUE;
     if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
-        return JS_FALSE;
+        return false;
     return JS_SetWatchPoint(cx, obj, propid, obj_watch_handler, callable);
 }
 
@@ -1227,7 +1225,7 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
     jsid id;
     if (argc != 0) {
         if (!ValueToId(cx, vp[2], &id))
-            return JS_FALSE;
+            return false;
     } else {
         id = JSID_VOID;
     }
