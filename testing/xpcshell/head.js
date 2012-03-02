@@ -778,6 +778,13 @@ function do_get_profile() {
   };
   dirSvc.QueryInterface(Components.interfaces.nsIDirectoryService)
         .registerProvider(provider);
+
+  // The methods of 'provider' will entrain this scope so null out everything
+  // to avoid spurious leak reports.
+  env = null;
+  profd = null;
+  dirSvc = null;
+  provider = null;
   return file.clone();
 }
 
