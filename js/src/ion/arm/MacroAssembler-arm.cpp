@@ -86,7 +86,7 @@ MacroAssemblerARM::alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
     // this preserves the overflow condition code.
     // unfortunately, it is horribly brittle.
     as_alu(ScratchRegister, src1, both.fst, interop, NoSetCond, c);
-    as_alu(ScratchRegister, ScratchRegister, both.snd, op, sc, c);
+    as_alu(dest, ScratchRegister, both.snd, op, sc, c);
     // we succeeded!
     return true;
 }
@@ -114,12 +114,20 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
     }
     // ONE INSTRUCTION, NEGATED:
     Imm32 negImm = imm;
-    ALUOp negOp = ALUNeg(op, &negImm);
+    Register negDest;
+    ALUOp negOp = ALUNeg(op, dest, &negImm, &negDest);
     Imm8 negImm8 = Imm8(negImm.value);
+    // add r1, r2, -15 can be replaced with
+    // sub r1, r2, 15
+    // for bonus points, dest can be replaced (nearly always invalid => ScratchRegister)
+    // This is useful if we wish to negate tst.  tst has an invalid (aka not used) dest,
+    // but its negation is bic *requires* a dest.  We can accomodate, but it will need to clobber
+    // *something*, and the scratch register isn't being used, so...
     if (negOp != op_invalid && !negImm8.invalid) {
-        as_alu(dest, src1, negImm8, negOp, sc, c);
+        as_alu(negDest, src1, negImm8, negOp, sc, c);
         return;
     }
+
     if (hasMOVWT()) {
         // If the operation is a move-a-like then we can try to use movw to
         // move the bits into the destination.  Otherwise, we'll need to
@@ -194,7 +202,8 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
         // Try to load the immediate into a scratch register
         // then use that
         as_movw(ScratchRegister, imm.value & 0xffff, c);
-        as_movt(ScratchRegister, (imm.value >> 16) & 0xffff, c);
+        if ((imm.value >> 16) != 0)
+            as_movt(ScratchRegister, (imm.value >> 16) & 0xffff, c);
     } else {
         JS_NOT_REACHED("non-ARMv7 loading of immediates NYI.");
     }
@@ -251,7 +260,8 @@ void
 MacroAssemblerARM::ma_mov(Register src, Register dest,
             SetCond_ sc, Assembler::Condition c)
 {
-    as_mov(dest, O2Reg(src), sc, c);
+    if (sc == SetCond || dest != src)
+        as_mov(dest, O2Reg(src), sc, c);
 }
 
 void
@@ -1930,8 +1940,9 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Register base, Register index,
 
 void
 MacroAssemblerARMCompat::linkExitFrame() {
-    movePtr(ImmWord(GetIonContext()->cx->runtime), ScratchRegister);
-    ma_str(StackPointer, Operand(ScratchRegister, offsetof(JSRuntime, ionTop)));
+    uint8 *dest = ((uint8*)GetIonContext()->cx->runtime) + offsetof(JSRuntime, ionTop);
+    movePtr(ImmWord(dest), ScratchRegister);
+    ma_str(StackPointer, Operand(ScratchRegister, 0));
 }
 
 // ARM says that all reads of pc will return 8 higher than the

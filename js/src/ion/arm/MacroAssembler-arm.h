@@ -608,14 +608,18 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         cond = testMagic(cond, t);
         ma_b(label, cond);
     }
-
     template<typename T>
     void branchTestBooleanTruthy(bool b, const T & t, Label *label) {
         Condition c = testBooleanTruthy(b, t);
         ma_b(label, c);
     }
     void branchTest32(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
-        ma_tst(lhs, rhs);
+        // x86 likes test foo, foo rather than cmp foo, #0.
+        // Convert the former into the latter.
+        if (lhs == rhs && (cond == Zero || cond == NonZero))
+            ma_cmp(lhs, Imm32(0));
+        else
+            ma_tst(lhs, rhs);
         ma_b(label, cond);
     }
     void branchTest32(Condition cond, const Register &lhs, Imm32 imm, Label *label) {

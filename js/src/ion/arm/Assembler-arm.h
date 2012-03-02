@@ -384,7 +384,7 @@ enum VFPOp {
     opv_cmpz  = 0xB << 20 | 0x1 << 6 | 0x5 << 16
 };
 // Negate the operation, AND negate the immediate that we were passed in.
-ALUOp ALUNeg(ALUOp op, Imm32 *imm);
+ALUOp ALUNeg(ALUOp op, Register dest, Imm32 *imm, Register *negDest);
 bool can_dbl(ALUOp op);
 bool condsAreSafe(ALUOp op);
 // If there is a variant of op that has a dest (think cmp/sub)
@@ -461,7 +461,10 @@ struct Imm8mData
 
     Imm8mData(uint32 data_, uint32 rot_)
       : data(data_), rot(rot_), invalid(0)
-    { }
+    {
+        JS_ASSERT(data == data_);
+        JS_ASSERT(rot == rot_);
+    }
 };
 
 struct Imm8Data
