@@ -96,6 +96,7 @@ CPPSRCS = \
   ValidateLimitations.cpp \
   ForLoopUnroll.cpp \
   MapLongVariableNames.cpp \
+  spooky.cpp \
   BuiltInFunctionEmulator.cpp \
   $(NULL)
 
