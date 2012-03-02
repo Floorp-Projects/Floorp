@@ -1003,7 +1003,9 @@ Livemark.prototype = {
    */
   terminate: function LM_terminate()
   {
-    delete this._resultObserversList;
+    // Clear the list before aborting, since abort() would try to set the
+    // status and notify about it, but that's not really useful at this point.
+    this._resultObserversList = [];
     this.abort();
   },
 
