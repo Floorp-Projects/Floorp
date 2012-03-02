@@ -221,7 +221,7 @@ typedef bool
   * fp is the file for the dump output.
   */
 extern JS_FRIEND_API(void)
-DumpHeapComplete(JSRuntime *rt, FILE *fp);
+DumpHeapComplete(JSContext *cx, FILE *fp);
 
 #endif
 
@@ -519,15 +519,15 @@ IsObjectInContextCompartment(const JSObject *obj, const JSContext *cx);
 #define JSITER_FOR_OF     0x20  /* harmony for-of loop */
 
 inline uintptr_t
-GetNativeStackLimit(const JSRuntime *rt)
+GetContextStackLimit(const JSContext *cx)
 {
-    return RuntimeFriendFields::get(rt)->nativeStackLimit;
+    return RuntimeFriendFields::get(GetRuntime(cx))->nativeStackLimit;
 }
 
 #define JS_CHECK_RECURSION(cx, onerror)                                         \
     JS_BEGIN_MACRO                                                              \
         int stackDummy_;                                                        \
-        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(js::GetRuntime(cx)), &stackDummy_)) { \
+        if (!JS_CHECK_STACK_SIZE(js::GetContextStackLimit(cx), &stackDummy_)) { \
             js_ReportOverRecursed(cx);                                          \
             onerror;                                                            \
         }                                                                       \

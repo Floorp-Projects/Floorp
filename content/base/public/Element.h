@@ -105,6 +105,8 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ELEMENT_IID)
 
+  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(Element, nsIContent)
+
   /**
    * Method to get the full state of this element.  See nsEventStates.h for
    * the possible bits that could be set here.

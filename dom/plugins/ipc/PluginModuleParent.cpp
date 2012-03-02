@@ -749,12 +749,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
         return NS_ERROR_FAILURE;
     }
 
-    uint32_t flags = 0;
-    if (mozilla::Preferences::GetBool("plugin.allow.asyncdrawing", false)) {
-      flags |= kAllowAsyncDrawing;
-    }
-
-    if (!CallNP_Initialize(flags, error)) {
+    if (!CallNP_Initialize(error)) {
         return NS_ERROR_FAILURE;
     }
     else if (*error != NPERR_NO_ERROR) {
@@ -778,12 +773,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
         return NS_ERROR_FAILURE;
     }
 
-    uint32_t flags = 0;
-    if (mozilla::Preferences::GetBool("plugin.allow.asyncdrawing", false)) {
-      flags |= kAllowAsyncDrawing;
-    }
-
-    if (!CallNP_Initialize(flags, error))
+    if (!CallNP_Initialize(error))
         return NS_ERROR_FAILURE;
 
 #if defined XP_WIN

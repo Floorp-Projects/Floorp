@@ -47,6 +47,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsDisplayList.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsIDOMHTMLInputElement.h"
 
 static void
 PaintCheckMark(nsIFrame* aFrame,

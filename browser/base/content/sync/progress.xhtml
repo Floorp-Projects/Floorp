@@ -48,9 +48,6 @@
   <!ENTITY % syncSetupDTD
     SYSTEM "chrome://browser/locale/syncSetup.dtd">
     %syncSetupDTD;
-  <!ENTITY % globalDTD 
-    SYSTEM "chrome://global/locale/global.dtd">
-    %globalDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -66,7 +63,7 @@
     <script type="text/javascript;version=1.8"
             src="chrome://browser/content/sync/progress.js"/>
   </head>
-  <body onload="onLoad(event)" onunload="onUnload(event)" dir="&locale.dir;">
+  <body onload="onLoad(event)" onunload="onUnload(event)">
     <title>&setup.successPage.title;</title>
     <div id="floatingBox" class="main-content">
       <div id="title">

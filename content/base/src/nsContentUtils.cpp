@@ -123,7 +123,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
 #include "nsUnicodeProperties.h"
-#include "harfbuzz/hb-common.h"
 #include "jsdbgapi.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIDOMDocumentXBL.h"
@@ -1118,38 +1117,34 @@ nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSr
   return normalizer.GetCharsWritten();
 }
 
-/**
- * This is used to determine whether a character is in one of the punctuation
- * mark classes which CSS says should be part of the first-letter.
- * See http://www.w3.org/TR/CSS2/selector.html#first-letter and
- *     http://www.w3.org/TR/selectors/#first-letter
- */
+// Replaced by precompiled CCMap (see bug 180266). To update the list
+// of characters, see one of files included below. As for the way
+// the original list of characters was obtained by Frank Tang, see bug 54467.
+// Updated to fix the regression (bug 263411). The list contains
+// characters of the following Unicode character classes : Ps, Pi, Po, Pf, Pe.
+// (ref.: http://www.w3.org/TR/2004/CR-CSS21-20040225/selector.html#first-letter)
+#include "punct_marks.x-ccmap"
+DEFINE_X_CCMAP(gPuncCharsCCMapExt, const);
 
 // static
 bool
-nsContentUtils::IsFirstLetterPunctuation(PRUint32 aChar)
+nsContentUtils::IsPunctuationMark(PRUint32 aChar)
 {
-  PRUint8 cat = mozilla::unicode::GetGeneralCategory(aChar);
-
-  return (cat == HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION ||     // Ps
-          cat == HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION ||    // Pe
-          cat == HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION ||  // Pi
-          cat == HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION ||    // Pf
-          cat == HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION);     // Po
+  return CCMAP_HAS_CHAR_EXT(gPuncCharsCCMapExt, aChar);
 }
 
 // static
 bool
-nsContentUtils::IsFirstLetterPunctuationAt(const nsTextFragment* aFrag, PRUint32 aOffset)
+nsContentUtils::IsPunctuationMarkAt(const nsTextFragment* aFrag, PRUint32 aOffset)
 {
   PRUnichar h = aFrag->CharAt(aOffset);
   if (!IS_SURROGATE(h)) {
-    return IsFirstLetterPunctuation(h);
+    return IsPunctuationMark(h);
   }
   if (NS_IS_HIGH_SURROGATE(h) && aOffset + 1 < aFrag->GetLength()) {
     PRUnichar l = aFrag->CharAt(aOffset + 1);
     if (NS_IS_LOW_SURROGATE(l)) {
-      return IsFirstLetterPunctuation(SURROGATE_TO_UCS4(h, l));
+      return IsPunctuationMark(SURROGATE_TO_UCS4(h, l));
     }
   }
   return false;

@@ -467,13 +467,6 @@ public:
   NPBool ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                       double *destX, double *destY, NPCoordinateSpace destSpace);
   void SendIdleEvent();
-  
-  NPError InitAsyncSurface(NPSize *size, NPImageFormat format,
-                           void *initData, NPAsyncSurface *surface)
-  { return NPERR_GENERIC_ERROR; }
-
-  NPError FinalizeAsyncSurface(NPAsyncSurface *surface) { return NPERR_GENERIC_ERROR; }
-  void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed) { return; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDummyJavaPluginOwner)
 
@@ -608,12 +601,6 @@ nsDummyJavaPluginOwner::InvalidateRect(NPRect *invalidRect)
 
 NS_IMETHODIMP
 nsDummyJavaPluginOwner::InvalidateRegion(NPRegion invalidRegion)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDummyJavaPluginOwner::RedrawPlugin()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -10197,26 +10184,35 @@ nsGlobalWindow::HasPerformanceSupport()
   return Preferences::GetBool("dom.enable_performance", false);
 }
 
-void
-nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
+PRInt64
+nsGlobalWindow::SizeOf() const
 {
-  aWindowSizes->mDOM += aWindowSizes->mMallocSizeOf(this);
+  PRInt64 size = sizeof(*this);
 
   if (IsInnerWindow()) {
     nsEventListenerManager* elm =
       const_cast<nsGlobalWindow*>(this)->GetListenerManager(false);
     if (elm) {
-      aWindowSizes->mDOM +=
-        elm->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
+      size += elm->SizeOf();
     }
     if (mDoc) {
-      mDoc->DocSizeOfIncludingThis(aWindowSizes);
+      size += mDoc->SizeOf();
     }
   }
 
-  aWindowSizes->mDOM +=
-    mNavigator ?
-      mNavigator->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf) : 0;
+  size += mNavigator ? mNavigator->SizeOf() : 0;
+
+  return size;
+}
+
+size_t
+nsGlobalWindow::SizeOfStyleSheets(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  if (IsInnerWindow() && mDoc) {
+    n += mDoc->SizeOfStyleSheets(aMallocSizeOf);
+  }
+  return n;
 }
 
 // nsGlobalChromeWindow implementation

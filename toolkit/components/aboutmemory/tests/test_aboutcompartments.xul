@@ -6,19 +6,12 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
-  <!-- This file uses fake memory reporters to test the presentation of
-       compartment memory reports in about:memory.  test_memoryReporters.xul
-       uses the real memory reporters to test whether the memory reporters
-       are producing sensible results. -->
-
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml"></body>
 
   <!-- test code goes here -->
-  <script type="application/javascript">
+  <script type="application/javascript;version=1.8">
   <![CDATA[
-  "use strict";
-
   const Cc = Components.classes;
   const Ci = Components.interfaces;
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].

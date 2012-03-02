@@ -86,7 +86,7 @@ struct JSSharpInfo {
 typedef js::HashMap<JSObject *, JSSharpInfo> JSSharpTable;
 
 struct JSSharpObjectMap {
-    unsigned     depth;
+    jsrefcount   depth;
     uint32_t     sharpgen;
     JSSharpTable table;
 
@@ -293,7 +293,7 @@ struct JSRuntime : js::RuntimeFriendFields
 
     js::RootedValueMap  gcRootsHash;
     js::GCLocks         gcLocksHash;
-    unsigned            gcKeepAtoms;
+    jsrefcount          gcKeepAtoms;
     size_t              gcBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
@@ -304,7 +304,7 @@ struct JSRuntime : js::RuntimeFriendFields
      * in MaybeGC.
      */
     volatile uint32_t   gcNumArenasFreeCommitted;
-    js::GCMarker        gcMarker;
+    js::FullGCMarker    gcMarker;
     void                *gcVerifyData;
     bool                gcChunkAllocationSinceLastGC;
     int64_t             gcNextFullGCTime;
@@ -437,7 +437,6 @@ struct JSRuntime : js::RuntimeFriendFields
 
     JSGCCallback        gcCallback;
     js::GCSliceCallback gcSliceCallback;
-    JSFinalizeCallback  gcFinalizeCallback;
 
   private:
     /*

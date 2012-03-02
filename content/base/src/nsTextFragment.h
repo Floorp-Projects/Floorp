@@ -223,7 +223,16 @@ public:
     PRUint32 mLength : 29;
   };
 
-  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  /**
+   * Returns the size taken in memory by this text fragment.
+   * @return the size taken in memory by this text fragment.
+   */
+  PRInt64 SizeOf() const
+  {
+    PRInt64 size = sizeof(*this);
+    size += GetLength() * (Is2b() ? sizeof(*m2b) : sizeof(*m1b));
+    return size;
+  }
 
 private:
   void ReleaseText();

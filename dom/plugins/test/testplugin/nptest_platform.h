@@ -49,11 +49,6 @@ bool    pluginSupportsWindowMode();
 bool    pluginSupportsWindowlessMode();
 
 /**
- * Returns true if the plugin supports async bitmap drawing.
- */
-bool    pluginSupportsAsyncBitmapDrawing();
-
-/**
  * Initialize the plugin instance. Returning an error here will cause the
  * plugin instantiation to fail.
  */

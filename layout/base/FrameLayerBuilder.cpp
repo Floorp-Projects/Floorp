@@ -1315,19 +1315,6 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
   return layer.forget();
 }
 
-#ifdef MOZ_DUMP_PAINTING
-static void
-DumpPaintedImage(nsDisplayItem* aItem, gfxASurface* aSurf)
-{
-  nsCString string(aItem->Name());
-  string.Append("-");
-  string.AppendInt((PRUint64)aItem);
-  fprintf(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
-  aSurf->DumpAsDataURL(gfxUtils::sDumpPaintFile);
-  fprintf(gfxUtils::sDumpPaintFile, "\";");
-}
-#endif
-
 static void
 PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
                    nsDisplayItem* aItem,
@@ -1335,47 +1322,23 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
 {
   // This item has an inactive layer. Render it to a ThebesLayer
   // using a temporary BasicLayerManager.
-  PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
-  nsIntRect itemVisibleRect =
-    aItem->GetVisibleRect().ToOutsidePixels(appUnitsPerDevPixel);
-
-  nsRefPtr<gfxContext> context = aContext;
-#ifdef MOZ_DUMP_PAINTING
-  nsRefPtr<gfxASurface> surf; 
-  if (gfxUtils::sDumpPainting) {
-    surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(itemVisibleRect.Size(), 
-                                                              gfxASurface::CONTENT_COLOR_ALPHA);
-    surf->SetDeviceOffset(-itemVisibleRect.TopLeft());
-    context = new gfxContext(surf);
-  }
-#endif
-
   nsRefPtr<BasicLayerManager> tempManager = new BasicLayerManager();
-  tempManager->BeginTransactionWithTarget(context);
+  tempManager->BeginTransactionWithTarget(aContext);
   nsRefPtr<Layer> layer =
     aItem->BuildLayer(aBuilder, tempManager, FrameLayerBuilder::ContainerParameters());
   if (!layer) {
     tempManager->EndTransaction(nsnull, nsnull);
     return;
   }
+  PRInt32 appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
+  nsIntRect itemVisibleRect =
+    aItem->GetVisibleRect().ToOutsidePixels(appUnitsPerDevPixel);
   RestrictVisibleRegionForLayer(layer, itemVisibleRect);
-  
+
   tempManager->SetRoot(layer);
   aBuilder->LayerBuilder()->WillEndTransaction(tempManager);
   tempManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
   aBuilder->LayerBuilder()->DidEndTransaction(tempManager);
- 
-#ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::sDumpPainting) {
-    DumpPaintedImage(aItem, surf);
-  
-    surf->SetDeviceOffset(gfxPoint(0, 0));
-    aContext->SetSource(surf, itemVisibleRect.TopLeft());
-    aContext->Rectangle(itemVisibleRect);
-    aContext->Fill();
-    aItem->SetPainted();
-  }
-#endif
 }
 
 /*
@@ -2042,32 +2005,6 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
   return nsnull;
 }
 
-#ifdef MOZ_DUMP_PAINTING
-static void DebugPaintItem(nsRenderingContext* aDest, nsDisplayItem *aItem, nsDisplayListBuilder* aBuilder)
-{
-  nsRect appUnitBounds = aItem->GetBounds(aBuilder);
-  gfxRect bounds(appUnitBounds.x, appUnitBounds.y, appUnitBounds.width, appUnitBounds.height);
-  bounds.ScaleInverse(aDest->AppUnitsPerDevPixel());
-
-  nsRefPtr<gfxASurface> surf = 
-    gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(bounds.width, bounds.height), 
-                                                       gfxASurface::CONTENT_COLOR_ALPHA);
-  surf->SetDeviceOffset(-bounds.TopLeft());
-  nsRefPtr<gfxContext> context = new gfxContext(surf);
-  nsRefPtr<nsRenderingContext> ctx = new nsRenderingContext();
-  ctx->Init(aDest->DeviceContext(), context);
-
-  aItem->Paint(aBuilder, ctx);
-  DumpPaintedImage(aItem, surf);
-  aItem->SetPainted();
-    
-  surf->SetDeviceOffset(gfxPoint(0, 0));
-  aDest->ThebesContext()->SetSource(surf, bounds.TopLeft());
-  aDest->ThebesContext()->Rectangle(bounds);
-  aDest->ThebesContext()->Fill();
-}
-#endif
-
 /*
  * A note on residual transforms:
  *
@@ -2242,16 +2179,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       if (frame) {
         frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
       }
-#ifdef MOZ_DUMP_PAINTING
-
-      if (gfxUtils::sDumpPainting) {
-        DebugPaintItem(rc, cdi->mItem, builder);
-      } else {
-#else
-      {
-#endif
-        cdi->mItem->Paint(builder, rc);
-      }
+      cdi->mItem->Paint(builder, rc);
     }
 
     if (builder->LayerBuilder()->CheckDOMModified())
@@ -2285,10 +2213,10 @@ FrameLayerBuilder::CheckDOMModified()
 
 #ifdef MOZ_DUMP_PAINTING
 void
-FrameLayerBuilder::DumpRetainedLayerTree(FILE* aFile)
+FrameLayerBuilder::DumpRetainedLayerTree()
 {
   if (mRetainingManager) {
-    mRetainingManager->Dump(aFile);
+    mRetainingManager->Dump(stdout);
   }
 }
 #endif

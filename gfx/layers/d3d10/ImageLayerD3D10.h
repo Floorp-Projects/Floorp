@@ -74,7 +74,7 @@ struct PlanarYCbCrD3D10BackendData : public ImageBackendData
   nsRefPtr<ID3D10ShaderResourceView> mCrView;
 };
 
-struct TextureD3D10BackendData : public ImageBackendData
+struct CairoD3D10BackendData : public ImageBackendData
 {
   nsRefPtr<ID3D10Texture2D> mTexture;
   nsRefPtr<ID3D10ShaderResourceView> mSRView;

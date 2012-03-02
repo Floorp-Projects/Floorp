@@ -80,7 +80,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsNPAPIPluginInstance)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
   :
-    mDrawingModel(kDefaultDrawingModel),
+#ifdef XP_MACOSX
+#ifdef NP_NO_QUICKDRAW
+    mDrawingModel(NPDrawingModelCoreGraphics),
+#else
+    mDrawingModel(NPDrawingModelQuickDraw),
+#endif
+#endif
 #ifdef MOZ_WIDGET_ANDROID
     mSurface(nsnull),
     mANPDrawingModel(0),
@@ -698,17 +704,12 @@ nsNPAPIPluginInstance::UsesDOMForCursor()
   return mUsesDOMForCursor;
 }
 
+#if defined(XP_MACOSX)
 void nsNPAPIPluginInstance::SetDrawingModel(NPDrawingModel aModel)
 {
   mDrawingModel = aModel;
 }
 
-void nsNPAPIPluginInstance::RedrawPlugin()
-{
-  mOwner->RedrawPlugin();
-}
-
-#if defined(XP_MACOSX)
 void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 {
   // the event model needs to be set for the object frame immediately
@@ -1479,32 +1480,6 @@ nsNPAPIPluginInstance::URLRedirectResponse(void* notifyData, NPBool allow)
       currentListener->URLRedirectResponse(allow);
     }
   }
-}
-
-NPError
-nsNPAPIPluginInstance::InitAsyncSurface(NPSize *size, NPImageFormat format,
-                                        void *initData, NPAsyncSurface *surface)
-{
-  if (mOwner)
-    return mOwner->InitAsyncSurface(size, format, initData, surface);
-
-  return NS_ERROR_FAILURE;
-}
-
-NPError
-nsNPAPIPluginInstance::FinalizeAsyncSurface(NPAsyncSurface *surface)
-{
-  if (mOwner)
-    return mOwner->FinalizeAsyncSurface(surface);
-
-  return NS_ERROR_FAILURE;
-}
-
-void
-nsNPAPIPluginInstance::SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed)
-{
-  if (mOwner)
-    mOwner->SetCurrentAsyncSurface(surface, changed);
 }
 
 class CarbonEventModelFailureEvent : public nsRunnable {

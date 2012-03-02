@@ -370,12 +370,10 @@ var StackFrames = {
    */
   _addFramePanel: function SF_addFramePanel(aFrame) {
     let depth = aFrame.depth;
-    let label = SourceScripts._getScriptLabel(aFrame.where.url);
+    let idText = "#" + aFrame.depth + " ";
+    let nameText = this._frameTitle(aFrame);
 
-    let startText = this._frameTitle(aFrame);
-    let endText = label + ":" + aFrame.where.line;
-
-    let panel = DebuggerView.Stackframes.addFrame(depth, startText, endText);
+    let panel = DebuggerView.Stackframes.addFrame(depth, idText, nameText);
 
     if (panel) {
       panel.stackFrame = aFrame;
@@ -399,7 +397,7 @@ var StackFrames = {
    */
   _frameTitle: function SF_frameTitle(aFrame) {
     if (aFrame.type == "call") {
-      return aFrame["calleeName"] ? aFrame["calleeName"] : "(anonymous)";
+      return aFrame["calleeName"] ? aFrame["calleeName"] + "()" : "(anonymous)";
     }
 
     return "(" + aFrame.type + ")";
@@ -418,7 +416,6 @@ StackFrames.onClick = StackFrames.onClick.bind(StackFrames);
 var SourceScripts = {
   pageSize: 25,
   activeThread: null,
-  _labelsCache: null,
 
   /**
    * Watch a given thread client.
@@ -434,7 +431,6 @@ var SourceScripts = {
     aThreadClient.addListener("paused", this.onPaused);
     aThreadClient.addListener("scriptsadded", this.onScripts);
     aThreadClient.addListener("scriptscleared", this.onScriptsCleared);
-    this.clearLabelsCache();
     this.onScriptsCleared();
     aCallback && aCallback();
   },
@@ -513,7 +509,14 @@ var SourceScripts = {
       return;
     }
 
-    if (this._trimUrlQuery(aUrl).slice(-3) == ".js") {
+    let url = aUrl;
+    // Trim the query part.
+    let q = url.indexOf('?');
+    if (q > -1) {
+      url = url.slice(0, q);
+    }
+
+    if (url.slice(-3) == ".js") {
       window.editor.setMode(SourceEditor.MODES.JAVASCRIPT);
     } else {
       window.editor.setMode(SourceEditor.MODES.HTML);
@@ -521,78 +524,11 @@ var SourceScripts = {
   },
 
   /**
-   * Trims the query part of a url string, if necessary.
-   *
-   * @param string aUrl
-   *        The script url.
-   * @return string
-   */
-  _trimUrlQuery: function SS_trimUrlQuery(aUrl) {
-    let q = aUrl.indexOf('?');
-    if (q > -1) {
-      return aUrl.slice(0, q);
-    }
-    return aUrl;
-  },
-
-  /**
-   * Gets a unique, simplified label from a script url.
-   * ex: a). ici://some.address.com/random/subrandom/
-   *     b). ni://another.address.org/random/subrandom/page.html
-   *     c). san://interesting.address.gro/random/script.js
-   *     d). si://interesting.address.moc/random/another/script.js
-   * =>
-   *     a). subrandom/
-   *     b). page.html
-   *     c). script.js
-   *     d). another/script.js
-   *
-   * @param string aUrl
-   *        The script url.
-   * @param string aHref
-   *        The content location href to be used. If unspecified, it will
-   *        defalult to debugged panrent window location.
-   * @return string
-   *         The simplified label.
-   */
-  _getScriptLabel: function SS_getScriptLabel(aUrl, aHref) {
-    let url = this._trimUrlQuery(aUrl);
-
-    if (this._labelsCache[url]) {
-      return this._labelsCache[url];
-    }
-
-    let href = aHref || window.parent.content.location.href;
-    let pathElements = url.split("/");
-    let label = pathElements.pop() || (pathElements.pop() + "/");
-
-    // if the label as a leaf name is alreay present in the scripts list
-    if (DebuggerView.Scripts.containsLabel(label)) {
-      label = url.replace(href.substring(0, href.lastIndexOf("/") + 1), "");
-
-      // if the path/to/script is exactly the same, we're in different domains
-      if (DebuggerView.Scripts.containsLabel(label)) {
-        label = url;
-      }
-    }
-
-    return this._labelsCache[url] = label;
-  },
-
-  /**
-   * Clears the labels cache, populated by SS_getScriptLabel().
-   * This should be done every time the content location changes.
-   */
-  clearLabelsCache: function SS_clearLabelsCache() {
-    this._labelsCache = {};
-  },
-
-  /**
    * Add the specified script to the list and display it in the editor if the
    * editor is empty.
    */
   _addScript: function SS_addScript(aScript) {
-    DebuggerView.Scripts.addScript(this._getScriptLabel(aScript.url), aScript);
+    DebuggerView.Scripts.addScript(aScript.url, aScript);
 
     if (window.editor.getCharCount() == 0) {
       this._showScript(aScript);

@@ -55,13 +55,11 @@ _BROWSER_TEST_FILES = \
   browser_bug_692400_element_style.js \
   browser_csslogic_inherited.js \
   browser_ruleview_editor.js \
-  browser_ruleview_editor_changedvalues.js \
   browser_ruleview_inherit.js \
   browser_ruleview_manipulation.js \
   browser_ruleview_override.js \
   browser_ruleview_ui.js \
   browser_bug705707_is_content_stylesheet.js \
-  browser_bug_592743_specificity.js \
   head.js \
   $(NULL)
 

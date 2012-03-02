@@ -61,9 +61,6 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // TODO: nsHTMLAreaElement::SizeOfAnchorElement should call
-  // Link::SizeOfExcludingThis().  See bug 682431.
-
   // nsIDOMNode
   NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 

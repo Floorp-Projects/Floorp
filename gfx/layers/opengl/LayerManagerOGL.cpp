@@ -55,7 +55,6 @@
 
 #include "gfxContext.h"
 #include "gfxUtils.h"
-#include "gfxPlatform.h"
 #include "nsIWidget.h"
 
 #include "GLContext.h"
@@ -807,20 +806,8 @@ LayerManagerOGL::Render()
   // Allow widget to render a custom foreground too.
   mWidget->DrawWindowOverlay(this, rect);
 
-#ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::sDumpPainting) {
-    nsIntRect rect;
-    mWidget->GetBounds(rect);
-    nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(rect.Size(), gfxASurface::CONTENT_COLOR_ALPHA);
-    nsRefPtr<gfxContext> ctx = new gfxContext(surf);
-    CopyToTarget(ctx);
-
-    WriteSnapshotToDumpFile(this, surf);
-  }
-#endif
-
   if (mTarget) {
-    CopyToTarget(mTarget);
+    CopyToTarget();
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     return;
   }
@@ -1026,7 +1013,7 @@ LayerManagerOGL::SetupBackBuffer(int aWidth, int aHeight)
 }
 
 void
-LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
+LayerManagerOGL::CopyToTarget()
 {
   nsIntRect rect;
   mWidget->GetBounds(rect);
@@ -1090,11 +1077,11 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
     }
   }
 
-  aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
-  aTarget->Scale(1.0, -1.0);
-  aTarget->Translate(-gfxPoint(0.0, height));
-  aTarget->SetSource(imageSurface);
-  aTarget->Paint();
+  mTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
+  mTarget->Scale(1.0, -1.0);
+  mTarget->Translate(-gfxPoint(0.0, height));
+  mTarget->SetSource(imageSurface);
+  mTarget->Paint();
 }
 
 LayerManagerOGL::ProgramType LayerManagerOGL::sLayerProgramTypes[] = {

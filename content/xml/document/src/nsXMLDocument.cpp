@@ -595,12 +595,6 @@ nsXMLDocument::EndLoad()
   }    
 }
  
-/* virtual */ void
-nsXMLDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
-{
-  nsDocument::DocSizeOfExcludingThis(aWindowSizes);
-}
-
 // nsIDOMDocument interface
 
 nsresult

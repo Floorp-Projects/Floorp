@@ -15,6 +15,7 @@
         onload="shell.start();"
         onunload="shell.stop();">
 
+  <script type="application/javascript" src="chrome://browser/content/commandUtil.js"/>
   <script type="application/javascript" src="chrome://browser/content/shell.js"/>
 #ifndef MOZ_TOUCH
   <script type="application/javascript" src="chrome://browser/content/touch.js"/>
@@ -22,6 +23,10 @@
 #ifndef MOZ_WIDGET_GONK
   <script type="application/javascript" src="chrome://browser/content/httpd.js"/>
 #endif
+
+  <commandset id="mainCommandSet">
+    <command id="cmd_close" oncommand="CommandUpdater.doCommand(this.id);"/>
+  </commandset>
 
   <browser id="homescreen"
            type="content-primary"

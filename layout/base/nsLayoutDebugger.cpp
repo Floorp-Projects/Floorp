@@ -153,16 +153,16 @@ nsLayoutDebugger::GetStyleSize(nsIPresShell* aPresentation,
 #ifdef MOZ_DUMP_PAINTING
 static void
 PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
-                   FILE* aOutput)
+                   PRInt32 aIndent, FILE* aOutput)
 {
-  fprintf(aOutput, "<ul>");
-
   for (nsDisplayItem* i = aList.GetBottom(); i != nsnull; i = i->GetAbove()) {
 #ifdef DEBUG
     if (aList.DidComputeVisibility() && i->GetVisibleRect().IsEmpty())
       continue;
 #endif
-    fprintf(aOutput, "<li>");
+    for (PRInt32 j = 0; j < aIndent; ++j) {
+      fputc(' ', aOutput);
+    }
     nsIFrame* f = i->GetUnderlyingFrame();
     nsAutoString fName;
 #ifdef DEBUG
@@ -194,26 +194,17 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
       opaque = i->GetOpaqueRegion(aBuilder);
     }
 #endif
-    if (i->Painted()) {
-      nsCString string(i->Name());
-      string.Append("-");
-      string.AppendInt((PRUint64)i);
-      fprintf(aOutput, "<a href=\"javascript:ViewImage('%s')\">", string.BeginReading());
-    }
     fprintf(aOutput, "%s %p(%s) (%d,%d,%d,%d)(%d,%d,%d,%d)%s%s",
             i->Name(), (void*)f, NS_ConvertUTF16toUTF8(fName).get(),
             rect.x, rect.y, rect.width, rect.height,
             vis.x, vis.y, vis.width, vis.height,
             opaque.IsEmpty() ? "" : " opaque",
             i->IsUniform(aBuilder, &color) ? " uniform" : "");
-    if (i->Painted()) {
-      fprintf(aOutput, "</a>");
-    }
     if (f) {
       PRUint32 key = i->GetPerFrameKey();
       Layer* layer = aBuilder->LayerBuilder()->GetOldLayerFor(f, key);
       if (layer) {
-        fprintf(aOutput, " <a href=\"#%p\">layer=%p</a>", layer, layer);
+        fprintf(aOutput, " layer=%p", layer);
       }
     }
     if (i->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {
@@ -221,20 +212,16 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     }
     fputc('\n', aOutput);
     if (list) {
-      PrintDisplayListTo(aBuilder, *list, aOutput);
+      PrintDisplayListTo(aBuilder, *list, aIndent + 4, aOutput);
     }
-    fprintf(aOutput, "</li>");
   }
-  
-  fprintf(aOutput, "</ul>");
 }
 
 void
 nsFrame::PrintDisplayList(nsDisplayListBuilder* aBuilder,
-                          const nsDisplayList& aList,
-                          FILE* aFile)
+                          const nsDisplayList& aList)
 {
-  PrintDisplayListTo(aBuilder, aList, aFile);
+  PrintDisplayListTo(aBuilder, aList, 0, stdout);
 }
 
 #endif

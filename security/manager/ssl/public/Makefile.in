@@ -56,7 +56,6 @@ SDK_XPIDLSRCS = \
     nsIX509Cert.idl \
     nsIX509CertDB.idl \
     nsIX509CertValidity.idl \
-    nsINSSVersion.idl \
     $(NULL)
 
 XPIDLSRCS = \

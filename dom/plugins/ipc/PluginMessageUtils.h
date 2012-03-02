@@ -43,7 +43,6 @@
 #include "base/message_loop.h"
 
 #include "mozilla/ipc/RPCChannel.h"
-#include "mozilla/ipc/CrossProcessMutex.h"
 #include "gfxipc/ShadowLayerUtils.h"
 
 #include "npapi.h"
@@ -86,17 +85,6 @@ std::string
 UnmungePluginDsoPath(const std::string& munged);
 
 extern PRLogModuleInfo* gPluginLog;
-
-const uint32_t kAllowAsyncDrawing = 0x1;
-
-inline bool IsDrawingModelAsync(int16_t aModel) {
-  return aModel == NPDrawingModelAsyncBitmapSurface
-#ifdef XP_WIN
-         || aModel == NPDrawingModelAsyncWindowsDXGISurface
-         || aModel == NPDrawingModelAsyncWindowsDX9ExSurface
-#endif
-         ;
-}
 
 #if defined(_MSC_VER)
 #define FULLFUNCTION __FUNCSIG__
@@ -154,10 +142,8 @@ typedef intptr_t NativeWindowHandle; // never actually used, will always be 0
 
 #ifdef XP_WIN
 typedef base::SharedMemoryHandle WindowsSharedMemoryHandle;
-typedef HANDLE DXGISharedSurfaceHandle;
 #else
 typedef mozilla::null_t WindowsSharedMemoryHandle;
-typedef mozilla::null_t DXGISharedSurfaceHandle;
 #endif
 
 // XXX maybe not the best place for these. better one?
@@ -346,32 +332,6 @@ template <>
 struct ParamTraits<NPWindowType>
 {
   typedef NPWindowType paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    aMsg->WriteInt16(int16(aParam));
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    int16 result;
-    if (aMsg->ReadInt16(aIter, &result)) {
-      *aResult = paramType(result);
-      return true;
-    }
-    return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"%d", int16(aParam)));
-  }
-};
-
-template <>
-struct ParamTraits<NPImageFormat>
-{
-  typedef NPImageFormat paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

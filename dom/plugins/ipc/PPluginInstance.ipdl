@@ -52,7 +52,6 @@ using NPError;
 using NPRemoteWindow;
 using NPRemoteEvent;
 using NPRect;
-using NPImageFormat;
 using NPNURLVariable;
 using NPCoordinateSpace;
 using mozilla::plugins::NativeWindowHandle;
@@ -60,8 +59,6 @@ using mozilla::gfxSurfaceType;
 using gfxIntSize;
 using mozilla::null_t;
 using mozilla::plugins::WindowsSharedMemoryHandle;
-using mozilla::plugins::DXGISharedSurfaceHandle;
-using mozilla::CrossProcessMutexHandle;
 using SurfaceDescriptorX11;
 using nsIntRect;
 using nsTextEvent;
@@ -85,26 +82,6 @@ union SurfaceDescriptor {
   //    and it just want to grab prevSurface
   //     back without giving new surface
   null_t;
-};
-
-union OptionalShmem {
-  Shmem;
-  null_t;
-};
-
-union AsyncSurfaceDescriptor {
-  Shmem;
-  DXGISharedSurfaceHandle;
-};
-
-struct NPRemoteAsyncSurface
-{
-  uint32_t version;
-  gfxIntSize size;
-  NPImageFormat format;
-  uint32_t      stride;
-  AsyncSurfaceDescriptor data;
-  uintptr_t hostPtr;
 };
 
 rpc protocol PPluginInstance
@@ -173,8 +150,6 @@ child:
   rpc HandleKeyEvent(nsKeyEvent event)
     returns (bool handled);
 
-  async NPP_DidComposite();
-
   rpc NPP_Destroy()
     returns (NPError rv);
 
@@ -201,7 +176,7 @@ parent:
   rpc NPN_SetValue_NPPVpluginUsesDOMForCursor(bool useDOMForCursor)
     returns (NPError result);
   rpc NPN_SetValue_NPPVpluginDrawingModel(int drawingModel)
-    returns (OptionalShmem remoteImageData, CrossProcessMutexHandle mutex, NPError result);
+    returns (NPError result);
   rpc NPN_SetValue_NPPVpluginEventModel(int eventModel)
     returns (NPError result);
 
@@ -256,11 +231,6 @@ parent:
   rpc NPN_ConvertPoint(double sourceX, bool ignoreDestX, double sourceY, bool ignoreDestY, NPCoordinateSpace sourceSpace,
                        NPCoordinateSpace destSpace)
     returns (double destX, double destY, bool result);
-
-  async RedrawPlugin();
-
-  rpc NPN_InitAsyncSurface(gfxIntSize size, NPImageFormat format)
-    returns (NPRemoteAsyncSurface surfData, bool result);
 
   // Send notification that a plugin tried to negotiate Carbon NPAPI so that
   // users can be notified that restarting the browser in i386 mode may allow

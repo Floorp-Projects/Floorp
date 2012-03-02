@@ -1188,16 +1188,16 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
 {
     if (argc <= 1) {
         js_ReportMissingArg(cx, *vp, 1);
-        return false;
+        return JS_FALSE;
     }
 
     JSObject *callable = js_ValueToCallableObject(cx, &vp[3], 0);
     if (!callable)
-        return false;
+        return JS_FALSE;
 
     jsid propid;
     if (!ValueToId(cx, vp[2], &propid))
-        return false;
+        return JS_FALSE;
 
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
@@ -1206,12 +1206,14 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
     Value tmp;
     unsigned attrs;
     if (!CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs))
-        return false;
+        return JS_FALSE;
 
     vp->setUndefined();
 
+    if (attrs & JSPROP_READONLY)
+        return JS_TRUE;
     if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
-        return false;
+        return JS_FALSE;
     return JS_SetWatchPoint(cx, obj, propid, obj_watch_handler, callable);
 }
 
@@ -1225,7 +1227,7 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
     jsid id;
     if (argc != 0) {
         if (!ValueToId(cx, vp[2], &id))
-            return false;
+            return JS_FALSE;
     } else {
         id = JSID_VOID;
     }
@@ -2364,19 +2366,18 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
     if (argc == 0) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "Object.create", "0", "s");
-        return false;
+        return JS_FALSE;
     }
 
-    CallArgs args = CallArgsFromVp(argc, vp);
-    const Value &v = args[0];
+    const Value &v = vp[2];
     if (!v.isObjectOrNull()) {
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
         if (!bytes)
-            return false;
+            return JS_FALSE;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                              bytes, "not an object or null");
         JS_free(cx, bytes);
-        return false;
+        return JS_FALSE;
     }
 
     JSObject *proto = v.toObjectOrNull();
@@ -2389,27 +2390,27 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
      * Use the callee's global as the parent of the new object to avoid dynamic
      * scoping (i.e., using the caller's global).
      */
-    JSObject *obj = NewObjectWithGivenProto(cx, &ObjectClass, proto, &args.callee().global());
+    JSObject *obj = NewObjectWithGivenProto(cx, &ObjectClass, proto, &vp->toObject().global());
     if (!obj)
-        return false;
+        return JS_FALSE;
+    vp->setObject(*obj); /* Root and prepare for eventual return. */
 
     /* Don't track types or array-ness for objects created here. */
     MarkTypeObjectUnknownProperties(cx, obj->type());
 
     /* 15.2.3.5 step 4. */
-    if (args.hasDefined(1)) {
-        if (args[1].isPrimitive()) {
+    if (argc > 1 && !vp[3].isUndefined()) {
+        if (vp[3].isPrimitive()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
-            return false;
+            return JS_FALSE;
         }
 
-        if (!DefineProperties(cx, obj, &args[1].toObject()))
-            return false;
+        if (!DefineProperties(cx, obj, &vp[3].toObject()))
+            return JS_FALSE;
     }
 
     /* 5. Return obj. */
-    args.rval().setObject(*obj);
-    return true;
+    return JS_TRUE;
 }
 
 static JSBool

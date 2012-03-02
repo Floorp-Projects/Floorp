@@ -63,6 +63,8 @@
 
 namespace mozilla {
 
+class MutexAutoLock;
+
 namespace psm {
 
 enum SSLErrorMessageType {

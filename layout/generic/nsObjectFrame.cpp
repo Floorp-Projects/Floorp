@@ -98,6 +98,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMElement.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsAttrName.h"
@@ -1189,7 +1190,8 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     nsRefPtr<ImageContainer> container = GetImageContainer();
-    if (container && container->HasCurrentImage() || !isVisible ||
+    nsRefPtr<Image> currentImage = container ? container->GetCurrentImage() : nsnull;
+    if (!currentImage || !isVisible ||
         container->GetCurrentSize() != gfxIntSize(window->width, window->height)) {
       mInstanceOwner->NotifyPaintWaiter(aBuilder);
     }

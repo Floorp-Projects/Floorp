@@ -468,17 +468,17 @@ struct DumpingChildInfo {
     {}
 };
 
-typedef HashSet<void *, DefaultHasher<void *>, SystemAllocPolicy> PtrSet;
+typedef HashSet<void *, DefaultHasher<void *>, ContextAllocPolicy> PtrSet;
 
 struct JSDumpHeapTracer : public JSTracer {
     PtrSet visited;
     FILE   *output;
-    Vector<DumpingChildInfo, 0, SystemAllocPolicy> nodes;
+    Vector<DumpingChildInfo, 0, ContextAllocPolicy> nodes;
     char   buffer[200];
     bool   rootTracing;
 
-    JSDumpHeapTracer(FILE *fp)
-      : output(fp)
+    JSDumpHeapTracer(JSContext *cx, FILE *fp)
+        : visited(cx), output(fp), nodes(cx)
     {}
 };
 
@@ -530,10 +530,10 @@ DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 }
 
 void
-js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
+js::DumpHeapComplete(JSContext *cx, FILE *fp)
 {
-    JSDumpHeapTracer dtrc(fp);
-    JS_TracerInit(&dtrc, rt, DumpHeapPushIfNew);
+    JSDumpHeapTracer dtrc(cx, fp);
+    JS_TracerInit(&dtrc, cx, DumpHeapPushIfNew);
     if (!dtrc.visited.init(10000))
         return;
 

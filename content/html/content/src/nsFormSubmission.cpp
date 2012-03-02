@@ -718,8 +718,15 @@ nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset,
     charset.AssignLiteral("windows-1252");
   }
 
+  // use UTF-8 for UTF-16* (per WHATWG and existing practice of
+  // MS IE/Opera). 
+  if (StringBeginsWith(charset, NS_LITERAL_CSTRING("UTF-16"))) {
+    charset.AssignLiteral("UTF-8");
+  }
+
   if (!(charset.EqualsLiteral("UTF-8") || charset.EqualsLiteral("gb18030"))) {
-    NS_ConvertUTF8toUTF16 charsetUtf16(charset);
+    nsAutoString charsetUtf16;
+    CopyUTF8toUTF16(charset, charsetUtf16);
     const PRUnichar* charsetPtr = charsetUtf16.get();
     SendJSWarning(aOriginatingElement ? aOriginatingElement->GetOwnerDocument()
                                       : nsnull,
@@ -861,15 +868,6 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
   // Get charset
   nsCAutoString charset;
   GetSubmitCharset(aForm, charset);
-
-  // We now have a canonical charset name, so we only have to check it
-  // against canonical names.
-
-  // use UTF-8 for UTF-16* (per WHATWG and existing practice of
-  // MS IE/Opera).
-  if (StringBeginsWith(charset, NS_LITERAL_CSTRING("UTF-16"))) {
-    charset.AssignLiteral("UTF-8");
-  }
 
   // Choose encoder
   if (method == NS_FORM_METHOD_POST &&

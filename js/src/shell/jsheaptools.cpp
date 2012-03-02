@@ -133,7 +133,7 @@ class HeapReverser : public JSTracer {
     struct Edge {
       public:
         Edge(char *name, void *origin) : name(name), origin(origin) { }
-        ~Edge() { js_free(name); }
+        ~Edge() { free(name); }
 
         /*
          * Move constructor and move assignment. These allow us to live in
@@ -166,12 +166,12 @@ class HeapReverser : public JSTracer {
      * The result of a reversal is a map from Cells' addresses to Node
      * structures describing their incoming edges.
      */
-    typedef HashMap<void *, Node, DefaultHasher<void *>, SystemAllocPolicy> Map;
+    typedef HashMap<void *, Node> Map;
     Map map;
 
     /* Construct a HeapReverser for |context|'s heap. */
-    HeapReverser(JSContext *cx) : rooter(cx, 0, NULL), parent(NULL) {
-        JS_TracerInit(this, JS_GetRuntime(cx), traverseEdgeWithThis);
+    HeapReverser(JSContext *cx) : map(cx), roots(cx), rooter(cx, 0, NULL), work(cx), parent(NULL) {
+        JS_TracerInit(this, cx, traverseEdgeWithThis);
     }
 
     bool init() { return map.init(); }
@@ -193,7 +193,7 @@ class HeapReverser : public JSTracer {
      * rule. This is kind of dumb, but JSAPI doesn't provide any less restricted
      * way to register arrays of roots.
      */
-    Vector<jsval, 0, SystemAllocPolicy> roots;
+    Vector<jsval> roots;
     AutoArrayRooter rooter;
 
     /*
@@ -232,7 +232,7 @@ class HeapReverser : public JSTracer {
      * A stack of work items. We represent the stack explicitly to avoid
      * overflowing the C++ stack when traversing long chains of objects.
      */
-    Vector<Child, 0, SystemAllocPolicy> work;
+    Vector<Child> work;
 
     /* When traverseEdge is called, the Cell and kind at which the edge originated. */
     void *parent;
@@ -323,7 +323,7 @@ HeapReverser::getEdgeDescription()
 {
     if (!debugPrinter && debugPrintIndex == (size_t) -1) {
         const char *arg = static_cast<const char *>(debugPrintArg);
-        char *name = static_cast<char *>(js_malloc(strlen(arg) + 1));
+        char *name = static_cast<char *>(context->malloc_(strlen(arg) + 1));
         if (!name)
             return NULL;
         strcpy(name, arg);
@@ -332,7 +332,7 @@ HeapReverser::getEdgeDescription()
 
     /* Lovely; but a fixed size is required by JSTraceNamePrinter. */
     static const int nameSize = 200;
-    char *name = static_cast<char *>(js_malloc(nameSize));
+    char *name = static_cast<char *>(context->malloc_(nameSize));
     if (!name)
         return NULL;
     if (debugPrinter)
@@ -342,7 +342,7 @@ HeapReverser::getEdgeDescription()
                     static_cast<const char *>(debugPrintArg), debugPrintIndex);
 
     /* Shrink storage to fit. */
-    return static_cast<char *>(js_realloc(name, strlen(name) + 1));
+    return static_cast<char *>(context->realloc_(name, strlen(name) + 1));
 }
 
 

@@ -258,14 +258,9 @@ public:
     void WriteAsPNG(const char* aFile);
 
     /**
-     * Write as a PNG encoded Data URL to a file.
-     */
-    void DumpAsDataURL(FILE* aOutput = stdout);
-
-    /**
      * Write as a PNG encoded Data URL to stdout.
      */
-    void PrintAsDataURL();
+    void DumpAsDataURL();
 
     /**
      * Copy a PNG encoded Data URL to the clipboard.

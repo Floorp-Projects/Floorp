@@ -7,7 +7,7 @@ assertEq(desc.writable, true);
 
 assertEq(typeof Map, 'function');
 assertEq(Object.keys(Map).length, 0);
-assertEq(Map.length, 1);
+assertEq(Map.length, 0);
 assertEq(Map.name, "Map");
 
 assertEq(Object.getPrototypeOf(Map.prototype), Object.prototype);
@@ -27,7 +27,6 @@ function checkMethod(name, arity) {
     assertEq(desc.value.length, arity);
 }
 
-checkMethod("size", 0);
 checkMethod("get", 1);
 checkMethod("has", 1);
 checkMethod("set", 2);

@@ -200,10 +200,7 @@ static NPNetscapeFuncs sBrowserFuncs = {
   _convertpoint,
   NULL, // handleevent, unimplemented
   NULL, // unfocusinstance, unimplemented
-  _urlredirectresponse,
-  _initasyncsurface,
-  _finalizeasyncsurface,
-  _setcurrentasyncsurface
+  _urlredirectresponse
 };
 
 static Mutex *sPluginThreadAsyncCallLock = nsnull;
@@ -2020,22 +2017,15 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
       bool windowless = false;
       inst->IsWindowless(&windowless);
-      // The documentation on the types for many variables in NP(N|P)_GetValue
-      // is vague.  Often boolean values are NPBool (1 byte), but
-      // https://developer.mozilla.org/en/XEmbed_Extension_for_Mozilla_Plugins
-      // treats NPPVpluginNeedsXEmbed as PRBool (int), and
-      // on x86/32-bit, flash stores to this using |movl 0x1,&needsXEmbed|.
-      // thus we can't use NPBool for needsXEmbed, or the three bytes above
-      // it on the stack would get clobbered. so protect with the larger bool.
-      int needsXEmbed = 0;
+      NPBool needXEmbed = false;
       if (!windowless) {
-        res = inst->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needsXEmbed);
+        res = inst->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needXEmbed);
         // If the call returned an error code make sure we still use our default value.
         if (NS_FAILED(res)) {
-          needsXEmbed = 0;
+          needXEmbed = false;
         }
       }
-      if (windowless || needsXEmbed) {
+      if (windowless || needXEmbed) {
         (*(Display **)result) = mozilla::DefaultXDisplay();
         return NPERR_NO_ERROR;
       }
@@ -2535,8 +2525,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       return inst->SetUsesDOMForCursor(useDOMForCursor);
     }
 
-#ifndef MOZ_WIDGET_ANDROID
-    // On android, their 'drawing model' uses the same constant!
+#ifdef XP_MACOSX
     case NPPVpluginDrawingModel: {
       if (inst) {
         inst->SetDrawingModel((NPDrawingModel)NS_PTR_TO_INT32(result));
@@ -2546,9 +2535,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
         return NPERR_GENERIC_ERROR;
       }
     }
-#endif
 
-#ifdef XP_MACOSX
     case NPPVpluginEventModel: {
       if (inst) {
         inst->SetEventModel((NPEventModel)NS_PTR_TO_INT32(result));
@@ -2894,36 +2881,6 @@ _popupcontextmenu(NPP instance, NPMenu* menu)
     return NPERR_GENERIC_ERROR;
 
   return inst->PopUpContextMenu(menu);
-}
-
-NPError NP_CALLBACK
-_initasyncsurface(NPP instance, NPSize *size, NPImageFormat format, void *initData, NPAsyncSurface *surface)
-{
-  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
-  if (!inst)
-    return NPERR_GENERIC_ERROR;
-
-  return inst->InitAsyncSurface(size, format, initData, surface);
-}
-
-NPError NP_CALLBACK
-_finalizeasyncsurface(NPP instance, NPAsyncSurface *surface)
-{
-  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
-  if (!inst)
-    return NPERR_GENERIC_ERROR;
-
-  return inst->FinalizeAsyncSurface(surface);
-}
-
-void NP_CALLBACK
-_setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface, NPRect *changed)
-{
-  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
-  if (!inst)
-    return;
-
-  inst->SetCurrentAsyncSurface(surface, changed);
 }
 
 NPBool NP_CALLBACK

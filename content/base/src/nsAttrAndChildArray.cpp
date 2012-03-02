@@ -839,22 +839,26 @@ nsAttrAndChildArray::SetChildAtPos(void** aPos, nsIContent* aChild,
   }
 }
 
-size_t
-nsAttrAndChildArray::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+PRInt64
+nsAttrAndChildArray::SizeOf() const
 {
-  size_t n = 0;
+  PRInt64 size = sizeof(*this);
+
   if (mImpl) {
     // Don't add the size taken by *mMappedAttrs because it's shared.
 
-    n += aMallocSizeOf(mImpl);
+    // mBuffer cointains InternalAttr and nsIContent* (even if it's void**)
+    // so, we just have to compute the size of *mBuffer given that this object
+    // doesn't own the children list.
+    size += mImpl->mBufferSize * sizeof(*(mImpl->mBuffer)) + NS_IMPL_EXTRA_SIZE;
 
     PRUint32 slotCount = AttrSlotCount();
     for (PRUint32 i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
       nsAttrValue* value = &ATTRS(mImpl)[i].mValue;
-      n += value->SizeOfExcludingThis(aMallocSizeOf);
+      size += value->SizeOf() - sizeof(*value);
     }
   }
 
-  return n;
+  return size;
 }
 

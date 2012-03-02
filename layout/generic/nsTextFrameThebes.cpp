@@ -6444,7 +6444,7 @@ FindEndOfPunctuationRun(const nsTextFragment* aFrag,
   PRInt32 i;
 
   for (i = aStart; i < aEnd - aOffset; ++i) {
-    if (nsContentUtils::IsFirstLetterPunctuationAt(aFrag, aOffset + i)) {
+    if (nsContentUtils::IsPunctuationMarkAt(aFrag, aOffset + i)) {
       aIter->SetOriginalOffset(aOffset + i);
       FindClusterEnd(aTextRun, aEnd, aIter);
       i = aIter->GetOriginalOffset() - aOffset;
