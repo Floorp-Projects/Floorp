@@ -142,12 +142,6 @@ class Bytecode
     bool getStringElement:1; /* GETELEM which has accessed string properties. */
     bool accessGetter: 1;    /* Property read on a shape with a getter hook. */
 
-    /*
-     * Switch target other than the last one, which shares its pending values
-     * with a later offset during SSA analysis.
-     */
-    bool switchSharesPending : 1;
-
     /* Stack depth before this opcode. */
     uint32_t stackDepth;
 
@@ -1213,8 +1207,7 @@ class ScriptAnalysis
     void checkPendingValue(JSContext *cx, const SSAValue &v, uint32_t slot,
                            Vector<SlotValue> *pending);
     void checkBranchTarget(JSContext *cx, uint32_t targetOffset, Vector<uint32_t> &branchTargets,
-                           SSAValueInfo *values, uint32_t stackDepth,
-                           Vector<SlotValue> **ppending = NULL, uint32_t *ppendingOffset = NULL);
+                           SSAValueInfo *values, uint32_t stackDepth);
     void checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
                               Vector<uint32_t> &exceptionTargets);
     void mergeBranchTarget(JSContext *cx, SSAValueInfo &value, uint32_t slot,
