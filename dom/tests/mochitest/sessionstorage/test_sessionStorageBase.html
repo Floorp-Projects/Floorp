@@ -96,16 +96,19 @@ function startTest()
   // add a second key
   sessionStorage.setItem("key2", "value2");
   is(sessionStorage.length, 2, "The storage has two key-value pairs");
-  is(sessionStorage.key(1), "key1"); // This test might not be accurate because order is not preserved
-  is(sessionStorage.key(0), "key2");
   is(sessionStorage.getItem("key1"), "value1");
   is(sessionStorage.getItem("key2"), "value2");
+  var firstKey = sessionStorage.key(0);
+  var secondKey = sessionStorage.key(1);
+  ok((firstKey == 'key1' && secondKey == 'key2') ||
+     (firstKey == 'key2' && secondKey == 'key1'),
+     'Both keys should be present.');
 
   // change the second key
   sessionStorage.setItem("key2", "value2-2");
   is(sessionStorage.length, 2, "The storage has two key-value pairs");
-  is(sessionStorage.key(1), "key1"); // After key value changes the order must be preserved
-  is(sessionStorage.key(0), "key2");
+  is(sessionStorage.key(0), firstKey); // After key value changes the order must be preserved
+  is(sessionStorage.key(1), secondKey);
   checkException(function() {sessionStorage.key(-1);}, INDEX_SIZE_ERR);
   checkException(function() {sessionStorage.key(2);}, INDEX_SIZE_ERR);
   is(sessionStorage.getItem("key1"), "value1");
@@ -114,8 +117,8 @@ function startTest()
   // change the first key
   sessionStorage.setItem("key1", "value1-2");
   is(sessionStorage.length, 2, "The storage has two key-value pairs");
-  is(sessionStorage.key(1), "key1"); // After key value changes the order must be preserved
-  is(sessionStorage.key(0), "key2");
+  is(sessionStorage.key(0), firstKey); // After key value changes the order must be preserved
+  is(sessionStorage.key(1), secondKey);
   checkException(function() {sessionStorage.key(-1);}, INDEX_SIZE_ERR);
   checkException(function() {sessionStorage.key(2);}, INDEX_SIZE_ERR);
   is(sessionStorage.getItem("key1"), "value1-2");
