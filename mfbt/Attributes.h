@@ -320,6 +320,25 @@
 #  define MOZ_FINAL             /* no support */
 #endif
 
+/**
+ * MOZ_WARN_UNUSED_RESULT tells the compiler to emit a warning if a function's
+ * return value is not used by the caller.
+ *
+ * Place this attribute at the very beginning of a function definition. For
+ * example, write
+ *
+ *   MOZ_WARN_UNUSED_RESULT int foo();
+ *
+ * or
+ *
+ *   MOZ_WARN_UNUSED_RESULT int foo() { return 42; }
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#  define MOZ_WARN_UNUSED_RESULT __attribute__ ((warn_unused_result))
+#else
+#  define MOZ_WARN_UNUSED_RESULT
+#endif
+
 #endif /* __cplusplus */
 
 #endif  /* mozilla_Attributes_h_ */
