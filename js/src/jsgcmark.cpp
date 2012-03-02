@@ -518,8 +518,8 @@ PushMarkStack(GCMarker *gcmarker, Shape *thing)
 void
 PushMarkStack(GCMarker *gcmarker, ion::IonCode *thing)
 {
-    JS_ASSERT_IF(gcmarker->context->runtime->gcCurrentCompartment,
-                 thing->compartment() == gcmarker->context->runtime->gcCurrentCompartment);
+    JS_ASSERT_IF(gcmarker->runtime->gcCurrentCompartment,
+                 thing->compartment() == gcmarker->runtime->gcCurrentCompartment);
 
     if (thing->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushIonCode(thing);
