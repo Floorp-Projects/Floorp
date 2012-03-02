@@ -554,9 +554,9 @@ CodeGenerator::visitCallNative(LCallNative *call)
 
     // Construct and execute call.
     masm.setupUnalignedABICall(3, tempReg);
-    masm.passABIArg(argJSContextReg);
-    masm.passABIArg(argUintNReg);
-    masm.passABIArg(argVpReg);
+    masm.pushABIArg(argJSContextReg);
+    masm.pushABIArg(argUintNReg);
+    masm.pushABIArg(argVpReg);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
 
     // Test for failure.

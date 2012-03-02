@@ -1852,22 +1852,11 @@ static const uint32 NumArgRegs = 4;
 static inline bool
 GetArgReg(uint32 arg, Register *out)
 {
-    switch (arg) {
-      case 0:
-        *out = r0;
+    if (arg < 4) {
+        *out = Register::FromCode(arg);
         return true;
-      case 1:
-        *out = r1;
-        return true;
-      case 2:
-        *out = r2;
-        return true;
-      case 3:
-        *out = r3;
-        return true;
-      default:
-        return false;
     }
+    return false;
 }
 
 static inline uint32
