@@ -2301,12 +2301,12 @@ let GsmPDUHelper = {
       let septet_mask = (0xff >> (shift + 1));
 
       let septet = ((octet & septet_mask) << shift) | leftOver;
-      ret += PDU_ALPHABET_7BIT_DEFAULT[septet];
+      ret += PDU_NL_LOCKING_SHIFT_TABLES[0][septet];
       leftOver = (octet & leftOver_mask) >> (7 - shift);
 
       // Every 7th byte we have a whole septet left over that we can apply.
       if (shift == 6) {
-        ret += PDU_ALPHABET_7BIT_DEFAULT[leftOver];
+        ret += PDU_NL_LOCKING_SHIFT_TABLES[0][leftOver];
         leftOver = 0;
       }
     }
@@ -2322,7 +2322,7 @@ let GsmPDUHelper = {
       let shift = (i % 8);
       let septet;
       if (i < message.length) {
-        septet = PDU_ALPHABET_7BIT_DEFAULT.indexOf(message[i]);
+        septet = PDU_NL_LOCKING_SHIFT_TABLES[0].indexOf(message[i]);
       } else {
         septet = 0;
       }
