@@ -85,7 +85,9 @@ nsAutoCompleteController::nsAutoCompleteController() :
   mSearchStatus(nsAutoCompleteController::STATUS_NONE),
   mRowCount(0),
   mSearchesOngoing(0),
-  mFirstSearchResult(false)
+  mSearchesFailed(0),
+  mFirstSearchResult(false),
+  mImmediateSearchesCount(0)
 {
 }
 
@@ -161,6 +163,7 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   mResults.SetCapacity(searchCount);
   mSearches.SetCapacity(searchCount);
   mMatchCounts.SetLength(searchCount);
+  mImmediateSearchesCount = 0;
 
   const char *searchCID = kAutoCompleteSearchCID;
 
@@ -173,8 +176,17 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
 
     // Use the created cid to get a pointer to the search service and store it for later
     nsCOMPtr<nsIAutoCompleteSearch> search = do_GetService(cid.get());
-    if (search)
+    if (search) {
       mSearches.AppendObject(search);
+
+      // Count immediate searches.
+      PRUint16 searchType = nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED;
+      nsCOMPtr<nsIAutoCompleteSearchDescriptor> searchDesc =
+        do_QueryInterface(search);
+      if (searchDesc && NS_SUCCEEDED(searchDesc->GetSearchType(&searchType)) &&
+          searchType == nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE)
+        mImmediateSearchesCount++;
+    }
   }
 
   return NS_OK;
@@ -184,7 +196,7 @@ NS_IMETHODIMP
 nsAutoCompleteController::StartSearch(const nsAString &aSearchString)
 {
   mSearchString = aSearchString;
-  StartSearchTimer();
+  StartSearches();
   return NS_OK;
 }
 
@@ -262,7 +274,7 @@ nsAutoCompleteController::HandleText()
     return NS_OK;
   }
 
-  StartSearchTimer();
+  StartSearches();
 
   return NS_OK;
 }
@@ -488,7 +500,7 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, bool *_retval)
             return NS_OK;
           }
 
-          StartSearchTimer();
+          StartSearches();
         }
       }
     }
@@ -727,7 +739,16 @@ NS_IMETHODIMP
 nsAutoCompleteController::Notify(nsITimer *timer)
 {
   mTimer = nsnull;
-  StartSearch();
+
+  if (mImmediateSearchesCount == 0) {
+    // If there were no immediate searches, BeforeSearches has not yet been
+    // called, so do it now.
+    nsresult rv = BeforeSearches();
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  StartSearch(nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED);
+  AfterSearches();
   return NS_OK;
 }
 
@@ -1002,31 +1023,50 @@ nsAutoCompleteController::ClosePopup()
 }
 
 nsresult
-nsAutoCompleteController::StartSearch()
+nsAutoCompleteController::BeforeSearches()
 {
   NS_ENSURE_STATE(mInput);
-  nsCOMPtr<nsIAutoCompleteInput> input(mInput);
+
   mSearchStatus = nsIAutoCompleteController::STATUS_SEARCHING;
   mDefaultIndexCompleted = false;
 
-  // Cache the current results so that we can pass these through to all the
-  // searches without losing them
-  nsCOMArray<nsIAutoCompleteResult> resultCache;
-  if (!resultCache.AppendObjects(mResults)) {
+  // The first search result will clear mResults array, though we should pass
+  // the previous result to each search to allow them to reuse it.  So we
+  // temporarily cache current results till AfterSearches().
+  if (!mResultCache.AppendObjects(mResults)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRUint32 count = mSearches.Count();
-  mSearchesOngoing = count;
+  mSearchesOngoing = mSearches.Count();
+  mSearchesFailed = 0;
   mFirstSearchResult = true;
 
   // notify the input that the search is beginning
-  input->OnSearchBegin();
+  mInput->OnSearchBegin();
 
-  PRUint32 searchesFailed = 0;
-  for (PRUint32 i = 0; i < count; ++i) {
+  return NS_OK;
+}
+
+nsresult
+nsAutoCompleteController::StartSearch(PRUint16 aSearchType)
+{
+  NS_ENSURE_STATE(mInput);
+  nsCOMPtr<nsIAutoCompleteInput> input = mInput;
+
+  for (PRInt32 i = 0; i < mSearches.Count(); ++i) {
     nsCOMPtr<nsIAutoCompleteSearch> search = mSearches[i];
-    nsIAutoCompleteResult *result = resultCache.SafeObjectAt(i);
+
+    // Filter on search type.  Not all the searches implement this interface,
+    // in such a case just consider them delayed.
+    PRUint16 searchType = nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED;
+    nsCOMPtr<nsIAutoCompleteSearchDescriptor> searchDesc =
+      do_QueryInterface(search);
+    if (searchDesc)
+      searchDesc->GetSearchType(&searchType);
+    if (searchType != aSearchType)
+      continue;
+
+    nsIAutoCompleteResult *result = mResultCache.SafeObjectAt(i);
 
     if (result) {
       PRUint16 searchResult;
@@ -1044,7 +1084,7 @@ nsAutoCompleteController::StartSearch()
 
     rv = search->StartSearch(mSearchString, searchParam, result, static_cast<nsIAutoCompleteObserver *>(this));
     if (NS_FAILED(rv)) {
-      ++searchesFailed;
+      ++mSearchesFailed;
       --mSearchesOngoing;
     }
     // Because of the joy of nested event loops (which can easily happen when some
@@ -1058,10 +1098,15 @@ nsAutoCompleteController::StartSearch()
     }
   }
 
-  if (searchesFailed == count)
-    PostSearchCleanup();
-
   return NS_OK;
+}
+
+void
+nsAutoCompleteController::AfterSearches()
+{
+  mResultCache.Clear();
+  if (mSearchesFailed == mSearches.Count())
+    PostSearchCleanup();
 }
 
 NS_IMETHODIMP
@@ -1087,7 +1132,7 @@ nsAutoCompleteController::StopSearch()
 }
 
 nsresult
-nsAutoCompleteController::StartSearchTimer()
+nsAutoCompleteController::StartSearches()
 {
   // Don't create a new search timer if we're already waiting for one to fire.
   // If we don't check for this, we won't be able to cancel the original timer
@@ -1095,9 +1140,37 @@ nsAutoCompleteController::StartSearchTimer()
   if (mTimer || !mInput)
     return NS_OK;
 
+  // Get the timeout for delayed searches.
   PRUint32 timeout;
   mInput->GetTimeout(&timeout);
 
+  PRUint32 immediateSearchesCount = mImmediateSearchesCount;
+  if (timeout == 0) {
+    // All the searches should be executed immediately.
+    immediateSearchesCount = mSearches.Count();
+  }
+
+  if (immediateSearchesCount > 0) {
+    nsresult rv = BeforeSearches();
+    if (NS_FAILED(rv))
+      return rv;
+    StartSearch(nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE);
+
+    if (mSearches.Count() == immediateSearchesCount) {
+      // Either all searches are immediate, or the timeout is 0.  In the
+      // latter case we still have to execute the delayed searches, otherwise
+      // this will be a no-op.
+      StartSearch(nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED);
+
+      // All the searches have been started, just finish.
+      AfterSearches();
+      return NS_OK;
+    }
+  }
+
+  MOZ_ASSERT(timeout > 0, "Trying to delay searches with a 0 timeout!");
+
+  // Now start the delayed searches.
   nsresult rv;
   mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_FAILED(rv))

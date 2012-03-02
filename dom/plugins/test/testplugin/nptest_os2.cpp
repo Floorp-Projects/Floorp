@@ -47,6 +47,12 @@ pluginSupportsWindowlessMode()
   return true;
 }
 
+bool
+pluginSupportsAsyncBitmapDrawing()
+{
+  return false;
+}
+
 NPError
 pluginInstanceInit(InstanceData* instanceData)
 {

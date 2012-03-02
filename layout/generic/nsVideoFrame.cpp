@@ -56,12 +56,10 @@
 #include "nsBoxFrame.h"
 #include "nsImageFrame.h"
 #include "nsIImageLoadingContent.h"
-#include "nsDisplayList.h"
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
 
 #ifdef ACCESSIBILITY
-#include "nsIServiceManager.h"
 #include "nsAccessibilityService.h"
 #endif
 

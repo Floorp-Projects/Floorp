@@ -63,10 +63,6 @@ public:
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
 
-  // DOM Memory Reporter participant.
-  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsCommentNode,
-                                              nsGenericDOMDataNode)
-
   // nsIDOMComment
   // Empty interface
 

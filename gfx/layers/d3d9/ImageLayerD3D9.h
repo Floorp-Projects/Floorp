@@ -71,7 +71,7 @@ public:
 };
 
 
-struct CairoD3D9BackendData : public ImageBackendData
+struct TextureD3D9BackendData : public ImageBackendData
 {
   nsRefPtr<IDirect3DTexture9> mTexture;
 };
