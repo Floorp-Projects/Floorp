@@ -104,7 +104,7 @@ struct IonOptions
     // How many invocations or loop iterations are needed before calls
     // are inlined.
     //
-    // Default: 10,000
+    // Default: 10,240
     uint32 usesBeforeInlining;
 
     void setEagerCompilation() {
@@ -123,7 +123,7 @@ struct IonOptions
         lsra(true),
         inlining(true),
         usesBeforeCompile(40),
-        usesBeforeInlining(10000)
+        usesBeforeInlining(10240)
     { }
 };
 
