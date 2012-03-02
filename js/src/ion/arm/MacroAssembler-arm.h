@@ -299,6 +299,9 @@ class MacroAssemblerARM : public Assembler
     void ma_vxfer(FloatRegister src, Register dest);
     void ma_vxfer(FloatRegister src, Register dest1, Register dest2);
 
+    void ma_vxfer(VFPRegister src, Register dest);
+    void ma_vxfer(VFPRegister src, Register dest1, Register dest2);
+
     void ma_vdtr(LoadStore ls, const Operand &addr, FloatRegister dest, Condition cc = Always);
 
     void ma_vldr(VFPAddr addr, FloatRegister dest);
@@ -322,17 +325,29 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 {
     // Number of bytes the stack is adjusted inside a call to C. Calls to C may
     // not be nested.
-    uint32 stackAdjust_;
-    bool dynamicAlignment_;
     bool inCall_;
-    bool enoughMemory_;
+    uint32 args_;
+    // The actual number of arguments that were passed, used to assert that
+    // the initial number of arguments declared was correct.
+    uint32 passedArgs_;
 
+    // ARM treats arguments as a vector in registers/memory, that looks like:
+    // { r0, r1, r2, r3, [sp], [sp,+4], [sp,+8] ... }
+    // usedSlots_ keeps track of how many of these have been used.
+    // It bears a passing resemblance to passedArgs_, but a single argument
+    // can effectively use between one and three slots depending on its size and
+    // alignment requirements
+    uint32 usedSlots_;
+    bool dynamicAlignment_;
+
+    bool enoughMemory_;
+    VFPRegister floatArgsInGPR[2];
     // Compute space needed for the function call and set the properties of the
     // callee.  It returns the space which has to be allocated for calling the
     // function.
     //
     // arg            Number of arguments of the function.
-    uint32 setupABICall(uint32 arg);
+    void setupABICall(uint32 arg);
 
   protected:
     MoveResolver moveResolver_;
@@ -350,9 +365,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     typedef MoveResolver::MoveOperand MoveOperand;
     typedef MoveResolver::Move Move;
 
+    enum Result {
+        GENERAL,
+        DOUBLE
+    };
+
     MacroAssemblerARMCompat()
-      : stackAdjust_(0),
-        inCall_(false),
+      : inCall_(false),
         enoughMemory_(true),
         framePushed_(0)
     { }
@@ -846,17 +865,18 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // scratch register.
     void setupUnalignedABICall(uint32 args, const Register &scratch);
 
-    // Arguments can be assigned to a C/C++ call in any order. They are moved
-    // in parallel immediately before performing the call. This process may
+    // Arguments must be assigned in a left-to-right order. This process may
     // temporarily use more stack, in which case esp-relative addresses will be
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall(). Furthermore, no
     // operations should be emitted while setting arguments.
-    void setABIArg(uint32 arg, const MoveOperand &from);
-    void setABIArg(uint32 arg, const Register &reg);
+    void pushABIArg(const MoveOperand &from);
+    void pushABIArg(const Register &reg);
+    void pushABIArg(const FloatRegister &reg);
+    void pushABIArg(const ValueOperand &regs);
 
     // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void *fun);
+    void callWithABI(void *fun, Result result = GENERAL);
 
     CodeOffsetLabel labelForPatch() {
         return CodeOffsetLabel(nextOffset().getOffset());

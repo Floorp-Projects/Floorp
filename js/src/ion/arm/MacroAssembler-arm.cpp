@@ -1030,6 +1030,19 @@ MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest1, Register dest2)
 {
     as_vxfer(dest1, dest2, VFPRegister(src), FloatToCore);
 }
+
+void
+MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest)
+{
+    as_vxfer(dest, InvalidReg, src, FloatToCore);
+}
+
+void
+MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest1, Register dest2)
+{
+    as_vxfer(dest1, dest2, src, FloatToCore);
+}
+
 void
 MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, FloatRegister rt, Condition cc)
 {
@@ -1971,71 +1984,82 @@ MacroAssemblerARMCompat::breakpoint()
     as_bkpt();
 }
 
-uint32
+void
 MacroAssemblerARMCompat::setupABICall(uint32 args)
 {
     JS_ASSERT(!inCall_);
     inCall_ = true;
-
-    uint32 stackForArgs = args > NumArgRegs
-                          ? (args - NumArgRegs) * sizeof(void *)
-                          : 0;
-    return stackForArgs;
+    args_ = args;
+    passedArgs_ = 0;
+    usedSlots_ = 0;
+    floatArgsInGPR[0] = VFPRegister();
+    floatArgsInGPR[1] = VFPRegister();
 }
 
 void
 MacroAssemblerARMCompat::setupAlignedABICall(uint32 args)
 {
-    // Find the total number of bytes the stack will have been adjusted by,
-    // in order to compute alignment. Include a stack slot for saving the stack
-    // pointer, which will be dynamically aligned.
-    uint32 stackForCall = setupABICall(args);
-    uint32 displacement = stackForCall + framePushed_;
+    setupABICall(args);
 
-    // framePushed_ is accurate, so precisely adjust the stack requirement.
-    stackAdjust_ = stackForCall + ComputeByteAlignment(displacement, StackAlignment);
     dynamicAlignment_ = false;
-    reserveStack(stackAdjust_);
 }
 
 void
 MacroAssemblerARMCompat::setupUnalignedABICall(uint32 args, const Register &scratch)
 {
-    uint32 stackForCall = setupABICall(args);
-    uint32 displacement = stackForCall + STACK_SLOT_SIZE;
+    setupABICall(args);
+    dynamicAlignment_ = true;
 
-    // Find the total number of bytes the stack will have been adjusted by,
-    // in order to compute alignment. framePushed_ is bogus or we don't know
-    // it for sure, so instead, save the original value of esp and then chop
-    // off its low bits. Then, we push the original value of esp.
     ma_mov(sp, scratch);
     ma_and(Imm32(~(StackAlignment - 1)), sp, sp);
     ma_push(scratch);
-    stackAdjust_ = stackForCall + ComputeByteAlignment(displacement, StackAlignment);
-    dynamicAlignment_ = true;
-    reserveStack(stackAdjust_);
 }
 
 void
-MacroAssemblerARMCompat::setABIArg(uint32 arg, const MoveOperand &from)
+MacroAssemblerARMCompat::pushABIArg(const MoveOperand &from)
 {
     MoveOperand to;
-    Register dest;
-    if (GetArgReg(arg, &dest)) {
-        to = MoveOperand(dest);
-    } else {
-        // There is no register for this argument, so just move it to its
-        // stack slot immediately.
-        uint32 disp = GetArgStackDisp(arg);
-        to = MoveOperand(StackPointer, disp);
+    uint32 increment = 1;
+    bool useResolver = true;
+    ++passedArgs_;
+    Move::Kind kind = Move::GENERAL;
+    if (from.isDouble()) {
+        // Double arguments need to be rounded up to the nearest doubleword
+        // boundary, even if it is in a register!
+        usedSlots_ = (usedSlots_ + 1) & ~1;
+        increment = 2;
+        kind = Move::DOUBLE;
     }
-    enoughMemory_ &= moveResolver_.addMove(from, to, Move::GENERAL);
+
+    Register destReg;
+    MoveOperand dest;
+    if (GetArgReg(usedSlots_, &destReg)) {
+        if (from.isDouble()) {
+            floatArgsInGPR[destReg.code() >> 1] = VFPRegister(from.floatReg());
+            useResolver = false;
+        } else {
+            dest = MoveOperand(dest);
+        }
+    } else {
+        uint32 disp = GetArgStackDisp(usedSlots_);
+        dest = MoveOperand(sp, disp);
+    }
+
+    if (useResolver)
+        enoughMemory_ = enoughMemory_ && moveResolver_.addMove(from, dest, kind);
+    usedSlots_ += increment;
 }
 
 void
-MacroAssemblerARMCompat::setABIArg(uint32 arg, const Register &reg)
+MacroAssemblerARMCompat::pushABIArg(const Register &reg)
 {
-    setABIArg(arg, MoveOperand(reg));
+    pushABIArg(MoveOperand(reg));
+}
+
+void
+MacroAssemblerARMCompat::pushABIArg(const FloatRegister &freg)
+{
+    pushABIArg(MoveOperand(freg));
 }
 
 void MacroAssemblerARMCompat::checkStackAlignment()
@@ -2050,13 +2074,17 @@ void MacroAssemblerARMCompat::checkStackAlignment()
 }
 
 void
-MacroAssemblerARMCompat::callWithABI(void *fun)
+MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
 {
     JS_ASSERT(inCall_);
+    uint32 stackAdjust = ((usedSlots_ - 4 > 0) ? usedSlots_ - 4 : 0) * STACK_SLOT_SIZE;
+    if (!dynamicAlignment_)
+        stackAdjust += 8-(framePushed_ & 7);
 
+    reserveStack(stackAdjust);
     // Position all arguments.
     {
-        enoughMemory_ &= moveResolver_.resolve();
+        enoughMemory_ = enoughMemory_ && moveResolver_.resolve();
         if (!enoughMemory_)
             return;
 
@@ -2064,11 +2092,15 @@ MacroAssemblerARMCompat::callWithABI(void *fun)
         emitter.emit(moveResolver_);
         emitter.finish();
     }
-
+    for (int i = 0; i < 2; i++) {
+        if (!floatArgsInGPR[i].isInvalid()) {
+            ma_vxfer(floatArgsInGPR[i], Register::FromCode(i*2), Register::FromCode(i*2+1));
+        }
+    }
     checkStackAlignment();
     ma_call(fun);
 
-    freeStack(stackAdjust_);
+    freeStack(stackAdjust);
     if (dynamicAlignment_) {
         // x86 supports pop esp.  on arm, that isn't well defined, so just
         // do it manually
@@ -2089,7 +2121,7 @@ MacroAssemblerARMCompat::handleException()
 
     // Ask for an exception handler.
     setupAlignedABICall(1);
-    setABIArg(0, r0);
+    pushABIArg(r0);
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::HandleException));
     // Load the error value, load the new stack pointer, and return.
     moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
