@@ -168,7 +168,7 @@ struct StmtInfo {
 #define TCF_IN_FOR_INIT         0x10 /* parsing init expr of for; exclude 'in' */
 #define TCF_FUN_SETS_OUTER_NAME 0x20 /* function set outer name (lexical or free) */
 #define TCF_FUN_PARAM_ARGUMENTS 0x40 /* function has parameter named arguments */
-#define TCF_FUN_LOCAL_ARGUMENTS 0x80 /* function has local named arguments */
+#define TCF_FUN_LOCAL_ARGUMENTS 0x80 /* function may contain a local named arguments */
 #define TCF_FUN_USES_ARGUMENTS 0x100 /* function uses arguments except as a
                                         parameter name */
 #define TCF_FUN_HEAVYWEIGHT    0x200 /* function needs Call object per call */
