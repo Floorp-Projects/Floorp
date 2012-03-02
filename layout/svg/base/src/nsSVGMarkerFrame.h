@@ -41,6 +41,7 @@
 #include "gfxMatrix.h"
 
 class gfxContext;
+class nsRenderingContext;
 class nsSVGPathGeometryFrame;
 class nsIURI;
 class nsIContent;
@@ -87,7 +88,7 @@ public:
 #endif
 
   // nsSVGMarkerFrame methods:
-  nsresult PaintMark(nsSVGRenderState *aContext,
+  nsresult PaintMark(nsRenderingContext *aContext,
                      nsSVGPathGeometryFrame *aMarkedFrame,
                      nsSVGMark *aMark,
                      float aStrokeWidth);
