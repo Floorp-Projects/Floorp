@@ -1495,7 +1495,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif
 
     /* State communicated between non-local jumps: */
-    JSBool interpReturnOK;
+    bool interpReturnOK;
 
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
@@ -1509,7 +1509,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
               case JSTRAP_CONTINUE:
                 break;
               case JSTRAP_RETURN:
-                interpReturnOK = JS_TRUE;
+                interpReturnOK = true;
                 goto forced_return;
               case JSTRAP_THROW:
               case JSTRAP_ERROR:
@@ -1606,7 +1606,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
                 break;
               case JSTRAP_RETURN:
                 regs.fp()->setReturnValue(rval);
-                interpReturnOK = JS_TRUE;
+                interpReturnOK = true;
                 goto forced_return;
               case JSTRAP_THROW:
                 cx->setPendingException(rval);
@@ -1627,7 +1627,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
                 goto error;
               case JSTRAP_RETURN:
                 regs.fp()->setReturnValue(rval);
-                interpReturnOK = JS_TRUE;
+                interpReturnOK = true;
                 goto forced_return;
               case JSTRAP_THROW:
                 cx->setPendingException(rval);
@@ -2757,7 +2757,7 @@ BEGIN_CASE(JSOP_FUNAPPLY)
           case JSTRAP_CONTINUE:
             break;
           case JSTRAP_RETURN:
-            interpReturnOK = JS_TRUE;
+            interpReturnOK = true;
             goto forced_return;
           case JSTRAP_THROW:
           case JSTRAP_ERROR:
@@ -3682,7 +3682,7 @@ BEGIN_CASE(JSOP_DEBUGGER)
         break;
       case JSTRAP_RETURN:
         regs.fp()->setReturnValue(rval);
-        interpReturnOK = JS_TRUE;
+        interpReturnOK = true;
         goto forced_return;
       case JSTRAP_THROW:
         cx->setPendingException(rval);
@@ -4138,7 +4138,7 @@ BEGIN_CASE(JSOP_YIELD)
     regs.fp()->setReturnValue(regs.sp[-1]);
     regs.fp()->setYielding();
     regs.pc += JSOP_YIELD_LENGTH;
-    interpReturnOK = JS_TRUE;
+    interpReturnOK = true;
     goto exit;
 
 BEGIN_CASE(JSOP_ARRAYPUSH)
@@ -4221,7 +4221,7 @@ END_CASE(JSOP_ARRAYPUSH)
 
     if (!cx->isExceptionPending()) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
-        interpReturnOK = JS_FALSE;
+        interpReturnOK = false;
     } else {
         JSThrowHook handler;
         JSTryNote *tn, *tnlimit;
@@ -4247,7 +4247,7 @@ END_CASE(JSOP_ARRAYPUSH)
               case JSTRAP_RETURN:
                 cx->clearPendingException();
                 regs.fp()->setReturnValue(rval);
-                interpReturnOK = JS_TRUE;
+                interpReturnOK = true;
                 goto forced_return;
               case JSTRAP_THROW:
                 cx->setPendingException(rval);
@@ -4347,12 +4347,12 @@ END_CASE(JSOP_ARRAYPUSH)
          * Propagate the exception or error to the caller unless the exception
          * is an asynchronous return from a generator.
          */
-        interpReturnOK = JS_FALSE;
+        interpReturnOK = false;
 #if JS_HAS_GENERATORS
         if (JS_UNLIKELY(cx->isExceptionPending() &&
                         cx->getPendingException().isMagic(JS_GENERATOR_CLOSING))) {
             cx->clearPendingException();
-            interpReturnOK = JS_TRUE;
+            interpReturnOK = true;
             regs.fp()->clearReturnValue();
         }
 #endif

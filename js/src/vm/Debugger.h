@@ -208,7 +208,7 @@ class Debugger {
     bool hasAnyLiveHooks() const;
 
     static JSTrapStatus slowPathOnEnterFrame(JSContext *cx, Value *vp);
-    static void slowPathOnLeaveFrame(JSContext *cx);
+    static bool slowPathOnLeaveFrame(JSContext *cx, bool ok);
     static void slowPathOnNewScript(JSContext *cx, JSScript *script,
                                     GlobalObject *compileAndGoGlobal);
     static JSTrapStatus dispatchHook(JSContext *cx, Value *vp, Hook which);
@@ -266,7 +266,7 @@ class Debugger {
                                              GlobalObjectSet::Enum *compartmentEnum);
 
     static inline JSTrapStatus onEnterFrame(JSContext *cx, Value *vp);
-    static inline void onLeaveFrame(JSContext *cx);
+    static inline bool onLeaveFrame(JSContext *cx, bool ok);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, Value *vp);
     static inline JSTrapStatus onExceptionUnwind(JSContext *cx, Value *vp);
     static inline void onNewScript(JSContext *cx, JSScript *script,
@@ -522,14 +522,15 @@ Debugger::onEnterFrame(JSContext *cx, Value *vp)
     return slowPathOnEnterFrame(cx, vp);
 }
 
-void
-Debugger::onLeaveFrame(JSContext *cx)
+bool
+Debugger::onLeaveFrame(JSContext *cx, bool ok)
 {
     /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
     bool evalTraps = cx->fp()->isEvalFrame() &&
                      cx->fp()->script()->hasAnyBreakpointsOrStepMode();
     if (!cx->compartment->getDebuggees().empty() || evalTraps)
-        slowPathOnLeaveFrame(cx);
+        ok = slowPathOnLeaveFrame(cx, ok);
+    return ok;
 }
 
 JSTrapStatus
