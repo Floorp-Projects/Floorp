@@ -39,11 +39,6 @@
 #ifndef _NSDATAOBJCOLLECTION_H_
 #define _NSDATAOBJCOLLECTION_H_
 
-#ifdef __MINGW32__
-#include <unknwn.h>
-#include <basetyps.h>
-#include <objidl.h>
-#endif
 #include <oleidl.h>
 
 #include "nsString.h"
