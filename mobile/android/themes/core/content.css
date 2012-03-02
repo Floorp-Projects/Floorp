@@ -366,3 +366,7 @@ input > .anonymous-div:after {
 video {
     image-rendering: -moz-crisp-edges;
 }
+
+xul|menulist {
+  -moz-binding: url("chrome://browser/content/bindings.xml#menulist");
+}

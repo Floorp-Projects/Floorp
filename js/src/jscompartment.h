@@ -197,7 +197,6 @@ struct JSCompartment
     js::gc::ArenaLists           arenas;
 
     bool                         needsBarrier_;
-    js::BarrierGCMarker          barrierMarker_;
 
     bool needsBarrier() {
         return needsBarrier_;
@@ -205,7 +204,7 @@ struct JSCompartment
 
     js::GCMarker *barrierTracer() {
         JS_ASSERT(needsBarrier_);
-        return &barrierMarker_;
+        return &rt->gcMarker;
     }
 
     size_t                       gcBytes;
@@ -275,10 +274,10 @@ struct JSCompartment
 
 #ifdef DEBUG
     /* Property metering. */
-    jsrefcount                   livePropTreeNodes;
-    jsrefcount                   totalPropTreeNodes;
-    jsrefcount                   propTreeKidsChunks;
-    jsrefcount                   liveDictModeNodes;
+    unsigned                     livePropTreeNodes;
+    unsigned                     totalPropTreeNodes;
+    unsigned                     propTreeKidsChunks;
+    unsigned                     liveDictModeNodes;
 #endif
 
     /* Set of all unowned base shapes in the compartment. */

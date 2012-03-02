@@ -69,9 +69,6 @@ public:
   // nsIDOMText
   NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
 
-  // DOM Memory Reporter participant.
-  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsTextNode, nsGenericDOMDataNode)
-
   // nsINode
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
 

@@ -429,6 +429,20 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength, bool aUpdateB
 
 }
 
+/* virtual */ size_t
+nsTextFragment::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  if (Is2b()) {
+    return aMallocSizeOf(m2b);
+  }
+
+  if (mState.mInHeap) {
+    return aMallocSizeOf(m1b);
+  }
+
+  return 0;
+}
+
 // To save time we only do this when we really want to know, not during
 // every allocation
 void

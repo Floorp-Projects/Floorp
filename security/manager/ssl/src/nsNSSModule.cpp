@@ -78,6 +78,7 @@
 #include "nsSSLStatus.h"
 #include "nsNSSIOLayer.h"
 #include "NSSErrorsService.h"
+#include "nsNSSVersion.h"
 
 #include "nsXULAppAPI.h"
 #define NS_IS_PROCESS_DEFAULT                                                 \
@@ -253,6 +254,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsureOnChromeOnly, nsNSSSocketInfo)
 
 typedef mozilla::psm::NSSErrorsService NSSErrorsService;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NSSErrorsService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSVersion)
 
 NS_DEFINE_NAMED_CID(NS_NSSCOMPONENT_CID);
 NS_DEFINE_NAMED_CID(NS_SSLSOCKETPROVIDER_CID);
@@ -289,7 +291,7 @@ NS_DEFINE_NAMED_CID(NS_RECENTBADCERTS_CID);
 NS_DEFINE_NAMED_CID(NS_SSLSTATUS_CID);
 NS_DEFINE_NAMED_CID(NS_NSSSOCKETINFO_CID);
 NS_DEFINE_NAMED_CID(NS_NSSERRORSSERVICE_CID);
-
+NS_DEFINE_NAMED_CID(NS_NSSVERSION_CID);
 
 static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_NSSCOMPONENT_CID, false, NULL, nsNSSComponentConstructor },
@@ -327,12 +329,14 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_SSLSTATUS_CID, false, NULL, nsSSLStatusConstructor },
   { &kNS_NSSSOCKETINFO_CID, false, NULL, nsNSSSocketInfoConstructor },
   { &kNS_NSSERRORSSERVICE_CID, false, NULL, NSSErrorsServiceConstructor },
+  { &kNS_NSSVERSION_CID, false, NULL, nsNSSVersionConstructor },
   { NULL }
 };
 
 static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { PSM_COMPONENT_CONTRACTID, &kNS_NSSCOMPONENT_CID },
   { NS_NSS_ERRORS_SERVICE_CONTRACTID, &kNS_NSSERRORSSERVICE_CID },
+  { NS_NSSVERSION_CONTRACTID, &kNS_NSSVERSION_CID },
   { NS_SSLSOCKETPROVIDER_CONTRACTID, &kNS_SSLSOCKETPROVIDER_CID },
   { NS_STARTTLSSOCKETPROVIDER_CONTRACTID, &kNS_STARTTLSSOCKETPROVIDER_CID },
   { NS_SDR_CONTRACTID, &kNS_SDR_CID },

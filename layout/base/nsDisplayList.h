@@ -566,8 +566,12 @@ public:
 
   // This is never instantiated directly (it has pure virtual methods), so no
   // need to count constructors and destructors.
-  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) :
-    mFrame(aFrame) {
+  nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    : mFrame(aFrame)
+#ifdef MOZ_DUMP_PAINTING
+    , mPainted(false)
+#endif
+  {
     if (aFrame) {
       mToReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
     }
@@ -715,6 +719,19 @@ public:
    * aCtx must be set up as for nsDisplayList::Paint.
    */
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) {}
+
+#ifdef MOZ_DUMP_PAINTING
+  /**
+   * Mark this display item as being painted via FrameLayerBuilder::DrawThebesLayer.
+   */
+  bool Painted() { return mPainted; }
+
+  /**
+   * Check if this display item has been painted.
+   */
+  void SetPainted() { mPainted = true; }
+#endif
+
   /**
    * Get the layer drawn by this display item. Call this only if
    * GetLayerState() returns something other than LAYER_NONE.
@@ -850,6 +867,10 @@ protected:
   // of the item. Paint implementations can use this to limit their drawing.
   // Guaranteed to be contained in GetBounds().
   nsRect    mVisibleRect;
+#ifdef MOZ_DUMP_PAINTING
+  // True if this frame has been painted.
+  bool      mPainted;
+#endif
 };
 
 /**
