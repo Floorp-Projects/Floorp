@@ -121,7 +121,6 @@ NS_IMETHODIMP WebGLContext::name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6) { \
     MakeContextCurrent(); gl->f##glname(a1,a2,a3,a4,a5,a6); return NS_OK; \
 }
 
-
 //
 //  WebGL API
 //
@@ -181,7 +180,8 @@ WebGLContext::BindAttribLocation(nsIWebGLProgram *pobj, WebGLuint location, cons
         return NS_OK;
 
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>("bindAttribLocation: program", pobj, &progname))
+    WebGLProgram *prog;
+    if (!GetConcreteObjectAndGLName("bindAttribLocation: program", pobj, &prog, &progname))
         return NS_OK;
 
     if (!ValidateGLSLVariableName(name, "bindAttribLocation"))
@@ -190,10 +190,12 @@ WebGLContext::BindAttribLocation(nsIWebGLProgram *pobj, WebGLuint location, cons
     if (!ValidateAttribIndex(location, "bindAttribLocation"))
         return NS_OK;
 
+    NS_LossyConvertUTF16toASCII cname(name);
+    nsCString mappedName;
+    prog->MapIdentifier(cname, &mappedName);
+    
     MakeContextCurrent();
-
-    gl->fBindAttribLocation(progname, location, NS_LossyConvertUTF16toASCII(name).get());
-
+    gl->fBindAttribLocation(progname, location, mappedName.get());
     return NS_OK;
 }
 
@@ -1852,7 +1854,8 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
     *retval = nsnull;
 
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>("getActiveAttrib: program", pobj, &progname))
+    WebGLProgram *prog;
+    if (!GetConcreteObjectAndGLName("getActiveAttrib: program", pobj, &prog, &progname))
         return NS_OK;
 
     MakeContextCurrent();
@@ -1872,7 +1875,10 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAct
         return NS_OK;
     }
 
-    WebGLActiveInfo *retActiveInfo = new WebGLActiveInfo(attrsize, attrtype, name.get(), len);
+    nsCString reverseMappedName;
+    prog->ReverseMapIdentifier(nsDependentCString(name), &reverseMappedName);
+
+    WebGLActiveInfo *retActiveInfo = new WebGLActiveInfo(attrsize, attrtype, reverseMappedName);
     NS_ADDREF(*retval = retActiveInfo);
 
     return NS_OK;
@@ -1916,7 +1922,8 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
     *retval = nsnull;
 
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>("getActiveUniform: program", pobj, &progname))
+    WebGLProgram *prog;
+    if (!GetConcreteObjectAndGLName("getActiveUniform: program", pobj, &prog, &progname))
         return NS_OK;
 
     MakeContextCurrent();
@@ -1926,16 +1933,19 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
     if (len == 0)
         *retval = nsnull;
 
-    nsAutoArrayPtr<char> name(new char[len + 3]); // +3 because we might have to append "[0]", see below
+    nsAutoArrayPtr<char> name(new char[len]);
 
-    GLint attrsize = 0;
-    GLuint attrtype = 0;
+    GLint usize = 0;
+    GLuint utype = 0;
 
-    gl->fGetActiveUniform(progname, index, len, &len, &attrsize, &attrtype, name);
-    if (len == 0 || attrsize == 0 || attrtype == 0) {
+    gl->fGetActiveUniform(progname, index, len, &len, &usize, &utype, name);
+    if (len == 0 || usize == 0 || utype == 0) {
         *retval = nsnull;
         return NS_OK;
     }
+
+    nsCString reverseMappedName;
+    prog->ReverseMapIdentifier(nsDependentCString(name), &reverseMappedName);
 
     // OpenGL ES 2.0 specifies that if foo is a uniform array, GetActiveUniform returns its name as "foo[0]".
     // See section 2.10 page 35 in the OpenGL ES 2.0.24 specification:
@@ -1950,16 +1960,11 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLAc
     // In principle we don't need to do that on OpenGL ES, but this is such a tricky difference between the ES and non-ES
     // specs that it seems probable that some ES implementers will overlook it. Since the work-around is quite cheap,
     // we do it unconditionally.
-    if (attrsize > 1 && name[len-1] != ']') {
-        name[len++] = '[';
-        name[len++] = '0';
-        name[len++] = ']';
-    }
+    if (usize > 1 && reverseMappedName.CharAt(reverseMappedName.Length()-1) != ']')
+        reverseMappedName.AppendLiteral("[0]");
 
-    WebGLActiveInfo *retActiveInfo = new WebGLActiveInfo(attrsize, attrtype, name.get(), len);
-
+    WebGLActiveInfo *retActiveInfo = new WebGLActiveInfo(usize, utype, reverseMappedName);
     NS_ADDREF(*retval = retActiveInfo);
-
     return NS_OK;
 }
 
@@ -2009,23 +2014,25 @@ WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
                                 const nsAString& name,
                                 PRInt32 *retval)
 {
-    if (!IsContextStable())
-    {
-        *retval = -1;
-        return NS_OK;
-    }
+    *retval = -1;
 
-    *retval = 0;
+    if (!IsContextStable())
+        return NS_OK;
 
     WebGLuint progname;
-    if (!GetGLName<WebGLProgram>("getAttribLocation: program", pobj, &progname))
+    WebGLProgram *prog;
+    if (!GetConcreteObjectAndGLName("getAttribLocation: program", pobj, &prog, &progname))
         return NS_OK;
 
     if (!ValidateGLSLVariableName(name, "getAttribLocation"))
         return NS_OK; 
 
+    NS_LossyConvertUTF16toASCII cname(name);
+    nsCString mappedName;
+    prog->MapIdentifier(cname, &mappedName);
+
     MakeContextCurrent();
-    *retval = gl->fGetAttribLocation(progname, NS_LossyConvertUTF16toASCII(name).get());
+    *retval = gl->fGetAttribLocation(progname, mappedName.get());
     return NS_OK;
 }
 
@@ -2980,11 +2987,14 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, n
         return NS_OK;
 
     if (!ValidateGLSLVariableName(name, "getUniformLocation"))
-        return NS_OK; 
+        return NS_OK;
+
+    NS_LossyConvertUTF16toASCII cname(name);
+    nsCString mappedName;
+    prog->MapIdentifier(cname, &mappedName);
 
     MakeContextCurrent();
-
-    GLint intlocation = gl->fGetUniformLocation(progname, NS_LossyConvertUTF16toASCII(name).get());
+    GLint intlocation = gl->fGetUniformLocation(progname, mappedName.get());
 
     WebGLUniformLocation *loc = nsnull;
     if (intlocation >= 0)
@@ -3251,18 +3261,16 @@ WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
     }
 
     MakeContextCurrent();
-
     gl->fLinkProgram(progname);
 
     GLint ok;
     gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
     if (ok) {
-        program->SetLinkStatus(true);
-        program->UpdateInfo(gl);
+        bool updateInfoSucceeded = program->UpdateInfo();
+        program->SetLinkStatus(updateInfoSucceeded);
     } else {
         program->SetLinkStatus(false);
     }
-
     return NS_OK;
 }
 
@@ -4387,6 +4395,20 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 
     MakeContextCurrent();
 
+    ShShaderOutput targetShaderSourceLanguage = gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
+    bool useShaderSourceTranslation = true;
+
+#ifdef ANDROID
+    // see bug 709947. On Android, we can't use the ESSL backend because of strange crashes (might be
+    // an allocator mismatch). So we use the GLSL backend, and discard the output, instead just passing
+    // the original WebGL shader source to the GL (since that's ESSL already). The problem is that means
+    // we can't use shader translations on Android, in particular we can't use long identifier shortening,
+    // which means we can't reach 100% conformance. We need to fix that by debugging the ESSL backend
+    // memory crashes.
+    targetShaderSourceLanguage = SH_GLSL_OUTPUT;
+    useShaderSourceTranslation = false;
+#endif
+
 #if defined(USE_ANGLE)
     if (shader->NeedsTranslation() && mShaderValidation) {
         ShHandle compiler = 0;
@@ -4404,20 +4426,6 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         if (mEnabledExtensions[WebGL_OES_standard_derivatives])
             resources.OES_standard_derivatives = 1;
 
-        // notice that on Android, we always use SH_GLSL_OUTPUT, we never use the ESSL backend.
-        // see bug 709947, the reason is that 1) we dont really need a ESSL backend since the
-        // source is already ESSL, and 2) we ran into massive Android crashes when we used the ESSL backend.
-        // But if we wanted to use shader transformations on ES platforms, we would have to use the
-        // ESSL backend
-        compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
-                                       SH_WEBGL_SPEC,
-#ifdef ANDROID
-                                       SH_GLSL_OUTPUT,
-#else
-                                       gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT,
-#endif
-                                       &resources);
-
         // We're storing an actual instance of StripComments because, if we don't, the 
         // cleanSource nsAString instance will be destroyed before the reference is
         // actually used.
@@ -4431,20 +4439,29 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         // shaderSource() already checks that the source stripped of comments is in the
         // 7-bit ASCII range, so we can skip the NS_IsAscii() check.
         const nsCString& sourceCString = NS_LossyConvertUTF16toASCII(flatSource);
-    
+
         const PRUint32 maxSourceLength = (PRUint32(1)<<18) - 1;
         if (sourceCString.Length() > maxSourceLength)
             return ErrorInvalidValue("compileShader: source has more than %d characters", maxSourceLength);
 
         const char *s = sourceCString.get();
-        
-        int compileOptions = SH_OBJECT_CODE;
-        
+
+        compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
+                                       SH_WEBGL_SPEC,
+                                       targetShaderSourceLanguage,
+                                       &resources);
+
+        int compileOptions = 0;
+        if (useShaderSourceTranslation) {
+            compileOptions |= SH_OBJECT_CODE
+                            | SH_MAP_LONG_VARIABLE_NAMES
+                            | SH_ATTRIBUTES_UNIFORMS;
 #ifdef XP_MACOSX
-        // work around bug 665578
-        if (!nsCocoaFeatures::OnLionOrLater() && gl->Vendor() == gl::GLContext::VendorATI)
-            compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
+            // work around bug 665578
+            if (!nsCocoaFeatures::OnLionOrLater() && gl->Vendor() == gl::GLContext::VendorATI)
+                compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
 #endif
+        }
 
         if (!ShCompile(compiler, &s, 1, compileOptions)) {
             int len = 0;
@@ -4462,11 +4479,50 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
             return NS_OK;
         }
 
-        /* If the GL context is really GLES2, we want to use the original provided code,
-         * since it's actually GLES2.  We still need to validate it however, which is
-         * why we ran it through the above, but we don't want the desktop GLSL.
-         */
-        if (!gl->IsGLES2()) {
+        int num_attributes = 0;
+        ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTES, &num_attributes);
+        int num_uniforms = 0;
+        ShGetInfo(compiler, SH_ACTIVE_UNIFORMS, &num_uniforms);
+        int attrib_max_length = 0;
+        ShGetInfo(compiler, SH_ACTIVE_ATTRIBUTE_MAX_LENGTH, &attrib_max_length);
+        int uniform_max_length = 0;
+        ShGetInfo(compiler, SH_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_max_length);
+        int mapped_max_length = 0;
+        ShGetInfo(compiler, SH_MAPPED_NAME_MAX_LENGTH, &mapped_max_length);
+
+        shader->mAttribMaxNameLength = attrib_max_length;
+
+        shader->mAttributes.Clear();
+        shader->mUniforms.Clear();
+        nsAutoArrayPtr<char> attribute_name(new char[attrib_max_length+1]);
+        nsAutoArrayPtr<char> uniform_name(new char[uniform_max_length+1]);
+        nsAutoArrayPtr<char> mapped_name(new char[mapped_max_length+1]);
+
+        if (useShaderSourceTranslation) {
+            for (int i = 0; i < num_attributes; i++) {
+                int length, size;
+                ShDataType type;
+                ShGetActiveAttrib(compiler, i,
+                                  &length, &size, &type,
+                                  attribute_name,
+                                  mapped_name);
+                shader->mAttributes.AppendElement(WebGLMappedIdentifier(
+                                                    nsDependentCString(attribute_name),
+                                                    nsDependentCString(mapped_name)));
+            }
+
+            for (int i = 0; i < num_uniforms; i++) {
+                int length, size;
+                ShDataType type;
+                ShGetActiveUniform(compiler, i,
+                                   &length, &size, &type,
+                                   uniform_name,
+                                   mapped_name);
+                shader->mUniforms.AppendElement(WebGLMappedIdentifier(
+                                                  nsDependentCString(uniform_name),
+                                                  nsDependentCString(mapped_name)));
+            }
+
             int len = 0;
             ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &len);
 
@@ -4478,7 +4534,10 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
             const char *ts = translatedSrc2.get();
 
             gl->fShaderSource(shadername, 1, &ts, NULL);
-        } else {
+        } else { // not useShaderSourceTranslation
+            // we just pass the raw untranslated shader source. We then can't use ANGLE idenfier mapping.
+            // that's really bad, as that means we can't be 100% conformant. We should work towards always
+            // using ANGLE identifier mapping.
             gl->fShaderSource(shadername, 1, &s, NULL);
         }
 
