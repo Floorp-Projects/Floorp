@@ -69,7 +69,6 @@
 #include "nsIBaseWindow.h"
 #include "nsThemeConstants.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsThemeConstants.h"
 #include "mozilla/dom/Element.h"
 
 #ifdef NS_DEBUG

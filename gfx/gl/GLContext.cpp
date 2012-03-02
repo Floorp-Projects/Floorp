@@ -256,6 +256,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &mSymbols.fTexParameteri, { "TexParameteri", NULL } },
         { (PRFuncPtr*) &mSymbols.fTexParameterf, { "TexParameterf", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetString, { "GetString", NULL } },
+        { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetTexParameterfv, { "GetTexParameterfv", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetTexParameteriv, { "GetTexParameteriv", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetUniformfv, { "GetUniformfv", "GetUniformfvARB", NULL } },
@@ -504,6 +505,13 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 mInitialized = false;
             }
         }
+       
+        // Load developer symbols, don't fail if we can't find them.
+        SymLoadStruct auxSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", NULL } },
+                { NULL, { NULL } },
+        };
+        LoadSymbols(&auxSymbols[0], trygl, prefix);
     }
 
     if (mInitialized) {
@@ -1691,10 +1699,73 @@ GLContext::MarkDestroyed()
     mSymbols.Zero();
 }
 
+static void SwapRAndBComponents(gfxImageSurface* aSurf)
+{
+  gfxIntSize size = aSurf->GetSize();
+  for (int j = 0; j < size.height; ++j) {
+    PRUint32 *row = (PRUint32*) (aSurf->Data() + aSurf->Stride() * j);
+    for (int i = 0; i < size.width; ++i) {
+      *row = (*row & 0xff00ff00) | ((*row & 0xff) << 16) | ((*row & 0xff0000) >> 16);
+      row++;
+    }
+  }
+}
+
+static already_AddRefed<gfxImageSurface> YInvertImageSurface(gfxImageSurface* aSurf)
+{
+  gfxIntSize size = aSurf->GetSize();
+  nsRefPtr<gfxImageSurface> temp = new gfxImageSurface(size, aSurf->Format());
+  nsRefPtr<gfxContext> ctx = new gfxContext(temp);
+  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+  ctx->Scale(1.0, -1.0);
+  ctx->Translate(-gfxPoint(0.0, size.height));
+  ctx->SetSource(aSurf);
+  ctx->Paint();
+  return temp.forget();
+}
+
+already_AddRefed<gfxImageSurface>
+GLContext::GetTexImage(GLuint aTexture, bool aYInvert, ShaderProgramType aShader)
+{
+    MakeCurrent();
+    fFinish();
+    fActiveTexture(LOCAL_GL_TEXTURE0);
+    fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
+
+    gfxIntSize size;
+    fGetTexLevelParameteriv(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_TEXTURE_WIDTH, &size.width);
+    fGetTexLevelParameteriv(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_TEXTURE_HEIGHT, &size.height);
+    
+    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
+    if (!surf || surf->CairoStatus()) {
+        return NULL;
+    }
+
+    PRUint32 currentPackAlignment = 0;
+    fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*)&currentPackAlignment);
+    if (currentPackAlignment != 4) {
+        fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+    }
+    fGetTexImage(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, surf->Data());
+    if (currentPackAlignment != 4) {
+        fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
+    }
+   
+    if (aShader == RGBALayerProgramType || aShader == RGBXLayerProgramType) {
+      SwapRAndBComponents(surf);
+    }
+
+    if (aYInvert) {
+      surf = YInvertImageSurface(surf);
+    }
+    return surf.forget();
+}
+
 already_AddRefed<gfxImageSurface>
 GLContext::ReadTextureImage(GLuint aTexture,
                             const gfxIntSize& aSize,
-                            GLenum aTextureFormat)
+                            GLenum aTextureFormat,
+                            bool aYInvert)
 {
     MakeCurrent();
 
@@ -1757,6 +1828,8 @@ GLContext::ReadTextureImage(GLuint aTexture,
     fs = fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
     fShaderSource(vs, 1, (const GLchar**) &vShader, NULL);
     fShaderSource(fs, 1, (const GLchar**) &fShader, NULL);
+    fCompileShader(vs);
+    fCompileShader(fs);
     prog = fCreateProgram();
     fAttachShader(prog, vs);
     fAttachShader(prog, fs);
@@ -1800,8 +1873,14 @@ GLContext::ReadTextureImage(GLuint aTexture,
                 LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
                 isurf->Data());
 
+    SwapRAndBComponents(isurf);
+
     if (oldPackAlignment != 4)
         fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, oldPackAlignment);
+
+    if (aYInvert) {
+      isurf = YInvertImageSurface(isurf);
+    }
 
  cleanup:
     // note that deleting 0 has no effect in any of these calls

@@ -8,9 +8,7 @@
 
 var gClient = null;
 var gTab = null;
-const DEBUGGER_TAB_URL = "http://example.com/browser/browser/devtools/" +
-                         "debugger/test/" +
-                         "browser_dbg_debuggerstatement.html";
+const DEBUGGER_TAB_URL = EXAMPLE_URL + "browser_dbg_debuggerstatement.html";
 
 function test()
 {
