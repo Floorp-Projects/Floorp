@@ -74,9 +74,11 @@ protected:
   nsresult OpenPopup();
   nsresult ClosePopup();
 
-  nsresult StartSearch();
-  
-  nsresult StartSearchTimer();
+  nsresult StartSearch(PRUint16 aSearchType);
+
+  nsresult BeforeSearches();
+  nsresult StartSearches();
+  void AfterSearches();
   nsresult ClearSearchTimer();
 
   nsresult ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteResult *aResult);
@@ -111,8 +113,14 @@ protected:
 
   nsCOMArray<nsIAutoCompleteSearch> mSearches;
   nsCOMArray<nsIAutoCompleteResult> mResults;
+  // Caches the match counts for the current ongoing results to allow
+  // incremental results to keep the rowcount up to date.
   nsTArray<PRUint32> mMatchCounts;
-  
+  // Temporarily keeps the results alive while invoking startSearch() for each
+  // search.  This is needed to allow the searches to reuse the previous result,
+  // since otherwise the first search clears mResults.
+  nsCOMArray<nsIAutoCompleteResult> mResultCache;
+
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITreeSelection> mSelection;
   nsCOMPtr<nsITreeBoxObject> mTree;
@@ -126,7 +134,9 @@ protected:
   PRUint16 mSearchStatus;
   PRUint32 mRowCount;
   PRUint32 mSearchesOngoing;
+  PRUint32 mSearchesFailed;
   bool mFirstSearchResult;
+  PRUint32 mImmediateSearchesCount;
 };
 
 #endif /* __nsAutoCompleteController__ */

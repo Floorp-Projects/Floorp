@@ -57,7 +57,6 @@
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
 #include "nsHTMLParts.h"
-#include "nsIComponentManager.h"
 #include "nsGUIEvent.h"
 #include "nsRenderingContext.h"
 #include "nsIServiceManager.h"

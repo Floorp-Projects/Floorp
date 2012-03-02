@@ -165,7 +165,8 @@ private:
  *
  * MUCH PREFERRED to bare calls to Mutex.Lock and Unlock.
  */ 
-class NS_COM_GLUE NS_STACK_CLASS MutexAutoLock
+template<typename T>
+class NS_COM_GLUE NS_STACK_CLASS BaseAutoLock
 {
 public:
     /**
@@ -176,7 +177,7 @@ public:
      * @param aLock A valid mozilla::Mutex* returned by 
      *              mozilla::Mutex::NewMutex. 
      **/
-    MutexAutoLock(mozilla::Mutex& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
+    BaseAutoLock(T& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
         mLock(&aLock)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -184,21 +185,22 @@ public:
         mLock->Lock();
     }
     
-    ~MutexAutoLock(void) {
+    ~BaseAutoLock(void) {
         mLock->Unlock();
     }
  
 private:
-    MutexAutoLock();
-    MutexAutoLock(MutexAutoLock&);
-    MutexAutoLock& operator=(MutexAutoLock&);
+    BaseAutoLock();
+    BaseAutoLock(BaseAutoLock&);
+    BaseAutoLock& operator=(BaseAutoLock&);
     static void* operator new(size_t) CPP_THROW_NEW;
     static void operator delete(void*);
 
-    mozilla::Mutex* mLock;
+    T* mLock;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+typedef BaseAutoLock<Mutex> MutexAutoLock;
 
 /**
  * MutexAutoUnlock
@@ -207,10 +209,11 @@ private:
  *
  * MUCH PREFERRED to bare calls to Mutex.Unlock and Lock.
  */ 
-class NS_COM_GLUE NS_STACK_CLASS MutexAutoUnlock 
+template<typename T>
+class NS_COM_GLUE NS_STACK_CLASS BaseAutoUnlock 
 {
 public:
-    MutexAutoUnlock(mozilla::Mutex& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
+    BaseAutoUnlock(T& aLock MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
         mLock(&aLock)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -218,22 +221,23 @@ public:
         mLock->Unlock();
     }
 
-    ~MutexAutoUnlock() 
+    ~BaseAutoUnlock() 
     {
         mLock->Lock();
     }
 
 private:
-    MutexAutoUnlock();
-    MutexAutoUnlock(MutexAutoUnlock&);
-    MutexAutoUnlock& operator =(MutexAutoUnlock&);
+    BaseAutoUnlock();
+    BaseAutoUnlock(BaseAutoUnlock&);
+    BaseAutoUnlock& operator =(BaseAutoUnlock&);
     static void* operator new(size_t) CPP_THROW_NEW;
     static void operator delete(void*);
      
-    mozilla::Mutex* mLock;
+    T* mLock;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+typedef BaseAutoUnlock<Mutex> MutexAutoUnlock;
 
 } // namespace mozilla
 

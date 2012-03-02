@@ -716,9 +716,16 @@ gfxASurface::WriteAsPNG(const char* aFile)
 }
     
 void 
-gfxASurface::DumpAsDataURL() 
+gfxASurface::DumpAsDataURL(FILE* aOutput) 
 { 
+  WriteAsPNG_internal(aOutput, false);
+}
+
+void
+gfxASurface::PrintAsDataURL()
+{
   WriteAsPNG_internal(stdout, false);
+  fprintf(stdout, "\n");
 }
 
 void 
@@ -776,7 +783,6 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
       for (PRInt32 x = 0; x < w; ++x) {
         printf("%x ", reinterpret_cast<PRUint32*>(imgsurf->Data())[y*imgsurf->Stride()+ x]);
       }
-      printf("\n");
     }
     return;
   }
@@ -846,7 +852,6 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
 
   if (aFile) {
     fprintf(aFile, "%s", string.BeginReading());
-    fprintf(aFile, "\n");
   } else {
     nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     if (clipboard) {

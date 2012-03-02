@@ -597,7 +597,7 @@ str_substring(JSContext *cx, unsigned argc, Value *vp)
         else if (begin > length)
             begin = length;
 
-        if (args.length() > 1 && !args[1].isUndefined()) {
+        if (args.hasDefined(1)) {
             if (!ValueToIntegerRange(cx, args[1], &end))
                 return false;
 
@@ -1429,7 +1429,7 @@ class StringRegExpGuard
             if (!RegExpToShared(cx, args[0].toObject(), &re_))
                 return false;
         } else {
-            if (convertVoid && (args.length() == 0 || args[0].isUndefined())) {
+            if (convertVoid && !args.hasDefined(0)) {
                 fm.patstr = cx->runtime->emptyString;
                 return true;
             }
@@ -2555,7 +2555,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32_t limit;
-    if (args.length() > 1 && !args[1].isUndefined()) {
+    if (args.hasDefined(1)) {
         double d;
         if (!ToNumber(cx, args[1], &d))
             return false;
@@ -2567,8 +2567,8 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     /* Step 8. */
     RegExpGuard re;
     JSLinearString *sepstr = NULL;
-    bool sepUndefined = (args.length() == 0 || args[0].isUndefined());
-    if (!sepUndefined) {
+    bool sepDefined = args.hasDefined(0);
+    if (sepDefined) {
         if (IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
             if (!RegExpToShared(cx, args[0].toObject(), &re))
                 return false;
@@ -2590,7 +2590,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 10. */
-    if (sepUndefined) {
+    if (!sepDefined) {
         Value v = StringValue(str);
         JSObject *aobj = NewDenseCopiedArray(cx, 1, &v);
         if (!aobj)
@@ -2643,9 +2643,7 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
                 begin = 0;
         }
 
-        if (args.length() == 1 || args[1].isUndefined()) {
-            len = length - begin;
-        } else {
+        if (args.hasDefined(1)) {
             if (!ValueToIntegerRange(cx, args[1], &len))
                 return false;
 
@@ -2656,6 +2654,8 @@ str_substr(JSContext *cx, unsigned argc, Value *vp)
 
             if (uint32_t(length) < uint32_t(begin + len))
                 len = length - begin;
+        } else {
+            len = length - begin;
         }
 
         str = js_NewDependentString(cx, str, size_t(begin), size_t(len));
@@ -2739,9 +2739,7 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
             begin = length;
         }
 
-        if (args.length() == 1 || args[1].isUndefined()) {
-            end = length;
-        } else {
+        if (args.hasDefined(1)) {
             if (!ToInteger(cx, args[1], &end))
                 return false;
             if (end < 0) {
@@ -2753,6 +2751,8 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
             }
             if (end < begin)
                 end = begin;
+        } else {
+            end = length;
         }
 
         str = js_NewDependentString(cx, str,

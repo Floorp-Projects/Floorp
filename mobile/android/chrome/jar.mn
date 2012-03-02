@@ -24,6 +24,7 @@ chrome.jar:
   content/exceptions.js                (content/exceptions.js)
 * content/downloads.js                 (content/downloads.js)
   content/netError.xhtml               (content/netError.xhtml)
+  content/SelectHelper.js              (content/SelectHelper.js)
   
 % override chrome://global/content/config.xul chrome://browser/content/config.xhtml
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml

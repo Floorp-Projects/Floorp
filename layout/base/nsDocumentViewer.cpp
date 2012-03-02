@@ -166,13 +166,9 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIWindowWatcher.h"
 
 // Printing 
-#include "nsPrintEngine.h"
 #include "nsPagePrintTimer.h"
 
 #endif // NS_PRINTING
-
-// FrameSet
-#include "nsIDocument.h"
 
 //focus
 #include "nsIDOMEventTarget.h"
@@ -190,9 +186,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 //paint forcing
 #include "prenv.h"
 #include <stdio.h>
-
-//switch to page layout
-#include "nsGfxCIID.h"
 
 #include "nsObserverService.h"
 
