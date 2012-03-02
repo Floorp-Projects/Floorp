@@ -75,10 +75,10 @@ NS_IMETHODIMP nsTransactionList::GetNumItems(PRInt32 *aNumItems)
 
   NS_ENSURE_TRUE(txMgr, NS_ERROR_FAILURE);
 
-  nsresult result = NS_ERROR_FAILURE;
+  nsresult result = NS_OK;
 
   if (mTxnStack)
-    result = mTxnStack->GetSize(aNumItems);
+    *aNumItems = mTxnStack->GetSize();
   else if (mTxnItem)
     result = mTxnItem->GetNumberOfChildren(aNumItems);
 
@@ -98,10 +98,10 @@ NS_IMETHODIMP nsTransactionList::ItemIsBatch(PRInt32 aIndex, bool *aIsBatch)
 
   nsRefPtr<nsTransactionItem> item;
 
-  nsresult result = NS_ERROR_FAILURE;
+  nsresult result = NS_OK;
 
   if (mTxnStack)
-    result = mTxnStack->GetItem(aIndex, getter_AddRefs(item));
+    item = mTxnStack->GetItem(aIndex);
   else if (mTxnItem)
     result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
 
@@ -125,10 +125,10 @@ NS_IMETHODIMP nsTransactionList::GetItem(PRInt32 aIndex, nsITransaction **aItem)
 
   nsRefPtr<nsTransactionItem> item;
 
-  nsresult result = NS_ERROR_FAILURE;
+  nsresult result = NS_OK;
 
   if (mTxnStack)
-    result = mTxnStack->GetItem(aIndex, getter_AddRefs(item));
+    item = mTxnStack->GetItem(aIndex);
   else if (mTxnItem)
     result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
 
@@ -152,10 +152,10 @@ NS_IMETHODIMP nsTransactionList::GetNumChildrenForItem(PRInt32 aIndex, PRInt32 *
 
   nsRefPtr<nsTransactionItem> item;
 
-  nsresult result = NS_ERROR_FAILURE;
+  nsresult result = NS_OK;
 
   if (mTxnStack)
-    result = mTxnStack->GetItem(aIndex, getter_AddRefs(item));
+    item = mTxnStack->GetItem(aIndex);
   else if (mTxnItem)
     result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
 
@@ -179,10 +179,10 @@ NS_IMETHODIMP nsTransactionList::GetChildListForItem(PRInt32 aIndex, nsITransact
 
   nsRefPtr<nsTransactionItem> item;
 
-  nsresult result = NS_ERROR_FAILURE;
+  nsresult result = NS_OK;
 
   if (mTxnStack)
-    result = mTxnStack->GetItem(aIndex, getter_AddRefs(item));
+    item = mTxnStack->GetItem(aIndex);
   else if (mTxnItem)
     result = mTxnItem->GetChild(aIndex, getter_AddRefs(item));
 
