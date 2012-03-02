@@ -216,12 +216,12 @@ SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
                                  (pc)[2] = UINT24_MID(i),                     \
                                  (pc)[3] = UINT24_LO(i))
 
-#define GET_INT8(pc)            ((jsint)int8_t((pc)[1]))
+#define GET_INT8(pc)            (int8_t((pc)[1]))
 
-#define GET_INT32(pc)           ((jsint)((uint32_t((pc)[1]) << 24) |          \
-                                         (uint32_t((pc)[2]) << 16) |          \
-                                         (uint32_t((pc)[3]) << 8)  |          \
-                                         uint32_t((pc)[4])))
+#define GET_INT32(pc)           (((uint32_t((pc)[1]) << 24) |                 \
+                                  (uint32_t((pc)[2]) << 16) |                 \
+                                  (uint32_t((pc)[3]) << 8)  |                 \
+                                  uint32_t((pc)[4])))
 #define SET_INT32(pc,i)         ((pc)[1] = (jsbytecode)(uint32_t(i) >> 24),   \
                                  (pc)[2] = (jsbytecode)(uint32_t(i) >> 16),   \
                                  (pc)[3] = (jsbytecode)(uint32_t(i) >> 8),    \

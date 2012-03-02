@@ -1909,7 +1909,7 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, unsigned offset,
     jsbytecode *pc;
     JSOp op;
     ptrdiff_t jmplen;
-    jsint low, high, n;
+    int32_t low, high, n;
 
     pc = script->code + offset;
     op = JSOp(*pc);

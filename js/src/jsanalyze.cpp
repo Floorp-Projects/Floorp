@@ -386,9 +386,9 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             isInlineable = false;
             unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
             jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
-            jsint low = GET_JUMP_OFFSET(pc2);
+            int32_t low = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
-            jsint high = GET_JUMP_OFFSET(pc2);
+            int32_t high = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
 
             if (!addJump(cx, defaultOffset, &nextOffset, &forwardJump, stackDepth))
@@ -396,7 +396,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             getCode(defaultOffset).switchTarget = true;
             getCode(defaultOffset).safePoint = true;
 
-            for (jsint i = low; i <= high; i++) {
+            for (int32_t i = low; i <= high; i++) {
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (targetOffset != offset) {
                     if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, stackDepth))
@@ -1520,12 +1520,12 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
           case JSOP_TABLESWITCH: {
             unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
             jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
-            jsint low = GET_JUMP_OFFSET(pc2);
+            int32_t low = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
-            jsint high = GET_JUMP_OFFSET(pc2);
+            int32_t high = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
 
-            for (jsint i = low; i <= high; i++) {
+            for (int32_t i = low; i <= high; i++) {
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (targetOffset != offset)
                     checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);

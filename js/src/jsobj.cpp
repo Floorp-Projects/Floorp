@@ -214,7 +214,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap, JSSharpInfo *va
             return false;
 
         bool ok = true;
-        for (jsint i = 0, length = ida->length; i < length; i++) {
+        for (int i = 0, length = ida->length; i < length; i++) {
             jsid id = ida->vector[i];
             JSObject *obj2;
             JSProperty *prop;
@@ -486,7 +486,7 @@ obj_toSource(JSContext *cx, unsigned argc, Value *vp)
      */
     val = localroot + 2;
 
-    for (jsint i = 0; i < ida->length; i++) {
+    for (int i = 0; i < ida->length; i++) {
         /* Get strings for id and value and GC-root them via vp. */
         jsid id = ida->vector[i];
         JSLinearString *idstr;

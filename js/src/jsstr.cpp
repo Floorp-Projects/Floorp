@@ -424,7 +424,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
 
     JSString *str = obj->asString().unbox();
 
-    jsint slot = JSID_TO_INT(id);
+    int32_t slot = JSID_TO_INT(id);
     if ((size_t)slot < str->length()) {
         JSString *str1 = cx->runtime->staticStrings.getUnitStringForElement(cx, str, size_t(slot));
         if (!str1)
@@ -877,9 +877,9 @@ out_of_range:
  */
 static const jsuint sBMHCharSetSize = 256; /* ISO-Latin-1 */
 static const jsuint sBMHPatLenMax   = 255; /* skip table element is uint8_t */
-static const jsint  sBMHBadPattern  = -2;  /* return value if pat is not ISO-Latin-1 */
+static const int  sBMHBadPattern  = -2;  /* return value if pat is not ISO-Latin-1 */
 
-jsint
+int
 js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
                       const jschar *pat, jsuint patlen)
 {
@@ -903,7 +903,7 @@ js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
             if (text[i] != pat[j])
                 break;
             if (j == 0)
-                return static_cast<jsint>(i);  /* safe: max string size */
+                return static_cast<int>(i);  /* safe: max string size */
         }
     }
     return -1;
@@ -934,7 +934,7 @@ struct ManualCmp {
 };
 
 template <class InnerMatch>
-static jsint
+static int
 UnrolledMatch(const jschar *text, jsuint textlen, const jschar *pat, jsuint patlen)
 {
     JS_ASSERT(patlen > 0 && textlen > 0);
@@ -979,7 +979,7 @@ UnrolledMatch(const jschar *text, jsuint textlen, const jschar *pat, jsuint patl
     return -1;
 }
 
-static JS_ALWAYS_INLINE jsint
+static JS_ALWAYS_INLINE int
 StringMatch(const jschar *text, jsuint textlen,
             const jschar *pat, jsuint patlen)
 {
@@ -1017,7 +1017,7 @@ StringMatch(const jschar *text, jsuint textlen,
      * empirically. See bug 526348.
      */
     if (textlen >= 512 && patlen >= 11 && patlen <= sBMHPatLenMax) {
-        jsint index = js_BoyerMooreHorspool(text, textlen, pat, patlen);
+        int index = js_BoyerMooreHorspool(text, textlen, pat, patlen);
         if (index != sBMHBadPattern)
             return index;
     }
@@ -1044,7 +1044,7 @@ static const size_t sRopeMatchThresholdRatioLog2 = 5;
  * the 'match' outparam (-1 for not found).
  */
 static bool
-RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, jsint *match)
+RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, int *match)
 {
     JS_ASSERT(textstr->isRope());
 
@@ -1090,14 +1090,14 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, js
     }
 
     /* Absolute offset from the beginning of the logical string textstr. */
-    jsint pos = 0;
+    int pos = 0;
 
     for (JSLinearString **outerp = strs.begin(); outerp != strs.end(); ++outerp) {
         /* Try to find a match within 'outer'. */
         JSLinearString *outer = *outerp;
         const jschar *chars = outer->chars();
         size_t len = outer->length();
-        jsint matchResult = StringMatch(chars, len, pat, patlen);
+        int matchResult = StringMatch(chars, len, pat, patlen);
         if (matchResult != -1) {
             /* Matched! */
             *match = pos + matchResult;
@@ -1166,7 +1166,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
     jsuint start;
     if (args.length() > 1) {
         if (args[1].isInt32()) {
-            jsint i = args[1].toInt32();
+            int i = args[1].toInt32();
             if (i <= 0) {
                 start = 0;
             } else if (jsuint(i) > textlen) {
@@ -1187,7 +1187,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
                 start = textlen;
                 textlen = 0;
             } else {
-                start = (jsint)d;
+                start = (int)d;
                 text += start;
                 textlen -= start;
             }
@@ -1196,7 +1196,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
         start = 0;
     }
 
-    jsint match = StringMatch(text, textlen, pat, patlen);
+    int match = StringMatch(text, textlen, pat, patlen);
     args.rval() = Int32Value((match == -1) ? -1 : start + match);
     return true;
 }
@@ -1221,7 +1221,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
     size_t patlen = patstr->length();
     const jschar *pat = patstr->chars();
 
-    jsint i = textlen - patlen; // Start searching here
+    int i = textlen - patlen; // Start searching here
     if (i < 0) {
         args.rval() = Int32Value(-1);
         return true;
@@ -1229,7 +1229,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
 
     if (args.length() > 1) {
         if (args[1].isInt32()) {
-            jsint j = args[1].toInt32();
+            int j = args[1].toInt32();
             if (j <= 0)
                 i = 0;
             else if (j < i)
@@ -1243,7 +1243,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
                 if (d <= 0)
                     i = 0;
                 else if (d < i)
-                    i = (jsint)d;
+                    i = (int)d;
             }
         }
     }
@@ -1717,7 +1717,7 @@ struct ReplaceData
     JSLinearString     *repstr;        /* replacement string */
     const jschar       *dollar;        /* null or pointer to first $ in repstr */
     const jschar       *dollarEnd;     /* limit pointer for js_strchr_limit */
-    jsint              leftIndex;      /* left context index in str->chars */
+    int                leftIndex;      /* left context index in str->chars */
     JSSubString        dollarStr;      /* for "$$" InterpretDollar result */
     bool               calledBack;     /* record whether callback has been called */
     InvokeArgsGuard    args;           /* arguments for lambda call */
@@ -2528,7 +2528,7 @@ class SplitStringMatcher
     {
         JS_ASSERT(index == 0 || index < str->length());
         const jschar *chars = str->chars();
-        jsint match = StringMatch(chars + index, str->length() - index, sepChars, sepLength);
+        int match = StringMatch(chars + index, str->length() - index, sepChars, sepLength);
         if (match == -1)
             res->setFailure();
         else
