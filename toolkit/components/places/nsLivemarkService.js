@@ -124,9 +124,9 @@ LivemarkService.prototype = {
     stmt.finalize();
   },
 
-  _onCacheReady: function LS__onCacheReady(aCallback)
+  _onCacheReady: function LS__onCacheReady(aCallback, aWaitForAsyncWrites)
   {
-    if (this._pendingStmt) {
+    if (this._pendingStmt || aWaitForAsyncWrites) {
       // The cache is still being populated, so enqueue the job to the Storage
       // async thread.  Ideally this should just dispatch a runnable to it,
       // that would call back on the main thread, but bug 608142 made that
@@ -421,7 +421,7 @@ LivemarkService.prototype = {
           try {
             aLivemarkCallback.onCompletion(result, livemark);
           } catch(ex2) {}
-        });
+        }, true);
       }
     }
   },
