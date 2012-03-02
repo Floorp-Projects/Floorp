@@ -1,40 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg"
    xmlns:xlink="http://www.w3.org/1999/xlink"
-   class="reftest-wait"
-   onload="swapAnimations()">
+   class="reftest-wait">
   <script type="text/ecmascript"><![CDATA[
-    // debugging bug 547801:
-    var called_shuffleAnimations = false;
-
     function swapAnimations() {
-      setTimeout('shuffleAnimations()',10);
-      setTimeout('finished()',20);
-    }
-
-    function shuffleAnimations()
-    {
-      called_shuffleAnimations = true;
       var high = document.getElementById("high");
       high.parentNode.insertBefore(high, null);
 
       var low = document.getElementById("low");
       low.parentNode.insertBefore(low, low.parentNode.firstChild);
-    }
 
-    function finished()
-    {
-      if (!called_shuffleAnimations) {
-        var line =
-          document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x2', '100%');
-        line.setAttribute('y2', '100%');
-        line.setAttribute('stroke', 'red');
-        line.setAttribute('stroke-width', '10');
-        document.documentElement.appendChild(line);
-      }
       setTimeAndSnapshot(3.1, true);
     }
+    window.addEventListener("MozReftestInvalidate", swapAnimations, false);
   ]]></script>
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!-- start line -->

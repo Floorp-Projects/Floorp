@@ -62,6 +62,11 @@ typedef enum {
 } TestFunction;
 
 typedef enum {
+  AD_NONE,
+  AD_BITMAP
+} AsyncDrawing;
+
+typedef enum {
   ACTIVATION_STATE_UNKNOWN,
   ACTIVATION_STATE_ACTIVATED,
   ACTIVATION_STATE_DEACTIVATED
@@ -140,6 +145,9 @@ typedef struct InstanceData {
   bool closeStream;
   std::string lastKeyText;
   bool wantsAllStreams;
+  AsyncDrawing asyncDrawing;
+  NPAsyncSurface *frontBuffer;
+  NPAsyncSurface *backBuffer;
 } InstanceData;
 
 void notifyDidPaint(InstanceData* instanceData);

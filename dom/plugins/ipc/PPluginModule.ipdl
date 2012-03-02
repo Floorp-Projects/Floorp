@@ -87,7 +87,7 @@ child:
   rpc NP_GetEntryPoints()
     returns (NPError rv);
 
-  rpc NP_Initialize()
+  rpc NP_Initialize(uint32_t aFlags)
     returns (NPError rv);
 
   rpc PPluginInstance(nsCString aMimeType,
