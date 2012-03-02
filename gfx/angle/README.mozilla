@@ -7,7 +7,6 @@ Current revision: r963
 In this order:
   angle-renaming-debug.patch - rename debug.h to compilerdebug.h to avoid conflict in our makefiles
   angle-intrinsic-msvc2005.patch - work around a MSVC 2005 compile error
-  angle-limit-identifiers-to-250-chars.patch - see bug 675625
   angle-use-xmalloc.patch - see bug 680840. Can drop this patch whenever the new preprocessor lands.
   angle-castrate-bug-241.patch - see bug 699033 / angle bug 241
   angle-enforce-readpixels-spec.patch - see bug 724476.
