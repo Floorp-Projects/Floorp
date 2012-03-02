@@ -452,7 +452,7 @@ class RelocationIterator
         return offset_;
     }
 };
-uint32 *
+const uint32 *
 Assembler::getCF32Target(Instruction *jump)
 {
     if (jump->is<InstBranchImm>()) {
@@ -502,7 +502,7 @@ Assembler::getPointer(uint8 *instPtr)
     return ret;
 }
 
-uint32 *
+const uint32 *
 Assembler::getPtr32Target(Instruction *load, Register *dest, RelocStyle *style)
 {
     if (load->is<InstMovW>() &&
@@ -557,7 +557,7 @@ TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
-        void *ptr = js::ion::Assembler::getPtr32Target((Instruction*)(buffer + offset));
+        const void *ptr = js::ion::Assembler::getPtr32Target((Instruction*)(buffer + offset));
         gc::MarkThingOrValueRoot(trc, reinterpret_cast<uintptr_t *>(&ptr), "immgcptr");
     }
 
@@ -567,7 +567,7 @@ TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer, CompactBufferReader &read
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
-        void *ptr = ion::Assembler::getPtr32Target((Instruction*)(buffer->getInst(BufferOffset(offset))));
+        const void *ptr = ion::Assembler::getPtr32Target((Instruction*)(buffer->getInst(BufferOffset(offset))));
         gc::MarkThingOrValueRoot(trc, reinterpret_cast<uintptr_t *>(&ptr), "immgcptr");
     }
 
@@ -1974,16 +1974,67 @@ Assembler::retargetBranch(Instruction *i, int offset)
         new (i) InstBLImm(BOffImm(offset), cond);
     JSC::ExecutableAllocator::cacheFlush(i, 4);
 }
+struct PoolHeader : Instruction {
+    struct Header {
+        // size should take into account the pool header.
+        // size is in units of Instruction (4bytes), not byte
+        uint32 size:15;
+        bool isNatural:1;
+        uint32 ONES:16;
+        Header(int size_, bool isNatural_) : size(size_), isNatural(isNatural_), ONES(0xffff) {}
+        Header(const Instruction *i) {
+            JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32));
+            memcpy(this, i, sizeof(Header));
+            JS_ASSERT(ONES == 0xffff);
+        }
+        uint32 raw() const {
+            JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32));
+            uint32 dest;
+            memcpy(&dest, this, sizeof(Header));
+            return dest;
+        }
+    };
+    PoolHeader(int size_, bool isNatural_) : Instruction (Header(size_, isNatural_).raw(), true) {}
+    uint32 size() const {
+        Header tmp(this);
+        return tmp.size;
+    }
+    uint32 isNatural() const {
+        Header tmp(this);
+        return tmp.isNatural;
+    }
+    static bool isTHIS(const Instruction &i) {
+        return (*i.raw() & 0xffff0000) == 0xffff0000;
+    }
+    static const PoolHeader *asTHIS(const Instruction &i) {
+        if (!isTHIS(i))
+            return NULL;
+        return static_cast<const PoolHeader*>(&i);
+    }
+};
+
 
 void
-Assembler::writePoolHeader(uint8 *start, Pool *p)
+Assembler::writePoolHeader(uint8 *start, Pool *p, bool isNatural)
 {
-    return;
+    STATIC_ASSERT(sizeof(PoolHeader) == 4);
+    uint8 *pool = start+4;
+    // go through the usual rigaramarole to get the size of the pool.
+    pool = p[0].addPoolSize(pool);
+    pool = p[1].addPoolSize(pool);
+    pool = p[1].other->addPoolSize(pool);
+    pool = p[0].other->addPoolSize(pool);
+    uint32 size = pool - start;
+    JS_ASSERT((size & 3) == 0);
+    size = size >> 2;
+    JS_ASSERT(size < (1 << 15));
+    PoolHeader header(size, isNatural);
+    *(PoolHeader*)start = header;
 }
 
 
 void
-Assembler::writePoolFooter(uint8 *start, Pool *p)
+Assembler::writePoolFooter(uint8 *start, Pool *p, bool isNatural)
 {
     return;
 }
@@ -2013,7 +2064,7 @@ Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue, Im
     Instruction *ptr = (Instruction *) label.raw();
     Register dest;
     Assembler::RelocStyle rs;
-    uint32 *val = getPtr32Target(ptr, &dest, &rs);
+    const uint32 *val = getPtr32Target(ptr, &dest, &rs);
     JS_ASSERT((uint32)val == expectedValue.value);
     reinterpret_cast<MacroAssemblerARM*>(dummy)->ma_movPatchable(Imm32(newValue.value), dest, Always, rs, ptr);
     JSC::ExecutableAllocator::cacheFlush(ptr, sizeof(uintptr_t)*2);
@@ -2031,6 +2082,56 @@ Assembler::patchWrite_Imm32(CodeLocationLabel label, Imm32 imm) {
     // Overwrite the 4 bytes before the return address, which will
     // end up being the call instruction.
     *(raw-1) = imm.value;
+}
+
+
+uint8 *
+Assembler::nextInstruction(uint8 *inst_, uint32 *count)
+{
+    Instruction *inst = reinterpret_cast<Instruction*>(inst_);
+    if (count != NULL)
+        *count += sizeof(Instruction);
+    return reinterpret_cast<uint8*>(inst->next());
+}
+
+bool instIsGuard(Instruction *inst, const PoolHeader **ph)
+{
+    Assembler::Condition c;
+    inst->extractCond(&c);
+    if (c != Assembler::Always)
+        return false;
+    if (!(inst->is<InstBXReg>() || inst->is<InstBImm>()))
+        return false;
+    *ph = inst->as<const PoolHeader>();
+    return *ph != NULL;
+}
+
+bool instIsArtificialGuard(Instruction *inst, const PoolHeader **ph)
+{
+    if (!instIsGuard(inst, ph))
+        return false;
+    return !(*ph)->isNatural();
+}
+
+// Cases to be handled:
+// 1) no pools in sight => return this+1
+// 2) this+1 is an artificial guard for a pool => return first instruction after the pool
+// 3) this+1 is a natural guard => return the branch
+// 4) this is a branch, right before a pool => return first instruction after the pool
+Instruction *
+Instruction::next()
+{
+    Assembler::Condition c;
+    Instruction *ret = this+1;
+    const PoolHeader *ph;
+    // If this is a guard, and the next instruction is a header, always work around the pool
+    // If it isn't a guard, then start looking ahead.
+    if (instIsGuard(this, &ph)) {
+        return ret + ph->size();
+    } else if (instIsArtificialGuard(ret, &ph)) {
+            return ret + 1 + ph->size();
+    }
+    return ret;
 }
 
 Assembler *Assembler::dummy = NULL;

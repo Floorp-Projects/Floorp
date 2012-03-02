@@ -184,7 +184,11 @@ class IonCache
     CodeLocationLabel cacheLabel() const { return cacheLabel_; }
 
     CodeLocationLabel rejoinLabel() const {
-        return CodeLocationLabel(initialJump_.raw() + REJOIN_LABEL_OFFSET);
+        uint32 i = 0;
+        uint8 *ptr = initialJump_.raw();
+        while (i < REJOIN_LABEL_OFFSET)
+            ptr = Assembler::nextInstruction(ptr, &i);
+        return CodeLocationLabel(ptr);
     }
 
     bool pure() { return pure_; }
