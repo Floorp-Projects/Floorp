@@ -483,20 +483,24 @@ IonCacheBindName::attachNonGlobal(JSContext *cx, JSObject *scopeChain, JSObject 
 static bool
 IsCacheableScopeChain(JSObject *scopeChain, JSObject *holder)
 {
-    do {
+    while (true) {
         if (!IsCacheableNonGlobalScope(scopeChain)) {
             IonSpew(IonSpew_InlineCaches, "Non-cacheable object on scope chain");
             return false;
         }
-        scopeChain = &scopeChain->asScope().enclosingScope();
-    } while (scopeChain && scopeChain != holder);
 
-    if (scopeChain != holder) {
-        IonSpew(IonSpew_InlineCaches, "Scope chain indirect hit");
-        return false;
+        if (scopeChain == holder)
+            return true;
+
+        scopeChain = &scopeChain->asScope().enclosingScope();
+        if (!scopeChain) {
+            IonSpew(IonSpew_InlineCaches, "Scope chain indirect hit");
+            return false;
+        }
     }
 
-    return true;
+    JS_NOT_REACHED("Shouldn't get here");
+    return false;
 }
 
 JSObject *
