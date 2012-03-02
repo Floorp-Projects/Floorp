@@ -923,6 +923,9 @@ class AssemblerX86Shared
     static uint32 nopSize() {
         return 1;
     }
+    static uint8 *nextInstruction(uint8 *cur, uint32 *count) {
+        JS_NOT_REACHED("nextInstruction NYI on x86");
+    }
 };
 
 } // namespace ion

@@ -1241,10 +1241,10 @@ class Assembler
     // Given the start of a Control Flow sequence, grab the value that is finally branched to
     // given the start of a function that loads an address into a register get the address that
     // ends up in the register.
-    static uint32 * getCF32Target(Instruction *jump);
+    static const uint32 * getCF32Target(Instruction *jump);
 
     static uintptr_t getPointer(uint8 *);
-    static uint32 * getPtr32Target(Instruction *load, Register *dest = NULL, RelocStyle *rs = NULL);
+    static const uint32 * getPtr32Target(Instruction *load, Register *dest = NULL, RelocStyle *rs = NULL);
 
     bool oom() const;
   private:
@@ -1624,8 +1624,8 @@ class Assembler
     // AssemblerBuffer to make that class.
     static ptrdiff_t getBranchOffset(const Instruction *i);
     static void retargetBranch(Instruction *i, int32 offset);
-    static void writePoolHeader(uint8 *start, Pool *p);
-    static void writePoolFooter(uint8 *start, Pool *p);
+    static void writePoolHeader(uint8 *start, Pool *p, bool isNatural);
+    static void writePoolFooter(uint8 *start, Pool *p, bool isNatural);
     static void writePoolGuard(BufferOffset branch, Instruction *inst, BufferOffset dest);
 
 
@@ -1638,6 +1638,7 @@ class Assembler
     static uint32 alignDoubleArg(uint32 offset) {
         return (offset+1)&~1;
     }
+    static uint8 *nextInstruction(uint8 *instruction, uint32 *count = NULL);
 }; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.
@@ -1649,8 +1650,8 @@ class Instruction
   protected:
     // This is not for defaulting to always, this is for instructions that
     // cannot be made conditional, and have the usually invalid 4b1111 cond field
-    Instruction (uint32 data_) : data(data_ | 0xf0000000) {
-        JS_ASSERT ((data_ & 0xf0000000) == 0);
+    Instruction (uint32 data_, bool fake = false) : data(data_ | 0xf0000000) {
+        JS_ASSERT (fake || ((data_ & 0xf0000000) == 0));
     }
     // Standard constructor
     Instruction (uint32 data_, Assembler::Condition c) : data(data_ | (uint32) c) {
@@ -1682,12 +1683,12 @@ class Instruction
             *c = (Assembler::Condition)(data & 0xf0000000);
     }
     // Get the next instruction in the instruction stream.
-    // This will likely eventually do neat things like ignore
-    // constant pools and their guards.
-    Instruction *next() { return &this[1]; }
+    // This does neat things like ignoreconstant pools and their guards.
+    Instruction *next();
+
     // Sometimes, an api wants a uint32 (or a pointer to it) rather than
     // an instruction.  raw() just coerces this into a pointer to a uint32
-    uint32 *raw() { return (uint32*)this; }
+    const uint32 *raw() const { return &data; }
 }; // Instruction
 
 // make sure that it is the right size

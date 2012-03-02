@@ -932,6 +932,8 @@ MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc, Assembler::Conditi
         break;
       case Assembler::B_LDR:
         as_Imm32Pool(pc, trg, c);
+        if (c == Always)
+            m_buffer.markGuard();
         break;
       default:
         JS_NOT_REACHED("Other methods of generating tracable jumps NYI");
