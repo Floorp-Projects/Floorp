@@ -302,7 +302,39 @@ class nsINode : public nsIDOMEventTarget,
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
 
-  NS_DECL_DOM_MEMORY_REPORTER_SIZEOF
+  // Among the sub-classes that inherit (directly or indirectly) from nsINode,
+  // measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - nsGenericHTMLElement:  mForm, mFieldSet
+  // - nsGenericHTMLFrameElement: mFrameLoader (bug 672539), mTitleChangedListener
+  // - nsHTMLBodyElement:     mContentStyleRule
+  // - nsHTMLDataListElement: mOptions
+  // - nsHTMLFieldSetElement: mElements, mDependentElements, mFirstLegend
+  // - nsHTMLFormElement:     many!
+  // - nsHTMLFrameSetElement: mRowSpecs, mColSpecs
+  // - nsHTMLInputElement:    mInputData, mFiles, mFileList, mStaticDocfileList
+  // - nsHTMLMapElement:      mAreas
+  // - nsHTMLMediaElement:    many!
+  // - nsHTMLOutputElement:   mDefaultValue, mTokenList
+  // - nsHTMLRowElement:      mCells
+  // - nsHTMLSelectElement:   mOptions, mRestoreState
+  // - nsHTMLTableElement:    mTBodies, mRows, mTableInheritedAttributes
+  // - nsHTMLTableSectionElement: mRows
+  // - nsHTMLTextAreaElement: mControllers, mState
+  //
+  // The following members don't need to be measured:
+  // - nsIContent: mPrimaryFrame, because it's non-owning and measured elsewhere
+  //
+  NS_DECL_SIZEOF_EXCLUDING_THIS
+
+  // SizeOfIncludingThis doesn't need to be overridden by sub-classes because
+  // sub-classes of nsINode are guaranteed to be laid out in memory in such a
+  // way that |this| points to the start of the allocated object, even in
+  // methods of nsINode's sub-classes, and so |aMallocSizeOf(this)| is always
+  // safe to call no matter which object it was invoked on.
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
 
   friend class nsNodeUtils;
   friend class nsNodeWeakReference;
@@ -1331,6 +1363,7 @@ protected:
 public:
   // Optimized way to get classinfo.
   virtual nsXPCClassInfo* GetClassInfo() = 0;
+
 protected:
 
   // Override this function to create a custom slots class.

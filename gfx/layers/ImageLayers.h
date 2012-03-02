@@ -54,6 +54,12 @@
 #endif
 
 namespace mozilla {
+
+class CrossProcessMutex;
+namespace ipc {
+class Shmem;
+}
+
 namespace layers {
 
 enum StereoMode {
@@ -120,7 +126,12 @@ public:
      *
      * It wraps an IOSurface object and binds it directly to a GL texture.
      */
-    MAC_IO_SURFACE
+    MAC_IO_SURFACE,
+
+    /**
+     * An bitmap image that can be shared with a remote process.
+     */
+    REMOTE_IMAGE_BITMAP
   };
 
   Format GetFormat() { return mFormat; }
@@ -194,6 +205,12 @@ FormatInList(const Image::Format* aFormats, PRUint32 aNumFormats,
   return false;
 }
 
+class CompositionNotifySink
+{
+public:
+  virtual void DidComposite() = 0;
+};
+
 /**
  * A class that manages Image creation for a LayerManager. The only reason
  * we need a separate class here is that LayerMananers aren't threadsafe
@@ -225,6 +242,46 @@ protected:
                                               BufferRecycleBin *aRecycleBin);
 
 };
+ 
+/**
+ * This struct is used to store RemoteImages, it is meant to be able to live in
+ * shared memory. Therefor it should not contain a vtable pointer. Remote
+ * users can manipulate the data in this structure to specify what image is to
+ * be drawn by the container. When accessing this data users should make sure
+ * the mutex synchronizing access to the structure is held!
+ */
+struct RemoteImageData {
+  enum Type {
+    /**
+     * This is a format that uses raw bitmap data.
+     */
+    RAW_BITMAP
+  };
+  /* These formats describe the format in the memory byte-order */
+  enum Format {
+    /* 8 bits per channel */
+    BGRA32,
+    /* 8 bits per channel, alpha channel is ignored */
+    BGRX32
+  };
+
+  // This should be set to true if a change was made so that the ImageContainer
+  // knows to throw out any cached RemoteImage objects.
+  bool mWasUpdated;
+  Type mType;
+  Format mFormat;
+  gfxIntSize mSize;
+  union {
+    struct {
+      /* This pointer is set by a remote process, however it will be set to
+       * the container process' address the memory of the raw bitmap resides
+       * at.
+       */
+      unsigned char *mData;
+      int mStride;
+    } mBitmap;
+  };
+};
 
 /**
  * A class that manages Images for an ImageLayer. The only reason
@@ -242,7 +299,10 @@ public:
     mPaintCount(0),
     mPreviousImagePainted(false),
     mImageFactory(new ImageFactory()),
-    mRecycleBin(new BufferRecycleBin())
+    mRecycleBin(new BufferRecycleBin()),
+    mRemoteData(nsnull),
+    mRemoteDataMutex(nsnull),
+    mCompositionNotifySink(nsnull)
   {}
 
   ~ImageContainer();
@@ -266,26 +326,37 @@ public:
    * aImage can be null. While it's null, nothing will be painted.
    * 
    * The Image data must not be modified after this method is called!
+   *
+   * Implementations must call CurrentImageChanged() while holding
+   * mReentrantMonitor.
    */
   void SetCurrentImage(Image* aImage);
 
   /**
-   * Get the current Image.
-   * This has to add a reference since otherwise there are race conditions
-   * where the current image is destroyed before the caller can add
-   * a reference.
+   * Returns if the container currently has an image.
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
-   * Implementations must call CurrentImageChanged() while holding
-   * mReentrantMonitor.
    */
-  already_AddRefed<Image> GetCurrentImage()
-  {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  bool HasCurrentImage();
 
-    nsRefPtr<Image> retval = mActiveImage;
-    return retval.forget();
-  }
+  /**
+   * Lock the current Image.
+   * This has to add a reference since otherwise there are race conditions
+   * where the current image is destroyed before the caller can add
+   * a reference. This lock strictly guarantees the underlying image remains
+   * valid, it does not mean the current image cannot change.
+   * Can be called on any thread. This method will lock the cross-process
+   * mutex to ensure remote processes cannot alter underlying data. This call
+   * -must- be balanced by a call to UnlockCurrentImage and users should avoid
+   * holding the image locked for a long time.
+   */
+  already_AddRefed<Image> LockCurrentImage();
+
+  /**
+   * This call unlocks the image. For remote images releasing the cross-process
+   * mutex.
+   */
+  void UnlockCurrentImage();
 
   /**
    * Get the current image as a gfxASurface. This is useful for fallback
@@ -301,8 +372,24 @@ public:
    * modify it.
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
+   * If the current image is a remote image, that is, if it is an image that
+   * may be shared accross processes, calling this function will make
+   * a copy of the image data while holding the mRemoteDataMutex. If possible,
+   * the lock methods should be used to avoid the copy, however this should be
+   * avoided if the surface is required for a long period of time.
    */
   already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSizeResult);
+
+  /**
+   * This is similar to GetCurrentAsSurface, however this does not make a copy
+   * of the image data and requires the user to call UnlockCurrentImage when
+   * done with the image data. Once UnlockCurrentImage has been called the
+   * surface returned by this function is no longer valid! This works for any
+   * type of image. Optionally a pointer can be passed to receive the current
+   * image.
+   */
+  already_AddRefed<gfxASurface> LockCurrentAsSurface(gfxIntSize* aSizeResult,
+                                                     Image** aCurrentImage = nsnull);
 
   /**
    * Returns the size of the image in pixels.
@@ -354,7 +441,8 @@ public:
    */
   void NotifyPaintedImage(Image* aPainted) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    nsRefPtr<Image> current = GetCurrentImage();
+
+    nsRefPtr<Image> current = mActiveImage;
     if (aPainted == current) {
       if (mPaintTime.IsNull()) {
         mPaintTime = TimeStamp::Now();
@@ -367,10 +455,39 @@ public:
       mPaintCount++;
       mPreviousImagePainted = true;
     }
+
+    if (mCompositionNotifySink) {
+      mCompositionNotifySink->DidComposite();
+    }
   }
+
+  void SetCompositionNotifySink(CompositionNotifySink *aSink) {
+    mCompositionNotifySink = aSink;
+  }
+
+  /**
+   * This function is called to tell the ImageContainer where the
+   * (cross-process) segment lives where the shared data about possible
+   * remote images are stored. In addition to this a CrossProcessMutex object
+   * is passed telling the container how to synchronize access to this data.
+   * NOTE: This should be called during setup of the container and not after
+   * usage has started.
+   */
+  void SetRemoteImageData(RemoteImageData *aRemoteData,
+                          CrossProcessMutex *aRemoteDataMutex);
+  /**
+   * This can be used to check if the container has RemoteData set.
+   */
+  RemoteImageData *GetRemoteImageData() { return mRemoteData; }
 
 protected:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
+
+  // This is called to ensure we have an active image, this may not be true
+  // when we're storing image information in a RemoteImageData structure.
+  // NOTE: If we have remote data mRemoteDataMutex should be locked when
+  // calling this function!
+  void EnsureActiveImage();
 
   // ReentrantMonitor to protect thread safe access to the "current
   // image", and any other state which is shared between threads.
@@ -407,6 +524,56 @@ protected:
   gfxIntSize mScaleHint;
 
   nsRefPtr<BufferRecycleBin> mRecycleBin;
+
+  // This contains the remote image data for this container, if this is NULL
+  // that means the container has no other process that may control its active
+  // image.
+  RemoteImageData *mRemoteData;
+
+  // This cross-process mutex is used to synchronise access to mRemoteData.
+  // When this mutex is held, we will always be inside the mReentrantMonitor
+  // however the same is not true vice versa.
+  CrossProcessMutex *mRemoteDataMutex;
+
+  CompositionNotifySink *mCompositionNotifySink;
+};
+ 
+class AutoLockImage
+{
+public:
+  AutoLockImage(ImageContainer *aContainer) : mContainer(aContainer) { mImage = mContainer->LockCurrentImage(); }
+  AutoLockImage(ImageContainer *aContainer, gfxASurface **aSurface) : mContainer(aContainer) {
+    *aSurface = mContainer->LockCurrentAsSurface(&mSize, getter_AddRefs(mImage)).get();
+  }
+  ~AutoLockImage() { if (mContainer) { mContainer->UnlockCurrentImage(); } }
+
+  Image* GetImage() { return mImage; }
+  const gfxIntSize &GetSize() { return mSize; }
+
+  void Unlock() { 
+    if (mContainer) {
+      mImage = nsnull;
+      mContainer->UnlockCurrentImage();
+      mContainer = nsnull;
+    }
+  }
+
+  /** Things get a little tricky here, because our underlying image can -still-
+   * change, and OS X requires a complicated callback mechanism to update this
+   * we need to support staying the lock and getting the new image in a proper
+   * way. This method makes any images retrieved with GetImage invalid!
+   */
+  void Refresh() {
+    if (mContainer) {
+      mContainer->UnlockCurrentImage();
+      mImage = mContainer->LockCurrentImage();
+    }
+  }
+
+private:
+  ImageContainer *mContainer;
+  nsRefPtr<Image> mImage;
+  gfxIntSize mSize;
 };
 
 /**
@@ -675,6 +842,20 @@ private:
   DestroyCallback mDestroyCallback;
 };
 #endif
+
+class RemoteBitmapImage : public Image {
+public:
+  RemoteBitmapImage() : Image(NULL, REMOTE_IMAGE_BITMAP) {}
+
+  already_AddRefed<gfxASurface> GetAsSurface();
+
+  gfxIntSize GetSize() { return mSize; }
+
+  unsigned char *mData;
+  int mStride;
+  gfxIntSize mSize;
+  RemoteImageData::Format mFormat;
+};
 
 }
 }

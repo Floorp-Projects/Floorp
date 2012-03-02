@@ -74,7 +74,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),
     principals(NULL),
     needsBarrier_(false),
-    barrierMarker_(rt->gcMarker.sizeLimit()),
     gcBytes(0),
     gcTriggerBytes(0),
     gcLastBytes(0),
@@ -134,9 +133,6 @@ JSCompartment::init(JSContext *cx)
         return false;
 
     if (!scriptFilenameTable.init())
-        return false;
-
-    if (!barrierMarker_.init())
         return false;
 
     return debuggees.init();

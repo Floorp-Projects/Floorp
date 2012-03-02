@@ -132,6 +132,9 @@ public class DoorHangerPopup extends PopupWindow {
             return;
         }
 
+        if (!mInflated)
+            init();
+
         // Hide old doorhangers
         for (int i = 0; i < mContent.getChildCount(); i++) {
             DoorHanger dh = (DoorHanger) mContent.getChildAt(i);
