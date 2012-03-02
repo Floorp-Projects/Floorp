@@ -508,7 +508,7 @@ nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder,
                     nsRenderingContext* aCtx)
 {
   static_cast<nsSVGOuterSVGFrame*>(mFrame)->
-    Paint(aBuilder, *aCtx, mVisibleRect, ToReferenceFrame());
+    Paint(aBuilder, aCtx, mVisibleRect, ToReferenceFrame());
 }
 
 // helper
@@ -585,14 +585,14 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 void
 nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
-                          nsRenderingContext& aRenderingContext,
+                          nsRenderingContext* aContext,
                           const nsRect& aDirtyRect, nsPoint aPt)
 {
   if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
     return;
 
   // initialize Mozilla rendering context
-  aRenderingContext.PushState();
+  aContext->PushState();
 
   nsRect viewportRect = GetContentRect();
   nsPoint viewportOffset = aPt + viewportRect.TopLeft() - GetPosition();
@@ -600,8 +600,8 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
 
   nsRect clipRect;
   clipRect.IntersectRect(aDirtyRect, viewportRect);
-  aRenderingContext.IntersectClip(clipRect);
-  aRenderingContext.Translate(viewportRect.TopLeft());
+  aContext->IntersectClip(clipRect);
+  aContext->Translate(viewportRect.TopLeft());
   nsRect dirtyRect = clipRect - viewportOffset;
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
@@ -610,30 +610,32 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
 
   nsIntRect dirtyPxRect = dirtyRect.ToOutsidePixels(PresContext()->AppUnitsPerDevPixel());
 
-  nsSVGRenderState ctx(&aRenderingContext);
+  // Create an SVGAutoRenderState so we can call SetPaintingToWindow on
+  // it, but don't change the render mode:
+  SVGAutoRenderState state(aContext, SVGAutoRenderState::GetRenderMode(aContext));
 
   if (aBuilder->IsPaintingToWindow()) {
-    ctx.SetPaintingToWindow(true);
+    state.SetPaintingToWindow(true);
   }
 
 #ifdef XP_MACOSX
   if (mEnableBitmapFallback) {
     // nquartz fallback paths, which svg tends to trigger, need
     // a non-window context target
-    ctx.GetGfxContext()->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+    aContext->ThebesContext()->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
   }
 #endif
 
-  nsSVGUtils::PaintFrameWithEffects(&ctx, &dirtyPxRect, this);
+  nsSVGUtils::PaintFrameWithEffects(aContext, &dirtyPxRect, this);
 
 #ifdef XP_MACOSX
   if (mEnableBitmapFallback) {
     // show the surface we pushed earlier for fallbacks
-    ctx.GetGfxContext()->PopGroupToSource();
-    ctx.GetGfxContext()->Paint();
+    aContext->ThebesContext()->PopGroupToSource();
+    aContext->ThebesContext()->Paint();
   }
   
-  if (ctx.GetGfxContext()->HasError() && !mEnableBitmapFallback) {
+  if (aContext->ThebesContext()->HasError() && !mEnableBitmapFallback) {
     mEnableBitmapFallback = true;
     // It's not really clear what area to invalidate here. We might have
     // stuffed up rendering for the entire window in this paint pass,
@@ -666,7 +668,7 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
   printf("SVG Paint Timing: %f ms\n", (end-start)/1000.0);
 #endif
   
-  aRenderingContext.PopState();
+  aContext->PopState();
 }
 
 nsSplittableType

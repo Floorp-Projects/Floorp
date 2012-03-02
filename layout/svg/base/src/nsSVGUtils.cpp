@@ -196,6 +196,56 @@ NS_SMILEnabled()
   return gSMILEnabled;
 }
 
+// we only take the address of this:
+static mozilla::gfx::UserDataKey sSVGAutoRenderStateKey;
+
+SVGAutoRenderState::SVGAutoRenderState(nsRenderingContext *aContext,
+                                       RenderMode aMode)
+  : mContext(aContext)
+  , mOriginalRenderState(nsnull)
+  , mMode(aMode)
+  , mPaintingToWindow(false)
+{
+  mOriginalRenderState = aContext->RemoveUserData(&sSVGAutoRenderStateKey);
+  // We always remove ourselves from aContext before it dies, so
+  // passing nsnull as the destroy function is okay.
+  aContext->AddUserData(&sSVGAutoRenderStateKey, this, nsnull);
+}
+
+SVGAutoRenderState::~SVGAutoRenderState()
+{
+  mContext->RemoveUserData(&sSVGAutoRenderStateKey);
+  if (mOriginalRenderState) {
+    mContext->AddUserData(&sSVGAutoRenderStateKey, mOriginalRenderState, nsnull);
+  }
+}
+
+void
+SVGAutoRenderState::SetPaintingToWindow(bool aPaintingToWindow)
+{
+  mPaintingToWindow = aPaintingToWindow;
+}
+
+/* static */ SVGAutoRenderState::RenderMode
+SVGAutoRenderState::GetRenderMode(nsRenderingContext *aContext)
+{
+  void *state = aContext->GetUserData(&sSVGAutoRenderStateKey);
+  if (state) {
+    return static_cast<SVGAutoRenderState*>(state)->mMode;
+  }
+  return NORMAL;
+}
+
+/* static */ bool
+SVGAutoRenderState::IsPaintingToWindow(nsRenderingContext *aContext)
+{
+  void *state = aContext->GetUserData(&sSVGAutoRenderStateKey);
+  if (state) {
+    return static_cast<SVGAutoRenderState*>(state)->mPaintingToWindow;
+  }
+  return false;
+}
+
 nsSVGSVGElement*
 nsSVGUtils::GetOuterSVGElement(nsSVGElement *aSVGElement)
 {
@@ -960,7 +1010,7 @@ nsSVGUtils::NotifyRedrawUnsuspended(nsIFrame *aFrame)
 class SVGPaintCallback : public nsSVGFilterPaintCallback
 {
 public:
-  virtual void Paint(nsSVGRenderState *aContext, nsIFrame *aTarget,
+  virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
                      const nsIntRect* aDirtyRect)
   {
     nsISVGChildFrame *svgChildFrame = do_QueryFrame(aTarget);
@@ -989,7 +1039,7 @@ public:
 };
 
 void
-nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
+nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
                                   const nsIntRect *aDirtyRect,
                                   nsIFrame *aFrame)
 {
@@ -1046,7 +1096,7 @@ nsSVGUtils::PaintFrameWithEffects(nsSVGRenderState *aContext,
   if (opacity != 1.0f && CanOptimizeOpacity(aFrame))
     opacity = 1.0f;
 
-  gfxContext *gfx = aContext->GetGfxContext();
+  gfxContext *gfx = aContext->ThebesContext();
   bool complexEffects = false;
 
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
@@ -1578,34 +1628,6 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 }
 
 // ----------------------------------------------------------------------
-
-nsSVGRenderState::nsSVGRenderState(nsRenderingContext *aContext) :
-  mRenderMode(NORMAL), mRenderingContext(aContext), mPaintingToWindow(false)
-{
-  mGfxContext = aContext->ThebesContext();
-}
-
-nsSVGRenderState::nsSVGRenderState(gfxContext *aContext) :
-  mRenderMode(NORMAL), mGfxContext(aContext), mPaintingToWindow(false)
-{
-}
-
-nsSVGRenderState::nsSVGRenderState(gfxASurface *aSurface) :
-  mRenderMode(NORMAL), mPaintingToWindow(false)
-{
-  mGfxContext = new gfxContext(aSurface);
-}
-
-nsRenderingContext*
-nsSVGRenderState::GetRenderingContext(nsIFrame *aFrame)
-{
-  if (!mRenderingContext) {
-    mRenderingContext = new nsRenderingContext();
-    mRenderingContext->Init(aFrame->PresContext()->DeviceContext(),
-                            mGfxContext);
-  }
-  return mRenderingContext;
-}
 
 /* static */ bool
 nsSVGUtils::RootSVGElementHasViewbox(const nsIContent *aRootSVGElem)

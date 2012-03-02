@@ -83,7 +83,7 @@ nsSVGInnerSVGFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext,
+nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
                              const nsIntRect *aDirtyRect)
 {
   gfxContextAutoSaveRestore autoSR;
@@ -100,7 +100,7 @@ nsSVGInnerSVGFrame::PaintSVG(nsSVGRenderState *aContext,
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
     gfxMatrix clipTransform = parent->GetCanvasTM();
 
-    gfxContext *gfx = aContext->GetGfxContext();
+    gfxContext *gfx = aContext->ThebesContext();
     autoSR.SetContext(gfx);
     gfxRect clipRect =
       nsSVGUtils::GetClipRectForFrame(this, x, y, width, height);
