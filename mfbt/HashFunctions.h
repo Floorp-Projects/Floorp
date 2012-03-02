@@ -10,6 +10,7 @@
 #ifndef mozilla_HashFunctions_h_
 #define mozilla_HashFunctions_h_
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StandardInteger.h"
 
