@@ -1286,6 +1286,11 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
 
     nsCOMPtr<nsIStreamListener> listener = hvc.get();
 
+    // We must set the notification callbacks before setting up the
+    // CORS listener, because that's also interested inthe
+    // notification callbacks.
+    newChannel->SetNotificationCallbacks(hvc);
+
     if (aCORSMode != imgIRequest::CORS_NONE) {
       bool withCredentials = aCORSMode == imgIRequest::CORS_USE_CREDENTIALS;
       nsCOMPtr<nsIStreamListener> corsproxy =
@@ -1296,8 +1301,6 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
 
       listener = corsproxy;
     }
-
-    newChannel->SetNotificationCallbacks(hvc);
 
     request->mValidator = hvc;
 
