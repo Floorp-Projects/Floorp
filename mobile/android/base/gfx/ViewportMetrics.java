@@ -79,6 +79,16 @@ public class ViewportMetrics {
         mZoomFactor = viewport.getZoomFactor();
     }
 
+    public ViewportMetrics(ImmutableViewportMetrics viewport) {
+        mPageSize = new FloatSize(viewport.pageSizeWidth, viewport.pageSizeHeight);
+        mViewportRect = new RectF(viewport.viewportRectLeft,
+                                  viewport.viewportRectTop,
+                                  viewport.viewportRectRight,
+                                  viewport.viewportRectBottom);
+        mZoomFactor = viewport.zoomFactor;
+    }
+
+
     public ViewportMetrics(JSONObject json) throws JSONException {
         float x = (float)json.getDouble("x");
         float y = (float)json.getDouble("y");
