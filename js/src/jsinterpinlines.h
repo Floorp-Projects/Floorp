@@ -805,7 +805,7 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &va
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length = obj->getDenseArrayInitializedLength();
-            jsint i = JSID_TO_INT(id);
+            int32_t i = JSID_TO_INT(id);
             if ((jsuint)i < length) {
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))

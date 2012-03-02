@@ -4451,7 +4451,7 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsid id, bool *aIsNumber)
     *aIsNumber = false;
   }
 
-  jsint i;
+  int i;
   if (JSID_IS_INT(id)) {
       i = JSID_TO_INT(id);
   } else {

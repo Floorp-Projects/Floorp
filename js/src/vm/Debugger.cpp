@@ -2370,19 +2370,19 @@ class FlowGraphSummary : public Vector<size_t> {
                 pc += step;
                 addEdge(lineno, defaultOffset);
 
-                jsint ncases;
+                int ncases;
                 if (op == JSOP_TABLESWITCH) {
-                    jsint low = GET_JUMP_OFFSET(pc);
+                    int32_t low = GET_JUMP_OFFSET(pc);
                     pc += JUMP_OFFSET_LEN;
                     ncases = GET_JUMP_OFFSET(pc) - low + 1;
                     pc += JUMP_OFFSET_LEN;
                 } else {
-                    ncases = (jsint) GET_UINT16(pc);
+                    ncases = GET_UINT16(pc);
                     pc += UINT16_LEN;
                     JS_ASSERT(ncases > 0);
                 }
 
-                for (jsint i = 0; i < ncases; i++) {
+                for (int i = 0; i < ncases; i++) {
                     if (op == JSOP_LOOKUPSWITCH)
                         pc += UINT32_INDEX_LEN;
                     size_t target = offset + GET_JUMP_OFFSET(pc);

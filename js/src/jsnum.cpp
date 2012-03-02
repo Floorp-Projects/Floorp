@@ -575,7 +575,7 @@ js_IntToString(JSContext *cx, int32_t si)
 
 /* Returns a non-NULL pointer to inside cbuf.  */
 static char *
-IntToCString(ToCStringBuf *cbuf, jsint i, jsint base = 10)
+IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
 {
     jsuint u = (i < 0) ? -i : i;
 
@@ -610,7 +610,7 @@ IntToCString(ToCStringBuf *cbuf, jsint i, jsint base = 10)
 }
 
 static JSString * JS_FASTCALL
-js_NumberToStringWithBase(JSContext *cx, double d, jsint base);
+js_NumberToStringWithBase(JSContext *cx, double d, int base);
 
 static JS_ALWAYS_INLINE bool
 num_toStringHelper(JSContext *cx, Native native, unsigned argc, Value *vp)
@@ -788,7 +788,7 @@ js_num_valueOf(JSContext *cx, unsigned argc, Value *vp)
 
 static JSBool
 num_to(JSContext *cx, Native native, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
-       jsint precisionMin, jsint precisionMax, jsint precisionOffset,
+       int precisionMin, int precisionMax, int precisionOffset,
        CallArgs args)
 {
     /* Use MAX_PRECISION+1 because precisionOffset can be 1. */
@@ -809,7 +809,7 @@ num_to(JSContext *cx, Native native, JSDToStrMode zeroArgMode, JSDToStrMode oneA
             return false;
         if (precision < precisionMin || precision > precisionMax) {
             ToCStringBuf cbuf;
-            numStr = IntToCString(&cbuf, jsint(precision));
+            numStr = IntToCString(&cbuf, int(precision));
             JS_ASSERT(numStr);
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PRECISION_RANGE, numStr);
             return JS_FALSE;
@@ -817,7 +817,7 @@ num_to(JSContext *cx, Native native, JSDToStrMode zeroArgMode, JSDToStrMode oneA
     }
 
     numStr = js_dtostr(cx->runtime->dtoaState, buf, sizeof buf,
-                       oneArgMode, (jsint)precision + precisionOffset, d);
+                       oneArgMode, (int)precision + precisionOffset, d);
     if (!numStr) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -1065,7 +1065,7 @@ extern char* DoubleToCString(double v, char* buffer, int buflen);
 namespace js {
 
 static char *
-FracNumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, jsint base = 10)
+FracNumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base = 10)
 {
 #ifdef DEBUG
     {
@@ -1097,7 +1097,7 @@ FracNumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, jsint base = 10
 }
 
 char *
-NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, jsint base/* = 10*/)
+NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base/* = 10*/)
 {
     int32_t i;
     return (JSDOUBLE_IS_INT32(d, &i))
@@ -1108,7 +1108,7 @@ NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, jsint base/* = 10*/
 }
 
 static JSString * JS_FASTCALL
-js_NumberToStringWithBase(JSContext *cx, double d, jsint base)
+js_NumberToStringWithBase(JSContext *cx, double d, int base)
 {
     ToCStringBuf cbuf;
     char *numStr;

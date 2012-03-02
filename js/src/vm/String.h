@@ -723,7 +723,7 @@ class StaticStrings
     inline JSAtom *getUint(uint32_t u);
 
     static inline bool hasInt(int32_t i);
-    inline JSAtom *getInt(jsint i);
+    inline JSAtom *getInt(int32_t i);
 
     static inline bool hasUnit(jschar c);
     JSAtom *getUnit(jschar c);

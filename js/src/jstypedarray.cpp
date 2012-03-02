@@ -156,7 +156,7 @@ ArrayBuffer::prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp
         vp->setInt32(0);
         return true;
     }
-    vp->setInt32(jsint(arrayBuffer->arrayBufferByteLength()));
+    vp->setInt32(int32_t(arrayBuffer->arrayBufferByteLength()));
     return true;
 }
 
@@ -2542,7 +2542,7 @@ JS_NewArrayBuffer(JSContext *cx, jsuint nbytes)
 }
 
 static inline JSObject *
-TypedArrayConstruct(JSContext *cx, jsint atype, unsigned argc, Value *argv)
+TypedArrayConstruct(JSContext *cx, int atype, unsigned argc, Value *argv)
 {
     switch (atype) {
       case TypedArray::TYPE_INT8:
@@ -2579,7 +2579,7 @@ TypedArrayConstruct(JSContext *cx, jsint atype, unsigned argc, Value *argv)
 }
 
 JS_FRIEND_API(JSObject *)
-js_CreateTypedArray(JSContext *cx, jsint atype, jsuint nelements)
+js_CreateTypedArray(JSContext *cx, int atype, jsuint nelements)
 {
     JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
 
@@ -2588,7 +2588,7 @@ js_CreateTypedArray(JSContext *cx, jsint atype, jsuint nelements)
 }
 
 JS_FRIEND_API(JSObject *)
-js_CreateTypedArrayWithArray(JSContext *cx, jsint atype, JSObject *arrayArg)
+js_CreateTypedArrayWithArray(JSContext *cx, int atype, JSObject *arrayArg)
 {
     JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
 
@@ -2597,8 +2597,8 @@ js_CreateTypedArrayWithArray(JSContext *cx, jsint atype, JSObject *arrayArg)
 }
 
 JS_FRIEND_API(JSObject *)
-js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
-                              jsint byteoffset, jsint length)
+js_CreateTypedArrayWithBuffer(JSContext *cx, int atype, JSObject *bufArg,
+                              int byteoffset, int length)
 {
     JS_ASSERT(atype >= 0 && atype < TypedArray::TYPE_MAX);
     JS_ASSERT(bufArg && js_IsArrayBuffer(bufArg));
