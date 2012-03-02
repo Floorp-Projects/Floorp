@@ -143,6 +143,110 @@ ValueToIdentifier(JSContext *cx, const Value &v, jsid *idp)
     return true;
 }
 
+/*
+ * A range of all the Debugger.Frame objects for a particular StackFrame.
+ *
+ * FIXME This checks only current debuggers, so it relies on a hack in
+ * Debugger::removeDebuggeeGlobal to make sure only current debuggers have Frame
+ * objects with .live === true.
+ */
+class Debugger::FrameRange {
+    JSContext *cx;
+    StackFrame *fp;
+
+    /* The debuggers in |fp|'s compartment, or NULL if there are none. */
+    GlobalObject::DebuggerVector *debuggers;
+
+    /*
+     * The index of the front Debugger.Frame's debugger in debuggers.
+     * nextDebugger < debuggerCount if and only if the range is not empty.
+     */
+    size_t debuggerCount, nextDebugger;
+
+    /*
+     * If the range is not empty, this is front Debugger.Frame's entry in its
+     * debugger's frame table.
+     */
+    FrameMap::Ptr entry;
+
+  public:
+    /*
+     * Return a range containing all Debugger.Frame instances referring to |fp|.
+     * |global| is |fp|'s global object; if NULL or omitted, we compute it
+     * ourselves from |fp|.
+     *
+     * We keep an index into the compartment's debugger list, and a
+     * FrameMap::Ptr into the current debugger's frame map. Thus, if the set of
+     * debuggers in |fp|'s compartment changes, this range becomes invalid.
+     * Similarly, if stack frames are added to or removed from frontDebugger(),
+     * then the range's front is invalid until popFront is called.
+     */
+    FrameRange(JSContext *cx, StackFrame *fp, GlobalObject *global = NULL)
+      : cx(cx), fp(fp) {
+        nextDebugger = 0;
+
+        /* Find our global, if we were not given one. */
+        if (!global)
+            global = &fp->scopeChain().global();
+
+        /* The frame and global must match. */
+        JS_ASSERT(&fp->scopeChain().global() == global);
+
+        /* Find the list of debuggers we'll iterate over. There may be none. */
+        debuggers = global->getDebuggers();
+        if (debuggers) {
+            debuggerCount = debuggers->length();
+            findNext();
+        } else {
+            debuggerCount = 0;
+        }
+    }
+
+    bool empty() const {
+        return nextDebugger >= debuggerCount;
+    }
+
+    JSObject *frontFrame() const {
+        JS_ASSERT(!empty());
+        return entry->value;
+    }
+
+    Debugger *frontDebugger() const {
+        JS_ASSERT(!empty());
+        return (*debuggers)[nextDebugger];
+    }
+
+    /*
+     * Delete the front frame from its Debugger's frame map. After this call,
+     * the range's front is invalid until popFront is called.
+     */
+    void removeFrontFrame() const {
+        JS_ASSERT(!empty());
+        frontDebugger()->frames.remove(entry);
+    }
+
+    void popFront() { 
+        JS_ASSERT(!empty());
+        nextDebugger++;
+        findNext();
+    }
+
+  private:
+    /*
+     * Either make this range refer to the first appropriate Debugger.Frame at
+     * or after nextDebugger, or make it empty.
+     */
+    void findNext() {
+        while (!empty()) {
+            Debugger *dbg = (*debuggers)[nextDebugger];
+            entry = dbg->frames.lookup(fp);
+            if (entry)
+                break;
+            nextDebugger++;
+        }
+    }
+};
+
 
 /*** Breakpoints *********************************************************************************/
 
@@ -458,30 +562,20 @@ void
 Debugger::slowPathOnLeaveFrame(JSContext *cx)
 {
     StackFrame *fp = cx->fp();
-    GlobalObject *global = &fp->scopeChain().global();
 
-    /*
-     * FIXME This notifies only current debuggers, so it relies on a hack in
-     * Debugger::removeDebuggeeGlobal to make sure only current debuggers have
-     * Frame objects with .live === true.
-     */
-    if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
-        for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
-            Debugger *dbg = *p;
-            if (FrameMap::Ptr p = dbg->frames.lookup(fp)) {
-                StackFrame *frame = p->key;
-                JSObject *frameobj = p->value;
-                frameobj->setPrivate(NULL);
+    for (FrameRange r(cx, fp); !r.empty(); r.popFront()) {
+        JSObject *frameobj = r.frontFrame();
 
-                /* If this frame had an onStep handler, adjust the script's count. */
-                if (!frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
-                    frame->isScriptFrame()) {
-                    frame->script()->changeStepModeCount(cx, -1);
-                }
+        frameobj->setPrivate(NULL);
 
-                dbg->frames.remove(p);
-            }
+        /* If this frame had an onStep handler, adjust the script's count. */
+        if (!frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
+            fp->isScriptFrame())
+        {
+            fp->script()->changeStepModeCount(cx, -1);
         }
+
+        r.removeFrontFrame();
     }
 
     /*
@@ -975,16 +1069,12 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
      * onStep handlers.
      */
     AutoObjectVector frames(cx);
-    GlobalObject *global = &fp->scopeChain().global();
-    if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
-        for (Debugger **d = debuggers->begin(); d != debuggers->end(); d++) {
-            Debugger *dbg = *d;
-            if (FrameMap::Ptr p = dbg->frames.lookup(fp)) {
-                JSObject *frame = p->value;
-                if (!frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
-                    !frames.append(frame))
-                    return JSTRAP_ERROR;
-            }
+    for (FrameRange r(cx, fp); !r.empty(); r.popFront()) {
+        JSObject *frame = r.frontFrame();
+        if (!frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
+            !frames.append(frame))
+        {
+            return JSTRAP_ERROR;
         }
     }
 
@@ -1001,6 +1091,7 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
     {
         uint32_t stepperCount = 0;
         JSScript *trappingScript = fp->script();
+        GlobalObject *global = &fp->scopeChain().global();
         if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
             for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger *dbg = *p;
