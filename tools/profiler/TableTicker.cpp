@@ -65,6 +65,12 @@
  #include "nsStackWalk.h"
 #endif
 
+#if defined(MOZ_PROFILING) && defined(ANDROID)
+ #define USE_LIBUNWIND
+ #include <libunwind.h>
+ #include "android-signal-defs.h"
+#endif
+
 using std::string;
 using namespace mozilla;
 
@@ -347,7 +353,14 @@ class TableTicker: public Sampler {
     , mPrimaryThreadProfile(aEntrySize, aStack)
     , mSaveRequested(false)
   {
+#if defined(USE_LIBUNWIND) && defined(ANDROID)
+    // We don't have the Gecko Profiler add-on on Android, but we know that
+    // libunwind is available, so we can always walk the stacks.
+    mUseStackWalk = true;
+#else
     mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
+#endif
+
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mPrimaryThreadProfile.addTag(ProfileEntry('m', "Start"));
@@ -377,7 +390,7 @@ class TableTicker: public Sampler {
 
 private:
   // Not implemented on platforms which do not support backtracing
-  void doBacktrace(ThreadProfile &aProfile, Address pc);
+  static void doBacktrace(ThreadProfile &aProfile, TickSample* aSample);
 
 private:
   // This represent the application's main thread (SAMPLER_INIT)
@@ -465,7 +478,7 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
 
 
 #ifdef USE_BACKTRACE
-void TableTicker::doBacktrace(ThreadProfile &aProfile, Address pc)
+void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
   void *array[100];
   int count = backtrace (array, 100);
@@ -498,7 +511,7 @@ void StackWalkCallback(void* aPC, void* aClosure)
   array->array[array->count++] = aPC;
 }
 
-void TableTicker::doBacktrace(ThreadProfile &aProfile, Address fp)
+void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
 #ifndef XP_MACOSX
   uintptr_t thread = GetThreadHandle(platform_data());
@@ -515,7 +528,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, Address fp)
   void *stackEnd = reinterpret_cast<void*>(-1);
   if (pt)
     stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt));
-  nsresult rv = FramePointerStackWalk(StackWalkCallback, 1, &array, reinterpret_cast<void**>(fp), stackEnd);
+  nsresult rv = FramePointerStackWalk(StackWalkCallback, 1, &array, reinterpret_cast<void**>(aSample->fp), stackEnd);
 #else
   nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
 #endif
@@ -525,6 +538,54 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, Address fp)
     for (size_t i = array.count; i > 0; --i) {
       aProfile.addTag(ProfileEntry('l', (const char*)array.array[i - 1]));
     }
+  }
+}
+#endif
+
+#if defined(USE_LIBUNWIND) && defined(ANDROID)
+void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+{
+  void* pc_array[1000];
+  size_t count = 0;
+
+  unw_cursor_t cursor; unw_context_t uc;
+  unw_word_t ip;
+  unw_getcontext(&uc);
+
+  // Dirty hack: replace the registers with values from the signal handler
+  // We do this in order to avoid the overhead of walking up to reach the
+  // signal handler frame, and the possibility that libunwind fails to
+  // handle it correctly.
+  unw_tdep_context_t *unw_ctx = reinterpret_cast<unw_tdep_context_t*> (&uc);
+  mcontext_t& mcontext = reinterpret_cast<ucontext_t*> (aSample->context)->uc_mcontext;
+#define REPLACE_REG(num) unw_ctx->regs[num] = mcontext.gregs[R##num]
+  REPLACE_REG(0);
+  REPLACE_REG(1);
+  REPLACE_REG(2);
+  REPLACE_REG(3);
+  REPLACE_REG(4);
+  REPLACE_REG(5);
+  REPLACE_REG(6);
+  REPLACE_REG(7);
+  REPLACE_REG(8);
+  REPLACE_REG(9);
+  REPLACE_REG(10);
+  REPLACE_REG(11);
+  REPLACE_REG(12);
+  REPLACE_REG(13);
+  REPLACE_REG(14);
+  REPLACE_REG(15);
+#undef REPLACE_REG
+  unw_init_local(&cursor, &uc);
+  while (count < ArrayLength(pc_array) &&
+         unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    pc_array[count++] = reinterpret_cast<void*> (ip);
+  }
+
+  aProfile.addTag(ProfileEntry('s', "(root)", 0));
+  for (size_t i = count; i > 0; --i) {
+    aProfile.addTag(ProfileEntry('l', reinterpret_cast<const char*>(pc_array[i - 1])));
   }
 }
 #endif
@@ -591,9 +652,9 @@ void TableTicker::Tick(TickSample* sample)
     }
   }
 
-#if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
+#if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK) || defined(USE_LIBUNWIND)
   if (mUseStackWalk) {
-    doBacktrace(mPrimaryThreadProfile, sample->fp);
+    doBacktrace(mPrimaryThreadProfile, sample);
   } else {
     doSampleStackTrace(stack, mPrimaryThreadProfile, sample);
   }
@@ -637,11 +698,6 @@ string ProfileEntry::TagToString(ThreadProfile *profile)
   return tag;
 }
 
-#define PROFILE_DEFAULT_ENTRY 100000
-#define PROFILE_DEFAULT_INTERVAL 10
-#define PROFILE_DEFAULT_FEATURES NULL
-#define PROFILE_DEFAULT_FEATURE_COUNT 0
-
 void mozilla_sampler_init()
 {
   // TODO linux port: Use TLS with ifdefs
@@ -654,6 +710,18 @@ void mozilla_sampler_init()
 
   ProfileStack *stack = new ProfileStack();
   mozilla::tls::set(pkey_stack, stack);
+
+#if defined(USE_LIBUNWIND) && defined(ANDROID)
+  // Only try debug_frame and exidx unwinding
+  putenv("UNW_ARM_UNWIND_METHOD=5");
+
+  // Allow the profiler to be started and stopped using signals
+  OS::RegisterStartStopHandlers();
+
+  // On Android, this is too soon in order to start up the
+  // profiler.
+  return;
+#endif
 
   // We can't open pref so we use an environment variable
   // to know if we should trigger the profiler on startup
@@ -717,7 +785,7 @@ JSObject *mozilla_sampler_get_profile_data(JSContext *aCx)
 const char** mozilla_sampler_get_features()
 {
   static const char* features[] = {
-#if defined(MOZ_PROFILING) && (defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK))
+#if defined(MOZ_PROFILING) && (defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK) || defined(USE_LIBUNWIND))
     "stackwalk",
 #endif
     "jank",
