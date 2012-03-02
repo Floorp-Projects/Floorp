@@ -14,11 +14,11 @@ let DebuggerTransport = tempScope.DebuggerTransport;
 let DebuggerClient = tempScope.DebuggerClient;
 let Services = tempScope.Services;
 
-const TAB1_URL = "http://example.com/browser/browser/devtools/debugger/test/browser_dbg_tab1.html";
+const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/";
 
-const TAB2_URL = "http://example.com/browser/browser/devtools/debugger/test/browser_dbg_tab2.html";
-
-const STACK_URL = "http://example.com/browser/browser/devtools/debugger/test/browser_dbg_stack.html";
+const TAB1_URL = EXAMPLE_URL + "browser_dbg_tab1.html";
+const TAB2_URL = EXAMPLE_URL + "browser_dbg_tab2.html";
+const STACK_URL = EXAMPLE_URL + "browser_dbg_stack.html";
 
 if (!DebuggerServer.initialized) {
   DebuggerServer.init();

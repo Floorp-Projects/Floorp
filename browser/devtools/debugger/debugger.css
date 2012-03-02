@@ -67,6 +67,26 @@
   overflow: auto;
 }
 
+.dbg-stackframe {
+  display: block;
+}
+
+.dbg-stackframe-name {
+  float: left;
+}
+
+.dbg-stackframe-details {
+  float: right;
+}
+
+.dbg-stackframe-name:-moz-locale-dir(rtl) {
+  float: right;
+}
+
+.dbg-stackframe-details:-moz-locale-dir(rtl) {
+  float: left;
+}
+
 /**
  * Properties elements
  */
