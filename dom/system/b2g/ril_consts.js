@@ -336,6 +336,60 @@ const PDU_DCS_MSG_CLASS_TE_SPECIFIC     = 0xF3;
 // Because service center timestamp omit the century. Yay.
 const PDU_TIMESTAMP_YEAR_OFFSET = 2000;
 
+// See 9.2.3.24 TP‑User Data (TP‑UD)
+const PDU_IEI_CONCATENATED_SHORT_MESSAGES_8BIT         = 0x00;
+const PDU_IEI_SPECIAL_SMS_MESSAGE_INDICATION           = 0x01;
+const PDU_IEI_APPLICATION_PORT_ADDREESING_SCHEME_8BIT  = 0x04;
+const PDU_IEI_APPLICATION_PORT_ADDREESING_SCHEME_16BIT = 0x05;
+const PDU_IEI_SMSC_CONTROL_PARAMS                      = 0x06;
+const PDU_IEI_UDH_SOURCE_INDICATOR                     = 0x07;
+const PDU_IEI_CONCATENATED_SHORT_MESSAGES_16BIT        = 0x08;
+const PDU_IEI_WIRELESS_CONTROL_MESSAGE_PROTOCOL        = 0x09;
+const PDU_IEI_TEXT_FORMATING                           = 0x0A;
+const PDU_IEI_PREDEFINED_SOUND                         = 0x0B;
+const PDU_IEI_USER_DATA_SOUND                          = 0x0C;
+const PDU_IEI_PREDEFINED_ANIMATION                     = 0x0D;
+const PDU_IEI_LARGE_ANIMATION                          = 0x0E;
+const PDU_IEI_SMALL_ANIMATION                          = 0x0F;
+const PDU_IEI_LARGE_PICTURE                            = 0x10;
+const PDU_IEI_SMALL_PICTURE                            = 0x11;
+const PDU_IEI_VARIABLE_PICTURE                         = 0x12;
+const PDU_IEI_USER_PROMPT_INDICATOR                    = 0x13;
+const PDU_IEI_EXTENDED_OBJECT                          = 0x14;
+const PDU_IEI_REUSED_EXTENDED_OBJECT                   = 0x15;
+const PDU_IEI_COMPRESS_CONTROL                         = 0x16;
+const PDU_IEI_OBJECT_DISTRIBUTION_INDICATOR            = 0x17;
+const PDU_IEI_STANDARD_WVG_OBJECT                      = 0x18;
+const PDU_IEI_CHARACTER_SIZE_WVG_OBJECT                = 0x19;
+const PDU_IEI_EXTENDED_OBJECT_DATA_REQUEST_COMMAND     = 0x1A;
+const PDU_IEI_RFC822_EMAIL_HEADER                      = 0x20;
+const PDU_IEI_HYPERLINK_FORMAT_ELEMENT                 = 0x21;
+const PDU_IEI_REPLY_ADDRESS_ELEMENT                    = 0x22;
+const PDU_IEI_ENHANCED_VOICE_MAIL_INFORMATION          = 0x23;
+const PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT           = 0x24;
+const PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT          = 0x25;
+
+// 7bit alphabet escape character. The encoded value of this code point is left
+// undefined in official spec. Its code value is internally assigned to \uffff,
+// <noncharacter-FFFF> in Unicode basic multilingual plane.
+const PDU_NL_EXTENDED_ESCAPE = 0x1B;
+
+// <SP>, <LF>, <CR> are only defined in locking shift tables.
+const PDU_NL_SPACE = 0x20;
+const PDU_NL_LINE_FEED = 0x0A;
+const PDU_NL_CARRIAGE_RETURN = 0x0D;
+
+// 7bit alphabet page break character, only defined in single shift tables.
+// The encoded value of this code point is left undefined in official spec, but
+// the code point itself maybe be used for example in compressed CBS messages.
+// Its code value is internally assigned to \u000c, ASCII form feed, or new page.
+const PDU_NL_PAGE_BREAK = 0x0A;
+// 7bit alphabet reserved control character, only defined in single shift
+// tables. The encoded value of this code point is left undefined in official
+// spec. Its code value is internally assigned to \ufffe, <noncharacter-FFFE>
+// in Unicode basic multilingual plane.
+const PDU_NL_RESERVED_CONTROL = 0x0D;
+
 const PDU_NL_IDENTIFIER_DEFAULT    = 0;
 const PDU_NL_IDENTIFIER_TURKISH    = 1;
 const PDU_NL_IDENTIFIER_SPANISH    = 2;
