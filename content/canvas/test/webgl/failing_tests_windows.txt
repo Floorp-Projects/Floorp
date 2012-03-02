@@ -2,5 +2,4 @@ conformance/context/premultiplyalpha-test.html
 conformance/glsl/functions/glsl-function-atan.html
 conformance/glsl/functions/glsl-function-atan-xy.html
 conformance/more/conformance/quickCheckAPI-S_V.html
-conformance/more/functions/uniformfArrayLen1.html
 conformance/glsl/misc/struct-nesting-under-maximum.html
