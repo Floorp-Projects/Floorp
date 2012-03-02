@@ -46,68 +46,79 @@
 using namespace js;
 using namespace js::ion;
 
-uint32
+void
 MacroAssemblerX86::setupABICall(uint32 args)
 {
     JS_ASSERT(!inCall_);
     inCall_ = true;
 
-    uint32 stackForArgs = args > NumArgRegs
-                          ? (args - NumArgRegs) * sizeof(void *)
-                          : 0;
-    return stackForArgs;
+    args_ = args;
+    passedArgs_ = 0;
+    stackForCall_ = 0;
 }
 
 void
 MacroAssemblerX86::setupAlignedABICall(uint32 args)
 {
-    // Find the total number of bytes the stack will have been adjusted by,
-    // in order to compute alignment. Include a stack slot for saving the stack
-    // pointer, which will be dynamically aligned.
-    uint32 stackForCall = setupABICall(args);
-    uint32 displacement = stackForCall + framePushed_;
-    stackAdjust_ = stackForCall + ComputeByteAlignment(displacement, StackAlignment);
+    setupABICall(args);
     dynamicAlignment_ = false;
-    reserveStack(stackAdjust_);
 }
 
 void
 MacroAssemblerX86::setupUnalignedABICall(uint32 args, const Register &scratch)
 {
-    uint32 stackForCall = setupABICall(args);
+    setupABICall(args);
+    dynamicAlignment_ = true;
 
-    // Find the total number of bytes the stack will have been adjusted by,
-    // in order to compute alignment. framePushed_ is bogus or we don't know
-    // it for sure, so instead, save the original value of esp and then chop
-    // off its low bits. Then, we push the original value of esp.
     movl(esp, scratch);
     andl(Imm32(~(StackAlignment - 1)), esp);
     push(scratch);
-
-    uint32 displacement = stackForCall + STACK_SLOT_SIZE;
-    stackAdjust_ = stackForCall + ComputeByteAlignment(displacement, StackAlignment);
-    dynamicAlignment_ = true;
-    reserveStack(stackAdjust_);
 }
 
 void
-MacroAssemblerX86::setABIArg(uint32 arg, const MoveOperand &from)
+MacroAssemblerX86::passABIArg(const MoveOperand &from)
 {
-    uint32 disp = GetArgStackDisp(arg);
-    MoveOperand to = MoveOperand(StackPointer, disp);
-    enoughMemory_ &= moveResolver_.addMove(from, to, Move::GENERAL);
+    ++passedArgs_;
+    MoveOperand to = MoveOperand(StackPointer, stackForCall_);
+    if (from.isDouble()) {
+        stackForCall_ += sizeof(double);
+        enoughMemory_ &= moveResolver_.addMove(from, to, Move::DOUBLE);
+    } else {
+        stackForCall_ += sizeof(int32_t);
+        enoughMemory_ &= moveResolver_.addMove(from, to, Move::GENERAL);
+    }
 }
 
 void
-MacroAssemblerX86::setABIArg(uint32 arg, const Register &reg)
+MacroAssemblerX86::passABIArg(const Register &reg)
 {
-    setABIArg(arg, MoveOperand(reg));
+    passABIArg(MoveOperand(reg));
 }
 
 void
-MacroAssemblerX86::callWithABI(void *fun)
+MacroAssemblerX86::passABIArg(const FloatRegister &reg)
+{
+    passABIArg(MoveOperand(reg));
+}
+
+void
+MacroAssemblerX86::callWithABI(void *fun, Result result)
 {
     JS_ASSERT(inCall_);
+    JS_ASSERT(args_ == passedArgs_);
+
+    uint32 stackAdjust;
+    if (dynamicAlignment_) {
+        stackAdjust = stackForCall_
+                    + ComputeByteAlignment(stackForCall_ + STACK_SLOT_SIZE,
+                                           StackAlignment);
+    } else {
+        stackAdjust = stackForCall_
+                    + ComputeByteAlignment(stackForCall_ + framePushed_,
+                                           StackAlignment);
+    }
+
+    reserveStack(stackAdjust);
 
     // Position all arguments.
     {
@@ -134,7 +145,14 @@ MacroAssemblerX86::callWithABI(void *fun)
 
     call(ImmWord(fun));
 
-    freeStack(stackAdjust_);
+    freeStack(stackAdjust);
+    if (result == DOUBLE) {
+        reserveStack(sizeof(double));
+        fstp(Operand(esp, 0));
+        movsd(Operand(esp, 0), ReturnFloatReg);
+        breakpoint();
+        freeStack(sizeof(double));
+    }
     if (dynamicAlignment_)
         pop(esp);
 
@@ -151,7 +169,7 @@ MacroAssemblerX86::handleException()
 
     // Ask for an exception handler.
     setupUnalignedABICall(1, ecx);
-    setABIArg(0, eax);
+    passABIArg(eax);
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::HandleException));
     
     // Load the error value, load the new stack pointer, and return.

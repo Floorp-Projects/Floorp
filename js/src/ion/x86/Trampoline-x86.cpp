@@ -239,7 +239,7 @@ GenerateBailoutTail(MacroAssembler &masm)
     // Otherwise, we're in the "reflow" case.
     masm.bind(&reflow);
     masm.setupUnalignedABICall(1, edx);
-    masm.setABIArg(0, eax);
+    masm.passABIArg(eax);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
 
     masm.testl(eax, eax);
@@ -252,7 +252,7 @@ GenerateBailoutTail(MacroAssembler &masm)
 
     // Call out to the interpreter.
     masm.setupUnalignedABICall(1, edx);
-    masm.setABIArg(0, ecx);
+    masm.passABIArg(ecx);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
 
     // Load the value the interpreter returned.
@@ -302,8 +302,8 @@ IonCompartment::generateInvalidator(JSContext *cx)
     masm.movl(esp, ecx);
 
     masm.setupUnalignedABICall(2, edx);
-    masm.setABIArg(0, ebx);
-    masm.setABIArg(1, ecx);
+    masm.passABIArg(ebx);
+    masm.passABIArg(ecx);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InvalidationBailout));
 
     masm.pop(ebx); // Get the frameSize outparam.
@@ -427,7 +427,7 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32 frameClass)
 
     // Call the bailout function. This will correct the size of the bailout.
     masm.setupUnalignedABICall(1, ecx);
-    masm.setABIArg(0, eax);
+    masm.passABIArg(eax);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Bailout));
 
     // Common size of stuff we've pushed.
@@ -549,10 +549,9 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // Initialize the context parameter.
     Register cxreg = regs.takeAny();
     masm.loadJSContext(cx->runtime, cxreg);
-    masm.setABIArg(0, cxreg);
+    masm.passABIArg(cxreg);
 
     size_t argDisp = 0;
-    size_t argc = 1;
 
     // Copy arguments.
     if (f.explicitArgs) {
@@ -560,21 +559,21 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
             MoveOperand from;
             switch (f.argProperties(explicitArg)) {
               case VMFunction::WordByValue:
-                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp));
+                masm.passABIArg(MoveOperand(argsBase, argDisp));
                 argDisp += sizeof(void *);
                 break;
               case VMFunction::DoubleByValue:
-                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp));
+                masm.passABIArg(MoveOperand(argsBase, argDisp));
                 argDisp += sizeof(void *);
-                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp));
+                masm.passABIArg(MoveOperand(argsBase, argDisp));
                 argDisp += sizeof(void *);
                 break;
               case VMFunction::WordByRef:
-                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
+                masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
                 argDisp += sizeof(void *);
                 break;
               case VMFunction::DoubleByRef:
-                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
+                masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
                 argDisp += 2 * sizeof(void *);
                 break;
             }
@@ -583,8 +582,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Copy the implicit outparam, if any.
     if (outReg != InvalidReg)
-        masm.setABIArg(argc++, outReg);
-    JS_ASSERT(f.argc() == argc);
+        masm.passABIArg(outReg);
 
     masm.callWithABI(f.wrapped);
 
@@ -635,8 +633,8 @@ IonCompartment::generatePreBarrier(JSContext *cx)
     masm.movl(ImmWord(cx->compartment), ecx);
 
     masm.setupUnalignedABICall(2, eax);
-    masm.setABIArg(0, ecx);
-    masm.setABIArg(1, edx);
+    masm.passABIArg(ecx);
+    masm.passABIArg(edx);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, MarkFromIon));
 
     masm.PopRegsInMask(save);

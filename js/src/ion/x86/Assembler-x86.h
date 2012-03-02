@@ -59,6 +59,15 @@ static const Register ebp = { JSC::X86Registers::ebp };
 static const Register esi = { JSC::X86Registers::esi };
 static const Register edi = { JSC::X86Registers::edi };
 
+static const FloatRegister xmm0 = { JSC::X86Registers::xmm0 };
+static const FloatRegister xmm1 = { JSC::X86Registers::xmm1 };
+static const FloatRegister xmm2 = { JSC::X86Registers::xmm2 };
+static const FloatRegister xmm3 = { JSC::X86Registers::xmm3 };
+static const FloatRegister xmm4 = { JSC::X86Registers::xmm4 };
+static const FloatRegister xmm5 = { JSC::X86Registers::xmm5 };
+static const FloatRegister xmm6 = { JSC::X86Registers::xmm6 };
+static const FloatRegister xmm7 = { JSC::X86Registers::xmm7 };
+
 static const Register InvalidReg = { JSC::X86Registers::invalid_reg };
 static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
@@ -66,7 +75,8 @@ static const Register JSReturnReg_Type = ecx;
 static const Register JSReturnReg_Data = edx;
 static const Register StackPointer = esp;
 static const Register ReturnReg = eax;
-static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm7 };
+static const FloatRegister ReturnFloatReg = xmm0;
+static const FloatRegister ScratchFloatReg = xmm7;
 
 static const Register ArgumentsRectifierReg = esi;
 static const Register CallTempReg0 = edi;
@@ -395,20 +405,6 @@ class Assembler : public AssemblerX86Shared
         label->setPrev(masm.size());
     }
 };
-
-static const uint32 NumArgRegs = 0;
-
-static inline bool
-GetArgReg(uint32 arg, Register *out)
-{
-    return false;
-}
-
-static inline uint32
-GetArgStackDisp(uint32 arg)
-{
-    return arg * STACK_SLOT_SIZE;
-}
 
 } // namespace ion
 } // namespace js
