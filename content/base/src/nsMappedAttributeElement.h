@@ -66,6 +66,9 @@ protected:
   {}
 
 public:
+  NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(nsMappedAttributeElement,
+                                              nsMappedAttributeElementBase)
+
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers);

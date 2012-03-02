@@ -123,7 +123,6 @@ class nsXMLEventsManager;
 class nsHTMLStyleSheet;
 class nsHTMLCSSStyleSheet;
 class nsDOMNavigationTiming;
-class nsWindowSizes;
 
 /**
  * Right now our identifier map entries contain information for 'name'
@@ -506,8 +505,7 @@ public:
   typedef mozilla::dom::Element Element;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-
-  NS_DECL_SIZEOF_EXCLUDING_THIS
+  NS_DECL_DOM_MEMORY_REPORTER_SIZEOF
 
   using nsINode::GetScriptTypeID;
 
@@ -992,8 +990,7 @@ public:
   // Posts an event to call UpdateVisibilityState
   virtual void PostVisibilityUpdateEvent();
 
-  virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const;
-  // DocSizeOfIncludingThis is inherited from nsIDocument.
+  virtual size_t SizeOfStyleSheets(nsMallocSizeOfFun aMallocSizeOf) const;
 
 protected:
   friend class nsNodeUtils;

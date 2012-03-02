@@ -76,6 +76,7 @@
 #include "nsAccessibilityService.h"
 #endif
 #include "nsHTMLSelectElement.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsCSSRendering.h"
 #include "nsITheme.h"
 #include "nsIDOMEventListener.h"

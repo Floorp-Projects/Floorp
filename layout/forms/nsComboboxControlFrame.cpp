@@ -77,6 +77,7 @@
 #include "nsAccessibilityService.h"
 #endif
 #include "nsIServiceManager.h"
+#include "nsIDOMNode.h"
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"

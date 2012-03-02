@@ -145,15 +145,6 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     mTexImageOnWhite->EndUpdate();
   }
 
-#ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::sDumpPainting) {
-    nsRefPtr<gfxImageSurface> surf = 
-      gl()->GetTexImage(mTexImage->GetTextureID(), false, mTexImage->GetShaderProgramType());
-    
-    WriteSnapshotToDumpFile(mLayer, surf);
-  }
-#endif
-
   PRInt32 passes = mTexImageOnWhite ? 2 : 1;
   for (PRInt32 pass = 1; pass <= passes; ++pass) {
     LayerProgram *program;

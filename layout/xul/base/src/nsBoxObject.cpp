@@ -41,6 +41,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
+#include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
@@ -52,6 +53,7 @@
 #else
 #include "nsIDOMElement.h"
 #endif
+#include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "prtypes.h"

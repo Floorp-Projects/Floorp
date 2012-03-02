@@ -1474,7 +1474,7 @@ struct JSCountHeapNode {
 typedef struct JSCountHeapTracer {
     JSTracer            base;
     JSDHashTable        visited;
-    bool                ok;
+    JSBool              ok;
     JSCountHeapNode     *traceList;
     JSCountHeapNode     *recycleList;
 } JSCountHeapTracer;
@@ -1495,7 +1495,8 @@ CountHeapNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     entry = (JSDHashEntryStub *)
             JS_DHashTableOperate(&countTracer->visited, thing, JS_DHASH_ADD);
     if (!entry) {
-        countTracer->ok = false;
+        JS_ReportOutOfMemory(trc->context);
+        countTracer->ok = JS_FALSE;
         return;
     }
     if (entry->key)
@@ -1508,7 +1509,7 @@ CountHeapNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     } else {
         node = (JSCountHeapNode *) js_malloc(sizeof *node);
         if (!node) {
-            countTracer->ok = false;
+            countTracer->ok = JS_FALSE;
             return;
         }
     }
@@ -1579,14 +1580,14 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    JS_TracerInit(&countTracer.base, JS_GetRuntime(cx), CountHeapNotify);
+    JS_TracerInit(&countTracer.base, cx, CountHeapNotify);
     if (!JS_DHashTableInit(&countTracer.visited, JS_DHashGetStubOps(),
                            NULL, sizeof(JSDHashEntryStub),
                            JS_DHASH_DEFAULT_CAPACITY(100))) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-    countTracer.ok = true;
+    countTracer.ok = JS_TRUE;
     countTracer.traceList = NULL;
     countTracer.recycleList = NULL;
 
@@ -1611,15 +1612,11 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         js_free(node);
     }
     JS_DHashTableFinish(&countTracer.visited);
-    if (!countTracer.ok) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
 
-    return JS_NewNumberValue(cx, (double) counter, vp);
+    return countTracer.ok && JS_NewNumberValue(cx, (double) counter, vp);
 }
 
-static unsigned finalizeCount = 0;
+static jsrefcount finalizeCount = 0;
 
 static void
 finalize_counter_finalize(JSContext *cx, JSObject *obj)
@@ -2536,16 +2533,12 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    ok = JS_DumpHeap(JS_GetRuntime(cx), dumpFile, startThing, startTraceKind, thingToFind,
+    ok = JS_DumpHeap(cx, dumpFile, startThing, startTraceKind, thingToFind,
                      maxDepth, thingToIgnore);
     if (dumpFile != stdout)
         fclose(dumpFile);
-    if (!ok) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return true;
+    return ok;
 
   not_traceable_arg:
     JS_ReportError(cx, "argument '%s' is not null or a heap-allocated thing",

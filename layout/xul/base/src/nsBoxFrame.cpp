@@ -97,6 +97,7 @@
 #include "mozilla/Preferences.h"
 
 // Needed for Print Preview
+#include "nsIDocument.h"
 #include "nsIURI.h"
 
 using namespace mozilla;

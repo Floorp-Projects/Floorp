@@ -83,11 +83,11 @@ pep.performAction('content_scroll', function() {
 });
 
 // Now test context menus in chrome
-let bar = findElement.ID(c.window.document, "toolbar-menubar");
+let bar = findElement.ID(c.window.document, "appmenu-toolbar-button");
 bar.click();
-pep.performAction('chrome_navigation', function() {
+pep.performAction('chrome_menu', function() {
   bar.rightClick();
-  bar.keypress('n');
+  bar.keypress('m');
 });
 
 pep.performAction('chrome_addon', function() {
@@ -98,8 +98,9 @@ pep.performAction('chrome_addon', function() {
 pep.performAction('chrome_scroll', function() {
   bar.rightClick();
   for (let i = 0; i < 15; ++i) {
-    bar.keypress('VK_DOWN');
+    page.keypress('VK_DOWN');
     // Sleep to better emulate a user
     c.sleep(10);
   }
 });
+

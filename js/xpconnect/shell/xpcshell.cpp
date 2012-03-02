@@ -644,12 +644,10 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    ok = JS_DumpHeap(JS_GetRuntime(cx), dumpFile, startThing, startTraceKind, thingToFind,
+    ok = JS_DumpHeap(cx, dumpFile, startThing, startTraceKind, thingToFind,
                      maxDepth, thingToIgnore);
     if (dumpFile != gOutFile)
         fclose(dumpFile);
-    if (!ok)
-        JS_ReportOutOfMemory(cx);
     return ok;
 
   not_traceable_arg:

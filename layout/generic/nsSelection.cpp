@@ -67,6 +67,7 @@
 #include "nsTArray.h"
 #include "nsIScrollableFrame.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsISelectionListener.h"
 #include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
 
@@ -96,6 +97,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
 #include "nsFrameManager.h"
+#include "nsIScrollableFrame.h"
 // notifications
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"

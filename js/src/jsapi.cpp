@@ -755,7 +755,6 @@ JSRuntime::JSRuntime()
 #endif
     gcCallback(NULL),
     gcSliceCallback(NULL),
-    gcFinalizeCallback(NULL),
     gcMallocBytes(0),
     gcBlackRootsTraceOp(NULL),
     gcBlackRootsData(NULL),
@@ -1073,14 +1072,14 @@ JS_YieldRequest(JSContext *cx)
 #endif
 }
 
-JS_PUBLIC_API(unsigned)
+JS_PUBLIC_API(jsrefcount)
 JS_SuspendRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JSRuntime *rt = cx->runtime;
     JS_ASSERT(rt->onOwnerThread());
 
-    unsigned saveDepth = rt->requestDepth;
+    jsrefcount saveDepth = rt->requestDepth;
     if (!saveDepth)
         return 0;
 
@@ -1094,7 +1093,7 @@ JS_SuspendRequest(JSContext *cx)
 }
 
 JS_PUBLIC_API(void)
-JS_ResumeRequest(JSContext *cx, unsigned saveDepth)
+JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 {
 #ifdef JS_THREADSAFE
     JSRuntime *rt = cx->runtime;
@@ -2429,9 +2428,9 @@ JS_SetExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 }
 
 JS_PUBLIC_API(void)
-JS_TracerInit(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback)
+JS_TracerInit(JSTracer *trc, JSContext *cx, JSTraceCallback callback)
 {
-    InitTracer(trc, rt, callback);
+    InitTracer(trc, cx->runtime, cx, callback);
 }
 
 JS_PUBLIC_API(void)
@@ -2606,7 +2605,7 @@ struct JSHeapDumpNode {
 typedef struct JSDumpingTracer {
     JSTracer            base;
     JSDHashTable        visited;
-    bool                ok;
+    JSBool              ok;
     void                *startThing;
     void                *thingToFind;
     void                *thingToIgnore;
@@ -2620,6 +2619,7 @@ DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     void *thing = *thingp;
     JSDumpingTracer *dtrc;
+    JSContext *cx;
     JSDHashEntryStub *entry;
 
     JS_ASSERT(trc->callback == DumpNotify);
@@ -2627,6 +2627,8 @@ DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 
     if (!dtrc->ok || thing == dtrc->thingToIgnore)
         return;
+
+    cx = trc->context;
 
     /*
      * Check if we have already seen thing unless it is thingToFind to include
@@ -2648,7 +2650,8 @@ DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         entry = (JSDHashEntryStub *)
             JS_DHashTableOperate(&dtrc->visited, thing, JS_DHASH_ADD);
         if (!entry) {
-            dtrc->ok = false;
+            JS_ReportOutOfMemory(cx);
+            dtrc->ok = JS_FALSE;
             return;
         }
         if (entry->key)
@@ -2661,7 +2664,7 @@ DumpNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     size_t bytes = offsetof(JSHeapDumpNode, edgeName) + edgeNameSize;
     JSHeapDumpNode *node = (JSHeapDumpNode *) OffTheBooks::malloc_(bytes);
     if (!node) {
-        dtrc->ok = false;
+        dtrc->ok = JS_FALSE;
         return;
     }
 
@@ -2682,6 +2685,7 @@ DumpNode(JSDumpingTracer *dtrc, FILE* fp, JSHeapDumpNode *node)
 {
     JSHeapDumpNode *prev, *following;
     size_t chainLimit;
+    JSBool ok;
     enum { MAX_PARENTS_TO_PRINT = 10 };
 
     JS_PrintTraceThingInfo(dtrc->buffer, sizeof dtrc->buffer,
@@ -2714,21 +2718,21 @@ DumpNode(JSDumpingTracer *dtrc, FILE* fp, JSHeapDumpNode *node)
 
     node = prev;
     prev = following;
-    bool ok = true;
+    ok = JS_TRUE;
     do {
         /* Loop must continue even when !ok to restore the parent chain. */
         if (ok) {
             if (!prev) {
                 /* Print edge from some runtime root or startThing. */
                 if (fputs(node->edgeName, fp) < 0)
-                    ok = false;
+                    ok = JS_FALSE;
             } else {
                 JS_PrintTraceThingInfo(dtrc->buffer, sizeof dtrc->buffer,
                                        &dtrc->base, prev->thing, prev->kind,
                                        JS_FALSE);
                 if (fprintf(fp, "(%p %s).%s",
                            prev->thing, dtrc->buffer, node->edgeName) < 0) {
-                    ok = false;
+                    ok = JS_FALSE;
                 }
             }
         }
@@ -2742,7 +2746,7 @@ DumpNode(JSDumpingTracer *dtrc, FILE* fp, JSHeapDumpNode *node)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
+JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, JSGCTraceKind startKind,
             void *thingToFind, size_t maxDepth, void *thingToIgnore)
 {
     JSDumpingTracer dtrc;
@@ -2753,11 +2757,12 @@ JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind startKind,
     if (maxDepth == 0)
         return JS_TRUE;
 
-    JS_TracerInit(&dtrc.base, rt, DumpNotify);
+    JS_TracerInit(&dtrc.base, cx, DumpNotify);
     if (!JS_DHashTableInit(&dtrc.visited, JS_DHashGetStubOps(),
                            NULL, sizeof(JSDHashEntryStub),
                            JS_DHASH_DEFAULT_CAPACITY(100))) {
-        return false;
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
     }
     dtrc.ok = JS_TRUE;
     dtrc.startThing = startThing;
@@ -2858,18 +2863,23 @@ JS_MaybeGC(JSContext *cx)
     MaybeGC(cx);
 }
 
-JS_PUBLIC_API(void)
-JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb)
+JS_PUBLIC_API(JSGCCallback)
+JS_SetGCCallback(JSContext *cx, JSGCCallback cb)
 {
-    AssertNoGC(rt);
-    rt->gcCallback = cb;
+    AssertNoGC(cx);
+    CHECK_REQUEST(cx);
+    return JS_SetGCCallbackRT(cx->runtime, cb);
 }
 
-JS_PUBLIC_API(void)
-JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb)
+JS_PUBLIC_API(JSGCCallback)
+JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb)
 {
+    JSGCCallback oldcb;
+
     AssertNoGC(rt);
-    rt->gcFinalizeCallback = cb;
+    oldcb = rt->gcCallback;
+    rt->gcCallback = cb;
+    return oldcb;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3340,12 +3350,6 @@ JS_PUBLIC_API(JSBool)
 JS_IsNative(JSObject *obj)
 {
     return obj->isNative();
-}
-
-JS_PUBLIC_API(JSRuntime *)
-JS_GetObjectRuntime(JSObject *obj)
-{
-    return obj->compartment()->rt;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4447,16 +4451,16 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
 }
 
 #ifdef JS_THREADSAFE
-JS_PUBLIC_API(int)
+JS_PUBLIC_API(jsrefcount)
 JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals)
 {
     return JS_ATOMIC_INCREMENT(&principals->refcount);
 }
 
-JS_PUBLIC_API(int)
+JS_PUBLIC_API(jsrefcount)
 JS_DropPrincipals(JSContext *cx, JSPrincipals *principals)
 {
-    int rc = JS_ATOMIC_DECREMENT(&principals->refcount);
+    jsrefcount rc = JS_ATOMIC_DECREMENT(&principals->refcount);
     if (rc == 0)
         principals->destroy(cx, principals);
     return rc;

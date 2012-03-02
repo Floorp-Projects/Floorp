@@ -15,8 +15,6 @@
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
-  "use strict";
-
   const Cc = Components.classes;
   const Ci = Components.interfaces;
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].

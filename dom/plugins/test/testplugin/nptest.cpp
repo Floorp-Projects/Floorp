@@ -540,39 +540,6 @@ DuplicateNPVariant(NPVariant& aDest, const NPVariant& aSrc)
   }
 }
 
-void
-drawAsyncBitmapColor(InstanceData* instanceData)
-{
-  NPP npp = instanceData->npp;
-
-  PRUint32 *pixelData = (PRUint32*)instanceData->backBuffer->bitmap.data;
-
-  PRUint32 rgba = instanceData->scriptableObject->drawColor;
-
-  unsigned char subpixels[4];
-  subpixels[0] = rgba & 0xFF;
-  subpixels[1] = (rgba & 0xFF00) >> 8;
-  subpixels[2] = (rgba & 0xFF0000) >> 16;
-  subpixels[3] = (rgba & 0xFF000000) >> 24;
-
-  subpixels[0] = PRUint8(float(subpixels[3] * subpixels[0]) / 0xFF);
-  subpixels[1] = PRUint8(float(subpixels[3] * subpixels[1]) / 0xFF);
-  subpixels[2] = PRUint8(float(subpixels[3] * subpixels[2]) / 0xFF);
-  PRUint32 premultiplied;
-  memcpy(&premultiplied, subpixels, sizeof(premultiplied));
-
-  for (PRUint32* lastPixel = pixelData + instanceData->backBuffer->size.width * instanceData->backBuffer->size.height;
-	pixelData < lastPixel;
-	++pixelData) {
-    *pixelData = premultiplied;
-  }
-
-  NPN_SetCurrentAsyncSurface(npp, instanceData->backBuffer, NULL);
-  NPAsyncSurface *oldFront = instanceData->frontBuffer;
-  instanceData->frontBuffer = instanceData->backBuffer;
-  instanceData->backBuffer = oldFront;
-}
-
 //
 // function signatures
 //
@@ -779,9 +746,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->eventModel = 0;
   instanceData->closeStream = false;
   instanceData->wantsAllStreams = false;
-  instanceData->asyncDrawing = AD_NONE;
-  instanceData->frontBuffer = NULL;
-  instanceData->backBuffer = NULL;
   instance->pdata = instanceData;
 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
@@ -816,13 +780,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     else if (strcmp(argn[i], "wmode") == 0) {
       if (strcmp(argv[i], "window") == 0) {
         requestWindow = true;
-      }
-    }
-    else if (strcmp(argn[i], "asyncmodel") == 0) {
-      if (strcmp(argv[i], "bitmap") == 0) {
-        if (pluginSupportsAsyncBitmapDrawing()) {
-          instanceData->asyncDrawing = AD_BITMAP;
-        }
       }
     }
     if (strcmp(argn[i], "streammode") == 0) {
@@ -927,16 +884,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     NPN_SetValue(instance, NPPVpluginTransparentBool, (void*)true);
   }
 
-  if (instanceData->asyncDrawing == AD_BITMAP) {
-    NPBool supportsAsyncBitmap = false;
-    if ((NPN_GetValue(instance, NPNVsupportsAsyncBitmapSurfaceBool, &supportsAsyncBitmap) == NPERR_NO_ERROR) &&
-        supportsAsyncBitmap) {
-      NPN_SetValue(instance, NPPVpluginDrawingModel, (void*)NPDrawingModelAsyncBitmapSurface);
-    } else {
-      instanceData->asyncDrawing = AD_NONE;
-    }
-  }
-
   instanceData->lastReportedPrivateModeState = false;
   instanceData->lastMouseX = instanceData->lastMouseY = -1;
   instanceData->widthAtLastPaint = -1;
@@ -1022,16 +969,6 @@ NPP_Destroy(NPP instance, NPSavedData** save)
     currentrange = nextrange;
   }
 
-  if (instanceData->frontBuffer) {
-    NPN_SetCurrentAsyncSurface(instance, NULL, NULL);
-    NPN_FinalizeAsyncSurface(instance, instanceData->frontBuffer);
-    NPN_MemFree(instanceData->frontBuffer);
-  }
-  if (instanceData->backBuffer) {
-    NPN_FinalizeAsyncSurface(instance, instanceData->backBuffer);
-    NPN_MemFree(instanceData->backBuffer);
-  }
-
   pluginInstanceShutdown(instanceData);
   NPN_ReleaseObject(instanceData->scriptableObject);
 
@@ -1062,35 +999,6 @@ NPP_SetWindow(NPP instance, NPWindow* window)
   pluginDoSetWindow(instanceData, window);
   if (instanceData->hasWidget && oldWindow != instanceData->window.window) {
     pluginWidgetInit(instanceData, oldWindow);
-  }
-
-  if (instanceData->asyncDrawing == AD_BITMAP) {
-    if (instanceData->frontBuffer &&
-        instanceData->frontBuffer->size.width == window->width &&
-        instanceData->frontBuffer->size.height == window->height) {
-          return NPERR_NO_ERROR;
-    }
-    if (instanceData->frontBuffer) {
-      NPN_FinalizeAsyncSurface(instance, instanceData->frontBuffer);
-      NPN_MemFree(instanceData->frontBuffer);
-    }
-    if (instanceData->backBuffer) {
-      NPN_FinalizeAsyncSurface(instance, instanceData->backBuffer);
-      NPN_MemFree(instanceData->backBuffer);
-    }
-    instanceData->frontBuffer = (NPAsyncSurface*)NPN_MemAlloc(sizeof(NPAsyncSurface));
-    instanceData->backBuffer = (NPAsyncSurface*)NPN_MemAlloc(sizeof(NPAsyncSurface));
-
-    NPSize size;
-    size.width = window->width;
-    size.height = window->height;
-
-    memcpy(instanceData->backBuffer, instanceData->frontBuffer, sizeof(NPAsyncSurface));
-
-    NPN_InitAsyncSurface(instance, &size, NPImageFormatBGRA32, NULL, instanceData->frontBuffer);
-    NPN_InitAsyncSurface(instance, &size, NPImageFormatBGRA32, NULL, instanceData->backBuffer);
-
-    drawAsyncBitmapColor(instanceData);
   }
   return NPERR_NO_ERROR;
 }
@@ -1841,25 +1749,6 @@ void
 NPN_URLRedirectResponse(NPP instance, void* notifyData, NPBool allow)
 {
   return sBrowserFuncs->urlredirectresponse(instance, notifyData, allow);
-}
-
-NPError
-NPN_InitAsyncSurface(NPP instance, NPSize *size, NPImageFormat format,
-                     void *initData, NPAsyncSurface *surface)
-{
-  return sBrowserFuncs->initasyncsurface(instance, size, format, initData, surface);
-}
-
-NPError
-NPN_FinalizeAsyncSurface(NPP instance, NPAsyncSurface *surface)
-{
-  return sBrowserFuncs->finalizeasyncsurface(instance, surface);
-}
-
-void
-NPN_SetCurrentAsyncSurface(NPP instance, NPAsyncSurface *surface, NPRect *changed)
-{
-  sBrowserFuncs->setcurrentasyncsurface(instance, surface, changed);
 }
 
 //
@@ -2732,11 +2621,7 @@ setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* r
   r.top = 0;
   r.right = id->window.width;
   r.bottom = id->window.height;
-  if (id->asyncDrawing == AD_NONE) {
-    NPN_InvalidateRect(npp, &r);
-  } else if (id->asyncDrawing == AD_BITMAP) {
-    drawAsyncBitmapColor(id);
-  }
+  NPN_InvalidateRect(npp, &r);
 
   VOID_TO_NPVARIANT(*result);
   return true;

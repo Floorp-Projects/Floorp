@@ -76,10 +76,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
-
-  virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const;
-  // DocSizeOfIncludingThis is inherited from nsIDocument.
-
 protected:
   // mChannelIsPending indicates whether we're currently asynchronously loading
   // data from mChannel (via document.load() or normal load).  It's set to true

@@ -53,6 +53,7 @@
 #include "nsIDocument.h"
 #include "nsFontMetrics.h"
 #include "nsIDocumentObserver.h"
+#include "nsIDocument.h"
 #include "nsBoxLayoutState.h"
 #include "nsINodeInfo.h"
 #include "nsScrollbarFrame.h"

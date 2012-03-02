@@ -82,20 +82,3 @@ interface nsIAutoCompleteObserver : nsISupports
    */
   void onUpdateSearchResult(in nsIAutoCompleteSearch search, in nsIAutoCompleteResult result);
 };
-
-[scriptable, uuid(02314d6e-b730-40cc-a215-221554d77064)]
-interface nsIAutoCompleteSearchDescriptor : nsISupports
-{
-  // The search is started after the timeout specified by the corresponding
-  // nsIAutoCompleteInput implementation.
-  const unsigned short SEARCH_TYPE_DELAYED = 0;
-  // The search is started synchronously, before any delayed searches.
-  const unsigned short SEARCH_TYPE_IMMEDIATE = 1;
-
-  /**
-   * Identifies the search behavior.
-   * Should be one of the SEARCH_TYPE_* constants above.
-   * Defaults to SEARCH_TYPE_DELAYED.
-   */
-  readonly attribute unsigned short searchType;
-};

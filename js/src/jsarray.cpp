@@ -1876,13 +1876,13 @@ array_join(JSContext *cx, unsigned argc, Value *vp)
 
     CallArgs args = CallArgsFromVp(argc, vp);
     JSString *str;
-    if (args.hasDefined(0)) {
+    if (args.length() == 0 || args[0].isUndefined()) {
+        str = NULL;
+    } else {
         str = ToString(cx, args[0]);
         if (!str)
             return JS_FALSE;
         args[0].setString(str);
-    } else {
-        str = NULL;
     }
     JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
@@ -2188,7 +2188,7 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     Value fval;
-    if (args.hasDefined(0)) {
+    if (args.length() > 0 && !args[0].isUndefined()) {
         if (args[0].isPrimitive()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_SORT_ARG);
             return false;
@@ -3026,7 +3026,7 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
         }
         begin = (jsuint)d;
 
-        if (args.hasDefined(1)) {
+        if (args.length() > 1 && !args[1].isUndefined()) {
             if (!ToInteger(cx, args[1], &d))
                 return false;
             if (d < 0) {

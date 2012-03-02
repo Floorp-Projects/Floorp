@@ -64,9 +64,9 @@ public:
   // nsIJSEventListener
   virtual void SetHandler(JSObject *aHandler);
 
-  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+  virtual PRInt64 SizeOf() const
   {
-    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+    return sizeof(*this);
   }
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsJSEventListener)

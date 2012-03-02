@@ -220,6 +220,7 @@ NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+#include "nsIDocument.h"
 #include "nsIScrollable.h"
 #include "nsINodeInfo.h"
 #include "prenv.h"
@@ -7605,9 +7606,8 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
                            nsIFrame* aFrame,
                            nsChangeHint aChange)
 {
-  NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) ||
-               aFrame->GetStyleDisplay()->HasTransform(),
-               "Only transform style should give a UpdateTransformLayer hint");
+  NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) || aFrame->IsTransformed(),
+               "Only transformed frames should have UpdateTransformLayer hint");
 
   nsIPresShell *shell = aPresContext->PresShell();
   if (shell->IsPaintingSuppressed()) {

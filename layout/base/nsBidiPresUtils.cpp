@@ -52,6 +52,7 @@
 #include "nsContainerFrame.h"
 #include "nsInlineFrame.h"
 #include "nsPlaceholderFrame.h"
+#include "nsContainerFrame.h"
 #include "nsFirstLetterFrame.h"
 #include "nsUnicodeProperties.h"
 #include "nsTextFrame.h"

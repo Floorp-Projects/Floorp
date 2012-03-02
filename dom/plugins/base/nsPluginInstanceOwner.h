@@ -128,11 +128,6 @@ public:
   NPBool     ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                           double *destX, double *destY, NPCoordinateSpace destSpace);
   
-  virtual NPError InitAsyncSurface(NPSize *size, NPImageFormat format,
-                                   void *initData, NPAsyncSurface *surface);
-  virtual NPError FinalizeAsyncSurface(NPAsyncSurface *surface);
-  virtual void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed);
-
   //nsIPluginTagInfo interface
   NS_DECL_NSIPLUGINTAGINFO
   

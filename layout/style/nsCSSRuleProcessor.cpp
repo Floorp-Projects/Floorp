@@ -60,6 +60,7 @@
 #include "pldhash.h"
 #include "nsHashtable.h"
 #include "nsICSSPseudoComparator.h"
+#include "nsCSSRuleProcessor.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/GroupRule.h"
 #include "nsIDocument.h"

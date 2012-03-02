@@ -422,8 +422,8 @@ public:
   /**
    * Returns true if aChar is of class Ps, Pi, Po, Pf, or Pe.
    */
-  static bool IsFirstLetterPunctuation(PRUint32 aChar);
-  static bool IsFirstLetterPunctuationAt(const nsTextFragment* aFrag, PRUint32 aOffset);
+  static bool IsPunctuationMark(PRUint32 aChar);
+  static bool IsPunctuationMarkAt(const nsTextFragment* aFrag, PRUint32 aOffset);
  
   /**
    * Returns true if aChar is of class Lu, Ll, Lt, Lm, Lo, Nd, Nl or No

@@ -217,19 +217,6 @@
   padding: 2px 5px;
 }
 
-.ruleview-warning {
-  background: url("chrome://browser/skin/devtools/alerticon-warning.png");
-  display: inline-block;
-  -moz-margin-start: 5px;
-  vertical-align: middle;
-  width: 13px;
-  height: 12px;
-}
-
-.ruleview-warning[hidden] {
-  display: none;
-}
-
 .ruleview-ruleopen {
   -moz-padding-end: 5px;
 }

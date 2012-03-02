@@ -997,11 +997,12 @@ nsGenericDOMDataNode::GetClassAttributeName() const
   return nsnull;
 }
 
-size_t
-nsGenericDOMDataNode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+PRInt64
+nsGenericDOMDataNode::SizeOf() const
 {
-  size_t n = nsIContent::SizeOfExcludingThis(aMallocSizeOf);
-  n += mText.SizeOfExcludingThis(aMallocSizeOf);
-  return n;
+  PRInt64 size = dom::MemoryReporter::GetBasicSize<nsGenericDOMDataNode,
+                                                   nsIContent>(this);
+  size += mText.SizeOf() - sizeof(mText);
+  return size;
 }
 
