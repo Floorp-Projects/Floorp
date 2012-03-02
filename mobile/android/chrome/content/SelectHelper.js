@@ -14,7 +14,7 @@ var SelectHelper = {
 
     let target = aTarget;
     while (target) {
-      if (this._isSelectElement(target) && !target.disabled) {
+      if (this._isMenu(target) && !target.disabled) {
         this._uiBusy = true;
         target.focus();
         let list = this.getListForElement(target);
@@ -35,22 +35,27 @@ var SelectHelper = {
     if (selected == -1)
         return;
 
-    if (!(selected instanceof Array)) {
-      let temp = [];
-      for (let i = 0; i < aList.listitems.length; i++) {
-        temp[i] = (i == selected);
+    if (aElement instanceof Ci.nsIDOMXULMenuListElement) {
+      aElement.selectedIndex = selected;
+    } else if (aElement instanceof HTMLSelectElement) {
+      if (!(selected instanceof Array)) {
+        let temp = [];
+        for (let i = 0; i < aList.listitems.length; i++) {
+          temp[i] = (i == selected);
+        }
+        selected = temp;
       }
-      selected = temp;
+      let i = 0;
+      this.forOptions(aElement, function(aNode) {
+        aNode.selected = selected[i++];
+      });
     }
-    let i = 0;
-    this.forOptions(aElement, function(aNode) {
-      aNode.selected = selected[i++];
-    });
     this.fireOnChange(aElement);
   },
 
-  _isSelectElement: function(aElement) {
-    return (aElement instanceof HTMLSelectElement);
+  _isMenu: function(aElement) {
+    return (aElement instanceof HTMLSelectElement ||
+            aElement instanceof Ci.nsIDOMXULMenuListElement);
   },
 
   getListForElement: function(aElement) {
@@ -87,14 +92,20 @@ var SelectHelper = {
   },
 
   forOptions: function(aElement, aFunction) {
-    let children = aElement.children;
+    let parent = aElement;
+    if (aElement instanceof Ci.nsIDOMXULMenuListElement)
+      parent = aElement.menupopup;
+    let children = parent.children;
     let numChildren = children.length;
+
     // if there are no children in this select, we add a dummy row so that at least something appears
     if (numChildren == 0)
       aFunction.call(this, { label: "" }, { isGroup: false, inGroup: false });
+
     for (let i = 0; i < numChildren; i++) {
       let child = children[i];
-      if (child instanceof HTMLOptionElement) {
+      if (child instanceof HTMLOptionElement ||
+          child instanceof Ci.nsIDOMXULSelectControlItemElement) {
         // This is a regular choice under no group.
         aFunction.call(this, child, {
           isGroup: false, inGroup: false
