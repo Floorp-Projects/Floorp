@@ -51,6 +51,7 @@ import org.mozilla.gecko.gfx.PlaceholderLayerClient;
 import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.SurfaceTextureLayer;
 import org.mozilla.gecko.gfx.ViewportMetrics;
+import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.Tab.HistoryEntry;
 
 import java.io.*;
@@ -1375,12 +1376,12 @@ abstract public class GeckoApp
                 if (tab == null)
                     return;
 
-                ViewportMetrics targetViewport = mLayerController.getViewportMetrics();
-                ViewportMetrics pluginViewport;
+                ImmutableViewportMetrics targetViewport = mLayerController.getViewportMetrics();
+                ImmutableViewportMetrics pluginViewport;
                 
                 try {
                     JSONObject viewportObject = new JSONObject(metadata);
-                    pluginViewport = new ViewportMetrics(viewportObject);
+                    pluginViewport = new ImmutableViewportMetrics(new ViewportMetrics(viewportObject));
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "Bad viewport metadata: ", e);
                     return;
@@ -1570,7 +1571,7 @@ abstract public class GeckoApp
     }
 
     public void repositionPluginViews(Tab tab, boolean setVisible) {
-        ViewportMetrics targetViewport = mLayerController.getViewportMetrics();
+        ImmutableViewportMetrics targetViewport = mLayerController.getViewportMetrics();
 
         if (targetViewport == null)
             return;
@@ -2729,20 +2730,20 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     private int mOriginalY;
     private int mOriginalWidth;
     private int mOriginalHeight;
-    private ViewportMetrics mOriginalViewport;
+    private ImmutableViewportMetrics mOriginalViewport;
     private float mLastResolution;
 
-    public PluginLayoutParams(int aX, int aY, int aWidth, int aHeight, ViewportMetrics aViewport) {
+    public PluginLayoutParams(int aX, int aY, int aWidth, int aHeight, ImmutableViewportMetrics aViewport) {
         super(aWidth, aHeight, aX, aY);
 
-        Log.i(LOGTAG, "Creating plugin at " + aX + ", " + aY + ", " + aWidth + "x" + aHeight + ", (" + (aViewport.getZoomFactor() * 100) + "%)");
+        Log.i(LOGTAG, "Creating plugin at " + aX + ", " + aY + ", " + aWidth + "x" + aHeight + ", (" + (aViewport.zoomFactor * 100) + "%)");
 
         mOriginalX = aX;
         mOriginalY = aY;
         mOriginalWidth = aWidth;
         mOriginalHeight = aHeight;
         mOriginalViewport = aViewport;
-        mLastResolution = aViewport.getZoomFactor();
+        mLastResolution = aViewport.zoomFactor;
 
         clampToMaxSize();
     }
@@ -2759,7 +2760,7 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
         }
     }
 
-    public void reset(int aX, int aY, int aWidth, int aHeight, ViewportMetrics aViewport) {
+    public void reset(int aX, int aY, int aWidth, int aHeight, ImmutableViewportMetrics aViewport) {
         PointF origin = aViewport.getOrigin();
 
         x = mOriginalX = aX + (int)origin.x;
@@ -2767,7 +2768,7 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
         width = mOriginalWidth = aWidth;
         height = mOriginalHeight = aHeight;
         mOriginalViewport = aViewport;
-        mLastResolution = aViewport.getZoomFactor();
+        mLastResolution = aViewport.zoomFactor;
 
         clampToMaxSize();
     }
@@ -2785,14 +2786,14 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
         }
     }
 
-    public void reposition(ViewportMetrics viewport) {
+    public void reposition(ImmutableViewportMetrics viewport) {
         PointF targetOrigin = viewport.getOrigin();
         PointF originalOrigin = mOriginalViewport.getOrigin();
 
         Point offset = new Point(Math.round(originalOrigin.x - targetOrigin.x),
                                  Math.round(originalOrigin.y - targetOrigin.y));
 
-        reposition(offset, viewport.getZoomFactor());
+        reposition(offset, viewport.zoomFactor);
     }
 
     public float getLastResolution() {
