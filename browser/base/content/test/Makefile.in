@@ -93,7 +93,6 @@ endif
 # browser_drag.js is disabled, as it needs to be updated for the new behavior from bug 320638.
 
 # browser_bug321000.js is disabled because newline handling is shaky (bug 592528)
-# browser_urlbarAutoFillTrimURLs.js is disabled till bug 720792 is fixed
 
 _BROWSER_FILES = \
                  head.js \
@@ -223,6 +222,7 @@ _BROWSER_FILES = \
                  browser_tabfocus.js \
                  browser_tabs_isActive.js \
                  browser_tabs_owner.js \
+                 browser_urlbarAutoFillTrimURLs.js \
                  browser_urlbarCopying.js \
                  browser_urlbarEnter.js \
                  browser_urlbarRevert.js \

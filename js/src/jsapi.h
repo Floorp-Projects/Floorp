@@ -1427,17 +1427,20 @@ typedef JSBool
 (* JSContextCallback)(JSContext *cx, unsigned contextOp);
 
 typedef enum JSGCStatus {
-    /* These callbacks happen outside the GC lock. */
     JSGC_BEGIN,
-    JSGC_END,
-
-    /* These callbacks happen within the GC lock. */
-    JSGC_MARK_END,
-    JSGC_FINALIZE_END
+    JSGC_END
 } JSGCStatus;
 
-typedef JSBool
-(* JSGCCallback)(JSContext *cx, JSGCStatus status);
+typedef void
+(* JSGCCallback)(JSRuntime *rt, JSGCStatus status);
+
+typedef enum JSFinalizeStatus {
+    JSFINALIZE_START,
+    JSFINALIZE_END
+} JSFinalizeStatus;
+
+typedef void
+(* JSFinalizeCallback)(JSContext *cx, JSFinalizeStatus status);
 
 /*
  * Generic trace operation that calls JS_CallTracer on each traceable thing
@@ -2349,11 +2352,11 @@ JS_EndRequest(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_YieldRequest(JSContext *cx);
 
-extern JS_PUBLIC_API(jsrefcount)
+extern JS_PUBLIC_API(unsigned)
 JS_SuspendRequest(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth);
+JS_ResumeRequest(JSContext *cx, unsigned saveDepth);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsInRequest(JSRuntime *rt);
@@ -2394,7 +2397,7 @@ class JSAutoRequest {
 
   protected:
     JSContext *mContext;
-    jsrefcount mSaveDepth;
+    unsigned  mSaveDepth;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 #if 0
@@ -2426,7 +2429,7 @@ class JSAutoSuspendRequest {
 
   protected:
     JSContext *mContext;
-    jsrefcount mSaveDepth;
+    unsigned mSaveDepth;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
 #if 0
@@ -3120,7 +3123,6 @@ typedef void
 
 struct JSTracer {
     JSRuntime           *runtime;
-    JSContext           *context;
     JSTraceCallback     callback;
     JSTraceNamePrinter  debugPrinter;
     const void          *debugPrintArg;
@@ -3219,7 +3221,7 @@ JS_CallTracer(JSTracer *trc, void *thing, JSGCTraceKind kind);
  * API for JSTraceCallback implementations.
  */
 extern JS_PUBLIC_API(void)
-JS_TracerInit(JSTracer *trc, JSContext *cx, JSTraceCallback callback);
+JS_TracerInit(JSTracer *trc, JSRuntime *rt, JSTraceCallback callback);
 
 extern JS_PUBLIC_API(void)
 JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind);
@@ -3252,7 +3254,7 @@ JS_GetTraceEdgeName(JSTracer *trc, char *buffer, int bufferSize);
  * thingToIgnore:   thing to ignore during the graph traversal when non-null.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_DumpHeap(JSContext *cx, FILE *fp, void* startThing, JSGCTraceKind kind,
+JS_DumpHeap(JSRuntime *rt, FILE *fp, void* startThing, JSGCTraceKind kind,
             void *thingToFind, size_t maxDepth, void *thingToIgnore);
 
 #endif
@@ -3269,11 +3271,11 @@ JS_CompartmentGC(JSContext *cx, JSCompartment *comp);
 extern JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx);
 
-extern JS_PUBLIC_API(JSGCCallback)
-JS_SetGCCallback(JSContext *cx, JSGCCallback cb);
+extern JS_PUBLIC_API(void)
+JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb);
 
-extern JS_PUBLIC_API(JSGCCallback)
-JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
+extern JS_PUBLIC_API(void)
+JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsGCMarkingTracer(JSTracer *trc);
@@ -3709,6 +3711,9 @@ JS_IsExtensible(JSObject *obj);
 extern JS_PUBLIC_API(JSBool)
 JS_IsNative(JSObject *obj);
 
+extern JS_PUBLIC_API(JSRuntime *)
+JS_GetObjectRuntime(JSObject *obj);
+
 /*
  * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default
  * proto if proto's actual parameter value is null.
@@ -4081,7 +4086,7 @@ struct JSPrincipals {
     char *codebase;
 
     /* Don't call "destroy"; use reference counting macros below. */
-    jsrefcount refcount;
+    int refcount;
 
     void   (* destroy)(JSContext *cx, JSPrincipals *);
     JSBool (* subsume)(JSPrincipals *, JSPrincipals *);
@@ -4091,10 +4096,10 @@ struct JSPrincipals {
 #define JSPRINCIPALS_HOLD(cx, principals)   JS_HoldPrincipals(cx,principals)
 #define JSPRINCIPALS_DROP(cx, principals)   JS_DropPrincipals(cx,principals)
 
-extern JS_PUBLIC_API(jsrefcount)
+extern JS_PUBLIC_API(int)
 JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals);
 
-extern JS_PUBLIC_API(jsrefcount)
+extern JS_PUBLIC_API(int)
 JS_DropPrincipals(JSContext *cx, JSPrincipals *principals);
 
 #else

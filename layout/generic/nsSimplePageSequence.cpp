@@ -57,7 +57,6 @@
 #define OFFSET_NOT_SET -1
 
 // Print Options
-#include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
