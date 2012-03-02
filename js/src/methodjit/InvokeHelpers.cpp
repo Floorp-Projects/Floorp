@@ -566,17 +566,23 @@ js_InternalThrow(VMFrame &f)
         if (pc)
             break;
 
-        // The JIT guarantees that ScriptEpilogue() has always been run
-        // upon exiting to its caller. This is important for consistency,
-        // where execution modes make similar guarantees about prologues
-        // and epilogues. RunTracer(), Interpret(), and Invoke() all
-        // rely on this property.
+        // The JIT guarantees that ScriptDebugEpilogue() and ScriptEpilogue()
+        // have always been run upon exiting to its caller. This is important
+        // for consistency, where execution modes make similar guarantees about
+        // prologues and epilogues. Interpret(), and Invoke() all rely on this
+        // property.
         JS_ASSERT(!f.fp()->finishedInInterpreter());
         UnwindScope(cx, 0);
         f.regs.sp = f.fp()->base();
 
-        if (cx->compartment->debugMode())
-            js::ScriptDebugEpilogue(cx, f.fp(), false);
+        if (cx->compartment->debugMode()) {
+            // This can turn a throw or error into a healthy return. Note that
+            // we will run ScriptDebugEpilogue again (from AnyFrameEpilogue);
+            // ScriptDebugEpilogue is prepared for this eventuality.
+            if (js::ScriptDebugEpilogue(cx, f.fp(), false))
+                return cx->jaegerCompartment()->forceReturnFromExternC();
+        }
+                
 
         ScriptEpilogue(f.cx, f.fp(), false);
 
