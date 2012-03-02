@@ -353,7 +353,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         // Create the shaders and textures if necessary.
         if (!mLayerRendererInitialized) {
             mLayerRenderer.checkMonitoringEnabled();
-            mLayerRenderer.createProgram();
+            mLayerRenderer.createDefaultProgram();
             mLayerRendererInitialized = true;
         }
 
@@ -365,12 +365,12 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public void activateProgram() {
-        mLayerRenderer.activateProgram();
+        mLayerRenderer.activateDefaultProgram();
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public void deactivateProgram() {
-        mLayerRenderer.deactivateProgram();
+        mLayerRenderer.deactivateDefaultProgram();
     }
 
     /** Implementation of FlexibleGLSurfaceView.Listener */
