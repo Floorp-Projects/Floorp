@@ -42,8 +42,9 @@ var SelectHelper = {
       }
       selected = temp;
     }
-    this.forOptions(aElement, function(aNode, aIndex) {
-      aNode.selected = selected[aIndex];
+    let i = 0;
+    this.forOptions(aElement, function(aNode) {
+      aNode.selected = selected[i++];
     });
     this.fireOnChange(aElement);
   },
@@ -66,46 +67,50 @@ var SelectHelper = {
       ];
     }
 
-    this.forOptions(aElement, function(aNode, aIndex, aIsGroup, aInGroup) {
+    let index = 0;
+    this.forOptions(aElement, function(aNode, aOptions) {
       let item = {
         label: aNode.text || aNode.label,
-        isGroup: aIsGroup,
-        inGroup: aInGroup,
+        isGroup: aOptions.isGroup,
+        inGroup: aOptions.inGroup,
         disabled: aNode.disabled,
-        id: aIndex
+        id: index
       }
-      if (aInGroup)
+      if (aOptions.inGroup)
         item.disabled = item.disabled || aNode.parentNode.disabled;
 
-      result.listitems[aIndex] = item;
-      result.selected[aIndex] = aNode.selected;
+      result.listitems[index] = item;
+      result.selected[index] = aNode.selected;
+      index++;
     });
     return result;
   },
 
   forOptions: function(aElement, aFunction) {
-    let optionIndex = 0;
     let children = aElement.children;
     let numChildren = children.length;
     // if there are no children in this select, we add a dummy row so that at least something appears
     if (numChildren == 0)
-      aFunction.call(this, {label:""}, optionIndex);
+      aFunction.call(this, { label: "" }, { isGroup: false, inGroup: false });
     for (let i = 0; i < numChildren; i++) {
       let child = children[i];
       if (child instanceof HTMLOptionElement) {
         // This is a regular choice under no group.
-        aFunction.call(this, child, optionIndex, false, false);
-        optionIndex++;
+        aFunction.call(this, child, {
+          isGroup: false, inGroup: false
+        });
       } else if (child instanceof HTMLOptGroupElement) {
-        aFunction.call(this, child, optionIndex, true, false);
-        optionIndex++;
+        aFunction.call(this, child, {
+          isGroup: true, inGroup: false
+        });
 
         let subchildren = child.children;
         let numSubchildren = subchildren.length;
         for (let j = 0; j < numSubchildren; j++) {
           let subchild = subchildren[j];
-          aFunction.call(this, subchild, optionIndex, false, true);
-          optionIndex++;
+          aFunction.call(this, subchild, {
+            isGroup: false, inGroup: true
+          });
         }
       }
     }
