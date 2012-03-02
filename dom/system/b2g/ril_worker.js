@@ -2295,33 +2295,80 @@ let GsmPDUHelper = {
    *
    * @param length
    *        Number of septets to read (*not* octets)
+   * @param paddingBits
+   *        Number of padding bits in the first byte of user data.
+   * @param langIndex
+   *        Table index used for normal 7-bit encoded character lookup.
+   * @param langShiftIndex
+   *        Table index used for escaped 7-bit encoded character lookup.
    *
    * @return a string.
-   *
-   * TODO: support other alphabets
-   * TODO: support escape chars
    */
-  readSeptetsToString: function readSeptetsToString(length) {
+  readSeptetsToString: function readSeptetsToString(length, paddingBits, langIndex, langShiftIndex) {
     let ret = "";
-    let byteLength = Math.ceil(length * 7 / 8);
+    let byteLength = Math.ceil((length * 7 + paddingBits) / 8);
 
-    let leftOver = 0;
-    for (let i = 0; i < byteLength; i++) {
-      let octet = this.readHexOctet();
-      let shift = (i % 7);
-      let leftOver_mask = (0xff << (7 - shift)) & 0xff;
-      let septet_mask = (0xff >> (shift + 1));
-
-      let septet = ((octet & septet_mask) << shift) | leftOver;
-      ret += PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT][septet];
-      leftOver = (octet & leftOver_mask) >> (7 - shift);
-
-      // Every 7th byte we have a whole septet left over that we can apply.
-      if (shift == 6) {
-        ret += PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT][leftOver];
-        leftOver = 0;
-      }
+    /**
+     * |<-                    last byte in header                    ->|
+     * |<-           incompleteBits          ->|<- last header septet->|
+     * +===7===|===6===|===5===|===4===|===3===|===2===|===1===|===0===|
+     *
+     * |<-                   1st byte in user data                   ->|
+     * |<-               data septet 1               ->|<-paddingBits->|
+     * +===7===|===6===|===5===|===4===|===3===|===2===|===1===|===0===|
+     *
+     * |<-                   2nd byte in user data                   ->|
+     * |<-                   data spetet 2                   ->|<-ds1->|
+     * +===7===|===6===|===5===|===4===|===3===|===2===|===1===|===0===|
+     */
+    let data = 0;
+    let dataBits = 0;
+    if (paddingBits) {
+      data = this.readHexOctet() >> paddingBits;
+      dataBits = 8 - paddingBits;
+      --byteLength;
     }
+
+    let escapeFound = false;
+    const langTable = PDU_NL_LOCKING_SHIFT_TABLES[langIndex];
+    const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[langShiftIndex];
+    do {
+      // Read as much as fits in 32bit word
+      let bytesToRead = Math.min(byteLength, dataBits ? 3 : 4);
+      for (let i = 0; i < bytesToRead; i++) {
+        data |= this.readHexOctet() << dataBits;
+        dataBits += 8;
+        --byteLength;
+      }
+
+      // Consume available full septets
+      for (; dataBits >= 7; dataBits -= 7) {
+        let septet = data & 0x7F;
+        data >>>= 7;
+
+        if (escapeFound) {
+          escapeFound = false;
+          if (septet == PDU_NL_EXTENDED_ESCAPE) {
+            // According to 3GPP TS 23.038, section 6.2.1.1, NOTE 1, "On
+            // receipt of this code, a receiving entity shall display a space
+            // until another extensiion table is defined."
+            ret += " ";
+          } else if (septet == PDU_NL_RESERVED_CONTROL) {
+            // According to 3GPP TS 23.038 B.2, "This code represents a control
+            // character and therefore must not be used for language specific
+            // characters."
+            ret += " ";
+          } else {
+            ret += langShiftTable[septet];
+          }
+        } else if (septet == PDU_NL_EXTENDED_ESCAPE) {
+          escapeFound = true;
+        } else {
+          ret += langTable[septet];
+        }
+      }
+    } while (byteLength);
+
     if (ret.length != length) {
       ret = ret.slice(0, length);
     }
@@ -2539,6 +2586,85 @@ let GsmPDUHelper = {
     }
   },
 
+  /**
+   * Read 1 + UDHL octets and construct user data header at return.
+   *
+   * @return A header object with properties contained in received message.
+   * The properties set include:
+   * <ul>
+   * <li>length: totoal length of the header, default 0.
+   * <li>langIndex: used locking shift table index, default
+   *     PDU_NL_IDENTIFIER_DEFAULT.
+   * <li>langShiftIndex: used locking shift table index, default
+   *     PDU_NL_IDENTIFIER_DEFAULT.
+   * </ul>
+   */
+  readUserDataHeader: function readUserDataHeader() {
+    let header = {
+      length: 0,
+      langIndex: PDU_NL_IDENTIFIER_DEFAULT,
+      langShiftIndex: PDU_NL_IDENTIFIER_DEFAULT
+    };
+
+    header.length = this.readHexOctet();
+    let dataAvailable = header.length;
+    while (dataAvailable >= 2) {
+      let id = this.readHexOctet();
+      let length = this.readHexOctet();
+      dataAvailable -= 2;
+
+      switch (id) {
+        case PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT:
+          let langShiftIndex = this.readHexOctet();
+          --dataAvailable;
+          if (langShiftIndex < PDU_NL_SINGLE_SHIFT_TABLES.length) {
+            header.langShiftIndex = langShiftIndex;
+          }
+          break;
+        case PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT:
+          let langIndex = this.readHexOctet();
+          --dataAvailable;
+          if (langIndex < PDU_NL_LOCKING_SHIFT_TABLES.length) {
+            header.langIndex = langIndex;
+          }
+          break;
+        default:
+          if (DEBUG) {
+            debug("readUserDataHeader: unsupported IEI(" + id
+                  + "), " + length + " bytes.");
+          }
+
+          // Read out unsupported data
+          if (length) {
+            let octets;
+            if (DEBUG) octets = new Uint8Array(length);
+
+            for (let i = 0; i < length; i++) {
+              let octet = this.readHexOctet();
+              if (DEBUG) octets[i] = octet;
+            }
+            dataAvailable -= length;
+
+            if (DEBUG) debug("readUserDataHeader: " + Array.slice(octets));
+          }
+          break;
+      }
+    }
+
+    if (dataAvailable != 0) {
+      throw new Error("Illegal user data header found!");
+    }
+
+    return header;
+  },
+
+  /**
+   * Write out user data header.
+   *
+   * @param options
+   *        Options containing information for user data header write-out. The
+   *        `userDataHeaderLength` property must be correctly pre-calculated.
+   */
   writeUserDataHeader: function writeUserDataHeader(options) {
     this.writeHexOctet(options.userDataHeaderLength);
 
@@ -2559,7 +2685,7 @@ let GsmPDUHelper = {
    * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
    * (UCS2) data.
    */
-  readUserData: function readUserData(length, codingScheme) {
+  readUserData: function readUserData(length, codingScheme, hasHeader) {
     if (DEBUG) {
       debug("Reading " + length + " bytes of user data.");
       debug("Coding scheme: " + codingScheme);
@@ -2596,6 +2722,22 @@ let GsmPDUHelper = {
         break;
     }
 
+    let header;
+    let paddingBits = 0;
+    if (hasHeader) {
+      header = this.readUserDataHeader();
+
+      if (encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
+        let headerBits = (header.length + 1) * 8;
+        let headerSeptets = Math.ceil(headerBits / 7);
+
+        length -= headerSeptets;
+        paddingBits = headerSeptets * 7 - headerBits;
+      } else {
+        length -= (header.length + 1);
+      }
+    }
+
     if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
     switch (encoding) {
       case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
@@ -2605,7 +2747,11 @@ let GsmPDUHelper = {
           if (DEBUG) debug("PDU error: user data is too long: " + length);
           return null;
         }
-        return this.readSeptetsToString(length);
+
+        return this.readSeptetsToString(length,
+                                        paddingBits,
+                                        hasHeader ? header.langIndex : PDU_NL_IDENTIFIER_DEFAULT,
+                                        hasHeader ? header.langShiftIndex : PDU_NL_IDENTIFIER_DEFAULT);
       case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
         // Unsupported.
         return null;
@@ -2645,6 +2791,10 @@ let GsmPDUHelper = {
 
     // First octet of this SMS-DELIVER or SMS-SUBMIT message
     let firstOctet = this.readHexOctet();
+
+    // User data header indicator
+    let hasUserDataHeader = firstOctet & PDU_UDHI;
+
     // if the sms is of SMS-SUBMIT type it would contain a TP-MR
     let isSmsSubmit = firstOctet & PDU_MTI_SMS_SUBMIT;
     if (isSmsSubmit) {
@@ -2722,7 +2872,9 @@ let GsmPDUHelper = {
 
     // - TP-User-Data -
     if (userDataLength > 0) {
-      msg.body = this.readUserData(userDataLength, dataCodingScheme);
+      msg.body = this.readUserData(userDataLength,
+                                   dataCodingScheme,
+                                   hasUserDataHeader);
     }
 
     return msg;
