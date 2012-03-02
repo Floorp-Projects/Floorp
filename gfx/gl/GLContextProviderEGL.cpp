@@ -2630,11 +2630,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& aSize,
     if (!glContext) {
         return nsnull;
     }
-    if (!glContext->GetSharedContext()) {
-        // no point in returning anything if sharing failed, we can't
-        // render from this
-        return nsnull;
-    }
+
     if (!gUseBackingSurface && !glContext->ResizeOffscreenFBO(glContext->OffscreenActualSize(), true)) {
         // we weren't able to create the initial
         // offscreen FBO, so this is dead
