@@ -2016,7 +2016,7 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32 args, const Register &scra
 }
 
 void
-MacroAssemblerARMCompat::pushABIArg(const MoveOperand &from)
+MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
 {
     MoveOperand to;
     uint32 increment = 1;
@@ -2051,15 +2051,15 @@ MacroAssemblerARMCompat::pushABIArg(const MoveOperand &from)
 }
 
 void
-MacroAssemblerARMCompat::pushABIArg(const Register &reg)
+MacroAssemblerARMCompat::passABIArg(const Register &reg)
 {
-    pushABIArg(MoveOperand(reg));
+    passABIArg(MoveOperand(reg));
 }
 
 void
-MacroAssemblerARMCompat::pushABIArg(const FloatRegister &freg)
+MacroAssemblerARMCompat::passABIArg(const FloatRegister &freg)
 {
-    pushABIArg(MoveOperand(freg));
+    passABIArg(MoveOperand(freg));
 }
 
 void MacroAssemblerARMCompat::checkStackAlignment()
@@ -2121,7 +2121,7 @@ MacroAssemblerARMCompat::handleException()
 
     // Ask for an exception handler.
     setupAlignedABICall(1);
-    pushABIArg(r0);
+    passABIArg(r0);
     callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::HandleException));
     // Load the error value, load the new stack pointer, and return.
     moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
