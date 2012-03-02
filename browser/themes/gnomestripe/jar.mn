@@ -13,7 +13,6 @@ browser.jar:
 * skin/classic/browser/browser.css                    (browser.css)
 * skin/classic/browser/engineManager.css              (engineManager.css)
   skin/classic/browser/fullscreen-video.css
-  skin/classic/browser/inspector.css
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
   skin/classic/browser/Go-arrow.png
@@ -88,12 +87,14 @@ browser.jar:
   skin/classic/browser/devtools/common.css            (devtools/common.css)
   skin/classic/browser/devtools/arrows.png            (devtools/arrows.png)
   skin/classic/browser/devtools/commandline.png       (devtools/commandline.png)
+  skin/classic/browser/devtools/alerticon-warning.png (devtools/alerticon-warning.png)
   skin/classic/browser/devtools/goto-mdn.png          (devtools/goto-mdn.png)
   skin/classic/browser/devtools/csshtmltree.css       (devtools/csshtmltree.css)
   skin/classic/browser/devtools/webconsole.css                  (devtools/webconsole.css)
   skin/classic/browser/devtools/webconsole_networkpanel.css     (devtools/webconsole_networkpanel.css)
   skin/classic/browser/devtools/webconsole.png                  (devtools/webconsole.png)
   skin/classic/browser/devtools/gcli.css              (devtools/gcli.css)
+  skin/classic/browser/devtools/htmlpanel.css         (devtools/htmlpanel.css)
   skin/classic/browser/devtools/orion.css             (devtools/orion.css)
   skin/classic/browser/devtools/orion-container.css   (devtools/orion-container.css)
   skin/classic/browser/devtools/orion-task.png        (devtools/orion-task.png)

@@ -150,35 +150,35 @@ DebuggerView.Stackframes = {
    *
    * @param number aDepth
    *        The frame depth specified by the debugger.
-   * @param string aFrameIdText
-   *        The id to be displayed in the list.
    * @param string aFrameNameText
    *        The name to be displayed in the list.
+   * @param string aFrameDetailsText
+   *        The details to be displayed in the list.
    * @return object
    *         The newly created html node representing the added frame.
    */
-  addFrame: function DVF_addFrame(aDepth, aFrameIdText, aFrameNameText) {
+  addFrame: function DVF_addFrame(aDepth, aFrameNameText, aFrameDetailsText) {
     // make sure we don't duplicate anything
     if (document.getElementById("stackframe-" + aDepth)) {
       return null;
     }
 
     let frame = document.createElement("div");
-    let frameId = document.createElement("span");
     let frameName = document.createElement("span");
+    let frameDetails = document.createElement("span");
 
     // create a list item to be added to the stackframes container
     frame.id = "stackframe-" + aDepth;
     frame.className = "dbg-stackframe list-item";
 
-    // this list should display the id and name of the frame
-    frameId.className = "dbg-stackframe-id";
+    // this list should display the name and details for the frame
     frameName.className = "dbg-stackframe-name";
-    frameId.appendChild(document.createTextNode(aFrameIdText));
+    frameDetails.className = "dbg-stackframe-details";
     frameName.appendChild(document.createTextNode(aFrameNameText));
+    frameDetails.appendChild(document.createTextNode(aFrameDetailsText));
 
-    frame.appendChild(frameId);
     frame.appendChild(frameName);
+    frame.appendChild(frameDetails);
 
     this._frames.appendChild(frame);
 
@@ -1074,9 +1074,25 @@ DebuggerView.Scripts = {
    *
    * @param string aUrl
    *        The script URL.
+   * @return boolean
    */
   contains: function DVS_contains(aUrl) {
     if (this._scripts.getElementsByAttribute("value", aUrl).length > 0) {
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Checks whether the script with the specified label is among the scripts
+   * known to the debugger and shown in the list.
+   *
+   * @param string aLabel
+   *        The script label.
+   * @return boolean
+   */
+  containsLabel: function DVS_containsLabel(aLabel) {
+    if (this._scripts.getElementsByAttribute("label", aLabel).length > 0) {
       return true;
     }
     return false;
@@ -1109,30 +1125,30 @@ DebuggerView.Scripts = {
         break;
       }
     }
-   },
+  },
 
   /**
    * Adds a script to the scripts container.
    * If the script already exists (was previously added), null is returned.
    * Otherwise, the newly created element is returned.
    *
-   * @param string aUrl
-   *        The script url.
+   * @param string aLabel
+   *        The simplified script location to be shown.
    * @param string aScript
    *        The source script.
-   * @param string aScriptNameText
-   *        Optional, title displayed instead of url.
    * @return object
    *         The newly created html node representing the added script.
    */
-  addScript: function DVS_addScript(aUrl, aSource, aScriptNameText) {
+  addScript: function DVS_addScript(aLabel, aScript) {
     // make sure we don't duplicate anything
-    if (this.contains(aUrl)) {
+    if (this.containsLabel(aLabel)) {
       return null;
     }
 
-    let script = this._scripts.appendItem(aScriptNameText || aUrl, aUrl);
-    script.setUserData("sourceScript", aSource, null);
+    let script = this._scripts.appendItem(aLabel, aScript.url);
+    script.setAttribute("tooltiptext", aScript.url);
+    script.setUserData("sourceScript", aScript, null);
+
     this._scripts.selectedItem = script;
     return script;
   },

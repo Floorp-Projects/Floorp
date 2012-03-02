@@ -6,8 +6,7 @@
  * Make sure that the property view displays function parameters.
  */
 
-const TAB_URL = "http://example.com/browser/browser/devtools/debugger/test/" +
-                "browser_dbg_frame-parameters.html";
+const TAB_URL = EXAMPLE_URL + "browser_dbg_frame-parameters.html";
 
 var gPane = null;
 var gTab = null;
