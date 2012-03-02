@@ -33,16 +33,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
-
-Cu.import("resource://gre/modules/Services.jsm");
-
-
-var gPrefService = Cc["@mozilla.org/preferences-service;1"]
-                    .getService(Ci.nsIPrefService)
-                    .QueryInterface(Ci.nsIPrefBranch);
 /**
  * Test nsSearchService with nested jar: uris
  */
@@ -52,15 +42,13 @@ function run_test() {
   do_load_manifest("data/chrome.manifest");
 
   let url  = "chrome://testsearchplugin/locale/searchplugins/";
-  gPrefService.setCharPref("browser.search.jarURIs", url);
+  Services.prefs.setCharPref("browser.search.jarURIs", url);
 
-  gPrefService.setBoolPref("browser.search.loadFromJars", true);
+  Services.prefs.setBoolPref("browser.search.loadFromJars", true);
 
   // The search service needs to be started after the jarURIs pref has been
   // set in order to initiate it correctly
-  let searchService = Cc["@mozilla.org/browser/search-service;1"]
-                       .getService(Ci.nsIBrowserSearchService);
-  let engine = searchService.getEngineByName("bug645970");
+  let engine = Services.search.getEngineByName("bug645970");
   do_check_neq(engine, null);
   Services.obs.notifyObservers(null, "quit-application", null);
 }
