@@ -476,8 +476,8 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
     if (!bailoutIf(Assembler::Equal, ins->snapshot()))
         return false;
     masm.setupAlignedABICall(2);
-    masm.pushABIArg(lhs);
-    masm.pushABIArg(rhs);
+    masm.passABIArg(lhs);
+    masm.passABIArg(rhs);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
     // idivmod returns the qoutient in r0, and the remainder in r1.
     masm.ma_cmp(r1, Imm32(0));
@@ -516,8 +516,8 @@ CodeGeneratorARM::visitModI(LModI *ins)
     if (!bailoutIf(Assembler::Equal, ins->snapshot()))
         return false;
     masm.setupAlignedABICall(2);
-    masm.pushABIArg(lhs);
-    masm.pushABIArg(rhs);
+    masm.passABIArg(lhs);
+    masm.passABIArg(rhs);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
     return true;
 }
@@ -920,7 +920,7 @@ CodeGeneratorARM::emitTruncateDouble(const FloatRegister &src, const Register &d
     if (dest != r3)
         masm.Push(r3);
     masm.setupAlignedABICall(1);
-    masm.pushABIArg(src);
+    masm.passABIArg(src);
     masm.callWithABI((void*)js_DoubleToECMAInt32);
 
     masm.ma_mov(r0, dest);
