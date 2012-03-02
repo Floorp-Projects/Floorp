@@ -167,7 +167,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
         return false;
 
     if (tvr.value().isInt32()) {
-        *lengthp = jsuint(jsint(tvr.value().toInt32())); /* jsuint cast does ToUint32_t */
+        *lengthp = jsuint(tvr.value().toInt32()); /* jsuint cast does ToUint32_t */
         return true;
     }
 
@@ -3082,7 +3082,7 @@ array_indexOfHelper(JSContext *cx, IndexOfKind mode, CallArgs &args)
 {
     jsuint length, i, stop;
     Value tosearch;
-    jsint direction;
+    int direction;
     JSBool hole;
 
     JSObject *obj = ToObject(cx, &args.thisv());

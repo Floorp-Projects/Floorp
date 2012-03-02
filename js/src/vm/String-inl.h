@@ -293,7 +293,7 @@ js::StaticStrings::hasInt(int32_t i)
 }
 
 inline JSAtom *
-js::StaticStrings::getInt(jsint i)
+js::StaticStrings::getInt(int32_t i)
 {
     JS_ASSERT(hasInt(i));
     return getUint(uint32_t(i));
@@ -352,7 +352,7 @@ js::StaticStrings::lookup(const jschar *chars, size_t length)
         if ('1' <= chars[0] && chars[0] <= '9' &&
             '0' <= chars[1] && chars[1] <= '9' &&
             '0' <= chars[2] && chars[2] <= '9') {
-            jsint i = (chars[0] - '0') * 100 +
+            int i = (chars[0] - '0') * 100 +
                       (chars[1] - '0') * 10 +
                       (chars[2] - '0');
 

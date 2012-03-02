@@ -4668,8 +4668,7 @@ static bool
 IdValIsIndex(JSContext *cx, jsval id, jsuint *indexp, bool *isIndex)
 {
     if (JSVAL_IS_INT(id)) {
-        jsint i;
-        i = JSVAL_TO_INT(id);
+        int32_t i = JSVAL_TO_INT(id);
         if (i < 0) {
             *isIndex = false;
             return true;
@@ -5602,7 +5601,7 @@ static JSBool
 ValueToId(JSContext *cx, jsval v, AutoIdRooter *idr)
 {
     if (JSVAL_IS_INT(v)) {
-        jsint i = JSVAL_TO_INT(v);
+        int32_t i = JSVAL_TO_INT(v);
         if (INT_FITS_IN_JSID(i))
             *idr->addr() = INT_TO_JSID(i);
         else if (!js_ValueToStringId(cx, v, idr->addr()))

@@ -426,9 +426,9 @@ js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
     if (!ida)
         return false;
 
-    ida->length = static_cast<jsint>(len);
+    ida->length = static_cast<int>(len);
     jsid *v = props.begin();
-    for (jsint i = 0; i < ida->length; i++)
+    for (int i = 0; i < ida->length; i++)
         ida->vector[i].init(v[i]);
     *idap = ida;
     return true;
@@ -1274,7 +1274,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
                 return true;
 
             JSString *str;
-            jsint i;
+            int i;
             if (rval->isInt32() && StaticStrings::hasInt(i = rval->toInt32())) {
                 str = cx->runtime->staticStrings.getInt(i);
             } else {
