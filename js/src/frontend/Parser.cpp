@@ -6080,6 +6080,9 @@ Parser::qualifiedSuffix(ParseNode *pn)
     if (!pn2)
         return NULL;
 
+    /* This qualifiedSuffice may refer to 'arguments'. */
+    tc->flags |= (TCF_FUN_HEAVYWEIGHT | TCF_FUN_LOCAL_ARGUMENTS);
+
     /* Left operand of :: must be evaluated if it is an identifier. */
     if (pn->isOp(JSOP_QNAMEPART))
         pn->setOp(JSOP_NAME);
@@ -6124,7 +6127,7 @@ Parser::qualifiedIdentifier()
         return NULL;
     if (tokenStream.matchToken(TOK_DBLCOLON)) {
         /* Hack for bug 496316. Slowing down E4X won't make it go away, alas. */
-        tc->flags |= TCF_FUN_HEAVYWEIGHT;
+        tc->flags |= (TCF_FUN_HEAVYWEIGHT | TCF_FUN_LOCAL_ARGUMENTS);
         pn = qualifiedSuffix(pn);
     }
     return pn;
@@ -6639,7 +6642,7 @@ Parser::propertyQualifiedIdentifier()
     JS_ASSERT(tokenStream.peekToken() == TOK_DBLCOLON);
 
     /* Deoptimize QualifiedIdentifier properties to avoid tricky analysis. */
-    tc->flags |= TCF_FUN_HEAVYWEIGHT;
+    tc->flags |= (TCF_FUN_HEAVYWEIGHT | TCF_FUN_LOCAL_ARGUMENTS);
 
     PropertyName *name = tokenStream.currentToken().name();
     ParseNode *node = NameNode::create(PNK_NAME, name, tc);
