@@ -183,7 +183,7 @@ EnumeratedIdVectorToIterator(JSContext *cx, JSObject *obj, unsigned flags, js::A
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
- * contain JSITER_ENUMERATE if js_ValueToIterator is called when enumerating
+ * contain JSITER_ENUMERATE if js::ValueToIterator is called when enumerating
  * for-in semantics are required, and when the caller can guarantee that the
  * iterator will never be exposed to scripts.
  */
@@ -220,6 +220,71 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, js::Value *rval);
 
 extern JSBool
 js_ThrowStopIteration(JSContext *cx);
+
+namespace js {
+
+/*
+ * Get the next value from an iterator object.
+ *
+ * On success, store the next value in *vp and return true; if there are no
+ * more values, store the magic value JS_NO_ITER_VALUE in *vp and return true.
+ */
+inline bool
+Next(JSContext *cx, JSObject *iter, Value *vp)
+{
+    if (!js_IteratorMore(cx, iter, vp))
+        return false;
+    if (vp->toBoolean())
+        return js_IteratorNext(cx, iter, vp);
+    vp->setMagic(JS_NO_ITER_VALUE);
+    return true;
+}
+
+/*
+ * Imitate a for-of loop. This does the equivalent of the JS code:
+ *
+ *     for (let v of iterable)
+ *         op(v);
+ *
+ * But the actual signature of op must be:
+ *     bool op(JSContext *cx, const Value &v);
+ *
+ * There is no feature like JS 'break'. op must return false only
+ * in case of exception or error.
+ */
+template <class Op>
+bool
+ForOf(JSContext *cx, const Value &iterable, Op op)
+{
+    Value iterv(iterable);
+    if (!ValueToIterator(cx, JSITER_FOR_OF, &iterv))
+        return false;
+    JSObject *iter = &iterv.toObject();
+
+    bool ok = true;
+    while (ok) {
+        Value v;
+        ok = Next(cx, iter, &v);
+        if (ok) {
+            if (v.isMagic(JS_NO_ITER_VALUE))
+                break;
+            ok = op(cx, v);
+        }
+    }
+
+    bool throwing = !ok && cx->isExceptionPending();
+    Value exc;
+    if (throwing) {
+        exc = cx->getPendingException();
+        cx->clearPendingException();
+    }
+    bool closedOK = CloseIterator(cx, iter);
+    if (throwing && closedOK)
+        cx->setPendingException(exc);
+    return ok && closedOK;
+}
+
+} /* namespace js */
 
 #if JS_HAS_GENERATORS
 

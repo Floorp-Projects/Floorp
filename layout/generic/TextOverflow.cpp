@@ -179,9 +179,10 @@ class nsDisplayTextOverflowMarker : public nsDisplayItem
 public:
   nsDisplayTextOverflowMarker(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               const nsRect& aRect, nscoord aAscent,
-                              const nsString& aString)
+                              const nsString& aString,
+                              PRUint32 aIndex)
     : nsDisplayItem(aBuilder, aFrame), mRect(aRect), mString(aString),
-      mAscent(aAscent) {
+      mAscent(aAscent), mIndex(aIndex) {
     MOZ_COUNT_CTOR(nsDisplayTextOverflowMarker);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -196,6 +197,10 @@ public:
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx);
+
+  virtual PRUint32 GetPerFrameKey() { 
+    return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); 
+  }
   void PaintTextToContext(nsRenderingContext* aCtx,
                           nsPoint aOffsetFromRect);
   NS_DISPLAY_DECL_NAME("TextOverflow", TYPE_TEXT_OVERFLOW)
@@ -203,6 +208,7 @@ private:
   nsRect          mRect;   // in reference frame coordinates
   const nsString  mString; // the marker text
   nscoord         mAscent; // baseline for the marker text in mRect
+  PRUint32        mIndex;
 };
 
 static void
@@ -720,7 +726,7 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
     markerRect += mBuilder->ToReferenceFrame(mBlock);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
-                                  aLine->GetAscent(), mLeft.mMarkerString);
+                                  aLine->GetAscent(), mLeft.mMarkerString, 0);
     if (marker) {
       marker = ClipMarker(mBuilder, mBlock, marker,
                           mContentArea + mBuilder->ToReferenceFrame(mBlock),
@@ -736,7 +742,7 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
     markerRect += mBuilder->ToReferenceFrame(mBlock);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
-                                  aLine->GetAscent(), mRight.mMarkerString);
+                                  aLine->GetAscent(), mRight.mMarkerString, 1);
     if (marker) {
       marker = ClipMarker(mBuilder, mBlock, marker,
                           mContentArea + mBuilder->ToReferenceFrame(mBlock),

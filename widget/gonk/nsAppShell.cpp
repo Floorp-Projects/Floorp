@@ -241,14 +241,6 @@ sendKeyEvent(PRUint32 keyCode, bool down, uint64_t timeMs)
 }
 
 static void
-sendSpecialKeyEvent(nsIAtom *command, uint64_t timeMs)
-{
-    nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, NULL);
-    event.time = timeMs;
-    nsWindow::DispatchInputEvent(event);
-}
-
-static void
 maybeSendKeyEvent(int keyCode, bool pressed, uint64_t timeMs)
 {
     switch (keyCode) {
@@ -256,12 +248,10 @@ maybeSendKeyEvent(int keyCode, bool pressed, uint64_t timeMs)
         sendKeyEvent(NS_VK_ESCAPE, pressed, timeMs);
         break;
     case KEY_MENU:
-        if (!pressed)
-            sendSpecialKeyEvent(nsGkAtoms::Menu, timeMs);
+         sendKeyEvent(NS_VK_CONTEXT_MENU, pressed, timeMs);
         break;
     case KEY_SEARCH:
-        if (pressed)
-            sendSpecialKeyEvent(nsGkAtoms::Search, timeMs);
+        sendKeyEvent(NS_VK_F5, pressed, timeMs);
         break;
     case KEY_HOME:
         sendKeyEvent(NS_VK_HOME, pressed, timeMs);
@@ -270,12 +260,10 @@ maybeSendKeyEvent(int keyCode, bool pressed, uint64_t timeMs)
         sendKeyEvent(NS_VK_SLEEP, pressed, timeMs);
         break;
     case KEY_VOLUMEUP:
-        if (pressed)
-            sendSpecialKeyEvent(nsGkAtoms::VolumeUp, timeMs);
+        sendKeyEvent(NS_VK_PAGE_UP, pressed, timeMs);
         break;
     case KEY_VOLUMEDOWN:
-        if (pressed)
-            sendSpecialKeyEvent(nsGkAtoms::VolumeDown, timeMs);
+        sendKeyEvent(NS_VK_PAGE_DOWN, pressed, timeMs);
         break;
     default:
         VERBOSE_LOG("Got unknown key event code. type 0x%04x code 0x%04x value %d",

@@ -43,6 +43,8 @@
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
 #include "mozilla/plugins/PPluginSurfaceChild.h"
+#include "mozilla/ipc/CrossProcessMutex.h"
+#include "nsClassHashtable.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
 #elif defined(MOZ_WIDGET_COCOA)
@@ -63,7 +65,14 @@ using namespace mozilla::plugins::PluginUtilsOSX;
 #include "mozilla/PaintTracker.h"
 #include "gfxASurface.h"
 
+#include <map>
+
 namespace mozilla {
+
+namespace layers {
+struct RemoteImageData;
+}
+
 namespace plugins {
 
 class PBrowserStreamChild;
@@ -209,6 +218,9 @@ protected:
     virtual bool
     AnswerUpdateWindow();
 
+    virtual bool
+    RecvNPP_DidComposite();
+
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface);
 
@@ -249,12 +261,23 @@ public:
 
     void NPN_URLRedirectResponse(void* notifyData, NPBool allow);
 
+    NPError NPN_InitAsyncSurface(NPSize *size, NPImageFormat format,
+                                 void *initData, NPAsyncSurface *surface);
+    NPError NPN_FinalizeAsyncSurface(NPAsyncSurface *surface);
+
+    void NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed);
+
+    void DoAsyncRedraw();
 private:
     friend class PluginModuleChild;
 
     NPError
     InternalGetNPObjectForValue(NPNVariable aValue,
                                 NPObject** aObject);
+
+    bool IsAsyncDrawing();
+
+    NPError DeallocateAsyncBitmapSurface(NPAsyncSurface *aSurface);
 
     NS_OVERRIDE
     virtual bool RecvUpdateBackground(const SurfaceDescriptor& aBackground,
@@ -360,10 +383,23 @@ private:
     };
 
 #endif
-
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
+    int16_t               mDrawingModel;
+    NPAsyncSurface* mCurrentAsyncSurface;
+    struct AsyncBitmapData {
+      void *mRemotePtr;
+      Shmem mShmem;
+    };
+
+    static PLDHashOperator DeleteSurface(NPAsyncSurface* surf, nsAutoPtr<AsyncBitmapData> &data, void* userArg);
+    nsClassHashtable<nsPtrHashKey<NPAsyncSurface>, AsyncBitmapData> mAsyncBitmaps;
+    Shmem mRemoteImageDataShmem;
+    mozilla::layers::RemoteImageData *mRemoteImageData;
+    nsAutoPtr<CrossProcessMutex> mRemoteImageDataMutex;
+    mozilla::Mutex mAsyncInvalidateMutex;
+    CancelableTask *mAsyncInvalidateTask;
 
     // Cached scriptable actors to avoid IPC churn
     PluginScriptableObjectChild* mCachedWindowActor;
@@ -426,7 +462,6 @@ private:
 #endif
     CGColorSpaceRef       mShColorSpace;
     CGContextRef          mShContext;
-    int16_t               mDrawingModel;
     nsCARenderer          mCARenderer;
     void                 *mCGLayer;
 
