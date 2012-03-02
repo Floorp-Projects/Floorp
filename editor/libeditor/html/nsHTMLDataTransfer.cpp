@@ -1968,94 +1968,63 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
   if (mWrapToWindow)
     return nsPlaintextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
 
-  nsresult rv;
-
-  // The quotesPreformatted pref is a temporary measure. See bug 69638.
-  // Eventually we'll pick one way or the other.
-  bool quotesInPre = false;
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && prefBranch)
-    prefBranch->GetBoolPref("editor.quotesPreformatted", &quotesInPre);
-
   nsCOMPtr<nsIDOMNode> preNode;
   // get selection
   nsCOMPtr<nsISelection> selection;
-  rv = GetSelection(getter_AddRefs(selection));
+  nsresult rv = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!selection)
-  {
-    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  }
-  else
-  {
-    nsAutoEditBatch beginBatching(this);
-    nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-    // give rules a chance to handle or cancel
-    nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
-    bool cancel, handled;
-    rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (cancel) return NS_OK; // rules canceled the operation
-    if (!handled)
+  nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
+
+  // give rules a chance to handle or cancel
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
+  bool cancel, handled;
+  rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (cancel) return NS_OK; // rules canceled the operation
+  if (!handled)
+  {
+    // Wrap the inserted quote in a <span> so it won't be wrapped:
+    rv = DeleteSelectionAndCreateNode(NS_LITERAL_STRING("span"), getter_AddRefs(preNode));
+
+    // If this succeeded, then set selection inside the pre
+    // so the inserted text will end up there.
+    // If it failed, we don't care what the return value was,
+    // but we'll fall through and try to insert the text anyway.
+    if (NS_SUCCEEDED(rv) && preNode)
     {
-      // Wrap the inserted quote in a <pre> so it won't be wrapped:
-      nsAutoString tag;
-      if (quotesInPre)
-        tag.AssignLiteral("pre");
-      else
-        tag.AssignLiteral("span");
-
-      rv = DeleteSelectionAndCreateNode(tag, getter_AddRefs(preNode));
-      
-      // If this succeeded, then set selection inside the pre
-      // so the inserted text will end up there.
-      // If it failed, we don't care what the return value was,
-      // but we'll fall through and try to insert the text anyway.
-      if (NS_SUCCEEDED(rv) && preNode)
+      // Add an attribute on the pre node so we'll know it's a quotation.
+      // Do this after the insertion, so that
+      nsCOMPtr<nsIDOMElement> preElement(do_QueryInterface(preNode));
+      if (preElement)
       {
-        // Add an attribute on the pre node so we'll know it's a quotation.
-        // Do this after the insertion, so that 
-        nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
-        if (preElement)
-        {
-          preElement->SetAttribute(NS_LITERAL_STRING("_moz_quote"),
-                                   NS_LITERAL_STRING("true"));
-          if (quotesInPre)
-          {
-            // set style to not have unwanted vertical margins
-            preElement->SetAttribute(NS_LITERAL_STRING("style"),
-                                     NS_LITERAL_STRING("margin: 0 0 0 0px;"));
-          }
-          else
-          {
-            // turn off wrapping on spans
-            preElement->SetAttribute(NS_LITERAL_STRING("style"),
-                                     NS_LITERAL_STRING("white-space: pre;"));
-          }
-        }
-
-        // and set the selection inside it:
-        selection->Collapse(preNode, 0);
+        preElement->SetAttribute(NS_LITERAL_STRING("_moz_quote"),
+                                 NS_LITERAL_STRING("true"));
+        // turn off wrapping on spans
+        preElement->SetAttribute(NS_LITERAL_STRING("style"),
+                                 NS_LITERAL_STRING("white-space: pre;"));
       }
+      // and set the selection inside it:
+      selection->Collapse(preNode, 0);
+    }
 
-      if (aAddCites)
-        rv = nsPlaintextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
-      else
-        rv = nsPlaintextEditor::InsertText(aQuotedText);
-      // Note that if !aAddCites, aNodeInserted isn't set.
-      // That's okay because the routines that use aAddCites
-      // don't need to know the inserted node.
+    if (aAddCites)
+      rv = nsPlaintextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
+    else
+      rv = nsPlaintextEditor::InsertText(aQuotedText);
+    // Note that if !aAddCites, aNodeInserted isn't set.
+    // That's okay because the routines that use aAddCites
+    // don't need to know the inserted node.
 
-      if (aNodeInserted && NS_SUCCEEDED(rv))
-      {
-        *aNodeInserted = preNode;
-        NS_IF_ADDREF(*aNodeInserted);
-      }
+    if (aNodeInserted && NS_SUCCEEDED(rv))
+    {
+      *aNodeInserted = preNode;
+      NS_IF_ADDREF(*aNodeInserted);
     }
   }
-    
+
   // Set the selection to just after the inserted node:
   if (NS_SUCCEEDED(rv) && preNode)
   {
