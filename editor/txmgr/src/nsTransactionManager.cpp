@@ -48,6 +48,9 @@
 
 nsTransactionManager::nsTransactionManager(PRInt32 aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount)
+  , mDoStack(nsTransactionStack::FOR_UNDO)
+  , mUndoStack(nsTransactionStack::FOR_UNDO)
+  , mRedoStack(nsTransactionStack::FOR_REDO)
 {
 }
 
@@ -120,17 +123,12 @@ NS_IMETHODIMP
 nsTransactionManager::UndoTransaction()
 {
   nsresult result       = NS_OK;
-  nsRefPtr<nsTransactionItem> tx;
 
   // It is illegal to call UndoTransaction() while the transaction manager is
   // executing a  transaction's DoTransaction() method! If this happens,
   // the UndoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
 
-  result = mDoStack.Peek(getter_AddRefs(tx));
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  nsRefPtr<nsTransactionItem> tx = mDoStack.Peek();
 
   if (tx) {
     return NS_ERROR_FAILURE;
@@ -138,11 +136,7 @@ nsTransactionManager::UndoTransaction()
 
   // Peek at the top of the undo stack. Don't remove the transaction
   // until it has successfully completed.
-  result = mUndoStack.Peek(getter_AddRefs(tx));
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  tx = mUndoStack.Peek();
 
   // Bail if there's nothing on the stack.
   if (!tx) {
@@ -172,10 +166,8 @@ nsTransactionManager::UndoTransaction()
   result = tx->UndoTransaction(this);
 
   if (NS_SUCCEEDED(result)) {
-    result = mUndoStack.Pop(getter_AddRefs(tx));
-
-    if (NS_SUCCEEDED(result))
-      result = mRedoStack.Push(tx);
+    tx = mUndoStack.Pop();
+    mRedoStack.Push(tx);
   }
 
   nsresult result2 = DidUndoNotify(t, result);
@@ -190,17 +182,12 @@ NS_IMETHODIMP
 nsTransactionManager::RedoTransaction()
 {
   nsresult result       = NS_OK;
-  nsRefPtr<nsTransactionItem> tx;
 
   // It is illegal to call RedoTransaction() while the transaction manager is
   // executing a  transaction's DoTransaction() method! If this happens,
   // the RedoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
 
-  result = mDoStack.Peek(getter_AddRefs(tx));
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  nsRefPtr<nsTransactionItem> tx = mDoStack.Peek();
 
   if (tx) {
     return NS_ERROR_FAILURE;
@@ -208,11 +195,7 @@ nsTransactionManager::RedoTransaction()
 
   // Peek at the top of the redo stack. Don't remove the transaction
   // until it has successfully completed.
-  result = mRedoStack.Peek(getter_AddRefs(tx));
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  tx = mRedoStack.Peek();
 
   // Bail if there's nothing on the stack.
   if (!tx) {
@@ -242,10 +225,8 @@ nsTransactionManager::RedoTransaction()
   result = tx->RedoTransaction(this);
 
   if (NS_SUCCEEDED(result)) {
-    result = mRedoStack.Pop(getter_AddRefs(tx));
-
-    if (NS_SUCCEEDED(result))
-      result = mUndoStack.Push(tx);
+    tx = mRedoStack.Pop();
+    mUndoStack.Push(tx);
   }
 
   nsresult result2 = DidRedoNotify(t, result);
@@ -307,7 +288,6 @@ nsTransactionManager::BeginBatch()
 NS_IMETHODIMP
 nsTransactionManager::EndBatch()
 {
-  nsRefPtr<nsTransactionItem> tx;
   nsCOMPtr<nsITransaction> ti;
   nsresult result;
 
@@ -322,11 +302,7 @@ nsTransactionManager::EndBatch()
   //      future when we allow users to execute a transaction when beginning
   //      a batch!!!!
 
-  result = mDoStack.Peek(getter_AddRefs(tx));
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  nsRefPtr<nsTransactionItem> tx = mDoStack.Peek();
 
   if (tx)
     tx->GetTransaction(getter_AddRefs(ti));
@@ -360,13 +336,15 @@ nsTransactionManager::EndBatch()
 NS_IMETHODIMP
 nsTransactionManager::GetNumberOfUndoItems(PRInt32 *aNumItems)
 {
-  return mUndoStack.GetSize(aNumItems);
+  *aNumItems = mUndoStack.GetSize();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
 {
-  return mRedoStack.GetSize(aNumItems);
+  *aNumItems = mRedoStack.GetSize();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -383,8 +361,6 @@ NS_IMETHODIMP
 nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
 {
   PRInt32 numUndoItems  = 0, numRedoItems = 0, total = 0;
-  nsRefPtr<nsTransactionItem> tx;
-  nsresult result;
 
   // It is illegal to call SetMaxTransactionCount() while the transaction
   // manager is executing a  transaction's DoTransaction() method because
@@ -392,11 +368,7 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
   // SetMaxTransactionCount() request is ignored, and we return
   // NS_ERROR_FAILURE.
 
-  result = mDoStack.Peek(getter_AddRefs(tx));
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  nsRefPtr<nsTransactionItem> tx = mDoStack.Peek();
 
   if (tx) {
     return NS_ERROR_FAILURE;
@@ -407,20 +379,12 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
 
   if (aMaxCount < 0) {
     mMaxTransactionCount = -1;
-    return result;
+    return NS_OK;
   }
 
-  result = mUndoStack.GetSize(&numUndoItems);
+  numUndoItems = mUndoStack.GetSize();
 
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  result = mRedoStack.GetSize(&numRedoItems);
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  numRedoItems = mRedoStack.GetSize();
 
   total = numUndoItems + numRedoItems;
 
@@ -430,17 +394,17 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
 
   if (aMaxCount > total ) {
     mMaxTransactionCount = aMaxCount;
-    return result;
+    return NS_OK;
   }
 
   // Try getting rid of some transactions on the undo stack! Start at
   // the bottom of the stack and pop towards the top.
 
   while (numUndoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
-    result = mUndoStack.PopBottom(getter_AddRefs(tx));
+    tx = mUndoStack.PopBottom();
 
-    if (NS_FAILED(result) || !tx) {
-      return result;
+    if (!tx) {
+      return NS_ERROR_FAILURE;
     }
 
     --numUndoItems;
@@ -450,10 +414,10 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
   // the bottom of the stack and pop towards the top.
 
   while (numRedoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
-    result = mRedoStack.PopBottom(getter_AddRefs(tx));
+    tx = mRedoStack.PopBottom();
 
-    if (NS_FAILED(result) || !tx) {
-      return result;
+    if (!tx) {
+      return NS_ERROR_FAILURE;
     }
 
     --numRedoItems;
@@ -461,23 +425,22 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
 
   mMaxTransactionCount = aMaxCount;
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
 {
-  nsRefPtr<nsTransactionItem> tx;
   nsresult result;
 
   NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
   *aTransaction = 0;
 
-  result = mUndoStack.Peek(getter_AddRefs(tx));
+  nsRefPtr<nsTransactionItem> tx = mUndoStack.Peek();
 
-  if (NS_FAILED(result) || !tx) {
-    return result;
+  if (!tx) {
+    return NS_OK;
   }
 
   result = tx->GetTransaction(aTransaction);
@@ -488,17 +451,16 @@ nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
 NS_IMETHODIMP
 nsTransactionManager::PeekRedoStack(nsITransaction **aTransaction)
 {
-  nsRefPtr<nsTransactionItem> tx;
   nsresult result;
 
   NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
   *aTransaction = 0;
 
-  result = mRedoStack.Peek(getter_AddRefs(tx));
+  nsRefPtr<nsTransactionItem> tx = mRedoStack.Peek();
 
-  if (NS_FAILED(result) || !tx) {
-    return result;
+  if (!tx) {
+    return NS_OK;
   }
 
   result = tx->GetTransaction(aTransaction);
@@ -549,13 +511,15 @@ nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
 nsresult
 nsTransactionManager::ClearUndoStack()
 {
-  return mUndoStack.Clear();
+  mUndoStack.Clear();
+  return NS_OK;
 }
 
 nsresult
 nsTransactionManager::ClearRedoStack()
 {
-  return mRedoStack.Clear();
+  mRedoStack.Clear();
+  return NS_OK;
 }
 
 nsresult
@@ -802,16 +766,12 @@ nsTransactionManager::BeginTransaction(nsITransaction *aTransaction)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  result = mDoStack.Push(tx);
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  mDoStack.Push(tx);
 
   result = tx->DoTransaction();
 
   if (NS_FAILED(result)) {
-    mDoStack.Pop(getter_AddRefs(tx));
+    tx = mDoStack.Pop();
     return result;
   }
 
@@ -822,13 +782,12 @@ nsresult
 nsTransactionManager::EndTransaction()
 {
   nsCOMPtr<nsITransaction> tint;
-  nsRefPtr<nsTransactionItem> tx;
   nsresult result              = NS_OK;
 
-  result = mDoStack.Pop(getter_AddRefs(tx));
+  nsRefPtr<nsTransactionItem> tx = mDoStack.Pop();
 
-  if (NS_FAILED(result) || !tx)
-    return result;
+  if (!tx)
+    return NS_ERROR_FAILURE;
 
   result = tx->GetTransaction(getter_AddRefs(tint));
 
@@ -864,13 +823,11 @@ nsTransactionManager::EndTransaction()
     return result;
   }
 
-  nsRefPtr<nsTransactionItem> top;
-
   // Check if there is a transaction on the do stack. If there is,
   // the current transaction is a "sub" transaction, and should
   // be added to the transaction at the top of the do stack.
 
-  result = mDoStack.Peek(getter_AddRefs(top));
+  nsRefPtr<nsTransactionItem> top = mDoStack.Peek();
   if (top) {
     result = top->AddChild(tx);
 
@@ -890,8 +847,7 @@ nsTransactionManager::EndTransaction()
   // Check if we can coalesce this transaction with the one at the top
   // of the undo stack.
 
-  top = 0;
-  result = mUndoStack.Peek(getter_AddRefs(top));
+  top = mUndoStack.Peek();
 
   if (tint && top) {
     bool didMerge = false;
@@ -929,27 +885,16 @@ nsTransactionManager::EndTransaction()
   // Check to see if we've hit the max level of undo. If so,
   // pop the bottom transaction off the undo stack and release it!
 
-  PRInt32 sz = 0;
-
-  result = mUndoStack.GetSize(&sz);
+  PRInt32 sz = mUndoStack.GetSize();
 
   if (mMaxTransactionCount > 0 && sz >= mMaxTransactionCount) {
-    nsRefPtr<nsTransactionItem> overflow;
-
-    result = mUndoStack.PopBottom(getter_AddRefs(overflow));
-
-    // XXX: What do we do in the case where this fails?
+    nsRefPtr<nsTransactionItem> overflow = mUndoStack.PopBottom();
   }
 
   // Push the transaction on the undo stack:
 
-  result = mUndoStack.Push(tx);
+  mUndoStack.Push(tx);
 
-  if (NS_FAILED(result)) {
-    // XXX: What do we do in the case where a clear fails?
-    //      Remove the transaction from the stack, and release it?
-  }
-
-  return result;
+  return NS_OK;
 }
 
