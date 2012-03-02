@@ -256,6 +256,14 @@ ContainerRender(Container* aContainer,
 
   if (needsFramebuffer) {
     // Unbind the current framebuffer and rebind the previous one.
+#ifdef MOZ_DUMP_PAINTING
+    if (gfxUtils::sDumpPainting) {
+      nsRefPtr<gfxImageSurface> surf = 
+        aContainer->gl()->GetTexImage(containerSurface, true, aManager->GetFBOLayerProgramType());
+
+      WriteSnapshotToDumpFile(aContainer, surf);
+    }
+#endif
     
     // Restore the viewport
     aContainer->gl()->PopViewportRect();

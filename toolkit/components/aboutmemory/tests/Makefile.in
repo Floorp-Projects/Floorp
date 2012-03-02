@@ -48,6 +48,7 @@ _CHROME_FILES	= \
 		test_aboutcompartments.xul \
 		test_aboutmemory.xul \
 		test_aboutmemory2.xul \
+		test_memoryReporters.xul \
 		test_sqliteMultiReporter.xul \
 		$(NULL)
 

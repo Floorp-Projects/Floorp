@@ -583,9 +583,10 @@ abstract public class GeckoApp
                 
                 String viewportJSON = viewportMetrics.toJSON();
                 // If the title, uri and viewport haven't changed, the old screenshot is probably valid
+                // Ordering of .equals() below is important since mLast* variables may be null
                 if (viewportJSON.equals(mLastViewport) &&
-                    mLastTitle.equals(lastHistoryEntry.mTitle) &&
-                    mLastSnapshotUri.equals(lastHistoryEntry.mUri))
+                    lastHistoryEntry.mTitle.equals(mLastTitle) &&
+                    lastHistoryEntry.mUri.equals(mLastSnapshotUri))
                     return; 
 
                 mLastViewport = viewportJSON;
