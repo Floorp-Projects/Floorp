@@ -6,8 +6,8 @@
  * and script URIs with extra query parameters also get the right engine.
  */
 
-const TAB_URL = "http://example.com/browser/browser/devtools/debugger/" +
-                "test/browser_dbg_update-editor-mode.html";
+const TAB_URL = EXAMPLE_URL + "browser_dbg_update-editor-mode.html";
+
 let tempScope = {};
 Cu.import("resource:///modules/source-editor.jsm", tempScope);
 let SourceEditor = tempScope.SourceEditor;
