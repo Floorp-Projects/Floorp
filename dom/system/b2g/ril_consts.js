@@ -336,80 +336,28 @@ const PDU_DCS_MSG_CLASS_TE_SPECIFIC     = 0xF3;
 // Because service center timestamp omit the century. Yay.
 const PDU_TIMESTAMP_YEAR_OFFSET = 2000;
 
-// 7bit Default Alphabet
-//TODO: maybe convert this to a string? might be faster/cheaper
-const PDU_ALPHABET_7BIT_DEFAULT = [
-  "@",      // COMMERCIAL AT
-  "\xa3",   // POUND SIGN
-  "$",      // DOLLAR SIGN
-  "\xa5",   // YEN SIGN
-  "\xe8",   // LATIN SMALL LETTER E WITH GRAVE
-  "\xe9",   // LATIN SMALL LETTER E WITH ACUTE
-  "\xf9",   // LATIN SMALL LETTER U WITH GRAVE
-  "\xec",   // LATIN SMALL LETTER I WITH GRAVE
-  "\xf2",   // LATIN SMALL LETTER O WITH GRAVE
-  "\xc7",   // LATIN CAPITAL LETTER C WITH CEDILLA
-  "\n",     // LINE FEED
-  "\xd8",   // LATIN CAPITAL LETTER O WITH STROKE
-  "\xf8",   // LATIN SMALL LETTER O WITH STROKE
-  "\r",     // CARRIAGE RETURN
-  "\xc5",   // LATIN CAPITAL LETTER A WITH RING ABOVE
-  "\xe5",   // LATIN SMALL LETTER A WITH RING ABOVE
-  "\u0394", // GREEK CAPITAL LETTER DELTA
-  "_",      // LOW LINE
-  "\u03a6", // GREEK CAPITAL LETTER PHI
-  "\u0393", // GREEK CAPITAL LETTER GAMMA
-  "\u039b", // GREEK CAPITAL LETTER LAMBDA
-  "\u03a9", // GREEK CAPITAL LETTER OMEGA
-  "\u03a0", // GREEK CAPITAL LETTER PI
-  "\u03a8", // GREEK CAPITAL LETTER PSI
-  "\u03a3", // GREEK CAPITAL LETTER SIGMA
-  "\u0398", // GREEK CAPITAL LETTER THETA
-  "\u039e", // GREEK CAPITAL LETTER XI
-  "\u20ac", // (escape to extension table)
-  "\xc6",   // LATIN CAPITAL LETTER AE
-  "\xe6",   // LATIN SMALL LETTER AE
-  "\xdf",   // LATIN SMALL LETTER SHARP S (German)
-  "\xc9",   // LATIN CAPITAL LETTER E WITH ACUTE
-  " ",      // SPACE
-  "!",      // EXCLAMATION MARK
-  "\"",     // QUOTATION MARK
-  "#",      // NUMBER SIGN
-  "\xa4",   // CURRENCY SIGN
-  "%",      // PERCENT SIGN
-  "&",      // AMPERSAND
-  "'",      // APOSTROPHE
-  "(",      // LEFT PARENTHESIS
-  ")",      // RIGHT PARENTHESIS
-  "*",      // ASTERISK
-  "+",      // PLUS SIGN
-  ",",      // COMMA
-  "-",      // HYPHEN-MINUS
-  ".",      // FULL STOP
-  "/",      // SOLIDUS (SLASH)
-  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-  ":",      // COLON
-  ";",      // SEMICOLON
-  "<",      // LESS-THAN SIGN
-  "=",      // EQUALS SIGN
-  ">",      // GREATER-THAN SIGN
-  "?",      // QUESTION MARK
-  "\xa1",   // INVERTED EXCLAMATION MARK
-  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-  "\xc4",   // LATIN CAPITAL LETTER A WITH DIAERESIS
-  "\xd6",   // LATIN CAPITAL LETTER O WITH DIAERESIS
-  "\xd1",   // LATIN CAPITAL LETTER N WITH TILDE
-  "\xdc",   // LATIN CAPITAL LETTER U WITH DIAERESIS
-  "\xa7",   // SECTION SIGN
-  "\xbf",   // INVERTED QUESTION MARK
-  "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-  "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-  "\xe4",   // LATIN SMALL LETTER A WITH DIAERESIS
-  "\xf6",   // LATIN SMALL LETTER O WITH DIAERESIS
-  "\xf1",   // LATIN SMALL LETTER N WITH TILDE
-  "\xfc",   // LATIN SMALL LETTER U WITH DIAERESIS
-  "\xe0"    // LATIN SMALL LETTER A WITH GRAVE
+// National Language Locking Shift Tables, see 3GPP TS 23.038
+const PDU_NL_LOCKING_SHIFT_TABLES = [
+  /**
+   * National Language Identifier: 0x00
+   * 6.2.1 GSM 7 bit Default Alphabet
+   */
+  // 01.....23.....4.....5.....6.....7.....8.....9.....A.B.....C.....D.E.....F.....
+    "@\u00a3$\u00a5\u00e8\u00e9\u00f9\u00ec\u00f2\u00c7\n\u00d8\u00f8\r\u00c5\u00e5"
+  // 0.....12.....3.....4.....5.....6.....7.....8.....9.....A.....B.....C.....D.....E.....F.....
+  + "\u0394_\u03a6\u0393\u039b\u03a9\u03a0\u03a8\u03a3\u0398\u039e\uffff\u00c6\u00e6\u00df\u00c9"
+  // 012.34.....56789ABCDEF
+  + " !\"#\u00a4%&'()*+,-./"
+  // 0123456789ABCDEF
+  + "0123456789:;<=>?"
+  // 0.....123456789ABCDEF
+  + "\u00a1ABCDEFGHIJKLMNO"
+  // 0123456789AB.....C.....D.....E.....F.....
+  + "PQRSTUVWXYZ\u00c4\u00d6\u00d1\u00dc\u00a7"
+  // 0.....123456789ABCDEF
+  + "\u00bfabcdefghijklmno"
+  // 0123456789AB.....C.....D.....E.....F.....
+  + "pqrstuvwxyz\u00e4\u00f6\u00f1\u00fc\u00e0",
 ];
 
 const DATACALL_RADIOTECHNOLOGY_CDMA = 0;
