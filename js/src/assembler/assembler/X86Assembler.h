@@ -246,7 +246,7 @@ private:
         OP_INT3                         = 0xCC,
         OP_GROUP2_Ev1                   = 0xD1,
         OP_GROUP2_EvCL                  = 0xD3,
-	    OP_FPU6				            = 0xDD,
+	OP_FPU6				= 0xDD,
         OP_CALL_rel32                   = 0xE8,
         OP_JMP_rel32                    = 0xE9,
         PRE_SSE_F2                      = 0xF2,

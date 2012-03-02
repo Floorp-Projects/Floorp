@@ -66,6 +66,23 @@ static const Register r14 = { JSC::X86Registers::r14 };
 static const Register r15 = { JSC::X86Registers::r15 };
 static const Register rsp = { JSC::X86Registers::esp };
 
+static const FloatRegister xmm0 = { JSC::X86Registers::xmm0 };
+static const FloatRegister xmm1 = { JSC::X86Registers::xmm1 };
+static const FloatRegister xmm2 = { JSC::X86Registers::xmm2 };
+static const FloatRegister xmm3 = { JSC::X86Registers::xmm3 };
+static const FloatRegister xmm4 = { JSC::X86Registers::xmm4 };
+static const FloatRegister xmm5 = { JSC::X86Registers::xmm5 };
+static const FloatRegister xmm6 = { JSC::X86Registers::xmm6 };
+static const FloatRegister xmm7 = { JSC::X86Registers::xmm7 };
+static const FloatRegister xmm8 = { JSC::X86Registers::xmm8 };
+static const FloatRegister xmm9 = { JSC::X86Registers::xmm9 };
+static const FloatRegister xmm10 = { JSC::X86Registers::xmm10 };
+static const FloatRegister xmm11 = { JSC::X86Registers::xmm11 };
+static const FloatRegister xmm12 = { JSC::X86Registers::xmm12 };
+static const FloatRegister xmm13 = { JSC::X86Registers::xmm13 };
+static const FloatRegister xmm14 = { JSC::X86Registers::xmm14 };
+static const FloatRegister xmm15 = { JSC::X86Registers::xmm15 };
+
 // X86-common synonyms.
 static const Register eax = rax;
 static const Register ebx = rbx;
@@ -83,7 +100,8 @@ static const Register StackPointer = rsp;
 static const Register JSReturnReg = rcx;
 static const Register ReturnReg = rax;
 static const Register ScratchReg = r11;
-static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm15 };
+static const FloatRegister ReturnFloatReg = xmm0;
+static const FloatRegister ScratchFloatReg = xmm15;
 
 static const Register ArgumentsRectifierReg = r8;
 static const Register CallTempReg0 = rax;
@@ -93,28 +111,46 @@ static const Register CallTempReg3 = rcx;
 
 // Different argument registers for WIN64
 #if defined(_WIN64)
-static const Register ArgReg0 = rcx;
-static const Register ArgReg1 = rdx;
-static const Register ArgReg2 = r8;
-static const Register ArgReg3 = r9;
-static const uint32 NumArgRegs = 4;
-static const Register ArgRegs[NumArgRegs] = { rcx, rdx, r8, r9 };
+static const Register IntArgReg0 = rcx;
+static const Register IntArgReg1 = rdx;
+static const Register IntArgReg2 = r8;
+static const Register IntArgReg3 = r9;
+static const uint32 NumIntArgRegs = 4;
+static const Register IntArgRegs[NumArgRegs] = { rcx, rdx, r8, r9 };
+
+static const FloatRegister FloatArgReg0 = xmm0;
+static const FloatRegister FloatArgReg1 = xmm1;
+static const FloatRegister FloatArgReg2 = xmm2;
+static const FloatRegister FloatArgReg3 = xmm3;
+static const uint32 NumFloatArgRegs = 4;
+static const FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3 };
 #else
-static const Register ArgReg0 = rdi;
-static const Register ArgReg1 = rsi;
-static const Register ArgReg2 = rdx;
-static const Register ArgReg3 = rcx;
-static const Register ArgReg4 = r8;
-static const Register ArgReg5 = r9;
-static const uint32 NumArgRegs = 6;
-static const Register ArgRegs[NumArgRegs] = { rdi, rsi, rdx, rcx, r8, r9 };
+static const Register IntArgReg0 = rdi;
+static const Register IntArgReg1 = rsi;
+static const Register IntArgReg2 = rdx;
+static const Register IntArgReg3 = rcx;
+static const Register IntArgReg4 = r8;
+static const Register IntArgReg5 = r9;
+static const uint32 NumIntArgRegs = 6;
+static const Register IntArgRegs[NumIntArgRegs] = { rdi, rsi, rdx, rcx, r8, r9 };
+
+static const FloatRegister FloatArgReg0 = xmm0;
+static const FloatRegister FloatArgReg1 = xmm1;
+static const FloatRegister FloatArgReg2 = xmm2;
+static const FloatRegister FloatArgReg3 = xmm3;
+static const FloatRegister FloatArgReg4 = xmm4;
+static const FloatRegister FloatArgReg5 = xmm5;
+static const FloatRegister FloatArgReg6 = xmm6;
+static const FloatRegister FloatArgReg7 = xmm7;
+static const uint32 NumFloatArgRegs = 8;
+static const FloatRegister FloatArgRegs[NumFloatArgRegs] = { xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7 };
 #endif
 
 // Threaded by the OsrPrologue through EnterJIT to the OsrEntry.
 #if defined(_WIN64)
 static const Register OsrFrameReg = r10;
 #else
-static const Register OsrFrameReg = ArgReg5;
+static const Register OsrFrameReg = IntArgReg5;
 #endif
 
 static const Register PreBarrierReg = rdx;
@@ -533,23 +569,34 @@ PatchJump(CodeLocationJump jump, CodeLocationLabel label)
 }
 
 static inline bool
-GetArgReg(uint32 arg, Register *out)
+GetIntArgReg(uint32 intArg, uint32 floatArg, Register *out)
 {
-    if (arg >= NumArgRegs)
+#if defined(_WIN64)
+    uint32 arg = intArg + floatArg;
+#else
+    uint32 arg = intArg;
+#endif
+    if (arg >= NumIntArgRegs)
         return false;
-    *out = ArgRegs[arg];
+    *out = IntArgRegs[arg];
     return true;
 }
 
-static inline uint32
-GetArgStackDisp(uint32 arg)
+static inline bool
+GetFloatArgReg(uint32 intArg, uint32 floatArg, FloatRegister *out)
 {
-    JS_ASSERT(arg >= NumArgRegs);
-    return (arg - NumArgRegs) * STACK_SLOT_SIZE + ShadowStackSpace;
+#if defined(_WIN64)
+    uint32 arg = intArg + floatArg;
+#else
+    uint32 arg = floatArg;
+#endif
+    if (floatArg >= NumFloatArgRegs)
+        return false;
+    *out = FloatArgRegs[arg];
+    return true;
 }
 
 } // namespace ion
 } // namespace js
 
 #endif // jsion_cpu_x64_assembler_h__
-
