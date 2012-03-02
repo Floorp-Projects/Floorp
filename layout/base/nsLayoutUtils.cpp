@@ -4734,9 +4734,13 @@ ShouldInflateFontsForContainer(const nsIFrame *aFrame)
   // indicates whether the frame is inside something with a constrained
   // height (propagating down the tree), but the propagation stops when
   // we hit overflow-y: scroll or auto.
-  return aFrame->GetStyleText()->mTextSizeAdjust !=
-           NS_STYLE_TEXT_SIZE_ADJUST_NONE &&
-         !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT);
+  const nsStyleText* styleText = aFrame->GetStyleText();
+
+  return styleText->mTextSizeAdjust != NS_STYLE_TEXT_SIZE_ADJUST_NONE &&
+         !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT) &&
+         // We also want to disable font inflation for containers that have
+         // preformatted text.
+         styleText->WhiteSpaceCanWrap();
 }
 
 nscoord
