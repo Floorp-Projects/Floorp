@@ -543,17 +543,13 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
                 masm.passABIArg(MoveOperand(argsBase, argDisp));
                 argDisp += sizeof(void *);
                 break;
-              case VMFunction::DoubleByValue:
-                masm.passABIArg(MoveOperand(argsBase, argDisp));
-                argDisp += sizeof(void *);
-                break;
               case VMFunction::WordByRef:
                 masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
                 argDisp += sizeof(void *);
                 break;
+              case VMFunction::DoubleByValue:
               case VMFunction::DoubleByRef:
-                masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
-                argDisp += 2 * sizeof(void *);
+                JS_NOT_REACHED("NYI: x64 callVM should not be used with 128bits values.");
                 break;
             }
         }
