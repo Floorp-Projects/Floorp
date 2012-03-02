@@ -116,6 +116,7 @@ FENNEC_JAVA_FILES = \
   gfx/GeckoLayerClient.java \
   gfx/GLController.java \
   gfx/GLThread.java \
+  gfx/ImmutableViewportMetrics.java \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \
   gfx/Layer.java \

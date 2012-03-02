@@ -95,6 +95,9 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /* Used by robocop for testing purposes */
     private DrawListener mDrawListener;
 
+    /* Used as a temporary ViewTransform by getViewTransform */
+    private ViewTransform mCurrentViewTransform;
+
     public GeckoLayerClient(Context context) {
         mScreenSize = new IntSize(0, 0);
         mBufferSize = new IntSize(0, 0);
@@ -102,6 +105,9 @@ public class GeckoLayerClient implements GeckoEventResponder,
                                        DEFAULT_DISPLAY_PORT_MARGIN,
                                        DEFAULT_DISPLAY_PORT_MARGIN,
                                        DEFAULT_DISPLAY_PORT_MARGIN);
+        // we can fill this in with dummy values because it is always written
+        // to before being read
+        mCurrentViewTransform = new ViewTransform(0, 0, 1);
     }
 
     /** Attaches the root layer to the layer controller so that Gecko appears. */
@@ -317,18 +323,19 @@ public class GeckoLayerClient implements GeckoEventResponder,
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    /* This functions needs to be fast because it is called by the compositor every frame.
+     * It avoids taking any locks or allocating any objects. We keep around a
+     * mCurrentViewTransform so we don't need to allocate a new ViewTransform
+     * everytime we're called. NOTE: we could probably switch to returning a ImmutableViewportMetrics
+     * which would avoid the copy into mCurrentViewTransform. */
     public ViewTransform getViewTransform() {
-        // NB: We don't begin a transaction here because this can be called in a synchronous
-        // manner between beginDrawing() and endDrawing(), and that will cause a deadlock.
-
-        synchronized (mLayerController) {
-            ViewportMetrics viewportMetrics = mLayerController.getViewportMetrics();
-            PointF viewportOrigin = viewportMetrics.getOrigin();
-            float scrollX = viewportOrigin.x; 
-            float scrollY = viewportOrigin.y;
-            float zoomFactor = viewportMetrics.getZoomFactor();
-            return new ViewTransform(scrollX, scrollY, zoomFactor);
-        }
+        // getViewportMetrics is thread safe so we don't need to synchronize
+        // on myLayerController.
+        ImmutableViewportMetrics viewportMetrics = mLayerController.getViewportMetrics();
+        mCurrentViewTransform.x = viewportMetrics.viewportRectLeft;
+        mCurrentViewTransform.y = viewportMetrics.viewportRectTop;
+        mCurrentViewTransform.scale = viewportMetrics.zoomFactor;
+        return mCurrentViewTransform;
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
