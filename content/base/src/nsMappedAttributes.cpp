@@ -278,16 +278,18 @@ nsMappedAttributes::IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
   return -1;
 }
 
-size_t
-nsMappedAttributes::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+PRInt64
+nsMappedAttributes::SizeOf() const
 {
   NS_ASSERTION(mAttrCount == mBufferSize,
                "mBufferSize and mAttrCount are expected to be the same.");
 
-  size_t n = aMallocSizeOf(this);
+  PRInt64 size = sizeof(*this) - sizeof(void*) + mAttrCount * sizeof(InternalAttr);
+
   for (PRUint16 i = 0; i < mAttrCount; ++i) {
-    n += Attrs()[i].mValue.SizeOfExcludingThis(aMallocSizeOf);
+    size += Attrs()[i].mValue.SizeOf() - sizeof(Attrs()[i].mValue);
   }
-  return n;
+
+  return size;
 }
 

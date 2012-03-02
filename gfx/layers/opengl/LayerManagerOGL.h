@@ -236,13 +236,9 @@ public:
   }
 
   ColorTextureLayerProgram *GetFBOLayerProgram() {
-    return static_cast<ColorTextureLayerProgram*>(mPrograms[GetFBOLayerProgramType()]);
-  }
-
-  gl::ShaderProgramType GetFBOLayerProgramType() {
     if (mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB)
-      return gl::RGBARectLayerProgramType;
-    return gl::RGBALayerProgramType;
+      return static_cast<ColorTextureLayerProgram*>(mPrograms[gl::RGBARectLayerProgramType]);
+    return static_cast<ColorTextureLayerProgram*>(mPrograms[gl::RGBALayerProgramType]);
   }
 
   GLContext *gl() const { return mGLContext; }
@@ -456,7 +452,7 @@ private:
   /**
    * Copies the content of our backbuffer to the set transaction target.
    */
-  void CopyToTarget(gfxContext *aTarget);
+  void CopyToTarget();
 
   /**
    * Updates all layer programs with a new projection matrix.

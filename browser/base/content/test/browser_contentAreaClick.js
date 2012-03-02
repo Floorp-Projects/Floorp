@@ -73,12 +73,8 @@ let gTests = [
   // just be like Alt click.
   {
     desc: "Shift+Alt left click",
-    setup: function() {
-      gPrefService.setBoolPref("browser.altClickSave", true);
-    },
-    clean: function() {
-      gPrefService.clearUserPref("browser.altClickSave"); 
-    },
+    setup: function() {},
+    clean: function() {},
     event: { shiftKey: true,
              altKey: true },
     targets: [ "commonlink", "maplink" ],
@@ -88,12 +84,8 @@ let gTests = [
 
   {
     desc: "Shift+Alt left click on XLinks",
-    setup: function() {
-      gPrefService.setBoolPref("browser.altClickSave", true);
-    },
-    clean: function() {
-      gPrefService.clearUserPref("browser.altClickSave"); 
-    },
+    setup: function() {},
+    clean: function() {},
     event: { shiftKey: true,
              altKey: true },
     targets: [ "mathxlink", "svgxlink"],
@@ -113,12 +105,8 @@ let gTests = [
 
   {
     desc: "Alt click",
-    setup: function() {
-      gPrefService.setBoolPref("browser.altClickSave", true);
-    },
-    clean: function() {
-      gPrefService.clearUserPref("browser.altClickSave"); 
-    },
+    setup: function() {},
+    clean: function() {},
     event: { altKey: true },
     targets: [ "commonlink", "maplink" ],
     expectedInvokedMethods: [ "gatherTextUnder", "saveURL" ],
@@ -127,12 +115,8 @@ let gTests = [
 
   {
     desc: "Alt click on XLinks",
-    setup: function() {
-      gPrefService.setBoolPref("browser.altClickSave", true);
-    },
-    clean: function() {
-      gPrefService.clearUserPref("browser.altClickSave"); 
-    },
+    setup: function() {},
+    clean: function() {},
     event: { altKey: true },
     targets: [ "mathxlink", "svgxlink" ],
     expectedInvokedMethods: [ "saveURL" ],
@@ -165,7 +149,9 @@ let gTests = [
       gPrefService.setBoolPref("browser.tabs.opentabfor.middleclick", false);
     },
     clean: function() {
-      gPrefService.clearUserPref("browser.tabs.opentabfor.middleclick");
+      try {
+        gPrefService.clearUserPref("browser.tabs.opentabfor.middleclick");
+      } catch(ex) {}
     },
     event: { button: 1 },
     targets: [ "commonlink", "mathxlink", "svgxlink", "maplink" ],
@@ -180,8 +166,12 @@ let gTests = [
       gPrefService.setBoolPref("general.autoScroll", false);
     },
     clean: function() {
-      gPrefService.clearUserPref("middlemouse.contentLoadURL");
-      gPrefService.clearUserPref("general.autoScroll");
+      try {
+        gPrefService.clearUserPref("middlemouse.contentLoadURL");
+      } catch(ex) {}
+      try {
+        gPrefService.clearUserPref("general.autoScroll");
+      } catch(ex) {}
     },
     event: { button: 1 },
     targets: [ "emptylink" ],

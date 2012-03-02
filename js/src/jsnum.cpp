@@ -623,7 +623,7 @@ num_toStringHelper(JSContext *cx, Native native, unsigned argc, Value *vp)
         return ok;
 
     int32_t base = 10;
-    if (args.hasDefined(0)) {
+    if (args.length() != 0 && !args[0].isUndefined()) {
         double d2;
         if (!ToInteger(cx, args[0], &d2))
             return false;
@@ -850,11 +850,10 @@ num_toExponential(JSContext *cx, unsigned argc, Value *vp)
 static JSBool
 num_toPrecision(JSContext *cx, unsigned argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.hasDefined(0))
+    if (argc == 0 || vp[2].isUndefined())
         return num_toStringHelper(cx, num_toPrecision, 0, vp);
     return num_to(cx, num_toPrecision, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0,
-                  args);
+                  CallArgsFromVp(argc, vp));
 }
 
 static JSFunctionSpec number_methods[] = {

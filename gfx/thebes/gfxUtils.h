@@ -167,10 +167,6 @@ public:
      * Copy a PNG encoded Data URL to the clipboard.
      */
     static void CopyAsDataURL(mozilla::gfx::DrawTarget* aDT);
-
-    static bool sDumpPainting;
-    static bool sDumpPaintingToFile;
-    static FILE* sDumpPaintFile;
 #endif
 };
 

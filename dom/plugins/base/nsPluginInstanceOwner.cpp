@@ -212,10 +212,9 @@ nsPluginInstanceOwner::GetImageContainer()
     mInstance->GetImageContainer(getter_AddRefs(container));
     if (container) {
 #ifdef XP_MACOSX
-      AutoLockImage autoLock(container);
-      Image* image = autoLock.GetImage();
+      nsRefPtr<Image> image = container->GetCurrentImage();
       if (image && image->GetFormat() == Image::MAC_IO_SURFACE && mObjectFrame) {
-        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
+        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
         NS_ADDREF_THIS();
         oglImage->SetUpdateCallback(&DrawPlugin, this);
         oglImage->SetDestroyCallback(&OnDestroyImage);
@@ -671,15 +670,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
- 
-NS_IMETHODIMP
-nsPluginInstanceOwner::RedrawPlugin()
-{
-  if (mObjectFrame) {
-    mObjectFrame->InvalidateLayer(mObjectFrame->GetContentRectRelativeToSelf(), nsDisplayItem::TYPE_PLUGIN);
-  }
-  return NS_OK;
-}
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 {
@@ -799,21 +789,6 @@ NPBool nsPluginInstanceOwner::ConvertPoint(double sourceX, double sourceY, NPCoo
   // we should implement this for all platforms
   return false;
 #endif
-}
-
-NPError nsPluginInstanceOwner::InitAsyncSurface(NPSize *size, NPImageFormat format,
-                                                void *initData, NPAsyncSurface *surface)
-{
-  return NPERR_GENERIC_ERROR;
-}
-
-NPError nsPluginInstanceOwner::FinalizeAsyncSurface(NPAsyncSurface *)
-{
-  return NPERR_GENERIC_ERROR;
-}
-
-void nsPluginInstanceOwner::SetCurrentAsyncSurface(NPAsyncSurface *, NPRect*)
-{
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
@@ -3729,11 +3704,10 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
     nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
     if (container) {
 #ifdef XP_MACOSX
-      AutoLockImage autoLock(container);
-      Image *image = autoLock.GetImage();
+      nsRefPtr<Image> image = container->GetCurrentImage();
       if (image && (image->GetFormat() == Image::MAC_IO_SURFACE) && mObjectFrame) {
         // Undo what we did to the current image in SetCurrentImage().
-        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
+        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
         oglImage->SetUpdateCallback(nsnull, nsnull);
         oglImage->SetDestroyCallback(nsnull);
         // If we have a current image here, its destructor hasn't yet been
@@ -3741,9 +3715,6 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
         // to do ourselves what OnDestroyImage() would have done.
         NS_RELEASE_THIS();
       }
-      // Important! Unlock here otherwise SetCurrentImage will deadlock with
-      // our lock if we have a RemoteImage.
-      autoLock.Unlock();
 #endif
       container->SetCurrentImage(nsnull);
     }

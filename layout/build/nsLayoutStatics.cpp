@@ -82,6 +82,7 @@
 #include "nsCrossSiteListenerProxy.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsHtml5Module.h"
+#include "nsCrossSiteListenerProxy.h"
 #include "nsFocusManager.h"
 #include "nsFrameList.h"
 #include "nsListControlFrame.h"

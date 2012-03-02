@@ -312,10 +312,10 @@ assertExpr("[1,,,2,,,3]", arrExpr([lit(1),,,lit(2),,,lit(3)]));
 assertExpr("[,1,2,3]", arrExpr([,lit(1),lit(2),lit(3)]));
 assertExpr("[,,1,2,3]", arrExpr([,,lit(1),lit(2),lit(3)]));
 assertExpr("[,,,1,2,3]", arrExpr([,,,lit(1),lit(2),lit(3)]));
-assertExpr("[,,,1,2,3,]", arrExpr([,,,lit(1),lit(2),lit(3),]));
-assertExpr("[,,,1,2,3,,]", arrExpr([,,,lit(1),lit(2),lit(3),,]));
-assertExpr("[,,,1,2,3,,,]", arrExpr([,,,lit(1),lit(2),lit(3),,,]));
-assertExpr("[,,,,,]", arrExpr([,,,,,]));
+assertExpr("[,,,1,2,3,]", arrExpr([,,,lit(1),lit(2),lit(3)]));
+assertExpr("[,,,1,2,3,,]", arrExpr([,,,lit(1),lit(2),lit(3),]));
+assertExpr("[,,,1,2,3,,,]", arrExpr([,,,lit(1),lit(2),lit(3),,]));
+assertExpr("[,,,,,]", arrExpr([,,,,]));
 assertExpr("({})", objExpr([]));
 assertExpr("({x:1})", objExpr([{ key: ident("x"), value: lit(1) }]));
 assertExpr("({x:1, y:2})", objExpr([{ key: ident("x"), value: lit(1) },
@@ -436,10 +436,9 @@ assertStmt("function f() { function g() { } function g() { } }",
            funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
                                               funDecl(ident("g"), [], blockStmt([]))])));
 
-// Fails due to parser quirks (bug 638577)
-//assertStmt("function f() { function g() { } function g() { return 42 } }",
-//           funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
-//                                              funDecl(ident("g"), [], blockStmt([returnStmt(lit(42))]))])));
+assertStmt("function f() { function g() { } function g() { return 42 } }",
+           funDecl(ident("f"), [], blockStmt([funDecl(ident("g"), [], blockStmt([])),
+                                              funDecl(ident("g"), [], blockStmt([returnStmt(lit(42))]))])));
 
 assertStmt("function f() { var x = 42; var x = 43; }",
            funDecl(ident("f"), [], blockStmt([varDecl([{ id: ident("x"), init: lit(42) }]),

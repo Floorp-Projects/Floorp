@@ -115,7 +115,7 @@ extern JS_PUBLIC_DATA(uint32_t) OOM_counter; /* data race, who cares. */
 #  define JS_OOM_POSSIBLY_FAIL() \
     do \
     { \
-        if (++OOM_counter > OOM_maxAllocations) { \
+        if (OOM_counter++ >= OOM_maxAllocations) { \
             return NULL; \
         } \
     } while (0)

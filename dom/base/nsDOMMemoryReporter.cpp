@@ -95,7 +95,8 @@ struct WindowTotals
   size_t mStyleSheets;
 };
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMStyleMallocSizeOf, "dom+style")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WindowStyleSheetsMallocSizeOf,
+                                     "window/style-sheets")
 
 static void
 CollectWindowReports(nsGlobalWindow *aWindow,
@@ -155,8 +156,8 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   nsIDocShell *docShell = aWindow->GetDocShell();
 
   nsGlobalWindow *top = aWindow->GetTop();
-  nsWindowSizes windowSizes(DOMStyleMallocSizeOf);
-  aWindow->SizeOfIncludingThis(&windowSizes);
+  PRInt64 windowDOMSize = aWindow->SizeOf();
+  PRInt64 styleSheetsSize = aWindow->SizeOfStyleSheets(WindowStyleSheetsMallocSizeOf);
 
   if (docShell && aWindow->IsFrozen()) {
     windowPath += NS_LITERAL_CSTRING("cached/");
@@ -199,27 +200,27 @@ CollectWindowReports(nsGlobalWindow *aWindow,
     windowPath += NS_LITERAL_CSTRING("outer-windows");
   }
 
-  if (windowSizes.mDOM > 0) {
+  if (windowDOMSize > 0) {
     nsCAutoString domPath(windowPath);
     domPath += "/dom";
     NS_NAMED_LITERAL_CSTRING(kWindowDesc,
                              "Memory used by a window and the DOM within it.");
     aCb->Callback(EmptyCString(), domPath, nsIMemoryReporter::KIND_HEAP,
-                  nsIMemoryReporter::UNITS_BYTES, windowSizes.mDOM,
-                  kWindowDesc, aClosure);
-    aWindowTotals->mDom += windowSizes.mDOM;
+                  nsIMemoryReporter::UNITS_BYTES, windowDOMSize, kWindowDesc,
+                  aClosure);
+    aWindowTotals->mDom += windowDOMSize;
   }
 
-  if (windowSizes.mStyleSheets > 0) {
+  if (styleSheetsSize > 0) {
     nsCAutoString styleSheetsPath(windowPath);
     styleSheetsPath += "/style-sheets";
     NS_NAMED_LITERAL_CSTRING(kStyleSheetsDesc,
                              "Memory used by style sheets within a window.");
     aCb->Callback(EmptyCString(), styleSheetsPath,
                   nsIMemoryReporter::KIND_HEAP,
-                  nsIMemoryReporter::UNITS_BYTES, windowSizes.mStyleSheets,
+                  nsIMemoryReporter::UNITS_BYTES, styleSheetsSize,
                   kStyleSheetsDesc, aClosure);
-    aWindowTotals->mStyleSheets += windowSizes.mStyleSheets;
+    aWindowTotals->mStyleSheets += styleSheetsSize;
   }
 }
 

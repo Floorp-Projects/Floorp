@@ -5157,10 +5157,10 @@ incorrect])
     else
        AC_CHECK_LIB(QtSensors, main, [
           MOZ_ENABLE_QTMOBILITY=1
-          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtMobility"
-          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtSensors"
-          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtFeedback"
-          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtLocation"
+          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtMobility"
+          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtSensors"
+          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtFeedback"
+          MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I/usr/include/qt4/QtLocation"
           MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtSensors -lQtFeedback -lQtLocation"
        ])
     fi

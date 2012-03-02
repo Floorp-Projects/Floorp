@@ -1149,17 +1149,21 @@ Navigator::GetMozBluetooth(nsIDOMBluetoothAdapter** aBluetooth)
 }
 #endif //MOZ_B2G_BT
 
-size_t
-Navigator::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+PRInt64
+Navigator::SizeOf() const
 {
-  size_t n = aMallocSizeOf(this);
+  PRInt64 size = sizeof(*this);
 
-  // TODO: add SizeOfIncludingThis() to nsMimeTypeArray, bug 674113.
-  // TODO: add SizeOfIncludingThis() to nsPluginArray, bug 674114.
-  // TODO: add SizeOfIncludingThis() to nsGeolocation, bug 674115.
-  // TODO: add SizeOfIncludingThis() to nsDesktopNotificationCenter, bug 674116.
+  // TODO: add SizeOf() to nsMimeTypeArray, bug 674113.
+  size += mMimeTypes ? sizeof(*mMimeTypes.get()) : 0;
+  // TODO: add SizeOf() to nsPluginArray, bug 674114.
+  size += mPlugins ? sizeof(*mPlugins.get()) : 0;
+  // TODO: add SizeOf() to nsGeolocation, bug 674115.
+  size += mGeolocation ? sizeof(*mGeolocation.get()) : 0;
+  // TODO: add SizeOf() to nsDesktopNotificationCenter, bug 674116.
+  size += mNotification ? sizeof(*mNotification.get()) : 0;
 
-  return n;
+  return size;
 }
 
 void

@@ -84,9 +84,6 @@ public:
   // nsIDOMHTMLLinkElement
   NS_DECL_NSIDOMHTMLLINKELEMENT
 
-  // TODO: nsHTMLLinkElement::SizeOfAnchorElement should call
-  // Link::SizeOfExcludingThis().  See bug 682431.
-
   // nsILink
   NS_IMETHOD    LinkAdded();
   NS_IMETHOD    LinkRemoved();

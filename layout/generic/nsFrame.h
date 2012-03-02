@@ -728,8 +728,7 @@ public:
 public:
 
   static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
-                               const nsDisplayList& aList,
-                               FILE* aFile = stdout);
+                               const nsDisplayList& aList);
 
 #endif
 };

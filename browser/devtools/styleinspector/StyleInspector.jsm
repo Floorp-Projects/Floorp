@@ -82,7 +82,7 @@ StyleInspector.prototype = {
       this.registrationObject = {
         id: "styleinspector",
         label: this.l10n("style.highlighter.button.label2"),
-        tooltiptext: this.l10n("style.highlighter.button.tooltip2"),
+        tooltiptext: this.l10n("style.highlighter.button.tooltip"),
         accesskey: this.l10n("style.highlighter.accesskey2"),
         context: this,
         get isOpen() isOpen(),

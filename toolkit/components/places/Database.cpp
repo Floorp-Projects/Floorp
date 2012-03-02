@@ -1856,7 +1856,8 @@ Database::Shutdown()
   nsRefPtr<BlockingConnectionCloseCallback> closeListener =
     new BlockingConnectionCloseCallback();
   (void)mMainConn->AsyncClose(closeListener);
-  closeListener->Spin();
+  // The spinning is temporarily disabled. See bug 728653.
+  //closeListener->Spin();
 
   // Don't set this earlier, otherwise some internal helper used on shutdown
   // may bail out.

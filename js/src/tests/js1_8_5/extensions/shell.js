@@ -139,9 +139,6 @@ var Match =
             throw new MatchError("expected array-like object, got " + quote(act));
 
         var length = exp.length;
-        if (act.length !== exp.length)
-            throw new MatchError("expected array-like object of length " + length + ", got " + quote(act));
-
         for (var i = 0; i < length; i++) {
             if (i in exp) {
                 if (!(i in act))

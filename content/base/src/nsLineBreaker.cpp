@@ -65,7 +65,7 @@ SetupCapitalization(const PRUnichar* aWord, PRUint32 aLength,
   // The only space character a word can contain is NBSP.
   bool capitalizeNextChar = true;
   for (PRUint32 i = 0; i < aLength; ++i) {
-    if (capitalizeNextChar && !nsContentUtils::IsFirstLetterPunctuation(aWord[i])) {
+    if (capitalizeNextChar && !nsContentUtils::IsPunctuationMark(aWord[i])) {
       aCapitalization[i] = true;
       capitalizeNextChar = false;
     }

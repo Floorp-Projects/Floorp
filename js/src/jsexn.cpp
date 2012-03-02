@@ -746,7 +746,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
 
     /* Set the 'message' property. */
     JSString *message;
-    if (args.hasDefined(0)) {
+    if (args.length() != 0 && !args[0].isUndefined()) {
         message = ToString(cx, args[0]);
         if (!message)
             return false;

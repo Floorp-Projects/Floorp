@@ -1062,7 +1062,7 @@ class HashMap
      */
     typedef typename Impl::Range Range;
     Range all() const                                 { return impl.all(); }
-    uint32_t count() const                            { return impl.count(); }
+    size_t count() const                              { return impl.count(); }
     size_t capacity() const                           { return impl.capacity(); }
     size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
         return impl.sizeOfExcludingThis(mallocSizeOf);
@@ -1272,7 +1272,7 @@ class HashSet
      */
     typedef typename Impl::Range Range;
     Range all() const                                 { return impl.all(); }
-    uint32_t count() const                            { return impl.count(); }
+    size_t count() const                              { return impl.count(); }
     size_t capacity() const                           { return impl.capacity(); }
     size_t sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf) const {
         return impl.sizeOfExcludingThis(mallocSizeOf);

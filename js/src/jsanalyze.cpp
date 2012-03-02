@@ -1316,7 +1316,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 SlotValue &v = (*pending)[i];
                 if (v.slot < numSlots && liveness(v.slot).firstWrite(code->loop) != UINT32_MAX) {
                     if (v.value.kind() != SSAValue::PHI || v.value.phiOffset() != offset) {
-                        JS_ASSERT(v.value.phiOffset() < offset);
                         SSAValue ov = v.value;
                         if (!makePhi(cx, v.slot, offset, &ov))
                             return;
@@ -1525,14 +1524,19 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             jsint high = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
 
+            Vector<SlotValue> *pending = NULL;
+            uint32_t pendingOffset = 0;
+
             for (jsint i = low; i <= high; i++) {
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (targetOffset != offset)
-                    checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
+                    checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth,
+                                      &pending, &pendingOffset);
                 pc2 += JUMP_OFFSET_LEN;
             }
 
-            checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);
+            checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth,
+                              &pending, &pendingOffset);
             break;
           }
 
@@ -1542,15 +1546,20 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             unsigned npairs = GET_UINT16(pc2);
             pc2 += UINT16_LEN;
 
+            Vector<SlotValue> *pending = NULL;
+            uint32_t pendingOffset = 0;
+
             while (npairs) {
                 pc2 += UINT32_INDEX_LEN;
                 unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
-                checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
+                checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth,
+                                  &pending, &pendingOffset);
                 pc2 += JUMP_OFFSET_LEN;
                 npairs--;
             }
 
-            checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);
+            checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth,
+                              &pending, &pendingOffset);
             break;
           }
 
@@ -1687,7 +1696,7 @@ ScriptAnalysis::mergeValue(JSContext *cx, uint32_t offset, const SSAValue &v, Sl
     if (v == pv->value)
         return;
 
-    if (pv->value.kind() != SSAValue::PHI || pv->value.phiOffset() < offset) {
+    if (pv->value.kind() != SSAValue::PHI || pv->value.phiOffset() != offset) {
         SSAValue ov = pv->value;
         if (makePhi(cx, pv->slot, offset, &pv->value)) {
             insertPhi(cx, pv->value, v);
@@ -1696,7 +1705,6 @@ ScriptAnalysis::mergeValue(JSContext *cx, uint32_t offset, const SSAValue &v, Sl
         return;
     }
 
-    JS_ASSERT(pv->value.phiOffset() == offset);
     insertPhi(cx, pv->value, v);
 }
 
@@ -1718,7 +1726,8 @@ ScriptAnalysis::checkPendingValue(JSContext *cx, const SSAValue &v, uint32_t slo
 void
 ScriptAnalysis::checkBranchTarget(JSContext *cx, uint32_t targetOffset,
                                   Vector<uint32_t> &branchTargets,
-                                  SSAValueInfo *values, uint32_t stackDepth)
+                                  SSAValueInfo *values, uint32_t stackDepth,
+                                  Vector<SlotValue> **ppending, uint32_t *ppendingOffset)
 {
     unsigned targetDepth = getCode(targetOffset).stackDepth;
     JS_ASSERT(targetDepth <= stackDepth);
@@ -1735,10 +1744,24 @@ ScriptAnalysis::checkBranchTarget(JSContext *cx, uint32_t targetOffset,
             mergeValue(cx, targetOffset, values[v.slot].v, &v);
         }
     } else {
-        pending = cx->new_< Vector<SlotValue> >(cx);
-        if (!pending || !branchTargets.append(targetOffset)) {
+        if (ppending && *ppending) {
+            JS_ASSERT(*ppendingOffset != targetOffset);
+            pending = *ppending;
+            getCode(Min(targetOffset, *ppendingOffset)).switchSharesPending = true;
+        } else {
+            pending = cx->new_< Vector<SlotValue> >(cx);
+            if (!pending) {
+                setOOM(cx);
+                return;
+            }
+        }
+        if (!branchTargets.append(targetOffset)) {
             setOOM(cx);
             return;
+        }
+        if (ppending) {
+            *ppending = pending;
+            *ppendingOffset = Max(targetOffset, *ppendingOffset);
         }
     }
 
@@ -1798,6 +1821,13 @@ ScriptAnalysis::mergeBranchTarget(JSContext *cx, SSAValueInfo &value, uint32_t s
             continue;
 
         const Bytecode &code = getCode(branchTargets[i]);
+
+        /*
+         * If the pending array for this offset is shared with a later branch
+         * target, it will be updated when that offset is handled.
+         */
+        if (code.switchSharesPending)
+            continue;
 
         Vector<SlotValue> *pending = code.pendingValues;
         checkPendingValue(cx, value.v, slot, pending);
@@ -1863,7 +1893,8 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32_t offset)
 
     unsigned count = pending->length();
     if (count == 0) {
-        cx->delete_(pending);
+        if (!code.switchSharesPending)
+            cx->delete_(pending);
         return;
     }
 
@@ -1878,7 +1909,8 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32_t offset)
     code.newValues[count].slot = 0;
     code.newValues[count].value.clear();
 
-    cx->delete_(pending);
+    if (!code.switchSharesPending)
+        cx->delete_(pending);
 }
 
 CrossSSAValue

@@ -1004,20 +1004,20 @@ nsEventListenerManager::GetJSEventListener(nsIAtom *aEventName, jsval *vp)
   *vp = OBJECT_TO_JSVAL(listener->GetHandler());
 }
 
-size_t
-nsEventListenerManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
-  const
+PRInt64
+nsEventListenerManager::SizeOf() const
 {
-  size_t n = aMallocSizeOf(this);
-  n += mListeners.SizeOfExcludingThis(aMallocSizeOf);
+  PRInt64 size = sizeof(*this);
   PRUint32 count = mListeners.Length();
   for (PRUint32 i = 0; i < count; ++i) {
-    nsIJSEventListener* jsl = mListeners.ElementAt(i).GetJSListener();
+    const nsListenerStruct& ls = mListeners.ElementAt(i);
+    size += sizeof(ls);
+    nsIJSEventListener* jsl = ls.GetJSListener();
     if (jsl) {
-      n += jsl->SizeOfIncludingThis(aMallocSizeOf);
+      size += jsl->SizeOf();
     }
   }
-  return n;
+  return size;
 }
 
 void

@@ -40,24 +40,40 @@
 
 #include "nsIMemoryReporter.h"
 
-// This should be used for any nsINode sub-class that has fields of its own
-// that it needs to measure;  any sub-class that doesn't use it will inherit
-// SizeOfExcludingThis from its super-class.  SizeOfIncludingThis() need not be
-// defined, it is inherited from nsINode.
-#define NS_DECL_SIZEOF_EXCLUDING_THIS \
-  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
-class nsWindowSizes {
-public:
-    nsWindowSizes(nsMallocSizeOfFun aMallocSizeOf)
-    : mMallocSizeOf(aMallocSizeOf),
-      mDOM(0),
-      mStyleSheets(0)
-    {}
-    nsMallocSizeOfFun mMallocSizeOf;
-    size_t mDOM;
-    size_t mStyleSheets;
-};
+/**
+ * Helper methods for the DOM Memory Reporter.
+ */
+namespace mozilla {
+  namespace dom {
+    namespace MemoryReporter {
+      /**
+       * It will compute the basic size of an object. This means the size of the
+       * object itself plus everything owned by its superclasses.  This will not
+       * include the size of objects owned by this objects (which have to be
+       * manually added to ::SizeOf), but does include the size of any pointers
+       * to those objects stored in this object.
+       */
+      template <class TypeCurrent, class TypeParent>
+      inline PRInt64 GetBasicSize(const TypeCurrent* const obj) {
+        return obj->TypeParent::SizeOf() - sizeof(TypeParent)
+                                         + sizeof(TypeCurrent);
+      }
+    }
+  }
+}
+
+/**
+ * Helper macros to declare/implement SizeOf() method for DOM objects.
+ */
+#define NS_DECL_DOM_MEMORY_REPORTER_SIZEOF  \
+  virtual PRInt64 SizeOf() const;
+
+#define NS_DECL_AND_IMPL_DOM_MEMORY_REPORTER_SIZEOF(TypeCurrent, TypeParent) \
+  virtual PRInt64 SizeOf() const {                                           \
+    return mozilla::dom::MemoryReporter::GetBasicSize<TypeCurrent,           \
+                                                      TypeParent>(this);     \
+  }
 
 class nsDOMMemoryMultiReporter: public nsIMemoryMultiReporter
 {

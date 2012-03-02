@@ -137,194 +137,182 @@ static void PrintImageDecoders()
 #endif
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ImagesMallocSizeOf, "images")
-
+ 
 class imgMemoryReporter MOZ_FINAL :
-  public nsIMemoryMultiReporter
+  public nsIMemoryReporter
 {
 public:
-  imgMemoryReporter()
+  enum ReporterType {
+    CHROME_BIT = PR_BIT(0),
+    USED_BIT   = PR_BIT(1),
+    RAW_BIT    = PR_BIT(2),
+    HEAP_BIT   = PR_BIT(3),
+
+    ChromeUsedRaw                     = CHROME_BIT | USED_BIT | RAW_BIT | HEAP_BIT,
+    ChromeUsedUncompressedHeap        = CHROME_BIT | USED_BIT | HEAP_BIT,
+    ChromeUsedUncompressedNonheap     = CHROME_BIT | USED_BIT,
+    ChromeUnusedRaw                   = CHROME_BIT | RAW_BIT | HEAP_BIT,
+    ChromeUnusedUncompressedHeap      = CHROME_BIT | HEAP_BIT,
+    ChromeUnusedUncompressedNonheap   = CHROME_BIT,
+    ContentUsedRaw                    = USED_BIT | RAW_BIT | HEAP_BIT,
+    ContentUsedUncompressedHeap       = USED_BIT | HEAP_BIT,
+    ContentUsedUncompressedNonheap    = USED_BIT,
+    ContentUnusedRaw                  = RAW_BIT | HEAP_BIT,
+    ContentUnusedUncompressedHeap     = HEAP_BIT,
+    ContentUnusedUncompressedNonheap  = 0
+  };
+
+  imgMemoryReporter(ReporterType aType)
+    : mType(aType)
   {
+    // If the RAW bit is set, HEAP should also be set, because we don't
+    // currently understand storing compressed image data off the heap.
+    NS_ASSERTION(!(aType & RAW_BIT) || (aType & HEAP_BIT),
+                 "RAW bit should imply HEAP bit.");
   }
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetName(nsACString &name)
+  NS_IMETHOD GetProcess(nsACString &process)
   {
-    name.Assign("images");
+    process.Truncate();
     return NS_OK;
   }
 
-  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *callback,
-                            nsISupports *closure)
+  NS_IMETHOD GetPath(nsACString &path)
   {
-    AllSizes chrome;
-    AllSizes content;
-    imgLoader::sChromeCache.EnumerateRead(EntryAllSizes, &chrome);
-    imgLoader::sCache.EnumerateRead(EntryAllSizes, &content);
-
-#define REPORT(_path, _kind, _amount, _desc)                                  \
-    do {                                                                      \
-      nsresult rv;                                                            \
-      rv = callback->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),      \
-                              _kind, nsIMemoryReporter::UNITS_BYTES, _amount, \
-                              NS_LITERAL_CSTRING(_desc), closure);            \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-    } while (0)
-
-    REPORT("explicit/images/chrome/used/raw",
-           nsIMemoryReporter::KIND_HEAP, chrome.mUsedRaw,
-           "Memory used by in-use chrome images (compressed data).");
-
-    REPORT("explicit/images/chrome/used/uncompressed-heap",
-           nsIMemoryReporter::KIND_HEAP, chrome.mUsedUncompressedHeap,
-           "Memory used by in-use chrome images (uncompressed data).");
-
-    REPORT("explicit/images/chrome/used/uncompressed-nonheap",
-           nsIMemoryReporter::KIND_NONHEAP, chrome.mUsedUncompressedNonheap,
-           "Memory used by in-use chrome images (uncompressed data).");
-
-    REPORT("explicit/images/chrome/unused/raw",
-           nsIMemoryReporter::KIND_HEAP, chrome.mUnusedRaw,
-           "Memory used by not in-use chrome images (compressed data).");
-
-    REPORT("explicit/images/chrome/unused/uncompressed-heap",
-           nsIMemoryReporter::KIND_HEAP, chrome.mUnusedUncompressedHeap,
-           "Memory used by not in-use chrome images (uncompressed data).");
-
-    REPORT("explicit/images/chrome/unused/uncompressed-nonheap",
-           nsIMemoryReporter::KIND_NONHEAP, chrome.mUnusedUncompressedNonheap,
-           "Memory used by not in-use chrome images (uncompressed data).");
-
-    REPORT("explicit/images/content/used/raw",
-           nsIMemoryReporter::KIND_HEAP, content.mUsedRaw,
-           "Memory used by in-use content images (compressed data).");
-
-    REPORT("explicit/images/content/used/uncompressed-heap",
-           nsIMemoryReporter::KIND_HEAP, content.mUsedUncompressedHeap,
-           "Memory used by in-use content images (uncompressed data).");
-
-    REPORT("explicit/images/content/used/uncompressed-nonheap",
-           nsIMemoryReporter::KIND_NONHEAP, content.mUsedUncompressedNonheap,
-           "Memory used by in-use content images (uncompressed data).");
-
-    REPORT("explicit/images/content/unused/raw",
-           nsIMemoryReporter::KIND_HEAP, content.mUnusedRaw,
-           "Memory used by not in-use content images (compressed data).");
-
-    REPORT("explicit/images/content/unused/uncompressed-heap",
-           nsIMemoryReporter::KIND_HEAP, content.mUnusedUncompressedHeap,
-           "Memory used by not in-use content images (uncompressed data).");
-
-    REPORT("explicit/images/content/unused/uncompressed-nonheap",
-           nsIMemoryReporter::KIND_NONHEAP, content.mUnusedUncompressedNonheap,
-           "Memory used by not in-use content images (uncompressed data).");
-
-#undef REPORT
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetExplicitNonHeap(PRInt64 *n)
-  {
-    size_t n2 = 0;
-    imgLoader::sChromeCache.EnumerateRead(EntryExplicitNonHeapSize, &n2);
-    imgLoader::sCache.EnumerateRead(EntryExplicitNonHeapSize, &n2);
-    *n = n2;
-    return NS_OK;
-  }
-
-  static PRInt64 GetImagesContentUsedUncompressed()
-  {
-    size_t n = 0;
-    imgLoader::sCache.EnumerateRead(EntryUsedUncompressedSize, &n);
-    return n;
-  }
-
-private:
-  struct AllSizes {
-    size_t mUsedRaw;
-    size_t mUsedUncompressedHeap;
-    size_t mUsedUncompressedNonheap;
-    size_t mUnusedRaw;
-    size_t mUnusedUncompressedHeap;
-    size_t mUnusedUncompressedNonheap;
-
-    AllSizes() {
-      memset(this, 0, sizeof(*this));
+    if (mType == ChromeUsedRaw) {
+      path.AssignLiteral("explicit/images/chrome/used/raw");
+    } else if (mType == ChromeUsedUncompressedHeap) {
+      path.AssignLiteral("explicit/images/chrome/used/uncompressed-heap");
+    } else if (mType == ChromeUsedUncompressedNonheap) {
+      path.AssignLiteral("explicit/images/chrome/used/uncompressed-nonheap");
+    } else if (mType == ChromeUnusedRaw) {
+      path.AssignLiteral("explicit/images/chrome/unused/raw");
+    } else if (mType == ChromeUnusedUncompressedHeap) {
+      path.AssignLiteral("explicit/images/chrome/unused/uncompressed-heap");
+    } else if (mType == ChromeUnusedUncompressedNonheap) {
+      path.AssignLiteral("explicit/images/chrome/unused/uncompressed-nonheap");
+    } else if (mType == ContentUsedRaw) {
+      path.AssignLiteral("explicit/images/content/used/raw");
+    } else if (mType == ContentUsedUncompressedHeap) {
+      path.AssignLiteral("explicit/images/content/used/uncompressed-heap");
+    } else if (mType == ContentUsedUncompressedNonheap) {
+      path.AssignLiteral("explicit/images/content/used/uncompressed-nonheap");
+    } else if (mType == ContentUnusedRaw) {
+      path.AssignLiteral("explicit/images/content/unused/raw");
+    } else if (mType == ContentUnusedUncompressedHeap) {
+      path.AssignLiteral("explicit/images/content/unused/uncompressed-heap");
+    } else if (mType == ContentUnusedUncompressedNonheap) {
+      path.AssignLiteral("explicit/images/content/unused/uncompressed-nonheap");
     }
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetKind(PRInt32 *kind)
+  {
+    if (mType & HEAP_BIT) {
+      *kind = KIND_HEAP;
+    }
+    else {
+      *kind = KIND_MAPPED;
+    }
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetUnits(PRInt32 *units)
+  {
+    *units = UNITS_BYTES;
+    return NS_OK;
+  }
+
+  struct EnumArg {
+    EnumArg(ReporterType aType)
+      : rtype(aType), n(0)
+    { }
+
+    ReporterType rtype;
+    size_t n;
   };
 
-  static PLDHashOperator EntryAllSizes(const nsACString&,
-                                       imgCacheEntry *entry,
-                                       void *userArg)
+  static PLDHashOperator EnumEntries(const nsACString&,
+                                     imgCacheEntry *entry,
+                                     void *userArg)
   {
+    EnumArg *arg = static_cast<EnumArg*>(userArg);
+    ReporterType rtype = arg->rtype;
+
+    if (rtype & USED_BIT) {
+      if (entry->HasNoProxies())
+        return PL_DHASH_NEXT;
+    } else {
+      if (!entry->HasNoProxies())
+        return PL_DHASH_NEXT;
+    }
+
     nsRefPtr<imgRequest> req = entry->GetRequest();
     Image *image = static_cast<Image*>(req->mImage.get());
-    if (image) {
-      AllSizes *sizes = static_cast<AllSizes*>(userArg);
-      if (entry->HasNoProxies()) {
-        sizes->mUnusedRaw +=
-          image->HeapSizeOfSourceWithComputedFallback(ImagesMallocSizeOf);
-        sizes->mUnusedUncompressedHeap +=
-          image->HeapSizeOfDecodedWithComputedFallback(ImagesMallocSizeOf);
-        sizes->mUnusedUncompressedNonheap += image->NonHeapSizeOfDecoded();
-      } else {
-        sizes->mUsedRaw +=
-          image->HeapSizeOfSourceWithComputedFallback(ImagesMallocSizeOf);
-        sizes->mUsedUncompressedHeap +=
-          image->HeapSizeOfDecodedWithComputedFallback(ImagesMallocSizeOf);
-        sizes->mUsedUncompressedNonheap += image->NonHeapSizeOfDecoded();
-      }
+    if (!image)
+      return PL_DHASH_NEXT;
+
+    if (rtype & RAW_BIT) {
+      arg->n += image->HeapSizeOfSourceWithComputedFallback(ImagesMallocSizeOf);
+    } else if (rtype & HEAP_BIT) {
+      arg->n += image->HeapSizeOfDecodedWithComputedFallback(ImagesMallocSizeOf);
+    } else {
+      arg->n += image->NonHeapSizeOfDecoded();
     }
 
     return PL_DHASH_NEXT;
   }
 
-  static PLDHashOperator EntryExplicitNonHeapSize(const nsACString&,
-                                                  imgCacheEntry *entry,
-                                                  void *userArg)
+  NS_IMETHOD GetAmount(PRInt64 *amount)
   {
-    size_t *n = static_cast<size_t*>(userArg);
-    nsRefPtr<imgRequest> req = entry->GetRequest();
-    Image *image = static_cast<Image*>(req->mImage.get());
-    if (image) {
-      *n += image->NonHeapSizeOfDecoded();
+    EnumArg arg(mType);
+    if (mType & CHROME_BIT) {
+      imgLoader::sChromeCache.EnumerateRead(EnumEntries, &arg);
+    } else {
+      imgLoader::sCache.EnumerateRead(EnumEntries, &arg);
     }
 
-    return PL_DHASH_NEXT;
+    *amount = arg.n;
+    return NS_OK;
   }
 
-  static PLDHashOperator EntryUsedUncompressedSize(const nsACString&,
-                                                   imgCacheEntry *entry,
-                                                   void *userArg)
+  NS_IMETHOD GetDescription(nsACString &desc)
   {
-    if (!entry->HasNoProxies()) {
-      size_t *n = static_cast<size_t*>(userArg);
-      nsRefPtr<imgRequest> req = entry->GetRequest();
-      Image *image = static_cast<Image*>(req->mImage.get());
-      if (image) {
-        *n += image->HeapSizeOfDecodedWithComputedFallback(ImagesMallocSizeOf);
-        *n += image->NonHeapSizeOfDecoded();
-      }
+    if (mType == ChromeUsedRaw) {
+      desc.AssignLiteral("Memory used by in-use chrome images (compressed data).");
+    } else if (mType == ChromeUsedUncompressedHeap) {
+      desc.AssignLiteral("Memory used by in-use chrome images (uncompressed data).");
+    } else if (mType == ChromeUsedUncompressedNonheap) {
+      desc.AssignLiteral("Memory used by in-use chrome images (uncompressed data).");
+    } else if (mType == ChromeUnusedRaw) {
+      desc.AssignLiteral("Memory used by not in-use chrome images (compressed data).");
+    } else if (mType == ChromeUnusedUncompressedHeap) {
+      desc.AssignLiteral("Memory used by not in-use chrome images (uncompressed data).");
+    } else if (mType == ChromeUnusedUncompressedNonheap) {
+      desc.AssignLiteral("Memory used by not in-use chrome images (uncompressed data).");
+    } else if (mType == ContentUsedRaw) {
+      desc.AssignLiteral("Memory used by in-use content images (compressed data).");
+    } else if (mType == ContentUsedUncompressedHeap) {
+      desc.AssignLiteral("Memory used by in-use content images (uncompressed data).");
+    } else if (mType == ContentUsedUncompressedNonheap) {
+      desc.AssignLiteral("Memory used by in-use content images (uncompressed data).");
+    } else if (mType == ContentUnusedRaw) {
+      desc.AssignLiteral("Memory used by not in-use content images (compressed data).");
+    } else if (mType == ContentUnusedUncompressedHeap) {
+      desc.AssignLiteral("Memory used by not in-use content images (uncompressed data).");
+    } else if (mType == ContentUnusedUncompressedNonheap) {
+      desc.AssignLiteral("Memory used by not in-use content images (uncompressed data).");
     }
-
-    return PL_DHASH_NEXT;
+    return NS_OK;
   }
+
+  ReporterType mType;
 };
 
-// This is used by telemetry.
-NS_MEMORY_REPORTER_IMPLEMENT(
-  ImagesContentUsedUncompressed,
-  "images-content-used-uncompressed",
-  KIND_OTHER,
-  UNITS_BYTES,
-  imgMemoryReporter::GetImagesContentUsedUncompressed,
-  "This is the sum of the 'explicit/images/content/used/uncompressed-heap' "
-  "and 'explicit/images/content/used/uncompressed-nonheap' numbers.  However, "
-  "it is measured at a different time and so may give slightly different "
-  "results.")
-
-NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryReporter)
 
 NS_IMPL_ISUPPORTS3(nsProgressNotificationProxy,
                      nsIProgressEventSink,
@@ -934,8 +922,18 @@ nsresult imgLoader::InitCache()
   else
     sCacheMaxSize = 5 * 1024 * 1024;
 
-  NS_RegisterMemoryMultiReporter(new imgMemoryReporter());
-  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(ImagesContentUsedUncompressed));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUsedRaw));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUsedUncompressedHeap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUsedUncompressedNonheap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUnusedRaw));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUnusedUncompressedHeap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUnusedUncompressedNonheap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUsedRaw));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUsedUncompressedHeap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUsedUncompressedNonheap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUnusedRaw));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUnusedUncompressedHeap));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUnusedUncompressedNonheap));
   
   return NS_OK;
 }
@@ -1286,11 +1284,6 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
 
     nsCOMPtr<nsIStreamListener> listener = hvc.get();
 
-    // We must set the notification callbacks before setting up the
-    // CORS listener, because that's also interested inthe
-    // notification callbacks.
-    newChannel->SetNotificationCallbacks(hvc);
-
     if (aCORSMode != imgIRequest::CORS_NONE) {
       bool withCredentials = aCORSMode == imgIRequest::CORS_USE_CREDENTIALS;
       nsCOMPtr<nsIStreamListener> corsproxy =
@@ -1301,6 +1294,8 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
 
       listener = corsproxy;
     }
+
+    newChannel->SetNotificationCallbacks(hvc);
 
     request->mValidator = hvc;
 

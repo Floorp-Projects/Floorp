@@ -376,7 +376,7 @@ public:
    */
   bool ParseIntMarginValue(const nsAString& aString);
 
-  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  PRInt64 SizeOf() const;
 
 private:
   // These have to be the same as in ValueType

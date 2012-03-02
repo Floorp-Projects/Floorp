@@ -6197,32 +6197,29 @@ nsGenericElement::MozMatchesSelector(const nsAString& aSelector, bool* aReturn)
   return rv;
 }
 
-size_t
-nsINode::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+PRInt64
+nsINode::SizeOf() const
 {
-  size_t n = 0;
+  PRInt64 size = sizeof(*this);
+
   nsEventListenerManager* elm =
     const_cast<nsINode*>(this)->GetListenerManager(false);
   if (elm) {
-    n += elm->SizeOfIncludingThis(aMallocSizeOf);
+    size += elm->SizeOf();
   }
 
-  // Measurement of the following members may be added later if DMD finds it is
-  // worthwhile:
-  // - mNodeInfo (Nb: allocated in nsNodeInfo.cpp with a nsFixedSizeAllocator)
-  // - mSlots
-  //
-  // The following members are not measured:
-  // - mParent, mNextSibling, mPreviousSibling, mFirstChild: because they're
-  //   non-owning
-  return n;
+  return size;
 }
 
-size_t
-nsGenericElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+PRInt64
+nsGenericElement::SizeOf() const
 {
-  return Element::SizeOfExcludingThis(aMallocSizeOf) +
-         mAttrsAndChildren.SizeOfExcludingThis(aMallocSizeOf);
+  PRInt64 size = MemoryReporter::GetBasicSize<nsGenericElement, Element>(this);
+
+  size -= sizeof(mAttrsAndChildren);
+  size += mAttrsAndChildren.SizeOf();
+
+  return size;
 }
 
 #define EVENT(name_, id_, type_, struct_)                                    \

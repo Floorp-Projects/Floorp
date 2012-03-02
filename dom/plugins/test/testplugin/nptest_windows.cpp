@@ -60,22 +60,14 @@ pluginSupportsWindowlessMode()
   return true;
 }
 
-bool
-pluginSupportsAsyncBitmapDrawing()
-{
-  return true;
-}
-
 NPError
 pluginInstanceInit(InstanceData* instanceData)
 {
-  NPP npp = instanceData->npp;
-
   instanceData->platformData = static_cast<PlatformData*>
     (NPN_MemAlloc(sizeof(PlatformData)));
   if (!instanceData->platformData)
     return NPERR_OUT_OF_MEMORY_ERROR;
-  
+
   instanceData->platformData->childWindow = NULL;
   return NPERR_NO_ERROR;
 }
@@ -91,7 +83,6 @@ void
 pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
 {
   instanceData->window = *newWindow;
-  NPP npp = instanceData->npp;
 }
 
 #define CHILD_WIDGET_SIZE 10

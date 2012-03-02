@@ -58,6 +58,7 @@ browser.jar:
   skin/classic/browser/newtab/strip.png                     (newtab/strip.png)
   skin/classic/browser/newtab/toolbar.png                   (newtab/toolbar.png)
   skin/classic/browser/setDesktopBackground.css
+  skin/classic/browser/inspector.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)
@@ -126,11 +127,9 @@ browser.jar:
 * skin/classic/browser/devtools/common.css                  (devtools/common.css)
   skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
   skin/classic/browser/devtools/commandline.png             (devtools/commandline.png)
-  skin/classic/browser/devtools/alerticon-warning.png       (devtools/alerticon-warning.png)
   skin/classic/browser/devtools/goto-mdn.png                (devtools/goto-mdn.png)
   skin/classic/browser/devtools/csshtmltree.css             (devtools/csshtmltree.css)
   skin/classic/browser/devtools/gcli.css                    (devtools/gcli.css)
-  skin/classic/browser/devtools/htmlpanel.css               (devtools/htmlpanel.css)
   skin/classic/browser/devtools/orion.css                   (devtools/orion.css)
   skin/classic/browser/devtools/orion-container.css         (devtools/orion-container.css)
   skin/classic/browser/devtools/orion-task.png              (devtools/orion-task.png)
@@ -166,10 +165,10 @@ browser.jar:
   skin/classic/browser/devtools/splitview.css               (devtools/splitview.css)
   skin/classic/browser/devtools/styleeditor.css             (devtools/styleeditor.css)
   skin/classic/browser/devtools/debugger.css                (devtools/debugger.css)
-  skin/classic/browser/devtools/magnifying-glass.png        (devtools/magnifying-glass.png)
-  skin/classic/browser/devtools/itemToggle.png              (devtools/itemToggle.png)
-  skin/classic/browser/devtools/itemArrow-rtl.png           (devtools/itemArrow-rtl.png)
-  skin/classic/browser/devtools/itemArrow-ltr.png           (devtools/itemArrow-ltr.png)
+  skin/classic/browser/devtools/magnifying-glass.png	    (devtools/magnifying-glass.png)
+  skin/classic/browser/devtools/itemToggle.png		    (devtools/itemToggle.png)
+  skin/classic/browser/devtools/itemArrow-rtl.png	    (devtools/itemArrow-rtl.png)
+  skin/classic/browser/devtools/itemArrow-ltr.png	    (devtools/itemArrow-ltr.png)
   skin/classic/browser/devtools/background-noise-toolbar.png (devtools/background-noise-toolbar.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png

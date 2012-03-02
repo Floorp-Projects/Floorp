@@ -477,7 +477,7 @@ GetCustomIterator(JSContext *cx, JSObject *obj, unsigned flags, Value *vp)
         return false;
     if (vp->isPrimitive()) {
         /*
-         * We are always coming from js::ValueToIterator, and we are no longer on
+         * We are always coming from js_ValueToIterator, and we are no longer on
          * trace, so the object we are iterating over is on top of the stack (-1).
          */
         JSAutoByteString bytes;
@@ -1157,8 +1157,45 @@ ElementIteratorObject::iteratorNext(JSContext *cx, Value *vp)
     }
 
     JS_ASSERT(i + 1 > i);
-    if (!obj->getElement(cx, obj, i, vp))
-        goto error;
+
+    /* Simple fast path for dense arrays. */
+    if (obj->isDenseArray()) {
+        *vp = obj->getDenseArrayElement(i);
+        if (vp->isMagic(JS_ARRAY_HOLE))
+            vp->setUndefined();
+    } else {
+        /* Make a jsid for this index. */
+        jsid id;
+        if (i < uint32_t(INT32_MAX) && INT_FITS_IN_JSID(i)) {
+            id = INT_TO_JSID(i);
+        } else {
+            Value v = DoubleValue(i);
+            if (!js_ValueToStringId(cx, v, &id))
+                goto error;
+        }
+
+        /* Find out if this object has an element i. */
+        bool has;
+        if (obj->isProxy()) {
+            /* js_HasOwnProperty does not work on proxies. */
+            if (!Proxy::hasOwn(cx, obj, id, &has))
+                goto error;
+        } else {
+            JSObject *obj2;
+            JSProperty *prop;
+            if (!js_HasOwnProperty(cx, obj->getOps()->lookupGeneric, obj, id, &obj2, &prop))
+                goto error;
+            has = !!prop;
+        }
+
+        /* Populate *vp. */
+        if (has) {
+            if (!obj->getElement(cx, obj, i, vp))
+                goto error;
+        } else {
+            vp->setUndefined();
+        }
+    }
 
     /* On success, bump the index. */
     setIndex(i + 1);
@@ -1647,7 +1684,7 @@ generator_op(JSContext *cx, Native native, JSGeneratorOp op, Value *vp, unsigned
             break;
 
           case JSGENOP_SEND:
-            if (args.hasDefined(0)) {
+            if (args.length() >= 1 && !args[0].isUndefined()) {
                 js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
                                     JSDVG_SEARCH_STACK, args[0], NULL);
                 return false;

@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/ipc/Shmem.h"
-#include "mozilla/ipc/CrossProcessMutex.h"
 #include "ImageLayers.h"
 #include "gfxImageSurface.h"
 #include "yuv_convert.h"
@@ -120,90 +119,14 @@ ImageContainer::SetCurrentImage(Image *aImage)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  if (mRemoteData) {
-    NS_ASSERTION(mRemoteDataMutex, "Should have remote data mutex when having remote data!");
-    mRemoteDataMutex->Lock();
-    // This is important since it ensures we won't change the active image
-    // when we currently have a locked image that depends on mRemoteData.
-  }
-
   mActiveImage = aImage;
   CurrentImageChanged();
-
-  if (mRemoteData) {
-    mRemoteDataMutex->Unlock();
-  }
-}
-
-bool
-ImageContainer::HasCurrentImage()
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  if (mRemoteData) {
-    CrossProcessMutexAutoLock autoLock(*mRemoteDataMutex);
-    
-    EnsureActiveImage();
-
-    return !!mActiveImage.get();
-  }
-
-  return !!mActiveImage.get();
-}
-
-already_AddRefed<Image>
-ImageContainer::LockCurrentImage()
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  
-  if (mRemoteData) {
-    NS_ASSERTION(mRemoteDataMutex, "Should have remote data mutex when having remote data!");
-    mRemoteDataMutex->Lock();
-  }
-
-  EnsureActiveImage();
-
-  nsRefPtr<Image> retval = mActiveImage;
-  return retval.forget();
 }
 
 already_AddRefed<gfxASurface>
-ImageContainer::LockCurrentAsSurface(gfxIntSize *aSize, Image** aCurrentImage)
+ImageContainer::GetCurrentAsSurface(gfxIntSize *aSize)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  if (mRemoteData) {
-    NS_ASSERTION(mRemoteDataMutex, "Should have remote data mutex when having remote data!");
-    mRemoteDataMutex->Lock();
-
-    EnsureActiveImage();
-
-    if (aCurrentImage) {
-      NS_IF_ADDREF(mActiveImage);
-      *aCurrentImage = mActiveImage.get();
-    }
-
-    if (!mActiveImage) {
-      return nsnull;
-    } 
-
-    if (mActiveImage->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
-      nsRefPtr<gfxImageSurface> newSurf =
-        new gfxImageSurface(mRemoteData->mBitmap.mData, mRemoteData->mSize, mRemoteData->mBitmap.mStride,
-                            mRemoteData->mFormat == RemoteImageData::BGRX32 ?
-                                                   gfxASurface::ImageFormatARGB32 :
-                                                   gfxASurface::ImageFormatRGB24);
-
-      *aSize = newSurf->GetSize();
-    
-      return newSurf.forget();
-    }
-  }
-
-  if (aCurrentImage) {
-    NS_IF_ADDREF(mActiveImage);
-    *aCurrentImage = mActiveImage.get();
-  }
 
   if (!mActiveImage) {
     return nsnull;
@@ -213,91 +136,16 @@ ImageContainer::LockCurrentAsSurface(gfxIntSize *aSize, Image** aCurrentImage)
   return mActiveImage->GetAsSurface();
 }
 
-void
-ImageContainer::UnlockCurrentImage()
-{
-  if (mRemoteData) {
-    NS_ASSERTION(mRemoteDataMutex, "Should have remote data mutex when having remote data!");
-    mRemoteDataMutex->Unlock();
-  }
-}
-
-already_AddRefed<gfxASurface>
-ImageContainer::GetCurrentAsSurface(gfxIntSize *aSize)
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  if (mRemoteData) {
-    CrossProcessMutexAutoLock autoLock(*mRemoteDataMutex);
-    EnsureActiveImage();
-
-    *aSize = mRemoteData->mSize;
-    return mActiveImage ? mActiveImage->GetAsSurface() : nsnull;
-  }
-
-  *aSize = mActiveImage->GetSize();
-  return mActiveImage ? mActiveImage->GetAsSurface() : nsnull;
-}
-
 gfxIntSize
 ImageContainer::GetCurrentSize()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  if (mRemoteData) {
-    CrossProcessMutexAutoLock autoLock(*mRemoteDataMutex);
-
-    // We don't need to ensure we have an active image here, as we need to
-    // be in the mutex anyway, and this is easiest to return from there.
-    return mRemoteData->mSize;
-  }
 
   if (!mActiveImage) {
     return gfxIntSize(0,0);
   }
 
   return mActiveImage->GetSize();
-}
-
-void
-ImageContainer::SetRemoteImageData(RemoteImageData *aData, CrossProcessMutex *aMutex)
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  NS_ASSERTION(!mActiveImage, "No active image expected when SetRemoteImageData is called.");
-  NS_ASSERTION(!mRemoteData, "No remote data expected when SetRemoteImageData is called.");
-
-  mRemoteData = aData;
-
-  if (aData) {
-    memset(aData, 0, sizeof(RemoteImageData));
-  } else {
-    mActiveImage = nsnull;
-  }
-
-  mRemoteDataMutex = aMutex;
-}
-
-void
-ImageContainer::EnsureActiveImage()
-{
-  if (mRemoteData) {
-    if (mRemoteData->mWasUpdated) {
-      mActiveImage = nsnull;
-    }
-
-    if (mRemoteData->mType == RemoteImageData::RAW_BITMAP &&
-        mRemoteData->mBitmap.mData && !mActiveImage) {
-      nsRefPtr<RemoteBitmapImage> newImg = new RemoteBitmapImage();
-      
-      newImg->mFormat = mRemoteData->mFormat;
-      newImg->mData = mRemoteData->mBitmap.mData;
-      newImg->mSize = mRemoteData->mSize;
-      newImg->mStride = mRemoteData->mBitmap.mStride;
-      mRemoteData->mWasUpdated = false;
-              
-      mActiveImage = newImg;
-    }
-  }
 }
 
 PlanarYCbCrImage::PlanarYCbCrImage(BufferRecycleBin *aRecycleBin)
@@ -422,21 +270,6 @@ MacIOSurfaceImage::Update(ImageContainer* aContainer)
   }
 }
 #endif
-already_AddRefed<gfxASurface>
-RemoteBitmapImage::GetAsSurface()
-{
-  nsRefPtr<gfxImageSurface> newSurf =
-    new gfxImageSurface(mSize,
-    mFormat == RemoteImageData::BGRX32 ? gfxASurface::ImageFormatRGB24 : gfxASurface::ImageFormatARGB32);
-
-  for (int y = 0; y < mSize.height; y++) {
-    memcpy(newSurf->Data() + newSurf->Stride() * y,
-           mData + mStride * y,
-           mSize.width * 4);
-  }
-
-  return newSurf.forget();
-}
 
 }
 }

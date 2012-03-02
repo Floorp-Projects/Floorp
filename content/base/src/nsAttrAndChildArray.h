@@ -135,7 +135,7 @@ public:
            !AttrSlotIsTaken(ATTRCHILD_ARRAY_MAX_ATTR_COUNT - 1);
   }
 
-  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  PRInt64 SizeOf() const;
   bool HasMappedAttrs() const
   {
     return MappedAttrCount();

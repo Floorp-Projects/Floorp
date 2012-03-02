@@ -56,7 +56,6 @@ EXPORTS_IPC = IPCMessageUtils.h
 EXPORTS_mozilla/ipc = \
   AsyncChannel.h \
   BrowserProcessSubThread.h \
-  CrossProcessMutex.h \
   GeckoChildProcessHost.h \
   IOThreadChild.h \
   ProcessChild.h \
@@ -112,14 +111,12 @@ CPPSRCS += \
   SharedMemory_windows.cpp \
   Transport_win.cpp \
   WindowsMessageLoop.cpp \
-  CrossProcessMutex_windows.cpp \
   $(NULL)
 else
 # POSIX
 CPPSRCS += \
   SharedMemory_posix.cpp \
   Transport_posix.cpp \
-  CrossProcessMutex_unimplemented.cpp \
   $(NULL)
 endif #}
 

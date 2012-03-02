@@ -82,6 +82,8 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Util.h"
 
+#include "mozilla/Util.h"
+
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
 #ifdef _MSC_VER

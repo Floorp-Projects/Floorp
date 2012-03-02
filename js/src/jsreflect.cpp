@@ -639,15 +639,11 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
 bool
 NodeBuilder::newArray(NodeVector &elts, Value *dst)
 {
-    const size_t len = elts.length();
-    if (len > UINT32_MAX) {
-        js_ReportAllocationOverflow(cx);
-        return false;
-    }
-    JSObject *array = NewDenseAllocatedArray(cx, uint32_t(len));
+    JSObject *array = NewDenseEmptyArray(cx);
     if (!array)
         return false;
 
+    const size_t len = elts.length();
     for (size_t i = 0; i < len; i++) {
         Value val = elts[i];
 

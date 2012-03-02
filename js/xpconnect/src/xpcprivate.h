@@ -751,8 +751,7 @@ public:
     void AddXPConnectRoots(nsCycleCollectionTraversalCallback& cb);
     void UnmarkSkippableJSHolders();
 
-    static void GCCallback(JSRuntime *rt, JSGCStatus status);
-    static void FinalizeCallback(JSContext *cx, JSFinalizeStatus status);
+    static JSBool GCCallback(JSContext *cx, JSGCStatus status);
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
@@ -3586,7 +3585,7 @@ struct XPCJSContextInfo {
     bool savedFrameChain;
 
     // Greater than 0 if a request was suspended.
-    unsigned suspendDepth;
+    jsrefcount suspendDepth;
 };
 
 class XPCJSContextStack
