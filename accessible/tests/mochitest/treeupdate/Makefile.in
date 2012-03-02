@@ -53,6 +53,7 @@ _TEST_FILES =\
 		test_contextmenu.xul \
 		test_doc.html \
 		test_gencontent.html \
+		test_hidden.html \
 		test_list_editabledoc.html \
 		test_list.html \
 		test_menu.xul \
