@@ -870,10 +870,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall(). Furthermore, no
     // operations should be emitted while setting arguments.
-    void pushABIArg(const MoveOperand &from);
-    void pushABIArg(const Register &reg);
-    void pushABIArg(const FloatRegister &reg);
-    void pushABIArg(const ValueOperand &regs);
+    void passABIArg(const MoveOperand &from);
+    void passABIArg(const Register &reg);
+    void passABIArg(const FloatRegister &reg);
+    void passABIArg(const ValueOperand &regs);
 
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun, Result result = GENERAL);
