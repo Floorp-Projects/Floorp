@@ -45,6 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE    = xulrunner
 
+# Statically link against the RTL on windows
+USE_STATIC_LIBS = 1
+# Don't create a dependency on mozglue
+MOZ_GLUE_LDFLAGS =
 
 CPPSRCS   = nsXULStub.cpp
 

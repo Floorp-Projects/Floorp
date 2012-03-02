@@ -147,9 +147,6 @@ using mozilla::dom::telephony::AudioManager;
 #include "nsEditor.h"
 #include "nsPlaintextEditor.h"
 #include "nsEditorController.h" //CID
-#include "nsIController.h"
-#include "nsIControllerContext.h"
-#include "nsIControllerCommandTable.h"
 
 #include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
@@ -160,7 +157,6 @@ using mozilla::dom::telephony::AudioManager;
 #include "nsSystemPrincipal.h"
 #include "nsNullPrincipal.h"
 #include "nsNetCID.h"
-#include "nsINodeInfo.h"
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_PLATFORM_MAEMO)
 #include "nsHapticFeedback.h"
 #endif

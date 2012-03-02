@@ -220,8 +220,8 @@ static JSClass sNPObjectMemberClass =
 static void
 OnWrapperDestroyed();
 
-static JSBool
-DelayedReleaseGCCallback(JSContext* cx, JSGCStatus status)
+static void
+DelayedReleaseGCCallback(JSRuntime* rt, JSGCStatus status)
 {
   if (JSGC_END == status) {
     // Take ownership of sDelayedReleases and null it out now. The
@@ -238,7 +238,6 @@ DelayedReleaseGCCallback(JSContext* cx, JSGCStatus status)
       }
     }
   }
-  return JS_TRUE;
 }
 
 static void

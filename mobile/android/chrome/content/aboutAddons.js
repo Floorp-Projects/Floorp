@@ -8,23 +8,20 @@ let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 let gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutAddons.properties");
 
-let gChromeWin = null;
-function getChromeWin() {
-  if (!gChromeWin) {
-    gChromeWin = window
-                .QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIWebNavigation)
-                .QueryInterface(Ci.nsIDocShellTreeItem)
-                .rootTreeItem
-                .QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDOMWindow)
-                .QueryInterface(Ci.nsIDOMChromeWindow);
-  }
-  return gChromeWin;
-}
+XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
+  window.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebNavigation)
+    .QueryInterface(Ci.nsIDocShellTreeItem)
+    .rootTreeItem
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindow)
+    .QueryInterface(Ci.nsIDOMChromeWindow));
+
+XPCOMUtils.defineLazyGetter(window, "SelectHelper", function() gChromeWin.SelectHelper);
 
 function init() {
   window.addEventListener("popstate", onPopState, false);
@@ -44,7 +41,7 @@ function openLink(aElement) {
   try {
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
     let url = formatter.formatURLPref(aElement.getAttribute("pref"));
-    let BrowserApp = getChromeWin().BrowserApp;
+    let BrowserApp = gChromeWin.BrowserApp;
     BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id });
   } catch (ex) {}
 }

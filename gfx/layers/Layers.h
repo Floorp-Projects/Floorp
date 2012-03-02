@@ -1345,6 +1345,11 @@ protected:
   bool mDirty;
 };
 
+#ifdef MOZ_DUMP_PAINTING
+void WriteSnapshotToDumpFile(Layer* aLayer, gfxASurface* aSurf);
+void WriteSnapshotToDumpFile(LayerManager* aManager, gfxASurface* aSurf);
+#endif
+
 }
 }
 

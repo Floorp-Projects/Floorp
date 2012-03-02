@@ -251,6 +251,7 @@ class CallArgs : public CallReceiver
     Value *array() const { return argv_; }
     unsigned length() const { return argc_; }
     Value *end() const { return argv_ + argc_; }
+    bool hasDefined(unsigned i) const { return i < argc_ && !argv_[i].isUndefined(); }
 };
 
 JS_ALWAYS_INLINE CallArgs

@@ -42,6 +42,7 @@
 
 #include "jscntxt.h"
 #include "jsgcmark.h"
+#include "jsiter.h"
 #include "jsobj.h"
 
 #include "vm/GlobalObject.h"
@@ -62,7 +63,7 @@ InitClass(JSContext *cx, GlobalObject *global, Class *clasp, JSProtoKey key, Nat
     proto->setPrivate(NULL);
 
     JSAtom *atom = cx->runtime->atomState.classAtoms[key];
-    JSFunction *ctor = global->createConstructor(cx, construct, clasp, atom, 0);
+    JSFunction *ctor = global->createConstructor(cx, construct, clasp, atom, 1);
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndBrand(cx, proto, NULL, methods) ||
@@ -165,6 +166,7 @@ Class MapObject::class_ = {
 };
 
 JSFunctionSpec MapObject::methods[] = {
+    JS_FN("size", size, 0, 0),
     JS_FN("get", get, 1, 0),
     JS_FN("has", has, 1, 0),
     JS_FN("set", set, 2, 0),
@@ -201,6 +203,37 @@ MapObject::finalize(JSContext *cx, JSObject *obj)
         cx->delete_(map);
 }
 
+class AddToMap {
+  private:
+    ValueMap *map;
+
+  public:
+    AddToMap(ValueMap *map) : map(map) {}
+
+    bool operator()(JSContext *cx, const Value &v) {
+        JSObject *pairobj = js_ValueToNonNullObject(cx, v);
+        if (!pairobj)
+            return false;
+
+        Value key;
+        if (!pairobj->getElement(cx, 0, &key))
+            return false;
+        HashableValue hkey;
+        if (!hkey.setValue(cx, key))
+            return false;
+
+        Value val;
+        if (!pairobj->getElement(cx, 1, &val))
+            return false;
+
+        if (!map->put(hkey, val)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
+    }
+};
+
 JSBool
 MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -209,11 +242,21 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     ValueMap *map = cx->new_<ValueMap>(cx->runtime);
-    if (!map || !map->init())
+    if (!map)
         return false;
+    if (!map->init()) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
     obj->setPrivate(map);
 
-    CallArgsFromVp(argc, vp).rval().setObject(*obj);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.hasDefined(0)) {
+        if (!ForOf(cx, args[0], AddToMap(map)))
+            return false;
+    }
+
+    args.rval().setObject(*obj);
     return true;
 }
 
@@ -239,6 +282,15 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
     HashableValue key;                                                        \
     if (args.length() > 0 && !key.setValue(cx, args[0]))                      \
         return false
+
+JSBool
+MapObject::size(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_MAP(get, cx, argc, vp, args, map);
+    JS_STATIC_ASSERT(sizeof map.count() <= sizeof(uint32_t));
+    args.rval().setNumber(map.count());
+    return true;
+}
 
 JSBool
 MapObject::get(JSContext *cx, unsigned argc, Value *vp)
@@ -267,7 +319,10 @@ MapObject::set(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_MAP(set, cx, argc, vp, args, map);
     ARG0_KEY(cx, args, key);
-    map.put(key, args.length() > 1 ? args[1] : UndefinedValue());
+    if (!map.put(key, args.length() > 1 ? args[1] : UndefinedValue())) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
     args.rval().setUndefined();
     return true;
 }
@@ -314,6 +369,7 @@ Class SetObject::class_ = {
 };
 
 JSFunctionSpec SetObject::methods[] = {
+    JS_FN("size", size, 0, 0),
     JS_FN("has", has, 1, 0),
     JS_FN("add", add, 1, 0),
     JS_FN("delete", delete_, 1, 0),
@@ -348,6 +404,25 @@ SetObject::finalize(JSContext *cx, JSObject *obj)
         cx->delete_(set);
 }
 
+class AddToSet {
+  private:
+    ValueSet *set;
+
+  public:
+    AddToSet(ValueSet *set) : set(set) {}
+
+    bool operator()(JSContext *cx, const Value &v) {
+        HashableValue key;
+        if (!key.setValue(cx, v))
+            return false;
+        if (!set->put(key)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
+    }
+};
+
 JSBool
 SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -356,16 +431,35 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     ValueSet *set = cx->new_<ValueSet>(cx->runtime);
-    if (!set || !set->init())
+    if (!set)
         return false;
+    if (!set->init()) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
     obj->setPrivate(set);
 
-    CallArgsFromVp(argc, vp).rval().setObject(*obj);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.hasDefined(0)) {
+        if (!ForOf(cx, args[0], AddToSet(set)))
+            return false;
+    }
+
+    args.rval().setObject(*obj);
     return true;
 }
 
 #define THIS_SET(native, cx, argc, vp, args, set)                             \
     UNPACK_THIS(SetObject, native, cx, argc, vp, args, set)
+
+JSBool
+SetObject::size(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_SET(has, cx, argc, vp, args, set);
+    JS_STATIC_ASSERT(sizeof set.count() <= sizeof(uint32_t));
+    args.rval().setNumber(set.count());
+    return true;
+}
 
 JSBool
 SetObject::has(JSContext *cx, unsigned argc, Value *vp)
@@ -381,8 +475,10 @@ SetObject::add(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_SET(add, cx, argc, vp, args, set);
     ARG0_KEY(cx, args, key);
-    if (!set.put(key))
+    if (!set.put(key)) {
+        js_ReportOutOfMemory(cx);
         return false;
+    }
     args.rval().setUndefined();
     return true;
 }

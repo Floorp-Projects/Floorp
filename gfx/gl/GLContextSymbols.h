@@ -155,6 +155,10 @@ struct GLContextSymbols
     PFNGLTEXPARAMETERFPROC fTexParameterf;
     typedef GLubyte* (GLAPIENTRY * PFNGLGETSTRINGPROC) (GLenum);
     PFNGLGETSTRINGPROC fGetString;
+    typedef void (GLAPIENTRY * PFNGLGETTEXIMAGEPROC) (GLenum target, GLint level, GLenum format, GLenum type, GLvoid* image);
+    PFNGLGETTEXIMAGEPROC fGetTexImage;
+    typedef void (GLAPIENTRY * PFNGLGETTEXLEVELPARAMETERIVPROC) (GLenum target, GLint level, GLenum pname, GLint *params);
+    PFNGLGETTEXLEVELPARAMETERIVPROC fGetTexLevelParameteriv;
     typedef void (GLAPIENTRY * PFNGLGETTEXPARAMETERFVPROC) (GLenum target, GLenum pname, const GLfloat *params);
     PFNGLGETTEXPARAMETERFVPROC fGetTexParameterfv;
     typedef void (GLAPIENTRY * PFNGLGETTEXPARAMETERIVPROC) (GLenum target, GLenum pname, const GLint *params);
