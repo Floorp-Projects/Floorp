@@ -46,6 +46,7 @@
 #include "nsIPresShell.h"
 #include "mozilla/Attributes.h"
 
+class nsRenderingContext;
 class nsSVGOuterSVGFrame;
 
 typedef nsContainerFrame nsSVGForeignObjectFrameBase;
@@ -121,7 +122,7 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsSVGRenderState *aContext,
+  NS_IMETHOD PaintSVG(nsRenderingContext *aContext,
                       const nsIntRect *aDirtyRect);
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHOD_(nsRect) GetCoveredRegion();
