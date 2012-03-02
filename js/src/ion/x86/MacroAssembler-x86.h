@@ -53,9 +53,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 {
     // Number of bytes the stack is adjusted inside a call to C. Calls to C may
     // not be nested.
-    uint32 stackAdjust_;
-    bool dynamicAlignment_;
     bool inCall_;
+    uint32 args_;
+    uint32 passedArgs_;
+    uint32 stackForCall_;
+    bool dynamicAlignment_;
     bool enoughMemory_;
 
   protected:
@@ -72,22 +74,21 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return Operand(address.base, address.index, address.scale, address.offset + 4);
     }
 
-    // Compute space needed for the function call and set the properties of the
-    // callee.  It returns the space which has to be allocated for calling the
-    // function.
-    //
-    // arg            Number of arguments of the function.
-    uint32 setupABICall(uint32 arg);
+    void setupABICall(uint32 args);
 
   public:
     using MacroAssemblerX86Shared::Push;
+
+    enum Result {
+        GENERAL,
+        DOUBLE
+    };
 
     typedef MoveResolver::MoveOperand MoveOperand;
     typedef MoveResolver::Move Move;
 
     MacroAssemblerX86()
-      : stackAdjust_(0),
-        inCall_(false),
+      : inCall_(false),
         enoughMemory_(true)
     {
     }
@@ -602,17 +603,18 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // scratch register.
     void setupUnalignedABICall(uint32 args, const Register &scratch);
 
-    // Arguments can be assigned to a C/C++ call in any order. They are moved
+    // Arguments must be assigned to a C/C++ call in order. They are moved
     // in parallel immediately before performing the call. This process may
     // temporarily use more stack, in which case esp-relative addresses will be
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall(). Furthermore, no
     // operations should be emitted while setting arguments.
-    void setABIArg(uint32 arg, const MoveOperand &from);
-    void setABIArg(uint32 arg, const Register &reg);
+    void passABIArg(const MoveOperand &from);
+    void passABIArg(const Register &reg);
+    void passABIArg(const FloatRegister &reg);
 
     // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void *fun);
+    void callWithABI(void *fun, Result result = GENERAL);
 
     // Used from within an Exit frame to handle a pending exception.
     void handleException();
