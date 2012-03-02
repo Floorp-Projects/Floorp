@@ -80,7 +80,7 @@ class BufferOffset
     }
 
     BufferOffset() : offset(INT_MIN) {}
-    bool assigned() { return offset != INT_MIN; };
+    bool assigned() const { return offset != INT_MIN; };
 };
 
 template<int SliceSize>
