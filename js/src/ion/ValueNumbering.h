@@ -104,6 +104,10 @@ class ValueNumberer
 
     void markConsumers(MDefinition *def);
     void markBlock(MBasicBlock *block);
+    void setClass(MDefinition *toSet, MDefinition *representative);
+
+  public:
+    void breakClass(MDefinition*);
 
   protected:
     MIRGraph &graph_;
@@ -116,6 +120,38 @@ class ValueNumberer
     bool analyze();
 };
 
+class ValueNumberData : public TempObject {
+
+    friend void ValueNumberer::breakClass(MDefinition*);
+    uint32 number;
+    MDefinition *classNext;
+    MDefinition *classPrev;
+
+  public:
+    ValueNumberData() : number(0), classNext(NULL), classPrev(NULL) {}
+
+    void setValueNumber(uint32 number_) {
+        number = number_;
+    }
+
+    uint32 valueNumber() {
+        return number;
+    }
+    // Set the class of this to the given representative value.
+    void setClass(MDefinition *thisDef, MDefinition *rep) {
+        JS_ASSERT(thisDef->valueNumberData() == this);
+        // If this value should already be in the given set, don't do anything
+        if (number == rep->valueNumber())
+            return;
+        if (classNext)
+            classNext->valueNumberData()->classPrev = classPrev;
+        if (classPrev)
+            classPrev->valueNumberData()->classPrev = classNext;
+        classPrev = rep;
+        classNext = rep->valueNumberData()->classNext;
+        rep->valueNumberData()->classNext = thisDef;
+    }
+};
 } // namespace ion
 } // namespace js
 
