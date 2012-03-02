@@ -86,7 +86,7 @@ interface nsIObjectLoadingContent : nsISupports
   * account. The MIME type is required as some plugins (java) calculate
   * this differently.
   */
-  nsIURI GetObjectBaseURI(in ACString aMimeType);
+  nsIURI getObjectBaseURI(in ACString aMimeType);
 
   /**
    * Returns the plugin instance if it has already been instantiated. This
