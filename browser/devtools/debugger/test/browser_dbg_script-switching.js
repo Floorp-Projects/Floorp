@@ -6,8 +6,8 @@
  * Make sure that switching the displayed script in the UI works as advertised.
  */
 
-const TAB_URL = "http://example.com/browser/browser/devtools/debugger/" +
-                "test/browser_dbg_script-switching.html";
+const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
+
 let tempScope = {};
 Cu.import("resource:///modules/source-editor.jsm", tempScope);
 let SourceEditor = tempScope.SourceEditor;
@@ -39,6 +39,24 @@ function testScriptsDisplay() {
         "Should only be getting stack frames while paused.");
 
       is(gScripts.itemCount, 2, "Found the expected number of scripts.");
+
+      for (let i = 0; i < gScripts.itemCount; i++) {
+        info("label: " + i + " " + gScripts.getItemAtIndex(i).getAttribute("label"));
+      }
+
+      let label1 = "test-script-switching-01.js";
+      let label2 = "test-script-switching-02.js";
+
+      ok(gDebugger.DebuggerView.Scripts.contains(EXAMPLE_URL +
+        label1), "First script url is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.contains(EXAMPLE_URL +
+        label2), "Second script url is incorrect.");
+
+      ok(gDebugger.DebuggerView.Scripts.containsLabel(
+        label1), "First script label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel(
+        label2), "Second script label is incorrect.");
+
 
       ok(gDebugger.editor.getText().search(/debugger/) != -1,
         "The correct script was loaded initially.");
