@@ -700,37 +700,77 @@ Debugger::handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook)
     return JSTRAP_ERROR;
 }
 
-bool
-Debugger::newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp)
+void
+Debugger::resultToCompletion(JSContext *cx, bool ok, const Value &rv,
+                             JSTrapStatus *status, Value *value)
 {
-    JS_ASSERT_IF(ok, !ac.context->isExceptionPending());
+    JS_ASSERT_IF(ok, !cx->isExceptionPending());
 
-    JSContext *cx = ac.context;
-    jsid key;
     if (ok) {
-        ac.leave();
-        key = ATOM_TO_JSID(cx->runtime->atomState.returnAtom);
+        *status = JSTRAP_RETURN;
+        *value = rv;
     } else if (cx->isExceptionPending()) {
-        key = ATOM_TO_JSID(cx->runtime->atomState.throwAtom);
-        val = cx->getPendingException();
+        *status = JSTRAP_THROW;
+        *value = cx->getPendingException();
         cx->clearPendingException();
-        ac.leave();
     } else {
-        ac.leave();
-        vp->setNull();
+        *status = JSTRAP_ERROR;
+        value->setUndefined();
+    }
+}
+
+bool
+Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Value *result)
+{
+    /* 
+     * We must be in the debugger's compartment, since that's where we want
+     * to construct the completion value.
+     */
+    assertSameCompartment(cx, object.get());
+
+    jsid key;
+
+    switch (status) {
+      case JSTRAP_RETURN:
+        key = ATOM_TO_JSID(cx->runtime->atomState.returnAtom);
+        break;
+
+      case JSTRAP_THROW:
+        key = ATOM_TO_JSID(cx->runtime->atomState.throwAtom);
+        break;
+
+      case JSTRAP_ERROR:
+        result->setNull();
         return true;
+
+      default:
+        JS_NOT_REACHED("bad status passed to Debugger::newCompletionValue");
     }
 
+    /* Common tail for JSTRAP_RETURN and JSTRAP_THROW. */
     JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!obj ||
-        !wrapDebuggeeValue(cx, &val) ||
-        !DefineNativeProperty(cx, obj, key, val, JS_PropertyStub, JS_StrictPropertyStub,
+        !wrapDebuggeeValue(cx, &value) ||
+        !DefineNativeProperty(cx, obj, key, value, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
         return false;
     }
-    vp->setObject(*obj);
+
+    result->setObject(*obj);
     return true;
+}
+
+bool
+Debugger::receiveCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp)
+{
+    JSContext *cx = ac.context;
+
+    JSTrapStatus status;
+    Value value;
+    resultToCompletion(cx, ok, val, &status, &value);
+    ac.leave();
+    return newCompletionValue(cx, status, value, vp);
 }
 
 JSTrapStatus
@@ -2986,7 +3026,7 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
     JS::Anchor<JSString *> anchor(linearStr);
     bool ok = EvaluateInEnv(cx, env, fp, linearStr->chars(), linearStr->length(),
                             "debugger eval code", 1, &rval);
-    return dbg->newCompletionValue(ac, ok, rval, vp);
+    return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }
 
 static JSBool
@@ -3624,12 +3664,12 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
     }
 
     /*
-     * Call the function. Use newCompletionValue to return to the debugger
+     * Call the function. Use receiveCompletionValue to return to the debugger
      * compartment and populate args.rval().
      */
     Value rval;
     bool ok = Invoke(cx, thisv, calleev, callArgc, callArgv, &rval);
-    return dbg->newCompletionValue(ac, ok, rval, &args.rval());
+    return dbg->receiveCompletionValue(ac, ok, rval, &args.rval());
 }
 
 static JSBool

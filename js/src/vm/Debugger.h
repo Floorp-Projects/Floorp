@@ -332,6 +332,23 @@ class Debugger {
     bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
 
     /*
+     * Set |*status| and |*value| to a (JSTrapStatus, Value) pair reflecting a
+     * standard SpiderMonkey call state: a boolean success value |ok|, a return
+     * value |rv|, and a context |cx| that may or may not have an exception set.
+     * If an exception was pending on |cx|, it is cleared (and |ok| is asserted
+     * to be false).
+     */
+    static void resultToCompletion(JSContext *cx, bool ok, const Value &rv,
+                                   JSTrapStatus *status, Value *value);
+
+    /*
+     * Set |*result| to a JavaScript completion value corresponding to |status|
+     * and |value|. |value| should be the return value or exception value, not
+     * wrapped as a debuggee value. |cx| must be in the debugger compartment.
+     */
+    bool newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Value *result);
+
+    /*
      * Precondition: we are in the debuggee compartment (ac is entered) and ok
      * is true if the operation in the debuggee compartment succeeded, false on
      * error or exception.
@@ -343,7 +360,7 @@ class Debugger {
      * pending exception. (This ordinarily returns true even if the ok argument
      * is false.)
      */
-    bool newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
+    bool receiveCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
 
     /*
      * Return the Debugger.Script object for |script|, or create a new one if
