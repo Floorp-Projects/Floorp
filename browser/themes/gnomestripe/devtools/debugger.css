@@ -116,8 +116,13 @@ a {
   background-color: white;
 }
 
-.dbg-stackframe-id {
-  -moz-padding-end: 1em;
+.dbg-stackframe {
+  -moz-padding-start: 4px;
+  -moz-padding-end: 4px;
+}
+
+.dbg-stackframe-name {
+  font-weight: 600;
 }
 
 /**
