@@ -1,5 +1,0 @@
-mk_add_options MOZ_PKG_FORMAT=BZ2
-
-ac_add_options --with-l10n-base=../../l10n-central
-ac_add_options --enable-application=mobile
-ac_add_options --disable-compile-environment
