@@ -216,19 +216,26 @@ void
 ImageLayerOGL::RenderLayer(int,
                            const nsIntPoint& aOffset)
 {
-  if (!GetContainer())
+  nsRefPtr<ImageContainer> container = GetContainer();
+
+  if (!container)
     return;
 
   mOGLManager->MakeCurrent();
 
-  nsRefPtr<Image> image = GetContainer()->GetCurrentImage();
+  AutoLockImage autoLock(container);
+
+  Image *image = autoLock.GetImage();
   if (!image) {
     return;
   }
 
+  NS_ASSERTION(image->GetFormat() != Image::REMOTE_IMAGE_BITMAP,
+    "Remote images aren't handled yet in OGL layers!");
+
   if (image->GetFormat() == Image::PLANAR_YCBCR) {
     PlanarYCbCrImage *yuvImage =
-      static_cast<PlanarYCbCrImage*>(image.get());
+      static_cast<PlanarYCbCrImage*>(image);
 
     if (!yuvImage->mBufferSize) {
       return;
@@ -278,7 +285,7 @@ ImageLayerOGL::RenderLayer(int,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   } else if (image->GetFormat() == Image::CAIRO_SURFACE) {
     CairoImage *cairoImage =
-      static_cast<CairoImage*>(image.get());
+      static_cast<CairoImage*>(image);
 
     if (!cairoImage->mSurface) {
       return;
@@ -427,16 +434,18 @@ ImageLayerOGL::RenderLayer(int,
 #ifdef XP_MACOSX
   } else if (image->GetFormat() == Image::MAC_IO_SURFACE) {
      MacIOSurfaceImage *ioImage =
-       static_cast<MacIOSurfaceImage*>(image.get());
+       static_cast<MacIOSurfaceImage*>(image);
 
      if (!mOGLManager->GetThebesLayerCallback()) {
        // If its an empty transaction we still need to update
        // the plugin IO Surface and make sure we grab the
        // new image
        ioImage->Update(GetContainer());
-       image = GetContainer()->GetCurrentImage();
+       image = nsnull;
+       autoLock.Refresh();
+       image = autoLock.GetImage();
        gl()->MakeCurrent();
-       ioImage = static_cast<MacIOSurfaceImage*>(image.get());
+       ioImage = static_cast<MacIOSurfaceImage*>(image);
      }
 
      if (!ioImage) {

@@ -1238,7 +1238,10 @@ public:
      */
     already_AddRefed<gfxImageSurface> ReadTextureImage(GLuint aTexture,
                                                        const gfxIntSize& aSize,
-                                                       GLenum aTextureFormat);
+                                                       GLenum aTextureFormat,
+                                                       bool aYInvert = false);
+
+    already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture, bool aYInvert, ShaderProgramType aShader);
 
     /**
      * Call ReadPixels into an existing gfxImageSurface for the given bounds.
@@ -2131,6 +2134,22 @@ public:
         const GLubyte *result = mSymbols.fGetString(name);
         AFTER_GL_CALL;
         return result;
+    }
+
+    void fGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid *img) {
+        if (!mSymbols.fGetTexImage) {
+          return;
+        }
+        BEFORE_GL_CALL;
+        mSymbols.fGetTexImage(target, level, format, type, img);
+        AFTER_GL_CALL;
+    };
+
+    void fGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)
+    {  
+        BEFORE_GL_CALL;
+        mSymbols.fGetTexLevelParameteriv(target, level, pname, params);
+        AFTER_GL_CALL;
     }
 
     void fGetTexParameterfv(GLenum target, GLenum pname, const GLfloat *params) {

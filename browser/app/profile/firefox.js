@@ -320,6 +320,8 @@ pref("browser.urlbar.default.behavior", 0);
 pref("browser.urlbar.formatting.enabled", true);
 pref("browser.urlbar.trimURLs", true);
 
+pref("browser.altClickSave", false);
+
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to 
 // picking a filename without that info in hand so that the user sees some

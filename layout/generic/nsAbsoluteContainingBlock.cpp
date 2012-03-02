@@ -44,7 +44,6 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsContainerFrame.h"
 #include "nsIPresShell.h"
-#include "nsContainerFrame.h"
 #include "nsHTMLParts.h"
 #include "nsPresContext.h"
 #include "nsFrameManager.h"

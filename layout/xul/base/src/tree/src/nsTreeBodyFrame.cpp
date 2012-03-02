@@ -72,7 +72,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
-#include "nsIContent.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsCSSRendering.h"
 #include "nsIXULTemplateBuilder.h"
