@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include "platform.h"
+#include "sps_sampler.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -54,28 +55,7 @@ static Sampler* sActiveSampler = NULL;
 
 
 #if !defined(__GLIBC__) && (defined(__arm__) || defined(__thumb__))
-// Android runs a fairly new Linux kernel, so signal info is there,
-// but the C library doesn't have the structs defined.
-
-struct sigcontext {
-  uint32_t trap_no;
-  uint32_t error_code;
-  uint32_t oldmask;
-  uint32_t gregs[16];
-  uint32_t arm_cpsr;
-  uint32_t fault_address;
-};
-typedef uint32_t __sigset_t;
-typedef struct sigcontext mcontext_t;
-typedef struct ucontext {
-  uint32_t uc_flags;
-  struct ucontext* uc_link;
-  stack_t uc_stack;
-  mcontext_t uc_mcontext;
-  __sigset_t uc_sigmask;
-} ucontext_t;
-enum ArmRegisters {R15 = 15, R13 = 13, R11 = 11};
-
+#include "android-signal-defs.h"
 #endif
 
 static void ProfilerSaveSignalHandler(int signal, siginfo_t* info, void* context) {
@@ -95,7 +75,7 @@ static void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
 
   TickSample sample_obj;
   TickSample* sample = &sample_obj;
-  sample->pc = 0;
+  sample->context = context;
 
 #ifdef ENABLE_SPS_LEAF_DATA
   // If profiling, we extract the current pc and sp.
@@ -280,5 +260,25 @@ void Sampler::Stop() {
 
   // This sampler is no longer the active sampler.
   sActiveSampler = NULL;
+}
+
+static struct sigaction old_sigstartstop_signal_handler;
+const int SIGSTARTSTOP = SIGUSR1;
+
+static void StartStopSignalHandler(int signal, siginfo_t* info, void* context) {
+  mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
+                        PROFILE_DEFAULT_FEATURES, PROFILE_DEFAULT_FEATURE_COUNT);
+}
+
+void OS::RegisterStartStopHandlers()
+{
+  LOG("Registering start/stop signal");
+  struct sigaction sa;
+  sa.sa_sigaction = StartStopSignalHandler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART | SA_SIGINFO;
+  if (sigaction(SIGSTARTSTOP, &sa, &old_sigstartstop_signal_handler) != 0) {
+    LOG("Error installing signal");
+  }
 }
 
