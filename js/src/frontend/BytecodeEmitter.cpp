@@ -1917,22 +1917,16 @@ EmitSpecialPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
      * interpreter and trace recorder, which skip dense array instances by
      * going up to Array.prototype before looking up the property name.
      */
+    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_DUP) < 0)
+        return false;
+
     jsatomid index;
     if (!bce->makeAtomIndex(pn->pn_atom, &index))
         return false;
     if (!EmitIndex32(cx, JSOP_QNAMEPART, index, bce))
         return false;
 
-    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_DUP) < 0)
-        return false;
-
-    if (!EmitElemOpBase(cx, bce, op))
-        return false;
-
-    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_SWAP) < 0)
-        return false;
-
-    return true;
+    return EmitElemOpBase(cx, bce, op);
 }
 
 static bool
