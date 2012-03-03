@@ -116,8 +116,13 @@ a {
   background-color: white;
 }
 
-.dbg-stackframe-id {
-  -moz-padding-end: 1em;
+.dbg-stackframe {
+  -moz-padding-start: 4px;
+  -moz-padding-end: 4px;
+}
+
+.dbg-stackframe-name {
+  font-weight: 600;
 }
 
 /**
@@ -245,6 +250,29 @@ a {
 
 .arrow[open] {
   -moz-appearance: treetwistyopen;
+}
+
+/**
+ * Animations
+ */
+
+.details[open] {
+  -moz-animation-duration: 0.25s;
+  -moz-animation-name: showblock;
+}
+
+@-moz-keyframes showblock {
+  from {
+    opacity: 0;
+    -moz-transform-origin: top;
+    -moz-transform: scaleY(0);
+  }
+
+  to {
+    opacity: 1;
+    -moz-transform-origin: top;
+    -moz-transform: scaleY(1);
+  }
 }
 
 /**

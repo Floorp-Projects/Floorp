@@ -42,6 +42,8 @@ var OPTIONS = {
     return request.responseText;
   };
 
+SimpleTest.waitForExplicitFinish();
+
 function start() {
 
   var kIsWindows = false;
@@ -62,6 +64,54 @@ function start() {
                             .getService(Components.interfaces.nsIPropertyBag2)
                             .getProperty("version");
     kIsWindowsVistaOrHigher = (parseFloat(version) >= 6.0);
+    // Workaround for Windows 2000 (driver?) which may crash itself.
+    if (parseFloat(version) <= 5.0) {
+      todo(false, "Test disabled on Windows 2000 and older. (To prevent possible system crash.)");
+      SimpleTest.finish();
+      return;
+    }
+  }
+
+  // we currently disable this test on version of Mac OSX older than 10.6,
+  // due to various weird failures, including one making getRenderbufferParameter tests
+  // on DEPTH_STENCIL fail
+  var kDarwinVersion = 0;
+  if (kIsMac) {
+    // code borrowed from browser/modules/test/browser_taskbar_preview.js
+    var is106orHigher = false;
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    kDarwinVersion = parseFloat(Components.classes["@mozilla.org/system-info;1"]
+                                          .getService(Components.interfaces.nsIPropertyBag2)
+                                          .getProperty("version"));
+    // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
+    // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
+    // is the Darwin version.
+    is106orHigher = (kDarwinVersion >= 10.0);
+    if (!is106orHigher) {
+      dump("WebGL mochitest disabled on Mac OSX versions older than 10.6\n");
+      SimpleTest.finish();
+      return;
+    }
+  }
+
+  // we currently disable this test on version of Mac OSX older than 10.6,
+  // due to various weird failures, including one making getRenderbufferParameter tests
+  // on DEPTH_STENCIL fail
+  var kDarwinVersion = 0;
+  if (kIsMac) {
+    // code borrowed from browser/modules/test/browser_taskbar_preview.js
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    kDarwinVersion = parseFloat(Components.classes["@mozilla.org/system-info;1"]
+                                          .getService(Components.interfaces.nsIPropertyBag2)
+                                          .getProperty("version"));
+    // the next line is correct: Mac OSX 10.6 corresponds to Darwin version 10 !
+    // Mac OSX 10.5 would be Darwin version 9. the |version| string we've got here
+    // is the Darwin version.
+    if (kDarwinVersion < 10.0) {
+      todo(false, "Test disabled on Mac OSX versions older than 10.6.");
+      SimpleTest.finish();
+      return;
+    }
   }
 
   function getEnv(env) {
@@ -100,14 +150,32 @@ function start() {
     this.elem = li;
   };
 
+  /**
+   * Indicates whether this test page results are not to be ignored.
+   */
+  Page.prototype.shouldBeAccountedFor = function() {
+    return testsToIgnore.indexOf(this.url) == -1;
+  }
+
+  /**
+   * Indicates whether all this test page results are expected not to fail,
+   * if not ignored.
+   */
   Page.prototype.isExpectedToFullyPass = function() {
-    return testsExpectedToFail.indexOf(this.url) == -1 && testsToIgnore.indexOf(this.url) == -1;
+    return this.shouldBeAccountedFor() &&
+           testsExpectedToFail.indexOf(this.url) == -1;
   }
 
-  Page.prototype.errormsg = function(msg) {
-    return msg + ' (URL: ' + this.url + ')';
+  /**
+   * Returns log message with added test page url.
+   */
+  Page.prototype.logMsg = function(msg) {
+    return '[' + this.url + '] ' + msg;
   }
 
+  /**
+   * Reports an individual test result of test page.
+   */
   Page.prototype.addResult = function(msg, success) {
     ++this.totalTests;
     if (success === undefined) {
@@ -116,19 +184,28 @@ function start() {
       var css = "timeout";
       // only few timeouts are actually caught here --- most are caught in finishPage().
       if (this.isExpectedToFullyPass()) {
-        ok(false, this.errormsg('Test timed out, "' + msg + '"'));
+        ok(false, this.logMsg('Test timed out'), msg);
+      } else {
+        todo(false, this.logMsg('Test timed out'), msg);
       }
     } else if (success) {
       ++this.totalSuccessful;
       var result = "success";
       var css = "success";
-      // don't report success.
+      if (this.shouldBeAccountedFor()) {
+        ok(true, this.logMsg('Test passed'), msg);
+      } else {
+        todo(false, this.logMsg('Test passed, but is ignored'), msg);
+      }
+      // Don't report individual success to UI, to keep it light.
       return;
     } else {
       var result = "failed";
       var css = "fail";
       if (this.isExpectedToFullyPass()) {
-        ok(false, this.errormsg('Test failed, "' + msg + '"'));
+        ok(false, this.logMsg('Test failed'), msg);
+      } else {
+        todo(false, this.logMsg('Test failed'), msg);
       }
     }
 
@@ -151,6 +228,9 @@ function start() {
     return true;
   };
 
+  /**
+   * Reports test page result summary.
+   */
   Page.prototype.finishPage = function(success) {
     var msg = ' (' + this.totalSuccessful + ' of ' +
               this.totalTests + ' passed)';
@@ -159,23 +239,31 @@ function start() {
       msg = '(*timeout*)';
       ++this.totalTests;
       ++this.totalTimeouts;
+      // Most timeouts are only caught here --- though a few are (already) caught in addResult().
       if (this.isExpectedToFullyPass()) {
-        ok(false, this.errormsg('Unexpected timeout in this test page'));
-        window.dump('WebGL test error: test page timeout: ' + this.url + '\n');
+        ok(false, this.logMsg('Timeout in this test page'));
+      } else {
+        todo(false, this.logMsg('Timeout in this test page'));
       }
     } else if (this.totalSuccessful != this.totalTests) {
       var css = 'testpagefail';
+      var totalFailed = this.totalTests - this.totalTimeouts - this.totalSuccessful;
       if (this.isExpectedToFullyPass()) {
-        window.dump('WebGL test error: test page failure: ' + this.url + '\n');
+        ok(false, this.logMsg("(WebGL test error) " + totalFailed + ' failure(s) and ' + this.totalTimeouts + ' timeout(s)'));
+      } else {
+        todo(false, this.logMsg("(WebGL test error) " + totalFailed + ' failure(s) and ' + this.totalTimeouts + ' timeout(s)'));
       }
-      // failures have already been reported for the sub-tests
     } else {
       var css = 'testpagesuccess';
       if (this.isExpectedToFullyPass()) {
-        ok(true, this.errormsg('Successful test page'));
+        ok(true, this.logMsg('All ' + this.totalSuccessful + ' test(s) passed'));
+      } else {
+        if (this.shouldBeAccountedFor()) {
+          todo(true, this.logMsg('Test page expected to fail, but all ' + this.totalSuccessful + ' tests passed'));
+        } else {
+          todo(false, this.logMsg('All ' + this.totalSuccessful + ' test(s) passed, but test page is ignored'));
+        }
       }
-      window.dump('WebGL test page successful: ' + this.url + '\n');
-      testsSuccessful.push(this.url);
     }
     this.elem.setAttribute('class', css);
     this.totalsElem.textContent = msg;
@@ -216,7 +304,7 @@ function start() {
   };
 
   Reporter.prototype.startPage = function(url) {
-    dump('WebGL mochitest: starting page ' + url + '\n');
+    info("[" + url + "] (WebGL mochitest) Starting test page");
 
     // Calling garbageCollect before each test page fixes intermittent failures with
     // out-of-memory errors, often failing to create a WebGL context.
@@ -236,14 +324,11 @@ function start() {
     return page.startPage();
   };
 
-  Reporter.prototype.totalFailed = function() {
-    return this.totalTests - this.totalSuccessful;
-  };
-
   Reporter.prototype.displayStats = function() {
+    var totalFailed = this.totalTests - this.totalTimeouts - this.totalSuccessful;
     this.fullResultsNode.textContent =
       this.totalSuccessful + ' passed, ' +
-      this.totalFailed() + ' failed, ' +
+      totalFailed + ' failed, ' +
       this.totalTimeouts + ' timed out';
   };
 
@@ -265,9 +350,6 @@ function start() {
   };
 
   Reporter.prototype.finishedTestSuite = function() {
-      for (var i = 0; i < testsExpectedToFail.length; ++i)
-        if (testsSuccessful.indexOf(testsExpectedToFail[i]) != -1)
-          todo(true, 'Test expected to fail, but passed: ' + testsExpectedToFail[i]);
       statusTextNode.textContent = 'Finished';
       SimpleTest.finish();
   }
@@ -323,10 +405,12 @@ function start() {
     // try to create a dummy WebGL context, just to catch context creation failures once here,
     // rather than having them result in 100's of failures (one in each test page)
     var canvas = document.getElementById("webglcheck-default");
-    var ctx = null;
+    var ctx;
     try {
         ctx = canvas.getContext("experimental-webgl");
-    } catch(e) {}
+    } catch(e) {
+        ok(false, "canvas.getContext() failed", e);
+    }
 
     if (ctx) {
         statusTextNode.textContent = 'Loading test lists...';
@@ -343,36 +427,17 @@ function start() {
     } else {
         var errmsg = "Can't create a WebGL context";
         reporter.fullResultsNode.textContent = errmsg;
-        ok(false, errmsg);
+        // Workaround for SeaMonkey tinderboxes which don't support WebGL.
+        if (navigator.userAgent.match(/ SeaMonkey\//))
+          todo(false, errmsg + " (This is expected on SeaMonkey (tinderboxes).)");
+        else
+          ok(false, errmsg);
         dump("WebGL mochitest failed: " + errmsg + "\n");
         reporter.finishedTestSuite();
     }
   };
 
-  SimpleTest.waitForExplicitFinish();
   SimpleTest.requestLongerTimeout(3);
-
-  // we currently disable this test on version of Mac OSX older than 10.6,
-  // due to various weird failures, including one making getRenderbufferParameter tests
-  // on DEPTH_STENCIL fail
-  var kDarwinVersion = 0;
-  if (kIsMac) {
-    // code borrowed from browser/modules/test/browser_taskbar_preview.js
-    var is106orHigher = false;
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    kDarwinVersion = parseFloat(Components.classes["@mozilla.org/system-info;1"]
-                                          .getService(Components.interfaces.nsIPropertyBag2)
-                                          .getProperty("version"));
-    // the next line is correct: Mac OS 10.6 corresponds to Darwin version 10 !
-    // Mac OS 10.5 would be Darwin version 9. the |version| string we've got here
-    // is the Darwin version.
-    is106orHigher = (kDarwinVersion >= 10.0);
-    if (!is106orHigher) {
-      dump("WebGL mochitest disabled on Mac OSX versions older than 10.6\n");
-      SimpleTest.finish();
-      return;
-    }
-  }
 
   var statusElem = document.getElementById("status");
   var statusTextNode = document.createTextNode('');
@@ -424,14 +489,12 @@ function start() {
 
   var testsToIgnore = [];
 
-  var testsSuccessful = [];
-
   runTestSuite();
 }
 
 </script>
 </head>
-<body onload="start()">
+<body onload="start();">
 <p id="display"></p>
 <div id="content" style="display: none">
 

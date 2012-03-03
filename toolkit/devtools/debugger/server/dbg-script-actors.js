@@ -99,12 +99,19 @@ ThreadActor.prototype = {
       this._dbg = new Debugger();
     }
 
+    // TODO: Remove this horrible hack when bug 723563 is fixed.
+    // Make sure that a chrome window is not added as a debuggee when opening
+    // the debugger in an empty tab or during tests.
+    if (aGlobal.location &&
+        (aGlobal.location.protocol == "about:" ||
+         aGlobal.location.protocol == "chrome:")) {
+      return;
+    }
+
     this.dbg.addDebuggee(aGlobal);
     this.dbg.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
     this.dbg.onDebuggerStatement = this.onDebuggerStatement.bind(this);
     this.dbg.onNewScript = this.onNewScript.bind(this);
-    // Keep the debugger disabled until a client attaches.
-    this.dbg.enabled = false;
   },
 
   /**

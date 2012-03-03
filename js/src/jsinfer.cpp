@@ -1688,10 +1688,8 @@ types::MarkArgumentsCreated(JSContext *cx, JSScript *script)
              */
             Value *sp = fp->base() + analysis->getCode(iter.pc()).stackDepth;
             for (Value *vp = fp->slots(); vp < sp; vp++) {
-                if (vp->isParticularMagic(JS_LAZY_ARGUMENTS)) {
-                    if (!js_GetArgsValue(cx, fp, vp))
-                        vp->setNull();
-                }
+                if (vp->isParticularMagic(JS_LAZY_ARGUMENTS))
+                    *vp = ObjectOrNullValue(js_GetArgsObject(cx, fp));
             }
         }
     }
@@ -2195,12 +2193,8 @@ TypeCompartment::nukeTypes(JSContext *cx)
     inferenceEnabled = false;
 
     /* Update the cached inferenceEnabled bit in all contexts. */
-    for (JSCList *cl = cx->runtime->contextList.next;
-         cl != &cx->runtime->contextList;
-         cl = cl->next) {
-        JSContext *cx = JSContext::fromLinkField(cl);
-        cx->setCompartment(cx->compartment);
-    }
+    for (ContextIter acx(cx->runtime); !acx.done(); acx.next())
+        acx->setCompartment(acx->compartment);
 
 #ifdef JS_METHODJIT
 
@@ -2210,7 +2204,7 @@ TypeCompartment::nukeTypes(JSContext *cx)
 
     /* Throw away all JIT code in the compartment, but leave everything else alone. */
 
-    for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasJITCode())
             mjit::ReleaseScriptCode(cx, script);
@@ -2325,7 +2319,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
      * new type objects as well or trigger GC.
      */
     Vector<TypeSet *> pending(cx);
-    for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
+    for (gc::CellIter i(cx->compartment, gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
         TypeObject *object = i.get<TypeObject>();
 
         unsigned count = object->getPropertyCount();
@@ -2341,7 +2335,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
     for (unsigned i = 0; i < pending.length(); i++)
         pending[i]->addType(cx, Type::AnyObjectType());
 
-    for (gc::CellIter i(cx, cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->types) {
             unsigned count = TypeScript::NumTypeSets(script);
@@ -2412,6 +2406,11 @@ ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *tar
 
     barrier = cx->typeLifoAlloc().new_<TypeBarrier>(target, type, (JSObject *) NULL, JSID_VOID);
 
+    if (!barrier) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
     barrier->next = code.typeBarriers;
     code.typeBarriers = barrier;
 }
@@ -2438,6 +2437,11 @@ ScriptAnalysis::addSingletonTypeBarrier(JSContext *cx, const jsbytecode *pc, Typ
     TypeBarrier *barrier = cx->typeLifoAlloc().new_<TypeBarrier>(target, Type::UndefinedType(),
                               singleton, singletonId);
 
+    if (!barrier) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return;
+    }
+
     barrier->next = code.typeBarriers;
     code.typeBarriers = barrier;
 }
@@ -2451,14 +2455,14 @@ TypeCompartment::print(JSContext *cx, bool force)
     if (!force && !InferSpewActive(ISpewResult))
         return;
 
-    for (gc::CellIter i(cx, compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+    for (gc::CellIter i(compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasAnalysis() && script->analysis()->ranInference())
             script->analysis()->printTypes(cx);
     }
 
 #ifdef DEBUG
-    for (gc::CellIter i(cx, compartment, gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
+    for (gc::CellIter i(compartment, gc::FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
         TypeObject *object = i.get<TypeObject>();
         object->print(cx);
     }
@@ -3303,7 +3307,7 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
         }
 
         /* Check if the script definitely binds the identifier. */
-        uintN index;
+        unsigned index;
         BindingKind kind = script->bindings.lookup(cx, atom, &index);
         if (kind == ARGUMENT || kind == VARIABLE) {
             TypeObject *obj = script->function()->getType(cx);
@@ -6318,8 +6322,7 @@ SizeOfScriptTypeInferenceData(JSScript *script, TypeInferenceSizes *sizes,
 }
 
 void
-JSCompartment::sizeOfTypeInferenceData(JSContext *cx, TypeInferenceSizes *sizes,
-                                       JSMallocSizeOfFun mallocSizeOf)
+JSCompartment::sizeOfTypeInferenceData(TypeInferenceSizes *sizes, JSMallocSizeOfFun mallocSizeOf)
 {
     /*
      * Note: not all data in the pool is temporary, and some will survive GCs
@@ -6334,7 +6337,7 @@ JSCompartment::sizeOfTypeInferenceData(JSContext *cx, TypeInferenceSizes *sizes,
     /* TypeCompartment::pendingRecompiles is non-NULL only while inference code is running. */
     JS_ASSERT(!types.pendingRecompiles);
 
-    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next())
+    for (gc::CellIter i(this, gc::FINALIZE_SCRIPT); !i.done(); i.next())
         SizeOfScriptTypeInferenceData(i.get<JSScript>(), sizes, mallocSizeOf);
 
     if (types.allocationSiteTable)

@@ -125,9 +125,9 @@ LayerManagerD3D10::~LayerManagerD3D10()
 }
 
 bool
-LayerManagerD3D10::Initialize()
+LayerManagerD3D10::Initialize(bool force)
 {
-  ScopedGfxFeatureReporter reporter("D3D10 Layers");
+  ScopedGfxFeatureReporter reporter("D3D10 Layers", force);
 
   HRESULT hr;
 

@@ -1,0 +1,222 @@
+<!-- -*- mode: HTML; tab-width: 2; indent-tabs-mode: nil; -*- -->
+<!-- vim: set tabstop=2 expandtab shiftwidth=2 textwidth=80:  -->
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla MathML Project.
+   -
+   - The Initial Developer of the Original Code is
+   - Frederic Wang <fred.wang@free.fr>.
+   - Portions created by the Initial Developer are Copyright (C) 2011
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>MathJax fonts</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        jax: ["output/HTML-CSS"],
+        "HTML-CSS": { availableFonts: ["TeX"] }
+      });
+    </script>
+    <script type="text/javascript"
+            src="http://cdn.mathjax.org/mathjax/latest/unpacked/MathJax.js">
+    </script>
+    <script type="text/javascript">
+      var fontList = [
+        "MathJax_Main",
+        "MathJax_Size1",
+        "MathJax_Size2",
+        "MathJax_Size3",
+        "MathJax_Size4",
+        "MathJax_AMS",
+        "MathJax_Main-bold"
+      ];
+
+      var noChar = codePoint();
+
+      function codePoint(aValue, aFont)
+      {
+        var v = 0xFFFD;
+        if (aValue) {
+          v = aValue;
+        }
+        var f = "";
+        if (aFont) {
+          var i = fontList.indexOf(aFont);
+          if (i > 0) {
+            f = "@" + i;
+          }
+        }
+        var hexacode = Number(v).toString(16).toUpperCase();
+        while (hexacode.length < 4) {
+          hexacode = "0" + hexacode;
+        }
+        return "\\u" + hexacode + f;
+      }
+
+      function codePoint2(aList)
+      {
+        if (aList) {
+          if (Array.isArray(aList[0])) {
+            // Generate a string representation for a composite character.
+            // (the syntax may not match the parser in nsMathMLChar, but 
+            // support for composite character is broken anyway).
+            var str = "(";
+            str += codePoint(aList[0][0], aList[1]);
+            for (var i = 1; i < aList[0].length; i++) {
+              str += "," + codePoint(aList[0][i], aList[1]);
+            }
+            str += ")";
+            return str;
+          } else {
+            return codePoint(aList[0], aList[1]);
+          }
+        } else {
+          return noChar;
+        }
+      }
+
+      function isSupported(aStretch)
+      {
+        for (var x in aStretch) {
+          var part = aStretch[x];
+          if (part[0] instanceof Array) {
+            // Composite char
+            return false;
+          } else if (part.length > 2) {
+            // Part has scale factor
+            return false;
+          }
+        }
+        return true;
+      }
+
+      MathJax.Hub.Queue(
+      ["Require", MathJax.Ajax, "[MathJax]/jax/element/mml/jax.js"],
+      ["Require", MathJax.Ajax, "[MathJax]/jax/output/HTML-CSS/jax.js"],
+      ["Require", MathJax.Ajax, "[MathJax]/jax/output/HTML-CSS/fonts/TeX/fontdata-extra.js"],
+      function () {
+
+      var t = document.getElementById("output");
+      t.value = "";
+
+      var fontData = MathJax.OutputJax["HTML-CSS"].FONTDATA;
+
+      t.value += "# Content below is generated from MathJaxFonts.html. Do not edit.\n";
+      t.value += "\n";
+
+      // Generate the list of external fonts
+      for (var i = 1; i < fontList.length; i++) {
+        t.value += "external." + i + " = " + fontList[i] + "\n";
+      }
+      t.value += "\n";
+
+      // Generate stretchy table for delimiters
+      var delimiters = fontData.DELIMITERS;
+      for (var u in delimiters) {
+
+        var v = delimiters[u];
+
+        if (v.load) {
+          // These characters are already handled when we load fontdata-extra.js
+          continue;
+        }
+
+        if (v.alias) {
+          if (delimiters.hasOwnProperty(v.alias)) {
+            // use data from the char pointed by this alias
+            v = delimiters[v.alias];
+          } else {
+            // It is an alias to a non-stretchy char. Ignore it.
+            continue;
+          }
+        }
+
+        if (v.stretch && !isSupported(v.stretch)) {
+          // This construction is not supported. Comment the line.
+          t.value += "# ";
+        }
+
+        t.value += codePoint(u);
+        t.value += " = ";
+        if (v.stretch) {
+          if (v.dir == "V") {
+            t.value += codePoint2(v.stretch.top);
+            t.value += codePoint2(v.stretch.mid);
+            t.value += codePoint2(v.stretch.bot);
+            t.value += codePoint2(v.stretch.ext);
+          } else {
+            t.value += codePoint2(v.stretch.left);
+            t.value += codePoint2(v.stretch.mid);
+            t.value += codePoint2(v.stretch.right);
+            t.value += codePoint2(v.stretch.rep);
+          }
+        } else {
+          t.value += noChar + noChar + noChar + noChar;
+        }
+
+        for (var i in v.HW) {
+            t.value += codePoint(u, v.HW[i][1]);
+        }
+
+        t.value += "\n";
+      }
+
+      // Generate table for large operators
+      var fonts1 = fontData.FONTS[fontList[1]];
+      var fonts2 = fontData.FONTS[fontList[2]];
+      for (var u in fonts1) {
+        if (delimiters.hasOwnProperty(u) || // already listed above
+            u == "version" || u == "available" ||
+            u == "directory" ||  u == "family" || u == "testString") {
+          // Ignore these properties
+          continue;
+        }
+        t.value += codePoint(u);
+        t.value += " = ";
+        t.value += noChar + noChar + noChar + noChar;
+        t.value += codePoint(u, fontList[1]);
+        if (fonts2.hasOwnProperty(u)) {
+          t.value += codePoint(u, fontList[2]);
+        }
+        t.value += "\n";
+       }
+ 
+     });
+    </script>
+  </head>
+
+  <body>
+
+    <textarea id="output" cols="80" rows="20"></textarea>
+
+  </body>
+</html>

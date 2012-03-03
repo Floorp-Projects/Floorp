@@ -70,7 +70,7 @@ HISTOGRAM(CYCLE_COLLECTOR_VISITED_GCED, 1, 300000, 50, EXPONENTIAL, "Number of J
 HISTOGRAM(CYCLE_COLLECTOR_COLLECTED, 1, 100000, 50, EXPONENTIAL, "Number of objects collected by the cycle collector")
 HISTOGRAM_BOOLEAN(CYCLE_COLLECTOR_NEED_GC, "Needed garbage collection before cycle collection.")
 HISTOGRAM(CYCLE_COLLECTOR_TIME_BETWEEN, 1, 120, 50, EXPONENTIAL, "Time spent in between cycle collections (seconds)")
-
+HISTOGRAM(CYCLE_COLLECTOR_CONTENT_UNBIND, 1, 10000, 50, EXPONENTIAL, "Time spent on one ContentUnbinder (ms)")
 HISTOGRAM(FORGET_SKIPPABLE_MAX, 1, 10000, 50, EXPONENTIAL, "Max time spent on one forget skippable (ms)")
 
 /**
@@ -85,6 +85,7 @@ HISTOGRAM(GC_SLICE_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running a JS GC sl
 HISTOGRAM(GC_MMU_50, 1, 100, 20, LINEAR, "Minimum percentage of time spent outside GC over any 50ms window")
 HISTOGRAM_BOOLEAN(GC_RESET, "Was an incremental GC canceled?")
 HISTOGRAM_BOOLEAN(GC_INCREMENTAL_DISABLED, "Is incremental GC permanently disabled?")
+HISTOGRAM_BOOLEAN(GC_NON_INCREMENTAL, "Was the GC non-incremental?")
 
 HISTOGRAM(TELEMETRY_PING, 1, 3000, 10, EXPONENTIAL, "Time taken to submit telemetry info (ms)")
 HISTOGRAM_BOOLEAN(TELEMETRY_SUCCESS,  "Successful telemetry submission")
@@ -200,6 +201,8 @@ HISTOGRAM(SPDY_SYN_REPLY_RATIO, 1, 99, 20, LINEAR,  "SPDY: SYN Reply Header Rati
 HISTOGRAM(SPDY_NPN_CONNECT, 0, 1, 2, BOOLEAN,  "SPDY: NPN Negotiated")
 HISTOGRAM(SPDY_NPN_JOIN, 0, 1, 2, BOOLEAN,  "SPDY: Coalesce Succeeded")
 HISTOGRAM(SPDY_KBREAD_PER_CONN, 1, 3000, 50, EXPONENTIAL, "SPDY: KB read per connection")
+HISTOGRAM(SPDY_PING_EXPERIMENT_PASS, 10, 355, 64, LINEAR, "SPDY: Ping Interval Passed")
+HISTOGRAM(SPDY_PING_EXPERIMENT_FAIL, 10, 355, 64, LINEAR, "SPDY: Ping Interval Failed")
 
 HISTOGRAM(SPDY_SETTINGS_UL_BW, 1, 10000, 100, EXPONENTIAL,  "SPDY: Settings Upload Bandwidth")
 HISTOGRAM(SPDY_SETTINGS_DL_BW, 1, 10000, 100, EXPONENTIAL,  "SPDY: Settings Download Bandwidth")
@@ -221,6 +224,8 @@ HISTOGRAM(CACHE_MEMORY_SEARCH, 1, 100, 100, LINEAR, "Time to search memory cache
 HISTOGRAM(CACHE_DISK_SEARCH, 1, 100, 100, LINEAR, "Time to search disk cache (ms)")
 HISTOGRAM(CACHE_OFFLINE_SEARCH, 1, 100, 100, LINEAR, "Time to search offline cache (ms)")
 HISTOGRAM(HTTP_DISK_CACHE_OVERHEAD, 1, 32000000, 100, EXPONENTIAL, "HTTP Disk cache memory overhead (bytes)")
+HISTOGRAM(CACHE_SERVICE_LOCK_WAIT, 1, 10000, 10000, LINEAR, "Time spent waiting on the cache service lock (ms)")
+HISTOGRAM(CACHE_SERVICE_LOCK_WAIT_MAINTHREAD, 1, 10000, 10000, LINEAR, "Time spent waiting on the cache service lock on the main thread (ms)")
 
 HISTOGRAM(DNS_LOOKUP_METHOD, 1, 7, 7, LINEAR, "DNS Lookup Type (hit, renewal, negative-hit, literal, overflow, network-first, network-shared)")
 HISTOGRAM(DNS_CLEANUP_AGE, 1, 1440, 50, EXPONENTIAL, "DNS Cache Entry Age at Removal Time (minutes)")
@@ -230,6 +235,7 @@ HISTOGRAM(DNS_FAILED_LOOKUP_TIME, 1, 60000, 50, EXPONENTIAL, "Time for an unsucc
 
 HISTOGRAM(FIND_PLUGINS, 1, 3000, 10, EXPONENTIAL, "Time spent scanning filesystem for plugins (ms)")
 HISTOGRAM(CHECK_JAVA_ENABLED, 1, 3000, 10, EXPONENTIAL, "Time spent checking if Java is enabled (ms)")
+HISTOGRAM(PLUGIN_SHUTDOWN_MS, 1, 5000, 20, EXPONENTIAL, "Time spent shutting down plugins (ms)")
 
 /* Define 2 histograms: MOZ_SQLITE_(NAME)_MS and
  * MOZ_SQLITE_(NAME)_MAIN_THREAD_MS. These are meant to be used by
@@ -274,6 +280,14 @@ HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE, 1, 10000, 10, EXPONENTIAL, "Ti
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_MAIN_THREAD, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::Close() on the main thread (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::CloseInternal() on non-main thread (ms)")
 HISTOGRAM(NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL_MAIN_THREAD, 1, 10000, 10, EXPONENTIAL, "Time spent in nsDiskCacheOutputStream::CloseInternal on the main thread (ms)")
+
+/**
+ * Idle service telemetry
+ */
+HISTOGRAM(IDLE_NOTIFY_BACK_MS, 1, 5000, 10, EXPONENTIAL, "Time spent checking for and notifying listeners that the user is back (ms)")
+HISTOGRAM(IDLE_NOTIFY_BACK_LISTENERS, 1, 100, 20, LINEAR, "Number of listeners notified that the user is back")
+HISTOGRAM(IDLE_NOTIFY_IDLE_MS, 1, 5000, 10, EXPONENTIAL, "Time spent checking for and notifying listeners that the user is idle (ms)")
+HISTOGRAM(IDLE_NOTIFY_IDLE_LISTENERS, 1, 100, 20, LINEAR, "Number of listeners notified that the user is idle")
 
 /**
  * Url-Classifier telemetry

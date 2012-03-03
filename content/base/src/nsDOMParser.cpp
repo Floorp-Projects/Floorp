@@ -102,7 +102,7 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
     nsDependentString sourceBuffer(str);
-    rv = nsContentUtils::ParseDocumentHTML(sourceBuffer, document);
+    rv = nsContentUtils::ParseDocumentHTML(sourceBuffer, document, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Keep the XULXBL state, base URL and principal setting in sync with the

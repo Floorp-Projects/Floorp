@@ -65,6 +65,7 @@ _TEST_FILES =\
 		test_focus_aria_activedescendant.html \
 		test_focus_autocomplete.xul \
 		test_focus_browserui.xul \
+		test_focus_canvas.html \
 		test_focus_contextmenu.xul \
 		test_focus_controls.html \
 		test_focus_dialog.html \

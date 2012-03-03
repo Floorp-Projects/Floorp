@@ -1,7 +1,0 @@
-richlistitem[type="tab"] {
-  -moz-binding: url(chrome://browser/content/aboutSyncTabs-bindings.xml#tab-listing);
-}
-
-richlistitem[type="client"] {
-  -moz-binding: url(chrome://browser/content/aboutSyncTabs-bindings.xml#client-listing);
-}

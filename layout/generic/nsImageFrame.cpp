@@ -62,7 +62,6 @@
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
-#include "nsIURL.h"
 #include "nsILoadGroup.h"
 #include "nsISupportsPriority.h"
 #include "nsIServiceManager.h"
@@ -80,7 +79,6 @@
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
-#include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsGUIEvent.h"
 #include "nsLayoutUtils.h"

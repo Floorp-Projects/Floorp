@@ -1,41 +1,7 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Mozilla Android code.
- *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Lucas Rocha <lucasr@mozilla.com>
- *   Jason Voll <jvoll@mozilla.com>
- *   Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.db;
@@ -43,11 +9,13 @@ package @ANDROID_PACKAGE_NAME@.db;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoBackgroundThread;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
@@ -134,12 +102,13 @@ public class BrowserProvider extends ContentProvider {
 
     static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
-    static final HashMap<String, String> BOOKMARKS_PROJECTION_MAP = new HashMap<String, String>();
-    static final HashMap<String, String> HISTORY_PROJECTION_MAP = new HashMap<String, String>();
-    static final HashMap<String, String> IMAGES_PROJECTION_MAP = new HashMap<String, String>();
-    static final HashMap<String, String> SCHEMA_PROJECTION_MAP = new HashMap<String, String>();
+    static final Map<String, String> BOOKMARKS_PROJECTION_MAP;
+    static final Map<String, String> HISTORY_PROJECTION_MAP;
+    static final Map<String, String> IMAGES_PROJECTION_MAP;
+    static final Map<String, String> SCHEMA_PROJECTION_MAP;
 
     static {
+        // We will reuse this.
         HashMap<String, String> map;
 
         // Bookmarks
@@ -149,7 +118,7 @@ public class BrowserProvider extends ContentProvider {
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/positions", BOOKMARKS_POSITIONS);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/folder/#", BOOKMARKS_FOLDER_ID);
 
-        map = BOOKMARKS_PROJECTION_MAP;
+        map = new HashMap<String, String>();
         map.put(Bookmarks._ID, Bookmarks._ID);
         map.put(Bookmarks.TITLE, Bookmarks.TITLE);
         map.put(Bookmarks.URL, Bookmarks.URL);
@@ -165,12 +134,13 @@ public class BrowserProvider extends ContentProvider {
         map.put(Bookmarks.DATE_MODIFIED, Bookmarks.DATE_MODIFIED);
         map.put(Bookmarks.GUID, Bookmarks.GUID);
         map.put(Bookmarks.IS_DELETED, Bookmarks.IS_DELETED);
+        BOOKMARKS_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // History
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history", HISTORY);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history/#", HISTORY_ID);
 
-        map = HISTORY_PROJECTION_MAP;
+        map = new HashMap<String, String>();
         map.put(History._ID, History._ID);
         map.put(History.TITLE, History.TITLE);
         map.put(History.URL, History.URL);
@@ -182,12 +152,13 @@ public class BrowserProvider extends ContentProvider {
         map.put(History.DATE_MODIFIED, History.DATE_MODIFIED);
         map.put(History.GUID, History.GUID);
         map.put(History.IS_DELETED, History.IS_DELETED);
+        HISTORY_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // Images
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images", IMAGES);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images/#", IMAGES_ID);
 
-        map = IMAGES_PROJECTION_MAP;
+        map = new HashMap<String, String>();
         map.put(Images._ID, Images._ID);
         map.put(Images.URL, Images.URL);
         map.put(Images.FAVICON, Images.FAVICON);
@@ -197,12 +168,14 @@ public class BrowserProvider extends ContentProvider {
         map.put(Images.DATE_MODIFIED, Images.DATE_MODIFIED);
         map.put(Images.GUID, Images.GUID);
         map.put(Images.IS_DELETED, Images.IS_DELETED);
+        IMAGES_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         // Schema
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "schema", SCHEMA);
 
-        map = SCHEMA_PROJECTION_MAP;
+        map = new HashMap<String, String>();
         map.put(Schema.VERSION, Schema.VERSION);
+        SCHEMA_PROJECTION_MAP = Collections.unmodifiableMap(map);
     }
 
     private HashMap<String, DatabaseHelper> mDatabasePerProfile;
@@ -744,7 +717,8 @@ public class BrowserProvider extends ContentProvider {
     public boolean onCreate() {
         debug("Creating BrowserProvider");
 
-        GeckoAppShell.getHandler().post(new Runnable() {
+        GeckoBackgroundThread.post(new Runnable() {
+            @Override
             public void run() {
                 // Kick this off early. It is synchronized so that other callers will wait
                 try {
@@ -1500,15 +1474,22 @@ public class BrowserProvider extends ContentProvider {
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_HISTORY, selection, selectionArgs);
-        } else {
-            debug("Marking history entry as deleted for URI: " + uri);
-
-            ContentValues values = new ContentValues();
-            values.put(History.IS_DELETED, 1);
-
-            cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
-            return updateHistory(uri, values, selection, selectionArgs);
         }
+
+        debug("Marking history entry as deleted for URI: " + uri);
+
+        ContentValues values = new ContentValues();
+        values.put(History.IS_DELETED, 1);
+
+        // Wipe sensitive data.
+        values.putNull(History.TITLE);
+        values.put(History.URL, "");          // Column is NOT NULL.
+        values.put(History.DATE_CREATED, 0);
+        values.put(History.DATE_LAST_VISITED, 0);
+        values.put(History.VISITS, 0);
+
+        cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
+        return updateHistory(uri, values, selection, selectionArgs);
     }
 
     int deleteBookmarks(Uri uri, String selection, String[] selectionArgs) {
@@ -1518,15 +1499,15 @@ public class BrowserProvider extends ContentProvider {
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_BOOKMARKS, selection, selectionArgs);
-        } else {
-            debug("Marking bookmarks as deleted for URI: " + uri);
-
-            ContentValues values = new ContentValues();
-            values.put(Bookmarks.IS_DELETED, 1);
-
-            cleanupSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
-            return updateBookmarks(uri, values, selection, selectionArgs);
         }
+
+        debug("Marking bookmarks as deleted for URI: " + uri);
+
+        ContentValues values = new ContentValues();
+        values.put(Bookmarks.IS_DELETED, 1);
+
+        cleanupSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
+        return updateBookmarks(uri, values, selection, selectionArgs);
     }
 
     int deleteImages(Uri uri, String selection, String[] selectionArgs) {
@@ -1536,15 +1517,15 @@ public class BrowserProvider extends ContentProvider {
 
         if (isCallerSync(uri)) {
             return db.delete(TABLE_IMAGES, selection, null);
-        } else {
-            debug("Marking images as deleted for URI: " + uri);
-
-            ContentValues values = new ContentValues();
-            values.put(History.IS_DELETED, 1);
-
-            cleanupSomeDeletedRecords(uri, Images.CONTENT_URI, TABLE_IMAGES);
-            return updateExistingImage(uri, values, selection, null);
         }
+
+        debug("Marking images as deleted for URI: " + uri);
+
+        ContentValues values = new ContentValues();
+        values.put(History.IS_DELETED, 1);
+
+        cleanupSomeDeletedRecords(uri, Images.CONTENT_URI, TABLE_IMAGES);
+        return updateExistingImage(uri, values, selection, null);
     }
 
     int deleteUnusedImages(Uri uri) {

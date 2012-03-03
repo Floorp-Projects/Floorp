@@ -13,6 +13,7 @@ import java.util.TreeMap;
 
 import org.json.simple.JSONArray;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.NoGuidForIdException;

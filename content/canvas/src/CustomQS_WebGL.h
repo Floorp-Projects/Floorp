@@ -83,7 +83,7 @@ helper_isFloat32Array(JSObject *obj) {
  *    BufferData_array (int, js::TypedArray *, int)
  */
 static JSBool
-nsIDOMWebGLRenderingContext_BufferData(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_BufferData(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -156,7 +156,7 @@ nsIDOMWebGLRenderingContext_BufferData(JSContext *cx, uintN argc, jsval *vp)
  *    BufferSubData_array (int, int, js::TypedArray *)
  */
 static JSBool
-nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -228,7 +228,7 @@ nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, uintN argc, jsval *vp)
  *    CompressedTexImage2D(uint, int, uint, int, int, int, ArrayBufferView)
  */
 static JSBool
-nsIDOMWebGLRenderingContext_CompressedTexImage2D(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_CompressedTexImage2D(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -278,7 +278,7 @@ nsIDOMWebGLRenderingContext_CompressedTexImage2D(JSContext *cx, uintN argc, jsva
  *    CompressedTexSubImage2D(uint, int, int, int, int, int, uint, ArrayBufferView)
  */
 static JSBool
-nsIDOMWebGLRenderingContext_CompressedTexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_CompressedTexSubImage2D(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -329,7 +329,7 @@ nsIDOMWebGLRenderingContext_CompressedTexSubImage2D(JSContext *cx, uintN argc, j
  *    ReadPixels(int, int, int, int, uint, uint, ArrayBufferView)
  */
 static JSBool
-nsIDOMWebGLRenderingContext_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_ReadPixels(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -389,7 +389,7 @@ nsIDOMWebGLRenderingContext_ReadPixels(JSContext *cx, uintN argc, jsval *vp)
  *    TexImage2D(uint, int, uint, uint, uint, ImageData)
  */
 static JSBool
-nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -510,7 +510,7 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
  *    TexSubImage2D(uint, int, int, int, uint, uint, ImageData)
  */
 static JSBool
-nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -621,7 +621,7 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
 
 /* NOTE: There is a TN version of this below, update it as well */
 static inline JSBool
-helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(JSContext *cx, uintN argc, jsval *vp, int nElements)
+helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(JSContext *cx, unsigned argc, jsval *vp, int nElements)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -695,7 +695,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(JSContext *cx, uintN argc, jsval
 
 /* NOTE: There is a TN version of this below, update it as well */
 static inline JSBool
-helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(JSContext *cx, uintN argc, jsval *vp, int nElements)
+helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(JSContext *cx, unsigned argc, jsval *vp, int nElements)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -769,7 +769,7 @@ helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(JSContext *cx, uintN argc, jsval
 
 /* NOTE: There is a TN version of this below, update it as well */
 static inline JSBool
-helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, uintN argc, jsval *vp, int nElements)
+helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, unsigned argc, jsval *vp, int nElements)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -842,7 +842,7 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, uintN argc,
 }
 
 static inline JSBool
-helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(JSContext *cx, uintN argc, jsval *vp, int nElements)
+helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(JSContext *cx, unsigned argc, jsval *vp, int nElements)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -910,91 +910,91 @@ helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(JSContext *cx, uintN argc, 
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_Uniform1iv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_Uniform1iv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(cx, argc, vp, 1);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_Uniform2iv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_Uniform2iv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(cx, argc, vp, 2);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_Uniform3iv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_Uniform3iv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(cx, argc, vp, 3);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_Uniform4iv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_Uniform4iv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_Uniform_x_iv(cx, argc, vp, 4);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_Uniform1fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_Uniform1fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(cx, argc, vp, 1);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_Uniform2fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_Uniform2fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(cx, argc, vp, 2);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_Uniform3fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_Uniform3fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(cx, argc, vp, 3);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_Uniform4fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_Uniform4fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_Uniform_x_fv(cx, argc, vp, 4);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_UniformMatrix2fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_UniformMatrix2fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(cx, argc, vp, 2);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_UniformMatrix3fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_UniformMatrix3fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(cx, argc, vp, 3);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_UniformMatrix4fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_UniformMatrix4fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(cx, argc, vp, 4);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_VertexAttrib1fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_VertexAttrib1fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(cx, argc, vp, 1);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_VertexAttrib2fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_VertexAttrib2fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(cx, argc, vp, 2);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_VertexAttrib3fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_VertexAttrib3fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(cx, argc, vp, 3);
 }
 
 static JSBool
-nsIDOMWebGLRenderingContext_VertexAttrib4fv(JSContext *cx, uintN argc, jsval *vp)
+nsIDOMWebGLRenderingContext_VertexAttrib4fv(JSContext *cx, unsigned argc, jsval *vp)
 {
     return helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(cx, argc, vp, 4);
 }

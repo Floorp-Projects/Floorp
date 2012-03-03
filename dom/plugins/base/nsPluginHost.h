@@ -113,9 +113,9 @@ public:
   nsresult Init();
   nsresult Destroy();
   nsresult LoadPlugins();
-  nsresult InstantiatePluginForChannel(nsIChannel* aChannel,
-                                       nsObjectLoadingContent* aContent,
-                                       nsIStreamListener** aListener);
+  nsresult CreateListenerForChannel(nsIChannel* aChannel,
+                                    nsObjectLoadingContent* aContent,
+                                    nsIStreamListener** aListener);
   nsresult SetUpPluginInstance(const char *aMimeType,
                                nsIURI *aURL,
                                nsIPluginInstanceOwner *aOwner);

@@ -138,7 +138,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
 }
 
 bool
-Parser::init(const jschar *base, size_t length, const char *filename, uintN lineno,
+Parser::init(const jschar *base, size_t length, const char *filename, unsigned lineno,
              JSVersion version)
 {
     JSContext *cx = context;
@@ -329,7 +329,7 @@ static int
 HasFinalReturn(ParseNode *pn)
 {
     ParseNode *pn2, *pn3;
-    uintN rv, rv2, hasDefault;
+    unsigned rv, rv2, hasDefault;
 
     switch (pn->getKind()) {
       case PNK_STATEMENTLIST:
@@ -441,8 +441,8 @@ HasFinalReturn(ParseNode *pn)
 }
 
 static JSBool
-ReportBadReturn(JSContext *cx, TreeContext *tc, ParseNode *pn, uintN flags, uintN errnum,
-                uintN anonerrnum)
+ReportBadReturn(JSContext *cx, TreeContext *tc, ParseNode *pn, unsigned flags, unsigned errnum,
+                unsigned anonerrnum)
 {
     JSAutoByteString name;
     if (tc->fun()->atom) {
@@ -512,7 +512,7 @@ CheckStrictBinding(JSContext *cx, TreeContext *tc, PropertyName *name, ParseNode
 }
 
 static bool
-ReportBadParameter(JSContext *cx, TreeContext *tc, JSAtom *name, uintN errorNumber)
+ReportBadParameter(JSContext *cx, TreeContext *tc, JSAtom *name, unsigned errorNumber)
 {
     Definition *dn = tc->decls.lookupFirst(name);
     JSAutoByteString bytes;
@@ -590,7 +590,7 @@ Parser::functionBody(FunctionBodyType type)
     PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
     stmtInfo.flags = SIF_BODY_BLOCK;
 
-    uintN oldflags = tc->flags;
+    unsigned oldflags = tc->flags;
     tc->flags &= ~(TCF_RETURN_EXPR | TCF_RETURN_VOID);
 
     ParseNode *pn;
@@ -667,7 +667,7 @@ Define(ParseNode *pn, JSAtom *atom, TreeContext *tc, bool let = false)
     if (dn && dn != pn) {
         ParseNode **pnup = &dn->dn_uses;
         ParseNode *pnu;
-        uintN start = let ? pn->pn_blockid : tc->bodyid;
+        unsigned start = let ? pn->pn_blockid : tc->bodyid;
 
         while ((pnu = *pnup) != NULL && pnu->pn_blockid >= start) {
             JS_ASSERT(pnu->isUsed());
@@ -794,7 +794,7 @@ MakeDefIntoUse(Definition *dn, ParseNode *pn, JSAtom *atom, TreeContext *tc)
 }
 
 bool
-js::DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc)
+js::DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, TreeContext *tc)
 {
     /* Flag tc so we don't have to lookup arguments on every use. */
     if (atom == tc->parser->context->runtime->atomState.argumentsAtom)
@@ -859,12 +859,12 @@ struct BindData {
         struct {
             VarContext varContext;
             StaticBlockObject *blockObj;
-            uintN   overflow;
+            unsigned   overflow;
         } let;
     };
     bool fresh;
 
-    void initLet(VarContext varContext, StaticBlockObject &blockObj, uintN overflow) {
+    void initLet(VarContext varContext, StaticBlockObject &blockObj, unsigned overflow) {
         this->pn = NULL;
         this->op = JSOP_NOP;
         this->binder = BindLet;
@@ -887,7 +887,7 @@ BindLocalVariable(JSContext *cx, TreeContext *tc, ParseNode *pn, BindingKind kin
     /* 'arguments' can be bound as a local only via a destructuring formal parameter. */
     JS_ASSERT_IF(pn->pn_atom == cx->runtime->atomState.argumentsAtom, kind == VARIABLE);
 
-    uintN index = tc->bindings.countVars();
+    unsigned index = tc->bindings.countVars();
     if (!tc->bindings.add(cx, pn->pn_atom, kind))
         return false;
 
@@ -1022,7 +1022,7 @@ EnterFunction(ParseNode *fn, TreeContext *funtc, JSAtom *funAtom = NULL,
 static bool
 DeoptimizeUsesWithin(Definition *dn, const TokenPos &pos)
 {
-    uintN ndeoptimized = 0;
+    unsigned ndeoptimized = 0;
 
     for (ParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
         JS_ASSERT(pnu->isUsed());
@@ -1474,7 +1474,7 @@ Parser::functionDef(PropertyName *funName, FunctionType type, FunctionSyntaxKind
              * we add a variable even if a parameter with the given name
              * already exists.
              */
-            uintN index;
+            unsigned index;
             switch (tc->bindings.lookup(context, funName, &index)) {
               case NONE:
               case ARGUMENT:
@@ -1937,7 +1937,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
         return false;
 
     StaticBlockObject &blockObj = *data->let.blockObj;
-    uintN blockCount = blockObj.slotCount();
+    unsigned blockCount = blockObj.slotCount();
     if (blockCount == JS_BIT(16)) {
         ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                  JSREPORT_ERROR, data->let.overflow);
@@ -2376,7 +2376,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
 }
 
 static bool
-MakeSetCall(JSContext *cx, ParseNode *pn, TreeContext *tc, uintN msg)
+MakeSetCall(JSContext *cx, ParseNode *pn, TreeContext *tc, unsigned msg)
 {
     JS_ASSERT(pn->isArity(PN_LIST));
     JS_ASSERT(pn->isOp(JSOP_CALL) || pn->isOp(JSOP_EVAL) ||
@@ -2394,7 +2394,7 @@ MakeSetCall(JSContext *cx, ParseNode *pn, TreeContext *tc, uintN msg)
 }
 
 static void
-NoteLValue(JSContext *cx, ParseNode *pn, TreeContext *tc, uintN dflag = PND_ASSIGNED)
+NoteLValue(JSContext *cx, ParseNode *pn, TreeContext *tc, unsigned dflag = PND_ASSIGNED)
 {
     if (pn->isUsed()) {
         Definition *dn = pn->pn_lexdef;
@@ -2431,7 +2431,7 @@ NoteLValue(JSContext *cx, ParseNode *pn, TreeContext *tc, uintN dflag = PND_ASSI
      */
     JSAtom *lname = pn->pn_atom;
     if (lname == cx->runtime->atomState.argumentsAtom) {
-        tc->flags |= TCF_FUN_HEAVYWEIGHT;
+        tc->flags |= (TCF_FUN_HEAVYWEIGHT | TCF_FUN_LOCAL_ARGUMENTS);
         tc->countArgumentsUse(pn);
     } else if (tc->inFunction() && lname == tc->fun()->atom) {
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
@@ -2453,7 +2453,7 @@ BindDestructuringVar(JSContext *cx, BindData *data, ParseNode *pn, TreeContext *
     JS_ASSERT(pn->isKind(PNK_NAME));
     atom = pn->pn_atom;
     if (atom == cx->runtime->atomState.argumentsAtom)
-        tc->flags |= TCF_FUN_HEAVYWEIGHT;
+        tc->flags |= (TCF_FUN_HEAVYWEIGHT | TCF_FUN_LOCAL_ARGUMENTS);
 
     data->pn = pn;
     if (!data->binder(cx, data, atom, tc))
@@ -3321,7 +3321,7 @@ Parser::forStatement()
          * rewrites the loop-head, moving the decl and setting pn1 to NULL.
          */
         pn2 = NULL;
-        uintN dflag = PND_ASSIGNED;
+        unsigned dflag = PND_ASSIGNED;
         if (forDecl) {
             /* Tell EmitVariables that pn1 is part of a for/in. */
             pn1->pn_xflags |= PNX_FORINVAR;
@@ -4220,7 +4220,7 @@ Parser::statement()
 
       case TOK_LC:
       {
-        uintN oldflags;
+        unsigned oldflags;
 
         oldflags = tc->flags;
         tc->flags = oldflags & ~TCF_HAS_FUNCTION_STMT;
@@ -4424,7 +4424,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
             if (tc->inFunction() && name == context->runtime->atomState.argumentsAtom) {
                 tc->noteArgumentsNameUse(pn2);
                 if (!blockObj)
-                    tc->flags |= TCF_FUN_HEAVYWEIGHT;
+                    tc->flags |= (TCF_FUN_HEAVYWEIGHT | TCF_FUN_LOCAL_ARGUMENTS);
             }
         }
     } while (tokenStream.matchToken(TOK_COMMA));
@@ -4565,7 +4565,7 @@ RelationalTokenToParseNodeKind(const Token &token)
 
 BEGIN_EXPR_PARSER(relExpr1)
 {
-    uintN inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
+    unsigned inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
 
     /*
      * Uses of the in operator in shiftExprs are always unambiguous,
@@ -4681,7 +4681,7 @@ Parser::condExpr1()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    uintN oldflags = tc->flags;
+    unsigned oldflags = tc->flags;
     tc->flags &= ~TCF_IN_FOR_INIT;
     ParseNode *thenExpr = assignExpr();
     tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
@@ -5017,11 +5017,11 @@ class CompExprTransplanter {
     ParseNode       *root;
     TreeContext     *tc;
     bool            genexp;
-    uintN           adjust;
-    uintN           funcLevel;
+    unsigned           adjust;
+    unsigned           funcLevel;
 
   public:
-    CompExprTransplanter(ParseNode *pn, TreeContext *tc, bool ge, uintN adj)
+    CompExprTransplanter(ParseNode *pn, TreeContext *tc, bool ge, unsigned adj)
       : root(pn), tc(tc), genexp(ge), adjust(adj), funcLevel(0)
     {
     }
@@ -5141,7 +5141,7 @@ static bool
 BumpStaticLevel(ParseNode *pn, TreeContext *tc)
 {
     if (!pn->pn_cookie.isFree()) {
-        uintN level = pn->pn_cookie.level() + 1;
+        unsigned level = pn->pn_cookie.level() + 1;
 
         JS_ASSERT(level >= tc->staticLevel);
         if (level >= UpvarCookie::FREE_LEVEL) {
@@ -5156,7 +5156,7 @@ BumpStaticLevel(ParseNode *pn, TreeContext *tc)
 }
 
 static void
-AdjustBlockId(ParseNode *pn, uintN adjust, TreeContext *tc)
+AdjustBlockId(ParseNode *pn, unsigned adjust, TreeContext *tc)
 {
     JS_ASSERT(pn->isArity(PN_LIST) || pn->isArity(PN_FUNC) || pn->isArity(PN_NAME));
     pn->pn_blockid += adjust;
@@ -5342,10 +5342,10 @@ CompExprTransplanter::transplant(ParseNode *pn)
  * (possibly nested) for-loop, initialized by |kind, op, kid|.
  */
 ParseNode *
-Parser::comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
+Parser::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
                           ParseNodeKind kind, JSOp op)
 {
-    uintN adjust;
+    unsigned adjust;
     ParseNode *pn, *pn2, *pn3, **pnp;
     StmtInfo stmtInfo;
     BindData data;
@@ -5964,7 +5964,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
 ParseNode *
 Parser::bracketedExpr()
 {
-    uintN oldflags;
+    unsigned oldflags;
     ParseNode *pn;
 
     /*
@@ -7122,7 +7122,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                     if (!js_AtomToPrintableString(context, atom, &name))
                         return NULL;
 
-                    uintN flags = (oldAssignType == VALUE &&
+                    unsigned flags = (oldAssignType == VALUE &&
                                    assignType == VALUE &&
                                    !tc->inStrictMode())
                                   ? JSREPORT_WARNING

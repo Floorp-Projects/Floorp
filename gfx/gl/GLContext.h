@@ -602,9 +602,15 @@ public:
 
     virtual bool MakeCurrentImpl(bool aForce = false) = 0;
 
+#ifdef DEBUG
+    static void StaticInit() {
+        PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, NULL);
+    }
+#endif
+
     bool MakeCurrent(bool aForce = false) {
 #ifdef DEBUG
-        sCurrentGLContext = this;
+        PR_SetThreadPrivate(sCurrentGLContextTLS, this);
 #endif
         return MakeCurrentImpl(aForce);
     }
@@ -1227,7 +1233,10 @@ public:
      */
     already_AddRefed<gfxImageSurface> ReadTextureImage(GLuint aTexture,
                                                        const gfxIntSize& aSize,
-                                                       GLenum aTextureFormat);
+                                                       GLenum aTextureFormat,
+                                                       bool aYInvert = false);
+
+    already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture, bool aYInvert, ShaderProgramType aShader);
 
     /**
      * Call ReadPixels into an existing gfxImageSurface for the given bounds.
@@ -1505,10 +1514,12 @@ protected:
     GLContextSymbols mSymbols;
 
 #ifdef DEBUG
-    // this should be thread-local, but that is slightly annoying to implement because on Mac
-    // we don't have any __thread-like keyword. So for now, MOZ_GL_DEBUG assumes (and asserts)
-    // that only the main thread is doing OpenGL calls.
-    static THEBES_API GLContext* sCurrentGLContext;
+    // GLDebugMode will check that we don't send call
+    // to a GLContext that isn't current on the current
+    // thread.
+    // Store the current context when binding to thread local
+    // storage to support DebugMode on an arbitrary thread.
+    static PRUintn sCurrentGLContextTLS;
 #endif
 
     void UpdateActualFormat();
@@ -1632,21 +1643,16 @@ public:
 
     void BeforeGLCall(const char* glFunction) {
         if (DebugMode()) {
-            // since the static member variable sCurrentGLContext is not thread-local as it should,
-            // we have to assert that we're in the main thread. Note that sCurrentGLContext is only used
-            // for the OpenGL debug mode.
-            if (!NS_IsMainThread()) {
-                NS_ERROR("OpenGL call from non-main thread. While this is fine in itself, "
-                         "the OpenGL debug mode, which is currently enabled, doesn't support this. "
-                         "It needs to be patched by making GLContext::sCurrentGLContext be thread-local.\n");
-                NS_ABORT();
-            }
+            GLContext *currentGLContext = NULL;
+
+            currentGLContext = (GLContext*)PR_GetThreadPrivate(sCurrentGLContextTLS);
+
             if (DebugMode() & DebugTrace)
                 printf_stderr("[gl:%p] > %s\n", this, glFunction);
-            if (this != sCurrentGLContext) {
+            if (this != currentGLContext) {
                 printf_stderr("Fatal: %s called on non-current context %p. "
                               "The current context for this thread is %p.\n",
-                               glFunction, this, sCurrentGLContext);
+                               glFunction, this, currentGLContext);
                 NS_ABORT();
             }
         }
@@ -2117,6 +2123,22 @@ public:
         const GLubyte *result = mSymbols.fGetString(name);
         AFTER_GL_CALL;
         return result;
+    }
+
+    void fGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid *img) {
+        if (!mSymbols.fGetTexImage) {
+          return;
+        }
+        BEFORE_GL_CALL;
+        mSymbols.fGetTexImage(target, level, format, type, img);
+        AFTER_GL_CALL;
+    };
+
+    void fGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)
+    {  
+        BEFORE_GL_CALL;
+        mSymbols.fGetTexLevelParameteriv(target, level, pname, params);
+        AFTER_GL_CALL;
     }
 
     void fGetTexParameterfv(GLenum target, GLenum pname, const GLfloat *params) {

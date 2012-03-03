@@ -41,11 +41,15 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsHyperTextAccessibleWrap.h"
+#include "StyleInfo.h"
 
 #include "gfxFont.h"
 #include "gfxUserFontSet.h"
 #include "nsFontMetrics.h"
 #include "nsLayoutUtils.h"
+
+using namespace mozilla;
+using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constants and structures
@@ -70,9 +74,6 @@ const char* const kCopyValue = nsnull;
 static nsCSSTextAttrMapItem gCSSTextAttrsMap[] =
 {
   // CSS name            CSS value        Attribute name                                Attribute value
-  { "color",             kAnyValue,       &nsGkAtoms::color,                 kCopyValue },
-  { "font-family",       kAnyValue,       &nsGkAtoms::font_family,            kCopyValue },
-  { "font-style",        kAnyValue,       &nsGkAtoms::font_style,             kCopyValue },
   { "text-decoration",   "line-through",  &nsGkAtoms::textLineThroughStyle,  "solid" },
   { "text-decoration",   "underline",     &nsGkAtoms::textUnderlineStyle,    "solid" },
   { "vertical-align",    kAnyValue,       &nsGkAtoms::textPosition,          kCopyValue }
@@ -152,43 +153,43 @@ nsTextAttrsMgr::GetAttributes(nsIPersistentProperties *aAttributes,
 
   // "language" text attribute
   nsLangTextAttr langTextAttr(mHyperTextAcc, hyperTextElm, offsetNode);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&langTextAttr));
-
-  // "color" text attribute
-  nsCSSTextAttr colorTextAttr(0, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&colorTextAttr));
-
-  // "font-family" text attribute
-  nsCSSTextAttr fontFamilyTextAttr(1, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontFamilyTextAttr));
-
-  // "font-style" text attribute
-  nsCSSTextAttr fontStyleTextAttr(2, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontStyleTextAttr));
+  textAttrArray.AppendElement(&langTextAttr);
 
   // "text-line-through-style" text attribute
-  nsCSSTextAttr lineThroughTextAttr(3, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&lineThroughTextAttr));
+  nsCSSTextAttr lineThroughTextAttr(0, hyperTextElm, offsetElm);
+  textAttrArray.AppendElement(&lineThroughTextAttr);
 
   // "text-underline-style" text attribute
-  nsCSSTextAttr underlineTextAttr(4, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&underlineTextAttr));
+  nsCSSTextAttr underlineTextAttr(1, hyperTextElm, offsetElm);
+  textAttrArray.AppendElement(&underlineTextAttr);
 
   // "text-position" text attribute
-  nsCSSTextAttr posTextAttr(5, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&posTextAttr));
+  nsCSSTextAttr posTextAttr(2, hyperTextElm, offsetElm);
+  textAttrArray.AppendElement(&posTextAttr);
 
   // "background-color" text attribute
   nsBGColorTextAttr bgColorTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&bgColorTextAttr));
+  textAttrArray.AppendElement(&bgColorTextAttr);
+
+  // "color" text attribute
+  ColorTextAttr colorTextAttr(rootFrame, frame);
+  textAttrArray.AppendElement(&colorTextAttr);
+
+  // "font-family" text attribute
+  FontFamilyTextAttr fontFamilyTextAttr(rootFrame, frame);
+  textAttrArray.AppendElement(&fontFamilyTextAttr);
 
   // "font-size" text attribute
   nsFontSizeTextAttr fontSizeTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontSizeTextAttr));
+  textAttrArray.AppendElement(&fontSizeTextAttr);
+
+  // "font-style" text attribute
+  FontStyleTextAttr fontStyleTextAttr(rootFrame, frame);
+  textAttrArray.AppendElement(&fontStyleTextAttr);
 
   // "font-weight" text attribute
   nsFontWeightTextAttr fontWeightTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(static_cast<nsITextAttr*>(&fontWeightTextAttr));
+  textAttrArray.AppendElement(&fontWeightTextAttr);
 
   // Expose text attributes if applicable.
   if (aAttributes) {
@@ -363,7 +364,7 @@ nsCSSTextAttr::Format(const nsAutoString& aValue, nsAString& aFormattedValue)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsBackgroundTextAttr
+// nsBGColorTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
 nsBGColorTextAttr::nsBGColorTextAttr(nsIFrame *aRootFrame, nsIFrame *aFrame) :
@@ -387,16 +388,8 @@ nsBGColorTextAttr::GetValueFor(nsIContent *aContent, nscolor *aValue)
 void
 nsBGColorTextAttr::Format(const nscolor& aValue, nsAString& aFormattedValue)
 {
-  // Combine the string like rgb(R, G, B) from nscolor.
   nsAutoString value;
-  value.AppendLiteral("rgb(");
-  value.AppendInt(NS_GET_R(aValue));
-  value.AppendLiteral(", ");
-  value.AppendInt(NS_GET_G(aValue));
-  value.AppendLiteral(", ");
-  value.AppendInt(NS_GET_B(aValue));
-  value.Append(')');
-
+  StyleInfo::FormatColor(aValue, value);
   aFormattedValue = value;
 }
 
@@ -427,6 +420,87 @@ nsBGColorTextAttr::GetColor(nsIFrame *aFrame, nscolor *aColor)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// ColorTextAttr
+////////////////////////////////////////////////////////////////////////////////
+
+ColorTextAttr::ColorTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
+  nsTextAttr<nscolor>(!aFrame)
+{
+  mRootNativeValue = aRootFrame->GetStyleColor()->mColor;
+  mIsRootDefined = true;
+
+  if (aFrame) {
+    mNativeValue = aFrame->GetStyleColor()->mColor;
+    mIsDefined = true;
+  }
+}
+
+bool
+ColorTextAttr::GetValueFor(nsIContent* aContent, nscolor* aValue)
+{
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  if (frame) {
+    *aValue = frame->GetStyleColor()->mColor;
+    return true;
+  }
+
+  return false;
+}
+
+void
+ColorTextAttr::Format(const nscolor& aValue, nsAString& aFormattedValue)
+{
+  nsAutoString value;
+  StyleInfo::FormatColor(aValue, value);
+  aFormattedValue = value;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FontFamilyTextAttr
+////////////////////////////////////////////////////////////////////////////////
+
+FontFamilyTextAttr::FontFamilyTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
+  nsTextAttr<nsAutoString>(aFrame == nsnull)
+{
+  mIsRootDefined = GetFontFamily(aRootFrame, mRootNativeValue);
+
+  if (aFrame)
+    mIsDefined = GetFontFamily(aFrame, mNativeValue);
+}
+
+bool
+FontFamilyTextAttr::GetValueFor(nsIContent* aElm, nsAutoString* aValue)
+{
+  nsIFrame* frame = aElm->GetPrimaryFrame();
+  if (!frame)
+    return false;
+
+  return GetFontFamily(frame, *aValue);
+}
+
+void
+FontFamilyTextAttr::Format(const nsAutoString& aValue,
+                           nsAString& aFormattedValue)
+{
+  aFormattedValue = aValue;
+}
+
+bool
+FontFamilyTextAttr::GetFontFamily(nsIFrame* aFrame, nsAutoString& aFamily)
+{
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
+
+  gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
+  gfxFont* font = fontGroup->GetFontAt(0);
+  gfxFontEntry* fontEntry = font->GetFontEntry();
+  aFamily = fontEntry->FamilyName();
+  return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 // nsFontSizeTextAttr
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -450,7 +524,7 @@ nsFontSizeTextAttr::GetValueFor(nsIContent *aContent, nscoord *aValue)
   nsIFrame *frame = aContent->GetPrimaryFrame();
   if (!frame)
     return false;
-  
+
   *aValue = GetFontSize(frame);
   return true;
 }
@@ -462,7 +536,7 @@ nsFontSizeTextAttr::Format(const nscoord& aValue, nsAString& aFormattedValue)
   //
   // Note: according to IA2, "The conversion doesn't have to be exact.
   // The intent is to give the user a feel for the size of the text."
-  // 
+  //
   // ATK does not specify a unit and will likely follow IA2 here.
   //
   // XXX todo: consider sharing this code with layout module? (bug 474621)
@@ -481,6 +555,41 @@ nscoord
 nsFontSizeTextAttr::GetFontSize(nsIFrame *aFrame)
 {
   return aFrame->GetStyleFont()->mSize;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// FontStyleTextAttr
+////////////////////////////////////////////////////////////////////////////////
+
+FontStyleTextAttr::FontStyleTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
+  nsTextAttr<nscoord>(!aFrame)
+{
+  mRootNativeValue = aRootFrame->GetStyleFont()->mFont.style;
+  mIsRootDefined = true;
+
+  if (aFrame) {
+    mNativeValue = aFrame->GetStyleFont()->mFont.style;
+    mIsDefined = true;
+  }
+}
+
+bool
+FontStyleTextAttr::GetValueFor(nsIContent* aContent, nscoord* aValue)
+{
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  if (frame) {
+    *aValue = frame->GetStyleFont()->mFont.style;
+    return true;
+  }
+
+  return false;
+}
+
+void
+FontStyleTextAttr::Format(const nscoord& aValue, nsAString& aFormattedValue)
+{
+  StyleInfo::FormatFontStyle(aValue, aFormattedValue);
 }
 
 

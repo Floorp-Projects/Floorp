@@ -2,12 +2,21 @@
 
 # Test harness for JSTests, controlled by manifest files.
 
-import datetime, os, sys, subprocess
-from subprocess import *
+import datetime, os, sys
+from subprocess import list2cmdline, call
 
-from tests import TestResult, NullTestOutput
-from workers import Source
+from results import NullTestOutput
+from tests import TestCase
+from tasks_win import Source
 from progressbar import ProgressBar
+from results import ResultsSink
+
+if (sys.platform.startswith('linux') or
+    sys.platform.startswith('darwin')
+   ):
+    from tasks_unix import run_all_tests
+else:
+    from tasks_win import run_all_tests
 
 def exclude_tests(test_list, exclude_files):
     exclude_paths = []
@@ -18,168 +27,6 @@ def exclude_tests(test_list, exclude_files):
             if not line: continue
             exclude_paths.append(line)
     return [ _ for _ in test_list if _.path not in exclude_paths ]
-
-def check_manifest(test_list):
-    test_set = set([ _.path for _ in test_list ])
-
-    missing = []
-
-    for dirpath, dirnames, filenames in os.walk('.'):
-        for filename in filenames:
-            if dirpath == '.': continue
-            if not filename.endswith('.js'): continue
-            if filename in ('browser.js', 'shell.js', 'jsref.js', 'template.js'): continue
-
-            path = os.path.join(dirpath, filename)
-            if path.startswith('./'):
-                path = path[2:]
-            if path not in test_set:
-                missing.append(path)
-
-    if missing:
-        print "Test files not contained in any manifest:"
-        for path in missing:
-            print path
-    else:
-        print 'All test files are listed in manifests'
-
-def print_tinderbox_result(label, path, message=None, skip=False, time=None):
-    result = label
-    result += " | " + path
-    result += " |" + OPTIONS.shell_args
-    if message:
-        result += " | " + message
-    if skip:
-        result += ' | (SKIP)'
-    if time > OPTIONS.timeout:
-        result += ' | (TIMEOUT)'
-    print result
-
-class TestTask:
-    js_cmd_prefix = None
-
-    def __init__(self, test):
-        self.test = test
-
-    def __call__(self):
-        if self.test.enable or OPTIONS.run_skipped:
-            return self.test.run(self.js_cmd_prefix, OPTIONS.timeout)
-        else:
-            return NullTestOutput(self.test)
-
-    def __str__(self):
-        return str(self.test)
-
-    @classmethod
-    def set_js_cmd_prefix(self, js_path, js_args, debugger_prefix):
-        parts = []
-        if debugger_prefix:
-            parts += debugger_prefix
-        parts.append(js_path)
-        if js_args:
-            parts += js_args
-        self.js_cmd_prefix = parts
-
-class ResultsSink:
-    output_file = None
-
-    def __init__(self):
-        self.groups = {}
-        self.counts = [ 0, 0, 0 ]
-        self.n = 0
-
-        self.finished = False
-        self.pb = None
-
-    def push(self, output):
-        if isinstance(output, NullTestOutput):
-            if OPTIONS.tinderbox:
-                print_tinderbox_result('TEST-KNOWN-FAIL', output.test.path, time=output.dt, skip=True)
-            self.counts[2] += 1
-            self.n += 1
-        else:
-            if OPTIONS.show_cmd:
-                print >> self.output_file, subprocess.list2cmdline(output.cmd)
-
-            if OPTIONS.show_output:
-                print >> self.output_file, '    rc = %d, run time = %f' % (output.rc, output.dt)
-                self.output_file.write(output.out)
-                self.output_file.write(output.err)
-
-            result = TestResult.from_output(output)
-            tup = (result.result, result.test.expect, result.test.random)
-            dev_label = self.LABELS[tup][1]
-            if output.timed_out:
-                dev_label = 'TIMEOUTS'
-            self.groups.setdefault(dev_label, []).append(result.test.path)
-
-            self.n += 1
-
-            if result.result == TestResult.PASS and not result.test.random:
-                self.counts[0] += 1
-            elif result.test.expect and not result.test.random:
-                self.counts[1] += 1
-            else:
-                self.counts[2] += 1
-
-            if OPTIONS.tinderbox:
-                if len(result.results) > 1:
-                    for sub_ok, msg in result.results:
-                        label = self.LABELS[(sub_ok, result.test.expect, result.test.random)][0]
-                        if label == 'TEST-UNEXPECTED-PASS':
-                            label = 'TEST-PASS (EXPECTED RANDOM)'
-                        print_tinderbox_result(label, result.test.path, time=output.dt, message=msg)
-                print_tinderbox_result(self.LABELS[
-                    (result.result, result.test.expect, result.test.random)][0],
-                    result.test.path, time=output.dt)
-           
-        if self.pb:
-            self.pb.label = '[%4d|%4d|%4d]'%tuple(self.counts)
-            self.pb.update(self.n)
-
-    # Conceptually, this maps (test result x test expection) to text labels.
-    #      key   is (result, expect, random)
-    #      value is (tinderbox label, dev test category)
-    LABELS = {
-        (TestResult.CRASH, False, False): ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
-        (TestResult.CRASH, False, True):  ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
-        (TestResult.CRASH, True,  False): ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
-        (TestResult.CRASH, True,  True):  ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
-
-        (TestResult.FAIL,  False, False): ('TEST-KNOWN-FAIL',                    ''),
-        (TestResult.FAIL,  False, True):  ('TEST-KNOWN-FAIL (EXPECTED RANDOM)',  ''),
-        (TestResult.FAIL,  True,  False): ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
-        (TestResult.FAIL,  True,  True):  ('TEST-KNOWN-FAIL (EXPECTED RANDOM)',  ''),
-
-        (TestResult.PASS,  False, False): ('TEST-UNEXPECTED-PASS',               'FIXES'),
-        (TestResult.PASS,  False, True):  ('TEST-PASS (EXPECTED RANDOM)',        ''),
-        (TestResult.PASS,  True,  False): ('TEST-PASS',                          ''),
-        (TestResult.PASS,  True,  True):  ('TEST-PASS (EXPECTED RANDOM)',        ''),
-        }
-
-    def list(self):
-        for label, paths in sorted(self.groups.items()):
-            if label == '': continue
-
-            print label
-            for path in paths:
-                print '    %s'%path
-
-        if OPTIONS.failure_file:
-              failure_file = open(OPTIONS.failure_file, 'w')
-              if not self.all_passed():
-                  for path in self.groups['REGRESSIONS'] + self.groups['TIMEOUTS']:
-                      print >> failure_file, path
-              failure_file.close()
-
-        suffix = '' if self.finished else ' (partial run -- interrupted by user)'
-        if self.all_passed():
-            print 'PASS' + suffix
-        else:
-            print 'FAIL' + suffix
-
-    def all_passed(self):
-        return 'REGRESSIONS' not in self.groups and 'TIMEOUTS' not in self.groups
 
 def run_tests(tests, results):
     """Run the given tests, sending raw results to the given results accumulator."""
@@ -192,17 +39,18 @@ def run_tests(tests, results):
             pass
     results.pb = pb
 
-    test_list = [ TestTask(test) for test in tests ]
-    pipeline = Source(test_list, results, False)
-    results.finished = pipeline.start(OPTIONS.worker_count)
+    try:
+        results.finished = run_all_tests(tests, results, OPTIONS)
+    except KeyboardInterrupt:
+        results.finished = False
 
-    if pb: 
+    if pb:
         pb.finish()
 
     if not OPTIONS.tinderbox:
         results.list()
 
-if __name__ == '__main__':        
+if __name__ == '__main__':
     from optparse import OptionParser
     op = OptionParser(usage='%prog JS_SHELL [TEST-SPECS]')
     op.add_option('-s', '--show-cmd', dest='show_cmd', action='store_true',
@@ -272,18 +120,18 @@ if __name__ == '__main__':
         if OPTIONS.valgrind_args:
             debugger_prefix.append(OPTIONS.valgrind_args)
         # Running under valgrind is not very useful if we don't show results.
-        OPTIONS.show_output = True 
+        OPTIONS.show_output = True
     else:
         debugger_prefix = []
 
-    TestTask.set_js_cmd_prefix(JS, OPTIONS.shell_args.split(), debugger_prefix)
+    TestCase.set_js_cmd_prefix(JS, OPTIONS.shell_args.split(), debugger_prefix)
 
     output_file = sys.stdout
     if OPTIONS.output_file and (OPTIONS.show_cmd or OPTIONS.show_output):
         output_file = open(OPTIONS.output_file, 'w')
     ResultsSink.output_file = output_file
 
-    if ((OPTIONS.show_cmd or OPTIONS.show_output) and 
+    if ((OPTIONS.show_cmd or OPTIONS.show_output) and
         output_file == sys.stdout or OPTIONS.tinderbox):
         OPTIONS.hide_progress = True
 
@@ -307,9 +155,10 @@ if __name__ == '__main__':
             xul_info = manifest.XULInfo(xul_abi, xul_os, xul_debug)
         xul_tester = manifest.XULInfoTester(xul_info, JS)
     test_list = manifest.parse(OPTIONS.manifest, xul_tester)
+    skipped_list = []
 
     if OPTIONS.check_manifest:
-        check_manifest(test_list)
+        manifest.check_manifest(test_list)
         if JS is None:
             sys.exit()
 
@@ -344,35 +193,44 @@ if __name__ == '__main__':
     if not OPTIONS.run_slow_tests:
         test_list = [ _ for _ in test_list if not _.slow ]
 
-    if OPTIONS.debug and test_list:
+    if not OPTIONS.run_skipped:
+        skipped_list = [ _ for _ in test_list if not _.enable ]
+        test_list = [ _ for _ in test_list if _.enable ]
+
+    if not test_list:
+        print 'no tests selected'
+        sys.exit(1)
+
+    if OPTIONS.debug:
         if len(test_list) > 1:
             print('Multiple tests match command line arguments, debugger can only run one')
             for tc in test_list:
                 print('    %s'%tc.path)
             sys.exit(2)
 
-        cmd = test_list[0].get_command(TestTask.js_cmd_prefix)
+        cmd = test_list[0].get_command(TestCase.js_cmd_prefix)
         if OPTIONS.show_cmd:
-            print subprocess.list2cmdline(cmd)
+            print list2cmdline(cmd)
         manifest_dir = os.path.dirname(OPTIONS.manifest)
         if manifest_dir not in ('', '.'):
-            os.chdir(os.path.dirname(OPTIONS.manifest))
+            os.chdir(manifest_dir)
         call(cmd)
         sys.exit()
 
+    curdir = os.getcwd()
+    manifest_dir = os.path.dirname(OPTIONS.manifest)
+    if manifest_dir not in ('', '.'):
+        os.chdir(manifest_dir)
+
     results = None
-    if not test_list:
-        print 'no tests selected'
-    else:
-        curdir = os.getcwd()
-        manifest_dir = os.path.dirname(OPTIONS.manifest)
-        if manifest_dir not in ('', '.'):
-            os.chdir(os.path.dirname(OPTIONS.manifest))
-        try:
-            results = ResultsSink()
-            run_tests(test_list, results)
-        finally:
-            os.chdir(curdir)
+    try:
+        results = ResultsSink(output_file, OPTIONS)
+        run_tests(test_list, results)
+    finally:
+        os.chdir(curdir)
+
+    for t in skipped_list:
+        results.push(NullTestOutput(t))
 
     if output_file != sys.stdout:
         output_file.close()

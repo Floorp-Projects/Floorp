@@ -404,7 +404,7 @@ class Compiler : public BaseCompiler
     analyze::CrossScriptSSA ssa;
 
     GlobalObject *globalObj;
-    const HeapValue *globalSlots;  /* Original slots pointer. */
+    const HeapSlot *globalSlots;  /* Original slots pointer. */
 
     Assembler masm;
     FrameState frame;
@@ -613,7 +613,7 @@ private:
     /* Emitting helpers. */
     bool constantFoldBranch(jsbytecode *target, bool taken);
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
-    bool iter(uintN flags);
+    bool iter(unsigned flags);
     void iterNext(ptrdiff_t offset);
     bool iterMore(jsbytecode *target);
     void iterEnd();

@@ -156,6 +156,12 @@ _TEST_FILES	= \
 		test_bug698061.html \
 		test_bug707749.html \
 		test_bug691707.html \
+		test_bug304459.html \
+		iframe_bug304459-1.html \
+		iframe_bug304459-2.html \
+		test_bug38959.html \
+		iframe_bug38959-1.html \
+		iframe_bug38959-2.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)

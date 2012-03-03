@@ -298,6 +298,10 @@ gfxPlatform::Init()
     #error "No gfxPlatform implementation available"
 #endif
 
+#ifdef DEBUG
+    mozilla::gl::GLContext::StaticInit();
+#endif
+
     nsresult rv;
 
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(ANDROID) // temporary, until this is implemented on others

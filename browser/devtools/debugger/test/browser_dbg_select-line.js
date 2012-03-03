@@ -6,8 +6,8 @@
  * pane and highlights the proper line.
  */
 
-const TAB_URL = "http://example.com/browser/browser/devtools/debugger/" +
-                "test/browser_dbg_script-switching.html";
+const TAB_URL = EXAMPLE_URL + "browser_dbg_script-switching.html";
+
 let tempScope = {};
 Cu.import("resource:///modules/source-editor.jsm", tempScope);
 let SourceEditor = tempScope.SourceEditor;

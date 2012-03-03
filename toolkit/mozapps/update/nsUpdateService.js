@@ -2464,6 +2464,7 @@ Checker.prototype = {
       this._callback.onError(request, update);
     }
 
+    this._callback = null;
     this._request = null;
   },
 
@@ -2513,6 +2514,8 @@ Checker.prototype = {
       Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, this._enabled);
       break;
     }
+
+    this._callback = null;
   },
 
   classID: Components.ID("{898CDC9B-E43F-422F-9CC4-2F6291B415A3}"),

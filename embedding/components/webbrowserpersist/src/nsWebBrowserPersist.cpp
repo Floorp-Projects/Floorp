@@ -85,6 +85,7 @@
 #include "nsISHEntry.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIFormControl.h"
+#include "nsContentUtils.h"
 
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -2604,72 +2605,6 @@ nsWebBrowserPersist::EnumCleanupUploadList(nsHashKey *aKey, void *aData, void* c
     return true;
 }
 
-
-bool
-nsWebBrowserPersist::GetQuotedAttributeValue(
-    const nsAString &aSource, const nsAString &aAttribute, nsAString &aValue)
-{  
-    // NOTE: This code was lifted verbatim from nsParserUtils.cpp
-    aValue.Truncate();
-    nsAString::const_iterator start, end;
-    aSource.BeginReading(start);
-    aSource.EndReading(end);
-    nsAString::const_iterator iter(end);
-
-    while (start != end) {
-        if (FindInReadable(aAttribute, start, iter))
-        {
-            // walk past any whitespace
-            while (iter != end && nsCRT::IsAsciiSpace(*iter))
-            {
-                ++iter;
-            }
-
-            if (iter == end)
-                break;
-            
-            // valid name="value" pair?
-            if (*iter != '=')
-            {
-                start = iter;
-                iter = end;
-                continue;
-            }
-            // move past the =
-            ++iter;
-
-            while (iter != end && nsCRT::IsAsciiSpace(*iter))
-            {
-                ++iter;
-            }
-
-            if (iter == end)
-                break;
-
-            PRUnichar q = *iter;
-            if (q != '"' && q != '\'')
-            {
-                start = iter;
-                iter = end;
-                continue;
-            }
-
-            // point to the first char of the value
-            ++iter;
-            start = iter;
-            if (FindCharInReadable(q, iter, end))
-            {
-                aValue = Substring(start, iter);
-                return true;
-            }
-
-            // we've run out of string.  Just return...
-            break;
-         }
-    }
-    return false;
-}
-
 nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, const nsAString &aHref)
 {
     NS_ENSURE_ARG_POINTER(aPI);
@@ -2680,7 +2615,9 @@ nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     nsAutoString href;
-    GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), href);
+    nsContentUtils::GetPseudoAttributeValue(data,
+                                            nsGkAtoms::href,
+                                            href);
 
     // Construct and set a new data value for the xml-stylesheet
     if (!aHref.IsEmpty() && !href.IsEmpty())
@@ -2691,11 +2628,21 @@ nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction
         nsAutoString type;
         nsAutoString media;
 
-        GetQuotedAttributeValue(data, NS_LITERAL_STRING("alternate"), alternate);
-        GetQuotedAttributeValue(data, NS_LITERAL_STRING("charset"), charset);
-        GetQuotedAttributeValue(data, NS_LITERAL_STRING("title"), title);
-        GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
-        GetQuotedAttributeValue(data, NS_LITERAL_STRING("media"), media);
+        nsContentUtils::GetPseudoAttributeValue(data,
+                                                nsGkAtoms::alternate,
+                                                alternate);
+        nsContentUtils::GetPseudoAttributeValue(data,
+                                                nsGkAtoms::charset,
+                                                charset);
+        nsContentUtils::GetPseudoAttributeValue(data,
+                                                nsGkAtoms::title,
+                                                title);
+        nsContentUtils::GetPseudoAttributeValue(data,
+                                                nsGkAtoms::type,
+                                                type);
+        nsContentUtils::GetPseudoAttributeValue(data,
+                                                nsGkAtoms::media,
+                                                media);
 
         NS_NAMED_LITERAL_STRING(kCloseAttr, "\" ");
         nsAutoString newData;
@@ -2736,7 +2683,7 @@ nsresult nsWebBrowserPersist::GetXMLStyleSheetLink(nsIDOMProcessingInstruction *
     rv = aPI->GetData(data);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), aHref);
+    nsContentUtils::GetPseudoAttributeValue(data, nsGkAtoms::href, aHref);
 
     return NS_OK;
 }

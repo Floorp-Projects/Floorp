@@ -48,10 +48,10 @@ function test() {
   let arcball3 = new TiltVisualizer.Arcball(window, 512, 512);
 
   let sphereVec = vec3.create();
-  arcball3.pointToSphere(123, 456, 256, 512, 512, sphereVec);
+  arcball3._pointToSphere(123, 456, 256, 512, 512, sphereVec);
 
   ok(isApproxVec(sphereVec, [-0.009765625, 0.390625, 0.9204980731010437]),
-    "The pointToSphere() function didn't map the coordinates correctly.");
+    "The _pointToSphere() function didn't map the coordinates correctly.");
 
   let stack1 = [];
   let expect1 = [

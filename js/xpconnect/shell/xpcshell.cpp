@@ -376,7 +376,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 }
 
 static JSBool
-ReadLine(JSContext *cx, uintN argc, jsval *vp)
+ReadLine(JSContext *cx, unsigned argc, jsval *vp)
 {
     // While 4096 might be quite arbitrary, this is something to be fixed in
     // bug 105707. It is also the same limit as in ProcessFile.
@@ -418,9 +418,9 @@ ReadLine(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Print(JSContext *cx, uintN argc, jsval *vp)
+Print(JSContext *cx, unsigned argc, jsval *vp)
 {
-    uintN i, n;
+    unsigned i, n;
     JSString *str;
 
     jsval *argv = JS_ARGV(cx, vp);
@@ -442,7 +442,7 @@ Print(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Dump(JSContext *cx, uintN argc, jsval *vp)
+Dump(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
@@ -467,14 +467,14 @@ Dump(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Load(JSContext *cx, uintN argc, jsval *vp)
+Load(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return false;
 
     jsval *argv = JS_ARGV(cx, vp);
-    for (uintN i = 0; i < argc; i++) {
+    for (unsigned i = 0; i < argc; i++) {
         JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return false;
@@ -503,7 +503,7 @@ Load(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Version(JSContext *cx, uintN argc, jsval *vp)
+Version(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc > 0 && JSVAL_IS_INT(JS_ARGV(cx, vp)[0]))
         JS_SET_RVAL(cx, vp, INT_TO_JSVAL(JS_SetVersion(cx, JSVersion(JSVAL_TO_INT(JS_ARGV(cx, vp)[0])))));
@@ -513,7 +513,7 @@ Version(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-BuildDate(JSContext *cx, uintN argc, jsval *vp)
+BuildDate(JSContext *cx, unsigned argc, jsval *vp)
 {
     fprintf(gOutFile, "built on %s at %s\n", __DATE__, __TIME__);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -521,7 +521,7 @@ BuildDate(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Quit(JSContext *cx, uintN argc, jsval *vp)
+Quit(JSContext *cx, unsigned argc, jsval *vp)
 {
     gExitCode = 0;
     JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp),"/ i", &gExitCode);
@@ -532,7 +532,7 @@ Quit(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-DumpXPC(JSContext *cx, uintN argc, jsval *vp)
+DumpXPC(JSContext *cx, unsigned argc, jsval *vp)
 {
     int32_t depth = 2;
 
@@ -549,7 +549,7 @@ DumpXPC(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-GC(JSContext *cx, uintN argc, jsval *vp)
+GC(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_GC(cx);
 #ifdef JS_GCMETER
@@ -561,7 +561,7 @@ GC(JSContext *cx, uintN argc, jsval *vp)
 
 #ifdef JS_GC_ZEAL
 static JSBool
-GCZeal(JSContext *cx, uintN argc, jsval *vp)
+GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 {
     uint32_t zeal;
     if (!JS_ValueToECMAUint32(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID, &zeal))
@@ -576,7 +576,7 @@ GCZeal(JSContext *cx, uintN argc, jsval *vp)
 #ifdef DEBUG
 
 static JSBool
-DumpHeap(JSContext *cx, uintN argc, jsval *vp)
+DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
 {
     void* startThing = NULL;
     JSGCTraceKind startTraceKind = JSTRACE_OBJECT;
@@ -644,10 +644,12 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
         }
     }
 
-    ok = JS_DumpHeap(cx, dumpFile, startThing, startTraceKind, thingToFind,
+    ok = JS_DumpHeap(JS_GetRuntime(cx), dumpFile, startThing, startTraceKind, thingToFind,
                      maxDepth, thingToIgnore);
     if (dumpFile != gOutFile)
         fclose(dumpFile);
+    if (!ok)
+        JS_ReportOutOfMemory(cx);
     return ok;
 
   not_traceable_arg:
@@ -660,7 +662,7 @@ DumpHeap(JSContext *cx, uintN argc, jsval *vp)
 #endif /* DEBUG */
 
 static JSBool
-Clear(JSContext *cx, uintN argc, jsval *vp)
+Clear(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc > 0 && !JSVAL_IS_PRIMITIVE(JS_ARGV(cx, vp)[0])) {
         JS_ClearScope(cx, JSVAL_TO_OBJECT(JS_ARGV(cx, vp)[0]));
@@ -674,7 +676,7 @@ Clear(JSContext *cx, uintN argc, jsval *vp)
 
 static JSBool
 SendCommand(JSContext* cx,
-            uintN argc,
+            unsigned argc,
             jsval* vp)
 {
     if (argc == 0) {
@@ -705,7 +707,7 @@ SendCommand(JSContext* cx,
 
 static JSBool
 GetChildGlobalObject(JSContext* cx,
-                     uintN,
+                     unsigned,
                      jsval* vp)
 {
     JSObject* global;
@@ -762,7 +764,7 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
 }
 
 static JSBool
-Options(JSContext *cx, uintN argc, jsval *vp)
+Options(JSContext *cx, unsigned argc, jsval *vp)
 {
     uint32_t optset, flag;
     JSString *str;
@@ -771,7 +773,7 @@ Options(JSContext *cx, uintN argc, jsval *vp)
 
     optset = 0;
     jsval *argv = JS_ARGV(cx, vp);
-    for (uintN i = 0; i < argc; i++) {
+    for (unsigned i = 0; i < argc; i++) {
         str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return false;
@@ -812,7 +814,7 @@ Options(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-Parent(JSContext *cx, uintN argc, jsval *vp)
+Parent(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc != 1) {
         JS_ReportError(cx, "Wrong number of arguments");
@@ -945,7 +947,7 @@ env_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-env_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+env_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
             JSObject **objp)
 {
     JSString *idstr, *valstr;
@@ -1003,7 +1005,7 @@ JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 };
 
 static const JSErrorFormatString *
-my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
+my_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber)
 {
     if (errorNumber == 0 || errorNumber >= JSShellErr_Limit)
         return NULL;
@@ -1686,7 +1688,7 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 static JSContextCallback gOldJSContextCallback;
 
 static JSBool
-ContextCallback(JSContext *cx, uintN contextOp)
+ContextCallback(JSContext *cx, unsigned contextOp)
 {
     if (gOldJSContextCallback && !gOldJSContextCallback(cx, contextOp))
         return false;

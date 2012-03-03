@@ -114,21 +114,38 @@
 #ifndef STN_UNDEF
 #define STN_UNDEF 0
 #endif
-
 #ifndef DT_INIT_ARRAY
 #define DT_INIT_ARRAY 25
 #endif
-
 #ifndef DT_FINI_ARRAY
 #define DT_FINI_ARRAY 26
 #endif
-
 #ifndef DT_INIT_ARRAYSZ
 #define DT_INIT_ARRAYSZ 27
 #endif
-
 #ifndef DT_FINI_ARRAYSZ
 #define DT_FINI_ARRAYSZ 28
+#endif
+#ifndef DT_RELACOUNT
+#define DT_RELACOUNT 0x6ffffff9
+#endif
+#ifndef DT_RELCOUNT
+#define DT_RELCOUNT 0x6ffffffa
+#endif
+#ifndef DT_VERSYM
+#define DT_VERSYM 0x6ffffff0
+#endif
+#ifndef DT_VERDEF
+#define DT_VERDEF 0x6ffffffc
+#endif
+#ifndef DT_VERDEFNUM
+#define DT_VERDEFNUM 0x6ffffffd
+#endif
+#ifndef DT_VERNEED
+#define DT_VERNEED 0x6ffffffe
+#endif
+#ifndef DT_VERNEEDNUM
+#define DT_VERNEEDNUM 0x6fffffff
 #endif
 
 namespace Elf {

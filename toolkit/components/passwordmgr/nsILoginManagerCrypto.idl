@@ -37,9 +37,12 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(73f85239-421d-4d34-8d9c-79cf820ea1e6)]
+[scriptable, uuid(2030770e-542e-40cd-8061-cd9d4ad4227f)]
 
 interface nsILoginManagerCrypto : nsISupports {
+
+    const unsigned long ENCTYPE_BASE64 = 0;
+    const unsigned long ENCTYPE_SDR = 1;
 
     /**
      * encrypt
@@ -86,4 +89,11 @@ interface nsILoginManagerCrypto : nsISupports {
      * password prompt.
      */
     readonly attribute boolean isLoggedIn;
+
+    /**
+     * defaultEncType
+     *
+     * Default encryption type used by an implementation of this interface.
+     */
+    readonly attribute unsigned long defaultEncType;
 };

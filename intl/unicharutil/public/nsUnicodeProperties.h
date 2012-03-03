@@ -65,6 +65,12 @@ PRInt32 GetScriptCode(PRUint32 aCh);
 
 PRUint32 GetScriptTagForCode(PRInt32 aScriptCode);
 
+bool IsClusterExtender(PRUint32 aCh, PRUint8 aCategory);
+
+inline bool IsClusterExtender(PRUint32 aCh) {
+    return IsClusterExtender(aCh, GetGeneralCategory(aCh));
+}
+
 enum HSType {
     HST_NONE = 0x00,
     HST_L    = 0x01,
@@ -87,6 +93,31 @@ enum ShapingType {
 };
 
 PRInt32 ScriptShapingType(PRInt32 aScriptCode);
+
+// A simple iterator for a string of PRUnichar codepoints that advances
+// by Unicode grapheme clusters
+class ClusterIterator
+{
+public:
+    ClusterIterator(const PRUnichar* aText, PRUint32 aLength)
+        : mText(aText), mLimit(aText + aLength), mPos(aText)
+    { }
+
+    operator const PRUnichar* () const {
+        return mPos;
+    }
+
+    bool AtEnd() const {
+        return mPos >= mLimit;
+    }
+
+    void Next();
+
+private:
+    const PRUnichar* mText;
+    const PRUnichar* mLimit;
+    const PRUnichar* mPos;
+};
 
 } // end namespace unicode
 

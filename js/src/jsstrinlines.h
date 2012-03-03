@@ -107,9 +107,9 @@ class StringBuffer
         cb.infallibleAppendN(c, n);
     }
 
-    JSAtom *atomize(uintN flags = 0);
-    static JSAtom *atomize(JSContext *cx, const CharBuffer &cb, uintN flags = 0);
-    static JSAtom *atomize(JSContext *cx, const jschar *begin, size_t length, uintN flags = 0);
+    JSAtom *atomize(unsigned flags = 0);
+    static JSAtom *atomize(JSContext *cx, const CharBuffer &cb, unsigned flags = 0);
+    static JSAtom *atomize(JSContext *cx, const jschar *begin, size_t length, unsigned flags = 0);
 
     void replaceRawBuffer(jschar *chars, size_t len) { cb.replaceRawBuffer(chars, len); }
     jschar *begin() { return cb.begin(); }

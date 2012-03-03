@@ -58,6 +58,7 @@ _BROWSER_TEST_FILES = \
 		browser_bug725388_mouse_events.js \
 		browser_bug707987_debugger_breakpoints.js \
 		browser_bug712982_line_ruler_click.js \
+		browser_bug700893_dirty_state.js \
 		head.js \
 
 libs:: $(_BROWSER_TEST_FILES)

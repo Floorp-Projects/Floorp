@@ -195,7 +195,7 @@ private:
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName);
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -265,7 +265,7 @@ private:
   }
 
   static JSBool
-  UnwrapErrorEvent(JSContext* aCx, uintN aArgc, jsval* aVp)
+  UnwrapErrorEvent(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ASSERT(JSVAL_IS_OBJECT(JS_CALLEE(aCx, aVp)));
     JS_ASSERT(aArgc == 1);
@@ -383,7 +383,7 @@ private:
   }
 
   static JSBool
-  Close(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Close(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -399,7 +399,7 @@ private:
   }
 
   static JSBool
-  ImportScripts(JSContext* aCx, uintN aArgc, jsval* aVp)
+  ImportScripts(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -419,7 +419,7 @@ private:
   }
 
   static JSBool
-  SetTimeout(JSContext* aCx, uintN aArgc, jsval* aVp)
+  SetTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -440,7 +440,7 @@ private:
   }
 
   static JSBool
-  ClearTimeout(JSContext* aCx, uintN aArgc, jsval* aVp)
+  ClearTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -461,7 +461,7 @@ private:
   }
 
   static JSBool
-  SetInterval(JSContext* aCx, uintN aArgc, jsval* aVp)
+  SetInterval(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -482,7 +482,7 @@ private:
   }
 
   static JSBool
-  ClearInterval(JSContext* aCx, uintN aArgc, jsval* aVp)
+  ClearInterval(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -503,7 +503,7 @@ private:
   }
 
   static JSBool
-  Dump(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Dump(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -536,7 +536,7 @@ private:
   }
 
   static JSBool
-  AtoB(JSContext* aCx, uintN aArgc, jsval* aVp)
+  AtoB(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -562,7 +562,7 @@ private:
   }
 
   static JSBool
-  BtoA(JSContext* aCx, uintN aArgc, jsval* aVp)
+  BtoA(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -731,7 +731,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -739,7 +739,7 @@ private:
   }
 
   static JSBool
-  Resolve(JSContext* aCx, JSObject* aObj, jsid aId, uintN aFlags,
+  Resolve(JSContext* aCx, JSObject* aObj, jsid aId, unsigned aFlags,
           JSObject** aObjp)
   {
     JSBool resolved;
@@ -775,7 +775,7 @@ private:
   }
 
   static JSBool
-  PostMessage(JSContext* aCx, uintN aArgc, jsval* aVp)
+  PostMessage(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {

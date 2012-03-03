@@ -758,7 +758,7 @@ nsDeviceContext::SetPixelScale(float aScale)
         NS_NOTREACHED("Invalid pixel scale value");
         return false;
     }
-    PRInt32 oldAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
+    PRUint32 oldAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
     mPixelScale = aScale;
     UpdateScaledAppUnits();
     return oldAppUnitsPerDevPixel != mAppUnitsPerDevPixel;

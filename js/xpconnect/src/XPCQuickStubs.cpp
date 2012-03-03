@@ -137,7 +137,7 @@ ApplyPropertyOp<JSStrictPropertyOp>(JSContext *cx, JSStrictPropertyOp op, JSObje
 
 template<typename Op>
 static JSBool
-PropertyOpForwarder(JSContext *cx, uintN argc, jsval *vp)
+PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
 {
     // Layout:
     //   this = our this
@@ -181,7 +181,7 @@ PointerHolderClass = {
 
 template<typename Op>
 static JSObject *
-GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc, Op pop)
+GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, unsigned argc, Op pop)
 {
     // The JS engine provides two reserved slots on function objects for
     // XPConnect to use. Use them to stick the necessary info here.
@@ -211,7 +211,7 @@ GeneratePropertyOp(JSContext *cx, JSObject *obj, jsid id, uintN argc, Op pop)
 }
 
 static JSBool
-ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id, uintN orig_attrs,
+ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id, unsigned orig_attrs,
                  JSPropertyOp getter, JSStrictPropertyOp setter,
                  JSObject **getterobjp, JSObject **setterobjp)
 {
@@ -219,7 +219,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id, uintN orig_attrs,
     jsval roots[2] = { JSVAL_NULL, JSVAL_NULL };
     JS::AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
 
-    uintN attrs = JSPROP_SHARED | (orig_attrs & JSPROP_ENUMERATE);
+    unsigned attrs = JSPROP_SHARED | (orig_attrs & JSPROP_ENUMERATE);
     JSObject *getterobj;
     if (getter) {
         getterobj = GeneratePropertyOp(cx, obj, id, 0, getter);
@@ -251,7 +251,7 @@ ReifyPropertyOps(JSContext *cx, JSObject *obj, jsid id, uintN orig_attrs,
 }
 
 static JSBool
-LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
+LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, unsigned argc, jsval *vp)
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
 
@@ -319,21 +319,21 @@ LookupGetterOrSetter(JSContext *cx, JSBool wantGetter, uintN argc, jsval *vp)
 }
 
 static JSBool
-SharedLookupGetter(JSContext *cx, uintN argc, jsval *vp)
+SharedLookupGetter(JSContext *cx, unsigned argc, jsval *vp)
 {
     return LookupGetterOrSetter(cx, true, argc, vp);
 }
 
 static JSBool
-SharedLookupSetter(JSContext *cx, uintN argc, jsval *vp)
+SharedLookupSetter(JSContext *cx, unsigned argc, jsval *vp)
 {
     return LookupGetterOrSetter(cx, false, argc, vp);
 }
 
 static JSBool
-DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
+DefineGetterOrSetter(JSContext *cx, unsigned argc, JSBool wantGetter, jsval *vp)
 {
-    uintN attrs;
+    unsigned attrs;
     JSBool found;
     JSPropertyOp getter;
     JSStrictPropertyOp setter;
@@ -374,20 +374,20 @@ DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
 }
 
 static JSBool
-SharedDefineGetter(JSContext *cx, uintN argc, jsval *vp)
+SharedDefineGetter(JSContext *cx, unsigned argc, jsval *vp)
 {
     return DefineGetterOrSetter(cx, argc, true, vp);
 }
 
 static JSBool
-SharedDefineSetter(JSContext *cx, uintN argc, jsval *vp)
+SharedDefineSetter(JSContext *cx, unsigned argc, jsval *vp)
 {
     return DefineGetterOrSetter(cx, argc, false, vp);
 }
 
 
 JSBool
-xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
+xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, unsigned flags,
                        PRUint32 ifacec, const nsIID **interfaces,
                        PRUint32 tableSize, const xpc_qsHashEntry *table,
                        const xpc_qsPropertySpec *propspecs,
@@ -602,7 +602,7 @@ xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
 
 static void
 ThrowBadArg(JSContext *cx, nsresult rv, const char *ifaceName,
-            jsid memberId, const char *memberName, uintN paramnum)
+            jsid memberId, const char *memberName, unsigned paramnum)
 {
     /* Only one memberId or memberName should be given. */
     JS_ASSERT(JSID_IS_VOID(memberId) != !memberName);
@@ -630,7 +630,7 @@ ThrowBadArg(JSContext *cx, nsresult rv, const char *ifaceName,
 }
 
 void
-xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, uintN paramnum)
+xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, unsigned paramnum)
 {
     const char *ifaceName;
     jsid memberId;
@@ -639,13 +639,13 @@ xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, uintN paramnum)
 }
 
 void
-xpc_qsThrowBadArgWithCcx(XPCCallContext &ccx, nsresult rv, uintN paramnum)
+xpc_qsThrowBadArgWithCcx(XPCCallContext &ccx, nsresult rv, unsigned paramnum)
 {
     XPCThrower::ThrowBadParam(rv, paramnum, ccx);
 }
 
 void
-xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, uintN paramnum,
+xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, unsigned paramnum,
                              const char *ifaceName, const char *memberName)
 {
     ThrowBadArg(cx, rv, ifaceName, JSID_VOID, memberName, paramnum);

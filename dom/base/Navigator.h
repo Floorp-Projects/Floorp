@@ -136,7 +136,7 @@ public:
 
   static bool HasDesktopNotificationSupport();
 
-  PRInt64 SizeOf() const;
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   /**
    * For use during document.write where our inner window changes.

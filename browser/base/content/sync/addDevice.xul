@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Firefox Sync.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+# Philipp von Weitershausen <philipp@weitershausen.de>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/syncSetup.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/syncCommon.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+<!ENTITY % syncSetupDTD SYSTEM "chrome://browser/locale/syncSetup.dtd">
+%brandDTD;
+%syncBrandDTD;
+%syncSetupDTD;
+]>
+<wizard xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        id="wizard"
+        title="&pairDevice.title.label;"
+        windowtype="Sync:AddDevice"
+        persist="screenX screenY"
+        onwizardnext="return gSyncAddDevice.onWizardAdvance();"
+        onwizardback="return gSyncAddDevice.onWizardBack();"
+        onwizardcancel="gSyncAddDevice.onWizardCancel();"
+        onload="gSyncAddDevice.init();">
+
+  <script type="application/javascript"
+          src="chrome://browser/content/sync/addDevice.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/sync/utils.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/printUtils.js"/>
+
+  <wizardpage id="addDevicePage"
+              label="&pairDevice.title.label;"
+              onpageshow="gSyncAddDevice.onPageShow();">
+    <description>
+      &pairDevice.dialog.description.label;
+      <label class="text-link"
+             value="&addDevice.showMeHow.label;"
+             href="https://services.mozilla.com/sync/help/add-device"/>
+    </description>
+    <separator class="groove-thin"/>
+    <description>
+      &addDevice.dialog.enterCode.label;
+    </description>
+    <separator class="groove-thin"/>
+    <vbox align="center">
+      <textbox id="pin1"
+               class="pin"
+               oninput="gSyncAddDevice.onTextBoxInput(this);"
+               onfocus="this.select();"
+               />
+      <textbox id="pin2"
+               class="pin"
+               oninput="gSyncAddDevice.onTextBoxInput(this);"
+               onfocus="this.select();"
+               />
+      <textbox id="pin3"
+               class="pin"
+               oninput="gSyncAddDevice.onTextBoxInput(this);"
+               onfocus="this.select();" 
+              />
+    </vbox>
+    <separator class="groove-thin"/>
+    <vbox id="pairDeviceThrobber" align="center" hidden="true">
+      <image/>
+    </vbox>
+    <hbox id="errorRow" pack="center" hidden="true">
+      <image class="statusIcon" status="error"/>
+      <label class="status"
+             value="&addDevice.dialog.tryAgain.label;"/>
+    </hbox>
+    <spacer flex="3"/>
+    <label class="text-link"
+           value="&addDevice.dontHaveDevice.label;"
+           onclick="gSyncAddDevice.goToSyncKeyPage();"/>
+  </wizardpage>
+
+  <!-- Need a non-empty label here, otherwise we get a default label on Mac -->
+  <wizardpage id="syncKeyPage"
+              label=" "
+              onpageshow="gSyncAddDevice.onPageShow();">
+    <description>
+      &addDevice.dialog.recoveryKey.label;
+    </description>
+    <spacer/>
+
+    <groupbox>
+      <label value="&recoveryKeyEntry.label;"
+             accesskey="&recoveryKeyEntry.accesskey;"
+             control="weavePassphrase"/>
+      <textbox id="weavePassphrase"
+               readonly="true"/>
+    </groupbox>
+
+    <groupbox align="center">
+      <description>&recoveryKeyBackup.description;</description>
+      <hbox>
+        <button id="printSyncKeyButton"
+                label="&button.syncKeyBackup.print.label;"
+                accesskey="&button.syncKeyBackup.print.accesskey;"
+                oncommand="gSyncUtils.passphrasePrint('weavePassphrase');"/>
+        <button id="saveSyncKeyButton"
+                label="&button.syncKeyBackup.save.label;"
+                accesskey="&button.syncKeyBackup.save.accesskey;"
+                oncommand="gSyncUtils.passphraseSave('weavePassphrase');"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage id="deviceConnectedPage"
+              label="&addDevice.dialog.connected.label;"
+              onpageshow="gSyncAddDevice.onPageShow();">
+    <vbox align="center">
+      <image id="successPageIcon"/>
+    </vbox>
+    <separator/>
+    <description class="normal">
+      &addDevice.dialog.successful.label;
+    </description>
+  </wizardpage>
+
+</wizard>

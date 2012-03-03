@@ -172,13 +172,24 @@
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.PasswordsProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.passwords"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
-									android:protectionLevel="signature"/>
+                  android:protectionLevel="signature"/>
 
+        <provider android:name="@ANDROID_PACKAGE_NAME@.db.FormHistoryProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.formhistory"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
+                  android:protectionLevel="signature"/>
+
+        <provider android:name="@ANDROID_PACKAGE_NAME@.db.TabsProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.tabs"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
 #include ../sync/manifests/SyncAndroidManifest_services.xml.in
     </application>
 
     <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
+                android:protectionLevel="signature"/>
+
+    <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
                 android:protectionLevel="signature"/>
 
 </manifest> 

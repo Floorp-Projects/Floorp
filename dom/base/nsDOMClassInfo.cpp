@@ -684,11 +684,6 @@ public:
   NS_IMETHOD PreCreate(nsISupports *aNativeObj, JSContext *aCx,
                        JSObject *aGlobalObj, JSObject **aParentObj);
 
-  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *aWrapper, JSContext *aCx,
-                         JSObject *aObj, jsid aId, jsval *aVp, bool *aRetval);
-
-  virtual void PreserveWrapper(nsISupports *aNative);
-
   static nsIClassInfo *doCreate(nsDOMClassInfoData *aData)
   {
     return new IDBEventTargetSH(aData);
@@ -5152,6 +5147,11 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
   JSObject *winObj = win->FastGetGlobalJSObject();
   if (!winObj) {
+
+    // See bug 691178 comment 11 for why this is necessary.
+    if (win->IsClosedOrClosing())
+      return NS_ERROR_FAILURE;
+
     NS_ASSERTION(win->GetOuterWindowInternal()->IsCreatingInnerWindow(),
                  "should have a JS object by this point");
     return NS_OK;
@@ -5240,7 +5240,7 @@ GetDocument(JSObject *obj)
 // static
 JSBool
 nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
-                                          jsid id, uintN flags,
+                                          jsid id, unsigned flags,
                                           JSObject **objp)
 {
   if (flags & (JSRESOLVE_ASSIGNING | JSRESOLVE_DECLARING |
@@ -5546,7 +5546,7 @@ FindConstructorFunc(const nsDOMClassInfoData *aDOMClassInfoData)
 static nsresult
 BaseStubConstructor(nsIWeakReference* aWeakOwner,
                     const nsGlobalNameStruct *name_struct, JSContext *cx,
-                    JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+                    JSObject *obj, unsigned argc, jsval *argv, jsval *rval)
 {
   nsresult rv;
   nsCOMPtr<nsISupports> native;
@@ -6640,7 +6640,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 // Native code for window._content getter, this simply maps
 // window._content to window.content for backwards compatibility only.
 static JSBool
-ContentWindowGetter(JSContext *cx, uintN argc, jsval *vp)
+ContentWindowGetter(JSContext *cx, unsigned argc, jsval *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj)
@@ -7698,25 +7698,6 @@ IDBEventTargetSH::PreCreate(nsISupports *aNativeObj, JSContext *aCx,
   JSObject *parent = target->GetParentObject();
   *aParentObj = parent ? parent : aGlobalObj;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBEventTargetSH::AddProperty(nsIXPConnectWrappedNative *aWrapper,
-                              JSContext *aCx, JSObject *aObj, jsid aId,
-                              jsval *aVp, bool *aRetval)
-{
-  if (aId != sAddEventListener_id) {
-    IDBEventTargetSH::PreserveWrapper(GetNative(aWrapper, aObj));
-  }
-
-  return NS_OK;
-}
-
-void
-IDBEventTargetSH::PreserveWrapper(nsISupports *aNative)
-{
-  IDBWrapperCache *target = IDBWrapperCache::FromSupports(aNative);
-  nsContentUtils::PreserveWrapper(aNative, target);
 }
 
 // Element helper
@@ -8901,7 +8882,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSObject *obj,
 
 JSBool
 nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsid id,
-                                        uintN flags, JSObject **objp)
+                                        unsigned flags, JSObject **objp)
 {
   if (flags & JSRESOLVE_ASSIGNING) {
     // Nothing to do here if we're assigning
@@ -8971,7 +8952,7 @@ nsHTMLDocumentSH::ReleaseDocument(JSContext *cx, JSObject *obj)
 }
 
 JSBool
-nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, uintN argc, jsval *vp)
+nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 {
   // Handle document.all("foo") style access to document.all.
 
@@ -9097,7 +9078,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
 
 JSBool
 nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
-                                              jsid id, uintN flags,
+                                              jsid id, unsigned flags,
                                               JSObject **objp)
 {
   if (id == nsDOMClassInfo::sAll_id) {
@@ -9120,7 +9101,7 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
 
 JSBool
 nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSObject *obj,
-                                            jsid id, uintN flags,
+                                            jsid id, unsigned flags,
                                             JSObject **objp)
 {
   if (JSID_IS_STRING(id)) {

@@ -39,7 +39,7 @@
 #if !defined(nsWebMReader_h_)
 #define nsWebMReader_h_
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 #include "nsDeque.h"
 #include "nsBuiltinDecoderReader.h"

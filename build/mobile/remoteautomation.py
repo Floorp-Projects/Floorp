@@ -96,7 +96,7 @@ class RemoteAutomation(Automation):
 
         return env
 
-    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsDir):
+    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsDir, logger):
         # maxTime is used to override the default timeout, we should honor that
         status = proc.wait(timeout = maxTime)
 
@@ -141,7 +141,7 @@ class RemoteAutomation(Automation):
         nettools = NetworkTools()
         return nettools.getLanIp()
 
-    def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
+    def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = None):
         if stdout == None or stdout == -1 or stdout == subprocess.PIPE:
           stdout = self._remoteLog
 
@@ -151,7 +151,7 @@ class RemoteAutomation(Automation):
     class RProcess(object):
         # device manager process
         dm = None
-        def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = '.'):
+        def __init__(self, dm, cmd, stdout = None, stderr = None, env = None, cwd = None):
             self.dm = dm
             self.stdoutlen = 0
             self.proc = dm.launchProcess(cmd, stdout, cwd, env, True)

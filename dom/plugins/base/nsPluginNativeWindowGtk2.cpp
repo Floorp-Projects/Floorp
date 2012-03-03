@@ -120,17 +120,24 @@ nsresult nsPluginNativeWindowGtk2::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance>
       if (!mSocketWidget) {
         nsresult rv;
 
-        bool needXEmbed = false;
-        rv = aPluginInstance->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needXEmbed);
+        // The documentation on the types for many variables in NP(N|P)_GetValue
+        // is vague.  Often boolean values are NPBool (1 byte), but
+        // https://developer.mozilla.org/en/XEmbed_Extension_for_Mozilla_Plugins
+        // treats NPPVpluginNeedsXEmbed as PRBool (int), and
+        // on x86/32-bit, flash stores to this using |movl 0x1,&needsXEmbed|.
+        // thus we can't use NPBool for needsXEmbed, or the three bytes above
+        // it on the stack would get clobbered. so protect with the larger bool.
+        int needsXEmbed = 0;
+        rv = aPluginInstance->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needsXEmbed);
         // If the call returned an error code make sure we still use our default value.
         if (NS_FAILED(rv)) {
-          needXEmbed = false;
+          needsXEmbed = 0;
         }
 #ifdef DEBUG
-        printf("nsPluginNativeWindowGtk2: NPPVpluginNeedsXEmbed=%d\n", needXEmbed);
+        printf("nsPluginNativeWindowGtk2: NPPVpluginNeedsXEmbed=%d\n", needsXEmbed);
 #endif
 
-        if (needXEmbed) {
+        if (needsXEmbed) {
           rv = CreateXEmbedWindow();
         }
         else {

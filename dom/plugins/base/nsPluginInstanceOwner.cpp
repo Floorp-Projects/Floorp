@@ -95,6 +95,7 @@ using mozilla::DefaultXDisplay;
 #include "nsIDOMDragEvent.h"
 #include "nsIScrollableFrame.h"
 #include "nsIImageLoadingContent.h"
+#include "nsIObjectLoadingContent.h"
 
 #include "nsContentCID.h"
 #include "nsWidgetsCID.h"
@@ -211,9 +212,10 @@ nsPluginInstanceOwner::GetImageContainer()
     mInstance->GetImageContainer(getter_AddRefs(container));
     if (container) {
 #ifdef XP_MACOSX
-      nsRefPtr<Image> image = container->GetCurrentImage();
+      AutoLockImage autoLock(container);
+      Image* image = autoLock.GetImage();
       if (image && image->GetFormat() == Image::MAC_IO_SURFACE && mObjectFrame) {
-        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
+        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
         NS_ADDREF_THIS();
         oglImage->SetUpdateCallback(&DrawPlugin, this);
         oglImage->SetDestroyCallback(&OnDestroyImage);
@@ -669,6 +671,15 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+ 
+NS_IMETHODIMP
+nsPluginInstanceOwner::RedrawPlugin()
+{
+  if (mObjectFrame) {
+    mObjectFrame->InvalidateLayer(mObjectFrame->GetContentRectRelativeToSelf(), nsDisplayItem::TYPE_PLUGIN);
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 {
@@ -788,6 +799,21 @@ NPBool nsPluginInstanceOwner::ConvertPoint(double sourceX, double sourceY, NPCoo
   // we should implement this for all platforms
   return false;
 #endif
+}
+
+NPError nsPluginInstanceOwner::InitAsyncSurface(NPSize *size, NPImageFormat format,
+                                                void *initData, NPAsyncSurface *surface)
+{
+  return NPERR_GENERIC_ERROR;
+}
+
+NPError nsPluginInstanceOwner::FinalizeAsyncSurface(NPAsyncSurface *)
+{
+  return NPERR_GENERIC_ERROR;
+}
+
+void nsPluginInstanceOwner::SetCurrentAsyncSurface(NPAsyncSurface *, NPRect*)
+{
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
@@ -1195,6 +1221,31 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     mNumCachedAttrs++;
   }
 
+  // Some plugins (java, bug 406541) don't canonicalize the 'codebase' attribute
+  // in a standard way - codebase="" results in / (domain root), but
+  // codebase="blah" results in ./blah; codebase="file:" results in "file:///".
+  // We canonicalize codebase here to ensure the codebase we run security checks
+  // against is the same codebase java uses.
+  // Note that GetObjectBaseURI mimics some of java's quirks for maximal
+  // compatibility.
+  const char* mime = nsnull;
+  bool addCodebase = false;
+  nsCAutoString codebaseSpec;
+  if (mInstance && NS_SUCCEEDED(mInstance->GetMIMEType(&mime)) && mime &&
+      strcmp(mime, "application/x-java-vm") == 0) {
+    addCodebase = true;
+    nsCOMPtr<nsIObjectLoadingContent> objlContent = do_QueryInterface(mContent);
+    nsCOMPtr<nsIURI> codebaseURI;
+    objlContent->GetObjectBaseURI(nsCString(mime), getter_AddRefs(codebaseURI));
+    nsresult rv = codebaseURI->GetSpec(codebaseSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Make space if codebase isn't already set
+    if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::codebase)) {
+      mNumCachedAttrs++;
+    }
+  }
+
   mCachedAttrParamNames  = (char**)NS_Alloc(sizeof(char*) * (mNumCachedAttrs + 1 + mNumCachedParams));
   NS_ENSURE_TRUE(mCachedAttrParamNames,  NS_ERROR_OUT_OF_MEMORY);
   mCachedAttrParamValues = (char**)NS_Alloc(sizeof(char*) * (mNumCachedAttrs + 1 + mNumCachedParams));
@@ -1248,9 +1299,19 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
         mNumCachedAttrs--;
         wmodeSet = true;
       }
+    } else if (addCodebase && 0 == PL_strcasecmp(mCachedAttrParamNames[nextAttrParamIndex], "codebase")) {
+      mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(NS_ConvertUTF8toUTF16(codebaseSpec));
+      addCodebase = false;
     } else {
       mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(value);
     }
+    nextAttrParamIndex++;
+  }
+
+  // Pontentially add CODEBASE attribute
+  if (addCodebase) {
+    mCachedAttrParamNames [nextAttrParamIndex] = ToNewUTF8String(NS_LITERAL_STRING("codebase"));
+    mCachedAttrParamValues[nextAttrParamIndex] = ToNewUTF8String(NS_ConvertUTF8toUTF16(codebaseSpec));
     nextAttrParamIndex++;
   }
 
@@ -3668,10 +3729,11 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
     nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
     if (container) {
 #ifdef XP_MACOSX
-      nsRefPtr<Image> image = container->GetCurrentImage();
+      AutoLockImage autoLock(container);
+      Image *image = autoLock.GetImage();
       if (image && (image->GetFormat() == Image::MAC_IO_SURFACE) && mObjectFrame) {
         // Undo what we did to the current image in SetCurrentImage().
-        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image.get());
+        MacIOSurfaceImage *oglImage = static_cast<MacIOSurfaceImage*>(image);
         oglImage->SetUpdateCallback(nsnull, nsnull);
         oglImage->SetDestroyCallback(nsnull);
         // If we have a current image here, its destructor hasn't yet been
@@ -3679,6 +3741,9 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
         // to do ourselves what OnDestroyImage() would have done.
         NS_RELEASE_THIS();
       }
+      // Important! Unlock here otherwise SetCurrentImage will deadlock with
+      // our lock if we have a RemoteImage.
+      autoLock.Unlock();
 #endif
       container->SetCurrentImage(nsnull);
     }

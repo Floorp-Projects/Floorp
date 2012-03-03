@@ -597,7 +597,7 @@ StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from,
 }
 
 bool
-StackSpace::tryBumpLimit(JSContext *cx, Value *from, uintN nvals, Value **limit)
+StackSpace::tryBumpLimit(JSContext *cx, Value *from, unsigned nvals, Value **limit)
 {
     if (!ensureSpace(cx, REPORT_ERROR, from, nvals))
         return false;
@@ -654,7 +654,7 @@ ContextStack::containsSlow(const StackFrame *target) const
  * there is space for nvars slots on top of the stack.
  */
 Value *
-ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
+ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars,
                           MaybeExtend extend, bool *pushedSeg, JSCompartment *dest)
 {
     Value *firstUnused = space().firstUnused();
@@ -727,16 +727,16 @@ ContextStack::popSegment()
 }
 
 bool
-ContextStack::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *iag)
+ContextStack::pushInvokeArgs(JSContext *cx, unsigned argc, InvokeArgsGuard *iag)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
-    uintN nvars = 2 + argc;
+    unsigned nvars = 2 + argc;
     Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &iag->pushedSeg_);
     if (!firstUnused)
         return false;
 
-    MakeRangeGCSafe(firstUnused, argc);
+    MakeRangeGCSafe(firstUnused, nvars);
 
     ImplicitCast<CallArgs>(*iag) = CallArgsFromVp(argc, firstUnused);
 
@@ -816,7 +816,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
         extend = CAN_EXTEND;
     }
 
-    uintN nvars = 2 /* callee, this */ + VALUES_PER_STACK_FRAME + script->nslots;
+    unsigned nvars = 2 /* callee, this */ + VALUES_PER_STACK_FRAME + script->nslots;
     Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, extend, &efg->pushedSeg_);
     if (!firstUnused)
         return NULL;
@@ -841,7 +841,7 @@ ContextStack::pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scope
 {
     JS_ASSERT(dest == scopeChain.compartment());
 
-    uintN nvars = VALUES_PER_STACK_FRAME;
+    unsigned nvars = VALUES_PER_STACK_FRAME;
     Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &dfg->pushedSeg_, dest);
     if (!firstUnused)
         return false;
@@ -885,9 +885,9 @@ ContextStack::pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrame
 {
     StackFrame *genfp = gen->floatingFrame();
     HeapValue *genvp = gen->floatingStack;
-    uintN vplen = (HeapValue *)genfp - genvp;
+    unsigned vplen = (HeapValue *)genfp - genvp;
 
-    uintN nvars = vplen + VALUES_PER_STACK_FRAME + genfp->numSlots();
+    unsigned nvars = vplen + VALUES_PER_STACK_FRAME + genfp->numSlots();
     Value *firstUnused = ensureOnTop(cx, REPORT_ERROR, nvars, CAN_EXTEND, &gfg->pushedSeg_);
     if (!firstUnused)
         return false;
@@ -1144,8 +1144,8 @@ StackIter::settleOnNewState()
              */
             JSOp op = JSOp(*pc_);
             if (op == JSOP_CALL || op == JSOP_FUNCALL) {
-                uintN argc = GET_ARGC(pc_);
-                DebugOnly<uintN> spoff = sp_ - fp_->base();
+                unsigned argc = GET_ARGC(pc_);
+                DebugOnly<unsigned> spoff = sp_ - fp_->base();
                 JS_ASSERT_IF(cx_->stackIterAssertionEnabled,
                              spoff == js_ReconstructStackDepth(cx_, fp_->script(), pc_));
                 Value *vp = sp_ - (2 + argc);
