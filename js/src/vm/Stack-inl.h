@@ -175,7 +175,7 @@ StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
  * point of FixupArity in the function prologue.
  */
 inline void
-StackFrame::initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, uintN nactual)
+StackFrame::initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, unsigned nactual)
 {
     JS_ASSERT((flags & ~(CONSTRUCTING |
                          LOWERED_CALL_APPLY |
@@ -197,7 +197,7 @@ StackFrame::overwriteCallee(JSObject &newCallee)
 }
 
 inline Value &
-StackFrame::canonicalActualArg(uintN i) const
+StackFrame::canonicalActualArg(unsigned i) const
 {
     if (i < numFormalArgs())
         return formalArg(i);
@@ -207,17 +207,17 @@ StackFrame::canonicalActualArg(uintN i) const
 
 template <class Op>
 inline bool
-StackFrame::forEachCanonicalActualArg(Op op, uintN start /* = 0 */, uintN count /* = uintN(-1) */)
+StackFrame::forEachCanonicalActualArg(Op op, unsigned start /* = 0 */, unsigned count /* = unsigned(-1) */)
 {
-    uintN nformal = fun()->nargs;
+    unsigned nformal = fun()->nargs;
     JS_ASSERT(start <= nformal);
 
     Value *formals = formalArgsEnd() - nformal;
-    uintN nactual = numActualArgs();
-    if (count == uintN(-1))
+    unsigned nactual = numActualArgs();
+    if (count == unsigned(-1))
         count = nactual - start;
 
-    uintN end = start + count;
+    unsigned end = start + count;
     JS_ASSERT(end >= start);
     JS_ASSERT(end <= nactual);
 
@@ -248,7 +248,7 @@ StackFrame::forEachFormalArg(Op op)
 {
     Value *formals = formalArgsEnd() - fun()->nargs;
     Value *formalsEnd = formalArgsEnd();
-    uintN i = 0;
+    unsigned i = 0;
     for (Value *p = formals; p != formalsEnd; ++p, ++i) {
         if (!op(i, p))
             return false;
@@ -260,13 +260,13 @@ struct CopyTo
 {
     Value *dst;
     CopyTo(Value *dst) : dst(dst) {}
-    bool operator()(uintN, Value *src) {
+    bool operator()(unsigned, Value *src) {
         *dst++ = *src;
         return true;
     }
 };
 
-inline uintN
+inline unsigned
 StackFrame::numActualArgs() const
 {
     /*
@@ -370,7 +370,7 @@ StackFrame::functionPrologue(JSContext *cx)
     JSFunction *fun = this->fun();
 
     if (fun->isHeavyweight()) {
-        if (!CreateFunCallObject(cx, this))
+        if (!CallObject::createForFunction(cx, this))
             return false;
     } else {
         /* Force instantiation of the scope chain, for JIT frames. */
@@ -453,7 +453,7 @@ inline Value *
 StackSpace::getStackLimit(JSContext *cx, MaybeReportError report)
 {
     FrameRegs &regs = cx->regs();
-    uintN nvals = regs.fp()->numSlots() + STACK_JIT_EXTRA;
+    unsigned nvals = regs.fp()->numSlots() + STACK_JIT_EXTRA;
     return ensureSpace(cx, report, regs.sp, nvals)
            ? conservativeEnd_
            : NULL;
@@ -466,13 +466,13 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
                            JSFunction *fun, JSScript *script, StackFrame::Flags *flags) const
 {
     JS_ASSERT(fun->script() == script);
-    uintN nformal = fun->nargs;
+    unsigned nformal = fun->nargs;
 
     Value *firstUnused = args.end();
     JS_ASSERT(firstUnused == space().firstUnused());
 
     /* Include extra space to satisfy the method-jit stackLimit invariant. */
-    uintN nvals = VALUES_PER_STACK_FRAME + script->nslots + StackSpace::STACK_JIT_EXTRA;
+    unsigned nvals = VALUES_PER_STACK_FRAME + script->nslots + StackSpace::STACK_JIT_EXTRA;
 
     /* Maintain layout invariant: &formalArgs[0] == ((Value *)fp) - nformal. */
 
@@ -484,7 +484,7 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
 
     if (args.length() < nformal) {
         *flags = StackFrame::Flags(*flags | StackFrame::UNDERFLOW_ARGS);
-        uintN nmissing = nformal - args.length();
+        unsigned nmissing = nformal - args.length();
         if (!space().ensureSpace(cx, report, firstUnused, nmissing + nvals))
             return NULL;
         SetValueRangeToUndefined(firstUnused, nmissing);
@@ -492,7 +492,7 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
     }
 
     *flags = StackFrame::Flags(*flags | StackFrame::OVERFLOW_ARGS);
-    uintN ncopy = 2 + nformal;
+    unsigned ncopy = 2 + nformal;
     if (!space().ensureSpace(cx, report, firstUnused, ncopy + nvals))
         return NULL;
     Value *dst = firstUnused;

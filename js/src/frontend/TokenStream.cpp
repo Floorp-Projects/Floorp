@@ -166,7 +166,7 @@ TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *origin
 #endif
 
 bool
-TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, JSVersion v)
+TokenStream::init(const jschar *base, size_t length, const char *fn, unsigned ln, JSVersion v)
 {
     filename = fn;
     lineno = ln;
@@ -178,8 +178,8 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
     prevLinebase = NULL;
     sourceMap = NULL;
 
-    JSSourceHandler listener = cx->debugHooks->sourceHandler;
-    void *listenerData = cx->debugHooks->sourceHandlerData;
+    JSSourceHandler listener = cx->runtime->debugHooks.sourceHandler;
+    void *listenerData = cx->runtime->debugHooks.sourceHandlerData;
 
     if (listener)
         listener(fn, ln, base, length, &listenerTSData, listenerData);
@@ -380,9 +380,9 @@ TokenStream::ungetCharIgnoreEOL(int32_t c)
  * characters had appropriate values.
  */
 bool
-TokenStream::peekChars(intN n, jschar *cp)
+TokenStream::peekChars(int n, jschar *cp)
 {
-    intN i, j;
+    int i, j;
     int32_t c;
 
     for (i = 0; i < n; i++) {
@@ -424,7 +424,7 @@ TokenStream::TokenBuf::findEOL()
 }
 
 bool
-TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorNumber, va_list ap)
+TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned errorNumber, va_list ap)
 {
     JSErrorReport report;
     char *message;
@@ -433,7 +433,7 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorN
     bool warning;
     JSBool ok;
     const TokenPos *tp;
-    uintN i;
+    unsigned i;
 
     if (JSREPORT_IS_STRICT(flags) && !cx->hasStrictOption())
         return true;
@@ -521,8 +521,8 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorN
          * sending the error on to the regular error reporter.
          */
         bool reportError = true;
-        if (JSDebugErrorHook hook = cx->debugHooks->debugErrorHook)
-            reportError = hook(cx, message, &report, cx->debugHooks->debugErrorHookData);
+        if (JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook)
+            reportError = hook(cx, message, &report, cx->runtime->debugHooks.debugErrorHookData);
 
         /* Report the error */
         if (reportError && cx->errorReporter)
@@ -553,13 +553,13 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorN
 
 bool
 js::ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn,
-                          uintN errorNumber, ...)
+                          unsigned errorNumber, ...)
 {
     JS_ASSERT(ts || tc);
     JS_ASSERT(cx == ts->getContext());
 
     /* In strict mode code, this is an error, not merely a warning. */
-    uintN flags;
+    unsigned flags;
     if ((ts && ts->isStrictMode()) || (tc && (tc->flags & TCF_STRICT_MODE_CODE))) {
         flags = JSREPORT_ERROR;
     } else {
@@ -577,8 +577,8 @@ js::ReportStrictModeError(JSContext *cx, TokenStream *ts, TreeContext *tc, Parse
 }
 
 bool
-js::ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, uintN flags,
-                             uintN errorNumber, ...)
+js::ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned flags,
+                             unsigned errorNumber, ...)
 {
     va_list ap;
 
@@ -1129,7 +1129,7 @@ TokenStream::getAtLine()
 {
     int c;
     jschar cp[5];
-    uintN i, line, temp;
+    unsigned i, line, temp;
     char filenameBuf[1024];
 
     /*
@@ -1987,7 +1987,7 @@ TokenStream::getTokenInternal()
          * Look for a multi-line comment.
          */
         if (matchChar('*')) {
-            uintN linenoBefore = lineno;
+            unsigned linenoBefore = lineno;
             while ((c = getChar()) != EOF &&
                    !(c == '*' && matchChar('/'))) {
                 /* Ignore all characters until comment close. */
@@ -2035,7 +2035,7 @@ TokenStream::getTokenInternal()
             }
 
             RegExpFlag reflags = NoFlags;
-            uintN length = tokenbuf.length() + 1;
+            unsigned length = tokenbuf.length() + 1;
             while (true) {
                 c = peekChar();
                 if (c == 'g' && !(reflags & GlobalFlag))

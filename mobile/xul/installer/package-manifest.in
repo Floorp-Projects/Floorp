@@ -197,6 +197,7 @@
 @BINPATH@/components/find.xpt
 @BINPATH@/components/fuel.xpt
 @BINPATH@/components/gfx.xpt
+@BINPATH@/components/html5.xpt
 @BINPATH@/components/htmlparser.xpt
 @BINPATH@/components/imglib2.xpt
 @BINPATH@/components/imgicon.xpt

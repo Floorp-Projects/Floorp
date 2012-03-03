@@ -67,7 +67,6 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsCSSRendering.h"
 #include "prprf.h"
-#include "nsContentPolicyUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsAutoPtr.h"
 #include "nsEventStateManager.h"
@@ -351,6 +350,7 @@ TraverseImageLoader(const void * aKey, nsRefPtr<nsImageLoader>& aData,
   nsCycleCollectionTraversalCallback *cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
 
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mImageLoaders[i] item");
   cb->NoteXPCOMChild(aData);
 
   return PL_DHASH_NEXT;
@@ -364,6 +364,18 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
 
   for (PRUint32 i = 0; i < IMAGE_LOAD_TYPE_COUNT; ++i)
     tmp->mImageLoaders[i].Enumerate(TraverseImageLoader, &cb);
+
+  // We own only the items in mDOMMediaQueryLists that have listeners;
+  // this reference is managed by their AddListener and RemoveListener
+  // methods.
+  for (PRCList *l = PR_LIST_HEAD(&tmp->mDOMMediaQueryLists);
+       l != &tmp->mDOMMediaQueryLists; l = PR_NEXT_LINK(l)) {
+    nsDOMMediaQueryList *mql = static_cast<nsDOMMediaQueryList*>(l);
+    if (mql->HasListeners()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mDOMMediaQueryLists item");
+      cb.NoteXPCOMChild(mql);
+    }
+  }
 
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTheme); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLangService); // a service
@@ -380,6 +392,17 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
     tmp->mEventManager->SetPresContext(nsnull);
 
     NS_RELEASE(tmp->mEventManager);
+  }
+
+  // We own only the items in mDOMMediaQueryLists that have listeners;
+  // this reference is managed by their AddListener and RemoveListener
+  // methods.
+  for (PRCList *l = PR_LIST_HEAD(&tmp->mDOMMediaQueryLists);
+       l != &tmp->mDOMMediaQueryLists; ) {
+    PRCList *next = PR_NEXT_LINK(l);
+    nsDOMMediaQueryList *mql = static_cast<nsDOMMediaQueryList*>(l);
+    mql->RemoveAllListeners();
+    l = next;
   }
 
   // NS_RELEASE(tmp->mLanguage); // an atom

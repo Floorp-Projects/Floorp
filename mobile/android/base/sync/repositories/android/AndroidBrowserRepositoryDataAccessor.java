@@ -38,6 +38,7 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.Record;

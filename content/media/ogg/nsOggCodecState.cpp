@@ -44,7 +44,7 @@
 #include "VideoUtils.h"
 #include "nsBuiltinDecoderReader.h"
 
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;

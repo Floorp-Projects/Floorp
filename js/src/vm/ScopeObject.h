@@ -103,7 +103,7 @@ class ScopeObject : public JSObject
      * The stack frame for this scope object, if the frame is still active.
      * Note: these members may not be called for a StaticBlockObject.
      */
-    inline js::StackFrame *maybeStackFrame() const;
+    inline StackFrame *maybeStackFrame() const;
     inline void setStackFrame(StackFrame *frame);
 
     /* For jit access. */
@@ -115,11 +115,14 @@ class CallObject : public ScopeObject
     static const uint32_t CALLEE_SLOT = 1;
     static const uint32_t ARGUMENTS_SLOT = 2;
 
+    static CallObject *
+    create(JSContext *cx, JSScript *script, JSObject &enclosing, JSObject *callee);
+
   public:
     static const uint32_t RESERVED_SLOTS = 3;
 
-    static CallObject *
-    create(JSContext *cx, JSScript *script, JSObject &enclosing, JSObject *callee);
+    static CallObject *createForFunction(JSContext *cx, StackFrame *fp);
+    static CallObject *createForStrictEval(JSContext *cx, StackFrame *fp);
 
     /* True if this is for a strict mode eval frame or for a function call. */
     inline bool isForEval() const;
@@ -132,30 +135,43 @@ class CallObject : public ScopeObject
     inline JSFunction *getCalleeFunction() const;
     inline void setCallee(JSObject *callee);
 
-    /* Returns the callee's arguments object. */
-    inline const js::Value &getArguments() const;
-    inline void setArguments(const js::Value &v);
-    inline void initArguments(const js::Value &v);
+    /*
+     * When a call object is created, CallObject::arguments has the value
+     * MagicValue(JS_UNASSIGNED_ARGUMENTS). This value is overwritten if:
+     *  1. js_PutCallObject is called in a frame which hasArgsObj
+     *  2. the script assigns to 'arguments'
+     */
+    inline const Value &arguments() const;
+    inline void setArguments(const Value &v);
 
     /* Returns the formal argument at the given index. */
-    inline const js::Value &arg(uintN i) const;
-    inline void setArg(uintN i, const js::Value &v);
-    inline void initArgUnchecked(uintN i, const js::Value &v);
+    inline const Value &arg(unsigned i) const;
+    inline void setArg(unsigned i, const Value &v);
+    inline void initArgUnchecked(unsigned i, const Value &v);
 
     /* Returns the variable at the given index. */
-    inline const js::Value &var(uintN i) const;
-    inline void setVar(uintN i, const js::Value &v);
-    inline void initVarUnchecked(uintN i, const js::Value &v);
+    inline const Value &var(unsigned i) const;
+    inline void setVar(unsigned i, const Value &v);
+    inline void initVarUnchecked(unsigned i, const Value &v);
 
     /*
      * Get the actual arrays of arguments and variables. Only call if type
      * inference is enabled, where we ensure that call object variables are in
      * contiguous slots (see NewCallObject).
      */
-    inline js::HeapValueArray argArray();
-    inline js::HeapValueArray varArray();
+    inline HeapSlotArray argArray();
+    inline HeapSlotArray varArray();
 
-    inline void copyValues(uintN nargs, Value *argv, uintN nvars, Value *slots);
+    inline void copyValues(unsigned nargs, Value *argv, unsigned nvars, Value *slots);
+
+    static JSBool getArgumentsOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool setArgumentsOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
+    static JSBool getArgOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool getUpvarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool setArgOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
+    static JSBool setVarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
+    static JSBool setUpvarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp);
 };
 
 class DeclEnvObject : public ScopeObject
@@ -210,13 +226,13 @@ class BlockObject : public NestedScopeObject
 
   protected:
     /* Blocks contain an object slot for each slot i: 0 <= i < slotCount. */
-    inline HeapValue &slotValue(unsigned i);
+    inline HeapSlot &slotValue(unsigned i);
 };
 
 class StaticBlockObject : public BlockObject
 {
     /* These ScopeObject operations are not valid on a static block object. */
-    js::StackFrame *maybeStackFrame() const;
+    StackFrame *maybeStackFrame() const;
     void setStackFrame(StackFrame *frame);
 
   public:
@@ -235,7 +251,7 @@ class StaticBlockObject : public BlockObject
     Definition *maybeDefinitionParseNode(unsigned i);
     void poisonDefinitionParseNode(unsigned i);
 
-    const js::Shape *addVar(JSContext *cx, jsid id, intN index, bool *redeclared);
+    const Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
 };
 
 class ClonedBlockObject : public BlockObject

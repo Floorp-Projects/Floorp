@@ -50,7 +50,7 @@
 // All of the exceptions thrown into JS from this file go through here.
 // That makes this a nice place to set a breakpoint.
 
-static JSBool Throw(uintN errNum, JSContext* cx)
+static JSBool Throw(unsigned errNum, JSContext* cx)
 {
     XPCThrower::Throw(errNum, cx);
     return false;
@@ -103,7 +103,7 @@ ToStringGuts(XPCCallContext& ccx)
 /***************************************************************************/
 
 static JSBool
-XPC_WN_Shared_ToString(JSContext *cx, uintN argc, jsval *vp)
+XPC_WN_Shared_ToString(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
@@ -142,7 +142,7 @@ XPC_WN_Shared_ToString(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-XPC_WN_Shared_ToSource(JSContext *cx, uintN argc, jsval *vp)
+XPC_WN_Shared_ToSource(JSContext *cx, unsigned argc, jsval *vp)
 {
     static const char empty[] = "({})";
     JSString *str = JS_NewStringCopyN(cx, empty, sizeof(empty)-1);
@@ -195,7 +195,7 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
 // double wrapped JSObjects.
 
 static JSBool
-XPC_WN_DoubleWrappedGetter(JSContext *cx, uintN argc, jsval *vp)
+XPC_WN_DoubleWrappedGetter(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
@@ -271,7 +271,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                       XPCWrappedNative* wrapperToReflectInterfaceNames,
                       XPCWrappedNative* wrapperToReflectDoubleWrap,
                       XPCNativeScriptableInfo* scriptableInfo,
-                      uintN propFlags,
+                      unsigned propFlags,
                       JSBool* resolved)
 {
     XPCJSRuntime* rt = ccx.GetRuntime();
@@ -991,7 +991,7 @@ XPC_WN_Helper_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
 }
 
 static JSBool
-XPC_WN_Helper_Call(JSContext *cx, uintN argc, jsval *vp)
+XPC_WN_Helper_Call(JSContext *cx, unsigned argc, jsval *vp)
 {
     // N.B. we want obj to be the callee, not JS_THIS(cx, vp)
     JSObject *obj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
@@ -1010,7 +1010,7 @@ XPC_WN_Helper_Call(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-XPC_WN_Helper_Construct(JSContext *cx, uintN argc, jsval *vp)
+XPC_WN_Helper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
     if (!obj)
@@ -1063,7 +1063,7 @@ XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                          JSObject **objp)
 {
     nsresult rv = NS_OK;
@@ -1139,7 +1139,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             if (si)
                 siFlags = si->GetFlags();
 
-            uintN enumFlag =
+            unsigned enumFlag =
                 siFlags.DontEnumStaticProps() ? 0 : JSPROP_ENUMERATE;
 
             XPCWrappedNative* wrapperForInterfaceNames =
@@ -1506,7 +1506,7 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
 /***************************************************************************/
 
 JSBool
-XPC_WN_CallMethod(JSContext *cx, uintN argc, jsval *vp)
+XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
 {
     NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
     JSObject* funobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
@@ -1541,7 +1541,7 @@ XPC_WN_CallMethod(JSContext *cx, uintN argc, jsval *vp)
 }
 
 JSBool
-XPC_WN_GetterSetter(JSContext *cx, uintN argc, jsval *vp)
+XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
 {
     NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
     JSObject* funobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
@@ -1670,7 +1670,7 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, JSObject *obj, jsid id)
     ccx.SetScopeForNewJSObjects(obj);
 
     XPCNativeScriptableInfo* si = self->GetScriptableInfo();
-    uintN enumFlag = (si && si->GetFlags().DontEnumStaticProps()) ?
+    unsigned enumFlag = (si && si->GetFlags().DontEnumStaticProps()) ?
                                                 0 : JSPROP_ENUMERATE;
 
     return DefinePropertyIfFound(ccx, obj, id,
@@ -1781,7 +1781,7 @@ XPC_WN_NoMods_Proto_Resolve(JSContext *cx, JSObject *obj, jsid id)
     ccx.SetScopeForNewJSObjects(obj);
 
     XPCNativeScriptableInfo* si = self->GetScriptableInfo();
-    uintN enumFlag = (si && si->GetFlags().DontEnumStaticProps()) ?
+    unsigned enumFlag = (si && si->GetFlags().DontEnumStaticProps()) ?
                                                 0 : JSPROP_ENUMERATE;
 
     return DefinePropertyIfFound(ccx, obj, id,

@@ -38,7 +38,7 @@
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
-const CURRENT_SCHEMA = 3;
+const CURRENT_SCHEMA = 4;
 const PR_HOURS = 60 * 60 * 1000000;
 
 do_get_profile();

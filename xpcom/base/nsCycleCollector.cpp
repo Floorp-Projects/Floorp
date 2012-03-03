@@ -1820,10 +1820,26 @@ private:
                                nsCycleCollectionParticipant* participant);
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
     NS_IMETHOD_(void) NoteNativeChild(void *child,
-                                     nsCycleCollectionParticipant *participant);
+                                      nsCycleCollectionParticipant *participant);
     NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child);
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name);
     NS_IMETHOD_(void) NoteWeakMapping(void *map, void *key, void *val);
+private:
+    NS_IMETHOD_(void) NoteChild(void *child, nsCycleCollectionParticipant *cp,
+                                PRUint32 langID, nsCString edgeName)
+    {
+        PtrInfo *childPi = AddNode(child, cp, langID);
+        if (!childPi)
+            return;
+        mEdgeBuilder.Add(childPi);
+#ifdef DEBUG_CC
+        mCurrPi->mEdgeNames.AppendElement(edgeName);
+#endif
+        if (mListener) {
+            mListener->NoteEdge((PRUint64)child, edgeName.get());
+        }
+        ++childPi->mInternalRefs;
+    }
 };
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
@@ -2009,18 +2025,7 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(child, &cp);
     if (cp && (!cp->CanSkipThis(child) || WantAllTraces())) {
-
-        PtrInfo *childPi = AddNode(child, cp, nsIProgrammingLanguage::CPLUSPLUS);
-        if (!childPi)
-            return;
-        mEdgeBuilder.Add(childPi);
-#ifdef DEBUG_CC
-        mCurrPi->mEdgeNames.AppendElement(edgeName);
-#endif
-        if (mListener) {
-            mListener->NoteEdge((PRUint64)child, edgeName.get());
-        }
-        ++childPi->mInternalRefs;
+        NoteChild(child, cp, nsIProgrammingLanguage::CPLUSPLUS, edgeName);
     }
 }
 
@@ -2037,18 +2042,7 @@ GCGraphBuilder::NoteNativeChild(void *child,
         return;
 
     NS_ASSERTION(participant, "Need a nsCycleCollectionParticipant!");
-
-    PtrInfo *childPi = AddNode(child, participant, nsIProgrammingLanguage::CPLUSPLUS);
-    if (!childPi)
-        return;
-    mEdgeBuilder.Add(childPi);
-#ifdef DEBUG_CC
-    mCurrPi->mEdgeNames.AppendElement(edgeName);
-#endif
-    if (mListener) {
-        mListener->NoteEdge((PRUint64)child, edgeName.get());
-    }
-    ++childPi->mInternalRefs;
+    NoteChild(child, participant, nsIProgrammingLanguage::CPLUSPLUS, edgeName);
 }
 
 NS_IMETHODIMP_(void)
@@ -2080,20 +2074,8 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     }
 
     nsCycleCollectionParticipant *cp = mRuntimes[langID]->ToParticipant(child);
-    if (!cp)
-        return;
-
-    PtrInfo *childPi = AddNode(child, cp, langID);
-    if (!childPi)
-        return;
-    mEdgeBuilder.Add(childPi);
-#ifdef DEBUG_CC
-    mCurrPi->mEdgeNames.AppendElement(edgeName);
-#endif
-    if (mListener) {
-        mListener->NoteEdge((PRUint64)child, edgeName.get());
-    }
-    ++childPi->mInternalRefs;
+    if (cp)
+        NoteChild(child, cp, langID, edgeName);
 }
 
 NS_IMETHODIMP_(void)

@@ -155,7 +155,8 @@ interface nsILocalFile : nsIFile
      *
      *  Ask the operating system to open the folder which contains
      *  this file or folder. This routine only works on platforms which 
-     *  support the ability to open a folder...
+     *  support the ability to open a folder and is run async on Windows.  
+     *  This routine must be called on the main. 
      */
     void reveal();
     
@@ -164,7 +165,9 @@ interface nsILocalFile : nsIFile
      *
      *  Ask the operating system to attempt to open the file. 
      *  this really just simulates "double clicking" the file on your platform.
-     *  This routine only works on platforms which support this functionality.
+     *  This routine only works on platforms which support this functionality
+     *  and is run async on Windows.  This routine must be called on the 
+     *  main thread. 
      */
     void launch();
     

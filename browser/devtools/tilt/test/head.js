@@ -7,6 +7,7 @@ Components.utils.import("resource:///modules/devtools/TiltGL.jsm", tempScope);
 Components.utils.import("resource:///modules/devtools/TiltMath.jsm", tempScope);
 Components.utils.import("resource:///modules/devtools/TiltUtils.jsm", tempScope);
 Components.utils.import("resource:///modules/devtools/TiltVisualizer.jsm", tempScope);
+Components.utils.import("resource:///modules/devtools/LayoutHelpers.jsm", tempScope);
 let TiltGL = tempScope.TiltGL;
 let EPSILON = tempScope.EPSILON;
 let TiltMath = tempScope.TiltMath;
@@ -16,6 +17,7 @@ let mat4 = tempScope.mat4;
 let quat4 = tempScope.quat4;
 let TiltUtils = tempScope.TiltUtils;
 let TiltVisualizer = tempScope.TiltVisualizer;
+let LayoutHelpers = tempScope.LayoutHelpers;
 
 
 const DEFAULT_HTML = "data:text/html," +

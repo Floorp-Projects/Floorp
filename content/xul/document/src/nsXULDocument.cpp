@@ -84,7 +84,6 @@
 #include "nsXULContentUtils.h"
 #include "nsIXULOverlayProvider.h"
 #include "nsNetUtil.h"
-#include "nsParserUtils.h"
 #include "nsParserCIID.h"
 #include "nsPIBoxObject.h"
 #include "nsRDFCID.h"
@@ -2545,9 +2544,9 @@ nsXULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
     }
 
     nsAutoString href;
-    nsParserUtils::GetQuotedAttributeValue(aProtoPI->mData,
-                                           nsGkAtoms::href,
-                                           href);
+    nsContentUtils::GetPseudoAttributeValue(aProtoPI->mData,
+                                            nsGkAtoms::href,
+                                            href);
 
     // If there was no href, we can't do anything with this PI
     if (href.IsEmpty()) {

@@ -99,6 +99,33 @@ def build_linux_headers(inst_dir):
         build_linux_headers_aux(inst_dir)
     with_env({"PATH" : aux_inst_dir + "/bin:%s" % os.environ["PATH"]}, f)
 
+def build_gcc(stage_dir, is_stage_one):
+    gcc_build_dir = stage_dir + '/gcc'
+    tool_inst_dir = stage_dir + '/inst'
+    lib_inst_dir = stage_dir + '/libinst'
+    gcc_configure_args = ["--prefix=%s" % tool_inst_dir,
+                          "--enable-__cxa_atexit",
+                          "--with-gmp=%s" % lib_inst_dir,
+                          "--with-mpfr=%s" % lib_inst_dir,
+                          "--with-mpc=%s" % lib_inst_dir,
+                          "--enable-languages=c,c++",
+                          "--disable-multilib",
+                          "--disable-bootstrap"]
+    if is_stage_one:
+        # We build the stage1 gcc without shared libraries. Otherwise its
+        # libgcc.so would depend on the system libc.so, which causes problems
+        # when it tries to use that libgcc.so and the libc we are about to
+        # build.
+        gcc_configure_args.append("--disable-shared")
+
+    build_package(gcc_source_dir, gcc_build_dir, gcc_configure_args)
+
+    if is_stage_one:
+        # The glibc build system uses -lgcc_eh, but at least in this setup
+        # libgcc.a has all it needs.
+        d = tool_inst_dir + "/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/"
+        os.symlink(d + "libgcc.a", d + "libgcc_eh.a")
+
 def build_one_stage(env, stage_dir, is_stage_one):
     def f():
         build_one_stage_aux(stage_dir, is_stage_one)
@@ -129,33 +156,18 @@ def build_one_stage_aux(stage_dir, is_stage_one):
     build_package(binutils_source_dir, binutils_build_dir,
                   ["--prefix=%s" % tool_inst_dir])
 
-    gcc_build_dir = stage_dir + '/gcc'
-    gcc_configure_args = ["--prefix=%s" % tool_inst_dir,
-                          "--enable-__cxa_atexit",
-                          "--with-gmp=%s" % lib_inst_dir,
-                          "--with-mpfr=%s" % lib_inst_dir,
-                          "--with-mpc=%s" % lib_inst_dir,
-                          "--enable-languages=c,c++",
-                          "--disable-multilib",
-                          "--disable-bootstrap"]
+    # During stage one we have to build gcc first, this glibc doesn't even
+    # build with gcc 4.6. During stage two, we have to build glibc first.
+    # The problem is that libstdc++ is built with xgcc and if glibc has
+    # not been built yet xgcc will use the system one.
     if is_stage_one:
-        # We build the stage1 gcc without shared libraries. Otherwise its
-        # libgcc.so would depend on the system libc.so, which causes problems
-        # when it tries to use that libgcc.so and the libc we are about to
-        # build.
-        gcc_configure_args.append("--disable-shared")
-
-    build_package(gcc_source_dir, gcc_build_dir, gcc_configure_args)
-
-    if is_stage_one:
-        # The glibc build system uses -lgcc_eh, but at least in this setup
-        # libgcc.a has all it needs.
-        d = tool_inst_dir + "/lib/gcc/x86_64-unknown-linux-gnu/4.5.2/"
-        os.symlink(d + "libgcc.a", d + "libgcc_eh.a")
-
-    build_glibc({"CC"  : tool_inst_dir + "/bin/gcc",
-                 "CXX" : tool_inst_dir + "/bin/g++"},
-                stage_dir, tool_inst_dir)
+        build_gcc(stage_dir, is_stage_one)
+        build_glibc({"CC"  : tool_inst_dir + "/bin/gcc",
+                     "CXX" : tool_inst_dir + "/bin/g++"},
+                    stage_dir, tool_inst_dir)
+    else:
+        build_glibc({}, stage_dir, tool_inst_dir)
+        build_gcc(stage_dir, is_stage_one)
 
 def build_tar_package(tar, name, base, directory):
     name = os.path.realpath(name)
@@ -238,6 +250,8 @@ if not os.path.exists(source_dir):
     patch('plugin_finish_decl.diff', 0, gcc_source_dir)
     patch('pr49911.diff', 1, gcc_source_dir)
     patch('r159628-r163231-r171807.patch', 1, gcc_source_dir)
+    patch('gcc-fixinc.patch', 1, gcc_source_dir)
+    patch('gcc-include.patch', 1, gcc_source_dir)
 
 if os.path.exists(build_dir):
     shutil.rmtree(build_dir)

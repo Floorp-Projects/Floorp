@@ -156,7 +156,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
@@ -373,7 +373,7 @@ private:
   }
 
   static JSBool
-  Construct(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_NewObject(aCx, &sClass, NULL, NULL);
     if (!obj) {
@@ -565,7 +565,7 @@ private:
   }
 
   static JSBool
-  Abort(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Abort(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -582,7 +582,7 @@ private:
   }
 
   static JSBool
-  GetAllResponseHeaders(JSContext* aCx, uintN aArgc, jsval* aVp)
+  GetAllResponseHeaders(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -605,7 +605,7 @@ private:
   }
 
   static JSBool
-  GetResponseHeader(JSContext* aCx, uintN aArgc, jsval* aVp)
+  GetResponseHeader(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -644,7 +644,7 @@ private:
   }
 
   static JSBool
-  Open(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Open(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -670,7 +670,7 @@ private:
   }
 
   static JSBool
-  Send(JSContext* aCx, uintN aArgc, jsval* aVp)
+  Send(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -689,7 +689,7 @@ private:
   }
 
   static JSBool
-  SendAsBinary(JSContext* aCx, uintN aArgc, jsval* aVp)
+  SendAsBinary(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -722,7 +722,7 @@ private:
   }
 
   static JSBool
-  SetRequestHeader(JSContext* aCx, uintN aArgc, jsval* aVp)
+  SetRequestHeader(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
@@ -745,7 +745,7 @@ private:
   }
 
   static JSBool
-  OverrideMimeType(JSContext* aCx, uintN aArgc, jsval* aVp)
+  OverrideMimeType(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {

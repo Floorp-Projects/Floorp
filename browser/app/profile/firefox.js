@@ -320,6 +320,8 @@ pref("browser.urlbar.default.behavior", 0);
 pref("browser.urlbar.formatting.enabled", true);
 pref("browser.urlbar.trimURLs", true);
 
+pref("browser.altClickSave", false);
+
 // Number of milliseconds to wait for the http headers (and thus
 // the Content-Disposition filename) before giving up and falling back to 
 // picking a filename without that info in hand so that the user sees some
@@ -958,6 +960,7 @@ pref("services.sync.prefs.sync.browser.download.manager.scanWhenDone", true);
 pref("services.sync.prefs.sync.browser.download.manager.showWhenStarting", true);
 pref("services.sync.prefs.sync.browser.formfill.enable", true);
 pref("services.sync.prefs.sync.browser.link.open_newwindow", true);
+pref("services.sync.prefs.sync.browser.newtabpage.enabled", true);
 pref("services.sync.prefs.sync.browser.offline-apps.notify", true);
 pref("services.sync.prefs.sync.browser.safebrowsing.enabled", true);
 pref("services.sync.prefs.sync.browser.safebrowsing.malware.enabled", true);
@@ -1028,6 +1031,9 @@ pref("devtools.errorconsole.enabled", false);
 // Enable the Inspector
 pref("devtools.inspector.enabled", true);
 pref("devtools.inspector.htmlHeight", 112);
+pref("devtools.inspector.htmlPanelOpen", false);
+pref("devtools.inspector.sidebarOpen", false);
+pref("devtools.inspector.activeSidebar", "ruleview");
 
 // Enable the Debugger
 pref("devtools.debugger.enabled", false);

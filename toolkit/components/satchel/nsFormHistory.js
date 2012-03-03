@@ -43,7 +43,7 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const DAY_IN_MS  = 86400000; // 1 day in milliseconds
 
 function FormHistory() {
@@ -74,6 +74,11 @@ FormHistory.prototype = {
                 "lastUsed"  : "INTEGER",
                 "guid"      : "TEXT"
             },
+            moz_deleted_formhistory: {
+                "id"          : "INTEGER PRIMARY KEY",
+                "timeDeleted" : "INTEGER",
+                "guid"        : "TEXT"
+            }
         },
         indices : {
             moz_formhistory_index : {
@@ -245,10 +250,18 @@ FormHistory.prototype = {
         let params = { id : id };
 
         try {
+            this.dbConnection.beginTransaction();
+            this.moveToDeletedTable("VALUES (:guid, :timeDeleted)", {
+              guid: guid,
+              timeDeleted: Date.now()
+            });
+
+            // remove from the formhistory database
             stmt = this.dbCreateStatement(query, params);
             stmt.execute();
             this.sendStringNotification("removeEntry", name, value, guid);
         } catch (e) {
+            this.dbConnection.rollbackTransaction();
             this.log("removeEntry failed: " + e);
             throw e;
         } finally {
@@ -256,6 +269,7 @@ FormHistory.prototype = {
                 stmt.reset();
             }
         }
+        this.dbConnection.commitTransaction();
     },
 
 
@@ -269,10 +283,19 @@ FormHistory.prototype = {
         let params = { fieldname : name };
 
         try {
+            this.dbConnection.beginTransaction();
+            this.moveToDeletedTable(
+              "SELECT guid, :timeDeleted FROM moz_formhistory " +
+              "WHERE fieldname = :fieldname", {
+                fieldname: name,
+                timeDeleted: Date.now()
+            });
+
             stmt = this.dbCreateStatement(query, params);
             stmt.execute();
             this.sendStringNotification("removeEntriesForName", name);
         } catch (e) {
+            this.dbConnection.rollbackTransaction();
             this.log("removeEntriesForName failed: " + e);
             throw e;
         } finally {
@@ -280,6 +303,7 @@ FormHistory.prototype = {
                 stmt.reset();
             }
         }
+        this.dbConnection.commitTransaction();
     },
 
 
@@ -292,10 +316,17 @@ FormHistory.prototype = {
         let query = "DELETE FROM moz_formhistory";
 
         try {
+            this.dbConnection.beginTransaction();
+            this.moveToDeletedTable(
+              "SELECT guid, :timeDeleted FROM moz_formhistory", {
+              timeDeleted: Date.now()
+            });
+
             stmt = this.dbCreateStatement(query);
             stmt.execute();
             this.sendNotification("removeAllEntries", null);
         } catch (e) {
+            this.dbConnection.rollbackTransaction();
             this.log("removeEntriesForName failed: " + e);
             throw e;
         } finally {
@@ -303,6 +334,7 @@ FormHistory.prototype = {
                 stmt.reset();
             }
         }
+        this.dbConnection.commitTransaction();
     },
 
 
@@ -344,10 +376,19 @@ FormHistory.prototype = {
                         endTime   : endTime
                      };
         try {
+            this.dbConnection.beginTransaction();
+            this.moveToDeletedTable(
+                  "SELECT guid, :timeDeleted FROM moz_formhistory " +
+                  "WHERE firstUsed >= :beginTime AND firstUsed <= :endTime", {
+              beginTime: beginTime,
+              endTime: endTime
+            });
+
             stmt = this.dbCreateStatement(query, params);
             stmt.executeStep();
             this.sendIntNotification("removeEntriesByTimeframe", beginTime, endTime);
         } catch (e) {
+            this.dbConnection.rollbackTransaction();
             this.log("removeEntriesByTimeframe failed: " + e);
             throw e;
         } finally {
@@ -355,7 +396,30 @@ FormHistory.prototype = {
                 stmt.reset();
             }
         }
+        this.dbConnection.commitTransaction();
+    },
 
+    moveToDeletedTable : function (values, params) {
+#ifdef ANDROID
+        this.log("move entries to deleted");
+
+        let stmt;
+
+        try {
+            // move the entry to the deleted items table
+            let query = "INSERT INTO moz_deleted_formhistory (guid, timeDeleted) ";
+            if (values) query += values;
+            stmt = this.dbCreateStatement(query, params);
+            stmt.execute();
+        } catch (e) {
+            this.log("move entry failed: " + e);
+            throw e;
+        } finally {
+            if (stmt) {
+                stmt.reset();
+            }
+        }
+#endif
     },
 
     get dbConnection() {
@@ -647,8 +711,7 @@ FormHistory.prototype = {
         this.log("Creating DB -- tables");
         for (let name in this.dbSchema.tables) {
             let table = this.dbSchema.tables[name];
-            let tSQL = [[col, table[col]].join(" ") for (col in table)].join(", ");
-            this.dbConnection.createTable(name, tSQL);
+            this.dbCreateTable(name, table);
         }
 
         this.log("Creating DB -- indices");
@@ -662,6 +725,11 @@ FormHistory.prototype = {
         this.dbConnection.schemaVersion = DB_VERSION;
     },
 
+    dbCreateTable: function(name, table) {
+        let tSQL = [[col, table[col]].join(" ") for (col in table)].join(", ");
+        this.log("Creating table " + name + " with " + tSQL);
+        this.dbConnection.createTable(name, tSQL);
+    },
 
     dbMigrate : function (oldVersion) {
         this.log("Attempting to migrate from version " + oldVersion);
@@ -820,6 +888,11 @@ FormHistory.prototype = {
         }
     },
 
+    dbMigrateToVersion4 : function () {
+        if (!this.dbConnection.tableExists("moz_deleted_formhistory")) {
+            this.dbCreateTable("moz_deleted_formhistory", this.dbSchema.tables.moz_deleted_formhistory);
+        }
+    },
 
     /*
      * dbAreExpectedColumnsPresent

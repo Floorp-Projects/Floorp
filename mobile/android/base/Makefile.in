@@ -82,9 +82,11 @@ FENNEC_JAVA_FILES = \
   GeckoAppShell.java \
   GeckoAsyncTask.java \
   GeckoBatteryManager.java \
+  GeckoBackgroundThread.java \
   GeckoConnectivityReceiver.java \
   GeckoEvent.java \
   GeckoEventListener.java \
+  GeckoEventResponder.java \
   GeckoInputConnection.java \
   GeckoPreferences.java \
   GeckoProfile.java \
@@ -95,6 +97,7 @@ FENNEC_JAVA_FILES = \
   ProfileMigrator.java \
   PromptService.java \
   sqlite/ByteBufferInputStream.java \
+  sqlite/MatrixBlobCursor.java \
   sqlite/SQLiteBridge.java \
   sqlite/SQLiteBridgeException.java \
   SetupScreen.java \
@@ -151,6 +154,9 @@ FENNEC_PP_JAVA_FILES = \
   db/BrowserContract.java \
   db/BrowserProvider.java \
   db/PasswordsProvider.java \
+  db/FormHistoryProvider.java \
+  db/TabsProvider.java \
+  db/GeckoProvider.java \
   SmsManager.java \
   $(NULL)
 

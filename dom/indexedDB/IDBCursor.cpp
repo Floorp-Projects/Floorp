@@ -266,6 +266,14 @@ IDBCursor::CreateCommon(IDBRequest* aRequest,
   cursor->mOwner = database->GetOwner();
   cursor->mScriptOwner = database->GetScriptOwner();
 
+  if (cursor->mScriptOwner) {
+    if (NS_FAILED(NS_HOLD_JS_OBJECTS(cursor, IDBCursor))) {
+      return nsnull;
+    }
+
+    cursor->mRooted = true;
+  }
+
   cursor->mRequest = aRequest;
   cursor->mTransaction = aTransaction;
   cursor->mObjectStore = aObjectStore;

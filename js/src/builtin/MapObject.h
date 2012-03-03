@@ -88,11 +88,12 @@ class MapObject : public JSObject {
     ValueMap *getData() { return static_cast<ValueMap *>(getPrivate()); }
     static void mark(JSTracer *trc, JSObject *obj);
     static void finalize(JSContext *cx, JSObject *obj);
-    static JSBool construct(JSContext *cx, uintN argc, Value *vp);
-    static JSBool get(JSContext *cx, uintN argc, Value *vp);
-    static JSBool has(JSContext *cx, uintN argc, Value *vp);
-    static JSBool set(JSContext *cx, uintN argc, Value *vp);
-    static JSBool delete_(JSContext *cx, uintN argc, Value *vp);
+    static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool size(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool get(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool has(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool set(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);
 };
 
 class SetObject : public JSObject {
@@ -105,10 +106,11 @@ class SetObject : public JSObject {
     ValueSet *getData() { return static_cast<ValueSet *>(getPrivate()); }
     static void mark(JSTracer *trc, JSObject *obj);
     static void finalize(JSContext *cx, JSObject *obj);
-    static JSBool construct(JSContext *cx, uintN argc, Value *vp);
-    static JSBool has(JSContext *cx, uintN argc, Value *vp);
-    static JSBool add(JSContext *cx, uintN argc, Value *vp);
-    static JSBool delete_(JSContext *cx, uintN argc, Value *vp);
+    static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool size(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool has(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool add(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);
 };
 
 } /* namespace js */

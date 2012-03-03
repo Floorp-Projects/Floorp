@@ -45,7 +45,6 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
-#include "jsgc.h"
 #include "jsgcmark.h"
 #include "jsweakmap.h"
 
@@ -102,6 +101,30 @@ WeakMapBase::resetWeakMapList(JSRuntime *rt)
     }
 }
 
+bool
+WeakMapBase::saveWeakMapList(JSRuntime *rt, WeakMapVector &vector)
+{
+    WeakMapBase *m = rt->gcWeakMapList;
+    while (m) {
+        if (!vector.append(m))
+            return false;
+        m = m->next;
+    }
+    return true;
+}
+
+void
+WeakMapBase::restoreWeakMapList(JSRuntime *rt, WeakMapVector &vector)
+{
+    JS_ASSERT(!rt->gcWeakMapList);
+    for (WeakMapBase **p = vector.begin(); p != vector.end(); p++) {
+        WeakMapBase *m = *p;
+        JS_ASSERT(m->next == WeakMapNotInList);
+        m->next = rt->gcWeakMapList;
+        rt->gcWeakMapList = m;
+    }
+}
+
 } /* namespace js */
 
 typedef WeakMap<HeapPtr<JSObject>, HeapValue> ObjectValueMap;
@@ -132,7 +155,7 @@ GetKeyArg(JSContext *cx, CallArgs &args)
 }
 
 static JSBool
-WeakMap_has(JSContext *cx, uintN argc, Value *vp)
+WeakMap_has(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -164,7 +187,7 @@ WeakMap_has(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-WeakMap_get(JSContext *cx, uintN argc, Value *vp)
+WeakMap_get(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -196,7 +219,7 @@ WeakMap_get(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-WeakMap_delete(JSContext *cx, uintN argc, Value *vp)
+WeakMap_delete(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -229,7 +252,7 @@ WeakMap_delete(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-WeakMap_set(JSContext *cx, uintN argc, Value *vp)
+WeakMap_set(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -327,7 +350,7 @@ WeakMap_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-WeakMap_construct(JSContext *cx, uintN argc, Value *vp)
+WeakMap_construct(JSContext *cx, unsigned argc, Value *vp)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &WeakMapClass);
     if (!obj)

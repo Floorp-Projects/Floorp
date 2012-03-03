@@ -48,7 +48,6 @@
 #include "jsxml.h"
 #include "jsbool.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
-#include "jsiter.h"
 #include "jstypes.h"
 #include "vm/Debugger.h"
 #include "vm/String.h"
@@ -231,7 +230,7 @@ stubs::SetElem(VMFrame &f)
     if (!FetchElementId(f.cx, obj, idval, id, &regs.sp[-2]))
         THROW();
 
-    TypeScript::MonitorAssign(cx, f.script(), f.pc(), obj, id, rval);
+    TypeScript::MonitorAssign(cx, obj, id);
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
@@ -434,7 +433,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
      * ECMA requires functions defined when entering Eval code to be
      * impermanent.
      */
-    uintN attrs = fp->isEvalFrame()
+    unsigned attrs = fp->isEvalFrame()
                   ? JSPROP_ENUMERATE
                   : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
@@ -845,12 +844,12 @@ stubs::Mod(VMFrame &f)
 void JS_FASTCALL
 stubs::DebuggerStatement(VMFrame &f, jsbytecode *pc)
 {
-    JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
+    JSDebuggerHandler handler = f.cx->runtime->debugHooks.debuggerHandler;
     if (handler || !f.cx->compartment->getDebuggees().empty()) {
         JSTrapStatus st = JSTRAP_CONTINUE;
         Value rval;
         if (handler)
-            st = handler(f.cx, f.script(), pc, &rval, f.cx->debugHooks->debuggerHandlerData);
+            st = handler(f.cx, f.script(), pc, &rval, f.cx->runtime->debugHooks.debuggerHandlerData);
         if (st == JSTRAP_CONTINUE)
             st = Debugger::onDebuggerStatement(f.cx, &rval);
 
@@ -908,9 +907,9 @@ stubs::Trap(VMFrame &f, uint32_t trapTypes)
          * single step mode may be paused without recompiling by
          * setting the interruptHook to NULL.
          */
-        JSInterruptHook hook = f.cx->debugHooks->interruptHook;
+        JSInterruptHook hook = f.cx->runtime->debugHooks.interruptHook;
         if (hook)
-            result = hook(f.cx, f.script(), f.pc(), &rval, f.cx->debugHooks->interruptHookData);
+            result = hook(f.cx, f.script(), f.pc(), &rval, f.cx->runtime->debugHooks.interruptHookData);
 
         if (result == JSTRAP_CONTINUE)
             result = Debugger::onSingleStep(f.cx, &rval);
@@ -1230,7 +1229,7 @@ stubs::GetPropNoCache(VMFrame &f, PropertyName *name)
 void JS_FASTCALL
 stubs::Iter(VMFrame &f, uint32_t flags)
 {
-    if (!js_ValueToIterator(f.cx, flags, &f.regs.sp[-1]))
+    if (!ValueToIterator(f.cx, flags, &f.regs.sp[-1]))
         THROW();
     JS_ASSERT(!f.regs.sp[-1].isPrimitive());
 }
@@ -1253,7 +1252,7 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     /* Get the immediate property name into id. */
     jsid id = ATOM_TO_JSID(name);
 
-    uintN defineHow = (op == JSOP_INITMETHOD) ? DNP_SET_METHOD : 0;
+    unsigned defineHow = (op == JSOP_INITMETHOD) ? DNP_SET_METHOD : 0;
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
         ? !js_SetPropertyHelper(cx, obj, id, defineHow, &rval, false)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
@@ -1305,7 +1304,7 @@ void JS_FASTCALL
 stubs::EndIter(VMFrame &f)
 {
     JS_ASSERT(f.regs.sp - 1 >= f.fp()->base());
-    if (!js_CloseIterator(f.cx, &f.regs.sp[-1].toObject()))
+    if (!CloseIterator(f.cx, &f.regs.sp[-1].toObject()))
         THROW();
 }
 
@@ -1363,10 +1362,10 @@ stubs::FlatLambda(VMFrame &f, JSFunction *fun)
 void JS_FASTCALL
 stubs::Arguments(VMFrame &f)
 {
-    Value argsobj;
-    if (!js_GetArgsValue(f.cx, f.fp(), &argsobj))
+    ArgumentsObject *arguments = js_GetArgsObject(f.cx, f.fp());
+    if (!arguments)
         THROW();
-    f.regs.sp[0] = argsobj;
+    f.regs.sp[0] = ObjectValue(*arguments);
 }
 
 JSBool JS_FASTCALL
@@ -1666,7 +1665,7 @@ stubs::DelElem(VMFrame &f)
 void JS_FASTCALL
 stubs::DefVarOrConst(VMFrame &f, PropertyName *dn)
 {
-    uintN attrs = JSPROP_ENUMERATE;
+    unsigned attrs = JSPROP_ENUMERATE;
     if (!f.fp()->isEvalFrame())
         attrs |= JSPROP_PERMANENT;
     if (JSOp(*f.regs.pc) == JSOP_DEFCONST)

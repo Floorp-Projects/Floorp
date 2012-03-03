@@ -95,7 +95,7 @@ using namespace js::gc;
 
 void
 JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
-                               size_t *regexpCode, size_t *stackCommitted)
+                               size_t *regexpCode, size_t *stackCommitted, size_t *gcMarkerSize)
 {
     if (normal)
         *normal = mallocSizeOf(dtoaState);
@@ -113,6 +113,9 @@ JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, s
 
     if (stackCommitted)
         *stackCommitted = stackSpace.sizeOfCommitted();
+
+    if (gcMarkerSize)
+        *gcMarkerSize = gcMarker.sizeOfExcludingThis(mallocSizeOf);
 }
 
 JS_FRIEND_API(void)
@@ -170,11 +173,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
     JS_AbortIfWrongThread(rt);
 
-    /*
-     * We need to initialize the new context fully before adding it to the
-     * runtime list. After that it can be accessed from another thread via
-     * js_ContextIterator.
-     */
     JSContext *cx = OffTheBooks::new_<JSContext>(rt);
     if (!cx)
         return NULL;
@@ -298,21 +296,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     Foreground::delete_(cx);
 }
 
-JSContext *
-js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
-{
-    JSContext *cx = *iterp;
-
-    Maybe<AutoLockGC> lockIf;
-    if (unlocked)
-        lockIf.construct(rt);
-    cx = JSContext::fromLinkField(cx ? cx->link.next : rt->contextList.next);
-    if (&cx->link == &rt->contextList)
-        cx = NULL;
-    *iterp = cx;
-    return cx;
-}
-
 namespace js {
 
 bool
@@ -356,11 +339,9 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
     if (!JS_IsRunning(cx) ||
         !js_ErrorToException(cx, message, reportp, callback, userRef)) {
         js_ReportErrorAgain(cx, message, reportp);
-    } else if (cx->debugHooks->debugErrorHook && cx->errorReporter) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
-        /* test local in case debugErrorHook changed on another thread */
-        if (hook)
-            hook(cx, message, reportp, cx->debugHooks->debugErrorHookData);
+    } else if (JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook) {
+        if (cx->errorReporter)
+            hook(cx, message, reportp, cx->runtime->debugHooks.debugErrorHookData);
     }
 }
 
@@ -378,7 +359,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
     for (FrameRegsIter iter(cx); !iter.done(); ++iter) {
         if (iter.fp()->isScriptFrame()) {
             report->filename = iter.fp()->script()->filename;
-            report->lineno = js_PCToLineNumber(cx, iter.fp()->script(), iter.pc());
+            report->lineno = PCToLineNumber(iter.fp()->script(), iter.pc());
             report->originPrincipals = iter.fp()->script()->originPrincipals;
             break;
         }
@@ -419,9 +400,9 @@ js_ReportOutOfMemory(JSContext *cx)
      */
     cx->clearPendingException();
     if (onError) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
+        JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook;
         if (hook &&
-            !hook(cx, msg, &report, cx->debugHooks->debugErrorHookData)) {
+            !hook(cx, msg, &report, cx->runtime->debugHooks.debugErrorHookData)) {
             onError = NULL;
         }
     }
@@ -464,7 +445,7 @@ js_ReportAllocationOverflow(JSContext *maybecx)
  * otherwise, adjust *flags as appropriate and return false.
  */
 static bool
-checkReportFlags(JSContext *cx, uintN *flags)
+checkReportFlags(JSContext *cx, unsigned *flags)
 {
     if (JSREPORT_IS_STRICT_MODE_ERROR(*flags)) {
         /*
@@ -493,7 +474,7 @@ checkReportFlags(JSContext *cx, uintN *flags)
 }
 
 JSBool
-js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
+js_ReportErrorVA(JSContext *cx, unsigned flags, const char *format, va_list ap)
 {
     char *message;
     jschar *ucmessage;
@@ -536,7 +517,7 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
  */
 JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
-                        void *userRef, const uintN errorNumber,
+                        void *userRef, const unsigned errorNumber,
                         char **messagep, JSErrorReport *reportp,
                         bool charArgs, va_list ap)
 {
@@ -687,8 +668,8 @@ error:
 }
 
 JSBool
-js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
-                       void *userRef, const uintN errorNumber,
+js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
+                       void *userRef, const unsigned errorNumber,
                        JSBool charArgs, va_list ap)
 {
     JSErrorReport report;
@@ -751,12 +732,9 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
      * sending the error on to the regular ErrorReporter.
      */
     if (onError) {
-        JSDebugErrorHook hook = cx->debugHooks->debugErrorHook;
-        if (hook &&
-            !hook(cx, cx->lastMessage, reportp,
-                  cx->debugHooks->debugErrorHookData)) {
+        JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook;
+        if (hook && !hook(cx, cx->lastMessage, reportp, cx->runtime->debugHooks.debugErrorHookData))
             onError = NULL;
-        }
     }
     if (onError)
         onError(cx, cx->lastMessage, reportp);
@@ -769,7 +747,7 @@ js_ReportIsNotDefined(JSContext *cx, const char *name)
 }
 
 JSBool
-js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, const Value &v,
+js_ReportIsNullOrUndefined(JSContext *cx, int spindex, const Value &v,
                            JSString *fallback)
 {
     char *bytes;
@@ -803,7 +781,7 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, const Value &v,
 }
 
 void
-js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
+js_ReportMissingArg(JSContext *cx, const Value &v, unsigned arg)
 {
     char argbuf[11];
     char *bytes;
@@ -825,8 +803,8 @@ js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
 }
 
 JSBool
-js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
-                         intN spindex, const Value &v, JSString *fallback,
+js_ReportValueErrorFlags(JSContext *cx, unsigned flags, const unsigned errorNumber,
+                         int spindex, const Value &v, JSString *fallback,
                          const char *arg1, const char *arg2)
 {
     char *bytes;
@@ -852,7 +830,7 @@ JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
 };
 
 JS_FRIEND_API(const JSErrorFormatString *)
-js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
+js_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber)
 {
     if ((errorNumber > 0) && (errorNumber < JSErr_Limit))
         return &js_ErrorFormatString[errorNumber];
@@ -980,8 +958,6 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     outstandingRequests(0),
 #endif
-    autoGCRooters(NULL),
-    debugHooks(&rt->globalDebugHooks),
     securityCallbacks(NULL),
     resolveFlags(0),
     rngSeed(0),
@@ -1003,9 +979,6 @@ JSContext::JSContext(JSRuntime *rt)
 #endif
 {
     PodZero(&link);
-#ifdef JS_THREADSAFE
-    PodZero(&threadLinks);
-#endif
 #ifdef JSGC_ROOT_ANALYSIS
     PodArrayZero(thingGCRooters);
 #ifdef DEBUG
@@ -1158,16 +1131,6 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
 }
 
 void
-JSRuntime::purge(JSContext *cx)
-{
-    tempLifoAlloc.freeUnused();
-    gsnCache.purge();
-
-    /* FIXME: bug 506341 */
-    propertyCache.purge(cx);
-}
-
-void
 JSContext::purge()
 {
     if (!activeCompilations) {
@@ -1281,9 +1244,6 @@ JSContext::mark(JSTracer *trc)
         MarkObjectRoot(trc, &globalObject, "global object");
     if (isExceptionPending())
         MarkValueRoot(trc, &exception, "exception");
-
-    if (autoGCRooters)
-        autoGCRooters->traceAll(trc);
 
     if (sharpObjectMap.depth > 0)
         js_TraceSharpMap(trc, &sharpObjectMap);

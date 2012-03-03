@@ -656,7 +656,7 @@ struct Shape : public js::gc::Cell
     };
 
     bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
-    uintN getFlags() const  { return flags & PUBLIC_FLAGS; }
+    unsigned getFlags() const  { return flags & PUBLIC_FLAGS; }
     bool hasShortID() const { return (flags & HAS_SHORTID) != 0; }
 
     /*
@@ -725,8 +725,8 @@ struct Shape : public js::gc::Cell
     inline bool matches(const Shape *other) const;
     inline bool matches(const StackShape &other) const;
     inline bool matchesParamsAfterId(BaseShape *base,
-                                     uint32_t aslot, uintN aattrs, uintN aflags,
-                                     intN ashortid) const;
+                                     uint32_t aslot, unsigned aattrs, unsigned aflags,
+                                     int ashortid) const;
 
     bool get(JSContext* cx, JSObject *receiver, JSObject *obj, JSObject *pobj, js::Value* vp) const;
     bool set(JSContext* cx, JSObject *obj, bool strict, js::Value* vp) const;
@@ -989,7 +989,7 @@ struct StackShape
     int16_t          shortid;
 
     StackShape(UnownedBaseShape *base, jsid propid, uint32_t slot,
-               uint32_t nfixed, uintN attrs, uintN flags, intN shortid)
+               uint32_t nfixed, unsigned attrs, unsigned flags, int shortid)
       : base(base),
         propid(propid),
         slot_(slot),

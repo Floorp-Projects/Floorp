@@ -23,12 +23,11 @@ struct StringWrapper
     bool     strOk;
 } sw;
 
-JSBool
-GCCallback(JSContext *cx, JSGCStatus status)
+void
+FinalizeCallback(JSContext *cx, JSFinalizeStatus status)
 {
-    if (status == JSGC_MARK_END)
+    if (status == JSFINALIZE_START)
         sw.strOk = !JS_IsAboutToBeFinalized(sw.str);
-    return true;
 }
 
 BEGIN_TEST(testInternAcrossGC)
@@ -36,7 +35,7 @@ BEGIN_TEST(testInternAcrossGC)
     sw.str = JS_InternString(cx, "wrapped chars that another test shouldn't be using");
     sw.strOk = false;
     CHECK(sw.str);
-    JS_SetGCCallback(cx, GCCallback);
+    JS_SetFinalizeCallback(rt, FinalizeCallback);
     JS_GC(cx);
     CHECK(sw.strOk);
     return true;

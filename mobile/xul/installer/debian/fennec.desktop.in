@@ -11,7 +11,7 @@ Type=Application
 Categories=Application;Network;
 #if MOZ_PLATFORM_MAEMO == 6
 Exec=@installdir@/fennec %U
-Icon=/usr/share/themes/blanco/meegotouch/icons/@MOZ_APP_NAME@.png
+Icon=/usr/share/themes/blanco/meegotouch/icons/icon-l-@MOZ_APP_NAME@.png
 Categories=X-MeeGo;
 OnlyShownIn=X-MeeGo;
 MimeType=x-maemo-urischeme/http;x-maemo-urischeme/https;x-maemo-urischeme/ftp;x-maemo-urischeme/file;text/html;x-maemo-highlight/ftp-url;x-maemo-highlight/http-url;

@@ -257,7 +257,7 @@ GetPrefixInteger(JSContext *cx, const jschar *start, const jschar *end, int base
 } // namespace js
 
 static JSBool
-num_isNaN(JSContext *cx, uintN argc, Value *vp)
+num_isNaN(JSContext *cx, unsigned argc, Value *vp)
 {
     if (argc == 0) {
         vp->setBoolean(true);
@@ -271,7 +271,7 @@ num_isNaN(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-num_isFinite(JSContext *cx, uintN argc, Value *vp)
+num_isFinite(JSContext *cx, unsigned argc, Value *vp)
 {
     if (argc == 0) {
         vp->setBoolean(false);
@@ -285,7 +285,7 @@ num_isFinite(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-num_parseFloat(JSContext *cx, uintN argc, Value *vp)
+num_parseFloat(JSContext *cx, unsigned argc, Value *vp)
 {
     JSString *str;
     double d;
@@ -367,7 +367,7 @@ ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int may
 
 /* See ECMA 15.1.2.2. */
 JSBool
-js::num_parseInt(JSContext *cx, uintN argc, Value *vp)
+js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -476,7 +476,7 @@ Class js::NumberClass = {
 };
 
 static JSBool
-Number(JSContext *cx, uintN argc, Value *vp)
+Number(JSContext *cx, unsigned argc, Value *vp)
 {
     /* Sample JS_CALLEE before clobbering. */
     bool isConstructing = IsConstructing(vp);
@@ -501,7 +501,7 @@ Number(JSContext *cx, uintN argc, Value *vp)
 
 #if JS_HAS_TOSOURCE
 static JSBool
-num_toSource(JSContext *cx, uintN argc, Value *vp)
+num_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -613,7 +613,7 @@ static JSString * JS_FASTCALL
 js_NumberToStringWithBase(JSContext *cx, double d, jsint base);
 
 static JS_ALWAYS_INLINE bool
-num_toStringHelper(JSContext *cx, Native native, uintN argc, Value *vp)
+num_toStringHelper(JSContext *cx, Native native, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -623,7 +623,7 @@ num_toStringHelper(JSContext *cx, Native native, uintN argc, Value *vp)
         return ok;
 
     int32_t base = 10;
-    if (args.length() != 0 && !args[0].isUndefined()) {
+    if (args.hasDefined(0)) {
         double d2;
         if (!ToInteger(cx, args[0], &d2))
             return false;
@@ -645,13 +645,13 @@ num_toStringHelper(JSContext *cx, Native native, uintN argc, Value *vp)
 }
 
 static JSBool
-num_toString(JSContext *cx, uintN argc, Value *vp)
+num_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     return num_toStringHelper(cx, num_toString, argc, vp);
 }
 
 static JSBool
-num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
+num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 {
     size_t thousandsLength, decimalLength;
     const char *numGrouping, *tmpGroup;
@@ -770,7 +770,7 @@ num_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-js_num_valueOf(JSContext *cx, uintN argc, Value *vp)
+js_num_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -834,26 +834,27 @@ num_to(JSContext *cx, Native native, JSDToStrMode zeroArgMode, JSDToStrMode oneA
  * than ECMA requires; this is permitted by ECMA-262.
  */
 static JSBool
-num_toFixed(JSContext *cx, uintN argc, Value *vp)
+num_toFixed(JSContext *cx, unsigned argc, Value *vp)
 {
     return num_to(cx, num_toFixed, DTOSTR_FIXED, DTOSTR_FIXED, -20, MAX_PRECISION, 0,
                   CallArgsFromVp(argc, vp));
 }
 
 static JSBool
-num_toExponential(JSContext *cx, uintN argc, Value *vp)
+num_toExponential(JSContext *cx, unsigned argc, Value *vp)
 {
     return num_to(cx, num_toExponential, DTOSTR_STANDARD_EXPONENTIAL, DTOSTR_EXPONENTIAL, 0,
                   MAX_PRECISION, 1, CallArgsFromVp(argc, vp));
 }
 
 static JSBool
-num_toPrecision(JSContext *cx, uintN argc, Value *vp)
+num_toPrecision(JSContext *cx, unsigned argc, Value *vp)
 {
-    if (argc == 0 || vp[2].isUndefined())
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.hasDefined(0))
         return num_toStringHelper(cx, num_toPrecision, 0, vp);
     return num_to(cx, num_toPrecision, DTOSTR_STANDARD, DTOSTR_PRECISION, 1, MAX_PRECISION, 0,
-                  CallArgsFromVp(argc, vp));
+                  args);
 }
 
 static JSFunctionSpec number_methods[] = {

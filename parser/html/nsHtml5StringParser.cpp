@@ -102,7 +102,8 @@ nsHtml5StringParser::ParseFragment(const nsAString& aSourceBuffer,
 
 nsresult
 nsHtml5StringParser::ParseDocument(const nsAString& aSourceBuffer,
-                                   nsIDocument* aTargetDoc)
+                                   nsIDocument* aTargetDoc,
+                                   bool aScriptingEnabledForNoscriptParsing)
 {
   MOZ_ASSERT(!aTargetDoc->GetFirstChild());
 
@@ -116,7 +117,7 @@ nsHtml5StringParser::ParseDocument(const nsAString& aSourceBuffer,
 
   mExecutor->PreventScriptExecution();
 
-  Tokenize(aSourceBuffer, aTargetDoc, false);
+  Tokenize(aSourceBuffer, aTargetDoc, aScriptingEnabledForNoscriptParsing);
   return NS_OK;
 }
 

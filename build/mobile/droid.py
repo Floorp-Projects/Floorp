@@ -39,6 +39,7 @@
 
 from devicemanagerADB import DeviceManagerADB
 from devicemanagerSUT import DeviceManagerSUT
+import StringIO
 
 class DroidMixin(object):
   """Mixin to extend DeviceManager with Android-specific functionality"""
@@ -59,7 +60,7 @@ class DroidMixin(object):
     acmd = [ "am", "start", "-a", intent, "-W", "-n", "%s/.%s" % (app, activity)]
 
     if extra_args:
-      acmd.extend(["--es", "args", " ".join(args)])
+      acmd.extend(["--es", "args", " ".join(extra_args)])
 
     if env:
       envCnt = 0
@@ -69,7 +70,7 @@ class DroidMixin(object):
         envCnt += 1
 
     if url:
-      acmd.extend(["-d", ''.join(['"', url, '"'])])
+      acmd.extend(["-d", ''.join(["'", url, "'"])])
 
     # shell output not that interesting and debugging logs should already
     # show what's going on here... so just create an empty memory buffer
