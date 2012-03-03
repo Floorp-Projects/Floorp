@@ -96,6 +96,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("th2", { "abbr": "SS#" }, true);
       testAttrs("th2", { "axis": "social" }, true);
 
+      // application accessible
+      if (WIN) {
+        var gfxInfo = Components.classes["@mozilla.org/gfx/info;1"].
+          getService(Components.interfaces.nsIGfxInfo);
+        var attrs = {
+          "D2D": (gfxInfo.D2DEnabled ? "true" : "false")
+        }
+        testAttrs(getApplicationAccessible(), attrs, false);
+      }
       SimpleTest.finish();
     }
 
