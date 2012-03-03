@@ -51,7 +51,7 @@ public class BookmarkRecordFactory extends RecordFactory {
   @Override
   public Record createRecord(Record record) {
     BookmarkRecord r = new BookmarkRecord();
-    r.initFromPayload((CryptoRecord) record);
+    r.initFromEnvelope((CryptoRecord) record);
     return r;
   }
 
