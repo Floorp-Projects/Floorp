@@ -973,6 +973,21 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
 #else
   if (!GUIEvent->widget)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+
+  nsIView* view = aFrame->GetView();
+  if (view) {
+    nsIWidget* widget = view->GetWidget();
+    if (widget && widget == GUIEvent->widget) {
+      // Special case this cause it happens a lot.
+      // This also fixes bug 664707, events in the extra-special case of select
+      // dropdown popups that are transformed.
+      nsPresContext* presContext = aFrame->PresContext();
+      nsPoint pt(presContext->DevPixelsToAppUnits(GUIEvent->refPoint.x),
+                 presContext->DevPixelsToAppUnits(GUIEvent->refPoint.y));
+      return pt - view->ViewToWidgetOffset();
+    }
+  }
+
   /* If we walk up the frame tree and discover that any of the frames are
    * transformed, we need to do extra work to convert from the global
    * space to the local space.
@@ -1029,6 +1044,20 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent,
   nsIWidget* widget = GUIEvent->widget;
   if (!widget) {
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
+
+  nsIView* view = aFrame->GetView();
+  if (view) {
+    nsIWidget* fwidget = view->GetWidget();
+    if (fwidget && fwidget == GUIEvent->widget) {
+      // Special case this cause it happens a lot.
+      // This also fixes bug 664707, events in the extra-special case of select
+      // dropdown popups that are transformed.
+      nsPresContext* presContext = aFrame->PresContext();
+      nsPoint pt(presContext->DevPixelsToAppUnits(GUIEvent->refPoint.x),
+                 presContext->DevPixelsToAppUnits(GUIEvent->refPoint.y));
+      return pt - view->ViewToWidgetOffset();
+    }
   }
 
   /* If we walk up the frame tree and discover that any of the frames are
