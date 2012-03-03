@@ -21,6 +21,7 @@ var futureReservedWords =
    "export",
    "extends",
    "import",
+   "let",  // Reserved even for versionless code, contrary to ES5 - see bug 730139
    "super",
   ];
 
@@ -28,7 +29,6 @@ var strictFutureReservedWords =
   [
    "implements",
    "interface",
-   "let", // enabled: this file doesn't execute as JS1.7
    "package",
    "private",
    "protected",
