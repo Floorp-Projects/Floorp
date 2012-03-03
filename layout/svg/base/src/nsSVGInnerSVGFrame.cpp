@@ -164,14 +164,24 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
 
-      if (static_cast<nsSVGSVGElement*>(mContent)->mViewBox.IsValid()) {
+      nsSVGSVGElement* svg = static_cast<nsSVGSVGElement*>(mContent);
+      if (svg->mViewBox.IsValid()) {
 
         // make sure our cached transform matrix gets (lazily) updated
         mCanvasTM = nsnull;
 
         nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
       } else {
-        nsSVGUtils::NotifyChildrenOfSVGChange(this, COORD_CONTEXT_CHANGED);
+
+        PRUint32 flags = COORD_CONTEXT_CHANGED;
+
+        if (mCanvasTM && mCanvasTM->IsSingular()) {
+
+          mCanvasTM = nsnull;
+
+          flags |= TRANSFORM_CHANGED;
+        }
+        nsSVGUtils::NotifyChildrenOfSVGChange(this, flags);
       }
 
     } else if (aAttribute == nsGkAtoms::transform ||
