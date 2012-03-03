@@ -1538,7 +1538,7 @@ bool
 CodeGenerator::visitCallIteratorEnd(LCallIteratorEnd *lir)
 {
     typedef bool (*pf)(JSContext *, JSObject *);
-    static const VMFunction Info = FunctionInfo<pf>(CloseIterator);
+    static const VMFunction Info = FunctionInfo<pf>(CloseIteratorFromIon);
 
     const Register objReg = ToRegister(lir->getOperand(0));
 
