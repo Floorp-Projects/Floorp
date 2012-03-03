@@ -9,7 +9,7 @@ function addTestCase( t ) {\
                   SECTION,\
                   '(new Date('+d+')).getUTCDay()',\
                   WeekDay((d)),\
-                  (new Date(let ({ stop } = 'properties.length' )('/ab[c\\\n]/'))).getUTCDay() \
+                  (new Date(foo ({ stop } = 'properties.length' )('/ab[c\\\n]/'))).getUTCDay() \
                 );\
 }\
 ");
