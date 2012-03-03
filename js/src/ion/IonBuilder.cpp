@@ -1458,6 +1458,14 @@ IonBuilder::processBreak(JSOp op, jssrcnote *sn)
     return processControlEnd();
 }
 
+static inline jsbytecode *
+EffectiveContinue(jsbytecode *pc)
+{
+    if (JSOp(*pc) == JSOP_GOTO)
+        return pc + GetJumpOffset(pc);
+    return pc;
+}
+
 IonBuilder::ControlStatus
 IonBuilder::processContinue(JSOp op, jssrcnote *sn)
 {
@@ -1467,7 +1475,9 @@ IonBuilder::processContinue(JSOp op, jssrcnote *sn)
     CFGState *found = NULL;
     jsbytecode *target = pc + GetJumpOffset(pc);
     for (size_t i = loops_.length() - 1; i < loops_.length(); i--) {
-        if (loops_[i].continuepc == target) {
+        if (loops_[i].continuepc == target ||
+            EffectiveContinue(loops_[i].continuepc) == target)
+        {
             found = &cfgStack_[loops_[i].cfgEntry];
             break;
         }
