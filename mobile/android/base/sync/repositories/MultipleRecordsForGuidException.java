@@ -46,5 +46,4 @@ public class MultipleRecordsForGuidException extends SyncException {
   public MultipleRecordsForGuidException(Exception ex) {
     super(ex);
   }
-
 }
