@@ -190,8 +190,9 @@ void
 nsSVGBoolean::SMILBool::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
-    mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
     mVal->mIsAnimated = false;
+    mVal->mAnimVal = mVal->mBaseVal;
+    mSVGElement->DidAnimateBoolean(mVal->mAttrEnum);
   }
 }
 
