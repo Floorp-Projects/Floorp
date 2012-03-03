@@ -866,8 +866,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_EvaluateUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 0, NULL);
+    return JS_EvaluateUCScript(cx, thisobj, codeChars, codeLength, "@evaluate", 0, vp);
 }
 
 static JSString *
@@ -1910,7 +1909,7 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, unsigned offset,
     jsbytecode *pc;
     JSOp op;
     ptrdiff_t jmplen;
-    jsint low, high, n;
+    int32_t low, high, n;
 
     pc = script->code + offset;
     op = JSOp(*pc);

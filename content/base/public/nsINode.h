@@ -49,7 +49,7 @@
 #include "nsDOMError.h"
 #include "nsDOMString.h"
 #include "jspubtd.h"
-#include "nsDOMMemoryReporter.h"
+#include "nsWindowMemoryReporter.h"
 #include "nsIVariant.h"
 #include "nsGkAtoms.h"
 

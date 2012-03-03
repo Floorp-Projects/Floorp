@@ -49,11 +49,11 @@ interface nsIDOMDOMTokenList : nsISupports
 {
   readonly attribute unsigned long length;
 
-  DOMString          item(in unsigned long index);
+  [getter] DOMString item(in unsigned long index);
   boolean            contains([Null(Stringify)] in DOMString token);
   void               add([Null(Stringify)] in DOMString token);
   void               remove([Null(Stringify)] in DOMString token);
   boolean            toggle([Null(Stringify)] in DOMString token);
 
-  DOMString          toString();
+  [stringifier] DOMString          toString();
 };

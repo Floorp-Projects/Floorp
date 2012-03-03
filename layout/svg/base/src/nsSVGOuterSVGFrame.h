@@ -110,7 +110,7 @@ public:
   virtual nsIAtom* GetType() const;
 
   void Paint(const nsDisplayListBuilder* aBuilder,
-             nsRenderingContext& aRenderingContext,
+             nsRenderingContext* aContext,
              const nsRect& aDirtyRect, nsPoint aPt);
 
 #ifdef DEBUG
@@ -139,6 +139,16 @@ public:
    */
   void RegisterForeignObject(nsSVGForeignObjectFrame* aFrame);
   void UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame);
+
+#ifdef XP_MACOSX
+  bool BitmapFallbackEnabled() const {
+    return mEnableBitmapFallback;
+  }
+  void SetBitmapFallbackEnabled(bool aVal) {
+    NS_NOTREACHED("don't think me need this any more"); // comment in bug 732429 if we do
+    mEnableBitmapFallback = aVal;
+  }
+#endif
 
 protected:
 

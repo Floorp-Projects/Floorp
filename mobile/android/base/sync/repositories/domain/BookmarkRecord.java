@@ -39,7 +39,6 @@
 package org.mozilla.gecko.sync.repositories.domain;
 
 import org.json.simple.JSONArray;
-import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
@@ -143,33 +142,19 @@ public class BookmarkRecord extends Record {
   }
 
   @Override
-  public void initFromPayload(CryptoRecord payload) {
-    ExtendedJSONObject p = payload.payload;
-
-    // All.
-    this.guid = payload.guid;
-    checkGUIDs(p);
-
-    final Object del = p.get("deleted");
-    if (del instanceof Boolean) {
-      this.deleted = (Boolean) del;
-    }
-
-    this.collection    = payload.collection;
-    this.lastModified  = payload.lastModified;
-
-    this.type          = (String) p.get("type");
-    this.title         = (String) p.get("title");
-    this.description   = (String) p.get("description");
-    this.parentID      = (String) p.get("parentid");
-    this.parentName    = (String) p.get("parentName");
+  protected void initFromPayload(ExtendedJSONObject payload) {
+    this.type        = (String) payload.get("type");
+    this.title       = (String) payload.get("title");
+    this.description = (String) payload.get("description");
+    this.parentID    = (String) payload.get("parentid");
+    this.parentName  = (String) payload.get("parentName");
 
     // Bookmark.
     if (isBookmark()) {
-      this.bookmarkURI = (String) p.get("bmkUri");
-      this.keyword     = (String) p.get("keyword");
+      this.bookmarkURI = (String) payload.get("bmkUri");
+      this.keyword     = (String) payload.get("keyword");
       try {
-        this.tags = p.getArray("tags");
+        this.tags = payload.getArray("tags");
       } catch (NonArrayJSONException e) {
         Log.e(LOG_TAG, "Got non-array tags in bookmark record " + this.guid, e);
         this.tags = new JSONArray();
@@ -179,7 +164,7 @@ public class BookmarkRecord extends Record {
     // Folder.
     if (isFolder()) {
       try {
-        this.children = p.getArray("children");
+        this.children = payload.getArray("children");
       } catch (NonArrayJSONException e) {
         Log.e(LOG_TAG, "Got non-array children in bookmark record " + this.guid, e);
         // Let's see if we can recover later by using the parentid pointers.
@@ -200,38 +185,29 @@ public class BookmarkRecord extends Record {
      */
   }
 
+  @Override
+  protected void populatePayload(ExtendedJSONObject payload) {
+    putPayload(payload, "type", this.type);
+    putPayload(payload, "title", this.title);
+    putPayload(payload, "description", this.description);
+    putPayload(payload, "parentid", this.parentID);
+    putPayload(payload, "parentName", this.parentName);
+
+    if (isBookmark()) {
+      payload.put("bmkUri", bookmarkURI);
+      payload.put("keyword", keyword);
+      payload.put("tags", this.tags);
+    } else if (isFolder()) {
+      payload.put("children", this.children);
+    }
+  }
+
   public boolean isBookmark() {
     return AndroidBrowserBookmarksDataAccessor.TYPE_BOOKMARK.equalsIgnoreCase(this.type);
   }
 
   public boolean isFolder() {
     return AndroidBrowserBookmarksDataAccessor.TYPE_FOLDER.equalsIgnoreCase(this.type);
-  }
-
-  @Override
-  public CryptoRecord getPayload() {
-    CryptoRecord rec = new CryptoRecord(this);
-    rec.payload = new ExtendedJSONObject();
-    rec.payload.put("id", this.guid);
-
-    if (this.deleted) {
-      rec.payload.put("deleted", true);
-    } else {
-      putPayload(rec, "type", this.type);
-      putPayload(rec, "title", this.title);
-      putPayload(rec, "description", this.description);
-      putPayload(rec, "parentid", this.parentID);
-      putPayload(rec, "parentName", this.parentName);
-
-      if (isBookmark()) {
-        rec.payload.put("bmkUri", bookmarkURI);
-        rec.payload.put("keyword", keyword);
-        rec.payload.put("tags", this.tags);
-      } else if (isFolder()) {
-        rec.payload.put("children", this.children);
-      }
-    }
-    return rec;
   }
 
   private void trace(String s) {

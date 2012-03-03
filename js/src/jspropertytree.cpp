@@ -277,7 +277,7 @@ Shape::dump(JSContext *cx, FILE *fp) const
     if (attrs) {
         int first = 1;
         fputs("(", fp);
-#define DUMP_ATTR(name, display) if (attrs & JSPROP_##name) fputs(" " #display + first, fp), first = 0
+#define DUMP_ATTR(name, display) if (attrs & JSPROP_##name) fputs(&(" " #display)[first], fp), first = 0
         DUMP_ATTR(ENUMERATE, enumerate);
         DUMP_ATTR(READONLY, readonly);
         DUMP_ATTR(PERMANENT, permanent);
@@ -292,7 +292,7 @@ Shape::dump(JSContext *cx, FILE *fp) const
     if (flags) {
         int first = 1;
         fputs("(", fp);
-#define DUMP_FLAG(name, display) if (flags & name) fputs(" " #display + first, fp), first = 0
+#define DUMP_FLAG(name, display) if (flags & name) fputs(&(" " #display)[first], fp), first = 0
         DUMP_FLAG(HAS_SHORTID, has_shortid);
         DUMP_FLAG(METHOD, method);
         DUMP_FLAG(IN_DICTIONARY, in_dictionary);
