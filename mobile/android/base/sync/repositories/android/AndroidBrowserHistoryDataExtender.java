@@ -46,9 +46,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 
-public class AndroidBrowserHistoryDataExtender extends SQLiteOpenHelper {
+public class AndroidBrowserHistoryDataExtender extends CachedSQLiteOpenHelper {
 
   public static final String LOG_TAG = "SyncHistoryVisits";
 
@@ -75,44 +74,6 @@ public class AndroidBrowserHistoryDataExtender extends SQLiteOpenHelper {
         + COL_GUID + " TEXT PRIMARY KEY, "
         + COL_VISITS + " TEXT)";
     db.execSQL(createTableSql);
-  }
-
-  // Cache these so we don't have to track them across cursors. Call `close`
-  // when you're done.
-  private static SQLiteDatabase readableDatabase;
-  private static SQLiteDatabase writableDatabase;
-
-  protected SQLiteDatabase getCachedReadableDatabase() {
-    if (AndroidBrowserHistoryDataExtender.readableDatabase == null) {
-      if (AndroidBrowserHistoryDataExtender.writableDatabase == null) {
-        AndroidBrowserHistoryDataExtender.readableDatabase = this.getReadableDatabase();
-        return AndroidBrowserHistoryDataExtender.readableDatabase;
-      } else {
-        return AndroidBrowserHistoryDataExtender.writableDatabase;
-      }
-    } else {
-      return AndroidBrowserHistoryDataExtender.readableDatabase;
-    }
-  }
-
-  protected SQLiteDatabase getCachedWritableDatabase() {
-    if (AndroidBrowserHistoryDataExtender.writableDatabase == null) {
-      AndroidBrowserHistoryDataExtender.writableDatabase = this.getWritableDatabase();
-    }
-    return AndroidBrowserHistoryDataExtender.writableDatabase;
-  }
-
-  @Override
-  public void close() {
-    if (AndroidBrowserHistoryDataExtender.readableDatabase != null) {
-      AndroidBrowserHistoryDataExtender.readableDatabase.close();
-      AndroidBrowserHistoryDataExtender.readableDatabase = null;
-    }
-    if (AndroidBrowserHistoryDataExtender.writableDatabase != null) {
-      AndroidBrowserHistoryDataExtender.writableDatabase.close();
-      AndroidBrowserHistoryDataExtender.writableDatabase = null;
-    }
-    super.close();
   }
 
   @Override

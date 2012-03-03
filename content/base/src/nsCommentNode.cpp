@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsGenericElement.h" // DOMCI_NODE_DATA
-#include "nsDOMMemoryReporter.h"
 
 class nsCommentNode : public nsGenericDOMDataNode,
                       public nsIDOMComment

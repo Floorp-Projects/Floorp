@@ -66,8 +66,7 @@ public:
 protected:
   bool              mIsForMail;
   nsCOMPtr<nsIAtom> mBlockQuoteAtom;
-  nsCOMPtr<nsIAtom> mPreAtom;          // mail plain text quotes are wrapped in pre tags
-  nsCOMPtr<nsIAtom> mSpanAtom;         //or they may be wrapped in span tags (editor.quotesPreformatted). 
+  nsCOMPtr<nsIAtom> mSpanAtom;         // mail plain text quotes are wrapped in span tags
   nsCOMPtr<nsIAtom> mMozQuoteAtom;     // _moz_quote_
   nsCOMPtr<nsIAtom> mTableAtom;
   nsCOMPtr<nsIAtom> mClassAtom;
