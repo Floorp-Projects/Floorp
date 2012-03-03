@@ -117,7 +117,7 @@ struct IonOptions
     IonOptions()
       : enabled(false),
         gvn(true),
-        gvnIsOptimistic(true),
+        gvnIsOptimistic(false),
         licm(true),
         osr(true),
         lsra(true),

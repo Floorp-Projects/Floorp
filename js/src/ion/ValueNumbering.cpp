@@ -59,13 +59,9 @@ ValueNumberer::lookupValue(MDefinition *ins)
 
     ValueMap::AddPtr p = values.lookupForAdd(ins);
 
-    if (p) {
-        // make sure this is in the correct group
-        setClass(ins, p->key);
-    } else {
+    if (!p) {
         if (!values.add(p, ins, ins->id()))
             return 0;
-        breakClass(ins);
     }
 
     return p->value;
@@ -82,9 +78,6 @@ ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
     if (ins == def || !ins->updateForReplacement(def))
         return def;
 
-    // ensure this instruction has a VN
-    if (!ins->valueNumberData())
-        ins->setValueNumberData(new ValueNumberData);
     if (!ins->block()) {
         // In this case, we made a new def by constant folding, for
         // example, we replaced add(#3,#4) with a new const(#7) node.
@@ -177,13 +170,6 @@ ValueNumberer::computeValueNumbers()
 
     if (!values.init())
         return false;
-    // Stick a VN object onto every mdefinition
-    for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
-        for (MDefinitionIterator iter(*block); iter; iter++)
-            iter->setValueNumberData(new ValueNumberData);
-        MControlInstruction *jump = block->lastIns();
-        jump->setValueNumberData(new ValueNumberData);
-    }
 
     // Assign unique value numbers if pessimistic.
     // It might be productive to do this in the MDefinition constructor or
@@ -420,68 +406,3 @@ ValueNumberer::analyze()
     return computeValueNumbers() && eliminateRedundancies();
 }
 
-uint32
-MDefinition::valueNumber() const
-{
-    JS_ASSERT(block_);
-    if (valueNumber_ == NULL)
-        return 0;
-    return valueNumber_->valueNumber();
-}
-void
-MDefinition::setValueNumber(uint32 vn)
-{
-    valueNumber_->setValueNumber(vn);
-}
-// Set the class of this to the given representative value.
-void
-ValueNumberer::setClass(MDefinition *def, MDefinition *rep)
-{
-    def->valueNumberData()->setClass(def, rep);
-}
-
-void
-ValueNumberer::breakClass(MDefinition *def)
-{
-    if (def->valueNumber() == def->id()) {
-        IonSpew(IonSpew_GVN, "Breaking congruence with itself: %d", def->id());
-        ValueNumberData *defdata = def->valueNumberData();
-        JS_ASSERT(defdata->classPrev == NULL);
-        // If the def was the only member of the class, then there is nothing to do.
-        if (defdata->classNext == NULL)
-            return;
-
-        // Get a new representative member
-        MDefinition *newRep = defdata->classNext;
-
-        // Chop off the head of the list (the old representative)
-        newRep->valueNumberData()->classPrev = NULL;
-        def->valueNumberData()->classNext = NULL;
-        IonSpew(IonSpew_GVN, "Choosing a new representative: %d", newRep->id());
-
-        // make the VN of every member in the class the VN of the new representative number.
-        for (MDefinition *tmp = newRep; tmp != NULL; tmp = tmp->valueNumberData()->classNext) {
-            // if this instruction is already scheduled to be processed, don't do anything.
-            if (tmp->isInWorklist())
-                continue;
-            IonSpew(IonSpew_GVN, "Moving to a new congruence class: %d", tmp->id());
-            tmp->setValueNumber(newRep->id());
-            markConsumers(tmp);
-        }
-
-        // Insert the new representative => number mapping into the table
-        values.putNew(newRep, newRep->id());
-    } else {
-        // The element that is breaking from the list isn't the representative element
-        // just strip it from the list
-        ValueNumberData *defdata = def->valueNumberData();
-        if (defdata->classPrev)
-            defdata->classPrev->valueNumberData()->classNext = defdata->classNext;
-        if (defdata->classNext)
-            defdata->classNext->valueNumberData()->classPrev = defdata->classPrev;
-
-        // Make sure there is no nastinees accidentally linking elements into the old list later.
-        defdata->classPrev = NULL;
-        defdata->classNext = NULL;
-    }
-}
