@@ -209,7 +209,7 @@ ToCanvasBounds(const gfxRect &aUserspaceRect,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
+nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
                                   const nsIntRect *aDirtyRect)
 {
   if (IsDisabled())
@@ -222,9 +222,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   gfxMatrix matrixForChildren = GetCanvasTMForChildren();
   gfxMatrix matrix = GetCanvasTM();
 
-  nsRenderingContext *ctx = aContext->GetRenderingContext(this);
-
-  if (!ctx || matrixForChildren.IsSingular()) {
+  if (matrixForChildren.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
     return NS_ERROR_FAILURE;
   }
@@ -255,7 +253,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
       return NS_OK;
   }
 
-  gfxContext *gfx = aContext->GetGfxContext();
+  gfxContext *gfx = aContext->ThebesContext();
 
   gfx->Save();
 
@@ -272,10 +270,10 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   gfx->Multiply(matrixForChildren);
 
   PRUint32 flags = nsLayoutUtils::PAINT_IN_TRANSFORM;
-  if (aContext->IsPaintingToWindow()) {
+  if (SVGAutoRenderState::IsPaintingToWindow(aContext)) {
     flags |= nsLayoutUtils::PAINT_TO_WINDOW;
   }
-  nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(kidDirtyRect),
+  nsresult rv = nsLayoutUtils::PaintFrame(aContext, kid, nsRegion(kidDirtyRect),
                                           NS_RGBA(0,0,0,0), flags);
 
   gfx->Restore();

@@ -52,13 +52,16 @@ public class GetChannelStage extends JPakeStage {
 
       @Override
       public void handleFailure(String error) {
+        Logger.error(LOG_TAG, "Got HTTP failure: " + error);
         jClient.abort(error);
+        return;
       }
 
       @Override
       public void handleError(Exception e) {
         Logger.error(LOG_TAG, "Threw HTTP exception.", e);
         jClient.abort(Constants.JPAKE_ERROR_CHANNEL);
+        return;
       }
     };
 
@@ -67,9 +70,11 @@ public class GetChannelStage extends JPakeStage {
     } catch (URISyntaxException e) {
       Logger.error(LOG_TAG, "Incorrect URI syntax.", e);
       jClient.abort(Constants.JPAKE_ERROR_INVALID);
+      return;
     } catch (Exception e) {
       Logger.error(LOG_TAG, "Unexpected exception.", e);
       jClient.abort(Constants.JPAKE_ERROR_INTERNAL);
+      return;
     }
   }
 

@@ -48,7 +48,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsTraceRefcnt.h"
-#include "nsDOMMemoryReporter.h"
 
 class nsString;
 class nsCString;

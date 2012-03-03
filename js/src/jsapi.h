@@ -65,8 +65,8 @@
 
 /* JS::Value can store a full int32_t. */
 #define JSVAL_INT_BITS          32
-#define JSVAL_INT_MIN           ((jsint)0x80000000)
-#define JSVAL_INT_MAX           ((jsint)0x7fffffff)
+#define JSVAL_INT_MIN           ((int32_t)0x80000000)
+#define JSVAL_INT_MAX           ((int32_t)0x7fffffff)
 
 /************************************************************************/
 
@@ -1651,7 +1651,7 @@ JSVAL_IS_INT(jsval v)
     return JSVAL_IS_INT32_IMPL(JSVAL_TO_IMPL(v));
 }
 
-static JS_ALWAYS_INLINE jsint
+static JS_ALWAYS_INLINE int32_t
 JSVAL_TO_INT(jsval v)
 {
     JS_ASSERT(JSVAL_IS_INT(v));
@@ -2062,7 +2062,7 @@ class AutoIdRooter : private AutoGCRooter
                                            set of the same-named property in an
                                            object that delegates to a prototype
                                            containing this property */
-#define JSPROP_INDEX            0x80    /* name is actually (jsint) index */
+#define JSPROP_INDEX            0x80    /* name is actually (int) index */
 #define JSPROP_SHORTID          0x100   /* set in JS_DefineProperty attrs
                                            if getters/setters use a shortid */
 #define JSPROP_NATIVE_ACCESSORS 0x08    /* set in JSPropertyDescriptor.flags
@@ -2244,7 +2244,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_ValueToNumber(JSContext *cx, jsval v, double *dp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DoubleIsInt32(double d, jsint *ip);
+JS_DoubleIsInt32(double d, int32_t *ip);
 
 extern JS_PUBLIC_API(int32_t)
 JS_DoubleToInt32(double d);
@@ -3492,11 +3492,11 @@ struct JSClass {
 #define JSCLASS_NO_INTERNAL_MEMBERS     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 #define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,JSCLASS_NO_INTERNAL_MEMBERS
 
-extern JS_PUBLIC_API(jsint)
+extern JS_PUBLIC_API(int)
 JS_IdArrayLength(JSContext *cx, JSIdArray *ida);
 
 extern JS_PUBLIC_API(jsid)
-JS_IdArrayGet(JSContext *cx, JSIdArray *ida, jsint index);
+JS_IdArrayGet(JSContext *cx, JSIdArray *ida, int index);
 
 extern JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida);
@@ -3980,7 +3980,7 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *obj,
                      jsval *rval);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector);
+JS_NewArrayObject(JSContext *cx, int length, jsval *vector);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj);
