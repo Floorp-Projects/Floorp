@@ -230,6 +230,9 @@ class IonActivation
     JSObject *savedEnumerators() const {
         return savedEnumerators_;
     }
+    void updateSavedEnumerators(JSObject *obj) {
+        savedEnumerators_ = obj;
+    }
 };
 
 } // namespace ion

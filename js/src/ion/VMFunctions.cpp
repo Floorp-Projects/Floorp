@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Ion.h"
+#include "IonCompartment.h"
 #include "jsinterp.h"
 #include "ion/Snapshots.h"
 #include "ion/IonFrames.h"
@@ -171,6 +172,18 @@ ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output)
 {
     *output = !js_ValueToBoolean(input);
     return true;
+}
+
+bool
+CloseIteratorFromIon(JSContext *cx, JSObject *obj)
+{
+    bool result = CloseIterator(cx, obj);
+
+    IonActivation *ion = cx->runtime->ionActivation;
+    if (obj == ion->savedEnumerators())
+        ion->updateSavedEnumerators(cx->enumerators);
+
+    return result;
 }
 
 } // namespace ion
