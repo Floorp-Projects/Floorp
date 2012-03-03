@@ -351,7 +351,10 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const
     Value v = value;
     // Stop generating new stubs once we hit the stub count limit, see
     // GetPropertyCache.
-    if (cache.stubCount() < MAX_STUBS && obj->isNative()) {
+    if (cache.stubCount() < MAX_STUBS &&
+        obj->isNative() &&
+        !obj->watched())
+    {
         cache.incrementStubCount();
 
         jsid id = ATOM_TO_JSID(atom);
