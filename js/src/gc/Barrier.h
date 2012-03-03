@@ -299,31 +299,24 @@ struct HeapPtrHasher
 template <class T>
 struct DefaultHasher< HeapPtr<T> >: HeapPtrHasher<T> { };
 
-class HeapValue
+class EncapsulatedValue
 {
+  protected:
     Value value;
 
-  public:
-    explicit HeapValue() : value(UndefinedValue()) {}
-    explicit inline HeapValue(const Value &v);
-    explicit inline HeapValue(const HeapValue &v);
-
-    inline ~HeapValue();
-
-    inline void init(const Value &v);
-    inline void init(JSCompartment *comp, const Value &v);
-
-    inline HeapValue &operator=(const Value &v);
-    inline HeapValue &operator=(const HeapValue &v);
-
     /*
-     * This is a faster version of operator=. Normally, operator= has to
-     * determine the compartment of the value before it can decide whether to do
-     * the barrier. If you already know the compartment, it's faster to pass it
-     * in.
+     * Ensure that EncapsulatedValue is not constructable, except by our
+     * implementations.
      */
-    inline void set(JSCompartment *comp, const Value &v);
+    EncapsulatedValue() MOZ_DELETE;
+    EncapsulatedValue(const EncapsulatedValue &v) MOZ_DELETE;
+    EncapsulatedValue &operator=(const Value &v) MOZ_DELETE;
+    EncapsulatedValue &operator=(const EncapsulatedValue &v) MOZ_DELETE;
 
+    EncapsulatedValue(const Value &v) : value(v) {}
+    ~EncapsulatedValue() {}
+
+  public:
     const Value &get() const { return value; }
     Value *unsafeGet() { return &value; }
     operator const Value &() const { return value; }
@@ -360,38 +353,93 @@ class HeapValue
 #endif
 
     static inline void writeBarrierPre(const Value &v);
-    static inline void writeBarrierPost(const Value &v, void *addr);
-
     static inline void writeBarrierPre(JSCompartment *comp, const Value &v);
+
+  protected:
+    inline void pre();
+    inline void pre(JSCompartment *comp);
+};
+
+class HeapValue : public EncapsulatedValue
+{
+  public:
+    explicit inline HeapValue();
+    explicit inline HeapValue(const Value &v);
+    explicit inline HeapValue(const HeapValue &v);
+    inline ~HeapValue();
+
+    inline void init(const Value &v);
+    inline void init(JSCompartment *comp, const Value &v);
+
+    inline HeapValue &operator=(const Value &v);
+    inline HeapValue &operator=(const HeapValue &v);
+
+    /*
+     * This is a faster version of operator=. Normally, operator= has to
+     * determine the compartment of the value before it can decide whether to do
+     * the barrier. If you already know the compartment, it's faster to pass it
+     * in.
+     */
+    inline void set(JSCompartment *comp, const Value &v);
+
+    static inline void writeBarrierPost(const Value &v, void *addr);
     static inline void writeBarrierPost(JSCompartment *comp, const Value &v, void *addr);
 
   private:
-    inline void pre();
     inline void post();
-
-    inline void pre(JSCompartment *comp);
     inline void post(JSCompartment *comp);
 };
 
-static inline const Value *
-Valueify(const HeapValue *array)
+class HeapSlot : public EncapsulatedValue
 {
-    JS_ASSERT(sizeof(HeapValue) == sizeof(Value));
+    /*
+     * Operator= is not valid for HeapSlot because is must take the object and
+     * slot offset to provide to the post/generational barrier.
+     */
+    inline HeapSlot &operator=(const Value &v) MOZ_DELETE;
+    inline HeapSlot &operator=(const HeapValue &v) MOZ_DELETE;
+    inline HeapSlot &operator=(const HeapSlot &v) MOZ_DELETE;
+
+  public:
+    explicit inline HeapSlot() MOZ_DELETE;
+    explicit inline HeapSlot(JSObject *obj, uint32_t slot, const Value &v);
+    explicit inline HeapSlot(JSObject *obj, uint32_t slot, const HeapSlot &v);
+    inline ~HeapSlot();
+
+    inline void init(JSObject *owner, uint32_t slot, const Value &v);
+    inline void init(JSCompartment *comp, JSObject *owner, uint32_t slot, const Value &v);
+
+    inline void set(JSObject *owner, uint32_t slot, const Value &v);
+    inline void set(JSCompartment *comp, JSObject *owner, uint32_t slot, const Value &v);
+
+    static inline void writeBarrierPost(JSObject *obj, uint32_t slot);
+    static inline void writeBarrierPost(JSCompartment *comp, JSObject *obj, uint32_t slotno);
+
+  private:
+    inline void post(JSObject *owner, uint32_t slot);
+    inline void post(JSCompartment *comp, JSObject *owner, uint32_t slot);
+};
+
+static inline const Value *
+Valueify(const EncapsulatedValue *array)
+{
+    JS_STATIC_ASSERT(sizeof(HeapValue) == sizeof(Value));
+    JS_STATIC_ASSERT(sizeof(HeapSlot) == sizeof(Value));
     return (const Value *)array;
 }
 
-class HeapValueArray
+class HeapSlotArray
 {
-    HeapValue *array;
+    HeapSlot *array;
 
   public:
-    HeapValueArray(HeapValue *array) : array(array) {}
+    HeapSlotArray(HeapSlot *array) : array(array) {}
 
     operator const Value *() const { return Valueify(array); }
-    operator HeapValue *() const { return array; }
+    operator HeapSlot *() const { return array; }
 
-    HeapValueArray operator +(int offset) const { return HeapValueArray(array + offset); }
-    HeapValueArray operator +(uint32_t offset) const { return HeapValueArray(array + offset); }
+    HeapSlotArray operator +(int offset) const { return HeapSlotArray(array + offset); }
+    HeapSlotArray operator +(uint32_t offset) const { return HeapSlotArray(array + offset); }
 };
 
 class HeapId

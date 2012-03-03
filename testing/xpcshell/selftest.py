@@ -7,6 +7,7 @@
 from __future__ import with_statement
 import sys, os, unittest, tempfile, shutil
 from StringIO import StringIO
+from xml.etree.ElementTree import ElementTree
 
 from runxpcshelltests import XPCShellTests
 
@@ -61,7 +62,7 @@ tail =
 
 """ + "\n".join(testlines))
 
-    def assertTestResult(self, expected, mozInfo={}, shuffle=False):
+    def assertTestResult(self, expected, shuffle=False, xunitFilename=None):
         """
         Assert that self.x.runTests with manifest=self.manifest
         returns |expected|.
@@ -69,8 +70,9 @@ tail =
         self.assertEquals(expected,
                           self.x.runTests(xpcshellBin,
                                           manifest=self.manifest,
-                                          mozInfo=mozInfo,
-                                          shuffle=shuffle),
+                                          mozInfo={},
+                                          shuffle=shuffle,
+                                          xunitFilename=xunitFilename),
                           msg="""Tests should have %s, log:
 ========
 %s
@@ -223,6 +225,50 @@ tail =
         self.assertTestResult(True, shuffle=True)
         self.assertEquals(10, self.x.testCount)
         self.assertEquals(10, self.x.passCount)
+
+    def testXunitOutput(self):
+        """
+        Check that Xunit XML files are written.
+        """
+        self.writeFile("test_00.js", SIMPLE_PASSING_TEST)
+        self.writeFile("test_01.js", SIMPLE_FAILING_TEST)
+        self.writeFile("test_02.js", SIMPLE_PASSING_TEST)
+
+        manifest = [
+            "test_00.js",
+            "test_01.js",
+            ("test_02.js", "skip-if = true")
+        ]
+
+        self.writeManifest(manifest)
+
+        filename = os.path.join(self.tempdir, "xunit.xml")
+
+        self.assertTestResult(False, xunitFilename=filename)
+
+        self.assertTrue(os.path.exists(filename))
+        self.assertTrue(os.path.getsize(filename) > 0)
+
+        tree = ElementTree()
+        tree.parse(filename)
+        suite = tree.getroot()
+
+        self.assertTrue(suite is not None)
+        self.assertEqual(suite.get("tests"), "3")
+        self.assertEqual(suite.get("failures"), "1")
+        self.assertEqual(suite.get("skip"), "1")
+
+        testcases = suite.findall("testcase")
+        self.assertEqual(len(testcases), 3)
+
+        for testcase in testcases:
+            attributes = testcase.keys()
+            self.assertTrue("classname" in attributes)
+            self.assertTrue("name" in attributes)
+            self.assertTrue("time" in attributes)
+
+        self.assertTrue(testcases[1].find("failure") is not None)
+        self.assertTrue(testcases[2].find("skipped") is not None)
 
 if __name__ == "__main__":
     unittest.main()

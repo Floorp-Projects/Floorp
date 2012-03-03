@@ -729,17 +729,17 @@ public:
         IDX_TOTAL_COUNT // just a count of the above
     };
 
-    jsid GetStringID(uintN index) const
+    jsid GetStringID(unsigned index) const
     {
         NS_ASSERTION(index < IDX_TOTAL_COUNT, "index out of range");
         return mStrIDs[index];
     }
-    jsval GetStringJSVal(uintN index) const
+    jsval GetStringJSVal(unsigned index) const
     {
         NS_ASSERTION(index < IDX_TOTAL_COUNT, "index out of range");
         return mStrJSVals[index];
     }
-    const char* GetStringName(uintN index) const
+    const char* GetStringName(unsigned index) const
     {
         NS_ASSERTION(index < IDX_TOTAL_COUNT, "index out of range");
         return mStrings[index];
@@ -748,11 +748,11 @@ public:
     static void TraceBlackJS(JSTracer* trc, void* data);
     static void TraceGrayJS(JSTracer* trc, void* data);
     void TraceXPConnectRoots(JSTracer *trc);
-    void AddXPConnectRoots(JSContext* cx,
-                           nsCycleCollectionTraversalCallback& cb);
+    void AddXPConnectRoots(nsCycleCollectionTraversalCallback& cb);
     void UnmarkSkippableJSHolders();
 
-    static JSBool GCCallback(JSContext *cx, JSGCStatus status);
+    static void GCCallback(JSRuntime *rt, JSGCStatus status);
+    static void FinalizeCallback(JSContext *cx, JSFinalizeStatus status);
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
@@ -761,7 +761,7 @@ public:
     nsresult AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
     nsresult RemoveJSHolder(void* aHolder);
 
-    static void SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
+    static void SuspectWrappedNative(XPCWrappedNative *wrapper,
                                      nsCycleCollectionTraversalCallback &cb);
 
     void DebugDump(PRInt16 depth);
@@ -1024,14 +1024,14 @@ public:
     NS_IMETHOD GetPreviousCallContext(nsAXPCNativeCallContext **aResult);
     NS_IMETHOD GetLanguage(PRUint16 *aResult);
 
-    enum {NO_ARGS = (uintN) -1};
+    enum {NO_ARGS = (unsigned) -1};
 
     XPCCallContext(XPCContext::LangType callerLanguage,
                    JSContext* cx    = nsnull,
                    JSObject* obj    = nsnull,
                    JSObject* funobj = nsnull,
                    jsid id          = JSID_VOID,
-                   uintN argc       = NO_ARGS,
+                   unsigned argc       = NO_ARGS,
                    jsval *argv      = nsnull,
                    jsval *rval      = nsnull);
 
@@ -1077,7 +1077,7 @@ public:
     inline JSBool                       HasInterfaceAndMember() const ;
     inline jsid                         GetName() const ;
     inline JSBool                       GetStaticMemberIsLocal() const ;
-    inline uintN                        GetArgc() const ;
+    inline unsigned                        GetArgc() const ;
     inline jsval*                       GetArgv() const ;
     inline jsval*                       GetRetVal() const ;
 
@@ -1096,7 +1096,7 @@ public:
     inline void SetRetVal(jsval val);
 
     void SetName(jsid name);
-    void SetArgsAndResultPtr(uintN argc, jsval *argv, jsval *rval);
+    void SetArgsAndResultPtr(unsigned argc, jsval *argv, jsval *rval);
     void SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
                      JSBool isSetter);
 
@@ -1135,7 +1135,7 @@ private:
               JSObject* funobj,
               WrapperInitOptions wrapperInitOptions,
               jsid name,
-              uintN argc,
+              unsigned argc,
               jsval *argv,
               jsval *rval);
 
@@ -1192,7 +1192,7 @@ private:
     jsid                            mName;
     JSBool                          mStaticMemberIsLocal;
 
-    uintN                           mArgc;
+    unsigned                           mArgc;
     jsval*                          mArgv;
     jsval*                          mRetVal;
 
@@ -1366,10 +1366,10 @@ extern JSBool
 XPC_WN_Equality(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
 
 extern JSBool
-XPC_WN_CallMethod(JSContext *cx, uintN argc, jsval *vp);
+XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp);
 
 extern JSBool
-XPC_WN_GetterSetter(JSContext *cx, uintN argc, jsval *vp);
+XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp);
 
 extern JSBool
 XPC_WN_JSOp_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
@@ -1556,8 +1556,7 @@ public:
     TraceJS(JSTracer* trc, XPCJSRuntime* rt);
 
     static void
-    SuspectAllWrappers(XPCJSRuntime* rt, JSContext* cx,
-                       nsCycleCollectionTraversalCallback &cb);
+    SuspectAllWrappers(XPCJSRuntime* rt, nsCycleCollectionTraversalCallback &cb);
 
     static void
     FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt);
@@ -1610,7 +1609,7 @@ public:
         return mCachedDOMPrototypes;
     }
 
-    static XPCWrappedNativeScope *GetNativeScope(JSContext *cx, JSObject *obj)
+    static XPCWrappedNativeScope *GetNativeScope(JSObject *obj)
     {
         MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
 
@@ -3332,7 +3331,7 @@ public:
 
     static JSBool JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
                                           uint32_t count, const nsXPTType& type,
-                                          uintN* pErr);
+                                          unsigned* pErr);
 
     static nsresult JSValToXPCException(XPCCallContext& ccx,
                                         jsval s,
@@ -3386,7 +3385,7 @@ public:
     static void Throw(nsresult rv, JSContext* cx);
     static void Throw(nsresult rv, XPCCallContext& ccx);
     static void ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx);
-    static void ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx);
+    static void ThrowBadParam(nsresult rv, unsigned paramNum, XPCCallContext& ccx);
     static JSBool SetVerbosity(JSBool state)
         {JSBool old = sVerbose; sVerbose = state; return old;}
 
@@ -3587,7 +3586,7 @@ struct XPCJSContextInfo {
     bool savedFrameChain;
 
     // Greater than 0 if a request was suspended.
-    jsrefcount suspendDepth;
+    unsigned suspendDepth;
 };
 
 class XPCJSContextStack
@@ -4395,7 +4394,7 @@ inline JSBool
 xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id);
 
 inline jsid
-GetRTIdByIndex(JSContext *cx, uintN index);
+GetRTIdByIndex(JSContext *cx, unsigned index);
 
 // Wrapper for JS_NewObject to mark the new object as system when parent is
 // also a system object. If uniqueType is specified then a new type object will

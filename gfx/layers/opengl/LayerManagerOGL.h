@@ -106,11 +106,11 @@ public:
    *
    * \return True is initialization was succesful, false when it was not.
    */
-  bool Initialize() {
-    return Initialize(CreateContext());
+  bool Initialize(bool force = false) {
+    return Initialize(CreateContext(), force);
   }
 
-  bool Initialize(nsRefPtr<GLContext> aContext);
+  bool Initialize(nsRefPtr<GLContext> aContext, bool force = false);
 
   /**
    * Sets the clipping region for this layer manager. This is important on 
@@ -236,9 +236,13 @@ public:
   }
 
   ColorTextureLayerProgram *GetFBOLayerProgram() {
+    return static_cast<ColorTextureLayerProgram*>(mPrograms[GetFBOLayerProgramType()]);
+  }
+
+  gl::ShaderProgramType GetFBOLayerProgramType() {
     if (mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB)
-      return static_cast<ColorTextureLayerProgram*>(mPrograms[gl::RGBARectLayerProgramType]);
-    return static_cast<ColorTextureLayerProgram*>(mPrograms[gl::RGBALayerProgramType]);
+      return gl::RGBARectLayerProgramType;
+    return gl::RGBALayerProgramType;
   }
 
   GLContext *gl() const { return mGLContext; }
@@ -451,7 +455,7 @@ private:
   /**
    * Copies the content of our backbuffer to the set transaction target.
    */
-  void CopyToTarget();
+  void CopyToTarget(gfxContext *aTarget);
 
   /**
    * Updates all layer programs with a new projection matrix.

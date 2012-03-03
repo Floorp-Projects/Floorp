@@ -56,7 +56,6 @@
 #include "jsscriptinlines.h"
 #include "InlineFrameAssembler.h"
 #include "jscompartment.h"
-#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
 
 #include "builtin/RegExp.h"
@@ -536,6 +535,14 @@ mjit::Compiler::performCompilation()
         if (inlining())
             CHECK_STATUS(scanInlineCalls(CrossScriptSSA::OUTER_FRAME, 0));
         CHECK_STATUS(pushActiveFrame(outerScript, 0));
+
+        if (outerScript->pcCounters || Probes::wantNativeAddressInfo(cx)) {
+            size_t length = ssa.frameLength(ssa.numFrames() - 1);
+            pcLengths = (PCLengthEntry *) OffTheBooks::calloc_(sizeof(pcLengths[0]) * length);
+            if (!pcLengths)
+                return Compile_Error;
+        }
+
         if (chunkIndex == 0)
             CHECK_STATUS(generatePrologue());
         CHECK_STATUS(generateMethod());
@@ -1155,8 +1162,7 @@ mjit::Compiler::generatePrologue()
              * correct if the UNDERFLOW and OVERFLOW flags are not set.
              */
             Jump hasArgs = masm.branchTest32(Assembler::NonZero, FrameFlagsAddress(),
-                                             Imm32(StackFrame::OVERRIDE_ARGS |
-                                                   StackFrame::UNDERFLOW_ARGS |
+                                             Imm32(StackFrame::UNDERFLOW_ARGS |
                                                    StackFrame::OVERFLOW_ARGS |
                                                    StackFrame::HAS_ARGS_OBJ));
             masm.storePtr(ImmPtr((void *)(size_t) script->function()->nargs),
@@ -1191,13 +1197,6 @@ mjit::Compiler::generatePrologue()
     }
 
     recompileCheckHelper();
-
-    if (outerScript->pcCounters || Probes::wantNativeAddressInfo(cx)) {
-        size_t length = ssa.frameLength(ssa.numFrames() - 1);
-        pcLengths = (PCLengthEntry *) OffTheBooks::calloc_(sizeof(pcLengths[0]) * length);
-        if (!pcLengths)
-            return Compile_Error;
-    }
 
     return Compile_Okay;
 }
@@ -3109,7 +3108,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETFCSLOT)
           BEGIN_CASE(JSOP_CALLFCSLOT)
           {
-            uintN index = GET_UINT16(PC);
+            unsigned index = GET_UINT16(PC);
 
             // Load the callee's payload into a register.
             frame.pushCallee();
@@ -6063,7 +6062,7 @@ mjit::Compiler::jsop_this()
 }
 
 bool
-mjit::Compiler::iter(uintN flags)
+mjit::Compiler::iter(unsigned flags)
 {
     FrameEntry *fe = frame.peek(-1);
 
@@ -6395,7 +6394,7 @@ mjit::Compiler::jsop_getgname(uint32_t index)
          */
         const js::Shape *shape = globalObj->nativeLookup(cx, ATOM_TO_JSID(name));
         if (shape && shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
-            HeapValue *value = &globalObj->getSlotRef(shape->slot());
+            HeapSlot *value = &globalObj->getSlotRef(shape->slot());
             if (!value->isUndefined() &&
                 !propertyTypes->isOwnProperty(cx, globalObj->getType(cx), true)) {
                 watchGlobalReallocation();
@@ -6521,7 +6520,7 @@ mjit::Compiler::jsop_setgname(PropertyName *name, bool popGuaranteed)
             shape->writable() && shape->hasSlot() &&
             !types->isOwnProperty(cx, globalObj->getType(cx), true)) {
             watchGlobalReallocation();
-            HeapValue *value = &globalObj->getSlotRef(shape->slot());
+            HeapSlot *value = &globalObj->getSlotRef(shape->slot());
             RegisterID reg = frame.allocReg();
 #ifdef JSGC_INCREMENTAL_MJ
             /* Write barrier. */

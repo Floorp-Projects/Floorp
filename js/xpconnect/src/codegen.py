@@ -478,7 +478,7 @@ def writeStub(f, customMethodCalls, member, stubName, writeThisUnwrapping, write
             signature += "%s(JSContext *cx, JSObject *obj, jsid id,%s jsval *vp)\n"
     else:
         # JSFastNative.
-        signature += "%s(JSContext *cx, uintN argc,%s jsval *vp)\n"
+        signature += "%s(JSContext *cx, unsigned argc,%s jsval *vp)\n"
 
     customMethodCall = customMethodCalls.get(stubName, None)
 

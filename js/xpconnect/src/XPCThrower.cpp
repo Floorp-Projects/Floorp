@@ -149,7 +149,7 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
 
 // static
 void
-XPCThrower::ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
+XPCThrower::ThrowBadParam(nsresult rv, unsigned paramNum, XPCCallContext& ccx)
 {
     char* sz;
     const char* format;

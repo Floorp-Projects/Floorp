@@ -634,10 +634,15 @@
                     }
                     for each (let event in this.videoEvents)
                         this.video.removeEventListener(event, this, false);
+
+                    for each(let element in this.controlListeners)
+                        element.item.removeEventListener(element.event, element.func, false);
+                    
+                    delete this.controlListeners;
+
                     this.video.removeEventListener("media-showStatistics", this._handleCustomEventsBound, false);
                     delete this._handleCustomEventsBound;
-                    this.video.ownerDocument.removeEventListener("mozfullscreenchange", this._setFullscreenButtonStateBound, false);
-                    delete this._setFullscreenButtonStateBound;
+
                     this.log("--- videocontrols terminated ---");
                 },
 
@@ -931,6 +936,7 @@
                 togglePause : function () {
                     if (this.video.paused || this.video.ended) {
                         this._triggeredByControls = true;
+                        this.hideClickToPlay();
                         this.video.play();
                     } else {
                         this.video.pause();
@@ -975,7 +981,19 @@
                         this.fullscreenButton.removeAttribute("fullscreened");
                 },
 
-                handleClickToPlay : function () {
+                clickToPlayClickHandler : function(e) {
+                    if (e.button != 0 || this.hasError())
+                        return;
+                    // Read defaultPrevented asynchronously, since Web content
+                    // may want to consume the "click" event but will only
+                    // receive it after us.
+                    let self = this;
+                    setTimeout(function clickToPlayCallback() {
+                        if (!e.defaultPrevented)
+                            self.togglePause();
+                    }, 0);
+                },
+                hideClickToPlay : function () {
                     let videoHeight = this.video.clientHeight;
                     let videoWidth = this.video.clientWidth;
 
@@ -990,7 +1008,6 @@
                         this.clickToPlay.removeAttribute("immediate");
                     }
                     this.clickToPlay.setAttribute("fadeout", "true");
-                    this.togglePause();
                 },
 
                 setPlayButtonState : function(aPaused) {
@@ -1330,47 +1347,36 @@
                         this.video.addEventListener(event, this, (event == "error") ? true : false);
 
                     var self = this;
-                    this.muteButton.addEventListener("command", function() { self.toggleMute(); }, false);
-                    this.playButton.addEventListener("command", function() { self.togglePause(); }, false);
-                    this.fullscreenButton.addEventListener("command", function() { self.toggleFullscreen(); }, false );
-                    this.clickToPlay.addEventListener("click", function clickToPlayClickHandler(e) {
-                      if (e.button != 0 || self.hasError())
-                        return;
-                      // Read defaultPrevented asynchronously, since Web content
-                      // may want to consume the "click" event but will only
-                      // receive it after us.
-                      setTimeout(function clickToPlayCallback() {
-                        if (!e.defaultPrevented)
-                          self.handleClickToPlay();
-                      }, 0);
-                    }, false);
 
-                    this.controlsSpacer.addEventListener("click", function spacerClickHandler(e) {
-                      if (e.button != 0 || self.hasError())
-                        return;
-                      // Read defaultPrevented asynchronously, since Web content
-                      // may want to consume the "click" event but will only
-                      // receive it after us (bug 693014).
-                      setTimeout(function togglePauseCallback() {
-                        if (!e.defaultPrevented)
-                          self.togglePause();
-                      }, 0);
-                    }, false);
+                    this.controlListeners = [];
 
-                    if (!this.isAudioOnly) {
-                      this.muteButton.addEventListener("mouseover",  function(e) { self.onVolumeMouseInOut(e); }, false);
-                      this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);
-                      this.volumeStack.addEventListener("mouseover", function(e) { self.onVolumeMouseInOut(e); }, false);
-                      this.volumeStack.addEventListener("mouseout",  function(e) { self.onVolumeMouseInOut(e); }, false);
+                    // Helper function to add an event listener to the given element
+                    function addListener(elem, eventName, func) {
+                      let boundFunc = func.bind(self);
+                      self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
+                      elem.addEventListener(eventName, boundFunc, false);
                     }
 
-                    this.videocontrols.addEventListener("transitionend", function(e) { self.onTransitionEnd(e); }, false);
-                    this._setFullscreenButtonStateBound = this.setFullscreenButtonState.bind(this);
-                    this.video.ownerDocument.addEventListener("mozfullscreenchange", this._setFullscreenButtonStateBound, false);
+                    addListener(this.muteButton, "command", this.toggleMute);
+                    addListener(this.playButton, "command", this.togglePause);
+                    addListener(this.fullscreenButton, "command", this.toggleFullscreen);
+                    addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
+                    addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
+
+                    if (!this.isAudioOnly) {
+                      addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
+                      addListener(this.muteButton, "mouseout", this.onVolumeMouseInOut);
+                      addListener(this.volumeStack, "mouseover", this.onVolumeMouseInOut);
+                      addListener(this.volumeStack, "mouseout", this.onVolumeMouseInOut);
+                    }
+
+                    addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
+                    addListener(this.video.ownerDocument, "mozfullscreenchange", this.setFullscreenButtonState);
 
                     // Make the <video> element keyboard accessible.
                     this.video.setAttribute("tabindex", 0);
-                    this.video.addEventListener("keypress", function (e) { self.keyHandler(e) }, false);
+
+                    addListener(this.video, "keypress", this.keyHandler);
 
                     this.log("--- videocontrols initialized ---");
                 }
@@ -1500,6 +1506,8 @@
             },
 
             hideControls : function() {
+              if (!this.Utils.dynamicControls)
+                  return;
               this.Utils.startFadeOut(this.Utils.controlBar);
               if (this.firstShow)
                 this.videocontrols.addEventListener("transitionend", this, false);

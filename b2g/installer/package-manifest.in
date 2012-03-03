@@ -155,6 +155,7 @@
 @BINPATH@/components/dom_bluetooth.xpt
 #endif
 @BINPATH@/components/dom_canvas.xpt
+@BINPATH@/components/dom_contacts.xpt
 @BINPATH@/components/dom_core.xpt
 @BINPATH@/components/dom_css.xpt
 @BINPATH@/components/dom_events.xpt
@@ -192,6 +193,7 @@
 @BINPATH@/components/find.xpt
 @BINPATH@/components/fuel.xpt
 @BINPATH@/components/gfx.xpt
+@BINPATH@/components/html5.xpt
 @BINPATH@/components/htmlparser.xpt
 @BINPATH@/components/imglib2.xpt
 @BINPATH@/components/imgicon.xpt
@@ -293,6 +295,8 @@
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
 @BINPATH@/components/ConsoleAPI.js
+@BINPATH@/components/ContactManager.js
+@BINPATH@/components/ContactManager.manifest
 @BINPATH@/components/FeedProcessor.manifest
 @BINPATH@/components/FeedProcessor.js
 @BINPATH@/components/BrowserFeeds.manifest

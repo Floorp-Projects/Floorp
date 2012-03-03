@@ -1306,6 +1306,10 @@ nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt3
     mTarget = target;
   } else {
     mValid = false;
+    // Create a dummy target in the hopes that it will help us deal with users
+    // calling into us after having changed the size where the size resulted
+    // in an inability to create a correct DrawTarget.
+    mTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(IntSize(1, 1), FORMAT_B8G8R8A8);
   }
 
   mResetLayer = true;

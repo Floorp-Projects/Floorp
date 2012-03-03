@@ -53,9 +53,10 @@ namespace mozilla {
 class NS_GFX ScopedGfxFeatureReporter
 {
 public:
-  ScopedGfxFeatureReporter(const char *aFeature) : mFeature(aFeature), mStatusChar('-')
+  ScopedGfxFeatureReporter(const char *aFeature, bool force = false)
+    : mFeature(aFeature), mStatusChar('-')
   {
-    WriteAppNote('?');
+    WriteAppNote(force ? '!' : '?');
   }
   ~ScopedGfxFeatureReporter() {
     WriteAppNote(mStatusChar);

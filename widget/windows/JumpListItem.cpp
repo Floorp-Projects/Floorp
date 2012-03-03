@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
-
 #include "JumpListItem.h"
 
 #include <shellapi.h>
@@ -841,4 +839,3 @@ nsresult JumpListItem::HashURI(nsCOMPtr<nsICryptoHash> &aCryptoHash,
 } // namespace widget
 } // namespace mozilla
 
-#endif // MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7

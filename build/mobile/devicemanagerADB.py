@@ -25,11 +25,17 @@ class DeviceManagerADB(DeviceManager):
         packageName = 'org.mozilla.fennec_'
     self.Init(packageName)
 
+  def __del__(self):
+    if self.host:
+      self.disconnectRemoteADB()
+
   def Init(self, packageName):
     # Initialization code that may fail: Catch exceptions here to allow
     # successful initialization even if, for example, adb is not installed.
     try:
       self.verifyADB()
+      if self.host:
+        self.connectRemoteADB()
       self.verifyRunAs(packageName)
     except:
       self.useRunAs = False
@@ -78,7 +84,7 @@ class DeviceManagerADB(DeviceManager):
     # to get it
     # FIXME: this function buffers all output of the command into memory,
     # always. :(
-    cmdline = subprocess.list2cmdline(cmd) + "; echo $?"
+    cmdline = " ".join(cmd) + "; echo $?"
 
     # prepend cwd and env to command if necessary
     if cwd:
@@ -103,6 +109,12 @@ class DeviceManagerADB(DeviceManager):
         return return_code
 
     return None
+
+  def connectRemoteADB(self):
+    self.checkCmd(["connect", self.host + ":" + str(self.port)])
+
+  def disconnectRemoteADB(self):
+    self.checkCmd(["disconnect", self.host + ":" + str(self.port)])
 
   # external function
   # returns:
@@ -437,8 +449,8 @@ class DeviceManagerADB(DeviceManager):
   def getDirectory(self, remoteDir, localDir, checkDir=True):
     ret = []
     p = self.runCmd(["pull", remoteDir, localDir])
-    p.stderr.readline()
-    line = p.stderr.readline()
+    p.stdout.readline()
+    line = p.stdout.readline()
     while (line):
       els = line.split()
       f = els[len(els) - 1]
@@ -451,7 +463,7 @@ class DeviceManagerADB(DeviceManager):
       if (i > 0):
         f = f[0:i]
       ret.append(f)
-      line =  p.stderr.readline()
+      line =  p.stdout.readline()
     #the last line is a summary
     if (len(ret) > 0):
       ret.pop()

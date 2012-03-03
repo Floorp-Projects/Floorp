@@ -539,41 +539,42 @@ nsHTMLStyleSheet::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-static
-PLDHashOperator
-GetHashEntryAttributesSize(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
-                           PRUint32 number, void* aArg)
+static size_t
+SizeOfAttributesEntryExcludingThis(PLDHashEntryHdr* aEntry,
+                                   nsMallocSizeOfFun aMallocSizeOf,
+                                   void* aArg)
 {
   NS_PRECONDITION(aEntry, "The entry should not be null!");
-  NS_PRECONDITION(aArg, "The passed argument should not be null!");
 
   MappedAttrTableEntry* entry = static_cast<MappedAttrTableEntry*>(aEntry);
-  PRInt64 size = *static_cast<PRInt64*>(aArg);
-
   NS_ASSERTION(entry->mAttributes, "entry->mAttributes should not be null!");
-  size += entry->mAttributes->SizeOf();
-
-  return PL_DHASH_NEXT;
+  return entry->mAttributes->SizeOfIncludingThis(aMallocSizeOf);
 }
 
-PRInt64
-nsHTMLStyleSheet::DOMSizeOf() const
+size_t
+nsHTMLStyleSheet::DOMSizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  PRInt64 size = sizeof(*this);
-
-  size += mLinkRule ? sizeof(*mLinkRule.get()) : 0;
-  size += mVisitedRule ? sizeof(*mVisitedRule.get()) : 0;
-  size += mActiveRule ? sizeof(*mActiveRule.get()) : 0;
-  size += mTableQuirkColorRule ? sizeof(*mTableQuirkColorRule.get()) : 0;
-  size += mTableTHRule ? sizeof(*mTableTHRule.get()) : 0;
+  size_t n = aMallocSizeOf(this);
 
   if (mMappedAttrTable.ops) {
-    size += PL_DHASH_TABLE_SIZE(&mMappedAttrTable) * sizeof(MappedAttrTableEntry);
-    PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mMappedAttrTable),
-                           GetHashEntryAttributesSize, &size);
+    n += PL_DHashTableSizeOfExcludingThis(&mMappedAttrTable,
+                                          SizeOfAttributesEntryExcludingThis,
+                                          aMallocSizeOf);
   }
 
-  return size;
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mURL
+  // - mLinkRule
+  // - mVisitedRule
+  // - mActiveRule
+  // - mTableQuirkColorRule
+  // - mTableTHRule
+  //
+  // The following members are not measured:
+  // - mDocument, because it's non-owning
+
+  return n;
 }
 
 // XXX For convenience and backwards compatibility

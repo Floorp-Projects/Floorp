@@ -127,7 +127,6 @@ Tilt.prototype = {
       chromeWindow: this.chromeWindow,
       contentWindow: this.chromeWindow.gBrowser.selectedBrowser.contentWindow,
       parentNode: this.chromeWindow.gBrowser.selectedBrowser.parentNode,
-      requestAnimationFrame: this.chromeWindow.mozRequestAnimationFrame,
       notifications: this.NOTIFICATIONS
     });
 
@@ -141,7 +140,7 @@ Tilt.prototype = {
   },
 
   /**
-   * Destroys a specific instance of the visualizer.
+   * Starts destroying a specific instance of the visualizer.
    *
    * @param {String} aId
    *                 the identifier of the instance in the visualizers array
@@ -150,43 +149,49 @@ Tilt.prototype = {
    */
   destroy: function T_destroy(aId, aAnimateFlag)
   {
-    // if the visualizer is already destroyed, don't do anything
-    if (!this.visualizers[aId]) {
+    // if the visualizer is destroyed or destroying, don't do anything
+    if (!this.visualizers[aId] || this._isDestroying) {
+      return;
+    }
+    this._isDestroying = true;
+
+    let controller = this.visualizers[aId].controller;
+    let presenter = this.visualizers[aId].presenter;
+
+    let content = presenter.contentWindow;
+    let pageXOffset = content.pageXOffset * presenter.transforms.zoom;
+    let pageYOffset = content.pageYOffset * presenter.transforms.zoom;
+    TiltUtils.setDocumentZoom(this.chromeWindow, presenter.transforms.zoom);
+
+    // if we're not doing any outro animation, just finish destruction directly
+    if (!aAnimateFlag) {
+      this._finish(aId);
       return;
     }
 
-    if (!this.isDestroying) {
-      this.isDestroying = true;
+    // otherwise, trigger the outro animation and notify necessary observers
+    Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYING, null);
 
-      let finalize = function T_finalize(aId) {
-        this.visualizers[aId].removeOverlay();
-        this.visualizers[aId].cleanup();
-        this.visualizers[aId] = null;
+    controller.removeEventListeners();
+    controller.arcball.reset([-pageXOffset, -pageYOffset]);
+    presenter.executeDestruction(this._finish.bind(this, aId));
+  },
 
-        this.isDestroying = false;
-        this.chromeWindow.gBrowser.selectedBrowser.focus();
-        Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYED, null);
-      };
+  /**
+   * Finishes detroying a specific instance of the visualizer.
+   *
+   * @param {String} aId
+   *                 the identifier of the instance in the visualizers array
+   */
+  _finish: function T__finish(aId)
+  {
+    this.visualizers[aId].removeOverlay();
+    this.visualizers[aId].cleanup();
+    this.visualizers[aId] = null;
 
-      if (!aAnimateFlag) {
-        finalize.call(this, aId);
-        return;
-      }
-
-      let controller = this.visualizers[aId].controller;
-      let presenter = this.visualizers[aId].presenter;
-
-      let content = presenter.contentWindow;
-      let pageXOffset = content.pageXOffset * presenter.transforms.zoom;
-      let pageYOffset = content.pageYOffset * presenter.transforms.zoom;
-
-      Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYING, null);
-      TiltUtils.setDocumentZoom(this.chromeWindow, presenter.transforms.zoom);
-
-      controller.removeEventListeners();
-      controller.arcball.reset([-pageXOffset, -pageYOffset]);
-      presenter.executeDestruction(finalize.bind(this, aId));
-    }
+    this._isDestroying = false;
+    this.chromeWindow.gBrowser.selectedBrowser.focus();
+    Services.obs.notifyObservers(null, TILT_NOTIFICATIONS.DESTROYED, null);
   },
 
   /**
@@ -286,16 +291,18 @@ Tilt.prototype = {
 
     // FIXME: this shouldn't be done here, see bug #705131
     let onOpened = function() {
-      if (this.currentInstance) {
-        this.chromeWindow.InspectorUI.stopInspecting();
-        this.inspectButton.disabled = true;
-        this.highlighterContainer.style.display = "none";
+      if (this.inspector && this.highlighter && this.currentInstance) {
+        this.inspector.stopInspecting();
+        this.inspector.inspectToolbutton.disabled = true;
+        this.highlighter.hide();
       }
     }.bind(this);
 
     let onClosed = function() {
-      this.inspectButton.disabled = false;
-      this.highlighterContainer.style.display = "";
+      if (this.inspector && this.highlighter) {
+        this.inspector.inspectToolbutton.disabled = false;
+        this.highlighter.show();
+      }
     }.bind(this);
 
     Services.obs.addObserver(onOpened,
@@ -338,31 +345,26 @@ Tilt.prototype = {
   },
 
   /**
+   * Gets the current InspectorUI instance.
+   */
+  get inspector()
+  {
+    return this.chromeWindow.InspectorUI;
+  },
+
+  /**
+   * Gets the current Highlighter instance from the InspectorUI.
+   */
+  get highlighter()
+  {
+    return this.inspector.highlighter;
+  },
+
+  /**
    * Gets the Tilt button in the Inspector toolbar.
    */
   get tiltButton()
   {
-    return this.chromeWindow.document.getElementById(
-      "inspector-3D-button");
-  },
-
-  /**
-   * Gets the Inspect button in the Inspector toolbar.
-   * FIXME: this shouldn't be needed here, remove after bug #705131
-   */
-  get inspectButton()
-  {
-    return this.chromeWindow.document.getElementById(
-      "inspector-inspect-toolbutton");
-  },
-
-  /**
-   * Gets the Highlighter contaniner stack.
-   * FIXME: this shouldn't be needed here, remove after bug #705131
-   */
-  get highlighterContainer()
-  {
-    return this.chromeWindow.document.getElementById(
-      "highlighter-container");
+    return this.chromeWindow.document.getElementById("inspector-3D-button");
   }
 };

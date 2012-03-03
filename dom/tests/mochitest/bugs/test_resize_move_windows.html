@@ -262,10 +262,12 @@ function checkChangeIsEnabled(aWindow, aNext)
   });
 }
 
+SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_move_resize", false]]}, function() {
 SimpleTest.waitForFocus(function() {
   if (screen.width <= 200 || screen.height <= 200) {
-    todo(false, "The screen is too small to run this test.");
+    todo(false, "The screen needs to be bigger than 200px*200px to run this test.");
     SimpleTest.finish();
+    return;
   }
 
   backValues();
@@ -318,6 +320,7 @@ SimpleTest.waitForFocus(function() {
     }, w, false);
   });
 });
+}); // SpecialPowers.pushPrefEnv()
 
 </script>
 </pre>

@@ -39,8 +39,8 @@
 #include "nsGkAtoms.h"
 #include "nsUnicharUtils.h"
 #include "nsXMLProcessingInstruction.h"
-#include "nsParserUtils.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsContentUtils.h"
 
 nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
@@ -129,7 +129,7 @@ nsXMLProcessingInstruction::GetAttrValue(nsIAtom *aName, nsAString& aValue)
   nsAutoString data;
 
   GetData(data);
-  return nsParserUtils::GetQuotedAttributeValue(data, aName, aValue);
+  return nsContentUtils::GetPseudoAttributeValue(data, aName, aValue);
 }
 
 bool

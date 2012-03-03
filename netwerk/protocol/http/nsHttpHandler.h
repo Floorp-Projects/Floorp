@@ -112,6 +112,8 @@ public:
     PRUint32       MaxSocketCount();
 
     bool           IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
+    bool           IsTelemetryEnabled() { return mTelemetryEnabled; }
+    bool           AllowExperiments() { return mTelemetryEnabled && mAllowExperiments; }
 
     bool           IsSpdyEnabled() { return mEnableSpdy; }
     bool           CoalesceSpdy() { return mCoalesceSpdy; }
@@ -190,6 +192,9 @@ public:
     nsresult GetIOService(nsIIOService** service);
     nsICookieService * GetCookieService(); // not addrefed
     nsIStrictTransportSecurityService * GetSTSService();
+
+    // callable from socket thread only
+    PRUint32 Get32BitsOfPseudoRandom();
 
     // Called by the channel before writing a request
     void OnModifyRequest(nsIHttpChannel *chan)
@@ -343,6 +348,12 @@ private:
     // For broadcasting the preference to not be tracked
     bool           mDoNotTrackEnabled;
     
+    // Whether telemetry is reported or not
+    bool           mTelemetryEnabled;
+
+    // The value of network.allow-experiments
+    bool           mAllowExperiments;
+
     // Try to use SPDY features instead of HTTP/1.1 over SSL
     bool           mEnableSpdy;
     bool           mCoalesceSpdy;

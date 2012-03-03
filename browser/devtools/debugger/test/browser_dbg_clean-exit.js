@@ -10,9 +10,7 @@ var gTab = null;
 var gDebuggee = null;
 var gDebugger = null;
 
-const DEBUGGER_TAB_URL = "http://example.com/browser/browser/devtools/" +
-                         "debugger/test/" +
-                         "browser_dbg_debuggerstatement.html";
+const DEBUGGER_TAB_URL = EXAMPLE_URL + "browser_dbg_debuggerstatement.html";
 
 function test() {
   debug_tab_pane(DEBUGGER_TAB_URL, function(aTab, aDebuggee, aPane) {

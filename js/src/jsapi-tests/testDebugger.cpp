@@ -110,6 +110,7 @@ bool called = false;
 static JSTrapStatus
 ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
 {
+    JS_ASSERT(!closure);
     called = true;
 
     JSObject *global = JS_GetGlobalForScopeChain(cx);
@@ -126,9 +127,7 @@ BEGIN_TEST(testDebugger_throwHook)
     uint32_t newopts = JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
     uint32_t oldopts = JS_SetOptions(cx, newopts);
 
-    JSDebugHooks hooks = { 0 };
-    hooks.throwHook = ThrowHook;
-    JSDebugHooks *old = JS_SetContextDebugHooks(cx, &hooks);
+    CHECK(JS_SetThrowHook(rt, ThrowHook, NULL));
     EXEC("function foo() { throw 3 };\n"
          "for (var i = 0; i < 10; ++i) { \n"
          "  var x = <tag></tag>;\n"
@@ -137,8 +136,7 @@ BEGIN_TEST(testDebugger_throwHook)
          "  } catch(e) {}\n"
          "}\n");
     CHECK(called);
-
-    JS_SetContextDebugHooks(cx, old);
+    CHECK(JS_SetThrowHook(rt, NULL, NULL));
     JS_SetOptions(cx, oldopts);
     return true;
 }
@@ -273,7 +271,7 @@ BEGIN_TEST(testDebugger_singleStepThrow)
     }
 
     static JSBool
-    setStepMode(JSContext *cx, uintN argc, jsval *vp)
+    setStepMode(JSContext *cx, unsigned argc, jsval *vp)
     {
         JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
         JS_ASSERT(fp);

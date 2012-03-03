@@ -64,7 +64,7 @@ GetNativePropertiesObject(JSContext *cx, JSObject *wrapper);
 template <typename Base>
 class XrayWrapper : public Base {
   public:
-    XrayWrapper(uintN flags);
+    XrayWrapper(unsigned flags);
     virtual ~XrayWrapper();
 
     /* Fundamental proxy traps. */
@@ -88,11 +88,11 @@ class XrayWrapper : public Base {
     virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp);
     virtual bool keys(JSContext *cx, JSObject *wrapper, js::AutoIdVector &props);
-    virtual bool iterate(JSContext *cx, JSObject *wrapper, uintN flags, js::Value *vp);
+    virtual bool iterate(JSContext *cx, JSObject *wrapper, unsigned flags, js::Value *vp);
 
-    virtual bool call(JSContext *cx, JSObject *wrapper, uintN argc, js::Value *vp);
+    virtual bool call(JSContext *cx, JSObject *wrapper, unsigned argc, js::Value *vp);
     virtual bool construct(JSContext *cx, JSObject *wrapper,
-                           uintN argc, js::Value *argv, js::Value *rval);
+                           unsigned argc, js::Value *argv, js::Value *rval);
 
     static JSObject *createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent);
 
@@ -105,7 +105,7 @@ class XrayWrapper : public Base {
 
 class XrayProxy : public XrayWrapper<js::CrossCompartmentWrapper> {
   public:
-    XrayProxy(uintN flags);
+    XrayProxy(unsigned flags);
     virtual ~XrayProxy();
 
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id,

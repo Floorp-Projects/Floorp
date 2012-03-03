@@ -178,21 +178,6 @@ public class GeckoAppShell
     public static native void freeDirectBuffer(ByteBuffer buf);
     public static native void bindWidgetTexture();
 
-    // A looper thread, accessed by GeckoAppShell.getHandler
-    private static class LooperThread extends Thread {
-        public SynchronousQueue<Handler> mHandlerQueue =
-            new SynchronousQueue<Handler>();
-        
-        public void run() {
-            setName("GeckoLooper Thread");
-            Looper.prepare();
-            try {
-                mHandlerQueue.put(new Handler());
-            } catch (InterruptedException ie) {}
-            Looper.loop();
-        }
-    }
-
     private static class GeckoMediaScannerClient implements MediaScannerConnectionClient {
         private String mFile = "";
         private String mMimeType = "";
@@ -223,19 +208,8 @@ public class GeckoAppShell
         return GeckoApp.mAppContext.mMainHandler;
     }
 
-    private static Handler sHandler = null;
-
-    // Get a Handler for a looper thread, or create one if it doesn't exist yet
     public static Handler getHandler() {
-        if (sHandler == null) {
-            LooperThread lt = new LooperThread();
-            lt.start();
-            try {
-                sHandler = lt.mHandlerQueue.take();
-            } catch (InterruptedException ie) {}
-
-        }
-        return sHandler;
+        return GeckoBackgroundThread.getHandler();
     }
 
     public static File getCacheDir() {
@@ -481,10 +455,13 @@ public class GeckoAppShell
                                         final int width, final int height) {
         getHandler().post(new Runnable() {
             public void run() {
+                final Tab tab = Tabs.getInstance().getTab(tabId);
+                if (tab == null)
+                    return;
+
                 Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
                 b.copyPixelsFromBuffer(data);
                 freeDirectBuffer(data);
-                final Tab tab = Tabs.getInstance().getTab(tabId);
                 GeckoApp.mAppContext.processThumbnail(tab, b, null);
             }
         });
@@ -603,6 +580,12 @@ public class GeckoAppShell
 
     public static void returnIMEQueryResult(String result, int selectionStart, int selectionLength) {
         mInputConnection.returnIMEQueryResult(result, selectionStart, selectionLength);
+    }
+
+    public static void resetIMESelection() {
+        if (mInputConnection != null) {
+            mInputConnection.resetSelection();
+        }
     }
 
     static void onXreExit() {
@@ -1652,14 +1635,25 @@ public class GeckoAppShell
             if (mEventListeners == null)
                 return "";
 
-            if (!mEventListeners.containsKey(type))
-                return "";
-            
             ArrayList<GeckoEventListener> listeners = mEventListeners.get(type);
-            Iterator<GeckoEventListener> items = listeners.iterator();
-            while (items.hasNext()) {
-                items.next().handleMessage(type, geckoObject);
+            if (listeners == null)
+                return "";
+
+            String response = null;
+
+            for (GeckoEventListener listener : listeners) {
+                listener.handleMessage(type, geckoObject);
+                if (listener instanceof GeckoEventResponder) {
+                    String newResponse = ((GeckoEventResponder)listener).getResponse();
+                    if (response != null && newResponse != null) {
+                        Log.e(LOGTAG, "Received two responses for message of type " + type);
+                    }
+                    response = newResponse;
+                }
             }
+
+            if (response != null)
+                return response;
 
         } catch (Exception e) {
             Log.i(LOGTAG, "handleGeckoMessage throws " + e);

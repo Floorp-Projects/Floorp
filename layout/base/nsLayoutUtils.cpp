@@ -92,7 +92,6 @@
 #endif
 #include "nsGenericHTMLElement.h"
 #include "imgIRequest.h"
-#include "imgIContainer.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
@@ -1381,8 +1380,8 @@ nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
 #ifdef MOZ_DUMP_PAINTING
 #include <stdio.h>
 
-static bool gDumpPaintList = getenv("MOZ_DUMP_PAINT_LIST") != 0;
 static bool gDumpEventList = false;
+int gPaintCount = 0;
 #endif
 
 nsresult
@@ -1774,10 +1773,22 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gDumpPaintList) {
-    fprintf(stdout, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
+  if (gfxUtils::sDumpPainting) {
+    if (gfxUtils::sDumpPaintingToFile) {
+      nsCString string("dump-");
+      string.AppendInt(gPaintCount);
+      string.Append(".html");
+      gfxUtils::sDumpPaintFile = fopen(string.BeginReading(), "w");
+    } else {
+      gfxUtils::sDumpPaintFile = stdout;
+    }
+    fprintf(gfxUtils::sDumpPaintFile, "<html><head><script>var array = {}; function ViewImage(index) { window.location = array[index]; }</script></head><body>");
+    fprintf(gfxUtils::sDumpPaintFile, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
             dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
-    nsFrame::PrintDisplayList(&builder, list);
+    nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile);
+    if (gfxUtils::sDumpPaintingToFile) {
+      fprintf(gfxUtils::sDumpPaintFile, "<script>");
+    }
   }
 #endif
 
@@ -1826,12 +1837,19 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gDumpPaintList) {
-    fprintf(stdout, "Painting --- after optimization:\n");
-    nsFrame::PrintDisplayList(&builder, list);
+  if (gfxUtils::sDumpPainting) {
+    fprintf(gfxUtils::sDumpPaintFile, "</script>Painting --- after optimization:\n");
+    nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile);
 
-    fprintf(stdout, "Painting --- retained layer tree:\n");
-    builder.LayerBuilder()->DumpRetainedLayerTree();
+    fprintf(gfxUtils::sDumpPaintFile, "Painting --- retained layer tree:\n");
+    builder.LayerBuilder()->DumpRetainedLayerTree(gfxUtils::sDumpPaintFile);
+    fprintf(gfxUtils::sDumpPaintFile, "</body></html>");
+    
+    if (gfxUtils::sDumpPaintingToFile) {
+      fclose(gfxUtils::sDumpPaintFile);
+    }
+    gfxUtils::sDumpPaintFile = NULL;
+    gPaintCount++;
   }
 #endif
 

@@ -52,7 +52,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsParserUtils.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsAsyncDOMEvent.h"
@@ -84,6 +83,9 @@ public:
 
   // nsIDOMHTMLLinkElement
   NS_DECL_NSIDOMHTMLLINKELEMENT
+
+  // TODO: nsHTMLLinkElement::SizeOfAnchorElement should call
+  // Link::SizeOfExcludingThis().  See bug 682431.
 
   // nsILink
   NS_IMETHOD    LinkAdded();
@@ -439,7 +441,7 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
   nsAutoString mimeType;
   nsAutoString notUsed;
   GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
-  nsParserUtils::SplitMimeType(aType, mimeType, notUsed);
+  nsContentUtils::SplitMimeType(aType, mimeType, notUsed);
   if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
     return;
   }

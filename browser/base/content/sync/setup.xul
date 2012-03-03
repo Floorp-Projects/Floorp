@@ -1,0 +1,526 @@
+<?xml version="1.0"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Weave.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Edward Lee <edilee@mozilla.com>
+#   Mike Connor <mconnor@mozilla.com>
+#   Paul O’Shannessy <paul@oshannessy.com>
+#   Philipp von Weitershausen <philipp@weitershausen.de>
+#   Allison Naaktgeboren <ally@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/syncSetup.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/syncCommon.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+<!ENTITY % syncSetupDTD SYSTEM "chrome://browser/locale/syncSetup.dtd">
+%brandDTD;
+%syncBrandDTD;
+%syncSetupDTD;
+]>
+<wizard id="wizard"
+        title="&accountSetupTitle.label;"
+        windowtype="Weave:AccountSetup"
+        persist="screenX screenY"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        onwizardnext="return gSyncSetup.onWizardAdvance()"
+        onwizardback="return gSyncSetup.onWizardBack()"
+        onwizardcancel="gSyncSetup.onWizardCancel()"
+        onload="gSyncSetup.init()">
+
+  <script type="application/javascript"
+          src="chrome://browser/content/sync/setup.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/sync/utils.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/printUtils.js"/>
+
+  <wizardpage id="addDevicePage"
+              label="&pairDevice.title.label;"
+              onpageshow="gSyncSetup.onPageShow()">
+    <description>
+      &pairDevice.dialog.description.label;
+      <label class="text-link"
+             value="&addDevice.showMeHow.label;"
+             href="https://services.mozilla.com/sync/help/add-device"/>
+    </description>
+    <separator class="groove-thin"/>
+    <description>
+      &addDevice.dialog.enterCode.label;
+    </description>
+    <separator class="groove-thin"/>
+    <vbox align="center">
+      <textbox id="pin1"
+               class="pin"
+               oninput="gSyncSetup.onPINInput(this);"
+               onfocus="this.select();"
+               />
+      <textbox id="pin2"
+               class="pin"
+               oninput="gSyncSetup.onPINInput(this);"
+               onfocus="this.select();"
+               />
+      <textbox id="pin3"
+               class="pin"
+               oninput="gSyncSetup.onPINInput(this);"
+               onfocus="this.select();" 
+               />
+    </vbox>
+    <separator class="groove-thin"/>
+    <vbox id="pairDeviceThrobber" align="center" hidden="true">
+      <image/>
+    </vbox>
+    <hbox id="pairDeviceErrorRow" pack="center" hidden="true">
+      <image class="statusIcon" status="error"/>
+      <label class="status"
+             value="&addDevice.dialog.tryAgain.label;"/>
+    </hbox>
+  </wizardpage>
+
+  <wizardpage id="pickSetupType"
+              label="&syncBrand.fullName.label;"
+              onpageshow="gSyncSetup.onPageShow()">
+    <vbox align="center" flex="1">
+      <description style="padding: 0 7em;">
+        &setup.pickSetupType.description2;
+      </description>
+      <spacer flex="3"/>
+      <button id="newAccount"
+              class="accountChoiceButton"
+              label="&button.createNewAccount.label;"
+              oncommand="gSyncSetup.startNewAccountSetup()"
+              align="center"/>
+      <spacer flex="1"/>
+    </vbox>
+    <separator class="groove"/>
+    <vbox align="center" flex="1">
+      <spacer flex="1"/>
+      <button id="existingAccount"
+              class="accountChoiceButton"
+              label="&button.haveAccount.label;"
+              oncommand="gSyncSetup.useExistingAccount()"/>
+      <spacer flex="3"/>
+    </vbox>
+  </wizardpage>
+
+  <wizardpage label="&setup.newAccountDetailsPage.title.label;"
+              id="newAccountStart"
+              onextra1="gSyncSetup.onSyncOptions()"
+              onpageshow="gSyncSetup.onPageShow();">
+    <grid>
+      <columns>
+        <column/>
+        <column class="inputColumn" flex="1"/>
+      </columns>
+      <rows>
+        <row id="emailRow" align="center">
+          <label value="&setup.emailAddress.label;"
+                 accesskey="&setup.emailAddress.accesskey;"
+                 control="weaveEmail"/>
+          <textbox id="weaveEmail"
+                   oninput="gSyncSetup.onEmailInput()"/>
+        </row>
+        <row id="emailFeedbackRow" align="center" hidden="true">
+          <spacer/>
+          <hbox>
+            <image class="statusIcon"/>
+            <label class="status" value=" "/>
+          </hbox>
+        </row>
+        <row id="passwordRow" align="center">
+          <label value="&setup.choosePassword.label;"
+                 accesskey="&setup.choosePassword.accesskey;"
+                 control="weavePassword"/>
+          <textbox id="weavePassword"
+                   type="password"
+                   onchange="gSyncSetup.onPasswordChange()"/>
+        </row>
+        <row id="confirmRow" align="center">
+          <label value="&setup.confirmPassword.label;"
+                 accesskey="&setup.confirmPassword.accesskey;"
+                 control="weavePasswordConfirm"/>
+          <textbox id="weavePasswordConfirm"
+                   type="password"
+                   onchange="gSyncSetup.onPasswordChange()"/>
+        </row>
+        <row id="passwordFeedbackRow" align="center" hidden="true">
+          <spacer/>
+          <hbox>
+            <image class="statusIcon"/>
+            <label class="status" value=" "/>
+          </hbox>
+        </row>
+        <row align="center">
+          <label control="server"
+                 value="&server.label;"/>
+          <menulist id="server"
+                    oncommand="gSyncSetup.onServerCommand()"
+                    oninput="gSyncSetup.onServerInput()">
+            <menupopup>
+              <menuitem label="&serverType.default.label;"
+                        value="main"/>
+              <menuitem label="&serverType.custom2.label;"
+                        value="custom"/>
+            </menupopup>
+          </menulist>
+        </row>
+        <row id="serverFeedbackRow" align="center" hidden="true">
+          <spacer/>
+          <hbox>
+            <image class="statusIcon"/>
+            <label class="status" value=" "/>
+          </hbox>
+        </row>
+        <row id="TOSRow" align="center">
+          <spacer/>
+          <hbox align="center">
+            <checkbox id="tos"
+                      accesskey="&setup.tosAgree1.accesskey;"
+                      oncommand="this.focus(); gSyncSetup.checkFields();"/>
+            <description id="tosDesc"
+                         flex="1"
+                         onclick="document.getElementById('tos').focus();
+                                  document.getElementById('tos').click()">
+              &setup.tosAgree1.label;
+              <label class="text-link inline-link"
+                     onclick="event.stopPropagation();gSyncUtils.openToS();">
+                &setup.tosLink.label;
+              </label>
+              &setup.tosAgree2.label;
+              <label class="text-link inline-link"
+                     onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();">
+                &setup.ppLink.label;
+              </label>
+              &setup.tosAgree3.label;
+            </description>
+          </hbox>
+        </row>
+      </rows>
+    </grid>
+    <spacer flex="1"/>
+    <vbox flex="1" align="center">
+      <browser height="150"
+               width="500"
+               id="captcha"
+               type="content"
+               disablehistory="true"/>
+      <spacer flex="1"/>
+      <hbox id="captchaFeedback">
+        <image class="statusIcon"/>
+        <label class="status" value=" "/>
+      </hbox>
+    </vbox>
+  </wizardpage>
+
+  <wizardpage id="addDevice"
+              label="&pairDevice.title.label;"
+              onextra1="gSyncSetup.onSyncOptions()"
+              onpageshow="gSyncSetup.onPageShow()">
+    <description>
+      &pairDevice.setup.description.label;
+      <label class="text-link"
+             value="&addDevice.showMeHow.label;"
+             href="https://services.mozilla.com/sync/help/easy-setup"/>
+    </description>
+    <label value="&addDevice.setup.enterCode.label;"
+           control="easySetupPIN1"/>
+    <spacer flex="1"/>
+    <vbox align="center" flex="1">
+      <textbox id="easySetupPIN1"
+               class="pin"
+               value=""
+               readonly="true"
+               />
+      <textbox id="easySetupPIN2"
+               class="pin"
+               value=""
+               readonly="true"
+               />
+      <textbox id="easySetupPIN3"
+               class="pin"
+               value=""
+               readonly="true"
+               />
+    </vbox>
+    <spacer flex="3"/>
+    <label class="text-link"
+           value="&addDevice.dontHaveDevice.label;"
+           onclick="gSyncSetup.manualSetup();"/>
+  </wizardpage>
+
+  <wizardpage id="existingAccount"
+              label="&setup.signInPage.title.label;"
+              onextra1="gSyncSetup.onSyncOptions()"
+              onpageshow="gSyncSetup.onPageShow()">
+      <grid>
+        <columns>
+          <column/>
+          <column class="inputColumn" flex="1"/>
+        </columns>
+        <rows>
+          <row id="existingAccountRow" align="center">
+            <label id="existingAccountLabel"
+                   value="&signIn.account2.label;"
+                   accesskey="&signIn.account2.accesskey;"
+                   control="existingAccount"/>
+            <textbox id="existingAccountName"
+                     oninput="gSyncSetup.checkFields(event)"
+                     onchange="gSyncSetup.checkFields(event)"/>
+          </row>
+          <row id="existingPasswordRow" align="center">
+            <label id="existingPasswordLabel"
+                   value="&signIn.password.label;"
+                   accesskey="&signIn.password.accesskey;"
+                   control="existingPassword"/>
+            <textbox id="existingPassword"
+                     type="password"
+                     onkeyup="gSyncSetup.checkFields(event)"
+                     onchange="gSyncSetup.checkFields(event)"/>
+          </row>
+          <row id="existingPasswordFeedbackRow" align="center" hidden="true">
+            <spacer/>
+            <hbox>
+              <image class="statusIcon"/>
+              <label class="status" value=" "/>
+            </hbox>
+          </row>
+          <row align="center">
+            <spacer/>
+            <label class="text-link"
+                   value="&resetPassword.label;"
+                   onclick="gSyncUtils.resetPassword(); return false;"/>
+          </row>
+          <row align="center">
+            <label control="existingServer"
+                   value="&server.label;"/>
+            <menulist id="existingServer"
+                      oncommand="gSyncSetup.onExistingServerCommand()"
+                      oninput="gSyncSetup.onExistingServerInput()">
+              <menupopup>
+                <menuitem label="&serverType.default.label;"
+                          value="main"/>
+                <menuitem label="&serverType.custom2.label;"
+                          value="custom"/>
+              </menupopup>
+            </menulist>
+          </row>
+          <row id="existingServerFeedbackRow" align="center" hidden="true">
+            <spacer/>
+            <hbox>
+              <image class="statusIcon"/>
+              <vbox>
+                <label class="status" value=" "/>
+              </vbox>
+            </hbox>
+          </row>
+        </rows>
+      </grid>
+
+    <groupbox>
+      <label id="existingPassphraseLabel"
+             value="&signIn.recoveryKey.label;"
+             accesskey="&signIn.recoveryKey.accesskey;"
+             control="existingPassphrase"/>
+      <textbox id="existingPassphrase"
+               oninput="gSyncSetup.checkFields()"/>
+      <hbox id="login-throbber" hidden="true">
+        <image/>
+        <label value="&verifying.label;"/>
+      </hbox>
+      <vbox align="left" id="existingPassphraseFeedbackRow" hidden="true">
+        <hbox>
+          <image class="statusIcon"/>
+          <label class="status" value=" "/>
+        </hbox>
+      </vbox>
+    </groupbox>
+
+    <vbox id="passphraseHelpBox">
+      <description>
+        &existingRecoveryKey.description;
+        <label class="text-link"
+               href="https://services.mozilla.com/sync/help/manual-setup">
+          &addDevice.showMeHow.label;
+        </label>
+        <spacer id="passphraseHelpSpacer"/>
+        <label class="text-link"
+               onclick="gSyncSetup.resetPassphrase(); return false;">
+          &resetSyncKey.label;
+        </label>
+      </description>
+    </vbox>
+  </wizardpage>
+
+  <wizardpage id="syncOptionsPage"
+              label="&setup.optionsPage.title;"
+              onpageshow="gSyncSetup.onPageShow()">
+    <groupbox id="syncOptions">
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1" style="-moz-margin-end: 2px"/>
+      </columns>
+      <rows>
+        <row align="center">
+          <label value="&syncComputerName.label;"
+                 accesskey="&syncComputerName.accesskey;"
+                 control="syncComputerName"/>
+          <textbox id="syncComputerName" flex="1"
+                   onchange="gSyncUtils.changeName(this)"/>
+        </row>
+        <row>
+          <label value="&syncMy.label;" />
+          <vbox>
+            <checkbox label="&engine.addons.label;"
+                      accesskey="&engine.addons.accesskey;"
+                      id="engine.addons"
+                      checked="true"/>
+            <checkbox label="&engine.bookmarks.label;"
+                      accesskey="&engine.bookmarks.accesskey;"
+                      id="engine.bookmarks"
+                      checked="true"/>
+            <checkbox label="&engine.passwords.label;"
+                      accesskey="&engine.passwords.accesskey;"
+                      id="engine.passwords"
+                      checked="true"/>
+            <checkbox label="&engine.prefs.label;"
+                      accesskey="&engine.prefs.accesskey;"
+                      id="engine.prefs"
+                      checked="true"/>
+            <checkbox label="&engine.history.label;"
+                      accesskey="&engine.history.accesskey;"
+                      id="engine.history"
+                      checked="true"/>
+            <checkbox label="&engine.tabs.label;"
+                      accesskey="&engine.tabs.accesskey;"
+                      id="engine.tabs"
+                      checked="true"/>
+          </vbox>
+        </row>
+      </rows>
+    </grid>
+    </groupbox>
+
+    <groupbox id="mergeOptions">
+      <radiogroup id="mergeChoiceRadio" pack="start">
+        <grid>
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows flex="1">
+            <row align="center">
+              <radio id="resetClient"
+                     class="mergeChoiceButton"
+                     aria-labelledby="resetClientLabel"/>
+              <label id="resetClientLabel" control="resetClient">
+                <html:strong>&choice2.merge.recommended.label;</html:strong>
+                &choice2.merge.main.label;
+              </label>
+            </row>
+            <row align="center">
+              <radio id="wipeClient"
+                     class="mergeChoiceButton"
+                     aria-labelledby="wipeClientLabel"/>
+              <label id="wipeClientLabel"
+                     control="wipeClient">
+                &choice2.client.main.label;
+              </label>
+            </row>
+            <row align="center">
+              <radio id="wipeRemote"
+                     class="mergeChoiceButton"
+                     aria-labelledby="wipeRemoteLabel"/>
+              <label id="wipeRemoteLabel"
+                     control="wipeRemote">
+                &choice2.server.main.label;
+              </label>
+            </row>
+          </rows>
+        </grid>
+      </radiogroup>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage id="syncOptionsConfirm"
+              label="&setup.optionsConfirmPage.title;"
+              onpageshow="gSyncSetup.onPageShow()">
+      <deck id="chosenActionDeck">
+        <vbox id="chosenActionMerge" class="confirm">
+          <description class="normal">
+            &confirm.merge.label;
+          </description>
+        </vbox>
+        <vbox id="chosenActionWipeClient" class="confirm">
+          <description class="normal">
+            &confirm.client2.label;
+          </description>
+          <separator class="thin"/>
+          <vbox id="dataList">
+            <label class="data indent" id="bookmarkCount"/>
+            <label class="data indent" id="historyCount"/>
+            <label class="data indent" id="passwordCount"/>
+            <label class="data indent" id="prefsWipe"
+                   value="&engine.prefs.label;"/>
+          </vbox>
+          <separator class="thin"/>
+          <description class="normal">
+            &confirm.client.moreinfo.label;
+          </description>
+        </vbox>
+        <vbox id="chosenActionWipeServer" class="confirm">
+          <description class="normal">
+            &confirm.server2.label;
+          </description>
+          <separator class="thin"/>
+          <vbox id="clientList">
+          </vbox>
+        </vbox>
+      </deck>
+  </wizardpage>
+# In terms of the wizard flow shown to the user, the 'syncOptionsConfirm'
+# page above is not the last wizard page. To prevent the wizard binding from
+# assuming that it is, we're inserting this dummy page here. This also means
+# that the wizard needs to always be closed manually via wizardFinish().
+  <wizardpage>
+  </wizardpage>
+</wizard>
+

@@ -44,7 +44,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsScriptLoader.h"
-#include "nsParserUtils.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIContent.h"
@@ -509,14 +508,14 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     if (scriptContent->IsHTML()) {
       scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
       if (!language.IsEmpty()) {
-        if (nsParserUtils::IsJavaScriptLanguage(language, &version))
+        if (nsContentUtils::IsJavaScriptLanguage(language, &version))
           typeID = nsIProgrammingLanguage::JAVASCRIPT;
         else
           typeID = nsIProgrammingLanguage::UNKNOWN;
         // IE, Opera, etc. do not respect language version, so neither should
         // we at this late date in the browser wars saga.  Note that this change
         // affects HTML but not XUL or SVG (but note also that XUL has its own
-        // code to check nsParserUtils::IsJavaScriptLanguage -- that's probably
+        // code to check nsContentUtils::IsJavaScriptLanguage -- that's probably
         // a separate bug, one we may not be able to fix short of XUL2).  See
         // bug 255895 (https://bugzilla.mozilla.org/show_bug.cgi?id=255895).
         NS_ASSERTION(JSVERSION_DEFAULT == 0,

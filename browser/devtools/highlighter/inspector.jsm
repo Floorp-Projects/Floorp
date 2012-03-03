@@ -42,6 +42,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -82,6 +83,8 @@ const INSPECTOR_NOTIFICATIONS = {
   EDITOR_SAVED: "inspector-editor-saved",
 };
 
+const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
+
 ///////////////////////////////////////////////////////////////////////////
 //// InspectorUI
 
@@ -108,7 +111,6 @@ InspectorUI.prototype = {
   tools: null,
   toolEvents: null,
   inspecting: false,
-  treePanelEnabled: true,
   ruleViewEnabled: true,
   isDirty: false,
   store: null,
@@ -137,23 +139,42 @@ InspectorUI.prototype = {
     this.sidebarSplitter.removeAttribute("hidden");
     this.stylingButton.checked = true;
 
-    // Activate the first tool in the sidebar, only if none previously-
-    // selected. We'll want to do a followup to remember selected tool-states.
+    // If no tool is already selected, show the last-used sidebar if available,
+    // otherwise just show the first.
+
     if (!Array.some(this.sidebarToolbar.children,
       function(btn) btn.hasAttribute("checked"))) {
-        let firstButtonId = this.getToolbarButtonId(this.sidebarTools[0].id);
-        this.chromeDoc.getElementById(firstButtonId).click();
+
+      let activePanel = this.sidebarTools[0];
+      let activeId = this.store.getValue(this.winID, "activeSidebar");
+      if (activeId && this.tools[activeId]) {
+        activePanel = this.tools[activeId];
+      }
+      this.activateSidebarPanel(activePanel.id);
     }
+
+    this.store.setValue(this.winID, "sidebarOpen", true);
+    Services.prefs.setBoolPref("devtools.inspector.sidebarOpen", true);
   },
 
   /**
-   * Hide the Sidebar.
+   * Tear down the sidebar.
    */
-  hideSidebar: function IUI_hideSidebar()
+  _destroySidebar: function IUI_destroySidebar()
   {
     this.sidebarBox.setAttribute("hidden", "true");
     this.sidebarSplitter.setAttribute("hidden", "true");
     this.stylingButton.checked = false;
+  },
+
+  /**
+   * Hide the sidebar.
+   */
+  hideSidebar: function IUI_hideSidebar()
+  {
+    this._destroySidebar();
+    this.store.setValue(this.winID, "sidebarOpen", false);
+    Services.prefs.setBoolPref("devtools.inspector.sidebarOpen", false);
   },
 
   /**
@@ -167,6 +188,25 @@ InspectorUI.prototype = {
     } else {
       this.hideSidebar();
     }
+  },
+
+  /**
+   * Activate a sidebar panel by id.
+   */
+  activateSidebarPanel: function IUI_activateSidebarPanel(aID)
+  {
+    let buttonId = this.getToolbarButtonId(aID);
+    this.chromeDoc.getElementById(buttonId).click();
+  },
+
+  get activeSidebarPanel()
+  {
+    for each (let tool in this.sidebarTools) {
+      if (this.sidebarDeck.selectedPanel == this.getToolIframe(tool)) {
+        return tool.id;
+      }
+    }
+    return null;
   },
 
   /**
@@ -189,6 +229,22 @@ InspectorUI.prototype = {
       this.stopInspecting();
     } else {
       this.startInspecting();
+    }
+  },
+
+  /**
+   * Toggle the TreePanel.
+   */
+  toggleHTMLPanel: function TP_toggle()
+  {
+    if (this.treePanel.isOpen()) {
+      this.treePanel.close();
+      Services.prefs.setBoolPref("devtools.inspector.htmlPanelOpen", false);
+      this.store.setValue(this.winID, "htmlPanelOpen", false);
+    } else {
+      this.treePanel.open();
+      Services.prefs.setBoolPref("devtools.inspector.htmlPanelOpen", true);
+      this.store.setValue(this.winID, "htmlPanelOpen", true);
     }
   },
 
@@ -260,9 +316,7 @@ InspectorUI.prototype = {
     this.initTools();
     this.chromeWin.Tilt.setup();
 
-    if (this.treePanelEnabled) {
-      this.treePanel = new TreePanel(this.chromeWin, this);
-    }
+    this.treePanel = new TreePanel(this.chromeWin, this);
 
     if (Services.prefs.getBoolPref("devtools.ruleview.enabled") &&
         !this.toolRegistered("ruleview")) {
@@ -310,6 +364,7 @@ InspectorUI.prototype = {
       show: this.openRuleView,
       hide: this.closeRuleView,
       onSelect: this.selectInRuleView,
+      onChanged: this.changeInRuleView,
       panel: null,
       unregister: this.destroyRuleView,
       sidebar: true,
@@ -349,6 +404,16 @@ InspectorUI.prototype = {
       this.store.setValue(this.winID, "selectedNode", null);
       this.store.setValue(this.winID, "inspecting", true);
       this.store.setValue(this.winID, "isDirty", this.isDirty);
+
+      this.store.setValue(this.winID, "htmlPanelOpen",
+        Services.prefs.getBoolPref("devtools.inspector.htmlPanelOpen"));
+
+      this.store.setValue(this.winID, "sidebarOpen",
+        Services.prefs.getBoolPref("devtools.inspector.sidebarOpen"));
+
+      this.store.setValue(this.winID, "activeSidebar",
+        Services.prefs.getCharPref("devtools.inspector.activeSidebar"));
+
       this.win.addEventListener("pagehide", this, true);
     }
   },
@@ -400,6 +465,8 @@ InspectorUI.prototype = {
     if (this.treePanel && this.treePanel.editingContext)
       this.treePanel.closeEditor();
 
+    this.treePanel.destroy();
+
     if (this.closing || !this.win || !this.browser) {
       return;
     }
@@ -417,6 +484,7 @@ InspectorUI.prototype = {
     if (!aKeepStore) {
       this.store.deleteStore(this.winID);
       this.win.removeEventListener("pagehide", this, true);
+      this.clearPseudoClassLocks();
     } else {
       // Update the store before closing.
       if (this.selection) {
@@ -435,13 +503,12 @@ InspectorUI.prototype = {
 
     this.stopInspecting();
 
-    this.saveToolState(this.winID);
     this.toolsDo(function IUI_toolsHide(aTool) {
       this.unregisterTool(aTool);
     }.bind(this));
 
     // close the sidebar
-    this.hideSidebar();
+    this._destroySidebar();
 
     if (this.highlighter) {
       this.highlighter.destroy();
@@ -503,7 +570,7 @@ InspectorUI.prototype = {
     this.inspecting = false;
     this.toolsDim(false);
     if (this.highlighter.getNode()) {
-      this.select(this.highlighter.getNode(), true, true, !aPreventScroll);
+      this.select(this.highlighter.getNode(), true, !aPreventScroll);
     } else {
       this.select(null, true, true);
     }
@@ -511,15 +578,17 @@ InspectorUI.prototype = {
   },
 
   /**
-   * Select an object in the tree view.
+   * Select an object in the inspector.
    * @param aNode
    *        node to inspect
    * @param forceUpdate
    *        force an update?
    * @param aScroll boolean
    *        scroll the tree panel?
+   * @param aFrom [optional] string
+   *        which part of the UI the selection occured from
    */
-  select: function IUI_select(aNode, forceUpdate, aScroll)
+  select: function IUI_select(aNode, forceUpdate, aScroll, aFrom)
   {
     // if currently editing an attribute value, using the
     // highlighter dismisses the editor
@@ -530,6 +599,10 @@ InspectorUI.prototype = {
       aNode = this.defaultSelection;
 
     if (forceUpdate || aNode != this.selection) {
+      if (aFrom != "breadcrumbs") {
+        this.clearPseudoClassLocks();
+      }
+      
       this.selection = aNode;
       if (!this.inspecting) {
         this.highlighter.highlight(this.selection);
@@ -538,8 +611,44 @@ InspectorUI.prototype = {
 
     this.breadcrumbs.update();
     this.chromeWin.Tilt.update(aNode);
+    this.treePanel.select(aNode, aScroll);
 
     this.toolsSelect(aScroll);
+  },
+  
+  /**
+   * Toggle the pseudo-class lock on the currently inspected element. If the
+   * pseudo-class is :hover or :active, that pseudo-class will also be toggled
+   * on every ancestor of the element, mirroring real :hover and :active
+   * behavior.
+   * 
+   * @param aPseudo the pseudo-class lock to toggle, e.g. ":hover"
+   */
+  togglePseudoClassLock: function IUI_togglePseudoClassLock(aPseudo)
+  {
+    if (DOMUtils.hasPseudoClassLock(this.selection, aPseudo)) {
+      this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
+        DOMUtils.removePseudoClassLock(crumb.node, aPseudo);
+      });
+    } else {
+      let hierarchical = aPseudo == ":hover" || aPseudo == ":active";
+      let node = this.selection;
+      do {
+        DOMUtils.addPseudoClassLock(node, aPseudo);
+        node = node.parentNode;
+      } while (hierarchical && node.parentNode)
+    }
+    this.nodeChanged();
+  },
+
+  /**
+   * Clear all pseudo-class locks applied to elements in the node hierarchy
+   */
+  clearPseudoClassLocks: function IUI_clearPseudoClassLocks()
+  {
+    this.breadcrumbs.nodeHierarchy.forEach(function(crumb) {
+      DOMUtils.clearPseudoClassLocks(crumb.node);
+    });
   },
 
   /**
@@ -552,6 +661,7 @@ InspectorUI.prototype = {
   nodeChanged: function IUI_nodeChanged(aUpdater)
   {
     this.highlighter.invalidateSize();
+    this.breadcrumbs.updateSelectors();
     this.toolsOnChanged(aUpdater);
   },
 
@@ -577,17 +687,32 @@ InspectorUI.prototype = {
       self.select(self.highlighter.getNode(), false, false);
     });
 
+    this.highlighter.addListener("pseudoclasstoggled", function(aPseudo) {
+      self.togglePseudoClassLock(aPseudo);
+    });
+
     if (this.store.getValue(this.winID, "inspecting")) {
       this.startInspecting();
+      this.highlighter.unlock();
+    } else {
+      this.highlighter.lock();
     }
 
-    this.restoreToolState(this.winID);
+    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.STATE_RESTORED, null);
 
     this.win.focus();
+    this.highlighter.highlight();
+
+    if (this.store.getValue(this.winID, "htmlPanelOpen")) {
+      this.treePanel.open();
+    }
+
+    if (this.store.getValue(this.winID, "sidebarOpen")) {
+      this.showSidebar();
+    }
+
     Services.obs.notifyObservers({wrappedJSObject: this},
                                  INSPECTOR_NOTIFICATIONS.OPENED, null);
-
-    this.highlighter.highlight();
   },
 
   /**
@@ -714,6 +839,47 @@ InspectorUI.prototype = {
     }
   },
 
+  /**
+   * Copy the innerHTML of the selected Node to the clipboard. Called via the
+   * Inspector:CopyInner command.
+   */
+  copyInnerHTML: function IUI_copyInnerHTML()
+  {
+    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+                    getService(Ci.nsIClipboardHelper);
+    clipboard.copyString(this.selection.innerHTML);
+  },
+
+  /**
+   * Copy the outerHTML of the selected Node to the clipboard. Called via the
+   * Inspector:CopyOuter command.
+   */
+  copyOuterHTML: function IUI_copyOuterHTML()
+  {
+    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+                    getService(Ci.nsIClipboardHelper);
+    clipboard.copyString(this.selection.outerHTML);
+  },
+
+  /**
+   * Delete the selected node. Called via the Inspector:DeleteNode command.
+   */
+  deleteNode: function IUI_deleteNode()
+  {
+    let selection = this.selection;
+    let parent = this.selection.parentNode;
+
+    // remove the node from the treepanel
+    if (this.treePanel.isOpen())
+      this.treePanel.deleteChildBox(selection);
+
+    // remove the node from content
+    parent.removeChild(selection);
+    this.breadcrumbs.invalidateHierarchy();
+
+    // select the parent node in the highlighter, treepanel, breadcrumbs
+    this.inspectNode(parent);
+  },
 
   /////////////////////////////////////////////////////////////////////////
   //// CssRuleView methods
@@ -795,6 +961,15 @@ InspectorUI.prototype = {
   {
     if (this.ruleView)
       this.ruleView.highlight(aNode);
+  },
+  
+  /**
+   * Update the rules for the current node in the Css Rule View.
+   */
+  changeInRuleView: function IUI_selectInRuleView()
+  {
+    if (this.ruleView)
+      this.ruleView.nodeChanged();
   },
 
   ruleViewChanged: function IUI_ruleViewChanged()
@@ -1060,6 +1235,7 @@ InspectorUI.prototype = {
     let iframe = this.chromeDoc.createElement("iframe");
     iframe.id = "devtools-sidebar-iframe-" + aRegObj.id;
     iframe.setAttribute("flex", "1");
+    iframe.setAttribute("tooltip", "aHTMLTooltip");
     this.sidebarDeck.appendChild(iframe);
 
     // wire up button to show the iframe
@@ -1087,6 +1263,8 @@ InspectorUI.prototype = {
     let btn = this.chromeDoc.getElementById(this.getToolbarButtonId(aTool.id));
     btn.setAttribute("checked", "true");
     if (aTool.sidebar) {
+      Services.prefs.setCharPref("devtools.inspector.activeSidebar", aTool.id);
+      this.store.setValue(this.winID, "activeSidebar", aTool.id);
       this.sidebarDeck.selectedPanel = this.getToolIframe(aTool);
       this.sidebarTools.forEach(function(other) {
         if (other != aTool)
@@ -1181,57 +1359,6 @@ InspectorUI.prototype = {
   },
 
   /**
-   * Save a list of open tools to the inspector store.
-   *
-   * @param aWinID The ID of the window used to save the associated tools
-   */
-  saveToolState: function IUI_saveToolState(aWinID)
-  {
-    let openTools = {};
-    this.toolsDo(function IUI_toolsSetId(aTool) {
-      if (aTool.isOpen) {
-        openTools[aTool.id] = true;
-      }
-    });
-    this.store.setValue(aWinID, "openTools", openTools);
-  },
-
-  /**
-   * Restore tools previously save using saveToolState().
-   *
-   * @param aWinID The ID of the window to which the associated tools are to be
-   *               restored.
-   */
-  restoreToolState: function IUI_restoreToolState(aWinID)
-  {
-    let openTools = this.store.getValue(aWinID, "openTools");
-    let activeSidebarTool;
-    if (openTools) {
-      this.toolsDo(function IUI_toolsOnShow(aTool) {
-        if (aTool.id in openTools) {
-          if (aTool.sidebar && !this.isSidebarOpen) {
-            this.showSidebar();
-            activeSidebarTool = aTool;
-          }
-          this.toolShow(aTool);
-        }
-      }.bind(this));
-      this.sidebarTools.forEach(function(tool) {
-        if (tool != activeSidebarTool)
-          this.chromeDoc.getElementById(
-            this.getToolbarButtonId(tool.id)).removeAttribute("checked");
-      }.bind(this));
-    }
-    if (this.store.getValue(this.winID, "inspecting")) {
-      this.highlighter.unlock();
-    } else {
-      this.highlighter.lock();
-    }
-
-    Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.STATE_RESTORED, null);
-  },
-
-  /**
    * For each tool in the tools collection select the current node that is
    * selected in the highlighter
    * @param aScroll boolean
@@ -1254,7 +1381,7 @@ InspectorUI.prototype = {
   toolsDim: function IUI_toolsDim(aState)
   {
     this.toolsDo(function IUI_toolsDim(aTool) {
-      if (aTool.isOpen && "dim" in aTool) {
+      if ("dim" in aTool) {
         aTool.dim.call(aTool.context, aState);
       }
     });
@@ -1270,7 +1397,7 @@ InspectorUI.prototype = {
   toolsOnChanged: function IUI_toolsChanged(aUpdater)
   {
     this.toolsDo(function IUI_toolsOnChanged(aTool) {
-      if (aTool.isOpen && ("onChanged" in aTool) && aTool != aUpdater) {
+      if (("onChanged" in aTool) && aTool != aUpdater) {
         aTool.onChanged.call(aTool.context);
       }
     });
@@ -1664,6 +1791,13 @@ HTMLBreadcrumbs.prototype = {
     for (let i = 0; i < aNode.classList.length; i++) {
       text += "." + aNode.classList[i];
     }
+    for (let i = 0; i < PSEUDO_CLASSES.length; i++) {
+      let pseudo = PSEUDO_CLASSES[i];
+      if (DOMUtils.hasPseudoClassLock(aNode, pseudo)) {
+        text += pseudo;  
+      }      
+    }
+
     return text;
   },
 
@@ -1689,6 +1823,9 @@ HTMLBreadcrumbs.prototype = {
 
     let classesLabel = this.IUI.chromeDoc.createElement("label");
     classesLabel.className = "inspector-breadcrumbs-classes plain";
+    
+    let pseudosLabel = this.IUI.chromeDoc.createElement("label");
+    pseudosLabel.className = "inspector-breadcrumbs-pseudo-classes plain";
 
     tagLabel.textContent = aNode.tagName.toLowerCase();
     idLabel.textContent = aNode.id ? ("#" + aNode.id) : "";
@@ -1699,9 +1836,15 @@ HTMLBreadcrumbs.prototype = {
     }
     classesLabel.textContent = classesText;
 
+    let pseudos = PSEUDO_CLASSES.filter(function(pseudo) {
+      return DOMUtils.hasPseudoClassLock(aNode, pseudo);
+    }, this);
+    pseudosLabel.textContent = pseudos.join("");
+
     fragment.appendChild(tagLabel);
     fragment.appendChild(idLabel);
     fragment.appendChild(classesLabel);
+    fragment.appendChild(pseudosLabel);
 
     return fragment;
   },
@@ -1741,7 +1884,7 @@ HTMLBreadcrumbs.prototype = {
 
         item.onmouseup = (function(aNode) {
           return function() {
-            inspector.select(aNode, true, true);
+            inspector.select(aNode, true, true, "breadcrumbs");
           }
         })(nodes[i]);
 
@@ -1895,7 +2038,7 @@ HTMLBreadcrumbs.prototype = {
 
     button.onBreadcrumbsClick = function onBreadcrumbsClick() {
       inspector.stopInspecting();
-      inspector.select(aNode, true, true);
+      inspector.select(aNode, true, true, "breadcrumbs");
     };
 
     button.onclick = (function _onBreadcrumbsRightClick(aEvent) {
@@ -2010,6 +2153,20 @@ HTMLBreadcrumbs.prototype = {
     let element = this.nodeHierarchy[this.currentIndex].button;
     scrollbox.ensureElementIsVisible(element);
   },
+  
+  updateSelectors: function BC_updateSelectors()
+  {
+    for (let i = this.nodeHierarchy.length - 1; i >= 0; i--) {
+      let crumb = this.nodeHierarchy[i];
+      let button = crumb.button;
+
+      while(button.hasChildNodes()) {
+        button.removeChild(button.firstChild);
+      }
+      button.appendChild(this.prettyPrintNodeAsXUL(crumb.node));
+      button.setAttribute("tooltiptext", this.prettyPrintNodeAsText(crumb.node));
+    }
+  },
 
   /**
    * Update the breadcrumbs display when a new node is selected.
@@ -2051,6 +2208,8 @@ HTMLBreadcrumbs.prototype = {
 
     // Make sure the selected node and its neighbours are visible.
     this.scroll();
+
+    this.updateSelectors();
   },
 
 }
@@ -2070,3 +2229,6 @@ XPCOMUtils.defineLazyGetter(this, "StyleInspector", function () {
   return obj.StyleInspector;
 });
 
+XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
+  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+});

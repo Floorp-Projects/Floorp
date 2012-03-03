@@ -169,10 +169,6 @@ radio[pane=paneSync] {
 #syncAddDeviceLabel {
   margin-top: 1em;
   margin-bottom: 1em;
- }
-
-#syncEnginesList {
-  height: 11em;
 }
 
 %endif

@@ -932,9 +932,9 @@ nsPluginHost::GetPluginTempDir(nsIFile **aDir)
   return sPluginTempDir->Clone(aDir);
 }
 
-nsresult nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
-                                                   nsObjectLoadingContent* aContent,
-                                                   nsIStreamListener** aListener)
+nsresult nsPluginHost::CreateListenerForChannel(nsIChannel* aChannel,
+                                                nsObjectLoadingContent* aContent,
+                                                nsIStreamListener** aListener)
 {
   NS_PRECONDITION(aChannel && aContent,
                   "Invalid arguments to InstantiatePluginForChannel");
@@ -1068,7 +1068,7 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
   // if we don't have a MIME type at this point, we still have one more chance by
   // opening the stream and seeing if the server hands one back
   if (!aMimeType) {
-    if (bCanHandleInternally && !aContent->SrcStreamLoadInitiated()) {
+    if (bCanHandleInternally && !aContent->SrcStreamLoading()) {
       NewEmbeddedPluginStream(aURL, aContent, nsnull);
     }
     return NS_ERROR_FAILURE;
@@ -1096,7 +1096,7 @@ nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType, nsIURI* aURL,
     // no need to check for "data" as it would have been converted to "src"
     const char *value;
     bool havedata = NS_SUCCEEDED(pti->GetAttribute("SRC", &value));
-    if (havedata && !isJava && bCanHandleInternally && !aContent->SrcStreamLoadInitiated()) {
+    if (havedata && !isJava && bCanHandleInternally && !aContent->SrcStreamLoading()) {
       NewEmbeddedPluginStream(aURL, nsnull, instance.get());
     }
   }
@@ -3253,6 +3253,7 @@ nsPluginHost::StopPluginInstance(nsNPAPIPluginInstance* aInstance)
     return NS_OK;
   }
 
+  Telemetry::AutoTimer<Telemetry::PLUGIN_SHUTDOWN_MS> timer;
   aInstance->Stop();
 
   // if the instance does not want to be 'cached' just remove it

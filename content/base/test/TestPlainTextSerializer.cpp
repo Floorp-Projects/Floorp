@@ -37,37 +37,18 @@
 
 #include "TestHarness.h"
 
-#include "nsIParser.h"
-#include "nsIHTMLToTextSink.h"
-#include "nsIParser.h"
-#include "nsIContentSink.h"
-#include "nsIParserService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringGlue.h"
-#include "nsParserCIID.h"
 #include "nsIDocumentEncoder.h"
 #include "nsCRT.h"
-
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
+#include "nsIParserUtils.h"
 
 void
 ConvertBufToPlainText(nsString &aConBuf, int aFlag)
 {
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID);
-  if (parser) {
-    nsCOMPtr<nsIContentSink> sink;
-    sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID);
-    if (sink) {
-      nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
-      if (textSink) {
-        nsAutoString convertedText;
-        textSink->Initialize(&convertedText, aFlag, 72);
-        parser->SetContentSink(sink);
-        parser->Parse(aConBuf, 0, NS_LITERAL_CSTRING("text/html"), true);
-        aConBuf = convertedText;
-      }
-    }
-  }
+  nsCOMPtr<nsIParserUtils> utils =
+    do_GetService(NS_PARSERUTILS_CONTRACTID);
+  utils->ConvertToPlainText(aConBuf, aFlag, 72, aConBuf);
 }
 
 // Test for ASCII with format=flowed; delsp=yes

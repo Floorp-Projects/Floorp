@@ -97,7 +97,7 @@ protected:
     JSObject *               mJSSetterObject;
   };
   
-  uintN mJSAttributes;          // A flag for all our JS properties (getter/setter/readonly/shared/enum)
+  unsigned mJSAttributes;          // A flag for all our JS properties (getter/setter/readonly/shared/enum)
 
 #ifdef DEBUG
   bool mIsCompiled;

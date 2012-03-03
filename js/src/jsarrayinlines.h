@@ -64,19 +64,24 @@ JSObject::ensureDenseArrayInitializedLength(JSContext *cx, uint32_t index, uint3
         markDenseArrayNotPacked(cx);
 
     if (initlen < index + extra) {
-        js::InitValueRange(elements + initlen, index + extra - initlen, true);
+        JSCompartment *comp = compartment();
+        size_t offset = initlen;
+        for (js::HeapSlot *sp = elements + initlen;
+             sp != elements + (index + extra);
+             sp++, offset++)
+            sp->init(comp, this, offset, js::MagicValue(JS_ARRAY_HOLE));
         initlen = index + extra;
     }
 }
 
 inline JSObject::EnsureDenseResult
-JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
+JSObject::ensureDenseArrayElements(JSContext *cx, unsigned index, unsigned extra)
 {
     JS_ASSERT(isDenseArray());
 
-    uintN currentCapacity = getDenseArrayCapacity();
+    unsigned currentCapacity = getDenseArrayCapacity();
 
-    uintN requiredCapacity;
+    unsigned requiredCapacity;
     if (extra == 1) {
         /* Optimize for the common case. */
         if (index < currentCapacity) {

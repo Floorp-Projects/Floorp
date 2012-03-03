@@ -109,6 +109,7 @@ _TEST_FILES = \
 		test_bug495300.html \
 		test_bug686942.html \
 		test_can_play_type.html \
+		test_closing_connections.html \
 		test_constants.html \
 		test_controls.html \
 		test_currentTime.html \
@@ -175,8 +176,6 @@ endif
 #   test_mixed_principals.html
 # Disabled since we don't play Wave files standalone, for now
 #		test_audioDocumentTitle.html
-# Bug 634564:
-#		test_closing_connections.html \
 
 # sample files
 _TEST_FILES += \

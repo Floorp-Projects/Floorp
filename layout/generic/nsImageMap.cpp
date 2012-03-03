@@ -59,7 +59,6 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
-#include "nsIDocument.h"
 #include "nsContentUtils.h"
 
 namespace dom = mozilla::dom;

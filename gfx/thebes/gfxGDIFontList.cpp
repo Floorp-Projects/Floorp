@@ -103,6 +103,8 @@ BuildKeyNameFromFontName(nsAString &aName)
 // Implementation of gfxPlatformFontList for Win32 GDI,
 // using GDI font enumeration APIs to get the list of fonts
 
+static HMODULE fontlib;
+
 class WinUserFontData : public gfxUserFontData {
 public:
     WinUserFontData(HANDLE aFontRef, bool aIsEmbedded)
@@ -563,6 +565,12 @@ GDIFontFamily::FindStyleVariations()
 gfxGDIFontList::gfxGDIFontList()
 {
     mFontSubstitutes.Init(50);
+
+    // Make sure the t2embed library is available because it may be
+    // disabled to work around security vulnerabilities.
+    if (!fontlib) {
+        fontlib = LoadLibraryW(L"t2embed.dll");
+    }
 }
 
 static void
@@ -851,6 +859,10 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
         const PRUint8 *mFontData;
     };
     FontDataDeleter autoDelete(aFontData);
+
+    // if the t2embed library isn't available, bail
+    if (!fontlib)
+        return nsnull;
 
     bool hasVertical;
     bool isCFF = gfxFontUtils::IsCffFont(aFontData, hasVertical);

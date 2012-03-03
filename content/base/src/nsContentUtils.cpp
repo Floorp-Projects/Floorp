@@ -123,6 +123,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
 #include "nsUnicodeProperties.h"
+#include "harfbuzz/hb-common.h"
 #include "jsdbgapi.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIDOMDocumentXBL.h"
@@ -180,6 +181,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIViewManager.h"
 #include "nsEventStateManager.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsParserConstants.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -720,6 +722,185 @@ nsContentUtils::URIIsChromeOrInPref(nsIURI *aURI, const char *aPref)
   return false;
 }
 
+#define SKIP_WHITESPACE(iter, end_iter, end_res)                 \
+  while ((iter) != (end_iter) && nsCRT::IsAsciiSpace(*(iter))) { \
+    ++(iter);                                                    \
+  }                                                              \
+  if ((iter) == (end_iter)) {                                    \
+    return (end_res);                                            \
+  }
+
+#define SKIP_ATTR_NAME(iter, end_iter)                            \
+  while ((iter) != (end_iter) && !nsCRT::IsAsciiSpace(*(iter)) && \
+         *(iter) != '=') {                                        \
+    ++(iter);                                                     \
+  }
+
+bool
+nsContentUtils::GetPseudoAttributeValue(const nsString& aSource, nsIAtom *aName,
+                                        nsAString& aValue)
+{
+  aValue.Truncate();
+
+  const PRUnichar *start = aSource.get();
+  const PRUnichar *end = start + aSource.Length();
+  const PRUnichar *iter;
+
+  while (start != end) {
+    SKIP_WHITESPACE(start, end, false)
+    iter = start;
+    SKIP_ATTR_NAME(iter, end)
+
+    if (start == iter) {
+      return false;
+    }
+
+    // Remember the attr name.
+    const nsDependentSubstring & attrName = Substring(start, iter);
+
+    // Now check whether this is a valid name="value" pair.
+    start = iter;
+    SKIP_WHITESPACE(start, end, false)
+    if (*start != '=') {
+      // No '=', so this is not a name="value" pair.  We don't know
+      // what it is, and we have no way to handle it.
+      return false;
+    }
+
+    // Have to skip the value.
+    ++start;
+    SKIP_WHITESPACE(start, end, false)
+    PRUnichar q = *start;
+    if (q != kQuote && q != kApostrophe) {
+      // Not a valid quoted value, so bail.
+      return false;
+    }
+
+    ++start;  // Point to the first char of the value.
+    iter = start;
+
+    while (iter != end && *iter != q) {
+      ++iter;
+    }
+
+    if (iter == end) {
+      // Oops, unterminated quoted string.
+      return false;
+    }
+
+    // At this point attrName holds the name of the "attribute" and
+    // the value is between start and iter.
+
+    if (aName->Equals(attrName)) {
+      nsIParserService* parserService = nsContentUtils::GetParserService();
+      NS_ENSURE_TRUE(parserService, false);
+
+      // We'll accumulate as many characters as possible (until we hit either
+      // the end of the string or the beginning of an entity). Chunks will be
+      // delimited by start and chunkEnd.
+      const PRUnichar *chunkEnd = start;
+      while (chunkEnd != iter) {
+        if (*chunkEnd == kLessThan) {
+          aValue.Truncate();
+
+          return false;
+        }
+
+        if (*chunkEnd == kAmpersand) {
+          aValue.Append(start, chunkEnd - start);
+
+          // Point to first character after the ampersand.
+          ++chunkEnd;
+
+          const PRUnichar *afterEntity;
+          PRUnichar result[2];
+          PRUint32 count =
+            parserService->DecodeEntity(chunkEnd, iter, &afterEntity, result);
+          if (count == 0) {
+            aValue.Truncate();
+
+            return false;
+          }
+
+          aValue.Append(result, count);
+
+          // Advance to after the entity and begin a new chunk.
+          start = chunkEnd = afterEntity;
+        }
+        else {
+          ++chunkEnd;
+        }
+      }
+
+      // Append remainder.
+      aValue.Append(start, iter - start);
+
+      return true;
+    }
+
+    // Resume scanning after the end of the attribute value (past the quote
+    // char).
+    start = iter + 1;
+  }
+
+  return false;
+}
+
+bool
+nsContentUtils::IsJavaScriptLanguage(const nsString& aName, PRUint32 *aFlags)
+{
+  JSVersion version = JSVERSION_UNKNOWN;
+
+  if (aName.LowerCaseEqualsLiteral("javascript") ||
+      aName.LowerCaseEqualsLiteral("livescript") ||
+      aName.LowerCaseEqualsLiteral("mocha")) {
+    version = JSVERSION_DEFAULT;
+  } else if (aName.LowerCaseEqualsLiteral("javascript1.0")) {
+    version = JSVERSION_1_0;
+  } else if (aName.LowerCaseEqualsLiteral("javascript1.1")) {
+    version = JSVERSION_1_1;
+  } else if (aName.LowerCaseEqualsLiteral("javascript1.2")) {
+    version = JSVERSION_1_2;
+  } else if (aName.LowerCaseEqualsLiteral("javascript1.3")) {
+    version = JSVERSION_1_3;
+  } else if (aName.LowerCaseEqualsLiteral("javascript1.4")) {
+    version = JSVERSION_1_4;
+  } else if (aName.LowerCaseEqualsLiteral("javascript1.5")) {
+    version = JSVERSION_1_5;
+  } else if (aName.LowerCaseEqualsLiteral("javascript1.6")) {
+    version = JSVERSION_1_6;
+  } else if (aName.LowerCaseEqualsLiteral("javascript1.7")) {
+    version = JSVERSION_1_7;
+  } else if (aName.LowerCaseEqualsLiteral("javascript1.8")) {
+    version = JSVERSION_1_8;
+  }
+
+  if (version == JSVERSION_UNKNOWN) {
+    return false;
+  }
+  *aFlags = version;
+  return true;
+}
+
+void
+nsContentUtils::SplitMimeType(const nsAString& aValue, nsString& aType,
+                              nsString& aParams)
+{
+  aType.Truncate();
+  aParams.Truncate();
+  PRInt32 semiIndex = aValue.FindChar(PRUnichar(';'));
+  if (-1 != semiIndex) {
+    aType = Substring(aValue, 0, semiIndex);
+    aParams = Substring(aValue, semiIndex + 1,
+                       aValue.Length() - (semiIndex + 1));
+    aParams.StripWhitespace();
+  }
+  else {
+    aType = aValue;
+  }
+  aType.StripWhitespace();
+}
+
 /**
  * Access a cached parser service. Don't addref. We need only one
  * reference to it and this class has that one.
@@ -937,34 +1118,38 @@ nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSr
   return normalizer.GetCharsWritten();
 }
 
-// Replaced by precompiled CCMap (see bug 180266). To update the list
-// of characters, see one of files included below. As for the way
-// the original list of characters was obtained by Frank Tang, see bug 54467.
-// Updated to fix the regression (bug 263411). The list contains
-// characters of the following Unicode character classes : Ps, Pi, Po, Pf, Pe.
-// (ref.: http://www.w3.org/TR/2004/CR-CSS21-20040225/selector.html#first-letter)
-#include "punct_marks.x-ccmap"
-DEFINE_X_CCMAP(gPuncCharsCCMapExt, const);
+/**
+ * This is used to determine whether a character is in one of the punctuation
+ * mark classes which CSS says should be part of the first-letter.
+ * See http://www.w3.org/TR/CSS2/selector.html#first-letter and
+ *     http://www.w3.org/TR/selectors/#first-letter
+ */
 
 // static
 bool
-nsContentUtils::IsPunctuationMark(PRUint32 aChar)
+nsContentUtils::IsFirstLetterPunctuation(PRUint32 aChar)
 {
-  return CCMAP_HAS_CHAR_EXT(gPuncCharsCCMapExt, aChar);
+  PRUint8 cat = mozilla::unicode::GetGeneralCategory(aChar);
+
+  return (cat == HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION ||     // Ps
+          cat == HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION ||    // Pe
+          cat == HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION ||  // Pi
+          cat == HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION ||    // Pf
+          cat == HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION);     // Po
 }
 
 // static
 bool
-nsContentUtils::IsPunctuationMarkAt(const nsTextFragment* aFrag, PRUint32 aOffset)
+nsContentUtils::IsFirstLetterPunctuationAt(const nsTextFragment* aFrag, PRUint32 aOffset)
 {
   PRUnichar h = aFrag->CharAt(aOffset);
   if (!IS_SURROGATE(h)) {
-    return IsPunctuationMark(h);
+    return IsFirstLetterPunctuation(h);
   }
   if (NS_IS_HIGH_SURROGATE(h) && aOffset + 1 < aFrag->GetLength()) {
     PRUnichar l = aFrag->CharAt(aOffset + 1);
     if (NS_IS_LOW_SURROGATE(l)) {
-      return IsPunctuationMark(SURROGATE_TO_UCS4(h, l));
+      return IsFirstLetterPunctuation(SURROGATE_TO_UCS4(h, l));
     }
   }
   return false;
@@ -3747,7 +3932,8 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
 /* static */
 nsresult
 nsContentUtils::ParseDocumentHTML(const nsAString& aSourceBuffer,
-                                  nsIDocument* aTargetDocument)
+                                  nsIDocument* aTargetDocument,
+                                  bool aScriptingEnabledForNoscriptParsing)
 {
   if (nsContentUtils::sFragmentParsingActive) {
     NS_NOTREACHED("Re-entrant fragment parsing attempted.");
@@ -3761,7 +3947,8 @@ nsContentUtils::ParseDocumentHTML(const nsAString& aSourceBuffer,
   }
   nsresult rv =
     sHTMLFragmentParser->ParseDocument(aSourceBuffer,
-                                       aTargetDocument);
+                                       aTargetDocument,
+                                       aScriptingEnabledForNoscriptParsing);
   return rv;
 }
 
@@ -3812,6 +3999,44 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   return rv;
 }
 
+/* static */
+nsresult
+nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
+                                   nsAString& aResultBuffer,
+                                   PRUint32 aFlags,
+                                   PRUint32 aWrapCol)
+{
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), "about:blank");
+  nsCOMPtr<nsIPrincipal> principal =
+    do_CreateInstance("@mozilla.org/nullprincipal;1");
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  nsresult rv = nsContentUtils::CreateDocument(EmptyString(),
+                                               EmptyString(),
+                                               nsnull,
+                                               uri,
+                                               uri,
+                                               principal,
+                                               nsnull,
+                                               DocumentFlavorHTML,
+                                               getter_AddRefs(domDocument));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+  rv = nsContentUtils::ParseDocumentHTML(aSourceBuffer, document,
+    !(aFlags & nsIDocumentEncoder::OutputNoScriptContent));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(
+    "@mozilla.org/layout/documentEncoder;1?type=text/plain");
+
+  rv = encoder->Init(domDocument, NS_LITERAL_STRING("text/plain"), aFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  encoder->SetWrapColumn(aWrapCol);
+
+  return encoder->EncodeToString(aResultBuffer);
+}
 
 /* static */
 nsresult

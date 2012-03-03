@@ -64,10 +64,6 @@
 #include "nsUrlClassifierPrefixSet.h"
 #endif
 
-#ifdef MOZ_FEEDS
-#include "nsScriptableUnescapeHTML.h"
-#endif
-
 #include "nsBrowserStatusFilter.h"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -115,10 +111,6 @@ nsUrlClassifierDBServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 #endif
 
-#ifdef MOZ_FEEDS
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnescapeHTML)
-#endif
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
@@ -138,9 +130,6 @@ NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERPREFIXSET_CID);
 NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERDBSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERSTREAMUPDATER_CID);
 NS_DEFINE_NAMED_CID(NS_URLCLASSIFIERUTILS_CID);
-#endif
-#ifdef MOZ_FEEDS
-NS_DEFINE_NAMED_CID(NS_SCRIPTABLEUNESCAPEHTML_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_BROWSERSTATUSFILTER_CID);
 NS_DEFINE_NAMED_CID(NS_CHARSETMENU_CID);
@@ -163,9 +152,6 @@ static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_URLCLASSIFIERDBSERVICE_CID, false, NULL, nsUrlClassifierDBServiceConstructor },
   { &kNS_URLCLASSIFIERSTREAMUPDATER_CID, false, NULL, nsUrlClassifierStreamUpdaterConstructor },
   { &kNS_URLCLASSIFIERUTILS_CID, false, NULL, nsUrlClassifierUtilsConstructor },
-#endif
-#ifdef MOZ_FEEDS
-  { &kNS_SCRIPTABLEUNESCAPEHTML_CID, false, NULL, nsScriptableUnescapeHTMLConstructor },
 #endif
   { &kNS_BROWSERSTATUSFILTER_CID, false, NULL, nsBrowserStatusFilterConstructor },
   { &kNS_CHARSETMENU_CID, false, NULL, NS_NewCharsetMenu },
@@ -191,9 +177,6 @@ static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
   { NS_URICLASSIFIERSERVICE_CONTRACTID, &kNS_URLCLASSIFIERDBSERVICE_CID },
   { NS_URLCLASSIFIERSTREAMUPDATER_CONTRACTID, &kNS_URLCLASSIFIERSTREAMUPDATER_CID },
   { NS_URLCLASSIFIERUTILS_CONTRACTID, &kNS_URLCLASSIFIERUTILS_CID },
-#endif
-#ifdef MOZ_FEEDS
-  { NS_SCRIPTABLEUNESCAPEHTML_CONTRACTID, &kNS_SCRIPTABLEUNESCAPEHTML_CID },
 #endif
   { NS_BROWSERSTATUSFILTER_CONTRACTID, &kNS_BROWSERSTATUSFILTER_CID },
   { NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID, &kNS_CHARSETMENU_CID },

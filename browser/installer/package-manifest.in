@@ -155,6 +155,7 @@
 @BINPATH@/components/dom_bluetooth.xpt
 #endif
 @BINPATH@/components/dom_canvas.xpt
+@BINPATH@/components/dom_contacts.xpt
 @BINPATH@/components/dom_core.xpt
 @BINPATH@/components/dom_css.xpt
 @BINPATH@/components/dom_events.xpt
@@ -190,6 +191,7 @@
 @BINPATH@/components/find.xpt
 @BINPATH@/components/fuel.xpt
 @BINPATH@/components/gfx.xpt
+@BINPATH@/components/html5.xpt
 @BINPATH@/components/htmlparser.xpt
 @BINPATH@/components/imglib2.xpt
 @BINPATH@/components/imgicon.xpt
@@ -407,6 +409,9 @@
 @BINPATH@/components/TelemetryPing.manifest
 @BINPATH@/components/messageWakeupService.js
 @BINPATH@/components/messageWakeupService.manifest
+
+@BINPATH@/components/ContactManager.js
+@BINPATH@/components/ContactManager.manifest
 
 ; Modules
 @BINPATH@/modules/*

@@ -135,6 +135,11 @@ WifiGeoPositionProvider.prototype = {
       this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(Components.interfaces.nsIWifiMonitor);
       this.wifiService.startWatching(this);
     }
+    if (this.hasSeenWiFi) {
+      this.hasSeenWiFi = false;
+      this.wifiService.stopWatching(this);
+      this.wifiService.startWatching(this);
+    }
   },
 
   shutdown: function() { 

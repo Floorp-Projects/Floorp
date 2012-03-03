@@ -422,8 +422,8 @@ public:
   /**
    * Returns true if aChar is of class Ps, Pi, Po, Pf, or Pe.
    */
-  static bool IsPunctuationMark(PRUint32 aChar);
-  static bool IsPunctuationMarkAt(const nsTextFragment* aFrag, PRUint32 aOffset);
+  static bool IsFirstLetterPunctuation(PRUint32 aChar);
+  static bool IsFirstLetterPunctuationAt(const nsTextFragment* aFrag, PRUint32 aOffset);
  
   /**
    * Returns true if aChar is of class Lu, Ll, Lt, Lm, Lo, Nd, Nl or No
@@ -1144,12 +1144,34 @@ public:
    * @param aSourceBuffer the string to parse as an HTML document
    * @param aTargetDocument the document object to parse into. Must not have
    *                        child nodes.
+   * @param aScriptingEnabledForNoscriptParsing whether <noscript> is parsed
+   *                                            as if scripting was enabled
    * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
    *         fragments is made, NS_ERROR_OUT_OF_MEMORY if aSourceBuffer is too
    *         long and NS_OK otherwise.
    */
   static nsresult ParseDocumentHTML(const nsAString& aSourceBuffer,
-                                    nsIDocument* aTargetDocument);
+                                    nsIDocument* aTargetDocument,
+                                    bool aScriptingEnabledForNoscriptParsing);
+
+  /**
+   * Converts HTML source to plain text by parsing the source and using the
+   * plain text serializer on the resulting tree.
+   *
+   * @param aSourceBuffer the string to parse as an HTML document
+   * @param aResultBuffer the string where the plain text result appears;
+   *                      may be the same string as aSourceBuffer
+   * @param aFlags Flags from nsIDocumentEncoder.
+   * @param aWrapCol Number of columns after which to line wrap; 0 for no
+   *                 auto-wrapping
+   * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
+   *         fragments is made, NS_ERROR_OUT_OF_MEMORY if aSourceBuffer is too
+   *         long and NS_OK otherwise.
+   */
+  static nsresult ConvertToPlainText(const nsAString& aSourceBuffer,
+                                     nsAString& aResultBuffer,
+                                     PRUint32 aFlags,
+                                     PRUint32 aWrapCol);
 
   /**
    * Creates a new XML document, which is marked to be loaded as data.
@@ -1940,6 +1962,32 @@ public:
    * comma-separated list is ignored.
    */
   static bool URIIsChromeOrInPref(nsIURI *aURI, const char *aPref);
+
+  /**
+   * This will parse aSource, to extract the value of the pseudo attribute
+   * with the name specified in aName. See
+   * http://www.w3.org/TR/xml-stylesheet/#NT-StyleSheetPI for the specification
+   * which is used to parse aSource.
+   *
+   * @param aSource the string to parse
+   * @param aName the name of the attribute to get the value for
+   * @param aValue [out] the value for the attribute with name specified in
+   *                     aAttribute. Empty if the attribute isn't present.
+   * @return true     if the attribute exists and was successfully parsed.
+   *         false if the attribute doesn't exist, or has a malformed
+   *                  value, such as an unknown or unterminated entity.
+   */
+  static bool GetPseudoAttributeValue(const nsString& aSource, nsIAtom *aName,
+                                      nsAString& aValue);
+
+  /**
+   * Returns true if the language name is a version of JavaScript and
+   * false otherwise
+   */
+  static bool IsJavaScriptLanguage(const nsString& aName, PRUint32 *aVerFlags);
+
+  static void SplitMimeType(const nsAString& aValue, nsString& aType,
+                            nsString& aParams);
 
 private:
   static bool InitializeEventTable();

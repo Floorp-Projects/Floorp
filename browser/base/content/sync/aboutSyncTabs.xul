@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Weave.
+#
+# The Initial Developer of the Original Code is the Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Edward Lee <edilee@mozilla.com>
+#   Mike Connor <mconnor@mozilla.com>
+#   Paul O’Shannessy <paul@oshannessy.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/aboutSyncTabs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/sync/aboutSyncTabs.css" type="text/css"?>
+
+<!DOCTYPE window [
+  <!ENTITY % aboutSyncTabsDTD SYSTEM "chrome://browser/locale/aboutSyncTabs.dtd">
+  %aboutSyncTabsDTD;
+]>
+
+<window id="tabs-display"
+        onload="RemoteTabViewer.init()"
+        onunload="RemoteTabViewer.uninit()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="&tabs.otherComputers.label;">
+  <script type="application/javascript;version=1.8" src="chrome://browser/content/sync/aboutSyncTabs.js"/>
+  <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <html:head>
+    <html:link rel="icon" href="chrome://browser/skin/sync-16.png"/>
+  </html:head>
+
+  <popupset id="contextmenus">
+    <menupopup id="tabListContext">
+      <menuitem label="&tabs.context.openTab.label;"
+                accesskey="&tabs.context.openTab.accesskey;"
+                oncommand="RemoteTabViewer.openSelected()"
+                showFor="single"/>
+      <menuitem label="&tabs.context.bookmarkSingleTab.label;"
+                accesskey="&tabs.context.bookmarkSingleTab.accesskey;"
+                oncommand="RemoteTabViewer.bookmarkSingleTab(event)"
+                showFor="single"/>
+      <menuitem label="&tabs.context.openMultipleTabs.label;"
+                accesskey="&tabs.context.openMultipleTabs.accesskey;"
+                oncommand="RemoteTabViewer.openSelected()"
+                showFor="multiple"/>
+      <menuitem label="&tabs.context.bookmarkMultipleTabs.label;"
+                accesskey="&tabs.context.bookmarkMultipleTabs.accesskey;"
+                oncommand="RemoteTabViewer.bookmarkSelectedTabs()"
+                showFor="multiple"/>
+      <menuseparator/>
+      <menuitem label="&tabs.context.refreshList.label;"
+                accesskey="&tabs.context.refreshList.accesskey;"
+                oncommand="RemoteTabViewer.buildList()"
+                showFor="all"/>
+    </menupopup>
+  </popupset>
+  <richlistbox context="tabListContext" id="tabsList" seltype="multiple"
+               align="center" flex="1"
+               onclick="RemoteTabViewer.handleClick(event)"
+               oncontextmenu="RemoteTabViewer.adjustContextMenu(event)">
+    <hbox id="headers" align="center">
+      <label id="tabsListHeading"
+             value="&tabs.otherComputers.label;"/>
+      <spacer flex="1"/>
+      <textbox type="search"
+               emptytext="&tabs.searchText.label;"
+               oncommand="RemoteTabViewer.filterTabs(event)"/>
+    </hbox>
+
+  </richlistbox>
+</window>
+

@@ -373,7 +373,7 @@ def writeHeaderFile(filename, name):
                 "#ifndef " + headerMacro + "\n"
                 "#define " + headerMacro + "\n\n"
                 "JSBool " + name + "_DefineQuickStubs("
-                "JSContext *cx, JSObject *proto, uintN flags, "
+                "JSContext *cx, JSObject *proto, unsigned flags, "
                 "PRUint32 count, const nsID **iids);\n\n"
                 "void " + name + "_MarkInterfaces();\n\n"
                 "void " + name + "_ClearInterfaces();\n\n"
@@ -802,7 +802,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             signature += "%s(JSContext *cx, JSObject *obj, jsid id,%s jsval *vp)\n"
     else:
         # JSFastNative.
-        signature += "%s(JSContext *cx, uintN argc,%s jsval *vp)\n"
+        signature += "%s(JSContext *cx, unsigned argc,%s jsval *vp)\n"
 
     customMethodCall = customMethodCalls.get(stubName, None)
 
@@ -1275,7 +1275,7 @@ def writeDefiner(f, conf, stringtable, interfaces):
 
     # the definer function (entry point to this quick stubs file)
     f.write("JSBool %s_DefineQuickStubs(" % conf.name)
-    f.write("JSContext *cx, JSObject *proto, uintN flags, PRUint32 count, "
+    f.write("JSContext *cx, JSObject *proto, unsigned flags, PRUint32 count, "
             "const nsID **iids)\n"
             "{\n")
     f.write("    return xpc_qsDefineQuickStubs("

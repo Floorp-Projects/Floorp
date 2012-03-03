@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/GuardObjects.h"
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -222,9 +222,9 @@ js::IsSystemCompartment(const JSCompartment *c)
 }
 
 JS_FRIEND_API(bool)
-js::IsAtomsCompartmentFor(const JSContext *cx, const JSCompartment *c)
+js::IsAtomsCompartment(const JSCompartment *c)
 {
-    return c == cx->runtime->atomsCompartment;
+    return c == c->rt->atomsCompartment;
 }
 
 JS_FRIEND_API(bool)
@@ -265,7 +265,7 @@ js::IsOriginalScriptFunction(JSFunction *fun)
 
 JS_FRIEND_API(JSFunction *)
 js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, JSNative call,
-                               uintN nargs, uintN attrs)
+                               unsigned nargs, unsigned attrs)
 {
     RootObject objRoot(cx, &obj);
 
@@ -280,7 +280,7 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, J
 }
 
 JS_FRIEND_API(JSFunction *)
-js::NewFunctionWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags,
+js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags,
                             JSObject *parent, const char *name)
 {
     RootObject parentRoot(cx, &parent);
@@ -304,7 +304,7 @@ js::NewFunctionWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN f
 }
 
 JS_FRIEND_API(JSFunction *)
-js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSObject *parent,
+js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsigned flags, JSObject *parent,
                                 jsid id)
 {
     RootObject parentRoot(cx, &parent);
@@ -320,7 +320,7 @@ js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, uintN nargs, uin
 
 JS_FRIEND_API(JSObject *)
 js::InitClassWithReserved(JSContext *cx, JSObject *obj, JSObject *parent_proto,
-                          JSClass *clasp, JSNative constructor, uintN nargs,
+                          JSClass *clasp, JSNative constructor, unsigned nargs,
                           JSPropertySpec *ps, JSFunctionSpec *fs,
                           JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
@@ -468,22 +468,32 @@ struct DumpingChildInfo {
     {}
 };
 
-typedef HashSet<void *, DefaultHasher<void *>, ContextAllocPolicy> PtrSet;
+typedef HashSet<void *, DefaultHasher<void *>, SystemAllocPolicy> PtrSet;
 
 struct JSDumpHeapTracer : public JSTracer {
     PtrSet visited;
     FILE   *output;
-    Vector<DumpingChildInfo, 0, ContextAllocPolicy> nodes;
+    Vector<DumpingChildInfo, 0, SystemAllocPolicy> nodes;
     char   buffer[200];
     bool   rootTracing;
 
-    JSDumpHeapTracer(JSContext *cx, FILE *fp)
-        : visited(cx), output(fp), nodes(cx)
+    JSDumpHeapTracer(FILE *fp)
+      : output(fp)
     {}
 };
 
 static void
 DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind);
+
+static char
+MarkDescriptor(void *thing)
+{
+    gc::Cell *cell = static_cast<gc::Cell*>(thing);
+    if (cell->isMarked(gc::BLACK))
+        return cell->isMarked(gc::GRAY) ? 'G' : 'B';
+    else
+        return cell->isMarked(gc::GRAY) ? 'X' : 'W';
+}
 
 static void
 DumpHeapPushIfNew(JSTracer *trc, void **thingp, JSGCTraceKind kind)
@@ -498,7 +508,7 @@ DumpHeapPushIfNew(JSTracer *trc, void **thingp, JSGCTraceKind kind)
      * already seen thing, for complete root information.
      */
     if (dtrc->rootTracing) {
-        fprintf(dtrc->output, "%p %s\n", thing,
+        fprintf(dtrc->output, "%p %c %s\n", thing, MarkDescriptor(thing),
                 JS_GetTraceEdgeName(dtrc, dtrc->buffer, sizeof(dtrc->buffer)));
     }
 
@@ -515,15 +525,15 @@ DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     JS_ASSERT(trc->callback == DumpHeapVisitChild);
     JSDumpHeapTracer *dtrc = static_cast<JSDumpHeapTracer *>(trc);
     const char *edgeName = JS_GetTraceEdgeName(dtrc, dtrc->buffer, sizeof(dtrc->buffer));
-    fprintf(dtrc->output, "> %p %s\n", *thingp, edgeName);
+    fprintf(dtrc->output, "> %p %c %s\n", *thingp, MarkDescriptor(*thingp), edgeName);
     DumpHeapPushIfNew(dtrc, thingp, kind);
 }
 
 void
-js::DumpHeapComplete(JSContext *cx, FILE *fp)
+js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
 {
-    JSDumpHeapTracer dtrc(cx, fp);
-    JS_TracerInit(&dtrc, cx, DumpHeapPushIfNew);
+    JSDumpHeapTracer dtrc(fp);
+    JS_TracerInit(&dtrc, rt, DumpHeapPushIfNew);
     if (!dtrc.visited.init(10000))
         return;
 
@@ -540,7 +550,7 @@ js::DumpHeapComplete(JSContext *cx, FILE *fp)
         DumpingChildInfo dci = dtrc.nodes.popCopy();
         JS_PrintTraceThingInfo(dtrc.buffer, sizeof(dtrc.buffer),
                                &dtrc, dci.node, dci.kind, JS_TRUE);
-        fprintf(fp, "%p %s\n", dci.node, dtrc.buffer);
+        fprintf(fp, "%p %c %s\n", dci.node, MarkDescriptor(dci.node), dtrc.buffer);
         JS_TraceChildren(&dtrc, dci.node, dci.kind);
     }
 
@@ -591,17 +601,17 @@ VersionSetXML(JSVersion version, bool enable)
 JS_FRIEND_API(bool)
 CanCallContextDebugHandler(JSContext *cx)
 {
-    return cx->debugHooks && cx->debugHooks->debuggerHandler;
+    return !!cx->runtime->debugHooks.debuggerHandler;
 }
 
 JS_FRIEND_API(JSTrapStatus)
 CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval)
 {
-    if (!CanCallContextDebugHandler(cx))
+    if (!cx->runtime->debugHooks.debuggerHandler)
         return JSTRAP_RETURN;
 
-    return cx->debugHooks->debuggerHandler(cx, script, bc, rval,
-                                           cx->debugHooks->debuggerHandlerData);
+    return cx->runtime->debugHooks.debuggerHandler(cx, script, bc, rval,
+                                                   cx->runtime->debugHooks.debuggerHandlerData);
 }
 
 #ifdef JS_THREADSAFE
@@ -732,6 +742,12 @@ extern JS_FRIEND_API(bool)
 IsIncrementalGCEnabled(JSRuntime *rt)
 {
     return rt->gcIncrementalEnabled;
+}
+
+extern JS_FRIEND_API(void)
+DisableIncrementalGC(JSRuntime *rt)
+{
+    rt->gcIncrementalEnabled = false;
 }
 
 JS_FRIEND_API(bool)

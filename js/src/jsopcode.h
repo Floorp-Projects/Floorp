@@ -165,9 +165,9 @@ SET_UINT8(jsbytecode *pc, uint8_t u)
 #define UINT16_LEN              2
 #define UINT16_HI(i)            ((jsbytecode)((i) >> 8))
 #define UINT16_LO(i)            ((jsbytecode)(i))
-#define GET_UINT16(pc)          ((uintN)(((pc)[1] << 8) | (pc)[2]))
+#define GET_UINT16(pc)          ((unsigned)(((pc)[1] << 8) | (pc)[2]))
 #define SET_UINT16(pc,i)        ((pc)[1] = UINT16_HI(i), (pc)[2] = UINT16_LO(i))
-#define UINT16_LIMIT            ((uintN)1 << 16)
+#define UINT16_LIMIT            ((unsigned)1 << 16)
 
 /* Helpers for accessing the offsets of jump opcodes. */
 #define JUMP_OFFSET_LEN         4
@@ -259,7 +259,7 @@ struct JSCodeSpec {
 };
 
 extern const JSCodeSpec js_CodeSpec[];
-extern uintN            js_NumCodeSpecs;
+extern unsigned            js_NumCodeSpecs;
 extern const char       *js_CodeName[];
 extern const char       js_EscapeMap[];
 
@@ -290,7 +290,7 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote);
 
 extern JSPrinter *
 js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
-              uintN indent, JSBool pretty, JSBool grouped, JSBool strict);
+              unsigned indent, JSBool pretty, JSBool grouped, JSBool strict);
 
 extern void
 js_DestroyPrinter(JSPrinter *jp);
@@ -320,10 +320,10 @@ js_puts(JSPrinter *jp, const char *s);
 
 namespace js {
 
-extern uintN
+extern unsigned
 StackUses(JSScript *script, jsbytecode *pc);
 
-extern uintN
+extern unsigned
 StackDefs(JSScript *script, jsbytecode *pc);
 
 }  /* namespace js */
@@ -351,7 +351,7 @@ typedef JSBool (* JSDecompilerPtr)(JSPrinter *);
 
 extern JSString *
 js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
-                     uintN indent, JSBool pretty, JSBool grouped, JSBool strict,
+                     unsigned indent, JSBool pretty, JSBool grouped, JSBool strict,
                      JSDecompilerPtr decompiler);
 
 /*
@@ -367,14 +367,14 @@ js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
  * The caller must call JS_free on the result after a succsesful call.
  */
 extern char *
-js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
+js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
                            JSString *fallback);
 
 /*
  * Given bytecode address pc in script's main program code, return the operand
  * stack depth just before (JSOp) *pc executes.
  */
-extern uintN
+extern unsigned
 js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 #ifdef _MSC_VER
@@ -395,7 +395,7 @@ js_GetVariableBytecodeLength(jsbytecode *pc);
 namespace js {
 
 static inline char *
-DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
+DecompileValueGenerator(JSContext *cx, int spindex, const Value &v,
                         JSString *fallback)
 {
     return js_DecompileValueGenerator(cx, spindex, v, fallback);
@@ -486,7 +486,7 @@ Sprint(Sprinter *sp, const char *format, ...);
 extern bool
 CallResultEscapes(jsbytecode *pc);
 
-static inline uintN
+static inline unsigned
 GetDecomposeLength(jsbytecode *pc, size_t len)
 {
     /*
@@ -494,10 +494,10 @@ GetDecomposeLength(jsbytecode *pc, size_t len)
      * constant: perhaps we should just hardcode values instead?
      */
     JS_ASSERT(size_t(js_CodeSpec[*pc].length) == len);
-    return (uintN) pc[len - 1];
+    return (unsigned) pc[len - 1];
 }
 
-static inline uintN
+static inline unsigned
 GetBytecodeLength(jsbytecode *pc)
 {
     JSOp op = (JSOp)*pc;
@@ -657,8 +657,8 @@ class OpcodeCounts
 extern JS_FRIEND_API(JSBool)
 js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, js::Sprinter *sp);
 
-extern JS_FRIEND_API(uintN)
-js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
+extern JS_FRIEND_API(unsigned)
+js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, unsigned loc,
                 JSBool lines, js::Sprinter *sp);
 
 extern JS_FRIEND_API(void)

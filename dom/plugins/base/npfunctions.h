@@ -72,6 +72,7 @@ typedef void         (* NP_LOADDS NPP_LostFocusPtr)(NPP instance);
 typedef void         (* NP_LOADDS NPP_URLRedirectNotifyPtr)(NPP instance, const char* url, int32_t status, void* notifyData);
 typedef NPError      (* NP_LOADDS NPP_ClearSiteDataPtr)(const char* site, uint64_t flags, uint64_t maxAge);
 typedef char**       (* NP_LOADDS NPP_GetSitesWithDataPtr)(void);
+typedef void         (* NP_LOADDS NPP_DidCompositePtr)(NPP instance);
 
 typedef NPError      (*NPN_GetValueProcPtr)(NPP instance, NPNVariable variable, void *ret_value);
 typedef NPError      (*NPN_SetValueProcPtr)(NPP instance, NPPVariable variable, void *value);
@@ -130,6 +131,9 @@ typedef NPBool       (*NPN_ConvertPointPtr)(NPP instance, double sourceX, double
 typedef NPBool       (*NPN_HandleEventPtr)(NPP instance, void *event, NPBool handled);
 typedef NPBool       (*NPN_UnfocusInstancePtr)(NPP instance, NPFocusDirection direction);
 typedef void         (*NPN_URLRedirectResponsePtr)(NPP instance, void* notifyData, NPBool allow);
+typedef NPError      (*NPN_InitAsyncSurfacePtr)(NPP instance, NPSize *size, NPImageFormat format, void *initData, NPAsyncSurface *surface);
+typedef NPError      (*NPN_FinalizeAsyncSurfacePtr)(NPP instance, NPAsyncSurface *surface);
+typedef void         (*NPN_SetCurrentAsyncSurfacePtr)(NPP instance, NPAsyncSurface *surface, NPRect *changed);
 
 typedef struct _NPPluginFuncs {
   uint16_t size;
@@ -153,6 +157,7 @@ typedef struct _NPPluginFuncs {
   NPP_URLRedirectNotifyPtr urlredirectnotify;
   NPP_ClearSiteDataPtr clearsitedata;
   NPP_GetSitesWithDataPtr getsiteswithdata;
+  NPP_DidCompositePtr didComposite;
 } NPPluginFuncs;
 
 typedef struct _NPNetscapeFuncs {
@@ -213,6 +218,9 @@ typedef struct _NPNetscapeFuncs {
   NPN_HandleEventPtr handleevent;
   NPN_UnfocusInstancePtr unfocusinstance;
   NPN_URLRedirectResponsePtr urlredirectresponse;
+  NPN_InitAsyncSurfacePtr initasyncsurface;
+  NPN_FinalizeAsyncSurfacePtr finalizeasyncsurface;
+  NPN_SetCurrentAsyncSurfacePtr setcurrentasyncsurface;
 } NPNetscapeFuncs;
 
 #ifdef XP_MACOSX

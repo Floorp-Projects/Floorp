@@ -244,7 +244,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
          */
         JSObject &sourceObj = sourceValue.toObject();
 
-        if (args.length() >= 2 && !args[1].isUndefined()) {
+        if (args.hasDefined(1)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEWREGEXP_FLAGGED);
             return false;
         }
@@ -293,7 +293,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
     }
 
     RegExpFlag flags = RegExpFlag(0);
-    if (args.length() > 1 && !args[1].isUndefined()) {
+    if (args.hasDefined(1)) {
         JSString *flagStr = ToString(cx, args[1]);
         if (!flagStr)
             return false;
@@ -319,7 +319,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 }
 
 static JSBool
-regexp_compile(JSContext *cx, uintN argc, Value *vp)
+regexp_compile(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -333,7 +333,7 @@ regexp_compile(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-regexp_construct(JSContext *cx, uintN argc, Value *vp)
+regexp_construct(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -343,8 +343,9 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
          * Otherwise, delegate to the standard constructor.
          * See ECMAv5 15.10.3.1.
          */
-        if (args.length() >= 1 && IsObjectWithClass(args[0], ESClass_RegExp, cx) &&
-            (args.length() == 1 || args[1].isUndefined()))
+        if (args.hasDefined(0) &&
+            IsObjectWithClass(args[0], ESClass_RegExp, cx) &&
+            !args.hasDefined(1))
         {
             args.rval() = args[0];
             return true;
@@ -356,7 +357,7 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
-regexp_toString(JSContext *cx, uintN argc, Value *vp)
+regexp_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -563,7 +564,7 @@ GetSharedForGreedyStar(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGu
  * |execType| to perform this optimization.
  */
 static bool
-ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
+ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -638,14 +639,14 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
 
 /* ES5 15.10.6.2. */
 JSBool
-js::regexp_exec(JSContext *cx, uintN argc, Value *vp)
+js::regexp_exec(JSContext *cx, unsigned argc, Value *vp)
 {
     return ExecuteRegExp(cx, regexp_exec, argc, vp);
 }
 
 /* ES5 15.10.6.3. */
 JSBool
-js::regexp_test(JSContext *cx, uintN argc, Value *vp)
+js::regexp_test(JSContext *cx, unsigned argc, Value *vp)
 {
     if (!ExecuteRegExp(cx, regexp_test, argc, vp))
         return false;

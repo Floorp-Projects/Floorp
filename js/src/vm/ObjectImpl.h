@@ -9,7 +9,7 @@
 #define ObjectImpl_h___
 
 #include "mozilla/Assertions.h"
-#include "mozilla/StdInt.h"
+#include "mozilla/StandardInteger.h"
 
 #include "jsfriendapi.h"
 #include "jsinfer.h"
@@ -57,8 +57,8 @@ class ObjectElements
       : capacity(capacity), initializedLength(0), length(length)
     {}
 
-    HeapValue * elements() { return (HeapValue *)(uintptr_t(this) + sizeof(ObjectElements)); }
-    static ObjectElements * fromElements(HeapValue *elems) {
+    HeapSlot *elements() { return (HeapSlot *)(uintptr_t(this) + sizeof(ObjectElements)); }
+    static ObjectElements * fromElements(HeapSlot *elems) {
         return (ObjectElements *)(uintptr_t(elems) - sizeof(ObjectElements));
     }
 
@@ -76,7 +76,7 @@ class ObjectElements
 };
 
 /* Shared singleton for objects with no elements. */
-extern HeapValue *emptyObjectElements;
+extern HeapSlot *emptyObjectElements;
 
 struct Class;
 struct GCMarker;
@@ -149,8 +149,8 @@ class ObjectImpl : public gc::Cell
      */
     HeapPtrTypeObject type_;
 
-    HeapValue *slots;     /* Slots for object properties. */
-    HeapValue *elements;  /* Slots for object elements. */
+    HeapSlot *slots;     /* Slots for object properties. */
+    HeapSlot *elements;  /* Slots for object elements. */
 
   private:
     static void staticAsserts() {
@@ -179,8 +179,8 @@ class ObjectImpl : public gc::Cell
     /* Minimum size for dynamically allocated slots. */
     static const uint32_t SLOT_CAPACITY_MIN = 8;
 
-    HeapValue * fixedSlots() const {
-        return reinterpret_cast<HeapValue *>(uintptr_t(this) + sizeof(ObjectImpl));
+    HeapSlot *fixedSlots() const {
+        return reinterpret_cast<HeapSlot *>(uintptr_t(this) + sizeof(ObjectImpl));
     }
 
     /*
@@ -259,7 +259,7 @@ class ObjectImpl : public gc::Cell
         return ObjectElements::fromElements(elements);
     }
 
-    inline HeapValue * fixedElements() const {
+    inline HeapSlot *fixedElements() const {
         MOZ_STATIC_ASSERT(2 * sizeof(Value) == sizeof(ObjectElements),
                           "when elements are stored inline, the first two "
                           "slots will hold the ObjectElements header");

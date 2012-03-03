@@ -527,7 +527,7 @@ jsds_GCSliceCallbackProc (JSRuntime *rt, js::GCProgress progress, const js::GCDe
         (*gPrevGCSliceCallback)(rt, progress, desc);
 }
 
-static uintN
+static unsigned
 jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
                     JSErrorReport *report, void *callerdata)
 {
@@ -585,7 +585,7 @@ jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
 
 static JSBool
 jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
-                   uintN type, void* callerdata)
+                   unsigned type, void* callerdata)
 {
     nsCOMPtr<jsdICallHook> hook;
 
@@ -625,7 +625,7 @@ jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
 
 static PRUint32
 jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
-                        uintN type, void* callerdata, jsval* rval)
+                        unsigned type, void* callerdata, jsval* rval)
 {
     nsCOMPtr<jsdIExecutionHook> hook(0);
     PRUint32 hook_rv = JSD_HOOK_RETURN_CONTINUE;
@@ -1036,7 +1036,7 @@ jsdScript::CreatePPLineMap()
     const jschar *chars;
     
     if (fun) {
-        uintN nargs;
+        unsigned nargs;
 
         {
             JSAutoEnterCompartment ac;
@@ -1281,7 +1281,7 @@ jsdScript::GetParameterNames(PRUint32* count, PRUnichar*** paramNames)
     if (!ac.enter(cx, JS_GetFunctionObject(fun)))
         return NS_ERROR_FAILURE;
 
-    uintN nargs;
+    unsigned nargs;
     if (!JS_FunctionHasLocalNames(cx, fun) ||
         (nargs = JS_GetFunctionArgumentCount(cx, fun)) == 0) {
         *count = 0;
@@ -1302,7 +1302,7 @@ jsdScript::GetParameterNames(PRUint32* count, PRUnichar*** paramNames)
     }
 
     nsresult rv = NS_OK;
-    for (uintN i = 0; i < nargs; ++i) {
+    for (unsigned i = 0; i < nargs; ++i) {
         JSAtom *atom = JS_LocalNameToAtom(names[i]);
         if (!atom) {
             ret[i] = 0;
@@ -1526,7 +1526,7 @@ jsdScript::GetExecutableLines(PRUint32 aPcmap, PRUint32 aStartLine, PRUint32 aMa
     ASSERT_VALID_EPHEMERAL;
     if (aPcmap == PCMAP_SOURCETEXT) {
         uintptr_t start = JSD_GetClosestPC(mCx, mScript, 0);
-        uintN lastLine = JSD_GetScriptBaseLineNumber(mCx, mScript)
+        unsigned lastLine = JSD_GetScriptBaseLineNumber(mCx, mScript)
                        + JSD_GetScriptLineExtent(mCx, mScript) - 1;
         uintptr_t end = JSD_GetClosestPC(mCx, mScript, lastLine + 1);
 
@@ -2835,7 +2835,7 @@ jsdService::DumpHeap(const nsACString &fileName)
         rv = NS_ERROR_FAILURE;
     } else {
         JSContext *cx = JSD_GetDefaultJSContext (mCx);
-        if (!JS_DumpHeap(cx, file, NULL, JSTRACE_OBJECT, NULL, (size_t)-1, NULL))
+        if (!JS_DumpHeap(JS_GetRuntime(cx), file, NULL, JSTRACE_OBJECT, NULL, (size_t)-1, NULL))
             rv = NS_ERROR_FAILURE;
         if (file != stdout)
             fclose(file);

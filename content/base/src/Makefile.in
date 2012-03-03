@@ -127,7 +127,6 @@ CPPSRCS		= \
 		nsNodeIterator.cpp \
 		nsNodeUtils.cpp \
 		nsObjectLoadingContent.cpp \
-		nsParserUtils.cpp \
 		nsPlainTextSerializer.cpp \
 		nsPropertyTable.cpp \
 		nsRange.cpp \
@@ -211,6 +210,7 @@ INCLUDES	+= \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
+DEFINES += -DHB_DONT_DEFINE_STDINT
 
 # gcc requires -msse2 for this file since it uses SSE2 intrinsics.  (See bug
 # 585538 comment 12.)

@@ -242,19 +242,20 @@ CallReceiverFromVp(Value *vp)
 class CallArgs : public CallReceiver
 {
   protected:
-    uintN argc_;
+    unsigned argc_;
   public:
-    friend CallArgs CallArgsFromVp(uintN, Value *);
-    friend CallArgs CallArgsFromArgv(uintN, Value *);
-    friend CallArgs CallArgsFromSp(uintN, Value *);
+    friend CallArgs CallArgsFromVp(unsigned, Value *);
+    friend CallArgs CallArgsFromArgv(unsigned, Value *);
+    friend CallArgs CallArgsFromSp(unsigned, Value *);
     Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
     Value *array() const { return argv_; }
-    uintN length() const { return argc_; }
+    unsigned length() const { return argc_; }
     Value *end() const { return argv_ + argc_; }
+    bool hasDefined(unsigned i) const { return i < argc_ && !argv_[i].isUndefined(); }
 };
 
 JS_ALWAYS_INLINE CallArgs
-CallArgsFromArgv(uintN argc, Value *argv)
+CallArgsFromArgv(unsigned argc, Value *argv)
 {
     CallArgs args;
     args.clearUsedRval();
@@ -264,13 +265,13 @@ CallArgsFromArgv(uintN argc, Value *argv)
 }
 
 JS_ALWAYS_INLINE CallArgs
-CallArgsFromVp(uintN argc, Value *vp)
+CallArgsFromVp(unsigned argc, Value *vp)
 {
     return CallArgsFromArgv(argc, vp + 2);
 }
 
 JS_ALWAYS_INLINE CallArgs
-CallArgsFromSp(uintN argc, Value *sp)
+CallArgsFromSp(unsigned argc, Value *sp)
 {
     return CallArgsFromArgv(argc, sp - argc);
 }
@@ -290,8 +291,8 @@ class CallArgsList : public CallArgs
     CallArgsList *prev_;
     bool active_;
   public:
-    friend CallArgsList CallArgsListFromVp(uintN, Value *, CallArgsList *);
-    friend CallArgsList CallArgsListFromArgv(uintN, Value *, CallArgsList *);
+    friend CallArgsList CallArgsListFromVp(unsigned, Value *, CallArgsList *);
+    friend CallArgsList CallArgsListFromArgv(unsigned, Value *, CallArgsList *);
     CallArgsList *prev() const { return prev_; }
     bool active() const { return active_; }
     void setActive() { active_ = true; }
@@ -299,7 +300,7 @@ class CallArgsList : public CallArgs
 };
 
 JS_ALWAYS_INLINE CallArgsList
-CallArgsListFromArgv(uintN argc, Value *argv, CallArgsList *prev)
+CallArgsListFromArgv(unsigned argc, Value *argv, CallArgsList *prev)
 {
     CallArgsList args;
 #ifdef DEBUG
@@ -313,7 +314,7 @@ CallArgsListFromArgv(uintN argc, Value *argv, CallArgsList *prev)
 }
 
 JS_ALWAYS_INLINE CallArgsList
-CallArgsListFromVp(uintN argc, Value *vp, CallArgsList *prev)
+CallArgsListFromVp(unsigned argc, Value *vp, CallArgsList *prev)
 {
     return CallArgsListFromArgv(argc, vp + 2, prev);
 }
@@ -323,8 +324,8 @@ CallArgsListFromVp(uintN argc, Value *vp, CallArgsList *prev)
 /* Flags specified for a frame as it is constructed. */
 enum InitialFrameFlags {
     INITIAL_NONE           =          0,
-    INITIAL_CONSTRUCT      =       0x80, /* == StackFrame::CONSTRUCTING, asserted in Stack.h */
-    INITIAL_LOWERED        =   0x800000  /* == StackFrame::LOWERED_CALL_APPLY, asserted in Stack.h */
+    INITIAL_CONSTRUCT      =       0x80, /* == StackFrame::CONSTRUCTING, asserted below */
+    INITIAL_LOWERED        =   0x200000  /* == StackFrame::LOWERED_CALL_APPLY, asserted below */
 };
 
 enum ExecuteType {
@@ -356,24 +357,23 @@ class StackFrame
         YIELDING           =      0x100,  /* js::Interpret dispatched JSOP_YIELD */
         FINISHED_IN_INTERP =      0x200,  /* set if frame finished in Interpret() */
 
-        /* Concerning function arguments */
-        OVERRIDE_ARGS      =      0x400,  /* overridden arguments local variable */
-        OVERFLOW_ARGS      =      0x800,  /* numActualArgs > numFormalArgs */
-        UNDERFLOW_ARGS     =     0x1000,  /* numActualArgs < numFormalArgs */
+        /* Function arguments */
+        OVERFLOW_ARGS      =      0x400,  /* numActualArgs > numFormalArgs */
+        UNDERFLOW_ARGS     =      0x800,  /* numActualArgs < numFormalArgs */
 
         /* Lazy frame initialization */
-        HAS_CALL_OBJ       =     0x2000,  /* frame has a callobj reachable from scopeChain_ */
-        HAS_ARGS_OBJ       =     0x4000,  /* frame has an argsobj in StackFrame::args */
-        HAS_HOOK_DATA      =     0x8000,  /* frame has hookData_ set */
-        HAS_ANNOTATION     =    0x10000,  /* frame has annotation_ set */
-        HAS_RVAL           =    0x20000,  /* frame has rval_ set */
-        HAS_SCOPECHAIN     =    0x40000,  /* frame has scopeChain_ set */
-        HAS_PREVPC         =    0x80000,  /* frame has prevpc_ and prevInline_ set */
-        HAS_BLOCKCHAIN     =   0x100000,  /* frame has blockChain_ set */
+        HAS_CALL_OBJ       =     0x1000,  /* frame has a callobj reachable from scopeChain_ */
+        HAS_ARGS_OBJ       =     0x2000,  /* frame has an argsobj in StackFrame::args */
+        HAS_HOOK_DATA      =     0x4000,  /* frame has hookData_ set */
+        HAS_ANNOTATION     =     0x8000,  /* frame has annotation_ set */
+        HAS_RVAL           =    0x10000,  /* frame has rval_ set */
+        HAS_SCOPECHAIN     =    0x20000,  /* frame has scopeChain_ set */
+        HAS_PREVPC         =    0x40000,  /* frame has prevpc_ and prevInline_ set */
+        HAS_BLOCKCHAIN     =    0x80000,  /* frame has blockChain_ set */
 
         /* Method JIT state */
-        DOWN_FRAMES_EXPANDED = 0x400000,  /* inlining in down frames has been expanded */
-        LOWERED_CALL_APPLY   = 0x800000   /* Pushed by a lowered call/apply */
+        DOWN_FRAMES_EXPANDED = 0x100000,  /* inlining in down frames has been expanded */
+        LOWERED_CALL_APPLY   = 0x200000   /* Pushed by a lowered call/apply */
     };
 
   private:
@@ -383,7 +383,7 @@ class StackFrame
         JSFunction      *fun;           /*   function frame, pre GetScopeChain */
     } exec;
     union {                             /* describes the arguments of a function */
-        uintN           nactual;        /*   for non-eval frames */
+        unsigned           nactual;        /*   for non-eval frames */
         JSScript        *evalScript;    /*   the script of an eval-in-function */
     } u;
     mutable JSObject    *scopeChain_;   /* current scope chain */
@@ -423,7 +423,7 @@ class StackFrame
                        JSScript *script, uint32_t nactual, StackFrame::Flags flags);
 
     /* Used for getFixupFrame (for FixupArity). */
-    void initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, uintN nactual);
+    void initFixupFrame(StackFrame *prev, StackFrame::Flags flags, void *ncode, unsigned nactual);
 
     /* Used for eval. */
     void initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs,
@@ -542,13 +542,13 @@ class StackFrame
         return slots() + script()->nfixed;
     }
 
-    Value &varSlot(uintN i) {
+    Value &varSlot(unsigned i) {
         JS_ASSERT(i < script()->nfixed);
         JS_ASSERT_IF(maybeFun(), i < script()->bindings.countVars());
         return slots()[i];
     }
 
-    Value &localSlot(uintN i) {
+    Value &localSlot(unsigned i) {
         /* Let variables can be above script->nfixed. */
         JS_ASSERT(i < script()->nslots);
         return slots()[i];
@@ -691,12 +691,12 @@ class StackFrame
         return isNonEvalFunctionFrame();
     }
 
-    uintN numFormalArgs() const {
+    unsigned numFormalArgs() const {
         JS_ASSERT(hasArgs());
         return fun()->nargs;
     }
 
-    Value &formalArg(uintN i) const {
+    Value &formalArg(unsigned i) const {
         JS_ASSERT(i < numFormalArgs());
         return formalArgs()[i];
     }
@@ -717,13 +717,13 @@ class StackFrame
                : NULL;
     }
 
-    inline uintN numActualArgs() const;
+    inline unsigned numActualArgs() const;
     inline Value *actualArgs() const;
     inline Value *actualArgsEnd() const;
 
-    inline Value &canonicalActualArg(uintN i) const;
+    inline Value &canonicalActualArg(unsigned i) const;
     template <class Op>
-    inline bool forEachCanonicalActualArg(Op op, uintN start = 0, uintN count = uintN(-1));
+    inline bool forEachCanonicalActualArg(Op op, unsigned start = 0, unsigned count = unsigned(-1));
     template <class Op> inline bool forEachFormalArg(Op op);
 
     bool hasArgsObj() const {
@@ -1105,16 +1105,8 @@ class StackFrame
         return !!(flags_ & DEBUGGER);
     }
 
-    bool hasOverriddenArgs() const {
-        return !!(flags_ & OVERRIDE_ARGS);
-    }
-
     bool hasOverflowArgs() const {
         return !!(flags_ & OVERFLOW_ARGS);
-    }
-
-    void setOverriddenArgs() {
-        flags_ |= OVERRIDE_ARGS;
     }
 
     bool isYielding() {
@@ -1188,12 +1180,12 @@ class StackFrame
                : -(fun->nargs + 1) * ptrdiff_t(sizeof(Value));
     }
 
-    static ptrdiff_t offsetOfFormalArg(JSFunction *fun, uintN i) {
+    static ptrdiff_t offsetOfFormalArg(JSFunction *fun, unsigned i) {
         JS_ASSERT(i < fun->nargs);
         return (-(int)fun->nargs + i) * sizeof(Value);
     }
 
-    static size_t offsetOfFixed(uintN i) {
+    static size_t offsetOfFixed(unsigned i) {
         return sizeof(StackFrame) + i * sizeof(Value);
     }
 
@@ -1211,10 +1203,10 @@ class StackFrame
 
 static const size_t VALUES_PER_STACK_FRAME = sizeof(StackFrame) / sizeof(Value);
 
-static inline uintN
+static inline unsigned
 ToReportFlags(InitialFrameFlags initial)
 {
-    return uintN(initial & StackFrame::CONSTRUCTING);
+    return unsigned(initial & StackFrame::CONSTRUCTING);
 }
 
 static inline StackFrame::Flags
@@ -1517,7 +1509,7 @@ class StackSpace
      * untrusted code) with an extra buffer so that, after such an apply, the
      * callee can do a little work without OOMing.
      */
-    static const uintN ARGS_LENGTH_MAX = CAPACITY_VALS - (2 * BUFFER_VALS);
+    static const unsigned ARGS_LENGTH_MAX = CAPACITY_VALS - (2 * BUFFER_VALS);
 
     /* See stack layout comment in Stack.h. */
     inline Value *firstUnused() const { return seg_ ? seg_->end() : base_; }
@@ -1549,7 +1541,7 @@ class StackSpace
      * NULL if this reserve space cannot be allocated.
      */
     inline Value *getStackLimit(JSContext *cx, MaybeReportError report);
-    bool tryBumpLimit(JSContext *cx, Value *from, uintN nvals, Value **limit);
+    bool tryBumpLimit(JSContext *cx, Value *from, unsigned nvals, Value **limit);
 
     /* Called during GC: mark segments, frames, and slots under firstUnused. */
     void mark(JSTracer *trc);
@@ -1567,7 +1559,7 @@ class StackSpace
 class ContextStack
 {
     StackSegment *seg_;
-    StackSpace *space_;
+    StackSpace *const space_;
     JSContext *cx_;
 
     /*
@@ -1589,7 +1581,7 @@ class ContextStack
     /* Implementation details of push* public interface. */
     StackSegment *pushSegment(JSContext *cx);
     enum MaybeExtend { CAN_EXTEND = true, CANT_EXTEND = false };
-    Value *ensureOnTop(JSContext *cx, MaybeReportError report, uintN nvars,
+    Value *ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars,
                        MaybeExtend extend, bool *pushedSeg,
                        JSCompartment *dest = (JSCompartment *)StackSpace::CX_COMPARTMENT);
 
@@ -1653,7 +1645,7 @@ class ContextStack
      * Invoke calls. The InvokeArgumentsGuard passed to Invoke must come from
      * an immediately-enclosing (stack-wise) call to pushInvokeArgs.
      */
-    bool pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *ag);
+    bool pushInvokeArgs(JSContext *cx, unsigned argc, InvokeArgsGuard *ag);
 
     /* Called by Invoke for a scripted function call. */
     bool pushInvokeFrame(JSContext *cx, const CallArgs &args,

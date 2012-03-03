@@ -157,7 +157,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                           jsval *statep, jsid *idp);
 
 static JSBool
-NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                         JSObject **objp);
 
 static JSBool
@@ -167,10 +167,10 @@ static void
 NPObjWrapper_Finalize(JSContext *cx, JSObject *obj);
 
 static JSBool
-NPObjWrapper_Call(JSContext *cx, uintN argc, jsval *vp);
+NPObjWrapper_Call(JSContext *cx, unsigned argc, jsval *vp);
 
 static JSBool
-NPObjWrapper_Construct(JSContext *cx, uintN argc, jsval *vp);
+NPObjWrapper_Construct(JSContext *cx, unsigned argc, jsval *vp);
 
 static JSBool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject *npobj,
@@ -202,14 +202,14 @@ static void
 NPObjectMember_Finalize(JSContext *cx, JSObject *obj);
 
 static JSBool
-NPObjectMember_Call(JSContext *cx, uintN argc, jsval *vp);
+NPObjectMember_Call(JSContext *cx, unsigned argc, jsval *vp);
 
 static void
 NPObjectMember_Trace(JSTracer *trc, JSObject *obj);
 
 static JSClass sNPObjectMemberClass =
   {
-    "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE,
+    "NPObject Ambiguous Member class", JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS,
     JS_PropertyStub, JS_PropertyStub,
     JS_PropertyStub, JS_StrictPropertyStub, JS_EnumerateStub,
     JS_ResolveStub, NPObjectMember_Convert,
@@ -220,8 +220,8 @@ static JSClass sNPObjectMemberClass =
 static void
 OnWrapperDestroyed();
 
-static JSBool
-DelayedReleaseGCCallback(JSContext* cx, JSGCStatus status)
+static void
+DelayedReleaseGCCallback(JSRuntime* rt, JSGCStatus status)
 {
   if (JSGC_END == status) {
     // Take ownership of sDelayedReleases and null it out now. The
@@ -238,7 +238,6 @@ DelayedReleaseGCCallback(JSContext* cx, JSGCStatus status)
       }
     }
   }
-  return JS_TRUE;
 }
 
 static void
@@ -1389,7 +1388,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSBool
-CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+CallNPMethodInternal(JSContext *cx, JSObject *obj, unsigned argc, jsval *argv,
                      jsval *rval, bool ctorCall)
 {
   while (obj && JS_GetClass(obj) != &sNPObjectJSWrapperClass) {
@@ -1526,7 +1525,7 @@ CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSBool
-CallNPMethod(JSContext *cx, uintN argc, jsval *vp)
+CallNPMethod(JSContext *cx, unsigned argc, jsval *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj)
@@ -1622,7 +1621,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
-NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
                         JSObject **objp)
 {
   NPObject *npobj = GetNPObject(obj);
@@ -1727,14 +1726,14 @@ NPObjWrapper_Finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-NPObjWrapper_Call(JSContext *cx, uintN argc, jsval *vp)
+NPObjWrapper_Call(JSContext *cx, unsigned argc, jsval *vp)
 {
   return CallNPMethodInternal(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), argc,
                               JS_ARGV(cx, vp), vp, false);
 }
 
 static JSBool
-NPObjWrapper_Construct(JSContext *cx, uintN argc, jsval *vp)
+NPObjWrapper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 {
   return CallNPMethodInternal(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), argc,
                               JS_ARGV(cx, vp), vp, true);
@@ -2226,7 +2225,7 @@ NPObjectMember_Finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-NPObjectMember_Call(JSContext *cx, uintN argc, jsval *vp)
+NPObjectMember_Call(JSContext *cx, unsigned argc, jsval *vp)
 {
   JSObject *memobj = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
   NS_ENSURE_TRUE(memobj, JS_FALSE);

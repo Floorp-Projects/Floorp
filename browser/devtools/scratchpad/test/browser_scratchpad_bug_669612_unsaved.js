@@ -3,7 +3,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */  
 
 // only finish() when correct number of tests are done
-const expected = 5;
+const expected = 4;
 var count = 0;
 function done()
 {
@@ -20,7 +20,6 @@ function test()
   waitForExplicitFinish();
   
   testListeners();
-  testErrorStatus();
   testRestoreNotFromFile();
   testRestoreFromFileSaved();
   testRestoreFromFileUnsaved();
@@ -34,35 +33,29 @@ function testListeners()
     aScratchpad.setText("new text");
     ok(!isStar(aWin), "no star if scratchpad isn't from a file");
 
-    aScratchpad.onTextSaved();
+    aScratchpad.editor.dirty = false;
     ok(!isStar(aWin), "no star before changing text");
 
+    aScratchpad.setFilename("foo.js");
     aScratchpad.setText("new text2");
     ok(isStar(aWin), "shows star if scratchpad text changes");
 
-    aScratchpad.onTextSaved();
+    aScratchpad.editor.dirty = false;
     ok(!isStar(aWin), "no star if scratchpad was just saved");
 
+    aScratchpad.setText("new text3");
+    ok(isStar(aWin), "shows star if scratchpad has more changes");
+
     aScratchpad.undo();
-    ok(isStar(aWin), "star if scratchpad undo");
+    ok(!isStar(aWin), "no star if scratchpad undo to save point");
+
+    aScratchpad.undo();
+    ok(isStar(aWin), "star if scratchpad undo past save point");
 
     aWin.close();
     done();
   }, {noFocus: true});
 }
-
-function testErrorStatus()
-{
-  openScratchpad(function(aWin, aScratchpad) {
-    aScratchpad.onTextSaved(Components.results.NS_ERROR_FAILURE);
-    aScratchpad.setText("new text");
-    ok(!isStar(aWin), "no star if file save failed");
-
-    aWin.close();
-    done();
-  }, {noFocus: true});
-}
-
 
 function testRestoreNotFromFile()
 {
