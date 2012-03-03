@@ -51,7 +51,10 @@ class nsSVGUseFrame : public nsSVGUseFrameBase,
   NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
-  nsSVGUseFrame(nsStyleContext* aContext) : nsSVGUseFrameBase(aContext) {}
+  nsSVGUseFrame(nsStyleContext* aContext) :
+    nsSVGUseFrameBase(aContext),
+    mHasValidDimensions(true)
+  {}
 
 public:
   NS_DECL_QUERYFRAME
@@ -59,11 +62,9 @@ public:
 
   
   // nsIFrame interface:
-#ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
-#endif
 
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -94,6 +95,9 @@ public:
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
                                         PRUint32 aFilter);
+
+private:
+  bool mHasValidDimensions;
 };
 
 //----------------------------------------------------------------------
@@ -123,18 +127,21 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGUseFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsSVGUseFrame::Init(nsIContent* aContent,
                     nsIFrame* aParent,
                     nsIFrame* aPrevInFlow)
 {
+#ifdef DEBUG
   nsCOMPtr<nsIDOMSVGUseElement> use = do_QueryInterface(aContent);
   NS_ASSERTION(use, "Content is not an SVG use!");
+#endif /* DEBUG */
+
+  mHasValidDimensions =
+    static_cast<nsSVGUseElement*>(aContent)->HasValidDimensions();
 
   return nsSVGUseFrameBase::Init(aContent, aParent, aPrevInFlow);
 }
-#endif /* DEBUG */
 
 NS_IMETHODIMP
 nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
@@ -150,7 +157,14 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
       nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
     } else if (aAttribute == nsGkAtoms::width ||
                aAttribute == nsGkAtoms::height) {
-      static_cast<nsSVGUseElement*>(mContent)->SyncWidthHeight(aAttribute);
+      static_cast<nsSVGUseElement*>(mContent)->SyncWidthOrHeight(aAttribute);
+
+      if (mHasValidDimensions != 
+          static_cast<nsSVGUseElement*>(mContent)->HasValidDimensions()) {
+
+        mHasValidDimensions = !mHasValidDimensions;
+        nsSVGUtils::UpdateGraphic(this);
+      }
     }
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {

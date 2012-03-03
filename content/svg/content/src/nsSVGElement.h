@@ -194,6 +194,9 @@ public:
   bool NumberAttrAllowsPercentage(PRUint8 aAttrEnum) {
     return GetNumberInfo().mNumberInfo[aAttrEnum].mPercentagesAllowed;
   }
+  virtual bool HasValidDimensions() const {
+    return true;
+  }
   void SetLength(nsIAtom* aName, const nsSVGLength2 &aLength);
 
   nsAttrValue WillChangeLength(PRUint8 aAttrEnum);

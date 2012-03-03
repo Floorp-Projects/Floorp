@@ -510,8 +510,10 @@ nsSVGAngle::SMILOrient::ClearAnimValue()
 {
   if (mAngle->mIsAnimated) {
     mOrientType->SetAnimValue(mOrientType->GetBaseValue());
-    mAngle->SetAnimValue(mAngle->mBaseVal, mAngle->mBaseValUnit, mSVGElement);
     mAngle->mIsAnimated = false;
+    mAngle->mAnimVal = mAngle->mBaseVal;
+    mAngle->mAnimValUnit = mAngle->mBaseValUnit;
+    mSVGElement->DidAnimateAngle(mAngle->mAttrEnum);
   }
 }
 
