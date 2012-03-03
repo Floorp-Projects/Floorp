@@ -165,10 +165,10 @@ public class SyncStorageRequest implements Resource {
     public void addHeaders(HttpRequestBase request, DefaultHttpClient client) {
       client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, USER_AGENT);
 
-      // Clients can use their delegate interface to specify X-Weave-If-Unmodified-Since.
+      // Clients can use their delegate interface to specify X-If-Unmodified-Since.
       String ifUnmodifiedSince = this.request.delegate.ifUnmodifiedSince();
       if (ifUnmodifiedSince != null) {
-        request.setHeader("x-weave-if-unmodified-since", ifUnmodifiedSince);
+        request.setHeader("x-if-unmodified-since", ifUnmodifiedSince);
       }
       if (request.getMethod().equalsIgnoreCase("DELETE")) {
         request.addHeader("x-confirm-delete", "1");
