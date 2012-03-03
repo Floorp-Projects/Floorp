@@ -9,4 +9,5 @@ package org.mozilla.gecko.sync;
  * Preprocessed class for storing preprocessed values.
  */
 public class GlobalConstants {
+  public static final String PRODUCT_NAME = "@MOZ_APP_DISPLAYNAME@";
 }
