@@ -757,7 +757,6 @@ var xml = <prefs>
 <pref><name>extensions.ignoreMTimeChanges</name></pref>
 <pref><name>network.hosts.pop_server</name></pref>
 <pref><name>privacy.item.history</name></pref>
-<pref><name>editor.quotesPreformatted</name></pref>
 <pref><name>security.password_lifetime</name></pref>
 <pref><name>security.ssl3.dhe_dss_aes_128_sha</name></pref>
 <pref><name>font.name.monospace.x-tamil</name></pref>

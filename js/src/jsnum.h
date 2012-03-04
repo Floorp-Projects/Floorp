@@ -160,7 +160,7 @@ class JSString;
 class JSFixedString;
 
 extern JSString * JS_FASTCALL
-js_IntToString(JSContext *cx, jsint i);
+js_IntToString(JSContext *cx, int i);
 
 /*
  * When base == 10, this function implements ToString() as specified by
@@ -213,7 +213,7 @@ struct ToCStringBuf
  * js_NumberToCString().
  */
 extern char *
-NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, jsint base = 10);
+NumberToCString(JSContext *cx, ToCStringBuf *cbuf, double d, int base = 10);
 
 /*
  * The largest positive integer such that all positive integers less than it

@@ -44,6 +44,7 @@
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
 #include "nsGenericElement.h"
+#include "dombindings.h"
 
 
 nsDOMTokenList::nsDOMTokenList(nsGenericElement *aElement, nsIAtom* aAttrAtom)
@@ -52,21 +53,34 @@ nsDOMTokenList::nsDOMTokenList(nsGenericElement *aElement, nsIAtom* aAttrAtom)
 {
   // We don't add a reference to our element. If it goes away,
   // we'll be told to drop our reference
+  SetIsProxy();
 }
 
 nsDOMTokenList::~nsDOMTokenList() { }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMTokenList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMTokenList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMTokenList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMTokenList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 DOMCI_DATA(DOMTokenList, nsDOMTokenList)
 
 NS_INTERFACE_TABLE_HEAD(nsDOMTokenList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_TABLE1(nsDOMTokenList,
                       nsIDOMDOMTokenList)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsDOMTokenList)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMTokenList)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsDOMTokenList)
-NS_IMPL_RELEASE(nsDOMTokenList)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMTokenList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMTokenList)
 
 void
 nsDOMTokenList::DropReference()
@@ -293,3 +307,12 @@ nsDOMTokenList::ToString(nsAString& aResult)
 
   return NS_OK;
 }
+
+JSObject*
+nsDOMTokenList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                           bool *triedToWrap)
+{
+  return mozilla::dom::binding::DOMTokenList::create(cx, scope, this,
+                                                     triedToWrap);
+}
+

@@ -49,7 +49,6 @@
 #include "nsChangeHint.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMMemoryReporter.h"
 #include "nsError.h"
 #include "nsGenericElement.h"
 #include "nsISupportsImpl.h"
@@ -194,6 +193,9 @@ public:
   }
   bool NumberAttrAllowsPercentage(PRUint8 aAttrEnum) {
     return GetNumberInfo().mNumberInfo[aAttrEnum].mPercentagesAllowed;
+  }
+  virtual bool HasValidDimensions() const {
+    return true;
   }
   void SetLength(nsIAtom* aName, const nsSVGLength2 &aLength);
 

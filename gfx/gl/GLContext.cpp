@@ -253,7 +253,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &mSymbols.fTexParameteri, { "TexParameteri", NULL } },
         { (PRFuncPtr*) &mSymbols.fTexParameterf, { "TexParameterf", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetString, { "GetString", NULL } },
-        { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetTexParameterfv, { "GetTexParameterfv", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetTexParameteriv, { "GetTexParameteriv", NULL } },
         { (PRFuncPtr*) &mSymbols.fGetUniformfv, { "GetUniformfv", "GetUniformfvARB", NULL } },
@@ -499,6 +498,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         // Load developer symbols, don't fail if we can't find them.
         SymLoadStruct auxSymbols[] = {
                 { (PRFuncPtr*) &mSymbols.fGetTexImage, { "GetTexImage", NULL } },
+                { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", NULL } },
                 { NULL, { NULL } },
         };
         LoadSymbols(&auxSymbols[0], trygl, prefix);

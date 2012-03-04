@@ -1,11 +1,6 @@
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/functions/glsl-function-atan.html
 conformance/glsl/functions/glsl-function-atan-xy.html
-conformance/glsl/misc/glsl-long-variable-names.html
-conformance/glsl/misc/shader-with-256-character-identifier.frag.html
-conformance/glsl/misc/shader-with-long-line.html
 conformance/more/conformance/quickCheckAPI-S_V.html
-conformance/more/functions/uniformfArrayLen1.html
-conformance/glsl/misc/attrib-location-length-limits.html
 conformance/glsl/misc/struct-nesting-under-maximum.html
-conformance/glsl/misc/uniform-location-length-limits.html
+conformance/more/functions/uniformfArrayLen1.html
