@@ -1557,13 +1557,12 @@ class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescri
 inline bool
 NewObjectCache::lookup(Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry)
 {
-    uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + kind;
+    uintptr_t hash = mozilla::HashGeneric(clasp, key, kind);
     *pentry = hash % js::ArrayLength(entries);
 
     Entry *entry = &entries[*pentry];
 
-    /* N.B. Lookups with the same clasp/key but different kinds map to different entries. */
-    return (entry->clasp == clasp && entry->key == key);
+    return (entry->clasp == clasp && entry->key == key && entry->kind == kind);
 }
 
 inline bool
