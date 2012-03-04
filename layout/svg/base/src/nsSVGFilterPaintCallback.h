@@ -40,7 +40,7 @@
 #include "nsRect.h"
 
 class nsIFrame;
-class nsSVGRenderState;
+class nsRenderingContext;
 
 class nsSVGFilterPaintCallback {
 public:
@@ -54,7 +54,7 @@ public:
    * system.
    * @param aDirtyRect the dirty rect *in user space pixels*
    */
-  virtual void Paint(nsSVGRenderState *aContext, nsIFrame *aTarget,
+  virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
                      const nsIntRect *aDirtyRect) = 0;
 };
 

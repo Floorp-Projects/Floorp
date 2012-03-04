@@ -54,11 +54,10 @@
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
 #include "nsCharTraits.h"
-#include "prbit.h"
 #include "nsUTF8Utils.h"
+#include "mozilla/HashFunctions.h"
 
-#define ADD_TO_HASHVAL(hashval, c) \
-    hashval = PR_ROTATE_LEFT32(hashval, 4) ^ (c);
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 
@@ -221,11 +220,13 @@ PRUint32 nsCRT::HashCode(const char* str, PRUint32* resultingStrLen)
   if (!str) return h;
 
   unsigned char c;
-  while ( (c = *s++) )
-    ADD_TO_HASHVAL(h, c);
+  while ( (c = *s++) ) {
+    h = AddToHash(h, c);
+  }
 
   if ( resultingStrLen )
     *resultingStrLen = (s-str)-1;
+
   return h;
 }
 
@@ -238,7 +239,7 @@ PRUint32 nsCRT::HashCode(const char* start, PRUint32 length)
   unsigned char c;
   while ( s < end ) {
     c = *s++;
-    ADD_TO_HASHVAL(h, c);
+    h = AddToHash(h, c);
   }
 
   return h;
@@ -253,10 +254,11 @@ PRUint32 nsCRT::HashCode(const PRUnichar* str, PRUint32* resultingStrLen)
 
   PRUnichar c;
   while ( (c = *s++) )
-    ADD_TO_HASHVAL(h, c);
+    h = AddToHash(h, c);
 
   if ( resultingStrLen )
     *resultingStrLen = (s-str)-1;
+
   return h;
 }
 
@@ -269,7 +271,7 @@ PRUint32 nsCRT::HashCode(const PRUnichar* start, PRUint32 length)
   PRUnichar c;
   while ( s < end ) {
     c = *s++;
-    ADD_TO_HASHVAL(h, c);
+    h = AddToHash(h, c);
   }
 
   return h;
@@ -292,11 +294,10 @@ PRUint32 nsCRT::HashCodeAsUTF16(const char* start, PRUint32 length,
       }
 
       if (ucs4 < PLANE1_BASE) {
-        ADD_TO_HASHVAL(h, ucs4);
+        h = AddToHash(h, ucs4);
       }
       else {
-        ADD_TO_HASHVAL(h, H_SURROGATE(ucs4));
-        ADD_TO_HASHVAL(h, L_SURROGATE(ucs4));
+        h = AddToHash(h, H_SURROGATE(ucs4), L_SURROGATE(ucs4));
       }
     }
 

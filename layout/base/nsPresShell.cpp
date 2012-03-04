@@ -201,9 +201,6 @@
 #include "imgIEncoder.h"
 #include "gfxPlatform.h"
 
-/* for NS_MEMORY_REPORTER_IMPLEMENT */
-#include "nsIMemoryReporter.h"
-
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -608,113 +605,6 @@ struct nsCallbackEventRequest
                  GetPresContext()->RefreshDriver()->                          \
                    IsLayoutFlushObserver(this), "Unexpected state")
 
-NS_IMPL_ISUPPORTS1(PresShell::MemoryReporter, nsIMemoryMultiReporter)
-
-namespace {
-
-struct MemoryReporterData
-{
-  nsIMemoryMultiReporterCallback* callback;
-  nsISupports* closure;
-};
-
-} // anonymous namespace
-
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(LayoutMallocSizeOf, "layout")
-
-/* static */ PLDHashOperator
-PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
-                                          void *userArg)
-{
-  PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
-  MemoryReporterData *data = (MemoryReporterData*)userArg;
-
-  // Build the string "explicit/layout/shell(<uri of the document>)"
-  nsCAutoString str("explicit/layout/shell(");
-
-  nsIDocument* doc = aShell->GetDocument();
-  if (doc) {
-    nsIURI* docURI = doc->GetDocumentURI();
-
-    if (docURI) {
-      nsCString spec;
-      docURI->GetSpec(spec);
-
-      // A hack: replace forward slashes with '\\' so they aren't
-      // treated as path separators.  Users of the reporters
-      // (such as about:memory) have to undo this change.
-      spec.ReplaceChar('/', '\\');
-
-      str += spec;
-    }
-  }
-
-  str += NS_LITERAL_CSTRING(")");
-
-  NS_NAMED_LITERAL_CSTRING(kArenaDesc, "Memory used by layout PresShell, PresContext, and other related areas.");
-  NS_NAMED_LITERAL_CSTRING(kStyleDesc, "Memory used by the style system.");
-  NS_NAMED_LITERAL_CSTRING(kTextRunsDesc, "Memory used for text-runs (glyph layout) in the PresShell's frame tree.");
-
-  nsCAutoString arenaPath = str + NS_LITERAL_CSTRING("/arenas");
-  nsCAutoString stylePath = str + NS_LITERAL_CSTRING("/styledata");
-  nsCAutoString textRunsPath = str + NS_LITERAL_CSTRING("/textruns");
-
-  PRInt64 arenasSize =
-    aShell->SizeOfIncludingThis(LayoutMallocSizeOf) +
-    aShell->mPresContext->SizeOfIncludingThis(LayoutMallocSizeOf);
-
-  PRInt64 styleSize =
-    aShell->StyleSet()->SizeOfIncludingThis(LayoutMallocSizeOf);
-
-  PRInt64 textRunsSize = aShell->SizeOfTextRuns(LayoutMallocSizeOf);
-
-  data->callback->
-    Callback(EmptyCString(), arenaPath, nsIMemoryReporter::KIND_HEAP,
-             nsIMemoryReporter::UNITS_BYTES, arenasSize, kArenaDesc,
-             data->closure);
-
-  data->callback->
-    Callback(EmptyCString(), stylePath, nsIMemoryReporter::KIND_HEAP,
-             nsIMemoryReporter::UNITS_BYTES, styleSize, kStyleDesc,
-             data->closure);
-
-  if (textRunsSize) {
-    data->callback->
-      Callback(EmptyCString(), textRunsPath, nsIMemoryReporter::KIND_HEAP,
-               nsIMemoryReporter::UNITS_BYTES, textRunsSize, kTextRunsDesc,
-               data->closure);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-NS_IMETHODIMP
-PresShell::MemoryReporter::GetName(nsACString &aName)
-{
-  aName.AssignLiteral("layout");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
-                                          nsISupports* aClosure)
-{
-  MemoryReporterData data;
-  data.callback = aCb;
-  data.closure = aClosure;
-
-  sLiveShells->EnumerateEntries(SizeEnumerator, &data);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresShell::MemoryReporter::GetExplicitNonHeap(PRInt64 *aAmount) {
-  // This reporter doesn't do any KIND_NONHEAP measurements.
-  *aAmount = 0;
-  return NS_OK;
-}
-
 class nsAutoCauseReflowNotifier
 {
 public:
@@ -915,7 +805,6 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
   return NS_OK;
 }
 
-nsTHashtable<PresShell::PresShellPtrKey> *nsIPresShell::sLiveShells = 0;
 static bool sSynthMouseMove = true;
 
 PresShell::PresShell()
@@ -943,15 +832,12 @@ PresShell::PresShell()
   mYResolution = 1.0;
   mViewportOverridden = false;
 
-  static bool registeredReporter = false;
-  if (!registeredReporter) {
-    NS_RegisterMemoryMultiReporter(new MemoryReporter);
+  static bool addedSynthMouseMove = false;
+  if (!addedSynthMouseMove) {
     Preferences::AddBoolVarCache(&sSynthMouseMove,
                                  "layout.reflow.synthMouseMove", true);
-    registeredReporter = true;
+    addedSynthMouseMove = true;
   }
-
-  sLiveShells->PutEntry(this);
 }
 
 NS_IMPL_ISUPPORTS7(PresShell, nsIPresShell, nsIDocumentObserver,
@@ -961,8 +847,6 @@ NS_IMPL_ISUPPORTS7(PresShell, nsIPresShell, nsIDocumentObserver,
 
 PresShell::~PresShell()
 {
-  sLiveShells->RemoveEntry(this);
-
   if (!mHaveShutDown) {
     NS_NOTREACHED("Someone did not call nsIPresShell::destroy");
     Destroy();
@@ -9085,19 +8969,18 @@ nsIPresShell::AccService()
 }
 #endif
 
+static bool inited = false;
+
 void nsIPresShell::InitializeStatics()
 {
-  NS_ASSERTION(sLiveShells == nsnull, "InitializeStatics called multiple times!");
-  sLiveShells = new nsTHashtable<PresShellPtrKey>();
-  sLiveShells->Init();
+  NS_ASSERTION(!inited, "InitializeStatics called multiple times!");
   gCaptureTouchList.Init();
+  inited = true;
 }
 
 void nsIPresShell::ReleaseStatics()
 {
-  NS_ASSERTION(sLiveShells, "ReleaseStatics called without Initialize!");
-  delete sLiveShells;
-  sLiveShells = nsnull;
+  NS_ASSERTION(inited, "ReleaseStatics called without Initialize!");
 }
 
 // Asks our docshell whether we're active.
@@ -9203,8 +9086,23 @@ PresShell::GetRootPresShell()
   return nsnull;
 }
 
+void
+PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                               size_t *aArenasSize,
+                               size_t *aStyleSetsSize,
+                               size_t *aTextRunsSize) const
+{
+  *aArenasSize = aMallocSizeOf(this);
+  *aArenasSize += mStackArena.SizeOfExcludingThis(aMallocSizeOf);
+  *aArenasSize += mFrameArena.SizeOfExcludingThis(aMallocSizeOf);
+
+  *aStyleSetsSize = StyleSet()->SizeOfIncludingThis(aMallocSizeOf);
+
+  *aTextRunsSize = SizeOfTextRuns(aMallocSizeOf);
+}
+
 size_t
-PresShell::SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf)
+PresShell::SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const
 {
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (!rootFrame) {
