@@ -64,7 +64,6 @@
 #include "plstr.h"
 #include "nsURLHelper.h"
 
-#include "mozilla/HashFunctions.h"
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -279,7 +278,7 @@ static PLDHashNumber
 HostDB_HashKey(PLDHashTable *table, const void *key)
 {
     const nsHostKey *hk = static_cast<const nsHostKey *>(key);
-    return AddToHash(HashString(hk->host), RES_KEY_FLAGS(hk->flags), hk->af);
+    return PL_DHashStringKey(table, hk->host) ^ RES_KEY_FLAGS(hk->flags) ^ hk->af;
 }
 
 static bool

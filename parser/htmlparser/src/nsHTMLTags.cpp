@@ -43,7 +43,6 @@
 #include "nsString.h"
 #include "nsStaticAtom.h"
 #include "nsUnicharUtils.h"
-#include "mozilla/HashFunctions.h"
 
 using namespace mozilla;
 
@@ -326,7 +325,9 @@ PLHashTable* nsHTMLTags::gTagAtomTable;
 static PLHashNumber
 HTMLTagsHashCodeUCPtr(const void *key)
 {
-  return HashString(static_cast<const PRUnichar*>(key));
+  const PRUnichar *str = (const PRUnichar *)key;
+
+  return nsCRT::HashCode(str);
 }
 
 static PRIntn
