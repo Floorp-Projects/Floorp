@@ -354,6 +354,9 @@ ClusterIterator::Next()
             mPos++;
         }
     }
+
+    NS_ASSERTION(mText < mPos && mPos <= mLimit,
+                 "ClusterIterator::Next has overshot the string!");
 }
 
 } // end namespace unicode
