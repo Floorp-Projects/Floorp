@@ -43,6 +43,9 @@
 #include "xpcprivate.h"
 
 #include "jshash.h"
+#include "mozilla/HashFunctions.h"
+
+using namespace mozilla;
 
 /***************************************************************************/
 // static shared...
@@ -88,9 +91,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
 
     if (!Set) {
         NS_ASSERTION(Addition, "bad key");
-        // This would be an XOR like below.
-        // But "0 ^ x == x". So it does not matter.
-        h = (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
+        h = AddToHash(h, Addition);
     } else {
         XPCNativeInterface** Current = Set->GetInterfaceArray();
         PRUint16 count = Set->GetInterfaceCount();
@@ -98,13 +99,13 @@ HashNativeKey(JSDHashTable *table, const void *key)
             count++;
             for (PRUint16 i = 0; i < count; i++) {
                 if (i == Position)
-                    h ^= (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
+                    h = AddToHash(h, Addition);
                 else
-                    h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
+                    h = AddToHash(h, *(Current++));
             }
         } else {
             for (PRUint16 i = 0; i < count; i++)
-                h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
+                h = AddToHash(h, *(Current++));
         }
     }
 
@@ -553,10 +554,8 @@ XPCNativeScriptableSharedMap::Entry::Hash(JSDHashTable *table, const void *key)
     // bitmap since it's very rare that it's different when flags and classname
     // are the same.
 
-    h = (JSDHashNumber) obj->GetFlags();
-    for (s = (const unsigned char*) obj->GetJSClass()->name; *s != '\0'; s++)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
-    return h;
+    h = HashGeneric(obj->GetFlags());
+    return AddToHash(h, HashString(obj->GetJSClass()->name));
 }
 
 JSBool
