@@ -57,7 +57,6 @@
 static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #endif
 
-using namespace mozilla;
 using namespace mozilla::dom;
 
 #define kXMLNSNameSpaceURI "http://www.w3.org/2000/xmlns/"

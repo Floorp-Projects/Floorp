@@ -54,9 +54,6 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsCRT.h"
-#include "mozilla/HashFunctions.h"
-
-using namespace mozilla;
 
 struct HTEntry : PLDHashEntryHdr
 {
@@ -537,7 +534,7 @@ nsCStringKey::~nsCStringKey(void)
 PRUint32
 nsCStringKey::HashCode(void) const
 {
-    return HashString(mStr, mStrLen);
+    return nsCRT::HashCode(mStr, (PRUint32*)&mStrLen);
 }
 
 bool
@@ -664,7 +661,7 @@ nsStringKey::~nsStringKey(void)
 PRUint32
 nsStringKey::HashCode(void) const
 {
-    return HashString(mStr, mStrLen);
+    return nsCRT::HashCode(mStr, (PRUint32*)&mStrLen);
 }
 
 bool

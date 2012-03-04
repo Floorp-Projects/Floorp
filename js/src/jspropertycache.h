@@ -44,7 +44,6 @@
 #include "jsapi.h"
 #include "jsprvtd.h"
 #include "jstypes.h"
-#include "mozilla/HashFunctions.h"
 
 #include "vm/String.h"
 
@@ -178,7 +177,7 @@ class PropertyCache
     static inline uintptr_t
     hash(jsbytecode *pc, const Shape *kshape)
     {
-        return mozilla::HashGeneric(pc, kshape) & MASK;
+        return (((uintptr_t(pc) >> SIZE_LOG2) ^ uintptr_t(pc) ^ ((uintptr_t)kshape >> 3)) & MASK);
     }
 
     static inline bool matchShape(JSContext *cx, JSObject *obj, uint32_t shape);
