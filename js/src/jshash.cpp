@@ -45,6 +45,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jshash.h"
+#include "mozilla/HashFunctions.h"
 
 using namespace js;
 
@@ -461,13 +462,7 @@ JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 JS_PUBLIC_API(JSHashNumber)
 JS_HashString(const void *key)
 {
-    JSHashNumber h;
-    const unsigned char *s;
-
-    h = 0;
-    for (s = (const unsigned char *)key; *s; s++)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
-    return h;
+    return mozilla::HashString(static_cast<const char*>(key));
 }
 
 JS_PUBLIC_API(int)

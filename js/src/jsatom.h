@@ -51,6 +51,7 @@
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
+#include "mozilla/HashFunctions.h"
 
 struct JSIdArray {
     int length;
@@ -173,9 +174,11 @@ namespace js {
 inline uint32_t
 HashChars(const jschar *chars, size_t length)
 {
+    // We could call mozilla::HashString here, but that isn't inlined.
+
     uint32_t h = 0;
-    for (; length; chars++, length--)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *chars;
+    for (size_t i = 0; i < length; i++)
+        h = mozilla::AddToHash(h, chars[i]);
     return h;
 }
 
