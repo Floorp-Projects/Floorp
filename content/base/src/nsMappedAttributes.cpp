@@ -45,9 +45,6 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsRuleWalker.h"
 #include "prmem.h"
-#include "mozilla/HashFunctions.h"
-
-using namespace mozilla;
 
 nsMappedAttributes::nsMappedAttributes(nsHTMLStyleSheet* aSheet,
                                        nsMapRuleToAttributesFunc aMapRuleFunc)
@@ -179,16 +176,14 @@ nsMappedAttributes::Equals(const nsMappedAttributes* aOther) const
 PRUint32
 nsMappedAttributes::HashValue() const
 {
-  PRUint32 hash = HashGeneric(mRuleMapper);
+  PRUint32 value = NS_PTR_TO_INT32(mRuleMapper);
 
   PRUint32 i;
   for (i = 0; i < mAttrCount; ++i) {
-    hash = AddToHash(hash,
-                     Attrs()[i].mName.HashValue(),
-                     Attrs()[i].mValue.HashValue());
+    value ^= Attrs()[i].mName.HashValue() ^ Attrs()[i].mValue.HashValue();
   }
 
-  return hash;
+  return value;
 }
 
 void

@@ -55,7 +55,6 @@
 #include "nsCRT.h"
 #include "prbit.h"
 #include "nsTraceRefcnt.h"
-#include "mozilla/HashFunctions.h"
 
 class nsPrefBranch;
 
@@ -72,8 +71,11 @@ class PrefCallback : public PLDHashEntryHdr {
 
     static PLDHashNumber HashKey(const PrefCallback *aKey)
     {
-      PRUint32 hash = mozilla::HashString(aKey->mDomain);
-      return mozilla::AddToHash(hash, aKey->mCanonical);
+      PRUint32 strHash = nsCRT::HashCode(aKey->mDomain.BeginReading(),
+                                         aKey->mDomain.Length());
+
+      return PR_ROTATE_LEFT32(strHash, 4) ^
+             NS_PTR_TO_UINT32(aKey->mCanonical);
     }
 
 

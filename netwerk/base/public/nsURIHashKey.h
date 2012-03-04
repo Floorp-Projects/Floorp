@@ -40,8 +40,8 @@
 
 #include "pldhash.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsIURI.h"
-#include "nsHashKeys.h"
 
 /**
  * Hashtable key class to use with nsTHashtable/nsBaseHashtable
@@ -72,7 +72,7 @@ public:
     static PLDHashNumber HashKey(const nsIURI* aKey) {
         nsCAutoString spec;
         const_cast<nsIURI*>(aKey)->GetSpec(spec);
-        return mozilla::HashString(spec);
+        return nsCRT::HashCode(spec.get());
     }
     
     enum { ALLOW_MEMMOVE = true };

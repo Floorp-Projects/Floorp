@@ -43,7 +43,6 @@
 #include "nsIImageToPixbuf.h"
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
-#include "nsCRT.h"
 
 #include <gdk/gdk.h>
 

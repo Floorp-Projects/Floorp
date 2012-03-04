@@ -40,7 +40,6 @@
 #include "mozilla/dom/ContentChild.h"
 
 #include "mozilla/Util.h"
-#include "mozilla/HashFunctions.h"
 
 #include "nsXULAppAPI.h"
 
@@ -107,8 +106,9 @@ public:
 
   static PLDHashNumber HashKey(const ValueObserverHashKey *aKey)
   {
-    PLDHashNumber hash = HashString(aKey->mPrefName);
-    return AddToHash(hash, aKey->mCallback);
+    PRUint32 strHash = nsCRT::HashCode(aKey->mPrefName.BeginReading(),
+                                       aKey->mPrefName.Length());
+    return PR_ROTATE_LEFT32(strHash, 4) ^ NS_PTR_TO_UINT32(aKey->mCallback);
   }
 
   ValueObserverHashKey(const char *aPref, PrefChangedFunc aCallback) :
