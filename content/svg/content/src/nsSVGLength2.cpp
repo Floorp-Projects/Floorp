@@ -570,8 +570,9 @@ void
 nsSVGLength2::SMILLength::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
-    mVal->SetAnimValueInSpecifiedUnits(mVal->mBaseVal, mSVGElement);
     mVal->mIsAnimated = false;
+    mVal->mAnimVal = mVal->mBaseVal;
+    mSVGElement->DidAnimateLength(mVal->mAttrEnum);
   }  
 }
 
