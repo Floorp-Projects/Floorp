@@ -107,7 +107,7 @@ public:
 
   bool KeyEquals(const char* aEntity) const { return !strcmp(mNode->mStr, aEntity); }
   static const char* KeyToPointer(const char* aEntity) { return aEntity; }
-  static PLDHashNumber HashKey(const char* aEntity) { return HashString(aEntity); }
+  static PLDHashNumber HashKey(const char* aEntity) { return mozilla::HashString(aEntity); }
   enum { ALLOW_MEMMOVE = true };
 
   const EntityNode* mNode;
