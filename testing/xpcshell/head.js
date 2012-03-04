@@ -335,9 +335,9 @@ function _execute_test() {
     // do_check failure though.
     if (!_quit || e != Components.results.NS_ERROR_ABORT) {
       msg = "TEST-UNEXPECTED-FAIL | ";
-      if ('fileName' in e) {
+      if (e.fileName) {
         msg += e.fileName;
-        if ('lineNumber' in e) {
+        if (e.lineNumber) {
           msg += ":" + e.lineNumber;
         }
       } else {
