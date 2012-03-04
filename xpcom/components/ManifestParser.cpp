@@ -42,6 +42,7 @@
 
 #include <string.h>
 
+#include "nsCRT.h"
 #include "prio.h"
 #include "prprf.h"
 #if defined(XP_WIN)
