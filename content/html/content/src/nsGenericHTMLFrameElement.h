@@ -7,7 +7,7 @@
 
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLFrameElement.h"
-#include "nsIDOMMozBrowserFrame.h"
+#include "nsIMozBrowserFrame.h"
 #include "nsIDOMEventListener.h"
 #include "nsIWebProgressListener.h"
 
@@ -16,7 +16,7 @@
  */
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsIFrameLoaderOwner,
-                                  public nsIDOMMozBrowserFrame,
+                                  public nsIMozBrowserFrame,
                                   public nsIWebProgressListener
 {
 public:
@@ -33,6 +33,7 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_DECL_NSIFRAMELOADEROWNER
   NS_DECL_NSIDOMMOZBROWSERFRAME
+  NS_DECL_NSIMOZBROWSERFRAME
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIContent
@@ -60,6 +61,9 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGenericHTMLFrameElement,
                                                      nsGenericHTMLElement)
+
+  // Non-COM version of nsIMozBrowserFrame::GetReallyIsBrowser.
+  bool GetReallyIsBrowser();
 
 protected:
   /**
@@ -92,7 +96,6 @@ protected:
   nsresult GetContentWindow(nsIDOMWindow** aContentWindow);
 
   void MaybeEnsureBrowserFrameListenersRegistered();
-  bool BrowserFrameSecurityCheck();
   nsresult MaybeFireBrowserEvent(const nsAString &aEventName,
                                  const nsAString &aEventType,
                                  const nsAString &aValue = EmptyString());
