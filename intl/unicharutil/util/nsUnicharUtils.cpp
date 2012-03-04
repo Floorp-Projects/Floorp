@@ -47,6 +47,7 @@
 #include "nsXPCOMStrings.h"
 #include "casetable.h"
 #include "nsUTF8Utils.h"
+#include "nsHashKeys.h"
 
 #include <ctype.h>
 
@@ -540,3 +541,33 @@ CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
   return leftChar == rightChar;
 }
 
+namespace mozilla {
+
+PRUint32
+HashUTF8AsUTF16(const char* aUTF8, PRUint32 aLength, bool* aErr)
+{
+  PRUint32 hash = 0;
+  const char* s = aUTF8;
+  const char* end = aUTF8 + aLength;
+
+  *aErr = false;
+
+  while (s < end)
+  {
+    PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&s, end, aErr);
+    if (*aErr) {
+      return 0;
+    }
+
+    if (ucs4 < PLANE1_BASE) {
+      hash = AddToHash(hash, ucs4);
+    }
+    else {
+      hash = AddToHash(hash, H_SURROGATE(ucs4), L_SURROGATE(ucs4));
+    }
+  }
+
+  return hash;
+}
+
+} // namespace mozilla
