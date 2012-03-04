@@ -238,9 +238,10 @@ namespace memory {
 
 // This reports all the stats in |rtStats| that belong in the "explicit" tree,
 // (which isn't all of them).
-void
-ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats, const nsACString &pathPrefix,
-                                 nsIMemoryMultiReporterCallback *callback,
+nsresult
+ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
+                                 const nsACString &pathPrefix,
+                                 nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure);
 
 } // namespace memory
