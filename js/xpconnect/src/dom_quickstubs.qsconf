@@ -75,7 +75,6 @@ members = [
     'nsIDOMWindow.getComputedStyle',
     'nsIDOMWindow.sessionStorage',
     'nsIDOMWindow.localStorage',
-    'nsIDOMWindow.globalStorage',
     'nsIDOMWindow.onmouseenter',
     'nsIDOMWindow.onmouseleave',
     'nsIDOMJSWindow.dump',
@@ -518,6 +517,7 @@ customIncludes = [
     'nsINodeList.h',
     'nsCSSPropertiesQS.h',
     'nsDocument.h',
+    'nsDOMTokenList.h',
     'nsGenericDOMDataNode.h',
     'nsGenericElement.h',
     'nsGenericHTMLElement.h',
@@ -785,7 +785,7 @@ customMethodCalls = {
         },
     'nsIDOMElement_GetClassList': {
         'thisType': 'nsGenericElement',
-        'code': '    nsIDOMDOMTokenList *result = self->GetClassList(&rv);'
+        'code': '    nsDOMTokenList *result = self->GetClassList(&rv);'
         },
     'nsIDOMElement_SetCapture': {
         'thisType': 'nsGenericElement',

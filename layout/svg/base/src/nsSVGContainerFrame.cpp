@@ -164,7 +164,7 @@ nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGDisplayContainerFrame::PaintSVG(nsSVGRenderState* aContext,
+nsSVGDisplayContainerFrame::PaintSVG(nsRenderingContext* aContext,
                                      const nsIntRect *aDirtyRect)
 {
   const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();

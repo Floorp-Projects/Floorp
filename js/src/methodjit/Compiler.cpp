@@ -734,9 +734,9 @@ MakeJITScript(JSContext *cx, JSScript *script, bool construct)
                 jsbytecode *pc2 = pc;
                 unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
                 pc2 += JUMP_OFFSET_LEN;
-                jsint low = GET_JUMP_OFFSET(pc2);
+                int32_t low = GET_JUMP_OFFSET(pc2);
                 pc2 += JUMP_OFFSET_LEN;
-                jsint high = GET_JUMP_OFFSET(pc2);
+                int32_t high = GET_JUMP_OFFSET(pc2);
                 pc2 += JUMP_OFFSET_LEN;
 
                 CrossChunkEdge edge;
@@ -745,7 +745,7 @@ MakeJITScript(JSContext *cx, JSScript *script, bool construct)
                 if (!currentEdges.append(edge))
                     return NULL;
 
-                for (jsint i = low; i <= high; i++) {
+                for (int32_t i = low; i <= high; i++) {
                     unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                     if (targetOffset != offset) {
                         /*
@@ -3781,6 +3781,21 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     JS_ASSERT_IF(fe, fe == frame.peek(-1));
 
     if (debugMode() || Probes::callTrackingActive(cx)) {
+        /* If the return value isn't in the frame's rval slot, move it there. */
+        if (fe) {
+            frame.storeTo(fe, Address(JSFrameReg, StackFrame::offsetOfReturnValue()), true);
+
+            /* Set the frame flag indicating it's there. */
+            RegisterID reg = frame.allocReg();
+            masm.load32(FrameFlagsAddress(), reg);
+            masm.or32(Imm32(StackFrame::HAS_RVAL), reg);
+            masm.store32(reg, FrameFlagsAddress());
+            frame.freeReg(reg);
+
+            /* Use the frame's return value when generating further code. */
+            fe = NULL;
+        }
+
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::ScriptDebugEpilogue, REJOIN_RESUME);
     }
@@ -7332,9 +7347,9 @@ mjit::Compiler::jsop_tableswitch(jsbytecode *pc)
     uint32_t defaultTarget = GET_JUMP_OFFSET(pc);
     pc += JUMP_OFFSET_LEN;
 
-    jsint low = GET_JUMP_OFFSET(pc);
+    int32_t low = GET_JUMP_OFFSET(pc);
     pc += JUMP_OFFSET_LEN;
-    jsint high = GET_JUMP_OFFSET(pc);
+    int32_t high = GET_JUMP_OFFSET(pc);
     pc += JUMP_OFFSET_LEN;
     int numJumps = high + 1 - low;
     JS_ASSERT(numJumps >= 0);

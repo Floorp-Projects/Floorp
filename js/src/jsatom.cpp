@@ -736,13 +736,13 @@ js_CheckForStringIndex(jsid id)
         if (oldIndex < -(JSID_INT_MIN / 10) ||
             (oldIndex == -(JSID_INT_MIN / 10) && c <= (-JSID_INT_MIN % 10)))
         {
-            id = INT_TO_JSID(-jsint(index));
+            id = INT_TO_JSID(-int32_t(index));
         }
     } else {
         if (oldIndex < JSID_INT_MAX / 10 ||
             (oldIndex == JSID_INT_MAX / 10 && c <= (JSID_INT_MAX % 10)))
         {
-            id = INT_TO_JSID(jsint(index));
+            id = INT_TO_JSID(int32_t(index));
         }
     }
 

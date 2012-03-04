@@ -54,7 +54,7 @@ NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGMaskFrame)
 
 already_AddRefed<gfxPattern>
-nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
+nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
                                  nsIFrame* aParent,
                                  const gfxMatrix &aMatrix,
                                  float aOpacity)
@@ -80,7 +80,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
   gfxRect maskArea = nsSVGUtils::GetRelativeRect(units,
     &mask->mLengthAttributes[nsSVGMaskElement::X], bbox, aParent);
 
-  gfxContext *gfx = aContext->GetGfxContext();
+  gfxContext *gfx = aContext->ThebesContext();
 
   gfx->Save();
   nsSVGUtils::SetClipRect(gfx, aMatrix, maskArea);
@@ -113,7 +113,8 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     return nsnull;
   image->SetDeviceOffset(-clipExtents.TopLeft());
 
-  nsSVGRenderState tmpState(image);
+  nsRenderingContext tmpCtx;
+  tmpCtx.Init(this->PresContext()->DeviceContext(), image);
 
   mMaskParent = aParent;
   if (mMaskParentMatrix) {
@@ -130,7 +131,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
       SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
                                  nsISVGChildFrame::TRANSFORM_CHANGED);
     }
-    nsSVGUtils::PaintFrameWithEffects(&tmpState, nsnull, kid);
+    nsSVGUtils::PaintFrameWithEffects(&tmpCtx, nsnull, kid);
   }
 
   PRUint8 *data   = image->Data();

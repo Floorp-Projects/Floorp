@@ -117,7 +117,7 @@ class StringBuffer
     const jschar *begin() const { return cb.begin(); }
     const jschar *end() const { return cb.end(); }
     bool empty() const { return cb.empty(); }
-    inline jsint length() const;
+    inline int length() const;
 
     /*
      * Creates a string from the characters in this buffer, then (regardless
@@ -216,12 +216,12 @@ StringBuffer::appendInflated(const char *cstr, size_t cstrlen)
     return true;
 }
 
-inline jsint
+inline int
 StringBuffer::length() const
 {
-    JS_STATIC_ASSERT(jsint(JSString::MAX_LENGTH) == JSString::MAX_LENGTH);
+    JS_STATIC_ASSERT(int(JSString::MAX_LENGTH) == JSString::MAX_LENGTH);
     JS_ASSERT(cb.length() <= JSString::MAX_LENGTH);
-    return jsint(cb.length());
+    return int(cb.length());
 }
 
 inline bool

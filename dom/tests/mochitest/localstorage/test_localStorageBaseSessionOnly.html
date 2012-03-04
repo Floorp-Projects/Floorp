@@ -104,16 +104,19 @@ function startTest()
   // add a second key
   localStorage.setItem("key2", "value2");
   is(localStorage.length, 2, "The storage has two key-value pairs");
-  is(localStorage.key(1), "key1"); // This test might not be accurate because order is not preserved
-  is(localStorage.key(0), "key2");
   is(localStorage.getItem("key1"), "value1");
   is(localStorage.getItem("key2"), "value2");
+  var firstKey = localStorage.key(0);
+  var secondKey = localStorage.key(1);
+  ok((firstKey == 'key1' && secondKey == 'key2') ||
+     (firstKey == 'key2' && secondKey == 'key1'),
+     'Both keys should be present.');
 
   // change the second key
   localStorage.setItem("key2", "value2-2");
   is(localStorage.length, 2, "The storage has two key-value pairs");
-  is(localStorage.key(1), "key1"); // After key value changes the order must be preserved
-  is(localStorage.key(0), "key2");
+  is(localStorage.key(0), firstKey); // After key value changes the order must be preserved
+  is(localStorage.key(1), secondKey);
   checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
   checkException(function() {localStorage.key(2);}, INDEX_SIZE_ERR);
   is(localStorage.getItem("key1"), "value1");
@@ -122,8 +125,8 @@ function startTest()
   // change the first key
   localStorage.setItem("key1", "value1-2");
   is(localStorage.length, 2, "The storage has two key-value pairs");
-  is(localStorage.key(1), "key1"); // After key value changes the order must be preserved
-  is(localStorage.key(0), "key2");
+  is(localStorage.key(0), firstKey); // After key value changes the order must be preserved
+  is(localStorage.key(1), secondKey);
   checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
   checkException(function() {localStorage.key(2);}, INDEX_SIZE_ERR);
   is(localStorage.getItem("key1"), "value1-2");

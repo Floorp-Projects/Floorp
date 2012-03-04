@@ -122,7 +122,7 @@ nsSVGMarkerFrame::GetCanvasTM()
 
 
 nsresult
-nsSVGMarkerFrame::PaintMark(nsSVGRenderState *aContext,
+nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
                             nsSVGPathGeometryFrame *aMarkedFrame,
                             nsSVGMark *aMark, float aStrokeWidth)
 {
@@ -148,7 +148,7 @@ nsSVGMarkerFrame::PaintMark(nsSVGRenderState *aContext,
   mY = aMark->y;
   mAutoAngle = aMark->angle;
 
-  gfxContext *gfx = aContext->GetGfxContext();
+  gfxContext *gfx = aContext->ThebesContext();
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
     gfx->Save();
