@@ -42,7 +42,6 @@
 #include "nsDOMError.h"
 #include "nsDOMException.h"
 #include "nsIDOMDOMException.h"
-#include "nsIDOMRangeException.h"
 #include "nsIDOMFileException.h"
 #include "nsIDOMSVGException.h"
 #include "nsIDOMXPathException.h"
@@ -160,23 +159,6 @@ IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsDOMException, nsIDOMDOMException,
 
 NS_IMETHODIMP
 nsDOMException::GetCode(PRUint16* aCode)
-{
-  NS_ENSURE_ARG_POINTER(aCode);
-  nsresult result;
-  GetResult(&result);
-  *aCode = NS_ERROR_GET_CODE(result);
-
-  return NS_OK;
-}
-
-IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsRangeException, nsIDOMRangeException)
-  NS_DECL_NSIDOMRANGEEXCEPTION
-IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsRangeException, nsIDOMRangeException,
-                                 RangeException, NS_ERROR_MODULE_DOM_RANGE,
-                                 NSResultToNameAndMessage)
-
-NS_IMETHODIMP
-nsRangeException::GetCode(PRUint16* aCode)
 {
   NS_ENSURE_ARG_POINTER(aCode);
   nsresult result;
