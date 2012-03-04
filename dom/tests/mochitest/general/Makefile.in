@@ -79,6 +79,7 @@ _TEST_FILES = \
 		test_browserFrame4.html \
 		test_browserFrame5.html \
 		test_browserFrame6.html \
+		test_browserFrame7.html \
 		test_for_of.html \
 		test_focus_legend_noparent.html \
 		$(NULL)

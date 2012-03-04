@@ -11756,3 +11756,18 @@ nsDocShell::GetCanExecuteScripts(bool *aResult)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocShell::GetIsBrowserFrame(bool *aOut)
+{
+  NS_ENSURE_ARG_POINTER(aOut);
+  *aOut = mIsBrowserFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetIsBrowserFrame(bool aValue)
+{
+  mIsBrowserFrame = aValue;
+  return NS_OK;
+}
