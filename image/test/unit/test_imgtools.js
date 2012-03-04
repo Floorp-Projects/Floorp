@@ -141,13 +141,13 @@ var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 testnum++;
 testdesc = "test decoding a PNG";
 
-// 64x64 png, 10698 bytes.
+// 64x64 png, 8415 bytes.
 var imgName = "image1.png";
 var inMimeType = "image/png";
 var imgFile = do_get_file(imgName);
 
 var istream = getFileInputStream(imgFile);
-do_check_eq(istream.available(), 10698);
+do_check_eq(istream.available(), 8415);
 
 var outParam = { value: null };
 imgTools.decodeImageData(istream, inMimeType, outParam);
