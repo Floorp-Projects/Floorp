@@ -46,6 +46,7 @@
 #include "jsinfer.h"
 #include "jsprf.h"
 #include "vm/GlobalObject.h"
+#include "mozilla/HashFunctions.h"
 
 #include "vm/Stack-inl.h"
 
@@ -535,7 +536,8 @@ struct AllocationSiteKey {
     typedef AllocationSiteKey Lookup;
 
     static inline uint32_t hash(AllocationSiteKey key) {
-        return uint32_t(size_t(key.script->code + key.offset)) ^ key.kind;
+        return mozilla::HashGeneric(uint32_t(size_t(key.script->code + key.offset)),
+                                    key.kind);
     }
 
     static inline bool match(const AllocationSiteKey &a, const AllocationSiteKey &b) {
