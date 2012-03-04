@@ -100,7 +100,7 @@ function startTest()
   var secondKey = localStorage.key(1);
   ok((firstKey == 'key1' && secondKey == 'key2') ||
      (firstKey == 'key2' && secondKey == 'key1'),
-     'Both keys should be present.');
+     'key() API works.');
 
   // change the second key
   localStorage.setItem("key2", "value2-2");
