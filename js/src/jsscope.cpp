@@ -1264,12 +1264,9 @@ Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, Shape
 /* static */ inline HashNumber
 StackBaseShape::hash(const StackBaseShape *base)
 {
-    JSDHashNumber hash = base->flags;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(base->clasp) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(base->parent) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ uintptr_t(base->rawGetter);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ uintptr_t(base->rawSetter);
-    return hash;
+    JSDHashNumber hash = HashGeneric(base->flags);
+    return AddToHash(hash, base->clasp, base->parent,
+                             base->rawGetter, base->rawSetter);
 }
 
 /* static */ inline bool
@@ -1401,10 +1398,8 @@ Bindings::setParent(JSContext *cx, JSObject *obj)
 /* static */ inline HashNumber
 InitialShapeEntry::hash(const Lookup &lookup)
 {
-    JSDHashNumber hash = uintptr_t(lookup.clasp) >> 3;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(lookup.proto) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(lookup.parent) >> 3);
-    return hash + lookup.nfixed;
+    JSDHashNumber hash = HashGeneric(lookup.clasp, lookup.proto, lookup.parent);
+    return AddToHash(hash, lookup.nfixed);
 }
 
 /* static */ inline bool
