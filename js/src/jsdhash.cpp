@@ -48,6 +48,7 @@
 #include <string.h>
 #include "jsdhash.h"
 #include "jsutil.h"
+#include "mozilla/HashFunctions.h"
 
 using namespace js;
 
@@ -125,13 +126,7 @@ JS_DHashFreeTable(JSDHashTable *table, void *ptr)
 JS_PUBLIC_API(JSDHashNumber)
 JS_DHashStringKey(JSDHashTable *table, const void *key)
 {
-    JSDHashNumber h;
-    const unsigned char *s;
-
-    h = 0;
-    for (s = (const unsigned char *) key; *s != '\0'; s++)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
-    return h;
+    return mozilla::HashString(static_cast<const char*>(key));
 }
 
 JS_PUBLIC_API(JSDHashNumber)
