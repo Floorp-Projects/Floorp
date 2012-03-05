@@ -72,7 +72,6 @@ CompositorChild::Destroy()
       static_cast<ShadowLayersChild*>(ManagedPLayersChild()[0]);
     layers->Destroy();
   }
-  printf_stderr("Destroy compositor\n");
   SendStop();
 }
 
