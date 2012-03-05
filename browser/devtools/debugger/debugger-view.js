@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Victor Porof <vporof@mozilla.com> (original author)
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1126,6 +1127,15 @@ DebuggerView.Scripts = {
       }
     }
   },
+
+   /**
+   	* Retrieve the URL of the selected script.
+   	* @return string|null
+   	*/
+   get selected() {
+    return this._scripts.selectedItem ?
+           this._scripts.selectedItem.value : null;
+   },
 
   /**
    * Adds a script to the scripts container.
