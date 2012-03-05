@@ -40,8 +40,12 @@
 #define Errors_h__
 
 #define OK 0
-//#define MEM_ERROR 1  // Replaced with errors 10-16 (inclusive)
+
+// Old unused error codes:
+// #define MEM_ERROR 1  // Replaced with errors 10-16 (inclusive)
 // #define IO_ERROR 2  // Use READ_ERROR or WRITE_ERROR instead
+
+// Error codes 3-16 are for general update problems.
 #define USAGE_ERROR 3
 #define CRC_ERROR 4
 #define PARSE_ERROR 5
@@ -56,6 +60,9 @@
 #define UPDATER_QUOTED_PATH_MEM_ERROR 14
 #define BAD_ACTION_ERROR 15
 #define STRING_CONVERSION_ERROR 16
+
+// Error codes 17-23 are related to security tasks for MAR
+// signing and MAR protection.
 #define CERT_LOAD_ERROR 17
 #define CERT_HANDLING_ERROR 18
 #define CERT_VERIFY_ERROR 19
@@ -63,6 +70,16 @@
 #define COULD_NOT_READ_PRODUCT_INFO_BLOCK_ERROR 21
 #define MAR_CHANNEL_MISMATCH_ERROR 22
 #define VERSION_DOWNGRADE_ERROR 23
+
+// Error codes 24-30 are related to the maintenance service
+// and so are Windows only
+#define SERVICE_UPDATER_COULD_NOT_BE_STARTED 24
+#define SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS 25
+#define SERVICE_UPDATER_SIGN_ERROR 26
+#define SERVICE_UPDATER_COMPARE_ERROR 27
+#define SERVICE_UPDATER_IDENTITY_ERROR 28
+#define SERVICE_STILL_APPLYING_ON_SUCCESS 29
+#define SERVICE_STILL_APPLYING_ON_FAILURE 30
 
 // The following error codes are only used by updater.exe
 // when a fallback key exists and XPCShell tests are being run.

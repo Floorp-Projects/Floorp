@@ -84,7 +84,7 @@ LOCAL_INCLUDES += \
 MOZ_WINCONSOLE = 1
 
 LIBS += \
-  ../../readstrings/$(LIB_PREFIX)readstrings.$(LIB_SUFFIX) \
+  ../common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
