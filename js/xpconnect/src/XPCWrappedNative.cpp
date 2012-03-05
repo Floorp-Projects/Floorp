@@ -331,7 +331,6 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
                                xpcObjectHelper& helper,
                                XPCWrappedNativeScope* Scope,
                                XPCNativeInterface* Interface,
-                               JSBool isGlobal,
                                XPCWrappedNative** resultWrapper)
 {
     nsWrapperCache *cache = helper.GetWrapperCache();
@@ -452,8 +451,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             XPCWrappedNativeScope* betterScope =
                 XPCWrappedNativeScope::FindInJSObjectScope(ccx, parent);
             if (betterScope != Scope)
-                return GetNewOrUsed(ccx, helper, betterScope, Interface,
-                                    isGlobal, resultWrapper);
+                return GetNewOrUsed(ccx, helper, betterScope, Interface, resultWrapper);
 
             newParentVal = OBJECT_TO_JSVAL(parent);
         }
@@ -522,7 +520,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // wrapper is actually created, but before JS code can see it.
 
     if (info && !isClassInfo) {
-        proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, Scope, info, &sciProto, isGlobal);
+        proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, Scope, info, &sciProto);
         if (!proto)
             return NS_ERROR_FAILURE;
 
@@ -558,7 +556,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(parent),
                  "Xray wrapper being used to parent XPCWrappedNative?");
 
-    if (!wrapper->Init(ccx, parent, isGlobal, &sciWrapper)) {
+    if (!wrapper->Init(ccx, parent, &sciWrapper)) {
         NS_RELEASE(wrapper);
         return NS_ERROR_FAILURE;
     }
@@ -1062,8 +1060,7 @@ static PRUint32 sMorphedSlimWrappers;
 #endif
 
 JSBool
-XPCWrappedNative::Init(XPCCallContext& ccx,
-                       JSObject* parent, JSBool isGlobal,
+XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent,
                        const XPCNativeScriptableCreateInfo* sci)
 {
     // setup our scriptable info...
@@ -1076,7 +1073,7 @@ XPCWrappedNative::Init(XPCCallContext& ccx,
         }
         if (!mScriptableInfo) {
             mScriptableInfo =
-                XPCNativeScriptableInfo::Construct(ccx, isGlobal, sci);
+                XPCNativeScriptableInfo::Construct(ccx, sci);
 
             if (!mScriptableInfo)
                 return false;
@@ -1088,7 +1085,7 @@ XPCWrappedNative::Init(XPCCallContext& ccx,
 
     JSClass* jsclazz = si ? si->GetJSClass() : Jsvalify(&XPC_WN_NoHelper_JSClass.base);
 
-    if (isGlobal) {
+    if (si && si->GetFlags().IsGlobalObject()) {
         // Resolving a global object's class can cause us to create a global's
         // JS class without the proper global flags. Notice that here and fix
         // the problem.
@@ -1458,9 +1455,7 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
             newProto =
                 XPCWrappedNativeProto::GetNewOrUsed(ccx, aNewScope,
                                                     oldProto->GetClassInfo(),
-                                                    &ci,
-                                                    (info->GetJSClass()->flags & JSCLASS_IS_GLOBAL),
-                                                    oldProto->GetOffsetsMasked());
+                                                    &ci, oldProto->GetOffsetsMasked());
             if (!newProto) {
                 return NS_ERROR_FAILURE;
             }
@@ -2999,9 +2994,7 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
     XPCNativeScriptableInfo *info = oldProto->GetScriptableInfo();
     XPCNativeScriptableCreateInfo ci(*info);
     newProto = XPCWrappedNativeProto::GetNewOrUsed(ccx, oldProto->GetScope(),
-                                                   oldProto->GetClassInfo(),
-                                                   &ci,
-                                                   (info->GetJSClass()->flags & JSCLASS_IS_GLOBAL),
+                                                   oldProto->GetClassInfo(), &ci,
                                                    oldProto->GetOffsetsMasked());
     if (!newProto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -3686,10 +3679,8 @@ ConstructSlimWrapper(XPCCallContext &ccx,
         sciProto(aHelper.forgetXPCClassInfo(), flags, interfacesBitmap);
 
     AutoMarkingWrappedNativeProtoPtr xpcproto(ccx);
-    JSBool isGlobal = false;
     xpcproto = XPCWrappedNativeProto::GetNewOrUsed(ccx, xpcScope,
-                                                   classInfoHelper, &sciProto,
-                                                   isGlobal);
+                                                   classInfoHelper, &sciProto);
     if (!xpcproto)
         return false;
 

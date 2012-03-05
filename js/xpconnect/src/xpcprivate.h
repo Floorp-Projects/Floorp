@@ -459,9 +459,6 @@ AddToCCKind(JSGCTraceKind kind)
     return kind == JSTRACE_OBJECT || kind == JSTRACE_XML || kind == JSTRACE_SCRIPT;
 }
 
-const bool OBJ_IS_GLOBAL = true;
-const bool OBJ_IS_NOT_GLOBAL = false;
-
 class nsXPConnect : public nsIXPConnect,
                     public nsIThreadObserver,
                     public nsSupportsWeakReference,
@@ -2076,7 +2073,7 @@ public:
         {char* name=(char*)mJSClass.base.name; mJSClass.base.name = nsnull;
         return name;}
 
-    void PopulateJSClass(JSBool isGlobal);
+    void PopulateJSClass();
 
     void Mark()       {mFlags.Mark();}
     void Unmark()     {mFlags.Unmark();}
@@ -2096,8 +2093,7 @@ class XPCNativeScriptableInfo
 {
 public:
     static XPCNativeScriptableInfo*
-    Construct(XPCCallContext& ccx, JSBool isGlobal,
-              const XPCNativeScriptableCreateInfo* sci);
+    Construct(XPCCallContext& ccx, const XPCNativeScriptableCreateInfo* sci);
 
     nsIXPCScriptable*
     GetCallback() const {return mCallback;}
@@ -2208,7 +2204,6 @@ public:
                  XPCWrappedNativeScope* scope,
                  nsIClassInfo* classInfo,
                  const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
-                 JSBool isGlobal,
                  QITableEntry* offsets = UNKNOWN_OFFSETS);
 
     XPCWrappedNativeScope*
@@ -2336,7 +2331,7 @@ protected:
                           XPCNativeSet* Set,
                           QITableEntry* offsets);
 
-    JSBool Init(XPCCallContext& ccx, JSBool isGlobal,
+    JSBool Init(XPCCallContext& ccx,
                 const XPCNativeScriptableCreateInfo* scriptableCreateInfo);
 
 private:
@@ -2590,7 +2585,6 @@ public:
                  xpcObjectHelper& helper,
                  XPCWrappedNativeScope* Scope,
                  XPCNativeInterface* Interface,
-                 JSBool isGlobal,
                  XPCWrappedNative** wrapper);
 
     static nsresult
@@ -2791,8 +2785,7 @@ private:
 
 private:
 
-    JSBool Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
-                const XPCNativeScriptableCreateInfo* sci);
+    JSBool Init(XPCCallContext& ccx, JSObject* parent, const XPCNativeScriptableCreateInfo* sci);
     JSBool Init(XPCCallContext &ccx, JSObject *existingJSObject);
     JSBool FinishInit(XPCCallContext &ccx);
 
@@ -3278,7 +3271,6 @@ public:
      *              will be QI'ed to get the cache)
      * @param allowNativeWrapper if true, this method may wrap the resulting
      *        JSObject in an XPCNativeWrapper and return that, as needed.
-     * @param isGlobal
      * @param pErr [out] relevant error code, if any.
      * @param src_is_identity optional performance hint. Set to true only
      *                        if src is the identity pointer.
@@ -3290,12 +3282,11 @@ public:
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
                                            bool allowNativeWrapper,
-                                           bool isGlobal,
                                            nsresult* pErr)
     {
         XPCLazyCallContext lccx(ccx);
         return NativeInterface2JSObject(lccx, d, dest, aHelper, iid, Interface,
-                                        allowNativeWrapper, isGlobal, pErr);
+                                        allowNativeWrapper, pErr);
     }
     static JSBool NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                            jsval* d,
@@ -3304,7 +3295,6 @@ public:
                                            const nsID* iid,
                                            XPCNativeInterface** Interface,
                                            bool allowNativeWrapper,
-                                           bool isGlobal,
                                            nsresult* pErr);
 
     static JSBool GetNativeInterfaceFromJSObject(XPCCallContext& ccx,
