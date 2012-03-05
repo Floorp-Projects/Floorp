@@ -183,7 +183,8 @@ const ContentPanning = {
         evt.preventDefault();
         
         let target = evt.target;
-        let view = target.defaultView || target.ownerDocument.defaultView;
+        let view = target.ownerDocument ? target.ownerDocument.defaultView
+                                        : target;
         view.removeEventListener('click', this, true, true);
         break;
     }
@@ -195,16 +196,21 @@ const ContentPanning = {
     this.dragging = true;
     this.panning = false;
 
+    let oldTarget = this.target;
+    [this.target, this.scrollCallback] = this.getPannable(evt.target);
+
     // If there is a pan animation running (from a previous pan gesture) and
     // the user touch back the screen, stop this animation immediatly and
-    // prevent the possible click action.
+    // prevent the possible click action if the touch happens on the same
+    // target.
+    this.preventNextClick = false;
     if (KineticPanning.active) {
       KineticPanning.stop();
-      this.preventNextClick = true;
+
+      if (oldTarget && oldTarget == this.target)
+        this.preventNextClick = true;
     }
 
-    this.scrollCallback = this.getPannable(evt.target);
-    this.targetDocument = evt.target.ownerDocument;
 
     this.position.set(evt.screenX, evt.screenY);
     KineticPanning.record(new Point(0, 0), evt.timeStamp);
@@ -218,13 +224,12 @@ const ContentPanning = {
     this.onTouchMove(evt);
 
     let click = evt.detail;
-    if (click && (this.panning || this.preventNextClick)) {
-      let target = evt.target;
-      let view = target.defaultView || target.ownerDocument.defaultView;
+    if (this.target && click && (this.panning || this.preventNextClick)) {
+      let target = this.target;
+      let view = target.ownerDocument ? target.ownerDocument.defaultView
+                                      : target;
       view.addEventListener('click', this, true, true);
     }
-
-    this.preventNextClick = false;
 
     if (this.panning)
       KineticPanning.start(this);
@@ -264,7 +269,7 @@ const ContentPanning = {
 
   getPannable: function cp_getPannable(node) {
     if (!(node instanceof Ci.nsIDOMHTMLElement) || node.tagName == 'HTML')
-      return null;
+      return [null, null];
 
     let content = node.ownerDocument.defaultView;
     while (!(node instanceof Ci.nsIDOMHTMLBodyElement)) {
@@ -281,12 +286,12 @@ const ContentPanning = {
 
       let isScroll = (overflow.indexOf('scroll') != -1);
       if (isScroll || isAuto)
-        return this._generateCallback(node);
+        return [node, this._generateCallback(node)];
 
       node = node.parentNode;
     }
 
-    return this._generateCallback(content);
+    return [content, this._generateCallback(content)];
   },
 
   _generateCallback: function cp_generateCallback(content) {
@@ -314,10 +319,10 @@ const ContentPanning = {
   },
 
   _resetActive: function cp_resetActive() {
-    let root = this.targetDocument.documentElement;
+    let root = this.target.ownerDocument || this.target.document;
 
     const kStateActive = 0x00000001;
-    this._domUtils.setContentState(root, kStateActive);
+    this._domUtils.setContentState(root.documentElement, kStateActive);
   }
 };
 
