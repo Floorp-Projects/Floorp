@@ -120,7 +120,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsscope.h"
-#include "jsstr.h"
 #include "jswrapper.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/StubCalls.h"
