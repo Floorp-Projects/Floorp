@@ -45,6 +45,7 @@
 #include "nsILocalFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsXULAppAPI.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsITimer.h"
@@ -107,10 +108,14 @@ public:
       idleSvc->RemoveIdleObserver(this, TEMP_FILE_IDLE_TIME);
 
     nsCOMPtr<nsIFile> tmpDir;
-    nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
                                          getter_AddRefs(tmpDir));
     if (NS_FAILED(rv))
       return;
+
+    NS_ABORT_IF_FALSE(XRE_GetProcessType() == GeckoProcessType_Default,
+                      "Need to update media cache file location");
+
     rv = tmpDir->AppendNative(nsDependentCString("mozilla-media-cache"));
     if (NS_FAILED(rv))
       return;
