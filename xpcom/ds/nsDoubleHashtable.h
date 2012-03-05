@@ -406,7 +406,7 @@ public:
   ~PLDHashStringEntry() { }
 
   static PLDHashNumber HashKey(const void* key) {
-    return mozilla::HashString(*static_cast<const nsAString*>(key));
+    return HashString(*static_cast<const nsAString*>(key));
   }
   bool MatchEntry(const void* key) const {
     return static_cast<const nsAString*>(key)->Equals(mKey);
@@ -426,7 +426,7 @@ public:
   ~PLDHashCStringEntry() { }
 
   static PLDHashNumber HashKey(const void* key) {
-    return mozilla::HashString(*static_cast<const nsACString*>(key));
+    return HashString(*static_cast<const nsACString*>(key));
   }
   bool MatchEntry(const void* key) const {
     return static_cast<const nsACString*>(key)->Equals(mKey);

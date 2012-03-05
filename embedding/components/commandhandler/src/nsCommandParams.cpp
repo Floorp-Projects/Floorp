@@ -41,9 +41,7 @@
 #include "nsCRT.h"
 
 #include "nsCommandParams.h"
-#include "mozilla/HashFunctions.h"
 
-using namespace mozilla;
 
 PLDHashTableOps nsCommandParams::sHashOps =
 {
@@ -358,7 +356,7 @@ nsCommandParams::GetOrMakeEntry(const char * name, PRUint8 entryType, HashEntry*
 PLDHashNumber
 nsCommandParams::HashKey(PLDHashTable *table, const void *key)
 {
-  return HashString((const char *)key);
+  return nsCRT::HashCode((const char *)key);
 }
 
 bool

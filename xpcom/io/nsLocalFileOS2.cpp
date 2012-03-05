@@ -59,8 +59,6 @@
 #include "nsIMutableArray.h"
 #include "nsTraceRefcntImpl.h"
 
-using namespace mozilla;
-
 #define CHECK_mWorkingPath()                    \
     PR_BEGIN_MACRO                              \
         if (mWorkingPath.IsEmpty())             \
@@ -2577,7 +2575,7 @@ nsLocalFile::Equals(nsIHashable* aOther, bool *aResult)
 NS_IMETHODIMP
 nsLocalFile::GetHashCode(PRUint32 *aResult)
 {
-    *aResult = HashString(mWorkingPath);
+    *aResult = nsCRT::HashCode(mWorkingPath.get());
     return NS_OK;
 }
 

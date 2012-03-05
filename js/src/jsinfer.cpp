@@ -2527,7 +2527,7 @@ struct types::ArrayTableKey
     typedef ArrayTableKey Lookup;
 
     static inline uint32_t hash(const ArrayTableKey &v) {
-        return HashGeneric(v.type.raw(), v.proto);
+        return (uint32_t) (v.type.raw() ^ ((uint32_t)(size_t)v.proto >> 2));
     }
 
     static inline bool match(const ArrayTableKey &v1, const ArrayTableKey &v2) {
@@ -2615,10 +2615,9 @@ struct types::ObjectTableKey
     typedef JSObject * Lookup;
 
     static inline uint32_t hash(JSObject *obj) {
-        return HashGeneric(JSID_BITS(obj->lastProperty()->propid().get()),
-                           obj->slotSpan(),
-                           obj->numFixedSlots(),
-                           obj->getProto());
+        return (uint32_t) (JSID_BITS(obj->lastProperty()->propid().get()) ^
+                         obj->slotSpan() ^ obj->numFixedSlots() ^
+                         ((uint32_t)(size_t)obj->getProto() >> 2));
     }
 
     static inline bool match(const ObjectTableKey &v, JSObject *obj) {

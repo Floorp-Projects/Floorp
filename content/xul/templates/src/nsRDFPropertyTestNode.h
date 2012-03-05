@@ -124,8 +124,9 @@ public:
             return "nsRDFPropertyTestNode::Element"; }
 
         virtual PLHashNumber Hash() const {
-            return mozilla::HashGeneric(mSource.get(), mProperty.get(), mTarget.get());
-        }
+            return PLHashNumber(NS_PTR_TO_INT32(mSource.get())) ^
+                (PLHashNumber(NS_PTR_TO_INT32(mProperty.get())) >> 4) ^
+                (PLHashNumber(NS_PTR_TO_INT32(mTarget.get())) >> 12); }
 
         virtual bool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {

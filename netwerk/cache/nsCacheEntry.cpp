@@ -50,9 +50,8 @@
 #include "nsCache.h"
 #include "nsCacheService.h"
 #include "nsCacheDevice.h"
-#include "nsHashKeys.h"
+#include "nsCRT.h"
 
-using namespace mozilla;
 
 nsCacheEntry::nsCacheEntry(nsCString *          key,
                            bool                 streamBased,
@@ -524,7 +523,7 @@ nsCacheEntryHashTable::VisitEntries( PLDHashEnumerator etor, void *arg)
 PLDHashNumber
 nsCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
 {
-    return HashString(*static_cast<const nsCString *>(key));
+    return PL_DHashStringKey(table,((nsCString *)key)->get());
 }
 
 bool
