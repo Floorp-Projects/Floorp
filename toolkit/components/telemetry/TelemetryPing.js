@@ -239,8 +239,7 @@ TelemetryPing.prototype = {
     return retgram;
   },
 
-  getHistograms: function getHistograms() {
-    let hls = Telemetry.histogramSnapshots;
+  getHistograms: function getHistograms(hls) {
     let info = Telemetry.registeredHistograms;
     let ret = {};
 
