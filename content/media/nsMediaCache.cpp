@@ -42,6 +42,7 @@
 #include "nsMediaCache.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsXULAppAPI.h"
 #include "nsNetUtil.h"
 #include "prio.h"
 #include "nsThreadUtils.h"
@@ -545,8 +546,15 @@ nsMediaCache::Init()
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(!mFD, "Cache file already open?");
 
+  // In single process Gecko, store the media cache in the profile directory
+  // so that multiple users can use separate media caches concurrently.
+  // In multi-process Gecko, there is no profile dir, so just store it in the
+  // system temp directory instead.
+  nsresult rv;
   nsCOMPtr<nsIFile> tmp;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmp));
+  const char* dir = (XRE_GetProcessType() == GeckoProcessType_Content) ?
+    NS_OS_TEMP_DIR : NS_APP_USER_PROFILE_LOCAL_50_DIR;
+  rv = NS_GetSpecialDirectory(dir, getter_AddRefs(tmp));
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsILocalFile> tmpFile = do_QueryInterface(tmp);
