@@ -1733,9 +1733,7 @@ abstract public class GeckoApp
             /*
              * Create a layer client, but don't hook it up to the layer controller yet.
              */
-            Log.e(LOGTAG, "### Creating GeckoLayerClient");
             mLayerClient = new GeckoLayerClient(this);
-            Log.e(LOGTAG, "### Done creating GeckoLayerClient");
 
             /*
              * Hook a placeholder layer client up to the layer controller so that the user can pan
