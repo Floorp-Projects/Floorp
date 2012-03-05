@@ -181,7 +181,10 @@ const ContentPanning = {
       case 'click':
         evt.stopPropagation();
         evt.preventDefault();
-        evt.target.removeEventListener('click', this, true);
+        
+        let target = evt.target;
+        let view = target.defaultView || target.ownerDocument.defaultView;
+        view.removeEventListener('click', this, true, true);
         break;
     }
   },
@@ -213,8 +216,11 @@ const ContentPanning = {
 
     let pan = KineticPanning.isPan();
     let click = evt.detail;
-    if (click && (pan || this.preventNextClick))
-      evt.target.addEventListener('click', this, true);
+    if (click && (pan || this.preventNextClick)) {
+      let target = evt.target;
+      let view = target.defaultView || target.ownerDocument.defaultView;
+      view.addEventListener('click', this, true, true);
+    }
 
     this.preventNextClick = false;
 
