@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 50; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * mozilla.org
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Nicholas Nethercote <nnethercote@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,35 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsICharsetAlias_h___
-#define nsICharsetAlias_h___
+#ifndef nsISizeOf_h___
+#define nsISizeOf_h___
 
-#include "nscore.h"
-#include "nsStringGlue.h"
 #include "nsISupports.h"
 
-/* 0b4028d6-7473-4958-9b3c-4dee46bf68cb */
-#define NS_ICHARSETALIAS_IID \
-{   0x0b4028d6, \
-    0x7473, \
-    0x4958, \
-    {0x9b, 0x3c, 0x4d, 0xee, 0x46, 0xbf, 0x68, 0xcb} }
+#define NS_ISIZEOF_IID \
+  {0x61d05579, 0xd7ec, 0x485c, \
+    { 0xa4, 0x0c, 0x31, 0xc7, 0x9a, 0x5c, 0xf9, 0xf3 }}
 
-// {98D41C21-CCF3-11d2-B3B1-00805F8A6670}
-#define NS_CHARSETALIAS_CID \
-{ 0x98d41c21, 0xccf3, 0x11d2, { 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 }}
-
-#define NS_CHARSETALIAS_CONTRACTID "@mozilla.org/intl/charsetalias;1"
-
-class nsICharsetAlias : public nsISupports
+class nsISizeOf : public nsISupports
 {
 public:
-   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHARSETALIAS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISIZEOF_IID)
 
-   NS_IMETHOD GetPreferred(const nsACString& aAlias, nsACString& aResult) = 0;
-   NS_IMETHOD Equals(const nsACString& aCharset1, const nsACString& aCharset2, bool* aResult) = 0;
+  /**
+   * Measures the size of the things pointed to by the object.
+   */
+  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+
+  /**
+   * Like SizeOfExcludingThis, but also includes the size of the object itself.
+   */
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICharsetAlias, NS_ICHARSETALIAS_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISizeOf, NS_ISIZEOF_IID)
 
-#endif /* nsICharsetAlias_h___ */
+#endif /* nsISizeOf_h___ */

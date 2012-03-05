@@ -503,17 +503,6 @@ nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
   return StringBeginsWith(path, neterror) || StringBeginsWith(path, certerror);
 }
 
-bool
-nsCoreUtils::IsCorrectFrameType(nsIFrame *aFrame, nsIAtom *aAtom)
-{
-  NS_ASSERTION(aFrame != nsnull,
-               "aFrame is null in call to IsCorrectFrameType!");
-  NS_ASSERTION(aAtom != nsnull,
-               "aAtom is null in call to IsCorrectFrameType!");
-  
-  return aFrame->GetType() == aAtom;
-}
-
 already_AddRefed<nsIDOMNode>
 nsCoreUtils::GetDOMNodeForContainer(nsIDocShellTreeItem *aContainer)
 {

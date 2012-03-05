@@ -39,7 +39,7 @@
 
 #include "nsCOMArray.h"
 #include "nsIAuthPrompt.h"
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -282,27 +282,21 @@ txStylesheetSink::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
 NS_IMETHODIMP
 txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
-    nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
     PRInt32 charsetSource = kCharsetFromDocTypeDefault;
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
     // check channel's charset...
     nsCAutoString charsetVal;
-    nsresult rv = channel->GetContentCharset(charsetVal);
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsICharsetAlias> calias =
-            do_GetService(NS_CHARSETALIAS_CONTRACTID);
-
-        if (calias) {
-            nsCAutoString preferred;
-            rv = calias->GetPreferred(charsetVal,
-                                      preferred);
-            if (NS_SUCCEEDED(rv)) {            
-                charset = preferred;
-                charsetSource = kCharsetFromChannel;
-             }
+    nsCAutoString charset;
+    if (NS_SUCCEEDED(channel->GetContentCharset(charsetVal))) {
+        if (NS_SUCCEEDED(nsCharsetAlias::GetPreferred(charsetVal, charset))) {
+            charsetSource = kCharsetFromChannel;
         }
+    }
+
+    if (charset.IsEmpty()) {
+      charset.AssignLiteral("UTF-8");
     }
 
     nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
@@ -318,6 +312,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     bool sniff;
     if (NS_SUCCEEDED(uri->SchemeIs("file", &sniff)) && sniff &&
         contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
+        nsresult rv;
         nsCOMPtr<nsIStreamConverterService> serv =
             do_GetService("@mozilla.org/streamConverters;1", &rv);
         if (NS_SUCCEEDED(rv)) {
