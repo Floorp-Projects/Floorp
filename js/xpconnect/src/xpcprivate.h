@@ -2584,6 +2584,11 @@ public:
                         return scope ? scope->GetRuntime() : nsnull;}
 
     static nsresult
+    WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelper,
+                  nsIPrincipal *principal, bool initStandardClasses,
+                  XPCWrappedNative **wrappedGlobal);
+
+    static nsresult
     GetNewOrUsed(XPCCallContext& ccx,
                  xpcObjectHelper& helper,
                  XPCWrappedNativeScope* Scope,
