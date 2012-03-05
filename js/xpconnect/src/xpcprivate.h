@@ -3493,9 +3493,9 @@ private:
 * member (as a hidden implementaion detail) to which they delegate many calls.
 */
 
-extern void xpc_InitJSxIDClassObjects();
+// Initialization is done on demand, and calling the destructor below is always
+// safe.
 extern void xpc_DestroyJSxIDClassObjects();
-
 
 class nsJSID : public nsIJSID
 {
