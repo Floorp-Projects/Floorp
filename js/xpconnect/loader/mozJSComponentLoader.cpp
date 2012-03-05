@@ -695,7 +695,6 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                               mSystemPrincipal,
-                                              nsnull,
                                               nsIXPConnect::
                                               FLAG_SYSTEM_GLOBAL_OBJECT,
                                               getter_AddRefs(holder));

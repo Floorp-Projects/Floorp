@@ -2233,8 +2233,7 @@ nsJSContext::CreateNativeGlobalForInner(
   nsresult rv = xpc->
           InitClassesWithNewWrappedGlobal(mContext, aNewInner,
                                           aIsChrome ? systemPrincipal.get() : aPrincipal,
-                                          nsnull, flags,
-                                          getter_AddRefs(jsholder));
+                                          flags, getter_AddRefs(jsholder));
   if (NS_FAILED(rv)) {
     return rv;
   }
