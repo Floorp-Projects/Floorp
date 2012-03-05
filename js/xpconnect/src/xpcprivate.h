@@ -2204,7 +2204,8 @@ public:
                  XPCWrappedNativeScope* scope,
                  nsIClassInfo* classInfo,
                  const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
-                 QITableEntry* offsets = UNKNOWN_OFFSETS);
+                 QITableEntry* offsets = UNKNOWN_OFFSETS,
+                 bool callPostCreatePrototype = true);
 
     XPCWrappedNativeScope*
     GetScope()   const {return mScope;}
@@ -2333,7 +2334,8 @@ protected:
                           QITableEntry* offsets);
 
     JSBool Init(XPCCallContext& ccx,
-                const XPCNativeScriptableCreateInfo* scriptableCreateInfo);
+                const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
+                bool callPostCreatePrototype);
 
 private:
 #if defined(DEBUG_xpc_hacker) || defined(DEBUG)
