@@ -1071,22 +1071,12 @@ js::FindUpvarFrame(JSContext *cx, unsigned targetLevel)
 
 #define POP_BOOLEAN(cx, vp, b)   do { VALUE_TO_BOOLEAN(cx, vp, b); regs.sp--; } while(0)
 
-#define VALUE_TO_OBJECT(cx, vp, obj)                                          \
-    JS_BEGIN_MACRO                                                            \
-        if ((vp)->isObject()) {                                               \
-            obj = &(vp)->toObject();                                          \
-        } else {                                                              \
-            obj = js_ValueToNonNullObject(cx, *(vp));                         \
-            if (!obj)                                                         \
-                goto error;                                                   \
-            (vp)->setObject(*obj);                                            \
-        }                                                                     \
-    JS_END_MACRO
-
 #define FETCH_OBJECT(cx, n, obj)                                              \
     JS_BEGIN_MACRO                                                            \
         Value *vp_ = &regs.sp[n];                                             \
-        VALUE_TO_OBJECT(cx, vp_, obj);                                        \
+        obj = ToObject(cx, (vp_));                                            \
+        if (!obj)                                                             \
+            goto error;                                                       \
     JS_END_MACRO
 
 /* Test whether v is an int in the range [-2^31 + 1, 2^31 - 2] */
