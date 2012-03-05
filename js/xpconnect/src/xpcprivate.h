@@ -48,6 +48,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Util.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -2021,6 +2022,7 @@ public:
     JSBool ClassInfoInterfacesOnly()      GET_IT(CLASSINFO_INTERFACES_ONLY)
     JSBool AllowPropModsDuringResolve()   GET_IT(ALLOW_PROP_MODS_DURING_RESOLVE)
     JSBool AllowPropModsToPrototype()     GET_IT(ALLOW_PROP_MODS_TO_PROTOTYPE)
+    JSBool IsGlobalObject()               GET_IT(IS_GLOBAL_OBJECT)
     JSBool DontReflectInterfaceNames()    GET_IT(DONT_REFLECT_INTERFACE_NAMES)
     JSBool UseStubEqualityHook()          GET_IT(USE_STUB_EQUALITY_HOOK)
 
@@ -3177,6 +3179,27 @@ public:
         GetXPCClassInfo();
 
         return mXPCClassInfo.forget();
+    }
+
+    // We assert that we can reach an nsIXPCScriptable somehow.
+    PRUint32 GetScriptableFlags()
+    {
+        // Try getting an nsXPCClassInfo - this handles DOM scriptable helpers.
+        nsCOMPtr<nsIXPCScriptable> sinfo = GetXPCClassInfo();
+
+        // If that didn't work, try just QI-ing. This handles BackstagePass.
+        if (!sinfo)
+            sinfo = do_QueryInterface(GetCanonical());
+
+        // We should have something by now.
+        MOZ_ASSERT(sinfo);
+
+        // Grab the flags. This should not fail.
+        PRUint32 flags;
+        mozilla::DebugOnly<nsresult> rv = sinfo->GetScriptableFlags(&flags);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+        return flags;
     }
 
     nsWrapperCache *GetWrapperCache()

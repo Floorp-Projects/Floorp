@@ -1266,6 +1266,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
         nsresult rv;
         xpcObjectHelper helper(aCOMObj);
+        MOZ_ASSERT(helper.GetScriptableFlags() & nsIXPCScriptable::IS_GLOBAL_OBJECT);
         if (!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                   getter_AddRefs(holder),
                                                   helper, &aIID, nsnull,
