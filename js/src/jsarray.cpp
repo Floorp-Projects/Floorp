@@ -128,6 +128,7 @@
 
 #include "vm/ArgumentsObject.h"
 #include "vm/MethodGuard.h"
+#include "vm/StringBuffer-inl.h"
 
 #include "ds/Sort.h"
 

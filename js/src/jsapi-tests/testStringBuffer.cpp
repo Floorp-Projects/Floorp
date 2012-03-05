@@ -7,7 +7,8 @@
 #include "jsatom.h"
 
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
+
+#include "vm/StringBuffer-inl.h"
 
 BEGIN_TEST(testStringBuffer_finishString)
 {
