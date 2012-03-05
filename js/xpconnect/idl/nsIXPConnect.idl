@@ -398,7 +398,7 @@ enum nsGCType {
 };
 %}
 
-[uuid(e92bf5e0-494c-11e1-b86c-0800200c9a66)]
+[uuid(0213cb40-2dd5-4ac8-a9d3-157bd53c3824)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -421,7 +421,6 @@ interface nsIXPConnect : nsISupports
      *
      * @param aJSContext the context to use while creating the global object.
      * @param aCOMObj the native object that represents the global object.
-     * @param aIID the IID used to wrap the global object.
      * @param aPrincipal the principal of the code that will run in this
      *                   compartment. Can be null if not on the main thread.
      * @param aExtraPtr must be passed if aPrincipal is null. Used to separate
@@ -434,7 +433,6 @@ interface nsIXPConnect : nsISupports
     initClassesWithNewWrappedGlobal(
                   in JSContextPtr aJSContext,
                   in nsISupports  aCOMObj,
-                  in nsIIDRef     aIID,
                   in nsIPrincipal aPrincipal,
                   in nsISupports  aExtraPtr,
                   in PRUint32     aFlags);
