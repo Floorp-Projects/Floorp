@@ -654,30 +654,56 @@ SweepCompartment(nsCStringHashKey& aKey, JSCompartment *compartment, void *aClos
     return PL_DHASH_NEXT;
 }
 
-// static
-JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
+/* static */ void
+XPCJSRuntime::GCCallback(JSRuntime *rt, JSGCStatus status)
 {
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if (!self)
-        return true;
+        return;
 
     switch (status) {
         case JSGC_BEGIN:
         {
-            if (!NS_IsMainThread()) {
-                return false;
-            }
-
             // We seem to sometime lose the unrooted global flag. Restore it
             // here. FIXME: bug 584495.
             JSContext *iter = nsnull;
-            while (JSContext *acx = JS_ContextIterator(JS_GetRuntime(cx), &iter)) {
+            while (JSContext *acx = JS_ContextIterator(rt, &iter)) {
                 if (!js::HasUnrootedGlobal(acx))
                     JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
             }
             break;
         }
-        case JSGC_MARK_END:
+        case JSGC_END:
+        {
+            // Do any deferred releases of native objects.
+#ifdef XPC_TRACK_DEFERRED_RELEASES
+            printf("XPC - Begin deferred Release of %d nsISupports pointers\n",
+                   self->mNativesToReleaseArray.Length());
+#endif
+            DoDeferredRelease(self->mNativesToReleaseArray);
+#ifdef XPC_TRACK_DEFERRED_RELEASES
+            printf("XPC - End deferred Releases\n");
+#endif
+
+            self->GetXPConnect()->ClearGCBeforeCC();
+            break;
+        }
+    }
+
+    nsTArray<JSGCCallback> callbacks(self->extraGCCallbacks);
+    for (PRUint32 i = 0; i < callbacks.Length(); ++i)
+        callbacks[i](rt, status);
+}
+
+/* static */ void
+XPCJSRuntime::FinalizeCallback(JSContext *cx, JSFinalizeStatus status)
+{
+    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
+    if (!self)
+        return;
+
+    switch (status) {
+        case JSFINALIZE_START:
         {
             NS_ASSERTION(!self->mDoingFinalization, "bad state");
 
@@ -710,7 +736,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
             self->mDoingFinalization = true;
             break;
         }
-        case JSGC_FINALIZE_END:
+        case JSFINALIZE_END:
         {
             NS_ASSERTION(self->mDoingFinalization, "bad state");
             self->mDoingFinalization = false;
@@ -897,36 +923,7 @@ JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
 
             break;
         }
-        case JSGC_END:
-        {
-            // NOTE that this event happens outside of the gc lock in
-            // the js engine. So this could be simultaneous with the
-            // events above.
-
-            // Do any deferred releases of native objects.
-#ifdef XPC_TRACK_DEFERRED_RELEASES
-            printf("XPC - Begin deferred Release of %d nsISupports pointers\n",
-                   self->mNativesToReleaseArray.Length());
-#endif
-            DoDeferredRelease(self->mNativesToReleaseArray);
-#ifdef XPC_TRACK_DEFERRED_RELEASES
-            printf("XPC - End deferred Releases\n");
-#endif
-
-            self->GetXPConnect()->ClearGCBeforeCC();
-            break;
-        }
-        default:
-            break;
     }
-
-    nsTArray<JSGCCallback> callbacks(self->extraGCCallbacks);
-    for (PRUint32 i = 0; i < callbacks.Length(); ++i) {
-        if (!callbacks[i](cx, status))
-            return false;
-    }
-
-    return true;
 }
 
 //static
@@ -2067,7 +2064,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetNativeStackQuota(mJSRuntime, 128 * sizeof(size_t) * 1024);
         JS_SetContextCallback(mJSRuntime, ContextCallback);
         JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
-        JS_SetGCCallbackRT(mJSRuntime, GCCallback);
+        JS_SetGCCallback(mJSRuntime, GCCallback);
+        JS_SetFinalizeCallback(mJSRuntime, FinalizeCallback);
         JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
         JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
         JS_SetWrapObjectCallbacks(mJSRuntime,

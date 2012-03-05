@@ -94,7 +94,7 @@
             return;
 
           this.focus();
-          MenuListHelperUI.show(this);
+          SelectHelper.handleClick(this);
         ]]>
       </handler>
 
