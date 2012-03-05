@@ -47,30 +47,9 @@
 
 #include "nsStringGlue.h"
 #include "nsCRTGlue.h"
-#include "nsUnicharUtils.h"
 
 #include <stdlib.h>
 #include <string.h>
-
-#include "mozilla/HashFunctions.h"
-
-namespace mozilla {
-
-// These are defined analogously to the HashString overloads in mfbt.
-
-inline PRUint32
-HashString(const nsAString& aStr)
-{
-  return HashString(aStr.BeginReading(), aStr.Length());
-}
-
-inline PRUint32
-HashString(const nsACString& aStr)
-{
-  return HashString(aStr.BeginReading(), aStr.Length());
-}
-
-} // namespace mozilla
 
 /** @file nsHashKeys.h
  * standard HashKey classes for nsBaseHashtable and relatives. Each of these
@@ -92,6 +71,11 @@ HashString(const nsACString& aStr)
  * nsUnicharPtrHashKey
  * nsHashableHashKey
  */
+
+NS_COM_GLUE PRUint32 HashString(const nsAString& aStr);
+NS_COM_GLUE PRUint32 HashString(const nsACString& aStr);
+NS_COM_GLUE PRUint32 HashString(const char* aKey);
+NS_COM_GLUE PRUint32 HashString(const PRUnichar* aKey);
 
 /**
  * hashkey wrapper using nsAString KeyType
@@ -117,54 +101,13 @@ public:
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(const KeyTypePointer aKey)
   {
-    return mozilla::HashString(*aKey);
+    return HashString(*aKey);
   }
   enum { ALLOW_MEMMOVE = true };
 
 private:
   const nsString mStr;
 };
-
-#ifdef MOZILLA_INTERNAL_API
-
-/**
- * hashkey wrapper using nsAString KeyType
- *
- * This is internal-API only because nsCaseInsensitiveStringComparator is
- * internal-only.
- *
- * @see nsTHashtable::EntryType for specification
- */
-class nsStringCaseInsensitiveHashKey : public PLDHashEntryHdr
-{
-public:
-  typedef const nsAString& KeyType;
-  typedef const nsAString* KeyTypePointer;
-
-  nsStringCaseInsensitiveHashKey(KeyTypePointer aStr) : mStr(*aStr) { } //take it easy just deal HashKey 
-  nsStringCaseInsensitiveHashKey(const nsStringCaseInsensitiveHashKey& toCopy) : mStr(toCopy.mStr) { }
-  ~nsStringCaseInsensitiveHashKey() { }
-
-  KeyType GetKey() const { return mStr; }
-  bool KeyEquals(const KeyTypePointer aKey) const
-  {
-    return mStr.Equals(*aKey, nsCaseInsensitiveStringComparator());
-  }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(const KeyTypePointer aKey)
-  {
-      nsAutoString tmKey(*aKey);
-      ToLowerCase(tmKey);
-      return mozilla::HashString(tmKey);
-  }
-  enum { ALLOW_MEMMOVE = true };
-
-private:
-  const nsString mStr;
-};
-
-#endif
 
 /**
  * hashkey wrapper using nsACString KeyType
@@ -188,7 +131,7 @@ public:
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey)
   {
-    return mozilla::HashString(*aKey);
+    return HashString(*aKey);
   }
   enum { ALLOW_MEMMOVE = true };
 
@@ -385,12 +328,7 @@ public:
   bool KeyEquals(KeyTypePointer aKey) const { return aKey->Equals(mID); }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey)
-  {
-    // Hash the nsID object's raw bytes.
-    return mozilla::HashBytes(aKey, sizeof(KeyType));
-  }
-
+  static PLDHashNumber HashKey(KeyTypePointer aKey);
   enum { ALLOW_MEMMOVE = true };
 
 private:
@@ -424,7 +362,7 @@ public:
   }
 
   static const char* KeyToPointer(const char* aKey) { return aKey; }
-  static PLDHashNumber HashKey(const char* aKey) { return mozilla::HashString(aKey); }
+  static PLDHashNumber HashKey(const char* aKey) { return HashString(aKey); }
   enum { ALLOW_MEMMOVE = true };
 
 private:
@@ -453,7 +391,7 @@ public:
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return mozilla::HashString(aKey); }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return HashString(aKey); }
 
   enum { ALLOW_MEMMOVE = true };
 
@@ -483,7 +421,7 @@ public:
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return mozilla::HashString(aKey); }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return HashString(aKey); }
 
   enum { ALLOW_MEMMOVE = true };
 

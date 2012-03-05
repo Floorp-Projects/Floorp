@@ -163,19 +163,4 @@ CaseInsensitiveUTF8CharsEqual(const char* aLeft, const char* aRight,
                               const char** aLeftNext, const char** aRightNext,
                               bool* aErr);
 
-namespace mozilla {
-
-/**
- * Hash a UTF8 string as though it were a UTF16 string.
- *
- * The value returned is the same as if we converted the string to UTF16 and
- * then ran HashString() on the result.
- *
- * The given |length| is in bytes.
- */
-PRUint32
-HashUTF8AsUTF16(const char* aUTF8, PRUint32 aLength, bool* aErr);
-
-} // namespace mozilla
-
 #endif  /* nsUnicharUtils_h__ */

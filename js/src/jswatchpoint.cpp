@@ -41,7 +41,6 @@
 #include "jsatom.h"
 #include "jsgcmark.h"
 #include "jsobjinlines.h"
-#include "mozilla/HashFunctions.h"
 
 using namespace js;
 using namespace js::gc;
@@ -49,8 +48,7 @@ using namespace js::gc;
 inline HashNumber
 DefaultHasher<WatchKey>::hash(const Lookup &key)
 {
-    return mozilla::HashGeneric(DefaultHasher<JSObject *>::hash(key.object.get()),
-                                HashId(key.id.get()));
+    return DefaultHasher<JSObject *>::hash(key.object.get()) ^ HashId(key.id.get());
 }
 
 class AutoEntryHolder {

@@ -121,7 +121,6 @@ static nsresult MacErrorMapper(OSErr inErr);
 
 #include "nsNativeCharsetUtils.h"
 #include "nsTraceRefcntImpl.h"
-#include "nsHashKeys.h"
 
 using namespace mozilla;
 
@@ -2031,7 +2030,7 @@ nsLocalFile::Equals(nsIHashable* aOther, bool *aResult)
 NS_IMETHODIMP
 nsLocalFile::GetHashCode(PRUint32 *aResult)
 {
-    *aResult = HashString(mPath);
+    *aResult = nsCRT::HashCode(mPath.get());
     return NS_OK;
 }
 

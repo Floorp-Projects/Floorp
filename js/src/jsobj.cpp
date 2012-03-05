@@ -45,7 +45,6 @@
 #include <string.h>
 
 #include "mozilla/Util.h"
-#include "mozilla/HashFunctions.h"
 
 #include "jstypes.h"
 #include "jsutil.h"
@@ -758,8 +757,9 @@ EvalCacheHash(JSContext *cx, JSLinearString *str)
         n = 100;
     uint32_t h;
     for (h = 0; n; s++, n--)
-        h = mozilla::AddToHash(h, *s);
+        h = JS_ROTATE_LEFT32(h, 4) ^ *s;
 
+    h *= JS_GOLDEN_RATIO;
     h >>= 32 - JS_EVAL_CACHE_SHIFT;
     return &cx->compartment->evalCache[h];
 }
