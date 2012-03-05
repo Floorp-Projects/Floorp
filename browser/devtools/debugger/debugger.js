@@ -612,6 +612,7 @@ var SourceScripts = {
       window.editor.setText(DebuggerView.getStr("loadingText"));
     } else {
       window.editor.setText(aScript.text);
+      window.updateEditorBreakpoints();
     }
   }
 };

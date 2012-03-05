@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Dave Camp <dcamp@mozilla.com> (original author)
  *   Panos Astithas <past@mozilla.com>
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -644,7 +645,8 @@ ThreadClient.prototype = {
               }
               return;
             }
-            let bpClient = new BreakpointClient(this._client, aResponse.actor);
+            let bpClient = new BreakpointClient(this._client, aResponse.actor,
+                                                aLocation);
             if (aCallback) {
               aCallback(aOnResponse(aResponse, bpClient));
             } else {
@@ -951,10 +953,14 @@ GripClient.prototype = {
  *        The debugger client parent.
  * @param aActor string
  *        The actor ID for this breakpoint.
+ * @param aLocation object
+ *        The location of the breakpoint. This is an object with two properties:
+ *        url and line.
  */
-function BreakpointClient(aClient, aActor) {
+function BreakpointClient(aClient, aActor, aLocation) {
   this._client = aClient;
   this._actor = aActor;
+  this.location = aLocation;
 }
 
 BreakpointClient.prototype = {
