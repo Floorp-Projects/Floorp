@@ -180,7 +180,14 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 
     void debugDump(in short depth);
 
-    void refreshPrototype();
+    /*
+     * This finishes initializing a wrapped global, doing the parts that we
+     * couldn't do while the global and window were being simultaneously
+     * bootstrapped. This should be called exactly once, and only for wrapped
+     * globals.
+     */
+    void finishInitForWrappedGlobal();
+
     /* 
      * This returns a pointer into the instance and care should be taken
      * to make sure the pointer is not kept past the life time of the

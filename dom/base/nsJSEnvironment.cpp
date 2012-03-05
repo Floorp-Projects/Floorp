@@ -2326,7 +2326,7 @@ nsJSContext::SetOuterObject(JSObject* aOuterObject)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ABORT_IF_FALSE(wrapper, "bad wrapper");
 
-  wrapper->RefreshPrototype();
+  wrapper->FinishInitForWrappedGlobal();
   JS_SetPrototype(mContext, aOuterObject, JS_GetPrototype(inner));
 
   return NS_OK;
