@@ -326,6 +326,152 @@ FinishCreate(XPCCallContext& ccx,
              XPCWrappedNative** resultWrapper);
 
 // static
+//
+// This method handles the special case of wrapping a new global object.
+//
+// The normal code path for wrapping natives goes through
+// XPCConvert::NativeInterface2JSObject, XPCWrappedNative::GetNewOrUsed,
+// and finally into XPCWrappedNative::Init. Unfortunately, this path assumes
+// very early on that we have an XPCWrappedNativeScope and corresponding global
+// JS object, which are the very things we need to create here. So we special-
+// case the logic and do some things in a different order.
+nsresult
+XPCWrappedNative::WrapNewGlobal(XPCCallContext &ccx, xpcObjectHelper &nativeHelper,
+                                nsIPrincipal *principal, bool initStandardClasses,
+                                XPCWrappedNative **wrappedGlobal)
+{
+    bool success;
+    nsresult rv;
+    nsISupports *identity = nativeHelper.GetCanonical();
+
+    // The object should specify that it's meant to be global.
+    MOZ_ASSERT(nativeHelper.GetScriptableFlags() & nsIXPCScriptable::IS_GLOBAL_OBJECT);
+
+    // We shouldn't be reusing globals.
+    MOZ_ASSERT(!nativeHelper.GetWrapperCache() ||
+               !nativeHelper.GetWrapperCache()->GetWrapperPreserveColor());
+
+    // Put together the ScriptableCreateInfo...
+    XPCNativeScriptableCreateInfo sciProto;
+    XPCNativeScriptableCreateInfo sciMaybe;
+    const XPCNativeScriptableCreateInfo& sciWrapper =
+        GatherScriptableCreateInfo(identity, nativeHelper.GetClassInfo(),
+                                   sciProto, sciMaybe);
+
+    // ...and then ScriptableInfo. We need all this stuff now because it's going
+    // to tell us the JSClass of the object we're going to create.
+    XPCNativeScriptableInfo *si = XPCNativeScriptableInfo::Construct(ccx, &sciWrapper);
+    MOZ_ASSERT(si);
+
+    // Finally, we get to the JSClass.
+    JSClass *clasp = si->GetJSClass();
+    MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
+
+    // Create the global.
+    JSObject *global;
+    JSCompartment *compartment;
+    rv = xpc_CreateGlobalObject(ccx, clasp, principal, nsnull, false,
+                                &global, &compartment);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Immediately enter the global's compartment, so that everything else we
+    // create ends up there.
+    JSAutoEnterCompartment ac;
+    success = ac.enter(ccx, global);
+    MOZ_ASSERT(success);
+
+    // If requested, immediately initialize the standard classes on the global.
+    // We need to do this before creating a scope, because
+    // XPCWrappedNativeScope::SetGlobal resolves |Object| via
+    // JS_ResolveStandardClass. JS_InitStandardClasses asserts if any of the
+    // standard classes are already initialized, so this is a problem.
+    if (initStandardClasses && ! JS_InitStandardClasses(ccx, global))
+        return NS_ERROR_FAILURE;
+
+    // Create a scope, but don't do any extra stuff like initializing |Components|.
+    // All of that stuff happens in the caller.
+    XPCWrappedNativeScope *scope = XPCWrappedNativeScope::GetNewOrUsed(ccx, global, identity);
+    MOZ_ASSERT(scope);
+
+    // Make a proto.
+    XPCWrappedNativeProto *proto =
+        XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, nativeHelper.GetClassInfo(), &sciProto,
+                                            UNKNOWN_OFFSETS, /* callPostCreatePrototype = */ false);
+    if (!proto)
+        return NS_ERROR_FAILURE;
+    proto->CacheOffsets(identity);
+
+    // Set up the prototype on the global.
+    MOZ_ASSERT(proto->GetJSProtoObject());
+    success = JS_SplicePrototype(ccx, global, proto->GetJSProtoObject());
+    if (!success)
+        return NS_ERROR_FAILURE;
+
+    // Construct the wrapper.
+    nsRefPtr<XPCWrappedNative> wrapper = new XPCWrappedNative(identity, proto);
+
+    // The wrapper takes over the strong reference to the native object.
+    nativeHelper.forgetCanonical();
+
+    //
+    // We don't call ::Init() on this wrapper, because our setup requirements
+    // are different for globals. We do our setup inline here, instead.
+    //
+
+    // Share mScriptableInfo with the proto.
+    //
+    // This is probably more trouble than it's worth, since we've already created
+    // an XPCNativeScriptableInfo for ourselves. Moreover, most of that class is
+    // shared internally via XPCNativeScriptableInfoShared, so the memory
+    // savings are negligible. Nevertheless, this is what ::Init() does, and we
+    // want to be as consistent as possible with that code.
+    XPCNativeScriptableInfo* siProto = proto->GetScriptableInfo();
+    if (siProto && siProto->GetCallback() == sciWrapper.GetCallback()) {
+        wrapper->mScriptableInfo = siProto;
+        delete si;
+    } else {
+        wrapper->mScriptableInfo = si;
+    }
+
+    // Set the JS object to the global we already created.
+    wrapper->mFlatJSObject = global;
+
+    // Set the private to the XPCWrappedNative.
+    JS_SetPrivate(global, wrapper);
+
+    // There are dire comments elsewhere in the code about how a GC can
+    // happen somewhere after wrapper initialization but before the wrapper is
+    // added to the hashtable in FinishCreate(). It's not clear if that can
+    // happen here, but let's just be safe for now.
+    AutoMarkingWrappedNativePtr wrapperMarker(ccx, wrapper);
+
+    // Call the common Init finish routine. This mainly just does an AddRef
+    // on behalf of XPConnect (the corresponding Release is in the finalizer
+    // hook), but it does some other miscellaneous things too, so we don't
+    // inline it.
+    success = wrapper->FinishInit(ccx);
+    MOZ_ASSERT(success);
+
+    // Go through some extra work to find the tearoff. This is kind of silly
+    // on a conceptual level: the point of tearoffs is to cache the results
+    // of QI-ing mIdentity to different interfaces, and we don't need that
+    // since we're dealing with nsISupports. But lots of code expects tearoffs
+    // to exist for everything, so we just follow along.
+    XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(ccx, &NS_GET_IID(nsISupports));
+    MOZ_ASSERT(iface);
+    nsresult status;
+    success = wrapper->FindTearOff(ccx, iface, false, &status);
+    if (!success)
+        return status;
+
+    // Call the common creation finish routine. This does all of the bookkeeping
+    // like inserting the wrapper into the wrapper map and setting up the wrapper
+    // cache.
+    return FinishCreate(ccx, scope, iface, nativeHelper.GetWrapperCache(),
+                        wrapper, wrappedGlobal);
+}
+
+// static
 nsresult
 XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
                                xpcObjectHelper& helper,
