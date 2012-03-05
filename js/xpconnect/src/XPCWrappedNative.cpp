@@ -353,26 +353,23 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     XPCLock* mapLock = Scope->GetRuntime()->GetMapLock();
 
-    XPCWrappedNative* wrapper;
+    nsRefPtr<XPCWrappedNative> wrapper;
 
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
     if (!cache) {
         {   // scoped lock
             XPCAutoLock lock(mapLock);
             wrapper = map->Find(identity);
-            if (wrapper)
-                wrapper->AddRef();
         }
 
         if (wrapper) {
             if (Interface &&
                 !wrapper->FindTearOff(ccx, Interface, false, &rv)) {
-                NS_RELEASE(wrapper);
                 NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
                 return rv;
             }
             DEBUG_CheckWrapperThreadSafety(wrapper);
-            *resultWrapper = wrapper;
+            *resultWrapper = wrapper.forget().get();
             return NS_OK;
         }
     }
@@ -460,35 +457,26 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             JSObject *cached = cache->GetWrapper();
             if (cached) {
                 if (IS_SLIM_WRAPPER_OBJECT(cached)) {
-                    nsRefPtr<XPCWrappedNative> morphed;
                     if (!XPCWrappedNative::Morph(ccx, cached, Interface, cache,
-                                                 getter_AddRefs(morphed)))
+                                                 getter_AddRefs(wrapper)))
                         return NS_ERROR_FAILURE;
-
-                    wrapper = morphed.forget().get();
                 } else {
-                    wrapper =
-                        static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cached));
-                    if (wrapper)
-                        wrapper->AddRef();
+                    wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cached));
                 }
             }
-        } else
-        {   // scoped lock
+        } else {
+            // scoped lock
             XPCAutoLock lock(mapLock);
             wrapper = map->Find(identity);
-            if (wrapper)
-                wrapper->AddRef();
         }
 
         if (wrapper) {
             if (Interface && !wrapper->FindTearOff(ccx, Interface, false, &rv)) {
-                NS_RELEASE(wrapper);
                 NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
                 return rv;
             }
             DEBUG_CheckWrapperThreadSafety(wrapper);
-            *resultWrapper = wrapper;
+            *resultWrapper = wrapper.forget().get();
             return NS_OK;
         }
     } else {
@@ -547,8 +535,6 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // forget about it.
     helper.forgetCanonical();
 
-    NS_ADDREF(wrapper);
-
     NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(parent),
                  "Xray wrapper being used to parent XPCWrappedNative?");
 
@@ -558,14 +544,10 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // *seen* this happen.
     AutoMarkingWrappedNativePtr wrapperMarker(ccx, wrapper);
 
-    if (!wrapper->Init(ccx, parent, &sciWrapper)) {
-        NS_RELEASE(wrapper);
+    if (!wrapper->Init(ccx, parent, &sciWrapper))
         return NS_ERROR_FAILURE;
-    }
 
     if (Interface && !wrapper->FindTearOff(ccx, Interface, false, &rv)) {
-        // Second reference will be released by the FlatJSObject's finalizer.
-        wrapper->Release();
         NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
         return rv;
     }
@@ -575,7 +557,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     if (needsCOW)
         wrapper->SetNeedsCOW();
 
-    return FinishCreate(ccx, Scope, Interface, cache, wrapper, resultWrapper);
+    return FinishCreate(ccx, Scope, Interface, cache, wrapper.forget().get(), resultWrapper);
 }
 
 static nsresult
@@ -711,11 +693,9 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
 #endif
 #endif
 
-    XPCWrappedNative* wrapper = new XPCWrappedNative(dont_AddRef(identity), proto);
+    nsRefPtr<XPCWrappedNative> wrapper = new XPCWrappedNative(dont_AddRef(identity), proto);
     if (!wrapper)
         return NS_ERROR_FAILURE;
-
-    NS_ADDREF(wrapper);
 
     NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(js::GetObjectParent(existingJSObject)),
                  "Xray wrapper being used to parent XPCWrappedNative?");
@@ -727,20 +707,16 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
     AutoMarkingWrappedNativePtr wrapperMarker(ccx, wrapper);
 
     JSAutoEnterCompartment ac;
-    if (!ac.enter(ccx, existingJSObject) || !wrapper->Init(ccx, existingJSObject)) {
-        NS_RELEASE(wrapper);
+    if (!ac.enter(ccx, existingJSObject) || !wrapper->Init(ccx, existingJSObject))
         return NS_ERROR_FAILURE;
-    }
 
     nsresult rv;
     if (Interface && !wrapper->FindTearOff(ccx, Interface, false, &rv)) {
-        // Second reference will be released by the FlatJSObject's finalizer.
-        wrapper->Release();
         NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
         return rv;
     }
 
-    return FinishCreate(ccx, wrapper->GetScope(), Interface, cache, wrapper,
+    return FinishCreate(ccx, wrapper->GetScope(), Interface, cache, wrapper.forget().get(),
                         resultWrapper);
 }
 
