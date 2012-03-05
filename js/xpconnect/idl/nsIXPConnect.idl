@@ -423,9 +423,6 @@ interface nsIXPConnect : nsISupports
      * @param aCOMObj the native object that represents the global object.
      * @param aPrincipal the principal of the code that will run in this
      *                   compartment. Can be null if not on the main thread.
-     * @param aExtraPtr must be passed if aPrincipal is null. Used to separate
-     *                  code from the same principal into different
-     *                  compartments, as for sandboxes.
      * @param aFlags one of the flags below specifying what options this
      *               global object wants.
      */
@@ -434,7 +431,6 @@ interface nsIXPConnect : nsISupports
                   in JSContextPtr aJSContext,
                   in nsISupports  aCOMObj,
                   in nsIPrincipal aPrincipal,
-                  in nsISupports  aExtraPtr,
                   in PRUint32     aFlags);
 
     const PRUint32 INIT_JS_STANDARD_CLASSES  = 1 << 0;

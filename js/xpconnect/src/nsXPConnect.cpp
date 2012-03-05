@@ -1221,14 +1221,16 @@ NS_IMETHODIMP
 nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                              nsISupports *aCOMObj,
                                              nsIPrincipal * aPrincipal,
-                                             nsISupports * aExtraPtr,
                                              PRUint32 aFlags,
                                              nsIXPConnectJSObjectHolder **_retval)
 {
     NS_ASSERTION(aJSContext, "bad param");
     NS_ASSERTION(aCOMObj, "bad param");
     NS_ASSERTION(_retval, "bad param");
-    NS_ASSERTION(aPrincipal, "must be able to find a compartment");
+
+    // We pass null for the 'extra' pointer during global object creation, so
+    // we need to have a principal.
+    MOZ_ASSERT(aPrincipal);
 
     // XXX This is not pretty. We make a temporary global object and
     // init it with all the Components object junk just so we have a
@@ -1241,7 +1243,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     JSObject* tempGlobal;
 
     nsresult rv = xpc_CreateGlobalObject(ccx, &xpcTempGlobalClass, aPrincipal,
-                                         aExtraPtr, false, &tempGlobal, &compartment);
+                                         nsnull, false, &tempGlobal, &compartment);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JSAutoEnterCompartment ac;
