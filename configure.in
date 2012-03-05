@@ -9212,7 +9212,7 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     fi
     if test "$MOZ_OPTIMIZE" = "1"; then
         ac_configure_args="$ac_configure_args --enable-optimize"
-    else
+    elif test -z "$MOZ_OPTIMIZE"; then
         ac_configure_args="$ac_configure_args --disable-optimize"
     fi
     if test -n "$HAVE_64BIT_OS"; then
