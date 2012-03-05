@@ -862,7 +862,16 @@ void nsBuiltinDecoder::PlaybackPositionChanged()
   {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     if (mDecoderStateMachine) {
-      mCurrentTime = mDecoderStateMachine->GetCurrentTime();
+      if (!IsSeeking()) {
+        // Only update the current playback position if we're not seeking.
+        // If we are seeking, the update could have been scheduled on the
+        // state machine thread while we were playing but after the seek
+        // algorithm set the current playback position on the main thread,
+        // and we don't want to override the seek algorithm and change the
+        // current time after the seek has started but before it has
+        // completed.
+        mCurrentTime = mDecoderStateMachine->GetCurrentTime();
+      }
       mDecoderStateMachine->ClearPositionChangeFlag();
     }
   }
