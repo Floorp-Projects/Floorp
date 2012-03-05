@@ -775,7 +775,7 @@ frontend::DefineCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom 
 }
 
 StmtInfo *
-frontend::LexicalLookup(TreeContext *tc, JSAtom *atom, jsint *slotp, StmtInfo *stmt)
+frontend::LexicalLookup(TreeContext *tc, JSAtom *atom, int *slotp, StmtInfo *stmt)
 {
     if (!stmt)
         stmt = tc->topScopeStmt;
@@ -1007,8 +1007,8 @@ BytecodeEmitter::shouldNoteClosedName(ParseNode *pn)
  *
  * The function returns -1 on failures.
  */
-static jsint
-AdjustBlockSlot(JSContext *cx, BytecodeEmitter *bce, jsint slot)
+static int
+AdjustBlockSlot(JSContext *cx, BytecodeEmitter *bce, int slot)
 {
     JS_ASSERT((jsuint) slot < bce->maxStackDepth);
     if (bce->inFunction()) {
@@ -1160,7 +1160,7 @@ BindKnownGlobal(JSContext *cx, BytecodeEmitter *bce, ParseNode *dn, ParseNode *p
 
         // Otherwise, find the atom's index by using the originating bce's
         // global use table.
-        index = globalbce->globalUses[dn->pn_cookie.asInteger()].slot;
+        index = globalbce->globalUses[dn->pn_cookie.slot()].slot;
     }
 
     if (!bce->addGlobalUse(atom, index, &pn->pn_cookie))
@@ -1350,7 +1350,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
 
         /* Optimize accesses to undeclared globals. */
-        if (!bce->mightAliasLocals() && !TryConvertToGname(bce, pn, &op))
+        if (!TryConvertToGname(bce, pn, &op))
             return JS_TRUE;
 
         jsatomid _;
@@ -1852,7 +1852,7 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool callContex
     } else {
         if (!pn->pn_cookie.isFree()) {
             JS_ASSERT(JOF_OPTYPE(op) != JOF_ATOM);
-            EMIT_UINT16_IMM_OP(op, pn->pn_cookie.asInteger());
+            EMIT_UINT16_IMM_OP(op, pn->pn_cookie.slot());
         } else {
             if (!EmitAtomOp(cx, pn, op, bce))
                 return JS_FALSE;
@@ -1917,22 +1917,16 @@ EmitSpecialPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
      * interpreter and trace recorder, which skip dense array instances by
      * going up to Array.prototype before looking up the property name.
      */
+    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_DUP) < 0)
+        return false;
+
     jsatomid index;
     if (!bce->makeAtomIndex(pn->pn_atom, &index))
         return false;
     if (!EmitIndex32(cx, JSOP_QNAMEPART, index, bce))
         return false;
 
-    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_DUP) < 0)
-        return false;
-
-    if (!EmitElemOpBase(cx, bce, op))
-        return false;
-
-    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_SWAP) < 0)
-        return false;
-
-    return true;
+    return EmitElemOpBase(cx, bce, op);
 }
 
 static bool
@@ -2261,7 +2255,7 @@ EmitNumberOp(JSContext *cx, double dval, BytecodeEmitter *bce)
             return Emit1(cx, bce, JSOP_ZERO) >= 0;
         if (ival == 1)
             return Emit1(cx, bce, JSOP_ONE) >= 0;
-        if ((jsint)(int8_t)ival == ival)
+        if ((int)(int8_t)ival == ival)
             return Emit2(cx, bce, JSOP_INT8, (jsbytecode)(int8_t)ival) >= 0;
 
         u = (uint32_t)ival;
@@ -2474,7 +2468,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 continue;
             }
             i = pn3->pn_pval->toInt32();
-            if ((jsuint)(i + (jsint)JS_BIT(15)) >= (jsuint)JS_BIT(16)) {
+            if ((jsuint)(i + (int)JS_BIT(15)) >= (jsuint)JS_BIT(16)) {
                 switchOp = JSOP_LOOKUPSWITCH;
                 continue;
             }
@@ -2684,7 +2678,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             savepc = bce->next();
             bce->current->next = pc + 1;
             if (switchOp == JSOP_TABLESWITCH) {
-                for (i = 0; i < (jsint)tableLength; i++) {
+                for (i = 0; i < (int)tableLength; i++) {
                     pn3 = table[i];
                     if (pn3 &&
                         (pn4 = pn3->pn_left) != NULL &&
@@ -2764,7 +2758,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         pc += 2 * JUMP_OFFSET_LEN;
 
         /* Fill in the jump table, if there is one. */
-        for (i = 0; i < (jsint)tableLength; i++) {
+        for (i = 0; i < (int)tableLength; i++) {
             pn3 = table[i];
             off = pn3 ? pn3->pn_offset - top : 0;
             SET_JUMP_OFFSET(pc, off);
@@ -3019,14 +3013,14 @@ EmitDestructuringLHS(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
 
           case JSOP_SETLOCAL:
           {
-            jsuint slot = pn->pn_cookie.asInteger();
+            uint16_t slot = pn->pn_cookie.slot();
             EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, slot);
             break;
           }
 
           case JSOP_SETARG:
           {
-            jsuint slot = pn->pn_cookie.asInteger();
+            uint16_t slot = pn->pn_cookie.slot();
             EMIT_UINT16_IMM_OP(pn->getOp(), slot);
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return JS_FALSE;
@@ -3334,7 +3328,7 @@ EmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp,
     for (pn = lhs->pn_head; pn; pn = pn->pn_next, ++i) {
         /* MaybeEmitGroupAssignment requires lhs->pn_count <= rhs->pn_count. */
         JS_ASSERT(i < limit);
-        jsint slot = AdjustBlockSlot(cx, bce, i);
+        int slot = AdjustBlockSlot(cx, bce, i);
         if (slot < 0)
             return JS_FALSE;
         EMIT_UINT16_IMM_OP(JSOP_GETLOCAL, slot);
@@ -3658,7 +3652,8 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
         if (!BindNameToSlot(cx, bce, lhs))
             return false;
         if (!lhs->pn_cookie.isFree()) {
-            atomIndex = lhs->pn_cookie.asInteger();
+            JS_ASSERT(lhs->pn_cookie.level() == 0);
+            atomIndex = lhs->pn_cookie.slot();
         } else {
             if (!bce->makeAtomIndex(lhs->pn_atom, &atomIndex))
                 return false;
@@ -6507,7 +6502,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 #endif /* JS_HAS_BLOCK_SCOPE */
 #if JS_HAS_GENERATORS
       case PNK_ARRAYPUSH: {
-        jsint slot;
+        int slot;
 
         /*
          * The array object's stack index is in bce->arrayCompDepth. See below

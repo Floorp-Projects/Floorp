@@ -59,14 +59,12 @@ public:
 
   typedef enum {
     Unknown = 0,
-    GlobalStorage = 1,
-    LocalStorage = 2,
-    SessionStorage = 3
+    LocalStorage = 1,
+    SessionStorage = 2
   } nsDOMStorageType;
 
   virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI) = 0;
   virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI) = 0;
-  virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded) = 0;
 
   virtual already_AddRefed<nsIDOMStorage> Clone() = 0;
   virtual already_AddRefed<nsIDOMStorage> Fork(const nsSubstring &aDocumentURI) = 0;

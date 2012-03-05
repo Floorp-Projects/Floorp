@@ -51,7 +51,7 @@ public class HistoryRecordFactory extends RecordFactory {
   @Override
   public Record createRecord(Record record) {
     HistoryRecord r = new HistoryRecord();
-    r.initFromPayload((CryptoRecord) record);
+    r.initFromEnvelope((CryptoRecord) record);
     return r;
   }
 

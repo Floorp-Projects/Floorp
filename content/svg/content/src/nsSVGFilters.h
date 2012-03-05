@@ -158,6 +158,9 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
+  // nsSVGElement interface
+  virtual bool HasValidDimensions() const;
+
   virtual nsSVGString& GetResultImageName() = 0;
   // Return a list of all image names used as sources. Default is to
   // return no sources.

@@ -1718,12 +1718,19 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     // request.
     nsCOMPtr<nsIStreamListener> listener = pl;
     if (corsmode != imgIRequest::CORS_NONE) {
+      PR_LOG(gImgLog, PR_LOG_DEBUG,
+             ("[this=%p] imgLoader::LoadImage -- Setting up a CORS load",
+              this));
       bool withCredentials = corsmode == imgIRequest::CORS_USE_CREDENTIALS;
 
       nsCOMPtr<nsIStreamListener> corsproxy =
         new nsCORSListenerProxy(pl, aLoadingPrincipal, newChannel,
                                 withCredentials, &rv);
       if (NS_FAILED(rv)) {
+        PR_LOG(gImgLog, PR_LOG_DEBUG,
+               ("[this=%p] imgLoader::LoadImage -- nsCORSListenerProxy "
+                "creation failed: 0x%x\n", this, rv));
+        request->CancelAndAbort(rv);
         return NS_ERROR_FAILURE;
       }
 

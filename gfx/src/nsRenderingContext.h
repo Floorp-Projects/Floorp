@@ -45,6 +45,7 @@
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "gfxContext.h"
+#include "mozilla/gfx/UserData.h"
 
 struct nsPoint;
 class nsIntRegion;
@@ -58,6 +59,9 @@ typedef enum {
 
 class nsRenderingContext
 {
+    typedef mozilla::gfx::UserData UserData;
+    typedef mozilla::gfx::UserDataKey UserDataKey;
+
 public:
     nsRenderingContext() : mP2A(0.) {}
     // ~nsRenderingContext() {}
@@ -136,6 +140,16 @@ public:
     void DrawString(const PRUnichar *aString, PRUint32 aLength,
                     nscoord aX, nscoord aY);
 
+    void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {
+      mUserData.Add(key, userData, destroy);
+    }
+    void *GetUserData(UserDataKey *key) {
+      return mUserData.Get(key);
+    }
+    void *RemoveUserData(UserDataKey *key) {
+      return mUserData.Remove(key);
+    }
+
 protected:
     PRInt32 GetMaxChunkLength();
 
@@ -144,6 +158,8 @@ protected:
     nsRefPtr<nsFontMetrics> mFontMetrics;
 
     double mP2A; // cached app units per device pixel value
+
+    UserData mUserData;
 };
 
 #endif  // NSRENDERINGCONTEXT__H__

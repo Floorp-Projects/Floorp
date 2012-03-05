@@ -50,7 +50,6 @@
 #include "nsEventListenerManager.h"
 #include "nsGenericElement.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMMemoryReporter.h"
 
 #include "nsISMILAttr.h"
 

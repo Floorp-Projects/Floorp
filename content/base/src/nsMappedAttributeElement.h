@@ -46,7 +46,6 @@
 #define NS_MAPPEDATTRIBUTEELEMENT_H_
 
 #include "nsStyledElement.h"
-#include "nsDOMMemoryReporter.h"
 
 class nsMappedAttributes;
 struct nsRuleData;

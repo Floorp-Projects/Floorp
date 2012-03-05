@@ -113,25 +113,6 @@ class RefTest(object):
                                                   profileDir,
                                                   "reftest@mozilla.org")
 
-
-  def registerExtension(self, browserEnv, options, profileDir, extraArgs = ['-silent']):
-    # run once with -silent to let the extension manager do its thing
-    # and then exit the app
-    self.automation.log.info("REFTEST INFO | runreftest.py | Performing extension manager registration: start.\n")
-    # Don't care about this |status|: |runApp()| reporting it should be enough.
-    status = self.automation.runApp(None, browserEnv, options.app, profileDir,
-                                 extraArgs,
-                                 utilityPath = options.utilityPath,
-                                 xrePath=options.xrePath,
-                                 symbolsPath=options.symbolsPath)
-    # We don't care to call |processLeakLog()| for this step.
-    self.automation.log.info("\nREFTEST INFO | runreftest.py | Performing extension manager registration: end.")
-
-    # Remove the leak detection file so it can't "leak" to the tests run.
-    # The file is not there if leak logging was not enabled in the application build.
-    if os.path.exists(self.leakLogFile):
-      os.remove(self.leakLogFile)
-
   def buildBrowserEnv(self, options, profileDir):
     browserEnv = self.automation.environment(xrePath = options.xrePath)
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
@@ -162,9 +143,6 @@ class RefTest(object):
       # browser environment
       browserEnv = self.buildBrowserEnv(options, profileDir)
 
-      self.registerExtension(browserEnv, options, profileDir)
-
-      # then again to actually run reftest
       self.automation.log.info("REFTEST INFO | runreftest.py | Running tests: start.\n")
       status = self.automation.runApp(None, browserEnv, options.app, profileDir,
                                  cmdlineArgs,

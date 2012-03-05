@@ -1871,9 +1871,18 @@ nsObjectLoadingContent::GetObjectBaseURI(const nsACString & aMimeType, nsIURI** 
     codebase.AssignLiteral("/");
   }
 
-  nsContentUtils::NewURIWithDocumentCharset(aURI, codebase,
-                                            thisContent->OwnerDoc(),
-                                            baseURI);
+  if (!codebase.IsEmpty()) {
+    nsresult rv = nsContentUtils::NewURIWithDocumentCharset(aURI, codebase,
+                                                            thisContent->OwnerDoc(),
+                                                            baseURI);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+    NS_WARNING("GetObjectBaseURI: Could not resolve plugin's codebase to a URI, using baseURI instead");
+  }
+
+  // Codebase empty or build URI failed, just use baseURI
+  *aURI = NULL;
+  baseURI.swap(*aURI);
   return NS_OK;
 }
 

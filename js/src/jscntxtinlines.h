@@ -214,7 +214,7 @@ class CompartmentChecker
     
     void check(JSIdArray *ida) {
         if (ida) {
-            for (jsint i = 0; i < ida->length; i++) {
+            for (int i = 0; i < ida->length; i++) {
                 if (JSID_IS_OBJECT(ida->vector[i]))
                     check(ida->vector[i]);
             }
