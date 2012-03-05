@@ -89,6 +89,7 @@ class MapObject : public JSObject {
     static void mark(JSTracer *trc, JSObject *obj);
     static void finalize(JSContext *cx, JSObject *obj);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool size(JSContext *cx, unsigned argc, Value *vp);
     static JSBool get(JSContext *cx, unsigned argc, Value *vp);
     static JSBool has(JSContext *cx, unsigned argc, Value *vp);
     static JSBool set(JSContext *cx, unsigned argc, Value *vp);
@@ -106,6 +107,7 @@ class SetObject : public JSObject {
     static void mark(JSTracer *trc, JSObject *obj);
     static void finalize(JSContext *cx, JSObject *obj);
     static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool size(JSContext *cx, unsigned argc, Value *vp);
     static JSBool has(JSContext *cx, unsigned argc, Value *vp);
     static JSBool add(JSContext *cx, unsigned argc, Value *vp);
     static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);

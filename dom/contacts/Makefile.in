@@ -11,7 +11,7 @@ VPATH            = \
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
+ifeq ($(MOZ_BUILD_APP),b2g)
 VPATH += $(srcdir)/fallback
 endif
 
@@ -19,17 +19,16 @@ MODULE         = dom
 LIBRARY_NAME   = jsdomcontacts_s
 LIBXUL_LIBRARY = 1
 
-EXTRA_COMPONENTS =              \
-  ContactManager.js             \
-  ContactManager.manifest       \
+EXTRA_COMPONENTS =        \
+  ContactManager.js       \
+  ContactManager.manifest \
   $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-EXTRA_JS_MODULES = ContactService.jsm \
-                   $(NULL)
-
-EXTRA_JS_MODULES += ContactDB.jsm \
-                    $(NULL)
+ifeq ($(MOZ_BUILD_APP),b2g)
+EXTRA_JS_MODULES =   \
+  ContactService.jsm \
+  ContactDB.jsm      \
+  $(NULL)
 endif
 
 ifdef ENABLE_TESTS

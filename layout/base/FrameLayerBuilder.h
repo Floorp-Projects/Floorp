@@ -249,7 +249,7 @@ public:
    * Dumps this FrameLayerBuilder's retained layer manager's retained
    * layer tree to stderr.
    */
-  void DumpRetainedLayerTree();
+  void DumpRetainedLayerTree(FILE* aFile = stdout);
 #endif
 
   /******* PRIVATE METHODS to FrameLayerBuilder.cpp ********/

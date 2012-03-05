@@ -34,7 +34,6 @@ public:
   NS_DECL_NSIFRAMELOADEROWNER
   NS_DECL_NSIDOMMOZBROWSERFRAME
   NS_DECL_NSIWEBPROGRESSLISTENER
-  NS_DECL_DOM_MEMORY_REPORTER_SIZEOF
 
   // nsIContent
   virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable, PRInt32 *aTabIndex);
