@@ -2283,6 +2283,7 @@ public:
     void SetScriptableInfo(XPCNativeScriptableInfo* si)
         {NS_ASSERTION(!mScriptableInfo, "leak here!"); mScriptableInfo = si;}
 
+    bool CallPostCreatePrototype(XPCCallContext& ccx);
     void JSProtoObjectFinalized(JSContext *cx, JSObject *obj);
 
     void SystemIsBeingShutDown();
