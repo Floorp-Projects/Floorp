@@ -44,7 +44,6 @@
 #include "nsNetUtil.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
-#include "nsICharsetAlias.h"
 #include "nsMimeTypes.h"
 #include "nsIStreamConverterService.h"
 #include "nsStringStream.h"

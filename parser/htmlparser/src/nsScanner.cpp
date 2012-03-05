@@ -42,7 +42,7 @@
 #include "nsDebug.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "nsReadableUtils.h"
 #include "nsIInputStream.h"
 #include "nsILocalFile.h"
@@ -154,14 +154,11 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSou
   if (aSource < mCharsetSource) // priority is lower the the current one , just
     return NS_OK;
 
-  nsICharsetAlias* calias = nsParser::GetCharsetAliasService();
-  NS_ASSERTION(calias, "Must have the charset alias service!");
-
   nsresult res = NS_OK;
   if (!mCharset.IsEmpty())
   {
     bool same;
-    res = calias->Equals(aCharset, mCharset, &same);
+    res = nsCharsetAlias::Equals(aCharset, mCharset, &same);
     if(NS_SUCCEEDED(res) && same)
     {
       return NS_OK; // no difference, don't change it
@@ -170,7 +167,7 @@ nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , PRInt32 aSou
 
   // different, need to change it
   nsCString charsetName;
-  res = calias->GetPreferred(aCharset, charsetName);
+  res = nsCharsetAlias::GetPreferred(aCharset, charsetName);
 
   if(NS_FAILED(res) && (mCharsetSource == kCharsetUninitialized))
   {

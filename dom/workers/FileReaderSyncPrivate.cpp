@@ -45,7 +45,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMError.h"
 #include "nsIDOMFile.h"
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "nsICharsetDetector.h"
 #include "nsIConverterInputStream.h"
 #include "nsIInputStream.h"
@@ -135,12 +135,8 @@ FileReaderSyncPrivate::ReadAsText(nsIDOMBlob* aBlob,
     CopyUTF16toUTF8(aEncoding, charsetGuess);
   }
 
-  nsCOMPtr<nsICharsetAlias> alias =
-    do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCString charset;
-  rv = alias->GetPreferred(charsetGuess, charset);
+  rv = nsCharsetAlias::GetPreferred(charsetGuess, charset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return ConvertStream(stream, charset.get(), aResult);

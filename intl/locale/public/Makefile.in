@@ -52,7 +52,7 @@ EXPORTS		= \
 		nsPosixLocale.h \
 		nsIOS2Locale.h \
 		nsWin32Locale.h \
-		nsICharsetAlias.h \
+		nsCharsetAlias.h \
 		nsIPlatformCharset.h \
 		nsLocaleCID.h \
 		$(NULL)

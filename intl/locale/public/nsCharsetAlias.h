@@ -35,35 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsICharsetAlias_h___
-#define nsICharsetAlias_h___
+#ifndef nsCharsetAlias_h___
+#define nsCharsetAlias_h___
 
 #include "nscore.h"
 #include "nsStringGlue.h"
-#include "nsISupports.h"
 
-/* 0b4028d6-7473-4958-9b3c-4dee46bf68cb */
-#define NS_ICHARSETALIAS_IID \
-{   0x0b4028d6, \
-    0x7473, \
-    0x4958, \
-    {0x9b, 0x3c, 0x4d, 0xee, 0x46, 0xbf, 0x68, 0xcb} }
-
-// {98D41C21-CCF3-11d2-B3B1-00805F8A6670}
-#define NS_CHARSETALIAS_CID \
-{ 0x98d41c21, 0xccf3, 0x11d2, { 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 }}
-
-#define NS_CHARSETALIAS_CONTRACTID "@mozilla.org/intl/charsetalias;1"
-
-class nsICharsetAlias : public nsISupports
+class nsCharsetAlias
 {
 public:
-   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHARSETALIAS_IID)
-
-   NS_IMETHOD GetPreferred(const nsACString& aAlias, nsACString& aResult) = 0;
-   NS_IMETHOD Equals(const nsACString& aCharset1, const nsACString& aCharset2, bool* aResult) = 0;
+   static nsresult GetPreferred(const nsACString& aAlias, nsACString& aResult);
+   static nsresult Equals(const nsACString& aCharset1, const nsACString& aCharset2, bool* aResult);
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICharsetAlias, NS_ICHARSETALIAS_IID)
-
-#endif /* nsICharsetAlias_h___ */
+#endif /* nsCharsetAlias_h___ */
