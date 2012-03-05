@@ -580,8 +580,8 @@ public:
 
     static XPCNativeScriptableSharedMap* newMap(int size);
 
-    JSBool GetNewOrUsed(uint32_t flags, char* name, bool isGlobal,
-                        PRUint32 interfacesBitmap, XPCNativeScriptableInfo* si);
+    JSBool GetNewOrUsed(uint32_t flags, char* name, PRUint32 interfacesBitmap,
+                        XPCNativeScriptableInfo* si);
 
     inline uint32_t Count() {return mTable->entryCount;}
     inline uint32_t Enumerate(JSDHashEnumerator f, void *arg)
