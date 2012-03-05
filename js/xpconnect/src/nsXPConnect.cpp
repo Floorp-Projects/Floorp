@@ -1220,7 +1220,6 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
 NS_IMETHODIMP
 nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                              nsISupports *aCOMObj,
-                                             const nsIID & aIID,
                                              nsIPrincipal * aPrincipal,
                                              nsISupports * aExtraPtr,
                                              PRUint32 aFlags,
@@ -1269,7 +1268,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         MOZ_ASSERT(helper.GetScriptableFlags() & nsIXPCScriptable::IS_GLOBAL_OBJECT);
         if (!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                   getter_AddRefs(holder),
-                                                  helper, &aIID, nsnull,
+                                                  helper, &NS_GET_IID(nsISupports), nsnull,
                                                   false, OBJ_IS_GLOBAL, &rv))
             return UnexpectedFailure(rv);
 
