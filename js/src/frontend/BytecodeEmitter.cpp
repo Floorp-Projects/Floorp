@@ -4931,6 +4931,9 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
         if (jmp < 0)
             return false;
+    } else {
+        if (op != JSOP_NOP && Emit1(cx, bce, JSOP_NOP) < 0)
+            return false;
     }
 
     top = bce->offset();
