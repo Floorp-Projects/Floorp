@@ -771,7 +771,7 @@ AndroidGeckoLayerClient::BeginDrawing(int aWidth, int aHeight, const nsAString &
     if (!env)
         return false;
 
-    AndroidBridge::AutoLocalJNIFrame(env, 1);
+    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
     jstring jMetadata = env->NewString(nsPromiseFlatString(aMetadata).get(), aMetadata.Length());
 
     return env->CallBooleanMethod(wrapped_obj, jBeginDrawingMethod, aWidth, aHeight, jMetadata);
@@ -785,7 +785,7 @@ AndroidGeckoLayerClient::EndDrawing()
     if (!env)
         return;
 
-    AndroidBridge::AutoLocalJNIFrame(env, 1);
+    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
     return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
 }
 
