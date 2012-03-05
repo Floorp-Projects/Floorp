@@ -127,24 +127,37 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
                                         mScope->GetPrototypeJSObject(),
                                         true, parent);
 
-    JSBool ok = !!mJSProtoObject;
-
-    if (ok) {
+    bool success = !!mJSProtoObject;
+    if (success) {
         JS_SetPrivate(mJSProtoObject, this);
-        if (callback) {
-            nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
-            if (NS_FAILED(rv)) {
-                JS_SetPrivate(mJSProtoObject, nsnull);
-                mJSProtoObject = nsnull;
-                XPCThrower::Throw(rv, ccx);
-                return false;
-            }
-        }
+        success = CallPostCreatePrototype(ccx);
     }
 
     DEBUG_ReportShadowedMembers(mSet, nsnull, this);
 
-    return ok;
+    return success;
+}
+
+bool
+XPCWrappedNativeProto::CallPostCreatePrototype(XPCCallContext& ccx)
+{
+    // Nothing to do if we don't have a scriptable callback.
+    nsIXPCScriptable *callback = mScriptableInfo ? mScriptableInfo->GetCallback()
+                                                 : nsnull;
+    if (!callback)
+        return true;
+
+    // Call the helper. This can handle being called if it's not implemented,
+    // so we don't have to check any sort of "want" here. See xpc_map_end.h.
+    nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
+    if (NS_FAILED(rv)) {
+        JS_SetPrivate(mJSProtoObject, nsnull);
+        mJSProtoObject = nsnull;
+        XPCThrower::Throw(rv, ccx);
+        return false;
+    }
+
+    return true;
 }
 
 void
