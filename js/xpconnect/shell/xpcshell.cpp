@@ -1948,7 +1948,6 @@ main(int argc, char **argv, char **envp)
 
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
-                                                  NS_GET_IID(nsISupports),
                                                   systemprincipal,
                                                   nsnull,
                                                   nsIXPConnect::

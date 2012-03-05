@@ -2231,8 +2231,7 @@ nsJSContext::CreateNativeGlobalForInner(
 
   nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
   nsresult rv = xpc->
-          InitClassesWithNewWrappedGlobal(mContext,
-                                          aNewInner, NS_GET_IID(nsISupports),
+          InitClassesWithNewWrappedGlobal(mContext, aNewInner,
                                           aIsChrome ? systemPrincipal.get() : aPrincipal,
                                           nsnull, flags,
                                           getter_AddRefs(jsholder));
