@@ -834,6 +834,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_object(info().getObject(pc));
 
       case JSOP_TYPEOF:
+      case JSOP_TYPEOFEXPR:
         return jsop_typeof();
 
       case JSOP_TOID:
