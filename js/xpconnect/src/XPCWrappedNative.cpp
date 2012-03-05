@@ -1197,15 +1197,8 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent,
 
     JSClass* jsclazz = si ? si->GetJSClass() : Jsvalify(&XPC_WN_NoHelper_JSClass.base);
 
-    if (si && si->GetFlags().IsGlobalObject()) {
-        // Resolving a global object's class can cause us to create a global's
-        // JS class without the proper global flags. Notice that here and fix
-        // the problem.
-        if (!(jsclazz->flags & JSCLASS_IS_GLOBAL))
-            jsclazz->flags |= XPCONNECT_GLOBAL_FLAGS;
-    } else
-        NS_ASSERTION(!(jsclazz->flags & JSCLASS_IS_GLOBAL),
-                     "Non-global object has the wrong flags");
+    // We should have the global jsclass flag if and only if we're a global.
+    MOZ_ASSERT_IF(si, !!si->GetFlags().IsGlobalObject() == !!(jsclazz->flags & JSCLASS_IS_GLOBAL));
 
     NS_ASSERTION(jsclazz &&
                  jsclazz->name &&
