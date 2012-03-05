@@ -45,11 +45,10 @@
 namespace mozilla {
 namespace gfx {
 
-ScaledFontWin::ScaledFontWin(gfxGDIFont* aFont, Float aSize)
+ScaledFontWin::ScaledFontWin(LOGFONT* aFont, Float aSize)
   : ScaledFontBase(aSize)
+  , mLogFont(*aFont)
 {
-  LOGFONT lf;
-  GetObject(aFont->GetHFONT(), sizeof(LOGFONT), &lf);
 }
 
 #ifdef USE_SKIA
