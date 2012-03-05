@@ -1630,6 +1630,8 @@ Tab.prototype = {
   },
 
   set viewport(aViewport) {
+    BrowserEventHandler._cancelTapHighlight();
+
     // Transform coordinates based on zoom
     aViewport.x /= aViewport.zoom;
     aViewport.y /= aViewport.zoom;
