@@ -57,8 +57,7 @@ function run_test() {
 
     // The XPCShell test wiki indicates this is the preferred way for 
     // Windows detection.
-    var isWindows = ("@mozilla.org/windows-registry-key;1" 
-                     in Cc);
+    var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
     // Setup the command line arguments to create the MAR.
     // Windows vs. Linux/Mac/... have different command line for verification 
