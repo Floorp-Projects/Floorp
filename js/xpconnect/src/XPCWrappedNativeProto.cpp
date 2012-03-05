@@ -89,7 +89,6 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 
 JSBool
 XPCWrappedNativeProto::Init(XPCCallContext& ccx,
-                            JSBool isGlobal,
                             const XPCNativeScriptableCreateInfo* scriptableCreateInfo)
 {
     nsIXPCScriptable *callback = scriptableCreateInfo ?
@@ -97,7 +96,7 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
                                  nsnull;
     if (callback) {
         mScriptableInfo =
-            XPCNativeScriptableInfo::Construct(ccx, isGlobal, scriptableCreateInfo);
+            XPCNativeScriptableInfo::Construct(ccx, scriptableCreateInfo);
         if (!mScriptableInfo)
             return false;
     }
@@ -195,7 +194,6 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
                                     XPCWrappedNativeScope* scope,
                                     nsIClassInfo* classInfo,
                                     const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
-                                    JSBool isGlobal,
                                     QITableEntry* offsets)
 {
     NS_ASSERTION(scope, "bad param");
@@ -226,7 +224,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
 
     proto = new XPCWrappedNativeProto(scope, classInfo, ciFlags, set, offsets);
 
-    if (!proto || !proto->Init(ccx, isGlobal, scriptableCreateInfo)) {
+    if (!proto || !proto->Init(ccx, scriptableCreateInfo)) {
         delete proto.get();
         return nsnull;
     }

@@ -1271,7 +1271,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         if (!XPCConvert::NativeInterface2JSObject(ccx, &v,
                                                   getter_AddRefs(holder),
                                                   helper, &NS_GET_IID(nsISupports), nsnull,
-                                                  false, OBJ_IS_GLOBAL, &rv))
+                                                  false, &rv))
             return UnexpectedFailure(rv);
 
         NS_ASSERTION(NS_SUCCEEDED(rv) && holder, "Didn't wrap properly");
@@ -1372,8 +1372,7 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
     if (!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, helper, aIID,
-                                              nsnull, aAllowWrapping,
-                                              OBJ_IS_NOT_GLOBAL, &rv))
+                                              nsnull, aAllowWrapping, &rv))
         return rv;
 
 #ifdef DEBUG
@@ -2120,8 +2119,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, sciProto);
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
-    proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo,
-                                                &sciProto, OBJ_IS_NOT_GLOBAL);
+    proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo, &sciProto);
     if (!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
