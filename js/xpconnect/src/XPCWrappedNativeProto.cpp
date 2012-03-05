@@ -89,7 +89,8 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 
 JSBool
 XPCWrappedNativeProto::Init(XPCCallContext& ccx,
-                            const XPCNativeScriptableCreateInfo* scriptableCreateInfo)
+                            const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
+                            bool callPostCreatePrototype)
 {
     nsIXPCScriptable *callback = scriptableCreateInfo ?
                                  scriptableCreateInfo->GetCallback() :
@@ -130,7 +131,8 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
     bool success = !!mJSProtoObject;
     if (success) {
         JS_SetPrivate(mJSProtoObject, this);
-        success = CallPostCreatePrototype(ccx);
+        if (callPostCreatePrototype)
+            success = CallPostCreatePrototype(ccx);
     }
 
     DEBUG_ReportShadowedMembers(mSet, nsnull, this);
@@ -207,7 +209,8 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
                                     XPCWrappedNativeScope* scope,
                                     nsIClassInfo* classInfo,
                                     const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
-                                    QITableEntry* offsets)
+                                    QITableEntry* offsets,
+                                    bool callPostCreatePrototype)
 {
     NS_ASSERTION(scope, "bad param");
     NS_ASSERTION(classInfo, "bad param");
@@ -237,7 +240,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
 
     proto = new XPCWrappedNativeProto(scope, classInfo, ciFlags, set, offsets);
 
-    if (!proto || !proto->Init(ccx, scriptableCreateInfo)) {
+    if (!proto || !proto->Init(ccx, scriptableCreateInfo, callPostCreatePrototype)) {
         delete proto.get();
         return nsnull;
     }
