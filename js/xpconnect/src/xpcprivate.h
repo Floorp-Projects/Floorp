@@ -1499,7 +1499,7 @@ class XPCWrappedNativeScope : public PRCList
 public:
 
     static XPCWrappedNativeScope*
-    GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal);
+    GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative = nsnull);
 
     XPCJSRuntime*
     GetRuntime() const {return mRuntime;}
@@ -1595,7 +1595,7 @@ public:
     IsDyingScope(XPCWrappedNativeScope *scope);
 
     void SetComponents(nsXPCComponents* aComponents);
-    void SetGlobal(XPCCallContext& ccx, JSObject* aGlobal);
+    void SetGlobal(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative);
 
     static void InitStatics() { gScopes = nsnull; gDyingScopes = nsnull; }
 
@@ -1624,7 +1624,7 @@ public:
     }
 
 protected:
-    XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal);
+    XPCWrappedNativeScope(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative);
     virtual ~XPCWrappedNativeScope();
 
     static void KillDyingScopes();

@@ -1309,7 +1309,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
 
     NS_ASSERTION(scope->GetGlobalJSObject() == tempGlobal, "stealing scope!");
 
-    scope->SetGlobal(ccx, globalJSObj);
+    scope->SetGlobal(ccx, globalJSObj, nsnull);
 
     JSObject* protoJSObject = wrapper->HasProto() ?
                                     wrapper->GetProto()->GetJSProtoObject() :
