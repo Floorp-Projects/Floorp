@@ -193,6 +193,7 @@ const ContentPanning = {
 
   onTouchStart: function cp_onTouchStart(evt) {
     this.dragging = true;
+    this.panning = false;
 
     // If there is a pan animation running (from a previous pan gesture) and
     // the user touch back the screen, stop this animation immediatly and
@@ -202,7 +203,9 @@ const ContentPanning = {
       this.preventNextClick = true;
     }
 
-    this.scrollCallback = this.getPannable(evt.originalTarget);
+    this.scrollCallback = this.getPannable(evt.target);
+    this.targetDocument = evt.target.ownerDocument;
+
     this.position.set(evt.screenX, evt.screenY);
     KineticPanning.record(new Point(0, 0), evt.timeStamp);
   },
@@ -214,9 +217,8 @@ const ContentPanning = {
 
     this.onTouchMove(evt);
 
-    let pan = KineticPanning.isPan();
     let click = evt.detail;
-    if (click && (pan || this.preventNextClick)) {
+    if (click && (this.panning || this.preventNextClick)) {
       let target = evt.target;
       let view = target.defaultView || target.ownerDocument.defaultView;
       view.addEventListener('click', this, true, true);
@@ -224,7 +226,7 @@ const ContentPanning = {
 
     this.preventNextClick = false;
 
-    if (pan)
+    if (this.panning)
       KineticPanning.start(this);
   },
 
@@ -238,6 +240,13 @@ const ContentPanning = {
 
     KineticPanning.record(delta, evt.timeStamp);
     this.scrollCallback(delta.scale(-1));
+
+    // If a pan action happens, cancel the active state of the
+    // current target.
+    if (!this.panning && KineticPanning.isPan()) {
+      this.panning = true;
+      this._resetActive();
+    }
   },
 
 
@@ -296,6 +305,19 @@ const ContentPanning = {
       }
     }
     return scroll;
+  },
+
+  get _domUtils() {
+    delete this._domUtils;
+    return this._domUtils = Cc['@mozilla.org/inspector/dom-utils;1']
+                              .getService(Ci.inIDOMUtils);
+  },
+
+  _resetActive: function cp_resetActive() {
+    let root = this.targetDocument.documentElement;
+
+    const kStateActive = 0x00000001;
+    this._domUtils.setContentState(root, kStateActive);
   }
 };
 
@@ -376,6 +398,7 @@ const KineticPanning = {
       return;
 
     this.momentums = [];
+    this.distance.set(0, 0);
 
     this.target.onKineticEnd();
     this.target = null;
@@ -384,23 +407,24 @@ const KineticPanning = {
   momentums: [],
   record: function kp_record(delta, timestamp) {
     this.momentums.push({ 'time': timestamp, 'dx' : delta.x, 'dy' : delta.y });
+    this.distance.add(delta.x, delta.y);
   },
 
-  isPan: function cp_isPan() {
+  get threshold() {
     let dpi = content.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils)
                      .displayDPI;
 
     let threshold = Services.prefs.getIntPref('ui.dragThresholdX') / 240 * dpi;
 
-    let deltaX = 0;
-    let deltaY = 0;
-    let start = this.momentums[0].time;
-    return this.momentums.slice(1).some(function(momentum) {
-      deltaX += momentum.dx;
-      deltaY += momentum.dy;
-      return (Math.abs(deltaX) > threshold) || (Math.abs(deltaY) > threshold);
-    });
+    delete this.threshold;
+    return this.threshold = threshold;
+  },
+
+  distance: new Point(0, 0),
+  isPan: function cp_isPan() {
+    return (Math.abs(this.distance.x) > this.threshold ||
+            Math.abs(this.distance.y) > this.threshold);
   },
 
   _startAnimation: function kp_startAnimation() {
