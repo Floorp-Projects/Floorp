@@ -717,6 +717,18 @@ SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
     return old;
 }
 
+jschar *
+GCDescription::formatMessage(JSRuntime *rt) const
+{
+    return rt->gcStats.formatMessage();
+}
+
+jschar *
+GCDescription::formatJSON(JSRuntime *rt) const
+{
+    return rt->gcStats.formatJSON();
+}
+
 JS_FRIEND_API(bool)
 WantGCSlice(JSRuntime *rt)
 {

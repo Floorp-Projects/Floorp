@@ -699,12 +699,14 @@ enum GCProgress {
     GC_CYCLE_END
 };
 
-struct GCDescription {
-    const char *logMessage;
+struct JS_FRIEND_API(GCDescription) {
     bool isCompartment;
 
-    GCDescription(const char *msg, bool isCompartment)
-      : logMessage(msg), isCompartment(isCompartment) {}
+    GCDescription(bool isCompartment)
+      : isCompartment(isCompartment) {}
+
+    jschar *formatMessage(JSRuntime *rt) const;
+    jschar *formatJSON(JSRuntime *rt) const;
 };
 
 typedef void
