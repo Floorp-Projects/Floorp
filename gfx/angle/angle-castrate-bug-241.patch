@@ -26,7 +26,25 @@ diff --git a/gfx/angle/README.mozilla b/gfx/angle/README.mozilla
 diff --git a/gfx/angle/src/compiler/Types.h b/gfx/angle/src/compiler/Types.h
 --- a/gfx/angle/src/compiler/Types.h
 +++ b/gfx/angle/src/compiler/Types.h
-@@ -203,17 +203,17 @@ public:
+@@ -5,16 +5,17 @@
+ //
+ 
+ #ifndef _TYPES_INCLUDED
+ #define _TYPES_INCLUDED
+ 
+ #include "compiler/BaseTypes.h"
+ #include "compiler/Common.h"
+ #include "compiler/compilerdebug.h"
++#include <cstdlib>
+ 
+ //
+ // Need to have association of line numbers to types in a list for building structs.
+ //
+ class TType;
+ struct TTypeLine {
+     TType* type;
+     int line;
+@@ -203,17 +204,17 @@ public:
      bool isVector() const { return size > 1 && !matrix; }
      bool isScalar() const { return size == 1 && !matrix && !structure; }
  
