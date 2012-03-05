@@ -261,7 +261,15 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
         jsid idObj = mRuntime->GetStringID(XPCJSRuntime::IDX_OBJECT);
         jsid idProto = mRuntime->GetStringID(XPCJSRuntime::IDX_PROTOTYPE);
 
-        if (JS_GetPropertyById(ccx, aGlobal, idObj, &val) &&
+        // When creating a new scope to boostrap a new global, we don't yet have
+        // an XPCWrappedNative associated with the global object. However, the
+        // resolve hook on the JSClass assumes there is one. So we need to avoid
+        // resolving anything on the global object until things get a bit further
+        // along. As such, we manually resolve |Object| before accessing it below.
+        JSBool didResolve;
+
+        if (JS_ResolveStandardClass(ccx, aGlobal, idObj, &didResolve) &&
+            JS_GetPropertyById(ccx, aGlobal, idObj, &val) &&
             !JSVAL_IS_PRIMITIVE(val) &&
             JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
             !JSVAL_IS_PRIMITIVE(val)) {
