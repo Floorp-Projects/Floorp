@@ -548,6 +548,7 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::WANT_ENUMERATE |                                          \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
   nsIXPCScriptable::USE_STUB_EQUALITY_HOOK |                                  \
+  nsIXPCScriptable::IS_GLOBAL_OBJECT |                                        \
   nsIXPCScriptable::WANT_OUTER_OBJECT)
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
@@ -1549,7 +1550,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(AnimationEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(ContentFrameMessageManager, nsEventTargetSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS | nsIXPCScriptable::IS_GLOBAL_OBJECT)
 
   NS_DEFINE_CLASSINFO_DATA(FormData, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
