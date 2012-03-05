@@ -66,11 +66,6 @@ DOM_MSG_DEF_(TIMEOUT_ERR, "TimeoutError", "The operation timed out.")
 DOM_MSG_DEF_(INVALID_NODE_TYPE_ERR, "InvalidNodeTypeError", "The supplied node is incorrect or has an incorrect ancestor for this operation.")
 DOM_MSG_DEF_(DATA_CLONE_ERR, "DataCloneError", "The object could not be cloned.")
 
-/* DOM error codes from http://www.w3.org/TR/DOM-Level-2/range.html */
-
-DOM_MSG_DEF(NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR, "The boundary-points of a range does not meet specific requirements.")
-DOM_MSG_DEF(NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR, "The container of an boundary-point of a range is being set to either a node of an invalid type or a node with an ancestor of an invalid type.")
-
 /* SVG DOM error codes from http://www.w3.org/TR/SVG11/svgdom.html */
 
 DOM_MSG_DEF(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR, "Unknown or invalid type")
