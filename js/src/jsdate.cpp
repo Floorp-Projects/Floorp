@@ -200,19 +200,19 @@ TimeWithinDay(double t)
 }
 
 static inline bool
-IsLeapYear(jsint year)
+IsLeapYear(int year)
 {
     return year % 4 == 0 && (year % 100 || (year % 400 == 0));
 }
 
-static inline jsint
-DaysInYear(jsint year)
+static inline int
+DaysInYear(int year)
 {
     return IsLeapYear(year) ? 366 : 365;
 }
 
-static inline jsint
-DaysInFebruary(jsint year)
+static inline int
+DaysInFebruary(int year)
 {
     return IsLeapYear(year) ? 29 : 28;
 }
@@ -224,10 +224,10 @@ DaysInFebruary(jsint year)
                          - floor(((y)-1901)/100.0) + floor(((y)-1601)/400.0))
 #define TimeFromYear(y) (DayFromYear(y) * msPerDay)
 
-static jsint
+static int
 YearFromTime(double t)
 {
-    jsint y = (jsint) floor(t /(msPerDay*365.2425)) + 1970;
+    int y = (int) floor(t /(msPerDay*365.2425)) + 1970;
     double t2 = (double) TimeFromYear(y);
 
     /*
@@ -258,7 +258,7 @@ static double firstDayOfMonth[2][13] = {
 #define DayFromMonth(m, leap) firstDayOfMonth[leap][(int)m]
 
 static int
-DaysInMonth(jsint year, jsint month)
+DaysInMonth(int year, int month)
 {
     JSBool leap = IsLeapYear(year);
     int result = int(DayFromMonth(month, leap) - DayFromMonth(month-1, leap));
@@ -269,7 +269,7 @@ static int
 MonthFromTime(double t)
 {
     int d, step;
-    jsint year = YearFromTime(t);
+    int year = YearFromTime(t);
     d = DayWithinYear(t, year);
 
     if (d < (step = 31))
@@ -301,7 +301,7 @@ static int
 DateFromTime(double t)
 {
     int d, step, next;
-    jsint year = YearFromTime(t);
+    int year = YearFromTime(t);
     d = DayWithinYear(t, year);
 
     if (d <= (next = 30))
@@ -343,8 +343,8 @@ DateFromTime(double t)
 static int
 WeekDay(double t)
 {
-    jsint result;
-    result = (jsint) Day(t) + 4;
+    int result;
+    result = (int) Day(t) + 4;
     result = result % 7;
     if (result < 0)
         result += 7;
@@ -367,7 +367,7 @@ MakeDay(double year, double month, double date)
     if (month < 0)
         month += 12;
 
-    leap = IsLeapYear((jsint) year);
+    leap = IsLeapYear((int) year);
 
     yearday = floor(TimeFromYear(year) / msPerDay);
     monthday = DayFromMonth(month, leap);
@@ -386,7 +386,7 @@ MakeDay(double year, double month, double date)
  * yearStartingWith[1][i] is an example leap year where
  * Jan 1 appears on Sunday (i == 0), Monday (i == 1), etc.
  */
-static jsint yearStartingWith[2][7] = {
+static int yearStartingWith[2][7] = {
     {1978, 1973, 1974, 1975, 1981, 1971, 1977},
     {1984, 1996, 1980, 1992, 1976, 1988, 1972}
 };
@@ -398,12 +398,12 @@ static jsint yearStartingWith[2][7] = {
  * for determining DST; it hasn't been proven not to produce an
  * incorrect year for times near year boundaries.
  */
-static jsint
-EquivalentYearForDST(jsint year)
+static int
+EquivalentYearForDST(int year)
 {
-    jsint day;
+    int day;
 
-    day = (jsint) DayFromYear(year) + 4;
+    day = (int) DayFromYear(year) + 4;
     day = day % 7;
     if (day < 0)
         day += 7;
@@ -426,7 +426,7 @@ DaylightSavingTA(double t, JSContext *cx)
      * many OSes, map it to an equivalent year before asking.
      */
     if (t < 0.0 || t > 2145916800000.0) {
-        jsint year = EquivalentYearForDST(YearFromTime(t));
+        int year = EquivalentYearForDST(YearFromTime(t));
         double day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
         t = MakeDate(day, TimeWithinDay(t));
     }
@@ -1273,11 +1273,11 @@ FillLocalTimes(JSContext *cx, JSObject *obj)
 
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_TIME, DoubleValue(localTime));
 
-    jsint year = (jsint) floor(localTime /(msPerDay*365.2425)) + 1970;
+    int year = (int) floor(localTime /(msPerDay*365.2425)) + 1970;
     double yearStartTime = (double) TimeFromYear(year);
 
     /* Adjust the year in case the approximation was wrong, as in YearFromTime. */
-    jsint yearDays;
+    int yearDays;
     if (yearStartTime > localTime) {
         year--;
         yearStartTime -= (msPerDay * DaysInYear(year));
@@ -1295,12 +1295,12 @@ FillLocalTimes(JSContext *cx, JSObject *obj)
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR, Int32Value(year));
 
     uint64_t yearTime = uint64_t(localTime - yearStartTime);
-    jsint yearSeconds = uint32_t(yearTime / 1000);
+    int yearSeconds = uint32_t(yearTime / 1000);
 
-    jsint day = yearSeconds / jsint(SecondsPerDay);
+    int day = yearSeconds / int(SecondsPerDay);
 
-    jsint step = -1, next = 30;
-    jsint month;
+    int step = -1, next = 30;
+    int month;
 
     do {
         if (day <= next) {
@@ -1365,19 +1365,19 @@ FillLocalTimes(JSContext *cx, JSObject *obj)
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_MONTH, Int32Value(month));
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_DATE, Int32Value(day - step));
 
-    jsint weekday = WeekDay(localTime);
+    int weekday = WeekDay(localTime);
 
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_DAY, Int32Value(weekday));
 
-    jsint seconds = yearSeconds % 60;
+    int seconds = yearSeconds % 60;
 
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_SECONDS, Int32Value(seconds));
 
-    jsint minutes = (yearSeconds / 60) % 60;
+    int minutes = (yearSeconds / 60) % 60;
 
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_MINUTES, Int32Value(minutes));
 
-    jsint hours = (yearSeconds / (60 * 60)) % 24;
+    int hours = (yearSeconds / (60 * 60)) % 24;
 
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_HOURS, Int32Value(hours));
 
@@ -1441,7 +1441,7 @@ date_getYear(JSContext *cx, unsigned argc, Value *vp)
     Value yearVal = obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR);
     if (yearVal.isInt32()) {
         /* Follow ECMA-262 to the letter, contrary to IE JScript. */
-        jsint year = yearVal.toInt32() - 1900;
+        int year = yearVal.toInt32() - 1900;
         args.rval().setInt32(year);
     } else {
         args.rval() = yearVal;
@@ -2162,7 +2162,7 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
 static void
 new_explode(double timeval, PRMJTime *split, JSContext *cx)
 {
-    jsint year = YearFromTime(timeval);
+    int year = YearFromTime(timeval);
 
     split->tm_usec = int32_t(msFromTime(timeval)) * 1000;
     split->tm_sec = int8_t(SecFromTime(timeval));
@@ -2201,7 +2201,7 @@ date_format(JSContext *cx, double date, formatspec format, CallReceiver call)
 
         /* offset from GMT in minutes.  The offset includes daylight savings,
            if it applies. */
-        jsint minutes = (jsint) floor(AdjustTime(date, cx) / msPerMinute);
+        int minutes = (int) floor(AdjustTime(date, cx) / msPerMinute);
 
         /* map 510 minutes to 0830 hours */
         int offset = (minutes / 60) * 100 + minutes % 60;

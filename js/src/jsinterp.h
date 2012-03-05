@@ -112,6 +112,21 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok);
 extern JSTrapStatus
 ScriptDebugPrologue(JSContext *cx, StackFrame *fp);
 
+/*
+ * Announce to the debugger that the thread has exited a JavaScript frame, |fp|.
+ * If |ok| is true, the frame is returning normally; if |ok| is false, the frame
+ * is throwing an exception or terminating. 
+ *
+ * Call whatever hooks have been registered to observe frame exits. Change cx's
+ * current exception and |fp|'s return value to reflect the changes in behavior
+ * the hooks request, if any. Return the new error/success value.
+ *
+ * This function may be called twice for the same outgoing frame; only the
+ * first call has any effect. (Permitting double calls simplifies some
+ * cases where an onPop handler's resumption value changes a return to a
+ * throw, or vice versa: we can redirect to a complete copy of the
+ * alternative path, containing its own call to ScriptDebugEpilogue.)
+ */
 extern bool
 ScriptDebugEpilogue(JSContext *cx, StackFrame *fp, bool ok);
 

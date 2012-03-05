@@ -41,7 +41,6 @@
 #include "nsStyleConsts.h"
 #include "nsIAtom.h"
 #include "nsRuleData.h"
-#include "nsDOMMemoryReporter.h"
 
 class nsHTMLSpanElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLElement

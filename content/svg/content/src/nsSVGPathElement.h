@@ -76,6 +76,9 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 
+  // nsSVGSVGElement methods:
+  virtual bool HasValidDimensions() const;
+
   // nsSVGPathGeometryElement methods:
   virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
   virtual bool IsMarkable();

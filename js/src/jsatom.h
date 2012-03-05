@@ -53,7 +53,7 @@
 #include "js/HashTable.h"
 
 struct JSIdArray {
-    jsint length;
+    int length;
     js::HeapId vector[1];    /* actually, length jsid words */
 };
 

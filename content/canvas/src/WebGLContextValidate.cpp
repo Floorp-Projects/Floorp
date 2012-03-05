@@ -49,38 +49,46 @@
 #include "angle/ShaderLang.h"
 #endif
 
+#include <algorithm>
+
 using namespace mozilla;
 
 /*
- * Pull all the data out of the program that will be used by validate later on
+ * Pull data out of the program, post-linking
  */
 bool
-WebGLProgram::UpdateInfo(gl::GLContext *gl)
+WebGLProgram::UpdateInfo()
 {
-    gl->fGetProgramiv(mGLName, LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &mAttribMaxNameLength);
-    gl->fGetProgramiv(mGLName, LOCAL_GL_ACTIVE_UNIFORM_MAX_LENGTH, &mUniformMaxNameLength);
-    gl->fGetProgramiv(mGLName, LOCAL_GL_ACTIVE_UNIFORMS, &mUniformCount);
-    gl->fGetProgramiv(mGLName, LOCAL_GL_ACTIVE_ATTRIBUTES, &mAttribCount);
+    mIdentifierMap = nsnull;
+    mIdentifierReverseMap = nsnull;
 
-    GLint numVertexAttribs;
-    if (mContext->MinCapabilityMode())  {
-        numVertexAttribs = MINVALUE_GL_MAX_VERTEX_ATTRIBS;
-    } else {
-        gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &numVertexAttribs);
-    }
-    mAttribsInUse.clear();
-    mAttribsInUse.resize(numVertexAttribs);
+    mAttribMaxNameLength = 0;
+
+    for (size_t i = 0; i < mAttachedShaders.Length(); i++)
+        mAttribMaxNameLength = NS_MAX(mAttribMaxNameLength, mAttachedShaders[i]->mAttribMaxNameLength);
+
+    GLint attribCount;
+    mContext->gl->fGetProgramiv(mGLName, LOCAL_GL_ACTIVE_ATTRIBUTES, &attribCount);
+
+    mAttribsInUse.resize(mContext->mGLMaxVertexAttribs);
+    std::fill(mAttribsInUse.begin(), mAttribsInUse.end(), false);
 
     nsAutoArrayPtr<char> nameBuf(new char[mAttribMaxNameLength]);
 
-    for (int i = 0; i < mAttribCount; ++i) {
+    for (int i = 0; i < attribCount; ++i) {
         GLint attrnamelen;
         GLint attrsize;
         GLenum attrtype;
-        gl->fGetActiveAttrib(mGLName, i, mAttribMaxNameLength, &attrnamelen, &attrsize, &attrtype, nameBuf);
+        mContext->gl->fGetActiveAttrib(mGLName, i, mAttribMaxNameLength, &attrnamelen, &attrsize, &attrtype, nameBuf);
         if (attrnamelen > 0) {
-            GLint loc = gl->fGetAttribLocation(mGLName, nameBuf);
-            mAttribsInUse[loc] = true;
+            GLint loc = mContext->gl->fGetAttribLocation(mGLName, nameBuf);
+            NS_ABORT_IF_FALSE(loc >= 0, "major oops in managing the attributes of a WebGL program");
+            if (loc < mContext->mGLMaxVertexAttribs) {
+                mAttribsInUse[loc] = true;
+            } else {
+                mContext->ErrorInvalidOperation("program exceeds MAX_VERTEX_ATTRIBS");
+                return false;
+            }
         }
     }
 
@@ -334,7 +342,7 @@ bool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
 
 bool WebGLContext::ValidateGLSLVariableName(const nsAString& name, const char *info)
 {
-    const PRUint32 maxSize = 255;
+    const PRUint32 maxSize = 256;
     if (name.Length() > maxSize) {
         ErrorInvalidValue("%s: identifier is %d characters long, exceeds the maximum allowed length of %d characters",
                           info, name.Length(), maxSize);

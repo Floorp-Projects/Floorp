@@ -50,41 +50,21 @@
 interface nsIDOMRange : nsISupports
 {
   readonly attribute nsIDOMNode       startContainer;
-                                        // raises(DOMException) on retrieval
-
   readonly attribute long             startOffset;
-                                        // raises(DOMException) on retrieval
-
   readonly attribute nsIDOMNode       endContainer;
-                                        // raises(DOMException) on retrieval
-
   readonly attribute long             endOffset;
-                                        // raises(DOMException) on retrieval
-
   readonly attribute boolean          collapsed;
-                                        // raises(DOMException) on retrieval
-
   readonly attribute nsIDOMNode       commonAncestorContainer;
-                                        // raises(DOMException) on retrieval
 
-  void               setStart(in nsIDOMNode refNode, in long offset)
-                                        raises(RangeException, DOMException);
-  void               setEnd(in nsIDOMNode refNode, in long offset)
-                                        raises(RangeException, DOMException);
-  void               setStartBefore(in nsIDOMNode refNode)
-                                        raises(RangeException, DOMException);
-  void               setStartAfter(in nsIDOMNode refNode)
-                                        raises(RangeException, DOMException);
-  void               setEndBefore(in nsIDOMNode refNode)
-                                        raises(RangeException, DOMException);
-  void               setEndAfter(in nsIDOMNode refNode)
-                                        raises(RangeException, DOMException);
-  void               collapse(in boolean toStart)
-                                        raises(DOMException);
-  void               selectNode(in nsIDOMNode refNode)
-                                        raises(RangeException, DOMException);
-  void               selectNodeContents(in nsIDOMNode refNode)
-                                        raises(RangeException, DOMException);
+  void               setStart(in nsIDOMNode refNode, in long offset);
+  void               setEnd(in nsIDOMNode refNode, in long offset);
+  void               setStartBefore(in nsIDOMNode refNode);
+  void               setStartAfter(in nsIDOMNode refNode);
+  void               setEndBefore(in nsIDOMNode refNode);
+  void               setEndAfter(in nsIDOMNode refNode);
+  void               collapse(in boolean toStart);
+  void               selectNode(in nsIDOMNode refNode);
+  void               selectNodeContents(in nsIDOMNode refNode);
 
   // CompareHow
   const unsigned short      START_TO_START                 = 0;
@@ -93,22 +73,14 @@ interface nsIDOMRange : nsISupports
   const unsigned short      END_TO_START                   = 3;
 
   short              compareBoundaryPoints(in unsigned short how,
-                                           in nsIDOMRange sourceRange)
-                                        raises(DOMException);
-  void               deleteContents()
-                                        raises(DOMException);
-  nsIDOMDocumentFragment extractContents()
-                                        raises(DOMException);
-  nsIDOMDocumentFragment cloneContents()
-                                        raises(DOMException);
-  void               insertNode(in nsIDOMNode newNode)
-                                        raises(DOMException, RangeException);
-  void               surroundContents(in nsIDOMNode newParent)
-                                        raises(DOMException, RangeException);
-  nsIDOMRange        cloneRange()
-                                        raises(DOMException);
-  DOMString          toString()
-                                        raises(DOMException);
+                                           in nsIDOMRange sourceRange);
+  void               deleteContents();
+  nsIDOMDocumentFragment extractContents();
+  nsIDOMDocumentFragment cloneContents();
+  void               insertNode(in nsIDOMNode newNode);
+  void               surroundContents(in nsIDOMNode newParent);
+  nsIDOMRange        cloneRange();
+  DOMString          toString();
   void               detach();
   
   // This method comes from

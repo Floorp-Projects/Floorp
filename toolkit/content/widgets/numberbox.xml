@@ -16,7 +16,7 @@
     <content>
       <xul:hbox class="textbox-input-box numberbox-input-box" flex="1" xbl:inherits="context,disabled,focused">
         <html:input class="numberbox-input textbox-input" anonid="input"
-                    xbl:inherits="onfocus,onblur,value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
+                    xbl:inherits="value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey"/>
       </xul:hbox>
       <xul:spinbuttons anonid="buttons" xbl:inherits="disabled,hidden=hidespinbuttons"/>
     </content>

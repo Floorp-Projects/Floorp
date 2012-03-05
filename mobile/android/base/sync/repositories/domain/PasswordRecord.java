@@ -37,7 +37,7 @@
 
 package org.mozilla.gecko.sync.repositories.domain;
 
-import org.mozilla.gecko.sync.CryptoRecord;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 
@@ -98,15 +98,13 @@ public class PasswordRecord extends Record {
   }
 
   @Override
-  public void initFromPayload(CryptoRecord payload) {
-    // TODO Auto-generated method stub
-
+  public void initFromPayload(ExtendedJSONObject payload) {
+    // TODO: implement.
   }
+
   @Override
-  public CryptoRecord getPayload() {
-    // TODO Auto-generated method stub
-    // TODO: don't forget to set "id" to our GUID.
-    return null;
+  public void populatePayload(ExtendedJSONObject payload) {
+    // TODO: implement.
   }
   
   @Override

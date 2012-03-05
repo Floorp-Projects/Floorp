@@ -39,36 +39,32 @@
 #define nsTransactionStack_h__
 
 #include "nsDeque.h"
+#include "nsCOMPtr.h"
 
 class nsTransactionItem;
 
 class nsTransactionStack
 {
-  nsDeque mQue;
-
 public:
+  enum Type { FOR_UNDO, FOR_REDO };
 
-  nsTransactionStack();
-  virtual ~nsTransactionStack();
+  explicit nsTransactionStack(Type aType);
+  ~nsTransactionStack();
 
-  virtual nsresult Push(nsTransactionItem *aTransactionItem);
-  virtual nsresult Pop(nsTransactionItem **aTransactionItem);
-  virtual nsresult PopBottom(nsTransactionItem **aTransactionItem);
-  virtual nsresult Peek(nsTransactionItem **aTransactionItem);
-  virtual nsresult GetItem(PRInt32 aIndex, nsTransactionItem **aTransactionItem);
-  virtual nsresult Clear(void);
-  virtual nsresult GetSize(PRInt32 *aStackSize);
+  void Push(nsTransactionItem *aTransactionItem);
+  already_AddRefed<nsTransactionItem> Pop();
+  already_AddRefed<nsTransactionItem> PopBottom();
+  already_AddRefed<nsTransactionItem> Peek();
+  already_AddRefed<nsTransactionItem> GetItem(PRInt32 aIndex);
+  void Clear();
+  PRInt32 GetSize() { return mQue.GetSize(); }
 
   void DoUnlink() { Clear(); }
   void DoTraverse(nsCycleCollectionTraversalCallback &cb);
-};
 
-class nsTransactionRedoStack: public nsTransactionStack
-{
-public:
-
-  virtual ~nsTransactionRedoStack();
-  virtual nsresult Clear(void);
+private:
+  nsDeque mQue;
+  const Type mType;
 };
 
 #endif // nsTransactionStack_h__

@@ -108,7 +108,6 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mCiteQuoteLevel = 0;
   mStructs = true;       // will be read from prefs later
   mHeaderStrategy = 1 /*indent increasingly*/;   // ditto
-  mQuotesPreformatted = false;                // ditto
   mDontWrapAnyQuotes = false;                 // ditto
   mHasWrittenCiteBlockquote = false;
   mSpanLevel = 0;
@@ -209,10 +208,6 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
 
     mHeaderStrategy =
       Preferences::GetInt(PREF_HEADER_STRATEGY, mHeaderStrategy);
-
-    // The quotesPreformatted pref is a temporary measure. See bug 69638.
-    mQuotesPreformatted =
-      Preferences::GetBool("editor.quotesPreformatted", mQuotesPreformatted);
 
     // DontWrapAnyQuotes is set according to whether plaintext mail
     // is wrapping to window width -- see bug 134439.
@@ -1636,7 +1631,7 @@ nsPlainTextSerializer::Write(const nsAString& aStr)
   // that does normal formatted text. The one for preformatted text calls
   // Output directly while the other code path goes through AddToLine.
   if ((mPreFormatted && !mWrapColumn) || IsInPre()
-      || ((((!mQuotesPreformatted && mSpanLevel > 0) || mDontWrapAnyQuotes))
+      || ((mSpanLevel > 0 || mDontWrapAnyQuotes)
           && mEmptyLines >= 0 && str.First() == PRUnichar('>'))) {
     // No intelligent wrapping.
 

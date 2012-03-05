@@ -99,14 +99,15 @@ _TEST_FILES = \
   browser_addonrepository_performance.js \
   browser_bug557956.js \
   browser_bug616841.js \
+  browser_checkAddonCompatibility.js \
   browser_hotfix.js \
-  browser_updatessl.js \
   browser_installssl.js \
   browser_newaddon.js \
-  browser_select_selection.js \
   browser_select_compatoverrides.js \
   browser_select_confirm.js \
+  browser_select_selection.js \
   browser_select_update.js \
+  browser_updatessl.js \
   $(NULL)
 
 _TEST_RESOURCES = \
