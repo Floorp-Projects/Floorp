@@ -102,10 +102,6 @@ public final class Tab {
         }
     }
 
-    public Tab() {
-        this(-1, "", false, -1, "");
-    }
-
     public Tab(int id, String url, boolean external, int parentId, String title) {
         mId = id;
         mUrl = url;
@@ -148,6 +144,7 @@ public final class Tab {
         return mParentId;
     }
 
+    // may be null if user-entered query hasn't yet been resolved to a URI
     public String getURL() {
         return mUrl;
     }
@@ -370,7 +367,11 @@ public final class Tab {
                 if (mCheckBookmarkTask != null)
                     mCheckBookmarkTask.cancel(false);
 
-                mCheckBookmarkTask = new CheckBookmarkTask(getURL());
+                String url = getURL();
+                if (url == null)
+                    return;
+
+                mCheckBookmarkTask = new CheckBookmarkTask(url);
                 mCheckBookmarkTask.execute();
             }
         });
@@ -379,7 +380,11 @@ public final class Tab {
     public void addBookmark() {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                BrowserDB.addBookmark(mContentResolver, getTitle(), getURL());
+                String url = getURL();
+                if (url == null)
+                    return;
+
+                BrowserDB.addBookmark(mContentResolver, getTitle(), url);
             }
         });
     }
@@ -387,7 +392,11 @@ public final class Tab {
     public void removeBookmark() {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                BrowserDB.removeBookmarksWithURL(mContentResolver, getURL());
+                String url = getURL();
+                if (url == null)
+                    return;
+
+                BrowserDB.removeBookmarksWithURL(mContentResolver, url);
             }
         });
     }
@@ -541,7 +550,11 @@ public final class Tab {
 
     private void saveThumbnailToDB(BitmapDrawable thumbnail) {
         try {
-            BrowserDB.updateThumbnailForUrl(mContentResolver, getURL(), thumbnail);
+            String url = getURL();
+            if (url == null)
+                return;
+
+            BrowserDB.updateThumbnailForUrl(mContentResolver, url, thumbnail);
         } catch (Exception e) {
             // ignore
         }
