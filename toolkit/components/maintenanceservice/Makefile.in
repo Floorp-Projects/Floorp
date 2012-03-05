@@ -64,7 +64,6 @@ MOZ_GLUE_PROGRAM_LDFLAGS =
 
 LIBS += \
   ../../mozapps/update/common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
-  ../../mozapps/readstrings/$(LIB_PREFIX)readstrings.$(LIB_SUFFIX) \
   $(NULL)
 
 USE_STATIC_LIBS = 1
@@ -98,5 +97,4 @@ endif
 # Pick up nsWindowsRestart.cpp
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre \
   -I$(topsrcdir)/toolkit/mozapps/update/common \
-  -I$(topsrcdir)/toolkit/mozapps/readstrings \
   $(NULL)
