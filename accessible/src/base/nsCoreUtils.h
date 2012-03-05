@@ -242,14 +242,6 @@ public:
   static bool IsErrorPage(nsIDocument *aDocument);
 
   /**
-   * Retrun true if the type of given frame equals to the given frame type.
-   *
-   * @param aFrame  the frame
-   * @param aAtom   the frame type
-   */
-  static bool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
-
-  /**
    * Return presShell for the document containing the given DOM node.
    */
   static nsIPresShell *GetPresShellFor(nsINode *aNode)
