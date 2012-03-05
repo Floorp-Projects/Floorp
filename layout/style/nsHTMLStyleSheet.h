@@ -95,6 +95,7 @@ public:
     SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE;
   virtual NS_MUST_OVERRIDE size_t
     SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE;
+  size_t DOMSizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   nsresult Init(nsIURI* aURL, nsIDocument* aDocument);
   void Reset(nsIURI* aURL);
@@ -107,7 +108,6 @@ public:
     UniqueMappedAttributes(nsMappedAttributes* aMapped);
   void DropMappedAttributes(nsMappedAttributes* aMapped);
 
-  PRInt64 DOMSizeOf() const;
 private: 
   nsHTMLStyleSheet(const nsHTMLStyleSheet& aCopy) MOZ_DELETE;
   nsHTMLStyleSheet& operator=(const nsHTMLStyleSheet& aCopy) MOZ_DELETE;
