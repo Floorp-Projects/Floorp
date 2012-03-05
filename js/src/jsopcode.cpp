@@ -77,11 +77,11 @@
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
-#include "jsscriptinlines.h"
 
 #include "jsautooplen.h"
 
 #include "vm/RegExpObject-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 using namespace mozilla;
 using namespace js;
