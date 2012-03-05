@@ -322,7 +322,7 @@ FinishCreate(XPCCallContext& ccx,
              XPCWrappedNativeScope* Scope,
              XPCNativeInterface* Interface,
              nsWrapperCache *cache,
-             XPCWrappedNative* wrapper,
+             XPCWrappedNative* inWrapper,
              XPCWrappedNative** resultWrapper);
 
 // static
@@ -557,7 +557,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     if (needsCOW)
         wrapper->SetNeedsCOW();
 
-    return FinishCreate(ccx, Scope, Interface, cache, wrapper.forget().get(), resultWrapper);
+    return FinishCreate(ccx, Scope, Interface, cache, wrapper, resultWrapper);
 }
 
 static nsresult
@@ -565,9 +565,11 @@ FinishCreate(XPCCallContext& ccx,
              XPCWrappedNativeScope* Scope,
              XPCNativeInterface* Interface,
              nsWrapperCache *cache,
-             XPCWrappedNative* wrapper,
+             XPCWrappedNative* inWrapper,
              XPCWrappedNative** resultWrapper)
 {
+    MOZ_ASSERT(inWrapper);
+
 #if DEBUG_xpc_leaks
     {
         char* s = wrapper->ToString(ccx);
@@ -582,30 +584,20 @@ FinishCreate(XPCCallContext& ccx,
     XPCLock* mapLock = Scope->GetRuntime()->GetMapLock();
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
 
-    // Redundant wrapper must be killed outside of the map lock.
-    XPCWrappedNative* wrapperToKill = nsnull;
-
+    nsRefPtr<XPCWrappedNative> wrapper;
     {   // scoped lock
-        XPCAutoLock lock(mapLock);
 
         // Deal with the case where the wrapper got created as a side effect
-        // of one of our calls out of this code (or on another thread).
-        XPCWrappedNative* wrapper2 = map->Add(wrapper);
-        if (!wrapper2) {
-            NS_ERROR("failed to add our wrapper!");
-            wrapperToKill = wrapper;
-            wrapper = nsnull;
-        } else if (wrapper2 != wrapper) {
-            NS_ADDREF(wrapper2);
-            wrapperToKill = wrapper;
-            wrapper = wrapper2;
-        }
+        // of one of our calls out of this code (or on another thread). Add()
+        // returns the (possibly pre-existing) wrapper that ultimately ends up
+        // in the map, which is what we want.
+        XPCAutoLock lock(mapLock);
+        wrapper = map->Add(inWrapper);
+        if (!wrapper)
+            return NS_ERROR_FAILURE;
     }
 
-    if (wrapperToKill) {
-        // Second reference will be released by the FlatJSObject's finializer.
-        wrapperToKill->Release();
-    } else if (wrapper) {
+    if (wrapper == inWrapper) {
         JSObject *flat = wrapper->GetFlatJSObject();
         NS_ASSERTION(!cache || !cache->GetWrapperPreserveColor() ||
                      flat == cache->GetWrapperPreserveColor(),
@@ -650,11 +642,8 @@ FinishCreate(XPCCallContext& ccx,
         }
     }
 
-    if (!wrapper)
-        return NS_ERROR_FAILURE;
-
     DEBUG_CheckClassInfoClaims(wrapper);
-    *resultWrapper = wrapper;
+    *resultWrapper = wrapper.forget().get();
     return NS_OK;
 }
 
@@ -716,8 +705,7 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
         return rv;
     }
 
-    return FinishCreate(ccx, wrapper->GetScope(), Interface, cache, wrapper.forget().get(),
-                        resultWrapper);
+    return FinishCreate(ccx, wrapper->GetScope(), Interface, cache, wrapper, resultWrapper);
 }
 
 // static
