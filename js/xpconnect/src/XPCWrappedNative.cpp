@@ -353,11 +353,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
 
     XPCLock* mapLock = Scope->GetRuntime()->GetMapLock();
 
-    // We use an AutoMarkingPtr here because it is possible for JS gc to happen
-    // after we have Init'd the wrapper but *before* we add it to the hashtable.
-    // This would cause the mSet to get collected and we'd later crash. I've
-    // *seen* this happen.
-    AutoMarkingWrappedNativePtr wrapper(ccx);
+    XPCWrappedNative* wrapper;
 
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
     if (!cache) {
@@ -556,6 +552,12 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(parent),
                  "Xray wrapper being used to parent XPCWrappedNative?");
 
+    // We use an AutoMarkingPtr here because it is possible for JS gc to happen
+    // after we have Init'd the wrapper but *before* we add it to the hashtable.
+    // This would cause the mSet to get collected and we'd later crash. I've
+    // *seen* this happen.
+    AutoMarkingWrappedNativePtr wrapperMarker(ccx, wrapper);
+
     if (!wrapper->Init(ccx, parent, &sciWrapper)) {
         NS_RELEASE(wrapper);
         return NS_ERROR_FAILURE;
@@ -689,12 +691,6 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
         static_cast<nsISupports*>(xpc_GetJSPrivate(existingJSObject));
     XPCWrappedNativeProto *proto = GetSlimWrapperProto(existingJSObject);
 
-    // We use an AutoMarkingPtr here because it is possible for JS gc to happen
-    // after we have Init'd the wrapper but *before* we add it to the hashtable.
-    // This would cause the mSet to get collected and we'd later crash. I've
-    // *seen* this happen.
-    AutoMarkingWrappedNativePtr wrapper(ccx);
-
 #if DEBUG
     // FIXME Can't assert this until
     //       https://bugzilla.mozilla.org/show_bug.cgi?id=343141 is fixed.
@@ -715,7 +711,7 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
 #endif
 #endif
 
-    wrapper = new XPCWrappedNative(dont_AddRef(identity), proto);
+    XPCWrappedNative* wrapper = new XPCWrappedNative(dont_AddRef(identity), proto);
     if (!wrapper)
         return NS_ERROR_FAILURE;
 
@@ -723,6 +719,12 @@ XPCWrappedNative::Morph(XPCCallContext& ccx,
 
     NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(js::GetObjectParent(existingJSObject)),
                  "Xray wrapper being used to parent XPCWrappedNative?");
+
+    // We use an AutoMarkingPtr here because it is possible for JS gc to happen
+    // after we have Init'd the wrapper but *before* we add it to the hashtable.
+    // This would cause the mSet to get collected and we'd later crash. I've
+    // *seen* this happen.
+    AutoMarkingWrappedNativePtr wrapperMarker(ccx, wrapper);
 
     JSAutoEnterCompartment ac;
     if (!ac.enter(ccx, existingJSObject) || !wrapper->Init(ccx, existingJSObject)) {
