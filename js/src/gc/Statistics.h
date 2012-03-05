@@ -76,7 +76,7 @@ enum Stat {
     STAT_LIMIT
 };
 
-static const size_t BUFFER_SIZE = 8192;
+class StatisticsSerializer;
 
 struct Statistics {
     Statistics(JSRuntime *rt);
@@ -95,6 +95,9 @@ struct Statistics {
         JS_ASSERT(s < STAT_LIMIT);
         counts[s]++;
     }
+
+    jschar *formatMessage();
+    jschar *formatJSON();
 
   private:
     JSRuntime *runtime;
@@ -136,19 +139,12 @@ struct Statistics {
     /* Number of events of this type for this GC. */
     unsigned int counts[STAT_LIMIT];
 
-    char buffer[BUFFER_SIZE];
-    bool needComma;
-
     void beginGC();
     void endGC();
 
     int64_t gcDuration();
-    double t(int64_t t);
     void printStats();
-    void fmt(const char *f, ...);
-    void fmtIfNonzero(const char *name, double t);
-    void formatPhases(int64_t *times);
-    const char *formatData();
+    bool formatData(StatisticsSerializer &ss);
 
     double computeMMU(int64_t resolution);
 };
