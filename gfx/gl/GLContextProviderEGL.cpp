@@ -236,7 +236,7 @@ static EGLint gContextAttribsRobustness[] = {
 
 static PRLibrary* LoadApitraceLibrary()
 {
-    PRLibrary* sApitraceLibrary = NULL;
+    static PRLibrary* sApitraceLibrary = NULL;
 
     if (sApitraceLibrary)
         return sApitraceLibrary;
