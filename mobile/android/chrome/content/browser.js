@@ -1528,17 +1528,23 @@ Tab.prototype = {
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.clipSubdocument = false;
 
+    // only set tab uri if uri is valid
+    let uri = null;
+    try {
+      uri = Services.io.newURI(aURL, null, null).spec;
+    } catch (e) {}
+
     this.id = ++gTabIDFactory;
 
     let message = {
       gecko: {
         type: "Tab:Added",
         tabID: this.id,
-        uri: aURL,
+        uri: uri,
         parentId: ("parentId" in aParams) ? aParams.parentId : -1,
         external: ("external" in aParams) ? aParams.external : false,
         selected: ("selected" in aParams) ? aParams.selected : true,
-        title: aParams.title || "",
+        title: aParams.title || aURL,
         delayLoad: aParams.delayLoad || false
       }
     };
