@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <style type="text/css">input{border: none}</style>
+</head>
+<body>
+  <div><input id="button" type="button"/></div>
+  <input id="button2" type="button"/>
+  <div id="target"/>
+<script>
+var button = document.getElementById("button");
+button.focus();
+document.getElementById("target").appendChild(button.parentNode);
+document.getElementById("button2").focus();
+</script>
+</body>
+</html>

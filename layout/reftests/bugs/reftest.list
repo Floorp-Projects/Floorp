@@ -1694,3 +1694,4 @@ fuzzy-if(d2d,1,19) fuzzy-if(cocoaWidget,1,170) == 718521.html 718521-ref.html
 == 720987.html 720987-ref.html
 == 722923-1.html 722923-1-ref.html
 == 729143-1.html 729143-1-ref.html
+needs-focus == 731726-1.html 731726-1-ref.html
