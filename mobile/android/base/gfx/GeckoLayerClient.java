@@ -126,8 +126,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public boolean beginDrawing(int width, int height, String metadata) {
-        Log.e(LOGTAG, "### beginDrawing " + width + " " + height);
-
         // If the viewport has changed but we still don't have the latest viewport
         // from Gecko, ignore the viewport passed to us from Gecko since that is going
         // to be wrong.
@@ -145,8 +143,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
         try {
             JSONObject viewportObject = new JSONObject(metadata);
             mNewGeckoViewport = new ViewportMetrics(viewportObject);
-
-            Log.e(LOGTAG, "### beginDrawing new Gecko viewport " + mNewGeckoViewport);
         } catch (JSONException e) {
             Log.e(LOGTAG, "Aborting draw, bad viewport description: " + metadata);
             return false;
@@ -172,9 +168,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
             RectF position = mGeckoViewport.getViewport();
             mRootLayer.setPositionAndResolution(RectUtils.round(position), mGeckoViewport.getZoomFactor());
-
-            Log.e(LOGTAG, "### updateViewport onlyUpdatePageSize=" + !mUpdateViewportOnEndDraw +
-                  " getTileViewport " + mGeckoViewport);
 
             if (mUpdateViewportOnEndDraw) {
                 mLayerController.setViewportMetrics(mGeckoViewport);
@@ -207,8 +200,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /* Informs Gecko that the screen size has changed. */
     private void sendResizeEventIfNecessary(boolean force) {
-        Log.d(LOGTAG, "### sendResizeEventIfNecessary " + force);
-
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
@@ -243,7 +234,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
             return false;
         }
 
-        Log.e(LOGTAG, "### Creating virtual layer");
         VirtualLayer virtualLayer = new VirtualLayer(getBufferSize());
         mLayerController.setRoot(virtualLayer);
         mRootLayer = virtualLayer;
@@ -284,7 +274,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /** Implementation of GeckoEventResponder/GeckoEventListener. */
     public void handleMessage(String event, JSONObject message) {
         if ("Viewport:UpdateAndDraw".equals(event)) {
-            Log.e(LOGTAG, "### Java side Viewport:UpdateAndDraw()!");
             mUpdateViewportOnEndDraw = true;
             mIgnorePaintsPendingViewportSizeChange = false;
 
@@ -292,7 +281,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
             Rect rect = new Rect(0, 0, mBufferSize.width, mBufferSize.height);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createDrawEvent(rect));
         } else if ("Viewport:UpdateLater".equals(event)) {
-            Log.e(LOGTAG, "### Java side Viewport:UpdateLater()!");
             mUpdateViewportOnEndDraw = true;
             mIgnorePaintsPendingViewportSizeChange = false;
         }
@@ -331,8 +319,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public ViewTransform getViewTransform() {
-        Log.e(LOGTAG, "### getViewTransform()");
-
         // NB: We don't begin a transaction here because this can be called in a synchronous
         // manner between beginDrawing() and endDrawing(), and that will cause a deadlock.
 
@@ -342,8 +328,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
             float scrollX = viewportOrigin.x; 
             float scrollY = viewportOrigin.y;
             float zoomFactor = viewportMetrics.getZoomFactor();
-            Log.e(LOGTAG, "### Viewport metrics = " + viewportMetrics + " tile reso = " +
-                  mRootLayer.getResolution());
             return new ViewTransform(scrollX, scrollY, zoomFactor);
         }
     }
@@ -375,19 +359,16 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** Implementation of FlexibleGLSurfaceView.Listener */
     public void renderRequested() {
-        Log.e(LOGTAG, "### Render requested, scheduling composite");
         GeckoAppShell.scheduleComposite();
     }
 
     /** Implementation of FlexibleGLSurfaceView.Listener */
     public void compositionPauseRequested() {
-        Log.e(LOGTAG, "### Scheduling PauseComposition");
         GeckoAppShell.schedulePauseComposition();
     }
 
     /** Implementation of FlexibleGLSurfaceView.Listener */
     public void compositionResumeRequested() {
-        Log.e(LOGTAG, "### Scheduling ResumeComposition");
         GeckoAppShell.scheduleResumeComposition();
     }
 
