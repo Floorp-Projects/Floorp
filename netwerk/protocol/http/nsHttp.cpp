@@ -40,11 +40,8 @@
 #include "nsHttp.h"
 #include "pldhash.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/HashFunctions.h"
 #include "nsCRT.h"
 #include "prbit.h"
-
-using namespace mozilla;
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gHttpLog = nsnull;
@@ -101,7 +98,7 @@ StringHash(PLDHashTable *table, const void *key)
 {
     PLDHashNumber h = 0;
     for (const char *s = reinterpret_cast<const char*>(key); *s; ++s)
-        h = AddToHash(h, nsCRT::ToLower(*s));
+        h = PR_ROTATE_LEFT32(h, 4) ^ nsCRT::ToLower(*s);
     return h;
 }
 
