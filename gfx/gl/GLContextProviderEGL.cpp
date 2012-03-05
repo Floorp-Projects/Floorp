@@ -2261,12 +2261,8 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
 #endif
 
 #ifdef MOZ_JAVA_COMPOSITOR
-    printf_stderr("... requesting window surface from bridge\n");
     surface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
-    printf_stderr("got surface %p\n", surface);
-    return surface;
 #elif defined(MOZ_WIDGET_ANDROID)
-    printf_stderr("... requesting window surface from bridge\n");
 
     // On Android, we have to ask Java to make the eglCreateWindowSurface
     // call for us.  See GLHelpers.java for a description of why.
@@ -2279,10 +2275,8 @@ CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
         return NULL;
     }
 
-    printf_stderr("... requesting window surface from bridge\n");
     surface = mozilla::AndroidBridge::Bridge()->
         CallEglCreateWindowSurface(EGL_DISPLAY(), config, sview);
-    printf_stderr("got surface %p\n", surface);
 #else
     surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, GET_NATIVE_WINDOW(aWidget), 0);
 #endif
@@ -2322,7 +2316,6 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
     }
 
 #ifdef MOZ_JAVA_COMPOSITOR
-    printf_stderr("... registering OGL compositor with bridge\n");
     mozilla::AndroidBridge::Bridge()->RegisterCompositor();
 #endif
 

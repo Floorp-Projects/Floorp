@@ -79,7 +79,6 @@ CompositorParent::Destroy()
 bool
 CompositorParent::RecvStop()
 {
-  printf_stderr("Stop composition\n");
   mPaused = true;
   Destroy();
   return true;
@@ -95,7 +94,6 @@ CompositorParent::ScheduleRenderOnCompositorThread(::base::Thread &aCompositorTh
 void
 CompositorParent::PauseComposition()
 {
-  printf_stderr("Pause composition\n");
   if (!mPaused) {
     mPaused = true;
 
@@ -147,7 +145,6 @@ CompositorParent::ScheduleComposition()
   mExpectedComposeTime = mozilla::TimeStamp::Now() + TimeDuration::FromMilliseconds(15);
 #endif
 
-  printf_stderr("Schedule composition\n");
   mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
   if (!initialComposition && delta.ToMilliseconds() < 15) {
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
@@ -180,7 +177,6 @@ CompositorParent::Composite()
 
 #ifdef MOZ_WIDGET_ANDROID
   RequestViewTransform();
-  printf_stderr("Correcting for position fixed %i, %i\n", -mScrollOffset.x, -mScrollOffset.y);
   TransformShadowTree();
 #endif
 
@@ -324,7 +320,6 @@ CompositorParent::RequestViewTransform()
 void
 CompositorParent::ShadowLayersUpdated()
 {
-  printf_stderr("ShadowLayersUpdated\n");
   const nsTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
   NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
                     "can only support at most 1 ShadowLayersParent");
