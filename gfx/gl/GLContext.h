@@ -2147,6 +2147,10 @@ public:
 
     void fGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)
     {  
+        if (!mSymbols.fGetTexLevelParameteriv) {
+          *params = 0;
+          return;
+        }
         BEFORE_GL_CALL;
         mSymbols.fGetTexLevelParameteriv(target, level, pname, params);
         AFTER_GL_CALL;

@@ -48,7 +48,6 @@ class nsITransaction;
 class nsITransactionListener;
 class nsTransactionItem;
 class nsTransactionStack;
-class nsTransactionRedoStack;
 
 /** implementation of a transaction manager object.
  *
@@ -61,7 +60,7 @@ private:
   PRInt32                mMaxTransactionCount;
   nsTransactionStack     mDoStack;
   nsTransactionStack     mUndoStack;
-  nsTransactionRedoStack mRedoStack;
+  nsTransactionStack     mRedoStack;
   nsCOMArray<nsITransactionListener> mListeners;
 
 public:

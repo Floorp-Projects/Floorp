@@ -215,6 +215,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == rect-01.svg pass.svg
 == rect-02.svg pass.svg
 == rect-03.svg pass.svg
+== rect-04.svg pass.svg
 == rect-with-rx-and-ry-01.svg pass.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01-ref.svg
 == rootElement-null-01.svg pass.svg

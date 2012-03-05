@@ -1,11 +1,6 @@
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/misc/glsl-function-nodes.html
-conformance/glsl/misc/glsl-long-variable-names.html
-conformance/glsl/misc/shader-with-256-character-identifier.frag.html
-conformance/glsl/misc/shader-with-long-line.html
 conformance/more/conformance/quickCheckAPI-S_V.html
-conformance/glsl/misc/attrib-location-length-limits.html
-conformance/glsl/misc/uniform-location-length-limits.html
 conformance/programs/program-test.html
 conformance/textures/texture-mips.html
 conformance/textures/texture-npot.html

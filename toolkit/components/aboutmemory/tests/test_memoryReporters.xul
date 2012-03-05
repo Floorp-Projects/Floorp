@@ -44,8 +44,7 @@
 
   let areJsCompartmentsPresent = false;
   let isSandboxLocationShown = false;
-  let areLayoutShellsPresent = false;
-  let areDomInnerWindowsPresent = false;
+  let areInnerWindowsPresent = false;
   let isPlacesPresent = false;
   let isImagesPresent = false;
   let isXptiWorkingSetPresent = false;
@@ -73,10 +72,8 @@
     // Check the presence of some other notable reporters.
     } else if (aPath.search(/^explicit\/js\/compartment\(/) >= 0) {
       areJsCompartmentsPresent = true;
-    } else if (aPath.search(/^explicit\/layout\/shell\(/) >= 0) {
-      areLayoutShellsPresent = true;
-    } else if (aPath.search(/^explicit\/dom\+style\/window-objects\/.*inner-window\(/) >= 0) {
-      areDomInnerWindowsPresent = true;
+    } else if (aPath.search(/^explicit\/window-objects\/.*inner-window\(/) >= 0) {
+      areInnerWindowsPresent = true;
     } else if (aPath.search(/^explicit\/storage\/sqlite\/places.sqlite/) >= 0) {
       isPlacesPresent = true;
     } else if (aPath.search(/^explicit\/images/) >= 0) {
@@ -134,8 +131,7 @@
 
   ok(areJsCompartmentsPresent,  "js compartments are present");
   ok(isSandboxLocationShown,    "sandbox locations are present");
-  ok(areLayoutShellsPresent,    "layout shells are present");
-  ok(areDomInnerWindowsPresent, "dom inner-windows are present");
+  ok(areInnerWindowsPresent,    "inner-windows are present");
   ok(isPlacesPresent,           "places is present");
   ok(isImagesPresent,           "images is present");
   ok(isXptiWorkingSetPresent,   "xpti-working-set is present");

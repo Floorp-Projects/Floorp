@@ -25,7 +25,7 @@
           <children/>
           <html:input anonid="input" class="autocomplete-textbox textbox-input"
                       allowevents="true"
-                      xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint,userAction"/>
+                      xbl:inherits="tooltiptext=inputtooltiptext,value,type,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint,userAction"/>
         </xul:hbox>
         <children includes="hbox"/>
       </xul:hbox>
@@ -48,11 +48,15 @@
           this.mInputElt.value = this.value;
         delete this.value;
 
+        // listen for pastes
+        this.mInputElt.controllers.insertControllerAt(0, this.mPasteController);
+
         // listen for menubar activation
         window.top.addEventListener("DOMMenuBarActive", this.mMenuBarListener, true);
 
         // set default property values
         this.ifSetAttribute("timeout", 50);
+        this.ifSetAttribute("pastetimeout", 1000);
         this.ifSetAttribute("maxrows", 5);
         this.ifSetAttribute("showpopup", true);
         this.ifSetAttribute("disableKeyNavigation", true);
@@ -71,6 +75,7 @@
       <destructor><![CDATA[
         this.clearResults(false);
         window.top.removeEventListener("DOMMenuBarActive", this.mMenuBarListener, true);
+        this.mInputElt.controllers.removeController(this.mPasteController);
       ]]></destructor>
       
       <!-- =================== PUBLIC PROPERTIES =================== -->
@@ -144,6 +149,11 @@
       <property name="timeout"
                 onset="this.setAttribute('timeout', val); return val;"
                 onget="var t = parseInt(this.getAttribute('timeout')); return t ? t : 0;"/>
+
+      <!-- number of milliseconds after a paste before a search begins -->
+      <property name="pasteTimeout"
+                onset="this.setAttribute('pastetimeout', val); return val;"
+                onget="var t = parseInt(this.getAttribute('pastetimeout')); return t ? t : 0;"/>
 
       <!-- maximum number of rows to display -->
       <property name="maxRows"
@@ -296,6 +306,30 @@
       <field name="oninit">null</field>
       <field name="mDefaultMatchFilled">false</field>
       <field name="mFirstReturn">true</field>
+      <field name="mIsPasting">false</field>
+
+      <field name="mPasteController"><![CDATA[
+        ({
+          self: this,
+          kGlobalClipboard: Components.interfaces.nsIClipboard.kGlobalClipboard,
+          supportsCommand: function(aCommand) {
+            return aCommand == "cmd_paste";
+          },
+          isCommandEnabled: function(aCommand) {
+            return aCommand == "cmd_paste" &&
+                   this.self.editor.isSelectionEditable &&
+                   this.self.editor.canPaste(this.kGlobalClipboard);
+          },
+          doCommand: function(aCommand) {
+            if (aCommand == "cmd_paste") {
+              this.self.mIsPasting = true;
+              this.self.editor.paste(this.kGlobalClipboard);
+              this.self.mIsPasting = false;
+            }
+          },
+          onEvent: function() {}
+        })
+      ]]></field>
 
       <field name="mMenuBarListener"><![CDATA[
         ({
@@ -940,7 +974,8 @@
           this.currentSearchString = str;
           this.popup.clearSelection();
           
-          this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
+          var timeout = this.mIsPasting ? this.pasteTimeout : this.timeout;
+          this.mAutoCompleteTimer = setTimeout(this.callListener, timeout, this, "startLookup");
         ]]></body>
       </method>
 

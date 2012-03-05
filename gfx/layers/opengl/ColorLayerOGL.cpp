@@ -50,7 +50,7 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
   // XXX we might be able to improve performance by using glClear
 
   nsIntRect visibleRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
-  
+
   /* Multiply color by the layer opacity, as the shader
    * ignores layer opacity and expects a final color to
    * write to the color buffer.  This saves a needless
@@ -77,14 +77,14 @@ void
 ColorLayerOGL::RenderLayer(int,
                            const nsIntPoint& aOffset)
 {
-  return RenderColorLayer(this, mOGLManager, aOffset);
+  RenderColorLayer(this, mOGLManager, aOffset);
 }
 
 void
 ShadowColorLayerOGL::RenderLayer(int,
                                  const nsIntPoint& aOffset)
 {
-  return RenderColorLayer(this, mOGLManager, aOffset);
+  RenderColorLayer(this, mOGLManager, aOffset);
 }
 
 

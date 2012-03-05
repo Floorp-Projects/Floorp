@@ -177,7 +177,7 @@ public class BaseResource implements Resource {
     }
   }
 
-  public static ClientConnectionManager enableTLSConnectionManager() throws KeyManagementException, NoSuchAlgorithmException  {
+  private static ClientConnectionManager enableTLSConnectionManager() throws KeyManagementException, NoSuchAlgorithmException  {
     SSLContext sslContext = SSLContext.getInstance("TLS");
     sslContext.init(null, null, new SecureRandom());
     SSLSocketFactory sf = new TLSSocketFactory(sslContext);

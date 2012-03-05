@@ -2538,12 +2538,17 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::EmbeddingLevelProperty()))
   virtual bool SupportsVisibilityHidden() { return true; }
 
   /**
-   * Returns true if the frame is absolutely positioned and has a clip
-   * rect set via the 'clip' property. If true, then we also set aRect
-   * to the computed clip rect coordinates relative to this frame's origin.
-   * aRect must not be null!
+   * Returns true if the frame has a valid clip rect set via the 'clip'
+   * property, and the 'clip' property applies to this frame. The 'clip'
+   * property applies to HTML frames if they are absolutely positioned. The
+   * 'clip' property applies to SVG frames regardless of the value of the
+   * 'position' property.
+   *
+   * If this method returns true, then we also set aRect to the computed clip
+   * rect, with coordinates relative to this frame's origin. aRect must not be
+   * null!
    */
-  bool GetAbsPosClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
+  bool GetClipPropClipRect(const nsStyleDisplay* aDisp, nsRect* aRect,
                            const nsSize& aSize) const;
 
   /**
