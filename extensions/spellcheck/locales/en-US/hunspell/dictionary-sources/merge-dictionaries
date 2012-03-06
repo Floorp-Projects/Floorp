@@ -52,6 +52,7 @@ sed '1d' $HUNSPELL_PATCHED > $HUNSPELL_PATCHED_STRIPPED
 
 # Combine dictionaries and sort
 echo Combining dictionaries
+export LC_ALL=C
 sort $CHROMIUM_AFFIX_CONVERTED $HUNSPELL_PATCHED_STRIPPED $MOZILLA_START > $MERGED_SORTED
 
 # Display any dupes. 

@@ -588,7 +588,7 @@ static int oc_state_ref_bufs_init(oc_theora_state *_state,int _nrefs){
    _ogg_malloc(_state->nfrags*sizeof(*frag_buf_offs));
   if(ref_frame_data==NULL||frag_buf_offs==NULL){
     _ogg_free(frag_buf_offs);
-    _ogg_free(ref_frame_data);
+    oc_aligned_free(ref_frame_data);
     return TH_EFAULT;
   }
   /*Set up the width, height and stride for the image buffers.*/
