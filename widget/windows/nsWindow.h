@@ -334,10 +334,6 @@ protected:
   void                    ResetLayout();
   void                    InvalidateNonClientRegion();
   HRGN                    ExcludeNonClientFromPaintRegion(HRGN aRegion);
-  static void             InitInputWorkaroundPrefDefaults();
-  static bool             GetInputWorkaroundPref(const char* aPrefName, bool aValueIfAutomatic);
-  static bool             UseTrackPointHack();
-  static void             PerformElantechSwipeGestureHack(UINT& aVirtualKeyCode, nsModifierKeyState& aModKeyState);
   static void             GetMainWindowClass(nsAString& aClass);
   bool                    HasGlass() const {
     return mTransparencyMode == eTransparencyGlass ||
@@ -522,10 +518,7 @@ protected:
   static bool           sJustGotActivate;
   static bool           sIsInMouseCapture;
   static int            sTrimOnMinimize;
-  static bool           sDefaultTrackPointHack;
   static const char*    sDefaultMainWindowClass;
-  static bool           sUseElantechSwipeHack;
-  static bool           sUseElantechPinchHack;
   static bool           sAllowD3D9;
 
   // Always use the helper method to read this property.  See bug 603793.
