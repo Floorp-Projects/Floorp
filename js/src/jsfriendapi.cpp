@@ -47,6 +47,8 @@
 #include "jsweakmap.h"
 #include "jswatchpoint.h"
 
+#include "builtin/TestingFunctions.h"
+
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -178,6 +180,51 @@ JS_FRIEND_API(void)
 JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape)
 {
     MarkCycleCollectorChildren(trc, (Shape *)shape);
+}
+
+static bool
+DefineHelpProperty(JSContext *cx, JSObject *obj, const char *prop, const char *value)
+{
+    JSAtom *atom = js_Atomize(cx, value, strlen(value));
+    if (!atom)
+        return false;
+    jsval v = STRING_TO_JSVAL(atom);
+    return JS_DefineProperty(cx, obj, prop, v,
+                             JS_PropertyStub, JS_StrictPropertyStub,
+                             JSPROP_READONLY | JSPROP_PERMANENT);
+}
+
+JS_FRIEND_API(bool)
+JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs)
+{
+    RootObject objRoot(cx, &obj);
+
+    JS_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    for (; fs->name; fs++) {
+        JSAtom *atom = js_Atomize(cx, fs->name, strlen(fs->name));
+        if (!atom)
+            return false;
+
+        JSFunction *fun = js_DefineFunction(cx, objRoot,
+                                            ATOM_TO_JSID(atom), fs->call, fs->nargs, fs->flags);
+        if (!fun)
+            return false;
+
+        if (fs->usage) {
+            if (!DefineHelpProperty(cx, fun, "usage", fs->usage))
+                return false;
+        }
+
+        if (fs->help) {
+            if (!DefineHelpProperty(cx, fun, "help", fs->help))
+                return false;
+        }
+    }
+
+    return true;
 }
 
 AutoPreserveCompartment::AutoPreserveCompartment(JSContext *cx
@@ -787,6 +834,19 @@ extern JS_FRIEND_API(void)
 IncrementalValueBarrier(const Value &v)
 {
     HeapValue::writeBarrierPre(v);
+}
+
+JS_FRIEND_API(JSObject *)
+GetTestingFunctions(JSContext *cx)
+{
+    JSObject *obj = JS_NewObject(cx, NULL, NULL, NULL);
+    if (!obj)
+        return NULL;
+
+    if (!DefineTestingFunctions(cx, obj))
+        return NULL;
+
+    return obj;
 }
 
 } // namespace js

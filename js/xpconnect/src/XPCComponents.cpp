@@ -3704,6 +3704,18 @@ nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const jsval &aMap,
     return NS_OK;
 }
 
+/* void getDebugObject(); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetJSTestingFunctions(JSContext *cx,
+                                             JS::Value *retval)
+{
+    JSObject *obj = js::GetTestingFunctions(cx);
+    if (!obj)
+        return NS_ERROR_XPC_JAVASCRIPT_ERROR;
+    *retval = OBJECT_TO_JSVAL(obj);
+    return NS_OK;
+}
+
 /* void getGlobalForObject(); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
