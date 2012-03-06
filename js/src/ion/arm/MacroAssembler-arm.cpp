@@ -1869,11 +1869,11 @@ MacroAssemblerARMCompat::storePayload(const Value &val, Operand dest)
 {
     jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable()) {
-        ma_mov(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ScratchRegister);
+        ma_mov(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), lr);
     } else {
-        ma_mov(Imm32(jv.s.payload.i32), ScratchRegister);
+        ma_mov(Imm32(jv.s.payload.i32), lr);
     }
-    ma_str(ScratchRegister, ToPayload(dest));
+    ma_str(lr, ToPayload(dest));
 }
 void
 MacroAssemblerARMCompat::storePayload(Register src, Operand dest)
@@ -1915,8 +1915,8 @@ MacroAssemblerARMCompat::storePayload(Register src, Register base, Register inde
 void
 MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Operand dest) {
     if (dest.getTag() == Operand::MEM) {
-        ma_mov(tag, ScratchRegister);
-        ma_str(ScratchRegister, ToType(dest));
+        ma_mov(tag, lr);
+        ma_str(lr, ToType(dest));
         return;
     }
 
