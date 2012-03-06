@@ -6295,20 +6295,12 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   // means we process this message
   *aRetValue = eventInfo.ComputeMessageResult(true);
 
-  nsModifierKeyState modKeyState;
+  nsModifierKeyState modKeyState = MouseScrollHandler::GetModifierKeyState();
 
   // Our positive delta value means to bottom or right.
   // But positive native delta value means to top or right.
   // Use orienter for computing our delta value with native delta value.
   PRInt32 orienter = eventInfo.IsVertical() ? -1 : 1;
-
-  // Assume the Control key is down if the Elantech touchpad has sent the
-  // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
-  // MouseScrollHandler::Device::Elantech::HandleKeyMessage().)
-  if (!modKeyState.mIsControlDown) {
-    modKeyState.mIsControlDown =
-      MouseScrollHandler::Device::Elantech::IsZooming();
-  }
 
   // Create line (or page) scroll event.
   nsMouseScrollEvent scrollEvent(true, NS_MOUSE_SCROLL, this);

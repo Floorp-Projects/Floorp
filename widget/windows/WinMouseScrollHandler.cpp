@@ -167,6 +167,20 @@ MouseScrollHandler::DispatchEvent(nsWindow* aWindow, nsGUIEvent& aEvent)
   return aWindow->DispatchWindowEvent(&aEvent);
 }
 
+/* static */
+nsModifierKeyState
+MouseScrollHandler::GetModifierKeyState()
+{
+  nsModifierKeyState result;
+  // Assume the Control key is down if the Elantech touchpad has sent the
+  // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
+  // MouseScrollHandler::Device::Elantech::HandleKeyMessage().)
+  if (!result.mIsControlDown) {
+    result.mIsControlDown = Device::Elantech::IsZooming();
+  }
+  return result;
+}
+
 /******************************************************************************
  *
  * EventInfo
