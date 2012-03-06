@@ -211,6 +211,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
    * Advance and loop around the stages of a sync.
    * @param current
    * @return
+   *        The next stage to execute.
    */
   public static Stage nextStage(Stage current) {
     int index = current.ordinal() + 1;
@@ -220,9 +221,6 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
 
   /**
    * Move to the next stage in the syncing process.
-   * @param next
-   *        The next stage.
-   * @throws NoSuchStageException if the stage does not exist.
    */
   public void advance() {
     this.callback.handleStageCompleted(this.currentState, this);
@@ -680,6 +678,9 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
    *
    * @param engineName
    * @return
+   *        true if the engine with the provided name is present in the
+   *        meta/global "engines" object.
+   *
    * @throws MetaGlobalException
    */
   public boolean engineIsEnabled(String engineName) throws MetaGlobalException {
