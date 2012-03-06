@@ -35,13 +35,6 @@ public:
                              LRESULT *aRetValue,
                              bool &aEatMessage);
 
-  /**
-   * GetModifierKeyState() returns current modifier key state.
-   * Note that some devices need some hack for the modifier key state.
-   * This method does it automatically.
-   */
-  static nsModifierKeyState GetModifierKeyState();
-
 private:
   MouseScrollHandler();
   ~MouseScrollHandler();
@@ -55,7 +48,27 @@ private:
    */
   static bool DispatchEvent(nsWindow* aWindow, nsGUIEvent& aEvent);
 
-public:
+  /**
+   * GetModifierKeyState() returns current modifier key state.
+   * Note that some devices need some hack for the modifier key state.
+   * This method does it automatically.
+   */
+  static nsModifierKeyState GetModifierKeyState();
+
+  /**
+   * HandleMouseWheelMessage() processes MOZ_WM_MOUSEVWHEEL and
+   * MOZ_WM_MOUSEHWHEEL which are posted when one of our windows received
+   * WM_MOUSEWHEEL or WM_MOUSEHWHEEL for avoiding deadlock with OOPP.
+   *
+   * @param aWindow     A window which receives the wheel message.
+   * @param aMessage    MOZ_WM_MOUSEWHEEL or MOZ_WM_MOUSEHWHEEL.
+   * @param aWParam     The wParam value of the original message.
+   * @param aLParam     The lParam value of the original message.
+   */
+  void HandleMouseWheelMessage(nsWindow* aWindow,
+                               UINT aMessage,
+                               WPARAM aWParam,
+                               LPARAM aLParam);
 
   class EventInfo;
   /**
@@ -101,11 +114,6 @@ public:
     bool IsVertical() const { return mIsVertical; }
     bool IsPositive() const { return (mDelta > 0); }
     bool IsPage() const { return mIsPage; }
-
-    LRESULT ComputeMessageResult(bool aWeProcessed) const
-    {
-      return IsVertical() ? !aWeProcessed : aWeProcessed;
-    }
 
     /**
      * @return          Number of lines or pages scrolled per WHEEL_DELTA.
@@ -208,12 +216,8 @@ public:
     PRInt32 mRemainingDeltaForPixel;
   };
 
-  LastEventInfo& GetLastEventInfo() { return mLastEventInfo; }
-
-private:
   LastEventInfo mLastEventInfo;
 
-public:
   class SystemSettings {
   public:
     SystemSettings() : mInitialized(false) {}
@@ -240,12 +244,6 @@ public:
     PRInt32 mScrollChars;
   };
 
-  SystemSettings& GetSystemSettings()
-  {
-    return mSystemSettings;
-  }
-
-private:
   SystemSettings mSystemSettings;
 
 public:
