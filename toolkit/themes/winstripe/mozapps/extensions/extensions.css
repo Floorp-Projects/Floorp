@@ -913,15 +913,25 @@ setting[first-row="true"] {
   margin-top: 2em;
 }
 
+setting {
+  -moz-box-align: start;
+}
+
+.preferences-alignment {
+  min-height: 30px;
+  -moz-box-align: center;
+}
+
 .preferences-description {
   font-size: 90.9%;
   color: graytext;
   margin-top: -2px;
   -moz-margin-start: 2em;
+  white-space: pre-wrap;
 }
 
-setting[type="string"] > .setting-input > textbox {
-  -moz-box-flex: 1;
+.preferences-description:empty {
+  display: none;
 }
 
 setting[type="radio"] > radiogroup {
