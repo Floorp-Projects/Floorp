@@ -547,6 +547,16 @@ CustomElf::InitDyn(const Phdr *pt_dyn)
           return false;
         }
         break;
+      case DT_FLAGS:
+        {
+           Word flags = dyn->d_un.d_val;
+           /* we can treat this like having a DT_SYMBOLIC tag */
+           flags &= ~DF_SYMBOLIC;
+           if (flags)
+             log("%s: Warning: unhandled flags #%" PRIxAddr" not handled",
+                 GetPath(), flags);
+        }
+        break;
       case DT_SONAME: /* Should match GetName(), but doesn't matter */
       case DT_SYMBOLIC: /* Indicates internal symbols should be looked up in
                          * the library itself first instead of the executable,
