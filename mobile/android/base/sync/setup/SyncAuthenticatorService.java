@@ -154,7 +154,7 @@ public class SyncAuthenticatorService extends Service {
         try {
           String username = KeyBundle.usernameFromAccount(account.name);
           Logger.pii(LOG_TAG, "Account " + account.name + " hashes to " + username);
-          Logger.info(LOG_TAG, "Setting username. Null?" + (username == null));
+          Logger.info(LOG_TAG, "Setting username. Null? " + (username == null));
           result.putString(Constants.OPTION_USERNAME, username);
         } catch (NoSuchAlgorithmException e) {
           // Do nothing. Calling code must check for missing value.

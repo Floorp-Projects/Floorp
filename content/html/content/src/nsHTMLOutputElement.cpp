@@ -100,8 +100,8 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLOutputElement,
-                                                     nsGenericHTMLFormElement)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLOutputElement,
+                                           nsGenericHTMLFormElement)
 
   virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -136,13 +136,26 @@ nsHTMLOutputElement::~nsHTMLOutputElement()
   }
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsHTMLOutputElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHTMLOutputElement,
+                                                nsGenericHTMLFormElement)
+  if (tmp->mTokenList) {
+    tmp->mTokenList->DropReference();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTokenList)
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHTMLOutputElement,
+                                                  nsGenericHTMLFormElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTokenList,
+                                                       nsDOMTokenList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLOutputElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLOutputElement, nsGenericElement)
 
 DOMCI_NODE_DATA(HTMLOutputElement, nsHTMLOutputElement)
 
-NS_INTERFACE_TABLE_HEAD(nsHTMLOutputElement)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLOutputElement)
   NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLOutputElement,
                                    nsIDOMHTMLOutputElement,
                                    nsIMutationObserver,

@@ -119,6 +119,8 @@ class Debugger {
     /* The map from debuggee Envs to Debugger.Environment instances. */
     ObjectWeakMap environments;
 
+    class FrameRange;
+
     bool addDebuggeeGlobal(JSContext *cx, GlobalObject *obj);
     void removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
                               GlobalObjectSet::Enum *compartmentEnum,
@@ -206,7 +208,7 @@ class Debugger {
     bool hasAnyLiveHooks() const;
 
     static JSTrapStatus slowPathOnEnterFrame(JSContext *cx, Value *vp);
-    static void slowPathOnLeaveFrame(JSContext *cx);
+    static bool slowPathOnLeaveFrame(JSContext *cx, bool ok);
     static void slowPathOnNewScript(JSContext *cx, JSScript *script,
                                     GlobalObject *compileAndGoGlobal);
     static JSTrapStatus dispatchHook(JSContext *cx, Value *vp, Hook which);
@@ -264,7 +266,7 @@ class Debugger {
                                              GlobalObjectSet::Enum *compartmentEnum);
 
     static inline JSTrapStatus onEnterFrame(JSContext *cx, Value *vp);
-    static inline void onLeaveFrame(JSContext *cx);
+    static inline bool onLeaveFrame(JSContext *cx, bool ok);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, Value *vp);
     static inline JSTrapStatus onExceptionUnwind(JSContext *cx, Value *vp);
     static inline void onNewScript(JSContext *cx, JSScript *script,
@@ -330,6 +332,23 @@ class Debugger {
     bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
 
     /*
+     * Set |*status| and |*value| to a (JSTrapStatus, Value) pair reflecting a
+     * standard SpiderMonkey call state: a boolean success value |ok|, a return
+     * value |rv|, and a context |cx| that may or may not have an exception set.
+     * If an exception was pending on |cx|, it is cleared (and |ok| is asserted
+     * to be false).
+     */
+    static void resultToCompletion(JSContext *cx, bool ok, const Value &rv,
+                                   JSTrapStatus *status, Value *value);
+
+    /*
+     * Set |*result| to a JavaScript completion value corresponding to |status|
+     * and |value|. |value| should be the return value or exception value, not
+     * wrapped as a debuggee value. |cx| must be in the debugger compartment.
+     */
+    bool newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Value *result);
+
+    /*
      * Precondition: we are in the debuggee compartment (ac is entered) and ok
      * is true if the operation in the debuggee compartment succeeded, false on
      * error or exception.
@@ -341,7 +360,7 @@ class Debugger {
      * pending exception. (This ordinarily returns true even if the ok argument
      * is false.)
      */
-    bool newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
+    bool receiveCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
 
     /*
      * Return the Debugger.Script object for |script|, or create a new one if
@@ -503,14 +522,15 @@ Debugger::onEnterFrame(JSContext *cx, Value *vp)
     return slowPathOnEnterFrame(cx, vp);
 }
 
-void
-Debugger::onLeaveFrame(JSContext *cx)
+bool
+Debugger::onLeaveFrame(JSContext *cx, bool ok)
 {
     /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
     bool evalTraps = cx->fp()->isEvalFrame() &&
                      cx->fp()->script()->hasAnyBreakpointsOrStepMode();
     if (!cx->compartment->getDebuggees().empty() || evalTraps)
-        slowPathOnLeaveFrame(cx);
+        ok = slowPathOnLeaveFrame(cx, ok);
+    return ok;
 }
 
 JSTrapStatus

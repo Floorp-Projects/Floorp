@@ -200,8 +200,9 @@ void
 nsSVGEnum::SMILEnum::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
-    mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
     mVal->mIsAnimated = false;
+    mVal->mAnimVal = mVal->mBaseVal;
+    mSVGElement->DidAnimateEnum(mVal->mAttrEnum);
   }
 }
 

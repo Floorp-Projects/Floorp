@@ -42,7 +42,6 @@
 #include "nsScriptLoader.h"
 #include "nsNetUtil.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsICharsetAlias.h"
 #include "nsIWebShellServices.h"
 #include "nsIDocShell.h"
 #include "nsEncoderDecoderUtils.h"

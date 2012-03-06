@@ -323,14 +323,14 @@ nsSVGGlyphFrame::GetType() const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
+nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
                           const nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
-  gfxContext *gfx = aContext->GetGfxContext();
-  PRUint16 renderMode = aContext->GetRenderMode();
+  gfxContext *gfx = aContext->ThebesContext();
+  PRUint16 renderMode = SVGAutoRenderState::GetRenderMode(aContext);
 
   switch (GetStyleSVG()->mTextRendering) {
   case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
@@ -341,7 +341,7 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
     break;
   }
 
-  if (renderMode != nsSVGRenderState::NORMAL) {
+  if (renderMode != SVGAutoRenderState::NORMAL) {
 
     gfxMatrix matrix = gfx->CurrentMatrix();
     SetupGlobalTransform(gfx);
@@ -354,7 +354,7 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
     else
       gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
 
-    if (renderMode == nsSVGRenderState::CLIP_MASK) {
+    if (renderMode == SVGAutoRenderState::CLIP_MASK) {
       gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
       DrawCharacters(&iter, gfx, gfxFont::GLYPH_FILL);
     } else {

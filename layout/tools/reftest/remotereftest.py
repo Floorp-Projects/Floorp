@@ -364,23 +364,6 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
         if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
             raise devicemanager.FileError("Failed to copy extra files to device") 
 
-    def registerExtension(self, browserEnv, options, profileDir, extraArgs = ['-silent'] ):
-        if options.bootstrap:
-            return
-
-        self.automation.log.info("REFTEST INFO | runreftest.py | Performing extension manager registration: start.\n")
-        # Because our startProcess code doesn't return until fennec starts we just give it
-        # a maxTime of 20 secs before timing it out and ensuring it is dead.
-        # Besides registering the extension, this works around fennec bug 570027
-        status = self.automation.runApp(None, browserEnv, options.app, profileDir,
-                                   extraArgs,
-                                   utilityPath = options.utilityPath,
-                                   xrePath=options.xrePath,
-                                   symbolsPath=options.symbolsPath,
-                                   maxTime = 20)
-        # We don't care to call |processLeakLog()| for this step.
-        self.automation.log.info("\nREFTEST INFO | runreftest.py | Performing extension manager registration: end.")
-
     def getManifestPath(self, path):
         return path
 

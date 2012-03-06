@@ -46,15 +46,25 @@
 
 class nsAttrValue;
 
-class nsDOMTokenList : public nsIDOMDOMTokenList
+class nsDOMTokenList : public nsIDOMDOMTokenList,
+                       public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMTokenList)
   NS_DECL_NSIDOMDOMTOKENLIST
 
   nsDOMTokenList(nsGenericElement* aElement, nsIAtom* aAttrAtom);
 
   void DropReference();
+
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap);
+
+  nsINode *GetParentObject()
+  {
+    return mElement;
+  }
 
 protected:
   ~nsDOMTokenList();

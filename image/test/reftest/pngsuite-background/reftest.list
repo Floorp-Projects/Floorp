@@ -5,18 +5,18 @@
 # identically and thus share common reference HTML files.
 
 # bgai4a08 - 8 bit grayscale, alpha, no background chunk, interlaced
-fails-if(!cocoaWidget) == wrapper.html?bgai4a08.png bg__4a08.html
+fails-if(Android) fuzzy-if(cocoaWidget,1,1024) == wrapper.html?bgai4a08.png bg__4a08.html
 # bgai4a16 - 16 bit grayscale, alpha, no background chunk, interlaced
-fails-if(!cocoaWidget) == wrapper.html?bgai4a16.png bg__4a16.html
+fails-if(Android) fuzzy-if(cocoaWidget,1,1024) == wrapper.html?bgai4a16.png bg__4a16.html
 # bgan6a08 - 3x8 bits rgb color, alpha, no background chunk
-fails-if(!cocoaWidget) == wrapper.html?bgan6a08.png bg__6a08.html
+fails-if(Android) fuzzy-if(cocoaWidget,1,1024) == wrapper.html?bgan6a08.png bg__6a08.html
 # bgan6a16 - 3x16 bits rgb color, alpha, no background chunk
-fails-if(!cocoaWidget) == wrapper.html?bgan6a16.png bg__6a16.html
+fails-if(Android) fuzzy-if(cocoaWidget,1,1024) == wrapper.html?bgan6a16.png bg__6a16.html
 # bgbn4a08 - 8 bit grayscale, alpha, black background chunk
-fails-if(!cocoaWidget) == wrapper.html?bgbn4a08.png bg__4a08.html
+fails-if(Android) fuzzy-if(cocoaWidget,1,1024) == wrapper.html?bgbn4a08.png bg__4a08.html
 # bggn4a16 - 16 bit grayscale, alpha, gray background chunk
-fails-if(!cocoaWidget) == wrapper.html?bggn4a16.png bg__4a16.html
+fails-if(Android) fuzzy-if(cocoaWidget,1,1024) == wrapper.html?bggn4a16.png bg__4a16.html
 # bgwn6a08 - 3x8 bits rgb color, alpha, white background chunk
-fails-if(!cocoaWidget) == wrapper.html?bgwn6a08.png bg__6a08.html
+fails-if(Android) fuzzy-if(cocoaWidget,1,1024) == wrapper.html?bgwn6a08.png bg__6a08.html
 # bgyn6a16 - 3x16 bits rgb color, alpha, yellow background chunk 
-fails-if(!cocoaWidget) == wrapper.html?bgyn6a16.png bg__6a16.html
+fails-if(Android) fuzzy-if(cocoaWidget,1,1024) == wrapper.html?bgyn6a16.png bg__6a16.html
