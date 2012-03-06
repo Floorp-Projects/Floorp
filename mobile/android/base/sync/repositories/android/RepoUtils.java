@@ -10,6 +10,7 @@ import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
+import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 
@@ -148,6 +149,16 @@ public class RepoUtils {
       Logger.debug(LOG_TAG, "Exception logging bookmark record " + rec, e);
     }
     return rec;
+  }
+
+  public static void logClient(ClientRecord rec) {
+    if (Logger.logVerbose(LOG_TAG)) {
+      Logger.trace(LOG_TAG, "Returning client record " + rec.guid + " (" + rec.androidID + ")");
+      Logger.trace(LOG_TAG, "Client Name: " + rec.name);
+      Logger.trace(LOG_TAG, "Client Type: " + rec.type);
+      Logger.trace(LOG_TAG, "Last Modified: " + rec.lastModified);
+      Logger.trace(LOG_TAG, "Deleted: " + rec.deleted);
+    }
   }
 
   public static PasswordRecord passwordFromMirrorCursor(Cursor cur) {
