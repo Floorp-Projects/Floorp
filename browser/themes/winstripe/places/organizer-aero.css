@@ -74,6 +74,6 @@
     -moz-padding-start: 4px;
     background-clip: padding-box;
     border: 1px solid rgba(0,0,0,.32);
-    border-radius: 2.5px;
+    border-radius: 2px;
   }
 }
