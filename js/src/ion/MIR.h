@@ -1266,6 +1266,13 @@ class MCompare
         JS_ASSERT(specialization_ <= MIRType_Object);
         return AliasSet::None();
     }
+
+  protected:
+    bool congruentTo(MDefinition *const &ins) const {
+        if (!MBinaryInstruction::congruentTo(ins))
+            return false;
+        return jsop() == ins->toCompare()->jsop();
+    }
 };
 
 // Wraps an SSA name in a new SSA name. This is used for correctness while
