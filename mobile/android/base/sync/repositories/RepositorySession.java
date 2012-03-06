@@ -80,7 +80,7 @@ public abstract class RepositorySession {
     Logger.trace(LOG_TAG, message);
   }
 
-  protected SessionStatus status = SessionStatus.UNSTARTED;
+  private SessionStatus status = SessionStatus.UNSTARTED;
   protected Repository repository;
   protected RepositorySessionStoreDelegate delegate;
 
@@ -109,7 +109,7 @@ public abstract class RepositorySession {
 
   public abstract void guidsSince(long timestamp, RepositorySessionGuidsSinceDelegate delegate);
   public abstract void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate);
-  public abstract void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate);
+  public abstract void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException;
   public abstract void fetchAll(RepositorySessionFetchRecordsDelegate delegate);
 
   /**
@@ -182,21 +182,19 @@ public abstract class RepositorySession {
    *
    */
   protected void sharedBegin() throws InvalidSessionTransitionException {
-    if (this.status == SessionStatus.UNSTARTED) {
-      this.status = SessionStatus.ACTIVE;
-    } else {
-      Logger.error(LOG_TAG, "Tried to begin() an already active or finished session");
+    Logger.debug(LOG_TAG, "Shared begin.");
+    if (delegateQueue.isShutdown()) {
       throw new InvalidSessionTransitionException(null);
     }
+    if (storeWorkQueue.isShutdown()) {
+      throw new InvalidSessionTransitionException(null);
+    }
+    this.transitionFrom(SessionStatus.UNSTARTED, SessionStatus.ACTIVE);
   }
 
-  public void begin(RepositorySessionBeginDelegate delegate) {
-    try {
-      sharedBegin();
-      delegate.deferredBeginDelegate(delegateQueue).onBeginSucceeded(this);
-    } catch (Exception e) {
-      delegate.deferredBeginDelegate(delegateQueue).onBeginFailed(e);
-    }
+  public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
+    sharedBegin();
+    delegate.deferredBeginDelegate(delegateQueue).onBeginSucceeded(this);
   }
 
   protected RepositorySessionBundle getBundle() {
@@ -231,41 +229,83 @@ public abstract class RepositorySession {
    * @param delegate
    */
   public void abort(RepositorySessionFinishDelegate delegate) {
-    this.status = SessionStatus.DONE;    // TODO: ABORTED?
+    this.abort();
     delegate.deferredFinishDelegate(delegateQueue).onFinishSucceeded(this, this.getBundle(null));
-  }
-
-  public void finish(final RepositorySessionFinishDelegate delegate) {
-    if (this.status == SessionStatus.ACTIVE) {
-      this.status = SessionStatus.DONE;
-      delegate.deferredFinishDelegate(delegateQueue).onFinishSucceeded(this, this.getBundle(null));
-    } else {
-      Logger.error(LOG_TAG, "Tried to finish() an unstarted or already finished session");
-      Exception e = new InvalidSessionTransitionException(null);
-      delegate.deferredFinishDelegate(delegateQueue).onFinishFailed(e);
-    }
-    Logger.info(LOG_TAG, "Shutting down work queues.");
- //   storeWorkQueue.shutdown();
- //   delegateQueue.shutdown();
-  }
-
-  public boolean isActive() {
-    return status == SessionStatus.ACTIVE;
-  }
-
-  public SessionStatus getStatus() {
-    return status;
-  }
-
-  public void setStatus(SessionStatus status) {
-    this.status = status;
   }
 
   public void abort() {
     // TODO: do something here.
-    status = SessionStatus.ABORTED;
+    this.setStatus(SessionStatus.ABORTED);
+    try {
+      storeWorkQueue.shutdown();
+    } catch (Exception e) {
+      Logger.error(LOG_TAG, "Caught exception shutting down store work queue.", e);
+    }
+    try {
+      delegateQueue.shutdown();
+    } catch (Exception e) {
+      Logger.error(LOG_TAG, "Caught exception shutting down delegate queue.", e);
+    }
+  }
+
+  public void finish(final RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
+    try {
+      this.transitionFrom(SessionStatus.ACTIVE, SessionStatus.DONE);
+      delegate.deferredFinishDelegate(delegateQueue).onFinishSucceeded(this, this.getBundle(null));
+    } catch (InvalidSessionTransitionException e) {
+      Logger.error(LOG_TAG, "Tried to finish() an unstarted or already finished session");
+      InactiveSessionException ex = new InactiveSessionException(null);
+      ex.initCause(e);
+      throw ex;
+    }
+
+    Logger.info(LOG_TAG, "Shutting down work queues.");
     storeWorkQueue.shutdown();
     delegateQueue.shutdown();
+  }
+
+  /**
+   * Run the provided command if we're active and our delegate queue
+   * is not shut down.
+   *
+   * @param command
+   * @throws InactiveSessionException
+   */
+  protected synchronized void executeDelegateCommand(Runnable command)
+      throws InactiveSessionException {
+    if (!isActive() || delegateQueue.isShutdown()) {
+      throw new InactiveSessionException(null);
+    }
+    delegateQueue.execute(command);
+  }
+
+  public synchronized void ensureActive() throws InactiveSessionException {
+    if (!isActive()) {
+      throw new InactiveSessionException(null);
+    }
+  }
+
+  public synchronized boolean isActive() {
+    return status == SessionStatus.ACTIVE;
+  }
+
+  public synchronized SessionStatus getStatus() {
+    return status;
+  }
+
+  public synchronized void setStatus(SessionStatus status) {
+    this.status = status;
+  }
+
+  public synchronized void transitionFrom(SessionStatus from, SessionStatus to) throws InvalidSessionTransitionException {
+    if (from == null || this.status == from) {
+      Logger.trace(LOG_TAG, "Successfully transitioning from " + this.status + " to " + to);
+
+      this.status = to;
+      return;
+    }
+    Logger.warn(LOG_TAG, "Wanted to transition from " + from + " but in state " + this.status);
+    throw new InvalidSessionTransitionException(null);
   }
 
   /**

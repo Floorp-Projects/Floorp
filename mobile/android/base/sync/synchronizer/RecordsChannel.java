@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutorService;
 
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.ThreadPool;
+import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.DeferredRepositorySessionBeginDelegate;
@@ -166,8 +167,9 @@ class RecordsChannel implements
 
   /**
    * Begin both sessions, invoking flow() when done.
+   * @throws InvalidSessionTransitionException 
    */
-  public void beginAndFlow() {
+  public void beginAndFlow() throws InvalidSessionTransitionException {
     Logger.info(LOG_TAG, "Beginning source.");
     source.begin(this);
   }
@@ -251,7 +253,11 @@ class RecordsChannel implements
   public void onBeginSucceeded(RepositorySession session) {
     if (session == source) {
       Logger.info(LOG_TAG, "Source session began. Beginning sink session.");
-      sink.begin(this);
+      try {
+        sink.begin(this);
+      } catch (InvalidSessionTransitionException e) {
+        onBeginFailed(e);
+      }
     }
     if (session == sink) {
       Logger.info(LOG_TAG, "Sink session began. Beginning flow.");
