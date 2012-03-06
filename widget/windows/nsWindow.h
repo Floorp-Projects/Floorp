@@ -608,7 +608,6 @@ protected:
   // was reirected to SendInput() API by OnKeyDown().
   static MSG            sRedirectedKeyDown;
 
-  static bool sEnablePixelScrolling;
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();
 
