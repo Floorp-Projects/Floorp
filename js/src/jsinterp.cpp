@@ -440,6 +440,21 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         }
     }
 
+#ifdef DEBUG
+    struct CheckStackBalance {
+        JSContext *cx;
+        StackFrame *fp;
+        JSObject *enumerators;
+        CheckStackBalance(JSContext *cx)
+          : cx(cx), fp(cx->fp()), enumerators(cx->enumerators)
+        {}
+        ~CheckStackBalance() {
+            JS_ASSERT(fp == cx->fp());
+            JS_ASSERT_IF(!fp->isGeneratorFrame(), enumerators == cx->enumerators);
+        }
+    } check(cx);
+#endif
+
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
     status = mjit::CanMethodJIT(cx, script, script->code, fp->isConstructing(),
@@ -511,12 +526,9 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
         return false;
 
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
-    JSBool ok;
-    {
-        AutoPreserveEnumerators preserve(cx);
-        ok = RunScript(cx, fun->script(), fp);
-    }
+    JSBool ok = RunScript(cx, fun->script(), fp);
 
+    /* Propagate the return value out. */
     args.rval() = fp->returnValue();
     JS_ASSERT_IF(ok && construct, !args.rval().isPrimitive());
     return ok;
@@ -653,17 +665,17 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
 
     TypeScript::SetThis(cx, script, fp->thisValue());
 
-    AutoPreserveEnumerators preserve(cx);
-    JSBool ok = RunScript(cx, script, fp);
-    if (result && ok)
-        *result = fp->returnValue();
+    bool ok = RunScript(cx, script, fp);
 
     if (fp->isStrictEvalFrame())
         js_PutCallObject(fp);
 
     Probes::stopExecution(cx, script);
 
-    return !!ok;
+    /* Propgate the return value out. */
+    if (result)
+        *result = fp->returnValue();
+    return ok;
 }
 
 bool

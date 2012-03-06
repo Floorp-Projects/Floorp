@@ -61,21 +61,6 @@
 
 namespace js {
 
-class AutoPreserveEnumerators {
-    JSContext *cx;
-    JSObject *enumerators;
-
-  public:
-    AutoPreserveEnumerators(JSContext *cx) : cx(cx), enumerators(cx->enumerators)
-    {
-    }
-
-    ~AutoPreserveEnumerators()
-    {
-        cx->enumerators = enumerators;
-    }
-};
-
 /*
  * Compute the implicit |this| parameter for a call expression where the callee
  * funval was resolved from an unqualified name reference to a property on obj
