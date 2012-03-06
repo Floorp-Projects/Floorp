@@ -766,8 +766,6 @@ LayerManagerOGL::Render()
   if (width == 0 || height == 0)
     return;
 
-  printf_stderr("render %i, %i\n", width, height);
-
   // If the widget size changed, we have to force a MakeCurrent
   // to make sure that GL sees the updated widget size.
   if (mWidgetSize.width != width ||

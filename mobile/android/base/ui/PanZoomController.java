@@ -242,7 +242,6 @@ public class PanZoomController
      */
 
     private boolean onTouchStart(MotionEvent event) {
-        Log.d(LOGTAG, "onTouchStart in state " + mState);
         // user is taking control of movement, so stop
         // any auto-movement we have going
         stopAnimationTimer();
@@ -269,7 +268,6 @@ public class PanZoomController
     }
 
     private boolean onTouchMove(MotionEvent event) {
-        Log.d(LOGTAG, "onTouchMove in state " + mState);
 
         switch (mState) {
         case NOTHING:
@@ -315,7 +313,6 @@ public class PanZoomController
     }
 
     private boolean onTouchEnd(MotionEvent event) {
-        Log.d(LOGTAG, "onTouchEnd in " + mState);
 
         switch (mState) {
         case NOTHING:
@@ -348,8 +345,6 @@ public class PanZoomController
     }
 
     private boolean onTouchCancel(MotionEvent event) {
-        Log.d(LOGTAG, "onTouchCancel in " + mState);
-
         mState = PanZoomState.NOTHING;
         // ensure we snap back if we're overscrolled
         bounce();
@@ -456,7 +451,6 @@ public class PanZoomController
         }
 
         mState = PanZoomState.FLING;
-        Log.d(LOGTAG, "end bounce at " + metrics);
 
         startAnimationTimer(new BounceRunnable(bounceStartMetrics, metrics));
     }
