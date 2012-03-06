@@ -260,10 +260,22 @@ NS_IMPL_THREADSAFE_RELEASE(SharedScriptableHelperForJSIID)
 #include "xpc_map_end.h" /* This will #undef the above */
 
 static nsIXPCScriptable* gSharedScriptableHelperForJSIID;
+static bool gClassObjectsWereInited = false;
+
+static void EnsureClassObjectsInitialized()
+{
+    if (!gClassObjectsWereInited) {
+        gSharedScriptableHelperForJSIID = new SharedScriptableHelperForJSIID();
+        NS_ADDREF(gSharedScriptableHelperForJSIID);
+
+        gClassObjectsWereInited = true;
+    }
+}
 
 NS_METHOD GetSharedScriptableHelperForJSIID(PRUint32 language,
                                             nsISupports **helper)
 {
+    EnsureClassObjectsInitialized();
     if (language == nsIProgrammingLanguage::JAVASCRIPT) {
         NS_IF_ADDREF(gSharedScriptableHelperForJSIID);
         *helper = gSharedScriptableHelperForJSIID;
@@ -273,8 +285,6 @@ NS_METHOD GetSharedScriptableHelperForJSIID(PRUint32 language,
 }
 
 /******************************************************/
-
-static JSBool gClassObjectsWereInited = false;
 
 #define NULL_CID                                                              \
 { 0x00000000, 0x0000, 0x0000,                                                 \
@@ -287,22 +297,15 @@ NS_IMPL_CLASSINFO(nsJSIID, GetSharedScriptableHelperForJSIID,
 NS_DECL_CI_INTERFACE_GETTER(nsJSCID)
 NS_IMPL_CLASSINFO(nsJSCID, NULL, nsIClassInfo::THREADSAFE, NULL_CID)
 
-void xpc_InitJSxIDClassObjects()
-{
-    if (!gClassObjectsWereInited) {
-        gSharedScriptableHelperForJSIID = new SharedScriptableHelperForJSIID();
-        NS_ADDREF(gSharedScriptableHelperForJSIID);
-    }
-    gClassObjectsWereInited = true;
-}
-
 void xpc_DestroyJSxIDClassObjects()
 {
-    NS_IF_RELEASE(NS_CLASSINFO_NAME(nsJSIID));
-    NS_IF_RELEASE(NS_CLASSINFO_NAME(nsJSCID));
-    NS_IF_RELEASE(gSharedScriptableHelperForJSIID);
+    if (gClassObjectsWereInited) {
+        NS_IF_RELEASE(NS_CLASSINFO_NAME(nsJSIID));
+        NS_IF_RELEASE(NS_CLASSINFO_NAME(nsJSCID));
+        NS_IF_RELEASE(gSharedScriptableHelperForJSIID);
 
-    gClassObjectsWereInited = false;
+        gClassObjectsWereInited = false;
+    }
 }
 
 /***************************************************************************/

@@ -57,10 +57,10 @@
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/MethodGuard-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::types;

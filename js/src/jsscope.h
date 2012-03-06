@@ -390,6 +390,8 @@ class BaseShape : public js::gc::Cell
 
     static inline ThingRootKind rootKind() { return THING_ROOT_BASE_SHAPE; }
 
+    inline void markChildren(JSTracer *trc);
+
   private:
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(BaseShape, clasp) == offsetof(js::shadow::BaseShape, clasp));
@@ -560,10 +562,6 @@ struct Shape : public js::gc::Cell
     }
 
     const HeapPtrShape &previous() const {
-        return parent;
-    }
-
-    HeapPtrShape &previousRef() {
         return parent;
     }
 
@@ -909,6 +907,8 @@ struct Shape : public js::gc::Cell
     static inline void readBarrier(const Shape *shape);
 
     static inline ThingRootKind rootKind() { return THING_ROOT_SHAPE; }
+
+    inline void markChildren(JSTracer *trc);
 
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
