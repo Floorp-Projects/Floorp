@@ -42,7 +42,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMFile.h"
 #include "nsDOMError.h"
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "nsICharsetDetector.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIConverterInputStream.h"
@@ -495,10 +495,7 @@ nsDOMFileReader::GetAsText(const nsACString &aCharset,
   }
 
   nsCAutoString charset;
-  nsCOMPtr<nsICharsetAlias> alias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = alias->GetPreferred(charsetGuess, charset);
+  rv = nsCharsetAlias::GetPreferred(charsetGuess, charset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ConvertStream(aFileData, aDataLen, charset.get(), aResult);
