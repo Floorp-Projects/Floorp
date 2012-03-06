@@ -173,6 +173,7 @@ CPPSRCS		= \
 		RegExp.cpp \
 		Memory.cpp \
 		Statistics.cpp \
+		StringBuffer.cpp \
 		Unicode.cpp \
 		$(NULL)
 

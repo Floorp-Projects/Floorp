@@ -43,10 +43,10 @@
 #include "vm/MatchPairs.h"
 
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
 
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using js::detail::RegExpCode;

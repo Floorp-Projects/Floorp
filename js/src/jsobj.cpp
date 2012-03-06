@@ -89,9 +89,9 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
 
 #include "vm/MethodGuard-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"

@@ -49,6 +49,7 @@
 
 #include "BasicLayers.h"
 #include "ImageLayers.h"
+#include "RenderTrace.h"
 
 #include "prprf.h"
 #include "nsTArray.h"
@@ -688,6 +689,11 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
     mBuffer.Clear();
 
     nsIntRegion toDraw = IntersectWithClip(GetEffectiveVisibleRegion(), aContext);
+
+#ifdef MOZ_RENDERTRACE
+    RenderTraceInvalidateStart(this, "FFFF00", toDraw.GetBounds());
+#endif
+
     if (!toDraw.IsEmpty() && !IsHidden()) {
       if (!aCallback) {
         BasicManager()->SetTransactionIncomplete();
@@ -723,6 +729,10 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
       aContext->Restore();
     }
+
+#ifdef MOZ_RENDERTRACE
+    RenderTraceInvalidateEnd(this, "FFFF00");
+#endif
     return;
   }
 
@@ -748,11 +758,20 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
                                     GetEffectiveVisibleRegion());
       nsIntRegion extendedDrawRegion = state.mRegionToDraw;
       SetAntialiasingFlags(this, state.mContext);
+
+#ifdef MOZ_RENDERTRACE
+      RenderTraceInvalidateStart(this, "FFFF00", state.mRegionToDraw.GetBounds());
+#endif
+
       PaintBuffer(state.mContext,
                   state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
                   state.mDidSelfCopy,
                   aCallback, aCallbackData);
       Mutated();
+
+#ifdef MOZ_RENDERTRACE
+      RenderTraceInvalidateEnd(this, "FFFF00");
+#endif
     } else {
       // It's possible that state.mRegionToInvalidate is nonempty here,
       // if we are shrinking the valid region to nothing.
@@ -1600,6 +1619,11 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
   mPhase = PHASE_DRAWING;
 #endif
 
+#ifdef MOZ_RENDERTRACE
+  Layer* aLayer = GetRoot();
+  RenderTraceLayers(aLayer, "FF00");
+#endif
+
   mTransactionIncomplete = false;
 
   if (mTarget && mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
@@ -1819,6 +1843,8 @@ Transform3D(gfxASurface* aSource, gfxContext* aDest,
   aDrawOffset = destRect.TopLeft();
   return destImage.forget(); 
 }
+
+
 
 void
 BasicLayerManager::PaintLayer(gfxContext* aTarget,

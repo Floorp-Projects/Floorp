@@ -549,7 +549,8 @@ Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReade
     RelocationIterator iter(reader);
     while (iter.read()) {
         IonCode *child = CodeFromJump((Instruction *) (code->raw() + iter.offset()));
-        MarkIonCodeUnbarriered(trc, child, "rel32");
+        MarkIonCodeUnbarriered(trc, &child, "rel32");
+        JS_ASSERT(child == CodeFromJump((Instruction *) (code->raw() + iter.offset())));
     };
 }
 
@@ -598,8 +599,11 @@ Assembler::trace(JSTracer *trc)
 {
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch &rp = jumps_[i];
-        if (rp.kind == Relocation::IONCODE)
-            MarkIonCodeUnbarriered(trc, IonCode::FromExecutable((uint8*)rp.target), "masmrel32");
+        if (rp.kind == Relocation::IONCODE) {
+            IonCode *code = IonCode::FromExecutable((uint8*)rp.target);
+            MarkIonCodeUnbarriered(trc, &code, "masmrel32");
+            JS_ASSERT(code == IonCode::FromExecutable((uint8*)rp.target));
+        }
     }
     if (tmpDataRelocations_.length()) {
         CompactBufferReader reader(dataRelocations_);

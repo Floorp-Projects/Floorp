@@ -1224,7 +1224,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 0;
   background-clip: padding-box;
   border: 1px solid ThreeDShadow;
-  border-radius: 2.5px;
+  border-radius: 2px;
 }
 
 #urlbar {

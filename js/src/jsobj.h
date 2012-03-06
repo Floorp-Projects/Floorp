@@ -695,7 +695,7 @@ struct JSObject : public js::ObjectImpl
 
     inline js::types::TypeObject *getType(JSContext *cx);
 
-    js::HeapPtr<js::types::TypeObject> &typeFromGC() {
+    const js::HeapPtr<js::types::TypeObject> &typeFromGC() const {
         /* Direct field access for use by GC. */
         return type_;
     }

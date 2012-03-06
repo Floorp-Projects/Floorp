@@ -348,7 +348,7 @@ IonCode::readBarrier(IonCode *code)
 
     JSCompartment *comp = code->compartment();
     if (comp->needsBarrier())
-        MarkIonCodeUnbarriered(comp->barrierTracer(), code, "ioncode read barrier");
+        MarkIonCodeUnbarriered(comp->barrierTracer(), &code, "ioncode read barrier");
 #endif
 }
 
@@ -361,7 +361,7 @@ IonCode::writeBarrierPre(IonCode *code)
 
     JSCompartment *comp = code->compartment();
     if (comp->needsBarrier())
-        MarkIonCodeUnbarriered(comp->barrierTracer(), code, "ioncode write barrier");
+        MarkIonCodeUnbarriered(comp->barrierTracer(), &code, "ioncode write barrier");
 #endif
 }
 
