@@ -330,8 +330,10 @@ ArrayBuffer::obj_trace(JSTracer *trc, JSObject *obj)
      * so it's safe to leave it Unbarriered.
      */
     JSObject *delegate = static_cast<JSObject*>(obj->getPrivate());
-    if (delegate)
-        MarkObjectUnbarriered(trc, delegate, "arraybuffer.delegate");
+    if (delegate) {
+        MarkObjectUnbarriered(trc, &delegate, "arraybuffer.delegate");
+        obj->setPrivate(delegate);
+    }
 }
 
 static JSProperty * const PROPERTY_FOUND = reinterpret_cast<JSProperty *>(1);

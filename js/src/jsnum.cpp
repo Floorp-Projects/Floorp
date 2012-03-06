@@ -78,11 +78,11 @@
 #include "jsinferinlines.h"
 #include "jsnuminlines.h"
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
 
 #include "vm/MethodGuard-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/String-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::types;

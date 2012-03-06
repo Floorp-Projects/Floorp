@@ -79,6 +79,7 @@
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
+#include "jsstrinlines.h"
 #include "jsautooplen.h"        // generated headers last
 
 #include "vm/MethodGuard-inl.h"
@@ -86,6 +87,7 @@
 #include "vm/RegExpStatics-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/String-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -3112,28 +3114,6 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     return s;
 }
 
-static JS_ALWAYS_INLINE JSFixedString *
-NewShortString(JSContext *cx, const jschar *chars, size_t length)
-{
-    /*
-     * Don't bother trying to find a static atom; measurement shows that not
-     * many get here (for one, Atomize is catching them).
-     */
-
-    JS_ASSERT(JSShortString::lengthFits(length));
-    JSInlineString *str = JSInlineString::lengthFits(length)
-                          ? JSInlineString::new_(cx)
-                          : JSShortString::new_(cx);
-    if (!str)
-        return NULL;
-
-    jschar *storage = str->init(length);
-    PodCopy(storage, chars, length);
-    storage[length] = 0;
-    Probes::createString(cx, str, length);
-    return str;
-}
-
 static JSInlineString *
 NewShortString(JSContext *cx, const char *chars, size_t length)
 {
@@ -3163,74 +3143,6 @@ NewShortString(JSContext *cx, const char *chars, size_t length)
     }
     Probes::createString(cx, str, length);
     return str;
-}
-
-jschar *
-StringBuffer::extractWellSized()
-{
-    size_t capacity = cb.capacity();
-    size_t length = cb.length();
-
-    jschar *buf = cb.extractRawBuffer();
-    if (!buf)
-        return NULL;
-
-    /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
-    JS_ASSERT(capacity >= length);
-    if (length > CharBuffer::sMaxInlineStorage && capacity - length > length / 4) {
-        size_t bytes = sizeof(jschar) * (length + 1);
-        JSContext *cx = context();
-        jschar *tmp = (jschar *)cx->realloc_(buf, bytes);
-        if (!tmp) {
-            cx->free_(buf);
-            return NULL;
-        }
-        buf = tmp;
-    }
-
-    return buf;
-}
-
-JSFixedString *
-StringBuffer::finishString()
-{
-    JSContext *cx = context();
-    if (cb.empty())
-        return cx->runtime->atomState.emptyAtom;
-
-    size_t length = cb.length();
-    if (!checkLength(length))
-        return NULL;
-
-    JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
-    if (JSShortString::lengthFits(length))
-        return NewShortString(cx, cb.begin(), length);
-
-    if (!cb.append('\0'))
-        return NULL;
-
-    jschar *buf = extractWellSized();
-    if (!buf)
-        return NULL;
-
-    JSFixedString *str = js_NewString(cx, buf, length);
-    if (!str)
-        cx->free_(buf);
-    return str;
-}
-
-JSAtom *
-StringBuffer::finishAtom()
-{
-    JSContext *cx = context();
-
-    size_t length = cb.length();
-    if (length == 0)
-        return cx->runtime->atomState.emptyAtom;
-
-    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length);
-    cb.clear();
-    return atom;
 }
 
 JSLinearString *
