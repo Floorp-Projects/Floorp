@@ -2952,7 +2952,41 @@ var FormAssistant = {
       if (value == aSearchString)
         continue;
 
-      suggestions.push(value);
+      // Supply a label and value, since they can differ for datalist suggestions
+      suggestions.push({ label: value, value: value });
+    }
+
+    return suggestions;
+  },
+
+  /**
+   * (Copied from mobile/xul/chrome/content/forms.js)
+   * This function is similar to getListSuggestions from
+   * components/satchel/src/nsInputListAutoComplete.js but sadly this one is
+   * used by the autocomplete.xml binding which is not in used in fennec
+   */
+  _getListSuggestions: function _getListSuggestions(aElement) {
+    if (!(aElement instanceof HTMLInputElement) || !aElement.list)
+      return [];
+
+    let suggestions = [];
+    let filter = !aElement.hasAttribute("mozNoFilter");
+    let lowerFieldValue = aElement.value.toLowerCase();
+
+    let options = aElement.list.options;
+    let length = options.length;
+    for (let i = 0; i < length; i++) {
+      let item = options.item(i);
+
+      let label = item.value;
+      if (item.label)
+        label = item.label;
+      else if (item.text)
+        label = item.text;
+
+      if (filter && label.toLowerCase().indexOf(lowerFieldValue) == -1)
+        continue;
+      suggestions.push({ label: label, value: item.value });
     }
 
     return suggestions;
@@ -2977,7 +3011,12 @@ var FormAssistant = {
     if (!this._isAutoComplete(aElement))
       return false;
 
-    let suggestions = this._getAutoCompleteSuggestions(aElement.value, aElement);
+    let autoCompleteSuggestions = this._getAutoCompleteSuggestions(aElement.value, aElement);
+    let listSuggestions = this._getListSuggestions(aElement);
+
+    // On desktop, we show datalist suggestions below autocomplete suggestions,
+    // without duplicates removed.
+    let suggestions = autoCompleteSuggestions.concat(listSuggestions);
 
     // Return false if there are no suggestions to show
     if (!suggestions.length)
