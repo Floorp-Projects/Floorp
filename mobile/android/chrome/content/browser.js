@@ -472,6 +472,15 @@ var BrowserApp = {
     return null;
   },
 
+  getTabForWindow: function getTabForWindow(aWindow) {
+    let tabs = this._tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].browser.contentWindow == aWindow)
+        return tabs[i];
+    }
+    return null; 
+  },
+
   getBrowserForWindow: function getBrowserForWindow(aWindow) {
     let tabs = this._tabs;
     for (let i = 0; i < tabs.length; i++) {
@@ -1445,7 +1454,7 @@ nsBrowserAccess.prototype = {
     if (newTab) {
       let parentId = -1;
       if (!isExternal) {
-        let parent = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForWindow(aOpener.top));
+        let parent = BrowserApp.getTabForWindow(aOpener.top);
         if (parent)
           parentId = parent.id;
       }
@@ -2309,11 +2318,7 @@ var BrowserEventHandler = {
       this._cancelTapHighlight();
       this.onDoubleTap(aData);
     } else if (aTopic == "dom-touch-listener-added") {
-      let browser = BrowserApp.getBrowserForWindow(aSubject);
-      if (!browser)
-        return;
-
-      let tab = BrowserApp.getTabForBrowser(browser);
+      let tab = BrowserApp.getTabForWindow(aSubject);
       if (!tab)
         return;
 
@@ -2556,11 +2561,7 @@ const ElementTouchHelper = {
     if (!aWindow)
       throw "Must provide a window";
   
-    let browser = BrowserApp.getBrowserForWindow(aWindow.top);
-    if (!browser)
-      throw "Unable to find a browser";
-
-    let tab = BrowserApp.getTabForBrowser(browser);
+    let tab = BrowserApp.getTabForWindow(aWindow.top);
     if (!tab)
       throw "Unable to find a tab";
 
@@ -2574,12 +2575,8 @@ const ElementTouchHelper = {
   toScreenCoords: function(aWindow, aX, aY) {
     if (!aWindow)
       throw "Must provide a window";
-  
-    let browser = BrowserApp.getBrowserForWindow(aWindow.top);
-    if (!browser)
-      throw "Unable to find a browser";
 
-    let tab = BrowserApp.getTabForBrowser(browser);
+    let tab = BrowserApp.getTabForWindow(aWindow.top);
     if (!tab)
       throw "Unable to find a tab";
 
@@ -3511,8 +3508,7 @@ var OfflineApps = {
     if (!Services.prefs.getBoolPref("browser.offline-apps.notify"))
       return;
 
-    let browser = BrowserApp.getBrowserForWindow(aContentWindow);
-    let tab = BrowserApp.getTabForBrowser(browser);
+    let tab = BrowserApp.getTabForWindow(aContentWindow);
     let currentURI = aContentWindow.document.documentURIObject;
 
     // Don't bother showing UI if the user has already made a decision
@@ -3611,8 +3607,8 @@ var IndexedDB = {
 
     let contentWindow = requestor.getInterface(Ci.nsIDOMWindow);
     let contentDocument = contentWindow.document;
-    let browser = BrowserApp.getBrowserForWindow(contentWindow);
-    if (!browser)
+    let tab = BrowserApp.getTabForWindow(contentWindow);
+    if (!tab)
       return;
 
     let host = contentDocument.documentURIObject.asciiHost;
@@ -3631,7 +3627,6 @@ var IndexedDB = {
     }
 
     let notificationID = responseTopic + host;
-    let tab = BrowserApp.getTabForBrowser(browser);
     let observer = requestor.getInterface(Ci.nsIObserver);
 
     if (topic == this._quotaCancel) {
