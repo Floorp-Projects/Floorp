@@ -634,7 +634,11 @@ TelemetryPing.prototype = {
    */
   uninstall: function uninstall() {
     this.detachObservers()
-    Services.obs.removeObserver(this, "sessionstore-windows-restored");
+    try {
+      Services.obs.removeObserver(this, "sessionstore-windows-restored");
+    } catch (e) {
+      // Already observed this event.
+    }
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "private-browsing");
     Services.obs.removeObserver(this, "quit-application-granted");
@@ -674,6 +678,9 @@ TelemetryPing.prototype = {
       }
       break;
     case "sessionstore-windows-restored":
+      Services.obs.removeObserver(this, "sessionstore-windows-restored");
+      // fall through
+    case "test-gather-startup":
       this.gatherStartupInformation();
       break;
     case "idle-daily":
