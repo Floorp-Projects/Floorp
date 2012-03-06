@@ -97,6 +97,10 @@ BrowserRootActor.prototype = {
     while (e.hasMoreElements()) {
       let win = e.getNext();
       this.unwatchWindow(win);
+      // Signal our imminent shutdown.
+      let evt = win.document.createEvent("Event");
+      evt.initEvent("Debugger:Shutdown", true, false);
+      win.document.documentElement.dispatchEvent(evt);
     }
   },
 
@@ -415,6 +419,10 @@ BrowserTabActor.prototype = {
    * Prepare to enter a nested event loop by disabling debuggee events.
    */
   preNest: function BTA_preNest() {
+    if (!this.browser) {
+      // The tab is already closed.
+      return;
+    }
     let windowUtils = this.browser.contentWindow
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIDOMWindowUtils);
@@ -426,6 +434,10 @@ BrowserTabActor.prototype = {
    * Prepare to exit a nested event loop by enabling debuggee events.
    */
   postNest: function BTA_postNest(aNestData) {
+    if (!this.browser) {
+      // The tab is already closed.
+      return;
+    }
     let windowUtils = this.browser.contentWindow
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIDOMWindowUtils);

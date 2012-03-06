@@ -67,17 +67,19 @@ function testEvalCall() {
       ok(!frames.querySelector("#stackframe-1").classList.contains("selected"),
          "Second frame should not be selected after click inside the first frame.");
 
-      resumeAndFinish();
+      gDebugger.StackFrames.activeThread.resume(function() {
+        closeDebuggerAndFinish(gTab);
+      });
     }}, 0);
   });
 
   gDebuggee.evalCall();
 }
 
-function resumeAndFinish() {
-  gDebugger.StackFrames.activeThread.resume(function() {
-    removeTab(gTab);
-    finish();
-  });
-}
-
+registerCleanupFunction(function() {
+  removeTab(gTab);
+  gPane = null;
+  gTab = null;
+  gDebuggee = null;
+  gDebugger = null;
+});
