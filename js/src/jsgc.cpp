@@ -1708,13 +1708,13 @@ ArenaLists::finalizeScripts(JSContext *cx)
 }
 
 static void
-RunLastDitchGC(JSContext *cx)
+RunLastDitchGC(JSContext *cx, gcreason::Reason reason)
 {
     JSRuntime *rt = cx->runtime;
 
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keep(rt);
-    GC(cx, rt->gcTriggerCompartment, GC_NORMAL, gcreason::LAST_DITCH);
+    GC(cx, rt->gcTriggerCompartment, GC_NORMAL, reason);
 }
 
 /* static */ void *
@@ -1729,7 +1729,7 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
     bool runGC = rt->gcIncrementalState != NO_INCREMENTAL && comp->gcBytes > comp->gcTriggerBytes;
     for (;;) {
         if (JS_UNLIKELY(runGC)) {
-            RunLastDitchGC(cx);
+            RunLastDitchGC(cx, gcreason::LAST_DITCH);
 
             /*
              * The JSGC_END callback can legitimately allocate new GC
@@ -3662,12 +3662,31 @@ GCCycle(JSContext *cx, JSCompartment *comp, int64_t budget, JSGCInvocationKind g
 #endif
 }
 
+#ifdef JS_GC_ZEAL
+static bool
+IsDeterministicGCReason(gcreason::Reason reason)
+{
+    if (reason > gcreason::DEBUG_GC && reason != gcreason::CC_FORCED)
+        return false;
+
+    if (reason == gcreason::MAYBEGC)
+        return false;
+
+    return true;
+}
+#endif
+
 static void
 Collect(JSContext *cx, JSCompartment *comp, int64_t budget,
         JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     JSRuntime *rt = cx->runtime;
     JS_AbortIfWrongThread(rt);
+
+#ifdef JS_GC_ZEAL
+    if (rt->gcDeterministicOnly && !IsDeterministicGCReason(reason))
+        return;
+#endif
 
     JS_ASSERT_IF(budget != SliceBudget::Unlimited, JSGC_INCREMENTAL);
 
@@ -3947,7 +3966,16 @@ RunDebugGC(JSContext *cx)
     if (rt->gcTriggerCompartment == rt->atomsCompartment)
         rt->gcTriggerCompartment = NULL;
 
-    RunLastDitchGC(cx);
+    RunLastDitchGC(cx, gcreason::DEBUG_GC);
+#endif
+}
+
+void
+SetDeterministicGC(JSContext *cx, bool enabled)
+{
+#ifdef JS_GC_ZEAL
+    JSRuntime *rt = cx->runtime;
+    rt->gcDeterministicOnly = enabled;
 #endif
 }
 

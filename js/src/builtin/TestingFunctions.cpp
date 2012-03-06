@@ -8,6 +8,7 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
+#include "jsgc.h"
 #include "jsobj.h"
 #include "jsprf.h"
 #include "jswrapper.h"
@@ -218,6 +219,19 @@ GCSlice(JSContext *cx, unsigned argc, jsval *vp)
         return JS_FALSE;
 
     GCDebugSlice(cx, budget);
+    *vp = JSVAL_VOID;
+    return JS_TRUE;
+}
+
+static JSBool
+DeterministicGC(JSContext *cx, unsigned argc, jsval *vp)
+{
+    if (argc != 1) {
+        ReportUsageError(cx, &JS_CALLEE(cx, vp).toObject(), "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    gc::SetDeterministicGC(cx, js_ValueToBoolean(vp[2]));
     *vp = JSVAL_VOID;
     return JS_TRUE;
 }
@@ -516,6 +530,10 @@ static JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gcslice", GCSlice, 1, 0,
 "gcslice(n)",
 "  Run an incremental GC slice that marks about n objects."),
+
+    JS_FN_HELP("deterministicgc", DeterministicGC, 1, 0,
+"deterministicgc(true|false)",
+"  If true, only allow determinstic GCs to run."),
 #endif
 
     JS_FN_HELP("internalConst", InternalConst, 1, 0,

@@ -753,6 +753,7 @@ JSRuntime::JSRuntime()
     gcZealFrequency(0),
     gcNextScheduled(0),
     gcDebugCompartmentGC(false),
+    gcDeterministicOnly(false),
 #endif
     gcCallback(NULL),
     gcSliceCallback(NULL),
