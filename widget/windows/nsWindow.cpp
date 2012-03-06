@@ -286,16 +286,6 @@ PRUint32        nsWindow::sOOPPPluginFocusEvent   =
 
 MSG             nsWindow::sRedirectedKeyDown;
 
-bool            nsWindow::sNeedsToInitMouseWheelSettings = true;
-
-HWND            nsWindow::sLastMouseWheelWnd = NULL;
-PRInt32         nsWindow::sRemainingDeltaForScroll = 0;
-PRInt32         nsWindow::sRemainingDeltaForPixel = 0;
-bool            nsWindow::sLastMouseWheelDeltaIsPositive = false;
-bool            nsWindow::sLastMouseWheelOrientationIsVertical = false;
-bool            nsWindow::sLastMouseWheelUnitIsPage = false;
-PRUint32        nsWindow::sLastMouseWheelTime = 0;
-
 /**************************************************************
  *
  * SECTION: globals variables
@@ -5160,15 +5150,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     }
     break;
 
-    case WM_SETTINGCHANGE:
-      switch (wParam) {
-        case SPI_SETWHEELSCROLLLINES:
-        case SPI_SETWHEELSCROLLCHARS:
-          sNeedsToInitMouseWheelSettings = true;
-          break;
-      }
-      break;
-
     case WM_INPUTLANGCHANGEREQUEST:
       *aRetValue = TRUE;
       result = false;
@@ -6277,25 +6258,6 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   return true; // Handled
 }
 
-/* static */ void
-nsWindow::InitMouseWheelScrollData()
-{
-  if (!sNeedsToInitMouseWheelSettings) {
-    return;
-  }
-  sNeedsToInitMouseWheelSettings = false;
-  ResetRemainingWheelDelta();
-}
-
-/* static */
-void
-nsWindow::ResetRemainingWheelDelta()
-{
-  sRemainingDeltaForPixel = 0;
-  sRemainingDeltaForScroll = 0;
-  sLastMouseWheelWnd = NULL;
-}
-
 static PRInt32 RoundDelta(double aDelta)
 {
   return aDelta >= 0 ? (PRInt32)floor(aDelta) : (PRInt32)ceil(aDelta);
@@ -6310,32 +6272,25 @@ void
 nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
                                LRESULT *aRetValue)
 {
-  InitMouseWheelScrollData();
-
-  MouseScrollHandler::EventInfo eventInfo(aMessage, aWParam, aLParam);
+  MouseScrollHandler* handler = MouseScrollHandler::GetInstance();
+  MouseScrollHandler::EventInfo eventInfo(this, aMessage, aWParam, aLParam);
   if (!eventInfo.CanDispatchMouseScrollEvent()) {
-    ResetRemainingWheelDelta();
+    handler->GetLastEventInfo().ResetTransaction();
     *aRetValue = eventInfo.ComputeMessageResult(false);
     return;
   }
 
+  MouseScrollHandler::LastEventInfo& lastEventInfo =
+                                       handler->GetLastEventInfo();
+
   // Discard the remaining delta if current wheel message and last one are
   // received by different window or to scroll different direction or
   // different unit scroll.  Furthermore, if the last event was too old.
-  PRUint32 now = PR_IntervalToMilliseconds(PR_IntervalNow());
-  if (sLastMouseWheelWnd &&
-      (sLastMouseWheelWnd != mWnd ||
-       sLastMouseWheelDeltaIsPositive != eventInfo.IsPositive() ||
-       sLastMouseWheelOrientationIsVertical != eventInfo.IsVertical() ||
-       sLastMouseWheelUnitIsPage != eventInfo.IsPage() ||
-       now - sLastMouseWheelTime > 1500)) {
-    ResetRemainingWheelDelta();
+  if (!lastEventInfo.CanContinueTransaction(eventInfo)) {
+    lastEventInfo.ResetTransaction();
   }
-  sLastMouseWheelWnd = mWnd;
-  sLastMouseWheelDeltaIsPositive = eventInfo.IsPositive();
-  sLastMouseWheelOrientationIsVertical = eventInfo.IsVertical();
-  sLastMouseWheelUnitIsPage = eventInfo.IsPage();
-  sLastMouseWheelTime = now;
+
+  lastEventInfo.RecordEvent(eventInfo);
 
   // means we process this message
   *aRetValue = eventInfo.ComputeMessageResult(true);
@@ -6386,8 +6341,8 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     testEvent.isAlt       = scrollEvent.isAlt;
 
     testEvent.delta       = computedScrollAmount;
-    if ((eventInfo.IsVertical() && sLastMouseWheelDeltaIsPositive) ||
-        (!eventInfo.IsVertical() && !sLastMouseWheelDeltaIsPositive)) {
+    if ((eventInfo.IsVertical() && eventInfo.IsPositive()) ||
+        (!eventInfo.IsVertical() && !eventInfo.IsPositive())) {
       testEvent.delta *= -1;
     }
     nsQueryContentEvent queryEvent(true, NS_QUERY_SCROLL_TARGET_INFO, this);
@@ -6429,14 +6384,15 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   scrollEvent.scrollFlags |= eventInfo.GetScrollFlags();
 
   PRInt32 nativeDeltaForScroll =
-    eventInfo.GetNativeDelta() + sRemainingDeltaForScroll;
+    eventInfo.GetNativeDelta() + lastEventInfo.mRemainingDeltaForScroll;
 
   // NOTE: Don't use computedScrollAmount for computing the delta value of
   //       line/page scroll event.  The value will be recomputed in ESM.
   if (eventInfo.IsPage()) {
     scrollEvent.delta = nativeDeltaForScroll * orienter / WHEEL_DELTA;
     PRInt32 recomputedNativeDelta = scrollEvent.delta * orienter / WHEEL_DELTA;
-    sRemainingDeltaForScroll = nativeDeltaForScroll - recomputedNativeDelta;
+    lastEventInfo.mRemainingDeltaForScroll =
+      nativeDeltaForScroll - recomputedNativeDelta;
   } else {
     double deltaPerUnit;
     deltaPerUnit =
@@ -6445,20 +6401,21 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
       RoundDelta((double)nativeDeltaForScroll * orienter / deltaPerUnit);
     PRInt32 recomputedNativeDelta =
       (PRInt32)(scrollEvent.delta * orienter * deltaPerUnit);
-    sRemainingDeltaForScroll = nativeDeltaForScroll - recomputedNativeDelta;
+    lastEventInfo.mRemainingDeltaForScroll =
+      nativeDeltaForScroll - recomputedNativeDelta;
   }
 
   if (scrollEvent.delta) {
     DispatchWindowEvent(&scrollEvent);
     if (mOnDestroyCalled) {
-      ResetRemainingWheelDelta();
+      lastEventInfo.ResetTransaction();
       return;
     }
   }
 
   // If the query event failed, we cannot send pixel events.
   if (!dispatchPixelScrollEvent) {
-    sRemainingDeltaForPixel = 0;
+    lastEventInfo.mRemainingDeltaForPixel = 0;
     return;
   }
 
@@ -6477,7 +6434,7 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   pixelEvent.isAlt       = scrollEvent.isAlt;
 
   PRInt32 nativeDeltaForPixel =
-    eventInfo.GetNativeDelta() + sRemainingDeltaForPixel;
+    eventInfo.GetNativeDelta() + lastEventInfo.mRemainingDeltaForPixel;
   // Pixel scroll event won't be recomputed the scroll amout and direction by
   // ESM.  Therefore, we need to set the computed amout and direction here.
   PRInt32 orienterForPixel = reversePixelScrollDirection ? -orienter : orienter;
@@ -6488,7 +6445,8 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     RoundDelta((double)nativeDeltaForPixel * orienterForPixel / deltaPerPixel);
   PRInt32 recomputedNativeDelta =
     (PRInt32)(pixelEvent.delta * orienterForPixel * deltaPerPixel);
-  sRemainingDeltaForPixel = nativeDeltaForPixel - recomputedNativeDelta;
+  lastEventInfo.mRemainingDeltaForPixel =
+    nativeDeltaForPixel - recomputedNativeDelta;
   if (pixelEvent.delta != 0) {
     DispatchWindowEvent(&pixelEvent);
   }
