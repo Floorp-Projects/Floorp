@@ -407,9 +407,6 @@ protected:
   void                    OnWindowPosChanged(WINDOWPOS *wp, bool& aResult);
   void                    OnMouseWheel(UINT aMsg, WPARAM aWParam,
                                        LPARAM aLParam, LRESULT *aRetValue);
-  void                    OnMouseWheelInternal(UINT aMessage, WPARAM aWParam,
-                                               LPARAM aLParam,
-                                               LRESULT *aRetValue);
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
   void                    OnSysColorChanged();
 

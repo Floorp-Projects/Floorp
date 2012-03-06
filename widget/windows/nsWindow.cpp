@@ -5221,21 +5221,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     // our window again, it causes making infinite message loop.
     return true;
 
-  case MOZ_WM_MOUSEVWHEEL:
-  case MOZ_WM_MOUSEHWHEEL:
-    {
-      UINT nativeMessage = WinUtils::GetNativeMessage(msg);
-      // If OnMouseWheel returns true, the event was forwarded directly to another
-      // mozilla window message handler (ProcessMessage). In this case the return
-      // value of the forwarded event is in 'result' which we should return immediately.
-      // If OnMouseWheel returns false, OnMouseWheel processed the event internally.
-      // 'result' and 'aRetValue' will be set based on what we did with the event, so
-      // we should fall through.
-      OnMouseWheelInternal(nativeMessage, wParam, lParam, aRetValue);
-      // Doesn't need to call next wndproc for internal message.
-      return true;
-    }
-
   case WM_DWMCOMPOSITIONCHANGED:
     // First, update the compositor state to latest one. All other methods
     // should use same state as here for consistency painting.
@@ -6256,67 +6241,6 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   mGesture.CloseGestureInfoHandle((HGESTUREINFO)lParam);
 
   return true; // Handled
-}
-
-/**
- * OnMouseWheelInternal - mouse wheel event processing.
- * aMessage may be WM_MOUSEWHEEL or WM_MOUSEHWHEEL but this is called when
- * ProcessMessage() handles MOZ_WM_MOUSEVWHEEL or MOZ_WM_MOUSEHWHEEL.
- */
-void
-nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
-                               LRESULT *aRetValue)
-{
-  MouseScrollHandler* handler = MouseScrollHandler::GetInstance();
-  MouseScrollHandler::EventInfo eventInfo(this, aMessage, aWParam, aLParam);
-  if (!eventInfo.CanDispatchMouseScrollEvent()) {
-    handler->GetLastEventInfo().ResetTransaction();
-    *aRetValue = eventInfo.ComputeMessageResult(false);
-    return;
-  }
-
-  MouseScrollHandler::LastEventInfo& lastEventInfo =
-                                       handler->GetLastEventInfo();
-
-  // Discard the remaining delta if current wheel message and last one are
-  // received by different window or to scroll different direction or
-  // different unit scroll.  Furthermore, if the last event was too old.
-  if (!lastEventInfo.CanContinueTransaction(eventInfo)) {
-    lastEventInfo.ResetTransaction();
-  }
-
-  lastEventInfo.RecordEvent(eventInfo);
-
-  // means we process this message
-  *aRetValue = eventInfo.ComputeMessageResult(true);
-
-  nsModifierKeyState modKeyState = MouseScrollHandler::GetModifierKeyState();
-
-  // Before dispatching line scroll event, we should get the current scroll
-  // event target information for pixel scroll.
-  MouseScrollHandler::ScrollTargetInfo scrollTargetInfo =
-    handler->GetScrollTargetInfo(this, eventInfo, modKeyState);
-
-  nsMouseScrollEvent scrollEvent(true, NS_MOUSE_SCROLL, this);
-  if (lastEventInfo.InitMouseScrollEvent(this, scrollEvent,
-                                         scrollTargetInfo, modKeyState)) {
-    DispatchWindowEvent(&scrollEvent);
-    if (mOnDestroyCalled) {
-      lastEventInfo.ResetTransaction();
-      return;
-    }
-  }
-
-  nsMouseScrollEvent pixelEvent(true, NS_MOUSE_PIXEL_SCROLL, this);
-  if (lastEventInfo.InitMousePixelScrollEvent(this, pixelEvent,
-                                              scrollTargetInfo, modKeyState)) {
-    DispatchWindowEvent(&pixelEvent);
-    if (mOnDestroyCalled) {
-      lastEventInfo.ResetTransaction();
-      return;
-    }
-  }
-  return;
 }
 
 static bool

@@ -139,6 +139,13 @@ MouseScrollHandler::ProcessMessage(nsWindow* aWindow, UINT msg,
       }
       return false;
 
+    case MOZ_WM_MOUSEVWHEEL:
+    case MOZ_WM_MOUSEHWHEEL:
+      GetInstance()->HandleMouseWheelMessage(aWindow, msg, wParam, lParam);
+      // Doesn't need to call next wndproc for internal wheel message.
+      aEatMessage = true;
+      return true;
+
     case WM_KEYDOWN:
     case WM_KEYUP:
       PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
@@ -264,6 +271,98 @@ MouseScrollHandler::GetScrollTargetInfo(
      result.actualScrollAction, result.pixelsPerUnit));
 
   return result;
+}
+
+void
+MouseScrollHandler::HandleMouseWheelMessage(nsWindow* aWindow,
+                                            UINT aMessage,
+                                            WPARAM aWParam,
+                                            LPARAM aLParam)
+{
+  NS_ABORT_IF_FALSE(
+    (aMessage == MOZ_WM_MOUSEVWHEEL || aMessage == MOZ_WM_MOUSEHWHEEL),
+    "HandleMouseWheelMessage must be called with "
+    "MOZ_WM_MOUSEVWHEEL or MOZ_WM_MOUSEHWHEEL");
+
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::HandleMouseWheelMessage: aWindow=%p, "
+     "aMessage=MOZ_WM_MOUSE%sWHEEL, aWParam=0x%08X, aLParam=0x%08X",
+     aWindow, aMessage == MOZ_WM_MOUSEVWHEEL ? "V" : "H",
+     aWParam, aLParam));
+
+  EventInfo eventInfo(aWindow, WinUtils::GetNativeMessage(aMessage),
+                      aWParam, aLParam);
+  if (!eventInfo.CanDispatchMouseScrollEvent()) {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::HandleMouseWheelMessage: Cannot dispatch the events"));
+    mLastEventInfo.ResetTransaction();
+    return;
+  }
+
+  // Discard the remaining delta if current wheel message and last one are
+  // received by different window or to scroll different direction or
+  // different unit scroll.  Furthermore, if the last event was too old.
+  if (!mLastEventInfo.CanContinueTransaction(eventInfo)) {
+    mLastEventInfo.ResetTransaction();
+  }
+
+  mLastEventInfo.RecordEvent(eventInfo);
+
+  nsModifierKeyState modKeyState = GetModifierKeyState();
+
+  // Before dispatching line scroll event, we should get the current scroll
+  // event target information for pixel scroll.
+  ScrollTargetInfo scrollTargetInfo =
+    GetScrollTargetInfo(aWindow, eventInfo, modKeyState);
+
+  // Grab the widget, it might be destroyed by a DOM event handler.
+  nsRefPtr<nsWindow> kungFuDethGrip(aWindow);
+
+  nsMouseScrollEvent scrollEvent(true, NS_MOUSE_SCROLL, aWindow);
+  if (mLastEventInfo.InitMouseScrollEvent(aWindow, scrollEvent,
+                                          scrollTargetInfo, modKeyState)) {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::HandleMouseWheelMessage: dispatching "
+       "NS_MOUSE_SCROLL event"));
+    DispatchEvent(aWindow, scrollEvent);
+    if (aWindow->Destroyed()) {
+      PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+        ("MouseScroll::HandleMouseWheelMessage: The window was destroyed "
+         "by NS_MOUSE_SCROLL event"));
+      mLastEventInfo.ResetTransaction();
+      return;
+    }
+  }
+#ifdef PR_LOGGING
+  else {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::HandleMouseWheelMessage: NS_MOUSE_SCROLL event is not "
+       "dispatched"));
+  }
+#endif
+
+  nsMouseScrollEvent pixelEvent(true, NS_MOUSE_PIXEL_SCROLL, aWindow);
+  if (mLastEventInfo.InitMousePixelScrollEvent(aWindow, pixelEvent,
+                                               scrollTargetInfo, modKeyState)) {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::HandleMouseWheelMessage: dispatching "
+       "NS_MOUSE_PIXEL_SCROLL event"));
+    DispatchEvent(aWindow, pixelEvent);
+    if (aWindow->Destroyed()) {
+      PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+        ("MouseScroll::HandleMouseWheelMessage: The window was destroyed "
+         "by NS_MOUSE_PIXEL_SCROLL event"));
+      mLastEventInfo.ResetTransaction();
+      return;
+    }
+  }
+#ifdef PR_LOGGING
+  else {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::HandleMouseWheelMessage: NS_MOUSE_PIXEL_SCROLL event is "
+       "not dispatched"));
+  }
+#endif
 }
 
 /******************************************************************************
