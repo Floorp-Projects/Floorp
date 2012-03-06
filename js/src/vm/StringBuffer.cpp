@@ -6,6 +6,8 @@
 
 #include "vm/StringBuffer.h"
 
+#include "jsobjinlines.h"
+
 #include "vm/String-inl.h"
 #include "vm/StringBuffer-inl.h"
 
@@ -45,8 +47,7 @@ StringBuffer::finishString()
         return cx->runtime->atomState.emptyAtom;
 
     size_t length = cb.length();
-    if (!checkLength(length))
-        return NULL;
+    JS_ASSERT(checkLength(length));
 
     JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
     if (JSShortString::lengthFits(length))
@@ -77,4 +78,23 @@ StringBuffer::finishAtom()
     JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length);
     cb.clear();
     return atom;
+}
+
+bool
+js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
+{
+    Value v = arg;
+    if (!ToPrimitive(cx, JSTYPE_STRING, &v))
+        return false;
+
+    if (v.isString())
+        return sb.append(v.toString());
+    if (v.isNumber())
+        return NumberValueToStringBuffer(cx, v, sb);
+    if (v.isBoolean())
+        return BooleanToStringBuffer(cx, v.toBoolean(), sb);
+    if (v.isNull())
+        return sb.append(cx->runtime->atomState.nullAtom);
+    JS_ASSERT(v.isUndefined());
+    return sb.append(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
 }
