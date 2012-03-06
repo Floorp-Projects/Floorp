@@ -976,27 +976,6 @@ abstract public class GeckoApp
                 mDOMFullScreen = true;
             } else if (event.equals("DOMFullScreen:Stop")) {
                 mDOMFullScreen = false;
-            } else if (event.equals("FormAssist:AutoComplete")) {
-                final JSONArray suggestions = message.getJSONArray("suggestions");
-                if (suggestions.length() == 0) {
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            mFormAssistPopup.hide();
-                        }
-                    });
-                } else {
-                    final JSONArray rect = message.getJSONArray("rect");
-                    final double zoom = message.getDouble("zoom");
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            // Don't show autocomplete popup when using fullscreen VKB
-                            InputMethodManager imm =
-                                (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                            if (!imm.isFullscreenMode())
-                                mFormAssistPopup.show(suggestions, rect, zoom);
-                        }
-                    });
-                }
             } else if (event.equals("Permissions:Data")) {
                 String host = message.getString("host");
                 JSONArray permissions = message.getJSONArray("permissions");
@@ -1797,7 +1776,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Stop", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
@@ -2170,7 +2148,6 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
