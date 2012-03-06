@@ -44,10 +44,7 @@ import android.content.Context;
 import android.util.Log;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Pair;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
@@ -94,10 +91,8 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
         setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parentView, View view, int position, long id) {
                 if (mTypeShowing.equals(PopupType.AUTOCOMPLETE)) {
-                    // Use the value stored with the autocomplete view, not the label text,
-                    // since they can be different.
                     TextView textView = (TextView) view;
-                    String value = (String) textView.getTag();
+                    String value = textView.getText().toString();
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:AutoComplete", value));
                     hide();
                 }
@@ -154,8 +149,13 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
     }
 
     private void showAutoCompleteSuggestions(JSONArray suggestions, JSONArray rect, double zoom) {
-        AutoCompleteListAdapter adapter = new AutoCompleteListAdapter(mContext, R.layout.autocomplete_list_item);
-        adapter.populateSuggestionsList(suggestions);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.autocomplete_list_item);
+        try {
+            for (int i = 0; i < suggestions.length(); i++)
+                adapter.add(suggestions.get(i).toString());
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "JSONException: " + e);
+        }
         setAdapter(adapter);
 
         if (positionAndShowPopup(rect, zoom))
@@ -264,50 +264,6 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
             setVisibility(View.GONE);
             mTypeShowing = PopupType.NONE;
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:Hidden", null));
-        }
-    }
-
-    private class AutoCompleteListAdapter extends ArrayAdapter<Pair<String, String>> {
-        private LayoutInflater mInflater;
-        private int mTextViewResourceId;
-
-        public AutoCompleteListAdapter(Context context, int textViewResourceId) {
-            super(context, textViewResourceId);
-
-            mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            mTextViewResourceId = textViewResourceId;
-        }
-
-        // This method takes an array of autocomplete suggestions with label/value properties
-        // and adds label/value Pair objects to the array that backs the adapter.
-        public void populateSuggestionsList(JSONArray suggestions) {
-            try {
-                for (int i = 0; i < suggestions.length(); i++) {
-                    JSONObject suggestion = (JSONObject) suggestions.get(i);
-                    String label = suggestion.getString("label");
-                    String value = suggestion.getString("value");
-                    add(new Pair<String, String>(label, value));
-                }
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "JSONException: " + e);
-            }
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null)
-                convertView = mInflater.inflate(mTextViewResourceId, null);
-
-            Pair<String, String> item = getItem(position);
-            TextView itemView = (TextView) convertView;
-
-            // Set the text with the suggestion label
-            itemView.setText(item.first);
-
-            // Set a tag with the suggestion value
-            itemView.setTag(item.second);
-
-            return convertView;
         }
     }
 }
