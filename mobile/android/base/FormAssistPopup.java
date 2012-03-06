@@ -47,6 +47,7 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 import android.widget.RelativeLayout;
@@ -55,8 +56,9 @@ import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
-public class FormAssistPopup extends ListView {
+public class FormAssistPopup extends ListView implements GeckoEventListener {
     private Context mContext;
     private RelativeLayout.LayoutParams mLayout;
 
@@ -88,6 +90,33 @@ public class FormAssistPopup extends ListView {
                 hide();
             }
         });
+
+        GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", this);
+    }
+
+    public void handleMessage(String event, JSONObject message) {
+        try {
+            if (event.equals("FormAssist:AutoComplete")) {
+                final JSONArray suggestions = message.getJSONArray("suggestions");
+                if (suggestions.length() == 0) {
+                    hide();
+                } else {
+                    final JSONArray rect = message.getJSONArray("rect");
+                    final double zoom = message.getDouble("zoom");
+                    GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                         public void run() {
+                             // Don't show autocomplete popup when using fullscreen VKB
+                             InputMethodManager imm =
+                                     (InputMethodManager) GeckoApp.mAppContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+                             if (!imm.isFullscreenMode())
+                                 show(suggestions, rect, zoom);
+                         }
+                    });
+                }
+            }
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+        }
     }
 
     public void show(JSONArray suggestions, JSONArray rect, double zoom) {
