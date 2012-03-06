@@ -48,8 +48,7 @@ function testEvalCallResume() {
         is(frames.querySelectorAll(".empty").length, 1,
            "Should have the empty list explanation.");
 
-        removeTab(gTab);
-        finish();
+        closeDebuggerAndFinish(gTab);
       });
 
       gPane.activeThread.resume();
@@ -58,3 +57,11 @@ function testEvalCallResume() {
 
   gDebuggee.evalCall();
 }
+
+registerCleanupFunction(function() {
+  removeTab(gTab);
+  gPane = null;
+  gTab = null;
+  gDebuggee = null;
+  gDebugger = null;
+});

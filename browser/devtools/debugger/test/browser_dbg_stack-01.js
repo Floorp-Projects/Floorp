@@ -36,16 +36,19 @@ function testSimpleCall() {
       is(childNodes.length, frames.querySelectorAll(".dbg-stackframe").length,
         "All children should be frames.");
 
-      resumeAndFinish();
+      gDebugger.StackFrames.activeThread.resume(function() {
+        closeDebuggerAndFinish(gTab);
+      });
     }}, 0);
   });
 
   gDebuggee.simpleCall();
 }
 
-function resumeAndFinish() {
-  gDebugger.StackFrames.activeThread.resume(function() {
-    removeTab(gTab);
-    finish();
-  });
-}
+registerCleanupFunction(function() {
+  removeTab(gTab);
+  gPane = null;
+  gTab = null;
+  gDebuggee = null;
+  gDebugger = null;
+});
