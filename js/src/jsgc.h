@@ -808,7 +808,7 @@ struct Chunk {
     inline void init();
 
     /* Search for a decommitted arena to allocate. */
-    jsuint findDecommittedArenaOffset();
+    unsigned findDecommittedArenaOffset();
     ArenaHeader* fetchNextDecommittedArena();
 
   public:
