@@ -61,7 +61,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsWeakPtr.h"
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMElement.h"
@@ -812,11 +812,7 @@ nsXMLHttpRequest::DetectCharset()
   nsresult rv = channel ? channel->GetContentCharset(charsetVal) :
                 NS_ERROR_FAILURE;
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsICharsetAlias> calias =
-      do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv) && calias) {
-      rv = calias->GetPreferred(charsetVal, mResponseCharset);
-    }
+    rv = nsCharsetAlias::GetPreferred(charsetVal, mResponseCharset);
   }
 
   if (NS_FAILED(rv) || mResponseCharset.IsEmpty()) {

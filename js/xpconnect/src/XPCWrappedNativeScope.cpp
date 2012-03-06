@@ -112,19 +112,19 @@ XPCWrappedNativeScope* XPCWrappedNativeScope::gDyingScopes = nsnull;
 
 // static
 XPCWrappedNativeScope*
-XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal)
+XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal, nsISupports* aNative)
 {
 
     XPCWrappedNativeScope* scope = FindInJSObjectScope(ccx, aGlobal, true);
     if (!scope)
-        scope = new XPCWrappedNativeScope(ccx, aGlobal);
+        scope = new XPCWrappedNativeScope(ccx, aGlobal, aNative);
     else {
         // We need to call SetGlobal in order to refresh our cached
         // mPrototypeJSObject and to clear mPrototypeNoHelper (so we get a new
         // new one if requested in the new scope) in the case where the global
         // object is being reused (JS_ClearScope has been called).  NOTE: We are
         // only called by nsXPConnect::InitClasses.
-        scope->SetGlobal(ccx, aGlobal);
+        scope->SetGlobal(ccx, aGlobal, aNative);
     }
     if (js::GetObjectClass(aGlobal)->flags & JSCLASS_XPCONNECT_GLOBAL)
         JS_SetReservedSlot(aGlobal,
@@ -134,7 +134,8 @@ XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal)
 }
 
 XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
-                                             JSObject* aGlobal)
+                                             JSObject* aGlobal,
+                                             nsISupports* aNative)
     :   mRuntime(ccx.GetRuntime()),
         mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
         mWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
@@ -165,7 +166,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
     }
 
     if (aGlobal)
-        SetGlobal(ccx, aGlobal);
+        SetGlobal(ccx, aGlobal, aNative);
 
     DEBUG_TrackNewScope(this);
     MOZ_COUNT_CTOR(XPCWrappedNativeScope);
@@ -226,32 +227,32 @@ js::Class XPC_WN_NoHelper_Proto_JSClass = {
 
 
 void
-XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
+XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal,
+                                 nsISupports* aNative)
 {
     // We allow for calling this more than once. This feature is used by
     // nsXPConnect::InitClassesWithNewWrappedGlobal.
 
     mGlobalJSObject = aGlobal;
     mScriptObjectPrincipal = nsnull;
-    // Now init our script object principal, if the new global has one
 
-    const JSClass* jsClass = js::GetObjectJSClass(aGlobal);
-    if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
-                             JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
-        // Our global has an nsISupports native pointer.  Let's
-        // see whether it's what we want.
-        nsISupports* priv = (nsISupports*)xpc_GetJSPrivate(aGlobal);
-        nsCOMPtr<nsIXPConnectWrappedNative> native =
-            do_QueryInterface(priv);
-        nsCOMPtr<nsIScriptObjectPrincipal> sop;
-        if (native) {
-            sop = do_QueryWrappedNative(native);
-        }
-        if (!sop) {
-            sop = do_QueryInterface(priv);
-        }
-        mScriptObjectPrincipal = sop;
+    // Try to find the native global object. If we didn't receive it explicitly,
+    // we might be able to find it in the private slot.
+    nsISupports* native = aNative;
+    if (!native &&
+        !(~js::GetObjectJSClass(aGlobal)->flags & (JSCLASS_HAS_PRIVATE |
+                                                   JSCLASS_PRIVATE_IS_NSISUPPORTS)))
+    {
+        // Get the private. It might be a WN, in which case we dig deeper.
+        native = (nsISupports*)xpc_GetJSPrivate(aGlobal);
+        nsCOMPtr<nsIXPConnectWrappedNative> wn = do_QueryInterface(native);
+        if (wn)
+            native = static_cast<XPCWrappedNative*>(native)->GetIdentityObject();
     }
+
+    // Now init our script object principal, if the new global has one.
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(native);
+    mScriptObjectPrincipal = sop;
 
     // Lookup 'globalObject.Object.prototype' for our wrapper's proto
     {
@@ -261,7 +262,15 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
         jsid idObj = mRuntime->GetStringID(XPCJSRuntime::IDX_OBJECT);
         jsid idProto = mRuntime->GetStringID(XPCJSRuntime::IDX_PROTOTYPE);
 
-        if (JS_GetPropertyById(ccx, aGlobal, idObj, &val) &&
+        // When creating a new scope to boostrap a new global, we don't yet have
+        // an XPCWrappedNative associated with the global object. However, the
+        // resolve hook on the JSClass assumes there is one. So we need to avoid
+        // resolving anything on the global object until things get a bit further
+        // along. As such, we manually resolve |Object| before accessing it below.
+        JSBool didResolve;
+
+        if (JS_ResolveStandardClass(ccx, aGlobal, idObj, &didResolve) &&
+            JS_GetPropertyById(ccx, aGlobal, idObj, &val) &&
             !JSVAL_IS_PRIMITIVE(val) &&
             JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
             !JSVAL_IS_PRIMITIVE(val)) {

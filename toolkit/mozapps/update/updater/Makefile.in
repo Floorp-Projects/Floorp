@@ -55,13 +55,13 @@ PROGRAM = updater$(BIN_SUFFIX)
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
 
-LOCAL_INCLUDES += -I$(srcdir)/../../readstrings \
-  -I$(srcdir)/../common
+LOCAL_INCLUDES += \
+  -I$(srcdir)/../common \
+  $(NULL)
 
 LIBS += \
   ../common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
   $(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
-  ../../readstrings/$(LIB_PREFIX)readstrings.$(LIB_SUFFIX) \
   $(BZ2_LIBS) \
   $(NULL)
 

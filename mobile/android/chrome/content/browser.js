@@ -138,6 +138,11 @@ XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
   return ContentAreaUtils;
 });
 
+XPCOMUtils.defineLazyGetter(this, "Rect", function() {
+  Cu.import("resource://gre/modules/Geometry.jsm");
+  return Rect;
+});
+
 function resolveGeckoURI(aURI) {
   if (aURI.indexOf("chrome://") == 0) {
     let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);
@@ -1523,17 +1528,23 @@ Tab.prototype = {
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.clipSubdocument = false;
 
+    // only set tab uri if uri is valid
+    let uri = null;
+    try {
+      uri = Services.io.newURI(aURL, null, null).spec;
+    } catch (e) {}
+
     this.id = ++gTabIDFactory;
 
     let message = {
       gecko: {
         type: "Tab:Added",
         tabID: this.id,
-        uri: aURL,
+        uri: uri,
         parentId: ("parentId" in aParams) ? aParams.parentId : -1,
         external: ("external" in aParams) ? aParams.external : false,
         selected: ("selected" in aParams) ? aParams.selected : true,
-        title: aParams.title || "",
+        title: aParams.title || aURL,
         delayLoad: aParams.delayLoad || false
       }
     };
@@ -2316,17 +2327,12 @@ var BrowserEventHandler = {
   },
  
   _zoomOut: function() {
-    this._zoomedToElement = null;
-    // zoom out, try to keep the center in the center of the page
-    setTimeout(function() {
-      sendMessageToJava({ gecko: { type: "Browser:ZoomToPageWidth"} });
-    }, 0);    
+    sendMessageToJava({ gecko: { type: "Browser:ZoomToPageWidth"} });
   },
 
   onDoubleTap: function(aData) {
     let data = JSON.parse(aData);
 
-    let rect = {};
     let win = BrowserApp.selectedBrowser.contentWindow;
     
     let zoom = BrowserApp.selectedTab._viewport.zoom;
@@ -2339,25 +2345,47 @@ var BrowserEventHandler = {
     win = element.ownerDocument.defaultView;
     while (element && win.getComputedStyle(element,null).display == "inline")
       element = element.parentNode;
-    if (!element || element == this._zoomedToElement) {
+
+    if (!element) {
       this._zoomOut();
-    } else if (element) {
+    } else {
       const margin = 15;
-      this._zoomedToElement = element;
-      rect = ElementTouchHelper.getBoundingContentRect(element);
+      const minDifference = -20;
+      const maxDifference = 20;
+      let rect = ElementTouchHelper.getBoundingContentRect(element);
 
-      let zoom = BrowserApp.selectedTab.viewport.zoom;
-      rect.x *= zoom;
-      rect.y *= zoom;
-      rect.w *= zoom;
-      rect.h *= zoom;
+      let viewport = BrowserApp.selectedTab.viewport;
+      let vRect = new Rect(viewport.x, viewport.y, viewport.width, viewport.height);
 
-      setTimeout(function() {
-        rect.type = "Browser:ZoomToRect";
-        rect.x -= margin;
-        rect.w += 2*margin;
-        sendMessageToJava({ gecko: rect });
-      }, 0);
+      let zoom = viewport.zoom;
+      let bRect = new Rect(Math.max(0,rect.x - margin),
+                           rect.y,
+                           rect.w + 2*margin,
+                           rect.h);
+      // constrict the rect to the screen width
+      bRect.width = Math.min(bRect.width, viewport.pageWidth/zoom - bRect.x);
+      bRect.scale(zoom, zoom);
+
+      let overlap = vRect.intersect(bRect);
+      let overlapArea = overlap.width*overlap.height;
+      // we want to know if the area of the element showing is near the max we can show
+      // on the screen at any time and if its already stretching the width of the screen
+      let availHeight = Math.min(bRect.width*vRect.height/vRect.width, bRect.height);
+      let showing = overlapArea/(bRect.width*availHeight);
+      let dw = (bRect.width - vRect.width)/zoom;
+      let dx = (bRect.x - vRect.x)/zoom;
+
+      if (showing > 0.9 &&
+          dx > minDifference && dx < maxDifference &&
+          dw > minDifference && dw < maxDifference) {
+            this._zoomOut();
+            return;
+      }
+
+      rect.type = "Browser:ZoomToRect";
+      rect.x = bRect.x; rect.y = bRect.y;
+      rect.w = bRect.width; rect.h = availHeight;
+      sendMessageToJava({ gecko: rect });
     }
   },
 

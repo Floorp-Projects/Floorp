@@ -147,7 +147,7 @@
 #include "nsILink.h"
 #include "nsBlobProtocolHandler.h"
 
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "nsIParser.h"
 #include "nsIContentSink.h"
 
@@ -3012,13 +3012,10 @@ nsDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
     mCharacterSet = aCharSetID;
 
 #ifdef DEBUG
-    nsCOMPtr<nsICharsetAlias> calias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
-    if (calias) {
-      nsCAutoString canonicalName;
-      calias->GetPreferred(aCharSetID, canonicalName);
-      NS_ASSERTION(canonicalName.Equals(aCharSetID),
-                   "charset name must be canonical");
-    }
+    nsCAutoString canonicalName;
+    nsCharsetAlias::GetPreferred(aCharSetID, canonicalName);
+    NS_ASSERTION(canonicalName.Equals(aCharSetID),
+                 "charset name must be canonical");
 #endif
 
     PRInt32 n = mCharSetObservers.Length();
@@ -3172,16 +3169,10 @@ nsDocument::TryChannelCharset(nsIChannel *aChannel,
     nsCAutoString charsetVal;
     nsresult rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICharsetAlias> calias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
-      if (calias) {
-        nsCAutoString preferred;
-        rv = calias->GetPreferred(charsetVal,
-                                  preferred);
-        if(NS_SUCCEEDED(rv)) {
-          aCharset = preferred;
-          aCharsetSource = kCharsetFromChannel;
-          return true;
-        }
+      rv = nsCharsetAlias::GetPreferred(charsetVal, aCharset);
+      if(NS_SUCCEEDED(rv)) {
+        aCharsetSource = kCharsetFromChannel;
+        return true;
       }
     }
   }

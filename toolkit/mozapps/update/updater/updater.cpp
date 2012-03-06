@@ -1563,23 +1563,9 @@ ReadMARChannelIDs(const NS_tchar *path, MARChannelStringTable *results)
   return result;
 }
 
-struct UpdateThreadData 
-{
-  UpdateThreadData(bool performMARChecks) :
-    mPerformMARChecks(performMARChecks)
-  {
-  }
-
-  bool mPerformMARChecks;
-};
-
 static void
 UpdateThreadFunc(void *param)
 {
-  UpdateThreadData *threadData = reinterpret_cast<UpdateThreadData*>(param);
-  bool performMARChecks = threadData && threadData->mPerformMARChecks;
-  delete threadData;
-  
   // open ZIP archive and process...
   int rv;
   NS_tchar dataFile[MAXPATHLEN];
@@ -1588,29 +1574,27 @@ UpdateThreadFunc(void *param)
 
   rv = gArchiveReader.Open(dataFile);
 
-  if (performMARChecks) {
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
-    if (rv == OK) {
-      rv = gArchiveReader.VerifySignature();
-    }
-
-    if (rv == OK) {
-      NS_tchar updateSettingsPath[MAX_TEXT_LEN];
-      NS_tsnprintf(updateSettingsPath, 
-                   sizeof(updateSettingsPath) / sizeof(updateSettingsPath[0]),
-                   NS_T("%supdate-settings.ini"), gDestPath);
-      MARChannelStringTable MARStrings;
-      if (ReadMARChannelIDs(updateSettingsPath, &MARStrings) != OK) {
-        // If we can't read from update-settings.ini then we shouldn't impose
-        // a MAR restriction.  Some installations won't even include this file.
-        MARStrings.MARChannelID[0] = '\0';
-      }
-
-      rv = gArchiveReader.VerifyProductInformation(MARStrings.MARChannelID,
-                                                   MOZ_APP_VERSION);
-    }
-#endif
+  if (rv == OK) {
+    rv = gArchiveReader.VerifySignature();
   }
+
+  if (rv == OK) {
+    NS_tchar updateSettingsPath[MAX_TEXT_LEN];
+    NS_tsnprintf(updateSettingsPath, 
+                 sizeof(updateSettingsPath) / sizeof(updateSettingsPath[0]),
+                 NS_T("%supdate-settings.ini"), gDestPath);
+    MARChannelStringTable MARStrings;
+    if (ReadMARChannelIDs(updateSettingsPath, &MARStrings) != OK) {
+      // If we can't read from update-settings.ini then we shouldn't impose
+      // a MAR restriction.  Some installations won't even include this file.
+      MARStrings.MARChannelID[0] = '\0';
+    }
+
+    rv = gArchiveReader.VerifyProductInformation(MARStrings.MARChannelID,
+                                                 MOZ_APP_VERSION);
+  }
+#endif
 
   if (rv == OK) {
     rv = DoUpdate();
@@ -2123,7 +2107,7 @@ int NS_main(int argc, NS_tchar **argv)
   // before QuitProgressUI has been called, so wait for UpdateThreadFunc to
   // terminate.
   Thread t;
-  if (t.Run(UpdateThreadFunc, new UpdateThreadData(usingService)) == 0) {
+  if (t.Run(UpdateThreadFunc, NULL) == 0) {
     ShowProgressUI();
   }
   t.Join();

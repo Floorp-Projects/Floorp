@@ -180,7 +180,14 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 
     void debugDump(in short depth);
 
-    void refreshPrototype();
+    /*
+     * This finishes initializing a wrapped global, doing the parts that we
+     * couldn't do while the global and window were being simultaneously
+     * bootstrapped. This should be called exactly once, and only for wrapped
+     * globals.
+     */
+    void finishInitForWrappedGlobal();
+
     /* 
      * This returns a pointer into the instance and care should be taken
      * to make sure the pointer is not kept past the life time of the
@@ -398,7 +405,7 @@ enum nsGCType {
 };
 %}
 
-[uuid(e92bf5e0-494c-11e1-b86c-0800200c9a66)]
+[uuid(0213cb40-2dd5-4ac8-a9d3-157bd53c3824)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -421,12 +428,8 @@ interface nsIXPConnect : nsISupports
      *
      * @param aJSContext the context to use while creating the global object.
      * @param aCOMObj the native object that represents the global object.
-     * @param aIID the IID used to wrap the global object.
      * @param aPrincipal the principal of the code that will run in this
      *                   compartment. Can be null if not on the main thread.
-     * @param aExtraPtr must be passed if aPrincipal is null. Used to separate
-     *                  code from the same principal into different
-     *                  compartments, as for sandboxes.
      * @param aFlags one of the flags below specifying what options this
      *               global object wants.
      */
@@ -434,9 +437,7 @@ interface nsIXPConnect : nsISupports
     initClassesWithNewWrappedGlobal(
                   in JSContextPtr aJSContext,
                   in nsISupports  aCOMObj,
-                  in nsIIDRef     aIID,
                   in nsIPrincipal aPrincipal,
-                  in nsISupports  aExtraPtr,
                   in PRUint32     aFlags);
 
     const PRUint32 INIT_JS_STANDARD_CLASSES  = 1 << 0;
