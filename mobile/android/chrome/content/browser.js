@@ -594,6 +594,10 @@ var BrowserApp = {
       return;
     }
 
+    // There's nothing to do if the tab is already selected
+    if (aTab == this.selectedTab)
+      return;
+
     let message = {
       gecko: {
         type: "Tab:Select",
@@ -1569,6 +1573,7 @@ Tab.prototype = {
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
+    this.browser.addEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("PluginClickToPlay", this, true);
     this.browser.addEventListener("pagehide", this, true);
@@ -1611,6 +1616,7 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
+    this.browser.removeEventListener("DOMWillOpenModalDialog", this, true);
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("PluginClickToPlay", this, true);
     this.browser.removeEventListener("pagehide", this, true);
@@ -1885,6 +1891,17 @@ Tab.prototype = {
             }
           });
         }
+        break;
+      }
+
+      case "DOMWillOpenModalDialog": {
+        if (!aEvent.isTrusted)
+          return;
+
+        // We're about to open a modal dialog, make sure the opening
+        // tab is brought to the front.
+        let tab = BrowserApp.getTabForWindow(aEvent.target.top);
+        BrowserApp.selectTab(tab);
         break;
       }
 
