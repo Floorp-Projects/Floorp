@@ -2024,6 +2024,8 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32 args, const Register &scra
     dynamicAlignment_ = true;
 
     ma_mov(sp, scratch);
+
+    // Force sp to be aligned
     ma_and(Imm32(~(StackAlignment - 1)), sp, sp);
     ma_push(scratch);
 }
@@ -2051,7 +2053,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
             floatArgsInGPR[destReg.code() >> 1] = VFPRegister(from.floatReg());
             useResolver = false;
         } else {
-            dest = MoveOperand(dest);
+            dest = MoveOperand(destReg);
         }
     } else {
         uint32 disp = GetArgStackDisp(usedSlots_);
@@ -2090,9 +2092,13 @@ void
 MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
 {
     JS_ASSERT(inCall_);
-    uint32 stackAdjust = ((usedSlots_ - 4 > 0) ? usedSlots_ - 4 : 0) * STACK_SLOT_SIZE;
+    uint32 stackAdjust = ((usedSlots_ > NumArgRegs) ? usedSlots_ - NumArgRegs : 0) * STACK_SLOT_SIZE;
     if (!dynamicAlignment_)
-        stackAdjust += 8-(framePushed_ & 7);
+        stackAdjust +=
+            ComputeByteAlignment(framePushed_ + stackAdjust, StackAlignment);
+    else
+        // STACK_SLOT_SIZE account for the saved stack pointer pushed by setupUnalignedABICall
+        stackAdjust += ComputeByteAlignment(stackAdjust + STACK_SLOT_SIZE, StackAlignment);
 
     reserveStack(stackAdjust);
     // Position all arguments.
