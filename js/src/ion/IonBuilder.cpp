@@ -1832,9 +1832,9 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     // Get the low and high from the tableswitch
     jsbytecode *pc2 = pc;
     pc2 += JUMP_OFFSET_LEN;
-    jsint low = GET_JUMP_OFFSET(pc2);
+    int low = GET_JUMP_OFFSET(pc2);
     pc2 += JUMP_OFFSET_LEN;
-    jsint high = GET_JUMP_OFFSET(pc2);
+    int high = GET_JUMP_OFFSET(pc2);
     pc2 += JUMP_OFFSET_LEN;
 
     // Create MIR instruction
@@ -1848,7 +1848,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
 
     // Create cases
     jsbytecode *casepc = NULL;
-    for (jsint i = 0; i < high-low+1; i++) {
+    for (int i = 0; i < high-low+1; i++) {
         casepc = pc + GET_JUMP_OFFSET(pc2);
 
         JS_ASSERT(casepc >= pc && casepc <= exitpc);
