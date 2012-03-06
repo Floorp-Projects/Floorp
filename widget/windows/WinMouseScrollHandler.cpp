@@ -141,6 +141,25 @@ MouseScrollHandler::ProcessMessage(nsWindow* aWindow, UINT msg,
       }
       return false;
 
+    case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
+      GetInstance()->
+        ProcessNativeMouseWheelMessage(aWindow, msg, wParam, lParam);
+      // We don't need to call next wndproc for WM_MOUSEWHEEL and
+      // WM_MOUSEHWHEEL.  We should consume them always.  If the messages
+      // would be handled by our window again, it caused making infinite
+      // message loop.
+      aEatMessage = true;
+      *aRetValue = (msg != WM_MOUSEHWHEEL);
+      return true;
+
+    case WM_HSCROLL:
+    case WM_VSCROLL:
+      aEatMessage =
+        GetInstance()->ProcessNativeScrollMessage(aWindow, msg, wParam, lParam);
+      *aRetValue = 0;
+      return true;
+
     case MOZ_WM_MOUSEVWHEEL:
     case MOZ_WM_MOUSEHWHEEL:
       GetInstance()->HandleMouseWheelMessage(aWindow, msg, wParam, lParam);
@@ -302,6 +321,202 @@ MouseScrollHandler::GetScrollTargetInfo(
      result.actualScrollAction, result.pixelsPerUnit));
 
   return result;
+}
+
+void
+MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindow* aWindow,
+                                                   UINT aMessage,
+                                                   WPARAM aWParam,
+                                                   LPARAM aLParam)
+{
+  POINT point = ComputeMessagePos(aMessage, aWParam, aLParam);
+
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::ProcessNativeMouseWheelMessage: aWindow=%p, "
+     "aMessage=%s, wParam=0x%08X, lParam=0x%08X, point: { x=%d, y=%d }",
+     aWindow, aMessage == WM_MOUSEWHEEL ? "WM_MOUSEWHEEL" :
+              aMessage == WM_MOUSEHWHEEL ? "WM_MOUSEHWHEEL" :
+              aMessage == WM_VSCROLL ? "WM_VSCROLL" : "WM_HSCROLL",
+     aWParam, aLParam, point.x, point.y));
+  LOG_KEYSTATE();
+
+  HWND underCursorWnd = ::WindowFromPoint(point);
+  if (!underCursorWnd) {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::ProcessNativeMouseWheelMessage: "
+       "No window is not found under the cursor"));
+    return;
+  }
+
+  if (Device::Elantech::IsPinchHackNeeded() &&
+      Device::Elantech::IsHelperWindow(underCursorWnd)) {
+    // The Elantech driver places a window right underneath the cursor
+    // when sending a WM_MOUSEWHEEL event to us as part of a pinch-to-zoom
+    // gesture.  We detect that here, and search for our window that would
+    // be beneath the cursor if that window wasn't there.
+    underCursorWnd = WinUtils::FindOurWindowAtPoint(point);
+    if (!underCursorWnd) {
+      PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+        ("MouseScroll::ProcessNativeMouseWheelMessage: "
+         "Our window is not found under the Elantech helper window"));
+      return;
+    }
+  }
+
+  // Handle most cases first.  If the window under mouse cursor is our window
+  // except plugin window (MozillaWindowClass), we should handle the message
+  // on the window.
+  if (WinUtils::IsOurProcessWindow(underCursorWnd)) {
+    nsWindow* destWindow = WinUtils::GetNSWindowPtr(underCursorWnd);
+    if (!destWindow) {
+      PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+        ("MouseScroll::ProcessNativeMouseWheelMessage: "
+         "Found window under the cursor isn't managed by nsWindow..."));
+      HWND wnd = ::GetParent(underCursorWnd);
+      for (; wnd; wnd = ::GetParent(wnd)) {
+        destWindow = WinUtils::GetNSWindowPtr(wnd);
+        if (destWindow) {
+          break;
+        }
+      }
+      if (!wnd) {
+        PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+          ("MouseScroll::ProcessNativeMouseWheelMessage: Our window which is "
+           "managed by nsWindow is not found under the cursor"));
+        return;
+      }
+    }
+
+    MOZ_ASSERT(destWindow, "destWindow must not be NULL");
+
+    // If the found window is our plugin window, it means that the message
+    // has been handled by the plugin but not consumed.  We should handle the
+    // message on its parent window.  However, note that the DOM event may
+    // cause accessing the plugin.  Therefore, we should unlock the plugin
+    // process by using PostMessage().
+    if (destWindow->GetWindowType() == eWindowType_plugin) {
+      destWindow = destWindow->GetParentWindow(false);
+      if (!destWindow) {
+        PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+          ("MouseScroll::ProcessNativeMouseWheelMessage: "
+           "Our window which is a parent of a plugin window is not found"));
+        return;
+      }
+    }
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::ProcessNativeMouseWheelMessage: Succeeded, "
+       "Posting internal message to an nsWindow (%p)...",
+       destWindow));
+    UINT internalMessage = WinUtils::GetInternalMessage(aMessage);
+    ::PostMessage(destWindow->GetWindowHandle(), internalMessage,
+                  aWParam, aLParam);
+    return;
+  }
+
+  // If the window under cursor is not in our process, it means:
+  // 1. The window may be a plugin window (GeckoPluginWindow or its descendant).
+  // 2. The window may be another application's window.
+  HWND pluginWnd = WinUtils::FindOurProcessWindow(underCursorWnd);
+  if (!pluginWnd) {
+    // If there is no plugin window in ancestors of the window under cursor,
+    // the window is for another applications (case 2).
+    // We don't need to handle this message.
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::ProcessNativeMouseWheelMessage: "
+       "Our window is not found under the cursor"));
+    return;
+  }
+
+  // If we're a plugin window (MozillaWindowClass) and cursor in this window,
+  // the message shouldn't go to plugin's wndproc again.  So, we should handle
+  // it on parent window.  However, note that the DOM event may cause accessing
+  // the plugin.  Therefore, we should unlock the plugin process by using
+  // PostMessage().
+  if (aWindow->GetWindowType() == eWindowType_plugin &&
+      aWindow->GetWindowHandle() == pluginWnd) {
+    nsWindow* destWindow = aWindow->GetParentWindow(false);
+    if (!destWindow) {
+      PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+        ("MouseScroll::ProcessNativeMouseWheelMessage: Our normal window which "
+         "is a parent of this plugin window is not found"));
+      return;
+    }
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::ProcessNativeMouseWheelMessage: Succeeded, "
+       "Posting internal message to an nsWindow (%p) which is parent of this "
+       "plugin window...",
+       destWindow));
+    UINT internalMessage = WinUtils::GetInternalMessage(aMessage);
+    ::PostMessage(destWindow->GetWindowHandle(), internalMessage,
+                  aWParam, aLParam);
+    return;
+  }
+
+  // If the window is a part of plugin, we should post the message to it.
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::ProcessNativeMouseWheelMessage: Succeeded, "
+     "Redirecting the message to a window which is a plugin child window"));
+  ::PostMessage(underCursorWnd, aMessage, aWParam, aLParam);
+}
+
+bool
+MouseScrollHandler::ProcessNativeScrollMessage(nsWindow* aWindow,
+                                               UINT aMessage,
+                                               WPARAM aWParam,
+                                               LPARAM aLParam)
+{
+  if (aLParam || mUserPrefs.IsScrollMessageHandledAsWheelMessage()) {
+    // Scroll message generated by Thinkpad Trackpoint Driver or similar
+    // Treat as a mousewheel message and scroll appropriately
+    ProcessNativeMouseWheelMessage(aWindow, aMessage, aWParam, aLParam);
+    // Always consume the scroll message if we try to emulate mouse wheel
+    // action.
+    return true;
+  }
+
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::ProcessNativeScrollMessage: aWindow=%p, "
+     "aMessage=%s, wParam=0x%08X, lParam=0x%08X",
+     aWindow, aMessage == WM_VSCROLL ? "WM_VSCROLL" : "WM_HSCROLL",
+     aWParam, aLParam));
+
+  // Scroll message generated by external application
+  nsContentCommandEvent commandEvent(true, NS_CONTENT_COMMAND_SCROLL, aWindow);
+
+  commandEvent.mScroll.mIsHorizontal = (aMessage == WM_HSCROLL);
+
+  switch (LOWORD(aWParam)) {
+    case SB_LINEUP:   // SB_LINELEFT
+      commandEvent.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Line;
+      commandEvent.mScroll.mAmount = -1;
+      break;
+    case SB_LINEDOWN: // SB_LINERIGHT
+      commandEvent.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Line;
+      commandEvent.mScroll.mAmount = 1;
+      break;
+    case SB_PAGEUP:   // SB_PAGELEFT
+      commandEvent.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Page;
+      commandEvent.mScroll.mAmount = -1;
+      break;
+    case SB_PAGEDOWN: // SB_PAGERIGHT
+      commandEvent.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Page;
+      commandEvent.mScroll.mAmount = 1;
+      break;
+    case SB_TOP:      // SB_LEFT
+      commandEvent.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Whole;
+      commandEvent.mScroll.mAmount = -1;
+      break;
+    case SB_BOTTOM:   // SB_RIGHT
+      commandEvent.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Whole;
+      commandEvent.mScroll.mAmount = 1;
+      break;
+    default:
+      return false;
+  }
+  // XXX If this is a plugin window, we should dispatch the event from
+  //     parent window.
+  DispatchEvent(aWindow, commandEvent);
+  return true;
 }
 
 void
