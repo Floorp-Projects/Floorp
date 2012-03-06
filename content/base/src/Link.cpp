@@ -41,6 +41,7 @@
 
 #include "nsEventStates.h"
 #include "nsIURL.h"
+#include "nsISizeOf.h"
 
 #include "nsContentUtils.h"
 #include "nsEscape.h"
@@ -529,6 +530,25 @@ Link::SetHrefAttribute(nsIURI *aURI)
   (void)aURI->GetSpec(href);
   (void)mElement->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
                           NS_ConvertUTF8toUTF16(href), true);
+}
+
+size_t
+Link::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+
+  if (mCachedURI) {
+    nsCOMPtr<nsISizeOf> iface = do_QueryInterface(mCachedURI);
+    if (iface) {
+      n += iface->SizeOfIncludingThis(aMallocSizeOf);
+    }
+  }
+
+  // The following members don't need to be measured:
+  // - mElement, because it is a pointer-to-self used to avoid QIs
+  // - mHistory, because it is non-owning
+
+  return n;
 }
 
 } // namespace dom

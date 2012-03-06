@@ -89,15 +89,15 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 
 JSBool
 XPCWrappedNativeProto::Init(XPCCallContext& ccx,
-                            JSBool isGlobal,
-                            const XPCNativeScriptableCreateInfo* scriptableCreateInfo)
+                            const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
+                            bool callPostCreatePrototype)
 {
     nsIXPCScriptable *callback = scriptableCreateInfo ?
                                  scriptableCreateInfo->GetCallback() :
                                  nsnull;
     if (callback) {
         mScriptableInfo =
-            XPCNativeScriptableInfo::Construct(ccx, isGlobal, scriptableCreateInfo);
+            XPCNativeScriptableInfo::Construct(ccx, scriptableCreateInfo);
         if (!mScriptableInfo)
             return false;
     }
@@ -128,24 +128,38 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
                                         mScope->GetPrototypeJSObject(),
                                         true, parent);
 
-    JSBool ok = !!mJSProtoObject;
-
-    if (ok) {
+    bool success = !!mJSProtoObject;
+    if (success) {
         JS_SetPrivate(mJSProtoObject, this);
-        if (callback) {
-            nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
-            if (NS_FAILED(rv)) {
-                JS_SetPrivate(mJSProtoObject, nsnull);
-                mJSProtoObject = nsnull;
-                XPCThrower::Throw(rv, ccx);
-                return false;
-            }
-        }
+        if (callPostCreatePrototype)
+            success = CallPostCreatePrototype(ccx);
     }
 
     DEBUG_ReportShadowedMembers(mSet, nsnull, this);
 
-    return ok;
+    return success;
+}
+
+bool
+XPCWrappedNativeProto::CallPostCreatePrototype(XPCCallContext& ccx)
+{
+    // Nothing to do if we don't have a scriptable callback.
+    nsIXPCScriptable *callback = mScriptableInfo ? mScriptableInfo->GetCallback()
+                                                 : nsnull;
+    if (!callback)
+        return true;
+
+    // Call the helper. This can handle being called if it's not implemented,
+    // so we don't have to check any sort of "want" here. See xpc_map_end.h.
+    nsresult rv = callback->PostCreatePrototype(ccx, mJSProtoObject);
+    if (NS_FAILED(rv)) {
+        JS_SetPrivate(mJSProtoObject, nsnull);
+        mJSProtoObject = nsnull;
+        XPCThrower::Throw(rv, ccx);
+        return false;
+    }
+
+    return true;
 }
 
 void
@@ -195,8 +209,8 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
                                     XPCWrappedNativeScope* scope,
                                     nsIClassInfo* classInfo,
                                     const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
-                                    JSBool isGlobal,
-                                    QITableEntry* offsets)
+                                    QITableEntry* offsets,
+                                    bool callPostCreatePrototype)
 {
     NS_ASSERTION(scope, "bad param");
     NS_ASSERTION(classInfo, "bad param");
@@ -226,7 +240,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
 
     proto = new XPCWrappedNativeProto(scope, classInfo, ciFlags, set, offsets);
 
-    if (!proto || !proto->Init(ccx, isGlobal, scriptableCreateInfo)) {
+    if (!proto || !proto->Init(ccx, scriptableCreateInfo, callPostCreatePrototype)) {
         delete proto.get();
         return nsnull;
     }

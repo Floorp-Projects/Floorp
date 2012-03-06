@@ -40,7 +40,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsICharsetConverterManager.h"
@@ -308,10 +308,8 @@ nsCharsetConverterManager::GetCharsetAlias(const char * aCharset,
   // We try to obtain the preferred name for this charset from the charset 
   // aliases.
   nsresult rv;
-  nsCOMPtr<nsICharsetAlias> csAlias(do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = csAlias->GetPreferred(nsDependentCString(aCharset), aResult);
+  rv = nsCharsetAlias::GetPreferred(nsDependentCString(aCharset), aResult);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

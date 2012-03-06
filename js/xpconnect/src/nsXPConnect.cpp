@@ -1082,8 +1082,6 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     if (!ac.enter(ccx, aGlobalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    xpc_InitJSxIDClassObjects();
-
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::GetNewOrUsed(ccx, aGlobalJSObj);
 
@@ -1102,20 +1100,6 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
 
     return NS_OK;
 }
-
-static JSBool
-TempGlobalResolve(JSContext *aJSContext, JSObject *obj, jsid id)
-{
-    JSBool resolved;
-    return JS_ResolveStandardClass(aJSContext, obj, id, &resolved);
-}
-
-static JSClass xpcTempGlobalClass = {
-    "xpcTempGlobalClass", JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_StrictPropertyStub,
-    JS_EnumerateStub, TempGlobalResolve, JS_ConvertStub,   nsnull,
-    JSCLASS_NO_OPTIONAL_MEMBERS
-};
 
 static bool
 CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
@@ -1205,7 +1189,12 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
     }
 
 #ifdef DEBUG
-    if (clasp->flags & JSCLASS_XPCONNECT_GLOBAL) {
+    // Verify that the right trace hook is called. Note that this doesn't
+    // work right for wrapped globals, since the tracing situation there is
+    // more complicated. Manual inspection shows that they do the right thing.
+    if (clasp->flags & JSCLASS_XPCONNECT_GLOBAL &&
+        !((js::Class*)clasp)->ext.isWrappedNative)
+    {
         VerifyTraceXPCGlobalCalledTracer trc;
         JS_TracerInit(&trc.base, JS_GetRuntime(cx), VerifyTraceXPCGlobalCalled);
         trc.ok = false;
@@ -1220,120 +1209,55 @@ xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
 NS_IMETHODIMP
 nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
                                              nsISupports *aCOMObj,
-                                             const nsIID & aIID,
                                              nsIPrincipal * aPrincipal,
-                                             nsISupports * aExtraPtr,
                                              PRUint32 aFlags,
                                              nsIXPConnectJSObjectHolder **_retval)
 {
     NS_ASSERTION(aJSContext, "bad param");
     NS_ASSERTION(aCOMObj, "bad param");
     NS_ASSERTION(_retval, "bad param");
-    NS_ASSERTION(aPrincipal, "must be able to find a compartment");
 
-    // XXX This is not pretty. We make a temporary global object and
-    // init it with all the Components object junk just so we have a
-    // parent with an xpc scope to use when wrapping the object that will
-    // become the 'real' global.
+    // We pass null for the 'extra' pointer during global object creation, so
+    // we need to have a principal.
+    MOZ_ASSERT(aPrincipal);
 
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
 
-    JSCompartment* compartment;
-    JSObject* tempGlobal;
-
-    nsresult rv = xpc_CreateGlobalObject(ccx, &xpcTempGlobalClass, aPrincipal,
-                                         aExtraPtr, false, &tempGlobal, &compartment);
+    // Call into XPCWrappedNative to make a new global object, scope, and global
+    // prototype.
+    xpcObjectHelper helper(aCOMObj);
+    MOZ_ASSERT(helper.GetScriptableFlags() & nsIXPCScriptable::IS_GLOBAL_OBJECT);
+    nsRefPtr<XPCWrappedNative> wrappedGlobal;
+    nsresult rv =
+        XPCWrappedNative::WrapNewGlobal(ccx, helper, aPrincipal,
+                                        aFlags & nsIXPConnect::INIT_JS_STANDARD_CLASSES,
+                                        getter_AddRefs(wrappedGlobal));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Grab a copy of the global and enter its compartment.
+    JSObject *global = wrappedGlobal->GetFlatJSObject();
+    MOZ_ASSERT(!js::GetObjectParent(global));
     JSAutoEnterCompartment ac;
-    if (!ac.enter(ccx, tempGlobal))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-    ccx.SetScopeForNewJSObjects(tempGlobal);
+    if (!ac.enter(ccx, global))
+        return NS_ERROR_UNEXPECTED;
 
+    // Apply the system flag, if requested.
     bool system = (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) != 0;
-    if (system && !JS_MakeSystemObject(aJSContext, tempGlobal))
+    if (system && !JS_MakeSystemObject(aJSContext, global))
         return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    jsval v;
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    {
-        // Scope for our auto-marker; it just needs to keep tempGlobal alive
-        // long enough for InitClasses and WrapNative to do their work
-        AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(tempGlobal));
-
-        if (NS_FAILED(InitClasses(aJSContext, tempGlobal)))
-            return UnexpectedFailure(NS_ERROR_FAILURE);
-
-        nsresult rv;
-        xpcObjectHelper helper(aCOMObj);
-        if (!XPCConvert::NativeInterface2JSObject(ccx, &v,
-                                                  getter_AddRefs(holder),
-                                                  helper, &aIID, nsnull,
-                                                  false, OBJ_IS_GLOBAL, &rv))
-            return UnexpectedFailure(rv);
-
-        NS_ASSERTION(NS_SUCCEEDED(rv) && holder, "Didn't wrap properly");
-    }
-
-    JSObject* globalJSObj = JSVAL_TO_OBJECT(v);
-    if (!globalJSObj)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    if (aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT)
-        NS_ASSERTION(JS_IsSystemObject(aJSContext, globalJSObj), "huh?!");
-
-    // voodoo to fixup scoping and parenting...
-
-    MOZ_ASSERT(!js::GetObjectParent(globalJSObj));
-
-    JSObject* oldGlobal = JS_GetGlobalObject(aJSContext);
-    if (!oldGlobal || oldGlobal == tempGlobal)
-        JS_SetGlobalObject(aJSContext, globalJSObj);
-
-    if ((aFlags & nsIXPConnect::INIT_JS_STANDARD_CLASSES) &&
-        !JS_InitStandardClasses(aJSContext, globalJSObj))
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    XPCWrappedNative* wrapper =
-        reinterpret_cast<XPCWrappedNative*>(holder.get());
-    XPCWrappedNativeScope* scope = wrapper->GetScope();
-
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    // Note: This call cooperates with a call to wrapper->RefreshPrototype()
-    // in nsJSEnvironment::SetOuterObject in order to ensure that the
-    // prototype defines its constructor on the right global object.
-    if (wrapper->GetProto()->GetScriptableInfo())
-        scope->RemoveWrappedNativeProtos();
-
-    NS_ASSERTION(scope->GetGlobalJSObject() == tempGlobal, "stealing scope!");
-
-    scope->SetGlobal(ccx, globalJSObj);
-
-    JSObject* protoJSObject = wrapper->HasProto() ?
-                                    wrapper->GetProto()->GetJSProtoObject() :
-                                    globalJSObj;
-    if (protoJSObject) {
-        if (protoJSObject != globalJSObj)
-            JS_SetParent(aJSContext, protoJSObject, globalJSObj);
-        if (!JS_SplicePrototype(aJSContext, protoJSObject, scope->GetPrototypeJSObject()))
-            return UnexpectedFailure(NS_ERROR_FAILURE);
-    }
 
     if (!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
         // XPCCallContext gives us an active request needed to save/restore.
-        if (!nsXPCComponents::AttachNewComponentsObject(ccx, scope, globalJSObj))
+        if (!nsXPCComponents::AttachNewComponentsObject(ccx, wrappedGlobal->GetScope(), global))
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
         if (XPCPerThreadData::IsMainThread(ccx)) {
-            if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, globalJSObj))
+            if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, global))
                 return UnexpectedFailure(NS_ERROR_FAILURE);
         }
     }
 
-    NS_ADDREF(*_retval = holder);
-
+    *_retval = wrappedGlobal.forget().get();
     return NS_OK;
 }
 
@@ -1370,8 +1294,7 @@ NativeInterface2JSObject(XPCLazyCallContext & lccx,
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
     if (!XPCConvert::NativeInterface2JSObject(lccx, aVal, aHolder, helper, aIID,
-                                              nsnull, aAllowWrapping,
-                                              OBJ_IS_NOT_GLOBAL, &rv))
+                                              nsnull, aAllowWrapping, &rv))
         return rv;
 
 #ifdef DEBUG
@@ -2118,8 +2041,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, sciProto);
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
-    proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo,
-                                                &sciProto, OBJ_IS_NOT_GLOBAL);
+    proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo, &sciProto);
     if (!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 

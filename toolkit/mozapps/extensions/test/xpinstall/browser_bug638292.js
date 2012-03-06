@@ -13,9 +13,13 @@ function test() {
 
 function check_load(aCallback) {
   gBrowser.addEventListener("load", function(aEvent) {
-    // SeaMonkey needs to deal with intermediate "about:blank" document(s).
-    if (!aEvent.target.location) {
-      info("Ignoring about:blank load. (Expected (a few times) on SeaMonkey only.)");
+    if (!gBrowser.browsers[2] ||
+        aEvent.target != gBrowser.browsers[2].contentDocument) {
+      // SeaMonkey tabbrowser needs to deal with additional loads.
+      if (navigator.userAgent.match(/ SeaMonkey\//))
+        info("Ignoring unrelated load on SeaMonkey. (Expected 2-3 times.)");
+      else
+        ok(false, "Ignoring unrelated load on Firefox. (Should never happen!)");
       return;
     }
 

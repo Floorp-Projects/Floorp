@@ -2066,14 +2066,22 @@ GetScriptReferent(JSObject *obj)
     return static_cast<JSScript *>(obj->getPrivate());
 }
 
+static inline void
+SetScriptReferent(JSObject *obj, JSScript *script)
+{
+    JS_ASSERT(obj->getClass() == &DebuggerScript_class);
+    obj->setPrivate(script);
+}
+
 static void
 DebuggerScript_trace(JSTracer *trc, JSObject *obj)
 {
     if (!trc->runtime->gcCurrentCompartment) {
         /* This comes from a private pointer, so no barrier needed. */
-        if (JSScript *script = GetScriptReferent(obj))
-            MarkScriptUnbarriered(trc, script, "Debugger.Script referent");
-
+        if (JSScript *script = GetScriptReferent(obj)) {
+            MarkScriptUnbarriered(trc, &script, "Debugger.Script referent");
+            SetScriptReferent(obj, script);
+        }
     }
 }
 
@@ -3205,8 +3213,10 @@ DebuggerObject_trace(JSTracer *trc, JSObject *obj)
          * There is a barrier on private pointers, so the Unbarriered marking
          * is okay.
          */
-        if (JSObject *referent = (JSObject *) obj->getPrivate())
-            MarkObjectUnbarriered(trc, referent, "Debugger.Object referent");
+        if (JSObject *referent = (JSObject *) obj->getPrivate()) {
+            MarkObjectUnbarriered(trc, &referent, "Debugger.Object referent");
+            obj->setPrivate(referent);
+        }
     }
 }
 
@@ -3847,8 +3857,10 @@ DebuggerEnv_trace(JSTracer *trc, JSObject *obj)
          * There is a barrier on private pointers, so the Unbarriered marking
          * is okay.
          */
-        if (Env *referent = (JSObject *) obj->getPrivate())
-            MarkObjectUnbarriered(trc, referent, "Debugger.Environment referent");
+        if (Env *referent = (JSObject *) obj->getPrivate()) {
+            MarkObjectUnbarriered(trc, &referent, "Debugger.Environment referent");
+            obj->setPrivate(referent);
+        }
     }
 }
 

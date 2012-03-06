@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -34,27 +34,18 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsCharsetAlias_h__
-#define nsCharsetAlias_h__
 
-#include "nsICharsetAlias.h"
+#ifndef nsCharsetAlias_h___
+#define nsCharsetAlias_h___
 
-//==============================================================
-class nsCharsetAlias2 : public nsICharsetAlias
+#include "nscore.h"
+#include "nsStringGlue.h"
+
+class nsCharsetAlias
 {
-  NS_DECL_ISUPPORTS
-
 public:
-
-  nsCharsetAlias2();
-  virtual ~nsCharsetAlias2();
-
-  NS_IMETHOD GetPreferred(const nsACString& aAlias, nsACString& aResult);
-
-  NS_IMETHOD Equals(const nsACString& aCharset1, const nsACString& aCharset2, bool* oResult) ;
-  
+   static nsresult GetPreferred(const nsACString& aAlias, nsACString& aResult);
+   static nsresult Equals(const nsACString& aCharset1, const nsACString& aCharset2, bool* aResult);
 };
 
-#endif // nsCharsetAlias_h__
-
-
+#endif /* nsCharsetAlias_h___ */
