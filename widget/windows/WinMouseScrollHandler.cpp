@@ -181,6 +181,94 @@ MouseScrollHandler::GetModifierKeyState()
   return result;
 }
 
+MouseScrollHandler::ScrollTargetInfo
+MouseScrollHandler::GetScrollTargetInfo(
+                      nsWindow* aWindow,
+                      const EventInfo& aEventInfo,
+                      const nsModifierKeyState& aModifierKeyState)
+{
+  ScrollTargetInfo result;
+  result.dispatchPixelScrollEvent = false;
+  result.reversePixelScrollDirection = false;
+  result.actualScrollAmount = aEventInfo.GetScrollAmount();
+  result.actualScrollAction = nsQueryContentEvent::SCROLL_ACTION_NONE;
+  result.pixelsPerUnit = 0;
+  if (!mUserPrefs.IsPixelScrollingEnabled()) {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::GetPixelScrollInfo: Succeeded, aWindow=%p, "
+       "result: { dispatchPixelScrollEvent: %s, actualScrollAmount: %d }",
+       aWindow, GetBoolName(result.dispatchPixelScrollEvent),
+       result.actualScrollAmount));
+    return result;
+  }
+
+  nsMouseScrollEvent testEvent(true, NS_MOUSE_SCROLL, aWindow);
+  aWindow->InitEvent(testEvent);
+  testEvent.scrollFlags = aEventInfo.GetScrollFlags();
+  testEvent.isShift     = aModifierKeyState.mIsShiftDown;
+  testEvent.isControl   = aModifierKeyState.mIsControlDown;
+  testEvent.isMeta      = false;
+  testEvent.isAlt       = aModifierKeyState.mIsAltDown;
+
+  testEvent.delta       = result.actualScrollAmount;
+  if ((aEventInfo.IsVertical() && aEventInfo.IsPositive()) ||
+      (!aEventInfo.IsVertical() && !aEventInfo.IsPositive())) {
+    testEvent.delta *= -1;
+  }
+
+  nsQueryContentEvent queryEvent(true, NS_QUERY_SCROLL_TARGET_INFO, aWindow);
+  aWindow->InitEvent(queryEvent);
+  queryEvent.InitForQueryScrollTargetInfo(&testEvent);
+  DispatchEvent(aWindow, queryEvent);
+
+  // If the necessary interger isn't larger than 0, we should assume that
+  // the event failed for us.
+  if (!queryEvent.mSucceeded) {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::GetPixelScrollInfo: Failed to query the "
+       "scroll target information, aWindow=%p"
+       "result: { dispatchPixelScrollEvent: %s, actualScrollAmount: %d }",
+       aWindow, GetBoolName(result.dispatchPixelScrollEvent),
+       result.actualScrollAmount));
+    return result;
+  }
+
+  result.actualScrollAction = queryEvent.mReply.mComputedScrollAction;
+
+  if (result.actualScrollAction == nsQueryContentEvent::SCROLL_ACTION_PAGE) {
+    result.pixelsPerUnit =
+      aEventInfo.IsVertical() ? queryEvent.mReply.mPageHeight :
+                                queryEvent.mReply.mPageWidth;
+  } else {
+    result.pixelsPerUnit = queryEvent.mReply.mLineHeight;
+  }
+
+  result.actualScrollAmount = queryEvent.mReply.mComputedScrollAmount;
+
+  if (result.pixelsPerUnit > 0 && result.actualScrollAmount != 0 &&
+      result.actualScrollAction != nsQueryContentEvent::SCROLL_ACTION_NONE) {
+    result.dispatchPixelScrollEvent = true;
+    // If original delta's sign and computed delta's one are different,
+    // we need to reverse the pixel scroll direction at dispatching it.
+    result.reversePixelScrollDirection =
+      (testEvent.delta > 0 && result.actualScrollAmount < 0) ||
+      (testEvent.delta < 0 && result.actualScrollAmount > 0);
+    // scroll amount must be positive.
+    result.actualScrollAmount = NS_ABS(result.actualScrollAmount);
+  }
+
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::GetPixelScrollInfo: Succeeded, aWindow=%p, "
+     "result: { dispatchPixelScrollEvent: %s, reversePixelScrollDirection: %s, "
+     "actualScrollAmount: %d, actualScrollAction: 0x%01X, "
+     "pixelsPerUnit: %d }",
+     aWindow, GetBoolName(result.dispatchPixelScrollEvent),
+     GetBoolName(result.reversePixelScrollDirection), result.actualScrollAmount,
+     result.actualScrollAction, result.pixelsPerUnit));
+
+  return result;
+}
+
 /******************************************************************************
  *
  * EventInfo

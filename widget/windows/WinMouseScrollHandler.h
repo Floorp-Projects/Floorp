@@ -55,6 +55,35 @@ private:
   static bool DispatchEvent(nsWindow* aWindow, nsGUIEvent& aEvent);
 
 public:
+
+  class EventInfo;
+  /**
+   * GetScrollTargetInfo() returns scroll target information which is
+   * computed from the result of NS_QUERY_SCROLL_TARGET_INFO event.
+   *
+   * @param aWindow           An nsWindow which is handling the event.
+   * @param aEventInfo        The EventInfo which is being handled.
+   * @param aModifierKeyState The modifier key state.
+   */
+  struct ScrollTargetInfo {
+    // TRUE if pixel scroll event is needed.  Otherwise, FALSE.
+    bool dispatchPixelScrollEvent;
+    // TRUE if pixel scroll event's delta value should be reversed.
+    // Otherwise, FALSE.
+    bool reversePixelScrollDirection;
+    // Actual scroll amount.  It might be computed with user prefs.
+    PRInt32 actualScrollAmount;
+    // Actual scroll action.  It might be computed with user prefs.
+    // The value is one of nsQueryContentEvent::SCROLL_ACTION_*.
+    PRInt32 actualScrollAction;
+    // Pixels per unit (line or page, depends on the action).
+    PRInt32 pixelsPerUnit;
+  };
+  ScrollTargetInfo GetScrollTargetInfo(
+                     nsWindow* aWindow,
+                     const EventInfo& aEvent,
+                     const nsModifierKeyState& aModiferKeyState);
+
   class EventInfo {
   public:
     /**
