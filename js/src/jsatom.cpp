@@ -712,9 +712,9 @@ js_CheckForStringIndex(jsid id)
     const jschar *cp = s;
     const jschar *end = s + n;
 
-    unsigned index = JS7_UNDEC(*cp++);
-    unsigned oldIndex = 0;
-    unsigned c = 0;
+    uint32_t index = JS7_UNDEC(*cp++);
+    uint32_t oldIndex = 0;
+    uint32_t c = 0;
 
     if (index != 0) {
         while (JS7_ISDEC(*cp)) {

@@ -127,7 +127,7 @@ cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
     array = JSVAL_TO_OBJECT(root.value());
     JS_ASSERT(JS_IsArrayObject(cx, array));
 
-    unsigned tmp;
+    uint32_t tmp;
     CHECK(JS_GetArrayLength(cx, array, &tmp));
     CHECK(ok);
 

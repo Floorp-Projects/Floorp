@@ -232,7 +232,7 @@ GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp
         if (lval.isObject()) {
             JSObject *obj = &lval.toObject();
             if (obj->isArray()) {
-                unsigned length = obj->getArrayLength();
+                uint32_t length = obj->getArrayLength();
                 *vp = NumberValue(length);
                 return true;
             }
@@ -804,13 +804,13 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, jsid id, const Value &va
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
-            unsigned length = obj->getDenseArrayInitializedLength();
+            uint32_t length = obj->getDenseArrayInitializedLength();
             int32_t i = JSID_TO_INT(id);
-            if ((unsigned)i < length) {
+            if ((uint32_t)i < length) {
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
-                    if ((unsigned)i >= obj->getArrayLength())
+                    if ((uint32_t)i >= obj->getArrayLength())
                         obj->setArrayLength(cx, i + 1);
                 }
                 obj->setDenseArrayElementWithType(cx, i, value);

@@ -4409,8 +4409,8 @@ JS_NewArrayObject(JSContext *cx, int length, jsval *vector)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     
-    assertSameCompartment(cx, JSValueArray(vector, vector ? (unsigned)length : 0));
-    return NewDenseCopiedArray(cx, (unsigned)length, vector);
+    assertSameCompartment(cx, JSValueArray(vector, vector ? (uint32_t)length : 0));
+    return NewDenseCopiedArray(cx, (uint32_t)length, vector);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4421,7 +4421,7 @@ JS_IsArrayObject(JSContext *cx, JSObject *obj)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetArrayLength(JSContext *cx, JSObject *obj, unsigned *lengthp)
+JS_GetArrayLength(JSContext *cx, JSObject *obj, uint32_t *lengthp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4430,7 +4430,7 @@ JS_GetArrayLength(JSContext *cx, JSObject *obj, unsigned *lengthp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetArrayLength(JSContext *cx, JSObject *obj, unsigned length)
+JS_SetArrayLength(JSContext *cx, JSObject *obj, uint32_t length)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
