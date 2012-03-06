@@ -61,6 +61,7 @@ _JAVA_HARNESS = \
   FennecNativeDriver.java \
   FennecNativeElement.java \
   RoboCopException.java \
+  PaintedSurface.java \
   $(NULL)
 
 _JAVA_TESTS = $(patsubst $(TESTPATH)/%.in,%,$(wildcard $(TESTPATH)/*.java.in))
