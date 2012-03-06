@@ -2383,10 +2383,6 @@ abstract public class GeckoApp
 
     @Override
     public boolean onSearchRequested() {
-        return showAwesomebar(AwesomeBar.Type.ADD);
-    }
- 
-    public boolean onEditRequested() {
         return showAwesomebar(AwesomeBar.Type.EDIT);
     }
 
