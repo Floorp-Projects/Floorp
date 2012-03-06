@@ -241,6 +241,9 @@ xpcshell-tests:
 	  --manifest=$(DEPTH)/_tests/xpcshell/xpcshell.ini \
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --no-logfiles \
+	  --tests-root-dir=$(call core_abspath,_tests/xpcshell) \
+	  --xunit-file=$(call core_abspath,_tests/xpcshell/results.xml) \
+	  --xunit-suite-name=xpcshell \
           $(SYMBOLS_PATH) \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \
 	  $(LIBXUL_DIST)/bin/xpcshell
