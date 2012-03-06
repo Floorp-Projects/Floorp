@@ -146,6 +146,14 @@ MouseScrollHandler::ProcessMessage(nsWindow* aWindow, UINT msg,
       aEatMessage = true;
       return true;
 
+    case MOZ_WM_HSCROLL:
+    case MOZ_WM_VSCROLL:
+      GetInstance()->
+        HandleScrollMessageAsMouseWheelMessage(aWindow, msg, wParam, lParam);
+      // Doesn't need to call next wndproc for internal scroll message.
+      aEatMessage = true;
+      return true;
+
     case WM_KEYDOWN:
     case WM_KEYUP:
       PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
@@ -176,13 +184,14 @@ MouseScrollHandler::DispatchEvent(nsWindow* aWindow, nsGUIEvent& aEvent)
 
 /* static */
 nsModifierKeyState
-MouseScrollHandler::GetModifierKeyState()
+MouseScrollHandler::GetModifierKeyState(UINT aMessage)
 {
   nsModifierKeyState result;
   // Assume the Control key is down if the Elantech touchpad has sent the
   // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
   // MouseScrollHandler::Device::Elantech::HandleKeyMessage().)
-  if (!result.mIsControlDown) {
+  if ((aMessage == MOZ_WM_MOUSEVWHEEL || aMessage == WM_MOUSEWHEEL) &&
+      !result.mIsControlDown) {
     result.mIsControlDown = Device::Elantech::IsZooming();
   }
   return result;
@@ -308,7 +317,7 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindow* aWindow,
 
   mLastEventInfo.RecordEvent(eventInfo);
 
-  nsModifierKeyState modKeyState = GetModifierKeyState();
+  nsModifierKeyState modKeyState = GetModifierKeyState(aMessage);
 
   // Before dispatching line scroll event, we should get the current scroll
   // event target information for pixel scroll.
@@ -363,6 +372,59 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindow* aWindow,
        "not dispatched"));
   }
 #endif
+}
+
+void
+MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(nsWindow* aWindow,
+                                                           UINT aMessage,
+                                                           WPARAM aWParam,
+                                                           LPARAM aLParam)
+{
+  NS_ABORT_IF_FALSE(
+    (aMessage == MOZ_WM_VSCROLL || aMessage == MOZ_WM_HSCROLL),
+    "HandleScrollMessageAsMouseWheelMessage must be called with "
+    "MOZ_WM_VSCROLL or MOZ_WM_HSCROLL");
+
+  nsModifierKeyState modKeyState = GetModifierKeyState(aMessage);
+
+  nsMouseScrollEvent scrollEvent(true, NS_MOUSE_SCROLL, aWindow);
+  scrollEvent.scrollFlags =
+    (aMessage == MOZ_WM_VSCROLL) ? nsMouseScrollEvent::kIsVertical :
+                                   nsMouseScrollEvent::kIsHorizontal;
+  switch (LOWORD(aWParam)) {
+    case SB_PAGEDOWN:
+      scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+    case SB_LINEDOWN:
+      scrollEvent.delta = 1;
+      break;
+    case SB_PAGEUP:
+      scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+    case SB_LINEUP:
+      scrollEvent.delta = -1;
+      break;
+    default:
+      return;
+  }
+  modKeyState.InitInputEvent(scrollEvent);
+  // XXX Current mouse position may not be same as when the original message
+  //     is received.  We need to know the actual mouse cursor position when
+  //     the original message was received.
+  aWindow->InitEvent(scrollEvent);
+
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::HandleScrollMessageAsMouseWheelMessage: aWindow=%p, "
+     "aMessage=MOZ_WM_%sSCROLL, aWParam=0x%08X, aLParam=0x%08X, "
+     "scrollEvent { refPoint: { x: %d, y: %d }, delta: %d, "
+     "scrollFlags: 0x%04X, isShift: %s, isControl: %s, isAlt: %s, isMeta: %s }",
+     aWindow, (aMessage == MOZ_WM_VSCROLL) ? "V" : "H",
+     aWParam, aLParam, scrollEvent.refPoint.x, scrollEvent.refPoint.y,
+     scrollEvent.delta, scrollEvent.scrollFlags,
+     GetBoolName(scrollEvent.isShift),
+     GetBoolName(scrollEvent.isControl),
+     GetBoolName(scrollEvent.isAlt),
+     GetBoolName(scrollEvent.isMeta)));
+
+  DispatchEvent(aWindow, scrollEvent);
 }
 
 /******************************************************************************
