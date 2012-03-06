@@ -73,6 +73,7 @@ CPPSRCS = \
         BasicImages.cpp \
         BasicLayers.cpp \
         Layers.cpp \
+        RenderTrace.cpp \
         ReadbackProcessor.cpp \
         ThebesLayerBuffer.cpp \
         CanvasLayerOGL.cpp \

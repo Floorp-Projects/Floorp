@@ -1377,17 +1377,6 @@ if [ "$MOZ_UPDATER" ]; then
   fi
 fi
 
-if [ "$MOZ_UPDATER" -o "$MOZ_MAINTENANCE_SERVICE" ]; then
-  add_makefiles "
-    toolkit/mozapps/readstrings/Makefile
-  "
-  if [ "$OS_TARGET" != "Android" ]; then
-    add_makefiles "
-      toolkit/mozapps/update/common/Makefile
-    "
-  fi
-fi
-
 if [ "$MOZ_UPDATER" -o "$MOZ_UPDATE_PACKAGING" ]; then
   add_makefiles "
     other-licenses/bsdiff/Makefile

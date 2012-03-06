@@ -43,7 +43,8 @@
 #include "jsonparser.h"
 
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
+
+#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 
