@@ -498,7 +498,8 @@ class XPCShellTests(object):
                thisChunk=1, totalChunks=1, debugger=None,
                debuggerArgs=None, debuggerInteractive=False,
                profileName=None, mozInfo=None, shuffle=False,
-               xunitFilename=None, xunitName=None, **otherOptions):
+               testsRootDir=None, xunitFilename=None, xunitName=None,
+               **otherOptions):
     """Run xpcshell tests.
 
     |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -523,6 +524,8 @@ class XPCShellTests(object):
       directory if running only a subset of tests.
     |mozInfo|, if set, specifies specifies build configuration information, either as a filename containing JSON, or a dict.
     |shuffle|, if True, execute tests in random order.
+    |testsRootDir|, absolute path to root directory of all tests. This is used
+      by xUnit generation to determine the package name of the tests.
     |xunitFilename|, if set, specifies the filename to which to write xUnit XML
       results.
     |xunitName|, if outputting an xUnit XML file, the str value to use for the
@@ -534,6 +537,17 @@ class XPCShellTests(object):
 
     if testdirs is None:
         testdirs = []
+
+    if xunitFilename is not None or xunitName is not None:
+        if not isinstance(testsRootDir, str):
+            raise Exception("testsRootDir must be a str when outputting xUnit.")
+
+        if not os.path.isabs(testsRootDir):
+            testsRootDir = os.path.abspath(testsRootDir)
+
+        if not os.path.exists(testsRootDir):
+            raise Exception("testsRootDir path does not exists: %s" %
+                    testsRootDir)
 
     self.xpcshell = xpcshell
     self.xrePath = xrePath
@@ -598,7 +612,16 @@ class XPCShellTests(object):
 
       self.testCount += 1
 
-      xunitResult = {"classname": "xpcshell", "name": test["name"]}
+      xunitResult = {"name": test["name"], "classname": "xpcshell"}
+      # The xUnit package is defined as the path component between the root
+      # dir and the test with path characters replaced with '.' (using Java
+      # class notation).
+      if testsRootDir is not None:
+          if test["here"].find(testsRootDir) != 0:
+              raise Exception("testsRootDir is not a parent path of %s" %
+                  test["here"])
+          relpath = test["here"][len(testsRootDir):].lstrip("/\\")
+          xunitResult["classname"] = relpath.replace("/", ".").replace("\\", ".")
 
       # Check for skipped tests
       if 'disabled' in test:
@@ -775,6 +798,9 @@ class XPCShellOptions(OptionParser):
     self.add_option("--test-path",
                     type="string", dest="testPath", default=None,
                     help="single path and/or test filename to test")
+    self.add_option("--tests-root-dir",
+                    type="string", dest="testsRootDir", default=None,
+                    help="absolute path to directory where all tests are located. this is typically $(objdir)/_tests")
     self.add_option("--total-chunks",
                     type = "int", dest = "totalChunks", default=1,
                     help = "how many chunks to split the tests up into")
