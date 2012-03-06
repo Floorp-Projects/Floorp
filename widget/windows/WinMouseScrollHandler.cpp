@@ -65,6 +65,8 @@ bool MouseScrollHandler::Device::Elantech::sUseSwipeHack = false;
 bool MouseScrollHandler::Device::Elantech::sUsePinchHack = false;
 DWORD MouseScrollHandler::Device::Elantech::sZoomUntil = 0;
 
+bool MouseScrollHandler::Device::SetPoint::sMightBeUsing = false;
+
 // The duration until timeout of events transaction.  The value is 1.5 sec,
 // it's just a magic number, it was suggested by Logitech's engineer, see
 // bug 605648 comment 90.
@@ -195,6 +197,26 @@ MouseScrollHandler::GetModifierKeyState(UINT aMessage)
     result.mIsControlDown = Device::Elantech::IsZooming();
   }
   return result;
+}
+
+POINT
+MouseScrollHandler::ComputeMessagePos(UINT aMessage,
+                                      WPARAM aWParam,
+                                      LPARAM aLParam)
+{
+  POINT point;
+  if (Device::SetPoint::IsGetMessagePosResponseValid(aMessage,
+                                                     aWParam, aLParam)) {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::ComputeMessagePos: Using ::GetCursorPos()"));
+    ::GetCursorPos(&point);
+  } else {
+    DWORD dwPoints = ::GetMessagePos();
+    point.x = GET_X_LPARAM(dwPoints);
+    point.y = GET_Y_LPARAM(dwPoints);
+  }
+
+  return point;
 }
 
 MouseScrollHandler::ScrollTargetInfo
@@ -1149,6 +1171,52 @@ MouseScrollHandler::Device::UltraNav::IsObsoleteDriverInstalled()
      "found driver version = %d.%d",
      majorVersion, minorVersion));
   return majorVersion < 15 || majorVersion == 15 && minorVersion == 0;
+}
+
+/******************************************************************************
+ *
+ * Device::SetPoint
+ *
+ ******************************************************************************/
+
+/* static */
+bool
+MouseScrollHandler::Device::SetPoint::IsGetMessagePosResponseValid(
+                                        UINT aMessage,
+                                        WPARAM aWParam,
+                                        LPARAM aLParam)
+{
+  if (aMessage != WM_MOUSEHWHEEL) {
+    return false;
+  }
+
+  DWORD messagePos = ::GetMessagePos();
+
+  // XXX We should check whether SetPoint is installed or not by registry.
+
+  // SetPoint, Logitech (Logicool) mouse driver, (confirmed with 4.82.11 and
+  // MX-1100) always sets 0 to the lParam of WM_MOUSEHWHEEL.  The driver SENDs
+  // one message at first time, this time, ::GetMessagePos() works fine.
+  // Then, we will return 0 (0 means we process it) to the message. Then, the
+  // driver will POST the same messages continuously during the wheel tilted.
+  // But ::GetMessagePos() API always returns (0, 0) for them, even if the
+  // actual mouse cursor isn't 0,0.  Therefore, we cannot trust the result of
+  // ::GetMessagePos API if the sender is SetPoint.
+  if (!sMightBeUsing && !aLParam && (DWORD)aLParam != messagePos &&
+      ::InSendMessage()) {
+    sMightBeUsing = true;
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::Device::SetPoint::IsGetMessagePosResponseValid(): "
+       "Might using SetPoint"));
+  } else if (sMightBeUsing && aLParam != 0 && ::InSendMessage()) {
+    // The user has changed the mouse from Logitech's to another one (e.g.,
+    // the user has changed to the touchpad of the notebook.
+    sMightBeUsing = false;
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::Device::SetPoint::IsGetMessagePosResponseValid(): "
+       "Might stop using SetPoint"));
+  }
+  return (sMightBeUsing && !aLParam && !messagePos);
 }
 
 } // namespace widget
