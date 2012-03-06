@@ -136,7 +136,7 @@ abstract public class GeckoApp
 
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
-    public static AutoCompletePopup mAutoCompletePopup;
+    public static FormAssistPopup mFormAssistPopup;
     public Favicons mFavicons;
 
     private Geocoder mGeocoder;
@@ -981,7 +981,7 @@ abstract public class GeckoApp
                 if (suggestions.length() == 0) {
                     mMainHandler.post(new Runnable() {
                         public void run() {
-                            mAutoCompletePopup.hide();
+                            mFormAssistPopup.hide();
                         }
                     });
                 } else {
@@ -993,7 +993,7 @@ abstract public class GeckoApp
                             InputMethodManager imm =
                                 (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                             if (!imm.isFullscreenMode())
-                                mAutoCompletePopup.show(suggestions, rect, zoom);
+                                mFormAssistPopup.show(suggestions, rect, zoom);
                         }
                     });
                 }
@@ -1108,7 +1108,7 @@ abstract public class GeckoApp
         }
 
         public void run() {
-            mAutoCompletePopup.hide();
+            mFormAssistPopup.hide();
             if (mShow) {
                 if (mAboutHomeContent == null) {
                     mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
@@ -1757,7 +1757,7 @@ abstract public class GeckoApp
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
-        mAutoCompletePopup = (AutoCompletePopup) findViewById(R.id.autocomplete_popup);
+        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - UI almost up");
 
@@ -2211,7 +2211,7 @@ abstract public class GeckoApp
 
         if (mOrientation != newConfig.orientation) {
             mOrientation = newConfig.orientation;
-            mAutoCompletePopup.hide();
+            mFormAssistPopup.hide();
             refreshActionBar();
         }
     }
