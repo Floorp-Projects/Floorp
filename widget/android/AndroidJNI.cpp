@@ -894,21 +894,18 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyReadingMessageListFailed(JNIEnv* jenv
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv*, jclass)
 {
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### scheduleComposite()");
     AndroidBridge::Bridge()->ScheduleComposite();
 }
 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(JNIEnv*, jclass)
 {
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### schedulePauseComposition()");
     AndroidBridge::Bridge()->SchedulePauseComposition();
 }
 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv*, jclass)
 {
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### scheduleResumeComposition()");
     AndroidBridge::Bridge()->ScheduleResumeComposition();
 }
 

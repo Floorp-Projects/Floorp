@@ -245,7 +245,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
     private IntSize getBufferSize() {
         View view = mLayerController.getView();
         IntSize size = new IntSize(view.getWidth(), view.getHeight());
-        Log.e(LOGTAG, "### getBufferSize " + size);
         return size;
     }
 

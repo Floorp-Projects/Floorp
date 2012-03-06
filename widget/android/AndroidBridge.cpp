@@ -1070,10 +1070,8 @@ AndroidBridge::RegisterCompositor()
 
     jmethodID registerCompositor = env->GetStaticMethodID(jFlexSurfaceView, "registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
 
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### registerCxxCompositor()");
     jobject glController = env->CallStaticObjectMethod(jFlexSurfaceView, registerCompositor);
 
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Acquire()");
     sController.Acquire(env, glController);
     sController.SetGLVersion(2);
     __android_log_print(ANDROID_LOG_ERROR, "Gecko", "Registered Compositor");
@@ -1882,14 +1880,12 @@ AndroidBridge::ScheduleResumeComposition()
 void
 AndroidBridge::SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter)
 {
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### SetViewTransformGetter()");
     mViewTransformGetter = &aViewTransformGetter;
 }
 
 void
 AndroidBridge::GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
 {
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### GetViewTransform()");
     if (mViewTransformGetter) {
         (*mViewTransformGetter)(aScrollOffset, aScaleX, aScaleY);
     }
