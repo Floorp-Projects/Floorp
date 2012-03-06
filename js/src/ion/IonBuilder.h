@@ -258,6 +258,7 @@ class IonBuilder : public MIRGenerator
     // Computes loop phis, places them in all successors of a loop, then
     // handles any pending breaks.
     ControlStatus finishLoop(CFGState &state, MBasicBlock *successor);
+    void fixPendingContinues(MBasicBlock *header);
 
     void assertValidLoopHeadOp(jsbytecode *pc);
 
