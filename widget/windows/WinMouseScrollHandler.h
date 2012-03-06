@@ -52,8 +52,10 @@ private:
    * GetModifierKeyState() returns current modifier key state.
    * Note that some devices need some hack for the modifier key state.
    * This method does it automatically.
+   *
+   * @param aMessage    Handling message.
    */
-  static nsModifierKeyState GetModifierKeyState();
+  static nsModifierKeyState GetModifierKeyState(UINT aMessage);
 
   /**
    * HandleMouseWheelMessage() processes MOZ_WM_MOUSEVWHEEL and
@@ -69,6 +71,22 @@ private:
                                UINT aMessage,
                                WPARAM aWParam,
                                LPARAM aLParam);
+
+  /**
+   * HandleScrollMessageAsMouseWheelMessage() processes the MOZ_WM_VSCROLL and
+   * MOZ_WM_HSCROLL which are posted when one of mouse windows received
+   * WM_VSCROLL or WM_HSCROLL and user wants them to emulate mouse wheel
+   * message's behavior.
+   *
+   * @param aWindow     A window which receives the scroll message.
+   * @param aMessage    MOZ_WM_VSCROLL or MOZ_WM_HSCROLL.
+   * @param aWParam     The wParam value of the original message.
+   * @param aLParam     The lParam value of the original message.
+   */
+  void HandleScrollMessageAsMouseWheelMessage(nsWindow* aWindow,
+                                              UINT aMessage,
+                                              WPARAM aWParam,
+                                              LPARAM aLParam);
 
   class EventInfo;
   /**

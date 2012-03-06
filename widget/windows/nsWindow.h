@@ -397,8 +397,6 @@ protected:
                                     const MSG *aMsg = nsnull,
                                     bool *aEventDispatched = nsnull);
   bool                    OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
-  void                    OnScrollInternal(UINT aMsg, WPARAM aWParam,
-                                           LPARAM aLParam);
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);
   bool                    OnHotKey(WPARAM wParam, LPARAM lParam);
