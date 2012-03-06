@@ -89,19 +89,34 @@ class BitSet : private TempObject
     }
 
     // O(1): Check if this set contains the given value.
-    bool contains(unsigned int value) const;
+    bool contains(unsigned int value) const {
+        JS_ASSERT(bits_);
+        JS_ASSERT(value <= max_);
+
+        return !!(bits_[wordForValue(value)] & bitForValue(value));
+    }
 
     // O(max): Check if this set contains any value.
     bool empty() const;
 
     // O(1): Insert the given value into this set.
-    void insert(unsigned int value);
+    void insert(unsigned int value) {
+        JS_ASSERT(bits_);
+        JS_ASSERT(value <= max_);
+
+        bits_[wordForValue(value)] |= bitForValue(value);
+    }
 
     // O(max): Insert every element of the given set into this set.
     void insertAll(const BitSet *other);
 
     // O(1): Remove the given value from this set.
-    void remove(unsigned int value);
+    void remove(unsigned int value) {
+        JS_ASSERT(bits_);
+        JS_ASSERT(value <= max_);
+
+        bits_[wordForValue(value)] &= ~bitForValue(value);
+    }
 
     // O(max): Remove the every element of the given set from this set.
     void removeAll(const BitSet *other);
@@ -119,12 +134,6 @@ class BitSet : private TempObject
     // O(max): Clear this set.
     void clear();
 
-    // Iterator to the beginning of this set.
-    Iterator begin();
-
-    // Iterator to the end of this set.
-    Iterator end();
-
     uint32 *raw() const {
         return bits_;
     }
@@ -138,26 +147,52 @@ class BitSet::Iterator
   private:
     BitSet &set_;
     unsigned index_;
+    unsigned word_;
+    uint32 value_;
 
   public:
-    Iterator(BitSet &set, unsigned int index) :
+    Iterator(BitSet &set) :
       set_(set),
-      index_(index)
+      index_(0),
+      word_(0),
+      value_(set.bits_[0])
     {
-        if (index_ <= set_.max_ && !set_.contains(index_))
+        if (!set_.contains(index_))
             (*this)++;
     }
 
-    bool operator!=(const Iterator &other) const {
-        return index_ != other.index_;
+    inline bool more() const {
+        return word_ < set_.numWords();
+    }
+    inline operator bool() const {
+        return more();
     }
 
-    // FIXME (668305): Use bit scan.
-    Iterator& operator++(int dummy) {
+    inline Iterator& operator++(int dummy) {
+        JS_ASSERT(more());
         JS_ASSERT(index_ <= set_.max_);
-        do {
-            index_++;
-        } while (index_ <= set_.max_ && !set_.contains(index_));
+
+        index_++;
+        value_ >>= 1;
+
+        // Skip words containing only zeros.
+        while (value_ == 0) {
+            word_++;
+            if (!more())
+                return *this;
+
+            index_ = word_ * sizeof(value_) * 8;
+            value_ = set_.bits_[word_];
+        }
+
+        // The result of js_bitscan_ctz32 is undefined if the input is 0.
+        JS_ASSERT(value_ != 0);
+
+        int numZeros = js_bitscan_ctz32(value_);
+        index_ += numZeros;
+        value_ >>= numZeros;
+
+        JS_ASSERT_IF(index_ <= set_.max_, set_.contains(index_));
         return *this;
     }
 

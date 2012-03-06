@@ -70,15 +70,6 @@ BitSet::init()
 }
 
 bool
-BitSet::contains(unsigned int value) const
-{
-    JS_ASSERT(bits_);
-    JS_ASSERT(value <= max_);
-
-    return bits_[wordForValue(value)] & bitForValue(value);
-}
-
-bool
 BitSet::empty() const
 {
     JS_ASSERT(bits_);
@@ -90,15 +81,6 @@ BitSet::empty() const
 }
 
 void
-BitSet::insert(unsigned int value)
-{
-    JS_ASSERT(bits_);
-    JS_ASSERT(value <= max_);
-
-    bits_[wordForValue(value)] |= bitForValue(value);
-}
-
-void
 BitSet::insertAll(const BitSet *other)
 {
     JS_ASSERT(bits_);
@@ -107,15 +89,6 @@ BitSet::insertAll(const BitSet *other)
 
     for (unsigned int i = 0; i < numWords(); i++)
         bits_[i] |= other->bits_[i];
-}
-
-void
-BitSet::remove(unsigned int value)
-{
-    JS_ASSERT(bits_);
-    JS_ASSERT(value <= max_);
-
-    bits_[wordForValue(value)] &= ~bitForValue(value);
 }
 
 void
@@ -174,16 +147,4 @@ BitSet::clear()
     JS_ASSERT(bits_);
     for (unsigned int i = 0; i < numWords(); i++)
         bits_[i] = 0;
-}
-
-BitSet::Iterator
-BitSet::begin()
-{
-    return Iterator(*this, 0);
-}
-
-BitSet::Iterator
-BitSet::end()
-{
-    return Iterator(*this, max_ + 1);
 }

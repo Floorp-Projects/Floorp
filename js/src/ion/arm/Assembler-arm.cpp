@@ -396,10 +396,11 @@ Assembler::finish()
     for (size_t i = 0; i < jumps_.length(); i++) {
         jumps_[i].fixOffset(m_buffer);
     }
-    
+
     for (int i = 0; i < tmpDataRelocations_.length(); i++) {
         int offset = tmpDataRelocations_[i].getOffset();
-        dataRelocations_.writeUnsigned(offset + m_buffer.poolSizeBefore(offset));
+        int real_offset = offset + m_buffer.poolSizeBefore(offset);
+        dataRelocations_.writeUnsigned(real_offset);
     }
 }
 
@@ -2102,7 +2103,8 @@ bool instIsGuard(Instruction *inst, const PoolHeader **ph)
         return false;
     if (!(inst->is<InstBXReg>() || inst->is<InstBImm>()))
         return false;
-    *ph = inst->as<const PoolHeader>();
+    // See if the next instruction is a pool header.
+    *ph = (inst+1)->as<const PoolHeader>();
     return *ph != NULL;
 }
 
