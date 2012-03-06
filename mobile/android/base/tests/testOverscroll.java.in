@@ -28,7 +28,7 @@ public class testOverscroll extends PixelTest {
         // and back this should NOT trigger a gecko-paint
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         meh.dragSync(10, 50, 10, 150);
-        int[][] painted = waitWithNoPaint(paintExpecter);
+        PaintedSurface painted = waitWithNoPaint(paintExpecter);
         checkScrollWithBoxes(painted, 0, 0);
 
         // drag page rightwards to go into overscroll on the left. let it bounce and verify.

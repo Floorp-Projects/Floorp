@@ -6,19 +6,19 @@ import @ANDROID_PACKAGE_NAME@.*;
 class PixelTest extends BaseTest {
     private static final long PAINT_CLEAR_DELAY = 500; // milliseconds
 
-    protected final int[][] loadAndPaint(String url) {
+    protected final PaintedSurface loadAndPaint(String url) {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         loadUrl(url);
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
         return mDriver.getPaintedSurface();
     }
 
-    protected final int[][] waitForPaint(Actions.RepeatedEventExpecter expecter) {
+    protected final PaintedSurface waitForPaint(Actions.RepeatedEventExpecter expecter) {
         expecter.blockUntilClear(PAINT_CLEAR_DELAY);
         return mDriver.getPaintedSurface();
     }
 
-    protected final int[][] waitWithNoPaint(Actions.RepeatedEventExpecter expecter) {
+    protected final PaintedSurface waitWithNoPaint(Actions.RepeatedEventExpecter expecter) {
         try {
             Thread.sleep(PAINT_CLEAR_DELAY);
         } catch (InterruptedException ie) {
@@ -41,15 +41,15 @@ class PixelTest extends BaseTest {
     /**
      * Checks the top-left corner of the visible area of the page is at (x,y) of robocop_boxes.html.
      */
-    protected final void checkScrollWithBoxes(int[][] painted, int x, int y) {
+    protected final void checkScrollWithBoxes(PaintedSurface painted, int x, int y) {
         int[] color = getBoxColorAt(x, y);
-        mAsserter.ispixel(painted[0][0], color[0], color[1], color[2], "Pixel at 0, 0");
+        mAsserter.ispixel(painted.getPixelAt(0, 0), color[0], color[1], color[2], "Pixel at 0, 0");
         color = getBoxColorAt(x + 100, y);
-        mAsserter.ispixel(painted[0][100], color[0], color[1], color[2], "Pixel at 100, 0");
+        mAsserter.ispixel(painted.getPixelAt(100, 0), color[0], color[1], color[2], "Pixel at 100, 0");
         color = getBoxColorAt(x, y + 100);
-        mAsserter.ispixel(painted[100][0], color[0], color[1], color[2], "Pixel at 0, 100");
+        mAsserter.ispixel(painted.getPixelAt(0, 100), color[0], color[1], color[2], "Pixel at 0, 100");
         color = getBoxColorAt(x + 100, y + 100);
-        mAsserter.ispixel(painted[100][100], color[0], color[1], color[2], "Pixel at 100, 100");
+        mAsserter.ispixel(painted.getPixelAt(100, 100), color[0], color[1], color[2], "Pixel at 100, 100");
     }
 
     /**
@@ -57,8 +57,8 @@ class PixelTest extends BaseTest {
      * @param url URL of the robocop_boxes.html file.
      * @return The painted surface after rendering the file.
      */
-    protected final int[][] loadAndVerifyBoxes(String url) {
-        int[][] painted = loadAndPaint(url);
+    protected final PaintedSurface loadAndVerifyBoxes(String url) {
+        PaintedSurface painted = loadAndPaint(url);
         checkScrollWithBoxes(painted, 0, 0);
         return painted;
     }
