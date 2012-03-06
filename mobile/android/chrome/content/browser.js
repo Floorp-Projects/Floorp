@@ -1572,6 +1572,8 @@ Tab.prototype = {
   refreshDisplayPort: function(aDisplayPortMargins) {
     if (this._zoom <= 0)
       return;
+    if (!this.browser.contentDocument.documentElement)
+      return;
 
     let viewport = this.viewport;
 
