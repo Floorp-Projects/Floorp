@@ -68,8 +68,7 @@ function testSelectLine() {
                "The correct line is selected.");
 
             gDebugger.StackFrames.activeThread.resume(function() {
-              removeTab(gTab);
-              finish();
+              closeDebuggerAndFinish(gTab);
             });
           });
         });
@@ -83,3 +82,11 @@ function testSelectLine() {
 
   gDebuggee.firstCall();
 }
+
+registerCleanupFunction(function() {
+  removeTab(gTab);
+  gPane = null;
+  gTab = null;
+  gDebuggee = null;
+  gDebugger = null;
+});
