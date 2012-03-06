@@ -366,7 +366,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         Label undefLoopTop;
         masm.bind(&undefLoopTop);
         masm.ma_dataTransferN(IsStore, 64, true, sp, Imm32(-8), r4, PreIndex);
-        masm.ma_sub(r2, Imm32(1), r2);
+        masm.ma_sub(r2, Imm32(1), r2, SetCond);
 
         masm.ma_b(&undefLoopTop, Assembler::NonZero);
     }
@@ -609,7 +609,6 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.passABIArg(cxreg);
 
     size_t argDisp = 0;
-    size_t argc = 1;
 
     // Copy arguments.
     if (f.explicitArgs) {
@@ -642,7 +641,6 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // Copy the implicit outparam, if any.
     if (outReg != InvalidReg)
         masm.passABIArg(outReg);
-    JS_ASSERT(f.argc() == argc);
 
     masm.callWithABI(f.wrapped);
 
