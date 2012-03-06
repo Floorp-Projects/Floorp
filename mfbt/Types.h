@@ -101,7 +101,7 @@
  * depending upon the compilation mode.
  */
 #ifdef _WIN32
-#  if defined(__MWERKS__) || defined(__GNUC__)
+#  if defined(__MWERKS__)
 #    define MOZ_IMPORT_API(x)    x
 #  else
 #    define MOZ_IMPORT_API(x)    __declspec(dllimport) x

@@ -392,9 +392,9 @@ void
 SMILPreserveAspectRatio::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
-    mVal->SetAnimValue(PackPreserveAspectRatio(mVal->GetBaseValue()),
-                       mSVGElement);
     mVal->mIsAnimated = false;
+    mVal->mAnimVal = mVal->mBaseVal;
+    mSVGElement->DidAnimatePreserveAspectRatio();
   }
 }
 

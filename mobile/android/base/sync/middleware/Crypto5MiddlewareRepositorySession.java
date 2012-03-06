@@ -216,7 +216,7 @@ public class Crypto5MiddlewareRepositorySession extends RepositorySession {
     if (delegate == null) {
       throw new NoStoreDelegateException();
     }
-    CryptoRecord rec = record.getPayload();
+    CryptoRecord rec = record.getEnvelope();
     rec.keyBundle = this.keyBundle;
     try {
       rec.encrypt();

@@ -434,20 +434,27 @@ var WifiManager = (function() {
     });
   }
 
+  var dhcpInfo = null;
   function runDhcp(ifname, callback) {
     controlMessage({ cmd: "dhcp_do_request", ifname: ifname }, function(data) {
+      if (!data.status)
+        dhcpInfo = data;
       callback(data.status ? null : data);
     });
   }
 
   function stopDhcp(ifname, callback) {
     controlMessage({ cmd: "dhcp_stop", ifname: ifname }, function(data) {
+      if (!data.status)
+        dhcpInfo = null;
       callback(!data.status);
     });
   }
 
   function releaseDhcpLease(ifname, callback) {
     controlMessage({ cmd: "dhcp_release_lease", ifname: ifname }, function(data) {
+      if (!data.status)
+        dhcpInfo = null;
       callback(!data.status);
     });
   }
@@ -468,6 +475,8 @@ var WifiManager = (function() {
 
   function runDhcpRenew(ifname, callback) {
     controlMessage({ cmd: "dhcp_do_request", ifname: ifname }, function(data) {
+      if (!data.status)
+        dhcpInfo = data;
       callback(data.status ? null : data);
     });
   }
@@ -486,6 +495,12 @@ var WifiManager = (function() {
   function notifyStateChange(fields) {
     fields.prevState = manager.state;
     manager.state = fields.state;
+
+    // If we got disconnected, kill the DHCP client in preparation for
+    // reconnection.
+    if (fields.state === "DISCONNECTED" && dhcpInfo)
+      stopDhcp(manager.ifname, function() {});
+
     notify("statechange", fields);
   }
 

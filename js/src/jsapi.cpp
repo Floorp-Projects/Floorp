@@ -551,9 +551,9 @@ JS_ValueToNumber(JSContext *cx, jsval v, double *dp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_DoubleIsInt32(double d, jsint *ip)
+JS_DoubleIsInt32(double d, int32_t *ip)
 {
-    return JSDOUBLE_IS_INT32(d, (int32_t *)ip);
+    return JSDOUBLE_IS_INT32(d, ip);
 }
 
 JS_PUBLIC_API(int32_t)
@@ -2039,7 +2039,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 }
 
 static JSIdArray *
-NewIdArray(JSContext *cx, jsint length)
+NewIdArray(JSContext *cx, int length)
 {
     JSIdArray *ida;
 
@@ -2054,7 +2054,7 @@ NewIdArray(JSContext *cx, jsint length)
  * Unlike realloc(3), this function frees ida on failure.
  */
 static JSIdArray *
-SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
+SetIdArrayLength(JSContext *cx, JSIdArray *ida, int length)
 {
     JSIdArray *rida;
 
@@ -2070,12 +2070,10 @@ SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
 }
 
 static JSIdArray *
-AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, jsint *ip)
+AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, int *ip)
 {
-    jsint i, length;
-
-    i = *ip;
-    length = ida->length;
+    int i = *ip;
+    int length = ida->length;
     if (i >= length) {
         ida = SetIdArrayLength(cx, ida, JS_MAX(length * 2, 8));
         if (!ida)
@@ -2089,7 +2087,7 @@ AddAtomToArray(JSContext *cx, JSAtom *atom, JSIdArray *ida, jsint *ip)
 
 static JSIdArray *
 EnumerateIfResolved(JSContext *cx, JSObject *obj, JSAtom *atom, JSIdArray *ida,
-                    jsint *ip, JSBool *foundp)
+                    int *ip, JSBool *foundp)
 {
     *foundp = obj->nativeContains(cx, ATOM_TO_JSID(atom));
     if (*foundp)
@@ -2101,7 +2099,7 @@ JS_PUBLIC_API(JSIdArray *)
 JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj, JSIdArray *ida)
 {
     JSRuntime *rt;
-    jsint i, j, k;
+    int i, j, k;
     JSAtom *atom;
     JSBool found;
     JSObjectOp init;
@@ -3020,14 +3018,14 @@ JS_SetNativeStackQuota(JSRuntime *rt, size_t stackSize)
 
 /************************************************************************/
 
-JS_PUBLIC_API(jsint)
+JS_PUBLIC_API(int)
 JS_IdArrayLength(JSContext *cx, JSIdArray *ida)
 {
     return ida->length;
 }
 
 JS_PUBLIC_API(jsid)
-JS_IdArrayGet(JSContext *cx, JSIdArray *ida, jsint index)
+JS_IdArrayGet(JSContext *cx, JSIdArray *ida, int index)
 {
     JS_ASSERT(index >= 0 && index < ida->length);
     return ida->vector[index];
@@ -4316,7 +4314,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 {
     JSObject *iterobj;
     void *pdata;
-    jsint index;
+    int index;
     JSIdArray *ida;
 
     AssertNoGC(cx);
@@ -4353,7 +4351,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSBool)
 JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
 {
-    jsint i;
+    int32_t i;
     const Shape *shape;
     JSIdArray *ida;
 
@@ -4420,7 +4418,7 @@ JS_SetReservedSlot(JSObject *obj, uint32_t index, jsval v)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
+JS_NewArrayObject(JSContext *cx, int length, jsval *vector)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);

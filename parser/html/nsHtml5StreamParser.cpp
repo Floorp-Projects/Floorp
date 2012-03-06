@@ -40,7 +40,7 @@
 
 #include "nsHtml5StreamParser.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "nsServiceManagerUtils.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsContentUtils.h"
@@ -60,7 +60,6 @@
 
 using namespace mozilla;
 
-static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
 PRInt32 nsHtml5StreamParser::sTimerInitialDelay = 120;
 PRInt32 nsHtml5StreamParser::sTimerSubsequentDelay = 120;
@@ -1171,13 +1170,8 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
   }
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
-  if (NS_FAILED(rv)) {
-    NS_NOTREACHED("Charset alias service not available.");
-    return false;
-  }
   bool eq;
-  rv = calias->Equals(newEncoding, mCharset, &eq);
+  rv = nsCharsetAlias::Equals(newEncoding, mCharset, &eq);
   if (NS_FAILED(rv)) {
     NS_NOTREACHED("Charset name equality check failed.");
     return false;
@@ -1192,7 +1186,7 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
   
   nsCAutoString preferred;
   
-  rv = calias->GetPreferred(newEncoding, preferred);
+  rv = nsCharsetAlias::GetPreferred(newEncoding, preferred);
   if (NS_FAILED(rv)) {
     // the encoding name is bogus
     return false;
