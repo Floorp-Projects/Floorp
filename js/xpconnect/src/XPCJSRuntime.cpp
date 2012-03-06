@@ -1684,7 +1684,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats, const nsACStri
                       callback, closure);
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/gc-marker"),
-                      nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeGCMarker,
+                      nsIMemoryReporter::KIND_HEAP, rtStats.runtimeGCMarker,
                       "Memory used for the GC mark stack and gray roots.",
                       callback, closure);
 
