@@ -14,4 +14,22 @@ fxc LayerManagerD3D9Shaders.hlsl -EYCbCrShader -nologo -Tps_2_0 -Fh$tempfile -Vn
 cat $tempfile >> LayerManagerD3D9Shaders.h
 fxc LayerManagerD3D9Shaders.hlsl -ESolidColorShader -nologo -Tps_2_0 -Fh$tempfile -VnSolidColorShaderPS
 cat $tempfile >> LayerManagerD3D9Shaders.h
+fxc LayerManagerD3D9Shaders.hlsl -ELayerQuadVSMask -nologo -Fh$tempfile -VnLayerQuadVSMask
+cat $tempfile >> LayerManagerD3D9Shaders.h
+fxc LayerManagerD3D9Shaders.hlsl -ELayerQuadVSMask3D -nologo -Fh$tempfile -VnLayerQuadVSMask3D
+cat $tempfile >> LayerManagerD3D9Shaders.h
+fxc LayerManagerD3D9Shaders.hlsl -ERGBAShaderMask -nologo -Tps_2_0 -Fh$tempfile -VnRGBAShaderPSMask
+cat $tempfile >> LayerManagerD3D9Shaders.h
+fxc LayerManagerD3D9Shaders.hlsl -ERGBAShaderMask3D -nologo -Tps_2_0 -Fh$tempfile -VnRGBAShaderPSMask3D
+cat $tempfile >> LayerManagerD3D9Shaders.h
+fxc LayerManagerD3D9Shaders.hlsl -EComponentPass1ShaderMask -nologo -Tps_2_0 -Fh$tempfile -VnComponentPass1ShaderPSMask
+cat $tempfile >> LayerManagerD3D9Shaders.h
+fxc LayerManagerD3D9Shaders.hlsl -EComponentPass2ShaderMask -nologo -Tps_2_0 -Fh$tempfile -VnComponentPass2ShaderPSMask
+cat $tempfile >> LayerManagerD3D9Shaders.h
+fxc LayerManagerD3D9Shaders.hlsl -ERGBShaderMask -nologo -Tps_2_0 -Fh$tempfile -VnRGBShaderPSMask
+cat $tempfile >> LayerManagerD3D9Shaders.h
+fxc LayerManagerD3D9Shaders.hlsl -EYCbCrShaderMask -nologo -Tps_2_0 -Fh$tempfile -VnYCbCrShaderPSMask
+cat $tempfile >> LayerManagerD3D9Shaders.h
+fxc LayerManagerD3D9Shaders.hlsl -ESolidColorShaderMask -nologo -Tps_2_0 -Fh$tempfile -VnSolidColorShaderPSMask
+cat $tempfile >> LayerManagerD3D9Shaders.h
 rm $tempfile
