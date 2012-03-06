@@ -35,6 +35,21 @@ public:
                              LRESULT *aRetValue,
                              bool &aEatMessage);
 
+  /**
+   * ComputeMessagePos() computes the cursor position when the message was
+   * added to the queue.
+   *
+   * @param aMessage    Handling message.
+   * @param aWParam     Handling message's wParam.
+   * @param aLParam     Handling message's lParam.
+   * @return            Mouse cursor position when the message is added to
+   *                    the queue or current cursor position if the result of
+   *                    ::GetMessagePos() is broken.
+   */
+  POINT ComputeMessagePos(UINT aMessage,
+                          WPARAM aWParam,
+                          LPARAM aLParam);
+
 private:
   MouseScrollHandler();
   ~MouseScrollHandler();
@@ -366,6 +381,20 @@ public:
        */
       static bool IsObsoleteDriverInstalled();
     }; // class UltraNav
+
+    class SetPoint {
+    public:
+      /**
+       * SetPoint, Logitech's mouse driver, may report wrong cursor position
+       * for WM_MOUSEHWHEEL message.  See comment in the implementation for
+       * the detail.
+       */
+      static bool IsGetMessagePosResponseValid(UINT aMessage,
+                                               WPARAM aWParam,
+                                               LPARAM aLParam);
+    private:
+      static bool sMightBeUsing;
+    };
 
     static void Init();
 
