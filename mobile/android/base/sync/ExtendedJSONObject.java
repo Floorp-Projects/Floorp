@@ -133,7 +133,7 @@ public class ExtendedJSONObject {
 
   /**
    * Return a server timestamp value as milliseconds since epoch.
-   * @param string
+   * @param key
    * @return A Long, or null if the value is non-numeric or doesn't exist.
    */
   public Long getTimestamp(String key) {
