@@ -2905,7 +2905,7 @@ BEGIN_CASE(JSOP_TABLESWITCH)
     int32_t high = GET_JUMP_OFFSET(pc2);
 
     i -= low;
-    if ((unsigned)i < (unsigned)(high - low + 1)) {
+    if ((uint32_t)i < (uint32_t)(high - low + 1)) {
         pc2 += JUMP_OFFSET_LEN + JUMP_OFFSET_LEN * i;
         int32_t off = (int32_t) GET_JUMP_OFFSET(pc2);
         if (off)
@@ -3557,9 +3557,9 @@ BEGIN_CASE(JSOP_INITELEM)
     if (rref.isMagic(JS_ARRAY_HOLE)) {
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(unsigned(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
+        JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
         if (JSOp(regs.pc[JSOP_INITELEM_LENGTH]) == JSOP_ENDINIT &&
-            !js_SetLengthProperty(cx, obj, (unsigned) (JSID_TO_INT(id) + 1))) {
+            !js_SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1))) {
             goto error;
         }
     } else {
