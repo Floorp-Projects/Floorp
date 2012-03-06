@@ -293,7 +293,8 @@ TelemetryPing.prototype = {
       appName: ai.name,
       appBuildID: ai.appBuildID,
       appUpdateChannel: getUpdateChannel(),
-      platformBuildID: ai.platformBuildID
+      platformBuildID: ai.platformBuildID,
+      locale: getLocale()
     };
 
     // sysinfo fields are not always available, get what we can.
