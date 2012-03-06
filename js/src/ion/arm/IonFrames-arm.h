@@ -134,8 +134,10 @@ class IonBailedRectifierFrameLayout : public IonJSFrameLayout
 {
   public:
     static inline size_t Size() {
-        // Include an extra word for the dead callee token.
-        return sizeof(IonBailedRectifierFrameLayout) + sizeof(void *);
+        // On X86, there is a +sizeof(uintptr_t) to account for an extra callee token.
+        // This is not needee here because sizeof(IonExitFrame) == sizeof(IonRectifierFrame)
+        // due to extra padding.
+        return sizeof(IonBailedRectifierFrameLayout);
     }
 };
 

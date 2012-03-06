@@ -693,8 +693,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         storeValue(val, Operand(dest));
     }
     void storeValue(JSValueType type, Register reg, Address dest) {
-        ma_mov(ImmTag(JSVAL_TYPE_TO_TAG(type)), ScratchRegister);
-        ma_str(ScratchRegister, Address(dest.base, dest.offset + 4));
+        ma_mov(ImmTag(JSVAL_TYPE_TO_TAG(type)), lr);
+        ma_str(lr, Address(dest.base, dest.offset + 4));
         ma_str(reg, dest);
     }
     void storeValue(ValueOperand val, const BaseIndex &dest) {
@@ -704,13 +704,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void storeValue(const Value &val, Address dest) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
-        ma_mov(Imm32(jv.s.tag), ScratchRegister);
-        ma_str(ScratchRegister, Address(dest.base, dest.offset + 4));
+        ma_mov(Imm32(jv.s.tag), lr);
+        ma_str(lr, Address(dest.base, dest.offset + 4));
         if (val.isGCThing())
-            ma_mov(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())), ScratchRegister);
+            ma_mov(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())), lr);
         else
-            ma_mov(Imm32(jv.s.payload.i32), ScratchRegister);
-        ma_str(ScratchRegister, dest);
+            ma_mov(Imm32(jv.s.payload.i32), lr);
+        ma_str(lr, dest);
     }
 
     void loadValue(Address src, ValueOperand val);
