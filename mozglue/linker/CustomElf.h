@@ -147,6 +147,12 @@
 #ifndef DT_VERNEEDNUM
 #define DT_VERNEEDNUM 0x6fffffff
 #endif
+#ifndef DT_FLAGS
+#define DT_FLAGS 30
+#endif
+#ifndef DF_SYMBOLIC
+#define DF_SYMBOLIC 0x00000002
+#endif
 
 namespace Elf {
 
