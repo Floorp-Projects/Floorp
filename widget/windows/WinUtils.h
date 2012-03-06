@@ -94,6 +94,17 @@ public:
                              DWORD aBufferLength);
 
   /**
+   * Checks whether the registry key exists in either 32bit or 64bit branch on
+   * the environment.
+   *
+   * @param aRoot The registry root of aName.
+   * @param aKeyName The name of the registry key to check.
+   * @return TRUE if it exists and is readable.  Otherwise, FALSE.
+   */
+  static bool HasRegistryKey(HKEY aRoot,
+                             const PRUnichar* aKeyName);
+
+  /**
    * GetTopLevelHWND() returns a window handle of the top level window which
    * aWnd belongs to.  Note that the result may not be our window, i.e., it
    * may not be managed by nsWindow.

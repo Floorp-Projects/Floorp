@@ -8663,20 +8663,6 @@ bool nsWindow::UseTrackPointHack()
 }
 
 static bool
-HasRegistryKey(HKEY aRoot, PRUnichar* aName)
-{
-  HKEY key;
-  LONG result = ::RegOpenKeyExW(aRoot, aName, 0, KEY_READ | KEY_WOW64_32KEY, &key);
-  if (result != ERROR_SUCCESS) {
-    result = ::RegOpenKeyExW(aRoot, aName, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    if (result != ERROR_SUCCESS)
-      return false;
-  }
-  ::RegCloseKey(key);
-  return true;
-}
-
-static bool
 IsObsoleteSynapticsDriver()
 {
   PRUnichar buf[40];
@@ -8732,14 +8718,19 @@ void nsWindow::InitInputWorkaroundPrefDefaults()
 {
   PRUint32 elantechDriverVersion = GetElantechDriverMajorVersion();
 
-  if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Lenovo\\TrackPoint")) {
+  if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
+                               L"Software\\Lenovo\\TrackPoint")) {
     sDefaultTrackPointHack = true;
-  } else if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Lenovo\\UltraNav")) {
+  } else if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
+                                      L"Software\\Lenovo\\UltraNav")) {
     sDefaultTrackPointHack = true;
-  } else if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Alps\\Apoint\\TrackPoint")) {
+  } else if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
+                                      L"Software\\Alps\\Apoint\\TrackPoint")) {
     sDefaultTrackPointHack = true;
-  } else if ((HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Synaptics\\SynTPEnh\\UltraNavUSB") ||
-              HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2")) &&
+  } else if ((WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
+                L"Software\\Synaptics\\SynTPEnh\\UltraNavUSB") ||
+              WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
+                L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2")) &&
               IsObsoleteSynapticsDriver()) {
     sDefaultTrackPointHack = true;
   }
