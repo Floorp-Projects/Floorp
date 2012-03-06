@@ -64,14 +64,27 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
   protected abstract ContentValues getContentValues(Record record);
   protected abstract Uri getUri();
 
+  public void dumpDB() {
+    Cursor cur = null;
+    try {
+      cur = queryHelper.safeQuery(".dumpDB", null, null, null, null);
+      RepoUtils.dumpCursor(cur);
+    } catch (NullCursorException e) {
+    } finally {
+      if (cur != null) {
+        cur.close();
+      }
+    }
+  }
+
   public String dateModifiedWhere(long timestamp) {
     return BrowserContract.SyncColumns.DATE_MODIFIED + " >= " + Long.toString(timestamp);
   }
 
   public void wipe() {
-    Logger.info(LOG_TAG, "wiping: " + getUri());
-    String where = BrowserContract.SyncColumns.GUID + " NOT IN ('mobile')";
-    context.getContentResolver().delete(getUri(), where, null);
+    Uri uri = getUri();
+    Logger.info(LOG_TAG, "wiping: " + uri);
+    context.getContentResolver().delete(uri, null, null);
   }
   
   public void purgeDeleted() throws NullCursorException {
