@@ -1,0 +1,8 @@
+This directory was created for code which is used in the Mozilla project in
+some way but is not under the MPL or a compatible license like the Apache 2,
+BSD or MIT licenses.
+
+It is _NOT_ for "all non-MPLed code".
+
+Before putting any new code in here, please consult licensing@mozilla.org. It
+is quite likely that this is not the right place.
