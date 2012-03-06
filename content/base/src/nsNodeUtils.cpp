@@ -597,28 +597,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
     if (aCx && wrapper) {
       nsIXPConnect *xpc = nsContentUtils::XPConnect();
       if (xpc) {
-        JSObject *preservedWrapper = nsnull;
-
-        // If reparenting moves us to a new compartment, preserving causes
-        // problems. In that case, we release ourselves and re-preserve after
-        // reparenting so we're sure to have the right JS object preserved.
-        // We use a JSObject stack copy of the wrapper to protect it from GC
-        // under ReparentWrappedNativeIfFound.
-        if (aNode->PreservingWrapper()) {
-          preservedWrapper = wrapper;
-          nsContentUtils::ReleaseWrapper(aNode, aNode);
-          NS_ASSERTION(aNode->GetWrapper(),
-                       "ReleaseWrapper cleared our wrapper, this code needs to "
-                       "be changed to deal with that!");
-        }
-
         nsCOMPtr<nsIXPConnectJSObjectHolder> oldWrapper;
         rv = xpc->ReparentWrappedNativeIfFound(aCx, wrapper, aNewScope, aNode,
                                                getter_AddRefs(oldWrapper));
-
-        if (preservedWrapper) {
-          nsContentUtils::PreserveWrapper(aNode, aNode);
-        }
 
         if (NS_FAILED(rv)) {
           aNode->mNodeInfo.swap(nodeInfo);
