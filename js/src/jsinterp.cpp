@@ -989,31 +989,35 @@ js::UnwindScope(JSContext *cx, uint32_t stackDepth)
 }
 
 /*
- * Find the results of incrementing or decrementing *vp. For pre-increments,
- * both *vp and *vp2 will contain the result on return. For post-increments,
- * vp will contain the original value converted to a number and vp2 will get
- * the result. Both vp and vp2 must be roots.
+ * Increment/decrement the value 'v'. The resulting value is stored in *slot.
+ * The result of the expression (taking into account prefix/postfix) is stored
+ * in *expr.
  */
 static bool
-DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
+DoIncDec(JSContext *cx, JSScript *script, jsbytecode *pc, const Value &v, Value *slot, Value *expr)
 {
-    if (cs->format & JOF_POST) {
-        double d;
-        if (!ToNumber(cx, *vp, &d))
-            return JS_FALSE;
-        vp->setNumber(d);
-        (cs->format & JOF_INC) ? ++d : --d;
-        vp2->setNumber(d);
-        return JS_TRUE;
+    const JSCodeSpec &cs = js_CodeSpec[*pc];
+
+    if (v.isInt32()) {
+        int32_t i = v.toInt32();
+        if (i > JSVAL_INT_MIN && i < JSVAL_INT_MAX) {
+            int32_t sum = i + (cs.format & JOF_INC ? 1 : -1);
+            *slot = Int32Value(sum);
+            *expr = (cs.format & JOF_POST) ? Int32Value(i) : *slot;
+            return true;
+        }
     }
 
     double d;
-    if (!ToNumber(cx, *vp, &d))
-        return JS_FALSE;
-    (cs->format & JOF_INC) ? ++d : --d;
-    vp->setNumber(d);
-    *vp2 = *vp;
-    return JS_TRUE;
+    if (!ToNumber(cx, *slot, &d))
+        return false;
+
+    double sum = d + (cs.format & JOF_INC ? 1 : -1);
+    *slot = NumberValue(sum);
+    *expr = (cs.format & JOF_POST) ? NumberValue(d) : *slot;
+
+    TypeScript::MonitorOverflow(cx, script, pc);
+    return true;
 }
 
 const Value &
@@ -1090,13 +1094,6 @@ js::FindUpvarFrame(JSContext *cx, unsigned targetLevel)
         if (!obj)                                                             \
             goto error;                                                       \
     JS_END_MACRO
-
-/* Test whether v is an int in the range [-2^31 + 1, 2^31 - 2] */
-static JS_ALWAYS_INLINE bool
-CanIncDecWithoutOverflow(int32_t i)
-{
-    return (i > JSVAL_INT_MIN) && (i < JSVAL_INT_MAX);
-}
 
 /*
  * Threaded interpretation via computed goto appears to be well-supported by
@@ -2501,62 +2498,29 @@ BEGIN_CASE(JSOP_GNAMEDEC)
     /* No-op */
 END_CASE(JSOP_INCPROP)
 
-{
-    int incr, incr2;
-    uint32_t slot;
-    Value *vp;
-
-    /* Position cases so the most frequent i++ does not need a jump. */
 BEGIN_CASE(JSOP_DECARG)
-    incr = -1; incr2 = -1; goto do_arg_incop;
 BEGIN_CASE(JSOP_ARGDEC)
-    incr = -1; incr2 =  0; goto do_arg_incop;
 BEGIN_CASE(JSOP_INCARG)
-    incr =  1; incr2 =  1; goto do_arg_incop;
 BEGIN_CASE(JSOP_ARGINC)
-    incr =  1; incr2 =  0;
-
-  do_arg_incop:
-    slot = GET_ARGNO(regs.pc);
-    JS_ASSERT(slot < regs.fp()->numFormalArgs());
-    vp = argv + slot;
-    goto do_int_fast_incop;
+{
+    Value &arg = regs.fp()->formalArg(GET_ARGNO(regs.pc));
+    if (!DoIncDec(cx, script, regs.pc, arg, &arg, &regs.sp[0]))
+        goto error;
+    regs.sp++;
+}
+END_CASE(JSOP_ARGINC);
 
 BEGIN_CASE(JSOP_DECLOCAL)
-    incr = -1; incr2 = -1; goto do_local_incop;
 BEGIN_CASE(JSOP_LOCALDEC)
-    incr = -1; incr2 =  0; goto do_local_incop;
 BEGIN_CASE(JSOP_INCLOCAL)
-    incr =  1; incr2 =  1; goto do_local_incop;
 BEGIN_CASE(JSOP_LOCALINC)
-    incr =  1; incr2 =  0;
-
-  /*
-   * do_local_incop comes right before do_int_fast_incop as we want to
-   * avoid an extra jump for variable cases as local++ is more frequent
-   * than arg++.
-   */
-  do_local_incop:
-    slot = GET_SLOTNO(regs.pc);
-    JS_ASSERT(slot < regs.fp()->numSlots());
-    vp = regs.fp()->slots() + slot;
-
-  do_int_fast_incop:
-    int32_t tmp;
-    if (JS_LIKELY(vp->isInt32() && CanIncDecWithoutOverflow(tmp = vp->toInt32()))) {
-        vp->getInt32Ref() = tmp + incr;
-        JS_ASSERT(JSOP_INCARG_LENGTH == js_CodeSpec[op].length);
-        PUSH_INT32(tmp + incr2);
-    } else {
-        PUSH_COPY(*vp);
-        if (!DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
-            goto error;
-        TypeScript::MonitorOverflow(cx, script, regs.pc);
-    }
-    len = JSOP_INCARG_LENGTH;
-    JS_ASSERT(len == js_CodeSpec[op].length);
-    DO_NEXT_OP(len);
+{
+    Value &local = regs.fp()->localSlot(GET_SLOTNO(regs.pc));
+    if (!DoIncDec(cx, script, regs.pc, local, &local, &regs.sp[0]))
+        goto error;
+    regs.sp++;
 }
+END_CASE(JSOP_LOCALINC)
 
 BEGIN_CASE(JSOP_THIS)
     if (!ComputeThis(cx, regs.fp()))
