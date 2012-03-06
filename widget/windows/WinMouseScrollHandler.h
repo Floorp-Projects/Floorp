@@ -15,6 +15,7 @@
 
 class nsWindow;
 class nsGUIEvent;
+class nsMouseScrollEvent;
 struct nsModifierKeyState;
 
 namespace mozilla {
@@ -159,6 +160,47 @@ public:
      * RecordEvent() saves the information of new event.
      */
     void RecordEvent(const EventInfo& aEvent);
+
+    /**
+     * InitMouseScrollEvent() initializes NS_MOUSE_SCROLL event and
+     * recomputes the remaning detla for the event.
+     * This must be called only once during handling a message and after
+     * RecordEvent() is called.
+     *
+     * @param aWindow           A window which will dispatch the event.
+     * @param aMouseScrollEvent An NS_MOUSE_SCROLL event, this will be
+     *                          initialized.
+     * @param aScrollTargetInfo The result of GetScrollTargetInfo().
+     * @param aModKeyState      Current modifier key state.
+     * @return                  TRUE if the event is ready to dispatch.
+     *                          Otherwise, FALSE.
+     */
+    bool InitMouseScrollEvent(nsWindow* aWindow,
+                              nsMouseScrollEvent& aMouseScrollEvent,
+                              const ScrollTargetInfo& aScrollTargetInfo,
+                              const nsModifierKeyState& aModKeyState);
+
+    /**
+     * InitMousePixelScrollEvent() initializes NS_MOUSE_PIXEL_SCROLL event and
+     * recomputes the remaning detla for the event.
+     * This must be called only once during handling a message and after
+     * RecordEvent() is called.
+     *
+     * @param aWindow           A window which will dispatch the event.
+     * @param aMouseScrollEvent An NS_MOUSE_PIXEL_SCROLL event, this will be
+     *                          initialized.
+     * @param aScrollTargetInfo The result of GetScrollTargetInfo().
+     * @param aModKeyState      Current modifier key state.
+     * @return                  TRUE if the event is ready to dispatch.
+     *                          Otherwise, FALSE.
+     */
+    bool InitMousePixelScrollEvent(nsWindow* aWindow,
+                                   nsMouseScrollEvent& aPixelScrollEvent,
+                                   const ScrollTargetInfo& aScrollTargetInfo,
+                                   const nsModifierKeyState& aModKeyState);
+
+  private:
+    static PRInt32 RoundDelta(double aDelta);
 
     // The remaining native delta value (i.e., not handled by previous
     // message handler).
