@@ -190,12 +190,12 @@ SmsFilter::SetNumbers(JSContext* aCx, const jsval& aNumbers)
     return NS_ERROR_INVALID_ARG;
   }
 
-  jsuint size;
+  unsigned size;
   JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, &obj, &size));
 
   nsTArray<nsString> numbers;
 
-  for (jsuint i=0; i<size; ++i) {
+  for (unsigned i=0; i<size; ++i) {
     jsval jsNumber;
     if (!JS_GetElement(aCx, &obj, i, &jsNumber)) {
       return NS_ERROR_INVALID_ARG;

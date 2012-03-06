@@ -618,12 +618,12 @@ IDBObjectStore::AppendIndexUpdateInfo(PRInt64 aIndexID,
   if (aMultiEntry && !JSVAL_IS_PRIMITIVE(key) &&
       JS_IsArrayObject(aCx, JSVAL_TO_OBJECT(key))) {
     JSObject* array = JSVAL_TO_OBJECT(key);
-    jsuint arrayLength;
+    unsigned arrayLength;
     if (!JS_GetArrayLength(aCx, array, &arrayLength)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    for (jsuint arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
+    for (unsigned arrayIndex = 0; arrayIndex < arrayLength; arrayIndex++) {
       jsval arrayItem;
       if (!JS_GetElement(aCx, array, arrayIndex, &arrayItem)) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -1700,7 +1700,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
 
     JSObject* obj = JSVAL_TO_OBJECT(aKeyPath);
 
-    jsuint length;
+    unsigned length;
     if (!JS_GetArrayLength(aCx, obj, &length)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
@@ -1711,7 +1711,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
 
     keyPathArray.SetCapacity(length);
 
-    for (jsuint index = 0; index < length; index++) {
+    for (unsigned index = 0; index < length; index++) {
       jsval val;
       JSString* jsstr;
       nsDependentJSString str;

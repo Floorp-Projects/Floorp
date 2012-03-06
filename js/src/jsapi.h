@@ -1896,8 +1896,8 @@ JSID_TO_INT(jsid id)
 static JS_ALWAYS_INLINE JSBool
 INT_FITS_IN_JSID(int32_t i)
 {
-    return ((jsuint)(i) - (jsuint)JSID_INT_MIN <=
-            (jsuint)(JSID_INT_MAX - JSID_INT_MIN));
+    return ((unsigned)(i) - (unsigned)JSID_INT_MIN <=
+            (unsigned)(JSID_INT_MAX - JSID_INT_MIN));
 }
 
 static JS_ALWAYS_INLINE jsid
@@ -3986,10 +3986,10 @@ extern JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp);
+JS_GetArrayLength(JSContext *cx, JSObject *obj, unsigned *lengthp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length);
+JS_SetArrayLength(JSContext *cx, JSObject *obj, unsigned length);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, uint32_t index, jsval value,

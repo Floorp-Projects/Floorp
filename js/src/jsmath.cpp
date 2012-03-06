@@ -435,7 +435,7 @@ js_math_min(JSContext *cx, unsigned argc, Value *vp)
 static double
 powi(double x, int y)
 {
-    jsuint n = (y < 0) ? -y : y;
+    unsigned n = (y < 0) ? -y : y;
     double m = x;
     double p = 1;
     while (true) {
