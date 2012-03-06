@@ -6638,6 +6638,25 @@ JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier)
     return true;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
+{
+    if (script)
+        *script = NULL;
+    if (lineno)
+        *lineno = 0;
+
+    FrameRegsIter i(cx);
+    if (i.done())
+        return JS_FALSE;
+
+    if (script)
+        *script = i.script();
+    if (lineno)
+        *lineno = js::PCToLineNumber(i.script(), i.pc());
+    return JS_TRUE;
+}
+
 #ifdef JS_THREADSAFE
 static PRStatus
 CallOnce(void *func)

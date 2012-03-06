@@ -739,8 +739,11 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   NS_ENSURE_TRUE(prompt, JS_FALSE);
 
   // Check if we should offer the option to debug
-  JSStackFrame* fp = ::JS_GetScriptedCaller(cx, NULL);
-  bool debugPossible = fp && js::CanCallContextDebugHandler(cx);
+  JSScript *script;
+  unsigned lineno;
+  JSBool hasFrame = ::JS_DescribeScriptedCaller(cx, &script, &lineno);
+
+  bool debugPossible = hasFrame && js::CanCallContextDebugHandler(cx);
 #ifdef MOZ_JSDEBUGGER
   // Get the debugger service if necessary.
   if (debugPossible) {
@@ -805,7 +808,6 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   }
 
   // Append file and line number information, if available
-  JSScript *script = fp ? ::JS_GetFrameScript(cx, fp) : nsnull;
   if (script) {
     const char *filename = ::JS_GetScriptFilename(cx, script);
     if (filename) {
@@ -820,17 +822,8 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
       if (NS_SUCCEEDED(rv) && scriptLocation) {
         msg.AppendLiteral("\n\n");
         msg.Append(scriptLocation);
-
-        JSStackFrame *fp, *iterator = nsnull;
-        fp = ::JS_FrameIterator(cx, &iterator);
-        if (fp) {
-          jsbytecode *pc = ::JS_GetFramePC(cx, fp);
-          if (pc) {
-            PRUint32 lineno = ::JS_PCToLineNumber(cx, script, pc);
-            msg.Append(':');
-            msg.AppendInt(lineno);
-          }
-        }
+        msg.Append(':');
+        msg.AppendInt(lineno);
       }
     }
   }
@@ -867,22 +860,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     return JS_TRUE;
   }
   else if ((buttonPressed == 2) && debugPossible) {
-    // Debug the script
-    jsval rval;
-    switch (js::CallContextDebugHandler(cx, script, JS_GetFramePC(cx, fp), &rval)) {
-      case JSTRAP_RETURN:
-        JS_SetFrameReturnValue(cx, fp, rval);
-        return JS_TRUE;
-      case JSTRAP_ERROR:
-        JS_ClearPendingException(cx);
-        return JS_FALSE;
-      case JSTRAP_THROW:
-        JS_SetPendingException(cx, rval);
-        return JS_FALSE;
-      case JSTRAP_CONTINUE:
-      default:
-        return JS_TRUE;
-    }
+    return js_CallContextDebugHandler(cx);
   }
 
   JS_ClearPendingException(cx);
