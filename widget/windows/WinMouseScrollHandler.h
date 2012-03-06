@@ -15,6 +15,7 @@
 
 class nsWindow;
 class nsGUIEvent;
+struct nsModifierKeyState;
 
 namespace mozilla {
 namespace widget {
@@ -32,6 +33,13 @@ public:
                              LPARAM lParam,
                              LRESULT *aRetValue,
                              bool &aEatMessage);
+
+  /**
+   * GetModifierKeyState() returns current modifier key state.
+   * Note that some devices need some hack for the modifier key state.
+   * This method does it automatically.
+   */
+  static nsModifierKeyState GetModifierKeyState();
 
 private:
   MouseScrollHandler();
