@@ -204,12 +204,9 @@ MouseScrollHandler::GetScrollTargetInfo(
 
   nsMouseScrollEvent testEvent(true, NS_MOUSE_SCROLL, aWindow);
   aWindow->InitEvent(testEvent);
-  testEvent.scrollFlags = aEventInfo.GetScrollFlags();
-  testEvent.isShift     = aModifierKeyState.mIsShiftDown;
-  testEvent.isControl   = aModifierKeyState.mIsControlDown;
-  testEvent.isMeta      = false;
-  testEvent.isAlt       = aModifierKeyState.mIsAltDown;
+  aModifierKeyState.InitInputEvent(testEvent);
 
+  testEvent.scrollFlags = aEventInfo.GetScrollFlags();
   testEvent.delta       = result.actualScrollAmount;
   if ((aEventInfo.IsVertical() && aEventInfo.IsPositive()) ||
       (!aEventInfo.IsVertical() && !aEventInfo.IsPositive())) {
@@ -366,6 +363,145 @@ MouseScrollHandler::LastEventInfo::RecordEvent(const EventInfo& aEvent)
   mIsVertical = aEvent.IsVertical();
   mIsPage = aEvent.IsPage();
   mTimeStamp = TimeStamp::Now();
+}
+
+/* static */
+PRInt32
+MouseScrollHandler::LastEventInfo::RoundDelta(double aDelta)
+{
+  return (aDelta >= 0) ? (PRInt32)floor(aDelta) : (PRInt32)ceil(aDelta);
+}
+
+bool
+MouseScrollHandler::LastEventInfo::InitMouseScrollEvent(
+                                     nsWindow* aWindow,
+                                     nsMouseScrollEvent& aMouseScrollEvent,
+                                     const ScrollTargetInfo& aScrollTargetInfo,
+                                     const nsModifierKeyState& aModKeyState)
+{
+  NS_ABORT_IF_FALSE(aMouseScrollEvent.message == NS_MOUSE_SCROLL,
+    "aMouseScrollEvent must be NS_MOUSE_SCROLL");
+
+  // XXX Why don't we use lParam value? We should use lParam value because
+  //     our internal message is always posted by original message handler.
+  //     So, GetMessagePos() may return different cursor position.
+  aWindow->InitEvent(aMouseScrollEvent);
+
+  aModKeyState.InitInputEvent(aMouseScrollEvent);
+
+  // If we dispatch pixel scroll event after the line scroll event,
+  // we should set kHasPixels flag to the line scroll event.
+  aMouseScrollEvent.scrollFlags =
+    aScrollTargetInfo.dispatchPixelScrollEvent ?
+      nsMouseScrollEvent::kHasPixels : 0;
+  aMouseScrollEvent.scrollFlags |= GetScrollFlags();
+
+  // Our positive delta value means to bottom or right.
+  // But positive native delta value means to top or right.
+  // Use orienter for computing our delta value with native delta value.
+  PRInt32 orienter = mIsVertical ? -1 : 1;
+
+  // NOTE: Don't use aScrollTargetInfo.actualScrollAmount for computing the
+  //       delta value of line/page scroll event.  The value will be recomputed
+  //       in ESM.
+  PRInt32 nativeDelta = mDelta + mRemainingDeltaForScroll;
+  if (IsPage()) {
+    aMouseScrollEvent.delta = nativeDelta * orienter / WHEEL_DELTA;
+    PRInt32 recomputedNativeDelta =
+      aMouseScrollEvent.delta * orienter / WHEEL_DELTA;
+    mRemainingDeltaForScroll = nativeDelta - recomputedNativeDelta;
+  } else {
+    double deltaPerUnit = (double)WHEEL_DELTA / GetScrollAmount();
+    aMouseScrollEvent.delta = 
+      RoundDelta((double)nativeDelta * orienter / deltaPerUnit);
+    PRInt32 recomputedNativeDelta =
+      (PRInt32)(aMouseScrollEvent.delta * orienter * deltaPerUnit);
+    mRemainingDeltaForScroll = nativeDelta - recomputedNativeDelta;
+  }
+
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::LastEventInfo::InitMouseScrollEvent: aWindow=%p, "
+     "aMouseScrollEvent { refPoint: { x: %d, y: %d }, delta: %d, "
+     "scrollFlags: 0x%04X, isShift: %s, isControl: %s, isAlt: %s, "
+     "isMeta: %s }, mRemainingDeltaForScroll: %d",
+     aWindow, aMouseScrollEvent.refPoint.x, aMouseScrollEvent.refPoint.y,
+     aMouseScrollEvent.delta, aMouseScrollEvent.scrollFlags,
+     GetBoolName(aMouseScrollEvent.isShift),
+     GetBoolName(aMouseScrollEvent.isControl),
+     GetBoolName(aMouseScrollEvent.isAlt),
+     GetBoolName(aMouseScrollEvent.isMeta), mRemainingDeltaForScroll));
+
+  return (aMouseScrollEvent.delta != 0);
+}
+
+bool
+MouseScrollHandler::LastEventInfo::InitMousePixelScrollEvent(
+                                     nsWindow* aWindow,
+                                     nsMouseScrollEvent& aPixelScrollEvent,
+                                     const ScrollTargetInfo& aScrollTargetInfo,
+                                     const nsModifierKeyState& aModKeyState)
+{
+  NS_ABORT_IF_FALSE(aPixelScrollEvent.message == NS_MOUSE_PIXEL_SCROLL,
+    "aPixelScrollEvent must be NS_MOUSE_PIXEL_SCROLL");
+
+  if (!aScrollTargetInfo.dispatchPixelScrollEvent) {
+    PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+      ("MouseScroll::LastEventInfo::InitMousePixelScrollEvent: aWindow=%p, "
+       "PixelScroll is disabled",
+       aWindow, mRemainingDeltaForPixel));
+
+    mRemainingDeltaForPixel = 0;
+    return false;
+  }
+
+  // XXX Why don't we use lParam value? We should use lParam value because
+  //     our internal message is always posted by original message handler.
+  //     So, GetMessagePos() may return different cursor position.
+  aWindow->InitEvent(aPixelScrollEvent);
+
+  aModKeyState.InitInputEvent(aPixelScrollEvent);
+
+  aPixelScrollEvent.scrollFlags = nsMouseScrollEvent::kAllowSmoothScroll;
+  aPixelScrollEvent.scrollFlags |= mIsVertical ?
+    nsMouseScrollEvent::kIsVertical : nsMouseScrollEvent::kIsHorizontal;
+  if (aScrollTargetInfo.actualScrollAction ==
+        nsQueryContentEvent::SCROLL_ACTION_PAGE) {
+    aPixelScrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+  }
+
+  // Our positive delta value means to bottom or right.
+  // But positive native delta value means to top or right.
+  // Use orienter for computing our delta value with native delta value.
+  PRInt32 orienter = mIsVertical ? -1 : 1;
+  // However, pixel scroll event won't be recomputed the scroll amout and
+  // direction by ESM.  Therefore, we need to set the computed amout and
+  // direction here.
+  if (aScrollTargetInfo.reversePixelScrollDirection) {
+    orienter *= -1;
+  }
+
+  PRInt32 nativeDelta = mDelta + mRemainingDeltaForPixel;
+  double deltaPerPixel = (double)WHEEL_DELTA /
+    aScrollTargetInfo.actualScrollAmount / aScrollTargetInfo.pixelsPerUnit;
+  aPixelScrollEvent.delta =
+    RoundDelta((double)nativeDelta * orienter / deltaPerPixel);
+  PRInt32 recomputedNativeDelta =
+    (PRInt32)(aPixelScrollEvent.delta * orienter * deltaPerPixel);
+  mRemainingDeltaForPixel = nativeDelta - recomputedNativeDelta;
+
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::LastEventInfo::InitMousePixelScrollEvent: aWindow=%p, "
+     "aPixelScrollEvent { refPoint: { x: %d, y: %d }, delta: %d, "
+     "scrollFlags: 0x%04X, isShift: %s, isControl: %s, isAlt: %s, "
+     "isMeta: %s }, mRemainingDeltaForScroll: %d",
+     aWindow, aPixelScrollEvent.refPoint.x, aPixelScrollEvent.refPoint.y,
+     aPixelScrollEvent.delta, aPixelScrollEvent.scrollFlags,
+     GetBoolName(aPixelScrollEvent.isShift),
+     GetBoolName(aPixelScrollEvent.isControl),
+     GetBoolName(aPixelScrollEvent.isAlt),
+     GetBoolName(aPixelScrollEvent.isMeta), mRemainingDeltaForPixel));
+
+  return (aPixelScrollEvent.delta != 0);
 }
 
 /******************************************************************************

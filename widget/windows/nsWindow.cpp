@@ -6258,11 +6258,6 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   return true; // Handled
 }
 
-static PRInt32 RoundDelta(double aDelta)
-{
-  return aDelta >= 0 ? (PRInt32)floor(aDelta) : (PRInt32)ceil(aDelta);
-}
-
 /**
  * OnMouseWheelInternal - mouse wheel event processing.
  * aMessage may be WM_MOUSEWHEEL or WM_MOUSEHWHEEL but this is called when
@@ -6297,58 +6292,14 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
 
   nsModifierKeyState modKeyState = MouseScrollHandler::GetModifierKeyState();
 
-  // Our positive delta value means to bottom or right.
-  // But positive native delta value means to top or right.
-  // Use orienter for computing our delta value with native delta value.
-  PRInt32 orienter = eventInfo.IsVertical() ? -1 : 1;
-
-  // Create line (or page) scroll event.
-  nsMouseScrollEvent scrollEvent(true, NS_MOUSE_SCROLL, this);
-
-  // Initialize common members on line scroll event, pixel scroll event and
-  // test event.
-  InitEvent(scrollEvent);
-  scrollEvent.isShift     = modKeyState.mIsShiftDown;
-  scrollEvent.isControl   = modKeyState.mIsControlDown;
-  scrollEvent.isMeta      = false;
-  scrollEvent.isAlt       = modKeyState.mIsAltDown;
-
   // Before dispatching line scroll event, we should get the current scroll
   // event target information for pixel scroll.
   MouseScrollHandler::ScrollTargetInfo scrollTargetInfo =
     handler->GetScrollTargetInfo(this, eventInfo, modKeyState);
 
-  // If we dispatch pixel scroll event after the line scroll event,
-  // we should set kHasPixels flag to the line scroll event.
-  scrollEvent.scrollFlags = eventInfo.GetScrollFlags();
-  if (scrollTargetInfo.dispatchPixelScrollEvent) {
-    scrollEvent.scrollFlags |= nsMouseScrollEvent::kHasPixels;
-  }
-
-  PRInt32 nativeDeltaForScroll =
-    eventInfo.GetNativeDelta() + lastEventInfo.mRemainingDeltaForScroll;
-
-  // NOTE: Don't use scrollTargetInfo.actualScrollAmount for computing the
-  //       delta value of line/page scroll event.  The value will be
-  //       recomputed in ESM.
-  if (eventInfo.IsPage()) {
-    scrollEvent.delta = nativeDeltaForScroll * orienter / WHEEL_DELTA;
-    PRInt32 recomputedNativeDelta = scrollEvent.delta * orienter / WHEEL_DELTA;
-    lastEventInfo.mRemainingDeltaForScroll =
-      nativeDeltaForScroll - recomputedNativeDelta;
-  } else {
-    double deltaPerUnit;
-    deltaPerUnit =
-      (double)WHEEL_DELTA / eventInfo.GetScrollAmount();
-    scrollEvent.delta =
-      RoundDelta((double)nativeDeltaForScroll * orienter / deltaPerUnit);
-    PRInt32 recomputedNativeDelta =
-      (PRInt32)(scrollEvent.delta * orienter * deltaPerUnit);
-    lastEventInfo.mRemainingDeltaForScroll =
-      nativeDeltaForScroll - recomputedNativeDelta;
-  }
-
-  if (scrollEvent.delta) {
+  nsMouseScrollEvent scrollEvent(true, NS_MOUSE_SCROLL, this);
+  if (lastEventInfo.InitMouseScrollEvent(this, scrollEvent,
+                                         scrollTargetInfo, modKeyState)) {
     DispatchWindowEvent(&scrollEvent);
     if (mOnDestroyCalled) {
       lastEventInfo.ResetTransaction();
@@ -6356,45 +6307,14 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     }
   }
 
-  // If the query event failed, we cannot send pixel events.
-  if (!scrollTargetInfo.dispatchPixelScrollEvent) {
-    lastEventInfo.mRemainingDeltaForPixel = 0;
-    return;
-  }
-
   nsMouseScrollEvent pixelEvent(true, NS_MOUSE_PIXEL_SCROLL, this);
-  InitEvent(pixelEvent);
-  pixelEvent.scrollFlags = nsMouseScrollEvent::kAllowSmoothScroll;
-  pixelEvent.scrollFlags |= eventInfo.IsVertical() ?
-    nsMouseScrollEvent::kIsVertical : nsMouseScrollEvent::kIsHorizontal;
-  if (scrollTargetInfo.actualScrollAction ==
-        nsQueryContentEvent::SCROLL_ACTION_PAGE) {
-    pixelEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
-  }
-  // Use same modifier state for pixel scroll event.
-  pixelEvent.isShift     = scrollEvent.isShift;
-  pixelEvent.isControl   = scrollEvent.isControl;
-  pixelEvent.isMeta      = scrollEvent.isMeta;
-  pixelEvent.isAlt       = scrollEvent.isAlt;
-
-  PRInt32 nativeDeltaForPixel =
-    eventInfo.GetNativeDelta() + lastEventInfo.mRemainingDeltaForPixel;
-  // Pixel scroll event won't be recomputed the scroll amout and direction by
-  // ESM.  Therefore, we need to set the computed amout and direction here.
-  PRInt32 orienterForPixel =
-    scrollTargetInfo.reversePixelScrollDirection ? -orienter : orienter;
-
-  double deltaPerPixel =
-    (double)WHEEL_DELTA / scrollTargetInfo.actualScrollAmount /
-      scrollTargetInfo.pixelsPerUnit;
-  pixelEvent.delta =
-    RoundDelta((double)nativeDeltaForPixel * orienterForPixel / deltaPerPixel);
-  PRInt32 recomputedNativeDelta =
-    (PRInt32)(pixelEvent.delta * orienterForPixel * deltaPerPixel);
-  lastEventInfo.mRemainingDeltaForPixel =
-    nativeDeltaForPixel - recomputedNativeDelta;
-  if (pixelEvent.delta != 0) {
+  if (lastEventInfo.InitMousePixelScrollEvent(this, pixelEvent,
+                                              scrollTargetInfo, modKeyState)) {
     DispatchWindowEvent(&pixelEvent);
+    if (mOnDestroyCalled) {
+      lastEventInfo.ResetTransaction();
+      return;
+    }
   }
   return;
 }
@@ -8312,6 +8232,14 @@ nsModifierKeyState::nsModifierKeyState()
   mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
 }
 
+void
+nsModifierKeyState::InitInputEvent(nsInputEvent& aInputEvent) const
+{
+  aInputEvent.isShift   = mIsShiftDown;
+  aInputEvent.isControl = mIsControlDown;
+  aInputEvent.isMeta    = false;
+  aInputEvent.isAlt     = mIsAltDown;
+}
 
 // Note that the result of GetTopLevelWindow method can be different from the
 // result of WinUtils::GetTopLevelHWND().  The result can be non-floating
