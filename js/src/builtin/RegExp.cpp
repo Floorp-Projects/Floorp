@@ -45,6 +45,7 @@
 #include "vm/MethodGuard-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::types;

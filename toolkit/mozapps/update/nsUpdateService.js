@@ -143,22 +143,13 @@ const UNEXPECTED_ERROR   = 8;
 const ELEVATION_CANCELED = 9;
 
 // Windows service specific errors
-const SERVICE_UPDATER_COULD_NOT_BE_STARTED = 16000;
-const SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS = 16001;
-const SERVICE_UPDATER_SIGN_ERROR           = 16002;
-const SERVICE_UPDATER_COMPARE_ERROR        = 16003;
-const SERVICE_UPDATER_IDENTITY_ERROR       = 16004;
-const SERVICE_STILL_APPLYING_ON_SUCCESS    = 16005;
-const SERVICE_STILL_APPLYING_ON_FAILURE    = 16006;
-
-// Updater MAR security errors
-const CERT_LOAD_ERROR                         = 17;
-const CERT_HANDLING_ERROR                     = 18;
-const CERT_VERIFY_ERROR                       = 19;
-const ARCHIVE_NOT_OPEN                        = 20;
-const COULD_NOT_READ_PRODUCT_INFO_BLOCK_ERROR = 21;
-const MAR_CHANNEL_MISMATCH_ERROR              = 22;
-const VERSION_DOWNGRADE_ERROR                 = 23;
+const SERVICE_UPDATER_COULD_NOT_BE_STARTED = 24;
+const SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS = 25;
+const SERVICE_UPDATER_SIGN_ERROR           = 26;
+const SERVICE_UPDATER_COMPARE_ERROR        = 27;
+const SERVICE_UPDATER_IDENTITY_ERROR       = 28;
+const SERVICE_STILL_APPLYING_ON_SUCCESS    = 29;
+const SERVICE_STILL_APPLYING_ON_FAILURE    = 30;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -1424,14 +1415,7 @@ UpdateService.prototype = {
             update.errorCode == SERVICE_UPDATER_COMPARE_ERROR ||
             update.errorCode == SERVICE_UPDATER_IDENTITY_ERROR ||
             update.errorCode == SERVICE_STILL_APPLYING_ON_SUCCESS ||
-            update.errorCode == SERVICE_STILL_APPLYING_ON_FAILURE ||
-            update.errorCode == CERT_LOAD_ERROR ||
-            update.errorCode == CERT_HANDLING_ERROR ||
-            update.errorCode == CERT_VERIFY_ERROR ||
-            update.errorCode == ARCHIVE_NOT_OPEN ||
-            update.errorCode == COULD_NOT_READ_PRODUCT_INFO_BLOCK_ERROR ||
-            update.errorCode == MAR_CHANNEL_MISMATCH_ERROR ||
-            update.errorCode == VERSION_DOWNGRADE_ERROR) {
+            update.errorCode == SERVICE_STILL_APPLYING_ON_FAILURE) {
           var failCount = getPref("getIntPref", 
                                   PREF_APP_UPDATE_SERVICE_ERRORS, 0);
           var maxFail = getPref("getIntPref", 
