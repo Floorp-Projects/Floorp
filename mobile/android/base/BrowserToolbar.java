@@ -196,7 +196,7 @@ public class BrowserToolbar extends LinearLayout {
     }
 
     private void onAwesomeBarSearch() {
-        GeckoApp.mAppContext.onEditRequested();
+        GeckoApp.mAppContext.onSearchRequested();
     }
 
     private void addTab() {
