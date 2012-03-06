@@ -51,7 +51,6 @@
 #include "nsIForm.h"
 #include "nsFormSubmission.h"
 #include "nsIFormProcessor.h"
-#include "nsContentCreatorFunctions.h"
 
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsEventStates.h"
