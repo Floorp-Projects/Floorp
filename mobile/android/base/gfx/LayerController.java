@@ -233,7 +233,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         float newZoomFactor = size.width * oldZoomFactor / oldWidth;
         mViewportMetrics.scaleTo(newZoomFactor, newFocus);
 
-        Log.d(LOGTAG, "setViewportSize: " + mViewportMetrics);
         setForceRedraw();
 
         if (mLayerClient != null) {
@@ -250,7 +249,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         PointF origin = mViewportMetrics.getOrigin();
         origin.offset(point.x, point.y);
         mViewportMetrics.setOrigin(origin);
-        Log.d(LOGTAG, "scrollBy: " + mViewportMetrics);
 
         notifyLayerClientOfGeometryChange();
         GeckoApp.mAppContext.repositionPluginViews(false);
@@ -263,7 +261,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
             return;
 
         mViewportMetrics.setPageSize(size);
-        Log.d(LOGTAG, "setPageSize: " + mViewportMetrics);
 
         // Page size is owned by the layer client, so no need to notify it of
         // this change.
@@ -284,7 +281,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      */
     public void setViewportMetrics(ViewportMetrics viewport) {
         mViewportMetrics = new ViewportMetrics(viewport);
-        Log.d(LOGTAG, "setViewportMetrics: " + mViewportMetrics);
         // this function may or may not be called on the UI thread,
         // but repositionPluginViews must only be called on the UI thread.
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
@@ -301,7 +297,6 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      */
     public void scaleWithFocus(float zoomFactor, PointF focus) {
         mViewportMetrics.scaleTo(zoomFactor, focus);
-        Log.d(LOGTAG, "scaleWithFocus: " + mViewportMetrics + "; zf=" + zoomFactor);
 
         // We assume the zoom level will only be modified by the
         // PanZoomController, so no need to notify it of this change.

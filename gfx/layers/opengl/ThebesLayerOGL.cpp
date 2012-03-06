@@ -960,7 +960,6 @@ ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
                            OptionalThebesBuffer* aReadOnlyFront,
                            nsIntRegion* aFrontUpdatedRegion)
 {
-  printf_stderr("Thebes Swap\n");
   if (!mDestroyed) {
     if (!mBuffer) {
       mBuffer = new ShadowBufferOGL(this);

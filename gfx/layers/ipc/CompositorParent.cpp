@@ -187,8 +187,8 @@ CompositorParent::Composite()
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   if (mExpectedComposeTime + TimeDuration::FromMilliseconds(15) < mozilla::TimeStamp::Now()) {
-    printf_stderr("Compositor: Compose frame took %i time then expected.\n",
-                  (int)(mozilla::TimeStamp::Now() - mExpectedComposeTime).ToMilliseconds());
+    printf_stderr("Compositor: Composite took %i ms.\n",
+                  15 + (int)(mozilla::TimeStamp::Now() - mExpectedComposeTime).ToMilliseconds());
   }
 #endif
 }
@@ -310,10 +310,6 @@ void
 CompositorParent::RequestViewTransform()
 {
   mozilla::AndroidBridge::Bridge()->GetViewTransform(mScrollOffset, mXScale, mYScale);
-
-  __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### mScrollOffset=%g %g "
-                      "mXScale=%g mYScale=%g", (float)mScrollOffset.x, (float)mScrollOffset.y,
-                      (float)mXScale, (float)mYScale);
 }
 #endif
 

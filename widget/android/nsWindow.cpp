@@ -1048,7 +1048,6 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
 
         switch (GetLayerManager(nsnull)->GetBackendType()) {
             case LayerManager::LAYERS_BASIC: {
-                __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Basic layers drawing");
 
                 nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
@@ -1073,7 +1072,6 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
             }
 
             case LayerManager::LAYERS_OPENGL: {
-                __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### OGL layers drawing");
 
                 static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nsnull))->
                     SetClippingRegion(nsIntRegion(boundsRect));
@@ -1133,8 +1131,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         DumpWindows();
         return;
     }
-
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### OnDraw()");
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
@@ -1212,12 +1208,10 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     if (targetSurface->CairoStatus()) {
         ALOG("### Failed to create a valid surface from the bitmap");
     } else {
-        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling DrawTo()!");
         DrawTo(targetSurface, dirtyRect);
     }
     layers::renderTraceEventEnd("Widget draw to", "434646");
 
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Calling EndDrawing()!");
     layers::renderTraceEventStart("Widget end draw", "434747");
     client.EndDrawing();
     layers::renderTraceEventEnd("Widget end draw", "434747");
