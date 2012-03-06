@@ -271,14 +271,8 @@ BYTE            nsWindow::sLastMouseButton        = 0;
 // Trim heap on minimize. (initialized, but still true.)
 int             nsWindow::sTrimOnMinimize         = 2;
 
-// Default value for Trackpoint hack (used when the pref is set to -1).
-bool            nsWindow::sDefaultTrackPointHack  = false;
 // Default value for general window class (used when the pref is the empty string).
 const char*     nsWindow::sDefaultMainWindowClass = kClassNameGeneral;
-// Whether to enable the Elantech swipe gesture hack.
-bool            nsWindow::sUseElantechSwipeHack  = false;
-// Whether to enable the Elantech pinch-to-zoom gesture hack.
-bool            nsWindow::sUseElantechPinchHack  = false;
 
 // If we're using D3D9, this will not be allowed during initial 5 seconds.
 bool            nsWindow::sAllowD3D9              = false;
@@ -404,7 +398,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldExStyle           = 0;
   mPainting             = 0;
   mLastKeyboardLayout   = 0;
-  mAssumeWheelIsZoomUntil = 0;
   mBlurSuppressLevel    = 0;
   mLastPaintEndTime     = TimeStamp::Now();
 #ifdef MOZ_XUL
@@ -435,7 +428,6 @@ nsWindow::nsWindow() : nsBaseWidget()
       sIsOleInitialized = TRUE;
     }
     NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
-    InitInputWorkaroundPrefDefaults();
     MouseScrollHandler::Initialize();
     // Init titlebar button info for custom frames.
     nsUXThemeData::InitTitlebarInfo();
@@ -601,7 +593,7 @@ nsWindow::Create(nsIWidget *aParent,
 
   if (mWindowType != eWindowType_plugin &&
       mWindowType != eWindowType_invisible &&
-      UseTrackPointHack()) {
+      MouseScrollHandler::Device::IsFakeScrollableWindowNeeded()) {
     // Ugly Thinkpad Driver Hack (Bugs 507222 and 594977)
     //
     // We create two zero-sized windows as descendants of the top-level window,
@@ -4487,24 +4479,6 @@ static bool CleartypeSettingChanged()
 bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                                 LRESULT *aRetValue)
 {
-  // For the Elantech Touchpad Zoom Gesture Hack, we should check that the
-  // system time (32-bit milliseconds) hasn't wrapped around.  Otherwise we
-  // might get into the situation where wheel events for the next 50 days of
-  // system uptime are assumed to be Ctrl+Wheel events.  (It is unlikely that
-  // we would get into that state, because the system would already need to be
-  // up for 50 days and the Control key message would need to be processed just
-  // before the system time overflow and the wheel message just after.)
-  //
-  // We also take the chance to reset mAssumeWheelIsZoomUntil if we simply have
-  // passed that time.
-  if (mAssumeWheelIsZoomUntil) {
-    LONG msgTime = ::GetMessageTime();
-    if ((mAssumeWheelIsZoomUntil >= 0x3fffffffu && DWORD(msgTime) < 0x40000000u) ||
-        (mAssumeWheelIsZoomUntil < DWORD(msgTime))) {
-      mAssumeWheelIsZoomUntil = 0;
-    }
-  }
-
   // (Large blocks of code should be broken out into OnEvent handlers.)
   if (mWindowHook.Notify(mWnd, msg, wParam, lParam, aRetValue))
     return true;
@@ -6388,13 +6362,10 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
 
   // Assume the Control key is down if the Elantech touchpad has sent the
   // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
-  // OnKeyUp.)
-  bool isControl;
-  if (mAssumeWheelIsZoomUntil &&
-      static_cast<DWORD>(::GetMessageTime()) < mAssumeWheelIsZoomUntil) {
-    isControl = true;
-  } else {
-    isControl = modKeyState.mIsControlDown;
+  // MouseScrollHandler::Device::Elantech::HandleKeyMessage().)
+  if (!modKeyState.mIsControlDown) {
+    modKeyState.mIsControlDown =
+      MouseScrollHandler::Device::Elantech::IsZooming();
   }
 
   // Create line (or page) scroll event.
@@ -6404,7 +6375,7 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   // test event.
   InitEvent(scrollEvent);
   scrollEvent.isShift     = modKeyState.mIsShiftDown;
-  scrollEvent.isControl   = isControl;
+  scrollEvent.isControl   = modKeyState.mIsControlDown;
   scrollEvent.isMeta      = false;
   scrollEvent.isAlt       = modKeyState.mIsAltDown;
 
@@ -6578,37 +6549,6 @@ bool nsWindow::IsRedirectedKeyDownMessage(const MSG &aMsg)
             WinUtils::GetScanCode(aMsg.lParam));
 }
 
-void
-nsWindow::PerformElantechSwipeGestureHack(UINT& aVirtualKeyCode,
-                                          nsModifierKeyState& aModKeyState)
-{
-  // The Elantech touchpad driver understands three-finger swipe left and
-  // right gestures, and translates them into Page Up and Page Down key
-  // events for most applications.  For Firefox 3.6, it instead sends
-  // Alt+Left and Alt+Right to trigger browser back/forward actions.  As
-  // with the Thinkpad Driver hack in nsWindow::Create, the change in
-  // HWND structure makes Firefox not trigger the driver's heuristics
-  // any longer.
-  //
-  // The Elantech driver actually sends these messages for a three-finger
-  // swipe right:
-  //
-  //   WM_KEYDOWN virtual_key = 0xCC or 0xFF (depending on driver version)
-  //   WM_KEYDOWN virtual_key = VK_NEXT
-  //   WM_KEYUP   virtual_key = VK_NEXT
-  //   WM_KEYUP   virtual_key = 0xCC or 0xFF
-  //
-  // so we use the 0xCC or 0xFF key modifier to detect whether the Page Down
-  // is due to the gesture rather than a regular Page Down keypress.  We then
-  // pretend that we were went an Alt+Right keystroke instead.  Similarly
-  // for VK_PRIOR and Alt+Left.
-  if ((aVirtualKeyCode == VK_NEXT || aVirtualKeyCode == VK_PRIOR) &&
-      (IS_VK_DOWN(0xFF) || IS_VK_DOWN(0xCC))) {
-    aModKeyState.mIsAltDown = true;
-    aVirtualKeyCode = aVirtualKeyCode == VK_NEXT ? VK_RIGHT : VK_LEFT;
-  }
-}
-
 /**
  * nsWindow::OnKeyDown peeks into the message queue and pulls out
  * WM_CHAR messages for processing. During testing we don't want to
@@ -6625,10 +6565,6 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   UINT virtualKeyCode =
     aMsg.wParam != VK_PROCESSKEY ? aMsg.wParam : ::ImmGetVirtualKey(mWnd);
   gKbdLayout.OnKeyDown(virtualKeyCode);
-
-  if (sUseElantechSwipeHack) {
-    PerformElantechSwipeGestureHack(virtualKeyCode, aModKeyState);
-  }
 
   // Use only DOMKeyCode for XP processing.
   // Use virtualKeyCode for gKbdLayout and native processing.
@@ -6970,34 +6906,6 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
                           bool *aEventDispatched)
 {
   UINT virtualKeyCode = aMsg.wParam;
-
-  if (sUseElantechSwipeHack) {
-    PerformElantechSwipeGestureHack(virtualKeyCode, aModKeyState);
-  }
-
-  if (sUseElantechPinchHack) {
-    // Version 8 of the Elantech touchpad driver sends these messages for
-    // zoom gestures:
-    //
-    //   WM_KEYDOWN    virtual_key = 0xCC        time = 10
-    //   WM_KEYDOWN    virtual_key = VK_CONTROL  time = 10
-    //   WM_MOUSEWHEEL                           time = ::GetTickCount()
-    //   WM_KEYUP      virtual_key = VK_CONTROL  time = 10
-    //   WM_KEYUP      virtual_key = 0xCC        time = 10
-    //
-    // The result of this is that we process all of the WM_KEYDOWN/WM_KEYUP
-    // messages first because their timestamps make them appear to have
-    // been sent before the WM_MOUSEWHEEL message.  To work around this,
-    // we store the current time when we process the WM_KEYUP message and
-    // assume that any WM_MOUSEWHEEL message with a timestamp before that
-    // time is one that should be processed as if the Control key was down.
-    if (virtualKeyCode == VK_CONTROL && aMsg.time == 10) {
-      // We look only at the bottom 31 bits of the system tick count since
-      // GetMessageTime returns a LONG, which is signed, so we want values
-      // that are more easily comparable.
-      mAssumeWheelIsZoomUntil = ::GetTickCount() & 0x7FFFFFFF;
-    }
-  }
 
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
          ("nsWindow::OnKeyUp VK=%d\n", virtualKeyCode));
@@ -7405,37 +7313,6 @@ bool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
   return true;
 }
 
-// Determine whether the given HWND is the handle for the Elantech helper
-// window.  The helper window cannot be distinguished based on its
-// window class, so we need to check if it is owned by the helper process,
-// ETDCtrl.exe.
-static bool IsElantechHelperWindow(HWND aHWND)
-{
-  const PRUnichar* filenameSuffix = L"\\etdctrl.exe";
-  const int filenameSuffixLength = 12;
-
-  DWORD pid;
-  ::GetWindowThreadProcessId(aHWND, &pid);
-
-  bool result = false;
-
-  HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
-  if (hProcess) {
-    PRUnichar path[256] = {L'\0'};
-    if (GetProcessImageFileName(hProcess, path, ArrayLength(path))) {
-      int pathLength = lstrlenW(path);
-      if (pathLength >= filenameSuffixLength) {
-        if (lstrcmpiW(path + pathLength - filenameSuffixLength, filenameSuffix) == 0) {
-          result = true;
-        }
-      }
-    }
-    ::CloseHandle(hProcess);
-  }
-
-  return result;
-}
-
 /**
  * OnMouseWheel() is called when ProcessMessage() handles WM_MOUSEWHEEL,
  * WM_MOUSEHWHEEL and also OnScroll() tries to emulate mouse wheel action for
@@ -7484,7 +7361,8 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
     return;
   }
 
-  if (sUseElantechPinchHack && IsElantechHelperWindow(underCursorWnd)) {
+  if (MouseScrollHandler::Device::Elantech::IsPinchHackNeeded() &&
+      MouseScrollHandler::Device::Elantech::IsHelperWindow(underCursorWnd)) {
     // The Elantech driver places a window right underneath the cursor
     // when sending a WM_MOUSEWHEEL event to us as part of a pinch-to-zoom
     // gesture.  We detect that here, and search for our window that would
@@ -8623,123 +8501,6 @@ void nsWindow::GetMainWindowClass(nsAString& aClass)
   if (NS_FAILED(rv) || aClass.IsEmpty()) {
     aClass.AssignASCII(sDefaultMainWindowClass);
   }
-}
-
-/**
- * Gets the Boolean value of a pref used to enable or disable an input
- * workaround (like the Trackpoint hack).  The pref can take values 0 (for
- * disabled), 1 (for enabled) or -1 (to automatically detect whether to
- * enable the workaround).
- *
- * @param aPrefName The name of the pref.
- * @param aValueIfAutomatic Whether the given input workaround should be
- *   enabled by default.
- */
-bool nsWindow::GetInputWorkaroundPref(const char* aPrefName,
-                                        bool aValueIfAutomatic)
-{
-  if (!aPrefName) {
-    return aValueIfAutomatic;
-  }
-
-  PRInt32 lHackValue = 0;
-  if (NS_SUCCEEDED(Preferences::GetInt(aPrefName, &lHackValue))) {
-    switch (lHackValue) {
-      case 0: // disabled
-        return false;
-      case 1: // enabled
-        return true;
-      default: // -1: autodetect
-        break;
-    }
-  }
-  return aValueIfAutomatic;
-}
-
-bool nsWindow::UseTrackPointHack()
-{
-  return GetInputWorkaroundPref("ui.trackpoint_hack.enabled",
-                                sDefaultTrackPointHack);
-}
-
-static bool
-IsObsoleteSynapticsDriver()
-{
-  PRUnichar buf[40];
-  bool foundKey = WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
-                                           L"Software\\Synaptics\\SynTP\\Install",
-                                           L"DriverVersion",
-                                           buf,
-                                           sizeof buf);
-  if (!foundKey)
-    return false;
-
-  int majorVersion = wcstol(buf, NULL, 10);
-  int minorVersion = 0;
-  PRUnichar* p = wcschr(buf, L'.');
-  if (p) {
-    minorVersion = wcstol(p + 1, NULL, 10);
-  }
-  return majorVersion < 15 || majorVersion == 15 && minorVersion == 0;
-}
-
-static PRInt32
-GetElantechDriverMajorVersion()
-{
-  PRUnichar buf[40];
-  // The driver version is found in one of these two registry keys.
-  bool foundKey = WinUtils::GetRegistryKey(HKEY_CURRENT_USER,
-                                           L"Software\\Elantech\\MainOption",
-                                           L"DriverVersion",
-                                           buf,
-                                           sizeof buf);
-  if (!foundKey)
-    foundKey = WinUtils::GetRegistryKey(HKEY_CURRENT_USER,
-                                        L"Software\\Elantech",
-                                        L"DriverVersion",
-                                        buf,
-                                        sizeof buf);
-
-  if (!foundKey)
-    return false;
-
-  // Assume that the major version number can be found just after a space
-  // or at the start of the string.
-  for (PRUnichar* p = buf; *p; p++) {
-    if (*p >= L'0' && *p <= L'9' && (p == buf || *(p - 1) == L' ')) {
-      return wcstol(p, NULL, 10);
-    }
-  }
-
-  return 0;
-}
-
-void nsWindow::InitInputWorkaroundPrefDefaults()
-{
-  PRUint32 elantechDriverVersion = GetElantechDriverMajorVersion();
-
-  if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
-                               L"Software\\Lenovo\\TrackPoint")) {
-    sDefaultTrackPointHack = true;
-  } else if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
-                                      L"Software\\Lenovo\\UltraNav")) {
-    sDefaultTrackPointHack = true;
-  } else if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
-                                      L"Software\\Alps\\Apoint\\TrackPoint")) {
-    sDefaultTrackPointHack = true;
-  } else if ((WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
-                L"Software\\Synaptics\\SynTPEnh\\UltraNavUSB") ||
-              WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
-                L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2")) &&
-              IsObsoleteSynapticsDriver()) {
-    sDefaultTrackPointHack = true;
-  }
-
-  bool useElantechGestureHacks =
-    GetInputWorkaroundPref("ui.elantech_gesture_hacks.enabled",
-                           elantechDriverVersion != 0);
-  sUseElantechSwipeHack = useElantechGestureHacks && elantechDriverVersion <= 7;
-  sUseElantechPinchHack = useElantechGestureHacks && elantechDriverVersion <= 8;
 }
 
 LPARAM nsWindow::lParamToScreen(LPARAM lParam)

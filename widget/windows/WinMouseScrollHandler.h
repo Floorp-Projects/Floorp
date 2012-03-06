@@ -13,6 +13,7 @@
 #include <windows.h>
 
 class nsWindow;
+class nsGUIEvent;
 
 namespace mozilla {
 namespace widget {
@@ -37,6 +38,12 @@ private:
 
   static MouseScrollHandler* sInstance;
 
+  /**
+   * DispatchEvent() dispatches aEvent on aWindow.
+   *
+   * @return TRUE if the event was consumed.  Otherwise, FALSE.
+   */
+  static bool DispatchEvent(nsWindow* aWindow, nsGUIEvent& aEvent);
 public:
   class SystemSettings {
   public:
@@ -113,6 +120,91 @@ public:
 
 private:
   UserPrefs mUserPrefs;
+
+public:
+
+  class Device {
+  public:
+    class Elantech {
+    public:
+      /**
+       * GetDriverMajorVersion() returns the installed driver's major version.
+       * If Elantech's driver was installed, returns 0.
+       */
+      static PRInt32 GetDriverMajorVersion();
+
+      /**
+       * IsHelperWindow() checks whether aWnd is a helper window of Elantech's
+       * touchpad.  Returns TRUE if so.  Otherwise, FALSE.
+       */
+      static bool IsHelperWindow(HWND aWnd);
+
+      /**
+       * Key message handler for Elantech's hack.  Returns TRUE if the message
+       * is consumed by this handler.  Otherwise, FALSE.
+       */
+      static bool HandleKeyMessage(nsWindow* aWindow,
+                                   UINT aMsg,
+                                   WPARAM aWParam);
+
+      static void UpdateZoomUntil();
+      static bool IsZooming();
+
+      static void Init();
+
+      static bool IsPinchHackNeeded() { return sUsePinchHack; }
+
+
+    private:
+      // Whether to enable the Elantech swipe gesture hack.
+      static bool sUseSwipeHack;
+      // Whether to enable the Elantech pinch-to-zoom gesture hack.
+      static bool sUsePinchHack;
+      static DWORD sZoomUntil;
+    }; // class Elantech
+
+    class TrackPoint {
+    public:
+      /**
+       * IsDriverInstalled() returns TRUE if TrackPoint's driver is installed.
+       * Otherwise, returns FALSE.
+       */
+      static bool IsDriverInstalled();
+    }; // class TrackPoint
+
+    class UltraNav {
+    public:
+      /**
+       * IsObsoleteDriverInstalled() checks whether obsoleted UltraNav
+       * is installed on the environment.
+       * Returns TRUE if it was installed.  Otherwise, FALSE.
+       */
+      static bool IsObsoleteDriverInstalled();
+    }; // class UltraNav
+
+    static void Init();
+
+    static bool IsFakeScrollableWindowNeeded()
+    {
+      return sFakeScrollableWindowNeeded;
+    }
+
+  private:
+    /**
+     * Gets the bool value of aPrefName used to enable or disable an input
+     * workaround (like the Trackpoint hack).  The pref can take values 0 (for
+     * disabled), 1 (for enabled) or -1 (to automatically detect whether to
+     * enable the workaround).
+     *
+     * @param aPrefName The name of the pref.
+     * @param aValueIfAutomatic Whether the given input workaround should be
+     *                          enabled by default.
+     */
+    static bool GetWorkaroundPref(const char* aPrefName,
+                                  bool aValueIfAutomatic);
+
+    static bool sFakeScrollableWindowNeeded;
+  }; // class Device
 };
 
 } // namespace widget
