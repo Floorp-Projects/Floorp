@@ -36,6 +36,41 @@ private:
   ~MouseScrollHandler();
 
   static MouseScrollHandler* sInstance;
+
+public:
+  class SystemSettings {
+  public:
+    SystemSettings() : mInitialized(false) {}
+
+    void Init();
+    void MarkDirty();
+
+    PRInt32 GetScrollAmount(bool aForVertical) const
+    {
+      MOZ_ASSERT(mInitialized, "SystemSettings must be initialized");
+      return aForVertical ? mScrollLines : mScrollChars;
+    }
+
+    bool IsPageScroll(bool aForVertical) const
+    {
+      MOZ_ASSERT(mInitialized, "SystemSettings must be initialized");
+      return aForVertical ? (mScrollLines == WHEEL_PAGESCROLL) :
+                            (mScrollChars == WHEEL_PAGESCROLL);
+    }
+
+  private:
+    bool mInitialized;
+    PRInt32 mScrollLines;
+    PRInt32 mScrollChars;
+  };
+
+  SystemSettings& GetSystemSettings()
+  {
+    return mSystemSettings;
+  }
+
+private:
+  SystemSettings mSystemSettings;
 };
 
 } // namespace widget

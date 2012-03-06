@@ -610,8 +610,6 @@ protected:
 
   static bool sEnablePixelScrolling;
   static bool sNeedsToInitMouseWheelSettings;
-  static ULONG sMouseWheelScrollLines;
-  static ULONG sMouseWheelScrollChars;
   static void InitMouseWheelScrollData();
 
   static HWND sLastMouseWheelWnd;

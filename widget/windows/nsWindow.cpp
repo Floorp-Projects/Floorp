@@ -294,8 +294,6 @@ MSG             nsWindow::sRedirectedKeyDown;
 
 bool            nsWindow::sEnablePixelScrolling = true;
 bool            nsWindow::sNeedsToInitMouseWheelSettings = true;
-ULONG           nsWindow::sMouseWheelScrollLines  = 0;
-ULONG           nsWindow::sMouseWheelScrollChars  = 0;
 
 HWND            nsWindow::sLastMouseWheelWnd = NULL;
 PRInt32         nsWindow::sRemainingDeltaForScroll = 0;
@@ -6315,30 +6313,6 @@ nsWindow::InitMouseWheelScrollData()
   sNeedsToInitMouseWheelSettings = false;
   ResetRemainingWheelDelta();
 
-  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0,
-                              &sMouseWheelScrollLines, 0)) {
-    NS_WARNING("Failed to get SPI_GETWHEELSCROLLLINES");
-    sMouseWheelScrollLines = 3;
-  } else if (sMouseWheelScrollLines > WHEEL_DELTA) {
-    // sMouseWheelScrollLines usually equals 3 or 0 (for no scrolling)
-    // However, if sMouseWheelScrollLines > WHEEL_DELTA, we assume that
-    // the mouse driver wants a page scroll.  The docs state that
-    // sMouseWheelScrollLines should explicitly equal WHEEL_PAGESCROLL, but
-    // since some mouse drivers use an arbitrary large number instead,
-    // we have to handle that as well.
-    sMouseWheelScrollLines = WHEEL_PAGESCROLL;
-  }
-
-  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0,
-                              &sMouseWheelScrollChars, 0)) {
-    NS_ASSERTION(WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION,
-                 "Failed to get SPI_GETWHEELSCROLLCHARS");
-    sMouseWheelScrollChars = 1;
-  } else if (sMouseWheelScrollChars > WHEEL_DELTA) {
-    // See the comments for the case sMouseWheelScrollLines > WHEEL_DELTA.
-    sMouseWheelScrollChars = WHEEL_PAGESCROLL;
-  }
-
   sEnablePixelScrolling =
     Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
 }
@@ -6367,10 +6341,12 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
                                LRESULT *aRetValue)
 {
   InitMouseWheelScrollData();
+  MouseScrollHandler::SystemSettings& systemSettings =
+    MouseScrollHandler::GetInstance()->GetSystemSettings();
+  systemSettings.Init();
 
   bool isVertical = (aMessage == WM_MOUSEWHEEL);
-  if ((isVertical && sMouseWheelScrollLines == 0) ||
-      (!isVertical && sMouseWheelScrollChars == 0)) {
+  if (systemSettings.GetScrollAmount(isVertical) == 0) {
     // XXX I think that we should dispatch mouse wheel events even if the
     // operation will not scroll because the wheel operation really happened
     // and web application may want to handle the event for non-scroll action.
@@ -6386,9 +6362,7 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     return; // We cannot process this message
   }
 
-  bool isPageScroll =
-    ((isVertical && sMouseWheelScrollLines == WHEEL_PAGESCROLL) ||
-     (!isVertical && sMouseWheelScrollChars == WHEEL_PAGESCROLL));
+  bool isPageScroll = systemSettings.IsPageScroll(isVertical);
 
   // Discard the remaining delta if current wheel message and last one are
   // received by different window or to scroll different direction or
@@ -6445,8 +6419,8 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
   PRInt32 actualScrollAction = nsQueryContentEvent::SCROLL_ACTION_NONE;
   PRInt32 pixelsPerUnit = 0;
   // the amount is the number of lines (or pages) per WHEEL_DELTA
-  PRInt32 computedScrollAmount = isPageScroll ? 1 :
-    (isVertical ? sMouseWheelScrollLines : sMouseWheelScrollChars);
+  PRInt32 computedScrollAmount =
+    isPageScroll ? 1 : systemSettings.GetScrollAmount(isVertical);
 
   if (sEnablePixelScrolling) {
     nsMouseScrollEvent testEvent(true, NS_MOUSE_SCROLL, this);
@@ -6519,11 +6493,11 @@ nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
     double deltaPerUnit;
     if (isVertical) {
       scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
-      deltaPerUnit = (double)WHEEL_DELTA / sMouseWheelScrollLines;
     } else {
       scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsHorizontal;
-      deltaPerUnit = (double)WHEEL_DELTA / sMouseWheelScrollChars;
     }
+    deltaPerUnit =
+      (double)WHEEL_DELTA / systemSettings.GetScrollAmount(isVertical);
     scrollEvent.delta =
       RoundDelta((double)nativeDeltaForScroll * orienter / deltaPerUnit);
     PRInt32 recomputedNativeDelta =
