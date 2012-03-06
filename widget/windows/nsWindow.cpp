@@ -7042,37 +7042,8 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
 {
   *aRetValue = (aMsg != WM_MOUSEHWHEEL) ? TRUE : FALSE;
 
-  POINT point;
-  DWORD dwPoints = ::GetMessagePos();
-  point.x = GET_X_LPARAM(dwPoints);
-  point.y = GET_Y_LPARAM(dwPoints);
-
-  static bool sMayBeUsingLogitechMouse = false;
-  if (aMsg == WM_MOUSEHWHEEL) {
-    // Logitech (Logicool) mouse driver (confirmed with 4.82.11 and MX-1100)
-    // always sets 0 to the lParam of WM_MOUSEHWHEEL.  The driver SENDs one
-    // message at first time, this time, ::GetMessagePos works fine.
-    // Then, we will return 0 (0 means we process it) to the message. Then, the
-    // driver will POST the same messages continuously during the wheel tilted.
-    // But ::GetMessagePos API always returns (0, 0), even if the actual mouse
-    // cursor isn't 0,0.  Therefore, we cannot trust the result of
-    // ::GetMessagePos API if the sender is the driver.
-    if (!sMayBeUsingLogitechMouse && aLParam == 0 && (DWORD)aLParam != dwPoints &&
-        ::InSendMessage()) {
-      sMayBeUsingLogitechMouse = true;
-    } else if (sMayBeUsingLogitechMouse && aLParam != 0 && ::InSendMessage()) {
-      // The user has changed the mouse from Logitech's to another one (e.g.,
-      // the user has changed to the touchpad of the notebook.
-      sMayBeUsingLogitechMouse = false;
-    }
-    // If the WM_MOUSEHWHEEL comes from Logitech's mouse driver, and the
-    // ::GetMessagePos isn't correct, probably, we should use ::GetCursorPos
-    // instead.
-    if (sMayBeUsingLogitechMouse && aLParam == 0 && dwPoints == 0) {
-      ::GetCursorPos(&point);
-    }
-  }
-
+  MouseScrollHandler* handler = MouseScrollHandler::GetInstance();
+  POINT point = handler->ComputeMessagePos(aMsg, aWParam, aLParam);
   HWND underCursorWnd = ::WindowFromPoint(point);
   if (!underCursorWnd) {
     return;
