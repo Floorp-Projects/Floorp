@@ -2832,20 +2832,31 @@ var ErrorPageEventHandler = {
 };
 
 var FormAssistant = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
+
   // Used to keep track of the element that corresponds to the current
   // autocomplete suggestions
   _currentInputElement: null,
 
+  // Keep track of whether or not an invalid form has been submitted
+  _invalidSubmit: false,
+
   init: function() {
     Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
     Services.obs.addObserver(this, "FormAssist:Hidden", false);
+    Services.obs.addObserver(this, "invalidformsubmit", false);
 
     BrowserApp.deck.addEventListener("input", this, false);
+    BrowserApp.deck.addEventListener("pageshow", this, false);
   },
 
   uninit: function() {
     Services.obs.removeObserver(this, "FormAssist:AutoComplete");
     Services.obs.removeObserver(this, "FormAssist:Hidden");
+    Services.obs.removeObserver(this, "invalidformsubmit");
+
+    BrowserApp.deck.removeEventListener("input", this);
+    BrowserApp.deck.removeEventListener("pageshow", this);
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -2865,15 +2876,43 @@ var FormAssistant = {
     }
   },
 
+  notifyInvalidSubmit: function notifyInvalidSubmit(aFormElement, aInvalidElements) {
+    if (!aInvalidElements.length)
+      return;
+
+    // Ignore this notificaiton if the current tab doesn't contain the invalid form
+    if (BrowserApp.selectedBrowser.contentDocument !=
+        aFormElement.ownerDocument.defaultView.top.document)
+      return;
+
+    this._invalidSubmit = true;
+
+    let currentElement = aInvalidElements.queryElementAt(0, Ci.nsISupports);
+    if (this._showValidationMessage(currentElement))
+      currentElement.focus();
+  },
+
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "input":
         let currentElement = aEvent.target;
+
+        // Since we can only show one popup at a time, prioritze autocomplete
+        // suggestions over a form validation message
         if (this._showAutoCompleteSuggestions(currentElement))
+          break;
+        if (this._showValidationMessage(currentElement))
           break;
 
         // If we're not showing autocomplete suggestions, hide the form assist popup
         this._hideFormAssistPopup();
+        break;
+
+      // Reset invalid submit state on each pageshow
+      case "pageshow":
+        let target = aEvent.originalTarget;
+        if (target == content.document || target.ownerDocument == content.document)
+          this._invalidSubmit = false;
     }
   },
 
@@ -2949,6 +2988,39 @@ var FormAssistant = {
     // Keep track of input element so we can fill it in if the user
     // selects an autocomplete suggestion
     this._currentInputElement = aElement;
+
+    return true;
+  },
+
+  // Only show a validation message if the user submitted an invalid form,
+  // there's a non-empty message string, and the element is the correct type
+  _isValidateable: function _isValidateable(aElement) {
+    if (!this._invalidSubmit ||
+        !aElement.validationMessage ||
+        !(aElement instanceof HTMLInputElement ||
+          aElement instanceof HTMLTextAreaElement ||
+          aElement instanceof HTMLSelectElement ||
+          aElement instanceof HTMLButtonElement))
+      return false;
+
+    return true;
+  },
+
+  // Sends a validation message and position data for an element to the Java UI.
+  // Returns true if there's a validation message to show, false otherwise.
+  _showValidationMessage: function _sendValidationMessage(aElement) {
+    if (!this._isValidateable(aElement))
+      return false;
+
+    let positionData = this._getElementPositionData(aElement);
+    sendMessageToJava({
+      gecko: {
+        type: "FormAssist:ValidationMessage",
+        validationMessage: aElement.validationMessage,
+        rect: positionData.rect,
+        zoom: positionData.zoom
+      }
+    });
 
     return true;
   },

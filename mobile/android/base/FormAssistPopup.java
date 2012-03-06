@@ -74,6 +74,11 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
     private static final int POPUP_MIN_WIDTH_IN_DPI = 200;
     private static final int POPUP_ROW_HEIGHT_IN_DPI = 32;
 
+    private static enum PopupType { NONE, AUTOCOMPLETE, VALIDATION };
+
+    // Keep track of the type of popup we're currently showing
+    private PopupType mTypeShowing = PopupType.NONE;
+
     public FormAssistPopup(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
@@ -85,13 +90,17 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
 
         setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parentView, View view, int position, long id) {
-                String value = ((TextView) view).getText().toString();
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:AutoComplete", value));
-                hide();
+                if (mTypeShowing.equals(PopupType.AUTOCOMPLETE)) {
+                    TextView textView = (TextView) view;
+                    String value = textView.getText().toString();
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:AutoComplete", value));
+                    hide();
+                }
             }
         });
 
         GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", this);
+        GeckoAppShell.registerGeckoEventListener("FormAssist:ValidationMessage", this);
         GeckoAppShell.registerGeckoEventListener("FormAssist:Hide", this);
     }
 
@@ -99,6 +108,8 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
         try {
             if (event.equals("FormAssist:AutoComplete")) {
                 handleAutoCompleteMessage(message);
+            } else if (event.equals("FormAssist:ValidationMessage")) {
+                handleValidationMessage(message);
             } else if (event.equals("FormAssist:Hide")) {
                 handleHideMessage(message);
             }
@@ -113,15 +124,22 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
         final double zoom = message.getDouble("zoom");
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
             public void run() {
-                // Don't show autocomplete popup when using fullscreen VKB
-                InputMethodManager imm =
-                        (InputMethodManager) GeckoApp.mAppContext.getSystemService(Context.INPUT_METHOD_SERVICE);
-                if (!imm.isFullscreenMode())
-                    show(suggestions, rect, zoom);
+                showAutoCompleteSuggestions(suggestions, rect, zoom);
             }
         });
     }
 
+    private void handleValidationMessage(JSONObject message) throws JSONException {
+        final String validationMessage = message.getString("validationMessage");
+        final JSONArray rect = message.getJSONArray("rect");
+        final double zoom = message.getDouble("zoom");
+        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            public void run() {
+                showValidationMessage(validationMessage, rect, zoom);
+            }
+        });
+    }
+    
     private void handleHideMessage(JSONObject message) {
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
             public void run() {
@@ -130,17 +148,37 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
         });
     }
 
-    public void show(JSONArray suggestions, JSONArray rect, double zoom) {
+    private void showAutoCompleteSuggestions(JSONArray suggestions, JSONArray rect, double zoom) {
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.autocomplete_list_item);
-        for (int i = 0; i < suggestions.length(); i++) {
-            try {
+        try {
+            for (int i = 0; i < suggestions.length(); i++)
                 adapter.add(suggestions.get(i).toString());
-            } catch (JSONException e) {
-                Log.i(LOGTAG, "JSONException: " + e);
-            }
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "JSONException: " + e);
         }
-
         setAdapter(adapter);
+
+        if (positionAndShowPopup(rect, zoom))
+            mTypeShowing = PopupType.AUTOCOMPLETE;
+    }
+
+    // TODO: style the validation message popup differently (bug 731654)
+    private void showValidationMessage(String validationMessage, JSONArray rect, double zoom) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mContext, R.layout.autocomplete_list_item);
+        adapter.add(validationMessage);
+        setAdapter(adapter);
+
+        if (positionAndShowPopup(rect, zoom))
+            mTypeShowing = PopupType.VALIDATION;
+    }
+
+    // Returns true if the popup is successfully shown, false otherwise
+    public boolean positionAndShowPopup(JSONArray rect, double zoom) {
+        // Don't show the form assist popup when using fullscreen VKB
+        InputMethodManager imm =
+                (InputMethodManager) GeckoApp.mAppContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm.isFullscreenMode())
+            return false;
 
         if (!isShown()) {
             setVisibility(View.VISIBLE);
@@ -193,7 +231,7 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
                 listLeft = (int) (viewport.width - listWidth);
         }
 
-        listHeight = sRowHeight * adapter.getCount();
+        listHeight = sRowHeight * getAdapter().getCount();
 
         // The text box doesnt fit below
         if ((listTop + listHeight) > viewport.height) {
@@ -217,11 +255,14 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
         mLayout.setMargins(listLeft, listTop, 0, 0);
         setLayoutParams(mLayout);
         requestLayout();
+
+        return true;
     }
 
     public void hide() {
         if (isShown()) {
             setVisibility(View.GONE);
+            mTypeShowing = PopupType.NONE;
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormAssist:Hidden", null));
         }
     }
