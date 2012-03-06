@@ -450,7 +450,10 @@ ValueNumberer::breakClass(MDefinition *def)
         // If the def was the only member of the class, then there is nothing to do.
         if (defdata->classNext == NULL)
             return;
-
+        // If upon closer inspection, we are still equivalent to this class
+        // then there isn't anything for us to do.
+        if (def->congruentTo(defdata->classNext))
+            return;
         // Get a new representative member
         MDefinition *newRep = defdata->classNext;
 
@@ -470,6 +473,10 @@ ValueNumberer::breakClass(MDefinition *def)
         }
 
         // Insert the new representative => number mapping into the table
+        // Logically, there should not be anything in the table currently, but
+        // old values are never removed, so there's a good chance something will
+        // already be there.  If putNew fails, and it turns out to be this case,
+        // change it to put.
         values.putNew(newRep, newRep->id());
     } else {
         // The element that is breaking from the list isn't the representative element
