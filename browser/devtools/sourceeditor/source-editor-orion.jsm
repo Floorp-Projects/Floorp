@@ -23,6 +23,7 @@
  *   Mihai Sucan <mihai.sucan@gmail.com> (original author)
  *   Kenny Heaton <kennyheaton@gmail.com>
  *   Spyros Livathinos <livathinos.spyros@gmail.com>
+ *   Allen Eubank <adeubank@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -123,6 +124,18 @@ const DEFAULT_KEYBINDINGS = [
     action: "Unindent Lines",
     code: Ci.nsIDOMKeyEvent.DOM_VK_TAB,
     shift: true,
+  },
+  {
+    action: "Move Lines Up",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_UP,
+    ctrl: Services.appinfo.OS == "Darwin",
+    alt: true,
+  },
+  {
+    action: "Move Lines Down",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_DOWN,
+    ctrl: Services.appinfo.OS == "Darwin",
+    alt: true,
   },
 ];
 
@@ -367,6 +380,7 @@ SourceEditor.prototype = {
       "Find Next Occurrence": [this.ui.findNext, this.ui],
       "Find Previous Occurrence": [this.ui.findPrevious, this.ui],
       "Goto Line...": [this.ui.gotoLine, this.ui],
+      "Move Lines Down": [this._moveLines, this],
     };
 
     for (let name in actions) {
@@ -374,9 +388,17 @@ SourceEditor.prototype = {
       this._view.setAction(name, action[0].bind(action[1]));
     }
 
+    this._view.setAction("Move Lines Up", this._moveLines.bind(this, true));
+
     let keys = (config.keys || []).concat(DEFAULT_KEYBINDINGS);
     keys.forEach(function(aKey) {
-      let binding = new KeyBinding(aKey.code, aKey.accel, aKey.shift, aKey.alt);
+      // In Orion mod1 refers to Cmd on Macs and Ctrl on Windows and Linux.
+      // So, if ctrl is in aKey we use it on Windows and Linux, otherwise
+      // we use aKey.accel for mod1.
+      let mod1 = Services.appinfo.OS != "Darwin" &&
+                 "ctrl" in aKey ? aKey.ctrl : aKey.accel;
+      let binding = new KeyBinding(aKey.code, mod1, aKey.shift, aKey.alt,
+                                  aKey.ctrl);
       this._view.setKeyBinding(binding, aKey.action);
 
       if (aKey.callback) {
@@ -575,6 +597,78 @@ SourceEditor.prototype = {
 
     this.setText(this.getLineDelimiter() + prefix, selection.start,
                  selection.end);
+    return true;
+  },
+
+  /**
+   * Move lines upwards or downwards, relative to the current caret location.
+   *
+   * @private
+   * @param boolean aLineAbove
+   *        True if moving lines up, false to move lines down.
+   */
+  _moveLines: function SE__moveLines(aLineAbove)
+  {
+    if (this.readOnly) {
+      return false;
+    }
+
+    let model = this._model;
+    let selection = this.getSelection();
+    let firstLine = model.getLineAtOffset(selection.start);
+    if (firstLine == 0 && aLineAbove) {
+      return true;
+    }
+
+    let lastLine = model.getLineAtOffset(selection.end);
+    let firstLineStart = model.getLineStart(firstLine);
+    let lastLineStart = model.getLineStart(lastLine);
+    if (selection.start != selection.end && lastLineStart == selection.end) {
+      lastLine--;
+    }
+    if (!aLineAbove && (lastLine + 1) == this.getLineCount()) {
+      return true;
+    }
+
+    let lastLineEnd = model.getLineEnd(lastLine, true);
+    let text = this.getText(firstLineStart, lastLineEnd);
+
+    if (aLineAbove) {
+      let aboveLine = firstLine - 1;
+      let aboveLineStart = model.getLineStart(aboveLine);
+
+      this.startCompoundChange();
+      if (lastLine == (this.getLineCount() - 1)) {
+        let delimiterStart = model.getLineEnd(aboveLine);
+        let delimiterEnd = model.getLineEnd(aboveLine, true);
+        let lineDelimiter = this.getText(delimiterStart, delimiterEnd);
+        text += lineDelimiter;
+        this.setText("", firstLineStart - lineDelimiter.length, lastLineEnd);
+      } else {
+        this.setText("", firstLineStart, lastLineEnd);
+      }
+      this.setText(text, aboveLineStart, aboveLineStart);
+      this.endCompoundChange();
+      this.setSelection(aboveLineStart, aboveLineStart + text.length);
+    } else {
+      let belowLine = lastLine + 1;
+      let belowLineEnd = model.getLineEnd(belowLine, true);
+
+      let insertAt = belowLineEnd - lastLineEnd + firstLineStart;
+      let lineDelimiter = "";
+      if (belowLine == this.getLineCount() - 1) {
+        let delimiterStart = model.getLineEnd(lastLine);
+        lineDelimiter = this.getText(delimiterStart, lastLineEnd);
+        text = lineDelimiter + text.substr(0, text.length -
+                                              lineDelimiter.length);
+      }
+      this.startCompoundChange();
+      this.setText("", firstLineStart, lastLineEnd);
+      this.setText(text, insertAt, insertAt);
+      this.endCompoundChange();
+      this.setSelection(insertAt + lineDelimiter.length,
+                        insertAt + text.length);
+    }
     return true;
   },
 
