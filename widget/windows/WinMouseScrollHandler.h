@@ -71,6 +71,48 @@ public:
 
 private:
   SystemSettings mSystemSettings;
+
+public:
+  class UserPrefs {
+  public:
+    UserPrefs();
+    ~UserPrefs();
+
+    void MarkDirty();
+
+    bool IsPixelScrollingEnabled()
+    {
+      Init();
+      return mPixelScrollingEnabled;
+    }
+
+    bool IsScrollMessageHandledAsWheelMessage()
+    {
+      Init();
+      return mScrollMessageHandledAsWheelMessage;
+    }
+
+  private:
+    void Init();
+
+    static int OnChange(const char* aPrefName, void* aClosure)
+    {
+      static_cast<UserPrefs*>(aClosure)->MarkDirty();
+      return 0;
+    }
+
+    bool mInitialized;
+    bool mPixelScrollingEnabled;
+    bool mScrollMessageHandledAsWheelMessage;
+  };
+
+  UserPrefs& GetUserPrefs()
+  {
+    return mUserPrefs;
+  }
+
+private:
+  UserPrefs mUserPrefs;
 };
 
 } // namespace widget
