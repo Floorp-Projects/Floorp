@@ -445,7 +445,7 @@ ImageLayerD3D9::RenderLayer()
       ),
       1);
 
-    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER, GetMaskLayer());
 
     /*
      * Send 3d control data and metadata
@@ -611,7 +611,7 @@ ShadowImageLayerD3D9::RenderLayer()
                                                           mYCbCrImage->mSize.height),
                                        1);
 
-    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER);
+    mD3DManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER, GetMaskLayer());
 
     /*
      * Send 3d control data and metadata
