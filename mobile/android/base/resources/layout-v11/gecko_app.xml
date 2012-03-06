@@ -13,13 +13,13 @@
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"/>
 
-        <org.mozilla.gecko.AutoCompletePopup android:id="@+id/autocomplete_popup"
-                                             style="@android:style/Widget.Holo.ListView"
-                                             android:layout_width="fill_parent"
-                                             android:layout_height="fill_parent"
-                                             android:background="@drawable/autocomplete_list_bg"
-                                             android:cacheColorHint="#ffffff"
-                                             android:visibility="gone"/>
+        <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
+                                           style="@android:style/Widget.Holo.ListView"
+                                           android:layout_width="fill_parent"
+                                           android:layout_height="fill_parent"
+                                           android:background="@drawable/autocomplete_list_bg"
+                                           android:cacheColorHint="#ffffff"
+                                           android:visibility="gone"/>
 
         <org.mozilla.gecko.AboutHomeContent android:id="@+id/abouthome_content"
                                             android:layout_width="fill_parent"

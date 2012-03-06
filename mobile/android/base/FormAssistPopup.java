@@ -56,7 +56,7 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-public class AutoCompletePopup extends ListView {
+public class FormAssistPopup extends ListView {
     private Context mContext;
     private RelativeLayout.LayoutParams mLayout;
 
@@ -65,14 +65,14 @@ public class AutoCompletePopup extends ListView {
 
     private Animation mAnimation; 
 
-    private static final String LOGTAG = "AutoCompletePopup";
+    private static final String LOGTAG = "FormAssistPopup";
 
     private static int sMinWidth = 0;
     private static int sRowHeight = 0;
-    private static final int AUTOCOMPLETE_MIN_WIDTH_IN_DPI = 200;
-    private static final int AUTOCOMPLETE_ROW_HEIGHT_IN_DPI = 32;
+    private static final int POPUP_MIN_WIDTH_IN_DPI = 200;
+    private static final int POPUP_ROW_HEIGHT_IN_DPI = 32;
 
-    public AutoCompletePopup(Context context, AttributeSet attrs) {
+    public FormAssistPopup(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
 
@@ -136,8 +136,8 @@ public class AutoCompletePopup extends ListView {
         if (sMinWidth == 0) {
             DisplayMetrics metrics = new DisplayMetrics();
             GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-            sMinWidth = (int) (AUTOCOMPLETE_MIN_WIDTH_IN_DPI * metrics.density);
-            sRowHeight = (int) (AUTOCOMPLETE_ROW_HEIGHT_IN_DPI * metrics.density);
+            sMinWidth = (int) (POPUP_MIN_WIDTH_IN_DPI * metrics.density);
+            sRowHeight = (int) (POPUP_ROW_HEIGHT_IN_DPI * metrics.density);
         }
 
         // If the textbox is smaller than the screen-width,
