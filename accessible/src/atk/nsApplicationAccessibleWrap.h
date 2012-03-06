@@ -57,6 +57,8 @@ public:
     virtual bool Init();
 
     // nsAccessible
+    NS_IMETHOD GetName(nsAString &aName);
+
     virtual bool AppendChild(nsAccessible* aChild);
     virtual bool RemoveChild(nsAccessible* aChild);
 
