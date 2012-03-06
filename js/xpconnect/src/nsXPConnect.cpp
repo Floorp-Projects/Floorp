@@ -699,6 +699,18 @@ xpc_GCThingIsGrayCCThing(void *thing)
            xpc_IsGrayGCThing(thing);
 }
 
+struct UnmarkGrayTracer : public JSTracer
+{
+    UnmarkGrayTracer() : mTracingShape(false), mPreviousShape(nsnull) {}
+    UnmarkGrayTracer(JSTracer *trc, bool aTracingShape)
+        : mTracingShape(aTracingShape), mPreviousShape(nsnull)
+    {
+        JS_TracerInit(this, trc->runtime, trc->callback);
+    }
+    bool mTracingShape; // true iff we are tracing the immediate children of a shape
+    void *mPreviousShape; // If mTracingShape, shape child or NULL. Otherwise, NULL.
+};
+
 /*
  * The GC and CC are run independently. Consequently, the following sequence of
  * events can occur:
@@ -729,15 +741,38 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         return;
     }
 
-    // If this thing is not a CC-kind or already non-gray then we're done.
-    if (!AddToCCKind(kind) || !xpc_IsGrayGCThing(thing))
+    if (!xpc_IsGrayGCThing(thing))
         return;
 
-    // Unmark.
     static_cast<js::gc::Cell *>(thing)->unmark(js::gc::GRAY);
 
-    // Trace children.
-    JS_TraceChildren(trc, thing, kind);
+    /*
+     * Trace children of |thing|. If |thing| and its parent are both shapes, |thing| will
+     * get saved to mPreviousShape without being traced. The parent will later
+     * trace |thing|. This is done to avoid increasing the stack depth during shape
+     * tracing. It is safe to do because a shape can only have one child that is a shape.
+     */
+    UnmarkGrayTracer *tracer = static_cast<UnmarkGrayTracer*>(trc);
+    UnmarkGrayTracer childTracer(tracer, kind == JSTRACE_SHAPE);
+
+    if (kind != JSTRACE_SHAPE) {
+        JS_TraceChildren(&childTracer, thing, kind);
+        MOZ_ASSERT(!childTracer.mPreviousShape);
+        return;
+    }
+
+    if (tracer->mTracingShape) {
+        MOZ_ASSERT(!tracer->mPreviousShape);
+        tracer->mPreviousShape = thing;
+        return;
+    }
+
+    do {
+        MOZ_ASSERT(!xpc_IsGrayGCThing(thing));
+        JS_TraceChildren(&childTracer, thing, JSTRACE_SHAPE);
+        thing = childTracer.mPreviousShape;
+        childTracer.mPreviousShape = nsnull;
+    } while (thing);
 }
 
 void
@@ -749,7 +784,7 @@ xpc_UnmarkGrayObjectRecursive(JSObject *obj)
     js::gc::AsCell(obj)->unmark(js::gc::GRAY);
 
     // Trace children.
-    JSTracer trc;
+    UnmarkGrayTracer trc;
     JS_TracerInit(&trc, JS_GetObjectRuntime(obj), UnmarkGrayChildren);
     JS_TraceChildren(&trc, obj, JSTRACE_OBJECT);
 }
