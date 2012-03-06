@@ -13,11 +13,18 @@
 #include "nsWindow.h"
 #include "WinUtils.h"
 
+#include "mozilla/Preferences.h"
+
 namespace mozilla {
 namespace widget {
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMouseScrollLog = nsnull;
+
+static const char* GetBoolName(bool aBool)
+{
+  return aBool ? "TRUE" : "FALSE";
+}
 #endif
 
 MouseScrollHandler* MouseScrollHandler::sInstance = nsnull;
@@ -156,6 +163,60 @@ MouseScrollHandler::SystemSettings::MarkDirty()
   PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
     ("MouseScrollHandler::SystemSettings::MarkDirty(): "
        "Marking SystemSettings dirty"));
+  mInitialized = false;
+}
+
+/******************************************************************************
+ *
+ * UserPrefs
+ *
+ ******************************************************************************/
+
+MouseScrollHandler::UserPrefs::UserPrefs() :
+  mInitialized(false)
+{
+  // We need to reset mouse wheel transaction when all of mousewheel related
+  // prefs are changed.
+  DebugOnly<nsresult> rv =
+    Preferences::RegisterCallback(OnChange, "mousewheel.", this);
+  MOZ_ASSERT(NS_SUCCEEDED(rv),
+    "Failed to register callback for mousewheel.");
+}
+
+MouseScrollHandler::UserPrefs::~UserPrefs()
+{
+  DebugOnly<nsresult> rv =
+    Preferences::UnregisterCallback(OnChange, "mousewheel.", this);
+  MOZ_ASSERT(NS_SUCCEEDED(rv),
+    "Failed to unregister callback for mousewheel.");
+}
+
+void
+MouseScrollHandler::UserPrefs::Init()
+{
+  if (mInitialized) {
+    return;
+  }
+
+  mInitialized = true;
+
+  mPixelScrollingEnabled =
+    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
+  mScrollMessageHandledAsWheelMessage =
+    Preferences::GetBool("mousewheel.emulate_at_wm_scroll", false);
+
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::UserPrefs::Init(): initialized, "
+       "mPixelScrollingEnabled=%s, mScrollMessageHandledAsWheelMessage=%s",
+     GetBoolName(mPixelScrollingEnabled),
+     GetBoolName(mScrollMessageHandledAsWheelMessage)));
+}
+
+void
+MouseScrollHandler::UserPrefs::MarkDirty()
+{
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScrollHandler::UserPrefs::MarkDirty(): Marking UserPrefs dirty"));
   mInitialized = false;
 }
 
