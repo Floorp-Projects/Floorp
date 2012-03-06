@@ -44,6 +44,49 @@ private:
    * @return TRUE if the event was consumed.  Otherwise, FALSE.
    */
   static bool DispatchEvent(nsWindow* aWindow, nsGUIEvent& aEvent);
+
+public:
+  class EventInfo {
+  public:
+    /**
+     * @param aMessage  Must be WM_MOUSEWHEEL or WM_MOUSEHWHEEL.
+     */
+    EventInfo(UINT aMessage, WPARAM aWParam, LPARAM aLParam);
+
+    bool CanDispatchMouseScrollEvent() const;
+
+    PRInt32 GetNativeDelta() const { return mDelta; }
+    bool IsVertical() const { return mIsVertical; }
+    bool IsPositive() const { return (mDelta > 0); }
+    bool IsPage() const { return mIsPage; }
+
+    LRESULT ComputeMessageResult(bool aWeProcessed) const
+    {
+      return IsVertical() ? !aWeProcessed : aWeProcessed;
+    }
+
+    /**
+     * @return          Number of lines or pages scrolled per WHEEL_DELTA.
+     */
+    PRInt32 GetScrollAmount() const;
+
+    /**
+     * @return          One or more values of
+     *                  nsMouseScrollEvent::nsMouseScrollFlags.
+     */
+    PRInt32 GetScrollFlags() const;
+
+  private:
+    EventInfo() {}
+
+    // TRUE if event is for vertical scroll.  Otherwise, FALSE.
+    bool mIsVertical;
+    // TRUE if event scrolls per page, otherwise, FALSE.
+    bool mIsPage;
+    // The native delta value.
+    PRInt32 mDelta;
+  };
+
 public:
   class SystemSettings {
   public:
