@@ -245,7 +245,7 @@ CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32 *lir)
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)
 {
-    typedef JSString *(*pf)(JSContext *, jsint);
+    typedef JSString *(*pf)(JSContext *, int);
     static const VMFunction js_IntToStringInfo = FunctionInfo<pf>(js_IntToString);
 
     pushArg(ToRegister(lir->input()));
