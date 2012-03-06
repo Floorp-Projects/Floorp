@@ -94,7 +94,8 @@ ShadowBufferD3D9::RenderTo(LayerManagerD3D9 *aD3DManager,
 {
   mLayer->SetShaderTransformAndOpacity();
 
-  aD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER);
+  aD3DManager->SetShaderMode(DeviceManagerD3D9::RGBALAYER,
+                             mLayer->GetLayer()->GetMaskLayer());
   mLayer->device()->SetTexture(0, mTexture);
 
   nsIntRegionRectIterator iter(aVisibleRegion);
