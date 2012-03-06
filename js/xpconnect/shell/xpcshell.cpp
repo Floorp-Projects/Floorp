@@ -168,8 +168,8 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     //XXX: your platform should really implement this
     return false;
 #else
-    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
-    JSScript *script = JS_GetFrameScript(cx, fp);
+    JSScript *script;
+    JS_DescribeScriptedCaller(cx, &script, NULL);
     const char *filename = JS_GetScriptFilename(cx, script);
 
     if (filename) {
