@@ -1418,6 +1418,14 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         bool charArgs, va_list ap);
 #endif
 
+namespace js {
+
+/* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
+extern void
+ReportUsageError(JSContext *cx, JSObject *callee, const char *msg);
+
+} /* namespace js */
+
 extern void
 js_ReportOutOfMemory(JSContext *cx);
 
