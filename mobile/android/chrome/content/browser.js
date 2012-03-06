@@ -2869,29 +2869,12 @@ var FormAssistant = {
     switch (aEvent.type) {
       case "input":
         let currentElement = aEvent.target;
-        if (!this._isAutocomplete(currentElement))
-          break;
-
-        // Keep track of input element so we can fill it in if the user
-        // selects an autocomplete suggestion
-        this._currentInputElement = currentElement;
-        let suggestions = this._getAutocompleteSuggestions(currentElement.value, currentElement);
-
-        let rect = ElementTouchHelper.getBoundingContentRect(currentElement);
-        let viewport = BrowserApp.selectedTab.viewport;
-
-        sendMessageToJava({
-          gecko: {
-            type:  "FormAssist:AutoComplete",
-            suggestions: suggestions,
-            rect: [rect.x - (viewport.x / viewport.zoom), rect.y - (viewport.y / viewport.zoom), rect.w, rect.h],
-            zoom: viewport.zoom
-          }
-        });
+        this._showAutoCompleteSuggestions(currentElement);
     }
   },
 
-  _isAutocomplete: function (aElement) {
+  // We only want to show autocomplete suggestions for certain elements
+  _isAutoComplete: function _isAutoComplete(aElement) {
     if (!(aElement instanceof HTMLInputElement) ||
         (aElement.getAttribute("type") == "password") ||
         (aElement.hasAttribute("autocomplete") &&
@@ -2901,25 +2884,65 @@ var FormAssistant = {
     return true;
   },
 
-  /** Retrieve the autocomplete list from the autocomplete service for an element */
-  _getAutocompleteSuggestions: function(aSearchString, aElement) {
-    let results = Cc["@mozilla.org/satchel/form-autocomplete;1"].
-                  getService(Ci.nsIFormAutoComplete).
-                  autoCompleteSearch(aElement.name || aElement.id, aSearchString, aElement, null);
+  // Retrieves autocomplete suggestions for an element from the form autocomplete service.
+  _getAutoCompleteSuggestions: function _getAutoCompleteSuggestions(aSearchString, aElement) {
+    // Cache the form autocomplete service for future use
+    if (!this._formAutoCompleteService)
+      this._formAutoCompleteService = Cc["@mozilla.org/satchel/form-autocomplete;1"].
+                                      getService(Ci.nsIFormAutoComplete);
 
+    let results = this._formAutoCompleteService.autoCompleteSearch(aElement.name || aElement.id,
+                                                                   aSearchString, aElement, null);
     let suggestions = [];
-    if (results.matchCount > 0) {
-      for (let i = 0; i < results.matchCount; i++) {
-        let value = results.getValueAt(i);
-        // Do not show the value if it is the current one in the input field
-        if (value == aSearchString)
-          continue;
+    for (let i = 0; i < results.matchCount; i++) {
+      let value = results.getValueAt(i);
 
-        suggestions.push(value);
-      }
+      // Do not show the value if it is the current one in the input field
+      if (value == aSearchString)
+        continue;
+
+      suggestions.push(value);
     }
 
     return suggestions;
+  },
+
+  // Gets the element position data necessary for the Java UI to position
+  // the form assist popup.
+  _getElementPositionData: function _getElementPositionData(aElement) {
+    let rect = ElementTouchHelper.getBoundingContentRect(aElement);
+    let viewport = BrowserApp.selectedTab.viewport;
+    
+    return { rect: [rect.x - (viewport.x / viewport.zoom),
+                    rect.y - (viewport.y / viewport.zoom),
+                    rect.w, rect.h],
+             zoom: viewport.zoom }
+  },
+
+  // Retrieves autocomplete suggestions for an element from the form autocomplete service
+  // and sends the suggestions to the Java UI, along with element position data.
+  // Returns true if there are suggestions to show, false otherwise.
+  _showAutoCompleteSuggestions: function _showAutoCompleteSuggestions(aElement) {
+    if (!this._isAutoComplete(aElement))
+      return false;
+
+    let suggestions = this._getAutoCompleteSuggestions(aElement.value, aElement);
+
+    let positionData = this._getElementPositionData(aElement);
+    sendMessageToJava({
+      gecko: {
+        type:  "FormAssist:AutoComplete",
+        suggestions: suggestions,
+        rect: positionData.rect,
+        zoom: positionData.zoom
+      }
+    });
+
+    // Keep track of input element so we can fill it in if the user
+    // selects an autocomplete suggestion
+    this._currentInputElement = aElement;
+
+    return true;
   }
 };
 
