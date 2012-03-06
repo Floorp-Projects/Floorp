@@ -1530,14 +1530,6 @@ js_InvokeOperationCallback(JSContext *cx);
 extern JSBool
 js_HandleExecutionInterrupt(JSContext *cx);
 
-/*
- * Get the topmost scripted frame in a context. Note: if the topmost frame is
- * in the middle of an inline call, that call will be expanded. To avoid this,
- * use cx->stack.currentScript or cx->stack.currentScriptedScopeChain.
- */
-extern js::StackFrame *
-js_GetScriptedCaller(JSContext *cx, js::StackFrame *fp);
-
 extern jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx);
 

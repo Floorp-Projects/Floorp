@@ -782,7 +782,10 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (!fp->prev())
             return true;
 
-        StackFrame *frame = js_GetScriptedCaller(cx, fp->prev());
+        StackFrame *frame = fp->prev();
+        while (frame && frame->isDummyFrame())
+            frame = frame->prev();
+
         if (frame && !frame->getValidCalleeObject(cx, vp))
             return false;
 

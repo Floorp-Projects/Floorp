@@ -919,17 +919,6 @@ js_HandleExecutionInterrupt(JSContext *cx)
     return result;
 }
 
-StackFrame *
-js_GetScriptedCaller(JSContext *cx, StackFrame *fp)
-{
-    if (!fp)
-        fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
-    while (fp && fp->isDummyFrame())
-        fp = fp->prev();
-    JS_ASSERT_IF(fp, fp->isScriptFrame());
-    return fp;
-}
-
 jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx)
 {
