@@ -94,7 +94,6 @@ typedef ptrdiff_t jsid;
 JS_BEGIN_EXTERN_C
 
 /* Scalar typedefs. */
-typedef int32_t   jsint;
 typedef uint32_t  jsuint;
 
 #ifdef WIN32

@@ -136,6 +136,15 @@ NS_IMETHODIMP nsSVGMaskElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
+/* virtual */ bool
+nsSVGMaskElement::HasValidDimensions() const
+{
+  return (!mLengthAttributes[WIDTH].IsExplicitlySet() ||
+           mLengthAttributes[WIDTH].GetAnimValInSpecifiedUnits() > 0) &&
+         (!mLengthAttributes[HEIGHT].IsExplicitlySet() || 
+           mLengthAttributes[HEIGHT].GetAnimValInSpecifiedUnits() > 0);
+}
+
 nsSVGElement::LengthAttributesInfo
 nsSVGMaskElement::GetLengthInfo()
 {

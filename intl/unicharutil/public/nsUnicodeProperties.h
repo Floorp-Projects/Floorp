@@ -100,7 +100,10 @@ class ClusterIterator
 {
 public:
     ClusterIterator(const PRUnichar* aText, PRUint32 aLength)
-        : mText(aText), mLimit(aText + aLength), mPos(aText)
+        : mPos(aText), mLimit(aText + aLength)
+#ifdef DEBUG
+        , mText(aText)
+#endif
     { }
 
     operator const PRUnichar* () const {
@@ -114,9 +117,11 @@ public:
     void Next();
 
 private:
-    const PRUnichar* mText;
-    const PRUnichar* mLimit;
     const PRUnichar* mPos;
+    const PRUnichar* mLimit;
+#ifdef DEBUG
+    const PRUnichar* mText;
+#endif
 };
 
 } // end namespace unicode

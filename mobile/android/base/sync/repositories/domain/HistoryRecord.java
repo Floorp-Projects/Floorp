@@ -41,7 +41,6 @@ import java.util.HashMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
@@ -109,45 +108,24 @@ public class HistoryRecord extends Record {
   }
 
   @Override
-  public void initFromPayload(CryptoRecord payload) {
-    ExtendedJSONObject p = payload.payload;
+  protected void populatePayload(ExtendedJSONObject payload) {
+    putPayload(payload, "id",      this.guid);
+    putPayload(payload, "title",   this.title);
+    putPayload(payload, "histUri", this.histURI);             // TODO: encoding?
+    payload.put("visits",  this.visits);
+  }
 
-    this.guid = payload.guid;
-    this.checkGUIDs(p);
-
-    this.lastModified  = payload.lastModified;
-    final Object del = p.get("deleted");
-    if (del instanceof Boolean) {
-      this.deleted = (Boolean) del;
-    }
-
-    this.histURI = (String) p.get("histUri");
-    this.title   = (String) p.get("title");
+  @Override
+  protected void initFromPayload(ExtendedJSONObject payload) {
+    this.histURI = (String) payload.get("histUri");
+    this.title   = (String) payload.get("title");
     try {
-      this.visits = p.getArray("visits");
+      this.visits = payload.getArray("visits");
     } catch (NonArrayJSONException e) {
       Logger.error(LOG_TAG, "Got non-array visits in history record " + this.guid, e);
       this.visits = new JSONArray();
     }
   }
-
-  @Override
-  public CryptoRecord getPayload() {
-    CryptoRecord rec = new CryptoRecord(this);
-    rec.payload = new ExtendedJSONObject();
-    Logger.debug(LOG_TAG, "Getting payload for history record " + this.guid + " (" + this.guid.length() + ").");
-
-    if (this.deleted) {
-      rec.payload.put("deleted", true);
-    } else {
-      putPayload(rec, "id",      this.guid);
-      putPayload(rec, "title",   this.title);
-      putPayload(rec, "histUri", this.histURI);             // TODO: encoding?
-      rec.payload.put("visits",  this.visits);
-    }
-    return rec;
-  }
-
 
   /**
    * We consider two history records to be congruent if they represent the

@@ -157,14 +157,14 @@ NPIdentifierIsInt(NPIdentifier id)
     return JSID_IS_INT(NPIdentifierToJSId(id));
 }
 
-inline jsint
+inline int
 NPIdentifierToInt(NPIdentifier id)
 {
     return JSID_TO_INT(NPIdentifierToJSId(id));
 }
 
 inline NPIdentifier
-IntToNPIdentifier(jsint i)
+IntToNPIdentifier(int i)
 {
     return JSIdToNPIdentifier(INT_TO_JSID(i));
 }

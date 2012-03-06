@@ -1,0 +1,21 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set tw=80 expandtab softtabstop=2 ts=2 sw=2: */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMMozBrowserFrame.idl"
+
+[scriptable, uuid(076AD76C-2DF6-4760-B914-21D554F0A2B6)]
+interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
+{
+  /**
+   * Gets whether this frame really is a browser frame.
+   *
+   * In order to really be a browser frame, this frame's
+   * nsIDOMMozBrowserFrame::mozbrowser attribute must be true, and the frame
+   * may have to pass various security checks.
+   */
+  readonly attribute boolean reallyIsBrowser;
+};

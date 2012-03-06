@@ -188,9 +188,12 @@ public:
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                       TransformTypes aWhich = eAllTransforms) const;
+  virtual bool HasValidDimensions() const;
  
   // nsSVGSVGElement methods:
   float GetLength(PRUint8 mCtxType);
+  // Copy our width or height to the target
+  void SyncWidthOrHeight(nsIAtom* aName, nsSVGElement *aTarget) const;
 
   // public helpers:
   gfxMatrix GetViewBoxTransform() const;

@@ -68,6 +68,7 @@ enum {
     JSSLOT_DEBUGFRAME_OWNER,
     JSSLOT_DEBUGFRAME_ARGUMENTS,
     JSSLOT_DEBUGFRAME_ONSTEP_HANDLER,
+    JSSLOT_DEBUGFRAME_ONPOP_HANDLER,
     JSSLOT_DEBUGFRAME_COUNT
 };
 
@@ -142,6 +143,110 @@ ValueToIdentifier(JSContext *cx, const Value &v, jsid *idp)
     *idp = id;
     return true;
 }
+
+/*
+ * A range of all the Debugger.Frame objects for a particular StackFrame.
+ *
+ * FIXME This checks only current debuggers, so it relies on a hack in
+ * Debugger::removeDebuggeeGlobal to make sure only current debuggers have Frame
+ * objects with .live === true.
+ */
+class Debugger::FrameRange {
+    JSContext *cx;
+    StackFrame *fp;
+
+    /* The debuggers in |fp|'s compartment, or NULL if there are none. */
+    GlobalObject::DebuggerVector *debuggers;
+
+    /*
+     * The index of the front Debugger.Frame's debugger in debuggers.
+     * nextDebugger < debuggerCount if and only if the range is not empty.
+     */
+    size_t debuggerCount, nextDebugger;
+
+    /*
+     * If the range is not empty, this is front Debugger.Frame's entry in its
+     * debugger's frame table.
+     */
+    FrameMap::Ptr entry;
+
+  public:
+    /*
+     * Return a range containing all Debugger.Frame instances referring to |fp|.
+     * |global| is |fp|'s global object; if NULL or omitted, we compute it
+     * ourselves from |fp|.
+     *
+     * We keep an index into the compartment's debugger list, and a
+     * FrameMap::Ptr into the current debugger's frame map. Thus, if the set of
+     * debuggers in |fp|'s compartment changes, this range becomes invalid.
+     * Similarly, if stack frames are added to or removed from frontDebugger(),
+     * then the range's front is invalid until popFront is called.
+     */
+    FrameRange(JSContext *cx, StackFrame *fp, GlobalObject *global = NULL)
+      : cx(cx), fp(fp) {
+        nextDebugger = 0;
+
+        /* Find our global, if we were not given one. */
+        if (!global)
+            global = &fp->scopeChain().global();
+
+        /* The frame and global must match. */
+        JS_ASSERT(&fp->scopeChain().global() == global);
+
+        /* Find the list of debuggers we'll iterate over. There may be none. */
+        debuggers = global->getDebuggers();
+        if (debuggers) {
+            debuggerCount = debuggers->length();
+            findNext();
+        } else {
+            debuggerCount = 0;
+        }
+    }
+
+    bool empty() const {
+        return nextDebugger >= debuggerCount;
+    }
+
+    JSObject *frontFrame() const {
+        JS_ASSERT(!empty());
+        return entry->value;
+    }
+
+    Debugger *frontDebugger() const {
+        JS_ASSERT(!empty());
+        return (*debuggers)[nextDebugger];
+    }
+
+    /*
+     * Delete the front frame from its Debugger's frame map. After this call,
+     * the range's front is invalid until popFront is called.
+     */
+    void removeFrontFrame() const {
+        JS_ASSERT(!empty());
+        frontDebugger()->frames.remove(entry);
+    }
+
+    void popFront() { 
+        JS_ASSERT(!empty());
+        nextDebugger++;
+        findNext();
+    }
+
+  private:
+    /*
+     * Either make this range refer to the first appropriate Debugger.Frame at
+     * or after nextDebugger, or make it empty.
+     */
+    void findNext() {
+        while (!empty()) {
+            Debugger *dbg = (*debuggers)[nextDebugger];
+            entry = dbg->frames.lookup(fp);
+            if (entry)
+                break;
+            nextDebugger++;
+        }
+    }
+};
 
 
 /*** Breakpoints *********************************************************************************/
@@ -419,7 +524,9 @@ Debugger::hasAnyLiveHooks() const
     }
 
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-        if (!r.front().value->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
+        JSObject *frameObj = r.front().value;
+        if (!frameObj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() ||
+            !frameObj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER).isUndefined())
             return true;
     }
 
@@ -454,34 +561,96 @@ Debugger::slowPathOnEnterFrame(JSContext *cx, Value *vp)
     return JSTRAP_CONTINUE;
 }
 
-void
-Debugger::slowPathOnLeaveFrame(JSContext *cx)
+/*
+ * Handle leaving a frame with debuggers watching. |frameOk| indicates whether
+ * the frame is exiting normally or abruptly. Set |cx|'s exception and/or
+ * |cx->fp()|'s return value, and return a new success value.
+ */
+bool
+Debugger::slowPathOnLeaveFrame(JSContext *cx, bool frameOk)
 {
     StackFrame *fp = cx->fp();
     GlobalObject *global = &fp->scopeChain().global();
 
-    /*
-     * FIXME This notifies only current debuggers, so it relies on a hack in
-     * Debugger::removeDebuggeeGlobal to make sure only current debuggers have
-     * Frame objects with .live === true.
-     */
-    if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
-        for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
-            Debugger *dbg = *p;
-            if (FrameMap::Ptr p = dbg->frames.lookup(fp)) {
-                StackFrame *frame = p->key;
-                JSObject *frameobj = p->value;
-                frameobj->setPrivate(NULL);
+    /* Save the frame's completion value. */
+    JSTrapStatus status;
+    Value value;
+    Debugger::resultToCompletion(cx, frameOk, fp->returnValue(), &status, &value);
 
-                /* If this frame had an onStep handler, adjust the script's count. */
-                if (!frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
-                    frame->isScriptFrame()) {
-                    frame->script()->changeStepModeCount(cx, -1);
-                }
+    /* Build a list of the recipients. */
+    AutoObjectVector frames(cx);
+    for (FrameRange r(cx, fp, global); !r.empty(); r.popFront()) {
+        if (!frames.append(r.frontFrame())) {
+            cx->clearPendingException();
+            return false;
+        }
+    }
 
-                dbg->frames.remove(p);
+    /* For each Debugger.Frame, fire its onPop handler, if any. */
+    for (JSObject **p = frames.begin(); p != frames.end(); p++) {
+        JSObject *frameobj = *p;
+        Debugger *dbg = Debugger::fromChildJSObject(frameobj);
+
+        if (dbg->enabled &&
+            !frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER).isUndefined()) {
+            const Value &handler = frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER);
+
+            AutoCompartment ac(cx, dbg->object);
+
+            if (!ac.enter()) {
+                status = JSTRAP_ERROR;
+                break;
+            }
+                
+            Value completion;
+            if (!dbg->newCompletionValue(cx, status, value, &completion)) {
+                status = dbg->handleUncaughtException(ac, NULL, false);
+                break;
+            }
+
+            /* Call the onPop handler. */
+            Value rval;
+            bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, &completion, &rval);
+            Value nextValue;
+            JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, &nextValue);
+            
+            /*
+             * At this point, we are back in the debuggee compartment, and any error has
+             * been wrapped up as a completion value.
+             */
+            JS_ASSERT(cx->compartment == global->compartment());
+            JS_ASSERT(!cx->isExceptionPending());
+
+            /* JSTRAP_CONTINUE means "make no change". */
+            if (nextStatus != JSTRAP_CONTINUE) {
+                status = nextStatus;
+                value = nextValue;
             }
         }
+    }
+
+    /*
+     * Clean up all Debugger.Frame instances. Use a fresh FrameRange, as one
+     * debugger's onPop handler could have caused another debugger to create its
+     * own Debugger.Frame instance.
+     */
+    for (FrameRange r(cx, fp, global); !r.empty(); r.popFront()) {
+        JSObject *frameobj = r.frontFrame();
+        Debugger *dbg = r.frontDebugger();
+        JS_ASSERT(dbg == Debugger::fromChildJSObject(frameobj));
+
+        frameobj->setPrivate(NULL);
+
+        /* If this frame had an onStep handler, adjust the script's count. */
+        if (!frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
+            fp->isScriptFrame() &&
+            !fp->script()->changeStepModeCount(cx, -1))
+        {
+            status = JSTRAP_ERROR;
+            /* Don't exit the loop; we must mark all frames as dead. */
+        }
+
+        dbg->frames.remove(fp);
     }
 
     /*
@@ -491,6 +660,24 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx)
     if (fp->isEvalFrame()) {
         JSScript *script = fp->script();
         script->clearBreakpointsIn(cx, NULL, NULL);
+    }
+
+    /* Establish (status, value) as our resumption value. */
+    switch (status) {
+      case JSTRAP_RETURN:
+        fp->setReturnValue(value);
+        return true;
+
+      case JSTRAP_THROW:
+        cx->setPendingException(value);
+        return false;
+        
+      case JSTRAP_ERROR:
+        JS_ASSERT(!cx->isExceptionPending());
+        return false;
+
+      default:
+        JS_NOT_REACHED("bad final trap status");
     }
 }
 
@@ -606,37 +793,77 @@ Debugger::handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook)
     return JSTRAP_ERROR;
 }
 
-bool
-Debugger::newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp)
+void
+Debugger::resultToCompletion(JSContext *cx, bool ok, const Value &rv,
+                             JSTrapStatus *status, Value *value)
 {
-    JS_ASSERT_IF(ok, !ac.context->isExceptionPending());
+    JS_ASSERT_IF(ok, !cx->isExceptionPending());
 
-    JSContext *cx = ac.context;
-    jsid key;
     if (ok) {
-        ac.leave();
-        key = ATOM_TO_JSID(cx->runtime->atomState.returnAtom);
+        *status = JSTRAP_RETURN;
+        *value = rv;
     } else if (cx->isExceptionPending()) {
-        key = ATOM_TO_JSID(cx->runtime->atomState.throwAtom);
-        val = cx->getPendingException();
+        *status = JSTRAP_THROW;
+        *value = cx->getPendingException();
         cx->clearPendingException();
-        ac.leave();
     } else {
-        ac.leave();
-        vp->setNull();
+        *status = JSTRAP_ERROR;
+        value->setUndefined();
+    }
+}
+
+bool
+Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value, Value *result)
+{
+    /* 
+     * We must be in the debugger's compartment, since that's where we want
+     * to construct the completion value.
+     */
+    assertSameCompartment(cx, object.get());
+
+    jsid key;
+
+    switch (status) {
+      case JSTRAP_RETURN:
+        key = ATOM_TO_JSID(cx->runtime->atomState.returnAtom);
+        break;
+
+      case JSTRAP_THROW:
+        key = ATOM_TO_JSID(cx->runtime->atomState.throwAtom);
+        break;
+
+      case JSTRAP_ERROR:
+        result->setNull();
         return true;
+
+      default:
+        JS_NOT_REACHED("bad status passed to Debugger::newCompletionValue");
     }
 
+    /* Common tail for JSTRAP_RETURN and JSTRAP_THROW. */
     JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!obj ||
-        !wrapDebuggeeValue(cx, &val) ||
-        !DefineNativeProperty(cx, obj, key, val, JS_PropertyStub, JS_StrictPropertyStub,
+        !wrapDebuggeeValue(cx, &value) ||
+        !DefineNativeProperty(cx, obj, key, value, JS_PropertyStub, JS_StrictPropertyStub,
                               JSPROP_ENUMERATE, 0, 0))
     {
         return false;
     }
-    vp->setObject(*obj);
+
+    result->setObject(*obj);
     return true;
+}
+
+bool
+Debugger::receiveCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp)
+{
+    JSContext *cx = ac.context;
+
+    JSTrapStatus status;
+    Value value;
+    resultToCompletion(cx, ok, val, &status, &value);
+    ac.leave();
+    return newCompletionValue(cx, status, value, vp);
 }
 
 JSTrapStatus
@@ -975,16 +1202,12 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
      * onStep handlers.
      */
     AutoObjectVector frames(cx);
-    GlobalObject *global = &fp->scopeChain().global();
-    if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
-        for (Debugger **d = debuggers->begin(); d != debuggers->end(); d++) {
-            Debugger *dbg = *d;
-            if (FrameMap::Ptr p = dbg->frames.lookup(fp)) {
-                JSObject *frame = p->value;
-                if (!frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
-                    !frames.append(frame))
-                    return JSTRAP_ERROR;
-            }
+    for (FrameRange r(cx, fp); !r.empty(); r.popFront()) {
+        JSObject *frame = r.frontFrame();
+        if (!frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
+            !frames.append(frame))
+        {
+            return JSTRAP_ERROR;
         }
     }
 
@@ -1001,6 +1224,7 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
     {
         uint32_t stepperCount = 0;
         JSScript *trappingScript = fp->script();
+        GlobalObject *global = &fp->scopeChain().global();
         if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
             for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
                 Debugger *dbg = *p;
@@ -2146,19 +2370,19 @@ class FlowGraphSummary : public Vector<size_t> {
                 pc += step;
                 addEdge(lineno, defaultOffset);
 
-                jsint ncases;
+                int ncases;
                 if (op == JSOP_TABLESWITCH) {
-                    jsint low = GET_JUMP_OFFSET(pc);
+                    int32_t low = GET_JUMP_OFFSET(pc);
                     pc += JUMP_OFFSET_LEN;
                     ncases = GET_JUMP_OFFSET(pc) - low + 1;
                     pc += JUMP_OFFSET_LEN;
                 } else {
-                    ncases = (jsint) GET_UINT16(pc);
+                    ncases = GET_UINT16(pc);
                     pc += UINT16_LEN;
                     JS_ASSERT(ncases > 0);
                 }
 
-                for (jsint i = 0; i < ncases; i++) {
+                for (int i = 0; i < ncases; i++) {
                     if (op == JSOP_LOOKUPSWITCH)
                         pc += UINT32_INDEX_LEN;
                     size_t target = offset + GET_JUMP_OFFSET(pc);
@@ -2784,6 +3008,36 @@ DebuggerFrame_setOnStep(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static JSBool
+DebuggerFrame_getOnPop(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_FRAME(cx, argc, vp, "get onPop", args, thisobj, fp);
+    (void) fp;  // Silence GCC warning
+    Value handler = thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER);
+    JS_ASSERT(IsValidHook(handler));
+    args.rval() = handler;
+    return true;
+}
+
+static JSBool
+DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
+{
+    REQUIRE_ARGC("Debugger.Frame.set onPop", 1);
+    THIS_FRAME(cx, argc, vp, "set onPop", args, thisobj, fp);
+    if (!fp->isScriptFrame()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NOT_SCRIPT_FRAME);
+        return false;
+    }
+    if (!IsValidHook(args[0])) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_CALLABLE_OR_UNDEFINED);
+        return false;
+    }
+
+    thisobj->setReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER, args[0]);
+    args.rval().setUndefined();
+    return true;
+}
+
 namespace js {
 
 JSBool
@@ -2895,7 +3149,7 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
     JS::Anchor<JSString *> anchor(linearStr);
     bool ok = EvaluateInEnv(cx, env, fp, linearStr->chars(), linearStr->length(),
                             "debugger eval code", 1, &rval);
-    return dbg->newCompletionValue(ac, ok, rval, vp);
+    return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }
 
 static JSBool
@@ -2930,6 +3184,7 @@ static JSPropertySpec DebuggerFrame_properties[] = {
     JS_PSG("this", DebuggerFrame_getThis, 0),
     JS_PSG("type", DebuggerFrame_getType, 0),
     JS_PSGS("onStep", DebuggerFrame_getOnStep, DebuggerFrame_setOnStep, 0),
+    JS_PSGS("onPop", DebuggerFrame_getOnPop, DebuggerFrame_setOnPop, 0),
     JS_PS_END
 };
 
@@ -3533,12 +3788,12 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
     }
 
     /*
-     * Call the function. Use newCompletionValue to return to the debugger
+     * Call the function. Use receiveCompletionValue to return to the debugger
      * compartment and populate args.rval().
      */
     Value rval;
     bool ok = Invoke(cx, thisv, calleev, callArgc, callArgv, &rval);
-    return dbg->newCompletionValue(ac, ok, rval, &args.rval());
+    return dbg->receiveCompletionValue(ac, ok, rval, &args.rval());
 }
 
 static JSBool

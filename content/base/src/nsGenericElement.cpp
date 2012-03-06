@@ -152,7 +152,6 @@
 #include "prprf.h"
 
 #include "nsSVGFeatures.h"
-#include "nsDOMMemoryReporter.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsCycleCollector.h"
 #include "xpcpublic.h"
@@ -1981,7 +1980,7 @@ nsGenericElement::GetChildrenList()
   return slots->mChildrenList;
 }
 
-nsIDOMDOMTokenList*
+nsDOMTokenList*
 nsGenericElement::GetClassList(nsresult *aResult)
 {
   *aResult = NS_ERROR_OUT_OF_MEMORY;
@@ -2469,6 +2468,9 @@ nsGenericElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb, b
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mChildrenList");
   cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMNodeList*, mChildrenList));
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mClassList");
+  cb.NoteXPCOMChild(mClassList.get());
 }
 
 void
@@ -2483,6 +2485,10 @@ nsGenericElement::nsDOMSlots::Unlink(bool aIsXUL)
   if (aIsXUL)
     NS_IF_RELEASE(mControllers);
   mChildrenList = nsnull;
+  if (mClassList) {
+    mClassList->DropReference();
+    mClassList = nsnull;
+  }
 }
 
 nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)

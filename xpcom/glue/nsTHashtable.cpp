@@ -38,6 +38,9 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "prbit.h"
+#include "mozilla/HashFunctions.h"
+
+using namespace mozilla;
 
 PRUint32
 HashString( const nsAString& aStr )
@@ -55,7 +58,7 @@ HashString( const nsAString& aStr )
 #endif
 
   while (begin != end) {
-    code = PR_ROTATE_LEFT32(code, 4) ^ PRUint32(*begin);
+    code = AddToHash(code, *begin);
     ++begin;
   }
 
@@ -78,7 +81,7 @@ HashString( const nsACString& aStr )
 #endif
 
   while (begin != end) {
-    code = PR_ROTATE_LEFT32(code, 4) ^ PRUint32(*begin);
+    code = AddToHash(code, *begin);
     ++begin;
   }
 
@@ -89,9 +92,10 @@ PRUint32
 HashString(const char *str)
 {
   PRUint32 code = 0;
+  const char *origStr = str;
 
   while (*str) {
-    code = PR_ROTATE_LEFT32(code, 4) ^ PRUint32(*str);
+    code = AddToHash(code, *str);
     ++str;
   }
 
@@ -102,9 +106,10 @@ PRUint32
 HashString(const PRUnichar *str)
 {
   PRUint32 code = 0;
+  const PRUnichar *origStr = str;
 
   while (*str) {
-    code = PR_ROTATE_LEFT32(code, 4) ^ PRUint32(*str);
+    code = AddToHash(code, *str);
     ++str;
   }
 

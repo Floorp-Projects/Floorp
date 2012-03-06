@@ -38,11 +38,6 @@
 #ifndef _NSDATAOBJ_H_
 #define _NSDATAOBJ_H_
 
-#ifdef __MINGW32__
-#include <unknwn.h>
-#include <basetyps.h>
-#include <objidl.h>
-#endif
 #include <oleidl.h>
 #include <shldisp.h>
 
@@ -110,35 +105,6 @@ IAsyncOperation : public IUnknown
 #ifndef CFSTR_FILEDESCRIPTORW
 # define CFSTR_FILEDESCRIPTORW   L"FileGroupDescriptorW"
 #endif
-
-#ifdef __MINGW32__
-# include <w32api.h>
-# if __W32API_MAJOR_VERSION < 3 || (__W32API_MAJOR_VERSION == 3 && __W32API_MINOR_VERSION == 0)
-#  ifndef FILEGROUPDESCRIPTORA
-#   define FILEGROUPDESCRIPTORA    FILEGROUPDESCRIPTOR
-#  endif
-#  ifndef LPFILEGROUPDESCRIPTORA
-#   define LPFILEGROUPDESCRIPTORA  LPFILEGROUPDESCRIPTOR
-#  endif
-typedef struct _FILEDESCRIPTORW {
-   DWORD dwFlags;
-   CLSID clsid;
-   SIZEL sizel;
-   POINTL pointl;
-   DWORD dwFileAttributes;
-   FILETIME ftCreationTime;
-   FILETIME ftLastAccessTime;
-   FILETIME ftLastWriteTime;
-   DWORD nFileSizeHigh;
-   DWORD nFileSizeLow;
-   WCHAR cFileName[MAX_PATH];
-} FILEDESCRIPTORW,*LPFILEDESCRIPTORW;
-typedef struct _FILEGROUPDESCRIPTORW {
-   UINT cItems;
-   FILEDESCRIPTORW fgd[1];
-} FILEGROUPDESCRIPTORW,*LPFILEGROUPDESCRIPTORW;
-# endif /*__W32API_MAJOR_VERSION*/
-#endif /*__MINGW32__*/
 
 class CEnumFormatEtc;
 class nsITransferable;

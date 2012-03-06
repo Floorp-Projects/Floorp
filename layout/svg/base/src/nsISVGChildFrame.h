@@ -47,7 +47,7 @@
 #include "gfxMatrix.h"
 
 class gfxContext;
-class nsSVGRenderState;
+class nsRenderingContext;
 
 namespace mozilla {
 class SVGAnimatedNumberList;
@@ -70,7 +70,7 @@ public:
 
   // Paint this frame - aDirtyRect is the area being redrawn, in frame
   // offset pixel coordinates
-  NS_IMETHOD PaintSVG(nsSVGRenderState* aContext,
+  NS_IMETHOD PaintSVG(nsRenderingContext* aContext,
                       const nsIntRect *aDirtyRect)=0;
 
   // Check if this frame or children contain the given point,
