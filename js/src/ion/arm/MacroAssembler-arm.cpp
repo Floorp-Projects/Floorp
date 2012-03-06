@@ -1396,7 +1396,10 @@ MacroAssemblerARMCompat::addPtr(Imm32 imm, const Register dest)
 Assembler::Condition
 MacroAssemblerARMCompat::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs)
 {
-    ma_vcmp(lhs, rhs);
+    if (rhs == InvalidFloatReg)
+        ma_vcmpz(lhs);
+    else
+        ma_vcmp(lhs, rhs);
     as_vmrs(pc);
     switch (compare) {
       case JSOP_STRICTNE:

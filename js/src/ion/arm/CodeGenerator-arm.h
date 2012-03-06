@@ -119,6 +119,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitTestDAndBranch(LTestDAndBranch *test);
     virtual bool visitCompareD(LCompareD *comp);
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
+    virtual bool visitNotI(LNotI *ins);
+    virtual bool visitNotD(LNotD *ins);
 
     virtual bool visitMathD(LMathD *math);
     virtual bool visitRound(LRound *lir);
