@@ -604,15 +604,6 @@ protected:
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();
 
-  static HWND sLastMouseWheelWnd;
-  static PRInt32 sRemainingDeltaForScroll;
-  static PRInt32 sRemainingDeltaForPixel;
-  static bool sLastMouseWheelDeltaIsPositive;
-  static bool sLastMouseWheelOrientationIsVertical;
-  static bool sLastMouseWheelUnitIsPage;
-  static PRUint32 sLastMouseWheelTime; // in milliseconds
-  static void ResetRemainingWheelDelta();
-
   // If a window receives WM_KEYDOWN message or WM_SYSKEYDOWM message which is
   // redirected message, OnKeyDowm() prevents to dispatch NS_KEY_DOWN event
   // because it has been dispatched before the message was redirected.
