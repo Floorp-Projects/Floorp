@@ -6810,7 +6810,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
       case TOK_LB:
       {
         JSBool matched;
-        jsuint index;
+        unsigned index;
 
         pn = ListNode::create(PNK_RB, tc);
         if (!pn)

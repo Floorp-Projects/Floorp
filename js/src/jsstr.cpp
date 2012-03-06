@@ -877,31 +877,31 @@ out_of_range:
  *
  * Return the index of pat in text, or -1 if not found.
  */
-static const jsuint sBMHCharSetSize = 256; /* ISO-Latin-1 */
-static const jsuint sBMHPatLenMax   = 255; /* skip table element is uint8_t */
-static const int  sBMHBadPattern  = -2;  /* return value if pat is not ISO-Latin-1 */
+static const unsigned sBMHCharSetSize = 256; /* ISO-Latin-1 */
+static const unsigned sBMHPatLenMax   = 255; /* skip table element is uint8_t */
+static const int      sBMHBadPattern  = -2;  /* return value if pat is not ISO-Latin-1 */
 
 int
-js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
-                      const jschar *pat, jsuint patlen)
+js_BoyerMooreHorspool(const jschar *text, unsigned textlen,
+                      const jschar *pat, unsigned patlen)
 {
     uint8_t skip[sBMHCharSetSize];
 
     JS_ASSERT(0 < patlen && patlen <= sBMHPatLenMax);
-    for (jsuint i = 0; i < sBMHCharSetSize; i++)
+    for (unsigned i = 0; i < sBMHCharSetSize; i++)
         skip[i] = (uint8_t)patlen;
-    jsuint m = patlen - 1;
-    for (jsuint i = 0; i < m; i++) {
+    unsigned m = patlen - 1;
+    for (unsigned i = 0; i < m; i++) {
         jschar c = pat[i];
         if (c >= sBMHCharSetSize)
             return sBMHBadPattern;
         skip[c] = (uint8_t)(m - i);
     }
     jschar c;
-    for (jsuint k = m;
+    for (unsigned k = m;
          k < textlen;
          k += ((c = text[k]) >= sBMHCharSetSize) ? patlen : skip[c]) {
-        for (jsuint i = k, j = m; ; i--, j--) {
+        for (unsigned i = k, j = m; ; i--, j--) {
             if (text[i] != pat[j])
                 break;
             if (j == 0)
@@ -912,8 +912,8 @@ js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
 }
 
 struct MemCmp {
-    typedef jsuint Extent;
-    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *, jsuint patlen) {
+    typedef unsigned Extent;
+    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *, unsigned patlen) {
         return (patlen - 1) * sizeof(jschar);
     }
     static JS_ALWAYS_INLINE bool match(const jschar *p, const jschar *t, Extent extent) {
@@ -923,7 +923,7 @@ struct MemCmp {
 
 struct ManualCmp {
     typedef const jschar *Extent;
-    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *pat, jsuint patlen) {
+    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *pat, unsigned patlen) {
         return pat + patlen;
     }
     static JS_ALWAYS_INLINE bool match(const jschar *p, const jschar *t, Extent extent) {
@@ -937,7 +937,7 @@ struct ManualCmp {
 
 template <class InnerMatch>
 static int
-UnrolledMatch(const jschar *text, jsuint textlen, const jschar *pat, jsuint patlen)
+UnrolledMatch(const jschar *text, unsigned textlen, const jschar *pat, unsigned patlen)
 {
     JS_ASSERT(patlen > 0 && textlen > 0);
     const jschar *textend = text + textlen - (patlen - 1);
@@ -982,8 +982,8 @@ UnrolledMatch(const jschar *text, jsuint textlen, const jschar *pat, jsuint patl
 }
 
 static JS_ALWAYS_INLINE int
-StringMatch(const jschar *text, jsuint textlen,
-            const jschar *pat, jsuint patlen)
+StringMatch(const jschar *text, unsigned textlen,
+            const jschar *pat, unsigned patlen)
 {
     if (patlen == 0)
         return 0;
@@ -1046,7 +1046,7 @@ static const size_t sRopeMatchThresholdRatioLog2 = 5;
  * the 'match' outparam (-1 for not found).
  */
 static bool
-RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, int *match)
+RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, unsigned patlen, int *match)
 {
     JS_ASSERT(textstr->isRope());
 
@@ -1157,21 +1157,21 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
     if (!patstr)
         return false;
 
-    jsuint textlen = str->length();
+    unsigned textlen = str->length();
     const jschar *text = str->getChars(cx);
     if (!text)
         return false;
 
-    jsuint patlen = patstr->length();
+    unsigned patlen = patstr->length();
     const jschar *pat = patstr->chars();
 
-    jsuint start;
+    unsigned start;
     if (args.length() > 1) {
         if (args[1].isInt32()) {
             int i = args[1].toInt32();
             if (i <= 0) {
                 start = 0;
-            } else if (jsuint(i) > textlen) {
+            } else if (unsigned(i) > textlen) {
                 start = textlen;
                 textlen = 0;
             } else {
@@ -3957,7 +3957,7 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, Value *rval)
                 goto report_bad_uri;
             if (!JS7_ISHEX(chars[k+1]) || !JS7_ISHEX(chars[k+2]))
                 goto report_bad_uri;
-            jsuint B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
+            unsigned B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
             k += 2;
             if (!(B & 0x80)) {
                 c = (jschar)B;

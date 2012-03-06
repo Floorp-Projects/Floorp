@@ -376,7 +376,7 @@ js::StaticStrings::lookup(const jschar *chars, size_t length)
                       (chars[1] - '0') * 10 +
                       (chars[2] - '0');
 
-            if (jsuint(i) < INT_STATIC_LIMIT)
+            if (unsigned(i) < INT_STATIC_LIMIT)
                 return getInt(i);
         }
         return NULL;

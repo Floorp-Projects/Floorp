@@ -664,7 +664,7 @@ Chunk::init()
     info.age = 0;
 
     /* Initialize the arena header state. */
-    for (jsuint i = 0; i < ArenasPerChunk; i++) {
+    for (unsigned i = 0; i < ArenasPerChunk; i++) {
         arenas[i].aheader.setAsNotAllocated();
         arenas[i].aheader.next = (i + 1 < ArenasPerChunk)
                                  ? &arenas[i + 1].aheader
@@ -724,14 +724,14 @@ Chunk::removeFromAvailableList()
  * it to the most recently freed arena when we free, and forcing it to
  * the last alloc + 1 when we allocate.
  */
-jsuint
+unsigned
 Chunk::findDecommittedArenaOffset()
 {
     /* Note: lastFreeArenaOffset can be past the end of the list. */
-    for (jsuint i = info.lastDecommittedArenaOffset; i < ArenasPerChunk; i++)
+    for (unsigned i = info.lastDecommittedArenaOffset; i < ArenasPerChunk; i++)
         if (decommittedArenas.get(i))
             return i;
-    for (jsuint i = 0; i < info.lastDecommittedArenaOffset; i++)
+    for (unsigned i = 0; i < info.lastDecommittedArenaOffset; i++)
         if (decommittedArenas.get(i))
             return i;
     JS_NOT_REACHED("No decommitted arenas found.");
@@ -744,7 +744,7 @@ Chunk::fetchNextDecommittedArena()
     JS_ASSERT(info.numArenasFreeCommitted == 0);
     JS_ASSERT(info.numArenasFree > 0);
 
-    jsuint offset = findDecommittedArenaOffset();
+    unsigned offset = findDecommittedArenaOffset();
     info.lastDecommittedArenaOffset = offset + 1;
     --info.numArenasFree;
     decommittedArenas.unset(offset);
