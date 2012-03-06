@@ -5056,12 +5056,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     }
     break;
 
-    case WM_HSCROLL:
-    case WM_VSCROLL:
-      *aRetValue = 0;
-      result = OnScroll(msg, wParam, lParam);
-      break;
-
     // The WM_ACTIVATE event is fired when a window is raised or lowered,
     // and the loword of wParam specifies which. But we don't want to tell
     // the focus system about this until the WM_SETFOCUS or WM_KILLFOCUS
@@ -5205,14 +5199,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       }
     }
     break;
-
-  case WM_MOUSEWHEEL:
-  case WM_MOUSEHWHEEL:
-    OnMouseWheel(msg, wParam, lParam, aRetValue);
-    // We don't need to call next wndproc WM_MOUSEWHEEL and WM_MOUSEHWHEEL.
-    // We should consume them always.  If the messages would be handled by
-    // our window again, it causes making infinite message loop.
-    return true;
 
   case WM_DWMCOMPOSITIONCHANGED:
     // First, update the compositor state to latest one. All other methods
@@ -7027,158 +7013,6 @@ bool nsWindow::OnResize(nsIntRect &aWindowRect)
 
 bool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
 {
-  return true;
-}
-
-/**
- * OnMouseWheel() is called when ProcessMessage() handles WM_MOUSEWHEEL,
- * WM_MOUSEHWHEEL and also OnScroll() tries to emulate mouse wheel action for
- * WM_VSCROLL or WM_HSCROLL.
- * So, aMsg may be WM_MOUSEWHEEL, WM_MOUSEHWHEEL, WM_VSCROLL or WM_HSCROLL.
- */
-void
-nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
-                       LRESULT *aRetValue)
-{
-  *aRetValue = (aMsg != WM_MOUSEHWHEEL) ? TRUE : FALSE;
-
-  MouseScrollHandler* handler = MouseScrollHandler::GetInstance();
-  POINT point = handler->ComputeMessagePos(aMsg, aWParam, aLParam);
-  HWND underCursorWnd = ::WindowFromPoint(point);
-  if (!underCursorWnd) {
-    return;
-  }
-
-  if (MouseScrollHandler::Device::Elantech::IsPinchHackNeeded() &&
-      MouseScrollHandler::Device::Elantech::IsHelperWindow(underCursorWnd)) {
-    // The Elantech driver places a window right underneath the cursor
-    // when sending a WM_MOUSEWHEEL event to us as part of a pinch-to-zoom
-    // gesture.  We detect that here, and search for our window that would
-    // be beneath the cursor if that window wasn't there.
-    underCursorWnd = WinUtils::FindOurWindowAtPoint(point);
-    if (!underCursorWnd) {
-      return;
-    }
-  }
-
-  // Handle most cases first.  If the window under mouse cursor is our window
-  // except plugin window (MozillaWindowClass), we should handle the message
-  // on the window.
-  if (WinUtils::IsOurProcessWindow(underCursorWnd)) {
-    nsWindow* destWindow = WinUtils::GetNSWindowPtr(underCursorWnd);
-    if (!destWindow) {
-      NS_WARNING("We're not sure what cause this is.");
-      HWND wnd = ::GetParent(underCursorWnd);
-      for (; wnd; wnd = ::GetParent(wnd)) {
-        destWindow = WinUtils::GetNSWindowPtr(wnd);
-        if (destWindow) {
-          break;
-        }
-      }
-      if (!wnd) {
-        return;
-      }
-    }
-
-    NS_ASSERTION(destWindow, "destWindow must not be NULL");
-    // If the found window is our plugin window, it means that the message
-    // has been handled by the plugin but not consumed.  We should handle the
-    // message on its parent window.  However, note that the DOM event may
-    // cause accessing the plugin.  Therefore, we should unlock the plugin
-    // process by using PostMessage().
-    if (destWindow->mWindowType == eWindowType_plugin) {
-      destWindow = destWindow->GetParentWindow(false);
-      NS_ENSURE_TRUE(destWindow, );
-    }
-    UINT internalMessage = WinUtils::GetInternalMessage(aMsg);
-    ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
-    return;
-  }
-
-  // If the window under cursor is not in our process, it means:
-  // 1. The window may be a plugin window (GeckoPluginWindow or its descendant).
-  // 2. The window may be another application's window.
-  HWND pluginWnd = WinUtils::FindOurProcessWindow(underCursorWnd);
-  if (!pluginWnd) {
-    // If there is no plugin window in ancestors of the window under cursor,
-    // the window is for another applications (case 2).
-    // We don't need to handle this message.
-    return;
-  }
-
-  // If we're a plugin window (MozillaWindowClass) and cursor in this window,
-  // the message shouldn't go to plugin's wndproc again.  So, we should handle
-  // it on parent window.  However, note that the DOM event may cause accessing
-  // the plugin.  Therefore, we should unlock the plugin process by using
-  // PostMessage().
-  if (mWindowType == eWindowType_plugin && pluginWnd == mWnd) {
-    nsWindow* destWindow = GetParentWindow(false);
-    NS_ENSURE_TRUE(destWindow, );
-    UINT internalMessage = WinUtils::GetInternalMessage(aMsg);
-    ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
-    return;
-  }
-
-  // If the window is a part of plugin, we should post the message to it.
-  ::PostMessage(underCursorWnd, aMsg, aWParam, aLParam);
-}
-
-/**
- * OnScroll() is called when ProcessMessage() handles WM_VSCROLL or WM_HSCROLL.
- * aMsg may be WM_VSCROLL or WM_HSCROLL.
- */
-bool
-nsWindow::OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam)
-{
-  if (aLParam ||
-      MouseScrollHandler::GetInstance()->
-        GetUserPrefs().IsScrollMessageHandledAsWheelMessage()) {
-    // Scroll message generated by Thinkpad Trackpoint Driver or similar
-    // Treat as a mousewheel message and scroll appropriately
-    LRESULT retVal;
-    OnMouseWheel(aMsg, aWParam, aLParam, &retVal);
-    // Always consume the scroll message if we try to emulate mouse wheel
-    // action.
-    return true;
-  }
-
-  // Scroll message generated by external application
-  nsContentCommandEvent command(true, NS_CONTENT_COMMAND_SCROLL, this);
-
-  command.mScroll.mIsHorizontal = (aMsg == WM_HSCROLL);
-
-  switch (LOWORD(aWParam))
-  {
-    case SB_LINEUP:   // SB_LINELEFT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Line;
-      command.mScroll.mAmount = -1;
-      break;
-    case SB_LINEDOWN: // SB_LINERIGHT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Line;
-      command.mScroll.mAmount = 1;
-      break;
-    case SB_PAGEUP:   // SB_PAGELEFT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Page;
-      command.mScroll.mAmount = -1;
-      break;
-    case SB_PAGEDOWN: // SB_PAGERIGHT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Page;
-      command.mScroll.mAmount = 1;
-      break;
-    case SB_TOP:      // SB_LEFT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Whole;
-      command.mScroll.mAmount = -1;
-      break;
-    case SB_BOTTOM:   // SB_RIGHT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Whole;
-      command.mScroll.mAmount = 1;
-      break;
-    default:
-      return false;
-  }
-  // XXX If this is a plugin window, we should dispatch the event from
-  //     parent window.
-  DispatchWindowEvent(&command);
   return true;
 }
 

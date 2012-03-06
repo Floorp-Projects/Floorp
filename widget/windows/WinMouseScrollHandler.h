@@ -35,21 +35,6 @@ public:
                              LRESULT *aRetValue,
                              bool &aEatMessage);
 
-  /**
-   * ComputeMessagePos() computes the cursor position when the message was
-   * added to the queue.
-   *
-   * @param aMessage    Handling message.
-   * @param aWParam     Handling message's wParam.
-   * @param aLParam     Handling message's lParam.
-   * @return            Mouse cursor position when the message is added to
-   *                    the queue or current cursor position if the result of
-   *                    ::GetMessagePos() is broken.
-   */
-  POINT ComputeMessagePos(UINT aMessage,
-                          WPARAM aWParam,
-                          LPARAM aLParam);
-
 private:
   MouseScrollHandler();
   ~MouseScrollHandler();
@@ -71,6 +56,42 @@ private:
    * @param aMessage    Handling message.
    */
   static nsModifierKeyState GetModifierKeyState(UINT aMessage);
+
+  /**
+   * ProcessNativeMouseWheelMessage() processes WM_MOUSEWHEEL and
+   * WM_MOUSEHWHEEL.  Additionally, processes WM_VSCROLL and WM_HSCROLL if they
+   * should be processed as mouse wheel message.
+   * This method posts MOZ_WM_MOUSEVWHEEL, MOZ_WM_MOUSEHWHEEL,
+   * MOZ_WM_VSCROLL or MOZ_WM_HSCROLL if we need to dispatch mouse scroll
+   * events.  That avoids deadlock with plugin process.
+   *
+   * @param aWindow     A window which receives the message.
+   * @param aMessage    WM_MOUSEWHEEL, WM_MOUSEHWHEEL, WM_VSCROLL or
+   *                    WM_HSCROLL.
+   * @param aWParam     The wParam value of the message.
+   * @param aLParam     The lParam value of the message.
+   */
+  void ProcessNativeMouseWheelMessage(nsWindow* aWindow,
+                                      UINT aMessage,
+                                      WPARAM aWParam,
+                                      LPARAM aLParam);
+
+  /**
+   * ProcessNativeScrollMessage() processes WM_VSCROLL and WM_HSCROLL.
+   * This method just call ProcessMouseWheelMessage() if the message should be
+   * processed as mouse wheel message.  Otherwise, dispatches a content
+   * command event.
+   *
+   * @param aWindow     A window which receives the message.
+   * @param aMessage    WM_VSCROLL or WM_HSCROLL.
+   * @param aWParam     The wParam value of the message.
+   * @param aLParam     The lParam value of the message.
+   * @return            TRUE if the message is processed.  Otherwise, FALSE.
+   */
+  bool ProcessNativeScrollMessage(nsWindow* aWindow,
+                                  UINT aMessage,
+                                  WPARAM aWParam,
+                                  LPARAM aLParam);
 
   /**
    * HandleMouseWheelMessage() processes MOZ_WM_MOUSEVWHEEL and
@@ -102,6 +123,21 @@ private:
                                               UINT aMessage,
                                               WPARAM aWParam,
                                               LPARAM aLParam);
+
+  /**
+   * ComputeMessagePos() computes the cursor position when the message was
+   * added to the queue.
+   *
+   * @param aMessage    Handling message.
+   * @param aWParam     Handling message's wParam.
+   * @param aLParam     Handling message's lParam.
+   * @return            Mouse cursor position when the message is added to
+   *                    the queue or current cursor position if the result of
+   *                    ::GetMessagePos() is broken.
+   */
+  POINT ComputeMessagePos(UINT aMessage,
+                          WPARAM aWParam,
+                          LPARAM aLParam);
 
   class EventInfo;
   /**
@@ -279,7 +315,6 @@ private:
 
   SystemSettings mSystemSettings;
 
-public:
   class UserPrefs {
   public:
     UserPrefs();
@@ -313,12 +348,6 @@ public:
     bool mScrollMessageHandledAsWheelMessage;
   };
 
-  UserPrefs& GetUserPrefs()
-  {
-    return mUserPrefs;
-  }
-
-private:
   UserPrefs mUserPrefs;
 
 public:

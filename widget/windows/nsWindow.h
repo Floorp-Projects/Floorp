@@ -396,15 +396,12 @@ protected:
                                     PRUint32 aFlags = 0,
                                     const MSG *aMsg = nsnull,
                                     bool *aEventDispatched = nsnull);
-  bool                    OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);
   bool                    OnHotKey(WPARAM wParam, LPARAM lParam);
   BOOL                    OnInputLangChange(HKL aHKL);
   bool                    OnPaint(HDC aDC, PRUint32 aNestingLevel);
   void                    OnWindowPosChanged(WINDOWPOS *wp, bool& aResult);
-  void                    OnMouseWheel(UINT aMsg, WPARAM aWParam,
-                                       LPARAM aLParam, LRESULT *aRetValue);
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
   void                    OnSysColorChanged();
 
