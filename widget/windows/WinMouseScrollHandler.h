@@ -10,6 +10,7 @@
 #include "nscore.h"
 #include "nsDebug.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/TimeStamp.h"
 #include <windows.h>
 
 class nsWindow;
@@ -49,13 +50,16 @@ public:
   class EventInfo {
   public:
     /**
+     * @param aWindow   An nsWindow which is handling the event.
      * @param aMessage  Must be WM_MOUSEWHEEL or WM_MOUSEHWHEEL.
      */
-    EventInfo(UINT aMessage, WPARAM aWParam, LPARAM aLParam);
+    EventInfo(nsWindow* aWindow, UINT aMessage, WPARAM aWParam, LPARAM aLParam);
 
     bool CanDispatchMouseScrollEvent() const;
 
     PRInt32 GetNativeDelta() const { return mDelta; }
+    HWND GetWindowHandle() const { return mWnd; }
+    const TimeStamp& GetTimeStamp() const { return mTimeStamp; }
     bool IsVertical() const { return mIsVertical; }
     bool IsPositive() const { return (mDelta > 0); }
     bool IsPage() const { return mIsPage; }
@@ -76,8 +80,11 @@ public:
      */
     PRInt32 GetScrollFlags() const;
 
-  private:
-    EventInfo() {}
+  protected:
+    EventInfo() :
+      mIsVertical(false), mIsPage(false), mDelta(0), mWnd(nsnull)
+    {
+    }
 
     // TRUE if event is for vertical scroll.  Otherwise, FALSE.
     bool mIsVertical;
@@ -85,7 +92,47 @@ public:
     bool mIsPage;
     // The native delta value.
     PRInt32 mDelta;
+    // The window handle which is handling the event.
+    HWND mWnd;
+    // Timestamp of the event.
+    TimeStamp mTimeStamp;
   };
+
+  class LastEventInfo : public EventInfo {
+  public:
+    LastEventInfo() :
+      EventInfo(), mRemainingDeltaForScroll(0), mRemainingDeltaForPixel(0)
+    {
+    }
+
+    /**
+     * CanContinueTransaction() checks whether the new event can continue the
+     * last transaction or not.  Note that if there is no transaction, this
+     * returns true.
+     */
+    bool CanContinueTransaction(const EventInfo& aNewEvent);
+
+    /**
+     * ResetTransaction() resets the transaction, i.e., the instance forgets
+     * the last event information.
+     */
+    void ResetTransaction();
+
+    /**
+     * RecordEvent() saves the information of new event.
+     */
+    void RecordEvent(const EventInfo& aEvent);
+
+    // The remaining native delta value (i.e., not handled by previous
+    // message handler).
+    PRInt32 mRemainingDeltaForScroll;
+    PRInt32 mRemainingDeltaForPixel;
+  };
+
+  LastEventInfo& GetLastEventInfo() { return mLastEventInfo; }
+
+private:
+  LastEventInfo mLastEventInfo;
 
 public:
   class SystemSettings {

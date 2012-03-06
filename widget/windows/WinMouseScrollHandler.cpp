@@ -65,6 +65,11 @@ bool MouseScrollHandler::Device::Elantech::sUseSwipeHack = false;
 bool MouseScrollHandler::Device::Elantech::sUsePinchHack = false;
 DWORD MouseScrollHandler::Device::Elantech::sZoomUntil = 0;
 
+// The duration until timeout of events transaction.  The value is 1.5 sec,
+// it's just a magic number, it was suggested by Logitech's engineer, see
+// bug 605648 comment 90.
+#define DEFAULT_TIMEOUT_DURATION 1500
+
 /******************************************************************************
  *
  * MouseScrollHandler
@@ -168,7 +173,8 @@ MouseScrollHandler::DispatchEvent(nsWindow* aWindow, nsGUIEvent& aEvent)
  *
  ******************************************************************************/
 
-MouseScrollHandler::EventInfo::EventInfo(UINT aMessage,
+MouseScrollHandler::EventInfo::EventInfo(nsWindow* aWindow,
+                                         UINT aMessage,
                                          WPARAM aWParam, LPARAM aLParam)
 {
   NS_ABORT_IF_FALSE(aMessage == WM_MOUSEWHEEL || aMessage == WM_MOUSEHWHEEL,
@@ -180,6 +186,8 @@ MouseScrollHandler::EventInfo::EventInfo(UINT aMessage,
   mIsPage = MouseScrollHandler::sInstance->
               mSystemSettings.IsPageScroll(mIsVertical);
   mDelta = (short)HIWORD(aWParam);
+  mWnd = aWindow->GetWindowHandle();
+  mTimeStamp = TimeStamp::Now();
 }
 
 bool
@@ -212,6 +220,50 @@ MouseScrollHandler::EventInfo::GetScrollFlags() const
   result |= mIsVertical ? nsMouseScrollEvent::kIsVertical :
                           nsMouseScrollEvent::kIsHorizontal;
   return result;
+}
+
+/******************************************************************************
+ *
+ * LastEventInfo
+ *
+ ******************************************************************************/
+
+bool
+MouseScrollHandler::LastEventInfo::CanContinueTransaction(
+                                     const EventInfo& aNewEvent)
+{
+  return !mWnd ||
+           (mWnd == aNewEvent.GetWindowHandle() &&
+            IsPositive() == aNewEvent.IsPositive() &&
+            mIsVertical == aNewEvent.IsVertical() &&
+            mIsPage == aNewEvent.IsPage() &&
+            TimeStamp::Now() - mTimeStamp <=
+              TimeDuration::FromMilliseconds(DEFAULT_TIMEOUT_DURATION));
+}
+
+void
+MouseScrollHandler::LastEventInfo::ResetTransaction()
+{
+  if (!mWnd) {
+    return;
+  }
+
+  PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
+    ("MouseScroll::LastEventInfo::ResetTransaction()"));
+
+  mWnd = nsnull;
+  mRemainingDeltaForScroll = 0;
+  mRemainingDeltaForPixel = 0;
+}
+
+void
+MouseScrollHandler::LastEventInfo::RecordEvent(const EventInfo& aEvent)
+{
+  mWnd = aEvent.GetWindowHandle();
+  mDelta = aEvent.GetNativeDelta();
+  mIsVertical = aEvent.IsVertical();
+  mIsPage = aEvent.IsPage();
+  mTimeStamp = TimeStamp::Now();
 }
 
 /******************************************************************************
@@ -278,6 +330,10 @@ MouseScrollHandler::SystemSettings::MarkDirty()
     ("MouseScrollHandler::SystemSettings::MarkDirty(): "
        "Marking SystemSettings dirty"));
   mInitialized = false;
+  // When system settings are changed, we should reset current transaction.
+  MOZ_ASSERT(sInstance,
+    "Must not be called at initializing MouseScrollHandler");
+  MouseScrollHandler::sInstance->mLastEventInfo.ResetTransaction();
 }
 
 /******************************************************************************
@@ -332,6 +388,11 @@ MouseScrollHandler::UserPrefs::MarkDirty()
   PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
     ("MouseScrollHandler::UserPrefs::MarkDirty(): Marking UserPrefs dirty"));
   mInitialized = false;
+  // When user prefs for mousewheel are changed, we should reset current
+  // transaction.
+  MOZ_ASSERT(sInstance,
+    "Must not be called at initializing MouseScrollHandler");
+  MouseScrollHandler::sInstance->mLastEventInfo.ResetTransaction();
 }
 
 /******************************************************************************
