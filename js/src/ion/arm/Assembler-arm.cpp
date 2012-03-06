@@ -2102,7 +2102,8 @@ bool instIsGuard(Instruction *inst, const PoolHeader **ph)
         return false;
     if (!(inst->is<InstBXReg>() || inst->is<InstBImm>()))
         return false;
-    *ph = inst->as<const PoolHeader>();
+    // See if the next instruction is a pool header.
+    *ph = (inst+1)->as<const PoolHeader>();
     return *ph != NULL;
 }
 
