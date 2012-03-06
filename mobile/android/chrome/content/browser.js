@@ -2838,14 +2838,14 @@ var FormAssistant = {
 
   init: function() {
     Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
-    Services.obs.addObserver(this, "FormAssist:Closed", false);
+    Services.obs.addObserver(this, "FormAssist:Hidden", false);
 
     BrowserApp.deck.addEventListener("input", this, false);
   },
 
   uninit: function() {
     Services.obs.removeObserver(this, "FormAssist:AutoComplete");
-    Services.obs.removeObserver(this, "FormAssist:Closed");
+    Services.obs.removeObserver(this, "FormAssist:Hidden");
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -2859,7 +2859,7 @@ var FormAssistant = {
         this._currentInputElement.value = aData;
         break;
 
-      case "FormAssist:Closed":
+      case "FormAssist:Hidden":
         this._currentInputElement = null;
         break;
     }
@@ -2869,7 +2869,11 @@ var FormAssistant = {
     switch (aEvent.type) {
       case "input":
         let currentElement = aEvent.target;
-        this._showAutoCompleteSuggestions(currentElement);
+        if (this._showAutoCompleteSuggestions(currentElement))
+          break;
+
+        // If we're not showing autocomplete suggestions, hide the form assist popup
+        this._hideFormAssistPopup();
     }
   },
 
@@ -2928,6 +2932,10 @@ var FormAssistant = {
 
     let suggestions = this._getAutoCompleteSuggestions(aElement.value, aElement);
 
+    // Return false if there are no suggestions to show
+    if (!suggestions.length)
+      return false;
+
     let positionData = this._getElementPositionData(aElement);
     sendMessageToJava({
       gecko: {
@@ -2943,6 +2951,12 @@ var FormAssistant = {
     this._currentInputElement = aElement;
 
     return true;
+  },
+
+  _hideFormAssistPopup: function _hideFormAssistPopup() {
+    sendMessageToJava({
+      gecko: { type:  "FormAssist:Hide" }
+    });
   }
 };
 
