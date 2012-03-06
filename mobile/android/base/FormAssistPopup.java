@@ -98,28 +98,36 @@ public class FormAssistPopup extends ListView implements GeckoEventListener {
     public void handleMessage(String event, JSONObject message) {
         try {
             if (event.equals("FormAssist:AutoComplete")) {
-                final JSONArray suggestions = message.getJSONArray("suggestions");
-                final JSONArray rect = message.getJSONArray("rect");
-                final double zoom = message.getDouble("zoom");
-                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
-                    public void run() {
-                        // Don't show autocomplete popup when using fullscreen // VKB
-                        InputMethodManager imm =
-                                (InputMethodManager) GeckoApp.mAppContext.getSystemService(Context.INPUT_METHOD_SERVICE);
-                        if (!imm.isFullscreenMode())
-                            show(suggestions, rect, zoom);
-                    }
-                });
+                handleAutoCompleteMessage(message);
             } else if (event.equals("FormAssist:Hide")) {
-                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
-                    public void run() {
-                        hide();
-                    }
-                });
+                handleHideMessage(message);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
         }
+    }
+
+    private void handleAutoCompleteMessage(JSONObject message) throws JSONException  {
+        final JSONArray suggestions = message.getJSONArray("suggestions");
+        final JSONArray rect = message.getJSONArray("rect");
+        final double zoom = message.getDouble("zoom");
+        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            public void run() {
+                // Don't show autocomplete popup when using fullscreen VKB
+                InputMethodManager imm =
+                        (InputMethodManager) GeckoApp.mAppContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (!imm.isFullscreenMode())
+                    show(suggestions, rect, zoom);
+            }
+        });
+    }
+
+    private void handleHideMessage(JSONObject message) {
+        GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+            public void run() {
+                hide();
+            }
+        });
     }
 
     public void show(JSONArray suggestions, JSONArray rect, double zoom) {
