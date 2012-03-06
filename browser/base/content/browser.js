@@ -5374,6 +5374,7 @@ function setToolbarVisibility(toolbar, isVisible) {
 
 var TabsOnTop = {
   init: function TabsOnTop_init() {
+    this._initialized = true;
     this.syncUI();
     Services.prefs.addObserver(this._prefName, this, false);
   },
@@ -5387,6 +5388,9 @@ var TabsOnTop = {
   },
 
   syncUI: function () {
+    if (!this._initialized)
+      return;
+
     let userEnabled = Services.prefs.getBoolPref(this._prefName);
     let enabled = userEnabled && gBrowser.tabContainer.visible;
 
