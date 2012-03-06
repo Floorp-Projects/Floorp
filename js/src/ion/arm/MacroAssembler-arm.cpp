@@ -275,7 +275,7 @@ void
 MacroAssemblerARM::ma_mov(const ImmGCPtr &ptr, Register dest)
 {
     writeDataRelocation(nextOffset());
-    ma_mov(Imm32(ptr.value), dest);
+    ma_movPatchable(Imm32(ptr.value), dest, Always, L_MOVWT);
 }
 
     // Shifts (just a move with a shifting op2)
@@ -592,8 +592,8 @@ MacroAssemblerARM::ma_cmp(Register src1, Imm32 imm, Condition c)
 void
 MacroAssemblerARM::ma_cmp(Register src1, ImmGCPtr ptr, Condition c)
 {
-    writeDataRelocation(nextOffset());
-    ma_alu(src1, Imm32(ptr.value), InvalidReg, op_cmp, SetCond, c);
+    ma_mov(ptr, ScratchRegister);
+    ma_cmp(src1, ScratchRegister, c);
 }
 void
 MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
@@ -1232,7 +1232,6 @@ MacroAssemblerARMCompat::movePtr(const ImmWord &imm, const Register &dest)
 void
 MacroAssemblerARMCompat::movePtr(const ImmGCPtr &imm, const Register &dest)
 {
-    writeDataRelocation(nextOffset());
     ma_mov(imm, dest);
 }
 void

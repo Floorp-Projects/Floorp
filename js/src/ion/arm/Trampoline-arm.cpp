@@ -350,7 +350,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
     // Including |this|, there are (|nargs| + 1) arguments to copy.
     JS_ASSERT(ArgumentsRectifierReg == r8);
-    
+
     // Load the number of |undefined|s to push into %rcx.
     masm.ma_ldr(DTRAddr(sp, DtrOffImm(IonJSFrameLayout::offsetOfCalleeToken())), r1);
     masm.ma_ldrh(EDtrAddr(r1, EDtrOffImm(offsetof(JSFunction, nargs))), r6);
