@@ -39,6 +39,10 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.URLSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -139,6 +143,28 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
 
         try {
             mTimeout = options.getLong("timeout");
+        } catch (JSONException e) { }
+
+        try {
+            JSONObject link = options.getJSONObject("link");
+            String title = mTextView.getText().toString();
+            String linkLabel = link.getString("label");
+            String linkUrl = link.getString("url");
+            SpannableString titleWithLink = new SpannableString(title + " " + linkLabel);
+            URLSpan linkSpan = new URLSpan(linkUrl) {
+                @Override
+                public void onClick(View view) {
+                    GeckoApp.mAppContext.loadUrlInTab(this.getURL());
+                }
+            };
+
+            // prevent text outside the link from flashing when clicked
+            ForegroundColorSpan colorSpan = new ForegroundColorSpan(mTextView.getCurrentTextColor());
+            titleWithLink.setSpan(colorSpan, 0, title.length(), 0);
+
+            titleWithLink.setSpan(linkSpan, title.length() + 1, titleWithLink.length(), 0);
+            mTextView.setText(titleWithLink);
+            mTextView.setMovementMethod(LinkMovementMethod.getInstance());
         } catch (JSONException e) { }
     }
 
