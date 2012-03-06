@@ -170,7 +170,7 @@ struct Pool {
 
     bool reset() {
         numEntries = 0;
-        uint32 buffSize = 8;
+        buffSize = 8;
         poolData = static_cast<uint8*>(malloc(buffSize * immSize));
         if (poolData == NULL)
             return false;
