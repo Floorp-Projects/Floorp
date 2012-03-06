@@ -47,7 +47,7 @@
 #include "nsIChannel.h"
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIInputStream.h"
 #include "CNavDTD.h"
@@ -161,7 +161,6 @@ public:
 
 //-------------- End ParseContinue Event Definition ------------------------
 
-nsICharsetAlias* nsParser::sCharsetAliasService = nsnull;
 nsICharsetConverterManager* nsParser::sCharsetConverterManager = nsnull;
 
 /**
@@ -173,15 +172,10 @@ nsParser::Init()
 {
   nsresult rv;
 
-  nsCOMPtr<nsICharsetAlias> charsetAlias =
-    do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsICharsetConverterManager> charsetConverter =
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  charsetAlias.swap(sCharsetAliasService);
   charsetConverter.swap(sCharsetConverterManager);
 
   return NS_OK;
@@ -194,7 +188,6 @@ nsParser::Init()
 // static
 void nsParser::Shutdown()
 {
-  NS_IF_RELEASE(sCharsetAliasService);
   NS_IF_RELEASE(sCharsetConverterManager);
 }
 
@@ -2064,8 +2057,7 @@ ParserWriteFunc(nsIInputStream* in,
         ((count >= 4) &&
          DetectByteOrderMark((const unsigned char*)buf,
                              theNumRead, guess, guessSource))) {
-      nsCOMPtr<nsICharsetAlias> alias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
-      result = alias->GetPreferred(guess, preferred);
+      result = nsCharsetAlias::GetPreferred(guess, preferred);
       // Only continue if it's a recognized charset and not
       // one of a designated set that we ignore.
       if (NS_SUCCEEDED(result) &&
