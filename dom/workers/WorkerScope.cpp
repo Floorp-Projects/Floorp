@@ -528,8 +528,8 @@ private:
 #ifdef ANDROID
       __android_log_print(ANDROID_LOG_INFO, "Gecko", buffer.ptr());
 #endif
-      fputs(buffer.ptr(), stderr);
-      fflush(stderr);
+      fputs(buffer.ptr(), stdout);
+      fflush(stdout);
     }
 
     return true;

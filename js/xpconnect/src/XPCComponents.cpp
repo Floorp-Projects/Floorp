@@ -2799,8 +2799,8 @@ SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
     }
 #endif
 
-    fputs(cstr, stderr);
-    fflush(stderr);
+    fputs(cstr, stdout);
+    fflush(stdout);
     NS_Free(cstr);
     JS_SET_RVAL(cx, vp, JSVAL_TRUE);
     return true;
