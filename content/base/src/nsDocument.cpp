@@ -155,7 +155,6 @@
 #include "nsIDateTimeFormat.h"
 #include "nsEventDispatcher.h"
 #include "nsMutationEvent.h"
-#include "nsIDOMXPathEvaluator.h"
 #include "nsDOMCID.h"
 
 #include "jsapi.h"
