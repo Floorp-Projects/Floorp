@@ -258,19 +258,19 @@ void PrintError(char *prefix)
 {
     LPVOID lpMsgBuf;
     DWORD lastErr = GetLastError();
-    FormatMessage(
+    FormatMessageA(
       FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
       NULL,
       lastErr,
       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-      (LPTSTR) &lpMsgBuf,
+      (LPSTR) &lpMsgBuf,
       0,
       NULL
     );
     fprintf(stderr, "### ERROR: %s: %s",
                     prefix, lpMsgBuf ? lpMsgBuf : "(null)\n");
     fflush(stderr);
-    LocalFree( lpMsgBuf );
+    LocalFree(lpMsgBuf);
 }
 
 bool

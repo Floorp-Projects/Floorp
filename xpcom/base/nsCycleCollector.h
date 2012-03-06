@@ -84,7 +84,7 @@ void nsCycleCollector_setBeforeUnlinkCallback(CC_BeforeUnlinkCallback aCB);
 typedef void (*CC_ForgetSkippableCallback)(void);
 void nsCycleCollector_setForgetSkippableCallback(CC_ForgetSkippableCallback aCB);
 
-void nsCycleCollector_forgetSkippable();
+void nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes = false);
 
 #ifdef DEBUG_CC
 void nsCycleCollector_logPurpleRemoval(void* aObject);
