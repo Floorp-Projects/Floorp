@@ -1644,6 +1644,7 @@ abstract public class GeckoApp
         mInitialized = true;
 
         Intent intent = getIntent();
+        String action = intent.getAction();
         String args = intent.getStringExtra("args");
         if (args != null && args.contains("-profile")) {
             Pattern p = Pattern.compile("(?:-profile\\s*)(\\w*)(\\s*)");
@@ -1656,7 +1657,7 @@ abstract public class GeckoApp
             }
         }
 
-        if (ACTION_UPDATE.equals(intent.getAction()) || args != null && args.contains("-alert update-app")) {
+        if (ACTION_UPDATE.equals(action) || args != null && args.contains("-alert update-app")) {
             Log.i(LOGTAG,"onCreate: Update request");
             checkAndLaunchUpdate();
         }
@@ -1697,9 +1698,20 @@ abstract public class GeckoApp
         }
 
         sGeckoThread = new GeckoThread(intent, passedUri, mRestoreSession);
-        if (!ACTION_DEBUG.equals(intent.getAction()) &&
-            checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
+        if (!ACTION_DEBUG.equals(action) &&
+            checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched)) {
             sGeckoThread.start();
+        } else if (ACTION_DEBUG.equals(action) &&
+            checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitForDebugger)) {
+            mMainHandler.postDelayed(new Runnable() {
+                public void run() {
+                    Log.i(LOGTAG, "Launching from debug intent after 5s wait");
+                    setLaunchState(LaunchState.Launching);
+                    sGeckoThread.start();
+                }
+            }, 1000 * 5 /* 5 seconds */);
+            Log.i(LOGTAG, "Intent : ACTION_DEBUG - waiting 5s before launching");
+        }
 
         mFavicons = new Favicons(this);
 
