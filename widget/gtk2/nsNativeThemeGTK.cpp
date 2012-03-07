@@ -67,8 +67,7 @@
 #include "gfxPlatformGtk.h"
 #include "gfxGdkNativeRenderer.h"
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsNativeThemeGTK, nsNativeTheme, nsITheme,
-                                                              nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeGTK, nsNativeTheme, nsITheme)
 
 static int gLastGdkError;
 
@@ -82,7 +81,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   // We have to call moz_gtk_shutdown before the event loop stops running.
   nsCOMPtr<nsIObserverService> obsServ =
     mozilla::services::GetObserverService();
-  obsServ->AddObserver(this, "xpcom-shutdown", false);
+  obsServ->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
@@ -95,14 +94,10 @@ NS_IMETHODIMP
 nsNativeThemeGTK::Observe(nsISupports *aSubject, const char *aTopic,
                           const PRUnichar *aData)
 {
-  if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     moz_gtk_shutdown();
-  } else {
-    NS_NOTREACHED("unexpected topic");
-    return NS_ERROR_UNEXPECTED;
   }
-
-  return NS_OK;
+  return nsNativeTheme::Observe(aSubject, aTopic, aData);
 }
 
 void
