@@ -4086,7 +4086,11 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return true;
 }
 
-static bool
+/*
+ * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr12127. See
+ * the comment on EmitSwitch.
+ */
+MOZ_NEVER_INLINE static bool
 EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     StmtInfo stmtInfo;
@@ -4446,7 +4450,11 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
  * JSOP_LEAVEBLOCKEXPR to the beginning of the let and is only needed for
  * let-expressions.
  */
-static bool
+/*
+ * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr12127. See
+ * the comment on EmitSwitch.
+ */
+MOZ_NEVER_INLINE static bool
 EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
 {
     JS_ASSERT(pnLet->isArity(PN_BINARY));
@@ -4590,7 +4598,11 @@ EmitXMLProcessingInstruction(JSContext *cx, BytecodeEmitter *bce, XMLProcessingI
 }
 #endif
 
-static bool
+/*
+ * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr12127. See
+ * the comment on EmitSwitch.
+ */
+MOZ_NEVER_INLINE static bool
 EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_LEXICALSCOPE));
@@ -5811,7 +5823,11 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return true;
 }
 
-static bool
+/*
+ * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr12127. See
+ * the comment on EmitSwitch.
+ */
+MOZ_NEVER_INLINE static bool
 EmitLabel(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     /*
