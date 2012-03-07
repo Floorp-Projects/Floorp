@@ -2493,6 +2493,9 @@ let GsmPDUHelper = {
           }
         } else if (septet == PDU_NL_EXTENDED_ESCAPE) {
           escapeFound = true;
+
+          // <escape> is not an effective character
+          --length;
         } else {
           ret += langTable[septet];
         }
@@ -2500,6 +2503,22 @@ let GsmPDUHelper = {
     } while (byteLength);
 
     if (ret.length != length) {
+      /**
+       * If num of effective characters does not equal to the length of read
+       * string, cut the tail off. This happens when the last octet of user
+       * data has following layout:
+       *
+       * |<-              penultimate octet in user data               ->|
+       * |<-               data septet N               ->|<-   dsN-1   ->|
+       * +===7===|===6===|===5===|===4===|===3===|===2===|===1===|===0===|
+       *
+       * |<-                  last octet in user data                  ->|
+       * |<-                       fill bits                   ->|<-dsN->|
+       * +===7===|===6===|===5===|===4===|===3===|===2===|===1===|===0===|
+       *
+       * The fill bits in the last octet may happen to form a full septet and
+       * be appended at the end of result string.
+       */
       ret = ret.slice(0, length);
     }
     return ret;
