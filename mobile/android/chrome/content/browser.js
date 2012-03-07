@@ -2913,7 +2913,13 @@ var FormAssistant = {
     switch (aEvent.type) {
       case "focus":
         let currentElement = aEvent.target;
-        this._showValidationMessage(currentElement);
+
+        // Prioritize a form validation message over autocomplete suggestions
+        // when the element is first focused (a form validation message will
+        // only be available if an invalid form was submitted)
+        if (this._showValidationMessage(currentElement))
+          break;
+        this._showAutoCompleteSuggestions(currentElement)
         break;
 
       case "input":
