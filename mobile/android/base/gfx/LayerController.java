@@ -81,7 +81,20 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     private Layer mRootLayer;                   /* The root layer. */
     private LayerView mView;                    /* The main rendering view. */
     private Context mContext;                   /* The current context. */
-    private ViewportMetrics mViewportMetrics;   /* The current viewport metrics. */
+
+    /* This is volatile so that we can read and write to it from different threads.
+     * We avoid synchronization to make getting the viewport metrics from
+     * the compositor as cheap as possible. The viewport is immutable so
+     * we don't need to worry about anyone mutating it while we're reading from it.
+     * Specifically:
+     * 1) reading mViewportMetrics from any thread is fine without synchronization
+     * 2) writing to mViewportMetrics requires synchronizing on the layer controller object
+     * 3) whenver reading multiple fields from mViewportMetrics without synchronization (i.e. in
+     *    case 1 above) you should always frist grab a local copy of the reference, and then use
+     *    that because mViewportMetrics might get reassigned in between reading the different
+     *    fields. */
+    private volatile ImmutableViewportMetrics mViewportMetrics;   /* The current viewport metrics. */
+
     private boolean mWaitForTouchListeners;
 
     private PanZoomController mPanZoomController;
@@ -124,7 +137,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         mContext = context;
 
         mForceRedraw = true;
-        mViewportMetrics = new ViewportMetrics();
+        mViewportMetrics = new ImmutableViewportMetrics(new ViewportMetrics());
         mPanZoomController = new PanZoomController(this);
         mView = new LayerView(context, this);
 
@@ -152,7 +165,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     public Layer getRoot()                        { return mRootLayer; }
     public LayerView getView()                    { return mView; }
     public Context getContext()                   { return mContext; }
-    public ViewportMetrics getViewportMetrics()   { return mViewportMetrics; }
+    public ImmutableViewportMetrics getViewportMetrics()   { return mViewportMetrics; }
 
     public RectF getViewport() {
         return mViewportMetrics.getViewport();
@@ -171,7 +184,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     }
 
     public float getZoomFactor() {
-        return mViewportMetrics.getZoomFactor();
+        return mViewportMetrics.zoomFactor;
     }
 
     public Bitmap getBackgroundPattern()    { return getDrawable("background"); }
@@ -203,10 +216,11 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     public void setViewportSize(FloatSize size) {
         // Resize the viewport, and modify its zoom factor so that the page retains proportionally
         // zoomed relative to the screen.
-        float oldHeight = mViewportMetrics.getSize().height;
-        float oldWidth = mViewportMetrics.getSize().width;
-        float oldZoomFactor = mViewportMetrics.getZoomFactor();
-        mViewportMetrics.setSize(size);
+        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
+        float oldHeight = viewportMetrics.getSize().height;
+        float oldWidth = viewportMetrics.getSize().width;
+        float oldZoomFactor = viewportMetrics.getZoomFactor();
+        viewportMetrics.setSize(size);
 
         // if the viewport got larger (presumably because the vkb went away), and the page
         // is smaller than the new viewport size, increase the page size so that the panzoomcontroller
@@ -214,9 +228,9 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         // gecko increasing the page size to match the new viewport size, which will happen the next
         // time we get a draw update.
         if (size.width >= oldWidth && size.height >= oldHeight) {
-            FloatSize pageSize = mViewportMetrics.getPageSize();
+            FloatSize pageSize = viewportMetrics.getPageSize();
             if (pageSize.width < size.width || pageSize.height < size.height) {
-                mViewportMetrics.setPageSize(new FloatSize(Math.max(pageSize.width, size.width),
+                viewportMetrics.setPageSize(new FloatSize(Math.max(pageSize.width, size.width),
                                                            Math.max(pageSize.height, size.height)));
             }
         }
@@ -231,7 +245,8 @@ public class LayerController implements Tabs.OnTabsChangedListener {
             newFocus = new PointF(size.width / 2.0f, size.height / 2.0f);
         }
         float newZoomFactor = size.width * oldZoomFactor / oldWidth;
-        mViewportMetrics.scaleTo(newZoomFactor, newFocus);
+        viewportMetrics.scaleTo(newZoomFactor, newFocus);
+        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
         setForceRedraw();
 
@@ -246,9 +261,11 @@ public class LayerController implements Tabs.OnTabsChangedListener {
 
     /** Scrolls the viewport by the given offset. You must hold the monitor while calling this. */
     public void scrollBy(PointF point) {
-        PointF origin = mViewportMetrics.getOrigin();
+        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
+        PointF origin = viewportMetrics.getOrigin();
         origin.offset(point.x, point.y);
-        mViewportMetrics.setOrigin(origin);
+        viewportMetrics.setOrigin(origin);
+        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
         notifyLayerClientOfGeometryChange();
         GeckoApp.mAppContext.repositionPluginViews(false);
@@ -260,7 +277,9 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         if (mViewportMetrics.getPageSize().fuzzyEquals(size))
             return;
 
-        mViewportMetrics.setPageSize(size);
+        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
+        viewportMetrics.setPageSize(size);
+        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
         // Page size is owned by the layer client, so no need to notify it of
         // this change.
@@ -280,7 +299,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      * while calling this.
      */
     public void setViewportMetrics(ViewportMetrics viewport) {
-        mViewportMetrics = new ViewportMetrics(viewport);
+        mViewportMetrics = new ImmutableViewportMetrics(viewport);
         // this function may or may not be called on the UI thread,
         // but repositionPluginViews must only be called on the UI thread.
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
@@ -296,7 +315,9 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      * scale operation. You must hold the monitor while calling this.
      */
     public void scaleWithFocus(float zoomFactor, PointF focus) {
-        mViewportMetrics.scaleTo(zoomFactor, focus);
+        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
+        viewportMetrics.scaleTo(zoomFactor, focus);
+        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
         // We assume the zoom level will only be modified by the
         // PanZoomController, so no need to notify it of this change.
@@ -375,10 +396,11 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         if (mRootLayer == null)
             return null;
 
+        ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
         // Undo the transforms.
-        PointF origin = mViewportMetrics.getOrigin();
+        PointF origin = viewportMetrics.getOrigin();
         PointF newPoint = new PointF(origin.x, origin.y);
-        float zoom = mViewportMetrics.getZoomFactor();
+        float zoom = viewportMetrics.zoomFactor;
         viewPoint.x /= zoom;
         viewPoint.y /= zoom;
         newPoint.offset(viewPoint.x, viewPoint.y);
