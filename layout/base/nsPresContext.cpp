@@ -2357,6 +2357,16 @@ nsPresContext::CheckForInterrupt(nsIFrame* aFrame)
   return mHasPendingInterrupt;
 }
 
+size_t
+nsPresContext::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return mPropertyTable.SizeOfExcludingThis(aMallocSizeOf);
+         mLangGroupFontPrefs.SizeOfExcludingThis(aMallocSizeOf);
+
+  // Measurement of other members may be added later if DMD finds it is
+  // worthwhile.
+}
+
 bool
 nsPresContext::IsRootContentDocument()
 {
@@ -2786,3 +2796,20 @@ nsRootPresContext::FlushWillPaintObservers()
     observers[i]->Run();
   }
 }
+
+size_t
+nsRootPresContext::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return nsPresContext::SizeOfExcludingThis(aMallocSizeOf);
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mNotifyDidPaintTimer
+  // - mRegisteredPlugins
+  // - mWillPaintObservers
+  // - mWillPaintFallbackEvent
+  //
+  // The following member are not measured:
+  // - mUpdatePluginGeometryForFrame, because it is non-owning
+}
+

@@ -24,10 +24,10 @@ public class test_bug720538 extends PixelTest {
          * the gray shades of the checkerboard.
          */
 
-        int[][] painted = loadAndPaint(url);
+        PaintedSurface painted = loadAndPaint(url);
 
         // first we check that the point we want to double-tap (100, 100) is blue, indicating it's inside the iframe
-        mAsserter.ispixel(painted[100][100], 0, 0, 0xFF, "Ensuring double-tap point is in the iframe");
+        mAsserter.ispixel(painted.getPixelAt(100, 100), 0, 0, 0xFF, "Ensuring double-tap point is in the iframe");
 
         // do the double tap and wait for the double-tap animation to finish. we assume the animation is done
         // when we find a 500ms period with no paint events that occurs after at least one paint event.
@@ -39,10 +39,10 @@ public class test_bug720538 extends PixelTest {
         // check a few points to ensure that we did a good zoom-to-block on the iframe. this checks that
         // the background color is visible on the left and right edges of the viewport, but the iframe is
         // visible in between those edges
-        mAsserter.ispixel(painted[100][0], 0, 0x80, 0, "Checking page background to the left of the iframe");
-        mAsserter.ispixel(painted[100][50], 0, 0, 0xFF, "Checking for iframe a few pixels from the left edge");
-        mAsserter.ispixel(painted[100][mDriver.getGeckoWidth() - 51], 0, 0, 0xFF, "Checking for iframe a few pixels from the right edge");
-        mAsserter.ispixel(painted[100][mDriver.getGeckoWidth() - 1], 0, 0x80, 0, "Checking page background the right of the iframe");
+        mAsserter.ispixel(painted.getPixelAt(0, 100), 0, 0x80, 0, "Checking page background to the left of the iframe");
+        mAsserter.ispixel(painted.getPixelAt(50, 100), 0, 0, 0xFF, "Checking for iframe a few pixels from the left edge");
+        mAsserter.ispixel(painted.getPixelAt(mDriver.getGeckoWidth() - 51, 100), 0, 0, 0xFF, "Checking for iframe a few pixels from the right edge");
+        mAsserter.ispixel(painted.getPixelAt(mDriver.getGeckoWidth() - 1, 100), 0, 0x80, 0, "Checking page background the right of the iframe");
 
         // now we do double-tap again to zoom out and wait for the animation to finish, as before
         paintExpecter = mActions.expectPaint();
@@ -54,9 +54,9 @@ public class test_bug720538 extends PixelTest {
         // the last row because the last row is subject to rounding and clipping errors
         for (int y = 2; y < 10; y++) {
             for (int x = 0; x < 10; x++) {
-                mAsserter.dumpLog("Pixel at " + x + ", " + (mDriver.getGeckoHeight() - y) + ": " + Integer.toHexString(painted[mDriver.getGeckoHeight() - y][x]));
+                mAsserter.dumpLog("Pixel at " + x + ", " + (mDriver.getGeckoHeight() - y) + ": " + Integer.toHexString(painted.getPixelAt(x, mDriver.getGeckoHeight() - y)));
             }
         }
-        mAsserter.ispixel(painted[mDriver.getGeckoHeight() - 2][0], 0, 0x80, 0, "Checking bottom-left corner of viewport");
+        mAsserter.ispixel(painted.getPixelAt(0, mDriver.getGeckoHeight() - 2), 0, 0x80, 0, "Checking bottom-left corner of viewport");
     }
 }

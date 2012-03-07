@@ -1,39 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync;
 
@@ -46,7 +13,6 @@ import org.mozilla.gecko.sync.crypto.KeyBundle;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.util.Log;
 
 public class SyncConfiguration implements CredentialsSource {
 
@@ -229,7 +195,7 @@ public class SyncConfiguration implements CredentialsSource {
    * provide access to preferences.
    *
    * @param prefsPath
-   * @param context
+   * @param prefsSource
    */
   public SyncConfiguration(String prefsPath, PrefsSource prefsSource) {
     this.prefsPath   = prefsPath;
@@ -238,7 +204,7 @@ public class SyncConfiguration implements CredentialsSource {
   }
 
   public SharedPreferences getPrefs() {
-    Log.d(LOG_TAG, "Returning prefs for " + prefsPath);
+    Logger.debug(LOG_TAG, "Returning prefs for " + prefsPath);
     return prefsSource.getPrefs(prefsPath, Utils.SHARED_PREFERENCES_MODE);
   }
 
@@ -246,6 +212,8 @@ public class SyncConfiguration implements CredentialsSource {
    * Return a convenient accessor for part of prefs.
    * @param prefix
    * @return
+   *        A ConfigurationBranch object representing this
+   *        section of the preferences space.
    */
   public ConfigurationBranch getBranch(String prefix) {
     return new ConfigurationBranch(this, prefix);
@@ -257,14 +225,14 @@ public class SyncConfiguration implements CredentialsSource {
       String u = prefs.getString("clusterURL", null);
       try {
         clusterURL = new URI(u);
-        Log.i(LOG_TAG, "Set clusterURL from bundle: " + u);
+        Logger.info(LOG_TAG, "Set clusterURL from bundle: " + u);
       } catch (URISyntaxException e) {
-        Log.w(LOG_TAG, "Ignoring bundle clusterURL (" + u + "): invalid URI.", e);
+        Logger.warn(LOG_TAG, "Ignoring bundle clusterURL (" + u + "): invalid URI.", e);
       }
     }
     if (prefs.contains("syncID")) {
       syncID = prefs.getString("syncID", null);
-      Log.i(LOG_TAG, "Set syncID from bundle: " + syncID);
+      Logger.info(LOG_TAG, "Set syncID from bundle: " + syncID);
     }
     // TODO: MetaGlobal, password, infoCollections, collectionKeys.
   }
@@ -371,8 +339,8 @@ public class SyncConfiguration implements CredentialsSource {
   public void setAndPersistClusterURL(URI u, SharedPreferences prefs) {
     boolean shouldPersist = (prefs != null) && (clusterURL == null);
 
-    Log.d(LOG_TAG, "Setting cluster URL to " + u.toASCIIString() +
-                   (shouldPersist ? ". Persisting." : ". Not persisting."));
+    Logger.debug(LOG_TAG, "Setting cluster URL to " + u.toASCIIString() +
+                          (shouldPersist ? ". Persisting." : ". Not persisting."));
     clusterURL = u;
     if (shouldPersist) {
       Editor edit = prefs.edit();
@@ -387,7 +355,7 @@ public class SyncConfiguration implements CredentialsSource {
 
   public void setClusterURL(URI u, SharedPreferences prefs) {
     if (u == null) {
-      Log.w(LOG_TAG, "Refusing to set cluster URL to null.");
+      Logger.warn(LOG_TAG, "Refusing to set cluster URL to null.");
       return;
     }
     URI uri = u.normalize();
@@ -396,7 +364,7 @@ public class SyncConfiguration implements CredentialsSource {
       return;
     }
     setAndPersistClusterURL(uri.resolve("/"), prefs);
-    Log.i(LOG_TAG, "Set cluster URL to " + clusterURL.toASCIIString() + ", given input " + u.toASCIIString());
+    Logger.info(LOG_TAG, "Set cluster URL to " + clusterURL.toASCIIString() + ", given input " + u.toASCIIString());
   }
 
   public void setClusterURL(String url) throws URISyntaxException {
@@ -405,7 +373,6 @@ public class SyncConfiguration implements CredentialsSource {
 
   /**
    * Used for direct management of related prefs.
-   * @return
    */
   public Editor getEditor() {
     return this.getPrefs().edit();

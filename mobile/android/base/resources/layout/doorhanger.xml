@@ -6,6 +6,7 @@
               android:layout_height="wrap_content"
               android:textAppearance="?android:attr/textAppearanceMedium"
               android:textColor="?android:attr/textColorPrimary"
+              android:textColorLink="@color/doorhanger_link"
               android:padding="10dp"/>
 
     <LinearLayout android:id="@+id/doorhanger_choices"

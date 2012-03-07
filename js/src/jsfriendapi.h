@@ -166,6 +166,21 @@ JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc);
 extern JS_FRIEND_API(JSBool)
 JS_EnumerateState(JSContext *cx, JSObject *obj, JSIterateOp enum_op, js::Value *statep, jsid *idp);
 
+struct JSFunctionSpecWithHelp {
+    const char      *name;
+    JSNative        call;
+    uint16_t        nargs;
+    uint16_t        flags;
+    const char      *usage;
+    const char      *help;
+};
+
+#define JS_FN_HELP(name,call,nargs,flags,usage,help)                          \
+    {name, call, nargs, (flags) | JSPROP_ENUMERATE | JSFUN_STUB_GSOPS, usage, help}
+
+extern JS_FRIEND_API(bool)
+JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs);
+
 #endif
 
 JS_END_EXTERN_C
@@ -498,7 +513,7 @@ JS_FRIEND_API(bool)
 GetPropertyNames(JSContext *cx, JSObject *obj, unsigned flags, js::AutoIdVector *props);
 
 JS_FRIEND_API(bool)
-StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
+StringIsArrayIndex(JSLinearString *str, uint32_t *indexp);
 
 JS_FRIEND_API(void)
 SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback);
@@ -658,7 +673,7 @@ SizeOfJSContext();
     D(LAST_DITCH)                               \
     D(TOO_MUCH_MALLOC)                          \
     D(ALLOC_TRIGGER)                            \
-    D(UNUSED1) /* was CHUNK */                  \
+    D(DEBUG_GC)                                 \
     D(UNUSED2) /* was SHAPE */                  \
     D(UNUSED3) /* was REFILL */                 \
                                                 \
@@ -807,6 +822,9 @@ class ObjectPtr
     JSObject *operator->() const { return value; }
     operator JSObject *() const { return value; }
 };
+
+extern JS_FRIEND_API(JSObject *)
+GetTestingFunctions(JSContext *cx);
 
 } /* namespace js */
 

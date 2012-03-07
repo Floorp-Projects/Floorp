@@ -1214,7 +1214,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
         // Iterate over symbols array, installing symbols on targetObj:
 
-        jsuint symbolCount = 0;
+        uint32_t symbolCount = 0;
         if (!JS_GetArrayLength(mContext, symbolsObj, &symbolCount)) {
             return ReportOnCaller(cxhelper, ERROR_GETTING_ARRAY_LENGTH,
                                   PromiseFlatCString(aLocation).get());
@@ -1224,7 +1224,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
         nsCAutoString logBuffer;
 #endif
 
-        for (jsuint i = 0; i < symbolCount; ++i) {
+        for (uint32_t i = 0; i < symbolCount; ++i) {
             jsval val;
             jsid symbolId;
 

@@ -123,6 +123,26 @@ WinUtils::GetRegistryKey(HKEY aRoot,
 }
 
 /* static */
+bool
+WinUtils::HasRegistryKey(HKEY aRoot, const PRUnichar* aKeyName)
+{
+  MOZ_ASSERT(aRoot, "aRoot must not be NULL");
+  MOZ_ASSERT(aKeyName, "aKeyName must not be NULL");
+  HKEY key;
+  LONG result =
+    ::RegOpenKeyExW(aRoot, aKeyName, 0, KEY_READ | KEY_WOW64_32KEY, &key);
+  if (result != ERROR_SUCCESS) {
+    result =
+      ::RegOpenKeyExW(aRoot, aKeyName, 0, KEY_READ | KEY_WOW64_64KEY, &key);
+    if (result != ERROR_SUCCESS) {
+      return false;
+    }
+  }
+  ::RegCloseKey(key);
+  return true;
+}
+
+/* static */
 HWND
 WinUtils::GetTopLevelHWND(HWND aWnd,
                           bool aStopIfNotChild,
