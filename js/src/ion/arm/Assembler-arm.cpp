@@ -560,7 +560,9 @@ TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         const void *ptr = js::ion::Assembler::getPtr32Target((Instruction*)(buffer + offset));
-        gc::MarkThingOrValue(trc, reinterpret_cast<uintptr_t *>(&ptr), "immgcptr");
+
+        // No barrier needed since these are constants.
+        gc::MarkThingOrValueUnbarriered(trc, reinterpret_cast<uintptr_t *>(&ptr), "immgcptr");
     }
 
 }
@@ -570,7 +572,9 @@ TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer, CompactBufferReader &read
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         const void *ptr = ion::Assembler::getPtr32Target((Instruction*)(buffer->getInst(BufferOffset(offset))));
-        gc::MarkThingOrValue(trc, reinterpret_cast<uintptr_t *>(&ptr), "immgcptr");
+
+        // No barrier needed since these are constants.
+        gc::MarkThingOrValueUnbarriered(trc, reinterpret_cast<uintptr_t *>(&ptr), "immgcptr");
     }
 
 }
