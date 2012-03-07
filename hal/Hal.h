@@ -14,6 +14,7 @@
 #include "prlog.h"
 #include "mozilla/dom/battery/Types.h"
 #include "mozilla/dom/network/Types.h"
+#include "mozilla/dom/power/Types.h"
 #include "mozilla/hal_sandbox/PHal.h"
 
 /*
@@ -239,6 +240,55 @@ void Reboot();
  * Power off the device.
  */
 void PowerOff();
+
+/**
+ * Enable wake lock notifications from the backend.
+ *
+ * This method is only used by WakeLockObserversManager.
+ */
+void EnableWakeLockNotifications();
+
+/**
+ * Disable wake lock notifications from the backend.
+ *
+ * This method is only used by WakeLockObserversManager.
+ */
+void DisableWakeLockNotifications();
+
+/**
+ * Inform the wake lock backend there is a new wake lock observer.
+ * @param aWakeLockObserver The observer that should be added.
+ */
+void RegisterWakeLockObserver(WakeLockObserver* aObserver);
+
+/**
+ * Inform the wake lock backend a wake lock observer unregistered.
+ * @param aWakeLockObserver The observer that should be removed.
+ */
+void UnregisterWakeLockObserver(WakeLockObserver* aObserver);
+
+/**
+ * Adjust the internal wake lock counts.
+ * @param aTopic        lock topic
+ * @param aLockAdjust   to increase or decrease active locks
+ * @param aHiddenAdjust to increase or decrease hidden locks
+ */
+void ModifyWakeLock(const nsAString &aTopic,
+                    hal::WakeLockControl aLockAdjust,
+                    hal::WakeLockControl aHiddenAdjust);
+
+/**
+ * Query the wake lock numbers of aTopic.
+ * @param aTopic        lock topic
+ * @param aWakeLockInfo wake lock numbers
+ */
+void GetWakeLockInfo(const nsAString &aTopic, hal::WakeLockInformation *aWakeLockInfo);
+
+/**
+ * Notify of a change in the wake lock state.
+ * @param aWakeLockInfo The new wake lock information.
+ */
+void NotifyWakeLockChange(const hal::WakeLockInformation& aWakeLockInfo);
 
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla

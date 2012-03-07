@@ -131,3 +131,4 @@ interface nsIDOMFontFaceList;
 
 // Power
 interface nsIDOMMozPowerManager;
+interface nsIDOMMozWakeLock;
