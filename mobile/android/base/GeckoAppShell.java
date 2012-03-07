@@ -153,11 +153,6 @@ public class GeckoAppShell
         });
     }
 
-    public static void reportJavaCrash(Throwable e) {
-        Log.e(LOGTAG, "top level exception", e);
-        reportJavaCrash(getStackTraceString(e));
-    }
-
     private static String getStackTraceString(Throwable e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
