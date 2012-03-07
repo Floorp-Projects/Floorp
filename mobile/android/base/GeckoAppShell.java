@@ -143,13 +143,27 @@ public class GeckoAppShell
     public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
 
+    public static void registerGlobalExceptionHandler() {
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            public void uncaughtException(Thread thread, Throwable e) {
+                Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
+                              + thread.getId() + " (\"" + thread.getName() + "\")", e);
+                reportJavaCrash(getStackTraceString(e));
+            }
+        });
+    }
+
     public static void reportJavaCrash(Throwable e) {
         Log.e(LOGTAG, "top level exception", e);
+        reportJavaCrash(getStackTraceString(e));
+    }
+
+    private static String getStackTraceString(Throwable e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
         pw.flush();
-        reportJavaCrash(sw.toString());
+        return sw.toString();
     }
 
     private static native void reportJavaCrash(String stackTrace);
