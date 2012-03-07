@@ -65,7 +65,7 @@ TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         void **ptr = JSC::X86Assembler::getPointerRef(buffer + offset);
-        gc::MarkThingOrValueRoot(trc, reinterpret_cast<uintptr_t *>(ptr), "imm-gc-word");
+        gc::MarkThingOrValue(trc, reinterpret_cast<uintptr_t *>(ptr), "imm-gc-word");
     }
 }
 
