@@ -475,7 +475,7 @@ static void
 MarkChildren(JSTracer *trc, JSScript *script);
 
 void
-MarkThingOrValue(JSTracer *trc, uintptr_t *word, const char *name)
+MarkThingOrValueUnbarriered(JSTracer *trc, uintptr_t *word, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
 
