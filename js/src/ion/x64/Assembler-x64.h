@@ -116,7 +116,7 @@ static const Register IntArgReg1 = rdx;
 static const Register IntArgReg2 = r8;
 static const Register IntArgReg3 = r9;
 static const uint32 NumIntArgRegs = 4;
-static const Register IntArgRegs[NumArgRegs] = { rcx, rdx, r8, r9 };
+static const Register IntArgRegs[NumIntArgRegs] = { rcx, rdx, r8, r9 };
 
 static const FloatRegister FloatArgReg0 = xmm0;
 static const FloatRegister FloatArgReg1 = xmm1;
