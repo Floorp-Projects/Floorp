@@ -138,6 +138,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   {"rf-firefox.dll", MAKE_VERSION(7,6,1,0)},
   {"roboform.dll", MAKE_VERSION(7,6,1,0)},
 
+  // Topcrash in Firefox 10
+  {"bexternal.dll", ALL_VERSIONS},
+
   // leave these two in always for tests
   { "mozdllblockingtest.dll", ALL_VERSIONS },
   { "mozdllblockingtest_versioned.dll", 0x0000000400000000ULL },
