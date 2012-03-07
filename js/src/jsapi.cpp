@@ -702,9 +702,7 @@ JSRuntime::JSRuntime()
     ownerThread_(NULL),
 #endif
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-#if ENABLE_ASSEMBLER
     execAlloc_(NULL),
-#endif
     bumpAlloc_(NULL),
     nativeStackBase(0),
     nativeStackQuota(0),
@@ -866,9 +864,7 @@ JSRuntime::~JSRuntime()
 {
     JS_ASSERT(onOwnerThread());
 
-#if ENABLE_ASSEMBLER
     delete_<JSC::ExecutableAllocator>(execAlloc_);
-#endif
     delete_<WTF::BumpPointerAllocator>(bumpAlloc_);
 
 #ifdef DEBUG

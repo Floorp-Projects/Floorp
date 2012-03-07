@@ -318,13 +318,12 @@ typedef Handle<Value>              HandleValue;
 
 } /* namespace js */
 
-#if ENABLE_ASSEMBLER
 namespace JSC {
 
 class ExecutableAllocator;
 
 } /* namespace JSC */
-#endif
+
 namespace WTF {
 
 class BumpPointerAllocator;
