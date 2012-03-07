@@ -440,6 +440,21 @@ ValueNumberer::setClass(MDefinition *def, MDefinition *rep)
     def->valueNumberData()->setClass(def, rep);
 }
 
+bool
+ValueNumberer::needsSplit(MDefinition *def)
+{
+    for (MDefinition *vncheck = def->valueNumberData()->classNext;
+         vncheck != NULL;
+         vncheck = vncheck->valueNumberData()->classNext) {
+        if (!def->congruentTo(vncheck)) {
+            IonSpew(IonSpew_GVN, "Proceeding with split because %d is not congruent to %d",
+                    def->id(), vncheck->id());
+            return true;
+        }
+    }
+    return false;
+}
+
 void
 ValueNumberer::breakClass(MDefinition *def)
 {
@@ -452,8 +467,9 @@ ValueNumberer::breakClass(MDefinition *def)
             return;
         // If upon closer inspection, we are still equivalent to this class
         // then there isn't anything for us to do.
-        if (def->congruentTo(defdata->classNext))
+        if (!needsSplit(def))
             return;
+
         // Get a new representative member
         MDefinition *newRep = defdata->classNext;
 
@@ -469,15 +485,14 @@ ValueNumberer::breakClass(MDefinition *def)
                 continue;
             IonSpew(IonSpew_GVN, "Moving to a new congruence class: %d", tmp->id());
             tmp->setValueNumber(newRep->id());
-            markConsumers(tmp);
+            markDefinition(tmp);
         }
 
         // Insert the new representative => number mapping into the table
         // Logically, there should not be anything in the table currently, but
         // old values are never removed, so there's a good chance something will
-        // already be there.  If putNew fails, and it turns out to be this case,
-        // change it to put.
-        values.putNew(newRep, newRep->id());
+        // already be there.
+        values.put(newRep, newRep->id());
     } else {
         // The element that is breaking from the list isn't the representative element
         // just strip it from the list
