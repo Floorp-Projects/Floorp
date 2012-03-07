@@ -2850,10 +2850,10 @@ let GsmPDUHelper = {
       // - TP-Service-Center-Time-Stamp -
       let year   = this.readSwappedNibbleBCD(1) + PDU_TIMESTAMP_YEAR_OFFSET;
       let month  = this.readSwappedNibbleBCD(1) - 1;
-      let day    = this.readSwappedNibbleBCD(1) - 1;
-      let hour   = this.readSwappedNibbleBCD(1) - 1;
-      let minute = this.readSwappedNibbleBCD(1) - 1;
-      let second = this.readSwappedNibbleBCD(1) - 1;
+      let day    = this.readSwappedNibbleBCD(1);
+      let hour   = this.readSwappedNibbleBCD(1);
+      let minute = this.readSwappedNibbleBCD(1);
+      let second = this.readSwappedNibbleBCD(1);
       msg.timestamp = Date.UTC(year, month, day, hour, minute, second);
 
       // If the most significant bit of the least significant nibble is 1,
