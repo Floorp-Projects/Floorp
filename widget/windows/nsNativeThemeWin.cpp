@@ -946,6 +946,12 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         }
       }
 
+      // Note, radio buttons do not support a visual indeterminate state,
+      // check boxes do.
+      // http://msdn.microsoft.com/en-us/library/windows/desktop/bb775947%28v=vs.85%29.aspx
+      if (!isCheckbox && inputState == INDETERMINATE)
+        inputState = UNCHECKED;
+
       // 4 unchecked states, 4 checked states, 4 indeterminate states.
       aState += inputState * 4;
       return NS_OK;
@@ -1923,6 +1929,61 @@ RENDER_AGAIN:
         QueueAnimation(&nativeDrawing, content,
                        ((state == PBS_NORMAL || state == PBS_DEFAULTED) ?
                          FADE_OUT : FADE_IN), duration);
+      }
+    }
+  }
+  else if (aWidgetType == NS_THEME_RADIO ||
+           aWidgetType == NS_THEME_CHECKBOX) {
+    nsIContent* content = nsnull;
+    if (aFrame) {
+      content = aFrame->GetContent();
+    }
+    FadeState fState = GetFadeState(content);
+    DWORD duration = GetThemedTransitionDuration(theme,
+                                                 BP_RADIOBUTTON,
+                                                 RBS_UNCHECKEDNORMAL,
+                                                 RBS_UNCHECKEDHOT);
+    // Radio buttons have two states, checkboxes have three. The
+    // checkbox constants work for both.
+    if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION ||
+        state == CBS_UNCHECKEDPRESSED || state == CBS_UNCHECKEDDISABLED ||
+        state == CBS_CHECKEDPRESSED || state == CBS_CHECKEDDISABLED ||
+        state == CBS_MIXEDPRESSED || state == CBS_MIXEDDISABLED ||
+        ((state == CBS_UNCHECKEDNORMAL || state == CBS_CHECKEDNORMAL ||
+          state == CBS_MIXEDNORMAL) && fState == FADE_NOTACTIVE) ||
+         !aFrame || !duration || !content) {
+      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
+    } else {
+      int partsList[1];
+      partsList[0] = part;
+      int startState, finalState;
+      switch(state) {
+        case CBS_UNCHECKEDNORMAL:
+        case CBS_UNCHECKEDHOT:
+        startState = CBS_UNCHECKEDNORMAL;
+        finalState = CBS_UNCHECKEDHOT;
+        break;
+        case CBS_CHECKEDNORMAL:
+        case CBS_CHECKEDHOT:
+        startState = CBS_CHECKEDNORMAL;
+        finalState = CBS_CHECKEDHOT;
+        break;
+        case CBS_MIXEDNORMAL:
+        case CBS_MIXEDHOT:
+        startState = CBS_MIXEDNORMAL;
+        finalState = CBS_MIXEDHOT;
+        break;
+      }
+      bool isNormal = (state == CBS_UNCHECKEDNORMAL ||
+                       state == CBS_CHECKEDNORMAL ||
+                       state == CBS_MIXEDNORMAL);
+      if (RenderThemedAnimationFrame(ctx, &nativeDrawing, theme, hdc,
+                                     partsList, 1,
+                                     startState, finalState,
+                                     GetFadeAlpha(content),
+                                     tr, dr, widgetRect, clipRect)) {
+        QueueAnimation(&nativeDrawing, content,
+                       (isNormal ? FADE_OUT : FADE_IN), duration);
       }
     }
   }
