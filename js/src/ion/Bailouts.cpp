@@ -110,8 +110,11 @@ class IonBailoutIterator
             // uninitialized, it can have any value, including 0, which will
             // throw an assert later down the line since the value is never read,
             //  set it to 1 to avoid the assert.
-            if (type == JSVAL_TYPE_OBJECT && bailoutKind() == Bailout_ArgumentCheck && reg == 0)
+            if (type == JSVAL_TYPE_OBJECT && bailoutKind() == Bailout_ArgumentCheck &&
+                (reg == 0 || reg >> 47))
+            {
                 reg = 1;
+            }
 #endif
             return FromTypedPayload(type, reg);
           }
