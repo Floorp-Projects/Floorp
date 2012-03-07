@@ -411,18 +411,20 @@ BrowserGlue.prototype = {
 
     // For any add-ons that were installed disabled and can be enabled offer
     // them to the user
-    var win = this.getMostRecentBrowserWindow();
-    var browser = win.gBrowser;
     var changedIDs = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED);
-    AddonManager.getAddonsByIDs(changedIDs, function(aAddons) {
-      aAddons.forEach(function(aAddon) {
-        // If the add-on isn't user disabled or can't be enabled then skip it
-        if (!aAddon.userDisabled || !(aAddon.permissions & AddonManager.PERM_CAN_ENABLE))
-          return;
+    if (changedIDs.length > 0) {
+      AddonManager.getAddonsByIDs(changedIDs, function(aAddons) {
+        var win = this.getMostRecentBrowserWindow();
+        var browser = win.gBrowser;
+        aAddons.forEach(function(aAddon) {
+          // If the add-on isn't user disabled or can't be enabled then skip it.
+          if (!aAddon.userDisabled || !(aAddon.permissions & AddonManager.PERM_CAN_ENABLE))
+            return;
 
-        browser.selectedTab = browser.addTab("about:newaddon?id=" + aAddon.id);
-      })
-    });
+          browser.selectedTab = browser.addTab("about:newaddon?id=" + aAddon.id);
+        })
+      });
+    }
 
     let keywordURLUserSet = Services.prefs.prefHasUserValue("keyword.URL");
     Services.telemetry.getHistogramById("FX_KEYWORD_URL_USERSET").add(keywordURLUserSet);
