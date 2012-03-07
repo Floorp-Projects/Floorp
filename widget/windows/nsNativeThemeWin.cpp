@@ -1882,6 +1882,50 @@ RENDER_AGAIN:
       }
     }
   }
+  else if (aWidgetType == NS_THEME_BUTTON) {
+    nsIContent* content = nsnull;
+    if (aFrame) {
+      content = aFrame->GetContent();
+    }
+    FadeState fState = GetFadeState(content);
+    DWORD duration = GetThemedTransitionDuration(theme,
+                                                 BP_PUSHBUTTON,
+                                                 PBS_NORMAL,
+                                                 PBS_HOT);
+    if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION ||
+        state == PBS_PRESSED || state == PBS_DISABLED ||
+        ((state == PBS_NORMAL || state == PBS_DEFAULTED) &&
+         fState == FADE_NOTACTIVE) || !aFrame || !duration || !content) {
+      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
+    } else {
+      // The normal state for buttons is either TS_NORMAL or TS_FOCUSED.
+      // Either of these states can also be used for the default button
+      // selection. Make sure we use the right state constant for focused
+      // and default buttons when they are hovered over.
+      int startState, finalState;
+      nsEventStates eventState = GetContentState(aFrame, aWidgetType);
+      if (eventState.HasState(NS_EVENT_STATE_FOCUS) ||
+          IsDefaultButton(aFrame)) {
+        startState = PBS_DEFAULTED;
+        finalState = PBS_DEFAULTED_ANIMATING;
+      } else {
+        startState = PBS_NORMAL;
+        finalState = PBS_HOT;
+      }
+
+      int partsList[1];
+      partsList[0] = part;
+      if (RenderThemedAnimationFrame(ctx, &nativeDrawing, theme, hdc,
+                                     partsList, 1,
+                                     startState, finalState,
+                                     GetFadeAlpha(content),
+                                     tr, dr, widgetRect, clipRect)) {
+        QueueAnimation(&nativeDrawing, content,
+                       ((state == PBS_NORMAL || state == PBS_DEFAULTED) ?
+                         FADE_OUT : FADE_IN), duration);
+      }
+    }
+  }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
   else if (part >= 0) {
