@@ -463,12 +463,14 @@ let Buf = {
 
       options = this.tokenRequestMap[token];
       request_type = options.rilRequestType;
-      if (error) {
-        //TODO
+
+      options.rilRequestError = error;
+      if (error) {   	  
         if (DEBUG) {
           debug("Received error " + error + " for solicited parcel type " +
                 request_type);
         }
+        RIL.handleRequestError(options);
         return;
       }
       if (DEBUG) {
@@ -509,6 +511,7 @@ let Buf = {
       options = {};
     }
     options.rilRequestType = type;
+    options.rilRequestError = null;
     this.tokenRequestMap[token] = options;
     this.token++;
     return token;
@@ -939,6 +942,14 @@ let RIL = {
   getFailCauseCode: function getFailCauseCode() {
     Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE);
   },
+  
+  /**
+   * Handle the RIL request errors
+   */ 
+  handleRequestError: function handleRequestError(options) {	  
+	options.type = "error";
+	Phone.sendDOMMessage(options);
+  },   
 
   /**
    * Handle incoming requests from the RIL. We find the method that
