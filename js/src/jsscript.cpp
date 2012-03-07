@@ -322,20 +322,6 @@ Bindings::trace(JSTracer *trc)
         MarkShape(trc, &lastBinding, "shape");
 }
 
-#ifdef JS_CRASH_DIAGNOSTICS
-
-void
-CheckScript(JSScript *script, JSScript *prev)
-{
-    if (script->cookie1[0] != JS_SCRIPT_COOKIE || script->cookie2[0] != JS_SCRIPT_COOKIE) {
-        crash::StackBuffer<sizeof(JSScript), 0x87> buf1(script);
-        crash::StackBuffer<sizeof(JSScript), 0x88> buf2(prev);
-        JS_OPT_ASSERT(false);
-    }
-}
-
-#endif /* JS_CRASH_DIAGNOSTICS */
-
 #if JS_HAS_XDR
 
 static bool
@@ -1453,10 +1439,24 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
     JS_ClearScriptTraps(cx, script);
 }
 
+#ifdef JS_CRASH_DIAGNOSTICS
+
+void
+JSScript::CheckScript(JSScript *prev)
+{
+    if (cookie1[0] != JS_SCRIPT_COOKIE || cookie2[0] != JS_SCRIPT_COOKIE) {
+        crash::StackBuffer<sizeof(JSScript), 0x87> buf1(this);
+        crash::StackBuffer<sizeof(JSScript), 0x88> buf2(prev);
+        JS_OPT_ASSERT(false);
+    }
+}
+
+#endif /* JS_CRASH_DIAGNOSTICS */
+
 void
 JSScript::finalize(JSContext *cx, bool background)
 {
-    CheckScript(this, NULL);
+    CheckScript(NULL);
 
     js_CallDestroyScriptHook(cx, this);
 
@@ -1945,13 +1945,52 @@ JSScript::clearTraps(JSContext *cx)
 }
 
 void
-JSScript::markTrapClosures(JSTracer *trc)
+JSScript::markChildren(JSTracer *trc)
 {
-    JS_ASSERT(hasAnyBreakpointsOrStepMode());
+    CheckScript(NULL);
 
-    for (unsigned i = 0; i < length; i++) {
-        BreakpointSite *site = debug->breakpoints[i];
-        if (site && site->trapHandler)
-            MarkValue(trc, &site->trapClosure, "trap closure");
+    JS_ASSERT_IF(trc->runtime->gcCheckCompartment,
+                 compartment() == trc->runtime->gcCheckCompartment);
+
+    for (uint32_t i = 0; i < natoms; ++i) {
+        if (atoms[i])
+            MarkStringUnbarriered(trc, &atoms[i], "atom");
+    }
+
+    if (JSScript::isValidOffset(objectsOffset)) {
+        JSObjectArray *objarray = objects();
+        MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
+    }
+
+    if (JSScript::isValidOffset(regexpsOffset)) {
+        JSObjectArray *objarray = regexps();
+        MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
+    }
+
+    if (JSScript::isValidOffset(constOffset)) {
+        JSConstArray *constarray = consts();
+        MarkValueRange(trc, constarray->length, constarray->vector, "consts");
+    }
+
+    if (function())
+        MarkObject(trc, &function_, "function");
+
+    if (!isCachedEval && globalObject)
+        MarkObject(trc, &globalObject, "object");
+
+    if (IS_GC_MARKING_TRACER(trc) && filename)
+        js_MarkScriptFilename(filename);
+
+    bindings.trace(trc);
+
+    if (types)
+        types->trace(trc);
+
+    if (hasAnyBreakpointsOrStepMode()) {
+        for (unsigned i = 0; i < length; i++) {
+            BreakpointSite *site = debug->breakpoints[i];
+            if (site && site->trapHandler)
+                MarkValue(trc, &site->trapClosure, "trap closure");
+        }
     }
 }

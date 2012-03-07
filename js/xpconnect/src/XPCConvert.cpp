@@ -348,16 +348,9 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
                                                            pErr, d);
                     }
                     // else...
-
-                    // XXX The OBJ_IS_NOT_GLOBAL here is not really right. In
-                    // fact, this code is depending on the fact that the
-                    // global object will not have been collected, and
-                    // therefore this NativeInterface2JSObject will not end up
-                    // creating a new XPCNativeScriptableShared.
                     xpcObjectHelper helper(iface);
                     if (!NativeInterface2JSObject(lccx, d, nsnull, helper, iid,
-                                                  nsnull, true,
-                                                  OBJ_IS_NOT_GLOBAL, pErr))
+                                                  nsnull, true, pErr))
                         return false;
 
 #ifdef DEBUG
@@ -876,7 +869,6 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                      const nsID* iid,
                                      XPCNativeInterface** Interface,
                                      bool allowNativeWrapper,
-                                     bool isGlobal,
                                      nsresult* pErr)
 {
     NS_ASSERTION(!Interface || iid,
@@ -1016,7 +1008,6 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             return false;
 
         rv = XPCWrappedNative::GetNewOrUsed(ccx, aHelper, xpcscope, iface,
-                                            isGlobal,
                                             getter_AddRefs(strongWrapper));
 
         wrapper = strongWrapper;

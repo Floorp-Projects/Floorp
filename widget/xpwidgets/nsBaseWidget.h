@@ -238,6 +238,8 @@ public:
 
   bool                    Destroyed() { return mOnDestroyCalled; }
 
+  nsWindowType            GetWindowType() { return mWindowType; }
+
 protected:
 
   virtual void            ResolveIconName(const nsAString &aIconName,

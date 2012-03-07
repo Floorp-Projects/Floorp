@@ -49,6 +49,7 @@ function clickEventHnalder(aEvent)
 //       are a lot of functions and SimpleTest.executeSoon()s.
 
 SimpleTest.waitForFocus(function() {
+  SpecialPowers.setBoolPref("middlemouse.contentLoadURL", false);
   SpecialPowers.setBoolPref("middlemouse.paste", true);
 
   frameWindow = iframe.contentWindow;
@@ -384,7 +385,9 @@ function runBodyEditableDocumentTests2()
 
 function cleanup()
 {
+  SpecialPowers.clearUserPref("middlemouse.contentLoadURL");
   SpecialPowers.clearUserPref("middlemouse.paste");
+
   SimpleTest.finish();
 }
 

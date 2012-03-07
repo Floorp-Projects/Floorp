@@ -973,6 +973,7 @@ add_test(function test_processIncoming_notify_count() {
     do_check_eq(counts.failed, 3);
     do_check_eq(counts.applied, 15);
     do_check_eq(counts.newFailed, 3);
+    do_check_eq(counts.succeeded, 12);
 
     // Sync again, 1 of the failed items are the same, the rest didn't fail.
     engine._processIncoming();
@@ -986,6 +987,7 @@ add_test(function test_processIncoming_notify_count() {
     do_check_eq(counts.failed, 1);
     do_check_eq(counts.applied, 3);
     do_check_eq(counts.newFailed, 0);
+    do_check_eq(counts.succeeded, 2);
 
     Svc.Obs.remove("weave:engine:sync:applied", onApplied);
   } finally {

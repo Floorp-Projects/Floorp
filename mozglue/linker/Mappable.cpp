@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <cstring>
 #include <cstdlib>
+#include <cstdio>
 #include "Mappable.h"
 #ifdef ANDROID
 #include <linux/ashmem.h>

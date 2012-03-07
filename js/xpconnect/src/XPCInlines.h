@@ -658,14 +658,11 @@ inline JSObject*
 xpc_NewSystemInheritingJSObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                                 bool uniqueType, JSObject *parent)
 {
+    // Global creation should go through XPCWrappedNative::WrapNewGlobal().
+    MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
+
     JSObject *obj;
-    if (clasp->flags & JSCLASS_IS_GLOBAL) {
-        obj = JS_NewGlobalObject(cx, clasp);
-        if (obj && proto) {
-            if (!JS_SplicePrototype(cx, obj, proto))
-                obj = NULL;
-        }
-    } else if (uniqueType) {
+    if (uniqueType) {
         obj = JS_NewObjectWithUniqueType(cx, clasp, proto, parent);
     } else {
         obj = JS_NewObject(cx, clasp, proto, parent);
