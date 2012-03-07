@@ -1987,6 +1987,39 @@ RENDER_AGAIN:
       }
     }
   }
+  else if (aWidgetType == NS_THEME_TOOLBAR_BUTTON) {
+    nsIContent* content = nsnull;
+    if (aFrame) {
+      content = aFrame->GetContent();
+    }
+    FadeState fState = GetFadeState(content);
+    DWORD duration = GetThemedTransitionDuration(theme,
+                                                 BP_PUSHBUTTON,
+                                                 PBS_NORMAL,
+                                                 PBS_HOT);
+    // similar to regular buttons, except there's no PBS_DEFAULTED
+    // state. There is however an additional TS_CHECKED state.
+    if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION ||
+        state == PBS_PRESSED || state == PBS_DISABLED ||
+        (state == PBS_NORMAL && fState == FADE_NOTACTIVE) ||
+        !aFrame || !duration || !content) {
+      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
+    } else {
+      int partsList[1];
+      partsList[0] = part;
+      bool isChecked = (state == TS_CHECKED || state == TS_HOTCHECKED);
+      if (RenderThemedAnimationFrame(ctx, &nativeDrawing, theme, hdc,
+                                     partsList, 1,
+                                     (isChecked ? TS_CHECKED : TS_NORMAL),
+                                     (isChecked ? TS_HOTCHECKED : TS_HOT),
+                                     GetFadeAlpha(content),
+                                     tr, dr, widgetRect, clipRect)) {
+        QueueAnimation(&nativeDrawing, content,
+                       (state == TS_NORMAL || state == TS_CHECKED ?
+                        FADE_OUT : FADE_IN), duration);
+      }
+    }
+  }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
   else if (part >= 0) {
