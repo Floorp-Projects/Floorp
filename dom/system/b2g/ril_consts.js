@@ -260,6 +260,80 @@ const CALL_PRESENTATION_PAYPHONE = 3;
 
 const SMS_HANDLED = 0;
 
+// ICC commands, see TS 27.007 +CRSM commands
+const ICC_COMMAND_READ_BINARY = 0xb0;
+const ICC_COMMAND_UPDATE_BINARY = 0xd6;
+const ICC_COMMAND_READ_RECORD = 0xb2;
+const ICC_COMMAND_UPDATE_RECORD = 0xdc;
+const ICC_COMMAND_SEEK = 0xa2;
+const ICC_COMMAND_GET_RESPONSE = 0xc0;
+
+// ICC constants, GSM SIM file ids from TS 51.011
+const ICC_EF_ADN = 0x6F3A;
+const ICC_EF_FDN = 0x6F3B;
+const ICC_EF_SDN = 0x6F49;
+const ICC_EF_EXT1 = 0x6F4A;
+const ICC_EF_EXT2 = 0x6F4B;
+const ICC_EF_EXT3 = 0x6F4C;
+const ICC_EF_EXT6 = 0x6fc8;   // Ext record for EF[MBDN]
+const ICC_EF_MWIS = 0x6FCA;
+const ICC_EF_MBDN = 0x6fc7;
+const ICC_EF_PNN = 0x6fc5;
+const ICC_EF_SPN = 0x6F46;
+const ICC_EF_SMS = 0x6F3C;
+const ICC_EF_ICCID = 0x2fe2;
+const ICC_EF_AD = 0x6FAD;
+const ICC_EF_MBI = 0x6fc9;
+const ICC_EF_MSISDN = 0x6f40;
+const ICC_EF_SPDI = 0x6fcd;
+const ICC_EF_SST = 0x6f38;
+const ICC_EF_CFIS = 0x6FCB;
+const ICC_EF_IMG = 0x4f20;
+
+// Types of files  TS 11.11 9.3
+const TYPE_RFU = 0;
+const TYPE_MF  = 1;
+const TYPE_DF  = 2;
+const TYPE_EF  = 4;
+
+const RESPONSE_DATA_FILE_ID_1 = 4;
+const RESPONSE_DATA_FILE_ID_2 = 5;
+const RESPONSE_DATA_FILE_TYPE = 6;
+const RESPONSE_DATA_RFU_3 = 7;
+const RESPONSE_DATA_ACCESS_CONDITION_1 = 8;
+const RESPONSE_DATA_ACCESS_CONDITION_2 = 9;
+const RESPONSE_DATA_ACCESS_CONDITION_3 = 10;
+const RESPONSE_DATA_FILE_STATUS = 11;
+const RESPONSE_DATA_LENGTH = 12;
+const RESPONSE_DATA_STRUCTURE = 13;
+const RESPONSE_DATA_RECORD_LENGTH = 14;
+
+// Types of files  TS 11.11 9.3
+const EF_TYPE_TRANSPARENT = 0;
+const EF_TYPE_LINEAR_FIXED = 1;
+const EF_TYPE_CYCLIC = 3;
+
+// For retriveing MSISDN
+const FOOTER_SIZE_BYTES = 14;
+const MAX_NUMBER_SIZE_BYTES = 11;
+
+// READ_RECORD mode,  TS 102.221
+const READ_RECORD_ABSOLUTE_MODE = 4;
+
+// GET_RESPONSE mandatory response size for EF, see TS 51.011 clause 9, 
+// 'Response data in case of an EF.'
+const GET_RESPONSE_EF_SIZE_BYTES = 15;
+
+// EF path
+const EF_PATH_MF_SIM = "3f00";
+const EF_PATH_DF_TELECOM = "7f10";
+
+// Status code for ICC I/O, 
+// see GSM11.11 and TS 51.011 clause 9.4.
+const STATUS_NORMAL_ENDING = 0x90;
+const STATUS_NORMAL_ENDING_WITH_EXTRA = 0x91;
+const STATUS_WITH_SIM_DATA = 0x9e;
+const STATUS_WITH_RESPONSE_DATA = 0x9f;
 
 /**
  * GSM PDU constants
