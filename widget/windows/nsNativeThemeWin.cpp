@@ -78,6 +78,9 @@ using namespace mozilla::widget;
 extern PRLogModuleInfo* gWindowsLog;
 #endif
 
+// Default fps when animating themed widgets.
+#define DEFAULT_ANIMATION_FPS 30
+
 NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
 static inline bool IsHTMLContent(nsIFrame *frame)
@@ -223,6 +226,193 @@ static SIZE GetGutterSize(HANDLE theme, HDC hdc)
     ret.cx = width;
     ret.cy = height;
     return ret;
+}
+
+/*
+ * RenderThemedAnimationFrame - renders a frame of widget animation
+ * for fadable widgets.
+ *
+ * aCtx         gfxContext of the target composition surface.
+ * aNative      gfxWindowsNativeDrawing associated with the rendering
+ *              operation initiated in DrawWidgetBackground.
+ * aTheme       An open theme handle used in rendering.
+ * aHdc         HDC associated with the DIB we'll be rendering the final
+ *              frame to.
+ * aPartsList   The Win theme part(s) to render.
+ * aPartCount   The number of parts listed in aPartsList.
+ * aBaseState   Theme state that will act as the background graphic of
+ *              the frame.
+ * aAlphaState  The overlay theme graphic that is layered on top of
+ *              aBaseState.
+ * aAlpha       Alpha (0.0-1.0) value for the aAlphaState overlay.
+ * aDRect,
+ * aDDirtyRect  Device rects 
+ * aWRect,
+ * aWDirtyRect  Native rects 
+ * returns      true on success, false if the default theme was rendered
+ *              without a fade or serious error. Callers should not
+ *              queue animations for false results.
+ */
+static bool
+RenderThemedAnimationFrame(gfxContext* aCtx,
+                           gfxWindowsNativeDrawing* aNative,
+                           HANDLE aTheme, HDC aHdc,
+                           int aPartsList[], int aPartCount,
+                           int aBaseState, int aAlphaState,
+                           double aAlpha,
+                           const gfxRect& aDRect, const gfxRect& aDDirtyRect,
+                           const RECT& aWRect, const RECT& aWDirtyRect)
+{
+  NS_ASSERTION(aPartCount > 0, "Bad parts array.");
+  NS_ASSERTION(aCtx, "Bad context.");
+  NS_ASSERTION(aNative, "Bad native pointer.");
+
+#if 0
+  printf("rect:(%d %d %d %d) dirty:(%d %d %d %d) alpha=%f\n",
+  aWRect.left, aWRect.top, aWRect.right, aWRect.bottom,
+  aWDirtyRect.left, aWDirtyRect.top, aWDirtyRect.right, aWDirtyRect.bottom,
+  aAlpha);
+#endif
+
+  // If false, we are rendering to the target surface, so use origin offsets.
+  // If true, we are rendering to back buffers with an origin of 0,0.
+  bool backBufferInUse = aNative->IsDoublePass();
+
+  nsRefPtr<gfxContext> paintCtx;
+  if (backBufferInUse) {
+    // In the case of alpha recovery, gfxWindowsNativeDrawing creates internal
+    // backing DIBs we render to, so get the current surface we are working
+    // with. (aHdc is already associated with the correct buffer.)
+    nsRefPtr<gfxASurface> currentSurf = aNative->GetCurrentSurface();
+    NS_ENSURE_TRUE(currentSurf, false);
+
+    // Wrap this in a gfxContext so we can work with it
+    paintCtx = new gfxContext(currentSurf);
+    NS_ENSURE_TRUE(paintCtx, false);
+  } else {
+    // Use the passed in context
+    paintCtx = aCtx;
+  }
+
+  int width = aWDirtyRect.right - aWDirtyRect.left;
+  int height = aWDirtyRect.bottom - aWDirtyRect.top;
+
+  RECT surfaceDrawRect = { 0, 0, width, height }; // left, top, right, bottom
+
+  // Create a temp base theme background surface
+  nsRefPtr<gfxWindowsSurface> surfBase =
+    new gfxWindowsSurface(gfxIntSize(width, height),
+                          gfxASurface::ImageFormatRGB24);
+  NS_ENSURE_TRUE(surfBase, false);
+
+  // Copy the destination context over to our temporary surface. We'll render
+  // on top of what we copy.
+  if (backBufferInUse) {
+    // FillRect is about 35% faster than BitBlt
+    if (!aNative->IsSecondPass()) {
+      FillRect(surfBase->GetDC(), &surfaceDrawRect,
+               (HBRUSH)GetStockObject(BLACK_BRUSH));
+    } else {
+      FillRect(surfBase->GetDC(), &surfaceDrawRect,
+               (HBRUSH)GetStockObject(WHITE_BRUSH));
+    }
+  } else {
+    // XXX we might not need this?
+    BitBlt(surfBase->GetDC(), 0, 0, width, height, aHdc, aWDirtyRect.left,
+           aWDirtyRect.top, SRCCOPY);
+  }
+
+  // Render the theme's base graphic
+  for (int idx = 0; idx < aPartCount; idx++) {
+    DrawThemeBackground(aTheme, surfBase->GetDC(), aPartsList[idx],
+                        aBaseState, &surfaceDrawRect, &surfaceDrawRect);
+  }
+
+  // Create a new highlight theme background surface
+  nsRefPtr<gfxWindowsSurface> surfAlpha =
+    new gfxWindowsSurface(gfxIntSize(width, height),
+                          gfxASurface::ImageFormatRGB24);
+  NS_ENSURE_TRUE(surfAlpha, false);
+
+  if (backBufferInUse) {
+    if (!aNative->IsSecondPass()) {
+      FillRect(surfAlpha->GetDC(), &surfaceDrawRect,
+               (HBRUSH)GetStockObject(BLACK_BRUSH));
+    } else {
+      FillRect(surfAlpha->GetDC(), &surfaceDrawRect,
+               (HBRUSH)GetStockObject(WHITE_BRUSH));
+    }
+  } else {
+    BitBlt(surfAlpha->GetDC(), 0, 0, width, height, aHdc, aWDirtyRect.left,
+           aWDirtyRect.top, SRCCOPY);
+  }
+
+  // Render the theme's highlight graphic
+  for (int idx = 0; idx < aPartCount; idx++) {
+    DrawThemeBackground(aTheme, surfAlpha->GetDC(), aPartsList[idx],
+                        aAlphaState, &surfaceDrawRect, &surfaceDrawRect);
+ }
+
+  // Blend the two images together using aAlpha for surfAlpha.
+  nsRefPtr<gfxImageSurface> imageBase = surfBase->GetAsImageSurface();
+  nsRefPtr<gfxImageSurface> imageAlpha = surfAlpha->GetAsImageSurface();
+  NS_ENSURE_TRUE(imageBase, false);
+  NS_ENSURE_TRUE(imageAlpha, false);
+
+  gfxContext::GraphicsOperator currentOp = paintCtx->CurrentOperator();
+  paintCtx->Save();
+  paintCtx->ResetClip();
+  if (!backBufferInUse) {
+    // In cairo we want to fall through and use BitBlt or AlphaBlend but
+    // won't unless we're aligned on pixel boundaries. Since our hdc rects
+    // are already snapped, round off the Translate parameter as well so
+    // they match.
+    gfxRect roundedRect = aDDirtyRect;
+    roundedRect.Round();
+    paintCtx->Clip(roundedRect);
+    paintCtx->Translate(roundedRect.TopLeft());
+  }
+  paintCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+  paintCtx->SetSource(imageBase);
+  paintCtx->Paint();
+  paintCtx->SetOperator(gfxContext::OPERATOR_OVER);
+  paintCtx->SetSource(imageAlpha);
+  paintCtx->Paint(aAlpha);
+  paintCtx->Restore();
+  paintCtx->SetOperator(currentOp);
+
+  return true;
+}
+
+/*
+ * QueueAnimation - helper for queuing up a render callback via
+ * QueueAnimatedContentRefreshForFade.
+ *
+ * aNative    gfxWindowsNativeDrawing associated with the rendering operation
+ *            initiated in DrawWidgetBackground.
+ * aContent   The element that will be invalidated.
+ * aDirection The FadeState direction of the fade. FADE_IN & FADE_OUT are
+ *            valid values.
+ * aDuration  The total duration of one phase (in/out) of the fade.
+ * aUserData  User data passed to QueueAnimatedContentRefreshForFade.
+ */
+void
+nsNativeThemeWin::QueueAnimation(gfxWindowsNativeDrawing* aNativeDrawing,
+                                 nsIContent* aContent, FadeState aDirection,
+                                 DWORD aDuration, PRUint32 aUserValue)
+{
+  NS_ASSERTION(aNativeDrawing, "bad draw pointer");
+  NS_ASSERTION(aContent, "bad content pointer");
+  NS_ASSERTION((aDirection == FADE_IN ||
+                aDirection == FADE_OUT), "bad direction");
+  // Often content is rendered using alpha recovery which requires two passes,
+  // so only queue up another refresh if we are on the final (or single) pass
+  // of a render operation. This way QueueAnimatedContentRefreshForFade won't
+  // cancel our fade resulting in the second pass passing through fState ==
+  // FADE_NOTACTIVE rendering, which would screw up recovery.
+  if (!aNativeDrawing->IsDoublePass() || aNativeDrawing->IsSecondPass())
+    QueueAnimatedContentRefreshForFade(aContent, aDirection,
+      DEFAULT_ANIMATION_FPS, aDuration, aUserValue);
 }
 
 static HRESULT DrawThemeBGRTLAware(HANDLE theme, HDC hdc, int part, int state,
