@@ -1998,4 +1998,7 @@ JSScript::markChildren(JSTracer *trc)
                 MarkValue(trc, &site->trapClosure, "trap closure");
         }
     }
+
+    if (hasIonScript())
+        ion::IonScript::Trace(trc, ion);
 }
