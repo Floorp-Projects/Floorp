@@ -337,21 +337,20 @@ CPPSRCS += 	checks.cc \
 # END enclude sources for V8 dtoa
 #############################################
 
+# For architectures without YARR JIT, PCRE is faster than the YARR
+# interpreter (bug 684559).
+
 ifeq (,$(filter arm% sparc %86 x86_64 mips%,$(TARGET_CPU)))
 
-VPATH +=        $(srcdir)/assembler \
-                $(srcdir)/assembler/wtf \
-                $(srcdir)/yarr \
+VPATH +=        $(srcdir)/yarr/pcre \
 		$(NULL)
 
 CPPSRCS += \
-                OSAllocatorOS2.cpp \
-                OSAllocatorPosix.cpp \
-                OSAllocatorWin.cpp \
-                PageBlock.cpp \
-                YarrInterpreter.cpp \
-                YarrPattern.cpp \
-                YarrSyntaxChecker.cpp \
+                pcre_compile.cpp \
+                pcre_exec.cpp \
+                pcre_tables.cpp \
+                pcre_xclass.cpp \
+                pcre_ucp_searchfuncs.cpp \
 		$(NULL)
 else
 
@@ -886,10 +885,10 @@ endif
 # Needed to "configure" it correctly.  Unfortunately these
 # flags wind up being applied to all code in js/src, not just
 # the code in js/src/assembler.
-CXXFLAGS += -DUSE_SYSTEM_MALLOC=1
+CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1
 
 ifneq (,$(ENABLE_YARR_JIT)$(ENABLE_METHODJIT))
-CXXFLAGS +=  -DENABLE_JIT=1 -DENABLE_ASSEMBLER=1
+CXXFLAGS +=  -DENABLE_JIT=1
 endif
 
 INCLUDES +=	-I$(srcdir)/assembler -I$(srcdir)/yarr
