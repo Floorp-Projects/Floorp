@@ -45,5 +45,26 @@
     </em:updates>
   </RDF:Description>
 
+  <RDF:Description about="urn:mozilla:extension:addon3@tests.mozilla.org">
+    <em:updates>
+      <RDF:Seq>
+        <!-- app id compatible update available -->
+        <RDF:li>
+          <RDF:Description>
+            <em:version>2</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>1</em:minVersion>
+                <em:maxVersion>1</em:maxVersion>
+                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+
 </RDF:RDF>
 
