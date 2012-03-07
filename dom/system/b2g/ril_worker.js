@@ -912,6 +912,41 @@ let RIL = {
     return token;
   },
 
+   /**
+   *  Request an ICC I/O operation.
+   * 
+   *  See TS 27.007 "restricted SIM" operation, "AT Command +CRSM".
+   *  The sequence is in the same order as how libril reads this parcel,
+   *  see the struct RIL_SIM_IO_v5 or RIL_SIM_IO_v6 defined in ril.h
+   *
+   *  @param command 
+   *         The I/O command, one of the ICC_COMMAND_* constants.
+   *  @param fileid
+   *         The file to operate on, one of the ICC_EF_* constants.
+   *  @param pathid
+   *         String type, check pathid from TS 27.007 +CRSM  
+   *  @param p1, p2, p3
+   *         Arbitrary integer parameters for the command.
+   *  @param data
+   *         String parameter for the command.
+   *  @param pin2 [optional]
+   *         String containing the PIN2.
+   */
+  iccIO: function iccIO (options) {
+    let token = Buf.newParcel(REQUEST_SIM_IO, options);
+    Buf.writeUint32(options.command);
+    Buf.writeUint32(options.fileid);
+    Buf.writeString(options.path);
+    Buf.writeUint32(options.p1);
+    Buf.writeUint32(options.p2);
+    Buf.writeUint32(options.p3);
+    Buf.writeString(options.data);
+    if (request.pin2 != null) {
+      Buf.writeString(pin2);
+    }
+    Buf.sendParcel();
+  },
+  
   /**
    * Deactivate a data call.
    *
@@ -1125,7 +1160,9 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL() {
   let [cid, ifname, ipaddr, dns, gw] = Buf.readStringList();
   Phone.onSetupDataCall(Buf.lastSolicitedToken, cid, ifname, ipaddr, dns, gw);
 };
-RIL[REQUEST_SIM_IO] = null;
+RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
+  Phone.onICCIO(options);
+};
 RIL[REQUEST_SEND_USSD] = null;
 RIL[REQUEST_CANCEL_USSD] = null;
 RIL[REQUEST_GET_CLIR] = null;
@@ -1338,6 +1375,7 @@ let Phone = {
   IMEISV: null,
   IMSI: null,
   SMSC: null,
+  MSISDN: null,
 
   registrationState: {},
   gprsRegistrationState: {},
@@ -1484,6 +1522,7 @@ let Phone = {
       this.requestNetworkInfo();
       RIL.getSignalStrength();
       RIL.getSMSCAddress();
+      this.getMSISDN();
       this.sendDOMMessage({type: "cardstatechange",
                            cardState: GECKO_CARDSTATE_READY});
     }
@@ -1685,6 +1724,52 @@ let Phone = {
 
   onIMEISV: function onIMEISV(imeiSV) {
     this.IMEISV = imeiSV;
+  },
+
+  onICCIO: function onICCIO(options) {
+    switch (options.fileid) {
+      case ICC_EF_MSISDN:
+        this.readMSISDNResponse(options);
+        break;
+    }
+  },
+  
+  readMSISDNResponse: function readMSISDNResponse(options) {
+    let sw1 = Buf.readUint32();
+    let sw2 = Buf.readUint32();
+    // See GSM11.11 section 9.4 for sw1 and sw2
+    if (sw1 != STATUS_NORMAL_ENDING) {
+      // TODO: error 
+      // Wait for fix for Bug 713451 to report error.
+      debug("Error in iccIO");
+    }
+    if (DEBUG) debug("ICC I/O (" + sw1 + "/" + sw2 + ")");
+
+    switch (options.command) {
+      case ICC_COMMAND_GET_RESPONSE:
+        let response = Buf.readString();
+        let recordSize = parseInt(
+            response.substr(RESPONSE_DATA_RECORD_LENGTH * 2, 2), 16) & 0xff;
+        let request = {
+          command: ICC_COMMAND_READ_RECORD,
+          fileid:  ICC_EF_MSISDN,
+          pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+          p1:      1, // Record number, MSISDN is always in the 1st record
+          p2:      READ_RECORD_ABSOLUTE_MODE,
+          p3:      recordSize,
+          data:    null,
+          pin2:    null,
+        };
+        RIL.iccIO(request);
+        break;
+
+      case ICC_COMMAND_READ_RECORD:
+        // Ignore 2 bytes prefix, which is 4 chars
+        let number = GsmPDUHelper.readStringAsBCD().toString().substr(4); 
+        if (DEBUG) debug("MSISDN: " + number);
+        this.MSISDN = number;
+        break;
+    } 
   },
 
   onRegistrationState: function onRegistrationState(state) {
@@ -2143,6 +2228,23 @@ let Phone = {
   },
 
   /**
+   *  Get MSISDN
+   */ 
+  getMSISDN: function getMSISDN() {
+    let request = {
+      command: ICC_COMMAND_GET_RESPONSE,
+      fileid:  ICC_EF_MSISDN,
+      pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+      p1:      0, // For GET_RESPONSE, p1 = 0
+      p2:      0, // For GET_RESPONSE, p2 = 0
+      p3:      GET_RESPONSE_EF_SIZE_BYTES,
+      data:    null,
+      pin2:    null,
+    };
+    RIL.iccIO(request);
+  },
+
+  /**
    * Handle incoming messages from the main UI thread.
    *
    * @param message
@@ -2270,6 +2372,8 @@ let GsmPDUHelper = {
     let number = 0;
     for (let i = 0; i < length; i++) {
       let octet = this.readHexOctet();
+      if (octet == 0xff)
+        continue;
       // If the first nibble is an "F" , only the second nibble is to be taken
       // into account.
       if ((octet & 0xf0) == 0xf0) {
@@ -2281,6 +2385,21 @@ let GsmPDUHelper = {
       number += this.octetToBCD(octet);
     }
     return number;
+  },
+
+  /**
+   *  Read a string from Buf and convert it to BCD
+   * 
+   *  @return the decimal as a number.
+   */ 
+  readStringAsBCD: function readStringAsBCD() {
+    let length = Buf.readUint32();
+    let bcd = this.readSwappedNibbleBCD(length / 2);
+    let delimiter = Buf.readUint16();
+    if (!(length & 1)) {
+      delimiter |= Buf.readUint16();
+    }
+    return bcd;
   },
 
   /**
