@@ -68,7 +68,12 @@ function executeTests() {
         button.getBoundingClientRect(); // Flush.
         gNeedsPaint = true;
       }
-      SimpleTest.executeSoon(execNext);
+      // On Vista+ we now support state transitions on themed
+      // content, so give the button time to normalize.
+      if (navigator.appVersion.indexOf("Win") != -1)
+        setTimeout(execNext, 500);
+      else
+        SimpleTest.executeSoon(execNext);
     } catch (e) {}
   }
   execNext();
