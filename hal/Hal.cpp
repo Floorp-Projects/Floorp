@@ -225,7 +225,7 @@ public:
   }
 
   void BroadcastCachedInformation() {
-    BroadcastInformation(mInfo);
+    this->BroadcastInformation(mInfo);
   }
 
 protected:
