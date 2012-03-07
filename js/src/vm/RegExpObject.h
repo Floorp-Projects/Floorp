@@ -51,10 +51,8 @@
 #include "yarr/Yarr.h"
 #if ENABLE_YARR_JIT
 #include "yarr/YarrJIT.h"
-#include "yarr/YarrSyntaxChecker.h"
-#else
-#include "yarr/pcre/pcre.h"
 #endif
+#include "yarr/YarrSyntaxChecker.h"
 
 /*
  * JavaScript Regular Expressions
@@ -112,68 +110,51 @@ namespace detail {
 
 class RegExpCode
 {
-#if ENABLE_YARR_JIT
     typedef JSC::Yarr::BytecodePattern BytecodePattern;
     typedef JSC::Yarr::ErrorCode ErrorCode;
+    typedef JSC::Yarr::YarrPattern YarrPattern;
+#if ENABLE_YARR_JIT
     typedef JSC::Yarr::JSGlobalData JSGlobalData;
     typedef JSC::Yarr::YarrCodeBlock YarrCodeBlock;
-    typedef JSC::Yarr::YarrPattern YarrPattern;
 
     /* Note: Native code is valid only if |codeBlock.isFallBack() == false|. */
     YarrCodeBlock   codeBlock;
-    BytecodePattern *byteCode;
-#else
-    JSRegExp        *compiled;
 #endif
+    BytecodePattern *byteCode;
 
   public:
     RegExpCode()
       :
 #if ENABLE_YARR_JIT
         codeBlock(),
-        byteCode(NULL)
-#else
-        compiled(NULL)
 #endif
+        byteCode(NULL)
     { }
 
     ~RegExpCode() {
 #if ENABLE_YARR_JIT
         codeBlock.release();
+#endif
         if (byteCode)
             Foreground::delete_<BytecodePattern>(byteCode);
-#else
-        if (compiled)
-            jsRegExpFree(compiled);
-#endif
     }
 
     static bool checkSyntax(JSContext *cx, TokenStream *tokenStream, JSLinearString *source) {
-#if ENABLE_YARR_JIT
         ErrorCode error = JSC::Yarr::checkSyntax(*source);
         if (error == JSC::Yarr::NoError)
             return true;
 
         reportYarrError(cx, tokenStream, error);
         return false;
-#else
-# error "Syntax checking not implemented for !ENABLE_YARR_JIT"
-#endif
     }
 
 #if ENABLE_YARR_JIT
     static inline bool isJITRuntimeEnabled(JSContext *cx);
-    static void reportYarrError(JSContext *cx, TokenStream *ts, JSC::Yarr::ErrorCode error);
-#else
-    static void reportPCREError(JSContext *cx, int error);
 #endif
+    static void reportYarrError(JSContext *cx, TokenStream *ts, JSC::Yarr::ErrorCode error);
 
     static size_t getOutputSize(size_t pairCount) {
-#if ENABLE_YARR_JIT
         return pairCount * 2;
-#else
-        return pairCount * 3; /* Should be x2, but PCRE has... needs. */
-#endif
     }
 
     bool compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount, RegExpFlag flags);

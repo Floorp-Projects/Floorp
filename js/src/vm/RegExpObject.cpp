@@ -167,7 +167,6 @@ MatchPairs::checkAgainst(size_t inputLength)
 
 /* detail::RegExpCode */
 
-#if ENABLE_YARR_JIT
 void
 RegExpCode::reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error)
 {
@@ -199,46 +198,9 @@ RegExpCode::reportYarrError(JSContext *cx, TokenStream *ts, ErrorCode error)
     }
 }
 
-#else /* !ENABLE_YARR_JIT */
-
-void
-RegExpCode::reportPCREError(JSContext *cx, int error)
-{
-#define REPORT(msg_) \
-    JS_ReportErrorFlagsAndNumberUC(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL, msg_); \
-    return
-    switch (error) {
-      case -2: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
-      case 0: JS_NOT_REACHED("Precondition violation: an error must have occurred.");
-      case 1: REPORT(JSMSG_TRAILING_SLASH);
-      case 2: REPORT(JSMSG_TRAILING_SLASH);
-      case 3: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
-      case 4: REPORT(JSMSG_BAD_QUANTIFIER);
-      case 5: REPORT(JSMSG_BAD_QUANTIFIER);
-      case 6: REPORT(JSMSG_BAD_CLASS_RANGE);
-      case 7: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
-      case 8: REPORT(JSMSG_BAD_CLASS_RANGE);
-      case 9: REPORT(JSMSG_BAD_QUANTIFIER);
-      case 10: REPORT(JSMSG_UNMATCHED_RIGHT_PAREN);
-      case 11: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
-      case 12: REPORT(JSMSG_UNMATCHED_RIGHT_PAREN);
-      case 13: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
-      case 14: REPORT(JSMSG_MISSING_PAREN);
-      case 15: REPORT(JSMSG_BAD_BACKREF);
-      case 16: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
-      case 17: REPORT(JSMSG_REGEXP_TOO_COMPLEX);
-      default:
-        JS_NOT_REACHED("Precondition violation: unknown PCRE error code.");
-    }
-#undef REPORT
-}
-
-#endif /* ENABLE_YARR_JIT */
-
 bool
 RegExpCode::compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount, RegExpFlag flags)
 {
-#if ENABLE_YARR_JIT
     /* Parse the pattern. */
     ErrorCode yarrError;
     YarrPattern yarrPattern(pattern, bool(flags & IgnoreCaseFlag), bool(flags & MultilineFlag),
@@ -255,7 +217,7 @@ RegExpCode::compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount
      * case we have to bytecode compile it.
      */
 
-#ifdef JS_METHODJIT
+#if ENABLE_YARR_JIT && defined(JS_METHODJIT)
     if (isJITRuntimeEnabled(cx) && !yarrPattern.m_containsBackreferences) {
         JSC::ExecutableAllocator *execAlloc = cx->runtime->getExecutableAllocator(cx);
         if (!execAlloc) {
@@ -276,21 +238,11 @@ RegExpCode::compile(JSContext *cx, JSLinearString &pattern, unsigned *parenCount
         return false;
     }
 
+#if ENABLE_YARR_JIT
     codeBlock.setFallBack(true);
+#endif
     byteCode = byteCompile(yarrPattern, bumpAlloc).get();
     return true;
-#else /* !defined(ENABLE_YARR_JIT) */
-    int error = 0;
-    compiled = jsRegExpCompile(pattern.chars(), pattern.length(),
-                  ignoreCase() ? JSRegExpIgnoreCase : JSRegExpDoNotIgnoreCase,
-                  multiline() ? JSRegExpMultiline : JSRegExpSingleLine,
-                  parenCount, &error);
-    if (error) {
-        reportPCREError(cx, error);
-        return false;
-    }
-    return true;
-#endif
 }
 
 RegExpRunStatus
@@ -305,18 +257,11 @@ RegExpCode::execute(JSContext *cx, const jschar *chars, size_t length, size_t st
     else
         result = JSC::Yarr::execute(codeBlock, chars, start, length, output);
 #else
-    result = jsRegExpExecute(cx, compiled, chars, length, start, output, outputCount);
+    result = JSC::Yarr::interpret(byteCode, chars, start, length, output);
 #endif
 
     if (result == -1)
         return RegExpRunStatus_Success_NotFound;
-
-#if !ENABLE_YARR_JIT
-    if (result < 0) {
-        reportPCREError(cx, result);
-        return RegExpRunStatus_Error;
-    }
-#endif
 
     JS_ASSERT(result >= 0);
     return RegExpRunStatus_Success;
