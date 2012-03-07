@@ -28,12 +28,12 @@ public class testAxisLocking extends PixelTest {
         // axis locking prevents any horizontal scrolling
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         meh.dragSync(20, 150, 10, 50);
-        int[][] painted = waitForPaint(paintExpecter);
+        PaintedSurface painted = waitForPaint(paintExpecter);
         checkScrollWithBoxes(painted, 0, 100);
         // since checkScrollWithBoxes only checks 4 points, it may not pick up a
         // sub-100 pixel horizontal shift. so we check another point manually to make sure.
         int[] color = getBoxColorAt(0, 100);
-        mAsserter.ispixel(painted[0][99], color[0], color[1], color[2], "Pixel at 99, 0 indicates no horizontal scroll");
+        mAsserter.ispixel(painted.getPixelAt(99, 0), color[0], color[1], color[2], "Pixel at 99, 0 indicates no horizontal scroll");
 
         // now drag at a 45-degree angle to ensure we break the axis lock, and
         // verify that we have both horizontal and vertical scrolling

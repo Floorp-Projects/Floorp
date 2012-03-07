@@ -134,13 +134,6 @@ function starttest(){
   noxray.b = 122;
   is(noxray_wrapper.b, 122, "Should be able to shadow.");
 
-  // Check that the wrapper preserves identity.
-  var someIdentityObject = {a: 2};
-  ok(SpecialPowers.wrap(someIdentityObject) === SpecialPowers.wrap(someIdentityObject),
-     "SpecialPowers wrapping should preserve identity!");
-  ok(webnav === SpecialPowers.wrap(SpecialPowers.unwrap(webnav)),
-     "SpecialPowers wrapping should preserve identity!");
-
   info("\nProfile::SpecialPowersRunTime: " + (new Date() - startTime) + "\n");
   SimpleTest.finish();
 }

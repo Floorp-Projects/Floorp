@@ -378,7 +378,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                    newBack));
 
       RenderTraceInvalidateEnd(image, "FF00FF");
-
       break;
     }
 

@@ -2799,8 +2799,8 @@ SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
     }
 #endif
 
-    fputs(cstr, stderr);
-    fflush(stderr);
+    fputs(cstr, stdout);
+    fflush(stdout);
     NS_Free(cstr);
     JS_SET_RVAL(cx, vp, JSVAL_TRUE);
     return true;
@@ -3704,6 +3704,18 @@ nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const jsval &aMap,
     return NS_OK;
 }
 
+/* void getDebugObject(); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetJSTestingFunctions(JSContext *cx,
+                                             JS::Value *retval)
+{
+    JSObject *obj = js::GetTestingFunctions(cx);
+    if (!obj)
+        return NS_ERROR_XPC_JAVASCRIPT_ERROR;
+    *retval = OBJECT_TO_JSVAL(obj);
+    return NS_OK;
+}
+
 /* void getGlobalForObject(); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
@@ -4223,8 +4235,7 @@ nsXPCComponents::AttachNewComponentsObject(XPCCallContext& ccx,
 
     nsCOMPtr<XPCWrappedNative> wrapper;
     xpcObjectHelper helper(cholder);
-    XPCWrappedNative::GetNewOrUsed(ccx, helper, aScope, iface,
-                                   OBJ_IS_NOT_GLOBAL, getter_AddRefs(wrapper));
+    XPCWrappedNative::GetNewOrUsed(ccx, helper, aScope, iface, getter_AddRefs(wrapper));
     if (!wrapper)
         return false;
 

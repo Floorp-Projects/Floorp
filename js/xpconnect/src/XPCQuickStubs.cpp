@@ -1111,16 +1111,10 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx, qsObjectHelper &aHelper,
 
     JSContext *cx = lccx.GetJSContext();
 
-    // XXX The OBJ_IS_NOT_GLOBAL here is not really right. In
-    // fact, this code is depending on the fact that the
-    // global object will not have been collected, and
-    // therefore this NativeInterface2JSObject will not end up
-    // creating a new XPCNativeScriptableShared.
-
     nsresult rv;
     if (!XPCConvert::NativeInterface2JSObject(lccx, rval, nsnull,
                                               aHelper, iid, iface,
-                                              true, OBJ_IS_NOT_GLOBAL, &rv)) {
+                                              true, &rv)) {
         // I can't tell if NativeInterface2JSObject throws JS exceptions
         // or not.  This is a sloppy stab at the right semantics; the
         // method really ought to be fixed to behave consistently.

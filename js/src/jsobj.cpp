@@ -89,9 +89,9 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsstrinlines.h"
 
 #include "vm/MethodGuard-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -2194,7 +2194,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const jsid &id, const PropDe
     if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
         return JS_FALSE;
 
-    jsuint oldLen = obj->getArrayLength();
+    uint32_t oldLen = obj->getArrayLength();
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         /*

@@ -1157,7 +1157,17 @@ _dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
 	   surface->dc,
 	   area.left, area.top, 
 	   SRCCOPY | NOMIRRORBITMAP);
-    HRESULT hr = rt->DrawGlyphRun(0, 0, DWRITE_MEASURING_MODE_NATURAL, run, params, color);
+    DWRITE_MEASURING_MODE measureMode; 
+    switch (scaled_font->rendering_mode) {
+    case cairo_d2d_surface_t::TEXT_RENDERING_GDI_CLASSIC:
+    case cairo_d2d_surface_t::TEXT_RENDERING_NO_CLEARTYPE:
+        measureMode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
+        break;
+    default:
+        measureMode = DWRITE_MEASURING_MODE_NATURAL;
+        break;
+    }
+    HRESULT hr = rt->DrawGlyphRun(0, 0, measureMode, run, params, color);
     BitBlt(surface->dc,
 	   area.left, area.top,
 	   area.right - area.left, area.bottom - area.top,

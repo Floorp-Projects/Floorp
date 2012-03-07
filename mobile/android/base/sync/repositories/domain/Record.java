@@ -150,11 +150,11 @@ public abstract class Record {
   }
 
   /**
-   * Return true iff the input is a Record which is substantially the
-   * same as this object.
-   *
    * @param o
+   *        The object to which this object should be compared.
    * @return
+   *        true iff the input is a Record which is substantially the
+   *        same as this object.
    */
   public boolean equalPayloads(Object o) {
     if (!this.equalIdentifiers(o)) {
@@ -165,12 +165,14 @@ public abstract class Record {
   }
 
   /**
-   * Return true iff the input is a Record which is substantially the
-   * same as this object, considering the ability and desire two
-   * reconcile the two objects if possible.
+   *
    *
    * @param o
+   *        The object to which this object should be compared.
    * @return
+   *        true iff the input is a Record which is substantially the
+   *        same as this object, considering the ability and desire to
+   *        reconcile the two objects if possible.
    */
   public boolean congruentWith(Object o) {
     if (!this.equalIdentifiers(o)) {
@@ -306,13 +308,12 @@ public abstract class Record {
   }
 
   /**
-   * Return an identical copy of this record with the provided two values.
-   *
    * Oh for persistent data structures.
    *
    * @param guid
    * @param androidID
    * @return
+   *        An identical copy of this record with the provided two values.
    */
   public abstract Record copyWithIDs(String guid, long androidID);
 }

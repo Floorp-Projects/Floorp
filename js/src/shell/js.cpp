@@ -76,6 +76,7 @@
 #include "jsxml.h"
 #include "jsperf.h"
 
+#include "builtin/TestingFunctions.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
 #include "methodjit/MethodJIT.h"
@@ -1243,417 +1244,6 @@ AssertJit(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
-}
-
-static JSBool
-GC(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JSCompartment *comp = NULL;
-    if (argc == 1) {
-        Value arg = vp[2];
-        if (arg.isObject())
-            comp = UnwrapObject(&arg.toObject())->compartment();
-    }
-
-#ifndef JS_MORE_DETERMINISTIC
-    size_t preBytes = cx->runtime->gcBytes;
-#endif
-    JS_CompartmentGC(cx, comp);
-
-    char buf[256];
-#ifdef JS_MORE_DETERMINISTIC
-    buf[0] = '\0';
-#else
-    JS_snprintf(buf, sizeof(buf), "before %lu, after %lu, break %08lx\n",
-                (unsigned long)preBytes, (unsigned long)cx->runtime->gcBytes,
-#ifdef HAVE_SBRK
-                (unsigned long)sbrk(0)
-#else
-                0
-#endif
-                );
-#endif
-    JSString *str = JS_NewStringCopyZ(cx, buf);
-    if (!str)
-        return false;
-    *vp = STRING_TO_JSVAL(str);
-    return true;
-}
-
-static const struct ParamPair {
-    const char      *name;
-    JSGCParamKey    param;
-} paramMap[] = {
-    {"maxBytes",            JSGC_MAX_BYTES },
-    {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
-    {"gcBytes",             JSGC_BYTES},
-    {"gcNumber",            JSGC_NUMBER},
-    {"sliceTimeBudget",     JSGC_SLICE_TIME_BUDGET},
-    {"markStackLimit",      JSGC_MARK_STACK_LIMIT}
-};
-
-static JSBool
-GCParameter(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JSString *str;
-    if (argc == 0) {
-        str = JS_ValueToString(cx, JSVAL_VOID);
-        JS_ASSERT(str);
-    } else {
-        str = JS_ValueToString(cx, vp[2]);
-        if (!str)
-            return JS_FALSE;
-        vp[2] = STRING_TO_JSVAL(str);
-    }
-
-    JSFlatString *flatStr = JS_FlattenString(cx, str);
-    if (!flatStr)
-        return false;
-
-    size_t paramIndex = 0;
-    for (;; paramIndex++) {
-        if (paramIndex == ArrayLength(paramMap)) {
-            JS_ReportError(cx,
-                           "the first argument argument must be maxBytes, "
-                           "maxMallocBytes, gcStackpoolLifespan, gcBytes or "
-                           "gcNumber");
-            return false;
-        }
-        if (JS_FlatStringEqualsAscii(flatStr, paramMap[paramIndex].name))
-            break;
-    }
-    JSGCParamKey param = paramMap[paramIndex].param;
-
-    if (argc == 1) {
-        uint32_t value = JS_GetGCParameter(cx->runtime, param);
-        return JS_NewNumberValue(cx, value, &vp[0]);
-    }
-
-    if (param == JSGC_NUMBER ||
-        param == JSGC_BYTES) {
-        JS_ReportError(cx, "Attempt to change read-only parameter %s",
-                       paramMap[paramIndex].name);
-        return false;
-    }
-
-    uint32_t value;
-    if (!JS_ValueToECMAUint32(cx, vp[3], &value)) {
-        JS_ReportError(cx,
-                       "the second argument must be convertable to uint32_t "
-                       "with non-zero value");
-        return false;
-    }
-
-    if (param == JSGC_MAX_BYTES) {
-        uint32_t gcBytes = JS_GetGCParameter(cx->runtime, JSGC_BYTES);
-        if (value < gcBytes) {
-            JS_ReportError(cx,
-                           "attempt to set maxBytes to the value less than the current "
-                           "gcBytes (%u)",
-                           gcBytes);
-            return false;
-        }
-    }
-
-    JS_SetGCParameter(cx->runtime, param, value);
-    *vp = JSVAL_VOID;
-    return true;
-}
-
-static JSBool
-InternalConst(JSContext *cx, unsigned argc, jsval *vp)
-{
-    if (argc != 1) {
-        JS_ReportError(cx, "the function takes exactly one argument");
-        return false;
-    }
-
-    JSString *str = JS_ValueToString(cx, vp[2]);
-    if (!str)
-        return false;
-    JSFlatString *flat = JS_FlattenString(cx, str);
-    if (!flat)
-        return false;
-
-    if (JS_FlatStringEqualsAscii(flat, "MARK_STACK_LENGTH")) {
-        vp[0] = UINT_TO_JSVAL(js::MARK_STACK_LENGTH);
-    } else {
-        JS_ReportError(cx, "unknown const name");
-        return false;
-    }
-    return true;
-}
-
-#ifdef JS_GC_ZEAL
-static JSBool
-GCZeal(JSContext *cx, unsigned argc, jsval *vp)
-{
-    uint32_t zeal, frequency = JS_DEFAULT_ZEAL_FREQ;
-    JSBool compartment = JS_FALSE;
-
-    if (argc > 3) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_TOO_MANY_ARGS, "gczeal");
-        return JS_FALSE;
-    }
-    if (!JS_ValueToECMAUint32(cx, argc < 1 ? JSVAL_VOID : vp[2], &zeal))
-        return JS_FALSE;
-    if (argc >= 2)
-        if (!JS_ValueToECMAUint32(cx, vp[3], &frequency))
-            return JS_FALSE;
-    if (argc >= 3)
-        compartment = js_ValueToBoolean(vp[3]);
-
-    JS_SetGCZeal(cx, (uint8_t)zeal, frequency, compartment);
-    *vp = JSVAL_VOID;
-    return JS_TRUE;
-}
-
-static JSBool
-ScheduleGC(JSContext *cx, unsigned argc, jsval *vp)
-{
-    uint32_t count;
-    bool compartment = false;
-
-    if (argc != 1 && argc != 2) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             (argc < 1)
-                             ? JSSMSG_NOT_ENOUGH_ARGS
-                             : JSSMSG_TOO_MANY_ARGS,
-                             "schedulegc");
-        return JS_FALSE;
-    }
-    if (!JS_ValueToECMAUint32(cx, vp[2], &count))
-        return JS_FALSE;
-    if (argc == 2)
-        compartment = js_ValueToBoolean(vp[3]);
-
-    JS_ScheduleGC(cx, count, compartment);
-    *vp = JSVAL_VOID;
-    return JS_TRUE;
-}
-
-static JSBool
-VerifyBarriers(JSContext *cx, unsigned argc, jsval *vp)
-{
-    gc::VerifyBarriers(cx);
-    *vp = JSVAL_VOID;
-    return JS_TRUE;
-}
-
-static JSBool
-GCSlice(JSContext *cx, unsigned argc, jsval *vp)
-{
-    uint32_t budget;
-
-    if (argc != 1) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                             (argc < 1)
-                             ? JSSMSG_NOT_ENOUGH_ARGS
-                             : JSSMSG_TOO_MANY_ARGS,
-                             "gcslice");
-        return JS_FALSE;
-    }
-    if (!JS_ValueToECMAUint32(cx, vp[2], &budget))
-        return JS_FALSE;
-
-    GCDebugSlice(cx, budget);
-    *vp = JSVAL_VOID;
-    return JS_TRUE;
-}
-#endif /* JS_GC_ZEAL */
-
-typedef struct JSCountHeapNode JSCountHeapNode;
-
-struct JSCountHeapNode {
-    void                *thing;
-    JSGCTraceKind       kind;
-    JSCountHeapNode     *next;
-};
-
-typedef struct JSCountHeapTracer {
-    JSTracer            base;
-    JSDHashTable        visited;
-    bool                ok;
-    JSCountHeapNode     *traceList;
-    JSCountHeapNode     *recycleList;
-} JSCountHeapTracer;
-
-static void
-CountHeapNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
-{
-    JSCountHeapTracer *countTracer;
-    JSDHashEntryStub *entry;
-    JSCountHeapNode *node;
-    void *thing = *thingp;
-
-    JS_ASSERT(trc->callback == CountHeapNotify);
-    countTracer = (JSCountHeapTracer *)trc;
-    if (!countTracer->ok)
-        return;
-
-    entry = (JSDHashEntryStub *)
-            JS_DHashTableOperate(&countTracer->visited, thing, JS_DHASH_ADD);
-    if (!entry) {
-        countTracer->ok = false;
-        return;
-    }
-    if (entry->key)
-        return;
-    entry->key = thing;
-
-    node = countTracer->recycleList;
-    if (node) {
-        countTracer->recycleList = node->next;
-    } else {
-        node = (JSCountHeapNode *) js_malloc(sizeof *node);
-        if (!node) {
-            countTracer->ok = false;
-            return;
-        }
-    }
-    node->thing = thing;
-    node->kind = kind;
-    node->next = countTracer->traceList;
-    countTracer->traceList = node;
-}
-
-static const struct TraceKindPair {
-    const char       *name;
-    int32_t           kind;
-} traceKindNames[] = {
-    { "all",        -1                  },
-    { "object",     JSTRACE_OBJECT      },
-    { "string",     JSTRACE_STRING      },
-#if JS_HAS_XML_SUPPORT
-    { "xml",        JSTRACE_XML         },
-#endif
-};
-
-static JSBool
-CountHeap(JSContext *cx, unsigned argc, jsval *vp)
-{
-    void* startThing;
-    JSGCTraceKind startTraceKind;
-    jsval v;
-    int32_t traceKind;
-    JSString *str;
-    JSCountHeapTracer countTracer;
-    JSCountHeapNode *node;
-    size_t counter;
-
-    startThing = NULL;
-    startTraceKind = JSTRACE_OBJECT;
-    if (argc > 0) {
-        v = JS_ARGV(cx, vp)[0];
-        if (JSVAL_IS_TRACEABLE(v)) {
-            startThing = JSVAL_TO_TRACEABLE(v);
-            startTraceKind = JSVAL_TRACE_KIND(v);
-        } else if (!JSVAL_IS_NULL(v)) {
-            JS_ReportError(cx,
-                           "the first argument is not null or a heap-allocated "
-                           "thing");
-            return JS_FALSE;
-        }
-    }
-
-    traceKind = -1;
-    if (argc > 1) {
-        str = JS_ValueToString(cx, JS_ARGV(cx, vp)[1]);
-        if (!str)
-            return JS_FALSE;
-        JSFlatString *flatStr = JS_FlattenString(cx, str);
-        if (!flatStr)
-            return JS_FALSE;
-        for (size_t i = 0; ;) {
-            if (JS_FlatStringEqualsAscii(flatStr, traceKindNames[i].name)) {
-                traceKind = traceKindNames[i].kind;
-                break;
-            }
-            if (++i == ArrayLength(traceKindNames)) {
-                JSAutoByteString bytes(cx, str);
-                if (!!bytes)
-                    JS_ReportError(cx, "trace kind name '%s' is unknown", bytes.ptr());
-                return JS_FALSE;
-            }
-        }
-    }
-
-    JS_TracerInit(&countTracer.base, JS_GetRuntime(cx), CountHeapNotify);
-    if (!JS_DHashTableInit(&countTracer.visited, JS_DHashGetStubOps(),
-                           NULL, sizeof(JSDHashEntryStub),
-                           JS_DHASH_DEFAULT_CAPACITY(100))) {
-        JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
-    }
-    countTracer.ok = true;
-    countTracer.traceList = NULL;
-    countTracer.recycleList = NULL;
-
-    if (!startThing) {
-        JS_TraceRuntime(&countTracer.base);
-    } else {
-        JS_SET_TRACING_NAME(&countTracer.base, "root");
-        JS_CallTracer(&countTracer.base, startThing, startTraceKind);
-    }
-
-    counter = 0;
-    while ((node = countTracer.traceList) != NULL) {
-        if (traceKind == -1 || node->kind == traceKind)
-            counter++;
-        countTracer.traceList = node->next;
-        node->next = countTracer.recycleList;
-        countTracer.recycleList = node;
-        JS_TraceChildren(&countTracer.base, node->thing, node->kind);
-    }
-    while ((node = countTracer.recycleList) != NULL) {
-        countTracer.recycleList = node->next;
-        js_free(node);
-    }
-    JS_DHashTableFinish(&countTracer.visited);
-    if (!countTracer.ok) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return JS_NewNumberValue(cx, (double) counter, vp);
-}
-
-static unsigned finalizeCount = 0;
-
-static void
-finalize_counter_finalize(JSContext *cx, JSObject *obj)
-{
-    JS_ATOMIC_INCREMENT(&finalizeCount);
-}
-
-static JSClass FinalizeCounterClass = {
-    "FinalizeCounter", JSCLASS_IS_ANONYMOUS,
-    JS_PropertyStub,       /* addProperty */
-    JS_PropertyStub,       /* delProperty */
-    JS_PropertyStub,       /* getProperty */
-    JS_StrictPropertyStub, /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    finalize_counter_finalize
-};
-
-static JSBool
-MakeFinalizeObserver(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JSObject *obj = JS_NewObjectWithGivenProto(cx, &FinalizeCounterClass, NULL,
-                                               JS_GetGlobalObject(cx));
-    if (!obj)
-        return false;
-    *vp = OBJECT_TO_JSVAL(obj);
-    return true;
-}
-
-static JSBool
-FinalizeCount(JSContext *cx, unsigned argc, jsval *vp)
-{
-    *vp = INT_TO_JSVAL(finalizeCount);
-    return true;
 }
 
 static JSScript *
@@ -3893,47 +3483,6 @@ Deserialize(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-JSBool
-MJitCodeStats(JSContext *cx, unsigned argc, jsval *vp)
-{
-#ifdef JS_METHODJIT
-    JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
-    size_t n = 0;
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
-        n += (*c)->sizeOfMjitCode();
-    }
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
-#else
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-#endif
-    return true;
-}
-
-JSBool
-MJitChunkLimit(JSContext *cx, unsigned argc, jsval *vp)
-{
-    if (argc > 1 || argc == 0) {
-        JS_ReportError(cx, "Wrong number of arguments");
-        return JS_FALSE;
-    }
-
-    double t;
-    if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t))
-        return JS_FALSE;
-
-#ifdef JS_METHODJIT
-    mjit::SetChunkLimit((uint32_t) t);
-#endif
-
-    // Clear out analysis information which might refer to code compiled with
-    // the previous chunk limit.
-    JS_GC(cx);
-
-    vp->setUndefined();
-    return true;
-}
-
 enum CompartmentKind { SAME_COMPARTMENT, NEW_COMPARTMENT };
 
 static JSObject *
@@ -4009,183 +3558,151 @@ GetMaxArgs(JSContext *cx, unsigned arg, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-Terminate(JSContext *cx, unsigned arg, jsval *vp)
-{
-    JS_ClearPendingException(cx);
-    return JS_FALSE;
-}
+static JSFunctionSpecWithHelp shell_functions[] = {
+    JS_FN_HELP("version", Version, 0, 0,
+"version([number])",
+"  Get or force a script compilation version number."),
 
-static JSFunctionSpec shell_functions[] = {
-    JS_FN("version",        Version,        0,0),
-    JS_FN("revertVersion",  RevertVersion,  0,0),
-    JS_FN("options",        Options,        0,0),
-    JS_FN("load",           Load,           1,0),
-    JS_FN("evaluate",       Evaluate,       1,0),
-    JS_FN("evalWithLocation", EvaluateWithLocation, 3,0),
-    JS_FN("run",            Run,            1,0),
-    JS_FN("readline",       ReadLine,       0,0),
-    JS_FN("print",          Print,          0,0),
-    JS_FN("printErr",       PrintErr,       0,0),
-    JS_FN("putstr",         PutStr,         0,0),
-    JS_FN("dateNow",        Now,            0,0),
-    JS_FN("help",           Help,           0,0),
-    JS_FN("quit",           Quit,           0,0),
-    JS_FN("assertEq",       AssertEq,       2,0),
-    JS_FN("assertJit",      AssertJit,      0,0),
-    JS_FN("gc",             ::GC,           0,0),
-    JS_FN("gcparam",        GCParameter,    2,0),
-    JS_FN("countHeap",      CountHeap,      0,0),
-    JS_FN("makeFinalizeObserver", MakeFinalizeObserver, 0,0),
-    JS_FN("finalizeCount",  FinalizeCount,  0,0),
-#ifdef JS_GC_ZEAL
-    JS_FN("gczeal",         GCZeal,         2,0),
-    JS_FN("schedulegc",     ScheduleGC,     1,0),
-    JS_FN("verifybarriers", VerifyBarriers, 0,0),
-    JS_FN("gcslice",        GCSlice,        1,0),
-#endif
-    JS_FN("internalConst",  InternalConst,  1,0),
-    JS_FN("setDebug",       SetDebug,       1,0),
-    JS_FN("setDebuggerHandler", SetDebuggerHandler, 1,0),
-    JS_FN("setThrowHook",   SetThrowHook,   1,0),
-    JS_FN("trap",           Trap,           3,0),
-    JS_FN("untrap",         Untrap,         2,0),
-    JS_FN("line2pc",        LineToPC,       0,0),
-    JS_FN("pc2line",        PCToLine,       0,0),
-    JS_FN("stringsAreUTF8", StringsAreUTF8, 0,0),
-    JS_FN("testUTF8",       TestUTF8,       1,0),
-    JS_FN("throwError",     ThrowError,     0,0),
-#ifdef DEBUG
-    JS_FN("disassemble",    DisassembleToString, 1,0),
-    JS_FN("dis",            Disassemble,    1,0),
-    JS_FN("disfile",        DisassFile,     1,0),
-    JS_FN("dissrc",         DisassWithSrc,  1,0),
-    JS_FN("dumpHeap",       DumpHeap,       0,0),
-    JS_FN("dumpObject",     DumpObject,     1,0),
-    JS_FN("notes",          Notes,          1,0),
-    JS_FN("stats",          DumpStats,      1,0),
-    JS_FN("findReferences", FindReferences, 1,0),
-#endif
-    JS_FN("dumpStack",      DumpStack,      1,0),
-#ifdef TEST_CVTARGS
-    JS_FN("cvtargs",        ConvertArgs,    0,0),
-#endif
-    JS_FN("build",          BuildDate,      0,0),
-    JS_FN("clear",          Clear,          0,0),
-    JS_FN("intern",         Intern,         1,0),
-    JS_FN("clone",          Clone,          1,0),
-    JS_FN("getpda",         GetPDA,         1,0),
-    JS_FN("getslx",         GetSLX,         1,0),
-    JS_FN("toint32",        ToInt32,        1,0),
-    JS_FN("evalcx",         EvalInContext,  1,0),
-    JS_FN("evalInFrame",    EvalInFrame,    2,0),
-    JS_FN("shapeOf",        ShapeOf,        1,0),
-    JS_FN("resolver",       Resolver,       1,0),
-#ifdef DEBUG
-    JS_FN("arrayInfo",      js_ArrayInfo,   1,0),
-#endif
-#ifdef JS_THREADSAFE
-    JS_FN("sleep",          Sleep_fn,       1,0),
-#endif
-    JS_FN("snarf",          Snarf,          0,0),
-    JS_FN("read",           Snarf,          0,0),
-    JS_FN("compile",        Compile,        1,0),
-    JS_FN("parse",          Parse,          1,0),
-    JS_FN("timeout",        Timeout,        1,0),
-    JS_FN("elapsed",        Elapsed,        0,0),
-    JS_FN("parent",         Parent,         1,0),
-    JS_FN("wrap",           Wrap,           1,0),
-    JS_FN("serialize",      Serialize,      1,0),
-    JS_FN("deserialize",    Deserialize,    1,0),
-#ifdef JS_METHODJIT
-    JS_FN("mjitcodestats",  MJitCodeStats,  0,0),
-#endif
-    JS_FN("mjitChunkLimit", MJitChunkLimit, 1,0),
-    JS_FN("newGlobal",      NewGlobal,      1,0),
-    JS_FN("parseLegacyJSON",ParseLegacyJSON,1,0),
-    JS_FN("enableStackWalkingAssertion",EnableStackWalkingAssertion,1,0),
-    JS_FN("getMaxArgs",     GetMaxArgs,     0,0),
-    JS_FN("terminate",      Terminate,      0,0),
-    JS_FS_END
-};
+    JS_FN_HELP("revertVersion", RevertVersion, 0, 0,
+"revertVersion()",
+"  Revert previously set version number."),
 
-static const char shell_help_header[] =
-"Command                  Description\n"
-"=======                  ===========\n";
+    JS_FN_HELP("options", Options, 0, 0,
+"options([option ...])",
+"  Get or toggle JavaScript options."),
 
-static const char *const shell_help_messages[] = {
-"version([number])        Get or force a script compilation version number",
-"revertVersion()          Revert previously set version number",
-"options([option ...])    Get or toggle JavaScript options",
-"load(['foo.js' ...])     Load files named by string arguments",
-"evaluate(code)           Evaluate code as though it were the contents of a file",
-"evalWithLocation(code, filename, lineno)\n"
-"  Eval code as if loaded from the given filename and line number",
-"run('foo.js')\n"
+    JS_FN_HELP("load", Load, 1, 0,
+"load(['foo.js' ...])",
+"  Load files named by string arguments."),
+
+    JS_FN_HELP("evaluate", Evaluate, 1, 0,
+"evaluate(code)",
+"  Evaluate code as though it were the contents of a file."),
+
+    JS_FN_HELP("evalWithLocation", EvaluateWithLocation, 3, 0,
+"evalWithLocation(code, filename, lineno)",
+"  Eval code as if loaded from the given filename and line number."),
+
+    JS_FN_HELP("run", Run, 1, 0,
+"run('foo.js')",
 "  Run the file named by the first argument, returning the number of\n"
-"  of milliseconds spent compiling and executing it",
-"readline()               Read a single line from stdin",
-"print([exp ...])         Evaluate and print expressions to stdout",
-"printErr([exp ...])      Evaluate and print expressions to stderr",
-"putstr([exp])            Evaluate and print expression without newline",
-"dateNow()                    Return the current time with sub-ms precision",
-"help([name ...])         Display usage and help messages",
-"quit()                   Quit the shell",
-"assertEq(actual, expected[, msg])\n"
+"  of milliseconds spent compiling and executing it."),
+
+    JS_FN_HELP("readline", ReadLine, 0, 0,
+"readline()",
+"  Read a single line from stdin."),
+
+    JS_FN_HELP("print", Print, 0, 0,
+"print([exp ...])",
+"  Evaluate and print expressions to stdout."),
+
+    JS_FN_HELP("printErr", PrintErr, 0, 0,
+"printErr([exp ...])",
+"  Evaluate and print expressions to stderr."),
+
+    JS_FN_HELP("putstr", PutStr, 0, 0,
+"putstr([exp])",
+"  Evaluate and print expression without newline."),
+
+    JS_FN_HELP("dateNow", Now, 0, 0,
+"dateNow()",
+"  Return the current time with sub-ms precision."),
+
+    JS_FN_HELP("help", Help, 0, 0,
+"help([name ...])",
+"  Display usage and help messages."),
+
+    JS_FN_HELP("quit", Quit, 0, 0,
+"quit()",
+"  Quit the shell."),
+
+    JS_FN_HELP("assertEq", AssertEq, 2, 0,
+"assertEq(actual, expected[, msg])",
 "  Throw if the first two arguments are not the same (both +0 or both -0,\n"
-"  both NaN, or non-zero and ===)",
-"assertJit()              Throw if the calling function failed to JIT",
-"gc([obj])                Run the garbage collector\n"
-"                         When obj is given, GC only the compartment it's in",
-"gcparam(name, value)\n"
-"  Wrapper for JS_SetGCParameter. The name must be either 'maxBytes' or\n"
-"  'maxMallocBytes' and the value must be convertable to a positive uint32",
-"countHeap([start[, kind]])\n"
-"  Count the number of live GC things in the heap or things reachable from\n"
-"  start when it is given and is not null. kind is either 'all' (default) to\n"
-"  count all things or one of 'object', 'double', 'string', 'function',\n"
-"  'qname', 'namespace', 'xml' to count only things of that kind",
-"makeFinalizeObserver()\n"
-"  get a special object whose finalization increases the counter returned\n"
-"  by the finalizeCount function",
-"finalizeCount()\n"
-"  return the current value of the finalization counter that is incremented\n"
-"  each time an object returned by the makeFinalizeObserver is finalized",
-#ifdef JS_GC_ZEAL
-"gczeal(level, [freq], [compartmentGC?])\n"
-"                         How zealous the garbage collector should be",
-"schedulegc(num, [compartmentGC?])\n"
-"                         Schedule a GC to happen after num allocations",
-"verifybarriers()         Start or end a run of the write barrier verifier",
-"gcslice(n)               Run an incremental GC slice that marks ~n objects",
-#endif
-"internalConst(name)\n"
-"  Query an internal constant for the engine. See InternalConst source for the\n"
-"  list of constant names",
-"setDebug(debug)          Set debug mode",
-"setDebuggerHandler(f)    Set handler for debugger keyword to f",
-"setThrowHook(f)          Set throw hook to f",
-"trap([fun, [pc,]] exp)   Trap bytecode execution",
-"untrap(fun[, pc])        Remove a trap",
-"line2pc([fun,] line)     Map line number to PC",
-"pc2line(fun[, pc])       Map PC to line number",
-"stringsAreUTF8()         Check if strings are UTF-8 encoded",
-"testUTF8(mode)           Perform UTF-8 tests (modes are 1 to 4)",
-"throwError()             Throw an error from JS_ReportError",
+"  both NaN, or non-zero and ===)."),
+
+    JS_FN_HELP("assertJit", AssertJit, 0, 0,
+"assertJit()",
+"  Throw if the calling function failed to JIT."),
+
+    JS_FN_HELP("setDebug", SetDebug, 1, 0,
+"setDebug(debug)",
+"  Set debug mode."),
+
+    JS_FN_HELP("setDebuggerHandler", SetDebuggerHandler, 1, 0,
+"setDebuggerHandler(f)",
+"  Set handler for debugger keyword to f."),
+
+    JS_FN_HELP("setThrowHook", SetThrowHook, 1, 0,
+"setThrowHook(f)",
+"  Set throw hook to f."),
+
+    JS_FN_HELP("trap", Trap, 3, 0,
+"trap([fun, [pc,]] exp)",
+"  Trap bytecode execution."),
+
+    JS_FN_HELP("untrap", Untrap, 2, 0,
+"untrap(fun[, pc])",
+"  Remove a trap."),
+
+    JS_FN_HELP("line2pc", LineToPC, 0, 0,
+"line2pc([fun,] line)",
+"  Map line number to PC."),
+
+    JS_FN_HELP("pc2line", PCToLine, 0, 0,
+"pc2line(fun[, pc])",
+"  Map PC to line number."),
+
+    JS_FN_HELP("stringsAreUTF8", StringsAreUTF8, 0, 0,
+"stringsAreUTF8()",
+"  Check if strings are UTF-8 encoded."),
+
+    JS_FN_HELP("testUTF8", TestUTF8, 1, 0,
+"testUTF8(mode)",
+"  Perform UTF-8 tests (modes are 1 to 4)."),
+
+    JS_FN_HELP("throwError", ThrowError, 0, 0,
+"throwError()",
+"  Throw an error from JS_ReportError."),
+
 #ifdef DEBUG
-"disassemble([fun])       Return the disassembly for the given function",
-"dis([fun])               Disassemble functions into bytecodes",
-"disfile('foo.js')        Disassemble script file into bytecodes\n"
-"  dis and disfile take these options as preceeding string arguments\n"
+    JS_FN_HELP("disassemble", DisassembleToString, 1, 0,
+"disassemble([fun])",
+"  Return the disassembly for the given function."),
+
+    JS_FN_HELP("dis", Disassemble, 1, 0,
+"dis([fun])",
+"  Disassemble functions into bytecodes."),
+
+    JS_FN_HELP("disfile", DisassFile, 1, 0,
+"disfile('foo.js')",
+"  Disassemble script file into bytecodes.\n"
+"  dis and disfile take these options as preceeding string arguments:\n"
 "    \"-r\" (disassemble recursively)\n"
-"    \"-l\" (show line numbers)",
-"dissrc([fun])            Disassemble functions with source lines",
-"dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])\n"
-"  Interface to JS_DumpHeap with output sent to file",
-"dumpObject()             Dump an internal representation of an object",
-"notes([fun])             Show source notes for functions",
-"stats([string ...])      Dump 'atom' or 'global' stats",
-"findReferences(target)\n"
+"    \"-l\" (show line numbers)"),
+
+    JS_FN_HELP("dissrc", DisassWithSrc, 1, 0,
+"dissrc([fun])",
+"  Disassemble functions with source lines."),
+
+    JS_FN_HELP("dumpHeap", DumpHeap, 0, 0,
+"dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])",
+"  Interface to JS_DumpHeap with output sent to file."),
+
+    JS_FN_HELP("dumpObject", DumpObject, 1, 0,
+"dumpObject()",
+"  Dump an internal representation of an object."),
+
+    JS_FN_HELP("notes", Notes, 1, 0,
+"notes([fun])",
+"  Show source notes for functions."),
+
+    JS_FN_HELP("stats", DumpStats, 1, 0,
+"stats([string ...])",
+"  Dump 'atom' or 'global' stats."),
+
+    JS_FN_HELP("findReferences", FindReferences, 1, 0,
+"findReferences(target)",
 "  Walk the entire heap, looking for references to |target|, and return a\n"
 "  \"references object\" describing what we found.\n"
 "\n"
@@ -4207,91 +3724,144 @@ static const char *const shell_help_messages[] = {
 "\n"
 "  If any references are found by the conservative scanner, the references\n"
 "  object will have a property named \"edge: machine stack\"; the referrers will\n"
-"  be 'null', because they are roots.",
+"  be 'null', because they are roots."),
+
 #endif
-"dumpStack()              Dump the stack as an array of callees (youngest first)",
+    JS_FN_HELP("dumpStack", DumpStack, 1, 0,
+"dumpStack()",
+"  Dump the stack as an array of callees (youngest first)."),
+
 #ifdef TEST_CVTARGS
-"cvtargs(arg1..., arg12)  Test argument formatter",
+    JS_FN_HELP("cvtargs", ConvertArgs, 0, 0,
+"cvtargs(arg1..., arg12)",
+"  Test argument formatter."),
+
 #endif
-"build()                  Show build date and time",
-"clear([obj])             Clear properties of object",
-"intern(str)              Internalize str in the atom table",
-"clone(fun[, scope])      Clone function object",
-"getpda(obj)              Get the property descriptors for obj",
-"getslx(obj)              Get script line extent",
-"toint32(n)               Testing hook for JS_ValueToInt32",
-"evalcx(s[, o])\n"
-"  Evaluate s in optional sandbox object o\n"
+    JS_FN_HELP("build", BuildDate, 0, 0,
+"build()",
+"  Show build date and time."),
+
+    JS_FN_HELP("clear", Clear, 0, 0,
+"clear([obj])",
+"  Clear properties of object."),
+
+    JS_FN_HELP("intern", Intern, 1, 0,
+"intern(str)",
+"  Internalize str in the atom table."),
+
+    JS_FN_HELP("clone", Clone, 1, 0,
+"clone(fun[, scope])",
+"  Clone function object."),
+
+    JS_FN_HELP("getpda", GetPDA, 1, 0,
+"getpda(obj)",
+"  Get the property descriptors for obj."),
+
+    JS_FN_HELP("getslx", GetSLX, 1, 0,
+"getslx(obj)",
+"  Get script line extent."),
+
+    JS_FN_HELP("toint32", ToInt32, 1, 0,
+"toint32(n)",
+"  Testing hook for JS_ValueToInt32."),
+
+    JS_FN_HELP("evalcx", EvalInContext, 1, 0,
+"evalcx(s[, o])",
+"  Evaluate s in optional sandbox object o.\n"
 "  if (s == '' && !o) return new o with eager standard classes\n"
-"  if (s == 'lazy' && !o) return new o with lazy standard classes",
-"evalInFrame(n,str,save)  Evaluate 'str' in the nth up frame.\n"
-"                         If 'save' (default false), save the frame chain",
-"shapeOf(obj)             Get the shape of obj (an implementation detail)",
-"resolver(src[, proto])   Create object with resolve hook that copies properties\n"
-"                         from src. If proto is omitted, use Object.prototype.",
+"  if (s == 'lazy' && !o) return new o with lazy standard classes"),
+
+    JS_FN_HELP("evalInFrame", EvalInFrame, 2, 0,
+"evalInFrame(n,str,save)",
+"  Evaluate 'str' in the nth up frame.\n"
+"  If 'save' (default false), save the frame chain."),
+
+    JS_FN_HELP("shapeOf", ShapeOf, 1, 0,
+"shapeOf(obj)",
+"  Get the shape of obj (an implementation detail)."),
+
+    JS_FN_HELP("resolver", Resolver, 1, 0,
+"resolver(src[, proto])",
+"  Create object with resolve hook that copies properties\n"
+"  from src. If proto is omitted, use Object.prototype."),
+
 #ifdef DEBUG
-"arrayInfo(a1, a2, ...)   Report statistics about arrays",
+    JS_FN_HELP("arrayInfo", js_ArrayInfo, 1, 0,
+"arrayInfo(a1, a2, ...)",
+"  Report statistics about arrays."),
+
 #endif
 #ifdef JS_THREADSAFE
-"sleep(dt)                Sleep for dt seconds",
+    JS_FN_HELP("sleep", Sleep_fn, 1, 0,
+"sleep(dt)",
+"  Sleep for dt seconds."),
+
 #endif
-"snarf(filename)          Read filename into returned string",
-"read(filename)           Synonym for snarf",
-"compile(code)            Compiles a string to bytecode, potentially throwing",
-"parse(code)              Parses a string, potentially throwing",
-"timeout([seconds])\n"
+    JS_FN_HELP("snarf", Snarf, 0, 0,
+"snarf(filename)",
+"  Read filename into returned string."),
+
+    JS_FN_HELP("read", Snarf, 0, 0,
+"read(filename)",
+"  Synonym for snarf."),
+
+    JS_FN_HELP("compile", Compile, 1, 0,
+"compile(code)",
+"  Compiles a string to bytecode, potentially throwing."),
+
+    JS_FN_HELP("parse", Parse, 1, 0,
+"parse(code)",
+"  Parses a string, potentially throwing."),
+
+    JS_FN_HELP("timeout", Timeout, 1, 0,
+"timeout([seconds])",
 "  Get/Set the limit in seconds for the execution time for the current context.\n"
-"  A negative value (default) means that the execution time is unlimited.",
-"elapsed()                Execution time elapsed for the current context.",
-"parent(obj)              Returns the parent of obj.",
-"wrap(obj)                Wrap an object into a noop wrapper.",
-"serialize(sd)            Serialize sd using JS_WriteStructuredClone. Returns a TypedArray.",
-"deserialize(a)           Deserialize data generated by serialize.",
-#ifdef JS_METHODJIT
-"mjitcodestats()          Return stats on mjit code memory usage.",
-#endif
-"mjitChunkLimit(N)        Specify limit on compiled chunk size during mjit compilation.",
-"newGlobal(kind)          Return a new global object, in the current\n"
-"                         compartment if kind === 'same-compartment' or in a\n"
-"                         new compartment if kind === 'new-compartment'",
-"parseLegacyJSON(str)     Parse str as legacy JSON, returning the result if the\n"
-"                         parse succeeded and throwing a SyntaxError if not.",
-"enableStackWalkingAssertion(enabled)\n"
+"  A negative value (default) means that the execution time is unlimited."),
+
+    JS_FN_HELP("elapsed", Elapsed, 0, 0,
+"elapsed()",
+"  Execution time elapsed for the current context.."),
+
+    JS_FN_HELP("parent", Parent, 1, 0,
+"parent(obj)",
+"  Returns the parent of obj.."),
+
+    JS_FN_HELP("wrap", Wrap, 1, 0,
+"wrap(obj)",
+"  Wrap an object into a noop wrapper.."),
+
+    JS_FN_HELP("serialize", Serialize, 1, 0,
+"serialize(sd)",
+"  Serialize sd using JS_WriteStructuredClone. Returns a TypedArray.."),
+
+    JS_FN_HELP("deserialize", Deserialize, 1, 0,
+"deserialize(a)",
+"  Deserialize data generated by serialize.."),
+
+    JS_FN_HELP("newGlobal", NewGlobal, 1, 0,
+"newGlobal(kind)",
+"  Return a new global object, in the current\n"
+"  compartment if kind === 'same-compartment' or in a\n"
+"  new compartment if kind === 'new-compartment'."),
+
+    JS_FN_HELP("parseLegacyJSON", ParseLegacyJSON, 1, 0,
+"parseLegacyJSON(str)",
+"  Parse str as legacy JSON, returning the result if the\n"
+"  parse succeeded and throwing a SyntaxError if not."),
+
+    JS_FN_HELP("enableStackWalkingAssertion", EnableStackWalkingAssertion, 1, 0,
+"enableStackWalkingAssertion(enabled)",
 "  Enables or disables a particularly expensive assertion in stack-walking\n"
 "  code.  If your test isn't ridiculously thorough, such that performing this\n"
 "  assertion increases test duration by an order of magnitude, you shouldn't\n"
-"  use this.",
-"getMaxArgs()             Return the maximum number of supported args for a call.",
-"terminate()              Terminate JavaScript execution, as if we had run out of\n"
-"                         memory or been terminated by the slow script dialog.",
+"  use this."),
 
-/* Keep these last: see the static assertion below. */
-#ifdef MOZ_PROFILING
-"startProfiling([profileName])\n"
-"                         Start a profiling session\n"
-"                         Profiler must be running with programatic sampling",
-"stopProfiling([profileName])\n"
-"                         Stop a running profiling session",
-"pauseProfilers([profileName])\n"
-"                         Pause a running profiling session",
-"resumeProfilers([profileName])\n"
-"                         Resume a paused profiling session",
-"dumpProfile([outfile[, profileName]])\n"
-"                         Dump out current profile info (only valid for callgrind)",
-# ifdef MOZ_CALLGRIND
-"startCallgrind()         Start Callgrind instrumentation",
-"stopCallgrind()          Stop Callgrind instrumentation",
-"dumpCallgrind([outfile]) Dump current Callgrind counters to file or stdout",
-# endif
-# ifdef MOZ_VTUNE
-"startVtune()             Start Vtune instrumentation",
-"stopVtune()              Stop Vtune instrumentation",
-"pauseVtune()             Pause Vtune collection",
-"resumeVtune()            Resume Vtune collection",
-# endif
-#endif
+    JS_FN_HELP("getMaxArgs", GetMaxArgs, 0, 0,
+"getMaxArgs()",
+"  Return the maximum number of supported args for a call."),
+
+    JS_FS_END
 };
-
 #ifdef MOZ_PROFILING
 # define PROFILING_FUNCTION_COUNT 5
 # ifdef MOZ_CALLGRIND
@@ -4309,99 +3879,71 @@ static const char *const shell_help_messages[] = {
 # define EXTERNAL_FUNCTION_COUNT 0
 #endif
 
-/* Help messages must match shell functions. */
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(shell_help_messages) - EXTERNAL_FUNCTION_COUNT ==
-                 JS_ARRAY_LENGTH(shell_functions) - 1 /* JS_FS_END */);
-
-#ifdef DEBUG
-static void
-CheckHelpMessages()
-{
-    const char *const *m;
-    const char *lp;
-
-    /* Messages begin with "function_name(" prefix and don't end with \n. */
-    for (m = shell_help_messages; m < ArrayEnd(shell_help_messages) - EXTERNAL_FUNCTION_COUNT; ++m) {
-        lp = strchr(*m, '(');
-        JS_ASSERT(lp);
-        JS_ASSERT(memcmp(shell_functions[m - shell_help_messages].name,
-                         *m, lp - *m) == 0);
-        JS_ASSERT((*m)[strlen(*m) - 1] != '\n');
-    }
-}
-#else
-# define CheckHelpMessages() ((void) 0)
-#endif
-
 #undef PROFILING_FUNCTION_COUNT
 #undef CALLGRIND_FUNCTION_COUNT
 #undef VTUNE_FUNCTION_COUNT
 #undef EXTERNAL_FUNCTION_COUNT
 
+static bool
+PrintHelpString(JSContext *cx, jsval v)
+{
+    JSString *str = JSVAL_TO_STRING(v);
+    JS::Anchor<JSString *> a_str(str);
+    const jschar *chars = JS_GetStringCharsZ(cx, str);
+    if (!chars)
+        return false;
+
+    for (const jschar *p = chars; *p; p++)
+        fprintf(gOutFile, "%c", char(*p));
+
+    fprintf(gOutFile, "\n");
+
+    return true;
+}
+
+static bool
+PrintHelp(JSContext *cx, JSObject *obj)
+{
+    jsval usage, help;
+    if (!JS_LookupProperty(cx, obj, "usage", &usage))
+        return false;
+    if (!JS_LookupProperty(cx, obj, "help", &help))
+        return false;
+
+    if (JSVAL_IS_VOID(usage) || JSVAL_IS_VOID(help))
+        return true;
+
+    return PrintHelpString(cx, usage) && PrintHelpString(cx, help);
+}
+
 static JSBool
 Help(JSContext *cx, unsigned argc, jsval *vp)
 {
-    unsigned i, j;
-    int did_header, did_something;
-    JSType type;
-    JSFunction *fun;
-    JSString *str;
-
     fprintf(gOutFile, "%s\n", JS_GetImplementationVersion());
+
     if (argc == 0) {
-        fputs(shell_help_header, gOutFile);
-        for (i = 0; i < ArrayLength(shell_help_messages); ++i)
-            fprintf(gOutFile, "%s\n", shell_help_messages[i]);
+        JSObject *global = JS_GetGlobalObject(cx);
+        AutoIdArray ida(cx, JS_Enumerate(cx, global));
+        if (!ida)
+            return false;
+
+        for (size_t i = 0; i < ida.length(); i++) {
+            jsval v;
+            if (!JS_LookupPropertyById(cx, global, ida[i], &v))
+                return false;
+            if (JSVAL_IS_OBJECT(v) && !PrintHelp(cx, JSVAL_TO_OBJECT(v)))
+                return false;
+        }
     } else {
-        did_header = 0;
         jsval *argv = JS_ARGV(cx, vp);
-        for (i = 0; i < argc; i++) {
-            did_something = 0;
-            type = JS_TypeOfValue(cx, argv[i]);
-            if (type == JSTYPE_FUNCTION) {
-                fun = JS_ValueToFunction(cx, argv[i]);
-                str = fun->atom;
-            } else if (type == JSTYPE_STRING) {
-                str = JSVAL_TO_STRING(argv[i]);
-            } else {
-                str = NULL;
-            }
-            if (str) {
-                JSAutoByteString funcName(cx, str);
-                if (!funcName)
-                    return JS_FALSE;
-                for (j = 0; j < ArrayLength(shell_help_messages); ++j) {
-                    /* Help messages are required to be formatted "functionName(..." */
-                    const char *msg = shell_help_messages[j];
-                    const char *p = strchr(msg, '(');
-                    JS_ASSERT(p);
-
-                    if (size_t(p - msg) != str->length())
-                        continue;
-
-                    if (strncmp(funcName.ptr(), msg, p - msg) == 0) {
-                        if (!did_header) {
-                            did_header = 1;
-                            fputs(shell_help_header, gOutFile);
-                        }
-                        did_something = 1;
-                        fprintf(gOutFile, "%s\n", shell_help_messages[j]);
-                        break;
-                    }
-                }
-            }
-            if (!did_something) {
-                str = JS_ValueToString(cx, argv[i]);
-                if (!str)
-                    return JS_FALSE;
-                fputs("Sorry, no help for ", gErrFile);
-                JS_FileEscapedString(gErrFile, str, 0);
-                putc('\n', gErrFile);
-            }
+        for (unsigned i = 0; i < argc; i++) {
+            if (JSVAL_IS_OBJECT(argv[i]) && !PrintHelp(cx, JSVAL_TO_OBJECT(argv[i])))
+                return false;
         }
     }
+
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    return JS_TRUE;
+    return true;
 }
 
 /*
@@ -5082,10 +4624,12 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
             return NULL;
         if (!JS::RegisterPerfMeasurement(cx, glob))
             return NULL;
-        if (!JS_DefineFunctions(cx, glob, shell_functions) ||
+        if (!JS_DefineFunctionsWithHelp(cx, glob, shell_functions) ||
             !JS_DefineProfilingFunctions(cx, glob)) {
             return NULL;
         }
+        if (!js::DefineTestingFunctions(cx, glob))
+            return NULL;
 
         JSObject *it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
         if (!it)
@@ -5377,7 +4921,6 @@ main(int argc, char **argv, char **envp)
     }
 #endif
 
-    CheckHelpMessages();
 #ifdef HAVE_SETLOCALE
     setlocale(LC_ALL, "");
 #endif
