@@ -173,7 +173,6 @@ abstract public class GeckoApp
     public enum LaunchState {Launching, WaitForDebugger,
                              Launched, GeckoRunning, GeckoExiting};
     private static LaunchState sLaunchState = LaunchState.Launching;
-    private static boolean sTryCatchAttached = false;
 
     private static final int FILE_PICKER_REQUEST = 1;
     private static final int AWESOMEBAR_REQUEST = 2;
@@ -1756,21 +1755,6 @@ abstract public class GeckoApp
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - UI almost up");
-
-        if (!sTryCatchAttached) {
-            sTryCatchAttached = true;
-            mMainHandler.post(new Runnable() {
-                public void run() {
-                    try {
-                        Looper.loop();
-                    } catch (Exception e) {
-                        GeckoAppShell.reportJavaCrash(e);
-                    }
-                    // resetting this is kinda pointless, but oh well
-                    sTryCatchAttached = false;
-                }
-            });
-        }
 
         //register for events
         GeckoAppShell.registerGeckoEventListener("DOMContentLoaded", GeckoApp.mAppContext);

@@ -101,15 +101,10 @@ public class GeckoThread extends Thread {
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
         // and then fire us up
-        try {
-            Log.w(LOGTAG, "RunGecko - URI = " + mUri);
-
-            GeckoAppShell.runGecko(app.getApplication().getPackageResourcePath(),
-                                   mIntent.getStringExtra("args"),
-                                   mUri,
-                                   mRestoreSession);
-        } catch (Exception e) {
-            GeckoAppShell.reportJavaCrash(e);
-        }
+        Log.w(LOGTAG, "RunGecko - URI = " + mUri);
+        GeckoAppShell.runGecko(app.getApplication().getPackageResourcePath(),
+                               mIntent.getStringExtra("args"),
+                               mUri,
+                               mRestoreSession);
     }
 }
