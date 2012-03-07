@@ -610,7 +610,7 @@ abstract public class GeckoApp
             bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
             processThumbnail(tab, bitmap, bos.toByteArray());
         } else {
-            if (!tab.hasLoaded()) {
+            if (tab.getState() == Tab.STATE_DELAYED) {
                 byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
                 if (thumbnail != null)
                     processThumbnail(tab, null, thumbnail);
@@ -783,7 +783,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
                     mBrowserToolbar.setFavicon(tab.getFavicon());
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-                    mBrowserToolbar.setProgressVisibility(tab.isLoading());
+                    mBrowserToolbar.setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
                 }
             }
         });
@@ -1218,7 +1218,7 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        tab.setLoading(true);
+        tab.setState(Tab.STATE_LOADING);
         tab.updateSecurityMode("unknown");
 
         mMainHandler.post(new Runnable() {
@@ -1238,7 +1238,7 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        tab.setLoading(false);
+        tab.setState(Tab.STATE_LOADED);
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -1273,7 +1273,6 @@ abstract public class GeckoApp
             return;
 
         tab.updateTitle(title);
-        tab.setHasLoaded(true);
 
         // Make the UI changes
         mMainHandler.post(new Runnable() {
@@ -1314,7 +1313,7 @@ abstract public class GeckoApp
                 // want to load the image straight away. If tab is still
                 // loading, we only load the favicon once the page's content
                 // is fully loaded (see handleContentLoaded()).
-                if (!tab.isLoading()) {
+                if (tab.getState() != tab.STATE_LOADING) {
                     mMainHandler.post(new Runnable() {
                         public void run() {
                             loadFavicon(tab);
