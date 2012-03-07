@@ -176,17 +176,26 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
     // of incremental GC. Entering Ion code in the middle of an incremental GC
     // triggers a read barrier on both these pointers, so they will still be
     // marked in that case.
-    if (!compartment->active)
-        return;
+
+    bool mustMarkEnterJIT = false;
+    bool mustMarkOsrPrologue = false;
+    for (IonActivationIterator iter(trc->runtime); iter.more(); ++iter) {
+        if (iter.activation()->compartment() != compartment)
+            continue;
+        if (iter.activation()->kind() == IonActivation::OSR)
+            mustMarkOsrPrologue = true;
+        else
+            mustMarkEnterJIT = true;
+    }
 
     // These must be available if we could be running JIT code; they are not
     // traced as normal through IonCode or IonScript objects
-    if (enterJIT_)
+    if (mustMarkEnterJIT)
         MarkIonCodeRoot(trc, enterJIT_.unsafeGetAddress(), "enterJIT");
 
     // These need to be here until we can figure out how to make the GC
     // scan these references inside the code generator itself.
-    if (osrPrologue_)
+    if (mustMarkOsrPrologue)
         MarkIonCodeRoot(trc, osrPrologue_.unsafeGetAddress(), "osrPrologue");
 
     // functionWrappers_ are not marked because this is a WeakCache of VM
@@ -249,7 +258,7 @@ IonCompartment::~IonCompartment()
     Foreground::delete_(functionWrappers_);
 }
 
-IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
+IonActivation::IonActivation(JSContext *cx, StackFrame *fp, IonActivation::Kind kind)
   : cx_(cx),
     compartment_(cx->compartment),
     prev_(cx->runtime->ionActivation),
@@ -257,7 +266,8 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
     bailout_(NULL),
     prevIonTop_(cx->runtime->ionTop),
     prevIonJSContext_(cx->runtime->ionJSContext),
-    savedEnumerators_(cx->enumerators)
+    savedEnumerators_(cx->enumerators),
+    kind_(kind)
 {
     fp->setRunningInIon();
     cx->runtime->ionJSContext = cx;
@@ -910,7 +920,7 @@ union CallTarget {
 };
 
 static bool
-EnterIon(JSContext *cx, StackFrame *fp, CallTarget target, void *jitcode, bool osr)
+EnterIon(JSContext *cx, StackFrame *fp, CallTarget target, void *jitcode, IonActivation::Kind kind)
 {
     JS_ASSERT(ion::IsEnabled());
     JS_ASSERT(CheckFrame(fp));
@@ -931,11 +941,11 @@ EnterIon(JSContext *cx, StackFrame *fp, CallTarget target, void *jitcode, bool o
     {
         AssertCompartmentUnchanged pcc(cx);
         IonContext ictx(cx, NULL);
-        IonActivation activation(cx, fp);
+        IonActivation activation(cx, fp, kind);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
         // Switch entrypoint.
-        if (osr)
+        if (kind == IonActivation::OSR)
             target.osrPrologue(jitcode, argc, argv, &result, calleeToken, fp);
         else
             target.enterJIT(jitcode, argc, argv, &result, calleeToken);
@@ -967,7 +977,7 @@ ion::Cannon(JSContext *cx, StackFrame *fp)
     IonCode *code = ion->method();
     void *jitcode = code->raw();
 
-    return EnterIon(cx, fp, target, jitcode, false);
+    return EnterIon(cx, fp, target, jitcode, IonActivation::FUNCTION);
 }
 
 bool
@@ -985,7 +995,7 @@ ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
 
     JS_ASSERT(ion->osrPc() == pc);
 
-    return EnterIon(cx, fp, target, osrcode, true);
+    return EnterIon(cx, fp, target, osrcode, IonActivation::OSR);
 }
 
 static void
