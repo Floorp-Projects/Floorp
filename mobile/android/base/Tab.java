@@ -93,7 +93,8 @@ public final class Tab {
 
     public static final int STATE_DELAYED = 0;
     public static final int STATE_LOADING = 1;
-    public static final int STATE_LOADED = 2;
+    public static final int STATE_SUCCESS = 2;
+    public static final int STATE_ERROR = 3;
 
     public static final class HistoryEntry {
         public String mUri;         // must never be null
@@ -235,7 +236,9 @@ public final class Tab {
                                                           b.getHeight());
 
                         Bitmap bitmap = Bitmap.createScaledBitmap(cropped, getThumbnailWidth(), getThumbnailHeight(), false);
-                        saveThumbnailToDB(new BitmapDrawable(bitmap));
+
+                        if (mState == Tab.STATE_SUCCESS)
+                            saveThumbnailToDB(new BitmapDrawable(bitmap));
 
                         if (!cropped.equals(b))
                             b.recycle();
