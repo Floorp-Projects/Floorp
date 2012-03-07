@@ -136,7 +136,7 @@ abstract public class GeckoApp
 
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
-    public static AutoCompletePopup mAutoCompletePopup;
+    public static FormAssistPopup mFormAssistPopup;
     public Favicons mFavicons;
 
     private Geocoder mGeocoder;
@@ -976,27 +976,6 @@ abstract public class GeckoApp
                 mDOMFullScreen = true;
             } else if (event.equals("DOMFullScreen:Stop")) {
                 mDOMFullScreen = false;
-            } else if (event.equals("FormAssist:AutoComplete")) {
-                final JSONArray suggestions = message.getJSONArray("suggestions");
-                if (suggestions.length() == 0) {
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            mAutoCompletePopup.hide();
-                        }
-                    });
-                } else {
-                    final JSONArray rect = message.getJSONArray("rect");
-                    final double zoom = message.getDouble("zoom");
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            // Don't show autocomplete popup when using fullscreen VKB
-                            InputMethodManager imm =
-                                (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                            if (!imm.isFullscreenMode())
-                                mAutoCompletePopup.show(suggestions, rect, zoom);
-                        }
-                    });
-                }
             } else if (event.equals("Permissions:Data")) {
                 String host = message.getString("host");
                 JSONArray permissions = message.getJSONArray("permissions");
@@ -1108,7 +1087,7 @@ abstract public class GeckoApp
         }
 
         public void run() {
-            mAutoCompletePopup.hide();
+            mFormAssistPopup.hide();
             if (mShow) {
                 if (mAboutHomeContent == null) {
                     mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
@@ -1757,7 +1736,7 @@ abstract public class GeckoApp
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
-        mAutoCompletePopup = (AutoCompletePopup) findViewById(R.id.autocomplete_popup);
+        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - UI almost up");
 
@@ -1797,7 +1776,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Stop", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
@@ -2170,7 +2148,6 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
@@ -2211,7 +2188,7 @@ abstract public class GeckoApp
 
         if (mOrientation != newConfig.orientation) {
             mOrientation = newConfig.orientation;
-            mAutoCompletePopup.hide();
+            mFormAssistPopup.hide();
             refreshActionBar();
         }
     }
@@ -2383,10 +2360,6 @@ abstract public class GeckoApp
 
     @Override
     public boolean onSearchRequested() {
-        return showAwesomebar(AwesomeBar.Type.ADD);
-    }
- 
-    public boolean onEditRequested() {
         return showAwesomebar(AwesomeBar.Type.EDIT);
     }
 

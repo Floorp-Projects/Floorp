@@ -1,4 +1,5 @@
 import re
+from subprocess import list2cmdline
 
 class TestOutput:
     """Output from a test run."""

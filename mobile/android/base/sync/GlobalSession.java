@@ -48,6 +48,7 @@ import java.util.Map;
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.delegates.FreshStartDelegate;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.delegates.InfoCollectionsDelegate;
@@ -69,6 +70,7 @@ import org.mozilla.gecko.sync.stage.FetchMetaGlobalStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 import org.mozilla.gecko.sync.stage.NoSuchStageException;
+import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -92,6 +94,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
 
   private GlobalSessionCallback callback;
   private Context context;
+  private ClientsDataDelegate clientsDelegate;
 
   /*
    * Key accessors.
@@ -148,7 +151,8 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
                        KeyBundle syncKeyBundle,
                        GlobalSessionCallback callback,
                        Context context,
-                       Bundle extras)
+                       Bundle extras,
+                       ClientsDataDelegate clientsDelegate)
                            throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
     if (callback == null) {
       throw new IllegalArgumentException("Must provide a callback to GlobalSession constructor.");
@@ -174,6 +178,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
 
     this.callback        = callback;
     this.context         = context;
+    this.clientsDelegate = clientsDelegate;
 
     config = new SyncConfiguration(prefsPath, this);
     config.userAPI       = userAPI;
@@ -192,6 +197,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
     stages.put(Stage.fetchInfoCollections,    new FetchInfoCollectionsStage());
     stages.put(Stage.fetchMetaGlobal,         new FetchMetaGlobalStage());
     stages.put(Stage.ensureKeysStage,         new EnsureKeysStage());
+    stages.put(Stage.syncClientsEngine,       new SyncClientsEngineStage());
 
     // TODO: more stages.
     stages.put(Stage.syncBookmarks,           new AndroidBrowserBookmarksServerSyncStage());
@@ -211,6 +217,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
    * Advance and loop around the stages of a sync.
    * @param current
    * @return
+   *        The next stage to execute.
    */
   public static Stage nextStage(Stage current) {
     int index = current.ordinal() + 1;
@@ -220,9 +227,6 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
 
   /**
    * Move to the next stage in the syncing process.
-   * @param next
-   *        The next stage.
-   * @throws NoSuchStageException if the stage does not exist.
    */
   public void advance() {
     this.callback.handleStageCompleted(this.currentState, this);
@@ -680,6 +684,9 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
    *
    * @param engineName
    * @return
+   *        true if the engine with the provided name is present in the
+   *        meta/global "engines" object.
+   *
    * @throws MetaGlobalException
    */
   public boolean engineIsEnabled(String engineName) throws MetaGlobalException {
@@ -690,5 +697,9 @@ public class GlobalSession implements CredentialsSource, PrefsSource {
       throw new MetaGlobalMissingEnginesException();
     }
     return this.config.metaGlobal.engines.get(engineName) != null;
+  }
+
+  public ClientsDataDelegate getClientsDelegate() {
+    return this.clientsDelegate;
   }
 }

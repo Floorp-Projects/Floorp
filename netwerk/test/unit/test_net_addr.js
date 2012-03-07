@@ -122,21 +122,32 @@ var serv;
 var connectTimeout = 5*1000;
 
 /**
+ * A place for individual tests to place Objects of importance for access
+ * throughout asynchronous testing.  Particularly important for any output or
+ * input streams opened, as cleanup of those objects (by the garbage collector)
+ * causes the stream to close and may have other side effects.
+ */
+var testDataStore = null;
+
+/**
  * IPv4 test.
  */
 function testIpv4() {
-  var transport;
+  testDataStore = {
+    transport : null ,
+    ouput : null
+  }
 
   serv.acceptCallback = function() {
     // disable the timeoutCallback
     serv.timeoutCallback = function(){};
 
-    var selfAddr = transport.getScriptableSelfAddr();
-    var peerAddr = transport.getScriptablePeerAddr();
+    var selfAddr = testDataStore.transport.getScriptableSelfAddr();
+    var peerAddr = testDataStore.transport.getScriptablePeerAddr();
 
     // check peerAddr against expected values
     do_check_eq(peerAddr.family, Ci.nsINetAddr.FAMILY_INET);
-    do_check_eq(peerAddr.port, transport.port);
+    do_check_eq(peerAddr.port, testDataStore.transport.port);
     do_check_eq(peerAddr.port, serv.port);
     do_check_eq(peerAddr.address, "127.0.0.1");
 
@@ -148,6 +159,7 @@ function testIpv4() {
     checkAddrEqual(selfAddr, serv.peerAddr);
     checkAddrEqual(peerAddr, serv.selfAddr);
 
+    testDataStore = null;
     do_execute_soon(run_next_test);
   };
 
@@ -158,11 +170,16 @@ function testIpv4() {
   };
   do_timeout(connectTimeout, function(){ serv.timeoutCallback('testIpv4'); });*/
 
-  transport = sts.createTransport(null, 0, '127.0.0.1', serv.port, null);
-  transport.openOutputStream(Ci.nsITransport.OPEN_BLOCKING,0,0);
+  testDataStore.transport = sts.createTransport(null, 0, '127.0.0.1', serv.port, null);
+  /*
+   * Need to hold |output| so that the output stream doesn't close itself and
+   * the associated connection.
+   */
+  testDataStore.output = testDataStore.transport.openOutputStream(Ci.nsITransport.OPEN_BLOCKING,0,0);
+
   /* NEXT:
    * openOutputStream -> onSocketAccepted -> acceptedCallback -> run_next_test
-   * OR
+   * OR (if the above timeout is uncommented)
    * <connectTimeout lapses> -> timeoutCallback -> do_throw
    */
 }

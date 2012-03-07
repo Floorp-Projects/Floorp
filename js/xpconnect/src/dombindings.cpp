@@ -607,7 +607,7 @@ GetArrayIndexFromId(JSContext *cx, jsid id)
         if (NS_LIKELY((unsigned)s >= 'a' && (unsigned)s <= 'z'))
             return -1;
 
-        jsuint i;
+        uint32_t i;
         JSLinearString *str = js::AtomToLinearString(JSID_TO_ATOM(id));
         return js::StringIsArrayIndex(str, &i) ? i : -1;
     }

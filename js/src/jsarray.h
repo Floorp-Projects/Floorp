@@ -57,13 +57,13 @@ const uint32_t MAX_ARRAY_INDEX = 4294967294u;
 }
 
 inline JSBool
-js_IdIsIndex(jsid id, jsuint *indexp)
+js_IdIsIndex(jsid id, uint32_t *indexp)
 {
     if (JSID_IS_INT(id)) {
         int32_t i = JSID_TO_INT(id);
         if (i < 0)
             return JS_FALSE;
-        *indexp = (jsuint)i;
+        *indexp = (uint32_t)i;
         return JS_TRUE;
     }
 
@@ -137,7 +137,7 @@ NewSlowEmptyArray(JSContext *cx);
 } /* namespace js */
 
 extern JSBool
-js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
+js_GetLengthProperty(JSContext *cx, JSObject *obj, uint32_t *lengthp);
 
 extern JSBool
 js_SetLengthProperty(JSContext *cx, JSObject *obj, double length);
@@ -158,7 +158,7 @@ array_deleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, J
  * js_GetLengthProperty on aobj.
  */
 extern bool
-GetElements(JSContext *cx, JSObject *aobj, jsuint length, js::Value *vp);
+GetElements(JSContext *cx, JSObject *aobj, uint32_t length, js::Value *vp);
 
 /* Natives exposed for optimization by the interpreter and JITs. */
 

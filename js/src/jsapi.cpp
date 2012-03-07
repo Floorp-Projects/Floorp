@@ -753,6 +753,7 @@ JSRuntime::JSRuntime()
     gcZealFrequency(0),
     gcNextScheduled(0),
     gcDebugCompartmentGC(false),
+    gcDeterministicOnly(false),
 #endif
     gcCallback(NULL),
     gcSliceCallback(NULL),
@@ -4407,9 +4408,9 @@ JS_NewArrayObject(JSContext *cx, int length, jsval *vector)
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    /* NB: jsuint cast does ToUint32. */
-    assertSameCompartment(cx, JSValueArray(vector, vector ? (jsuint)length : 0));
-    return NewDenseCopiedArray(cx, (jsuint)length, vector);
+    
+    assertSameCompartment(cx, JSValueArray(vector, vector ? (uint32_t)length : 0));
+    return NewDenseCopiedArray(cx, (uint32_t)length, vector);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4420,7 +4421,7 @@ JS_IsArrayObject(JSContext *cx, JSObject *obj)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp)
+JS_GetArrayLength(JSContext *cx, JSObject *obj, uint32_t *lengthp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4429,7 +4430,7 @@ JS_GetArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length)
+JS_SetArrayLength(JSContext *cx, JSObject *obj, uint32_t length)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -6466,23 +6467,10 @@ JS_ClearPendingException(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_ReportPendingException(JSContext *cx)
 {
-    JSBool ok;
-    bool save;
-
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    /*
-     * Set cx->generatingError to suppress the standard error-to-exception
-     * conversion done by all {js,JS}_Report* functions except for OOM.  The
-     * cx->generatingError flag was added to suppress recursive divergence
-     * under js_ErrorToException, but it serves for our purposes here too.
-     */
-    save = cx->generatingError;
-    cx->generatingError = JS_TRUE;
-    ok = js_ReportUncaughtException(cx);
-    cx->generatingError = save;
-    return ok;
+    return js_ReportUncaughtException(cx);
 }
 
 struct JSExceptionState {

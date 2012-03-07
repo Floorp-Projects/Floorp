@@ -1010,7 +1010,7 @@ BytecodeEmitter::shouldNoteClosedName(ParseNode *pn)
 static int
 AdjustBlockSlot(JSContext *cx, BytecodeEmitter *bce, int slot)
 {
-    JS_ASSERT((jsuint) slot < bce->maxStackDepth);
+    JS_ASSERT((unsigned) slot < bce->maxStackDepth);
     if (bce->inFunction()) {
         slot += bce->bindings.countVars();
         if ((unsigned) slot >= SLOTNO_LIMIT) {
@@ -2468,7 +2468,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 continue;
             }
             i = pn3->pn_pval->toInt32();
-            if ((jsuint)(i + (int)JS_BIT(15)) >= (jsuint)JS_BIT(16)) {
+            if ((unsigned)(i + (int)JS_BIT(15)) >= (unsigned)JS_BIT(16)) {
                 switchOp = JSOP_LOOKUPSWITCH;
                 continue;
             }
@@ -3068,7 +3068,7 @@ EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
 {
     JS_ASSERT(emitOption != DefineVars);
 
-    jsuint index;
+    unsigned index;
     ParseNode *pn2, *pn3;
     JSBool doElemOp;
 
@@ -3303,7 +3303,7 @@ static JSBool
 EmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp,
                     ParseNode *lhs, ParseNode *rhs)
 {
-    jsuint depth, limit, i, nslots;
+    unsigned depth, limit, i, nslots;
     ParseNode *pn;
 
     depth = limit = (unsigned) bce->stackDepth;

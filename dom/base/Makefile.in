@@ -66,6 +66,7 @@ EXTRA_COMPONENTS = \
 		$(NULL)
 
 EXTRA_JS_MODULES += Webapps.jsm \
+        DOMRequestHelper.jsm \
 		$(NULL)
 endif
 

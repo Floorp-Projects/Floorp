@@ -1825,7 +1825,7 @@ GetLocal(SprintStack *ss, int i)
             if (obj->isBlock()) {
                 uint32_t depth = obj->asBlock().stackDepth();
                 uint32_t count = obj->asBlock().slotCount();
-                if (jsuint(i - depth) < jsuint(count))
+                if (uint32_t(i - depth) < uint32_t(count))
                     return GetLocalInSlot(ss, i, int(i - depth), obj);
             }
         }
@@ -1838,7 +1838,7 @@ GetLocal(SprintStack *ss, int i)
         if (obj->isBlock()) {
             uint32_t depth = obj->asBlock().stackDepth();
             uint32_t count = obj->asBlock().slotCount();
-            if (jsuint(i - depth) < jsuint(count))
+            if (uint32_t(i - depth) < uint32_t(count))
                 return GetLocalInSlot(ss, i, int(i - depth), obj);
         }
     }

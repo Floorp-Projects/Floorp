@@ -334,10 +334,6 @@ protected:
   void                    ResetLayout();
   void                    InvalidateNonClientRegion();
   HRGN                    ExcludeNonClientFromPaintRegion(HRGN aRegion);
-  static void             InitInputWorkaroundPrefDefaults();
-  static bool             GetInputWorkaroundPref(const char* aPrefName, bool aValueIfAutomatic);
-  static bool             UseTrackPointHack();
-  static void             PerformElantechSwipeGestureHack(UINT& aVirtualKeyCode, nsModifierKeyState& aModKeyState);
   static void             GetMainWindowClass(nsAString& aClass);
   bool                    HasGlass() const {
     return mTransparencyMode == eTransparencyGlass ||
@@ -400,20 +396,12 @@ protected:
                                     PRUint32 aFlags = 0,
                                     const MSG *aMsg = nsnull,
                                     bool *aEventDispatched = nsnull);
-  bool                    OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
-  void                    OnScrollInternal(UINT aMsg, WPARAM aWParam,
-                                           LPARAM aLParam);
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);
   bool                    OnHotKey(WPARAM wParam, LPARAM lParam);
   BOOL                    OnInputLangChange(HKL aHKL);
   bool                    OnPaint(HDC aDC, PRUint32 aNestingLevel);
   void                    OnWindowPosChanged(WINDOWPOS *wp, bool& aResult);
-  void                    OnMouseWheel(UINT aMsg, WPARAM aWParam,
-                                       LPARAM aLParam, LRESULT *aRetValue);
-  void                    OnMouseWheelInternal(UINT aMessage, WPARAM aWParam,
-                                               LPARAM aLParam,
-                                               LRESULT *aRetValue);
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
   void                    OnSysColorChanged();
 
@@ -522,10 +510,7 @@ protected:
   static bool           sJustGotActivate;
   static bool           sIsInMouseCapture;
   static int            sTrimOnMinimize;
-  static bool           sDefaultTrackPointHack;
   static const char*    sDefaultMainWindowClass;
-  static bool           sUseElantechSwipeHack;
-  static bool           sUseElantechPinchHack;
   static bool           sAllowD3D9;
 
   // Always use the helper method to read this property.  See bug 603793.
@@ -608,20 +593,8 @@ protected:
   // was reirected to SendInput() API by OnKeyDown().
   static MSG            sRedirectedKeyDown;
 
-  static bool sEnablePixelScrolling;
   static bool sNeedsToInitMouseWheelSettings;
-  static ULONG sMouseWheelScrollLines;
-  static ULONG sMouseWheelScrollChars;
   static void InitMouseWheelScrollData();
-
-  static HWND sLastMouseWheelWnd;
-  static PRInt32 sRemainingDeltaForScroll;
-  static PRInt32 sRemainingDeltaForPixel;
-  static bool sLastMouseWheelDeltaIsPositive;
-  static bool sLastMouseWheelOrientationIsVertical;
-  static bool sLastMouseWheelUnitIsPage;
-  static PRUint32 sLastMouseWheelTime; // in milliseconds
-  static void ResetRemainingWheelDelta();
 
   // If a window receives WM_KEYDOWN message or WM_SYSKEYDOWM message which is
   // redirected message, OnKeyDowm() prevents to dispatch NS_KEY_DOWN event

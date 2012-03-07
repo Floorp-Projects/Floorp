@@ -122,7 +122,7 @@ JSValToMatrixElts(JSContext* cx, const jsval& val,
                   double* (&elts)[N], nsresult* rv)
 {
     JSObject* obj;
-    jsuint length;
+    uint32_t length;
 
     if (JSVAL_IS_PRIMITIVE(val) ||
         !(obj = JSVAL_TO_OBJECT(val)) ||

@@ -21,7 +21,7 @@ var observer = {
       // Test if the binding has applied before the observers are notified. We test the second setting here,
       // because the code operates on the first setting and we want to check it applies to all.
       var setting = aSubject.querySelector("rows > setting[first-row] ~ setting");
-      var input = gManagerWindow.document.getAnonymousElementByAttribute(setting, "class", "setting-label");
+      var input = gManagerWindow.document.getAnonymousElementByAttribute(setting, "class", "preferences-title");
       isnot(input, null, "XBL binding should be applied");
 
       // Add some extra height to the scrolling pane to ensure that it needs to scroll when appropriate.
@@ -174,6 +174,7 @@ add_test(function() {
     Services.prefs.setBoolPref("extensions.inlinesettings1.bool", false);
     var input = gManagerWindow.document.getAnonymousElementByAttribute(settings[0], "anonid", "input");
     isnot(input.checked, true, "Checkbox should have initial value");
+    is(input.label, "Check box label", "Checkbox should be labelled");
     EventUtils.synthesizeMouseAtCenter(input, { clickCount: 1 }, gManagerWindow);
     is(input.checked, true, "Checkbox should have updated value");
     is(Services.prefs.getBoolPref("extensions.inlinesettings1.bool"), true, "Bool pref should have been updated");
@@ -381,45 +382,26 @@ add_test(function() {
     is(node.nodeName, "setting", "Should be a setting node");
     ok(node.hasAttribute("first-row"), "First visible row should have first-row attribute");
     var description = gManagerWindow.document.getAnonymousElementByAttribute(node, "class", "preferences-description");
-    is(description.textContent.trim(), "", "Description node should be empty");
-
-    node = node.nextSibling;
-    is(node.nodeName, "row", "Setting should be followed by a row node");
-    is_element_visible(node, "Description should be visible");
-    is(node.textContent, "Description Attribute", "Description should be in this row");
+    is(description.textContent, "Description Attribute", "Description node should contain description");
 
     node = settings[2];
     is(node.nodeName, "setting", "Should be a setting node");
     ok(!node.hasAttribute("first-row"), "Not the first row");
     description = gManagerWindow.document.getAnonymousElementByAttribute(node, "class", "preferences-description");
-    is(description.textContent.trim(), "", "Description node should be empty");
-
-    node = node.nextSibling;
-    is(node.nodeName, "row", "Setting should be followed by a row node");
-    is_element_visible(node, "Description should be visible");
-    is(node.textContent, "Description Text Node", "Description should be in this row");
+    is(description.textContent, "Description Text Node", "Description node should contain description");
 
     node = settings[3];
     is(node.nodeName, "setting", "Should be a setting node");
     ok(!node.hasAttribute("first-row"), "Not the first row");
     description = gManagerWindow.document.getAnonymousElementByAttribute(node, "class", "preferences-description");
-    is(description.textContent.trim(), "", "Description node should be empty");
+    is(description.textContent, "This is a test, all this text should be visible", "Description node should contain description");
     var button = node.firstElementChild;
     isnot(button, null, "There should be a button");
-
-    node = node.nextSibling;
-    is(node.nodeName, "row", "Setting should be followed by a row node");
-    is_element_visible(node, "Description should be visible");
-    is(node.textContent.trim(), "This is a test, all this text should be visible", "Description should be in this row");
 
     node = settings[4];
     is_element_hidden(node, "Unsupported settings should not be visible");
     ok(!node.hasAttribute("first-row"), "Hidden row is not the first row");
 
-    node = node.nextSibling;
-    is(node.nodeName, "row", "Setting should be followed by a row node");
-    is_element_hidden(node, "Descriptions of unsupported settings should not be visible");
-    
     var button = gManagerWindow.document.getElementById("detail-prefs-btn");
     is_element_hidden(button, "Preferences button should not be visible");
 
