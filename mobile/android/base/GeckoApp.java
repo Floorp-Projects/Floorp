@@ -925,6 +925,7 @@ abstract public class GeckoApp
                 handleSecurityChange(tabId, mode);
             } else if (event.equals("Content:StateChange")) {
                 final int tabId = message.getInt("tabID");
+                final boolean success = message.getBoolean("success");
                 int state = message.getInt("state");
                 Log.i(LOGTAG, "State - " + state);
                 if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
@@ -934,7 +935,7 @@ abstract public class GeckoApp
                         handleDocumentStart(tabId, showProgress);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         Log.i(LOGTAG, "Got a document stop");
-                        handleDocumentStop(tabId);
+                        handleDocumentStop(tabId, success);
                     }
                 }
             } else if (event.equals("Content:LoadError")) {
@@ -1233,12 +1234,12 @@ abstract public class GeckoApp
         });
     }
 
-    void handleDocumentStop(int tabId) {
+    void handleDocumentStop(int tabId, boolean success) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
-        tab.setState(Tab.STATE_LOADED);
+        tab.setState(success ? Tab.STATE_SUCCESS : Tab.STATE_ERROR);
 
         mMainHandler.post(new Runnable() {
             public void run() {
