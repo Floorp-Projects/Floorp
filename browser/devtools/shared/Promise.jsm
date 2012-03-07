@@ -9,33 +9,61 @@ var EXPORTED_SYMBOLS = [ "Promise" ];
 
 /**
  * Create an unfulfilled promise
+ *
+ * @param {*=} aTrace A debugging value
+ *
  * @constructor
  */
-function Promise() {
+function Promise(aTrace) {
   this._status = Promise.PENDING;
   this._value = undefined;
   this._onSuccessHandlers = [];
   this._onErrorHandlers = [];
+  this._trace = aTrace;
 
   // Debugging help
-  this._id = Promise._nextId++;
-  Promise._outstanding[this._id] = this;
+  if (Promise.Debug._debug) {
+    this._id = Promise.Debug._nextId++;
+    Promise.Debug._outstanding[this._id] = this;
+  }
 }
 
 /**
- * We give promises and ID so we can track which are outstanding
+ * Debugging options and tools.
  */
-Promise._nextId = 0;
+Promise.Debug = {
+  /**
+   * Set current debugging mode.
+   *
+   * @param {boolean} value If |true|, maintain _nextId, _outstanding, _recent.
+   * Otherwise, cleanup debugging data.
+   */
+  setDebug: function(value) {
+    Promise.Debug._debug = value;
+    if (!value) {
+      Promise.Debug._outstanding = [];
+      Promise.Debug._recent = [];
+    }
+  },
 
-/**
- * Outstanding promises. Handy list for debugging only
- */
-Promise._outstanding = [];
+  _debug: false,
 
-/**
- * Recently resolved promises. Also for debugging only
- */
-Promise._recent = [];
+  /**
+   * We give promises and ID so we can track which are outstanding.
+   */
+  _nextId: 0,
+
+  /**
+   * Outstanding promises. Handy for debugging (only).
+   */
+  _outstanding: [],
+
+  /**
+   * Recently resolved promises. Also for debugging only.
+   */
+  _recent: []
+};
+
 
 /**
  * A promise can be in one of 2 states.
@@ -145,6 +173,45 @@ Promise.prototype._complete = function(list, status, data, name) {
     throw new Error('Promise already complete');
   }
 
+  if (list.length == 0 && status == Promise.ERROR) {
+    var frame;
+    var text;
+
+    //Complain if a rejection is ignored
+    //(this is the equivalent of an empty catch-all clause)
+    Promise._error("Promise rejection ignored and silently dropped", data);
+    if (data.stack) {// This looks like an exception. Try harder to display it
+      if (data.fileName && data.lineNumber) {
+        Promise._error("Error originating at", data.fileName,
+                       ", line", data.lineNumber );
+      }
+      try {
+        for (frame = data.stack; frame; frame = frame.caller) {
+          text += frame + "\n";
+        }
+        Promise._error("Attempting to extract exception stack", text);
+      } catch (x) {
+        Promise._error("Could not extract exception stack.");
+      }
+    } else {
+      Promise._error("Exception stack not available.");
+    }
+    if (Components && Components.stack) {
+      try {
+        text = "";
+        for (frame = Components.stack; frame; frame = frame.caller) {
+          text += frame + "\n";
+        }
+        Promise._error("Attempting to extract current stack", text);
+      } catch (x) {
+        Promise._error("Could not extract current stack.");
+      }
+    } else {
+      Promise._error("Current stack not available.");
+    }
+  }
+
+
   this._status = status;
   this._value = data;
 
@@ -157,7 +224,7 @@ Promise.prototype._complete = function(list, status, data, name) {
 
   // Remove the given {promise} from the _outstanding list, and add it to the
   // _recent list, pruning more than 20 recent promises from that list
-  delete Promise._outstanding[this._id];
+  delete Promise.Debug._outstanding[this._id];
   // The original code includes this very useful debugging aid, however there
   // is concern that it will create a memory leak, so we leave it out here.
   /*
@@ -320,4 +387,23 @@ Promise.prototype.always = function(aTrap) {
   };
   this.then(resolve, reject);
   return promise;
+};
+
+
+Promise.prototype.toString = function() {
+  var status;
+  switch (this._status) {
+  case Promise.PENDING:
+    status = "pending";
+    break;
+  case Promise.SUCCESS:
+    status = "resolved";
+    break;
+  case Promise.ERROR:
+    status = "rejected";
+    break;
+  default:
+    status = "invalid status: "+this._status;
+  }
+  return "[Promise " + this._id + " (" + status + ")]";
 };
