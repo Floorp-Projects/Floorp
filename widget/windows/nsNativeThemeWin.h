@@ -133,6 +133,9 @@ protected:
   void QueueAnimation(gfxWindowsNativeDrawing* aNativeDrawing,
                       nsIContent* aContent, FadeState aDirection,
                       DWORD aDuration, PRUint32 aUserValue = 0);
+  void GetScrollbarButtonProperFadeStates(int aBasicState, nsIContent* aContent,
+                                          int aWidgetType, int& aStartState,
+                                          int& aFinalState);
 };
 
 // Creator function
