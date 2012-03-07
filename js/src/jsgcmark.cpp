@@ -249,7 +249,7 @@ MarkKind(JSTracer *trc, void *thing, JSGCTraceKind kind)
         break;
       case JSTRACE_IONCODE:
         MarkInternal(trc, reinterpret_cast<ion::IonCode *>(thing));
-        break;	
+        break;
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_XML:
         MarkInternal(trc, static_cast<JSXML *>(thing));
@@ -475,6 +475,30 @@ static void
 MarkChildren(JSTracer *trc, JSScript *script);
 
 void
+MarkThingOrValue(JSTracer *trc, uintptr_t *word, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+
+#ifdef JS_PUNBOX64
+    // All pointers on x64 will have the top bits cleared. If those bits
+    // are not cleared, this must be a Value.
+    {
+        if (*word >> JSVAL_TAG_SHIFT) {
+            jsval_layout layout;
+            layout.asBits = *word;
+            Value v = IMPL_TO_JSVAL(layout);
+            gc::MarkValueInternal(trc, &v);
+            *word = JSVAL_TO_IMPL(v).asBits;
+            return;
+        }
+    }
+#endif
+
+    void *ptr = reinterpret_cast<void *>(*word);
+    MarkKind(trc, ptr, GetGCThingTraceKind(ptr));
+}
+
+void
 MarkThingOrValueRoot(JSTracer *trc, uintptr_t *word, const char *name)
 {
 #ifdef JS_PUNBOX64
@@ -486,8 +510,8 @@ MarkThingOrValueRoot(JSTracer *trc, uintptr_t *word, const char *name)
             layout.asBits = *word;
             Value v = IMPL_TO_JSVAL(layout);
             gc::MarkValueRoot(trc, &v, name);
-	    *word = JSVAL_TO_IMPL(v).asBits;
-	    return;
+            *word = JSVAL_TO_IMPL(v).asBits;
+            return;
         }
     }
 #endif

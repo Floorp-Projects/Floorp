@@ -110,6 +110,9 @@ void
 MarkValueRoot(JSTracer *trc, Value *v, const char *name);
 
 void
+MarkThingOrValue(JSTracer *trc, uintptr_t *word, const char *name);
+
+void
 MarkThingOrValueRoot(JSTracer *trc, uintptr_t *word, const char *name);
 
 void
