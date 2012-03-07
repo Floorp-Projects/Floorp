@@ -25,7 +25,7 @@ public class testPanCorrectness extends PixelTest {
         // drag page upwards by 100 pixels
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         meh.dragSync(10, 150, 10, 50);
-        int[][] painted = waitForPaint(paintExpecter);
+        PaintedSurface painted = waitForPaint(paintExpecter);
         checkScrollWithBoxes(painted, 0, 100);
 
         // drag page leftwards by 100 pixels

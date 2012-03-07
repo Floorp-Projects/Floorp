@@ -63,7 +63,6 @@ SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml res/xml/sync_options.xml
 FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
   AlertNotification.java \
-  AutoCompletePopup.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
@@ -77,6 +76,7 @@ FENNEC_JAVA_FILES = \
   DoorHangerPopup.java \
   Favicons.java \
   FloatUtils.java \
+  FormAssistPopup.java \
   GeckoActionBar.java \
   GeckoApp.java \
   GeckoAppShell.java \

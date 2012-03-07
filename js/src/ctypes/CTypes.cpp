@@ -1574,7 +1574,7 @@ jsvalToPtrExplicit(JSContext* cx, jsval val, uintptr_t* result)
 
 template<class IntegerType, class CharType, size_t N, class AP>
 void
-IntegerToString(IntegerType i, jsuint radix, Vector<CharType, N, AP>& result)
+IntegerToString(IntegerType i, int radix, Vector<CharType, N, AP>& result)
 {
   JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
 
@@ -1955,7 +1955,7 @@ ImplicitConvert(JSContext* cx,
                JS_IsArrayObject(cx, JSVAL_TO_OBJECT(val))) {
       // Convert each element of the array by calling ImplicitConvert.
       JSObject* sourceArray = JSVAL_TO_OBJECT(val);
-      jsuint sourceLength;
+      uint32_t sourceLength;
       if (!JS_GetArrayLength(cx, sourceArray, &sourceLength) ||
           targetLength != size_t(sourceLength)) {
         JS_ReportError(cx, "ArrayType length does not match source array length");
@@ -1971,7 +1971,7 @@ ImplicitConvert(JSContext* cx,
         return false;
       }
 
-      for (jsuint i = 0; i < sourceLength; ++i) {
+      for (uint32_t i = 0; i < sourceLength; ++i) {
         js::AutoValueRooter item(cx);
         if (!JS_GetElement(cx, sourceArray, i, item.jsval_addr()))
           return false;
@@ -4112,7 +4112,7 @@ StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
 JSBool
 StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj)
 {
-  jsuint len;
+  uint32_t len;
   ASSERT_OK(JS_GetArrayLength(cx, fieldsObj, &len));
 
   // Get the common prototype for CData objects of this type from
@@ -4150,7 +4150,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
     structSize = 0;
     structAlign = 0;
 
-    for (jsuint i = 0; i < len; ++i) {
+    for (uint32_t i = 0; i < len; ++i) {
       js::AutoValueRooter item(cx);
       if (!JS_GetElement(cx, fieldsObj, i, item.jsval_addr()))
         return JS_FALSE;
@@ -4925,7 +4925,7 @@ FunctionType::Create(JSContext* cx, unsigned argc, jsval* vp)
     }
 
     arrayObj = JSVAL_TO_OBJECT(argv[2]);
-    jsuint len;
+    uint32_t len;
     ASSERT_OK(JS_GetArrayLength(cx, arrayObj, &len));
 
     if (!argTypes.appendN(JSVAL_VOID, len)) {
@@ -4937,7 +4937,7 @@ FunctionType::Create(JSContext* cx, unsigned argc, jsval* vp)
   // Pull out the argument types from the array, if any.
   JS_ASSERT(!argTypes.length() || arrayObj);
   js::AutoArrayRooter items(cx, argTypes.length(), argTypes.begin());
-  for (jsuint i = 0; i < argTypes.length(); ++i) {
+  for (uint32_t i = 0; i < argTypes.length(); ++i) {
     if (!JS_GetElement(cx, arrayObj, i, &argTypes[i]))
       return JS_FALSE;
   }
@@ -4956,7 +4956,7 @@ FunctionType::CreateInternal(JSContext* cx,
                              jsval abi,
                              jsval rtype,
                              jsval* argtypes,
-                             jsuint arglen)
+                             unsigned arglen)
 {
   // Determine and check the types, and prepare the function CIF.
   AutoPtr<FunctionInfo> fninfo(NewFunctionInfo(cx, abi, rtype, argtypes, arglen));
@@ -5109,7 +5109,7 @@ FunctionType::Call(JSContext* cx,
   }
 
   jsval* argv = JS_ARGV(cx, vp);
-  for (jsuint i = 0; i < argcFixed; ++i)
+  for (unsigned i = 0; i < argcFixed; ++i)
     if (!ConvertArgument(cx, argv[i], fninfo->mArgTypes[i], &values[i], &strings))
       return false;
 
@@ -6044,7 +6044,7 @@ Int64Base::ToString(JSContext* cx,
     return JS_FALSE;
   }
 
-  jsuint radix = 10;
+  int radix = 10;
   if (argc == 1) {
     jsval arg = JS_ARGV(cx, vp)[0];
     if (JSVAL_IS_INT(arg))

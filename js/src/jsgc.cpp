@@ -664,7 +664,7 @@ Chunk::init()
     info.age = 0;
 
     /* Initialize the arena header state. */
-    for (jsuint i = 0; i < ArenasPerChunk; i++) {
+    for (unsigned i = 0; i < ArenasPerChunk; i++) {
         arenas[i].aheader.setAsNotAllocated();
         arenas[i].aheader.next = (i + 1 < ArenasPerChunk)
                                  ? &arenas[i + 1].aheader
@@ -724,14 +724,14 @@ Chunk::removeFromAvailableList()
  * it to the most recently freed arena when we free, and forcing it to
  * the last alloc + 1 when we allocate.
  */
-jsuint
+uint32_t
 Chunk::findDecommittedArenaOffset()
 {
     /* Note: lastFreeArenaOffset can be past the end of the list. */
-    for (jsuint i = info.lastDecommittedArenaOffset; i < ArenasPerChunk; i++)
+    for (unsigned i = info.lastDecommittedArenaOffset; i < ArenasPerChunk; i++)
         if (decommittedArenas.get(i))
             return i;
-    for (jsuint i = 0; i < info.lastDecommittedArenaOffset; i++)
+    for (unsigned i = 0; i < info.lastDecommittedArenaOffset; i++)
         if (decommittedArenas.get(i))
             return i;
     JS_NOT_REACHED("No decommitted arenas found.");
@@ -744,7 +744,7 @@ Chunk::fetchNextDecommittedArena()
     JS_ASSERT(info.numArenasFreeCommitted == 0);
     JS_ASSERT(info.numArenasFree > 0);
 
-    jsuint offset = findDecommittedArenaOffset();
+    unsigned offset = findDecommittedArenaOffset();
     info.lastDecommittedArenaOffset = offset + 1;
     --info.numArenasFree;
     decommittedArenas.unset(offset);
@@ -1708,13 +1708,13 @@ ArenaLists::finalizeScripts(JSContext *cx)
 }
 
 static void
-RunLastDitchGC(JSContext *cx)
+RunLastDitchGC(JSContext *cx, gcreason::Reason reason)
 {
     JSRuntime *rt = cx->runtime;
 
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keep(rt);
-    GC(cx, rt->gcTriggerCompartment, GC_NORMAL, gcreason::LAST_DITCH);
+    GC(cx, rt->gcTriggerCompartment, GC_NORMAL, reason);
 }
 
 /* static */ void *
@@ -1729,7 +1729,7 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
     bool runGC = rt->gcIncrementalState != NO_INCREMENTAL && comp->gcBytes > comp->gcTriggerBytes;
     for (;;) {
         if (JS_UNLIKELY(runGC)) {
-            RunLastDitchGC(cx);
+            RunLastDitchGC(cx, gcreason::LAST_DITCH);
 
             /*
              * The JSGC_END callback can legitimately allocate new GC
@@ -3662,12 +3662,31 @@ GCCycle(JSContext *cx, JSCompartment *comp, int64_t budget, JSGCInvocationKind g
 #endif
 }
 
+#ifdef JS_GC_ZEAL
+static bool
+IsDeterministicGCReason(gcreason::Reason reason)
+{
+    if (reason > gcreason::DEBUG_GC && reason != gcreason::CC_FORCED)
+        return false;
+
+    if (reason == gcreason::MAYBEGC)
+        return false;
+
+    return true;
+}
+#endif
+
 static void
 Collect(JSContext *cx, JSCompartment *comp, int64_t budget,
         JSGCInvocationKind gckind, gcreason::Reason reason)
 {
     JSRuntime *rt = cx->runtime;
     JS_AbortIfWrongThread(rt);
+
+#ifdef JS_GC_ZEAL
+    if (rt->gcDeterministicOnly && !IsDeterministicGCReason(reason))
+        return;
+#endif
 
     JS_ASSERT_IF(budget != SliceBudget::Unlimited, JSGC_INCREMENTAL);
 
@@ -3947,7 +3966,16 @@ RunDebugGC(JSContext *cx)
     if (rt->gcTriggerCompartment == rt->atomsCompartment)
         rt->gcTriggerCompartment = NULL;
 
-    RunLastDitchGC(cx);
+    RunLastDitchGC(cx, gcreason::DEBUG_GC);
+#endif
+}
+
+void
+SetDeterministicGC(JSContext *cx, bool enabled)
+{
+#ifdef JS_GC_ZEAL
+    JSRuntime *rt = cx->runtime;
+    rt->gcDeterministicOnly = enabled;
 #endif
 }
 

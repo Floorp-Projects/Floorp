@@ -1296,7 +1296,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
      * original version of ES5).
      */
     JSObject *aobj = &vp[3].toObject();
-    jsuint length;
+    uint32_t length;
     if (!js_GetLengthProperty(cx, aobj, &length))
         return false;
 

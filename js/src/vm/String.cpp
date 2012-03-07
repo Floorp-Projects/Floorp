@@ -533,7 +533,7 @@ StaticStrings::isStatic(JSAtom *atom)
                       (chars[1] - '0') * 10 +
                       (chars[2] - '0');
 
-            return (jsuint(i) < INT_STATIC_LIMIT);
+            return (unsigned(i) < INT_STATIC_LIMIT);
         }
         return false;
       default:

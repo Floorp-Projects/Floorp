@@ -808,7 +808,7 @@ struct Chunk {
     inline void init();
 
     /* Search for a decommitted arena to allocate. */
-    jsuint findDecommittedArenaOffset();
+    unsigned findDecommittedArenaOffset();
     ArenaHeader* fetchNextDecommittedArena();
 
   public:
@@ -1967,6 +1967,9 @@ NewCompartment(JSContext *cx, JSPrincipals *principals);
 /* Tries to run a GC no matter what (used for GC zeal). */
 void
 RunDebugGC(JSContext *cx);
+
+void
+SetDeterministicGC(JSContext *cx, bool enabled);
 
 #if defined(JSGC_ROOT_ANALYSIS) && defined(DEBUG) && !defined(JS_THREADSAFE)
 /* Overwrites stack references to GC things which have not been rooted. */

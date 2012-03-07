@@ -55,7 +55,7 @@ BEGIN_TEST(testNewObject_1)
     CHECK(obj);
     jsvalRoot rt(cx, OBJECT_TO_JSVAL(obj));
     CHECK(JS_IsArrayObject(cx, obj));
-    jsuint len;
+    uint32_t len;
     CHECK(JS_GetArrayLength(cx, obj, &len));
     CHECK_EQUAL(len, 0);
 
