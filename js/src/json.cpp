@@ -64,9 +64,9 @@
 #include "jsboolinlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
 
 #include "vm/Stack-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -500,7 +500,7 @@ JA(JSContext *cx, JSObject *obj, StringifyContext *scx)
         return JS_FALSE;
 
     /* Step 6. */
-    jsuint length;
+    uint32_t length;
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
@@ -649,7 +649,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
              */
 
             /* Step 4b(ii). */
-            jsuint len;
+            uint32_t len;
             JS_ALWAYS_TRUE(js_GetLengthProperty(cx, replacer, &len));
             if (replacer->isDenseArray())
                 len = JS_MIN(len, replacer->getDenseArrayCapacity());
@@ -659,7 +659,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
                 return false;
 
             /* Step 4b(iii). */
-            jsuint i = 0;
+            uint32_t i = 0;
 
             /* Step 4b(iv). */
             for (; i < len; i++) {

@@ -281,6 +281,12 @@ protected:
     PRUint64        mGeneration;
 
     static PRLogModuleInfo *sUserFontsLog;
+
+private:
+    static void CopyWOFFMetadata(const PRUint8* aFontData,
+                                 PRUint32 aLength,
+                                 nsTArray<PRUint8>* aMetadata,
+                                 PRUint32* aMetaOrigLen);
 };
 
 // acts a placeholder until the real font is downloaded

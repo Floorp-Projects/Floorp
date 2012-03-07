@@ -628,9 +628,10 @@ if test "$GXX" = "yes"; then
     GNU_CXX=1
     CXX_VERSION=`$CXX -v 2>&1 | grep 'gcc version'`
 fi
-if test "`echo | $AS -v 2>&1 | grep -c GNU`" != "0"; then
+if test "`echo | $AS -o conftest.out -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_AS=1
 fi
+rm -f conftest.out
 if test "`echo | $LD -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_LD=1
 fi
@@ -9212,7 +9213,7 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     fi
     if test "$MOZ_OPTIMIZE" = "1"; then
         ac_configure_args="$ac_configure_args --enable-optimize"
-    else
+    elif test -z "$MOZ_OPTIMIZE"; then
         ac_configure_args="$ac_configure_args --disable-optimize"
     fi
     if test -n "$HAVE_64BIT_OS"; then

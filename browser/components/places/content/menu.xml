@@ -72,10 +72,6 @@
                                                 "popup-internal-box");
       </field>
 
-      <!-- markers for start and end of valid places items -->
-      <field name="_startMarker">-1</field>
-      <field name="_endMarker">-1</field>
-
       <!-- This is the view that manage the popup -->
       <field name="_rootView">PlacesUIUtils.getViewForNode(this);</field>
 
@@ -83,17 +79,16 @@
       <method name="_hideDropIndicator">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var target = aEvent.target;
+          let target = aEvent.target;
 
-          // in some view we have _startMarker and _endMarker, we should not
-          // draw the drop indicator outside of them
-          var betweenMarkers = true;
-          if (this._startMarker != -1 &&
-              target.boxObject.y <= this.childNodes[this._startMarker].boxObject.y)
-            betweenMarkers = false;
-          if (this._endMarker != -1 &&
-              target.boxObject.y >= this.childNodes[this._endMarker].boxObject.y)
-            betweenMarkers = false;
+          // Don't draw the drop indicator outside of markers.
+          // The markers are hidden, since otherwise sometimes popups acquire
+          // scrollboxes on OS X, so we can't use them directly.
+          let firstChildTop = this._startMarker.nextSibling.boxObject.y;
+          let lastChildBottom = this._endMarker.previousSibling.boxObject.y +
+                                this._endMarker.previousSibling.boxObject.height;
+          let betweenMarkers = target.boxObject.y >= firstChildTop ||
+                               target.boxObject.y <= lastChildBottom;
 
           // Hide the dropmarker if current node is not a Places node.
           return !(target && target._placesNode && betweenMarkers);

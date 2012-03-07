@@ -52,10 +52,12 @@ endif
 
 CPPSRCS = \
   updatelogging.cpp \
+  readstrings.cpp \
   $(NULL)
 
 EXPORTS = updatelogging.h \
   updatedefines.h \
+  readstrings.h \
   $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

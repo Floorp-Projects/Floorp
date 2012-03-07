@@ -294,8 +294,10 @@ HeapId::pre()
     if (JS_UNLIKELY(JSID_IS_OBJECT(value))) {
         JSObject *obj = JSID_TO_OBJECT(value);
         JSCompartment *comp = obj->compartment();
-        if (comp->needsBarrier())
-            js::gc::MarkObjectUnbarriered(comp->barrierTracer(), obj, "write barrier");
+        if (comp->needsBarrier()) {
+            js::gc::MarkObjectUnbarriered(comp->barrierTracer(), &obj, "write barrier");
+            JS_ASSERT(obj == JSID_TO_OBJECT(value));
+        }
     }
 #endif
 }

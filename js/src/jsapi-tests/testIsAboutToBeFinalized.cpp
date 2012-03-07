@@ -8,14 +8,14 @@
 static JSGCCallback oldGCCallback;
 
 static void **checkPointers;
-static jsuint checkPointersLength;
+static unsigned checkPointersLength;
 static size_t checkPointersStaticStrings;
 
 static JSBool
 TestAboutToBeFinalizedCallback(JSContext *cx, JSGCStatus status)
 {
     if (status == JSGC_MARK_END && checkPointers) {
-        for (jsuint i = 0; i != checkPointersLength; ++i) {
+        for (unsigned i = 0; i != checkPointersLength; ++i) {
             void *p = checkPointers[i];
             JS_ASSERT(p);
             if (JS_IsAboutToBeFinalized(p))
@@ -52,7 +52,7 @@ BEGIN_TEST(testIsAboutToBeFinalized_bug528645)
     JS_GC(cx);
 
     /* Everything is unrooted except unit strings. */
-    for (jsuint i = 0; i != checkPointersLength; ++i) {
+    for (unsigned i = 0; i != checkPointersLength; ++i) {
         void *p = checkPointers[i];
         if (p) {
             CHECK(JSString::isStatic(p));
@@ -97,7 +97,7 @@ cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
     CHECK(checkPointers);
 
     checkPointersStaticStrings = 0;
-    for (jsuint i = 0; i != checkPointersLength; ++i) {
+    for (unsigned i = 0; i != checkPointersLength; ++i) {
         jsval v;
         ok = JS_GetElement(cx, array, i, &v);
         CHECK(ok);
@@ -115,7 +115,7 @@ cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
      * All GC things are rooted via the root holding the array containing them
      * and TestAboutToBeFinalizedCallback must keep them as is.
      */
-    for (jsuint i = 0; i != checkPointersLength; ++i)
+    for (unsigned i = 0; i != checkPointersLength; ++i)
         CHECK(checkPointers[i]);
 
     /*
@@ -127,7 +127,7 @@ cls_testIsAboutToBeFinalized_bug528645::createAndTestRooted()
     array = JSVAL_TO_OBJECT(root.value());
     JS_ASSERT(JS_IsArrayObject(cx, array));
 
-    jsuint tmp;
+    uint32_t tmp;
     CHECK(JS_GetArrayLength(cx, array, &tmp));
     CHECK(ok);
 

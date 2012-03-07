@@ -79,6 +79,7 @@
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
+#include "jsstrinlines.h"
 #include "jsautooplen.h"        // generated headers last
 
 #include "vm/MethodGuard-inl.h"
@@ -86,6 +87,7 @@
 #include "vm/RegExpStatics-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/String-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -875,31 +877,31 @@ out_of_range:
  *
  * Return the index of pat in text, or -1 if not found.
  */
-static const jsuint sBMHCharSetSize = 256; /* ISO-Latin-1 */
-static const jsuint sBMHPatLenMax   = 255; /* skip table element is uint8_t */
-static const int  sBMHBadPattern  = -2;  /* return value if pat is not ISO-Latin-1 */
+static const uint32_t sBMHCharSetSize = 256; /* ISO-Latin-1 */
+static const uint32_t sBMHPatLenMax   = 255; /* skip table element is uint8_t */
+static const int      sBMHBadPattern  = -2;  /* return value if pat is not ISO-Latin-1 */
 
 int
-js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
-                      const jschar *pat, jsuint patlen)
+js_BoyerMooreHorspool(const jschar *text, uint32_t textlen,
+                      const jschar *pat, uint32_t patlen)
 {
     uint8_t skip[sBMHCharSetSize];
 
     JS_ASSERT(0 < patlen && patlen <= sBMHPatLenMax);
-    for (jsuint i = 0; i < sBMHCharSetSize; i++)
+    for (uint32_t i = 0; i < sBMHCharSetSize; i++)
         skip[i] = (uint8_t)patlen;
-    jsuint m = patlen - 1;
-    for (jsuint i = 0; i < m; i++) {
+    uint32_t m = patlen - 1;
+    for (uint32_t i = 0; i < m; i++) {
         jschar c = pat[i];
         if (c >= sBMHCharSetSize)
             return sBMHBadPattern;
         skip[c] = (uint8_t)(m - i);
     }
     jschar c;
-    for (jsuint k = m;
+    for (uint32_t k = m;
          k < textlen;
          k += ((c = text[k]) >= sBMHCharSetSize) ? patlen : skip[c]) {
-        for (jsuint i = k, j = m; ; i--, j--) {
+        for (uint32_t i = k, j = m; ; i--, j--) {
             if (text[i] != pat[j])
                 break;
             if (j == 0)
@@ -910,8 +912,8 @@ js_BoyerMooreHorspool(const jschar *text, jsuint textlen,
 }
 
 struct MemCmp {
-    typedef jsuint Extent;
-    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *, jsuint patlen) {
+    typedef uint32_t Extent;
+    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *, uint32_t patlen) {
         return (patlen - 1) * sizeof(jschar);
     }
     static JS_ALWAYS_INLINE bool match(const jschar *p, const jschar *t, Extent extent) {
@@ -921,7 +923,7 @@ struct MemCmp {
 
 struct ManualCmp {
     typedef const jschar *Extent;
-    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *pat, jsuint patlen) {
+    static JS_ALWAYS_INLINE Extent computeExtent(const jschar *pat, uint32_t patlen) {
         return pat + patlen;
     }
     static JS_ALWAYS_INLINE bool match(const jschar *p, const jschar *t, Extent extent) {
@@ -935,7 +937,7 @@ struct ManualCmp {
 
 template <class InnerMatch>
 static int
-UnrolledMatch(const jschar *text, jsuint textlen, const jschar *pat, jsuint patlen)
+UnrolledMatch(const jschar *text, uint32_t textlen, const jschar *pat, uint32_t patlen)
 {
     JS_ASSERT(patlen > 0 && textlen > 0);
     const jschar *textend = text + textlen - (patlen - 1);
@@ -980,8 +982,8 @@ UnrolledMatch(const jschar *text, jsuint textlen, const jschar *pat, jsuint patl
 }
 
 static JS_ALWAYS_INLINE int
-StringMatch(const jschar *text, jsuint textlen,
-            const jschar *pat, jsuint patlen)
+StringMatch(const jschar *text, uint32_t textlen,
+            const jschar *pat, uint32_t patlen)
 {
     if (patlen == 0)
         return 0;
@@ -1044,7 +1046,7 @@ static const size_t sRopeMatchThresholdRatioLog2 = 5;
  * the 'match' outparam (-1 for not found).
  */
 static bool
-RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, jsuint patlen, int *match)
+RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patlen, int *match)
 {
     JS_ASSERT(textstr->isRope());
 
@@ -1155,21 +1157,21 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
     if (!patstr)
         return false;
 
-    jsuint textlen = str->length();
+    uint32_t textlen = str->length();
     const jschar *text = str->getChars(cx);
     if (!text)
         return false;
 
-    jsuint patlen = patstr->length();
+    uint32_t patlen = patstr->length();
     const jschar *pat = patstr->chars();
 
-    jsuint start;
+    uint32_t start;
     if (args.length() > 1) {
         if (args[1].isInt32()) {
             int i = args[1].toInt32();
             if (i <= 0) {
                 start = 0;
-            } else if (jsuint(i) > textlen) {
+            } else if (uint32_t(i) > textlen) {
                 start = textlen;
                 textlen = 0;
             } else {
@@ -3112,28 +3114,6 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     return s;
 }
 
-static JS_ALWAYS_INLINE JSFixedString *
-NewShortString(JSContext *cx, const jschar *chars, size_t length)
-{
-    /*
-     * Don't bother trying to find a static atom; measurement shows that not
-     * many get here (for one, Atomize is catching them).
-     */
-
-    JS_ASSERT(JSShortString::lengthFits(length));
-    JSInlineString *str = JSInlineString::lengthFits(length)
-                          ? JSInlineString::new_(cx)
-                          : JSShortString::new_(cx);
-    if (!str)
-        return NULL;
-
-    jschar *storage = str->init(length);
-    PodCopy(storage, chars, length);
-    storage[length] = 0;
-    Probes::createString(cx, str, length);
-    return str;
-}
-
 static JSInlineString *
 NewShortString(JSContext *cx, const char *chars, size_t length)
 {
@@ -3163,74 +3143,6 @@ NewShortString(JSContext *cx, const char *chars, size_t length)
     }
     Probes::createString(cx, str, length);
     return str;
-}
-
-jschar *
-StringBuffer::extractWellSized()
-{
-    size_t capacity = cb.capacity();
-    size_t length = cb.length();
-
-    jschar *buf = cb.extractRawBuffer();
-    if (!buf)
-        return NULL;
-
-    /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
-    JS_ASSERT(capacity >= length);
-    if (length > CharBuffer::sMaxInlineStorage && capacity - length > length / 4) {
-        size_t bytes = sizeof(jschar) * (length + 1);
-        JSContext *cx = context();
-        jschar *tmp = (jschar *)cx->realloc_(buf, bytes);
-        if (!tmp) {
-            cx->free_(buf);
-            return NULL;
-        }
-        buf = tmp;
-    }
-
-    return buf;
-}
-
-JSFixedString *
-StringBuffer::finishString()
-{
-    JSContext *cx = context();
-    if (cb.empty())
-        return cx->runtime->atomState.emptyAtom;
-
-    size_t length = cb.length();
-    if (!checkLength(length))
-        return NULL;
-
-    JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
-    if (JSShortString::lengthFits(length))
-        return NewShortString(cx, cb.begin(), length);
-
-    if (!cb.append('\0'))
-        return NULL;
-
-    jschar *buf = extractWellSized();
-    if (!buf)
-        return NULL;
-
-    JSFixedString *str = js_NewString(cx, buf, length);
-    if (!str)
-        cx->free_(buf);
-    return str;
-}
-
-JSAtom *
-StringBuffer::finishAtom()
-{
-    JSContext *cx = context();
-
-    size_t length = cb.length();
-    if (length == 0)
-        return cx->runtime->atomState.emptyAtom;
-
-    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length);
-    cb.clear();
-    return atom;
 }
 
 JSLinearString *
@@ -4045,7 +3957,7 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, Value *rval)
                 goto report_bad_uri;
             if (!JS7_ISHEX(chars[k+1]) || !JS7_ISHEX(chars[k+2]))
                 goto report_bad_uri;
-            jsuint B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
+            uint32_t B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
             k += 2;
             if (!(B & 0x80)) {
                 c = (jschar)B;

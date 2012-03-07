@@ -152,7 +152,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(9e9ba9d6-a0fa-4767-9f49-9b74bb2368cd)]
+[scriptable, uuid(9e43a260-5db2-11e1-b86c-0800200c9a66)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -300,6 +300,9 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     jsval nondeterministicGetWeakMapKeys(in jsval aMap);
+
+    [implicit_jscontext]
+    jsval getJSTestingFunctions();
 
     /*
      * To be called from JS only.

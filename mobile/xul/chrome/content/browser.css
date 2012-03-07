@@ -30,41 +30,54 @@ settings {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
 }
 
+setting {
+  display: none;
+}
+
 setting[type="bool"] {
+  display: -moz-box;
   -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-bool");
 }
 
 setting[type="bool"][localized="true"] {
+  display: -moz-box;
   -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-localized-bool");
 }
 
 setting[type="boolint"] {
+  display: -moz-box;
   -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-boolint");
 }
 
 setting[type="integer"] {
+  display: -moz-box;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-integer");
 }
 
 setting[type="control"] {
+  display: -moz-box;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-control");
 }
 
 setting[type="string"] {
+  display: -moz-box;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
 }
 
 setting[type="color"] {
+  display: -moz-box;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-color");
 }
 
 setting[type="file"],
 setting[type="directory"] {
+  display: -moz-box;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-path");
 }
 
 setting[type="radio"],
 setting[type="menulist"] {
+  display: -moz-box;
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
 }
 

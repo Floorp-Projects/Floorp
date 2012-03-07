@@ -10,6 +10,7 @@ import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
+import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.HistoryRecord;
 import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 
@@ -150,6 +151,16 @@ public class RepoUtils {
     return rec;
   }
 
+  public static void logClient(ClientRecord rec) {
+    if (Logger.logVerbose(LOG_TAG)) {
+      Logger.trace(LOG_TAG, "Returning client record " + rec.guid + " (" + rec.androidID + ")");
+      Logger.trace(LOG_TAG, "Client Name: " + rec.name);
+      Logger.trace(LOG_TAG, "Client Type: " + rec.type);
+      Logger.trace(LOG_TAG, "Last Modified: " + rec.lastModified);
+      Logger.trace(LOG_TAG, "Deleted: " + rec.deleted);
+    }
+  }
+
   public static PasswordRecord passwordFromMirrorCursor(Cursor cur) {
     
     String guid = getStringFromCursor(cur, BrowserContract.SyncColumns.GUID);
@@ -186,5 +197,59 @@ public class RepoUtils {
     if (a != null && b == null) return false;
     
     return a.equals(b);
+  }
+
+  private static String fixedWidth(int width, String s) {
+    if (s == null) {
+      return spaces(width);
+    }
+    int length = s.length();
+    if (width == length) {
+      return s;
+    }
+    if (width > length) {
+      return s + spaces(width - length);
+    }
+    return s.substring(0, width);
+  }
+
+  private static String spaces(int i) {
+    return "                                     ".substring(0, i);
+  }
+
+  public static void dumpCursor(Cursor cur) {
+    int originalPosition = cur.getPosition();
+    try {
+      String[] columnNames = cur.getColumnNames();
+      int columnCount      = cur.getColumnCount();
+
+      // 12 chars each column.
+      for (int i = 0; i < columnCount; ++i) {
+        System.out.print(fixedWidth(12, columnNames[i]) + " | ");
+      }
+      System.out.println("");
+      for (int i = 0; i < columnCount; ++i) {
+        System.out.print("------------" + " | ");
+      }
+      System.out.println("");
+      if (!cur.moveToFirst()) {
+        System.out.println("EMPTY");
+        return;
+      }
+
+      cur.moveToFirst();
+      while (cur.moveToNext()) {
+        for (int i = 0; i < columnCount; ++i) {
+          System.out.print(fixedWidth(12, cur.getString(i)) + " | ");
+        }
+        System.out.println("");
+      }
+      for (int i = 0; i < columnCount; ++i) {
+        System.out.print("---------------");
+      }
+      System.out.println("");
+    } finally {
+      cur.moveToPosition(originalPosition);
+    }
   }
 }

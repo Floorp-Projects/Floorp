@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.AlreadySyncingException;
+import org.mozilla.gecko.sync.GlobalConstants;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SyncConfiguration;
@@ -51,6 +52,7 @@ import org.mozilla.gecko.sync.SyncConfigurationException;
 import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
@@ -73,7 +75,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
-public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSessionCallback {
+public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSessionCallback, ClientsDataDelegate {
   private static final String  LOG_TAG = "SyncAdapter";
 
   private static final String  PREFS_EARLIEST_NEXT_SYNC = "earliestnextsync";
@@ -196,6 +198,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
 
   public Object syncMonitor = new Object();
   private SyncResult syncResult;
+
+  private Account localAccount;
 
   /**
    * Return the number of milliseconds until we're allowed to sync again,
@@ -340,11 +344,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
                                         IOException, ParseException,
                                         NonObjectJSONException {
     Log.i(LOG_TAG, "Performing sync.");
-    this.syncResult = syncResult;
+    this.syncResult   = syncResult;
+    this.localAccount = account;
     // TODO: default serverURL.
     GlobalSession globalSession = new GlobalSession(SyncConfiguration.DEFAULT_USER_API,
                                                     serverURL, username, password, prefsPath,
-                                                    keyBundle, this, this.mContext, extras);
+                                                    keyBundle, this, this.mContext, extras, this);
 
     globalSession.start();
   }
@@ -406,5 +411,41 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
     if (backoff > 0) {
       this.extendEarliestNextSync(System.currentTimeMillis() + backoff);
     }
+  }
+
+  @Override
+  public synchronized String getAccountGUID() {
+    String accountGUID = mAccountManager.getUserData(localAccount, Constants.ACCOUNT_GUID);
+    if (accountGUID == null) {
+      accountGUID = Utils.generateGuid();
+      mAccountManager.setUserData(localAccount, Constants.ACCOUNT_GUID, accountGUID);
+    }
+    return accountGUID;
+  }
+
+  @Override
+  public synchronized String getClientName() {
+    String clientName = mAccountManager.getUserData(localAccount, Constants.CLIENT_NAME);
+    if (clientName == null) {
+      clientName = GlobalConstants.PRODUCT_NAME + " on " + android.os.Build.MODEL;
+      mAccountManager.setUserData(localAccount, Constants.CLIENT_NAME, clientName);
+    }
+    return clientName;
+  }
+
+  @Override
+  public synchronized void setClientsCount(int clientsCount) {
+    mAccountManager.setUserData(localAccount, Constants.NUM_CLIENTS,
+        Integer.toString(clientsCount));
+  }
+
+  @Override
+  public synchronized int getClientsCount() {
+    String clientsCount = mAccountManager.getUserData(localAccount, Constants.NUM_CLIENTS);
+    if (clientsCount == null) {
+      clientsCount = "0";
+      mAccountManager.setUserData(localAccount, Constants.NUM_CLIENTS, clientsCount);
+    }
+    return Integer.parseInt(clientsCount);
   }
 }
