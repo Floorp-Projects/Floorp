@@ -202,6 +202,7 @@ public class AwesomeBarTabs extends TabHost {
         private static final int VIEW_TYPE_COUNT = 2;
 
         private LayoutInflater mInflater;
+        private Resources mResources;
         private LinkedList<Pair<Integer, String>> mParentStack;
         private RefreshBookmarkCursorTask mRefreshTask = null;
         private TextView mBookmarksTitleView;
@@ -210,6 +211,7 @@ public class AwesomeBarTabs extends TabHost {
             super(context, layout, c, from, to);
 
             mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            mResources = mContext.getResources();
 
             // mParentStack holds folder id/title pairs that allow us to navigate
             // back up the folder heirarchy
@@ -268,6 +270,24 @@ public class AwesomeBarTabs extends TabHost {
             if (!c.moveToPosition(position))
                 return "";
 
+            String guid = c.getString(c.getColumnIndexOrThrow(Bookmarks.GUID));
+
+            // If we don't have a special GUID, just return the folder title from the DB.
+            if (guid == null || guid.length() == 12)
+                return c.getString(c.getColumnIndexOrThrow(Bookmarks.TITLE));
+
+            // Use localized strings for special folder names.
+            if (guid.equals(Bookmarks.MOBILE_FOLDER_GUID))
+                return mResources.getString(R.string.bookmarks_folder_mobile);
+            else if (guid.equals(Bookmarks.MENU_FOLDER_GUID))
+                return mResources.getString(R.string.bookmarks_folder_menu);
+            else if (guid.equals(Bookmarks.TOOLBAR_FOLDER_GUID))
+                return mResources.getString(R.string.bookmarks_folder_toolbar);
+            else if (guid.equals(Bookmarks.UNFILED_FOLDER_GUID))
+                return mResources.getString(R.string.bookmarks_folder_unfiled);
+
+            // If for some reason we have a folder with a special GUID, but it's not one of
+            // the special folders we expect in the UI, just return the title from the DB.
             return c.getString(c.getColumnIndexOrThrow(Bookmarks.TITLE));
         }
 
