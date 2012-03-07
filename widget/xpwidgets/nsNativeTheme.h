@@ -62,10 +62,9 @@ class nsNativeTheme :
   public nsITimerCallback,
   public nsIObserver
 {
+ protected:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
-
- protected:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK

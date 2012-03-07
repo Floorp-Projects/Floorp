@@ -233,6 +233,39 @@ gfxWindowsNativeDrawing::IsDoublePass()
 }
 
 bool
+gfxWindowsNativeDrawing::IsSecondPass()
+{
+    return (mRenderState == RENDER_STATE_ALPHA_RECOVERY_WHITE ||
+            mRenderState == RENDER_STATE_ALPHA_RECOVERY_WHITE_DONE);
+}
+
+gfxWindowsSurface*
+gfxWindowsNativeDrawing::GetCurrentSurface()
+{
+    switch (mRenderState) {
+        case RENDER_STATE_NATIVE_DRAWING:
+        case RENDER_STATE_ALPHA_RECOVERY_WHITE:
+        case RENDER_STATE_ALPHA_RECOVERY_BLACK:
+            return mWinSurface;
+
+        case RENDER_STATE_NATIVE_DRAWING_DONE:
+        case RENDER_STATE_ALPHA_RECOVERY_BLACK_DONE:
+        case RENDER_STATE_ALPHA_RECOVERY_WHITE_DONE:
+        case RENDER_STATE_DONE:
+            NS_WARNING("GetCurrentSurface() called after "
+                       "rendering operation complete. Returning nsnull.");
+            return nsnull;
+
+        default:
+            NS_ERROR("Invalid RenderState in"
+                     "gfxWindowsNativeDrawing::GetCurrentSurface");
+            break;
+    }
+
+    return nsnull;
+}
+
+bool
 gfxWindowsNativeDrawing::ShouldRenderAgain()
 {
     switch (mRenderState) {
@@ -251,7 +284,7 @@ gfxWindowsNativeDrawing::ShouldRenderAgain()
             break;
     }
 
-    return false;
+    return nsnull;
 }
 
 void
