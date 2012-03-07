@@ -214,7 +214,6 @@ public:
       return mInfo;
     }
 
-    mHasValidCache = true;
     GetCurrentInformationInternal(&mInfo);
     return mInfo;
   }
