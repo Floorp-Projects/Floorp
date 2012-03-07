@@ -63,12 +63,14 @@ EXPORTS_mozilla = \
   HalSandbox.h \
   HalSensor.h \
   HalTypes.h \
+  HalWakeLock.h \
   $(NULL)
 
 CPPSRCS = \
   Hal.cpp \
   SandboxHal.cpp \
   WindowIdentifier.cpp \
+  HalWakeLock.cpp \
   $(NULL)
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
