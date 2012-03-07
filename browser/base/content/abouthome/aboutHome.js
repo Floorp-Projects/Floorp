@@ -159,7 +159,8 @@ function onLoad(event)
 
   fitToWidth();
   window.addEventListener("resize", fitToWidth);
-  window.addEventListener("unload", function() {
+  window.addEventListener("unload", function cleanup() {
+    window.removeEventListener("unload", cleanup);
     window.removeEventListener("resize", fitToWidth);
   });
 }
