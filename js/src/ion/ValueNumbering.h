@@ -107,6 +107,7 @@ class ValueNumberer
     void setClass(MDefinition *toSet, MDefinition *representative);
 
   public:
+    static bool needsSplit(MDefinition *);
     void breakClass(MDefinition*);
 
   protected:
@@ -123,6 +124,7 @@ class ValueNumberer
 class ValueNumberData : public TempObject {
 
     friend void ValueNumberer::breakClass(MDefinition*);
+    friend bool ValueNumberer::needsSplit(MDefinition*);
     uint32 number;
     MDefinition *classNext;
     MDefinition *classPrev;
