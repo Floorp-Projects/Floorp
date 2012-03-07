@@ -48,7 +48,7 @@ html {
   background-image: url(chrome://browser/content/abouthome/noise.png),
                     -moz-linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.4));
   background-attachment: fixed;
-  color: -moz-FieldText;
+  color: #000;
   height: 100%;
 }
 
@@ -95,7 +95,6 @@ a {
 
 #searchForm {
   display: -moz-box;
-  margin: 0 auto;
 }
 
 #searchLogoContainer {
