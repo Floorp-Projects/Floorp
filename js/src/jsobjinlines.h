@@ -122,6 +122,13 @@ JSObject::setPrivate(void *data)
 }
 
 inline void
+JSObject::setPrivateUnbarriered(void *data)
+{
+    void **pprivate = &privateRef(numFixedSlots());
+    *pprivate = data;
+}
+
+inline void
 JSObject::initPrivate(void *data)
 {
     privateRef(numFixedSlots()) = data;
