@@ -48,6 +48,10 @@ of a command line. The kind of list file format used depends on the
 EXPAND_LIBS_LIST_STYLE variable: 'list' for MSVC style lists (@file.list)
 or 'linkerscript' for GNU ld linker scripts.
 See https://bugzilla.mozilla.org/show_bug.cgi?id=584474#c59 for more details.
+
+With the --symbol-order argument, followed by a file name, it will add the
+relevant linker options to change the order in which the linker puts the
+symbols appear in the resulting binary. Only works for ELF targets.
 '''
 from __future__ import with_statement
 import sys
@@ -58,6 +62,18 @@ from optparse import OptionParser
 import subprocess
 import tempfile
 import shutil
+import subprocess
+import re
+
+# The are the insert points for a GNU ld linker script, assuming a more
+# or less "standard" default linker script. This is not a dict because
+# order is important.
+SECTION_INSERT_BEFORE = [
+  ('.text', '.fini'),
+  ('.rodata', '.rodata1'),
+  ('.data.rel.ro', '.dynamic'),
+  ('.data', '.data1'),
+]
 
 class ExpandArgsMore(ExpandArgs):
     ''' Meant to be used as 'with ExpandArgsMore(args) as ...: '''
@@ -125,6 +141,126 @@ class ExpandArgsMore(ExpandArgs):
         newlist = self[0:idx] + [ref] + [item for item in self[idx:] if item not in objs]
         self[0:] = newlist
 
+    def _getOrderedSections(self, ordered_symbols):
+        '''Given an ordered list of symbols, returns the corresponding list
+        of sections following the order.'''
+        if not conf.EXPAND_LIBS_ORDER_STYLE in ['linkerscript', 'section-ordering-file']:
+            raise Exception('EXPAND_LIBS_ORDER_STYLE "%s" is not supported' % conf.EXPAND_LIBS_ORDER_STYLE)
+        finder = SectionFinder([arg for arg in self if isObject(arg) or os.path.splitext(arg)[1] == conf.LIB_SUFFIX])
+        sections = set()
+        ordered_sections = []
+        for symbol in ordered_symbols:
+            for section in finder.getSections(symbol):
+                if not section in sections:
+                    ordered_sections.append(section)
+                    sections.add(section)
+        return ordered_sections
+
+    def orderSymbols(self, order):
+        '''Given a file containing a list of symbols, adds the appropriate
+        argument to make the linker put the symbols in that order.'''
+        with open(order) as file:
+            sections = self._getOrderedSections([l.strip() for l in file.readlines() if l.strip()])
+        split_sections = {}
+        linked_sections = [s[0] for s in SECTION_INSERT_BEFORE]
+        for s in sections:
+            for linked_section in linked_sections:
+                if s.startswith(linked_section):
+                    if linked_section in split_sections:
+                        split_sections[linked_section].append(s)
+                    else:
+                        split_sections[linked_section] = [s]
+                    break
+        content = []
+        # Order is important
+        linked_sections = [s for s in linked_sections if s in split_sections]
+
+        if conf.EXPAND_LIBS_ORDER_STYLE == 'section-ordering-file':
+            option = '-Wl,--section-ordering-file,%s'
+            content = sections
+            for linked_section in linked_sections:
+                content.extend(split_sections[linked_section])
+                content.append('%s.*' % linked_section)
+                content.append(linked_section)
+
+        elif conf.EXPAND_LIBS_ORDER_STYLE == 'linkerscript':
+            option = '-Wl,-T,%s'
+            section_insert_before = dict(SECTION_INSERT_BEFORE)
+            for linked_section in linked_sections:
+                content.append('SECTIONS {')
+                content.append('  %s : {' % linked_section)
+                content.extend('    *(%s)' % s for s in split_sections[linked_section])
+                content.append('  }')
+                content.append('}')
+                content.append('INSERT BEFORE %s' % section_insert_before[linked_section])
+        else:
+            raise Exception('EXPAND_LIBS_ORDER_STYLE "%s" is not supported' % conf.EXPAND_LIBS_ORDER_STYLE)
+
+        fd, tmp = tempfile.mkstemp(dir=os.curdir)
+        f = os.fdopen(fd, "w")
+        f.write('\n'.join(content)+'\n')
+        f.close()
+        self.tmp.append(tmp)
+        self.append(option % tmp)
+
+class SectionFinder(object):
+    '''Instances of this class allow to map symbol names to sections in
+    object files.'''
+
+    def __init__(self, objs):
+        '''Creates an instance, given a list of object files.'''
+        if not conf.EXPAND_LIBS_ORDER_STYLE in ['linkerscript', 'section-ordering-file']:
+            raise Exception('EXPAND_LIBS_ORDER_STYLE "%s" is not supported' % conf.EXPAND_LIBS_ORDER_STYLE)
+        self.mapping = {}
+        for obj in objs:
+            if not isObject(obj) and os.path.splitext(obj)[1] != conf.LIB_SUFFIX:
+                raise Exception('%s is not an object nor a static library' % obj)
+            for symbol, section in SectionFinder._getSymbols(obj):
+                sym = SectionFinder._normalize(symbol)
+                if sym in self.mapping:
+                    if not section in self.mapping[sym]:
+                        self.mapping[sym].append(section)
+                else:
+                    self.mapping[sym] = [section]
+
+    def getSections(self, symbol):
+        '''Given a symbol, returns a list of sections containing it or the
+        corresponding thunks. When the given symbol is a thunk, returns the
+        list of sections containing its corresponding normal symbol and the
+        other thunks for that symbol.'''
+        sym = SectionFinder._normalize(symbol)
+        if sym in self.mapping:
+            return self.mapping[sym]
+        return []
+
+    @staticmethod
+    def _normalize(symbol):
+        '''For normal symbols, return the given symbol. For thunks, return
+        the corresponding normal symbol.'''
+        if re.match('^_ZThn[0-9]+_', symbol):
+            return re.sub('^_ZThn[0-9]+_', '_Z', symbol)
+        return symbol
+
+    @staticmethod
+    def _getSymbols(obj):
+        '''Returns a list of (symbol, section) contained in the given object
+        file.'''
+        proc = subprocess.Popen(['objdump', '-t', obj], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        (stdout, stderr) = proc.communicate()
+        syms = []
+        for line in stdout.splitlines():
+            # Each line has the following format:
+            # <addr> [lgu!][w ][C ][W ][Ii ][dD ][FfO ] <section>\t<length> <symbol>
+            tmp = line.split(' ',1)
+            # This gives us ["<addr>", "[lgu!][w ][C ][W ][Ii ][dD ][FfO ] <section>\t<length> <symbol>"]
+            # We only need to consider cases where "<section>\t<length> <symbol>" is present,
+            # and where the [FfO] flag is either F (function) or O (object).
+            if len(tmp) > 1 and len(tmp[1]) > 6 and tmp[1][6] in ['O', 'F']:
+                tmp = tmp[1][8:].split()
+                # That gives us ["<section>","<length>", "<symbol>"]
+                syms.append((tmp[-1], tmp[0]))
+        return syms
+
 def main():
     parser = OptionParser()
     parser.add_option("--extract", action="store_true", dest="extract",
@@ -133,12 +269,16 @@ def main():
         help="use a list file for objects when executing a command")
     parser.add_option("--verbose", action="store_true", dest="verbose",
         help="display executed command and temporary files content")
+    parser.add_option("--symbol-order", dest="symbol_order", metavar="FILE",
+        help="use the given list of symbols to order symbols in the resulting binary when using with a linker")
 
     (options, args) = parser.parse_args()
 
     with ExpandArgsMore(args) as args:
         if options.extract:
             args.extract()
+        if options.symbol_order:
+            args.orderSymbols(options.symbol_order)
         if options.uselist:
             args.makelist()
 
