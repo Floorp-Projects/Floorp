@@ -57,7 +57,22 @@
 <xul:script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 
 <xul:popupset id="style-editor-popups">
-  <xul:menupopup id="sourceEditorContextMenu"/>
+  <xul:menupopup id="sourceEditorContextMenu"
+                 onpopupshowing="goUpdateSourceEditorMenuItems()">
+    <xul:menuitem id="se-cMenu-undo"/>
+    <xul:menuseparator/>
+    <xul:menuitem id="se-cMenu-cut"/>
+    <xul:menuitem id="se-cMenu-copy"/>
+    <xul:menuitem id="se-cMenu-paste"/>
+    <xul:menuitem id="se-cMenu-delete"/>
+    <xul:menuseparator/>
+    <xul:menuitem id="se-cMenu-selectAll"/>
+    <xul:menuseparator/>
+    <xul:menuitem id="se-cMenu-find"/>
+    <xul:menuitem id="se-cMenu-findAgain"/>
+    <xul:menuseparator/>
+    <xul:menuitem id="se-cMenu-gotoLine"/>
+  </xul:menupopup>
 </xul:popupset>
 
 <xul:commandset id="editMenuCommands"/>
@@ -66,7 +81,6 @@
   <xul:command id="style-editor-cmd-close" oncommand="window.close();"/>
 </xul:commandset>
 
-<xul:keyset id="editMenuKeys"/>
 <xul:keyset id="sourceEditorKeys"/>
 <xul:keyset id="style-editor-keyset">
   <xul:key id="style-editor-key-close"
