@@ -41,7 +41,13 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$MOZ_DISABLE_ICF"; then
         fi
         rm -rf conftest*])
     if test "$LD_SUPPORTS_ICF" = yes; then
-        LDFLAGS="$LDFLAGS -Wl,--icf=safe"
+        _SAVE_LDFLAGS="$LDFLAGS -Wl,--icf=safe"
+        LDFLAGS="$LDFLAGS -Wl,--icf=safe -Wl,--print-icf-sections"
+        AC_TRY_LINK([], [],
+                    [LD_PRINT_ICF_SECTIONS=-Wl,--print-icf-sections],
+                    [LD_PRINT_ICF_SECTIONS=])
+        AC_SUBST([LD_PRINT_ICF_SECTIONS])
+        LDFLAGS="$_SAVE_LDFLAGS"
     fi
 fi
 
