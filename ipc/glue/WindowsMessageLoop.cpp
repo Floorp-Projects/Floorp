@@ -206,20 +206,17 @@ ProcessOrDeferMessage(HWND hwnd,
     case WM_CAPTURECHANGED:
     case WM_CHILDACTIVATE:
     case WM_DESTROY:
-    case WM_DISPLAYCHANGE:
     case WM_ENABLE:
     case WM_IME_NOTIFY:
     case WM_IME_SETCONTEXT:
-    case WM_KEYDOWN:
-    case WM_KEYUP:
     case WM_KILLFOCUS:
     case WM_MOUSEWHEEL:
     case WM_NCDESTROY:
     case WM_PARENTNOTIFY:
     case WM_SETFOCUS:
     case WM_SYSCOMMAND:
-    case WM_SHOWWINDOW:
-    case WM_VSCROLL: // Intentional fall-through.
+    case WM_DISPLAYCHANGE:
+    case WM_SHOWWINDOW: // Intentional fall-through.
     case WM_XP_THEMECHANGED: {
       deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
       break;
@@ -327,11 +324,7 @@ ProcessOrDeferMessage(HWND hwnd,
           log.AppendLiteral("\")");
         }
 
-        log.AppendLiteral(", wParam = ");
-        log.AppendInt(wParam);
-        log.AppendLiteral(", lParam = ");
-        log.AppendInt(lParam);
-        log.AppendLiteral("; sending it to DefWindowProc instead of the normal "
+        log.AppendLiteral(", sending it to DefWindowProc instead of the normal "
                           "window procedure.");
         NS_ERROR(log.get());
 #endif
