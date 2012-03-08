@@ -1,26 +1,32 @@
 <html>
     <script>
-        function check(elt, expectProxy, message) {
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-            var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                              .getInterface(Components.interfaces.nsIDOMWindowUtils);
-            var result = ((utils.getClassName(elt) === 'Proxy') === expectProxy)
-                         ? "PASS"
-                         : "FAIL";
+        function check(elt, expectAccess, prop) {
+            var access = false;
+            try {
+                elt[prop];
+                access = true;
+            }
+            catch (e) {}
+            return access === expectAccess;
+        }
 
+        function sendMessage(success, sameOrigin, prop) {
+            var result = success ? 'PASS' : 'FAIL';
+            var message;
+            if (sameOrigin)
+                message = 'Can access |' + prop + '| if same origin';
+            else
+                message = 'Cannot access |' + prop + '| if not same origin';
             parent.postMessage(result + ',' + message, '*');
         }
 
-        try {
-            // true if same origin, throws otherwise
-            var sameOrigin = parent.location.href !== '';
-        } catch (e) {
-            sameOrigin = false;
+        var sameOrigin = location.host !== 'example.org';
+        var pass = check(frameElement, sameOrigin, 'src');
+        if (!pass) {
+            sendMessage(false, sameOrigin, 'src');
+        } else {
+            pass = check(parent.location, sameOrigin, 'href');
+            sendMessage(pass, sameOrigin, 'href');
         }
-
-        check(frameElement, !sameOrigin,
-              sameOrigin
-              ? 'no wrapper needed if same origin'
-              : 'wrapper needed if not same origin');
     </script>
 </html>
