@@ -200,7 +200,6 @@ DebuggerView.Stackframes = {
 
     // the list item wasn't found in the stackframe container
     if (!frame) {
-      dump("The frame list item wasn't found in the stackframes container.");
       return;
     }
 
@@ -357,7 +356,6 @@ DebuggerView.Properties = {
 
     // make sure the element was created successfully
     if (!element) {
-      dump("The debugger scope container wasn't created properly: " + aId);
       return null;
     }
 
@@ -399,7 +397,6 @@ DebuggerView.Properties = {
 
     // make sure the element was created successfully
     if (!element) {
-      dump("The debugger variable container wasn't created properly: " + aId);
       return null;
     }
 
@@ -467,7 +464,6 @@ DebuggerView.Properties = {
 
     // make sure the info node exists
     if (!info) {
-      dump("Could not set the grip for the corresponding variable: " + aVar.id);
       return null;
     }
 
@@ -570,7 +566,6 @@ DebuggerView.Properties = {
 
     // make sure the element was created successfully
     if (!element) {
-      dump("The debugger property container wasn't created properly.");
       return null;
     }
 
@@ -711,11 +706,9 @@ DebuggerView.Properties = {
   _createPropertyElement: function DVP__createPropertyElement(aName, aId, aClass, aParent) {
     // make sure we don't duplicate anything and the parent exists
     if (document.getElementById(aId)) {
-      dump("Duplicating a property element id is not allowed.");
       return null;
     }
     if (!aParent) {
-      dump("A property element must have a valid parent node specified.");
       return null;
     }
 
