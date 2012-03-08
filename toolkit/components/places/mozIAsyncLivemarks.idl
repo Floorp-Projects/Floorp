@@ -16,7 +16,7 @@ interface mozILivemark;
 
 interface nsINavHistoryResultObserver;
 
-[scriptable, uuid(addaa7c5-bd85-4c83-9c21-81c8a825c358)]
+[scriptable, uuid(1dbf174c-696e-4d9b-af0f-350da50d2249)]
 interface mozIAsyncLivemarks : nsISupports
 {
   /**
@@ -67,9 +67,15 @@ interface mozIAsyncLivemarks : nsISupports
                    in mozILivemarkCallback aCallback);
 
   /**
-   * Forces a reload of all livemarks, whether or not they've expired.
+   * Reloads all livemarks if they are expired or if forced to do so.
+   *
+   * @param [optional]aForceUpdate
+   *        If set to true forces a reload even if contents are still valid.
+   *
+   * @note The update process is asynchronous, observers registered through
+   *       registerForUpdates will be notified of updated contents.
    */
-  void reloadLivemarks();
+  void reloadLivemarks([optional]in boolean aForceUpdate);
 };
 
 [scriptable, function, uuid(62a426f9-39a6-42f0-ad48-b7404d48188f)]
