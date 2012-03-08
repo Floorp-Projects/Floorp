@@ -39,6 +39,9 @@
 
 package @ANDROID_PACKAGE_NAME@;
 import java.util.List;
+import java.util.ArrayList;
+
+import android.database.Cursor;
 
 public interface Actions {
 
@@ -92,4 +95,9 @@ public interface Actions {
     void sendSpecialKey(SpecialKey key);
 
     void drag(int startingX, int endingX, int startingY, int endingY);
+
+    /**
+     * Run a sql query on the specified database
+     */
+    public Cursor querySql(String dbPath, String sql);
 }
