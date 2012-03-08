@@ -49,8 +49,8 @@
                       "realm=mochirealm&" +
                       extra || "");
       xhr.onloadend = function() {
-        is(xhr.status, expectedStatus);
-        is(xhr.statusText, expectedText);
+        is(xhr.status, expectedStatus, "xhr.status");
+        is(xhr.statusText, expectedText, "xhr.statusText");
         runNextTest();
       }
       return xhr;

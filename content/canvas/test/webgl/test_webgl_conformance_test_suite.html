@@ -377,7 +377,7 @@ function start() {
       default:
         throw 'unhandled';
         break;
-    };
+    }
   };
 
   var getURLOptions = function(obj) {
@@ -404,27 +404,12 @@ function start() {
 
     // try to create a dummy WebGL context, just to catch context creation failures once here,
     // rather than having them result in 100's of failures (one in each test page)
-    var canvas = document.getElementById("webglcheck-default");
     var ctx;
     try {
-        ctx = canvas.getContext("experimental-webgl");
-    } catch(e) {
-        ok(false, "canvas.getContext() failed", e);
-    }
-
-    if (ctx) {
-        statusTextNode.textContent = 'Loading test lists...';
-        var iframe = document.getElementById("testframe");
-        var testHarness = new WebGLTestHarnessModule.TestHarness(
-            iframe,
-            '00_test_list.txt',
-            function(type, msg, success) {
-                return reporter.reportFunc(type, msg, success);
-            },
-            OPTIONS);
-        testHarness.setTimeoutDelay(20000); // and make it much higher when running under valgrind.
-        window.webglTestHarness = testHarness;
-    } else {
+      ctx = document.getElementById("webglcheck-default")
+                    .getContext("experimental-webgl");
+    } catch(e) {}
+    if (!ctx) {
         var errmsg = "Can't create a WebGL context";
         reporter.fullResultsNode.textContent = errmsg;
         // Workaround for SeaMonkey tinderboxes which don't support WebGL.
@@ -434,8 +419,22 @@ function start() {
           ok(false, errmsg);
         dump("WebGL mochitest failed: " + errmsg + "\n");
         reporter.finishedTestSuite();
+        return;
     }
-  };
+
+    statusTextNode.textContent = 'Loading test lists...';
+    var iframe = document.getElementById("testframe");
+    var testHarness = new WebGLTestHarnessModule.TestHarness(
+        iframe,
+        '00_test_list.txt',
+        function(type, msg, success) {
+          return reporter.reportFunc(type, msg, success);
+        },
+        OPTIONS);
+    // Make timeout delay much higher when running under valgrind.
+    testHarness.setTimeoutDelay(20000);
+    window.webglTestHarness = testHarness;
+  }
 
   SimpleTest.requestLongerTimeout(3);
 
