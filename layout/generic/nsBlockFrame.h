@@ -170,7 +170,7 @@ public:
                            nsFrameList&    aFrameList);
   NS_IMETHOD  RemoveFrame(ChildListID     aListID,
                           nsIFrame*       aOldFrame);
-  virtual nsFrameList GetChildList(ChildListID aListID) const;
+  virtual const nsFrameList& GetChildList(ChildListID aListID) const;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
   virtual nscoord GetBaseline() const;
   virtual nscoord GetCaretBaseline() const;

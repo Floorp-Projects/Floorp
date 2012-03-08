@@ -215,7 +215,7 @@ nsTableOuterFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
-nsFrameList
+const nsFrameList&
 nsTableOuterFrame::GetChildList(ChildListID aListID) const
 {
   if (aListID == kCaptionList) {

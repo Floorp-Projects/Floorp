@@ -300,7 +300,7 @@ nsMenuFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-nsFrameList
+const nsFrameList&
 nsMenuFrame::GetChildList(ChildListID aListID) const
 {
   if (kPopupList == aListID) {
