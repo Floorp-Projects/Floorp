@@ -1212,7 +1212,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   bool isValid = true;
   nsBlockInFlowLineIterator backIterator(block, &isValid);
   if (aForFrameLine) {
-    backIterator = nsBlockInFlowLineIterator(block, *aForFrameLine, false);
+    backIterator = nsBlockInFlowLineIterator(block, *aForFrameLine);
   } else {
     backIterator = nsBlockInFlowLineIterator(block, lineContainerChild, &isValid);
     NS_ASSERTION(isValid, "aForFrame not found in block, someone lied to us");

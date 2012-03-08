@@ -328,6 +328,11 @@ public:
    */
   static nsBlockFrame* GetNearestAncestorBlock(nsIFrame* aCandidate);
   
+  struct FrameLines {
+    nsLineList mLines;
+    nsFrameList mFrames;
+  };
+
 protected:
   nsBlockFrame(nsStyleContext* aContext)
     : nsContainerFrame(aContext)
@@ -355,7 +360,8 @@ protected:
   void TryAllLines(nsLineList::iterator* aIterator,
                    nsLineList::iterator* aStartIterator,
                    nsLineList::iterator* aEndIterator,
-                   bool* aInOverflowLines);
+                   bool*        aInOverflowLines,
+                   FrameLines** aOverflowLines);
 
   void SetFlags(nsFrameState aFlags) {
     mState &= ~NS_BLOCK_FLAGS_MASK;
@@ -646,8 +652,14 @@ protected:
                           nsLineBox*           aLine,
                           nsBlockFrame*        aFromContainer,
                           bool                 aFromOverflowLine,
+                          nsFrameList&         aFromFrameList,
                           nsLineList::iterator aFromLine);
 
+  /**
+   * Push the line after aLineBefore to the overflow line list.
+   * @param aLineBefore a line in 'mLines' (or begin_lines() when
+   *        pushing the first line)
+   */
   void PushLines(nsBlockReflowState& aState,
                  nsLineList::iterator aLineBefore);
 
@@ -684,10 +696,14 @@ protected:
   virtual nsILineIterator* GetLineIterator();
 
 public:
-  nsLineList* GetOverflowLines() const;
+  bool HasOverflowLines() const {
+    return 0 != (GetStateBits() & NS_BLOCK_HAS_OVERFLOW_LINES);
+  }
+  FrameLines* GetOverflowLines() const;
 protected:
-  nsLineList* RemoveOverflowLines();
-  nsresult SetOverflowLines(nsLineList* aOverflowLines);
+  FrameLines* RemoveOverflowLines();
+  void SetOverflowLines(FrameLines* aOverflowLines);
+  void DestroyOverflowLines();
 
   // Determine the computed height that's in effect for this block
   // frame (that is, our computed height minus the heights of our
@@ -798,7 +814,11 @@ private:
 class nsBlockInFlowLineIterator {
 public:
   typedef nsBlockFrame::line_iterator line_iterator;
-  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine, bool aInOverflow);
+  /**
+   * Set up the iterator to point to aLine which must be a normal line
+   * in aFrame (not an overflow line).
+   */
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine);
   /**
    * Set up the iterator to point to the first line found starting from
    * aFrame. Sets aFoundValidLine to false if there is no such line.
@@ -845,6 +865,10 @@ public:
   bool Prev();
 
 private:
+  friend class nsBlockFrame;
+  // XXX nsBlockFrame uses this internally in one place.  Try to remove it.
+  nsBlockInFlowLineIterator(nsBlockFrame* aFrame, line_iterator aLine, bool aInOverflow);
+
   nsBlockFrame* mFrame;
   line_iterator mLine;
   nsLineList*   mInOverflowLines;
