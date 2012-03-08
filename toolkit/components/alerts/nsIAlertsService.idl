@@ -70,6 +70,11 @@ interface nsIAlertsService : nsISupports
     *   topic   - "alertfinished" when the alert goes away
     *             "alertclickcallback" when the text is clicked
     *   data    - the value of the cookie parameter passed to showAlertNotification.
+    *
+    * @note Depending on current circumstances (if the user's in a fullscreen
+    *       application, for instance), the alert might not be displayed at all.
+    *       In that case, if an alert listener is passed in it will receive the
+    *       "alertfinished" notification immediately.
     */
    void showAlertNotification(in AString  imageUrl, 
                               in AString  title, 

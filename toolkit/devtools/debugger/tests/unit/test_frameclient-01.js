@@ -42,7 +42,6 @@ function test_pause_frame()
   gDebuggee.eval("(" + function() {
     var recurseLeft = 5;
     function recurse() {
-      dump(recurseLeft);
       if (--recurseLeft == 0) {
         debugger;
         return;

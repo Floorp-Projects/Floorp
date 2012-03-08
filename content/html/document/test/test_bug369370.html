@@ -39,8 +39,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
         is(kidWin.innerHeight, 300, "Checking doc height");
 
         // Image just loaded and is scaled to window size.
-        is(img.width,  378, "image width");
-        is(img.height, 284, "image height");
+        is(img.width,  400, "image width");
+        is(img.height, 300, "image height");
         is(kidDoc.body.scrollLeft,  0, "Checking scrollLeft");
         is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
 
@@ -61,8 +61,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
         img.dispatchEvent(event);
         ok(true, "----- click 2 -----");
 
-        is(img.width,  378, "image width");
-        is(img.height, 284, "image height");
+        is(img.width,  400, "image width");
+        is(img.height, 300, "image height");
         is(kidDoc.body.scrollLeft,  0, "Checking scrollLeft");
         is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
 
@@ -83,8 +83,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
         img.dispatchEvent(event);
         ok(true, "----- click 4 -----");
 
-        is(img.width,  378, "image width");
-        is(img.height, 284, "image height");
+        is(img.width,  400, "image width");
+        is(img.height, 300, "image height");
         is(kidDoc.body.scrollLeft,  0, "Checking scrollLeft");
         is(kidDoc.body.scrollTop,   0, "Checking scrollTop");
 

@@ -146,6 +146,7 @@
   direction: ltr;
   padding: 0;
   -moz-padding-start: 20px;
+  vertical-align: text-bottom;
 }
 
 .bestmatch {

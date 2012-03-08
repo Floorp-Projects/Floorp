@@ -6467,10 +6467,23 @@ JS_ClearPendingException(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_ReportPendingException(JSContext *cx)
 {
+    JSBool ok;
+    bool save;
+
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    return js_ReportUncaughtException(cx);
+    /*
+     * Set cx->generatingError to suppress the standard error-to-exception
+     * conversion done by all {js,JS}_Report* functions except for OOM.  The
+     * cx->generatingError flag was added to suppress recursive divergence
+     * under js_ErrorToException, but it serves for our purposes here too.
+     */
+    save = cx->generatingError;
+    cx->generatingError = JS_TRUE;
+    ok = js_ReportUncaughtException(cx);
+    cx->generatingError = save;
+    return ok;
 }
 
 struct JSExceptionState {

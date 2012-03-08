@@ -144,8 +144,8 @@ class nsXFormsEditableAccessible : public nsXFormsAccessible
 public:
   nsXFormsEditableAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
 
-  // nsIAccessibleEditableText
-  NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
+  // nsHyperTextAccessible
+  virtual already_AddRefed<nsIEditor> GetEditor() const;
 
   // nsAccessible
   virtual PRUint64 NativeState();
