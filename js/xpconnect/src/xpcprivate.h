@@ -2898,7 +2898,7 @@ public:
 
     static nsresult GetNamedPropertyAsVariant(XPCCallContext& ccx,
                                               JSObject* aJSObj,
-                                              jsval aName,
+                                              const nsAString& aName,
                                               nsIVariant** aResult);
 
     virtual ~nsXPCWrappedJSClass();
