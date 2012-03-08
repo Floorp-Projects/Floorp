@@ -78,7 +78,7 @@ nsScreenAndroid::GetPixelDepth(PRInt32 *aPixelDepth)
 {
     // XXX do we need to lie here about 16bpp?  Or
     // should we actually check and return the right thing?
-    *aPixelDepth = 24;
+    *aPixelDepth = 16;
     return NS_OK;
 }
 
