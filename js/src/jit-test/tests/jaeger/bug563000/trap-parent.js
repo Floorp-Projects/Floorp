@@ -13,6 +13,5 @@ function success() {
   x = "success";
 }
 
-dis(parent);
 parent()
 assertEq(x, "success");
