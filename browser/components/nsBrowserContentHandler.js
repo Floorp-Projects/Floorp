@@ -887,7 +887,7 @@ let AboutHomeUtils = {
 
   loadSnippetsURL: function AHU_loadSnippetsURL()
   {
-    const STARTPAGE_VERSION = 2;
+    const STARTPAGE_VERSION = 1;
     let updateURL = Services.prefs
                             .getCharPref(this.SNIPPETS_URL_PREF)
                             .replace("%STARTPAGE_VERSION%", STARTPAGE_VERSION);

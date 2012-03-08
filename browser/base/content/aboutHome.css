@@ -1,0 +1,384 @@
+%if 0
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is aboutHome.xhtml.
+ *
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Marco Bonardo <mak77@bonardo.net> (original author)
+ *   Mihai Sucan <mihai.sucan@gmail.com>
+ *   Stephen Horlander <shorlander@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+%endif
+
+html {
+  font-family: sans-serif;
+  background: -moz-Field;
+  color: -moz-FieldText;
+  height: 100%;
+}
+
+body {
+  display: inline-block;
+  position: relative;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+#brandStart {
+  text-align: center;
+  height: 19%;
+  max-height: 256px;
+  min-height: 92px;
+}
+
+#brandStartSpacer {
+  height: 6.5%;
+}
+
+#brandStartLogo {
+  height: 100%;
+}
+
+#searchContainer {
+  height: 15%;
+  min-height: 90px;
+}
+
+#searchContainer::before {
+  content: " ";
+  display: block;
+  height: 23%;
+}
+
+#searchForm {
+  display: table;
+  width: 100%;
+  max-width: 1830px;
+  margin: 0 auto;
+}
+
+@media all and (max-height: 700px) {
+  #searchContainer { height: 20% }
+}
+
+@media all and (max-height: 500px) {
+  #searchContainer { height: 25% }
+}
+
+@media all and (max-height: 370px) {
+  #searchContainer { height: 30% }
+}
+
+#searchLogoContainer {
+  display: table-cell;
+  width: 30%;
+  text-align: end;
+  line-height: 32px;
+}
+
+#searchEngineLogo {
+  -moz-margin-end: 2.5%;
+  vertical-align: middle;
+}
+
+#searchInputContainer {
+  display: table-cell;
+  width: 38%;
+  max-width: 700px;
+  min-width: 150px;
+}
+
+#searchText {
+  width: 100%;
+  height: 24px;
+  padding: 3px 6px;
+  border-radius: 2px;
+  border: 1px solid rgb(150,150,150);
+  border-top-color: rgb(100,100,100);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  font-size: 1.2em;
+}
+
+#searchButtons {
+  display: table-cell;
+  width: 31%;
+  -moz-padding-start: 13px;
+  vertical-align: top;
+}
+
+@media all and (max-width: 470px) {
+  #searchLogoContainer { width: 10% }
+  #searchButtons { width: 11% }
+  #searchInputContainer { width: 40% }
+}
+
+@media all and (min-width: 470px) and (max-width: 600px) {
+  #searchLogoContainer { width: 15% }
+  #searchButtons { width: 16%; white-space: nowrap }
+  #searchInputContainer { width: 45% }
+}
+
+@media all and (min-width: 600px) and (max-width: 850px) {
+  #searchLogoContainer { width: 20% }
+  #searchButtons { width: 21%; white-space: nowrap }
+  #searchInputContainer { width: 49% }
+}
+
+#searchSubmit {
+  background: -moz-linear-gradient(#f1f1f1, #dfdfdf);
+  padding: 4px 8px;
+  height: 32px;
+  border: 1px solid #ccc;
+  border-top-color: #ccc;
+  border-bottom-color: #999;
+  -moz-border-start-color: #afafaf;
+  -moz-border-end-color: #999;
+  box-shadow: 1px 1px 0 #e7e7e7,
+              0 1px 0 #fcfcfc inset,
+              0 -1px 0 #d7d7d7 inset;
+  font-size: 1em;
+  color: #000;
+  cursor: pointer;
+}
+
+body[dir=rtl] #searchSubmit {
+  box-shadow: -1px 1px 0 #e7e7e7,
+              0 1px 0 #fcfcfc inset,
+              0 -1px 0 #d7d7d7 inset;
+}
+
+#searchSubmit:active {
+  background: -moz-linear-gradient(#c5c5c5, #c5c5c5);
+  box-shadow: 1px 1px 0 #e7e7e7;
+}
+
+body[dir=rtl] #searchSubmit:active {
+  box-shadow: -1px 1px 0 #e7e7e7;
+}
+
+#contentContainer {
+  height: 30%;
+  background-image: -moz-radial-gradient(center top, ellipse farthest-side, rgba(16,83,130,.5), rgba(16,83,130,0) 75%),
+                    -moz-radial-gradient(center top, ellipse farthest-side, rgba(180,218,244,.5), rgba(180,218,244,0)),
+                    -moz-radial-gradient(center top, ellipse farthest-side, rgba(180,218,244,.3), rgba(180,218,244,0));
+  background-size: 100% 5px,
+                   100% 50px,
+                   100% 100%;
+  background-repeat: no-repeat;
+}
+
+@media all and (max-height: 400px) {
+  #contentContainer { height: 20% }
+}
+
+#snippetContainer {
+  position: relative;
+  top: -24px;
+  text-align: center;
+}
+
+#snippets {
+  display: inline-block;
+  padding: 14px;
+  width: 30%;
+  max-width: 600px;
+  background-image: -moz-linear-gradient(rgba(255,255,255,.8), rgba(255,255,255,.1));
+  background-color: rgb(250,250,250);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset,
+              0 -2px 0 rgba(0,0,0,.1) inset,
+              0 0 10px rgba(255,255,255,.5) inset,
+              0 0 0 1px rgba(0,0,0,.1),
+              0 2px 4px rgba(0,0,0,.2);
+  color: rgb(60,60,60);
+  font-size: .85em;
+  cursor: pointer;
+}
+
+#snippets:empty {
+  visibility: hidden;
+}
+
+@media all and (max-width: 470px) {
+  #snippets { width: 65% }
+}
+
+@media all and (min-width: 470px) and (max-width: 850px) {
+  #snippets { width: 45% }
+}
+
+#snippets:hover {
+  background-color: rgb(255,255,255);
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset,
+              0 -2px 0 rgba(0,0,0,.1) inset,
+              0 0 10px rgba(255,255,255,.5) inset,
+              0 0 5px rgba(0,0,0,.1),
+              0 0 0 1px rgba(0,0,0,.1),
+              0 2px 4px rgba(0,0,0,.2);
+}
+
+#snippets:hover:active {
+  background-color: rgb(210,210,210);
+  box-shadow: 0 2px 3px rgba(0,0,0,.3) inset,
+              0 1px 0 rgba(255,255,255,.5);
+}
+
+#defaultSnippet1,
+#defaultSnippet2 {
+  display: table-row;
+  text-align: start;
+}
+
+#defaultSnippet1::before,
+#defaultSnippet2::before {
+  display: table-cell;
+  vertical-align: middle;
+  -moz-padding-end: 1em;
+}
+
+#defaultSnippet1::before {
+  content: url("chrome://browser/content/aboutHome-snippet1.png");
+}
+#defaultSnippet2::before {
+  content: url("chrome://browser/content/aboutHome-snippet2.png");
+}
+
+#sessionRestoreContainer {
+  padding-top: 1.5%;
+  text-align: center;
+}
+
+@media all and (max-height: 500px) {
+  #sessionRestoreContainer {
+    position: relative;
+    top: -15px;
+    padding-top: 0;
+  }
+}
+
+#restorePreviousSession {
+  padding: 10px;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(9,37,59,0),
+              0 1px 2px rgba(9,37,59,0),
+              0 0 10px rgba(255,255,255,0),
+              0 -3px 0 rgba(180,194,212,0) inset;
+  -moz-transition-property: background-color, box-shadow;
+  -moz-transition-duration: 0.25s;
+  -moz-transition-timing-function: ease-out;
+  background: transparent;
+  color: rgb(50,50,50);
+  font-weight: bold;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+#restorePreviousSession::before {
+  display: inline-block;
+  content: url("chrome://browser/content/aboutHome-restore-icon.png");
+  -moz-margin-end: 10px;
+  vertical-align: middle;
+  height: 66px; /* Needed to avoid a blank space under the image */
+}
+
+body[dir=rtl] #restorePreviousSession::before {
+  -moz-transform: scaleX(-1);
+}
+
+@media all and (max-height: 500px) {
+  #restorePreviousSession::before {
+    content: url("chrome://browser/content/aboutHome-restore-icon-small.png");
+    height: 41px;
+  }
+}
+
+@media all and (max-width: 500px) {
+  #restorePreviousSession::before { 
+    content: url("chrome://browser/content/aboutHome-restore-icon-small.png");
+    height: 41px;
+  }
+}
+
+#restorePreviousSession:disabled {
+  display: none;
+}
+
+#restorePreviousSession:hover {
+  background-image: -moz-linear-gradient(rgba(255,255,255,.7), rgba(255,255,255,.2));
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(9,37,59,.2),
+              0 1px 2px rgba(9,37,59,.2),
+              0 0 10px rgba(255,255,255,.4),
+              0 -3px 0 rgba(180,194,212,.3) inset;
+}
+
+#restorePreviousSession:hover:active {
+  background-image: -moz-linear-gradient(rgba(255,255,255,.0), rgba(255,255,255,.2));
+  background-color: rgba(23,75,115,.1);
+  box-shadow: 0 0 0 1px rgba(9,37,59,.2),
+              0 1px 2px rgba(9,37,59,.4) inset,
+              0 1px 5px rgba(9,37,59,.15) inset;
+}
+
+#bottomSection {
+  position: absolute;
+  color: rgb(150,150,150);
+  font-size: .8em;
+  width: 100%;
+  text-align: center;
+  bottom: 2%;
+}
+
+#syncLinksContainer {
+  padding-top: 1em;
+}
+
+.sync-link {
+  padding: 1em;
+}
+
+@media all and (max-height: 370px) {
+  #bottomSection {
+    visibility: hidden;
+  }
+}
