@@ -770,6 +770,9 @@ public class PanZoomController
     public boolean onScale(SimpleScaleGestureDetector detector) {
         Log.d(LOGTAG, "onScale in state " + mState);
 
+        if (GeckoApp.mDOMFullScreen)
+            return false;
+
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
