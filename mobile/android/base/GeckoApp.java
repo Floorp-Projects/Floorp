@@ -610,7 +610,7 @@ abstract public class GeckoApp
             bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
             processThumbnail(tab, bitmap, bos.toByteArray());
         } else {
-            if (!tab.hasLoaded()) {
+            if (tab.getState() == Tab.STATE_DELAYED) {
                 byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
                 if (thumbnail != null)
                     processThumbnail(tab, null, thumbnail);
@@ -783,7 +783,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
                     mBrowserToolbar.setFavicon(tab.getFavicon());
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-                    mBrowserToolbar.setProgressVisibility(tab.isLoading());
+                    mBrowserToolbar.setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
                 }
             }
         });
@@ -925,6 +925,7 @@ abstract public class GeckoApp
                 handleSecurityChange(tabId, mode);
             } else if (event.equals("Content:StateChange")) {
                 final int tabId = message.getInt("tabID");
+                final boolean success = message.getBoolean("success");
                 int state = message.getInt("state");
                 Log.i(LOGTAG, "State - " + state);
                 if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
@@ -934,7 +935,7 @@ abstract public class GeckoApp
                         handleDocumentStart(tabId, showProgress);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         Log.i(LOGTAG, "Got a document stop");
-                        handleDocumentStop(tabId);
+                        handleDocumentStop(tabId, success);
                     }
                 }
             } else if (event.equals("Content:LoadError")) {
@@ -970,6 +971,13 @@ abstract public class GeckoApp
                 mMainHandler.post(new Runnable() {
                     public void run() {
                         mBrowserToolbar.show();
+                    }
+                });
+            } else if (event.equals("ToggleChrome:Focus")) {
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        mBrowserToolbar.setVisibility(View.VISIBLE);
+                        mBrowserToolbar.requestFocusFromTouch();
                     }
                 });
             } else if (event.equals("DOMFullScreen:Start")) {
@@ -1218,7 +1226,7 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        tab.setLoading(true);
+        tab.setState(Tab.STATE_LOADING);
         tab.updateSecurityMode("unknown");
 
         mMainHandler.post(new Runnable() {
@@ -1233,12 +1241,12 @@ abstract public class GeckoApp
         });
     }
 
-    void handleDocumentStop(int tabId) {
+    void handleDocumentStop(int tabId, boolean success) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
-        tab.setLoading(false);
+        tab.setState(success ? Tab.STATE_SUCCESS : Tab.STATE_ERROR);
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -1273,7 +1281,6 @@ abstract public class GeckoApp
             return;
 
         tab.updateTitle(title);
-        tab.setHasLoaded(true);
 
         // Make the UI changes
         mMainHandler.post(new Runnable() {
@@ -1314,7 +1321,7 @@ abstract public class GeckoApp
                 // want to load the image straight away. If tab is still
                 // loading, we only load the favicon once the page's content
                 // is fully loaded (see handleContentLoaded()).
-                if (!tab.isLoading()) {
+                if (tab.getState() != tab.STATE_LOADING) {
                     mMainHandler.post(new Runnable() {
                         public void run() {
                             loadFavicon(tab);
@@ -1644,6 +1651,7 @@ abstract public class GeckoApp
         mInitialized = true;
 
         Intent intent = getIntent();
+        String action = intent.getAction();
         String args = intent.getStringExtra("args");
         if (args != null && args.contains("-profile")) {
             Pattern p = Pattern.compile("(?:-profile\\s*)(\\w*)(\\s*)");
@@ -1656,7 +1664,7 @@ abstract public class GeckoApp
             }
         }
 
-        if (ACTION_UPDATE.equals(intent.getAction()) || args != null && args.contains("-alert update-app")) {
+        if (ACTION_UPDATE.equals(action) || args != null && args.contains("-alert update-app")) {
             Log.i(LOGTAG,"onCreate: Update request");
             checkAndLaunchUpdate();
         }
@@ -1697,9 +1705,20 @@ abstract public class GeckoApp
         }
 
         sGeckoThread = new GeckoThread(intent, passedUri, mRestoreSession);
-        if (!ACTION_DEBUG.equals(intent.getAction()) &&
-            checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
+        if (!ACTION_DEBUG.equals(action) &&
+            checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched)) {
             sGeckoThread.start();
+        } else if (ACTION_DEBUG.equals(action) &&
+            checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitForDebugger)) {
+            mMainHandler.postDelayed(new Runnable() {
+                public void run() {
+                    Log.i(LOGTAG, "Launching from debug intent after 5s wait");
+                    setLaunchState(LaunchState.Launching);
+                    sGeckoThread.start();
+                }
+            }, 1000 * 5 /* 5 seconds */);
+            Log.i(LOGTAG, "Intent : ACTION_DEBUG - waiting 5s before launching");
+        }
 
         mFavicons = new Favicons(this);
 
@@ -1776,6 +1795,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Stop", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Focus", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
@@ -1945,6 +1965,10 @@ abstract public class GeckoApp
             setIntent(intent);
             return;
         }
+
+        // don't perform any actions if launching from recent apps
+        if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0)
+            return;
 
         if (checkLaunchState(LaunchState.Launched)) {
             Uri data = intent.getData();
@@ -2148,6 +2172,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Focus", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);

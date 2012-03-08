@@ -95,7 +95,6 @@ EXPORTS		= \
 		nsCheapSets.h \
 		nsCppSharedAllocator.h \
 		nsCRT.h \
-		nsDoubleHashtable.h \
 		nsExpirationTracker.h \
 		nsFixedSizeAllocator.h \
 		nsHashtable.h \
