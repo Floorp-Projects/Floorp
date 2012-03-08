@@ -75,7 +75,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     needsBarrier_(false),
     gcBytes(0),
     gcTriggerBytes(0),
-    gcLastBytes(0),
     hold(false),
     typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     data(NULL),
@@ -86,6 +85,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     regExps(rt),
     propertyTree(thisForCtor()),
     emptyTypeObject(NULL),
+    gcMallocAndFreeBytes(0),
+    gcTriggerMallocAndFreeBytes(0),
+    gcMallocBytes(0),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     mathCache(NULL),
     watchpointMap(NULL)
