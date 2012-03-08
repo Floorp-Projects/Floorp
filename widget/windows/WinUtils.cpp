@@ -62,18 +62,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "mozilla/Preferences.h"
 
-#ifdef DEBUG
-#ifndef max
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a,b) (((a) < (b)) ? (a) : (b))
-#endif
-
-#include <gdiplus.h>
-#endif
-
 namespace mozilla {
 namespace widget {
 
@@ -443,115 +431,6 @@ WinUtils::GetShellItemPath(IShellItem* aItem,
   CoTaskMemFree(str);
   return !aResultString.IsEmpty();
 }
-
-#ifdef DEBUG
-
-// Win xp and up
-#pragma comment(lib, "gdiplus.lib")
-
-static bool
-GetEncoderClsid(const WCHAR* aFormat, CLSID* aClsid)
-{
-  using namespace Gdiplus;
-
-  UINT num = 0;
-  UINT size = 0;
-
-  ImageCodecInfo* pImageCodecInfo = NULL;
-
-  GetImageEncodersSize(&num, &size);
-  if(size == 0)
-    return false;
-
-  pImageCodecInfo = (ImageCodecInfo*)(moz_malloc(size));
-
-  if (GetImageEncoders(num, size, pImageCodecInfo) != Ok)
-    return false;
-
-  for(UINT j = 0; j < num; ++j) {
-    if(!wcscmp(pImageCodecInfo[j].MimeType, aFormat)) {
-      *aClsid = pImageCodecInfo[j].Clsid;
-      moz_free(pImageCodecInfo);
-      return true;
-    }    
-  }
-
-  moz_free(pImageCodecInfo);
-  return false;
-}
-
-/* static */
-void
-WinUtils::SaveDCToPng(HDC aHdc, const WCHAR* aFilePath, int aXPos, int aYPos,
-                      int aWidth, int aHeight)
-{
-  using namespace Gdiplus;
-  
-  static ULONG_PTR sGiplusToken;
-
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-  if (!file || NS_FAILED(file->InitWithPath(nsDependentString(aFilePath)))) {
-    NS_WARNING("bad file path.");
-    return;
-  }
-
-  GdiplusStartupInput gdiplusStartupInput;
-  if (!sGiplusToken)
-    GdiplusStartup(&sGiplusToken, &gdiplusStartupInput, NULL);
-
-  HDC memdc;
-  HBITMAP membit;
-  memdc = CreateCompatibleDC(aHdc);
-  NS_WARN_IF_FALSE(memdc, "CreateCompatibleDC failed");
-  if (!memdc)
-    return;
-  membit = CreateCompatibleBitmap(aHdc, aWidth, aHeight);
-  NS_WARN_IF_FALSE(membit, "CreateCompatibleBitmap failed");
-  if (!membit) {
-    DeleteObject(memdc);
-    return;
-  }
-  HBITMAP hOldBitmap =(HBITMAP) SelectObject(memdc, membit);
-  if (!hOldBitmap || hOldBitmap == HGDI_ERROR) {
-    DeleteObject(memdc);
-    DeleteObject(membit);
-    return;
-  }
-  BitBlt(memdc, 0, 0, aWidth, aHeight, aHdc, aXPos, aYPos, SRCCOPY);
-
-  Gdiplus::Bitmap bitmap(membit, NULL);
-
-  CLSID clsid;
-  if (!GetEncoderClsid(L"image/png", &clsid)) {
-    NS_WARNING("GetEncoderClsid failed");
-    return;
-  }
-
-  file->Remove(false);
-  if (bitmap.Save(aFilePath, &clsid) != Ok) {
-    NS_WARNING("bitmap.Save faled.");
-  }
-
-  SelectObject(memdc, hOldBitmap);
-  DeleteObject(memdc);
-  DeleteObject(membit);
-}
-
-/* static */
-void
-WinUtils::SaveDCToPngIndexed(HDC aHdc, const WCHAR* aDirectory, const WCHAR* aAnnotation,
-                             int aXPos, int aYPos, int aWidth, int aHeight)
-{
-  static int sPngFileIndex;
-  WCHAR filename[512];
-  filename[0] = 0;
-  wsprintf(filename, L"%s\\%s_image-%d.png", aDirectory, aAnnotation,
-           sPngFileIndex);
-  sPngFileIndex++;
-  WinUtils::SaveDCToPng(aHdc, filename, aXPos, aYPos, aWidth, aHeight);
-}
-
-#endif // DEBUG
 
 } // namespace widget
 } // namespace mozilla

@@ -141,13 +141,6 @@ public:
   static mozilla::LookAndFeel::WindowsTheme GetNativeThemeId();
   static bool IsDefaultWindowTheme();
 
-  // Vista and up theme library typedefs and entry points
-  typedef HRESULT (WINAPI*GetThemeTransitionDurationPtr)(HTHEME hTheme, int iPartId,
-                                                         int iStateIdFrom, int iStateIdTo,
-                                                         int iPropId, DWORD *pdwDuration);
-
-  static GetThemeTransitionDurationPtr getThemeTransitionDuration;
-
   // dwmapi.dll function typedefs and declarations
   typedef HRESULT (WINAPI*DwmExtendFrameIntoClientAreaProc)(HWND hWnd, const MARGINS *pMarInset);
   typedef HRESULT (WINAPI*DwmIsCompositionEnabledProc)(BOOL *pfEnabled);

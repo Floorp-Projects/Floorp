@@ -67,6 +67,7 @@
 #include "gfxMatrix.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxWindowsSurface.h"
+#include "gfxWindowsNativeDrawing.h"
 
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
@@ -76,9 +77,6 @@ using namespace mozilla::widget;
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gWindowsLog;
 #endif
-
-// Default fps when animating themed widgets.
-#define DEFAULT_ANIMATION_FPS 30
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
@@ -225,330 +223,6 @@ static SIZE GetGutterSize(HANDLE theme, HDC hdc)
     ret.cx = width;
     ret.cy = height;
     return ret;
-}
-
-/*
- * RenderThemedAnimationFrame - renders a frame of widget animation
- * for fadable widgets.
- *
- * @param aCtx         gfxContext of the target composition surface.
- * @param aNative      gfxWindowsNativeDrawing associated with the rendering
- *                     operation initiated in DrawWidgetBackground.
- * @param aTheme       An open theme handle used in rendering.
- * @param aHdc         HDC associated with the DIB we'll be rendering the final
- *                     frame to.
- * @param aPartsList   The Win theme part(s) to render.
- * @param aPartCount   The number of parts listed in aPartsList.
- * @param aBaseState   Theme state that will act as the background graphic of
- *                     the frame.
- * @param aAlphaState  The overlay theme graphic that is layered on top of
- *                     aBaseState.
- * @param aAlpha       Alpha (0.0-1.0) value for the aAlphaState overlay.
- * @param aDRect
- * @param aDDirtyRect  Device rects 
- * @param aWRect
- * @param aWDirtyRect  Native rects 
- * @returns            true on success, false if the default theme was rendered
- *                     without a fade or serious error. Callers should not
- *                     queue animations for false results.
- */
-static bool
-RenderThemedAnimationFrame(gfxContext* aCtx,
-                           gfxWindowsNativeDrawing* aNative,
-                           HANDLE aTheme, HDC aHdc,
-                           int aPartsList[], int aPartCount,
-                           int aBaseState, int aAlphaState,
-                           double aAlpha,
-                           const gfxRect& aDRect, const gfxRect& aDDirtyRect,
-                           const RECT& aWRect, const RECT& aWDirtyRect)
-{
-  NS_ASSERTION(aPartCount > 0, "Bad parts array.");
-  NS_ASSERTION(aCtx, "Bad context.");
-  NS_ASSERTION(aNative, "Bad native pointer.");
-
-#if 0
-  printf("rect:(%d %d %d %d) dirty:(%d %d %d %d) alpha=%f\n",
-  aWRect.left, aWRect.top, aWRect.right, aWRect.bottom,
-  aWDirtyRect.left, aWDirtyRect.top, aWDirtyRect.right, aWDirtyRect.bottom,
-  aAlpha);
-#endif
-
-  // If false, we are rendering to the target surface, so use origin offsets.
-  // If true, we are rendering to back buffers with an origin of 0,0.
-  bool backBufferInUse = aNative->IsDoublePass();
-
-  nsRefPtr<gfxContext> paintCtx;
-  if (backBufferInUse) {
-    // In the case of alpha recovery, gfxWindowsNativeDrawing creates internal
-    // backing DIBs we render to, so get the current surface we are working
-    // with. (aHdc is already associated with the correct buffer.)
-    nsRefPtr<gfxASurface> currentSurf = aNative->GetCurrentSurface();
-    NS_ENSURE_TRUE(currentSurf, false);
-
-    // Wrap this in a gfxContext so we can work with it
-    paintCtx = new gfxContext(currentSurf);
-    NS_ENSURE_TRUE(paintCtx, false);
-  } else {
-    // Use the passed in context
-    paintCtx = aCtx;
-  }
-
-  int width = aWDirtyRect.right - aWDirtyRect.left;
-  int height = aWDirtyRect.bottom - aWDirtyRect.top;
-
-  RECT surfaceDrawRect = { 0, 0, width, height }; // left, top, right, bottom
-
-  // Create a temp base theme background surface
-  nsRefPtr<gfxWindowsSurface> surfBase =
-    new gfxWindowsSurface(gfxIntSize(width, height),
-                          gfxASurface::ImageFormatRGB24);
-  NS_ENSURE_TRUE(surfBase, false);
-
-  // Copy the destination context over to our temporary surface. We'll render
-  // on top of what we copy.
-  if (backBufferInUse) {
-    // FillRect is about 35% faster than BitBlt
-    if (!aNative->IsSecondPass()) {
-      FillRect(surfBase->GetDC(), &surfaceDrawRect,
-               (HBRUSH)GetStockObject(BLACK_BRUSH));
-    } else {
-      FillRect(surfBase->GetDC(), &surfaceDrawRect,
-               (HBRUSH)GetStockObject(WHITE_BRUSH));
-    }
-  } else {
-    // XXX we might not need this?
-    BitBlt(surfBase->GetDC(), 0, 0, width, height, aHdc, aWDirtyRect.left,
-           aWDirtyRect.top, SRCCOPY);
-  }
-
-  // Render the theme's base graphic
-  for (int idx = 0; idx < aPartCount; idx++) {
-    DrawThemeBackground(aTheme, surfBase->GetDC(), aPartsList[idx],
-                        aBaseState, &surfaceDrawRect, &surfaceDrawRect);
-  }
-
-  // Create a new highlight theme background surface
-  nsRefPtr<gfxWindowsSurface> surfAlpha =
-    new gfxWindowsSurface(gfxIntSize(width, height),
-                          gfxASurface::ImageFormatRGB24);
-  NS_ENSURE_TRUE(surfAlpha, false);
-
-  if (backBufferInUse) {
-    if (!aNative->IsSecondPass()) {
-      FillRect(surfAlpha->GetDC(), &surfaceDrawRect,
-               (HBRUSH)GetStockObject(BLACK_BRUSH));
-    } else {
-      FillRect(surfAlpha->GetDC(), &surfaceDrawRect,
-               (HBRUSH)GetStockObject(WHITE_BRUSH));
-    }
-  } else {
-    BitBlt(surfAlpha->GetDC(), 0, 0, width, height, aHdc, aWDirtyRect.left,
-           aWDirtyRect.top, SRCCOPY);
-  }
-
-  // Render the theme's highlight graphic
-  for (int idx = 0; idx < aPartCount; idx++) {
-    DrawThemeBackground(aTheme, surfAlpha->GetDC(), aPartsList[idx],
-                        aAlphaState, &surfaceDrawRect, &surfaceDrawRect);
- }
-
-  // Blend the two images together using aAlpha for surfAlpha.
-  nsRefPtr<gfxImageSurface> imageBase = surfBase->GetAsImageSurface();
-  nsRefPtr<gfxImageSurface> imageAlpha = surfAlpha->GetAsImageSurface();
-  NS_ENSURE_TRUE(imageBase, false);
-  NS_ENSURE_TRUE(imageAlpha, false);
-
-  gfxContext::GraphicsOperator currentOp = paintCtx->CurrentOperator();
-  paintCtx->Save();
-  paintCtx->ResetClip();
-  if (!backBufferInUse) {
-    // In cairo we want to fall through and use BitBlt or AlphaBlend but
-    // won't unless we're aligned on pixel boundaries. Since our hdc rects
-    // are already snapped, round off the Translate parameter as well so
-    // they match.
-    gfxRect roundedRect = aDDirtyRect;
-    roundedRect.Round();
-    paintCtx->Clip(roundedRect);
-    paintCtx->Translate(roundedRect.TopLeft());
-  }
-  paintCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  paintCtx->SetSource(imageBase);
-  paintCtx->Paint();
-  paintCtx->SetOperator(gfxContext::OPERATOR_OVER);
-  paintCtx->SetSource(imageAlpha);
-  paintCtx->Paint(aAlpha);
-  paintCtx->Restore();
-  paintCtx->SetOperator(currentOp);
-
-  return true;
-}
-
-/*
- * QueueAnimation - helper for queuing up a render callback via
- * QueueAnimatedContentRefreshForFade.
- *
- * @param aNative    gfxWindowsNativeDrawing associated with the rendering
- *                   operation initiated in DrawWidgetBackground.
- * @param aContent   The element that will be invalidated.
- * @param aDirection The FadeState direction of the fade. FADE_IN & FADE_OUT
- *                   are valid values.
- * @param aDuration  The total duration of one phase (in/out) of the fade.
- * @param aUserData  User data passed to QueueAnimatedContentRefreshForFade.
- */
-void
-nsNativeThemeWin::QueueAnimation(gfxWindowsNativeDrawing* aNativeDrawing,
-                                 nsIContent* aContent, FadeState aDirection,
-                                 DWORD aDuration, PRUint32 aUserValue)
-{
-  NS_ASSERTION(aNativeDrawing, "bad draw pointer");
-  NS_ASSERTION(aContent, "bad content pointer");
-  NS_ASSERTION((aDirection == FADE_IN ||
-                aDirection == FADE_OUT), "bad direction");
-  // Often content is rendered using alpha recovery which requires two passes,
-  // so only queue up another refresh if we are on the final (or single) pass
-  // of a render operation. This way QueueAnimatedContentRefreshForFade won't
-  // cancel our fade resulting in the second pass passing through fState ==
-  // FADE_NOTACTIVE rendering, which would screw up recovery.
-  if (!aNativeDrawing->IsDoublePass() || aNativeDrawing->IsSecondPass())
-    QueueAnimatedContentRefreshForFade(aContent, aDirection,
-      DEFAULT_ANIMATION_FPS, aDuration, aUserValue);
-}
-
-/*
- * GetScrollbarButtonBasicState - translate vsstyle.h scrollbar button
- * states to generic TS_* states.
- */
-static int
-GetScrollbarButtonBasicState(int aState)
-{
-  switch(aState) {
-    case ABS_UPHOT:
-    case ABS_DOWNHOT:
-    case ABS_LEFTHOT:
-    case ABS_RIGHTHOT:
-      return TS_HOVER;
-    break;
-    case ABS_UPPRESSED:
-    case ABS_DOWNPRESSED:
-    case ABS_LEFTPRESSED:
-    case ABS_RIGHTPRESSED:
-      return TS_ACTIVE;
-    break;
-    case ABS_UPDISABLED:
-    case ABS_DOWNDISABLED:
-    case ABS_LEFTDISABLED:
-    case ABS_RIGHTDISABLED:
-      return TS_DISABLED;
-    break;
-    case ABS_UPHOVER:
-    case ABS_DOWNHOVER:
-    case ABS_LEFTHOVER:
-    case ABS_RIGHTHOVER:
-      return TS_FOCUSED;
-    break;
-    default:
-      return TS_NORMAL;
-  }
-}
-
-/*
- * GetScrollbarButtonProperFadeStates - translate basic TS_* states to proper
- * vsstyle.h scrollbar button states. Modifies aStartState and aFinalState.
- */
-void
-nsNativeThemeWin::GetScrollbarButtonProperFadeStates(int aBasicState,
-                                                     nsIContent* aContent,
-                                                     int aWidgetType,
-                                                     int& aStartState,
-                                                     int& aFinalState)
-{
-  if (aBasicState == TS_FOCUSED) {
-    // gray highlight
-    switch(aWidgetType) {
-      case NS_THEME_SCROLLBAR_BUTTON_UP:
-        aStartState = ABS_UPNORMAL;
-        aFinalState = ABS_UPHOVER;
-      break;
-      case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-        aStartState = ABS_DOWNNORMAL;
-        aFinalState = ABS_DOWNHOVER;
-      break;
-      case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-        aStartState = ABS_LEFTNORMAL;
-        aFinalState = ABS_LEFTHOVER;
-      break;
-      case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-        aStartState = ABS_RIGHTNORMAL;
-        aFinalState = ABS_RIGHTHOVER;
-      break;
-    }
-  } else if (aBasicState == TS_HOVER) {
-    // hot blue hover
-    switch(aWidgetType) {
-      case NS_THEME_SCROLLBAR_BUTTON_UP:
-        aStartState = ABS_UPNORMAL;
-        aFinalState = ABS_UPHOT;
-      break;
-      case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-        aStartState = ABS_DOWNNORMAL;
-        aFinalState = ABS_DOWNHOT;
-      break;
-      case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-        aStartState = ABS_LEFTNORMAL;
-        aFinalState = ABS_LEFTHOT;
-      break;
-      case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-        aStartState = ABS_RIGHTNORMAL;
-        aFinalState = ABS_RIGHTHOT;
-      break;
-    }
-  } else if (aBasicState == TS_NORMAL) {
-    switch(aWidgetType) {
-      case NS_THEME_SCROLLBAR_BUTTON_UP:
-        aStartState = ABS_UPNORMAL;
-      break;
-      case NS_THEME_SCROLLBAR_BUTTON_DOWN:
-        aStartState = ABS_DOWNNORMAL;
-      break;
-      case NS_THEME_SCROLLBAR_BUTTON_LEFT:
-        aStartState = ABS_LEFTNORMAL;
-      break;
-      case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
-        aStartState = ABS_RIGHTNORMAL;
-      break;
-    }
-    aFinalState = GetFadeUserData(aContent);
-  } else {
-    NS_NOTREACHED("Unexpected state for Win7/Vista scroll bar buttons");
-  }
-}
-
-/*
- * GetThemedTransitionDuration - returns the duration of a fading
- * widget transition in milliseconds.
- *
- * @param aTheme       An open theme handle used in rendering.
- * @param aStateIdFrom Theme state that will act as the starting point of an
- *                     animation.
- * @param aStateIdTo   Theme state that will act as the ending point of an
- *                     animation.
- * @returns            0 if there is no fade sequence for aPartId between
- *                     aStateIdFrom and aStateIdTo.
- */
-static DWORD
-GetThemedTransitionDuration(HANDLE aTheme, int aPartId,
-                            int aStateIdFrom, int aStateIdTo)
-{
-  DWORD duration = 0;
-  // XP does not support this call
-  if (!nsUXThemeData::getThemeTransitionDuration)
-    return 0;
-  nsUXThemeData::getThemeTransitionDuration(aTheme, aPartId,
-                                            aStateIdFrom,
-                                            aStateIdTo,
-                                            TMT_TRANSITIONDURATIONS,
-                                            &duration);
-  return duration;
 }
 
 static HRESULT DrawThemeBGRTLAware(HANDLE theme, HDC hdc, int part, int state,
@@ -945,12 +619,6 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           aState = StandardGetState(aFrame, aWidgetType, false);
         }
       }
-
-      // Note, radio buttons do not support a visual indeterminate state,
-      // check boxes do.
-      // http://msdn.microsoft.com/en-us/library/windows/desktop/bb775947%28v=vs.85%29.aspx
-      if (!isCheckbox && inputState == INDETERMINATE)
-        inputState = UNCHECKED;
 
       // 4 unchecked states, 4 checked states, 4 indeterminate states.
       aState += inputState * 4;
@@ -1793,233 +1461,6 @@ RENDER_AGAIN:
     DrawThemeBGRTLAware(theme, hdc, part, state,
                         &widgetRect, &clipRect, IsFrameRTL(aFrame));
   }
-  else if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
-           aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) {
-    // Calculate if we need a gripper layered on top of the background
-    SIZE gripSize;
-    MARGINS thumbMgns;
-    int gripPart = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) ?
-                    SP_GRIPPERHOR : SP_GRIPPERVERT;
-    bool drawGripper = 
-      (GetThemePartSize(theme, hdc, gripPart, state, NULL,
-                        TS_TRUE, &gripSize) == S_OK &&
-       GetThemeMargins(theme, hdc, part, state,
-                       TMT_CONTENTMARGINS, NULL,
-                       &thumbMgns) == S_OK &&
-       gripSize.cx + thumbMgns.cxLeftWidth + thumbMgns.cxRightWidth <=
-         widgetRect.right - widgetRect.left &&
-       gripSize.cy + thumbMgns.cyTopHeight + thumbMgns.cyBottomHeight <=
-         widgetRect.bottom - widgetRect.top);
-
-    nsIContent* content = nsnull;
-    if (aFrame) {
-      content = aFrame->GetContent();
-    }
-    FadeState fState = GetFadeState(content);
-    DWORD duration = GetThemedTransitionDuration(theme, part,
-                                                 TS_NORMAL,
-                                                 TS_HOVER);
-    // Rendering the scrollbar
-    if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION ||
-        state == TS_ACTIVE || state == TS_DISABLED ||
-        (state == TS_NORMAL && fState == FADE_NOTACTIVE) ||
-        !aFrame || !duration || !content) {
-      // We only apply scrollbar fades to Vista and Win7, and on those os we
-      // have a fade active when the state is either TS_HOVER or TS_NORMAL.
-      // Everything else gets the standard rendering from the Win theme lib.
-      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
-      if (drawGripper)
-        DrawThemeBackground(theme, hdc, gripPart, state, &widgetRect,
-                            &clipRect);
-      if (state == TS_ACTIVE) {
-        // Common transition, mid fade-in -> active state. Finish
-        // the fade-in here.
-        FinishFadeIn(content);
-      }
-    } else {
-      int partsList[2];
-      partsList[0] = part;
-      partsList[1] = gripPart;
-      int partCount = (drawGripper ? 2 : 1);
-      if (RenderThemedAnimationFrame(ctx, &nativeDrawing, theme, hdc,
-                                     partsList, partCount,
-                                     TS_NORMAL, TS_HOVER,
-                                     GetFadeAlpha(content),
-                                     tr, dr, widgetRect, clipRect)) {
-        QueueAnimation(&nativeDrawing, content,
-                       (state == TS_HOVER ? FADE_IN : FADE_OUT), duration);
-      }
-    }
-  }
-  else if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
-           aWidgetType == NS_THEME_SCROLLBAR_BUTTON_DOWN ||
-           aWidgetType == NS_THEME_SCROLLBAR_BUTTON_LEFT ||
-           aWidgetType == NS_THEME_SCROLLBAR_BUTTON_RIGHT) {
-    int basicState = GetScrollbarButtonBasicState(state);
-    nsIContent* content = nsnull;
-    if (aFrame) {
-      content = aFrame->GetContent();
-    }
-    FadeState fState = GetFadeState(content);
-    // Cheating, but they are all the same
-    DWORD duration = GetThemedTransitionDuration(theme,
-                                                 SBP_ARROWBTN,
-                                                 ABS_UPNORMAL,
-                                                 ABS_UPHOT);
-    if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION ||
-        basicState == TS_ACTIVE || basicState == TS_DISABLED ||
-        (basicState == TS_NORMAL && fState == FADE_NOTACTIVE) ||
-        !aFrame || !duration || !content) {
-      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
-    } else {
-      int partsList[1];
-      partsList[0] = part;
-      int startState, finalState;
-      GetScrollbarButtonProperFadeStates(basicState, content, aWidgetType,
-                                         startState, finalState);
-      if (RenderThemedAnimationFrame(ctx, &nativeDrawing, theme, hdc,
-                                     partsList, 1,
-                                     startState, finalState,
-                                     GetFadeAlpha(content),
-                                     tr, dr, widgetRect, clipRect)) {
-        QueueAnimation(&nativeDrawing, content,
-                       (basicState == TS_NORMAL ? FADE_OUT : FADE_IN),
-                       duration, finalState);
-      }
-    }
-  }
-  else if (aWidgetType == NS_THEME_BUTTON) {
-    nsIContent* content = nsnull;
-    if (aFrame) {
-      content = aFrame->GetContent();
-    }
-    FadeState fState = GetFadeState(content);
-    DWORD duration = GetThemedTransitionDuration(theme,
-                                                 BP_PUSHBUTTON,
-                                                 PBS_NORMAL,
-                                                 PBS_HOT);
-    if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION ||
-        state == PBS_PRESSED || state == PBS_DISABLED ||
-        ((state == PBS_NORMAL || state == PBS_DEFAULTED) &&
-         fState == FADE_NOTACTIVE) || !aFrame || !duration || !content) {
-      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
-    } else {
-      // The normal state for buttons is either TS_NORMAL or TS_FOCUSED.
-      // Either of these states can also be used for the default button
-      // selection. Make sure we use the right state constant for focused
-      // and default buttons when they are hovered over.
-      int startState, finalState;
-      nsEventStates eventState = GetContentState(aFrame, aWidgetType);
-      if (eventState.HasState(NS_EVENT_STATE_FOCUS) ||
-          IsDefaultButton(aFrame)) {
-        startState = PBS_DEFAULTED;
-        finalState = PBS_DEFAULTED_ANIMATING;
-      } else {
-        startState = PBS_NORMAL;
-        finalState = PBS_HOT;
-      }
-
-      int partsList[1];
-      partsList[0] = part;
-      if (RenderThemedAnimationFrame(ctx, &nativeDrawing, theme, hdc,
-                                     partsList, 1,
-                                     startState, finalState,
-                                     GetFadeAlpha(content),
-                                     tr, dr, widgetRect, clipRect)) {
-        QueueAnimation(&nativeDrawing, content,
-                       ((state == PBS_NORMAL || state == PBS_DEFAULTED) ?
-                         FADE_OUT : FADE_IN), duration);
-      }
-    }
-  }
-  else if (aWidgetType == NS_THEME_RADIO ||
-           aWidgetType == NS_THEME_CHECKBOX) {
-    nsIContent* content = nsnull;
-    if (aFrame) {
-      content = aFrame->GetContent();
-    }
-    FadeState fState = GetFadeState(content);
-    DWORD duration = GetThemedTransitionDuration(theme,
-                                                 BP_RADIOBUTTON,
-                                                 RBS_UNCHECKEDNORMAL,
-                                                 RBS_UNCHECKEDHOT);
-    // Radio buttons have two states, checkboxes have three. The
-    // checkbox constants work for both.
-    if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION ||
-        state == CBS_UNCHECKEDPRESSED || state == CBS_UNCHECKEDDISABLED ||
-        state == CBS_CHECKEDPRESSED || state == CBS_CHECKEDDISABLED ||
-        state == CBS_MIXEDPRESSED || state == CBS_MIXEDDISABLED ||
-        ((state == CBS_UNCHECKEDNORMAL || state == CBS_CHECKEDNORMAL ||
-          state == CBS_MIXEDNORMAL) && fState == FADE_NOTACTIVE) ||
-         !aFrame || !duration || !content) {
-      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
-    } else {
-      int partsList[1];
-      partsList[0] = part;
-      int startState, finalState;
-      switch(state) {
-        case CBS_UNCHECKEDNORMAL:
-        case CBS_UNCHECKEDHOT:
-        startState = CBS_UNCHECKEDNORMAL;
-        finalState = CBS_UNCHECKEDHOT;
-        break;
-        case CBS_CHECKEDNORMAL:
-        case CBS_CHECKEDHOT:
-        startState = CBS_CHECKEDNORMAL;
-        finalState = CBS_CHECKEDHOT;
-        break;
-        case CBS_MIXEDNORMAL:
-        case CBS_MIXEDHOT:
-        startState = CBS_MIXEDNORMAL;
-        finalState = CBS_MIXEDHOT;
-        break;
-      }
-      bool isNormal = (state == CBS_UNCHECKEDNORMAL ||
-                       state == CBS_CHECKEDNORMAL ||
-                       state == CBS_MIXEDNORMAL);
-      if (RenderThemedAnimationFrame(ctx, &nativeDrawing, theme, hdc,
-                                     partsList, 1,
-                                     startState, finalState,
-                                     GetFadeAlpha(content),
-                                     tr, dr, widgetRect, clipRect)) {
-        QueueAnimation(&nativeDrawing, content,
-                       (isNormal ? FADE_OUT : FADE_IN), duration);
-      }
-    }
-  }
-  else if (aWidgetType == NS_THEME_TOOLBAR_BUTTON) {
-    nsIContent* content = nsnull;
-    if (aFrame) {
-      content = aFrame->GetContent();
-    }
-    FadeState fState = GetFadeState(content);
-    DWORD duration = GetThemedTransitionDuration(theme,
-                                                 BP_PUSHBUTTON,
-                                                 PBS_NORMAL,
-                                                 PBS_HOT);
-    // similar to regular buttons, except there's no PBS_DEFAULTED
-    // state. There is however an additional TS_CHECKED state.
-    if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION ||
-        state == PBS_PRESSED || state == PBS_DISABLED ||
-        (state == PBS_NORMAL && fState == FADE_NOTACTIVE) ||
-        !aFrame || !duration || !content) {
-      DrawThemeBackground(theme, hdc, part, state, &widgetRect, &clipRect);
-    } else {
-      int partsList[1];
-      partsList[0] = part;
-      bool isChecked = (state == TS_CHECKED || state == TS_HOTCHECKED);
-      if (RenderThemedAnimationFrame(ctx, &nativeDrawing, theme, hdc,
-                                     partsList, 1,
-                                     (isChecked ? TS_CHECKED : TS_NORMAL),
-                                     (isChecked ? TS_HOTCHECKED : TS_HOT),
-                                     GetFadeAlpha(content),
-                                     tr, dr, widgetRect, clipRect)) {
-        QueueAnimation(&nativeDrawing, content,
-                       (state == TS_NORMAL || state == TS_CHECKED ?
-                        FADE_OUT : FADE_IN), duration);
-      }
-    }
-  }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
   else if (part >= 0) {
@@ -2087,6 +1528,24 @@ RENDER_AGAIN:
     widgetRect.bottom = widgetRect.top + TB_SEPARATOR_HEIGHT;
     DrawThemeEdge(theme, hdc, RP_BAND, 0, &widgetRect, EDGE_ETCHED, BF_TOP, NULL);
   }
+  else if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL ||
+           aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL)
+  {
+    // Draw the decorative gripper for the scrollbar thumb button, if it fits
+
+    SIZE gripSize;
+    MARGINS thumbMgns;
+    int gripPart = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) ?
+                   SP_GRIPPERHOR : SP_GRIPPERVERT;
+
+    if (GetThemePartSize(theme, hdc, gripPart, state, NULL, TS_TRUE, &gripSize) == S_OK &&
+        GetThemeMargins(theme, hdc, part, state, TMT_CONTENTMARGINS, NULL, &thumbMgns) == S_OK &&
+        gripSize.cx + thumbMgns.cxLeftWidth + thumbMgns.cxRightWidth <= widgetRect.right - widgetRect.left &&
+        gripSize.cy + thumbMgns.cyTopHeight + thumbMgns.cyBottomHeight <= widgetRect.bottom - widgetRect.top)
+    {
+      DrawThemeBackground(theme, hdc, gripPart, state, &widgetRect, &clipRect);
+    }
+  }
   else if ((aWidgetType == NS_THEME_WINDOW_BUTTON_BOX ||
             aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED) &&
             nsUXThemeData::CheckForCompositor())
@@ -2140,8 +1599,7 @@ RENDER_AGAIN:
 
     if (indeterminate ||
         WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
-      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(),
-                                          DEFAULT_ANIMATION_FPS)) {
+      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
         NS_WARNING("unable to animate progress widget!");
       }
 
@@ -3934,8 +3392,7 @@ RENDER_AGAIN:
        * The indeterminate rendering is animated: the bar goes from one side to
        * another.
        */
-      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(),
-                                          DEFAULT_ANIMATION_FPS)) {
+      if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
         NS_WARNING("unable to animate progress widget!");
       }
 

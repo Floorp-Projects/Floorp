@@ -46,12 +46,12 @@
 #include "gtkdrawing.h"
 
 class nsNativeThemeGTK: private nsNativeTheme,
-                        public nsITheme {
+                        public nsITheme,
+                        public nsIObserver {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  // Also implemented by nsNativeTheme
-  NS_SCRIPTABLE NS_IMETHOD Observe(nsISupports *aSubject, const char * aTopic,
-                                   const PRUnichar * aData); 
+
+  NS_DECL_NSIOBSERVER
 
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,

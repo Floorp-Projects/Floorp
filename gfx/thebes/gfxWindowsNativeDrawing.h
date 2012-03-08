@@ -114,13 +114,6 @@ public:
     /* Returns true if double pass alpha extraction is taking place. */
     bool IsDoublePass();
 
-    /* Returns true if double pass alpha extraction is taking place
-     * and this is the second pass in the operation. */
-    bool IsSecondPass();
-
-    /* Returns the current surface in use for rendering. */
-    gfxWindowsSurface* GetCurrentSurface();
-
     /* Places the result to the context, if necessary */
     void PaintToContext();
 

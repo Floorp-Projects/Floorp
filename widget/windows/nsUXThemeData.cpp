@@ -70,8 +70,6 @@ bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
 SIZE nsUXThemeData::sCommandButtons[4];
 
-nsUXThemeData::GetThemeTransitionDurationPtr nsUXThemeData::getThemeTransitionDuration = NULL;
-
 nsUXThemeData::DwmExtendFrameIntoClientAreaProc nsUXThemeData::dwmExtendFrameIntoClientAreaPtr = NULL;
 nsUXThemeData::DwmIsCompositionEnabledProc nsUXThemeData::dwmIsCompositionEnabledPtr = NULL;
 nsUXThemeData::DwmSetIconicThumbnailProc nsUXThemeData::dwmSetIconicThumbnailPtr = NULL;
@@ -95,13 +93,6 @@ nsUXThemeData::Initialize()
 {
   ::ZeroMemory(sThemes, sizeof(sThemes));
   NS_ASSERTION(!sThemeDLL, "nsUXThemeData being initialized twice!");
-
-  if (GetThemeDLL()) {
-    // Vista and up entry points:
-    getThemeTransitionDuration =
-     (GetThemeTransitionDurationPtr)
-     GetProcAddress(sThemeDLL, "GetThemeTransitionDuration");
-  }
 
   if (GetDwmDLL()) {
     dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDLL, "DwmExtendFrameIntoClientArea");
