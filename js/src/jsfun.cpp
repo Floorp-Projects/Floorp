@@ -1094,13 +1094,13 @@ JSFunction::trace(JSTracer *trc)
     }
 
     if (atom)
-        MarkStringUnbarriered(trc, atom, "atom");
+        MarkStringUnbarriered(trc, &atom, "atom");
 
     if (isInterpreted()) {
-        if (script())
-            MarkScript(trc, &script(), "script");
-        if (environment())
-            MarkObjectUnbarriered(trc, environment(), "fun_callscope");
+        if (u.i.script_)
+            MarkScriptUnbarriered(trc, &u.i.script_, "script");
+        if (u.i.env_)
+            MarkObjectUnbarriered(trc, &u.i.env_, "fun_callscope");
     }
 }
 
@@ -1296,7 +1296,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
      * original version of ES5).
      */
     JSObject *aobj = &vp[3].toObject();
-    jsuint length;
+    uint32_t length;
     if (!js_GetLengthProperty(cx, aobj, &length))
         return false;
 

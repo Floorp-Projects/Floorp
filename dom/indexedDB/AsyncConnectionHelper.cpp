@@ -90,7 +90,7 @@ ConvertCloneReadInfosToArrayInternal(
   }
 
   if (!aReadInfos.IsEmpty()) {
-    if (!JS_SetArrayLength(aCx, array, jsuint(aReadInfos.Length()))) {
+    if (!JS_SetArrayLength(aCx, array, uint32_t(aReadInfos.Length()))) {
       NS_WARNING("Failed to set array length!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }

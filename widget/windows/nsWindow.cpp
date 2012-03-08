@@ -133,6 +133,7 @@
 #include "nsIServiceManager.h"
 #include "nsIClipboard.h"
 #include "nsIMM32Handler.h"
+#include "WinMouseScrollHandler.h"
 #include "nsILocalFile.h"
 #include "nsFontMetrics.h"
 #include "nsIFontEnumerator.h"
@@ -270,14 +271,8 @@ BYTE            nsWindow::sLastMouseButton        = 0;
 // Trim heap on minimize. (initialized, but still true.)
 int             nsWindow::sTrimOnMinimize         = 2;
 
-// Default value for Trackpoint hack (used when the pref is set to -1).
-bool            nsWindow::sDefaultTrackPointHack  = false;
 // Default value for general window class (used when the pref is the empty string).
 const char*     nsWindow::sDefaultMainWindowClass = kClassNameGeneral;
-// Whether to enable the Elantech swipe gesture hack.
-bool            nsWindow::sUseElantechSwipeHack  = false;
-// Whether to enable the Elantech pinch-to-zoom gesture hack.
-bool            nsWindow::sUseElantechPinchHack  = false;
 
 // If we're using D3D9, this will not be allowed during initial 5 seconds.
 bool            nsWindow::sAllowD3D9              = false;
@@ -290,19 +285,6 @@ PRUint32        nsWindow::sOOPPPluginFocusEvent   =
                   RegisterWindowMessageW(kOOPPPluginFocusEventId);
 
 MSG             nsWindow::sRedirectedKeyDown;
-
-bool            nsWindow::sEnablePixelScrolling = true;
-bool            nsWindow::sNeedsToInitMouseWheelSettings = true;
-ULONG           nsWindow::sMouseWheelScrollLines  = 0;
-ULONG           nsWindow::sMouseWheelScrollChars  = 0;
-
-HWND            nsWindow::sLastMouseWheelWnd = NULL;
-PRInt32         nsWindow::sRemainingDeltaForScroll = 0;
-PRInt32         nsWindow::sRemainingDeltaForPixel = 0;
-bool            nsWindow::sLastMouseWheelDeltaIsPositive = false;
-bool            nsWindow::sLastMouseWheelOrientationIsVertical = false;
-bool            nsWindow::sLastMouseWheelUnitIsPage = false;
-PRUint32        nsWindow::sLastMouseWheelTime = 0;
 
 /**************************************************************
  *
@@ -406,7 +388,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldExStyle           = 0;
   mPainting             = 0;
   mLastKeyboardLayout   = 0;
-  mAssumeWheelIsZoomUntil = 0;
   mBlurSuppressLevel    = 0;
   mLastPaintEndTime     = TimeStamp::Now();
 #ifdef MOZ_XUL
@@ -427,27 +408,21 @@ nsWindow::nsWindow() : nsBaseWidget()
     // Global app registration id for Win7 and up. See
     // WinTaskbar.cpp for details.
     mozilla::widget::WinTaskbar::RegisterAppUserModelID();
-
     gKbdLayout.LoadLayout(::GetKeyboardLayout(0));
-
     // Init IME handler
     nsIMM32Handler::Initialize();
-
 #ifdef NS_ENABLE_TSF
     nsTextStore::Initialize();
 #endif
-
-    if (SUCCEEDED(::OleInitialize(NULL)))
+    if (SUCCEEDED(::OleInitialize(NULL))) {
       sIsOleInitialized = TRUE;
+    }
     NS_ASSERTION(sIsOleInitialized, "***** OLE is not initialized!\n");
-
-    InitInputWorkaroundPrefDefaults();
-
+    MouseScrollHandler::Initialize();
     // Init titlebar button info for custom frames.
     nsUXThemeData::InitTitlebarInfo();
     // Init theme data
     nsUXThemeData::UpdateNativeThemeInfo();
-
     ForgetRedirectedKeyDownMessage();
   } // !sInstanceCount
 
@@ -608,7 +583,7 @@ nsWindow::Create(nsIWidget *aParent,
 
   if (mWindowType != eWindowType_plugin &&
       mWindowType != eWindowType_invisible &&
-      UseTrackPointHack()) {
+      MouseScrollHandler::Device::IsFakeScrollableWindowNeeded()) {
     // Ugly Thinkpad Driver Hack (Bugs 507222 and 594977)
     //
     // We create two zero-sized windows as descendants of the top-level window,
@@ -4494,24 +4469,6 @@ static bool CleartypeSettingChanged()
 bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
                                 LRESULT *aRetValue)
 {
-  // For the Elantech Touchpad Zoom Gesture Hack, we should check that the
-  // system time (32-bit milliseconds) hasn't wrapped around.  Otherwise we
-  // might get into the situation where wheel events for the next 50 days of
-  // system uptime are assumed to be Ctrl+Wheel events.  (It is unlikely that
-  // we would get into that state, because the system would already need to be
-  // up for 50 days and the Control key message would need to be processed just
-  // before the system time overflow and the wheel message just after.)
-  //
-  // We also take the chance to reset mAssumeWheelIsZoomUntil if we simply have
-  // passed that time.
-  if (mAssumeWheelIsZoomUntil) {
-    LONG msgTime = ::GetMessageTime();
-    if ((mAssumeWheelIsZoomUntil >= 0x3fffffffu && DWORD(msgTime) < 0x40000000u) ||
-        (mAssumeWheelIsZoomUntil < DWORD(msgTime))) {
-      mAssumeWheelIsZoomUntil = 0;
-    }
-  }
-
   // (Large blocks of code should be broken out into OnEvent handlers.)
   if (mWindowHook.Notify(mWnd, msg, wParam, lParam, aRetValue))
     return true;
@@ -4525,6 +4482,11 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   bool eatMessage;
   if (nsIMM32Handler::ProcessMessage(this, msg, wParam, lParam, aRetValue,
                                      eatMessage)) {
+    return mWnd ? eatMessage : true;
+  }
+
+  if (MouseScrollHandler::ProcessMessage(this, msg, wParam, lParam, aRetValue,
+                                         eatMessage)) {
     return mWnd ? eatMessage : true;
   }
 
@@ -5094,19 +5056,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     }
     break;
 
-    case WM_HSCROLL:
-    case WM_VSCROLL:
-      *aRetValue = 0;
-      result = OnScroll(msg, wParam, lParam);
-      break;
-
-    case MOZ_WM_HSCROLL:
-    case MOZ_WM_VSCROLL:
-      *aRetValue = 0;
-      OnScrollInternal(WinUtils::GetNativeMessage(msg), wParam, lParam);
-      // Doesn't need to call next wndproc for internal message.
-      return true;
-
     // The WM_ACTIVATE event is fired when a window is raised or lowered,
     // and the loword of wParam specifies which. But we don't want to tell
     // the focus system about this until the WM_SETFOCUS or WM_KILLFOCUS
@@ -5188,15 +5137,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     }
     break;
 
-    case WM_SETTINGCHANGE:
-      switch (wParam) {
-        case SPI_SETWHEELSCROLLLINES:
-        case SPI_SETWHEELSCROLLCHARS:
-          sNeedsToInitMouseWheelSettings = true;
-          break;
-      }
-      break;
-
     case WM_INPUTLANGCHANGEREQUEST:
       *aRetValue = TRUE;
       result = false;
@@ -5259,29 +5199,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       }
     }
     break;
-
-  case WM_MOUSEWHEEL:
-  case WM_MOUSEHWHEEL:
-    OnMouseWheel(msg, wParam, lParam, aRetValue);
-    // We don't need to call next wndproc WM_MOUSEWHEEL and WM_MOUSEHWHEEL.
-    // We should consume them always.  If the messages would be handled by
-    // our window again, it causes making infinite message loop.
-    return true;
-
-  case MOZ_WM_MOUSEVWHEEL:
-  case MOZ_WM_MOUSEHWHEEL:
-    {
-      UINT nativeMessage = WinUtils::GetNativeMessage(msg);
-      // If OnMouseWheel returns true, the event was forwarded directly to another
-      // mozilla window message handler (ProcessMessage). In this case the return
-      // value of the forwarded event is in 'result' which we should return immediately.
-      // If OnMouseWheel returns false, OnMouseWheel processed the event internally.
-      // 'result' and 'aRetValue' will be set based on what we did with the event, so
-      // we should fall through.
-      OnMouseWheelInternal(nativeMessage, wParam, lParam, aRetValue);
-      // Doesn't need to call next wndproc for internal message.
-      return true;
-    }
 
   case WM_DWMCOMPOSITIONCHANGED:
     // First, update the compositor state to latest one. All other methods
@@ -6305,277 +6222,6 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   return true; // Handled
 }
 
-/* static */ void
-nsWindow::InitMouseWheelScrollData()
-{
-  if (!sNeedsToInitMouseWheelSettings) {
-    return;
-  }
-  sNeedsToInitMouseWheelSettings = false;
-  ResetRemainingWheelDelta();
-
-  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0,
-                              &sMouseWheelScrollLines, 0)) {
-    NS_WARNING("Failed to get SPI_GETWHEELSCROLLLINES");
-    sMouseWheelScrollLines = 3;
-  } else if (sMouseWheelScrollLines > WHEEL_DELTA) {
-    // sMouseWheelScrollLines usually equals 3 or 0 (for no scrolling)
-    // However, if sMouseWheelScrollLines > WHEEL_DELTA, we assume that
-    // the mouse driver wants a page scroll.  The docs state that
-    // sMouseWheelScrollLines should explicitly equal WHEEL_PAGESCROLL, but
-    // since some mouse drivers use an arbitrary large number instead,
-    // we have to handle that as well.
-    sMouseWheelScrollLines = WHEEL_PAGESCROLL;
-  }
-
-  if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0,
-                              &sMouseWheelScrollChars, 0)) {
-    NS_ASSERTION(WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION,
-                 "Failed to get SPI_GETWHEELSCROLLCHARS");
-    sMouseWheelScrollChars = 1;
-  } else if (sMouseWheelScrollChars > WHEEL_DELTA) {
-    // See the comments for the case sMouseWheelScrollLines > WHEEL_DELTA.
-    sMouseWheelScrollChars = WHEEL_PAGESCROLL;
-  }
-
-  sEnablePixelScrolling =
-    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
-}
-
-/* static */
-void
-nsWindow::ResetRemainingWheelDelta()
-{
-  sRemainingDeltaForPixel = 0;
-  sRemainingDeltaForScroll = 0;
-  sLastMouseWheelWnd = NULL;
-}
-
-static PRInt32 RoundDelta(double aDelta)
-{
-  return aDelta >= 0 ? (PRInt32)floor(aDelta) : (PRInt32)ceil(aDelta);
-}
-
-/**
- * OnMouseWheelInternal - mouse wheel event processing.
- * aMessage may be WM_MOUSEWHEEL or WM_MOUSEHWHEEL but this is called when
- * ProcessMessage() handles MOZ_WM_MOUSEVWHEEL or MOZ_WM_MOUSEHWHEEL.
- */
-void
-nsWindow::OnMouseWheelInternal(UINT aMessage, WPARAM aWParam, LPARAM aLParam,
-                               LRESULT *aRetValue)
-{
-  InitMouseWheelScrollData();
-
-  bool isVertical = (aMessage == WM_MOUSEWHEEL);
-  if ((isVertical && sMouseWheelScrollLines == 0) ||
-      (!isVertical && sMouseWheelScrollChars == 0)) {
-    // XXX I think that we should dispatch mouse wheel events even if the
-    // operation will not scroll because the wheel operation really happened
-    // and web application may want to handle the event for non-scroll action.
-    ResetRemainingWheelDelta();
-    *aRetValue = isVertical ? TRUE : FALSE; // means we don't process it
-    return;
-  }
-
-  PRInt32 nativeDelta = (short)HIWORD(aWParam);
-  if (!nativeDelta) {
-    *aRetValue = isVertical ? TRUE : FALSE; // means we don't process it
-    ResetRemainingWheelDelta();
-    return; // We cannot process this message
-  }
-
-  bool isPageScroll =
-    ((isVertical && sMouseWheelScrollLines == WHEEL_PAGESCROLL) ||
-     (!isVertical && sMouseWheelScrollChars == WHEEL_PAGESCROLL));
-
-  // Discard the remaining delta if current wheel message and last one are
-  // received by different window or to scroll different direction or
-  // different unit scroll.  Furthermore, if the last event was too old.
-  PRUint32 now = PR_IntervalToMilliseconds(PR_IntervalNow());
-  if (sLastMouseWheelWnd &&
-      (sLastMouseWheelWnd != mWnd ||
-       sLastMouseWheelDeltaIsPositive != (nativeDelta > 0) ||
-       sLastMouseWheelOrientationIsVertical != isVertical ||
-       sLastMouseWheelUnitIsPage != isPageScroll ||
-       now - sLastMouseWheelTime > 1500)) {
-    ResetRemainingWheelDelta();
-  }
-  sLastMouseWheelWnd = mWnd;
-  sLastMouseWheelDeltaIsPositive = (nativeDelta > 0);
-  sLastMouseWheelOrientationIsVertical = isVertical;
-  sLastMouseWheelUnitIsPage = isPageScroll;
-  sLastMouseWheelTime = now;
-
-  *aRetValue = isVertical ? FALSE : TRUE; // means we process this message
-  nsModifierKeyState modKeyState;
-
-  // Our positive delta value means to bottom or right.
-  // But positive nativeDelta value means to top or right.
-  // Use orienter for computing our delta value with native delta value.
-  PRInt32 orienter = isVertical ? -1 : 1;
-
-  // Assume the Control key is down if the Elantech touchpad has sent the
-  // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
-  // OnKeyUp.)
-  bool isControl;
-  if (mAssumeWheelIsZoomUntil &&
-      static_cast<DWORD>(::GetMessageTime()) < mAssumeWheelIsZoomUntil) {
-    isControl = true;
-  } else {
-    isControl = modKeyState.mIsControlDown;
-  }
-
-  // Create line (or page) scroll event.
-  nsMouseScrollEvent scrollEvent(true, NS_MOUSE_SCROLL, this);
-
-  // Initialize common members on line scroll event, pixel scroll event and
-  // test event.
-  InitEvent(scrollEvent);
-  scrollEvent.isShift     = modKeyState.mIsShiftDown;
-  scrollEvent.isControl   = isControl;
-  scrollEvent.isMeta      = false;
-  scrollEvent.isAlt       = modKeyState.mIsAltDown;
-
-  // Before dispatching line scroll event, we should get the current scroll
-  // event target information for pixel scroll.
-  bool dispatchPixelScrollEvent = false;
-  bool reversePixelScrollDirection = false;
-  PRInt32 actualScrollAction = nsQueryContentEvent::SCROLL_ACTION_NONE;
-  PRInt32 pixelsPerUnit = 0;
-  // the amount is the number of lines (or pages) per WHEEL_DELTA
-  PRInt32 computedScrollAmount = isPageScroll ? 1 :
-    (isVertical ? sMouseWheelScrollLines : sMouseWheelScrollChars);
-
-  if (sEnablePixelScrolling) {
-    nsMouseScrollEvent testEvent(true, NS_MOUSE_SCROLL, this);
-    InitEvent(testEvent);
-    testEvent.scrollFlags = isPageScroll ? nsMouseScrollEvent::kIsFullPage : 0;
-    testEvent.scrollFlags |= isVertical ? nsMouseScrollEvent::kIsVertical :
-                                          nsMouseScrollEvent::kIsHorizontal;
-    testEvent.isShift     = scrollEvent.isShift;
-    testEvent.isControl   = scrollEvent.isControl;
-    testEvent.isMeta      = scrollEvent.isMeta;
-    testEvent.isAlt       = scrollEvent.isAlt;
-
-    testEvent.delta       = computedScrollAmount;
-    if ((isVertical && sLastMouseWheelDeltaIsPositive) ||
-        (!isVertical && !sLastMouseWheelDeltaIsPositive)) {
-      testEvent.delta *= -1;
-    }
-    nsQueryContentEvent queryEvent(true, NS_QUERY_SCROLL_TARGET_INFO, this);
-    InitEvent(queryEvent);
-    queryEvent.InitForQueryScrollTargetInfo(&testEvent);
-    DispatchWindowEvent(&queryEvent);
-    // If the necessary interger isn't larger than 0, we should assume that
-    // the event failed for us.
-    if (queryEvent.mSucceeded) {
-      actualScrollAction = queryEvent.mReply.mComputedScrollAction;
-      if (actualScrollAction == nsQueryContentEvent::SCROLL_ACTION_PAGE) {
-        if (isVertical) {
-          pixelsPerUnit = queryEvent.mReply.mPageHeight;
-        } else {
-          pixelsPerUnit = queryEvent.mReply.mPageWidth;
-        }
-      } else {
-        pixelsPerUnit = queryEvent.mReply.mLineHeight;
-      }
-      computedScrollAmount = queryEvent.mReply.mComputedScrollAmount;
-      if (pixelsPerUnit > 0 && computedScrollAmount != 0 &&
-          actualScrollAction != nsQueryContentEvent::SCROLL_ACTION_NONE) {
-        dispatchPixelScrollEvent = true;
-        // If original delta's sign and computed delta's one are different,
-        // we need to reverse the pixel scroll direction at dispatching it.
-        reversePixelScrollDirection =
-          (testEvent.delta > 0 && computedScrollAmount < 0) ||
-          (testEvent.delta < 0 && computedScrollAmount > 0);
-        // scroll amount must be positive.
-        computedScrollAmount = NS_ABS(computedScrollAmount);
-      }
-    }
-  }
-
-  // If we dispatch pixel scroll event after the line scroll event,
-  // we should set kHasPixels flag to the line scroll event.
-  scrollEvent.scrollFlags =
-    dispatchPixelScrollEvent ? nsMouseScrollEvent::kHasPixels : 0;
-
-  PRInt32 nativeDeltaForScroll = nativeDelta + sRemainingDeltaForScroll;
-
-  // NOTE: Don't use computedScrollAmount for computing the delta value of
-  //       line/page scroll event.  The value will be recomputed in ESM.
-  if (isPageScroll) {
-    scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
-    if (isVertical) {
-      scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
-    } else {
-      scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsHorizontal;
-    }
-    scrollEvent.delta = nativeDeltaForScroll * orienter / WHEEL_DELTA;
-    PRInt32 recomputedNativeDelta = scrollEvent.delta * orienter / WHEEL_DELTA;
-    sRemainingDeltaForScroll = nativeDeltaForScroll - recomputedNativeDelta;
-  } else {
-    double deltaPerUnit;
-    if (isVertical) {
-      scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
-      deltaPerUnit = (double)WHEEL_DELTA / sMouseWheelScrollLines;
-    } else {
-      scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsHorizontal;
-      deltaPerUnit = (double)WHEEL_DELTA / sMouseWheelScrollChars;
-    }
-    scrollEvent.delta =
-      RoundDelta((double)nativeDeltaForScroll * orienter / deltaPerUnit);
-    PRInt32 recomputedNativeDelta =
-      (PRInt32)(scrollEvent.delta * orienter * deltaPerUnit);
-    sRemainingDeltaForScroll = nativeDeltaForScroll - recomputedNativeDelta;
-  }
-
-  if (scrollEvent.delta) {
-    DispatchWindowEvent(&scrollEvent);
-    if (mOnDestroyCalled) {
-      ResetRemainingWheelDelta();
-      return;
-    }
-  }
-
-  // If the query event failed, we cannot send pixel events.
-  if (!dispatchPixelScrollEvent) {
-    sRemainingDeltaForPixel = 0;
-    return;
-  }
-
-  nsMouseScrollEvent pixelEvent(true, NS_MOUSE_PIXEL_SCROLL, this);
-  InitEvent(pixelEvent);
-  pixelEvent.scrollFlags = nsMouseScrollEvent::kAllowSmoothScroll;
-  pixelEvent.scrollFlags |= isVertical ?
-    nsMouseScrollEvent::kIsVertical : nsMouseScrollEvent::kIsHorizontal;
-  if (actualScrollAction == nsQueryContentEvent::SCROLL_ACTION_PAGE) {
-    pixelEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
-  }
-  // Use same modifier state for pixel scroll event.
-  pixelEvent.isShift     = scrollEvent.isShift;
-  pixelEvent.isControl   = scrollEvent.isControl;
-  pixelEvent.isMeta      = scrollEvent.isMeta;
-  pixelEvent.isAlt       = scrollEvent.isAlt;
-
-  PRInt32 nativeDeltaForPixel = nativeDelta + sRemainingDeltaForPixel;
-  // Pixel scroll event won't be recomputed the scroll amout and direction by
-  // ESM.  Therefore, we need to set the computed amout and direction here.
-  PRInt32 orienterForPixel = reversePixelScrollDirection ? -orienter : orienter;
-
-  double deltaPerPixel =
-    (double)WHEEL_DELTA / computedScrollAmount / pixelsPerUnit;
-  pixelEvent.delta =
-    RoundDelta((double)nativeDeltaForPixel * orienterForPixel / deltaPerPixel);
-  PRInt32 recomputedNativeDelta =
-    (PRInt32)(pixelEvent.delta * orienterForPixel * deltaPerPixel);
-  sRemainingDeltaForPixel = nativeDeltaForPixel - recomputedNativeDelta;
-  if (pixelEvent.delta != 0) {
-    DispatchWindowEvent(&pixelEvent);
-  }
-  return;
-}
-
 static bool
 StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
                             const PRUnichar* aChars2, const PRUint32 aNumChars2)
@@ -6606,37 +6252,6 @@ bool nsWindow::IsRedirectedKeyDownMessage(const MSG &aMsg)
             WinUtils::GetScanCode(aMsg.lParam));
 }
 
-void
-nsWindow::PerformElantechSwipeGestureHack(UINT& aVirtualKeyCode,
-                                          nsModifierKeyState& aModKeyState)
-{
-  // The Elantech touchpad driver understands three-finger swipe left and
-  // right gestures, and translates them into Page Up and Page Down key
-  // events for most applications.  For Firefox 3.6, it instead sends
-  // Alt+Left and Alt+Right to trigger browser back/forward actions.  As
-  // with the Thinkpad Driver hack in nsWindow::Create, the change in
-  // HWND structure makes Firefox not trigger the driver's heuristics
-  // any longer.
-  //
-  // The Elantech driver actually sends these messages for a three-finger
-  // swipe right:
-  //
-  //   WM_KEYDOWN virtual_key = 0xCC or 0xFF (depending on driver version)
-  //   WM_KEYDOWN virtual_key = VK_NEXT
-  //   WM_KEYUP   virtual_key = VK_NEXT
-  //   WM_KEYUP   virtual_key = 0xCC or 0xFF
-  //
-  // so we use the 0xCC or 0xFF key modifier to detect whether the Page Down
-  // is due to the gesture rather than a regular Page Down keypress.  We then
-  // pretend that we were went an Alt+Right keystroke instead.  Similarly
-  // for VK_PRIOR and Alt+Left.
-  if ((aVirtualKeyCode == VK_NEXT || aVirtualKeyCode == VK_PRIOR) &&
-      (IS_VK_DOWN(0xFF) || IS_VK_DOWN(0xCC))) {
-    aModKeyState.mIsAltDown = true;
-    aVirtualKeyCode = aVirtualKeyCode == VK_NEXT ? VK_RIGHT : VK_LEFT;
-  }
-}
-
 /**
  * nsWindow::OnKeyDown peeks into the message queue and pulls out
  * WM_CHAR messages for processing. During testing we don't want to
@@ -6653,10 +6268,6 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   UINT virtualKeyCode =
     aMsg.wParam != VK_PROCESSKEY ? aMsg.wParam : ::ImmGetVirtualKey(mWnd);
   gKbdLayout.OnKeyDown(virtualKeyCode);
-
-  if (sUseElantechSwipeHack) {
-    PerformElantechSwipeGestureHack(virtualKeyCode, aModKeyState);
-  }
 
   // Use only DOMKeyCode for XP processing.
   // Use virtualKeyCode for gKbdLayout and native processing.
@@ -6998,34 +6609,6 @@ LRESULT nsWindow::OnKeyUp(const MSG &aMsg,
                           bool *aEventDispatched)
 {
   UINT virtualKeyCode = aMsg.wParam;
-
-  if (sUseElantechSwipeHack) {
-    PerformElantechSwipeGestureHack(virtualKeyCode, aModKeyState);
-  }
-
-  if (sUseElantechPinchHack) {
-    // Version 8 of the Elantech touchpad driver sends these messages for
-    // zoom gestures:
-    //
-    //   WM_KEYDOWN    virtual_key = 0xCC        time = 10
-    //   WM_KEYDOWN    virtual_key = VK_CONTROL  time = 10
-    //   WM_MOUSEWHEEL                           time = ::GetTickCount()
-    //   WM_KEYUP      virtual_key = VK_CONTROL  time = 10
-    //   WM_KEYUP      virtual_key = 0xCC        time = 10
-    //
-    // The result of this is that we process all of the WM_KEYDOWN/WM_KEYUP
-    // messages first because their timestamps make them appear to have
-    // been sent before the WM_MOUSEWHEEL message.  To work around this,
-    // we store the current time when we process the WM_KEYUP message and
-    // assume that any WM_MOUSEWHEEL message with a timestamp before that
-    // time is one that should be processed as if the Control key was down.
-    if (virtualKeyCode == VK_CONTROL && aMsg.time == 10) {
-      // We look only at the bottom 31 bits of the system tick count since
-      // GetMessageTime returns a LONG, which is signed, so we want values
-      // that are more easily comparable.
-      mAssumeWheelIsZoomUntil = ::GetTickCount() & 0x7FFFFFFF;
-    }
-  }
 
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
          ("nsWindow::OnKeyUp VK=%d\n", virtualKeyCode));
@@ -7431,259 +7014,6 @@ bool nsWindow::OnResize(nsIntRect &aWindowRect)
 bool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
 {
   return true;
-}
-
-// Determine whether the given HWND is the handle for the Elantech helper
-// window.  The helper window cannot be distinguished based on its
-// window class, so we need to check if it is owned by the helper process,
-// ETDCtrl.exe.
-static bool IsElantechHelperWindow(HWND aHWND)
-{
-  const PRUnichar* filenameSuffix = L"\\etdctrl.exe";
-  const int filenameSuffixLength = 12;
-
-  DWORD pid;
-  ::GetWindowThreadProcessId(aHWND, &pid);
-
-  bool result = false;
-
-  HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
-  if (hProcess) {
-    PRUnichar path[256] = {L'\0'};
-    if (GetProcessImageFileName(hProcess, path, ArrayLength(path))) {
-      int pathLength = lstrlenW(path);
-      if (pathLength >= filenameSuffixLength) {
-        if (lstrcmpiW(path + pathLength - filenameSuffixLength, filenameSuffix) == 0) {
-          result = true;
-        }
-      }
-    }
-    ::CloseHandle(hProcess);
-  }
-
-  return result;
-}
-
-/**
- * OnMouseWheel() is called when ProcessMessage() handles WM_MOUSEWHEEL,
- * WM_MOUSEHWHEEL and also OnScroll() tries to emulate mouse wheel action for
- * WM_VSCROLL or WM_HSCROLL.
- * So, aMsg may be WM_MOUSEWHEEL, WM_MOUSEHWHEEL, WM_VSCROLL or WM_HSCROLL.
- */
-void
-nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
-                       LRESULT *aRetValue)
-{
-  *aRetValue = (aMsg != WM_MOUSEHWHEEL) ? TRUE : FALSE;
-
-  POINT point;
-  DWORD dwPoints = ::GetMessagePos();
-  point.x = GET_X_LPARAM(dwPoints);
-  point.y = GET_Y_LPARAM(dwPoints);
-
-  static bool sMayBeUsingLogitechMouse = false;
-  if (aMsg == WM_MOUSEHWHEEL) {
-    // Logitech (Logicool) mouse driver (confirmed with 4.82.11 and MX-1100)
-    // always sets 0 to the lParam of WM_MOUSEHWHEEL.  The driver SENDs one
-    // message at first time, this time, ::GetMessagePos works fine.
-    // Then, we will return 0 (0 means we process it) to the message. Then, the
-    // driver will POST the same messages continuously during the wheel tilted.
-    // But ::GetMessagePos API always returns (0, 0), even if the actual mouse
-    // cursor isn't 0,0.  Therefore, we cannot trust the result of
-    // ::GetMessagePos API if the sender is the driver.
-    if (!sMayBeUsingLogitechMouse && aLParam == 0 && (DWORD)aLParam != dwPoints &&
-        ::InSendMessage()) {
-      sMayBeUsingLogitechMouse = true;
-    } else if (sMayBeUsingLogitechMouse && aLParam != 0 && ::InSendMessage()) {
-      // The user has changed the mouse from Logitech's to another one (e.g.,
-      // the user has changed to the touchpad of the notebook.
-      sMayBeUsingLogitechMouse = false;
-    }
-    // If the WM_MOUSEHWHEEL comes from Logitech's mouse driver, and the
-    // ::GetMessagePos isn't correct, probably, we should use ::GetCursorPos
-    // instead.
-    if (sMayBeUsingLogitechMouse && aLParam == 0 && dwPoints == 0) {
-      ::GetCursorPos(&point);
-    }
-  }
-
-  HWND underCursorWnd = ::WindowFromPoint(point);
-  if (!underCursorWnd) {
-    return;
-  }
-
-  if (sUseElantechPinchHack && IsElantechHelperWindow(underCursorWnd)) {
-    // The Elantech driver places a window right underneath the cursor
-    // when sending a WM_MOUSEWHEEL event to us as part of a pinch-to-zoom
-    // gesture.  We detect that here, and search for our window that would
-    // be beneath the cursor if that window wasn't there.
-    underCursorWnd = WinUtils::FindOurWindowAtPoint(point);
-    if (!underCursorWnd) {
-      return;
-    }
-  }
-
-  // Handle most cases first.  If the window under mouse cursor is our window
-  // except plugin window (MozillaWindowClass), we should handle the message
-  // on the window.
-  if (WinUtils::IsOurProcessWindow(underCursorWnd)) {
-    nsWindow* destWindow = WinUtils::GetNSWindowPtr(underCursorWnd);
-    if (!destWindow) {
-      NS_WARNING("We're not sure what cause this is.");
-      HWND wnd = ::GetParent(underCursorWnd);
-      for (; wnd; wnd = ::GetParent(wnd)) {
-        destWindow = WinUtils::GetNSWindowPtr(wnd);
-        if (destWindow) {
-          break;
-        }
-      }
-      if (!wnd) {
-        return;
-      }
-    }
-
-    NS_ASSERTION(destWindow, "destWindow must not be NULL");
-    // If the found window is our plugin window, it means that the message
-    // has been handled by the plugin but not consumed.  We should handle the
-    // message on its parent window.  However, note that the DOM event may
-    // cause accessing the plugin.  Therefore, we should unlock the plugin
-    // process by using PostMessage().
-    if (destWindow->mWindowType == eWindowType_plugin) {
-      destWindow = destWindow->GetParentWindow(false);
-      NS_ENSURE_TRUE(destWindow, );
-    }
-    UINT internalMessage = WinUtils::GetInternalMessage(aMsg);
-    ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
-    return;
-  }
-
-  // If the window under cursor is not in our process, it means:
-  // 1. The window may be a plugin window (GeckoPluginWindow or its descendant).
-  // 2. The window may be another application's window.
-  HWND pluginWnd = WinUtils::FindOurProcessWindow(underCursorWnd);
-  if (!pluginWnd) {
-    // If there is no plugin window in ancestors of the window under cursor,
-    // the window is for another applications (case 2).
-    // We don't need to handle this message.
-    return;
-  }
-
-  // If we're a plugin window (MozillaWindowClass) and cursor in this window,
-  // the message shouldn't go to plugin's wndproc again.  So, we should handle
-  // it on parent window.  However, note that the DOM event may cause accessing
-  // the plugin.  Therefore, we should unlock the plugin process by using
-  // PostMessage().
-  if (mWindowType == eWindowType_plugin && pluginWnd == mWnd) {
-    nsWindow* destWindow = GetParentWindow(false);
-    NS_ENSURE_TRUE(destWindow, );
-    UINT internalMessage = WinUtils::GetInternalMessage(aMsg);
-    ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
-    return;
-  }
-
-  // If the window is a part of plugin, we should post the message to it.
-  ::PostMessage(underCursorWnd, aMsg, aWParam, aLParam);
-}
-
-/**
- * OnScroll() is called when ProcessMessage() handles WM_VSCROLL or WM_HSCROLL.
- * aMsg may be WM_VSCROLL or WM_HSCROLL.
- */
-bool
-nsWindow::OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam)
-{
-  static PRInt8 sMouseWheelEmulation = -1;
-  if (sMouseWheelEmulation < 0) {
-    bool emulate =
-      Preferences::GetBool("mousewheel.emulate_at_wm_scroll", false);
-    sMouseWheelEmulation = PRInt8(emulate);
-  }
-
-  if (aLParam || sMouseWheelEmulation) {
-    // Scroll message generated by Thinkpad Trackpoint Driver or similar
-    // Treat as a mousewheel message and scroll appropriately
-    LRESULT retVal;
-    OnMouseWheel(aMsg, aWParam, aLParam, &retVal);
-    // Always consume the scroll message if we try to emulate mouse wheel
-    // action.
-    return true;
-  }
-
-  // Scroll message generated by external application
-  nsContentCommandEvent command(true, NS_CONTENT_COMMAND_SCROLL, this);
-
-  command.mScroll.mIsHorizontal = (aMsg == WM_HSCROLL);
-
-  switch (LOWORD(aWParam))
-  {
-    case SB_LINEUP:   // SB_LINELEFT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Line;
-      command.mScroll.mAmount = -1;
-      break;
-    case SB_LINEDOWN: // SB_LINERIGHT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Line;
-      command.mScroll.mAmount = 1;
-      break;
-    case SB_PAGEUP:   // SB_PAGELEFT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Page;
-      command.mScroll.mAmount = -1;
-      break;
-    case SB_PAGEDOWN: // SB_PAGERIGHT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Page;
-      command.mScroll.mAmount = 1;
-      break;
-    case SB_TOP:      // SB_LEFT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Whole;
-      command.mScroll.mAmount = -1;
-      break;
-    case SB_BOTTOM:   // SB_RIGHT
-      command.mScroll.mUnit = nsContentCommandEvent::eCmdScrollUnit_Whole;
-      command.mScroll.mAmount = 1;
-      break;
-    default:
-      return false;
-  }
-  // XXX If this is a plugin window, we should dispatch the event from
-  //     parent window.
-  DispatchWindowEvent(&command);
-  return true;
-}
-
-/**
- * OnScrollInternal() is called when ProcessMessage() handles MOZ_WM_VSCROLL or
- * MOZ_WM_HSCROLL but aMsg may be WM_VSCROLL or WM_HSCROLL.
- * These internal messages used only when OnScroll() tries to emulate mouse
- * wheel action for the WM_VSCROLL or WM_HSCROLL message.
- */
-void
-nsWindow::OnScrollInternal(UINT aMsg, WPARAM aWParam, LPARAM aLParam)
-{
-  nsMouseScrollEvent scrollevent(true, NS_MOUSE_SCROLL, this);
-  scrollevent.scrollFlags = (aMsg == WM_VSCROLL) 
-                            ? nsMouseScrollEvent::kIsVertical
-                            : nsMouseScrollEvent::kIsHorizontal;
-  switch (LOWORD(aWParam)) {
-    case SB_PAGEDOWN:
-      scrollevent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
-    case SB_LINEDOWN:
-      scrollevent.delta = 1;
-      break;
-    case SB_PAGEUP:
-      scrollevent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
-    case SB_LINEUP:
-      scrollevent.delta = -1;
-      break;
-    default:
-      return;
-  }
-  scrollevent.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
-  scrollevent.isControl = IS_VK_DOWN(NS_VK_CONTROL);
-  scrollevent.isMeta    = false;
-  scrollevent.isAlt     = IS_VK_DOWN(NS_VK_ALT);
-  InitEvent(scrollevent);
-  if (mEventCallback) {
-    DispatchWindowEvent(&scrollevent);
-  }
 }
 
 // Can be overriden. Controls auto-erase of background.
@@ -8587,6 +7917,14 @@ nsModifierKeyState::nsModifierKeyState()
   mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
 }
 
+void
+nsModifierKeyState::InitInputEvent(nsInputEvent& aInputEvent) const
+{
+  aInputEvent.isShift   = mIsShiftDown;
+  aInputEvent.isControl = mIsControlDown;
+  aInputEvent.isMeta    = false;
+  aInputEvent.isAlt     = mIsAltDown;
+}
 
 // Note that the result of GetTopLevelWindow method can be different from the
 // result of WinUtils::GetTopLevelHWND().  The result can be non-floating
@@ -8656,132 +7994,6 @@ void nsWindow::GetMainWindowClass(nsAString& aClass)
   if (NS_FAILED(rv) || aClass.IsEmpty()) {
     aClass.AssignASCII(sDefaultMainWindowClass);
   }
-}
-
-/**
- * Gets the Boolean value of a pref used to enable or disable an input
- * workaround (like the Trackpoint hack).  The pref can take values 0 (for
- * disabled), 1 (for enabled) or -1 (to automatically detect whether to
- * enable the workaround).
- *
- * @param aPrefName The name of the pref.
- * @param aValueIfAutomatic Whether the given input workaround should be
- *   enabled by default.
- */
-bool nsWindow::GetInputWorkaroundPref(const char* aPrefName,
-                                        bool aValueIfAutomatic)
-{
-  if (!aPrefName) {
-    return aValueIfAutomatic;
-  }
-
-  PRInt32 lHackValue = 0;
-  if (NS_SUCCEEDED(Preferences::GetInt(aPrefName, &lHackValue))) {
-    switch (lHackValue) {
-      case 0: // disabled
-        return false;
-      case 1: // enabled
-        return true;
-      default: // -1: autodetect
-        break;
-    }
-  }
-  return aValueIfAutomatic;
-}
-
-bool nsWindow::UseTrackPointHack()
-{
-  return GetInputWorkaroundPref("ui.trackpoint_hack.enabled",
-                                sDefaultTrackPointHack);
-}
-
-static bool
-HasRegistryKey(HKEY aRoot, PRUnichar* aName)
-{
-  HKEY key;
-  LONG result = ::RegOpenKeyExW(aRoot, aName, 0, KEY_READ | KEY_WOW64_32KEY, &key);
-  if (result != ERROR_SUCCESS) {
-    result = ::RegOpenKeyExW(aRoot, aName, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    if (result != ERROR_SUCCESS)
-      return false;
-  }
-  ::RegCloseKey(key);
-  return true;
-}
-
-static bool
-IsObsoleteSynapticsDriver()
-{
-  PRUnichar buf[40];
-  bool foundKey = WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
-                                           L"Software\\Synaptics\\SynTP\\Install",
-                                           L"DriverVersion",
-                                           buf,
-                                           sizeof buf);
-  if (!foundKey)
-    return false;
-
-  int majorVersion = wcstol(buf, NULL, 10);
-  int minorVersion = 0;
-  PRUnichar* p = wcschr(buf, L'.');
-  if (p) {
-    minorVersion = wcstol(p + 1, NULL, 10);
-  }
-  return majorVersion < 15 || majorVersion == 15 && minorVersion == 0;
-}
-
-static PRInt32
-GetElantechDriverMajorVersion()
-{
-  PRUnichar buf[40];
-  // The driver version is found in one of these two registry keys.
-  bool foundKey = WinUtils::GetRegistryKey(HKEY_CURRENT_USER,
-                                           L"Software\\Elantech\\MainOption",
-                                           L"DriverVersion",
-                                           buf,
-                                           sizeof buf);
-  if (!foundKey)
-    foundKey = WinUtils::GetRegistryKey(HKEY_CURRENT_USER,
-                                        L"Software\\Elantech",
-                                        L"DriverVersion",
-                                        buf,
-                                        sizeof buf);
-
-  if (!foundKey)
-    return false;
-
-  // Assume that the major version number can be found just after a space
-  // or at the start of the string.
-  for (PRUnichar* p = buf; *p; p++) {
-    if (*p >= L'0' && *p <= L'9' && (p == buf || *(p - 1) == L' ')) {
-      return wcstol(p, NULL, 10);
-    }
-  }
-
-  return 0;
-}
-
-void nsWindow::InitInputWorkaroundPrefDefaults()
-{
-  PRUint32 elantechDriverVersion = GetElantechDriverMajorVersion();
-
-  if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Lenovo\\TrackPoint")) {
-    sDefaultTrackPointHack = true;
-  } else if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Lenovo\\UltraNav")) {
-    sDefaultTrackPointHack = true;
-  } else if (HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Alps\\Apoint\\TrackPoint")) {
-    sDefaultTrackPointHack = true;
-  } else if ((HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Synaptics\\SynTPEnh\\UltraNavUSB") ||
-              HasRegistryKey(HKEY_CURRENT_USER, L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2")) &&
-              IsObsoleteSynapticsDriver()) {
-    sDefaultTrackPointHack = true;
-  }
-
-  bool useElantechGestureHacks =
-    GetInputWorkaroundPref("ui.elantech_gesture_hacks.enabled",
-                           elantechDriverVersion != 0);
-  sUseElantechSwipeHack = useElantechGestureHacks && elantechDriverVersion <= 7;
-  sUseElantechPinchHack = useElantechGestureHacks && elantechDriverVersion <= 8;
 }
 
 LPARAM nsWindow::lParamToScreen(LPARAM lParam)

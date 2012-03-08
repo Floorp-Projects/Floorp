@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <setting pref="extensions.inlinesettings1.bool" type="bool" title="Bool"/>
+  <setting pref="extensions.inlinesettings1.bool" type="bool" title="Bool" checkboxlabel="Check box label"/>
   <setting pref="extensions.inlinesettings1.boolint" type="boolint" on="1" off="2" title="BoolInt"/>
   <setting pref="extensions.inlinesettings1.integer" type="integer" title="Integer"/>
   <setting pref="extensions.inlinesettings1.string" type="string" title="String"/>

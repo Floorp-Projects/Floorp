@@ -41,7 +41,6 @@
 #include "nsIFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetAlias.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"

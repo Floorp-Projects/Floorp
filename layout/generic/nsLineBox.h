@@ -470,11 +470,8 @@ public:
   char* StateToString(char* aBuf, PRInt32 aBufSize) const;
 
   void List(FILE* out, PRInt32 aIndent) const;
-#endif
-
   nsIFrame* LastChild() const;
-
-  bool IsLastChild(nsIFrame* aFrame) const;
+#endif
 
   PRInt32 IndexOf(nsIFrame* aFrame) const;
 

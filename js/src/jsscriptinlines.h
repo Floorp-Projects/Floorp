@@ -245,7 +245,9 @@ JSScript::writeBarrierPre(JSScript *script)
     JSCompartment *comp = script->compartment();
     if (comp->needsBarrier()) {
         JS_ASSERT(!comp->rt->gcRunning);
-        MarkScriptUnbarriered(comp->barrierTracer(), script, "write barrier");
+        JSScript *tmp = script;
+        MarkScriptUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        JS_ASSERT(tmp == script);
     }
 #endif
 }

@@ -75,10 +75,10 @@
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
 
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 #ifdef DEBUG
 #include <string.h>     /* for #ifdef DEBUG memset calls */
@@ -4665,7 +4665,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj, jsid funid, JSBool *found)
 }
 
 static bool
-IdValIsIndex(JSContext *cx, jsval id, jsuint *indexp, bool *isIndex)
+IdValIsIndex(JSContext *cx, jsval id, uint32_t *indexp, bool *isIndex)
 {
     if (JSVAL_IS_INT(id)) {
         int32_t i = JSVAL_TO_INT(id);
@@ -4673,7 +4673,7 @@ IdValIsIndex(JSContext *cx, jsval id, jsuint *indexp, bool *isIndex)
             *isIndex = false;
             return true;
         }
-        *indexp = (jsuint)i;
+        *indexp = (uint32_t)i;
         *isIndex = true;
         return true;
     }
@@ -5160,8 +5160,10 @@ xml_trace(JSTracer *trc, JSObject *obj)
      * This is safe to leave Unbarriered for incremental GC, but we'll need
      * to fix somehow for generational.
      */
-    if (xml)
-        MarkXMLUnbarriered(trc, xml, "private");
+    if (xml) {
+        MarkXMLUnbarriered(trc, &xml, "private");
+        JS_ASSERT(xml == obj->getPrivate());
+    }
 }
 
 static JSBool
@@ -6196,7 +6198,7 @@ static JSBool
 xml_namespace(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSLinearString *prefix, *nsprefix;
-    jsuint i, length;
+    uint32_t i, length;
     JSObject *ns;
 
     NON_LIST_XML_METHOD_PROLOG;
@@ -7308,8 +7310,11 @@ JSXML::writeBarrierPre(JSXML *xml)
         return;
 
     JSCompartment *comp = xml->compartment();
-    if (comp->needsBarrier())
-        MarkXMLUnbarriered(comp->barrierTracer(), xml, "write barrier");
+    if (comp->needsBarrier()) {
+        JSXML *tmp = xml;
+        MarkXMLUnbarriered(comp->barrierTracer(), &tmp, "write barrier");
+        JS_ASSERT(tmp == xml);
+    }
 #endif
 }
 

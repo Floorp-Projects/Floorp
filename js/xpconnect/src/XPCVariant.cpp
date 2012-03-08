@@ -190,7 +190,7 @@ private:
 
 public:
     static JSBool GetTypeForArray(XPCCallContext& ccx, JSObject* array,
-                                  jsuint length,
+                                  uint32_t length,
                                   nsXPTType* resultType, nsID* resultID);
 };
 
@@ -215,7 +215,7 @@ XPCArrayHomogenizer::StateTable[tTypeCount][tTypeCount-1] = {
 // static
 JSBool
 XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
-                                     jsuint length,
+                                     uint32_t length,
                                      nsXPTType* resultType, nsID* resultID)
 {
     Type state = tUnk;

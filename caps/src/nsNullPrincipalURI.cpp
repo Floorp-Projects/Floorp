@@ -67,11 +67,12 @@ NS_IMPL_THREADSAFE_ADDREF(nsNullPrincipalURI)
 NS_IMPL_THREADSAFE_RELEASE(nsNullPrincipalURI)
 
 NS_INTERFACE_MAP_BEGIN(nsNullPrincipalURI)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURI)
   if (aIID.Equals(kNullPrincipalURIImplementationCID))
     foundInterface = static_cast<nsIURI *>(this);
   else
   NS_INTERFACE_MAP_ENTRY(nsIURI)
+  NS_INTERFACE_MAP_ENTRY(nsISizeOf)
 NS_INTERFACE_MAP_END
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,3 +300,19 @@ nsNullPrincipalURI::SchemeIs(const char *aScheme, bool *_schemeIs)
   *_schemeIs = (0 == nsCRT::strcasecmp(mScheme.get(), aScheme));
   return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsISizeOf
+
+size_t
+nsNullPrincipalURI::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return mScheme.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
+         mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
+size_t
+nsNullPrincipalURI::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+

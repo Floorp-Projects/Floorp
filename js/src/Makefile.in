@@ -165,6 +165,7 @@ CPPSRCS		= \
 		Parser.cpp \
 		SemanticAnalysis.cpp \
 		TokenStream.cpp \
+		TestingFunctions.cpp \
 		LifoAlloc.cpp \
 		MapObject.cpp \
 		MemoryMetrics.cpp \
@@ -173,6 +174,7 @@ CPPSRCS		= \
 		RegExp.cpp \
 		Memory.cpp \
 		Statistics.cpp \
+		StringBuffer.cpp \
 		Unicode.cpp \
 		$(NULL)
 

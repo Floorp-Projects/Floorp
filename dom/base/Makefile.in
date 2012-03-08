@@ -69,6 +69,9 @@ EXTRA_JS_MODULES += Webapps.jsm \
 		$(NULL)
 endif
 
+EXTRA_JS_MODULES += DOMRequestHelper.jsm \
+		$(NULL)
+
 XPIDLSRCS = \
   nsIDOMDOMError.idl \
   nsIDOMDOMRequest.idl \

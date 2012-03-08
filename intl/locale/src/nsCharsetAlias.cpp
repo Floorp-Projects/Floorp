@@ -37,7 +37,7 @@
 
 #include "mozilla/Util.h"
 
-#include "nsICharsetAlias.h"
+#include "nsCharsetAlias.h"
 #include "pratom.h"
 
 // for NS_IMPL_IDS only
@@ -46,21 +46,8 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUConvPropertySearch.h"
-#include "nsCharsetAlias.h"
 
 using namespace mozilla;
-
-//--------------------------------------------------------------
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias)
-
-//--------------------------------------------------------------
-nsCharsetAlias2::nsCharsetAlias2()
-{
-}
-//--------------------------------------------------------------
-nsCharsetAlias2::~nsCharsetAlias2()
-{
-}
 
 // 
 static const char* kAliases[][3] = {
@@ -68,24 +55,25 @@ static const char* kAliases[][3] = {
 };
 
 //--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
-                                            nsACString& oResult)
+// static
+nsresult
+nsCharsetAlias::GetPreferred(const nsACString& aAlias,
+                             nsACString& oResult)
 {
    if (aAlias.IsEmpty()) return NS_ERROR_NULL_POINTER;
 
    nsCAutoString key(aAlias);
    ToLowerCase(key);
 
-   nsresult rv = nsUConvPropertySearch::SearchPropertyValue(kAliases,
+   return nsUConvPropertySearch::SearchPropertyValue(kAliases,
       ArrayLength(kAliases), key, oResult);
-
-  return rv;
 }
 
 //--------------------------------------------------------------
-NS_IMETHODIMP
-nsCharsetAlias2::Equals(const nsACString& aCharset1,
-                        const nsACString& aCharset2, bool* oResult)
+// static
+nsresult
+nsCharsetAlias::Equals(const nsACString& aCharset1,
+                       const nsACString& aCharset2, bool* oResult)
 {
    nsresult res = NS_OK;
 
@@ -101,15 +89,15 @@ nsCharsetAlias2::Equals(const nsACString& aCharset1,
 
    *oResult = false;
    nsCAutoString name1;
-   nsCAutoString name2;
-   res = this->GetPreferred(aCharset1, name1);
-   if(NS_SUCCEEDED(res)) {
-      res = this->GetPreferred(aCharset2, name2);
-      if(NS_SUCCEEDED(res)) {
-        *oResult = name1.Equals(name2);
-      }
-   }
-   
-   return res;
-}
+   res = GetPreferred(aCharset1, name1);
+   if (NS_FAILED(res))
+     return res;
 
+   nsCAutoString name2;
+   res = GetPreferred(aCharset2, name2);
+   if (NS_FAILED(res))
+     return res;
+
+   *oResult = name1.Equals(name2);
+   return NS_OK;
+}

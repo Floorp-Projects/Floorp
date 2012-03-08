@@ -261,17 +261,18 @@ StackFrame::mark(JSTracer *trc)
      * this path. However, generators use a special write barrier when the stack
      * frame is copied to the floating frame. Therefore, no barrier is needed.
      */
-    gc::MarkObjectUnbarriered(trc, &scopeChain(), "scope chain");
+    if (flags_ & HAS_SCOPECHAIN)
+        gc::MarkObjectUnbarriered(trc, &scopeChain_, "scope chain");
     if (isDummyFrame())
         return;
     if (hasArgsObj())
-        gc::MarkObjectUnbarriered(trc, &argsObj(), "arguments");
+        gc::MarkObjectUnbarriered(trc, &argsObj_, "arguments");
     if (isFunctionFrame()) {
-        gc::MarkObjectUnbarriered(trc, fun(), "fun");
+        gc::MarkObjectUnbarriered(trc, &exec.fun, "fun");
         if (isEvalFrame())
-            gc::MarkScriptUnbarriered(trc, script(), "eval script");
+            gc::MarkScriptUnbarriered(trc, &u.evalScript, "eval script");
     } else {
-        gc::MarkScriptUnbarriered(trc, script(), "script");
+        gc::MarkScriptUnbarriered(trc, &exec.script, "script");
     }
     if (IS_GC_MARKING_TRACER(trc))
         script()->compartment()->active = true;
