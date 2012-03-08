@@ -52,7 +52,6 @@
 #include "nsILineBreaker.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
-#include "nsIHTMLToTextSink.h"
 #include "nsIDocumentEncoder.h"
 #include "nsTArray.h"
 
@@ -62,9 +61,7 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
-class nsPlainTextSerializer : public nsIContentSerializer,
-                              public nsIHTMLContentSink,
-                              public nsIHTMLToTextSink
+class nsPlainTextSerializer : public nsIContentSerializer
 {
 public:
   nsPlainTextSerializer();
@@ -99,29 +96,6 @@ public:
 
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
                                  nsAString& aStr);
-
-  // nsIContentSink
-  NS_IMETHOD WillParse(void) { return NS_OK; }
-  NS_IMETHOD WillInterrupt(void) { return NS_OK; }
-  NS_IMETHOD WillResume(void) { return NS_OK; }
-  NS_IMETHOD SetParser(nsParserBase* aParser) { return NS_OK; }
-  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
-  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  virtual void FlushPendingNotifications(mozFlushType aType) { }
-  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
-  virtual nsISupports *GetTarget() { return nsnull; }
-
-  // nsIHTMLContentSink
-  NS_IMETHOD OpenHead();
-  NS_IMETHOD IsEnabled(PRInt32 aTag, bool* aReturn);
-  NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-
-  NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
-  NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
-  NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
-  NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
-  NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
 
   // nsIHTMLToTextSink
   NS_IMETHOD Initialize(nsAString* aOutString,

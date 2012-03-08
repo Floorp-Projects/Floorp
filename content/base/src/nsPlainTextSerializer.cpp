@@ -144,11 +144,8 @@ nsPlainTextSerializer::~nsPlainTextSerializer()
   NS_WARN_IF_FALSE(mHeadLevel == 0, "Wrong head level!");
 }
 
-NS_IMPL_ISUPPORTS4(nsPlainTextSerializer, 
-                   nsIContentSerializer,
-                   nsIContentSink,
-                   nsIHTMLContentSink,
-                   nsIHTMLToTextSink)
+NS_IMPL_ISUPPORTS1(nsPlainTextSerializer,
+                   nsIContentSerializer)
 
 
 NS_IMETHODIMP 
@@ -169,8 +166,6 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                  "Can't do formatted and preformatted output at the same time!");
   }
 #endif
-
-  NS_ENSURE_TRUE(nsContentUtils::GetParserService(), NS_ERROR_UNEXPECTED);
 
   mFlags = aFlags;
   mWrapColumn = aWrapColumn;
@@ -454,83 +449,6 @@ NS_IMETHODIMP
 nsPlainTextSerializer::AppendDocumentStart(nsIDocument *aDocument,
                                            nsAString& aStr)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPlainTextSerializer::OpenContainer(const nsIParserNode& aNode)
-{
-  PRInt32 type = aNode.GetNodeType();
-
-  if (type == eHTMLTag_head) {
-    ++mHeadLevel;
-    return NS_OK;
-  }
-
-  return DoOpenContainer(&aNode, type);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
-{
-  if (aTag == eHTMLTag_head) {
-    --mHeadLevel;
-    NS_ASSERTION(mHeadLevel >= 0, "mHeadLevel < 0");
-    return NS_OK;
-  }
-
-  return DoCloseContainer(aTag);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
-{
-  if (mIgnoreAboveIndex != (PRUint32)kNotFound) {
-    return NS_OK;
-  }
-
-  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-  const nsAString& text = aNode.GetText();
-
-  if ((type == eHTMLTag_text) ||
-      (type == eHTMLTag_whitespace) ||
-      (type == eHTMLTag_newline)) {
-    // Copy the text out, stripping out CRs
-    nsAutoString str;
-    PRUint32 length;
-    str.SetCapacity(text.Length());
-    nsReadingIterator<PRUnichar> srcStart, srcEnd;
-    length = nsContentUtils::CopyNewlineNormalizedUnicodeTo(text.BeginReading(srcStart), text.EndReading(srcEnd), str);
-    str.SetLength(length);
-    return DoAddLeaf(&aNode, type, str);
-  }
-  else {
-    return DoAddLeaf(&aNode, type, text);
-  }
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::OpenHead()
-{
-  ++mHeadLevel;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPlainTextSerializer::IsEnabled(PRInt32 aTag, bool* aReturn)
-{
-  nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
-
-  if (theHTMLTag == eHTMLTag_script) {
-    *aReturn = !(mFlags & nsIDocumentEncoder::OutputNoScriptContent);
-  }
-  else if (theHTMLTag == eHTMLTag_frameset) {
-    *aReturn = !(mFlags & nsIDocumentEncoder::OutputNoFramesContent);
-  }
-  else {
-    *aReturn = false;
-  }
-
   return NS_OK;
 }
 
