@@ -3522,7 +3522,8 @@ var PopupBlockerObserver = {
         let popupFeatures = pageReport[i].popupWindowFeatures;
         let popupName = pageReport[i].popupWindowName;
 
-        BrowserApp.addTab(popupURIspec);
+        let parent = BrowserApp.selectedTab;
+        BrowserApp.addTab(popupURIspec, { parentId: parent.id });
       }
     }
   }
