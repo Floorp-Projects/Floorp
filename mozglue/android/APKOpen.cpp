@@ -713,10 +713,6 @@ loadNSSLibs(const char *apkName)
 
 #ifdef MOZ_OLD_LINKER
   simple_linker_init();
-
-  struct stat status;
-  if (!stat(apkName, &status))
-    apk_mtime = status.st_mtime;
 #endif
 
   Zip *zip = new Zip(apkName);
