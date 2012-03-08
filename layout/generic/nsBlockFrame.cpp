@@ -287,6 +287,9 @@ NS_DECLARE_FRAME_PROPERTY(OverflowOutOfFlowsProperty,
                           nsContainerFrame::DestroyFrameList)
 NS_DECLARE_FRAME_PROPERTY(PushedFloatProperty,
                           nsContainerFrame::DestroyFrameList)
+NS_DECLARE_FRAME_PROPERTY(OutsideBulletProperty,
+                          nsContainerFrame::DestroyFrameList)
+NS_DECLARE_FRAME_PROPERTY(InsideBulletProperty, nsnull)
 
 //----------------------------------------------------------------------
 
@@ -310,12 +313,6 @@ void
 nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   DestroyAbsoluteFrames(aDestructRoot);
-  // Outside bullets are not in our child-list so check for them here
-  // and delete them when present.
-  if (mBullet && HaveOutsideBullet()) {
-    mBullet->DestroyFrom(aDestructRoot);
-    mBullet = nsnull;
-  }
 
   mFloats.DestroyFramesFrom(aDestructRoot);
 
@@ -599,9 +596,10 @@ nsBlockFrame::GetChildList(ChildListID aListID) const
       const nsFrameList* list = GetPushedFloats();
       return list ? *list : nsFrameList::EmptyList();
     }
-    case kBulletList:
-      return HaveOutsideBullet() ? nsFrameList(mBullet, mBullet)
-                                 : nsFrameList::EmptyList();
+    case kBulletList: {
+      const nsFrameList* list = GetOutsideBulletList();
+      return list ? *list : nsFrameList::EmptyList();
+    }
     default:
       return nsContainerFrame::GetChildList(aListID);
   }
@@ -620,9 +618,9 @@ nsBlockFrame::GetChildLists(nsTArray<ChildList>* aLists) const
     list->AppendIfNonempty(aLists, kOverflowOutOfFlowList);
   }
   mFloats.AppendIfNonempty(aLists, kFloatList);
-  if (HaveOutsideBullet()) {
-    nsFrameList bullet(mBullet, mBullet);
-    bullet.AppendIfNonempty(aLists, kBulletList);
+  list = GetOutsideBulletList();
+  if (list) {
+    list->AppendIfNonempty(aLists, kBulletList);
   }
   list = GetPushedFloats();
   if (list) {
@@ -1111,7 +1109,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // rare case: an empty first line followed by a second line that
   // contains a block (example: <LI>\n<P>... ). This is where
   // the second case can happen.
-  if (mBullet && HaveOutsideBullet() && !mLines.empty() &&
+  if (HasOutsideBullet() && !mLines.empty() &&
       (mLines.front()->IsBlock() ||
        (0 == mLines.front()->mBounds.height &&
         mLines.front() != mLines.back() &&
@@ -1123,7 +1121,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     bool havePosition = nsLayoutUtils::GetFirstLinePosition(this, &position);
     nscoord lineTop = havePosition ? position.mTop
                                    : reflowState->mComputedBorderPadding.top;
-    ReflowBullet(state, metrics, lineTop);
+    nsIFrame* bullet = GetOutsideBullet();
+    ReflowBullet(bullet, state, metrics, lineTop);
     NS_ASSERTION(!BulletIsEmpty() || metrics.height == 0,
                  "empty bullet took up space");
 
@@ -1134,9 +1133,9 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       // bullets that are placed next to a child block (bug 92896)
     
       // Tall bullets won't look particularly nice here...
-      nsRect bbox = mBullet->GetRect();
+      nsRect bbox = bullet->GetRect();
       bbox.y = position.mBaseline - metrics.ascent;
-      mBullet->SetRect(bbox);
+      bullet->SetRect(bbox);
     }
     // Otherwise just leave the bullet where it is, up against our top padding.
   }
@@ -1492,13 +1491,14 @@ nsBlockFrame::ComputeOverflowAreas(const nsRect&         aBounds,
       areas.UnionWith(line->GetOverflowAreas());
     }
 
-    // Factor the bullet in; normally the bullet will be factored into
+    // Factor an outside bullet in; normally the bullet will be factored into
     // the line-box's overflow areas. However, if the line is a block
     // line then it won't; if there are no lines, it won't. So just
     // factor it in anyway (it can't hurt if it was already done).
     // XXXldb Can we just fix GetOverflowArea instead?
-    if (mBullet) {
-      areas.UnionAllWith(mBullet->GetRect());
+    nsIFrame* outsideBullet = GetOutsideBullet();
+    if (outsideBullet) {
+      areas.UnionAllWith(outsideBullet->GetRect());
     }
 
     // Factor in the bottom edge of the children.  Child frames will be added
@@ -2346,9 +2346,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   }
 
   // Handle an odd-ball case: a list-item with no lines
-  if (mBullet && HaveOutsideBullet() && mLines.empty()) {
+  if (HasOutsideBullet() && mLines.empty()) {
     nsHTMLReflowMetrics metrics;
-    ReflowBullet(aState, metrics,
+    nsIFrame* bullet = GetOutsideBullet();
+    ReflowBullet(bullet, aState, metrics,
                  aState.mReflowState.mComputedBorderPadding.top);
     NS_ASSERTION(!BulletIsEmpty() || metrics.height == 0,
                  "empty bullet took up space");
@@ -2358,7 +2359,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // we end up with *some* height.
 
       if (metrics.ascent == nsHTMLReflowMetrics::ASK_FOR_BASELINE &&
-          !nsLayoutUtils::GetFirstLineBaseline(mBullet, &metrics.ascent)) {
+          !nsLayoutUtils::GetFirstLineBaseline(bullet, &metrics.ascent)) {
         metrics.ascent = metrics.height;
       }
 
@@ -2376,7 +2377,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
       nscoord offset = minAscent - metrics.ascent;
       if (offset > 0) {
-        mBullet->SetRect(mBullet->GetRect() + nsPoint(0, offset));
+        bullet->SetRect(bullet->GetRect() + nsPoint(0, offset));
       }
     }
   }
@@ -2862,7 +2863,7 @@ nsBlockFrame::IsSelfEmpty()
     return false;
   }
 
-  if (HaveOutsideBullet() && !BulletIsEmpty()) {
+  if (HasOutsideBullet() && !BulletIsEmpty()) {
     return false;
   }
 
@@ -4188,17 +4189,18 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // first or second line. It's only placed on the second line in a
   // rare case: when the first line is empty.
   bool addedBullet = false;
-  if (mBullet && HaveOutsideBullet() &&
+  if (HasOutsideBullet() &&
       ((aLine == mLines.front() &&
         (!aLineLayout.IsZeroHeight() || (aLine == mLines.back()))) ||
        (mLines.front() != mLines.back() &&
         0 == mLines.front()->mBounds.height &&
         aLine == mLines.begin().next()))) {
     nsHTMLReflowMetrics metrics;
-    ReflowBullet(aState, metrics, aState.mY);
+    nsIFrame* bullet = GetOutsideBullet();
+    ReflowBullet(bullet, aState, metrics, aState.mY);
     NS_ASSERTION(!BulletIsEmpty() || metrics.height == 0,
                  "empty bullet took up space");
-    aLineLayout.AddBulletFrame(mBullet, metrics);
+    aLineLayout.AddBulletFrame(bullet, metrics);
     addedBullet = true;
   }
   aLineLayout.VerticalAlignLine();
@@ -4281,7 +4283,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   aLineLayout.RelativePositionFrames(overflowAreas);
   aLine->SetOverflowAreas(overflowAreas);
   if (addedBullet) {
-    aLineLayout.RemoveBulletFrame(mBullet);
+    aLineLayout.RemoveBulletFrame(GetOutsideBullet());
   }
 
   // Inline lines do not have margins themselves; however they are
@@ -4670,6 +4672,43 @@ nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
   }
 }
 
+nsBulletFrame*
+nsBlockFrame::GetInsideBullet() const
+{
+  if (!HasInsideBullet()) {
+    return nsnull;
+  }
+  NS_ASSERTION(!HasOutsideBullet(), "invalid bullet state");
+  nsBulletFrame* frame =
+    static_cast<nsBulletFrame*>(Properties().Get(InsideBulletProperty()));
+  NS_ASSERTION(frame && frame->GetType() == nsGkAtoms::bulletFrame,
+               "bogus inside bullet frame");
+  return frame;
+}
+
+nsBulletFrame*
+nsBlockFrame::GetOutsideBullet() const
+{
+  nsFrameList* list = GetOutsideBulletList();
+  return list ? static_cast<nsBulletFrame*>(list->FirstChild())
+              : nsnull;
+}
+
+nsFrameList*
+nsBlockFrame::GetOutsideBulletList() const
+{
+  if (!HasOutsideBullet()) {
+    return nsnull;
+  }
+  NS_ASSERTION(!HasInsideBullet(), "invalid bullet state");
+  nsFrameList* list =
+    static_cast<nsFrameList*>(Properties().Get(OutsideBulletProperty()));
+  NS_ASSERTION(list && list->GetLength() == 1 &&
+               list->FirstChild()->GetType() == nsGkAtoms::bulletFrame,
+               "bogus outside bullet list");
+  return list;
+}
+
 nsFrameList*
 nsBlockFrame::GetPushedFloats() const
 {
@@ -4833,10 +4872,8 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
 
   // If we're inserting at the beginning of our list and we have an
   // inside bullet, insert after that bullet.
-  if (!aPrevSibling && mBullet && !HaveOutsideBullet()) {
-    NS_ASSERTION(!aFrameList.ContainsFrame(mBullet),
-                 "Trying to make mBullet prev sibling to itself");
-    aPrevSibling = mBullet;
+  if (!aPrevSibling && HasInsideBullet()) {
+    aPrevSibling = GetInsideBullet();
   }
   
   nsIPresShell *presShell = PresContext()->PresShell();
@@ -6305,9 +6342,10 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  if (NS_SUCCEEDED(rv) && (nsnull != mBullet) && HaveOutsideBullet()) {
+  if (NS_SUCCEEDED(rv) && HasOutsideBullet()) {
     // Display outside bullets manually
-    rv = BuildDisplayListForChild(aBuilder, mBullet, aDirtyRect, aLists);
+    nsIFrame* bullet = GetOutsideBullet();
+    rv = BuildDisplayListForChild(aBuilder, bullet, aDirtyRect, aLists);
   }
 
 #ifdef DEBUG
@@ -6351,7 +6389,7 @@ nsBlockFrame::CreateAccessible()
                                               presContext->PresShell());
   }
 
-  if (!mBullet || !presContext) {
+  if (!HasBullet() || !presContext) {
     if (!mContent->GetParent()) {
       // Don't create accessible objects for the root content node, they are redundant with
       // the nsDocAccessible object created with the document node
@@ -6439,7 +6477,7 @@ nsBlockFrame::ChildIsDirty(nsIFrame* aChild)
   if (aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
       aChild->GetStyleDisplay()->IsAbsolutelyPositioned()) {
     // do nothing
-  } else if (aChild == mBullet && HaveOutsideBullet()) {
+  } else if (aChild == GetOutsideBullet()) {
     // The bullet lives in the first line, unless the first line has
     // height 0 and there is a second line, in which case it lives
     // in the second line.
@@ -6474,15 +6512,9 @@ nsBlockFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aPrevInFlow)
 {
   if (aPrevInFlow) {
-    // Copy over the block frame type flags
-    nsBlockFrame*  blockFrame = (nsBlockFrame*)aPrevInFlow;
-
-    // Don't copy NS_BLOCK_HAS_FIRST_LETTER_CHILD as that is set on the first
-    // continuation only.
-    SetFlags(blockFrame->mState &
-             (NS_BLOCK_FLAGS_MASK &
-               (~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET &
-                ~NS_BLOCK_HAS_FIRST_LETTER_CHILD)));
+    // Copy over the inherited block frame bits from the prev-in-flow.
+    SetFlags(aPrevInFlow->GetStateBits() &
+             (NS_BLOCK_FLAGS_MASK & ~NS_BLOCK_FLAGS_NON_INHERITED_MASK));
   }
 
   nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
@@ -6498,6 +6530,11 @@ NS_IMETHODIMP
 nsBlockFrame::SetInitialChildList(ChildListID     aListID,
                                   nsFrameList&    aChildList)
 {
+  NS_ASSERTION(aListID != kPrincipalList ||
+               (GetStateBits() & (NS_BLOCK_FRAME_HAS_INSIDE_BULLET |
+                                  NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET)) == 0,
+               "how can we have a bullet already?");
+
   nsresult rv = NS_OK;
 
   if (kAbsoluteList == aListID) {
@@ -6556,10 +6593,9 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
       }
       possibleListItem = parent;
     }
-    if ((nsnull == GetPrevInFlow()) &&
-        (NS_STYLE_DISPLAY_LIST_ITEM ==
-           possibleListItem->GetStyleDisplay()->mDisplay) &&
-        (nsnull == mBullet)) {
+    if (NS_STYLE_DISPLAY_LIST_ITEM ==
+          possibleListItem->GetStyleDisplay()->mDisplay &&
+        !GetPrevInFlow()) {
       // Resolve style for the bullet frame
       const nsStyleList* styleList = GetStyleList();
       nsCSSPseudoElements::Type pseudoType;
@@ -6585,7 +6621,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
 
       // Create bullet frame
       nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);
-      if (nsnull == bullet) {
+      if (!bullet) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
       bullet->Init(mContent, this, nsnull);
@@ -6593,16 +6629,16 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
       // If the list bullet frame should be positioned inside then add
       // it to the flow now.
       if (NS_STYLE_LIST_STYLE_POSITION_INSIDE ==
-          styleList->mListStylePosition) {
+            styleList->mListStylePosition) {
         nsFrameList bulletList(bullet, bullet);
         AddFrames(bulletList, nsnull);
-        mState &= ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
+        Properties().Set(InsideBulletProperty(), bullet);
+        AddStateBits(NS_BLOCK_FRAME_HAS_INSIDE_BULLET);
+      } else {
+        nsFrameList* bulletList = new nsFrameList(bullet, bullet);
+        Properties().Set(OutsideBulletProperty(), bulletList);
+        AddStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
       }
-      else {
-        mState |= NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
-      }
-
-      mBullet = bullet;
     }
   }
 
@@ -6613,8 +6649,7 @@ bool
 nsBlockFrame::BulletIsEmpty() const
 {
   NS_ASSERTION(mContent->GetPrimaryFrame()->GetStyleDisplay()->mDisplay ==
-                 NS_STYLE_DISPLAY_LIST_ITEM &&
-               HaveOutsideBullet(),
+                 NS_STYLE_DISPLAY_LIST_ITEM && HasOutsideBullet(),
                "should only care when we have an outside bullet");
   const nsStyleList* list = GetStyleList();
   return list->mListStyleType == NS_STYLE_LIST_STYLE_NONE &&
@@ -6638,22 +6673,13 @@ nsBlockFrame::GetBulletText(nsAString& aText) const
     aText.Assign(kSquareCharacter);
   }
   else if (myList->mListStyleType != NS_STYLE_LIST_STYLE_NONE) {
-    nsAutoString text;
-    mBullet->GetListItemText(*myList, text);
-    aText = text;
+    nsBulletFrame* bullet = GetBullet();
+    if (bullet) {
+      nsAutoString text;
+      bullet->GetListItemText(*myList, text);
+      aText = text;
+    }
   }
-}
-
-bool
-nsBlockFrame::HasBullet() const
-{
-  if (mBullet) {
-    const nsStyleList* styleList = GetStyleList();
-    return styleList->GetListStyleImage() ||
-      styleList->mListStyleType != NS_STYLE_LIST_STYLE_NONE;
-  }
-
-  return false;
 }
 
 // static
@@ -6763,15 +6789,15 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
     // something foreign has crept in.
     nsBlockFrame* listItem = nsLayoutUtils::GetAsBlock(kid);
     if (listItem) {
-      if (nsnull != listItem->mBullet) {
+      nsBulletFrame* bullet = listItem->GetBullet();
+      if (bullet) {
         bool changed;
-        *aOrdinal = listItem->mBullet->SetListItemOrdinal(*aOrdinal,
-                                                          &changed);
+        *aOrdinal = bullet->SetListItemOrdinal(*aOrdinal, &changed);
         if (changed) {
           kidRenumberedABullet = true;
 
           // The ordinal changed - mark the bullet frame dirty.
-          listItem->ChildIsDirty(listItem->mBullet);
+          listItem->ChildIsDirty(bullet);
         }
       }
 
@@ -6803,7 +6829,8 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
 }
 
 void
-nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
+nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
+                           nsBlockReflowState& aState,
                            nsHTMLReflowMetrics& aMetrics,
                            nscoord aLineTop)
 {
@@ -6819,10 +6846,10 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   // XXXwaterson Should this look just like the logic in
   // nsBlockReflowContext::ReflowBlock and nsLineLayout::ReflowFrame?
   nsHTMLReflowState reflowState(aState.mPresContext, rs,
-                                mBullet, availSize);
+                                aBulletFrame, availSize);
   nsReflowStatus  status;
-  mBullet->WillReflow(aState.mPresContext);
-  mBullet->Reflow(aState.mPresContext, aMetrics, reflowState, status);
+  aBulletFrame->WillReflow(aState.mPresContext);
+  aBulletFrame->Reflow(aState.mPresContext, aMetrics, reflowState, status);
 
   // Get the float available space using our saved state from before we
   // started reflowing the block, so that we ignore any floats inside
@@ -6862,8 +6889,9 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location.
   nscoord y = aState.mContentArea.y;
-  mBullet->SetRect(nsRect(x, y, aMetrics.width, aMetrics.height));
-  mBullet->DidReflow(aState.mPresContext, &aState.mReflowState, NS_FRAME_REFLOW_FINISHED);
+  aBulletFrame->SetRect(nsRect(x, y, aMetrics.width, aMetrics.height));
+  aBulletFrame->DidReflow(aState.mPresContext, &aState.mReflowState,
+                          NS_FRAME_REFLOW_FINISHED);
 }
 
 // This is used to scan frames for any float placeholders, add their
