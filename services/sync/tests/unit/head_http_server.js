@@ -295,6 +295,16 @@ ServerCollection.prototype = {
     return this.insertWBO(new ServerWBO(id, payload, modified));
   },
 
+  /**
+   * Removes an object entirely from the collection.
+   *
+   * @param id
+   *        (string) ID to remove.
+   */
+  remove: function remove(id) {
+    delete this._wbos[id];
+  },
+
   _inResultSet: function(wbo, options) {
     return wbo.payload
            && (!options.ids || (options.ids.indexOf(wbo.id) != -1))
