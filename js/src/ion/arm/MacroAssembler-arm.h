@@ -706,7 +706,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         jsval_layout jv = JSVAL_TO_IMPL(val);
         ma_mov(Imm32(jv.s.tag), lr);
         ma_str(lr, Address(dest.base, dest.offset + 4));
-        if (val.isGCThing())
+        if (val.isMarkable())
             ma_mov(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())), lr);
         else
             ma_mov(Imm32(jv.s.payload.i32), lr);
@@ -728,7 +728,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void pushValue(const Value &val) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         push(Imm32(jv.s.tag));
-        if (val.isGCThing())
+        if (val.isMarkable())
             push(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())));
         else
             push(Imm32(jv.s.payload.i32));
