@@ -112,6 +112,7 @@ public class GeckoAppShell
     static File sHomeDir = null;
     static private int sDensityDpi = 0;
     private static Boolean sSQLiteLibsLoaded = false;
+    private static Boolean sNSSLibsLoaded = false;
     private static Boolean sLibsSetup = false;
     private static File sGREDir = null;
 
@@ -141,6 +142,7 @@ public class GeckoAppShell
     public static native void removeObserver(String observerKey);
     public static native void loadGeckoLibsNative(String apkName);
     public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
+    public static native void loadNSSLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
 
     public static void registerGlobalExceptionHandler() {
@@ -368,6 +370,19 @@ public class GeckoAppShell
             loadLibsSetup(context);
             loadSQLiteLibsNative(apkName, false);
             sSQLiteLibsLoaded = true;
+        }
+    }
+
+    public static void loadNSSLibs(Context context, String apkName) {
+        if (sNSSLibsLoaded)
+            return;
+        synchronized(sNSSLibsLoaded) {
+            if (sNSSLibsLoaded)
+                return;
+            loadMozGlue();
+            loadLibsSetup(context);
+            loadNSSLibsNative(apkName, false);
+            sNSSLibsLoaded = true;
         }
     }
 
