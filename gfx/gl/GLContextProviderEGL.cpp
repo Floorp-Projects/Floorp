@@ -42,6 +42,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Util.h"
 
+#include "nsIScreen.h"
+#include "nsIScreenManager.h"
+
 #if defined(XP_UNIX)
 
 #ifdef MOZ_WIDGET_GTK2
@@ -2190,13 +2193,6 @@ static const EGLint kEGLConfigAttribsRGBA32[] = {
     LOCAL_EGL_NONE
 };
 
-// This struct is used only by CreateConfig below, but ISO C++98 forbids
-// instantiating a template dependent on a locally-defined type.  Boo-urns!
-struct EGLAttribs {
-    gfxASurface::gfxImageFormat mFormat;
-    const EGLint* mAttribs;
-};
-
 // Return true if a suitable EGLConfig was found and pass it out
 // through aConfig.  Return false otherwise.
 //
@@ -2205,47 +2201,41 @@ struct EGLAttribs {
 static bool
 CreateConfig(EGLConfig* aConfig)
 {
-    EGLAttribs attribsToTry[] = {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-        // Prefer r5g6b5 for potential savings in memory bandwidth.
-        // This needs to be reevaluated for newer devices.
-        { gfxASurface::ImageFormatRGB16_565, kEGLConfigAttribsRGB16 },
-#endif
-        { gfxASurface::ImageFormatARGB32, kEGLConfigAttribsRGBA32 },
-    };
+    nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
+    nsCOMPtr<nsIScreen> screen;
+    screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
+    PRInt32 depth = 24;
+    screen->GetColorDepth(&depth);
 
     EGLConfig configs[64];
-    for (unsigned i = 0; i < ArrayLength(attribsToTry); ++i) {
-        const EGLAttribs& attribs = attribsToTry[i];
-        EGLint ncfg = ArrayLength(configs);
+    gfxASurface::gfxImageFormat format;
+    const EGLint* attribs = depth == 16 ? kEGLConfigAttribsRGB16 :
+                                          kEGLConfigAttribsRGBA32;
+    EGLint ncfg = ArrayLength(configs);
 
-        if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(), attribs.mAttribs,
-                                       configs, ncfg, &ncfg) ||
-            ncfg < 1)
+    if (!sEGLLibrary.fChooseConfig(EGL_DISPLAY(), attribs,
+                                   configs, ncfg, &ncfg) ||
+        ncfg < 1) {
+        return false;
+    }
+
+    for (int j = 0; j < ncfg; ++j) {
+        EGLConfig config = configs[j];
+        EGLint r, g, b, a;
+
+        if (sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config,
+                                         LOCAL_EGL_RED_SIZE, &r) &&
+            sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config,
+                                         LOCAL_EGL_GREEN_SIZE, &g) &&
+            sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config,
+                                         LOCAL_EGL_BLUE_SIZE, &b) &&
+            sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config,
+                                         LOCAL_EGL_ALPHA_SIZE, &a) &&
+            ((depth == 16 && r == 5 && g == 6 && b == 5) ||
+             (depth == 24 && r == 8 && g == 8 && b == 8 && a == 8)))
         {
-            continue;
-        }
-
-        for (int j = 0; j < ncfg; ++j) {
-            EGLConfig config = configs[j];
-            EGLint r, g, b, a;
-
-            if (sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config,
-                                             LOCAL_EGL_RED_SIZE, &r) &&
-                sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config,
-                                             LOCAL_EGL_GREEN_SIZE, &g) &&
-                sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config,
-                                             LOCAL_EGL_BLUE_SIZE, &b) &&
-                sEGLLibrary.fGetConfigAttrib(EGL_DISPLAY(), config,
-                                             LOCAL_EGL_ALPHA_SIZE, &a) &&
-                ((gfxASurface::ImageFormatRGB16_565 == attribs.mFormat &&
-                  r == 5 && g == 6 && b == 5) ||
-                 (gfxASurface::ImageFormatARGB32 == attribs.mFormat &&
-                  r == 8 && g == 8 && b == 8 && a == 8)))
-            {
-                *aConfig = config;
-                return true;
-            }
+            *aConfig = config;
+            return true;
         }
     }
     return false;
