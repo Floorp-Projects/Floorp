@@ -1988,6 +1988,15 @@ panel[dimmed="true"] {
 
 /* Highlighter toolbar */
 
+#inspector-inspect-toolbutton {
+  list-style-image: url("chrome://browser/skin/devtools/inspect-button.png");
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+#inspector-inspect-toolbutton[checked] {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+
 #inspector-toolbar {
   border-top: 1px solid hsla(210, 8%, 5%, .65);
 }
