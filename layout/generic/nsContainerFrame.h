@@ -95,7 +95,7 @@ public:
   NS_IMETHOD RemoveFrame(ChildListID aListID,
                          nsIFrame* aOldFrame);
 
-  virtual nsFrameList GetChildList(ChildListID aList) const;
+  virtual const nsFrameList& GetChildList(ChildListID aList) const;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const;
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
   virtual void ChildIsDirty(nsIFrame* aChild);
