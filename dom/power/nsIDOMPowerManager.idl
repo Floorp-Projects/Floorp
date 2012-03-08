@@ -37,9 +37,40 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(6ec16abc-2fe8-4ab3-99b0-0f08405be81b)]
+interface nsIDOMMozWakeLockListener;
+
+/**
+ * This interface implements navigator.mozPower
+ */
+[scriptable, uuid(abf4b2b1-139d-4eff-998d-8f24616910ae)]
 interface nsIDOMMozPowerManager : nsISupports
 {
-    void powerOff();
-    void reboot();
+    void    powerOff();
+    void    reboot();
+
+    /**
+     * The listeners are notified when a resource changes its lock state to:
+     *  - unlocked
+     *  - locked but not visible
+     *  - locked and visible
+     */
+    void    addWakeLockListener(in nsIDOMMozWakeLockListener aListener);
+    void    removeWakeLockListener(in nsIDOMMozWakeLockListener aListener);
+
+    /**
+     * Query the wake lock state of the topic.
+     *
+     * Possible states are:
+     *
+     *  - "unlocked" - nobody holds the wake lock.
+     *
+     *  - "locked-foreground" - at least one window holds the wake lock,
+     *    and it is visible.
+     *
+     *  - "locked-background" - at least one window holds the wake lock,
+     *    but all of them are hidden.
+     *
+     * @param aTopic The resource name related to the wake lock.
+     */
+    DOMString getWakeLockState(in DOMString aTopic);
 };
