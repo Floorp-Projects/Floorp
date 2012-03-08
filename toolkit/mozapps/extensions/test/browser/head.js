@@ -59,6 +59,7 @@ var gUseInContentUI = !gTestInWindow && ("switchToTabHavingURI" in window);
 var gRestorePrefs = [{name: PREF_LOGGING_ENABLED},
                      {name: "extensions.webservice.discoverURL"},
                      {name: "extensions.update.url"},
+                     {name: "extensions.update.background.url"},
                      {name: "extensions.getAddons.get.url"},
                      {name: "extensions.getAddons.getWithPerformance.url"},
                      {name: "extensions.getAddons.search.browseURL"},

@@ -43,7 +43,7 @@
 
 interface nsIEditor;
 
-[scriptable, uuid(52837507-202d-4e72-a482-5f068a1fd720)]
+[scriptable, uuid(e242d495-5cde-4b1c-8c84-2525b14939f5)]
 interface nsIAccessibleEditableText : nsISupports
 {
   /**
@@ -103,19 +103,4 @@ interface nsIAccessibleEditableText : nsISupports
    *                   clipboard into the text represented by this object.
    */
   void pasteText (in long position);
-
-  /**
-   * Returns an editor associated with the accessible.
-   */
-  [noscript] readonly attribute nsIEditor associatedEditor;
 };
-
-/*
- Assumptions:
-
- selectAttributes method takes an nsISupports parameter.
-        'set' methods throw exception on failure.
- 'wstring' inputs are potentially multibyte (UTF-16 for
-        instance); 'string' and UTF-8 may be a better choice.
-
-*/

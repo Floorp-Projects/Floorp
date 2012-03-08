@@ -2061,7 +2061,12 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         // to cause period, and we hope hygienic, last-ditch GCs from within
         // the GC's allocator.
         JS_SetGCParameter(mJSRuntime, JSGC_MAX_BYTES, 0xffffffff);
+#ifdef MOZ_ASAN
+        // ASan requires more stack space due to redzones
+        JS_SetNativeStackQuota(mJSRuntime, 2 * 128 * sizeof(size_t) * 1024);
+#else  
         JS_SetNativeStackQuota(mJSRuntime, 128 * sizeof(size_t) * 1024);
+#endif
         JS_SetContextCallback(mJSRuntime, ContextCallback);
         JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
         JS_SetGCCallback(mJSRuntime, GCCallback);

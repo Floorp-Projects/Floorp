@@ -81,13 +81,29 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIdleServiceDaily
 
-NS_IMPL_ISUPPORTS1(nsIdleServiceDaily, nsIObserver)
+NS_IMPL_ISUPPORTS2(nsIdleServiceDaily, nsIObserver, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsIdleServiceDaily::Observe(nsISupports *,
-                            const char *,
+                            const char *aTopic,
                             const PRUnichar *)
 {
+  if (strcmp(aTopic, "profile-after-change") == 0) {
+    // We are back. Start sending notifications again.
+    mShutdownInProgress = false;
+    return NS_OK;
+  }
+
+  if (strcmp(aTopic, "xpcom-will-shutdown") == 0 ||
+      strcmp(aTopic, "profile-change-teardown") == 0) {
+    mShutdownInProgress = true;
+  }
+
+  if (mShutdownInProgress || strcmp(aTopic, OBSERVER_TOPIC_BACK) == 0) {
+    return NS_OK;
+  }
+  MOZ_ASSERT(strcmp(aTopic, OBSERVER_TOPIC_IDLE) == 0);
+
   // Notify anyone who cares.
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
@@ -123,6 +139,7 @@ nsIdleServiceDaily::nsIdleServiceDaily(nsIIdleService* aIdleService)
   : mIdleService(aIdleService)
   , mTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
   , mCategoryObservers(OBSERVER_TOPIC_IDLE_DAILY)
+  , mShutdownInProgress(false)
 {
 }
 
@@ -149,6 +166,14 @@ nsIdleServiceDaily::Init()
                                        this,
                                        SECONDS_PER_DAY * PR_MSEC_PER_SEC,
                                        nsITimer::TYPE_ONE_SHOT);
+  }
+
+  // Register for when we should terminate/pause
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, "xpcom-will-shutdown", true);
+    obs->AddObserver(this, "profile-change-teardown", true);
+    obs->AddObserver(this, "profile-after-change", true);
   }
 }
 
