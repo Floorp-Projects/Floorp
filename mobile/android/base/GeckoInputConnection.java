@@ -40,6 +40,7 @@ package org.mozilla.gecko;
 
 import android.R;
 import android.content.Context;
+import android.os.Build.VERSION;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
@@ -95,7 +96,6 @@ public class GeckoInputConnection
     private static int mIMEState;
     private static String mIMETypeHint;
     private static String mIMEActionHint;
-    private static boolean mIMELandscapeFS;
 
     // Is a composition active?
     private boolean mComposing;
@@ -694,8 +694,10 @@ public class GeckoInputConnection
         else if (mIMEActionHint != null && mIMEActionHint.length() != 0)
             outAttrs.actionLabel = mIMEActionHint;
 
-        if (mIMELandscapeFS == false)
-            outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+        outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+        if (VERSION.SDK_INT >= 11) { // Honeycomb
+            outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_FULLSCREEN;
+        }
 
         reset();
         return this;
@@ -872,8 +874,7 @@ public class GeckoInputConnection
         }
     }
 
-    public void notifyIMEEnabled(int state, String typeHint,
-                                 String actionHint, boolean landscapeFS) {
+    public void notifyIMEEnabled(int state, String typeHint, String actionHint) {
         View v = GeckoApp.mAppContext.getLayerController().getView();
 
         if (v == null)
@@ -884,7 +885,6 @@ public class GeckoInputConnection
         mIMEState = state;
         mIMETypeHint = typeHint;
         mIMEActionHint = actionHint;
-        mIMELandscapeFS = landscapeFS;
         IMEStateUpdater.enableIME();
     }
 
