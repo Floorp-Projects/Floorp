@@ -41,7 +41,6 @@
 
 #define PNG_API_RULE 0
 #define PNG_COST_SHIFT 3
-#define PNG_DEFAULT_READ_MACROS 1
 #define PNG_GAMMA_THRESHOLD_FIXED 5000
 #define PNG_MAX_GAMMA_8 11
 #define PNG_USER_CHUNK_MALLOC_MAX 4000000L
@@ -72,7 +71,6 @@
 #define PNG_READ_EXPAND_SUPPORTED
 #define PNG_READ_GAMMA_SUPPORTED
 #define PNG_READ_GRAY_TO_RGB_SUPPORTED
-#define PNG_READ_INT_FUNCTIONS_SUPPORTED
 #define PNG_READ_INTERLACING_SUPPORTED
 #define PNG_READ_SCALE_16_TO_8_SUPPORTED
 #define PNG_READ_TEXT_SUPPORTED
@@ -86,8 +84,8 @@
 #define PNG_WRITE_16BIT_SUPPORTED
 #define PNG_WRITE_ANCILLARY_CHUNKS_SUPPORTED
 #define PNG_WRITE_FLUSH_SUPPORTED
-#define PNG_WRITE_INT_FUNCTIONS_SUPPORTED
 #define PNG_WRITE_OPTIMIZE_CMF_SUPPORTED
+#define PNG_WRITE_INT_FUNCTIONS_SUPPORTED
 #endif
 
 #define PNG_APNG_SUPPORTED
@@ -144,7 +142,6 @@
 /* The following may have changed, or can be affected by conditional compilation
    choices, and will be mangled. */
 #define png_64bit_product               MOZ_PNG_64bit_product
-#define png_benign_error                MOZ_PNG_benign_error
 #define png_build_gamma_table           MOZ_PNG_build_gamma_tab
 #define png_build_grayscale_palette     MOZ_PNG_build_g_p
 #define png_calculate_crc               MOZ_PNG_calc_crc
@@ -153,7 +150,6 @@
 #define png_check_chunk_name            MOZ_PNG_ck_chunk_name
 #define png_check_IHDR                  MOZ_PNG_ck_IHDR
 #define png_check_keyword               MOZ_PNG_ck_keyword
-#define png_chunk_benign_error          MOZ_PNG_ck_benign_error
 #define png_combine_row                 MOZ_PNG_combine_row
 #define png_convert_from_struct_tm      MOZ_PNG_cv_from_struct_tm
 #define png_convert_from_time_t         MOZ_PNG_cv_from_time_t
@@ -234,7 +230,6 @@
 #define png_get_IHDR                    MOZ_PNG_get_IHDR
 #define png_get_image_height            MOZ_PNG_get_image_h
 #define png_get_image_width             MOZ_PNG_get_image_w
-#define png_get_int_32                  MOZ_PNG_get_int_32
 #define png_get_interlace_type          MOZ_PNG_get_interlace_type
 #define png_get_libpng_ver              MOZ_PNG_get_libpng_ver
 #define png_get_mem_ptr                 MOZ_PNG_get_mem_ptr
@@ -259,9 +254,6 @@
 #define png_get_text                    MOZ_PNG_get_text
 #define png_get_tIME                    MOZ_PNG_get_tIME
 #define png_get_tRNS                    MOZ_PNG_get_tRNS
-#define png_get_uint_16                 MOZ_PNG_get_uint_16
-#define png_get_uint_31                 MOZ_PNG_get_uint_31
-#define png_get_uint_32                 MOZ_PNG_get_uint_32
 #define png_get_unknown_chunks          MOZ_PNG_get_unk_chunks
 #define png_get_user_chunk_ptr          MOZ_PNG_get_user_chunk_ptr
 #define png_get_user_height_max         MOZ_PNG_get_user_height_max
@@ -545,10 +537,8 @@
 #define png_exp                                   MOZ_PNG_exp
 #define png_exp16bit                              MOZ_PNG_exp16bit
 #define png_exp8bit                               MOZ_PNG_exp8bit
-#define png_fixed_error                           MOZ_PNG_fixed_error
 #define png_fixed_inches_from_microns             MOZ_PNG_fixed_inch_from_micr
 #define png_format_number                         MOZ_PNG_format_number
-#define png_formatted_warning                     MOZ_PNG_formatted_warning
 #define png_gamma_16bit_correct                   MOZ_PNG_gamma_16bit_correct
 #define png_gamma_8bit_correct                    MOZ_PNG_gamma_8bit_correct
 #define png_gamma_correct                         MOZ_PNG_gamma_correct
@@ -610,9 +600,6 @@
 #define png_set_text_compression_strategy         MOZ_PNG_set_text_c_strategy
 #define png_set_text_compression_window_bits      MOZ_PNG_set_text_c_wnd_bits
 #define png_user_version_check                    MOZ_PNG_user_version_check
-#define png_warning_parameter                     MOZ_PNG_warn_param
-#define png_warning_parameter_signed              MOZ_PNG_warn_param_signed
-#define png_warning_parameter_unsigned            MOZ_PNG_warn_param_unsigned
 #define png_write_chunk_header                    MOZ_PNG_write_chunk_header
 #define png_write_complete_chunk                  MOZ_PNG_write_complete_chunk
 #define png_xy_from_XYZ                           MOZ_PNG_xy_from_XYZ
@@ -624,11 +611,16 @@
 #define ppi_from_ppm                              MOZ_ppi_from_ppm
 #define translate_gamma_flags                     MOZ_translate_gamma_flags
 
-#ifdef PR_LOGGING
+#if defined(PR_LOGGING) && defined(PNG_WARNINGS_SUPPORTED)
 #define png_warning                     MOZ_PNG_warning
 #define png_error                       MOZ_PNG_error
 #define png_chunk_error                 MOZ_PNG_chunk_err
+#define png_fixed_error                 MOZ_PNG_fixed_err
+#define png_formatted_warning           MOZ_PNG_formatted_warning
 #define png_chunk_warning               MOZ_PNG_chunk_warn
+#define png_warning_parameter           MOZ_PNG_warn_param
+#define png_warning_parameter_signed    MOZ_PNG_warn_param_signed
+#define png_warning_parameter_unsigned  MOZ_PNG_warn_param_unsigned
 #endif
 
 #endif /* MOZPNGCONF_H */
