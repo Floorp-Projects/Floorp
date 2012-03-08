@@ -2190,6 +2190,10 @@ abstract public class GeckoApp
         super.onDestroy();
 
         unregisterReceiver(mBatteryReceiver);
+
+        if (mAboutHomeContent != null) {
+            mAboutHomeContent.onDestroy();
+        }
     }
 
     @Override
