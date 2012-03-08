@@ -115,6 +115,7 @@ public class GeckoAppShell
     public static native void removeObserver(String observerKey);
     public static native void loadGeckoLibsNative(String apkName);
     public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
+    public static native void loadNSSLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
     public static native void reportJavaCrash(String stack);
 
@@ -398,6 +399,7 @@ public class GeckoAppShell
             }
         }
         loadSQLiteLibsNative(apkName, extractLibs);
+        loadNSSLibsNative(apkName, extractLibs);
         loadGeckoLibsNative(apkName);
     }
 
