@@ -510,7 +510,9 @@ nsScreenGonk::GetAvailRect(PRInt32 *outLeft,  PRInt32 *outTop,
 NS_IMETHODIMP
 nsScreenGonk::GetPixelDepth(PRInt32 *aPixelDepth)
 {
-    *aPixelDepth = gNativeWindow->getDevice()->format == GGL_PIXEL_FORMAT_RGB_565 ? 16 : 24;
+    // XXX do we need to lie here about 16bpp?  Or
+    // should we actually check and return the right thing?
+    *aPixelDepth = 24;
     return NS_OK;
 }
 
