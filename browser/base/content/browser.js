@@ -56,7 +56,6 @@
 #   Patrick Walton <pcwalton@mozilla.com>
 #   Mihai Sucan <mihai.sucan@gmail.com>
 #   Victor Porof <vporof@mozilla.com>
-#   Frank Yan <fyan@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2750,7 +2749,11 @@ function BrowserOnAboutPageLoad(document) {
     let ss = Components.classes["@mozilla.org/browser/sessionstore;1"].
              getService(Components.interfaces.nsISessionStore);
     if (!ss.canRestoreLastSession)
-      document.getElementById("launcher").removeAttribute("session");
+      document.getElementById("sessionRestoreContainer").hidden = true;
+    // Sync-related links
+    if (Services.prefs.prefHasUserValue("services.sync.username")) {
+      document.getElementById("setupSyncLink").hidden = true;
+    }
   }
 }
 
@@ -2758,17 +2761,19 @@ function BrowserOnAboutPageLoad(document) {
  * Handle command events bubbling up from error page content
  */
 function BrowserOnClick(event) {
-    if (!event.isTrusted || // Don't trust synthetic events
-        event.button == 2 || event.target.localName != "button")
+    // Don't trust synthetic events
+    if (!event.isTrusted ||
+        (event.target.localName != "button" &&
+         event.target.className != "sync-link"))
       return;
 
     var ot = event.originalTarget;
-    var ownerDoc = ot.ownerDocument;
+    var errorDoc = ot.ownerDocument;
 
     // If the event came from an ssl error page, it is probably either the "Add
     // Exception…" or "Get me out of here!" button
-    if (/^about:certerror/.test(ownerDoc.documentURI)) {
-      if (ot == ownerDoc.getElementById('exceptionDialogButton')) {
+    if (/^about:certerror/.test(errorDoc.documentURI)) {
+      if (ot == errorDoc.getElementById('exceptionDialogButton')) {
         var params = { exceptionAdded : false, handlePrivateBrowsing : true };
 
         try {
@@ -2776,7 +2781,7 @@ function BrowserOnClick(event) {
             case 2 : // Pre-fetch & pre-populate
               params.prefetchCert = true;
             case 1 : // Pre-populate
-              params.location = ownerDoc.location.href;
+              params.location = errorDoc.location.href;
           }
         } catch (e) {
           Components.utils.reportError("Couldn't get ssl_override pref: " + e);
@@ -2787,22 +2792,22 @@ function BrowserOnClick(event) {
 
         // If the user added the exception cert, attempt to reload the page
         if (params.exceptionAdded)
-          ownerDoc.location.reload();
+          errorDoc.location.reload();
       }
-      else if (ot == ownerDoc.getElementById('getMeOutOfHereButton')) {
+      else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
         getMeOutOfHere();
       }
     }
-    else if (/^about:blocked/.test(ownerDoc.documentURI)) {
+    else if (/^about:blocked/.test(errorDoc.documentURI)) {
       // The event came from a button on a malware/phishing block page
       // First check whether it's malware or phishing, so that we can
       // use the right strings/links
-      var isMalware = /e=malwareBlocked/.test(ownerDoc.documentURI);
+      var isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
 
-      if (ot == ownerDoc.getElementById('getMeOutButton')) {
+      if (ot == errorDoc.getElementById('getMeOutButton')) {
         getMeOutOfHere();
       }
-      else if (ot == ownerDoc.getElementById('reportButton')) {
+      else if (ot == errorDoc.getElementById('reportButton')) {
         // This is the "Why is this site blocked" button.  For malware,
         // we can fetch a site-specific report, for phishing, we redirect
         // to the generic page describing phishing protection.
@@ -2812,7 +2817,7 @@ function BrowserOnClick(event) {
           // append the current url, and go there.
           try {
             let reportURL = formatURL("browser.safebrowsing.malware.reportURL", true);
-            reportURL += ownerDoc.location.href;
+            reportURL += errorDoc.location.href;
             content.location = reportURL;
           } catch (e) {
             Components.utils.reportError("Couldn't get malware report URL: " + e);
@@ -2826,7 +2831,7 @@ function BrowserOnClick(event) {
           }
         }
       }
-      else if (ot == ownerDoc.getElementById('ignoreWarningButton')) {
+      else if (ot == errorDoc.getElementById('ignoreWarningButton')) {
         // Allow users to override and continue through to the site,
         // but add a notify bar as a reminder, so that they don't lose
         // track after, e.g., tab switching.
@@ -2881,31 +2886,23 @@ function BrowserOnClick(event) {
         );
       }
     }
-    else if (/^about:home$/i.test(ownerDoc.documentURI)) {
-      if (ot == ownerDoc.getElementById("restorePreviousSession")) {
+    else if (/^about:home$/i.test(errorDoc.documentURI)) {
+      if (ot == errorDoc.getElementById("restorePreviousSession")) {
         let ss = Cc["@mozilla.org/browser/sessionstore;1"].
                  getService(Ci.nsISessionStore);
         if (ss.canRestoreLastSession)
           ss.restoreLastSession();
-        ownerDoc.getElementById("launcher").removeAttribute("session");
+        errorDoc.getElementById("sessionRestoreContainer").hidden = true;
       }
-      else if (ot == ownerDoc.getElementById("bookmarks")) {
-        PlacesCommandHook.showPlacesOrganizer("AllBookmarks");
+      else if (ot == errorDoc.getElementById("pairDeviceLink")) {
+        if (Services.prefs.prefHasUserValue("services.sync.username")) {
+          gSyncUI.openAddDevice();
+        } else {
+          gSyncUI.openSetup("pair");
+        }
       }
-      else if (ot == ownerDoc.getElementById("history")) {
-        PlacesCommandHook.showPlacesOrganizer("History");
-      }
-      else if (ot == ownerDoc.getElementById("settings")) {
-        openPreferences();
-      }
-      else if (ot == ownerDoc.getElementById("addons")) {
-        BrowserOpenAddonsMgr();
-      }
-      else if (ot == ownerDoc.getElementById("downloads")) {
-        BrowserDownloadsUI();
-      }
-      else if (ot == ownerDoc.getElementById("sync")) {
-        openPreferences("paneSync");
+      else if (ot == errorDoc.getElementById("setupSyncLink")) {
+        gSyncUI.openSetup(null);
       }
     }
 }
