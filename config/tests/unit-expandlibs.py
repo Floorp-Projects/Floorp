@@ -267,28 +267,5 @@ class TestExpandArgsMore(TestExpandInit):
         # Restore subprocess.call
         subprocess.call = subprocess_call
 
-    def test_reorder(self):
-        '''Test object reordering'''
-        # We don't care about AR_EXTRACT testing, which is done in test_extract
-        config.AR_EXTRACT = ''
-
-        # ExpandArgsMore does the same as ExpandArgs
-        with ExpandArgsMore(['foo', '-bar'] + self.arg_files + [self.tmpfile('liby', Lib('y'))]) as args:
-            self.assertRelEqual(args, ['foo', '-bar'] + self.files + self.liby_files + self.libx_files) 
-
-            # Use an order containing object files from libraries
-            order_files = [self.libx_files[1], self.libx_files[0], self.liby_files[2], self.files[1]]
-            order = [os.path.splitext(os.path.basename(f))[0] for f in order_files]
-            args.reorder(order[:2] + ['unknown'] + order[2:])
-
-            # self.files has objects at #1, #2, #4
-            self.assertRelEqual(args[:3], ['foo', '-bar'] + self.files[:1])
-            self.assertRelEqual(args[3:7], order_files)
-            self.assertRelEqual(args[7:9], [self.files[2], self.files[4]])
-            self.assertRelEqual(args[9:11], self.liby_files[:2])
-            self.assertRelEqual(args[11:12], [self.libx_files[2]])
-            self.assertRelEqual(args[12:14], [self.files[3], self.files[5]])
-            self.assertRelEqual(args[14:], [self.liby_files[3]])
-
 if __name__ == '__main__':
     unittest.main(testRunner=MozTestRunner())
