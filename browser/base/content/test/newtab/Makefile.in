@@ -21,6 +21,7 @@ _BROWSER_FILES = \
 	browser_newtab_tabsync.js \
 	browser_newtab_unpin.js \
 	browser_newtab_bug723102.js \
+	browser_newtab_bug723121.js \
 	head.js \
 	$(NULL)
 
