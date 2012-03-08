@@ -88,6 +88,8 @@ public abstract class GeckoProvider extends ContentProvider {
 
         boolean dbNeedsSetup = true;
         try {
+            String resourcePath = context.getPackageResourcePath();
+            GeckoAppShell.loadSQLiteLibs(context, resourcePath);
             bridge = new SQLiteBridge(databasePath);
             int version = bridge.getVersion();
             Log.i(mLogTag, version + " == " + mDBVersion);
