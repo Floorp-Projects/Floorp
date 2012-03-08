@@ -1042,6 +1042,9 @@ pref("devtools.debugger.enabled", false);
 // The default Debugger UI height
 pref("devtools.debugger.ui.height", 250);
 
+// Disable remote debugging protocol logging
+pref("devtools.debugger.log", false);
+
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
 

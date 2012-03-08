@@ -78,7 +78,8 @@ function startDebuggingTab(aClient, aTabGrip)
       gTabClient = aTabClient;
       gClient.attachThread(aResponse.threadActor, function(aResponse, aThreadClient) {
         if (!aThreadClient) {
-          dump("Couldn't attach to thread: "+aResponse.error+"\n");
+          Components.utils.reportError("Couldn't attach to thread: " +
+                                       aResponse.error);
           return;
         }
         ThreadState.connect(aThreadClient, function() {
