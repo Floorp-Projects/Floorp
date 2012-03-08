@@ -61,7 +61,7 @@ class nsBoxLayoutState;
 #define NS_STATE_CURRENTLY_IN_DEBUG      NS_FRAME_STATE_BIT(25)
 //#define NS_STATE_SET_TO_DEBUG            NS_FRAME_STATE_BIT(26)  moved to nsBox.h
 //#define NS_STATE_DEBUG_WAS_SET           NS_FRAME_STATE_BIT(27)  moved to nsBox.h
-//                                         NS_FRAME_STATE_BIT(28)  not used anymore
+#define NS_STATE_MENU_HAS_POPUP_LIST       NS_FRAME_STATE_BIT(28) /* used on nsMenuFrame */
 #define NS_STATE_BOX_WRAPS_KIDS_IN_BLOCK NS_FRAME_STATE_BIT(29)
 #define NS_STATE_EQUAL_SIZE              NS_FRAME_STATE_BIT(30)
 //#define NS_STATE_IS_DIRECTION_NORMAL     NS_FRAME_STATE_BIT(31)  moved to nsIFrame.h

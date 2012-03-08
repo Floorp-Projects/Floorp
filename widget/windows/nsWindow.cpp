@@ -581,19 +581,21 @@ nsWindow::Create(nsIWidget *aParent,
     nsUXThemeData::dwmSetWindowAttributePtr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
   }
 
-  if (mWindowType != eWindowType_plugin &&
-      mWindowType != eWindowType_invisible &&
+  if ((mWindowType == eWindowType_toplevel ||
+       mWindowType == eWindowType_dialog ||
+       mWindowType == eWindowType_popup) &&
       MouseScrollHandler::Device::IsFakeScrollableWindowNeeded()) {
-    // Ugly Thinkpad Driver Hack (Bugs 507222 and 594977)
+    // Ugly Thinkpad Driver Hack (Bugs 507222, 594977 and 725475)
     //
-    // We create two zero-sized windows as descendants of the top-level window,
-    // like so:
+    // We create three zero-sized windows as descendants of the top-level
+    // window, like so:
     //
     //   Top-level window (MozillaWindowClass)
     //     FAKETRACKPOINTSCROLLCONTAINER (MozillaWindowClass)
     //       FAKETRACKPOINTSCROLLABLE (MozillaWindowClass)
+    //     FAKETRACKPOINTSCROLLBAR (ScrollBar)
     //
-    // We need to have the middle window, otherwise the Trackpoint driver
+    // We need to have the container window, otherwise the Trackpoint driver
     // will fail to deliver scroll messages.  WM_MOUSEWHEEL messages are
     // sent to the FAKETRACKPOINTSCROLLABLE, which then propagate up the
     // window hierarchy until they are handled by nsWindow::WindowProc.
@@ -604,6 +606,11 @@ nsWindow::Create(nsIWidget *aParent,
     //
     // The FAKETRACKPOINTSCROLLABLE needs to have the specific window styles it
     // is given below so that it catches the Trackpoint driver's heuristics.
+    //
+    // The FAKETRACKPOINTSCROLLBAR is needed for certain configurations of
+    // Synaptics drivers when a plugin window is visible and would otherwise
+    // attract all scrolling messages.  A corresponding horizontal scrollbar
+    // does not seem to be needed to attract WM_HSCROLL messages.
     HWND scrollContainerWnd = ::CreateWindowW
       (className.get(), L"FAKETRACKPOINTSCROLLCONTAINER",
        WS_CHILD | WS_VISIBLE,
@@ -612,6 +619,15 @@ nsWindow::Create(nsIWidget *aParent,
       (className.get(), L"FAKETRACKPOINTSCROLLABLE",
        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | 0x30,
        0, 0, 0, 0, scrollContainerWnd, NULL, nsToolkit::mDllInstance, NULL);
+    HWND scrollBarWnd = ::CreateWindowW
+      (L"SCROLLBAR", L"FAKETRACKPOINTSCROLLBAR",
+       WS_CHILD | WS_VISIBLE | SBS_VERT,
+       0, 0, 0, 0, mWnd, NULL, nsToolkit::mDllInstance, NULL);
+
+    // We set the hidden scroll bar control to have a range of values and
+    // be positioned in the middle, so that scrolling up and down works.
+    SCROLLINFO scrollInfo = { sizeof SCROLLINFO, SIF_ALL, 0, 100, 1, 50, 50 };
+    ::SetScrollInfo(scrollBarWnd, SB_CTL, &scrollInfo, FALSE);
 
     // Give the FAKETRACKPOINTSCROLLABLE window a specific ID so that
     // WindowProcInternal can distinguish it from the top-level window
@@ -6853,11 +6869,9 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
   // the plugin window gets disabled.
   if(mWindowType == eWindowType_plugin) {
     if(NULLREGION == ::CombineRgn(dest, dest, dest, RGN_OR)) {
-      ::ShowWindow(mWnd, SW_HIDE);
       ::EnableWindow(mWnd, FALSE);
     } else {
       ::EnableWindow(mWnd, TRUE);
-      ::ShowWindow(mWnd, SW_SHOW);
     }
   }
   if (!::SetWindowRgn(mWnd, dest, TRUE)) {

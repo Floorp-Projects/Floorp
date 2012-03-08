@@ -78,10 +78,12 @@ interface nsITelemetry : nsISupports
    * HISTOGRAM_EXPONENTIAL - buckets increase exponentially
    * HISTOGRAM_LINEAR - buckets increase linearly
    * HISTOGRAM_BOOLEAN - For storing 0/1 values
+   * HISTOGRAM_FLAG - For storing a single value; its count is always == 1.
    */
   const unsigned long HISTOGRAM_EXPONENTIAL = 0;
   const unsigned long HISTOGRAM_LINEAR = 1;
   const unsigned long HISTOGRAM_BOOLEAN = 2;
+  const unsigned long HISTOGRAM_FLAG = 3;
 
   /*
    * An object containing a snapshot from all of the currently registered histograms.
