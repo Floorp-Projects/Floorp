@@ -1540,8 +1540,17 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
     nsIWebBrowserChrome::CHROME_DEPENDENT : 0;
   chromeFlags |= WinHasOption(aFeatures, "modal", 0, nsnull) ?
     (nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_DEPENDENT) : 0;
-  chromeFlags |= WinHasOption(aFeatures, "dialog", 0, nsnull) ?
-    nsIWebBrowserChrome::CHROME_OPENAS_DIALOG : 0;
+
+  /* On mobile we want to ignore the dialog window feature, since the mobile UI
+     does not provide any affordance for dialog windows. This does not interfere
+     with dialog windows created through openDialog. */
+  bool disableDialogFeature = false;
+  nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+  branch->GetBoolPref("dom.disable_window_open_dialog_feature", &disableDialogFeature);
+  if (!disableDialogFeature) {
+    chromeFlags |= WinHasOption(aFeatures, "dialog", 0, nsnull) ?
+      nsIWebBrowserChrome::CHROME_OPENAS_DIALOG : 0;
+  }
 
   /* and dialogs need to have the last word. assume dialogs are dialogs,
      and opened as chrome, unless explicitly told otherwise. */
