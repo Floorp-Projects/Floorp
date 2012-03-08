@@ -1421,14 +1421,19 @@ js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
     return ct;
 }
 
-void
-JSCompartment::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
+static size_t
+ComputeTriggerBytes(size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
 {
-    gcLastBytes = lastBytes;
-
     size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, GC_ALLOCATION_THRESHOLD);
     float trigger = float(base) * GC_HEAP_GROWTH_FACTOR;
-    gcTriggerBytes = size_t(Min(float(rt->gcMaxBytes), trigger));
+    return size_t(Min(float(maxBytes), trigger));
+}
+
+void
+JSCompartment::setGCLastBytes(size_t lastBytes, size_t lastMallocBytes, JSGCInvocationKind gckind)
+{
+    gcTriggerBytes = ComputeTriggerBytes(lastBytes, rt->gcMaxBytes, gckind);
+    gcTriggerMallocAndFreeBytes = ComputeTriggerBytes(lastMallocBytes, SIZE_MAX, gckind);
 }
 
 void
@@ -2487,6 +2492,11 @@ MaybeGC(JSContext *cx)
         return;
     }
 
+    if (comp->gcMallocAndFreeBytes >= comp->gcTriggerMallocAndFreeBytes) {
+        GCSlice(cx, comp, GC_NORMAL, gcreason::MAYBEGC);
+        return;
+    }
+
     /*
      * Access to the counters and, on 32 bit, setting gcNextFullGCTime below
      * is not atomic and a race condition could trigger or suppress the GC. We
@@ -3272,7 +3282,7 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
     }
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
-        c->setGCLastBytes(c->gcBytes, gckind);
+        c->setGCLastBytes(c->gcBytes, c->gcMallocAndFreeBytes, gckind);
 }
 
 /* Perform mark-and-sweep GC. If comp is set, we perform a single-compartment GC. */
@@ -3925,7 +3935,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
             JSPRINCIPALS_HOLD(cx, principals);
         }
 
-        compartment->setGCLastBytes(8192, GC_NORMAL);
+        compartment->setGCLastBytes(8192, 8192, GC_NORMAL);
 
         /*
          * Before reporting the OOM condition, |lock| needs to be cleaned up,
