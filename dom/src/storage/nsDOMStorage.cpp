@@ -74,6 +74,7 @@ using mozilla::dom::StorageChild;
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
+#include "DictionaryHelpers.h"
 
 // calls FlushAndDeleteTemporaryTables(false)
 #define NS_DOMSTORAGE_FLUSH_TIMER_TOPIC "domstorage-flush-timer"
@@ -2388,6 +2389,19 @@ NS_IMETHODIMP nsDOMStorageEvent::InitStorageEvent(const nsAString & typeArg,
   mStorageArea = storageAreaArg;
 
   return NS_OK;
+}
+
+nsresult
+nsDOMStorageEvent::InitFromCtor(const nsAString& aType,
+                                JSContext* aCx, jsval* aVal)
+{
+  mozilla::dom::StorageEventInit d;
+  d.oldValue.SetIsVoid(true);
+  d.newValue.SetIsVoid(true);
+  nsresult rv = d.Init(aCx, aVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return InitStorageEvent(aType, d.bubbles, d.cancelable, d.key, d.oldValue,
+                          d.newValue, d.url, d.storageArea);
 }
 
 // Obsolete globalStorage event
