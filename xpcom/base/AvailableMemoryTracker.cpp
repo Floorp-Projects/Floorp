@@ -141,10 +141,12 @@ void safe_write(PRUint64 x)
 #endif
 
 PRUint32 sLowVirtualMemoryThreshold = 0;
+PRUint32 sLowCommitSpaceThreshold = 0;
 PRUint32 sLowPhysicalMemoryThreshold = 0;
-PRUint32 sLowPhysicalMemoryNotificationIntervalMS = 0;
+PRUint32 sLowMemoryNotificationIntervalMS = 0;
 
 PRUint32 sNumLowVirtualMemEvents = 0;
+PRUint32 sNumLowCommitSpaceEvents = 0;
 PRUint32 sNumLowPhysicalMemEvents = 0;
 
 WindowsDllInterceptor sKernel32Intercept;
@@ -173,6 +175,37 @@ HBITMAP (WINAPI *sCreateDIBSectionOrig)
    UINT aUsage, VOID **aBits,
    HANDLE aSection, DWORD aOffset);
 
+/**
+ * Fire a memory pressure event if it's been long enough since the last one we
+ * fired.
+ */
+bool MaybeScheduleMemoryPressureEvent()
+{
+  // If this interval rolls over, we may fire an extra memory pressure
+  // event, but that's not a big deal.
+  PRIntervalTime interval = PR_IntervalNow() - sLastLowMemoryNotificationTime;
+  if (sHasScheduledOneLowMemoryNotification &&
+      PR_IntervalToMilliseconds(interval) < sLowMemoryNotificationIntervalMS) {
+
+    LOG("Not scheduling low physical memory notification, "
+        "because not enough time has elapsed since last one.");
+    return false;
+  }
+
+  // There's a bit of a race condition here, since an interval may be a
+  // 64-bit number, and 64-bit writes aren't atomic on x86-32.  But let's
+  // not worry about it -- the races only happen when we're already
+  // experiencing memory pressure and firing notifications, so the worst
+  // thing that can happen is that we fire two notifications when we
+  // should have fired only one.
+  sHasScheduledOneLowMemoryNotification = true;
+  sLastLowMemoryNotificationTime = PR_IntervalNow();
+
+  LOG("Scheduling memory pressure notification.");
+  ScheduleMemoryPressureEvent();
+  return true;
+}
+
 void CheckMemAvailable()
 {
   MEMORYSTATUSEX stat;
@@ -185,42 +218,23 @@ void CheckMemAvailable()
   {
     // sLowVirtualMemoryThreshold is in MB, but ullAvailVirtual is in bytes.
     if (stat.ullAvailVirtual < sLowVirtualMemoryThreshold * 1024 * 1024) {
-      // If we're running low on virtual memory, schedule the notification.
-      // We'll probably crash if we run out of virtual memory, so don't worry
-      // about firing this notification too often.
+      // If we're running low on virtual memory, unconditionally schedule the
+      // notification.  We'll probably crash if we run out of virtual memory,
+      // so don't worry about firing this notification too often.
       LOG("Detected low virtual memory.");
       PR_ATOMIC_INCREMENT(&sNumLowVirtualMemEvents);
       ScheduleMemoryPressureEvent();
     }
+    else if (stat.ullAvailPageFile < sLowCommitSpaceThreshold * 1024 * 1024) {
+      LOG("Detected low available page file space.");
+      if (MaybeScheduleMemoryPressureEvent()) {
+        PR_ATOMIC_INCREMENT(&sNumLowCommitSpaceEvents);
+      }
+    }
     else if (stat.ullAvailPhys < sLowPhysicalMemoryThreshold * 1024 * 1024) {
       LOG("Detected low physical memory.");
-      // If the machine is running low on physical memory and it's been long
-      // enough since we last fired a low-memory notification, fire a
-      // notification.
-      //
-      // If this interval rolls over, we may fire an extra memory pressure
-      // event, but that's not a big deal.
-      PRIntervalTime interval = PR_IntervalNow() - sLastLowMemoryNotificationTime;
-      if (!sHasScheduledOneLowMemoryNotification ||
-          PR_IntervalToMilliseconds(interval) >=
-            sLowPhysicalMemoryNotificationIntervalMS) {
-
-        // There's a bit of a race condition here, since an interval may be a
-        // 64-bit number, and 64-bit writes aren't atomic on x86-32.  But let's
-        // not worry about it -- the races only happen when we're already
-        // experiencing memory pressure and firing notifications, so the worst
-        // thing that can happen is that we fire two notifications when we
-        // should have fired only one.
-        sHasScheduledOneLowMemoryNotification = true;
-        sLastLowMemoryNotificationTime = PR_IntervalNow();
-
-        LOG("Scheduling memory pressure notification.");
+      if (MaybeScheduleMemoryPressureEvent()) {
         PR_ATOMIC_INCREMENT(&sNumLowPhysicalMemEvents);
-        ScheduleMemoryPressureEvent();
-      }
-      else {
-        LOG("Not scheduling low physical memory notification, "
-            "because not enough time has elapsed since last one.");
       }
     }
   }
@@ -389,6 +403,49 @@ public:
 
 NS_IMPL_ISUPPORTS1(NumLowVirtualMemoryEventsMemoryReporter, nsIMemoryReporter)
 
+class NumLowCommitSpaceEventsMemoryReporter : public NumLowMemoryEventsReporter
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetPath(nsACString &aPath)
+  {
+    aPath.AssignLiteral("low-commit-space-events");
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetAmount(PRInt64 *aAmount)
+  {
+    *aAmount = sNumLowCommitSpaceEvents;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetDescription(nsACString &aDescription)
+  {
+    aDescription.AssignLiteral(
+      "Number of low-commit-space events fired since startup. ");
+
+    if (sLowCommitSpaceThreshold == 0 || !sHooksInstalled) {
+      aDescription.Append(nsPrintfCString(1024,
+        "Tracking low-commit-space events is disabled, but you can enable it "
+        "by giving the memory.low_commit_space_threshold_mb pref a non-zero "
+        "value%s.",
+        sHooksInstalled ? "" : " and restarting"));
+    }
+    else {
+      aDescription.Append(nsPrintfCString(1024,
+        "We fire such an event if we notice there is less than %d MB of "
+        "available commit space (controlled by the "
+        "'memory.low_commit_space_threshold_mb' pref).  Windows will likely "
+        "kill us if we run out of commit space, so this event is somewhat dire.",
+        sLowCommitSpaceThreshold));
+    }
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(NumLowCommitSpaceEventsMemoryReporter, nsIMemoryReporter)
+
 class NumLowPhysicalMemoryEventsMemoryReporter : public NumLowMemoryEventsReporter
 {
 public:
@@ -452,8 +509,10 @@ void Init()
 
   Preferences::AddUintVarCache(&sLowPhysicalMemoryThreshold,
       "memory.low_physical_memory_threshold_mb", 0);
-  Preferences::AddUintVarCache(&sLowPhysicalMemoryNotificationIntervalMS,
-      "memory.low_physical_memory_notification_interval_ms", 10000);
+  Preferences::AddUintVarCache(&sLowCommitSpaceThreshold,
+      "memory.low_commit_space_threshold_mb", 128);
+  Preferences::AddUintVarCache(&sLowMemoryNotificationIntervalMS,
+      "memory.low_memory_notification_interval_ms", 10000);
 
   // Don't register the hooks if we're a build instrumented for PGO or if both
   // thresholds are 0.  (If we're an instrumented build, the compiler adds
@@ -480,6 +539,7 @@ void Init()
     sHooksInstalled = false;
   }
 
+  NS_RegisterMemoryReporter(new NumLowCommitSpaceEventsMemoryReporter());
   NS_RegisterMemoryReporter(new NumLowPhysicalMemoryEventsMemoryReporter());
   if (sizeof(void*) == 4) {
     NS_RegisterMemoryReporter(new NumLowVirtualMemoryEventsMemoryReporter());
