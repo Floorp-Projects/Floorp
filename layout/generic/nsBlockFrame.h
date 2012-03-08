@@ -154,11 +154,6 @@ public:
 
   friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
-  // This is a child list too, but we let nsBlockReflowState get to it
-  // directly too.
-  NS_DECLARE_FRAME_PROPERTY(PushedFloatProperty,
-                            nsContainerFrame::DestroyFrameList)
-
   // nsQueryFrame
   NS_DECL_QUERYFRAME
 
@@ -739,6 +734,13 @@ protected:
 
   nsFrameList* GetOverflowOutOfFlows() const;
   void SetOverflowOutOfFlows(const nsFrameList& aList, nsFrameList* aPropValue);
+
+  /**
+   * @return true if this frame has pushed floats.
+   */
+  bool HasPushedFloats() const {
+    return 0 != (GetStateBits() & NS_BLOCK_HAS_PUSHED_FLOATS);
+  }
 
   // Get the pushed floats list
   nsFrameList* GetPushedFloats() const;
