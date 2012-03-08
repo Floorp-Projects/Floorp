@@ -176,7 +176,7 @@ PRUint32   nsIOService::gDefaultSegmentCount = 24;
 nsIOService::nsIOService()
     : mOffline(true)
     , mOfflineForProfileChange(false)
-    , mManageOfflineStatus(true)
+    , mManageOfflineStatus(false)
     , mSettingOffline(false)
     , mSetOfflineValue(false)
     , mShutdown(false)
@@ -1119,9 +1119,18 @@ NS_IMETHODIMP
 nsIOService::SetManageOfflineStatus(bool aManage) {
     nsresult rv = NS_OK;
 
-    InitializeNetworkLinkService();
+    // SetManageOfflineStatus must throw when we fail to go from non-managed
+    // to managed.  Usually because there is no link monitoring service 
+    // available.  Failure to do this switch is detected by a failure of 
+    // TrackNetworkLinkStatusForOffline().  When there is no network link 
+    // available during call to InitializeNetworkLinkService(), application is
+    // put to offline mode.  And when we change mMangeOfflineStatus to false 
+    // on the next line we get stuck on being offline even though the link 
+    // becomes later available.
     bool wasManaged = mManageOfflineStatus;
     mManageOfflineStatus = aManage;
+
+    InitializeNetworkLinkService();
 
     if (mManageOfflineStatus && !wasManaged) {
         rv = TrackNetworkLinkStatusForOffline();
