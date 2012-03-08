@@ -1966,6 +1966,10 @@ abstract public class GeckoApp
             return;
         }
 
+        // don't perform any actions if launching from recent apps
+        if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0)
+            return;
+
         if (checkLaunchState(LaunchState.Launched)) {
             Uri data = intent.getData();
             Bundle bundle = intent.getExtras();
