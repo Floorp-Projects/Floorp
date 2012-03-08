@@ -1756,7 +1756,7 @@ nsPlainTextSerializer::IsInPre()
 {
   PRInt32 i = mTagStackIndex;
   while(i > 0) {
-    if (mTagStack[i-1] == nsGkAtoms::pre)
+    if (mTagStack[i - 1] == nsGkAtoms::pre)
       return true;
     if (nsContentUtils::IsHTMLBlock(mTagStack[i - 1])) {
       // We assume that every other block overrides a <pre>
