@@ -2314,19 +2314,11 @@ nsresult
 nsJSContext::SetOuterObject(JSObject* aOuterObject)
 {
   // Force our context's global object to be the outer.
+  // NB: JS_SetGlobalObject sets mContext->compartment.
   JS_SetGlobalObject(mContext, aOuterObject);
 
-  // NB: JS_SetGlobalObject sets mContext->compartment.
+  // Set up the prototype for the outer object.
   JSObject *inner = JS_GetParent(aOuterObject);
-
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  nsresult rv = xpc->GetWrappedNativeOfJSObject(mContext, inner,
-                                                getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ABORT_IF_FALSE(wrapper, "bad wrapper");
-
-  wrapper->FinishInitForWrappedGlobal();
   JS_SetPrototype(mContext, aOuterObject, JS_GetPrototype(inner));
 
   return NS_OK;
