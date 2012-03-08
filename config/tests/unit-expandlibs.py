@@ -38,7 +38,7 @@ config = sys.modules['expandlibs_config'] = imp.new_module('expandlibs_config')
 
 from expandlibs import LibDescriptor, ExpandArgs, relativize
 from expandlibs_gen import generate
-from expandlibs_exec import ExpandArgsMore
+from expandlibs_exec import ExpandArgsMore, SectionFinder
 
 def Lib(name):
     return config.LIB_PREFIX + name + config.LIB_SUFFIX
@@ -266,6 +266,69 @@ class TestExpandArgsMore(TestExpandInit):
 
         # Restore subprocess.call
         subprocess.call = subprocess_call
+
+class FakeProcess(object):
+    def __init__(self, out):
+        self.out = out
+
+    def communicate(self):
+        return (self.out, '')
+
+OBJDUMPS = {
+'foo.o': '''
+00000000 g     F .text\t00000001 foo
+00000000 g     F .text._Z6foobarv\t00000001 _Z6foobarv
+00000000 g     F .text.hello\t00000001 hello
+00000000 g     F .text._ZThn4_6foobarv\t00000001 _ZThn4_6foobarv
+''',
+'bar.o': '''
+00000000 g     F .text.hi\t00000001 hi
+00000000 g     F .text.hot._Z6barbazv\t00000001 .hidden _Z6barbazv
+''',
+}
+
+class ObjdumpSubprocessPopen(object):
+    def __init__(self, test):
+        self.test = test
+
+    def __call__(self, args, stdout = None, stderr = None):
+        self.test.assertEqual(stdout, subprocess.PIPE)
+        self.test.assertEqual(stderr, subprocess.PIPE)
+        self.test.assertEqual(args[0], 'objdump')
+        self.test.assertEqual(args[1], '-t')
+        self.test.assertTrue(args[2] in OBJDUMPS)
+            
+        return FakeProcess(OBJDUMPS[args[2]])
+
+class TestSectionFinder(unittest.TestCase):
+    def test_getSections(self):
+        '''Test SectionFinder'''
+        # Divert subprocess.Popen
+        subprocess_popen = subprocess.Popen
+        subprocess.Popen = ObjdumpSubprocessPopen(self)
+        config.EXPAND_LIBS_ORDER_STYLE = 'linkerscript'
+        config.OBJ_SUFFIX = '.o'
+        config.LIB_SUFFIX = '.a'
+        finder = SectionFinder(['foo.o', 'bar.o'])
+        self.assertEqual(finder.getSections('foobar'), [])
+        self.assertEqual(finder.getSections('_Z6barbazv'), ['.text.hot._Z6barbazv'])
+        self.assertEqual(finder.getSections('_Z6foobarv'), ['.text._Z6foobarv', '.text._ZThn4_6foobarv'])
+        self.assertEqual(finder.getSections('_ZThn4_6foobarv'), ['.text._Z6foobarv', '.text._ZThn4_6foobarv'])
+        subprocess.Popen = subprocess_popen
+
+class TestSymbolOrder(unittest.TestCase):
+    def test_getOrderedSections(self):
+        '''Test ExpandMoreArgs' _getOrderedSections'''
+        # Divert subprocess.Popen
+        subprocess_popen = subprocess.Popen
+        subprocess.Popen = ObjdumpSubprocessPopen(self)
+        config.EXPAND_LIBS_ORDER_STYLE = 'linkerscript'
+        config.OBJ_SUFFIX = '.o'
+        config.LIB_SUFFIX = '.a'
+        args = ExpandArgsMore(['foo', '-bar', 'bar.o', 'foo.o'])
+        self.assertEqual(args._getOrderedSections(['_Z6foobarv', '_Z6barbazv']), ['.text._Z6foobarv', '.text._ZThn4_6foobarv', '.text.hot._Z6barbazv'])
+        self.assertEqual(args._getOrderedSections(['_ZThn4_6foobarv', '_Z6barbazv']), ['.text._Z6foobarv', '.text._ZThn4_6foobarv', '.text.hot._Z6barbazv'])
+        subprocess.Popen = subprocess_popen
 
 if __name__ == '__main__':
     unittest.main(testRunner=MozTestRunner())
