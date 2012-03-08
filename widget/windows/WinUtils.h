@@ -231,44 +231,6 @@ public:
   static bool GetShellItemPath(IShellItem* aItem,
                                nsString& aResultString);
 
-#ifdef DEBUG
-  /**
-   * (DEBUG ONLY)
-   * SaveDCToPng - Save the contents of an HDC to a local png image. Deletes
-   * the target before creating.
-   *
-   * aHdc        HDC to save
-   * aFilePath   file path to save to.
-   * aXPos       X origin within the HDC.
-   * aYPos       Y origin within the HDC.
-   * aWidth      Width of the section to capture.
-   * aHeight     height of the section to capture.
-   */
-  static void SaveDCToPng(HDC hdc, const WCHAR* aFilePath,
-                          int aXPos, int aYPos,
-                          int aWidth, int aHeight);
-
-  /**
-   * (DEBUG ONLY)
-   * SaveDCToPngIndexed - Save the contents of an HDC to a local png image.
-   * Filenames are of the format:
-   *  (dir)\\(annotation)_image-(index).png
-   * where index equals the call count. Calls SaveDCToPng.
-   *
-   * aHdc        HDC to save
-   * aDirectory  location to store mutliple images.
-   * aAnnotation filename safe annotation for the png.
-   * aXPos       X origin within the HDC.
-   * aYPos       Y origin within the HDC.
-   * aWidth      Width of the section to capture.
-   * aHeight     height of the section to capture.
-   */
-  static void SaveDCToPngIndexed(HDC aHdc, const WCHAR* aDirectory,
-                                 const WCHAR* aAnnotation,
-                                 int aXPos, int aYPos,
-                                 int aWidth, int aHeight);
-#endif
-
 private:
   typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath,
                                                             IBindCtx *pbc,
