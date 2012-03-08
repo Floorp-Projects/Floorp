@@ -31,6 +31,7 @@ AC_CACHE_CHECK(what kind of list files are supported by the linker,
 LIBS_DESC_SUFFIX=desc
 AC_SUBST(LIBS_DESC_SUFFIX)
 AC_SUBST(EXPAND_LIBS_LIST_STYLE)
+
 if test "$GCC_USE_GNU_LD"; then
     AC_CACHE_CHECK(what kind of ordering can be done with the linker,
         EXPAND_LIBS_ORDER_STYLE,
@@ -42,12 +43,12 @@ if test "$GCC_USE_GNU_LD"; then
              EXPAND_LIBS_ORDER_STYLE=)
          LDFLAGS="$_SAVE_LDFLAGS"
          if test -z "$EXPAND_LIBS_ORDER_STYLE"; then
-             if AC_TRY_COMMAND(${CC-cc} ${DSO_LDOPTS} ${LDFLAGS} -o conftest${DLL_SUFFIX} -Wl,--verbose 2> /dev/null | sed -n '/^===/,/^===/p' | grep '\.text'); then
+             if AC_TRY_COMMAND(${CC-cc} ${DSO_LDOPTS} ${LDFLAGS} -o ${DLL_PREFIX}conftest${DLL_SUFFIX} -Wl,--verbose 2> /dev/null | sed -n '/^===/,/^===/p' | grep '\.text'); then
                  EXPAND_LIBS_ORDER_STYLE=linkerscript
              else
                  EXPAND_LIBS_ORDER_STYLE=none
              fi
-             rm -f conftest${DLL_SUFFIX}
+             rm -f ${DLL_PREFIX}conftest${DLL_SUFFIX}
          fi])
 fi
 AC_SUBST(EXPAND_LIBS_ORDER_STYLE)
