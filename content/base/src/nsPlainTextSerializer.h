@@ -45,8 +45,6 @@
 #define nsPlainTextSerializer_h__
 
 #include "nsIContentSerializer.h"
-#include "nsIHTMLContentSink.h"
-#include "nsHTMLTags.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsILineBreaker.h"
@@ -97,12 +95,8 @@ public:
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
                                  nsAString& aStr);
 
-  // nsIHTMLToTextSink
-  NS_IMETHOD Initialize(nsAString* aOutString,
-                        PRUint32 aFlags, PRUint32 aWrapCol);
-
 protected:
-  nsresult GetAttributeValue(const nsIParserNode* node, nsIAtom* aName, nsString& aValueRet);
+  nsresult GetAttributeValue(nsIAtom* aName, nsString& aValueRet);
   void AddToLine(const PRUnichar* aStringToAdd, PRInt32 aLength);
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(PRInt32 noOfRows);
@@ -110,17 +104,20 @@ protected:
   void OutputQuotesAndIndent(bool stripTrailingSpaces=false);
   void Output(nsString& aString);
   void Write(const nsAString& aString);
-  bool IsBlockLevel(PRInt32 aId);
-  bool IsContainer(PRInt32 aId);
   bool IsInPre();
   bool IsInOL();
-  bool IsCurrentNodeConverted(const nsIParserNode* aNode);
-  static PRInt32 GetIdForContent(nsIContent* aContent);
-  nsresult DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag);
-  nsresult DoCloseContainer(PRInt32 aTag);
-  nsresult DoAddLeaf(const nsIParserNode* aNode,
-                     PRInt32 aTag,
-                     const nsAString& aText);
+  bool IsCurrentNodeConverted();
+  bool MustSuppressLeaf();
+
+  /**
+   * Returns the local name of the element as an atom if the element is an
+   * HTML element and the atom is a static atom. Otherwise, nsnull is returned.
+   */
+  static nsIAtom* GetIdForContent(nsIContent* aContent);
+  nsresult DoOpenContainer(nsIAtom* aTag);
+  nsresult DoCloseContainer(nsIAtom* aTag);
+  nsresult DoAddLeaf(nsIAtom* aTag);
+  void DoAddText(bool aIsWhitespace, const nsAString& aText);
 
   // Inlined functions
   inline bool MayWrap()
@@ -214,14 +211,15 @@ protected:
   nsAutoTArray<bool, 8> mHasWrittenCellsForRow;
   
   // Values gotten in OpenContainer that is (also) needed in CloseContainer
-  nsAutoTArray<bool, 8> mCurrentNodeIsConverted;
   nsAutoTArray<bool, 8> mIsInCiteBlockquote;
 
   // The output data
   nsAString*            mOutputString;
 
-  // The tag stack: the stack of tags we're operating on, so we can nest:
-  nsHTMLTag       *mTagStack;
+  // The tag stack: the stack of tags we're operating on, so we can nest.
+  // The stack only ever points to static atoms, so they don't need to be
+  // refcounted.
+  nsIAtom**        mTagStack;
   PRUint32         mTagStackIndex;
 
   // Content in the stack above this index should be ignored:
