@@ -1128,8 +1128,10 @@ TelemetrySessionData::LoadFromDisk(nsIFile *file, TelemetrySessionData **ptr)
     return NS_ERROR_FAILURE;
   }
 
+  // If there's not even enough data to read the header for the pickle,
+  // don't bother.  Conveniently, this handles the error case as well.
   PRInt32 size = PR_Available(fd);
-  if (size == -1) {
+  if (size < static_cast<PRInt32>(sizeof(Pickle::Header))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1141,6 +1143,13 @@ TelemetrySessionData::LoadFromDisk(nsIFile *file, TelemetrySessionData **ptr)
 
   Pickle pickle(data, size);
   void *iter = NULL;
+
+  // Make sure that how much data the pickle thinks it has corresponds
+  // with how much data we actually read.
+  const Pickle::Header *header = pickle.headerT<Pickle::Header>();
+  if (header->payload_size != static_cast<PRUint32>(amount) - sizeof(*header)) {
+    return NS_ERROR_FAILURE;
+  }
 
   unsigned int storedVersion;
   if (!(pickle.ReadUInt32(&iter, &storedVersion)
