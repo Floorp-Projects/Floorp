@@ -1563,6 +1563,10 @@ Tab.prototype = {
     };
     sendMessageToJava(message);
 
+    this.overscrollController = new OverscrollController(this);
+    this.browser.contentWindow.controllers
+      .insertControllerAt(0, this.overscrollController);
+
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
                 Ci.nsIWebProgress.NOTIFY_LOCATION |
                 Ci.nsIWebProgress.NOTIFY_SECURITY;
@@ -1610,6 +1614,9 @@ Tab.prototype = {
   destroy: function() {
     if (!this.browser)
       return;
+
+    this.browser.controllers.contentWindow
+      .removeController(this.overscrollController);
 
     this.browser.removeProgressListener(this);
     this.browser.removeEventListener("DOMContentLoaded", this, true);
@@ -4322,3 +4329,25 @@ var CharacterEncoding = {
   }
 };
 
+function OverscrollController(aTab) {
+  this.tab = aTab;
+}
+
+OverscrollController.prototype = {
+  supportsCommand : function supportsCommand(aCommand) {
+    if (aCommand != "cmd_linePrevious" && aCommand != "cmd_scrollPageUp")
+      return false;
+
+    return (this.tab.viewport.y == 0);
+  },
+
+  isCommandEnabled : function isCommandEnabled(aCommand) {
+    return this.supportsCommand(aCommand);
+  },
+
+  doCommand : function doCommand(aCommand){
+    sendMessageToJava({ gecko: { type: "ToggleChrome:Focus" } });
+  },
+
+  onEvent : function onEvent(aEvent) { }
+};
