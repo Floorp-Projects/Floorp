@@ -268,11 +268,12 @@ class TestExpandArgsMore(TestExpandInit):
         subprocess.call = subprocess_call
 
 class FakeProcess(object):
-    def __init__(self, out):
+    def __init__(self, out, err = ''):
         self.out = out
+        self.err = err
 
     def communicate(self):
-        return (self.out, '')
+        return (self.out, self.err)
 
 OBJDUMPS = {
 'foo.o': '''
@@ -287,25 +288,31 @@ OBJDUMPS = {
 ''',
 }
 
-class ObjdumpSubprocessPopen(object):
+PRINT_ICF = '''
+ld: ICF folding section '.text.hello' in file 'foo.o'into '.text.hi' in file 'bar.o'
+ld: ICF folding section '.foo' in file 'foo.o'into '.foo' in file 'bar.o'
+'''
+
+class SubprocessPopen(object):
     def __init__(self, test):
         self.test = test
 
     def __call__(self, args, stdout = None, stderr = None):
         self.test.assertEqual(stdout, subprocess.PIPE)
         self.test.assertEqual(stderr, subprocess.PIPE)
-        self.test.assertEqual(args[0], 'objdump')
-        self.test.assertEqual(args[1], '-t')
-        self.test.assertTrue(args[2] in OBJDUMPS)
-            
-        return FakeProcess(OBJDUMPS[args[2]])
+        if args[0] == 'objdump':
+            self.test.assertEqual(args[1], '-t')
+            self.test.assertTrue(args[2] in OBJDUMPS)
+            return FakeProcess(OBJDUMPS[args[2]])
+        else:
+            return FakeProcess('', PRINT_ICF)
 
 class TestSectionFinder(unittest.TestCase):
     def test_getSections(self):
         '''Test SectionFinder'''
         # Divert subprocess.Popen
         subprocess_popen = subprocess.Popen
-        subprocess.Popen = ObjdumpSubprocessPopen(self)
+        subprocess.Popen = SubprocessPopen(self)
         config.EXPAND_LIBS_ORDER_STYLE = 'linkerscript'
         config.OBJ_SUFFIX = '.o'
         config.LIB_SUFFIX = '.a'
@@ -321,14 +328,40 @@ class TestSymbolOrder(unittest.TestCase):
         '''Test ExpandMoreArgs' _getOrderedSections'''
         # Divert subprocess.Popen
         subprocess_popen = subprocess.Popen
-        subprocess.Popen = ObjdumpSubprocessPopen(self)
+        subprocess.Popen = SubprocessPopen(self)
         config.EXPAND_LIBS_ORDER_STYLE = 'linkerscript'
         config.OBJ_SUFFIX = '.o'
         config.LIB_SUFFIX = '.a'
+        config.LD_PRINT_ICF_SECTIONS = ''
         args = ExpandArgsMore(['foo', '-bar', 'bar.o', 'foo.o'])
         self.assertEqual(args._getOrderedSections(['_Z6foobarv', '_Z6barbazv']), ['.text._Z6foobarv', '.text._ZThn4_6foobarv', '.text.hot._Z6barbazv'])
         self.assertEqual(args._getOrderedSections(['_ZThn4_6foobarv', '_Z6barbazv']), ['.text._Z6foobarv', '.text._ZThn4_6foobarv', '.text.hot._Z6barbazv'])
         subprocess.Popen = subprocess_popen
+
+    def test_getFoldedSections(self):
+        '''Test ExpandMoreArgs' _getFoldedSections'''
+        # Divert subprocess.Popen
+        subprocess_popen = subprocess.Popen
+        subprocess.Popen = SubprocessPopen(self)
+        config.LD_PRINT_ICF_SECTIONS = '-Wl,--print-icf-sections'
+        args = ExpandArgsMore(['foo', '-bar', 'bar.o', 'foo.o'])
+        self.assertEqual(args._getFoldedSections(), {'.text.hello': '.text.hi', '.text.hi': ['.text.hello']})
+        subprocess.Popen = subprocess_popen
+
+    def test_getOrderedSectionsWithICF(self):
+        '''Test ExpandMoreArgs' _getOrderedSections, with ICF'''
+        # Divert subprocess.Popen
+        subprocess_popen = subprocess.Popen
+        subprocess.Popen = SubprocessPopen(self)
+        config.EXPAND_LIBS_ORDER_STYLE = 'linkerscript'
+        config.OBJ_SUFFIX = '.o'
+        config.LIB_SUFFIX = '.a'
+        config.LD_PRINT_ICF_SECTIONS = '-Wl,--print-icf-sections'
+        args = ExpandArgsMore(['foo', '-bar', 'bar.o', 'foo.o'])
+        self.assertEqual(args._getOrderedSections(['hello', '_Z6barbazv']), ['.text.hi', '.text.hello', '.text.hot._Z6barbazv'])
+        self.assertEqual(args._getOrderedSections(['_ZThn4_6foobarv', 'hi', '_Z6barbazv']), ['.text._Z6foobarv', '.text._ZThn4_6foobarv', '.text.hi', '.text.hello', '.text.hot._Z6barbazv'])
+        subprocess.Popen = subprocess_popen
+
 
 if __name__ == '__main__':
     unittest.main(testRunner=MozTestRunner())
