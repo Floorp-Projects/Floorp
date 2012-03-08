@@ -285,6 +285,8 @@ NS_DECLARE_FRAME_PROPERTY(LineCursorProperty, nsnull)
 NS_DECLARE_FRAME_PROPERTY(OverflowLinesProperty, DestroyOverflowLines)
 NS_DECLARE_FRAME_PROPERTY(OverflowOutOfFlowsProperty,
                           nsContainerFrame::DestroyFrameList)
+NS_DECLARE_FRAME_PROPERTY(PushedFloatProperty,
+                          nsContainerFrame::DestroyFrameList)
 
 //----------------------------------------------------------------------
 
@@ -1086,7 +1088,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   if (!NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
-    if (HasOverflowLines() || GetPushedFloats()) {
+    if (HasOverflowLines() || HasPushedFloats()) {
       state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
     }
 
@@ -4671,7 +4673,7 @@ nsBlockFrame::SetOverflowOutOfFlows(const nsFrameList& aList,
 nsFrameList*
 nsBlockFrame::GetPushedFloats() const
 {
-  if (!(GetStateBits() & NS_BLOCK_HAS_PUSHED_FLOATS)) {
+  if (!HasPushedFloats()) {
     return nsnull;
   }
   nsFrameList* result =
@@ -4697,10 +4699,9 @@ nsBlockFrame::EnsurePushedFloats()
 nsFrameList*
 nsBlockFrame::RemovePushedFloats()
 {
-  if (!(GetStateBits() & NS_BLOCK_HAS_PUSHED_FLOATS)) {
+  if (!HasPushedFloats()) {
     return nsnull;
   }
-
   nsFrameList *result =
     static_cast<nsFrameList*>(Properties().Remove(PushedFloatProperty()));
   RemoveStateBits(NS_BLOCK_HAS_PUSHED_FLOATS);
