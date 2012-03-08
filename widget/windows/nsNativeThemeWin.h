@@ -41,7 +41,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsNativeTheme.h"
-#include "gfxWindowsNativeDrawing.h"
 #include <windows.h>
 
 struct nsIntRect;
@@ -104,38 +103,39 @@ protected:
   nsresult GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
                                 PRInt32& aPart, PRInt32& aState);
   nsresult ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
-                                       PRInt32& aPart, PRInt32& aState, bool& aFocused);
+                                   PRInt32& aPart, PRInt32& aState, bool& aFocused);
   nsresult ClassicDrawWidgetBackground(nsRenderingContext* aContext,
-                                       nsIFrame* aFrame,
-                                       PRUint8 aWidgetType,
-                                       const nsRect& aRect,
-                                       const nsRect& aClipRect);
-  nsresult ClassicGetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
-                                  nsIntMargin* aResult);
+                                  const nsRect& aRect,
+                                  const nsRect& aClipRect);
+  nsresult ClassicGetWidgetBorder(nsDeviceContext* aContext, 
+                             nsIFrame* aFrame,
+                             PRUint8 aWidgetType,
+                             nsIntMargin* aResult);
+
   bool ClassicGetWidgetPadding(nsDeviceContext* aContext,
-                               nsIFrame* aFrame,
-                               PRUint8 aWidgetType,
-                               nsIntMargin* aResult);
+                            nsIFrame* aFrame,
+                            PRUint8 aWidgetType,
+                            nsIntMargin* aResult);
+
   nsresult ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
-                                       PRUint8 aWidgetType,
-                                       nsIntSize* aResult,
-                                       bool* aIsOverridable);
+                                  PRUint8 aWidgetType,
+                                  nsIntSize* aResult,
+                                  bool* aIsOverridable);
+
   bool ClassicThemeSupportsWidget(nsPresContext* aPresContext, 
-                                  nsIFrame* aFrame,
-                                  PRUint8 aWidgetType);
+                             nsIFrame* aFrame,
+                             PRUint8 aWidgetType);
+
   void DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PRInt32 back,
                        HBRUSH defaultBack);
+
   PRUint32 GetWidgetNativeDrawingFlags(PRUint8 aWidgetType);
+
   PRInt32 StandardGetState(nsIFrame* aFrame, PRUint8 aWidgetType, bool wantFocused);
+
   bool IsMenuActive(nsIFrame* aFrame, PRUint8 aWidgetType);
-  void QueueAnimation(gfxWindowsNativeDrawing* aNativeDrawing,
-                      nsIContent* aContent, FadeState aDirection,
-                      DWORD aDuration, PRUint32 aUserValue = 0);
-  void GetScrollbarButtonProperFadeStates(int aBasicState, nsIContent* aContent,
-                                          int aWidgetType, int& aStartState,
-                                          int& aFinalState);
 };
 
 // Creator function
