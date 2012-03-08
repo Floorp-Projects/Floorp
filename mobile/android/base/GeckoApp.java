@@ -121,7 +121,6 @@ abstract public class GeckoApp
     public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
     public static boolean mDOMFullScreen = false;
-    public static File sGREDir = null;
     public static Menu sMenu;
     private static GeckoThread sGeckoThread = null;
     public GeckoAppHandler mMainHandler;
@@ -1616,7 +1615,7 @@ abstract public class GeckoApp
             enableStrictMode();
         }
 
-        System.loadLibrary("mozglue");
+        GeckoAppShell.loadMozGlue();
         mMainHandler = new GeckoAppHandler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
         if (savedInstanceState != null) {
@@ -1686,9 +1685,6 @@ abstract public class GeckoApp
         } else {
             mBrowserToolbar.updateTabCount(1);
         }
-
-        if (sGREDir == null)
-            sGREDir = new File(this.getApplicationInfo().dataDir);
 
         Uri data = intent.getData();
         if (data != null && "http".equals(data.getScheme()) &&
@@ -2513,7 +2509,7 @@ abstract public class GeckoApp
                         fileExt = name.substring(period);
                         fileName = name.substring(0, period);
                     }
-                    File file = File.createTempFile(fileName, fileExt, sGREDir);
+                    File file = File.createTempFile(fileName, fileExt, GeckoAppShell.getGREDir(GeckoApp.mAppContext));
 
                     FileOutputStream fos = new FileOutputStream(file);
                     InputStream is = cr.openInputStream(uri);
