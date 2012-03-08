@@ -185,7 +185,16 @@ public:
   virtual nsMenuParent *GetMenuParent() { return mMenuParent; }
   const nsAString& GetRadioGroupName() { return mGroupName; }
   nsMenuType GetMenuType() { return mType; }
-  nsMenuPopupFrame* GetPopup() { return mPopupFrame; }
+  nsMenuPopupFrame* GetPopup();
+
+  /**
+   * @return true if this frame has a popup child frame.
+   */
+  bool HasPopup() const
+  {
+    return (GetStateBits() & NS_STATE_MENU_HAS_POPUP_LIST) != 0;
+  }
+
 
   // nsMenuFrame methods 
 
@@ -226,9 +235,22 @@ protected:
   friend class nsASyncMenuInitialization;
   friend class nsMenuAttributeChangedEvent;
 
-  // initialize mPopupFrame to the first popup frame within
-  // aChildList. Removes the popup, if any, from aChildList.
+  /**
+   * Initialize the popup list to the first popup frame within
+   * aChildList. Removes the popup, if any, from aChildList.
+   */
   void SetPopupFrame(nsFrameList& aChildList);
+
+  /**
+   * Get the popup frame list from the frame property.
+   * @return the property value if it exists, nsnull otherwise.
+   */
+  nsFrameList* GetPopupList() const;
+
+  /**
+   * Destroy the popup list property.  The list must exist and be empty.
+   */
+  void DestroyPopupList();
 
   // set mMenuParent to the nearest enclosing menu bar or menupopup frame of
   // aParent (or aParent itself). This is called when initializing the frame,
@@ -274,9 +296,6 @@ protected:
   nsMenuType mType;
 
   nsMenuParent* mMenuParent; // Our parent menu.
-
-  // the popup for this menu, owned
-  nsMenuPopupFrame* mPopupFrame;
 
   // Reference to the mediator which wraps this frame.
   nsRefPtr<nsMenuTimerMediator> mTimerMediator;
