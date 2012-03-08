@@ -201,11 +201,21 @@ function editorLoaded()
   editor.setText("foobar");
   is(editor.getText(), "foobar", "editor allows programmatic changes (setText)");
 
+  EventUtils.synthesizeKey("VK_RETURN", {}, testWin);
+  is(editor.getText(), "foobar", "Enter key does nothing");
+
+  EventUtils.synthesizeKey("VK_TAB", {}, testWin);
+  is(editor.getText(), "foobar", "Tab does nothing");
+
+  editor.setText("      foobar");
+  EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, testWin);
+  is(editor.getText(), "      foobar", "Shift+Tab does nothing");
+
   editor.readOnly = false;
 
   editor.setCaretOffset(editor.getCharCount());
   EventUtils.synthesizeKey("-", {}, testWin);
-  is(editor.getText(), "foobar-", "editor is now editable again");
+  is(editor.getText(), "      foobar-", "editor is now editable again");
 
   // Test the Selection event.
 
