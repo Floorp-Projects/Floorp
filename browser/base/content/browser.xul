@@ -1003,8 +1003,6 @@
 #endif
       <toolbarbutton id="inspector-inspect-toolbutton"
                      class="devtools-toolbarbutton"
-                     label="&inspectButton.label;"
-                     accesskey="&inspectButton.accesskey;"
                      command="Inspector:Inspect"/>
       <toolbarbutton id="inspector-treepanel-toolbutton"
                      class="devtools-toolbarbutton"
