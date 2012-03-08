@@ -2756,6 +2756,12 @@ var gDetailView = {
     AddonManager.removeManagerListener(this);
     this.clearLoading();
     if (this._addon) {
+      if (this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
+        Services.obs.notifyObservers(document,
+                                     "addon-options-hidden",
+                                     this._addon.id);
+      }
+
       gEventManager.unregisterAddonListener(this, this._addon.id);
       gEventManager.unregisterInstallListener(this);
       this._addon = null;
@@ -2947,8 +2953,14 @@ var gDetailView = {
     this.fillSettingsRows();
   },
 
-  onDisabling: function() {
+  onDisabling: function(aNeedsRestart) {
     this.updateState();
+    if (!aNeedsRestart &&
+        this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
+      Services.obs.notifyObservers(document,
+                                   "addon-options-hidden",
+                                   this._addon.id);
+    }
   },
 
   onDisabled: function() {

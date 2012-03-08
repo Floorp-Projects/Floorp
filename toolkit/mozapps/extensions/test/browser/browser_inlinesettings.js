@@ -14,10 +14,25 @@ var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init();
 
 var observer = {
-  lastData: null,
+  lastDisplayed: null,
+  checkDisplayed: function(aExpected) {
+    is(this.lastDisplayed, aExpected, "'addon-options-displayed' notification should have fired");
+    this.lastDisplayed = null;
+  },
+  checkNotDisplayed: function() {
+    is(this.lastDisplayed, null, "'addon-options-displayed' notification should not have fired");
+  },
+  lastHidden: null,
+  checkHidden: function(aExpected) {
+    is(this.lastHidden, aExpected, "'addon-options-hidden' notification should have fired");
+    this.lastHidden = null;
+  },
+  checkNotHidden: function() {
+    is(this.lastHidden, null, "'addon-options-hidden' notification should not have fired");
+  },
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "addon-options-displayed") {
-      this.lastData = aData;
+      this.lastDisplayed = aData;
       // Test if the binding has applied before the observers are notified. We test the second setting here,
       // because the code operates on the first setting and we want to check it applies to all.
       var setting = aSubject.querySelector("rows > setting[first-row] ~ setting");
@@ -26,6 +41,8 @@ var observer = {
 
       // Add some extra height to the scrolling pane to ensure that it needs to scroll when appropriate.
       gManagerWindow.document.getElementById("detail-controls").style.marginBottom = "1000px";
+    } else if (aTopic == "addon-options-hidden") {
+      this.lastHidden = aData;
     }
   }
 };
@@ -63,7 +80,8 @@ function test() {
     name: "Inline Settings (Regular)",
     version: "1",
     optionsURL: CHROMEROOT + "options.xul",
-    optionsType: AddonManager.OPTIONS_TYPE_INLINE
+    optionsType: AddonManager.OPTIONS_TYPE_INLINE,
+    operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_DISABLE,
   },{
     id: "inlinesettings3@tests.mozilla.org",
     name: "Inline Settings (More Options)",
@@ -84,6 +102,7 @@ function test() {
       gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
       Services.obs.addObserver(observer, "addon-options-displayed", false);
+      Services.obs.addObserver(observer, "addon-options-hidden", false);
 
       run_next_test();
     });
@@ -108,6 +127,9 @@ function end_test() {
   MockFilePicker.cleanup();
 
   close_manager(gManagerWindow, function() {
+    observer.checkHidden("inlinesettings2@tests.mozilla.org");
+    Services.obs.removeObserver(observer, "addon-options-hidden");
+
     AddonManager.getAddonByID("inlinesettings1@tests.mozilla.org", function(aAddon) {
       aAddon.uninstall();
       finish();
@@ -160,7 +182,7 @@ add_test(function() {
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
-    is(observer.lastData, "inlinesettings1@tests.mozilla.org", "Observer notification should have fired");
+    observer.checkDisplayed("inlinesettings1@tests.mozilla.org");
     is(gManagerWindow.gViewController.currentViewId,
        "addons://detail/inlinesettings1%40tests.mozilla.org/preferences",
        "Current view should scroll to preferences");
@@ -297,6 +319,8 @@ add_test(function() {
 
 // Tests for the setting.xml bindings introduced after Mozilla 7
 add_test(function() {
+  observer.checkHidden("inlinesettings1@tests.mozilla.org");
+
   var addon = get_addon_element(gManagerWindow, "inlinesettings3@tests.mozilla.org");
   addon.parentNode.ensureElementIsVisible(addon);
 
@@ -304,7 +328,7 @@ add_test(function() {
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
-    is(observer.lastData, "inlinesettings3@tests.mozilla.org", "Observer notification should have fired");
+    observer.checkDisplayed("inlinesettings3@tests.mozilla.org");
 
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
@@ -360,6 +384,8 @@ add_test(function() {
 
 // Addon with inline preferences as optionsURL
 add_test(function() {
+  observer.checkHidden("inlinesettings3@tests.mozilla.org");
+
   var addon = get_addon_element(gManagerWindow, "inlinesettings2@tests.mozilla.org");
   addon.parentNode.ensureElementIsVisible(addon);
 
@@ -367,7 +393,7 @@ add_test(function() {
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
-    is(observer.lastData, "inlinesettings2@tests.mozilla.org", "Observer notification should have fired");
+    observer.checkDisplayed("inlinesettings2@tests.mozilla.org");
 
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
@@ -411,6 +437,8 @@ add_test(function() {
 
 // Addon with non-inline preferences as optionsURL
 add_test(function() {
+  observer.checkHidden("inlinesettings2@tests.mozilla.org");
+
   var addon = get_addon_element(gManagerWindow, "noninlinesettings@tests.mozilla.org");
   addon.parentNode.ensureElementIsVisible(addon);
 
@@ -418,7 +446,7 @@ add_test(function() {
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
-    is(observer.lastData, "inlinesettings2@tests.mozilla.org", "Observer notification should not have fired");
+    observer.checkNotDisplayed();
 
     var grid = gManagerWindow.document.getElementById("detail-grid");
     var settings = grid.querySelectorAll("rows > setting");
@@ -433,6 +461,8 @@ add_test(function() {
 
 // Addon with options.xul, disabling and enabling should hide and show settings UI
 add_test(function() {
+  observer.checkNotHidden();
+
   var addon = get_addon_element(gManagerWindow, "inlinesettings1@tests.mozilla.org");
   addon.parentNode.ensureElementIsVisible(addon);
 
@@ -440,6 +470,7 @@ add_test(function() {
   EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
   wait_for_view_load(gManagerWindow, function() {
+    observer.checkDisplayed("inlinesettings1@tests.mozilla.org");
     is(gManagerWindow.gViewController.currentViewId,
        "addons://detail/inlinesettings1%40tests.mozilla.org",
        "Current view should not scroll to preferences");
@@ -453,6 +484,8 @@ add_test(function() {
     var button = gManagerWindow.document.getElementById("detail-disable-btn");
     button.focus(); // make sure it's in view
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+
+    observer.checkHidden("inlinesettings1@tests.mozilla.org");
 
     settings = grid.querySelectorAll("rows > setting");
     is(settings.length, 0, "Grid should not have settings children");
@@ -472,13 +505,11 @@ add_test(function() {
         var settings = grid.querySelectorAll("rows > setting");
         is(settings.length, 0, "Grid should not have settings children");
         
-        observer.lastData = null;
-
         // enable
         var button = gManagerWindow.document.getElementById("detail-enable-btn");
         EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
-        is(observer.lastData, "inlinesettings1@tests.mozilla.org", "Observer notification should have fired");
+        observer.checkDisplayed("inlinesettings1@tests.mozilla.org");
 
         settings = grid.querySelectorAll("rows > setting");
         is(settings.length, SETTINGS_ROWS, "Grid should have settings children");
@@ -486,5 +517,43 @@ add_test(function() {
         gCategoryUtilities.openType("extension", run_next_test);
       });
     });
+  });
+});
+
+
+// Addon with options.xul that requires a restart to disable,
+// disabling and enabling should not hide and show settings UI.
+add_test(function() {
+  observer.checkHidden("inlinesettings1@tests.mozilla.org");
+
+  var addon = get_addon_element(gManagerWindow, "inlinesettings2@tests.mozilla.org");
+  addon.parentNode.ensureElementIsVisible(addon);
+
+  var button = gManagerWindow.document.getAnonymousElementByAttribute(addon, "anonid", "details-btn");
+  EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+
+  wait_for_view_load(gManagerWindow, function() {
+    observer.checkDisplayed("inlinesettings2@tests.mozilla.org");
+
+    var grid = gManagerWindow.document.getElementById("detail-grid");
+    var settings = grid.querySelectorAll("rows > setting");
+    ok(settings.length > 0, "Grid should have settings children");
+
+    // disable
+    var button = gManagerWindow.document.getElementById("detail-disable-btn");
+    button.focus(); // make sure it's in view
+    EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+    observer.checkNotHidden();
+
+    settings = grid.querySelectorAll("rows > setting");
+    ok(settings.length > 0, "Grid should still have settings children");
+
+    // cancel pending disable
+    button = gManagerWindow.document.getElementById("detail-enable-btn");
+    button.focus(); // make sure it's in view
+    EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+    observer.checkNotDisplayed();
+
+    gCategoryUtilities.openType("extension", run_next_test);
   });
 });
