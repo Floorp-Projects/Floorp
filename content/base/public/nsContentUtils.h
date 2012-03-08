@@ -442,6 +442,16 @@ public:
   static bool IsHTMLWhitespace(PRUnichar aChar);
 
   /**
+   * Is the HTML local name a block element?
+   */
+  static bool IsHTMLBlock(nsIAtom* aLocalName);
+
+  /**
+   * Is the HTML local name a void element?
+   */
+  static bool IsHTMLVoid(nsIAtom* aLocalName);
+
+  /**
    * Parse a margin string of format 'top, right, bottom, left' into
    * an nsIntMargin.
    *
