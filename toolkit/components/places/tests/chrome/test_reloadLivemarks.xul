@@ -42,6 +42,12 @@ let gLivemarks = [
 
 function runTest()
 {
+  if (navigator.platform.indexOf("Lin") != -1) {
+    ok(true, "Bug 734044: This test is disabled on Linux for random timeouts.");
+    SimpleTest.finish();
+    return;
+  }
+
   addLivemarks(function () {
     reloadLivemarks(false, function () {
       reloadLivemarks(true, function () {
