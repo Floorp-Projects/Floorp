@@ -3462,11 +3462,15 @@ pref("dom.network.metered", false);
 pref("memory.low_virtual_memory_threshold_mb", 128);
 
 // On Windows 32- or 64-bit, fire a low-memory notification if we have less
+// than this many mb of commit space (physical memory plus page file) left.
+pref("memory.low_commit_space_threshold_mb", 128);
+
+// On Windows 32- or 64-bit, fire a low-memory notification if we have less
 // than this many mb of physical memory available on the whole machine.
 pref("memory.low_physical_memory_threshold_mb", 0);
 
 // On Windows 32- or 64-bit, don't fire a low-memory notification because of
-// low available physical memory more than once every
-// low_physical_memory_notification_interval_ms.
-pref("memory.low_physical_memory_notification_interval_ms", 10000);
+// low available physical memory or low commit space more than once every
+// low_memory_notification_interval_ms.
+pref("memory.low_memory_notification_interval_ms", 10000);
 #endif
