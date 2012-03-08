@@ -657,7 +657,9 @@ PlacesViewBase.prototype = {
               aPlacesNode._siteURI = aLivemark.siteURI;
               if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED) {
                 aLivemark.registerForUpdates(aPlacesNode, this);
+                // Prioritize the current livemark.
                 aLivemark.reload();
+                PlacesUtils.livemarks.reloadLivemarks();
                 if (shouldInvalidate)
                   this.invalidateContainer(aPlacesNode);
               }
