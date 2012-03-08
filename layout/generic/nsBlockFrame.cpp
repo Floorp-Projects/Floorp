@@ -574,15 +574,13 @@ nsBlockFrame::GetCaretBaseline() const
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-nsFrameList
+const nsFrameList&
 nsBlockFrame::GetChildList(ChildListID aListID) const
 {
   switch (aListID) {
     case kPrincipalList:
       return mFrames;
     case kOverflowList: {
-      // XXXbz once we start using nsFrameList for our overflow list, we
-      // could switch GetChildList to returning a |const nsFrameList&|.
       FrameLines* overflowLines = GetOverflowLines();
       return overflowLines ? overflowLines->mFrames : nsFrameList::EmptyList();
     }
