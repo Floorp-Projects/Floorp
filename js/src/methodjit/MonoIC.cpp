@@ -1143,7 +1143,7 @@ ic::SplatApplyArgs(VMFrame &f)
 
     /* Steps 4-5. */
     JSObject *aobj = &vp[3].toObject();
-    jsuint length;
+    uint32_t length;
     if (!js_GetLengthProperty(cx, aobj, &length))
         THROWV(false);
 

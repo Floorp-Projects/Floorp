@@ -1,0 +1,142 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 900">
+  <!-- 1. gradientUnits -->
+  <defs>
+    <linearGradient id="gradientUnits" x1="0" y1="0" x2="100" y2="0"
+      gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F60" />
+      <stop offset="100%" stop-color="#FF6" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" fill="url(#gradientUnits)"/>
+  <g transform="translate(100)">
+    <rect width="100" height="100" fill="url(#gradientUnits)"/>
+  </g>
+  <!-- 2. gradientTransform -->
+  <defs>
+    <linearGradient id="gradientTransform"
+      gradientTransform="rotate(90 0.5 0.5)">
+      <stop offset="0%" stop-color="#F60" />
+      <stop offset="100%" stop-color="#FF6" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(0 100)">
+    <rect width="100" height="100" fill="url(#gradientTransform)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" fill="url(#gradientTransform)"/>
+    </g>
+  </g>
+  <!-- 3. x1, x2 -->
+  <defs>
+    <linearGradient id="x1x2" x1="40%" x2="60%">
+      <stop offset="0%" stop-color="#F60" />
+      <stop offset="100%" stop-color="#FF6" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(0 200)">
+    <rect width="100" height="100" fill="url(#x1x2)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" fill="url(#x1x2)"/>
+    </g>
+  </g>
+  <!-- 4. y1, y2 -->
+  <defs>
+    <linearGradient id="y1y2" x2="0%" y1="40%" y2="60%">
+      <stop offset="0%" stop-color="#F60" />
+      <stop offset="100%" stop-color="#FF6" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(0 300)">
+    <rect width="100" height="100" fill="url(#y1y2)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" fill="url(#y1y2)"/>
+    </g>
+  </g>
+  <!-- 5. cx, cy -->
+  <defs>
+    <radialGradient id="cxcy" cx="0%" cy="100%">
+      <stop offset="0%" stop-color="#F60" />
+      <stop offset="100%" stop-color="#FF6" />
+    </radialGradient>
+  </defs>
+  <g transform="translate(0 400)">
+    <rect width="100" height="100" fill="url(#cxcy)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" fill="url(#cxcy)"/>
+    </g>
+  </g>
+  <!-- 6. r -->
+  <defs>
+    <radialGradient id="r" r="100%">
+      <stop offset="0%" stop-color="#F60" />
+      <stop offset="100%" stop-color="#FF6" />
+    </radialGradient>
+  </defs>
+  <g transform="translate(0 500)">
+    <rect width="100" height="100" fill="url(#r)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" fill="url(#r)"/>
+    </g>
+  </g>
+  <!-- 7. fx, fy -->
+  <defs>
+    <radialGradient id="fxfy" fx="20%" fy="80%">
+      <stop offset="0%" stop-color="#F60" />
+      <stop offset="100%" stop-color="#FF6" />
+    </radialGradient>
+  </defs>
+  <g transform="translate(0 600)">
+    <rect width="100" height="100" fill="url(#fxfy)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" fill="url(#fxfy)"/>
+    </g>
+  </g>
+  <!-- 8. spreadMethod -->
+  <defs>
+    <linearGradient id="spreadMethod" x1="50%" spreadMethod="reflect">
+      <stop offset="0%" stop-color="#F60" />
+      <stop offset="100%" stop-color="#FF6" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(0 700)">
+    <rect width="100" height="100" fill="url(#spreadMethod)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" fill="url(#spreadMethod)"/>
+    </g>
+  </g>
+  <!-- 9. xlink:href -->
+  <defs>
+    <linearGradient id="xlink" xlink:href="#xlinkRef"/>
+    <linearGradient id="xlinkRef">
+      <stop offset="0%" stop-color="#F60" />
+      <stop offset="100%" stop-color="#FF6" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(0 800)">
+    <rect width="100" height="100" fill="url(#xlink)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" fill="url(#xlinkRef)"/>
+    </g>
+  </g>
+  <!-- We were getting random but very minor anti-aliasing differences on OSX
+       and OSX64 along the edges of these gradients so we draw a thick stroke
+       over all the edges. -->
+  <path stroke="black" stroke-width="3" stroke-linecap="square" fill="none"
+    d="M0 0H200V900H0V0
+       M0 100H200
+       M0 200H200
+       M0 300H200
+       M0 400H200
+       M0 500H200
+       M0 600H200
+       M0 700H200
+       M0 800H200
+       M0 900H200
+       M100 0V900"/>
+  <!-- If adding more tests here, be sure to update the viewBox on the root svg
+       element -->
+</svg>

@@ -359,7 +359,7 @@ GetHistogramCounts(const char *testmsg, JSContext *cx, jsval *counts)
 nsresult
 CompareCountArrays(JSContext *cx, JSObject *before, JSObject *after)
 {
-  jsuint before_size, after_size;
+  uint32_t before_size, after_size;
   if (!(JS_GetArrayLength(cx, before, &before_size)
         && JS_GetArrayLength(cx, after, &after_size))) {
     return NS_ERROR_UNEXPECTED;
@@ -369,7 +369,7 @@ CompareCountArrays(JSContext *cx, JSObject *before, JSObject *after)
     return NS_ERROR_UNEXPECTED;
   }
 
-  for (jsuint i = 0; i < before_size; ++i) {
+  for (uint32_t i = 0; i < before_size; ++i) {
     jsval before_num, after_num;
 
     if (!(JS_GetElement(cx, before, i, &before_num)

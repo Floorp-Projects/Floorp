@@ -196,7 +196,7 @@ public class BrowserToolbar extends LinearLayout {
     }
 
     private void onAwesomeBarSearch() {
-        GeckoApp.mAppContext.onEditRequested();
+        GeckoApp.mAppContext.onSearchRequested();
     }
 
     private void addTab() {
@@ -294,13 +294,13 @@ public class BrowserToolbar extends LinearLayout {
         Tab tab = Tabs.getInstance().getSelectedTab();
         // Setting a null title for about:home will ensure we just see
         // the "Enter Search or Address" placeholder text
-        if (tab != null && tab.getURL().equals("about:home"))
+        if (tab != null && "about:home".equals(tab.getURL()))
             title = null;
         mAwesomeBar.setText(title);
     }
 
     public void setFavicon(Drawable image) {
-        if (Tabs.getInstance().getSelectedTab().isLoading())
+        if (Tabs.getInstance().getSelectedTab().getState() == Tab.STATE_LOADING)
             return;
 
         if (image != null)
@@ -339,11 +339,12 @@ public class BrowserToolbar extends LinearLayout {
     public void refresh() {
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
+            String url = tab.getURL();
             setTitle(tab.getDisplayTitle());
             setFavicon(tab.getFavicon());
             setSecurityMode(tab.getSecurityMode());
-            setProgressVisibility(tab.isLoading());
-            setShadowVisibility(!(tab.getURL().startsWith("about:")));
+            setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
+            setShadowVisibility((url == null) || !url.startsWith("about:"));
             updateTabCount(Tabs.getInstance().getCount());
         }
     }

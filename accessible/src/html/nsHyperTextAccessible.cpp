@@ -47,6 +47,7 @@
 #include "States.h"
 
 #include "nsIClipboard.h"
+#include "nsContentUtils.h"
 #include "nsFocusManager.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
@@ -165,8 +166,7 @@ nsHyperTextAccessible::NativeState()
 {
   PRUint64 states = nsAccessibleWrap::NativeState();
 
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   if (editor) {
     PRUint32 flags;
     editor->GetFlags(&flags);
@@ -710,8 +710,7 @@ nsHyperTextAccessible::HypertextOffsetsToDOMRange(PRInt32 aStartHTOffset,
   // If the given offsets are 0 and associated editor is empty then return
   // collapsed range with editor root element as range container.
   if (aStartHTOffset == 0 && aEndHTOffset == 0) {
-    nsCOMPtr<nsIEditor> editor;
-    GetAssociatedEditor(getter_AddRefs(editor));
+    nsCOMPtr<nsIEditor> editor = GetEditor();
     if (editor) {
       bool isEmpty = false;
       editor->GetDocumentIsEmpty(&isEmpty);
@@ -1153,15 +1152,14 @@ nsHyperTextAccessible::GetTextAttributes(bool aIncludeDefAttrs,
   // Compute spelling attributes on text accessible only.
   nsIFrame *offsetFrame = accAtOffset->GetFrame();
   if (offsetFrame && offsetFrame->GetType() == nsGkAtoms::textFrame) {
-    nsCOMPtr<nsIDOMNode> node = accAtOffset->DOMNode();
-
     PRInt32 nodeOffset = 0;
     nsresult rv = RenderedToContentOffset(offsetFrame, offsetInAcc,
                                           &nodeOffset);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set 'misspelled' text attribute.
-    rv = GetSpellTextAttribute(node, nodeOffset, &startOffset, &endOffset,
+    rv = GetSpellTextAttribute(accAtOffset->GetNode(), nodeOffset,
+                               &startOffset, &endOffset,
                                aAttributes ? *aAttributes : nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1455,8 +1453,10 @@ NS_IMETHODIMP nsHyperTextAccessible::SetTextContents(const nsAString &aText)
 NS_IMETHODIMP
 nsHyperTextAccessible::InsertText(const nsAString &aText, PRInt32 aPosition)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
 
   nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
   NS_ENSURE_STATE(peditor);
@@ -1470,8 +1470,10 @@ nsHyperTextAccessible::InsertText(const nsAString &aText, PRInt32 aPosition)
 NS_IMETHODIMP
 nsHyperTextAccessible::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   NS_ENSURE_STATE(editor);
 
   nsresult rv = SetSelectionRange(aStartPos, aEndPos);
@@ -1483,8 +1485,10 @@ nsHyperTextAccessible::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
 NS_IMETHODIMP
 nsHyperTextAccessible::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   NS_ENSURE_STATE(editor);
 
   nsresult rv = SetSelectionRange(aStartPos, aEndPos);
@@ -1496,8 +1500,10 @@ nsHyperTextAccessible::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
 NS_IMETHODIMP
 nsHyperTextAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   NS_ENSURE_STATE(editor);
 
   nsresult rv = SetSelectionRange(aStartPos, aEndPos);
@@ -1509,8 +1515,10 @@ nsHyperTextAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
 NS_IMETHODIMP
 nsHyperTextAccessible::PasteText(PRInt32 aPosition)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   NS_ENSURE_STATE(editor);
 
   nsresult rv = SetSelectionRange(aPosition, aPosition);
@@ -1519,44 +1527,37 @@ nsHyperTextAccessible::PasteText(PRInt32 aPosition)
   return editor->Paste(nsIClipboard::kGlobalClipboard);
 }
 
-NS_IMETHODIMP
-nsHyperTextAccessible::GetAssociatedEditor(nsIEditor **aEditor)
+already_AddRefed<nsIEditor>
+nsHyperTextAccessible::GetEditor() const
 {
-  NS_ENSURE_ARG_POINTER(aEditor);
-  *aEditor = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   if (!mContent->HasFlag(NODE_IS_EDITABLE)) {
     // If we're inside an editable container, then return that container's editor
-    nsCOMPtr<nsIAccessible> ancestor, current = this;
-    while (NS_SUCCEEDED(current->GetParent(getter_AddRefs(ancestor))) && ancestor) {
-      nsRefPtr<nsHyperTextAccessible> ancestorTextAccessible;
-      ancestor->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
-                               getter_AddRefs(ancestorTextAccessible));
-      if (ancestorTextAccessible) {
+    nsAccessible* ancestor = Parent();
+    while (ancestor) {
+      nsHyperTextAccessible* hyperText = ancestor->AsHyperText();
+      if (hyperText) {
         // Recursion will stop at container doc because it has its own impl
-        // of GetAssociatedEditor()
-        return ancestorTextAccessible->GetAssociatedEditor(aEditor);
+        // of GetEditor()
+        return hyperText->GetEditor();
       }
-      current = ancestor;
+
+      ancestor = ancestor->Parent();
     }
-    return NS_OK;
+
+    return nsnull;
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mContent);
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(docShellTreeItem));
   if (!editingSession)
-    return NS_OK; // No editing session interface
-
-  NS_ENSURE_TRUE(mDoc, NS_ERROR_FAILURE);
-  nsIDocument* docNode = mDoc->GetDocumentNode();
-  NS_ENSURE_TRUE(docNode, NS_ERROR_FAILURE);
+    return nsnull; // No editing session interface
 
   nsCOMPtr<nsIEditor> editor;
-  return editingSession->GetEditorForWindow(docNode->GetWindow(), aEditor);
+  nsIDocument* docNode = mDoc->GetDocumentNode();
+  editingSession->GetEditorForWindow(docNode->GetWindow(),
+                                     getter_AddRefs(editor));
+  return editor.forget();
 }
 
 /**
@@ -1770,8 +1771,7 @@ nsHyperTextAccessible::GetSelectionDOMRanges(PRInt16 aType,
 
   nsCOMPtr<nsINode> startNode = GetNode();
 
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   if (editor) {
     nsCOMPtr<nsIDOMElement> editorRoot;
     editor->GetRootElement(getter_AddRefs(editorRoot));
@@ -1789,13 +1789,11 @@ nsHyperTextAccessible::GetSelectionDOMRanges(PRInt16 aType,
 
   // Remove collapsed ranges
   PRUint32 numRanges = aRanges->Length();
-  for (PRUint32 count = 0; count < numRanges; count ++) {
-    bool isCollapsed = false;
-    (*aRanges)[count]->GetCollapsed(&isCollapsed);
-    if (isCollapsed) {
-      aRanges->RemoveElementAt(count);
+  for (PRUint32 idx = 0; idx < numRanges; idx ++) {
+    if ((*aRanges)[idx]->Collapsed()) {
+      aRanges->RemoveElementAt(idx);
       --numRanges;
-      --count;
+      --idx;
     }
   }
 }
@@ -1837,29 +1835,19 @@ nsHyperTextAccessible::GetSelectionBounds(PRInt32 aSelectionNum,
 
   nsRange* range = ranges[aSelectionNum];
 
-  // Get start point
-  nsCOMPtr<nsIDOMNode> startDOMNode;
-  range->GetStartContainer(getter_AddRefs(startDOMNode));
-  nsCOMPtr<nsINode> startNode(do_QueryInterface(startDOMNode));
-  PRInt32 startOffset = 0;
-  range->GetStartOffset(&startOffset);
+  // Get start and end points.
+  nsINode* startNode = range->GetStartParent();
+  nsINode* endNode = range->GetEndParent();
+  PRInt32 startOffset = range->StartOffset(), endOffset = range->EndOffset();
 
-  // Get end point
-  nsCOMPtr<nsIDOMNode> endDOMNode;
-  range->GetEndContainer(getter_AddRefs(endDOMNode));
-  nsCOMPtr<nsINode> endNode(do_QueryInterface(endDOMNode));
-  PRInt32 endOffset = 0;
-  range->GetEndOffset(&endOffset);
-
-  PRInt16 rangeCompareResult = 0;
-  nsresult rv = range->CompareBoundaryPoints(nsIDOMRange::START_TO_END, range,
-                                             &rangeCompareResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (rangeCompareResult < 0) {
-    // Make sure start is before end, by swapping offsets
-    // This occurs when the user selects backwards in the text
-    startNode.swap(endNode);
+  // Make sure start is before end, by swapping DOM points.  This occurs when
+  // the user selects backwards in the text.
+  PRInt32 rangeCompare = nsContentUtils::ComparePoints(endNode, endOffset,
+                                                       startNode, startOffset);
+  if (rangeCompare < 0) {
+    nsINode* tempNode = startNode;
+    startNode = endNode;
+    endNode = tempNode;
     PRInt32 tempOffset = startOffset;
     startOffset = endOffset;
     endOffset = tempOffset;
@@ -2324,25 +2312,17 @@ nsHyperTextAccessible::RangeBoundToHypertextOffset(nsRange *aRange,
                                                    bool aIsStartHTOffset,
                                                    PRInt32 *aHTOffset)
 {
-  nsCOMPtr<nsIDOMNode> DOMNode;
+  nsINode* node = nsnull;
   PRInt32 nodeOffset = 0;
 
-  nsresult rv;
   if (aIsStartBound) {
-    rv = aRange->GetStartContainer(getter_AddRefs(DOMNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aRange->GetStartOffset(&nodeOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
+    node = aRange->GetStartParent();
+    nodeOffset = aRange->StartOffset();
   } else {
-    rv = aRange->GetEndContainer(getter_AddRefs(DOMNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aRange->GetEndOffset(&nodeOffset);
-    NS_ENSURE_SUCCESS(rv, rv);
+    node = aRange->GetEndParent();
+    nodeOffset = aRange->EndOffset();
   }
 
-  nsCOMPtr<nsINode> node(do_QueryInterface(DOMNode));
   nsAccessible *startAcc =
     DOMPointToHypertextOffset(node, nodeOffset, aHTOffset);
 
@@ -2354,7 +2334,7 @@ nsHyperTextAccessible::RangeBoundToHypertextOffset(nsRange *aRange,
 
 // nsHyperTextAccessible
 nsresult
-nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
+nsHyperTextAccessible::GetSpellTextAttribute(nsINode* aNode,
                                              PRInt32 aNodeOffset,
                                              PRInt32 *aHTStartOffset,
                                              PRInt32 *aHTEndOffset,
@@ -2367,25 +2347,19 @@ nsHyperTextAccessible::GetSpellTextAttribute(nsIDOMNode *aNode,
   if (!rangeCount)
     return NS_OK;
 
+  nsCOMPtr<nsIDOMNode> DOMNode = do_QueryInterface(aNode);
   for (PRUint32 index = 0; index < rangeCount; index++) {
     nsRange* range = ranges[index];
 
     PRInt16 result;
-    nsresult rv = range->ComparePoint(aNode, aNodeOffset, &result);
+    nsresult rv = range->ComparePoint(DOMNode, aNodeOffset, &result);
     NS_ENSURE_SUCCESS(rv, rv);
     // ComparePoint checks boundary points, but we need to check that
     // text at aNodeOffset is inside the range.
     // See also bug 460690.
     if (result == 0) {
-      nsCOMPtr<nsIDOMNode> end;
-      rv = range->GetEndContainer(getter_AddRefs(end));
-      NS_ENSURE_SUCCESS(rv, rv);
-      PRInt32 endOffset;
-      rv = range->GetEndOffset(&endOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (aNode == end && aNodeOffset == endOffset) {
+      if (aNode == range->GetEndParent() && aNodeOffset == range->EndOffset())
         result = 1;
-      }
     }
 
     if (result == 1) { // range is before point

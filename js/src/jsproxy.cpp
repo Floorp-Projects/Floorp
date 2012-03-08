@@ -494,11 +494,11 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
         return true;
 
     JSObject *obj = &array.toObject();
-    jsuint length;
+    uint32_t length;
     if (!js_GetLengthProperty(cx, obj, &length))
         return false;
 
-    for (jsuint n = 0; n < length; ++n) {
+    for (uint32_t n = 0; n < length; ++n) {
         if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
         Value v;

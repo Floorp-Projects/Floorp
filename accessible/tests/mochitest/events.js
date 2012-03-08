@@ -304,12 +304,20 @@ function eventQueue(aEventType)
     // Start processing of next invoker.
     invoker = this.getNextInvoker();
 
+    this.setEventHandler(invoker);
+
     if (gLogger.isEnabled()) {
       gLogger.logToConsole("Event queue: \n  invoke: " + invoker.getID());
       gLogger.logToDOM("EQ: invoke: " + invoker.getID(), true);
     }
 
-    this.setEventHandler(invoker);
+    var infoText = "Invoke the '" + invoker.getID() + "' test { ";
+    for (var idx = 0; idx < this.mEventSeq.length; idx++) {
+      infoText += this.isEventUnexpected(idx) ? "un" : "";
+      infoText += "expected '" + this.getEventTypeAsString(idx) + "' event; ";
+    }
+    infoText += " }";
+    info(infoText);
 
     if (invoker.invoke() == INVOKER_ACTION_FAILED) {
       // Invoker failed to prepare action, fail and finish tests.

@@ -124,7 +124,8 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
         nsBlockFrame::line_iterator line_end;
         bool anyLines = true;
         if (overflowLines) {
-          nsLineList* lines = block->GetOverflowLines();
+          nsBlockFrame::FrameLines* frames = block->GetOverflowLines();
+          nsLineList* lines = frames ? &frames->mLines : nsnull;
           if (!lines) {
             anyLines = false;
           } else {

@@ -47,11 +47,12 @@ namespace gc {
 #define DeclMarker(base, type)                                                                    \
 void Mark##base(JSTracer *trc, HeapPtr<type> *thing, const char *name);                           \
 void Mark##base##Root(JSTracer *trc, type **thingp, const char *name);                            \
-void Mark##base##Unbarriered(JSTracer *trc, type *thing, const char *name);                       \
+void Mark##base##Unbarriered(JSTracer *trc, type **thingp, const char *name);                     \
 void Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *thing, const char *name);        \
 void Mark##base##RootRange(JSTracer *trc, size_t len, type **thing, const char *name);
 
 DeclMarker(BaseShape, BaseShape)
+DeclMarker(BaseShape, UnownedBaseShape)
 DeclMarker(Object, ArgumentsObject)
 DeclMarker(Object, GlobalObject)
 DeclMarker(Object, JSObject)
@@ -120,7 +121,10 @@ void
 MarkSlot(JSTracer *trc, HeapSlot *s, const char *name);
 
 void
-MarkSlotRange(JSTracer *trc, size_t len, HeapSlot *vec, const char *name);
+MarkArraySlots(JSTracer *trc, size_t len, HeapSlot *vec, const char *name);
+
+void
+MarkObjectSlots(JSTracer *trc, JSObject *obj, uint32_t start, uint32_t nslots);
 
 /*
  * Mark a value that may be in a different compartment from the compartment
@@ -129,7 +133,15 @@ MarkSlotRange(JSTracer *trc, size_t len, HeapSlot *vec, const char *name);
 void
 MarkCrossCompartmentSlot(JSTracer *trc, HeapSlot *s, const char *name);
 
+
 /*** Special Cases ***/
+
+/*
+ * The unioned HeapPtr stored in script->globalObj needs special treatment to
+ * typecheck correctly.
+ */
+void
+MarkObject(JSTracer *trc, HeapPtr<GlobalObject, JSScript *> *thingp, const char *name);
 
 /* Direct value access used by the write barriers and the methodjit. */
 void
