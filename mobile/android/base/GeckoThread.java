@@ -66,7 +66,7 @@ public class GeckoThread extends Thread {
 
     public void run() {
         final GeckoApp app = GeckoApp.mAppContext;
-        File cacheFile = GeckoAppShell.getCacheDir(app);
+        File cacheFile = GeckoAppShell.getCacheDir();
         File libxulFile = new File(cacheFile, "libxul.so");
 
         if ((!libxulFile.exists() ||
@@ -86,13 +86,9 @@ public class GeckoThread extends Thread {
         // At some point while loading the gecko libs our default locale gets set
         // so just save it to locale here and reset it as default after the join
         Locale locale = Locale.getDefault();
-
         String resourcePath = app.getApplication().getPackageResourcePath();
-        GeckoAppShell.setupGeckoEnvironment(app);
-        GeckoAppShell.loadSQLiteLibs(app, resourcePath);
-        GeckoAppShell.loadNSSLibs(app, resourcePath);
+        GeckoAppShell.ensureSQLiteLibsLoaded(resourcePath);
         GeckoAppShell.loadGeckoLibs(resourcePath);
-
         Locale.setDefault(locale);
         Resources res = app.getBaseContext().getResources();
         Configuration config = res.getConfiguration();
@@ -112,6 +108,5 @@ public class GeckoThread extends Thread {
         } catch (Exception e) {
             GeckoAppShell.reportJavaCrash(e);
         }
-
     }
 }
