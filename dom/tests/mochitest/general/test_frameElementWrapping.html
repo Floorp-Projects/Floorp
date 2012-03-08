@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for location object behaviors</title>
+  <title>Test for same-origin and cross-origin wrapping of frameElement</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -13,6 +13,14 @@
 <iframe id="ifr" src="file_frameElementWrapping.html"></iframe>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+
+//
+// This test has sort of morphed over time to become less and less useful.
+// In the past, we had special security policy for frameElement, but that's
+// more or less gone away with compartment/proxy wrapping. So we just go
+// through the motions to make sure that, indeed, frameElement is subject
+// to the same-origin policy.
+//
 
 SimpleTest.waitForExplicitFinish();
 
