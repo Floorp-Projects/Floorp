@@ -56,6 +56,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStringAPI.h"
 #include "nsXULAppAPI.h"
+#include "nsIPrefLocalizedString.h"
 
 namespace mozilla {
 namespace browser {
@@ -200,7 +201,18 @@ AppendDistroSearchDirs(nsIProperties* aDirSvc, nsCOMArray<nsIFile> &array)
     localePlugins->AppendNative(NS_LITERAL_CSTRING("locale"));
 
     nsCString locale;
-    rv = prefs->GetCharPref("general.useragent.locale", getter_Copies(locale));
+    nsCOMPtr<nsIPrefLocalizedString> prefString;
+    rv = prefs->GetComplexValue("general.useragent.locale",
+                                NS_GET_IID(nsIPrefLocalizedString),
+                                getter_AddRefs(prefString));
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString wLocale;
+      prefString->GetData(getter_Copies(wLocale));
+      CopyUTF16toUTF8(wLocale, locale);
+    } else {
+      rv = prefs->GetCharPref("general.useragent.locale", getter_Copies(locale));
+    }
+
     if (NS_SUCCEEDED(rv)) {
 
       nsCOMPtr<nsIFile> curLocalePlugins;
