@@ -162,13 +162,11 @@ private:
   typedef AutoHashtable<AddonHistogramEntryType> AddonHistogramMapType;
   typedef nsBaseHashtableET<nsCStringHashKey, AddonHistogramMapType *> AddonEntryType;
   typedef AutoHashtable<AddonEntryType> AddonMapType;
-  struct AddonEnumeratorArgs {
-    JSContext *cx;
-    JSObject *obj;
-  };
   static bool AddonHistogramReflector(AddonHistogramEntryType *entry,
                                       JSContext *cx, JSObject *obj);
   static bool AddonReflector(AddonEntryType *entry, JSContext *cx, JSObject *obj);
+  static bool CreateHistogramForAddon(const nsACString &name,
+                                      AddonHistogramInfo &info);
   AddonMapType mAddonMap;
 
   // This is used for speedy string->Telemetry::ID conversions
@@ -205,6 +203,7 @@ struct TelemetryHistogram {
 // errors.
 #define HISTOGRAM(id, min, max, bucket_count, histogram_type, b) \
   PR_STATIC_ASSERT(nsITelemetry::HISTOGRAM_ ## histogram_type == nsITelemetry::HISTOGRAM_BOOLEAN || \
+                   nsITelemetry::HISTOGRAM_ ## histogram_type == nsITelemetry::HISTOGRAM_FLAG || \
                    (min < max && bucket_count > 2 && min >= 1));
 
 #include "TelemetryHistograms.h"
@@ -235,6 +234,8 @@ TelemetryHistogramType(Histogram *h, PRUint32 *result)
   case Histogram::BOOLEAN_HISTOGRAM:
     *result = nsITelemetry::HISTOGRAM_BOOLEAN;
     break;
+  case Histogram::FLAG_HISTOGRAM:
+    *result = nsITelemetry::HISTOGRAM_FLAG;
   default:
     return false;
   }
@@ -245,7 +246,8 @@ nsresult
 HistogramGet(const char *name, PRUint32 min, PRUint32 max, PRUint32 bucketCount,
              PRUint32 histogramType, Histogram **result)
 {
-  if (histogramType != nsITelemetry::HISTOGRAM_BOOLEAN) {
+  if (histogramType != nsITelemetry::HISTOGRAM_BOOLEAN
+      && histogramType != nsITelemetry::HISTOGRAM_FLAG) {
     // Sanity checks for histogram parameters.
     if (min >= max)
       return NS_ERROR_ILLEGAL_VALUE;
@@ -266,6 +268,9 @@ HistogramGet(const char *name, PRUint32 min, PRUint32 max, PRUint32 bucketCount,
     break;
   case nsITelemetry::HISTOGRAM_BOOLEAN:
     *result = BooleanHistogram::FactoryGet(name, Histogram::kUmaTargetedHistogramFlag);
+    break;
+  case nsITelemetry::HISTOGRAM_FLAG:
+    *result = FlagHistogram::FactoryGet(name, Histogram::kUmaTargetedHistogramFlag);
     break;
   default:
     return NS_ERROR_INVALID_ARG;
@@ -735,25 +740,14 @@ TelemetryImpl::GetAddonHistogram(const nsACString &id, const nsACString &name,
   }
 
   AddonHistogramInfo &info = histogramEntry->mData;
-  Histogram *h;
-  if (info.h) {
-    h = info.h;
-  } else {
+  if (!info.h) {
     nsCAutoString actualName;
     AddonHistogramName(id, name, actualName);
-    nsresult rv = HistogramGet(PromiseFlatCString(actualName).get(),
-                               info.min, info.max, info.bucketCount,
-                               info.histogramType, &h);
-    if (NS_FAILED(rv)) {
-      return rv;
+    if (!CreateHistogramForAddon(actualName, info)) {
+      return NS_ERROR_FAILURE;
     }
-    // Don't let this histogram be reported via the normal means
-    // (e.g. Telemetry.registeredHistograms); we'll make it available in
-    // other ways.
-    h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
-    info.h = h;
   }
-  return WrapAndReturnHistogram(h, cx, ret);
+  return WrapAndReturnHistogram(info.h, cx, ret);
 }
 
 NS_IMETHODIMP
@@ -779,6 +773,16 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
   if (!root_obj)
     return NS_ERROR_FAILURE;
   *ret = OBJECT_TO_JSVAL(root_obj);
+
+  // Ensure that all the HISTOGRAM_FLAG histograms have been created, so
+  // that their values are snapshotted.
+  for (size_t i = 0; i < Telemetry::HistogramCount; ++i) {
+    if (gHistograms[i].histogramType == nsITelemetry::HISTOGRAM_FLAG) {
+      Histogram *h;
+      DebugOnly<nsresult> rv = GetHistogramByEnumId(Telemetry::ID(i), &h);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+  };
 
   StatisticsRecorder::Histograms hs;
   StatisticsRecorder::GetHistograms(&hs);
@@ -822,12 +826,39 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
 }
 
 bool
+TelemetryImpl::CreateHistogramForAddon(const nsACString &name,
+                                       AddonHistogramInfo &info)
+{
+  Histogram *h;
+  nsresult rv = HistogramGet(PromiseFlatCString(name).get(),
+                             info.min, info.max, info.bucketCount,
+                             info.histogramType, &h);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  // Don't let this histogram be reported via the normal means
+  // (e.g. Telemetry.registeredHistograms); we'll make it available in
+  // other ways.
+  h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
+  info.h = h;
+  return true;
+}
+
+bool
 TelemetryImpl::AddonHistogramReflector(AddonHistogramEntryType *entry,
                                        JSContext *cx, JSObject *obj)
 {
+  AddonHistogramInfo &info = entry->mData;
+
   // Never even accessed the histogram.
-  if (!entry->mData.h) {
-    return true;
+  if (!info.h) {
+    // Have to force creation of HISTOGRAM_FLAG histograms.
+    if (info.histogramType != nsITelemetry::HISTOGRAM_FLAG) 
+      return true;
+
+    if (!CreateHistogramForAddon(entry->GetKey(), info)) {
+      return false;
+    }
   }
 
   JSObject *snapshot = JS_NewObject(cx, NULL, NULL, NULL);
@@ -836,7 +867,7 @@ TelemetryImpl::AddonHistogramReflector(AddonHistogramEntryType *entry,
     return true;
   }
   JS::AutoObjectRooter r(cx, snapshot);
-  switch (ReflectHistogramSnapshot(cx, snapshot, entry->mData.h)) {
+  switch (ReflectHistogramSnapshot(cx, snapshot, info.h)) {
   case REFLECT_FAILURE:
   case REFLECT_CORRUPT:
     return false;

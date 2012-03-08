@@ -85,9 +85,14 @@ using namespace mozilla::xpconnect::memory;
 // consistency.
 #define WORKER_STACK_SIZE 256 * sizeof(size_t) * 1024
 
-// The stack limit the JS engine will check. Half the size of the
-// actual C stack, to be safe.
+// The stack limit the JS engine will check. 
+#ifdef MOZ_ASAN
+// For ASan, we need more stack space, so we use all that is available
+#define WORKER_CONTEXT_NATIVE_STACK_LIMIT WORKER_STACK_SIZE
+#else
+// Half the size of the actual C stack, to be safe.
 #define WORKER_CONTEXT_NATIVE_STACK_LIMIT 128 * sizeof(size_t) * 1024
+#endif
 
 // The maximum number of threads to use for workers, overridable via pref.
 #define MAX_WORKERS_PER_DOMAIN 10

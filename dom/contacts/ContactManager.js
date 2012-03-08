@@ -17,6 +17,15 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
+
+XPCOMUtils.defineLazyGetter(Services, "rs", function() {
+  return Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
+});
+
+XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
+  return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
+});
 
 const nsIClassInfo            = Ci.nsIClassInfo;
 const CONTACTPROPERTIES_CID   = Components.ID("{53ed7c20-ceda-11e0-9572-0800200c9a66}");
@@ -184,6 +193,7 @@ function ContactManager()
 }
 
 ContactManager.prototype = {
+  __proto__: DOMRequestIpcHelper.prototype,
 
   save: function save(aContact) {
     let request;
@@ -222,9 +232,9 @@ ContactManager.prototype = {
 
       this._setMetaData(newContact, aContact);
       debug("send: " + JSON.stringify(newContact));
-      request = this._rs.createRequest(this._window);
-      this._mm.sendAsyncMessage("Contact:Save", {contact: newContact,
-                                                 requestID: this.getRequestId({ request: request })});
+      request = this.createRequest();
+      cpmm.sendAsyncMessage("Contact:Save", {contact: newContact,
+                                             requestID: this.getRequestId(request)});
       return request;
     } else {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -234,9 +244,9 @@ ContactManager.prototype = {
   remove: function removeContact(aRecord) {
     let request;
     if (this.hasPrivileges) {
-      request = this._rs.createRequest(this._window);
-      this._mm.sendAsyncMessage("Contact:Remove", {id: aRecord.id,
-                                                   requestID: this.getRequestId({ request: request })});
+      request = this.createRequest();
+      cpmm.sendAsyncMessage("Contact:Remove", {id: aRecord.id,
+                                               requestID: this.getRequestId(request)});
       return request;
     } else {
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
@@ -260,26 +270,6 @@ ContactManager.prototype = {
     return contacts;
   },
 
-  getRequestId: function(aRequest) {
-    let id = "id" + this._getRandomId();
-    this._requests[id] = aRequest;
-    return id;
-  },
-
-  getRequest: function(aId) {
-    if (this._requests[aId])
-      return this._requests[aId].request;
-  },
-
-  removeRequest: function(aId) {
-    if (this._requests[aId])
-      delete this._requests[aId];
-  },
-  
-  _getRandomId: function() {
-    return Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
-  },
-
   receiveMessage: function(aMessage) {
     debug("Contactmanager::receiveMessage: " + aMessage.name);
     let msg = aMessage.json;
@@ -291,7 +281,7 @@ ContactManager.prototype = {
         if (req) {
           let result = this._convertContactsArray(contacts);
           debug("result: " + JSON.stringify(result));
-          this._rs.fireSuccess(req, result);
+          Services.rs.fireSuccess(req, result);
         } else {
           debug("no request stored!" + msg.requestID);
         }
@@ -301,7 +291,7 @@ ContactManager.prototype = {
       case "Contact:Remove:Return:OK":
         req = this.getRequest(msg.requestID);
         if (req)
-          this._rs.fireSuccess(req, 0);
+          Services.rs.fireSuccess(req, null);
         break;
       case "Contacts:Find:Return:KO":
       case "Contact:Save:Return:KO":
@@ -309,7 +299,7 @@ ContactManager.prototype = {
       case "Contacts:Clear:Return:KO":
         req = this.getRequest(msg.requestID);
         if (req)
-          this._rs.fireError(req, msg.errorMsg);
+          Services.rs.fireError(req, msg.errorMsg);
         break;
       default: 
         debug("Wrong message: " + aMessage.name);
@@ -320,9 +310,9 @@ ContactManager.prototype = {
   find: function(aOptions) {
     let request;
     if (this.hasPrivileges) {
-      request = this._rs.createRequest(this._window);
-      this._mm.sendAsyncMessage("Contacts:Find", {findOptions: aOptions, 
-                                                  requestID: this.getRequestId({ request: request })});
+      request = this.createRequest();
+      cpmm.sendAsyncMessage("Contacts:Find", {findOptions: aOptions, 
+                                              requestID: this.getRequestId(request)});
       return request;
     } else {
       debug("find not allowed");
@@ -333,8 +323,8 @@ ContactManager.prototype = {
   clear: function() {
     let request;
     if (this.hasPrivileges) {
-      request = this._rs.createRequest(this._window);
-      this._mm.sendAsyncMessage("Contacts:Clear", {requestID: this.getRequestId({ request: request })});
+      request = this.createRequest();
+      cpmm.sendAsyncMessage("Contacts:Clear", {requestID: this.getRequestId(request)});
       return request;
     } else {
       debug("clear not allowed");
@@ -347,22 +337,12 @@ ContactManager.prototype = {
     if (!Services.prefs.getBoolPref("dom.mozContacts.enabled"))
       return null;
 
-    this._window = aWindow;
-    this._messages = ["Contacts:Find:Return:OK", "Contacts:Find:Return:KO",
+    this.initHelper(aWindow, ["Contacts:Find:Return:OK", "Contacts:Find:Return:KO",
                      "Contacts:Clear:Return:OK", "Contacts:Clear:Return:KO",
                      "Contact:Save:Return:OK", "Contact:Save:Return:KO",
-                     "Contact:Remove:Return:OK", "Contact:Remove:Return:KO"];
+                     "Contact:Remove:Return:OK", "Contact:Remove:Return:KO"]);
 
-    this._mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
-    this._messages.forEach((function(msgName) {
-      this._mm.addMessageListener(msgName, this);
-    }).bind(this));
-
-    this._rs = Cc["@mozilla.org/dom/dom-request-service;1"].getService(Ci.nsIDOMRequestService);
-    this._requests = [];
     Services.obs.addObserver(this, "inner-window-destroyed", false);
-    let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    this._innerWindowID = util.currentInnerWindowID;
 
     let principal = aWindow.document.nodePrincipal;
     let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
@@ -374,21 +354,6 @@ ContactManager.prototype = {
     //only pages with perm set can use the contacts
     this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION;
     debug("has privileges :" + this.hasPrivileges);
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    if (wId == this.innerWindowID) {
-      Services.obs.removeObserver(this, "inner-window-destroyed");
-      this._messages.forEach((function(msgName) {
-        this._mm.removeMessageListener(msgName, this);
-      }).bind(this));
-      this._mm = null;
-      this._messages = null;
-      this._requests = null;
-      this._window = null;
-      this._innerWindowID = null;
-    }
   },
 
   classID : CONTACTMANAGER_CID,

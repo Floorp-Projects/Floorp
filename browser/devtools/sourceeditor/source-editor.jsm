@@ -192,6 +192,7 @@ SourceEditor.DEFAULTS = {
    *   - action - name of the editor action to invoke.
    *   - code - keyCode for the shortcut.
    *   - accel - boolean for the Accel key (Cmd on Macs, Ctrl on Linux/Windows).
+   *   - ctrl - boolean for the Control key
    *   - shift - boolean for the Shift key.
    *   - alt - boolean for the Alt key.
    *   - callback - optional function to invoke, if the action is not predefined

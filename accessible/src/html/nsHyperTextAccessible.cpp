@@ -166,8 +166,7 @@ nsHyperTextAccessible::NativeState()
 {
   PRUint64 states = nsAccessibleWrap::NativeState();
 
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   if (editor) {
     PRUint32 flags;
     editor->GetFlags(&flags);
@@ -711,8 +710,7 @@ nsHyperTextAccessible::HypertextOffsetsToDOMRange(PRInt32 aStartHTOffset,
   // If the given offsets are 0 and associated editor is empty then return
   // collapsed range with editor root element as range container.
   if (aStartHTOffset == 0 && aEndHTOffset == 0) {
-    nsCOMPtr<nsIEditor> editor;
-    GetAssociatedEditor(getter_AddRefs(editor));
+    nsCOMPtr<nsIEditor> editor = GetEditor();
     if (editor) {
       bool isEmpty = false;
       editor->GetDocumentIsEmpty(&isEmpty);
@@ -1455,8 +1453,10 @@ NS_IMETHODIMP nsHyperTextAccessible::SetTextContents(const nsAString &aText)
 NS_IMETHODIMP
 nsHyperTextAccessible::InsertText(const nsAString &aText, PRInt32 aPosition)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
 
   nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
   NS_ENSURE_STATE(peditor);
@@ -1470,8 +1470,10 @@ nsHyperTextAccessible::InsertText(const nsAString &aText, PRInt32 aPosition)
 NS_IMETHODIMP
 nsHyperTextAccessible::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   NS_ENSURE_STATE(editor);
 
   nsresult rv = SetSelectionRange(aStartPos, aEndPos);
@@ -1483,8 +1485,10 @@ nsHyperTextAccessible::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
 NS_IMETHODIMP
 nsHyperTextAccessible::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   NS_ENSURE_STATE(editor);
 
   nsresult rv = SetSelectionRange(aStartPos, aEndPos);
@@ -1496,8 +1500,10 @@ nsHyperTextAccessible::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
 NS_IMETHODIMP
 nsHyperTextAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   NS_ENSURE_STATE(editor);
 
   nsresult rv = SetSelectionRange(aStartPos, aEndPos);
@@ -1509,8 +1515,10 @@ nsHyperTextAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
 NS_IMETHODIMP
 nsHyperTextAccessible::PasteText(PRInt32 aPosition)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   NS_ENSURE_STATE(editor);
 
   nsresult rv = SetSelectionRange(aPosition, aPosition);
@@ -1519,44 +1527,37 @@ nsHyperTextAccessible::PasteText(PRInt32 aPosition)
   return editor->Paste(nsIClipboard::kGlobalClipboard);
 }
 
-NS_IMETHODIMP
-nsHyperTextAccessible::GetAssociatedEditor(nsIEditor **aEditor)
+already_AddRefed<nsIEditor>
+nsHyperTextAccessible::GetEditor() const
 {
-  NS_ENSURE_ARG_POINTER(aEditor);
-  *aEditor = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   if (!mContent->HasFlag(NODE_IS_EDITABLE)) {
     // If we're inside an editable container, then return that container's editor
-    nsCOMPtr<nsIAccessible> ancestor, current = this;
-    while (NS_SUCCEEDED(current->GetParent(getter_AddRefs(ancestor))) && ancestor) {
-      nsRefPtr<nsHyperTextAccessible> ancestorTextAccessible;
-      ancestor->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
-                               getter_AddRefs(ancestorTextAccessible));
-      if (ancestorTextAccessible) {
+    nsAccessible* ancestor = Parent();
+    while (ancestor) {
+      nsHyperTextAccessible* hyperText = ancestor->AsHyperText();
+      if (hyperText) {
         // Recursion will stop at container doc because it has its own impl
-        // of GetAssociatedEditor()
-        return ancestorTextAccessible->GetAssociatedEditor(aEditor);
+        // of GetEditor()
+        return hyperText->GetEditor();
       }
-      current = ancestor;
+
+      ancestor = ancestor->Parent();
     }
-    return NS_OK;
+
+    return nsnull;
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
     nsCoreUtils::GetDocShellTreeItemFor(mContent);
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(docShellTreeItem));
   if (!editingSession)
-    return NS_OK; // No editing session interface
-
-  NS_ENSURE_TRUE(mDoc, NS_ERROR_FAILURE);
-  nsIDocument* docNode = mDoc->GetDocumentNode();
-  NS_ENSURE_TRUE(docNode, NS_ERROR_FAILURE);
+    return nsnull; // No editing session interface
 
   nsCOMPtr<nsIEditor> editor;
-  return editingSession->GetEditorForWindow(docNode->GetWindow(), aEditor);
+  nsIDocument* docNode = mDoc->GetDocumentNode();
+  editingSession->GetEditorForWindow(docNode->GetWindow(),
+                                     getter_AddRefs(editor));
+  return editor.forget();
 }
 
 /**
@@ -1770,8 +1771,7 @@ nsHyperTextAccessible::GetSelectionDOMRanges(PRInt16 aType,
 
   nsCOMPtr<nsINode> startNode = GetNode();
 
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   if (editor) {
     nsCOMPtr<nsIDOMElement> editorRoot;
     editor->GetRootElement(getter_AddRefs(editorRoot));
