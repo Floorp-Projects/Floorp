@@ -273,8 +273,7 @@ nsXFormsEditableAccessible::NativeState()
     }
   }
 
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIEditor> editor = GetEditor();
   NS_ENSURE_TRUE(editor, state);
   PRUint32 flags;
   editor->GetFlags(&flags);
@@ -286,11 +285,14 @@ nsXFormsEditableAccessible::NativeState()
   return state;
 }
 
-NS_IMETHODIMP
-nsXFormsEditableAccessible::GetAssociatedEditor(nsIEditor **aEditor)
+already_AddRefed<nsIEditor>
+nsXFormsEditableAccessible::GetEditor() const
 {
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
-  return sXFormsService->GetEditor(DOMNode, aEditor);
+
+  nsCOMPtr<nsIEditor> editor;
+  sXFormsService->GetEditor(DOMNode, getter_AddRefs(editor));
+  return editor.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
