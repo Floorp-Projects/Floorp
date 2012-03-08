@@ -141,16 +141,54 @@ class ExpandArgsMore(ExpandArgs):
         newlist = self[0:idx] + [ref] + [item for item in self[idx:] if item not in objs]
         self[0:] = newlist
 
+    def _getFoldedSections(self):
+        '''Returns a dict about folded sections.
+        When section A and B are folded into section C, the dict contains:
+        { 'A': 'C',
+          'B': 'C',
+          'C': ['A', 'B'] }'''
+        if not conf.LD_PRINT_ICF_SECTIONS:
+            return {}
+
+        proc = subprocess.Popen(self + [conf.LD_PRINT_ICF_SECTIONS], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        (stdout, stderr) = proc.communicate()
+        result = {}
+        # gold's --print-icf-sections output looks like the following:
+        # ld: ICF folding section '.section' in file 'file.o'into '.section' in file 'file.o'
+        # In terms of words, chances are this will change in the future,
+        # especially considering "into" is misplaced. Splitting on quotes
+        # seems safer.
+        for l in stderr.split('\n'):
+            quoted = l.split("'")
+            if len(quoted) > 5 and quoted[1] != quoted[5]:
+                result[quoted[1]] = quoted[5]
+                if quoted[5] in result:
+                    result[quoted[5]].append(quoted[1])
+                else:
+                    result[quoted[5]] = [quoted[1]]
+        return result
+
     def _getOrderedSections(self, ordered_symbols):
         '''Given an ordered list of symbols, returns the corresponding list
         of sections following the order.'''
         if not conf.EXPAND_LIBS_ORDER_STYLE in ['linkerscript', 'section-ordering-file']:
             raise Exception('EXPAND_LIBS_ORDER_STYLE "%s" is not supported' % conf.EXPAND_LIBS_ORDER_STYLE)
         finder = SectionFinder([arg for arg in self if isObject(arg) or os.path.splitext(arg)[1] == conf.LIB_SUFFIX])
+        folded = self._getFoldedSections()
         sections = set()
         ordered_sections = []
         for symbol in ordered_symbols:
-            for section in finder.getSections(symbol):
+            symbol_sections = finder.getSections(symbol)
+            all_symbol_sections = []
+            for section in symbol_sections:
+                if section in folded:
+                    if isinstance(folded[section], str):
+                        section = folded[section]
+                    all_symbol_sections.append(section)
+                    all_symbol_sections.extend(folded[section])
+                else:
+                    all_symbol_sections.append(section)
+            for section in all_symbol_sections:
                 if not section in sections:
                     ordered_sections.append(section)
                     sections.add(section)
