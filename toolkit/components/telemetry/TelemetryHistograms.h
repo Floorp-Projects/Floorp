@@ -104,6 +104,7 @@ HISTOGRAM(MEMORY_FREE_PURGED_PAGES_MS, 1, 1024, 10, EXPONENTIAL, "Time(ms) to pu
 #elif defined(XP_WIN)
 HISTOGRAM(LOW_MEMORY_EVENTS_VIRTUAL, 1, 1024, 21, EXPONENTIAL, "Number of low-virtual-memory events fired since last ping")
 HISTOGRAM(LOW_MEMORY_EVENTS_PHYSICAL, 1, 1024, 21, EXPONENTIAL, "Number of low-physical-memory events fired since last ping")
+HISTOGRAM(LOW_MEMORY_EVENTS_COMMIT_SPACE, 1, 1024, 21, EXPONENTIAL, "Number of low-commit-space events fired since last ping")
 #endif
 
 #if defined(XP_WIN)
