@@ -241,12 +241,14 @@ public:
   /**
    * Return the bullet text equivalent.
    */
-  virtual void GetBulletText(nsAString& aText) const;
+  void GetBulletText(nsAString& aText) const;
 
   /**
    * Return true if there's a bullet.
    */
-  virtual bool HasBullet() const;
+  bool HasBullet() const {
+    return HasOutsideBullet() || HasInsideBullet();
+  }
 
   virtual void MarkIntrinsicWidthsDirty();
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
@@ -361,15 +363,6 @@ protected:
   void SetFlags(nsFrameState aFlags) {
     mState &= ~NS_BLOCK_FLAGS_MASK;
     mState |= aFlags;
-  }
-
-  bool HaveOutsideBullet() const {
-#if defined(DEBUG) && !defined(DEBUG_rods)
-    if(mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET) {
-      NS_ASSERTION(mBullet,"NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET flag set and no mBullet");
-    }
-#endif
-    return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
   /** move the frames contained by aLine by aDY
@@ -682,7 +675,8 @@ protected:
 
   static bool FrameStartsCounterScope(nsIFrame* aFrame);
 
-  void ReflowBullet(nsBlockReflowState& aState,
+  void ReflowBullet(nsIFrame* aBulletFrame,
+                    nsBlockReflowState& aState,
                     nsHTMLReflowMetrics& aMetrics,
                     nscoord aLineTop);
 
@@ -736,6 +730,43 @@ protected:
   void SetOverflowOutOfFlows(const nsFrameList& aList, nsFrameList* aPropValue);
 
   /**
+   * @return true if this frame has an inside bullet frame.
+   */
+  bool HasInsideBullet() const {
+    return 0 != (mState & NS_BLOCK_FRAME_HAS_INSIDE_BULLET);
+  }
+
+  /**
+   * @return the inside bullet frame or nsnull if we don't have one.
+   */
+  nsBulletFrame* GetInsideBullet() const;
+
+  /**
+   * @return true if this frame has an outside bullet frame.
+   */
+  bool HasOutsideBullet() const {
+    return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
+  }
+
+  /**
+   * @return the outside bullet frame or nsnull if we don't have one.
+   */
+  nsBulletFrame* GetOutsideBullet() const;
+
+  /**
+   * @return the outside bullet frame list frame property.
+   */
+  nsFrameList* GetOutsideBulletList() const;
+
+  /**
+   * @return the bullet frame or nsnull if we don't have one.
+   */
+  nsBulletFrame* GetBullet() const {
+    nsBulletFrame* outside = GetOutsideBullet();
+    return outside ? outside : GetInsideBullet();
+  }
+  
+  /**
    * @return true if this frame has pushed floats.
    */
   bool HasPushedFloats() const {
@@ -761,11 +792,8 @@ protected:
   nsLineList mLines;
 
   // List of all floats in this block
+  // XXXmats blocks rarely have floats, make it a frame property
   nsFrameList mFloats;
-
-  // XXX_fix_me: subclass one more time!
-  // For list-item frames, this is the bullet frame.
-  nsBulletFrame* mBullet;
 
   friend class nsBlockReflowState;
   friend class nsBlockInFlowLineIterator;
