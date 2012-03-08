@@ -2072,10 +2072,6 @@ abstract public class GeckoApp
             mMainHandler.sendMessage(message);
         }
 
-        // An Android framework bug can cause an IME crash when focus changes invalidate text
-        // selection offsets. A workaround is to reset selection when the activity resumes.
-        GeckoAppShell.resetIMESelection();
-
         int newOrientation = getResources().getConfiguration().orientation;
 
         if (mOrientation != newOrientation) {

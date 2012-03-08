@@ -969,18 +969,6 @@ public class GeckoInputConnection
         mEditable.setSpan(this, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         Selection.setSelection(mEditable, contents.length());
     }
-
-    public void resetSelection() {
-        // An Android framework bug can cause a SpannableStringBuilder crash when focus changes
-        // invalidate text selection offsets. A workaround is to reset selection when the activity
-        // resumes. More info: https://code.google.com/p/android/issues/detail?id=5164
-        Editable content = getEditable();
-        if (content != null) {
-            Log.d(LOGTAG, "IME: resetSelection");
-            int length = content.length();
-            setSelection(length, length);
-        }
-    }
 }
 
 class DebugGeckoInputConnection extends GeckoInputConnection {
