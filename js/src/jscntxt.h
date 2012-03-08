@@ -830,11 +830,11 @@ struct JSContext : js::ContextFriendFields
     bool                hasVersionOverride;
 
     /* Exception state -- the exception member is a GC root by definition. */
-    JSBool              throwing;            /* is there a pending exception? */
-    js::Value           exception;           /* most-recently-thrown exception */
+    JSBool              throwing;           /* is there a pending exception? */
+    js::Value           exception;          /* most-recently-thrown exception */
 
     /* Per-context run options. */
-    unsigned            runOptions;          /* see jsapi.h for JSOPTION_* */
+    unsigned               runOptions;            /* see jsapi.h for JSOPTION_* */
 
   public:
     int32_t             reportGranularity;  /* see jsprobes.h */
@@ -844,8 +844,11 @@ struct JSContext : js::ContextFriendFields
 
     js::AutoResolving   *resolvingList;
 
-    /* True if generating an error, to prevent runaway recursion. */
-    bool                generatingError;
+    /*
+     * True if generating an error, to prevent runaway recursion.
+     * NB: generatingError packs with throwing below.
+     */
+    bool        generatingError;
 
     /* GC heap compartment. */
     JSCompartment       *compartment;
