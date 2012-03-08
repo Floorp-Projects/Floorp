@@ -88,14 +88,12 @@ FENNEC_JAVA_FILES = \
   GeckoEventListener.java \
   GeckoEventResponder.java \
   GeckoInputConnection.java \
-  GeckoMessageReceiver.java \
   GeckoPreferences.java \
   GeckoProfile.java \
   GeckoStateListDrawable.java \
   GeckoThread.java \
   GlobalHistory.java \
   LinkPreference.java \
-  NSSBridge.java \
   ProfileMigrator.java \
   PromptService.java \
   sqlite/ByteBufferInputStream.java \
