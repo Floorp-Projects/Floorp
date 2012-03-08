@@ -116,6 +116,117 @@ let gTests = [
     executeSoon(runNextTest);
   }
 },
+
+{
+  desc: "Check sync links visibility before and after Sync setup",
+  setup: function ()
+  {
+    try {
+      Services.prefs.clearUserPref("services.sync.username");
+    } catch (ex) {}
+    Services.obs.notifyObservers(null, "weave:service:ready", null);
+  },
+  run: function ()
+  {
+    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let pairLink = doc.getElementById("pairDeviceLink");
+    let setupLink = doc.getElementById("setupSyncLink");
+
+    ok(pairLink, "Found 'Pair Device' link");
+    ok(setupLink, "Found 'Set Up Sync' link");
+    ok(!pairLink.hidden, "'Pair' link is visible before setup");
+    ok(!setupLink.hidden, "'Set Up' link is visible before setup");
+
+    Services.obs.notifyObservers(null, "weave:service:setup-complete", null);
+
+    executeSoon(function () {
+      setupLink = doc.getElementById("setupSyncLink");
+      ok(setupLink.hidden, "'Set Up' link is hidden after setup");
+      ok(!pairLink.hidden, "'Pair' link is visible after setup");
+
+      executeSoon(runNextTest);
+    });
+  }
+},
+
+{
+  desc: "Check sync links visibility before and after Sync unlink",
+  setup: function ()
+  {
+    Services.prefs.setCharPref("services.sync.username", "someuser@domain.com");
+    Services.obs.notifyObservers(null, "weave:service:ready", null);
+  },
+  run: function ()
+  {
+    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let pairLink = doc.getElementById("pairDeviceLink");
+    let setupLink = doc.getElementById("setupSyncLink");
+
+    ok(!pairLink.hidden, "'Pair' link is visible before unlink");
+    ok(setupLink.hidden, "'Set Up' link is hidden before unlink");
+
+    Services.obs.notifyObservers(null, "weave:service:start-over", null);
+
+    executeSoon(function () {
+      setupLink = doc.getElementById("setupSyncLink");
+      ok(!setupLink.hidden, "'Set Up' link is visible after unlink");
+      ok(!pairLink.hidden, "'Pair' link is visible after unlink");
+      executeSoon(runNextTest);
+    });
+  }
+},
+
+{
+  desc: "Check Pair Device link opens correct dialog with Sync account ",
+  setup: function ()
+  {
+    Services.prefs.setCharPref("services.sync.username", "someuser@domain.com");
+    Services.obs.notifyObservers(null, "weave:service:ready", null);
+  },
+  run: function ()
+  {
+    expectDialogWindow("Sync:AddDevice");
+    let browser = gBrowser.selectedTab.linkedBrowser;
+    let button = browser.contentDocument.getElementById("pairDeviceLink");
+    EventUtils.sendMouseEvent({type: "click"}, button, browser.contentWindow);
+  }
+},
+
+{
+  desc: "Check Pair Device link opens correct dialog without Sync account",
+  setup: function ()
+  {
+    try {
+      Services.prefs.clearUserPref("services.sync.username");
+    } catch (ex) {}
+    Services.obs.notifyObservers(null, "weave:service:ready", null);
+  },
+  run: function ()
+  {
+    expectDialogWindow("Weave:AccountSetup");
+    let browser = gBrowser.selectedTab.linkedBrowser;
+    let button = browser.contentDocument.getElementById("pairDeviceLink");
+    EventUtils.sendMouseEvent({type: "click"}, button, browser.contentWindow);
+  }
+},
+
+{
+  desc: "Check Sync Setup link opens correct dialog (without Sync account)",
+  setup: function ()
+  {
+    try {
+      Services.prefs.clearUserPref("services.sync.username");
+    } catch (ex) {}
+    Services.obs.notifyObservers(null, "weave:service:ready", null);
+  },
+  run: function ()
+  {
+    expectDialogWindow("Weave:AccountSetup");
+    let browser = gBrowser.selectedTab.linkedBrowser;
+    let button = browser.contentDocument.getElementById("setupSyncLink");
+    EventUtils.sendMouseEvent({type: "click"}, button, browser.contentWindow);
+  }
+},
 ];
 
 function test()

@@ -25,7 +25,6 @@
 #   Marco Bonardo <mak77@bonardo.net> (original author)
 #   Mihai Sucan <mihai.sucan@gmail.com>
 #   Stephen Horlander <shorlander@mozilla.com>
-#   Frank Yan <fyan@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,48 +60,52 @@
     <link rel="icon" type="image/png" id="favicon"
           href="chrome://branding/content/icon16.png"/>
     <link rel="stylesheet" type="text/css" media="all"
-          href="chrome://browser/content/abouthome/aboutHome.css"/>
+          href="chrome://browser/content/aboutHome.css"/>
 
     <script type="text/javascript;version=1.8"
-            src="chrome://browser/content/abouthome/aboutHome.js"/>
+            src="chrome://browser/content/aboutHome.js"/>
   </head>
 
   <body dir="&locale.dir;" onload="onLoad(event)">
-    <div id="container">
-      <div class="spacer"/>
-      <div id="topSection">
-        <img id="brandLogo" src="chrome://branding/content/about-logo.png" alt=""/>
+    <div id="brandStartSpacer" />
+    <div id="brandStart">
+      <img id="brandStartLogo" src="chrome://branding/content/about-logo.png" alt="" />
+    </div>
 
-        <div id="searchContainer">
-          <form name="searchForm" id="searchForm" onsubmit="onSearchSubmit(event)">
-            <div id="searchLogoContainer"><img id="searchEngineLogo"/></div>
-            <input type="text" name="q" value="" id="searchText" maxlength="256"/>
-            <input id="searchSubmit" type="submit" value="&abouthome.searchEngineButton.label;"/>
-          </form>
+    <div id="searchContainer">
+      <form name="searchForm" id="searchForm" onsubmit="onSearchSubmit(event)">
+        <div id="searchLogoContainer"><img id="searchEngineLogo" /></div>
+        <div id="searchInputContainer">
+          <input type="text" name="q" value="" id="searchText" maxlength="256" />
         </div>
-
-        <div id="snippetContainer">
-          <div id="defaultSnippets" hidden="true">
-            <span id="defaultSnippet1">&abouthome.defaultSnippet1.v1;</span>
-            <span id="defaultSnippet2">&abouthome.defaultSnippet2.v1;</span>
-          </div>
-          <div id="snippets"/>
+        <div id="searchButtons">
+          <input id="searchSubmit" type="submit" value="&abouthome.searchEngineButton.label;" />
         </div>
-      </div>
-      <div class="spacer"/>
+      </form>
+    </div>
 
-      <div id="launcher" session="true">
-        <button class="launchButton" id="bookmarks">&abouthome.bookmarksButton.label;</button>
-        <button class="launchButton" id="history">&abouthome.historyButton.label;</button>
-        <button class="launchButton" id="settings">&abouthome.settingsButton.label;</button>
-        <button class="launchButton" id="addons">&abouthome.addonsButton.label;</button>
-        <button class="launchButton" id="downloads">&abouthome.downloadsButton.label;</button>
-        <button class="launchButton" id="sync">&syncBrand.shortName.label;</button>
-        <div id="restorePreviousSessionSeparator"/>
-        <button class="launchButton" id="restorePreviousSession">&historyRestoreLastSession.label;</button>
+    <div id="contentContainer">
+      <div id="snippetContainer">
+        <div id="defaultSnippets" hidden="true">
+          <span id="defaultSnippet1">&abouthome.defaultSnippet1.v1;</span>
+          <span id="defaultSnippet2">&abouthome.defaultSnippet2.v1;</span>
+        </div>
+        <div id="snippets"/>
       </div>
 
-      <a id="aboutMozilla" href="http://www.mozilla.com/about/"/>
+      <div id="sessionRestoreContainer">
+        <button id="restorePreviousSession">&historyRestoreLastSession.label;</button>
+      </div>
+    </div>
+
+    <div id="bottomSection">
+      <div id="aboutMozilla">
+        <a href="http://www.mozilla.com/about/">&abouthome.aboutMozilla;</a>
+      </div>
+      <div id="syncLinksContainer">
+        <a href="javascript:void(0);" class="sync-link" id="setupSyncLink">&abouthome.syncSetup.label;</a>
+        <a href="javascript:void(0);" class="sync-link" id="pairDeviceLink">&abouthome.pairDevice.label;</a>
+      </div>
     </div>
   </body>
 </html>
