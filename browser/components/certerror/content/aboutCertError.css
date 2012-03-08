@@ -47,20 +47,6 @@
   white-space: pre-wrap;
 }
 
-#technicalContent > h2, #expertContent > h2 {
-  cursor: pointer;
-  -moz-padding-start: 20px;
-  position: relative;
-  left: -20px;
-}
-
-body[dir="rtl"] #technicalContent > h2,
-body[dir="rtl"] #expertContent > h2 {
-  left: auto;
-  right: -20px;
-}
-
-div[collapsed] > p,
-div[collapsed] > div {
+.expander[collapsed] + * {
   display: none;
 }

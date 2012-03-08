@@ -260,18 +260,18 @@
         
         <!-- The following sections can be unhidden by default by setting the
              "browser.xul.error_pages.expert_bad_cert" pref to true -->
-        <div id="technicalContent" collapsed="true">
-          <h2 onclick="toggle('technicalContent');" id="technicalContentHeading">&certerror.technical.heading;</h2>
-          <p id="technicalContentText"/>
-        </div>
+        <h2 id="technicalContent" class="expander" collapsed="true">
+          <button onclick="toggle('technicalContent');">&certerror.technical.heading;</button>
+        </h2>
+        <p id="technicalContentText"/>
         
-        <div id="expertContent" collapsed="true">
-          <h2 onclick="toggle('expertContent');" id="expertContentHeading">&certerror.expert.heading;</h2>
-          <div>
-            <p>&certerror.expert.content;</p>
-            <p>&certerror.expert.contentPara2;</p>
-            <button id='exceptionDialogButton'>&certerror.addException.label;</button>
-          </div>
+        <h2 id="expertContent" class="expander" collapsed="true">
+          <button onclick="toggle('expertContent');">&certerror.expert.heading;</button>
+        </h2>
+        <div>
+          <p>&certerror.expert.content;</p>
+          <p>&certerror.expert.contentPara2;</p>
+          <button id='exceptionDialogButton'>&certerror.addException.label;</button>
         </div>
       </div>
     </div>
