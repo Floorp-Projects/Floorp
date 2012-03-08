@@ -45,15 +45,10 @@ public class BrowserContract {
     public static final Uri AUTHORITY_URI = Uri.parse("content://" + AUTHORITY);
 
     public static final String PASSWORDS_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.passwords";
-    public static final String DELETED_PASSWORDS_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.deleted-passwords";
-
     public static final Uri PASSWORDS_AUTHORITY_URI = Uri.parse("content://" + PASSWORDS_AUTHORITY);
-    public static final Uri DELETED_PASSWORDS_AUTHORITY_URI = Uri.parse("content://" + DELETED_PASSWORDS_AUTHORITY);
 
     public static final String FORM_HISTORY_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.formhistory";
-    public static final String DELETED_FORM_HISTORY_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.deleted-formhistory";
     public static final Uri FORM_HISTORY_AUTHORITY_URI = Uri.parse("content://" + FORM_HISTORY_AUTHORITY);
-    public static final Uri DELETED_FORM_HISTORY_AUTHORITY_URI = Uri.parse("content://" + DELETED_FORM_HISTORY_AUTHORITY);
     
     public static final String TABS_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.tabs";
     public static final Uri TABS_AUTHORITY_URI = Uri.parse("content://" + TABS_AUTHORITY);
@@ -168,7 +163,7 @@ public class BrowserContract {
     public static final class DeletedPasswords implements DeletedColumns {
         private DeletedPasswords() {}
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/deleted-passwords";
-        public static final Uri CONTENT_URI = Uri.withAppendedPath(DELETED_PASSWORDS_AUTHORITY_URI, "deleted-formhistory");
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(PASSWORDS_AUTHORITY_URI, "deleted-passwords");
     }
 
     public static final class FormHistory {
@@ -187,7 +182,7 @@ public class BrowserContract {
 
     public static final class DeletedFormHistory implements DeletedColumns {
         private DeletedFormHistory() {}
-        public static final Uri CONTENT_URI = Uri.withAppendedPath(DELETED_FORM_HISTORY_AUTHORITY_URI, "deleted-formhistory");
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(FORM_HISTORY_AUTHORITY_URI, "deleted-formhistory");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/deleted-formhistory";
     }
 
