@@ -54,6 +54,9 @@ public class FormHistoryProvider extends GeckoProvider {
     private static int DB_VERSION = 4;
     private static String DB_FILENAME = "formhistory.sqlite";
 
+    private static final String WHERE_GUID_IS_NULL = BrowserContract.DeletedFormHistory.GUID + " IS NULL";
+    private static final String WHERE_GUID_IS_VALUE = BrowserContract.DeletedFormHistory.GUID + " = ?";
+
     static {
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
         URI_MATCHER.addURI(BrowserContract.FORM_HISTORY_AUTHORITY, "formhistory", FORM_HISTORY);
@@ -144,9 +147,27 @@ public class FormHistoryProvider extends GeckoProvider {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FormHistory:Init", null));
     }
 
-    public void onPreInsert(ContentValues values, Uri uri) { }
+    @Override
+    public void onPreInsert(ContentValues values, Uri uri, SQLiteBridge db) {
+        if (!values.containsKey(FormHistory.GUID)) {
+            return;
+        }
+        String guid = values.getAsString(FormHistory.GUID);
+        try {
+            if (guid == null) {
+                db.delete(TABLE_DELETED_FORM_HISTORY, WHERE_GUID_IS_NULL, null);
+                return;
+            }
+            String[] args = new String[] { guid };
+            db.delete(TABLE_DELETED_FORM_HISTORY, WHERE_GUID_IS_VALUE, args);
+        } catch(SQLiteBridgeException ex) {
+            Log.w(getLogTag(), "Error removing entry with GUID " + guid, ex);
+        }
+     }
 
-    public void onPreUpdate(ContentValues values, Uri uri) { }
+    @Override
+    public void onPreUpdate(ContentValues values, Uri uri, SQLiteBridge db) { }
 
-    public void onPostQuery(Cursor cursor, Uri uri) { }
+    @Override
+    public void onPostQuery(Cursor cursor, Uri uri, SQLiteBridge db) { }
 }
