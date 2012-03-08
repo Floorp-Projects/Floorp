@@ -896,7 +896,9 @@ PlacesTreeView.prototype = {
             aNode._feedURI = aLivemark.feedURI;
             if (aNewState == Components.interfaces.nsINavHistoryContainerResultNode.STATE_OPENED) {
               aLivemark.registerForUpdates(aNode, this);
+              // Prioritize the current livemark.
               aLivemark.reload();
+              PlacesUtils.livemarks.reloadLivemarks();
               if (shouldInvalidate)
                 this.invalidateContainer(aNode);
             }
