@@ -456,20 +456,23 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
     }
 
-    // If invalidation was triggered inside a stub call, we may still have to
-    // monitor the result, since the bailout happens before the MMonitorTypes
-    // instruction is executed.
-    jsbytecode *pc = activation->bailout()->bailoutPc();
-    if (js_CodeSpec[*pc].format & JOF_TYPESET)
-        types::TypeScript::Monitor(cx, cx->fp()->script(), pc, cx->regs().sp[-1]);
-
     in.ionScript()->decref(cx);
 
     if (cx->runtime->hasIonReturnOverride())
         cx->regs().sp[-1] = cx->runtime->takeIonReturnOverride();
 
-    if (retval != BAILOUT_RETURN_FATAL_ERROR)
+    if (retval != BAILOUT_RETURN_FATAL_ERROR) {
+        // If invalidation was triggered inside a stub call, we may still have to
+        // monitor the result, since the bailout happens before the MMonitorTypes
+        // instruction is executed.
+        jsbytecode *pc = activation->bailout()->bailoutPc();
+        if (js_CodeSpec[*pc].format & JOF_TYPESET) {
+            JS_ASSERT(retval == BAILOUT_RETURN_OK);
+            return BAILOUT_RETURN_MONITOR;
+        }
+
         return retval;
+    }
 
     cx->delete_(activation->maybeTakeBailout());
     return BAILOUT_RETURN_FATAL_ERROR;
@@ -506,9 +509,6 @@ ion::ReflowTypeInfo(uint32 bailoutResult)
 
     JSScript *script = cx->fp()->script();
     jsbytecode *pc = activation->bailout()->bailoutPc();
-
-    JS_ASSERT(script->hasAnalysis());
-    JS_ASSERT(script->analysis()->ranInference());
 
     JS_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);
 
