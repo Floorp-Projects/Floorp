@@ -110,6 +110,10 @@ const ORION_ANNOTATION_TYPES = {
  */
 const DEFAULT_KEYBINDINGS = [
   {
+    action: "enter",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_ENTER,
+  },
+  {
     action: "undo",
     code: Ci.nsIDOMKeyEvent.DOM_VK_Z,
     accel: true,
@@ -465,6 +469,10 @@ SourceEditor.prototype = {
    */
   _doTab: function SE__doTab()
   {
+    if (this.readOnly) {
+      return false;
+    }
+
     let indent = "\t";
     let selection = this.getSelection();
     let model = this._model;
@@ -515,6 +523,10 @@ SourceEditor.prototype = {
    */
   _doUnindentLines: function SE__doUnindentLines()
   {
+    if (this.readOnly) {
+      return true;
+    }
+
     let indent = "\t";
 
     let selection = this.getSelection();
@@ -569,6 +581,10 @@ SourceEditor.prototype = {
    */
   _doEnter: function SE__doEnter()
   {
+    if (this.readOnly) {
+      return false;
+    }
+
     let selection = this.getSelection();
     if (selection.start != selection.end) {
       return false;

@@ -84,7 +84,6 @@
   <command id="sp-cmd-documentationLink" oncommand="Scratchpad.openDocumentationPage();"/>
 </commandset>
 
-<keyset id="editMenuKeys"/>
 <keyset id="sourceEditorKeys"/>
 
 <keyset id="sp-keyset">
@@ -183,32 +182,20 @@
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
     <menupopup id="sp-menu_editpopup"
-               onpopupshowing="goUpdateGlobalEditMenuItems()">
-      <menuitem id="sp-menu-undo"
-                label="&undoCmd.label;"
-                accesskey="&undoCmd.accesskey;"
-                key="sp-key-undo"
-                command="se-cmd-undo"/>
-      <menuitem id="sp-menu-redo"
-                label="&redoCmd.label;"
-                accesskey="&redoCmd.accesskey;"
-                key="sp-key-redo"
-                command="se-cmd-redo"/>
+               onpopupshowing="goUpdateSourceEditorMenuItems()">
+      <menuitem id="se-menu-undo"/>
+      <menuitem id="se-menu-redo"/>
       <menuseparator/>
-      <menuitem id="menu_cut"/>
-      <menuitem id="menu_copy"/>
-      <menuitem id="menu_paste"/>
+      <menuitem id="se-menu-cut"/>
+      <menuitem id="se-menu-copy"/>
+      <menuitem id="se-menu-paste"/>
       <menuseparator/>
-      <menuitem id="menu_selectAll"/>
+      <menuitem id="se-menu-selectAll"/>
       <menuseparator/>
-      <menuitem id="menu_find"/>
-      <menuitem id="menu_findAgain"/>
+      <menuitem id="se-menu-find"/>
+      <menuitem id="se-menu-findAgain"/>
       <menuseparator/>
-      <menuitem id="sp-menu-gotoLine"
-                label="&gotoLineCmd.label;"
-                accesskey="&gotoLineCmd.accesskey;"
-                key="key_gotoLine"
-                command="cmd_gotoLine"/>
+      <menuitem id="se-menu-gotoLine"/>
     </menupopup>
   </menu>
 
@@ -278,13 +265,13 @@
 
 <popupset id="scratchpad-popups">
   <menupopup id="scratchpad-text-popup"
-             onpopupshowing="goUpdateGlobalEditMenuItems()">
-    <menuitem id="cMenu_cut" key="key_cut"/>
-    <menuitem id="cMenu_copy" key="key_copy"/>
-    <menuitem id="cMenu_paste" key="key_paste"/>
-    <menuitem id="cMenu_delete" key="key_delete"/>
+             onpopupshowing="goUpdateSourceEditorMenuItems()">
+    <menuitem id="se-cMenu-cut"/>
+    <menuitem id="se-cMenu-copy"/>
+    <menuitem id="se-cMenu-paste"/>
+    <menuitem id="se-cMenu-delete"/>
     <menuseparator/>
-    <menuitem id="cMenu_selectAll" key="key_selectAll"/>
+    <menuitem id="se-cMenu-selectAll"/>
     <menuseparator/>
     <menuitem id="sp-text-run"
               label="&run.label;"
@@ -310,7 +297,7 @@
 </popupset>
 
 <notificationbox id="scratchpad-notificationbox" flex="1">
-  <hbox id="scratchpad-editor" flex="1" context="scratchpad-text-popup" />
+  <hbox id="scratchpad-editor" flex="1"/>
 </notificationbox>
 
 </window>
