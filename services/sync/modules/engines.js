@@ -992,8 +992,10 @@ SyncEngine.prototype = {
     doApplyBatchAndPersistFailed.call(this);
 
     count.newFailed = Utils.arraySub(this.previousFailed, failedInPreviousSync).length;
+    count.succeeded = Math.max(0, count.applied - count.failed);
     this._log.info(["Records:",
                     count.applied, "applied,",
+                    count.succeeded, "successfully,",
                     count.failed, "failed to apply,",
                     count.newFailed, "newly failed to apply,",
                     count.reconciled, "reconciled."].join(" "));

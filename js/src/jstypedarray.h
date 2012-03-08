@@ -252,7 +252,7 @@ struct JS_FRIEND_API(TypedArray) {
 
   public:
     static bool
-    isArrayIndex(JSContext *cx, JSObject *obj, jsid id, jsuint *ip = NULL);
+    isArrayIndex(JSContext *cx, JSObject *obj, jsid id, uint32_t *ip = NULL);
 
     static inline uint32_t slotWidth(int atype) {
         switch (atype) {
@@ -335,7 +335,7 @@ JS_FRIEND_API(JSBool)
 JS_IsArrayBufferObject(JSObject *obj);
 
 JS_FRIEND_API(JSObject *)
-JS_NewArrayBuffer(JSContext *cx, jsuint nbytes);
+JS_NewArrayBuffer(JSContext *cx, uint32_t nbytes);
 
 JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj);

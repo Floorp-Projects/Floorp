@@ -4,5 +4,6 @@
   <color name="splash_msgfont">#ffffff</color>
   <color name="splash_urlfont">#000000</color>
   <color name="splash_content">#ffffff</color>
+  <color name="doorhanger_link">#ACC4D5</color>
 </resources>
 

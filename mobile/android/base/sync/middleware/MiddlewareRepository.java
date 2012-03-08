@@ -51,6 +51,5 @@ public abstract class MiddlewareRepository extends Repository {
     public RepositorySessionCreationDelegate deferredCreationDelegate() {
       return this;
     }
-
   }
 }

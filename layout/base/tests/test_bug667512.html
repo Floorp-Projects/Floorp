@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=667512
+-->
+<head>
+  <title>Test for Bug 667512</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<table contenteditable="true"><tbody><tr><td id="b"><br id="a"></td></tr></tbody></table>
+<span style="display: list-item;direction: rtl;"></span>
+<script type="application/javascript">
+
+/** Test for Bug 667512 **/
+function appendElements() {
+  window.focus();
+  window.getSelection().collapse(document.documentElement, 0);
+
+  var x=document.getElementById('a');
+  x.parentNode.removeChild(x);
+
+  var x=document.getElementById('b');
+  x.parentNode.removeChild(x);
+
+  synthesizeKey("VK_LEFT", {});
+  synthesizeKey("VK_RIGHT", {});
+
+  ok(true, "Should not crash!");
+  SimpleTest.finish();
+}
+
+addLoadEvent(appendElements);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

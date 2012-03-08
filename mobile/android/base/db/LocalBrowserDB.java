@@ -89,6 +89,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     private static final String[] DEFAULT_BOOKMARK_COLUMNS =
             new String[] { Bookmarks._ID,
+                           Bookmarks.GUID,
                            Bookmarks.URL,
                            Bookmarks.TITLE,
                            Bookmarks.IS_FOLDER,

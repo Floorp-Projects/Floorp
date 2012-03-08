@@ -199,7 +199,7 @@ menuitem.bookmark-item {
 }
 
 /* Bookmark items */
-.bookmark-item:not([container])  {
+.bookmark-item {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 

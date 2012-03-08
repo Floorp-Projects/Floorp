@@ -428,6 +428,49 @@ BrowserGlue.prototype = {
 
     let keywordURLUserSet = Services.prefs.prefHasUserValue("keyword.URL");
     Services.telemetry.getHistogramById("FX_KEYWORD_URL_USERSET").add(keywordURLUserSet);
+
+    // Perform default browser checking.
+    var shell;
+    try {
+      shell = Components.classes["@mozilla.org/browser/shell-service;1"]
+        .getService(Components.interfaces.nsIShellService);
+    } catch (e) { }
+    if (shell) {
+#ifdef DEBUG
+      var shouldCheck = false;
+#else
+      var shouldCheck = shell.shouldCheckDefaultBrowser;
+#endif
+      var willRecoverSession = false;
+      try {
+        var ss = Cc["@mozilla.org/browser/sessionstartup;1"].
+                 getService(Ci.nsISessionStartup);
+        willRecoverSession =
+          (ss.sessionType == Ci.nsISessionStartup.RECOVER_SESSION);
+      }
+      catch (ex) { /* never mind; suppose SessionStore is broken */ }
+      if (shouldCheck && !shell.isDefaultBrowser(true) && !willRecoverSession) {
+        Services.tm.mainThread.dispatch(function() {
+          var brandBundle = win.document.getElementById("bundle_brand");
+          var shellBundle = win.document.getElementById("bundle_shell");
+  
+          var brandShortName = brandBundle.getString("brandShortName");
+          var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
+          var promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage",
+                                                             [brandShortName]);
+          var checkboxLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk",
+                                                             [brandShortName]);
+          var checkEveryTime = { value: shouldCheck };
+          var ps = Services.prompt;
+          var rv = ps.confirmEx(win, promptTitle, promptMessage,
+                                ps.STD_YES_NO_BUTTONS,
+                                null, null, null, checkboxLabel, checkEveryTime);
+          if (rv == 0)
+            shell.setDefaultBrowser(true, false);
+          shell.shouldCheckDefaultBrowser = checkEveryTime.value;
+        }, Ci.nsIThread.DISPATCH_NORMAL);
+      }
+    }
   },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {

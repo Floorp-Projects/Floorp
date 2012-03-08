@@ -68,10 +68,10 @@
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
-#include "jsstrinlines.h"
 
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
+#include "vm/StringBuffer-inl.h"
 
 using namespace mozilla;
 using namespace js;
@@ -1084,7 +1084,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
      */
     JS_ASSERT(reportp);
     if (JSREPORT_IS_WARNING(reportp->flags))
-        return JS_FALSE;
+        return false;
 
     /* Find the exception index associated with this error. */
     errorNumber = (JSErrNum) reportp->errorNumber;
@@ -1107,19 +1107,12 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
      * with the given error number.
      */
     if (exn == JSEXN_NONE)
-        return JS_FALSE;
+        return false;
 
-    /*
-     * Prevent runaway recursion, via cx->generatingError.  If an out-of-memory
-     * error occurs, no exception object will be created, but we don't assume
-     * that OOM is the only kind of error that subroutines of this function
-     * called below might raise.
-     */
+    /* Prevent infinite recursion. */
     if (cx->generatingError)
-        return JS_FALSE;
-
-    MUST_FLOW_THROUGH("out");
-    cx->generatingError = JS_TRUE;
+        return false;
+    AutoScopedAssign<bool> asa(&cx->generatingError, false);
 
     /* Protect the newly-created strings below from nesting GCs. */
     PodArrayZero(tv);
@@ -1132,43 +1125,34 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
      */
     ok = js_GetClassPrototype(cx, NULL, GetExceptionProtoKey(exn), &errProto);
     if (!ok)
-        goto out;
+        return false;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
     errObject = NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL);
-    if (!errObject) {
-        ok = JS_FALSE;
-        goto out;
-    }
+    if (!errObject)
+        return false;
     tv[1] = OBJECT_TO_JSVAL(errObject);
 
     messageStr = JS_NewStringCopyZ(cx, message);
-    if (!messageStr) {
-        ok = JS_FALSE;
-        goto out;
-    }
+    if (!messageStr)
+        return false;
     tv[2] = STRING_TO_JSVAL(messageStr);
 
     filenameStr = JS_NewStringCopyZ(cx, reportp->filename);
-    if (!filenameStr) {
-        ok = JS_FALSE;
-        goto out;
-    }
+    if (!filenameStr)
+        return false;
     tv[3] = STRING_TO_JSVAL(filenameStr);
 
     ok = InitExnPrivate(cx, errObject, messageStr, filenameStr,
                         reportp->lineno, reportp, exn);
     if (!ok)
-        goto out;
+        return false;
 
     JS_SetPendingException(cx, OBJECT_TO_JSVAL(errObject));
 
     /* Flag the error report passed in to indicate an exception was raised. */
     reportp->flags |= JSREPORT_EXCEPTION;
-
-out:
-    cx->generatingError = JS_FALSE;
-    return ok;
+    return true;
 }
 
 JSBool

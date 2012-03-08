@@ -234,13 +234,13 @@ stubs::SetElem(VMFrame &f)
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
-            jsuint length = obj->getDenseArrayInitializedLength();
+            uint32_t length = obj->getDenseArrayInitializedLength();
             int32_t i = JSID_TO_INT(id);
-            if ((jsuint)i < length) {
+            if ((uint32_t)i < length) {
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
-                    if ((jsuint)i >= obj->getArrayLength())
+                    if ((uint32_t)i >= obj->getArrayLength())
                         obj->setArrayLength(cx, i + 1);
                 }
                 obj->setDenseArrayElementWithType(cx, i, rval);
@@ -1034,8 +1034,8 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     if (rref.isMagic(JS_ARRAY_HOLE)) {
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(jsuint(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
-        if (last && !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1)))
+        JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
+        if (last && !js_SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
             THROW();
     } else {
         if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
@@ -1584,7 +1584,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
         pc += JUMP_OFFSET_LEN;
 
         tableIdx -= low;
-        if ((jsuint) tableIdx < (jsuint)(high - low + 1)) {
+        if ((uint32_t) tableIdx < (uint32_t)(high - low + 1)) {
             pc += JUMP_OFFSET_LEN * tableIdx;
             if (uint32_t candidateOffset = GET_JUMP_OFFSET(pc))
                 jumpOffset = candidateOffset;
