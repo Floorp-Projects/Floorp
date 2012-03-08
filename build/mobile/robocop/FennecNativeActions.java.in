@@ -40,19 +40,24 @@
 package @ANDROID_PACKAGE_NAME@;
 
 import java.lang.Class;
+import java.lang.ClassLoader;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.Long;
+import java.util.concurrent.SynchronousQueue;
+import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Context;
 import android.app.Instrumentation;
+import android.database.Cursor;
 import android.os.SystemClock;
 import android.view.View;
 import android.view.KeyEvent;
-
-import java.util.concurrent.SynchronousQueue;
+import android.util.Log;
 
 import org.json.*;
 
@@ -74,6 +79,7 @@ public class FennecNativeActions implements Actions {
     private Method mSendGE;
     private Method mGetLayerClient;
     private Method mSetDrawListener;
+    private static final String LOGTAG = "FennecNativeActions";
 
     public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation) {
         mSolo = robocop;
@@ -348,5 +354,37 @@ public class FennecNativeActions implements Actions {
 
     public void drag(int startingX, int endingX, int startingY, int endingY) {
         mSolo.drag(startingX, endingX, startingY, endingY, 10);
+    }
+
+    public Cursor querySql(String dbPath, String sql) {
+        try {
+            ClassLoader classLoader = mGeckoApp.getClassLoader();
+            Class sqlClass = classLoader.loadClass("org.mozilla.gecko.sqlite.SQLiteBridge");
+            Class stringClass = String.class;
+            Class stringArrayClass = String[].class;
+            Class appshell = classLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
+            Class contextClass = Context.class;
+    
+            Constructor bridgeConstructor = sqlClass.getConstructor(stringClass);
+            Method query = sqlClass.getMethod("rawQuery", stringClass, stringArrayClass);
+            Method loadSQLiteLibs = appshell.getMethod("loadSQLiteLibs", contextClass, stringClass);
+    
+            Object bridge = bridgeConstructor.newInstance(dbPath);
+    
+            String resourcePath = mGeckoApp.getApplication().getPackageResourcePath();
+            loadSQLiteLibs.invoke(null, mGeckoApp, resourcePath);
+            return (Cursor)query.invoke(bridge, sql, null);
+        } catch(ClassNotFoundException ex) {
+            Log.e(LOGTAG, "Error getting class", ex);
+        } catch(NoSuchMethodException ex) {
+            Log.e(LOGTAG, "Error getting method", ex);
+        } catch(InvocationTargetException ex) {
+            Log.e(LOGTAG, "Error invoking method", ex);
+        } catch(InstantiationException ex) {
+            Log.e(LOGTAG, "Error calling constructor", ex);
+        } catch(IllegalAccessException ex) {
+            Log.e(LOGTAG, "Error using field", ex);
+        }
+        return null;
     }
 }
