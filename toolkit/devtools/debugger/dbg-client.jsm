@@ -51,14 +51,19 @@ var EXPORTED_SYMBOLS = ["DebuggerTransport",
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "socketTransportService",
                                    "@mozilla.org/network/socket-transport-service;1",
                                    "nsISocketTransportService");
 
+let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+
 function dumpn(str)
 {
-  dump("DBG-CLIENT: " + str + "\n");
+  if (wantLogging) {
+    dump("DBG-CLIENT: " + str + "\n");
+  }
 }
 
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
