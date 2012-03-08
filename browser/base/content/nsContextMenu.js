@@ -850,7 +850,7 @@ nsContextMenu.prototype = {
       let uri = makeURI(this.mediaURL);
       let url = uri.QueryInterface(Ci.nsIURL);
       if (url.fileBaseName)
-        name = url.fileBaseName + ".jpg";
+        name = decodeURI(url.fileBaseName) + ".jpg";
     } catch (e) { }
     if (!name)
       name = "snapshot.jpg";
