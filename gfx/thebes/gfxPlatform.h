@@ -136,7 +136,9 @@ enum eGfxLog {
     // dump text runs, font matching, system fallback for content
     eGfxLog_textrun          = 2,
     // dump text runs, font matching, system fallback for chrome
-    eGfxLog_textrunui        = 3
+    eGfxLog_textrunui        = 3,
+    // dump cmap coverage data as they are loaded
+    eGfxLog_cmapdata         = 4
 };
 
 // when searching through pref langs, max number of pref langs
