@@ -131,6 +131,7 @@ class ExpandArgsMore(ExpandArgs):
             content = ["%s\n" % obj for obj in objs]
             ref = "@" + tmp
         else:
+            os.close(fd)
             os.remove(tmp)
             return
         self.tmp.append(tmp)
