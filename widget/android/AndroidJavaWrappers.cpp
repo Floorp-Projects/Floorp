@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+3/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -73,7 +73,6 @@ jfieldID AndroidGeckoEvent::jRangeStylesField = 0;
 jfieldID AndroidGeckoEvent::jRangeForeColorField = 0;
 jfieldID AndroidGeckoEvent::jRangeBackColorField = 0;
 jfieldID AndroidGeckoEvent::jLocationField = 0;
-jfieldID AndroidGeckoEvent::jAddressField = 0;
 jfieldID AndroidGeckoEvent::jBandwidthField = 0;
 jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
 
@@ -95,19 +94,6 @@ jmethodID AndroidLocation::jGetAccuracyMethod = 0;
 jmethodID AndroidLocation::jGetBearingMethod = 0;
 jmethodID AndroidLocation::jGetSpeedMethod = 0;
 jmethodID AndroidLocation::jGetTimeMethod = 0;
-
-jclass AndroidAddress::jAddressClass = 0;
-jmethodID AndroidAddress::jGetAddressLineMethod;
-jmethodID AndroidAddress::jGetAdminAreaMethod;
-jmethodID AndroidAddress::jGetCountryNameMethod;
-jmethodID AndroidAddress::jGetFeatureNameMethod;
-jmethodID AndroidAddress::jGetLocalityMethod;
-jmethodID AndroidAddress::jGetPostalCodeMethod;
-jmethodID AndroidAddress::jGetPremisesMethod;
-jmethodID AndroidAddress::jGetSubAdminAreaMethod;
-jmethodID AndroidAddress::jGetSubLocalityMethod;
-jmethodID AndroidAddress::jGetSubThoroughfareMethod;
-jmethodID AndroidAddress::jGetThoroughfareMethod;
 
 jclass AndroidGeckoSoftwareLayerClient::jGeckoSoftwareLayerClientClass = 0;
 jmethodID AndroidGeckoSoftwareLayerClient::jLockBufferMethod = 0;
@@ -142,7 +128,6 @@ mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
     AndroidGeckoEvent::InitGeckoEventClass(jEnv);
     AndroidPoint::InitPointClass(jEnv);
     AndroidLocation::InitLocationClass(jEnv);
-    AndroidAddress::InitAddressClass(jEnv);
     AndroidRect::InitRectClass(jEnv);
     AndroidGeckoSoftwareLayerClient::InitGeckoSoftwareLayerClientClass(jEnv);
     AndroidGeckoSurfaceView::InitGeckoSurfaceViewClass(jEnv);
@@ -186,7 +171,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jRangeForeColorField = getField("mRangeForeColor", "I");
     jRangeBackColorField = getField("mRangeBackColor", "I");
     jLocationField = getField("mLocation", "Landroid/location/Location;");
-    jAddressField = getField("mAddress", "Landroid/location/Address;");
     jBandwidthField = getField("mBandwidth", "D");
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
 }
@@ -223,60 +207,6 @@ AndroidLocation::InitLocationClass(JNIEnv *jEnv)
     jGetBearingMethod = getMethod("getBearing", "()F");
     jGetSpeedMethod = getMethod("getSpeed", "()F");
     jGetTimeMethod = getMethod("getTime", "()J");
-}
-
-void
-AndroidAddress::InitAddressClass(JNIEnv *jEnv)
-{
-    initInit();
-
-    jAddressClass = getClassGlobalRef("android/location/Address");
-
-    jGetAddressLineMethod = getMethod("getAddressLine", "(I)Ljava/lang/String;");
-    jGetAdminAreaMethod = getMethod("getAdminArea", "()Ljava/lang/String;");
-    jGetCountryNameMethod = getMethod("getCountryName", "()Ljava/lang/String;");
-    jGetFeatureNameMethod = getMethod("getFeatureName", "()Ljava/lang/String;");
-    jGetLocalityMethod  = getMethod("getLocality", "()Ljava/lang/String;");
-    jGetPostalCodeMethod = getMethod("getPostalCode", "()Ljava/lang/String;");
-    jGetPremisesMethod = getMethod("getPremises", "()Ljava/lang/String;");
-    jGetSubAdminAreaMethod = getMethod("getSubAdminArea", "()Ljava/lang/String;");
-    jGetSubLocalityMethod = getMethod("getSubLocality", "()Ljava/lang/String;");
-    jGetSubThoroughfareMethod = getMethod("getSubThoroughfare", "()Ljava/lang/String;");
-    jGetThoroughfareMethod = getMethod("getThoroughfare", "()Ljava/lang/String;");
-}
-
-nsGeoPositionAddress*
-AndroidAddress::CreateGeoPositionAddress(JNIEnv *jenv, jobject jobj)
-{
-    nsJNIString streetNumber(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetSubThoroughfareMethod)), jenv);
-    nsJNIString street(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetThoroughfareMethod)), jenv);
-    nsJNIString city(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetLocalityMethod)), jenv);
-    nsJNIString county(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetSubAdminAreaMethod)), jenv);
-    nsJNIString country(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetCountryNameMethod)), jenv);
-    nsJNIString premises(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetPremisesMethod)), jenv);
-    nsJNIString postalCode(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetPostalCodeMethod)), jenv);
-    nsJNIString region(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetAdminAreaMethod, 0)), jenv);
-
-#ifdef DEBUG
-    printf_stderr("!!!!!!!!!!!!!! AndroidAddress::CreateGeoPositionAddress:\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n",
-                  NS_LossyConvertUTF16toASCII(streetNumber).get(),
-                  NS_LossyConvertUTF16toASCII(street).get(),
-                  NS_LossyConvertUTF16toASCII(premises).get(),
-                  NS_LossyConvertUTF16toASCII(city).get(),
-                  NS_LossyConvertUTF16toASCII(county).get(),
-                  NS_LossyConvertUTF16toASCII(region).get(),
-                  NS_LossyConvertUTF16toASCII(country).get(),
-                  NS_LossyConvertUTF16toASCII(postalCode).get());
-#endif
-
-    return new nsGeoPositionAddress(streetNumber,
-                                    street,
-                                    premises,
-                                    city,
-                                    county,
-                                    region,
-                                    country,
-                                    postalCode);
 }
 
 nsGeoPosition*
@@ -511,11 +441,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case LOCATION_EVENT: {
             jobject location = jenv->GetObjectField(jobj, jLocationField);
-            jobject address  = jenv->GetObjectField(jobj, jAddressField);
-
             mGeoPosition = AndroidLocation::CreateGeoPosition(jenv, location);
-            if (address)
-                mGeoAddress = AndroidAddress::CreateGeoPositionAddress(jenv, address);
             break;
         }
 

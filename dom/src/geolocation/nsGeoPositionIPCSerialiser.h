@@ -41,97 +41,10 @@
 #include "nsGeoPosition.h"
 #include "nsIDOMGeoPosition.h"
 
-typedef nsIDOMGeoPositionAddress  *GeoPositionAddress;
 typedef nsGeoPositionCoords       *GeoPositionCoords;
 typedef nsIDOMGeoPosition         *GeoPosition;
 
 namespace IPC {
-
-template <>
-struct ParamTraits<GeoPositionAddress>
-{
-  typedef GeoPositionAddress paramType;
-
-  // Function to serialize a geo position address
-  static void Write(Message *aMsg, const paramType& aParam)
-  {
-    bool isNull = !aParam;
-    WriteParam(aMsg, isNull);
-    // If it is null, then we are done
-    if (isNull) return;
-
-    nsString addressLine;
-
-    aParam->GetStreetNumber(addressLine);
-    WriteParam(aMsg, addressLine);
-
-    aParam->GetStreet(addressLine);
-    WriteParam(aMsg, addressLine);
-
-    aParam->GetPremises(addressLine);
-    WriteParam(aMsg, addressLine);
-
-    aParam->GetCity(addressLine);
-    WriteParam(aMsg, addressLine);
-
-    aParam->GetCounty(addressLine);
-    WriteParam(aMsg, addressLine);
-
-    aParam->GetRegion(addressLine);
-    WriteParam(aMsg, addressLine);
-
-    aParam->GetCountry(addressLine);
-    WriteParam(aMsg, addressLine);
-
-    aParam->GetPostalCode(addressLine);
-    WriteParam(aMsg, addressLine);
-  }
-
-  // Function to de-serialize a geoposition
-  static bool Read(const Message* aMsg, void **aIter, paramType* aResult)
-  {
-    // Check if it is the null pointer we have transfered
-    bool isNull;
-    if (!ReadParam(aMsg, aIter, &isNull)) return false;
-
-    if (isNull) {
-      *aResult = 0;
-      return true;
-    }
-
-    // We need somewhere to store the address before we create the object
-    nsString streetNumber;
-    nsString street;
-    nsString premises;
-    nsString city;
-    nsString county;
-    nsString region;
-    nsString country;
-    nsString postalCode;
-
-    // It's not important to us where it fails, but rather if it fails
-    if (!(ReadParam(aMsg, aIter, &streetNumber) &&
-          ReadParam(aMsg, aIter, &street      ) &&
-          ReadParam(aMsg, aIter, &premises    ) &&
-          ReadParam(aMsg, aIter, &city        ) &&
-          ReadParam(aMsg, aIter, &county      ) &&
-          ReadParam(aMsg, aIter, &region      ) &&
-          ReadParam(aMsg, aIter, &country     ) &&
-          ReadParam(aMsg, aIter, &postalCode  ))) return false;
-
-    // We now have all the data
-    *aResult = new nsGeoPositionAddress(streetNumber, /* aStreetNumber */
-                                        street,       /* aStreet       */
-                                        premises,     /* aPremises     */
-                                        city,         /* aCity         */
-                                        county,       /* aCounty       */
-                                        region,       /* aRegion       */
-                                        country,      /* aCountry      */
-                                        postalCode    /* aPostalCode   */
-                                       );
-    return true;
-  }
-} ;
 
 template <>
 struct ParamTraits<GeoPositionCoords>
@@ -235,11 +148,6 @@ struct ParamTraits<GeoPosition>
     aParam->GetCoords(getter_AddRefs(coords));
     GeoPositionCoords simpleCoords = static_cast<GeoPositionCoords>(coords.get());
     WriteParam(aMsg, simpleCoords);
-
-    nsCOMPtr<nsIDOMGeoPositionAddress> address;
-    aParam->GetAddress(getter_AddRefs(address));
-    GeoPositionAddress simpleAddress = address.get();
-    WriteParam(aMsg, simpleAddress);
   }
 
   // Function to de-serialize a geoposition
@@ -256,20 +164,17 @@ struct ParamTraits<GeoPosition>
 
     DOMTimeStamp timeStamp;
     GeoPositionCoords coords = nsnull;
-    GeoPositionAddress address;
 
     // It's not important to us where it fails, but rather if it fails
     if (!(   ReadParam(aMsg, aIter, &timeStamp)
-          && ReadParam(aMsg, aIter, &coords   )
-          && ReadParam(aMsg, aIter, &address  ))) {
+          && ReadParam(aMsg, aIter, &coords   ))) {
           // note it is fine to do "delete nsnull" in case coords hasn't
-          // been allocated and we will never have a case where address
-          // gets allocated and we end here
+          // been allocated
           delete coords;
           return false;
       }
 
-    *aResult = new nsGeoPosition(coords, address, timeStamp);
+    *aResult = new nsGeoPosition(coords, timeStamp);
 
     return true;
   };

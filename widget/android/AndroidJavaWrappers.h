@@ -384,25 +384,6 @@ public:
     static jmethodID jGetTimeMethod;
 };
 
-class AndroidAddress : public WrappedJavaObject
-{
-public:
-    static void InitAddressClass(JNIEnv *jEnv);
-    static nsGeoPositionAddress* CreateGeoPositionAddress(JNIEnv *jenv, jobject jobj);
-    static jclass jAddressClass;
-    static jmethodID jGetAddressLineMethod;
-    static jmethodID jGetAdminAreaMethod;
-    static jmethodID jGetCountryNameMethod;
-    static jmethodID jGetFeatureNameMethod;
-    static jmethodID jGetLocalityMethod;
-    static jmethodID jGetPostalCodeMethod;
-    static jmethodID jGetPremisesMethod;
-    static jmethodID jGetSubAdminAreaMethod;
-    static jmethodID jGetSubLocalityMethod;
-    static jmethodID jGetSubThoroughfareMethod;
-    static jmethodID jGetThoroughfareMethod;
-};
-
 class AndroidGeckoEvent : public WrappedJavaObject
 {
 public:
@@ -461,7 +442,6 @@ public:
     int RangeForeColor() { return mRangeForeColor; }
     int RangeBackColor() { return mRangeBackColor; }
     nsGeoPosition* GeoPosition() { return mGeoPosition; }
-    nsGeoPositionAddress* GeoAddress() { return mGeoAddress; }
     double Bandwidth() { return mBandwidth; }
     bool CanBeMetered() { return mCanBeMetered; }
 
@@ -486,7 +466,6 @@ protected:
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra;
     nsRefPtr<nsGeoPosition> mGeoPosition;
-    nsRefPtr<nsGeoPositionAddress> mGeoAddress;
     double mBandwidth;
     bool mCanBeMetered;
 
@@ -539,7 +518,6 @@ protected:
     static jfieldID jRangeForeColorField;
     static jfieldID jRangeBackColorField;
     static jfieldID jLocationField;
-    static jfieldID jAddressField;
 
     static jfieldID jBandwidthField;
     static jfieldID jCanBeMeteredField;
