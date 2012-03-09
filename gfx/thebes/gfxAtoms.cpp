@@ -58,5 +58,5 @@ static const nsStaticAtom atoms[] = {
 
 void gfxAtoms::RegisterAtoms()
 {
-    NS_RegisterStaticAtoms(atoms, ArrayLength(atoms));
+    NS_RegisterStaticAtoms(atoms);
 }

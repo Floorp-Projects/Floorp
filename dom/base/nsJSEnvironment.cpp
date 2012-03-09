@@ -815,7 +815,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
       const PRUnichar *formatParams[] = { filenameUTF16.get() };
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                  "KillScriptLocation",
-                                                 formatParams, 1,
+                                                 formatParams,
                                                  scriptLocation);
 
       if (NS_SUCCEEDED(rv) && scriptLocation) {
