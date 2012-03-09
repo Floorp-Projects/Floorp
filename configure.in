@@ -2524,6 +2524,8 @@ ia64*-hpux*)
     no_x=yes
     if test -n "$gonkdir"; then
         _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
+        MOZ_B2G_RIL=1
+        MOZ_B2G_BT=1
     else
         _PLATFORM_DEFAULT_TOOLKIT=cairo-android
         MOZ_LINKER=1
@@ -5038,7 +5040,6 @@ cairo-gonk)
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
-    MOZ_B2G_RIL=1
     MOZ_TOUCH=1
     ;;
 
