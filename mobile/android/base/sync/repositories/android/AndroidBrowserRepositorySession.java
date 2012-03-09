@@ -101,8 +101,6 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
    *
    * Return null if this record should not be processed.
    *
-   * @param cur
-   * @return
    * @throws NoGuidForIdException
    * @throws NullCursorException
    * @throws ParentNotFoundException
@@ -114,8 +112,6 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
    * updated to match the record that we're constructing: for example, the children
    * of a folder might be repositioned as we generate the folder's record.
    *
-   * @param cur
-   * @return
    * @throws NoGuidForIdException
    * @throws NullCursorException
    * @throws ParentNotFoundException
@@ -555,8 +551,6 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
    * Retrieve a record from the store by GUID, without writing unnecessarily to the
    * database.
    *
-   * @param guid
-   * @return
    * @throws NoGuidForIdException
    * @throws NullCursorException
    * @throws ParentNotFoundException

@@ -169,7 +169,6 @@ public class BaseResource implements Resource {
 
   /**
    * This method exists for test code.
-   * @return
    */
   public static ClientConnectionManager enablePlainHTTPConnectionManager() {
     synchronized (connManagerMonitor) {

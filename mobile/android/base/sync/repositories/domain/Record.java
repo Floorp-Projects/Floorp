@@ -118,9 +118,6 @@ public abstract class Record {
   /**
    * Return true iff the input is a Record and has the same
    * collection and guid as this object.
-   *
-   * @param o
-   * @return
    */
   public boolean equalIdentifiers(Object o) {
     if (o == null || !(o instanceof Record)) {
