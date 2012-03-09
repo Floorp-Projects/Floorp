@@ -2,11 +2,16 @@
 
 == Line length ==
 
-The line limit is 80 characters, except that excessively long blocks of preprocessor directives may exceed this if it makes the code more readable (e.g. MOZ_STATIC_ASSERT in Assertions.h.), and unbreakable text in comments (e.g. URLs) may exceed this as well.  Wrap expressions after binary operators.
+The line limit is 80 characters, except that excessively long blocks of
+preprocessor directives may exceed this if it makes the code more readable (e.g.
+MOZ_STATIC_ASSERT in Assertions.h.), and unbreakable text in comments (e.g.
+URLs) may exceed this as well.  Wrap expressions after binary operators.
 
 == Capitalization ==
 
-Standalone functions, classes, structs, and template parameters are named InterCaps-style.  Member functions and fields in classes and structs are named camelCaps-style.
+Standalone functions, classes, structs, and template parameters are named
+InterCaps-style.  Member functions and fields in classes and structs are named
+camelCaps-style.
 
 == Indentation ==
 
@@ -22,7 +27,8 @@ Surround binary operators with a single space on either side.
   if (x == 2)
     return 17;
 
-When describing pointer types, the * shall be adjacent to the type name.  (Same goes for references -- & goes by the type name.)
+When describing pointer types, the * shall be adjacent to the type name.  (Same
+goes for references -- & goes by the type name.)
 
   int
   Foo(int* p)
@@ -31,7 +37,8 @@ When describing pointer types, the * shall be adjacent to the type name.  (Same 
     int& i = *p;
   }
 
-A corollary: don't mix declaration types by declaring a T and a T* (or a T**, &c.) in the same declaration.
+A corollary: don't mix declaration types by declaring a T and a T* (or a T**,
+&c.) in the same declaration.
 
   T* foo, bar; // BAD
 
@@ -44,7 +51,9 @@ Don't brace single statements.
   for (size_t i = 0; i < 5; i++)
     frob(i);
 
-But do brace them if the statement (or condition(s) or any additional consequents, if the braces would be associated with an if statement) occupies multiple lines.
+But do brace them if the statement (or condition(s) or any additional
+consequents, if the braces would be associated with an if statement) occupies
+multiple lines.
 
   if (cond1 ||
       cond2)
@@ -68,11 +77,13 @@ But do brace them if the statement (or condition(s) or any additional consequent
     action();
   }
 
-Braces in control flow go at the end of the line except when associated with an |if| or loop-head where the condition covers multiple lines
+Braces in control flow go at the end of the line except when associated with an
+|if| or loop-head where the condition covers multiple lines
 
 == Classes and structs ==
 
-Inside class and structure definitions, public/private consume one level of indentation.
+Inside class and structure definitions, public/private consume one level of
+indentation.
 
   class Baz
   {
@@ -80,7 +91,8 @@ Inside class and structure definitions, public/private consume one level of inde
       Baz() { }
   };
 
-The absence of public/private in structs in which all members are public still consumes a level.
+The absence of public/private in structs in which all members are public still
+consumes a level.
 
   struct Foo
   {
@@ -108,11 +120,16 @@ Member initialization in constructors should be formatted as follows:
       }
   };
 
-Fields should go first in the class so that the basic structure is all in one place, consistently.
+Fields should go first in the class so that the basic structure is all in one
+place, consistently.
 
-Use the inline keyword to annotate functions defined inline in a header.  (If the function is defined inline in the class, don't bother adding it redundantly.)
+Use the inline keyword to annotate functions defined inline in a header.  (If
+the function is defined inline in the class, don't bother adding it
+redundantly.)
 
-Explicitly delete (using Attributes.h's MOZ_DELETE) the copy constructor and assignment operator from classes not intended to be copied or assigned to avoid mistakes.
+Explicitly delete (using Attributes.h's MOZ_DELETE) the copy constructor and
+assignment operator from classes not intended to be copied or assigned to avoid
+mistakes.
 
   class Funky
   {
@@ -124,9 +141,11 @@ Explicitly delete (using Attributes.h's MOZ_DELETE) the copy constructor and ass
       void operator=(const Funky& other) MOZ_DELETE;
   };
 
-Include a blank line between sections of structs and classes with different access control.
+Include a blank line between sections of structs and classes with different
+access control.
 
-The "get" prefix is used when a method is fallible.  If it's infallible, don't use it.
+The "get" prefix is used when a method is fallible.  If it's infallible, don't
+use it.
 
   class String
   {
@@ -143,9 +162,12 @@ Capitalize template parameter names to distinguish them from fields.
   {
   };
 
-Use single-letter names if it makes sense (T for an arbitrary type, K for key type, V for value type, &c.).  Otherwise use InterCaps-style names.
+Use single-letter names if it makes sense (T for an arbitrary type, K for key
+type, V for value type, &c.).  Otherwise use InterCaps-style names.
 
-When declaring or defining a function, template<...> goes on one line, the return type and other specifiers go on another line, and the function name and argument list go on a third line.
+When declaring or defining a function, template<...> goes on one line, the
+return type and other specifiers go on another line, and the function name and
+argument list go on a third line.
 
   template<typename T>
   inline bool
@@ -155,30 +177,38 @@ When declaring or defining a function, template<...> goes on one line, the retur
 
 == Namespaces ==
 
-All C++ code shall be in the mozilla namespace, except that functionality only used to implement external-facing API should be in the mozilla::detail namespace, indicating that it should not be directly used.
+All C++ code shall be in the mozilla namespace, except that functionality only
+used to implement external-facing API should be in the mozilla::detail
+namespace, indicating that it should not be directly used.
 
-Namespace opening braces go on the same line as the namespace declaration.  Namespace closing braces shall be commented.  Namespace contents are not indented.
+Namespace opening braces go on the same line as the namespace declaration.
+Namespace closing braces shall be commented.  Namespace contents are not
+indented.
 
   namespace mozilla {
   ...
   } // namespace mozilla
 
-Don't use |using| in a header unless it's confined to a class or method.  Implementation files for out-of-line functionality may use |using|.
+Don't use |using| in a header unless it's confined to a class or method.
+Implementation files for out-of-line functionality may use |using|.
 
 == #includes ==
 
-Headers that include mfbt headers use a fully-qualified include path, even if full qualification is not strictly necessary.
+Headers that include mfbt headers use a fully-qualified include path, even if
+full qualification is not strictly necessary.
 
   #include "mozilla/Assertions.h"
 
-mfbt headers should be included first, alphabetically.  Standard includes should follow, separated from mfbt includes by a blank line.
+mfbt headers should be included first, alphabetically.  Standard includes should
+follow, separated from mfbt includes by a blank line.
 
   #include "mozilla/Assertions.h"
   #include "mozilla/Attributes.h"
   
   #include <string.h>
 
-If a header dependency is limited simply to the existence of a class, forward-declare it rather than #include that header.
+If a header dependency is limited simply to the existence of a class,
+forward-declare it rather than #include that header.
 
   namespace mozilla {
   
@@ -190,9 +220,12 @@ If a header dependency is limited simply to the existence of a class, forward-de
 
 == Preprocessor ==
 
-Include guards should be named by determining the fully-qualified include path, then substituting _ for / and . in it, and finally appending a trailing _.  For example, "mozilla/Assertions.h" becomes mozilla_Assertions_h_.
+Include guards should be named by determining the fully-qualified include path,
+then substituting _ for / and . in it, and finally appending a trailing _.  For
+example, "mozilla/Assertions.h" becomes mozilla_Assertions_h_.
 
-Nested preprocessor directives indent the directive name (but not the #) by two spaces.
+Nested preprocessor directives indent the directive name (but not the #) by two
+spaces.
 
   #ifdef __clang__
   #  define FOO ...
@@ -200,7 +233,8 @@ Nested preprocessor directives indent the directive name (but not the #) by two 
   #  define FOO ...
   #endif
 
-Comments within nested preprocessor directives align with directive names at that nesting depth.
+Comments within nested preprocessor directives align with directive names at
+that nesting depth.
 
   #if defined(__GNUC__)
      /* gcc supports C++11 override syntax. */
@@ -209,11 +243,17 @@ Comments within nested preprocessor directives align with directive names at tha
   #  define MOZ_OVERRIDE /* unsupported */
   #endif
 
-Feature-testing macros may be defined to nothing.  Macros intended to be textually expanded should be defined to a comment indicating non-support, as above or as appropriate to the situation.
+Feature-testing macros may be defined to nothing.  Macros intended to be
+textually expanded should be defined to a comment indicating non-support, as
+above or as appropriate to the situation.
 
-No particular preference is expressed between testing for a macro being defined using defined(...) and using #ifdef.
+No particular preference is expressed between testing for a macro being defined
+using defined(...) and using #ifdef.
 
-When defining a macro with different expansions for different compilers, the top level of distinction should be the compiler, and the next nested level should be the compiler version.  Clang seems likely to be around for awhile, so to reduce confusion test for it separately from gcc even when it's not strictly necessary.
+When defining a macro with different expansions for different compilers, the top
+level of distinction should be the compiler, and the next nested level should be
+the compiler version.  Clang seems likely to be around for awhile, so to reduce
+confusion test for it separately from gcc even when it's not strictly necessary.
 
   #if defined(__clang__)
   #elif defined(__GNUC__)
@@ -223,20 +263,28 @@ When defining a macro with different expansions for different compilers, the top
   #elif defined(_MSC_VER)
   #endif
 
-But don't distinguish clang's feature support using version checks: use the __has_feature() and __has_extension() macros instead, because vendors may customize clang's version numbers.
+But don't distinguish clang's feature support using version checks: use the
+__has_feature() and __has_extension() macros instead, because vendors may
+customize clang's version numbers.
 
 Prefer inline functions to macros whenever possible.
 
 == Comments ==
 
-Header files shall have a short descriptive comment underneath license boilerplate indicating what functionality the file implements, to be picked up by MXR and displayed in directory listings.  (But see bug 717196, which currently prevents MXR from doing this if the MPL2 boilerplate is used.)
+Header files shall have a short descriptive comment underneath license
+boilerplate indicating what functionality the file implements, to be picked up
+by MXR and displayed in directory listings.  (But see bug 717196, which
+currently prevents MXR from doing this if the MPL2 boilerplate is used.)
 
   Assertions.h:
   ...license boilerplate...
   
   /* Implementations of runtime and static assertion macros for C and C++. */
 
-Classes intended for public use shall have interface comments explaining their functionality from the user's perspective.  These comments shall include examples of how the relevant functionality might be used.  These interface comments use /** */ doxygen/Javadoc-style comments.
+Classes intended for public use shall have interface comments explaining their
+functionality from the user's perspective.  These comments shall include
+examples of how the relevant functionality might be used.  These interface
+comments use /** */ doxygen/Javadoc-style comments.
 
   /**
    * The Frobber class simplifies the process of frobbing.
@@ -245,21 +293,38 @@ Classes intended for public use shall have interface comments explaining their f
   {
   };
 
-Comments describing implementation details (tradeoffs considered, assumptions made, mathematical background, &c.) occur separately from interface comments so that users need not consider them.  They should go inside the class definition or inside the appropriate method, depending on the specificity of the comment.
+Comments describing implementation details (tradeoffs considered, assumptions
+made, mathematical background, &c.) occur separately from interface comments so
+that users need not consider them.  They should go inside the class definition
+or inside the appropriate method, depending on the specificity of the comment.
 
-Headers which are intended to be C-compatible shall use only /**/-style comments.  (Code examples nested inside documentation comments may use //-style comments.)  Headers which are C++-compatible may also use //-style comments.
+Headers which are intended to be C-compatible shall use only /**/-style
+comments.  (Code examples nested inside documentation comments may use //-style
+comments.)  Headers which are C++-compatible may also use //-style comments.
 
 Non-interface comments that are /**/-style shall not also be doxygen-style.
 
-Use Python-style ** to denote exponentiation inside comments, not ^ (which can be confused with C-style bitwise xor).  If you're writing sufficiently complex math, feel free to descend into LaTeX math mode ;-) inside implementation comments if you need to.  (But keep it out of interface comments, because most people probably haven't seen LaTeX.)
+Use Python-style ** to denote exponentiation inside comments, not ^ (which can
+be confused with C-style bitwise xor).  If you're writing sufficiently complex
+math, feel free to descend into LaTeX math mode ;-) inside implementation
+comments if you need to.  (But keep it out of interface comments, because most
+people probably haven't seen LaTeX.)
 
 == Miscellaneous ==
 
-Enclose C-compatible code in |extern "C"| blocks, and #ifdef __cplusplus the block start/end as needed.  The contents of these blocks should not be indented.
+Enclose C-compatible code in |extern "C"| blocks, and #ifdef __cplusplus the
+block start/end as needed.  The contents of these blocks should not be indented.
 
-Add new functionality to new headers unless an existing header makes sense.  Err on the side of more headers rather than fewer, as this helps to minimize dependencies.  Don't add anything to Util.h, which will be split into multiple headers at some point (bug 713082).
+Add new functionality to new headers unless an existing header makes sense.
+Err on the side of more headers rather than fewer, as this helps to minimize
+dependencies.  Don't add anything to Util.h, which will be split into multiple
+headers at some point (bug 713082).
 
-Don't use bool for argument types unless the method is a "set" or "enable"-style method where the method name and bool value together indicate the sense of its effect.  Use well-named enums in all other places, so that the semantics of the argument are clear at a glance and do not require knowing how the method interprets that argument.
+Don't use bool for argument types unless the method is a "set" or "enable"-style
+method where the method name and bool value together indicate the sense of its
+effect.  Use well-named enums in all other places, so that the semantics of the
+argument are clear at a glance and do not require knowing how the method
+interprets that argument.
 
   void
   setVisible(bool visible); // true clearly means visible, false clearly not
