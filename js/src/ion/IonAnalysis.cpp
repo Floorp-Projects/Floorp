@@ -232,10 +232,17 @@ GuessPhiType(MPhi *phi)
         MDefinition *in = phi->getOperand(i);
         if (in->isPhi() && !in->toPhi()->triedToSpecialize())
             continue;
-        if (type == MIRType_None)
+        if (type == MIRType_None) {
             type = in->type();
-        else if (type != in->type())
-            return MIRType_Value;
+            continue;
+        }
+        if (type != in->type()) {
+            // Specialize phis with int32 and double operands as double.
+            if (IsNumberType(type) && IsNumberType(in->type()))
+                type = MIRType_Double;
+            else
+                return MIRType_Value;
+        }
     }
     return type;
 }
@@ -260,6 +267,12 @@ TypeAnalyzer::propagateSpecialization(MPhi *phi)
             continue;
         }
         if (use->type() != phi->type()) {
+            // Specialize phis with int32 and double operands as double.
+            if (IsNumberType(use->type()) && IsNumberType(phi->type())) {
+                use->specialize(MIRType_Double);
+                continue;
+            }
+
             // This phi in our use chain can now no longer be specialized.
             use->specialize(MIRType_Value);
             if (!addPhiToWorklist(use))
@@ -294,6 +307,23 @@ void
 TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 {
     MIRType phiType = phi->type();
+
+    if (phiType == MIRType_Double) {
+        // Convert int32 operands to double.
+        for (size_t i = 0; i < phi->numOperands(); i++) {
+            MDefinition *in = phi->getOperand(i);
+
+            if (in->type() == MIRType_Int32) {
+                MToDouble *toDouble = MToDouble::New(in);
+                in->block()->insertBefore(in->block()->lastIns(), toDouble);
+                phi->replaceOperand(i, toDouble);
+            } else {
+                JS_ASSERT(in->type() == MIRType_Double);
+            }
+        }
+        return;
+    }
+
     if (phiType != MIRType_Value)
         return;
 
