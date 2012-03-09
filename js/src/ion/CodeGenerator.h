@@ -148,7 +148,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallIteratorMore(LCallIteratorMore *lir);
     bool visitCallIteratorEnd(LCallIteratorEnd *lir);
     bool visitCallSetProperty(LCallSetProperty *ins);
-    bool visitCallDeleteProperty(LCallDeleteProperty *lir);
     bool visitBitNotV(LBitNotV *lir);
     bool visitBitOpV(LBitOpV *lir);
 

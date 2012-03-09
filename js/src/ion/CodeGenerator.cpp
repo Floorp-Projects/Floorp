@@ -1998,23 +1998,6 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
 }
 
 bool
-CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
-{
-    typedef bool (*pf)(JSContext *, const Value &, PropertyName *, JSBool *);
-
-    pushArg(ImmGCPtr(lir->mir()->atom()));
-    pushArg(ToValue(lir, LCallDeleteProperty::Value));
-
-    if(lir->mir()->block()->info().script()->strictModeCode) {
-        static const VMFunction Info = FunctionInfo<pf>(DeleteProperty<true>);
-        return callVM(Info, lir);
-    } else {
-        static const VMFunction Info = FunctionInfo<pf>(DeleteProperty<false>);
-        return callVM(Info, lir);
-    }
-}
-
-bool
 CodeGenerator::visitOutOfLineSetPropertyCache(OutOfLineCache *ool)
 {
     LInstruction *ins = ool->cache();

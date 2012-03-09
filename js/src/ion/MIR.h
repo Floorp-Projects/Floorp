@@ -3357,38 +3357,6 @@ class MSetPropertyInstruction : public MBinaryInstruction
     }
 };
 
-class MDeleteProperty
-  : public MUnaryInstruction,
-    public BoxInputsPolicy
-{
-    JSAtom *atom_;
-    bool needsBarrier_;
-
-  protected:
-    MDeleteProperty(MDefinition *val, JSAtom *atom)
-      : MUnaryInstruction(val),
-        atom_(atom)
-    {
-        setResultType(MIRType_Boolean);
-    }
-
-  public:
-    INSTRUCTION_HEADER(DeleteProperty);
-
-    static MDeleteProperty *New(MDefinition *obj, JSAtom *atom) {
-        return new MDeleteProperty(obj, atom);
-    }
-    MDefinition *value() const {
-        return getOperand(0);
-    }
-    JSAtom *atom() const {
-        return atom_;
-    }
-    virtual TypePolicy *typePolicy() {
-        return this;
-    }
-};
-
 // Note: This uses CallSetElementPolicy to always box its second input,
 // ensuring we don't need two LIR instructions to lower this.
 class MCallSetProperty
