@@ -2181,8 +2181,7 @@ RasterImage::Discard(bool force)
   if (observer)
     observer->OnDiscard(nsnull);
 
-  if (force)
-    DiscardTracker::Remove(&mDiscardTrackerNode);
+  DiscardTracker::Remove(&mDiscardTrackerNode);
 
   // Log
   PR_LOG(gCompressedImageAccountingLog, PR_LOG_DEBUG,
@@ -2690,6 +2689,18 @@ RasterImage::UnlockImage()
   if (CanDiscard()) {
     nsresult rv = DiscardTracker::Reset(&mDiscardTrackerNode);
     CONTAINER_ENSURE_SUCCESS(rv);
+  }
+
+  return NS_OK;
+}
+
+//******************************************************************************
+/* void requestDiscard() */
+NS_IMETHODIMP
+RasterImage::RequestDiscard()
+{
+  if (CanDiscard()) {
+    Discard();
   }
 
   return NS_OK;

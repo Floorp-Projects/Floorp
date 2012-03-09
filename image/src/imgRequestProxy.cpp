@@ -370,6 +370,16 @@ imgRequestProxy::UnlockImage()
   return NS_OK;
 }
 
+/* void requestDiscard (); */
+NS_IMETHODIMP
+imgRequestProxy::RequestDiscard()
+{
+  if (mImage) {
+    return mImage->RequestDiscard();
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 imgRequestProxy::IncrementAnimationConsumers()
 {
