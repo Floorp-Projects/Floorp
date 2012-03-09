@@ -80,8 +80,7 @@ static const PRUint32 CSSPseudoElements_flags[] = {
 
 void nsCSSPseudoElements::AddRefAtoms()
 {
-  NS_RegisterStaticAtoms(CSSPseudoElements_info,
-                         ArrayLength(CSSPseudoElements_info));
+  NS_RegisterStaticAtoms(CSSPseudoElements_info);
 }
 
 bool nsCSSPseudoElements::IsPseudoElement(nsIAtom *aAtom)

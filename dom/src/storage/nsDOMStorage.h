@@ -600,6 +600,8 @@ public:
   NS_DECL_NSIDOMSTORAGEEVENT
   NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
 
+  virtual nsresult InitFromCtor(const nsAString& aType,
+                                JSContext* aCx, jsval* aVal);
 protected:
   nsString mKey;
   nsString mOldValue;

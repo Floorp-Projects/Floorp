@@ -147,6 +147,9 @@ static PRLogModuleInfo* gJSDiagnostics;
 // Force a CC after this long if there's anything in the purple buffer.
 #define NS_CC_FORCED                (2 * 60 * PR_USEC_PER_SEC) // 2 min
 
+// Don't allow an incremental GC to lock out the CC for too long.
+#define NS_MAX_CC_LOCKEDOUT_TIME    (5 * PR_USEC_PER_SEC) // 5 seconds
+
 // Trigger a CC if the purple buffer exceeds this size when we check it.
 #define NS_CC_PURPLE_LIMIT          250
 
@@ -160,8 +163,8 @@ static nsITimer *sCCTimer;
 
 static PRTime sLastCCEndTime;
 
-static bool sGCHasRun;
 static bool sCCLockedOut;
+static PRTime sCCLockedOutTime;
 
 static js::GCSliceCallback sPrevGCSliceCallback;
 
@@ -812,7 +815,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
       const PRUnichar *formatParams[] = { filenameUTF16.get() };
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                  "KillScriptLocation",
-                                                 formatParams, 1,
+                                                 formatParams,
                                                  scriptLocation);
 
       if (NS_SUCCEEDED(rv) && scriptLocation) {
@@ -2314,19 +2317,11 @@ nsresult
 nsJSContext::SetOuterObject(JSObject* aOuterObject)
 {
   // Force our context's global object to be the outer.
+  // NB: JS_SetGlobalObject sets mContext->compartment.
   JS_SetGlobalObject(mContext, aOuterObject);
 
-  // NB: JS_SetGlobalObject sets mContext->compartment.
+  // Set up the prototype for the outer object.
   JSObject *inner = JS_GetParent(aOuterObject);
-
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  nsresult rv = xpc->GetWrappedNativeOfJSObject(mContext, inner,
-                                                getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ABORT_IF_FALSE(wrapper, "bad wrapper");
-
-  wrapper->FinishInitForWrappedGlobal();
   JS_SetPrototype(mContext, aOuterObject, JS_GetPrototype(inner));
 
   return NS_OK;
@@ -3318,9 +3313,24 @@ TimerFireForgetSkippable(PRUint32 aSuspected, bool aRemoveChildless)
 static void
 CCTimerFired(nsITimer *aTimer, void *aClosure)
 {
-  if (sDidShutdown || sCCLockedOut) {
+  if (sDidShutdown) {
     return;
   }
+
+  if (sCCLockedOut) {
+    PRTime now = PR_Now();
+    if (sCCLockedOutTime == 0) {
+      sCCLockedOutTime = now;
+      return;
+    }
+    if (now - sCCLockedOutTime < NS_MAX_CC_LOCKEDOUT_TIME) {
+      return;
+    }
+
+    // Finish the current incremental GC
+    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED, nsGCNormal);
+  }
+
   ++sCCTimerFireCount;
 
   // During early timer fires, we only run forgetSkippable. During the first
@@ -3486,6 +3496,8 @@ nsJSContext::KillShrinkGCBuffersTimer()
 void
 nsJSContext::KillCCTimer()
 {
+  sCCLockedOutTime = 0;
+
   if (sCCTimer) {
     sCCTimer->Cancel();
 
@@ -3524,9 +3536,10 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
     }
   }
 
-  // Prevent cycle collections during incremental GC.
+  // Prevent cycle collections and shrinking during incremental GC.
   if (aProgress == js::GC_CYCLE_BEGIN) {
     sCCLockedOut = true;
+    nsJSContext::KillShrinkGCBuffersTimer();
   } else if (aProgress == js::GC_CYCLE_END) {
     sCCLockedOut = false;
   }
@@ -3534,43 +3547,31 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
   // The GC has more work to do, so schedule another GC slice.
   if (aProgress == js::GC_SLICE_END) {
     nsJSContext::KillGCTimer();
-    nsJSContext::KillCCTimer();
-
     nsJSContext::PokeGC(js::gcreason::INTER_SLICE_GC, NS_INTERSLICE_GC_DELAY);
   }
 
   if (aProgress == js::GC_CYCLE_END) {
+    // May need to kill the inter-slice GC timer
+    nsJSContext::KillGCTimer();
+
     sCCollectedWaitingForGC = 0;
     sCleanupSinceLastGC = false;
 
-    if (sGCTimer) {
-      // If we were waiting for a GC to happen, kill the timer.
-      nsJSContext::KillGCTimer();
-
+    if (aDesc.isCompartment) {
       // If this is a compartment GC, restart it. We still want
       // a full GC to happen. Compartment GCs usually happen as a
-      // result of last-ditch or MaybeGC. In both cases its
+      // result of last-ditch or MaybeGC. In both cases it is
       // probably a time of heavy activity and we want to delay
       // the full GC, but we do want it to happen eventually.
-      if (aDesc.isCompartment) {
-        nsJSContext::PokeGC(js::gcreason::POST_COMPARTMENT);
-
-        // We poked the GC, so we can kill any pending CC here.
-        nsJSContext::KillCCTimer();
-      }
-    } else {
-      // If this was a full GC, poke the CC to run soon.
-      if (!aDesc.isCompartment) {
-        sGCHasRun = true;
-        sNeedsFullCC = true;
-        nsJSContext::MaybePokeCC();
-      }
+      nsJSContext::PokeGC(js::gcreason::POST_COMPARTMENT);
     }
 
-    // If we didn't end up scheduling a GC, make sure that we release GC buffers
-    // soon after canceling previous shrinking attempt.
-    nsJSContext::KillShrinkGCBuffersTimer();
-    if (!sGCTimer) {
+    sNeedsFullCC = true;
+    nsJSContext::MaybePokeCC();
+
+    if (!aDesc.isCompartment) {
+      // Avoid shrinking during heavy activity, which is suggested by
+      // compartment GC.
       nsJSContext::PokeShrinkGCBuffers();
     }
   }
@@ -3669,8 +3670,8 @@ nsJSRuntime::Startup()
 {
   // initialize all our statics, so that we can restart XPCOM
   sGCTimer = sCCTimer = nsnull;
-  sGCHasRun = false;
   sCCLockedOut = false;
+  sCCLockedOutTime = 0;
   sLastCCEndTime = 0;
   sPendingLoadCount = 0;
   sLoadingInProgress = false;

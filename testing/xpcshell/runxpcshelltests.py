@@ -679,10 +679,17 @@ class XPCShellTests(object):
           self.log.info("<<<<<<<")
 
         result = not ((self.getReturnCode(proc) != 0) or
+                      # if do_throw or do_check failed
                       (stdout and re.search("^((parent|child): )?TEST-UNEXPECTED-",
                                             stdout, re.MULTILINE)) or
+                      # if syntax error in xpcshell file
                       (stdout and re.search(": SyntaxError:", stdout,
-                                            re.MULTILINE)))
+                                            re.MULTILINE)) or
+                      # if e10s test started but never finished (child process crash)
+                      (stdout and re.search("^child: CHILD-TEST-STARTED", 
+                                            stdout, re.MULTILINE) 
+                              and not re.search("^child: CHILD-TEST-COMPLETED",
+                                                stdout, re.MULTILINE)))
 
         if result != expected:
           failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")

@@ -828,6 +828,175 @@ gfxWindowsPlatform::UpdateFontList()
     return NS_OK;
 }
 
+static const char kFontArabicTypesetting[] = "Arabic Typesetting";
+static const char kFontArial[] = "Arial";
+static const char kFontArialUnicodeMS[] = "Arial Unicode MS";
+static const char kFontCambria[] = "Cambria";
+static const char kFontCambriaMath[] = "Cambria Math";
+static const char kFontEbrima[] = "Ebrima";
+static const char kFontEstrangeloEdessa[] = "Estrangelo Edessa";
+static const char kFontEuphemia[] = "Euphemia";
+static const char kFontGabriola[] = "Gabriola";
+static const char kFontKhmerUI[] = "Khmer UI";
+static const char kFontLaoUI[] = "Lao UI";
+static const char kFontMVBoli[] = "MV Boli";
+static const char kFontMalgunGothic[] = "Malgun Gothic";
+static const char kFontMicrosoftJhengHei[] = "Microsoft JhengHei";
+static const char kFontMicrosoftNewTaiLue[] = "Microsoft New Tai Lue";
+static const char kFontMicrosoftPhagsPa[] = "Microsoft PhagsPa";
+static const char kFontMicrosoftTaiLe[] = "Microsoft Tai Le";
+static const char kFontMicrosoftUighur[] = "Microsoft Uighur";
+static const char kFontMicrosoftYaHei[] = "Microsoft YaHei";
+static const char kFontMicrosoftYiBaiti[] = "Microsoft Yi Baiti";
+static const char kFontMeiryo[] = "Meiryo";
+static const char kFontMongolianBaiti[] = "Mongolian Baiti";
+static const char kFontNyala[] = "Nyala";
+static const char kFontPlantagenetCherokee[] = "Plantagenet Cherokee";
+static const char kFontSegoeUI[] = "Segoe UI";
+static const char kFontSegoeUISymbol[] = "Segoe UI Symbol";
+static const char kFontSylfaen[] = "Sylfaen";
+static const char kFontTraditionalArabic[] = "Traditional Arabic";
+
+void
+gfxWindowsPlatform::GetCommonFallbackFonts(const PRUint32 aCh,
+                                           PRInt32 aRunScript,
+                                           nsTArray<const char*>& aFontList)
+{
+    // Arial is used as the default fallback for system fallback
+    aFontList.AppendElement(kFontArial);
+
+    if (!IS_IN_BMP(aCh)) {
+        PRUint32 p = aCh >> 16;
+        if (p == 1) { // SMP plane
+            aFontList.AppendElement(kFontCambriaMath);
+            aFontList.AppendElement(kFontSegoeUISymbol);
+            aFontList.AppendElement(kFontEbrima);
+        }
+    } else {
+        PRUint32 b = (aCh >> 8) & 0xff;
+
+        switch (b) {
+        case 0x05:
+            aFontList.AppendElement(kFontEstrangeloEdessa);
+            aFontList.AppendElement(kFontCambria);
+            break;
+        case 0x06:
+            aFontList.AppendElement(kFontMicrosoftUighur);
+            break;
+        case 0x07:
+            aFontList.AppendElement(kFontEstrangeloEdessa);
+            aFontList.AppendElement(kFontMVBoli);
+            aFontList.AppendElement(kFontEbrima);
+            break;
+        case 0x0e:
+            aFontList.AppendElement(kFontLaoUI);
+            break;
+        case 0x12:
+        case 0x13:
+            aFontList.AppendElement(kFontNyala);
+            aFontList.AppendElement(kFontPlantagenetCherokee);
+            break;
+        case 0x14:
+        case 0x15:
+        case 0x16:
+            aFontList.AppendElement(kFontEuphemia);
+            aFontList.AppendElement(kFontSegoeUISymbol);
+            break;
+        case 0x17:
+            aFontList.AppendElement(kFontKhmerUI);
+            break;
+        case 0x18:  // Mongolian
+            aFontList.AppendElement(kFontMongolianBaiti);
+            break;
+        case 0x19:
+            aFontList.AppendElement(kFontMicrosoftTaiLe);
+            aFontList.AppendElement(kFontMicrosoftNewTaiLue);
+            aFontList.AppendElement(kFontKhmerUI);
+            break;
+            break;
+        case 0x20:  // Symbol ranges
+        case 0x21:
+        case 0x22:
+        case 0x23:
+        case 0x24:
+        case 0x25:
+        case 0x26:
+        case 0x27:
+        case 0x29:
+        case 0x2a:
+        case 0x2b:
+        case 0x2c:
+            aFontList.AppendElement(kFontSegoeUI);
+            aFontList.AppendElement(kFontSegoeUISymbol);
+            aFontList.AppendElement(kFontCambria);
+            aFontList.AppendElement(kFontCambriaMath);
+            aFontList.AppendElement(kFontMeiryo);
+            aFontList.AppendElement(kFontArial);
+            aFontList.AppendElement(kFontEbrima);
+            break;
+        case 0x2d:
+        case 0x2e:
+        case 0x2f:
+            aFontList.AppendElement(kFontEbrima);
+            aFontList.AppendElement(kFontNyala);
+            aFontList.AppendElement(kFontMeiryo);
+            break;
+        case 0x28:  // Braille
+            aFontList.AppendElement(kFontSegoeUISymbol);
+            break;
+        case 0x30:
+        case 0x31:
+            aFontList.AppendElement(kFontMicrosoftYaHei);
+            break;
+        case 0x32:
+            aFontList.AppendElement(kFontMalgunGothic);
+            break;
+        case 0x4d:
+            aFontList.AppendElement(kFontSegoeUISymbol);
+            break;
+        case 0xa0:  // Yi
+        case 0xa1:
+        case 0xa2:
+        case 0xa3:
+        case 0xa4:
+            aFontList.AppendElement(kFontMicrosoftYiBaiti);
+            break;
+        case 0xa5:
+        case 0xa6:
+        case 0xa7:
+            aFontList.AppendElement(kFontEbrima);
+            aFontList.AppendElement(kFontCambriaMath);
+            break;
+        case 0xa8:
+             aFontList.AppendElement(kFontMicrosoftPhagsPa);
+             break;
+        case 0xfb:
+            aFontList.AppendElement(kFontMicrosoftUighur);
+            aFontList.AppendElement(kFontGabriola);
+            aFontList.AppendElement(kFontSylfaen);
+            break;
+        case 0xfc:
+        case 0xfd:
+            aFontList.AppendElement(kFontTraditionalArabic);
+            aFontList.AppendElement(kFontArabicTypesetting);
+            break;
+        case 0xfe:
+            aFontList.AppendElement(kFontTraditionalArabic);
+            aFontList.AppendElement(kFontMicrosoftJhengHei);
+           break;
+       case 0xff:
+            aFontList.AppendElement(kFontMicrosoftJhengHei);
+            break;
+        default:
+            break;
+        }
+    }
+
+    // Arial Unicode MS has lots of glyphs for obscure characters,
+    // use it as a last resort
+    aFontList.AppendElement(kFontArialUnicodeMS);
+}
+
 struct ResolveData {
     ResolveData(gfxPlatform::FontResolverCallback aCallback,
                 gfxWindowsPlatform *aCaller, const nsAString *aFontName,

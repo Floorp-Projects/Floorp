@@ -105,6 +105,15 @@ function run_tests()
   list[0].x = 20;
   list[1].y = 34;
   path.setAttribute("d", "M20,5 L12,34");
+
+  // -- Attribute removal
+  eventChecker.expect("remove");
+  path.removeAttribute("d");
+
+  // -- Non-existent attribute removal
+  eventChecker.expect("");
+  path.removeAttribute("d");
+  path.removeAttributeNS(null, "d");
   eventChecker.finish();
 
   SimpleTest.finish();

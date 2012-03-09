@@ -2879,6 +2879,12 @@ JS_THIS(JSContext *cx, jsval *vp)
  */
 #define JS_THIS_VALUE(cx,vp)    ((vp)[1])
 
+extern JS_PUBLIC_API(void)
+JS_MallocInCompartment(JSCompartment *comp, size_t nbytes);
+
+extern JS_PUBLIC_API(void)
+JS_FreeInCompartment(JSCompartment *comp, size_t nbytes);
+
 extern JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes);
 
@@ -4498,21 +4504,17 @@ JS_BEGIN_EXTERN_C
 
 /*
  * These functions allow setting an operation callback that will be called
- * from the thread the context is associated with some time after any thread
- * triggered the callback using JS_TriggerOperationCallback(cx).
+ * from the JS thread some time after any thread triggered the callback using
+ * JS_TriggerOperationCallback(rt).
  *
- * In a threadsafe build the engine internally triggers operation callbacks
- * under certain circumstances (i.e. GC and title transfer) to force the
- * context to yield its current request, which the engine always
- * automatically does immediately prior to calling the callback function.
- * The embedding should thus not rely on callbacks being triggered through
- * the external API only.
+ * To schedule the GC and for other activities the engine internally triggers
+ * operation callbacks. The embedding should thus not rely on callbacks being
+ * triggered through the external API only.
  *
  * Important note: Additional callbacks can occur inside the callback handler
  * if it re-enters the JS engine. The embedding must ensure that the callback
  * is disconnected before attempting such re-entry.
  */
-
 extern JS_PUBLIC_API(JSOperationCallback)
 JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback);
 
@@ -4520,10 +4522,7 @@ extern JS_PUBLIC_API(JSOperationCallback)
 JS_GetOperationCallback(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_TriggerOperationCallback(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
-JS_TriggerRuntimeOperationCallback(JSRuntime *rt);
+JS_TriggerOperationCallback(JSRuntime *rt);
 
 extern JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx);

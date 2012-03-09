@@ -61,6 +61,13 @@ function run_tests()
   lengths[0].valueAsString = "10";
   lengths[0].convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_NUMBER);
   lengths[0].newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_NUMBER, 10);
+  // -- Attribute removal
+  eventChecker.expect("remove");
+  text.removeAttribute("x");
+  // -- Non-existent attribute removal
+  eventChecker.expect("");
+  text.removeAttribute("x");
+  text.removeAttributeNS(null, "x");
   eventChecker.finish();
 
   SimpleTest.finish();

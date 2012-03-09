@@ -44,18 +44,18 @@ def main():
     # 3) download the necessary files
     print "INFO: talos.json URL: %s" % options.talos_json_url
     try:
-        for key in ('talos.zip', 'pageloader.xpi',):
-            entity = get_value(jsonFilename, key)
-            if passesRestrictions(options.talos_json_url, entity["url"]):
-                # the key is at the same time the filename e.g. talos.zip
-                download_file(entity["url"], entity["path"], key)
-                print "INFO: %s -> %s" % (entity["url"], os.path.join(entity["path"], key))
-            else:
-                print "ERROR: You have tried to download a file " + \
-                      "from: %s " % fileUrl + \
-                      "which is a location different than http://build.mozilla.org/talos/"
-                print "ERROR: This is only allowed for the certain branches."
-                sys.exit(1)
+        key = 'talos.zip'
+        entity = get_value(jsonFilename, key)
+        if passesRestrictions(options.talos_json_url, entity["url"]):
+            # the key is at the same time the filename e.g. talos.zip
+            download_file(entity["url"], entity["path"], key)
+            print "INFO: %s -> %s" % (entity["url"], os.path.join(entity["path"], key))
+        else:
+            print "ERROR: You have tried to download a file " + \
+                  "from: %s " % fileUrl + \
+                  "which is a location different than http://build.mozilla.org/talos/"
+            print "ERROR: This is only allowed for the certain branches."
+            sys.exit(1)
     except Exception, e:
         print "ERROR: %s" % str(e)
         sys.exit(1)
