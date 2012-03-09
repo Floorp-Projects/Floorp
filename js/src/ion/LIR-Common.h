@@ -1994,6 +1994,18 @@ class LCallSetProperty : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
     }
 };
 
+class LCallDeleteProperty : public LCallInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(CallDeleteProperty);
+
+    static const size_t Value = 0;
+
+    MDeleteProperty *mir() const {
+        return mir_->toDeleteProperty();
+    }
+};
+
 // Patchable jump to stubs generated for a SetProperty cache, which stores a
 // boxed value.
 class LSetPropertyCacheV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
