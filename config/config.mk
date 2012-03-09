@@ -789,8 +789,12 @@ EXPAND_LIBS_GEN = $(PYTHON) $(topsrcdir)/config/pythonpath.py -I$(DEPTH)/config 
 EXPAND_AR = $(EXPAND_LIBS_EXEC) --extract -- $(AR)
 EXPAND_CC = $(EXPAND_LIBS_EXEC) --uselist -- $(CC)
 EXPAND_CCC = $(EXPAND_LIBS_EXEC) --uselist -- $(CCC)
-EXPAND_LD = $(EXPAND_LIBS_EXEC) --uselist $(if $(REORDER),--reorder $(REORDER))-- $(LD)
-EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) --uselist $(if $(REORDER),--reorder $(REORDER))-- $(MKSHLIB)
+EXPAND_LD = $(EXPAND_LIBS_EXEC) --uselist -- $(LD)
+EXPAND_MKSHLIB_ARGS = --uselist
+ifdef SYMBOL_ORDER
+EXPAND_MKSHLIB_ARGS += --symbol-order $(SYMBOL_ORDER)
+endif
+EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) $(EXPAND_MKSHLIB_ARGS) -- $(MKSHLIB)
 
 ifdef STDCXX_COMPAT
 ifneq ($(OS_ARCH),Darwin)

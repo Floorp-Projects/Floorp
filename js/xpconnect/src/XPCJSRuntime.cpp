@@ -926,6 +926,20 @@ XPCJSRuntime::FinalizeCallback(JSContext *cx, JSFinalizeStatus status)
     }
 }
 
+class AutoLockWatchdog {
+    XPCJSRuntime* const mRuntime;
+
+  public:
+    AutoLockWatchdog(XPCJSRuntime* aRuntime)
+      : mRuntime(aRuntime) {
+        PR_Lock(mRuntime->mWatchdogLock);
+    }
+
+    ~AutoLockWatchdog() {
+        PR_Unlock(mRuntime->mWatchdogLock);
+    }
+};
+
 //static
 void
 XPCJSRuntime::WatchdogMain(void *arg)
@@ -933,7 +947,7 @@ XPCJSRuntime::WatchdogMain(void *arg)
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
 
     // Lock lasts until we return
-    js::AutoLockGC lock(self->mJSRuntime);
+    AutoLockWatchdog lock(self);
 
     PRIntervalTime sleepInterval;
     while (self->mWatchdogThread) {
@@ -944,12 +958,8 @@ XPCJSRuntime::WatchdogMain(void *arg)
             sleepInterval = PR_INTERVAL_NO_TIMEOUT;
             self->mWatchdogHibernating = true;
         }
-#ifdef DEBUG
-        PRStatus status =
-#endif
-            PR_WaitCondVar(self->mWatchdogWakeup, sleepInterval);
-        JS_ASSERT(status == PR_SUCCESS);
-        js::TriggerOperationCallback(self->mJSRuntime);
+        MOZ_ALWAYS_TRUE(PR_WaitCondVar(self->mWatchdogWakeup, sleepInterval) == PR_SUCCESS);
+        JS_TriggerOperationCallback(self->mJSRuntime);
     }
 
     /* Wake up the main thread waiting for the watchdog to terminate. */
@@ -961,6 +971,9 @@ void
 XPCJSRuntime::ActivityCallback(void *arg, JSBool active)
 {
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
+
+    AutoLockWatchdog lock(self);
+    
     if (active) {
         self->mLastActiveTime = -1;
         if (self->mWatchdogHibernating) {
@@ -1058,7 +1071,7 @@ XPCJSRuntime::~XPCJSRuntime()
         // must release the lock before calling PR_DestroyCondVar, we use an
         // extra block here.
         {
-            js::AutoLockGC lock(mJSRuntime);
+            AutoLockWatchdog lock(this);
             if (mWatchdogThread) {
                 mWatchdogThread = nsnull;
                 PR_NotifyCondVar(mWatchdogWakeup);
@@ -1066,6 +1079,7 @@ XPCJSRuntime::~XPCJSRuntime()
             }
         }
         PR_DestroyCondVar(mWatchdogWakeup);
+        PR_DestroyLock(mWatchdogLock);
         mWatchdogWakeup = nsnull;
     }
 
@@ -2029,6 +2043,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mVariantRoots(nsnull),
    mWrappedJSRoots(nsnull),
    mObjectHolderRoots(nsnull),
+   mWatchdogLock(nsnull),
    mWatchdogWakeup(nsnull),
    mWatchdogThread(nsnull),
    mWatchdogHibernating(false),
@@ -2053,47 +2068,40 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if (!mJSRuntime)
         NS_RUNTIMEABORT("JS_NewRuntime failed.");
 
-    {
-        // Unconstrain the runtime's threshold on nominal heap size, to avoid
-        // triggering GC too often if operating continuously near an arbitrary
-        // finite threshold (0xffffffff is infinity for uint32_t parameters).
-        // This leaves the maximum-JS_malloc-bytes threshold still in effect
-        // to cause period, and we hope hygienic, last-ditch GCs from within
-        // the GC's allocator.
-        JS_SetGCParameter(mJSRuntime, JSGC_MAX_BYTES, 0xffffffff);
+    // Unconstrain the runtime's threshold on nominal heap size, to avoid
+    // triggering GC too often if operating continuously near an arbitrary
+    // finite threshold (0xffffffff is infinity for uint32_t parameters).
+    // This leaves the maximum-JS_malloc-bytes threshold still in effect
+    // to cause period, and we hope hygienic, last-ditch GCs from within
+    // the GC's allocator.
+    JS_SetGCParameter(mJSRuntime, JSGC_MAX_BYTES, 0xffffffff);
 #ifdef MOZ_ASAN
-        // ASan requires more stack space due to redzones
-        JS_SetNativeStackQuota(mJSRuntime, 2 * 128 * sizeof(size_t) * 1024);
+    // ASan requires more stack space due to redzones
+    JS_SetNativeStackQuota(mJSRuntime, 2 * 128 * sizeof(size_t) * 1024);
 #else  
-        JS_SetNativeStackQuota(mJSRuntime, 128 * sizeof(size_t) * 1024);
+    JS_SetNativeStackQuota(mJSRuntime, 128 * sizeof(size_t) * 1024);
 #endif
-        JS_SetContextCallback(mJSRuntime, ContextCallback);
-        JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
-        JS_SetGCCallback(mJSRuntime, GCCallback);
-        JS_SetFinalizeCallback(mJSRuntime, FinalizeCallback);
-        JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
-        JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
-        JS_SetWrapObjectCallbacks(mJSRuntime,
-                                  xpc::WrapperFactory::Rewrap,
-                                  xpc::WrapperFactory::PrepareForWrapping);
-        js::SetPreserveWrapperCallback(mJSRuntime, PreserveWrapper);
-
+    JS_SetContextCallback(mJSRuntime, ContextCallback);
+    JS_SetCompartmentCallback(mJSRuntime, CompartmentCallback);
+    JS_SetGCCallback(mJSRuntime, GCCallback);
+    JS_SetFinalizeCallback(mJSRuntime, FinalizeCallback);
+    JS_SetExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this);
+    JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
+    JS_SetWrapObjectCallbacks(mJSRuntime,
+                              xpc::WrapperFactory::Rewrap,
+                              xpc::WrapperFactory::PrepareForWrapping);
+    js::SetPreserveWrapperCallback(mJSRuntime, PreserveWrapper);
 #ifdef MOZ_CRASHREPORTER
-        JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
+    JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
 #endif
-        JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
-        mWatchdogWakeup = PR_NewCondVar(js::GetRuntimeGCLock(mJSRuntime));
-        if (!mWatchdogWakeup)
-            NS_RUNTIMEABORT("PR_NewCondVar failed.");
-
-        js::SetActivityCallback(mJSRuntime, ActivityCallback, this);
-
-        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
-        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
-        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
-        NS_RegisterMemoryMultiReporter(new JSMemoryMultiReporter);
-        NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
-    }
+    JS_SetAccumulateTelemetryCallback(mJSRuntime, AccumulateTelemetryCallback);
+    js::SetActivityCallback(mJSRuntime, ActivityCallback, this);
+        
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
+    NS_RegisterMemoryMultiReporter(new JSMemoryMultiReporter);
+    NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
 
     if (!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
                            sizeof(ObjectHolder), 512))
@@ -2103,12 +2111,19 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
-    if (mJSRuntime && !JS_GetGlobalDebugHooks(mJSRuntime)->debuggerHandler)
+    if (!JS_GetGlobalDebugHooks(mJSRuntime)->debuggerHandler)
         xpc_InstallJSDebuggerKeywordHandler(mJSRuntime);
 #endif
 
-    if (mWatchdogWakeup) {
-        js::AutoLockGC lock(mJSRuntime);
+    mWatchdogLock = PR_NewLock();
+    if (!mWatchdogLock)
+        NS_RUNTIMEABORT("PR_NewLock failed.");
+    mWatchdogWakeup = PR_NewCondVar(mWatchdogLock);
+    if (!mWatchdogWakeup)
+        NS_RUNTIMEABORT("PR_NewCondVar failed.");
+
+    {
+        AutoLockWatchdog lock(this);
 
         mWatchdogThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
                                           PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,

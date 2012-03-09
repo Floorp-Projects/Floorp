@@ -2561,44 +2561,16 @@ BEGIN_CASE(JSOP_SETMETHOD)
 END_CASE(JSOP_SETPROP)
 
 BEGIN_CASE(JSOP_GETELEM)
+BEGIN_CASE(JSOP_CALLELEM)
 {
     Value &lref = regs.sp[-2];
     Value &rref = regs.sp[-1];
-    if (!GetElementOperation(cx, lref, rref, &regs.sp[-2]))
+    if (!GetElementOperation(cx, op, lref, rref, &regs.sp[-2]))
         goto error;
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-2]);
     regs.sp--;
 }
 END_CASE(JSOP_GETELEM)
-
-BEGIN_CASE(JSOP_CALLELEM)
-{
-    /* Find the object on which to look for |this|'s properties. */
-    Value thisv = regs.sp[-2];
-    JSObject *thisObj = ValuePropertyBearer(cx, regs.fp(), thisv, -2);
-    if (!thisObj)
-        goto error;
-
-    /* Fetch index and convert it to id suitable for use with obj. */
-    jsid id;
-    FETCH_ELEMENT_ID(thisObj, -1, id);
-
-    /* Get the method. */
-    if (!js_GetMethod(cx, thisObj, id, JSGET_NO_METHOD_BARRIER, &regs.sp[-2]))
-        goto error;
-
-#if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(regs.sp[-2].isPrimitive()) && thisv.isObject()) {
-        if (!OnUnknownMethod(cx, &thisv.toObject(), regs.sp[-1], regs.sp - 2))
-            goto error;
-    }
-#endif
-
-    regs.sp--;
-
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-}
-END_CASE(JSOP_CALLELEM)
 
 BEGIN_CASE(JSOP_SETELEM)
 {

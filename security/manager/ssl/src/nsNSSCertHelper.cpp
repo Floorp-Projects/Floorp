@@ -2125,7 +2125,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
     // length to be in bytes, so let's convert the
     // length in a temporary SECItem
     data.data = mCert->issuerID.data;
-    data.len  = mCert->issuerID.len / 8;
+    data.len  = (mCert->issuerID.len + 7) / 8;
 
     ProcessRawBytes(nssComponent, &data, text);
     printableItem = new nsNSSASN1PrintableItem();
@@ -2143,8 +2143,8 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
     // The function ProcessRawBytes expects the
     // length to be in bytes, so let's convert the
     // length in a temporary SECItem
-    data.data = mCert->issuerID.data;
-    data.len  = mCert->issuerID.len / 8;
+    data.data = mCert->subjectID.data;
+    data.len  = (mCert->subjectID.len + 7) / 8;
 
     ProcessRawBytes(nssComponent, &data, text);
     printableItem = new nsNSSASN1PrintableItem();

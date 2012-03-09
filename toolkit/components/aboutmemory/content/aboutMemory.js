@@ -124,7 +124,7 @@ function onLoad()
   } else if (document.title === "about:compartments") {
     onLoadAboutCompartments();
   } else {
-    assert(false, "Unknown location");
+    assert(false, "Unknown location: " + document.title);
   }
 }
 

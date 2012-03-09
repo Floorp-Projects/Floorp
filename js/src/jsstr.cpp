@@ -3265,26 +3265,6 @@ js::ToStringSlow(JSContext *cx, const Value &arg)
     return str;
 }
 
-/* This function implements E-262-3 section 9.8, toString. */
-bool
-js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
-{
-    Value v = arg;
-    if (!ToPrimitive(cx, JSTYPE_STRING, &v))
-        return false;
-
-    if (v.isString())
-        return sb.append(v.toString());
-    if (v.isNumber())
-        return NumberValueToStringBuffer(cx, v, sb);
-    if (v.isBoolean())
-        return BooleanToStringBuffer(cx, v.toBoolean(), sb);
-    if (v.isNull())
-        return sb.append(cx->runtime->atomState.nullAtom);
-    JS_ASSERT(v.isUndefined());
-    return sb.append(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
-}
-
 JS_FRIEND_API(JSString *)
 js_ValueToSource(JSContext *cx, const Value &v)
 {

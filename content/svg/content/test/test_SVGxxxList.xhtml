@@ -835,6 +835,7 @@ function run_baseVal_API_tests()
 
     eventChecker.expect("remove add");
     t.element.removeAttribute(t.attr_name);
+    t.element.removeAttributeNS(null, t.attr_name);
     res = t.baseVal.appendItem(item);
     eventChecker.finish();
   }

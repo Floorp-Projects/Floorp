@@ -160,9 +160,19 @@ class nsCSSScanner {
 
   // aMessage must take no parameters
   void ReportUnexpected(const char* aMessage);
+  
+private:
   void ReportUnexpectedParams(const char* aMessage,
-                              const PRUnichar **aParams,
+                              const PRUnichar** aParams,
                               PRUint32 aParamsLength);
+
+public:
+  template<PRUint32 N>                           
+  void ReportUnexpectedParams(const char* aMessage,
+                              const PRUnichar* (&aParams)[N])
+    {
+      return ReportUnexpectedParams(aMessage, aParams, N);
+    }
   // aLookingFor is a plain string, not a format string
   void ReportUnexpectedEOF(const char* aLookingFor);
   // aLookingFor is a single character

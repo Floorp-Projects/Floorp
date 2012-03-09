@@ -38,6 +38,7 @@ function runTests()
   filter.setAttribute("class", "foo");
   filter.className.baseVal = "bar";
   filter.removeAttribute("class");
+  filter.removeAttributeNS(null, "class");
   filter.className.baseVal = "foo";
 
   eventChecker.expect("");
@@ -57,6 +58,7 @@ function runTests()
   marker.markerWidth.baseVal.newValueSpecifiedUnits(
     SVGLength.SVG_LENGTHTYPE_MM, 11);
   marker.removeAttribute("markerWidth");
+  marker.removeAttributeNS(null, "markerWidth");
   marker.markerWidth.baseVal.value = 8;
 
   eventChecker.expect("remove add modify");
@@ -84,6 +86,7 @@ function runTests()
   convolve.setAttribute("divisor", "12.5");
   convolve.divisor.baseVal = 6;
   convolve.removeAttribute("divisor");
+  convolve.removeAttributeNS(null, "divisor");
   convolve.divisor.baseVal = 8;
 
   eventChecker.expect("");
@@ -97,6 +100,7 @@ function runTests()
   blur.setAttribute("stdDeviation", "5, 6");
   blur.stdDeviationX.baseVal = 8;
   blur.removeAttribute("stdDeviation");
+  blur.removeAttributeNS(null, "stdDeviation");
   blur.setAttribute("stdDeviation", "2, 3");
 
   eventChecker.expect("");
@@ -111,6 +115,7 @@ function runTests()
   convolve.setAttribute("targetX", "12");
   convolve.targetX.baseVal = 6;
   convolve.removeAttribute("targetX");
+  convolve.removeAttributeNS(null, "targetX");
   convolve.targetX.baseVal = 8;
 
   // Check redundant change when comparing typed value to attribute value
@@ -129,6 +134,7 @@ function runTests()
   filter.setAttribute("filterRes", "60, 70");
   filter.filterResX.baseVal = 50;
   filter.removeAttribute("filterRes");
+  filter.removeAttributeNS(null, "filterRes");
   filter.setAttribute("filterRes", "50, 60");
 
   eventChecker.expect("");
@@ -149,6 +155,7 @@ function runTests()
   marker.orientAngle.baseVal.newValueSpecifiedUnits(
     SVGAngle.SVG_ANGLETYPE_GRAD, 45);
   marker.removeAttribute("orient");
+  marker.removeAttributeNS(null, "orient");
   marker.orientAngle.baseVal.value = 40;
 
   eventChecker.expect("");
@@ -167,6 +174,7 @@ function runTests()
   convolve.setAttribute("preserveAlpha", "true");
   convolve.preserveAlpha.baseVal = false;
   convolve.removeAttribute("preserveAlpha");
+  convolve.removeAttributeNS(null, "preserveAlpha");
   convolve.preserveAlpha.baseVal = true;
 
   eventChecker.expect("");
@@ -180,6 +188,7 @@ function runTests()
   convolve.setAttribute("edgeMode", "none");
   convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_WRAP;
   convolve.removeAttribute("edgeMode");
+  convolve.removeAttributeNS(null, "edgeMode");
   convolve.edgeMode.baseVal = SVGFEConvolveMatrixElement.SVG_EDGEMODE_NONE;
 
   eventChecker.expect("");
@@ -194,6 +203,7 @@ function runTests()
   convolve.setAttribute("result", "bar");
   convolve.result.baseVal = "foo";
   convolve.removeAttribute("result");
+  convolve.removeAttributeNS(null, "result");
   convolve.result.baseVal = "bar";
 
   eventChecker.expect("");
@@ -209,6 +219,7 @@ function runTests()
   marker.preserveAspectRatio.baseVal.align =
     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMAXYMAX;
   marker.removeAttribute("preserveAspectRatio");
+  marker.removeAttributeNS(null, "preserveAspectRatio");
   marker.preserveAspectRatio.baseVal.align =
     SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMIDYMIN;
 
@@ -224,6 +235,7 @@ function runTests()
   marker.setAttribute("viewBox", "1 2 3 4");
   marker.viewBox.baseVal.height = 5;
   marker.removeAttribute("viewBox");
+  marker.removeAttributeNS(null, "viewBox");
   marker.viewBox.baseVal.height = 4;
 
   eventChecker.ignoreEvents();

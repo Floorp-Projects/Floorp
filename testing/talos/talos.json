@@ -2,9 +2,5 @@
     "talos.zip": {
         "url": "http://build.mozilla.org/talos/zips/talos.bug732835.zip",
         "path": ""
-    },
-    "pageloader.xpi": {
-        "url": "http://build.mozilla.org/talos/xpis/pageloader.xpi",
-        "path": "talos/page_load_test"
     }
 }
