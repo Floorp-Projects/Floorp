@@ -46,7 +46,6 @@
 #include "shared-libraries.h"
 #include "mozilla/StringBuilder.h"
 #include "mozilla/StackWalk.h"
-#include "JSObjectBuilder.h"
 
 // we eventually want to make this runtime switchable
 #if defined(MOZ_PROFILING) && (defined(XP_UNIX) && !defined(XP_MACOSX))
@@ -144,7 +143,6 @@ public:
   string TagToString(Profile *profile);
 
 private:
-  friend class Profile;
   union {
     const char* mTagData;
     double mTagFloat;
@@ -254,54 +252,12 @@ public:
   void ToString(StringBuilder &profile)
   {
     //XXX: this code is not thread safe and needs to be fixed
-    // can we just have a mutex that guards access to the circular buffer?
-    // no because the main thread can be stopped while it still has access.
-    // which will cause a deadlock
     int oldReadPos = mReadPos;
     while (mReadPos != mLastFlushPos) {
       profile.Append(mEntries[mReadPos].TagToString(this).c_str());
       mReadPos = (mReadPos + 1) % mEntrySize;
     }
     mReadPos = oldReadPos;
-  }
-
-  JSObject *ToJSObject(JSContext *aCx)
-  {
-    JSObjectBuilder b(aCx);
-
-    JSObject *profile = b.CreateObject();
-    JSObject *samples = b.CreateArray();
-    b.DefineProperty(profile, "samples", samples);
-
-    JSObject *sample = NULL;
-    JSObject *frames = NULL;
-
-    int oldReadPos = mReadPos;
-    while (mReadPos != mLastFlushPos) {
-      ProfileEntry entry = mEntries[mReadPos];
-      mReadPos = (mReadPos + 1) % mEntrySize;
-      switch (entry.mTagName) {
-        case 's':
-          sample = b.CreateObject();
-          b.DefineProperty(sample, "name", entry.mTagData);
-          frames = b.CreateArray();
-          b.DefineProperty(sample, "frames", frames);
-          b.ArrayPush(samples, sample);
-          break;
-        case 'c':
-        case 'l':
-          {
-            if (sample) {
-              JSObject *frame = b.CreateObject();
-              b.DefineProperty(frame, "location", entry.mTagData);
-              b.ArrayPush(frames, frame);
-            }
-          }
-      }
-    }
-    mReadPos = oldReadPos;
-
-    return profile;
   }
 
   void WriteProfile(FILE* stream)
@@ -682,17 +638,6 @@ char* mozilla_sampler_get_profile()
   strcpy(rtn, profile.Buffer());
   return rtn;
 }
-
-JSObject *mozilla_sampler_get_profile_data(JSContext *aCx)
-{
-  TableTicker *t = mozilla::tls::get<TableTicker>(pkey_ticker);
-  if (!t) {
-    return NULL;
-  }
-
-  return t->GetProfile()->ToJSObject(aCx);
-}
-
 
 const char** mozilla_sampler_get_features()
 {

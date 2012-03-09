@@ -44,7 +44,6 @@
 #include "nsMemory.h"
 #include "shared-libraries.h"
 #include "nsString.h"
-#include "jsapi.h"
 
 using std::string;
 
@@ -123,18 +122,6 @@ NS_IMETHODIMP
 nsProfiler::GetSharedLibraryInformation(nsAString& aOutString)
 {
   aOutString.Assign(NS_ConvertUTF8toUTF16(GetSharedLibraryInfoString().c_str()));
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP nsProfiler::GetProfileData(JSContext* aCx, jsval* aResult)
-{
-  JSObject *obj = SAMPLER_GET_PROFILE_DATA(aCx);
-  if (!obj)
-    return NS_ERROR_FAILURE;
-
-  *aResult = OBJECT_TO_JSVAL(obj);
   return NS_OK;
 }
 
