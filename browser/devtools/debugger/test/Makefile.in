@@ -73,6 +73,7 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_update-editor-mode.js \
 	browser_dbg_select-line.js \
 	browser_dbg_clean-exit.js \
+	browser_dbg_bug723069_editor-breakpoints.js \
 	head.js \
 	$(NULL)
 

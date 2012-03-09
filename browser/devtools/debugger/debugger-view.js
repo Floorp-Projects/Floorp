@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Victor Porof <vporof@mozilla.com> (original author)
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -199,7 +200,6 @@ DebuggerView.Stackframes = {
 
     // the list item wasn't found in the stackframe container
     if (!frame) {
-      dump("The frame list item wasn't found in the stackframes container.");
       return;
     }
 
@@ -356,7 +356,6 @@ DebuggerView.Properties = {
 
     // make sure the element was created successfully
     if (!element) {
-      dump("The debugger scope container wasn't created properly: " + aId);
       return null;
     }
 
@@ -398,7 +397,6 @@ DebuggerView.Properties = {
 
     // make sure the element was created successfully
     if (!element) {
-      dump("The debugger variable container wasn't created properly: " + aId);
       return null;
     }
 
@@ -466,7 +464,6 @@ DebuggerView.Properties = {
 
     // make sure the info node exists
     if (!info) {
-      dump("Could not set the grip for the corresponding variable: " + aVar.id);
       return null;
     }
 
@@ -569,7 +566,6 @@ DebuggerView.Properties = {
 
     // make sure the element was created successfully
     if (!element) {
-      dump("The debugger property container wasn't created properly.");
       return null;
     }
 
@@ -710,11 +706,9 @@ DebuggerView.Properties = {
   _createPropertyElement: function DVP__createPropertyElement(aName, aId, aClass, aParent) {
     // make sure we don't duplicate anything and the parent exists
     if (document.getElementById(aId)) {
-      dump("Duplicating a property element id is not allowed.");
       return null;
     }
     if (!aParent) {
-      dump("A property element must have a valid parent node specified.");
       return null;
     }
 
@@ -1126,6 +1120,15 @@ DebuggerView.Scripts = {
       }
     }
   },
+
+   /**
+   	* Retrieve the URL of the selected script.
+   	* @return string|null
+   	*/
+   get selected() {
+    return this._scripts.selectedItem ?
+           this._scripts.selectedItem.value : null;
+   },
 
   /**
    * Adds a script to the scripts container.

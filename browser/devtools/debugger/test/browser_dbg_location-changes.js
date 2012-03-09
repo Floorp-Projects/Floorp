@@ -55,10 +55,17 @@ function testLocationChange()
       gPane._client.addOneTimeListener("tabAttached", function(aEvent, aPacket) {
         ok(true, "Successfully reattached to the tab again.");
 
-        removeTab(gTab);
-        finish();
+        closeDebuggerAndFinish(gTab);
       });
     });
     content.location = TAB1_URL;
   });
 }
+
+registerCleanupFunction(function() {
+  removeTab(gTab);
+  gPane = null;
+  gTab = null;
+  gDebuggee = null;
+  gDebugger = null;
+});

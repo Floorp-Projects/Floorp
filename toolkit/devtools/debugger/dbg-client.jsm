@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Dave Camp <dcamp@mozilla.com> (original author)
  *   Panos Astithas <past@mozilla.com>
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,14 +51,19 @@ var EXPORTED_SYMBOLS = ["DebuggerTransport",
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "socketTransportService",
                                    "@mozilla.org/network/socket-transport-service;1",
                                    "nsISocketTransportService");
 
+let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+
 function dumpn(str)
 {
-  dump("DBG-CLIENT: " + str + "\n");
+  if (wantLogging) {
+    dump("DBG-CLIENT: " + str + "\n");
+  }
 }
 
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
@@ -644,7 +650,8 @@ ThreadClient.prototype = {
               }
               return;
             }
-            let bpClient = new BreakpointClient(this._client, aResponse.actor);
+            let bpClient = new BreakpointClient(this._client, aResponse.actor,
+                                                aLocation);
             if (aCallback) {
               aCallback(aOnResponse(aResponse, bpClient));
             } else {
@@ -951,10 +958,14 @@ GripClient.prototype = {
  *        The debugger client parent.
  * @param aActor string
  *        The actor ID for this breakpoint.
+ * @param aLocation object
+ *        The location of the breakpoint. This is an object with two properties:
+ *        url and line.
  */
-function BreakpointClient(aClient, aActor) {
+function BreakpointClient(aClient, aActor, aLocation) {
   this._client = aClient;
   this._actor = aActor;
+  this.location = aLocation;
 }
 
 BreakpointClient.prototype = {
