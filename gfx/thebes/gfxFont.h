@@ -569,6 +569,9 @@ public:
     // used as part of the font fallback process
     void FindFontForChar(GlobalFontMatch *aMatchData);
 
+    // checks all fonts for a matching font within the family
+    void SearchAllFontsForChar(GlobalFontMatch *aMatchData);
+
     // read in other family names, if any, and use functor to add each into cache
     virtual void ReadOtherFamilyNames(gfxPlatformFontList *aPlatformFontList);
 
@@ -590,7 +593,7 @@ public:
     gfxFontEntry* FindFont(const nsAString& aPostscriptName);
 
     // read in cmaps for all the faces
-    void ReadCMAP() {
+    void ReadAllCMAPs() {
         PRUint32 i, numFonts = mAvailableFonts.Length();
         for (i = 0; i < numFonts; i++) {
             gfxFontEntry *fe = mAvailableFonts[i];
@@ -606,7 +609,7 @@ public:
 
     bool TestCharacterMap(PRUint32 aCh) {
         if (!mCharacterMapInitialized) {
-            ReadCMAP();
+            ReadAllCMAPs();
         }
         return mCharacterMap.test(aCh);
     }
