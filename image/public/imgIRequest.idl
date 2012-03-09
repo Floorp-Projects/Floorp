@@ -52,7 +52,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(c3bf4e2a-f64b-4ac1-a84e-18631b1802ab)]
+[scriptable, uuid(d35a9adb-8328-4b64-b06f-72a165acd080)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -193,6 +193,12 @@ interface imgIRequest : nsIRequest
    * @see imgIContainer::unlockImage for documentation of the underlying call.
    */
   void unlockImage();
+
+  /**
+   * If this image is unlocked, discard the image's decoded data.  If the image
+   * is locked or is already discarded, do nothing.
+   */
+  void requestDiscard();
 
   /**
    * If this request is for an animated image, the method creates a new
