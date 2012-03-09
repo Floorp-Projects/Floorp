@@ -134,7 +134,7 @@ nsTextServicesDocument::RegisterAtoms()
 #undef TS_ATOM
   };
 
-  NS_RegisterStaticAtoms(ts_atoms, ArrayLength(ts_atoms));
+  NS_RegisterStaticAtoms(ts_atoms);
 }
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTextServicesDocument)

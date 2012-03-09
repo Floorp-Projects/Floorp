@@ -68,8 +68,7 @@ static const nsStaticAtom CSSAnonBoxes_info[] = {
 
 void nsCSSAnonBoxes::AddRefAtoms()
 {
-  NS_RegisterStaticAtoms(CSSAnonBoxes_info,
-                         ArrayLength(CSSAnonBoxes_info));
+  NS_RegisterStaticAtoms(CSSAnonBoxes_info);
 }
 
 bool nsCSSAnonBoxes::IsAnonBox(nsIAtom *aAtom)

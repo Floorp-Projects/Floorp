@@ -848,11 +848,22 @@ public:
    * Fill (with the parameters given) the localized string named |aKey| in
    * properties file |aFile|.
    */
+private:
   static nsresult FormatLocalizedString(PropertiesFile aFile,
                                         const char* aKey,
-                                        const PRUnichar **aParams,
+                                        const PRUnichar** aParams,
                                         PRUint32 aParamsLength,
                                         nsXPIDLString& aResult);
+  
+public:
+  template<PRUint32 N>
+  static nsresult FormatLocalizedString(PropertiesFile aFile,
+                                        const char* aKey,
+                                        const PRUnichar* (&aParams)[N],
+                                        nsXPIDLString& aResult)
+  {
+    return FormatLocalizedString(aFile, aKey, aParams, N, aResult);
+  }
 
   /**
    * Returns true if aDocument is a chrome document
