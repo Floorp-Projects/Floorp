@@ -54,12 +54,14 @@
 <script>
   SimpleTest.waitForExplicitFinish();
 
-  frames['submit_frame'].onload = function() {
-    is(frames['submit_frame'].location.href, "http://mochi.test:8888/blah?field1-2=teststring&field2-2=0&field4-2=1&field6-2=3&field7-2=2&field8-2=8&field9-2=9&field12-2=&field1=teststring&field2=0&field4=1&field6=3&field7=2&field8=8&field9=9&field12=&field14=14&field14-2=14", "Submit string was correct.");
-    SimpleTest.finish();
-  }
+  addLoadEvent(function() {
+    document.getElementsByName('submit_frame')[0].onload = function() {
+      is(frames['submit_frame'].location.href, "http://mochi.test:8888/blah?field1-2=teststring&field2-2=0&field4-2=1&field6-2=3&field7-2=2&field8-2=8&field9-2=9&field12-2=&field1=teststring&field2=0&field4=1&field6=3&field7=2&field8=8&field9=9&field12=&field14=14&field14-2=14", "Submit string was correct.");
+      SimpleTest.finish();
+    };
 
-  document.forms[0].submit();
+    document.forms[0].submit();
+  });
 </script>
 </body>
 </html>
