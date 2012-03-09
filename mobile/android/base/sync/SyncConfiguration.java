@@ -193,9 +193,6 @@ public class SyncConfiguration implements CredentialsSource {
   /**
    * Create a new SyncConfiguration instance. Pass in a PrefsSource to
    * provide access to preferences.
-   *
-   * @param prefsPath
-   * @param prefsSource
    */
   public SyncConfiguration(String prefsPath, PrefsSource prefsSource) {
     this.prefsPath   = prefsPath;
@@ -210,7 +207,6 @@ public class SyncConfiguration implements CredentialsSource {
 
   /**
    * Return a convenient accessor for part of prefs.
-   * @param prefix
    * @return
    *        A ConfigurationBranch object representing this
    *        section of the preferences space.

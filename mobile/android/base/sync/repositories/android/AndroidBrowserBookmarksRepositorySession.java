@@ -172,9 +172,6 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   /**
    * Return true if the provided record GUID should be skipped
    * in child lists or fetch results.
-   *
-   * @param recordGUID
-   * @return
    */
   public static boolean forbiddenGUID(String recordGUID) {
     return recordGUID == null ||
