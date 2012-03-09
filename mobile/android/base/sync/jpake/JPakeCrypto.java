@@ -98,10 +98,6 @@ public class JPakeCrypto {
    *
    * Round 1 of J-PAKE protocol.
    * Generate x1, x2, and ZKP for other party.
-   *
-   * @param mySignerId
-   * @param valuesOut
-   * @throws NoSuchAlgorithmException 
    */
   public static void round1(JPakeParty jp, JPakeNumGenerator gen) throws NoSuchAlgorithmException, UnsupportedEncodingException {
     // Randomly select x1 from [0,q), x2 from [1,q).
@@ -124,16 +120,6 @@ public class JPakeCrypto {
    * Round 2 of J-PAKE protocol.
    * Generate A and ZKP for A.
    * Verify ZKP from other party. Does not check for replay ZKP.
-   *
-   * @param mySignerId
-   * @param valuesOut
-   * @param secret
-   * @param gx3
-   * @param gx4
-   * @param zkp3
-   * @param zkp4
-   * @throws IncorrectZkpException
-   * @throws NoSuchAlgorithmException
    */
   public static void round2(BigInteger secretValue, JPakeParty jp, JPakeNumGenerator gen)
       throws IncorrectZkpException, NoSuchAlgorithmException,
@@ -164,13 +150,6 @@ public class JPakeCrypto {
 
   /**
    * Final round of J-PAKE protocol.
-   *
-   * @param b
-   * @param zkp
-   * @param secret
-   *
-   * @return KeyBundle
-   * @throws IncorrectZkpException
    */
   public static KeyBundle finalRound(BigInteger secretValue, JPakeParty jp)
       throws IncorrectZkpException, NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
