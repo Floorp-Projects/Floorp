@@ -1,7 +1,39 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+   ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Bobby Holley <bobbyholley@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
@@ -12,95 +44,77 @@
 namespace mozilla {
 namespace image {
 
-static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
-
-/* static */ LinkedList<DiscardTracker::Node> DiscardTracker::sDiscardableImages;
-/* static */ nsCOMPtr<nsITimer> DiscardTracker::sTimer;
-/* static */ bool DiscardTracker::sInitialized = false;
-/* static */ bool DiscardTracker::sTimerOn = false;
-/* static */ bool DiscardTracker::sDiscardRunnablePending = false;
-/* static */ PRUint64 DiscardTracker::sCurrentDecodedImageBytes = 0;
-/* static */ PRUint32 DiscardTracker::sMinDiscardTimeoutMs = 10000;
-/* static */ PRUint32 DiscardTracker::sMaxDecodedImageKB = 42 * 1024;
+static bool sInitialized = false;
+static bool sTimerOn = false;
+static PRUint32 sMinDiscardTimeoutMs = 10000; /* Default if pref unreadable. */
+static nsITimer *sTimer = nsnull;
+static struct DiscardTrackerNode sHead, sSentinel, sTail;
 
 /*
- * When we notice we're using too much memory for decoded images, we enqueue a
- * DiscardRunnable, which runs this code.
+ * Puts an image in the back of the tracker queue. If the image is already
+ * in the tracker, this removes it first.
  */
-NS_IMETHODIMP
-DiscardTracker::DiscardRunnable::Run()
-{
-  sDiscardRunnablePending = false;
-  DiscardTracker::DiscardNow();
-  return NS_OK;
-}
-
-int
-DiscardTimeoutChangedCallback(const char* aPref, void *aClosure)
-{
-  DiscardTracker::ReloadTimeout();
-  return 0;
-}
-
 nsresult
-DiscardTracker::Reset(Node *node)
+DiscardTracker::Reset(DiscardTrackerNode *node)
 {
-  // We shouldn't call Reset() with a null |img| pointer, on images which can't
-  // be discarded, or on animated images (which should be marked as
-  // non-discardable, anyway).
-  MOZ_ASSERT(node->img);
-  MOZ_ASSERT(node->img->CanDiscard());
-  MOZ_ASSERT(!node->img->mAnim);
-
-  // Initialize the first time through.
   nsresult rv;
+#ifdef DEBUG
+  bool isSentinel = (node == &sSentinel);
+
+  // Sanity check the node.
+  NS_ABORT_IF_FALSE(isSentinel || node->curr, "Node doesn't point to anything!");
+
+  // We should not call this function if we can't discard
+  NS_ABORT_IF_FALSE(isSentinel || node->curr->CanDiscard(),
+                    "trying to reset discarding but can't discard!");
+
+  // As soon as an image becomes animated it is set non-discardable
+  NS_ABORT_IF_FALSE(isSentinel || !node->curr->mAnim,
+                    "Trying to reset discarding on animated image!");
+#endif
+
+  // Initialize the first time through
   if (NS_UNLIKELY(!sInitialized)) {
     rv = Initialize();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Insert the node at the front of the list and note when it was inserted.
-  bool wasInList = node->isInList();
-  if (wasInList) {
-    node->remove();
-  }
-  node->timestamp = TimeStamp::Now();
-  sDiscardableImages.insertFront(node);
+  // Remove the node if it's in the list.
+  Remove(node);
 
-  // If the node wasn't already in the list of discardable images, then we may
-  // need to discard some images to stay under the sMaxDecodedImageKB limit.
-  // Call MaybeDiscardSoon to do this check.
-  if (!wasInList) {
-    MaybeDiscardSoon();
-  }
+  // Append it to the list.
+  node->prev = sTail.prev;
+  node->next = &sTail;
+  node->prev->next = sTail.prev = node;
 
-  // Make sure the timer is running.
-  rv = EnableTimer();
+  // Make sure the timer is running
+  rv = TimerOn();
   NS_ENSURE_SUCCESS(rv,rv);
 
   return NS_OK;
 }
 
-void
-DiscardTracker::Remove(Node *node)
-{
-  if (node->isInList())
-    node->remove();
-
-  if (sDiscardableImages.isEmpty())
-    DisableTimer();
-}
-
-/**
- * Shut down the tracker, deallocating the timer.
+/*
+ * Removes a node from the tracker. No-op if the node is currently untracked.
  */
 void
-DiscardTracker::Shutdown()
+DiscardTracker::Remove(DiscardTrackerNode *node)
 {
-  if (sTimer) {
-    sTimer->Cancel();
-    sTimer = NULL;
+  NS_ABORT_IF_FALSE(node != nsnull, "Can't pass null node");
+
+  // If we're not in a list, we have nothing to do.
+  if ((node->prev == nsnull) || (node->next == nsnull)) {
+    NS_ABORT_IF_FALSE(node->prev == node->next,
+                      "Node is half in a list!");
+    return;
   }
+
+  // Connect around ourselves
+  node->prev->next = node->next;
+  node->next->prev = node->prev;
+
+  // Clean up the node we removed.
+  node->prev = node->next = nsnull;
 }
 
 /*
@@ -112,23 +126,31 @@ DiscardTracker::DiscardAll()
   if (!sInitialized)
     return;
 
-  sDiscardableImages.clear();
+  // Remove the sentinel from the list so that the only elements in the list
+  // which don't track an image are the head and tail.
+  Remove(&sSentinel);
 
-  // The list is empty, so there's no need to leave the timer on.
-  DisableTimer();
+  // Discard all tracked images.
+  for (DiscardTrackerNode *node = sHead.next;
+       node != &sTail; node = sHead.next) {
+    NS_ABORT_IF_FALSE(node->curr, "empty node!");
+    Remove(node);
+    node->curr->Discard();
+  }
+
+  // Add the sentinel back to the (now empty) list.
+  Reset(&sSentinel);
+
+  // Because the sentinel is the only element in the list, the next timer event
+  // would be a no-op.  Disable the timer as an optimization.
+  TimerOff();
 }
 
-void
-DiscardTracker::InformAllocation(PRUint64 bytes)
+static int
+DiscardTimeoutChangedCallback(const char* aPref, void *aClosure)
 {
-  // This function is called back e.g. from RasterImage::Discard(); be careful!
-
-  sCurrentDecodedImageBytes += bytes;
-  MOZ_ASSERT(sCurrentDecodedImageBytes >= 0);
-
-  // If we're using too much memory for decoded images, MaybeDiscardSoon will
-  // enqueue a callback to discard some images.
-  MaybeDiscardSoon();
+  DiscardTracker::ReloadTimeout();
+  return 0;
 }
 
 /**
@@ -137,19 +159,27 @@ DiscardTracker::InformAllocation(PRUint64 bytes)
 nsresult
 DiscardTracker::Initialize()
 {
+  nsresult rv;
+
+  // Set up the list. Head<->Sentinel<->Tail
+  sHead.curr = sTail.curr = sSentinel.curr = nsnull;
+  sHead.prev = sTail.next = nsnull;
+  sHead.next = sTail.prev = &sSentinel;
+  sSentinel.prev = &sHead;
+  sSentinel.next = &sTail;
+
   // Watch the timeout pref for changes.
   Preferences::RegisterCallback(DiscardTimeoutChangedCallback,
-                                sDiscardTimeoutPref);
+                                DISCARD_TIMEOUT_PREF);
 
-  Preferences::AddUintVarCache(&sMaxDecodedImageKB,
-                              "image.mem.max_decoded_image_kb",
-                              50 * 1024);
-
-  // Create the timer.
-  sTimer = do_CreateInstance("@mozilla.org/timer;1");
-
-  // Read the timeout pref and start the timer.
   ReloadTimeout();
+
+  // Create and start the timer
+  nsCOMPtr<nsITimer> t = do_CreateInstance("@mozilla.org/timer;1");
+  NS_ENSURE_TRUE(t, NS_ERROR_OUT_OF_MEMORY);
+  t.forget(&sTimer);
+  rv = TimerOn();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Mark us as initialized
   sInitialized = true;
@@ -158,36 +188,53 @@ DiscardTracker::Initialize()
 }
 
 /**
+ * Shut down the tracker, deallocating the timer.
+ */
+void
+DiscardTracker::Shutdown()
+{
+  if (sTimer) {
+    sTimer->Cancel();
+    NS_RELEASE(sTimer);
+    sTimer = nsnull;
+  }
+}
+
+/**
  * Read the discard timeout from about:config.
  */
 void
 DiscardTracker::ReloadTimeout()
 {
-  // Read the timeout pref.
-  PRInt32 discardTimeout;
-  nsresult rv = Preferences::GetInt(sDiscardTimeoutPref, &discardTimeout);
+  nsresult rv;
 
-  // If we got something bogus, return.
+  // read the timeout pref
+  PRInt32 discardTimeout;
+  rv = Preferences::GetInt(DISCARD_TIMEOUT_PREF, &discardTimeout);
+
+  // If we got something bogus, return
   if (!NS_SUCCEEDED(rv) || discardTimeout <= 0)
     return;
 
-  // If the value didn't change, return.
+  // If the value didn't change, return
   if ((PRUint32) discardTimeout == sMinDiscardTimeoutMs)
     return;
 
-  // Update the value.
+  // Update the value
   sMinDiscardTimeoutMs = (PRUint32) discardTimeout;
 
-  // Restart the timer so the new timeout takes effect.
-  DisableTimer();
-  EnableTimer();
+  // If the timer's on, restart the clock to make changes take effect
+  if (sTimerOn) {
+    TimerOff();
+    TimerOn();
+  }
 }
 
 /**
  * Enables the timer. No-op if the timer is already running.
  */
 nsresult
-DiscardTracker::EnableTimer()
+DiscardTracker::TimerOn()
 {
   // Nothing to do if the timer's already on.
   if (sTimerOn)
@@ -205,7 +252,7 @@ DiscardTracker::EnableTimer()
  * Disables the timer. No-op if the timer isn't running.
  */
 void
-DiscardTracker::DisableTimer()
+DiscardTracker::TimerOff()
 {
   // Nothing to do if the timer's already off.
   if (!sTimerOn)
@@ -217,59 +264,29 @@ DiscardTracker::DisableTimer()
 }
 
 /**
- * Routine activated when the timer fires. This discards everything that's
- * older than sMinDiscardTimeoutMs, and tries to discard enough images so that
- * we go under sMaxDecodedImageKB.
+ * Routine activated when the timer fires. This discards everything
+ * in front of sentinel, and resets the sentinel to the back of the
+ * list.
  */
 void
 DiscardTracker::TimerCallback(nsITimer *aTimer, void *aClosure)
 {
-  DiscardNow();
-}
+  DiscardTrackerNode *node;
 
-void
-DiscardTracker::DiscardNow()
-{
-  // Assuming the list is ordered with oldest discard tracker nodes at the back
-  // and newest ones at the front, iterate from back to front discarding nodes
-  // until we encounter one which is new enough to keep and until we go under
-  // our sMaxDecodedImageKB limit.
-
-  TimeStamp now = TimeStamp::Now();
-  Node* node;
-  while ((node = sDiscardableImages.getLast())) {
-    if ((now - node->timestamp).ToMilliseconds() > sMinDiscardTimeoutMs ||
-        sCurrentDecodedImageBytes > sMaxDecodedImageKB * 1024) {
-
-      // Discarding the image should cause sCurrentDecodedImageBytes to
-      // decrease via a call to InformAllocation().
-      node->img->Discard();
-
-      // Careful: Discarding may have caused the node to have been removed
-      // from the list.
-      Remove(node);
-    }
-    else {
-      break;
-    }
+  // Remove and discard everything before the sentinel
+  for (node = sSentinel.prev; node != &sHead; node = sSentinel.prev) {
+    NS_ABORT_IF_FALSE(node->curr, "empty node!");
+    Remove(node);
+    node->curr->Discard();
   }
 
-  // If the list is empty, disable the timer.
-  if (sDiscardableImages.isEmpty())
-    DisableTimer();
-}
+  // Append the sentinel to the back of the list
+  Reset(&sSentinel);
 
-void
-DiscardTracker::MaybeDiscardSoon()
-{
-  // Are we carrying around too much decoded image data?  If so, enqueue an
-  // event to try to get us down under our limit.
-  if (sCurrentDecodedImageBytes > sMaxDecodedImageKB * 1024 &&
-      !sDiscardableImages.isEmpty() && !sDiscardRunnablePending) {
-    sDiscardRunnablePending = true;
-    nsRefPtr<DiscardRunnable> runnable = new DiscardRunnable();
-    NS_DispatchToCurrentThread(runnable);
-  }
+  // If there's nothing in front of the sentinel, the next callback
+  // is guaranteed to be a no-op. Disable the timer as an optimization.
+  if (sSentinel.prev == &sHead)
+    TimerOff();
 }
 
 } // namespace image
