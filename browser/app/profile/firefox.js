@@ -1142,7 +1142,7 @@ pref("full-screen-api.approval-required", true);
 // Startup Crash Tracking
 // number of startup crashes that can occur before starting into safe mode automatically
 // (this pref has no effect if more than 6 hours have passed since the last crash)
-pref("toolkit.startup.max_resumed_crashes", 2);
+pref("toolkit.startup.max_resumed_crashes", 3);
 
 // The maximum amount of decoded image data we'll willingly keep around (we
 // might keep around more than this, but we'll try to get down to this value).

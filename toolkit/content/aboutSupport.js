@@ -3,9 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cu = Components.utils;
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -579,23 +579,8 @@ function openProfileDirectory() {
  * Profile reset is only supported for the default profile if the appropriate migrator exists.
  */
 function populateResetBox() {
-  let profileService = Cc["@mozilla.org/toolkit/profile-service;1"]
-                         .getService(Ci.nsIToolkitProfileService);
-  let currentProfileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-
-#expand const MOZ_APP_NAME = "__MOZ_APP_NAME__";
-#expand const MOZ_BUILD_APP = "__MOZ_BUILD_APP__";
-
-  // Only show the reset box for the default profile if the self-migrator used for reset exists.
-  try {
-    if (!currentProfileDir.equals(profileService.selectedProfile.rootDir) ||
-        !("@mozilla.org/profile/migrator;1?app=" + MOZ_BUILD_APP + "&type=" + MOZ_APP_NAME in Cc))
-      return;
+  if (resetSupported())
     document.getElementById("reset-box").style.visibility = "visible";
-  } catch (e) {
-    // Catch exception when there is no selected profile.
-    Cu.reportError(e);
-  }
 }
 
 /**
