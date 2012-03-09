@@ -60,6 +60,7 @@ _BROWSER_TEST_FILES = \
   browser_ruleview_manipulation.js \
   browser_ruleview_override.js \
   browser_ruleview_ui.js \
+  browser_ruleview_focus.js \
   browser_bug705707_is_content_stylesheet.js \
   browser_bug722196_property_view_media_queries.js \
   browser_bug722196_rule_view_media_queries.js \
