@@ -51,11 +51,12 @@ public class HTTPFailureException extends SyncException {
 
   @Override
   public String toString() {
-    String errorMessage = "[unknown error message]";
+    String errorMessage;
     try {
       errorMessage = this.response.getErrorMessage();
     } catch (Exception e) {
       // Oh well.
+      errorMessage = "[unknown error message]";
     }
     return "<HTTPFailureException " + this.response.getStatusCode() +
            " :: (" + errorMessage + ")>";

@@ -53,11 +53,6 @@ public class AndroidBrowserBookmarksServerSyncStage extends ServerSyncStage {
   private static final long   BOOKMARKS_REQUEST_LIMIT = 5000;         // Sanity limit.
 
   @Override
-  public void execute(org.mozilla.gecko.sync.GlobalSession session) throws NoSuchStageException {
-    super.execute(session);
-  }
-
-  @Override
   protected String getCollection() {
     return "bookmarks";
   }
