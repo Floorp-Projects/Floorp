@@ -50,7 +50,7 @@
 
 #include "gfxImageSurface.h"
 #include "gfxQPainterSurface.h"
-#include "gfxUnicodeProperties.h"
+#include "nsUnicodeProperties.h"
 
 #ifdef MOZ_PANGO
 #include "gfxPangoFonts.h"
@@ -80,6 +80,7 @@
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
+using namespace mozilla::unicode;
 
 #define DEFAULT_RENDER_MODE RENDER_DIRECT
 
@@ -543,7 +544,7 @@ gfxQtPlatform::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
         return nsnull;
     }
 
-    GlobalFontMatch data(aCh, gfxUnicodeProperties::GetScriptCode(aCh),
+    GlobalFontMatch data(aCh, GetScriptCode(aCh),
                          (aFont ? aFont->GetStyle() : nsnull));
 
     // find fonts that support the character
