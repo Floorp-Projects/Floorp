@@ -50,6 +50,7 @@
 
 #include "gfxImageSurface.h"
 #include "gfxQPainterSurface.h"
+#include "gfxUnicodeProperties.h"
 
 #ifdef MOZ_PANGO
 #include "gfxPangoFonts.h"
@@ -526,7 +527,7 @@ FindFontForCharProc(nsStringHashKey::KeyType aKey,
                     nsRefPtr<FontFamily>& aFontFamily,
                     void* aUserArg)
 {
-    FontSearch *data = (FontSearch*)aUserArg;
+    GlobalFontMatch *data = (GlobalFontMatch*)aUserArg;
     aFontFamily->FindFontForChar(data);
     return PL_DHASH_NEXT;
 }
@@ -542,7 +543,8 @@ gfxQtPlatform::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
         return nsnull;
     }
 
-    FontSearch data(aCh, aFont);
+    GlobalFontMatch data(aCh, gfxUnicodeProperties::GetScriptCode(aCh),
+                         (aFont ? aFont->GetStyle() : nsnull));
 
     // find fonts that support the character
     gPlatformFonts->Enumerate(FindFontForCharProc, &data);

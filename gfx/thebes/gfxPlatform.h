@@ -371,6 +371,15 @@ public:
     // helper method to add a pref lang to an array, if not already in array
     static void AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPrefLang aAddLang);
 
+    // returns a list of commonly used fonts for a given character
+    // these are *possible* matches, no cmap-checking is done at this level
+    virtual void GetCommonFallbackFonts(const PRUint32 /*aCh*/,
+                                        PRInt32 /*aRunScript*/,
+                                        nsTArray<const char*>& /*aFontList*/)
+    {
+        // platform-specific override, by default do nothing
+    }
+
     // helper method to indicate if we want to use Azure content drawing
     static bool UseAzureContentDrawing();
     
