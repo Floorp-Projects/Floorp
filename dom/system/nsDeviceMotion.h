@@ -43,6 +43,10 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
+#include "nsIDOMDeviceOrientationEvent.h"
+#include "nsIDOMDeviceMotionEvent.h"
+#include "nsDOMDeviceMotionEvent.h"
+#include "mozilla/TimeStamp.h"
 
 #define NS_DEVICE_MOTION_CID \
 { 0xecba5203, 0x77da, 0x465a, \
@@ -91,10 +95,16 @@ private:
                           double x,
                           double y,
                           double z);
-  bool mEnabled;
 
   virtual void Startup()  = 0;
   virtual void Shutdown() = 0;
+
+  bool mEnabled;
+  mozilla::TimeStamp mLastDOMMotionEventTime;
+  nsRefPtr<nsDOMDeviceAcceleration> mLastAcceleration;
+  nsRefPtr<nsDOMDeviceAcceleration> mLastAccelerationIncluduingGravity;
+  nsRefPtr<nsDOMDeviceRotationRate> mLastRotationRate;
+
 };
 
 #endif

@@ -82,4 +82,7 @@ LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
 endif
 endif
 
+# We fire the nsDOMDeviceAcceleration
+LOCAL_INCLUDES += -I$(topsrcdir)/content/events/src
+
 include $(topsrcdir)/config/rules.mk
