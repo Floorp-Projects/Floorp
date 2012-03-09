@@ -202,6 +202,11 @@ add_test(function test_GsmPDUHelper_calculateUserDataLength() {
   //   the best choice should be the second one.
   test_calc("\\\\\\\\\\\\\\",
             [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 14, 0, 0, 0], [[3, 1], [0, 0]]);
+  // - Case 2, possible early return non-best choice. The original code will
+  //   get total cost 6 in the first run and returns immediately. With correct
+  //   fix, the best choice should be the second one.
+  test_calc(ESCAPE + ESCAPE + ESCAPE + ESCAPE + ESCAPE + "\\",
+            [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 0, 0, 0], [[3, 0], [0, 0]]);
 
   run_next_test();
 });
