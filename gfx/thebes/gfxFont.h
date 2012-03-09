@@ -487,16 +487,24 @@ private:
 };
 
 
-// used when picking fallback font
-struct FontSearch {
-    FontSearch(const PRUint32 aCharacter, gfxFont *aFont) :
-        mCh(aCharacter), mFontToMatch(aFont), mMatchRank(0), mCount(0) {
-    }
-    const PRUint32         mCh;
-    gfxFont*               mFontToMatch;
-    PRInt32                mMatchRank;
-    nsRefPtr<gfxFontEntry> mBestMatch;
-    PRUint32               mCount;
+// used when iterating over all fonts looking for a match for a given character
+struct GlobalFontMatch {
+    GlobalFontMatch(const PRUint32 aCharacter,
+                    PRInt32 aRunScript,
+                    const gfxFontStyle *aStyle) :
+        mCh(aCharacter), mRunScript(aRunScript), mStyle(aStyle),
+        mMatchRank(0), mCount(0), mCmapsTested(0)
+        {
+
+        }
+
+    const PRUint32         mCh;          // codepoint to be matched
+    PRInt32                mRunScript;   // Unicode script for the codepoint
+    const gfxFontStyle*    mStyle;       // style to match
+    PRInt32                mMatchRank;   // metric indicating closest match
+    nsRefPtr<gfxFontEntry> mBestMatch;   // current best match
+    PRUint32               mCount;       // number of fonts matched
+    PRUint32               mCmapsTested; // number of cmaps tested
 };
 
 class gfxFontFamily {
@@ -557,9 +565,12 @@ public:
     gfxFontEntry *FindFontForStyle(const gfxFontStyle& aFontStyle, 
                                    bool& aNeedsSyntheticBold);
 
-    // iterates over faces looking for a match with a given characters
+    // checks for a matching font within the family
     // used as part of the font fallback process
-    void FindFontForChar(FontSearch *aMatchData);
+    void FindFontForChar(GlobalFontMatch *aMatchData);
+
+    // checks all fonts for a matching font within the family
+    void SearchAllFontsForChar(GlobalFontMatch *aMatchData);
 
     // read in other family names, if any, and use functor to add each into cache
     virtual void ReadOtherFamilyNames(gfxPlatformFontList *aPlatformFontList);
@@ -582,7 +593,7 @@ public:
     gfxFontEntry* FindFont(const nsAString& aPostscriptName);
 
     // read in cmaps for all the faces
-    void ReadCMAP() {
+    void ReadAllCMAPs() {
         PRUint32 i, numFonts = mAvailableFonts.Length();
         for (i = 0; i < numFonts; i++) {
             gfxFontEntry *fe = mAvailableFonts[i];
@@ -598,7 +609,7 @@ public:
 
     bool TestCharacterMap(PRUint32 aCh) {
         if (!mCharacterMapInitialized) {
-            ReadCMAP();
+            ReadAllCMAPs();
         }
         return mCharacterMap.test(aCh);
     }
@@ -2975,7 +2986,8 @@ public:
     // search through pref fonts for a character, return nsnull if no matching pref font
     virtual already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
 
-    virtual already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
+    virtual already_AddRefed<gfxFont>
+        WhichSystemFontSupportsChar(PRUint32 aCh, PRInt32 aRunScript);
 
     template<typename T>
     void ComputeRanges(nsTArray<gfxTextRange>& mRanges,

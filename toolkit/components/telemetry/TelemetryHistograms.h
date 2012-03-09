@@ -104,6 +104,7 @@ HISTOGRAM(MEMORY_FREE_PURGED_PAGES_MS, 1, 1024, 10, EXPONENTIAL, "Time(ms) to pu
 #elif defined(XP_WIN)
 HISTOGRAM(LOW_MEMORY_EVENTS_VIRTUAL, 1, 1024, 21, EXPONENTIAL, "Number of low-virtual-memory events fired since last ping")
 HISTOGRAM(LOW_MEMORY_EVENTS_PHYSICAL, 1, 1024, 21, EXPONENTIAL, "Number of low-physical-memory events fired since last ping")
+HISTOGRAM(LOW_MEMORY_EVENTS_COMMIT_SPACE, 1, 1024, 21, EXPONENTIAL, "Number of low-commit-space events fired since last ping")
 #endif
 
 #if defined(XP_WIN)
@@ -134,6 +135,8 @@ HISTOGRAM(MAC_INITFONTLIST_TOTAL, 1, 30000, 10, EXPONENTIAL, "gfxMacPlatformFont
 
 HISTOGRAM(SYSTEM_FONT_FALLBACK, 1, 100000, 50, EXPONENTIAL, "System font fallback (us)")
 HISTOGRAM(SYSTEM_FONT_FALLBACK_FIRST, 1, 40000, 20, EXPONENTIAL, "System font fallback, first call (ms)")
+HISTOGRAM(SYSTEM_FONT_FALLBACK_SCRIPT, 1, 110, 111, LINEAR, "System font fallback script")
+
 HISTOGRAM(STARTUP_CACHE_AGE_HOURS, 1, 3000, 20, EXPONENTIAL, "Startup cache age (hours)")
 
 /**
@@ -146,6 +149,7 @@ HISTOGRAM(WORD_CACHE_LOOKUP_SCRIPT, 1, 110, 111, LINEAR, "Word cache lookup (scr
 HISTOGRAM(WORD_CACHE_HIT_SCRIPT, 1, 110, 111, LINEAR, "Word cache hit (script)")
 
 HISTOGRAM_BOOLEAN(FONT_CACHE_HIT, "font cache hit")
+HISTOGRAM_BOOLEAN(BAD_FALLBACK_FONT, "system fallback font can't be used")
 
 HISTOGRAM_BOOLEAN(SHUTDOWN_OK, "Did the browser start after a successful shutdown")
 

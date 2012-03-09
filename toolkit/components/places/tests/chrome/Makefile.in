@@ -61,6 +61,7 @@ _CHROME_FILES	= \
 		test_favicon_annotations.xul \
 		test_303567.xul \
 		test_381357.xul \
+		test_reloadLivemarks.xul \
 		$(NULL)
 
 libs:: $(_HTTP_FILES)

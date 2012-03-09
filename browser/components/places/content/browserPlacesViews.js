@@ -657,7 +657,9 @@ PlacesViewBase.prototype = {
               aPlacesNode._siteURI = aLivemark.siteURI;
               if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED) {
                 aLivemark.registerForUpdates(aPlacesNode, this);
+                // Prioritize the current livemark.
                 aLivemark.reload();
+                PlacesUtils.livemarks.reloadLivemarks();
                 if (shouldInvalidate)
                   this.invalidateContainer(aPlacesNode);
               }
@@ -900,11 +902,6 @@ PlacesToolbar.prototype = {
   __proto__: PlacesViewBase.prototype,
 
   _cbEvents: ["dragstart", "dragover", "dragexit", "dragend", "drop",
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-              "mousedown", "mouseup",
-#endif
-#endif
               "mousemove", "mouseover", "mouseout"],
 
   QueryInterface: function PT_QueryInterface(aIID) {
@@ -1101,16 +1098,6 @@ PlacesToolbar.prototype = {
       case "mouseout":
         this._onMouseOut(aEvent);
         break;
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-      case "mouseup":
-        this._onMouseUp(aEvent);
-        break;
-      case "mousedown":
-        this._onMouseDown(aEvent);
-        break;
-#endif
-#endif
       case "popupshowing":
         this._onPopupShowing(aEvent);
         break;
@@ -1538,14 +1525,6 @@ PlacesToolbar.prototype = {
         draggedElt.getAttribute("type") == "menu") {
       // If the drag gesture on a container is toward down we open instead
       // of dragging.
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-      if (this._mouseDownTimer) {
-        this._mouseDownTimer.cancel();
-        this._mouseDownTimer = null;
-      }
-#endif
-#endif
       let translateY = this._cachedMouseMoveEvent.clientY - aEvent.clientY;
       let translateX = this._cachedMouseMoveEvent.clientX - aEvent.clientX;
       if ((translateY) >= Math.abs(translateX/2)) {
@@ -1717,47 +1696,6 @@ PlacesToolbar.prototype = {
         parent.removeAttribute("dragover");
     }
   },
-
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-  _onMouseDown: function PT__onMouseDown(aEvent) {
-    let target = aEvent.target;
-    if (aEvent.button == 0 &&
-        target.localName == "toolbarbutton" &&
-        target.getAttribute("type") == "menu") {
-      this._allowPopupShowing = false;
-      // On Linux we can open the popup only after a delay.
-      // Indeed as soon as the menupopup opens we are unable to start a
-      // drag aEvent.  See bug 500081 for details.
-      this._mouseDownTimer = Cc["@mozilla.org/timer;1"].
-                             createInstance(Ci.nsITimer);
-      let callback = {
-        _self: this,
-        _target: target,
-        notify: function(timer) {
-          this._target.open = true;
-          this._mouseDownTimer = null;
-        }
-      };
-
-      this._mouseDownTimer.initWithCallback(callback, 300,
-                                            Ci.nsITimer.TYPE_ONE_SHOT);
-    }
-  },
-
-  _onMouseUp: function PT__onMouseUp(aEvent) {
-    if (aEvent.button != 0)
-      return;
-
-    if (this._mouseDownTimer) {
-      // On a click (down/up), we should open the menu popup.
-      this._mouseDownTimer.cancel();
-      this._mouseDownTimer = null;
-      aEvent.target.open = true;
-    }
-  },
-#endif
-#endif
 
   _onMouseMove: function PT__onMouseMove(aEvent) {
     // Used in dragStart to prevent dragging folders when dragging down.

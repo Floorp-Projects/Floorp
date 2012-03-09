@@ -45,6 +45,7 @@
 #include "gfxPlatformGtk.h"
 
 #include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 #include "gfxFontconfigUtils.h"
 #ifdef MOZ_PANGO
 #include "gfxPangoFonts.h"
@@ -82,6 +83,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::unicode;
 
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
@@ -668,7 +670,7 @@ FindFontForCharProc(nsStringHashKey::KeyType aKey,
                     nsRefPtr<FontFamily>& aFontFamily,
                     void* aUserArg)
 {
-    FontSearch *data = (FontSearch*)aUserArg;
+    GlobalFontMatch *data = (GlobalFontMatch*)aUserArg;
     aFontFamily->FindFontForChar(data);
     return PL_DHASH_NEXT;
 }
@@ -684,7 +686,8 @@ gfxPlatformGtk::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
         return nsnull;
     }
 
-    FontSearch data(aCh, aFont);
+    GlobalFontMatch data(aCh, GetScriptCode(aCh),
+                         (aFont ? aFont->GetStyle() : nsnull));
 
     // find fonts that support the character
     gPlatformFonts->Enumerate(FindFontForCharProc, &data);
