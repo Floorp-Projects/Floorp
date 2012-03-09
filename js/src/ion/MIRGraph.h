@@ -70,31 +70,6 @@ enum BranchDirection {
 
 class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 {
-    static const uint32 NotACopy = uint32(-1);
-
-    struct StackSlot {
-        MDefinition *def;
-        uint32 copyOf;
-        union {
-            uint32 firstCopy; // copyOf == NotACopy: first copy in the linked list
-            uint32 nextCopy;  // copyOf != NotACopy: next copy in the linked list
-        };
-
-        void set(MDefinition *def) {
-            this->def = def;
-            copyOf = NotACopy;
-            firstCopy = NotACopy;
-        }
-        bool isCopy() const {
-            return copyOf != NotACopy;
-        }
-        bool isCopied() const {
-            if (isCopy())
-                return false;
-            return firstCopy != NotACopy;
-        }
-    };
-
   public:
     enum Kind {
         NORMAL,
@@ -119,11 +94,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Sets a variable slot to the top of the stack, correctly creating copies
     // as needed.
     void setVariable(uint32 slot);
-
-    // Update the index of the linked list of stack slot during swapAt
-    // operations.  The value must have been copied from the source to the
-    // destination before calling this function.
-    void updateIndexes(StackSlot &elem, uint32 oldIdx, uint32 newIdx);
 
   public:
     ///////////////////////////////////////////////////////
@@ -451,7 +421,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     InlineList<MInstruction> instructions_;
     Vector<MBasicBlock *, 1, IonAllocPolicy> predecessors_;
     InlineForwardList<MPhi> phis_;
-    FixedList<StackSlot> slots_;
+    FixedList<MDefinition *> slots_;
     uint32 stackPosition_;
     MControlInstruction *lastIns_;
     jsbytecode *pc_;
