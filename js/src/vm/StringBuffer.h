@@ -26,10 +26,6 @@ namespace js {
  * Well-sized extractions (which waste no more than 1/4 of their char
  * buffer space) are guaranteed for strings built by this interface.
  * See |extractWellSized|.
- *
- * Note: over-allocation is not checked for when using the infallible
- * |replaceRawBuffer|, so the implementation of |finishString| also must check
- * for over-allocation.
  */
 class StringBuffer
 {
@@ -38,7 +34,6 @@ class StringBuffer
 
     CharBuffer cb;
 
-    static inline bool checkLength(JSContext *cx, size_t length);
     inline bool checkLength(size_t length);
     JSContext *context() const { return cb.allocPolicy().context(); }
     jschar *extractWellSized();
@@ -47,7 +42,8 @@ class StringBuffer
     void operator=(const StringBuffer &other) MOZ_DELETE;
 
   public:
-    explicit inline StringBuffer(JSContext *cx);
+    explicit StringBuffer(JSContext *cx) : cb(cx) { }
+
     inline bool reserve(size_t len);
     inline bool resize(size_t len);
     inline bool append(const jschar c);
@@ -57,6 +53,11 @@ class StringBuffer
     inline bool append(JSLinearString *str);
     inline bool appendN(const jschar c, size_t n);
     inline bool appendInflated(const char *cstr, size_t len);
+
+    template <size_t ArrayLength>
+    bool append(const char (&array)[ArrayLength]) {
+        return cb.append(array, array + ArrayLength - 1); /* No trailing '\0'. */
+    }
 
     /* Infallible variants usable when the corresponding space is reserved. */
     void infallibleAppend(const jschar c) {
@@ -72,11 +73,6 @@ class StringBuffer
         cb.infallibleAppendN(c, n);
     }
 
-    JSAtom *atomize(unsigned flags = 0);
-    static JSAtom *atomize(JSContext *cx, const CharBuffer &cb, unsigned flags = 0);
-    static JSAtom *atomize(JSContext *cx, const jschar *begin, size_t length, unsigned flags = 0);
-
-    void replaceRawBuffer(jschar *chars, size_t len) { cb.replaceRawBuffer(chars, len); }
     jschar *begin() { return cb.begin(); }
     jschar *end() { return cb.end(); }
     const jschar *begin() const { return cb.begin(); }
@@ -92,17 +88,14 @@ class StringBuffer
 
     /* Identical to finishString() except that an atom is created. */
     JSAtom *finishAtom();
-
-    template <size_t ArrayLength>
-    bool append(const char (&array)[ArrayLength]) {
-        return cb.append(array, array + ArrayLength - 1); /* No trailing '\0'. */
-    }
 };
 
-inline
-StringBuffer::StringBuffer(JSContext *cx)
-  : cb(cx)
-{}
+inline bool
+StringBuffer::append(JSLinearString *str)
+{
+    JS::Anchor<JSString *> anch(str);
+    return cb.append(str->chars(), str->length());
+}
 
 inline bool
 StringBuffer::append(JSString *str)
@@ -111,13 +104,6 @@ StringBuffer::append(JSString *str)
     if (!linear)
         return false;
     return append(linear);
-}
-
-inline bool
-StringBuffer::append(JSLinearString *str)
-{
-    JS::Anchor<JSString *> anch(str);
-    return cb.append(str->chars(), str->length());
 }
 
 inline size_t

@@ -9,14 +9,60 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "mozilla/LazyIdleThread.h"
-
+#include <dlfcn.h>
 #include "BluetoothAdapter.h"
 
-#if defined(MOZ_WIDGET_GONK)
-#include <bluedroid/bluetooth.h>
-#endif
-
 USING_BLUETOOTH_NAMESPACE
+
+static struct BluedroidFunctions {
+  bool initialized;
+  bool tried_initialization;
+
+  BluedroidFunctions() :
+    initialized(false),
+    tried_initialization(false)
+  {
+  }
+  
+  int (* bt_enable)();
+  int (* bt_disable)();
+  int (* bt_is_enabled)();
+} sBluedroidFunctions;
+
+static bool EnsureBluetoothInit() {
+  if (sBluedroidFunctions.tried_initialization)
+  {
+    return sBluedroidFunctions.initialized;
+  }
+
+  sBluedroidFunctions.initialized = false;
+  sBluedroidFunctions.tried_initialization = true;
+  
+  void* handle = dlopen("libbluedroid.so", RTLD_LAZY);
+
+  if(!handle) {
+    NS_ERROR("Failed to open libbluedroid.so, bluetooth cannot run");
+    return false;
+  }
+
+  sBluedroidFunctions.bt_enable = (int (*)())dlsym(handle, "bt_enable");
+  if(sBluedroidFunctions.bt_enable == NULL) {
+    NS_ERROR("Failed to attach bt_enable function");
+    return false;
+  }
+  sBluedroidFunctions.bt_disable = (int (*)())dlsym(handle, "bt_disable");
+  if(sBluedroidFunctions.bt_disable == NULL) {
+    NS_ERROR("Failed to attach bt_disable function");
+    return false;
+  }
+  sBluedroidFunctions.bt_is_enabled = (int (*)())dlsym(handle, "bt_is_enabled");
+  if(sBluedroidFunctions.bt_is_enabled == NULL) {
+    NS_ERROR("Failed to attach bt_is_enabled function");
+    return false;
+  }
+  sBluedroidFunctions.initialized = true;
+  return true;
+}
 
 class ToggleBtResultTask : public nsRunnable
 {
@@ -54,7 +100,7 @@ class ToggleBtResultTask : public nsRunnable
 class ToggleBtTask : public nsRunnable
 {
   public:
-    ToggleBtTask(bool onOff, BluetoothAdapter* adapterPtr) 
+    ToggleBtTask(bool onOff, BluetoothAdapter* adapterPtr)
       : mOnOff(onOff),
         mAdapterPtr(adapterPtr) 
     {
@@ -65,18 +111,20 @@ class ToggleBtTask : public nsRunnable
     {
       MOZ_ASSERT(!NS_IsMainThread());
 
+      if(!EnsureBluetoothInit()) {
+        NS_ERROR("Failed to load bluedroid library.\n");
+        return NS_ERROR_FAILURE;
+      }
+
       bool result;
 
       //Toggle BT here
-#if defined(MOZ_WIDGET_GONK)  
+
       if (mOnOff) {
-        result = bt_enable();
+        result = sBluedroidFunctions.bt_enable();
       } else {
-        result = bt_disable();
+        result = sBluedroidFunctions.bt_disable();
       }
-#else 
-      result = true;
-#endif
 
       // Create a result thread and pass it to Main Thread, 
       nsCOMPtr<nsIRunnable> resultRunnable = new ToggleBtResultTask(mAdapterPtr, result);
@@ -89,8 +137,8 @@ class ToggleBtTask : public nsRunnable
     }
 
   private:
-    nsRefPtr<BluetoothAdapter> mAdapterPtr;
     bool mOnOff;
+    nsRefPtr<BluetoothAdapter> mAdapterPtr;
 };
 
 DOMCI_DATA(BluetoothAdapter, BluetoothAdapter)
@@ -123,18 +171,37 @@ BluetoothAdapter::BluetoothAdapter()
 NS_IMETHODIMP
 BluetoothAdapter::GetPower(bool* aPower)
 {
+#ifdef MOZ_WIDGET_GONK
+  if(!EnsureBluetoothInit()) {
+    NS_ERROR("Failed to load bluedroid library.\n");
+    return NS_ERROR_FAILURE;
+  }
+  *aPower = sBluedroidFunctions.bt_is_enabled();
+#else
   *aPower = mPower;
-
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 BluetoothAdapter::SetPower(bool aPower)
 {
+
+#ifdef MOZ_WIDGET_GONK
+  // Platform specific check for gonk until object is divided in
+  // different implementations per platform. Linux doesn't require
+  // bluetooth firmware loading, but code should work otherwise.
+  if(!EnsureBluetoothInit()) {
+    NS_ERROR("Failed to load bluedroid library.\n");
+    return NS_ERROR_FAILURE;
+  }
+#endif
   if (mPower != aPower) {
     mPower = aPower;
 
+#ifdef MOZ_WIDGET_GONK
     return ToggleBluetoothAsync();
+#endif
   }
 
   return NS_OK;

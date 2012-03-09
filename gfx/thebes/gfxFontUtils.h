@@ -41,6 +41,7 @@
 #define GFX_FONT_UTILS_H
 
 #include "gfxTypes.h"
+#include "gfxPlatform.h"
 
 #include "prtypes.h"
 #include "nsAlgorithm.h"
@@ -96,6 +97,11 @@ public:
             return false;
         return ((block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)]) & (1 << (aIndex & 0x7))) != 0;
     }
+
+#if PR_LOGGING
+    // dump out contents of bitmap
+    void Dump(const char* aPrefix, eGfxLog aWhichLog) const;
+#endif
 
     bool TestRange(PRUint32 aStart, PRUint32 aEnd) {
         PRUint32 startBlock, endBlock, blockLen;

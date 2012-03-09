@@ -112,6 +112,8 @@ public class GeckoAppShell
     static File sHomeDir = null;
     static private int sDensityDpi = 0;
     private static Boolean sSQLiteLibsLoaded = false;
+    private static Boolean sLibsSetup = false;
+    private static File sGREDir = null;
 
     private static HashMap<String, ArrayList<GeckoEventListener>> mEventListeners;
 
@@ -141,13 +143,22 @@ public class GeckoAppShell
     public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
 
-    public static void reportJavaCrash(Throwable e) {
-        Log.e(LOGTAG, "top level exception", e);
+    public static void registerGlobalExceptionHandler() {
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            public void uncaughtException(Thread thread, Throwable e) {
+                Log.e(LOGTAG, ">>> REPORTING UNCAUGHT EXCEPTION FROM THREAD "
+                              + thread.getId() + " (\"" + thread.getName() + "\")", e);
+                reportJavaCrash(getStackTraceString(e));
+            }
+        });
+    }
+
+    private static String getStackTraceString(Throwable e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
         pw.flush();
-        reportJavaCrash(sw.toString());
+        return sw.toString();
     }
 
     private static native void reportJavaCrash(String stackTrace);
@@ -212,16 +223,16 @@ public class GeckoAppShell
         return GeckoBackgroundThread.getHandler();
     }
 
-    public static File getCacheDir() {
+    public static File getCacheDir(Context context) {
         if (sCacheFile == null)
-            sCacheFile = GeckoApp.mAppContext.getCacheDir();
+            sCacheFile = context.getCacheDir();
         return sCacheFile;
     }
 
-    public static long getFreeSpace() {
+    public static long getFreeSpace(Context context) {
         try {
             if (sFreeSpace == -1) {
-                File cacheDir = getCacheDir();
+                File cacheDir = getCacheDir(context);
                 if (cacheDir != null) {
                     StatFs cacheStats = new StatFs(cacheDir.getPath());
                     sFreeSpace = cacheStats.getFreeBlocks() *
@@ -236,17 +247,46 @@ public class GeckoAppShell
         return sFreeSpace;
     }
 
+    public static File getGREDir(Context context) {
+        if (sGREDir == null)
+            sGREDir = new File(context.getApplicationInfo().dataDir);
+        return sGREDir;
+    }
+
     // java-side stuff
-    public static boolean loadLibsSetup(String apkName) {
+    public static void loadLibsSetup(Context context) {
+        if (sLibsSetup)
+            return;
+
         // The package data lib directory isn't placed in ld.so's
         // search path, so we have to manually load libraries that
         // libxul will depend on.  Not ideal.
-        GeckoApp geckoApp = GeckoApp.mAppContext;
-        GeckoProfile profile = geckoApp.getProfile();
-        profile.moveProfilesToAppInstallLocation();
+        GeckoProfile profile = GeckoProfile.get(context);
 
+        File cacheFile = getCacheDir(context);
+        putenv("GRE_HOME=" + getGREDir(context).getPath());
+        File[] files = cacheFile.listFiles();
+        if (files != null) {
+            Iterator<File> cacheFiles = Arrays.asList(files).iterator();
+            while (cacheFiles.hasNext()) {
+                File libFile = cacheFiles.next();
+                if (libFile.getName().endsWith(".so"))
+                    libFile.delete();
+            }
+        }
+
+        // setup the libs cache
+        String linkerCache = System.getenv("MOZ_LINKER_CACHE");
+        if (System.getenv("MOZ_LINKER_CACHE") == null) {
+            GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
+        }
+        sLibsSetup = true;
+    }
+
+    private static void setupPluginEnvironment(GeckoApp context) {
+        // setup plugin path directories
         try {
-            String[] dirs = GeckoApp.mAppContext.getPluginDirectories();
+            String[] dirs = context.getPluginDirectories();
             StringBuffer pluginSearchPath = new StringBuffer();
             for (int i = 0; i < dirs.length; i++) {
                 Log.i(LOGTAG, "dir: " + dirs[i]);
@@ -254,49 +294,22 @@ public class GeckoAppShell
                 pluginSearchPath.append(":");
             }
             GeckoAppShell.putenv("MOZ_PLUGIN_PATH="+pluginSearchPath);
+
+            File pluginDataDir = context.getDir("plugins", 0);
+            GeckoAppShell.putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());
+
         } catch (Exception ex) {
             Log.i(LOGTAG, "exception getting plugin dirs", ex);
         }
+    }
 
-        GeckoAppShell.putenv("HOME=" + profile.getFilesDir().getPath());
-        GeckoAppShell.putenv("GRE_HOME=" + GeckoApp.sGREDir.getPath());
-        Intent i = geckoApp.getIntent();
-        String env = i.getStringExtra("env0");
-        Log.i(LOGTAG, "env0: "+ env);
-        for (int c = 1; env != null; c++) {
-            GeckoAppShell.putenv(env);
-            env = i.getStringExtra("env" + c);
-            Log.i(LOGTAG, "env"+ c +": "+ env);
-        }
-
-        File f = geckoApp.getDir("tmp", Context.MODE_WORLD_READABLE |
-                                 Context.MODE_WORLD_WRITEABLE );
-
-        if (!f.exists())
-            f.mkdirs();
-
-        GeckoAppShell.putenv("TMPDIR=" + f.getPath());
-
-        f = Environment.getDownloadCacheDirectory();
-        GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
-
-        File cacheFile = getCacheDir();
-        String linkerCache = System.getenv("MOZ_LINKER_CACHE");
-        if (System.getenv("MOZ_LINKER_CACHE") == null) {
-            GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
-        }
-
-        File pluginDataDir = GeckoApp.mAppContext.getDir("plugins", 0);
-        GeckoAppShell.putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());
-
-        // gingerbread introduces File.getUsableSpace(). We should use that.
-        long freeSpace = getFreeSpace();
+    private static void setupDownloadEnvironment(GeckoApp context) {
         try {
             File downloadDir = null;
             File updatesDir  = null;
             if (Build.VERSION.SDK_INT >= 8) {
                 downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                updatesDir  = GeckoApp.mAppContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                updatesDir  = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
             } else {
                 updatesDir = downloadDir = new File(Environment.getExternalStorageDirectory().getPath(), "download");
             }
@@ -306,38 +319,63 @@ public class GeckoAppShell
         catch (Exception e) {
             Log.i(LOGTAG, "No download directory has been found: " + e);
         }
-
-        putLocaleEnv();
-
-        boolean extractLibs = GeckoApp.ACTION_DEBUG.equals(i.getAction());
-        if (!extractLibs) {
-            // remove any previously extracted libs
-            File[] files = cacheFile.listFiles();
-            if (files != null) {
-                Iterator<File> cacheFiles = Arrays.asList(files).iterator();
-                while (cacheFiles.hasNext()) {
-                    File libFile = cacheFiles.next();
-                    if (libFile.getName().endsWith(".so"))
-                        libFile.delete();
-                }
-            }
-        }
-        return extractLibs;
     }
 
-    public static void ensureSQLiteLibsLoaded(String apkName) {
+    public static void setupGeckoEnvironment(Context context) {
+        GeckoProfile profile = GeckoProfile.get(context);
+        profile.moveProfilesToAppInstallLocation();
+
+        setupPluginEnvironment((GeckoApp) context);
+        setupDownloadEnvironment((GeckoApp) context);
+
+        // profile home path
+        GeckoAppShell.putenv("HOME=" + profile.getFilesDir().getPath());
+
+        Intent i = null;
+        i = ((Activity)context).getIntent();
+
+        // if we have an intent (we're being launched by an activity)
+        // read in any environmental variables from it here
+        String env = i.getStringExtra("env0");
+        Log.i(LOGTAG, "env0: "+ env);
+        for (int c = 1; env != null; c++) {
+            GeckoAppShell.putenv(env);
+            env = i.getStringExtra("env" + c);
+            Log.i(LOGTAG, "env"+ c +": "+ env);
+        }
+        // setup the tmp path
+        File f = context.getDir("tmp", Context.MODE_WORLD_READABLE |
+                                 Context.MODE_WORLD_WRITEABLE );
+        if (!f.exists())
+            f.mkdirs();
+        GeckoAppShell.putenv("TMPDIR=" + f.getPath());
+
+        // setup the downloads path
+        f = Environment.getDownloadCacheDirectory();
+        GeckoAppShell.putenv("EXTERNAL_STORAGE=" + f.getPath());
+
+        putLocaleEnv();
+    }
+
+    public static void loadSQLiteLibs(Context context, String apkName) {
         if (sSQLiteLibsLoaded)
             return;
         synchronized(sSQLiteLibsLoaded) {
             if (sSQLiteLibsLoaded)
                 return;
-            loadSQLiteLibsNative(apkName, loadLibsSetup(apkName));
+            loadMozGlue();
+            // the extract libs parameter is being removed in bug 732069
+            loadSQLiteLibsNative(apkName, false);
             sSQLiteLibsLoaded = true;
         }
     }
 
+    public static void loadMozGlue() {
+        System.loadLibrary("mozglue");
+    }
+
     public static void loadGeckoLibs(String apkName) {
-        boolean extractLibs = loadLibsSetup(apkName);
+        loadLibsSetup(GeckoApp.mAppContext);
         loadGeckoLibsNative(apkName);
     }
 

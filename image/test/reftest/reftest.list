@@ -1,5 +1,5 @@
 # Check for 24-bit color mode (test for bug 414720)
-== colordepth.html about:blank
+skip-if(Android) == colordepth.html about:blank
 
 # "PngSuite, the official set of PNG test images"
 # Images by Willem van Schaik

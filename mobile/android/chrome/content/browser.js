@@ -507,7 +507,7 @@ var BrowserApp = {
     aParams = aParams || {};
 
     let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
+    let postData = ("postData" in aParams && aParams.postData) ? aParams.postData : null;
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
     let charset = "charset" in aParams ? aParams.charset : null;
 
@@ -830,16 +830,6 @@ var BrowserApp = {
     });
   },
 
-  getSearchOrURI: function getSearchOrURI(aParams) {
-    let uri;
-    if (aParams.engine) {
-      let engine = Services.search.getEngineByName(aParams.engine);
-      if (engine)
-        uri = engine.getSubmission(aParams.url).uri;
-    }
-    return uri ? uri.spec : aParams.url;
-  },
-
   scrollToFocusedInput: function(aBrowser) {
     let doc = aBrowser.contentDocument;
     if (!doc)
@@ -955,7 +945,15 @@ var BrowserApp = {
         flags: flags
       };
 
-      let url = this.getSearchOrURI(data);
+      let url = data.url;
+      if (data.engine) {
+        let engine = Services.search.getEngineByName(data.engine);
+        if (engine) {
+          let submission = engine.getSubmission(url);
+          url = submission.uri.spec;
+          params.postData = submission.postData;
+        }
+      }
 
       // Don't show progress throbber for about:home
       if (url == "about:home")
@@ -1745,6 +1743,8 @@ Tab.prototype = {
       /* Transform the page width and height based on the zoom factor. */
       pageWidth *= this._viewport.zoom;
       pageHeight *= this._viewport.zoom;
+
+      this._viewport.allowZoom  = this.metadata.allowZoom;
 
       /*
        * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
@@ -3520,7 +3520,8 @@ var PopupBlockerObserver = {
         let popupFeatures = pageReport[i].popupWindowFeatures;
         let popupName = pageReport[i].popupWindowName;
 
-        BrowserApp.addTab(popupURIspec);
+        let parent = BrowserApp.selectedTab;
+        BrowserApp.addTab(popupURIspec, { parentId: parent.id });
       }
     }
   }

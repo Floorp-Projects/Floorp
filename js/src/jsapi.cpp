@@ -841,7 +841,7 @@ JSRuntime::init(uint32_t maxbytes)
     }
 
     atomsCompartment->isSystemCompartment = true;
-    atomsCompartment->setGCLastBytes(8192, GC_NORMAL);
+    atomsCompartment->setGCLastBytes(8192, 8192, GC_NORMAL);
 
     if (!js_InitAtomState(this))
         return false;
@@ -1014,8 +1014,6 @@ StartRequest(JSContext *cx)
     if (rt->requestDepth) {
         rt->requestDepth++;
     } else {
-        AutoLockGC lock(rt);
-
         /* Indicate that a request is running. */
         rt->requestDepth = 1;
 
@@ -1034,10 +1032,6 @@ StopRequest(JSContext *cx)
         rt->requestDepth--;
     } else {
         rt->conservativeGC.updateForRequestEnd(rt->suspendCount);
-
-        /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
-        AutoLockGC lock(rt);
-
         rt->requestDepth = 0;
 
         if (rt->activityCallback)
@@ -1307,14 +1301,12 @@ SetOptionsCommon(JSContext *cx, unsigned options)
 JS_PUBLIC_API(uint32_t)
 JS_SetOptions(JSContext *cx, uint32_t options)
 {
-    AutoLockGC lock(cx->runtime);
     return SetOptionsCommon(cx, options);
 }
 
 JS_PUBLIC_API(uint32_t)
 JS_ToggleOptions(JSContext *cx, uint32_t options)
 {
-    AutoLockGC lock(cx->runtime);
     unsigned oldopts = cx->allOptions();
     unsigned newopts = oldopts ^ options;
     return SetOptionsCommon(cx, newopts);
@@ -2203,6 +2195,18 @@ JS_ComputeThis(JSContext *cx, jsval *vp)
     return call.thisv();
 }
 
+JS_PUBLIC_API(void)
+JS_MallocInCompartment(JSCompartment *comp, size_t nbytes)
+{
+    comp->mallocInCompartment(nbytes);
+}
+
+JS_PUBLIC_API(void)
+JS_FreeInCompartment(JSCompartment *comp, size_t nbytes)
+{
+    comp->freeInCompartment(nbytes);
+}
+
 JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes)
 {
@@ -2884,7 +2888,6 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
 {
     switch (key) {
       case JSGC_MAX_BYTES: {
-        AutoLockGC lock(rt);
         JS_ASSERT(value >= rt->gcBytes);
         rt->gcMaxBytes = value;
         break;
@@ -4268,7 +4271,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
          */
         Shape *tmp = (Shape *)pdata;
         MarkShapeUnbarriered(trc, &tmp, "prop iter shape");
-        JS_ASSERT(tmp == pdata);
+        obj->setPrivateUnbarriered(tmp);
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;
@@ -5511,20 +5514,8 @@ JS_GetOperationCallback(JSContext *cx)
 }
 
 JS_PUBLIC_API(void)
-JS_TriggerOperationCallback(JSContext *cx)
+JS_TriggerOperationCallback(JSRuntime *rt)
 {
-#ifdef JS_THREADSAFE
-    AutoLockGC lock(cx->runtime);
-#endif
-    cx->runtime->triggerOperationCallback();
-}
-
-JS_PUBLIC_API(void)
-JS_TriggerRuntimeOperationCallback(JSRuntime *rt)
-{
-#ifdef JS_THREADSAFE
-    AutoLockGC lock(rt);
-#endif
     rt->triggerOperationCallback();
 }
 

@@ -1322,12 +1322,18 @@ TokenStream::checkForKeyword(const jschar *s, size_t length, TokenKind *ttp, JSO
                                             JSMSG_RESERVED_ID, kw->chars);
         }
 
+        /* The let keyword is reserved on <1.7 */
+        if (kw->tokentype == TOK_LET) {
+            return ReportCompileErrorNumber(cx, this, NULL, JSREPORT_ERROR,
+                                            JSMSG_RESERVED_ID, kw->chars);
+        }
+
         /*
          * The keyword is not in this version. Treat it as an identifier,
-         * unless it is let or yield which we treat as TOK_STRICT_RESERVED by
-         * falling through to the code below (ES5 forbids them in strict mode).
+         * unless it is yield which we treat as TOK_STRICT_RESERVED by
+         * falling through to the code below (ES5 forbids it in strict mode).
          */
-        if (kw->tokentype != TOK_LET && kw->tokentype != TOK_YIELD)
+        if (kw->tokentype != TOK_YIELD)
             return true;
     }
 
