@@ -195,9 +195,6 @@ private: // data
   /** Indicates if the image data is currently locked */
   bool mLocked;
 
-  /** Have we called DiscardTracker::InformAllocation()? */
-  bool mInformedDiscardTracker;
-
 #ifdef XP_WIN
   bool mIsDDBSurface;
 #endif
