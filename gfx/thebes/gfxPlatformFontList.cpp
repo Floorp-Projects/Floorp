@@ -666,10 +666,12 @@ gfxPlatformFontList::InitLoader()
     mNumFamilies = mFontFamiliesToLoad.Length();
 }
 
-bool 
+bool
 gfxPlatformFontList::RunLoader()
 {
     PRUint32 i, endIndex = (mStartIndex + mIncrement < mNumFamilies ? mStartIndex + mIncrement : mNumFamilies);
+    bool loadCmaps = !UsesSystemFallback() ||
+        gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
 
     // for each font family, load in various font info
     for (i = mStartIndex; i < endIndex; i++) {
@@ -685,8 +687,10 @@ gfxPlatformFontList::RunLoader()
             continue;
         }
 
-        // load the cmaps
-        familyEntry->ReadAllCMAPs();
+        // load the cmaps if needed
+        if (loadCmaps) {
+            familyEntry->ReadAllCMAPs();
+        }
 
         // read in face names
         familyEntry->ReadFaceNames(this, mNeedFullnamePostscriptNames);
