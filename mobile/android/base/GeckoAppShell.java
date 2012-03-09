@@ -365,6 +365,7 @@ public class GeckoAppShell
                 return;
             loadMozGlue();
             // the extract libs parameter is being removed in bug 732069
+            loadLibsSetup(context);
             loadSQLiteLibsNative(apkName, false);
             sSQLiteLibsLoaded = true;
         }
