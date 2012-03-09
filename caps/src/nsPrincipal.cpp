@@ -93,9 +93,9 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsPrincipal,
 NS_IMETHODIMP_(nsrefcnt)
 nsPrincipal::AddRef()
 {
-  NS_PRECONDITION(PRInt32(mJSPrincipals.refcount) >= 0, "illegal refcnt");
+  NS_PRECONDITION(PRInt32(refcount) >= 0, "illegal refcnt");
   // XXXcaa does this need to be threadsafe?  See bug 143559.
-  nsrefcnt count = PR_ATOMIC_INCREMENT(&mJSPrincipals.refcount);
+  nsrefcnt count = PR_ATOMIC_INCREMENT(&refcount);
   NS_LOG_ADDREF(this, count, "nsPrincipal", sizeof(*this));
   return count;
 }
@@ -103,8 +103,8 @@ nsPrincipal::AddRef()
 NS_IMETHODIMP_(nsrefcnt)
 nsPrincipal::Release()
 {
-  NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");
-  nsrefcnt count = PR_ATOMIC_DECREMENT(&mJSPrincipals.refcount);
+  NS_PRECONDITION(0 != refcount, "dup release");
+  nsrefcnt count = PR_ATOMIC_DECREMENT(&refcount);
   NS_LOG_RELEASE(this, count, "nsPrincipal");
   if (count == 0) {
     delete this;
@@ -147,24 +147,10 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
   mCodebase = NS_TryToMakeImmutable(aCodebase);
   mCodebaseImmutable = URIIsImmutable(mCodebase);
 
-  nsresult rv;
-  if (!aCertFingerprint.IsEmpty()) {
-    rv = SetCertificate(aCertFingerprint, aSubjectName, aPrettyName, aCert);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mJSPrincipals.Init(this, mCert->fingerprint);
-    }
-  }
-  else {
-    nsCAutoString spec;
-    rv = mCodebase->GetSpec(spec);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mJSPrincipals.Init(this, spec);
-    }
-  }
+  if (aCertFingerprint.IsEmpty())
+    return NS_OK;
 
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrincipal::Init() failed");
-
-  return rv;
+  return SetCertificate(aCertFingerprint, aSubjectName, aPrettyName, aCert);
 }
 
 nsPrincipal::~nsPrincipal(void)
@@ -173,15 +159,24 @@ nsPrincipal::~nsPrincipal(void)
   delete mCapabilities;
 }
 
-NS_IMETHODIMP
-nsPrincipal::GetJSPrincipals(JSContext *cx, JSPrincipals **jsprin)
+void
+nsPrincipal::GetScriptLocation(nsACString &aStr)
 {
-  NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr, "mJSPrincipals is uninitialized!");
-
-  JSPRINCIPALS_HOLD(cx, &mJSPrincipals);
-  *jsprin = &mJSPrincipals;
-  return NS_OK;
+  if (mCert) {
+    aStr.Assign(mCert->fingerprint);
+  } else {
+    mCodebase->GetSpec(aStr);
+  }
 }
+
+#ifdef DEBUG
+void nsPrincipal::dumpImpl()
+{
+  nsCAutoString str;
+  GetScriptLocation(str);
+  fprintf(stderr, "nsPrincipal (%p) = %s\n", this, str.get());
+}
+#endif 
 
 NS_IMETHODIMP
 nsPrincipal::GetOrigin(char **aOrigin)
@@ -882,9 +877,6 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
 
     mTrusted = aTrusted;
   }
-
-  rv = mJSPrincipals.Init(this, aToken);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   //-- Save the preference name
   mPrefName = aPrefName;

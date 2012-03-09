@@ -509,11 +509,8 @@ struct JSRuntime : js::RuntimeFriendFields
 
     uint32_t            debuggerMutations;
 
-    /*
-     * Security callbacks set on the runtime are used by each context unless
-     * an override is set on the context.
-     */
-    JSSecurityCallbacks *securityCallbacks;
+    const JSSecurityCallbacks *securityCallbacks;
+    JSDestroyPrincipalsOp destroyPrincipals;
 
     /* Structured data callbacks are runtime-wide. */
     const JSStructuredCloneCallbacks *structuredCloneCallbacks;
@@ -1012,9 +1009,6 @@ struct JSContext : js::ContextFriendFields
 #endif
 
 #endif /* JSGC_ROOT_ANALYSIS */
-
-    /* Security callbacks that override any defined on the runtime. */
-    JSSecurityCallbacks *securityCallbacks;
 
     /* Stored here to avoid passing it around as a parameter. */
     unsigned               resolveFlags;

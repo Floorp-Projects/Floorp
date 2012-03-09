@@ -60,6 +60,8 @@
 #include "jsfriendapi.h"
 #include "js/MemoryMetrics.h"
 
+#include "nsJSPrincipals.h"
+
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
@@ -1220,71 +1222,42 @@ XPCJSRuntime::~XPCJSRuntime()
     XPCPerThreadData::ShutDown();
 }
 
-static void*
-GetCompartmentNameHelper(JSCompartment *c, bool getAddress)
+static void
+GetCompartmentName(JSCompartment *c, bool getAddress, nsCString &name)
 {
-    nsCString* name = new nsCString();
     if (js::IsAtomsCompartment(c)) {
-        name->AssignLiteral("atoms");
+        name.AssignLiteral("atoms");
     } else if (JSPrincipals *principals = JS_GetCompartmentPrincipals(c)) {
-        if (principals->codebase) {
-            name->Assign(principals->codebase);
+        nsJSPrincipals::get(principals)->GetScriptLocation(name);
 
-            // For system compartments we append the location, if there is one.
-            // And we append the address if |getAddress| is true, so that
-            // multiple system compartments (and there can be many) can be
-            // distinguished.
-            if (js::IsSystemCompartment(c)) {
-                xpc::CompartmentPrivate *compartmentPrivate =
-                    static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
-                if (compartmentPrivate &&
-                    !compartmentPrivate->location.IsEmpty()) {
-                    name->AppendLiteral(", ");
-                    name->Append(compartmentPrivate->location);
-                }
-
-                if (getAddress) {
-                    // ample; 64-bit address max is 18 chars
-                    static const int maxLength = 31;
-                    nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
-                    name->Append(address);
-                }
+        // For system compartments we append the location, if there is one.
+        // And we append the address if |getAddress| is true, so that
+        // multiple system compartments (and there can be many) can be
+        // distinguished.
+        if (js::IsSystemCompartment(c)) {
+            xpc::CompartmentPrivate *compartmentPrivate =
+                static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
+            if (compartmentPrivate && !compartmentPrivate->location.IsEmpty()) {
+                name.AppendLiteral(", ");
+                name.Append(compartmentPrivate->location);
             }
-
-            // A hack: replace forward slashes with '\\' so they aren't
-            // treated as path separators.  Users of the reporters
-            // (such as about:memory) have to undo this change.
-            name->ReplaceChar('/', '\\');
-        } else {
-            name->AssignLiteral("null-codebase");
+            
+            if (getAddress) {
+                // ample; 64-bit address max is 18 chars
+                const int maxLength = 31;
+                nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
+                name.Append(address);
+            }
         }
+        
+        // A hack: replace forward slashes with '\\' so they aren't
+        // treated as path separators.  Users of the reporters
+        // (such as about:memory) have to undo this change.
+        name.ReplaceChar('/', '\\');
     } else {
-        name->AssignLiteral("null-principal");
+        name.AssignLiteral("null-principal");
     }
-    return name;
 }
-
-static void*
-GetCompartmentNameAndAddress(JSRuntime *rt, JSCompartment *c)
-{
-    return GetCompartmentNameHelper(c, /* get address = */true);
-}
-
-namespace xpc {
-
-void*
-GetCompartmentName(JSRuntime *rt, JSCompartment *c)
-{
-    return GetCompartmentNameHelper(c, /* get address = */false);
-}
-
-void
-DestroyCompartmentName(void *string)
-{
-    delete static_cast<nsCString*>(string);
-}
-
-} // namespace xpc
 
 // We have per-compartment GC heap totals, so we can't put the total GC heap
 // size in the explicit allocations tree.  But it's a useful figure, so put it
@@ -1404,9 +1377,12 @@ inline const nsCString
 MakePath(const nsACString &pathPrefix, const JS::CompartmentStats &cStats,
          const char (&reporterName)[N])
 {
-  return pathPrefix + NS_LITERAL_CSTRING("compartment(") +
-         *static_cast<nsCString*>(cStats.name) +
-         NS_LITERAL_CSTRING(")/") + nsDependentCString(reporterName);
+    const char *name = static_cast<char *>(cStats.extra);
+    if (!name)
+        name = "error while initializing compartment name";
+    return pathPrefix + NS_LITERAL_CSTRING("compartment(") +
+           nsDependentCString(name) + NS_LITERAL_CSTRING(")/") +
+           nsDependentCString(reporterName);
 }
 
 namespace mozilla {
@@ -1694,18 +1670,15 @@ class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
 
     static void CompartmentCallback(JSRuntime *rt, void* data, JSCompartment *c)
     {
+        // silently ignore OOM errors
         Paths *paths = static_cast<Paths *>(data);
-        nsCString *name =
-            static_cast<nsCString *>(xpc::GetCompartmentName(rt, c));
         nsCString path;
-        if (js::IsSystemCompartment(c))
-            path = NS_LITERAL_CSTRING("compartments/system/") + *name;
-        else
-            path = NS_LITERAL_CSTRING("compartments/user/") + *name;
-        if (!paths->append(path))
-            return;     // silent failure, but it's very unlikely
-
-        xpc::DestroyCompartmentName(name);
+        GetCompartmentName(c, /* getAddress = */ false, path);
+        path.Insert(js::IsSystemCompartment(c)
+                    ? NS_LITERAL_CSTRING("compartments/system/")
+                    : NS_LITERAL_CSTRING("compartments/user/"),
+                    0);
+        paths->append(path);
     }
 
     NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *cb,
@@ -1745,6 +1718,23 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(JSCompartmentsMultiReporter
                               , nsIMemoryMultiReporter
                               )
 
+struct XPCJSRuntimeStats : public JS::RuntimeStats {
+    XPCJSRuntimeStats()
+      : JS::RuntimeStats(JsMallocSizeOf) { }
+    
+    ~XPCJSRuntimeStats() {
+        for (size_t i = 0; i != compartmentStatsVector.length(); ++i)
+            free(compartmentStatsVector[i].extra);
+    }
+
+    virtual void initExtraCompartmentStats(JSCompartment *c,
+                                           JS::CompartmentStats *cstats) MOZ_OVERRIDE {
+        nsCAutoString name;
+        GetCompartmentName(c, /* getAddress = */ true, name);
+        cstats->extra = strdup(name.get());
+    }
+};
+    
 class JSMemoryMultiReporter : public nsIMemoryMultiReporter
 {
 public:
@@ -1766,8 +1756,7 @@ public:
         // the callback.  Separating these steps is important because the
         // callback may be a JS function, and executing JS while getting these
         // stats seems like a bad idea.
-        JS::RuntimeStats rtStats(JsMallocSizeOf, GetCompartmentNameAndAddress,
-                                 xpc::DestroyCompartmentName);
+        XPCJSRuntimeStats rtStats;
         if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats))
             return NS_ERROR_FAILURE;
 
