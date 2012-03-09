@@ -75,7 +75,7 @@ class DiscardTracker
      * memory for a decoded image.  We use this to determine when we've
      * allocated too much memory and should discard some images.
      */
-    static void InformAllocation(ssize_t bytes);
+    static void InformAllocation(PRUint64 bytes);
 
   private:
     /**
@@ -105,7 +105,7 @@ class DiscardTracker
     static bool sInitialized;
     static bool sTimerOn;
     static bool sDiscardRunnablePending;
-    static ssize_t sCurrentDecodedImageBytes;
+    static PRUint64 sCurrentDecodedImageBytes;
     static PRUint32 sMinDiscardTimeoutMs;
     static PRUint32 sMaxDecodedImageKB;
 };

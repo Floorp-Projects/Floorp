@@ -19,7 +19,7 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 /* static */ bool DiscardTracker::sInitialized = false;
 /* static */ bool DiscardTracker::sTimerOn = false;
 /* static */ bool DiscardTracker::sDiscardRunnablePending = false;
-/* static */ ssize_t DiscardTracker::sCurrentDecodedImageBytes = 0;
+/* static */ PRUint64 DiscardTracker::sCurrentDecodedImageBytes = 0;
 /* static */ PRUint32 DiscardTracker::sMinDiscardTimeoutMs = 10000;
 /* static */ PRUint32 DiscardTracker::sMaxDecodedImageKB = 42 * 1024;
 
@@ -119,7 +119,7 @@ DiscardTracker::DiscardAll()
 }
 
 void
-DiscardTracker::InformAllocation(ssize_t bytes)
+DiscardTracker::InformAllocation(PRUint64 bytes)
 {
   // This function is called back e.g. from RasterImage::Discard(); be careful!
 
