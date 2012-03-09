@@ -892,7 +892,7 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
 {
     nsIntRegion region;
 
-    if (mTextureState != Valid || !mGL->CanUploadSubTextures()) {
+    if (mTextureState != Valid) {
         nsIntRect bounds = nsIntRect(0, 0, mSize.width, mSize.height);
         region = nsIntRegion(bounds);
     } else {
@@ -904,10 +904,17 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
         int xPos = (i % mColumns) * mTileSize;
         int yPos = (i / mColumns) * mTileSize;
         nsIntRegion tileRegion;
-        tileRegion.And(region, nsIntRect(nsIntPoint(xPos,yPos), mImages[i]->GetSize())); // intersect with tile
+        nsIntRect tileRect = nsIntRect(nsIntPoint(xPos, yPos), mImages[i]->GetSize());
+        tileRegion.And(region, tileRect); // intersect with tile
         if (tileRegion.IsEmpty())
             continue;
-        tileRegion.MoveBy(-xPos, -yPos); // translate into tile local space
+        if (mGL->CanUploadSubTextures()) {
+          tileRegion.MoveBy(-xPos, -yPos); // translate into tile local space
+        } else {
+          // If sub-textures are unsupported, expand to tile boundaries
+          tileRect.x = tileRect.y = 0;
+          tileRegion = nsIntRegion(tileRect);
+        }
         result &= mImages[i]->DirectUpdate(aSurf,
                                            tileRegion,
                                            aFrom + nsIntPoint(xPos, yPos));
@@ -1209,6 +1216,8 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
         fBindTexture(LOCAL_GL_TEXTURE_2D, newOffscreenTexture);
         fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
         fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+        fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+        fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
         if (alpha) {
             fTexImage2D(LOCAL_GL_TEXTURE_2D,

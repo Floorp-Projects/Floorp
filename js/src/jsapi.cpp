@@ -700,6 +700,8 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
  */
 static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
+static const JSSecurityCallbacks NullSecurityCallbacks = { };
+
 JSRuntime::JSRuntime()
   : atomsCompartment(NULL),
 #ifdef JS_THREADSAFE
@@ -757,6 +759,7 @@ JSRuntime::JSRuntime()
     gcZealFrequency(0),
     gcNextScheduled(0),
     gcDebugCompartmentGC(false),
+    gcDeterministicOnly(false),
 #endif
     gcCallback(NULL),
     gcSliceCallback(NULL),
@@ -781,7 +784,8 @@ JSRuntime::JSRuntime()
     gcHelperThread(thisFromCtor()),
 #endif
     debuggerMutations(0),
-    securityCallbacks(NULL),
+    securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),
+    destroyPrincipals(NULL),
     structuredCloneCallbacks(NULL),
     telemetryCallback(NULL),
     propertyRemovals(0),
@@ -849,7 +853,7 @@ JSRuntime::init(uint32_t maxbytes)
     }
 
     atomsCompartment->isSystemCompartment = true;
-    atomsCompartment->setGCLastBytes(8192, GC_NORMAL);
+    atomsCompartment->setGCLastBytes(8192, 8192, GC_NORMAL);
 
     if (!js_InitAtomState(this))
         return false;
@@ -1027,8 +1031,6 @@ StartRequest(JSContext *cx)
     if (rt->requestDepth) {
         rt->requestDepth++;
     } else {
-        AutoLockGC lock(rt);
-
         /* Indicate that a request is running. */
         rt->requestDepth = 1;
 
@@ -1047,10 +1049,6 @@ StopRequest(JSContext *cx)
         rt->requestDepth--;
     } else {
         rt->conservativeGC.updateForRequestEnd(rt->suspendCount);
-
-        /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
-        AutoLockGC lock(rt);
-
         rt->requestDepth = 0;
 
         if (rt->activityCallback)
@@ -1320,14 +1318,12 @@ SetOptionsCommon(JSContext *cx, unsigned options)
 JS_PUBLIC_API(uint32_t)
 JS_SetOptions(JSContext *cx, uint32_t options)
 {
-    AutoLockGC lock(cx->runtime);
     return SetOptionsCommon(cx, options);
 }
 
 JS_PUBLIC_API(uint32_t)
 JS_ToggleOptions(JSContext *cx, uint32_t options)
 {
-    AutoLockGC lock(cx->runtime);
     unsigned oldopts = cx->allOptions();
     unsigned newopts = oldopts ^ options;
     return SetOptionsCommon(cx, newopts);
@@ -2216,6 +2212,18 @@ JS_ComputeThis(JSContext *cx, jsval *vp)
     return call.thisv();
 }
 
+JS_PUBLIC_API(void)
+JS_MallocInCompartment(JSCompartment *comp, size_t nbytes)
+{
+    comp->mallocInCompartment(nbytes);
+}
+
+JS_PUBLIC_API(void)
+JS_FreeInCompartment(JSCompartment *comp, size_t nbytes)
+{
+    comp->freeInCompartment(nbytes);
+}
+
 JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes)
 {
@@ -2902,7 +2910,6 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
 {
     switch (key) {
       case JSGC_MAX_BYTES: {
-        AutoLockGC lock(rt);
         JS_ASSERT(value >= rt->gcBytes);
         rt->gcMaxBytes = value;
         break;
@@ -4286,7 +4293,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
          */
         Shape *tmp = (Shape *)pdata;
         MarkShapeUnbarriered(trc, &tmp, "prop iter shape");
-        JS_ASSERT(tmp == pdata);
+        obj->setPrivateUnbarriered(tmp);
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;
@@ -4426,9 +4433,9 @@ JS_NewArrayObject(JSContext *cx, int length, jsval *vector)
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    /* NB: jsuint cast does ToUint32. */
-    assertSameCompartment(cx, JSValueArray(vector, vector ? (jsuint)length : 0));
-    return NewDenseCopiedArray(cx, (jsuint)length, vector);
+    
+    assertSameCompartment(cx, JSValueArray(vector, vector ? (uint32_t)length : 0));
+    return NewDenseCopiedArray(cx, (uint32_t)length, vector);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4439,7 +4446,7 @@ JS_IsArrayObject(JSContext *cx, JSObject *obj)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_GetArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp)
+JS_GetArrayLength(JSContext *cx, JSObject *obj, uint32_t *lengthp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4448,7 +4455,7 @@ JS_GetArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length)
+JS_SetArrayLength(JSContext *cx, JSObject *obj, uint32_t length)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
@@ -4466,61 +4473,45 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     return CheckAccess(cx, obj, id, mode, vp, attrsp);
 }
 
-#ifdef JS_THREADSAFE
-JS_PUBLIC_API(int)
-JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals)
+JS_PUBLIC_API(void)
+JS_HoldPrincipals(JSPrincipals *principals)
 {
-    return JS_ATOMIC_INCREMENT(&principals->refcount);
+    JS_ATOMIC_INCREMENT(&principals->refcount);
 }
 
-JS_PUBLIC_API(int)
-JS_DropPrincipals(JSContext *cx, JSPrincipals *principals)
+JS_PUBLIC_API(void)
+JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals)
 {
     int rc = JS_ATOMIC_DECREMENT(&principals->refcount);
     if (rc == 0)
-        principals->destroy(cx, principals);
-    return rc;
-}
-#endif
-
-JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_SetRuntimeSecurityCallbacks(JSRuntime *rt, JSSecurityCallbacks *callbacks)
-{
-    JSSecurityCallbacks *oldcallbacks;
-
-    oldcallbacks = rt->securityCallbacks;
-    rt->securityCallbacks = callbacks;
-    return oldcallbacks;
+        rt->destroyPrincipals(principals);
 }
 
-JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_GetRuntimeSecurityCallbacks(JSRuntime *rt)
+JS_PUBLIC_API(void)
+JS_SetSecurityCallbacks(JSRuntime *rt, const JSSecurityCallbacks *scb)
 {
-  return rt->securityCallbacks;
+    JS_ASSERT(scb != &NullSecurityCallbacks);
+    rt->securityCallbacks = scb ? scb : &NullSecurityCallbacks;
 }
 
-JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_SetContextSecurityCallbacks(JSContext *cx, JSSecurityCallbacks *callbacks)
+JS_PUBLIC_API(const JSSecurityCallbacks *)
+JS_GetSecurityCallbacks(JSRuntime *rt)
 {
-    JSSecurityCallbacks *oldcallbacks;
-
-    oldcallbacks = cx->securityCallbacks;
-    cx->securityCallbacks = callbacks;
-    return oldcallbacks;
-}
-
-JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_GetSecurityCallbacks(JSContext *cx)
-{
-  return cx->securityCallbacks
-         ? cx->securityCallbacks
-         : cx->runtime->securityCallbacks;
+    return (rt->securityCallbacks != &NullSecurityCallbacks) ? rt->securityCallbacks : NULL;
 }
 
 JS_PUBLIC_API(void)
 JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin)
 {
     rt->setTrustedPrincipals(prin);
+}
+
+extern JS_PUBLIC_API(void)
+JS_InitDestroyPrincipalsCallback(JSRuntime *rt, JSDestroyPrincipalsOp destroyPrincipals)
+{
+    JS_ASSERT(destroyPrincipals);
+    JS_ASSERT(!rt->destroyPrincipals);
+    rt->destroyPrincipals = destroyPrincipals;
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -5529,20 +5520,8 @@ JS_GetOperationCallback(JSContext *cx)
 }
 
 JS_PUBLIC_API(void)
-JS_TriggerOperationCallback(JSContext *cx)
+JS_TriggerOperationCallback(JSRuntime *rt)
 {
-#ifdef JS_THREADSAFE
-    AutoLockGC lock(cx->runtime);
-#endif
-    cx->runtime->triggerOperationCallback();
-}
-
-JS_PUBLIC_API(void)
-JS_TriggerRuntimeOperationCallback(JSRuntime *rt)
-{
-#ifdef JS_THREADSAFE
-    AutoLockGC lock(rt);
-#endif
     rt->triggerOperationCallback();
 }
 

@@ -24,6 +24,7 @@
  *   Dave Camp <dcamp@mozilla.com> (original author)
  *   Panos Astithas <past@mozilla.com>
  *   Victor Porof <vporof@mozilla.com>
+ *   Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,9 +61,37 @@ function DebuggerPane(aTab) {
   this._tab = aTab;
   this._close = this.close.bind(this);
   this._debugTab = this.debugTab.bind(this);
+  this.breakpoints = {};
 }
 
 DebuggerPane.prototype = {
+  /**
+   * Skip editor breakpoint change events.
+   *
+   * This property tells the source editor event handler to skip handling of
+   * the BREAKPOINT_CHANGE events. This is used when the debugger adds/removes
+   * breakpoints from the editor. Typically, the BREAKPOINT_CHANGE event handler
+   * adds/removes events from the debugger, but when breakpoints are added from
+   * the public debugger API, we need to do things in reverse.
+   *
+   * This implementation relies on the fact that the source editor fires the
+   * BREAKPOINT_CHANGE events synchronously.
+   *
+   * @private
+   * @type boolean
+   */
+  _skipEditorBreakpointChange: false,
+
+  /**
+   * The list of breakpoints in the debugger as tracked by the current
+   * DebuggerPane instance. This an object where the values are BreakpointActor
+   * objects received from the client, while the keys are actor names, for
+   * example "conn0.breakpoint3".
+   *
+   * @type object
+   */
+  breakpoints: null,
+
   /**
    * Creates and initializes the widgets contained in the debugger UI.
    */
@@ -87,11 +116,15 @@ DebuggerPane.prototype = {
       self.frame.removeEventListener("DOMContentLoaded", initPane, true);
       // Initialize the source editor.
       self.frame.contentWindow.editor = self.editor = new SourceEditor();
+      self.frame.contentWindow.updateEditorBreakpoints =
+        self._updateEditorBreakpoints.bind(self);
 
       let config = {
         mode: SourceEditor.MODES.JAVASCRIPT,
         showLineNumbers: true,
-        readOnly: true
+        readOnly: true,
+        showAnnotationRuler: true,
+        showOverviewRuler: true,
       };
 
       let editorPlaceholder = self.frame.contentDocument.getElementById("editor");
@@ -107,14 +140,217 @@ DebuggerPane.prototype = {
    * editor initialization.
    */
   _onEditorLoad: function DP__onEditorLoad() {
+    this.editor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE,
+                                 this._onEditorBreakpointChange.bind(this));
     // Connect to the debugger server.
     this.connect();
+  },
+
+  /**
+   * Event handler for breakpoint changes that happen in the editor. This
+   * function syncs the breakpoint changes in the editor to those in the
+   * debugger.
+   *
+   * @private
+   * @param object aEvent
+   *        The SourceEditor.EVENTS.BREAKPOINT_CHANGE event object.
+   */
+  _onEditorBreakpointChange: function DP__onEditorBreakpointChange(aEvent) {
+    if (this._skipEditorBreakpointChange) {
+      return;
+    }
+
+    aEvent.added.forEach(this._onEditorBreakpointAdd, this);
+    aEvent.removed.forEach(this._onEditorBreakpointRemove, this);
+  },
+
+  /**
+   * Retrieve the URL of the selected script in the debugger view.
+   *
+   * @private
+   * @return string
+   *         The URL of the selected script.
+   */
+  _selectedScript: function DP__selectedScript() {
+    return this.debuggerWindow ?
+           this.debuggerWindow.DebuggerView.Scripts.selected : null;
+  },
+
+  /**
+   * Event handler for new breakpoints that come from the editor.
+   *
+   * @private
+   * @param object aBreakpoint
+   *        The breakpoint object coming from the editor.
+   */
+  _onEditorBreakpointAdd: function DP__onEditorBreakpointAdd(aBreakpoint) {
+    let location = {
+      url: this._selectedScript(),
+      line: aBreakpoint.line + 1,
+    };
+
+    if (location.url) {
+      let callback = function (aClient, aError) {
+        if (aError) {
+          this._skipEditorBreakpointChange = true;
+          let result = this.editor.removeBreakpoint(aBreakpoint.line);
+          this._skipEditorBreakpointChange = false;
+        }
+      }.bind(this);
+      this.addBreakpoint(location, callback, true);
+    }
+  },
+
+  /**
+   * Event handler for breakpoints that are removed from the editor.
+   *
+   * @private
+   * @param object aBreakpoint
+   *        The breakpoint object that was removed from the editor.
+   */
+  _onEditorBreakpointRemove: function DP__onEditorBreakpointRemove(aBreakpoint) {
+    let url = this._selectedScript();
+    let line = aBreakpoint.line + 1;
+    if (!url) {
+      return;
+    }
+
+    let breakpoint = this.getBreakpoint(url, line);
+    if (breakpoint) {
+      this.removeBreakpoint(breakpoint, null, true);
+    }
+  },
+
+  /**
+   * Update the breakpoints in the editor view. This function takes the list of
+   * breakpoints in the debugger and adds them back into the editor view. This
+   * is invoked when the selected script is changed.
+   *
+   * @private
+   */
+  _updateEditorBreakpoints: function DP__updateEditorBreakpoints()
+  {
+    let url = this._selectedScript();
+    if (!url) {
+      return;
+    }
+
+    this._skipEditorBreakpointChange = true;
+    for each (let breakpoint in this.breakpoints) {
+      if (breakpoint.location.url == url) {
+        this.editor.addBreakpoint(breakpoint.location.line - 1);
+      }
+    }
+    this._skipEditorBreakpointChange = false;
+  },
+
+  /**
+   * Add a breakpoint.
+   *
+   * @param object aLocation
+   *        The location where you want the breakpoint. This object must have
+   *        two properties:
+   *          - url - the URL of the script.
+   *          - line - the line number (starting from 1).
+   * @param function [aCallback]
+   *        Optional function to invoke once the breakpoint is added. The
+   *        callback is invoked with two arguments:
+   *          - aBreakpointClient - the BreakpointActor client object, if the
+   *          breakpoint has been added successfully.
+   *          - aResponseError - if there was any error.
+   * @param boolean [aNoEditorUpdate=false]
+   *        Tells if you want to skip editor updates. Typically the editor is
+   *        updated to visually indicate that a breakpoint has been added.
+   */
+  addBreakpoint:
+  function DP_addBreakpoint(aLocation, aCallback, aNoEditorUpdate) {
+    let breakpoint = this.getBreakpoint(aLocation.url, aLocation.line);
+    if (breakpoint) {
+      aCallback && aCallback(breakpoint);
+      return;
+    }
+
+    this.activeThread.setBreakpoint(aLocation, function(aResponse, aBpClient) {
+      if (!aResponse.error) {
+        this.breakpoints[aBpClient.actor] = aBpClient;
+
+        if (!aNoEditorUpdate) {
+          let url = this._selectedScript();
+          if (url == aLocation.url) {
+            this._skipEditorBreakpointChange = true;
+            this.editor.addBreakpoint(aLocation.line - 1);
+            this._skipEditorBreakpointChange = false;
+          }
+        }
+      }
+
+      aCallback && aCallback(aBpClient, aResponse.error);
+    }.bind(this));
+  },
+
+  /**
+   * Remove a breakpoint.
+   *
+   * @param object aBreakpoint
+   *        The breakpoint you want to remove.
+   * @param function [aCallback]
+   *        Optional function to invoke once the breakpoint is removed. The
+   *        callback is invoked with one argument: the breakpoint location
+   *        object which holds the url and line properties.
+   * @param boolean [aNoEditorUpdate=false]
+   *        Tells if you want to skip editor updates. Typically the editor is
+   *        updated to visually indicate that a breakpoint has been removed.
+   */
+  removeBreakpoint:
+  function DP_removeBreakpoint(aBreakpoint, aCallback, aNoEditorUpdate) {
+    if (!(aBreakpoint.actor in this.breakpoints)) {
+      aCallback && aCallback(aBreakpoint.location);
+      return;
+    }
+
+    aBreakpoint.remove(function() {
+      delete this.breakpoints[aBreakpoint.actor];
+
+      if (!aNoEditorUpdate) {
+        let url = this._selectedScript();
+        if (url == aBreakpoint.location.url) {
+          this._skipEditorBreakpointChange = true;
+          this.editor.removeBreakpoint(aBreakpoint.location.line - 1);
+          this._skipEditorBreakpointChange = false;
+        }
+      }
+
+      aCallback && aCallback(aBreakpoint.location);
+    }.bind(this));
+  },
+
+  /**
+   * Get the breakpoint object at the given location.
+   *
+   * @param string aUrl
+   *        The URL of where the breakpoint is.
+   * @param number aLine
+   *        The line number where the breakpoint is.
+   * @return object
+   *         The BreakpointActor object.
+   */
+  getBreakpoint: function DP_getBreakpoint(aUrl, aLine) {
+    for each (let breakpoint in this.breakpoints) {
+      if (breakpoint.location.url == aUrl && breakpoint.location.line == aLine) {
+        return breakpoint;
+      }
+    }
+    return null;
   },
 
   /**
    * Closes the debugger UI removing child nodes and event listeners.
    */
   close: function DP_close() {
+    for each (let breakpoint in this.breakpoints) {
+      this.removeBreakpoint(breakpoint);
+    }
+
     if (this._tab) {
       this._tab._scriptDebugger = null;
       this._tab = null;
@@ -192,7 +428,7 @@ DebuggerPane.prototype = {
   },
 
   get debuggerWindow() {
-    return this.frame.contentWindow;
+    return this.frame ? this.frame.contentWindow : null;
   },
 
   get debuggerClient() {
@@ -340,6 +576,7 @@ DebuggerUI.prototype = {
     script.text = aSourceText;
     script.contentType = aContentType;
     elt.setUserData("sourceScript", script, null);
+    dbg._updateEditorBreakpoints();
   }
 };
 

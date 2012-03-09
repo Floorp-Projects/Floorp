@@ -178,6 +178,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetCurrentNetworkInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentNetworkInformation", "()[D");
     jEnableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableNetworkNotifications", "()V");
     jDisableNetworkNotifications = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableNetworkNotifications", "()V");
+    jEmitGeckoAccessibilityEvent = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "emitGeckoAccessibilityEvent", "(I[Ljava/lang/String;Ljava/lang/String;ZZZ)V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -185,6 +186,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jEGLContextImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLContextImpl"));
     jEGLConfigImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLConfigImpl"));
     jEGLDisplayImplClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("com/google/android/gles_jni/EGLDisplayImpl"));
+
+    jStringClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("java/lang/String"));
 
     InitAndroidJavaWrappers(jEnv);
 
@@ -1487,17 +1490,17 @@ AndroidBridge::MarkURIVisited(const nsAString& aURI)
     env->CallStaticVoidMethod(mGeckoAppShellClass, jMarkUriVisited, jstrURI);
 }
 
-void AndroidBridge::EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsAString& role, const nsAString& text, const nsAString& description, bool enabled, bool checked, bool password) {
-
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return;
-
-    AutoLocalJNIFrame jniFrame(env); 
-    jstring jstrRole = env->NewString(nsPromiseFlatString(role).get(), role.Length());
-    jstring jstrText = env->NewString(nsPromiseFlatString(text).get(), text.Length());
-    jstring jstrDescription = env->NewString(nsPromiseFlatString(description).get(), description.Length());
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jEmitGeckoAccessibilityEvent, eventType, jstrRole, jstrText, jstrDescription, enabled, checked, password);
+void AndroidBridge::EmitGeckoAccessibilityEvent (PRInt32 eventType, const nsTArray<nsString>& text, const nsAString& description, bool enabled, bool checked, bool password) {
+    AutoLocalJNIFrame jniFrame;
+    jobjectArray jarrayText = mJNIEnv->NewObjectArray(text.Length(),
+                                                      jStringClass, 0);
+    for (PRUint32 i = 0; i < text.Length() ; i++) {
+        jstring jstrText = mJNIEnv->NewString(nsPromiseFlatString(text[i]).get(),
+                                              text[i].Length());
+        mJNIEnv->SetObjectArrayElement(jarrayText, i, jstrText);
+    }
+    jstring jstrDescription = mJNIEnv->NewString(nsPromiseFlatString(description).get(), description.Length());
+    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEmitGeckoAccessibilityEvent, eventType, jarrayText, jstrDescription, enabled, checked, password);
 }
 
 PRUint16
@@ -1584,8 +1587,8 @@ AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aR
 
     jobjectArray numbers =
       (jobjectArray)env->NewObjectArray(aFilter.numbers().Length(),
-                                          env->FindClass("java/lang/String"),
-                                          env->NewStringUTF(""));
+                                        jStringClass,
+                                        env->NewStringUTF(""));
 
     for (PRUint32 i = 0; i < aFilter.numbers().Length(); ++i) {
       env->SetObjectArrayElement(numbers, i,

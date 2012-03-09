@@ -1412,6 +1412,9 @@ nsIEProfileMigrator::CopyFavoritesBatched(bool aReplace)
 
     // Locate the Links toolbar folder, we want to replace the Personal Toolbar
     // content with Favorites in this folder.
+    // On versions minor or equal to IE6 the folder name is stored in the
+    // LinksFolderName registry key, but in newer versions it may be just a
+    // Links subfolder inside the default Favorites folder.
     nsCOMPtr<nsIWindowsRegKey> regKey =
       do_CreateInstance("@mozilla.org/windows-registry-key;1");
     if (regKey &&
@@ -1421,9 +1424,14 @@ nsIEProfileMigrator::CopyFavoritesBatched(bool aReplace)
       nsAutoString linksFolderName;
       if (NS_SUCCEEDED(regKey->ReadStringValue(
                          NS_LITERAL_STRING("LinksFolderName"),
-                         linksFolderName)))
+                         linksFolderName))) {
         personalToolbarFolderName = linksFolderName;
+      }
+      else {
+        personalToolbarFolderName.AssignLiteral("Links");
+      }
     }
+
     folder = bookmarksMenuFolderId;
   }
 

@@ -2756,6 +2756,12 @@ var gDetailView = {
     AddonManager.removeManagerListener(this);
     this.clearLoading();
     if (this._addon) {
+      if (this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
+        Services.obs.notifyObservers(document,
+                                     "addon-options-hidden",
+                                     this._addon.id);
+      }
+
       gEventManager.unregisterAddonListener(this, this._addon.id);
       gEventManager.unregisterInstallListener(this);
       this._addon = null;
@@ -2882,12 +2888,9 @@ var gDetailView = {
     for (var i = 0; i < settings.length; i++) {
       var setting = settings[i];
 
-      // Remove setting description, for replacement later
       var desc = stripTextNodes(setting).trim();
-      if (setting.hasAttribute("desc")) {
-        desc = setting.getAttribute("desc").trim();
-        setting.removeAttribute("desc");
-      }
+      if (!setting.hasAttribute("desc"))
+        setting.setAttribute("desc", desc);
 
       var type = setting.getAttribute("type");
       if (type == "file" || type == "directory")
@@ -2899,23 +2902,10 @@ var gDetailView = {
         setting.setAttribute("first-row", true);
         firstSetting = setting;
       }
-
-      // Add a new row containing the description
-      if (desc) {
-        var row = document.createElement("row");
-        if (!visible) {
-          row.setAttribute("unsupported", "true");
-        }
-        var label = document.createElement("label");
-        label.className = "preferences-description";
-        label.textContent = desc;
-        row.appendChild(label);
-        rows.appendChild(row);
-      }
     }
 
-	// Ensure the page has loaded and force the XBL bindings to be synchronously applied,
-	// then notify observers.
+    // Ensure the page has loaded and force the XBL bindings to be synchronously applied,
+    // then notify observers.
     if (gViewController.viewPort.selectedPanel.hasAttribute("loading")) {
       gDetailView.node.addEventListener("ViewChanged", function viewChangedEventListener() {
         gDetailView.node.removeEventListener("ViewChanged", viewChangedEventListener, false);
@@ -2963,8 +2953,14 @@ var gDetailView = {
     this.fillSettingsRows();
   },
 
-  onDisabling: function() {
+  onDisabling: function(aNeedsRestart) {
     this.updateState();
+    if (!aNeedsRestart &&
+        this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
+      Services.obs.notifyObservers(document,
+                                   "addon-options-hidden",
+                                   this._addon.id);
+    }
   },
 
   onDisabled: function() {

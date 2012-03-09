@@ -85,5 +85,5 @@ nsEditProperty::RegisterAtoms()
 #undef EDITOR_ATOM
   };
   
-  NS_RegisterStaticAtoms(property_atoms, ArrayLength(property_atoms));
+  NS_RegisterStaticAtoms(property_atoms);
 }

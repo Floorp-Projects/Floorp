@@ -925,3 +925,29 @@ add_test(function test_loginError_fatal_clearsTriggers() {
 
   SyncScheduler.scheduleNextSync(0);
 });
+
+add_test(function test_proper_interval_on_only_failing() {
+  _("Ensure proper behavior when only failed records are applied.");
+
+  // If an engine reports that no records succeeded, we shouldn't decrease the
+  // sync interval.
+  do_check_false(SyncScheduler.hasIncomingItems);
+  const INTERVAL = 10000000;
+  SyncScheduler.syncInterval = INTERVAL;
+
+  Svc.Obs.notify("weave:service:sync:applied", {
+    applied: 2,
+    succeeded: 0,
+    failed: 2,
+    newFailed: 2,
+    reconciled: 0
+  });
+
+  Utils.nextTick(function() {
+    SyncScheduler.adjustSyncInterval();
+    do_check_false(SyncScheduler.hasIncomingItems);
+    do_check_eq(SyncScheduler.syncInterval, SyncScheduler.singleDeviceInterval);
+
+    run_next_test();
+  });
+});

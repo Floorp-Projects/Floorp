@@ -1215,6 +1215,11 @@ nsSVGUtils::HitTestChildren(nsIFrame *aFrame, const nsPoint &aPoint)
        current = current->GetPrevSibling()) {
     nsISVGChildFrame* SVGFrame = do_QueryFrame(current);
     if (SVGFrame) {
+      const nsIContent* content = current->GetContent();
+      if (content->IsSVG() &&
+          !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
+        continue;
+      }
       result = SVGFrame->GetFrameForPoint(aPoint);
       if (result)
         break;

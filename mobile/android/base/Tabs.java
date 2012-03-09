@@ -129,14 +129,14 @@ public class Tabs implements GeckoEventListener {
 
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() { 
             public void run() {
-                GeckoApp.mAutoCompletePopup.hide();
+                GeckoApp.mFormAssistPopup.hide();
                 // Do we need to do this check?
                 if (isSelectedTab(tab)) {
                     String url = tab.getURL();
                     GeckoApp.mBrowserToolbar.setTitle(tab.getDisplayTitle());
                     GeckoApp.mBrowserToolbar.setFavicon(tab.getFavicon());
                     GeckoApp.mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-                    GeckoApp.mBrowserToolbar.setProgressVisibility(tab.isLoading());
+                    GeckoApp.mBrowserToolbar.setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
                     GeckoApp.mDoorHangerPopup.updatePopup();
                     GeckoApp.mBrowserToolbar.setShadowVisibility((url == null) || !url.startsWith("about:"));
                     notifyListeners(tab, TabEvents.SELECTED);
@@ -283,7 +283,7 @@ public class Tabs implements GeckoEventListener {
                 if (message.getBoolean("selected"))
                     selectTab(tab.getId());
                 if (message.getBoolean("delayLoad"))
-                    tab.setHasLoaded(false);
+                    tab.setState(Tab.STATE_DELAYED);
             } else if (event.equals("Tab:Close")) {
                 Tab tab = getTab(message.getInt("tabID"));
                 closeTab(tab);

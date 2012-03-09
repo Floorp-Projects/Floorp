@@ -169,6 +169,7 @@ _TEST_FILES =	\
 		test_bug588174.html \
 		test_bug607529.html \
 		file_bug607529.html \
+		test_bug667512.html \
 		test_bug677878.html \
 		test_bug696020.html \
 		test_flush_on_paint.html \

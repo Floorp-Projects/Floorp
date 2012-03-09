@@ -640,7 +640,7 @@ public class ProfileMigrator {
             File dbFileShm = new File(dbPathShm);
 
             SQLiteBridge db = null;
-            GeckoAppShell.ensureSQLiteLibsLoaded(GeckoApp.mAppContext.getApplication().getPackageResourcePath());
+            GeckoAppShell.loadSQLiteLibs(GeckoApp.mAppContext, GeckoApp.mAppContext.getApplication().getPackageResourcePath());
             try {
                 db = new SQLiteBridge(dbPath);
                 calculateReroot(db);
@@ -664,7 +664,7 @@ public class ProfileMigrator {
         }
 
         protected void cleanupXULLibCache() {
-            File cacheFile = GeckoAppShell.getCacheDir();
+            File cacheFile = GeckoAppShell.getCacheDir(GeckoApp.mAppContext);
             File[] files = cacheFile.listFiles();
             if (files != null) {
                 Iterator<File> cacheFiles = Arrays.asList(files).iterator();

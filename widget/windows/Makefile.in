@@ -79,6 +79,7 @@ CPPSRCS = \
   AudioSession.cpp \
   nsWidgetFactory.cpp \
   WinUtils.cpp \
+  WinMouseScrollHandler.cpp \
   $(NULL)
 
 ifdef MOZ_CRASHREPORTER

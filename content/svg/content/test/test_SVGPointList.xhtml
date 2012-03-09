@@ -50,6 +50,13 @@ function run_tests()
   points[0].x = 30;
   points[1].y = 380;
   polyline.setAttribute("points", "30,375 150,380");
+  // -- Attribute removal
+  eventChecker.expect("remove");
+  polyline.removeAttribute("points");
+  // -- Non-existent attribute removal
+  eventChecker.expect("");
+  polyline.removeAttribute("points");
+  polyline.removeAttributeNS(null, "points");
   eventChecker.finish();
 
   SimpleTest.finish();

@@ -320,23 +320,8 @@ def write_header(iface, fd):
     if iface.base != "nsISupports":
         fd.write(" : public %s" % dict_name(iface.base))
     fd.write("\n{\npublic:\n")
-    fd.write("  %s()" % dict_name(iface.name))
-
-    if iface.base != "nsISupports" or len(attributes) > 0:
-        fd.write(" :\n")
-    
-    if iface.base != "nsISupports":
-        fd.write("    %s()" % dict_name(iface.base))
-        if len(attributes) > 0:
-            fd.write(",\n")
-
-    for i in range(len(attributes)):
-        fd.write("    %s(%s)" % (attributes[i].name, init_value(attributes[i])))
-        if i < (len(attributes) - 1):
-            fd.write(",")
-        fd.write("\n")
-
-    fd.write("  {}\n\n")
+    fd.write("  %s();\n" % dict_name(iface.name))
+    fd.write("  ~%s();\n\n" % dict_name(iface.name))
 
     fd.write("  // If aCx or aVal is null, NS_OK is returned and \n"
              "  // dictionary will use the default values. \n"
@@ -354,6 +339,25 @@ def write_cpp(iface, fd):
     for member in iface.members:
         if isinstance(member, xpidl.Attribute):
             attributes.append(member)
+
+    fd.write("%s::%s()" % (dict_name(iface.name), dict_name(iface.name)))
+
+    if iface.base != "nsISupports" or len(attributes) > 0:
+        fd.write(" :\n")
+    
+    if iface.base != "nsISupports":
+        fd.write("  %s()" % dict_name(iface.base))
+        if len(attributes) > 0:
+            fd.write(",\n")
+
+    for i in range(len(attributes)):
+        fd.write("  %s(%s)" % (attributes[i].name, init_value(attributes[i])))
+        if i < (len(attributes) - 1):
+            fd.write(",")
+        fd.write("\n")
+
+    fd.write("  {}\n\n")
+    fd.write("%s::~%s() {}\n\n" % (dict_name(iface.name), dict_name(iface.name)))
 
     fd.write("static nsresult\n%s_InitInternal(%s& aDict, %s* aIfaceObject, JSContext* aCx, JSObject* aObj)\n" %
              (dict_name(iface.name), dict_name(iface.name), iface.name))

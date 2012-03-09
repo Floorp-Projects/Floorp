@@ -64,6 +64,7 @@ public class ViewportMetrics {
     private RectF mViewportRect;
     private PointF mViewportOffset;
     private float mZoomFactor;
+    private boolean mAllowZoom;
 
     // A scale from -1,-1 to 1,1 that represents what edge of the displayport
     // we want the viewport to be biased towards.
@@ -79,6 +80,7 @@ public class ViewportMetrics {
         mViewportOffset = new PointF(0, 0);
         mZoomFactor = 1.0f;
         mViewportBias = new PointF(0.0f, 0.0f);
+        mAllowZoom = true;
     }
 
     public ViewportMetrics(ViewportMetrics viewport) {
@@ -88,6 +90,7 @@ public class ViewportMetrics {
         mViewportOffset = new PointF(offset.x, offset.y);
         mZoomFactor = viewport.getZoomFactor();
         mViewportBias = viewport.mViewportBias;
+        mAllowZoom = viewport.mAllowZoom;
     }
 
     public ViewportMetrics(JSONObject json) throws JSONException {
@@ -100,6 +103,8 @@ public class ViewportMetrics {
         float offsetX = (float)json.getDouble("offsetX");
         float offsetY = (float)json.getDouble("offsetY");
         float zoom = (float)json.getDouble("zoom");
+
+        mAllowZoom = json.getBoolean("allowZoom");
 
         mPageSize = new FloatSize(pageWidth, pageHeight);
         mViewportRect = new RectF(x, y, x + width, y + height);
@@ -184,6 +189,10 @@ public class ViewportMetrics {
 
     public float getZoomFactor() {
         return mZoomFactor;
+    }
+
+    public boolean getAllowZoom() {
+        return mAllowZoom;
     }
 
     public void setPageSize(FloatSize pageSize) {

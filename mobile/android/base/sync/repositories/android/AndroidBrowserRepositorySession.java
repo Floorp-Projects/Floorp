@@ -101,8 +101,6 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
    *
    * Return null if this record should not be processed.
    *
-   * @param cur
-   * @return
    * @throws NoGuidForIdException
    * @throws NullCursorException
    * @throws ParentNotFoundException
@@ -114,8 +112,6 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
    * updated to match the record that we're constructing: for example, the children
    * of a folder might be repositioned as we generate the folder's record.
    *
-   * @param cur
-   * @return
    * @throws NoGuidForIdException
    * @throws NullCursorException
    * @throws ParentNotFoundException
@@ -141,14 +137,9 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
   }
 
   @Override
-  public void begin(RepositorySessionBeginDelegate delegate) {
+  public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
     RepositorySessionBeginDelegate deferredDelegate = delegate.deferredBeginDelegate(delegateQueue);
-    try {
-      super.sharedBegin();
-    } catch (InvalidSessionTransitionException e) {
-      deferredDelegate.onBeginFailed(e);
-      return;
-    }
+    super.sharedBegin();
 
     try {
       // We do this check here even though it results in one extra call to the DB
@@ -241,9 +232,9 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
 
   @Override
   public void fetch(String[] guids,
-                    RepositorySessionFetchRecordsDelegate delegate) {
+                    RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException {
     FetchRunnable command = new FetchRunnable(guids, now(), null, delegate);
-    delegateQueue.execute(command);
+    executeDelegateCommand(command);
   }
 
   abstract class FetchingRunnable implements Runnable {
@@ -289,7 +280,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     }
   }
 
-  class FetchRunnable extends FetchingRunnable {
+  public class FetchRunnable extends FetchingRunnable {
     private String[] guids;
     private long     end;
     private RecordFilter filter;
@@ -392,6 +383,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       @Override
       public void run() {
         if (!isActive()) {
+          Logger.warn(LOG_TAG, "AndroidBrowserRepositorySession is inactive. Store failing.");
           delegate.onRecordStoreFailed(new InactiveSessionException(null));
           return;
         }
@@ -559,8 +551,6 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
    * Retrieve a record from the store by GUID, without writing unnecessarily to the
    * database.
    *
-   * @param guid
-   * @return
    * @throws NoGuidForIdException
    * @throws NullCursorException
    * @throws ParentNotFoundException

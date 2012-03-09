@@ -64,7 +64,7 @@ action found_vowel_syllable { found_vowel_syllable (map, buffer, mask_array, las
 action found_standalone_cluster { found_standalone_cluster (map, buffer, mask_array, last, p); }
 action found_non_indic { found_non_indic (map, buffer, mask_array, last, p); }
 
-action next_syllable { set_cluster (buffer, p, last); last = p; }
+action next_syllable { set_cluster (buffer, last, p); last = p; }
 
 consonant_syllable =	(c.N? (z.H|H.z?))* c.N? A? (H.z? | matra_group*)? syllable_tail %(found_consonant_syllable);
 vowel_syllable =	(Ra H)? V N? (z.H.c | ZWJ.c)? matra_group* syllable_tail %(found_vowel_syllable);

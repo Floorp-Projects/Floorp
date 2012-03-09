@@ -42,9 +42,26 @@
 #define POWERMANAGERSERVICE_CONTRACTID "@mozilla.org/power/powermanagerservice;1"
 %}
 
-[scriptable, builtinclass, uuid(38919539-4641-4f0b-9f11-6b6294a9386f)]
+interface nsIDOMMozWakeLock;
+interface nsIDOMMozWakeLockListener;
+interface nsIDOMWindow;
+
+/**
+ * For use with non-content code.
+ */
+[scriptable, builtinclass, uuid(235ca1a1-d0c8-41f3-9b4a-dbaa4437d69c)]
 interface nsIPowerManagerService : nsISupports
 {
-    void powerOff();
-    void reboot();
+  void              powerOff();
+  void              reboot();
+  void              addWakeLockListener(in nsIDOMMozWakeLockListener aListener);
+  void              removeWakeLockListener(in nsIDOMMozWakeLockListener aListener);
+  DOMString         getWakeLockState(in DOMString aTopic);
+
+  /**
+   * Return a wake lock object of aTopic associated with aWindow.
+   * A wake lock without associated window, e.g. used in chrome, is
+   * always considered invisible.
+   */
+  nsIDOMMozWakeLock newWakeLock(in DOMString aTopic, [optional] in nsIDOMWindow aWindow);
 };

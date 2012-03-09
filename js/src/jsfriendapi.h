@@ -166,13 +166,26 @@ JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc);
 extern JS_FRIEND_API(JSBool)
 JS_EnumerateState(JSContext *cx, JSObject *obj, JSIterateOp enum_op, js::Value *statep, jsid *idp);
 
+struct JSFunctionSpecWithHelp {
+    const char      *name;
+    JSNative        call;
+    uint16_t        nargs;
+    uint16_t        flags;
+    const char      *usage;
+    const char      *help;
+};
+
+#define JS_FN_HELP(name,call,nargs,flags,usage,help)                          \
+    {name, call, nargs, (flags) | JSPROP_ENUMERATE | JSFUN_STUB_GSOPS, usage, help}
+
+extern JS_FRIEND_API(bool)
+JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs);
+
 #endif
 
 JS_END_EXTERN_C
 
 #ifdef __cplusplus
-
-struct PRLock;
 
 namespace js {
 
@@ -498,7 +511,7 @@ JS_FRIEND_API(bool)
 GetPropertyNames(JSContext *cx, JSObject *obj, unsigned flags, js::AutoIdVector *props);
 
 JS_FRIEND_API(bool)
-StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
+StringIsArrayIndex(JSLinearString *str, uint32_t *indexp);
 
 JS_FRIEND_API(void)
 SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback);
@@ -558,9 +571,6 @@ GetOwnerThread(const JSContext *cx);
 JS_FRIEND_API(unsigned)
 GetContextOutstandingRequests(const JSContext *cx);
 
-JS_FRIEND_API(PRLock *)
-GetRuntimeGCLock(const JSRuntime *rt);
-
 class JS_FRIEND_API(AutoSkipConservativeScan)
 {
   public:
@@ -585,42 +595,10 @@ typedef void
 /*
  * Sets a callback that is run whenever the runtime goes idle - the
  * last active request ceases - and begins activity - when it was
- * idle and a request begins. Note: The callback is called under the
- * GC lock.
+ * idle and a request begins.
  */
 JS_FRIEND_API(void)
 SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg);
-
-class JS_FRIEND_API(AutoLockGC)
-{
-  public:
-    explicit AutoLockGC(JSRuntime *rt = NULL
-                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : runtime(rt)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        if (rt)
-            LockGC(rt);
-    }
-
-    ~AutoLockGC()
-    {
-        if (runtime)
-            UnlockGC(runtime);
-    }
-
-    bool locked() const {
-        return !!runtime;
-    }
-    void lock(JSRuntime *rt);
-
-  private:
-    static void LockGC(JSRuntime *rt);
-    static void UnlockGC(JSRuntime *rt);
-
-    JSRuntime *runtime;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
 
 extern JS_FRIEND_API(const JSStructuredCloneCallbacks *)
 GetContextStructuredCloneCallbacks(JSContext *cx);
@@ -636,10 +614,6 @@ CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *
 
 extern JS_FRIEND_API(bool)
 IsContextRunningJS(JSContext *cx);
-
-/* Must be called with GC lock taken. */
-extern JS_FRIEND_API(void)
-TriggerOperationCallback(JSRuntime *rt);
 
 class SystemAllocPolicy;
 typedef Vector<JSCompartment*, 0, SystemAllocPolicy> CompartmentVector;
@@ -658,7 +632,7 @@ SizeOfJSContext();
     D(LAST_DITCH)                               \
     D(TOO_MUCH_MALLOC)                          \
     D(ALLOC_TRIGGER)                            \
-    D(UNUSED1) /* was CHUNK */                  \
+    D(DEBUG_GC)                                 \
     D(UNUSED2) /* was SHAPE */                  \
     D(UNUSED3) /* was REFILL */                 \
                                                 \
@@ -807,6 +781,9 @@ class ObjectPtr
     JSObject *operator->() const { return value; }
     operator JSObject *() const { return value; }
 };
+
+extern JS_FRIEND_API(JSObject *)
+GetTestingFunctions(JSContext *cx);
 
 } /* namespace js */
 

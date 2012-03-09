@@ -53,6 +53,7 @@
 #include "nsScreenManagerWin.h"
 #include "nsSound.h"
 #include "nsWindow.h"
+#include "WinMouseScrollHandler.h"
 #include "WinTaskbar.h"
 #include "JumpListBuilder.h"
 #include "JumpListItem.h"
@@ -209,6 +210,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 static void
 nsWidgetWindowsModuleDtor()
 {
+  MouseScrollHandler::Shutdown();
   nsLookAndFeel::Shutdown();
   nsToolkit::Shutdown();
   nsAppShellShutdown();
