@@ -487,7 +487,7 @@ SmsDatabaseService.prototype = {
       // In first place, we retrieve the keys that match the filter.startDate
       // and filter.endDate search criteria.
       let timeKeyRange = null;
-      if (!filter.startDate != null && filter.endDate != null) {
+      if (filter.startDate != null && filter.endDate != null) {
         timeKeyRange = IDBKeyRange.bound(filter.startDate.getTime(),
                                          filter.endDate.getTime());
       } else if (filter.startDate != null) {
