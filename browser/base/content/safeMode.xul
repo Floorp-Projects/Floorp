@@ -10,51 +10,54 @@
 %brandDTD;
 <!ENTITY % safeModeDTD SYSTEM "chrome://browser/locale/safeMode.dtd" >
 %safeModeDTD;
-<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
-%browserDTD;
+<!ENTITY % resetProfileDTD SYSTEM "chrome://global/locale/resetProfile.dtd" >
+%resetProfileDTD;
 ]>
 
 <?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/content/safeMode.css"?>
 
 <dialog id="safeModeDialog"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&safeModeDialog.title;"
-            buttons="accept,cancel,extra1"
-            buttonlabelaccept="&changeAndRestartButton.label;"
-#ifdef XP_WIN
-            buttonlabelcancel="&quitApplicationCmdWin.label;"
-#else
-            buttonlabelcancel="&quitApplicationCmd.label;"
-#endif
-            buttonlabelextra1="&continueButton.label;"
-            width="&window.width;"
-            ondialogaccept="return onOK()"
-            ondialogcancel="onCancel()"
-            ondialogextra1="window.close()"
-            onload="onLoad();"
-            buttondisabledaccept="true">
+            buttons="accept,extra1"
+            buttonlabelaccept="&startSafeMode.label;"
+            buttonlabelextra1="&resetProfile.label;"
+            maxwidth="&window.maxWidth;"
+            ondialogaccept="return onDefaultButton()"
+            ondialogcancel="onCancel();"
+            ondialogextra1="return onExtra1()"
+            onload="onLoad()">
 
+  <script type="application/javascript" src="chrome://global/content/resetProfile.js"/>
   <script type="application/javascript" src="chrome://browser/content/safeMode.js"/>
 
-  <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
-
   <vbox id="autoSafeMode" hidden="true">
-    <label class="header plain" value="&autoSafeModeIntro.label;"/>
-    <description>&autoSafeModeDescription.label;</description>
+    <description>&autoSafeModeDescription2.label;</description>
   </vbox>
 
-  <description id="manualSafeMode">&safeModeDescription.label;</description>
-
-  <separator class="thin"/>
-
-  <label value="&safeModeDescription2.label;"/>
-  <vbox id="tasks">
-    <checkbox id="disableAddons"  label="&disableAddons.label;"  accesskey="&disableAddons.accesskey;"/>
-    <checkbox id="resetToolbars"  label="&resetToolbars.label;"  accesskey="&resetToolbars.accesskey;"/>
-    <checkbox id="deleteBookmarks" label="&deleteBookmarks.label;" accesskey="&deleteBookmarks.accesskey;"/>
-    <checkbox id="resetUserPrefs" label="&resetUserPrefs.label;" accesskey="&resetUserPrefs.accesskey;"/>
-    <checkbox id="restoreSearch"  label="&restoreSearch.label;"  accesskey="&restoreSearch.accesskey;"/>
+  <vbox id ="safeMode">
+    <label>&safeModeDescription3.label;</label>
+    <separator class="thin"/>
+    <label>&safeModeDescription4.label;</label>
+    <separator class="thin"/>
+    <label id="resetProfileInstead">&resetProfileInstead.label;</label>
   </vbox>
-     
+
+  <vbox id="resetProfile" hidden="true">
+    <label>&resetProfile.dialog.items2.label;</label>
+
+    <vbox id="resetProfileItems" class="indent">
+    </vbox>
+
+    <separator class="thin"/>
+
+    <label id="resetProfileFooter">&resetProfileFooter.label;</label>
+
+    <label>&safeModeInstead.label;</label>
+
+    <separator/>
+  </vbox>
+
   <separator class="thin"/>
 </dialog>
