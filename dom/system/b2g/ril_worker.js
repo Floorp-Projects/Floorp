@@ -1313,7 +1313,41 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS
 };
 RIL[UNSOLICITED_ON_USSD] = null;
 RIL[UNSOLICITED_ON_USSD_REQUEST] = null;
-RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = null;
+
+RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() {
+  let dateString = Buf.readString();
+
+  // The data contained in the NITZ message is
+  // in the form "yy/mm/dd,hh:mm:ss(+/-)tz,dt"
+  // for example: 12/02/16,03:36:08-20,00,310410
+
+  // Always print the NITZ info so we can collection what different providers
+  // send down the pipe (see bug XXX).
+  // TODO once data is collected, add in |if (DEBUG)|
+  
+  debug("DateTimeZone string " + dateString);
+
+  let now = Date.now();
+	
+  let year = parseInt(dateString.substr(0, 2), 10);
+  let month = parseInt(dateString.substr(3, 2), 10);
+  let day = parseInt(dateString.substr(6, 2), 10);
+  let hours = parseInt(dateString.substr(9, 2), 10);
+  let minutes = parseInt(dateString.substr(12, 2), 10);
+  let seconds = parseInt(dateString.substr(15, 2), 10);
+  let tz = parseInt(dateString.substr(17, 3), 10); // TZ is in 15 min. units
+  let dst = parseInt(dateString.substr(21, 2), 10); // DST already is in local time
+
+  let timeInSeconds = Date.UTC(year + PDU_TIMESTAMP_YEAR_OFFSET, month - 1, day,
+                               hours, minutes, seconds) / 1000;
+
+  if (isNaN(timeInSeconds)) {
+    debug("NITZ failed to convert date");
+  } else {
+    Phone.onNITZ(timeInSeconds, tz*15, dst, now);
+  }
+};
+
 RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH() {
   this[REQUEST_SIGNAL_STRENGTH]();
 };
@@ -2021,6 +2055,15 @@ let Phone = {
 
   onDataCallListChanged: function onDataCallListChanged() {
     RIL.getDataCallList();
+  },
+
+  onNITZ: function onNITZ(timeInSeconds, timeZoneInMinutes, dstFlag, timeStampInMS) {
+    let message = {type: "nitzTime",
+                   networkTimeInSeconds: timeInSeconds,
+                   networkTimeZoneInMinutes: timeZoneInMinutes,
+                   dstFlag: dstFlag,
+                   localTimeStampInMS: timeStampInMS};
+    this.sendDOMMessage(message);
   },
 
   /**
