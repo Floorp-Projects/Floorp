@@ -4499,6 +4499,32 @@ js::SetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value)
 template bool js::SetProperty<true> (JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value);
 template bool js::SetProperty<false>(JSContext *cx, JSObject *obj, JSAtom *atom, const Value &value);
 
+template <bool strict>
+bool
+js::DeleteProperty(JSContext *ctx, const Value &val, PropertyName *name, JSBool *bp)
+{
+    // default op result is false (failure)
+    *bp = true;
+
+    // convert value to JSObject pointer
+    JSObject *obj = ValueToObject(ctx, val);
+    if (!obj)
+        return false;
+
+    // Call deleteProperty on obj
+    Value result = NullValue();
+    bool delprop_ok = obj->deleteProperty(ctx, name, &result, strict);
+    if(!delprop_ok)
+        return false;
+    JS_ASSERT(result.isBoolean());
+    // convert result into *bp and return
+    *bp = result.toBoolean();
+    return true;
+}
+
+template bool js::DeleteProperty<true> (JSContext *ctx, const Value &val, PropertyName *name, JSBool *bp);
+template bool js::DeleteProperty<false>(JSContext *ctx, const Value &val, PropertyName *name, JSBool *bp);
+
 bool
 js::GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res)
 {
