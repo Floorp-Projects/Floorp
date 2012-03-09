@@ -213,11 +213,25 @@ public class AccountActivity extends AccountAuthenticatorActivity {
       userbundle.putString(Constants.OPTION_SERVER, DEFAULT_SERVER);
     }
     Log.d(LOG_TAG, "Adding account for " + Constants.ACCOUNTTYPE_SYNC);
-    boolean result = accountManager.addAccountExplicitly(account, password, userbundle);
+    boolean result = false;
+    try {
+      result = accountManager.addAccountExplicitly(account, password, userbundle);
+    } catch (SecurityException e) {
+      final String message = e.getMessage();
+      if (message != null && (message.indexOf("is different than the authenticator's uid") > 0)) {
+        Log.wtf("FirefoxSync",
+                "Unable to create account. " +
+                "If you have more than one version of " +
+                "Firefox/Beta/Aurora/Nightly/Fennec installed, that's why.",
+                e);
+      } else {
+        Log.e("FirefoxSync", "Unable to create account.", e);
+      }
+    }
 
     Log.d(LOG_TAG, "Account: " + account + " added successfully? " + result);
     if (!result) {
-      Log.e(LOG_TAG, "Error adding account!");
+      Log.e(LOG_TAG, "Failed to add account!");
     }
 
     // Set components to sync (default: all).
