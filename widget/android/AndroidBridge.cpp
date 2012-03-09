@@ -63,6 +63,9 @@
 #define ALOG_BRIDGE(args...)
 #endif
 
+#define IME_FULLSCREEN_PREF "widget.ime.android.landscape_fullscreen"
+#define IME_FULLSCREEN_THRESHOLD_PREF "widget.ime.android.fullscreen_threshold"
+
 using namespace mozilla;
 
 AndroidBridge *AndroidBridge::sBridge = 0;
@@ -103,7 +106,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     mGeckoAppShellClass = (jclass) jEnv->NewGlobalRef(jGeckoAppShellClass);
 
     jNotifyIME = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIME", "(II)V");
-    jNotifyIMEEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEEnabled", "(ILjava/lang/String;Ljava/lang/String;)V");
+    jNotifyIMEEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEEnabled", "(ILjava/lang/String;Ljava/lang/String;Z)V");
     jNotifyIMEChange = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEChange", "(Ljava/lang/String;III)V");
     jNotifyScreenShot = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyScreenShot", "(Ljava/nio/ByteBuffer;III)V");
     jAcknowledgeEventSync = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "acknowledgeEventSync", "()V");
@@ -238,14 +241,34 @@ AndroidBridge::NotifyIMEEnabled(int aState, const nsAString& aTypeHint,
     nsPromiseFlatString typeHint(aTypeHint);
     nsPromiseFlatString actionHint(aActionHint);
 
-    jvalue args[3];
+    jvalue args[4];
     AutoLocalJNIFrame jniFrame(env, 1);
     args[0].i = aState;
     args[1].l = env->NewString(typeHint.get(), typeHint.Length());
     args[2].l = env->NewString(actionHint.get(), actionHint.Length());
+    args[3].z = false;
+
+    PRInt32 landscapeFS;
+    if (NS_SUCCEEDED(Preferences::GetInt(IME_FULLSCREEN_PREF, &landscapeFS))) {
+        if (landscapeFS == 1) {
+            args[3].z = true;
+        } else if (landscapeFS == -1){
+            if (NS_SUCCEEDED(
+                  Preferences::GetInt(IME_FULLSCREEN_THRESHOLD_PREF,
+                                      &landscapeFS))) {
+                // the threshold is hundreths of inches, so convert the 
+                // threshold to pixels and multiply the height by 100
+                if (nsWindow::GetAndroidScreenBounds().height  * 100 < 
+                    landscapeFS * Bridge()->GetDPI()) {
+                    args[3].z = true;
+                }
+            }
+
+        }
+    }
 
     env->CallStaticVoidMethodA(sBridge->mGeckoAppShellClass,
-                               sBridge->jNotifyIMEEnabled, args);
+                                 sBridge->jNotifyIMEEnabled, args);
 }
 
 void

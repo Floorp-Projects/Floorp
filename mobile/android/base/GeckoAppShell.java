@@ -478,9 +478,10 @@ public class GeckoAppShell
             mInputConnection.notifyIME(type, state);
     }
 
-    public static void notifyIMEEnabled(int state, String typeHint, String actionHint) {
+    public static void notifyIMEEnabled(int state, String typeHint,
+                                        String actionHint, boolean landscapeFS) {
         if (mInputConnection != null)
-            mInputConnection.notifyIMEEnabled(state, typeHint, actionHint);
+            mInputConnection.notifyIMEEnabled(state, typeHint, actionHint, landscapeFS);
     }
 
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
