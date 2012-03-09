@@ -1520,6 +1520,12 @@ typedef JSBool
  * Security protocol types.
  */
 
+typedef void
+(* JSDestroyPrincipalsOp)(JSPrincipals *principals);
+
+typedef JSBool
+(* JSSubsumePrincipalsOp)(JSPrincipals *principals1, JSPrincipals *principals2);
+
 /*
  * XDR-encode or -decode a principals instance, based on whether xdr->mode is
  * JSXDR_ENCODE, in which case *principalsp should be encoded; or JSXDR_DECODE,
@@ -1539,7 +1545,7 @@ typedef JSBool
  * callback's implementation.
  */
 typedef JSPrincipals *
-(* JSObjectPrincipalsFinder)(JSContext *cx, JSObject *obj);
+(* JSObjectPrincipalsFinder)(JSObject *obj);
 
 /*
  * Used to check if a CSP instance wants to disable eval() and friends.
@@ -4088,52 +4094,48 @@ JS_SetReservedSlot(JSObject *obj, uint32_t index, jsval v);
  * Security protocol.
  */
 struct JSPrincipals {
-    char *codebase;
-
     /* Don't call "destroy"; use reference counting macros below. */
     int refcount;
 
-    void   (* destroy)(JSContext *cx, JSPrincipals *);
-    JSBool (* subsume)(JSPrincipals *, JSPrincipals *);
-};
-
-#ifdef JS_THREADSAFE
-#define JSPRINCIPALS_HOLD(cx, principals)   JS_HoldPrincipals(cx,principals)
-#define JSPRINCIPALS_DROP(cx, principals)   JS_DropPrincipals(cx,principals)
-
-extern JS_PUBLIC_API(int)
-JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals);
-
-extern JS_PUBLIC_API(int)
-JS_DropPrincipals(JSContext *cx, JSPrincipals *principals);
-
-#else
-#define JSPRINCIPALS_HOLD(cx, principals)   (++(principals)->refcount)
-#define JSPRINCIPALS_DROP(cx, principals)                                     \
-    ((--(principals)->refcount == 0)                                          \
-     ? ((*(principals)->destroy)((cx), (principals)), 0)                      \
-     : (principals)->refcount)
+#ifdef DEBUG
+    /* A helper to facilitate principals debugging. */
+    uint32_t    debugToken;
 #endif
 
+#ifdef __cplusplus
+    void setDebugToken(uint32_t token) {
+# ifdef DEBUG
+        debugToken = token;
+# endif
+    }
+
+    /*
+     * This is not defined by the JS engine but should be provided by the
+     * embedding.
+     */
+    JS_PUBLIC_API(void) dump();
+#endif
+};
+
+extern JS_PUBLIC_API(void)
+JS_HoldPrincipals(JSPrincipals *principals);
+
+extern JS_PUBLIC_API(void)
+JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals);
 
 struct JSSecurityCallbacks {
     JSCheckAccessOp            checkObjectAccess;
+    JSSubsumePrincipalsOp      subsumePrincipals;
     JSPrincipalsTranscoder     principalsTranscoder;
     JSObjectPrincipalsFinder   findObjectPrincipals;
     JSCSPEvalChecker           contentSecurityPolicyAllows;
 };
 
-extern JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_SetRuntimeSecurityCallbacks(JSRuntime *rt, JSSecurityCallbacks *callbacks);
+extern JS_PUBLIC_API(void)
+JS_SetSecurityCallbacks(JSRuntime *rt, const JSSecurityCallbacks *callbacks);
 
-extern JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_GetRuntimeSecurityCallbacks(JSRuntime *rt);
-
-extern JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_SetContextSecurityCallbacks(JSContext *cx, JSSecurityCallbacks *callbacks);
-
-extern JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_GetSecurityCallbacks(JSContext *cx);
+extern JS_PUBLIC_API(const JSSecurityCallbacks *)
+JS_GetSecurityCallbacks(JSRuntime *rt);
 
 /*
  * Code running with "trusted" principals will be given a deeper stack
@@ -4149,6 +4151,14 @@ JS_GetSecurityCallbacks(JSContext *cx);
  */
 extern JS_PUBLIC_API(void)
 JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin);
+
+/*
+ * Initialize the callback that is called to destroy JSPrincipals instance
+ * when its reference counter drops to zero. The initialization can be done
+ * only once per JS runtime.
+ */
+extern JS_PUBLIC_API(void)
+JS_InitDestroyPrincipalsCallback(JSRuntime *rt, JSDestroyPrincipalsOp destroyPrincipals);
 
 /************************************************************************/
 

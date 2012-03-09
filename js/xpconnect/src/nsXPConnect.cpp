@@ -1145,12 +1145,8 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
     // of failure or give ownership to the compartment in case of success (in
     // that case it will be free'd in CompartmentCallback during GC).
     nsAutoPtr<xpc::CompartmentPrivate> priv_holder(priv);
-    JSPrincipals *principals = nsnull;
-    if (principal)
-        principal->GetJSPrincipals(cx, &principals);
-    JSObject *tempGlobal = JS_NewCompartmentAndGlobalObject(cx, clasp, principals);
-    if (principals)
-        JSPRINCIPALS_DROP(cx, principals);
+    JSObject *tempGlobal =
+        JS_NewCompartmentAndGlobalObject(cx, clasp, nsJSPrincipals::get(principal));
 
     if (!tempGlobal)
         return false;

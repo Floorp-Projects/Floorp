@@ -158,7 +158,7 @@ TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *origin
     cx(cx), originPrincipals(JSScript::normalizeOriginPrincipals(prin, originPrin))
 {
     if (originPrincipals)
-        JSPRINCIPALS_HOLD(cx, originPrincipals);
+        JS_HoldPrincipals(originPrincipals);
 }
 
 #ifdef _MSC_VER
@@ -248,7 +248,7 @@ TokenStream::~TokenStream()
     if (sourceMap)
         cx->free_(sourceMap);
     if (originPrincipals)
-        JSPRINCIPALS_DROP(cx, originPrincipals);
+        JS_DropPrincipals(cx->runtime, originPrincipals);
 }
 
 /* Use the fastest available getc. */

@@ -69,8 +69,8 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsNullPrincipal,
 NS_IMETHODIMP_(nsrefcnt) 
 nsNullPrincipal::AddRef()
 {
-  NS_PRECONDITION(PRInt32(mJSPrincipals.refcount) >= 0, "illegal refcnt");
-  nsrefcnt count = PR_ATOMIC_INCREMENT(&mJSPrincipals.refcount);
+  NS_PRECONDITION(PRInt32(refcount) >= 0, "illegal refcnt");
+  nsrefcnt count = PR_ATOMIC_INCREMENT(&refcount);
   NS_LOG_ADDREF(this, count, "nsNullPrincipal", sizeof(*this));
   return count;
 }
@@ -78,8 +78,8 @@ nsNullPrincipal::AddRef()
 NS_IMETHODIMP_(nsrefcnt)
 nsNullPrincipal::Release()
 {
-  NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");
-  nsrefcnt count = PR_ATOMIC_DECREMENT(&mJSPrincipals.refcount);
+  NS_PRECONDITION(0 != refcount, "dup release");
+  nsrefcnt count = PR_ATOMIC_DECREMENT(&refcount);
   NS_LOG_RELEASE(this, count, "nsNullPrincipal");
   if (count == 0) {
     delete this;
@@ -133,8 +133,23 @@ nsNullPrincipal::Init()
   mURI = new nsNullPrincipalURI(str);
   NS_ENSURE_TRUE(mURI, NS_ERROR_OUT_OF_MEMORY);
 
-  return mJSPrincipals.Init(this, str);
+  return NS_OK;
 }
+
+void
+nsNullPrincipal::GetScriptLocation(nsACString &aStr)
+{
+  mURI->GetSpec(aStr);
+}
+
+#ifdef DEBUG
+void nsNullPrincipal::dumpImpl()
+{
+  nsCAutoString str;
+  mURI->GetSpec(str);
+  fprintf(stderr, "nsNullPrincipal (%p) = %s\n", this, str.get());
+}
+#endif 
 
 /**
  * nsIPrincipal implementation
@@ -176,17 +191,6 @@ NS_IMETHODIMP
 nsNullPrincipal::GetHashValue(PRUint32 *aResult)
 {
   *aResult = (NS_PTR_TO_INT32(this) >> 2);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetJSPrincipals(JSContext *cx, JSPrincipals **aJsprin)
-{
-  NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr,
-                  "mJSPrincipals is uninitalized!");
-
-  JSPRINCIPALS_HOLD(cx, &mJSPrincipals);
-  *aJsprin = &mJSPrincipals;
   return NS_OK;
 }
 
