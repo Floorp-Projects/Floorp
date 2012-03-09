@@ -8,10 +8,13 @@ import java.util.ArrayList;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.Utils;
+
+import android.content.ContentValues;
 
 /**
  * Represents a client's collection of tabs.
@@ -40,7 +43,19 @@ public class TabsRecord extends Record {
       String title      = obj.getString("title");
       String icon       = obj.getString("icon");
       JSONArray history = obj.getArray("urlHistory");
-      long lastUsed     = obj.getLong("lastUsed");
+
+      // Last used is inexplicably a string in seconds. Most of the time.
+      long lastUsed = 0;
+      Object lU = obj.get("lastUsed");
+      if (lU instanceof Number) {
+        lastUsed = ((Long) lU) * 1000L;
+      } else if (lU instanceof String) {
+        try {
+          lastUsed = Long.parseLong((String) lU, 10) * 1000L;
+        } catch (NumberFormatException e) {
+          Logger.debug(LOG_TAG, "Invalid number format in lastUsed: " + lU);
+        }
+      }
       return new Tab(title, icon, history, lastUsed);
     }
 
@@ -50,8 +65,22 @@ public class TabsRecord extends Record {
       o.put("title", title);
       o.put("icon", icon);
       o.put("urlHistory", history);
-      o.put("lastUsed", lastUsed);
+      o.put("lastUsed", this.lastUsed / 1000);
       return o;
+    }
+
+    public ContentValues toContentValues(String clientGUID, int position) {
+      ContentValues out = new ContentValues();
+      out.put(BrowserContract.Tabs.POSITION,    position);
+      out.put(BrowserContract.Tabs.CLIENT_GUID, clientGUID);
+
+      out.put(BrowserContract.Tabs.FAVICON,   this.icon);
+      out.put(BrowserContract.Tabs.LAST_USED, this.lastUsed);
+      out.put(BrowserContract.Tabs.TITLE,     this.title);
+      out.put(BrowserContract.Tabs.URL,       (String) this.history.get(0));
+      out.put(BrowserContract.Tabs.HISTORY,   this.history.toJSONString());
+      return out;
+
     }
   }
 
@@ -128,6 +157,23 @@ public class TabsRecord extends Record {
     out.clientName = this.clientName;
     out.tabs = new ArrayList<Tab>(this.tabs);
 
+    return out;
+  }
+
+  public ContentValues getClientsContentValues() {
+    ContentValues cv = new ContentValues();
+    cv.put(BrowserContract.Clients.GUID, this.guid);
+    cv.put(BrowserContract.Clients.NAME, this.clientName);
+    cv.put(BrowserContract.Clients.LAST_MODIFIED, this.lastModified);
+    return cv;
+  }
+
+  public ContentValues[] getTabsContentValues() {
+    int c = tabs.size();
+    ContentValues[] out = new ContentValues[c];
+    for (int i = 0; i < c; i++) {
+      out[i] = tabs.get(i).toContentValues(this.guid, i);
+    }
     return out;
   }
 }
