@@ -64,17 +64,18 @@ function doEditorTestSteps()
   let editor = treePanel.treeBrowserDocument.getElementById("attribute-editor");
   let editorInput = treePanel.treeBrowserDocument.getElementById("attribute-editor-input");
 
-  // Step 1: grab and test the attribute-value nodes in the HTML panel, then open editor
-  let attrValNode_id = treePanel.treeBrowserDocument.querySelectorAll(".nodeValue.editable[data-attributeName='id']")[0];
-  let attrValNode_class = treePanel.treeBrowserDocument.querySelectorAll(".nodeValue.editable[data-attributeName='class']")[0];
+  // Step 1: grab and test the attribute-name nodes in the HTML panel, then open editor
+  let nodes = treePanel.treeBrowserDocument.querySelectorAll(".nodeName.editable");
+  let attrNameNode_id = nodes[0]
+  let attrNameNode_class = nodes[1];
 
-  is(attrValNode_id.innerHTML, "foobar", "Step 1: we have the correct `id` attribute-value node in the HTML panel");
-  is(attrValNode_class.innerHTML, "barbaz", "we have the correct `class` attribute-value node in the HTML panel");
+  is(attrNameNode_id.innerHTML, "id", "Step 1: we have the correct `id` attribute-name node in the HTML panel");
+  is(attrNameNode_class.innerHTML, "class", "we have the correct `class` attribute-name node in the HTML panel");
 
-  // double-click the `id` attribute-value node to open the editor
+  // double-click the `id` attribute-name node to open the editor
   executeSoon(function() {
     // firing 2 clicks right in a row to simulate a double-click
-    EventUtils.synthesizeMouse(attrValNode_id, 2, 2, {clickCount: 2}, attrValNode_id.ownerDocument.defaultView);
+    EventUtils.synthesizeMouse(attrNameNode_id, 2, 2, {clickCount: 2}, attrNameNode_id.ownerDocument.defaultView);
   });
 
   yield; // End of Step 1
@@ -91,23 +92,23 @@ function doEditorTestSteps()
 
   // check if the editor popup is "near" the correct position
   let editorDims = editor.getBoundingClientRect();
-  let attrValNodeDims = attrValNode_id.getBoundingClientRect();
-  let editorPositionOK = (editorDims.left >= (attrValNodeDims.left - editorDims.width - 5)) &&
-                          (editorDims.right <= (attrValNodeDims.right + editorDims.width + 5)) &&
-                          (editorDims.top >= (attrValNodeDims.top - editorDims.height - 5)) &&
-                          (editorDims.bottom <= (attrValNodeDims.bottom + editorDims.height + 5));
+  let attrNameNodeDims = attrNameNode_id.getBoundingClientRect();
+  let editorPositionOK = (editorDims.left >= (attrNameNodeDims.left - editorDims.width - 5)) &&
+                          (editorDims.right <= (attrNameNodeDims.right + editorDims.width + 5)) &&
+                          (editorDims.top >= (attrNameNodeDims.top - editorDims.height - 5)) &&
+                          (editorDims.bottom <= (attrNameNodeDims.bottom + editorDims.height + 5));
 
   ok(editorPositionOK, "editor position acceptable");
 
   // check to make sure the attribute-value node being edited is properly highlighted
-  let attrValNodeHighlighted = attrValNode_id.classList.contains("editingAttributeValue");
-  ok(attrValNodeHighlighted, "`id` attribute-value node is editor-highlighted");
+  let attrNameNodeHighlighted = attrNameNode_id.classList.contains("editingAttributeValue");
+  ok(attrNameNodeHighlighted, "`id` attribute-name node is editor-highlighted");
 
   is(treePanel.editingContext.repObj, div, "editor session has correct reference to div");
-  is(treePanel.editingContext.attrObj, attrValNode_id, "editor session has correct reference to `id` attribute-value node in HTML panel");
+  is(treePanel.editingContext.attrObj, attrNameNode_id, "editor session has correct reference to `id` attribute-name node in HTML panel");
   is(treePanel.editingContext.attrName, "id", "editor session knows correct attribute-name");
 
-  editorInput.value = "Hello World";
+  editorInput.value = "burp";
   editorInput.focus();
 
   InspectorUI.highlighter.addListener("nodeselected", highlighterTrap);
@@ -115,8 +116,8 @@ function doEditorTestSteps()
   // hit <enter> to save the textbox value
   executeSoon(function() {
     // Extra key to test that keyboard handlers have been removed. bug 696107.
-    EventUtils.synthesizeKey("VK_LEFT", {}, attrValNode_id.ownerDocument.defaultView);
-    EventUtils.synthesizeKey("VK_RETURN", {}, attrValNode_id.ownerDocument.defaultView);
+    EventUtils.synthesizeKey("VK_LEFT", {}, attrNameNode_id.ownerDocument.defaultView);
+    EventUtils.synthesizeKey("VK_RETURN", {}, attrNameNode_id.ownerDocument.defaultView);
   });
 
   // two `yield` statements, to trap both the "SAVED" and "CLOSED" events that will be triggered
@@ -130,15 +131,15 @@ function doEditorTestSteps()
   ok(!treePanel.editingContext, "Step 3: editor session ended");
   editorVisible = editor.classList.contains("editing");
   ok(!editorVisible, "editor popup hidden");
-  attrValNodeHighlighted = attrValNode_id.classList.contains("editingAttributeValue");
-  ok(!attrValNodeHighlighted, "`id` attribute-value node is no longer editor-highlighted");
-  is(div.getAttribute("id"), "Hello World", "`id` attribute-value successfully updated");
-  is(attrValNode_id.innerHTML, "Hello World", "attribute-value node in HTML panel successfully updated");
+  attrNameNodeHighlighted = attrNameNode_id.classList.contains("editingAttributeValue");
+  ok(!attrNameNodeHighlighted, "`id` attribute-value node is no longer editor-highlighted");
+  is(div.getAttribute("burp"), "foobar", "`id` attribute-name successfully updated");
+  is(attrNameNode_id.innerHTML, "burp", "attribute-name node in HTML panel successfully updated");
 
   // double-click the `class` attribute-value node to open the editor
   executeSoon(function() {
     // firing 2 clicks right in a row to simulate a double-click
-    EventUtils.synthesizeMouse(attrValNode_class, 2, 2, {clickCount: 2}, attrValNode_class.ownerDocument.defaultView);
+    EventUtils.synthesizeMouse(attrNameNode_class, 2, 2, {clickCount: 2}, attrNameNode_class.ownerDocument.defaultView);
   });
 
   yield; // End of Step 3
@@ -149,7 +150,7 @@ function doEditorTestSteps()
   editorVisible = editor.classList.contains("editing");
   ok(editorVisible, "editor popup visible");
 
-  is(treePanel.editingContext.attrObj, attrValNode_class, "editor session has correct reference to `class` attribute-value node in HTML panel");
+  is(treePanel.editingContext.attrObj, attrNameNode_class, "editor session has correct reference to `class` attribute-name node in HTML panel");
   is(treePanel.editingContext.attrName, "class", "editor session knows correct attribute-name");
 
   editorInput.value = "Hello World";
@@ -157,7 +158,7 @@ function doEditorTestSteps()
 
   // hit <escape> to discard the inputted value
   executeSoon(function() {
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, attrValNode_class.ownerDocument.defaultView);
+    EventUtils.synthesizeKey("VK_ESCAPE", {}, attrNameNode_class.ownerDocument.defaultView);
   });
 
   yield; // End of Step 4
@@ -167,13 +168,13 @@ function doEditorTestSteps()
   ok(!treePanel.editingContext, "Step 5: editor session ended");
   editorVisible = editor.classList.contains("editing");
   ok(!editorVisible, "editor popup hidden");
-  is(div.getAttribute("class"), "barbaz", "`class` attribute-value *not* updated");
-  is(attrValNode_class.innerHTML, "barbaz", "attribute-value node in HTML panel *not* updated");
+  is(div.getAttribute("class"), "barbaz", "`class` attribute-name *not* updated");
+  is(attrNameNode_class.innerHTML, "class", "attribute-name node in HTML panel *not* updated");
 
-  // double-click the `id` attribute-value node to open the editor
+  // double-click the `id` attribute-name node to open the editor
   executeSoon(function() {
     // firing 2 clicks right in a row to simulate a double-click
-    EventUtils.synthesizeMouse(attrValNode_id, 2, 2, {clickCount: 2}, attrValNode_id.ownerDocument.defaultView);
+    EventUtils.synthesizeMouse(attrNameNode_id, 2, 2, {clickCount: 2}, attrNameNode_id.ownerDocument.defaultView);
   });
 
   yield; // End of Step 5
@@ -209,7 +210,7 @@ function doEditorTestSteps()
 
   // single-click the `class` attribute-value node
   executeSoon(function() {
-    EventUtils.synthesizeMouse(attrValNode_class, 2, 2, {}, attrValNode_class.ownerDocument.defaultView);
+    EventUtils.synthesizeMouse(attrNameNode_class, 2, 2, {}, attrNameNode_class.ownerDocument.defaultView);
   });
 
   yield; // End of Step 7
@@ -219,8 +220,8 @@ function doEditorTestSteps()
   ok(!treePanel.editingContext, "Step 8: editor session ended");
   editorVisible = editor.classList.contains("editing");
   ok(!editorVisible, "editor popup hidden");
-  is(div.getAttribute("id"), "Hello World", "`id` attribute-value *not* updated");
-  is(attrValNode_id.innerHTML, "Hello World", "attribute-value node in HTML panel *not* updated");
+  is(div.getAttribute("burp"), "foobar", "`id` attribute-name *not* updated");
+  is(attrNameNode_id.innerHTML, "burp", "attribute-value node in HTML panel *not* updated");
 
   // End of Step 8
   executeSoon(finishUp);
