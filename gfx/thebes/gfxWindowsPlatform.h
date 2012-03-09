@@ -179,6 +179,10 @@ public:
 
     nsresult UpdateFontList();
 
+    virtual void GetCommonFallbackFonts(const PRUint32 aCh,
+                                        PRInt32 aRunScript,
+                                        nsTArray<const char*>& aFontList);
+
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,
                              void *aClosure, bool& aAborted);
