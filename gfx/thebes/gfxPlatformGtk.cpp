@@ -82,6 +82,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::unicode;
 
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
@@ -684,7 +685,7 @@ gfxPlatformGtk::FindFontForChar(PRUint32 aCh, gfxFont *aFont)
         return nsnull;
     }
 
-    GlobalFontMatch data(aCh, gfxUnicodeProperties::GetScriptCode(aCh),
+    GlobalFontMatch data(aCh, GetScriptCode(aCh),
                          (aFont ? aFont->GetStyle() : nsnull));
 
     // find fonts that support the character
