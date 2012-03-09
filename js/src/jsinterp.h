@@ -433,10 +433,6 @@ Debug_SetSlotRangeToCrashOnTouch(HeapSlot *begin, HeapSlot *end)
 #endif
 }
 
-template <bool strict>
-bool
-DeleteProperty(JSContext *ctx, const Value &val, PropertyName *name, JSBool *bv);
-
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */
