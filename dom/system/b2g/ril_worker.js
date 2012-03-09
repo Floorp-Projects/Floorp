@@ -941,8 +941,8 @@ let RIL = {
     Buf.writeUint32(options.p2);
     Buf.writeUint32(options.p3);
     Buf.writeString(options.data);
-    if (request.pin2 != null) {
-      Buf.writeString(pin2);
+    if (options.pin2 != null) {
+      Buf.writeString(options.pin2);
     }
     Buf.sendParcel();
   },
@@ -1784,7 +1784,7 @@ let Phone = {
         let response = Buf.readString();
         let recordSize = parseInt(
             response.substr(RESPONSE_DATA_RECORD_LENGTH * 2, 2), 16) & 0xff;
-        let request = {
+        let options = {
           command: ICC_COMMAND_READ_RECORD,
           fileid:  ICC_EF_MSISDN,
           pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
@@ -1794,7 +1794,7 @@ let Phone = {
           data:    null,
           pin2:    null,
         };
-        RIL.iccIO(request);
+        RIL.iccIO(options);
         break;
 
       case ICC_COMMAND_READ_RECORD:
@@ -2274,7 +2274,7 @@ let Phone = {
    *  Get MSISDN
    */ 
   getMSISDN: function getMSISDN() {
-    let request = {
+    let options = {
       command: ICC_COMMAND_GET_RESPONSE,
       fileid:  ICC_EF_MSISDN,
       pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
@@ -2284,7 +2284,7 @@ let Phone = {
       data:    null,
       pin2:    null,
     };
-    RIL.iccIO(request);
+    RIL.iccIO(options);
   },
 
   /**
