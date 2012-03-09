@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    TrueType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
-/*            2010 by                                                      */
+/*  Copyright 1996-2012                                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -47,7 +46,7 @@
 
   /*************************************************************************/
   /*                                                                       */
-  /* Composite font flags.                                                 */
+  /* Composite glyph flags.                                                */
   /*                                                                       */
 #define ARGS_ARE_WORDS             0x0001
 #define ARGS_ARE_XY_VALUES         0x0002
@@ -66,21 +65,15 @@
 
   /*************************************************************************/
   /*                                                                       */
-  /* Returns the horizontal metrics in font units for a given glyph.  If   */
-  /* `check' is true, take care of monospaced fonts by returning the       */
-  /* advance width maximum.                                                */
+  /* Return the horizontal metrics in font units for a given glyph.        */
   /*                                                                       */
   FT_LOCAL_DEF( void )
   TT_Get_HMetrics( TT_Face     face,
                    FT_UInt     idx,
-                   FT_Bool     check,
                    FT_Short*   lsb,
                    FT_UShort*  aw )
   {
     ( (SFNT_Service)face->sfnt )->get_metrics( face, 0, idx, lsb, aw );
-
-    if ( check && face->postscript.isFixedPitch )
-      *aw = face->horizontal.advance_Width_Max;
 
     FT_TRACE5(( "  advance width (font units): %d\n", *aw ));
     FT_TRACE5(( "  left side bearing (font units): %d\n", *lsb ));
@@ -89,7 +82,7 @@
 
   /*************************************************************************/
   /*                                                                       */
-  /* Returns the vertical metrics in font units for a given glyph.         */
+  /* Return the vertical metrics in font units for a given glyph.          */
   /* Greg Hitchcock from Microsoft told us that if there were no `vmtx'    */
   /* table, typoAscender/Descender from the `OS/2' table would be used     */
   /* instead, and if there were no `OS/2' table, use ascender/descender    */
@@ -97,18 +90,12 @@
   /* apparently does: It uses the ppem value as the advance height, and    */
   /* sets the top side bearing to be zero.                                 */
   /*                                                                       */
-  /* The monospace `check' is probably not meaningful here, but we leave   */
-  /* it in for a consistent interface.                                     */
-  /*                                                                       */
   FT_LOCAL_DEF( void )
   TT_Get_VMetrics( TT_Face     face,
                    FT_UInt     idx,
-                   FT_Bool     check,
                    FT_Short*   tsb,
                    FT_UShort*  ah )
   {
-    FT_UNUSED( check );
-
     if ( face->vertical_info )
       ( (SFNT_Service)face->sfnt )->get_metrics( face, 1, idx, tsb, ah );
 
@@ -151,13 +138,9 @@
 
 
     TT_Get_HMetrics( face, glyph_index,
-                     (FT_Bool)!( loader->load_flags &
-                                 FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH ),
                      &left_bearing,
                      &advance_width );
     TT_Get_VMetrics( face, glyph_index,
-                     (FT_Bool)!( loader->load_flags &
-                                 FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH ),
                      &top_bearing,
                      &advance_height );
 
@@ -379,19 +362,21 @@
     if ( n_contours >= 0xFFF || p + ( n_contours + 1 ) * 2 > limit )
       goto Invalid_Outline;
 
-    prev_cont = FT_NEXT_USHORT( p );
+    prev_cont = FT_NEXT_SHORT( p );
 
     if ( n_contours > 0 )
       cont[0] = prev_cont;
 
+    if ( prev_cont < 0 )
+      goto Invalid_Outline;
+
     for ( cont++; cont < cont_limit; cont++ )
     {
-      cont[0] = FT_NEXT_USHORT( p );
+      cont[0] = FT_NEXT_SHORT( p );
       if ( cont[0] <= prev_cont )
       {
         /* unordered contours: this is invalid */
-        error = TT_Err_Invalid_Table;
-        goto Fail;
+        goto Invalid_Outline;
       }
       prev_cont = cont[0];
     }
@@ -408,13 +393,6 @@
     error = FT_GLYPHLOADER_CHECK_POINTS( gloader, n_points + 4, 0 );
     if ( error )
       goto Fail;
-
-    /* we'd better check the contours table right now */
-    outline = &gloader->current.outline;
-
-    for ( cont = outline->contours + 1; cont < cont_limit; cont++ )
-      if ( cont[-1] >= cont[0] )
-        goto Invalid_Outline;
 
     /* reading the bytecode instructions */
     load->glyph->control_len  = 0;
@@ -455,6 +433,8 @@
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 
     p += n_ins;
+
+    outline = &gloader->current.outline;
 
     /* reading the point tags */
     flag       = (FT_Byte*)outline->tags;
@@ -1656,23 +1636,7 @@
 
     /* get the device-independent horizontal advance; it is scaled later */
     /* by the base layer.                                                */
-    {
-      FT_Pos  advance = loader->linear;
-
-
-      /* the flag FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH was introduced to */
-      /* correctly support DynaLab fonts, which have an incorrect       */
-      /* `advance_Width_Max' field!  It is used, to my knowledge,       */
-      /* exclusively in the X-TrueType font server.                     */
-      /*                                                                */
-      if ( face->postscript.isFixedPitch                                     &&
-           ( loader->load_flags & FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH ) == 0 )
-        advance = face->horizontal.advance_Width_Max;
-
-      /* we need to return the advance in font units in linearHoriAdvance, */
-      /* it will be scaled later by the base layer.                        */
-      glyph->linearHoriAdvance = advance;
-    }
+    glyph->linearHoriAdvance = loader->linear;
 
     glyph->metrics.horiBearingX = bbox.xMin;
     glyph->metrics.horiBearingY = bbox.yMax;
@@ -1869,6 +1833,7 @@
   {
     TT_Face    face;
     FT_Stream  stream;
+    FT_Bool    pedantic = FT_BOOL( load_flags & FT_LOAD_PEDANTIC );
 
 
     face   = (TT_Face)glyph->face;
@@ -1887,7 +1852,9 @@
 
       if ( !size->cvt_ready )
       {
-        FT_Error  error = tt_size_ready_bytecode( size );
+        FT_Error  error = tt_size_ready_bytecode( size, pedantic );
+
+
         if ( error )
           return error;
       }
@@ -1917,7 +1884,7 @@
 
         for ( i = 0; i < size->cvt_size; i++ )
           size->cvt[i] = FT_MulFix( face->cvt[i], size->ttmetrics.scale );
-        tt_size_run_prep( size );
+        tt_size_run_prep( size, pedantic );
       }
 
       /* see whether the cvt program has disabled hinting */
@@ -2047,9 +2014,6 @@
           glyph->linearHoriAdvance = loader.linear;
           glyph->linearVertAdvance = loader.top_bearing + loader.bbox.yMax -
                                        loader.vadvance;
-          if ( face->postscript.isFixedPitch                             &&
-               ( load_flags & FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH ) == 0 )
-            glyph->linearHoriAdvance = face->horizontal.advance_Width_Max;
         }
 
         return TT_Err_Ok;

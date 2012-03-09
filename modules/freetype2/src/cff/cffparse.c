@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF token stream parser (body)                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2007, 2008, 2009, 2010 by       */
+/*  Copyright 1996-2004, 2007-2011 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -33,8 +33,6 @@
   /*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_cffparse
-
-
 
 
   FT_LOCAL_DEF( void )
@@ -462,6 +460,8 @@
 
       error = CFF_Err_Ok;
 
+      dict->has_font_matrix = TRUE;
+
       /* We expect a well-formed font matrix, this is, the matrix elements */
       /* `xx' and `yy' are of approximately the same magnitude.  To avoid  */
       /* loss of precision, we use the magnitude of element `xx' to scale  */
@@ -475,9 +475,15 @@
       if ( scaling < 0 || scaling > 9 )
       {
         /* Return default matrix in case of unlikely values. */
+
+        FT_TRACE1(( "cff_parse_font_matrix:"
+                    " strange scaling value for xx element (%d),\n"
+                    "                      "
+                    " using default matrix\n", scaling ));
+
         matrix->xx = 0x10000L;
         matrix->yx = 0;
-        matrix->yx = 0;
+        matrix->xy = 0;
         matrix->yy = 0x10000L;
         offset->x  = 0;
         offset->y  = 0;
@@ -493,6 +499,14 @@
       offset->y  = cff_parse_fixed_scaled( data,   scaling );
 
       *upm = power_tens[scaling];
+
+      FT_TRACE4(( " [%f %f %f %f %f %f]\n",
+                  (double)matrix->xx / *upm / 65536,
+                  (double)matrix->xy / *upm / 65536,
+                  (double)matrix->yx / *upm / 65536,
+                  (double)matrix->yy / *upm / 65536,
+                  (double)offset->x  / *upm / 65536,
+                  (double)offset->y  / *upm / 65536 ));
     }
 
   Exit:
@@ -518,6 +532,12 @@
       bbox->xMax = FT_RoundFix( cff_parse_fixed( data++ ) );
       bbox->yMax = FT_RoundFix( cff_parse_fixed( data   ) );
       error = CFF_Err_Ok;
+
+      FT_TRACE4(( " [%d %d %d %d]\n",
+                  bbox->xMin / 65536,
+                  bbox->yMin / 65536,
+                  bbox->xMax / 65536,
+                  bbox->yMax / 65536 ));
     }
 
     return error;
@@ -538,6 +558,9 @@
     {
       dict->private_size   = cff_parse_num( data++ );
       dict->private_offset = cff_parse_num( data   );
+      FT_TRACE4(( " %lu %lu\n",
+                  dict->private_size, dict->private_offset ));
+
       error = CFF_Err_Ok;
     }
 
@@ -557,8 +580,8 @@
 
     if ( parser->top >= parser->stack + 3 )
     {
-      dict->cid_registry   = (FT_UInt)cff_parse_num ( data++ );
-      dict->cid_ordering   = (FT_UInt)cff_parse_num ( data++ );
+      dict->cid_registry = (FT_UInt)cff_parse_num( data++ );
+      dict->cid_ordering = (FT_UInt)cff_parse_num( data++ );
       if ( **data == 30 )
         FT_TRACE1(( "cff_parse_cid_ros: real supplement is rounded\n" ));
       dict->cid_supplement = cff_parse_num( data );
@@ -566,60 +589,70 @@
         FT_TRACE1(( "cff_parse_cid_ros: negative supplement %d is found\n",
                    dict->cid_supplement ));
       error = CFF_Err_Ok;
+
+      FT_TRACE4(( " %d %d %d\n",
+                  dict->cid_registry,
+                  dict->cid_ordering,
+                  dict->cid_supplement ));
     }
 
     return error;
   }
 
 
-#define CFF_FIELD_NUM( code, name ) \
-          CFF_FIELD( code, name, cff_kind_num )
-#define CFF_FIELD_FIXED( code, name ) \
-          CFF_FIELD( code, name, cff_kind_fixed )
-#define CFF_FIELD_FIXED_1000( code, name ) \
-          CFF_FIELD( code, name, cff_kind_fixed_thousand )
-#define CFF_FIELD_STRING( code, name ) \
-          CFF_FIELD( code, name, cff_kind_string )
-#define CFF_FIELD_BOOL( code, name ) \
-          CFF_FIELD( code, name, cff_kind_bool )
-#define CFF_FIELD_DELTA( code, name, max ) \
-          CFF_FIELD( code, name, cff_kind_delta )
+#define CFF_FIELD_NUM( code, name, id )             \
+          CFF_FIELD( code, name, id, cff_kind_num )
+#define CFF_FIELD_FIXED( code, name, id )             \
+          CFF_FIELD( code, name, id, cff_kind_fixed )
+#define CFF_FIELD_FIXED_1000( code, name, id )                 \
+          CFF_FIELD( code, name, id, cff_kind_fixed_thousand )
+#define CFF_FIELD_STRING( code, name, id )             \
+          CFF_FIELD( code, name, id, cff_kind_string )
+#define CFF_FIELD_BOOL( code, name, id )             \
+          CFF_FIELD( code, name, id, cff_kind_bool )
 
 #define CFFCODE_TOPDICT  0x1000
 #define CFFCODE_PRIVATE  0x2000
 
+
 #ifndef FT_CONFIG_OPTION_PIC
 
-#define CFF_FIELD_CALLBACK( code, name ) \
-          {                              \
-            cff_kind_callback,           \
-            code | CFFCODE,              \
-            0, 0,                        \
-            cff_parse_ ## name,          \
-            0, 0                         \
-          },
 
 #undef  CFF_FIELD
-#define CFF_FIELD( code, name, kind ) \
-          {                          \
-            kind,                    \
-            code | CFFCODE,          \
-            FT_FIELD_OFFSET( name ), \
-            FT_FIELD_SIZE( name ),   \
-            0, 0, 0                  \
+#undef  CFF_FIELD_DELTA
+
+
+#ifndef FT_DEBUG_LEVEL_TRACE
+
+
+#define CFF_FIELD_CALLBACK( code, name, id ) \
+          {                                  \
+            cff_kind_callback,               \
+            code | CFFCODE,                  \
+            0, 0,                            \
+            cff_parse_ ## name,              \
+            0, 0                             \
           },
 
-#undef  CFF_FIELD_DELTA
-#define CFF_FIELD_DELTA( code, name, max ) \
-        {                                  \
-          cff_kind_delta,                  \
-          code | CFFCODE,                  \
-          FT_FIELD_OFFSET( name ),         \
-          FT_FIELD_SIZE_DELTA( name ),     \
-          0,                               \
-          max,                             \
-          FT_FIELD_OFFSET( num_ ## name )  \
-        },
+#define CFF_FIELD( code, name, id, kind ) \
+          {                               \
+            kind,                         \
+            code | CFFCODE,               \
+            FT_FIELD_OFFSET( name ),      \
+            FT_FIELD_SIZE( name ),        \
+            0, 0, 0                       \
+          },
+
+#define CFF_FIELD_DELTA( code, name, max, id ) \
+          {                                    \
+            cff_kind_delta,                    \
+            code | CFFCODE,                    \
+            FT_FIELD_OFFSET( name ),           \
+            FT_FIELD_SIZE_DELTA( name ),       \
+            0,                                 \
+            max,                               \
+            FT_FIELD_OFFSET( num_ ## name )    \
+          },
 
   static const CFF_Field_Handler  cff_field_handlers[] =
   {
@@ -630,83 +663,200 @@
   };
 
 
+#else /* FT_DEBUG_LEVEL_TRACE */
+
+
+
+#define CFF_FIELD_CALLBACK( code, name, id ) \
+          {                                  \
+            cff_kind_callback,               \
+            code | CFFCODE,                  \
+            0, 0,                            \
+            cff_parse_ ## name,              \
+            0, 0,                            \
+            id                               \
+          },
+
+#define CFF_FIELD( code, name, id, kind ) \
+          {                               \
+            kind,                         \
+            code | CFFCODE,               \
+            FT_FIELD_OFFSET( name ),      \
+            FT_FIELD_SIZE( name ),        \
+            0, 0, 0,                      \
+            id                            \
+          },
+
+#define CFF_FIELD_DELTA( code, name, max, id ) \
+          {                                    \
+            cff_kind_delta,                    \
+            code | CFFCODE,                    \
+            FT_FIELD_OFFSET( name ),           \
+            FT_FIELD_SIZE_DELTA( name ),       \
+            0,                                 \
+            max,                               \
+            FT_FIELD_OFFSET( num_ ## name ),   \
+            id                                 \
+          },
+
+  static const CFF_Field_Handler  cff_field_handlers[] =
+  {
+
+#include "cfftoken.h"
+
+    { 0, 0, 0, 0, 0, 0, 0, 0 }
+  };
+
+
+#endif /* FT_DEBUG_LEVEL_TRACE */
+
+
 #else /* FT_CONFIG_OPTION_PIC */
 
-  void FT_Destroy_Class_cff_field_handlers(FT_Library library, CFF_Field_Handler* clazz)
+
+  void
+  FT_Destroy_Class_cff_field_handlers( FT_Library          library,
+                                       CFF_Field_Handler*  clazz )
   {
-    FT_Memory memory = library->memory;
+    FT_Memory  memory = library->memory;
+
+
     if ( clazz )
       FT_FREE( clazz );
   }
 
-  FT_Error FT_Create_Class_cff_field_handlers(FT_Library library, CFF_Field_Handler** output_class)
+
+  FT_Error
+  FT_Create_Class_cff_field_handlers( FT_Library           library,
+                                      CFF_Field_Handler**  output_class )
   {
     CFF_Field_Handler*  clazz;
-    FT_Error          error;
-    FT_Memory memory = library->memory;
-    int i=0;
+    FT_Error            error;
+    FT_Memory           memory = library->memory;
+
+    int  i = 0;
+
 
 #undef CFF_FIELD
+#define CFF_FIELD( code, name, id, kind ) i++;
 #undef CFF_FIELD_DELTA
+#define CFF_FIELD_DELTA( code, name, max, id ) i++;
 #undef CFF_FIELD_CALLBACK
-#define CFF_FIELD_CALLBACK( code, name ) i++;
-#define CFF_FIELD( code, name, kind ) i++;
-#define CFF_FIELD_DELTA( code, name, max ) i++;
+#define CFF_FIELD_CALLBACK( code, name, id ) i++;
 
 #include "cfftoken.h"
-    i++;/*{ 0, 0, 0, 0, 0, 0, 0 }*/
 
-    if ( FT_ALLOC( clazz, sizeof(CFF_Field_Handler)*i ) )
+    i++; /* { 0, 0, 0, 0, 0, 0, 0 } */
+
+    if ( FT_ALLOC( clazz, sizeof ( CFF_Field_Handler ) * i ) )
       return error;
 
-    i=0;
-#undef CFF_FIELD
-#undef CFF_FIELD_DELTA
-#undef CFF_FIELD_CALLBACK
+    i = 0;
 
-#define CFF_FIELD_CALLBACK( code_, name_ )                                   \
-    clazz[i].kind = cff_kind_callback;                                       \
-    clazz[i].code = code_ | CFFCODE;                                         \
-    clazz[i].offset = 0;                                                     \
-    clazz[i].size = 0;                                                       \
-    clazz[i].reader = cff_parse_ ## name_;                                   \
-    clazz[i].array_max = 0;                                                  \
-    clazz[i].count_offset = 0;                                               \
-    i++;
+
+#ifndef FT_DEBUG_LEVEL_TRACE
+
+
+#undef CFF_FIELD_CALLBACK
+#define CFF_FIELD_CALLBACK( code_, name_, id_ )        \
+          clazz[i].kind         = cff_kind_callback;   \
+          clazz[i].code         = code_ | CFFCODE;     \
+          clazz[i].offset       = 0;                   \
+          clazz[i].size         = 0;                   \
+          clazz[i].reader       = cff_parse_ ## name_; \
+          clazz[i].array_max    = 0;                   \
+          clazz[i].count_offset = 0;                   \
+          i++;
 
 #undef  CFF_FIELD
-#define CFF_FIELD( code_, name_, kind_ )                                     \
-    clazz[i].kind = kind_;                                                   \
-    clazz[i].code = code_ | CFFCODE;                                         \
-    clazz[i].offset = FT_FIELD_OFFSET( name_ );                              \
-    clazz[i].size = FT_FIELD_SIZE( name_ );                                  \
-    clazz[i].reader = 0;                                                     \
-    clazz[i].array_max = 0;                                                  \
-    clazz[i].count_offset = 0;                                               \
-    i++;                                                                     \
+#define CFF_FIELD( code_, name_, id_, kind_ )               \
+          clazz[i].kind         = kind_;                    \
+          clazz[i].code         = code_ | CFFCODE;          \
+          clazz[i].offset       = FT_FIELD_OFFSET( name_ ); \
+          clazz[i].size         = FT_FIELD_SIZE( name_ );   \
+          clazz[i].reader       = 0;                        \
+          clazz[i].array_max    = 0;                        \
+          clazz[i].count_offset = 0;                        \
+          i++;                                              \
 
 #undef  CFF_FIELD_DELTA
-#define CFF_FIELD_DELTA( code_, name_, max_ )                                \
-    clazz[i].kind = cff_kind_delta;                                          \
-    clazz[i].code = code_ | CFFCODE;                                         \
-    clazz[i].offset = FT_FIELD_OFFSET( name_ );                              \
-    clazz[i].size = FT_FIELD_SIZE_DELTA( name_ );                            \
-    clazz[i].reader = 0;                                                     \
-    clazz[i].array_max = max_;                                               \
-    clazz[i].count_offset = FT_FIELD_OFFSET( num_ ## name_ );                \
-    i++;
+#define CFF_FIELD_DELTA( code_, name_, max_, id_ )                  \
+          clazz[i].kind         = cff_kind_delta;                   \
+          clazz[i].code         = code_ | CFFCODE;                  \
+          clazz[i].offset       = FT_FIELD_OFFSET( name_ );         \
+          clazz[i].size         = FT_FIELD_SIZE_DELTA( name_ );     \
+          clazz[i].reader       = 0;                                \
+          clazz[i].array_max    = max_;                             \
+          clazz[i].count_offset = FT_FIELD_OFFSET( num_ ## name_ ); \
+          i++;
 
 #include "cfftoken.h"
 
-    clazz[i].kind = 0;
-    clazz[i].code = 0;
-    clazz[i].offset = 0;
-    clazz[i].size = 0;
-    clazz[i].reader = 0;
-    clazz[i].array_max = 0;
+    clazz[i].kind         = 0;
+    clazz[i].code         = 0;
+    clazz[i].offset       = 0;
+    clazz[i].size         = 0;
+    clazz[i].reader       = 0;
+    clazz[i].array_max    = 0;
     clazz[i].count_offset = 0;
 
+
+#else /* FT_DEBUG_LEVEL_TRACE */
+
+
+#undef CFF_FIELD_CALLBACK
+#define CFF_FIELD_CALLBACK( code_, name_, id_ )        \
+          clazz[i].kind         = cff_kind_callback;   \
+          clazz[i].code         = code_ | CFFCODE;     \
+          clazz[i].offset       = 0;                   \
+          clazz[i].size         = 0;                   \
+          clazz[i].reader       = cff_parse_ ## name_; \
+          clazz[i].array_max    = 0;                   \
+          clazz[i].count_offset = 0;                   \
+          clazz[i].id           = id_;                 \
+          i++;
+
+#undef  CFF_FIELD
+#define CFF_FIELD( code_, name_, id_, kind_ )               \
+          clazz[i].kind         = kind_;                    \
+          clazz[i].code         = code_ | CFFCODE;          \
+          clazz[i].offset       = FT_FIELD_OFFSET( name_ ); \
+          clazz[i].size         = FT_FIELD_SIZE( name_ );   \
+          clazz[i].reader       = 0;                        \
+          clazz[i].array_max    = 0;                        \
+          clazz[i].count_offset = 0;                        \
+          clazz[i].id           = id_;                      \
+          i++;                                              \
+
+#undef  CFF_FIELD_DELTA
+#define CFF_FIELD_DELTA( code_, name_, max_, id_ )                  \
+          clazz[i].kind         = cff_kind_delta;                   \
+          clazz[i].code         = code_ | CFFCODE;                  \
+          clazz[i].offset       = FT_FIELD_OFFSET( name_ );         \
+          clazz[i].size         = FT_FIELD_SIZE_DELTA( name_ );     \
+          clazz[i].reader       = 0;                                \
+          clazz[i].array_max    = max_;                             \
+          clazz[i].count_offset = FT_FIELD_OFFSET( num_ ## name_ ); \
+          clazz[i].id           = id_;                              \
+          i++;
+
+#include "cfftoken.h"
+
+    clazz[i].kind         = 0;
+    clazz[i].code         = 0;
+    clazz[i].offset       = 0;
+    clazz[i].size         = 0;
+    clazz[i].reader       = 0;
+    clazz[i].array_max    = 0;
+    clazz[i].count_offset = 0;
+    clazz[i].id           = 0;
+
+
+#endif /* FT_DEBUG_LEVEL_TRACE */
+
+
     *output_class = clazz;
+
     return CFF_Err_Ok;
   }
 
@@ -722,7 +872,7 @@
     FT_Byte*    p       = start;
     FT_Error    error   = CFF_Err_Ok;
     FT_Library  library = parser->library;
-    FT_UNUSED(library);
+    FT_UNUSED( library );
 
 
     parser->top    = parser->stack;
@@ -803,6 +953,10 @@
             FT_Byte*  q = (FT_Byte*)parser->object + field->offset;
 
 
+#ifdef FT_DEBUG_LEVEL_TRACE
+            FT_TRACE4(( "  %s", field->id ));
+#endif
+
             /* check that we have enough arguments -- except for */
             /* delta encoded arrays, which can be empty          */
             if ( field->kind != cff_kind_delta && num_args < 1 )
@@ -841,6 +995,34 @@
               default:  /* for 64-bit systems */
                 *(FT_Long*)q = val;
               }
+
+#ifdef FT_DEBUG_LEVEL_TRACE
+              switch ( field->kind )
+              {
+              case cff_kind_bool:
+                FT_TRACE4(( " %s\n", val ? "true" : "false" ));
+                break;
+
+              case cff_kind_string:
+                FT_TRACE4(( " %ld (SID)\n", val ));
+                break;
+
+              case cff_kind_num:
+                FT_TRACE4(( " %ld\n", val ));
+                break;
+
+              case cff_kind_fixed:
+                FT_TRACE4(( " %f\n", (double)val / 65536 ));
+                break;
+
+              case cff_kind_fixed_thousand:
+                FT_TRACE4(( " %f\n", (double)val / 65536 / 1000 ));
+
+              default:
+                ; /* never reached */
+              }
+#endif
+
               break;
 
             case cff_kind_delta:
@@ -853,6 +1035,8 @@
 
                 if ( num_args > field->array_max )
                   num_args = field->array_max;
+
+                FT_TRACE4(( " [" ));
 
                 /* store count */
                 *qcount = (FT_Byte)num_args;
@@ -879,9 +1063,13 @@
                     *(FT_Long*)q = val;
                   }
 
+                  FT_TRACE4(( " %ld", val ));
+
                   q += field->size;
                   num_args--;
                 }
+
+                FT_TRACE4(( "]\n" ));
               }
               break;
 

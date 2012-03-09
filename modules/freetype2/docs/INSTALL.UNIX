@@ -32,7 +32,7 @@ or MSys on Win32:
   2. Regenerate the configure script if needed
   --------------------------------------------
 
-    This only applies if you  are building a CVS snapshot or checkout,
+    This only applies if you  are building a git snapshot or checkout,
     *not* if you grabbed the sources of an official release.
 
     You  need  to invoke  the  `autogen.sh'  script  in the  top-level
@@ -42,7 +42,7 @@ or MSys on Win32:
       sh autogen.sh
 
     In case of problems, you  may need to install or upgrade Automake,
-    Autoconf or  Libtool.  See  README.CVS in the  top-level directory
+    Autoconf or  Libtool.  See  README.git in the  top-level directory
     for more information.
 
 
