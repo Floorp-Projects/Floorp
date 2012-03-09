@@ -164,7 +164,6 @@ public:
     , mEntrySize(aEntrySize)
   {
     mEntries = new ProfileEntry[mEntrySize];
-    mNeedsSharedLibraryInfo = true;
   }
 
   ~Profile()
@@ -252,12 +251,6 @@ public:
 
   void ToString(StringBuilder &profile)
   {
-    if (mNeedsSharedLibraryInfo) {
-      // Can't be called from signal because
-      // getting the shared library information can call non-reentrant functions.
-      mSharedLibraryInfo = SharedLibraryInfo::GetInfoForSelf();
-    }
-
     //XXX: this code is not thread safe and needs to be fixed
     int oldReadPos = mReadPos;
     while (mReadPos != mLastFlushPos) {
@@ -269,12 +262,6 @@ public:
 
   void WriteProfile(FILE* stream)
   {
-    if (mNeedsSharedLibraryInfo) {
-      // Can't be called from signal because
-      // getting the shared library information can call non-reentrant functions.
-      mSharedLibraryInfo = SharedLibraryInfo::GetInfoForSelf();
-    }
-
     //XXX: this code is not thread safe and needs to be fixed
     int oldReadPos = mReadPos;
     while (mReadPos != mLastFlushPos) {
@@ -284,11 +271,6 @@ public:
     }
     mReadPos = oldReadPos;
   }
-
-  SharedLibraryInfo& getSharedLibraryInfo()
-  {
-    return mSharedLibraryInfo;
-  }
 private:
   // Circular buffer 'Keep One Slot Open' implementation
   // for simplicity
@@ -297,8 +279,6 @@ private:
   int mLastFlushPos; // points to the next entry since the last flush()
   int mReadPos;  // points to the next entry we will read to
   int mEntrySize;
-  bool mNeedsSharedLibraryInfo;
-  SharedLibraryInfo mSharedLibraryInfo;
 };
 
 class SaveProfileTask;
@@ -570,54 +550,20 @@ string ProfileEntry::TagToString(Profile *profile)
     snprintf(buff, 50, "%-40f", mTagFloat);
     tag += string(1, mTagName) + string("-") + string(buff) + string("\n");
   } else if (mTagName == 'l') {
-    bool found = false;
     char tagBuff[1024];
-    SharedLibraryInfo& shlibInfo = profile->getSharedLibraryInfo();
     Address pc = mTagAddress;
-    // TODO Use binary sort (STL)
-    for (size_t i = 0; i < shlibInfo.GetSize(); i++) {
-      SharedLibrary &e = shlibInfo.GetEntry(i);
-      if (pc > (Address)e.GetStart() && pc < (Address)e.GetEnd()) {
-        if (e.GetName()) {
-          found = true;
-
-          snprintf(tagBuff, 1024, "l-%s@%p\n", e.GetName(), pc - e.GetStart());
-          tag += string(tagBuff);
-
-          break;
-        }
-      }
-    }
-    if (!found) {
-      snprintf(tagBuff, 1024, "l-???@%p\n", pc);
-      tag += string(tagBuff);
-    }
+    snprintf(tagBuff, 1024, "l-%p\n", pc);
+    tag += string(tagBuff);
   } else {
     tag += string(1, mTagName) + string("-") + string(mTagData) + string("\n");
   }
 
 #ifdef ENABLE_SPS_LEAF_DATA
   if (mLeafAddress) {
-    bool found = false;
     char tagBuff[1024];
-    SharedLibraryInfo& shlibInfo = profile->getSharedLibraryInfo();
     unsigned long pc = (unsigned long)mLeafAddress;
-    // TODO Use binary sort (STL)
-    for (size_t i = 0; i < shlibInfo.GetSize(); i++) {
-      SharedLibrary &e = shlibInfo.GetEntry(i);
-      if (pc > e.GetStart() && pc < e.GetEnd()) {
-        if (e.GetName()) {
-          found = true;
-          snprintf(tagBuff, 1024, "l-%900s@%llu\n", e.GetName(), pc - e.GetStart());
-          tag += string(tagBuff);
-          break;
-        }
-      }
-    }
-    if (!found) {
-      snprintf(tagBuff, 1024, "l-???@%llu\n", pc);
-      tag += string(tagBuff);
-    }
+    snprintf(tagBuff, 1024, "l-%llu\n", pc);
+    tag += string(tagBuff);
   }
 #endif
   return tag;
