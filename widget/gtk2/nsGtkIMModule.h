@@ -169,6 +169,10 @@ protected:
     // was dispatched by compositionupdate event.
     nsString mDispatchedCompositionString;
 
+    // mSelectedString is the selected string which was removed by first
+    // text event.
+    nsString mSelectedString;
+
     // OnKeyEvent() temporarily sets mProcessingKeyEvent to the given native
     // event.
     GdkEventKey* mProcessingKeyEvent;

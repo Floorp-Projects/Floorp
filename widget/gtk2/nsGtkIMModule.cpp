@@ -454,6 +454,10 @@ nsGtkIMModule::OnFocusChangeInGecko(bool aFocus)
          this, aFocus ? "YES" : "NO", GetCompositionStateName(),
          mIsIMFocused ? "YES" : "NO",
          mIgnoreNativeCompositionEvent ? "YES" : "NO"));
+
+    // We shouldn't carry over the removed string to another editor.
+    mSelectedString.Truncate();
+
     if (aFocus) {
         // If we failed to commit forcedely in previous focused editor,
         // we should reopen the gate for native signals in new focused editor.
@@ -1093,6 +1097,10 @@ nsGtkIMModule::DispatchCompositionStart()
         return false;
     }
 
+    // XXX The composition start point might be changed by composition events
+    //     even though we strongly hope it doesn't happen.
+    //     Every composition event should have the start offset for the result
+    //     because it may high cost if we query the offset every time.
     mCompositionStart = selection.mReply.mOffset;
     mDispatchedCompositionString.Truncate();
 
@@ -1218,6 +1226,20 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
               ("    NOTE, the focused widget was destroyed/changed by compositionupdate"));
           return false;
       }
+    }
+
+    // Store the selected string which will be removed by following text event.
+    if (mCompositionState == eCompositionState_CompositionStartDispatched) {
+        // XXX We should assume, for now, any web applications don't change
+        //     selection at handling this text event.
+        nsQueryContentEvent querySelectedTextEvent(true,
+                                                   NS_QUERY_SELECTED_TEXT,
+                                                   mLastFocusedWindow);
+        mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
+        if (querySelectedTextEvent.mSucceeded) {
+            mSelectedString = querySelectedTextEvent.mReply.mString;
+            mCompositionStart = querySelectedTextEvent.mReply.mOffset;
+        }
     }
 
     nsTextEvent textEvent(true, NS_TEXT_TEXT, mLastFocusedWindow);
