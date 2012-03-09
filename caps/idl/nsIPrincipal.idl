@@ -52,7 +52,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(1f83b0e0-6b63-4bdc-a50a-b9afe256bd25)]
+[scriptable, uuid(f8c4c89a-d726-421b-8415-3e34b241175b)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -95,12 +95,6 @@ interface nsIPrincipal : nsISerializable
      * Returns a hash value for the principal.
      */
     [noscript] readonly attribute unsigned long hashValue;
-
-    /**
-     * Returns the JS equivalent of the principal.
-     * @see JSPrincipals.h
-     */
-    [noscript] JSPrincipals getJSPrincipals(in JSContext cx);
 
     /**
      * The domain security policy of the principal.

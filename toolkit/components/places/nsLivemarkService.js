@@ -877,7 +877,7 @@ Livemark.prototype = {
                     QueryInterface(Ci.nsIHttpChannel);
       channel.loadGroup = loadgroup;
       channel.loadFlags |= Ci.nsIRequest.LOAD_BACKGROUND |
-                           Ci.nsIRequest.VALIDATE_ALWAYS;
+                           Ci.nsIRequest.LOAD_BYPASS_CACHE;
       channel.requestMethod = "GET";
       channel.setRequestHeader("X-Moz", "livebookmarks", false);
 

@@ -988,7 +988,6 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     outstandingRequests(0),
 #endif
-    securityCallbacks(NULL),
     resolveFlags(0),
     rngSeed(0),
     iterValue(MagicValue(JS_NO_ITER_VALUE)),

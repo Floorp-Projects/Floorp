@@ -60,6 +60,8 @@
 #include "jsfriendapi.h"
 #include "js/MemoryMetrics.h"
 
+#include "nsJSPrincipals.h"
+
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
@@ -1220,152 +1222,42 @@ XPCJSRuntime::~XPCJSRuntime()
     XPCPerThreadData::ShutDown();
 }
 
-static void*
-GetCompartmentNameHelper(JSCompartment *c, bool getAddress)
+static void
+GetCompartmentName(JSCompartment *c, bool getAddress, nsCString &name)
 {
-    nsCString* name = new nsCString();
     if (js::IsAtomsCompartment(c)) {
-        name->AssignLiteral("atoms");
+        name.AssignLiteral("atoms");
     } else if (JSPrincipals *principals = JS_GetCompartmentPrincipals(c)) {
-        if (principals->codebase) {
-            name->Assign(principals->codebase);
+        nsJSPrincipals::get(principals)->GetScriptLocation(name);
 
-            // For system compartments we append the location, if there is one.
-            // And we append the address if |getAddress| is true, so that
-            // multiple system compartments (and there can be many) can be
-            // distinguished.
-            if (js::IsSystemCompartment(c)) {
-                xpc::CompartmentPrivate *compartmentPrivate =
-                    static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
-                if (compartmentPrivate &&
-                    !compartmentPrivate->location.IsEmpty()) {
-                    name->AppendLiteral(", ");
-                    name->Append(compartmentPrivate->location);
-                }
-
-                if (getAddress) {
-                    // ample; 64-bit address max is 18 chars
-                    static const int maxLength = 31;
-                    nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
-                    name->Append(address);
-                }
+        // For system compartments we append the location, if there is one.
+        // And we append the address if |getAddress| is true, so that
+        // multiple system compartments (and there can be many) can be
+        // distinguished.
+        if (js::IsSystemCompartment(c)) {
+            xpc::CompartmentPrivate *compartmentPrivate =
+                static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(c));
+            if (compartmentPrivate && !compartmentPrivate->location.IsEmpty()) {
+                name.AppendLiteral(", ");
+                name.Append(compartmentPrivate->location);
             }
-
-            // A hack: replace forward slashes with '\\' so they aren't
-            // treated as path separators.  Users of the reporters
-            // (such as about:memory) have to undo this change.
-            name->ReplaceChar('/', '\\');
-        } else {
-            name->AssignLiteral("null-codebase");
+            
+            if (getAddress) {
+                // ample; 64-bit address max is 18 chars
+                const int maxLength = 31;
+                nsPrintfCString address(maxLength, ", 0x%llx", PRUint64(c));
+                name.Append(address);
+            }
         }
+        
+        // A hack: replace forward slashes with '\\' so they aren't
+        // treated as path separators.  Users of the reporters
+        // (such as about:memory) have to undo this change.
+        name.ReplaceChar('/', '\\');
     } else {
-        name->AssignLiteral("null-principal");
+        name.AssignLiteral("null-principal");
     }
-    return name;
 }
-
-static void*
-GetCompartmentNameAndAddress(JSRuntime *rt, JSCompartment *c)
-{
-    return GetCompartmentNameHelper(c, /* get address = */true);
-}
-
-namespace xpc {
-
-void*
-GetCompartmentName(JSRuntime *rt, JSCompartment *c)
-{
-    return GetCompartmentNameHelper(c, /* get address = */false);
-}
-
-void
-DestroyCompartmentName(void *string)
-{
-    delete static_cast<nsCString*>(string);
-}
-
-} // namespace xpc
-
-namespace {
-
-template <int N>
-inline void
-ReportMemory(const nsACString &path, PRInt32 kind, PRInt32 units,
-             PRInt64 amount, const char (&desc)[N],
-             nsIMemoryMultiReporterCallback *callback, nsISupports *closure)
-{
-    callback->Callback(NS_LITERAL_CSTRING(""), path, kind, units, amount,
-                       NS_LITERAL_CSTRING(desc), closure);
-}
-
-template <int N>
-inline void
-ReportMemoryBytes(const nsACString &path, PRInt32 kind, PRInt64 amount,
-                  const char (&desc)[N],
-                  nsIMemoryMultiReporterCallback *callback,
-                  nsISupports *closure)
-{
-    ReportMemory(path, kind, nsIMemoryReporter::UNITS_BYTES, amount, desc,
-                 callback, closure);
-}
-
-template <int N>
-inline void
-ReportMemoryBytes0(const nsCString &path, PRInt32 kind, PRInt64 amount,
-                   const char (&desc)[N],
-                   nsIMemoryMultiReporterCallback *callback,
-                   nsISupports *closure)
-{
-    if (amount)
-        ReportMemoryBytes(path, kind, amount, desc, callback, closure);
-}
-
-template <int N>
-inline void
-ReportGCHeapBytes(const nsACString &path, PRInt64 *total, PRInt64 amount,
-                  const char (&desc)[N],
-                  nsIMemoryMultiReporterCallback *callback,
-                  nsISupports *closure)
-{
-    ReportMemory(path, nsIMemoryReporter::KIND_NONHEAP, nsIMemoryReporter::UNITS_BYTES, amount,
-                 desc, callback, closure);
-    *total += amount;
-}
-
-template <int N>
-inline void
-ReportGCHeapBytes0(const nsCString &path, PRInt64 *total, PRInt64 amount,
-                   const char (&desc)[N],
-                   nsIMemoryMultiReporterCallback *callback,
-                   nsISupports *closure)
-{
-    if (amount) 
-        return ReportGCHeapBytes(path, total, amount, desc, callback, closure);
-}
-
-template <int N>
-inline void
-ReportMemoryPercentage(const nsACString &path, PRInt32 kind, PRInt64 amount,
-                       const char (&desc)[N],
-                       nsIMemoryMultiReporterCallback *callback,
-                       nsISupports *closure)
-{
-    ReportMemory(path, kind, nsIMemoryReporter::UNITS_PERCENTAGE, amount, desc,
-                 callback, closure);
-}
-
-template <int N>
-inline const nsCString
-MakeMemoryReporterPath(const nsACString &pathPrefix,
-                       const JS::CompartmentStats &cStats,
-                       const char (&reporterName)[N])
-{
-  return pathPrefix + NS_LITERAL_CSTRING("compartment(") +
-         *static_cast<nsCString*>(cStats.name) +
-         NS_LITERAL_CSTRING(")/") + nsDependentCString(reporterName);
-}
-
-} // anonymous namespace
 
 // We have per-compartment GC heap totals, so we can't put the total GC heap
 // size in the explicit allocations tree.  But it's a useful figure, so put it
@@ -1404,340 +1296,357 @@ GetJSUserCompartmentCount()
 // XPConnectJSCompartmentCount to avoid that problem, but then we couldn't
 // easily report them via telemetry, so we live with the small risk of
 // inconsistencies.
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSSystemCompartmentCount,
-                             "js-compartments-system",
-                             KIND_OTHER,
-                             nsIMemoryReporter::UNITS_COUNT,
-                             GetJSSystemCompartmentCount,
-                             "The number of JavaScript compartments for system code.  The sum of this "
-                             "and 'js-compartments-user' might not match the number of "
-                             "compartments listed under 'js' if a garbage collection occurs at an "
-                             "inopportune time, but such cases should be rare.")
+NS_MEMORY_REPORTER_IMPLEMENT(
+    XPConnectJSSystemCompartmentCount,
+    "js-compartments-system",
+    KIND_OTHER,
+    nsIMemoryReporter::UNITS_COUNT,
+    GetJSSystemCompartmentCount,
+    "The number of JavaScript compartments for system code.  The sum of this "
+    "and 'js-compartments-user' might not match the number of compartments "
+    "listed under 'js' if a garbage collection occurs at an inopportune time, "
+    "but such cases should be rare.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
-                             "js-compartments-user",
-                             KIND_OTHER,
-                             nsIMemoryReporter::UNITS_COUNT,
-                             GetJSUserCompartmentCount,
-                             "The number of JavaScript compartments for user code.  The sum of this "
-                             "and 'js-compartments-system' might not match the number of "
-                             "compartments listed under 'js' if a garbage collection occurs at an "
-                             "inopportune time, but such cases should be rare.")
+NS_MEMORY_REPORTER_IMPLEMENT(
+    XPConnectJSUserCompartmentCount,
+    "js-compartments-user",
+    KIND_OTHER,
+    nsIMemoryReporter::UNITS_COUNT,
+    GetJSUserCompartmentCount,
+    "The number of JavaScript compartments for user code.  The sum of this "
+    "and 'js-compartments-system' might not match the number of compartments "
+    "listed under 'js' if a garbage collection occurs at an inopportune time, "
+    "but such cases should be rare.")
+
+// The REPORT* macros do an unconditional report.  The REPORT*0 macros only
+// report if the value is non-zero.
+
+#define REPORT(_path, _kind, _units, _amount, _desc)                          \
+    do {                                                                      \
+        nsresult rv;                                                          \
+        rv = cb->Callback(EmptyCString(), _path, _kind, _units, _amount,      \
+                          NS_LITERAL_CSTRING(_desc), closure);                \
+        NS_ENSURE_SUCCESS(rv, rv);                                            \
+    } while (0)
+
+#define REPORT0(_path, _kind, _units, _amount, _desc)                         \
+    do {                                                                      \
+        size_t amount = _amount;  /* evaluate _amount only once */            \
+        if (amount > 0) {                                                     \
+            nsresult rv;                                                      \
+            rv = cb->Callback(EmptyCString(), _path, _kind, _units, amount,   \
+                              NS_LITERAL_CSTRING(_desc), closure);            \
+            NS_ENSURE_SUCCESS(rv, rv);                                        \
+        }                                                                     \
+    } while (0)
+
+#define REPORT_BYTES(_path, _kind, _amount, _desc)                            \
+    REPORT(_path, _kind, nsIMemoryReporter::UNITS_BYTES, _amount, _desc);
+
+#define REPORT_BYTES0(_path, _kind, _amount, _desc)                           \
+    REPORT0(_path, _kind, nsIMemoryReporter::UNITS_BYTES, _amount, _desc);
+
+#define REPORT_GC_BYTES(_path, _amount, _desc)                                \
+    do {                                                                      \
+        size_t amount = _amount;  /* evaluate _amount only once */            \
+        nsresult rv;                                                          \
+        rv = cb->Callback(EmptyCString(), _path,                              \
+                          nsIMemoryReporter::KIND_NONHEAP,                    \
+                          nsIMemoryReporter::UNITS_BYTES, amount,             \
+                          NS_LITERAL_CSTRING(_desc), closure);                \
+        NS_ENSURE_SUCCESS(rv, rv);                                            \
+        gcTotal += amount;                                                    \
+    } while (0)
+
+#define REPORT_GC_BYTES0(_path, _amount, _desc)                               \
+    do {                                                                      \
+        size_t amount = _amount;  /* evaluate _amount only once */            \
+        if (amount > 0) {                                                     \
+            nsresult rv;                                                      \
+            rv = cb->Callback(EmptyCString(), _path,                          \
+                              nsIMemoryReporter::KIND_NONHEAP,                \
+                              nsIMemoryReporter::UNITS_BYTES, amount,         \
+                              NS_LITERAL_CSTRING(_desc), closure);            \
+            NS_ENSURE_SUCCESS(rv, rv);                                        \
+            gcTotal += amount;                                                \
+        }                                                                     \
+    } while (0)
+
+template <int N>
+inline const nsCString
+MakePath(const nsACString &pathPrefix, const JS::CompartmentStats &cStats,
+         const char (&reporterName)[N])
+{
+    const char *name = static_cast<char *>(cStats.extra);
+    if (!name)
+        name = "error while initializing compartment name";
+    return pathPrefix + NS_LITERAL_CSTRING("compartment(") +
+           nsDependentCString(name) + NS_LITERAL_CSTRING(")/") +
+           nsDependentCString(reporterName);
+}
 
 namespace mozilla {
 namespace xpconnect {
 namespace memory {
 
-static PRInt64
+static nsresult
 ReportCompartmentStats(const JS::CompartmentStats &cStats,
                        const nsACString &pathPrefix,
-                       nsIMemoryMultiReporterCallback *callback,
-                       nsISupports *closure)
+                       nsIMemoryMultiReporterCallback *cb,
+                       nsISupports *closure, size_t *gcTotalOut)
 {
-    PRInt64 gcTotal = 0;
+    size_t gcTotal = 0;
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/arena/headers"),
-                       &gcTotal, cStats.gcHeapArenaHeaders,
-                       "Memory on the compartment's garbage-collected JavaScript heap, within "
-                       "arenas, that is used to hold internal book-keeping information.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/arena/headers"),
+                     cStats.gcHeapArenaHeaders,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap, within arenas, that is used to hold internal "
+                     "book-keeping information.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/arena/padding"),
-                       &gcTotal, cStats.gcHeapArenaPadding,
-                       "Memory on the compartment's garbage-collected JavaScript heap, within "
-                       "arenas, that is unused and present only so that other data is aligned. "
-                       "This constitutes internal fragmentation.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/arena/padding"),
+                     cStats.gcHeapArenaPadding,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap, within arenas, that is unused and present only so "
+                     "that other data is aligned. This constitutes internal "
+                     "fragmentation.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/arena/unused"),
-                       &gcTotal, cStats.gcHeapArenaUnused,
-                       "Memory on the compartment's garbage-collected JavaScript heap, within "
-                       "arenas, that could be holding useful data but currently isn't.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/arena/unused"),
+                     cStats.gcHeapArenaUnused,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap, within arenas, that could be holding useful data "
+                     "but currently isn't.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/objects/non-function"),
-                       &gcTotal, cStats.gcHeapObjectsNonFunction,
-                       "Memory on the compartment's garbage-collected JavaScript heap that holds "
-                       "non-function objects.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/objects/non-function"),
+                     cStats.gcHeapObjectsNonFunction,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap that holds non-function objects.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/objects/function"),
-                       &gcTotal, cStats.gcHeapObjectsFunction,
-                       "Memory on the compartment's garbage-collected JavaScript heap that holds "
-                       "function objects.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/objects/function"),
+                     cStats.gcHeapObjectsFunction,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap that holds function objects.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/strings"),
-                       &gcTotal, cStats.gcHeapStrings,
-                       "Memory on the compartment's garbage-collected JavaScript heap that holds "
-                       "string headers.  String headers contain various pieces of information "
-                       "about a string, but do not contain (except in the case of very short "
-                       "strings) the string characters;  characters in longer strings are counted "
-                       "under 'gc-heap/string-chars' instead.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/strings"),
+                     cStats.gcHeapStrings,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap that holds string headers.  String headers contain "
+                     "various pieces of information about a string, but do not "
+                     "contain (except in the case of very short strings) the "
+                     "string characters;  characters in longer strings are "
+                     "counted " "under 'gc-heap/string-chars' instead.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/scripts"),
-                       &gcTotal, cStats.gcHeapScripts,
-                       "Memory on the compartment's garbage-collected JavaScript heap that holds "
-                       "JSScript instances. A JSScript is created for each user-defined function "
-                       "in a script. One is also created for the top-level code in a script.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/scripts"),
+                     cStats.gcHeapScripts,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap that holds JSScript instances. A JSScript is "
+                     "created for each user-defined function in a script. One "
+                     "is also created for the top-level code in a script.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/shapes/tree"),
-                       &gcTotal, cStats.gcHeapShapesTree,
-                       "Memory on the compartment's garbage-collected JavaScript heap that holds "
-                       "shapes that are in a property tree.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/shapes/tree"),
+                     cStats.gcHeapShapesTree,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap that holds shapes that are in a property tree.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/shapes/dict"),
-                       &gcTotal, cStats.gcHeapShapesDict,
-                       "Memory on the compartment's garbage-collected JavaScript heap that holds "
-                       "shapes that are in dictionary mode.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/shapes/dict"),
+                     cStats.gcHeapShapesDict,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap that holds shapes that are in dictionary mode.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/shapes/base"),
-                       &gcTotal, cStats.gcHeapShapesBase,
-                       "Memory on the compartment's garbage-collected JavaScript heap that collates "
-                       "data common to many shapes.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/shapes/base"),
+                     cStats.gcHeapShapesBase,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap that collates data common to many shapes.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/type-objects"),
-                       &gcTotal, cStats.gcHeapTypeObjects,
-                       "Memory on the compartment's garbage-collected JavaScript heap that holds "
-                       "type inference information.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/type-objects"),
+                     cStats.gcHeapTypeObjects,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap that holds type inference information.");
 
-    ReportGCHeapBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "gc-heap/xml"),
-                       &gcTotal, cStats.gcHeapXML,
-                       "Memory on the compartment's garbage-collected JavaScript heap that holds "
-                       "E4X XML objects.",
-                       callback, closure);
+    REPORT_GC_BYTES0(MakePath(pathPrefix, cStats, "gc-heap/xml"),
+                     cStats.gcHeapXML,
+                     "Memory on the compartment's garbage-collected JavaScript "
+                     "heap that holds E4X XML objects.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "objects/slots"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.objectSlots,
-                       "Memory allocated for the compartment's non-fixed object slot arrays, "
-                       "which are used to represent object properties.  Some objects also "
-                       "contain a fixed number of slots which are stored on the compartment's "
-                       "JavaScript heap; those slots are not counted here, but in "
-                       "'gc-heap/objects' instead.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "objects/slots"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.objectSlots,
+                  "Memory allocated for the compartment's non-fixed object "
+                  "slot arrays, which are used to represent object properties. "
+                  "Some objects also contain a fixed number of slots which are "
+                  "stored on the compartment's JavaScript heap; those slots "
+                  "are not counted here, but in 'gc-heap/objects' instead.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "objects/elements"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.objectElements,
-                       "Memory allocated for the compartment's object element arrays, "
-                       "which are used to represent indexed object properties.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "objects/elements"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.objectElements,
+                  "Memory allocated for the compartment's object element "
+                  "arrays, which are used to represent indexed object "
+                  "properties.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "objects/misc"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.objectMisc,
-                       "Memory allocated for various small, miscellaneous "
-                       "structures that hang off certain kinds of objects.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "objects/misc"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.objectMisc,
+                  "Memory allocated for various small, miscellaneous "
+                  "structures that hang off certain kinds of objects.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "string-chars"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.stringChars,
-                       "Memory allocated to hold the compartment's string characters.  Sometimes "
-                       "more memory is allocated than necessary, to simplify string "
-                       "concatenation.  Each string also includes a header which is stored on the "
-                       "compartment's JavaScript heap;  that header is not counted here, but in "
-                       "'gc-heap/strings' instead.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "string-chars"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.stringChars,
+                  "Memory allocated to hold the compartment's string "
+                  "characters.  Sometimes more memory is allocated than "
+                  "necessary, to simplify string concatenation.  Each string "
+                  "also includes a header which is stored on the "
+                  "compartment's JavaScript heap;  that header is not counted "
+                  "here, but in 'gc-heap/strings' instead.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "shapes-extra/tree-tables"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.shapesExtraTreeTables,
-                       "Memory allocated for the compartment's property tables that belong to "
-                       "shapes that are in a property tree.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "shapes-extra/tree-tables"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.shapesExtraTreeTables,
+                  "Memory allocated for the compartment's property tables "
+                  "that belong to shapes that are in a property tree.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "shapes-extra/dict-tables"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.shapesExtraDictTables,
-                       "Memory allocated for the compartment's property tables that belong to "
-                       "shapes that are in dictionary mode.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "shapes-extra/dict-tables"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.shapesExtraDictTables,
+                  "Memory allocated for the compartment's property tables "
+                  "that belong to shapes that are in dictionary mode.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "shapes-extra/tree-shape-kids"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.shapesExtraTreeShapeKids,
-                       "Memory allocated for the compartment's kid hashes that belong to shapes "
-                       "that are in a property tree.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "shapes-extra/tree-shape-kids"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.shapesExtraTreeShapeKids,
+                  "Memory allocated for the compartment's kid hashes that "
+                  "belong to shapes that are in a property tree.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "shapes-extra/compartment-tables"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.shapesCompartmentTables,
-                       "Memory used by compartment wide tables storing shape information "
-                       "for use during object construction.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "shapes-extra/compartment-tables"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.shapesCompartmentTables,
+                  "Memory used by compartment wide tables storing shape "
+                  "information for use during object construction.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "script-data"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.scriptData,
-                       "Memory allocated for JSScript bytecode and various variable-length "
-                       "tables.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "script-data"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.scriptData,
+                  "Memory allocated for JSScript bytecode and various "
+                  "variable-length tables.");
 
 #ifdef JS_METHODJIT
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "mjit/code"),
-                       nsIMemoryReporter::KIND_NONHEAP, cStats.mjitCode,
-                       "Memory used by the method JIT to hold the compartment's generated code.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "mjit/code"),
+                  nsIMemoryReporter::KIND_NONHEAP, cStats.mjitCode,
+                  "Memory used by the method JIT to hold the compartment's "
+                  "generated code.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "mjit/data"),
-                       nsIMemoryReporter::KIND_HEAP, cStats.mjitData,
-                       "Memory used by the method JIT for the compartment's compilation data: "
-                       "JITScripts, native maps, and inline cache structs.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "mjit/data"),
+                  nsIMemoryReporter::KIND_HEAP, cStats.mjitData,
+                  "Memory used by the method JIT for the compartment's "
+                  "compilation data: JITScripts, native maps, and inline "
+                  "cache structs.");
 #endif
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "type-inference/script-main"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       cStats.typeInferenceSizes.scripts,
-                       "Memory used during type inference to store type sets of variables "
-                       "and dynamically observed types.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "type-inference/script-main"),
+                  nsIMemoryReporter::KIND_HEAP,
+                  cStats.typeInferenceSizes.scripts,
+                  "Memory used during type inference to store type sets of "
+                  "variables and dynamically observed types.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "type-inference/object-main"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       cStats.typeInferenceSizes.objects,
-                       "Memory used during type inference to store types and possible "
-                       "property types of JS objects.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "type-inference/object-main"),
+                  nsIMemoryReporter::KIND_HEAP,
+                  cStats.typeInferenceSizes.objects,
+                  "Memory used during type inference to store types and "
+                  "possible property types of JS objects.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "type-inference/tables"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       cStats.typeInferenceSizes.tables,
-                       "Memory used during type inference for compartment-wide tables.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "type-inference/tables"),
+                  nsIMemoryReporter::KIND_HEAP,
+                  cStats.typeInferenceSizes.tables,
+                  "Memory used during type inference for compartment-wide "
+                  "tables.");
 
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, cStats,
-                                              "analysis-temporary"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       cStats.typeInferenceSizes.temporary,
-                       "Memory used during type inference and compilation to hold transient "
-                       "analysis information.  Cleared on GC.",
-                       callback, closure);
+    REPORT_BYTES0(MakePath(pathPrefix, cStats, "analysis-temporary"),
+                  nsIMemoryReporter::KIND_HEAP,
+                  cStats.typeInferenceSizes.temporary,
+                  "Memory used during type inference and compilation to hold "
+                  "transient analysis information.  Cleared on GC.");
 
-    return gcTotal;
+    *gcTotalOut += gcTotal;
+
+    return NS_OK;
 }
 
-void
-ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats, const nsACString &pathPrefix,
-                                 nsIMemoryMultiReporterCallback *callback,
+nsresult
+ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
+                                 const nsACString &pathPrefix,
+                                 nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure)
 {
-    PRInt64 gcTotal = 0;
+    nsresult rv;
+    size_t gcTotal = 0;
     for (size_t index = 0;
          index < rtStats.compartmentStatsVector.length();
          index++) {
-        gcTotal += ReportCompartmentStats(rtStats.compartmentStatsVector[index], pathPrefix,
-                                    callback, closure);
+        rv = ReportCompartmentStats(rtStats.compartmentStatsVector[index],
+                                    pathPrefix, cb, closure, &gcTotal);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/runtime-object"),
-                      nsIMemoryReporter::KIND_HEAP, rtStats.runtimeObject,
-                      "Memory used by the JSRuntime object.",
-                      callback, closure);
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/runtime-object"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeObject,
+                 "Memory used by the JSRuntime object.");
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/atoms-table"),
-                      nsIMemoryReporter::KIND_HEAP, rtStats.runtimeAtomsTable,
-                      "Memory used by the atoms table.",
-                      callback, closure);
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/atoms-table"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeAtomsTable,
+                 "Memory used by the atoms table.");
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/contexts"),
-                      nsIMemoryReporter::KIND_HEAP, rtStats.runtimeContexts,
-                      "Memory used by JSContext objects and certain structures "
-                      "hanging off them." ,
-                      callback, closure);
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/contexts"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeContexts,
+                 "Memory used by JSContext objects and certain structures "
+                 "hanging off them.");
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/normal"),
-                      nsIMemoryReporter::KIND_HEAP, rtStats.runtimeNormal,
-                      "Memory used by a JSRuntime, "
-                      "excluding memory that is reported by "
-                      "other reporters under 'explicit/js/runtime/'.",
-                      callback, closure);
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/normal"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeNormal,
+                 "Memory used by a JSRuntime, excluding memory that is "
+                 "reported by other reporters under 'explicit/js/runtime/'.");
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/temporary"),
-                      nsIMemoryReporter::KIND_HEAP, rtStats.runtimeTemporary,
-                      "Memory held transiently in JSRuntime and used during "
-                      "compilation.  It mostly holds parse nodes.",
-                      callback, closure);
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/temporary"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeTemporary,
+                 "Memory held transiently in JSRuntime and used during "
+                 "compilation.  It mostly holds parse nodes.");
 
-    ReportMemoryBytes0(pathPrefix + NS_LITERAL_CSTRING("runtime/regexp-code"),
-                       nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeRegexpCode,
-                       "Memory used by the regexp JIT to hold generated code.",
-                       callback, closure);
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/regexp-code"),
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeRegexpCode,
+                 "Memory used by the regexp JIT to hold generated code.");
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/stack-committed"),
-                      nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeStackCommitted,
-                      "Memory used for the JS call stack.  This is the committed portion "
-                      "of the stack; the uncommitted portion is not measured because it "
-                      "hardly costs anything.",
-                      callback, closure);
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/stack-committed"),
+                 nsIMemoryReporter::KIND_NONHEAP, rtStats.runtimeStackCommitted,
+                 "Memory used for the JS call stack.  This is the committed "
+                 "portion of the stack; the uncommitted portion is not "
+                 "measured because it hardly costs anything.");
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/gc-marker"),
-                      nsIMemoryReporter::KIND_HEAP, rtStats.runtimeGCMarker,
-                      "Memory used for the GC mark stack and gray roots.",
-                      callback, closure);
+    REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("runtime/gc-marker"),
+                 nsIMemoryReporter::KIND_HEAP, rtStats.runtimeGCMarker,
+                 "Memory used for the GC mark stack and gray roots.");
 
-    ReportGCHeapBytes(pathPrefix +
-                      NS_LITERAL_CSTRING("gc-heap-chunk-dirty-unused"),
-                      &gcTotal, rtStats.gcHeapChunkDirtyUnused,
-                      "Memory on the garbage-collected JavaScript heap, within chunks with at "
-                      "least one allocated GC thing, that could be holding useful data but "
-                      "currently isn't.  Memory here is mutually exclusive with memory reported"
-                      "under 'explicit/js/gc-heap-decommitted'.",
-                      callback, closure);
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-chunk-dirty-unused"),
+                    rtStats.gcHeapChunkDirtyUnused,
+                    "Memory on the garbage-collected JavaScript heap, within "
+                    "chunks with at least one allocated GC thing, that could "
+                    "be holding useful data but currently isn't.  Memory here "
+                    "is mutually exclusive with memory reported under "
+                    "'explicit/js/gc-heap-decommitted'.");
 
-    ReportGCHeapBytes(pathPrefix +
-                      NS_LITERAL_CSTRING("gc-heap-chunk-clean-unused"),
-                      &gcTotal, rtStats.gcHeapChunkCleanUnused,
-                      "Memory on the garbage-collected JavaScript heap taken by completely empty "
-                      "chunks, that soon will be released unless claimed for new allocations.  "
-                      "Memory here is mutually exclusive with memory reported under "
-                      "'explicit/js/gc-heap-decommitted'.",
-                      callback, closure);
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-chunk-clean-unused"),
+                    rtStats.gcHeapChunkCleanUnused,
+                    "Memory on the garbage-collected JavaScript heap taken by "
+                    "completely empty chunks, that soon will be released "
+                    "unless claimed for new allocations.  Memory here is "
+                    "mutually exclusive with memory reported under "
+                    "'explicit/js/gc-heap-decommitted'.");
 
-    ReportGCHeapBytes(pathPrefix +
-                      NS_LITERAL_CSTRING("gc-heap-decommitted"),
-                      &gcTotal,
-                      rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
-                      "Memory in the address space of the garbage-collected JavaScript heap that "
-                      "is currently returned to the OS.",
-                      callback, closure);
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-decommitted"),
+                    rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
+                    "Memory in the address space of the garbage-collected "
+                    "JavaScript heap that is currently returned to the OS.");
 
-    ReportGCHeapBytes(pathPrefix +
-                      NS_LITERAL_CSTRING("gc-heap-chunk-admin"),
-                      &gcTotal, rtStats.gcHeapChunkAdmin,
-                      "Memory on the garbage-collected JavaScript heap, within chunks, that is "
-                      "used to hold internal book-keeping information.",
-                      callback, closure);
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-chunk-admin"),
+                    rtStats.gcHeapChunkAdmin,
+                    "Memory on the garbage-collected JavaScript heap, within "
+                    "chunks, that is used to hold internal book-keeping "
+                    "information.");
 
     // gcTotal is the sum of everything we've reported for the GC heap.  It
     // should equal rtStats.gcHeapChunkTotal.
-    JS_ASSERT(size_t(gcTotal) == rtStats.gcHeapChunkTotal);
+    JS_ASSERT(gcTotal == rtStats.gcHeapChunkTotal);
+
+    return NS_OK;
 }
 
 } // namespace memory
@@ -1761,25 +1670,22 @@ class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
 
     static void CompartmentCallback(JSRuntime *rt, void* data, JSCompartment *c)
     {
+        // silently ignore OOM errors
         Paths *paths = static_cast<Paths *>(data);
-        nsCString *name =
-            static_cast<nsCString *>(xpc::GetCompartmentName(rt, c));
         nsCString path;
-        if (js::IsSystemCompartment(c))
-            path = NS_LITERAL_CSTRING("compartments/system/") + *name;
-        else
-            path = NS_LITERAL_CSTRING("compartments/user/") + *name;
-        if (!paths->append(path))
-            return;     // silent failure, but it's very unlikely
-
-        xpc::DestroyCompartmentName(name);
+        GetCompartmentName(c, /* getAddress = */ false, path);
+        path.Insert(js::IsSystemCompartment(c)
+                    ? NS_LITERAL_CSTRING("compartments/system/")
+                    : NS_LITERAL_CSTRING("compartments/user/"),
+                    0);
+        paths->append(path);
     }
 
-    NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *callback,
+    NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *cb,
                               nsISupports *closure)
     {
         // First we collect the compartment paths.  Then we report them.  Doing
-        // the two steps interleaved is a bad idea, because calling |callback|
+        // the two steps interleaved is a bad idea, because calling |cb|
         // from within CompartmentCallback() leads to all manner of assertions.
 
         // Collect.
@@ -1791,10 +1697,10 @@ class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
         // Report.
         for (size_t i = 0; i < paths.length(); i++)
             // These ones don't need a description, hence the "".
-            ReportMemory(paths[i],
-                         nsIMemoryReporter::KIND_OTHER,
-                         nsIMemoryReporter::UNITS_COUNT,
-                         1, "", callback, closure);
+            REPORT(nsCString(paths[i]),
+                   nsIMemoryReporter::KIND_OTHER,
+                   nsIMemoryReporter::UNITS_COUNT,
+                   1, "");
 
         return NS_OK;
     }
@@ -1812,6 +1718,23 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(JSCompartmentsMultiReporter
                               , nsIMemoryMultiReporter
                               )
 
+struct XPCJSRuntimeStats : public JS::RuntimeStats {
+    XPCJSRuntimeStats()
+      : JS::RuntimeStats(JsMallocSizeOf) { }
+    
+    ~XPCJSRuntimeStats() {
+        for (size_t i = 0; i != compartmentStatsVector.length(); ++i)
+            free(compartmentStatsVector[i].extra);
+    }
+
+    virtual void initExtraCompartmentStats(JSCompartment *c,
+                                           JS::CompartmentStats *cstats) MOZ_OVERRIDE {
+        nsCAutoString name;
+        GetCompartmentName(c, /* getAddress = */ true, name);
+        cstats->extra = strdup(name.get());
+    }
+};
+    
 class JSMemoryMultiReporter : public nsIMemoryMultiReporter
 {
 public:
@@ -1823,7 +1746,7 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *callback,
+    NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *cb,
                               nsISupports *closure)
     {
         XPCJSRuntime *xpcrt = nsXPConnect::GetRuntimeInstance();
@@ -1833,8 +1756,7 @@ public:
         // the callback.  Separating these steps is important because the
         // callback may be a JS function, and executing JS while getting these
         // stats seems like a bad idea.
-        JS::RuntimeStats rtStats(JsMallocSizeOf, GetCompartmentNameAndAddress,
-                                 xpc::DestroyCompartmentName);
+        XPCJSRuntimeStats rtStats;
         if (!JS::CollectRuntimeStats(xpcrt->GetJSRuntime(), &rtStats))
             return NS_ERROR_FAILURE;
 
@@ -1847,102 +1769,101 @@ public:
         // This is the second step (see above).  First we report stuff in the
         // "explicit" tree, then we report other stuff.
 
-        ReportJSRuntimeExplicitTreeStats(rtStats, pathPrefix, callback, closure);
+        nsresult rv =
+            ReportJSRuntimeExplicitTreeStats(rtStats, pathPrefix, cb, closure);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("xpconnect"),
-                          nsIMemoryReporter::KIND_HEAP, xpconnect,
-                          "Memory used by XPConnect.",
-                          callback, closure);
+        REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("xpconnect"),
+                     nsIMemoryReporter::KIND_HEAP, xpconnect,
+                     "Memory used by XPConnect.");
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-chunk-dirty-unused"),
-                          nsIMemoryReporter::KIND_OTHER,
-                          rtStats.gcHeapChunkDirtyUnused,
-                          "The same as 'explicit/js/gc-heap-chunk-dirty-unused'.  Shown here for "
-                          "easy comparison with other 'js-gc' reporters.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-chunk-dirty-unused"),
+                     nsIMemoryReporter::KIND_OTHER,
+                     rtStats.gcHeapChunkDirtyUnused,
+                     "The same as 'explicit/js/gc-heap-chunk-dirty-unused'. "
+                     "Shown here for easy comparison with other 'js-gc' "
+                     "reporters.");
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-chunk-clean-unused"),
-                          nsIMemoryReporter::KIND_OTHER,
-                          rtStats.gcHeapChunkCleanUnused,
-                          "The same as 'explicit/js/gc-heap-chunk-clean-unused'.  Shown here for "
-                          "easy comparison with other 'js-gc' reporters.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-chunk-clean-unused"),
+                     nsIMemoryReporter::KIND_OTHER,
+                     rtStats.gcHeapChunkCleanUnused,
+                     "The same as 'explicit/js/gc-heap-chunk-clean-unused'.  "
+                     "Shown here for easy comparison with other 'js-gc' "
+                     "reporters.");
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-decommitted"),
-                          nsIMemoryReporter::KIND_OTHER,
-                          rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
-                          "The same as 'explicit/js/gc-heap-decommitted'.  Shown here for "
-                          "easy comparison with other 'js-gc' reporters.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-decommitted"),
+                     nsIMemoryReporter::KIND_OTHER,
+                     rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
+                     "The same as 'explicit/js/gc-heap-decommitted'.  Shown "
+                     "here for easy comparison with other 'js-gc' reporters.");
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-arena-unused"),
-                          nsIMemoryReporter::KIND_OTHER,
-                          rtStats.gcHeapArenaUnused,
-                          "Memory on the main JSRuntime's garbage-collected JavaScript heap, "
-                          "within arenas, that could be holding useful data but currently isn't. "
-                          "This is the sum of all compartments' 'gc-heap/arena-unused' numbers.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-arena-unused"),
+                     nsIMemoryReporter::KIND_OTHER,
+                     rtStats.gcHeapArenaUnused,
+                     "Memory on the main JSRuntime's garbage-collected "
+                     "JavaScript heap, within arenas, that could be holding "
+                     "useful data but currently isn't. This is the sum of all "
+                     "compartments' 'gc-heap/arena-unused' numbers.");
 
-        ReportMemoryPercentage(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused-fraction"),
-                               nsIMemoryReporter::KIND_OTHER,
-                               rtStats.gcHeapUnusedPercentage,
-                               "Fraction of the main JSRuntime's garbage-collected JavaScript "
-                               "heap that is unused. Computed as ('js-gc-heap-chunk-clean-unused' "
-                               "+ 'js-gc-heap-chunk-dirty-unused' + 'js-gc-heap-decommitted' + "
-                               "'js-gc-heap-arena-unused') / 'js-gc-heap'.",
-                               callback, closure);
+        REPORT(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused-fraction"),
+               nsIMemoryReporter::KIND_OTHER,
+               nsIMemoryReporter::UNITS_PERCENTAGE,
+               rtStats.gcHeapUnusedPercentage,
+               "Fraction of the main JSRuntime's garbage-collected JavaScript "
+               "heap that is unused. Computed as "
+               "('js-gc-heap-chunk-clean-unused' + "
+               "'js-gc-heap-chunk-dirty-unused' + 'js-gc-heap-decommitted' + "
+               "'js-gc-heap-arena-unused') / 'js-gc-heap'.");
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-objects"),
-                          nsIMemoryReporter::KIND_OTHER, rtStats.totalObjects,
-                          "Memory used for all object-related data in the main JSRuntime. "
-                          "This is the sum of all compartments' 'gc-heap/objects-non-function', "
-                          "'gc-heap/objects-function' and 'object-slots' numbers.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-objects"),
+                     nsIMemoryReporter::KIND_OTHER, rtStats.totalObjects,
+                     "Memory used for all object-related data in the main "
+                     "JSRuntime. This is the sum of all compartments' "
+                     "'gc-heap/objects-non-function', "
+                     "'gc-heap/objects-function' and 'object-slots' numbers.");
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-shapes"),
-                          nsIMemoryReporter::KIND_OTHER, rtStats.totalShapes,
-                          "Memory used for all shape-related data in the main JSRuntime. "
-                          "This is the sum of all compartments' 'gc-heap/shapes/tree', "
-                          "'gc-heap/shapes/dict', 'gc-heap/shapes/base', "
-                          "'shapes-extra/tree-tables', 'shapes-extra/dict-tables', "
-                          "'shapes-extra/tree-shape-kids' and 'shapes-extra/empty-shape-arrays'.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-shapes"),
+                     nsIMemoryReporter::KIND_OTHER, rtStats.totalShapes,
+                     "Memory used for all shape-related data in the main "
+                     "JSRuntime. This is the sum of all compartments' "
+                     "'gc-heap/shapes/tree', 'gc-heap/shapes/dict', "
+                     "'gc-heap/shapes/base', 'shapes-extra/tree-tables', "
+                     "'shapes-extra/dict-tables', "
+                     "'shapes-extra/tree-shape-kids' and "
+                     "'shapes-extra/empty-shape-arrays'.");
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-scripts"),
-                          nsIMemoryReporter::KIND_OTHER, rtStats.totalScripts,
-                          "Memory used for all script-related data in the main JSRuntime. "
-                          "This is the sum of all compartments' 'gc-heap/scripts' and "
-                          "'script-data' numbers.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-scripts"),
+                     nsIMemoryReporter::KIND_OTHER, rtStats.totalScripts,
+                     "Memory used for all script-related data in the main "
+                     "JSRuntime. This is the sum of all compartments' "
+                     "'gc-heap/scripts' and 'script-data' numbers.");
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-strings"),
-                          nsIMemoryReporter::KIND_OTHER, rtStats.totalStrings,
-                          "Memory used for all string-related data in the main JSRuntime. "
-                          "This is the sum of all compartments' 'gc-heap/strings' and "
-                          "'string-chars' numbers.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-strings"),
+                     nsIMemoryReporter::KIND_OTHER, rtStats.totalStrings,
+                     "Memory used for all string-related data in the main "
+                     "JSRuntime. This is the sum of all compartments' "
+                     "'gc-heap/strings' and 'string-chars' numbers.");
+
 #ifdef JS_METHODJIT
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-mjit"),
-                          nsIMemoryReporter::KIND_OTHER, rtStats.totalMjit,
-                          "Memory used by the method JIT in the main JSRuntime.  "
-                          "This is the sum of all compartments' 'mjit/code', and 'mjit/data' "
-                          "numbers.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-mjit"),
+                     nsIMemoryReporter::KIND_OTHER, rtStats.totalMjit,
+                     "Memory used by the method JIT in the main JSRuntime.  "
+                     "This is the sum of all compartments' 'mjit/code', and "
+                     "'mjit/data' numbers.");
 #endif
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-type-inference"),
-                          nsIMemoryReporter::KIND_OTHER, rtStats.totalTypeInference,
-                          "Non-transient memory used by type inference in the main JSRuntime. "
-                          "This is the sum of all compartments' 'gc-heap/type-objects', "
-                          "'type-inference/script-main', 'type-inference/object-main' and "
-                          "'type-inference/tables' numbers.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-type-inference"),
+                     nsIMemoryReporter::KIND_OTHER, rtStats.totalTypeInference,
+                     "Non-transient memory used by type inference in the main "
+                     "JSRuntime. This is the sum of all compartments' "
+                     "'gc-heap/type-objects', 'type-inference/script-main', "
+                     "'type-inference/object-main' and "
+                     "'type-inference/tables' numbers.");
 
-        ReportMemoryBytes(NS_LITERAL_CSTRING("js-main-runtime-analysis-temporary"),
-                          nsIMemoryReporter::KIND_OTHER, rtStats.totalAnalysisTemp,
-                          "Memory used transiently during type inference and compilation in the "
-                          "main JSRuntime. This is the sum of all compartments' "
-                          "'analysis-temporary' numbers.",
-                          callback, closure);
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-analysis-temporary"),
+                     nsIMemoryReporter::KIND_OTHER, rtStats.totalAnalysisTemp,
+                     "Memory used transiently during type inference and "
+                     "compilation in the main JSRuntime. This is the sum of "
+                     "all compartments' 'analysis-temporary' numbers.");
 
         return NS_OK;
     }

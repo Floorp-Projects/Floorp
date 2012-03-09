@@ -2915,7 +2915,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
             if (callback)
                 JS_ALWAYS_TRUE(callback(cx, compartment, JSCOMPARTMENT_DESTROY));
             if (compartment->principals)
-                JSPRINCIPALS_DROP(cx, compartment->principals);
+                JS_DropPrincipals(rt, compartment->principals);
             cx->delete_(compartment);
             continue;
         }
@@ -3905,7 +3905,7 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
         compartment->isSystemCompartment = principals && rt->trustedPrincipals() == principals;
         if (principals) {
             compartment->principals = principals;
-            JSPRINCIPALS_HOLD(cx, principals);
+            JS_HoldPrincipals(principals);
         }
 
         compartment->setGCLastBytes(8192, 8192, GC_NORMAL);

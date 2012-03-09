@@ -209,9 +209,6 @@ public abstract class RepositorySession {
    *
    * The Synchronizer most likely wants to bump the bundle timestamp to be a value
    * return from a fetch call.
-   *
-   * @param optional
-   * @return
    */
   protected RepositorySessionBundle getBundle(RepositorySessionBundle optional) {
     Logger.debug(LOG_TAG, "RepositorySession.getBundle(optional).");
@@ -225,8 +222,6 @@ public abstract class RepositorySession {
   /**
    * Just like finish(), but doesn't do any work that should only be performed
    * at the end of a successful sync, and can be called any time.
-   *
-   * @param delegate
    */
   public void abort(RepositorySessionFinishDelegate delegate) {
     this.abort();
@@ -267,9 +262,6 @@ public abstract class RepositorySession {
   /**
    * Run the provided command if we're active and our delegate queue
    * is not shut down.
-   *
-   * @param command
-   * @throws InactiveSessionException
    */
   protected synchronized void executeDelegateCommand(Runnable command)
       throws InactiveSessionException {
@@ -389,8 +381,6 @@ public abstract class RepositorySession {
    * redundantly.
    *
    * The default implementation does nothing.
-   *
-   * @param record
    */
   protected synchronized void trackRecord(Record record) {
   }

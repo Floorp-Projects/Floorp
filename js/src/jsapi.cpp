@@ -696,6 +696,8 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
  */
 static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
+static const JSSecurityCallbacks NullSecurityCallbacks = { };
+
 JSRuntime::JSRuntime()
   : atomsCompartment(NULL),
 #ifdef JS_THREADSAFE
@@ -778,7 +780,8 @@ JSRuntime::JSRuntime()
     gcHelperThread(thisFromCtor()),
 #endif
     debuggerMutations(0),
-    securityCallbacks(NULL),
+    securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),
+    destroyPrincipals(NULL),
     structuredCloneCallbacks(NULL),
     telemetryCallback(NULL),
     propertyRemovals(0),
@@ -4451,61 +4454,45 @@ JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     return CheckAccess(cx, obj, id, mode, vp, attrsp);
 }
 
-#ifdef JS_THREADSAFE
-JS_PUBLIC_API(int)
-JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals)
+JS_PUBLIC_API(void)
+JS_HoldPrincipals(JSPrincipals *principals)
 {
-    return JS_ATOMIC_INCREMENT(&principals->refcount);
+    JS_ATOMIC_INCREMENT(&principals->refcount);
 }
 
-JS_PUBLIC_API(int)
-JS_DropPrincipals(JSContext *cx, JSPrincipals *principals)
+JS_PUBLIC_API(void)
+JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals)
 {
     int rc = JS_ATOMIC_DECREMENT(&principals->refcount);
     if (rc == 0)
-        principals->destroy(cx, principals);
-    return rc;
-}
-#endif
-
-JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_SetRuntimeSecurityCallbacks(JSRuntime *rt, JSSecurityCallbacks *callbacks)
-{
-    JSSecurityCallbacks *oldcallbacks;
-
-    oldcallbacks = rt->securityCallbacks;
-    rt->securityCallbacks = callbacks;
-    return oldcallbacks;
+        rt->destroyPrincipals(principals);
 }
 
-JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_GetRuntimeSecurityCallbacks(JSRuntime *rt)
+JS_PUBLIC_API(void)
+JS_SetSecurityCallbacks(JSRuntime *rt, const JSSecurityCallbacks *scb)
 {
-  return rt->securityCallbacks;
+    JS_ASSERT(scb != &NullSecurityCallbacks);
+    rt->securityCallbacks = scb ? scb : &NullSecurityCallbacks;
 }
 
-JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_SetContextSecurityCallbacks(JSContext *cx, JSSecurityCallbacks *callbacks)
+JS_PUBLIC_API(const JSSecurityCallbacks *)
+JS_GetSecurityCallbacks(JSRuntime *rt)
 {
-    JSSecurityCallbacks *oldcallbacks;
-
-    oldcallbacks = cx->securityCallbacks;
-    cx->securityCallbacks = callbacks;
-    return oldcallbacks;
-}
-
-JS_PUBLIC_API(JSSecurityCallbacks *)
-JS_GetSecurityCallbacks(JSContext *cx)
-{
-  return cx->securityCallbacks
-         ? cx->securityCallbacks
-         : cx->runtime->securityCallbacks;
+    return (rt->securityCallbacks != &NullSecurityCallbacks) ? rt->securityCallbacks : NULL;
 }
 
 JS_PUBLIC_API(void)
 JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin)
 {
     rt->setTrustedPrincipals(prin);
+}
+
+extern JS_PUBLIC_API(void)
+JS_InitDestroyPrincipalsCallback(JSRuntime *rt, JSDestroyPrincipalsOp destroyPrincipals)
+{
+    JS_ASSERT(destroyPrincipals);
+    JS_ASSERT(!rt->destroyPrincipals);
+    rt->destroyPrincipals = destroyPrincipals;
 }
 
 JS_PUBLIC_API(JSFunction *)

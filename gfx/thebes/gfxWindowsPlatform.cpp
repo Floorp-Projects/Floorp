@@ -293,29 +293,28 @@ public:
         
         FreeLibrary(gdi32Handle);
         
-        aCb->Callback(EmptyCString(),
-                      NS_LITERAL_CSTRING("gpu-committed"),
-                      nsIMemoryReporter::KIND_OTHER,
-                      nsIMemoryReporter::UNITS_BYTES,
-                      committedBytesUsed,
-                      NS_LITERAL_CSTRING("Memory committed by the Windows graphics system."),
-                      aClosure);
-        aCb->Callback(EmptyCString(),
-                      NS_LITERAL_CSTRING("gpu-dedicated"),
-                      nsIMemoryReporter::KIND_OTHER,
-                      nsIMemoryReporter::UNITS_BYTES,
-                      dedicatedBytesUsed,
-                      NS_LITERAL_CSTRING("Out-of-process memory allocated for this process in a "
-                                         "physical GPU adapter's memory."),
-                      aClosure);
-        aCb->Callback(EmptyCString(),
-                      NS_LITERAL_CSTRING("gpu-shared"),
-                      nsIMemoryReporter::KIND_OTHER,
-                      nsIMemoryReporter::UNITS_BYTES,
-                      sharedBytesUsed,
-                      NS_LITERAL_CSTRING("In-process memory that is shared with the GPU."),
-                      aClosure);
+#define REPORT(_path, _amount, _desc)                                         \
+    do {                                                                      \
+      nsresult rv;                                                            \
+      rv = aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),           \
+                         nsIMemoryReporter::KIND_OTHER,                       \
+                         nsIMemoryReporter::UNITS_BYTES, _amount,             \
+                         NS_LITERAL_CSTRING(_desc), aClosure);                \
+      NS_ENSURE_SUCCESS(rv, rv);                                              \
+    } while (0)
+
+        REPORT("gpu-committed", committedBytesUsed,
+               "Memory committed by the Windows graphics system.");
+
+        REPORT("gpu-dedicated", dedicatedBytesUsed,
+               "Out-of-process memory allocated for this process in a "
+               "physical GPU adapter's memory.");
+
+        REPORT("gpu-shared", sharedBytesUsed,
+               "In-process memory that is shared with the GPU.");
         
+#undef REPORT
+
         return NS_OK;
     }
 
