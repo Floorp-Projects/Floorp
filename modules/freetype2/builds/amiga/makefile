@@ -234,6 +234,11 @@ pcf.ppc.o: $(FTSRC)/pcf/pcf.c
 gzip.ppc.o: $(FTSRC)/gzip/ftgzip.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
+# FreeType2 library bzip2 support for compressed PCF bitmap fonts
+#
+bzip2.ppc.o: $(FTSRC)/bzip2/ftbzip2.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
 #
 # FreeType2 library compress support for compressed PCF bitmap fonts
 #
@@ -285,8 +290,8 @@ RASTERPPC = raster.ppc.o smooth.ppc.o
 FONTDPPC = cff.ppc.o type1.ppc.o type42.ppc.o type1cid.ppc.o truetype.ppc.o\
 	   bdf.ppc.o pcf.ppc.o pfr.ppc.o winfnt.ppc.o
 
-libft2_ppc.a:    $(BASEPPC) $(AFITPPC) $(GXVPPC) $(OTVPPC) $(PSPPC) $(RASTERPPC) sfnt.ppc.o ftcache.ppc.o $(FONTDPPC) gzip.ppc.o lzw.ppc.o
-	$(AR) $@ $(BASEPPC) $(AFITPPC) $(GXVPPC) $(OTVPPC) $(PSPPC) $(RASTERPPC) sfnt.ppc.o ftcache.ppc.o $(FONTDPPC) gzip.ppc.o lzw.ppc.o
+libft2_ppc.a:    $(BASEPPC) $(AFITPPC) $(GXVPPC) $(OTVPPC) $(PSPPC) $(RASTERPPC) sfnt.ppc.o ftcache.ppc.o $(FONTDPPC) gzip.ppc.o bzip2.ppc.o lzw.ppc.o
+	$(AR) $@ $(BASEPPC) $(AFITPPC) $(GXVPPC) $(OTVPPC) $(PSPPC) $(RASTERPPC) sfnt.ppc.o ftcache.ppc.o $(FONTDPPC) gzip.ppc.o bzip2.ppc.o lzw.ppc.o
 	-@ ($(RANLIB) $@ || true) >/dev/null 2>&1
 
 #Local Variables:

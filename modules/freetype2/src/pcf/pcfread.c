@@ -2,8 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-            2010 by
+  Copyright 2000-2010, 2012 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -399,7 +398,7 @@ THE SOFTWARE.
                       PCF_Face   face )
   {
     PCF_ParseProperty  props      = 0;
-    PCF_Property       properties;
+    PCF_Property       properties = NULL;
     FT_ULong           nprops, i;
     FT_ULong           format, size;
     FT_Error           error;
@@ -496,7 +495,8 @@ THE SOFTWARE.
       goto Bail;
     }
 
-    if ( FT_NEW_ARRAY( strings, string_size ) )
+    /* allocate one more byte so that we have a final null byte */
+    if ( FT_NEW_ARRAY( strings, string_size + 1 ) )
       goto Bail;
 
     error = FT_Stream_Read( stream, (FT_Byte*)strings, string_size );
@@ -663,9 +663,9 @@ THE SOFTWARE.
   pcf_get_bitmaps( FT_Stream  stream,
                    PCF_Face   face )
   {
-    FT_Error   error  = PCF_Err_Ok;
-    FT_Memory  memory = FT_FACE(face)->memory;
-    FT_Long*   offsets;
+    FT_Error   error   = PCF_Err_Ok;
+    FT_Memory  memory  = FT_FACE(face)->memory;
+    FT_Long*   offsets = NULL;
     FT_Long    bitmapSizes[GLYPHPADOPTIONS];
     FT_ULong   format, size;
     FT_ULong   nbitmaps, i, sizebitmaps = 0;
@@ -772,7 +772,7 @@ THE SOFTWARE.
     int           firstRow, lastRow;
     int           nencoding, encodingOffset;
     int           i, j;
-    PCF_Encoding  tmpEncoding, encoding = 0;
+    PCF_Encoding  tmpEncoding = NULL, encoding = 0;
 
 
     error = pcf_seek_to_table_type( stream,

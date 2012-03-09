@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.4.3 API Reference</title>
+<title>FreeType-2.4.9 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.4.3 API Reference</h1></center>
+<center><h1>FreeType-2.4.9 API Reference</h1></center>
 
 <center><h1>
 Module Management
@@ -655,6 +655,7 @@ Defined in FT_RENDER_H (freetype/ftrender.h).
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>In case of success, the renderer will be used to convert glyph images in the renderer's known format into bitmaps.</p>
 <p>This doesn't change the current renderer for other formats.</p>
+<p>Currently, only the B/W renderer, if compiled with FT_RASTER_OPTION_ANTI_ALIASING (providing a 5-levels anti-aliasing mode; this option must be set directly in &lsquo;ftraster.c&rsquo; and is undefined by default) accepts a single tag &lsquo;pal5&rsquo; to set its gray palette as a character string with 5&nbsp;elements. Consequently, the third and fourth argument are zero normally.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

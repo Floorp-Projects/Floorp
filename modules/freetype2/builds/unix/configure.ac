@@ -2,7 +2,7 @@
 #
 # Process this file with autoconf to produce a configure script.
 #
-# Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 by
+# Copyright 2001-2012 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -11,13 +11,13 @@
 # indicate that you have read the license and understand and accept it
 # fully.
 
-AC_INIT([FreeType], [2.4.3], [freetype@nongnu.org], [freetype])
+AC_INIT([FreeType], [2.4.9], [freetype@nongnu.org], [freetype])
 AC_CONFIG_SRCDIR([ftconfig.in])
 
 
 # Don't forget to update docs/VERSION.DLL!
 
-version_info='12:1:6'
+version_info='14:1:8'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -52,7 +52,7 @@ if test ${cross_compiling} = yes; then
     EXEEXT_BUILD=""
   elif test -x a_out.exe -o -x conftest.exe; then
     EXEEXT_BUILD=".exe"
-  elif test -x conftest.* ; then
+  elif test -x conftest.*; then
     EXEEXT_BUILD=`echo conftest.* | sed -n '1s/^.*\././'`
   fi
   rm -f a.* b.* a_out.exe conftest.*
@@ -104,7 +104,8 @@ case "$INSTALL" in
 /*)
   ;;
 */*)
-  INSTALL="`pwd`/$INSTALL" ;;
+  INSTALL="`pwd`/$INSTALL"
+  ;;
 esac
 
 
@@ -123,7 +124,7 @@ AC_CHECK_SIZEOF([long])
 
 # check whether cpp computation of size of int and long in ftconfig.in works
 
-AC_MSG_CHECKING([cpp computation of bit length in ftconfig.in works])
+AC_MSG_CHECKING([whether cpp computation of bit length in ftconfig.in works])
 orig_CPPFLAGS="${CPPFLAGS}"
 CPPFLAGS="-I${srcdir} -I. ${CPPFLAGS}"
 ac_clean_files="ft2build.h ftoption.h ftstdlib.h"
@@ -189,8 +190,15 @@ CPPFLAGS="${orig_CPPFLAGS}"
 
 # Here we check whether we can use our mmap file component.
 
-AC_FUNC_MMAP
-if test "$ac_cv_func_mmap_fixed_mapped" != yes; then
+AC_ARG_ENABLE([mmap],
+  AS_HELP_STRING([--disable-mmap],
+                 [do not check mmap() and do not use]),
+  [enable_mmap="no"],[enable_mmap="yes"])
+if test "x${enable_mmap}" != "xno"; then
+  AC_FUNC_MMAP
+fi
+if test "x${enable_mmap}" = "xno" \
+   -o "$ac_cv_func_mmap_fixed_mapped" != "yes"; then
   FTSYS_SRC='$(BASE_DIR)/ftsystem.c'
 else
   FTSYS_SRC='$(BUILD_DIR)/ftsystem.c'
@@ -229,6 +237,19 @@ if test x$with_zlib != xno && test -n "$LIBZ"; then
   SYSTEM_ZLIB=yes
 fi
 
+# check for system libbz2
+
+# don't quote AS_HELP_STRING!
+AC_ARG_WITH([bzip2],
+  AS_HELP_STRING([--without-bzip2],
+                 [do not support bzip2 compressed fonts]))
+if test x$with_bzip2 != xno && test -z "$LIBBZ2"; then
+  AC_CHECK_LIB([bz2], [BZ2_bzDecompress], [AC_CHECK_HEADER([bzlib.h], [LIBBZ2='-lbz2'])])
+fi
+if test x$with_bzip2 != xno && test -n "$LIBBZ2"; then
+  CFLAGS="$CFLAGS -DFT_CONFIG_OPTION_USE_BZIP2"
+  LDFLAGS="$LDFLAGS $LIBBZ2"
+fi
 
 # Some options handling SDKs/archs in CFLAGS should be copied
 # to LDFLAGS. Apple TechNote 2137 recommends to include these
@@ -237,7 +258,7 @@ fi
 save_config_args=$*
 set dummy ${CFLAGS}
 i=1
-while test $i -lt $#
+while test $i -le $#
 do
   c=$1
 
@@ -254,7 +275,7 @@ do
     fi
     shift 1
     ;;
-  -m32|-m64) # options taking no argument
+  -m32|-m64|-march=*|-mcpu=*) # options taking no argument
     AC_MSG_RESULT([whether CFLAGS and LDFLAGS share ${c}])
     if expr " ${LDFLAGS} " : ".* ${c} *${a}.*" > /dev/null
     then
@@ -309,8 +330,8 @@ if test x$with_old_mac_fonts = xyes; then
       ])],
     [AC_MSG_RESULT([ok])
      ftmac_c='ftmac.c'
-     AC_MSG_CHECKING([OS_INLINE macro is ANSI compatible])
-     orig_CFLAGS="$CFLAGS"
+     AC_MSG_CHECKING([whether OS_INLINE macro is ANSI compatible])
+     orig_CFLAGS="$CFLAGS -DFT_MACINTOSH"
      CFLAGS="$CFLAGS $XX_CFLAGS $XX_ANSIFLAGS"
      AC_COMPILE_IFELSE([
        AC_LANG_PROGRAM([
@@ -381,7 +402,8 @@ else
     dnl AC_MSG_WARN([host system is MacOS but configured to build without Carbon])
     CFLAGS="$CFLAGS -DDARWIN_NO_CARBON"
     ;;
-  *) ;;
+  *)
+    ;;
   esac
 fi
 
@@ -597,7 +619,7 @@ AC_ARG_WITH([ats],
                  [use AppleTypeService, if available (default=yes)]))
 if test x$with_ats = xno; then
   CFLAGS="$CFLAGS -DHAVE_ATS=0"
-elif test x$with_old_mac_fonts = xyes -a x$with_ats != x ; then
+elif test x$with_old_mac_fonts = xyes -a x$with_ats != x; then
   AC_MSG_CHECKING([AppleTypeService functions])
   AC_LINK_IFELSE([
     AC_LANG_PROGRAM([
@@ -644,6 +666,7 @@ esac
 
 AC_SUBST([ftmac_c])
 AC_SUBST([LIBZ])
+AC_SUBST([LIBBZ2])
 AC_SUBST([CFLAGS])
 AC_SUBST([LDFLAGS])
 AC_SUBST([FT2_EXTRA_LIBS])

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    VMS-specific FreeType low-level system interface (body).             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2005 by                                     */
+/*  Copyright 1996-2001, 2002, 2005, 2010 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -231,6 +231,13 @@
     }
 
     stream->size = stat_buf.st_size;
+    if ( !stream->size )
+    {
+      FT_ERROR(( "FT_Stream_Open:" ));
+      FT_ERROR(( " opened `%s' but zero-sized\n", filepathname ));
+      goto Fail_Map;
+    }
+
     stream->pos  = 0;
     stream->base = (unsigned char *)mmap( NULL,
                                           stream->size,
