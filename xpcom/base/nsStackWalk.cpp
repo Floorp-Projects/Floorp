@@ -1262,6 +1262,15 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+namespace mozilla {
+nsresult
+FramePointerStackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+                      void *aClosure, void **bp)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+}
+
 EXPORT_XPCOM_API(nsresult)
 NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
 {

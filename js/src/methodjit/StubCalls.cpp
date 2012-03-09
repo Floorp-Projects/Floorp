@@ -134,79 +134,12 @@ stubs::Name(VMFrame &f)
 void JS_FASTCALL
 stubs::GetElem(VMFrame &f)
 {
-    JSContext *cx = f.cx;
-    FrameRegs &regs = f.regs;
+    Value &lref = f.regs.sp[-2];
+    Value &rref = f.regs.sp[-1];
+    Value &rval = f.regs.sp[-2];
 
-    Value &lref = regs.sp[-2];
-    Value &rref = regs.sp[-1];
-    Value &rval = regs.sp[-2];
-    if (lref.isString() && rref.isInt32()) {
-        JSString *str = lref.toString();
-        int32_t i = rref.toInt32();
-        if ((size_t)i < str->length()) {
-            str = f.cx->runtime->staticStrings.getUnitStringForElement(cx, str, (size_t)i);
-            if (!str)
-                THROW();
-            rval.setString(str);
-            return;
-        }
-    }
-
-    if (lref.isMagic(JS_LAZY_ARGUMENTS)) {
-        if (rref.isInt32() && size_t(rref.toInt32()) < regs.fp()->numActualArgs()) {
-            rval = regs.fp()->canonicalActualArg(rref.toInt32());
-            return;
-        }
-        MarkArgumentsCreated(cx, f.script());
-        JS_ASSERT(!lref.isMagic(JS_LAZY_ARGUMENTS));
-    }
-
-    bool isObject = lref.isObject();
-    JSObject *obj = ValueToObject(cx, lref);
-    if (!obj)
+    if (!GetElementOperation(f.cx, JSOp(*f.pc()), lref, rref, &rval))
         THROW();
-
-    uint32_t index;
-    if (IsDefinitelyIndex(rref, &index)) {
-        if (obj->isDenseArray()) {
-            if (index < obj->getDenseArrayInitializedLength()) {
-                rval = obj->getDenseArrayElement(index);
-                if (!rval.isMagic())
-                    return;
-            }
-        } else if (obj->isArguments()) {
-            if (obj->asArguments().getElement(index, &rval))
-                return;
-        }
-
-        if (!obj->getElement(cx, index, &rval))
-            THROW();
-    } else {
-        SpecialId special;
-        if (ValueIsSpecial(obj, &rref, &special, cx)) {
-            if (!obj->getSpecial(cx, obj, special, &rval))
-                THROW();
-        } else {
-            JSAtom *name;
-            if (!js_ValueToAtom(cx, rref, &name))
-                THROW();
-
-            if (name->isIndex(&index)) {
-                if (!obj->getElement(cx, index, &rval))
-                    THROW();
-            } else {
-                if (!obj->getProperty(cx, name->asPropertyName(), &rval))
-                    THROW();
-            }
-        }
-    }
-
-#if JS_HAS_NO_SUCH_METHOD
-    if (*f.pc() == JSOP_CALLELEM && JS_UNLIKELY(rval.isPrimitive()) && isObject) {
-        if (!OnUnknownMethod(cx, obj, rref, &rval))
-            THROW();
-    }
-#endif
 }
 
 template<JSBool strict>
@@ -234,13 +167,13 @@ stubs::SetElem(VMFrame &f)
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
-            jsuint length = obj->getDenseArrayInitializedLength();
+            uint32_t length = obj->getDenseArrayInitializedLength();
             int32_t i = JSID_TO_INT(id);
-            if ((jsuint)i < length) {
+            if ((uint32_t)i < length) {
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
-                    if ((jsuint)i >= obj->getArrayLength())
+                    if ((uint32_t)i >= obj->getArrayLength())
                         obj->setArrayLength(cx, i + 1);
                 }
                 obj->setDenseArrayElementWithType(cx, i, rval);
@@ -1034,8 +967,8 @@ stubs::InitElem(VMFrame &f, uint32_t last)
     if (rref.isMagic(JS_ARRAY_HOLE)) {
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
-        JS_ASSERT(jsuint(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
-        if (last && !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1)))
+        JS_ASSERT(uint32_t(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
+        if (last && !js_SetLengthProperty(cx, obj, (uint32_t) (JSID_TO_INT(id) + 1)))
             THROW();
     } else {
         if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
@@ -1584,7 +1517,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
         pc += JUMP_OFFSET_LEN;
 
         tableIdx -= low;
-        if ((jsuint) tableIdx < (jsuint)(high - low + 1)) {
+        if ((uint32_t) tableIdx < (uint32_t)(high - low + 1)) {
             pc += JUMP_OFFSET_LEN * tableIdx;
             if (uint32_t candidateOffset = GET_JUMP_OFFSET(pc))
                 jumpOffset = candidateOffset;

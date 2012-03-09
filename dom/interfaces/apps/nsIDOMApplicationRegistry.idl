@@ -36,104 +36,79 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "domstubs.idl"
+#include "nsIArray.idl"
+#include "nsIDOMEvent.idl"
+#include "nsIDOMEventTarget.idl"
 
-[scriptable, uuid(e0c271cb-266b-48c9-a7e4-96590b445c26)]
-interface mozIDOMApplicationRegistryError : nsISupports
-{
-  const unsigned short DENIED = 1;
-  const unsigned short PERMISSION_DENIED = 2;
-  const unsigned short MANIFEST_URL_ERROR = 3;
-  const unsigned short NETWORK_ERROR = 4;
-  const unsigned short MANIFEST_PARSE_ERROR = 5;
-  const unsigned short INVALID_MANIFEST = 6;
+interface nsIDOMDOMRequest;
 
-  readonly attribute short code;
-};
-
-[scriptable, uuid(a6856a3d-dece-43ce-89b9-72dba07f4246)]
-interface mozIDOMApplication : nsISupports
+[scriptable, uuid(b70b84f1-7ac9-4a92-bc32-8b6a7eb7879e)]
+interface mozIDOMApplication  : nsISupports
 {
   readonly attribute jsval manifest;
-  readonly attribute DOMString receipt;
+  readonly attribute DOMString manifestURL;
+  readonly attribute nsIArray receipts; /* an array of strings */
   readonly attribute DOMString origin;
   readonly attribute DOMString installOrigin;
   readonly attribute unsigned long installTime;
+  
+  /* startPoint will be used when several launch_path exists for an app */
+  nsIDOMDOMRequest launch([optional] in DOMString startPoint);
+  nsIDOMDOMRequest uninstall(); 
 };
 
-[scriptable, function, uuid(be170df5-9154-463b-9197-10a6195eba52)]
-interface mozIDOMApplicationRegistryEnumerateCallback : nsISupports
+[scriptable, uuid(870bfbdc-3e13-4042-99dd-18e25720782d)]
+interface mozIDOMApplicationEvent : nsIDOMEvent
 {
-  void handleEvent([array, size_is(count)] in mozIDOMApplication apps,
-                    in unsigned long count);
+  readonly attribute mozIDOMApplication application;
 };
 
-[scriptable, function, uuid(ae0ed33d-35cf-443a-837b-a6cebf16bd49)]
-interface mozIDOMApplicationRegistryErrorCallback : nsISupports
+[scriptable, uuid(a82771f6-ba46-4073-9e6e-f1ad3f42b1f6)]
+interface mozIDOMApplicationMgmt : nsIDOMEventTarget
 {
-  void handleEvent(in mozIDOMApplicationRegistryError error);
+  /**
+   * the request will return the all the applications installed. Only accessible
+   * to privileged callers.
+   */
+  nsIDOMDOMRequest getAll();
+
+  /**
+   * event listener to get notified of application installs. Only settable by
+   * privileged callers.
+   * the event will be a mozIDOMApplicationEvent
+   */
+  attribute nsIDOMEventListener oninstall;
+
+  /**
+   * event listener to get notified of application uninstalls. Only settable by
+   * privileged callers.
+   * the event will be a mozIDOMApplicationEvent
+   */
+  attribute nsIDOMEventListener onuninstall;
 };
 
-[scriptable, uuid(ac63c0ba-1f33-4e3e-b9aa-6a3243a9adba)]
+[scriptable, uuid(f6929871-288b-4613-9a37-9a150760ac50)]
 interface mozIDOMApplicationRegistry : nsISupports
 {
   /**
    * Install a web app. onerror can be used to report errors,
    * and oninstall if the caller is privileged.
    *
-   * @param manifestUrl : the URL of the webapps manifest
-   * @param receipt : An opaque string used to track payment status
+   * @param manifestUrl : the URL of the webapps manifest.
+   * @param parameters : A structure with optional information. 
+   *                     { receipts: ... } will be used to specify the payment receipts for this installation. 
    */
-  void install(in DOMString manifestUrl,
-	       [optional] in DOMString receipt);
+  nsIDOMDOMRequest install(in DOMString manifestUrl, [optional] in jsval parameters);
 
   /**
-   * This call is only accessible to privileged callers.
-   *
-   * @param origin : the origin of the application to uninstall.
+   * the request will return the application currently installed, or null.
    */
-  void uninstall(in DOMString origin);
+  nsIDOMDOMRequest getSelf();
 
   /**
-   * Enumerate apps : either return itself if caller is an app, or
-   * apps installed from a store if caller is a store
-   *
-   * @param success: the callback that will get the array of applications
-   * @param error: optional error callback
+   * the request will return the applications installed from this origin, or null.
    */
-  void enumerate(in mozIDOMApplicationRegistryEnumerateCallback success,
-		 [optional] in mozIDOMApplicationRegistryErrorCallback error);
+  nsIDOMDOMRequest getInstalled();
 
-  /**
-   * Enumerate all apps installed from all stores.
-   * Only usable by privileged callers.
-   *
-   * @param success: the callback that will get the array of applications
-   * @param error: optional error callback
-   */
-  void enumerateAll(in mozIDOMApplicationRegistryEnumerateCallback success,
-		 [optional] in mozIDOMApplicationRegistryErrorCallback error);
-
-  /**
-   * launch a webapp. Behavior is application dependant.
-   *
-   * @param origin : the origin of the application to launch
-   */
-  void launch(in DOMString origin);
-
-  /**
-   * event listener to get notified of application installs. Only settable by
-   * privileged callers
-   */
-  attribute nsIDOMEventListener oninstall;
-
-  /**
-   * event listener to get notified of application uninstalls. Only settable by
-   * privileged callers
-   */
-  attribute nsIDOMEventListener onuninstall;
-
-  /**
-   * event listener to get notified of errors. 
-   */
-  attribute nsIDOMEventListener onerror;
+  readonly attribute mozIDOMApplicationMgmt mgmt;
 };

@@ -577,7 +577,7 @@ js_IntToString(JSContext *cx, int32_t si)
 static char *
 IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
 {
-    jsuint u = (i < 0) ? -i : i;
+    unsigned u = (i < 0) ? -i : i;
 
     RangedPtr<char> cp(cbuf->sbuf + cbuf->sbufSize - 1, cbuf->sbuf, cbuf->sbufSize);
     *cp = '\0';
@@ -589,7 +589,7 @@ IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
       break;
     case 16:
       do {
-          jsuint newu = u / 16;
+          unsigned newu = u / 16;
           *--cp = "0123456789abcdef"[u - newu * 16];
           u = newu;
       } while (u != 0);
@@ -597,7 +597,7 @@ IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
     default:
       JS_ASSERT(base >= 2 && base <= 36);
       do {
-          jsuint newu = u / base;
+          unsigned newu = u / base;
           *--cp = "0123456789abcdefghijklmnopqrstuvwxyz"[u - newu * base];
           u = newu;
       } while (u != 0);
@@ -1127,7 +1127,7 @@ js_NumberToStringWithBase(JSContext *cx, double d, int base)
     if (JSDOUBLE_IS_INT32(d, &i)) {
         if (base == 10 && StaticStrings::hasInt(i))
             return cx->runtime->staticStrings.getInt(i);
-        if (jsuint(i) < jsuint(base)) {
+        if (unsigned(i) < unsigned(base)) {
             if (i < 10)
                 return cx->runtime->staticStrings.getInt(i);
             jschar c = 'a' + i - 10;
@@ -1346,7 +1346,7 @@ ValueToUint16Slow(JSContext *cx, const Value &v, uint16_t *out)
     bool neg = (d < 0);
     d = floor(neg ? -d : d);
     d = neg ? -d : d;
-    jsuint m = JS_BIT(16);
+    unsigned m = JS_BIT(16);
     d = fmod(d, (double) m);
     if (d < 0)
         d += m;

@@ -1273,8 +1273,12 @@ setting {
   -moz-box-orient: horizontal;
 }
 
-.setting-label {
+setting > vbox {
   -moz-box-flex: 1;
+}
+
+.preferences-description:empty {
+  display: none;
 }
 
 .setting-group > setting {
@@ -1291,20 +1295,24 @@ setting {
 }
 
 /* Put setting textboxes on a separate row in portrait */
-@media (@orientation@: portrait) {
+@media (@orientation@: portrait) and (max-width: 600px) {
   setting[type="integer"],
   setting[type="string"],
   setting[type="file"],
   setting[type="directory"] {
-    -moz-box-align: start;
+    -moz-box-align: stretch;
     -moz-box-orient: vertical;
   }
+}
 
-  setting[type="integer"] > .setting-input > textbox,
-  setting[type="string"] > .setting-input > textbox {
-    width: 499px; /* textboxes seem to need a width in order to flex */
-    -moz-box-flex: 1;
-  }
+setting[type="integer"] > .preferences-alignment,
+setting[type="string"] > .preferences-alignment {
+  -moz-box-flex: 3;
+}
+
+setting[type="file"] > .preferences-alignment,
+setting[type="directory"] > .preferences-alignment {
+  -moz-box-align: center;
 }
 
 .options-box {

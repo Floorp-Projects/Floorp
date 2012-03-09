@@ -229,15 +229,20 @@ toolbarbutton.bookmark-item > menupopup {
   list-style-image: url("chrome://global/skin/tree/folder.png");
 }
 
-.query-item[container] {
-  list-style-image: url("chrome://browser/skin/places/history.png");
-}
-
-.bookmark-item[livemark] {
+.bookmark-item[container][livemark] {
   list-style-image: url("chrome://browser/skin/page-livemarks.png");
 }
 
-.bookmark-item[query] {
+.bookmark-item[container][livemark] .bookmark-item {
+  list-style-image: url("chrome://browser/skin/places/livemark-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.bookmark-item[container][livemark] .bookmark-item[visited] {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+.bookmark-item[container][query] {
   list-style-image: url("chrome://browser/skin/places/query.png");
 }
 
@@ -257,18 +262,21 @@ toolbarbutton.bookmark-item > menupopup {
   list-style-image: url("chrome://global/skin/tree/folder.png");
 }
 
-.bookmark-item[livemark] .menuitem-iconic {
-  list-style-image: url("chrome://browser/skin/places/livemark-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.bookmark-item[livemark] .menuitem-iconic[visited] {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-.bookmark-item menuitem[openInTabs],
-.bookmark-item menuitem[siteURI] {
+/* Workaround for native menubar inheritance */
+.openintabs-menuitem,
+.openlivemarksite-menuitem,
+.livemarkstatus-menuitem {
   list-style-image: none;
+}
+
+.bookmark-item[cutting] > .toolbarbutton-icon,
+.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
+  opacity: 0.5;
+}
+
+.bookmark-item[cutting] > .toolbarbutton-text,
+.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-text {
+  opacity: 0.7;
 }
 
 #wrapper-personal-bookmarks[place="palette"] > .toolbarpaletteitem-box {
@@ -285,16 +293,6 @@ toolbarbutton.bookmark-item > menupopup {
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
   width: 16px;
   height: 16px;
-}
-
-.bookmark-item[cutting] > .toolbarbutton-icon,
-.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
-  opacity: 0.5;
-}
-
-.bookmark-item[cutting] > .toolbarbutton-text,
-.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-text {
-  opacity: 0.7;
 }
 
 #bookmarksToolbarFolderMenu,

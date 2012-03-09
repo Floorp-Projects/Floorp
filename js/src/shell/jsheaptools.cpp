@@ -532,7 +532,7 @@ ReferenceFinder::addReferrer(jsval referrer, Path *path)
     JS_ASSERT(JS_IsArrayObject(context, array));
 
     /* Append our referrer to this array. */
-    jsuint length;
+    uint32_t length;
     return JS_GetArrayLength(context, array, &length) &&
            JS_SetElement(context, array, length, &referrer);
 }

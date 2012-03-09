@@ -63,12 +63,14 @@ EXPORTS_mozilla = \
   HalSandbox.h \
   HalSensor.h \
   HalTypes.h \
+  HalWakeLock.h \
   $(NULL)
 
 CPPSRCS = \
   Hal.cpp \
   SandboxHal.cpp \
   WindowIdentifier.cpp \
+  HalWakeLock.cpp \
   $(NULL)
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
@@ -113,4 +115,4 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += $(MOZ_DBUS_GLIB_CFLAGS)
-CXXFLAGS        += $(MOZ_DBUS_GLIB_CFLAGS) -DHAVE_PTHREADS
+CXXFLAGS        += $(MOZ_DBUS_GLIB_CFLAGS)

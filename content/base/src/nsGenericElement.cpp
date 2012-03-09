@@ -2736,6 +2736,9 @@ nsGenericElement::RemoveAttribute(const nsAString& aName)
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
 
   if (!name) {
+    // If there is no canonical nsAttrName for this attribute name, then the
+    // attribute does not exist and we can't get its namespace ID and
+    // local name below, so we return early.
     return NS_OK;
   }
 
@@ -2889,8 +2892,9 @@ nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
     nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
   if (nsid == kNameSpaceID_Unknown) {
-    // Unknown namespace means no attr...
-
+    // If the namespace ID is unknown, it means there can't possibly be an
+    // existing attribute. We would need a known namespace ID to pass into
+    // UnsetAttr, so we return early if we don't have one.
     return NS_OK;
   }
 

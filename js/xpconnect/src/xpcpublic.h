@@ -222,9 +222,6 @@ bool Base64Decode(JSContext *cx, JS::Value val, JS::Value *out);
 bool StringToJsval(JSContext *cx, nsAString &str, JS::Value *rval);
 bool NonVoidStringToJsval(JSContext *cx, nsAString &str, JS::Value *rval);
 
-void *GetCompartmentName(JSRuntime *rt, JSCompartment *c);
-void DestroyCompartmentName(void *string);
-
 #ifdef DEBUG
 void DumpJSHeap(FILE* file);
 #endif
@@ -238,9 +235,10 @@ namespace memory {
 
 // This reports all the stats in |rtStats| that belong in the "explicit" tree,
 // (which isn't all of them).
-void
-ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats, const nsACString &pathPrefix,
-                                 nsIMemoryMultiReporterCallback *callback,
+nsresult
+ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
+                                 const nsACString &pathPrefix,
+                                 nsIMemoryMultiReporterCallback *cb,
                                  nsISupports *closure);
 
 } // namespace memory

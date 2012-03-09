@@ -73,7 +73,7 @@ public abstract class ServerSyncStage implements
   /**
    * Override these in your subclasses.
    *
-   * @return
+   * @return true if this stage should be executed.
    * @throws MetaGlobalException
    */
   protected boolean isEnabled() throws MetaGlobalException {
@@ -95,10 +95,6 @@ public abstract class ServerSyncStage implements
   /**
    * Return a Crypto5Middleware-wrapped Server11Repository.
    *
-   * @param clusterURI
-   * @param data.username
-   * @param collection
-   * @return
    * @throws NoCollectionKeysSetException
    * @throws URISyntaxException
    */

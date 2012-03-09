@@ -119,7 +119,7 @@ JSRuntime::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, s
         *gcMarkerSize = gcMarker.sizeOfExcludingThis(mallocSizeOf);
 }
 
-JS_FRIEND_API(void)
+void
 JSRuntime::triggerOperationCallback()
 {
     /*
@@ -251,49 +251,48 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         }
     }
 
-    JS_LOCK_GC(rt);
     JS_REMOVE_LINK(&cx->link);
     bool last = !rt->hasContexts();
-    if (last || mode == JSDCM_FORCE_GC || mode == JSDCM_MAYBE_GC) {
+    if (last) {
         JS_ASSERT(!rt->gcRunning);
 
 #ifdef JS_THREADSAFE
-        rt->gcHelperThread.waitBackgroundSweepEnd();
-#endif
-        JS_UNLOCK_GC(rt);
-
-        if (last) {
-            /*
-             * Dump remaining type inference results first. This printing
-             * depends on atoms still existing.
-             */
-            {
-                AutoLockGC lock(rt);
-                for (CompartmentsIter c(rt); !c.done(); c.next())
-                    c->types.print(cx, false);
-            }
-
-            /* Unpin all common atoms before final GC. */
-            js_FinishCommonAtoms(cx);
-
-            /* Clear debugging state to remove GC roots. */
-            for (CompartmentsIter c(rt); !c.done(); c.next())
-                c->clearTraps(cx);
-            JS_ClearAllWatchPoints(cx);
-
-            GC(cx, NULL, GC_NORMAL, gcreason::LAST_CONTEXT);
-
-        } else if (mode == JSDCM_FORCE_GC) {
-            GC(cx, NULL, GC_NORMAL, gcreason::DESTROY_CONTEXT);
-        } else if (mode == JSDCM_MAYBE_GC) {
-            JS_MaybeGC(cx);
+        {
+            AutoLockGC lock(rt);
+            rt->gcHelperThread.waitBackgroundSweepEnd();
         }
-        JS_LOCK_GC(rt);
-    }
-#ifdef JS_THREADSAFE
-    rt->gcHelperThread.waitBackgroundSweepEnd();
 #endif
-    JS_UNLOCK_GC(rt);
+        
+        /*
+         * Dump remaining type inference results first. This printing
+         * depends on atoms still existing.
+         */
+        for (CompartmentsIter c(rt); !c.done(); c.next())
+            c->types.print(cx, false);
+
+        /* Unpin all common atoms before final GC. */
+        js_FinishCommonAtoms(cx);
+        
+        /* Clear debugging state to remove GC roots. */
+        for (CompartmentsIter c(rt); !c.done(); c.next())
+            c->clearTraps(cx);
+        JS_ClearAllWatchPoints(cx);
+        
+        GC(cx, NULL, GC_NORMAL, gcreason::LAST_CONTEXT);
+    } else if (mode == JSDCM_FORCE_GC) {
+        JS_ASSERT(!rt->gcRunning);
+        GC(cx, NULL, GC_NORMAL, gcreason::DESTROY_CONTEXT);
+    } else if (mode == JSDCM_MAYBE_GC) {
+        JS_ASSERT(!rt->gcRunning);
+        JS_MaybeGC(cx);
+    }
+
+#ifdef JS_THREADSAFE
+    {
+        AutoLockGC lock(rt);
+        rt->gcHelperThread.waitBackgroundSweepEnd();
+    }
+#endif
     Foreground::delete_(cx);
 }
 
@@ -504,6 +503,37 @@ js_ReportErrorVA(JSContext *cx, unsigned flags, const char *format, va_list ap)
     Foreground::free_(ucmessage);
     return warning;
 }
+
+namespace js {
+
+/* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
+void
+ReportUsageError(JSContext *cx, JSObject *callee, const char *msg)
+{
+    const char *usageStr = "usage";
+    JSAtom *usageAtom = js_Atomize(cx, usageStr, strlen(usageStr));
+    DebugOnly<const Shape *> shape = callee->nativeLookup(cx, ATOM_TO_JSID(usageAtom));
+    JS_ASSERT(!shape->configurable());
+    JS_ASSERT(!shape->writable());
+    JS_ASSERT(shape->hasDefaultGetter());
+
+    jsval usage;
+    if (!JS_LookupProperty(cx, callee, "usage", &usage))
+        return;
+
+    if (JSVAL_IS_VOID(usage)) {
+        JS_ReportError(cx, "%s", msg);
+    } else {
+        JSString *str = JSVAL_TO_STRING(usage);
+        JS::Anchor<JSString *> a_str(str);
+        const jschar *chars = JS_GetStringCharsZ(cx, str);
+        if (!chars)
+            return;
+        JS_ReportError(cx, "%s. Usage: %hs", msg, chars);
+    }
+}
+
+} /* namespace js */
 
 /*
  * The arguments from ap need to be packaged up into an array and stored
@@ -959,7 +989,6 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     outstandingRequests(0),
 #endif
-    securityCallbacks(NULL),
     resolveFlags(0),
     rngSeed(0),
     iterValue(MagicValue(JS_NO_ITER_VALUE)),

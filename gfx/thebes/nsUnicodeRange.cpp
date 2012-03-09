@@ -213,7 +213,7 @@ static nsIAtom **gUnicodeRangeToLangGroupAtomTable[] =
 
 
 
-#define NUM_OF_SUBTABLES      9
+#define NUM_OF_SUBTABLES      10
 #define SUBTABLE_SIZE         16
 
 static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] = 
@@ -252,7 +252,7 @@ static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeTertiaryTable,     //u0cxx
     kRangeTertiaryTable,     //u0dxx
     kRangeTertiaryTable,     //u0exx
-    kRangeTibetan,           //u0fxx
+    kRangeTibetan            //u0fxx
   },
   { //table for 1x--
     kRangeTertiaryTable,     //u10xx
@@ -270,7 +270,7 @@ static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeUnassigned,        //u1cxx
     kRangeUnassigned,        //u1dxx
     kRangeSetLatin,          //u1exx
-    kRangeGreek,             //u1fxx
+    kRangeGreek              //u1fxx
   },
   { //table for 2x--
     kRangeSetLatin,          //u20xx
@@ -288,7 +288,7 @@ static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeUnassigned,        //u2cxx
     kRangeUnassigned,        //u2dxx
     kRangeSetCJK,            //u2exx
-    kRangeSetCJK,            //u2fxx
+    kRangeSetCJK             //u2fxx
   },
   {  //table for ax--
     kRangeYi,                //ua0xx
@@ -306,7 +306,7 @@ static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeKorean,            //uacxx
     kRangeKorean,            //uadxx
     kRangeKorean,            //uaexx
-    kRangeKorean,            //uafxx
+    kRangeKorean             //uafxx
   },
   {  //table for dx--
     kRangeKorean,            //ud0xx
@@ -324,7 +324,7 @@ static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeSurrogate,         //udcxx
     kRangeSurrogate,         //uddxx
     kRangeSurrogate,         //udexx
-    kRangeSurrogate,         //udfxx
+    kRangeSurrogate          //udfxx
   },
   { // table for fx--
     kRangePrivate,           //uf0xx 
@@ -341,11 +341,8 @@ static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeArabic,            //ufbxx, includes alphabic presentation form
     kRangeArabic,            //ufcxx
     kRangeArabic,            //ufdxx
-    kRangeArabic,            //ufexx, includes Combining half marks, 
-                             //                CJK compatibility forms, 
-                             //                CJK compatibility forms, 
-                             //                small form variants
-    kRangeTableBase+8,       //uffxx, halfwidth and fullwidth forms, includes Specials
+    kRangeTableBase+8,       //ufexx
+    kRangeTableBase+9        //uffxx, halfwidth and fullwidth forms, includes Specials
   },
   { //table for 0x0500 - 0x05ff
     kRangeCyrillic,          //u050x
@@ -363,7 +360,25 @@ static const PRUint8 gUnicodeSubrangeTable[NUM_OF_SUBTABLES][SUBTABLE_SIZE] =
     kRangeHebrew,            //u05cx
     kRangeHebrew,            //u05dx
     kRangeHebrew,            //u05ex
-    kRangeHebrew,            //u05fx
+    kRangeHebrew             //u05fx
+  },
+  { //table for 0xfe00 - 0xfeff
+    kRangeSetCJK,            //ufe0x
+    kRangeSetCJK,            //ufe1x
+    kRangeSetCJK,            //ufe2x
+    kRangeSetCJK,            //ufe3x
+    kRangeSetCJK,            //ufe4x
+    kRangeSetCJK,            //ufe5x
+    kRangeSetCJK,            //ufe6x
+    kRangeArabic,            //ufe7x
+    kRangeArabic,            //ufe8x
+    kRangeArabic,            //ufe9x
+    kRangeArabic,            //ufeax
+    kRangeArabic,            //ufebx
+    kRangeArabic,            //ufecx
+    kRangeArabic,            //ufedx
+    kRangeArabic,            //ufeex
+    kRangeArabic             //ufefx
   },
   { //table for 0xff00 - 0xffff
     kRangeSetCJK,            //uff0x, fullwidth latin
@@ -425,7 +440,7 @@ static const PRUint8 gUnicodeTertiaryRangeTable[TERTIARY_TABLE_SIZE] =
     kRangeCanadian,          //u150x  place holder(resolved in the 2ndary tab.)
     kRangeCanadian,          //u158x  place holder(resolved in the 2ndary tab.)
     kRangeCanadian,          //u160x  
-    kRangeOghamRunic,        //u168x  this contains two scripts, Ogham & Runic
+    kRangeOghamRunic         //u168x  this contains two scripts, Ogham & Runic
 };
 
 // A two level index is almost enough for locating a range, with the 
@@ -436,18 +451,31 @@ static const PRUint8 gUnicodeTertiaryRangeTable[TERTIARY_TABLE_SIZE] =
 // there is such a need.
 // For Indic, Southeast Asian scripts and some other scripts between
 // U+0700 and U+16FF, it's extended to the third level.
-PRUint32 FindCharUnicodeRange(PRUnichar ch)
+PRUint32 FindCharUnicodeRange(PRUint32 ch)
 {
   PRUint32 range;
+  
+  // aggregate ranges for non-BMP codepoints
+  if (ch > 0xFFFF) {
+    PRUint32 p = (ch >> 16);
+    if (p == 1) {
+        return kRangeSMP;
+    } else if (p == 2) {
+        return kRangeSetCJK;
+    }
+    return kRangeHigherPlanes;
+  }
 
-  //search the first table
+  // lookup explicit range for BMP codepoints
+  // first general range
   range = gUnicodeSubrangeTable[0][ch >> 12];
   
+  // if general range is good enough, return that
   if (range < kRangeTableBase)
     // we try to get a specific range 
     return range;
 
-  // otherwise, we have one more table to look at
+  // otherwise, use subrange tables
   range = gUnicodeSubrangeTable[range - kRangeTableBase][(ch & 0x0f00) >> 8];
   if (range < kRangeTableBase)
     return range;

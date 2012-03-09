@@ -309,9 +309,11 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         }
         mGoButton.setImageResource(imageResource);
 
-        if ((mText.getImeOptions() & EditorInfo.IME_MASK_ACTION) != imeAction) {
+        int actionBits = mText.getImeOptions() & EditorInfo.IME_MASK_ACTION;
+        if (actionBits != imeAction) {
             InputMethodManager imm = (InputMethodManager) mText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            mText.setImeOptions(imeAction);
+            int optionBits = mText.getImeOptions() & ~EditorInfo.IME_MASK_ACTION;
+            mText.setImeOptions(optionBits | imeAction);
             imm.restartInput(mText);
         }
     }

@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// This verifies that background update notifications work as expected
+// This verifies that background updates & notifications work as expected
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
@@ -74,6 +74,20 @@ function run_test_2() {
     name: "Test Addon 2",
   }, profileDir);
 
+  writeInstallRDFForExtension({
+    id: "addon3@tests.mozilla.org",
+    version: "1.0",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 3",
+  }, profileDir);
+
+  // Background update uses a different pref, if set
+  Services.prefs.setCharPref("extensions.update.background.url",
+                             "http://localhost:4444/data/test_backgroundupdate.rdf");
   restartManager();
 
   // Do hotfix checks
@@ -87,7 +101,7 @@ function run_test_2() {
   Services.obs.addObserver(function() {
     Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
 
-    do_check_eq(installCount, 2);
+    do_check_eq(installCount, 3);
     sawCompleteNotification = true;
   }, "addons-background-update-complete", false);
 
@@ -98,7 +112,7 @@ function run_test_2() {
 
     onDownloadFailed: function(aInstall) {
       completeCount++;
-      if (completeCount == 2) {
+      if (completeCount == 3) {
         do_check_true(sawCompleteNotification);
         end_test();
       }

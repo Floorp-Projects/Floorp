@@ -644,7 +644,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
     {
         shape = self->lastProperty();
 
-        jsuint index;
+        uint32_t index;
         bool indexed = js_IdIsIndex(id, &index);
         UnownedBaseShape *nbase;
         if (shape->base()->matchesGetterSetter(getter, setter) && !indexed) {
@@ -758,7 +758,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
     RootedVar<UnownedBaseShape*> nbase(cx);
     {
-        jsuint index;
+        uint32_t index;
         bool indexed = js_IdIsIndex(id, &index);
         StackBaseShape base(self->lastProperty()->base());
         base.updateGetterSetter(attrs, getter, setter);

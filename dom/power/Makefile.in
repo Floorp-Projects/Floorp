@@ -52,15 +52,19 @@ EXPORTS_NAMESPACES = mozilla/dom/power
 
 EXPORTS_mozilla/dom/power = \
   PowerManagerService.h \
+  Types.h \
   $(NULL)
 
 CPPSRCS = \
   PowerManager.cpp \
   PowerManagerService.cpp \
+  WakeLock.cpp \
   $(NULL)
 
 XPIDLSRCS = \
   nsIDOMPowerManager.idl \
+  nsIDOMWakeLock.idl \
+  nsIDOMWakeLockListener.idl \
   nsIPowerManagerService.idl \
   $(NULL)
 

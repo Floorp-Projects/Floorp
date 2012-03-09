@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<!DOCTYPE prefwindow [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % resetProfileDTD SYSTEM "chrome://global/locale/resetProfile.dtd" >
+%resetProfileDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://global/content/resetProfile.css"?>
+
+<dialog id="resetProfileDialog"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            title="&resetProfile.dialog.title;"
+            buttons="accept,cancel"
+            buttonlabelaccept="&resetProfile.dialog.button.label;"
+            ondialogaccept="return onResetProfileAccepted();"
+            ondialogcancel="window.close();"
+            onload="onResetProfileLoad();">
+
+  <script type="application/javascript" src="chrome://global/content/resetProfile.js"/>
+
+  <description>&resetProfile.dialog.description;</description>
+
+  <label value="&resetProfile.dialog.items.label;"/>
+  <vbox id="migratedItems">
+  </vbox>
+
+  <label id="resetProfileFooter" value="&resetProfile.dialog.footer.label;"/>
+
+</dialog>

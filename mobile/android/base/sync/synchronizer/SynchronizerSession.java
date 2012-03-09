@@ -40,6 +40,8 @@ package org.mozilla.gecko.sync.synchronizer;
 
 import java.util.concurrent.ExecutorService;
 
+import org.mozilla.gecko.sync.repositories.InactiveSessionException;
+import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.delegates.DeferrableRepositorySessionCreationDelegate;
@@ -170,7 +172,11 @@ implements RecordsChannelDelegate,
     };
     final RecordsChannel channelAToB = new RecordsChannel(this.sessionA, this.sessionB, channelDelegate);
     info("Starting A to B flow. Channel is " + channelAToB);
-    channelAToB.beginAndFlow();
+    try {
+      channelAToB.beginAndFlow();
+    } catch (InvalidSessionTransitionException e) {
+      onFlowBeginFailed(channelAToB, e);
+    }
   }
 
   @Override
@@ -183,7 +189,11 @@ implements RecordsChannelDelegate,
     flowBToACompleted = true;
 
     // Finish the two sessions.
-    this.sessionA.finish(this);
+    try {
+      this.sessionA.finish(this);
+    } catch (InactiveSessionException e) {
+      this.onFinishFailed(e);
+    }
   }
 
   @Override
@@ -297,7 +307,11 @@ implements RecordsChannelDelegate,
       if (this.sessionB != null) {
         info("Finishing session B.");
         // On to the next.
-        this.sessionB.finish(this);
+        try {
+          this.sessionB.finish(this);
+        } catch (InactiveSessionException e) {
+          this.onFinishFailed(e);
+        }
       }
     } else if (session == sessionB) {
       if (flowBToACompleted) {

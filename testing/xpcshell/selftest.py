@@ -72,6 +72,7 @@ tail =
                                           manifest=self.manifest,
                                           mozInfo={},
                                           shuffle=shuffle,
+                                          testsRootDir=self.tempdir,
                                           xunitFilename=xunitFilename),
                           msg="""Tests should have %s, log:
 ========

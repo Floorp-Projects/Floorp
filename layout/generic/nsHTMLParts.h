@@ -73,6 +73,10 @@ class nsTableColFrame;
  *  frame among the block's descendants. If there is a floating first-letter
  *  frame, or the block has first-letter style but has no first letter, this
  *  bit is not set. This bit is set on the first continuation only.
+ *
+ * NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET and NS_BLOCK_FRAME_HAS_INSIDE_BULLET
+ * means the block has an associated bullet frame, they are mutually exclusive.
+ *
  */
 #define NS_BLOCK_MARGIN_ROOT              NS_FRAME_STATE_BIT(22)
 #define NS_BLOCK_FLOAT_MGR                NS_FRAME_STATE_BIT(23)
@@ -80,14 +84,25 @@ class nsTableColFrame;
 #define NS_BLOCK_HAS_FIRST_LETTER_STYLE   NS_FRAME_STATE_BIT(29)
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET NS_FRAME_STATE_BIT(30)
 #define NS_BLOCK_HAS_FIRST_LETTER_CHILD   NS_FRAME_STATE_BIT(31)
-// These are the bits that get inherited from a block frame to its
-// next-in-flows and are not private to blocks
-#define NS_BLOCK_FLAGS_MASK               (NS_BLOCK_MARGIN_ROOT | \
-                                           NS_BLOCK_FLOAT_MGR | \
-                                           NS_BLOCK_CLIP_PAGINATED_OVERFLOW | \
-                                           NS_BLOCK_HAS_FIRST_LETTER_STYLE | \
-                                           NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET | \
-                                           NS_BLOCK_HAS_FIRST_LETTER_CHILD)
+#define NS_BLOCK_FRAME_HAS_INSIDE_BULLET  NS_FRAME_STATE_BIT(63)
+// These are all the block specific frame bits, they are copied from
+// the prev-in-flow to a newly created next-in-flow, except for the
+// NS_BLOCK_FLAGS_NON_INHERITED_MASK bits below.
+#define NS_BLOCK_FLAGS_MASK (NS_BLOCK_MARGIN_ROOT              | \
+                             NS_BLOCK_FLOAT_MGR                | \
+                             NS_BLOCK_CLIP_PAGINATED_OVERFLOW  | \
+                             NS_BLOCK_HAS_FIRST_LETTER_STYLE   | \
+                             NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET | \
+                             NS_BLOCK_HAS_FIRST_LETTER_CHILD   | \
+                             NS_BLOCK_FRAME_HAS_INSIDE_BULLET)
+
+// This is the subset of NS_BLOCK_FLAGS_MASK that is NOT inherited
+// by default.  They should only be set on the first-in-flow.
+// See nsBlockFrame::Init.
+#define NS_BLOCK_FLAGS_NON_INHERITED_MASK                        \
+                            (NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET | \
+                             NS_BLOCK_HAS_FIRST_LETTER_CHILD   | \
+                             NS_BLOCK_FRAME_HAS_INSIDE_BULLET)
 
 // Factory methods for creating html layout objects
 
