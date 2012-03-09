@@ -1293,6 +1293,15 @@ LIRGenerator::visitCallSetProperty(MCallSetProperty *ins)
 }
 
 bool
+LIRGenerator::visitDeleteProperty(MDeleteProperty *ins)
+{
+    LCallDeleteProperty *lir = new LCallDeleteProperty();
+    if(!useBox(lir, LCallDeleteProperty::Value, ins->value()))
+        return false;
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitSetPropertyCache(MSetPropertyCache *ins)
 {
     LUse obj = useRegisterAtStart(ins->obj());
