@@ -1016,6 +1016,25 @@ abstract public class GeckoApp
                         });
                     }
                 });
+            } else if (event.equals("Accessibility:Event")) {
+                final int eventType = message.getInt("eventType");
+
+                final JSONArray text = message.getJSONArray("text");
+                final int len = text.length();
+                final String[] textList = new String[len];
+                for (int i = 0; i < len; i++)
+                    textList[i] = text.getString(i);
+
+                final String description = message.optString("description");
+                final boolean enabled = message.optBoolean("enabled", true);
+                final boolean checked = message.optBoolean("checked");
+                final boolean password = message.optBoolean("password");
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        GeckoAppShell.emitGeckoAccessibilityEvent(eventType, textList, description,
+                                                                  enabled, checked, password);
+                    }
+                });
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1731,6 +1750,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Tab:HasTouchListener", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Session:StatePurged", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
