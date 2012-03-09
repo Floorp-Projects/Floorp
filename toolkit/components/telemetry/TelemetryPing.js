@@ -67,6 +67,7 @@ const MEM_HISTOGRAMS = {
   "heap-allocated": "MEMORY_HEAP_ALLOCATED",
   "page-faults-hard": "PAGE_FAULTS_HARD",
   "low-memory-events-virtual": "LOW_MEMORY_EVENTS_VIRTUAL",
+  "low-memory-events-commit-space": "LOW_MEMORY_EVENTS_COMMIT_SPACE",
   "low-memory-events-physical": "LOW_MEMORY_EVENTS_PHYSICAL"
 };
 // Seconds of idle time before pinging.
@@ -634,7 +635,11 @@ TelemetryPing.prototype = {
    */
   uninstall: function uninstall() {
     this.detachObservers()
-    Services.obs.removeObserver(this, "sessionstore-windows-restored");
+    try {
+      Services.obs.removeObserver(this, "sessionstore-windows-restored");
+    } catch (e) {
+      // Already observed this event.
+    }
     Services.obs.removeObserver(this, "profile-before-change");
     Services.obs.removeObserver(this, "private-browsing");
     Services.obs.removeObserver(this, "quit-application-granted");
@@ -674,6 +679,9 @@ TelemetryPing.prototype = {
       }
       break;
     case "sessionstore-windows-restored":
+      Services.obs.removeObserver(this, "sessionstore-windows-restored");
+      // fall through
+    case "test-gather-startup":
       this.gatherStartupInformation();
       break;
     case "idle-daily":

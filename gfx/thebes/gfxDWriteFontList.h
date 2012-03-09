@@ -204,6 +204,145 @@ protected:
     bool mForceGDIClassic;
 };
 
+// custom text renderer used to determine the fallback font for a given char
+class FontFallbackRenderer : public IDWriteTextRenderer
+{
+public:
+    FontFallbackRenderer(IDWriteFactory *aFactory)
+        : mRefCount(0)
+    {
+        HRESULT hr = S_OK;
+
+        hr = aFactory->GetSystemFontCollection(getter_AddRefs(mSystemFonts));
+        NS_ASSERTION(SUCCEEDED(hr), "GetSystemFontCollection failed!");
+    }
+
+    ~FontFallbackRenderer()
+    {}
+
+    // IDWriteTextRenderer methods
+    IFACEMETHOD(DrawGlyphRun)(
+        __maybenull void* clientDrawingContext,
+        FLOAT baselineOriginX,
+        FLOAT baselineOriginY,
+        DWRITE_MEASURING_MODE measuringMode,
+        __in DWRITE_GLYPH_RUN const* glyphRun,
+        __in DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
+        __maybenull IUnknown* clientDrawingEffect
+        );
+
+    IFACEMETHOD(DrawUnderline)(
+        __maybenull void* clientDrawingContext,
+        FLOAT baselineOriginX,
+        FLOAT baselineOriginY,
+        __in DWRITE_UNDERLINE const* underline,
+        __maybenull IUnknown* clientDrawingEffect
+        )
+    {
+        return E_NOTIMPL;
+    }
+
+
+    IFACEMETHOD(DrawStrikethrough)(
+        __maybenull void* clientDrawingContext,
+        FLOAT baselineOriginX,
+        FLOAT baselineOriginY,
+        __in DWRITE_STRIKETHROUGH const* strikethrough,
+        __maybenull IUnknown* clientDrawingEffect
+        )
+    {
+        return E_NOTIMPL;
+    }
+
+
+    IFACEMETHOD(DrawInlineObject)(
+        __maybenull void* clientDrawingContext,
+        FLOAT originX,
+        FLOAT originY,
+        IDWriteInlineObject* inlineObject,
+        BOOL isSideways,
+        BOOL isRightToLeft,
+        __maybenull IUnknown* clientDrawingEffect
+        )
+    {
+        return E_NOTIMPL;
+    }
+
+    // IDWritePixelSnapping methods
+
+    IFACEMETHOD(IsPixelSnappingDisabled)(
+        __maybenull void* clientDrawingContext,
+        __out BOOL* isDisabled
+        )
+    {
+        *isDisabled = FALSE;
+        return S_OK;
+    }
+
+    IFACEMETHOD(GetCurrentTransform)(
+        __maybenull void* clientDrawingContext,
+        __out DWRITE_MATRIX* transform
+        )
+    {
+        const DWRITE_MATRIX ident = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+        *transform = ident;
+        return S_OK;
+    }
+
+    IFACEMETHOD(GetPixelsPerDip)(
+        __maybenull void* clientDrawingContext,
+        __out FLOAT* pixelsPerDip
+        )
+    {
+        *pixelsPerDip = 1.0f;
+        return S_OK;
+    }
+
+    // IUnknown methods
+
+    IFACEMETHOD_(unsigned long, AddRef) ()
+    {
+        return InterlockedIncrement(&mRefCount);
+    }
+
+    IFACEMETHOD_(unsigned long,  Release) ()
+    {
+        unsigned long newCount = InterlockedDecrement(&mRefCount);
+        if (newCount == 0)
+        {
+            delete this;
+            return 0;
+        }
+
+        return newCount;
+    }
+
+    IFACEMETHOD(QueryInterface) (IID const& riid, void** ppvObject)
+    {
+        if (__uuidof(IDWriteTextRenderer) == riid) {
+            *ppvObject = this;
+        } else if (__uuidof(IDWritePixelSnapping) == riid) {
+            *ppvObject = this;
+        } else if (__uuidof(IUnknown) == riid) {
+            *ppvObject = this;
+        } else {
+            *ppvObject = NULL;
+            return E_FAIL;
+        }
+
+        this->AddRef();
+        return S_OK;
+    }
+
+    const nsString& FallbackFamilyName() { return mFamilyName; }
+
+protected:
+    unsigned long mRefCount;
+    nsRefPtr<IDWriteFontCollection> mSystemFonts;
+    nsString mFamilyName;
+};
+
+
 
 class gfxDWriteFontList : public gfxPlatformFontList {
 public:
@@ -248,6 +387,14 @@ private:
 
     void GetDirectWriteSubstitutes();
 
+    // search fonts system-wide for a given character, null otherwise
+    virtual gfxFontEntry* GlobalFontFallback(const PRUint32 aCh,
+                                             PRInt32 aRunScript,
+                                             const gfxFontStyle* aMatchStyle,
+                                             PRUint32& aCmapCount);
+
+    virtual bool UsesSystemFallback() { return true; }
+
     /**
      * Fonts listed in the registry as substitutes but for which no actual
      * font family is found.
@@ -270,6 +417,9 @@ private:
     // whether to use GDI font table access routines
     bool mGDIFontTableAccess;
     nsRefPtr<IDWriteGdiInterop> mGDIInterop;
+
+    nsRefPtr<FontFallbackRenderer> mFallbackRenderer;
+    nsRefPtr<IDWriteTextFormat>    mFallbackFormat;
 };
 
 

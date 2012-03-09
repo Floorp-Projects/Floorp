@@ -795,12 +795,12 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
         const PRUnichar* params[] = { atom->GetUTF16String(),
                                       otherAtom->GetUTF16String() };
         rv = nsContentUtils::FormatLocalizedString(
-          nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, 2, message);
+          nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, message);
         NS_ENSURE_SUCCESS(rv, rv);
       } else if (atom) {
         const PRUnichar* params[] = { atom->GetUTF16String() };
         rv = nsContentUtils::FormatLocalizedString(
-          nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, 1, message);
+          nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, message);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         rv = nsContentUtils::GetLocalizedString(

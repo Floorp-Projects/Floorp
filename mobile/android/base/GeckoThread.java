@@ -66,7 +66,7 @@ public class GeckoThread extends Thread {
 
     public void run() {
         final GeckoApp app = GeckoApp.mAppContext;
-        File cacheFile = GeckoAppShell.getCacheDir();
+        File cacheFile = GeckoAppShell.getCacheDir(app);
         File libxulFile = new File(cacheFile, "libxul.so");
 
         if ((!libxulFile.exists() ||
@@ -86,9 +86,12 @@ public class GeckoThread extends Thread {
         // At some point while loading the gecko libs our default locale gets set
         // so just save it to locale here and reset it as default after the join
         Locale locale = Locale.getDefault();
+
         String resourcePath = app.getApplication().getPackageResourcePath();
-        GeckoAppShell.ensureSQLiteLibsLoaded(resourcePath);
+        GeckoAppShell.setupGeckoEnvironment(app);
+        GeckoAppShell.loadSQLiteLibs(app, resourcePath);
         GeckoAppShell.loadGeckoLibs(resourcePath);
+
         Locale.setDefault(locale);
         Resources res = app.getBaseContext().getResources();
         Configuration config = res.getConfiguration();
@@ -98,15 +101,10 @@ public class GeckoThread extends Thread {
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
         // and then fire us up
-        try {
-            Log.w(LOGTAG, "RunGecko - URI = " + mUri);
-
-            GeckoAppShell.runGecko(app.getApplication().getPackageResourcePath(),
-                                   mIntent.getStringExtra("args"),
-                                   mUri,
-                                   mRestoreSession);
-        } catch (Exception e) {
-            GeckoAppShell.reportJavaCrash(e);
-        }
+        Log.w(LOGTAG, "RunGecko - URI = " + mUri);
+        GeckoAppShell.runGecko(app.getApplication().getPackageResourcePath(),
+                               mIntent.getStringExtra("args"),
+                               mUri,
+                               mRestoreSession);
     }
 }

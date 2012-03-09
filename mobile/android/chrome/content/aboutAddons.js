@@ -208,6 +208,22 @@ var Addons = {
   },
 
   showDetails: function showDetails(aListItem) {
+    // This function removes and returns the text content of aNode without
+    // removing any child elements. Removing the text nodes ensures any XBL
+    // bindings apply properly.
+    function stripTextNodes(aNode) {
+      var text = "";
+      for (var i = 0; i < aNode.childNodes.length; i++) {
+        if (aNode.childNodes[i].nodeType != document.ELEMENT_NODE) {
+          text += aNode.childNodes[i].textContent;
+          aNode.removeChild(aNode.childNodes[i--]);
+        } else {
+          text += stripTextNodes(aNode.childNodes[i]);
+        }
+      }
+      return text;
+    }
+
     let detailItem = document.querySelector("#addons-details > .addon-item");
     detailItem.setAttribute("isDisabled", aListItem.getAttribute("isDisabled"));
     detailItem.setAttribute("opType", aListItem.getAttribute("opType"));
@@ -247,22 +263,6 @@ var Addons = {
       xhr.open("GET", optionsURL, false);
       xhr.send();
       if (xhr.responseXML) {
-        // This function removes and returns the text content of aNode without
-        // removing any child elements. Removing the text nodes ensures any XBL
-        // bindings apply properly.
-        function stripTextNodes(aNode) {
-          var text = '';
-          for (var i = 0; i < aNode.childNodes.length; i++) {
-            if (aNode.childNodes[i].nodeType != document.ELEMENT_NODE) {
-              text += aNode.childNodes[i].textContent;
-              aNode.removeChild(aNode.childNodes[i--]);
-            } else {
-              text += stripTextNodes(aNode.childNodes[i]);
-            }
-          }
-          return text;
-        }
-
         // Only allow <setting> for now
         let settings = xhr.responseXML.querySelectorAll(":root > setting");
         for (let i = 0; i < settings.length; i++) {

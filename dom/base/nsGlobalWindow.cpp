@@ -1933,12 +1933,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   bool reUseInnerWindow = aForceReuseInnerWindow || wouldReuseInnerWindow;
 
-  // Remember the old document's principal.
-  nsIPrincipal *oldPrincipal = nsnull;
-  if (oldDoc) {
-    oldPrincipal = oldDoc->NodePrincipal();
-  }
-
   nsresult rv = NS_OK;
 
   // Set mDocument even if this is an outer window to avoid
@@ -1956,6 +1950,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
   nsRefPtr<nsGlobalWindow> newInnerWindow;
+  bool createdInnerWindow = false;
 
   bool thisChrome = IsChromeWindow();
 
@@ -2034,6 +2029,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                    "Failed to get script global and holder");
 
       mCreatingInnerWindow = false;
+      createdInnerWindow = true;
       Thaw();
 
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2112,6 +2108,19 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
           priv->waiverWrapperMap->Enumerate(ReparentWaiverWrappers, &closure);
         }
       }
+    }
+
+    // If we created a new inner window above, we need to do the last little bit
+    // of initialization now that the dust has settled.
+    if (createdInnerWindow) {
+      nsIXPConnect *xpc = nsContentUtils::XPConnect();
+      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+      nsresult rv = xpc->GetWrappedNativeOfJSObject(cx, newInnerWindow->mJSObject,
+                                                    getter_AddRefs(wrapper));
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ABORT_IF_FALSE(wrapper, "bad wrapper");
+      rv = wrapper->FinishInitForWrappedGlobal();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     JSAutoEnterCompartment ac;
@@ -4693,7 +4702,7 @@ nsGlobalWindow::MakeScriptDialogTitle(nsAString &aOutTitle)
               nsXPIDLString tempString;
               nsContentUtils::FormatLocalizedString(nsContentUtils::eCOMMON_DIALOG_PROPERTIES,
                                                     "ScriptDlgHeading",
-                                                    formatStrings, ArrayLength(formatStrings),
+                                                    formatStrings,
                                                     tempString);
               aOutTitle = tempString;
             }

@@ -67,6 +67,7 @@ StringBuffer::appendN(const jschar c, size_t n)
     return cb.appendN(c, n);
 }
 
+/* ES5 9.8 ToString, appending the result to the string buffer. */
 extern bool
 ValueToStringBufferSlow(JSContext *cx, const Value &v, StringBuffer &sb);
 
@@ -77,6 +78,13 @@ ValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
         return sb.append(v.toString());
 
     return ValueToStringBufferSlow(cx, v, sb);
+}
+
+/* ES5 9.8 ToString for booleans, appending the result to the string buffer. */
+inline bool
+BooleanToStringBuffer(JSContext *cx, bool b, StringBuffer &sb)
+{
+    return b ? sb.append("true") : sb.append("false");
 }
 
 }  /* namespace js */

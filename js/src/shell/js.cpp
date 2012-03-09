@@ -3134,7 +3134,7 @@ CancelExecution(JSRuntime *rt)
     if (gWorkerThreadPool)
         js::workers::terminateAll(gWorkerThreadPool);
 #endif
-    JS_TriggerRuntimeOperationCallback(rt);
+    JS_TriggerOperationCallback(rt);
 
     static const char msg[] = "Script runs for too long, terminating.\n";
 #if defined(XP_UNIX) && !defined(JS_THREADSAFE)
