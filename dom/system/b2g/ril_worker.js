@@ -2612,10 +2612,12 @@ let GsmPDUHelper = {
    * @param langShiftTable
    *        single shift table string.
    *
+   * @return encoded length in septets.
+   *
    * @note that the algorithm used in this function must match exactly with
    * #writeStringAsSeptets.
    */
-  _calculateLangEncodedLength: function _calculateLangEncodedLength(message, langTable, langShiftTable) {
+  _calculateLangEncodedSeptets: function _calculateLangEncodedSeptets(message, langTable, langShiftTable) {
     let length = 0;
     for (let msgIndex = 0; msgIndex < message.length; msgIndex++) {
       let septet = langTable.indexOf(message.charAt(msgIndex));
@@ -2686,17 +2688,17 @@ let GsmPDUHelper = {
     options.userDataHeaderLength = 0;
 
     let needUCS2 = true;
-    let minUserDataLength = Number.MAX_VALUE;
+    let minUserDataSeptets = Number.MAX_VALUE;
     for (let i = 0; i < this.enabledGsmTableTuples.length; i++) {
       let [langIndex, langShiftIndex] = this.enabledGsmTableTuples[i];
 
       const langTable = PDU_NL_LOCKING_SHIFT_TABLES[langIndex];
       const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[langShiftIndex];
 
-      let length = this._calculateLangEncodedLength(options.body,
-                                                    langTable,
-                                                    langShiftTable);
-      if (length < 0) {
+      let bodySeptets = this._calculateLangEncodedSeptets(options.body,
+                                                          langTable,
+                                                          langShiftTable);
+      if (bodySeptets < 0) {
         continue;
       }
 
@@ -2709,20 +2711,21 @@ let GsmPDUHelper = {
       }
 
       // Calculate full user data length, note the extra byte is for header len
-      let userDataLength = length + (headerLen ? headerLen + 1 : 0);
-      if (userDataLength >= minUserDataLength) {
+      let headerSeptets = Math.ceil((headerLen ? headerLen + 1 : 0) * 8 / 7);
+      let userDataSeptets = bodySeptets + headerSeptets;
+      if (userDataSeptets >= minUserDataSeptets) {
         continue;
       }
 
       needUCS2 = false;
-      minUserDataLength = userDataLength;
+      minUserDataSeptets = userDataSeptets;
 
-      options.encodedBodyLength = length;
+      options.encodedBodyLength = bodySeptets;
       options.userDataHeaderLength = headerLen;
       options.langIndex = langIndex;
       options.langShiftIndex = langShiftIndex;
 
-      if (userDataLength <= options.body.length) {
+      if (userDataSeptets <= options.body.length) {
         // Found minimum user data length already
         return;
       }
