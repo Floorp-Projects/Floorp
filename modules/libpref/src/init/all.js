@@ -312,6 +312,9 @@ pref("toolkit.telemetry.server_owner", "Mozilla");
 // Information page about telemetry (temporary ; will be about:telemetry in the end)
 pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.html#telemetry");
 
+// Disable remote debugging protocol logging
+pref("devtools.debugger.log", false);
+
 // view source
 pref("view_source.syntax_highlight", true);
 pref("view_source.wrap_long_lines", false);
