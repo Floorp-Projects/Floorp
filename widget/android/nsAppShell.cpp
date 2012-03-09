@@ -351,12 +351,8 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             break;
 
         nsGeoPosition* p = curEvent->GeoPosition();
-        nsGeoPositionAddress* a = curEvent->GeoAddress();
-
-        if (p) {
-            p->SetAddress(a);
+        if (p)
             gLocationCallback->Update(curEvent->GeoPosition());
-        }
         else
             NS_WARNING("Received location event without geoposition!");
         break;
