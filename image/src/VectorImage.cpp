@@ -627,15 +627,6 @@ VectorImage::UnlockImage()
 }
 
 //******************************************************************************
-/* void requestDiscard() */
-NS_IMETHODIMP
-VectorImage::RequestDiscard()
-{
-  // This method is for image-discarding, which only applies to RasterImages.
-  return NS_OK;
-}
-
-//******************************************************************************
 /* void resetAnimation (); */
 NS_IMETHODIMP
 VectorImage::ResetAnimation()
