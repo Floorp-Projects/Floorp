@@ -2724,11 +2724,6 @@ let GsmPDUHelper = {
       options.userDataHeaderLength = headerLen;
       options.langIndex = langIndex;
       options.langShiftIndex = langShiftIndex;
-
-      if (userDataSeptets <= options.body.length) {
-        // Found minimum user data length already
-        return;
-      }
     }
 
     if (needUCS2) {
