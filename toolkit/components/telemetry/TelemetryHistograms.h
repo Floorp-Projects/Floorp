@@ -147,6 +147,7 @@ HISTOGRAM(WORD_CACHE_LOOKUP_SCRIPT, 1, 110, 111, LINEAR, "Word cache lookup (scr
 HISTOGRAM(WORD_CACHE_HIT_SCRIPT, 1, 110, 111, LINEAR, "Word cache hit (script)")
 
 HISTOGRAM_BOOLEAN(FONT_CACHE_HIT, "font cache hit")
+HISTOGRAM_BOOLEAN(BAD_FALLBACK_FONT, "system fallback font can't be used")
 
 HISTOGRAM_BOOLEAN(SHUTDOWN_OK, "Did the browser start after a successful shutdown")
 
