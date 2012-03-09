@@ -1779,7 +1779,7 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     // for loops have the following structures:
     //
     //   NOP or POP
-    //   [GOTO cond]
+    //   [GOTO cond | NOP]
     //   LOOPHEAD
     // body:
     //    ; [body]
@@ -1799,6 +1799,9 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
         JS_ASSERT(bodyStart + GetJumpOffset(bodyStart) == condpc);
         bodyStart = GetNextPc(bodyStart);
     } else {
+        // No loop condition, such as for(j = 0; ; j++)
+        JS_ASSERT(JSOp(*bodyStart) == JSOP_NOP);
+        bodyStart = GetNextPc(bodyStart);
         loopEntry = GetNextPc(bodyStart);
     }
     jsbytecode *loopHead = bodyStart;
