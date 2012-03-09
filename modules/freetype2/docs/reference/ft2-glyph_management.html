@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.4.3 API Reference</title>
+<title>FreeType-2.4.9 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.4.3 API Reference</h1></center>
+<center><h1>FreeType-2.4.9 API Reference</h1></center>
 
 <center><h1>
 Glyph Management
@@ -500,6 +500,7 @@ Defined in FT_GLYPH_H (freetype/ftglyph.h).
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>Coordinates are relative to the glyph origin, using the y&nbsp;upwards convention.</p>
 <p>If the glyph has been loaded with <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_SCALE</a>, &lsquo;bbox_mode&rsquo; must be set to <a href="ft2-glyph_management.html#FT_Glyph_BBox_Mode">FT_GLYPH_BBOX_UNSCALED</a> to get unscaled font units in 26.6 pixel format. The value <a href="ft2-glyph_management.html#FT_Glyph_BBox_Mode">FT_GLYPH_BBOX_SUBPIXELS</a> is another name for this constant.</p>
+<p>If the font is tricky and the glyph has been loaded with <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_SCALE</a>, the resulting CBox is meaningless. To get reasonable values for the CBox it is necessary to load the glyph at a large ppem value (so that the hinting instructions can properly shift and scale the subglyphs), then extracting the CBox which can be eventually converted back to font units.</p>
 <p>Note that the maximum coordinates are exclusive, which means that one can compute the width and height of the glyph image (be it in integer or 26.6 pixels) as:</p>
 <pre class="colored">
   width  = bbox.xMax - bbox.xMin;                                  

@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.4.3 API Reference</title>
+<title>FreeType-2.4.9 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.4.3 API Reference</h1></center>
+<center><h1>FreeType-2.4.9 API Reference</h1></center>
 
 <center><h1>
 Outline Processing
@@ -455,7 +455,7 @@ Defined in FT_OUTLINE_H (freetype/ftoutln.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>The used algorithm to increase or decrease the thickness of the glyph doesn't change the number of points; this means that certain situations like acute angles or intersections are sometimes handled incorrectly.</p>
-<p>If you need &lsquo;better&rsquo; metrics values you should call <a href="ft2-outline_processing.html#FT_Outline_Get_CBox">FT_Outline_Get_CBox</a> ot <a href="ft2-outline_processing.html#FT_Outline_Get_BBox">FT_Outline_Get_BBox</a>.</p>
+<p>If you need &lsquo;better&rsquo; metrics values you should call <a href="ft2-outline_processing.html#FT_Outline_Get_CBox">FT_Outline_Get_CBox</a> or <a href="ft2-outline_processing.html#FT_Outline_Get_BBox">FT_Outline_Get_BBox</a>.</p>
 <p>Example call:</p>
 <pre class="colored">
   FT_Load_Glyph( face, index, FT_LOAD_DEFAULT );                   
@@ -565,6 +565,9 @@ Defined in FT_BBOX_H (freetype/ftbbox.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
 <p>FreeType error code. 0&nbsp;means success.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>If the font is tricky and the glyph has been loaded with <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_SCALE</a>, the resulting BBox is meaningless. To get reasonable values for the BBox it is necessary to load the glyph at a large ppem value (so that the hinting instructions can properly shift and scale the subglyphs), then extracting the BBox which can be eventually converted back to font units.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -926,6 +929,9 @@ Defined in FT_OUTLINE_H (freetype/ftoutln.h).
 <p>The outline's control box.</p>
 </td></tr>
 </table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>See <a href="ft2-glyph_management.html#FT_Glyph_Get_CBox">FT_Glyph_Get_CBox</a> for a discussion of tricky fonts.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
