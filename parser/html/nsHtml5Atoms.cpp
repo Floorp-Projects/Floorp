@@ -66,5 +66,5 @@ static const nsStaticAtom Html5Atoms_info[] = {
 
 void nsHtml5Atoms::AddRefAtoms()
 {
-  NS_RegisterStaticAtoms(Html5Atoms_info, ArrayLength(Html5Atoms_info));
+  NS_RegisterStaticAtoms(Html5Atoms_info);
 }
