@@ -703,11 +703,11 @@ XDRScript(JSXDRState *xdr, JSScript **scriptp)
         JS_ASSERT_IF(script->principals, script->originPrincipals);
         if (xdr->principals) {
             script->principals = xdr->principals;
-            JSPRINCIPALS_HOLD(cx, xdr->principals);
+            JS_HoldPrincipals(xdr->principals);
         }
         if (xdr->originPrincipals) {
             script->originPrincipals = xdr->originPrincipals;
-            JSPRINCIPALS_HOLD(cx, xdr->originPrincipals);
+            JS_HoldPrincipals(xdr->originPrincipals);
         }
     }
 
@@ -1256,14 +1256,14 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     script->principals = bce->parser->principals;
 
     if (script->principals)
-        JSPRINCIPALS_HOLD(cx, script->principals);
+        JS_HoldPrincipals(script->principals);
 
     /* Establish invariant: principals implies originPrincipals. */
     script->originPrincipals = bce->parser->originPrincipals;
     if (!script->originPrincipals)
         script->originPrincipals = script->principals;
     if (script->originPrincipals)
-        JSPRINCIPALS_HOLD(cx, script->originPrincipals);
+        JS_HoldPrincipals(script->originPrincipals);
 
     script->sourceMap = (jschar *) bce->parser->tokenStream.releaseSourceMap();
 
@@ -1462,9 +1462,9 @@ JSScript::finalize(JSContext *cx, bool background)
 
     JS_ASSERT_IF(principals, originPrincipals);
     if (principals)
-        JSPRINCIPALS_DROP(cx, principals);
+        JS_DropPrincipals(cx->runtime, principals);
     if (originPrincipals)
-        JSPRINCIPALS_DROP(cx, originPrincipals);
+        JS_DropPrincipals(cx->runtime, originPrincipals);
 
     if (types)
         types->destroy();
