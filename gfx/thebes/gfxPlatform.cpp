@@ -150,6 +150,7 @@ SRGBOverrideObserver::Observe(nsISupports *aSubject,
 
 #define GFX_PREF_HARFBUZZ_SCRIPTS "gfx.font_rendering.harfbuzz.scripts"
 #define HARFBUZZ_SCRIPTS_DEFAULT  mozilla::unicode::SHAPING_DEFAULT
+#define GFX_PREF_FALLBACK_USE_CMAPS  "gfx.font_rendering.fallback.always_use_cmaps"
 
 #ifdef MOZ_GRAPHITE
 #define GFX_PREF_GRAPHITE_SHAPING "gfx.font_rendering.graphite.enabled"
@@ -233,6 +234,8 @@ gfxPlatform::gfxPlatform()
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
     mDownloadableFontsSanitize = UNINITIALIZED_VALUE;
+    mFallbackUsesCmaps = UNINITIALIZED_VALUE;
+
 #ifdef MOZ_GRAPHITE
     mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
 #endif
@@ -680,6 +683,17 @@ gfxPlatform::SanitizeDownloadedFonts()
     }
 
     return mDownloadableFontsSanitize;
+}
+
+bool
+gfxPlatform::UseCmapsDuringSystemFallback()
+{
+    if (mFallbackUsesCmaps == UNINITIALIZED_VALUE) {
+        mFallbackUsesCmaps =
+            Preferences::GetBool(GFX_PREF_FALLBACK_USE_CMAPS, false);
+    }
+
+    return mFallbackUsesCmaps;
 }
 
 #ifdef MOZ_GRAPHITE
@@ -1360,6 +1374,8 @@ gfxPlatform::FontsPrefsChanged(const char *aPref)
         mAllowDownloadableFonts = UNINITIALIZED_VALUE;
     } else if (!strcmp(GFX_DOWNLOADABLE_FONTS_SANITIZE, aPref)) {
         mDownloadableFontsSanitize = UNINITIALIZED_VALUE;
+    } else if (!strcmp(GFX_PREF_FALLBACK_USE_CMAPS, aPref)) {
+        mFallbackUsesCmaps = UNINITIALIZED_VALUE;
 #ifdef MOZ_GRAPHITE
     } else if (!strcmp(GFX_PREF_GRAPHITE_SHAPING, aPref)) {
         mGraphiteShapingEnabled = UNINITIALIZED_VALUE;

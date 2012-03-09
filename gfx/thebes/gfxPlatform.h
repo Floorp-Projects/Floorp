@@ -319,6 +319,11 @@ public:
      */
     virtual bool FontHintingEnabled() { return true; }
 
+    /**
+     * Whether to check all font cmaps during system font fallback
+     */
+    bool UseCmapsDuringSystemFallback();
+
 #ifdef MOZ_GRAPHITE
     /**
      * Whether to use the SIL Graphite rendering engine
@@ -464,6 +469,10 @@ protected:
 #endif
 
     PRInt8  mBidiNumeralOption;
+
+    // whether to always search font cmaps globally 
+    // when doing system font fallback
+    PRInt8  mFallbackUsesCmaps;
 
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;

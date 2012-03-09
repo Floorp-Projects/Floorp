@@ -203,6 +203,9 @@ pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.sanitize", true);
 
+// whether to always search all font cmaps during system font fallback
+pref("gfx.font_rendering.fallback.always_use_cmaps", false);
+
 #ifdef MOZ_GRAPHITE
 pref("gfx.font_rendering.graphite.enabled", false);
 #endif

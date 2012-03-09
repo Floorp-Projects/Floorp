@@ -161,6 +161,10 @@ protected:
                                              const gfxFontStyle* aMatchStyle,
                                              PRUint32& aCmapCount);
 
+    // whether system-based font fallback is used or not
+    // if system fallback is used, no need to load all cmaps
+    virtual bool UsesSystemFallback() { return false; }
+
     // separate initialization for reading in name tables, since this is expensive
     void InitOtherFamilyNames();
 
