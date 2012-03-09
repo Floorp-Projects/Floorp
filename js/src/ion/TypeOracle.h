@@ -153,7 +153,8 @@ class TypeOracle
 
     /* |pc| must be a |JSOP_CALL|. */
     virtual types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc) {
-        JS_ASSERT(JSOp(*pc) == JSOP_CALL);
+        // Same assertion as TypeInferenceOracle::getCallTarget.
+        JS_ASSERT(js_CodeSpec[*pc].format & JOF_INVOKE && JSOp(*pc) != JSOP_EVAL);
         return NULL;
     }
     virtual types::TypeSet *getCallArg(JSScript *script, uint32 argc, uint32 arg, jsbytecode *pc) {
