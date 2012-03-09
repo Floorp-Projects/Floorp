@@ -11,6 +11,7 @@
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteController.h"
 #include "nsIAutoCompletePopup.h"
+#include "nsIFormAutoComplete.h"
 #include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
@@ -33,6 +34,7 @@ class nsFormFillController : public nsIFormFillController,
                              public nsIAutoCompleteInput,
                              public nsIAutoCompleteSearch,
                              public nsIDOMEventListener,
+                             public nsIFormAutoCompleteObserver,
                              public nsIMutationObserver
 {
 public:
@@ -40,6 +42,7 @@ public:
   NS_DECL_NSIFORMFILLCONTROLLER
   NS_DECL_NSIAUTOCOMPLETESEARCH
   NS_DECL_NSIAUTOCOMPLETEINPUT
+  NS_DECL_NSIFORMAUTOCOMPLETEOBSERVER
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIMUTATIONOBSERVER
 
@@ -60,6 +63,8 @@ protected:
   void StartControllingInput(nsIDOMHTMLInputElement *aInput);
   void StopControllingInput();
 
+  nsresult PerformInputListAutoComplete(nsIAutoCompleteResult* aPreviousResult);
+
   void RevalidateDataList();
   bool RowMatch(nsFormHistory *aHistory, uint32_t aIndex, const nsAString &aInputName, const nsAString &aInputValue);
 
@@ -79,6 +84,9 @@ protected:
   nsCOMPtr<nsILoginManager> mLoginManager;
   nsIDOMHTMLInputElement* mFocusedInput;
   nsINode* mFocusedInputNode;
+
+  // mListNode is a <datalist> element which, is set, has the form fill controller
+  // as a mutation observer for it.
   nsINode* mListNode;
   nsCOMPtr<nsIAutoCompletePopup> mFocusedPopup;
 
@@ -87,7 +95,13 @@ protected:
 
   //these are used to dynamically update the autocomplete
   nsCOMPtr<nsIAutoCompleteResult> mLastSearchResult;
+
+  // The observer passed to StartSearch. It will be notified when the search is
+  // complete or the data from a datalist changes.
   nsCOMPtr<nsIAutoCompleteObserver> mLastListener;
+
+  // This is cleared by StopSearch().
+  nsCOMPtr<nsIFormAutoComplete> mLastFormAutoComplete;
   nsString mLastSearchString;
 
   nsDataHashtable<nsPtrHashKey<const nsINode>, bool> mPwmgrInputs;
