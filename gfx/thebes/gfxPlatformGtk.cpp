@@ -45,6 +45,7 @@
 #include "gfxPlatformGtk.h"
 
 #include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 #include "gfxFontconfigUtils.h"
 #ifdef MOZ_PANGO
 #include "gfxPangoFonts.h"
