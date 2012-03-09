@@ -46,5 +46,13 @@ interface nsIProfiler : nsISupports
   boolean IsActive();
   void GetResponsivenessTimes(out PRUint32 aCount, [retval, array, size_is(aCount)] out double aResult);
   void GetFeatures(out PRUint32 aCount, [retval, array, size_is(aCount)] out string aFeatures);
+
+  /**
+   * Returns a JSON string of an array of shared library objects.
+   * Every object has three properties: start, end, and name.
+   * start and end are integers describing the address range that the library
+   * occupies in memory. name is the path of the library as a string.
+   */
+  AString getSharedLibraryInformation();
 };
 
