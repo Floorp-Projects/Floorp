@@ -55,10 +55,10 @@ add_test(function test_nl_single_shift_tables_validity() {
 });
 
 /**
- * Verify GsmPDUHelper#_calculateLangEncodedLength() and
+ * Verify GsmPDUHelper#_calculateLangEncodedSeptets() and
  * GsmPDUHelper#writeStringAsSeptets() algorithm match each other.
  */
-add_test(function test_GsmPDUHelper__calculateLangEncodedLength() {
+add_test(function test_GsmPDUHelper__calculateLangEncodedSeptets() {
   let worker = newWorker({
     postRILMessage: function fakePostRILMessage(data) {
       // Do nothing
@@ -78,9 +78,9 @@ add_test(function test_GsmPDUHelper__calculateLangEncodedLength() {
 
   function do_check_calc(str, expectedCalcLen, lst, sst) {
     do_check_eq(expectedCalcLen,
-                helper._calculateLangEncodedLength(str,
-                                                   PDU_NL_LOCKING_SHIFT_TABLES[lst],
-                                                   PDU_NL_SINGLE_SHIFT_TABLES[sst]));
+                helper._calculateLangEncodedSeptets(str,
+                                                    PDU_NL_LOCKING_SHIFT_TABLES[lst],
+                                                    PDU_NL_SINGLE_SHIFT_TABLES[sst]));
 
     helper.resetOctetWritten();
     helper.writeStringAsSeptets(str, 0, lst, sst);
@@ -192,6 +192,21 @@ add_test(function test_GsmPDUHelper_calculateUserDataLength() {
   //   table of another.
   test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[1, 0], [2, 4]]);
   test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 3, 1, 0], [[2, 4], [1, 0]]);
+
+  // Test Bug 733981
+  // - Case 1, headerLen is in octets, not septets. "\\" is defined in default
+  //   single shift table and Portuguese locking shift table. The original code
+  //   will add headerLen 7(octets), which should be 8(septets), to calculated
+  //   cost and gets 14, which should be 15 in total for the first run. As for
+  //   the second run, it will be undoubtedly 14 in total. With correct fix,
+  //   the best choice should be the second one.
+  test_calc("\\\\\\\\\\\\\\",
+            [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 14, 0, 0, 0], [[3, 1], [0, 0]]);
+  // - Case 2, possible early return non-best choice. The original code will
+  //   get total cost 6 in the first run and returns immediately. With correct
+  //   fix, the best choice should be the second one.
+  test_calc(ESCAPE + ESCAPE + ESCAPE + ESCAPE + ESCAPE + "\\",
+            [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 0, 0, 0], [[3, 0], [0, 0]]);
 
   run_next_test();
 });
@@ -390,8 +405,8 @@ function test_receiving_7bit_alphabets(lst, sst) {
   for (let i = 0; i < text.length;) {
     let len = Math.min(70, text.length - i);
     let expected = text.substring(i, i + len);
-    let septets = helper._calculateLangEncodedLength(expected, langTable,
-                                                     langShiftTable);
+    let septets = helper._calculateLangEncodedSeptets(expected, langTable,
+                                                      langShiftTable);
     let rawBytes = get7bitRawBytes(expected);
     let pdu = compose7bitPdu(lst, sst, rawBytes, septets);
     add_test_receiving_sms(expected, pdu);
