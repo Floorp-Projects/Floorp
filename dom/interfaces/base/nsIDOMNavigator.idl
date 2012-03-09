@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(b1f4b1fa-49c2-4375-9ce8-bf97ecf6b428)]
+[scriptable, uuid(e610c037-db58-4cd7-8ed3-0d7f1422b4d3)]
 interface nsIDOMNavigator : nsISupports
 {
   readonly attribute DOMString             appCodeName;
@@ -110,4 +110,34 @@ interface nsIDOMNavigator : nsISupports
    */
   [implicit_jscontext]
   void mozVibrate(in jsval aPattern);
+
+  /**
+   * Request a wake lock for a resource.
+   *
+   * A page holds a wake lock to request that a resource not be turned
+   * off (or otherwise made unavailable).
+   *
+   * The topic is the name of a resource that might be made unavailable for
+   * various reasons. For example, on a mobile device the power manager might
+   * decide to turn off the screen after a period of idle time to save power.
+   *
+   * The resource manager checks the lock state of a topic before turning off
+   * the associated resource. For example, a page could hold a lock on the
+   * "screen" topic to prevent the screensaver from appearing or the screen
+   * from turning off.
+   *
+   * The resource manager defines what each topic means and sets policy.  For
+   * example, the resource manager might decide to ignore 'screen' wake locks
+   * held by pages which are not visible.
+   *
+   * One topic can be locked multiple times; it is considered released only when
+   * all locks on the topic have been released.
+   *
+   * The returned nsIDOMMozWakeLock object is a token of the lock.  You can
+   * unlock the lock via the object's |unlock| method.  The lock is released
+   * automatically when its associated window is unloaded.
+   *
+   * @param aTopic resource name
+   */
+  nsIDOMMozWakeLock requestWakeLock(in DOMString aTopic);
 };

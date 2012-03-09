@@ -13,6 +13,7 @@ function login_handling(handler) {
     } else {
       let body = "Unauthorized";
       response.setStatusLine(request.httpVersion, 401, "Unauthorized");
+      response.setHeader("Content-Type", "text/plain");
       response.bodyOutputStream.write(body, body.length);
     }
   };

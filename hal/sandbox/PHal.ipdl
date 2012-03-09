@@ -48,6 +48,7 @@ using mozilla::hal::FlashMode;
 using mozilla::hal::LightType;
 using mozilla::hal::LightMode;
 using mozilla::hal::SensorType;
+using mozilla::hal::WakeLockControl;
 
 namespace mozilla {
 
@@ -81,6 +82,14 @@ namespace hal {
   };
 }
 
+namespace hal {
+  struct WakeLockInformation {
+    uint32_t numLocks;
+    uint32_t numHidden;
+    nsString topic;
+  };
+}
+
 namespace hal_sandbox {
 
 sync protocol PHal {
@@ -89,6 +98,7 @@ sync protocol PHal {
 child:
     NotifyBatteryChange(BatteryInformation aBatteryInfo);
     NotifyNetworkChange(NetworkInformation aNetworkInfo);
+    NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
 
 parent:
     Vibrate(uint32[] pattern, uint64[] id, PBrowser browser);
@@ -120,6 +130,12 @@ parent:
 
     Reboot();
     PowerOff();
+
+    ModifyWakeLock(nsString aTopic, WakeLockControl aLockAdjust, WakeLockControl aHiddenAdjust);
+    EnableWakeLockNotifications();
+    DisableWakeLockNotifications();
+    sync GetWakeLockInfo(nsString aTopic)
+      returns (WakeLockInformation aWakeLockInfo);
 
 child:
     NotifySensorChange(SensorData aSensorData);

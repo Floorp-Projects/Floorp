@@ -86,21 +86,24 @@ body[dir="rtl"] #errorPageContainer {
   -moz-margin-start: 80px;
 }
 
-#technicalContent > h2, #expertContent > h2 {
-  background : url("chrome://browser/skin/section_expanded.png") left center no-repeat;
+.expander > button {
+  -moz-padding-start: 20px;
+  -moz-margin-start: -20px;
+  background: url("chrome://browser/skin/aboutCertError_sectionExpanded.png") left center no-repeat;
+  border: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
-body[dir="rtl"] #technicalContent > h2,
-body[dir="rtl"] #expertContent > h2 {
+body[dir="rtl"] .expander > button {
   background-position: right center;
 }
 
-#technicalContent[collapsed] > h2,
-#expertContent[collapsed] > h2{
-  background-image: url("chrome://browser/skin/section_collapsed.png");
+.expander[collapsed] > button {
+  background-image: url("chrome://browser/skin/aboutCertError_sectionCollapsed.png");
 }
 
-body[dir="rtl"] #technicalContent[collapsed] > h2,
-body[dir="rtl"] #expertContent[collapsed] > h2 {
-  background-image: url("chrome://browser/skin/section_collapsed-rtl.png");
+body[dir="rtl"] .expander[collapsed] > button {
+  background-image: url("chrome://browser/skin/aboutCertError_sectionCollapsed-rtl.png");
 }

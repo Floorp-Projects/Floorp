@@ -113,7 +113,7 @@ function report(testName, success) {
 ]]></script>
 <script type="text/javascript"><![CDATA[
   try {
-    let (x=1) (x);
+    eval("let (x=1) (x)");
     var success = false;
   }
   catch (e) { success = true; }

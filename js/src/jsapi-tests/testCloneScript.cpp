@@ -52,7 +52,7 @@ BEGIN_TEST(test_cloneScript)
 END_TEST(test_cloneScript)
 
 void
-DestroyPrincipals(JSContext *cx, JSPrincipals *principals)
+DestroyPrincipals(JSPrincipals *principals)
 {
     delete principals;
 }
@@ -60,54 +60,38 @@ DestroyPrincipals(JSContext *cx, JSPrincipals *principals)
 struct Principals : public JSPrincipals
 {
   public:
-    Principals(const char *name)
+    Principals()
     {
         refcount = 0;
-        codebase = const_cast<char *>(name);
-        destroy = DestroyPrincipals;
-        subsume = NULL;
     }
 };
 
 class AutoDropPrincipals
 {
-    JSContext *cx;
+    JSRuntime *rt;
     JSPrincipals *principals;
 
   public:
-    AutoDropPrincipals(JSContext *cx, JSPrincipals *principals)
-      : cx(cx), principals(principals)
+    AutoDropPrincipals(JSRuntime *rt, JSPrincipals *principals)
+      : rt(rt), principals(principals)
     {
-        JSPRINCIPALS_HOLD(cx, principals);
+        JS_HoldPrincipals(principals);
     }
 
     ~AutoDropPrincipals()
     {
-        JSPRINCIPALS_DROP(cx, principals);
+        JS_DropPrincipals(rt, principals);
     }
 };
 
-JSBool
-TranscodePrincipals(JSXDRState *xdr, JSPrincipals **principalsp)
-{
-    return JS_XDRBytes(xdr, reinterpret_cast<char *>(principalsp), sizeof(*principalsp));
-}
-
 BEGIN_TEST(test_cloneScriptWithPrincipals)
 {
-    JSSecurityCallbacks cbs = {
-        NULL,
-        TranscodePrincipals,
-        NULL,
-        NULL
-    };
+    JS_InitDestroyPrincipalsCallback(rt, DestroyPrincipals);
 
-    JS_SetRuntimeSecurityCallbacks(rt, &cbs);
-
-    JSPrincipals *principalsA = new Principals("A");
-    AutoDropPrincipals dropA(cx, principalsA);
-    JSPrincipals *principalsB = new Principals("B");
-    AutoDropPrincipals dropB(cx, principalsB);
+    JSPrincipals *principalsA = new Principals();
+    AutoDropPrincipals dropA(rt, principalsA);
+    JSPrincipals *principalsB = new Principals();
+    AutoDropPrincipals dropB(rt, principalsB);
 
     JSObject *A, *B;
 

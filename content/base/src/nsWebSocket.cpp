@@ -602,7 +602,7 @@ nsWebSocket::Initialize(nsISupports* aOwner,
     if (JSVAL_IS_OBJECT(aArgv[1]) &&
         (jsobj = JSVAL_TO_OBJECT(aArgv[1])) &&
         JS_IsArrayObject(aContext, jsobj)) {
-      jsuint len;
+      uint32_t len;
       JS_GetArrayLength(aContext, jsobj, &len);
       
       for (PRUint32 index = 0; index < len; ++index) {

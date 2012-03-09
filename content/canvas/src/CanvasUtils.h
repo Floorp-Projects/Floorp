@@ -146,11 +146,11 @@ JSValToDashArray(JSContext* cx, const jsval& patternArray,
 {
     // The cap is pretty arbitrary.  16k should be enough for
     // anybody...
-    static const jsuint MAX_NUM_DASHES = 1 << 14;
+    static const uint32_t MAX_NUM_DASHES = 1 << 14;
 
     if (!JSVAL_IS_PRIMITIVE(patternArray)) {
         JSObject* obj = JSVAL_TO_OBJECT(patternArray);
-        jsuint length;
+        uint32_t length;
         if (!JS_GetArrayLength(cx, obj, &length)) {
             // Not an array-like thing
             return NS_ERROR_INVALID_ARG;

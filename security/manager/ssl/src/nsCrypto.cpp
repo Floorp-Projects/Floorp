@@ -2164,7 +2164,6 @@ NS_IMETHODIMP
 nsCryptoRunnable::Run()
 {
   nsNSSShutDownPreventionLock locker;
-  JSPrincipals *principals;
   JSContext *cx = m_args->m_cx;
 
   JSAutoRequest ar(cx);
@@ -2174,29 +2173,20 @@ nsCryptoRunnable::Run()
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = m_args->m_principals->GetJSPrincipals(cx, &principals);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
   // make sure the right context is on the stack. must not return w/out popping
   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
   if (!stack || NS_FAILED(stack->Push(cx))) {
-    JSPRINCIPALS_DROP(cx, principals);
     return NS_ERROR_FAILURE;
   }
 
-  jsval retval;
-  if (JS_EvaluateScriptForPrincipals(cx, m_args->m_scope, principals,
-                                     m_args->m_jsCallback, 
-                                     strlen(m_args->m_jsCallback),
-                                     nsnull, 0,
-                                     &retval) != JS_TRUE) {
-    rv = NS_ERROR_FAILURE;
-  }
-
+  JSBool ok =
+    JS_EvaluateScriptForPrincipals(cx, m_args->m_scope,
+                                   nsJSPrincipals::get(m_args->m_principals),
+                                   m_args->m_jsCallback, 
+                                   strlen(m_args->m_jsCallback),
+                                   nsnull, 0, nsnull);
   stack->Pop(nsnull);
-  JSPRINCIPALS_DROP(cx, principals);
-  return rv;
+  return ok ? NS_OK : NS_ERROR_FAILURE;
 }
 
 //Quick helper function to check if a newly issued cert

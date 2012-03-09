@@ -121,7 +121,6 @@ abstract public class GeckoApp
     public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
     public static boolean mDOMFullScreen = false;
-    public static File sGREDir = null;
     public static Menu sMenu;
     private static GeckoThread sGeckoThread = null;
     public GeckoAppHandler mMainHandler;
@@ -136,7 +135,7 @@ abstract public class GeckoApp
 
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
-    public static AutoCompletePopup mAutoCompletePopup;
+    public static FormAssistPopup mFormAssistPopup;
     public Favicons mFavicons;
 
     private Geocoder mGeocoder;
@@ -174,7 +173,6 @@ abstract public class GeckoApp
     public enum LaunchState {Launching, WaitForDebugger,
                              Launched, GeckoRunning, GeckoExiting};
     private static LaunchState sLaunchState = LaunchState.Launching;
-    private static boolean sTryCatchAttached = false;
 
     private static final int FILE_PICKER_REQUEST = 1;
     private static final int AWESOMEBAR_REQUEST = 2;
@@ -610,7 +608,7 @@ abstract public class GeckoApp
             bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
             processThumbnail(tab, bitmap, bos.toByteArray());
         } else {
-            if (!tab.hasLoaded()) {
+            if (tab.getState() == Tab.STATE_DELAYED) {
                 byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
                 if (thumbnail != null)
                     processThumbnail(tab, null, thumbnail);
@@ -783,7 +781,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
                     mBrowserToolbar.setFavicon(tab.getFavicon());
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-                    mBrowserToolbar.setProgressVisibility(tab.isLoading());
+                    mBrowserToolbar.setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
                 }
             }
         });
@@ -925,6 +923,7 @@ abstract public class GeckoApp
                 handleSecurityChange(tabId, mode);
             } else if (event.equals("Content:StateChange")) {
                 final int tabId = message.getInt("tabID");
+                final boolean success = message.getBoolean("success");
                 int state = message.getInt("state");
                 Log.i(LOGTAG, "State - " + state);
                 if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
@@ -934,7 +933,7 @@ abstract public class GeckoApp
                         handleDocumentStart(tabId, showProgress);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         Log.i(LOGTAG, "Got a document stop");
-                        handleDocumentStop(tabId);
+                        handleDocumentStop(tabId, success);
                     }
                 }
             } else if (event.equals("Content:LoadError")) {
@@ -972,31 +971,17 @@ abstract public class GeckoApp
                         mBrowserToolbar.show();
                     }
                 });
+            } else if (event.equals("ToggleChrome:Focus")) {
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        mBrowserToolbar.setVisibility(View.VISIBLE);
+                        mBrowserToolbar.requestFocusFromTouch();
+                    }
+                });
             } else if (event.equals("DOMFullScreen:Start")) {
                 mDOMFullScreen = true;
             } else if (event.equals("DOMFullScreen:Stop")) {
                 mDOMFullScreen = false;
-            } else if (event.equals("FormAssist:AutoComplete")) {
-                final JSONArray suggestions = message.getJSONArray("suggestions");
-                if (suggestions.length() == 0) {
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            mAutoCompletePopup.hide();
-                        }
-                    });
-                } else {
-                    final JSONArray rect = message.getJSONArray("rect");
-                    final double zoom = message.getDouble("zoom");
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            // Don't show autocomplete popup when using fullscreen VKB
-                            InputMethodManager imm =
-                                (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                            if (!imm.isFullscreenMode())
-                                mAutoCompletePopup.show(suggestions, rect, zoom);
-                        }
-                    });
-                }
             } else if (event.equals("Permissions:Data")) {
                 String host = message.getString("host");
                 JSONArray permissions = message.getJSONArray("permissions");
@@ -1108,7 +1093,7 @@ abstract public class GeckoApp
         }
 
         public void run() {
-            mAutoCompletePopup.hide();
+            mFormAssistPopup.hide();
             if (mShow) {
                 if (mAboutHomeContent == null) {
                     mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
@@ -1239,7 +1224,7 @@ abstract public class GeckoApp
         if (tab == null)
             return;
 
-        tab.setLoading(true);
+        tab.setState(Tab.STATE_LOADING);
         tab.updateSecurityMode("unknown");
 
         mMainHandler.post(new Runnable() {
@@ -1254,12 +1239,12 @@ abstract public class GeckoApp
         });
     }
 
-    void handleDocumentStop(int tabId) {
+    void handleDocumentStop(int tabId, boolean success) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
 
-        tab.setLoading(false);
+        tab.setState(success ? Tab.STATE_SUCCESS : Tab.STATE_ERROR);
 
         mMainHandler.post(new Runnable() {
             public void run() {
@@ -1294,7 +1279,6 @@ abstract public class GeckoApp
             return;
 
         tab.updateTitle(title);
-        tab.setHasLoaded(true);
 
         // Make the UI changes
         mMainHandler.post(new Runnable() {
@@ -1335,7 +1319,7 @@ abstract public class GeckoApp
                 // want to load the image straight away. If tab is still
                 // loading, we only load the favicon once the page's content
                 // is fully loaded (see handleContentLoaded()).
-                if (!tab.isLoading()) {
+                if (tab.getState() != tab.STATE_LOADING) {
                     mMainHandler.post(new Runnable() {
                         public void run() {
                             loadFavicon(tab);
@@ -1623,6 +1607,8 @@ abstract public class GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+        GeckoAppShell.registerGlobalExceptionHandler();
+
         mAppContext = this;
 
         // StrictMode is set by defaults resource flag |enableStrictMode|.
@@ -1630,7 +1616,7 @@ abstract public class GeckoApp
             enableStrictMode();
         }
 
-        System.loadLibrary("mozglue");
+        GeckoAppShell.loadMozGlue();
         mMainHandler = new GeckoAppHandler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
         if (savedInstanceState != null) {
@@ -1665,6 +1651,7 @@ abstract public class GeckoApp
         mInitialized = true;
 
         Intent intent = getIntent();
+        String action = intent.getAction();
         String args = intent.getStringExtra("args");
         if (args != null && args.contains("-profile")) {
             Pattern p = Pattern.compile("(?:-profile\\s*)(\\w*)(\\s*)");
@@ -1677,7 +1664,7 @@ abstract public class GeckoApp
             }
         }
 
-        if (ACTION_UPDATE.equals(intent.getAction()) || args != null && args.contains("-alert update-app")) {
+        if (ACTION_UPDATE.equals(action) || args != null && args.contains("-alert update-app")) {
             Log.i(LOGTAG,"onCreate: Update request");
             checkAndLaunchUpdate();
         }
@@ -1700,9 +1687,6 @@ abstract public class GeckoApp
             mBrowserToolbar.updateTabCount(1);
         }
 
-        if (sGREDir == null)
-            sGREDir = new File(this.getApplicationInfo().dataDir);
-
         Uri data = intent.getData();
         if (data != null && "http".equals(data.getScheme()) &&
             isHostOnPrefetchWhitelist(data.getHost())) {
@@ -1718,9 +1702,20 @@ abstract public class GeckoApp
         }
 
         sGeckoThread = new GeckoThread(intent, passedUri, mRestoreSession);
-        if (!ACTION_DEBUG.equals(intent.getAction()) &&
-            checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
+        if (!ACTION_DEBUG.equals(action) &&
+            checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched)) {
             sGeckoThread.start();
+        } else if (ACTION_DEBUG.equals(action) &&
+            checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitForDebugger)) {
+            mMainHandler.postDelayed(new Runnable() {
+                public void run() {
+                    Log.i(LOGTAG, "Launching from debug intent after 5s wait");
+                    setLaunchState(LaunchState.Launching);
+                    sGeckoThread.start();
+                }
+            }, 1000 * 5 /* 5 seconds */);
+            Log.i(LOGTAG, "Intent : ACTION_DEBUG - waiting 5s before launching");
+        }
 
         mFavicons = new Favicons(this);
 
@@ -1757,24 +1752,9 @@ abstract public class GeckoApp
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
-        mAutoCompletePopup = (AutoCompletePopup) findViewById(R.id.autocomplete_popup);
+        mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - UI almost up");
-
-        if (!sTryCatchAttached) {
-            sTryCatchAttached = true;
-            mMainHandler.post(new Runnable() {
-                public void run() {
-                    try {
-                        Looper.loop();
-                    } catch (Exception e) {
-                        GeckoAppShell.reportJavaCrash(e);
-                    }
-                    // resetting this is kinda pointless, but oh well
-                    sTryCatchAttached = false;
-                }
-            });
-        }
 
         //register for events
         GeckoAppShell.registerGeckoEventListener("DOMContentLoaded", GeckoApp.mAppContext);
@@ -1797,7 +1777,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("DOMFullScreen:Stop", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("ToggleChrome:Focus", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
@@ -1967,6 +1947,10 @@ abstract public class GeckoApp
             setIntent(intent);
             return;
         }
+
+        // don't perform any actions if launching from recent apps
+        if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0)
+            return;
 
         if (checkLaunchState(LaunchState.Launched)) {
             Uri data = intent.getData();
@@ -2170,7 +2154,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Focus", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("CharEncoding:Data", GeckoApp.mAppContext);
@@ -2192,6 +2176,10 @@ abstract public class GeckoApp
         super.onDestroy();
 
         unregisterReceiver(mBatteryReceiver);
+
+        if (mAboutHomeContent != null) {
+            mAboutHomeContent.onDestroy();
+        }
     }
 
     @Override
@@ -2211,7 +2199,7 @@ abstract public class GeckoApp
 
         if (mOrientation != newConfig.orientation) {
             mOrientation = newConfig.orientation;
-            mAutoCompletePopup.hide();
+            mFormAssistPopup.hide();
             refreshActionBar();
         }
     }
@@ -2383,10 +2371,6 @@ abstract public class GeckoApp
 
     @Override
     public boolean onSearchRequested() {
-        return showAwesomebar(AwesomeBar.Type.ADD);
-    }
- 
-    public boolean onEditRequested() {
         return showAwesomebar(AwesomeBar.Type.EDIT);
     }
 
@@ -2515,7 +2499,7 @@ abstract public class GeckoApp
                         fileExt = name.substring(period);
                         fileName = name.substring(0, period);
                     }
-                    File file = File.createTempFile(fileName, fileExt, sGREDir);
+                    File file = File.createTempFile(fileName, fileExt, GeckoAppShell.getGREDir(GeckoApp.mAppContext));
 
                     FileOutputStream fos = new FileOutputStream(file);
                     InputStream is = cr.openInputStream(uri);

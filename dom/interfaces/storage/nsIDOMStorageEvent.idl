@@ -94,3 +94,13 @@ interface nsIDOMStorageEvent : nsIDOMEvent
                         in DOMString urlArg,
                         in nsIDOMStorage storageAreaArg);
 };
+
+[scriptable, uuid(6335e5b5-13ce-4c8a-b452-5c5895f4e90e)]
+interface nsIStorageEventInit : nsIEventInit
+{
+  attribute DOMString key;
+  attribute DOMString oldValue;
+  attribute DOMString newValue;
+  attribute DOMString url;
+  attribute nsIDOMStorage storageArea;
+};

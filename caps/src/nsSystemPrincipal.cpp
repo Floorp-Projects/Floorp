@@ -62,8 +62,8 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsSystemPrincipal,
 NS_IMETHODIMP_(nsrefcnt) 
 nsSystemPrincipal::AddRef()
 {
-  NS_PRECONDITION(PRInt32(mJSPrincipals.refcount) >= 0, "illegal refcnt");
-  nsrefcnt count = PR_ATOMIC_INCREMENT(&mJSPrincipals.refcount);
+  NS_PRECONDITION(PRInt32(refcount) >= 0, "illegal refcnt");
+  nsrefcnt count = PR_ATOMIC_INCREMENT(&refcount);
   NS_LOG_ADDREF(this, count, "nsSystemPrincipal", sizeof(*this));
   return count;
 }
@@ -71,8 +71,8 @@ nsSystemPrincipal::AddRef()
 NS_IMETHODIMP_(nsrefcnt)
 nsSystemPrincipal::Release()
 {
-  NS_PRECONDITION(0 != mJSPrincipals.refcount, "dup release");
-  nsrefcnt count = PR_ATOMIC_DECREMENT(&mJSPrincipals.refcount);
+  NS_PRECONDITION(0 != refcount, "dup release");
+  nsrefcnt count = PR_ATOMIC_DECREMENT(&refcount);
   NS_LOG_RELEASE(this, count, "nsSystemPrincipal");
   if (count == 0) {
     delete this;
@@ -81,12 +81,25 @@ nsSystemPrincipal::Release()
   return count;
 }
 
+static const char SYSTEM_PRINCIPAL_SPEC[] = "[System Principal]";
+
+void
+nsSystemPrincipal::GetScriptLocation(nsACString &aStr)
+{
+    aStr.Assign(SYSTEM_PRINCIPAL_SPEC);
+}
+
+#ifdef DEBUG
+void nsSystemPrincipal::dumpImpl()
+{
+  fprintf(stderr, "nsSystemPrincipal (%p)\n", this);
+}
+#endif 
+
 
 ///////////////////////////////////////
 // Methods implementing nsIPrincipal //
 ///////////////////////////////////////
-
-#define SYSTEM_PRINCIPAL_SPEC "[System Principal]"
 
 NS_IMETHODIMP
 nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID,
@@ -280,16 +293,6 @@ nsSystemPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSystemPrincipal::GetJSPrincipals(JSContext *cx, JSPrincipals **jsprin)
-{
-    NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr, "mJSPrincipals is uninitialized!");
-
-    JSPRINCIPALS_HOLD(cx, &mJSPrincipals);
-    *jsprin = &mJSPrincipals;
-    return NS_OK;
-}
-
 
 //////////////////////////////////////////
 // Methods implementing nsISerializable //
@@ -317,24 +320,6 @@ nsSystemPrincipal::nsSystemPrincipal()
 {
 }
 
-nsresult
-nsSystemPrincipal::Init(JSPrincipals **jsprin)
-{
-    // Use an nsCString so we only do the allocation once here and then
-    // share with nsJSPrincipals
-    nsCString str(SYSTEM_PRINCIPAL_SPEC);
-    if (!str.EqualsLiteral(SYSTEM_PRINCIPAL_SPEC)) {
-        NS_WARNING("Out of memory initializing system principal");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsresult rv = mJSPrincipals.Init(this, str);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *jsprin = &mJSPrincipals;
-    return NS_OK;
-}
-
-nsSystemPrincipal::~nsSystemPrincipal(void)
+nsSystemPrincipal::~nsSystemPrincipal()
 {
 }

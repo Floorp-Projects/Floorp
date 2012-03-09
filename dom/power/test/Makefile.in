@@ -52,8 +52,15 @@ _TEST_FILES = \
   test_power_basics.html \
   $(NULL)
 
+_BROWSER_TEST_FILES = \
+  browser_bug697132.js \
+  $(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 
 #libs:: $(_CHROME_TEST_FILES)
 #	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

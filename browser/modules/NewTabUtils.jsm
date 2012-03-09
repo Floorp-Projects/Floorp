@@ -121,8 +121,6 @@ let Storage = {
       // want any data from private browsing to show up.
       PinnedLinks.resetCache();
       BlockedLinks.resetCache();
-
-      Pages.update();
     }
   },
 
@@ -188,11 +186,6 @@ let AllPages = {
   _pages: [],
 
   /**
-   * Tells whether we already added a preference observer.
-   */
-  _observing: false,
-
-  /**
    * Cached value that tells whether the New Tab Page feature is enabled.
    */
   _enabled: null,
@@ -203,12 +196,7 @@ let AllPages = {
    */
   register: function AllPages_register(aPage) {
     this._pages.push(aPage);
-
-    // Add the preference observer if we haven't already.
-    if (!this._observing) {
-      this._observing = true;
-      Services.prefs.addObserver(PREF_NEWTAB_ENABLED, this, true);
-    }
+    this._addObserver();
   },
 
   /**
@@ -239,6 +227,14 @@ let AllPages = {
   },
 
   /**
+   * Returns the number of registered New Tab Pages (i.e. the number of open
+   * about:newtab instances).
+   */
+  get length() {
+    return this._pages.length;
+  },
+
+  /**
    * Updates all currently active pages but the given one.
    * @param aExceptPage The page to exclude from updating.
    */
@@ -262,6 +258,15 @@ let AllPages = {
     this._pages.forEach(function (aPage) {
       aPage.observe.apply(aPage, args);
     }, this);
+  },
+
+  /**
+   * Adds a preference observer and turns itself into a no-op after the first
+   * invokation.
+   */
+  _addObserver: function AllPages_addObserver() {
+    Services.prefs.addObserver(PREF_NEWTAB_ENABLED, this, true);
+    this._addObserver = function () {};
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -512,6 +517,8 @@ let Links = {
         this._links = aLinks;
         executeCallbacks();
       }.bind(this));
+
+      this._addObserver();
     }
   },
 
@@ -544,7 +551,32 @@ let Links = {
    */
   resetCache: function Links_resetCache() {
     this._links = [];
-  }
+  },
+
+  /**
+   * Implements the nsIObserver interface to get notified about browser history
+   * sanitization.
+   */
+  observe: function Links_observe(aSubject, aTopic, aData) {
+    // Make sure to update open about:newtab instances. If there are no opened
+    // pages we can just wait for the next new tab to populate the cache again.
+    if (AllPages.length && AllPages.enabled)
+      this.populateCache(function () { AllPages.update() }, true);
+    else
+      this._links = null;
+  },
+
+  /**
+   * Adds a sanitization observer and turns itself into a no-op after the first
+   * invokation.
+   */
+  _addObserver: function Links_addObserver() {
+    Services.obs.addObserver(this, "browser:purge-session-history", true);
+    this._addObserver = function () {};
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference])
 };
 
 /**

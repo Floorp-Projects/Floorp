@@ -232,25 +232,25 @@ _resume:
 #line 62 "hb-ot-shape-complex-indic-machine.rl"
 	{ found_consonant_syllable (map, buffer, mask_array, last, p); }
 #line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, p, last); last = p; }
+	{ set_cluster (buffer, last, p); last = p; }
 	break;
 	case 3:
 #line 63 "hb-ot-shape-complex-indic-machine.rl"
 	{ found_vowel_syllable (map, buffer, mask_array, last, p); }
 #line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, p, last); last = p; }
+	{ set_cluster (buffer, last, p); last = p; }
 	break;
 	case 4:
 #line 64 "hb-ot-shape-complex-indic-machine.rl"
 	{ found_standalone_cluster (map, buffer, mask_array, last, p); }
 #line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, p, last); last = p; }
+	{ set_cluster (buffer, last, p); last = p; }
 	break;
 	case 1:
 #line 65 "hb-ot-shape-complex-indic-machine.rl"
 	{ found_non_indic (map, buffer, mask_array, last, p); }
 #line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, p, last); last = p; }
+	{ set_cluster (buffer, last, p); last = p; }
 	break;
 #line 256 "hb-ot-shape-complex-indic-machine.hh"
 	}
@@ -268,25 +268,25 @@ _again:
 #line 62 "hb-ot-shape-complex-indic-machine.rl"
 	{ found_consonant_syllable (map, buffer, mask_array, last, p); }
 #line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, p, last); last = p; }
+	{ set_cluster (buffer, last, p); last = p; }
 	break;
 	case 3:
 #line 63 "hb-ot-shape-complex-indic-machine.rl"
 	{ found_vowel_syllable (map, buffer, mask_array, last, p); }
 #line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, p, last); last = p; }
+	{ set_cluster (buffer, last, p); last = p; }
 	break;
 	case 4:
 #line 64 "hb-ot-shape-complex-indic-machine.rl"
 	{ found_standalone_cluster (map, buffer, mask_array, last, p); }
 #line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, p, last); last = p; }
+	{ set_cluster (buffer, last, p); last = p; }
 	break;
 	case 1:
 #line 65 "hb-ot-shape-complex-indic-machine.rl"
 	{ found_non_indic (map, buffer, mask_array, last, p); }
 #line 67 "hb-ot-shape-complex-indic-machine.rl"
-	{ set_cluster (buffer, p, last); last = p; }
+	{ set_cluster (buffer, last, p); last = p; }
 	break;
 #line 292 "hb-ot-shape-complex-indic-machine.hh"
 	}

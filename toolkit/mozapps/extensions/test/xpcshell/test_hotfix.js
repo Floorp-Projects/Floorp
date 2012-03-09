@@ -36,7 +36,7 @@ function end_test() {
 // Test that background updates find and install any available hotfix
 function run_test_1() {
   Services.prefs.setCharPref("extensions.hotfix.id", "hotfix@tests.mozilla.org");
-  Services.prefs.setCharPref("extensions.update.url", "http://localhost:4444/data/test_hotfix_1.rdf");
+  Services.prefs.setCharPref("extensions.update.background.url", "http://localhost:4444/data/test_hotfix_1.rdf");
 
   prepare_test({
     "hotfix@tests.mozilla.org": [

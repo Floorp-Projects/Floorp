@@ -136,7 +136,9 @@ enum eGfxLog {
     // dump text runs, font matching, system fallback for content
     eGfxLog_textrun          = 2,
     // dump text runs, font matching, system fallback for chrome
-    eGfxLog_textrunui        = 3
+    eGfxLog_textrunui        = 3,
+    // dump cmap coverage data as they are loaded
+    eGfxLog_cmapdata         = 4
 };
 
 // when searching through pref langs, max number of pref langs
@@ -317,6 +319,11 @@ public:
      */
     virtual bool FontHintingEnabled() { return true; }
 
+    /**
+     * Whether to check all font cmaps during system font fallback
+     */
+    bool UseCmapsDuringSystemFallback();
+
 #ifdef MOZ_GRAPHITE
     /**
      * Whether to use the SIL Graphite rendering engine
@@ -368,6 +375,15 @@ public:
     
     // helper method to add a pref lang to an array, if not already in array
     static void AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPrefLang aAddLang);
+
+    // returns a list of commonly used fonts for a given character
+    // these are *possible* matches, no cmap-checking is done at this level
+    virtual void GetCommonFallbackFonts(const PRUint32 /*aCh*/,
+                                        PRInt32 /*aRunScript*/,
+                                        nsTArray<const char*>& /*aFontList*/)
+    {
+        // platform-specific override, by default do nothing
+    }
 
     // helper method to indicate if we want to use Azure content drawing
     static bool UseAzureContentDrawing();
@@ -453,6 +469,10 @@ protected:
 #endif
 
     PRInt8  mBidiNumeralOption;
+
+    // whether to always search font cmaps globally 
+    // when doing system font fallback
+    PRInt8  mFallbackUsesCmaps;
 
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;

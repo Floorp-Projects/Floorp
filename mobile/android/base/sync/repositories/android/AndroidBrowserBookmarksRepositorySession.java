@@ -16,6 +16,8 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.repositories.InactiveSessionException;
+import org.mozilla.gecko.sync.repositories.InvalidSessionTransitionException;
 import org.mozilla.gecko.sync.repositories.NoGuidForIdException;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.ParentNotFoundException;
@@ -170,9 +172,6 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   /**
    * Return true if the provided record GUID should be skipped
    * in child lists or fetch results.
-   *
-   * @param recordGUID
-   * @return
    */
   public static boolean forbiddenGUID(String recordGUID) {
     return recordGUID == null ||
@@ -478,7 +477,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   }
   
   @Override
-  public void begin(RepositorySessionBeginDelegate delegate) {
+  public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
     // Check for the existence of special folders
     // and insert them if they don't exist.
     Cursor cur;
@@ -526,7 +525,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   }
 
   @Override
-  public void finish(RepositorySessionFinishDelegate delegate) {
+  public void finish(RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
     // Override finish to do this check; make sure all records
     // needing re-parenting have been re-parented.
     if (needsReparenting != 0) {

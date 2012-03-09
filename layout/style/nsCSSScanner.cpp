@@ -547,7 +547,7 @@ nsCSSScanner::ReportUnexpectedToken(nsCSSToken& tok,
     tokenString.get()
   };
 
-  ReportUnexpectedParams(aMessage, params, ArrayLength(params));
+  ReportUnexpectedParams(aMessage, params);
 }
 
 // aParams's first entry must be null, and we'll fill in the token

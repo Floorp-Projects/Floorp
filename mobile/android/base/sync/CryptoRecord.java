@@ -152,6 +152,8 @@ public class CryptoRecord extends Record {
    *
    * @param jsonRecord
    * @return
+   *        A CryptoRecord that encapsulates the provided record.
+   *
    * @throws NonObjectJSONException
    * @throws ParseException
    * @throws IOException

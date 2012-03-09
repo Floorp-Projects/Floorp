@@ -395,6 +395,7 @@ user_pref("browser.safebrowsing.provider.0.keyURL", "http://%(server)s/safebrows
 user_pref("browser.safebrowsing.provider.0.updateURL", "http://%(server)s/safebrowsing-dummy/update");
 // Point update checks to the local testing server for fast failures
 user_pref("extensions.update.url", "http://%(server)s/extensions-dummy/updateURL");
+user_pref("extensions.update.background.url", "http://%(server)s/extensions-dummy/updateBackgroundURL");
 user_pref("extensions.blocklist.url", "http://%(server)s/extensions-dummy/blocklistURL");
 user_pref("extensions.hotfix.url", "http://%(server)s/extensions-dummy/hotfixURL");
 // Make sure opening about:addons won't hit the network
@@ -737,8 +738,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
   def killAndGetStack(self, proc, utilityPath, debuggerInfo):
     """Kill the process, preferrably in a way that gets us a stack trace."""
-    if not debuggerInfo and not self.haveDumpedScreen:
-      self.dumpScreen(utilityPath)
+    if not debuggerInfo:
+      if self.haveDumpedScreen:
+        self.log.info("Not taking screenshot here: see the one that was previously logged")
+      else:
+        self.dumpScreen(utilityPath)
 
     if self.CRASHREPORTER and not debuggerInfo:
       if self.UNIXISH:
@@ -795,8 +799,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         if stackFixerFunction:
           line = stackFixerFunction(line)
         self.log.info(line.rstrip().decode("UTF-8", "ignore"))
-        if not debuggerInfo and not self.haveDumpedScreen and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
-          self.dumpScreen(utilityPath)
+        if not debuggerInfo and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
+          if self.haveDumpedScreen:
+            self.log.info("Not taking screenshot here: see the one that was previously logged")
+          else:
+            self.dumpScreen(utilityPath)
 
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):

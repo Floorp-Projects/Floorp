@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Jonathan Kew <jfkthame@gmail.com>
+ *   John Daggett <jdaggett@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -97,7 +98,10 @@ public:
 
     virtual void GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray);
 
-    gfxFontEntry* FindFontForChar(const PRUint32 aCh, gfxFont *aPrevFont);
+    virtual gfxFontEntry*
+    SystemFindFontForChar(const PRUint32 aCh,
+                          PRInt32 aRunScript,
+                          const gfxFontStyle* aStyle);
 
     // TODO: make this virtual, for lazily adding to the font list
     virtual gfxFontFamily* FindFamily(const nsAString& aFamily);
@@ -145,6 +149,21 @@ protected:
     static PLDHashOperator FindFontForCharProc(nsStringHashKey::KeyType aKey,
                                                nsRefPtr<gfxFontFamily>& aFamilyEntry,
                                                void* userArg);
+
+    // returns default font for a given character, null otherwise
+    virtual gfxFontEntry* CommonFontFallback(const PRUint32 aCh,
+                                             PRInt32 aRunScript,
+                                             const gfxFontStyle* aMatchStyle);
+
+    // search fonts system-wide for a given character, null otherwise
+    virtual gfxFontEntry* GlobalFontFallback(const PRUint32 aCh,
+                                             PRInt32 aRunScript,
+                                             const gfxFontStyle* aMatchStyle,
+                                             PRUint32& aCmapCount);
+
+    // whether system-based font fallback is used or not
+    // if system fallback is used, no need to load all cmaps
+    virtual bool UsesSystemFallback() { return false; }
 
     // separate initialization for reading in name tables, since this is expensive
     void InitOtherFamilyNames();

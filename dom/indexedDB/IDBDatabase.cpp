@@ -410,7 +410,7 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     
         JSObject* obj = JSVAL_TO_OBJECT(val);
     
-        jsuint length;
+        uint32_t length;
         if (!JS_GetArrayLength(aCx, obj, &length)) {
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
@@ -421,7 +421,7 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     
         keyPathArray.SetCapacity(length);
     
-        for (jsuint index = 0; index < length; index++) {
+        for (uint32_t index = 0; index < length; index++) {
           jsval val;
           JSString* jsstr;
           nsDependentJSString str;
@@ -566,7 +566,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
 
     // See if this is a JS array.
     if (JS_IsArrayObject(aCx, obj)) {
-      jsuint length;
+      uint32_t length;
       if (!JS_GetArrayLength(aCx, obj, &length)) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
@@ -577,7 +577,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
 
       storesToOpen.SetCapacity(length);
 
-      for (jsuint index = 0; index < length; index++) {
+      for (uint32_t index = 0; index < length; index++) {
         jsval val;
         JSString* jsstr;
         nsDependentJSString str;

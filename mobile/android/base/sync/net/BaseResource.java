@@ -82,6 +82,8 @@ import ch.boye.httpclientandroidlib.protocol.HttpContext;
  * Exposes simple get/post/put/delete methods.
  */
 public class BaseResource implements Resource {
+  private static final String ANDROID_LOOPBACK_IP = "10.0.2.2";
+
   public static boolean rewriteLocalhost = true;
 
   private static final String LOG_TAG = "BaseResource";
@@ -107,9 +109,9 @@ public class BaseResource implements Resource {
   public BaseResource(URI uri, boolean rewrite) {
     if (rewrite && uri.getHost().equals("localhost")) {
       // Rewrite localhost URIs to refer to the special Android emulator loopback passthrough interface.
-      Log.d(LOG_TAG, "Rewriting " + uri + " to point to 10.0.2.2.");
+      Log.d(LOG_TAG, "Rewriting " + uri + " to point to " + ANDROID_LOOPBACK_IP + ".");
       try {
-        this.uri = new URI(uri.getScheme(), uri.getUserInfo(), "10.0.2.2", uri.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
+        this.uri = new URI(uri.getScheme(), uri.getUserInfo(), ANDROID_LOOPBACK_IP, uri.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
       } catch (URISyntaxException e) {
         Log.e(LOG_TAG, "Got error rewriting URI for Android emulator.", e);
       }
@@ -167,7 +169,6 @@ public class BaseResource implements Resource {
 
   /**
    * This method exists for test code.
-   * @return
    */
   public static ClientConnectionManager enablePlainHTTPConnectionManager() {
     synchronized (connManagerMonitor) {
