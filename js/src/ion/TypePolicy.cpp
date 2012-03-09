@@ -93,11 +93,12 @@ ArithPolicy::adjustInputs(MInstruction *ins)
         MInstruction *replace;
 
         // If the input is a string or an object, the conversion is not
-        // possible, at least, we can't specialize. So box the input. Note
-        // that we don't do this for (undefined -> int32) because we
-        // should have despecialized that earlier.
-        if (in->type() == MIRType_Object || in->type() == MIRType_String)
+        // possible, at least, we can't specialize. So box the input.
+        if (in->type() == MIRType_Object || in->type() == MIRType_String ||
+            (in->type() == MIRType_Undefined && specialization_ == MIRType_Int32))
+        {
             in = boxAt(ins, in);
+        }
 
         if (ins->type() == MIRType_Double)
             replace = MToDouble::New(in);
