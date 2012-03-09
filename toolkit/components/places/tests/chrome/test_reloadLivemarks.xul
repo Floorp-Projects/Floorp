@@ -5,7 +5,7 @@
 <window title="Reload Livemarks"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="runTest()">
+  onload="runTest()" onunload="cleanup()">
   <script type="application/javascript"
    src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
@@ -42,12 +42,6 @@ let gLivemarks = [
 
 function runTest()
 {
-  if (navigator.platform.indexOf("Lin") != -1) {
-    ok(true, "Bug 734044: This test is disabled on Linux for random timeouts.");
-    SimpleTest.finish();
-    return;
-  }
-
   addLivemarks(function () {
     reloadLivemarks(false, function () {
       reloadLivemarks(true, function () {
@@ -132,11 +126,23 @@ resultObserver.prototype = {
     if (this._livemark.status == Ci.mozILivemark.STATUS_LOADING)
       return;
 
-    this._livemark.unregisterForUpdates(this._node);
+    this._terminate();
     this._callback();
+  },
+  _terminate: function () {
+    if (!this._terminated) {
+      this._livemark.unregisterForUpdates(this._node);
+      this._terminated = true;
+    }
   }
 };
 
+function cleanup() {
+  gLivemarks.forEach(function(aLivemarkData) {
+    if (aLivemarkData._observer)
+      aLivemarkData._observer._terminate();
+  });
+}
 ]]>
 </script>
 </window>
