@@ -1469,7 +1469,8 @@ nsresult
 nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): GetCurrentParagraph", this));
+        ("GtkIMModule(%p): GetCurrentParagraph, mCompositionState=%s",
+         this, GetCompositionStateName()));
 
     if (!mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
@@ -1479,15 +1480,26 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
 
     nsEventStatus status;
 
-    // Query cursor position & selection
-    nsQueryContentEvent querySelectedTextEvent(true,
-                                               NS_QUERY_SELECTED_TEXT,
-                                               mLastFocusedWindow);
-    mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
-    NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
+    PRUint32 selOffset = mCompositionStart;
+    PRUint32 selLength = mSelectedString.Length();
 
-    PRUint32 selOffset = querySelectedTextEvent.mReply.mOffset;
-    PRUint32 selLength = querySelectedTextEvent.mReply.mString.Length();
+    // If focused editor doesn't have composition string, we should use
+    // current selection.
+    if (!EditorHasCompositionString()) {
+        // Query cursor position & selection
+        nsQueryContentEvent querySelectedTextEvent(true,
+                                                   NS_QUERY_SELECTED_TEXT,
+                                                   mLastFocusedWindow);
+        mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
+        NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
+
+        selOffset = querySelectedTextEvent.mReply.mOffset;
+        selLength = querySelectedTextEvent.mReply.mString.Length();
+    }
+
+    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+        ("        selOffset=%u, selLength=%u",
+         selOffset, selLength));
 
     // XXX nsString::Find and nsString::RFind take PRInt32 for offset, so,
     //     we cannot support this request when the current offset is larger
@@ -1496,9 +1508,6 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
         selOffset + selLength > PR_INT32_MAX) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, The selection is out of range"));
-        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("        selOffset=%u, selLength=%u",
-             selOffset, selLength));
         return NS_ERROR_FAILURE;
     }
 
@@ -1513,11 +1522,18 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
     nsAutoString textContent(queryTextContentEvent.mReply.mString);
     if (selOffset + selLength > textContent.Length()) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, The selection is invalid"));
-        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("        selOffset=%u, selLength=%u, textContent.Length()=%u",
-             selOffset, selLength, textContent.Length()));
+            ("    FAILED, The selection is invalid, textContent.Length()=%u",
+             textContent.Length()));
         return NS_ERROR_FAILURE;
+    }
+
+    // Remove composing string and restore the selected string because
+    // GtkEntry doesn't remove selected string until committing, however,
+    // our editor does it.  We should emulate the behavior for IME.
+    if (EditorHasCompositionString() &&
+        mDispatchedCompositionString != mSelectedString) {
+        textContent.Replace(mCompositionStart,
+            mDispatchedCompositionString.Length(), mSelectedString);
     }
 
     // Get only the focused paragraph, by looking for newlines
@@ -1531,7 +1547,9 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, PRUint32& aCursorPos)
     aCursorPos = selOffset - PRUint32(parStart);
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("    aText.Length()=%u, aCursorPos=%u", aText.Length(), aCursorPos));
+        ("    aText=%s, aText.Length()=%u, aCursorPos=%u",
+         NS_ConvertUTF16toUTF8(aText).get(),
+         aText.Length(), aCursorPos));
 
     return NS_OK;
 }
@@ -1540,8 +1558,9 @@ nsresult
 nsGtkIMModule::DeleteText(const PRInt32 aOffset, const PRUint32 aNChars)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): DeleteText, aOffset=%d, aNChars=%d",
-         this, aOffset, aNChars));
+        ("GtkIMModule(%p): DeleteText, aOffset=%d, aNChars=%d, "
+         "mCompositionState=%s",
+         this, aOffset, aNChars, GetCompositionStateName()));
 
     if (!mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
@@ -1549,31 +1568,93 @@ nsGtkIMModule::DeleteText(const PRInt32 aOffset, const PRUint32 aNChars)
         return NS_ERROR_NULL_POINTER;
     }
 
+    nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
     nsEventStatus status;
 
-    // Query cursor position & selection
-    nsQueryContentEvent querySelectedTextEvent(true,
-                                               NS_QUERY_SELECTED_TEXT,
-                                               mLastFocusedWindow);
-    mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
-    NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
+    // First, we should cancel current composition because editor cannot
+    // handle changing selection and deleting text.
+    PRUint32 selOffset;
+    bool wasComposing = IsComposing();
+    bool editorHadCompositionString = EditorHasCompositionString();
+    if (wasComposing) {
+        selOffset = mCompositionStart;
+        if (editorHadCompositionString &&
+            !DispatchTextEvent(mSelectedString, false)) {
+            PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+                ("    FAILED, quitting from DeletText"));
+            return NS_ERROR_FAILURE;
+        }
+        if (!DispatchCompositionEnd()) {
+            PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+                ("    FAILED, quitting from DeletText"));
+            return NS_ERROR_FAILURE;
+        }
+    } else {
+        // Query cursor position & selection
+        nsQueryContentEvent querySelectedTextEvent(true,
+                                                   NS_QUERY_SELECTED_TEXT,
+                                                   mLastFocusedWindow);
+        lastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
+        NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
+
+        selOffset = querySelectedTextEvent.mReply.mOffset;
+    }
 
     // Set selection to delete
     nsSelectionEvent selectionEvent(true, NS_SELECTION_SET,
                                     mLastFocusedWindow);
-    selectionEvent.mOffset = querySelectedTextEvent.mReply.mOffset + aOffset;
+    selectionEvent.mOffset = selOffset + aOffset;
     selectionEvent.mLength = aNChars;
     selectionEvent.mReversed = false;
     selectionEvent.mExpandToClusterBoundary = false;
-    mLastFocusedWindow->DispatchEvent(&selectionEvent, status);
-    NS_ENSURE_TRUE(selectionEvent.mSucceeded, NS_ERROR_FAILURE);
+    lastFocusedWindow->DispatchEvent(&selectionEvent, status);
+
+    if (!selectionEvent.mSucceeded ||
+        lastFocusedWindow != mLastFocusedWindow ||
+        lastFocusedWindow->Destroyed()) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    FAILED, setting selection caused focus change "
+             "or window destroyed"));
+        return NS_ERROR_FAILURE;
+    }
 
     // Delete the selection
     nsContentCommandEvent contentCommandEvent(true,
                                               NS_CONTENT_COMMAND_DELETE,
                                               mLastFocusedWindow);
     mLastFocusedWindow->DispatchEvent(&contentCommandEvent, status);
-    NS_ENSURE_TRUE(contentCommandEvent.mSucceeded, NS_ERROR_FAILURE);
+
+    if (!contentCommandEvent.mSucceeded ||
+        lastFocusedWindow != mLastFocusedWindow ||
+        lastFocusedWindow->Destroyed()) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    FAILED, deleting the selection caused focus change "
+             "or window destroyed"));
+        return NS_ERROR_FAILURE;
+    }
+
+    if (!wasComposing) {
+        return NS_OK;
+    }
+
+    // Restore the composition at new caret position.
+    if (!DispatchCompositionStart()) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    FAILED, resterting composition start"));
+        return NS_ERROR_FAILURE;
+    }
+
+    if (!editorHadCompositionString) {
+        return NS_OK;
+    }
+
+    nsAutoString compositionString;
+    GetCompositionString(compositionString);
+    if (!DispatchTextEvent(compositionString, true)) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    FAILED, restoring composition string"));
+        return NS_ERROR_FAILURE;
+    }
 
     return NS_OK;
 }
