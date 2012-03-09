@@ -2607,36 +2607,6 @@ var BrowserEventHandler = {
 const kReferenceDpi = 240; // standard "pixel" size used in some preferences
 
 const ElementTouchHelper = {
-  toBrowserCoords: function(aWindow, aX, aY) {
-    if (!aWindow)
-      throw "Must provide a window";
-  
-    let tab = BrowserApp.getTabForWindow(aWindow.top);
-    if (!tab)
-      throw "Unable to find a tab";
-
-    let viewport = tab.viewport;
-    return [
-        ((aX - tab.viewportExcess.x) * viewport.zoom + viewport.offsetX),
-        ((aY - tab.viewportExcess.y) * viewport.zoom + viewport.offsetY)
-    ];
-  },
-
-  toScreenCoords: function(aWindow, aX, aY) {
-    if (!aWindow)
-      throw "Must provide a window";
-
-    let tab = BrowserApp.getTabForWindow(aWindow.top);
-    if (!tab)
-      throw "Unable to find a tab";
-
-    let viewport = tab.viewport;
-    return [
-        (aX - viewport.offsetX)/viewport.zoom + tab.viewportExcess.x,
-        (aY - viewport.offsetY)/viewport.zoom + tab.viewportExcess.y
-    ];
-  },
-
   anyElementFromPoint: function(aWindow, aX, aY) {
     let cwu = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     let elem = cwu.elementFromPoint(aX, aY, false, true);
