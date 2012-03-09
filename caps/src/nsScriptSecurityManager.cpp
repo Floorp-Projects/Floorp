@@ -517,6 +517,13 @@ NS_IMPL_ISUPPORTS4(nsScriptSecurityManager,
 ///////////////////////////////////////////////////
 
 ///////////////// Security Checks /////////////////
+
+/* static */ JSPrincipals *
+nsScriptSecurityManager::ObjectPrincipalFinder(JSObject *aObj)
+{
+    return nsJSPrincipals::get(doGetObjectPrincipal(aObj));
+}
+
 JSBool
 nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 {
@@ -537,7 +544,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 
     if (!subjectPrincipal) {
         // See bug 553448 for discussion of this case.
-        NS_ASSERTION(!JS_GetSecurityCallbacks(cx)->findObjectPrincipals,
+        NS_ASSERTION(!JS_GetSecurityCallbacks(js::GetRuntime(cx))->findObjectPrincipals,
                      "CSP: Should have been able to find subject principal. "
                      "Reluctantly granting access.");
         return JS_TRUE;
@@ -2179,11 +2186,7 @@ nsScriptSecurityManager::GetScriptPrincipal(JSContext *cx,
         NS_ERROR("Script compiled without principals!");
         return nsnull;
     }
-    nsJSPrincipals *nsJSPrin = static_cast<nsJSPrincipals *>(jsp);
-    nsIPrincipal* result = nsJSPrin->nsIPrincipalPtr;
-    if (!result)
-        *rv = NS_ERROR_FAILURE;
-    return result;
+    return nsJSPrincipals::get(jsp);
 }
 
 // static
@@ -3330,7 +3333,6 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
     mPrincipals.Init(31);
 }
 
-
 nsresult nsScriptSecurityManager::Init()
 {
     nsXPConnect* xpconnect = nsXPConnect::GetXPConnect();
@@ -3365,10 +3367,6 @@ nsresult nsScriptSecurityManager::Init()
     nsRefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
     NS_ENSURE_TRUE(system, NS_ERROR_OUT_OF_MEMORY);
 
-    JSPrincipals *jsprin;
-    rv = system->Init(&jsprin);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     mSystemPrincipal = system;
 
     //-- Register security check callback in the JS engine
@@ -3380,20 +3378,19 @@ nsresult nsScriptSecurityManager::Init()
     rv = runtimeService->GetRuntime(&sRuntime);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    static JSSecurityCallbacks securityCallbacks = {
+    static const JSSecurityCallbacks securityCallbacks = {
         CheckObjectAccess,
-        NULL,
-        NULL,
+        nsJSPrincipals::Subsume,
+        nsJSPrincipals::Transcode,
+        ObjectPrincipalFinder,
         ContentSecurityPolicyPermitsJSAction
     };
 
-#ifdef DEBUG
-    JSSecurityCallbacks *oldcallbacks =
-#endif
-    JS_SetRuntimeSecurityCallbacks(sRuntime, &securityCallbacks);
-    NS_ASSERTION(!oldcallbacks, "Someone else set security callbacks!");
+    MOZ_ASSERT(!JS_GetSecurityCallbacks(sRuntime));
+    JS_SetSecurityCallbacks(sRuntime, &securityCallbacks);
+    JS_InitDestroyPrincipalsCallback(sRuntime, nsJSPrincipals::Destroy);
 
-    JS_SetTrustedPrincipals(sRuntime, jsprin);
+    JS_SetTrustedPrincipals(sRuntime, system);
 
     return NS_OK;
 }
@@ -3417,7 +3414,7 @@ void
 nsScriptSecurityManager::Shutdown()
 {
     if (sRuntime) {
-        JS_SetRuntimeSecurityCallbacks(sRuntime, NULL);
+        JS_SetSecurityCallbacks(sRuntime, NULL);
         JS_SetTrustedPrincipals(sRuntime, NULL);
         sRuntime = nsnull;
     }
@@ -3441,13 +3438,6 @@ nsScriptSecurityManager::GetScriptSecurityManager()
         rv = ssManager->Init();
         NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to initialize nsScriptSecurityManager");
         if (NS_FAILED(rv)) {
-            delete ssManager;
-            return nsnull;
-        }
- 
-        rv = nsJSPrincipals::Startup();
-        if (NS_FAILED(rv)) {
-            NS_WARNING("can't initialize JS engine security protocol glue!");
             delete ssManager;
             return nsnull;
         }

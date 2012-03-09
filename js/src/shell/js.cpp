@@ -4867,28 +4867,18 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
     }
 }
 
-JSBool
-ShellPrincipalsSubsume(JSPrincipals *, JSPrincipals *)
-{
-    return JS_TRUE;
-}
-
-JSPrincipals shellTrustedPrincipals = {
-    (char *)"[shell trusted principals]",
-    1,
-    NULL, /* nobody should be destroying this */
-    ShellPrincipalsSubsume
-};
+/* Set the initial counter to 1 so the principal will never be destroyed. */ 
+JSPrincipals shellTrustedPrincipals = { 1 };
 
 JSBool
-CheckObjectAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-                  jsval *vp)
+CheckObjectAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode, jsval *vp)
 {
     return true;
 }
 
 JSSecurityCallbacks securityCallbacks = {
     CheckObjectAccess,
+    NULL,
     NULL,
     NULL,
     NULL
@@ -5033,7 +5023,7 @@ main(int argc, char **argv, char **envp)
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
-    JS_SetRuntimeSecurityCallbacks(rt, &securityCallbacks);
+    JS_SetSecurityCallbacks(rt, &securityCallbacks);
 
     JS_SetNativeStackQuota(rt, gMaxStackSize);
 

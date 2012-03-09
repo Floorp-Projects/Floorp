@@ -50,46 +50,44 @@
 #include "nsMemory.h"
 #include "nsStringBuffer.h"
 
-static JSBool
-nsJSPrincipalsSubsume(JSPrincipals *jsprin, JSPrincipals *other)
-{
-    nsJSPrincipals *nsjsprin = static_cast<nsJSPrincipals *>(jsprin);
-    nsJSPrincipals *nsother  = static_cast<nsJSPrincipals *>(other);
+// for mozilla::dom::workers::kJSPrincipalsDebugToken
+#include "mozilla/dom/workers/Workers.h"
 
+/* static */ JSBool
+nsJSPrincipals::Subsume(JSPrincipals *jsprin, JSPrincipals *other)
+{
     bool result;
-    nsresult rv = nsjsprin->nsIPrincipalPtr->Subsumes(nsother->nsIPrincipalPtr,
-                                                      &result);
+    nsresult rv = nsJSPrincipals::get(jsprin)->Subsumes(nsJSPrincipals::get(other), &result);
     return NS_SUCCEEDED(rv) && result;
 }
 
-static void
-nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin)
+/* static */ void
+nsJSPrincipals::Destroy(JSPrincipals *jsprin)
 {
-    nsJSPrincipals *nsjsprin = static_cast<nsJSPrincipals *>(jsprin);
+    // The JS runtime can call this method during the last GC when
+    // nsScriptSecurityManager is destroyed. So we must not assume here that
+    // the security manager still exists.
+
+    nsJSPrincipals *nsjsprin = nsJSPrincipals::get(jsprin);
 
     // We need to destroy the nsIPrincipal. We'll do this by adding
     // to the refcount and calling release
 
-    // Note that we don't want to use NS_IF_RELEASE because it will try
-    // to set nsjsprin->nsIPrincipalPtr to nsnull *after* nsjsprin has
-    // already been destroyed.
 #ifdef NS_BUILD_REFCNT_LOGGING
     // The refcount logging considers AddRef-to-1 to indicate creation,
     // so trick it into thinking it's otherwise, but balance the
     // Release() we do below.
     nsjsprin->refcount++;
-    nsjsprin->nsIPrincipalPtr->AddRef();
+    nsjsprin->AddRef();
     nsjsprin->refcount--;
 #else
     nsjsprin->refcount++;
 #endif
-    nsjsprin->nsIPrincipalPtr->Release();
-    // The nsIPrincipal that we release owns the JSPrincipal struct,
-    // so we don't need to worry about "codebase"
+    nsjsprin->Release();
 }
 
-static JSBool
-nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
+/* static */ JSBool
+nsJSPrincipals::Transcode(JSXDRState *xdr, JSPrincipals **jsprinp)
 {
     nsresult rv;
 
@@ -107,12 +105,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
             if (NS_SUCCEEDED(rv)) {
                 ::JS_XDRMemResetData(xdr);
 
-                // Require that GetJSPrincipals has been called already by the
-                // code that compiled the script that owns the principals.
-                nsJSPrincipals *nsjsprin =
-                    static_cast<nsJSPrincipals*>(*jsprinp);
-
-                rv = stream->WriteObject(nsjsprin->nsIPrincipalPtr, true);
+                rv = stream->WriteObject(nsJSPrincipals::get(*jsprinp), true);
             }
         }
     } else {
@@ -141,7 +134,8 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
                     nsMemory::Free(olddata);
                     ::JS_XDRMemSetData(xdr, data, size);
 
-                    prin->GetJSPrincipals(xdr->cx, jsprinp);
+                    *jsprinp = nsJSPrincipals::get(prin);
+                    JS_HoldPrincipals(*jsprinp);
                 }
             }
         }
@@ -156,69 +150,22 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
     return JS_TRUE;
 }
 
-nsresult
-nsJSPrincipals::Startup()
+#ifdef DEBUG
+
+// Defined here so one can do principals->dump() in the debugger
+JS_EXPORT_API(void)
+JSPrincipals::dump()
 {
-    nsCOMPtr<nsIJSRuntimeService> rtsvc = nsXPConnect::GetXPConnect();
-    if (!rtsvc)
-        return NS_ERROR_FAILURE;
-
-    JSRuntime *rt;
-    rtsvc->GetRuntime(&rt);
-    NS_ASSERTION(rt != nsnull, "no JSRuntime?!");
-
-    JSSecurityCallbacks *callbacks = JS_GetRuntimeSecurityCallbacks(rt);
-    NS_ASSERTION(callbacks, "Need a callbacks struct by now!");
-
-    NS_ASSERTION(!callbacks->principalsTranscoder,
-                 "oops, JS_SetPrincipalsTranscoder wars!");
-
-    callbacks->principalsTranscoder = nsTranscodeJSPrincipals;
-    return NS_OK;
-}
-
-nsJSPrincipals::nsJSPrincipals()
-{
-    codebase = nsnull;
-    refcount = 0;
-    destroy = nsDestroyJSPrincipals;
-    subsume = nsJSPrincipalsSubsume;
-    nsIPrincipalPtr = nsnull;
-}
-
-nsresult
-nsJSPrincipals::Init(nsIPrincipal *aPrincipal, const nsCString& aCodebase)
-{
-    if (nsIPrincipalPtr) {
-        NS_ERROR("Init called twice!");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    nsIPrincipalPtr = aPrincipal;
-    nsStringBuffer* buf = nsStringBuffer::FromString(aCodebase);
-    char* data;
-    if (buf) {
-        buf->AddRef();
-        data = static_cast<char*>(buf->Data());
+    if (debugToken == nsJSPrincipals::DEBUG_TOKEN) {
+        static_cast<nsJSPrincipals *>(this)->dumpImpl();
+    } else if (debugToken == mozilla::dom::workers::kJSPrincipalsDebugToken) {
+        fprintf(stderr, "Web Worker principal singleton (%p)\n", this);
     } else {
-        PRUint32 len = aCodebase.Length();
-        buf = nsStringBuffer::Alloc(len + 1); // addrefs
-        if (!buf) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        data = static_cast<char*>(buf->Data());
-        memcpy(data, aCodebase.get(), len);
-        data[len] = '\0';
-    }
-    
-    codebase = data;
-
-    return NS_OK;
-}
-
-nsJSPrincipals::~nsJSPrincipals()
-{
-    if (codebase) {
-        nsStringBuffer::FromData(codebase)->Release();
+        fprintf(stderr,
+                "!!! JSPrincipals (%p) is not nsJSPrincipals instance - bad token: "
+                "actual=0x%x expected=0x%x\n",
+                this, unsigned(debugToken), unsigned(nsJSPrincipals::DEBUG_TOKEN));
     }
 }
+
+#endif 

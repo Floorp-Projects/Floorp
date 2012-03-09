@@ -63,7 +63,7 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
     // CollectRuntimeStats reserves enough space.
     MOZ_ALWAYS_TRUE(rtStats->compartmentStatsVector.growBy(1));
     CompartmentStats &cStats = rtStats->compartmentStatsVector.back();
-    cStats.init(rtStats->getNameCb(rt, compartment), rtStats->destroyNameCb);
+    rtStats->initExtraCompartmentStats(compartment, &cStats);
     rtStats->currCompartmentStats = &cStats;
 
     // Get the compartment-level numbers.

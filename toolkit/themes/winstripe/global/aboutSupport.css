@@ -111,3 +111,29 @@ td {
   white-space: nowrap;
   overflow: hidden;
 }
+
+#reset-box {
+  background-color: -moz-Dialog;
+  border: 1px solid ThreeDShadow;
+  color: -moz-DialogText;
+  float: right;
+  margin-top: 2em;
+  margin-bottom: 20px;
+  -moz-margin-start: 20px;
+  -moz-margin-end: 0;
+  padding: 16px;
+  width: 30%;
+}
+
+body[dir="rtl"] > #reset-box {
+  float: left;
+}
+
+#reset-box > h3 {
+  margin-top: 0;
+}
+
+#reset-box > button {
+  display: block;
+  margin: auto;
+}

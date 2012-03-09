@@ -81,6 +81,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIXPCSecurityManager.h"
+#include "nsJSPrincipals.h"
 #include "xpcpublic.h"
 #ifdef XP_MACOSX
 #include "xpcshellMacUtils.h"
@@ -1739,10 +1740,12 @@ GetCurrentWorkingDirectory(nsAString& workingDirectory)
 }
 
 static JSPrincipals *
-FindObjectPrincipals(JSContext *cx, JSObject *obj)
+FindObjectPrincipals(JSObject *obj)
 {
     return gJSPrincipals;
 }
+
+static JSSecurityCallbacks shellSecurityCallbacks;
 
 int
 main(int argc, char **argv, char **envp)
@@ -1905,10 +1908,8 @@ main(int argc, char **argv, char **envp)
                     fprintf(gErrFile, "+++ Failed to obtain SystemPrincipal from ScriptSecurityManager service.\n");
                 } else {
                     // fetch the JS principals and stick in a global
-                    rv = systemprincipal->GetJSPrincipals(cx, &gJSPrincipals);
-                    if (NS_FAILED(rv)) {
-                        fprintf(gErrFile, "+++ Failed to obtain JS principals from SystemPrincipal.\n");
-                    }
+                    gJSPrincipals = nsJSPrincipals::get(systemprincipal);
+                    JS_HoldPrincipals(gJSPrincipals);
                     secman->SetSystemPrincipal(systemprincipal);
                 }
             } else {
@@ -1916,10 +1917,11 @@ main(int argc, char **argv, char **envp)
             }
         }
 
-        JSSecurityCallbacks *cb = JS_GetRuntimeSecurityCallbacks(rt);
-        NS_ASSERTION(cb, "We are assuming that nsScriptSecurityManager::Init() has been run");
-        NS_ASSERTION(!cb->findObjectPrincipals, "Your pigeon is in my hole!");
-        cb->findObjectPrincipals = FindObjectPrincipals;
+        const JSSecurityCallbacks *scb = JS_GetSecurityCallbacks(rt);
+        NS_ASSERTION(scb, "We are assuming that nsScriptSecurityManager::Init() has been run");
+        shellSecurityCallbacks = *scb;
+        shellSecurityCallbacks.findObjectPrincipals = FindObjectPrincipals;
+        JS_SetSecurityCallbacks(rt, &shellSecurityCallbacks);
 
 #ifdef TEST_TranslateThis
         nsCOMPtr<nsIXPCFunctionThisTranslator>
@@ -2009,7 +2011,7 @@ main(int argc, char **argv, char **envp)
             xpc->WrapJS(cx, glob, NS_GET_IID(nsIJSContextStack),
                         (void**) getter_AddRefs(bogus));
 #endif
-            JSPRINCIPALS_DROP(cx, gJSPrincipals);
+            JS_DropPrincipals(rt, gJSPrincipals);
             JS_ClearScope(cx, glob);
             JS_GC(cx);
             JSContext *oldcx;
