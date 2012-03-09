@@ -305,10 +305,9 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createLocationEvent(Location l, Address a) {
+    public static GeckoEvent createLocationEvent(Location l) {
         GeckoEvent event = new GeckoEvent(LOCATION_EVENT);
         event.mLocation = l;
-        event.mAddress  = a;
         return event;
     }
 
