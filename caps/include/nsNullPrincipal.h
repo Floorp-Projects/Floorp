@@ -59,16 +59,16 @@ class nsIURI;
 
 #define NS_NULLPRINCIPAL_SCHEME "moz-nullprincipal"
 
-class nsNullPrincipal : public nsIPrincipal
+class nsNullPrincipal : public nsJSPrincipals
 {
 public:
   nsNullPrincipal();
   
-  // Our refcount is managed by mJSPrincipals.  Use this macro to avoid an
+  // Our refcount is managed by nsJSPrincipals.  Use this macro to avoid an
   // extra refcount member.
 
   // FIXME: bug 327245 -- I sorta wish there were a clean way to share the
-  // mJSPrincipals munging code between the various principal classes without
+  // nsJSPrincipals munging code between the various principal classes without
   // giving up the NS_DECL_NSIPRINCIPAL goodness.
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRINCIPAL
@@ -76,10 +76,15 @@ public:
 
   nsresult Init();
 
-protected:
+  virtual void GetScriptLocation(nsACString &aStr) MOZ_OVERRIDE;
+
+#ifdef DEBUG
+  virtual void dumpImpl() MOZ_OVERRIDE;
+#endif 
+
+ protected:
   virtual ~nsNullPrincipal();
 
-  nsJSPrincipals mJSPrincipals;
   nsCOMPtr<nsIURI> mURI;
 };
 

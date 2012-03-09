@@ -42,7 +42,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import org.json.JSONException;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
 import org.mozilla.apache.commons.codec.binary.Base64;
@@ -101,11 +100,6 @@ public class CollectionKeys {
   /**
    * Take a pair of values in a JSON array, handing them off to KeyBundle to
    * produce a usable keypair.
-   *
-   * @param array
-   * @return
-   * @throws JSONException
-   * @throws UnsupportedEncodingException
    */
   private static KeyBundle arrayToKeyBundle(JSONArray array) throws UnsupportedEncodingException {
     String encKeyStr  = (String) array.get(0);
@@ -168,14 +162,6 @@ public class CollectionKeys {
   /**
    * Take a downloaded record, and the Sync Key, decrypting the record and
    * setting our own keys accordingly.
-   *
-   * @param keys
-   * @param syncKeyBundle
-   * @throws CryptoException
-   * @throws IOException
-   * @throws ParseException
-   * @throws NonObjectJSONException
-   * @throws JSONException
    */
   public void setKeyPairsFromWBO(CryptoRecord keys, KeyBundle syncKeyBundle)
                                                                             throws CryptoException,

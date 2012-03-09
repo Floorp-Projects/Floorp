@@ -55,6 +55,8 @@ DEFINES += \
   -DCXX_VERSION="$(CXX_VERSION)" \
   -DCXXFLAGS="$(CXXFLAGS)" \
   -DCPPFLAGS="$(CPPFLAGS)" \
+  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+  -DMOZ_BUILD_APP=$(MOZ_BUILD_APP) \
   $(NULL)
 
 MOZ_SOURCE_STAMP ?= $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null)

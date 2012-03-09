@@ -52,6 +52,7 @@
   locale/@AB_CD@/global/printdialog.properties          (%chrome/global/printdialog.properties)
 + locale/@AB_CD@/global/printProgress.dtd               (%chrome/global/printProgress.dtd)
 + locale/@AB_CD@/global/regionNames.properties          (%chrome/global/regionNames.properties)
+  locale/@AB_CD@/global/resetProfile.dtd                (%chrome/global/resetProfile.dtd)
 + locale/@AB_CD@/global/dialog.properties               (%chrome/global/dialog.properties)
 + locale/@AB_CD@/global/tree.dtd                        (%chrome/global/tree.dtd)
 + locale/@AB_CD@/global/textcontext.dtd                 (%chrome/global/textcontext.dtd)

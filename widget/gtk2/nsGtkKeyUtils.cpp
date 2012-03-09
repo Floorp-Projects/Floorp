@@ -68,6 +68,9 @@ struct KeyPair {
     guint GDKKeyval;
 };
 
+#define IS_ASCII_ALPHABETICAL(key) \
+    ((('a' <= key) && (key <= 'z')) || (('A' <= key) && (key <= 'Z')))
+
 //
 // Netscape keycodes are defined in widget/public/nsGUIEvent.h
 // GTK keycodes are defined in <gdk/gdkkeysyms.h>
@@ -879,9 +882,16 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
         aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
     }
 
+    PRBool needLatinKeyCodes = !isLatin;
+    if (!needLatinKeyCodes) {
+        needLatinKeyCodes = 
+            (IS_ASCII_ALPHABETICAL(altCharCodes.mUnshiftedCharCode) !=
+             IS_ASCII_ALPHABETICAL(altCharCodes.mShiftedCharCode));
+    }
+
     // If current keyboard layout can input Latin characters, we don't need
     // more information.
-    if (isLatin) {
+    if (!needLatinKeyCodes) {
         PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
             ("KeymapWrapper(%p): InitKeypressEvent, keyCode=0x%02X, "
              "charCode=0x%08X, level=%d, altCharCodes={ "

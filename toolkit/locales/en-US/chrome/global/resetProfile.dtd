@@ -1,0 +1,13 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<!ENTITY resetProfile.dialog.title        "Reset &brandShortName;">
+<!ENTITY resetProfile.dialog.description  "Are you sure you want to reset &brandShortName; to its initial state?">
+<!ENTITY resetProfile.dialog.items.label  "The following will be preserved:">
+<!ENTITY resetProfile.dialog.footer.label "&brandShortName; will restart and everything else will be removed.">
+<!ENTITY resetProfile.dialog.button.label "Reset &brandShortName;">
+
+<!ENTITY resetProfile.title               "Reset &brandShortName; to its default state">
+<!ENTITY resetProfile.description         "If you're having major problems which you can't resolve, start fresh with only your essential information.">
+<!ENTITY resetProfile.button.label        "Reset &brandShortName;">

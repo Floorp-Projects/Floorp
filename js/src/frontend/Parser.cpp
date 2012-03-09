@@ -156,9 +156,9 @@ Parser::~Parser()
 {
     JSContext *cx = context;
     if (principals)
-        JSPRINCIPALS_DROP(cx, principals);
+        JS_DropPrincipals(cx->runtime, principals);
     if (originPrincipals)
-        JSPRINCIPALS_DROP(cx, originPrincipals);
+        JS_DropPrincipals(cx->runtime, originPrincipals);
     cx->tempLifoAlloc().release(tempPoolMark);
     cx->activeCompilations--;
 }
@@ -169,10 +169,10 @@ Parser::setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin)
     JS_ASSERT(!principals && !originPrincipals);
     principals = prin;
     if (principals)
-        JSPRINCIPALS_HOLD(context, principals);
+        JS_HoldPrincipals(principals);
     originPrincipals = originPrin;
     if (originPrincipals)
-        JSPRINCIPALS_HOLD(context, originPrincipals);
+        JS_HoldPrincipals(originPrincipals);
 }
 
 ObjectBox *
