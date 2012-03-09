@@ -827,9 +827,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_SETNAME:
         return jsop_setprop(info().getAtom(pc));
 
-      case JSOP_DELPROP:
-        return jsop_delprop(info().getAtom(pc));
-
       case JSOP_REGEXP:
         return jsop_regexp(info().getRegExp(pc));
 
@@ -3742,19 +3739,6 @@ IonBuilder::jsop_setprop(JSAtom *atom)
 
     current->add(ins);
     current->push(value);
-
-    return resumeAfter(ins);
-}
-
-bool
-IonBuilder::jsop_delprop(JSAtom *atom)
-{
-    MDefinition *obj = current->pop();
-
-    MInstruction *ins = MDeleteProperty::New(obj, atom);
-
-    current->add(ins);
-    current->push(ins);
 
     return resumeAfter(ins);
 }

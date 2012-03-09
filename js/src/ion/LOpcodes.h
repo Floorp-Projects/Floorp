@@ -146,7 +146,6 @@
     _(CallGetElement)               \
     _(CallSetElement)               \
     _(CallSetProperty)              \
-    _(CallDeleteProperty)           \
     _(SetPropertyCacheV)            \
     _(SetPropertyCacheT)            \
     _(CallIteratorStart)            \
