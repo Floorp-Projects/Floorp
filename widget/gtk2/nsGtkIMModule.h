@@ -173,12 +173,39 @@ protected:
     // event.
     GdkEventKey* mProcessingKeyEvent;
 
+    // mCompositionState indicates current status of composition.
+    enum eCompositionState {
+        eCompositionState_NotComposing,
+        eCompositionState_CompositionStartDispatched,
+        eCompositionState_TextEventDispatched,
+        eCompositionState_CommitTextEventDispatched
+    };
+    eCompositionState mCompositionState;
 
-    // mIsComposing is set to TRUE when we dispatch the composition start
-    // event.  And it's set to FALSE when we dispatches the composition end
-    // event.  Note that mCompositionString can be empty string even if this is
-    // TRUE.
-    bool mIsComposing;
+    bool IsComposing()
+    {
+        return (mCompositionState != eCompositionState_NotComposing);
+    }
+
+#ifdef PR_LOGGING
+    const char* GetCompositionStateName()
+    {
+        switch (mCompositionState) {
+            case eCompositionState_NotComposing:
+                return "NotComposing";
+            case eCompositionState_CompositionStartDispatched:
+                return "CompositionStartDispatched";
+            case eCompositionState_TextEventDispatched:
+                return "TextEventDispatched";
+            case eCompositionState_CommitTextEventDispatched:
+                return "CommitTextEventDispatched";
+            default:
+                return "InvaildState";
+        }
+    }
+#endif // PR_LOGGING
+
+
     // mIsIMFocused is set to TRUE when we call gtk_im_context_focus_in(). And
     // it's set to FALSE when we call gtk_im_context_focus_out().
     bool mIsIMFocused;
@@ -303,10 +330,10 @@ protected:
     bool DispatchCompositionStart();
     bool DispatchCompositionEnd();
 
-    // Dispatches a text event.  If aCheckAttr is TRUE, dispatches a committed
+    // Dispatches a text event.  If aIsCommit is TRUE, dispatches a committed
     // text event.  Otherwise, dispatches a composing text event.
     bool DispatchTextEvent(const nsAString& aCompositionString,
-                             bool aCheckAttr);
+                           bool aIsCommit);
 
 };
 
