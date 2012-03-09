@@ -191,6 +191,11 @@ protected:
         return (mCompositionState != eCompositionState_NotComposing);
     }
 
+    bool EditorHasCompositionString()
+    {
+        return (mCompositionState == eCompositionState_TextEventDispatched);
+    }
+
 #ifdef PR_LOGGING
     const char* GetCompositionStateName()
     {
