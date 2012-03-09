@@ -205,7 +205,7 @@
 
 .ruleview-rule-source {
   background-color: -moz-dialog;
-  color: #0091ff;
+  color: -moz-dialogText;
   padding: 2px 5px;
   cursor: pointer;
 }
