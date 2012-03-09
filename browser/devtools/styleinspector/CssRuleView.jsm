@@ -356,10 +356,20 @@ function Rule(aElementStyle, aOptions)
   this.style = aOptions.style || this.domRule.style;
   this.selectorText = aOptions.selectorText || this.domRule.selectorText;
   this.inherited = aOptions.inherited || null;
+
+  if (this.domRule) {
+    let parentRule = this.domRule.parentRule;
+    if (parentRule && parentRule.type == Ci.nsIDOMCSSRule.MEDIA_RULE) {
+      this.mediaText = parentRule.media.mediaText;
+    }
+  }
+
   this._getTextProperties();
 }
 
 Rule.prototype = {
+  mediaText: "",
+
   get title()
   {
     if (this._title) {
@@ -380,7 +390,7 @@ Rule.prototype = {
                                                            args, args.length);
     }
 
-    return this._title;
+    return this._title + (this.mediaText ? " @media " + this.mediaText : "");
   },
 
   /**

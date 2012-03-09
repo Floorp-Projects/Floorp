@@ -50,6 +50,9 @@ const Cu = Components.utils;
 
 var EXPORTED_SYMBOLS = ["DebuggerServer"];
 
+Cu.import("resource://gre/modules/Services.jsm");
+let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
+
 function loadSubScript(aURL)
 {
   try {
@@ -57,14 +60,16 @@ function loadSubScript(aURL)
       .getService(Components.interfaces.mozIJSSubScriptLoader);
     loader.loadSubScript(aURL, this);
   } catch(e) {
-    dump("Error loading: " + aURL + ": " + e + " - " + e.stack + "\n");
+    dumpn("Error loading: " + aURL + ": " + e + " - " + e.stack + "\n");
 
     throw e;
   }
 }
 
 function dumpn(str) {
-  dump("DBG-SERVER: " + str + "\n");
+  if (wantLogging) {
+    dump("DBG-SERVER: " + str + "\n");
+  }
 }
 
 function dbg_assert(cond, e) {

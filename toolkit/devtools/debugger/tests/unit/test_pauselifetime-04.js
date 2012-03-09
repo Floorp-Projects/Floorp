@@ -32,7 +32,6 @@ function test_pause_frame()
 
     gThreadClient.getFrames(0, 1, function(aResponse) {
       let frame = aResponse.frames[0];
-      dump(JSON.stringify(frame));
       do_check_eq(objActor1, frame.arguments[0].actor);
       gThreadClient.resume(function () {
         finishClient(gClient);
