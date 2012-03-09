@@ -83,6 +83,10 @@ using namespace mozilla;
                                    gfxPlatform::GetLog(eGfxLog_fontlist), \
                                    PR_LOG_DEBUG)
 
+#define LOG_CMAPDATA_ENABLED() PR_LOG_TEST( \
+                                   gfxPlatform::GetLog(eGfxLog_cmapdata), \
+                                   PR_LOG_DEBUG)
+
 #endif // PR_LOGGING
 
 // font info loader constants
@@ -227,6 +231,12 @@ GDIFontEntry::ReadCMAP()
 #ifdef PR_LOGGING
     LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d\n",
                   NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
+    if (LOG_CMAPDATA_ENABLED()) {
+        char prefix[256];
+        sprintf(prefix, "(cmapdata) name: %.220s",
+                NS_ConvertUTF16toUTF8(mName).get());
+        mCharacterMap.Dump(prefix, eGfxLog_cmapdata);
+    }
 #endif
     return rv;
 }

@@ -68,6 +68,10 @@ using namespace mozilla;
                                    gfxPlatform::GetLog(eGfxLog_fontinit), \
                                    PR_LOG_DEBUG)
 
+#define LOG_CMAPDATA_ENABLED() PR_LOG_TEST( \
+                                   gfxPlatform::GetLog(eGfxLog_cmapdata), \
+                                   PR_LOG_DEBUG)
+
 // font info loader constants
 
 // avoid doing this during startup even on slow machines but try to start
@@ -371,6 +375,16 @@ gfxDWriteFontEntry::ReadCMAP()
         rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
                                     mCharacterMap, mUVSOffset,
                                     unicodeFont, symbolFont);
+#ifdef PR_LOGGING
+        LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d\n",
+                      NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
+        if (LOG_CMAPDATA_ENABLED()) {
+            char prefix[256];
+            sprintf(prefix, "(cmapdata) name: %.220s",
+                    NS_ConvertUTF16toUTF8(mName).get());
+            mCharacterMap.Dump(prefix, eGfxLog_cmapdata);
+        }
+#endif
         mHasCmapTable = NS_SUCCEEDED(rv);
         return rv;
     }
@@ -411,6 +425,12 @@ gfxDWriteFontEntry::ReadCMAP()
 #ifdef PR_LOGGING
     LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d\n",
                   NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
+    if (LOG_CMAPDATA_ENABLED()) {
+        char prefix[256];
+        sprintf(prefix, "(cmapdata) name: %.220s",
+                NS_ConvertUTF16toUTF8(mName).get());
+        mCharacterMap.Dump(prefix, eGfxLog_cmapdata);
+    }
 #endif
 
     mHasCmapTable = NS_SUCCEEDED(rv);
