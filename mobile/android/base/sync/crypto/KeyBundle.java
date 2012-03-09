@@ -46,7 +46,6 @@ import javax.crypto.Mac;
 
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.crypto.CryptoException;
 import java.security.InvalidKeyException;
 import java.util.Locale;
 
