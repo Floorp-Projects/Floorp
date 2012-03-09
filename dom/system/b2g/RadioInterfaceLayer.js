@@ -219,6 +219,21 @@ RadioInterfaceLayer.prototype = {
       case "datacalllist":
         this.handleDataCallList(message);
         break;
+      case "nitzTime":
+        // TODO bug 714349
+        // Send information to time manager to decide what to do with it
+        // Message contains networkTimeInSeconds, networkTimeZoneInMinutes,
+        // dstFlag,localTimeStampInMS
+        // indicating the time, daylight savings flag, and timezone
+        // sent from the network and a timestamp of when the message was received
+        // so an offset can be added if/when the time is actually set.
+        if (DEBUG) {
+          debug("nitzTime networkTime=" + message.networkTimeInSeconds
+               + " timezone=" + message.networkTimeZoneInMinutes
+               + " dst=" + message.dstFlag
+               + " timestamp=" + message.localTimeStampInMS);
+        }
+        break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
     }
