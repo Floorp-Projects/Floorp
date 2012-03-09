@@ -203,6 +203,9 @@ pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.sanitize", true);
 
+// whether to always search all font cmaps during system font fallback
+pref("gfx.font_rendering.fallback.always_use_cmaps", false);
+
 #ifdef MOZ_GRAPHITE
 pref("gfx.font_rendering.graphite.enabled", false);
 #endif
@@ -1518,14 +1521,14 @@ pref("plugins.click_to_play", false);
 #ifndef DEBUG
 // How long a plugin is allowed to process a synchronous IPC message
 // before we consider it "hung".
-pref("dom.ipc.plugins.timeoutSecs", 25);
+pref("dom.ipc.plugins.timeoutSecs", 45);
 // How long a plugin process will wait for a response from the parent
 // to a synchronous request before terminating itself. After this
 // point the child assumes the parent is hung. Currently disabled.
 pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 // How long a plugin launch is allowed to take before
 // we consider it failed.
-pref("dom.ipc.plugins.processLaunchTimeoutSecs", 25);
+pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
 #else
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
@@ -1631,9 +1634,9 @@ pref("font.name-list.cursive.he", "Guttman Yad, Ktav, Arial");
 pref("font.name.serif.ja", "MS PMincho");
 pref("font.name.sans-serif.ja", "MS PGothic");
 pref("font.name.monospace.ja", "MS Gothic");
-pref("font.name-list.serif.ja", "MS PMincho, MS Mincho, MS PGothic, MS Gothic");
-pref("font.name-list.sans-serif.ja", "MS PGothic, MS Gothic, MS PMincho, MS Mincho");
-pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, MS PGothic, MS PMincho");
+pref("font.name-list.serif.ja", "MS PMincho, MS Mincho, MS PGothic, MS Gothic,Meiryo");
+pref("font.name-list.sans-serif.ja", "MS PGothic, MS Gothic, MS PMincho, MS Mincho,Meiryo");
+pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, MS PGothic, MS PMincho,Meiryo");
 
 pref("font.name.serif.ko", "Batang");
 pref("font.name.sans-serif.ko", "Gulim");
@@ -1683,27 +1686,27 @@ pref("font.name.cursive.x-western", "Comic Sans MS");
 pref("font.name.serif.zh-CN", "SimSun");
 pref("font.name.sans-serif.zh-CN", "SimSun");
 pref("font.name.monospace.zh-CN", "SimSun");
-pref("font.name-list.serif.zh-CN", "MS Song, SimSun");
-pref("font.name-list.sans-serif.zh-CN", "MS Song, SimSun");
-pref("font.name-list.monospace.zh-CN", "MS Song, SimSun");
+pref("font.name-list.serif.zh-CN", "MS Song, SimSun, SimSun-ExtB");
+pref("font.name-list.sans-serif.zh-CN", "MS Song, SimSun, SimSun-ExtB");
+pref("font.name-list.monospace.zh-CN", "MS Song, SimSun, SimSun-ExtB");
 
 // Per Taiwanese users' demand. They don't want to use TC fonts for
 // rendering Latin letters. (bug 88579)
 pref("font.name.serif.zh-TW", "Times New Roman"); 
 pref("font.name.sans-serif.zh-TW", "Arial");
 pref("font.name.monospace.zh-TW", "MingLiU");
-pref("font.name-list.serif.zh-TW", "PMingLiu, MingLiU"); 
-pref("font.name-list.sans-serif.zh-TW", "PMingLiU, MingLiU");
-pref("font.name-list.monospace.zh-TW", "MingLiU");
+pref("font.name-list.serif.zh-TW", "PMingLiu, MingLiU, MingLiU-ExtB");
+pref("font.name-list.sans-serif.zh-TW", "PMingLiU, MingLiU, MingLiU-ExtB");
+pref("font.name-list.monospace.zh-TW", "MingLiU, MingLiU-ExtB");
 
 // hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs
 // Hong Kong users have the same demand about glyphs for Latin letters (bug 88579)
 pref("font.name.serif.zh-HK", "Times New Roman");
 pref("font.name.sans-serif.zh-HK", "Arial");
 pref("font.name.monospace.zh-HK", "MingLiu_HKSCS");
-pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU");
-pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");
-pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");
+pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
+pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
+pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU, MingLiU_HKSCS-ExtB");
 
 pref("font.name.serif.x-devanagari", "Mangal");
 pref("font.name.sans-serif.x-devanagari", "Raghindi");
@@ -2099,16 +2102,16 @@ pref("font.name-list.monospace.ar", "Geeza Pro");
 pref("font.name-list.cursive.ar", "DecoType Naskh");
 pref("font.name-list.fantasy.ar", "KufiStandardGK");
 
-pref("font.name.serif.el", "Lucida Grande");
-pref("font.name.sans-serif.el", "Lucida Grande");
-pref("font.name.monospace.el", "Lucida Grande");
+pref("font.name.serif.el", "Times");
+pref("font.name.sans-serif.el", "Helvetica");
+pref("font.name.monospace.el", "Courier New");
 pref("font.name.cursive.el", "Lucida Grande");
 pref("font.name.fantasy.el", "Lucida Grande");
-pref("font.name-list.serif.el", "Lucida Grande");
-pref("font.name-list.sans-serif.el", "Lucida Grande");
-pref("font.name-list.monospace.el", "Lucida Grande");
-pref("font.name-list.cursive.el", "Lucida Grande");
-pref("font.name-list.fantasy.el", "Lucida Grande");
+pref("font.name-list.serif.el", "Times,Times New Roman");
+pref("font.name-list.sans-serif.el", "Helvetica,Lucida Grande");
+pref("font.name-list.monospace.el", "Courier New,Lucida Grande");
+pref("font.name-list.cursive.el", "Times,Lucida Grande");
+pref("font.name-list.fantasy.el", "Times,Lucida Grande");
 
 pref("font.name.serif.he", "Times New Roman");
 pref("font.name.sans-serif.he", "Arial");
@@ -2121,11 +2124,11 @@ pref("font.name-list.monospace.he", "Courier New");
 pref("font.name-list.cursive.he", "Times New Roman");
 pref("font.name-list.fantasy.he", "Times New Roman");
 
-pref("font.name.serif.ja", "Hiragino Mincho Pro"); 
-pref("font.name.sans-serif.ja", "Hiragino Kaku Gothic Pro"); 
+pref("font.name.serif.ja", "Hiragino Mincho ProN");
+pref("font.name.sans-serif.ja", "Hiragino Kaku Gothic ProN");
 pref("font.name.monospace.ja", "Osaka-Mono"); 
-pref("font.name-list.serif.ja", "Hiragino Mincho Pro"); 
-pref("font.name-list.sans-serif.ja", "Hiragino Kaku Gothic Pro"); 
+pref("font.name-list.serif.ja", "Hiragino Mincho ProN,Hiragino Mincho Pro");
+pref("font.name-list.sans-serif.ja", "Hiragino Kaku Gothic ProN,Hiragino Kaku Gothic Pro");
 pref("font.name-list.monospace.ja", "Osaka-Mono"); 
 
 pref("font.name.serif.ko", "AppleMyungjo"); 
@@ -2204,9 +2207,9 @@ pref("font.name.sans-serif.x-cyrillic", "Helvetica");
 pref("font.name.monospace.x-cyrillic", "Monaco");
 pref("font.name.cursive.x-cyrillic", "Geneva");
 pref("font.name.fantasy.x-cyrillic", "Charcoal CY");
-pref("font.name-list.serif.x-cyrillic", "Times");
-pref("font.name-list.sans-serif.x-cyrillic", "Helvetica");
-pref("font.name-list.monospace.x-cyrillic", "Monaco");
+pref("font.name-list.serif.x-cyrillic", "Times,Times New Roman");
+pref("font.name-list.sans-serif.x-cyrillic", "Helvetica,Arial");
+pref("font.name-list.monospace.x-cyrillic", "Monaco,Courier New");
 pref("font.name-list.cursive.x-cyrillic", "Geneva");
 pref("font.name-list.fantasy.x-cyrillic", "Charcoal CY");
 
@@ -2315,32 +2318,32 @@ pref("font.name.sans-serif.x-western", "Helvetica");
 pref("font.name.monospace.x-western", "Courier");
 pref("font.name.cursive.x-western", "Apple Chancery");
 pref("font.name.fantasy.x-western", "Papyrus");
-pref("font.name-list.serif.x-western", "Times");
-pref("font.name-list.sans-serif.x-western", "Helvetica");
-pref("font.name-list.monospace.x-western", "Courier");
+pref("font.name-list.serif.x-western", "Times,Times New Roman");
+pref("font.name-list.sans-serif.x-western", "Helvetica,Arial");
+pref("font.name-list.monospace.x-western", "Courier,Courier New");
 pref("font.name-list.cursive.x-western", "Apple Chancery");
 pref("font.name-list.fantasy.x-western", "Papyrus");
 
 pref("font.name.serif.zh-CN", "STSong");
 pref("font.name.sans-serif.zh-CN", "STHeiti");
 pref("font.name.monospace.zh-CN", "STHeiti");
-pref("font.name-list.serif.zh-CN", "STSong");
-pref("font.name-list.sans-serif.zh-CN", "STHeiti");
-pref("font.name-list.monospace.zh-CN", "STHeiti");
+pref("font.name-list.serif.zh-CN", "STSong,Heiti SC");
+pref("font.name-list.sans-serif.zh-CN", "STHeiti,Heiti SC");
+pref("font.name-list.monospace.zh-CN", "STHeiti,Heiti SC");
 
 pref("font.name.serif.zh-TW", "Apple LiSung"); 
 pref("font.name.sans-serif.zh-TW", "Apple LiGothic");  
 pref("font.name.monospace.zh-TW", "Apple LiGothic");  
-pref("font.name-list.serif.zh-TW", "Apple LiSung"); 
-pref("font.name-list.sans-serif.zh-TW", "Apple LiGothic");  
-pref("font.name-list.monospace.zh-TW", "Apple LiGothic");  
+pref("font.name-list.serif.zh-TW", "Apple LiSung,Heiti TC");
+pref("font.name-list.sans-serif.zh-TW", "Apple LiGothic,Heiti TC");
+pref("font.name-list.monospace.zh-TW", "Apple LiGothic,Heiti TC");
 
 pref("font.name.serif.zh-HK", "LiSong Pro");
 pref("font.name.sans-serif.zh-HK", "LiHei Pro");
 pref("font.name.monospace.zh-HK", "LiHei Pro");
-pref("font.name-list.serif.zh-HK", "LiSong Pro");
-pref("font.name-list.sans-serif.zh-HK", "LiHei Pro");
-pref("font.name-list.monospace.zh-HK", "LiHei Pro");
+pref("font.name-list.serif.zh-HK", "LiSong Pro,Heiti TC");
+pref("font.name-list.sans-serif.zh-HK", "LiHei Pro,Heiti TC");
+pref("font.name-list.monospace.zh-HK", "LiHei Pro,Heiti TC");
 
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
@@ -3466,11 +3469,15 @@ pref("dom.network.metered", false);
 pref("memory.low_virtual_memory_threshold_mb", 128);
 
 // On Windows 32- or 64-bit, fire a low-memory notification if we have less
+// than this many mb of commit space (physical memory plus page file) left.
+pref("memory.low_commit_space_threshold_mb", 128);
+
+// On Windows 32- or 64-bit, fire a low-memory notification if we have less
 // than this many mb of physical memory available on the whole machine.
 pref("memory.low_physical_memory_threshold_mb", 0);
 
 // On Windows 32- or 64-bit, don't fire a low-memory notification because of
-// low available physical memory more than once every
-// low_physical_memory_notification_interval_ms.
-pref("memory.low_physical_memory_notification_interval_ms", 10000);
+// low available physical memory or low commit space more than once every
+// low_memory_notification_interval_ms.
+pref("memory.low_memory_notification_interval_ms", 10000);
 #endif

@@ -24,6 +24,7 @@ public class ImmutableViewportMetrics {
     public final float viewportRectRight;
     public final float viewportRectTop;
     public final float zoomFactor;
+    public final boolean allowZoom;
 
     public ImmutableViewportMetrics(ViewportMetrics m) {
         RectF viewportRect = m.getViewport();
@@ -37,6 +38,7 @@ public class ImmutableViewportMetrics {
         pageSizeHeight = pageSize.height;
 
         zoomFactor = m.getZoomFactor();
+        allowZoom = m.getAllowZoom();
     }
 
     // some helpers to make ImmutableViewportMetrics act more like ViewportMetrics
@@ -60,5 +62,7 @@ public class ImmutableViewportMetrics {
         return new FloatSize(pageSizeWidth, pageSizeHeight);
     }
 
-
+    public boolean getAllowZoom() {
+        return allowZoom;
+    }
 }

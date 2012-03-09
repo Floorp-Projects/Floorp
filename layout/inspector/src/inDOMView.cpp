@@ -142,7 +142,7 @@ inDOMView::~inDOMView()
 /* static */ void
 inDOMView::InitAtoms()
 {
-  NS_RegisterStaticAtoms(Atoms_info, ArrayLength(Atoms_info));
+  NS_RegisterStaticAtoms(Atoms_info);
 }
 
 ////////////////////////////////////////////////////////////////////////

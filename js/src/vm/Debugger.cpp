@@ -429,7 +429,6 @@ Debugger::Debugger(JSContext *cx, JSObject *dbg)
     assertSameCompartment(cx, dbg);
 
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
     JS_APPEND_LINK(&link, &rt->debuggerList);
     JS_INIT_CLIST(&breakpoints);
 }
@@ -3215,7 +3214,7 @@ DebuggerObject_trace(JSTracer *trc, JSObject *obj)
          */
         if (JSObject *referent = (JSObject *) obj->getPrivate()) {
             MarkObjectUnbarriered(trc, &referent, "Debugger.Object referent");
-            obj->setPrivate(referent);
+            obj->setPrivateUnbarriered(referent);
         }
     }
 }
@@ -3859,7 +3858,7 @@ DebuggerEnv_trace(JSTracer *trc, JSObject *obj)
          */
         if (Env *referent = (JSObject *) obj->getPrivate()) {
             MarkObjectUnbarriered(trc, &referent, "Debugger.Environment referent");
-            obj->setPrivate(referent);
+            obj->setPrivateUnbarriered(referent);
         }
     }
 }

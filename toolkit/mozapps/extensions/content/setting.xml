@@ -293,7 +293,7 @@
         <xul:description class="preferences-description" flex="1" xbl:inherits="xbl:text=desc"/>
       </xul:vbox>
       <xul:hbox class="preferences-alignment">
-        <children includes="button|menulist"/>
+        <children/>
       </xul:hbox>
     </content>
   </binding>

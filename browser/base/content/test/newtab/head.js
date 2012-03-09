@@ -129,10 +129,11 @@ function addNewTabPageTab() {
     cw = browser.contentWindow;
 
     if (NewTabUtils.allPages.enabled) {
-      cells = cw.gGrid.cells;
-
       // Continue when the link cache has been populated.
-      NewTabUtils.links.populateCache(TestRunner.next);
+      NewTabUtils.links.populateCache(function () {
+        cells = cw.gGrid.cells;
+        executeSoon(TestRunner.next);
+      });
     } else {
       TestRunner.next();
     }
@@ -246,6 +247,8 @@ function unpinCell(aCell) {
  */
 function simulateDrop(aDropTarget, aDragSource) {
   let event = {
+    clientX: 0,
+    clientY: 0,
     dataTransfer: {
       mozUserCancelled: false,
       setData: function () null,

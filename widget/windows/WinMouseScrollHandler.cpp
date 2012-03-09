@@ -12,6 +12,7 @@
 #include "WinMouseScrollHandler.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
+#include "nsGkAtoms.h"
 
 #include "mozilla/Preferences.h"
 
