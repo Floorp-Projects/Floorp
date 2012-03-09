@@ -44,11 +44,11 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIServiceManager.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMDeviceOrientationEvent.h"
-#include "nsIDOMDeviceMotionEvent.h"
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
-#include "nsDOMDeviceMotionEvent.h"
+
+using mozilla::TimeStamp;
+using mozilla::TimeDuration;
 
 // also see sDefaultSensorHint in mobile/android/base/GeckoAppShell.java
 #define DEFAULT_SENSOR_POLL 100
@@ -129,6 +129,7 @@ nsDeviceMotion::nsDeviceMotion()
     if (NS_SUCCEEDED(rv) && bvalue == false)
       mEnabled = false;
   }
+  mLastDOMMotionEventTime = TimeStamp::Now();
 }
 
 nsDeviceMotion::~nsDeviceMotion()
@@ -361,45 +362,53 @@ nsDeviceMotion::FireDOMMotionEvent(nsIDOMDocument *domdoc,
                                    double x,
                                    double y,
                                    double z) {
+  // Attempt to coalesce events
+  bool fireEvent = TimeStamp::Now() > mLastDOMMotionEventTime + TimeDuration::FromMilliseconds(DEFAULT_SENSOR_POLL);
+
+  switch (type) {
+  case nsIDeviceMotionData::TYPE_LINEAR_ACCELERATION:
+      mLastAcceleration = new nsDOMDeviceAcceleration(x, y, z);
+      break;
+  case nsIDeviceMotionData::TYPE_ACCELERATION:
+      mLastAccelerationIncluduingGravity = new nsDOMDeviceAcceleration(x, y, z);
+      break;
+  case nsIDeviceMotionData::TYPE_GYROSCOPE:
+      mLastRotationRate = new nsDOMDeviceRotationRate(x, y, z);
+      break;
+  }
+
+  if (!fireEvent && (!mLastAcceleration || !mLastAccelerationIncluduingGravity || !mLastRotationRate)) {
+      return;
+  }
+
   nsCOMPtr<nsIDOMEvent> event;
-  bool defaultActionEnabled = true;
   domdoc->CreateEvent(NS_LITERAL_STRING("DeviceMotionEvent"), getter_AddRefs(event));
 
   nsCOMPtr<nsIDOMDeviceMotionEvent> me = do_QueryInterface(event);
 
   if (!me) {
     return;
-}
-
-  nsRefPtr<nsDOMDeviceAcceleration> acceleration;
-  nsRefPtr<nsDOMDeviceAcceleration> accelerationIncluduingGravity;
-  nsRefPtr<nsDOMDeviceRotationRate> rotationRate;
-
-  switch (type) {
-  case nsIDeviceMotionData::TYPE_LINEAR_ACCELERATION:
-      acceleration = new nsDOMDeviceAcceleration(x, y, z);
-      break;
-  case nsIDeviceMotionData::TYPE_ACCELERATION:
-      accelerationIncluduingGravity = new nsDOMDeviceAcceleration(x, y, z);
-      break;
-  case nsIDeviceMotionData::TYPE_GYROSCOPE:
-      rotationRate = new nsDOMDeviceRotationRate(x, y, z);
-      break;
   }
-
 
   me->InitDeviceMotionEvent(NS_LITERAL_STRING("devicemotion"),
                             true,
                             false,
-                            acceleration,
-                            accelerationIncluduingGravity,
-                            rotationRate,
+                            mLastAcceleration,
+                            mLastAccelerationIncluduingGravity,
+                            mLastRotationRate,
                             DEFAULT_SENSOR_POLL);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
   if (privateEvent)
     privateEvent->SetTrusted(true);
   
+  bool defaultActionEnabled = true;
   target->DispatchEvent(event, &defaultActionEnabled);
+
+  mLastRotationRate = nsnull;
+  mLastAccelerationIncluduingGravity = nsnull;
+  mLastAcceleration = nsnull;
+  mLastDOMMotionEventTime = TimeStamp::Now();
+
 }
 
