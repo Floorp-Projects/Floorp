@@ -37,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+#include "prlog.h"
+
 #include "mozilla/Util.h"
 
 #include "gfxFontUtils.h"
@@ -51,12 +56,20 @@
 #include "nsICharsetConverterManager.h"
 
 #include "plbase64.h"
+#include "prlog.h"
 
 #include "woff.h"
 
 #ifdef XP_MACOSX
 #include <CoreFoundation/CoreFoundation.h>
 #endif
+
+#ifdef PR_LOGGING
+
+#define LOG(log, args) PR_LOG(gfxPlatform::GetLog(log), \
+                               PR_LOG_DEBUG, args)
+
+#endif // PR_LOGGING
 
 #define NO_RANGE_FOUND 126 // bit 126 in the font unicode ranges is required to be 0
 
@@ -268,6 +281,37 @@ typedef struct {
 } Format12Group;
 
 #pragma pack()
+
+#if PR_LOGGING
+void
+gfxSparseBitSet::Dump(const char* aPrefix, eGfxLog aWhichLog) const
+{
+    NS_ASSERTION(mBlocks.DebugGetHeader(), "mHdr is null, this is bad");
+    PRUint32 b, numBlocks = mBlocks.Length();
+
+    for (b = 0; b < numBlocks; b++) {
+        Block *block = mBlocks[b];
+        if (!block) continue;
+        char outStr[256];
+        int index = 0;
+        index += sprintf(&outStr[index], "%s u+%6.6x [", aPrefix, (b << BLOCK_INDEX_SHIFT));
+        for (int i = 0; i < 32; i += 4) {
+            for (int j = i; j < i + 4; j++) {
+                PRUint8 bits = block->mBits[j];
+                PRUint8 flip1 = ((bits & 0xaa) >> 1) | ((bits & 0x55) << 1);
+                PRUint8 flip2 = ((flip1 & 0xcc) >> 2) | ((flip1 & 0x33) << 2);
+                PRUint8 flipped = ((flip2 & 0xf0) >> 4) | ((flip2 & 0x0f) << 4);
+
+                index += sprintf(&outStr[index], "%2.2x", flipped);
+            }
+            if (i + 4 != 32) index += sprintf(&outStr[index], " ");
+        }
+        index += sprintf(&outStr[index], "]");
+        LOG(aWhichLog, ("%s", outStr));
+    }
+}
+#endif
+
 
 nsresult
 gfxFontUtils::ReadCMAPTableFormat12(const PRUint8 *aBuf, PRUint32 aLength,

@@ -118,6 +118,7 @@ static PRLogModuleInfo *sFontlistLog = nsnull;
 static PRLogModuleInfo *sFontInitLog = nsnull;
 static PRLogModuleInfo *sTextrunLog = nsnull;
 static PRLogModuleInfo *sTextrunuiLog = nsnull;
+static PRLogModuleInfo *sCmapDataLog = nsnull;
 #endif
 
 /* Class to listen for pref changes so that chrome code can dynamically
@@ -268,6 +269,7 @@ gfxPlatform::Init()
     sFontInitLog = PR_NewLogModule("fontinit");;
     sTextrunLog = PR_NewLogModule("textrun");;
     sTextrunuiLog = PR_NewLogModule("textrunui");;
+    sCmapDataLog = PR_NewLogModule("cmapdata");;
 #endif
 
 
@@ -1396,6 +1398,9 @@ gfxPlatform::GetLog(eGfxLog aWhichLog)
         break;
     case eGfxLog_textrunui:
         return sTextrunuiLog;
+        break;
+    case eGfxLog_cmapdata:
+        return sCmapDataLog;
         break;
     default:
         break;
