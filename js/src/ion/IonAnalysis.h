@@ -56,10 +56,7 @@ bool
 SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph);
 
 bool
-EliminateDeadPhis(MIRGraph &graph);
-
-void
-EliminateCopies(MIRGraph &graph);
+EliminatePhis(MIRGraph &graph);
 
 bool
 EliminateDeadCode(MIRGraph &graph);

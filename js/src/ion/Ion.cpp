@@ -665,18 +665,14 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
     // No spew: graph not changed.
 
     // This must occur before any code elimination.
-    if (!EliminateDeadPhis(graph))
+    if (!EliminatePhis(graph))
         return false;
-    IonSpewPass("Eliminate dead phis");
+    IonSpewPass("Eliminate phis");
     AssertGraphCoherency(graph);
 
     if (!BuildPhiReverseMapping(graph))
         return false;
     // No spew: graph not changed.
-
-    EliminateCopies(graph);
-    IonSpewPass("Eliminate copies");
-    AssertGraphCoherency(graph);
 
     // This pass also removes copies.
     if (!ApplyTypeInformation(graph))

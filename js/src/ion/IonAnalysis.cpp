@@ -111,20 +111,41 @@ IsPhiObservable(MPhi *phi)
     return false;
 }
 
+static inline MDefinition *
+IsPhiRedundant(MPhi *phi)
+{
+    MDefinition *first = phi->getOperand(0);
+
+    for (size_t i = 1; i < phi->numOperands(); i++) {
+        if (first != phi->getOperand(i))
+            return NULL;
+    }
+
+    return first;
+}
+
 bool
-ion::EliminateDeadPhis(MIRGraph &graph)
+ion::EliminatePhis(MIRGraph &graph)
 {
     Vector<MPhi *, 16, SystemAllocPolicy> worklist;
 
     // Add all observable phis to a worklist. We use the "in worklist" bit to
     // mean "this phi is live".
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
-        for (MPhiIterator iter = block->phisBegin(); iter != block->phisEnd(); iter++) {
+        MPhiIterator iter = block->phisBegin();
+        while (iter != block->phisEnd()) {
+            // If the phi is redundant, remove it here.
+            if (MDefinition *redundant = IsPhiRedundant(*iter)) {
+                iter->replaceAllUsesWith(redundant);
+                iter = block->discardPhiAt(iter);
+                continue;
+            }
             if (IsPhiObservable(*iter)) {
                 iter->setInWorklist();
                 if (!worklist.append(*iter))
                     return false;
             }
+            iter++;
         }
     }
 
@@ -157,26 +178,6 @@ ion::EliminateDeadPhis(MIRGraph &graph)
     }
 
     return true;
-}
-
-void
-ion::EliminateCopies(MIRGraph &graph)
-{
-    // The worklist is LIFO. We add items in postorder to get reverse-postorder
-    // removal.
-    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
-        MInstructionIterator iter = block->begin();
-        while (iter != block->end()) {
-            if (iter->isCopy()) {
-                // Remove copies here.
-                MCopy *copy = iter->toCopy();
-                copy->replaceAllUsesWith(copy->getOperand(0));
-                iter = block->discardAt(iter);
-            } else {
-                iter++;
-            }
-        }
-    }
 }
 
 // The type analysis algorithm inserts conversions and box/unbox instructions

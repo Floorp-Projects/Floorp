@@ -164,7 +164,8 @@ MBasicBlock::inherit(MBasicBlock *pred)
 {
     if (pred) {
         stackPosition_ = pred->stackPosition_;
-        copySlots(pred);
+        if (kind_ != PENDING_LOOP_HEADER)
+            copySlots(pred);
     } else {
         uint32_t stackDepth = info().script()->analysis()->getCode(pc()).stackDepth;
         stackPosition_ = info().firstStackSlot() + stackDepth;
@@ -184,8 +185,19 @@ MBasicBlock::inherit(MBasicBlock *pred)
         if (!predecessors_.append(pred))
             return false;
 
-        for (size_t i = 0; i < stackDepth(); i++)
-            entryResumePoint()->initOperand(i, getSlot(i));
+        if (kind_ == PENDING_LOOP_HEADER) {
+            for (size_t i = 0; i < stackDepth(); i++) {
+                MPhi *phi = MPhi::New(i);
+                if (!phi->addInput(pred->getSlot(i)))
+                    return NULL;
+                addPhi(phi);
+                setSlot(i, phi);
+                entryResumePoint()->initOperand(i, phi);
+            }
+        } else {
+            for (size_t i = 0; i < stackDepth(); i++)
+                entryResumePoint()->initOperand(i, getSlot(i));
+        }
     }
 
     return true;
@@ -207,13 +219,13 @@ MDefinition *
 MBasicBlock::getSlot(uint32 index)
 {
     JS_ASSERT(index < stackPosition_);
-    return slots_[index].def;
+    return slots_[index];
 }
 
 void
 MBasicBlock::initSlot(uint32 slot, MDefinition *ins)
 {
-    slots_[slot].set(ins);
+    slots_[slot] = ins;
     entryResumePoint()->initOperand(slot, ins);
 }
 
@@ -225,133 +237,25 @@ MBasicBlock::linkOsrValues(MStart *start)
     MResumePoint *res = start->resumePoint();
 
     for (uint32 i = 0; i < stackDepth(); i++) {
-        StackSlot &var = slots_[i];
-        if (!var.isCopy()) {
-            if (i == info().scopeChainSlot())
-                var.def->toOsrScopeChain()->setResumePoint(res);
-            else
-                var.def->toOsrValue()->setResumePoint(res);
-        }
+        MDefinition *def = slots_[i];
+        if (i == info().scopeChainSlot())
+            def->toOsrScopeChain()->setResumePoint(res);
+        else
+            def->toOsrValue()->setResumePoint(res);
     }
 }
 
 void
 MBasicBlock::setSlot(uint32 slot, MDefinition *ins)
 {
-    StackSlot &var = slots_[slot];
-
-    // If |var| is copied, we must fix any of its copies so that they point to
-    // a usable value.
-    if (var.isCopied()) {
-        // Find the lowest copy on the stack, to preserve the invariant that
-        // the copy list starts near the top of the stack and proceeds
-        // toward the bottom.
-        uint32 lowest = var.firstCopy;
-        uint32 prev = NotACopy;
-        do {
-            uint32 next = slots_[lowest].nextCopy;
-            if (next == NotACopy)
-                break;
-            JS_ASSERT(next < lowest);
-            prev = lowest;
-            lowest = next;
-        } while (true);
-
-        // Rewrite every copy.
-        for (uint32 copy = var.firstCopy; copy != lowest;) {
-            slots_[copy].copyOf = lowest;
-
-            uint32 next = slots_[copy].nextCopy;
-
-            // The node whose "nextCopy" field is |lowest| is now the
-            // terminator of the list.
-            if (slots_[copy].nextCopy == lowest)
-                slots_[copy].nextCopy = NotACopy;
-
-            copy = next;
-        }
-
-        // Make the lowest the new store.
-        slots_[lowest].copyOf = NotACopy;
-        slots_[lowest].firstCopy = prev;
-    } else if (var.isCopy()) {
-        uint32 prev = var.copyOf;
-        if (slots_[prev].firstCopy != slot) {
-            // Find the first entry in the list pointing to this entry.
-            prev = slots_[prev].firstCopy;
-            while (slots_[prev].nextCopy != slot) {
-                prev = slots_[prev].nextCopy;
-                JS_ASSERT(prev != NotACopy);
-            }
-            slots_[prev].nextCopy = var.nextCopy;
-        } else {
-            slots_[prev].firstCopy = var.nextCopy;
-        }
-    }
-
-    var.set(ins);
+    slots_[slot] = ins;
 }
 
-// We must avoid losing copies when inserting phis. For example, the code
-// on the left must not be naively rewritten as shown.
-//   t = 1           ||   0: const(#1)   ||   0: const(#1)
-//   i = t           \|   do {           \|   do {
-//   do {             ->    2: add(0, 0)  ->   1: phi(0, 1)
-//      i = i + t    /|                  /|    2: add(1, 1)
-//   } ...           ||   } ...          ||   } ...
-//
-// Which is not correct. To solve this, we create a new SSA name at the point
-// where |t| is assigned to |i|, like so:
-//   t = 1          ||   0: const(#1)    ||   0: const(#1)
-//   t' = copy(t)   ||   1: copy(0)      ||   1: copy(0)
-//   i = t'         \|   do {            \|   do {
-//   do {            ->    3: add(0, 1)   ->    2: phi(1, 3)
-//      i = i + t   /|   } ...           /|     3: add(0, 2)
-//   } ...          ||                   ||   } ...
-//                  ||                   ||
-//
-// We assume that the only way such copies can be created is via simple
-// assignment, like (x = y), which will be reflected in the bytecode via
-// a GET[LOCAL,ARG] that inherits into a SET[LOCAL,ARG]. Normal calls
-// to push() will be compiler-created temporaries. So to minimize creation of
-// new SSA names, we lazily create them when applying a setVariable() whose
-// stack top was pushed by a pushVariable(). That also means we do not create
-// "copies" for calls to push().
 void
 MBasicBlock::setVariable(uint32 index)
 {
     JS_ASSERT(stackPosition_ > info_.firstStackSlot());
-    StackSlot &top = slots_[stackPosition_ - 1];
-
-    MDefinition *def = top.def;
-    if (top.isCopy()) {
-        // Set the local variable to be a copy of |def|. Note that unlike
-        // JaegerMonkey, no complicated logic is needed to figure out how to
-        // make |top| a copy of |var|. There is no need, because we only care
-        // about (1) popping being fast, thus the backwarding ordering of
-        // copies, and (2) knowing when a GET flows into a SET.
-        MInstruction *ins = MCopy::New(def);
-        add(ins);
-        def = ins;
-    }
-
-    setSlot(index, def);
-
-    if (!top.isCopy()) {
-        // If the top is not a copy, we make it one anyway, in case the
-        // bytecode ever emits something like:
-        //    GETELEM
-        //    SETLOCAL 0
-        //    SETLOCAL 1
-        //
-        // In this case, we want the second assignment to act as though there
-        // was an intervening POP; GETLOCAL. Note that |def| is already
-        // correct, because we only created a new instruction if |top.isCopy()|
-        // was true.
-        top.copyOf = index;
-        top.nextCopy = slots_[index].firstCopy;
-        slots_[index].firstCopy = stackPosition_ - 1;
-    }
+    setSlot(index, slots_[stackPosition_ - 1]);
 }
 
 void
@@ -384,27 +288,13 @@ void
 MBasicBlock::push(MDefinition *ins)
 {
     JS_ASSERT(stackPosition_ < info_.nslots());
-    slots_[stackPosition_].set(ins);
-    stackPosition_++;
+    slots_[stackPosition_++] = ins;
 }
 
 void
 MBasicBlock::pushVariable(uint32 slot)
 {
-    JS_ASSERT(slot < stackPosition_);
-    if (slots_[slot].isCopy())
-        slot = slots_[slot].copyOf;
-
-    JS_ASSERT(stackPosition_ < info_.nslots());
-    StackSlot &to = slots_[stackPosition_];
-    StackSlot &from = slots_[slot];
-
-    to.def = from.def;
-    to.copyOf = slot;
-    to.nextCopy = from.firstCopy;
-    from.firstCopy = stackPosition_;
-
-    stackPosition_++;
+    push(slots_[slot]);
 }
 
 void
@@ -431,22 +321,7 @@ MDefinition *
 MBasicBlock::pop()
 {
     JS_ASSERT(stackPosition_ > info_.firstStackSlot());
-
-    StackSlot &slot = slots_[--stackPosition_];
-    if (slot.isCopy()) {
-        // The latest copy is at the top of the stack, and is the first copy
-        // in the linked list. We only remove copies from the head of the list.
-        StackSlot &backing = slots_[slot.copyOf];
-        JS_ASSERT(backing.isCopied());
-        JS_ASSERT(backing.firstCopy == stackPosition_);
-
-        backing.firstCopy = slot.nextCopy;
-    }
-
-    // The slot cannot have live copies if it is being removed.
-    JS_ASSERT(!slot.isCopied());
-
-    return slot.def;
+    return slots_[--stackPosition_];
 }
 
 void
@@ -467,64 +342,9 @@ MBasicBlock::swapAt(int32 depth)
     uint32 lhsDepth = stackPosition_ + depth - 1;
     uint32 rhsDepth = stackPosition_ + depth;
 
-    JS_ASSERT(depth < 0);
-    JS_ASSERT(lhsDepth >= info_.firstStackSlot());
-
-    StackSlot &lhs = slots_[lhsDepth];
-    StackSlot &rhs = slots_[rhsDepth];
-
-    // Exit if the swap is a no-op.
-    if (rhs.isCopy()) {
-        if (rhs.copyOf == lhsDepth)
-            return;
-        if (lhs.isCopy() && rhs.copyOf == lhs.copyOf)
-            return;
-    }
-
-    // Update linked lists to new locations.
-    updateIndexes(lhs, lhsDepth, rhsDepth);
-    updateIndexes(rhs, rhsDepth, lhsDepth);
-
-    // Swap values.
-    StackSlot tmp = lhs;
-    lhs = rhs;
-    rhs = tmp;
-}
-
-void
-MBasicBlock::updateIndexes(StackSlot &elem, uint32 oldIdx, uint32 newIdx)
-{
-    // This implementation does not handle the case where the element need to
-    // change location in the chained list.
-    JS_ASSERT(oldIdx == newIdx + 1 || oldIdx == newIdx - 1);
-    JS_ASSERT(&elem == &slots_[oldIdx] || &elem == &slots_[newIdx]);
-    JS_ASSERT_IF(slots_[oldIdx].isCopy() || slots_[newIdx].isCopy(),
-                 slots_[oldIdx].copyOf != newIdx &&
-                 slots_[oldIdx].copyOf != slots_[newIdx].copyOf &&
-                 oldIdx != slots_[newIdx].copyOf);
-
-    if (elem.isCopy()) {
-        // We iterate since the beginning to find and update the element
-        // pointing to this one.
-        JS_ASSERT(slots_[elem.copyOf].isCopied());
-        if (slots_[elem.copyOf].firstCopy == oldIdx) {
-            slots_[elem.copyOf].firstCopy = newIdx;
-        } else {
-            uint32 copyIndex = slots_[elem.copyOf].firstCopy;
-            while (slots_[copyIndex].nextCopy != oldIdx)
-                copyIndex = slots_[copyIndex].nextCopy;
-            slots_[copyIndex].nextCopy = newIdx;
-        }
-    } else if (elem.isCopied()) {
-        // This element is copied, so we iterate over all copies to update the
-        // copyOf index.
-        uint32 copyIndex = elem.firstCopy;
-        while (copyIndex != NotACopy) {
-            JS_ASSERT(slots_[copyIndex].copyOf == oldIdx);
-            slots_[copyIndex].copyOf = newIdx;
-            copyIndex = slots_[copyIndex].nextCopy;
-        }
-    }
+    MDefinition *temp = slots_[lhsDepth];
+    slots_[lhsDepth] = slots_[rhsDepth];
+    slots_[rhsDepth] = temp;
 }
 
 MDefinition *
@@ -736,14 +556,6 @@ MBasicBlock::assertUsesAreNotWithin(MUseIterator use, MUseIterator end)
 #endif
 }
 
-static inline MDefinition *
-FollowCopy(MDefinition *def)
-{
-    MDefinition *ret = def->isCopy() ? def->getOperand(0) : def;
-    JS_ASSERT(!ret->isCopy());
-    return ret;
-}
-
 bool
 MBasicBlock::setBackedge(MBasicBlock *pred)
 {
@@ -755,103 +567,29 @@ MBasicBlock::setBackedge(MBasicBlock *pred)
     // We must be a pending loop header
     JS_ASSERT(kind_ == PENDING_LOOP_HEADER);
 
-    // Place minimal phi nodes by comparing the set of defintions at loop entry
-    // with the loop exit. For each mismatching slot, we create a phi node, and
-    // rewrite all uses of the entry definition to use the phi node instead.
-    //
-    // This algorithm would break in the face of copies, so we take care to
-    // give every assignment its own unique SSA name. See
-    // MBasicBlock::setVariable for more information.
+    // Add exit definitions to each corresponding phi at the entry.
     for (uint32 i = 0; i < pred->stackDepth(); i++) {
-        MDefinition *entryDef = entryResumePoint()->getOperand(i);
-        MDefinition *exitDef = pred->slots_[i].def;
+        MPhi *entryDef = entryResumePoint()->getOperand(i)->toPhi();
+        MDefinition *exitDef = pred->slots_[i];
 
-        // If the entry def is a phi, it must not be a phi owned by this block,
-        // since a loop header can only have two entry points, and one already
-        // exists. This assert would trigger if we accidentally copy propagated,
-        // and two locals had the same def.
-        JS_ASSERT_IF(entryDef->isPhi(), entryDef->block() != this);
+        // Assert that we already placed phis for each slot.
+        JS_ASSERT(entryDef->block() == this);
 
-        // So long as we make sure that local variables are distinct SSA names,
-        // and generate a unique copy for each assignment until copy
-        // propagation occurs after SSA building is complete, then we need not
-        // insert phis if the entry definition is just a copy of the exit
-        // definition.
-        //
-        // If at any point, we perform an operation on a local variable that is
-        // NOT just a copy (say, we perform an add), then the exit definition
-        // will differ and we will insert the phi as necessary.
-        //
-        // Essentially, we are capturing the fact that copy propagation WILL
-        // occur, so that there will be no modifying operations in the loop,
-        // and we will not need to insert a phi to merge a back edge. So,
-        // inserting a phi is not necessary.
-        //
-        // Consider:
-        //   i = 1          ||   0: const(#1)    ||   0: const(#1)
-        //                  ||   1: copy(0)      ||   1: copy(0)
-        //   t = i          \|   do {            \|   do {
-        //   do {            ->    3: copy(0)     ->    2: phi(0, 3)
-        //      i = t       /|   } ...           /|     3: copy(2)
-        //   } ...          ||                   ||   } ...
-        //                  ||                   ||
-        //
-        // Note that the inserted phi is unecessary. After copy propagation
-        // occurs, we will have:
-        // 0: const(#1)     ||   0: const(#1)
-        // 1: copy(0)       ||   [eliminated copy]
-        // do {             \|   do {
-        //   2: phi(0, 3)    ->     2: phi(0, 2)
-        //   3: copy(2)     /|   }
-        // } ...            ||   4 : op(2, ...)
-        // 4 : op(3, ...)   ||
-        //
-        // So, the phi joins two definitions which are actually the same, and
-        // there was no reason to insert it to begin with.
-
-        // If the entry definition and exit definition do not differ, then
-        // no phi placement is necessary.
-        if (FollowCopy(entryDef) == FollowCopy(exitDef))
-            continue;
-
-        // Create a new phi. Do not add inputs yet, as we don't want to
-        // accidentally rewrite the phi's operands.
-        MPhi *phi = MPhi::New(i);
-        addPhi(phi);
-
-        for (MUseIterator use(entryDef->usesBegin()); use != entryDef->usesEnd(); ) {
-            JS_ASSERT(use->node()->getOperand(use->index()) == entryDef);
-
-            // Uses are initially sorted, with the head of the list being the
-            // most recently inserted. This ordering is maintained while
-            // placing phis.
-            if (use->node()->block()->id() < id()) {
-                assertUsesAreNotWithin(use, entryDef->usesEnd());
-                break;
-            }
-
-            // Replace the instruction's use with the phi. Note that |prev|
-            // does not change, and is really NULL since we always remove
-            // from the head of the list,
-            use = use->node()->replaceOperand(use, phi);
+        if (entryDef == exitDef) {
+            // If the exit def is the same as the entry def, make a redundant
+            // phi. Since loop headers have exactly two incoming edges, we
+            // know that that's just the first input.
+            //
+            // Note that we eliminate later rather than now, to avoid any
+            // weirdness around pending continue edges which might still hold
+            // onto phis.
+            exitDef = entryDef->getOperand(0);
         }
 
-#ifdef DEBUG
-        // Assert that no slot after this one has the same entryDef. This would
-        // imply that the SSA building process has accidentally allowed the
-        // same SSA name to occupy two slots. Note, this is actually allowed
-        // when the expression stack is non-empty, for example, (a + a) will
-        // push two stack slots with the same SSA name as |a|. However, at loop
-        // edges, the expression stack is empty, and thus we expect there to be
-        // no copies.
-        for (uint32 j = i + 1; j < pred->stackDepth(); j++)
-            JS_ASSERT(slots_[j].def != entryDef);
-#endif
-
-        if (!phi->addInput(entryDef) || !phi->addInput(exitDef))
+        if (!entryDef->addInput(exitDef))
             return false;
 
-        setSlot(i, phi);
+        setSlot(i, entryDef);
     }
 
     // We are now a loop header proper
@@ -932,7 +670,7 @@ MBasicBlock::dumpStack(FILE *fp)
     fprintf(fp, "-------------------------------------------\n");
     for (uint32 i = 0; i < stackPosition_; i++) {
         fprintf(fp, " %-3d", i);
-        fprintf(fp, " %-16p %-6d %-10d\n", (void *)slots_[i].def, slots_[i].copyOf, slots_[i].firstCopy);
+        fprintf(fp, " %-16p\n", (void *)slots_[i]);
     }
 #endif
 }

@@ -859,13 +859,6 @@ LIRGenerator::visitToString(MToString *ins)
 }
 
 bool
-LIRGenerator::visitCopy(MCopy *ins)
-{
-    JS_NOT_REACHED("unexpected copy");
-    return false;
-}
-
-bool
 LIRGenerator::visitRegExp(MRegExp *ins)
 {
     LRegExp *lir = new LRegExp();
