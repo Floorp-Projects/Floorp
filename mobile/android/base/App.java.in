@@ -39,6 +39,7 @@
 package @ANDROID_PACKAGE_NAME@;
 
 import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
 
 public class App extends GeckoApp {
     public String getPackageName() {
@@ -50,17 +51,19 @@ public class App extends GeckoApp {
     }
 
     public String getDefaultUAString() {
-        return "Mozilla/5.0 (Android; Linux armv7l; rv:@MOZ_APP_VERSION@) Gecko/@UA_BUILDID@ Firefox/@MOZ_APP_VERSION@ Fennec/@MOZ_APP_VERSION@";
+        String deviceType = "Mobile";
+        if (GeckoAppShell.isTablet())
+            deviceType = "Tablet";
+        return "Mozilla/5.0 (Android; " + deviceType + "; rv:@MOZ_APP_VERSION@) Gecko/@MOZ_APP_VERSION@ Firefox/@MOZ_APP_VERSION@";
     }
 
     public String getUAStringForHost(String host) {
         // With our standard UA String, we get a 200 response code and 
-        // client-side redirect from t.co. This slight tweak gives us a 
-        // 302 response code
+        // client-side redirect from t.co. This bot-like UA gives us a 
+        // 301 response code
         if ("t.co".equals(host))
-            return "Mozilla/5.0 (Android; Linux armv7l; rv:@MOZ_APP_VERSION@) Gecko/@UA_BUILDID@ Firefox Mobile/@MOZ_APP_VERSION@";
+            return "Redirector/@MOZ_APP_VERSION@ (Android; rv:@MOZ_APP_VERSION@)";
         return getDefaultUAString();
     }
-
 };
 
