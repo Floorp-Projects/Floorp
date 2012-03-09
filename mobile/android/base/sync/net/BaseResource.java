@@ -13,7 +13,6 @@ import java.security.SecureRandom;
 
 import javax.net.ssl.SSLContext;
 
-import android.util.Log;
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -105,7 +104,7 @@ public class BaseResource implements Resource {
     Credentials creds = new UsernamePasswordCredentials(credentials);
     Header header = BasicScheme.authenticate(creds, "US-ASCII", false);
     request.addHeader(header);
-    Log.d(LOG_TAG, "Adding auth header " + header);
+    Logger.trace(LOG_TAG, "Adding Basic Auth header.");
   }
 
   /**
