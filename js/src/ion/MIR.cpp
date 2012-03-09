@@ -362,31 +362,6 @@ MCall::New(size_t argc, bool construct)
     return ins;
 }
 
-MCopy *
-MCopy::New(MDefinition *ins)
-{
-    // Don't create nested copies.
-    if (ins->isCopy())
-        ins = ins->toCopy()->getOperand(0);
-
-    return new MCopy(ins);
-}
-
-HashNumber
-MCopy::valueHash() const
-{
-    return getOperand(0)->valueHash();
-}
-
-bool
-MCopy::congruentTo(MDefinition * const &ins) const
-{
-    if (!ins->isCopy())
-        return false;
-
-    return ins->toCopy()->getOperand(0) == getOperand(0);
-}
-
 MTest *
 MTest::New(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
 {

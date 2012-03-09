@@ -1275,29 +1275,6 @@ class MCompare
     }
 };
 
-// Wraps an SSA name in a new SSA name. This is used for correctness while
-// constructing SSA, and is removed immediately after the initial SSA is built.
-class MCopy : public MUnaryInstruction
-{
-    MCopy(MDefinition *ins)
-      : MUnaryInstruction(ins)
-    {
-        setResultType(ins->type());
-    }
-
-  public:
-    INSTRUCTION_HEADER(Copy);
-    static MCopy *New(MDefinition *ins);
-
-    HashNumber valueHash() const;
-    bool congruentTo(MDefinition * const &ins) const;
-
-    AliasSet getAliasSet() const {
-        JS_NOT_REACHED("Unexpected MCopy after building SSA");
-        return AliasSet::None();
-    }
-};
-
 // Takes a typed value and returns an untyped value.
 class MBox : public MUnaryInstruction
 {

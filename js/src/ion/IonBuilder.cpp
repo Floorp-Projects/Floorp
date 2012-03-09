@@ -1099,8 +1099,6 @@ IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
     if (successor)
         successor->inheritPhis(state.loop.entry);
 
-    fixPendingContinues(state.loop.entry);
-
     if (state.loop.breaks) {
         // Propagate phis placed in the header to individual break exit points.
         DeferredEdge *edge = state.loop.breaks;
@@ -1132,60 +1130,6 @@ IonBuilder::finishLoop(CFGState &state, MBasicBlock *successor)
 
     pc = current->pc();
     return ControlStatus_Joined;
-}
-
-void
-IonBuilder::fixPendingContinues(MBasicBlock *header)
-{
-    // An edge case (bug 729902). We leave |continue| edges "dangling" in the
-    // control-flow graph. When we finish parsing a loop, all continues
-    // targeting that loop are linked to a catch-all join block, which becomes
-    // that loop's backedge.
-    //
-    // If a continue edge crosses a loop boundary, this mechanism is delayed.
-    // Consider:
-    //   
-    //   outer: for (;;) {
-    //      inner: for (;;) {
-    //         continue outer;
-    //      }
-    //   }
-    //
-    // In this case, the innermost loop will have a dangling edge. When we
-    // finish parsing the outer loop, we will insert an MGoto from edge->outer.
-    //
-    // The inner loop, via setBackEdge, could place a phi at its header, and
-    // replace all contained uses of its original value with that phi. This
-    // will even include resume points, meaning the dangling |continue| edge's
-    // entry state will correctly use that phi. However, this will *not* update
-    // the *stack state* of that edge. Thus, when we go to create the catch-all
-    // join block, we'll inherit the wrong value from that edge! The value will
-    // be stale, instead of the phi.
-    //
-    // As a fix for this, we iterate over slots in continue blocks and make
-    // sure to update them. Note that we are only concerned about |continue|
-    // edges eminating from this loop, targeting outer loops, so we skip
-    // continues targeting the current loop.
-
-    for (size_t i = 0; i < loops_.length() - 1; i++) {
-        CFGState &cfg = cfgStack_[loops_[i].cfgEntry];
-        for (DeferredEdge *edge = cfg.loop.continues; edge; edge = edge->next) {
-            // Edges are added to the head of the list as we parse control-flow,
-            // so if we see an id outside this loop body, we can shortcut out.
-            // We haven't yet parsed anything beyond this loop, so any blocks
-            // created after the header are part of this loop.
-            if (edge->block->id() < header->id())
-                break;
-
-            MBasicBlock *block = edge->block;
-            for (MPhiIterator iter = header->phisBegin(); iter != header->phisEnd(); iter++) {
-                // We should have replaced the initial mapping of this slot.
-                JS_ASSERT(block->getEntrySlot(iter->slot()) == *iter);
-
-                block->rewriteSlot(iter->slot(), *iter);
-            }
-        }
-    }
 }
 
 IonBuilder::ControlStatus

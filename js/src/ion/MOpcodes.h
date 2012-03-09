@@ -83,7 +83,6 @@ namespace ion {
     _(FromCharCode)                                                         \
     _(Return)                                                               \
     _(Throw)                                                                \
-    _(Copy)                                                                 \
     _(Box)                                                                  \
     _(Unbox)                                                                \
     _(GuardObject)                                                          \
