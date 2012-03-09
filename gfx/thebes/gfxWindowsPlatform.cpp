@@ -852,6 +852,7 @@ static const char kFontMeiryo[] = "Meiryo";
 static const char kFontMongolianBaiti[] = "Mongolian Baiti";
 static const char kFontNyala[] = "Nyala";
 static const char kFontPlantagenetCherokee[] = "Plantagenet Cherokee";
+static const char kFontSegoeUI[] = "Segoe UI";
 static const char kFontSegoeUISymbol[] = "Segoe UI Symbol";
 static const char kFontSylfaen[] = "Sylfaen";
 static const char kFontTraditionalArabic[] = "Traditional Arabic";
@@ -861,6 +862,9 @@ gfxWindowsPlatform::GetCommonFallbackFonts(const PRUint32 aCh,
                                            PRInt32 aRunScript,
                                            nsTArray<const char*>& aFontList)
 {
+    // Arial is used as the default fallback for system fallback
+    aFontList.AppendElement(kFontArial);
+
     if (!IS_IN_BMP(aCh)) {
         PRUint32 p = aCh >> 16;
         if (p == 1) { // SMP plane
@@ -922,8 +926,9 @@ gfxWindowsPlatform::GetCommonFallbackFonts(const PRUint32 aCh,
         case 0x2a:
         case 0x2b:
         case 0x2c:
-            aFontList.AppendElement(kFontCambria);
+            aFontList.AppendElement(kFontSegoeUI);
             aFontList.AppendElement(kFontSegoeUISymbol);
+            aFontList.AppendElement(kFontCambria);
             aFontList.AppendElement(kFontCambriaMath);
             aFontList.AppendElement(kFontMeiryo);
             aFontList.AppendElement(kFontArial);
@@ -972,8 +977,8 @@ gfxWindowsPlatform::GetCommonFallbackFonts(const PRUint32 aCh,
             break;
         case 0xfc:
         case 0xfd:
-            aFontList.AppendElement(kFontArabicTypesetting);
             aFontList.AppendElement(kFontTraditionalArabic);
+            aFontList.AppendElement(kFontArabicTypesetting);
             break;
         case 0xfe:
             aFontList.AppendElement(kFontTraditionalArabic);
