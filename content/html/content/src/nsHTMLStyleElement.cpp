@@ -340,7 +340,9 @@ nsHTMLStyleElement::GetStyleSheetInfo(nsAString& aTitle,
   aTitle.Assign(title);
 
   GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
-  ToLowerCase(aMedia); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
+  // The HTML5 spec is formulated in terms of the CSSOM spec, which specifies
+  // that media queries should be ASCII lowercased during serialization.
+  nsContentUtils::ASCIIToLower(aMedia);
 
   GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
 
