@@ -663,12 +663,5 @@ nsHTMLImageElement::CopyInnerTo(nsGenericElement* aDest) const
 CORSMode
 nsHTMLImageElement::GetCORSMode()
 {
-  const nsAttrValue* value = GetParsedAttr(nsGkAtoms::crossorigin);
-  if (value) {
-    NS_ASSERTION(value->Type() == nsAttrValue::eEnum,
-                 "Why is this not an enum value?");
-    return CORSMode(value->GetEnumValue());
-  }
-
-  return CORS_NONE;
+  return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 }

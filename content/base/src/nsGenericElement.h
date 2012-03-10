@@ -654,6 +654,12 @@ public:
    */
   static mozilla::CORSMode StringToCORSMode(const nsAString& aValue);
   
+  /**
+   * Return the CORS mode for a given nsAttrValue (which may be null,
+   * but if not should have been parsed via ParseCORSValue).
+   */
+  static mozilla::CORSMode AttrValueToCORSMode(const nsAttrValue* aValue);
+
 protected:
   /*
    * Named-bools for use with SetAttrAndNotify to make call sites easier to
