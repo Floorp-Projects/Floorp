@@ -1906,8 +1906,13 @@ EmitElemOpBase(JSContext *cx, BytecodeEmitter *bce, JSOp op)
     if (Emit1(cx, bce, op) < 0)
         return false;
     CheckTypeSet(cx, bce, op);
-    if (op == JSOP_CALLELEM)
-        return Emit1(cx, bce, JSOP_SWAP) >= 0;
+
+    if (op == JSOP_CALLELEM) {
+        if (Emit1(cx, bce, JSOP_SWAP) < 0)
+            return false;
+        if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
+            return false;
+    }
     return true;
 }
 

@@ -372,7 +372,7 @@ js::OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp)
     AutoValueRooter tvr(cx);
     if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, tvr.addr()))
         return false;
-    TypeScript::MonitorUnknown(cx, cx->fp()->script(), cx->regs().pc);
+    TypeScript::MonitorUnknown(cx);
 
     if (tvr.value().isPrimitive()) {
         *vp = tvr.value();
@@ -4529,6 +4529,12 @@ bool
 js::GetElement(JSContext *cx, const Value &lref, const Value &rref, Value *res)
 {
     return GetElementOperation(cx, JSOP_GETELEM, lref, rref, res);
+}
+
+bool
+js::CallElement(JSContext *cx, const Value &lref, const Value &rref, Value *res)
+{
+    return GetElementOperation(cx, JSOP_CALLELEM, lref, rref, res);
 }
 
 bool
