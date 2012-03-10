@@ -144,12 +144,12 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
     return result;
   }
 
-  float kernelX = aInstance->GetPrimitiveNumber(nsSVGUtils::X,
-                                                aKernelUnitLength,
-                                                nsSVGNumberPair::eFirst);
-  float kernelY = aInstance->GetPrimitiveNumber(nsSVGUtils::Y,
-                                                aKernelUnitLength,
-                                                nsSVGNumberPair::eSecond);
+  gfxFloat kernelX = aInstance->GetPrimitiveNumber(nsSVGUtils::X,
+                                                   aKernelUnitLength,
+                                                   nsSVGNumberPair::eFirst);
+  gfxFloat kernelY = aInstance->GetPrimitiveNumber(nsSVGUtils::Y,
+                                                   aKernelUnitLength,
+                                                   nsSVGNumberPair::eSecond);
   if (kernelX <= 0 || kernelY <= 0)
     return result;
 
