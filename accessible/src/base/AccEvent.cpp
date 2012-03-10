@@ -380,3 +380,24 @@ AccTableChangeEvent::CreateXPCOMObject()
   return event;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// AccVCChangeEvent
+////////////////////////////////////////////////////////////////////////////////
+
+AccVCChangeEvent::
+  AccVCChangeEvent(nsAccessible* aAccessible,
+                   nsIAccessible* aOldAccessible,
+                   PRInt32 aOldStart, PRInt32 aOldEnd) :
+    AccEvent(::nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED, aAccessible),
+    mOldAccessible(aOldAccessible), mOldStart(aOldStart), mOldEnd(aOldEnd)
+{
+}
+
+already_AddRefed<nsAccEvent>
+AccVCChangeEvent::CreateXPCOMObject()
+{
+  nsAccEvent* event = new nsAccVirtualCursorChangeEvent(this);
+  NS_ADDREF(event);
+  return event;
+}
