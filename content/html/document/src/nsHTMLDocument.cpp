@@ -1358,7 +1358,7 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   contentType.AssignLiteral("text/html");
   if (aOptionalArgCount > 0) {
     nsAutoString type;
-    ToLowerCase(aContentTypeOrUrl, type);
+    nsContentUtils::ASCIIToLower(aContentTypeOrUrl, type);
     nsCAutoString actualType, dummy;
     NS_ParseContentType(NS_ConvertUTF16toUTF8(type), actualType, dummy);
     if (!actualType.EqualsLiteral("text/html") &&

@@ -714,7 +714,7 @@ nsAttrValue::GetEnumString(nsAString& aResult, bool aRealTag) const
     if (table->value == val) {
       aResult.AssignASCII(table->tag);
       if (!aRealTag && allEnumBits & NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER) {
-        ToUpperCase(aResult);
+        nsContentUtils::ASCIIToUpper(aResult);
       }
       return;
     }
@@ -1316,7 +1316,7 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
       if (!equals) {
         nsAutoString tag;
         tag.AssignASCII(tableEntry->tag);
-        ToUpperCase(tag);
+        nsContentUtils::ASCIIToUpper(tag);
         if ((equals = tag.Equals(aValue))) {
           value |= NS_ATTRVALUE_ENUMTABLE_VALUE_NEEDS_TO_UPPER;
         }
