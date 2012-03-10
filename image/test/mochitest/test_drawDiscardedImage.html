@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=731419
+-->
+<head>
+  <title>Test for Bug 731419 - Draw an ostensibly discarded image to a canvas</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+
+<!--
+  Load an image in an iframe, then draw that image to a canvas.  Then set the
+  iframe to display:none (after bug 731419, this causes the image's decoded
+  data to be discarded) and draw the image to a canvas again.  We should draw
+  the same image data both times.
+-->
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+var data1;
+
+function drawImage()
+{
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+  var iframeDoc = document.getElementById('iframe').contentDocument;
+
+  ctx.clearRect(0, 0, canvas.height, canvas.width);
+  ctx.drawImage(iframeDoc.getElementById('image'), 0, 0);
+  return canvas.toDataURL();
+}
+
+function iframeLoad()
+{
+  data1 = drawImage();
+  document.getElementById('iframe').style.display = 'none';
+
+  // Spin the event loop a few times to give the image in the display:none
+  // iframe a chance to be discarded.
+  SimpleTest.executeSoon(function() {
+    SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function() {
+        step2();
+      });
+    });
+  });
+}
+
+function step2()
+{
+  is(drawImage(), data1, "Same image before and after iframe display:none");
+  SimpleTest.finish();
+}
+
+</script>
+
+<canvas id='canvas'></canvas>
+
+<iframe id='iframe' onload='iframeLoad()' src='data:text/html,<img id="image"
+src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADRElEQVQ4EQXBTWgcZQCA4ff7ZmZ3
+NpvNZLObTWpCuoZGIxWJplAKbVUKavUiHrQHaRG1XrV4SNuD4MFcRDwUoR4qEq2gFUlBEWmtppYi
+acSmMakxtfkx/5tNdmd35/8bn0cAzJ7IXwKGH/q8NDF48vy+7vk/3tzVXDs8nj9cAAiDcD70gwVi
+vvvr4tsjAAAAAmD2RD4GOL34wge21XHsnHWh9/aUjX1pC4C1UpXrP08zN7vMvvujPx3P/PD+0VH3
+BoAcTspXAbK9iuGe78+csy70ZnsVvh+xWQ8p1QI8dNK7CiT9CmeO28/4ZsuVX9/IvQwgmzLaU9LS
+AGh/3KJ5jw6A6ynyL7Xx7UCORiwQGRN0g7C4m4FX9poNV35681ShU6ZbxKDRLJVuZQl9RdSQRB4c
+OtDGoQNtPGHBuh0SaAa+ZvLjHYt8fwfZrpTl2cFp2ZwVDyQzSgLgVIndGN/tIP/c61y/WWb14gaV
+asTWioPSDabnfCqVkK7BHKHtPK0n06oFGQHgewJtbw8AujGNkYTNpTJxbYfaygqR0piYkaRkhMya
+eI2oX9dTQRIFmtrmz7EGpS9vESZjAN7tfo/UL2PouoZwbfxIo9jaoLWlzI7jEPmhLjVEbXs5IPAE
+jx5M0Z5RZDJwqjCENFN8XBtmOP0FXq1O6NR5snsRtsv4C+voCdHQpcfVtTn/xUKXTrMlyfck6BCC
+a02fkDZDqirF5JVrRA8ewagu8NbADN6az9btMoTqjnasKDTHjp5PSM3I5DQy7UliZbCz7bCwFDD/
+b52h3BCviVHOHv2bvmydyvwOM5MSmch9Ji4/SxMNcaNJTw707zdJmBqeo+G5BuO/V6AzQ5Oo01MI
+KBaTOOis3rPZrKeqrbn2hwXA10fY7zvicqeZKPQ8YpKxJCgIpEQXisBVhG6MYcQ0pGJp2XWnSpx8
+52o0ogF8c5/ltMlGIlYHo0qQrq9HxHWFvx3RqCoCFzwn4L+tiIVV5Y5MhWc/mlDnATQAgMkynbMb
+opoN4z2hUAlPBdpO6FNp+JTtkPVaHE7NYX94K/xqrBT/BvwDIAAAgALQAfT1aWJwtyYea9VEXoAo
+RfHGYhTfvRfF48BdYB3YAPgfnOuE39kFlREAAAAASUVORK5CYII=">'></iframe>
+
+</body>
+</html>
+
