@@ -4527,6 +4527,18 @@ if test -n "$JS_MORE_DETERMINISTIC"; then
     AC_DEFINE(JS_MORE_DETERMINISTIC)
 fi
 
+dnl ========================================================
+dnl Enable output of backtraces on artificial OOMs
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(oom-backtrace,
+[  --enable-oom-backtrace
+                          Enable output of backtraces on artificial OOMs (-A)],
+    JS_OOM_DO_BACKTRACES=1,
+    JS_OOM_DO_BACKTRACES= )
+if test -n "$JS_OOM_DO_BACKTRACES"; then
+    AC_DEFINE(JS_OOM_DO_BACKTRACES)
+fi
+
 dnl ======================================================
 dnl = Enable compiling with ccache
 dnl ======================================================
