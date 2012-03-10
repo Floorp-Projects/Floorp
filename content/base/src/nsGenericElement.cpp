@@ -6257,6 +6257,18 @@ nsGenericElement::ParseCORSValue(const nsAString& aValue,
   MOZ_ASSERT(success);
 }
 
+/* static */ CORSMode
+nsGenericElement::StringToCORSMode(const nsAString& aValue)
+{
+  if (aValue.IsVoid()) {
+    return CORS_NONE;
+  }
+
+  nsAttrValue val;
+  nsGenericElement::ParseCORSValue(aValue, val);
+  return CORSMode(val.GetEnumValue());
+}
+
 #define EVENT(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, jsval *vp) {            \
     nsEventListenerManager *elm = GetListenerManager(false);              \

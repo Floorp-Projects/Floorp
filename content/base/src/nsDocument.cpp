@@ -7737,14 +7737,20 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
   }
 
   nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-  if (aCrossOriginAttr.LowerCaseEqualsLiteral("anonymous")) {
+  switch (nsGenericElement::StringToCORSMode(aCrossOriginAttr)) {
+  case CORS_NONE:
+    // Nothing to do
+    break;
+  case CORS_ANONYMOUS:
     loadFlags |= imgILoader::LOAD_CORS_ANONYMOUS;
-  } else if (aCrossOriginAttr.LowerCaseEqualsLiteral("use-credentials")) {
+    break;
+  case CORS_USE_CREDENTIALS:
     loadFlags |= imgILoader::LOAD_CORS_USE_CREDENTIALS;
+    break;
+  default:
+    /* should never happen */
+    MOZ_NOT_REACHED("Unknown CORS mode!");
   }
-  // else should we err on the side of not doing the preload if
-  // aCrossOriginAttr is nonempty?  Let's err on the side of doing the
-  // preload as CORS_NONE.
 
   // Image not in cache - trigger preload
   nsCOMPtr<imgIRequest> request;
