@@ -42,9 +42,9 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsDocAccessible.h"
-#include "nsTextAttrs.h"
 #include "Role.h"
 #include "States.h"
+#include "TextAttrs.h"
 
 #include "nsIClipboard.h"
 #include "nsContentUtils.h"
@@ -1130,8 +1130,8 @@ nsHyperTextAccessible::GetTextAttributes(bool aIncludeDefAttrs,
     // default attributes if they were requested, otherwise return empty set.
     if (aOffset == 0) {
       if (aIncludeDefAttrs) {
-        nsTextAttrsMgr textAttrsMgr(this, true, nsnull, -1);
-        return textAttrsMgr.GetAttributes(*aAttributes);
+        TextAttrsMgr textAttrsMgr(this);
+        textAttrsMgr.GetAttributes(*aAttributes);
       }
       return NS_OK;
     }
@@ -1143,11 +1143,9 @@ nsHyperTextAccessible::GetTextAttributes(bool aIncludeDefAttrs,
   PRInt32 endOffset = GetChildOffset(accAtOffsetIdx + 1);
   PRInt32 offsetInAcc = aOffset - startOffset;
 
-  nsTextAttrsMgr textAttrsMgr(this, aIncludeDefAttrs, accAtOffset,
-                              accAtOffsetIdx);
-  nsresult rv = textAttrsMgr.GetAttributes(*aAttributes, &startOffset,
-                                           &endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  TextAttrsMgr textAttrsMgr(this, aIncludeDefAttrs, accAtOffset,
+                            accAtOffsetIdx);
+  textAttrsMgr.GetAttributes(*aAttributes, &startOffset, &endOffset);
 
   // Compute spelling attributes on text accessible only.
   nsIFrame *offsetFrame = accAtOffset->GetFrame();
@@ -1186,8 +1184,9 @@ nsHyperTextAccessible::GetDefaultTextAttributes(nsIPersistentProperties **aAttri
 
   NS_ADDREF(*aAttributes = attributes);
 
-  nsTextAttrsMgr textAttrsMgr(this, true);
-  return textAttrsMgr.GetAttributes(*aAttributes);
+  TextAttrsMgr textAttrsMgr(this);
+  textAttrsMgr.GetAttributes(*aAttributes);
+  return NS_OK;
 }
 
 PRInt32
