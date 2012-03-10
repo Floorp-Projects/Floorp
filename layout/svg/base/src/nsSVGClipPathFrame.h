@@ -49,9 +49,12 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   friend nsIFrame*
   NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  nsSVGClipPathFrame(nsStyleContext* aContext) :
-    nsSVGClipPathFrameBase(aContext),
-    mInUse(false) {}
+  nsSVGClipPathFrame(nsStyleContext* aContext)
+    : nsSVGClipPathFrameBase(aContext)
+    , mInUse(false)
+  {
+    AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
+  }
 
 public:
   NS_DECL_FRAMEARENA_HELPERS
