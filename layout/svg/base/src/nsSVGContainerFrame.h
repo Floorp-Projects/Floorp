@@ -71,9 +71,6 @@ public:
                           nsFrameList&    aFrameList);
   NS_IMETHOD RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame);
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
 
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
