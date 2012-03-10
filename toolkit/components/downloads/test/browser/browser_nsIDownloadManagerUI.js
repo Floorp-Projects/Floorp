@@ -106,6 +106,13 @@ function test()
   if (win)
     win.close();
 
+  // Ensure that the download manager callbacks and nsIDownloadManagerUI always
+  // use the window UI instead of the panel in the browser's window.
+  Services.prefs.setBoolPref("browser.download.useToolkitUI", true);
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("browser.download.useToolkitUI");
+  });
+
   // OK, now that all the data is in, let's pull up the UI
   Cc["@mozilla.org/download-manager-ui;1"].
   getService(Ci.nsIDownloadManagerUI).show();
