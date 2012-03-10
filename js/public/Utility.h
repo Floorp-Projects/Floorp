@@ -45,6 +45,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef JS_OOM_DO_BACKTRACES
+#include <stdio.h>
+#include <execinfo.h>
+#endif
+
 #include "jstypes.h"
 
 #ifdef __cplusplus
@@ -112,10 +117,43 @@ extern JS_PUBLIC_API(void) JS_Abort(void);
  */
 extern JS_PUBLIC_DATA(uint32_t) OOM_maxAllocations; /* set from shell/js.cpp */
 extern JS_PUBLIC_DATA(uint32_t) OOM_counter; /* data race, who cares. */
+
+#ifdef JS_OOM_DO_BACKTRACES
+#define JS_OOM_BACKTRACE_SIZE 32
+static JS_ALWAYS_INLINE void
+PrintBacktrace()
+{
+    void* OOM_trace[JS_OOM_BACKTRACE_SIZE];
+    char** OOM_traceSymbols = NULL;
+    int32_t OOM_traceSize = 0;
+    int32_t OOM_traceIdx = 0;
+    OOM_traceSize = backtrace(OOM_trace, JS_OOM_BACKTRACE_SIZE);
+    OOM_traceSymbols = backtrace_symbols(OOM_trace, OOM_traceSize);
+    
+    if (!OOM_traceSymbols)
+        return;
+
+    for (OOM_traceIdx = 0; OOM_traceIdx < OOM_traceSize; ++OOM_traceIdx) {
+        fprintf(stderr, "#%d %s\n", OOM_traceIdx, OOM_traceSymbols[OOM_traceIdx]);
+    }
+
+    free(OOM_traceSymbols);
+}
+
+#define JS_OOM_EMIT_BACKTRACE() \
+    do {\
+        fprintf(stderr, "Forcing artificial memory allocation function failure:\n");\
+	PrintBacktrace();\
+    } while (0)
+# else
+#  define JS_OOM_EMIT_BACKTRACE() do {} while(0)
+#endif /* JS_OOM_DO_BACKTRACES */
+
 #  define JS_OOM_POSSIBLY_FAIL() \
     do \
     { \
         if (++OOM_counter > OOM_maxAllocations) { \
+            JS_OOM_EMIT_BACKTRACE();\
             return NULL; \
         } \
     } while (0)
