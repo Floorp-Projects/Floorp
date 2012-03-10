@@ -2363,7 +2363,7 @@ NS_IMETHODIMP nsDOMStorageEvent::GetStorageArea(nsIDOMStorage * *aStorageArea)
 {
   NS_ENSURE_ARG_POINTER(aStorageArea);
 
-  NS_ADDREF(*aStorageArea = mStorageArea);
+  NS_IF_ADDREF(*aStorageArea = mStorageArea);
   return NS_OK;
 }
 
