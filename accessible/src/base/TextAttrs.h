@@ -42,6 +42,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIPersistentProperties2.h"
+#include "nsStyleConsts.h"
 
 class nsHyperTextAccessible;
 
@@ -382,6 +383,58 @@ protected:
   private:
     PRInt32 GetFontWeight(nsIFrame* aFrame);
   };
+
+
+  /**
+   * TextDecorTextAttr class is used for the work with
+   * "text-line-through-style", "text-line-through-color",
+   * "text-underline-style" and "text-underline-color" text attributes.
+   */
+
+  class TextDecorValue
+  {
+  public:
+    TextDecorValue() { }
+    TextDecorValue(nsIFrame* aFrame);
+
+    nscolor Color() const { return mColor; }
+    PRUint8 Style() const { return mStyle; }
+
+    bool IsDefined() const
+      { return IsUnderline() || IsLineThrough(); }
+    bool IsUnderline() const
+      { return mLine & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE; }
+    bool IsLineThrough() const
+      { return mLine & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH; }
+
+    bool operator ==(const TextDecorValue& aValue)
+    {
+      return mColor == aValue.mColor && mLine == aValue.mLine &&
+        mStyle == aValue.mStyle;
+    }
+    bool operator !=(const TextDecorValue& aValue)
+      { return !(*this == aValue); }
+
+  private:
+    nscolor mColor;
+    PRUint8 mLine;
+    PRUint8 mStyle;
+  };
+
+  class TextDecorTextAttr : public TTextAttr<TextDecorValue>
+  {
+  public:
+    TextDecorTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame);
+    virtual ~TextDecorTextAttr() { }
+
+  protected:
+
+    // TextAttr
+    virtual bool GetValueFor(nsIContent* aElm, TextDecorValue* aValue);
+    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+                             const TextDecorValue& aValue);
+  };
+
 }; // TextAttrMgr
 
 } // namespace a11y

@@ -73,9 +73,7 @@ const char* const kCopyValue = nsnull;
 
 static nsCSSTextAttrMapItem gCSSTextAttrsMap[] =
 {
-  // CSS name            CSS value        Attribute name                                Attribute value
-  { "text-decoration",   "line-through",  &nsGkAtoms::textLineThroughStyle,  "solid" },
-  { "text-decoration",   "underline",     &nsGkAtoms::textUnderlineStyle,    "solid" },
+  // CSS name            CSS value        Attribute name                     Attribute value
   { "vertical-align",    kAnyValue,       &nsGkAtoms::textPosition,          kCopyValue }
 };
 
@@ -141,22 +139,14 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
     frame = offsetElm->GetPrimaryFrame();
   }
 
-  nsTArray<TextAttr*> textAttrArray(10);
+  nsTArray<TextAttr*> textAttrArray(9);
 
   // "language" text attribute
   LangTextAttr langTextAttr(mHyperTextAcc, hyperTextElm, offsetNode);
   textAttrArray.AppendElement(&langTextAttr);
 
-  // "text-line-through-style" text attribute
-  CSSTextAttr lineThroughTextAttr(0, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(&lineThroughTextAttr);
-
-  // "text-underline-style" text attribute
-  CSSTextAttr underlineTextAttr(1, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(&underlineTextAttr);
-
   // "text-position" text attribute
-  CSSTextAttr posTextAttr(2, hyperTextElm, offsetElm);
+  CSSTextAttr posTextAttr(0, hyperTextElm, offsetElm);
   textAttrArray.AppendElement(&posTextAttr);
 
   // "background-color" text attribute
@@ -182,6 +172,10 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
   // "font-weight" text attribute
   FontWeightTextAttr fontWeightTextAttr(rootFrame, frame);
   textAttrArray.AppendElement(&fontWeightTextAttr);
+
+  // "text-underline(line-through)-style(color)" text attributes
+  TextDecorTextAttr textDecorTextAttr(rootFrame, frame);
+  textAttrArray.AppendElement(&textDecorTextAttr);
 
   // Expose text attributes if applicable.
   if (aAttributes) {
@@ -668,4 +662,83 @@ TextAttrsMgr::FontWeightTextAttr::
   gfxFontEntry *fontEntry = font->GetFontEntry();
   return fontEntry->Weight();
 #endif
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// TextDecorTextAttr
+////////////////////////////////////////////////////////////////////////////////
+
+TextAttrsMgr::TextDecorValue::
+  TextDecorValue(nsIFrame* aFrame)
+{
+  const nsStyleTextReset* textReset = aFrame->GetStyleTextReset();
+  mStyle = textReset->GetDecorationStyle();
+
+  bool isForegroundColor = false;
+  textReset->GetDecorationColor(mColor, isForegroundColor);
+  if (isForegroundColor)
+    mColor = aFrame->GetStyleColor()->mColor;
+
+  mLine = textReset->mTextDecorationLine &
+    (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |
+     NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH);
+}
+
+TextAttrsMgr::TextDecorTextAttr::
+  TextDecorTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame) :
+  TTextAttr<TextDecorValue>(!aFrame)
+{
+  mRootNativeValue = TextDecorValue(aRootFrame);
+  mIsRootDefined = mRootNativeValue.IsDefined();
+
+  if (aFrame) {
+    mNativeValue = TextDecorValue(aFrame);
+    mIsDefined = mNativeValue.IsDefined();
+  }
+}
+
+bool
+TextAttrsMgr::TextDecorTextAttr::
+  GetValueFor(nsIContent* aContent, TextDecorValue* aValue)
+{
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  if (frame) {
+    *aValue = TextDecorValue(frame);
+    return aValue->IsDefined();
+  }
+
+  return false;
+}
+
+void
+TextAttrsMgr::TextDecorTextAttr::
+  ExposeValue(nsIPersistentProperties* aAttributes, const TextDecorValue& aValue)
+{
+  if (aValue.IsUnderline()) {
+    nsAutoString formattedStyle;
+    StyleInfo::FormatTextDecorationStyle(aValue.Style(), formattedStyle);
+    nsAccUtils::SetAccAttr(aAttributes,
+                           nsGkAtoms::textUnderlineStyle,
+                           formattedStyle);
+
+    nsAutoString formattedColor;
+    StyleInfo::FormatColor(aValue.Color(), formattedColor);
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textUnderlineColor,
+                           formattedColor);
+    return;
+  }
+
+  if (aValue.IsLineThrough()) {
+    nsAutoString formattedStyle;
+    StyleInfo::FormatTextDecorationStyle(aValue.Style(), formattedStyle);
+    nsAccUtils::SetAccAttr(aAttributes,
+                           nsGkAtoms::textLineThroughStyle,
+                           formattedStyle);
+
+    nsAutoString formattedColor;
+    StyleInfo::FormatColor(aValue.Color(), formattedColor);
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textLineThroughColor,
+                           formattedColor);
+  }
 }
