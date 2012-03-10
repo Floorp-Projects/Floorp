@@ -65,6 +65,6 @@ static const nsStaticAtom GkAtoms_info[] = {
 
 void nsGkAtoms::AddRefAtoms()
 {
-  NS_RegisterStaticAtoms(GkAtoms_info, ArrayLength(GkAtoms_info));
+  NS_RegisterStaticAtoms(GkAtoms_info);
 }
 

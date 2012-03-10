@@ -7,8 +7,8 @@
 == bidi-004.html bidi-004-ref.html
 == bidi-004-j.html bidi-004-ref.html
 == bidi-005.html bidi-005-ref.html
-== bidi-006.html bidi-006-ref.html
-== bidi-006-j.html bidi-006-ref.html
+random-if(cocoaWidget) == bidi-006.html bidi-006-ref.html # bug 734313
+random-if(cocoaWidget) == bidi-006-j.html bidi-006-ref.html # bug 734313
 == bidiSVG-01.svg bidiSVG-01-ref.svg
 == bidiSVG-02.svg bidiSVG-02-ref.svg
 == bidiSVG-03.svg bidiSVG-03-ref.svg
@@ -34,8 +34,8 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002-ref.html
 == with-first-letter-1a.html with-first-letter-1-ref.html
 == with-first-letter-1b.html with-first-letter-1-ref.html
-== with-first-letter-2a.html with-first-letter-2-ref.html
-== with-first-letter-2b.html with-first-letter-2-ref.html
+random-if(cocoaWidget) == with-first-letter-2a.html with-first-letter-2-ref.html # bug 734313
+random-if(cocoaWidget) == with-first-letter-2b.html with-first-letter-2-ref.html # bug 734313
 == 83958-1a.html 83958-1-ref.html
 == 83958-1b.html 83958-1-ref.html
 == 83958-1c.html 83958-1-ref.html

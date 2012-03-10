@@ -1820,6 +1820,9 @@ public class GeckoAppShell
         return false;
     }
 
+    public static void emitGeckoAccessibilityEvent (int eventType, String[] textList, String description, boolean enabled, boolean checked, boolean password) {
+    }
+
     public static double[] getCurrentNetworkInformation() {
         return GeckoNetworkManager.getInstance().getCurrentInformation();
     }

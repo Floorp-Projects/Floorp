@@ -337,7 +337,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 
         rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
 
-        NS_RegisterStaticAtoms(rdf_atoms, ArrayLength(rdf_atoms));
+        NS_RegisterStaticAtoms(rdf_atoms);
     }
 
     mNodeIDMap.Init();

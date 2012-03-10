@@ -7580,7 +7580,14 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     // if frame has view, will already be invalidated
     if (aChange & nsChangeHint_RepaintFrame) {
       if (aFrame->IsFrameOfType(nsIFrame::eSVG)) {
-        nsSVGUtils::UpdateGraphic(aFrame);
+        if (aChange & nsChangeHint_UpdateEffects) {
+          // Invalidate the frame's old bounds, update its bounds, invalidate its new
+          // bounds, and then inform anyone observing _us_ that we've changed:
+          nsSVGUtils::UpdateGraphic(aFrame);
+        } else {
+          // Just invalidate our area:
+          nsSVGUtils::InvalidateCoveredRegion(aFrame);
+        }
       } else {
         aFrame->InvalidateOverflowRect();
       }

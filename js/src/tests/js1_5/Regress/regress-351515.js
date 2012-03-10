@@ -47,7 +47,6 @@ test();
 //-----------------------------------------------------------------------------
 
 yield = 1;
-let   = 1;
 
 function test()
 {
@@ -55,10 +54,9 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  function f(yield, let) { return yield+let; }
+  function f(yield) { return yield; }
 
   var yield = 1;
-  var let = 1;
 
   function yield() {}
 

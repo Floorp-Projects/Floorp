@@ -2179,17 +2179,6 @@ TypeCompartment::nukeTypes(JSContext *cx)
         pendingRecompiles = NULL;
     }
 
-    /*
-     * We may or may not be under the GC. In either case don't allocate, and
-     * acquire the GC lock so we can update inferenceEnabled for all contexts.
-     */
-
-#ifdef JS_THREADSAFE
-    AutoLockGC maybeLock;
-    if (!cx->runtime->gcRunning)
-        maybeLock.lock(cx->runtime);
-#endif
-
     inferenceEnabled = false;
 
     /* Update the cached inferenceEnabled bit in all contexts. */

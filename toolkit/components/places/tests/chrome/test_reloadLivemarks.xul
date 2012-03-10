@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet
+  href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="Reload Livemarks"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="runTest()" onunload="cleanup()">
+  <script type="application/javascript"
+   src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+<script type="application/javascript">
+<![CDATA[
+// Test that for concurrent reload of livemarks.
+
+SimpleTest.waitForExplicitFinish();
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+
+let gLivemarks = [
+  { id: -1,
+    title: "foo",
+    parentId: PlacesUtils.toolbarFolderId,
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+    feedURI: NetUtil.newURI("http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/link-less-items.rss")
+  },
+  { id: -1,
+    title: "bar",
+    parentId: PlacesUtils.toolbarFolderId,
+    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+    feedURI: NetUtil.newURI("http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/link-less-items-no-site-uri.rss")
+  },
+];
+
+function runTest()
+{
+  addLivemarks(function () {
+    reloadLivemarks(false, function () {
+      reloadLivemarks(true, function () {
+        removeLivemarks(SimpleTest.finish);
+      });
+    });
+    // Ensure this normal reload doesn't overwrite the forced one.
+    PlacesUtils.livemarks.reloadLivemarks();
+  });
+}
+
+function addLivemarks(aCallback) {
+  info("Adding livemarks");
+  let count = gLivemarks.length;
+  gLivemarks.forEach(function(aLivemarkData) {
+    PlacesUtils.livemarks.addLivemark(aLivemarkData,
+      function (aStatus, aLivemark) {
+        ok(Components.isSuccessCode(aStatus), "Add livemark should succeed");
+        aLivemarkData.id = aLivemark.id;
+        if (--count == 0) {
+          aCallback();
+        }
+      }
+    );
+  });
+}
+
+function reloadLivemarks(aForceUpdate, aCallback) {
+  info("Reloading livemarks with forceUpdate: " + aForceUpdate);
+  let count = gLivemarks.length;
+  gLivemarks.forEach(function(aLivemarkData) {
+    PlacesUtils.livemarks.getLivemark(aLivemarkData,
+      function (aStatus, aLivemark) {
+        ok(Components.isSuccessCode(aStatus), "Get livemark should succeed");
+        aLivemarkData._observer = new resultObserver(aLivemark, function() {
+          if (++count == gLivemarks.length) {
+            aCallback();
+          }
+        });
+        if (--count == 0) {
+          PlacesUtils.livemarks.reloadLivemarks(aForceUpdate);
+        }
+      }
+    );
+  });
+}
+
+function removeLivemarks(aCallback) {
+  info("Removing livemarks");
+  let count = gLivemarks.length;
+  gLivemarks.forEach(function(aLivemarkData) {
+    PlacesUtils.livemarks.removeLivemark(aLivemarkData,
+      function (aStatus, aLivemark) {
+        ok(Components.isSuccessCode(aStatus), "Remove livemark should succeed");
+        if (--count == 0) {
+          aCallback();
+        }
+      }
+    );
+  });
+}
+
+function resultObserver(aLivemark, aCallback) {
+  this._node = {};
+  this._livemark = aLivemark;
+  this._callback = aCallback;
+  this._livemark.registerForUpdates(this._node, this);
+}
+resultObserver.prototype = {
+  nodeInserted: function() {},
+  nodeRemoved: function() {},
+  nodeAnnotationChanged: function() {},
+  nodeTitleChanged: function() {},
+  nodeHistoryDetailsChanged: function() {},
+  nodeReplaced: function() {},
+  nodeMoved: function() {},
+  ontainerStateChanged: function () {},
+  sortingChanged: function() {},
+  batching: function() {},
+  invalidateContainer: function(aContainer) {
+    // Wait for load finish.
+    if (this._livemark.status == Ci.mozILivemark.STATUS_LOADING)
+      return;
+
+    this._terminate();
+    this._callback();
+  },
+  _terminate: function () {
+    if (!this._terminated) {
+      this._livemark.unregisterForUpdates(this._node);
+      this._terminated = true;
+    }
+  }
+};
+
+function cleanup() {
+  gLivemarks.forEach(function(aLivemarkData) {
+    if (aLivemarkData._observer)
+      aLivemarkData._observer._terminate();
+  });
+}
+]]>
+</script>
+</window>

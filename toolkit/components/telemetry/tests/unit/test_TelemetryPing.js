@@ -29,7 +29,7 @@ var gFinished = false;
 
 function telemetry_ping () {
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
-  TelemetryPing.observe(null, "sessionstore-windows-restored", null);
+  TelemetryPing.observe(null, "test-gather-startup", null);
   TelemetryPing.observe(null, "test-ping", SERVER);
 }
 
@@ -121,6 +121,7 @@ function checkHistograms(request, response) {
 
   const TELEMETRY_PING = "TELEMETRY_PING";
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
+  const TELEMETRY_TEST_FLAG = "TELEMETRY_TEST_FLAG";
   do_check_true(TELEMETRY_PING in payload.histograms);
   let rh = Telemetry.registeredHistograms;
   for (let name in rh) {
@@ -130,6 +131,17 @@ function checkHistograms(request, response) {
   }
   do_check_false(IGNORE_HISTOGRAM in payload.histograms);
   do_check_false(IGNORE_CLONED_HISTOGRAM in payload.histograms);
+
+  // Flag histograms should automagically spring to life.
+  const expected_flag = {
+    range: [1, 2],
+    bucket_count: 3,
+    histogram_type: 3,
+    values: {0:1, 1:0},
+    sum: 1
+  };
+  let flag = payload.histograms[TELEMETRY_TEST_FLAG];
+  do_check_eq(uneval(flag), uneval(expected_flag));
 
   // There should be one successful report from the previous telemetry ping.
   const expected_tc = {

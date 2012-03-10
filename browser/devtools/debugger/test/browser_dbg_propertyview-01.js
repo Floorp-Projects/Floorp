@@ -134,9 +134,15 @@ function resumeAndFinish() {
       is(vs._scripts.itemCount, 6,
         "Got too many script items in the list!");
 
-
-      removeTab(gTab);
-      finish();
+      closeDebuggerAndFinish(gTab);
     });
   });
 }
+
+registerCleanupFunction(function() {
+  removeTab(gTab);
+  gPane = null;
+  gTab = null;
+  gDebuggee = null;
+  gDebugger = null;
+});

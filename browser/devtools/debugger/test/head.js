@@ -49,6 +49,14 @@ function removeTab(aTab) {
   gBrowser.removeTab(aTab);
 }
 
+function closeDebuggerAndFinish(aTab) {
+  DebuggerUI.aWindow.addEventListener("Debugger:Shutdown", function cleanup() {
+    DebuggerUI.aWindow.removeEventListener("Debugger:Shutdown", cleanup, false);
+    finish();
+  }, false);
+  DebuggerUI.getDebugger(aTab).close();
+}
+
 function get_tab_actor_for_url(aClient, aURL, aCallback) {
   aClient.listTabs(function(aResponse) {
     for each (let tab in aResponse.tabs) {

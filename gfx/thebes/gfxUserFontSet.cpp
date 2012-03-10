@@ -402,6 +402,22 @@ StoreUserFontData(gfxFontEntry* aFontEntry, gfxProxyFontEntry* aProxy,
     }
 }
 
+struct WOFFHeader {
+    AutoSwap_PRUint32 signature;
+    AutoSwap_PRUint32 flavor;
+    AutoSwap_PRUint32 length;
+    AutoSwap_PRUint16 numTables;
+    AutoSwap_PRUint16 reserved;
+    AutoSwap_PRUint32 totalSfntSize;
+    AutoSwap_PRUint16 majorVersion;
+    AutoSwap_PRUint16 minorVersion;
+    AutoSwap_PRUint32 metaOffset;
+    AutoSwap_PRUint32 metaCompLen;
+    AutoSwap_PRUint32 metaOrigLen;
+    AutoSwap_PRUint32 privOffset;
+    AutoSwap_PRUint32 privLen;
+};
+
 void
 gfxUserFontSet::CopyWOFFMetadata(const PRUint8* aFontData,
                                  PRUint32 aLength,
@@ -414,21 +430,6 @@ gfxUserFontSet::CopyWOFFMetadata(const PRUint8* aFontData,
     // This just saves a copy of the compressed data block; it does NOT check
     // that the block can be successfully decompressed, or that it contains
     // well-formed/valid XML metadata.
-    struct WOFFHeader {
-        AutoSwap_PRUint32 signature;
-        AutoSwap_PRUint32 flavor;
-        AutoSwap_PRUint32 length;
-        AutoSwap_PRUint16 numTables;
-        AutoSwap_PRUint16 reserved;
-        AutoSwap_PRUint32 totalSfntSize;
-        AutoSwap_PRUint16 majorVersion;
-        AutoSwap_PRUint16 minorVersion;
-        AutoSwap_PRUint32 metaOffset;
-        AutoSwap_PRUint32 metaCompLen;
-        AutoSwap_PRUint32 metaOrigLen;
-        AutoSwap_PRUint32 privOffset;
-        AutoSwap_PRUint32 privLen;
-    };
     if (aLength < sizeof(WOFFHeader)) {
         return;
     }

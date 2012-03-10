@@ -243,6 +243,24 @@ add_test(function test_addLivemark_callback_succeeds()
   });
 });
 
+add_test(function test_addLivemark_bogusid_callback_succeeds()
+{
+  PlacesUtils.livemarks.addLivemark({ id: 100 // Should be ignored.
+                                    , title: "test"
+                                    , parentId: PlacesUtils.unfiledBookmarksFolderId
+                                    , index: PlacesUtils.bookmarks.DEFAULT_INDEX
+                                    , feedURI: FEED_URI
+                                    , siteURI: SITE_URI
+                                    }, function (aStatus, aLivemark)
+  {
+    do_check_true(Components.isSuccessCode(aStatus));
+    do_check_true(aLivemark.id > 0);
+    do_check_neq(aLivemark.id, 100);
+
+    run_next_test();
+  });
+});
+
 add_test(function test_addLivemark_bogusParent_callback_fails()
 {
   PlacesUtils.livemarks.addLivemark({ title: "test"

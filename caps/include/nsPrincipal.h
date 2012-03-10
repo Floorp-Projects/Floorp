@@ -51,7 +51,7 @@
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 
-class nsPrincipal : public nsIPrincipal
+class nsPrincipal : public nsJSPrincipals
 {
 public:
   nsPrincipal();
@@ -60,7 +60,7 @@ protected:
   virtual ~nsPrincipal();
 
 public:
-  // Our refcount is managed by mJSPrincipals.  Use this macro to avoid
+  // Our refcount is managed by nsJSPrincipals.  Use this macro to avoid
   // an extra refcount member.
   NS_DECL_ISUPPORTS_INHERITED
 public:
@@ -100,8 +100,13 @@ public:
 
   static const char sInvalid[];
 
+  virtual void GetScriptLocation(nsACString &aStr) MOZ_OVERRIDE;
+
+#ifdef DEBUG
+  virtual void dumpImpl() MOZ_OVERRIDE;
+#endif 
+
 protected:
-  nsJSPrincipals mJSPrincipals;
   nsTArray< nsAutoPtr<nsHashtable> > mAnnotations;
   nsHashtable* mCapabilities;
   nsCString mPrefName;

@@ -269,7 +269,6 @@ HandleMailtoSubject(nsCString& aPath) {
                                            nsContentUtils::eFORMS_PROPERTIES,
                                            "DefaultFormSubject",
                                            formatStrings,
-                                           ArrayLength(formatStrings),
                                            subjectStr);
     if (NS_FAILED(rv))
       return;

@@ -507,7 +507,7 @@ var BrowserApp = {
     aParams = aParams || {};
 
     let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
+    let postData = ("postData" in aParams && aParams.postData) ? aParams.postData : null;
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
     let charset = "charset" in aParams ? aParams.charset : null;
 
@@ -830,16 +830,6 @@ var BrowserApp = {
     });
   },
 
-  getSearchOrURI: function getSearchOrURI(aParams) {
-    let uri;
-    if (aParams.engine) {
-      let engine = Services.search.getEngineByName(aParams.engine);
-      if (engine)
-        uri = engine.getSubmission(aParams.url).uri;
-    }
-    return uri ? uri.spec : aParams.url;
-  },
-
   scrollToFocusedInput: function(aBrowser) {
     let doc = aBrowser.contentDocument;
     if (!doc)
@@ -955,7 +945,15 @@ var BrowserApp = {
         flags: flags
       };
 
-      let url = this.getSearchOrURI(data);
+      let url = data.url;
+      if (data.engine) {
+        let engine = Services.search.getEngineByName(data.engine);
+        if (engine) {
+          let submission = engine.getSubmission(url);
+          url = submission.uri.spec;
+          params.postData = submission.postData;
+        }
+      }
 
       // Don't show progress throbber for about:home
       if (url == "about:home")
@@ -1563,6 +1561,10 @@ Tab.prototype = {
     };
     sendMessageToJava(message);
 
+    this.overscrollController = new OverscrollController(this);
+    this.browser.contentWindow.controllers
+      .insertControllerAt(0, this.overscrollController);
+
     let flags = Ci.nsIWebProgress.NOTIFY_STATE_ALL |
                 Ci.nsIWebProgress.NOTIFY_LOCATION |
                 Ci.nsIWebProgress.NOTIFY_SECURITY;
@@ -1610,6 +1612,9 @@ Tab.prototype = {
   destroy: function() {
     if (!this.browser)
       return;
+
+    this.browser.controllers.contentWindow
+      .removeController(this.overscrollController);
 
     this.browser.removeProgressListener(this);
     this.browser.removeEventListener("DOMContentLoaded", this, true);
@@ -1738,6 +1743,8 @@ Tab.prototype = {
       /* Transform the page width and height based on the zoom factor. */
       pageWidth *= this._viewport.zoom;
       pageHeight *= this._viewport.zoom;
+
+      this._viewport.allowZoom  = this.metadata.allowZoom;
 
       /*
        * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
@@ -1973,13 +1980,20 @@ Tab.prototype = {
       let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
       let showProgress = restoring ? false : this.showProgress;
 
+      // true if the page loaded successfully (i.e., no 404s or other errors)
+      let success = false; 
+      try {
+        success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
+      } catch (e) { }
+
       let message = {
         gecko: {
           type: "Content:StateChange",
           tabID: this.id,
           uri: uri,
           state: aStateFlags,
-          showProgress: showProgress
+          showProgress: showProgress,
+          success: success
         }
       };
       sendMessageToJava(message);
@@ -2913,7 +2927,13 @@ var FormAssistant = {
     switch (aEvent.type) {
       case "focus":
         let currentElement = aEvent.target;
-        this._showValidationMessage(currentElement);
+
+        // Prioritize a form validation message over autocomplete suggestions
+        // when the element is first focused (a form validation message will
+        // only be available if an invalid form was submitted)
+        if (this._showValidationMessage(currentElement))
+          break;
+        this._showAutoCompleteSuggestions(currentElement)
         break;
 
       case "input":
@@ -3500,7 +3520,8 @@ var PopupBlockerObserver = {
         let popupFeatures = pageReport[i].popupWindowFeatures;
         let popupName = pageReport[i].popupWindowName;
 
-        BrowserApp.addTab(popupURIspec);
+        let parent = BrowserApp.selectedTab;
+        BrowserApp.addTab(popupURIspec, { parentId: parent.id });
       }
     }
   }
@@ -4309,3 +4330,25 @@ var CharacterEncoding = {
   }
 };
 
+function OverscrollController(aTab) {
+  this.tab = aTab;
+}
+
+OverscrollController.prototype = {
+  supportsCommand : function supportsCommand(aCommand) {
+    if (aCommand != "cmd_linePrevious" && aCommand != "cmd_scrollPageUp")
+      return false;
+
+    return (this.tab.viewport.y == 0);
+  },
+
+  isCommandEnabled : function isCommandEnabled(aCommand) {
+    return this.supportsCommand(aCommand);
+  },
+
+  doCommand : function doCommand(aCommand){
+    sendMessageToJava({ gecko: { type: "ToggleChrome:Focus" } });
+  },
+
+  onEvent : function onEvent(aEvent) { }
+};

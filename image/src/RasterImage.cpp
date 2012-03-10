@@ -2581,6 +2581,16 @@ RasterImage::Draw(gfxContext *aContext,
     mFrameDecodeFlags = DECODE_FLAGS_DEFAULT;
   }
 
+  // If this image is a candidate for discarding, reset its position in the
+  // discard tracker so we're less likely to discard it right away.
+  //
+  // (We don't normally draw unlocked images, so this conditition will usually
+  // be false.  But we will draw unlocked images if image locking is globally
+  // disabled via the content.image.allow_locking pref.)
+  if (DiscardingActive()) {
+    DiscardTracker::Reset(&mDiscardTrackerNode);
+  }
+
   // We use !mDecoded && mHasSourceData to mean discarded.
   if (!mDecoded && mHasSourceData) {
       mDrawStartTime = TimeStamp::Now();

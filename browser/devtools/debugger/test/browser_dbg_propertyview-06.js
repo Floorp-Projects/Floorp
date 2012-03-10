@@ -117,17 +117,19 @@ function testSimpleCall() {
       is(localVar5.querySelector(".info").textContent, "[object Object]",
         "The grip information for the localVar5 wasn't set correctly.");
 
-
-      resumeAndFinish();
+      gDebugger.StackFrames.activeThread.resume(function() {
+        closeDebuggerAndFinish(gTab);
+      });
     }}, 0);
   });
 
   gDebuggee.simpleCall();
 }
 
-function resumeAndFinish() {
-  gDebugger.StackFrames.activeThread.resume(function() {
-    removeTab(gTab);
-    finish();
-  });
-}
+registerCleanupFunction(function() {
+  removeTab(gTab);
+  gPane = null;
+  gTab = null;
+  gDebuggee = null;
+  gDebugger = null;
+});

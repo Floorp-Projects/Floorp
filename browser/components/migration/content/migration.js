@@ -65,6 +65,7 @@ var MigrationWizard = {
       this._source = window.arguments[0];
       this._migrator = window.arguments[1].QueryInterface(kIMig);
       this._autoMigrate = window.arguments[2].QueryInterface(kIPStartup);
+      this._skipImportSourcePage = window.arguments[3];
 
       if (this._autoMigrate) {
         // Show the "nothing" option in the automigrate case to provide an
@@ -94,7 +95,7 @@ var MigrationWizard = {
     // Reference to the "From File" radio button 
     var fromfile = null;
 
-    //XXXquark This function is called before init, so check for bookmarks here
+    // init is not called when openDialog opens the wizard, so check for bookmarks here.
     if ("arguments" in window && window.arguments[0] == "bookmarks") {
       this._bookmarks = true;
 
@@ -150,6 +151,12 @@ var MigrationWizard = {
 
       document.getElementById("importBookmarks").hidden = true;
       document.getElementById("importAll").hidden = true;
+    }
+
+    // Advance to the next page if the caller told us to.
+    if (this._migrator && this._skipImportSourcePage) {
+      this._wiz.advance();
+      this._wiz.canRewind = false;
     }
   },
   
