@@ -1728,10 +1728,19 @@ CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 {
     typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
     static const VMFunction GetElementInfo = FunctionInfo<pf>(js::GetElement);
+    static const VMFunction CallElementInfo = FunctionInfo<pf>(js::CallElement);
 
     pushArg(ToValue(lir, LCallGetElement::RhsInput));
     pushArg(ToValue(lir, LCallGetElement::LhsInput));
-    return callVM(GetElementInfo, lir);
+
+    JSOp op = JSOp(*lir->mir()->resumePoint()->pc());
+
+    if (op == JSOP_GETELEM) {
+        return callVM(GetElementInfo, lir);
+    } else {
+        JS_ASSERT(op == JSOP_CALLELEM);
+        return callVM(CallElementInfo, lir);
+    }
 }
 
 bool
