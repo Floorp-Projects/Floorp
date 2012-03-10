@@ -328,11 +328,32 @@ class InterpreterFrames {
 extern void
 UnwindScope(JSContext *cx, uint32_t stackDepth);
 
+/*
+ * Unwind for an uncatchable exception. This means not running finalizers, etc;
+ * just preserving the basic engine stack invariants.
+ */
+extern void
+UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
+
 extern bool
 OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp);
 
 extern bool
 IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);
+
+class TryNoteIter
+{
+    const FrameRegs &regs;
+    JSScript *script;
+    uint32_t pcOffset;
+    JSTryNote *tn, *tnEnd;
+    void settle();
+  public:
+    TryNoteIter(const FrameRegs &regs);
+    bool done() const;
+    void operator++();
+    JSTryNote *operator*() const { return tn; }
+};
 
 /************************************************************************/
 

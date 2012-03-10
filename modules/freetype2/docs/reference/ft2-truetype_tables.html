@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.4.3 API Reference</title>
+<title>FreeType-2.4.9 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.4.3 API Reference</h1></center>
+<center><h1>FreeType-2.4.9 API Reference</h1></center>
 
 <center><h1>
 TrueType Tables
@@ -1110,14 +1110,19 @@ Defined in FT_TRUETYPE_TABLES_H (freetype/tttables.h).
 </td></tr>
 </table>
 </td></tr></table>
-<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>output</b></em></td></tr><tr><td>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>inout</b></em></td></tr><tr><td>
 <p></p>
 <table cellpadding=3 border=0>
 <tr valign=top><td><b>tag</b></td><td>
-<p>The name tag of the SFNT table.</p>
+<p>The name tag of the SFNT table. If the value is NULL, &lsquo;table_index&rsquo; is ignored, and &lsquo;length&rsquo; returns the number of SFNT tables in the font.</p>
 </td></tr>
+</table>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>output</b></em></td></tr><tr><td>
+<p></p>
+<table cellpadding=3 border=0>
 <tr valign=top><td><b>length</b></td><td>
-<p>The length of the SFNT table.</p>
+<p>The length of the SFNT table (or the number of SFNT tables, depending on &lsquo;tag&rsquo;).</p>
 </td></tr>
 </table>
 </td></tr></table>

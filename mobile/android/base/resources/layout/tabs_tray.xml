@@ -20,19 +20,39 @@
                        android:layout_height="2dp"
                        android:background="@drawable/tabs_tray_list_divider"/>
 
-         <LinearLayout android:id="@+id/add_tab"
-                       android:layout_width="fill_parent"
-                       android:layout_height="50dip"
-                       android:orientation="horizontal"
-                       android:gravity="center|left"
-                       android:background="@drawable/tabs_tray_list_selector">
+         <RelativeLayout android:layout_width="fill_parent"
+                         android:layout_height="50dip"
+                         android:background="@drawable/tabs_tray_bg_repeat">
 
-             <ImageView android:layout_width="20dip"
-                        android:layout_height="20dip"
-                        android:layout_marginLeft="20dip"
-                        android:src="@drawable/tab_new"/>
+             <ImageButton android:id="@+id/add_tab"
+                          android:layout_width="60dip"
+                          android:layout_height="50dip"
+                          android:layout_alignParentLeft="true"
+                          android:paddingTop="15dip"
+                          android:paddingBottom="15dip"
+                          android:paddingLeft="20dip"
+                          android:paddingRight="20dip"
+                          android:src="@drawable/tab_new"
+                          android:background="@drawable/tabs_tray_list_selector"/>
 
-         </LinearLayout>
+             <org.mozilla.gecko.LinkTextView android:id="@+id/remote_tabs"
+                                             android:layout_width="wrap_content"
+                                             android:layout_height="50dip"
+                                             android:layout_alignParentRight="true"
+                                             android:gravity="center_vertical"
+                                             android:paddingRight="20dip"
+                                             android:text="@string/remote_tabs"
+                                             android:textAppearance="?android:attr/textAppearanceSmall"
+                                             android:textColor="#E5F2FF"
+                                             android:shadowColor="#000000"
+                                             android:shadowRadius="1"
+                                             android:shadowDx="0"
+                                             android:shadowDy="1"
+                                             android:singleLine="true"
+                                             android:ellipsize="middle"
+                                             android:visibility="gone"/>
+
+         </RelativeLayout>
 
      </view>
 

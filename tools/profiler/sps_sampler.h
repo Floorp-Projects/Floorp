@@ -40,6 +40,7 @@
 #include <signal.h>
 #include "thread_helper.h"
 #include "nscore.h"
+#include "jsapi.h"
 #include "mozilla/TimeStamp.h"
 
 using mozilla::TimeStamp;
@@ -68,6 +69,7 @@ extern bool stack_key_initialized;
 #define SAMPLER_GET_RESPONSIVENESS() mozilla_sampler_get_responsiveness()
 #define SAMPLER_SAVE() mozilla_sampler_save()
 #define SAMPLER_GET_PROFILE() mozilla_sampler_get_profile()
+#define SAMPLER_GET_PROFILE_DATA(ctx) mozilla_sampler_get_profile_data(ctx)
 #define SAMPLER_GET_FEATURES() mozilla_sampler_get_features()
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
@@ -140,6 +142,7 @@ void mozilla_sampler_responsiveness(TimeStamp time);
 const double* mozilla_sampler_get_responsiveness();
 void mozilla_sampler_save();
 char* mozilla_sampler_get_profile();
+JSObject *mozilla_sampler_get_profile_data(JSContext *aCx);
 const char** mozilla_sampler_get_features();
 void mozilla_sampler_init();
 

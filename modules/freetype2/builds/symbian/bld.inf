@@ -36,6 +36,7 @@ PRJ_EXPORTS
 ../../include/freetype/ftglyph.h		freetype/ftglyph.h
 ../../include/freetype/ftgxval.h		freetype/ftgxval.h
 ../../include/freetype/ftgzip.h			freetype/ftgzip.h
+../../include/freetype/ftbzip2.h		freetype/ftbzip2.h
 ../../include/freetype/ftimage.h		freetype/ftimage.h
 ../../include/freetype/ftincrem.h		freetype/ftincrem.h
 ../../include/freetype/ftlcdfil.h		freetype/ftlcdfil.h

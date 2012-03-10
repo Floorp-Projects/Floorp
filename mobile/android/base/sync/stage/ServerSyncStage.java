@@ -42,6 +42,7 @@ import java.net.URISyntaxException;
 
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
@@ -127,17 +128,18 @@ public abstract class ServerSyncStage implements
 
   @Override
   public void execute(GlobalSession session) throws NoSuchStageException {
-    Log.d(LOG_TAG, "Starting execute.");
+    final String name = getEngineName();
+    Logger.debug(LOG_TAG, "Starting execute for " + name);
 
     this.session = session;
     try {
       if (!this.isEnabled()) {
-        Log.i(LOG_TAG, "Stage disabled; skipping.");
+        Logger.info(LOG_TAG, "Stage " + name + " disabled; skipping.");
         session.advance();
         return;
       }
     } catch (MetaGlobalException e) {
-      session.abort(e, "Inappropriate meta/global; refusing to execute " + this.getEngineName() + " stage.");
+      session.abort(e, "Inappropriate meta/global; refusing to execute " + name + " stage.");
       return;
     }
 
@@ -161,9 +163,9 @@ public abstract class ServerSyncStage implements
       session.abort(e, "Invalid persisted JSON for config.");
       return;
     }
-    Log.d(LOG_TAG, "Invoking synchronizer.");
+    Logger.debug(LOG_TAG, "Invoking synchronizer.");
     synchronizer.synchronize(session.getContext(), this);
-    Log.d(LOG_TAG, "Reached end of execute.");
+    Logger.debug(LOG_TAG, "Reached end of execute.");
   }
 
   @Override

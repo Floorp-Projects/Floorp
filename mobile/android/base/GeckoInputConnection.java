@@ -184,15 +184,9 @@ public class GeckoInputConnection
 
         String text = content.toString();
 
+        clampSelection();
         int a = Selection.getSelectionStart(content);
         int b = Selection.getSelectionEnd(content);
-        if (a < 0) a = 0;
-        if (b < 0) b = 0;
-        if (a > b) {
-            int tmp = a;
-            a = b;
-            b = tmp;
-        }
 
         switch (id) {
             case R.id.selectAll:
@@ -239,17 +233,9 @@ public class GeckoInputConnection
         extract.partialStartOffset = -1;
         extract.partialEndOffset = -1;
 
-        int a = Selection.getSelectionStart(content);
-        int b = Selection.getSelectionEnd(content);
-        if (a > b) {
-            int tmp = a;
-            a = b;
-            b = tmp;
-        }
-
-        extract.selectionStart = a;
-        extract.selectionEnd = b;
-
+        clampSelection();
+        extract.selectionStart = Selection.getSelectionStart(content);
+        extract.selectionEnd = Selection.getSelectionEnd(content);
         extract.startOffset = 0;
 
         try {
@@ -273,9 +259,79 @@ public class GeckoInputConnection
     }
 
     @Override
+    public boolean deleteSurroundingText(int leftLength, int rightLength) {
+        clampSelection();
+        return super.deleteSurroundingText(leftLength, rightLength);
+    }
+
+    @Override
+    public int getCursorCapsMode(int reqModes) {
+        clampSelection();
+        return super.getCursorCapsMode(reqModes);
+    }
+
+    @Override
+    public CharSequence getTextBeforeCursor(int length, int flags) {
+        clampSelection();
+        return super.getTextBeforeCursor(length, flags);
+    }
+
+    @Override
+    public CharSequence getSelectedText(int flags) {
+        clampSelection();
+        return super.getSelectedText(flags);
+    }
+
+    @Override
+    public CharSequence getTextAfterCursor(int length, int flags) {
+        clampSelection();
+        return super.getTextAfterCursor(length, flags);
+    }
+
+    @Override
     public boolean setComposingText(CharSequence text, int newCursorPosition) {
-        replaceText(text, newCursorPosition, true);
-        return true;
+        clampSelection();
+        return super.setComposingText(text, newCursorPosition);
+    }
+
+    // Android's BaseInputConnection.java is vulnerable to IndexOutOfBoundsExceptions because it
+    // does not adequately protect against stale indexes for selections exceeding the content length
+    // when the Editable content changes. We must clamp the indexes to be safe.
+    private void clampSelection() {
+        Editable content = getEditable();
+        if (content == null) {
+            return;
+        }
+
+        final int selectionStart = Selection.getSelectionStart(content);
+        final int selectionEnd = Selection.getSelectionEnd(content);
+
+        int a = clampContentIndex(content, selectionStart);
+        int b = clampContentIndex(content, selectionEnd);
+
+        if (a > b) {
+            int tmp = a;
+            a = b;
+            b = tmp;
+        }
+
+        if (a != selectionStart || b != selectionEnd) {
+            Log.e(LOGTAG, "CLAMPING BOGUS SELECTION (" + selectionStart + ", " + selectionEnd
+                          + "] -> (" + a + ", " + b + "]", new AssertionError());
+            setSelection(a, b);
+        }
+    }
+
+    private static int clampContentIndex(Editable content, int index) {
+        if (index < 0) {
+            index = 0;
+        } else {
+            final int contentLength = content.length();
+            if (index > contentLength) {
+                index = contentLength;
+            }
+        }
+        return index;
     }
 
     private void replaceText(CharSequence text, int newCursorPosition, boolean composing) {
@@ -309,15 +365,9 @@ public class GeckoInputConnection
         if (a != -1 && b != -1) {
             removeComposingSpans(content);
         } else {
+            clampSelection();
             a = Selection.getSelectionStart(content);
             b = Selection.getSelectionEnd(content);
-            if (a < 0) a = 0;
-            if (b < 0) b = 0;
-            if (b < a) {
-                int tmp = a;
-                a = b;
-                b = tmp;
-            }
         }
 
         if (composing) {
@@ -468,8 +518,14 @@ public class GeckoInputConnection
                                       int start, int end) {
         if (!mBatchMode) {
             final Editable content = getEditable();
+
+            start = clampContentIndex(content, start);
+            end = clampContentIndex(content, end);
+
+            clampSelection();
             int a = Selection.getSelectionStart(content);
             int b = Selection.getSelectionEnd(content);
+
             if (start != a || end != b) {
                 if (DEBUG) {
                     Log.d(LOGTAG, String.format(
@@ -761,6 +817,7 @@ public class GeckoInputConnection
                 !mKeyListener.onKeyDown(v, mEditable, keyCode, event)) {
             // Make sure selection in Gecko is up-to-date
             final Editable content = getEditable();
+            clampSelection();
             int a = Selection.getSelectionStart(content);
             int b = Selection.getSelectionEnd(content);
             GeckoAppShell.sendEventToGecko(
@@ -968,18 +1025,6 @@ public class GeckoInputConnection
         mEditable = mEditableFactory.newEditable(contents);
         mEditable.setSpan(this, 0, contents.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
         Selection.setSelection(mEditable, contents.length());
-    }
-
-    public void resetSelection() {
-        // An Android framework bug can cause a SpannableStringBuilder crash when focus changes
-        // invalidate text selection offsets. A workaround is to reset selection when the activity
-        // resumes. More info: https://code.google.com/p/android/issues/detail?id=5164
-        Editable content = getEditable();
-        if (content != null) {
-            Log.d(LOGTAG, "IME: resetSelection");
-            int length = content.length();
-            setSelection(length, length);
-        }
     }
 }
 

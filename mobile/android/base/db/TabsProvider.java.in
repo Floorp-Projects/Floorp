@@ -51,7 +51,7 @@ public class TabsProvider extends ContentProvider {
     static final int CLIENTS = 602;
     static final int CLIENTS_ID = 603;
 
-    static final String DEFAULT_TABS_SORT_ORDER = Tabs.POSITION + " ASC";
+    static final String DEFAULT_TABS_SORT_ORDER = Clients.LAST_MODIFIED + " DESC, " + Tabs.LAST_USED + " DESC";
     static final String DEFAULT_CLIENTS_SORT_ORDER = Clients.LAST_MODIFIED + " DESC";
 
     static final String INDEX_TABS_GUID = "tabs_guid_index";
@@ -73,13 +73,15 @@ public class TabsProvider extends ContentProvider {
 
         map = new HashMap<String, String>();
         map.put(Tabs._ID, Tabs._ID);
-        map.put(Tabs.CLIENT_GUID, Tabs.CLIENT_GUID);
         map.put(Tabs.TITLE, Tabs.TITLE);
         map.put(Tabs.URL, Tabs.URL);
         map.put(Tabs.HISTORY, Tabs.HISTORY);
         map.put(Tabs.FAVICON, Tabs.FAVICON);
         map.put(Tabs.LAST_USED, Tabs.LAST_USED);
         map.put(Tabs.POSITION, Tabs.POSITION);
+        map.put(Clients.GUID, Clients.GUID);
+        map.put(Clients.NAME, Clients.NAME);
+        map.put(Clients.LAST_MODIFIED, Clients.LAST_MODIFIED);
         TABS_PROJECTION_MAP = Collections.unmodifiableMap(map);
 
         map = new HashMap<String, String>();
@@ -526,7 +528,7 @@ public class TabsProvider extends ContentProvider {
                 }
 
                 qb.setProjectionMap(TABS_PROJECTION_MAP);
-                qb.setTables(TABLE_TABS);
+                qb.setTables(TABLE_TABS + " LEFT OUTER JOIN " + TABLE_CLIENTS + " ON (" + TABLE_TABS + "." + Tabs.CLIENT_GUID + " = " + TABLE_CLIENTS + "." + Clients.GUID + ")");
                 break;
 
             case CLIENTS_ID:

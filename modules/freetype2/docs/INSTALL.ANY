@@ -81,6 +81,7 @@ I. Standard procedure
       src/cache/ftcache.c     -- cache sub-system (in beta)
       src/gzip/ftgzip.c       -- support for compressed fonts (.gz)
       src/lzw/ftlzw.c         -- support for compressed fonts (.Z)
+      src/bzip2/ftbzip2.c     -- support for compressed fonts (.bz2)
       src/gxvalid/gxvalid.c   -- TrueTypeGX/AAT table validation
       src/otvalid/otvalid.c   -- OpenType table validation
       src/psaux/psaux.c       -- PostScript Type 1 parsing
@@ -101,6 +102,10 @@ I. Standard procedure
       `type1.c'    needs `psaux.c' `pshinter.c', and `psnames.c'
       `type1cid.c' needs `psaux.c', `pshinter.c', and `psnames.c'
       `type42.c'   needs `truetype.c'
+
+      To use `ftbzip2.c', an application must be linked with a library
+      which implements bzip2 support  (and the bzip2 header files must
+      be available also during compilation).
 
 
   Read the file `CUSTOMIZE' in case  you want to compile only a subset

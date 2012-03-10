@@ -69,7 +69,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype243.lib"
+				OutputFile="..\..\..\objs\freetype249.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -144,7 +144,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype243MT.lib"
+				OutputFile="..\..\..\objs\freetype249MT.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -219,7 +219,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype243ST.lib"
+				OutputFile="..\..\..\objs\freetype249ST.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -291,7 +291,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype243_D.lib"
+				OutputFile="..\..\..\objs\freetype249_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -364,7 +364,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype243ST_D.lib"
+				OutputFile="..\..\..\objs\freetype249ST_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -438,7 +438,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\objs\freetype243MT_D.lib"
+				OutputFile="..\..\..\objs\freetype249MT_D.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
