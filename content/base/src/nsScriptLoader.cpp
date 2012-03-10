@@ -1325,7 +1325,8 @@ nsScriptLoader::ParsingComplete(bool aTerminated)
 
 void
 nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
-                           const nsAString &aType)
+                           const nsAString &aType,
+                           const nsAString &aCrossOrigin)
 {
   // Check to see if scripts has been turned off.
   if (!mEnabled || !mDocument->IsScriptEnabled()) {
