@@ -562,6 +562,11 @@ _TEST_FILES2 = \
 		test_bug726364.html \
 		test_bug698381.html \
 		test_bug711047.html \
+		test_bug696301-1.html \
+		test_bug696301-2.html \
+		bug696301-script-1.js \
+		bug696301-script-1.js^headers^ \
+		bug696301-script-2.js \
 		$(NULL)
 
 _CHROME_FILES =	\
