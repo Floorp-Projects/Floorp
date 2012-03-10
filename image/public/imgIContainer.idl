@@ -93,7 +93,7 @@ native gfxGraphicsFilter(gfxPattern::GraphicsFilter);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, uuid(2506249c-e0a1-4d8f-846c-2d478247f8d8)]
+[scriptable, uuid(8bf87433-be67-413b-9497-00071c5002bd)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -282,6 +282,12 @@ interface imgIContainer : nsISupports
     * In other words, the lock count is not allowed to be negative.
     */
   void unlockImage();
+
+  /**
+   * If this image is unlocked, discard its decoded data.  If the image is
+   * locked or has already been discarded, do nothing.
+   */
+  void requestDiscard();
 
   /**
     * Indicates that this imgIContainer has been triggered to update
