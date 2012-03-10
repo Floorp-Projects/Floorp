@@ -52,7 +52,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'SyntaxError: invalid for each loop';
+  expect = 'SyntaxError: let is a reserved identifier';
   try
   {
     var obj = { };

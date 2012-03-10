@@ -332,7 +332,7 @@ ArrayBuffer::obj_trace(JSTracer *trc, JSObject *obj)
     JSObject *delegate = static_cast<JSObject*>(obj->getPrivate());
     if (delegate) {
         MarkObjectUnbarriered(trc, &delegate, "arraybuffer.delegate");
-        obj->setPrivate(delegate);
+        obj->setPrivateUnbarriered(delegate);
     }
 }
 

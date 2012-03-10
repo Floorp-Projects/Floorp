@@ -1308,15 +1308,6 @@ js_AddGCThingRoot(JSContext *cx, void **rp, const char *name)
 JS_FRIEND_API(JSBool)
 js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name)
 {
-    /*
-     * Due to the long-standing, but now removed, use of rt->gcLock across the
-     * bulk of js::GC, API users have come to depend on JS_AddRoot etc. locking
-     * properly with a racing GC, without calling JS_AddRoot from a request.
-     * We have to preserve API compatibility here, now that we avoid holding
-     * rt->gcLock across the mark phase (including the root hashtable mark).
-     */
-    AutoLockGC lock(rt);
-
     return !!rt->gcRootsHash.put((void *)vp,
                                  RootInfo(name, JS_GC_ROOT_VALUE_PTR));
 }
@@ -1324,15 +1315,6 @@ js_AddRootRT(JSRuntime *rt, jsval *vp, const char *name)
 JS_FRIEND_API(JSBool)
 js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
 {
-    /*
-     * Due to the long-standing, but now removed, use of rt->gcLock across the
-     * bulk of js::GC, API users have come to depend on JS_AddRoot etc. locking
-     * properly with a racing GC, without calling JS_AddRoot from a request.
-     * We have to preserve API compatibility here, now that we avoid holding
-     * rt->gcLock across the mark phase (including the root hashtable mark).
-     */
-    AutoLockGC lock(rt);
-
     return !!rt->gcRootsHash.put((void *)rp,
                                  RootInfo(name, JS_GC_ROOT_GCTHING_PTR));
 }
@@ -1340,11 +1322,6 @@ js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
 JS_FRIEND_API(JSBool)
 js_RemoveRoot(JSRuntime *rt, void *rp)
 {
-    /*
-     * Due to the JS_RemoveRootRT API, we may be called outside of a request.
-     * Same synchronization drill as above in js_AddRoot.
-     */
-    AutoLockGC lock(rt);
     rt->gcRootsHash.remove(rp);
     rt->gcPoke = JS_TRUE;
     return JS_TRUE;
@@ -1404,7 +1381,6 @@ js_DumpNamedRoots(JSRuntime *rt,
 uint32_t
 js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
 {
-    AutoLockGC lock(rt);
     int ct = 0;
     for (RootEnum e(rt->gcRootsHash); !e.empty(); e.popFront()) {
         RootEntry &entry = e.front();
@@ -1421,14 +1397,19 @@ js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
     return ct;
 }
 
-void
-JSCompartment::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
+static size_t
+ComputeTriggerBytes(size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
 {
-    gcLastBytes = lastBytes;
-
     size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, GC_ALLOCATION_THRESHOLD);
     float trigger = float(base) * GC_HEAP_GROWTH_FACTOR;
-    gcTriggerBytes = size_t(Min(float(rt->gcMaxBytes), trigger));
+    return size_t(Min(float(maxBytes), trigger));
+}
+
+void
+JSCompartment::setGCLastBytes(size_t lastBytes, size_t lastMallocBytes, JSGCInvocationKind gckind)
+{
+    gcTriggerBytes = ComputeTriggerBytes(lastBytes, rt->gcMaxBytes, gckind);
+    gcTriggerMallocAndFreeBytes = ComputeTriggerBytes(lastMallocBytes, SIZE_MAX, gckind);
 }
 
 void
@@ -1790,7 +1771,6 @@ js_LockGCThingRT(JSRuntime *rt, void *thing)
     if (!thing)
         return true;
 
-    AutoLockGC lock(rt);
     if (GCLocks::Ptr p = rt->gcLocksHash.lookupWithDefault(thing, 0)) {
         p->value++;
         return true;
@@ -1805,10 +1785,7 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
     if (!thing)
         return;
 
-    AutoLockGC lock(rt);
-    GCLocks::Ptr p = rt->gcLocksHash.lookup(thing);
-
-    if (p) {
+    if (GCLocks::Ptr p = rt->gcLocksHash.lookup(thing)) {
         rt->gcPoke = true;
         if (--p->value == 0)
             rt->gcLocksHash.remove(p);
@@ -2412,6 +2389,7 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
         }
     }
 }
+
 void
 TriggerGC(JSRuntime *rt, gcreason::Reason reason)
 {
@@ -2458,7 +2436,7 @@ TriggerCompartmentGC(JSCompartment *comp, gcreason::Reason reason)
     rt->gcIsNeeded = true;
     rt->gcTriggerCompartment = comp;
     rt->gcTriggerReason = reason;
-    comp->rt->triggerOperationCallback();
+    rt->triggerOperationCallback();
 }
 
 void
@@ -2484,6 +2462,11 @@ MaybeGC(JSContext *cx)
         rt->gcIncrementalState == NO_INCREMENTAL)
     {
         GCSlice(cx, NULL, GC_NORMAL, gcreason::MAYBEGC);
+        return;
+    }
+
+    if (comp->gcMallocAndFreeBytes >= comp->gcTriggerMallocAndFreeBytes) {
+        GCSlice(cx, comp, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
 
@@ -2932,7 +2915,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
             if (callback)
                 JS_ALWAYS_TRUE(callback(cx, compartment, JSCOMPARTMENT_DESTROY));
             if (compartment->principals)
-                JSPRINCIPALS_DROP(cx, compartment->principals);
+                JS_DropPrincipals(rt, compartment->principals);
             cx->delete_(compartment);
             continue;
         }
@@ -3272,7 +3255,7 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
     }
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
-        c->setGCLastBytes(c->gcBytes, gckind);
+        c->setGCLastBytes(c->gcBytes, c->gcMallocAndFreeBytes, gckind);
 }
 
 /* Perform mark-and-sweep GC. If comp is set, we perform a single-compartment GC. */
@@ -3922,10 +3905,10 @@ NewCompartment(JSContext *cx, JSPrincipals *principals)
         compartment->isSystemCompartment = principals && rt->trustedPrincipals() == principals;
         if (principals) {
             compartment->principals = principals;
-            JSPRINCIPALS_HOLD(cx, principals);
+            JS_HoldPrincipals(principals);
         }
 
-        compartment->setGCLastBytes(8192, GC_NORMAL);
+        compartment->setGCLastBytes(8192, 8192, GC_NORMAL);
 
         /*
          * Before reporting the OOM condition, |lock| needs to be cleaned up,
@@ -4506,7 +4489,6 @@ JS_FRIEND_API(void)
 StartPCCountProfiling(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
 
     if (rt->profilingScripts)
         return;
@@ -4523,7 +4505,6 @@ JS_FRIEND_API(void)
 StopPCCountProfiling(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
 
     if (!rt->profilingScripts)
         return;
@@ -4556,7 +4537,6 @@ JS_FRIEND_API(void)
 PurgePCCounts(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    AutoLockGC lock(rt);
 
     if (!rt->scriptPCCounters)
         return;
@@ -4575,6 +4555,10 @@ JS_IterateCompartments(JSRuntime *rt, void *data,
 
     AutoLockGC lock(rt);
     AutoHeapSession session(rt);
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
+#endif
+    AutoUnlockGC unlock(rt);
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
         (*compartmentCallback)(rt, data, c);

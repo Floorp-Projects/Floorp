@@ -205,7 +205,6 @@ struct JSCompartment
 
     size_t                       gcBytes;
     size_t                       gcTriggerBytes;
-    size_t                       gcLastBytes;
     size_t                       gcMaxMallocBytes;
 
     bool                         hold;
@@ -267,14 +266,6 @@ struct JSCompartment
      */
     js::PropertyTree             propertyTree;
 
-#ifdef DEBUG
-    /* Property metering. */
-    unsigned                     livePropTreeNodes;
-    unsigned                     totalPropTreeNodes;
-    unsigned                     propTreeKidsChunks;
-    unsigned                     liveDictModeNodes;
-#endif
-
     /* Set of all unowned base shapes in the compartment. */
     js::BaseShapeSet             baseShapes;
     void sweepBaseShapeTable(JSContext *cx);
@@ -298,16 +289,26 @@ struct JSCompartment
     /* Cache to speed up object creation. */
     js::NewObjectCache           newObjectCache;
 
+    /*
+     * Keeps track of the total number of malloc bytes connected to a
+     * compartment's GC things. This counter should be used in preference to
+     * gcMallocBytes. These counters affect collection in the same way as
+     * gcBytes and gcTriggerBytes.
+     */
+    size_t                       gcMallocAndFreeBytes;
+    size_t                       gcTriggerMallocAndFreeBytes;
+
   private:
+    /*
+     * Malloc counter to measure memory pressure for GC scheduling. It runs from
+     * gcMaxMallocBytes down to zero. This counter should be used only when it's
+     * not possible to know the size of a free.
+     */
+    ptrdiff_t                    gcMallocBytes;
+
     enum { DebugFromC = 1, DebugFromJS = 2 };
 
-    unsigned                        debugModeBits;  // see debugMode() below
-    
-    /*
-     * Malloc counter to measure memory pressure for GC scheduling. It runs
-     * from gcMaxMallocBytes down to zero.
-     */
-    volatile ptrdiff_t           gcMallocBytes;
+    unsigned                     debugModeBits;  // see debugMode() below
 
   public:
     js::NativeIterCache          nativeIterCache;
@@ -340,9 +341,9 @@ struct JSCompartment
     void sweep(JSContext *cx, bool releaseTypes);
     void purge();
 
-    void setGCLastBytes(size_t lastBytes, js::JSGCInvocationKind gckind);
+    void setGCLastBytes(size_t lastBytes, size_t lastMallocBytes, js::JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(size_t amount);
-    
+
     void resetGCMallocBytes();
     void setGCMaxMallocBytes(size_t value);
     void updateMallocCounter(size_t nbytes) {
@@ -352,8 +353,17 @@ struct JSCompartment
         if (JS_UNLIKELY(newCount <= 0 && oldCount > 0))
             onTooMuchMalloc();
     }
-    
+
     void onTooMuchMalloc();
+
+    void mallocInCompartment(size_t nbytes) {
+        gcMallocAndFreeBytes += nbytes;
+    }
+
+    void freeInCompartment(size_t nbytes) {
+        JS_ASSERT(gcMallocAndFreeBytes >= nbytes);
+        gcMallocAndFreeBytes -= nbytes;
+    }
 
     js::DtoaCache dtoaCache;
 

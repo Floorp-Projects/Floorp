@@ -691,7 +691,7 @@ ImageDocument::CheckOverflowing(bool changeState)
 {
   /* Create a scope so that the style context gets destroyed before we might
    * call RebuildStyleData.  Also, holding onto pointers to the
-   * presentatation through style resolution is potentially dangerous.
+   * presentation through style resolution is potentially dangerous.
    */
   {
     nsIPresShell *shell = GetShell();
@@ -701,23 +701,6 @@ ImageDocument::CheckOverflowing(bool changeState)
 
     nsPresContext *context = shell->GetPresContext();
     nsRect visibleArea = context->GetVisibleArea();
-
-    Element* body = GetBodyElement();
-    if (!body) {
-      NS_WARNING("no body on image document!");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsRefPtr<nsStyleContext> styleContext =
-      context->StyleSet()->ResolveStyleFor(body, nsnull);
-
-    nsMargin m;
-    if (styleContext->GetStyleMargin()->GetMargin(m))
-      visibleArea.Deflate(m);
-    m = styleContext->GetStyleBorder()->GetActualBorder();
-    visibleArea.Deflate(m);
-    if (styleContext->GetStylePadding()->GetPadding(m))
-      visibleArea.Deflate(m);
 
     mVisibleWidth = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.width);
     mVisibleHeight = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.height);

@@ -50,6 +50,13 @@ function run_tests()
   numbers[0].value = 17;
   numbers[1].value = 20;
   text.setAttribute("rotate", "17 20 30");
+  // -- Attribute removal
+  eventChecker.expect("remove");
+  text.removeAttribute("rotate");
+  // -- Non-existent attribute removal
+  eventChecker.expect("");
+  text.removeAttribute("rotate");
+  text.removeAttributeNS(null, "rotate");
   eventChecker.finish();
 
   SimpleTest.finish();

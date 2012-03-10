@@ -278,6 +278,13 @@ ifeq ($(OS_TARGET),Linux)
 DEFAULT_GMAKE_FLAGS += FREEBL_LOWHASH=1
 endif
 
+ifdef MOZ_NO_WLZDEFS
+DEFAULT_GMAKE_FLAGS += ZDEFS_FLAG=
+endif
+ifdef MOZ_CFLAGS_NSS
+DEFAULT_GMAKE_FLAGS += XCFLAGS="$(CFLAGS)"
+endif
+
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
 
 include $(topsrcdir)/config/rules.mk

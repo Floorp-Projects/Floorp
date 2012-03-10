@@ -307,7 +307,7 @@ nsDirectoryService::RealInit()
     if (NS_FAILED(rv))
         return rv;
 
-    NS_RegisterStaticAtoms(directory_atoms, ArrayLength(directory_atoms));
+    NS_RegisterStaticAtoms(directory_atoms);
     
     // Let the list hold the only reference to the provider.
     nsAppFileLocationProvider *defaultProvider = new nsAppFileLocationProvider;

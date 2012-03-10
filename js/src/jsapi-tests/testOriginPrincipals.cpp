@@ -5,27 +5,18 @@
 JSPrincipals *sCurrentGlobalPrincipals = NULL;
 
 JSPrincipals *
-ObjectPrincipalsFinder(JSContext *, JSObject *)
+ObjectPrincipalsFinder(JSObject *)
 {
     return sCurrentGlobalPrincipals;
 }
 
-JSSecurityCallbacks seccb = {
+static const JSSecurityCallbacks seccb = {
+    NULL,
     NULL,
     NULL,
     ObjectPrincipalsFinder,
     NULL
 };
-
-static void
-Destroy(JSContext *, JSPrincipals *)
-{}
-
-static JSBool
-Subsume(JSPrincipals *, JSPrincipals *)
-{
-    return true;
-}
 
 JSPrincipals *sOriginPrincipalsInErrorReporter = NULL;
 
@@ -35,14 +26,12 @@ ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     sOriginPrincipalsInErrorReporter = report->originPrincipals;
 }
 
-char p1str[] = "principal1";
-JSPrincipals prin1 = { p1str, 0, Destroy, Subsume };
-char p2str[] = "principal2";
-JSPrincipals prin2 = { p2str, 0, Destroy, Subsume };
+JSPrincipals prin1 = { 1 };
+JSPrincipals prin2 = { 1 };
 
 BEGIN_TEST(testOriginPrincipals)
 {
-    JS_SetContextSecurityCallbacks(cx, &seccb);
+    JS_SetSecurityCallbacks(rt, &seccb);
 
     /*
      * Currently, the only way to set a non-trivial originPrincipal is to use

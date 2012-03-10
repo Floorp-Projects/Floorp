@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" >
+
+  <symbol id="z">
+    <use xlink:href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' id='root' /&gt;#root" />
+  </symbol>
+
+  <use id="a" xlink:href="#z" width="20"/>
+
+  <script>
+  window.addEventListener("load", function() {
+    window.scrollByPages(0);
+    document.getElementById("a").removeAttribute("width");
+    document.elementFromPoint(0, 0);
+  }, false);
+  </script>
+
+</svg>

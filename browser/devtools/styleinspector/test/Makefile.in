@@ -60,7 +60,10 @@ _BROWSER_TEST_FILES = \
   browser_ruleview_manipulation.js \
   browser_ruleview_override.js \
   browser_ruleview_ui.js \
+  browser_ruleview_focus.js \
   browser_bug705707_is_content_stylesheet.js \
+  browser_bug722196_property_view_media_queries.js \
+  browser_bug722196_rule_view_media_queries.js \
   browser_bug_592743_specificity.js \
   head.js \
   $(NULL)
@@ -74,6 +77,7 @@ _BROWSER_TEST_PAGES = \
   browser_bug705707_is_content_stylesheet_script.css \
   browser_bug705707_is_content_stylesheet.xul \
   browser_bug705707_is_content_stylesheet_xul.css \
+  browser_bug722196_identify_media_queries.html \
   $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

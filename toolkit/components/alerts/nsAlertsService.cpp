@@ -74,6 +74,33 @@ nsAlertsService::nsAlertsService()
 nsAlertsService::~nsAlertsService()
 {}
 
+bool nsAlertsService::ShouldShowAlert()
+{
+  bool result = true;
+
+#ifdef XP_WIN
+  HMODULE shellDLL = ::LoadLibraryW(L"shell32.dll");
+  if (!shellDLL)
+    return result;
+
+  SHQueryUserNotificationStatePtr pSHQueryUserNotificationState =
+    (SHQueryUserNotificationStatePtr) ::GetProcAddress(shellDLL, "SHQueryUserNotificationState");
+
+  if (pSHQueryUserNotificationState) {
+    MOZ_QUERY_USER_NOTIFICATION_STATE qstate;
+    if (SUCCEEDED(pSHQueryUserNotificationState(&qstate))) {
+      if (qstate != QUNS_ACCEPTS_NOTIFICATIONS) {
+         result = false;
+      }
+    }
+  }
+
+  ::FreeLibrary(shellDLL);
+#endif
+
+  return result;
+}
+
 NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl, const nsAString & aAlertTitle, 
                                                      const nsAString & aAlertText, bool aAlertTextClickable,
                                                      const nsAString & aAlertCookie,
@@ -108,6 +135,13 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                           aAlertCookie, aAlertListener, aAlertName);
     if (NS_SUCCEEDED(rv))
       return rv;
+  }
+
+  if (!ShouldShowAlert()) {
+    // Do not display the alert. Instead call alertfinished and get out.
+    if (aAlertListener)
+      aAlertListener->Observe(NULL, "alertfinished", PromiseFlatString(aAlertCookie).get());
+    return NS_OK;
   }
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));

@@ -212,7 +212,7 @@ test_atomtable()
   if (!thirdNonPerm || NS_GetNumberOfAtoms() != count + 1)
     return false;
 
-  NS_RegisterStaticAtoms(sAtoms_info, ArrayLength(sAtoms_info));
+  NS_RegisterStaticAtoms(sAtoms_info);
 
   return sAtom1 &&
          sAtom1->Equals(NS_LITERAL_STRING(FIRST_ATOM_STR)) &&
