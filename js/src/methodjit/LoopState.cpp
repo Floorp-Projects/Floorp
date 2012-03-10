@@ -158,10 +158,8 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
     JS_ASSERT(!alloc);
 
     alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(true);
-    if (!alloc) {
-        js_ReportOutOfMemory(cx);
+    if (!alloc)
         return false;
-    }
 
     this->alloc = alloc;
     this->loopRegs = Registers::AvailAnyRegs;
