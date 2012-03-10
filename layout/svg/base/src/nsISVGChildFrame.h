@@ -57,6 +57,13 @@ class SVGLengthList;
 class SVGUserUnitList;
 }
 
+/**
+ * This class is not particularly well named. It is inherited by some, but
+ * not all SVG frame classes that can be descendants of an
+ * nsSVGOuterSVGFrame in the frame tree. Note specifically that SVG container
+ * frames that do not inherit nsSVGDisplayContainerFrame do not inherit this
+ * class (so that's classes that only inherit nsSVGContainerFrame).
+ */
 class nsISVGChildFrame : public nsQueryFrame
 {
 public:
