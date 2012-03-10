@@ -54,7 +54,7 @@ math {
   display: inline;
   font-size: inherit;
   font-style: normal;
-  font-family: STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
+  font-family: MathJax_Main, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
   text-rendering: optimizeLegibility;
   -moz-float-edge: margin-box;
 }
@@ -156,13 +156,18 @@ math[display="inline"] {
 */
 [mathvariant] { /* shared and same as [mathvariant="normal"] */
   /* reset all font properties except those that affect the size */
+  font-family: MathJax_Main, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
   font-style: normal;
   font-variant: normal;
   font-weight: normal;
 }
-[mathvariant="bold-fraktur"], 
+[mathvariant="bold-fraktur"] {
+  font-weight: bold;
+  font-family: MathJax_Fraktur, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
+}
 [mathvariant="bold-script"] {
   font-weight: bold;
+  font-family: MathJax_Script, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
 }
 [mathvariant="bold"] {
   font-weight: bold;
@@ -175,23 +180,32 @@ math[display="inline"] {
   font-style: italic;
 }
 [mathvariant="sans-serif"] {
-  font-family: sans-serif;
+  font-family: MathJax_SansSerif, sans-serif;
 }
 [mathvariant="bold-sans-serif"] {
   font-weight: bold;
-  font-family: sans-serif;
+  font-family: MathJax_SansSerif, sans-serif;
 }
 [mathvariant="sans-serif-italic"] {
-  font-family: sans-serif;
+  font-family: MathJax_SansSerif, sans-serif;
   font-style: italic;
 }
 [mathvariant="sans-serif-bold-italic"] {
-  font-family: sans-serif;
+  font-family: MathJax_SansSerif, sans-serif;
   font-weight: bold;
   font-style: italic;
 }
 [mathvariant="monospace"] {
-  font-family: monospace;
+  font-family: MathJax_Typewriter, monospace;
+}
+[mathvariant="double-struck"] {
+  font-family: MathJax_AMS, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
+}
+[mathvariant="script"] {
+  font-family: MathJax_Script, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
+}
+[mathvariant="fraktur"] {
+  font-style: MathJax_Fraktur, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
 }
 
 /**************************************************************************/
