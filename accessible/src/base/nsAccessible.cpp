@@ -1450,6 +1450,23 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   if (!mContent->IsElement())
     return NS_OK;
 
+  // Expose draggable object attribute?
+  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
+  if (htmlElement) {
+    bool draggable = false;
+    htmlElement->GetDraggable(&draggable);
+    if (draggable) {
+      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::draggable,
+                             NS_LITERAL_STRING("true"));
+    }
+  }
+
+  // Don't calculate CSS-based object attributes when no frame (i.e.
+  // the accessible is not unattached form three) or when the accessible is not
+  // primary for node (like list bullet or XUL tree items).
+  if (!mContent->GetPrimaryFrame() || !IsPrimaryForNode())
+    return NS_OK;
+
   // CSS style based object attributes.
   nsAutoString value;
   StyleInfo styleInfo(mContent->AsElement(), mDoc->PresShell());
@@ -1481,17 +1498,6 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   // Expose 'margin-bottom' attribute.
   styleInfo.MarginBottom(value);
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::marginBottom, value);
-
-  // Expose draggable object attribute?
-  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mContent);
-  if (htmlElement) {
-    bool draggable = false;
-    htmlElement->GetDraggable(&draggable);
-    if (draggable) {
-      nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::draggable,
-                             NS_LITERAL_STRING("true"));
-    }
-  }
 
   return NS_OK;
 }

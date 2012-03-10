@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    OpenType and CFF data/program tables loader (body).                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
-/*            2010 by                                                      */
+/*  Copyright 1996-2011 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -387,7 +386,7 @@
   {
     FT_Error   error     = CFF_Err_Ok;
     FT_Memory  memory    = idx->stream->memory;
-    FT_Byte**  t;
+    FT_Byte**  t = NULL;
     FT_Byte*   new_bytes = NULL;
 
 
@@ -1337,7 +1336,10 @@
 
     error = cff_index_access_element( idx, font_index, &dict, &dict_len );
     if ( !error )
+    {
+      FT_TRACE4(( " top dictionary:\n" ));
       error = cff_parser_run( &parser, dict, dict + dict_len );
+    }
 
     cff_index_forget_element( idx, &dict );
 
@@ -1366,6 +1368,7 @@
            FT_FRAME_ENTER( font->font_dict.private_size )                 )
         goto Exit;
 
+      FT_TRACE4(( " private dictionary:\n" ));
       error = cff_parser_run( &parser,
                               (FT_Byte*)stream->cursor,
                               (FT_Byte*)stream->limit );
@@ -1455,7 +1458,7 @@
          font->header_size      < 4 ||
          font->absolute_offsize > 4 )
     {
-      FT_TRACE2(( "[not a CFF font header]\n" ));
+      FT_TRACE2(( "  not a CFF font header\n" ));
       error = CFF_Err_Unknown_File_Format;
       goto Exit;
     }
@@ -1494,6 +1497,7 @@
       goto Exit;
 
     /* now, parse the top-level font dictionary */
+    FT_TRACE4(( "parsing top-level\n" ));
     error = cff_subfont_load( &font->top_font,
                               &font->font_dict_index,
                               face_index,
@@ -1514,7 +1518,7 @@
     if ( dict->cid_registry != 0xFFFFU )
     {
       CFF_IndexRec  fd_index;
-      CFF_SubFont   sub;
+      CFF_SubFont   sub = NULL;
       FT_UInt       idx;
 
 
@@ -1546,6 +1550,7 @@
       for ( idx = 0; idx < fd_index.count; idx++ )
       {
         sub = font->subfonts[idx];
+        FT_TRACE4(( "parsing subfont %u\n", idx ));
         error = cff_subfont_load( sub, &fd_index, idx,
                                   stream, base_offset, library );
         if ( error )
@@ -1571,7 +1576,7 @@
     if ( dict->charstrings_offset == 0 )
     {
       FT_ERROR(( "cff_font_load: no charstrings offset\n" ));
-      error = CFF_Err_Unknown_File_Format;
+      error = CFF_Err_Invalid_File_Format;
       goto Exit;
     }
 

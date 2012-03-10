@@ -988,6 +988,79 @@ js::UnwindScope(JSContext *cx, uint32_t stackDepth)
     }
 }
 
+void
+js::UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs)
+{
+
+    /* c.f. the regular (catchable) TryNoteIter loop in Interpret. */
+    for (TryNoteIter tni(regs); !tni.done(); ++tni) {
+        JSTryNote *tn = *tni;
+        if (tn->kind == JSTRY_ITER) {
+            Value *sp = regs.fp()->base() + tn->stackDepth;
+            UnwindIteratorForUncatchableException(cx, &sp[-1].toObject());
+        }
+    }
+}
+
+TryNoteIter::TryNoteIter(const FrameRegs &regs)
+  : regs(regs),
+    script(regs.fp()->script()),
+    pcOffset(regs.pc - script->main())
+{
+    if (JSScript::isValidOffset(script->trynotesOffset)) {
+        tn = script->trynotes()->vector;
+        tnEnd = tn + script->trynotes()->length;
+    } else {
+        tn = tnEnd = NULL;
+    }
+    settle();
+}
+
+void
+TryNoteIter::operator++()
+{
+    ++tn;
+    settle();
+}
+
+bool
+TryNoteIter::done() const
+{
+    return tn == tnEnd;
+}
+
+void
+TryNoteIter::settle()
+{
+    for (; tn != tnEnd; ++tn) {
+        /* If pc is out of range, try the next one. */
+        if (pcOffset - tn->start >= tn->length)
+            continue;
+
+        /*
+         * We have a note that covers the exception pc but we must check
+         * whether the interpreter has already executed the corresponding
+         * handler. This is possible when the executed bytecode implements
+         * break or return from inside a for-in loop.
+         *
+         * In this case the emitter generates additional [enditer] and [gosub]
+         * opcodes to close all outstanding iterators and execute the finally
+         * blocks. If such an [enditer] throws an exception, its pc can still
+         * be inside several nested for-in loops and try-finally statements
+         * even if we have already closed the corresponding iterators and
+         * invoked the finally blocks.
+         *
+         * To address this, we make [enditer] always decrease the stack even
+         * when its implementation throws an exception. Thus already executed
+         * [enditer] and [gosub] opcodes will have try notes with the stack
+         * depth exceeding the current one and this condition is what we use to
+         * filter them out.
+         */
+        if (tn->stackDepth <= regs.sp - regs.fp()->base())
+            break;
+    }
+}
+
 /*
  * Increment/decrement the value 'v'. The resulting value is stored in *slot.
  * The result of the expression (taking into account prefix/postfix) is stored
@@ -4157,14 +4230,7 @@ END_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(&cx->regs() == &regs);
     JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
 
-    if (!cx->isExceptionPending()) {
-        /* This is an error, not a catchable exception, quit the frame ASAP. */
-        interpReturnOK = false;
-    } else {
-        JSThrowHook handler;
-        JSTryNote *tn, *tnlimit;
-        uint32_t offset;
-
+    if (cx->isExceptionPending()) {
         /* Restore atoms local in case we will resume. */
         atoms = script->atoms;
 
@@ -4173,8 +4239,7 @@ END_CASE(JSOP_ARRAYPUSH)
             Value rval;
             JSTrapStatus st = Debugger::onExceptionUnwind(cx, &rval);
             if (st == JSTRAP_CONTINUE) {
-                handler = cx->runtime->debugHooks.throwHook;
-                if (handler)
+                if (JSThrowHook handler = cx->runtime->debugHooks.throwHook)
                     st = handler(cx, script, regs.pc, &rval, cx->runtime->debugHooks.throwHookData);
             }
 
@@ -4195,40 +4260,10 @@ END_CASE(JSOP_ARRAYPUSH)
             CHECK_INTERRUPT_HANDLER();
         }
 
-        /*
-         * Look for a try block in script that can catch this exception.
-         */
-        if (!JSScript::isValidOffset(script->trynotesOffset))
-            goto no_catch;
+        for (TryNoteIter tni(regs); !tni.done(); ++tni) {
+            JSTryNote *tn = *tni;
 
-        offset = (uint32_t)(regs.pc - script->main());
-        tn = script->trynotes()->vector;
-        tnlimit = tn + script->trynotes()->length;
-        do {
-            if (offset - tn->start >= tn->length)
-                continue;
-
-            /*
-             * We have a note that covers the exception pc but we must check
-             * whether the interpreter has already executed the corresponding
-             * handler. This is possible when the executed bytecode
-             * implements break or return from inside a for-in loop.
-             *
-             * In this case the emitter generates additional [enditer] and
-             * [gosub] opcodes to close all outstanding iterators and execute
-             * the finally blocks. If such an [enditer] throws an exception,
-             * its pc can still be inside several nested for-in loops and
-             * try-finally statements even if we have already closed the
-             * corresponding iterators and invoked the finally blocks.
-             *
-             * To address this, we make [enditer] always decrease the stack
-             * even when its implementation throws an exception. Thus already
-             * executed [enditer] and [gosub] opcodes will have try notes
-             * with the stack depth exceeding the current one and this
-             * condition is what we use to filter them out.
-             */
-            if (tn->stackDepth > regs.sp - regs.fp()->base())
-                continue;
+            UnwindScope(cx, tn->stackDepth);
 
             /*
              * Set pc to the first bytecode after the the try note to point
@@ -4236,8 +4271,6 @@ END_CASE(JSOP_ARRAYPUSH)
              * the for-in loop.
              */
             regs.pc = (script)->main() + tn->start + tn->length;
-
-            UnwindScope(cx, tn->stackDepth);
             regs.sp = regs.fp()->base() + tn->stackDepth;
 
             switch (tn->kind) {
@@ -4278,9 +4311,8 @@ END_CASE(JSOP_ARRAYPUSH)
                     goto error;
               }
            }
-        } while (++tn != tnlimit);
+        }
 
-      no_catch:
         /*
          * Propagate the exception or error to the caller unless the exception
          * is an asynchronous return from a generator.
@@ -4294,6 +4326,9 @@ END_CASE(JSOP_ARRAYPUSH)
             regs.fp()->clearReturnValue();
         }
 #endif
+    } else {
+        UnwindForUncatchableException(cx, regs);
+        interpReturnOK = false;
     }
 
   forced_return:
