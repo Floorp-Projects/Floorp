@@ -1964,6 +1964,10 @@ class LCallGetElement : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES
 
     static const size_t LhsInput = 0;
     static const size_t RhsInput = BOX_PIECES;
+
+    MCallGetElement *mir() const {
+        return mir_->toCallGetElement();
+    }
 };
 
 // Call js::SetElement.
