@@ -3534,7 +3534,15 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindCanvasData(Element* aElement,
                                       nsStyleContext* aStyleContext)
 {
-  if (!aElement->OwnerDoc()->IsScriptEnabled()) {
+  // We want to check whether script is enabled on the document that
+  // could be painting to the canvas.  That's the owner document of
+  // the canvas, except when the owner document is a static document,
+  // in which case it's the original document it was cloned from.
+  nsIDocument* doc = aElement->OwnerDoc();
+  if (doc->IsStaticDocument()) {
+    doc = doc->GetOriginalDocument();
+  }
+  if (!doc->IsScriptEnabled()) {
     return nsnull;
   }
 
