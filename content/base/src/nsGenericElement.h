@@ -65,6 +65,7 @@
 #include "nsDOMClassInfoID.h" // DOMCI_DATA
 #include "nsIDOMTouchEvent.h"
 #include "nsIInlineEventHandlers.h"
+#include "mozilla/CORSMode.h"
 
 #include "nsISMILAttr.h"
 
@@ -647,6 +648,11 @@ public:
    * GetEnumValue() returns one of the above constants.
    */
   static void ParseCORSValue(const nsAString& aValue, nsAttrValue& aResult);
+
+  /**
+   * Return the CORS mode for a given string
+   */
+  static mozilla::CORSMode StringToCORSMode(const nsAString& aValue);
   
 protected:
   /*
