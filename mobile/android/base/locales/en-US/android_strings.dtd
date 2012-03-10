@@ -27,6 +27,8 @@
 
 <!ENTITY awesomebar_default_text "Enter Search or Address">
 
+<!ENTITY remote_tabs "Synced Tabs">
+
 <!ENTITY bookmark "Bookmark">
 <!ENTITY bookmark_added "Bookmark added">
 <!ENTITY bookmark_removed "Bookmark removed">

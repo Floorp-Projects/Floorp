@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.4.3 API Reference</title>
+<title>FreeType-2.4.9 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.4.3 API Reference</h1></center>
+<center><h1>FreeType-2.4.9 API Reference</h1></center>
 
 <center><h1>
 Gasp Table
@@ -72,14 +72,14 @@ Defined in FT_GASP_H (freetype/ftgasp.h).
 <p>This special value means that there is no GASP table in this face. It is up to the client to decide what to do.</p>
 </td></tr>
 <tr valign=top><td><b>FT_GASP_DO_GRIDFIT</b></td><td>
-<p>Grid-fitting and hinting should be performed at the specified ppem. This <b>really</b> means TrueType bytecode interpretation.</p>
+<p>Grid-fitting and hinting should be performed at the specified ppem. This <b>really</b> means TrueType bytecode interpretation. If this bit is not set, no hinting gets applied.</p>
 </td></tr>
 <tr valign=top><td><b>FT_GASP_DO_GRAY</b></td><td>
-<p>Anti-aliased rendering should be performed at the specified ppem.</p>
+<p>Anti-aliased rendering should be performed at the specified ppem. If not set, do monochrome rendering.</p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_GASP_SYMMETRIC_SMOOTHING</b></td></tr>
 <tr valign=top><td></td><td>
-<p>Smoothing along multiple axes must be used with ClearType.</p>
+<p>If set, smoothing along multiple axes must be used with ClearType.</p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_GASP_SYMMETRIC_GRIDFIT</b></td></tr>
 <tr valign=top><td></td><td>
@@ -88,6 +88,7 @@ Defined in FT_GASP_H (freetype/ftgasp.h).
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>The bit-flags &lsquo;FT_GASP_DO_GRIDFIT&rsquo; and &lsquo;FT_GASP_DO_GRAY&rsquo; are to be used for standard font rasterization only. Independently of that, &lsquo;FT_GASP_SYMMETRIC_SMOOTHING&rsquo; and &lsquo;FT_GASP_SYMMETRIC_GRIDFIT&rsquo; are to be used if ClearType is enabled (and &lsquo;FT_GASP_DO_GRIDFIT&rsquo; and &lsquo;FT_GASP_DO_GRAY&rsquo; are consequently ignored).</p>
 <p>&lsquo;ClearType&rsquo; is Microsoft's implementation of LCD rendering, partly protected by patents.</p>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>since</b></em></td></tr><tr><td>

@@ -4,8 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
-/*            2010 by                                                      */
+/*  Copyright 1996-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -162,7 +161,7 @@
     {
       CFF_Face      face     = (CFF_Face)cffsize->face;
       CFF_Font      font     = (CFF_Font)face->extra.data;
-      CFF_Internal  internal;
+      CFF_Internal  internal = NULL;
 
       PS_PrivateRec  priv;
       FT_Memory      memory = cffsize->face->memory;
@@ -404,7 +403,7 @@
     FT_Int32  idx             = 0;
     FT_Int32  length          = strlen( name ) + 1;
     FT_Bool   continue_search = 1;
- 
+
 
     while ( continue_search )
     {
@@ -421,10 +420,56 @@
         {
           for ( idx = 7; idx < length; idx++ )
             name[idx - 7] = name[idx];
+          length -= 7;
         }
       }
       else
         continue_search = 0;
+    }
+  }
+
+
+  /* Remove the style part from the family name (if present). */
+
+  static void
+  remove_style( FT_String*        family_name,
+                const FT_String*  style_name )
+  {
+    FT_Int32  family_name_length, style_name_length;
+
+
+    family_name_length = strlen( family_name );
+    style_name_length  = strlen( style_name );
+
+    if ( family_name_length > style_name_length )
+    {
+      FT_Int  idx;
+
+
+      for ( idx = 1; idx <= style_name_length; ++idx )
+      {
+        if ( family_name[family_name_length - idx] !=
+             style_name[style_name_length - idx] )
+          break;
+      }
+
+      if ( idx > style_name_length )
+      {
+        /* family_name ends with style_name; remove it */
+        idx = family_name_length - style_name_length - 1;
+
+        /* also remove special characters     */
+        /* between real family name and style */
+        while ( idx > 0                     &&
+                ( family_name[idx] == '-' ||
+                  family_name[idx] == ' ' ||
+                  family_name[idx] == '_' ||
+                  family_name[idx] == '+' ) )
+          --idx;
+
+        if ( idx > 0 )
+          family_name[idx + 1] = '\0';
+      }
     }
   }
 
@@ -436,25 +481,31 @@
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
-    CFF_Face            face = (CFF_Face)cffface;
+    CFF_Face            face        = (CFF_Face)cffface;
     FT_Error            error;
     SFNT_Service        sfnt;
     FT_Service_PsCMaps  psnames;
     PSHinter_Service    pshinter;
     FT_Bool             pure_cff    = 1;
     FT_Bool             sfnt_format = 0;
-    FT_Library library = cffface->driver->root.library;
+    FT_Library          library     = cffface->driver->root.library;
 
 
     sfnt = (SFNT_Service)FT_Get_Module_Interface(
              library, "sfnt" );
     if ( !sfnt )
-      goto Bad_Format;
+    {
+      FT_ERROR(( "cff_face_init: cannot access `sfnt' module\n" ));
+      error = CFF_Err_Missing_Module;
+      goto Exit;
+    }
 
     FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
 
     pshinter = (PSHinter_Service)FT_Get_Module_Interface(
                  library, "pshinter" );
+
+    FT_TRACE2(( "CFF driver\n" ));
 
     /* create input stream from resource */
     if ( FT_STREAM_SEEK( 0 ) )
@@ -466,8 +517,9 @@
     {
       if ( face->format_tag != TTAG_OTTO )  /* `OTTO'; OpenType/CFF font */
       {
-        FT_TRACE2(( "[not a valid OpenType/CFF font]\n" ));
-        goto Bad_Format;
+        FT_TRACE2(( "  not an OpenType/CFF font\n" ));
+        error = CFF_Err_Unknown_File_Format;
+        goto Exit;
       }
 
       /* if we are performing a simple font format check, exit immediately */
@@ -523,7 +575,7 @@
 
     /* now load and parse the CFF table in the file */
     {
-      CFF_Font         cff;
+      CFF_Font         cff = NULL;
       CFF_FontRecDict  dict;
       FT_Memory        memory = cffface->memory;
       FT_Int32         flags;
@@ -559,10 +611,29 @@
                    " cannot open CFF & CEF fonts\n"
                    "              "
                    " without the `PSNames' module\n" ));
-        goto Bad_Format;
+        error = CFF_Err_Missing_Module;
+        goto Exit;
       }
 
-      if ( !dict->units_per_em )
+#ifdef FT_DEBUG_LEVEL_TRACE
+      {
+        FT_UInt     idx;
+        FT_String*  s;
+
+
+        FT_TRACE4(( "SIDs\n" ));
+
+        /* dump string index, including default strings for convenience */
+        for ( idx = 0; idx < cff->num_strings + 390; idx++ )
+        {
+          s = cff_index_get_sid_string( cff, idx );
+          if ( s )
+            FT_TRACE4(("  %5d %s\n", idx, s ));
+        }
+      }
+#endif /* FT_DEBUG_LEVEL_TRACE */
+
+      if ( !dict->has_font_matrix )
         dict->units_per_em = pure_cff ? 1000 : face->root.units_per_EM;
 
       /* Normalize the font matrix so that `matrix->xx' is 1; the */
@@ -607,26 +678,32 @@
         FT_Fixed    temp;
 
 
-        if ( sub->units_per_em )
+        if ( sub->has_font_matrix )
         {
           FT_Long  scaling;
 
 
-          if ( top->units_per_em > 1 && sub->units_per_em > 1 )
-            scaling = FT_MIN( top->units_per_em, sub->units_per_em );
-          else
-            scaling = 1;
+          /* if we have a top-level matrix, */
+          /* concatenate the subfont matrix */
 
-          FT_Matrix_Multiply_Scaled( &top->font_matrix,
-                                     &sub->font_matrix,
-                                     scaling );
-          FT_Vector_Transform_Scaled( &sub->font_offset,
-                                      &top->font_matrix,
-                                      scaling );
+          if ( top->has_font_matrix )
+          {
+            if ( top->units_per_em > 1 && sub->units_per_em > 1 )
+              scaling = FT_MIN( top->units_per_em, sub->units_per_em );
+            else
+              scaling = 1;
 
-          sub->units_per_em = FT_MulDiv( sub->units_per_em,
-                                         top->units_per_em,
-                                         scaling );
+            FT_Matrix_Multiply_Scaled( &top->font_matrix,
+                                       &sub->font_matrix,
+                                       scaling );
+            FT_Vector_Transform_Scaled( &sub->font_offset,
+                                        &top->font_matrix,
+                                        scaling );
+
+            sub->units_per_em = FT_MulDiv( sub->units_per_em,
+                                           top->units_per_em,
+                                           scaling );
+          }
         }
         else
         {
@@ -644,16 +721,6 @@
         if ( temp != 0x10000L )
         {
           *upm = FT_DivFix( *upm, temp );
-
-          /* if *upm is larger than 100*1000 we divide by 1000 --     */
-          /* this can happen if e.g. there is no top-font FontMatrix  */
-          /* and the subfont FontMatrix already contains the complete */
-          /* scaling for the subfont (see section 5.11 of the PLRM)   */
-
-          /* 100 is a heuristic value */
-
-          if ( *upm > 100L * 1000L )
-            *upm = ( *upm + 500 ) / 1000;
 
           matrix->xx = FT_DivFix( matrix->xx, temp );
           matrix->yx = FT_DivFix( matrix->yx, temp );
@@ -713,7 +780,7 @@
           char*  family_name = NULL;
 
 
-          remove_subset_prefix( cffface->family_name ); 
+          remove_subset_prefix( cffface->family_name );
 
           if ( dict->family_name )
           {
@@ -758,6 +825,9 @@
                 /* case, the remaining string in `fullp' will be used as */
                 /* the style name.                                       */
                 style_name = cff_strcpy( memory, fullp );
+
+                /* remove the style part from the family name (if present) */
+                remove_style( cffface->family_name, style_name );
               }
               break;
             }
@@ -785,22 +855,22 @@
         /*                                                                 */
         /* Compute face flags.                                             */
         /*                                                                 */
-        flags = (FT_UInt32)( FT_FACE_FLAG_SCALABLE   | /* scalable outlines */
-                             FT_FACE_FLAG_HORIZONTAL | /* horizontal data   */
-                             FT_FACE_FLAG_HINTER );    /* has native hinter */
+        flags = FT_FACE_FLAG_SCALABLE   | /* scalable outlines */
+                FT_FACE_FLAG_HORIZONTAL | /* horizontal data   */
+                FT_FACE_FLAG_HINTER;      /* has native hinter */
 
         if ( sfnt_format )
-          flags |= (FT_UInt32)FT_FACE_FLAG_SFNT;
+          flags |= FT_FACE_FLAG_SFNT;
 
         /* fixed width font? */
         if ( dict->is_fixed_pitch )
-          flags |= (FT_UInt32)FT_FACE_FLAG_FIXED_WIDTH;
+          flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
   /* XXX: WE DO NOT SUPPORT KERNING METRICS IN THE GPOS TABLE FOR NOW */
 #if 0
         /* kerning available? */
         if ( face->kern_pairs )
-          flags |= (FT_UInt32)FT_FACE_FLAG_KERNING;
+          flags |= FT_FACE_FLAG_KERNING;
 #endif
 
         cffface->face_flags = flags;
@@ -952,10 +1022,6 @@
 
   Exit:
     return error;
-
-  Bad_Format:
-    error = CFF_Err_Unknown_File_Format;
-    goto Exit;
   }
 
 

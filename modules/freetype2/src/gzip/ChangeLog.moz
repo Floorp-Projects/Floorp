@@ -1,7 +1,0 @@
-
-		Mozilla ChangeLog file for zlib
-
-Mozilla.org changes:
-
-- 28 September 2009
-  Don't enable zlib's debug output when the Mozilla build is in debug mode (bug 431950)

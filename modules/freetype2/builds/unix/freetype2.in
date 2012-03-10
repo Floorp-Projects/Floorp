@@ -8,5 +8,5 @@ Description: A free, high-quality, and portable font engine.
 Version: @ft_version@
 Requires:
 Libs: -L${libdir} -lfreetype
-Libs.private: @LIBZ@ @FT2_EXTRA_LIBS@
+Libs.private: @LIBZ@ @LIBBZ2@ @FT2_EXTRA_LIBS@
 Cflags: -I${includedir}/freetype2 -I${includedir}

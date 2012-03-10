@@ -238,6 +238,12 @@ gzip.ppc.o: FT:src/gzip/ftgzip.c
 	$(CC) -c $(CFLAGS) -o $@ /FT/src/gzip/ftgzip.c
 
 #
+# FreeType2 library bzip2 support for compressed PCF bitmap fonts
+#
+bzip2.ppc.o: FT:src/bzip2/ftbzip2.c
+	$(CC) -c $(CFLAGS) -o $@ /FT/src/bzip2/ftbzip2.c
+
+#
 # FreeType2 library compress support for compressed PCF bitmap fonts
 #
 lzw.ppc.o: FT:src/lzw/ftlzw.c
