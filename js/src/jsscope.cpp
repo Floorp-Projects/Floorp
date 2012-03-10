@@ -451,8 +451,10 @@ JSObject::toDictionaryMode(JSContext *cx)
         JS_ASSERT(!shape->inDictionary());
 
         Shape *dprop = js_NewGCShape(cx);
-        if (!dprop)
+        if (!dprop) {
+            js_ReportOutOfMemory(cx);
             return false;
+        }
 
         HeapPtrShape *listp = dictionaryShape
                               ? &dictionaryShape->parent
@@ -466,8 +468,10 @@ JSObject::toDictionaryMode(JSContext *cx)
         shape = shape->previous();
     }
 
-    if (!root->hashify(cx))
+    if (!root->hashify(cx)) {
+        js_ReportOutOfMemory(cx);
         return false;
+    }
 
     JS_ASSERT((Shape **) root->listp == root.address());
     root->listp = &self->shape_;
