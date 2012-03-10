@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.4.3 API Reference</title>
+<title>FreeType-2.4.9 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.4.3 API Reference</h1></center>
+<center><h1>FreeType-2.4.9 API Reference</h1></center>
 
 <center><h1>
 Glyph Stroker
@@ -87,9 +87,11 @@ Defined in FT_STROKER_H (freetype/ftstroke.h).
 
   <span class="keyword">typedef</span> <span class="keyword">enum</span>  FT_Stroker_LineJoin_
   {
-    <a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_STROKER_LINEJOIN_ROUND</a> = 0,
-    <a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_STROKER_LINEJOIN_BEVEL</a>,
-    <a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_STROKER_LINEJOIN_MITER</a>
+    <a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_STROKER_LINEJOIN_ROUND</a>          = 0,
+    <a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_STROKER_LINEJOIN_BEVEL</a>          = 1,
+    <a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_STROKER_LINEJOIN_MITER_VARIABLE</a> = 2,
+    <a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_STROKER_LINEJOIN_MITER</a>          = <a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_STROKER_LINEJOIN_MITER_VARIABLE</a>,
+    <a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_STROKER_LINEJOIN_MITER_FIXED</a>    = 3
 
   } <b>FT_Stroker_LineJoin</b>;
 
@@ -106,11 +108,19 @@ Defined in FT_STROKER_H (freetype/ftstroke.h).
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_STROKER_LINEJOIN_BEVEL</b></td></tr>
 <tr valign=top><td></td><td>
-<p>Used to render beveled line joins; i.e., the two joining lines are extended until they intersect.</p>
+<p>Used to render beveled line joins. The outer corner of the joined lines is filled by enclosing the triangular region of the corner with a straight line between the outer corners of each stroke.</p>
+</td></tr>
+<tr valign=top><td colspan=0><b>FT_STROKER_LINEJOIN_MITER_FIXED</b></td></tr>
+<tr valign=top><td></td><td>
+<p>Used to render mitered line joins, with fixed bevels if the miter limit is exceeded. The outer edges of the strokes for the two segments are extended until they meet at an angle. If the segments meet at too sharp an angle (such that the miter would extend from the intersection of the segments a distance greater than the product of the miter limit value and the border radius), then a bevel join (see above) is used instead. This prevents long spikes being created. FT_STROKER_LINEJOIN_MITER_FIXED generates a miter line join as used in PostScript and PDF.</p>
+</td></tr>
+<tr valign=top><td colspan=0><b>FT_STROKER_LINEJOIN_MITER_VARIABLE</b></td></tr>
+<tr valign=top><td></td><td>
+<p></p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_STROKER_LINEJOIN_MITER</b></td></tr>
 <tr valign=top><td></td><td>
-<p>Same as beveled rendering, except that an additional line break is added if the angle between the two joining lines is too closed (this is useful to avoid unpleasant spikes in beveled rendering).</p>
+<p>Used to render mitered line joins, with variable bevels if the miter limit is exceeded. The intersection of the strokes is clipped at a line perpendicular to the bisector of the angle between the strokes, at the distance from the intersection of the segments equal to the product of the miter limit value and the border radius. This prevents long spikes being created. FT_STROKER_LINEJOIN_MITER_VARIABLE generates a mitered line join as used in XPS. FT_STROKER_LINEJOIN_MITER is an alias for FT_STROKER_LINEJOIN_MITER_VARIABLE, retained for backwards compatibility.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -338,7 +348,7 @@ Defined in FT_STROKER_H (freetype/ftstroke.h).
 <p>The line join style.</p>
 </td></tr>
 <tr valign=top><td><b>miter_limit</b></td><td>
-<p>The miter limit for the FT_STROKER_LINEJOIN_MITER style, expressed as 16.16 fixed point value.</p>
+<p>The miter limit for the FT_STROKER_LINEJOIN_MITER_FIXED and FT_STROKER_LINEJOIN_MITER_VARIABLE line join styles, expressed as 16.16 fixed point value.</p>
 </td></tr>
 </table>
 </td></tr></table>

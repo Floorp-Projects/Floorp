@@ -282,9 +282,18 @@
 #if defined(_MSC_VER)
 #define SK_OVERRIDE override
 #elif defined(__clang__)
+#if __has_feature(cxx_override_control)
 // Some documentation suggests we should be using __attribute__((override)),
 // but it doesn't work.
 #define SK_OVERRIDE override
+#elif defined(__has_extension)
+#if __has_extension(cxx_override_control)
+#define SK_OVERRIDE override
+#endif
+#endif
+#ifndef SK_OVERRIDE
+#define SK_OVERRIDE
+#endif
 #else
 // Linux GCC ignores "__attribute__((override))" and rejects "override".
 #define SK_OVERRIDE

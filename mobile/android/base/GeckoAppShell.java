@@ -367,6 +367,7 @@ public class GeckoAppShell
                 return;
             loadMozGlue();
             // the extract libs parameter is being removed in bug 732069
+            loadLibsSetup(context);
             loadSQLiteLibsNative(apkName, false);
             sSQLiteLibsLoaded = true;
         }
@@ -617,12 +618,6 @@ public class GeckoAppShell
 
     public static void returnIMEQueryResult(String result, int selectionStart, int selectionLength) {
         mInputConnection.returnIMEQueryResult(result, selectionStart, selectionLength);
-    }
-
-    public static void resetIMESelection() {
-        if (mInputConnection != null) {
-            mInputConnection.resetSelection();
-        }
     }
 
     static void onXreExit() {
