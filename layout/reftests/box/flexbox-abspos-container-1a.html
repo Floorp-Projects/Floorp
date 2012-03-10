@@ -1,0 +1,30 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!-- This testcase has a relatively-positioned -moz-box element, which should
+     form a containing block for its absolutely positioned child. -->
+<html>
+  <head>
+    <style>
+      .box { display: -moz-box }
+      .relpos_parent {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        background: lightblue;
+      }
+      .abspos_child {
+        position: absolute;
+        left: 30px;
+        bottom: 10px;
+        width: 20px;
+        height: 20px;
+        background: purple;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box relpos_parent">
+      <div class="abspos_child"></div>
+    </div>
+  </body>
+</html>

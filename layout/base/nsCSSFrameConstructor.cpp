@@ -3914,6 +3914,12 @@ bool IsXULDisplayType(const nsStyleDisplay* aDisplay)
 #define SCROLLABLE_XUL_FCDATA(_func)                                    \
   FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_SKIP_ABSPOS_PUSH |   \
               FCDATA_MAY_NEED_SCROLLFRAME, _func)
+// .. but we allow some XUL frames to be _containers_ for out-of-flow content
+// (This is the same as SCROLLABLE_XUL_FCDATA, but w/o FCDATA_SKIP_ABSPOS_PUSH)
+#define SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(_func)                   \
+  FCDATA_DECL(FCDATA_DISALLOW_OUT_OF_FLOW |                             \
+              FCDATA_MAY_NEED_SCROLLFRAME, _func)
+
 #define SIMPLE_XUL_CREATE(_tag, _func)            \
   { &nsGkAtoms::_tag, SIMPLE_XUL_FCDATA(_func) }
 #define SCROLLABLE_XUL_CREATE(_tag, _func)            \
@@ -3922,6 +3928,8 @@ bool IsXULDisplayType(const nsStyleDisplay* aDisplay)
   { _int, SIMPLE_XUL_FCDATA(_func) }
 #define SCROLLABLE_XUL_INT_CREATE(_int, _func)                          \
   { _int, SCROLLABLE_XUL_FCDATA(_func) }
+#define SCROLLABLE_ABSPOS_CONTAINER_XUL_INT_CREATE(_int, _func)         \
+  { _int, SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(_func) }
 
 static
 nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
@@ -4117,8 +4125,10 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay* aDisplay,
                                           nsStyleContext* aStyleContext)
 {
   static const FrameConstructionDataByInt sXULDisplayData[] = {
-    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_INLINE_BOX, NS_NewBoxFrame),
-    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_BOX, NS_NewBoxFrame),
+    SCROLLABLE_ABSPOS_CONTAINER_XUL_INT_CREATE(NS_STYLE_DISPLAY_INLINE_BOX,
+                                               NS_NewBoxFrame),
+    SCROLLABLE_ABSPOS_CONTAINER_XUL_INT_CREATE(NS_STYLE_DISPLAY_BOX,
+                                               NS_NewBoxFrame),
 #ifdef MOZ_XUL
     SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_INLINE_GRID, NS_NewGridBoxFrame),
     SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_GRID, NS_NewGridBoxFrame),
