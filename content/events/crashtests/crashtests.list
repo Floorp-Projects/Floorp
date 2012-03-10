@@ -6,5 +6,6 @@ load 457776-1.html
 load 496308-1.html
 load 682637-1.html
 load eventctor-nulldictionary.html
+load eventctor-nullstorage.html
 load recursive-onload.html
 load recursive-DOMNodeInserted.html
