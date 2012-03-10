@@ -292,24 +292,24 @@ function test_moz_hosts()
   // check the number of entries in moz_hosts equals the number of
   // unique rev_host in moz_places
   stmt = DBConn().createAsyncStatement(
-    "SELECT ("
-  + "SELECT COUNT(host) "
-  + "FROM moz_hosts), ("
-  + "SELECT COUNT(DISTINCT rev_host) "
-  + "FROM moz_places "
-  + "WHERE LENGTH(rev_host) > 1)"
-  );
+    "SELECT (SELECT COUNT(host) FROM moz_hosts), " +
+           "(SELECT COUNT(DISTINCT rev_host) " +
+            "FROM moz_places " +
+            "WHERE LENGTH(rev_host) > 1)");
   try {
     stmt.executeAsync({
-      handleResult: function (aResultSet) {
+      handleResult: function (aResult) {
+        this._hasResults = true;
         let row = aResult.getNextRow();
-        let mozPlacesCount = row.getResultByIndex(0);
-        let mozHostsCount = row.getResultByIndex(1);
+        let mozHostsCount = row.getResultByIndex(0);
+        let mozPlacesCount = row.getResultByIndex(1);
+        do_check_true(mozPlacesCount > 0);
         do_check_eq(mozPlacesCount, mozHostsCount);
       },
       handleError: function () {},
       handleCompletion: function (aReason) {
         do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
+        do_check_true(this._hasResults);
         run_next_test();
       }
     });
