@@ -75,6 +75,7 @@
 #include "nsCRT.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsGenericElement.h"
+#include "nsCrossSiteListenerProxy.h"
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/CORSMode.h"
@@ -300,7 +301,6 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
-  nsCOMPtr<nsIStreamLoader> loader;
 
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mDocument->GetScriptGlobalObject()));
   if (!window) {
@@ -339,10 +339,21 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
     httpChannel->SetReferrer(mDocument->GetDocumentURI());
   }
 
+  nsCOMPtr<nsIStreamLoader> loader;
   rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = channel->AsyncOpen(loader, aRequest);
+  nsCOMPtr<nsIStreamListener> listener = loader.get();
+
+  if (aRequest->mCORSMode != CORS_NONE) {
+    bool withCredentials = (aRequest->mCORSMode == CORS_USE_CREDENTIALS);
+    listener =
+      new nsCORSListenerProxy(listener, mDocument->NodePrincipal(), channel,
+                              withCredentials, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = channel->AsyncOpen(listener, aRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1238,9 +1249,14 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(req);
-  rv = nsContentUtils::GetSecurityManager()->
-    GetChannelPrincipal(channel, getter_AddRefs(aRequest->mOriginPrincipal));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // If this load was subject to a CORS check; don't flag it with a
+  // separate origin principal, so that it will treat our document's
+  // principal as the origin principal
+  if (aRequest->mCORSMode == CORS_NONE) {
+    rv = nsContentUtils::GetSecurityManager()->
+      GetChannelPrincipal(channel, getter_AddRefs(aRequest->mOriginPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   if (aStringLen) {
     // Check the charset attribute to determine script charset.
