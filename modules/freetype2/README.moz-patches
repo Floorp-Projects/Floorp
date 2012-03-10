@@ -1,6 +1,4 @@
-This directory contains freetype2 v2.4.3 downloaded from
+This directory contains freetype2 v2.4.9 downloaded from
 http://savannah.nongnu.org/download/freetype/
 
-Makefile.in is added for the mozilla build.
-
-Additional patch applied locally:
+There are currently no local changes applied the freetype tree.

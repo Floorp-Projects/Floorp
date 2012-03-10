@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.4.3 API Reference</title>
+<title>FreeType-2.4.9 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.4.3 API Reference</h1></center>
+<center><h1>FreeType-2.4.9 API Reference</h1></center>
 
 <center><h1>
 Base Interface
@@ -382,10 +382,10 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <p>Left side bearing for vertical layout.</p>
 </td></tr>
 <tr valign=top><td><b>vertBearingY</b></td><td>
-<p>Top side bearing for vertical layout.</p>
+<p>Top side bearing for vertical layout. Larger positive values mean further below the vertical glyph origin.</p>
 </td></tr>
 <tr valign=top><td><b>vertAdvance</b></td><td>
-<p>Advance height for vertical layout.</p>
+<p>Advance height for vertical layout. Positive values mean the glyph has a positive advance downward.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -693,8 +693,8 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 
     <a href="ft2-list_processing.html#FT_ListRec">FT_ListRec</a>        sizes_list;
 
-    <a href="ft2-basic_types.html#FT_Generic">FT_Generic</a>        autohint;
-    <span class="keyword">void</span>*             extensions;
+    <a href="ft2-basic_types.html#FT_Generic">FT_Generic</a>        autohint;   /* face-specific auto-hinter data */
+    <span class="keyword">void</span>*             extensions; /* unused                         */
 
     <a href="ft2-base_interface.html#FT_Face_Internal">FT_Face_Internal</a>  internal;
 
@@ -872,8 +872,8 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 </td></tr>
 <tr valign=top><td><b>FT_FACE_FLAG_TRICKY</b></td><td>
 <p>Set if the font is &lsquo;tricky&rsquo;, this is, it always needs the font format's native hinting engine to get a reasonable result. A typical example is the Chinese font &lsquo;mingli.ttf&rsquo; which uses TrueType bytecode instructions to move and scale all of its subglyphs.</p>
-<p>It is not possible to autohint such fonts using <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_FORCE_AUTOHINT</a>; it will also ignore <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_HINTING</a>. You have to set both FT_LOAD_NO_HINTING and <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_AUTOHINT</a> to really disable hinting; however, you probably never want this except for demonstration purposes.</p>
-<p>Currently, there are six TrueType fonts in the list of tricky fonts; they are hard-coded in file &lsquo;ttobjs.c&rsquo;.</p>
+<p>It is not possible to autohint such fonts using <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_FORCE_AUTOHINT</a>; it will also ignore <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_HINTING</a>. You have to set both <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_HINTING</a> and <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_AUTOHINT</a> to really disable hinting; however, you probably never want this except for demonstration purposes.</p>
+<p>Currently, there are about a dozen TrueType fonts in the list of tricky fonts; they are hard-coded in file &lsquo;ttobjs.c&rsquo;.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -1507,6 +1507,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>In case you want to provide your own memory allocating routines, use <a href="ft2-module_management.html#FT_New_Library">FT_New_Library</a> instead, followed by a call to <a href="ft2-module_management.html#FT_Add_Default_Modules">FT_Add_Default_Modules</a> (or a series of calls to <a href="ft2-module_management.html#FT_Add_Module">FT_Add_Module</a>).</p>
+<p>For multi-threading applications each thread should have its own FT_Library object.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -1882,6 +1883,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <p>Unlike FreeType 1.x, this function automatically creates a glyph slot for the face object which can be accessed directly through &lsquo;face-&gt;glyph&rsquo;.</p>
 <p>FT_Open_Face can be used to quickly check whether the font format of a given font resource is supported by FreeType. If the &lsquo;face_index&rsquo; field is negative, the function's return value is&nbsp;0 if the font format is recognized, or non-zero otherwise; the function returns a more or less empty face handle in &lsquo;*aface&rsquo; (if &lsquo;aface&rsquo; isn't NULL). The only useful field in this special case is &lsquo;face-&gt;num_faces&rsquo; which gives the number of faces within the font file. After examination, the returned <a href="ft2-base_interface.html#FT_Face">FT_Face</a> structure should be deallocated with a call to <a href="ft2-base_interface.html#FT_Done_Face">FT_Done_Face</a>.</p>
 <p>Each new face object created with this function also owns a default <a href="ft2-base_interface.html#FT_Size">FT_Size</a> object, accessible as &lsquo;face-&gt;size&rsquo;.</p>
+<p>One <a href="ft2-base_interface.html#FT_Library">FT_Library</a> instance can have multiple face objects, this is, <a href="ft2-base_interface.html#FT_Open_Face">FT_Open_Face</a> and its siblings can be called multiple times using the same &lsquo;library&rsquo; argument.</p>
 <p>See the discussion of reference counters in the description of <a href="ft2-base_interface.html#FT_Reference_Face">FT_Reference_Face</a>.</p>
 </td></tr></table>
 </td></tr></table>
@@ -2115,7 +2117,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_SIZE_REQUEST_TYPE_REAL_DIM</b></td></tr>
 <tr valign=top><td></td><td>
-<p>The real dimension. The sum of the the &lsquo;Ascender&rsquo; and (minus of) the &lsquo;Descender&rsquo; fields of <a href="ft2-base_interface.html#FT_FaceRec">FT_FaceRec</a> are used to determine both scaling values.</p>
+<p>The real dimension. The sum of the the &lsquo;ascender&rsquo; and (minus of) the &lsquo;descender&rsquo; fields of <a href="ft2-base_interface.html#FT_FaceRec">FT_FaceRec</a> are used to determine both scaling values.</p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_SIZE_REQUEST_TYPE_BBOX</b></td></tr>
 <tr valign=top><td></td><td>
@@ -2458,20 +2460,20 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <table align=center width="87%"><tr bgcolor="#D6E8FF"><td><pre>
 
 #define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_DEFAULT</a>                      0x0
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_SCALE</a>                     0x1
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_HINTING</a>                   0x2
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_RENDER</a>                       0x4
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_BITMAP</a>                    0x8
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_VERTICAL_LAYOUT</a>              0x10
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_FORCE_AUTOHINT</a>               0x20
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_CROP_BITMAP</a>                  0x40
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_PEDANTIC</a>                     0x80
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH</a>  0x200
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_RECURSE</a>                   0x400
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_IGNORE_TRANSFORM</a>             0x800
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_MONOCHROME</a>                   0x1000
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_LINEAR_DESIGN</a>                0x2000
-#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_AUTOHINT</a>                  0x8000U
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_SCALE</a>                     ( 1L &lt;&lt; 0 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_HINTING</a>                   ( 1L &lt;&lt; 1 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_RENDER</a>                       ( 1L &lt;&lt; 2 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_BITMAP</a>                    ( 1L &lt;&lt; 3 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_VERTICAL_LAYOUT</a>              ( 1L &lt;&lt; 4 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_FORCE_AUTOHINT</a>               ( 1L &lt;&lt; 5 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_CROP_BITMAP</a>                  ( 1L &lt;&lt; 6 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_PEDANTIC</a>                     ( 1L &lt;&lt; 7 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH</a>  ( 1L &lt;&lt; 9 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_RECURSE</a>                   ( 1L &lt;&lt; 10 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_IGNORE_TRANSFORM</a>             ( 1L &lt;&lt; 11 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_MONOCHROME</a>                   ( 1L &lt;&lt; 12 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_LINEAR_DESIGN</a>                ( 1L &lt;&lt; 13 )
+#define <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_NO_AUTOHINT</a>                  ( 1L &lt;&lt; 15 )
 
 </pre></table><br>
 <table align=center width="87%"><tr><td>
@@ -2514,11 +2516,11 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 </td></tr>
 <tr valign=top><td><b>FT_LOAD_PEDANTIC</b></td><td>
 <p>Indicates that the font driver should perform pedantic verifications during glyph loading. This is mostly used to detect broken glyphs in fonts. By default, FreeType tries to handle broken fonts also.</p>
+<p>In particular, errors from the TrueType bytecode engine are not passed to the application if this flag is not set; this might result in partially hinted or distorted glyphs in case a glyph's bytecode is buggy.</p>
 </td></tr>
 <tr valign=top><td colspan=0><b>FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH</b></td></tr>
 <tr valign=top><td></td><td>
-<p>Indicates that the font driver should ignore the global advance width defined in the font. By default, that value is used as the advance width for all glyphs when the face has <a href="ft2-base_interface.html#FT_FACE_FLAG_XXX">FT_FACE_FLAG_FIXED_WIDTH</a> set.</p>
-<p>This flag exists for historical reasons (to support buggy CJK fonts).</p>
+<p>Ignored. Deprecated.</p>
 </td></tr>
 <tr valign=top><td><b>FT_LOAD_NO_RECURSE</b></td><td>
 <p>This flag is only used internally. It merely indicates that the font driver should not load composite glyphs recursively. Instead, it should set the &lsquo;num_subglyph&rsquo; and &lsquo;subglyphs&rsquo; values of the glyph slot accordingly, and set &lsquo;glyph-&gt;format&rsquo; to <a href="ft2-basic_types.html#FT_Glyph_Format">FT_GLYPH_FORMAT_COMPOSITE</a>.</p>
@@ -2979,7 +2981,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <p>The point size in 16.16 fractional points.</p>
 </td></tr>
 <tr valign=top><td><b>degree</b></td><td>
-<p>The degree of tightness.</p>
+<p>The degree of tightness. Increasingly negative values represent tighter track kerning, while increasingly positive values represent looser track kerning. Value zero means no track kerning.</p>
 </td></tr>
 </table>
 </td></tr></table>
@@ -2987,12 +2989,16 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <p></p>
 <table cellpadding=3 border=0>
 <tr valign=top><td><b>akerning</b></td><td>
-<p>The kerning in 16.16 fractional points.</p>
+<p>The kerning in 16.16 fractional points, to be uniformly applied between all glyphs.</p>
 </td></tr>
 </table>
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
 <p>FreeType error code. 0&nbsp;means success.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>Currently, only the Type&nbsp;1 font driver supports track kerning, using data from AFM files (if attached with <a href="ft2-base_interface.html#FT_Attach_File">FT_Attach_File</a> or <a href="ft2-base_interface.html#FT_Attach_Stream">FT_Attach_Stream</a>).</p>
+<p>Only very few AFM files come with track kerning data; please refer to the Adobe's AFM specification for more details.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -3045,6 +3051,7 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>An error is returned if the face doesn't provide glyph names or if the glyph index is invalid. In all cases of failure, the first byte of &lsquo;buffer&rsquo; is set to&nbsp;0 to indicate an empty name.</p>
 <p>The glyph name is truncated to fit within the buffer if it is too long. The returned string is always zero-terminated.</p>
+<p>Be aware that FreeType reorders glyph indices internally so that glyph index&nbsp;0 always corresponds to the &lsquo;missing glyph&rsquo; (called &lsquo;.notdef&rsquo;).</p>
 <p>This function is not compiled within the library if the config macro &lsquo;FT_CONFIG_OPTION_NO_GLYPH_NAMES&rsquo; is defined in &lsquo;include/freetype/config/ftoptions.h&rsquo;.</p>
 </td></tr></table>
 </td></tr></table>
@@ -3587,6 +3594,9 @@ Defined in FT_FREETYPE_H (freetype/freetype.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>Use this function rather than directly reading the &lsquo;fs_type&rsquo; field in the <a href="ft2-type1_tables.html#PS_FontInfoRec">PS_FontInfoRec</a> structure which is only guaranteed to return the correct results for Type&nbsp;1 fonts.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>since</b></em></td></tr><tr><td>
+<p>2.3.8</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

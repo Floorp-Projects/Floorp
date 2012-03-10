@@ -57,6 +57,7 @@ public interface GlobalSyncStage {
     processClientCommands,
     updateEnabledEngines,
     */
+    syncTabs,
     syncBookmarks,
     syncHistory,
     completed,

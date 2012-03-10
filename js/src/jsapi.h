@@ -861,7 +861,8 @@ class JS_PUBLIC_API(AutoGCRooter) {
         DESCRIPTOR =  -13, /* js::AutoPropertyDescriptorRooter */
         STRING =      -14, /* js::AutoStringRooter */
         IDVECTOR =    -15, /* js::AutoIdVector */
-        OBJVECTOR =   -16  /* js::AutoObjectVector */
+        OBJVECTOR =   -16, /* js::AutoObjectVector */
+        SCRIPTVECTOR =-17  /* js::AutoScriptVector */
     };
 
   private:
@@ -1132,6 +1133,19 @@ class AutoIdVector : public AutoVectorRooter<jsid>
     explicit AutoIdVector(JSContext *cx
                           JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : AutoVectorRooter<jsid>(cx, IDVECTOR)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoScriptVector : public AutoVectorRooter<JSScript *>
+{
+  public:
+    explicit AutoScriptVector(JSContext *cx
+                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<JSScript *>(cx, SCRIPTVECTOR)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }

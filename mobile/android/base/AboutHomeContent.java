@@ -717,18 +717,4 @@ public class AboutHomeContent extends ScrollView {
             return false;
         }
     }
-
-    public static class LinkTextView extends TextView {
-        public LinkTextView(Context context, AttributeSet attrs) {
-            super(context, attrs);
-        }
-
-        @Override
-        public void setText(CharSequence text, BufferType type) {
-            SpannableString content = new SpannableString(text + " \u00BB");
-            content.setSpan(new UnderlineSpan(), 0, text.length(), 0);
-
-            super.setText(content, BufferType.SPANNABLE);
-        }
-    }
 }

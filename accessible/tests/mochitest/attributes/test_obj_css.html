@@ -82,6 +82,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=689540
       testCSSAttrs("tr");
       testCSSAttrs("td");
 
+      // no CSS-based object attributes
+      testAbsentCSSAttrs(getAccessible("listitem").firstChild);
+
       SimpleTest.finish();
     }
 
@@ -110,6 +113,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=689540
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=714579"
      title="Don't use GetComputedStyle for object attribute calculation">
     Mozilla Bug 714579
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=729831"
+     title="Don't expose CSS-based object attributes on not in tree accessible and accessible having no DOM element">
+    Mozilla Bug 729831
   </a>
 
   <p id="display"></p>
@@ -189,5 +197,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=689540
       <td id="td">td</td>
     </tr>
   </table>
+
+  <ul>
+    <li id="listitem">item
+  </ul>
 </body>
 </html>

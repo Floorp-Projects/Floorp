@@ -94,12 +94,14 @@ FENNEC_JAVA_FILES = \
   GeckoThread.java \
   GlobalHistory.java \
   LinkPreference.java \
+  LinkTextView.java \
   ProfileMigrator.java \
   PromptService.java \
   sqlite/ByteBufferInputStream.java \
   sqlite/MatrixBlobCursor.java \
   sqlite/SQLiteBridge.java \
   sqlite/SQLiteBridgeException.java \
+  RemoteTabs.java \
   SetupScreen.java \
   SurfaceLockInfo.java \
   Tab.java \
@@ -248,6 +250,9 @@ RES_LAYOUT = \
   res/layout/notification_progress_text.xml \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
+  res/layout/remote_tabs.xml \
+  res/layout/remote_tabs_child.xml \
+  res/layout/remote_tabs_group.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
@@ -293,6 +298,7 @@ RES_ANIM = \
 RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/abouthome_bg.png \
   res/drawable-nodpi/abouthome_topsites_bg.png \
+  res/drawable-nodpi/background.png \
   res/drawable-nodpi/tabs_tray_bg.png \
   res/drawable-nodpi/tabs_tray_pressed_bg.png \
   $(NULL)
@@ -528,7 +534,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/awesomebar_tab_press_selected.xml      \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
-  mobile/android/base/resources/drawable/background.png                         \
   mobile/android/base/resources/drawable/desktop_notification.png               \
   mobile/android/base/resources/drawable/gecko_actionbar_bg.xml                 \
   mobile/android/base/resources/drawable/progress_spinner.xml                   \
@@ -550,6 +555,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/progress_spinner_16.png                \
   mobile/android/base/resources/drawable/progress_spinner_17.png                \
   mobile/android/base/resources/drawable/progress_spinner_18.png                \
+  mobile/android/base/resources/drawable/remote_tabs_group_bg_repeat.xml        \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
