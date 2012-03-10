@@ -530,7 +530,7 @@ public:
    * Returns the current disabled state of the element.
    */
   virtual bool IsDisabled() const {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+    return false;
   }
 
   bool IsHidden() const
