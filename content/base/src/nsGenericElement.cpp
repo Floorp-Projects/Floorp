@@ -6269,6 +6269,16 @@ nsGenericElement::StringToCORSMode(const nsAString& aValue)
   return CORSMode(val.GetEnumValue());
 }
 
+/* static */ CORSMode
+nsGenericElement::AttrValueToCORSMode(const nsAttrValue* aValue)
+{
+  if (!aValue) {
+    return CORS_NONE;
+  }
+
+  return CORSMode(aValue->GetEnumValue());
+}
+
 #define EVENT(name_, id_, type_, struct_)                                    \
   NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, jsval *vp) {            \
     nsEventListenerManager *elm = GetListenerManager(false);              \

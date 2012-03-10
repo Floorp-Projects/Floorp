@@ -74,13 +74,16 @@
 #include "nsChannelPolicy.h"
 #include "nsCRT.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsGenericElement.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/CORSMode.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gCspPRLog;
 #endif
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //////////////////////////////////////////////////////////////
@@ -90,11 +93,14 @@ using namespace mozilla::dom;
 class nsScriptLoadRequest : public nsISupports {
 public:
   nsScriptLoadRequest(nsIScriptElement* aElement,
-                      PRUint32 aVersion)
+                      PRUint32 aVersion,
+                      CORSMode aCORSMode)
     : mElement(aElement),
       mLoading(true),
       mIsInline(true),
-      mJSVersion(aVersion), mLineNo(1)
+      mJSVersion(aVersion),
+      mLineNo(1),
+      mCORSMode(aCORSMode)
   {
   }
 
@@ -122,6 +128,7 @@ public:
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
   PRInt32 mLineNo;
+  const CORSMode mCORSMode;
 };
 
 // The nsScriptLoadRequest is passed as the context to necko, and thus
@@ -551,6 +558,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     if (!scriptURI) {
       return false;
     }
+    CORSMode ourCORSMode = aElement->GetCORSMode();
     nsTArray<PreloadInfo>::index_type i =
       mPreloads.IndexOf(scriptURI.get(), 0, PreloadURIComparator());
     if (i != nsTArray<PreloadInfo>::NoIndex) {
@@ -565,7 +573,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       // the charset we have now.
       nsAutoString elementCharset;
       aElement->GetScriptCharset(elementCharset);
-      if (elementCharset.Equals(preloadCharset)) {
+      if (elementCharset.Equals(preloadCharset) &&
+          ourCORSMode == request->mCORSMode) {
         rv = CheckContentPolicy(mDocument, aElement, request->mURI, type);
         NS_ENSURE_SUCCESS(rv, false);
       } else {
@@ -576,7 +585,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     if (!request) {
       // no usable preload
-      request = new nsScriptLoadRequest(aElement, version);
+      request = new nsScriptLoadRequest(aElement, version, ourCORSMode);
       request->mURI = scriptURI;
       request->mIsInline = false;
       request->mLoading = true;
@@ -697,7 +706,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     }
   }
 
-  request = new nsScriptLoadRequest(aElement, version);
+  // Inline scripts ignore ther CORS mode and are always CORS_NONE
+  request = new nsScriptLoadRequest(aElement, version, CORS_NONE);
   request->mJSVersion = version;
   request->mLoading = false;
   request->mIsInline = true;
@@ -1333,7 +1343,9 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
     return;
   }
 
-  nsRefPtr<nsScriptLoadRequest> request = new nsScriptLoadRequest(nsnull, 0);
+  nsRefPtr<nsScriptLoadRequest> request =
+    new nsScriptLoadRequest(nsnull, 0,
+                            nsGenericElement::StringToCORSMode(aCrossOrigin));
   request->mURI = aURI;
   request->mIsInline = false;
   request->mLoading = true;
