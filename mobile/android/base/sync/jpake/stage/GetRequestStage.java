@@ -75,14 +75,12 @@ public class GetRequestStage extends JPakeStage {
       public void handleFailure(String error) {
         Logger.error(LOG_TAG, "Got HTTP failure: " + error);
         jClient.abort(error);
-        return;
       }
 
       @Override
       public void handleError(Exception e) {
         Logger.error(LOG_TAG, "Threw HTTP exception.", e);
         jClient.abort(Constants.JPAKE_ERROR_NETWORK);
-        return;
       }
     };
 

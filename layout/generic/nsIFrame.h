@@ -1057,12 +1057,8 @@ public:
    * @return  the child list.  If the requested list is unsupported by this
    *          frame type, an empty list will be returned.
    */
-  // XXXbz if all our frame storage were actually backed by nsFrameList, we
-  // could make this return a const reference...  nsBlockFrame is the only real
-  // culprit here.  Make sure to assign the return value of this function into
-  // a |const nsFrameList&|, not an nsFrameList.
-  virtual nsFrameList GetChildList(ChildListID aListID) const = 0;
-  nsFrameList PrincipalChildList() { return GetChildList(kPrincipalList); }
+  virtual const nsFrameList& GetChildList(ChildListID aListID) const = 0;
+  const nsFrameList& PrincipalChildList() { return GetChildList(kPrincipalList); }
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const = 0;
   // XXXbz this method should go away
   nsIFrame* GetFirstChild(ChildListID aListID) const {

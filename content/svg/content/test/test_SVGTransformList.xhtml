@@ -424,6 +424,16 @@ function testMutationEvents(g)
   eventChecker.expect("");
   g.setAttribute("transform", "matrix(1, 0, 0, 1, 0, 0)");
   list[0].setMatrix(mx);
+
+  // Attribute removal
+  eventChecker.expect("remove");
+  g.removeAttribute("transform");
+
+  // Non-existent attribute removal
+  eventChecker.expect("");
+  g.removeAttribute("transform");
+  g.removeAttributeNS(null, "transform");
+
   eventChecker.finish();
 }
 

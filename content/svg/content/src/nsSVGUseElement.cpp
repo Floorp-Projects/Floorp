@@ -428,9 +428,7 @@ nsSVGUseElement::SyncWidthOrHeight(nsIAtom* aName)
       // Our width/height attribute is now no longer explicitly set, so we
       // need to revert the clone's width/height to the width/height of the
       // content that's being cloned.
-      nsSVGSVGElement* svgElement =
-        static_cast<nsSVGSVGElement*>(mSource.get());
-      svgElement->SyncWidthOrHeight(aName, target);
+      TriggerReclone();
       return;
     }
     // Our width/height attribute is now no longer explicitly set, so we

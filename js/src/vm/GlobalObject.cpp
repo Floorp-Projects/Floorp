@@ -386,15 +386,12 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx)
 {
     HeapSlot &v = getSlotRef(RUNTIME_CODEGEN_ENABLED);
     if (v.isUndefined()) {
-        JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
-
         /*
          * If there are callbacks, make sure that the CSP callback is installed
          * and that it permits runtime code generation, then cache the result.
          */
-        v.set(this, RUNTIME_CODEGEN_ENABLED,
-              BooleanValue((!callbacks || !callbacks->contentSecurityPolicyAllows) ||
-                           callbacks->contentSecurityPolicyAllows(cx)));
+        JSCSPEvalChecker allows = cx->runtime->securityCallbacks->contentSecurityPolicyAllows;
+        v.set(this, RUNTIME_CODEGEN_ENABLED, BooleanValue(!allows || allows(cx)));
     }
     return !v.isFalse();
 }

@@ -7,7 +7,10 @@ browser.jar:
 *       skin/classic/browser/aboutPrivateBrowsing.css                (aboutPrivateBrowsing.css)
 *       skin/classic/browser/aboutSessionRestore.css                 (aboutSessionRestore.css)
         skin/classic/browser/aboutSessionRestore-window-icon.png     (preferences/application.png)
-        skin/classic/browser/aboutCertError.css                      (aboutCertError.css)
+        skin/classic/browser/aboutCertError.css
+        skin/classic/browser/aboutCertError_sectionCollapsed.png
+        skin/classic/browser/aboutCertError_sectionCollapsed-rtl.png
+        skin/classic/browser/aboutCertError_sectionExpanded.png
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/aboutSyncTabs.css
 #endif
@@ -16,7 +19,6 @@ browser.jar:
         skin/classic/browser/appmenu-dropmarker.png
 *       skin/classic/browser/browser.css                             (browser.css)
 *       skin/classic/browser/engineManager.css                       (engineManager.css)
-        skin/classic/browser/fullscreen-video.css
         skin/classic/browser/Geolocation-16.png
         skin/classic/browser/Geolocation-64.png
         skin/classic/browser/Info.png                                (Info.png)
@@ -38,9 +40,6 @@ browser.jar:
         skin/classic/browser/toolbarbutton-dropdown-arrow-inverted.png
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
         skin/classic/browser/searchbar-dropdown-arrow.png
-        skin/classic/browser/section_collapsed.png
-        skin/classic/browser/section_collapsed-rtl.png
-        skin/classic/browser/section_expanded.png
         skin/classic/browser/setDesktopBackground.css
         skin/classic/browser/menu-back.png                           (menu-back.png)
         skin/classic/browser/menu-forward.png                        (menu-forward.png)
@@ -177,7 +176,10 @@ browser.jar:
 *       skin/classic/aero/browser/aboutPrivateBrowsing.css           (aboutPrivateBrowsing.css)
 *       skin/classic/aero/browser/aboutSessionRestore.css            (aboutSessionRestore.css)
         skin/classic/aero/browser/aboutSessionRestore-window-icon.png (aboutSessionRestore-window-icon-aero.png)
-        skin/classic/aero/browser/aboutCertError.css                 (aboutCertError.css)
+        skin/classic/aero/browser/aboutCertError.css
+        skin/classic/aero/browser/aboutCertError_sectionCollapsed.png
+        skin/classic/aero/browser/aboutCertError_sectionCollapsed-rtl.png
+        skin/classic/aero/browser/aboutCertError_sectionExpanded.png
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/aboutSyncTabs.css
 #endif
@@ -186,7 +188,6 @@ browser.jar:
         skin/classic/aero/browser/appmenu-icons.png
 *       skin/classic/aero/browser/browser.css                        (browser-aero.css)
 *       skin/classic/aero/browser/engineManager.css                  (engineManager.css)
-        skin/classic/aero/browser/fullscreen-video.css
         skin/classic/aero/browser/Geolocation-16.png
         skin/classic/aero/browser/Geolocation-64.png
         skin/classic/aero/browser/Info.png                           (Info-aero.png)
@@ -208,9 +209,6 @@ browser.jar:
         skin/classic/aero/browser/toolbarbutton-dropdown-arrow-inverted.png
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
         skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
-        skin/classic/aero/browser/section_collapsed.png
-        skin/classic/aero/browser/section_collapsed-rtl.png
-        skin/classic/aero/browser/section_expanded.png
         skin/classic/aero/browser/setDesktopBackground.css
         skin/classic/aero/browser/menu-back.png                      (menu-back-aero.png)
         skin/classic/aero/browser/menu-forward.png                   (menu-forward-aero.png)

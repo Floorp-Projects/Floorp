@@ -509,11 +509,8 @@ struct JSRuntime : js::RuntimeFriendFields
 
     uint32_t            debuggerMutations;
 
-    /*
-     * Security callbacks set on the runtime are used by each context unless
-     * an override is set on the context.
-     */
-    JSSecurityCallbacks *securityCallbacks;
+    const JSSecurityCallbacks *securityCallbacks;
+    JSDestroyPrincipalsOp destroyPrincipals;
 
     /* Structured data callbacks are runtime-wide. */
     const JSStructuredCloneCallbacks *structuredCloneCallbacks;
@@ -686,7 +683,7 @@ struct JSRuntime : js::RuntimeFriendFields
      */
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes, JSContext *cx);
 
-    JS_FRIEND_API(void) triggerOperationCallback();
+    void triggerOperationCallback();
 
     void setJitHardening(bool enabled);
     bool getJitHardening() const {
@@ -830,11 +827,11 @@ struct JSContext : js::ContextFriendFields
     bool                hasVersionOverride;
 
     /* Exception state -- the exception member is a GC root by definition. */
-    JSBool              throwing;            /* is there a pending exception? */
-    js::Value           exception;           /* most-recently-thrown exception */
+    JSBool              throwing;           /* is there a pending exception? */
+    js::Value           exception;          /* most-recently-thrown exception */
 
     /* Per-context run options. */
-    unsigned            runOptions;          /* see jsapi.h for JSOPTION_* */
+    unsigned               runOptions;            /* see jsapi.h for JSOPTION_* */
 
   public:
     int32_t             reportGranularity;  /* see jsprobes.h */
@@ -844,8 +841,11 @@ struct JSContext : js::ContextFriendFields
 
     js::AutoResolving   *resolvingList;
 
-    /* True if generating an error, to prevent runaway recursion. */
-    bool                generatingError;
+    /*
+     * True if generating an error, to prevent runaway recursion.
+     * NB: generatingError packs with throwing below.
+     */
+    bool        generatingError;
 
     /* GC heap compartment. */
     JSCompartment       *compartment;
@@ -1009,9 +1009,6 @@ struct JSContext : js::ContextFriendFields
 #endif
 
 #endif /* JSGC_ROOT_ANALYSIS */
-
-    /* Security callbacks that override any defined on the runtime. */
-    JSSecurityCallbacks *securityCallbacks;
 
     /* Stored here to avoid passing it around as a parameter. */
     unsigned               resolveFlags;
@@ -1246,6 +1243,40 @@ class AutoXMLRooter : private AutoGCRooter {
 # define JS_LOCK_GC(rt)
 # define JS_UNLOCK_GC(rt)
 #endif
+
+class AutoLockGC
+{
+  public:
+    explicit AutoLockGC(JSRuntime *rt = NULL
+                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : runtime(rt)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        if (rt)
+            JS_LOCK_GC(rt);
+    }
+
+    ~AutoLockGC()
+    {
+        if (runtime)
+            JS_UNLOCK_GC(runtime);
+    }
+
+    bool locked() const {
+        return !!runtime;
+    }
+
+    void lock(JSRuntime *rt) {
+        JS_ASSERT(rt);
+        JS_ASSERT(!runtime);
+        runtime = rt;
+        JS_LOCK_GC(rt);
+    }
+
+  private:
+    JSRuntime *runtime;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 class AutoUnlockGC {
   private:

@@ -50,23 +50,26 @@
 #define NS_SYSTEMPRINCIPAL_CONTRACTID "@mozilla.org/systemprincipal;1"
 
 
-class nsSystemPrincipal : public nsIPrincipal
+class nsSystemPrincipal : public nsJSPrincipals
 {
 public:
-    // Our refcount is managed by mJSPrincipals.  Use this macro to avoid
+    // Our refcount is managed by nsJSPrincipals.  Use this macro to avoid
     // an extra refcount member.
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIPRINCIPAL
     NS_DECL_NSISERIALIZABLE
 
-    nsresult Init(JSPrincipals **jsprin);
-
     nsSystemPrincipal();
+
+    virtual void GetScriptLocation(nsACString &aStr) MOZ_OVERRIDE;
+
+#ifdef DEBUG
+    virtual void dumpImpl() MOZ_OVERRIDE;
+#endif 
 
 protected:
     virtual ~nsSystemPrincipal(void);
 
-    nsJSPrincipals mJSPrincipals;
     // XXX Probably unnecessary.  See bug 143559.
     NS_DECL_OWNINGTHREAD
 };

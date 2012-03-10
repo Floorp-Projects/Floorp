@@ -194,9 +194,10 @@ public:
   // main thread!  But at the time of writing this function is only called when
   // about:memory is loaded (not, for example, when telemetry pings occur) and
   // any delays in that case aren't so bad.
-  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *aCallback,
+  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *aCb,
                             nsISupports *aClosure)
   {
+    nsresult rv;
     size_t totalConnSize = 0;
     {
       nsTArray<nsRefPtr<Connection> > connections;
@@ -218,29 +219,32 @@ public:
 
         SQLiteMutexAutoLock lockedScope(conn->sharedDBMutex);
 
-        totalConnSize +=
-          doConnMeasurement(aCallback, aClosure, *conn.get(), pathHead,
-                            NS_LITERAL_CSTRING("stmt"), mStmtDesc,
-                            SQLITE_DBSTATUS_STMT_USED);
-        totalConnSize +=
-          doConnMeasurement(aCallback, aClosure, *conn.get(), pathHead,
-                            NS_LITERAL_CSTRING("cache"), mCacheDesc,
-                            SQLITE_DBSTATUS_CACHE_USED);
-        totalConnSize +=
-          doConnMeasurement(aCallback, aClosure, *conn.get(), pathHead,
-                            NS_LITERAL_CSTRING("schema"), mSchemaDesc,
-                            SQLITE_DBSTATUS_SCHEMA_USED);
+        rv = reportConn(aCb, aClosure, *conn.get(), pathHead,
+                        NS_LITERAL_CSTRING("stmt"), mStmtDesc,
+                        SQLITE_DBSTATUS_STMT_USED, &totalConnSize);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = reportConn(aCb, aClosure, *conn.get(), pathHead,
+                        NS_LITERAL_CSTRING("cache"), mCacheDesc,
+                        SQLITE_DBSTATUS_CACHE_USED, &totalConnSize);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = reportConn(aCb, aClosure, *conn.get(), pathHead,
+                        NS_LITERAL_CSTRING("schema"), mSchemaDesc,
+                        SQLITE_DBSTATUS_SCHEMA_USED, &totalConnSize);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
     }
 
     PRInt64 other = ::sqlite3_memory_used() - totalConnSize;
 
-    aCallback->Callback(NS_LITERAL_CSTRING(""),
-                        NS_LITERAL_CSTRING("explicit/storage/sqlite/other"),
-                        nsIMemoryReporter::KIND_HEAP,
-                        nsIMemoryReporter::UNITS_BYTES, other,
-                        NS_LITERAL_CSTRING("All unclassified sqlite memory."),
-                        aClosure);
+    rv = aCb->Callback(NS_LITERAL_CSTRING(""),
+                       NS_LITERAL_CSTRING("explicit/storage/sqlite/other"),
+                       nsIMemoryReporter::KIND_HEAP,
+                       nsIMemoryReporter::UNITS_BYTES, other,
+                       NS_LITERAL_CSTRING("All unclassified sqlite memory."),
+                       aClosure);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
@@ -272,14 +276,17 @@ private:
    *        The memory report description.
    * @param aOption
    *        The SQLite constant for getting the measurement.
+   * @param aTotal
+   *        The accumulator for the measurement.
    */
-  size_t doConnMeasurement(nsIMemoryMultiReporterCallback *aCallback,
-                           nsISupports *aClosure,
-                           sqlite3 *aConn,
-                           const nsACString &aPathHead,
-                           const nsACString &aKind,
-                           const nsACString &aDesc,
-                           int aOption)
+  nsresult reportConn(nsIMemoryMultiReporterCallback *aCb,
+                      nsISupports *aClosure,
+                      sqlite3 *aConn,
+                      const nsACString &aPathHead,
+                      const nsACString &aKind,
+                      const nsACString &aDesc,
+                      int aOption,
+                      size_t *aTotal)
   {
     nsCString path(aPathHead);
     path.Append(aKind);
@@ -290,11 +297,14 @@ private:
     nsresult rv = convertResultCode(rc);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aCallback->Callback(NS_LITERAL_CSTRING(""), path,
-                        nsIMemoryReporter::KIND_HEAP,
-                        nsIMemoryReporter::UNITS_BYTES, PRInt64(curr),
-                        aDesc, aClosure);
-    return curr;
+    rv = aCb->Callback(NS_LITERAL_CSTRING(""), path,
+                       nsIMemoryReporter::KIND_HEAP,
+                       nsIMemoryReporter::UNITS_BYTES, PRInt64(curr),
+                       aDesc, aClosure);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *aTotal += curr;
+
+    return NS_OK;
   }
 };
 

@@ -76,8 +76,13 @@ struct nsFakeStringBuffer {
     nsStaticAtomStringType mStringData[size];
 };
 
-// Register static atoms with the atom table
+// Register an array of static atoms with the atom table
+template<PRUint32 N>
 nsresult
-NS_RegisterStaticAtoms(const nsStaticAtom*, PRUint32 aAtomCount);
+NS_RegisterStaticAtoms(const nsStaticAtom (&atoms)[N])
+{
+    extern nsresult RegisterStaticAtoms(const nsStaticAtom*, PRUint32 aAtomCount);
+    return RegisterStaticAtoms(atoms, N);
+}
 
 #endif

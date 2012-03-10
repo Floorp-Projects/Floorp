@@ -273,7 +273,7 @@ nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot)
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-nsFrameList
+const nsFrameList&
 nsContainerFrame::GetChildList(ChildListID aListID) const
 {
   // We only know about the principal child list and the overflow lists.
