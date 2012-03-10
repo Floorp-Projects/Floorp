@@ -10,10 +10,6 @@ VERSIONS:
   cairo (12d521df8acc483b2daa844d4f05dc2fe2765ba6)
   pixman (2f4f2fb4859931bf6dc5632d8c919e7296736427)
 
-***** NOTE FOR VISUAL C++ 6.0 *****
-
-VC6 is not supported.  Please upgrade to VC8.
-
 ==== Patches ====
 
 Some specific things:
