@@ -164,5 +164,25 @@ private:
   nsAccTableChangeEvent& operator =(const nsAccTableChangeEvent&);
 };
 
+/**
+ * Accessible virtual cursor change event.
+ */
+class nsAccVirtualCursorChangeEvent : public nsAccEvent,
+                                      public nsIAccessibleVirtualCursorChangeEvent
+{
+public:
+  nsAccVirtualCursorChangeEvent(AccVCChangeEvent* aEvent) :
+    nsAccEvent(aEvent) { }
+  virtual ~nsAccVirtualCursorChangeEvent() { }
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLEVIRTUALCURSORCHANGEEVENT
+
+private:
+  nsAccVirtualCursorChangeEvent() MOZ_DELETE;
+  nsAccVirtualCursorChangeEvent(const nsAccVirtualCursorChangeEvent&) MOZ_DELETE;
+  nsAccVirtualCursorChangeEvent& operator =(const nsAccVirtualCursorChangeEvent&) MOZ_DELETE;
+};
+
 #endif
 

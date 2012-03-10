@@ -129,7 +129,8 @@ public:
     eShowEvent,
     eCaretMoveEvent,
     eSelectionChangeEvent,
-    eTableChangeEvent
+    eTableChangeEvent,
+    eVirtualCursorChangeEvent
   };
 
   static const EventGroup kEventGroup = eGenericEvent;
@@ -399,6 +400,37 @@ private:
   PRUint32 mNumRowsOrCols;   // the number of inserted/deleted rows/columns
 };
 
+/**
+ * Accessible virtual cursor change event.
+ */
+class AccVCChangeEvent : public AccEvent
+{
+public:
+  AccVCChangeEvent(nsAccessible* aAccessible,
+                   nsIAccessible* aOldAccessible,
+                   PRInt32 aOldStart, PRInt32 aOldEnd);
+
+  virtual ~AccVCChangeEvent() { }
+
+  // AccEvent
+  virtual already_AddRefed<nsAccEvent> CreateXPCOMObject();
+
+  static const EventGroup kEventGroup = eVirtualCursorChangeEvent;
+  virtual unsigned int GetEventGroups() const
+  {
+    return AccEvent::GetEventGroups() | (1U << eVirtualCursorChangeEvent);
+  }
+
+  // AccTableChangeEvent
+  nsIAccessible* OldAccessible() const { return mOldAccessible; }
+  PRInt32 OldStartOffset() const { return mOldStart; }
+  PRInt32 OldEndOffset() const { return mOldEnd; }
+
+private:
+  nsRefPtr<nsIAccessible> mOldAccessible;
+  PRInt32 mOldStart;
+  PRInt32 mOldEnd;
+};
 
 /**
  * Downcast the generic accessible event object to derived type.
