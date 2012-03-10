@@ -1604,10 +1604,8 @@ bool nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
       return true;
     }
     if (aAttribute == nsGkAtoms::crossorigin) {
-      return aResult.ParseEnumValue(aValue, kCORSAttributeTable, false,
-                                    // default value is anonymous if aValue is
-                                    // not a value we understand
-                                    &kCORSAttributeTable[0]);
+      ParseCORSValue(aValue, aResult);
+      return true;
     }
     if (aAttribute == nsGkAtoms::preload) {
       return aResult.ParseEnumValue(aValue, kPreloadTable, false);
