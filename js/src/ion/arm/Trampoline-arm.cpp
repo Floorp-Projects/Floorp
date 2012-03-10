@@ -357,7 +357,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 
     masm.ma_sub(r6, r8, r2);
 
-    masm.moveValue(UndefinedValue(), r4, r5);
+    masm.moveValue(UndefinedValue(), r5, r4);
 
     masm.ma_mov(sp, r3); // Save %rsp.
 
