@@ -199,15 +199,12 @@ NS_IMETHODIMP nsDeviceMotion::RemoveListener(nsIDeviceMotionListener *aListener)
 
 NS_IMETHODIMP nsDeviceMotion::AddWindowListener(nsIDOMWindow *aWindow)
 {
-  if (mWindowListeners.IndexOf(aWindow) != NoIndex)
-      return NS_OK;
-
   if (mStarted == false) {
     mStarted = true;
     Startup();
   }
-
-  mWindowListeners.AppendElement(aWindow);
+  if (mWindowListeners.IndexOf(aWindow) == NoIndex)
+    mWindowListeners.AppendElement(aWindow);
   return NS_OK;
 }
 
@@ -227,34 +224,28 @@ nsDeviceMotion::DeviceMotionChanged(PRUint32 type, double x, double y, double z)
   if (!mEnabled)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMArray<nsIDeviceMotionListener> listeners = mListeners;
-  for (PRUint32 i = listeners.Count(); i > 0 ; ) {
+  for (PRUint32 i = mListeners.Count(); i > 0 ; ) {
     --i;
     nsRefPtr<nsDeviceMotionData> a = new nsDeviceMotionData(type, x, y, z);
-    listeners[i]->OnMotionChange(a);
+    mListeners[i]->OnMotionChange(a);
   }
 
-  nsCOMArray<nsIDOMWindow> windowListeners;
-  for (PRUint32 i = windowListeners.Count(); i > 0 ; ) {
-    windowListeners.AppendObject(mWindowListeners[i]);
-  }
-
-  for (PRUint32 i = windowListeners.Count(); i > 0 ; ) {
+  for (PRUint32 i = mWindowListeners.Length(); i > 0 ; ) {
     --i;
 
     // check to see if this window is in the background.  if
     // it is, don't send any device motion to it.
-    nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(windowListeners[i]);
+    nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(mWindowListeners[i]);
     if (!pwindow ||
         !pwindow->GetOuterWindow() ||
         pwindow->GetOuterWindow()->IsBackground())
       continue;
 
     nsCOMPtr<nsIDOMDocument> domdoc;
-    windowListeners[i]->GetDocument(getter_AddRefs(domdoc));
+    mWindowListeners[i]->GetDocument(getter_AddRefs(domdoc));
 
     if (domdoc) {
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(windowListeners[i]);
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mWindowListeners[i]);
       if (type == nsIDeviceMotionData::TYPE_ACCELERATION)
         FireDOMMotionEvent(domdoc, target, x, y, z);
       else if (type == nsIDeviceMotionData::TYPE_ORIENTATION)
