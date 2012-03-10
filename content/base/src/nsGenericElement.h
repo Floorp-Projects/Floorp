@@ -640,6 +640,14 @@ public:
                            void *aData);
   static void MarkUserDataHandler(void* aObject, nsIAtom* aKey, void* aChild,
                                   void* aData);
+
+  /**
+   * Parse a string into an nsAttrValue for a CORS attribute.  This
+   * never fails.  The resulting value is an enumerated value whose
+   * GetEnumValue() returns one of the above constants.
+   */
+  static void ParseCORSValue(const nsAString& aValue, nsAttrValue& aResult);
+  
 protected:
   /*
    * Named-bools for use with SetAttrAndNotify to make call sites easier to
