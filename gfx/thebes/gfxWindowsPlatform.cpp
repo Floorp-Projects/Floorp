@@ -526,7 +526,6 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
               return;
             }
     
-            nsRefPtr<IDXGIAdapter1> adapter1; 
             hr = factory1->EnumAdapters1(0, getter_AddRefs(adapter1));
 
             if (SUCCEEDED(hr) && adapter1) {
