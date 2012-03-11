@@ -130,8 +130,6 @@ ImageLayerD3D10::RenderLayer()
     return;
   }
 
-  gfxIntSize size = mScaleMode == SCALE_NONE ? image->GetSize() : mScaleToSize;
-
   SetEffectTransformAndOpacity();
 
   ID3D10EffectTechnique *technique;
@@ -139,6 +137,7 @@ ImageLayerD3D10::RenderLayer()
   if (image->GetFormat() == Image::CAIRO_SURFACE || image->GetFormat() == Image::REMOTE_IMAGE_BITMAP)
   {
     bool hasAlpha = false;
+    gfxIntSize size;
 
     if (image->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
       RemoteBitmapImage *remoteImage =
@@ -155,6 +154,7 @@ ImageLayerD3D10::RenderLayer()
       }
 
       hasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
+      size = remoteImage->mSize;
     } else {
       CairoImage *cairoImage =
         static_cast<CairoImage*>(image);
@@ -174,6 +174,7 @@ ImageLayerD3D10::RenderLayer()
       }
 
       hasAlpha = cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+      size = cairoImage->mSize;
     }
 
     TextureD3D10BackendData *data =
@@ -285,8 +286,8 @@ ImageLayerD3D10::RenderLayer()
       ShaderConstantRectD3D10(
         (float)0,
         (float)0,
-        (float)size.width,
-        (float)size.height)
+        (float)yuvImage->mSize.width,
+        (float)yuvImage->mSize.height)
       );
 
     effect()->GetVariableByName("vTextureCoords")->AsVector()->SetFloatVector(
