@@ -54,7 +54,6 @@
 #include "nsIDOMFile.h"
 #include "nsIDOMFileReader.h"
 #include "nsIDOMFileList.h"
-#include "nsIDOMFileError.h"
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
 #include "nsIStreamLoader.h"
