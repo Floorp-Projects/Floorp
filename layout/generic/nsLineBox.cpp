@@ -55,6 +55,11 @@ static PRInt32 ctorCount;
 PRInt32 nsLineBox::GetCtorCount() { return ctorCount; }
 #endif
 
+#ifndef _MSC_VER
+// static nsLineBox constant; initialized in the header file.
+const PRUint32 nsLineBox::kMinChildCountForHashtable;
+#endif
+
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock)
   : mFirstChild(aFrame),
     mBounds(0, 0, 0, 0),
@@ -76,7 +81,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock)
 #if NS_STYLE_CLEAR_NONE > 0
   mFlags.mBreakType = NS_STYLE_CLEAR_NONE;
 #endif
-  SetChildCount(aCount);
+  mChildCount = aCount;
   MarkDirty();
   mFlags.mBlock = aIsBlock;
 }
@@ -84,14 +89,88 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock)
 nsLineBox::~nsLineBox()
 {
   MOZ_COUNT_DTOR(nsLineBox);
+  if (NS_UNLIKELY(mFlags.mHasHashedFrames)) {
+    delete mFrames;
+  }  
   Cleanup();
 }
 
 nsLineBox*
-NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
-              PRInt32 aCount, bool aIsBlock)
+NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame, bool aIsBlock)
 {
-  return new (aPresShell)nsLineBox(aFrame, aCount, aIsBlock);
+  return new (aPresShell) nsLineBox(aFrame, 1, aIsBlock);
+}
+
+nsLineBox*
+NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
+              nsIFrame* aFrame, PRInt32 aCount)
+{
+  nsLineBox* newLine = new (aPresShell) nsLineBox(aFrame, aCount, false);
+  if (newLine) {
+    newLine->NoteFramesMovedFrom(aFromLine);
+  }
+  return newLine;
+}
+
+void
+nsLineBox::StealHashTableFrom(nsLineBox* aFromLine, PRUint32 aFromLineNewCount)
+{
+  MOZ_ASSERT(!mFlags.mHasHashedFrames);
+  MOZ_ASSERT(GetChildCount() >= PRInt32(aFromLineNewCount));
+  mFrames = aFromLine->mFrames;
+  mFlags.mHasHashedFrames = 1;
+  aFromLine->mFlags.mHasHashedFrames = 0;
+  aFromLine->mChildCount = aFromLineNewCount;
+  // remove aFromLine's frames that aren't on this line
+  nsIFrame* f = aFromLine->mFirstChild;
+  for (PRUint32 i = 0; i < aFromLineNewCount; f = f->GetNextSibling(), ++i) {
+    mFrames->RemoveEntry(f);
+  }
+}
+
+void
+nsLineBox::NoteFramesMovedFrom(nsLineBox* aFromLine)
+{
+  PRUint32 fromCount = aFromLine->GetChildCount();
+  PRUint32 toCount = GetChildCount();
+  MOZ_ASSERT(toCount <= fromCount, "moved more frames than aFromLine has");
+  PRUint32 fromNewCount = fromCount - toCount;
+  if (NS_LIKELY(!aFromLine->mFlags.mHasHashedFrames)) {
+    aFromLine->mChildCount = fromNewCount;
+    MOZ_ASSERT(toCount < kMinChildCountForHashtable);
+  } else if (fromNewCount < kMinChildCountForHashtable) {
+    // aFromLine has a hash table but will not have it after moving the frames
+    // so this line can steal the hash table if it needs it.
+    if (toCount >= kMinChildCountForHashtable) {
+      StealHashTableFrom(aFromLine, fromNewCount);
+    } else {
+      delete aFromLine->mFrames;
+      aFromLine->mFlags.mHasHashedFrames = 0;
+      aFromLine->mChildCount = fromNewCount;
+    }
+  } else {
+    // aFromLine still needs a hash table.
+    if (toCount < kMinChildCountForHashtable) {
+      // remove the moved frames from it
+      nsIFrame* f = mFirstChild;
+      for (PRUint32 i = 0; i < toCount; f = f->GetNextSibling(), ++i) {
+        aFromLine->mFrames->RemoveEntry(f);
+      }
+    } else if (toCount <= fromNewCount) {
+      // This line needs a hash table, allocate a hash table for it since that
+      // means fewer hash ops.
+      nsIFrame* f = mFirstChild;
+      for (PRUint32 i = 0; i < toCount; f = f->GetNextSibling(), ++i) {
+        aFromLine->mFrames->RemoveEntry(f); // toCount RemoveEntry
+      }
+      SwitchToHashtable(); // toCount PutEntry
+    } else {
+      // This line needs a hash table, but it's fewer hash ops to steal
+      // aFromLine's hash table and allocate a new hash table for that line.
+      StealHashTableFrom(aFromLine, fromNewCount); // fromNewCount RemoveEntry
+      aFromLine->SwitchToHashtable(); // fromNewCount PutEntry
+    }
+  }
 }
 
 // Overloaded new operator. Uses an arena (which comes from the presShell)
@@ -102,21 +181,11 @@ nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
   return aPresShell->AllocateMisc(sz);
 }
 
-// Overloaded delete operator. Doesn't actually free the memory, because we
-// use an arena
-void
-nsLineBox::operator delete(void* aPtr, size_t sz)
-{
-}
-
 void
 nsLineBox::Destroy(nsIPresShell* aPresShell)
 {
-  // Destroy the object. This won't actually free the memory, though
-  delete this;
-
-  // Have the pres shell recycle the memory
-  aPresShell->FreeMisc(sizeof(*this), (void*)this);
+  this->nsLineBox::~nsLineBox();
+  aPresShell->FreeMisc(sizeof(*this), this);
 }
 
 void
@@ -365,10 +434,18 @@ nsLineBox::RFindLineContaining(nsIFrame* aFrame,
                                PRInt32* aFrameIndexInLine)
 {
   NS_PRECONDITION(aFrame, "null ptr");
+
   nsIFrame* curFrame = aLastFrameBeforeEnd;
   while (aBegin != aEnd) {
     --aEnd;
     NS_ASSERTION(aEnd->LastChild() == curFrame, "Unexpected curFrame");
+    if (NS_UNLIKELY(aEnd->mFlags.mHasHashedFrames) &&
+        !aEnd->Contains(aFrame)) {
+      if (aEnd->mFirstChild) {
+        curFrame = aEnd->mFirstChild->GetPrevSibling();
+      }
+      continue;
+    }
     // i is the index of curFrame in aEnd
     PRInt32 i = aEnd->GetChildCount() - 1;
     while (i >= 0) {
@@ -379,6 +456,7 @@ nsLineBox::RFindLineContaining(nsIFrame* aFrame,
       --i;
       curFrame = curFrame->GetPrevSibling();
     }
+    MOZ_ASSERT(!aEnd->mFlags.mHasHashedFrames, "Contains lied to us!");
   }
   *aFrameIndexInLine = -1;
   return false;
