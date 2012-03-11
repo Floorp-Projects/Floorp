@@ -59,8 +59,6 @@ const kTaskbarID = "@mozilla.org/windows-taskbar;1";
 const DOWNLOAD_MANAGER_URL = "chrome://mozapps/content/downloads/downloads.xul";
 const DLMGR_UI_DONE = "download-manager-ui-done";
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-
 let DownloadTaskbarProgress, TaskbarService, observerService, wwatch, chromeWindow;
 let gGen = null;
 
@@ -87,9 +85,6 @@ function continueTest() {
 }
 
 function doTest() {
-  // Ensure that the download manager callbacks always use the window UI instead
-  // of the panel in the browser's window.
-  Services.prefs.setBoolPref("browser.download.useToolkitUI", true);
 
   let tempScope = {};
   Components.utils.import("resource://gre/modules/DownloadTaskbarProgress.jsm", tempScope);
@@ -147,8 +142,6 @@ function doTest() {
   // The owner window should not have changed, since our
   // original window still exists
   checkActiveTaskbar(false, window);
-
-  Services.prefs.clearUserPref("browser.download.useToolkitUI");
 
   browserWindow.close();
   SimpleTest.finish();

@@ -62,7 +62,6 @@ PARALLEL_DIRS = \
   about \
   certerror \
   dirprovider \
-  downloads \
   feeds \
   places \
   preferences \

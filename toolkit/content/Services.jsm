@@ -68,7 +68,6 @@ let initTable = [
   ["console", "@mozilla.org/consoleservice;1", "nsIConsoleService"],
   ["contentPrefs", "@mozilla.org/content-pref/service;1", "nsIContentPrefService"],
   ["cookies", "@mozilla.org/cookiemanager;1", "nsICookieManager2"],
-  ["downloads", "@mozilla.org/download-manager;1", "nsIDownloadManager"],
   ["droppedLinkHandler", "@mozilla.org/content/dropped-link-handler;1", "nsIDroppedLinkHandler"],
   ["eTLD", "@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService"],
   ["io", "@mozilla.org/network/io-service;1", "nsIIOService2"],

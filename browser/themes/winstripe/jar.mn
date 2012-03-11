@@ -48,10 +48,6 @@ browser.jar:
         skin/classic/browser/urlbar-arrow.png
         skin/classic/browser/urlbar-popup-blocked.png
         skin/classic/browser/urlbar-history-dropmarker.png
-        skin/classic/browser/downloads/buttons.png                   (downloads/buttons.png)
-        skin/classic/browser/downloads/download-glow.png             (downloads/download-glow.png)
-        skin/classic/browser/downloads/download-notification.png     (downloads/download-notification.png)
-*       skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)
         skin/classic/browser/feeds/feedIcon.png                      (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
         skin/classic/browser/feeds/audioFeedIcon.png                 (feeds/feedIcon.png)
@@ -221,10 +217,6 @@ browser.jar:
         skin/classic/aero/browser/urlbar-arrow.png
         skin/classic/aero/browser/urlbar-popup-blocked.png
         skin/classic/aero/browser/urlbar-history-dropmarker.png
-        skin/classic/aero/browser/downloads/buttons.png              (downloads/buttons-aero.png)
-        skin/classic/aero/browser/downloads/download-glow.png        (downloads/download-glow-aero.png)
-        skin/classic/aero/browser/downloads/download-notification.png (downloads/download-notification.png)
-*       skin/classic/aero/browser/downloads/downloads.css            (downloads/downloads-aero.css)
         skin/classic/aero/browser/feeds/feedIcon.png                 (feeds/feedIcon-aero.png)
         skin/classic/aero/browser/feeds/feedIcon16.png               (feeds/feedIcon16-aero.png)
         skin/classic/aero/browser/feeds/audioFeedIcon.png            (feeds/feedIcon-aero.png)
