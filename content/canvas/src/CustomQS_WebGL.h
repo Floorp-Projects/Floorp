@@ -494,9 +494,11 @@ TexImage2DImageDataOrElement(JSContext* cx, T& self, JS::Value* object)
     JSObject* imageData = &object->toObject();
 
     jsval js_width, js_height, js_data;
-    JS_GetProperty(cx, imageData, "width", &js_width);
-    JS_GetProperty(cx, imageData, "height", &js_height);
-    JS_GetProperty(cx, imageData, "data", &js_data);
+    if (!JS_GetProperty(cx, imageData, "width", &js_width) ||
+        !JS_GetProperty(cx, imageData, "height", &js_height) ||
+        !JS_GetProperty(cx, imageData, "data", &js_data)) {
+        return false;
+    }
     if (js_width  == JSVAL_VOID ||
         js_height == JSVAL_VOID ||
         !js_data.isObject())
