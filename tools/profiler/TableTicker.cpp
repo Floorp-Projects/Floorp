@@ -159,12 +159,11 @@ private:
 class ThreadProfile
 {
 public:
-  ThreadProfile(int aEntrySize, ProfileStack *aStack)
+  ThreadProfile(int aEntrySize)
     : mWritePos(0)
     , mLastFlushPos(0)
     , mReadPos(0)
     , mEntrySize(aEntrySize)
-    , mStack(aStack)
   {
     mEntries = new ProfileEntry[mEntrySize];
   }
@@ -309,11 +308,6 @@ public:
       readPos = (readPos + 1) % mEntrySize;
     }
   }
-
-  ProfileStack* GetStack()
-  {
-    return mStack;
-  }
 private:
   // Circular buffer 'Keep One Slot Open' implementation
   // for simplicity
@@ -322,7 +316,6 @@ private:
   int mLastFlushPos; // points to the next entry since the last flush()
   int mReadPos;  // points to the next entry we will read to
   int mEntrySize;
-  ProfileStack *mStack;
 };
 
 class SaveProfileTask;
@@ -341,7 +334,8 @@ class TableTicker: public Sampler {
   TableTicker(int aInterval, int aEntrySize, ProfileStack *aStack,
               const char** aFeatures, uint32_t aFeatureCount)
     : Sampler(aInterval, true)
-    , mPrimaryThreadProfile(aEntrySize, aStack)
+    , mPrimaryThreadProfile(aEntrySize)
+    , mStack(aStack)
     , mSaveRequested(false)
   {
     mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
@@ -365,6 +359,11 @@ class TableTicker: public Sampler {
 
   virtual void HandleSaveRequest();
 
+  ProfileStack* GetStack()
+  {
+    return mStack;
+  }
+
   ThreadProfile* GetPrimaryThreadProfile()
   {
     return &mPrimaryThreadProfile;
@@ -377,6 +376,7 @@ private:
 private:
   // This represent the application's main thread (SAMPLER_INIT)
   ThreadProfile mPrimaryThreadProfile;
+  ProfileStack *mStack;
   bool mSaveRequested;
   bool mUseStackWalk;
   bool mJankOnly;
@@ -538,11 +538,10 @@ unsigned int sCurrentEventGeneration = 0;
 void TableTicker::Tick(TickSample* sample)
 {
   // Marker(s) come before the sample
-  ProfileStack* stack = mPrimaryThreadProfile.GetStack();
-  for (int i = 0; stack->getMarker(i) != NULL; i++) {
-    mPrimaryThreadProfile.addTag(ProfileEntry('m', stack->getMarker(i)));
+  for (int i = 0; mStack->getMarker(i) != NULL; i++) {
+    mPrimaryThreadProfile.addTag(ProfileEntry('m', mStack->getMarker(i)));
   }
-  stack->mQueueClearMarker = true;
+  mStack->mQueueClearMarker = true;
 
   // if we are on a different event we can discard any temporary samples
   // we've kept around
@@ -570,10 +569,10 @@ void TableTicker::Tick(TickSample* sample)
   if (mUseStackWalk) {
     doBacktrace(mPrimaryThreadProfile, sample->fp);
   } else {
-    doSampleStackTrace(stack, mPrimaryThreadProfile, sample);
+    doSampleStackTrace(mStack, mPrimaryThreadProfile, sample);
   }
 #else
-  doSampleStackTrace(stack, mPrimaryThreadProfile, sample);
+  doSampleStackTrace(mStack, mPrimaryThreadProfile, sample);
 #endif
 
   if (recordSample)
