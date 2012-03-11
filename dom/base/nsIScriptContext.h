@@ -76,8 +76,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x6a536a37, 0x9773, 0x467e, \
-  { 0x93, 0xb2, 0xdb, 0xe6, 0xe6, 0xec, 0x24, 0xc3 } }
+{ 0xdfaea249, 0xaaad, 0x48bd, \
+  { 0xb8, 0x04, 0x92, 0xad, 0x30, 0x88, 0xd0, 0xc6 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -344,11 +344,6 @@ public:
    *
    */
   virtual bool IsContextInitialized() = 0;
-
-  /**
-   * Called as the global object discards its reference to the context.
-   */
-  virtual void FinalizeContext() = 0;
 
   /**
    * For garbage collected systems, do a synchronous collection pass.

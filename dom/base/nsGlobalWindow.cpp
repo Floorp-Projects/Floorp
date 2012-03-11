@@ -2402,7 +2402,6 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
     if (mContext) {
       mContext->GC(js::gcreason::SET_DOC_SHELL);
-      mContext->FinalizeContext();
       mContext = nsnull;
     }
 

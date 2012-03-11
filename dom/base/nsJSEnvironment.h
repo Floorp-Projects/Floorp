@@ -143,7 +143,6 @@ public:
   virtual nsresult SetOuterObject(JSObject* aOuterObject);
   virtual nsresult InitOuterWindow();
   virtual bool IsContextInitialized();
-  virtual void FinalizeContext();
 
   virtual void ScriptEvaluated(bool aTerminated);
   virtual void SetTerminationFunction(nsScriptTerminationFunc aFunc,
