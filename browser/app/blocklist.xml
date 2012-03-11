@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1330367012000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1331241604000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -19,18 +19,6 @@
                   </emItem>
       <emItem  blockID="i43" id="supportaccessplugin@gmail.com">
                         </emItem>
-      <emItem  blockID="i38" id="{B7082FAA-CB62-4872-9106-E42DD88EDE45}">
-                        <versionRange  minVersion="0.1" maxVersion="3.3.0.*">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.7a1" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                                <versionRange  minVersion="3.3.1" maxVersion="*">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="5.0a1" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
       <emItem  blockID="i65" id="activity@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -63,18 +51,6 @@
                   </emItem>
       <emItem  blockID="i10" id="{8CE11043-9A15-4207-A565-0C94C42D590D}">
                         </emItem>
-      <emItem  blockID="i1" id="mozilla_cc@internetdownloadmanager.com">
-                        <versionRange  minVersion="2.1" maxVersion="3.3">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.0a1" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                                <versionRange  minVersion=" " maxVersion="6.9.8">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.7a1pre" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
       <emItem  blockID="i63" id="youtube@youtuber.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -89,18 +65,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i4" id="{4B3803EA-5230-4DC3-A7FC-33638F3D3542}">
-                        <versionRange  minVersion="1.2" maxVersion="1.2">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.0a1" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
-      <emItem  blockID="i50" id="firebug@software.joehewitt.com">
-                        <versionRange  minVersion="0" maxVersion="0">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="9.0a1" maxVersion="9.*" />
-                          </targetApplication>
+      <emItem  blockID="i72" id="{4ED1F68A-5463-4931-9384-8FFF5ED91D92}">
+                        <versionRange  minVersion="0" maxVersion="3.4.1.194" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i40" id="{28387537-e3f9-4ed7-860c-11e69af4a8a0}">
@@ -121,13 +87,6 @@
                   </emItem>
       <emItem  blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
                         </emItem>
-      <emItem  blockID="i46" id="{841468a1-d7f4-4bd3-84e6-bb0f13a06c64}">
-                        <versionRange  minVersion="0.1" maxVersion="*">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="9.0a1" maxVersion="9.0" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
       <emItem  blockID="i67" id="youtube2@youtube2.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -136,33 +95,16 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i23" id="firefox@bandoo.com">
-                        <versionRange  minVersion="5.0" maxVersion="5.0" severity="1">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.7a1pre" maxVersion="*" />
-                          </targetApplication>
+      <emItem  blockID="i56" id="flash@adobe.com">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i55" id="youtube@youtube7.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i11" id="yslow@yahoo-inc.com">
-                        <versionRange  minVersion="2.0.5" maxVersion="2.0.5">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.5.7" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
       <emItem  blockID="i22" id="ShopperReports@ShopperReports.com">
                         <versionRange  minVersion="3.1.22.0" maxVersion="3.1.22.0">
-                    </versionRange>
-                  </emItem>
-      <emItem  blockID="i2" id="fdm_ffext@freedownloadmanager.org">
-                        <versionRange  minVersion="1.0" maxVersion="1.3.1">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.0a1" maxVersion="*" />
-                          </targetApplication>
                     </versionRange>
                   </emItem>
       <emItem  blockID="i44" id="sigma@labs.mozilla">
@@ -203,17 +145,6 @@
                         <versionRange  minVersion="2.2" maxVersion="2.2">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i56" id="flash@adobe.com">
-                        <versionRange  minVersion="0" maxVersion="*">
-                    </versionRange>
-                  </emItem>
-      <emItem  blockID="i45" id="{22119944-ED35-4ab1-910B-E619EA06A115}">
-                        <versionRange  minVersion="0.1" maxVersion="7.6.1">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="8.0a1" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
       <emItem  blockID="i19" id="{46551EC9-40F0-4e47-8E18-8E5CF550CFB8}">
                         <versionRange  minVersion="1.1b1" maxVersion="1.1b1">
                     </versionRange>
@@ -230,39 +161,11 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i24" id="{6E19037A-12E3-4295-8915-ED48BC341614}">
-                        <versionRange  minVersion="0.1" maxVersion="1.3.328.4" severity="1">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.7a1pre" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
-      <emItem  blockID="i15" id="personas@christopher.beard">
-                        <versionRange  minVersion="1.6" maxVersion="1.6">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.6" maxVersion="3.6.*" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
       <emItem  blockID="i21" id="support@update-firefox.com">
                         </emItem>
     </emItems>
 
   <pluginItems>
-      <pluginItem  blockID="p26">
-      <match name="name" exp="^Yahoo Application State Plugin$" />      <match name="description" exp="^Yahoo Application State Plugin$" />      <match name="filename" exp="npYState.dll" />              <versionRange >
-                      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-              <versionRange  minVersion="3.0a1" maxVersion="3.*" />
-            </targetApplication>
-                  </versionRange>
-          </pluginItem>
-      <pluginItem  blockID="p27">
-      <match name="name" exp="QuickTime Plug-in 7[.]1[.]" />            <match name="filename" exp="npqtplugin.?[.]dll" />              <versionRange >
-                      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-              <versionRange  minVersion="3.0a1" maxVersion="3.*" />
-            </targetApplication>
-                  </versionRange>
-          </pluginItem>
       <pluginItem  blockID="p28">
                   <match name="filename" exp="NPFFAddOn.dll" />              <versionRange >
                   </versionRange>
@@ -271,22 +174,8 @@
                   <match name="filename" exp="NPMySrch.dll" />              <versionRange >
                   </versionRange>
           </pluginItem>
-      <pluginItem  blockID="p32">
-                  <match name="filename" exp="npViewpoint.dll" />              <versionRange >
-                      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-              <versionRange  minVersion="3.0" maxVersion="*" />
-            </targetApplication>
-                  </versionRange>
-          </pluginItem>
       <pluginItem  blockID="p33">
       <match name="name" exp="[0-6]\.0\.[01]\d{2}\.\d+" />            <match name="filename" exp="npdeploytk.dll" />              <versionRange  severity="1">
-                  </versionRange>
-          </pluginItem>
-      <pluginItem  blockID="p34">
-                  <match name="filename" exp="[Nn][Pp][Jj][Pp][Ii]1[56]0_[0-9]+\.[Dd][Ll][Ll]" />              <versionRange >
-                      <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-              <versionRange  minVersion="3.6a1pre" maxVersion="*" />
-            </targetApplication>
                   </versionRange>
           </pluginItem>
     </pluginItems>
