@@ -6167,16 +6167,21 @@ var gPageStyleMenu = {
     }
   },
 
-  switchStyleSheet: function (frameset, title) {
+  _stylesheetSwitchAll: function (frameset, title) {
     if (!title || title == "_nostyle" || this._stylesheetInFrame(frameset, title))
       this._stylesheetSwitchFrame(frameset, title);
 
     for (let i = 0; i < frameset.frames.length; i++)
-      this.switchStyleSheet(frameset.frames[i], title);
+      this._stylesheetSwitchAll(frameset.frames[i], title);
   },
 
-  setStyleDisabled: function (disabled) {
-    getMarkupDocumentViewer().authorStyleDisabled = disabled;
+  switchStyleSheet: function (contentWindow, title) {
+    getMarkupDocumentViewer().authorStyleDisabled = false;
+    this._stylesheetSwitchAll(contentWindow, title);
+  },
+
+  disableStyle: function () {
+    getMarkupDocumentViewer().authorStyleDisabled = true;
   },
 };
 
@@ -6184,7 +6189,10 @@ var gPageStyleMenu = {
 var getAllStyleSheets   = gPageStyleMenu.getAllStyleSheets.bind(gPageStyleMenu);
 var stylesheetFillPopup = gPageStyleMenu.fillPopup.bind(gPageStyleMenu);
 var stylesheetSwitchAll = gPageStyleMenu.switchStyleSheet.bind(gPageStyleMenu);
-var setStyleDisabled    = gPageStyleMenu.setStyleDisabled.bind(gPageStyleMenu);
+function setStyleDisabled(disabled) {
+  if (disabled)
+    gPageStyleMenu.disableStyle();
+}
 
 
 var BrowserOffline = {

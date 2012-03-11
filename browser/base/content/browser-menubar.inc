@@ -292,12 +292,11 @@
                 <menu id="pageStyleMenu" label="&pageStyleMenu.label;"
                       accesskey="&pageStyleMenu.accesskey;" observes="isImage">
                   <menupopup onpopupshowing="gPageStyleMenu.fillPopup(this);"
-                             oncommand="gPageStyleMenu.switchStyleSheet(window.content, event.target.getAttribute('data'));
-                                        gPageStyleMenu.setStyleDisabled(false);">
+                             oncommand="gPageStyleMenu.switchStyleSheet(window.content, event.target.getAttribute('data'));">
                     <menuitem id="menu_pageStyleNoStyle"
                               label="&pageStyleNoStyle.label;"
                               accesskey="&pageStyleNoStyle.accesskey;"
-                              oncommand="gPageStyleMenu.setStyleDisabled(true); event.stopPropagation();"
+                              oncommand="gPageStyleMenu.disableStyle(); event.stopPropagation();"
                               type="radio"/>
                     <menuitem id="menu_pageStylePersistentOnly"
                               label="&pageStylePersistentOnly.label;"
