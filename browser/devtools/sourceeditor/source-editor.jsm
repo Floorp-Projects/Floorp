@@ -268,24 +268,24 @@ SourceEditor.EVENTS = {
   BLUR: "Blur",
 
   /**
-   * The MouseMove event is sent when the user moves the mouse over a line
-   * annotation. The event object properties:
+   * The MouseMove event is sent when the user moves the mouse over a line.
+   * The event object properties:
    *   - event - the DOM mousemove event object.
    *   - x and y - the mouse coordinates relative to the document being edited.
    */
   MOUSE_MOVE: "MouseMove",
 
   /**
-   * The MouseOver event is sent when the mouse pointer enters a line
-   * annotation. The event object properties:
+   * The MouseOver event is sent when the mouse pointer enters a line.
+   * The event object properties:
    *   - event - the DOM mouseover event object.
    *   - x and y - the mouse coordinates relative to the document being edited.
    */
   MOUSE_OVER: "MouseOver",
 
   /**
-   * This MouseOut event is sent when the mouse pointer exits a line
-   * annotation. The event object properties:
+   * This MouseOut event is sent when the mouse pointer exits a line.
+   * The event object properties:
    *   - event - the DOM mouseout event object.
    *   - x and y - the mouse coordinates relative to the document being edited.
    */
