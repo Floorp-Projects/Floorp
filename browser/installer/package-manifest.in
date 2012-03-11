@@ -294,9 +294,6 @@
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
-@BINPATH@/components/BrowserDownloads.manifest
-@BINPATH@/components/DownloadsStartup.js
-@BINPATH@/components/DownloadsUI.js
 @BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/BrowserPageThumbs.manifest
 @BINPATH@/components/nsPrivateBrowsingService.manifest
