@@ -58,8 +58,8 @@ protected:
 public:
   nsIContent * GetActiveChild() const
   { return mActiveChild; }
-  void MaybeInvalidate();
-    
+  void InvalidateIfActiveChildChanged();
+
   // interfaces:
 
   NS_DECL_ISUPPORTS_INHERITED
