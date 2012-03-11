@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -255,30 +254,12 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal,
     mScriptObjectPrincipal = sop;
 
     // Lookup 'globalObject.Object.prototype' for our wrapper's proto
-    {
-        AutoJSErrorAndExceptionEater eater(ccx); // scoped error eater
-
-        jsval val;
-        jsid idObj = mRuntime->GetStringID(XPCJSRuntime::IDX_OBJECT);
-        jsid idProto = mRuntime->GetStringID(XPCJSRuntime::IDX_PROTOTYPE);
-
-        // When creating a new scope to boostrap a new global, we don't yet have
-        // an XPCWrappedNative associated with the global object. However, the
-        // resolve hook on the JSClass assumes there is one. So we need to avoid
-        // resolving anything on the global object until things get a bit further
-        // along. As such, we manually resolve |Object| before accessing it below.
-        JSBool didResolve;
-
-        if (JS_ResolveStandardClass(ccx, aGlobal, idObj, &didResolve) &&
-            JS_GetPropertyById(ccx, aGlobal, idObj, &val) &&
-            !JSVAL_IS_PRIMITIVE(val) &&
-            JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
-            !JSVAL_IS_PRIMITIVE(val)) {
-            mPrototypeJSObject = JSVAL_TO_OBJECT(val);
-        } else {
-            NS_ERROR("Can't get globalObject.Object.prototype");
-        }
-    }
+    JSObject *objectPrototype =
+        JS_GetObjectPrototype(ccx.GetJSContext(), aGlobal);
+    if (objectPrototype)
+        mPrototypeJSObject = objectPrototype;
+    else
+        NS_ERROR("Can't get globalObject.Object.prototype");
 
     // Clear the no helper wrapper prototype object so that a new one
     // gets created if needed.
