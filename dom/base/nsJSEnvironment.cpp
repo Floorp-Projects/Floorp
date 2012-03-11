@@ -3006,20 +3006,15 @@ nsJSContext::ScriptEvaluated(bool aTerminated)
   }
 }
 
-nsresult
+void
 nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                    nsISupports* aRef)
+                                    nsIDOMWindow* aRef)
 {
   NS_PRECONDITION(GetExecutingScript(), "should be executing script");
 
   nsJSContext::TerminationFuncClosure* newClosure =
     new nsJSContext::TerminationFuncClosure(aFunc, aRef, mTerminations);
-  if (!newClosure) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   mTerminations = newClosure;
-  return NS_OK;
 }
 
 bool
