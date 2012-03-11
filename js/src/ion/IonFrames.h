@@ -277,6 +277,7 @@ class MachineState
 };
 
 class IonJSFrameLayout;
+class IonFrameIterator;
 
 // Information needed to recover the content of the stack frame.
 class FrameRecovery
@@ -308,6 +309,7 @@ class FrameRecovery
                                        BailoutId bailoutId);
     static FrameRecovery FromSnapshot(uint8 *fp, uint8 *sp, const MachineState &machine,
                                       SnapshotOffset offset);
+    static FrameRecovery FromIterator(const IonFrameIterator &it);
     static FrameRecovery FromTop(JSContext *cx);
 
     // Override the ionScript gleaned from the JSScript.
@@ -373,67 +375,8 @@ MakeFrameDescriptor(uint32 frameSize, FrameType type)
 namespace js {
 namespace ion {
 
-inline IonCommonFrameLayout *
-IonFrameIterator::current() const
-{
-    return (IonCommonFrameLayout *)current_;
-}
-
-inline uint8 *
-IonFrameIterator::returnAddress() const
-{
-    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
-    return current->returnAddress();
-}
-
-inline size_t
-IonFrameIterator::prevFrameLocalSize() const
-{
-    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
-    return current->prevFrameLocalSize();
-}
-
-inline FrameType
-IonFrameIterator::prevType() const
-{
-    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
-    return current->prevType();
-}
-
-inline bool 
-IonFrameIterator::more() const
-{
-    return type_ != IonFrame_Entry;
-}
-
-size_t
-IonFrameIterator::frameSize() const
-{
-    JS_ASSERT(type_ != IonFrame_Exit);
-    return frameSize_;
-}
-
-// Returns the JSScript associated with the topmost Ion frame.
-static inline JSScript *
-GetTopIonJSScript(JSContext *cx)
-{
-    IonFrameIterator iter(cx->runtime->ionTop);
-    JS_ASSERT(iter.type() == IonFrame_Exit);
-    ++iter;
-    JS_ASSERT(iter.type() == IonFrame_JS);
-    IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());
-    switch (GetCalleeTokenTag(frame->calleeToken())) {
-      case CalleeToken_Function: {
-        JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
-        return fun->script();
-      }
-      case CalleeToken_Script:
-        return CalleeTokenToScript(frame->calleeToken());
-      default:
-        JS_NOT_REACHED("unexpected callee token kind");
-        return NULL;
-    }
-}
+inline JSScript *
+GetTopIonJSScript(JSContext *cx);
 
 void
 GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes);

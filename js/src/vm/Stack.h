@@ -1852,6 +1852,7 @@ class StackIter
 #ifdef JS_ION
     ion::IonActivationIterator ionActivations_;
     ion::IonFrameIterator ionFrames_;
+    ion::InlineFrameIterator ionInlineFrames_;
 #endif
 
     void poisonRegs();
