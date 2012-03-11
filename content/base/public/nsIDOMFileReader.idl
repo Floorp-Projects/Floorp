@@ -39,9 +39,9 @@
 
 interface nsIDOMEventListener;
 interface nsIDOMBlob;
-interface nsIDOMFileError;
+interface nsIDOMDOMError;
 
-[scriptable, builtinclass, uuid(d158de26-904e-4731-b42c-8b3a4d172703)]
+[scriptable, builtinclass, uuid(faed1779-b523-4060-8c3b-7199f347b273)]
 interface nsIDOMFileReader : nsIDOMEventTarget
 {
   [implicit_jscontext]
@@ -59,7 +59,7 @@ interface nsIDOMFileReader : nsIDOMEventTarget
 
   [implicit_jscontext]
   readonly attribute jsval result;
-  readonly attribute nsIDOMFileError error;
+  readonly attribute nsIDOMDOMError error;
 
   attribute nsIDOMEventListener onloadstart;
   attribute nsIDOMEventListener onprogress;
