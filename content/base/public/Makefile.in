@@ -97,7 +97,6 @@ XPIDLSRCS	= \
 		nsIDOMFileReader.idl \
 		nsIDOMFileList.idl \
 		nsIDOMFileException.idl \
-		nsIDOMFileError.idl \
 		nsIDOMFormData.idl \
 		nsIDOMParser.idl \
 		nsIDOMSerializer.idl \
