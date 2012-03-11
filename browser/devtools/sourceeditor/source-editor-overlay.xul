@@ -53,6 +53,15 @@
   </commandset>
 
   <keyset id="sourceEditorKeys">
+    <key id="sp-key-undo" key="&undoCmd.key;"
+         command="se-cmd-undo" modifiers="accel"/>
+#ifdef XP_UNIX
+    <key id="sp-key-redo" key="&undoCmd.key;"
+         command="se-cmd-redo" modifiers="accel,shift"/>
+#else
+    <key id="sp-key-redo" key="&redoCmd.key;"
+         command="se-cmd-redo" modifiers="accel"/>
+#endif
     <key id="key_gotoLine"
          key="&gotoLineCmd.key;"
          command="cmd_gotoLine"
