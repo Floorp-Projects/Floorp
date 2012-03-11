@@ -867,8 +867,7 @@ BasicThebesLayerBuffer::SetBackingBufferAndUpdateFrom(
 class BasicImageLayer : public ImageLayer, public BasicImplData {
 public:
   BasicImageLayer(BasicLayerManager* aLayerManager) :
-    ImageLayer(aLayerManager, static_cast<BasicImplData*>(this)),
-    mSize(-1, -1)
+    ImageLayer(aLayerManager, static_cast<BasicImplData*>(this))
   {
     MOZ_COUNT_CTOR(BasicImageLayer);
   }
@@ -901,8 +900,6 @@ protected:
   already_AddRefed<gfxPattern>
   GetAndPaintCurrentImage(gfxContext* aContext,
                           float aOpacity);
-
-  gfxIntSize mSize;
 };
 
 void
@@ -926,7 +923,7 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   nsRefPtr<gfxASurface> surface;
   AutoLockImage autoLock(mContainer, getter_AddRefs(surface));
   Image *image = autoLock.GetImage();
-  mSize = autoLock.GetSize();
+  gfxIntSize size = autoLock.GetSize();
 
   if (!surface || surface->CairoStatus()) {
     return nsnull;
@@ -938,6 +935,15 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   }
 
   pat->SetFilter(mFilter);
+  gfxIntSize sourceSize = surface->GetSize();
+  if (mScaleMode != SCALE_NONE) {
+    NS_ASSERTION(mScaleMode == SCALE_STRETCH,
+      "No other scalemodes than stretch and none supported yet.");
+    gfxMatrix mat = pat->GetMatrix();
+    mat.Scale(float(sourceSize.width) / mScaleToSize.width, float(sourceSize.height) / mScaleToSize.height);
+    pat->SetMatrix(mat);
+    size = mScaleToSize;
+  }
 
   // The visible region can extend outside the image.  If we're not
   // tiling, we don't want to draw into that area, so just draw within
@@ -945,7 +951,7 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   const nsIntRect* tileSrcRect = GetTileSourceRect();
   AutoSetOperator setOperator(aContext, GetOperator());
   PaintContext(pat,
-               tileSrcRect ? GetVisibleRegion() : nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
+               tileSrcRect ? GetVisibleRegion() : nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
                tileSrcRect,
                aOpacity, aContext);
 
@@ -2469,7 +2475,8 @@ class BasicShadowableImageLayer : public BasicImageLayer,
 public:
   BasicShadowableImageLayer(BasicShadowLayerManager* aManager) :
     BasicImageLayer(aManager),
-    mBufferIsOpaque(false)
+    mBufferIsOpaque(false),
+    mSize(-1, -1)
   {
     MOZ_COUNT_CTOR(BasicShadowableImageLayer);
   }
@@ -2536,6 +2543,7 @@ private:
   nsRefPtr<gfxSharedImageSurface> mBackBufferU;
   nsRefPtr<gfxSharedImageSurface> mBackBufferV;
   gfxIntSize mCbCrSize;
+  gfxIntSize mSize;
 };
  
 void
