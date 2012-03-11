@@ -27,6 +27,7 @@
  *   Paul Rouget <paul@mozilla.com>
  *   Kyle Simpson <ksimpson@mozilla.com>
  *   Johan Charlez <johan.charlez@gmail.com>
+ *   Mike Ratcliffe <mratcliffe@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -854,9 +855,7 @@ InspectorUI.prototype = {
    */
   copyInnerHTML: function IUI_copyInnerHTML()
   {
-    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
-                    getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(this.selection.innerHTML);
+    clipboardHelper.copyString(this.selection.innerHTML);
   },
 
   /**
@@ -865,9 +864,7 @@ InspectorUI.prototype = {
    */
   copyOuterHTML: function IUI_copyOuterHTML()
   {
-    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
-                    getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(this.selection.outerHTML);
+    clipboardHelper.copyString(this.selection.outerHTML);
   },
 
   /**
@@ -935,12 +932,34 @@ InspectorUI.prototype = {
 
       this.ruleView = new CssRuleView(doc, ruleViewStore);
 
+      // Add event handlers bound to this.
       this.boundRuleViewChanged = this.ruleViewChanged.bind(this);
       this.ruleView.element.addEventListener("CssRuleViewChanged",
                                              this.boundRuleViewChanged);
       this.cssRuleViewBoundCSSLinkClicked = this.ruleViewCSSLinkClicked.bind(this);
       this.ruleView.element.addEventListener("CssRuleViewCSSLinkClicked",
                                              this.cssRuleViewBoundCSSLinkClicked);
+      this.cssRuleViewBoundMouseDown = this.ruleViewMouseDown.bind(this);
+      this.ruleView.element.addEventListener("mousedown",
+                                             this.cssRuleViewBoundMouseDown);
+      this.cssRuleViewBoundMouseUp = this.ruleViewMouseUp.bind(this);
+      this.ruleView.element.addEventListener("mouseup",
+                                             this.cssRuleViewBoundMouseUp);
+      this.cssRuleViewBoundMouseMove = this.ruleViewMouseMove.bind(this);
+      this.cssRuleViewBoundMenuUpdate = this.ruleViewMenuUpdate.bind(this);
+
+      this.cssRuleViewBoundCopy = this.ruleViewCopy.bind(this);
+      iframe.addEventListener("copy", this.cssRuleViewBoundCopy);
+
+      this.cssRuleViewBoundCopyRule = this.ruleViewCopyRule.bind(this);
+      this.cssRuleViewBoundCopyDeclaration =
+        this.ruleViewCopyDeclaration.bind(this);
+      this.cssRuleViewBoundCopyProperty = this.ruleViewCopyProperty.bind(this);
+      this.cssRuleViewBoundCopyPropertyValue =
+        this.ruleViewCopyPropertyValue.bind(this);
+
+      // Add the rule view's context menu.
+      this.ruleViewAddContextMenu();
 
       doc.documentElement.appendChild(this.ruleView.element);
       this.ruleView.highlight(this.selection);
@@ -1012,18 +1031,355 @@ InspectorUI.prototype = {
   },
 
   /**
+   * This is the mousedown handler for the rule view. We use it to track whether
+   * text is currently getting selected.
+   * .
+   * @param aEvent The event object
+   */
+  ruleViewMouseDown: function IUI_ruleViewMouseDown(aEvent)
+  {
+    this.ruleView.element.addEventListener("mousemove",
+      this.cssRuleViewBoundMouseMove);
+  },
+
+  /**
+   * This is the mouseup handler for the rule view. We use it to track whether
+   * text is currently getting selected.
+   * .
+   * @param aEvent The event object
+   */
+  ruleViewMouseUp: function IUI_ruleViewMouseUp(aEvent)
+  {
+    this.ruleView.element.removeEventListener("mousemove",
+      this.cssRuleViewBoundMouseMove);
+    this.ruleView._selectionMode = false;
+  },
+
+  /**
+   * This is the mousemove handler for the rule view. We use it to track whether
+   * text is currently getting selected.
+   * .
+   * @param aEvent The event object
+   */
+  ruleViewMouseMove: function IUI_ruleViewMouseMove(aEvent)
+  {
+    this.ruleView._selectionMode = true;
+  },
+
+  /**
+   * Add a context menu to the rule view.
+   */
+  ruleViewAddContextMenu: function IUI_ruleViewAddContextMenu()
+  {
+    let iframe = this.getToolIframe(this.ruleViewObject);
+    let popupSet = this.chromeDoc.getElementById("mainPopupSet");
+    let menu = this.chromeDoc.createElement("menupopup");
+    menu.addEventListener("popupshowing", this.cssRuleViewBoundMenuUpdate);
+    menu.id = "rule-view-context-menu";
+
+    // Copy selection
+    let label = styleInspectorStrings
+      .GetStringFromName("rule.contextmenu.copyselection");
+    let accessKey = styleInspectorStrings
+      .GetStringFromName("rule.contextmenu.copyselection.accesskey");
+    let item = this.chromeDoc.createElement("menuitem");
+    item.id = "rule-view-copy";
+    item.setAttribute("label", label);
+    item.setAttribute("accesskey", accessKey);
+    item.addEventListener("command", this.cssRuleViewBoundCopy);
+    menu.appendChild(item);
+
+    // Copy rule
+    label = styleInspectorStrings.
+      GetStringFromName("rule.contextmenu.copyrule");
+    accessKey = styleInspectorStrings.
+      GetStringFromName("rule.contextmenu.copyrule.accesskey");
+    item = this.chromeDoc.createElement("menuitem");
+    item.id = "rule-view-copy-rule";
+    item.setAttribute("label", label);
+    item.setAttribute("accesskey", accessKey);
+    item.addEventListener("command", this.cssRuleViewBoundCopyRule);
+    menu.appendChild(item);
+
+    // Copy declaration
+    label = styleInspectorStrings.
+      GetStringFromName("rule.contextmenu.copydeclaration");
+    accessKey = styleInspectorStrings.
+      GetStringFromName("rule.contextmenu.copydeclaration.accesskey");
+    item = this.chromeDoc.createElement("menuitem");
+    item.id = "rule-view-copy-declaration";
+    item.setAttribute("label", label);
+    item.setAttribute("accesskey", accessKey);
+    item.addEventListener("command", this.cssRuleViewBoundCopyDeclaration);
+    menu.appendChild(item);
+
+    // Copy property name
+    label = styleInspectorStrings.
+      GetStringFromName("rule.contextmenu.copyproperty");
+    accessKey = styleInspectorStrings.
+      GetStringFromName("rule.contextmenu.copyproperty.accesskey");
+    item = this.chromeDoc.createElement("menuitem");
+    item.id = "rule-view-copy-property";
+    item.setAttribute("label", label);
+    item.setAttribute("accesskey", accessKey);
+    item.addEventListener("command", this.cssRuleViewBoundCopyProperty);
+    menu.appendChild(item);
+
+    // Copy property value
+    label = styleInspectorStrings.
+      GetStringFromName("rule.contextmenu.copypropertyvalue");
+    accessKey = styleInspectorStrings.
+      GetStringFromName("rule.contextmenu.copypropertyvalue.accesskey");
+    item = this.chromeDoc.createElement("menuitem");
+    item.id = "rule-view-copy-property-value";
+    item.setAttribute("label", label);
+    item.setAttribute("accesskey", accessKey);
+    item.addEventListener("command", this.cssRuleViewBoundCopyPropertyValue);
+    menu.appendChild(item);
+
+    popupSet.appendChild(menu);
+
+    iframe.setAttribute("context", menu.id);
+  },
+
+  /**
+   * Update the rule view's context menu by disabling irrelevant menuitems and
+   * enabling relevant ones.
+   *
+   * @param aEvent The event object
+   */
+  ruleViewMenuUpdate: function IUI_ruleViewMenuUpdate(aEvent)
+  {
+    let iframe = this.getToolIframe(this.ruleViewObject);
+    let win = iframe.contentWindow;
+
+    // Copy selection.
+    let disable = win.getSelection().isCollapsed;
+    let menuitem = this.chromeDoc.getElementById("rule-view-copy");
+    menuitem.disabled = disable;
+
+    // Copy property, copy property name & copy property value.
+    let node = this.chromeDoc.popupNode;
+    if (!node.classList.contains("ruleview-property") &&
+        !node.classList.contains("ruleview-computed")) {
+      while (node = node.parentElement) {
+        if (node.classList.contains("ruleview-property") ||
+          node.classList.contains("ruleview-computed")) {
+          break;
+        }
+      }
+    }
+    let disablePropertyItems = !node || (node &&
+      !node.classList.contains("ruleview-property") &&
+      !node.classList.contains("ruleview-computed"));
+
+    menuitem = this.chromeDoc.querySelector("#rule-view-copy-declaration");
+    menuitem.disabled = disablePropertyItems;
+    menuitem = this.chromeDoc.querySelector("#rule-view-copy-property");
+    menuitem.disabled = disablePropertyItems;
+    menuitem = this.chromeDoc.querySelector("#rule-view-copy-property-value");
+    menuitem.disabled = disablePropertyItems;
+  },
+
+  /**
+   * Copy selected text from the rule view.
+   *
+   * @param aEvent The event object
+   */
+  ruleViewCopy: function IUI_ruleViewCopy(aEvent)
+  {
+    let iframe = this.getToolIframe(this.ruleViewObject);
+    let win = iframe.contentWindow;
+    let text = win.getSelection().toString();
+
+    // Remove any double newlines.
+    text = text.replace(/(\r?\n)\r?\n/g, "$1");
+
+    // Remove "inline"
+    let inline = styleInspectorStrings.GetStringFromName("rule.sourceInline");
+    let rx = new RegExp("^" + inline + "\\r?\\n?", "g");
+    text = text.replace(rx, "");
+
+    // Remove file:line
+    text = text.replace(/[\w\.]+:\d+(\r?\n)/g, "$1");
+
+    // Remove inherited from: line
+    let inheritedFrom = styleInspectorStrings
+      .GetStringFromName("rule.inheritedSource");
+    inheritedFrom = inheritedFrom.replace(/\s%S\s\(%S\)/g, "");
+    rx = new RegExp("(\r?\n)" + inheritedFrom + ".*", "g");
+    text = text.replace(rx, "$1");
+
+    clipboardHelper.copyString(text);
+
+    if (aEvent) {
+      aEvent.preventDefault();
+    }
+  },
+
+  /**
+   * Copy a rule from the rule view.
+   *
+   * @param aEvent The event object
+   */
+  ruleViewCopyRule: function IUI_ruleViewCopyRule(aEvent)
+  {
+    let node = this.chromeDoc.popupNode;
+    if (node.className != "ruleview-code") {
+      if (node.className == "ruleview-rule-source") {
+        node = node.nextElementSibling;
+      } else {
+        while (node = node.parentElement) {
+          if (node.className == "ruleview-code") {
+            break;
+          }
+        }
+      }
+    }
+
+    if (node.className == "ruleview-code") {
+      // We need to strip expanded properties from the node because we use
+      // node.textContent below, which also gets text from hidden nodes. The
+      // simplest way to do this is to clone the node and remove them from the
+      // clone.
+      node = node.cloneNode();
+      let computed = node.querySelector(".ruleview-computedlist");
+      if (computed) {
+        computed.parentNode.removeChild(computed);
+      }
+    }
+
+    let text = node.textContent;
+
+    // Format the rule
+    if (osString == "WINNT") {
+      text = text.replace(/{/g, "{\r\n    ");
+      text = text.replace(/;/g, ";\r\n    ");
+      text = text.replace(/\s*}/g, "\r\n}");
+    } else {
+      text = text.replace(/{/g, "{\n    ");
+      text = text.replace(/;/g, ";\n    ");
+      text = text.replace(/\s*}/g, "\n}");
+    }
+
+    clipboardHelper.copyString(text);
+  },
+
+  /**
+   * Copy a declaration from the rule view.
+   *
+   * @param aEvent The event object
+   */
+  ruleViewCopyDeclaration: function IUI_ruleViewCopyDeclaration(aEvent)
+  {
+    let node = this.chromeDoc.popupNode;
+    if (!node.classList.contains("ruleview-property") &&
+        !node.classList.contains("ruleview-computed")) {
+      while (node = node.parentElement) {
+        if (node.classList.contains("ruleview-property") ||
+            node.classList.contains("ruleview-computed")) {
+          break;
+        }
+      }
+    }
+
+    // We need to strip expanded properties from the node because we use
+    // node.textContent below, which also gets text from hidden nodes. The
+    // simplest way to do this is to clone the node and remove them from the
+    // clone.
+    node = node.cloneNode();
+    let computed = node.querySelector(".ruleview-computedlist");
+    if (computed) {
+      computed.parentNode.removeChild(computed);
+    }
+    clipboardHelper.copyString(node.textContent);
+  },
+
+  /**
+   * Copy a property name from the rule view.
+   *
+   * @param aEvent The event object
+   */
+  ruleViewCopyProperty: function IUI_ruleViewCopyProperty(aEvent)
+  {
+    let node = this.chromeDoc.popupNode;
+
+    if (!node.classList.contains("ruleview-propertyname")) {
+      node = node.querySelector(".ruleview-propertyname");
+    }
+
+    if (node) {
+      clipboardHelper.copyString(node.textContent);
+    }
+  },
+
+  /**
+   * Copy a property value from the rule view.
+   *
+   * @param aEvent The event object
+   */
+  ruleViewCopyPropertyValue: function IUI_ruleViewCopyPropertyValue(aEvent)
+  {
+    let node = this.chromeDoc.popupNode;
+
+    if (!node.classList.contains("ruleview-propertyvalue")) {
+      node = node.querySelector(".ruleview-propertyvalue");
+    }
+
+    if (node) {
+      clipboardHelper.copyString(node.textContent);
+    }
+  },
+
+  /**
    * Destroy the rule view.
    */
   destroyRuleView: function IUI_destroyRuleView()
   {
     let iframe = this.getToolIframe(this.ruleViewObject);
+    iframe.removeEventListener("copy", this.cssRuleViewBoundCopy);
     iframe.parentNode.removeChild(iframe);
 
     if (this.ruleView) {
+      let menu = this.chromeDoc.querySelector("#rule-view-context-menu");
+      if (menu) {
+        // Copy
+        let menuitem = this.chromeDoc.querySelector("#rule-view-copy");
+        menuitem.removeEventListener("command", this.cssRuleViewBoundCopy);
+
+        // Copy rule
+        menuitem = this.chromeDoc.querySelector("#rule-view-copy-rule");
+        menuitem.removeEventListener("command", this.cssRuleViewBoundCopyRule);
+
+        // Copy property
+        menuitem = this.chromeDoc.querySelector("#rule-view-copy-declaration");
+        menuitem.removeEventListener("command",
+                                     this.cssRuleViewBoundCopyDeclaration);
+
+        // Copy property name
+        menuitem = this.chromeDoc.querySelector("#rule-view-copy-property");
+        menuitem.removeEventListener("command",
+                                     this.cssRuleViewBoundCopyProperty);
+
+        // Copy property value
+        menuitem = this.chromeDoc.querySelector("#rule-view-copy-property-value");
+        menuitem.removeEventListener("command",
+                                     this.cssRuleViewBoundCopyPropertyValue);
+
+        menu.removeEventListener("popupshowing", this.cssRuleViewBoundMenuUpdate);
+        menu.parentNode.removeChild(menu);
+      }
+
       this.ruleView.element.removeEventListener("CssRuleViewChanged",
                                                 this.boundRuleViewChanged);
       this.ruleView.element.removeEventListener("CssRuleViewCSSLinkClicked",
                                                 this.cssRuleViewBoundCSSLinkClicked);
+      this.ruleView.element.removeEventListener("mousedown",
+                                                this.cssRuleViewBoundMouseDown);
+      this.ruleView.element.removeEventListener("mouseup",
+                                                this.cssRuleViewBoundMouseUp);
+      this.ruleView.element.removeEventListener("mousemove",
+                                                this.cssRuleViewBoundMouseMove);
       delete boundRuleViewChanged;
       this.ruleView.clear();
       delete this.ruleView;
@@ -1245,6 +1601,7 @@ InspectorUI.prototype = {
     iframe.id = "devtools-sidebar-iframe-" + aRegObj.id;
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("tooltip", "aHTMLTooltip");
+    iframe.addEventListener("mousedown", iframe.focus);
     this.sidebarDeck.appendChild(iframe);
 
     // wire up button to show the iframe
@@ -1355,6 +1712,10 @@ InspectorUI.prototype = {
     let buttonId = this.getToolbarButtonId(aRegObj.id);
     let btn = this.chromeDoc.getElementById(buttonId);
     this.unbindToolEvent(btn, "click");
+
+    // Remove focus listener
+    let iframe = this.getToolIframe(aRegObj);
+    iframe.removeEventListener("mousedown", iframe.focus);
 
     // remove sidebar buttons and tools
     this.sidebarToolbar.removeChild(btn);
@@ -2240,4 +2601,18 @@ XPCOMUtils.defineLazyGetter(this, "StyleInspector", function () {
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+});
+
+XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
+  return Cc["@mozilla.org/widget/clipboardhelper;1"].
+    getService(Ci.nsIClipboardHelper);
+});
+
+XPCOMUtils.defineLazyGetter(this, "styleInspectorStrings", function() {
+  return Services.strings.createBundle(
+    "chrome://browser/locale/devtools/styleinspector.properties");
+});
+
+XPCOMUtils.defineLazyGetter(this, "osString", function() {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });

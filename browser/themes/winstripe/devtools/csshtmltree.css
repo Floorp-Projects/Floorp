@@ -105,15 +105,12 @@
   background-image: url("chrome://global/skin/tree/twisty-open.png");
 }
 
-.expandable {
-  cursor: pointer;
-}
-
 .match {
   visibility: hidden;
 }
 
-.expandable > .property-header > .match {
+.expandable {
+  cursor: pointer;
   visibility: visible;
 }
 
@@ -165,6 +162,7 @@
   -moz-box-flex: 1;
   overflow-y: auto;
   border-collapse: collapse;
+  -moz-user-select: text;
 }
 
 .darkrow {
@@ -233,6 +231,11 @@
 
 .ruleview-ruleopen {
   -moz-padding-end: 5px;
+}
+
+.ruleview-ruleclose {
+  width: -moz-min-content;
+  padding-right: 20px;
 }
 
 .ruleview-propertylist {

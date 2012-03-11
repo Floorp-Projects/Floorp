@@ -55,7 +55,7 @@ var EXPORTED_SYMBOLS = ["StyleInspector"];
 function StyleInspector(aContext, aIUI)
 {
   this._init(aContext, aIUI);
-};
+}
 
 StyleInspector.prototype = {
 
