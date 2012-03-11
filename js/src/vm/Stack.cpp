@@ -47,6 +47,8 @@
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
+#include "jsopcode.h"
+
 #include "Stack-inl.h"
 
 /* Includes to get to low-level memory-mapping functionality. */
@@ -1181,6 +1183,8 @@ StackIter::settleOnNewState()
 
                 state_ = ION;
                 ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
+                pc_ = ionInlineFrames_.pc();
+                script_ = ionInlineFrames_.script();
                 return;
             }
 #endif /* JS_ION */
@@ -1225,10 +1229,10 @@ StackIter::settleOnNewState()
             }
 
             state_ = SCRIPTED;
-            DebugOnly<JSScript *> script = fp_->script();
+            script_ = fp_->script();
             JS_ASSERT_IF(op != JSOP_FUNAPPLY,
-                         sp_ >= fp_->base() && sp_ <= fp_->slots() + script->nslots);
-            JS_ASSERT(pc_ >= script->code && pc_ < script->code + script->length);
+                         sp_ >= fp_->base() && sp_ <= fp_->slots() + script_->nslots);
+            JS_ASSERT(pc_ >= script_->code && pc_ < script_->code + script_->length);
             return;
         }
 
@@ -1283,6 +1287,7 @@ StackIter::popIonFrame()
     if (ionInlineFrames_.more()) {
         ++ionInlineFrames_;
         pc_ = ionInlineFrames_.pc();
+        script_ = ionInlineFrames_.script();
     } else {
         ++ionFrames_;
         while (ionFrames_.more() && !ionFrames_.isScripted())
@@ -1291,6 +1296,7 @@ StackIter::popIonFrame()
         if (ionFrames_.more()) {
             ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
             pc_ = ionInlineFrames_.pc();
+            script_ = ionInlineFrames_.script();
         } else {
             ++ionActivations_;
             popFrame();

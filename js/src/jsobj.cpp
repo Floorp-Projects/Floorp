@@ -6505,3 +6505,22 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
 
 #endif /* DEBUG */
 
+JS_FRIEND_API(void)
+js_DumpBacktrace(JSContext *cx)
+{
+    Sprinter sprinter(cx);
+    sprinter.init();
+    size_t depth = 1;
+    for (StackIter i(cx); !i.done(); ++i, ++depth) {
+        if (i.isScripted()) {
+            const char *filename = JS_GetScriptFilename(cx, i.script());
+            unsigned line = JS_PCToLineNumber(cx, i.script(), i.pc());
+            sprinter.printf("#%d %14p   %s:%d (%p @ %d)\n",
+                            depth, (i.isScript() ? i.fp() : 0), filename, line,
+                            i.script(), i.pc() - i.script()->code);
+        } else {
+            sprinter.printf("#%d ???\n", depth);
+        }
+    }
+    fprintf(stdout, "%s", sprinter.string());
+}
