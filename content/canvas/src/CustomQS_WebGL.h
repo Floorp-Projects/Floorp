@@ -413,7 +413,7 @@ public:
         return self->TexImage2D_imageData(target, level, internalformat, width,
                                           height, 0, format, type, pixels);
     }
-    nsresult DoCallForElement(nsIDOMElement* elt)
+    nsresult DoCallForElement(mozilla::dom::Element* elt)
     {
         return self->TexImage2D_dom(target, level, internalformat, format, type,
                                     elt);
@@ -456,7 +456,7 @@ public:
                                              width, height, format, type,
                                              pixels);
     }
-    nsresult DoCallForElement(nsIDOMElement* elt)
+    nsresult DoCallForElement(mozilla::dom::Element* elt)
     {
         return self->TexSubImage2D_dom(target, level, xoffset, yoffset, format,
                                        type, elt);
@@ -469,24 +469,12 @@ TexImage2DImageDataOrElement(JSContext* cx, T& self, JS::Value* object)
 {
     MOZ_ASSERT(object && object->isObject());
 
-    nsIDOMElement* elt;
+    nsGenericElement* elt;
     xpc_qsSelfRef eltRef;
-    nsresult rv =
-        xpc_qsUnwrapArg<nsIDOMElement>(cx, *object, &elt, &eltRef.ptr, object);
-    if (NS_FAILED(rv)) {
-        return false;
-    }
-
-    rv = self.DoCallForElement(elt);
-
-    // NS_ERROR_DOM_SECURITY_ERR indicates we tried to load a cross-domain
-    // element, so bail out immediately, don't try to interpret as ImageData.
-    if (rv == NS_ERROR_DOM_SECURITY_ERR) {
-        return xpc_qsThrow(cx, rv);
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-        return true;
+    if (NS_SUCCEEDED(xpc_qsUnwrapArg<nsGenericElement>(
+            cx, *object, &elt, &eltRef.ptr, object))) {
+        nsresult rv = self.DoCallForElement(elt);
+        return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
     }
 
     // Failed to interpret object as an Element, now try to interpret it as
@@ -517,7 +505,7 @@ TexImage2DImageDataOrElement(JSContext* cx, T& self, JS::Value* object)
         return xpc_qsThrow(cx, NS_ERROR_FAILURE);
     }
 
-    rv = self.DoCallForImageData(int_width, int_height, obj_data);
+    nsresult rv = self.DoCallForImageData(int_width, int_height, obj_data);
     return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
 }
 
