@@ -165,10 +165,10 @@ private:
 
 // the SamplerStack members are read by signal
 // handlers, so the mutation of them needs to be signal-safe.
-struct ProfileStack
+struct Stack
 {
 public:
-  ProfileStack()
+  Stack()
     : mStackPointer(0)
     , mMarkerPointer(0)
     , mDroppedStackEntries(0)
@@ -256,7 +256,7 @@ inline void* mozilla_sampler_call_enter(const char *aInfo)
   if (!stack_key_initialized)
     return NULL;
 
-  ProfileStack *stack = mozilla::tls::get<ProfileStack>(pkey_stack);
+  Stack *stack = mozilla::tls::get<Stack>(pkey_stack);
   // we can't infer whether 'stack' has been initialized
   // based on the value of stack_key_intiailized because
   // 'stack' is only intialized when a thread is being
@@ -279,13 +279,13 @@ inline void mozilla_sampler_call_exit(void *aHandle)
   if (!aHandle)
     return;
 
-  ProfileStack *stack = (ProfileStack*)aHandle;
+  Stack *stack = (Stack*)aHandle;
   stack->pop();
 }
 
 inline void mozilla_sampler_add_marker(const char *aMarker)
 {
-  ProfileStack *stack = mozilla::tls::get<ProfileStack>(pkey_stack);
+  Stack *stack = mozilla::tls::get<Stack>(pkey_stack);
   if (!stack) {
     return;
   }
