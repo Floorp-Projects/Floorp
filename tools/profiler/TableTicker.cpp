@@ -104,7 +104,7 @@ bool stack_key_initialized;
 
 TimeStamp sLastTracerEvent;
 
-class Profile;
+class ThreadProfile;
 
 class ProfileEntry
 {
@@ -141,10 +141,10 @@ public:
     , mTagName(aTagName)
   { }
 
-  string TagToString(Profile *profile);
+  string TagToString(ThreadProfile *profile);
 
 private:
-  friend class Profile;
+  friend class ThreadProfile;
   union {
     const char* mTagData;
     double mTagFloat;
@@ -156,10 +156,10 @@ private:
 };
 
 #define PROFILE_MAX_ENTRY 100000
-class Profile
+class ThreadProfile
 {
 public:
-  Profile(int aEntrySize)
+  ThreadProfile(int aEntrySize)
     : mWritePos(0)
     , mLastFlushPos(0)
     , mReadPos(0)
@@ -168,7 +168,7 @@ public:
     mEntries = new ProfileEntry[mEntrySize];
   }
 
-  ~Profile()
+  ~ThreadProfile()
   {
     delete[] mEntries;
   }
@@ -331,17 +331,17 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
 
 class TableTicker: public Sampler {
  public:
-  TableTicker(int aInterval, int aEntrySize, Stack *aStack,
+  TableTicker(int aInterval, int aEntrySize, ProfileStack *aStack,
               const char** aFeatures, uint32_t aFeatureCount)
     : Sampler(aInterval, true)
-    , mProfile(aEntrySize)
+    , mPrimaryThreadProfile(aEntrySize)
     , mStack(aStack)
     , mSaveRequested(false)
   {
     mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
-    mProfile.addTag(ProfileEntry('m', "Start"));
+    mPrimaryThreadProfile.addTag(ProfileEntry('m', "Start"));
   }
 
   ~TableTicker() { if (IsActive()) Stop(); }
@@ -359,23 +359,24 @@ class TableTicker: public Sampler {
 
   virtual void HandleSaveRequest();
 
-  Stack* GetStack()
+  ProfileStack* GetStack()
   {
     return mStack;
   }
 
-  Profile* GetProfile()
+  ThreadProfile* GetPrimaryThreadProfile()
   {
-    return &mProfile;
+    return &mPrimaryThreadProfile;
   }
 
 private:
   // Not implemented on platforms which do not support backtracing
-  void doBacktrace(Profile &aProfile, Address pc);
+  void doBacktrace(ThreadProfile &aProfile, Address pc);
 
 private:
-  Profile mProfile;
-  Stack *mStack;
+  // This represent the application's main thread (SAMPLER_INIT)
+  ThreadProfile mPrimaryThreadProfile;
+  ProfileStack *mStack;
   bool mSaveRequested;
   bool mUseStackWalk;
   bool mJankOnly;
@@ -414,7 +415,7 @@ public:
 
     FILE* stream = ::fopen(buff, "w");
     if (stream) {
-      t->GetProfile()->WriteProfile(stream);
+      t->GetPrimaryThreadProfile()->WriteProfile(stream);
       ::fclose(stream);
       LOG("Saved to " FOLDER "profile_TYPE_PID.txt");
     } else {
@@ -439,7 +440,7 @@ void TableTicker::HandleSaveRequest()
 
 
 #ifdef USE_BACKTRACE
-void TableTicker::doBacktrace(Profile &aProfile, Address pc)
+void TableTicker::doBacktrace(ThreadProfile &aProfile, Address pc)
 {
   void *array[100];
   int count = backtrace (array, 100);
@@ -472,7 +473,7 @@ void StackWalkCallback(void* aPC, void* aClosure)
   array->array[array->count++] = aPC;
 }
 
-void TableTicker::doBacktrace(Profile &aProfile, Address fp)
+void TableTicker::doBacktrace(ThreadProfile &aProfile, Address fp)
 {
 #ifndef XP_MACOSX
   uintptr_t thread = GetThreadHandle(platform_data());
@@ -504,7 +505,7 @@ void TableTicker::doBacktrace(Profile &aProfile, Address fp)
 #endif
 
 static
-void doSampleStackTrace(Stack *aStack, Profile &aProfile, TickSample *sample)
+void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSample *sample)
 {
   // Sample
   // 's' tag denotes the start of a sample block
@@ -538,7 +539,7 @@ void TableTicker::Tick(TickSample* sample)
 {
   // Marker(s) come before the sample
   for (int i = 0; mStack->getMarker(i) != NULL; i++) {
-    mProfile.addTag(ProfileEntry('m', mStack->getMarker(i)));
+    mPrimaryThreadProfile.addTag(ProfileEntry('m', mStack->getMarker(i)));
   }
   mStack->mQueueClearMarker = true;
 
@@ -548,7 +549,7 @@ void TableTicker::Tick(TickSample* sample)
     // XXX: we also probably want to add an entry to the profile to help
     // distinguish which samples are part of the same event. That, or record
     // the event generation in each sample
-    mProfile.erase();
+    mPrimaryThreadProfile.erase();
   }
   sLastSampledEventGeneration = sCurrentEventGeneration;
 
@@ -566,24 +567,24 @@ void TableTicker::Tick(TickSample* sample)
 
 #if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
   if (mUseStackWalk) {
-    doBacktrace(mProfile, sample->fp);
+    doBacktrace(mPrimaryThreadProfile, sample->fp);
   } else {
-    doSampleStackTrace(mStack, mProfile, sample);
+    doSampleStackTrace(mStack, mPrimaryThreadProfile, sample);
   }
 #else
-  doSampleStackTrace(mStack, mProfile, sample);
+  doSampleStackTrace(mStack, mPrimaryThreadProfile, sample);
 #endif
 
   if (recordSample)
-    mProfile.flush();
+    mPrimaryThreadProfile.flush();
 
   if (!mJankOnly && !sLastTracerEvent.IsNull() && sample) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
-    mProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
+    mPrimaryThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }
 }
 
-string ProfileEntry::TagToString(Profile *profile)
+string ProfileEntry::TagToString(mPrimaryThreadProfile *profile)
 {
   string tag = "";
   if (mTagName == 'r') {
@@ -625,7 +626,7 @@ void mozilla_sampler_init()
   }
   stack_key_initialized = true;
 
-  Stack *stack = new Stack();
+  ProfileStack *stack = new ProfileStack();
   mozilla::tls::set(pkey_stack, stack);
 
   // We can't open pref so we use an environment variable
@@ -669,7 +670,7 @@ char* mozilla_sampler_get_profile()
   }
 
   StringBuilder profile;
-  t->GetProfile()->ToString(profile);
+  t->GetPrimaryThreadProfile()->ToString(profile);
 
   char *rtn = (char*)malloc( (profile.Length()+1) * sizeof(char) );
   strcpy(rtn, profile.Buffer());
@@ -683,7 +684,7 @@ JSObject *mozilla_sampler_get_profile_data(JSContext *aCx)
     return NULL;
   }
 
-  return t->GetProfile()->ToJSObject(aCx);
+  return t->GetPrimaryThreadProfile()->ToJSObject(aCx);
 }
 
 
@@ -704,7 +705,7 @@ const char** mozilla_sampler_get_features()
 void mozilla_sampler_start(int aProfileEntries, int aInterval,
                            const char** aFeatures, uint32_t aFeatureCount)
 {
-  Stack *stack = mozilla::tls::get<Stack>(pkey_stack);
+  ProfileStack *stack = mozilla::tls::get<ProfileStack>(pkey_stack);
   if (!stack) {
     ASSERT(false);
     return;
@@ -726,7 +727,7 @@ void mozilla_sampler_stop()
   }
 
   t->Stop();
-  mozilla::tls::set(pkey_ticker, (Stack*)NULL);
+  mozilla::tls::set(pkey_ticker, (ProfileStack*)NULL);
 }
 
 bool mozilla_sampler_is_active()
