@@ -5,6 +5,8 @@
 #include "jsapi.h"
 #include "nsIScriptContext.h"
 
+class nsIJSArgArray;
+
 // seems like overkill for just this 1 function - but let's see what else
 // falls out first.
 inline nsIScriptContext *
@@ -50,6 +52,6 @@ GetScriptContextPrincipalFromJSContext(JSContext *cx)
 // rooted, but all items remain NULL.  This presumably means the caller will
 // then QI us for nsIJSArgArray, and set our array elements.
 nsresult NS_CreateJSArgv(JSContext *aContext, PRUint32 aArgc, void *aArgv,
-                         nsIArray **aArray);
+                         nsIJSArgArray **aArray);
 
 #endif // nsDOMJSUtils_h__
