@@ -43,7 +43,6 @@
 #include "nsIFile.h"
 #include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
-#include "nsIDOMFileError.h"
 #include "nsIInputStream.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIMutable.h"
@@ -53,12 +52,13 @@
 #include "nsIXMLHttpRequest.h"
 #include "prmem.h"
 #include "nsAutoPtr.h"
-#include "mozilla/dom/indexedDB/FileInfo.h"
-#include "mozilla/dom/indexedDB/FileManager.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/StandardInteger.h"
+#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/indexedDB/FileInfo.h"
+#include "mozilla/dom/indexedDB/FileManager.h"
+#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 
 class nsIFile;
 class nsIInputStream;
@@ -361,18 +361,6 @@ public:
 
 private:
   nsCOMArray<nsIDOMFile> mFiles;
-};
-
-class nsDOMFileError : public nsIDOMFileError
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMFILEERROR
-
-  nsDOMFileError(PRUint16 aErrorCode) : mCode(aErrorCode) {}
-
-private:
-  PRUint16 mCode;
 };
 
 class NS_STACK_CLASS nsDOMFileInternalUrlHolder {
