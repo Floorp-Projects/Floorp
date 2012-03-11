@@ -1847,6 +1847,7 @@ class StackIter
     StackSegment *seg_;
     Value        *sp_;
     jsbytecode   *pc_;
+    JSScript     *script_;
     CallArgs     args_;
 
 #ifdef JS_ION
@@ -1875,9 +1876,11 @@ class StackIter
     bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
 
     bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED; }
+    bool isScripted() const { JS_ASSERT(!done()); return state_ == SCRIPTED || state_ == ION; }
     StackFrame *fp() const { JS_ASSERT(!done() && isScript()); return fp_; }
     Value      *sp() const { JS_ASSERT(!done() && isScript()); return sp_; }
-    jsbytecode *pc() const { JS_ASSERT(!done() && isScript()); return pc_; }
+    jsbytecode *pc() const { JS_ASSERT(!done() && isScripted()); return pc_; }
+    JSScript *script() const { JS_ASSERT(!done() && isScripted()); return script_; }
 
     bool isNativeCall() const { JS_ASSERT(!done()); return state_ != SCRIPTED; }
     CallArgs nativeArgs() const { JS_ASSERT(!done() && isNativeCall()); return args_; }
