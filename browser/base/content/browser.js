@@ -6175,9 +6175,9 @@ var gPageStyleMenu = {
       this._stylesheetSwitchAll(frameset.frames[i], title);
   },
 
-  switchStyleSheet: function (contentWindow, title) {
+  switchStyleSheet: function (title, contentWindow) {
     getMarkupDocumentViewer().authorStyleDisabled = false;
-    this._stylesheetSwitchAll(contentWindow, title);
+    this._stylesheetSwitchAll(contentWindow || content, title);
   },
 
   disableStyle: function () {
@@ -6188,7 +6188,9 @@ var gPageStyleMenu = {
 /* Legacy global page-style functions */
 var getAllStyleSheets   = gPageStyleMenu.getAllStyleSheets.bind(gPageStyleMenu);
 var stylesheetFillPopup = gPageStyleMenu.fillPopup.bind(gPageStyleMenu);
-var stylesheetSwitchAll = gPageStyleMenu.switchStyleSheet.bind(gPageStyleMenu);
+function stylesheetSwitchAll(contentWindow, title) {
+  gPageStyleMenu.switchStyleSheet(title, contentWindow);
+}
 function setStyleDisabled(disabled) {
   if (disabled)
     gPageStyleMenu.disableStyle();

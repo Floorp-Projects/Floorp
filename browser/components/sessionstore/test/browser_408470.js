@@ -50,7 +50,7 @@ function test() {
     Array.forEach(tab.linkedBrowser.contentDocument.styleSheets, function(aSS, aIx) {
       pendingCount++;
       let ssTitle = aSS.title;
-      gPageStyleMenu.switchStyleSheet(tab.linkedBrowser.contentWindow, ssTitle);
+      gPageStyleMenu.switchStyleSheet(ssTitle, tab.linkedBrowser.contentWindow);
 
       let newTab = gBrowser.duplicateTab(tab);
       newTab.linkedBrowser.addEventListener("load", function(aEvent) {

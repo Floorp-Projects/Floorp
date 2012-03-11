@@ -292,7 +292,7 @@
                 <menu id="pageStyleMenu" label="&pageStyleMenu.label;"
                       accesskey="&pageStyleMenu.accesskey;" observes="isImage">
                   <menupopup onpopupshowing="gPageStyleMenu.fillPopup(this);"
-                             oncommand="gPageStyleMenu.switchStyleSheet(window.content, event.target.getAttribute('data'));">
+                             oncommand="gPageStyleMenu.switchStyleSheet(event.target.getAttribute('data'));">
                     <menuitem id="menu_pageStyleNoStyle"
                               label="&pageStyleNoStyle.label;"
                               accesskey="&pageStyleNoStyle.accesskey;"
