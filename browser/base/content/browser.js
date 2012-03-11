@@ -6092,7 +6092,7 @@ var gPageStyleMenu = {
     return styleSheetsArray;
   },
 
-  stylesheetFillPopup: function (menuPopup) {
+  fillPopup: function (menuPopup) {
     var noStyle = menuPopup.firstChild;
     var persistentOnly = noStyle.nextSibling;
     var sep = persistentOnly.nextSibling;
@@ -6147,12 +6147,12 @@ var gPageStyleMenu = {
     return true;
   },
 
-  stylesheetInFrame: function (frame, title) {
+  _stylesheetInFrame: function (frame, title) {
     return Array.some(frame.document.styleSheets,
                       function (stylesheet) stylesheet.title == title);
   },
 
-  stylesheetSwitchFrame: function (frame, title) {
+  _stylesheetSwitchFrame: function (frame, title) {
     var docStyleSheets = frame.document.styleSheets;
 
     for (let i = 0; i < docStyleSheets.length; ++i) {
@@ -6167,12 +6167,12 @@ var gPageStyleMenu = {
     }
   },
 
-  stylesheetSwitchAll: function (frameset, title) {
-    if (!title || title == "_nostyle" || this.stylesheetInFrame(frameset, title))
-      this.stylesheetSwitchFrame(frameset, title);
+  switchStyleSheet: function (frameset, title) {
+    if (!title || title == "_nostyle" || this._stylesheetInFrame(frameset, title))
+      this._stylesheetSwitchFrame(frameset, title);
 
     for (let i = 0; i < frameset.frames.length; i++)
-      this.stylesheetSwitchAll(frameset.frames[i], title);
+      this.switchStyleSheet(frameset.frames[i], title);
   },
 
   setStyleDisabled: function (disabled) {
@@ -6181,12 +6181,10 @@ var gPageStyleMenu = {
 };
 
 /* Legacy global page-style functions */
-var getAllStyleSheets     = gPageStyleMenu.getAllStyleSheets;
-var stylesheetFillPopup   = gPageStyleMenu.stylesheetFillPopup;
-var stylesheetInFrame     = gPageStyleMenu.stylesheetInFrame;
-var stylesheetSwitchFrame = gPageStyleMenu.stylesheetSwitchFrame;
-var stylesheetSwitchAll   = gPageStyleMenu.stylesheetSwitchAll;
-var setStyleDisabled      = gPageStyleMenu.setStyleDisabled;
+var getAllStyleSheets   = gPageStyleMenu.getAllStyleSheets.bind(gPageStyleMenu);
+var stylesheetFillPopup = gPageStyleMenu.fillPopup.bind(gPageStyleMenu);
+var stylesheetSwitchAll = gPageStyleMenu.switchStyleSheet.bind(gPageStyleMenu);
+var setStyleDisabled    = gPageStyleMenu.setStyleDisabled.bind(gPageStyleMenu);
 
 
 var BrowserOffline = {
