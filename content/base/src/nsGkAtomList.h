@@ -1934,6 +1934,13 @@ GK_ATOM(VolumeUp, "VolumeUp")
 GK_ATOM(VolumeDown, "VolumeDown")
 GK_ATOM(Menu, "Menu")
 
+// Smooth scroll profiles
+GK_ATOM(pixels,     "pixels")
+GK_ATOM(lines,      "lines")
+GK_ATOM(pages,      "pages")
+GK_ATOM(scrollbars, "scrollbars")
+GK_ATOM(other,      "other")
+
 #ifdef ACCESSIBILITY
 GK_ATOM(anonid, "anonid")
 GK_ATOM(aria_activedescendant, "aria-activedescendant")
