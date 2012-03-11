@@ -151,7 +151,7 @@ public:
   virtual bool GetScriptsEnabled();
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
 
-  virtual nsresult SetProperty(void *aTarget, const char *aPropName, nsISupports *aVal);
+  virtual nsresult SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* aVal);
 
   virtual bool GetProcessingScriptTag();
   virtual void SetProcessingScriptTag(bool aResult);
