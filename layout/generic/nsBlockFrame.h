@@ -354,8 +354,11 @@ protected:
 #endif
 #endif
 
-  nsLineBox* NewLineBox(nsIFrame* aFrame, PRInt32 aCount, bool aIsBlock) {
-    return NS_NewLineBox(PresContext()->PresShell(), aFrame, aCount, aIsBlock);
+  nsLineBox* NewLineBox(nsIFrame* aFrame, bool aIsBlock) {
+    return NS_NewLineBox(PresContext()->PresShell(), aFrame, aIsBlock);
+  }
+  nsLineBox* NewLineBox(nsLineBox* aFromLine, nsIFrame* aFrame, PRInt32 aCount) {
+    return NS_NewLineBox(PresContext()->PresShell(), aFromLine, aFrame, aCount);
   }
   void FreeLineBox(nsLineBox* aLine) {
     aLine->Destroy(PresContext()->PresShell());
