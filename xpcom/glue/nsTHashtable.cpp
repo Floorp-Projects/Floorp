@@ -92,7 +92,6 @@ PRUint32
 HashString(const char *str)
 {
   PRUint32 code = 0;
-  const char *origStr = str;
 
   while (*str) {
     code = AddToHash(code, *str);
@@ -106,7 +105,6 @@ PRUint32
 HashString(const PRUnichar *str)
 {
   PRUint32 code = 0;
-  const PRUnichar *origStr = str;
 
   while (*str) {
     code = AddToHash(code, *str);
