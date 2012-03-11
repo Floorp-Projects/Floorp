@@ -56,6 +56,7 @@ class nsIObjectInputStream;
 class nsIObjectOutputStream;
 template<class> class nsScriptObjectHolder;
 class nsIScriptObjectPrincipal;
+class nsIDOMWindow;
 
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
 
@@ -75,8 +76,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x6d69fbee, 0x0723, 0x48f5, \
- { 0x82, 0x48, 0xcd, 0xcf, 0x88, 0xac, 0x25, 0x74 } }
+{ 0xb0eca8ac, 0x2a77, 0x4d04, \
+  { 0xaf, 0x71, 0xca, 0x86, 0x98, 0xa4, 0xc3, 0xe7 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -389,8 +390,8 @@ public:
    *
    * @throws NS_ERROR_OUT_OF_MEMORY if that happens
    */
-  virtual nsresult SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                          nsISupports* aRef) = 0;
+  virtual void SetTerminationFunction(nsScriptTerminationFunc aFunc,
+                                      nsIDOMWindow* aRef) = 0;
 
   /**
    * Called to disable/enable script execution in this context.

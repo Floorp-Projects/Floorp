@@ -146,8 +146,8 @@ public:
   virtual void FinalizeContext();
 
   virtual void ScriptEvaluated(bool aTerminated);
-  virtual nsresult SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                          nsISupports* aRef);
+  virtual void SetTerminationFunction(nsScriptTerminationFunc aFunc,
+                                      nsIDOMWindow* aRef);
   virtual bool GetScriptsEnabled();
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts);
 
