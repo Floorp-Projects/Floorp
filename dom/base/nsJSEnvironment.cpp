@@ -2974,12 +2974,6 @@ nsJSContext::IsContextInitialized()
 }
 
 void
-nsJSContext::FinalizeContext()
-{
-  ;
-}
-
-void
 nsJSContext::ScriptEvaluated(bool aTerminated)
 {
   if (aTerminated && mTerminations) {
