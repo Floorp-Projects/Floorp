@@ -229,23 +229,6 @@ txResultRecycler::getNodeSet(const txXPathNode& aNode, txAExprResult** aResult)
 }
 
 nsresult
-txResultRecycler::getNodeSet(const txXPathNode& aNode, txNodeSet** aResult)
-{
-    if (mNodeSetResults.isEmpty()) {
-        *aResult = new txNodeSet(aNode, this);
-        NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-    }
-    else {
-        *aResult = static_cast<txNodeSet*>(mNodeSetResults.pop());
-        (*aResult)->append(aNode);
-        (*aResult)->mRecycler = this;
-    }
-    NS_ADDREF(*aResult);
-
-    return NS_OK;
-}
-
-nsresult
 txResultRecycler::getNumberResult(double aValue, txAExprResult** aResult)
 {
     if (mNumberResults.isEmpty()) {
