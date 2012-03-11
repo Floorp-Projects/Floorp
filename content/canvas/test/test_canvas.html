@@ -7591,7 +7591,7 @@ ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
 <!-- [[[ test_2d.imageData.create.type.html ]]] -->
 
 <p>Canvas test: 2d.imageData.create.type - bug 433004</p>
-<!-- Testing: createImageData() returns an ImageData object containing a CanvasPixelArray object -->
+<!-- Testing: createImageData() returns an ImageData object containing a Uint8ClampedArray object -->
 <canvas id="c261" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
@@ -7604,12 +7604,12 @@ var _thrown_outer = false;
 try {
 
 todo(window.ImageData !== undefined, "window.ImageData !== undefined");
-todo(window.CanvasPixelArray !== undefined, "window.CanvasPixelArray !== undefined");
+ok(window.Uint8ClampedArray !== undefined, "window.Uint8ClampedArray !== undefined");
 window.ImageData.prototype.thisImplementsImageData = true;
-window.CanvasPixelArray.prototype.thisImplementsCanvasPixelArray = true;
+window.Uint8ClampedArray.prototype.thisImplementsUint8ClampedArray = true;
 var imgdata = ctx.createImageData(1, 1);
 ok(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
-ok(imgdata.data.thisImplementsCanvasPixelArray, "imgdata.data.thisImplementsCanvasPixelArray");
+ok(imgdata.data.thisImplementsUint8ClampedArray, "imgdata.data.thisImplementsUint8ClampedArray");
 
 } catch (e) {
     _thrown_outer = true;
@@ -7623,7 +7623,7 @@ todo(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
 <!-- [[[ test_2d.imageData.create1.type.html ]]] -->
 
 <p>Canvas test: 2d.imageData.create1.type - bug 630040</p>
-<!-- Testing: createImageData(imgdata) returns an ImageData object containing a CanvasPixelArray object -->
+<!-- Testing: createImageData(imgdata) returns an ImageData object containing a Uint8ClampedArray object -->
 <canvas id="c261a" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
@@ -7636,12 +7636,12 @@ var _thrown_outer = false;
 try {
 
 todo(window.ImageData !== undefined, "window.ImageData !== undefined");
-todo(window.CanvasPixelArray !== undefined, "window.CanvasPixelArray !== undefined");
+ok(window.Uint8ClampedArray !== undefined, "window.Uint8ClampedArray !== undefined");
 window.ImageData.prototype.thisImplementsImageData = true;
-window.CanvasPixelArray.prototype.thisImplementsCanvasPixelArray = true;
+window.Uint8ClampedArray.prototype.thisImplementsUint8ClampedArray = true;
 var imgdata = ctx.createImageData(ctx.createImageData(1, 1));
 todo(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
-todo(imgdata.data.thisImplementsCanvasPixelArray, "imgdata.data.thisImplementsCanvasPixelArray");
+ok(imgdata.data.thisImplementsUint8ClampedArray, "imgdata.data.thisImplementsUint8ClampedArray");
 
 } catch (e) {
     _thrown_outer = true;
@@ -8229,7 +8229,7 @@ ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
 <!-- [[[ test_2d.imageData.get.type.html ]]] -->
 
 <p>Canvas test: 2d.imageData.get.type</p>
-<!-- Testing: getImageData() returns an ImageData object containing a CanvasPixelArray object -->
+<!-- Testing: getImageData() returns an ImageData object containing a Uint8ClampedArray object -->
 <canvas id="c276" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
@@ -8242,12 +8242,12 @@ var _thrown_outer = false;
 try {
 
 todo(window.ImageData !== undefined, "window.ImageData !== undefined");
-todo(window.CanvasPixelArray !== undefined, "window.CanvasPixelArray !== undefined");
+ok(window.Uint8ClampedArray !== undefined, "window.Uint8ClampedArray !== undefined");
 window.ImageData.prototype.thisImplementsImageData = true;
-window.CanvasPixelArray.prototype.thisImplementsCanvasPixelArray = true;
+window.Uint8ClampedArray.prototype.thisImplementsUint8ClampedArray = true;
 var imgdata = ctx.getImageData(0, 0, 1, 1);
 ok(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
-ok(imgdata.data.thisImplementsCanvasPixelArray, "imgdata.data.thisImplementsCanvasPixelArray");
+ok(imgdata.data.thisImplementsUint8ClampedArray, "imgdata.data.thisImplementsUint8ClampedArray");
 
 } catch (e) {
     _thrown_outer = true;
