@@ -60,6 +60,7 @@ _BROWSER_TEST_FILES = \
 		browser_bug712982_line_ruler_click.js \
 		browser_bug725618_moveLines_shortcut.js \
 		browser_bug700893_dirty_state.js \
+		browser_bug729480_line_vertical_align.js \
 		head.js \
 
 libs:: $(_BROWSER_TEST_FILES)
