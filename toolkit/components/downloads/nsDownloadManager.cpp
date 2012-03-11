@@ -882,11 +882,6 @@ nsDownloadManager::Init()
   nsCOMPtr<nsINavHistoryService> history =
     do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID);
 
-  (void)mObserverService->NotifyObservers(
-                                static_cast<nsIDownloadManager *>(this),
-                                "download-manager-initialized",
-                                nsnull);
-
   // The following AddObserver calls must be the last lines in this function,
   // because otherwise, this function may fail (and thus, this object would be not
   // completely initialized), but the observerservice would still keep a reference
@@ -920,19 +915,6 @@ nsDownloadManager::GetRetentionBehavior()
   PRInt32 val;
   rv = pref->GetIntPref(PREF_BDM_RETENTION, &val);
   NS_ENSURE_SUCCESS(rv, 0);
-
-  // Allow the Downloads Panel to change the retention behavior.  We do this to
-  // allow proper migration to the new feature when using the same profile on
-  // multiple versions of the product (bug 697678).  Implementation note: in
-  // order to allow observers to change the retention value, we have to pass an
-  // object in the aSubject parameter, we cannot use aData for that.
-  nsCOMPtr<nsISupportsPRInt32> retentionBehavior =
-    do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
-  retentionBehavior->SetData(val);
-  (void)mObserverService->NotifyObservers(retentionBehavior,
-                                          "download-manager-change-retention",
-                                          nsnull);
-  retentionBehavior->GetData(&val);
 
   return val;
 }
@@ -1842,12 +1824,6 @@ nsDownloadManager::SwitchDatabaseTypeTo(enum nsDownloadManager::DatabaseType aTy
   rv = RestoreDatabaseState();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Notify that the database type changed before resuming current downloads
-  (void)mObserverService->NotifyObservers(
-                                static_cast<nsIDownloadManager *>(this),
-                                "download-manager-database-type-changed",
-                                nsnull);
-
   rv = RestoreActiveDownloads();
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to restore all active downloads");
 
@@ -1966,7 +1942,7 @@ nsDownloadManager::Observe(nsISupports *aSubject,
   } else if (strcmp(aTopic, "profile-before-change") == 0) {
     mGetIdsForURIStatement->Finalize();
     mUpdateDownloadStatement->Finalize();
-    mozilla::DebugOnly<nsresult> rv = mDBConn->AsyncClose(nsnull);
+    mozilla::DebugOnly<nsresult> rv = mDBConn->Close();
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   } else if (strcmp(aTopic, "quit-application") == 0) {
     // Try to pause all downloads and, if appropriate, mark them as auto-resume

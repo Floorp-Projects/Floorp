@@ -38,10 +38,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
-                                  "resource:///modules/DownloadsCommon.jsm");
-
 var gMainPane = {
   _pane: null,
 
@@ -59,23 +55,10 @@ var gMainPane = {
     this.updateBrowserStartupLastSession();
     this.startupPagePrefChanged();
 
-    this.setupDownloadsWindowOptions();
-
     // Notify observers that the UI is now ready
     Components.classes["@mozilla.org/observer-service;1"]
               .getService(Components.interfaces.nsIObserverService)
               .notifyObservers(window, "main-pane-loaded", null);
-  },
-
-  setupDownloadsWindowOptions: function ()
-  {
-    var showWhenDownloading = document.getElementById("showWhenDownloading");
-    var closeWhenDone = document.getElementById("closeWhenDone");
-
-    // These radio-buttons should not be visible if we have enabled the Downloads Panel.
-    let shouldHide = !DownloadsCommon.useToolkitUI;
-    showWhenDownloading.hidden = shouldHide;
-    closeWhenDone.hidden = shouldHide;
   },
 
   // HOME PAGE

@@ -55,11 +55,9 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/downloads/downloads.css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/webconsole.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/downloads/downloads.css"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
@@ -420,10 +418,6 @@
 #endif
     </tooltip>
   </popupset>
-
-# To improve startup performance, we include the XUL elements for the downloads
-# status indicator at build time instead of using an overlay.
-#include ../../components/downloads/content/indicatorXul.inc
 
 #ifdef CAN_DRAW_IN_TITLEBAR
 <vbox id="titlebar">
@@ -859,10 +853,12 @@
                      label="&printButton.label;" command="cmd_print"
                      tooltiptext="&printButton.tooltip;"/>
 
-      <!-- This is a placeholder for the Downloads Indicator.  It is visible
-           only during the customization of the toolbar or in the palette, and
-           is replaced when customization is done. -->
       <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     observes="Tools:Downloads"
+                     ondrop="DownloadsButtonDNDObserver.onDrop(event)"
+                     ondragover="DownloadsButtonDNDObserver.onDragOver(event)"
+                     ondragenter="DownloadsButtonDNDObserver.onDragOver(event)"
+                     ondragexit="DownloadsButtonDNDObserver.onDragExit(event)"
                      label="&downloads.label;"
                      tooltiptext="&downloads.tooltip;"/>
 
