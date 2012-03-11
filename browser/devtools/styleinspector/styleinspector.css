@@ -37,6 +37,7 @@
 
 .ruleview {
   overflow: auto;
+  -moz-user-select: text;
 }
 
 .ruleview-computedlist:not(.styleinspector-open) {
