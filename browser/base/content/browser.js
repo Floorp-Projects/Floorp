@@ -6083,10 +6083,10 @@ function charsetLoadListener(event) {
 
 var gPageStyleMenu = {
 
-  getAllStyleSheets: function (frameset) {
+  _getAllStyleSheets: function (frameset) {
     var styleSheetsArray = Array.slice(frameset.document.styleSheets);
     for (let i = 0; i < frameset.frames.length; i++) {
-      let frameSheets = this.getAllStyleSheets(frameset.frames[i]);
+      let frameSheets = this._getAllStyleSheets(frameset.frames[i]);
       styleSheetsArray = styleSheetsArray.concat(frameSheets);
     }
     return styleSheetsArray;
@@ -6099,7 +6099,7 @@ var gPageStyleMenu = {
     while (sep.nextSibling)
       menuPopup.removeChild(sep.nextSibling);
 
-    var styleSheets = this.getAllStyleSheets(window.content);
+    var styleSheets = this._getAllStyleSheets(window.content);
     var currentStyleSheets = {};
     var styleDisabled = getMarkupDocumentViewer().authorStyleDisabled;
     var haveAltSheets = false;
@@ -6186,7 +6186,7 @@ var gPageStyleMenu = {
 };
 
 /* Legacy global page-style functions */
-var getAllStyleSheets   = gPageStyleMenu.getAllStyleSheets.bind(gPageStyleMenu);
+var getAllStyleSheets   = gPageStyleMenu._getAllStyleSheets.bind(gPageStyleMenu);
 var stylesheetFillPopup = gPageStyleMenu.fillPopup.bind(gPageStyleMenu);
 function stylesheetSwitchAll(contentWindow, title) {
   gPageStyleMenu.switchStyleSheet(title, contentWindow);
