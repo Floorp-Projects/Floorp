@@ -101,7 +101,7 @@ private:
   nsCString mFileName;
   PRUint32 mLineNo;
   PRUint32 mVersion;
-  nsCOMPtr<nsIArray> mArgv;
+  nsCOMPtr<nsIJSArgArray> mArgv;
 
   // The JS expression to evaluate or function to call, if !mExpr
   JSFlatString *mExpr;
@@ -326,7 +326,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
     // to setTimeout or setInterval; the first two are our callback
     // and the delay, so only arguments after that need to go in our
     // array.
-    nsCOMPtr<nsIArray> array;
+    nsCOMPtr<nsIJSArgArray> array;
     // NS_MAX(argc - 2, 0) wouldn't work right because argc is unsigned.
     rv = NS_CreateJSArgv(cx, NS_MAX(argc, 2u) - 2, nsnull,
                          getter_AddRefs(array));
@@ -336,8 +336,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
 
     PRUint32 dummy;
     jsval *jsargv = nsnull;
-    nsCOMPtr<nsIJSArgArray> jsarray(do_QueryInterface(array));
-    jsarray->GetArgs(&dummy, reinterpret_cast<void **>(&jsargv));
+    array->GetArgs(&dummy, reinterpret_cast<void **>(&jsargv));
 
     // jsargv might be null if we have argc <= 2
     if (jsargv) {

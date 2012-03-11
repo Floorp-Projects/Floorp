@@ -3909,7 +3909,7 @@ nsresult NS_CreateJSRuntime(nsIScriptRuntime **aRuntime)
 // to/from nsISupports.
 // When consumed by non-JS (eg, another script language), conversion is done
 // on-the-fly.
-class nsJSArgArray : public nsIJSArgArray, public nsIArray {
+class nsJSArgArray : public nsIJSArgArray {
 public:
   nsJSArgArray(JSContext *aContext, PRUint32 argc, jsval *argv, nsresult *prv);
   ~nsJSArgArray();
@@ -4049,7 +4049,7 @@ NS_IMETHODIMP nsJSArgArray::Enumerate(nsISimpleEnumerator **_retval)
 
 // The factory function
 nsresult NS_CreateJSArgv(JSContext *aContext, PRUint32 argc, void *argv,
-                         nsIArray **aArray)
+                         nsIJSArgArray **aArray)
 {
   nsresult rv;
   nsJSArgArray *ret = new nsJSArgArray(aContext, argc,
