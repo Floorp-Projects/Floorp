@@ -63,6 +63,49 @@ enum FrameType
 class IonCommonFrameLayout;
 class IonActivation;
 class IonJSFrameLayout;
+class IonFrameIterator;
+
+class InlineFrameIterator
+{
+    // We cannot declare a BwdInlineFrameIterator here due to multiple circular
+    // dependencies, so we need to keep the IonFrameIterator to build a new one
+    // each time and save the pc & script.
+    const IonFrameIterator *bottom_;
+    size_t frameCount_;
+    JSScript *script_;
+    jsbytecode *pc_;
+
+  private:
+    size_t getInlinedFrame(size_t nb);
+
+  public:
+    InlineFrameIterator(const IonFrameIterator *bottom)
+      : bottom_(bottom)
+    {
+        if (bottom_)
+            frameCount_ = getInlinedFrame(-1);
+    }
+
+    inline JSScript *script() const {
+        JS_ASSERT(bottom_);
+        return script_;
+    }
+    inline jsbytecode *pc() const {
+        JS_ASSERT(bottom_);
+        return pc_;
+    }
+
+    inline InlineFrameIterator &operator++() {
+        JS_ASSERT(bottom_);
+        JS_ASSERT(more());
+        getInlinedFrame(--frameCount_);
+        return *this;
+    }
+    inline bool more() const {
+        JS_ASSERT(bottom_);
+        return frameCount_;
+    }
+};
 
 class IonFrameIterator
 {
@@ -100,8 +143,10 @@ class IonFrameIterator
     bool checkInvalidation(IonScript **ionScript) const;
     bool checkInvalidation() const;
 
+    inline bool isScripted() const {
+        return type_ == IonFrame_JS;
+    }
     void *calleeToken() const;
-    bool hasScript() const;
     JSScript *script() const;
 
     // Returns the return address of the frame above this one (that is, the
@@ -121,7 +166,9 @@ class IonFrameIterator
 
     // Functions used to iterate on frames. When prevType is IonFrame_Entry,
     // the current frame is the last frame.
-    inline bool more() const;
+    inline bool more() const {
+        return type_ != IonFrame_Entry;
+    }
     IonFrameIterator &operator++();
 };
 

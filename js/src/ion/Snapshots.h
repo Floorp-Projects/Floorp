@@ -289,7 +289,7 @@ class SnapshotIterator
         unreadSlots_ = slots();
     }
 
-    bool moreFrames() {
+    bool moreFrames() const {
         return reader_.ref().remainingFrameCount() > 1;
     }
 

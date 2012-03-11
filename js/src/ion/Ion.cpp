@@ -65,6 +65,7 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 #include "vm/Stack-inl.h"
+#include "ion/IonFrames-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -1011,7 +1012,7 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop, bool invalidateAll)
             break;
           case IonFrame_JS:
           {
-            JS_ASSERT(it.hasScript());
+            JS_ASSERT(it.isScripted());
             IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p", frameno, it.fp());
             IonSpew(IonSpew_Invalidate, "   token: %p", it.jsFrame()->calleeToken());
             IonSpew(IonSpew_Invalidate, "   script: %p; %s:%d", it.script(),
@@ -1031,7 +1032,7 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop, bool invalidateAll)
         IonSpew(IonSpew_Invalidate, "   return address %p", it.returnAddress());
 #endif
 
-        if (!it.hasScript())
+        if (!it.isScripted())
             continue;
 
         // See if the frame has already been invalidated.

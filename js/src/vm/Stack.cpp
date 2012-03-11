@@ -1169,7 +1169,9 @@ StackIter::settleOnNewState()
             if (fp_->runningInIon()) {
                 ionFrames_ = ion::IonFrameIterator(ionActivations_.top());
 
-                JS_ASSERT(ionFrames_.type() == ion::IonFrame_Exit);
+                while (ionFrames_.more() && !ionFrames_.isScripted())
+                    ++ionFrames_;
+
                 if (!ionFrames_.more()) {
                     // In this case, we bailed out the last frame, so we
                     // shouldn't really transition to Ion code.
@@ -1178,7 +1180,7 @@ StackIter::settleOnNewState()
                 }
 
                 state_ = ION;
-                ++ionFrames_;
+                ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
                 return;
             }
 #endif /* JS_ION */
@@ -1256,7 +1258,8 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
     savedOption_(savedOption)
 #ifdef JS_ION
     , ionActivations_(cx),
-    ionFrames_(NULL)
+    ionFrames_(NULL),
+    ionInlineFrames_(NULL)
 #endif
 {
 #ifdef JS_METHODJIT
@@ -1275,12 +1278,24 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
 void
 StackIter::popIonFrame()
 {
-    if (ionFrames_.more()) {
-        ++ionFrames_;
+    // Keep fp which describes all ion frames.
+    poisonRegs();
+    if (ionInlineFrames_.more()) {
+        ++ionInlineFrames_;
+        pc_ = ionInlineFrames_.pc();
     } else {
-        ++ionActivations_;
-        popFrame();
-        settleOnNewState();
+        ++ionFrames_;
+        while (ionFrames_.more() && !ionFrames_.isScripted())
+            ++ionFrames_;
+
+        if (ionFrames_.more()) {
+            ionInlineFrames_ = ion::InlineFrameIterator(&ionFrames_);
+            pc_ = ionInlineFrames_.pc();
+        } else {
+            ++ionActivations_;
+            popFrame();
+            settleOnNewState();
+        }
     }
 }
 #endif
