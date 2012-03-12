@@ -10,3 +10,6 @@ mk_add_options MOZ_MAKE_FLAGS="-j4"
 export MOZILLA_OFFICIAL=1
 
 ac_add_options --with-macbundlename-prefix=Firefox
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1

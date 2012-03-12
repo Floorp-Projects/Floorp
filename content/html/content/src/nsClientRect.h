@@ -44,6 +44,8 @@
 #include "nsCOMArray.h"
 #include "nsRect.h"
 #include "nsCOMPtr.h"
+#include "nsWrapperCache.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsClientRect : public nsIDOMClientRect
 {
@@ -64,21 +66,29 @@ protected:
   float mX, mY, mWidth, mHeight;
 };
 
-class nsClientRectList : public nsIDOMClientRectList
+class nsClientRectList MOZ_FINAL : public nsIDOMClientRectList,
+                                   public nsWrapperCache
 {
 public:
-  nsClientRectList() {}
+  nsClientRectList(nsISupports *aParent) : mParent(aParent)
+  {
+    SetIsProxy();
+  }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsClientRectList)
 
   NS_DECL_NSIDOMCLIENTRECTLIST
   
-  void Append(nsIDOMClientRect* aElement) { mArray.AppendObject(aElement); }
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap);
 
-  nsIDOMClientRect* GetItemAt(PRUint32 aIndex)
+  nsISupports* GetParentObject()
   {
-    return mArray.SafeObjectAt(aIndex);
+    return mParent;
   }
+
+  void Append(nsIDOMClientRect* aElement) { mArray.AppendObject(aElement); }
 
   static nsClientRectList* FromSupports(nsISupports* aSupports)
   {
@@ -101,6 +111,7 @@ protected:
   virtual ~nsClientRectList() {}
 
   nsCOMArray<nsIDOMClientRect> mArray;
+  nsCOMPtr<nsISupports> mParent;
 };
 
 #endif /*NSCLIENTRECT_H_*/
