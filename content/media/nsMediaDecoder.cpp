@@ -39,20 +39,8 @@
 #include "nsMediaDecoder.h"
 #include "MediaResource.h"
 
-#include "prlog.h"
-#include "prmem.h"
-#include "nsIFrame.h"
-#include "nsIDocument.h"
-#include "nsThreadUtils.h"
-#include "nsIDOMHTMLMediaElement.h"
-#include "nsNetUtil.h"
 #include "nsHTMLMediaElement.h"
-#include "gfxContext.h"
-#include "nsPresContext.h"
 #include "nsDOMError.h"
-#include "nsDisplayList.h"
-#include "nsSVGEffects.h"
-#include "VideoUtils.h"
 
 using namespace mozilla;
 
