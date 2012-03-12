@@ -3119,7 +3119,17 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
       // Only set the Referer header for GET requests because IIS throws
       // errors about malformed requests if we include it in POSTs. See
       // bug 724465.
-      rv = httpChannel->SetReferrer(doc->GetDocumentURI());  
+      nsCOMPtr<nsIURI> referer;
+
+      nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(element);
+      if (olc)
+        olc->GetSrcURI(getter_AddRefs(referer));
+
+
+      if (!referer)
+        referer = doc->GetDocumentURI();
+
+      rv = httpChannel->SetReferrer(referer);
       NS_ENSURE_SUCCESS(rv,rv);
     }
       
