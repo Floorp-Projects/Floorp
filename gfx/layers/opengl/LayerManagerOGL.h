@@ -234,6 +234,11 @@ public:
   CopyProgram *GetCopy2DRectProgram() {
     return static_cast<CopyProgram*>(mPrograms[gl::Copy2DRectProgramType]);
   }
+#ifdef ANDROID
+  CopyProgram *GetCopy2DExternalProgram() {
+    return static_cast<CopyProgram*>(mPrograms[gl::Copy2DExternalProgramType]);
+  }
+#endif
 
   ColorTextureLayerProgram *GetFBOLayerProgram() {
     return static_cast<ColorTextureLayerProgram*>(mPrograms[GetFBOLayerProgramType()]);
