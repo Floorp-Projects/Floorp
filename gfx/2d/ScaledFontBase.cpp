@@ -37,6 +37,8 @@
 
 #include "ScaledFontBase.h"
 
+#include "gfxFont.h"
+
 #ifdef USE_SKIA
 #include "PathSkia.h"
 #include "skia/SkPaint.h"

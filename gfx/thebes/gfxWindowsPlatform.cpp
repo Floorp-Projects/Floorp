@@ -725,9 +725,7 @@ gfxWindowsPlatform::GetScaledFontForFont(gfxFont *aFont)
 
   NativeFont nativeFont;
   nativeFont.mType = NATIVE_FONT_GDI_FONT_FACE;
-  LOGFONT lf;
-  GetObject(aFont->GetHFONT(), sizeof(LOGFONT), &lf);
-  nativeFont.mFont = &lf;
+  nativeFont.mFont = aFont;
   RefPtr<ScaledFont> scaledFont =
     Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());
 
