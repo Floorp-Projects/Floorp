@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 731777</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #container {
+      position: relative;
+      height: 300px;
+      width: 300px;
+      margin: 50px 100px;
+      border: 2px solid blue;
+      background-color: #044B0A;
+      
+      -moz-perspective: 500px;
+      overflow:hidden;
+  }
+
+  #inner {
+      margin: 0px;
+      width: 480px;
+      border: 2px solid blue;
+      height: 220px;
+      background-color: #844BCA;
+      
+      -moz-transform: rotateY(91deg) translateX(0px) translateZ(0px);
+      -moz-transition: 5s;
+  }
+    
+  </style>
+</head>
+<body>
+<div id="container">
+  <div id="inner"></div>
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 731777 **/
+
+is(document.elementFromPoint(325,170), document.getElementById("inner"), "Able to hit transformed object");
+is(document.elementFromPoint(405,170), document.getElementById("inner"), "Able to hit transformed object");
+
+</script>
+</pre>
+</body>
+</html>

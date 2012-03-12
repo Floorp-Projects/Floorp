@@ -995,6 +995,18 @@ nsIFrame::HasPerspective() const
   return false;
 }
 
+bool
+nsIFrame::ChildrenHavePerspective() const
+{
+  const nsStyleDisplay *disp = GetStyleContext()->GetStyleDisplay();
+  if (disp &&
+      disp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
+      disp->mChildPerspective.GetCoordValue() > 0.0) {
+    return true;
+  }
+  return false;
+}
+
 nsRect
 nsIFrame::GetContentRectRelativeToSelf() const
 {
@@ -6771,12 +6783,17 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     }
     if (Preserves3DChildren()) {
       ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
-    } else if (HasPerspective()) {
-      RecomputePerspectiveChildrenOverflow(this, &newBounds);
+    } else if (ChildrenHavePerspective()) {
+      RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
     }
   } else {
     Properties().Delete(nsIFrame::PreTransformOverflowAreasProperty());
+    if (ChildrenHavePerspective()) {
+      nsRect newBounds(nsPoint(0, 0), aNewSize);
+      RecomputePerspectiveChildrenOverflow(this->GetStyleContext(), &newBounds);
+    }
   }
+    
 
   bool anyOverflowChanged;
   if (aOverflowAreas != nsOverflowAreas(bounds, bounds)) {
@@ -6833,7 +6850,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 }
 
 void
-nsIFrame::RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame, const nsRect* aBounds)
+nsIFrame::RecomputePerspectiveChildrenOverflow(const nsStyleContext* aStartStyle, const nsRect* aBounds)
 {
   // Children may check our size when getting our transform, make sure it's valid.
   nsSize oldSize = GetSize();
@@ -6856,8 +6873,11 @@ nsIFrame::RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame, cons
           boundsOverflow.SetAllTo(bounds);
           child->FinishAndStoreOverflow(boundsOverflow, bounds.Size());
         }
-      } else if (child->GetParentStyleContextFrame() != aStartFrame) {
-        child->RecomputePerspectiveChildrenOverflow(aStartFrame, nsnull);
+      } else if (child->GetStyleContext()->GetParent() == aStartStyle ||
+                 child->GetStyleContext() == aStartStyle) {
+        // Recurse into frames with the same style context, or a direct
+        // child style context.
+        child->RecomputePerspectiveChildrenOverflow(aStartStyle, nsnull);
       }
     }
   }
