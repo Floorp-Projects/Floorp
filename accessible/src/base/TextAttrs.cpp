@@ -155,15 +155,13 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
 
   // Expose text attributes if applicable.
   if (aAttributes) {
-    for (PRUint32 idx = 0; idx < NS_ARRAY_LENGTH(attrArray); idx++)
+    for (PRUint32 idx = 0; idx < ArrayLength(attrArray); idx++)
       attrArray[idx]->Expose(aAttributes, mIncludeDefAttrs);
   }
 
   // Expose text attributes range where they are applied if applicable.
-  if (mOffsetAcc) {
-    GetRange(attrArray, NS_ARRAY_LENGTH(attrArray),
-             aStartHTOffset, aEndHTOffset);
-  }
+  if (mOffsetAcc)
+    GetRange(attrArray, ArrayLength(attrArray), aStartHTOffset, aEndHTOffset);
 }
 
 void
