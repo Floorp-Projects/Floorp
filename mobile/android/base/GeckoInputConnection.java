@@ -100,7 +100,6 @@ public class GeckoInputConnection
     // Is a composition active?
     private boolean mComposing;
     private int mCompositionStart = -1;
-    private KeyListener mKeyListener;
     private Editable mEditable;
     private Editable.Factory mEditableFactory;
     private boolean mBatchMode;
@@ -711,7 +710,6 @@ public class GeckoInputConnection
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
         outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
         outAttrs.actionLabel = null;
-        mKeyListener = TextKeyListener.getInstance();
 
         if (mIMEState == IME_STATE_PASSWORD)
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
@@ -806,7 +804,8 @@ public class GeckoInputConnection
             // Let active IME process pre-IME key events
             return false;
 
-        View v = GeckoApp.mAppContext.getLayerController().getView();
+        View view = GeckoApp.mAppContext.getLayerController().getView();
+        KeyListener keyListener = TextKeyListener.getInstance();
 
         // KeyListener returns true if it handled the event for us.
         if (mIMEState == IME_STATE_DISABLED ||
@@ -814,7 +813,7 @@ public class GeckoInputConnection
                 keyCode == KeyEvent.KEYCODE_DEL ||
                 keyCode == KeyEvent.KEYCODE_TAB ||
                 (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
-                !mKeyListener.onKeyDown(v, mEditable, keyCode, event)) {
+                !keyListener.onKeyDown(view, mEditable, keyCode, event)) {
             // Make sure selection in Gecko is up-to-date
             final Editable content = getEditable();
             clampSelection();
@@ -852,14 +851,17 @@ public class GeckoInputConnection
             // Let active IME process pre-IME key events
             return false;
 
-        View v = GeckoApp.mAppContext.getLayerController().getView();
+        View view = GeckoApp.mAppContext.getLayerController().getView();
+        KeyListener keyListener = TextKeyListener.getInstance();
 
         if (mIMEState == IME_STATE_DISABLED ||
             keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_DEL ||
             (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
-            !mKeyListener.onKeyUp(v, mEditable, keyCode, event))
+            !keyListener.onKeyUp(view, mEditable, keyCode, event)) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createKeyEvent(event));
+        }
+
         return true;
     }
 
