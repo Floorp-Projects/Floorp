@@ -7,6 +7,9 @@
     <item android:id="@+id/share"
           android:title="@string/contextmenu_share"/>
 
+    <item android:id="@+id/edit_bookmark"
+          android:title="@string/contextmenu_edit_bookmark"/>
+
     <item android:id="@+id/remove_bookmark"
           android:title="@string/contextmenu_remove_bookmark"/>
 
