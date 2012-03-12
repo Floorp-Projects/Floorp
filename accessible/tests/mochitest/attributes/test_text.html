@@ -181,6 +181,30 @@
       attrs = {"text-position": gComputedStyle.verticalAlign};
       testTextAttrs(ID, 55, attrs, defAttrs, 55, 64);
 
+      attrs = {};
+      testTextAttrs(ID, 64, attrs, defAttrs, 64, 69);
+
+      attrs = { "text-position": "super" };
+      testTextAttrs(ID, 69, attrs, defAttrs, 69, 84);
+
+      attrs = {};
+      testTextAttrs(ID, 84, attrs, defAttrs, 84, 89);
+
+      attrs = { "text-position": "sub" };
+      testTextAttrs(ID, 89, attrs, defAttrs, 89, 102);
+
+      attrs = {};
+      testTextAttrs(ID, 102, attrs, defAttrs, 102, 107);
+
+      attrs = { "text-position": "super" };
+      testTextAttrs(ID, 107, attrs, defAttrs, 107, 123);
+
+      attrs = {};
+      testTextAttrs(ID, 123, attrs, defAttrs, 123, 128);
+
+      attrs = { "text-position": "sub" };
+      testTextAttrs(ID, 128, attrs, defAttrs, 128, 142);
+
       //////////////////////////////////////////////////////////////////////////
       // area7
       ID = "area7";
@@ -506,6 +530,11 @@
     Mozilla Bug 345759
   </a>
   <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=473569"
+     title="Restrict text-position to allowed values">
+    Mozilla Bug 473569
+  </a>
+  <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=473576"
      title="font-family text attribute should expose actual font used">
     Mozilla Bug 473576
@@ -549,7 +578,11 @@
     This <sup>sentence</sup> has the word 
     <span style="vertical-align:super;">sentence</span> in 
     <sub>superscript</sub> and 
-    <span style="vertical-align:sub;">subscript</span>
+    <span style="vertical-align:sub;">subscript</span> and
+    <span style="vertical-align:20%;">superscript 20%</span> and
+    <span style="vertical-align:-20%;">subscript 20%</span> and
+    <span style="vertical-align:20px;">superscript 20px</span> and
+    <span style="vertical-align:-20px;">subscript 20px</span>
   </p>
 
   <p lang="en" id="area7">
