@@ -44,5 +44,6 @@ interface nsIDOMPaintRequest;
 interface nsIDOMPaintRequestList : nsISupports
 {
   readonly attribute unsigned long length;
-  nsIDOMPaintRequest item(in unsigned long index);
+  [getter,forward(getItemAt)] nsIDOMPaintRequest        item(in unsigned long index);
+  [noscript,notxpcom,nostdcall] nsIDOMPaintRequest getItemAt(in unsigned long index);
 };

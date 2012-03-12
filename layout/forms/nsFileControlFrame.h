@@ -94,13 +94,19 @@ public:
 
 #ifdef ACCESSIBILITY
   virtual already_AddRefed<nsAccessible> CreateAccessible();
-#endif
+#endif  
 
   typedef bool (*AcceptAttrCallback)(const nsAString&, void*);
-  void ParseAcceptAttribute(AcceptAttrCallback aCallback, void* aClosure) const;
 
 protected:
-
+  
+  struct CaptureCallbackData {
+    nsICapturePicker* picker;
+    PRUint32 mode;
+  };
+  
+  PRUint32 GetCaptureMode(const CaptureCallbackData& aData);
+  
   class MouseListener;
   friend class MouseListener;
   class MouseListener : public nsIDOMEventListener {

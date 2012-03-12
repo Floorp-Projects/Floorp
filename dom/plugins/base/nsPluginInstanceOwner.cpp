@@ -804,12 +804,12 @@ NPBool nsPluginInstanceOwner::ConvertPoint(double sourceX, double sourceY, NPCoo
 NPError nsPluginInstanceOwner::InitAsyncSurface(NPSize *size, NPImageFormat format,
                                                 void *initData, NPAsyncSurface *surface)
 {
-  return NPERR_GENERIC_ERROR;
+  return NPERR_INCOMPATIBLE_VERSION_ERROR;
 }
 
 NPError nsPluginInstanceOwner::FinalizeAsyncSurface(NPAsyncSurface *)
 {
-  return NPERR_GENERIC_ERROR;
+  return NPERR_INCOMPATIBLE_VERSION_ERROR;
 }
 
 void nsPluginInstanceOwner::SetCurrentAsyncSurface(NPAsyncSurface *, NPRect*)

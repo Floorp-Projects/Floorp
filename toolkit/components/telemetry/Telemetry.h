@@ -42,6 +42,9 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/StartupTimeline.h"
+#include "nsTArray.h"
+#include "nsStringGlue.h"
+#include "shared-libraries.h"
 
 namespace base {
   class Histogram;
@@ -155,6 +158,22 @@ void RecordSlowSQLStatement(const nsACString &statement,
  * Threshold for a statement to be considered slow, in milliseconds
  */
 const PRUint32 kSlowStatementThreshold = 100;
+
+/**
+ * nsTArray of pointers representing PCs on a call stack
+ */
+typedef nsTArray<uintptr_t> HangStack;
+
+/**
+ * Record the main thread's call stack after it hangs.
+ *
+ * @param duration - Approximate duration of main thread hang in seconds
+ * @param callStack - Array of PCs from the hung call stack
+ * @param moduleMap - Array of info about modules in memory (for symbolication)
+ */
+void RecordChromeHang(PRUint32 duration,
+                      const HangStack &callStack,
+                      SharedLibraryInfo &moduleMap);
 
 } // namespace Telemetry
 } // namespace mozilla
