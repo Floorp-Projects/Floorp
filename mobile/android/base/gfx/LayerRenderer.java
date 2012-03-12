@@ -226,6 +226,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         GLES20.glUniform1i(mSampleHandle, 0);
 
+        TextureGenerator.get().fill();
+
         // TODO: Move these calls into a separate deactivate() call that is called after the
         // underlay and overlay are rendered.
     }
@@ -612,17 +614,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             LayerController controller = mView.getController();
 
             /* Draw any extra layers that were added (likely plugins) */
-            if (mExtraLayers.size() > 0) {
-                // This is a hack. SurfaceTextureLayer draws with its own program, so disable ours here
-                // and re-enable when done. If we end up adding other types of Layer here we'll need
-                // to do something different.
-                deactivateDefaultProgram();
-                
-                for (Layer layer : mExtraLayers)
-                    layer.draw(mPageContext);
-
-                activateDefaultProgram();
-            }
+            for (Layer layer : mExtraLayers)
+                layer.draw(mPageContext);
 
             /* Draw the vertical scrollbar. */
             IntSize screenSize = new IntSize(controller.getViewportSize());

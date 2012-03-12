@@ -2917,14 +2917,8 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   PRInt32 model = mInstance->GetANPDrawingModel();
 
-  float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
-  float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
-
-  gfxRect scaledFrameRect = aFrameRect;
-  scaledFrameRect.Scale(xResolution, yResolution);
-
   if (model == kSurface_ANPDrawingModel) {
-    if (!AddPluginView(scaledFrameRect)) {
+    if (!AddPluginView(aFrameRect)) {
       Invalidate();
     }
     return;
@@ -2934,9 +2928,11 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
     if (!mLayer)
       mLayer = new AndroidMediaLayer();
 
-    mLayer->UpdatePosition(scaledFrameRect, xResolution);
+    // FIXME: this is gross
+    float zoomLevel = aFrameRect.width / (float)mPluginWindow->width;
+    mLayer->UpdatePosition(aFrameRect, zoomLevel);
 
-    SendSize((int)scaledFrameRect.width, (int)scaledFrameRect.height);
+    SendSize((int)aFrameRect.width, (int)aFrameRect.height);
     return;
   }
 

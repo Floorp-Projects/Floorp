@@ -137,6 +137,9 @@ void AndroidMediaLayer::UpdatePosition(const gfxRect& aRect, float aZoomLevel) {
 
   std::map<void*, SurfaceData*>::iterator it;
 
+  if (EnsureContentSurface())
+    AndroidBridge::Bridge()->ShowSurface(mContentData.surface, aRect, mInverted, true);
+
   for (it = mVideoSurfaces.begin(); it != mVideoSurfaces.end(); it++) {
     SurfaceData* data = it->second;
 
@@ -148,10 +151,6 @@ void AndroidMediaLayer::UpdatePosition(const gfxRect& aRect, float aZoomLevel) {
     gfxRect videoRect(aRect.x + scaledDimensions.x, aRect.y + scaledDimensions.y,
                       scaledDimensions.width, scaledDimensions.height);
     AndroidBridge::Bridge()->ShowSurface(data->surface, videoRect, mInverted, false);
-  }
-
-  if (EnsureContentSurface()) {
-    AndroidBridge::Bridge()->ShowSurface(mContentData.surface, aRect, mInverted, true);
   }
 }
 
