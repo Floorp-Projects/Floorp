@@ -6,10 +6,7 @@ package org.mozilla.gecko;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import org.mozilla.gecko.db.BrowserContract.Clients;
-import org.mozilla.gecko.db.BrowserContract.Tabs;
-import org.mozilla.gecko.db.BrowserContract;
+import java.util.List;
 
 import org.json.JSONObject;
 
@@ -31,15 +28,16 @@ import android.text.TextUtils;
 import android.util.Log;
 
 public class RemoteTabs extends Activity
-       implements ExpandableListView.OnGroupClickListener, ExpandableListView.OnChildClickListener {
+       implements ExpandableListView.OnGroupClickListener, ExpandableListView.OnChildClickListener, 
+                  TabsAccessor.OnQueryTabsCompleteListener {
     private static final String LOGTAG = "GeckoRemoteTabs";
 
     private static int sPreferredHeight;
     private static int sChildItemHeight;
     private static int sGroupItemHeight;
     private static ExpandableListView mList;
-
-    private static ArrayList <HashMap <String, String>> mClientsList;
+    private static boolean mExitToTabsTray;
+    
     private static ArrayList <ArrayList <HashMap <String, String>>> mTabsList;
 
     // 50 for child + 2 for divider
@@ -47,13 +45,6 @@ public class RemoteTabs extends Activity
 
     // 30 for group + 2 for divider
     private static final int GROUP_ITEM_HEIGHT = 32;
-
-    private static final String[] PROJECTION_COLUMNS = new String[] {
-                                                           BrowserContract.Tabs.TITLE,     // 0
-                                                           BrowserContract.Tabs.URL,       // 1
-                                                           BrowserContract.Clients.GUID,   // 2
-                                                           BrowserContract.Clients.NAME    // 3
-                                                       };
 
     private static final String[] CLIENT_KEY = new String[] { "name" };
     private static final String[] TAB_KEY = new String[] { "title" };
@@ -84,14 +75,19 @@ public class RemoteTabs extends Activity
         sGroupItemHeight = (int) (GROUP_ITEM_HEIGHT * metrics.density);
         sPreferredHeight = (int) (0.67 * metrics.heightPixels);
 
-        // Query the database for remote tabs in AsyncTask
-        (new QueryRemoteTabsTask()).execute();
+        TabsAccessor.getTabs(getApplicationContext(), this);
+
+        // Exit to tabs-tray
+        mExitToTabsTray = getIntent().getBooleanExtra("exit-to-tabs-tray", false);
     }
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(this, TabsTray.class));
-        overridePendingTransition(R.anim.grow_fade_in, 0);
+        if (mExitToTabsTray) {
+            startActivity(new Intent(this, TabsTray.class));
+            overridePendingTransition(R.anim.grow_fade_in, R.anim.shrink_fade_out);
+        }
+
         finishActivity();
     }
 
@@ -124,7 +120,7 @@ public class RemoteTabs extends Activity
             Log.e(LOGTAG, "error building JSON arguments");
         }
 
-        Log.i(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
+        Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
         finishActivity();
         return true;
@@ -154,77 +150,53 @@ public class RemoteTabs extends Activity
         }
     }
 
-    // AsyncTask to query the database
-    private class QueryRemoteTabsTask extends GeckoAsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... unused) {
-            mClientsList = new ArrayList <HashMap <String, String>>();
-            mTabsList = new ArrayList <ArrayList <HashMap <String, String>>>();
-
-            Cursor tabs = getContentResolver().query(BrowserContract.Tabs.CONTENT_URI,
-                                                     PROJECTION_COLUMNS,
-                                                     BrowserContract.Tabs.CLIENT_GUID + " IS NOT NULL",
-                                                     null,
-                                                     null);
-
-            if (tabs == null)
-                return null;
-
-            String oldGuid = null;
-            ArrayList <HashMap <String, String>> tabsForClient = null;
-            HashMap <String, String> client;
-            HashMap <String, String> tab;
-
-            try {
-                while (tabs.moveToNext()) {
-                    String title = tabs.getString(0);
-                    String url = tabs.getString(1);
-                    String guid = tabs.getString(2);
-                    String name = tabs.getString(3);
-
-                    if (oldGuid == null || !TextUtils.equals(oldGuid, guid)) {
-                        client = new HashMap <String, String>();
-                        client.put("name", name);
-                        mClientsList.add(client);
-
-                        tabsForClient = new ArrayList <HashMap <String, String>>();
-                        mTabsList.add(tabsForClient);
-
-                        oldGuid = new String(guid);
-                    }
-
-                    tab = new HashMap<String, String>();
-                    tab.put("title", TextUtils.isEmpty(title) ? url : title);
-                    tab.put("url", url);
-                    tabsForClient.add(tab);
-                }
-            } finally {
-                tabs.close();
-            }
-
-            return null;
+    @Override
+    public void onQueryTabsComplete(List<TabsAccessor.RemoteTab> remoteTabsList) {
+        ArrayList<TabsAccessor.RemoteTab> remoteTabs = new ArrayList<TabsAccessor.RemoteTab> (remoteTabsList);
+        if (remoteTabs == null || remoteTabs.size() == 0) {
+            finishActivity();
+            return;
         }
+        
+        ArrayList <HashMap <String, String>> clients = new ArrayList <HashMap <String, String>>();
 
-        @Override
-        protected void onPostExecute(Void unused) {
-            if (mClientsList.size() == 0) {
-                finishActivity();
-                return;
+        mTabsList = new ArrayList <ArrayList <HashMap <String, String>>>();
+
+        String oldGuid = null;
+        ArrayList <HashMap <String, String>> tabsForClient = null;
+        HashMap <String, String> client;
+        HashMap <String, String> tab;
+        
+        for (TabsAccessor.RemoteTab remoteTab : remoteTabs) {
+            if (oldGuid == null || !TextUtils.equals(oldGuid, remoteTab.guid)) {
+                client = new HashMap <String, String>();
+                client.put("name", remoteTab.name);
+                clients.add(client);
+        
+                tabsForClient = new ArrayList <HashMap <String, String>>();
+                mTabsList.add(tabsForClient);
+        
+                oldGuid = new String(remoteTab.guid);
             }
-
-            mList.setAdapter(new SimpleExpandableListAdapter(getApplicationContext(),
-                                                             mClientsList,
-                                                             R.layout.remote_tabs_group,
-                                                             CLIENT_KEY,
-                                                             CLIENT_RESOURCE,
-                                                             mTabsList,
-                                                             R.layout.remote_tabs_child,
-                                                             TAB_KEY,
-                                                             TAB_RESOURCE));
-
-            for (int i = 0; i < mClientsList.size(); i++) {
-                mList.expandGroup(i);
-            }
+        
+            tab = new HashMap<String, String>();
+            tab.put("title", TextUtils.isEmpty(remoteTab.title) ? remoteTab.url : remoteTab.title);
+            tab.put("url", remoteTab.url);
+            tabsForClient.add(tab);
+        }
+        
+        mList.setAdapter(new SimpleExpandableListAdapter(getApplicationContext(),
+                                                         clients,
+                                                         R.layout.remote_tabs_group,
+                                                         CLIENT_KEY,
+                                                         CLIENT_RESOURCE,
+                                                         mTabsList,
+                                                         R.layout.remote_tabs_child,
+                                                         TAB_KEY,
+                                                         TAB_RESOURCE));
+        
+        for (int i = 0; i < clients.size(); i++) {
+            mList.expandGroup(i);
         }
     }
 }
