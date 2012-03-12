@@ -78,6 +78,8 @@ PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
 SDK_PATH      = $(PKG_PATH)
 ifeq ($(MOZ_APP_NAME),xulrunner)
 SDK_PATH = sdk/
+# Don't codesign xulrunner internally
+MOZ_INTERNAL_SIGNING_FORMAT =
 endif
 SDK_SUFFIX    = $(PKG_SUFFIX)
 SDK           = $(SDK_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
@@ -565,6 +567,11 @@ endif
 
 ifdef MOZ_SIGN_PACKAGE_CMD
 MAKE_PACKAGE    += && $(MOZ_SIGN_PACKAGE_CMD) "$(PACKAGE)"
+endif
+
+ifdef MOZ_SIGN_CMD
+MAKE_SDK           += && $(MOZ_SIGN_CMD) -f gpg $(SDK)
+UPLOAD_EXTRA_FILES += $(SDK).asc
 endif
 
 # dummy macro if we don't have PSM built
