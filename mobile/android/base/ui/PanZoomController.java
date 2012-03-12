@@ -217,10 +217,22 @@ public class PanZoomController
         // if that's the case, abort any animation in progress and re-zoom so that the page
         // snaps to edges. for other cases (where the user's finger(s) are down) don't do
         // anything special.
-        if (mState == PanZoomState.FLING) {
+        switch (mState) {
+        case FLING:
             mX.stopFling();
             mY.stopFling();
             mState = PanZoomState.NOTHING;
+            // fall through
+        case ANIMATED_ZOOM:
+            // the zoom that's in progress likely makes no sense any more (such as if
+            // the screen orientation changed) so abort it
+            // fall through
+        case NOTHING:
+            // Don't do animations here; they're distracting and can cause flashes on page
+            // transitions.
+            mController.setViewportMetrics(getValidViewportMetrics());
+            mController.notifyLayerClientOfGeometryChange();
+            break;
         }
     }
 
