@@ -495,8 +495,10 @@ function run_test() {
 
   let query = "?" + args.join("&");
 
-  let uri1 = Utils.makeURL("http://foo/" + query);
-  let uri2 = Utils.makeURL("http://foo/");
+  let uri1 = Utils.makeURI("http://foo/" + query)
+                  .QueryInterface(Ci.nsIURL);
+  let uri2 = Utils.makeURI("http://foo/")
+                  .QueryInterface(Ci.nsIURL);
   uri2.query = query;
   do_check_eq(uri1.query, uri2.query);
   server.stop(do_test_finished);
