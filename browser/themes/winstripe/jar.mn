@@ -165,6 +165,9 @@ browser.jar:
         skin/classic/browser/devtools/inspect-button.png            (devtools/inspect-button.png)
         skin/classic/browser/devtools/dropmarker.png                (devtools/dropmarker.png)
         skin/classic/browser/devtools/treepanel-button.png          (devtools/treepanel-button.png)
+        skin/classic/browser/devtools/layout-background.png         (devtools/layout-background.png)
+        skin/classic/browser/devtools/layoutview.css                (devtools/layoutview.css)
+        skin/classic/browser/devtools/layout-buttons.png            (devtools/layout-buttons.png)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/sync-throbber.png
         skin/classic/browser/sync-16.png
@@ -345,6 +348,9 @@ browser.jar:
         skin/classic/aero/browser/devtools/inspect-button.png        (devtools/inspect-button.png)
         skin/classic/aero/browser/devtools/dropmarker.png            (devtools/dropmarker.png)
         skin/classic/aero/browser/devtools/treepanel-button.png      (devtools/treepanel-button.png)
+        skin/classic/aero/browser/devtools/layout-background.png     (devtools/layout-background.png)
+        skin/classic/aero/browser/devtools/layoutview.css            (devtools/layoutview.css)
+        skin/classic/aero/browser/devtools/layout-buttons.png        (devtools/layout-buttons.png)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/sync-throbber.png
         skin/classic/aero/browser/sync-16.png

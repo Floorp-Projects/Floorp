@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+#ifdef 0
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is LayoutView.
+   -
+   - The Initial Developer of the Original Code is
+   - The Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2012
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Paul Rouget <paul@mozilla.com> (original author)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+#endif
+<!DOCTYPE html [
+<!ENTITY % layoutviewDTD SYSTEM "chrome://browser/locale/devtools/layoutview.dtd" >
+ %layoutviewDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <head>
+    <title>Layout View</title>
+
+    <script type="application/javascript;version=1.8">
+    <![CDATA[
+      let elts;
+      let tooltip;
+
+      const Ci = Components.interfaces;
+      const Cc = Components.classes;
+
+      window.onload = function() {
+
+        // Tooltip mechanism
+        elts = document.querySelectorAll("*[tooltip]");
+        tooltip = document.querySelector(".tooltip");
+        for (let i = 0; i < elts.length; i++) {
+          let elt = elts[i];
+          elt.addEventListener("mouseover", onmouseover, true);
+          elt.addEventListener("mouseout", onmouseout, true);
+        }
+
+        // Mark document as RTL or LTR:
+        let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+          getService(Ci.nsIXULChromeRegistry);
+        let dir = chromeReg.isLocaleRTL("global");
+        document.body.setAttribute("dir", dir ? "rtl" : "ltr");
+
+        window.parent.postMessage("layoutview-ready", "*");
+      }
+
+      window.onunload = function() {
+        if (elts) {
+          for (let i = 0; i < elts.length; i++) {
+            let elt = elts[i];
+            elt.removeEventListener("mouseover", onmouseover, true);
+            elt.removeEventListener("mouseout", onmouseout, true);
+          }
+        }
+      }
+
+      function onmouseover(e) {
+        tooltip.textContent = e.target.getAttribute("tooltip");
+      }
+
+      function onmouseout(e) {
+        tooltip.textContent = "";
+      }
+
+      function toggleView() {
+        window.parent.postMessage("layoutview-toggle-view", "*");
+      }
+    ]]>
+    </script>
+
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/layoutview.css" type="text/css"/>
+    <link rel="stylesheet" href="view.css" type="text/css"/>
+
+  </head>
+  <body>
+
+    <!-- Header: always visible, even when the view is closed. -->
+    <a onclick="toggleView()" href="#" id="header">
+        <span>&elementSize.label;</span>
+        <span id="element-size"></span>
+        <span id="togglebutton"></span>
+    </a>
+
+    <!-- Boxes: hidden when the view is closed. -->
+    <div id="main">
+
+      <div id="margins" tooltip="&margins.tooltip;">
+        <div id="borders" tooltip="&borders.tooltip;">
+          <div id="padding" tooltip="&padding.tooltip;">
+            <div id="content" tooltip="&content.tooltip;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="border top"><span tooltip="border-top"></span></p>
+      <p class="border right"><span tooltip="border-right"></span></p>
+      <p class="border bottom"><span tooltip="border-bottom"></span></p>
+      <p class="border left"><span tooltip="border-left"></span></p>
+
+      <p class="margin top"><span tooltip="margin-top"></span></p>
+      <p class="margin right"><span tooltip="margin-right"></span></p>
+      <p class="margin bottom"><span tooltip="margin-bottom"></span></p>
+      <p class="margin left"><span tooltip="margin-left"></span></p>
+
+      <p class="padding top"><span tooltip="padding-top"></span></p>
+      <p class="padding right"><span tooltip="padding-right"></span></p>
+      <p class="padding bottom"><span tooltip="padding-bottom"></span></p>
+      <p class="padding left"><span tooltip="padding-left"></span></p>
+
+      <p class="size"><span tooltip="&content.tooltip;"></span></p>
+
+      <span class="tooltip"></span>
+
+    </div>
+
+  </body>
+</html>
