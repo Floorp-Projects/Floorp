@@ -1441,9 +1441,26 @@ nsHTMLTableAccessible::IsProbablyForLayout(bool *aIsProbablyForLayout)
         if (rowElm->IsHTML() && rowElm->Tag() == nsGkAtoms::tr) {
           for (nsIContent* cellElm = rowElm->GetFirstChild(); cellElm;
                cellElm = cellElm->GetNextSibling()) {
-            if (cellElm->IsHTML() && cellElm->Tag() == nsGkAtoms::th) {
-              RETURN_LAYOUT_ANSWER(false,
-                                   "Has th -- legitimate table structures");
+            if (cellElm->IsHTML()) {
+              
+              if (cellElm->NodeInfo()->Equals(nsGkAtoms::th)) {
+                RETURN_LAYOUT_ANSWER(false,
+                                     "Has th -- legitimate table structures");
+              }
+
+              if (cellElm->HasAttr(kNameSpaceID_None, nsGkAtoms::headers) ||
+                  cellElm->HasAttr(kNameSpaceID_None, nsGkAtoms::scope) ||
+                  cellElm->HasAttr(kNameSpaceID_None, nsGkAtoms::abbr)) {
+                RETURN_LAYOUT_ANSWER(false,
+                                     "Has headers, scope, or abbr attribute -- legitimate table structures");
+              }
+
+              nsAccessible* cell = mDoc->GetAccessible(cellElm);
+              if (cell && cell->GetChildCount() == 1 &&
+                  cell->FirstChild()->IsAbbreviation()) {
+                RETURN_LAYOUT_ANSWER(false,
+                                     "has abbr -- legitimate table structures");
+              }
             }
           }
         }
