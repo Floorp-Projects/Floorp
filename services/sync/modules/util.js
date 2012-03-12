@@ -206,28 +206,6 @@ let Utils = {
     return !!guid && this._base64url_regex.test(guid);
   },
 
-  ensureOneOpen: let (windows = {}) function ensureOneOpen(window) {
-    // Close the other window if it exists
-    let url = window.location.href;
-    let other = windows[url];
-    if (other != null)
-      other.close();
-
-    // Save the new window for future closure
-    windows[url] = window;
-
-    // Actively clean up when the window is closed
-    window.addEventListener("unload", function() windows[url] = null, false);
-  },
-
-  // Returns a nsILocalFile representing a file relative to the current
-  // user's profile directory.  The argument should be a string with
-  // unix-style slashes for directory names (these slashes are automatically
-  // converted to platform-specific path separators).
-  getProfileFile: function getProfileFile(path) {
-    return FileUtils.getFile("ProfD", path.split("/"), true);
-  },
-
   /**
    * Add a simple getter/setter to an object that defers access of a property
    * to an inner property.
@@ -291,70 +269,46 @@ let Utils = {
     return true;
   },
 
-  deepCopy: function Weave_deepCopy(thing, noSort) {
-    if (typeof(thing) != "object" || thing == null)
-      return thing;
-    let ret;
-
-    if (Array.isArray(thing)) {
-      ret = [];
-      for (let i = 0; i < thing.length; i++)
-        ret.push(Utils.deepCopy(thing[i], noSort));
-
-    } else {
-      ret = {};
-      let props = [p for (p in thing)];
-      if (!noSort)
-        props = props.sort();
-      props.forEach(function(k) ret[k] = Utils.deepCopy(thing[k], noSort));
-    }
-
-    return ret;
-  },
-
-  // Works on frames or exceptions, munges file:// URIs to shorten the paths
-  // FIXME: filename munging is sort of hackish, might be confusing if
-  // there are multiple extensions with similar filenames
-  formatFrame: function Utils_formatFrame(frame) {
-    let tmp = "<file:unknown>";
-
-    let file = frame.filename || frame.fileName;
-    if (file)
-      tmp = file.replace(/^(?:chrome|file):.*?([^\/\.]+\.\w+)$/, "$1");
-
-    if (frame.lineNumber)
-      tmp += ":" + frame.lineNumber;
-    if (frame.name)
-      tmp = frame.name + "()@" + tmp;
-
-    return tmp;
-  },
-
   exceptionStr: function Weave_exceptionStr(e) {
     let message = e.message ? e.message : e;
     return message + " " + Utils.stackTrace(e);
   },
-
-  stackTraceFromFrame: function Weave_stackTraceFromFrame(frame) {
-    let output = [];
-    while (frame) {
-      let str = Utils.formatFrame(frame);
-      if (str)
-        output.push(str);
-      frame = frame.caller;
-    }
-    return output.join(" < ");
-  },
-
+  
   stackTrace: function Weave_stackTrace(e) {
     // Wrapped nsIException
-    if (e.location)
-      return "Stack trace: " + Utils.stackTraceFromFrame(e.location);
+    if (e.location){
+      let frame = e.location; 
+      let output = [];
+      while (frame) {
+      	// Works on frames or exceptions, munges file:// URIs to shorten the paths
+        // FIXME: filename munging is sort of hackish, might be confusing if
+        // there are multiple extensions with similar filenames
+        let str = "<file:unknown>";
 
+        let file = frame.filename || frame.fileName;
+        if (file){
+          str = file.replace(/^(?:chrome|file):.*?([^\/\.]+\.\w+)$/, "$1");
+        }
+
+        if (frame.lineNumber){
+          str += ":" + frame.lineNumber;
+        }
+        if (frame.name){
+          str = frame.name + "()@" + str;
+        }
+
+        if (str){
+          output.push(str);
+        }
+        frame = frame.caller;
+      }
+      return "Stack trace: " + output.join(" < ");
+    }
     // Standard JS exception
-    if (e.stack)
+    if (e.stack){
       return "JS Stack trace: " + e.stack.trim().replace(/\n/g, " < ").
         replace(/@[^@]*?([^\/\.]+\.\w+:)/g, "@$1");
+    }
 
     return "No traceback available";
   },
@@ -890,12 +844,6 @@ let Utils = {
     }
   },
 
-  makeURL: function Weave_makeURL(URIString) {
-    let url = Utils.makeURI(URIString);
-    url.QueryInterface(Ci.nsIURL);
-    return url;
-  },
-
   /**
    * Load a json object from disk
    *
@@ -911,7 +859,7 @@ let Utils = {
     if (that._log)
       that._log.trace("Loading json from disk: " + filePath);
 
-    let file = Utils.getProfileFile(filePath);
+    let file = FileUtils.getFile("ProfD", filePath.split("/"), true);
     if (!file.exists()) {
       callback.call(that);
       return;
@@ -956,7 +904,7 @@ let Utils = {
     if (that._log)
       that._log.trace("Saving json to disk: " + filePath);
 
-    let file = Utils.getProfileFile(filePath);
+    let file = FileUtils.getFile("ProfD", filePath.split("/"), true);
     let json = typeof obj == "function" ? obj.call(that) : obj;
     let out = JSON.stringify(json);
 
