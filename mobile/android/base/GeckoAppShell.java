@@ -112,7 +112,6 @@ public class GeckoAppShell
     static File sHomeDir = null;
     static private int sDensityDpi = 0;
     private static Boolean sSQLiteLibsLoaded = false;
-    private static Boolean sNSSLibsLoaded = false;
     private static Boolean sLibsSetup = false;
     private static File sGREDir = null;
 
@@ -141,8 +140,7 @@ public class GeckoAppShell
     public static native void callObserver(String observerKey, String topic, String data);
     public static native void removeObserver(String observerKey);
     public static native void loadGeckoLibsNative(String apkName);
-    public static native void loadSQLiteLibsNative(String apkName);
-    public static native void loadNSSLibsNative(String apkName);
+    public static native void loadSQLiteLibsNative(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
 
     public static void registerGlobalExceptionHandler() {
@@ -267,6 +265,15 @@ public class GeckoAppShell
 
         File cacheFile = getCacheDir(context);
         putenv("GRE_HOME=" + getGREDir(context).getPath());
+        File[] files = cacheFile.listFiles();
+        if (files != null) {
+            Iterator<File> cacheFiles = Arrays.asList(files).iterator();
+            while (cacheFiles.hasNext()) {
+                File libFile = cacheFiles.next();
+                if (libFile.getName().endsWith(".so"))
+                    libFile.delete();
+            }
+        }
 
         // setup the libs cache
         String linkerCache = System.getenv("MOZ_LINKER_CACHE");
@@ -359,21 +366,8 @@ public class GeckoAppShell
             loadMozGlue();
             // the extract libs parameter is being removed in bug 732069
             loadLibsSetup(context);
-            loadSQLiteLibsNative(apkName);
+            loadSQLiteLibsNative(apkName, false);
             sSQLiteLibsLoaded = true;
-        }
-    }
-
-    public static void loadNSSLibs(Context context, String apkName) {
-        if (sNSSLibsLoaded)
-            return;
-        synchronized(sNSSLibsLoaded) {
-            if (sNSSLibsLoaded)
-                return;
-            loadMozGlue();
-            loadLibsSetup(context);
-            loadNSSLibsNative(apkName);
-            sNSSLibsLoaded = true;
         }
     }
 

@@ -55,7 +55,6 @@ CPPSRCS = \
   nsGeckoUtils.cpp \
   APKOpen.cpp \
   SQLiteBridge.cpp \
-	NSSBridge.cpp \
   $(NULL)
 
 LOCAL_INCLUDES += -I$(DEPTH)/build
@@ -64,28 +63,6 @@ LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
 LOCAL_INCLUDES += -I$(srcdir)/../linker
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/startup
 LOCAL_INCLUDES += -I$(topsrcdir)/db/sqlite3/src
-LOCAL_INCLUDES += -I$(topsrcdir)/base/src
-LOCAL_INCLUDES += -I$(topsrcdir)/nsprpub/lib/ds
-LOCAL_INCLUDES += -I$(topsrcdir)/nsprpub/lib/libc/include
-LOCAL_INCLUDES += -I$(topsrcdir)/nsprpub/pr/include
-LOCAL_INCLUDES += -I$(topsrcdir)/ipc/chromium/src/base/third_party/nspr
-LOCAL_INCLUDES += -I$(topsrcdir)/ipc/chromium/src
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/nss
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/util
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/softoken
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/pk11wrap
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/cmd/ecperf
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/pkcs7
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/certdb
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/cryptohi
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/dev
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/base
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/pki
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/smime
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/freebl/
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/ssl
-LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/cmd/lib/
-
 ifdef MOZ_OLD_LINKER
 DEFINES += -DMOZ_OLD_LINKER
 LOCAL_INCLUDES += -I$(topsrcdir)/other-licenses/android
