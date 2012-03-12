@@ -33,6 +33,7 @@
 <!ENTITY bookmark "Bookmark">
 <!ENTITY bookmark_added "Bookmark added">
 <!ENTITY bookmark_removed "Bookmark removed">
+<!ENTITY bookmark_updated "Bookmark updated">
 
 <!ENTITY history_today_section "Today">
 <!ENTITY history_yesterday_section "Yesterday">
@@ -89,6 +90,12 @@
 <!ENTITY contextmenu_remove_bookmark "Remove">
 <!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
 <!ENTITY contextmenu_share "Share">
+<!ENTITY contextmenu_edit_bookmark "Edit">
+
+<!ENTITY bookmark_edit_title "Edit Bookmark">
+<!ENTITY bookmark_edit_name "Name">
+<!ENTITY bookmark_edit_location "Location">
+<!ENTITY bookmark_edit_keyword "Keyword">
 
 <!ENTITY site_settings_title        "Clear Site Settings">
 <!ENTITY site_settings_cancel       "Cancel">
