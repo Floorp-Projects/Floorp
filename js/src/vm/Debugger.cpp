@@ -47,6 +47,7 @@
 #include "jsobj.h"
 #include "jswrapper.h"
 #include "jsarrayinlines.h"
+#include "jsgcinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
@@ -54,6 +55,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "methodjit/Retcon.h"
+#include "js/Vector.h"
 
 #include "vm/Stack-inl.h"
 
@@ -2032,6 +2034,87 @@ Debugger::removeDebuggeeGlobal(JSContext *cx, GlobalObject *global,
         debuggees.remove(global);
 }
 
+/* A set of JSCompartment pointers. */
+typedef HashSet<JSCompartment *, DefaultHasher<JSCompartment *>, RuntimeAllocPolicy> CompartmentSet;
+
+JSBool
+Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "findScripts", args, dbg);
+
+    CompartmentSet compartments(cx);
+    if (!compartments.init()) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    /* Assemble the set of debuggee compartments. */
+    for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
+        if (!compartments.put(r.front()->compartment())) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+    }            
+
+    /*
+     * Accumulate the scripts in an AutoScriptVector, instead of creating
+     * the JS array as we go, because we mustn't allocate JS objects or GC
+     * while we use the CellIter.
+     */
+    AutoScriptVector scripts(cx);
+
+    /* Search each compartment for debuggee scripts. */
+    for (CompartmentSet::Range r = compartments.all(); !r.empty(); r.popFront()) {
+        for (gc::CellIter i(r.front(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            GlobalObject *global = script->getGlobalObjectOrNull();
+            if (global && dbg->debuggees.has(global)) {
+                if (!scripts.append(script)) {
+                    js_ReportOutOfMemory(cx);
+                    return false;
+                }                    
+            }
+        }
+    }
+
+    /*
+     * Since eval scripts have no global, we need to find them via the call
+     * stack, where frame's scope tells us the global in use.
+     */
+    for (FrameRegsIter fri(cx); !fri.done(); ++fri) {
+        if (fri.fp()->isEvalFrame() && dbg->debuggees.has(&fri.fp()->scopeChain().global())) {
+            JSScript *script = fri.fp()->script();
+
+            /*
+             * If eval scripts never have global objects set, then we don't need
+             * to check the existing script vector for duplicates, since we only
+             * include scripts with globals above.
+             */
+            JS_ASSERT(!script->getGlobalObjectOrNull());
+            if (!scripts.append(script)) {
+                js_ReportOutOfMemory(cx);
+                return false;
+            }
+        }
+    }
+
+    JSObject *result = NewDenseAllocatedArray(cx, scripts.length(), NULL);
+    if (!result)
+        return false;
+
+    result->ensureDenseArrayInitializedLength(cx, 0, scripts.length());
+
+    for (size_t i = 0; i < scripts.length(); i++) {
+        JSObject *scriptObject = dbg->wrapScript(cx, scripts[i]);
+        if (!scriptObject)
+            return false;
+        result->setDenseArrayElement(i, ObjectValue(*scriptObject));
+    }
+
+    args.rval().setObject(*result);
+    return true;
+}
+
 JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
@@ -2052,6 +2135,7 @@ JSFunctionSpec Debugger::methods[] = {
     JS_FN("getDebuggees", Debugger::getDebuggees, 0, 0),
     JS_FN("getNewestFrame", Debugger::getNewestFrame, 0, 0),
     JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 1, 0),
+    JS_FN("findScripts", Debugger::findScripts, 1, 0),
     JS_FS_END
 };
 

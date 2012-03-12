@@ -86,7 +86,6 @@ public:
     nsresult getNodeSet(txNodeSet** aResult);
     nsresult getNodeSet(txNodeSet* aNodeSet, txNodeSet** aResult);
     nsresult getNodeSet(const txXPathNode& aNode, txAExprResult** aResult);
-    nsresult getNodeSet(const txXPathNode& aNode, txNodeSet** aResult);
     nsresult getNumberResult(double aValue, txAExprResult** aResult);
 
     /**

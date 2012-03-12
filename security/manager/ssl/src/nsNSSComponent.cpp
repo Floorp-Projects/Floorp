@@ -1597,6 +1597,26 @@ nsNSSComponent::TryCFM2MachOMigration(nsIFile *cfmPath, nsIFile *machoPath)
 }
 #endif
 
+static void configureMD5(bool enabled)
+{
+  if (enabled) { // set flags
+    NSS_SetAlgorithmPolicy(SEC_OID_MD5, 
+        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
+        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
+        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
+  }
+  else { // clear flags
+    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
+        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
+        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
+        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+  }
+}
+
 nsresult
 nsNSSComponent::InitializeNSS(bool showWarningBox)
 {
@@ -1788,6 +1808,8 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
       SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
       mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+      mPrefBranch->GetBoolPref("security.enable_md5_signatures", &enabled);
+      configureMD5(enabled);
 
       // Configure TLS session tickets
       mPrefBranch->GetBoolPref("security.enable_tls_session_tickets", &enabled);
@@ -2309,6 +2331,10 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     } else if (prefName.Equals("security.enable_tls")) {
       mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+      clearSessionCache = true;
+    } else if (prefName.Equals("security.enable_md5_signatures")) {
+      mPrefBranch->GetBoolPref("security.enable_md5_signatures", &enabled);
+      configureMD5(enabled);
       clearSessionCache = true;
     } else if (prefName.Equals("security.enable_tls_session_tickets")) {
       mPrefBranch->GetBoolPref("security.enable_tls_session_tickets", &enabled);

@@ -2338,6 +2338,13 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
+      case SCRIPTVECTOR: {
+        AutoScriptVector::VectorImpl &vector = static_cast<AutoScriptVector *>(this)->vector;
+        for (size_t i = 0; i < vector.length(); i++)
+            MarkScriptRoot(trc, &vector[i], "AutoScriptVector element");
+        return;
+      }
+
       case IONMASM: {
 #ifdef JS_ION
         static_cast<js::ion::MacroAssembler::AutoRooter *>(this)->masm()->trace(trc);

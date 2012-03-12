@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2005, 2007, 2008, 2009, 2010 by       */
+/*  Copyright 1996-2003, 2005, 2007-2012 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -302,7 +302,6 @@
   typedef short           Short;
   typedef unsigned short  UShort, *PUShort;
   typedef long            Long, *PLong;
-  typedef unsigned long   ULong;
 
   typedef unsigned char   Byte, *PByte;
   typedef char            Bool;
@@ -370,17 +369,22 @@
 
   /* Simple record used to implement a stack of bands, required */
   /* by the sub-banding mechanism                               */
-  typedef struct  TBand_
+  typedef struct  black_TBand_
   {
     Short  y_min;   /* band's minimum */
     Short  y_max;   /* band's maximum */
 
-  } TBand;
+  } black_TBand;
 
 
 #define AlignProfileSize \
   ( ( sizeof ( TProfile ) + sizeof ( Alignment ) - 1 ) / sizeof ( long ) )
 
+
+#undef RAS_ARG
+#undef RAS_ARGS
+#undef RAS_VAR
+#undef RAS_VARS
 
 #ifdef FT_STATIC_RASTER
 
@@ -397,8 +401,8 @@
 #else /* !FT_STATIC_RASTER */
 
 
-#define RAS_ARGS       PWorker    worker,
-#define RAS_ARG        PWorker    worker
+#define RAS_ARGS       black_PWorker  worker,
+#define RAS_ARG        black_PWorker  worker
 
 #define RAS_VARS       worker,
 #define RAS_VAR        worker
@@ -409,7 +413,7 @@
 #endif /* !FT_STATIC_RASTER */
 
 
-  typedef struct TWorker_  TWorker, *PWorker;
+  typedef struct black_TWorker_  black_TWorker, *black_PWorker;
 
 
   /* prototypes used for sweep function dispatch */
@@ -429,6 +433,10 @@
 
 
   /* NOTE: These operations are only valid on 2's complement processors */
+#undef FLOOR
+#undef CEILING
+#undef TRUNC
+#undef SCALED
 
 #define FLOOR( x )    ( (x) & -ras.precision )
 #define CEILING( x )  ( ( (x) + ras.precision - 1 ) & -ras.precision )
@@ -443,12 +451,11 @@
   /* Thus, their offset can be coded with less opcodes, resulting in a   */
   /* smaller executable.                                                 */
 
-  struct  TWorker_
+  struct  black_TWorker_
   {
     Int         precision_bits;     /* precision related variables         */
     Int         precision;
     Int         precision_half;
-    Long        precision_mask;
     Int         precision_shift;
     Int         precision_step;
     Int         precision_jitter;
@@ -517,8 +524,8 @@
 
     TPoint      arcs[3 * MaxBezier + 1]; /* The Bezier stack               */
 
-    TBand       band_stack[16];     /* band stack used for sub-banding     */
-    Int         band_top;           /* band stack top                      */
+    black_TBand  band_stack[16];    /* band stack used for sub-banding     */
+    Int          band_top;          /* band stack top                      */
 
 #ifdef FT_RASTER_OPTION_ANTI_ALIASING
 
@@ -542,20 +549,20 @@
   };
 
 
-  typedef struct  TRaster_
+  typedef struct  black_TRaster_
   {
-    char*    buffer;
-    long     buffer_size;
-    void*    memory;
-    PWorker  worker;
-    Byte     grays[5];
-    Short    gray_width;
+    char*          buffer;
+    long           buffer_size;
+    void*          memory;
+    black_PWorker  worker;
+    Byte           grays[5];
+    Short          gray_width;
 
-  } TRaster, *PRaster;
+  } black_TRaster, *black_PRaster;
 
 #ifdef FT_STATIC_RASTER
 
-  static TWorker  cur_ras;
+  static black_TWorker  cur_ras;
 #define ras  cur_ras
 
 #else /* !FT_STATIC_RASTER */
@@ -653,11 +660,33 @@
   static void
   Set_High_Precision( RAS_ARGS Int  High )
   {
+    /*
+     * `precision_step' is used in `Bezier_Up' to decide when to split a
+     * given y-monotonous Bezier arc that crosses a scanline before
+     * approximating it as a straight segment.  The default value of 32 (for
+     * low accuracy) corresponds to
+     *
+     *   32 / 64 == 0.5 pixels ,
+     *
+     * while for the high accuracy case we have
+     *
+     *   256/ (1 << 12) = 0.0625 pixels .
+     *
+     * `precision_jitter' is an epsilon threshold used in
+     * `Vertical_Sweep_Span' to deal with small imperfections in the Bezier
+     * decomposition (after all, we are working with approximations only);
+     * it avoids switching on additional pixels which would cause artifacts
+     * otherwise.
+     *
+     * The value of `precision_jitter' has been determined heuristically.
+     *
+     */
+
     if ( High )
     {
       ras.precision_bits   = 12;
       ras.precision_step   = 256;
-      ras.precision_jitter = 50;
+      ras.precision_jitter = 30;
     }
     else
     {
@@ -671,7 +700,6 @@
     ras.precision       = 1 << ras.precision_bits;
     ras.precision_half  = ras.precision / 2;
     ras.precision_shift = ras.precision_bits - Pixel_Bits;
-    ras.precision_mask  = -ras.precision;
   }
 
 
@@ -725,13 +753,13 @@
       if ( overshoot )
         ras.cProfile->flags |= Overshoot_Bottom;
 
-      FT_TRACE6(( "New ascending profile = %lx\n", (long)ras.cProfile ));
+      FT_TRACE6(( "New ascending profile = %p\n", ras.cProfile ));
       break;
 
     case Descending_State:
       if ( overshoot )
         ras.cProfile->flags |= Overshoot_Top;
-      FT_TRACE6(( "New descending profile = %lx\n", (long)ras.cProfile ));
+      FT_TRACE6(( "New descending profile = %p\n", ras.cProfile ));
       break;
 
     default:
@@ -784,8 +812,8 @@
 
     if ( h > 0 )
     {
-      FT_TRACE6(( "Ending profile %lx, start = %ld, height = %ld\n",
-                  (long)ras.cProfile, ras.cProfile->start, h ));
+      FT_TRACE6(( "Ending profile %p, start = %ld, height = %ld\n",
+                  ras.cProfile, ras.cProfile->start, h ));
 
       ras.cProfile->height = h;
       if ( overshoot )
@@ -1094,7 +1122,7 @@
         return SUCCESS;
       else
       {
-        x1 += FMulDiv( Dx, ras.precision - f1, Dy );
+        x1 += SMulDiv( Dx, ras.precision - f1, Dy );
         e1 += 1;
       }
     }
@@ -1122,13 +1150,13 @@
 
     if ( Dx > 0 )
     {
-      Ix = SMulDiv( ras.precision, Dx,  Dy);
+      Ix = SMulDiv( ras.precision, Dx, Dy);
       Rx = ( ras.precision * Dx ) % Dy;
       Dx = 1;
     }
     else
     {
-      Ix = SMulDiv( ras.precision, -Dx,  Dy) * -1;
+      Ix = SMulDiv( ras.precision, -Dx, Dy) * -1;
       Rx =    ( ras.precision * -Dx ) % Dy;
       Dx = -1;
     }
@@ -2406,6 +2434,14 @@
           return;  /* no drop-out control */
         }
 
+        /* undocumented but confirmed: If the drop-out would result in a  */
+        /* pixel outside of the bounding box, use the pixel inside of the */
+        /* bounding box instead                                           */
+        if ( pxl < 0 )
+          pxl = e1;
+        else if ( TRUNC( pxl ) >= ras.bWidth )
+          pxl = e2;
+
         /* check that the other pixel isn't set */
         e1 = pxl == e1 ? e2 : e1;
 
@@ -2581,6 +2617,14 @@
         default: /* modes 2, 3, 6, 7 */
           return;  /* no drop-out control */
         }
+
+        /* undocumented but confirmed: If the drop-out would result in a  */
+        /* pixel outside of the bounding box, use the pixel inside of the */
+        /* bounding box instead                                           */
+        if ( pxl < 0 )
+          pxl = e1;
+        else if ( TRUNC( pxl ) >= ras.target.rows )
+          pxl = e2;
 
         /* check that the other pixel isn't set */
         e1 = pxl == e1 ? e2 : e1;
@@ -3356,7 +3400,7 @@
 
 
   static void
-  ft_black_init( PRaster  raster )
+  ft_black_init( black_PRaster  raster )
   {
 #ifdef FT_RASTER_OPTION_ANTI_ALIASING
     FT_UInt  n;
@@ -3384,7 +3428,7 @@
   ft_black_new( void*       memory,
                 FT_Raster  *araster )
   {
-     static TRaster  the_raster;
+     static black_TRaster  the_raster;
      FT_UNUSED( memory );
 
 
@@ -3408,11 +3452,11 @@
 
 
   static int
-  ft_black_new( FT_Memory   memory,
-                PRaster    *araster )
+  ft_black_new( FT_Memory       memory,
+                black_PRaster  *araster )
   {
-    FT_Error  error;
-    PRaster   raster = NULL;
+    FT_Error       error;
+    black_PRaster  raster = NULL;
 
 
     *araster = 0;
@@ -3429,9 +3473,11 @@
 
 
   static void
-  ft_black_done( PRaster  raster )
+  ft_black_done( black_PRaster  raster )
   {
     FT_Memory  memory = (FT_Memory)raster->memory;
+
+
     FT_FREE( raster );
   }
 
@@ -3440,15 +3486,15 @@
 
 
   static void
-  ft_black_reset( PRaster  raster,
-                  char*    pool_base,
-                  long     pool_size )
+  ft_black_reset( black_PRaster  raster,
+                  char*          pool_base,
+                  long           pool_size )
   {
     if ( raster )
     {
-      if ( pool_base && pool_size >= (long)sizeof(TWorker) + 2048 )
+      if ( pool_base && pool_size >= (long)sizeof ( black_TWorker ) + 2048 )
       {
-        PWorker  worker = (PWorker)pool_base;
+        black_PWorker  worker = (black_PWorker)pool_base;
 
 
         raster->buffer      = pool_base + ( ( sizeof ( *worker ) + 7 ) & ~7 );
@@ -3466,7 +3512,7 @@
 
 
   static void
-  ft_black_set_mode( PRaster        raster,
+  ft_black_set_mode( black_PRaster  raster,
                      unsigned long  mode,
                      const char*    palette )
   {
@@ -3493,12 +3539,12 @@
 
 
   static int
-  ft_black_render( PRaster                  raster,
+  ft_black_render( black_PRaster            raster,
                    const FT_Raster_Params*  params )
   {
     const FT_Outline*  outline    = (const FT_Outline*)params->source;
     const FT_Bitmap*   target_map = params->target;
-    PWorker            worker;
+    black_PWorker      worker;
 
 
     if ( !raster || !raster->buffer || !raster->buffer_size )

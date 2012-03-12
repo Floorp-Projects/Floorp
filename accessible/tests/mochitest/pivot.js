@@ -74,6 +74,15 @@ function virtualCursorChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets)
 
   this.check = function virtualCursorChangedChecker_check(aEvent)
   {
+    SimpleTest.info("virtualCursorChangedChecker_check");
+
+    var event = null;
+    try {
+      event = aEvent.QueryInterface(nsIAccessibleVirtualCursorChangeEvent);
+    } catch (e) {
+      SimpleTest.ok(false, "Does not support correct interface: " + e);
+    }
+
     var position = aDocAcc.virtualCursor.position;
 
     var idMatches = position.DOMNode.id == aIdOrNameOrAcc;
@@ -90,8 +99,37 @@ function virtualCursorChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets)
       SimpleTest.is(aDocAcc.virtualCursor.endOffset, aTextOffsets[1],
                     "wrong end offset");
     }
+
+    var prevPosAndOffset = virtualCursorChangedChecker.
+      getPreviousPosAndOffset(aDocAcc.virtualCursor);
+
+    if (prevPosAndOffset) {
+      SimpleTest.is(event.oldAccessible, prevPosAndOffset.position,
+                    "previous position does not match");
+      SimpleTest.is(event.oldStartOffset, prevPosAndOffset.startOffset,
+                    "previous start offset does not match");
+      SimpleTest.is(event.oldEndOffset, prevPosAndOffset.endOffset,
+                    "previous end offset does not match");
+    }
   };
 }
+
+virtualCursorChangedChecker.prevPosAndOffset = {};
+
+virtualCursorChangedChecker.storePreviousPosAndOffset =
+  function storePreviousPosAndOffset(aPivot)
+{
+  virtualCursorChangedChecker.prevPosAndOffset[aPivot] =
+    {position: aPivot.position,
+     startOffset: aPivot.startOffset,
+     endOffset: aPivot.endOffset};
+};
+
+virtualCursorChangedChecker.getPreviousPosAndOffset =
+  function getPreviousPosAndOffset(aPivot)
+{
+  return virtualCursorChangedChecker.prevPosAndOffset[aPivot];
+};
 
 /**
  * Set a text range in the pivot and wait for virtual cursor change event.
@@ -105,6 +143,8 @@ function setVirtualCursorRangeInvoker(aDocAcc, aTextAccessible, aTextOffsets)
 {
   this.invoke = function virtualCursorChangedInvoker_invoke()
   {
+    virtualCursorChangedChecker.
+      storePreviousPosAndOffset(aDocAcc.virtualCursor);
     SimpleTest.info(prettyName(aTextAccessible) + " " + aTextOffsets);
     aDocAcc.virtualCursor.setTextRange(aTextAccessible,
                                        aTextOffsets[0],
@@ -136,6 +176,8 @@ function setVirtualCursorPosInvoker(aDocAcc, aPivotMoveMethod, aRule,
 {
   this.invoke = function virtualCursorChangedInvoker_invoke()
   {
+    virtualCursorChangedChecker.
+      storePreviousPosAndOffset(aDocAcc.virtualCursor);
     var moved = aDocAcc.virtualCursor[aPivotMoveMethod](aRule);
     SimpleTest.ok((aIdOrNameOrAcc && moved) || (!aIdOrNameOrAcc && !moved),
                   "moved pivot");

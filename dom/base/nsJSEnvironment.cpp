@@ -2293,7 +2293,7 @@ nsJSContext::InitializeExternalClasses()
 }
 
 nsresult
-nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArgs)
+nsJSContext::SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* aArgs)
 {
   PRUint32  argc;
   jsval    *argv = nsnull;
@@ -2302,8 +2302,8 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
 
   Maybe<nsRootedJSValueArray> tempStorage;
 
-  nsresult rv;
-  rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc, &argv, tempStorage);
+  nsresult rv =
+    ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc, &argv, tempStorage);
   NS_ENSURE_SUCCESS(rv, rv);
 
   jsval vargs;
@@ -2327,11 +2327,9 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
 
   // Make sure to use JS_DefineProperty here so that we can override
   // readonly XPConnect properties here as well (read dialogArguments).
-  rv = ::JS_DefineProperty(mContext, reinterpret_cast<JSObject *>(aTarget),
-                           aPropName, vargs, nsnull, nsnull, 0) ?
-       NS_OK : NS_ERROR_FAILURE;
-
-  return rv;
+  return JS_DefineProperty(mContext, aTarget, aPropName, vargs, NULL, NULL, 0)
+    ? NS_OK
+    : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -2360,7 +2358,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
 
   if (!aArgs)
     return NS_OK;
-  PRUint32 argCtr, argCount;
+  PRUint32 argCount;
   // This general purpose function may need to convert an arg array
   // (window.arguments, event-handler args) and a generic property.
   nsCOMPtr<nsIArray> argsArray(do_QueryInterface(aArgs));
@@ -2381,7 +2379,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
   jsval *argv = aTempStorage.ref().Elements();
 
   if (argsArray) {
-    for (argCtr = 0; argCtr < argCount && NS_SUCCEEDED(rv); argCtr++) {
+    for (PRUint32 argCtr = 0; argCtr < argCount && NS_SUCCEEDED(rv); argCtr++) {
       nsCOMPtr<nsISupports> arg;
       jsval *thisval = argv + argCtr;
       argsArray->QueryElementAt(argCtr, NS_GET_IID(nsISupports),
@@ -2976,12 +2974,6 @@ nsJSContext::IsContextInitialized()
 }
 
 void
-nsJSContext::FinalizeContext()
-{
-  ;
-}
-
-void
 nsJSContext::ScriptEvaluated(bool aTerminated)
 {
   if (aTerminated && mTerminations) {
@@ -3006,20 +2998,15 @@ nsJSContext::ScriptEvaluated(bool aTerminated)
   }
 }
 
-nsresult
+void
 nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                    nsISupports* aRef)
+                                    nsIDOMWindow* aRef)
 {
   NS_PRECONDITION(GetExecutingScript(), "should be executing script");
 
   nsJSContext::TerminationFuncClosure* newClosure =
     new nsJSContext::TerminationFuncClosure(aFunc, aRef, mTerminations);
-  if (!newClosure) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   mTerminations = newClosure;
-  return NS_OK;
 }
 
 bool
@@ -3922,7 +3909,7 @@ nsresult NS_CreateJSRuntime(nsIScriptRuntime **aRuntime)
 // to/from nsISupports.
 // When consumed by non-JS (eg, another script language), conversion is done
 // on-the-fly.
-class nsJSArgArray : public nsIJSArgArray, public nsIArray {
+class nsJSArgArray : public nsIJSArgArray {
 public:
   nsJSArgArray(JSContext *aContext, PRUint32 argc, jsval *argv, nsresult *prv);
   ~nsJSArgArray();
@@ -4062,7 +4049,7 @@ NS_IMETHODIMP nsJSArgArray::Enumerate(nsISimpleEnumerator **_retval)
 
 // The factory function
 nsresult NS_CreateJSArgv(JSContext *aContext, PRUint32 argc, void *argv,
-                         nsIArray **aArray)
+                         nsIJSArgArray **aArray)
 {
   nsresult rv;
   nsJSArgArray *ret = new nsJSArgArray(aContext, argc,

@@ -7560,6 +7560,20 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
   desiredSize.width = size.width;
   desiredSize.height = size.height;
   desiredSize.UnionOverflowAreasWithDesiredBounds();
+
+  if (HasAbsolutelyPositionedChildren()) {
+    // Set up a |reflowState| to pass into ReflowAbsoluteFrames
+    nsHTMLReflowState reflowState(aState.PresContext(), this,
+                                  aState.GetRenderingContext(),
+                                  nsSize(size.width, NS_UNCONSTRAINEDSIZE));
+
+    // Set up a |reflowStatus| to pass into ReflowAbsoluteFrames
+    // (just a dummy value; hopefully that's OK)
+    nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
+    ReflowAbsoluteFrames(aState.PresContext(), desiredSize,
+                         reflowState, reflowStatus);
+  }
+
   FinishAndStoreOverflow(desiredSize.mOverflowAreas, size);
 
   SyncLayout(aState);

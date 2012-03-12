@@ -221,6 +221,8 @@ class LifoAlloc
 
     JS_ALWAYS_INLINE
     void *alloc(size_t n) {
+        JS_OOM_POSSIBLY_FAIL();
+
         void *result;
         if (latest && (result = latest->tryAlloc(n)))
             return result;

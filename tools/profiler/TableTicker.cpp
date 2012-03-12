@@ -46,6 +46,7 @@
 #include "shared-libraries.h"
 #include "mozilla/StringBuilder.h"
 #include "mozilla/StackWalk.h"
+#include "JSObjectBuilder.h"
 
 // we eventually want to make this runtime switchable
 #if defined(MOZ_PROFILING) && (defined(XP_UNIX) && !defined(XP_MACOSX))
@@ -143,6 +144,7 @@ public:
   string TagToString(Profile *profile);
 
 private:
+  friend class Profile;
   union {
     const char* mTagData;
     double mTagFloat;
@@ -164,7 +166,6 @@ public:
     , mEntrySize(aEntrySize)
   {
     mEntries = new ProfileEntry[mEntrySize];
-    mNeedsSharedLibraryInfo = true;
   }
 
   ~Profile()
@@ -252,42 +253,60 @@ public:
 
   void ToString(StringBuilder &profile)
   {
-    if (mNeedsSharedLibraryInfo) {
-      // Can't be called from signal because
-      // getting the shared library information can call non-reentrant functions.
-      mSharedLibraryInfo = SharedLibraryInfo::GetInfoForSelf();
+    int readPos = mReadPos;
+    while (readPos != mLastFlushPos) {
+      profile.Append(mEntries[readPos].TagToString(this).c_str());
+      readPos = (readPos + 1) % mEntrySize;
     }
+  }
 
-    //XXX: this code is not thread safe and needs to be fixed
+  JSObject *ToJSObject(JSContext *aCx)
+  {
+    JSObjectBuilder b(aCx);
+
+    JSObject *profile = b.CreateObject();
+    JSObject *samples = b.CreateArray();
+    b.DefineProperty(profile, "samples", samples);
+
+    JSObject *sample = NULL;
+    JSObject *frames = NULL;
+
     int oldReadPos = mReadPos;
     while (mReadPos != mLastFlushPos) {
-      profile.Append(mEntries[mReadPos].TagToString(this).c_str());
+      ProfileEntry entry = mEntries[mReadPos];
       mReadPos = (mReadPos + 1) % mEntrySize;
+      switch (entry.mTagName) {
+        case 's':
+          sample = b.CreateObject();
+          b.DefineProperty(sample, "name", entry.mTagData);
+          frames = b.CreateArray();
+          b.DefineProperty(sample, "frames", frames);
+          b.ArrayPush(samples, sample);
+          break;
+        case 'c':
+        case 'l':
+          {
+            if (sample) {
+              JSObject *frame = b.CreateObject();
+              b.DefineProperty(frame, "location", entry.mTagData);
+              b.ArrayPush(frames, frame);
+            }
+          }
+      }
     }
     mReadPos = oldReadPos;
+
+    return profile;
   }
 
   void WriteProfile(FILE* stream)
   {
-    if (mNeedsSharedLibraryInfo) {
-      // Can't be called from signal because
-      // getting the shared library information can call non-reentrant functions.
-      mSharedLibraryInfo = SharedLibraryInfo::GetInfoForSelf();
-    }
-
-    //XXX: this code is not thread safe and needs to be fixed
-    int oldReadPos = mReadPos;
-    while (mReadPos != mLastFlushPos) {
-      string tag = mEntries[mReadPos].TagToString(this);
+    int readPos = mReadPos;
+    while (readPos != mLastFlushPos) {
+      string tag = mEntries[readPos].TagToString(this);
       fwrite(tag.data(), 1, tag.length(), stream);
-      mReadPos = (mReadPos + 1) % mEntrySize;
+      readPos = (readPos + 1) % mEntrySize;
     }
-    mReadPos = oldReadPos;
-  }
-
-  SharedLibraryInfo& getSharedLibraryInfo()
-  {
-    return mSharedLibraryInfo;
   }
 private:
   // Circular buffer 'Keep One Slot Open' implementation
@@ -297,8 +316,6 @@ private:
   int mLastFlushPos; // points to the next entry since the last flush()
   int mReadPos;  // points to the next entry we will read to
   int mEntrySize;
-  bool mNeedsSharedLibraryInfo;
-  SharedLibraryInfo mSharedLibraryInfo;
 };
 
 class SaveProfileTask;
@@ -468,7 +485,11 @@ void TableTicker::doBacktrace(Profile &aProfile, Address fp)
     0
   };
 #ifdef XP_MACOSX
-  nsresult rv = FramePointerStackWalk(StackWalkCallback, 1, &array, reinterpret_cast<void**>(fp));
+  pthread_t pt = GetProfiledThread(platform_data());
+  void *stackEnd = reinterpret_cast<void*>(-1);
+  if (pt)
+    stackEnd = static_cast<char*>(pthread_get_stackaddr_np(pt)) - pthread_get_stacksize_np(pt);
+  nsresult rv = FramePointerStackWalk(StackWalkCallback, 1, &array, reinterpret_cast<void**>(fp), stackEnd);
 #else
   nsresult rv = NS_StackWalk(StackWalkCallback, 0, &array, thread);
 #endif
@@ -570,54 +591,20 @@ string ProfileEntry::TagToString(Profile *profile)
     snprintf(buff, 50, "%-40f", mTagFloat);
     tag += string(1, mTagName) + string("-") + string(buff) + string("\n");
   } else if (mTagName == 'l') {
-    bool found = false;
     char tagBuff[1024];
-    SharedLibraryInfo& shlibInfo = profile->getSharedLibraryInfo();
     Address pc = mTagAddress;
-    // TODO Use binary sort (STL)
-    for (size_t i = 0; i < shlibInfo.GetSize(); i++) {
-      SharedLibrary &e = shlibInfo.GetEntry(i);
-      if (pc > (Address)e.GetStart() && pc < (Address)e.GetEnd()) {
-        if (e.GetName()) {
-          found = true;
-
-          snprintf(tagBuff, 1024, "l-%s@%p\n", e.GetName(), pc - e.GetStart());
-          tag += string(tagBuff);
-
-          break;
-        }
-      }
-    }
-    if (!found) {
-      snprintf(tagBuff, 1024, "l-???@%p\n", pc);
-      tag += string(tagBuff);
-    }
+    snprintf(tagBuff, 1024, "l-%p\n", pc);
+    tag += string(tagBuff);
   } else {
     tag += string(1, mTagName) + string("-") + string(mTagData) + string("\n");
   }
 
 #ifdef ENABLE_SPS_LEAF_DATA
   if (mLeafAddress) {
-    bool found = false;
     char tagBuff[1024];
-    SharedLibraryInfo& shlibInfo = profile->getSharedLibraryInfo();
     unsigned long pc = (unsigned long)mLeafAddress;
-    // TODO Use binary sort (STL)
-    for (size_t i = 0; i < shlibInfo.GetSize(); i++) {
-      SharedLibrary &e = shlibInfo.GetEntry(i);
-      if (pc > e.GetStart() && pc < e.GetEnd()) {
-        if (e.GetName()) {
-          found = true;
-          snprintf(tagBuff, 1024, "l-%900s@%llu\n", e.GetName(), pc - e.GetStart());
-          tag += string(tagBuff);
-          break;
-        }
-      }
-    }
-    if (!found) {
-      snprintf(tagBuff, 1024, "l-???@%llu\n", pc);
-      tag += string(tagBuff);
-    }
+    snprintf(tagBuff, 1024, "l-%llu\n", pc);
+    tag += string(tagBuff);
   }
 #endif
   return tag;
@@ -688,6 +675,17 @@ char* mozilla_sampler_get_profile()
   strcpy(rtn, profile.Buffer());
   return rtn;
 }
+
+JSObject *mozilla_sampler_get_profile_data(JSContext *aCx)
+{
+  TableTicker *t = mozilla::tls::get<TableTicker>(pkey_ticker);
+  if (!t) {
+    return NULL;
+  }
+
+  return t->GetProfile()->ToJSObject(aCx);
+}
+
 
 const char** mozilla_sampler_get_features()
 {

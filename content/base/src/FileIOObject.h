@@ -45,8 +45,9 @@
 #include "nsIDOMFile.h"
 #include "nsIStreamListener.h"
 #include "nsITimer.h"
-
 #include "nsCOMPtr.h"
+
+#include "mozilla/dom/DOMError.h"
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
 
@@ -69,7 +70,7 @@ public:
   // Common methods
   NS_METHOD Abort();
   NS_METHOD GetReadyState(PRUint16* aReadyState);
-  NS_METHOD GetError(nsIDOMFileError** aError);
+  NS_METHOD GetError(nsIDOMDOMError** aError);
 
   NS_DECL_AND_IMPL_EVENT_HANDLER(abort);
   NS_DECL_AND_IMPL_EVENT_HANDLER(error);
@@ -108,7 +109,7 @@ protected:
   bool mProgressEventWasDelayed;
   bool mTimerIsActive;
 
-  nsCOMPtr<nsIDOMFileError> mError;
+  nsCOMPtr<nsIDOMDOMError> mError;
   nsCOMPtr<nsIChannel> mChannel;
 
   PRUint16 mReadyState;

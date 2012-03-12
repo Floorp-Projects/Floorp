@@ -199,6 +199,9 @@ CloseIterator(JSContext *cx, JSObject *iterObj);
 extern bool
 UnwindIteratorForException(JSContext *cx, JSObject *obj);
 
+extern void
+UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj);
+
 }
 
 extern bool
