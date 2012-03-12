@@ -76,7 +76,6 @@ jfieldID AndroidGeckoEvent::jLocationField = 0;
 jfieldID AndroidGeckoEvent::jAddressField = 0;
 jfieldID AndroidGeckoEvent::jBandwidthField = 0;
 jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
-jmethodID AndroidGeckoEvent::jDoCallbackMethod = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -208,8 +207,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jAddressField = getField("mAddress", "Landroid/location/Address;");
     jBandwidthField = getField("mBandwidth", "D");
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
-
-    jDoCallbackMethod = getMethod("doCallback", "(Ljava/lang/String;)V");
 }
 
 void
@@ -488,16 +485,6 @@ AndroidGeckoEvent::Init(int aType, nsIntRect const& aRect)
     mRect = aRect;
 }
 
-AndroidGeckoEvent::~AndroidGeckoEvent() {
-    if (!wrapped_obj)
-        return;
-
-    JNIEnv *jenv = GetJNIForThread();
-    if (!jenv)
-        return;
-    jenv->DeleteGlobalRef(wrapped_obj);
-}
-
 void
 AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 {
@@ -507,8 +494,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
     if (!jobj)
         return;
-
-    jenv->NewGlobalRef(jobj);
 
     mAction = jenv->GetIntField(jobj, jActionField);
     mType = jenv->GetIntField(jobj, jTypeField);
@@ -668,15 +653,6 @@ AndroidPoint::Init(JNIEnv *jenv, jobject jobj)
         mX = 0;
         mY = 0;
     }
-}
-
-void
-AndroidGeckoEvent::DoCallback(const nsAString& data) {
-    JNIEnv* env = AndroidBridge::GetJNIEnv();
-    if (!env)
-        return;
-    jstring jData = env->NewString(nsPromiseFlatString(data).get(), data.Length());
-    env->CallVoidMethod(wrapped_obj, jDoCallbackMethod, jData);
 }
 
 void

@@ -334,9 +334,4 @@ public class GeckoEvent {
         mBandwidth = bandwidth;
         mCanBeMetered = canBeMetered;
     }
-
-    public void doCallback(String json) {
-        // this stub is never called in XUL Fennec, but we need it so that the JNI code
-        // shared between XUL and Native Fennec doesn't die.
-    }
 }
