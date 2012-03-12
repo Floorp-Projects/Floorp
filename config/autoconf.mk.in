@@ -699,6 +699,8 @@ MOZ_INSTRUMENT_EVENT_LOOP = @MOZ_INSTRUMENT_EVENT_LOOP@
 
 MOZ_SYSTEM_PLY = @MOZ_SYSTEM_PLY@
 
+MOZ_PACKAGE_JSSHELL = @MOZ_PACKAGE_JSSHELL@
+
 # We only want to do the pymake sanity on Windows, other os's can cope
 ifeq ($(HOST_OS_ARCH),WINNT)
 # Ensure invariants between GNU Make and pymake
