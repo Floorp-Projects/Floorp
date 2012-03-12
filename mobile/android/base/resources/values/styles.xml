@@ -55,6 +55,13 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
+    <!-- AwesomeBar -->
+    <style name="AwesomeBar">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">48dip</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
     <!-- Lists in AwesomeBar -->
     <style name="AwesomeBarList" parent="android:style/Widget.ListView.White">
         <item name="android:layout_width">fill_parent</item>
