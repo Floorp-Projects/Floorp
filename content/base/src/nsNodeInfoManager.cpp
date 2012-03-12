@@ -56,6 +56,8 @@
 #include "nsHashKeys.h"
 #include "nsCCUncollectableMarker.h"
 
+using namespace mozilla;
+
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
 #define FORCE_PR_LOG 1
@@ -75,6 +77,9 @@ nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
     reinterpret_cast<const nsINodeInfo::nsNodeInfoInner *>(key);
 
   if (node->mName) {
+    // Ideally, we'd return node->mName->hash() here.  But that doesn't work at
+    // the moment because node->mName->hash() is not the same as
+    // HashString(*(node->mNameString)).  See bug 732815.
     return HashString(nsDependentAtomString(node->mName));
   }
   return HashString(*(node->mNameString));

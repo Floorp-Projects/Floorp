@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/Assertions.h"
+#include "mozilla/HashFunctions.h"
 
 #include "nsAtomTable.h"
 #include "nsStaticAtom.h"
@@ -50,9 +51,12 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsAutoPtr.h"
+#include "nsUnicharUtils.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "plarena.h"
+
+using namespace mozilla;
 
 /**
  * The shared hash table for atom lookups.
@@ -192,7 +196,7 @@ AtomTableGetHash(PLDHashTable *table, const void *key)
 
   if (k->mUTF8String) {
     bool err;
-    PRUint32 hash = nsCRT::HashCodeAsUTF16(k->mUTF8String, k->mLength, &err);
+    PRUint32 hash = HashUTF8AsUTF16(k->mUTF8String, k->mLength, &err);
     if (err) {
       AtomTableKey* mutableKey = const_cast<AtomTableKey*>(k);
       mutableKey->mUTF8String = nsnull;
@@ -202,7 +206,7 @@ AtomTableGetHash(PLDHashTable *table, const void *key)
     return hash;
   }
 
-  return nsCRT::HashCode(k->mUTF16String, k->mLength);
+  return HashString(k->mUTF16String, k->mLength);
 }
 
 static bool
