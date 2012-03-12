@@ -846,8 +846,8 @@ nsBaseWidget::GetShouldAccelerate()
 
 void nsBaseWidget::CreateCompositor()
 {
-  mCompositorParent = new CompositorParent(this);
   mCompositorThread = new Thread("CompositorThread");
+  mCompositorParent = new CompositorParent(this, mCompositorThread);
   if (mCompositorThread->Start()) {
     LayerManager* lm = CreateBasicLayerManager();
     MessageLoop *childMessageLoop = mCompositorThread->message_loop();
