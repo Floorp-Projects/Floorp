@@ -17,3 +17,6 @@ ac_add_options --enable-warnings-as-errors
 
 # Enable parallel compiling
 mk_add_options MOZ_MAKE_FLAGS="-j4"
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
