@@ -104,6 +104,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
 
         view.setListener(this);
+        view.setLayerRenderer(mLayerRenderer);
         layerController.setRoot(mRootLayer);
 
         sendResizeEventIfNecessary(true);

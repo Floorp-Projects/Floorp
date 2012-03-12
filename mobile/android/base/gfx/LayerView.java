@@ -226,5 +226,14 @@ public class LayerView extends FlexibleGLSurfaceView {
     public IntBuffer getPixels() {
         return mRenderer.getPixels();
     }
+
+    public void setLayerRenderer(LayerRenderer renderer) {
+        mRenderer = renderer;
+        setRenderer(mRenderer);
+    }
+
+    public LayerRenderer getLayerRenderer() {
+        return mRenderer;
+    }
 }
 
