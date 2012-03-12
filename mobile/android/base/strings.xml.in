@@ -35,6 +35,7 @@
   <string name="awesomebar_default_text">&awesomebar_default_text;</string>
   
   <string name="remote_tabs">&remote_tabs;</string>
+  <string name="remote_tabs_show_all">&remote_tabs_show_all;</string>
 
   <string name="quit">&quit;</string>
   <string name="bookmark">&bookmark;</string>

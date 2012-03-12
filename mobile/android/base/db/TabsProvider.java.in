@@ -511,6 +511,7 @@ public class TabsProvider extends ContentProvider {
         final int match = URI_MATCHER.match(uri);
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        String limit = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
 
         switch (match) {
             case TABS_ID:
@@ -555,7 +556,7 @@ public class TabsProvider extends ContentProvider {
 
         trace("Running built query.");
         Cursor cursor = qb.query(db, projection, selection, selectionArgs, null,
-                null, sortOrder, null);
+                null, sortOrder, limit);
         cursor.setNotificationUri(getContext().getContentResolver(),
                 BrowserContract.TABS_AUTHORITY_URI);
 
