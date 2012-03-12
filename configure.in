@@ -4931,6 +4931,10 @@ MOZ_ARG_HEADER(Toolkit Options)
         AC_MSG_ERROR([You must specify a default toolkit (perhaps $_PLATFORM_DEFAULT_TOOLKIT).])
     fi
 
+MOZ_ARG_WITHOUT_BOOL(x,
+[  --without-x              Build without X11],
+    WITHOUT_X11=1)
+
 dnl ========================================================
 dnl = Enable the toolkit as needed                         =
 dnl ========================================================
@@ -4965,16 +4969,17 @@ cairo-gtk2|cairo-gtk2-x11)
 cairo-qt)
     MOZ_WIDGET_TOOLKIT=qt
     MOZ_ENABLE_QT=1
-    MOZ_ENABLE_XREMOTE=1
+    if test -z "$WITHOUT_X11"; then
+      MOZ_ENABLE_XREMOTE=1
+      MOZ_WEBGL_GLX=1
+      MOZ_X11=1
+      AC_DEFINE(MOZ_X11)
+      XT_LIBS=
+    fi
+
     MOZ_WEBGL=1
-    MOZ_WEBGL_GLX=1
     USE_ELF_DYNSTR_GC=
-
-    AC_DEFINE(MOZ_X11)
-    MOZ_X11=1
     USE_FC_FREETYPE=1
-    XT_LIBS=
-
     TK_CFLAGS='$(MOZ_QT_CFLAGS)'
     TK_LIBS='$(MOZ_QT_LIBS)'
     AC_DEFINE(MOZ_WIDGET_QT)
@@ -8843,6 +8848,9 @@ fi
 dnl Check for missing components
 if test "$COMPILE_ENVIRONMENT"; then
 if test "$MOZ_X11"; then
+    if test "$WITHOUT_X11"; then
+        AC_MSG_ERROR([--without-x specified and MOZ_X11 still defined])
+    fi
     dnl ====================================================
     dnl = Check if X headers exist
     dnl ====================================================

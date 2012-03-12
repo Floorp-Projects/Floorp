@@ -111,21 +111,6 @@
        modifiers="accel"/>
   -->
 
-  <key id="key_cut"
-       key="&cutCmd.key;"
-       modifiers="accel"/>
-
-  <key id="key_copy"
-       key="&copyCmd.key;"
-       modifiers="accel"/>
-  <key id="key_paste"
-       key="&pasteCmd.key;"
-       modifiers="accel"/>
-  <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
-  <key id="key_undo" key="&undoCmd.key;" modifiers="accel"
-       command="se-cmd-undo"/>
-  <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift"
-       command="se-cmd-redo"/>
   <key id="sp-key-run"
        key="&run.key;"
        command="sp-cmd-run"
@@ -146,28 +131,6 @@
        key="&webConsoleCmd.commandkey;"
        command="sp-cmd-webConsole"
        modifiers="accel,shift"/>
-  <key id="key_find"
-       key="&findCmd.key;"
-       command="cmd_find"
-       modifiers="accel"/>
-#ifdef XP_MACOSX
-  <key id="key_findAgain"
-       key="&findAgainCmd.key;"
-       command="cmd_findAgain"
-       modifiers="accel"/>
-  <key id="key_findPrevious"
-       key="&findPreviousCmd.key;"
-       command="cmd_findPrevious"
-       modifiers="accel,shift"/>
-#else
-  <key id="key_findAgain"
-       keycode="VK_F3"
-       command="cmd_findAgain"/>
-  <key id="key_findPrevious"
-       keycode="VK_F3"
-       command="cmd_findPrevious"
-       modifiers="shift"/>
-#endif
   <key id="key_openHelp"
        keycode="VK_F1"
        command="sp-cmd-documentationLink"/>
@@ -219,56 +182,20 @@
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
     <menupopup id="sp-menu_editpopup"
-               onpopupshowing="goUpdateGlobalEditMenuItems()">
-      <menuitem id="sp-menu-undo"
-                label="&undoCmd.label;"
-                key="key_undo"
-                accesskey="&undoCmd.accesskey;"
-                command="se-cmd-undo"/>
-      <menuitem id="sp-menu-redo"
-                label="&redoCmd.label;"
-                key="key_redo"
-                accesskey="&redoCmd.accesskey;"
-                command="se-cmd-redo"/>
+               onpopupshowing="goUpdateSourceEditorMenuItems()">
+      <menuitem id="se-menu-undo"/>
+      <menuitem id="se-menu-redo"/>
       <menuseparator/>
-      <menuitem id="sp-menu-cut"
-                label="&cutCmd.label;"
-                key="key_cut"
-                accesskey="&cutCmd.accesskey;"
-                command="cmd_cut"/>
-      <menuitem id="sp-menu-copy"
-                label="&copyCmd.label;"
-                key="key_copy"
-                accesskey="&copyCmd.accesskey;"
-                command="cmd_copy"/>
-      <menuitem id="sp-menu-paste"
-                label="&pasteCmd.label;"
-                key="key_paste"
-                accesskey="&pasteCmd.accesskey;"
-                command="cmd_paste"/>
+      <menuitem id="se-menu-cut"/>
+      <menuitem id="se-menu-copy"/>
+      <menuitem id="se-menu-paste"/>
       <menuseparator/>
-      <menuitem id="sp-menu-selectAll"
-                label="&selectAllCmd.label;"
-                key="key_selectAll"
-                accesskey="&selectAllCmd.accesskey;"
-                command="cmd_selectAll"/>
+      <menuitem id="se-menu-selectAll"/>
       <menuseparator/>
-      <menuitem id="sp-menu-find"
-                label="&findCmd.label;"
-                accesskey="&findCmd.accesskey;"
-                key="key_find"
-                command="cmd_find"/>
-      <menuitem id="sp-menu-findAgain"
-                label="&findAgainCmd.label;"
-                accesskey="&findAgainCmd.accesskey;"
-                key="key_findAgain"
-                command="cmd_findAgain"/>
+      <menuitem id="se-menu-find"/>
+      <menuitem id="se-menu-findAgain"/>
       <menuseparator/>
-      <menuitem id="sp-menu-gotoLine"
-                label="&gotoLineCmd.label;"
-                accesskey="&gotoLineCmd.accesskey;"
-                key="key_gotoLine"
-                command="cmd_gotoLine"/>
+      <menuitem id="se-menu-gotoLine"/>
     </menupopup>
   </menu>
 
@@ -338,13 +265,13 @@
 
 <popupset id="scratchpad-popups">
   <menupopup id="scratchpad-text-popup"
-             onpopupshowing="goUpdateGlobalEditMenuItems()">
-    <menuitem id="menu_cut"/>
-    <menuitem id="menu_copy"/>
-    <menuitem id="menu_paste"/>
-    <menuitem id="menu_delete"/>
+             onpopupshowing="goUpdateSourceEditorMenuItems()">
+    <menuitem id="se-cMenu-cut"/>
+    <menuitem id="se-cMenu-copy"/>
+    <menuitem id="se-cMenu-paste"/>
+    <menuitem id="se-cMenu-delete"/>
     <menuseparator/>
-    <menuitem id="menu_selectAll"/>
+    <menuitem id="se-cMenu-selectAll"/>
     <menuseparator/>
     <menuitem id="sp-text-run"
               label="&run.label;"
@@ -370,7 +297,7 @@
 </popupset>
 
 <notificationbox id="scratchpad-notificationbox" flex="1">
-  <hbox id="scratchpad-editor" flex="1" context="scratchpad-text-popup" />
+  <hbox id="scratchpad-editor" flex="1"/>
 </notificationbox>
 
 </window>

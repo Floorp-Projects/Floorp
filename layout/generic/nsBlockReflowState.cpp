@@ -149,22 +149,6 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mMinLineHeight = aReflowState.CalcLineHeight();
 }
 
-nsLineBox*
-nsBlockReflowState::NewLineBox(nsIFrame* aFrame,
-                               PRInt32 aCount,
-                               bool aIsBlock)
-{
-  return NS_NewLineBox(mPresContext->PresShell(), aFrame, aCount, aIsBlock);
-}
-
-void
-nsBlockReflowState::FreeLineBox(nsLineBox* aLine)
-{
-  if (aLine) {
-    aLine->Destroy(mPresContext->PresShell());
-  }
-}
-
 void
 nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
                                                          const nsRect& aFloatAvailableSpace,

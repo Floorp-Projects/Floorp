@@ -930,13 +930,14 @@ nsHtml5TreeOpExecutor::ConvertIfNotPreloadedYet(const nsAString& aURL)
 void
 nsHtml5TreeOpExecutor::PreloadScript(const nsAString& aURL,
                                      const nsAString& aCharset,
-                                     const nsAString& aType)
+                                     const nsAString& aType,
+                                     const nsAString& aCrossOrigin)
 {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYet(aURL);
   if (!uri) {
     return;
   }
-  mDocument->ScriptLoader()->PreloadURI(uri, aCharset, aType);
+  mDocument->ScriptLoader()->PreloadURI(uri, aCharset, aType, aCrossOrigin);
 }
 
 void

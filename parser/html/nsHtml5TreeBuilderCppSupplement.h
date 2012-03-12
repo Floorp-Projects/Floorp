@@ -108,11 +108,9 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
           if (url) {
             nsString* crossOrigin =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
-            if (crossOrigin) {
-              mSpeculativeLoadQueue.AppendElement()->InitImage(*url, *crossOrigin);
-            } else {
-              mSpeculativeLoadQueue.AppendElement()->InitImage(*url, EmptyString());
-            }
+            mSpeculativeLoadQueue.AppendElement()->
+              InitImage(*url,
+                        crossOrigin ? *crossOrigin : NullString());
           }
         } else if (nsHtml5Atoms::script == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -123,9 +121,13 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
           if (url) {
             nsString* charset = aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
             nsString* type = aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
-            mSpeculativeLoadQueue.AppendElement()->InitScript(*url,
-                                                   (charset) ? *charset : EmptyString(),
-                                                   (type) ? *type : EmptyString());
+            nsString* crossOrigin =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+            mSpeculativeLoadQueue.AppendElement()->
+              InitScript(*url,
+                         (charset) ? *charset : EmptyString(),
+                         (type) ? *type : EmptyString(),
+                         (crossOrigin) ? *crossOrigin : NullString());
             mCurrentHtmlScriptIsAsyncOrDefer = 
               aAttributes->contains(nsHtml5AttributeName::ATTR_ASYNC) ||
               aAttributes->contains(nsHtml5AttributeName::ATTR_DEFER);
@@ -145,7 +147,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
         } else if (nsHtml5Atoms::video == aName) {
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_POSTER);
           if (url) {
-            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, EmptyString());
+            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, NullString());
           }
         } else if (nsHtml5Atoms::style == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -170,7 +172,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
         if (nsHtml5Atoms::image == aName) {
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
           if (url) {
-            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, EmptyString());
+            mSpeculativeLoadQueue.AppendElement()->InitImage(*url, NullString());
           }
         } else if (nsHtml5Atoms::script == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -180,9 +182,13 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_XLINK_HREF);
           if (url) {
             nsString* type = aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
-            mSpeculativeLoadQueue.AppendElement()->InitScript(*url,
-                                                   EmptyString(),
-                                                   (type) ? *type : EmptyString());
+            nsString* crossOrigin =
+              aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
+            mSpeculativeLoadQueue.AppendElement()->
+              InitScript(*url,
+                         EmptyString(),
+                         (type) ? *type : EmptyString(),
+                         (crossOrigin) ? *crossOrigin : NullString());
           }
         } else if (nsHtml5Atoms::style == aName) {
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
