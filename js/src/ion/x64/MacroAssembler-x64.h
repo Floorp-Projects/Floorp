@@ -148,6 +148,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadValue(const BaseIndex &src, ValueOperand val) {
         loadValue(Operand(src), val);
     }
+    void tagValue(JSValueType type, Register payload, ValueOperand dest) {
+        JS_ASSERT(dest.valueReg() != ScratchReg);
+        if (payload != dest.valueReg())
+            movq(payload, dest.valueReg());
+        movq(ImmShiftedTag(type), ScratchReg);
+        orq(Operand(ScratchReg), dest.valueReg());
+    }
     void pushValue(ValueOperand val) {
         push(val.valueReg());
     }
@@ -290,6 +297,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void cmpPtr(const Address &lhs, const ImmGCPtr rhs) {
         cmpPtr(Operand(lhs), rhs);
     }
+    void cmpPtr(const Operand &lhs, const Register &rhs) {
+        cmpq(lhs, rhs);
+    }
+    void cmpPtr(const Address &lhs, const Register &rhs) {
+        cmpPtr(Operand(lhs), rhs);
+    }
     void cmpPtr(const Register &lhs, const Register &rhs) {
         return cmpq(lhs, rhs);
     }
@@ -318,6 +331,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void addPtr(Imm32 imm, const Register &dest) {
         addq(imm, dest);
     }
+    void addPtr(Imm32 imm, const Address &dest) {
+        addq(imm, Operand(dest));
+    }
     void subPtr(Imm32 imm, const Register &dest) {
         subq(imm, dest);
     }
@@ -340,6 +356,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         cmpPtr(lhs, rhs);
+        j(cond, label);
+    }
+    void branchTestPtr(Condition cond, Register lhs, Register rhs, Label *label) {
+        testq(lhs, rhs);
         j(cond, label);
     }
 

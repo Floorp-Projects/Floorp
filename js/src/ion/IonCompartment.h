@@ -244,6 +244,10 @@ class IonActivation
     Kind kind() const {
         return kind_;
     }
+
+    static inline size_t offsetOfSavedEnumerators() {
+        return offsetof(IonActivation, savedEnumerators_);
+    }
 };
 
 } // namespace ion

@@ -104,7 +104,7 @@ LIRGenerator::visitGoto(MGoto *ins)
 bool
 LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
-    LCheckOverRecursed *lir = new LCheckOverRecursed(temp(LDefinition::GENERAL));
+    LCheckOverRecursed *lir = new LCheckOverRecursed(temp());
 
     if (!add(lir))
         return false;
@@ -118,7 +118,7 @@ bool
 LIRGenerator::visitDefVar(MDefVar *ins)
 {
     LAllocation scopeChain = useRegister(ins->scopeChain());
-    LDefVar *lir = new LDefVar(scopeChain, temp(LDefinition::GENERAL));
+    LDefVar *lir = new LDefVar(scopeChain, temp());
 
     lir->setMir(ins);
 
@@ -968,7 +968,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
 {
     // Requesting a non-GC pointer is safe here since we never re-enter C++
     // from inside a type barrier test.
-    LTypeBarrier *barrier = new LTypeBarrier(temp(LDefinition::GENERAL));
+    LTypeBarrier *barrier = new LTypeBarrier(temp());
     if (!useBox(barrier, LTypeBarrier::Input, ins->input()))
         return false;
     if (!assignSnapshot(barrier, ins->bailoutKind()))
@@ -981,7 +981,7 @@ LIRGenerator::visitMonitorTypes(MMonitorTypes *ins)
 {
     // Requesting a non-GC pointer is safe here since we never re-enter C++
     // from inside a type check.
-    LMonitorTypes *lir = new LMonitorTypes(temp(LDefinition::GENERAL));
+    LMonitorTypes *lir = new LMonitorTypes(temp());
     if (!useBox(lir, LMonitorTypes::Input, ins->input()))
         return false;
     return assignSnapshot(lir, Bailout_Monitor) && add(lir, ins);
@@ -1061,7 +1061,7 @@ LIRGenerator::visitBoundsCheck(MBoundsCheck *ins)
     if (ins->minimum() || ins->maximum()) {
         check = new LBoundsCheckRange(useRegisterOrConstant(ins->index()),
                                       useRegister(ins->length()),
-                                      temp(LDefinition::GENERAL));
+                                      temp());
     } else {
         check = new LBoundsCheck(useRegisterOrConstant(ins->index()),
                                  useRegister(ins->length()));
@@ -1235,7 +1235,7 @@ LIRGenerator::visitBindNameCache(MBindNameCache *ins)
 bool
 LIRGenerator::visitGuardClass(MGuardClass *ins)
 {
-    LDefinition t = temp(LDefinition::GENERAL);
+    LDefinition t = temp();
     LGuardClass *guard = new LGuardClass(useRegister(ins->obj()), t);
     return assignSnapshot(guard) && add(guard, ins);
 }
@@ -1342,28 +1342,34 @@ LIRGenerator::visitCallSetElement(MCallSetElement *ins)
 bool
 LIRGenerator::visitIteratorStart(MIteratorStart *ins)
 {
-    LCallIteratorStart *lir = new LCallIteratorStart(useRegister(ins->object()));
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    // Call a stub if this is not a simple for-in loop.
+    if (ins->flags() != JSITER_ENUMERATE) {
+        LCallIteratorStart *lir = new LCallIteratorStart(useRegister(ins->object()));
+        return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    }
+
+    LIteratorStart *lir = new LIteratorStart(useRegister(ins->object()), temp(), temp(), temp());
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
 LIRGenerator::visitIteratorNext(MIteratorNext *ins)
 {
-    LCallIteratorNext *lir = new LCallIteratorNext(useRegister(ins->iterator()));
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    LIteratorNext *lir = new LIteratorNext(useRegister(ins->iterator()), temp());
+    return defineBox(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
 LIRGenerator::visitIteratorMore(MIteratorMore *ins)
 {
-    LCallIteratorMore *lir = new LCallIteratorMore(useRegister(ins->iterator()));
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    LIteratorMore *lir = new LIteratorMore(useRegister(ins->iterator()), temp());
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
 LIRGenerator::visitIteratorEnd(MIteratorEnd *ins)
 {
-    LCallIteratorEnd *lir = new LCallIteratorEnd(useRegister(ins->iterator()));
+    LIteratorEnd *lir = new LIteratorEnd(useRegister(ins->iterator()), temp(), temp());
     return add(lir, ins) && assignSafepoint(lir, ins);
 }
 

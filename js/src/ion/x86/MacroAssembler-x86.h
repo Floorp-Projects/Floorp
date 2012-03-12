@@ -172,6 +172,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadValue(const BaseIndex &src, ValueOperand val) {
         loadValue(Operand(src), val);
     }
+    void tagValue(JSValueType type, Register payload, ValueOperand dest) {
+        JS_ASSERT(payload != dest.typeReg());
+        movl(ImmType(type), dest.typeReg());
+        if (payload != dest.payloadReg())
+            movl(payload, dest.payloadReg());
+    }
     void pushValue(ValueOperand val) {
         push(val.typeReg());
         push(val.payloadReg());
@@ -333,6 +339,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void cmpPtr(const Operand &lhs, const ImmGCPtr rhs) {
         cmpl(lhs, rhs);
     }
+    void cmpPtr(const Address &lhs, const Register &rhs) {
+        cmpl(Operand(lhs), rhs);
+    }
     void testPtr(const Register &lhs, const Register &rhs) {
         return testl(lhs, rhs);
     }
@@ -358,6 +367,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void addPtr(Imm32 imm, const Register &dest) {
         addl(imm, dest);
     }
+    void addPtr(Imm32 imm, const Address &dest) {
+        addl(imm, Operand(dest));
+    }
     void subPtr(Imm32 imm, const Register &dest) {
         subl(imm, dest);
     }
@@ -379,6 +391,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         cmpl(lhs, rhs);
+        j(cond, label);
+    }
+    void branchTestPtr(Condition cond, Register lhs, Register rhs, Label *label) {
+        testl(lhs, rhs);
         j(cond, label);
     }
 

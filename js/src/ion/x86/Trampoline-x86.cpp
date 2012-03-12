@@ -548,7 +548,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Initialize the context parameter.
     Register cxreg = regs.takeAny();
-    masm.loadJSContext(cx->runtime, cxreg);
+    masm.loadJSContext(cxreg);
     masm.passABIArg(cxreg);
 
     size_t argDisp = 0;
