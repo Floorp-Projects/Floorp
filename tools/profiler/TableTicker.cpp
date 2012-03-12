@@ -279,7 +279,7 @@ public:
       switch (entry.mTagName) {
         case 's':
           sample = b.CreateObject();
-          b.DefineProperty(sample, "name", entry.mTagData);
+          b.DefineProperty(sample, "name", (const char*)entry.mTagData);
           frames = b.CreateArray();
           b.DefineProperty(sample, "frames", frames);
           b.ArrayPush(samples, sample);
@@ -289,7 +289,10 @@ public:
           {
             if (sample) {
               JSObject *frame = b.CreateObject();
-              b.DefineProperty(frame, "location", entry.mTagData);
+              char tagBuff[1024];
+              void* pc = (void*)entry.mTagData;
+              snprintf(tagBuff, 1024, "%p", pc);
+              b.DefineProperty(frame, "location", tagBuff);
               b.ArrayPush(frames, frame);
             }
           }
@@ -370,6 +373,8 @@ class TableTicker: public Sampler {
     return &mPrimaryThreadProfile;
   }
 
+  JSObject *ToJSObject(JSContext *aCx);
+
 private:
   // Not implemented on platforms which do not support backtracing
   void doBacktrace(ThreadProfile &aProfile, Address pc);
@@ -436,6 +441,26 @@ void TableTicker::HandleSaveRequest()
   // without XPCOM.
   nsCOMPtr<nsIRunnable> runnable = new SaveProfileTask();
   NS_DispatchToMainThread(runnable);
+}
+
+JSObject* TableTicker::ToJSObject(JSContext *aCx)
+{
+  JSObjectBuilder b(aCx);
+
+  JSObject *profile = b.CreateObject();
+
+  // Put meta data
+  // TODO: List things like feature, version number, profile time start/end
+
+  // Lists the samples for each ThreadProfile
+  JSObject *threads = b.CreateArray();
+  b.DefineProperty(profile, "threads", threads);
+
+  // For now we only have one thread
+  JSObject* threadSamples = GetPrimaryThreadProfile()->ToJSObject(aCx);
+  b.ArrayPush(threads, threadSamples);
+
+  return profile;
 }
 
 
@@ -685,7 +710,7 @@ JSObject *mozilla_sampler_get_profile_data(JSContext *aCx)
     return NULL;
   }
 
-  return t->GetPrimaryThreadProfile()->ToJSObject(aCx);
+  return t->ToJSObject(aCx);
 }
 
 
