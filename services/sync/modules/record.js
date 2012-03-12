@@ -88,8 +88,11 @@ WBORecord.prototype = {
   // Take a base URI string, with trailing slash, and return the URI of this
   // WBO based on collection and ID.
   uri: function(base) {
-    if (this.collection && this.id)
-      return Utils.makeURL(base + this.collection + "/" + this.id);
+    if (this.collection && this.id) {
+      let url = Utils.makeURI(base + this.collection + "/" + this.id);
+      url.QueryInterface(Ci.nsIURL);
+      return url;
+    }
     return null;
   },
 

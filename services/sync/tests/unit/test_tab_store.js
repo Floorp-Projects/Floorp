@@ -80,7 +80,7 @@ function fakeSessionSvc(url, numtabs) {
       if (numtabs) {
         let tabs = obj.windows[0].tabs;
         for (let i = 0; i < numtabs-1; i++)
-          tabs.push(Utils.deepCopy(tabs[0]));
+          tabs.push(deepCopy(tabs[0]));
       }
       return JSON.stringify(obj);
     }

@@ -456,3 +456,26 @@ RotaryEngine.prototype = {
     }
   }
 };
+
+deepCopy: function deepCopy(thing, noSort) {
+  if (typeof(thing) != "object" || thing == null){
+    return thing;
+  }
+  let ret;
+
+  if (Array.isArray(thing)) {
+    ret = [];
+    for (let i = 0; i < thing.length; i++){
+      ret.push(deepCopy(thing[i], noSort));
+	}
+  } else {
+    ret = {};
+    let props = [p for (p in thing)];
+    if (!noSort){
+      props = props.sort();
+    }
+    props.forEach(function(k) ret[k] = deepCopy(thing[k], noSort));
+  }
+
+  return ret;
+};
