@@ -3321,13 +3321,13 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_NewObjectForConstructor(JSContext *cx, const jsval *vp)
+JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, *vp);
 
-    return js_CreateThis(cx, JSVAL_TO_OBJECT(*vp));
+    return js_CreateThis(cx, Valueify(clasp), JSVAL_TO_OBJECT(*vp));
 }
 
 JS_PUBLIC_API(JSBool)

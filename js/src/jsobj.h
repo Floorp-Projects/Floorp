@@ -1337,7 +1337,7 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType);
 
 // Generic call for constructing |this|.
 extern JSObject *
-js_CreateThis(JSContext *cx, JSObject *callee);
+js_CreateThis(JSContext *cx, js::Class *clasp, JSObject *callee);
 
 extern jsid
 js_CheckForStringIndex(jsid id);
