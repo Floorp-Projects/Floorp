@@ -1,0 +1,16 @@
+export INCLUDE=/c/tools/msvs10/vc/include:/c/tools/msvs10/vc/atlmfc/include:/c/tools/sdks/v7.0/include:/c/tools/sdks/v7.0/include/atl:/c/tools/sdks/dx10/include
+export LIBPATH=/c/tools/msvs10/vc/lib/amd64:/c/tools/msvs10/vc/atlmfc/lib/amd64
+export LIB=/c/tools/msvs10/vc/lib/amd64:/c/tools/msvs10/vc/atlmfc/lib/amd64:/c/tools/sdks/v7.0/lib/x64:/c/tools/sdks/dx10/lib/x64
+export PATH="/c/tools/msvs10/Common7/IDE:/c/tools/msvs10/VC/BIN/amd64:/c/tools/msvs10/VC/BIN/x86_amd64:/c/tools/msvs10/VC/BIN:/c/tools/msvs10/Common7/Tools:/c/tools/msvs10/VC/VCPackages:${PATH}"
+export WIN32_REDIST_DIR=/c/tools/msvs10/VC/redist/x64/Microsoft.VC100.CRT
+
+# Use 32bit linker for PGO crash bug.
+# https://connect.microsoft.com/VisualStudio/feedback/details/686117/
+export LD=/c/tools/msvs10/VC/BIN/x86_amd64/link.exe
+
+
+mk_add_options "export LIB=$LIB"
+mk_add_options "export LIBPATH=$LIBPATH"
+mk_add_options "export PATH=$PATH"
+mk_add_options "export INCLUDE=$INCLUDE"
+mk_add_options "export WIN32_REDIST_DIR=$WIN32_REDIST_DIR"
