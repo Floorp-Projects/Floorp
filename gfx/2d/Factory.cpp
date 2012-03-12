@@ -152,7 +152,7 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 #ifdef WIN32
   case NATIVE_FONT_GDI_FONT_FACE:
     {
-      return new ScaledFontWin(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
+      return new ScaledFontWin(static_cast<gfxGDIFont*>(aNativeFont.mFont), aSize);
     }
 #endif
   case NATIVE_FONT_SKIA_FONT_FACE:
