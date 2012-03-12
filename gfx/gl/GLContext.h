@@ -1691,7 +1691,6 @@ protected:
     GLint mMaxTextureSize;
     GLint mMaxTextureImageSize;
     GLint mMaxRenderbufferSize;
-    bool mSupport_ES_ReadPixels_BGRA_UByte;
 
 public:
  
