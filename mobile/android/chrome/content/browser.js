@@ -147,7 +147,7 @@ var Strings = {};
 
 var MetadataProvider = {
   getDrawMetadata: function getDrawMetadata() {
-    return BrowserApp.getDrawMetadata();
+    return JSON.stringify(BrowserApp.selectedTab.getViewport());
   },
 
   paintingSuppressed: function paintingSuppressed() {
@@ -837,12 +837,6 @@ var BrowserApp = {
     }
   },
 
-  getDrawMetadata: function getDrawMetadata() {
-    let viewport = this.selectedTab.viewport;
-
-    return JSON.stringify(viewport);
-  },
-
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
     if (!browser)
@@ -908,7 +902,7 @@ var BrowserApp = {
     } else if (aTopic == "FullScreen:Exit") {
       browser.contentDocument.mozCancelFullScreen();
     } else if (aTopic == "Viewport:Change") {
-      this.selectedTab.viewport = JSON.parse(aData);
+      this.selectedTab.setViewport(JSON.parse(aData));
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
@@ -1580,7 +1574,7 @@ Tab.prototype = {
     if (!this.browser.contentDocument.documentElement)
       return;
 
-    let viewport = this.viewport;
+    let viewport = this.getViewport();
 
     // we need to avoid having a display port that is larger than the page, or we will end up
     // painting things outside the page bounds (bug 729169)
@@ -1648,7 +1642,7 @@ Tab.prototype = {
                                  this.browser.contentDocument.documentElement);
   },
 
-  set viewport(aViewport) {
+  setViewport: function(aViewport) {
     // Transform coordinates based on zoom
     aViewport.x /= aViewport.zoom;
     aViewport.y /= aViewport.zoom;
@@ -1658,21 +1652,23 @@ Tab.prototype = {
     win.scrollTo(aViewport.x, aViewport.y);
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
-
-    // Set zoom level
-    let zoom = aViewport.zoom;
-    if (Math.abs(zoom - this._zoom) >= 1e-6) {
-      this._zoom = zoom;
-      let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
-      cwu.setResolution(zoom, zoom);
-    }
+    this.setResolution(aViewport.zoom);
 
     // always refresh display port when we scroll so that we can clip it to page bounds
     this.refreshDisplayPort(aViewport.displayPortMargins);
   },
 
-  get viewport() {
+  setResolution: function(aZoom) {
+    // Set zoom level
+    if (Math.abs(aZoom - this._zoom) >= 1e-6) {
+      this._zoom = aZoom;
+      let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      cwu.setResolution(aZoom, aZoom);
+    }
+  },
+
+  getViewport: function() {
     let viewport = {
       width: gScreenWidth,
       height: gScreenHeight,
@@ -1681,7 +1677,7 @@ Tab.prototype = {
       zoom: this._zoom
     };
 
-    // Update the viewport to current dimensions
+    // Set the viewport offset to current scroll offset
     viewport.x = this.browser.contentWindow.scrollX || 0;
     viewport.y = this.browser.contentWindow.scrollY || 0;
 
@@ -2371,7 +2367,7 @@ var BrowserEventHandler = {
       const maxDifference = 20;
       let rect = ElementTouchHelper.getBoundingContentRect(element);
 
-      let viewport = BrowserApp.selectedTab.viewport;
+      let viewport = BrowserApp.selectedTab.getViewport();
       let vRect = new Rect(viewport.x, viewport.y, viewport.width, viewport.height);
 
       let zoom = viewport.zoom;
@@ -2978,7 +2974,7 @@ var FormAssistant = {
   // the form assist popup.
   _getElementPositionData: function _getElementPositionData(aElement) {
     let rect = ElementTouchHelper.getBoundingContentRect(aElement);
-    let viewport = BrowserApp.selectedTab.viewport;
+    let viewport = BrowserApp.selectedTab.getViewport();
     
     return { rect: [rect.x - (viewport.x / viewport.zoom),
                     rect.y - (viewport.y / viewport.zoom),
@@ -4266,7 +4262,7 @@ OverscrollController.prototype = {
     if (aCommand != "cmd_linePrevious" && aCommand != "cmd_scrollPageUp")
       return false;
 
-    return (this.tab.viewport.y == 0);
+    return (this.tab.getViewport().y == 0);
   },
 
   isCommandEnabled : function isCommandEnabled(aCommand) {
