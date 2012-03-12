@@ -139,62 +139,63 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
     frame = offsetElm->GetPrimaryFrame();
   }
 
-  nsTArray<TextAttr*> textAttrArray(9);
-
   // "language" text attribute
   LangTextAttr langTextAttr(mHyperTextAcc, hyperTextElm, offsetNode);
-  textAttrArray.AppendElement(&langTextAttr);
 
   // "text-position" text attribute
   CSSTextAttr posTextAttr(0, hyperTextElm, offsetElm);
-  textAttrArray.AppendElement(&posTextAttr);
 
   // "background-color" text attribute
   BGColorTextAttr bgColorTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(&bgColorTextAttr);
 
   // "color" text attribute
   ColorTextAttr colorTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(&colorTextAttr);
 
   // "font-family" text attribute
   FontFamilyTextAttr fontFamilyTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(&fontFamilyTextAttr);
 
   // "font-size" text attribute
   FontSizeTextAttr fontSizeTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(&fontSizeTextAttr);
 
   // "font-style" text attribute
   FontStyleTextAttr fontStyleTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(&fontStyleTextAttr);
 
   // "font-weight" text attribute
   FontWeightTextAttr fontWeightTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(&fontWeightTextAttr);
 
   // "text-underline(line-through)-style(color)" text attributes
   TextDecorTextAttr textDecorTextAttr(rootFrame, frame);
-  textAttrArray.AppendElement(&textDecorTextAttr);
+
+  TextAttr* attrArray[] =
+  {
+    &langTextAttr,
+    &posTextAttr,
+    &bgColorTextAttr,
+    &colorTextAttr,
+    &fontFamilyTextAttr,
+    &fontSizeTextAttr,
+    &fontStyleTextAttr,
+    &fontWeightTextAttr,
+    &textDecorTextAttr
+  };
 
   // Expose text attributes if applicable.
   if (aAttributes) {
-    PRUint32 len = textAttrArray.Length();
-    for (PRUint32 idx = 0; idx < len; idx++)
-      textAttrArray[idx]->Expose(aAttributes, mIncludeDefAttrs);
+    for (PRUint32 idx = 0; idx < NS_ARRAY_LENGTH(attrArray); idx++)
+      attrArray[idx]->Expose(aAttributes, mIncludeDefAttrs);
   }
 
   // Expose text attributes range where they are applied if applicable.
-  if (mOffsetAcc)
-    GetRange(textAttrArray, aStartHTOffset, aEndHTOffset);
+  if (mOffsetAcc) {
+    GetRange(attrArray, NS_ARRAY_LENGTH(attrArray),
+             aStartHTOffset, aEndHTOffset);
+  }
 }
 
 void
-TextAttrsMgr::GetRange(const nsTArray<TextAttr*>& aTextAttrArray,
+TextAttrsMgr::GetRange(TextAttr* aAttrArray[], PRUint32 aAttrArrayLen,
                        PRInt32* aStartHTOffset, PRInt32* aEndHTOffset)
 {
-  PRUint32 attrLen = aTextAttrArray.Length();
-
   // Navigate backward from anchor accessible to find start offset.
   for (PRInt32 childIdx = mOffsetAccIdx - 1; childIdx >= 0; childIdx--) {
     nsAccessible *currAcc = mHyperTextAcc->GetChildAt(childIdx);
@@ -209,8 +210,8 @@ TextAttrsMgr::GetRange(const nsTArray<TextAttr*>& aTextAttrArray,
       return;
 
     bool offsetFound = false;
-    for (PRUint32 attrIdx = 0; attrIdx < attrLen; attrIdx++) {
-      TextAttr* textAttr = aTextAttrArray[attrIdx];
+    for (PRUint32 attrIdx = 0; attrIdx < aAttrArrayLen; attrIdx++) {
+      TextAttr* textAttr = aAttrArray[attrIdx];
       if (!textAttr->Equal(currElm)) {
         offsetFound = true;
         break;
@@ -235,8 +236,8 @@ TextAttrsMgr::GetRange(const nsTArray<TextAttr*>& aTextAttrArray,
       return;
 
     bool offsetFound = false;
-    for (PRUint32 attrIdx = 0; attrIdx < attrLen; attrIdx++) {
-      TextAttr* textAttr = aTextAttrArray[attrIdx];
+    for (PRUint32 attrIdx = 0; attrIdx < aAttrArrayLen; attrIdx++) {
+      TextAttr* textAttr = aAttrArray[attrIdx];
 
       // Alter the end offset when text attribute changes its value and stop
       // the search.
