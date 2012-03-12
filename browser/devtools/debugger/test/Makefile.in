@@ -71,7 +71,7 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_script-switching.js \
 	browser_dbg_pause-resume.js \
 	browser_dbg_update-editor-mode.js \
-	browser_dbg_select-line.js \
+	$(warning browser_dbg_select-line.js temporarily disabled due to oranges, see bug 726609) \
 	browser_dbg_clean-exit.js \
 	browser_dbg_bug723069_editor-breakpoints.js \
 	browser_dbg_bug731394_editor-contextmenu.js \
