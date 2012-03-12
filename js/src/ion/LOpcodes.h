@@ -150,9 +150,10 @@
     _(SetPropertyCacheV)            \
     _(SetPropertyCacheT)            \
     _(CallIteratorStart)            \
-    _(CallIteratorNext)             \
-    _(CallIteratorMore)             \
-    _(CallIteratorEnd)              \
+    _(IteratorStart)                \
+    _(IteratorNext)                 \
+    _(IteratorMore)                 \
+    _(IteratorEnd)                  \
     _(ArrayLength)                  \
     _(StringLength)                 \
     _(TypeOfV)                      \

@@ -2063,45 +2063,109 @@ class LCallIteratorStart : public LCallInstructionHelper<1, 1, 0>
     LCallIteratorStart(const LAllocation &object) {
         setOperand(0, object);
     }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
     MIteratorStart *mir() const {
         return mir_->toIteratorStart();
     }
 };
 
-class LCallIteratorNext : public LCallInstructionHelper<BOX_PIECES, 1, 0>
+class LIteratorStart : public LInstructionHelper<1, 1, 3>
 {
   public:
-    LIR_HEADER(CallIteratorNext);
+    LIR_HEADER(IteratorStart);
+
+    LIteratorStart(const LAllocation &object, const LDefinition &temp1,
+                   const LDefinition &temp2, const LDefinition &temp3) {
+        setOperand(0, object);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *temp1() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+    const LDefinition *temp3() {
+        return getTemp(2);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+    MIteratorStart *mir() const {
+        return mir_->toIteratorStart();
+    }
+};
+
+class LIteratorNext : public LInstructionHelper<BOX_PIECES, 1, 1>
+{
+  public:
+    LIR_HEADER(IteratorNext);
     BOX_OUTPUT_ACCESSORS();
 
-    LCallIteratorNext(const LAllocation &iterator) {
+    LIteratorNext(const LAllocation &iterator, const LDefinition &temp) {
         setOperand(0, iterator);
+        setTemp(0, temp);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
     }
     MIteratorNext *mir() const {
         return mir_->toIteratorNext();
     }
 };
 
-class LCallIteratorMore : public LCallInstructionHelper<1, 1, 0>
+class LIteratorMore : public LInstructionHelper<1, 1, 1>
 {
   public:
-    LIR_HEADER(CallIteratorMore);
+    LIR_HEADER(IteratorMore);
 
-    LCallIteratorMore(const LAllocation &iterator) {
+    LIteratorMore(const LAllocation &iterator, const LDefinition &temp) {
         setOperand(0, iterator);
+        setTemp(0, temp);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
     }
     MIteratorMore *mir() const {
         return mir_->toIteratorMore();
     }
 };
 
-class LCallIteratorEnd : public LCallInstructionHelper<0, 1, 0>
+class LIteratorEnd : public LInstructionHelper<0, 1, 2>
 {
   public:
-    LIR_HEADER(CallIteratorEnd);
+    LIR_HEADER(IteratorEnd);
 
-    LCallIteratorEnd(const LAllocation &iterator) {
+    LIteratorEnd(const LAllocation &iterator, const LDefinition &temp1,
+                 const LDefinition &temp2) {
         setOperand(0, iterator);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *temp1() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
     }
     MIteratorEnd *mir() const {
         return mir_->toIteratorEnd();

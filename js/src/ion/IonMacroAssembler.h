@@ -113,6 +113,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     void guardTypeSet(const T &address, types::TypeSet *types, Register scratch,
                       Label *mismatched);
 
+    void loadObjShape(Register objReg, Register dest) {
+        loadPtr(Address(objReg, JSObject::offsetOfShape()), dest);
+    }
     void loadBaseShape(Register objReg, Register dest) {
         loadPtr(Address(objReg, JSObject::offsetOfShape()), dest);
 
@@ -125,10 +128,28 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadBaseShape(objReg, dest);
         loadBaseShapeClass(dest, dest);
     }
+    void branchTestObjClass(Condition cond, Register obj, Register scratch, js::Class *clasp,
+                            Label *label) {
+        loadBaseShape(obj, scratch);
+        branchPtr(cond, Address(scratch, BaseShape::offsetOfClass()), ImmWord(clasp), label);
+    }
 
-    void loadJSContext(JSRuntime *runtime, const Register &dest) {
-        movePtr(ImmWord(runtime), dest);
+    void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
+        loadPtr(Address(obj, JSObject::getPrivateDataOffset(nfixed)), dest);
+    }
+
+    void loadObjProto(Register obj, Register dest) {
+        loadPtr(Address(obj, JSObject::offsetOfType()), dest);
+        loadPtr(Address(dest, offsetof(types::TypeObject, proto)), dest);
+    }
+
+    void loadJSContext(const Register &dest) {
+        movePtr(ImmWord(GetIonContext()->cx->runtime), dest);
         loadPtr(Address(dest, offsetof(JSRuntime, ionJSContext)), dest);
+    }
+    void loadIonActivation(const Register &dest) {
+        movePtr(ImmWord(GetIonContext()->cx->runtime), dest);
+        loadPtr(Address(dest, offsetof(JSRuntime, ionActivation)), dest);
     }
 
     void loadTypedOrValue(Address address, TypedOrValueRegister dest)
