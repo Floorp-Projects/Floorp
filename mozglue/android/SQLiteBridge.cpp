@@ -102,6 +102,21 @@ static jmethodID jCursorConstructor;
 static jmethodID jCursorAddRow;
 
 static void
+JNI_Throw(JNIEnv* jenv, const char* name, const char* msg)
+{
+    jclass cls = jenv->FindClass(name);
+    if (cls == NULL) {
+        LOG("Couldn't find exception class (or exception pending)\n");
+        return;
+    }
+    int rc = jenv->ThrowNew(cls, msg);
+    if (rc < 0) {
+        LOG("Error throwing exception\n");
+    }
+    jenv->DeleteLocalRef(cls);
+}
+
+static void
 JNI_Setup(JNIEnv* jenv)
 {
     if (initialized) return;
