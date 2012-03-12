@@ -151,31 +151,7 @@ var MetadataProvider = {
   },
 
   paintingSuppressed: function paintingSuppressed() {
-    // Get the current tab. Don't suppress painting if there are no tabs yet.
-    let tab = BrowserApp.selectedTab;
-    if (!tab)
-      return false;
-
-    // If the viewport metadata has not yet been updated (and therefore the browser size has not
-    // been changed accordingly), do not draw yet. We'll get an unsightly flash on page transitions
-    // otherwise, because we receive a paint event after the new document is shown but before the
-    // correct browser size for the new document has been set.
-    //
-    // This whole situation exists because the docshell and the browser element are unaware of the
-    // existence of <meta viewport>. Therefore they dispatch paint events without knowledge of the
-    // invariant that the page must not be drawn until the browser size has been appropriately set.
-    // It would be easier if the docshell were made aware of the existence of <meta viewport> so
-    // that this logic could be removed.
-
-    let viewportDocumentId = tab.documentIdForCurrentViewport;
-    let contentDocumentId = ViewportHandler.getIdForDocument(tab.browser.contentDocument);
-    if (viewportDocumentId != null && viewportDocumentId != contentDocumentId)
-      return true;
-
-    // Suppress painting if the current presentation shell is suppressing painting.
-    let cwu = tab.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsIDOMWindowUtils);
-    return cwu.paintingSuppressed;
+    return false;
   }
 };
 
@@ -1456,7 +1432,6 @@ function Tab(aURL, aParams) {
   this.showProgress = true;
   this.create(aURL, aParams);
   this._zoom = 1.0;
-  this.documentIdForCurrentViewport = null;
   this.userScrollPos = { x: 0, y: 0 };
   this._pluginCount = 0;
   this._pluginOverlayShowing = false;
@@ -1582,7 +1557,6 @@ Tab.prototype = {
     BrowserApp.deck.selectedPanel = selectedPanel;
 
     this.browser = null;
-    this.documentIdForCurrentViewport = null;
   },
 
   // This should be called to update the browser when the tab gets selected/unselected
@@ -2260,15 +2234,6 @@ Tab.prototype = {
         let contentDocument = aSubject;
         if (contentDocument == this.browser.contentDocument) {
           ViewportHandler.updateMetadata(this);
-          this.documentIdForCurrentViewport = ViewportHandler.getIdForDocument(contentDocument);
-          // FIXME: This is a workaround for the fact that we suppress draw events.
-          // This means we need to retrigger a draw event here since we might
-          // have suppressed a draw event before documentIdForCurrentViewport
-          // got updated. The real fix is to get rid of suppressing draw events
-          // based on the value of documentIdForCurrentViewport, which we
-          // can do once the docshell and the browser element are aware 
-          // of the existence of <meta viewport>. 
-          this.sendViewportMessage("Viewport:UpdateAndDraw");
         }
         break;
     }
@@ -3248,11 +3213,6 @@ var ViewportHandler = {
   // ES6 weak map lets us avoid leaks.
   _metadata: new WeakMap(),
 
-  // A list of document IDs, arbitrarily assigned. We use IDs to refer to content documents instead
-  // of strong references to avoid leaking them.
-  _documentIds: new WeakMap(),
-  _nextDocumentId: 0,
-
   init: function init() {
     addEventListener("DOMMetaAdded", this, false);
     addEventListener("resize", this, false);
@@ -3408,19 +3368,6 @@ var ViewportHandler = {
       autoScale: true,
       scaleRatio: ViewportHandler.getScaleRatio()
     };
-  },
-
-  /**
-   * Returns a globally unique ID for the given content document. Using IDs to refer to documents
-   * allows content documents to be identified without any possibility of leaking them.
-   */
-  getIdForDocument: function getIdForDocument(aDocument) {
-    let id = this._documentIds.get(aDocument, null);
-    if (id == null) {
-      id = this._nextDocumentId++;
-      this._documentIds.set(aDocument, id);
-    }
-    return id;
   }
 };
 
