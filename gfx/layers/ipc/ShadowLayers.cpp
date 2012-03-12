@@ -128,6 +128,7 @@ struct AutoTxnEnd {
 ShadowLayerForwarder::ShadowLayerForwarder()
  : mShadowManager(NULL)
  , mParentBackend(LayerManager::LAYERS_NONE)
+ , mIsFirstPaint(false)
 {
   mTxn = new Transaction();
 }
@@ -325,11 +326,12 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 
   MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
   RenderTraceScope rendertrace3("Foward Transaction", "000093");
-  if (!mShadowManager->SendUpdate(cset, false, aReplies)) {
+  if (!mShadowManager->SendUpdate(cset, mIsFirstPaint, aReplies)) {
     MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
     return false;
   }
 
+  mIsFirstPaint = false;
   MOZ_LAYERS_LOG(("[LayersForwarder] ... done"));
   return true;
 }

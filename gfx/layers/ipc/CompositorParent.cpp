@@ -58,6 +58,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget)
   : mWidget(aWidget)
   , mCurrentCompositeTask(NULL)
   , mPaused(false)
+  , mIsFirstPaint(false)
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -315,8 +316,9 @@ CompositorParent::RequestViewTransform()
 #endif
 
 void
-CompositorParent::ShadowLayersUpdated()
+CompositorParent::ShadowLayersUpdated(bool isFirstPaint)
 {
+  mIsFirstPaint = mIsFirstPaint || isFirstPaint;
   const nsTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
   NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
                     "can only support at most 1 ShadowLayersParent");
