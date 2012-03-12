@@ -37,16 +37,22 @@
 
 package org.mozilla.gecko.gfx;
 
+import android.util.Log;
 import android.opengl.GLES20;
-import java.util.Stack;
+import java.util.concurrent.ArrayBlockingQueue;
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLContext;
 
 public class TextureGenerator {
-    private static final int MIN_TEXTURES = 5;
+    private static final String LOGTAG = "TextureGenerator";
+    private static final int POOL_SIZE = 5;
 
     private static TextureGenerator sSharedInstance;
-    private Stack<Integer> mTextureIds;
 
-    private TextureGenerator() { mTextureIds = new Stack<Integer>(); }
+    private ArrayBlockingQueue<Integer> mTextureIds;
+    private EGLContext mContext;
+
+    private TextureGenerator() { mTextureIds = new ArrayBlockingQueue<Integer>(POOL_SIZE); }
 
     public static TextureGenerator get() {
         if (sSharedInstance == null)
@@ -55,17 +61,45 @@ public class TextureGenerator {
     }
 
     public synchronized int take() {
-        if (mTextureIds.empty())
+        try {
+            // Will block until one becomes available
+            return (int)mTextureIds.take();
+        } catch (InterruptedException e) {
             return 0;
-
-        return (int)mTextureIds.pop();
+        }
     }
 
     public synchronized void fill() {
-        int[] textures = new int[1];
-        while (mTextureIds.size() < MIN_TEXTURES) {
-            GLES20.glGenTextures(1, textures, 0);
-            mTextureIds.push(textures[0]);
+        EGL10 egl = (EGL10)EGLContext.getEGL();
+        EGLContext context = egl.eglGetCurrentContext();
+
+        if (mContext != null && mContext != context) {
+            mTextureIds.clear();
+        }
+
+        mContext = context;
+
+        int numNeeded = mTextureIds.remainingCapacity();
+        if (numNeeded == 0)
+            return;
+
+        // Clear existing GL errors
+        int error;
+        while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
+            Log.w(LOGTAG, String.format("Clearing GL error: %#x", error));
+        }
+
+        int[] textures = new int[numNeeded];
+        GLES20.glGenTextures(numNeeded, textures, 0);
+
+        error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR) {
+            Log.e(LOGTAG, String.format("Failed to generate textures: %#x", error), new Exception());
+            return;
+        }
+        
+        for (int i = 0; i < numNeeded; i++) {
+            mTextureIds.offer(textures[i]);
         }
     }
 }
