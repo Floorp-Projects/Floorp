@@ -91,6 +91,13 @@
       testGroupAttrs("radio2", 2, 2);
 
       //////////////////////////////////////////////////////////////////////////
+      // xul:menulist
+      testGroupAttrs("menulist1.1", 1);
+      testGroupAttrs("menulist1.2", 2);
+      testGroupAttrs("menulist1.3", 3);
+      testGroupAttrs("menulist1.4", 4);
+
+      //////////////////////////////////////////////////////////////////////////
       // ARIA menu (bug 441888)
       testGroupAttrs("aria-menuitem", 1, 3);
       testGroupAttrs("aria-menuitemcheckbox", 2, 3);
@@ -174,6 +181,15 @@
     <radio id="radio1" label="radio1"/>
     <radio id="radio2" label="radio2"/>
   </radiogroup>
+
+  <menulist id="menulist1" label="Vehicle">
+    <menupopup>
+      <menuitem id="menulist1.1" label="Car"/>
+      <menuitem id="menulist1.2" label="Taxi"/>
+      <menuitem id="menulist1.3" label="Bus" selected="true"/>
+      <menuitem id="menulist1.4" label="Train"/>
+    </menupopup>
+  </menulist>
 
   <vbox>
     <description role="menuitem" id="aria-menuitem"
