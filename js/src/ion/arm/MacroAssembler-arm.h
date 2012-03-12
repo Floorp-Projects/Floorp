@@ -205,6 +205,7 @@ class MacroAssemblerARM : public Assembler
 
     // compare (src - src2)
     void ma_cmp(Register src1, Imm32 imm, Condition c = Always);
+    void ma_cmp(Register src1, ImmWord ptr, Condition c = Always);
     void ma_cmp(Register src1, ImmGCPtr ptr, Condition c = Always);
     void ma_cmp(Register src1, Operand op, Condition c = Always);
     void ma_cmp(Register src1, Register src2, Condition c = Always);
@@ -573,6 +574,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         move32(lhs, ScratchRegister);
         branch32(cond, ScratchRegister, rhs, label);
     }
+    void branchPtr(Condition cond, const Address &lhs, Register rhs, Label *label) {
+        branch32(cond, lhs, rhs, label);
+    }
     template<typename T>
     void branchTestDouble(Condition cond, const T & t, Label *label) {
         Condition c = testDouble(cond, t);
@@ -630,6 +634,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_ldr(Operand(address.base, address.offset), ScratchRegister);
         branchTest32(cond, ScratchRegister, imm, label);
     }
+    void branchTestPtr(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
+        branchTest32(cond, lhs, rhs, label);
+    }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         branch32(cond, lhs, rhs, label);
     }
@@ -672,6 +679,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return ret;
     }
     void branchPtr(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
+        // See the comment in branchPtrWithPatch.
+        ma_ldr(addr, lr);
+        ma_cmp(lr, ptr);
+        ma_b(label, cond);
+    }
+    void branchPtr(Condition cond, Address addr, ImmWord ptr, Label *label) {
         // See the comment in branchPtrWithPatch.
         ma_ldr(addr, lr);
         ma_cmp(lr, ptr);
@@ -723,6 +736,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         JS_ASSERT(addr.offset == 0);
         loadValue(addr.base, addr.index, val);
     }
+    void tagValue(JSValueType type, Register payload, ValueOperand dest);
+
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);
     void pushValue(const Value &val) {
@@ -811,6 +826,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void add32(const Imm32 &imm, const Register &dest);
     void sub32(const Imm32 &imm, const Register &dest);
 
+    void and32(const Imm32 &imm, const Address &dest);
+    void or32(const Imm32 &imm, const Address &dest);
+
     void move32(const Imm32 &imm, const Register &dest);
 
     void move32(const Address &src, const Register &dest);
@@ -838,9 +856,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmp32(const Register &lhs, const Imm32 &rhs);
     void cmp32(const Register &lhs, const Register &rhs);
     void cmpPtr(const Register &lhs, const ImmWord &rhs);
+    void cmpPtr(const Register &lhs, const Register &rhs);
+    void cmpPtr(const Address &lhs, const Register &rhs);
 
     void subPtr(Imm32 imm, const Register dest);
     void addPtr(Imm32 imm, const Register dest);
+    void addPtr(Imm32 imm, const Address &dest);
 
     void setStackArg(const Register &reg, uint32 arg);
 

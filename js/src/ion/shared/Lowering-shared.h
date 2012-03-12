@@ -128,7 +128,8 @@ class LIRGeneratorShared : public MInstructionVisitor
 #endif
 
     // These create temporary register requests.
-    inline LDefinition temp(LDefinition::Type type, LDefinition::Policy policy = LDefinition::DEFAULT);
+    inline LDefinition temp(LDefinition::Type type = LDefinition::GENERAL,
+                            LDefinition::Policy policy = LDefinition::DEFAULT);
     inline LDefinition tempFloat();
     inline LDefinition tempCopy(MDefinition *input, uint32 reusedInput);
 

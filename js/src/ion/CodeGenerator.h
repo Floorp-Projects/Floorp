@@ -144,9 +144,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitStoreElementHoleT(LStoreElementHoleT *lir);
     bool visitStoreElementHoleV(LStoreElementHoleV *lir);
     bool visitCallIteratorStart(LCallIteratorStart *lir);
-    bool visitCallIteratorNext(LCallIteratorNext *lir);
-    bool visitCallIteratorMore(LCallIteratorMore *lir);
-    bool visitCallIteratorEnd(LCallIteratorEnd *lir);
+    bool visitIteratorStart(LIteratorStart *lir);
+    bool visitIteratorNext(LIteratorNext *lir);
+    bool visitIteratorMore(LIteratorMore *lir);
+    bool visitIteratorEnd(LIteratorEnd *lir);
     bool visitCallSetProperty(LCallSetProperty *ins);
     bool visitCallDeleteProperty(LCallDeleteProperty *lir);
     bool visitBitNotV(LBitNotV *lir);

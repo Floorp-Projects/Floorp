@@ -317,6 +317,8 @@ bool GreaterThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBoo
 
 bool ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output);
 
+bool IteratorMore(JSContext *cx, JSObject *obj, JSBool *res);
+
 bool CloseIteratorFromIon(JSContext *cx, JSObject *obj);
 
 } // namespace ion

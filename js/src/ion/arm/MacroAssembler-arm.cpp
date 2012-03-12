@@ -590,6 +590,12 @@ MacroAssemblerARM::ma_cmp(Register src1, Imm32 imm, Condition c)
 }
 
 void
+MacroAssemblerARM::ma_cmp(Register src1, ImmWord ptr, Condition c)
+{
+    ma_cmp(src1, Imm32(ptr.value), c);
+}
+
+void
 MacroAssemblerARM::ma_cmp(Register src1, ImmGCPtr ptr, Condition c)
 {
     ma_mov(ptr, ScratchRegister);
@@ -1210,6 +1216,22 @@ MacroAssemblerARMCompat::sub32(const Imm32 &imm, const Register &dest)
 }
 
 void
+MacroAssemblerARMCompat::and32(const Imm32 &imm, const Address &dest)
+{
+    load32(dest, ScratchRegister);
+    ma_and(imm, ScratchRegister);
+    store32(ScratchRegister, dest);
+}
+
+void
+MacroAssemblerARMCompat::or32(const Imm32 &imm, const Address &dest)
+{
+    load32(dest, ScratchRegister);
+    ma_orr(imm, ScratchRegister);
+    store32(ScratchRegister, dest);
+}
+
+void
 MacroAssemblerARMCompat::move32(const Imm32 &imm, const Register &dest)
 {
     ma_mov(imm, dest);
@@ -1374,6 +1396,19 @@ MacroAssemblerARMCompat::cmpPtr(const Register &lhs, const ImmWord &rhs)
 }
 
 void
+MacroAssemblerARMCompat::cmpPtr(const Register &lhs, const Register &rhs)
+{
+    ma_cmp(lhs, rhs);
+}
+
+void
+MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const Register &rhs)
+{
+    loadPtr(lhs, ScratchRegister);
+    cmpPtr(ScratchRegister, rhs);
+}
+
+void
 MacroAssemblerARMCompat::setStackArg(const Register &reg, uint32 arg)
 {
     ma_dataTransferN(IsStore, 32, true, sp, Imm32(arg * STACK_SLOT_SIZE), reg);
@@ -1390,6 +1425,14 @@ void
 MacroAssemblerARMCompat::addPtr(Imm32 imm, const Register dest)
 {
     ma_add(imm, dest);
+}
+
+void
+MacroAssemblerARMCompat::addPtr(Imm32 imm, const Address &dest)
+{
+    loadPtr(dest, ScratchRegister);
+    addPtr(imm, ScratchRegister);
+    storePtr(ScratchRegister, dest);
 }
 
 // higher level tag testing code
@@ -1856,6 +1899,16 @@ MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
         ma_ldr(payload, val.payloadReg());
     }
 }
+
+void
+MacroAssemblerARMCompat::tagValue(JSValueType type, Register payload, ValueOperand dest)
+{
+    JS_ASSERT(payload != dest.typeReg());
+    ma_mov(ImmType(type), dest.typeReg());
+    if (payload != dest.payloadReg())
+        ma_mov(payload, dest.payloadReg());
+}
+
 void
 MacroAssemblerARMCompat::pushValue(ValueOperand val) {
     ma_push(val.typeReg());

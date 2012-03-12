@@ -175,10 +175,23 @@ ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output)
 }
 
 bool
+IteratorMore(JSContext *cx, JSObject *obj, JSBool *res)
+{
+    Value tmp;
+    if (!js_IteratorMore(cx, obj, &tmp))
+        return false;
+
+    *res = tmp.toBoolean();
+    return true;
+}
+
+bool
 CloseIteratorFromIon(JSContext *cx, JSObject *obj)
 {
     bool result = CloseIterator(cx, obj);
 
+    // Note: When making changes here, update CodeGenerator::visitIteratorEnd
+    // as well.
     IonActivation *ion = cx->runtime->ionActivation;
     if (obj == ion->savedEnumerators())
         ion->updateSavedEnumerators(cx->enumerators);
