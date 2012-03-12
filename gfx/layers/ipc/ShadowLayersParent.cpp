@@ -148,6 +148,7 @@ ShadowLayersParent::Destroy()
 
 bool
 ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
+                               const bool& isFirstPaint,
                                InfallibleTArray<EditReply>* reply)
 {
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
