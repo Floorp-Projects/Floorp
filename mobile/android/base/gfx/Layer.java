@@ -63,7 +63,7 @@ public abstract class Layer {
     public Layer(IntSize size) {
         mTransactionLock = new ReentrantLock();
         if (size == null) {
-            mPosition = new Rect(0, 0, 0, 0);
+            mPosition = new Rect();
         } else {
             mPosition = new Rect(0, 0, size.width, size.height);
         }
