@@ -1012,9 +1012,10 @@ PlacesToolbar.prototype = {
 
   _updateChevronPopupNodesVisibility:
   function PT__updateChevronPopupNodesVisibility() {
-    for (let i = 0; i < this._chevronPopup.childNodes.length; i++) {
-      this._chevronPopup.childNodes[i].hidden =
-        this._rootElt.childNodes[i].style.visibility != "hidden";
+    for (let i = 0, node = this._chevronPopup._startMarker.nextSibling;
+         node != this._chevronPopup._endMarker;
+         i++, node = node.nextSibling) {
+      node.hidden = this._rootElt.childNodes[i].style.visibility != "hidden";
     }
   },
 
