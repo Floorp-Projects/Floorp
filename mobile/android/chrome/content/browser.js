@@ -379,6 +379,20 @@ var BrowserApp = {
     CharacterEncoding.uninit();
   },
 
+  // This function returns false during periods where the browser displayed document is
+  // different from the browser content document, so user actions and some kinds of viewport
+  // updates should be ignored. This period starts when we start loading a new page or
+  // switch tabs, and ends when the new browser content document has been drawn and handed
+  // off to the compositor.
+  isBrowserContentDocumentDisplayed: function() {
+    if (window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint)
+      return false;
+    let tab = this.selectedTab;
+    if (!tab)
+      return true;
+    return tab.contentDocumentIsDisplayed;
+  },
+
   displayedDocumentChanged: function() {
     window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint = true;
   },
@@ -907,7 +921,8 @@ var BrowserApp = {
     } else if (aTopic == "FullScreen:Exit") {
       browser.contentDocument.mozCancelFullScreen();
     } else if (aTopic == "Viewport:Change") {
-      this.selectedTab.setViewport(JSON.parse(aData));
+      if (this.isBrowserContentDocumentDisplayed())
+        this.selectedTab.setViewport(JSON.parse(aData));
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
@@ -1434,6 +1449,7 @@ function Tab(aURL, aParams) {
   this.userScrollPos = { x: 0, y: 0 };
   this._pluginCount = 0;
   this._pluginOverlayShowing = false;
+  this.contentDocumentIsDisplayed = true;
 }
 
 Tab.prototype = {
@@ -1732,6 +1748,8 @@ Tab.prototype = {
   sendViewportUpdate: function() {
     if (BrowserApp.selectedTab != this)
       return;
+    if (!BrowserApp.isBrowserContentDocumentDisplayed())
+      return;
     let message = this.getViewport();
     message.type = "Viewport:Update";
     let displayPortMargins = sendMessageToJava({ gecko: message });
@@ -1996,6 +2014,9 @@ Tab.prototype = {
       // point Java doesn't know about this document yet, so we cannot query it for
       // a display port. We default to a display port with zero margins, as this is
       // safe and Java will overwrite it once it becomes aware of this document.
+      // XXX This code assumes that this is the earliest hook we have at which
+      // browser.contentDocument is changed to the new document we're loading
+      this.contentDocumentIsDisplayed = false;
       this.refreshDisplayPort({left: 0, top: 0, right: 0, bottom: 0 });
     } else {
       this.sendViewportUpdate();
@@ -2224,6 +2245,7 @@ Tab.prototype = {
           this.setResolution(this.getDefaultZoomLevel(), false);
           ViewportHandler.updateMetadata(this);
           BrowserApp.displayedDocumentChanged();
+          this.contentDocumentIsDisplayed = true;
         }
         break;
     }
@@ -2250,6 +2272,26 @@ var BrowserEventHandler = {
   },
 
   observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "dom-touch-listener-added") {
+      let tab = BrowserApp.getTabForWindow(aSubject);
+      if (!tab)
+        return;
+
+      sendMessageToJava({
+        gecko: {
+          type: "Tab:HasTouchListener",
+          tabID: tab.id
+        }
+      });
+      return;
+    }
+
+    // the remaining events are all dependent on the browser content document being the
+    // same as the browser displayed document. if they are not the same, we should ignore
+    // the event.
+    if (!BrowserApp.isBrowserContentDocumentDisplayed())
+      return;
+
     if (aTopic == "Gesture:Scroll") {
       // If we've lost our scrollable element, return. Don't cancel the
       // override, as we probably don't want Java to handle panning until the
@@ -2323,17 +2365,6 @@ var BrowserEventHandler = {
     } else if (aTopic == "Gesture:DoubleTap") {
       this._cancelTapHighlight();
       this.onDoubleTap(aData);
-    } else if (aTopic == "dom-touch-listener-added") {
-      let tab = BrowserApp.getTabForWindow(aSubject);
-      if (!tab)
-        return;
-
-      sendMessageToJava({
-        gecko: {
-          type: "Tab:HasTouchListener",
-          tabID: tab.id
-        }
-      });
     }
   },
  
