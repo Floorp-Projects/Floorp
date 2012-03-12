@@ -85,11 +85,12 @@ nsSVGSwitchElement::nsSVGSwitchElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 }
 
 void
-nsSVGSwitchElement::InvalidateIfActiveChildChanged()
+nsSVGSwitchElement::MaybeInvalidate()
 {
-  // If mActiveChild is going to change, we must not change it until after
-  // we've invalidated the old active child's area. Hence we must not use
-  // UpdateActiveChild() for this check:
+  // We don't reuse UpdateActiveChild() and check if mActiveChild has changed
+  // to determine if we should invalidate. If we did that,
+  // nsSVGUtils::UpdateGraphic would not invalidate the old mActiveChild area!
+
   if (FindActiveChild() == mActiveChild) {
     return;
   }
@@ -116,7 +117,7 @@ nsSVGSwitchElement::InsertChildAt(nsIContent* aKid,
 {
   nsresult rv = nsSVGSwitchElementBase::InsertChildAt(aKid, aIndex, aNotify);
   if (NS_SUCCEEDED(rv)) {
-    InvalidateIfActiveChildChanged();
+    MaybeInvalidate();
   }
   return rv;
 }
@@ -126,7 +127,7 @@ nsSVGSwitchElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
 {
   nsresult rv = nsSVGSwitchElementBase::RemoveChildAt(aIndex, aNotify);
   if (NS_SUCCEEDED(rv)) {
-    InvalidateIfActiveChildChanged();
+    MaybeInvalidate();
   }
   return rv;
 }
