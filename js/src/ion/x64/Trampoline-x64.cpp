@@ -569,7 +569,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.j(Assembler::Zero, &exception);
         break;
       case Type_Bool:
-        masm.branchTest32(Assembler::Zero, eax, eax, &exception);
+        masm.testb(rax, rax);
+        masm.j(Assembler::Zero, &exception);
         break;
       default:
         JS_NOT_REACHED("unknown failure kind");
