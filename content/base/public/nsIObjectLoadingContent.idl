@@ -129,4 +129,10 @@ interface nsIObjectLoadingContent : nsISupports
 
   [noscript] void syncStartPluginInstance();
   [noscript] void asyncStartPluginInstance();
+
+  /**
+   * The URL of the data/src loaded in the object. This may be null (i.e.
+   * an <embed> with no src).
+   */
+  readonly attribute nsIURI srcURI;
 };

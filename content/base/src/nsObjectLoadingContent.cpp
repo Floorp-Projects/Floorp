@@ -2070,6 +2070,13 @@ nsObjectLoadingContent::AsyncStartPluginInstance()
   return rv;
 }
 
+NS_IMETHODIMP
+nsObjectLoadingContent::GetSrcURI(nsIURI** aURI)
+{
+  NS_IF_ADDREF(*aURI = mURI);
+  return NS_OK;
+}
+
 static bool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, bool aDelayedStop)
 {
