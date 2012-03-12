@@ -76,19 +76,9 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /* The viewport that Gecko is currently displaying. */
     private ViewportMetrics mGeckoViewport;
 
-    /* The viewport that Gecko will display when drawing is finished */
-    private ViewportMetrics mNewGeckoViewport;
-
     private boolean mViewportSizeChanged;
     private boolean mIgnorePaintsPendingViewportSizeChange;
     private boolean mFirstPaint = true;
-
-    // mUpdateViewportOnEndDraw is used to indicate that we received a
-    // viewport update notification while drawing. therefore, when the
-    // draw finishes, we need to update the entire viewport rather than
-    // just the page size. this boolean should always be accessed from
-    // inside a transaction, so no synchronization is needed.
-    private boolean mUpdateViewportOnEndDraw;
 
     private String mLastCheckerboardColor;
 
@@ -147,7 +137,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
         try {
             JSONObject viewportObject = new JSONObject(metadata);
-            mNewGeckoViewport = new ViewportMetrics(viewportObject);
+            mGeckoViewport = new ViewportMetrics(viewportObject);
         } catch (JSONException e) {
             Log.e(LOGTAG, "Aborting draw, bad viewport description: " + metadata);
             return false;
@@ -163,28 +153,8 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public void endDrawing() {
         synchronized (mLayerController) {
-            // save and restore the viewport size stored in java; never let the
-            // JS-side viewport dimensions override the java-side ones because
-            // java is the One True Source of this information, and allowing JS
-            // to override can lead to race conditions where this data gets clobbered.
-            FloatSize viewportSize = mLayerController.getViewportSize();
-            mGeckoViewport = mNewGeckoViewport;
-            mGeckoViewport.setSize(viewportSize);
-
             RectF position = mGeckoViewport.getViewport();
             mRootLayer.setPositionAndResolution(RectUtils.round(position), mGeckoViewport.getZoomFactor());
-
-            if (mUpdateViewportOnEndDraw) {
-                mLayerController.setViewportMetrics(mGeckoViewport);
-                mLayerController.abortPanZoomAnimation();
-                mUpdateViewportOnEndDraw = false;
-            } else {
-                // Don't adjust page size when zooming unless zoom levels are
-                // approximately equal.
-                if (FloatUtils.fuzzyEquals(mLayerController.getZoomFactor(),
-                        mGeckoViewport.getZoomFactor()))
-                    mLayerController.setPageSize(mGeckoViewport.getPageSize());
-            }
         }
 
         Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
@@ -278,8 +248,20 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /** Implementation of GeckoEventResponder/GeckoEventListener. */
     public void handleMessage(String event, JSONObject message) {
         if ("Viewport:Update".equals(event)) {
-            mUpdateViewportOnEndDraw = true;
             mIgnorePaintsPendingViewportSizeChange = false;
+
+            try {
+                ViewportMetrics newMetrics = new ViewportMetrics(message);
+                synchronized (mLayerController) {
+                    // keep the old viewport size, but update everything else
+                    ImmutableViewportMetrics oldMetrics = mLayerController.getViewportMetrics();
+                    newMetrics.setSize(oldMetrics.getSize());
+                    mLayerController.setViewportMetrics(newMetrics);
+                    mLayerController.abortPanZoomAnimation();
+                }
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Unable to create viewport metrics in " + event + " handler", e);
+            }
         }
     }
 
