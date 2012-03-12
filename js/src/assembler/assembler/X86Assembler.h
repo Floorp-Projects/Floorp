@@ -226,6 +226,7 @@ private:
         OP_GROUP1_EbIb                  = 0x80,
         OP_GROUP1_EvIz                  = 0x81,
         OP_GROUP1_EvIb                  = 0x83,
+        OP_TEST_EbGb                    = 0x84,
         OP_TEST_EvGv                    = 0x85,
         OP_XCHG_EvGv                    = 0x87,
         OP_MOV_EbGv                     = 0x88,
@@ -1270,6 +1271,14 @@ public:
                        IPFX "testl      %s, %s\n", MAYBE_PAD,
                        nameIReg(4,src), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_TEST_EvGv, src, dst);
+    }
+
+    void testb_rr(RegisterID src, RegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "testb      %s, %s\n", MAYBE_PAD,
+                       nameIReg(1,src), nameIReg(1,dst));
+        m_formatter.oneByteOp(OP_TEST_EbGb, src, dst);
     }
     
     void testl_i32r(int imm, RegisterID dst)

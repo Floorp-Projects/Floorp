@@ -501,6 +501,11 @@ class AssemblerX86Shared
     void setCC(Condition cond, const Register &r) {
         masm.setCC_r(static_cast<JSC::X86Assembler::Condition>(cond), r.code());
     }
+    void testb(const Register &lhs, const Register &rhs) {
+        JS_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(lhs));
+        JS_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(rhs));
+        masm.testb_rr(rhs.code(), lhs.code());
+    }
     void testl(const Register &lhs, const Register &rhs) {
         masm.testl_rr(rhs.code(), lhs.code());
     }

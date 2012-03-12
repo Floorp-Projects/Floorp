@@ -588,7 +588,19 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Test for failure.
     Label exception;
-    masm.branchTest32(Assembler::Zero, eax, eax, &exception);
+    switch (f.failType()) {
+      case Type_Object:
+        masm.testl(eax, eax);
+        masm.j(Assembler::Zero, &exception);
+        break;
+      case Type_Bool:
+        masm.testb(eax, eax);
+        masm.j(Assembler::Zero, &exception);
+        break;
+      default:
+        JS_NOT_REACHED("unknown failure kind");
+        break;
+    }
 
     // Load the outparam and free any allocated stack.
     switch (f.outParam) {
