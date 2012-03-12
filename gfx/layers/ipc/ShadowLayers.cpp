@@ -325,7 +325,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 
   MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
   RenderTraceScope rendertrace3("Foward Transaction", "000093");
-  if (!mShadowManager->SendUpdate(cset, aReplies)) {
+  if (!mShadowManager->SendUpdate(cset, false, aReplies)) {
     MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
     return false;
   }
