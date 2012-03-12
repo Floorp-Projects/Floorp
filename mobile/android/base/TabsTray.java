@@ -201,7 +201,7 @@ public class TabsTray extends Activity implements Tabs.OnTabsChangedListener {
             if (childrenHeight <= sPreferredHeight) {
                 restrictedHeightSpec = MeasureSpec.makeMeasureSpec(childrenHeight, MeasureSpec.EXACTLY);
             } else {
-                if ((childrenHeight - sAddTabHeight) % sListItemHeight == 0)
+                if (((childrenHeight - sAddTabHeight) % sListItemHeight == 0) && (childrenHeight >= sMaxHeight))
                     restrictedHeightSpec = MeasureSpec.makeMeasureSpec(sMaxHeight, MeasureSpec.EXACTLY);
                 else
                     restrictedHeightSpec = MeasureSpec.makeMeasureSpec(sPreferredHeight, MeasureSpec.EXACTLY);
