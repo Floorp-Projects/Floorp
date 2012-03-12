@@ -41,8 +41,6 @@
 #include "SVGAnimatedPointList.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
-#include "nsContentUtils.h"
-#include "dombindings.h"
 
 // See the comment in this file's header.
 
@@ -71,19 +69,7 @@ namespace mozilla {
 static nsSVGAttrTearoffTable<void, DOMSVGPointList>
   sSVGPointListTearoffTable;
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGPointList)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGPointList)
-  // No unlinking of mElement, we'd need to null out the value pointer (the
-  // object it points to is held by the element) and null-check it everywhere.
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGPointList)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mElement, nsIContent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGPointList)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION(DOMSVGPointList, mElement)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGPointList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGPointList)
@@ -93,7 +79,6 @@ DOMCI_DATA(SVGPointList, mozilla::DOMSVGPointList)
 namespace mozilla {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGPointList)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPointList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGPointList)
@@ -131,16 +116,8 @@ DOMSVGPointList::~DOMSVGPointList()
   sSVGPointListTearoffTable.RemoveTearoff(key);
 }
 
-JSObject*
-DOMSVGPointList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
-                            bool *triedToWrap)
-{
-  return mozilla::dom::binding::SVGPointList::create(cx, scope, this,
-                                                     triedToWrap);
-}
-
 nsIDOMSVGPoint*
-DOMSVGPointList::GetItemAt(PRUint32 aIndex)
+DOMSVGPointList::GetItemWithoutAddRef(PRUint32 aIndex)
 {
   if (IsAnimValList()) {
     Element()->FlushAnimations();
@@ -294,7 +271,7 @@ NS_IMETHODIMP
 DOMSVGPointList::GetItem(PRUint32 aIndex,
                          nsIDOMSVGPoint **_retval)
 {
-  *_retval = GetItemAt(aIndex);
+  *_retval = GetItemWithoutAddRef(aIndex);
   if (!*_retval) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
