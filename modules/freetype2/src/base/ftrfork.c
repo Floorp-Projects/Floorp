@@ -28,7 +28,7 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_RFORK_H
-
+#include "basepic.h"
 
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_raccess
@@ -159,8 +159,8 @@
     FT_Long       tag_internal, rpos;
     FT_Memory     memory = library->memory;
     FT_Long       temp;
-    FT_Long       *offsets_internal;
-    FT_RFork_Ref  *ref;
+    FT_Long       *offsets_internal = NULL;
+    FT_RFork_Ref  *ref = NULL;
 
 
     error = FT_Stream_Seek( stream, map_offset );
@@ -253,14 +253,6 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  typedef FT_Error
-  (*raccess_guess_func)( FT_Library  library,
-                         FT_Stream   stream,
-                         char       *base_file_name,
-                         char      **result_file_name,
-                         FT_Long    *result_offset );
-
-
   static FT_Error
   raccess_guess_apple_double( FT_Library  library,
                               FT_Stream   stream,
@@ -325,6 +317,20 @@
                                 FT_Long    *result_offset );
 
 
+  CONST_FT_RFORK_RULE_ARRAY_BEGIN(ft_raccess_guess_table,
+                                  ft_raccess_guess_rec)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(apple_double,      apple_double)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(apple_single,      apple_single)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(darwin_ufs_export, darwin_ufs_export)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(darwin_newvfs,     darwin_newvfs)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(darwin_hfsplus,    darwin_hfsplus)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(vfat,              vfat)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(linux_cap,         linux_cap)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(linux_double,      linux_double)
+  CONST_FT_RFORK_RULE_ARRAY_ENTRY(linux_netatalk,    linux_netatalk)
+  CONST_FT_RFORK_RULE_ARRAY_END
+
+
   /*************************************************************************/
   /****                                                                 ****/
   /****                       Helper functions                          ****/
@@ -348,7 +354,6 @@
                           const char  *original_name,
                           const char  *insertion );
 
-
   FT_BASE_DEF( void )
   FT_Raccess_Guess( FT_Library  library,
                     FT_Stream   stream,
@@ -359,19 +364,6 @@
   {
     FT_Long  i;
 
-
-    raccess_guess_func  funcs[FT_RACCESS_N_RULES] =
-    {
-      raccess_guess_apple_double,
-      raccess_guess_apple_single,
-      raccess_guess_darwin_ufs_export,
-      raccess_guess_darwin_newvfs,
-      raccess_guess_darwin_hfsplus,
-      raccess_guess_vfat,
-      raccess_guess_linux_cap,
-      raccess_guess_linux_double,
-      raccess_guess_linux_netatalk,
-    };
 
     for ( i = 0; i < FT_RACCESS_N_RULES; i++ )
     {
@@ -384,12 +376,48 @@
       if ( errors[i] )
         continue ;
 
-      errors[i] = (funcs[i])( library, stream, base_name,
-                              &(new_names[i]), &(offsets[i]) );
+      errors[i] = (FT_RACCESS_GUESS_TABLE_GET[i].func)( library,
+                                                 stream, base_name,
+                                                 &(new_names[i]),
+                                                 &(offsets[i]) );
     }
 
     return;
   }
+
+
+#ifndef FT_MACINTOSH
+  static FT_RFork_Rule
+  raccess_get_rule_type_from_rule_index( FT_Library  library,
+                                         FT_UInt     rule_index )
+  {
+    FT_UNUSED( library );
+
+    if ( rule_index >= FT_RACCESS_N_RULES )
+      return FT_RFork_Rule_invalid;
+
+    return FT_RACCESS_GUESS_TABLE_GET[rule_index].type;
+  }
+
+
+  /*
+   * For this function, refer ftbase.h.
+   */
+  FT_LOCAL_DEF( FT_Bool )
+  ft_raccess_rule_by_darwin_vfs( FT_Library  library,
+                                 FT_UInt     rule_index )
+  {
+    switch( raccess_get_rule_type_from_rule_index( library, rule_index ) )
+    {
+      case FT_RFork_Rule_darwin_newvfs:
+      case FT_RFork_Rule_darwin_hfsplus:
+        return TRUE;
+
+      default:
+        return FALSE;
+    }
+  }
+#endif
 
 
   static FT_Error
@@ -477,7 +505,7 @@
       Only meaningful on systems with hfs+ drivers (or Macs).
      */
     FT_Error   error;
-    char*      newpath;
+    char*      newpath = NULL;
     FT_Memory  memory;
     FT_Long    base_file_len = ft_strlen( base_file_name );
 
@@ -513,7 +541,7 @@
       Only meaningful on systems with Mac OS X (> 10.1).
      */
     FT_Error   error;
-    char*      newpath;
+    char*      newpath = NULL;
     FT_Memory  memory;
     FT_Long    base_file_len = ft_strlen( base_file_name );
 

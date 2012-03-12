@@ -758,6 +758,8 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   }
 #endif
 
+  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus);
+
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
@@ -934,6 +936,35 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
 
   aState.SetLayoutFlags(oldFlags);
 
+  if (HasAbsolutelyPositionedChildren()) {
+    // Set up a |reflowState| to pass into ReflowAbsoluteFrames
+    nsHTMLReflowState reflowState(aState.PresContext(), this,
+                                  aState.GetRenderingContext(),
+                                  nsSize(mRect.width, NS_UNCONSTRAINEDSIZE));
+
+    // Set up a |desiredSize| to pass into ReflowAbsoluteFrames
+    nsHTMLReflowMetrics desiredSize;
+    desiredSize.width  = mRect.width;
+    desiredSize.height = mRect.height;
+
+    // get the ascent (cribbed from ::Reflow)
+    nscoord ascent = mRect.height;
+
+    // getting the ascent could be a lot of work. Don't get it if
+    // we are the root. The viewport doesn't care about it.
+    if (!(mState & NS_STATE_IS_ROOT)) {
+      ascent = GetBoxAscent(aState);
+    }
+    desiredSize.ascent = ascent;
+    desiredSize.mOverflowAreas = GetOverflowAreas();
+
+    // Set up a |reflowStatus| to pass into ReflowAbsoluteFrames
+    // (just a dummy value; hopefully that's OK)
+    nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
+    ReflowAbsoluteFrames(aState.PresContext(), desiredSize,
+                         reflowState, reflowStatus);
+  }
+
   return rv;
 }
 
@@ -945,6 +976,8 @@ nsBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
   // clean up the container box's layout manager and child boxes
   SetLayoutManager(nsnull);
+
+  DestroyAbsoluteFrames(aDestructRoot);
 
   nsContainerFrame::DestroyFrom(aDestructRoot);
 } 

@@ -128,8 +128,9 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
     // The CTM of each frame referencing us can be different
     nsISVGChildFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
-      SVGFrame->NotifySVGChanged(nsISVGChildFrame::SUPPRESS_INVALIDATION |
-                                 nsISVGChildFrame::TRANSFORM_CHANGED);
+      SVGFrame->NotifySVGChanged(
+                          nsISVGChildFrame::DO_NOT_NOTIFY_RENDERING_OBSERVERS |
+                          nsISVGChildFrame::TRANSFORM_CHANGED);
     }
     nsSVGUtils::PaintFrameWithEffects(&tmpCtx, nsnull, kid);
   }

@@ -99,6 +99,7 @@
 #define SAMPLER_SAVE()
 // Returned string must be free'ed
 #define SAMPLER_GET_PROFILE() NULL
+#define SAMPLER_GET_PROFILE_DATA(ctx) NULL
 #define SAMPLER_RESPONSIVENESS(time) NULL
 #define SAMPLER_GET_RESPONSIVENESS() NULL
 #define SAMPLER_GET_FEATURES() NULL

@@ -3846,10 +3846,9 @@ mjit::stubs::NewDenseUnallocatedArray(VMFrame &f, uint32_t length)
 {
     JSObject *proto = (JSObject *) f.scratch;
     JSObject *obj = NewArray<false>(f.cx, length, proto);
-    if (!obj) {
-        js_ReportOutOfMemory(f.cx);
+    if (!obj)
         THROWV(NULL);
-    }
+
     return obj;
 }
 #endif

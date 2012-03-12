@@ -48,6 +48,23 @@ function testCSSAttrs(aID)
 }
 
 /**
+ * Test the accessible that it doesn't have CSS-based object attributes.
+ */
+function testAbsentCSSAttrs(aID)
+{
+  var attrs = {
+    "display": "",
+    "text-align": "",
+    "text-indent": "",
+    "margin-left": "",
+    "margin-right": "",
+    "margin-top": "",
+    "margin-bottom": ""
+  };
+  testAbsentAttrs(aID, attrs);
+}
+
+/**
  * Test group object attributes (posinset, setsize and level) and
  * nsIAccessible::groupPosition() method.
  *

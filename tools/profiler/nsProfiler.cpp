@@ -35,12 +35,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <string>
+#include <sstream>
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
 #include "EventTracer.h"
 #endif
 #include "sampler.h"
 #include "nsProfiler.h"
 #include "nsMemory.h"
+#include "shared-libraries.h"
+#include "nsString.h"
+#include "jsapi.h"
 
 using std::string;
 
@@ -82,6 +86,55 @@ nsProfiler::GetProfile(char **aProfile)
     *aProfile = profileStr;
     free(profile);
   }
+  return NS_OK;
+}
+
+static void
+AddSharedLibraryInfoToStream(std::ostream& aStream, SharedLibrary& aLib)
+{
+  aStream << "{";
+  aStream << "\"start\":" << aLib.GetStart();
+  aStream << ",\"end\":" << aLib.GetEnd();
+  aStream << ",\"name\":\"" << aLib.GetName() << "\"";
+  aStream << "}";
+}
+
+static std::string
+GetSharedLibraryInfoString()
+{
+  SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
+  if (info.GetSize() == 0)
+    return "[]";
+
+  std::ostringstream os;
+  os << "[";
+  AddSharedLibraryInfoToStream(os, info.GetEntry(0));
+
+  for (size_t i = 1; i < info.GetSize(); i++) {
+    os << ",";
+    AddSharedLibraryInfoToStream(os, info.GetEntry(i));
+  }
+
+  os << "]";
+  return os.str();
+}
+
+NS_IMETHODIMP
+nsProfiler::GetSharedLibraryInformation(nsAString& aOutString)
+{
+  aOutString.Assign(NS_ConvertUTF8toUTF16(GetSharedLibraryInfoString().c_str()));
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP nsProfiler::GetProfileData(JSContext* aCx, jsval* aResult)
+{
+  JSObject *obj = SAMPLER_GET_PROFILE_DATA(aCx);
+  if (!obj)
+    return NS_ERROR_FAILURE;
+
+  *aResult = OBJECT_TO_JSVAL(obj);
   return NS_OK;
 }
 

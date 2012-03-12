@@ -160,6 +160,10 @@
                   android:theme="@style/Gecko.Translucent.TabsTray"
                   android:launchMode="singleTask"/>
 
+        <activity android:name="org.mozilla.gecko.RemoteTabs"
+                  android:theme="@style/Gecko.Translucent.TabsTray"
+                  android:launchMode="singleTask"/>
+
         <activity android:name="org.mozilla.gecko.GeckoPreferences"
                   android:theme="@style/Gecko.TitleBar.Preferences"
                   android:label="@string/settings_title"

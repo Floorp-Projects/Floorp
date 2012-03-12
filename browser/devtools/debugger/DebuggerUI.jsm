@@ -568,6 +568,7 @@ DebuggerUI.prototype = {
     let dbg = this.getDebugger(this.aWindow.gBrowser.selectedTab);
     dbg.debuggerWindow.SourceScripts.setEditorMode(aSourceUrl, aContentType);
     dbg.editor.setText(aSourceText);
+    dbg.editor.resetUndo();
     let doc = dbg.frame.contentDocument;
     let scripts = doc.getElementById("scripts");
     let elt = scripts.getElementsByAttribute("value", aSourceUrl)[0];

@@ -1482,7 +1482,7 @@ UpdateService.prototype = {
       if (parts.length > 1) {
         result = parseInt(parts[1]) || UNEXPECTED_ERROR;
       }
-      Services.telemetry.getHistogramById("UPDATE_STATUS").add(result);
+      Services.telemetry.getHistogramById("UPDATER_STATUS_CODES").add(result);
     } catch(e) {
       // Don't allow any exception to be propagated.
       Components.utils.reportError(e);

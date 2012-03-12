@@ -182,9 +182,21 @@ protected:
 need to rearrange the mBits bitfield;
 #endif
 
-// Funtion to create a line box
+/**
+ * Function to create a line box and initialize it with a single frame.
+ * If the frame was moved from another line then you're responsible
+ * for notifying that line using NoteFrameRemoved().  Alternatively,
+ * it's better to use the next function that does that for you in an
+ * optimal way.
+ */
 nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
-                         PRInt32 aCount, bool aIsBlock);
+                         bool aIsBlock);
+/**
+ * Function to create a line box and initialize it with aCount frames
+ * that are currently on aFromLine.
+ */
+nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
+                         nsIFrame* aFrame, PRInt32 aCount);
 
 class nsLineList;
 
@@ -232,13 +244,14 @@ private:
   // Overloaded new operator. Uses an arena (which comes from the presShell)
   // to perform the allocation.
   void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
-  void operator delete(void* aPtr, size_t sz);
+  void operator delete(void* aPtr, size_t sz) MOZ_DELETE;
 
 public:
-  // Use these two functions to allocate and destroy line boxes
+  // Use these functions to allocate and destroy line boxes
   friend nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
-                                  PRInt32 aCount, bool aIsBlock);
-
+                                  bool aIsBlock);
+  friend nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
+                                  nsIFrame* aFrame, PRInt32 aCount);
   void Destroy(nsIPresShell* aPresShell);
 
   // mBlock bit
@@ -284,7 +297,6 @@ public:
 
   // mImpactedByFloat bit
   void SetLineIsImpactedByFloat(bool aValue) {
-    NS_ASSERTION((false==aValue || true==aValue), "somebody is playing fast and loose with bools and bits!");
     mFlags.mImpactedByFloat = aValue;
   }
   bool IsImpactedByFloat() const {
@@ -293,7 +305,6 @@ public:
 
   // mLineWrapped bit
   void SetLineWrapped(bool aOn) {
-    NS_ASSERTION((false==aOn || true==aOn), "somebody is playing fast and loose with bools and bits!");
     mFlags.mLineWrapped = aOn;
   }
   bool IsLineWrapped() const {
@@ -302,7 +313,6 @@ public:
 
   // mInvalidateTextRuns bit
   void SetInvalidateTextRuns(bool aOn) {
-    NS_ASSERTION((false==aOn || true==aOn), "somebody is playing fast and loose with bools and bits!");
     mFlags.mInvalidateTextRuns = aOn;
   }
   bool GetInvalidateTextRuns() const {
@@ -344,20 +354,76 @@ public:
     return mFlags.mHadFloatPushed;
   }
 
+private:
+  // Add a hash table for fast lookup when the line has more frames than this.
+  static const PRUint32 kMinChildCountForHashtable = 200;
 
-  // mChildCount value
-  PRInt32 GetChildCount() const {
-    return (PRInt32) mFlags.mChildCount;
+  /**
+   * Take ownership of aFromLine's hash table and remove the frames that
+   * stay on aFromLine from it, i.e. aFromLineNewCount frames starting with
+   * mFirstChild.  This method is used to optimize moving a large number
+   * of frames from one line to the next.
+   */
+  void StealHashTableFrom(nsLineBox* aFromLine, PRUint32 aFromLineNewCount);
+
+  /**
+   * Does the equivalent of this->NoteFrameAdded and aFromLine->NoteFrameRemoved
+   * for each frame on this line, but in a optimized way.
+   */
+  void NoteFramesMovedFrom(nsLineBox* aFromLine);
+
+  void SwitchToHashtable()
+  {
+    MOZ_ASSERT(!mFlags.mHasHashedFrames);
+    PRUint32 count = GetChildCount();
+    mFrames = new nsTHashtable< nsPtrHashKey<nsIFrame> >();
+    mFlags.mHasHashedFrames = 1;
+    PRUint32 minSize =
+      NS_MAX(kMinChildCountForHashtable, PRUint32(PL_DHASH_MIN_SIZE));
+    mFrames->Init(NS_MAX(count, minSize));
+    for (nsIFrame* f = mFirstChild; count-- > 0; f = f->GetNextSibling()) {
+      mFrames->PutEntry(f);
+    }
   }
-  void SetChildCount(PRInt32 aNewCount) {
-    if (aNewCount < 0) {
-      NS_WARNING("negative child count");
-      aNewCount = 0;
+  void SwitchToCounter() {
+    MOZ_ASSERT(mFlags.mHasHashedFrames);
+    PRUint32 count = GetChildCount();
+    delete mFrames;
+    mFlags.mHasHashedFrames = 0;
+    mChildCount = count;
+  }
+
+public:
+  PRInt32 GetChildCount() const {
+    return NS_UNLIKELY(mFlags.mHasHashedFrames) ? mFrames->Count() : mChildCount;
+  }
+
+  /**
+   * Register that aFrame is now on this line.
+   */
+  void NoteFrameAdded(nsIFrame* aFrame) {
+    if (NS_UNLIKELY(mFlags.mHasHashedFrames)) {
+      mFrames->PutEntry(aFrame);
+    } else {
+      if (++mChildCount >= kMinChildCountForHashtable) {
+        SwitchToHashtable();
+      }
     }
-    if (aNewCount > LINE_MAX_CHILD_COUNT) {
-      aNewCount = LINE_MAX_CHILD_COUNT;
+  }
+
+  /**
+   * Register that aFrame is not on this line anymore.
+   */
+  void NoteFrameRemoved(nsIFrame* aFrame) {
+    MOZ_ASSERT(GetChildCount() > 0);
+    if (NS_UNLIKELY(mFlags.mHasHashedFrames)) {
+      mFrames->RemoveEntry(aFrame);
+      if (mFrames->Count() < kMinChildCountForHashtable) {
+        SwitchToCounter();
+      }
+    } else {
+      --mChildCount;
     }
-    mFlags.mChildCount = aNewCount;
   }
 
   // mBreakType value
@@ -473,10 +539,13 @@ public:
   nsIFrame* LastChild() const;
 #endif
 
+private:
   PRInt32 IndexOf(nsIFrame* aFrame) const;
+public:
 
   bool Contains(nsIFrame* aFrame) const {
-    return IndexOf(aFrame) >= 0;
+    return NS_UNLIKELY(mFlags.mHasHashedFrames) ? mFrames->Contains(aFrame)
+                                                : IndexOf(aFrame) >= 0;
   }
 
   // whether the line box is "logically" empty (just like nsIFrame::IsEmpty)
@@ -504,6 +573,12 @@ public:
 
   nsRect mBounds;
 
+  // mFlags.mHasHashedFrames says which one to use
+  union {
+    nsTHashtable< nsPtrHashKey<nsIFrame> >* mFrames;
+    PRUint32 mChildCount;
+  };
+
   struct FlagBits {
     PRUint32 mDirty : 1;
     PRUint32 mPreviousMarginDirty : 1;
@@ -521,10 +596,8 @@ public:
     // Indicates that this line *may* have a placeholder for a float
     // that was pushed to a later column or page.
     PRUint32 mHadFloatPushed : 1;
+    PRUint32 mHasHashedFrames: 1;
     PRUint32 mBreakType : 4;
-
-    // FIXME: Move this out of FlagBits
-    PRUint32 mChildCount;
   };
 
   struct ExtraData {
