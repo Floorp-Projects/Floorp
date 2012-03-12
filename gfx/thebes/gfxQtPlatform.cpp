@@ -93,6 +93,8 @@ static void do_qt_pixmap_unref (void *data)
     delete pmap;
 }
 
+static gfxImageFormat sOffscreenFormat = gfxASurface::ImageFormatRGB24;
+
 #ifndef MOZ_PANGO
 typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
 typedef nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<FontEntry> > > PrefFontTable;
@@ -151,6 +153,9 @@ gfxQtPlatform::gfxQtPlatform()
     // Qt doesn't provide a public API to detect the graphicssystem type. We hack
     // around this by checking what type of graphicssystem a test QPixmap uses.
     QPixmap pixmap(1, 1);
+    if (pixmap.depth() == 16) {
+        sOffscreenFormat = gfxASurface::ImageFormatRGB16_565;
+    }
 #if (QT_VERSION < QT_VERSION_CHECK(4,8,0))
     if (pixmap.paintEngine())
         sDefaultQtPaintEngineType = pixmap.paintEngine()->type();
@@ -589,9 +594,5 @@ gfxQtPlatform::GetDPI()
 gfxImageFormat
 gfxQtPlatform::GetOffscreenFormat()
 {
-    if (qApp->desktop()->depth() == 16) {
-        return gfxASurface::ImageFormatRGB16_565;
-    }
-
-    return gfxASurface::ImageFormatRGB24;
+    return sOffscreenFormat;
 }
