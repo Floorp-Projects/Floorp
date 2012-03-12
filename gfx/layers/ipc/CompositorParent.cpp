@@ -51,11 +51,14 @@
 #include <android/log.h>
 #endif
 
+using base::Thread;
+
 namespace mozilla {
 namespace layers {
 
-CompositorParent::CompositorParent(nsIWidget* aWidget)
-  : mWidget(aWidget)
+CompositorParent::CompositorParent(nsIWidget* aWidget, base::Thread* aCompositorThread)
+  : mCompositorThread(aCompositorThread)
+  , mWidget(aWidget)
   , mCurrentCompositeTask(NULL)
   , mPaused(false)
   , mIsFirstPaint(false)
@@ -87,15 +90,17 @@ CompositorParent::RecvStop()
 }
 
 void
-CompositorParent::ScheduleRenderOnCompositorThread(::base::Thread &aCompositorThread)
+CompositorParent::ScheduleRenderOnCompositorThread()
 {
-  CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::AsyncRender);
-  aCompositorThread.message_loop()->PostTask(FROM_HERE, renderTask);
+  CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::ScheduleComposition);
+  mCompositorThread->message_loop()->PostTask(FROM_HERE, renderTask);
 }
 
 void
 CompositorParent::PauseComposition()
 {
+  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+                    "PauseComposition() can only be called on the compositor thread");
   if (!mPaused) {
     mPaused = true;
 
@@ -108,6 +113,8 @@ CompositorParent::PauseComposition()
 void
 CompositorParent::ResumeComposition()
 {
+  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+                    "ResumeComposition() can only be called on the compositor thread");
   mPaused = false;
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -116,19 +123,19 @@ CompositorParent::ResumeComposition()
 }
 
 void
-CompositorParent::SchedulePauseOnCompositorThread(::base::Thread &aCompositorThread)
+CompositorParent::SchedulePauseOnCompositorThread()
 {
   CancelableTask *pauseTask = NewRunnableMethod(this,
                                                 &CompositorParent::PauseComposition);
-  aCompositorThread.message_loop()->PostTask(FROM_HERE, pauseTask);
+  mCompositorThread->message_loop()->PostTask(FROM_HERE, pauseTask);
 }
 
 void
-CompositorParent::ScheduleResumeOnCompositorThread(::base::Thread &aCompositorThread)
+CompositorParent::ScheduleResumeOnCompositorThread()
 {
   CancelableTask *resumeTask = NewRunnableMethod(this,
                                                  &CompositorParent::ResumeComposition);
-  aCompositorThread.message_loop()->PostTask(FROM_HERE, resumeTask);
+  mCompositorThread->message_loop()->PostTask(FROM_HERE, resumeTask);
 }
 
 void
@@ -148,6 +155,9 @@ CompositorParent::ScheduleComposition()
 #endif
 
   mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
+
+  // Since 60 fps is the maximum frame rate we can acheive, scheduling composition
+  // events less than 15 ms apart wastes computation..
   if (!initialComposition && delta.ToMilliseconds() < 15) {
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
     mExpectedComposeTime = mozilla::TimeStamp::Now() + TimeDuration::FromMilliseconds(15 - delta.ToMilliseconds());
@@ -169,6 +179,8 @@ CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
 void
 CompositorParent::Composite()
 {
+  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+                    "Composite can only be called on the compositor thread");
   mCurrentCompositeTask = NULL;
 
   mLastCompose = mozilla::TimeStamp::Now();
@@ -204,8 +216,9 @@ CompositorParent::GetPrimaryScrollableLayer()
 
   nsTArray<Layer*> queue;
   queue.AppendElement(root);
-  for (unsigned i = 0; i < queue.Length(); i++) {
-    ContainerLayer* containerLayer = queue[i]->AsContainerLayer();
+  while (queue.Length()) {
+    ContainerLayer* containerLayer = queue[0]->AsContainerLayer();
+    queue.RemoveElementAt(0);
     if (!containerLayer) {
       continue;
     }
@@ -243,16 +256,6 @@ SetShadowProperties(Layer* aLayer)
   }
 }
 
-static double GetXScale(const gfx3DMatrix& aTransform)
-{
-  return aTransform._11;
-}
-
-static double GetYScale(const gfx3DMatrix& aTransform)
-{
-  return aTransform._22;
-}
-
 void
 CompositorParent::TransformShadowTree()
 {
@@ -265,8 +268,8 @@ CompositorParent::TransformShadowTree()
   const gfx3DMatrix& rootTransform = mLayerManager->GetRoot()->GetTransform();
   const gfx3DMatrix& currentTransform = layer->GetTransform();
 
-  float rootScaleX = GetXScale(rootTransform);
-  float rootScaleY = GetYScale(rootTransform);
+  float rootScaleX = rootTransform.GetXScale();
+  float rootScaleY = rootTransform.GetYScale();
 
   if (mIsFirstPaint && metrics) {
     nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
@@ -307,21 +310,6 @@ CompositorParent::TransformShadowTree()
     shadow->SetShadowTransform(gfx3DMatrix(treeTransform) * currentTransform);
   }
 #endif
-}
-
-void
-CompositorParent::AsyncRender()
-{
-  if (mPaused || !mLayerManager) {
-    return;
-  }
-
-  Layer* root = mLayerManager->GetRoot();
-  if (!root) {
-    return;
-  }
-
-  ScheduleComposition();
 }
 
 #ifdef MOZ_WIDGET_ANDROID

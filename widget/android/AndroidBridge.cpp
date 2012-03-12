@@ -1861,7 +1861,7 @@ void
 AndroidBridge::ScheduleComposite()
 {
     if (mCompositorParent) {
-        mCompositorParent->ScheduleRenderOnCompositorThread(*mCompositorThread);
+        mCompositorParent->ScheduleRenderOnCompositorThread();
     }
 }
 
@@ -1869,7 +1869,7 @@ void
 AndroidBridge::SchedulePauseComposition()
 {
     if (mCompositorParent) {
-        mCompositorParent->SchedulePauseOnCompositorThread(*mCompositorThread);
+        mCompositorParent->SchedulePauseOnCompositorThread();
     }
 }
 
@@ -1877,7 +1877,7 @@ void
 AndroidBridge::ScheduleResumeComposition()
 {
     if (mCompositorParent) {
-        mCompositorParent->ScheduleResumeOnCompositorThread(*mCompositorThread);
+        mCompositorParent->ScheduleResumeOnCompositorThread();
     }
 }
 
