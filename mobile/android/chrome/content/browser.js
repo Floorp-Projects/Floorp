@@ -1732,11 +1732,9 @@ Tab.prototype = {
   sendViewportUpdate: function() {
     if (BrowserApp.selectedTab != this)
       return;
-    let displayPortMargins = sendMessageToJava({
-      gecko: {
-        type: "Viewport:Update"
-      }
-    });
+    let message = this.getViewport();
+    message.type = "Viewport:Update";
+    let displayPortMargins = sendMessageToJava({ gecko: message });
     if (displayPortMargins != null)
       this.refreshDisplayPort(JSON.parse(displayPortMargins));
   },
