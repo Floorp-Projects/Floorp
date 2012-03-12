@@ -77,8 +77,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
     private ViewportMetrics mGeckoViewport;
 
     private boolean mViewportSizeChanged;
-    private boolean mIgnorePaintsPendingViewportSizeChange;
-    private boolean mFirstPaint = true;
 
     private String mLastCheckerboardColor;
 
@@ -121,14 +119,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public boolean beginDrawing(int width, int height, String metadata) {
-        // If the viewport has changed but we still don't have the latest viewport
-        // from Gecko, ignore the viewport passed to us from Gecko since that is going
-        // to be wrong.
-        if (!mFirstPaint && mIgnorePaintsPendingViewportSizeChange) {
-            return false;
-        }
-        mFirstPaint = false;
-
         // If we've changed surface types, cancel this draw
         if (initializeVirtualLayer()) {
             Log.e(LOGTAG, "### Cancelling draw due to virtual layer initialization");
@@ -229,7 +219,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     void viewportSizeChanged() {
         mViewportSizeChanged = true;
-        mIgnorePaintsPendingViewportSizeChange = true;
     }
 
     private void adjustViewport() {
@@ -248,8 +237,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /** Implementation of GeckoEventResponder/GeckoEventListener. */
     public void handleMessage(String event, JSONObject message) {
         if ("Viewport:Update".equals(event)) {
-            mIgnorePaintsPendingViewportSizeChange = false;
-
             try {
                 ViewportMetrics newMetrics = new ViewportMetrics(message);
                 synchronized (mLayerController) {
