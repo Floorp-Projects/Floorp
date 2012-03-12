@@ -83,7 +83,6 @@ public class SingleTileLayer extends TileLayer {
             return;
 
         RectF bounds;
-        int[] cropRect;
         Rect position = getPosition();
         RectF viewport = context.viewport;
 
@@ -91,10 +90,8 @@ public class SingleTileLayer extends TileLayer {
             bounds = new RectF(0.0f, 0.0f, viewport.width(), viewport.height());
             int width = Math.round(viewport.width());
             int height = Math.round(viewport.height());
-            cropRect = new int[] { 0, 0, width, height };
         } else {
             bounds = getBounds(context);
-            cropRect = new int[] { 0, 0, position.width(), position.height() };
         }
 
         Rect intBounds = new Rect();
@@ -116,6 +113,11 @@ public class SingleTileLayer extends TileLayer {
                                        Math.max(bounds.top, (float)subRect.top),
                                        Math.min(bounds.right, (float)subRect.right),
                                        Math.min(bounds.bottom, (float)subRect.bottom));
+
+            int[] cropRect = new int[] { Math.round(subRectF.left - bounds.left),
+                                         Math.round(subRectF.bottom - bounds.top),
+                                         Math.round(subRectF.right - bounds.left),
+                                         Math.round(subRectF.top - bounds.top) };
 
             float height = subRectF.height();
             float left = subRectF.left - viewport.left;
