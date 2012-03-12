@@ -1097,7 +1097,14 @@ FrameActor.prototype = {
                  type: this.frame.type };
     if (this.frame.type === "call") {
       grip.callee = this.threadActor.createValueGrip(this.frame.callee);
-      grip.calleeName = this.frame.callee.name;
+      if (this.frame.callee.name) {
+        grip.calleeName = this.frame.callee.name;
+      } else {
+        let desc = this.frame.callee.getOwnPropertyDescriptor("displayName");
+        if (desc && desc.value && typeof desc.value == "string") {
+          grip.calleeName = desc.value;
+        }
+      }
     }
 
     let envActor = this.threadActor
