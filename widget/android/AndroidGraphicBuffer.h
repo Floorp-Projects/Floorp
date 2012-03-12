@@ -39,6 +39,7 @@
 #define AndroidGraphicBuffer_h_
 
 #include "gfxASurface.h"
+#include <GLES2/gl2.h>
 #include "nsRect.h"
 
 typedef void* EGLImageKHR;
@@ -77,7 +78,7 @@ public:
   PRUint32 Width() { return mWidth; }
   PRUint32 Height() { return mHeight; }
 
-  bool Bind();
+  bool Bind(GLenum target);
 
   static bool IsBlacklisted();
 
