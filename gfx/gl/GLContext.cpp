@@ -518,23 +518,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
         mMaxTextureImageSize = mMaxTextureSize;
 
-        mSupport_ES_ReadPixels_BGRA_UByte = false;
-        if (mIsGLES2) {
-            if (IsExtensionSupported(gl::GLContext::EXT_bgra)) {
-                mSupport_ES_ReadPixels_BGRA_UByte = true;
-            } else if (IsExtensionSupported(gl::GLContext::EXT_read_format_bgra) ||
-                       IsExtensionSupported(gl::GLContext::IMG_read_format)) {
-                GLint auxFormat = 0;
-                GLint auxType = 0;
-
-                fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT, &auxFormat);
-                fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE, &auxType);
-
-                if (auxFormat == LOCAL_GL_BGRA && auxType == LOCAL_GL_UNSIGNED_BYTE)
-                    mSupport_ES_ReadPixels_BGRA_UByte = true;
-            }
-        }
-
         UpdateActualFormat();
     }
 
@@ -1817,6 +1800,35 @@ GLContext::ReadTextureImage(GLuint aTexture,
     return isurf.forget();
 }
 
+static void
+GetOptimalReadFormats(GLContext* gl, GLenum& format, GLenum& type) {
+    if (gl->IsGLES2()) {
+        bool has_BGRA_UByte = false;
+        if (gl->IsExtensionSupported(gl::GLContext::EXT_bgra)) {
+          has_BGRA_UByte = true;
+        } else if (gl->IsExtensionSupported(gl::GLContext::EXT_read_format_bgra) ||
+                   gl->IsExtensionSupported(gl::GLContext::IMG_read_format)) {
+            // Note that these extensions are not required to query this value.
+            // However, we should never get back BGRA unless one of these is supported.
+            GLint auxFormat = 0;
+            GLint auxType = 0;
+
+            gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT, &auxFormat);
+            gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE, &auxType);
+
+            if (auxFormat == LOCAL_GL_BGRA && auxType == LOCAL_GL_UNSIGNED_BYTE)
+              has_BGRA_UByte = true;
+        }
+
+        format = has_BGRA_UByte ? LOCAL_GL_BGRA : LOCAL_GL_RGBA;
+        type = LOCAL_GL_UNSIGNED_BYTE;
+    } else {
+        // defaults for desktop
+        format = LOCAL_GL_BGRA;
+        type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
+    }
+}
+
 void
 GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
                                       GLsizei aWidth, GLsizei aHeight,
@@ -1843,27 +1855,17 @@ GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
     fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &currentPackAlignment);
     fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
 
-    // defaults for desktop
-    GLenum format = LOCAL_GL_BGRA;
-    GLenum datatype = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
-    bool swap = false;
+    GLenum format;
+    GLenum datatype;
 
-    if (IsGLES2()) {
-        datatype = LOCAL_GL_UNSIGNED_BYTE;
-
-        if (mSupport_ES_ReadPixels_BGRA_UByte) {
-            format = LOCAL_GL_BGRA;
-        } else {
-            format = LOCAL_GL_RGBA;
-            swap = true;
-        }
-    }
+    GetOptimalReadFormats(this, format, datatype);
 
     fReadPixels(0, 0, aWidth, aHeight,
                 format, datatype,
                 aDest->Data());
 
-    if (swap) {
+    // Output should be in BGRA, so swap if RGBA
+    if (format == LOCAL_GL_RGBA) {
         // swap B and R bytes
         for (int j = 0; j < aHeight; ++j) {
             PRUint32 *row = (PRUint32*) (aDest->Data() + aDest->Stride() * j);
