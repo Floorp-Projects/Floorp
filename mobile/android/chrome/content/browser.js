@@ -1951,14 +1951,9 @@ Tab.prototype = {
     sendMessageToJava(message);
 
     if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0) {
-      // The document element must have a display port on it at all times. At this
-      // point Java doesn't know about this document yet, so we cannot query it for
-      // a display port. We default to a display port with zero margins, as this is
-      // safe and Java will overwrite it once it becomes aware of this document.
       // XXX This code assumes that this is the earliest hook we have at which
       // browser.contentDocument is changed to the new document we're loading
       this.contentDocumentIsDisplayed = false;
-      this.setDisplayPort(0, 0, {left: 0, top: 0, right: gScreenWidth, bottom: gScreenHeight });
     } else {
       this.sendViewportUpdate();
     }
@@ -2185,6 +2180,13 @@ Tab.prototype = {
         if (contentDocument == this.browser.contentDocument) {
           this.setResolution(this.getDefaultZoomLevel(), false);
           ViewportHandler.updateMetadata(this);
+
+          // The document element must have a display port on it whenever we are about to
+          // paint. This is the point just before the first paint, so we set the display port
+          // to a default value here. Once Java is aware of this document it will overwrite
+          // it with a better-calculated display port.
+          this.setDisplayPort(0, 0, {left: 0, top: 0, right: gScreenWidth, bottom: gScreenHeight });
+
           BrowserApp.displayedDocumentChanged();
           this.contentDocumentIsDisplayed = true;
         }
