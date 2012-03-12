@@ -253,6 +253,10 @@ SourceEditorController.prototype = {
       case "cmd_gotoLine":
       case "se-cmd-undo":
       case "se-cmd-redo":
+      case "se-cmd-cut":
+      case "se-cmd-paste":
+      case "se-cmd-delete":
+      case "se-cmd-selectAll":
         result = true;
         break;
       default:
@@ -278,6 +282,7 @@ SourceEditorController.prototype = {
     switch (aCommand) {
       case "cmd_find":
       case "cmd_gotoLine":
+      case "se-cmd-selectAll":
         result = true;
         break;
       case "cmd_findAgain":
@@ -290,6 +295,19 @@ SourceEditorController.prototype = {
       case "se-cmd-redo":
         result = this._editor.canRedo();
         break;
+      case "se-cmd-cut":
+      case "se-cmd-delete": {
+        let selection = this._editor.getSelection();
+        result = selection.start != selection.end && !this._editor.readOnly;
+        break;
+      }
+      case "se-cmd-paste": {
+        let window = this._editor._view._frameWindow;
+        let controller = window.controllers.getControllerForCommand("cmd_paste");
+        result = !this._editor.readOnly &&
+                 controller.isCommandEnabled("cmd_paste");
+        break;
+      }
       default:
         result = false;
         break;
@@ -320,12 +338,26 @@ SourceEditorController.prototype = {
       case "cmd_gotoLine":
         this._editor.ui.gotoLine();
         break;
+      case "se-cmd-selectAll":
+        this._editor._view.invokeAction("selectAll");
+        break;
       case "se-cmd-undo":
         this._editor.undo();
         break;
       case "se-cmd-redo":
         this._editor.redo();
         break;
+      case "se-cmd-cut":
+        this._editor.ui._ownerWindow.goDoCommand("cmd_cut");
+        break;
+      case "se-cmd-paste":
+        this._editor.ui._ownerWindow.goDoCommand("cmd_paste");
+        break;
+      case "se-cmd-delete": {
+        let selection = this._editor.getSelection();
+        this._editor.setText("", selection.start, selection.end);
+        break;
+      }
     }
   },
 
