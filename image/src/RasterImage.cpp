@@ -2696,6 +2696,18 @@ RasterImage::UnlockImage()
   return NS_OK;
 }
 
+//******************************************************************************
+/* void requestDiscard() */
+NS_IMETHODIMP
+RasterImage::RequestDiscard()
+{
+  if (CanDiscard()) {
+    ForceDiscard();
+  }
+
+  return NS_OK;
+}
+
 // Flushes up to aMaxBytes to the decoder.
 nsresult
 RasterImage::DecodeSomeData(PRUint32 aMaxBytes)

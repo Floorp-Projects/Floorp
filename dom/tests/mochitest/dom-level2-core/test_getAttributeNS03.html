@@ -105,7 +105,7 @@ function getAttributeNS03() {
       assertNotNull("empAddrNotNull",testAddr);
 testAddr.removeAttributeNS(namespaceURI,localName);
       attrValue = testAddr.getAttributeNS(namespaceURI,localName);
-      assertEquals("throw_Equals","",attrValue);
+      assertEquals("throw_Equals",null,attrValue);
        
 }
 

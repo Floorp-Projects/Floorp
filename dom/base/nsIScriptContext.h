@@ -56,6 +56,7 @@ class nsIObjectInputStream;
 class nsIObjectOutputStream;
 template<class> class nsScriptObjectHolder;
 class nsIScriptObjectPrincipal;
+class nsIDOMWindow;
 
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
 
@@ -75,8 +76,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x6d69fbee, 0x0723, 0x48f5, \
- { 0x82, 0x48, 0xcd, 0xcf, 0x88, 0xac, 0x25, 0x74 } }
+{ 0xdfaea249, 0xaaad, 0x48bd, \
+  { 0xb8, 0x04, 0x92, 0xad, 0x30, 0x88, 0xd0, 0xc6 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -345,11 +346,6 @@ public:
   virtual bool IsContextInitialized() = 0;
 
   /**
-   * Called as the global object discards its reference to the context.
-   */
-  virtual void FinalizeContext() = 0;
-
-  /**
    * For garbage collected systems, do a synchronous collection pass.
    * May be a no-op on other systems
    *
@@ -389,8 +385,8 @@ public:
    *
    * @throws NS_ERROR_OUT_OF_MEMORY if that happens
    */
-  virtual nsresult SetTerminationFunction(nsScriptTerminationFunc aFunc,
-                                          nsISupports* aRef) = 0;
+  virtual void SetTerminationFunction(nsScriptTerminationFunc aFunc,
+                                      nsIDOMWindow* aRef) = 0;
 
   /**
    * Called to disable/enable script execution in this context.
@@ -400,7 +396,7 @@ public:
 
   // SetProperty is suspect and jst believes should not be needed.  Currenly
   // used only for "arguments".
-  virtual nsresult SetProperty(void *aTarget, const char *aPropName, nsISupports *aVal) = 0;
+  virtual nsresult SetProperty(JSObject* aTarget, const char* aPropName, nsISupports* aVal) = 0;
   /** 
    * Called to set/get information if the script context is
    * currently processing a script tag

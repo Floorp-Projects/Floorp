@@ -3247,6 +3247,14 @@ nsIDocument::TakeFrameRequestCallbacks(FrameRequestCallbackList& aCallbacks)
   mFrameRequestCallbacks.Clear();
 }
 
+PLDHashOperator RequestDiscardEnumerator(imgIRequest* aKey,
+                                         PRUint32 aData,
+                                         void* userArg)
+{
+  aKey->RequestDiscard();
+  return PL_DHASH_NEXT;
+}
+
 void
 nsDocument::DeleteShell()
 {
@@ -3254,6 +3262,11 @@ nsDocument::DeleteShell()
   if (IsEventHandlingEnabled()) {
     RevokeAnimationFrameNotifications();
   }
+
+  // When our shell goes away, request that all our images be immediately
+  // discarded, so we don't carry around decoded image data for a document we
+  // no longer intend to paint.
+  mImageTracker.EnumerateRead(RequestDiscardEnumerator, nsnull);
 
   mPresShell = nsnull;
 }
@@ -4414,7 +4427,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
   bool needsLowercase = IsHTML() && !IsLowercaseASCII(aTagName);
   nsAutoString lcTagName;
   if (needsLowercase) {
-    ToLowerCase(aTagName, lcTagName);
+    nsContentUtils::ASCIIToLower(aTagName, lcTagName);
   }
 
   rv = CreateElem(needsLowercase ? lcTagName : aTagName,
@@ -7724,14 +7737,20 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
   }
 
   nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-  if (aCrossOriginAttr.LowerCaseEqualsLiteral("anonymous")) {
+  switch (nsGenericElement::StringToCORSMode(aCrossOriginAttr)) {
+  case CORS_NONE:
+    // Nothing to do
+    break;
+  case CORS_ANONYMOUS:
     loadFlags |= imgILoader::LOAD_CORS_ANONYMOUS;
-  } else if (aCrossOriginAttr.LowerCaseEqualsLiteral("use-credentials")) {
+    break;
+  case CORS_USE_CREDENTIALS:
     loadFlags |= imgILoader::LOAD_CORS_USE_CREDENTIALS;
+    break;
+  default:
+    /* should never happen */
+    MOZ_NOT_REACHED("Unknown CORS mode!");
   }
-  // else should we err on the side of not doing the preload if
-  // aCrossOriginAttr is nonempty?  Let's err on the side of doing the
-  // preload as CORS_NONE.
 
   // Image not in cache - trigger preload
   nsCOMPtr<imgIRequest> request;
@@ -8309,25 +8328,31 @@ nsDocument::RemoveImage(imgIRequest* aImage)
 
   // If the count is now zero, remove from the tracker.
   // Otherwise, set the new value.
-  if (count == 0) {
-    mImageTracker.Remove(aImage);
-  } else {
+  if (count != 0) {
     mImageTracker.Put(aImage, count);
+    return NS_OK;
   }
+
+  mImageTracker.Remove(aImage);
 
   nsresult rv = NS_OK;
 
-  // If we removed the image from the tracker and we're locking images, unlock
-  // this image.
-  if (count == 0 && mLockingImages)
+  // Now that we're no longer tracking this image, unlock it if we'd
+  // previously locked it.
+  if (mLockingImages) {
     rv = aImage->UnlockImage();
+  }
 
-  // If we removed the image from the tracker and we're animating images,
-  // remove our request to animate this image.
-  if (count == 0 && mAnimatingImages) {
+  // If we're animating images, remove our request to animate this one.
+  if (mAnimatingImages) {
     nsresult rv2 = aImage->DecrementAnimationConsumers();
     rv = NS_SUCCEEDED(rv) ? rv2 : rv;
   }
+
+  // Request that the image be discarded if nobody else holds a lock on it.
+  // Do this even if !mLockingImages, because even if we didn't just unlock
+  // this image, it might still be a candidate for discarding.
+  aImage->RequestDiscard();
 
   return rv;
 }

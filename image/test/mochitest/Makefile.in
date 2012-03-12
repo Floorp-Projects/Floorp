@@ -88,6 +88,7 @@ _TEST_FILES =   imgutils.js \
                 test_bug671906.html \
 		test_error_events.html \
 		error-early.png \
+		test_drawDiscardedImage.html \
                 $(NULL)
 
 # Tests disabled due to intermittent orange

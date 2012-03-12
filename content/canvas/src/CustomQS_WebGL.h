@@ -382,6 +382,133 @@ nsIDOMWebGLRenderingContext_ReadPixels(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 
+class CallTexImage2D
+{
+private:
+    nsIDOMWebGLRenderingContext* self;
+    WebGLenum target;
+    WebGLint level;
+    WebGLenum internalformat;
+    WebGLenum format;
+    WebGLenum type;
+
+public:
+    explicit CallTexImage2D(nsIDOMWebGLRenderingContext* aSelf,
+                            WebGLenum aTarget,
+                            WebGLint aLevel,
+                            WebGLenum aInternalformat,
+                            WebGLenum aFormat,
+                            WebGLenum aType)
+        : self(aSelf)
+        , target(aTarget)
+        , level(aLevel)
+        , internalformat(aInternalformat)
+        , format(aFormat)
+        , type(aType)
+    {}
+
+    nsresult DoCallForImageData(WebGLsizei width, WebGLsizei height,
+                                JSObject* pixels)
+    {
+        return self->TexImage2D_imageData(target, level, internalformat, width,
+                                          height, 0, format, type, pixels);
+    }
+    nsresult DoCallForElement(mozilla::dom::Element* elt)
+    {
+        return self->TexImage2D_dom(target, level, internalformat, format, type,
+                                    elt);
+    }
+};
+
+class CallTexSubImage2D
+{
+private:
+    nsIDOMWebGLRenderingContext* self;
+    WebGLenum target;
+    WebGLint level;
+    WebGLint xoffset;
+    WebGLint yoffset;
+    WebGLenum format;
+    WebGLenum type;
+
+public:
+    explicit CallTexSubImage2D(nsIDOMWebGLRenderingContext* aSelf,
+                               WebGLenum aTarget,
+                               WebGLint aLevel,
+                               WebGLint aXoffset,
+                               WebGLint aYoffset,
+                               WebGLenum aFormat,
+                               WebGLenum aType)
+
+        : self(aSelf)
+        , target(aTarget)
+        , level(aLevel)
+        , xoffset(aXoffset)
+        , yoffset(aYoffset)
+        , format(aFormat)
+        , type(aType)
+    {}
+
+    nsresult DoCallForImageData(WebGLsizei width, WebGLsizei height,
+                                JSObject* pixels)
+    {
+        return self->TexSubImage2D_imageData(target, level, xoffset, yoffset,
+                                             width, height, format, type,
+                                             pixels);
+    }
+    nsresult DoCallForElement(mozilla::dom::Element* elt)
+    {
+        return self->TexSubImage2D_dom(target, level, xoffset, yoffset, format,
+                                       type, elt);
+    }
+};
+
+template<class T>
+static bool
+TexImage2DImageDataOrElement(JSContext* cx, T& self, JS::Value* object)
+{
+    MOZ_ASSERT(object && object->isObject());
+
+    nsGenericElement* elt;
+    xpc_qsSelfRef eltRef;
+    if (NS_SUCCEEDED(xpc_qsUnwrapArg<nsGenericElement>(
+            cx, *object, &elt, &eltRef.ptr, object))) {
+        nsresult rv = self.DoCallForElement(elt);
+        return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
+    }
+
+    // Failed to interpret object as an Element, now try to interpret it as
+    // ImageData.
+    JSObject* imageData = &object->toObject();
+
+    jsval js_width, js_height, js_data;
+    if (!JS_GetProperty(cx, imageData, "width", &js_width) ||
+        !JS_GetProperty(cx, imageData, "height", &js_height) ||
+        !JS_GetProperty(cx, imageData, "data", &js_data)) {
+        return false;
+    }
+    if (js_width  == JSVAL_VOID ||
+        js_height == JSVAL_VOID ||
+        !js_data.isObject())
+    {
+        return xpc_qsThrow(cx, NS_ERROR_FAILURE);
+    }
+    int32_t int_width, int_height;
+    JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
+    if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
+        !JS_ValueToECMAInt32(cx, js_height, &int_height))
+    {
+        return false;
+    }
+    if (!js_IsTypedArray(obj_data))
+    {
+        return xpc_qsThrow(cx, NS_ERROR_FAILURE);
+    }
+
+    nsresult rv = self.DoCallForImageData(int_width, int_height, obj_data);
+    return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
+}
+
 /*
  * TexImage2D takes:
  *    TexImage2D(uint, int, uint, int, int, int, uint, uint, ArrayBufferView)
@@ -412,65 +539,21 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, unsigned argc, jsval *vp)
     // arguments common to all cases
     GET_UINT32_ARG(argv0, 0);
     GET_INT32_ARG(argv1, 1);
+    GET_UINT32_ARG(argv2, 2);
 
-    if (argc > 5 &&
-        !JSVAL_IS_PRIMITIVE(argv[5]))
-    {
+    if (argc > 5 && !JSVAL_IS_PRIMITIVE(argv[5])) {
         // implement the variants taking a DOMElement as argv[5]
-        GET_UINT32_ARG(argv2, 2);
         GET_UINT32_ARG(argv3, 3);
         GET_UINT32_ARG(argv4, 4);
 
-        nsIDOMElement *elt;
-        xpc_qsSelfRef eltRef;
-        rv = xpc_qsUnwrapArg<nsIDOMElement>(cx, argv[5], &elt, &eltRef.ptr, &argv[5]);
-        if (NS_FAILED(rv)) return JS_FALSE;
-
-        rv = self->TexImage2D_dom(argv0, argv1, argv2, argv3, argv4, elt);
-
-        // NS_ERROR_DOM_SECURITY_ERR indicates we tried to load a cross-domain element, so
-        // bail out immediately, don't try to interprete as ImageData
-        if (rv == NS_ERROR_DOM_SECURITY_ERR) {
-            xpc_qsThrowBadArg(cx, rv, vp, 5);
-            return JS_FALSE;
+        CallTexImage2D selfCaller(self, argv0, argv1, argv2, argv3, argv4);
+        if (!TexImage2DImageDataOrElement(cx, selfCaller, argv + 5)) {
+            return false;
         }
-
-        if (NS_FAILED(rv)) {
-            // failed to interprete argv[5] as a DOMElement, now try to interprete it as ImageData
-            JSObject *argv5 = JSVAL_TO_OBJECT(argv[5]);
-
-            jsval js_width, js_height, js_data;
-            JS_GetProperty(cx, argv5, "width", &js_width);
-            JS_GetProperty(cx, argv5, "height", &js_height);
-            JS_GetProperty(cx, argv5, "data", &js_data);
-            if (js_width  == JSVAL_VOID ||
-                js_height == JSVAL_VOID ||
-                !js_data.isObject())
-            {
-                xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 5);
-                return JS_FALSE;
-            }
-            int32_t int_width, int_height;
-            JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
-            if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
-                !JS_ValueToECMAInt32(cx, js_height, &int_height))
-            {
-                return JS_FALSE;
-            }
-            if (!js_IsTypedArray(obj_data))
-            {
-                xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 5);
-                return JS_FALSE;
-            }
-            rv = self->TexImage2D_imageData(argv0, argv1, argv2,
-                                            int_width, int_height, 0,
-                                            argv3, argv4, js::TypedArray::getTypedArray(obj_data));
-        }
-    } else if (argc > 8 &&
-               JSVAL_IS_OBJECT(argv[8])) // here, we allow null !
-    {
+        rv = NS_OK;
+    } else if (argc > 8 && JSVAL_IS_OBJECT(argv[8])) {
+        // here, we allow null !
         // implement the variants taking a buffer/array as argv[8]
-        GET_UINT32_ARG(argv2, 2);
         GET_INT32_ARG(argv3, 3);
         GET_INT32_ARG(argv4, 4);
         GET_INT32_ARG(argv5, 5);
@@ -536,61 +619,17 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, unsigned argc, jsval *v
     GET_INT32_ARG(argv2, 2);
     GET_INT32_ARG(argv3, 3);
 
-    if (argc > 6 &&
-        !JSVAL_IS_PRIMITIVE(argv[6]))
-    {
-        // implement the variants taking a DOMElement as argv[6]
+    if (argc > 6 && !JSVAL_IS_PRIMITIVE(argv[6])) {
+        // implement the variants taking a DOMElement or an ImageData as argv[6]
         GET_UINT32_ARG(argv4, 4);
         GET_UINT32_ARG(argv5, 5);
 
-        nsIDOMElement *elt;
-        xpc_qsSelfRef eltRef;
-        rv = xpc_qsUnwrapArg<nsIDOMElement>(cx, argv[6], &elt, &eltRef.ptr, &argv[6]);
-        if (NS_FAILED(rv)) return JS_FALSE;
-
-        rv = self->TexSubImage2D_dom(argv0, argv1, argv2, argv3, argv4, argv5, elt);
-        
-        // NS_ERROR_DOM_SECURITY_ERR indicates we tried to load a cross-domain element, so
-        // bail out immediately, don't try to interprete as ImageData
-        if (rv == NS_ERROR_DOM_SECURITY_ERR) {
-            xpc_qsThrowBadArg(cx, rv, vp, 6);
-            return JS_FALSE;
+        CallTexSubImage2D selfCaller(self, argv0, argv1, argv2, argv3, argv4, argv5);
+        if (!TexImage2DImageDataOrElement(cx, selfCaller, argv + 6)) {
+            return false;
         }
-
-        if (NS_FAILED(rv)) {
-            // failed to interprete argv[6] as a DOMElement, now try to interprete it as ImageData
-            JSObject *argv6 = JSVAL_TO_OBJECT(argv[6]);
-            jsval js_width, js_height, js_data;
-            JS_GetProperty(cx, argv6, "width", &js_width);
-            JS_GetProperty(cx, argv6, "height", &js_height);
-            JS_GetProperty(cx, argv6, "data", &js_data);
-            if (js_width  == JSVAL_VOID ||
-                js_height == JSVAL_VOID ||
-                !js_data.isObject())
-            {
-                xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
-                return JS_FALSE;
-            }
-            int32_t int_width, int_height;
-            JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
-            if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
-                !JS_ValueToECMAInt32(cx, js_height, &int_height))
-            {
-                return JS_FALSE;
-            }
-            if (!js_IsTypedArray(obj_data))
-            {
-                xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
-                return JS_FALSE;
-            }
-            rv = self->TexSubImage2D_imageData(argv0, argv1, argv2, argv3,
-                                               int_width, int_height,
-                                               argv4, argv5,
-                                               js::TypedArray::getTypedArray(obj_data));
-        }
-    } else if (argc > 8 &&
-               !JSVAL_IS_PRIMITIVE(argv[8]))
-    {
+        rv = NS_OK;
+    } else if (argc > 8 && !JSVAL_IS_PRIMITIVE(argv[8])) {
         // implement the variants taking a buffer/array as argv[8]
         GET_INT32_ARG(argv4, 4);
         GET_INT32_ARG(argv5, 5);

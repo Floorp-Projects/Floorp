@@ -408,8 +408,10 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32_t argc)
         script->initCounts(cx);
 
     ActiveFrame *newa = OffTheBooks::new_<ActiveFrame>(cx);
-    if (!newa)
+    if (!newa) {
+        js_ReportOutOfMemory(cx);
         return Compile_Error;
+    }
 
     newa->parent = a;
     if (a)
@@ -624,8 +626,10 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
 
     a->varTypes = (VarType *)
         OffTheBooks::calloc_(TotalSlots(script) * sizeof(VarType));
-    if (!a->varTypes)
+    if (!a->varTypes) {
+        js_ReportOutOfMemory(cx);
         return Compile_Error;
+    }
 
     for (uint32_t slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
         VarType &vt = a->varTypes[slot];
@@ -6998,8 +7002,10 @@ mjit::Compiler::startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
     }
 
     LoopState *nloop = OffTheBooks::new_<LoopState>(cx, &ssa, this, &frame);
-    if (!nloop || !nloop->init(head, entry, entryTarget))
+    if (!nloop || !nloop->init(head, entry, entryTarget)) {
+        js_ReportOutOfMemory(cx);
         return false;
+    }
 
     nloop->outer = loop;
     loop = nloop;
@@ -7175,8 +7181,10 @@ mjit::Compiler::jumpAndRun(Jump j, jsbytecode *target, Jump *slow, bool *trampol
         RegisterAllocation *&alloc = analysis->getAllocation(target);
         if (!alloc) {
             alloc = cx->typeLifoAlloc().new_<RegisterAllocation>(false);
-            if (!alloc)
+            if (!alloc) {
+                js_ReportOutOfMemory(cx);
                 return false;
+            }
         }
         lvtarget = alloc;
         consistent = frame.consistentRegisters(target);

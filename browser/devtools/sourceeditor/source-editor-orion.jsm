@@ -24,6 +24,7 @@
  *   Kenny Heaton <kennyheaton@gmail.com>
  *   Spyros Livathinos <livathinos.spyros@gmail.com>
  *   Allen Eubank <adeubank@gmail.com>
+ *   Girish Sharma <scrapmachines@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,6 +63,14 @@ const ORION_IFRAME = "data:text/html;charset=utf8,<!DOCTYPE html>" +
   "</body></html>";
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/**
+ * Maximum allowed vertical offset for the line index when you call
+ * SourceEditor.setCaretPosition().
+ *
+ * @type number
+ */
+const VERTICAL_OFFSET = 3;
 
 /**
  * The primary selection update delay. On Linux, the X11 primary selection is
@@ -109,6 +118,10 @@ const ORION_ANNOTATION_TYPES = {
  * Default key bindings in the Orion editor.
  */
 const DEFAULT_KEYBINDINGS = [
+  {
+    action: "enter",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_ENTER,
+  },
   {
     action: "undo",
     code: Ci.nsIDOMKeyEvent.DOM_VK_Z,
@@ -465,6 +478,10 @@ SourceEditor.prototype = {
    */
   _doTab: function SE__doTab()
   {
+    if (this.readOnly) {
+      return false;
+    }
+
     let indent = "\t";
     let selection = this.getSelection();
     let model = this._model;
@@ -515,6 +532,10 @@ SourceEditor.prototype = {
    */
   _doUnindentLines: function SE__doUnindentLines()
   {
+    if (this.readOnly) {
+      return true;
+    }
+
     let indent = "\t";
 
     let selection = this.getSelection();
@@ -569,6 +590,10 @@ SourceEditor.prototype = {
    */
   _doEnter: function SE__doEnter()
   {
+    if (this.readOnly) {
+      return false;
+    }
+
     let selection = this.getSelection();
     if (selection.start != selection.end) {
       return false;
@@ -1309,10 +1334,56 @@ SourceEditor.prototype = {
    *        The new caret line location. Line numbers start from 0.
    * @param number [aColumn=0]
    *        Optional. The new caret column location. Columns start from 0.
+   * @param number [aAlign=0]
+   *        Optional. Position of the line with respect to viewport.
+   *        Allowed values are:
+   *          SourceEditor.VERTICAL_ALIGN.TOP     target line at top of view.
+   *          SourceEditor.VERTICAL_ALIGN.CENTER  target line at center of view.
+   *          SourceEditor.VERTICAL_ALIGN.BOTTOM  target line at bottom of view.
    */
-  setCaretPosition: function SE_setCaretPosition(aLine, aColumn)
+  setCaretPosition: function SE_setCaretPosition(aLine, aColumn, aAlign)
   {
-    this.setCaretOffset(this._model.getLineStart(aLine) + (aColumn || 0));
+    let editorHeight = this._view.getClientArea().height;
+    let lineHeight = this._view.getLineHeight();
+    let linesVisible = Math.floor(editorHeight/lineHeight);
+    let halfVisible = Math.round(linesVisible/2);
+    let firstVisible = this.getTopIndex();
+    let lastVisible = this._view.getBottomIndex();
+    let caretOffset = this._model.getLineStart(aLine) + (aColumn || 0);
+
+    this._view.setSelection(caretOffset, caretOffset, false);
+
+    // If the target line is in view, skip the vertical alignment part.
+    if (aLine <= lastVisible && aLine >= firstVisible) {
+      this._view.showSelection();
+      return;
+    }
+
+    // Setting the offset so that the line always falls in the upper half
+    // of visible lines (lower half for BOTTOM aligned).
+    // VERTICAL_OFFSET is the maximum allowed value.
+    let offset = Math.min(halfVisible, VERTICAL_OFFSET);
+
+    let topIndex;
+    switch (aAlign) {
+      case this.VERTICAL_ALIGN.CENTER:
+        topIndex = Math.max(aLine - halfVisible, 0);
+        break;
+
+      case this.VERTICAL_ALIGN.BOTTOM:
+        topIndex = Math.max(aLine - linesVisible + offset, 0);
+        break;
+
+      default: // this.VERTICAL_ALIGN.TOP.
+        topIndex = Math.max(aLine - offset, 0);
+        break;
+    }
+    // Bringing down the topIndex to total lines in the editor if exceeding.
+    topIndex = Math.min(topIndex, this.getLineCount());
+    this.setTopIndex(topIndex);
+
+    let location = this._view.getLocationAtOffset(caretOffset);
+    this._view.setHorizontalPixel(location.x);
   },
 
   /**

@@ -85,6 +85,10 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo();
+
+  virtual bool IsDisabled() const {
+    return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+  }
 protected:
 
   /**

@@ -62,6 +62,7 @@ public:
 
   static void FormatColor(const nscolor& aValue, nsString& aFormattedValue);
   static void FormatFontStyle(const nscoord& aValue, nsAString& aFormattedValue);
+  static void FormatTextDecorationStyle(PRUint8 aValue, nsAString& aFormattedValue);
 
 private:
   StyleInfo() MOZ_DELETE;

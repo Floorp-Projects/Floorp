@@ -61,20 +61,21 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
       aExecutor->SetSpeculationBase(mUrl);
       break;
     case eSpeculativeLoadImage:
-      aExecutor->PreloadImage(mUrl, mCharsetOrCrossOrigin);
+      aExecutor->PreloadImage(mUrl, mCrossOrigin);
       break;
     case eSpeculativeLoadScript:
-      aExecutor->PreloadScript(mUrl, mCharsetOrCrossOrigin, mTypeOrCharsetSource);
+      aExecutor->PreloadScript(mUrl, mCharset, mTypeOrCharsetSource,
+			       mCrossOrigin);
       break;
     case eSpeculativeLoadStyle:
-      aExecutor->PreloadStyle(mUrl, mCharsetOrCrossOrigin);
+      aExecutor->PreloadStyle(mUrl, mCharset);
       break;
     case eSpeculativeLoadManifest:  
       aExecutor->ProcessOfflineManifest(mUrl);
       break;
     case eSpeculativeLoadSetDocumentCharset: {
         nsCAutoString narrowName;
-        CopyUTF16toUTF8(mCharsetOrCrossOrigin, narrowName);
+        CopyUTF16toUTF8(mCharset, narrowName);
         NS_ASSERTION(mTypeOrCharsetSource.Length() == 1,
             "Unexpected charset source string");
         PRInt32 intSource = (PRInt32)mTypeOrCharsetSource.First();

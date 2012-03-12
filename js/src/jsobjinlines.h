@@ -1076,8 +1076,10 @@ JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
     uint32_t capacity = js::gc::GetGCKindSlots(kind) - js::ObjectElements::VALUES_PER_HEADER;
 
     JSObject *obj = js_NewGCObject(cx, kind);
-    if (!obj)
+    if (!obj) {
+        js_ReportOutOfMemory(cx);
         return NULL;
+    }
 
     obj->shape_.init(shape);
     obj->type_.init(type);

@@ -1,0 +1,30 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <style>
+      body { margin-top: 50px }
+      .relpos_parent {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        background: lightblue;
+      }
+      .abspos_child {
+        position: absolute;
+        left: 30px;
+        bottom: 10px;
+        width: 20px;
+        height: 130px;
+        background: purple;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div class="relpos_parent">
+        <div class="abspos_child"></div>
+      </div>
+    </div>
+  </body>
+</html>
