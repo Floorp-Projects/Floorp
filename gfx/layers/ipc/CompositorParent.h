@@ -143,6 +143,7 @@ private:
   float mXScale;
   float mYScale;
   nsIntPoint mScrollOffset;
+  nsIntSize mContentSize;
 
   // When this flag is set, the next composition will be the first for a
   // particular document (i.e. the document displayed on the screen will change).
