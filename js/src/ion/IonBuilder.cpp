@@ -654,7 +654,7 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_DEFVAR:
       case JSOP_DEFCONST:
-        return jsop_defvar(GET_SLOTNO(pc));
+        return jsop_defvar(GET_UINT32_INDEX(pc));
 
       case JSOP_LOCALINC:
       case JSOP_INCLOCAL:
