@@ -377,10 +377,12 @@ var BrowserApp = {
     const PREF_TELEMETRY_PROMPTED = "toolkit.telemetry.prompted";
     const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
     const PREF_TELEMETRY_REJECTED = "toolkit.telemetry.rejected";
+    const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
 
     // This is used to reprompt users when privacy message changes
     const TELEMETRY_PROMPT_REV = 2;
 
+    let serverOwner = Services.prefs.getCharPref(PREF_TELEMETRY_SERVER_OWNER);
     let telemetryPrompted = null;
     try {
       telemetryPrompted = Services.prefs.getIntPref(PREF_TELEMETRY_PROMPTED);
@@ -412,8 +414,17 @@ var BrowserApp = {
     ];
 
     let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-    let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
-    NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
+    let message = Strings.browser.formatStringFromName("telemetry.optin.message", [serverOwner, brandShortName], 2);
+    let learnMoreLabel = Strings.browser.GetStringFromName("telemetry.optin.learnMore");
+    let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    learnMoreUrl += "how-can-i-help-submitting-performance-data";
+    let options = {
+      link: {
+        label: learnMoreLabel,
+        url: learnMoreUrl
+      }
+    };
+    NativeWindow.doorhanger.show(message, "telemetry-optin", buttons, this.selectedTab.id, options);
   },
 
   shutdown: function shutdown() {
