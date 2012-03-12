@@ -12,16 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is LayoutView Build Code.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# The Initial Developer of the Original Code is The Mozilla Foundation.
+#
+# Portions created by the Initial Developer are Copyright (C) 2012
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Rob Campbell <rcampbell@mozilla.com>
-#  Mike Ratcliffe <mratcliffe@mozilla.com>
+#   Paul Rouget <paul@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,26 +36,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
-DIRS = \
-  highlighter \
-  webconsole \
-  sourceeditor \
-  styleeditor \
-  styleinspector \
-  tilt \
-  scratchpad \
-  debugger \
-  layoutview \
-  shared \
-  $(NULL)
+ifdef ENABLE_TESTS
+	DIRS += test
+endif
 
 include $(topsrcdir)/config/rules.mk
+
+libs::
+	$(NSINSTALL) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/devtools

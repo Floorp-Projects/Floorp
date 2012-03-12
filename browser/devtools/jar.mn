@@ -9,6 +9,8 @@ browser.jar:
     content/browser/devtools/csshtmltree.xul      (styleinspector/csshtmltree.xul)
     content/browser/devtools/cssruleview.xul      (styleinspector/cssruleview.xul)
     content/browser/devtools/styleinspector.css   (styleinspector/styleinspector.css)
+*   content/browser/devtools/layoutview/view.xhtml  (layoutview/view.xhtml)
+    content/browser/devtools/layoutview/view.css  (layoutview/view.css)
     content/browser/orion.js                      (sourceeditor/orion/orion.js)
 *   content/browser/source-editor-overlay.xul     (sourceeditor/source-editor-overlay.xul)
 *   content/browser/debugger.xul                  (debugger/debugger.xul)
