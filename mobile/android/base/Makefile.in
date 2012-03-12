@@ -263,7 +263,6 @@ RES_LAYOUT = \
   $(NULL)
 
 RES_LAYOUT_V11 = \
-  res/layout-v11/awesomebar.xml \
   res/layout-v11/gecko_app.xml \
   $(NULL)
  

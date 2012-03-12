@@ -36,12 +36,10 @@
          <item name="android:displayOptions">showCustom</item>
          <item name="android:customNavigationLayout">@layout/browser_toolbar</item>
     </style>
- 
+
     <!-- AwesomeBar ActionBar -->
     <style name="ActionBar.AwesomeBar">
-         <item name="android:background">@android:color/transparent</item>
-         <item name="android:displayOptions">showCustom</item>
-         <item name="android:customNavigationLayout">@layout/awesomebar_search</item>
+         <item name="android:visibility">gone</item>
     </style>
  
     <!-- GeckoPreferences ActionBar -->
