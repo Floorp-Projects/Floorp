@@ -823,6 +823,7 @@ PresShell::PresShell()
   mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT | nsISelectionDisplay::DISPLAY_IMAGES;
   mIsThemeSupportDisabled = false;
   mIsActive = true;
+  mIsFirstPaint = false;
   mFrozen = false;
 #ifdef DEBUG
   mPresArenaAllocCount = 0;
