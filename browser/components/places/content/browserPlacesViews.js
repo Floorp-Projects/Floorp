@@ -887,6 +887,14 @@ function PlacesToolbar(aPlace) {
   this._addEventListeners(this._rootElt, ["overflow", "underflow"], true);
   this._addEventListeners(window, ["resize", "unload"], false);
 
+  // If personal-bookmarks has been dragged to the tabs toolbar,
+  // we have to track addition and removals of tabs, to properly
+  // recalculate the available space for bookmarks.
+  // TODO (bug 734730): Use a performant mutation listener when available.
+  if (this._viewElt.parentNode.parentNode == document.getElementById("TabsToolbar")) {
+    this._addEventListeners(gBrowser.tabContainer, ["TabOpen", "TabClose"], false);
+  }
+
   PlacesViewBase.call(this, aPlace);
 
   Services.telemetry.getHistogramById("FX_BOOKMARKS_TOOLBAR_INIT_MS")
@@ -913,6 +921,7 @@ PlacesToolbar.prototype = {
                                true);
     this._removeEventListeners(this._rootElt, ["overflow", "underflow"], true);
     this._removeEventListeners(window, ["resize", "unload"], false);
+    this._removeEventListeners(gBrowser.tabContainer, ["TabOpen", "TabClose"], false);
 
     PlacesViewBase.prototype.uninit.apply(this, arguments);
   },
@@ -1067,7 +1076,11 @@ PlacesToolbar.prototype = {
         if (aEvent.detail == 0)
           return;
 
+        this.updateChevron();
         this._chevron.collapsed = true;
+        break;
+      case "TabOpen":
+      case "TabClose":
         this.updateChevron();
         break;
       case "dragstart":
