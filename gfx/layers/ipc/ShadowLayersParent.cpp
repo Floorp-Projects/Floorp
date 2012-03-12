@@ -399,7 +399,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   // other's buffer contents.
   ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
 
-  mShadowLayersManager->ShadowLayersUpdated();
+  mShadowLayersManager->ShadowLayersUpdated(isFirstPaint);
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   printf_stderr("Compositor: Layers update took %i ms (blocking gecko).\n",

@@ -5370,6 +5370,11 @@ PresShell::Paint(nsIView*           aViewToPaint,
   LayerManager* layerManager =
     aWidgetToPaint->GetLayerManager(&isRetainingManager);
   NS_ASSERTION(layerManager, "Must be in paint event");
+
+  if (mIsFirstPaint) {
+    layerManager->SetIsFirstPaint();
+    mIsFirstPaint = false;
+  }
   layerManager->BeginTransaction();
 
   if (frame && isRetainingManager) {
