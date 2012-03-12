@@ -153,7 +153,11 @@ public:
     bool Init()
     {
         MakeCurrent();
-        return InitWithPrefix("gl", true);
+        if (!InitWithPrefix("gl", true))
+            return false;
+
+        InitFramebuffers();
+        return true;
     }
 
     void *GetNativeData(NativeDataType aType)
@@ -456,7 +460,7 @@ GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
                                                         context);
     if (!glContext->Init()) {
         return nsnull;
-    }    
+    }
 
     return glContext.forget();
 }
@@ -554,6 +558,7 @@ CreateOffscreenPBufferContext(const gfxIntSize& aSize,
     [pbFormat release];
 
     nsRefPtr<GLContextCGL> glContext = new GLContextCGL(aFormat, shareContext, context, pb);
+
     return glContext.forget();
 }
 
@@ -579,6 +584,7 @@ CreateOffscreenFBOContext(const ContextFormat& aFormat,
     }
 
     nsRefPtr<GLContextCGL> glContext = new GLContextCGL(aFormat, shareContext, context, true);
+
     return glContext.forget();
 }
 
