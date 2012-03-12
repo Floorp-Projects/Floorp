@@ -1011,13 +1011,9 @@ var BrowserApp = {
   },
 
   // nsIAndroidBrowserApp
-  getWindowForTab: function(tabId) {
-      let tab = this.getTabForId(tabId);
-      if (!tab.browser)
-	  return null;
-      return tab.browser.contentWindow;
+  getBrowserTab: function(tabId) {
+    return this.getTabForId(tabId);
   }
-
 };
 
 var NativeWindow = {
@@ -2253,11 +2249,23 @@ Tab.prototype = {
     }
   },
 
+  // nsIBrowserTab
+  get window() {
+    if (!this.browser)
+      return null;
+    return this.browser.contentWindow;
+  },
+
+  get scale() {
+    return this.viewport.zoom;
+  },
+
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIWebProgressListener,
     Ci.nsISHistoryListener,
     Ci.nsIObserver,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
+    Ci.nsIBrowserTab
   ])
 };
 
