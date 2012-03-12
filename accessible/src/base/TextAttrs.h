@@ -107,11 +107,12 @@ protected:
    * its value before or after the given offsets.
    *
    * @param aTextAttrArray  [in] text attributes array
+   * @param aAttrArrayLen   [in] text attributes array length
    * @param aStartHTOffset  [in, out] the start offset
    * @param aEndHTOffset    [in, out] the end offset
    */
   class TextAttr;
-  void GetRange(const nsTArray<TextAttr*>& aTextAttrArray,
+  void GetRange(TextAttr* aAttrArray[], PRUint32 aAttrArrayLen,
                 PRInt32* aStartHTOffset, PRInt32* aEndHTOffset);
 
 private:
@@ -157,7 +158,7 @@ protected:
   public:
     TTextAttr(bool aGetRootValue) : mGetRootValue(aGetRootValue) {}
 
-    // ITextAttr
+    // TextAttr
     virtual void Expose(nsIPersistentProperties* aAttributes,
                         bool aIncludeDefAttrValue)
     {
