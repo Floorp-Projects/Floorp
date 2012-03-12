@@ -381,7 +381,7 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createViewportEvent(ViewportMetrics viewport, Rect displayPortMargins) {
+    public static GeckoEvent createViewportEvent(ViewportMetrics viewport, RectF displayPort) {
         GeckoEvent event = new GeckoEvent(VIEWPORT);
         event.mCharacters = "Viewport:Change";
         PointF origin = viewport.getOrigin();
@@ -389,7 +389,7 @@ public class GeckoEvent {
         sb.append("{ \"x\" : ").append(origin.x)
           .append(", \"y\" : ").append(origin.y)
           .append(", \"zoom\" : ").append(viewport.getZoomFactor())
-          .append(", \"displayPortMargins\" :").append(RectUtils.toJSON(displayPortMargins))
+          .append(", \"displayPort\" :").append(RectUtils.toJSON(displayPort))
           .append('}');
         event.mCharactersExtra = sb.toString();
         return event;
