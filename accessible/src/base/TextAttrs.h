@@ -244,27 +244,6 @@ protected:
 
 
   /**
-   * Class is used for the work with CSS based text attributes.
-   */
-  class CSSTextAttr : public TTextAttr<nsString>
-  {
-  public:
-    CSSTextAttr(PRUint32 aIndex, nsIContent* aRootElm, nsIContent* aElm);
-    virtual ~CSSTextAttr() { }
-
-  protected:
-
-    // TextAttr
-    virtual bool GetValueFor(nsIContent* aElm, nsString* aValue);
-    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
-                             const nsString& aValue);
-
-  private:
-    PRInt32 mIndex;
-  };
-
-
-  /**
    * Class is used for the work with 'background-color' text attribute.
    */
   class BGColorTextAttr : public TTextAttr<nscolor>
@@ -434,6 +413,34 @@ protected:
     virtual bool GetValueFor(nsIContent* aElm, TextDecorValue* aValue);
     virtual void ExposeValue(nsIPersistentProperties* aAttributes,
                              const TextDecorValue& aValue);
+  };
+
+  /**
+   * Class is used for the work with "text-position" text attribute.
+   */
+
+  enum TextPosValue {
+    eTextPosNone = 0,
+    eTextPosBaseline,
+    eTextPosSub,
+    eTextPosSuper
+  };
+
+  class TextPosTextAttr : public TTextAttr<TextPosValue>
+  {
+  public:
+    TextPosTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame);
+    virtual ~TextPosTextAttr() { }
+
+  protected:
+
+    // TextAttr
+    virtual bool GetValueFor(nsIContent* aElm, TextPosValue* aValue);
+    virtual void ExposeValue(nsIPersistentProperties* aAttributes,
+                             const TextPosValue& aValue);
+
+  private:
+    TextPosValue GetTextPosValue(nsIFrame* aFrame) const;
   };
 
 }; // TextAttrMgr
