@@ -108,7 +108,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
 
     /* The new color for the checkerboard. */
     private int mCheckerboardColor;
-    private boolean mCheckerboardShouldShowChecks = true;
+    private boolean mCheckerboardShouldShowChecks;
 
     private boolean mForceRedraw;
 
@@ -140,6 +140,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         mViewportMetrics = new ImmutableViewportMetrics(new ViewportMetrics());
         mPanZoomController = new PanZoomController(this);
         mView = new LayerView(context, this);
+        mCheckerboardShouldShowChecks = true;
 
         Tabs.getInstance().registerOnTabsChangedListener(this);
 
@@ -356,26 +357,29 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      * Converts a point from layer view coordinates to layer coordinates. In other words, given a
      * point measured in pixels from the top left corner of the layer view, returns the point in
      * pixels measured from the top left corner of the root layer, in the coordinate system of the
-     * layer itself. This method is used by the viewport controller as part of the process of
-     * translating touch events to Gecko's coordinate system.
+     * layer itself (CSS pixels). This method is used as part of the process of translating touch
+     * events to Gecko's coordinate system.
      */
     public PointF convertViewPointToLayerPoint(PointF viewPoint) {
         if (mRootLayer == null)
             return null;
 
         ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
-        // Undo the transforms.
         PointF origin = viewportMetrics.getOrigin();
-        PointF newPoint = new PointF(origin.x, origin.y);
         float zoom = viewportMetrics.zoomFactor;
-        viewPoint.x /= zoom;
-        viewPoint.y /= zoom;
-        newPoint.offset(viewPoint.x, viewPoint.y);
-
         Rect rootPosition = mRootLayer.getPosition();
-        newPoint.offset(-rootPosition.left, -rootPosition.top);
+        float rootScale = mRootLayer.getResolution();
 
-        return newPoint;
+        // viewPoint + origin gives the coordinate in device pixels from the top-left corner of the page.
+        // Divided by zoom, this gives us the coordinate in CSS pixels from the top-left corner of the page.
+        // rootPosition / rootScale is where Gecko thinks it is (scrollTo position) in CSS pixels from
+        // the top-left corner of the page. Subtracting the two gives us the offset of the viewPoint from
+        // the current Gecko coordinate in CSS pixels.
+        PointF layerPoint = new PointF(
+                ((viewPoint.x + origin.x) / zoom) - (rootPosition.left / rootScale),
+                ((viewPoint.y + origin.y) / zoom) - (rootPosition.top / rootScale));
+
+        return layerPoint;
     }
 
     /*
