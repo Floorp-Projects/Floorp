@@ -75,6 +75,7 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_clean-exit.js \
 	browser_dbg_bug723069_editor-breakpoints.js \
 	browser_dbg_bug731394_editor-contextmenu.js \
+	browser_dbg_displayName.js \
 	head.js \
 	$(NULL)
 
@@ -89,6 +90,7 @@ _BROWSER_TEST_PAGES = \
 	browser_dbg_frame-parameters.html \
 	browser_dbg_update-editor-mode.html \
 	test-editor-mode \
+	browser_dbg_displayName.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
