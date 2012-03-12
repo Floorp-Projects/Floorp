@@ -65,35 +65,3 @@ function _test_makeURI() {
   do_check_eq(Utils.makeURI("chrome://badstuff"), undefined);
   do_check_eq(Utils.makeURI("this is a test"), undefined);
 }
-
-function _test_makeURL() {
-  _("Check http uri");
-  let uri = "http://mozillalabs.com/";
-  do_check_true(Utils.makeURL(uri) instanceof Ci.nsIURL);
-
-  _("Check https uri");
-  let uris = "https://mozillalabs.com/";
-  do_check_true(Utils.makeURL(uris) instanceof Ci.nsIURL);
-
-  let uric = "chrome://browser/content/browser.xul";
-  do_check_true(Utils.makeURL(uric) instanceof Ci.nsIURL);
-
-  _("Check about uri");
-  let uria = "about:weave";
-  let except1;
-  try {
-    Utils.makeURL(uria);
-  } catch(e) {
-    except1 = e;
-  }
-  do_check_true(!!except1);
-
-  _("Check invalid uri");
-  let except2;
-  try {
-    Utils.makeURL("mozillalabs.com");
-  } catch(e) {
-    except2 = e;
-  }
-  do_check_true(!!except2);
-}
