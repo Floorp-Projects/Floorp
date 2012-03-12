@@ -18,3 +18,8 @@ export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 
 mk_add_options MOZ_MAKE_FLAGS=-j1
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+. $topsrcdir/browser/config/mozconfigs/win64/vs2010-mozconfig

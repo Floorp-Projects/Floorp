@@ -43,13 +43,11 @@
 
 #include "nsDeque.h"
 #include "nsBuiltinDecoderReader.h"
-#include "nsWebMBufferedParser.h"
 #include "nsAutoRef.h"
 #include "nestegg/nestegg.h"
 
 #define VPX_DONT_DEFINE_STDINT_TYPES
-#include "vpx/vpx_decoder.h"
-#include "vpx/vp8dx.h"
+#include "vpx/vpx_codec.h"
 
 #ifdef MOZ_TREMOR
 #include "tremor/ivorbiscodec.h"
@@ -57,7 +55,7 @@
 #include "vorbis/codec.h"
 #endif
 
-class nsMediaDecoder;
+class nsWebMBufferedState;
 
 // Holds a nestegg_packet, and its file offset. This is needed so we
 // know the offset in the file we've played up to, in order to calculate
