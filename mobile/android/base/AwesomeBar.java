@@ -110,14 +110,8 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
 
         setContentView(R.layout.awesomebar);
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            RelativeLayout actionBarLayout = (RelativeLayout) GeckoActionBar.getCustomView(this);
-            mGoButton = (ImageButton) actionBarLayout.findViewById(R.id.awesomebar_button);
-            mText = (AwesomeBarEditText) actionBarLayout.findViewById(R.id.awesomebar_text);
-        } else {
-            mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
-            mText = (AwesomeBarEditText) findViewById(R.id.awesomebar_text);
-        }
+        mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
+        mText = (AwesomeBarEditText) findViewById(R.id.awesomebar_text);
 
         TabWidget tabWidget = (TabWidget) findViewById(android.R.id.tabs);
         tabWidget.setDividerDrawable(null);
