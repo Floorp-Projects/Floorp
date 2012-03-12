@@ -1666,7 +1666,9 @@ struct nsStyleDisplay {
 
   /* Returns whether the element has the -moz-transform property. */
   bool HasTransform() const {
-    return mSpecifiedTransform != nsnull || mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D;
+    return mSpecifiedTransform != nsnull || 
+           mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
+           mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;
   }
 };
 
