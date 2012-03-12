@@ -376,31 +376,26 @@ PlacesViewBase.prototype = {
   _setLivemarkStatusMenuItem:
   function PVB_setLivemarkStatusMenuItem(aPopup, aStatus) {
     let statusMenuitem = aPopup._statusMenuitem;
-    let stringId = "";
-    if (aStatus == Ci.mozILivemark.STATUS_LOADING)
-      stringId = "bookmarksLivemarkLoading";
-    else if (aStatus == Ci.mozILivemark.STATUS_FAILED)
-      stringId = "bookmarksLivemarkFailed";
-
-    if (stringId && !statusMenuitem) {
+    if (!statusMenuitem) {
       // Create the status menuitem and cache it in the popup object.
       statusMenuitem = document.createElement("menuitem");
-      statusMenuitem.setAttribute("livemarkStatus", stringId);
       statusMenuitem.className = "livemarkstatus-menuitem";
-      statusMenuitem.setAttribute("label", PlacesUIUtils.getString(stringId));
       statusMenuitem.setAttribute("disabled", true);
-      aPopup.insertBefore(statusMenuitem, aPopup._startMarker.nextSibling);
       aPopup._statusMenuitem = statusMenuitem;
     }
-    else if (stringId &&
-             statusMenuitem.getAttribute("livemarkStatus") != stringId) {
+
+    if (aStatus == Ci.mozILivemark.STATUS_LOADING ||
+        aStatus == Ci.mozILivemark.STATUS_FAILED) {
       // Status has changed, update the cached status menuitem.
+      let stringId = aStatus == Ci.mozILivemark.STATUS_LOADING ?
+                       "bookmarksLivemarkLoading" : "bookmarksLivemarkFailed";
       statusMenuitem.setAttribute("label", PlacesUIUtils.getString(stringId));
+      if (aPopup._startMarker.nextSibling != statusMenuitem)
+        aPopup.insertBefore(statusMenuitem, aPopup._startMarker.nextSibling);
     }
-    else if (!stringId && statusMenuitem) {
+    else {
       // The livemark has finished loading.
       aPopup.removeChild(aPopup._statusMenuitem);
-      aPopup._statusMenuitem = null;
     }
   },
 
