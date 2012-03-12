@@ -88,9 +88,6 @@ const kElementsReceivingInput = {
     video: true
 };
 
-// Whether we're using GL layers.
-const kUsingGLLayers = true;
-
 const kDefaultCSSViewportWidth = 980;
 const kDefaultCSSViewportHeight = 480;
 
@@ -1462,13 +1459,8 @@ Tab.prototype = {
     this.browser.stop();
 
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
-    if (kUsingGLLayers) {
-        frameLoader.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
-        frameLoader.clampScrollPosition = false;
-    } else {
-        // Turn off clipping so we can buffer areas outside of the browser element.
-        frameLoader.clipSubdocument = false;
-    }
+    frameLoader.renderMode = Ci.nsIFrameLoader.RENDER_MODE_ASYNC_SCROLL;
+    frameLoader.clampScrollPosition = false;
 
     // only set tab uri if uri is valid
     let uri = null;
@@ -1703,7 +1695,8 @@ Tab.prototype = {
           return;
 
         // Sample the background color of the page and pass it along. (This is used to draw the
-        // checkerboard.)
+        // checkerboard.) Right now we don't detect changes in the background color after this
+        // event fires; it's not clear that doing so is worth the effort.
         var backgroundColor = null;
         try {
           let browser = this.selectedBrowser;

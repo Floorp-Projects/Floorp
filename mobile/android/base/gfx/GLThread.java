@@ -135,9 +135,6 @@ class GLThread extends Thread {
             }
 
             mController.swapBuffers();
-            //if (!mController.swapBuffers() && mController.checkForLostContext()) {
-            //    doRecreateSurface();
-            //}
         }
     }
 

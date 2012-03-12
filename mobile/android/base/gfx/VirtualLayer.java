@@ -65,6 +65,9 @@ public class VirtualLayer extends Layer {
         // VirtualLayer that is just a shadow of what gecko is painting) because
         // the position and resolution of this layer are never used for anything
         // meaningful.
+        // XXX The above is not true any more; the compositor uses these values
+        // in order to determine where to draw the checkerboard. The values are
+        // also used in LayerController's convertViewPointToLayerPoint function.
         mPosition = newPosition;
         mResolution = newResolution;
     }

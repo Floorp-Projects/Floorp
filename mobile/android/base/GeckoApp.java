@@ -610,8 +610,9 @@ abstract public class GeckoApp
             }
 
             mLastScreen = null;
-            int sw = forceBigSceenshot ? mLayerClient.getWidth() : tab.getMinScreenshotWidth();
-            int sh = forceBigSceenshot ? mLayerClient.getHeight(): tab.getMinScreenshotHeight();
+            View view = mLayerController.getView();
+            int sw = forceBigSceenshot ? view.getWidth() : tab.getMinScreenshotWidth();
+            int sh = forceBigSceenshot ? view.getHeight(): tab.getMinScreenshotHeight();
             int dw = forceBigSceenshot ? sw : tab.getThumbnailWidth();
             int dh = forceBigSceenshot ? sh : tab.getThumbnailHeight();
             GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), sw, sh, dw, dh));

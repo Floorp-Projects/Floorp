@@ -46,6 +46,18 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+/*
+ * This class extends SurfaceView and allows dynamically switching between two modes
+ * of operation. In one mode, it is used like a GLSurfaceView, and has it's own GL
+ * thread. In the other mode, it allows external code to perform GL composition, by
+ * exposing the GL controller.
+ *
+ * In our case, we start off in the first mode because we are rendering the placeholder
+ * image. This mode is initiated by a call to createGLThread(). Once Gecko comes up,
+ * it invokes registerCxxCompositor() via a JNI call, which shuts down the GL thread and
+ * returns the GL controller. The JNI code then takes the EGL surface from the GL
+ * controller and allows the off-main thread compositor to deal with it directly.
+ */
 public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
     private static final String LOGTAG = "GeckoFlexibleGLSurfaceView";
 
@@ -146,6 +158,7 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         return mController;
     }
 
+    /** Implementation of SurfaceHolder.Callback */
     public synchronized void surfaceChanged(SurfaceHolder holder, int format, int width,
                                             int height) {
         mController.sizeChanged(width, height);
@@ -158,6 +171,7 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         }
     }
 
+    /** Implementation of SurfaceHolder.Callback */
     public synchronized void surfaceCreated(SurfaceHolder holder) {
         mController.surfaceCreated();
         if (mGLThread != null) {
@@ -165,6 +179,7 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         }
     }
 
+    /** Implementation of SurfaceHolder.Callback */
     public synchronized void surfaceDestroyed(SurfaceHolder holder) {
         mController.surfaceDestroyed();
         if (mGLThread != null) {
@@ -176,7 +191,7 @@ public class FlexibleGLSurfaceView extends SurfaceView implements SurfaceHolder.
         }
     }
 
-    // Called from the compositor thread
+    /** This function is invoked by Gecko (compositor thread) via JNI; be careful when modifying signature. */
     public static GLController registerCxxCompositor() {
         try {
             FlexibleGLSurfaceView flexView = (FlexibleGLSurfaceView)GeckoApp.mAppContext.getLayerController().getView();

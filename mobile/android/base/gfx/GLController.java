@@ -253,19 +253,23 @@ public class GLController {
         }
     }
 
-    // Provides an EGLSurface without assuming ownership of this surface.
+    /**
+     * Provides an EGLSurface without assuming ownership of this surface.
+     * This class does not keep a reference to the provided EGL surface; the
+     * caller assumes ownership of the surface once it is returned.
+     */
     private EGLSurface provideEGLSurface() {
         if (mEGL == null) {
             initEGL();
         }
 
         SurfaceHolder surfaceHolder = mView.getHolder();
-        mEGLSurface = mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, surfaceHolder, null);
-        if (mEGLSurface == null || mEGLSurface == EGL10.EGL_NO_SURFACE) {
+        EGLSurface surface = mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, surfaceHolder, null);
+        if (surface == null || surface == EGL10.EGL_NO_SURFACE) {
             throw new GLControllerException("EGL window surface could not be created!");
         }
 
-        return mEGLSurface;
+        return surface;
     }
 
     public static class GLControllerException extends RuntimeException {

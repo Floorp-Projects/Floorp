@@ -68,7 +68,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     private IntSize mScreenSize;
     private IntSize mWindowSize;
-    private IntSize mBufferSize;
     private RectF mDisplayPort;
 
     private VirtualLayer mRootLayer;
@@ -88,48 +87,36 @@ public class GeckoLayerClient implements GeckoEventResponder,
         // we can fill these in with dummy values because they are always written
         // to before being read
         mScreenSize = new IntSize(0, 0);
-        mBufferSize = new IntSize(0, 0);
+        mWindowSize = new IntSize(0, 0);
         mDisplayPort = new RectF();
         mCurrentViewTransform = new ViewTransform(0, 0, 1);
     }
 
     /** Attaches the root layer to the layer controller so that Gecko appears. */
     void setLayerController(LayerController layerController) {
+        LayerView view = layerController.getView();
+
         mLayerController = layerController;
 
-        layerController.setRoot(mRootLayer);
-        if (mGeckoViewport != null) {
-            layerController.setViewportMetrics(mGeckoViewport);
-        }
+        mRootLayer = new VirtualLayer(new IntSize(view.getWidth(), view.getHeight()));
+        mLayerRenderer = new LayerRenderer(view);
 
         GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
 
-        sendResizeEventIfNecessary(false);
-
-        LayerView view = layerController.getView();
         view.setListener(this);
+        layerController.setRoot(mRootLayer);
 
-        mLayerRenderer = new LayerRenderer(view);
+        sendResizeEventIfNecessary(true);
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public boolean beginDrawing(int width, int height, String metadata) {
-        // If we've changed surface types, cancel this draw
-        if (initializeVirtualLayer()) {
-            Log.e(LOGTAG, "### Cancelling draw due to virtual layer initialization");
-            return false;
-        }
-
         try {
             JSONObject viewportObject = new JSONObject(metadata);
             mGeckoViewport = new ViewportMetrics(viewportObject);
         } catch (JSONException e) {
             Log.e(LOGTAG, "Aborting draw, bad viewport description: " + metadata);
             return false;
-        }
-
-        if (mBufferSize.width != width || mBufferSize.height != height) {
-            mBufferSize = new IntSize(width, height);
         }
 
         return true;
@@ -157,12 +144,13 @@ public class GeckoLayerClient implements GeckoEventResponder,
     private void sendResizeEventIfNecessary(boolean force) {
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        View view = mLayerController.getView();
 
         IntSize newScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
-        IntSize newWindowSize = getBufferSize();
+        IntSize newWindowSize = new IntSize(view.getWidth(), view.getHeight());
 
-        boolean screenSizeChanged = mScreenSize == null || !mScreenSize.equals(newScreenSize);
-        boolean windowSizeChanged = mWindowSize == null || !mWindowSize.equals(newWindowSize);
+        boolean screenSizeChanged = !mScreenSize.equals(newScreenSize);
+        boolean windowSizeChanged = !mWindowSize.equals(newWindowSize);
 
         if (!force && !screenSizeChanged && !windowSizeChanged) {
             return;
@@ -172,35 +160,16 @@ public class GeckoLayerClient implements GeckoEventResponder,
         mWindowSize = newWindowSize;
 
         if (screenSizeChanged) {
-            Log.i(LOGTAG, "### Screen-size changed to " + mScreenSize);
+            Log.d(LOGTAG, "Screen-size changed to " + mScreenSize);
         }
 
         if (windowSizeChanged) {
-            Log.i(LOGTAG, "### Window-size changed to " + mWindowSize);
+            Log.d(LOGTAG, "Window-size changed to " + mWindowSize);
         }
 
-        GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height,  // Window (buffer) size
-                                                             mScreenSize.width, mScreenSize.height); // Screen size
+        GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height,
+                                                             mScreenSize.width, mScreenSize.height);
         GeckoAppShell.sendEventToGecko(event);
-    }
-
-    private boolean initializeVirtualLayer() {
-        if (mRootLayer != null) {
-            return false;
-        }
-
-        VirtualLayer virtualLayer = new VirtualLayer(getBufferSize());
-        mLayerController.setRoot(virtualLayer);
-        mRootLayer = virtualLayer;
-
-        sendResizeEventIfNecessary(true);
-        return true;
-    }
-
-    private IntSize getBufferSize() {
-        View view = mLayerController.getView();
-        IntSize size = new IntSize(view.getWidth(), view.getHeight());
-        return size;
     }
 
     public Bitmap getBitmap() {
@@ -327,14 +296,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
             adjustViewport();
     }
 
-    public int getWidth() {
-        return mBufferSize.width;
-    }
-
-    public int getHeight() {
-        return mBufferSize.height;
-    }
-
     public ViewportMetrics getGeckoViewportMetrics() {
         // Return a copy, as we modify this inside the Gecko thread
         if (mGeckoViewport != null)
@@ -342,7 +303,13 @@ public class GeckoLayerClient implements GeckoEventResponder,
         return null;
     }
 
-    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature.
+      * The compositor invokes this function just before compositing a frame where the document
+      * is different from the document composited on the last frame. In these cases, the viewport
+      * information we have in Java is no longer valid and needs to be replaced with the new
+      * viewport information provided. setPageSize will never be invoked on the same frame that
+      * this function is invoked on; and this function will always be called prior to getViewTransform.
+      */
     public void setFirstPaintViewport(float offsetX, float offsetY, float zoom, float pageWidth, float pageHeight) {
         synchronized (mLayerController) {
             ViewportMetrics currentMetrics = new ViewportMetrics(mLayerController.getViewportMetrics());
@@ -361,7 +328,12 @@ public class GeckoLayerClient implements GeckoEventResponder,
         }
     }
 
-    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature.
+      * The compositor invokes this function whenever it determines that the page size
+      * has changed (based on the information it gets from layout). If setFirstPaintViewport
+      * is invoked on a frame, then this function will not be. For any given frame, this
+      * function will be invoked before getViewTransform.
+      */
     public void setPageSize(float zoom, float pageWidth, float pageHeight) {
         synchronized (mLayerController) {
             // adjust the page dimensions to account for differences in zoom
@@ -378,12 +350,14 @@ public class GeckoLayerClient implements GeckoEventResponder,
         }
     }
 
-    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
-    /* This functions needs to be fast because it is called by the compositor every frame.
-     * It avoids taking any locks or allocating any objects. We keep around a
-     * mCurrentViewTransform so we don't need to allocate a new ViewTransform
-     * everytime we're called. NOTE: we could probably switch to returning a ImmutableViewportMetrics
-     * which would avoid the copy into mCurrentViewTransform. */
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature.
+      * The compositor invokes this function on every frame to figure out what part of the
+      * page to display. Since it is called on every frame, it needs to be ultra-fast.
+      * It avoids taking any locks or allocating any objects. We keep around a
+      * mCurrentViewTransform so we don't need to allocate a new ViewTransform
+      * everytime we're called. NOTE: we might be able to return a ImmutableViewportMetrics
+      * which would avoid the copy into mCurrentViewTransform.
+      */
     public ViewTransform getViewTransform() {
         // getViewportMetrics is thread safe so we don't need to synchronize
         // on myLayerController.

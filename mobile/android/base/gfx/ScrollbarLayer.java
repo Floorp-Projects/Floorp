@@ -267,7 +267,6 @@ public class ScrollbarLayer extends TileLayer {
             return;
 
         // Create the shader program, if necessary
-        // XXX Can the context's LayerRenderer
         if (mProgram == 0) {
             createProgram();
         }
