@@ -90,9 +90,6 @@ const kElementsReceivingInput = {
 // Whether we're using GL layers.
 const kUsingGLLayers = true;
 
-const kDefaultCSSViewportWidth = 980;
-const kDefaultCSSViewportHeight = 480;
-
 function dump(a) {
   Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
 }
@@ -1464,7 +1461,7 @@ Tab.prototype = {
 
     this.browser = document.createElement("browser");
     this.browser.setAttribute("type", "content-targetable");
-    this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
+    this.setBrowserSize(980, 480);
     BrowserApp.deck.appendChild(this.browser);
 
     this.browser.stop();
@@ -2070,7 +2067,6 @@ Tab.prototype = {
         return;
     }
 
-    let oldScreenWidth = gScreenWidth;
     gScreenWidth = window.outerWidth;
     gScreenHeight = window.outerHeight;
 
@@ -2122,21 +2118,17 @@ Tab.prototype = {
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
 
-    // This change to the zoom accounts for all types of changes I can conceive:
-    // 1. screen size changes, CSS viewport does not (pages with no meta viewport
-    //    or a fixed size viewport)
-    // 2. screen size changes, CSS viewport also does (pages with a device-width
-    //    viewport)
-    // 3. screen size remains constant, but CSS viewport changes (meta viewport
-    //    tag is added or removed)
-    // 4. neither screen size nor CSS viewport changes
-    //
-    // In all of these cases, we maintain how much actual content is visible
-    // within the screen width. Note that "actual content" may be different
-    // with respect to CSS pixels because of the CSS viewport size changing.
-    let zoomScale = (screenW * oldBrowserWidth) / (oldScreenWidth * viewportW);
-    this.setResolution(this._zoom * zoomScale, false);
+    this.setResolution(oldBrowserWidth * this._zoom / viewportW, false);
     this.sendViewportUpdate();
+  },
+
+  getDefaultZoomLevel: function getDefaultZoomLevel() {
+    let md = this.metadata;
+    if ("defaultZoom" in md && md.defaultZoom)
+      return md.defaultZoom;
+
+    dump("### getDefaultZoomLevel gScreenWidth=" + gScreenWidth);
+    return gScreenWidth / this.browserWidth;
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
@@ -2186,10 +2178,7 @@ Tab.prototype = {
         // Is it on the top level?
         let contentDocument = aSubject;
         if (contentDocument == this.browser.contentDocument) {
-          // reset CSS viewport and zoom to default on new page
-          this.setBrowserSize(kDefaultCSSViewportWidth, kDefaultCSSViewportHeight);
-          this.setResolution(gScreenWidth / this.browserWidth, false);
-          // and then use the metadata to figure out how it needs to be updated
+          this.setResolution(this.getDefaultZoomLevel(), false);
           ViewportHandler.updateMetadata(this);
 
           // The document element must have a display port on it whenever we are about to
