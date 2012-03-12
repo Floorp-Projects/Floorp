@@ -52,7 +52,6 @@ interface nsIDOMSVGPathSegList : nsISupports
                     // raises(nsIDOMDOMException, nsIDOMSVGException);
   nsIDOMSVGPathSeg getItem(in unsigned long index);
                     // raises(nsIDOMDOMException);
-  [getter,noscript,notxpcom,nostdcall] nsIDOMSVGPathSeg getItemAt(in unsigned long index);
   nsIDOMSVGPathSeg insertItemBefore(in nsIDOMSVGPathSeg newItem, in unsigned long index);
                     // raises(nsIDOMDOMException, nsIDOMSVGException);
   nsIDOMSVGPathSeg replaceItem(in nsIDOMSVGPathSeg newItem, in unsigned long index);

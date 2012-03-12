@@ -52,7 +52,6 @@ interface nsIDOMSVGNumberList : nsISupports
                     // raises(nsIDOMDOMException, nsIDOMSVGException);
   nsIDOMSVGNumber getItem(in unsigned long index);
                     // raises(nsIDOMDOMException);
-  [getter,noscript,notxpcom,nostdcall] nsIDOMSVGNumber getItemAt(in unsigned long index);
   nsIDOMSVGNumber insertItemBefore(in nsIDOMSVGNumber newItem, in unsigned long index);
                     // raises(nsIDOMDOMException, nsIDOMSVGException);
   nsIDOMSVGNumber replaceItem(in nsIDOMSVGNumber newItem, in unsigned long index);

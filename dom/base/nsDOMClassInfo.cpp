@@ -10640,7 +10640,7 @@ nsSVGListSH<ListInterfaceType, ListType>::GetItemAt(nsISupports *aNative,
   }
 #endif
 
-  return list->GetItemAt(aIndex);
+  return list->GetItemWithoutAddRef(aIndex);
 }
 
 

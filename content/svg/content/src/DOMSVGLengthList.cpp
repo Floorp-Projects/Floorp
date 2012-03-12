@@ -40,8 +40,6 @@
 #include "nsDOMError.h"
 #include "SVGAnimatedLengthList.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
-#include "dombindings.h"
 
 // See the comment in this file's header.
 
@@ -74,16 +72,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGLengthList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGLengthList)
   // No need to null check tmp - script/SMIL can't detach us from mAList
   ( tmp->IsAnimValList() ? tmp->mAList->mAnimVal : tmp->mAList->mBaseVal ) = nsnull;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAList)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGLengthList)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAList)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGLengthList)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGLengthList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGLengthList)
@@ -93,22 +86,14 @@ DOMCI_DATA(SVGLengthList, mozilla::DOMSVGLengthList)
 namespace mozilla {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGLengthList)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLengthList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGLengthList)
 NS_INTERFACE_MAP_END
 
-JSObject*
-DOMSVGLengthList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
-                             bool *triedToWrap)
-{
-  return mozilla::dom::binding::SVGLengthList::create(cx, scope, this,
-                                                      triedToWrap);
-}
 
 nsIDOMSVGLength*
-DOMSVGLengthList::GetItemAt(PRUint32 aIndex)
+DOMSVGLengthList::GetItemWithoutAddRef(PRUint32 aIndex)
 {
   if (IsAnimValList()) {
     Element()->FlushAnimations();
@@ -235,7 +220,7 @@ NS_IMETHODIMP
 DOMSVGLengthList::GetItem(PRUint32 index,
                           nsIDOMSVGLength **_retval)
 {
-  *_retval = GetItemAt(index);
+  *_retval = GetItemWithoutAddRef(index);
   if (!*_retval) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }

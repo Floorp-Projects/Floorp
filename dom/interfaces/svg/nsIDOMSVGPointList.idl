@@ -52,7 +52,6 @@ interface nsIDOMSVGPointList : nsISupports
       // raises( DOMException, SVGException );
   nsIDOMSVGPoint getItem (in unsigned long index);
       // raises( DOMException );
-  [getter,noscript,notxpcom,nostdcall] nsIDOMSVGPoint getItemAt(in unsigned long index);
   nsIDOMSVGPoint insertItemBefore(in nsIDOMSVGPoint newItem, in unsigned long index);
       // raises( DOMException, SVGException );
   nsIDOMSVGPoint replaceItem(in nsIDOMSVGPoint newItem, in unsigned long index);
