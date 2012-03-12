@@ -409,6 +409,8 @@ public:
     void ScheduleComposite();
     void SchedulePauseComposition();
     void ScheduleResumeComposition();
+    void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
+    void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
     void SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter);
     void GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 

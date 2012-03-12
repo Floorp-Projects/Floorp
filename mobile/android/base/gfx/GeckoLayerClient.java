@@ -323,6 +323,31 @@ public class GeckoLayerClient implements GeckoEventResponder,
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    public void setFirstPaintViewport(float offsetX, float offsetY, float zoom, float pageWidth, float pageHeight) {
+        synchronized (mLayerController) {
+            ViewportMetrics currentMetrics = new ViewportMetrics(mLayerController.getViewportMetrics());
+            currentMetrics.setOrigin(new PointF(offsetX, offsetY));
+            currentMetrics.setZoomFactor(zoom);
+            currentMetrics.setPageSize(new FloatSize(pageWidth, pageHeight));
+            mLayerController.setViewportMetrics(currentMetrics);
+            mLayerController.abortPanZoomAnimation();
+        }
+    }
+
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
+    public void setPageSize(float zoom, float pageWidth, float pageHeight) {
+        synchronized (mLayerController) {
+            // adjust the page dimensions to account for differences in zoom
+            // between the rendered content (which is what the compositor tells us)
+            // and our zoom level (which may have diverged).
+            float ourZoom = mLayerController.getZoomFactor();
+            pageWidth = pageWidth * ourZoom / zoom;
+            pageHeight = pageHeight * ourZoom /zoom;
+            mLayerController.setPageSize(new FloatSize(pageWidth, pageHeight));
+        }
+    }
+
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     /* This functions needs to be fast because it is called by the compositor every frame.
      * It avoids taking any locks or allocating any objects. We keep around a
      * mCurrentViewTransform so we don't need to allocate a new ViewTransform
