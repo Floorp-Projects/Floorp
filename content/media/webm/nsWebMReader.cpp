@@ -41,9 +41,14 @@
 #include "nsBuiltinDecoder.h"
 #include "MediaResource.h"
 #include "nsWebMReader.h"
+#include "nsWebMBufferedParser.h"
 #include "VideoUtils.h"
 #include "nsTimeRanges.h"
 #include "mozilla/Preferences.h"
+
+#define VPX_DONT_DEFINE_STDINT_TYPES
+#include "vpx/vp8dx.h"
+#include "vpx/vpx_decoder.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
