@@ -1113,11 +1113,16 @@ RIL[REQUEST_UDUB] = function REQUEST_UDUB(length) {
 };
 RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
 RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
+  let signalStrength = Buf.readUint32();
+  // The SGS2 seems to compute the number of bars for us and expose those
+  // instead of the actual signal strength.
+  let bars = signalStrength >> 8;
+  signalStrength = signalStrength & 0xff;
   let strength = {
     // Valid values are (0-31, 99) as defined in TS 27.007 8.5.
-    // For some reason we're getting int32s like [99, 4, 0, 0] and [99, 3, 0, 0]
-    // here, so let's strip of anything beyond the first byte.
-    gsmSignalStrength: Buf.readUint32() & 0xff,
+    gsmSignalStrength: signalStrength,
+    // Non-standard extension by the SGS2.
+    bars:              bars,
     // GSM bit error rate (0-7, 99) as defined in TS 27.007 8.5.
     gsmBitErrorRate:   Buf.readUint32(),
     // The CDMA RSSI value.
@@ -1650,6 +1655,7 @@ let Phone = {
     if ((!iccStatus) || (iccStatus.cardState == CARD_STATE_ABSENT)) {
       if (DEBUG) debug("ICC absent");
       if (this.cardState == GECKO_CARDSTATE_ABSENT) {
+        this.operator = null;
         return;
       }
       this.cardState = GECKO_CARDSTATE_ABSENT;
@@ -1687,6 +1693,7 @@ let Phone = {
           return;
         }
         this.cardState = GECKO_CARDSTATE_ABSENT;
+        this.operator = null;
         this.sendDOMMessage({type: "cardstatechange",
                              cardState: this.cardState});
         return;
