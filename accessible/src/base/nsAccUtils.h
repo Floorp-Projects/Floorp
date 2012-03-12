@@ -116,14 +116,6 @@ public:
                                                         PRInt32 *aSetSize);
 
   /**
-   * Compute group position and group size (posinset and setsize) for
-   * nsIDOMXULContainerItemElement node.
-   */
-  static void GetPositionAndSizeForXULContainerItem(nsIContent *aContent,
-                                                    PRInt32 *aPosInSet,
-                                                    PRInt32 *aSetSize);
-
-  /**
    * Compute group level for nsIDOMXULContainerItemElement node.
    */
   static PRInt32 GetLevelForXULContainerItem(nsIContent *aContent);
