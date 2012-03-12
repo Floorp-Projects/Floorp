@@ -281,10 +281,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
         if ("Viewport:UpdateAndDraw".equals(event)) {
             mUpdateViewportOnEndDraw = true;
             mIgnorePaintsPendingViewportSizeChange = false;
-
-            // Redraw everything.
-            Rect rect = new Rect(0, 0, mBufferSize.width, mBufferSize.height);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createDrawEvent(rect));
         } else if ("Viewport:UpdateLater".equals(event)) {
             mUpdateViewportOnEndDraw = true;
             mIgnorePaintsPendingViewportSizeChange = false;
