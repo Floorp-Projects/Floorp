@@ -23,6 +23,7 @@
  *   Vladimir Vukicevic <vladimir@pobox.com>
  *   Mark Steele <mwsteele@gmail.com>
  *   Bas Schouten <bschouten@mozilla.com>
+ *   Jeff Gilbert <jgilbert@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -556,6 +557,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
     else {
         // if initialization fails, ensure all symbols are zero, to avoid hard-to-understand bugs
         mSymbols.Zero();
+        NS_WARNING("InitWithPrefix failed!");
     }
 
     return mInitialized;
@@ -1167,8 +1169,8 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
             !mIsGLES2 || IsExtensionSupported(OES_packed_depth_stencil);
 
     // save a few things for later restoring
-    curBoundFramebufferDraw = GetBoundDrawFBO();
-    curBoundFramebufferRead = GetBoundReadFBO();
+    curBoundFramebufferDraw = GetUserBoundDrawFBO();
+    curBoundFramebufferRead = GetUserBoundReadFBO();
     fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, (GLint*) &curBoundRenderbuffer);
     fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &curBoundTexture);
     fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
@@ -1336,7 +1338,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     }
 
     // Now assemble the FBO
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, newOffscreenDrawFBO);    // If we're not using a separate draw FBO, this will be the read FBO
+    BindInternalFBO(newOffscreenDrawFBO);    // If we're not using a separate draw FBO, this will be the read FBO
     if (useDrawMSFBO) {
         fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                  LOCAL_GL_COLOR_ATTACHMENT0,
@@ -1370,7 +1372,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     }
 
     if (aUseReadFBO) {
-        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, newOffscreenReadFBO);
+        BindInternalFBO(newOffscreenReadFBO);
         fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
                               LOCAL_GL_COLOR_ATTACHMENT0,
                               LOCAL_GL_TEXTURE_2D,
@@ -1382,7 +1384,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     GLenum status;
     bool framebuffersComplete = true;
 
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, newOffscreenDrawFBO);
+    BindInternalFBO(newOffscreenDrawFBO);
     status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("DrawFBO: Incomplete");
@@ -1392,7 +1394,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
         framebuffersComplete = false;
     }
 
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, newOffscreenReadFBO);
+    BindInternalFBO(newOffscreenReadFBO);
     status = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("ReadFBO: Incomplete");
@@ -1413,8 +1415,8 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
         fDeleteRenderbuffers(1, &newOffscreenDepthRB);
         fDeleteRenderbuffers(1, &newOffscreenStencilRB);
 
-        BindReadFBO(curBoundFramebufferRead);
-        BindDrawFBO(curBoundFramebufferDraw);
+        BindUserDrawFBO(curBoundFramebufferDraw);
+        BindUserReadFBO(curBoundFramebufferRead);
         fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
         fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
         fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -1467,18 +1469,18 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     }
 #endif
 
-    // Make sure we know that the buffers are new and thus dirty:
-    ForceDirtyFBOs();
-
     // We're good, and the framebuffer is already attached.
     // Now restore the GL state back to what it was before the resize took place.
     // If the user was using fb 0, this will bind the offscreen framebuffer we
     // just created.
-    BindDrawFBO(curBoundFramebufferDraw);
-    BindReadFBO(curBoundFramebufferRead);
+    BindUserDrawFBO(curBoundFramebufferDraw);
+    BindUserReadFBO(curBoundFramebufferRead);
     fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
     fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, curBoundRenderbuffer);
     fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+    // Make sure we know that the buffers are new and thus dirty:
+    ForceDirtyFBOs();
 
     return true;
 }
