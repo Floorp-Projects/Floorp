@@ -69,7 +69,7 @@ public:
   PRUint32 Width() { return mWidth; }
   PRUint32 Height() { return mHeight; }
 
-  bool Bind();
+  bool Bind(GLenum target);
 
 private:
   mozilla::Mutex mLock;

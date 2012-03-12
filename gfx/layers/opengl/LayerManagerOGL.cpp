@@ -246,6 +246,11 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
   SHADER_PROGRAM(Copy2DRectProgramType, CopyProgram,
                  sCopyVS, sCopy2DRectFS);
 
+#ifdef ANDROID
+  SHADER_PROGRAM(Copy2DExternalProgramType, CopyProgram,
+                 sCopyVS, sCopy2DExternalFS);
+#endif
+
 #undef SHADER_PROGRAM
 
   NS_ASSERTION(programIndex == NumProgramTypes,

@@ -92,7 +92,7 @@ XPIDLSRCS	= \
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
-EXPORTS = AndroidBridge.h AndroidJavaWrappers.h AndroidFlexViewWrapper.h
+EXPORTS = AndroidBridge.h AndroidJavaWrappers.h AndroidFlexViewWrapper.h AndroidDirectTexture.h AndroidGraphicBuffer.h
 
 include $(topsrcdir)/config/rules.mk
 
