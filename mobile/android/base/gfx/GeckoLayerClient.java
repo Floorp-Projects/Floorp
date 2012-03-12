@@ -110,6 +110,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         view.setListener(this);
 
         mLayerRenderer = new LayerRenderer(view);
+        view.setLayerRenderer(mLayerRenderer);
     }
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
