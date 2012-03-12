@@ -301,7 +301,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
                     ImmutableViewportMetrics oldMetrics = mLayerController.getViewportMetrics();
                     newMetrics.setSize(oldMetrics.getSize());
                     mLayerController.setViewportMetrics(newMetrics);
-                    mLayerController.abortPanZoomAnimation();
+                    mLayerController.abortPanZoomAnimation(false);
                 }
             } catch (JSONException e) {
                 Log.e(LOGTAG, "Unable to create viewport metrics in " + event + " handler", e);
@@ -349,7 +349,14 @@ public class GeckoLayerClient implements GeckoEventResponder,
             currentMetrics.setZoomFactor(zoom);
             currentMetrics.setPageSize(new FloatSize(pageWidth, pageHeight));
             mLayerController.setViewportMetrics(currentMetrics);
-            mLayerController.abortPanZoomAnimation();
+            // At this point, we have just switched to displaying a different document than we
+            // we previously displaying. This means we need to abort any panning/zooming animations
+            // that are in progress and send an updated display port request to browser.js as soon
+            // as possible. We accomplish this by passing true to abortPanZoomAnimation, which
+            // sends the request after aborting the animation. The display port request is actually
+            // a full viewport update, which is fine because if browser.js has somehow moved to
+            // be out of sync with this first-paint viewport, then we force them back in sync.
+            mLayerController.abortPanZoomAnimation(true);
         }
     }
 
@@ -363,6 +370,10 @@ public class GeckoLayerClient implements GeckoEventResponder,
             pageWidth = pageWidth * ourZoom / zoom;
             pageHeight = pageHeight * ourZoom /zoom;
             mLayerController.setPageSize(new FloatSize(pageWidth, pageHeight));
+            // Here the page size of the document has changed, but the document being displayed
+            // is still the same. Therefore, we don't need to send anything to browser.js; any
+            // changes we need to make to the display port will get sent the next time we call
+            // adjustViewport().
         }
     }
 

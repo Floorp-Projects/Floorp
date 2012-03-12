@@ -342,11 +342,14 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     }
 
     /** Aborts any pan/zoom animation that is currently in progress. */
-    public void abortPanZoomAnimation() {
+    public void abortPanZoomAnimation(final boolean notifyLayerClient) {
         if (mPanZoomController != null) {
             mView.post(new Runnable() {
                 public void run() {
                     mPanZoomController.abortAnimation();
+                    if (notifyLayerClient) {
+                        notifyLayerClientOfGeometryChange();
+                    }
                 }
             });
         }
