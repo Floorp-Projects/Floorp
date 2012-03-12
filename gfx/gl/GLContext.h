@@ -136,6 +136,7 @@ enum ShaderProgramType {
     ComponentAlphaPass2ProgramType,
     Copy2DProgramType,
     Copy2DRectProgramType,
+    Copy2DExternalProgramType,
     NumProgramTypes
 };
 
