@@ -1742,13 +1742,9 @@ Tab.prototype = {
   sendViewportUpdate: function() {
     if (BrowserApp.selectedTab != this)
       return;
-    this.sendViewportMessage("Viewport:UpdateAndDraw");
-  },
-
-  sendViewportMessage: function(msg) {
     let displayPortMargins = sendMessageToJava({
       gecko: {
-        type: msg
+        type: "Viewport:Update"
       }
     });
     if (displayPortMargins != null)
@@ -1897,7 +1893,7 @@ Tab.prototype = {
       case "scroll": {
         let win = this.browser.contentWindow;
         if (this.userScrollPos.x != win.scrollX || this.userScrollPos.y != win.scrollY) {
-          this.sendViewportMessage("Viewport:UpdateLater");
+          this.sendViewportUpdate();
         }
         break;
       }
