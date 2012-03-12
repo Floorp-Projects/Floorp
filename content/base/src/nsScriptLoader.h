@@ -238,9 +238,12 @@ public:
    * @param aURI The URI of the external script.
    * @param aCharset The charset parameter for the script.
    * @param aType The type parameter for the script.
+   * @param aCrossOrigin The crossorigin attribute for the script.
+   *                     Void if not present.
    */
   virtual void PreloadURI(nsIURI *aURI, const nsAString &aCharset,
-                          const nsAString &aType);
+                          const nsAString &aType,
+                          const nsAString &aCrossOrigin);
 
 private:
   /**

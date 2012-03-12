@@ -571,3 +571,26 @@ interface nsIAccessibleTableChangeEvent: nsISupports
   readonly attribute long numRowsOrCols;
 };
 
+
+/*
+ * An interface for virtual cursor changed events.
+ * Passes previous cursor position and text offsets.
+ */
+[scriptable, uuid(370e8b9b-2bbc-4bff-a9c7-16ddc54aea21)]
+interface nsIAccessibleVirtualCursorChangeEvent : nsISupports
+{
+  /**
+   * Previous object pointed at by virtual cursor. null if none.
+   */
+  readonly attribute nsIAccessible oldAccessible;
+
+  /**
+   * Previous start offset of pivot. -1 if none.
+   */
+  readonly attribute long oldStartOffset;
+
+  /**
+   * Previous end offset of pivot. -1 if none.
+   */
+  readonly attribute long oldEndOffset;
+};

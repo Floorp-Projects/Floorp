@@ -61,6 +61,7 @@ var focusableElements = [
     "<div tabindex=\"0\"></div>",
     "<div tabindex=\"1\"></div>",
     "<div contenteditable=\"true\"></div>",
+    "<div tabindex=\"0\" disabled></div>",
 
     "<embed>",
     "<embed tabindex=\"-1\">",
@@ -165,7 +166,17 @@ var focusableElements = [
     "<select tabindex=\"-1\"></select>",
     "<select tabindex=\"0\"></select>",
     "<select tabindex=\"1\"></select>",
-    "<select contenteditable=\"true\"></select>"
+    "<select contenteditable=\"true\"></select>",
+
+    "<option tabindex='-1'></option>",
+    "<option tabindex='0'></option>",
+    "<option tabindex='1'></option>",
+    "<option contenteditable></option>",
+
+    "<optgroup tabindex='-1'></optgroup>",
+    "<optgroup tabindex='0'></optgroup>",
+    "<optgroup tabindex='1'></optgroup>",
+    "<optgroup contenteditable></optgroup>"
 ];
 
 var nonFocusableElements = [
@@ -182,7 +193,6 @@ var nonFocusableElements = [
     "<button type=\"submit\" disabled></button>",
 
     "<div></div>",
-    "<div tabindex=\"0\" disabled></div>",
     "<div disabled></div>",
 
     "<img>",
@@ -243,7 +253,13 @@ var nonFocusableElements = [
     "<object></object>",
 
     "<select tabindex=\"0\" disabled></select>",
-    "<select disabled></select>"
+    "<select disabled></select>",
+
+    "<option></option>",
+    "<option tabindex='1' disabled></option>",
+
+    "<optgroup></optgroup>",
+    "<optgroup tabindex='1' disabled></optgroup>"
 ];
 
 var focusableInContentEditable = [
@@ -268,6 +284,7 @@ var focusableInContentEditable = [
     "<div tabindex=\"-1\"></div>",
     "<div tabindex=\"0\"></div>",
     "<div tabindex=\"1\"></div>",
+    "<div tabindex=\"0\" disabled></div>",
 
     "<embed>",
     "<embed tabindex=\"-1\">",
@@ -365,7 +382,15 @@ var focusableInContentEditable = [
     "<select tabindex=\"-1\"></select>",
     "<select tabindex=\"0\"></select>",
     "<select tabindex=\"1\"></select>",
-    "<select contenteditable=\"true\"></select>"
+    "<select contenteditable=\"true\"></select>",
+
+    "<option tabindex='-1'></option>",
+    "<option tabindex='0'></option>",
+    "<option tabindex='1'></option>",
+
+    "<optgroup tabindex='-1'></optgroup>",
+    "<optgroup tabindex='0'></optgroup>",
+    "<optgroup tabindex='1'></optgroup>"
 ];
 
 var focusableInDesignMode = [

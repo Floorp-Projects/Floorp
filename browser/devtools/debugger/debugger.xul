@@ -45,10 +45,29 @@
 <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/debugger.dtd" >
  %debuggerDTD;
 ]>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/source-editor-overlay.xul"?>
 <xul:window xmlns="http://www.w3.org/1999/xhtml"
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <xul:script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
     <xul:script type="text/javascript" src="debugger.js"/>
     <xul:script type="text/javascript" src="debugger-view.js"/>
+    <xul:popupset id="debugger-popups">
+      <xul:menupopup id="sourceEditorContextMenu"
+                     onpopupshowing="goUpdateSourceEditorMenuItems()">
+        <xul:menuitem id="se-cMenu-copy"/>
+        <xul:menuseparator/>
+        <xul:menuitem id="se-cMenu-selectAll"/>
+        <xul:menuseparator/>
+        <xul:menuitem id="se-cMenu-find"/>
+        <xul:menuitem id="se-cMenu-findAgain"/>
+        <xul:menuseparator/>
+        <xul:menuitem id="se-cMenu-gotoLine"/>
+      </xul:menupopup>
+    </xul:popupset>
+    <xul:commandset id="editMenuCommands"/>
+    <xul:commandset id="sourceEditorCommands"/>
+    <xul:keyset id="sourceEditorKeys"/>
 
     <div id="body" class="vbox flex">
         <xul:toolbar id="dbg-toolbar">

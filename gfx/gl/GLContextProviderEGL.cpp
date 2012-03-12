@@ -2087,7 +2087,7 @@ GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
 {
     nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType, aUseNearestFilter);
     return t.forget();
-};
+}
 
 already_AddRefed<TextureImage>
 GLContextEGL::TileGenFunc(const nsIntSize& aSize,

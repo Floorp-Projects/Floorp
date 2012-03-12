@@ -5692,24 +5692,23 @@ nsTypedSelection::NotifySelectionListeners()
   if (!mFrameSelection)
     return NS_OK;//nothing to do
  
-  if (mFrameSelection->GetBatching()){
+  if (mFrameSelection->GetBatching()) {
     mFrameSelection->SetDirty();
     return NS_OK;
   }
-  PRInt32 cnt = mSelectionListeners.Count();
   nsCOMArray<nsISelectionListener> selectionListeners(mSelectionListeners);
-  
+  PRInt32 cnt = selectionListeners.Count();
+  if (cnt != mSelectionListeners.Count()) {
+    return NS_ERROR_OUT_OF_MEMORY;  // nsCOMArray is fallible
+  }
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = GetPresShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell)
     domdoc = do_QueryInterface(shell->GetDocument());
   short reason = mFrameSelection->PopReason();
-  for (PRInt32 i = 0; i < cnt; i++)
-  {
-    nsISelectionListener* thisListener = selectionListeners[i];
-    if (thisListener)
-      thisListener->NotifySelectionChanged(domdoc, this, reason);
+  for (PRInt32 i = 0; i < cnt; i++) {
+    selectionListeners[i]->NotifySelectionChanged(domdoc, this, reason);
   }
   return NS_OK;
 }

@@ -3954,30 +3954,6 @@ private:
     PRInt64 mTimeStamp;
 };
 
-/***************************************************************************/
-
-class NS_STACK_CLASS AutoJSErrorAndExceptionEater
-{
-public:
-    AutoJSErrorAndExceptionEater(JSContext* aCX
-                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mCX(aCX),
-          mOldErrorReporter(JS_SetErrorReporter(mCX, nsnull)),
-          mOldExceptionState(JS_SaveExceptionState(mCX)) {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    ~AutoJSErrorAndExceptionEater()
-    {
-        JS_SetErrorReporter(mCX, mOldErrorReporter);
-        JS_RestoreExceptionState(mCX, mOldExceptionState);
-    }
-private:
-    JSContext*        mCX;
-    JSErrorReporter   mOldErrorReporter;
-    JSExceptionState* mOldExceptionState;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 /******************************************************************************
  * Handles pre/post script processing and the setting/resetting the error
  * reporter

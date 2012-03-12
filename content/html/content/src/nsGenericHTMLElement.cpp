@@ -2488,24 +2488,25 @@ nsGenericHTMLElement::GetContentEditable(nsAString& aContentEditable)
 nsresult
 nsGenericHTMLElement::SetContentEditable(const nsAString& aContentEditable)
 {
-  nsString contentEditable;
-  ToLowerCase(aContentEditable, contentEditable);
-
-  if (contentEditable.EqualsLiteral("inherit")) {
+  if (nsContentUtils::EqualsLiteralIgnoreASCIICase(aContentEditable, "inherit")) {
     UnsetAttr(kNameSpaceID_None, nsGkAtoms::contenteditable, true);
 
     return NS_OK;
   }
 
-  if (!contentEditable.EqualsLiteral("true") &&
-      !contentEditable.EqualsLiteral("false")) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
+  if (nsContentUtils::EqualsLiteralIgnoreASCIICase(aContentEditable, "true")) {
+    SetAttr(kNameSpaceID_None, nsGkAtoms::contenteditable, NS_LITERAL_STRING("true"), true);
+    
+    return NS_OK;
+  }
+  
+  if (nsContentUtils::EqualsLiteralIgnoreASCIICase(aContentEditable, "false")) {
+    SetAttr(kNameSpaceID_None, nsGkAtoms::contenteditable, NS_LITERAL_STRING("false"), true);
+
+    return NS_OK;
   }
 
-  SetAttr(kNameSpaceID_None, nsGkAtoms::contenteditable, contentEditable,
-          true);
-
-  return NS_OK;
+  return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
 nsresult
@@ -2885,14 +2886,6 @@ nsGenericHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
-
-const nsAttrValue::EnumTable nsGenericHTMLElement::kCORSAttributeTable[] = {
-  // Order matters here
-  // See ParseAttribute in nsHTMLImageElement or nsHTMLMediaElement
-  { "anonymous",       nsGenericHTMLElement::CORS_ANONYMOUS       },
-  { "use-credentials", nsGenericHTMLElement::CORS_USE_CREDENTIALS },
-  { 0 }
-};
 
 /* virtual */
 bool

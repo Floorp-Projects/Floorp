@@ -951,14 +951,7 @@ nsresult nsHTMLMediaElement::LoadResource()
   }
 
   // Set the media element's CORS mode only when loading a resource
-  // By default, it's CORS_NONE
-  mCORSMode = CORS_NONE;
-  const nsAttrValue* value = GetParsedAttr(nsGkAtoms::crossorigin);
-  if (value) {
-    NS_ASSERTION(value->Type() == nsAttrValue::eEnum,
-                 "Why is this not an enum value?");
-    mCORSMode = CORSMode(value->GetEnumValue());
-  }
+  mCORSMode = AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 
   nsHTMLMediaElement* other = LookupMediaElementURITable(mLoadingSrc);
   if (other) {
@@ -1604,10 +1597,8 @@ bool nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
       return true;
     }
     if (aAttribute == nsGkAtoms::crossorigin) {
-      return aResult.ParseEnumValue(aValue, kCORSAttributeTable, false,
-                                    // default value is anonymous if aValue is
-                                    // not a value we understand
-                                    &kCORSAttributeTable[0]);
+      ParseCORSValue(aValue, aResult);
+      return true;
     }
     if (aAttribute == nsGkAtoms::preload) {
       return aResult.ParseEnumValue(aValue, kPreloadTable, false);

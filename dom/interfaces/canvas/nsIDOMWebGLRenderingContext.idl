@@ -59,16 +59,18 @@ typedef float          WebGLclampf;
 // for jsval
 #include "jsapi.h"
 
-namespace js {
-struct ArrayBuffer;
-struct TypedArray;
-}
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 /* Avoid conflict with WinAPI */
 #undef NO_ERROR
 %}
 
 [ptr] native WebGLJSObjectPtr (JSObject);
+[ptr] native Element (mozilla::dom::Element);
 
 //
 // OpenGL object wrappers
@@ -175,7 +177,7 @@ interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
   const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
-[scriptable, builtinclass, uuid(f000afac-11b3-4c06-a35f-8db411f1cf54)]
+[scriptable, builtinclass, uuid(020474b1-2d3f-403b-b85d-11d9082ccd92)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -786,7 +788,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
 
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
   [noscript] void texImage2D_dom(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
-                                 in WebGLenum format, in WebGLenum type, in nsIDOMElement element);
+                                 in WebGLenum format, in WebGLenum type, in Element element);
 
   void texSubImage2D([optional] in long dummy);
   [noscript] void texSubImage2D_array(in WebGLenum target, in WebGLint level,
@@ -798,7 +800,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
   [noscript] void texSubImage2D_dom(in WebGLenum target, in WebGLint level,
                                     in WebGLint xoffset, in WebGLint yoffset, in WebGLenum format, in WebGLenum type,
-                                    in nsIDOMElement element);
+                                    in Element element);
 
   // Modified: This replaces glTexParameterf, glTexParameterfv, glTexParameteri and glTexParameteriv
   void texParameterf(in WebGLenum target, in WebGLenum pname, in WebGLfloat param);
