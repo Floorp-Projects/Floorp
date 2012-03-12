@@ -90,7 +90,6 @@ public class GeckoThread extends Thread {
         String resourcePath = app.getApplication().getPackageResourcePath();
         GeckoAppShell.setupGeckoEnvironment(app);
         GeckoAppShell.loadSQLiteLibs(app, resourcePath);
-        GeckoAppShell.loadNSSLibs(app, resourcePath);
         GeckoAppShell.loadGeckoLibs(resourcePath);
 
         Locale.setDefault(locale);
