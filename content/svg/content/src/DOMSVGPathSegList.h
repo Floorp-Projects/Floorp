@@ -78,23 +78,14 @@ class SVGAnimatedPathSegList;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGPathSegList : public nsIDOMSVGPathSegList,
-                          public nsWrapperCache
+class DOMSVGPathSegList : public nsIDOMSVGPathSegList
 {
   friend class DOMSVGPathSeg;
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGPathSegList)
+  NS_DECL_CYCLE_COLLECTION_CLASS(DOMSVGPathSegList)
   NS_DECL_NSIDOMSVGPATHSEGLIST
-
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
-                               bool *triedToWrap);
-
-  nsISupports* GetParentObject()
-  {
-    return static_cast<nsIContent*>(mElement);
-  }
 
   /**
    * Factory method to create and return a DOMSVGPathSegList wrapper
@@ -137,6 +128,8 @@ public:
     return mItems.Length();
   }
 
+  nsIDOMSVGPathSeg* GetItemWithoutAddRef(PRUint32 aIndex);
+
   /**
    * WATCH OUT! If you add code to call this on a baseVal wrapper, then you
    * must also call it on the animVal wrapper too if necessary!! See other
@@ -171,8 +164,6 @@ private:
     : mElement(aElement)
     , mIsAnimValList(aIsAnimValList)
   {
-    SetIsProxy();
-
     InternalListWillChangeTo(InternalList()); // Sync mItems
   }
 

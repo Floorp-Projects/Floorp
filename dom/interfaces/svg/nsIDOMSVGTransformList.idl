@@ -53,7 +53,6 @@ interface nsIDOMSVGTransformList : nsISupports
       // raises( DOMException, SVGException );
   nsIDOMSVGTransform getItem(in unsigned long index);
       // raises( DOMException );
-  [getter,noscript,notxpcom,nostdcall] nsIDOMSVGTransform getItemAt(in unsigned long index);
   nsIDOMSVGTransform insertItemBefore(in nsIDOMSVGTransform newItem,
                                       in unsigned long index);
       //  raises( DOMException, SVGException );
