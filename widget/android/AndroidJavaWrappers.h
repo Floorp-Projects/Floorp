@@ -495,8 +495,6 @@ public:
         Init(aResizeEvent);
     }
 
-    ~AndroidGeckoEvent();
-
     void Init(JNIEnv *jenv, jobject jobj);
     void Init(int aType);
     void Init(int x1, int y1, int x2, int y2);
@@ -536,7 +534,6 @@ public:
     nsGeoPositionAddress* GeoAddress() { return mGeoAddress; }
     double Bandwidth() { return mBandwidth; }
     bool CanBeMetered() { return mCanBeMetered; }
-    void DoCallback(const nsAString& data);
 
 protected:
     int mAction;
@@ -616,8 +613,6 @@ protected:
 
     static jfieldID jBandwidthField;
     static jfieldID jCanBeMeteredField;
-    
-    static jmethodID jDoCallbackMethod;
 
 public:
     enum {
