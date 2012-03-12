@@ -35,80 +35,203 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-<!DOCTYPE overlay SYSTEM "chrome://browser/locale/devtools/sourceeditor.dtd">
+<!DOCTYPE overlay [
+  <!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+  %editMenuStrings;
+  <!ENTITY % sourceEditorStrings SYSTEM "chrome://browser/locale/devtools/sourceeditor.dtd">
+  %sourceEditorStrings;
+]>
 <overlay id="sourceEditorOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- This Source Editor overlay requires the editMenuOverlay.xul to be loaded.
        The globalOverlay.js script is also required in the XUL document where
-       the source-editor-overlay.xul is loaded. -->
+       the source-editor-overlay.xul is loaded. Do not use #editMenuKeys to
+       avoid conflicts! -->
+
+  <script type="application/javascript">
+    function goUpdateSourceEditorMenuItems()
+    {
+      goUpdateGlobalEditMenuItems();
+      let commands = ['se-cmd-undo', 'se-cmd-redo', 'se-cmd-cut', 'se-cmd-paste',
+                      'se-cmd-delete'];
+      commands.forEach(goUpdateCommand);
+    }
+  </script>
 
   <commandset id="sourceEditorCommands">
     <command id="cmd_find" oncommand="goDoCommand('cmd_find')"/>
     <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
     <command id="cmd_findPrevious" oncommand="goDoCommand('cmd_findPrevious')" disabled="true"/>
     <command id="cmd_gotoLine" oncommand="goDoCommand('cmd_gotoLine')"/>
+    <command id="se-cmd-selectAll" oncommand="goDoCommand('se-cmd-selectAll')"/>
+    <command id="se-cmd-cut" oncommand="goDoCommand('se-cmd-cut')" disabled="true"/>
+    <command id="se-cmd-paste" oncommand="goDoCommand('se-cmd-paste')" disabled="true"/>
+    <command id="se-cmd-delete" oncommand="goDoCommand('se-cmd-delete')" disabled="true"/>
     <command id="se-cmd-undo" oncommand="goDoCommand('se-cmd-undo')" disabled="true"/>
     <command id="se-cmd-redo" oncommand="goDoCommand('se-cmd-redo')" disabled="true"/>
   </commandset>
 
   <keyset id="sourceEditorKeys">
+    <!-- Do not use both #sourceEditorKeys and #editMenuKeys in the same
+    	 document to avoid conflicts! -->
+    <key id="key_undo"
+         key="&undoCmd.key;"
+         modifiers="accel"
+         command="se-cmd-undo"/>
+#ifdef XP_UNIX
+    <key id="key_redo"
+         key="&undoCmd.key;"
+         modifiers="accel,shift"
+         command="se-cmd-redo"/>
+#else
+    <key id="key_redo"
+         key="&redoCmd.key;"
+         modifiers="accel"
+         command="se-cmd-redo"/>
+#endif
+    <key id="key_cut"
+         key="&cutCmd.key;"
+         modifiers="accel"
+         command="se-cmd-cut"/>
+    <key id="key_copy"
+         key="&copyCmd.key;"
+         modifiers="accel"
+         command="cmd_copy"/>
+    <key id="key_paste"
+         key="&pasteCmd.key;"
+         modifiers="accel"
+         command="se-cmd-paste"/>
     <key id="key_gotoLine"
          key="&gotoLineCmd.key;"
          command="cmd_gotoLine"
          modifiers="accel"/>
+    <key id="key_delete"
+         keycode="VK_DELETE"
+         command="se-cmd-delete"/>
+    <key id="key_selectAll"
+         key="&selectAllCmd.key;"
+         modifiers="accel"
+         command="se-cmd-selectAll"/>
+    <key id="key_find"
+         key="&findCmd.key;"
+         modifiers="accel"
+         command="cmd_find"/>
+    <key id="key_findAgain"
+         key="&findAgainCmd.key;"
+         modifiers="accel"
+         command="cmd_findAgain"/>
+    <key id="key_findPrevious"
+         key="&findAgainCmd.key;"
+         modifiers="shift,accel"
+         command="cmd_findPrevious"/>
+    <key id="key_findAgain2"
+         keycode="&findAgainCmd.key2;"
+         command="cmd_findAgain"/>
+    <key id="key_findPrevious2"
+         keycode="&findAgainCmd.key2;"
+         modifiers="shift"
+         command="cmd_findPrevious"/>
   </keyset>
 
-  <menupopup id="sourceEditorContextMenu"
-             onpopupshowing="goUpdateGlobalEditMenuItems()">
-    <menuitem id="se-menu-undo"
-              label="&undoCmd.label;"
-              key="key_undo"
-              accesskey="&undoCmd.accesskey;"
-              command="se-cmd-undo"/>
-    <menuseparator/>
-    <menuitem id="se-menu-cut"
-              label="&cutCmd.label;"
-              key="key_cut"
-              accesskey="&cutCmd.accesskey;"
-              command="cmd_cut"/>
-    <menuitem id="se-menu-copy"
-              label="&copyCmd.label;"
-              key="key_copy"
-              accesskey="&copyCmd.accesskey;"
-              command="cmd_copy"/>
-    <menuitem id="se-menu-paste"
-              label="&pasteCmd.label;"
-              key="key_paste"
-              accesskey="&pasteCmd.accesskey;"
-              command="cmd_paste"/>
-    <menuitem id="se-menu-delete"
-              label="&deleteCmd.label;"
-              key="key_delete"
-              accesskey="&deleteCmd.accesskey;"
-              command="cmd_delete"/>
-    <menuseparator/>
-    <menuitem id="se-menu-selectAll"
-              label="&selectAllCmd.label;"
-              key="key_selectAll"
-              accesskey="&selectAllCmd.accesskey;"
-              command="cmd_selectAll"/>
-    <menuseparator/>
-    <menuitem id="se-menu-find"
-              label="&findCmd.label;"
-              accesskey="&findCmd.accesskey;"
-              key="key_find"
-              command="cmd_find"/>
-    <menuitem id="se-menu-findAgain"
-              label="&findAgainCmd.label;"
-              accesskey="&findAgainCmd.accesskey;"
-              key="key_findAgain"
-              command="cmd_findAgain"/>
-    <menuseparator/>
-    <menuitem id="se-menu-gotoLine"
-              label="&gotoLineCmd.label;"
-              accesskey="&gotoLineCmd.accesskey;"
-              key="key_gotoLine"
-              command="cmd_gotoLine"/>
-  </menupopup>
+  <!-- Items for the Edit menu -->
+
+  <menuitem id="se-menu-undo"
+            label="&undoCmd.label;"
+            key="key_undo"
+            accesskey="&undoCmd.accesskey;"
+            command="se-cmd-undo"/>
+  <menuitem id="se-menu-redo"
+            label="&redoCmd.label;"
+            key="key_redo"
+            accesskey="&redoCmd.accesskey;"
+            command="se-cmd-redo"/>
+  <menuitem id="se-menu-cut"
+            label="&cutCmd.label;"
+            key="key_cut"
+            accesskey="&cutCmd.accesskey;"
+            command="se-cmd-cut"/>
+  <menuitem id="se-menu-copy"
+            label="&copyCmd.label;"
+            key="key_copy"
+            accesskey="&copyCmd.accesskey;"
+            command="cmd_copy"/>
+  <menuitem id="se-menu-paste"
+            label="&pasteCmd.label;"
+            key="key_paste"
+            accesskey="&pasteCmd.accesskey;"
+            command="se-cmd-paste"/>
+  <menuitem id="se-menu-delete"
+            label="&deleteCmd.label;"
+            key="key_delete"
+            accesskey="&deleteCmd.accesskey;"
+            command="se-cmd-delete"/>
+  <menuitem id="se-menu-selectAll"
+            label="&selectAllCmd.label;"
+            key="key_selectAll"
+            accesskey="&selectAllCmd.accesskey;"
+            command="se-cmd-selectAll"/>
+  <menuitem id="se-menu-find"
+            label="&findCmd.label;"
+            accesskey="&findCmd.accesskey;"
+            key="key_find"
+            command="cmd_find"/>
+  <menuitem id="se-menu-findAgain"
+            label="&findAgainCmd.label;"
+            accesskey="&findAgainCmd.accesskey;"
+            key="key_findAgain"
+            command="cmd_findAgain"/>
+  <menuitem id="se-menu-gotoLine"
+            label="&gotoLineCmd.label;"
+            accesskey="&gotoLineCmd.accesskey;"
+            key="key_gotoLine"
+            command="cmd_gotoLine"/>
+
+  <!-- Items for context menus -->
+
+  <menuitem id="se-cMenu-undo"
+            label="&undoCmd.label;"
+            key="key_undo"
+            accesskey="&undoCmd.accesskey;"
+            command="se-cmd-undo"/>
+  <menuitem id="se-cMenu-cut"
+            label="&cutCmd.label;"
+            key="key_cut"
+            accesskey="&cutCmd.accesskey;"
+            command="se-cmd-cut"/>
+  <menuitem id="se-cMenu-copy"
+            label="&copyCmd.label;"
+            key="key_copy"
+            accesskey="&copyCmd.accesskey;"
+            command="cmd_copy"/>
+  <menuitem id="se-cMenu-paste"
+            label="&pasteCmd.label;"
+            key="key_paste"
+            accesskey="&pasteCmd.accesskey;"
+            command="se-cmd-paste"/>
+  <menuitem id="se-cMenu-delete"
+            label="&deleteCmd.label;"
+            key="key_delete"
+            accesskey="&deleteCmd.accesskey;"
+            command="se-cmd-delete"/>
+  <menuitem id="se-cMenu-selectAll"
+            label="&selectAllCmd.label;"
+            key="key_selectAll"
+            accesskey="&selectAllCmd.accesskey;"
+            command="se-cmd-selectAll"/>
+  <menuitem id="se-cMenu-find"
+            label="&findCmd.label;"
+            accesskey="&findCmd.accesskey;"
+            key="key_find"
+            command="cmd_find"/>
+  <menuitem id="se-cMenu-findAgain"
+            label="&findAgainCmd.label;"
+            accesskey="&findAgainCmd.accesskey;"
+            key="key_findAgain"
+            command="cmd_findAgain"/>
+  <menuitem id="se-cMenu-gotoLine"
+            label="&gotoLineCmd.label;"
+            accesskey="&gotoLineCmd.accesskey;"
+            key="key_gotoLine"
+            command="cmd_gotoLine"/>
 </overlay>

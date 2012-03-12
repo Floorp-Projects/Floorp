@@ -615,6 +615,7 @@ var SourceScripts = {
       window.editor.setText(aScript.text);
       window.updateEditorBreakpoints();
     }
+    window.editor.resetUndo();
   }
 };
 
