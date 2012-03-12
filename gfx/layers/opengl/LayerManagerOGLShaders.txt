@@ -269,6 +269,19 @@ void main()
 }
 @end
 
+@shader sCopy2DExternalFS
+$FRAGMENT_SHADER_HEADER$
+#extension GL_OES_EGL_image_external : require
+
+varying vec2 vTexCoord;
+
+uniform samplerExternalOES uTexture;
+void main()
+{
+  gl_FragColor = texture2D(uTexture, vTexCoord);
+}
+@end
+
 @shader sCopy2DRectFS
 #extension GL_ARB_texture_rectangle : enable
 
