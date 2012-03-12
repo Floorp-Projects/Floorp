@@ -79,11 +79,15 @@ nsXMLNameSpaceMap.h \
 nsIXFormsUtilityService.h \
 $(NULL)
 
-EXPORTS_NAMESPACES = mozilla/dom
+EXPORTS_NAMESPACES = mozilla/dom mozilla
 
 EXPORTS_mozilla/dom = \
 		Element.h \
 		FromParser.h \
+		$(NULL)
+
+EXPORTS_mozilla = \
+		CORSMode.h \
 		$(NULL)
 
 SDK_XPIDLSRCS   = \
@@ -97,7 +101,6 @@ XPIDLSRCS	= \
 		nsIDOMFileReader.idl \
 		nsIDOMFileList.idl \
 		nsIDOMFileException.idl \
-		nsIDOMFileError.idl \
 		nsIDOMFormData.idl \
 		nsIDOMParser.idl \
 		nsIDOMSerializer.idl \

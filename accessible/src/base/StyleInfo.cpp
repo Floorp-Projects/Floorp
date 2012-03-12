@@ -131,3 +131,12 @@ StyleInfo::FormatFontStyle(const nscoord& aValue, nsAString& aFormattedValue)
     nsCSSProps::ValueToKeywordEnum(aValue, nsCSSProps::kFontStyleKTable);
   AppendUTF8toUTF16(nsCSSKeywords::GetStringValue(keyword), aFormattedValue);
 }
+
+void
+StyleInfo::FormatTextDecorationStyle(PRUint8 aValue, nsAString& aFormattedValue)
+{
+  nsCSSKeyword keyword =
+    nsCSSProps::ValueToKeywordEnum(aValue,
+                                   nsCSSProps::kTextDecorationStyleKTable);
+  AppendUTF8toUTF16(nsCSSKeywords::GetStringValue(keyword), aFormattedValue);
+}

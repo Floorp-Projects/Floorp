@@ -5331,8 +5331,6 @@ function setToolbarVisibility(toolbar, isVisible) {
 
 var TabsOnTop = {
   init: function TabsOnTop_init() {
-    this._initialized = true;
-    this.syncUI();
     Services.prefs.addObserver(this._prefName, this, false);
   },
 
@@ -5345,9 +5343,6 @@ var TabsOnTop = {
   },
 
   syncUI: function () {
-    if (!this._initialized)
-      return;
-
     let userEnabled = Services.prefs.getBoolPref(this._prefName);
     let enabled = userEnabled && gBrowser.tabContainer.visible;
 
@@ -6097,23 +6092,23 @@ function charsetLoadListener(event) {
 
 var gPageStyleMenu = {
 
-  getAllStyleSheets: function (frameset) {
+  _getAllStyleSheets: function (frameset) {
     var styleSheetsArray = Array.slice(frameset.document.styleSheets);
     for (let i = 0; i < frameset.frames.length; i++) {
-      let frameSheets = this.getAllStyleSheets(frameset.frames[i]);
+      let frameSheets = this._getAllStyleSheets(frameset.frames[i]);
       styleSheetsArray = styleSheetsArray.concat(frameSheets);
     }
     return styleSheetsArray;
   },
 
-  stylesheetFillPopup: function (menuPopup) {
+  fillPopup: function (menuPopup) {
     var noStyle = menuPopup.firstChild;
     var persistentOnly = noStyle.nextSibling;
     var sep = persistentOnly.nextSibling;
     while (sep.nextSibling)
       menuPopup.removeChild(sep.nextSibling);
 
-    var styleSheets = this.getAllStyleSheets(window.content);
+    var styleSheets = this._getAllStyleSheets(window.content);
     var currentStyleSheets = {};
     var styleDisabled = getMarkupDocumentViewer().authorStyleDisabled;
     var haveAltSheets = false;
@@ -6161,12 +6156,12 @@ var gPageStyleMenu = {
     return true;
   },
 
-  stylesheetInFrame: function (frame, title) {
+  _stylesheetInFrame: function (frame, title) {
     return Array.some(frame.document.styleSheets,
                       function (stylesheet) stylesheet.title == title);
   },
 
-  stylesheetSwitchFrame: function (frame, title) {
+  _stylesheetSwitchFrame: function (frame, title) {
     var docStyleSheets = frame.document.styleSheets;
 
     for (let i = 0; i < docStyleSheets.length; ++i) {
@@ -6181,26 +6176,34 @@ var gPageStyleMenu = {
     }
   },
 
-  stylesheetSwitchAll: function (frameset, title) {
-    if (!title || title == "_nostyle" || this.stylesheetInFrame(frameset, title))
-      this.stylesheetSwitchFrame(frameset, title);
+  _stylesheetSwitchAll: function (frameset, title) {
+    if (!title || title == "_nostyle" || this._stylesheetInFrame(frameset, title))
+      this._stylesheetSwitchFrame(frameset, title);
 
     for (let i = 0; i < frameset.frames.length; i++)
-      this.stylesheetSwitchAll(frameset.frames[i], title);
+      this._stylesheetSwitchAll(frameset.frames[i], title);
   },
 
-  setStyleDisabled: function (disabled) {
-    getMarkupDocumentViewer().authorStyleDisabled = disabled;
+  switchStyleSheet: function (title, contentWindow) {
+    getMarkupDocumentViewer().authorStyleDisabled = false;
+    this._stylesheetSwitchAll(contentWindow || content, title);
+  },
+
+  disableStyle: function () {
+    getMarkupDocumentViewer().authorStyleDisabled = true;
   },
 };
 
 /* Legacy global page-style functions */
-var getAllStyleSheets     = gPageStyleMenu.getAllStyleSheets;
-var stylesheetFillPopup   = gPageStyleMenu.stylesheetFillPopup;
-var stylesheetInFrame     = gPageStyleMenu.stylesheetInFrame;
-var stylesheetSwitchFrame = gPageStyleMenu.stylesheetSwitchFrame;
-var stylesheetSwitchAll   = gPageStyleMenu.stylesheetSwitchAll;
-var setStyleDisabled      = gPageStyleMenu.setStyleDisabled;
+var getAllStyleSheets   = gPageStyleMenu._getAllStyleSheets.bind(gPageStyleMenu);
+var stylesheetFillPopup = gPageStyleMenu.fillPopup.bind(gPageStyleMenu);
+function stylesheetSwitchAll(contentWindow, title) {
+  gPageStyleMenu.switchStyleSheet(title, contentWindow);
+}
+function setStyleDisabled(disabled) {
+  if (disabled)
+    gPageStyleMenu.disableStyle();
+}
 
 
 var BrowserOffline = {
