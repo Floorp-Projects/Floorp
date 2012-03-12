@@ -125,10 +125,6 @@ static PRLogModuleInfo* gJSDiagnostics;
 #undef CompareString
 #endif
 
-// The amount of time we wait between a request to GC (due to leaving
-// a page) and doing the actual GC.
-#define NS_GC_DELAY                 4000 // ms
-
 #define NS_SHRINK_GC_BUFFERS_DELAY  4000 // ms
 
 // The amount of time we wait from the first request to GC to actually
