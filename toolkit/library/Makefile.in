@@ -56,7 +56,6 @@ CPPSRCS += \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-REQUIRES += widget gfx
 CPPSRCS += \
   nsDllMain.cpp \
   $(NULL)
@@ -82,7 +81,6 @@ DEFINES += -DZLIB_DLL=1
 endif
 
 ifeq ($(OS_ARCH),OS2)
-REQUIRES += widget gfx
 
 CPPSRCS += \
   nsGFXDeps.cpp \

@@ -827,10 +827,12 @@ ifdef MOZ_POST_STAGING_CMD
 	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(MOZ_POST_STAGING_CMD)
 endif # MOZ_POST_STAGING_CMD
 ifndef LIBXUL_SDK
+ifdef MOZ_PACKAGE_JSSHELL
 # Package JavaScript Shell
 	@echo "Packaging JavaScript Shell..."
 	$(RM) $(PKG_JSSHELL)
 	$(MAKE_JSSHELL)
+endif # MOZ_PACKAGE_JSSHELL
 endif # LIBXUL_SDK
 
 make-package: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
