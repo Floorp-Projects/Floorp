@@ -5367,12 +5367,12 @@ JS_IsConstructing(JSContext *cx, const jsval *vp)
 }
 
 /*
- * If a constructor does not have any static knowledge about the type of
- * object to create, it can request that the JS engine create a default new
- * 'this' object, as is done for non-constructor natives when called with new.
+ * A constructor can request that the JS engine create a default new 'this'
+ * object of the given class, using the callee to determine parentage and
+ * [[Prototype]].
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_NewObjectForConstructor(JSContext *cx, const jsval *vp);
+JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp);
 
 /************************************************************************/
 
