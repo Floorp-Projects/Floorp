@@ -113,6 +113,8 @@ jmethodID AndroidAddress::jGetThoroughfareMethod;
 jclass AndroidGeckoLayerClient::jGeckoLayerClientClass = 0;
 jmethodID AndroidGeckoLayerClient::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoLayerClient::jEndDrawingMethod = 0;
+jmethodID AndroidGeckoLayerClient::jSetFirstPaintViewport = 0;
+jmethodID AndroidGeckoLayerClient::jSetPageSize = 0;
 jmethodID AndroidGeckoLayerClient::jGetViewTransformMethod = 0;
 jmethodID AndroidGeckoLayerClient::jCreateFrameMethod = 0;
 jmethodID AndroidGeckoLayerClient::jActivateProgramMethod = 0;
@@ -349,6 +351,8 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
 
     jBeginDrawingMethod = getMethod("beginDrawing", "(IILjava/lang/String;)Z");
     jEndDrawingMethod = getMethod("endDrawing", "()V");
+    jSetFirstPaintViewport = getMethod("setFirstPaintViewport", "(FFFFF)V");
+    jSetPageSize = getMethod("setPageSize", "(FFF)V");
     jGetViewTransformMethod = getMethod("getViewTransform",
                                         "()Lorg/mozilla/gecko/gfx/ViewTransform;");
     jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
@@ -787,6 +791,30 @@ AndroidGeckoLayerClient::EndDrawing()
 
     AndroidBridge::AutoLocalJNIFrame jniFrame(env);
     return env->CallVoidMethod(wrapped_obj, jEndDrawingMethod);
+}
+
+void
+AndroidGeckoLayerClient::SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight)
+{
+    NS_ASSERTION(!isNull(), "SetFirstPaintViewport called on null layer client!");
+    JNIEnv *env = GetJNIForThread();
+    if (!env)
+        return;
+
+    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
+    return env->CallVoidMethod(wrapped_obj, jSetFirstPaintViewport, aOffsetX, aOffsetY, aZoom, aPageWidth, aPageHeight);
+}
+
+void
+AndroidGeckoLayerClient::SetPageSize(float aZoom, float aPageWidth, float aPageHeight)
+{
+    NS_ASSERTION(!isNull(), "SetPageSize called on null layer client!");
+    JNIEnv *env = GetJNIForThread();
+    if (!env)
+        return;
+
+    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
+    return env->CallVoidMethod(wrapped_obj, jSetPageSize, aZoom, aPageWidth, aPageHeight);
 }
 
 jobject

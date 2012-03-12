@@ -1882,6 +1882,26 @@ AndroidBridge::ScheduleResumeComposition()
 }
 
 void
+AndroidBridge::SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight)
+{
+    AndroidGeckoLayerClient *client = mLayerClient;
+    if (!client)
+        return;
+
+    client->SetFirstPaintViewport(aOffsetX, aOffsetY, aZoom, aPageWidth, aPageHeight);
+}
+
+void
+AndroidBridge::SetPageSize(float aZoom, float aPageWidth, float aPageHeight)
+{
+    AndroidGeckoLayerClient *client = mLayerClient;
+    if (!client)
+        return;
+
+    client->SetPageSize(aZoom, aPageWidth, aPageHeight);
+}
+
+void
 AndroidBridge::SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter)
 {
     mViewTransformGetter = &aViewTransformGetter;

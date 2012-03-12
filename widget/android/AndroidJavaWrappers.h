@@ -226,6 +226,8 @@ public:
 
     bool BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata);
     void EndDrawing();
+    void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
+    void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
     void GetViewTransform(AndroidViewTransform& aViewTransform);
     void CreateFrame(AndroidLayerRendererFrame& aFrame);
     void ActivateProgram();
@@ -235,6 +237,8 @@ protected:
     static jclass jGeckoLayerClientClass;
     static jmethodID jBeginDrawingMethod;
     static jmethodID jEndDrawingMethod;
+    static jmethodID jSetFirstPaintViewport;
+    static jmethodID jSetPageSize;
     static jmethodID jGetViewTransformMethod;
     static jmethodID jCreateFrameMethod;
     static jmethodID jActivateProgramMethod;
