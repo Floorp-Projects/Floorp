@@ -204,4 +204,33 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }
         return true;
     }
+
+    @SuppressWarnings({"unchecked", "non-varargs"})
+    public void SqliteCompare(Cursor c, ContentValues[] cvs) {
+        mAsserter.is(c.getCount(), cvs.length, "List is correct length");
+        if (c.moveToFirst()) {
+            do {
+                boolean found = false;
+                for (int i = 0; !found && i < cvs.length; i++) {
+                    if (CursorMatches(c, cvs[i])) {
+                        found = true;
+                    }
+                }
+                mAsserter.is(found, true, "Password was found");
+            } while(c.moveToNext());
+        }
+    }
+
+    public boolean CursorMatches(Cursor c, ContentValues cv) {
+        for (int i = 0; i < c.getColumnCount(); i++) {
+            String column = c.getColumnName(i);
+             if (cv.containsKey(column)) {
+                mAsserter.info("Pass","Column value " + c.getString(i) + " ?= " + cv.get(column).toString());
+                if (!cv.get(column).toString().equals(c.getString(i))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }
