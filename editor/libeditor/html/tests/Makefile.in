@@ -93,6 +93,7 @@ _TEST_FILES = \
 		test_bug677752.html \
 		test_bug697842.html \
 		test_bug725069.html \
+		test_bug735059.html \
 		test_CF_HTML_clipboard.html \
 		test_contenteditable_focus.html \
 		test_htmleditor_keyevent_handling.html \
