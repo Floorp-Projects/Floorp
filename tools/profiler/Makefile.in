@@ -48,6 +48,7 @@ EXPORTS = \
   sampler.h \
   sps_sampler.h \
   thread_helper.h \
+  shared-libraries.h \
   $(NULL)
 
 LOCAL_INCLUDES += \

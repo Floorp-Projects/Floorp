@@ -38,22 +38,16 @@
 #if !defined(nsMediaDecoder_h_)
 #define nsMediaDecoder_h_
 
-#include "mozilla/XPCOM.h"
-
-#include "nsIPrincipal.h"
-#include "nsSize.h"
-#include "prlog.h"
-#include "gfxContext.h"
-#include "gfxRect.h"
-#include "nsITimer.h"
 #include "ImageLayers.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "nsIMemoryReporter.h"
 #include "VideoFrameContainer.h"
 
 class nsHTMLMediaElement;
 class nsIStreamListener;
 class nsTimeRanges;
+class nsIMemoryReporter;
+class nsIPrincipal;
+class nsITimer;
 
 namespace mozilla {
 class MediaResource;

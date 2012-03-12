@@ -103,7 +103,8 @@ nsDOMNotifyPaintEvent::GetBoundingClientRect(nsIDOMClientRect** aResult)
 NS_IMETHODIMP
 nsDOMNotifyPaintEvent::GetClientRects(nsIDOMClientRectList** aResult)
 {
-  nsRefPtr<nsClientRectList> rectList = new nsClientRectList();
+  nsRefPtr<nsClientRectList> rectList =
+    new nsClientRectList(static_cast<nsIDOMEvent*>(static_cast<nsDOMEvent*>(this)));
   if (!rectList)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -125,7 +126,8 @@ nsDOMNotifyPaintEvent::GetClientRects(nsIDOMClientRectList** aResult)
 NS_IMETHODIMP
 nsDOMNotifyPaintEvent::GetPaintRequests(nsIDOMPaintRequestList** aResult)
 {
-  nsRefPtr<nsPaintRequestList> requests = new nsPaintRequestList();
+  nsRefPtr<nsPaintRequestList> requests =
+    new nsPaintRequestList(static_cast<nsDOMEvent*>(this));
   if (!requests)
     return NS_ERROR_OUT_OF_MEMORY;
 
