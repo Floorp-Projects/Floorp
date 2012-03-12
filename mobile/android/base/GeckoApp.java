@@ -1107,7 +1107,8 @@ abstract public class GeckoApp
                     });
                 } else {
                     mAboutHomeContent.update(GeckoApp.mAppContext,
-                                             EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES));
+                                             EnumSet.of(AboutHomeContent.UpdateFlags.TOP_SITES,
+                                                        AboutHomeContent.UpdateFlags.REMOTE_TABS));
                 }
             
                 mAboutHomeContent.setVisibility(View.VISIBLE);
@@ -2562,7 +2563,7 @@ abstract public class GeckoApp
             Log.e(LOGTAG, "error building JSON arguments");
         }
         if (type == AwesomeBar.Type.ADD) {
-            Log.i(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
+            Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
         } else {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));

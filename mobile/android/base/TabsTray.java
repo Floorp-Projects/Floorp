@@ -39,13 +39,9 @@ package org.mozilla.gecko;
 
 import java.util.ArrayList;
 
-import org.mozilla.gecko.db.BrowserContract.Clients;
-import org.mozilla.gecko.db.BrowserContract;
-
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Context;
-import android.database.Cursor;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -128,8 +124,17 @@ public class TabsTray extends Activity implements Tabs.OnTabsChangedListener {
 
          // If sync is set up, query the database for remote clients
          // Cleanup after Bug: 734211 is fixed
-         if (AccountManager.get(getApplicationContext()).getAccountsByType("org.mozilla.firefox_sync").length > 0)
-             (new QueryForRemoteClientsTask()).execute();
+         if (AccountManager.get(getApplicationContext()).getAccountsByType("org.mozilla.firefox_sync").length > 0) {
+             TabsAccessor.areClientsAvailable(getApplicationContext(), new TabsAccessor.OnClientsAvailableListener() {
+                 @Override
+                 public void areAvailable(boolean available) {
+                     if (available)
+                         mRemoteTabs.setVisibility(View.VISIBLE);
+                     else
+                         mRemoteTabs.setVisibility(View.GONE);
+                 }
+             });
+        }
     }
 
     @Override
@@ -177,8 +182,10 @@ public class TabsTray extends Activity implements Tabs.OnTabsChangedListener {
     }
 
     void showRemoteTabs() {
-        startActivity(new Intent(this, RemoteTabs.class));
-        overridePendingTransition(R.anim.grow_fade_in, 0);
+        Intent intent = new Intent(this, RemoteTabs.class);
+        intent.putExtra("exit-to-tabs-tray", true);
+        startActivity(intent);
+        overridePendingTransition(R.anim.grow_fade_in, R.anim.shrink_fade_out);
         finishActivity();
     }
 
@@ -208,35 +215,6 @@ public class TabsTray extends Activity implements Tabs.OnTabsChangedListener {
             }
 
             super.onMeasure(widthMeasureSpec, restrictedHeightSpec);
-        }
-    }
-
-    // AsyncTask to see if there is any remote tabs in the database
-    private class QueryForRemoteClientsTask extends GeckoAsyncTask<Void, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(Void... unused) {
-            Cursor clients = getContentResolver().query(BrowserContract.Clients.CONTENT_URI,
-                                                        null,
-                                                        null,
-                                                        null,
-                                                        null);
-
-            if (clients == null)
-                return false;
-
-            try {
-                return clients.moveToNext();
-            } finally {
-                clients.close();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(Boolean clientsExist) {
-            if (clientsExist.booleanValue())
-                mRemoteTabs.setVisibility(View.VISIBLE);
-            else
-                mRemoteTabs.setVisibility(View.GONE);
         }
     }
 
