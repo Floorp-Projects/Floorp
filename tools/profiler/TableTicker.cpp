@@ -542,18 +542,18 @@ void TableTicker::Tick(TickSample* sample)
   }
   mStack->mQueueClearMarker = true;
 
-  // if we are on a different event we can discard any temporary samples
-  // we've kept around
-  if (sLastSampledEventGeneration != sCurrentEventGeneration) {
-    // XXX: we also probably want to add an entry to the profile to help
-    // distinguish which samples are part of the same event. That, or record
-    // the event generation in each sample
-    mProfile.erase();
-  }
-  sLastSampledEventGeneration = sCurrentEventGeneration;
-
   bool recordSample = true;
   if (mJankOnly) {
+    // if we are on a different event we can discard any temporary samples
+    // we've kept around
+    if (sLastSampledEventGeneration != sCurrentEventGeneration) {
+      // XXX: we also probably want to add an entry to the profile to help
+      // distinguish which samples are part of the same event. That, or record
+      // the event generation in each sample
+      mProfile.erase();
+    }
+    sLastSampledEventGeneration = sCurrentEventGeneration;
+
     recordSample = false;
     // only record the events when we have a we haven't seen a tracer event for 100ms
     if (!sLastTracerEvent.IsNull()) {
