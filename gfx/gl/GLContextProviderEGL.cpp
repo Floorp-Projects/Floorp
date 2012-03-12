@@ -39,11 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/Preferences.h"
 #include "mozilla/Util.h"
-
-#include "nsIScreen.h"
-#include "nsIScreenManager.h"
+// please add new includes below Qt, otherwise it break Qt build due malloc wrapper conflicts
 
 #if defined(XP_UNIX)
 
@@ -92,7 +89,6 @@ typedef void *EGLNativeWindowType;
 
 #elif defined(XP_WIN)
 
-#include "mozilla/Preferences.h"
 #include "nsILocalFile.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -151,6 +147,9 @@ public:
 
 #endif
 
+#include "mozilla/Preferences.h"
+#include "nsIScreen.h"
+#include "nsIScreenManager.h"
 #include "gfxUtils.h"
 #include "gfxFailure.h"
 #include "gfxASurface.h"
