@@ -74,6 +74,8 @@ void CleanUpWidgetTracing()
 // This function is called from the main (UI) thread.
 void SignalTracerThread()
 {
+  if (!sMutex || !sCondVar)
+    return;
   MutexAutoLock lock(*sMutex);
   NS_ABORT_IF_FALSE(!sTracerProcessed, "Tracer synchronization state is wrong");
   sTracerProcessed = true;
