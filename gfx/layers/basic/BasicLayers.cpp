@@ -3504,5 +3504,11 @@ BasicShadowLayerManager::IsCompositingCheap()
          LayerManager::IsCompositingCheap(GetParentBackendType());
 }
 
+void
+BasicShadowLayerManager::SetIsFirstPaint()
+{
+  ShadowLayerForwarder::SetIsFirstPaint();
+}
+
 }
 }

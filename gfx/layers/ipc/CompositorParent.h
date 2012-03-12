@@ -91,7 +91,7 @@ public:
 
   virtual bool RecvStop() MOZ_OVERRIDE;
 
-  virtual void ShadowLayersUpdated() MOZ_OVERRIDE;
+  virtual void ShadowLayersUpdated(bool isFirstPaint) MOZ_OVERRIDE;
   void Destroy();
 
   LayerManager* GetLayerManager() { return mLayerManager; }
@@ -143,6 +143,13 @@ private:
   float mXScale;
   float mYScale;
   nsIntPoint mScrollOffset;
+
+  // When this flag is set, the next composition will be the first for a
+  // particular document (i.e. the document displayed on the screen will change).
+  // This happens when loading a new page or switching tabs. We notify the
+  // front-end (e.g. Java on Android) about this so that it take the new page
+  // size and zoom into account when providing us with the next view transform.
+  bool mIsFirstPaint;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

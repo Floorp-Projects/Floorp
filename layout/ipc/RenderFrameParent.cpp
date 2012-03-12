@@ -516,7 +516,7 @@ RenderFrameParent::ContentViewScaleChanged(nsContentView* aView)
 }
 
 void
-RenderFrameParent::ShadowLayersUpdated()
+RenderFrameParent::ShadowLayersUpdated(bool isFirstPaint)
 {
   mFrameLoader->SetCurrentRemoteFrame(this);
 
