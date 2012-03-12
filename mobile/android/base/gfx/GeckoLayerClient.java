@@ -76,8 +76,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /* The viewport that Gecko is currently displaying. */
     private ViewportMetrics mGeckoViewport;
 
-    private boolean mViewportSizeChanged;
-
     private String mLastCheckerboardColor;
 
     /* Used by robocop for testing purposes */
@@ -210,7 +208,14 @@ public class GeckoLayerClient implements GeckoEventResponder,
     }
 
     void viewportSizeChanged() {
-        mViewportSizeChanged = true;
+        // here we send gecko a resize message. The code in browser.js is responsible for
+        // picking up on that resize event, modifying the viewport as necessary, and informing
+        // us of the new viewport.
+        sendResizeEventIfNecessary(true);
+        // the following call also sends gecko a message, which will be processed after the resize
+        // message above has updated the viewport. this message ensures that if we have just put
+        // focus in a text field, we scroll the content so that the text field is in view.
+        GeckoAppShell.viewSizeChanged();
     }
 
     private void updateDisplayPort() {
@@ -285,10 +290,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
         updateDisplayPort();
         GeckoAppShell.sendEventToGecko(GeckoEvent.createViewportEvent(viewportMetrics, mDisplayPort));
-        if (mViewportSizeChanged) {
-            mViewportSizeChanged = false;
-            GeckoAppShell.viewSizeChanged();
-        }
     }
 
     /** Implementation of GeckoEventResponder/GeckoEventListener. */

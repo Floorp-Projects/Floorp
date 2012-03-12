@@ -214,49 +214,13 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      * result in an infinite loop.
      */
     public void setViewportSize(FloatSize size) {
-        // Resize the viewport, and modify its zoom factor so that the page retains proportionally
-        // zoomed relative to the screen.
         ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
-        float oldHeight = viewportMetrics.getSize().height;
-        float oldWidth = viewportMetrics.getSize().width;
-        float oldZoomFactor = viewportMetrics.getZoomFactor();
         viewportMetrics.setSize(size);
-
-        // if the viewport got larger (presumably because the vkb went away), and the page
-        // is smaller than the new viewport size, increase the page size so that the panzoomcontroller
-        // doesn't zoom in to make it fit (bug 718270). this page size change is in anticipation of
-        // gecko increasing the page size to match the new viewport size, which will happen the next
-        // time we get a draw update.
-        if (size.width >= oldWidth && size.height >= oldHeight) {
-            FloatSize pageSize = viewportMetrics.getPageSize();
-            if (pageSize.width < size.width || pageSize.height < size.height) {
-                viewportMetrics.setPageSize(new FloatSize(Math.max(pageSize.width, size.width),
-                                                           Math.max(pageSize.height, size.height)));
-            }
-        }
-
-        // For rotations, we want the focus point to be at the top left.
-        boolean rotation = (size.width > oldWidth && size.height < oldHeight) ||
-                           (size.width < oldWidth && size.height > oldHeight);
-        PointF newFocus;
-        if (rotation) {
-            newFocus = new PointF(0, 0);
-        } else {
-            newFocus = new PointF(size.width / 2.0f, size.height / 2.0f);
-        }
-        float newZoomFactor = size.width * oldZoomFactor / oldWidth;
-        viewportMetrics.scaleTo(newZoomFactor, newFocus);
         mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
-
-        setForceRedraw();
 
         if (mLayerClient != null) {
             mLayerClient.viewportSizeChanged();
-            notifyLayerClientOfGeometryChange();
         }
-
-        mPanZoomController.abortAnimation();
-        mView.requestRender();
     }
 
     /** Scrolls the viewport by the given offset. You must hold the monitor while calling this. */
