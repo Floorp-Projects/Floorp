@@ -119,8 +119,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
             layerController.setViewportMetrics(mGeckoViewport);
         }
 
-        GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
-        GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
+        GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
 
         sendResizeEventIfNecessary(false);
 
@@ -278,10 +277,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** Implementation of GeckoEventResponder/GeckoEventListener. */
     public void handleMessage(String event, JSONObject message) {
-        if ("Viewport:UpdateAndDraw".equals(event)) {
-            mUpdateViewportOnEndDraw = true;
-            mIgnorePaintsPendingViewportSizeChange = false;
-        } else if ("Viewport:UpdateLater".equals(event)) {
+        if ("Viewport:Update".equals(event)) {
             mUpdateViewportOnEndDraw = true;
             mIgnorePaintsPendingViewportSizeChange = false;
         }
@@ -290,9 +286,9 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /** Implementation of GeckoEventResponder. */
     public String getResponse() {
         // We are responding to the events handled in handleMessage() above with
-        // the display port margins we want. Note that both messages we are currently
-        // handling (Viewport:UpdateAndDraw and Viewport:UpdateLater) require this
-        // response, so we can just return this indiscriminately.
+        // the display port margins we want. Note that all messages we are currently
+        // handling (Viewport:Update) require this response, so we can just return
+        // this indiscriminately.
         return RectUtils.toJSON(mDisplayPortMargins);
     }
 
