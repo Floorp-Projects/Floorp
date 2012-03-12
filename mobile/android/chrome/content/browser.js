@@ -1517,7 +1517,7 @@ Tab.prototype = {
     this.browser.addEventListener("pagehide", this, true);
     this.browser.addEventListener("pageshow", this, true);
 
-    Services.obs.addObserver(this, "document-shown", false);
+    Services.obs.addObserver(this, "before-first-paint", false);
 
     if (!aParams.delayLoad) {
       let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -1563,7 +1563,7 @@ Tab.prototype = {
     this.browser.removeEventListener("pagehide", this, true);
     this.browser.removeEventListener("pageshow", this, true);
 
-    Services.obs.removeObserver(this, "document-shown");
+    Services.obs.removeObserver(this, "before-first-paint");
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
@@ -2238,7 +2238,7 @@ Tab.prototype = {
 
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "document-shown":
+      case "before-first-paint":
         // Is it on the top level?
         let contentDocument = aSubject;
         if (contentDocument == this.browser.contentDocument) {
