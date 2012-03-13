@@ -468,24 +468,6 @@ nsApplicationAccessible::ScrollToPoint(PRUint32 aCoordinateType,
 }
 
 NS_IMETHODIMP
-nsApplicationAccessible::GetComputedStyleValue(const nsAString &aPseudoElt,
-                                               const nsAString &aPropertyName,
-                                               nsAString &aValue)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsApplicationAccessible::GetComputedStyleCSSValue(const nsAString &aPseudoElt,
-                                                  const nsAString &aPropertyName,
-                                                  nsIDOMCSSPrimitiveValue **aCSSPrimitiveValue)
-{
-  NS_ENSURE_ARG_POINTER(aCSSPrimitiveValue);
-  *aCSSPrimitiveValue = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsApplicationAccessible::GetLanguage(nsAString &aLanguage)
 {
   aLanguage.Truncate();

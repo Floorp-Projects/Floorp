@@ -232,42 +232,6 @@ nsAccessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
 }
 
 NS_IMETHODIMP
-nsAccessible::GetComputedStyleValue(const nsAString& aPseudoElt,
-                                    const nsAString& aPropertyName,
-                                    nsAString& aValue)
-{
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl =
-    nsCoreUtils::GetComputedStyleDeclaration(aPseudoElt, mContent);
-  NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
-
-  return styleDecl->GetPropertyValue(aPropertyName, aValue);
-}
-
-NS_IMETHODIMP
-nsAccessible::GetComputedStyleCSSValue(const nsAString& aPseudoElt,
-                                       const nsAString& aPropertyName,
-                                       nsIDOMCSSPrimitiveValue **aCSSValue) {
-  NS_ENSURE_ARG_POINTER(aCSSValue);
-  *aCSSValue = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl =
-    nsCoreUtils::GetComputedStyleDeclaration(aPseudoElt, mContent);
-  NS_ENSURE_STATE(styleDecl);
-
-  nsCOMPtr<nsIDOMCSSValue> cssValue;
-  styleDecl->GetPropertyCSSValue(aPropertyName, getter_AddRefs(cssValue));
-  NS_ENSURE_TRUE(cssValue, NS_ERROR_FAILURE);
-
-  return CallQueryInterface(cssValue, aCSSValue);
-}
-
-NS_IMETHODIMP
 nsAccessible::GetDocument(nsIAccessibleDocument **aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
