@@ -36,11 +36,11 @@ let gDrag = {
   start: function Drag_start(aSite, aEvent) {
     this._draggedSite = aSite;
 
-    // Prevent moz-transform for left, top.
-    aSite.node.setAttribute("dragged", "true");
-
-    // Make sure the dragged site is floating above the grid.
-    aSite.node.setAttribute("ontop", "true");
+    // Mark nodes as being dragged.
+    let selector = ".newtab-site, .newtab-control, .newtab-thumbnail";
+    let nodes = aSite.node.parentNode.querySelectorAll(selector);
+    for (let i = 0; i < nodes.length; i++)
+      nodes[i].setAttribute("dragged", "true");
 
     this._setDragData(aSite, aEvent);
 
@@ -88,13 +88,12 @@ let gDrag = {
    * @param aEvent The 'dragend' event.
    */
   end: function Drag_end(aSite, aEvent) {
-    aSite.node.removeAttribute("dragged");
+    let nodes = aSite.node.parentNode.querySelectorAll("[dragged]");
+    for (let i = 0; i < nodes.length; i++)
+      nodes[i].removeAttribute("dragged");
 
     // Slide the dragged site back into its cell (may be the old or the new cell).
-    gTransformation.slideSiteTo(aSite, aSite.cell, {
-      unfreeze: true,
-      callback: function () aSite.node.removeAttribute("ontop")
-    });
+    gTransformation.slideSiteTo(aSite, aSite.cell, {unfreeze: true});
 
     this._draggedSite = null;
   },
@@ -132,13 +131,13 @@ let gDrag = {
     // Create and use an empty drag element. We don't want to use the default
     // drag image with its default opacity.
     let dragElement = document.createElementNS(HTML_NAMESPACE, "div");
-    dragElement.classList.add("drag-element");
-    let body = document.getElementById("body");
-    body.appendChild(dragElement);
+    dragElement.classList.add("newtab-drag");
+    let scrollbox = document.getElementById("newtab-scrollbox");
+    scrollbox.appendChild(dragElement);
     dt.setDragImage(dragElement, 0, 0);
 
     // After the 'dragstart' event has been processed we can remove the
     // temporary drag element from the DOM.
-    setTimeout(function () body.removeChild(dragElement), 0);
+    setTimeout(function () scrollbox.removeChild(dragElement), 0);
   }
 };

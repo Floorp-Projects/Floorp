@@ -1,148 +1,131 @@
-#scrollbox {
-  padding-bottom: 18px;
-  background-color: #fff;
+:root {
+  -moz-appearance: none;
+  background-color: transparent;
 }
 
-#body {
-  padding-top: 106px;
-  font-family: sans-serif;
+/* SCROLLBOX */
+#newtab-scrollbox:not([page-disabled]) {
+  background-color: rgb(229,229,229);
+  background-image: url(chrome://browser/skin/newtab/noise.png),
+                    -moz-linear-gradient(rgba(255,255,255,.5), rgba(255,255,255,.2));
+  background-attachment: fixed;
 }
 
-.button {
+/* TOGGLE */
+#newtab-toggle {
+  width: 16px;
+  height: 16px;
   padding: 0;
-  border: 0 none;
+  border: none;
+  background: -216px 0 transparent url(chrome://browser/skin/newtab/controls.png);
 }
 
-/* TOOLBAR */
-#toolbar {
-  top: 8px;
-  right: 8px;
-  width: 13px;
-  height: 30px;
-  padding: 0;
-  margin: 0;
+#newtab-toggle[page-disabled] {
+  background-position: -232px 0;
 }
 
-.toolbar-button {
-  background: transparent url(chrome://browser/skin/newtab/toolbar.png);
+/* ROWS */
+.newtab-row {
+  margin-bottom: 20px;
 }
 
-#toolbar-button-show {
-  width: 11px;
-  height: 11px;
-  background-position: -10px 0;
-}
-
-#toolbar-button-show:hover {
-  background-position: -10px -12px;
-}
-
-#toolbar-button-show:active {
-  background-position: -10px -24px;
-}
-
-#toolbar-button-hide {
-  width: 10px;
-  height: 10px;
-}
-
-#toolbar-button-hide:hover {
-  background-position: 0 -12px;
-}
-
-#toolbar-button-hide:active {
-  background-position: 0 -24px;
-}
-
-#toolbar-button-reset {
-  top: 17px;
-  width: 11px;
-  height: 12px;
-}
-
-#toolbar-button-reset {
-  background-position: -21px 0;
-}
-
-#toolbar-button-reset:hover {
-  background-position: -21px -12px;
-}
-
-#toolbar-button-reset:active {
-  background-position: -21px -24px;
-}
-
-/* GRID */
-#grid {
-  padding: 1px;
-  margin: 0 auto;
+.newtab-row:last-child {
+  margin-bottom: 0;
 }
 
 /* CELLS */
-.cell {
-  outline: 1px dashed #ccc;
-  outline-offset: -1px;
+.newtab-cell {
+  -moz-margin-end: 20px;
+  background-color: rgba(255,255,255,.2);
+  border: 1px solid;
+  border-color: rgba(8,22,37,.12) rgba(8,22,37,.14) rgba(8,22,37,.16);
+  border-radius: 1px;
+  -moz-transition: border-color 100ms ease-out;
+}
+
+.newtab-cell:empty {
+  border: 1px dashed;
+  border-color: rgba(8,22,37,.15) rgba(8,22,37,.17) rgba(8,22,37,.19);
+}
+
+.newtab-cell:last-child {
+  -moz-margin-end: 0;
+}
+
+.newtab-cell:hover:not(:empty) {
+  border-color: rgba(8,22,37,.25) rgba(8,22,37,.27) rgba(8,22,37,.3);
 }
 
 /* SITES */
-.site {
-  background-color: #ececec;
-  -moz-transition: 200ms ease-out;
-  -moz-transition-property: top, left, box-shadow, opacity;
-}
-
-.site[dragged] {
-  -moz-transition-property: box-shadow;
-}
-
-.site[ontop] {
-  box-shadow: 0 1px 4px #000;
-  outline: none;
-}
-
-/* SITE TITLE */
-.site-title {
-  height: 2.4em;
-  width: 189px;
-  padding: 0 6px;
-  background-color: rgba(0,0,0,0.5);
-  border: solid transparent;
-  border-width: 6px 0;
-  color: #fff;
+.newtab-site {
   text-decoration: none;
-  line-height: 1.2em;
-  font-weight: 700;
+  -moz-transition-property: top, left, opacity, box-shadow, background-color;
 }
 
-/* SITE STRIP */
-.site-strip {
-  padding: 4px 3px;
-  background-color: rgba(0,0,0,0.5);
+.newtab-site:hover,
+.newtab-site[dragged] {
+  box-shadow: 0 0 10px rgba(8,22,37,.3);
 }
 
-.strip-button {
-  width: 17px;
-  height: 17px;
-  background: transparent url(chrome://browser/skin/newtab/strip.png);
+.newtab-site[dragged] {
+  -moz-transition-property: box-shadow, background-color;
+  background-color: rgb(242,242,242);
 }
 
-.strip-button-pin:hover {
-  background-position: 0 -17px;
+/* THUMBNAILS */
+.newtab-thumbnail {
+  background-origin: padding-box;
+  background-clip: padding-box;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
-.strip-button-pin:active,
-.site[pinned] .strip-button-pin {
-  background-position: 0 -34px;
+/* TITLES */
+.newtab-title {
+  padding: 0 8px;
+  background-color: rgba(248,249,251,.95);
+  color: #1f364c;
+  font-size: 12px;
+  line-height: 24px;
 }
 
-.strip-button-block {
-  background-position: -17px 0;
+/* CONTROLS */
+.newtab-control {
+  width: 24px;
+  height: 24px;
+  padding: 1px 2px 3px;
+  border: none;
+  background: transparent url(chrome://browser/skin/newtab/controls.png);
 }
 
-.strip-button-block:hover {
-  background-position: -17px -17px;
+.newtab-control-pin:hover {
+  background-position: -24px 0;
 }
 
-.strip-button-block:active {
-  background-position: -17px -34px;
+.newtab-control-pin:active {
+  background-position: -48px 0;
+}
+
+.newtab-control-pin[pinned] {
+  background-position: -72px 0;
+}
+
+.newtab-control-pin[pinned]:hover {
+  background-position: -96px 0;
+}
+
+.newtab-control-pin[pinned]:active {
+  background-position: -120px 0;
+}
+
+.newtab-control-block {
+  background-position: -144px 0;
+}
+
+.newtab-control-block:hover {
+  background-position: -168px 0;
+}
+
+.newtab-control-block:active {
+  background-position: -192px 0;
 }
