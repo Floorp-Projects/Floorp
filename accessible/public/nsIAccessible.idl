@@ -59,7 +59,7 @@ interface nsIAccessibleRelation;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(3126544c-826c-4694-a2ed-67bfe56a1f37)]
+[scriptable, uuid(e7c44e0d-736e-4ead-afee-b51f4b574020)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -109,26 +109,6 @@ interface nsIAccessible : nsISupports
    * node, not including the start and end tag for the node.
    */
   readonly attribute DOMString innerHTML;
-
-  /**
-   * Retrieve the computed style value for this DOM node, if it is a DOM element.
-   * Note: the meanings of width, height and other size measurements depend
-   * on the version of CSS being used. Therefore, for bounds information, 
-   * it is better to use nsIAccessible::accGetBounds.
-   *
-   * @param pseudoElt [in] The pseudo element to retrieve style for, or NULL
-   *                  for general computed style information for this node.
-   * @param propertyName [in] Retrieve the computed style value for this property name,
-   *                     for example "border-bottom".
-   */
-  DOMString getComputedStyleValue(in DOMString pseudoElt, in DOMString propertyName);
-
-  /**
-   * The method is similar to getComputedStyleValue() excepting that this one
-   * returns nsIDOMCSSPrimitiveValue.
-   */
-  nsIDOMCSSPrimitiveValue getComputedStyleCSSValue(in DOMString pseudoElt,
-                                                   in DOMString propertyName);
 
   /**
    * The DOM node this nsIAccessible is associated with.
