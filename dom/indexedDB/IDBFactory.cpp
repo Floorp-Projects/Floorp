@@ -468,16 +468,9 @@ IDBFactory::OpenCommon(const nsAString& aName,
 
   nsCOMPtr<nsPIDOMWindow> window;
   nsCOMPtr<nsIScriptGlobalObject> sgo;
-  nsIScriptContext* context = nsnull;
   JSObject* scriptOwner = nsnull;
 
   if (mWindow) {
-    sgo = do_QueryInterface(mWindow);
-    NS_ENSURE_TRUE(sgo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    context = sgo->GetContext();
-    NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
     window = mWindow;
   }
   else {
@@ -490,7 +483,7 @@ IDBFactory::OpenCommon(const nsAString& aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<IDBOpenDBRequest> request =
-    IDBOpenDBRequest::Create(context, window, scriptOwner);
+    IDBOpenDBRequest::Create(window, scriptOwner);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenDatabaseHelper> openHelper =

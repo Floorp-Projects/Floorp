@@ -162,8 +162,7 @@ IDBDatabase::Create(IDBWrapperCache* aOwnerCache,
 
   nsRefPtr<IDBDatabase> db(new IDBDatabase());
 
-  db->mScriptContext = aOwnerCache->GetScriptContext();
-  db->mOwner = aOwnerCache->GetOwner();
+  db->BindToOwner(aOwnerCache);
   if (!db->SetScriptOwner(aOwnerCache->GetScriptOwner())) {
     return nsnull;
   }
@@ -681,7 +680,7 @@ IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
 
-  if (!mOwner) {
+  if (!GetOwner()) {
     return NS_OK;
   }
 
@@ -695,7 +694,7 @@ IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         CreateGenericEvent(type, eDoesNotBubble, eNotCancelable);
       NS_ENSURE_STATE(duplicateEvent);
 
-      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mOwner));
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(GetOwner()));
       NS_ASSERTION(target, "How can this happen?!");
 
       bool dummy;

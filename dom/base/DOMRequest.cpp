@@ -22,11 +22,8 @@ DOMRequest::DOMRequest(nsIDOMWindow* aWindow)
   , mRooted(false)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  mOwner = window->IsInnerWindow() ? window.get() :
-                                     window->GetCurrentInnerWindow();
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
-  mScriptContext = sgo->GetContext();
+  BindToOwner(window->IsInnerWindow() ? window.get() :
+                                        window->GetCurrentInnerWindow());
 }
 
 DOMCI_DATA(DOMRequest, DOMRequest)

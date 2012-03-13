@@ -47,6 +47,7 @@ class nsIDOMMozSmsCursor;
 namespace mozilla {
 namespace dom {
 namespace sms {
+class SmsManager;
 
 class SmsRequest : public nsIDOMMozSmsRequest
                  , public nsDOMEventTargetHelper
@@ -67,7 +68,7 @@ public:
 private:
   SmsRequest() MOZ_DELETE;
 
-  SmsRequest(nsPIDOMWindow* aWindow, nsIScriptContext* aScriptContext);
+  SmsRequest(SmsManager* aManager);
   ~SmsRequest();
 
   /**
