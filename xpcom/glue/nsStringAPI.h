@@ -1322,7 +1322,7 @@ Substring( const nsAString& str, PRUint32 startPos, PRUint32 length )
 inline const nsDependentSubstring
 Substring( const PRUnichar* start, const PRUnichar* end )
 {
-  NS_ABORT_IF_FALSE(PRUint32(end - start) == uintptr_t(end - start), "string too long");
+  NS_ABORT_IF_FALSE(PRUint32(end - start) == end - start, "string too long");
   return nsDependentSubstring(start, PRUint32(end - start));
 }
 
@@ -1361,7 +1361,7 @@ inline
 const nsDependentCSubstring
 Substring( const char* start, const char* end )
 {
-  NS_ABORT_IF_FALSE(PRUint32(end - start) == uintptr_t(end - start), "string too long");
+  NS_ABORT_IF_FALSE(PRUint32(end - start) == end - start, "string too long");
   return nsDependentCSubstring(start, PRUint32(end - start));
 }
 

@@ -5,7 +5,6 @@
 #ifndef BASE_LOGGING_H_
 #define BASE_LOGGING_H_
 
-#include <assert.h>
 #include <string>
 #include <cstring>
 
@@ -14,6 +13,8 @@
 
 // Replace the Chromium logging code with NSPR-based logging code and
 // some C++ wrappers to emulate std::ostream
+
+#define ERROR 0
 
 namespace mozilla {
 
@@ -99,8 +100,8 @@ const mozilla::EmptyLog& operator <<(const mozilla::EmptyLog& log, const T&)
 #define DCHECK(condition) while (false && (condition)) mozilla::EmptyLog()
 #endif
 
-#define LOG_ASSERT(cond) CHECK(0)
-#define DLOG_ASSERT(cond) DCHECK(0)
+#define LOG_ASSERT(cond) CHECK(ERROR)
+#define DLOG_ASSERT(cond) DCHECK(ERROR)
 
 #define NOTREACHED() LOG(ERROR)
 #define NOTIMPLEMENTED() LOG(ERROR)
