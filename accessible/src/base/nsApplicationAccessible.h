@@ -76,12 +76,6 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   NS_SCRIPTABLE NS_IMETHOD ScrollTo(PRUint32 aScrollType);
   NS_SCRIPTABLE NS_IMETHOD ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY);
-  NS_SCRIPTABLE NS_IMETHOD GetComputedStyleValue(const nsAString& aPseudoElt,
-                                                 const nsAString& aPropertyName,
-                                                 nsAString& aValue NS_OUTPARAM);
-  NS_SCRIPTABLE NS_IMETHOD GetComputedStyleCSSValue(const nsAString& aPseudoElt,
-                                                    const nsAString& aPropertyName,
-                                                    nsIDOMCSSPrimitiveValue** aValue NS_OUTPARAM);
   NS_SCRIPTABLE NS_IMETHOD GetLanguage(nsAString& aLanguage);
   NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetNextSibling(nsIAccessible **aNextSibling);

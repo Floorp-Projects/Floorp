@@ -38,6 +38,10 @@
 #ifdef mozilla_StartupTimeline_Event
 mozilla_StartupTimeline_Event(PROCESS_CREATION, "process")
 mozilla_StartupTimeline_Event(MAIN, "main")
+// Record the beginning and end of startup crash detection to compare with crash stats to know whether
+// detection should be improved to start or end sooner.
+mozilla_StartupTimeline_Event(STARTUP_CRASH_DETECTION_BEGIN, "startupCrashDetectionBegin")
+mozilla_StartupTimeline_Event(STARTUP_CRASH_DETECTION_END, "startupCrashDetectionEnd")
 mozilla_StartupTimeline_Event(FIRST_PAINT, "firstPaint")
 mozilla_StartupTimeline_Event(SESSION_RESTORED, "sessionRestored")
 mozilla_StartupTimeline_Event(CREATE_TOP_LEVEL_WINDOW, "createTopLevelWindow")

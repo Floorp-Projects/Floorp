@@ -60,6 +60,8 @@
 #define NS_INTERFACE_PREFIX "nsI"
 #define NS_DOM_INTERFACE_PREFIX "nsIDOM"
 
+using namespace mozilla;
+
 // Our extended PLDHashEntryHdr
 class GlobalNameMapEntry : public PLDHashEntryHdr
 {
@@ -74,7 +76,6 @@ static PLDHashNumber
 GlobalNameHashHashKey(PLDHashTable *table, const void *key)
 {
   const nsAString *str = static_cast<const nsAString *>(key);
-
   return HashString(*str);
 }
 

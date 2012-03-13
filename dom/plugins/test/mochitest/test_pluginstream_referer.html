@@ -9,11 +9,12 @@
   <p id="display"></p>
 
   <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+  <embed id="plugin2" type="application/x-test" src="loremipsum.xtest" width="200" height="200"></embed>
 
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  var pending = 2;
+  var pending = 3;
   function testDone() {
     --pending;
     if (0 == pending)
@@ -22,6 +23,7 @@
 
   function runTests() {
     var p = document.getElementById('plugin1');
+    var p2 = document.getElementById('plugin2');
 
     ok(p.streamTest('plugin-stream-referer.sjs', false, null, null,
                     function(r, t) {
@@ -37,6 +39,16 @@
                       is(t, "No Referer found", "POST Referer absent");
                       testDone();
                     }, null, true), "referer POST");
+
+    ok(p2.streamTest('plugin-stream-referer.sjs', false, null, null,
+                     function(r, t) {
+                       is(r, 0, "GET plugin-stream-referer.sjs (2)");
+                       var expectedreferer = String(window.location).replace("test_pluginstream_referer.html", "loremipsum.xtest");
+                       is(t, "Referer found: " + expectedreferer,
+                          "GET Referer correct with plugin src");
+                       testDone();
+                     }, null, true), "referer GET (2)");
+                            
   }
   </script>
 

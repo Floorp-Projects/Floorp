@@ -12,9 +12,15 @@ interface nsIAndroidDrawMetadataProvider : nsISupports {
   boolean paintingSuppressed();
 };
 
+[scriptable, uuid(0843f3c1-043e-4c64-9d8c-091370548c05)]
+interface nsIBrowserTab : nsISupports {
+  readonly attribute nsIDOMWindow window;
+  readonly attribute float scale;
+};
+
 [scriptable, uuid(d10377b4-1c90-493a-a532-63cb3f16ee2b)]
 interface nsIAndroidBrowserApp : nsISupports {
-  nsIDOMWindow getWindowForTab(in PRInt32 tabId);
+  nsIBrowserTab getBrowserTab(in PRInt32 tabId);
 };
 
 [scriptable, uuid(7dd8441a-4f38-49b2-bd90-da69d02a96cf)]

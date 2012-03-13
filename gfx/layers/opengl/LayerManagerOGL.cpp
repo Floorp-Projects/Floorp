@@ -1043,39 +1043,10 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
   }
 #endif
 
-  GLenum format = LOCAL_GL_RGBA;
-  if (mHasBGRA)
-    format = LOCAL_GL_BGRA;
-
   NS_ASSERTION(imageSurface->Stride() == width * 4,
                "Image Surfaces being created with weird stride!");
 
-  PRUint32 currentPackAlignment = 0;
-  mGLContext->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*)&currentPackAlignment);
-  if (currentPackAlignment != 4) {
-    mGLContext->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
-  }
-
-  mGLContext->fReadPixels(0, 0,
-                          width, height,
-                          format,
-                          LOCAL_GL_UNSIGNED_BYTE,
-                          imageSurface->Data());
-
-  if (currentPackAlignment != 4) {
-    mGLContext->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
-  }
-
-  if (!mHasBGRA) {
-    // need to swap B and R bytes
-    for (int j = 0; j < height; ++j) {
-      PRUint32 *row = (PRUint32*) (imageSurface->Data() + imageSurface->Stride() * j);
-      for (int i = 0; i < width; ++i) {
-        *row = (*row & 0xff00ff00) | ((*row & 0xff) << 16) | ((*row & 0xff0000) >> 16);
-        row++;
-      }
-    }
-  }
+  mGLContext->ReadPixelsIntoImageSurface(0, 0, width, height, imageSurface);
 
   aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   aTarget->Scale(1.0, -1.0);

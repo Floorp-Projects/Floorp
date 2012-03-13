@@ -1562,17 +1562,12 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
   JSContext* cx = nsnull;
   if (stack && NS_SUCCEEDED(stack->Peek(&cx)) && cx) {
-    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
-    if (fp) {
-      JSScript *script = JS_GetFrameScript(cx, fp);
-      if (script) {
-        mScriptFile = JS_GetScriptFilename(cx, script);
-      }
+    unsigned lineno;
+    JSScript *script;
 
-      jsbytecode *pc = JS_GetFramePC(cx, fp);
-      if (script && pc) {
-        mScriptLine = JS_PCToLineNumber(cx, script, pc);
-      }
+    if (JS_DescribeScriptedCaller(cx, &script, &lineno)) {
+        mScriptFile = JS_GetScriptFilename(cx, script);
+        mScriptLine = lineno;
     }
 
     mInnerWindowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);

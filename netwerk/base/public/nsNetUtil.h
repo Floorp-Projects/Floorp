@@ -48,8 +48,9 @@
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "prio.h" // for read/write flags, permissions, etc.
+#include "nsHashKeys.h"
 
-#include "nsCRT.h"
+#include "plstr.h"
 #include "nsIURI.h"
 #include "nsIStandardURL.h"
 #include "nsIURLParser.h"
@@ -106,10 +107,9 @@
 #include "nsIChannelPolicy.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
+#include "nsIRedirectChannelRegistrar.h"
 #include "nsIMIMEHeaderParam.h"
 #include "mozilla/Services.h"
-
-#include "nsIRedirectChannelRegistrar.h"
 
 #ifdef MOZILLA_INTERNAL_API
 
@@ -1618,7 +1618,7 @@ NS_SecurityHashURI(nsIURI* aURI)
     nsCAutoString scheme;
     PRUint32 schemeHash = 0;
     if (NS_SUCCEEDED(baseURI->GetScheme(scheme)))
-        schemeHash = nsCRT::HashCode(scheme.get());
+        schemeHash = mozilla::HashString(scheme);
 
     // TODO figure out how to hash file:// URIs
     if (scheme.EqualsLiteral("file"))
@@ -1631,17 +1631,16 @@ NS_SecurityHashURI(nsIURI* aURI)
         nsCAutoString spec;
         PRUint32 specHash = baseURI->GetSpec(spec);
         if (NS_SUCCEEDED(specHash))
-            specHash = nsCRT::HashCode(spec.get());
+            specHash = mozilla::HashString(spec);
         return specHash;
     }
 
     nsCAutoString host;
     PRUint32 hostHash = 0;
     if (NS_SUCCEEDED(baseURI->GetAsciiHost(host)))
-        hostHash = nsCRT::HashCode(host.get());
+        hostHash = mozilla::HashString(host);
 
-    // XOR to combine hash values
-    return schemeHash ^ hostHash ^ NS_GetRealPort(baseURI);
+    return mozilla::AddToHash(schemeHash, hostHash, NS_GetRealPort(baseURI));
 }
 
 inline bool

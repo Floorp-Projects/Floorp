@@ -1252,14 +1252,19 @@ class AutoLockGC
       : runtime(rt)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        // Avoid MSVC warning C4390 for non-threadsafe builds.
+#ifdef JS_THREADSAFE
         if (rt)
             JS_LOCK_GC(rt);
+#endif
     }
 
     ~AutoLockGC()
     {
+#ifdef JS_THREADSAFE
         if (runtime)
             JS_UNLOCK_GC(runtime);
+#endif
     }
 
     bool locked() const {
@@ -1529,14 +1534,6 @@ js_InvokeOperationCallback(JSContext *cx);
 
 extern JSBool
 js_HandleExecutionInterrupt(JSContext *cx);
-
-/*
- * Get the topmost scripted frame in a context. Note: if the topmost frame is
- * in the middle of an inline call, that call will be expanded. To avoid this,
- * use cx->stack.currentScript or cx->stack.currentScriptedScopeChain.
- */
-extern js::StackFrame *
-js_GetScriptedCaller(JSContext *cx, js::StackFrame *fp);
 
 extern jsbytecode*
 js_GetCurrentBytecodePC(JSContext* cx);
