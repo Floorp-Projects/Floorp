@@ -279,6 +279,6 @@ function whenPagesUpdated() {
 
   NewTabUtils.allPages.register(page);
   registerCleanupFunction(function () {
-    NewTabUtils.allPages.unregister(this);
+    NewTabUtils.allPages.unregister(page);
   });
 }
