@@ -241,12 +241,6 @@ JS_GetFrameScript(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp);
 
-/*
- * Get the closest scripted frame below fp.  If fp is null, start from cx->fp.
- */
-extern JS_PUBLIC_API(JSStackFrame *)
-JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
-
 extern JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp);
 
@@ -580,6 +574,10 @@ JS_DumpCompartmentPCCounts(JSContext *cx);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_UnwrapObject(JSObject *obj);
+
+/* Call the context debug handler on the topmost scripted frame. */
+extern JS_FRIEND_API(JSBool)
+js_CallContextDebugHandler(JSContext *cx);
 
 JS_END_EXTERN_C
 

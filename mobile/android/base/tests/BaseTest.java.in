@@ -6,9 +6,12 @@ import @ANDROID_PACKAGE_NAME@.*;
 
 import android.app.Activity;
 import android.app.Instrumentation;
+import android.database.Cursor;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.os.SystemClock;
 import android.test.ActivityInstrumentationTestCase2;
+import java.io.File;
 
 import java.util.HashMap;
 
@@ -25,6 +28,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected String mBaseUrl;
     private String mTestType;
     private String mLogFile;
+    protected String mProfile;
 
     static {
         try {
@@ -46,7 +50,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
         // Create the intent to be used with all the important arguments.
         Intent i = new Intent(Intent.ACTION_MAIN);
-        i.putExtra("args", "-no-remote -profile " + (String)config.get("profile"));
+        mProfile = (String)config.get("profile");
+        i.putExtra("args", "-no-remote -profile " + mProfile);
 
         // Start the activity
         setActivityIntent(i);
@@ -147,5 +152,56 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
     protected interface BooleanTest {
         public boolean test();
+    }
+
+    @SuppressWarnings({"unchecked", "non-varargs"})
+    public void SqliteCompare(String dbName, String sqlCommand, ContentValues[] cvs) {
+        File profile = new File(mProfile);
+        String dbPath = new File(profile, dbName).getPath();
+
+        Cursor c = mActions.querySql(dbPath, sqlCommand);
+        SqliteCompare(c, cvs);
+    }
+
+    private boolean CursorMatches(Cursor c, String[] columns, ContentValues cv) {
+        for (int i = 0; i < columns.length; i++) {
+            String column = columns[i];
+            if (cv.containsKey(column)) {
+                mAsserter.info("Comparing", "Column value " + c.getString(i) + " ?= " + cv.get(column).toString());
+                if (!cv.get(column).toString().equals(c.getString(i))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    @SuppressWarnings({"unchecked", "non-varargs"})
+    public void SqliteCompare(Cursor c, ContentValues[] cvs) {
+        mAsserter.is(c.getCount(), cvs.length, "List is correct length");
+        if (c.moveToFirst()) {
+            do {
+                boolean found = false;
+                for (int i = 0; !found && i < cvs.length; i++) {
+                    if (CursorMatches(c, cvs[i])) {
+                        found = true;
+                    }
+                }
+                mAsserter.is(found, true, "Password was found");
+            } while(c.moveToNext());
+        }
+    }
+
+    public boolean CursorMatches(Cursor c, ContentValues cv) {
+        for (int i = 0; i < c.getColumnCount(); i++) {
+            String column = c.getColumnName(i);
+             if (cv.containsKey(column)) {
+                mAsserter.info("Pass","Column value " + c.getString(i) + " ?= " + cv.get(column).toString());
+                if (!cv.get(column).toString().equals(c.getString(i))) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
