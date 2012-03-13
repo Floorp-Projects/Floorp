@@ -544,6 +544,7 @@ nsWebSocket::DisconnectFromOwner()
   NS_DISCONNECT_EVENT_HANDLER(Message)
   NS_DISCONNECT_EVENT_HANDLER(Close)
   NS_DISCONNECT_EVENT_HANDLER(Error)
+  FailConnectionQuietly();
   DontKeepAliveAnyMore();
 }
 
