@@ -1339,14 +1339,14 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
 {
     JS_ASSERT(state.state == CFGState::TABLE_SWITCH);
 
-    state.tableswitch.currentSuccessor++;
+    state.tableswitch.currentBlock++;
 
     // Test if there are still unprocessed successors (cases/default)
-    if (state.tableswitch.currentSuccessor >= state.tableswitch.ins->numSuccessors())
+    if (state.tableswitch.currentBlock >= state.tableswitch.ins->numBlocks())
         return processTableSwitchEnd(state);
 
     // Get the next successor
-    MBasicBlock *successor = state.tableswitch.ins->getSuccessor(state.tableswitch.currentSuccessor);
+    MBasicBlock *successor = state.tableswitch.ins->getBlock(state.tableswitch.currentBlock);
 
     // Add current block as predecessor if available.
     // This means the previous case didn't have a break statement.
@@ -1358,8 +1358,8 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
 
     // If this is the last successor the block should stop at the end of the tableswitch
     // Else it should stop at the start of the next successor
-    if (state.tableswitch.currentSuccessor+1 < state.tableswitch.ins->numSuccessors())
-        state.stopAt = state.tableswitch.ins->getSuccessor(state.tableswitch.currentSuccessor+1)->pc();
+    if (state.tableswitch.currentBlock+1 < state.tableswitch.ins->numBlocks())
+        state.stopAt = state.tableswitch.ins->getBlock(state.tableswitch.currentBlock+1)->pc();
     else
         state.stopAt = state.tableswitch.exitpc;
 
@@ -1852,6 +1852,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     if (!defaultcase)
         return ControlStatus_Error;
     tableswitch->addDefault(defaultcase);
+    tableswitch->addBlock(defaultcase);
 
     // Create cases
     jsbytecode *casepc = NULL;
@@ -1860,17 +1861,25 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
 
         JS_ASSERT(casepc >= pc && casepc <= exitpc);
 
+        MBasicBlock *caseblock = newBlock(current, casepc);
+        if (!caseblock)
+            return ControlStatus_Error;
+
         // If the casepc equals the current pc, it is not a written case,
         // but a filled gap. That way we can use a tableswitch instead of
         // lookupswitch, even if not all numbers are consecutive.
+        // In that case this block goes to the default case
         if (casepc == pc) {
-            tableswitch->addCase(defaultcase, true);
-        } else {
-            MBasicBlock *caseblock = newBlock(current, casepc);
-            if (!caseblock)
-                return ControlStatus_Error;
-            tableswitch->addCase(caseblock);
+            caseblock->end(MGoto::New(defaultcase));
+            defaultcase->addPredecessor(caseblock);
         }
+
+        tableswitch->addCase(caseblock);
+        
+        // If this is an actual case (not filled gap),
+        // add this block to the list that still needs to get processed 
+        if (casepc != pc)
+            tableswitch->addBlock(caseblock);
 
         pc2 += JUMP_OFFSET_LEN;
     }
@@ -1878,8 +1887,8 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     JS_ASSERT(tableswitch->numCases() == (uint32)(high - low + 1));
     JS_ASSERT(tableswitch->numSuccessors() > 0);
 
-    // Sort the successors
-    qsort(tableswitch->successors(), tableswitch->numSuccessors(),
+    // Sort the list of blocks that still needs to get processed by pc
+    qsort(tableswitch->blocks(), tableswitch->numBlocks(),
           sizeof(MBasicBlock*), CmpSuccessors);
 
     // Create info
@@ -1893,18 +1902,18 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
     state.tableswitch.exitpc = exitpc;
     state.tableswitch.breaks = NULL;
     state.tableswitch.ins = tableswitch;
-    state.tableswitch.currentSuccessor = 0;
+    state.tableswitch.currentBlock = 0;
 
     // Save the MIR instruction as last instruction of this block.
     current->end(tableswitch);
 
     // If there is only one successor the block should stop at the end of the switch
     // Else it should stop at the start of the next successor
-    if (tableswitch->numSuccessors() == 1)
-        state.stopAt = state.tableswitch.exitpc;
+    if (tableswitch->numBlocks() == 1)
+        state.stopAt = exitpc;
     else
-        state.stopAt = tableswitch->getSuccessor(1)->pc();
-    current = tableswitch->getSuccessor(0);
+        state.stopAt = tableswitch->getBlock(1)->pc();
+    current = tableswitch->getBlock(0);
 
     if (!cfgStack_.append(state))
         return ControlStatus_Error;
