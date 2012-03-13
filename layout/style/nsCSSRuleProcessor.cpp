@@ -713,8 +713,9 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
 #endif
 
 static inline
-void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
-                     RuleProcessorData* data, NodeMatchContext& nodeContext);
+void ContentEnumFunc(const RuleValue &value, nsCSSSelector* selector,
+                     RuleProcessorData* data, NodeMatchContext& nodeContext,
+                     AncestorFilter *ancestorFilter);
 
 void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
                                  NodeMatchContext& aNodeContext)
@@ -785,6 +786,14 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
   NS_ASSERTION(valueCount <= testCount, "values exceeded list size");
 
   if (valueCount > 0) {
+    AncestorFilter *filter =
+      aData->mTreeMatchContext.mAncestorFilter.HasFilter() ?
+        &aData->mTreeMatchContext.mAncestorFilter : nsnull;
+#ifdef DEBUG
+    if (filter) {
+      filter->AssertHasAllAncestors(aElement);
+    }
+#endif
     // Merge the lists while there are still multiple lists to merge.
     while (valueCount > 1) {
       PRInt32 valueIndex = 0;
@@ -797,7 +806,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
         }
       }
       const RuleValue *cur = mEnumList[valueIndex].mCurValue;
-      ContentEnumFunc(cur->mRule, cur->mSelector, aData, aNodeContext);
+      ContentEnumFunc(*cur, cur->mSelector, aData, aNodeContext, filter);
       cur++;
       if (cur == mEnumList[valueIndex].mEnd) {
         mEnumList[valueIndex] = mEnumList[--valueCount];
@@ -810,7 +819,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
     for (const RuleValue *value = mEnumList[0].mCurValue,
                          *end = mEnumList[0].mEnd;
          value != end; ++value) {
-      ContentEnumFunc(value->mRule, value->mSelector, aData, aNodeContext);
+      ContentEnumFunc(*value, value->mSelector, aData, aNodeContext, filter);
     }
   }
 }
@@ -2327,11 +2336,18 @@ static bool SelectorMatchesTree(Element* aPrevElement,
 }
 
 static inline
-void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
-                     RuleProcessorData* data, NodeMatchContext& nodeContext)
+void ContentEnumFunc(const RuleValue& value, nsCSSSelector* aSelector,
+                     RuleProcessorData* data, NodeMatchContext& nodeContext,
+                     AncestorFilter *ancestorFilter)
 {
   if (nodeContext.mIsRelevantLink) {
     data->mTreeMatchContext.SetHaveRelevantLink();
+  }
+  if (ancestorFilter &&
+      !ancestorFilter->MightHaveMatchingAncestor<RuleValue::eMaxAncestorHashes>(
+          value.mAncestorSelectorHashes)) {
+    // We won't match; nothing else to do here
+    return;
   }
   if (SelectorMatches(data->mElement, aSelector, nodeContext,
                       data->mTreeMatchContext)) {
@@ -2339,8 +2355,9 @@ void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
     if (!next || SelectorMatchesTree(data->mElement, next,
                                      data->mTreeMatchContext,
                                      !nodeContext.mIsRelevantLink)) {
-      aRule->RuleMatched();
-      data->mRuleWalker->Forward(aRule);
+      css::StyleRule *rule = value.mRule;
+      rule->RuleMatched();
+      data->mRuleWalker->Forward(rule);
       // nsStyleSet will deal with the !important rule
     }
   }
@@ -2410,8 +2427,8 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
            value != end; ++value) {
         if (aData->mComparator->PseudoMatches(value->mSelector)) {
-          ContentEnumFunc(value->mRule, value->mSelector->mNext, aData,
-                          nodeContext);
+          ContentEnumFunc(*value, value->mSelector->mNext, aData, nodeContext,
+                          nsnull);
         }
       }
     }
