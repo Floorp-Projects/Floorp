@@ -117,8 +117,7 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 
   nsRefPtr<IDBTransaction> transaction = new IDBTransaction();
 
-  transaction->mScriptContext = aDatabase->GetScriptContext();
-  transaction->mOwner = aDatabase->GetOwner();
+  transaction->BindToOwner(aDatabase);
   if (!transaction->SetScriptOwner(aDatabase->GetScriptOwner())) {
     return nsnull;
   }
