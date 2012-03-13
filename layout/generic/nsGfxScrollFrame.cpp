@@ -2172,13 +2172,12 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsRect scrollRange = GetScrollRange();
   ScrollbarStyles styles = GetScrollbarStylesFromFrame();
   mShouldBuildLayer =
-     ((XRE_GetProcessType() == GeckoProcessType_Content || usingDisplayport) &&
      (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
       styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
-     (scrollRange.width > 0 ||
-      scrollRange.height > 0 || usingDisplayport) &&
-     (usingDisplayport || !mIsRoot ||
-      !mOuter->PresContext()->IsRootContentDocument()));
+     (usingDisplayport ||
+      (XRE_GetProcessType() == GeckoProcessType_Content &&
+       (scrollRange.width > 0 || scrollRange.height > 0) &&
+       (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument())));
 
   if (ShouldBuildLayer()) {
     // ScrollLayerWrapper must always be created because it initializes the
