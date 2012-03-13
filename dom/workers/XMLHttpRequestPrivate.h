@@ -67,6 +67,7 @@ class XMLHttpRequestPrivate : public events::EventTarget,
   bool mBackgroundRequest;
   bool mWithCredentials;
   bool mCanceled;
+  PRUint32 mTimeout;
 
 public:
   XMLHttpRequestPrivate(JSObject* aObj, WorkerPrivate* aWorkerPrivate);
@@ -121,6 +122,9 @@ public:
 
   bool
   SetResponseType(JSContext* aCx, jsval aOldVal, jsval *aVp);
+
+  bool
+  SetTimeout(JSContext* aCx, jsval aOldVal, jsval *aVp);
 
   bool
   Abort(JSContext* aCx);

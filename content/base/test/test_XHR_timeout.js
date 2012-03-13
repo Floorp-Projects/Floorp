@@ -5,6 +5,32 @@
    request handlers.
  */
 
+var inWorker = false;
+try {
+  inWorker = !(self instanceof Window);
+} catch (e) {
+  inWorker = true;
+}
+
+function is(got, expected, msg) {
+  var obj = {};
+  obj.type = "is";
+  obj.got = got;
+  obj.expected = expected;
+  obj.msg = msg;
+
+  self.postMessage(obj, "*");
+}
+
+function ok(bool, msg) {
+  var obj = {};
+  obj.type = "ok";
+  obj.bool = bool;
+  obj.msg = msg;
+
+  self.postMessage(obj, "*");
+}
+
 /**
  * Generate and track results from a XMLHttpRequest with regards to timeouts.
  *
@@ -23,14 +49,15 @@
  * @constructor
  * @implements DOMEventListener
  */
-function RequestTracker(id, timeLimit /*[, resetAfter, resetTo]*/) {
+function RequestTracker(async, id, timeLimit /*[, resetAfter, resetTo]*/) {
+  this.async = async;
   this.id = id;
   this.timeLimit = timeLimit;
 
-  if (arguments.length > 2) {
+  if (arguments.length > 3) {
     this.mustReset  = true;
-    this.resetAfter = arguments[2];
-    this.resetTo    = arguments[3];
+    this.resetAfter = arguments[3];
+    this.resetTo    = arguments[4];
   }
 
   this.hasFired = false;
@@ -42,7 +69,7 @@ RequestTracker.prototype = {
   startXHR: function() {
     var req = new XMLHttpRequest();
     this.request = req;
-    req.open("GET", "file_XHR_timeout.sjs");
+    req.open("GET", "file_XHR_timeout.sjs", this.async);
     req.onerror   = this;
     req.onload    = this;
     req.onabort   = this;
@@ -52,7 +79,7 @@ RequestTracker.prototype = {
     
     if (this.mustReset) {
       var resetTo = this.resetTo;
-      window.setTimeout(function() {
+      self.setTimeout(function() {
         req.timeout = resetTo;
       }, this.resetAfter);
     }
@@ -137,7 +164,7 @@ AbortedRequest.prototype = {
     }
 
     if (!this.shouldAbort) {
-      window.setTimeout(function() {
+      self.setTimeout(function() {
         try {
           _this.noEventsFired();
         }
@@ -154,7 +181,7 @@ AbortedRequest.prototype = {
         abortReq();
       }
       else {
-        window.setTimeout(abortReq, this.abortDelay);
+        self.setTimeout(abortReq, this.abortDelay);
       }
     }
   },
@@ -229,22 +256,22 @@ var SyncRequestSettingTimeoutBeforeOpen = {
 
 var TestRequests = [
   // Simple timeouts.
-  new RequestTracker("no time out scheduled, load fires normally", 0),
-  new RequestTracker("load fires normally", 5000),
-  new RequestTracker("timeout hit before load", 2000),
+  new RequestTracker(true, "no time out scheduled, load fires normally", 0),
+  new RequestTracker(true, "load fires normally", 5000),
+  new RequestTracker(true, "timeout hit before load", 2000),
 
   // Timeouts reset after a certain delay.
-  new RequestTracker("load fires normally with no timeout set, twice", 0, 2000, 0),
-  new RequestTracker("load fires normally with same timeout set twice", 5000, 2000, 5000),
-  new RequestTracker("timeout fires normally with same timeout set twice", 2000, 1000, 2000),
+  new RequestTracker(true, "load fires normally with no timeout set, twice", 0, 2000, 0),
+  new RequestTracker(true, "load fires normally with same timeout set twice", 5000, 2000, 5000),
+  new RequestTracker(true, "timeout fires normally with same timeout set twice", 2000, 1000, 2000),
 
-  new RequestTracker("timeout disabled after initially set", 5000, 2000, 0),
-  new RequestTracker("timeout overrides load after a delay", 5000, 1000, 2000),
-  new RequestTracker("timeout enabled after initially disabled", 0, 2000, 5000),
+  new RequestTracker(true, "timeout disabled after initially set", 5000, 2000, 0),
+  new RequestTracker(true, "timeout overrides load after a delay", 5000, 1000, 2000),
+  new RequestTracker(true, "timeout enabled after initially disabled", 0, 2000, 5000),
 
-  new RequestTracker("timeout set to expiring value after load fires", 5000, 4000, 1000),
-  new RequestTracker("timeout set to expired value before load fires", 5000, 2000, 1000),
-  new RequestTracker("timeout set to non-expiring value after timeout fires", 1000, 2000, 5000),
+  new RequestTracker(true, "timeout set to expiring value after load fires", 5000, 4000, 1000),
+  new RequestTracker(true, "timeout set to expired value before load fires", 5000, 2000, 1000),
+  new RequestTracker(true, "timeout set to non-expiring value after timeout fires", 1000, 2000, 5000),
 
   // Aborted requests.
   new AbortedRequest(false),
@@ -252,17 +279,34 @@ var TestRequests = [
   new AbortedRequest(true, 0),
   new AbortedRequest(true, 1000),
   new AbortedRequest(true, 5000),
+];
 
+var MainThreadTestRequests = [
   // Synchronous requests.
   SyncRequestSettingTimeoutAfterOpen,
   SyncRequestSettingTimeoutBeforeOpen
 ];
 
+var WorkerThreadTestRequests = [
+  // Simple timeouts.
+  new RequestTracker(false, "no time out scheduled, load fires normally", 0),
+  new RequestTracker(false, "load fires normally", 5000),
+  new RequestTracker(false, "timeout hit before load", 2000),
+
+  // Reset timeouts don't make much sense with a sync request ...
+];
+
+if (inWorker) {
+  TestRequests = TestRequests.concat(WorkerThreadTestRequests);
+} else {
+  TestRequests = TestRequests.concat(MainThreadTestRequests);
+}
+
 // This code controls moving from one test to another.
 var TestCounter = {
   testComplete: function() {
     // Allow for the possibility there are other events coming.
-    window.setTimeout(function() {
+    self.setTimeout(function() {
       TestCounter.next();
     }, 5000);
   },
@@ -274,17 +318,13 @@ var TestCounter = {
       test.startXHR();
     }
     else {
-      SimpleTest.finish();
+      self.postMessage("done", "*");
     }
   }
 };
 
-// Final test harness setup and launch.
-(function() {
-  SimpleTest.waitForExplicitFinish();
-  SimpleTest.requestLongerTimeout(TestRequests.length);
-  var msg = "This test will take approximately " + (TestRequests.length * 10)
-  msg += " seconds to complete, at most.";
-  document.getElementById("content").firstChild.nodeValue = msg;
-  TestCounter.next();
-})();
+self.addEventListener("message", function (event) {
+  if (event.data == "start") {
+    TestCounter.next();
+  }
+});

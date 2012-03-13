@@ -1,10 +1,10 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=525816
+https://bugzilla.mozilla.org/show_bug.cgi?id=498998
 -->
 <head>
-  <title>Test for Bug 525816</title>
+  <title>Test for Bug 498998</title>
   <script type="application/javascript"
           src="/MochiKit/MochiKit.js"></script>
   <script type="application/javascript"
@@ -16,18 +16,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525816
 <body>
 
 <a target="_blank"
-   href="https://bugzilla.mozilla.org/show_bug.cgi?id=525816"
-  >Mozilla Bug 525816 (XMLHttpRequest timeout)</a>
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=498998"
+  >Mozilla Bug 498998 (Worker XMLHttpRequest timeout)</a>
 <p id="display"></p>
 <div id="content">
   This test takes over 1 minute to run, probably over 2 minutes.
 </div>
 <pre id="test">
-<script class="testbody"
-        type="text/javascript"
-        src="test_XHR_timeout.js"></script>
 <script type="text/javascript">
-  window.addEventListener("message", function (event) {
+  var worker = new Worker("../../../content/base/test/test_XHR_timeout.js");
+
+  worker.addEventListener("message", function (event) {
     if (event.data == "done") {
       SimpleTest.finish();
       return;
@@ -47,11 +46,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525816
   // Final test harness setup and launch.
   (function() {
     SimpleTest.waitForExplicitFinish();
-    SimpleTest.requestLongerTimeout(TestRequests.length);
-    var msg = "This test will take approximately " + (TestRequests.length * 10)
+    SimpleTest.requestLongerTimeout(20);
+    var msg = "This test will take approximately " + (20 * 10)
     msg += " seconds to complete, at most.";
     document.getElementById("content").firstChild.nodeValue = msg;
-    window.postMessage("start", "*");
+    worker.postMessage("start");
   })();
 </script>
 </pre>
