@@ -87,9 +87,7 @@ private:
                           double x,
                           double y,
                           double z);
-
-  PRUint32 mUpdateInterval;
-  bool     mEnabled;
+  bool mEnabled;
 
   virtual void Startup()  = 0;
   virtual void Shutdown() = 0;
