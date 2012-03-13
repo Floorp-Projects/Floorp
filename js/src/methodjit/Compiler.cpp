@@ -6931,7 +6931,7 @@ mjit::Compiler::jsop_regexp()
      */
     analyze::SSAUseChain *uses =
         analysis->useChain(analyze::SSAValue::PushedValue(PC - script->code, 0));
-    if (uses && uses->popped && !uses->next) {
+    if (uses && uses->popped && !uses->next && !reobj->global() && !reobj->sticky()) {
         jsbytecode *use = script->code + uses->offset;
         uint32_t which = uses->u.which;
         if (JSOp(*use) == JSOP_CALLPROP) {
