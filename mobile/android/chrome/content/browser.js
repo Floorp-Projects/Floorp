@@ -922,9 +922,6 @@ var BrowserApp = {
     } else if (aTopic == "Viewport:Change") {
       if (this.isBrowserContentDocumentDisplayed())
         this.selectedTab.setViewport(JSON.parse(aData));
-      
-      // this.selectedTab.viewport = JSON.parse(aData);
-      // ViewportHandler.onResize();
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
@@ -2208,7 +2205,7 @@ Tab.prototype = {
   },
 
   get scale() {
-    return this.viewport.zoom;
+    return this._zoom;
   },
 
   QueryInterface: XPCOMUtils.generateQI([
