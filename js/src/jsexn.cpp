@@ -111,21 +111,25 @@ Class js::ErrorClass = {
     exn_trace
 };
 
-typedef struct JSStackTraceElem {
-    js::HeapPtrString   funName;
+template <typename T>
+struct JSStackTraceElemImpl {
+    T                   funName;
     size_t              argc;
     const char          *filename;
-    unsigned               ulineno;
-} JSStackTraceElem;
+    unsigned            ulineno;
+};
+
+typedef JSStackTraceElemImpl<HeapPtrString> JSStackTraceElem;
+typedef JSStackTraceElemImpl<JSString *>    JSStackTraceStackElem;
 
 typedef struct JSExnPrivate {
     /* A copy of the JSErrorReport originally generated. */
     JSErrorReport       *errorReport;
     js::HeapPtrString   message;
     js::HeapPtrString   filename;
-    unsigned               lineno;
+    unsigned            lineno;
     size_t              stackDepth;
-    int                exnType;
+    int                 exnType;
     JSStackTraceElem    stackElems[1];
 } JSExnPrivate;
 
@@ -306,7 +310,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
 
     JSCheckAccessOp checkAccess = cx->runtime->securityCallbacks->checkObjectAccess;
 
-    Vector<JSStackTraceElem> frames(cx);
+    Vector<JSStackTraceStackElem> frames(cx);
     Vector<Value> values(cx);
     {
         SuppressErrorsGuard seg(cx);
@@ -330,14 +334,14 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
 
             if (!frames.growBy(1))
                 return false;
-            JSStackTraceElem &frame = frames.back();
+            JSStackTraceStackElem &frame = frames.back();
             if (fp->isNonEvalFunctionFrame()) {
-                frame.funName.init(fp->fun()->atom ? fp->fun()->atom : cx->runtime->emptyString);
+                frame.funName = fp->fun()->atom ? fp->fun()->atom : cx->runtime->emptyString;
                 frame.argc = fp->numActualArgs();
                 if (!fp->forEachCanonicalActualArg(AppendArg(values)))
                     return false;
             } else {
-                frame.funName.init(NULL);
+                frame.funName = NULL;
                 frame.argc = 0;
             }
             if (fp->isScriptFrame()) {
@@ -390,7 +394,12 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     HeapValue *valuesDest = reinterpret_cast<HeapValue *>(framesDest + frames.length());
     JS_ASSERT(valuesDest == GetStackTraceValueBuffer(priv));
 
-    PodCopy(framesDest, frames.begin(), frames.length());
+    for (size_t i = 0; i < frames.length(); ++i) {
+        framesDest[i].funName.init(frames[i].funName);
+        framesDest[i].argc = frames[i].argc;
+        framesDest[i].filename = frames[i].filename;
+        framesDest[i].ulineno = frames[i].ulineno;
+    }
     for (size_t i = 0; i < values.length(); ++i)
         valuesDest[i].init(cx->compartment, values[i]);
 
