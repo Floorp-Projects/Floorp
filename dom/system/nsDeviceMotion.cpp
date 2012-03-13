@@ -261,6 +261,64 @@ nsDeviceMotion::DeviceMotionChanged(PRUint32 type, double x, double y, double z)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDeviceMotion::NeedsCalibration()
+{
+  if (!mEnabled)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMArray<nsIDeviceMotionListener> listeners = mListeners;
+  for (PRUint32 i = listeners.Count(); i > 0 ; ) {
+    --i;
+    listeners[i]->NeedsCalibration();
+  }
+
+  nsCOMArray<nsIDOMWindow> windowListeners;
+  for (PRUint32 i = 0; i < mWindowListeners.Length(); i++) {
+    windowListeners.AppendObject(mWindowListeners[i]);
+  }
+
+  for (PRUint32 i = windowListeners.Count(); i > 0 ; ) {
+    --i;
+
+    // check to see if this window is in the background.  if
+    // it is, don't send any device motion to it.
+    nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(windowListeners[i]);
+    if (!pwindow ||
+        !pwindow->GetOuterWindow() ||
+        pwindow->GetOuterWindow()->IsBackground())
+      continue;
+
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    windowListeners[i]->GetDocument(getter_AddRefs(domdoc));
+
+    if (domdoc) {
+	nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(windowListeners[i]);
+        FireNeedsCalibration(domdoc, target);
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+nsDeviceMotion::FireNeedsCalibration(nsIDOMDocument *domdoc,
+				    nsIDOMEventTarget *target)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  domdoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  if (!event)
+    return;
+
+  event->InitEvent(NS_LITERAL_STRING("compassneedscalibration"), true, false);
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  if (privateEvent)
+    privateEvent->SetTrusted(true);
+  
+  bool defaultActionEnabled = true;
+  target->DispatchEvent(event, &defaultActionEnabled);
+}
+
 void
 nsDeviceMotion::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
                                         nsIDOMEventTarget *target,

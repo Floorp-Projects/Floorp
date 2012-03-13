@@ -473,6 +473,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case SENSOR_ACCURACY:
         case ACTIVITY_STOPPING:
         case ACTIVITY_START:
         case ACTIVITY_PAUSING:

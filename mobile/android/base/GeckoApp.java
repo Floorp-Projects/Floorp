@@ -2608,6 +2608,8 @@ abstract public class GeckoApp
     // accelerometer
     public void onAccuracyChanged(Sensor sensor, int accuracy)
     {
+        Log.w(LOGTAG, "onAccuracyChanged "+accuracy);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorAccuracyEvent(accuracy));
     }
 
     public void onSensorChanged(SensorEvent event)
