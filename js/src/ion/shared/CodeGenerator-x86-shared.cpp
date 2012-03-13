@@ -546,31 +546,39 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
 
+    MDiv *mir = ins->mir();
+
     JS_ASSERT(remainder == edx);
     JS_ASSERT(lhs == eax);
 
     // Prevent divide by zero.
-    masm.testl(rhs, rhs);
-    if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-        return false;
+    if (mir->canBeDivideByZero()) {
+        masm.testl(rhs, rhs);
+        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+            return false;
+    }
 
     // Prevent an integer overflow exception from -2147483648 / -1.
-    Label notmin;
-    masm.cmpl(lhs, Imm32(INT_MIN));
-    masm.j(Assembler::NotEqual, &notmin);
-    masm.cmpl(rhs, Imm32(-1));
-    if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-        return false;
-    masm.bind(&notmin);
+    if (mir->canBeNegativeOverflow()) {
+        Label notmin;
+        masm.cmpl(lhs, Imm32(INT_MIN));
+        masm.j(Assembler::NotEqual, &notmin);
+        masm.cmpl(rhs, Imm32(-1));
+        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+            return false;
+        masm.bind(&notmin);
+    }
 
     // Prevent negative 0.
-    Label nonzero;
-    masm.testl(lhs, lhs);
-    masm.j(Assembler::NonZero, &nonzero);
-    masm.cmpl(rhs, Imm32(0));
-    if (!bailoutIf(Assembler::LessThan, ins->snapshot()))
-        return false;
-    masm.bind(&nonzero);
+    if (mir->canBeNegativeZero()) {
+        Label nonzero;
+        masm.testl(lhs, lhs);
+        masm.j(Assembler::NonZero, &nonzero);
+        masm.cmpl(rhs, Imm32(0));
+        if (!bailoutIf(Assembler::LessThan, ins->snapshot()))
+            return false;
+        masm.bind(&nonzero);
+    }
 
     // Sign extend eax into edx to make (edx:eax), since idiv is 64-bit.
     masm.cdq();

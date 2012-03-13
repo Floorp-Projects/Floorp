@@ -59,6 +59,10 @@ class LDivI : public LBinaryMath<1>
     const LDefinition *remainder() {
         return getTemp(0);
     }
+
+    MDiv *mir() const {
+        return mir_->toDiv();
+    }
 };
 
 class LModI : public LBinaryMath<1>
