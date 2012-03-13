@@ -3146,7 +3146,7 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
             return pushConstant(NullValue());
         break;
       default:
-        MUnbox::Mode mode = ins->isEffectful() ? MUnbox::TypeBarrier : MUnbox::Fallible;
+        MUnbox::Mode mode = ins->isEffectful() ? MUnbox::TypeBarrier : MUnbox::TypeGuard;
         barrier = MUnbox::New(ins, MIRTypeFromValueType(type), mode);
         current->add(barrier);
     }
