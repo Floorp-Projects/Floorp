@@ -45,11 +45,10 @@ interface nsIIDBRequest;
 interface nsIIDBTransaction;
 interface nsIDOMDOMStringList;
 
-[scriptable, uuid(450e02fd-a87a-47d4-beaf-321417dad781)]
-interface nsIIDBIndexParameters : nsISupports
+dictionary IDBIndexParameters
 {
-  attribute boolean unique;
-  attribute boolean multiEntry;
+  boolean unique;
+  boolean multiEntry;
 };
 
 /**

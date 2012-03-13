@@ -95,12 +95,11 @@ interface nsIDOMStorageEvent : nsIDOMEvent
                         in nsIDOMStorage storageAreaArg);
 };
 
-[scriptable, uuid(6335e5b5-13ce-4c8a-b452-5c5895f4e90e)]
-interface nsIStorageEventInit : nsIEventInit
+dictionary StorageEventInit : EventInit
 {
-  attribute DOMString key;
-  attribute DOMString oldValue;
-  attribute DOMString newValue;
-  attribute DOMString url;
-  attribute nsIDOMStorage storageArea;
+  DOMString key;
+  DOMString oldValue;
+  DOMString newValue;
+  DOMString url;
+  nsIDOMStorage storageArea;
 };

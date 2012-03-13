@@ -114,18 +114,17 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
                                        in unsigned short inputSourceArg);
 };
 
-[scriptable, uuid(9495a977-5c9e-4b34-8d51-22bfd9b4fcf6)]
-interface nsIMouseEventInit : nsIUIEventInit
+dictionary MouseEventInit : UIEventInit
 {
-  attribute long screenX;
-  attribute long screenY;
-  attribute long clientX;
-  attribute long clientY;
-  attribute boolean ctrlKey;
-  attribute boolean shiftKey;
-  attribute boolean altKey;
-  attribute boolean metaKey;
-  attribute unsigned short button;
-  // attribute unsigned short buttons; is not supported yet.
-  attribute nsIDOMEventTarget relatedTarget;
+  long screenX;
+  long screenY;
+  long clientX;
+  long clientY;
+  boolean ctrlKey;
+  boolean shiftKey;
+  boolean altKey;
+  boolean metaKey;
+  unsigned short button;
+  // unsigned short buttons; is not supported yet.
+  nsIDOMEventTarget relatedTarget;
 };

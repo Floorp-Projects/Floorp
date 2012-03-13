@@ -485,9 +485,7 @@ class Native(object):
     def __str__(self):
         return "native %s(%s)\n" % (self.name, self.nativename)
 
-class Interface(object):
-    kind = 'interface'
-
+class BaseInterface(object):
     def __init__(self, name, attlist, base, members, location, doccomments):
         self.name = name
         self.attributes = InterfaceAttributes(attlist, location)
@@ -543,8 +541,8 @@ class Interface(object):
         parent.setName(self)
         if self.base is not None:
             realbase = parent.getName(self.base, self.location)
-            if realbase.kind != 'interface':
-                raise IDLError("interface '%s' inherits from non-interface type '%s'" % (self.name, self.base), self.location)
+            if realbase.kind != self.kind:
+                raise IDLError("%s '%s' inherits from non-%s type '%s'" % (self.kind, self.name, self.kind, self.base), self.location)
 
             if self.attributes.scriptable and not realbase.attributes.scriptable:
                 print >>sys.stderr, IDLError("interface '%s' is scriptable but derives from non-scriptable '%s'" % (self.name, self.base), self.location, warning=True)
@@ -620,6 +618,21 @@ class Interface(object):
             total += realbase.countEntries()
         return total
 
+class Interface(BaseInterface):
+    kind = 'interface'
+
+    def __init__(self, name, attlist, base, members, location, doccomments):
+        BaseInterface.__init__(self, name, attlist, base, members, location, doccomments)
+
+        if self.attributes.uuid is None:
+            raise IDLError("interface has no uuid", location)
+
+class Dictionary(BaseInterface):
+    kind = 'dictionary'
+
+    def __init__(self, name, attlist, base, members, location, doccomments):
+        BaseInterface.__init__(self, name, attlist, base, members, location, doccomments)
+
 class InterfaceAttributes(object):
     uuid = None
     scriptable = False
@@ -675,9 +688,6 @@ class InterfaceAttributes(object):
 
                 action(self)
 
-        if self.uuid is None:
-            raise IDLError("interface has no uuid", location)
-
     def __str__(self):
         l = []
         if self.uuid:
@@ -730,12 +740,14 @@ class Attribute(object):
     null = None
     undefined = None
     deprecated = False
+    defvalue = None
 
-    def __init__(self, type, name, attlist, readonly, location, doccomments):
+    def __init__(self, type, name, attlist, readonly, defvalue, location, doccomments):
         self.type = type
         self.name = name
         self.attlist = attlist
         self.readonly = readonly
+        self.defvalue = defvalue
         self.location = location
         self.doccomments = doccomments
 
@@ -1061,6 +1073,7 @@ class IDLParser(object):
     keywords = {
         'const': 'CONST',
         'interface': 'INTERFACE',
+        'dictionary': 'DICTIONARY',
         'in': 'IN',
         'inout': 'INOUT',
         'out': 'OUT',
@@ -1081,6 +1094,7 @@ class IDLParser(object):
         'LSHIFT',
         'RSHIFT',
         'NATIVEID',
+        'STRING',
         ]
 
     tokens.extend(keywords.values())
@@ -1128,6 +1142,12 @@ class IDLParser(object):
     def t_INCLUDE(self, t):
         r'\#include[ \t]+"[^"\n]+"'
         inc, value, end = t.value.split('"')
+        t.value = value
+        return t
+
+    def t_STRING(self, t):
+        r'"[^"\n]+"'
+        begin, value, end = t.value.split('"')
         t.value = value
         return t
 
@@ -1182,6 +1202,7 @@ class IDLParser(object):
 
     def p_productions_interface(self, p):
         """productions : interface productions
+                       | dictionary productions
                        | typedef productions
                        | native productions"""
         p[0] = list(p[2])
@@ -1359,7 +1380,7 @@ class IDLParser(object):
         p[0] = lambda i: n1(i) | n2(i)
 
     def p_member_att(self, p):
-        """member : attributes optreadonly ATTRIBUTE IDENTIFIER IDENTIFIER ';'"""
+        """member : attributes optreadonly ATTRIBUTE IDENTIFIER identifier ';'"""
         if 'doccomments' in p[1]:
             doccomments = p[1]['doccomments']
         elif p[2] is not None:
@@ -1371,6 +1392,7 @@ class IDLParser(object):
                          name=p[5],
                          attlist=p[1]['attlist'],
                          readonly=p[2] is not None,
+                         defvalue=None,
                          location=self.getLocation(p, 3),
                          doccomments=doccomments)
 
@@ -1408,7 +1430,7 @@ class IDLParser(object):
         p[0].insert(0, p[2])
 
     def p_param(self, p):
-        """param : attributes paramtype IDENTIFIER IDENTIFIER"""
+        """param : attributes paramtype IDENTIFIER identifier"""
         p[0] = Param(paramtype=p[2],
                      type=p[3],
                      name=p[4],
@@ -1428,6 +1450,67 @@ class IDLParser(object):
             p[0] = p.slice[1].doccomments
         else:
             p[0] = None
+
+    def p_dictionary(self, p):
+        """dictionary : attributes DICTIONARY IDENTIFIER ifacebase dictbody ';'"""
+        atts, DICTIONARY, name, base, body, SEMI = p[1:]
+        attlist = atts['attlist']
+        doccomments = []
+        if 'doccomments' in atts:
+            doccomments.extend(atts['doccomments'])
+        doccomments.extend(p.slice[2].doccomments)
+
+        l = lambda: self.getLocation(p, 2)
+
+        p[0] = Dictionary(name=name,
+                          attlist=attlist,
+                          base=base,
+                          members=body,
+                          location=l(),
+                          doccomments=doccomments)
+
+    def p_dictbody(self, p):
+        """dictbody : '{' dictmembers '}'
+                     | """
+        if len(p) > 1:
+            p[0] = p[2]
+
+    def p_dictmembers_start(self, p):
+        """dictmembers : """
+        p[0] = []
+
+    def p_dictmembers_continue(self, p):
+        """dictmembers : dictmember dictmembers"""
+        p[0] = list(p[2])
+        p[0].insert(0, p[1])
+
+    def p_dictmember(self, p):
+        """dictmember : attributes IDENTIFIER IDENTIFIER optdefvalue ';'"""
+        if 'doccomments' in p[1]:
+            doccomments = p[1]['doccomments']
+        else:
+            doccomments = p.slice[2].doccomments
+
+        p[0] = Attribute(type=p[2],
+                         name=p[3],
+                         attlist=p[1]['attlist'],
+                         readonly=False,
+                         defvalue=p[4],
+                         location=self.getLocation(p, 1),
+                         doccomments=doccomments)
+
+    def p_optdefvalue(self, p):
+        """optdefvalue : '=' STRING
+                       | """
+        if len(p) > 1:
+            p[0] = p[2]
+        else:
+            p[0] = None
+
+    def p_identifier(self, p):
+        """identifier : DICTIONARY
+                      | IDENTIFIER"""
+        p[0] = p[1]
 
     def p_raises(self, p):
         """raises : RAISES '(' idlist ')'
