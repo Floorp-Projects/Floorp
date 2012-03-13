@@ -7,14 +7,11 @@ package org.mozilla.gecko.sync.setup.activities;
 import java.util.Locale;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 
-import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,8 +27,6 @@ import android.widget.EditText;
 
 public class AccountActivity extends AccountAuthenticatorActivity {
   private final static String LOG_TAG        = "AccountActivity";
-
-  private final static String DEFAULT_SERVER = "https://auth.services.mozilla.com/";
 
   private AccountManager      mAccountManager;
   private Context             mContext;
@@ -156,9 +151,11 @@ public class AccountActivity extends AccountAuthenticatorActivity {
   }
 
   private boolean validateInputs() {
-    if (usernameInput.length() == 0 || passwordInput.length() == 0
-        || synckeyInput.length() == 0
-        || (serverCheckbox.isChecked() && serverInput.length() == 0)) {
+    if (usernameInput.length() == 0 ||
+        passwordInput.length() == 0 ||
+        synckeyInput.length() == 0  ||
+        (serverCheckbox.isChecked() &&
+         serverInput.length() == 0)) {
       return false;
     }
     return true;
@@ -171,7 +168,7 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     // Create and add account to AccountManager
     // TODO: only allow one account to be added?
     Log.d(LOG_TAG, "Using account manager " + mAccountManager);
-    final Intent intent = createAccount(mContext, mAccountManager,
+    final Intent intent = SyncAccounts.createAccount(mContext, mAccountManager,
                                         username,
                                         key, password, server);
     setAccountAuthenticatorResult(intent.getExtras());
@@ -191,74 +188,6 @@ public class AccountActivity extends AccountAuthenticatorActivity {
         authSuccess();
       }
     });
-  }
-
-  // TODO: lift this out.
-  public static Intent createAccount(Context context,
-                                     AccountManager accountManager,
-                                     String username,
-                                     String syncKey,
-                                     String password,
-                                     String serverURL) {
-
-    final Account account = new Account(username, Constants.ACCOUNTTYPE_SYNC);
-    final Bundle userbundle = new Bundle();
-
-    // Add sync key and server URL.
-    userbundle.putString(Constants.OPTION_SYNCKEY, syncKey);
-    if (serverURL != null) {
-      Log.i(LOG_TAG, "Setting explicit server URL: " + serverURL);
-      userbundle.putString(Constants.OPTION_SERVER, serverURL);
-    } else {
-      userbundle.putString(Constants.OPTION_SERVER, DEFAULT_SERVER);
-    }
-    Log.d(LOG_TAG, "Adding account for " + Constants.ACCOUNTTYPE_SYNC);
-    boolean result = false;
-    try {
-      result = accountManager.addAccountExplicitly(account, password, userbundle);
-    } catch (SecurityException e) {
-      final String message = e.getMessage();
-      if (message != null && (message.indexOf("is different than the authenticator's uid") > 0)) {
-        Log.wtf("FirefoxSync",
-                "Unable to create account. " +
-                "If you have more than one version of " +
-                "Firefox/Beta/Aurora/Nightly/Fennec installed, that's why.",
-                e);
-      } else {
-        Log.e("FirefoxSync", "Unable to create account.", e);
-      }
-    }
-
-    Log.d(LOG_TAG, "Account: " + account + " added successfully? " + result);
-    if (!result) {
-      Log.e(LOG_TAG, "Failed to add account!");
-    }
-
-    // Set components to sync (default: all).
-    ContentResolver.setMasterSyncAutomatically(true);
-
-    String authority = BrowserContract.AUTHORITY;
-    Log.d(LOG_TAG, "Setting authority " + authority + " to sync automatically.");
-    ContentResolver.setSyncAutomatically(account, authority, true);
-    ContentResolver.setIsSyncable(account, authority, 1);
-
-    // TODO: add other ContentProviders as needed (e.g. passwords)
-    // TODO: for each, also add to res/xml to make visible in account settings
-    Log.d(LOG_TAG, "Finished setting syncables.");
-
-    // TODO: correctly implement Sync Options.
-    Log.i(LOG_TAG, "Clearing preferences for this account.");
-    try {
-      Utils.getSharedPreferences(context, username, serverURL).edit().clear().commit();
-    } catch (Exception e) {
-      Log.e(LOG_TAG, "Could not clear prefs path!", e);
-    }
-
-    final Intent intent = new Intent();
-    intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, username);
-    intent.putExtra(AccountManager.KEY_ACCOUNT_TYPE, Constants.ACCOUNTTYPE_SYNC);
-    intent.putExtra(AccountManager.KEY_AUTHTOKEN, Constants.ACCOUNTTYPE_SYNC);
-    return intent;
   }
 
   @SuppressWarnings("unused")
