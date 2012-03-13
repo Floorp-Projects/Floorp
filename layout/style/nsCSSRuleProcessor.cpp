@@ -2114,6 +2114,11 @@ static bool SelectorMatches(Element* aElement,
         // selectors ":hover" and ":active".
         return false;
       } else {
+        if (aTreeMatchContext.mForStyling &&
+            statesToCheck.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER)) {
+          // Mark the element as having :hover-dependent style
+          aElement->SetFlags(NODE_HAS_RELEVANT_HOVER_RULES);
+        }
         if (aNodeMatchContext.mStateMask.HasAtLeastOneOfStates(statesToCheck)) {
           if (aDependence)
             *aDependence = true;
