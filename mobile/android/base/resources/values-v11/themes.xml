@@ -10,7 +10,6 @@
     <style name="Gecko.NoActionBar" parent="@android:style/Theme.Holo">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">@color/splash_background</item>
     </style>
     
     <style name="Gecko.Light" parent="@android:style/Theme.Holo.Light">

@@ -98,6 +98,12 @@ source-package::
 upload::
 	@$(MAKE) -C browser/installer upload
 
+source-upload::
+	@$(MAKE) -C browser/installer source-upload
+
+hg-bundle::
+	@$(MAKE) -C browser/installer hg-bundle
+
 l10n-check::
 	@$(MAKE) -C browser/locales l10n-check
 

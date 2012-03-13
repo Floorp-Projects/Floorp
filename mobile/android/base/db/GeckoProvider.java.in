@@ -90,6 +90,7 @@ public abstract class GeckoProvider extends ContentProvider {
         try {
             String resourcePath = context.getPackageResourcePath();
             GeckoAppShell.loadSQLiteLibs(context, resourcePath);
+            GeckoAppShell.loadNSSLibs(context, resourcePath);
             bridge = new SQLiteBridge(databasePath);
             int version = bridge.getVersion();
             Log.i(mLogTag, version + " == " + mDBVersion);
@@ -221,6 +222,8 @@ public abstract class GeckoProvider extends ContentProvider {
 
         setupDefaults(uri, values);
 
+        onPreInsert(values, uri, db);
+
         try {
             id = db.insert(getTable(uri), null, values);
         } catch(SQLiteBridgeException ex) {
@@ -241,6 +244,8 @@ public abstract class GeckoProvider extends ContentProvider {
         // callers to try again later
         if (db == null)
             return updated;
+
+        onPreUpdate(values, uri, db);
 
         try {
             updated = db.update(getTable(uri), values, selection, selectionArgs);
@@ -267,6 +272,7 @@ public abstract class GeckoProvider extends ContentProvider {
 
         try {
             cursor = db.query(getTable(uri), projection, selection, selectionArgs, null, null, sortOrder, null);
+            onPostQuery(cursor, uri, db);
         } catch (SQLiteBridgeException ex) {
             Log.e(mLogTag, "Error querying database", ex);
         }
@@ -281,4 +287,10 @@ public abstract class GeckoProvider extends ContentProvider {
     public abstract void setupDefaults(Uri uri, ContentValues values);
 
     public abstract void initGecko();
+
+    public abstract void onPreInsert(ContentValues values, Uri uri, SQLiteBridge db);
+
+    public abstract void onPreUpdate(ContentValues values, Uri uri, SQLiteBridge db);
+
+    public abstract void onPostQuery(Cursor cursor, Uri uri, SQLiteBridge db);
 }

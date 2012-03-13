@@ -59,7 +59,6 @@ EXTRA_PP_COMPONENTS = \
 EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
 		$(NULL)
 
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_COMPONENTS = \
 	        Webapps.js \
 	        Webapps.manifest \
@@ -67,7 +66,6 @@ EXTRA_COMPONENTS = \
 
 EXTRA_JS_MODULES += Webapps.jsm \
 		$(NULL)
-endif
 
 EXTRA_JS_MODULES += DOMRequestHelper.jsm \
 		$(NULL)

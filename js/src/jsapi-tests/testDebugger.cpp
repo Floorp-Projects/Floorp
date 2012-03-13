@@ -273,10 +273,10 @@ BEGIN_TEST(testDebugger_singleStepThrow)
     static JSBool
     setStepMode(JSContext *cx, unsigned argc, jsval *vp)
     {
-        JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
-        JS_ASSERT(fp);
-        JSScript *script = JS_GetFrameScript(cx, fp);
+        JSScript *script;
+        JS_DescribeScriptedCaller(cx, &script, NULL);
         JS_ASSERT(script);
+
         if (!JS_SetSingleStepMode(cx, script, true))
             return false;
         JS_SET_RVAL(cx, vp, JSVAL_VOID);

@@ -47,6 +47,7 @@ import java.net.URL;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -70,6 +71,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
@@ -89,8 +91,10 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.text.TextUtils;
 
-public class AboutHomeContent extends ScrollView {
+public class AboutHomeContent extends ScrollView
+       implements TabsAccessor.OnQueryTabsCompleteListener {
     private static final String LOGTAG = "GeckoAboutHome";
 
     private static final int NUMBER_OF_TOP_SITES_PORTRAIT = 4;
@@ -99,10 +103,13 @@ public class AboutHomeContent extends ScrollView {
     private static final int NUMBER_OF_COLS_PORTRAIT = 2;
     private static final int NUMBER_OF_COLS_LANDSCAPE = 3;
 
+    private static final int NUMBER_OF_REMOTE_TABS = 10;
+
     static enum UpdateFlags {
         TOP_SITES,
         PREVIOUS_TABS,
-        RECOMMENDED_ADDONS;
+        RECOMMENDED_ADDONS,
+        REMOTE_TABS;
 
         public static final EnumSet<UpdateFlags> ALL = EnumSet.allOf(UpdateFlags.class);
     }
@@ -119,6 +126,9 @@ public class AboutHomeContent extends ScrollView {
 
     protected LinearLayout mAddonsLayout;
     protected LinearLayout mLastTabsLayout;
+    protected LinearLayout mRemoteTabsLayout;
+
+    private View.OnClickListener mRemoteTabClickListener;
 
     public interface UriLoadCallback {
         public void callback(String uriSpec);
@@ -172,6 +182,7 @@ public class AboutHomeContent extends ScrollView {
 
         mAddonsLayout = (LinearLayout) findViewById(R.id.recommended_addons);
         mLastTabsLayout = (LinearLayout) findViewById(R.id.last_tabs);
+        mRemoteTabsLayout = (LinearLayout) findViewById(R.id.remote_tabs);
 
         TextView allTopSitesText = (TextView) findViewById(R.id.all_top_sites_text);
         allTopSitesText.setOnClickListener(new View.OnClickListener() {
@@ -185,6 +196,14 @@ public class AboutHomeContent extends ScrollView {
             public void onClick(View v) {
                 if (mUriLoadCallback != null)
                     mUriLoadCallback.callback("https://addons.mozilla.org/android");
+            }
+        });
+
+        TextView allRemoteTabsText = (TextView) findViewById(R.id.all_remote_tabs_text);
+        allRemoteTabsText.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Context context = v.getContext();
+                context.startActivity(new Intent(context, RemoteTabs.class));
             }
         });
 
@@ -209,6 +228,24 @@ public class AboutHomeContent extends ScrollView {
                 context.startActivity(intent);
             }
         });
+
+        mRemoteTabClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = ((String) v.getTag());
+                JSONObject args = new JSONObject();
+                try {
+                    args.put("url", url);
+                    args.put("engine", null);
+                    args.put("userEntered", false);
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "error building JSON arguments");
+                }
+    
+                Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
+            }
+        };
     }
 
     public void onDestroy() {
@@ -241,6 +278,14 @@ public class AboutHomeContent extends ScrollView {
         findViewById(R.id.top_sites_title).setVisibility(visibility);
         findViewById(R.id.all_top_sites_text).setVisibility(visibilityWithTopSites);
         findViewById(R.id.no_top_sites_text).setVisibility(visibilityWithoutTopSites);
+    }
+
+    private void setRemoteTabsVisibility(boolean visible) {
+        int visibility = visible ? View.VISIBLE : View.GONE;
+        findViewById(R.id.remote_tabs_title).setVisibility(visibility);
+        findViewById(R.id.remote_tabs_client).setVisibility(visibility);
+        findViewById(R.id.remote_tabs).setVisibility(visibility);
+        findViewById(R.id.all_remote_tabs_text).setVisibility(visibility);
     }
 
     private void setSyncVisibility(boolean visible) {
@@ -353,6 +398,9 @@ public class AboutHomeContent extends ScrollView {
 
                 if (flags.contains(UpdateFlags.RECOMMENDED_ADDONS))
                     readRecommendedAddons(activity);
+
+                if (flags.contains(UpdateFlags.REMOTE_TABS))
+                    loadRemoteTabs(activity);
             }
         });
     }
@@ -603,6 +651,44 @@ public class AboutHomeContent extends ScrollView {
                 });
             }
         }
+    }
+
+    private void loadRemoteTabs(final Activity activity) {
+        if (!isSyncSetup()) {
+            setRemoteTabsVisibility(false);
+            return;
+        }
+
+        TabsAccessor.getTabs(getContext(), NUMBER_OF_REMOTE_TABS, this);
+    }
+
+    @Override
+    public void onQueryTabsComplete(List<TabsAccessor.RemoteTab> tabsList) {
+        ArrayList<TabsAccessor.RemoteTab> tabs = new ArrayList<TabsAccessor.RemoteTab> (tabsList);
+        if (tabs == null || tabs.size() == 0) {
+            setRemoteTabsVisibility(false);
+            return;
+        }
+        
+        mRemoteTabsLayout.removeAllViews();
+        
+        String client = null;
+        
+        for (TabsAccessor.RemoteTab tab : tabs) {
+            if (client == null)
+                client = tab.name;
+            else if (!TextUtils.equals(client, tab.name))
+                break;
+
+            final TextView row = (TextView) mInflater.inflate(R.layout.abouthome_remote_tab_row, mRemoteTabsLayout, false);
+            row.setText(tab.title);
+            row.setTag(tab.url);
+            mRemoteTabsLayout.addView(row);
+            row.setOnClickListener(mRemoteTabClickListener);
+        }
+        
+        ((TextView) findViewById(R.id.remote_tabs_client)).setText(client);
+        setRemoteTabsVisibility(true);
     }
 
     public static class TopSitesGridView extends GridView {

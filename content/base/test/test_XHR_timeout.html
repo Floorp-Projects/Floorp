@@ -26,6 +26,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525816
 <script class="testbody"
         type="text/javascript"
         src="test_XHR_timeout.js"></script>
+<script type="text/javascript">
+  window.addEventListener("message", function (event) {
+    if (event.data == "done") {
+      SimpleTest.finish();
+      return;
+    }
+    if (event.data == "start") {
+      return;
+    }
+    if (event.data.type == "is") {
+      SimpleTest.is(event.data.got, event.data.expected, event.data.msg);
+      return;
+    }
+    if (event.data.type == "ok") {
+      SimpleTest.ok(event.data.bool, event.data.msg);
+      return;
+    }
+  });
+  // Final test harness setup and launch.
+  (function() {
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestLongerTimeout(TestRequests.length);
+    var msg = "This test will take approximately " + (TestRequests.length * 10)
+    msg += " seconds to complete, at most.";
+    document.getElementById("content").firstChild.nodeValue = msg;
+    window.postMessage("start", "*");
+  })();
+</script>
 </pre>
 </body>
 </html>

@@ -3708,9 +3708,20 @@ gfxFontStyle::ParseFontFeatureSettings(const nsString& aFeatureString,
       PRInt32 rv;
       setting.mValue = valString.ToInteger(&rv);
       if (rv == NS_OK) {
-        // we keep the features array sorted so that we can
-        // use nsTArray<>::Equals() to compare feature lists
-        aFeatures.InsertElementSorted(setting);
+        PRUint32 i;
+        // could optimize this based on the fact that the features array
+        // is sorted, but it's unlikely to be more than a few entries
+        for (i = 0; i < aFeatures.Length(); i++) {
+          if (aFeatures[i].mTag == setting.mTag) {
+            aFeatures[i].mValue = setting.mValue;
+            break;
+          }
+        }
+        if (i == aFeatures.Length()) {
+          // we keep the features array sorted so that we can
+          // use nsTArray<>::Equals() to compare feature lists
+          aFeatures.InsertElementSorted(setting);
+        }
       }
     }
     offset = limit + 1;

@@ -61,12 +61,13 @@ class XMLHttpRequestPrivate : public events::EventTarget,
   JSObject* mUploadJSObject;
   WorkerPrivate* mWorkerPrivate;
   nsRefPtr<Proxy> mProxy;
-  PRUint32 mJSObjectRootCount;
 
+  bool mJSObjectRooted;
   bool mMultipart;
   bool mBackgroundRequest;
   bool mWithCredentials;
   bool mCanceled;
+  PRUint32 mTimeout;
 
 public:
   XMLHttpRequestPrivate(JSObject* aObj, WorkerPrivate* aWorkerPrivate);
@@ -75,7 +76,7 @@ public:
   void
   FinalizeInstance(JSContext* aCx)
   {
-    ReleaseProxy();
+    ReleaseProxy(XHRIsGoingAway);
     events::EventTarget::FinalizeInstance(aCx);
   }
 
@@ -123,6 +124,9 @@ public:
   SetResponseType(JSContext* aCx, jsval aOldVal, jsval *aVp);
 
   bool
+  SetTimeout(JSContext* aCx, jsval aOldVal, jsval *aVp);
+
+  bool
   Abort(JSContext* aCx);
 
   JSString*
@@ -148,11 +152,13 @@ public:
   OverrideMimeType(JSContext* aCx, JSString* aMimeType);
 
 private:
+  enum ReleaseType { Default, XHRIsGoingAway, WorkerIsGoingAway };
+
   void
-  ReleaseProxy();
+  ReleaseProxy(ReleaseType aType = Default);
 
   bool
-  Pin(JSContext* aCx);
+  MaybePin(JSContext* aCx);
 
   bool
   MaybeDispatchPrematureAbortEvents(JSContext* aCx);
@@ -164,7 +170,7 @@ private:
   bool
   SendInProgress() const
   {
-    return mJSObjectRootCount != 0;
+    return mJSObjectRooted;
   }
 };
 

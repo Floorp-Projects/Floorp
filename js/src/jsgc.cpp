@@ -2472,8 +2472,8 @@ MaybeGC(JSContext *cx)
         return;
     }
 
-    if (comp->gcMallocAndFreeBytes >= comp->gcTriggerMallocAndFreeBytes) {
-        GCSlice(cx, comp, GC_NORMAL, gcreason::MAYBEGC);
+    if (comp->gcMallocAndFreeBytes > comp->gcTriggerMallocAndFreeBytes) {
+        GCSlice(cx, rt->gcMode == JSGC_MODE_GLOBAL ? NULL : comp, GC_NORMAL, gcreason::MAYBEGC);
         return;
     }
 

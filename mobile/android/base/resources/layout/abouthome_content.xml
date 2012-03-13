@@ -177,6 +177,45 @@
                                         android:visibility="gone"
                                         android:text="@string/abouthome_addons_browse"/>
 
+        <TextView android:id="@+id/remote_tabs_title"
+                  android:layout_width="fill_parent"
+                  android:layout_height="26dip"
+                  android:paddingLeft="12dip"
+                  android:background="@drawable/abouthome_separator"
+                  android:textSize="12sp"
+                  android:textColor="#000000"
+                  android:textStyle="bold"
+                  android:gravity="left|center_vertical"
+                  android:visibility="gone"
+                  android:text="@string/remote_tabs"/>
+
+        <TextView android:id="@+id/remote_tabs_client"
+                  android:layout_width="fill_parent"
+                  android:layout_height="26dip"
+                  android:paddingLeft="12dip"
+                  android:background="@drawable/abouthome_separator"
+                  android:textSize="12sp"
+                  android:textColor="#666666"
+                  android:gravity="left|center_vertical"
+                  android:visibility="gone"/>
+
+        <LinearLayout android:id="@+id/remote_tabs"
+                      android:orientation="vertical"
+                      android:layout_width="fill_parent"
+                      android:layout_height="wrap_content"
+                      android:visibility="gone"
+                      android:isScrollContainer="false"/>
+
+        <org.mozilla.gecko.LinkTextView android:id="@+id/all_remote_tabs_text"
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="47dip"
+                                        android:background="@drawable/abouthome_separator"
+                                        android:textColor="#22629e"
+                                        android:textSize="12sp"
+                                        android:gravity="center"
+                                        android:visibility="gone"
+                                        android:text="@string/remote_tabs_show_all"/>
+
     </LinearLayout>
 
 </merge>
