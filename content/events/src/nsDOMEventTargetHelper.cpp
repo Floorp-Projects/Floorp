@@ -266,7 +266,7 @@ nsDOMEventTargetHelper::GetInnerEventListener(nsRefPtr<nsDOMEventListenerWrapper
 {
   NS_ENSURE_ARG_POINTER(aListener);
   if (aWrapper) {
-    NS_ADDREF(*aListener = aWrapper->GetInner());
+    NS_IF_ADDREF(*aListener = aWrapper->GetInner());
   } else {
     *aListener = nsnull;
   }
