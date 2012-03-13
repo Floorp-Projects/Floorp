@@ -87,6 +87,7 @@ private:
 
   void FireDOMMotionEvent(class nsIDOMDocument *domDoc, 
                           class nsIDOMEventTarget *target,
+                          PRUint32 type,
                           double x,
                           double y,
                           double z);
