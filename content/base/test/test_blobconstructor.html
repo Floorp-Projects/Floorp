@@ -1,17 +1,17 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=648997
+https://bugzilla.mozilla.org/show_bug.cgi?id=721569
 -->
 <head>
-  <title>Test for Bug 648997</title>
+  <title>Test for Blob constructor (Bug 721569)</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="fileutils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=648997">Mozilla Bug 648997</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=721569">Mozilla Bug 721569</a>
 <p id="display"></p>
 <div id="content" style="display: none">
   
@@ -19,65 +19,61 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=648997
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.7">
 "use strict";
-// We're prefixing still
-window.BlobBuilder = window.MozBlobBuilder;
+/** Test for Bug 721569 **/
+var blob = Blob();
+ok(blob, "Blob should exist");
 
-/** Test for Bug 648997 **/
-var blobBuilder = BlobBuilder();
-ok(blobBuilder, "BlobBuilder should exist");
+ok(blob.size !== undefined, "Blob should have a size property");
+ok(blob.type !== undefined, "Blob should have a type property");
+ok(blob.slice, "Blob should have a slice method");
 
-ok(blobBuilder.append, "BlobBuilder should have an append method");
-ok(blobBuilder.getBlob, "BlobBuilder should have a getBlob method");
-ok(blobBuilder.getFile, "BlobBuilder should have a getFile method");
+blob = Blob([], {type: null});
+ok(blob, "Blob should exist");
+is(blob.type, "null", "Blob type should be stringified");
+
+blob = Blob([], {type: undefined});
+ok(blob, "Blob should exist");
+is(blob.type, "undefined", "Blob type should be stringified");
 
 try {
-blobBuilder.append();
-ok(false, "NOT REACHED");
+blob = Blob([]);
+ok(true, "an empty blobParts argument should not throw");
 } catch(e) {
-ok(true, "an empty argument to append should throw");
+ok(false, "NOT REACHED");
 }
 
-blobBuilder.append(null);
-// Yay we didn't crash.
+try {
+blob = Blob(null);
+ok(false, "NOT REACHED");
+} catch(e) {
+ok(true, "a null blobParts member should throw");
+}
 
-blobBuilder.append("squiggle");
-let blob1 = blobBuilder.getBlob();
-ok(blob1 instanceof Blob, "getBlob should produce Blobs");
-ok(!(blob1 instanceof File), "getBlob should not produce Files");
-is(blob1.type, "", "getBlob with no argument should return Blob with empty type");
-is(blob1.size, 8, "getBlob should return Blob with correct size");
+try {
+blob = Blob([], null);
+ok(false, "NOT REACHED");
+} catch(e) {
+ok(true, "a null options member should throw");
+}
 
-blobBuilder.append("ohai");
-let blob2 = blobBuilder.getFile("thefilename");
-ok(blob2 instanceof Blob, "getFile should produce Blobs");
-ok(blob2 instanceof File, "getFile should produce Files");
-is(blob2.name, "thefilename", "getFile should produces Files with correct name");
-is(blob2.type, "", "getFile with no second argument should return File with empty type");
-is(blob2.size, 4, "getFile should return Blob with correct size");
+try {
+blob = Blob([], undefined);
+ok(false, "NOT REACHED");
+} catch(e) {
+ok(true, "an undefined options member should throw");
+}
 
-blobBuilder.append("steak");
-let blob3 = blobBuilder.getBlob("content/type");
-ok(blob3 instanceof Blob, "getBlob should produce Blobs");
-ok(!(blob3 instanceof File), "getBlob should not produce Files");
-is(blob3.type, "content/type", "getBlob with no argument should return Blob with empty type");
-is(blob3.size, 5, "getBlob should return Blob with correct size");
+let blob1 = Blob(["squiggle"]);
+ok(blob1 instanceof Blob, "Blob constructor should produce Blobs");
+ok(!(blob1 instanceof File), "Blob constructor should not produce Files");
+is(blob1.type, "", "Blob constructor with no options should return Blob with empty type");
+is(blob1.size, 8, "Blob constructor should return Blob with correct size");
 
-blobBuilder.append("apples");
-let blob4 = blobBuilder.getFile("the other filename", "text/plain");
-ok(blob4 instanceof Blob, "getFile should produce Blobs");
-ok(blob4 instanceof File, "getFile should produce Files");
-is(blob4.name, "the other filename", "getFile should produces Files with correct name");
-is(blob4.type, "text/plain", "getFile with second argument should return File with correct type");
-is(blob4.size, 6, "getFile should return Blob with correct size");
-
-blobBuilder.append("boletes");
-let blob5 = blobBuilder.getFile("");
-ok(blob5 instanceof Blob, "getFile should produce Blobs");
-ok(blob5 instanceof File, "getFile should produce Files");
-is(blob5.name, "", "getFile with empty name should produces Files with empty name");
-is(blob5.type, "", "getFile with no second argument should return File with correct type");
-is(blob5.size, 7, "getFile should return Blob with correct size");
-testFile(blob5, "boletes", "Test empty-named File from BlobBuilder.getFile");
+let blob2 = Blob(["steak"], {type: "content/type"});
+ok(blob2 instanceof Blob, "Blob constructor should produce Blobs");
+ok(!(blob2 instanceof File), "Blob constructor should not produce Files");
+is(blob2.type, "content/type", "Blob constructor with a type option should return Blob with the type");
+is(blob2.size, 5, "Blob constructor should return Blob with correct size");
 
 
 let aB = new ArrayBuffer(16);
@@ -89,7 +85,7 @@ for (var i = 0; i < 16; i++) {
 let testData = 
  [
     // Test 3 strings
-    [["foo", "bar", "baz"], undefined,
+    [["foo", "bar", "baz"], {},
                             [{start: 0, length: 9, contents: "foobarbaz"},
                              {start: 0, length: 3, contents: "foo"},
                              {start: 3, length:6, contents:  "barbaz"},
@@ -99,13 +95,13 @@ let testData =
                              {start: 0, length: 11, contents: "foobarbaz"},
                              {start: 10, length: 5, contents: ""}]],
     // Test string, Blob, string
-    [["foo", blob1, "baz"], undefined,
+    [["foo", blob1, "baz"], {},
                             [{start: 0, length: 3, contents:  "foo"},
                              {start: 3, length: 8, contents:  "squiggle"},
                              {start: 2, length: 2, contents:  "os"},
                              {start: 10, length: 2, contents: "eb"}]],
     // Test blob, string, blob
-    [[blob1, "foo", blob1], undefined,
+    [[blob1, "foo", blob1], {},
                             [{start: 0, length: 8, contents:  "squiggle"},
                              {start: 7, length: 2, contents:  "ef"},
                              {start: 10, length: 2, contents: "os"},
@@ -113,14 +109,14 @@ let testData =
                              {start: 12, length: 3, contents: "qui"},
                              {start: 40, length: 20, contents: ""}]],
     // Test blobs all the way down
-    [[blob2, blob1, blob2], undefined,
-                            [{start: 0, length: 4, contents:  "ohai"},
-                             {start: 4, length: 8, contents:  "squiggle"},
-                             {start: 12, length: 4, contents: "ohai"},
-                             {start: 1, length: 2, contents:  "ha"},
-                             {start: 5, length: 4, contents:  "quig"}]],
+    [[blob2, blob1, blob2], {},
+                            [{start: 0, length: 5, contents:  "steak"},
+                             {start: 5, length: 8, contents:  "squiggle"},
+                             {start: 13, length: 5, contents: "steak"},
+                             {start: 1, length: 2, contents:  "te"},
+                             {start: 6, length: 4, contents:  "quig"}]],
     // Test an array buffer
-    [[aB, blob1, "foo"], null,
+    [[aB, blob1, "foo"], {},
                             [{start: 0, length: 8, contents:  "ABCDEFGH"},
                              {start: 8, length:10, contents:  "IJKLMNOPsq"},
                              {start: 17, length: 3, contents: "qui"},
@@ -145,10 +141,7 @@ let testData =
                              {start: 4, length: 4, contents:  "bar\n"},
                              {start: 8, length: 4, contents: "baz\n"}]],
     // Test type coercion of a number
-    [[3, aB, "foo"], {},    [{start: 0, length: 8, contents:  "3ABCDEFG"},
-                             {start: 8, length:10, contents:  "HIJKLMNOPf"},
-                             {start: 17, length: 4, contents: "foo"},
-                             {start: 4, length: 8, contents:  "DEFGHIJK"}]]
+    [[3, aB, "foo"], {},    "InvalidStateError"]
  ];
 
 let testCounter = 0;
@@ -160,21 +153,12 @@ function doTest(data) {
 
   function runTest(test) {
 
-    let bb = new BlobBuilder();
-    ok(bb, "BlobBuilder should exist");
-
-    function doAppend(blob) {
-      if (options !== undefined) {
-        bb.append(blob, options && options.endings);
-      } else {
-        bb.append(blob);
-      }
-      blob.expando = bb; // Do we leak?
+    let blob;
+    if (options !== undefined) {
+      blob = new Blob(blobs, options);
+    } else {
+      blob = new Blob(blobs);
     }
-
-    blobs.forEach(doAppend);
-    ok(true, "Test " + testCounter + " appended all successfully");
-    let blob = bb.getBlob();
     ok(blob, "Test " + testCounter + " got blob");
     ok(blob instanceof Blob, "Test " + testCounter + " blob is a Blob");
     ok(!(blob instanceof File), "Test " + testCounter + " blob is not a File");
@@ -188,7 +172,16 @@ function doTest(data) {
 
     testFile(slice, test.contents, "Test " + testCounter);
   }
-  tests.forEach(runTest);
+  if (Array.isArray(tests)) {
+    tests.forEach(runTest);
+  } else {
+    try {
+      let blob = new Blob(blobs, options);
+      ok(false, "NOT REACHED");
+    } catch (e) {
+      is(e.name, tests, "Blob constructor should throw " + tests);
+    }
+  }
   SpecialPowers.gc();
 }
 

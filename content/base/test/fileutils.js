@@ -97,8 +97,8 @@ function getXHRLoadHandler(expectedResult, expectedLength, statusWorking, testNa
          "[XHR] no error in test " + testName);
     }
     else {
-      todo(event.target.status, 200,
-           "[XHR] no error in test " + testName);
+      todo_is(event.target.status, 200,
+              "[XHR] no error in test " + testName);
     }
     // Do not use |is(convertXHRBinary(event.target.responseText), expectedResult, "...");| that may output raw binary data.
     var convertedData = convertXHRBinary(event.target.responseText);
