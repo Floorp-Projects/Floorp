@@ -63,7 +63,6 @@ public class ViewportMetrics {
     private FloatSize mPageSize;
     private RectF mViewportRect;
     private float mZoomFactor;
-    private boolean mAllowZoom;
 
     public ViewportMetrics() {
         DisplayMetrics metrics = new DisplayMetrics();
@@ -72,14 +71,12 @@ public class ViewportMetrics {
         mPageSize = new FloatSize(metrics.widthPixels, metrics.heightPixels);
         mViewportRect = new RectF(0, 0, metrics.widthPixels, metrics.heightPixels);
         mZoomFactor = 1.0f;
-        mAllowZoom = true;
     }
 
     public ViewportMetrics(ViewportMetrics viewport) {
         mPageSize = new FloatSize(viewport.getPageSize());
         mViewportRect = new RectF(viewport.getViewport());
         mZoomFactor = viewport.getZoomFactor();
-        mAllowZoom = viewport.mAllowZoom;
     }
 
     public ViewportMetrics(ImmutableViewportMetrics viewport) {
@@ -89,7 +86,6 @@ public class ViewportMetrics {
                                   viewport.viewportRectRight,
                                   viewport.viewportRectBottom);
         mZoomFactor = viewport.zoomFactor;
-        mAllowZoom = viewport.allowZoom;
     }
 
 
@@ -101,8 +97,6 @@ public class ViewportMetrics {
         float pageWidth = (float)json.getDouble("pageWidth");
         float pageHeight = (float)json.getDouble("pageHeight");
         float zoom = (float)json.getDouble("zoom");
-
-        mAllowZoom = json.getBoolean("allowZoom");
 
         mPageSize = new FloatSize(pageWidth, pageHeight);
         mViewportRect = new RectF(x, y, x + width, y + height);
@@ -147,10 +141,6 @@ public class ViewportMetrics {
 
     public float getZoomFactor() {
         return mZoomFactor;
-    }
-
-    public boolean getAllowZoom() {
-        return mAllowZoom;
     }
 
     public void setPageSize(FloatSize pageSize) {

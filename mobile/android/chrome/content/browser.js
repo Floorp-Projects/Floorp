@@ -1657,8 +1657,6 @@ Tab.prototype = {
       pageWidth *= viewport.zoom;
       pageHeight *= viewport.zoom;
 
-      viewport.allowZoom  = this.metadata.allowZoom;
-
       /*
        * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
        * this causes the page size to jump around wildly during page load. After the page is loaded,
