@@ -26,9 +26,9 @@ function run_test()
 function test_pause_frame()
 {
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    let args = aPacket.frame["arguments"];
+    let args = aPacket.frame.arguments;
     let objActor = args[0].actor;
-    do_check_eq(args[0]["class"], "Object");
+    do_check_eq(args[0].class, "Object");
     do_check_true(!!objActor);
 
     let objClient = gThreadClient.pauseGrip(args[0]);
