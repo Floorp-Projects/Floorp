@@ -2359,6 +2359,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
 }
 
+#webapps-notification-icon {
+  list-style-image: url(chrome://browser/skin/webapps-16.png);
+}
+
 .popup-notification-icon {
   width: 64px;
   height: 64px;
@@ -2423,6 +2427,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .popup-notification-icon[popupid="password-save"],
 .popup-notification-icon[popupid="password-change"] {
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-64.png);
+}
+
+.popup-notification-icon[popupid="webapps-install"] {
+  list-style-image: url(chrome://browser/skin/webapps-64.png);
 }
 
 /* Popup Buttons */
