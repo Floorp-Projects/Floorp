@@ -25,7 +25,7 @@ const STORE_NAME = "contacts";
 
 function ContactDB(aGlobal) {
   debug("Constructor");
-  this._indexedDB = aGlobal.mozIndexedDB;
+  this._global = aGlobal;
 }
 
 ContactDB.prototype = {
@@ -54,7 +54,7 @@ ContactDB.prototype = {
 
     let self = this;
     debug("try to open database:" + DB_NAME + " " + DB_VERSION);
-    let request = this._indexedDB.open(DB_NAME, DB_VERSION);
+    let request = this._global.mozIndexedDB.open(DB_NAME, DB_VERSION);
     request.onsuccess = function (event) {
       debug("Opened database:", DB_NAME, DB_VERSION);
       self.db = event.target.result;
@@ -116,6 +116,14 @@ ContactDB.prototype = {
     objectStore.createIndex("email",      "properties.email",      { unique: false, multiEntry: true });
     objectStore.createIndex("note",       "properties.note",       { unique: false, multiEntry: true });
 
+    objectStore.createIndex("nicknameLowerCase",   "search.nickname",   { unique: false, multiEntry: true });
+    objectStore.createIndex("nameLowerCase",       "search.name",       { unique: false, multiEntry: true });
+    objectStore.createIndex("familyNameLowerCase", "search.familyName", { unique: false, multiEntry: true });
+    objectStore.createIndex("givenNameLowerCase",  "search.givenName",  { unique: false, multiEntry: true });
+    objectStore.createIndex("telLowerCase",        "search.tel",        { unique: false, multiEntry: true });
+    objectStore.createIndex("emailLowerCase",      "search.email",      { unique: false, multiEntry: true });
+    objectStore.createIndex("noteLowerCase",       "search.note",       { unique: false, multiEntry: true });
+
     debug("Created object stores and indexes");
   },
 
@@ -171,7 +179,6 @@ ContactDB.prototype = {
     }, failureCb);
   },
 
-  // Todo: add searchfields. "Tom" should be a result with T, t, To, to...
   makeImport: function makeImport(aContact) {
     let contact = {};
     contact.properties = {
@@ -197,9 +204,33 @@ ContactDB.prototype = {
       genderIdentity:  null
     };
 
+    contact.search = {
+      name:            [],
+      honorificPrefix: [],
+      givenName:       [],
+      additionalName:  [],
+      familyName:      [],
+      honorificSuffix: [],
+      nickname:        [],
+      email:           [],
+      category:        [],
+      tel:             [],
+      org:             [],
+      note:            [],
+      impp:            []
+    };
+
     for (let field in aContact.properties) {
       contact.properties[field] = aContact.properties[field];
+      // Add search fields
+      if (aContact.properties[field] && contact.search[field]) {
+        for (let i = 0; i <= aContact.properties[field].length; i++) {
+          if (aContact.properties[field][i])
+            contact.search[field].push(aContact.properties[field][i].toLowerCase());
+        }
+      }
     }
+    debug("contact:" + JSON.stringify(contact));
 
     contact.updated = aContact.updated;
     contact.published = aContact.published;
@@ -208,7 +239,6 @@ ContactDB.prototype = {
     return contact;
   },
 
-  // Needed to remove searchfields
   makeExport: function makeExport(aRecord) {
     let contact = {};
     contact.properties = aRecord.properties;
@@ -298,10 +328,8 @@ ContactDB.prototype = {
 
     let self = this;
     this.newTxn("readonly", function (txn, store) {
-      if (aOptions && aOptions.filterOp == "equals") {
+      if (aOptions && (aOptions.filterOp == "equals" || aOptions.filterOp == "contains")) {
         self._findWithIndex(txn, store, aOptions);
-      } else if (aOptions && aOptions.filterBy) {
-        self._findWithSearch(txn, store, aOptions);
       } else {
         self._findAll(txn, store, aOptions);
       }
@@ -334,10 +362,17 @@ ContactDB.prototype = {
       if (key == "id") {
         // store.get would return an object and not an array
         request = store.getAll(options.filterValue);
-      } else {
+      } else if (options.filterOp == "equals") {
         debug("Getting index: " + key);
+        // case sensitive
         let index = store.index(key);
         request = index.getAll(options.filterValue, options.filterLimit);
+      } else {
+        // not case sensitive
+        let tmp = options.filterValue.toLowerCase();
+        let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
+        let index = store.index(key + "LowerCase");
+        request = index.getAll(range, options.filterLimit);
       }
       if (!txn.result)
         txn.result = {};
@@ -348,52 +383,6 @@ ContactDB.prototype = {
           txn.result[event.target.result[i].id] = this.makeExport(event.target.result[i]);
       }.bind(this);
     }
-  },
-
-  // Will be replaced by _findWithIndex once all searchfields are added.
-  _findWithSearch: function _findWithSearch(txn, store, options) {
-    debug("_findWithSearch:" + options.filterValue + options.filterOp)
-    store.getAll().onsuccess = function (event) {
-      debug("Request successful." + event.target.result);
-      txn.result = event.target.result.filter(function (record) {
-        let properties = record.properties;
-        for (let i = 0; i < options.filterBy.length; i++) {
-          let field = options.filterBy[i];
-          if (!properties[field])
-              continue;
-          let value = '';
-          switch (field) {
-            case "name":
-            case "familyName":
-            case "givenName":
-            case "nickname":
-            case "email":
-            case "tel":
-            case "note":
-              value = [f for each (f in [properties[field]])].join("\n") || '';
-              break;
-            default:
-              value = properties[field];
-              debug("unknown field: " + field);
-          }
-          let match = false;
-          switch (options.filterOp) {
-            case "icontains":
-              match = value.toLowerCase().indexOf(options.filterValue.toLowerCase()) != -1;
-              break;
-            case "contains":
-              match = value.indexOf(options.filterValue) != -1;
-              break;
-            case "equals":
-              match = value == options.filterValue;
-              break
-          }
-          if (match)
-            return true;
-        }
-        return false;
-      }).map(this.makeExport.bind(this));
-    }.bind(this);
   },
 
   _findAll: function _findAll(txn, store, options) {
