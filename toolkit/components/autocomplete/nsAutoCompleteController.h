@@ -129,8 +129,12 @@ protected:
   bool mDefaultIndexCompleted;
   bool mBackspaced;
   bool mPopupClosedByCompositionStart;
-  bool mIsIMEComposing;
-  bool mIgnoreHandleText;
+  enum CompositionState {
+    eCompositionState_None,
+    eCompositionState_Composing,
+    eCompositionState_Committing
+  };
+  CompositionState mCompositionState;
   PRUint16 mSearchStatus;
   PRUint32 mRowCount;
   PRUint32 mSearchesOngoing;
