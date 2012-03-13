@@ -1549,7 +1549,13 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nsnull;
   }
 
-  gfxIntSize size = container->GetCurrentSize();
+  gfxIntSize size;
+  
+  if (mInstanceOwner->UseAsyncRendering()) {
+    size = container->GetCurrentSize();
+  } else {
+    size = gfxIntSize(window->width, window->height);
+  }
 
   nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
   gfxRect r = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
@@ -1572,6 +1578,9 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
     UpdateImageLayer(r);
 
+    if (!mInstanceOwner->UseAsyncRendering()) {
+      imglayer->SetScaleToSize(size, ImageLayer::SCALE_STRETCH);
+    }
     imglayer->SetContainer(container);
     gfxPattern::GraphicsFilter filter =
       nsLayoutUtils::GetGraphicsFilterForFrame(this);
