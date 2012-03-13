@@ -772,9 +772,6 @@ public class PanZoomController
         if (GeckoApp.mDOMFullScreen)
             return false;
 
-        if (!mController.getViewportMetrics().getAllowZoom())
-            return false;
-
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
