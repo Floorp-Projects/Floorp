@@ -459,7 +459,7 @@ class ShutdownLeakLogger(object):
   DOM windows (that are still around after test suite shutdown, despite running
   the GC) to the tests that created them and prints leak statistics.
   """
-  MAX_LEAK_COUNT = 120
+  MAX_LEAK_COUNT = 121
 
   def __init__(self, logger):
     self.logger = logger
@@ -491,7 +491,7 @@ class ShutdownLeakLogger(object):
     if leakingTests:
       totalWindows = sum(len(test["leakedWindows"]) for test in leakingTests)
       totalDocShells = sum(len(test["leakedDocShells"]) for test in leakingTests)
-      msgType = "INFO" if totalWindows + totalDocShells < self.MAX_LEAK_COUNT else "UNEXPECTED-FAIL"
+      msgType = "INFO" if totalWindows + totalDocShells <= self.MAX_LEAK_COUNT else "UNEXPECTED-FAIL"
       self.logger.info("TEST-%s | ShutdownLeaks | leaked %d DOMWindow(s) and %d DocShell(s) until shutdown", msgType, totalWindows, totalDocShells)
 
     for test in leakingTests:
