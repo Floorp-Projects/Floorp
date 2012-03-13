@@ -33,8 +33,8 @@ function test_syntax_error_eval()
         // Check the return value...
         do_check_eq(aPacket.type, "paused");
         do_check_eq(aPacket.why.type, "clientEvaluated");
-        do_check_eq(aPacket.why.exception.type, "object");
-        do_check_eq(aPacket.why.exception["class"], "Error");
+        do_check_eq(aPacket.why.frameFinished.throw.type, "object");
+        do_check_eq(aPacket.why.frameFinished.throw.class, "Error");
 
         gThreadClient.resume(function() {
           finishClient(gClient);

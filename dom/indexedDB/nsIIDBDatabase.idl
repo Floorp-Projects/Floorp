@@ -45,11 +45,10 @@ interface nsIIDBTransaction;
 interface nsIDOMDOMStringList;
 interface nsIDOMEventListener;
 
-[scriptable, uuid(fb143548-08d1-43b4-95f2-a1cd58f8db76)]
-interface nsIIDBObjectStoreParameters : nsISupports
+dictionary IDBObjectStoreParameters
 {
-  attribute jsval keyPath;
-  attribute boolean autoIncrement;
+  jsval keyPath;
+  boolean autoIncrement;
 };
 
 /**
@@ -57,7 +56,7 @@ interface nsIIDBObjectStoreParameters : nsISupports
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, builtinclass, uuid(bb877dff-ab5b-4ebb-9b3c-a7fa97cd4b51)]
+[scriptable, builtinclass, uuid(bedee48a-f47f-44f2-ba1e-d8fe595bbfee)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
@@ -75,10 +74,11 @@ interface nsIIDBDatabase : nsISupports
   void
   deleteObjectStore([Null(Stringify)] in DOMString name);
 
+  // mode can be either "readonly" or "readwrite"
   [optional_argc, implicit_jscontext]
   nsIIDBTransaction
   transaction(in jsval storeNames, // js array of strings
-              [optional /* READ_ONLY */] in unsigned short mode);
+              [optional /* "readonly" */] in DOMString mode);
 
   void
   close();

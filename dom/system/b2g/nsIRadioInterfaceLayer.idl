@@ -116,7 +116,7 @@ interface nsIRILDataCallback : nsISupports
                            in unsigned long length);
 };
 
-[scriptable, uuid(aeb7ffe7-7d3a-4b7d-9b59-b6d3ae1c72ed)]
+[scriptable, uuid(78fc7ef6-0941-4fc8-89ff-de9398ef478a)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -139,7 +139,7 @@ interface nsIRadioInterfaceLayer : nsISupports
   const unsigned short DATACALL_STATE_DISCONNECTING = 3;
   const unsigned short DATACALL_STATE_DISCONNECTED = 4;
 
-  readonly attribute jsval currentState;
+  readonly attribute jsval radioState;
 
   void registerCallback(in nsIRILTelephonyCallback callback);
   void unregisterCallback(in nsIRILTelephonyCallback callback);

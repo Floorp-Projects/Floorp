@@ -62,7 +62,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SmsManager,
                                            nsDOMEventTargetHelper)
 
-  void Init(nsPIDOMWindow *aWindow, nsIScriptContext* aScriptContext);
+  void Init(nsPIDOMWindow *aWindow);
   void Shutdown();
 
 private:

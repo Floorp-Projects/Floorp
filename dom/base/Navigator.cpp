@@ -922,13 +922,9 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsIDOMDesktopNotificationCenter** aR
   }
 
   nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(win));
-  NS_ENSURE_TRUE(sgo && win->GetDocShell(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(win && win->GetDocShell(), NS_ERROR_FAILURE);
 
-  nsIScriptContext* scx = sgo->GetContext();
-  NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
-
-  mNotification = new nsDesktopNotificationCenter(win, scx);
+  mNotification = new nsDesktopNotificationCenter(win);
 
   NS_ADDREF(*aRetVal = mNotification);
   return NS_OK;
@@ -945,14 +941,10 @@ Navigator::GetMozBattery(nsIDOMMozBatteryManager** aBattery)
     *aBattery = nsnull;
 
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(win));
-    NS_ENSURE_TRUE(sgo && win->GetDocShell(), NS_OK);
-
-    nsIScriptContext* scx = sgo->GetContext();
-    NS_ENSURE_TRUE(scx, NS_OK);
+    NS_ENSURE_TRUE(win->GetDocShell(), NS_OK);
 
     mBatteryManager = new battery::BatteryManager();
-    mBatteryManager->Init(win, scx);
+    mBatteryManager->Init(win);
   }
 
   NS_ADDREF(*aBattery = mBatteryManager);
@@ -1083,14 +1075,8 @@ Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
 
-    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
-    NS_ENSURE_TRUE(sgo, NS_OK);
-
-    nsIScriptContext* scx = sgo->GetContext();
-    NS_ENSURE_TRUE(scx, NS_OK);
-
     mSmsManager = new sms::SmsManager();
-    mSmsManager->Init(window, scx);
+    mSmsManager->Init(window);
   }
 
   NS_ADDREF(*aSmsManager = mSmsManager);
@@ -1139,14 +1125,8 @@ Navigator::GetMozConnection(nsIDOMMozConnection** aConnection)
     nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
     NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
 
-    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
-    NS_ENSURE_TRUE(sgo, NS_OK);
-
-    nsIScriptContext* scx = sgo->GetContext();
-    NS_ENSURE_TRUE(scx, NS_OK);
-
     mConnection = new network::Connection();
-    mConnection->Init(window, scx);
+    mConnection->Init(window);
   }
 
   NS_ADDREF(*aConnection = mConnection);

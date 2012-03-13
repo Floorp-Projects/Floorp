@@ -39,6 +39,7 @@
 #include "nsIDOMSmsMessage.h"
 #include "nsDOMEvent.h"
 #include "SmsCursor.h"
+#include "SmsManager.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -78,13 +79,12 @@ SmsRequestManager::AddRequest(nsIDOMMozSmsRequest* aRequest,
 
 
 NS_IMETHODIMP
-SmsRequestManager::CreateRequest(nsPIDOMWindow* aWindow,
-                                 nsIScriptContext* aScriptContext,
+SmsRequestManager::CreateRequest(nsIDOMMozSmsManager* aManager,
                                  nsIDOMMozSmsRequest** aRequest,
                                  PRInt32* aRequestId)
 {
   nsCOMPtr<nsIDOMMozSmsRequest> request =
-    new SmsRequest(aWindow, aScriptContext);
+    new SmsRequest(static_cast<SmsManager*>(aManager));
 
   PRInt32 size = mRequests.Count();
 

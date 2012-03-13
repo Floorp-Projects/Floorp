@@ -138,8 +138,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMOfflineResourceList, nsDOMEventTargetHelper)
 
 nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
                                                    nsIURI *aDocumentURI,
-                                                   nsPIDOMWindow *aWindow,
-                                                   nsIScriptContext* aScriptContext)
+                                                   nsPIDOMWindow *aWindow)
   : mInitialized(false)
   , mManifestURI(aManifestURI)
   , mDocumentURI(aDocumentURI)
@@ -148,8 +147,7 @@ nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
   , mCachedKeys(nsnull)
   , mCachedKeysCount(0)
 {
-  mOwner = aWindow;
-  mScriptContext = aScriptContext;
+  BindToOwner(aWindow);
 }
 
 nsDOMOfflineResourceList::~nsDOMOfflineResourceList()
@@ -510,7 +508,7 @@ nsDOMOfflineResourceList::Update()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMWindow> window = 
-    do_QueryInterface(mOwner);
+    do_QueryInterface(GetOwner());
 
   nsCOMPtr<nsIOfflineCacheUpdate> update;
   rv = updateService->ScheduleUpdate(mManifestURI, mDocumentURI,
@@ -690,11 +688,11 @@ nsresult
 nsDOMOfflineResourceList::SendEvent(const nsAString &aEventName)
 {
   // Don't send events to closed windows
-  if (!mOwner) {
+  if (!GetOwner()) {
     return NS_OK;
   }
 
-  if (!mOwner->GetDocShell()) {
+  if (!GetOwner()->GetDocShell()) {
     return NS_OK;
   }
 
@@ -716,7 +714,7 @@ nsDOMOfflineResourceList::SendEvent(const nsAString &aEventName)
 
   // If the window is frozen or we're still catching up on events that were
   // queued while frozen, save the event for later.
-  if (mOwner->IsFrozen() || mPendingEvents.Count() > 0) {
+  if (GetOwner()->IsFrozen() || mPendingEvents.Count() > 0) {
     mPendingEvents.AppendObject(event);
     return NS_OK;
   }
@@ -853,7 +851,7 @@ nsDOMOfflineResourceList::UpdateAdded(nsIOfflineCacheUpdate *aUpdate)
 already_AddRefed<nsIApplicationCacheContainer>
 nsDOMOfflineResourceList::GetDocumentAppCacheContainer()
 {
-  nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(mOwner);
+  nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(GetOwner());
   if (!webnav) {
     return nsnull;
   }
