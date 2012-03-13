@@ -424,6 +424,7 @@ protected:
     jmethodID jNotifyIMEChange;
     jmethodID jNotifyScreenShot;
     jmethodID jAcknowledgeEventSync;
+    jmethodID jEnableDeviceMotion;
     jmethodID jEnableLocation;
     jmethodID jEnableSensor;
     jmethodID jDisableSensor;
