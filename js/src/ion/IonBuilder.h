@@ -149,7 +149,7 @@ class IonBuilder : public MIRGenerator
                 MTableSwitch *ins;
 
                 // The number of current successor that get mapped into a block. 
-                uint32 currentSuccessor;
+                uint32 currentBlock;
 
             } tableswitch;
         };
