@@ -252,8 +252,10 @@ nsDeviceMotion::DeviceMotionChanged(PRUint32 type, double x, double y, double z)
 
     if (domdoc) {
       nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(windowListeners[i]);
-      if (type == nsIDeviceMotionData::TYPE_ACCELERATION)
-        FireDOMMotionEvent(domdoc, target, x, y, z);
+      if (type == nsIDeviceMotionData::TYPE_ACCELERATION || 
+        type == nsIDeviceMotionData::TYPE_LINEAR_ACCELERATION || 
+        type == nsIDeviceMotionData::TYPE_GYROSCOPE )
+        FireDOMMotionEvent(domdoc, target, type, x, y, z);
       else if (type == nsIDeviceMotionData::TYPE_ORIENTATION)
         FireDOMOrientationEvent(domdoc, target, x, y, z);
     }
@@ -355,6 +357,7 @@ nsDeviceMotion::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
 void
 nsDeviceMotion::FireDOMMotionEvent(nsIDOMDocument *domdoc,
                                    nsIDOMEventTarget *target,
+                                   PRUint32 type,
                                    double x,
                                    double y,
                                    double z) {
@@ -368,15 +371,29 @@ nsDeviceMotion::FireDOMMotionEvent(nsIDOMDocument *domdoc,
     return;
 }
 
-  // Currently acceleration as determined includes gravity.
-  nsRefPtr<nsDOMDeviceAcceleration> acceleration = new nsDOMDeviceAcceleration(x, y, z);
+  nsRefPtr<nsDOMDeviceAcceleration> acceleration;
+  nsRefPtr<nsDOMDeviceAcceleration> accelerationIncluduingGravity;
+  nsRefPtr<nsDOMDeviceRotationRate> rotationRate;
+
+  switch (type) {
+  case nsIDeviceMotionData::TYPE_LINEAR_ACCELERATION:
+      acceleration = new nsDOMDeviceAcceleration(x, y, z);
+      break;
+  case nsIDeviceMotionData::TYPE_ACCELERATION:
+      accelerationIncluduingGravity = new nsDOMDeviceAcceleration(x, y, z);
+      break;
+  case nsIDeviceMotionData::TYPE_GYROSCOPE:
+      rotationRate = new nsDOMDeviceRotationRate(x, y, z);
+      break;
+  }
+
 
   me->InitDeviceMotionEvent(NS_LITERAL_STRING("devicemotion"),
                             true,
                             false,
-                            nsnull,
                             acceleration,
-                            nsnull,
+                            accelerationIncluduingGravity,
+                            rotationRate,
                             DEFAULT_SENSOR_POLL);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);

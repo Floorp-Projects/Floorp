@@ -111,14 +111,9 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jNotifyScreenShot = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyScreenShot", "(Ljava/nio/ByteBuffer;III)V");
     jAcknowledgeEventSync = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "acknowledgeEventSync", "()V");
 
-    jEnableDeviceMotion = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableDeviceMotion", "(Z)V");
     jEnableLocation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocation", "(Z)V");
-    jEnableSensor =
-        (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass,
-                                            "enableSensor", "(I)V");
-    jDisableSensor =
-        (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass,
-                                            "disableSensor", "(I)V");
+    jEnableSensor = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableSensor", "(I)V");
+    jDisableSensor = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "disableSensor", "(I)V");
     jReturnIMEQueryResult = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "returnIMEQueryResult", "(Ljava/lang/String;II)V");
     jScheduleRestart = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scheduleRestart", "()V");
     jNotifyXreExit = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "onXreExit", "()V");
@@ -311,12 +306,22 @@ AndroidBridge::EnableDeviceMotion(bool aEnable)
 {
     ALOG_BRIDGE("AndroidBridge::EnableDeviceMotion");
 
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return;
-
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableDeviceMotion, aEnable);
+    // bug 734855 - we probably can make this finer grain based on
+    // the DOM APIs that are being invoked.
+    if (aEnable) {
+        EnableSensor(hal::SENSOR_ORIENTATION);
+        EnableSensor(hal::SENSOR_ACCELERATION);
+        EnableSensor(hal::SENSOR_LINEAR_ACCELERATION);
+        EnableSensor(hal::SENSOR_GYROSCOPE);
+    }
+    else {
+        DisableSensor(hal::SENSOR_ORIENTATION);
+        DisableSensor(hal::SENSOR_ACCELERATION);
+        DisableSensor(hal::SENSOR_LINEAR_ACCELERATION);
+        DisableSensor(hal::SENSOR_GYROSCOPE);
+    }
 }
+
 
 void
 AndroidBridge::EnableLocation(bool aEnable)
@@ -326,22 +331,30 @@ AndroidBridge::EnableLocation(bool aEnable)
     JNIEnv *env = GetJNIEnv();
     if (!env)
         return;
-    
+
+    AutoLocalJNIFrame jniFrame(env, 1);
     env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableLocation, aEnable);
 }
 
 void
 AndroidBridge::EnableSensor(int aSensorType) {
     ALOG_BRIDGE("AndroidBridge::EnableSensor");
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jEnableSensor,
-                                  aSensorType);
+    JNIEnv *env = GetJNIEnv();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env, 1);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jEnableSensor, aSensorType);
 }
 
 void
 AndroidBridge::DisableSensor(int aSensorType) {
     ALOG_BRIDGE("AndroidBridge::DisableSensor");
-    mJNIEnv->CallStaticVoidMethod(mGeckoAppShellClass, jDisableSensor,
-                                  aSensorType);
+    JNIEnv *env = GetJNIEnv();
+    if (!env)
+        return;
+    AutoLocalJNIFrame jniFrame(env, 1);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jDisableSensor, aSensorType);
 }
 
 void
