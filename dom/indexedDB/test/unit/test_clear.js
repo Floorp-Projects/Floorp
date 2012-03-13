@@ -7,8 +7,6 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
-
   const name = this.window ? window.location.pathname : "Splendid Test";
   const description = "My Test Database";
   const entryCount = 1000;
@@ -64,7 +62,7 @@ function testSteps()
     ok(true, "clear should throw on READ_ONLY transactions");
   }
 
-  request = db.transaction("foo", READ_WRITE).objectStore("foo").clear();
+  request = db.transaction("foo", "readwrite").objectStore("foo").clear();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -84,7 +82,7 @@ function testSteps()
   }
   yield;
 
-  request = db.transaction("foo", READ_WRITE).objectStore("foo").add({});
+  request = db.transaction("foo", "readwrite").objectStore("foo").add({});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;

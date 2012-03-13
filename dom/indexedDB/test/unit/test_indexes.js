@@ -9,13 +9,6 @@ function testSteps()
 {
   const CONSTRAINT_ERR =
     Components.interfaces.nsIIDBDatabaseException.CONSTRAINT_ERR;
-  const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
-  const NEXT = Components.interfaces.nsIIDBCursor.NEXT;
-  const PREV = Components.interfaces.nsIIDBCursor.PREV;
-  const NEXT_NO_DUPLICATE =
-    Components.interfaces.nsIIDBCursor.NEXT_NO_DUPLICATE;
-  const PREV_NO_DUPLICATE =
-    Components.interfaces.nsIIDBCursor.PREV_NO_DUPLICATE;
 
   const name = this.window ? this.window ? window.location.pathname : "Splendid Test" : "Splendid Test";
   const description = "My Test Database";
@@ -167,7 +160,7 @@ function testSteps()
 
   keyIndex = 0;
 
-  request = objectStore.index("weight").openKeyCursor(null, NEXT);
+  request = objectStore.index("weight").openKeyCursor(null, "next");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -195,7 +188,7 @@ function testSteps()
   is(keyIndex, objectStoreData.length - 1, "Saw all the expected keys");
 
   // Check that the name index enforces its unique constraint.
-  objectStore = db.transaction(objectStoreName, READ_WRITE)
+  objectStore = db.transaction(objectStoreName, "readwrite")
                   .objectStore(objectStoreName);
   request = objectStore.add({ name: "Bob", height: 62, weight: 170 },
                             "237-23-7738");
@@ -207,7 +200,7 @@ function testSteps()
 
   keyIndex = objectStoreDataNameSort.length - 1;
 
-  request = objectStore.index("name").openKeyCursor(null, PREV);
+  request = objectStore.index("name").openKeyCursor(null, "prev");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -523,7 +516,7 @@ function testSteps()
 
   keyIndex = objectStoreDataNameSort.length - 1;
 
-  request = objectStore.index("name").openCursor(null, PREV);
+  request = objectStore.index("name").openCursor(null, "prev");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -783,7 +776,7 @@ function testSteps()
   keyIndex = 4;
   keyRange = IDBKeyRange.bound("Bob", "Ron");
 
-  request = objectStore.index("name").openCursor(keyRange, PREV);
+  request = objectStore.index("name").openCursor(keyRange, "prev");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -832,11 +825,11 @@ function testSteps()
 
   ok(true, "Test group 20");
 
-  // Test NEXT_NO_DUPLICATE
+  // Test "nextunique"
   keyIndex = 3;
   keyRange = IDBKeyRange.only(65);
 
-  request = objectStore.index("height").openKeyCursor(keyRange, NEXT);
+  request = objectStore.index("height").openKeyCursor(keyRange, "next");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -863,7 +856,7 @@ function testSteps()
   keyRange = IDBKeyRange.only(65);
 
   request = objectStore.index("height").openKeyCursor(keyRange,
-                                                      NEXT_NO_DUPLICATE);
+                                                      "nextunique");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -888,7 +881,7 @@ function testSteps()
 
   keyIndex = 5;
 
-  request = objectStore.index("height").openKeyCursor(null, PREV);
+  request = objectStore.index("height").openKeyCursor(null, "prev");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -914,7 +907,7 @@ function testSteps()
   keyIndex = 5;
 
   request = objectStore.index("height").openKeyCursor(null,
-                                                      PREV_NO_DUPLICATE);
+                                                      "prevunique");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -943,7 +936,7 @@ function testSteps()
   keyIndex = 3;
   keyRange = IDBKeyRange.only(65);
 
-  request = objectStore.index("height").openCursor(keyRange, NEXT);
+  request = objectStore.index("height").openCursor(keyRange, "next");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -980,7 +973,7 @@ function testSteps()
   keyRange = IDBKeyRange.only(65);
 
   request = objectStore.index("height").openCursor(keyRange,
-                                                   NEXT_NO_DUPLICATE);
+                                                   "nextunique");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -1015,7 +1008,7 @@ function testSteps()
 
   keyIndex = 5;
 
-  request = objectStore.index("height").openCursor(null, PREV);
+  request = objectStore.index("height").openCursor(null, "prev");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -1051,7 +1044,7 @@ function testSteps()
   keyIndex = 5;
 
   request = objectStore.index("height").openCursor(null,
-                                                   PREV_NO_DUPLICATE);
+                                                   "prevunique");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;

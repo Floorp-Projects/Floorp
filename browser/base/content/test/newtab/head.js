@@ -188,7 +188,7 @@ function checkGrid(aSitesPattern, aSites) {
 
     let shouldBePinned = /p$/.test(id);
     let cellContainsPinned = site.isPinned();
-    let cssClassPinned = site.node && site.node.hasAttribute("pinned");
+    let cssClassPinned = site.node && site.node.querySelector(".newtab-control-pin").hasAttribute("pinned");
 
     // Check if the site should be and is pinned.
     if (shouldBePinned) {
@@ -270,10 +270,15 @@ function simulateDrop(aDropTarget, aDragSource) {
  * Resumes testing when all pages have been updated.
  */
 function whenPagesUpdated() {
-  NewTabUtils.allPages.register({
+  let page = {
     update: function () {
       NewTabUtils.allPages.unregister(this);
       executeSoon(TestRunner.next);
     }
+  };
+
+  NewTabUtils.allPages.register(page);
+  registerCleanupFunction(function () {
+    NewTabUtils.allPages.unregister(page);
   });
 }

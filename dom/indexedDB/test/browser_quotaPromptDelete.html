@@ -7,13 +7,11 @@
     <title>Indexed Database Test</title>
 
     <script type="text/javascript;version=1.7">
-      const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
-
       let db;
       let name = window.location.pathname;
 
       function onAddMore() {
-        let transaction = db.transaction("foo", READ_WRITE);
+        let transaction = db.transaction("foo", "readwrite");
 
         transaction.oncomplete = function(event) {
           setTimeout(testFinishedCallback, 0, "complete");

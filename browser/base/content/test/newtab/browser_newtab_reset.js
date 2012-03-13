@@ -5,6 +5,9 @@
  * These tests make sure that resetting the 'New Tage Page' works as expected.
  */
 function runTests() {
+  // Disabled until bug 716543 is fixed.
+  return;
+
   // create a new tab page and check its modified state after blocking a site
   setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("");
