@@ -420,9 +420,6 @@ public:
     nsTArray<float> Pressures() { return mPressures; }
     nsTArray<float> Orientations() { return mOrientations; }
     nsTArray<nsIntPoint> PointRadii() { return mPointRadii; }
-    double Alpha() { return mAlpha; }
-    double Beta() { return mBeta; }
-    double Gamma() { return mGamma; }
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
@@ -460,7 +457,6 @@ protected:
     int mOffset, mCount;
     int mRangeType, mRangeStyles;
     int mRangeForeColor, mRangeBackColor;
-    double mAlpha, mBeta, mGamma;
     double mX, mY, mZ;
     double mDistance;
     int mPointerIndex;
@@ -494,9 +490,6 @@ protected:
     static jfieldID jOrientations;
     static jfieldID jPressures;
     static jfieldID jPointRadii;
-    static jfieldID jAlphaField;
-    static jfieldID jBetaField;
-    static jfieldID jGammaField;
     static jfieldID jXField;
     static jfieldID jYField;
     static jfieldID jZField;
@@ -527,8 +520,8 @@ public:
         NATIVE_POKE = 0,
         KEY_EVENT = 1,
         MOTION_EVENT = 2,
-        ORIENTATION_EVENT = 3,
-        ACCELERATION_EVENT = 4,
+        SENSOR_EVENT = 3,
+        UNUSED1_EVENT = 4,
         LOCATION_EVENT = 5,
         IME_EVENT = 6,
         DRAW = 7,

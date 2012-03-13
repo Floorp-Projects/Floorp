@@ -52,6 +52,7 @@ import android.util.DisplayMetrics;
 import android.graphics.PointF;
 import android.text.format.Time;
 import android.os.SystemClock;
+import java.lang.Math;
 import java.lang.System;
 
 import android.util.Log;
@@ -68,8 +69,8 @@ public class GeckoEvent {
     private static final int NATIVE_POKE = 0;
     private static final int KEY_EVENT = 1;
     private static final int MOTION_EVENT = 2;
-    private static final int ORIENTATION_EVENT = 3;
-    private static final int ACCELERATION_EVENT = 4;
+    private static final int SENSOR_EVENT = 3;
+    private static final int UNUSED1_EVENT = 4;
     private static final int LOCATION_EVENT = 5;
     private static final int IME_EVENT = 6;
     private static final int DRAW = 7;
@@ -121,7 +122,6 @@ public class GeckoEvent {
     public Point[] mPointRadii;
     public Rect mRect;
     public double mX, mY, mZ;
-    public double mAlpha, mBeta, mGamma;
     public double mDistance;
 
     public int mMetaState, mFlags;
@@ -280,25 +280,46 @@ public class GeckoEvent {
     }
 
     public static GeckoEvent createSensorEvent(SensorEvent s) {
-        GeckoEvent event = null;
         int sensor_type = s.sensor.getType();
- 
+        GeckoEvent event = null;
+
         switch(sensor_type) {
+
         case Sensor.TYPE_ACCELEROMETER:
-            event = new GeckoEvent(ACCELERATION_EVENT);
+            event = new GeckoEvent(SENSOR_EVENT);
+            event.mFlags = GeckoHalDefines.SENSOR_ACCELERATION;
             event.mX = s.values[0];
             event.mY = s.values[1];
             event.mZ = s.values[2];
             break;
-            
+
+        case 10 /* Requires API Level 9, so just use the raw value - Sensor.TYPE_LINEAR_ACCELEROMETER*/ :
+            event = new GeckoEvent(SENSOR_EVENT);
+            event.mFlags = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
+            event.mX = s.values[0];
+            event.mY = s.values[1];
+            event.mZ = s.values[2];
+            break;
+
         case Sensor.TYPE_ORIENTATION:
-            event = new GeckoEvent(ORIENTATION_EVENT);
-            event.mAlpha = s.values[0];
-            event.mBeta  = s.values[1];
-            event.mGamma = s.values[2];
+            event = new GeckoEvent(SENSOR_EVENT);
+            event.mFlags = GeckoHalDefines.SENSOR_ORIENTATION;
+            event.mX = s.values[0];
+            event.mY = s.values[1];
+            event.mZ = s.values[2];
+            break;
+
+        case Sensor.TYPE_GYROSCOPE:
+            event = new GeckoEvent(SENSOR_EVENT);
+            event.mFlags = GeckoHalDefines.SENSOR_GYROSCOPE;
+            event.mX = Math.toDegrees(s.values[0]);
+            event.mY = Math.toDegrees(s.values[1]);
+            event.mZ = Math.toDegrees(s.values[2]);
             break;
 
         case Sensor.TYPE_PROXIMITY:
+            // bug 734854 - maybe we can get rid of this event.  is
+            // values[1] and values[2] valid?
             event = new GeckoEvent(PROXIMITY_EVENT);
             event.mDistance = s.values[0];
             break;
