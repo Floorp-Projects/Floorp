@@ -10,9 +10,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.mozilla.gecko.sync.crypto.KeyBundle;
-import org.mozilla.gecko.sync.stage.EnsureClusterURLStage;
-
-import ch.boye.httpclientandroidlib.HttpResponse;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;

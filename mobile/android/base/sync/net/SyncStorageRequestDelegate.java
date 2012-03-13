@@ -11,7 +11,27 @@ public interface SyncStorageRequestDelegate {
   // TODO: at this point we can access X-Weave-Timestamp, compare
   // that to our local timestamp, and compute an estimate of clock
   // skew. Bug 721887.
+
+  /**
+   * Override this to handle a successful SyncStorageRequest.
+   *
+   * SyncStorageResourceDelegate implementers <b>must</b> ensure that the HTTP
+   * responses underlying SyncStorageResponses are fully consumed to ensure that
+   * connections are returned to the pool, for example by calling
+   * <code>BaseResource.consumeEntity(response)</code>.
+   */
   void handleRequestSuccess(SyncStorageResponse response);
+
+  /**
+   * Override this to handle a failed SyncStorageRequest.
+   *
+   *
+   * SyncStorageResourceDelegate implementers <b>must</b> ensure that the HTTP
+   * responses underlying SyncStorageResponses are fully consumed to ensure that
+   * connections are returned to the pool, for example by calling
+   * <code>BaseResource.consumeEntity(response)</code>.
+   */
   void handleRequestFailure(SyncStorageResponse response);
+
   void handleRequestError(Exception ex);
 }
