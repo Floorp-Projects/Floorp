@@ -5426,6 +5426,14 @@ JS_IndexToId(JSContext *cx, uint32_t index, jsid *id);
 extern JS_PUBLIC_API(JSBool)
 JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier);
 
+/*
+ * Return the current script and line number of the most currently running
+ * frame. Returns true if a scripted frame was found, false otherwise.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno);
+
+
 JS_END_EXTERN_C
 
 #endif /* jsapi_h___ */

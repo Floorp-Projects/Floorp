@@ -44,7 +44,23 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "BROWSER_NEW_TAB_URL", function () {
-  return Services.prefs.getCharPref("browser.newtab.url") || "about:blank";
+  const PREF = "browser.newtab.url";
+
+  function getNewTabPageURL() {
+    return Services.prefs.getCharPref(PREF) || "about:blank";
+  }
+
+  function update() {
+    BROWSER_NEW_TAB_URL = getNewTabPageURL();
+  }
+
+  Services.prefs.addObserver(PREF, update, false);
+  addEventListener("unload", function onUnload() {
+    removeEventListener("unload", onUnload);
+    Services.prefs.removeObserver(PREF, update);
+  });
+
+  return getNewTabPageURL();
 });
 
 var TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";

@@ -228,8 +228,21 @@ public class MatrixBlobCursor extends AbstractCursor {
         }
     }
 
-    // AbstractCursor implementation.
+    public void set(int column, Object value) {
+        if (column < 0 || column >= columnCount) {
+            throw new CursorIndexOutOfBoundsException("Requested column: "
+                    + column + ", # of columns: " +  columnCount);
+        }
+        if (mPos < 0) {
+            throw new CursorIndexOutOfBoundsException("Before first row.");
+        }
+        if (mPos >= rowCount) {
+            throw new CursorIndexOutOfBoundsException("After last row.");
+        }
+        data[mPos * columnCount + column] = value;
+    }
 
+    // AbstractCursor implementation.
     @Override
     public int getCount() {
         return rowCount;

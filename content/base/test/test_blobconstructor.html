@@ -1,0 +1,194 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=721569
+-->
+<head>
+  <title>Test for Blob constructor (Bug 721569)</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="fileutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=721569">Mozilla Bug 721569</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+"use strict";
+/** Test for Bug 721569 **/
+var blob = Blob();
+ok(blob, "Blob should exist");
+
+ok(blob.size !== undefined, "Blob should have a size property");
+ok(blob.type !== undefined, "Blob should have a type property");
+ok(blob.slice, "Blob should have a slice method");
+
+blob = Blob([], {type: null});
+ok(blob, "Blob should exist");
+is(blob.type, "null", "Blob type should be stringified");
+
+blob = Blob([], {type: undefined});
+ok(blob, "Blob should exist");
+is(blob.type, "undefined", "Blob type should be stringified");
+
+try {
+blob = Blob([]);
+ok(true, "an empty blobParts argument should not throw");
+} catch(e) {
+ok(false, "NOT REACHED");
+}
+
+try {
+blob = Blob(null);
+ok(false, "NOT REACHED");
+} catch(e) {
+ok(true, "a null blobParts member should throw");
+}
+
+try {
+blob = Blob([], null);
+ok(false, "NOT REACHED");
+} catch(e) {
+ok(true, "a null options member should throw");
+}
+
+try {
+blob = Blob([], undefined);
+ok(false, "NOT REACHED");
+} catch(e) {
+ok(true, "an undefined options member should throw");
+}
+
+let blob1 = Blob(["squiggle"]);
+ok(blob1 instanceof Blob, "Blob constructor should produce Blobs");
+ok(!(blob1 instanceof File), "Blob constructor should not produce Files");
+is(blob1.type, "", "Blob constructor with no options should return Blob with empty type");
+is(blob1.size, 8, "Blob constructor should return Blob with correct size");
+
+let blob2 = Blob(["steak"], {type: "content/type"});
+ok(blob2 instanceof Blob, "Blob constructor should produce Blobs");
+ok(!(blob2 instanceof File), "Blob constructor should not produce Files");
+is(blob2.type, "content/type", "Blob constructor with a type option should return Blob with the type");
+is(blob2.size, 5, "Blob constructor should return Blob with correct size");
+
+
+let aB = new ArrayBuffer(16);
+var int8View = new Int8Array(aB);
+for (var i = 0; i < 16; i++) {
+  int8View[i] = i+65;
+}
+
+let testData = 
+ [
+    // Test 3 strings
+    [["foo", "bar", "baz"], {},
+                            [{start: 0, length: 9, contents: "foobarbaz"},
+                             {start: 0, length: 3, contents: "foo"},
+                             {start: 3, length:6, contents:  "barbaz"},
+                             {start: 6, length: 3, contents:  "baz"},
+                             {start: 6, length: 6, contents: "baz"},
+                             {start: 0, length: 9, contents:  "foobarbaz"},
+                             {start: 0, length: 11, contents: "foobarbaz"},
+                             {start: 10, length: 5, contents: ""}]],
+    // Test string, Blob, string
+    [["foo", blob1, "baz"], {},
+                            [{start: 0, length: 3, contents:  "foo"},
+                             {start: 3, length: 8, contents:  "squiggle"},
+                             {start: 2, length: 2, contents:  "os"},
+                             {start: 10, length: 2, contents: "eb"}]],
+    // Test blob, string, blob
+    [[blob1, "foo", blob1], {},
+                            [{start: 0, length: 8, contents:  "squiggle"},
+                             {start: 7, length: 2, contents:  "ef"},
+                             {start: 10, length: 2, contents: "os"},
+                             {start: 1, length: 3, contents:  "qui"},
+                             {start: 12, length: 3, contents: "qui"},
+                             {start: 40, length: 20, contents: ""}]],
+    // Test blobs all the way down
+    [[blob2, blob1, blob2], {},
+                            [{start: 0, length: 5, contents:  "steak"},
+                             {start: 5, length: 8, contents:  "squiggle"},
+                             {start: 13, length: 5, contents: "steak"},
+                             {start: 1, length: 2, contents:  "te"},
+                             {start: 6, length: 4, contents:  "quig"}]],
+    // Test an array buffer
+    [[aB, blob1, "foo"], {},
+                            [{start: 0, length: 8, contents:  "ABCDEFGH"},
+                             {start: 8, length:10, contents:  "IJKLMNOPsq"},
+                             {start: 17, length: 3, contents: "qui"},
+                             {start: 4, length: 8, contents:  "EFGHIJKL"}]],
+    // Test transparent line endings
+    [["foo\r\n", "bar\r", "baz\n"], { endings: "transparent" },
+                            [{start: 0, length: 5, contents:  "foo\r\n"},
+                             {start: 5, length: 4, contents:  "bar\r"},
+                             {start: 9, length: 4, contents: "baz\n"}]],
+    // Test transparent line endings when the second argument is omitted
+    [["foo\r\n", "bar\r", "baz\n"], undefined,
+                            [{start: 0, length: 5, contents:  "foo\r\n"},
+                             {start: 5, length: 4, contents:  "bar\r"},
+                             {start: 9, length: 4, contents: "baz\n"}]],
+    // Test native line endings
+    [["foo\r\n", "bar\r", "baz\n"], { endings: "native" },
+                            navigator.platform.indexOf("Win") != -1 ?
+                            [{start: 0, length: 5, contents:  "foo\r\n"},
+                             {start: 5, length: 5, contents:  "bar\r\n"},
+                             {start: 10, length: 5, contents: "baz\r\n"}] :
+                            [{start: 0, length: 4, contents:  "foo\n"},
+                             {start: 4, length: 4, contents:  "bar\n"},
+                             {start: 8, length: 4, contents: "baz\n"}]],
+    // Test type coercion of a number
+    [[3, aB, "foo"], {},    "InvalidStateError"]
+ ];
+
+let testCounter = 0;
+
+function doTest(data) {
+  testCounter++;
+
+  [blobs, options, tests] = data;
+
+  function runTest(test) {
+
+    let blob;
+    if (options !== undefined) {
+      blob = new Blob(blobs, options);
+    } else {
+      blob = new Blob(blobs);
+    }
+    ok(blob, "Test " + testCounter + " got blob");
+    ok(blob instanceof Blob, "Test " + testCounter + " blob is a Blob");
+    ok(!(blob instanceof File), "Test " + testCounter + " blob is not a File");
+
+    let slice = blob.slice(test.start, test.start + test.length);
+    ok(slice, "Test " + testCounter + " got slice");
+    ok(slice instanceof Blob, "Test " + testCounter + " slice is a Blob");
+    ok(!(slice instanceof File), "Test " + testCounter + " slice is not a File");
+    is(slice.size, test.contents.length,
+       "Test " + testCounter + " slice is correct size");
+
+    testFile(slice, test.contents, "Test " + testCounter);
+  }
+  if (Array.isArray(tests)) {
+    tests.forEach(runTest);
+  } else {
+    try {
+      let blob = new Blob(blobs, options);
+      ok(false, "NOT REACHED");
+    } catch (e) {
+      is(e.name, tests, "Blob constructor should throw " + tests);
+    }
+  }
+  SpecialPowers.gc();
+}
+
+SimpleTest.waitForExplicitFinish();
+testData.forEach(doTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -11,6 +11,24 @@
  */
 let gTransformation = {
   /**
+   * Returns the width of the left and top border of a cell. We need to take it
+   * into account when measuring and comparing site and cell positions.
+   */
+  get _cellBorderWidths() {
+    let cstyle = window.getComputedStyle(gGrid.cells[0].node, null);
+    let widths = {
+      left: parseInt(cstyle.getPropertyValue("border-left-width")),
+      top: parseInt(cstyle.getPropertyValue("border-top-width"))
+    };
+
+    // Cache this value, overwrite the getter.
+    Object.defineProperty(this, "_cellBorderWidths",
+                          {value: widths, enumerable: true});
+
+    return widths;
+  },
+
+  /**
    * Gets a DOM node's position.
    * @param aNode The DOM node.
    * @return A Rect instance with the position.
@@ -80,6 +98,14 @@ let gTransformation = {
    * @param aSite The site to freeze.
    */
   freezeSitePosition: function Transformation_freezeSitePosition(aSite) {
+    if (this._isFrozen(aSite))
+      return;
+
+    let style = aSite.node.style;
+    let comp = getComputedStyle(aSite.node, null);
+    style.width = comp.getPropertyValue("width")
+    style.height = comp.getPropertyValue("height");
+
     aSite.node.setAttribute("frozen", "true");
     this.setSitePosition(aSite, this.getNodePosition(aSite.node));
   },
@@ -89,8 +115,11 @@ let gTransformation = {
    * @param aSite The site to unfreeze.
    */
   unfreezeSitePosition: function Transformation_unfreezeSitePosition(aSite) {
+    if (!this._isFrozen(aSite))
+      return;
+
     let style = aSite.node.style;
-    style.left = style.top = "";
+    style.left = style.top = style.width = style.height = "";
     aSite.node.removeAttribute("frozen");
   },
 
@@ -117,8 +146,13 @@ let gTransformation = {
         callback();
     }
 
+    // We need to take the width of a cell's border into account.
+    targetPosition.left += this._cellBorderWidths.left;
+    targetPosition.top += this._cellBorderWidths.top;
+
     // Nothing to do here if the positions already match.
-    if (currentPosition.equals(targetPosition)) {
+    if (currentPosition.left == targetPosition.left &&
+        currentPosition.top == targetPosition.top) {
       finish();
     } else {
       this.setSitePosition(aSite, targetPosition);
@@ -222,5 +256,14 @@ let gTransformation = {
   _moveSite: function Transformation_moveSite(aSite, aIndex, aOptions) {
     this.freezeSitePosition(aSite);
     this.slideSiteTo(aSite, gGrid.cells[aIndex], aOptions);
+  },
+
+  /**
+   * Checks whether a site is currently frozen.
+   * @param aSite The site to check.
+   * @return Whether the given site is frozen.
+   */
+  _isFrozen: function Transformation_isFrozen(aSite) {
+    return aSite.node.hasAttribute("frozen");
   }
 };

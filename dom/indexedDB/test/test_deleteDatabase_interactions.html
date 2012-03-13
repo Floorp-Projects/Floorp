@@ -13,9 +13,6 @@
 
   function testSteps()
   {
-    const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
-    const VERSION_CHANGE = Components.interfaces.nsIIDBTransaction.VERSION_CHANGE;
-
     const name = window.location.pathname;
 
     let request = mozIndexedDB.open(name, 10);

@@ -927,7 +927,8 @@ CssLogic.shortSource = function CssLogic_shortSource(aSheet)
     return url.query;
   }
 
-  return aSheet.href;
+  let dataUrl = aSheet.href.match(/^(data:[^,]*),/);
+  return dataUrl ? dataUrl[1] : aSheet.href;
 }
 
 /**

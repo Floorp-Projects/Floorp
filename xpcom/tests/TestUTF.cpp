@@ -41,9 +41,9 @@
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
-#include "nsCRTGlue.h"
 #include "UTFStrings.h"
-#include "nsCRT.h"
+#include "nsUnicharUtils.h"
+#include "mozilla/HashFunctions.h"
 
 using namespace mozilla;
 
@@ -153,8 +153,8 @@ test_hashas16()
   for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
     nsDependentCString str8(ValidStrings[i].m8);
     bool err;
-    if (nsCRT::HashCode(ValidStrings[i].m16) !=
-        nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) ||
+    if (HashString(ValidStrings[i].m16) !=
+        HashUTF8AsUTF16(str8.get(), str8.Length(), &err) ||
         err)
       return false;
   }
@@ -162,8 +162,8 @@ test_hashas16()
   for (unsigned int i = 0; i < ArrayLength(Invalid8Strings); ++i) {
     nsDependentCString str8(Invalid8Strings[i].m8);
     bool err;
-    if (nsCRT::HashCode(Invalid8Strings[i].m16) !=
-        nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) ||
+    if (HashString(Invalid8Strings[i].m16) !=
+        HashUTF8AsUTF16(str8.get(), str8.Length(), &err) ||
         err)
       return false;
   }
@@ -173,7 +173,7 @@ test_hashas16()
   for (unsigned int i = 0; i < ArrayLength(Malformed8Strings); ++i) {
     nsDependentCString str8(Malformed8Strings[i]);
     bool err;
-    if (nsCRT::HashCodeAsUTF16(str8.get(), str8.Length(), &err) != 0 ||
+    if (HashUTF8AsUTF16(str8.get(), str8.Length(), &err) != 0 ||
         !err)
       return false;
   }

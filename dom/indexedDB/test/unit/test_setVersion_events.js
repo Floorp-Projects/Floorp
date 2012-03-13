@@ -57,7 +57,7 @@ function testSteps()
   ok(event instanceof IDBVersionChangeEvent, "Event is of the right type");
   ok(event.target.result instanceof IDBDatabase, "Good result");
   db2 = event.target.result;
-  is(event.target.transaction.mode, IDBTransaction.VERSION_CHANGE,
+  is(event.target.transaction.mode, "versionchange",
      "Correct mode");
   is(db2.version, 2, "Correct db version");
   is(event.oldVersion, 1, "Correct event oldVersion");
@@ -127,7 +127,7 @@ function testSteps()
 
   ok(event instanceof IDBVersionChangeEvent, "Event is of the right type");
   ok(event.target.result instanceof IDBDatabase, "Good result");
-  is(event.target.transaction.mode, IDBTransaction.VERSION_CHANGE,
+  is(event.target.transaction.mode, "versionchange",
      "Correct mode");
   is(event.oldVersion, 3, "Correct event oldVersion");
   is(event.newVersion, 4, "Correct event newVersion");

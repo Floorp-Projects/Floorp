@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                style="@style/AddressBar"
+                style="@style/AwesomeBar"
                 android:background="@drawable/tabs_tray_bg_repeat">
 
     <view class="org.mozilla.gecko.AwesomeBar$AwesomeBarEditText"

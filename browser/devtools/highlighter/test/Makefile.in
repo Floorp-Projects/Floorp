@@ -58,6 +58,7 @@ _BROWSER_FILES = \
 		browser_inspector_bug_665880.js \
 		browser_inspector_bug_674871.js \
 		browser_inspector_editor.js \
+		browser_inspector_editor_name.js \
 		browser_inspector_bug_566084_location_changed.js \
 		browser_inspector_infobar.js \
 		browser_inspector_bug_690361.js \

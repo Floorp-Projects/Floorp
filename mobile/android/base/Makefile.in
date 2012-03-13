@@ -88,6 +88,7 @@ FENNEC_JAVA_FILES = \
   GeckoEventListener.java \
   GeckoEventResponder.java \
   GeckoInputConnection.java \
+	GeckoMessageReceiver.java \
   GeckoPreferences.java \
   GeckoProfile.java \
   GeckoStateListDrawable.java \
@@ -95,6 +96,7 @@ FENNEC_JAVA_FILES = \
   GlobalHistory.java \
   LinkPreference.java \
   LinkTextView.java \
+	NSSBridge.java \
   ProfileMigrator.java \
   PromptService.java \
   sqlite/ByteBufferInputStream.java \
@@ -107,6 +109,7 @@ FENNEC_JAVA_FILES = \
   Tab.java \
   Tabs.java \
   TabsTray.java \
+  TabsAccessor.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
@@ -239,6 +242,7 @@ RES_LAYOUT = \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
+  res/layout/bookmark_edit.xml \
   res/layout/browser_toolbar.xml \
   res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
@@ -261,10 +265,10 @@ RES_LAYOUT = \
   res/layout/abouthome_topsite_item.xml \
   res/layout/abouthome_addon_row.xml \
   res/layout/abouthome_last_tabs_row.xml \
+  res/layout/abouthome_remote_tab_row.xml \
   $(NULL)
 
 RES_LAYOUT_V11 = \
-  res/layout-v11/awesomebar.xml \
   res/layout-v11/gecko_app.xml \
   $(NULL)
  

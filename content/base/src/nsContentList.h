@@ -55,8 +55,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "nsCRT.h"
 #include "nsHashKeys.h"
+#include "mozilla/HashFunctions.h"
 
 // Magic namespace id that means "match all namespaces".  This is
 // negative so it won't collide with actual namespace constants.
@@ -204,10 +204,8 @@ struct nsContentListKey
 
   inline PRUint32 GetHash(void) const
   {
-    return
-      HashString(mTagname) ^
-      (NS_PTR_TO_INT32(mRootNode) << 12) ^
-      (mMatchNameSpaceId << 24);
+    PRUint32 hash = mozilla::HashString(mTagname);
+    return mozilla::AddToHash(hash, mRootNode, mMatchNameSpaceId);
   }
   
   nsINode* const mRootNode; // Weak ref
@@ -490,8 +488,8 @@ public:
 
   PRUint32 GetHash(void) const
   {
-    return NS_PTR_TO_INT32(mRootNode) ^ (NS_PTR_TO_INT32(mFunc) << 12) ^
-      nsCRT::HashCode(mString.BeginReading(), mString.Length());
+    PRUint32 hash = mozilla::HashString(mString);
+    return mozilla::AddToHash(hash, mRootNode, mFunc);
   }
 
 private:

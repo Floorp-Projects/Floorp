@@ -550,6 +550,11 @@ CustomElf::InitDyn(const Phdr *pt_dyn)
       case DT_FLAGS:
         {
            Word flags = dyn->d_un.d_val;
+           /* Treat as a DT_TEXTREL tag */
+           if (flags & DF_TEXTREL) {
+             log("%s: Text relocations are not supported", GetPath());
+             return false;
+           }
            /* we can treat this like having a DT_SYMBOLIC tag */
            flags &= ~DF_SYMBOLIC;
            if (flags)

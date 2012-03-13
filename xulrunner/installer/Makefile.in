@@ -69,6 +69,7 @@ ifndef MOZ_PLATFORM_MAEMO
 GENERATE_CACHE = 1
 endif
 
+include $(topsrcdir)/toolkit/mozapps/installer/signing.mk
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 # Add pkg-config files to the install:: target

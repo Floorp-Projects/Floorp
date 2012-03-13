@@ -50,21 +50,13 @@ interface nsIDOMDOMStringList;
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransaction
  * for more information.
  */
-[scriptable, builtinclass, uuid(4f25832d-de40-4c0b-a176-358d94384b19)]
+[scriptable, builtinclass, uuid(e4927c76-4f1f-4d7d-80ad-8186e1677da6)]
 interface nsIIDBTransaction : nsISupports
 {
   readonly attribute nsIIDBDatabase db;
 
-  const unsigned short INITIAL = 0;
-  const unsigned short LOADING = 1;
-  const unsigned short COMMITTING = 2;
-  const unsigned short DONE = 3;
-  readonly attribute unsigned short readyState;
-
-  const unsigned short READ_ONLY = 0;
-  const unsigned short READ_WRITE = 1;
-  const unsigned short VERSION_CHANGE = 2;
-  readonly attribute unsigned short mode;
+  // "readonly", "readwrite" or "versionchange"
+  readonly attribute DOMString mode;
 
   readonly attribute nsIDOMDOMStringList objectStoreNames;
 

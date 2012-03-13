@@ -70,6 +70,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 
 #include <stdlib.h>
 
@@ -778,6 +779,16 @@ nsXREDirProvider::DoStartup()
       static const PRUnichar kCrashed[] = {'c','r','a','s','h','e','d','\0'};
       obsSvc->NotifyObservers(nsnull, "safemode-forced", kCrashed);
     }
+
+    // 1 = Regular mode, 2 = Safe mode, 3 = Safe mode forced
+    int mode = 1;
+    if (gSafeMode) {
+      if (safeModeNecessary)
+        mode = 3;
+      else
+        mode = 2;
+    }
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SAFE_MODE_USAGE, mode);
 
     obsSvc->NotifyObservers(nsnull, "profile-initial-state", nsnull);
   }
