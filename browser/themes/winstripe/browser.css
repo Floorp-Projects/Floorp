@@ -2323,6 +2323,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-64.png);
 }
 
+.popup-notification-icon[popupid="webapps-install"] {
+  list-style-image: url(chrome://browser/skin/webapps-64.png);
+}
+
 /* Notification icon box */
 #notification-popup-box {
   position: relative;
@@ -2373,6 +2377,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #password-notification-icon {
   list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
+}
+
+#webapps-notification-icon {
+  list-style-image: url(chrome://browser/skin/webapps-16.png);
 }
 
 #identity-popup-container {

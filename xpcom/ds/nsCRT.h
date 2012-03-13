@@ -229,28 +229,6 @@ public:
   	shared_allocator.deallocate(str, 0 /*we never new or kept the size*/);
   }
 
-  // Computes the hashcode for a c-string, returns the string length as
-  // an added bonus.
-  static PRUint32 HashCode(const char* str,
-                           PRUint32* resultingStrLen = nsnull);
-
-  // Computes the hashcode for a length number of bytes of c-string data.
-  static PRUint32 HashCode(const char* start, PRUint32 length);
-
-  // Computes the hashcode for a ucs2 string, returns the string length
-  // as an added bonus.
-  static PRUint32 HashCode(const PRUnichar* str,
-                           PRUint32* resultingStrLen = nsnull);
-
-  // Computes the hashcode for a buffer with a specified length.
-  static PRUint32 HashCode(const PRUnichar* str, PRUint32 strLen);
-
-  // Computes a hashcode for a length number of UTF8
-  // characters. Returns the same hash code as the HashCode method
-  // taking a |PRUnichar*| would if the string were converted to UTF16.
-  static PRUint32 HashCodeAsUTF16(const char* start, PRUint32 length,
-                                  bool* err);
-
   // String to longlong
   static PRInt64 atoll(const char *str);
   
