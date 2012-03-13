@@ -266,13 +266,14 @@ enum
   STRING_load,
   STRING_loadstart,
   STRING_progress,
+  STRING_timeout,
   STRING_readystatechange,
   STRING_loadend,
 
   STRING_COUNT,
 
   STRING_LAST_XHR = STRING_loadend,
-  STRING_LAST_EVENTTARGET = STRING_progress
+  STRING_LAST_EVENTTARGET = STRING_timeout
 };
 
 JS_STATIC_ASSERT(STRING_LAST_XHR >= STRING_LAST_EVENTTARGET);
@@ -285,6 +286,7 @@ const char* const sEventStrings[] = {
   "load",
   "loadstart",
   "progress",
+  "timeout",
 
   // nsIXMLHttpRequest event types, supported only by XHR.
   "readystatechange",
@@ -1007,6 +1009,24 @@ public:
   }
 };
 
+class SetTimeoutRunnable : public WorkerThreadProxySyncRunnable
+{
+  PRUint32 mTimeout;
+
+public:
+  SetTimeoutRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
+                     PRUint32 aTimeout)
+  : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy),
+    mTimeout(aTimeout)
+  { }
+
+  int
+  MainThreadRun()
+  {
+    return GetDOMExceptionCodeFromResult(mProxy->mXHR->SetTimeout(mTimeout));
+  }
+};
+
 class AbortRunnable : public WorkerThreadProxySyncRunnable
 {
 public:
@@ -1081,15 +1101,18 @@ class OpenRunnable : public WorkerThreadProxySyncRunnable
   bool mMultipart;
   bool mBackgroundRequest;
   bool mWithCredentials;
+  PRUint32 mTimeout;
 
 public:
   OpenRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
                const nsCString& aMethod, const nsCString& aURL,
                const nsString& aUser, const nsString& aPassword,
-               bool aMultipart, bool aBackgroundRequest, bool aWithCredentials)
+               bool aMultipart, bool aBackgroundRequest, bool aWithCredentials,
+               PRUint32 aTimeout)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mMethod(aMethod),
     mURL(aURL), mUser(aUser), mPassword(aPassword), mMultipart(aMultipart),
-    mBackgroundRequest(aBackgroundRequest), mWithCredentials(aWithCredentials)
+    mBackgroundRequest(aBackgroundRequest), mWithCredentials(aWithCredentials),
+    mTimeout(aTimeout)
   { }
 
   int
@@ -1129,6 +1152,13 @@ public:
 
     if (mWithCredentials) {
       rv = mProxy->mXHR->SetWithCredentials(mWithCredentials);
+      if (NS_FAILED(rv)) {
+        return GetDOMExceptionCodeFromResult(rv);
+      }
+    }
+
+    if (mTimeout) {
+      rv = mProxy->mXHR->SetTimeout(mTimeout);
       if (NS_FAILED(rv)) {
         return GetDOMExceptionCodeFromResult(rv);
       }
@@ -1487,7 +1517,7 @@ XMLHttpRequestPrivate::XMLHttpRequestPrivate(JSObject* aObj,
                                              WorkerPrivate* aWorkerPrivate)
 : mJSObject(aObj), mUploadJSObject(nsnull), mWorkerPrivate(aWorkerPrivate),
   mJSObjectRooted(false), mMultipart(false), mBackgroundRequest(false),
-  mWithCredentials(false), mCanceled(false)
+  mWithCredentials(false), mCanceled(false), mTimeout(0)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_COUNT_CTOR(mozilla::dom::workers::xhr::XMLHttpRequestPrivate);
@@ -1746,6 +1776,33 @@ XMLHttpRequestPrivate::SetResponseType(JSContext* aCx, jsval aOldVal,
 }
 
 bool
+XMLHttpRequestPrivate::SetTimeout(JSContext* aCx, jsval aOldVal, jsval *aVp)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  uint32_t timeout;
+  if (!JS_ValueToECMAUint32(aCx, *aVp, &timeout)) {
+    return false;
+  }
+
+  mTimeout = timeout;
+
+  if (!mProxy) {
+    // Open may not have been called yet, in which case we'll handle the
+    // timeout in OpenRunnable.
+    return true;
+  }
+
+  nsRefPtr<SetTimeoutRunnable> runnable =
+    new SetTimeoutRunnable(mWorkerPrivate, mProxy, timeout);
+  if (!runnable->Dispatch(aCx)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool
 XMLHttpRequestPrivate::Abort(JSContext* aCx)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -1854,7 +1911,7 @@ XMLHttpRequestPrivate::Open(JSContext* aCx, JSString* aMethod, JSString* aURL,
   nsRefPtr<OpenRunnable> runnable =
     new OpenRunnable(mWorkerPrivate, mProxy, NS_ConvertUTF16toUTF8(method),
                      NS_ConvertUTF16toUTF8(url), user, password, mMultipart,
-                     mBackgroundRequest, mWithCredentials);
+                     mBackgroundRequest, mWithCredentials, mTimeout);
 
   // These were only useful before we had a proxy. From here on out changing
   // those values makes no difference.
