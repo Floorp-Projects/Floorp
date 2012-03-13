@@ -10,17 +10,14 @@ function testSteps()
   const name = this.window ? window.location.pathname : "Splendid Test";
   const description = "My Test Database";
 
-  const LOADING = Components.interfaces.nsIIDBRequest.LOADING;
-  const DONE = Components.interfaces.nsIIDBRequest.DONE;
-
   let request = mozIndexedDB.open(name, 1, description);
-  is(request.readyState, LOADING, "Correct readyState");
+  is(request.readyState, "pending", "Correct readyState");
 
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
 
-  is(request.readyState, DONE, "Correct readyState");
+  is(request.readyState, "done", "Correct readyState");
 
   let db = event.target.result;
 
@@ -28,23 +25,23 @@ function testSteps()
   let key = 10;
 
   request = objectStore.add({}, key);
-  is(request.readyState, LOADING, "Correct readyState");
+  is(request.readyState, "pending", "Correct readyState");
 
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
 
-  is(request.readyState, DONE, "Correct readyState");
+  is(request.readyState, "done", "Correct readyState");
   is(event.target.result, key, "Correct key");
 
   request = objectStore.get(key);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  is(request.readyState, LOADING, "Correct readyState");
+  is(request.readyState, "pending", "Correct readyState");
   event = yield;
 
   ok(event.target.result, "Got something");
-  is(request.readyState, DONE, "Correct readyState");
+  is(request.readyState, "done", "Correct readyState");
 
   finishTest();
   yield;
