@@ -197,7 +197,68 @@ function testFailGroup(data) {
   laterGroup = undefined;
   laterRejection = undefined;
 
-  finished();
+  testTrap();
+}
+
+function testTrap() {
+  var p = new Promise();
+  var message = "Expected exception";
+  p.chainPromise(
+    function() {
+      throw new Error(message);
+    }).trap(
+      function(aError) {
+        is(aError instanceof Error, true, "trap received exception");
+        is(aError.message, message, "trap received correct exception");
+        return 1;
+      }).chainPromise(
+        function(aResult) {
+          is(aResult, 1, "trap restored correct result");
+          testAlways();
+        });
+  p.resolve();
+}
+
+function testAlways() {
+  var shouldbeTrue1 = false;
+  var shouldbeTrue2 = false;
+  var p = new Promise();
+  p.chainPromise(
+    function() {
+      throw new Error();
+    }
+  ).chainPromise(// Promise rejected, should not be executed
+    function() {
+      ok(false, "This should not be executed");
+    }
+  ).always(
+    function(x) {
+      shouldbeTrue1 = true;
+      return "random value";
+    }
+  ).trap(
+    function(arg) {
+      ok((arg instanceof Error), "The random value should be ignored");
+      return 1;// We should still have this result later
+    }
+  ).trap(
+    function() {
+      ok(false, "This should not be executed 2");
+    }
+  ).always(
+    function() {
+      shouldbeTrue2 = true;
+    }
+  ).then(
+    function(aResult){
+      ok(shouldbeTrue1, "First always must be executed");
+      ok(shouldbeTrue2, "Second always must be executed");
+      is(aResult, 1, "Result should be unaffected by always");
+
+      testComplete();
+    }
+  );
+  p.resolve();
 }
 
 function fail() {
@@ -206,6 +267,36 @@ function fail() {
   ok(false, "fail called");
   finish();
 }
+
+/**
+ * We wish to launch all tests with several configurations (at the moment,
+ * non-debug and debug mode).
+ *
+ * If 0, we have not completed any test yet.
+ * If 1, we have completed the tests in non-debug mode.
+ * If 2, we have also completed the tests in debug mode.
+ */
+var configurationTestComplete = 0;
+function testComplete() {
+  switch (configurationTestComplete) {
+  case 0:
+    info("Finished run in non-debug mode");
+    configurationTestComplete = 1;
+    Promise.Debug.setDebug(true);
+    window.setTimeout(testBasic, 0);
+    return;
+  case 1:
+    info("Finished run in debug mode");
+    configurationTestComplete = 2;
+    Promise.Debug.setDebug(false);
+    window.setTimeout(finished, 0);
+    return;
+  default:
+    ok(false, "Internal error in testComplete "+configurationTestComplete);
+    return;
+  }
+}
+
 
 function finished() {
   gBrowser.removeCurrentTab();
