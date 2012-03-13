@@ -8,7 +8,7 @@ var testGenerator = testSteps();
 function testSteps()
 {
   const dbname = this.window ? window.location.pathname : "Splendid Test";
-  const RW = IDBTransaction.READ_WRITE
+  const RW = "readwrite"
   let c1 = 1;
   let c2 = 1;
 

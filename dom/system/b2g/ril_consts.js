@@ -1122,14 +1122,29 @@ const GECKO_RADIOSTATE_UNAVAILABLE   = "unavailable";
 const GECKO_RADIOSTATE_OFF           = "off";
 const GECKO_RADIOSTATE_READY         = "ready";
 
-const GECKO_CARDSTATE_UNAVAILABLE    = "unavailable";
+const GECKO_CARDSTATE_UNAVAILABLE    = null;
 const GECKO_CARDSTATE_ABSENT         = "absent";
 const GECKO_CARDSTATE_PIN_REQUIRED   = "pin_required";
 const GECKO_CARDSTATE_PUK_REQUIRED   = "puk_required";
 const GECKO_CARDSTATE_NETWORK_LOCKED = "network_locked";
-const GECKO_CARDSTATE_NOT_READY      = "not_ready";
+const GECKO_CARDSTATE_NOT_READY      = null;
 const GECKO_CARDSTATE_READY          = "ready";
 
+const GECKO_RADIO_TECH = [
+  null,
+  "gprs",
+  "edge",
+  "umts",
+  "is95a",
+  "is95b",
+  "1xrtt",
+  "evdo0",
+  "evdoa",
+  "hsdpa",
+  "hsupa",
+  "hspa",
+  "evdob",
+];
 
 // Allow this file to be imported via Components.utils.import().
 const EXPORTED_SYMBOLS = Object.keys(this);

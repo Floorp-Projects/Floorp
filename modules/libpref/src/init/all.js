@@ -312,6 +312,9 @@ pref("toolkit.telemetry.server_owner", "Mozilla");
 // Information page about telemetry (temporary ; will be about:telemetry in the end)
 pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.html#telemetry");
 
+// Disable remote debugging protocol logging
+pref("devtools.debugger.log", false);
+
 // view source
 pref("view_source.syntax_highlight", true);
 pref("view_source.wrap_long_lines", false);
@@ -660,7 +663,7 @@ pref("javascript.options.typeinference", true);
 pref("javascript.options.mem.high_water_mark", 128);
 pref("javascript.options.mem.max", -1);
 pref("javascript.options.mem.gc_per_compartment", true);
-pref("javascript.options.mem.gc_incremental", true);
+pref("javascript.options.mem.gc_incremental", false);
 pref("javascript.options.mem.gc_incremental_slice_ms", 10);
 pref("javascript.options.mem.log", false);
 pref("javascript.options.gc_on_memory_pressure", true);
@@ -1326,6 +1329,36 @@ pref("mousewheel.horizscroll.withaltkey.sysnumlines",false);
 pref("mousewheel.horizscroll.withmetakey.action",0);
 pref("mousewheel.horizscroll.withmetakey.numlines",1);
 pref("mousewheel.horizscroll.withmetakey.sysnumlines",true);
+
+// These define the smooth scroll behavior (min ms, max ms) for different triggers
+// Some triggers:
+// Pixels: Discrete mouse wheel events, Synaptics touchpads on windows (generate wheel events)
+// Lines:  Up/Down/Left/Right KB arrows
+// Pages:  Page up/down, Space
+// Scrollbars: Clicking scrollbars arrows, clicking scrollbars tracks
+// Note: Currently OS X trackpad and magic mouse don't use our smooth scrolling
+// Note: These are relevant only when "general.smoothScroll" is enabled
+pref("general.smoothScroll.pixels.durationMinMS", 200);
+pref("general.smoothScroll.pixels.durationMaxMS", 800);
+pref("general.smoothScroll.lines.durationMinMS", 150);
+pref("general.smoothScroll.lines.durationMaxMS", 150);
+pref("general.smoothScroll.pages.durationMinMS", 150);
+pref("general.smoothScroll.pages.durationMaxMS", 150);
+pref("general.smoothScroll.scrollbars.durationMinMS", 150);
+pref("general.smoothScroll.scrollbars.durationMaxMS", 150);
+pref("general.smoothScroll.other.durationMinMS", 150);
+pref("general.smoothScroll.other.durationMaxMS", 150);
+pref("general.smoothScroll.pixels", true);
+pref("general.smoothScroll.lines", true);
+pref("general.smoothScroll.pages", true);
+pref("general.smoothScroll.scrollbars", true);
+pref("general.smoothScroll.other", true);
+// To connect consecutive scroll events into a continuous flow, the animation's duration
+// should be longer than scroll events intervals (or else the scroll will stop
+// before the next event arrives - we're guessing next interval by averaging recent
+// intervals).
+// This defines how longer is the duration compared to events interval (percentage)
+pref("general.smoothScroll.durationToIntervalRatio", 200);
 
 pref("profile.confirm_automigration",true);
 // profile.migration_behavior determines how the profiles root is set

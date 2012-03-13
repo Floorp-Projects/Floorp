@@ -87,25 +87,24 @@ public class GetChannelStage extends JPakeStage {
 
       @Override
       public void handleHttpResponse(HttpResponse response) {
-
-        JPakeResponse res = new JPakeResponse(response);
-        Object body = null;
         try {
-          body = res.jsonBody();
-        } catch (Exception e) {
-          callbackDelegate.handleError(e);
-          SyncResourceDelegate.consumeEntity(response.getEntity());
-          return;
+          JPakeResponse res = new JPakeResponse(response);
+          Object body = null;
+          try {
+            body = res.jsonBody();
+          } catch (Exception e) {
+            callbackDelegate.handleError(e);
+            return;
+          }
+          String channel = body instanceof String ? (String) body : null;
+          if (channel == null) {
+            callbackDelegate.handleFailure(Constants.JPAKE_ERROR_CHANNEL);
+            return;
+          }
+          callbackDelegate.handleSuccess(channel);
+        } finally {
+          BaseResource.consumeEntity(response);
         }
-        String channel = body instanceof String ? (String) body : null;
-        if (channel == null) {
-          callbackDelegate.handleFailure(Constants.JPAKE_ERROR_CHANNEL);
-          SyncResourceDelegate.consumeEntity(response.getEntity());
-          return;
-        }
-        callbackDelegate.handleSuccess(channel);
-        // Clean up.
-        SyncResourceDelegate.consumeEntity(response.getEntity());
       }
 
       @Override

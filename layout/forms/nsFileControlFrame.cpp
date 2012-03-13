@@ -159,57 +159,6 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
-struct CaptureCallbackData {
-  nsICapturePicker* picker;
-  PRUint32* mode;
-};
-
-typedef struct CaptureCallbackData CaptureCallbackData;
-
-bool CapturePickerAcceptCallback(const nsAString& aAccept, void* aClosure)
-{
-  nsresult rv;
-  bool captureEnabled;
-  CaptureCallbackData* closure = (CaptureCallbackData*)aClosure;
-
-  if (StringBeginsWith(aAccept,
-                       NS_LITERAL_STRING("image/"))) {
-    rv = closure->picker->ModeMayBeAvailable(nsICapturePicker::MODE_STILL,
-                                             &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, true);
-    if (captureEnabled) {
-      *closure->mode = nsICapturePicker::MODE_STILL;
-      return false;
-    }
-  } else if (StringBeginsWith(aAccept,
-                              NS_LITERAL_STRING("audio/"))) {
-    rv = closure->picker->ModeMayBeAvailable(nsICapturePicker::MODE_AUDIO_CLIP,
-                                             &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, true);
-    if (captureEnabled) {
-      *closure->mode = nsICapturePicker::MODE_AUDIO_CLIP;
-      return false;
-    }
-  } else if (StringBeginsWith(aAccept,
-                              NS_LITERAL_STRING("video/"))) {
-    rv = closure->picker->ModeMayBeAvailable(nsICapturePicker::MODE_VIDEO_CLIP,
-                                             &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, true);
-    if (captureEnabled) {
-      *closure->mode = nsICapturePicker::MODE_VIDEO_CLIP;
-      return false;
-    }
-    rv = closure->picker->ModeMayBeAvailable(nsICapturePicker::MODE_VIDEO_NO_SOUND_CLIP,
-                                             &captureEnabled);
-    NS_ENSURE_SUCCESS(rv, true);
-    if (captureEnabled) {
-      *closure->mode = nsICapturePicker::MODE_VIDEO_NO_SOUND_CLIP;
-      return false;
-    }
-  }
-  return true;
-}
-
 nsresult
 nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
@@ -282,15 +231,12 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsCOMPtr<nsICapturePicker> capturePicker;
   capturePicker = do_GetService("@mozilla.org/capturepicker;1");
   if (capturePicker) {
-    PRUint32 mode = 0;
-
     CaptureCallbackData data;
     data.picker = capturePicker;
-    data.mode = &mode;
-    ParseAcceptAttribute(&CapturePickerAcceptCallback, (void*)&data);
+    data.mode = GetCaptureMode(data);
 
-    if (mode != 0) {
-      mCaptureMouseListener->mMode = mode;
+    if (data.mode != 0) {
+      mCaptureMouseListener->mMode = data.mode;
       nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::input, nsnull,
                                                      kNameSpaceID_XHTML,
                                                      nsIDOMNode::ELEMENT_NODE);
@@ -747,19 +693,51 @@ nsFileControlFrame::CreateAccessible()
 }
 #endif
 
-void 
-nsFileControlFrame::ParseAcceptAttribute(AcceptAttrCallback aCallback,
-                                         void* aClosure) const
+PRUint32
+nsFileControlFrame::GetCaptureMode(const CaptureCallbackData& aData)
 {
-  nsAutoString accept;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accept, accept);
+  PRInt32 filters = nsHTMLInputElement::FromContent(mContent)->GetFilterFromAccept();
+  nsresult rv;
+  bool captureEnabled;
 
-  HTMLSplitOnSpacesTokenizer tokenizer(accept, ',');
-  // Empty loop body because aCallback is doing the work
-  while (tokenizer.hasMoreTokens() &&
-         (*aCallback)(tokenizer.nextToken(), aClosure));
+  if (filters == nsIFilePicker::filterImages) {
+    rv = aData.picker->ModeMayBeAvailable(nsICapturePicker::MODE_STILL,
+                                             &captureEnabled);
+    NS_ENSURE_SUCCESS(rv, 0);
+    if (captureEnabled) {
+      return nsICapturePicker::MODE_STILL;
+    }
+    return 0;
+  }
+
+  if (filters == nsIFilePicker::filterAudio) {
+    rv = aData.picker->ModeMayBeAvailable(nsICapturePicker::MODE_AUDIO_CLIP,
+                                             &captureEnabled);
+    NS_ENSURE_SUCCESS(rv, 0);
+    if (captureEnabled) {
+      return nsICapturePicker::MODE_AUDIO_CLIP;
+    }
+    return 0;
+  }
+
+  if (filters == nsIFilePicker::filterVideo) {
+    rv = aData.picker->ModeMayBeAvailable(nsICapturePicker::MODE_VIDEO_CLIP,
+                                             &captureEnabled);
+    NS_ENSURE_SUCCESS(rv, 0);
+    if (captureEnabled) {
+      return nsICapturePicker::MODE_VIDEO_CLIP;
+    }
+    rv = aData.picker->ModeMayBeAvailable(nsICapturePicker::MODE_VIDEO_NO_SOUND_CLIP,
+                                             &captureEnabled);
+    NS_ENSURE_SUCCESS(rv, 0);
+    if (captureEnabled) {
+      return nsICapturePicker::MODE_VIDEO_NO_SOUND_CLIP;
+    }
+    return 0;
+  }
+  
+  return 0;
 }
-
 ////////////////////////////////////////////////////////////
 // Mouse listener implementation
 

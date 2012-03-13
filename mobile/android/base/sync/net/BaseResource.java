@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.sync.net;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -40,6 +41,7 @@ import ch.boye.httpclientandroidlib.params.HttpParams;
 import ch.boye.httpclientandroidlib.params.HttpProtocolParams;
 import ch.boye.httpclientandroidlib.protocol.BasicHttpContext;
 import ch.boye.httpclientandroidlib.protocol.HttpContext;
+import ch.boye.httpclientandroidlib.util.EntityUtils;
 
 import org.mozilla.gecko.sync.Logger;
 
@@ -224,5 +226,68 @@ public class BaseResource implements Resource {
     HttpPut request = new HttpPut(this.uri);
     request.setEntity(body);
     this.go(request);
+  }
+
+  /**
+   * Best-effort attempt to ensure that the entity has been fully consumed and
+   * that the underlying stream has been closed.
+   *
+   * This releases the connection back to the connection pool.
+   *
+   * @param entity The HttpEntity to be consumed.
+   */
+  public static void consumeEntity(HttpEntity entity) {
+    try {
+      EntityUtils.consume(entity);
+    } catch (Exception e) {
+      // Doesn't matter.
+    }
+  }
+
+  /**
+   * Best-effort attempt to ensure that the entity corresponding to the given
+   * HTTP response has been fully consumed and that the underlying stream has
+   * been closed.
+   *
+   * This releases the connection back to the connection pool.
+   *
+   * @param response
+   *          The HttpResponse to be consumed.
+   */
+  public static void consumeEntity(HttpResponse response) {
+    consumeEntity(response.getEntity());
+  }
+
+  /**
+   * Best-effort attempt to ensure that the entity corresponding to the given
+   * Sync storage response has been fully consumed and that the underlying
+   * stream has been closed.
+   *
+   * This releases the connection back to the connection pool.
+   *
+   * @param response
+   *          The SyncStorageResponse to be consumed.
+   */
+  public static void consumeEntity(SyncStorageResponse response) {
+    if (response.httpResponse() != null) {
+      consumeEntity(response.httpResponse());
+    }
+  }
+
+  /**
+   * Best-effort attempt to ensure that the reader has been fully consumed, so
+   * that the underlying stream will be closed.
+   *
+   * This should allow the connection to be released back to the connection pool.
+   *
+   * @param reader The BufferedReader to be consumed.
+   */
+  public static void consumeReader(BufferedReader reader) {
+    try {
+      while ((reader.readLine()) != null) {
+      }
+    } catch (IOException e) {
+      return;
+    }
   }
 }

@@ -43,6 +43,7 @@
 #include "nsAutoCompleteController.h"
 #include "nsAutoCompleteSimpleResult.h"
 
+#include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsToolkitCompsCID.h"
@@ -80,8 +81,7 @@ nsAutoCompleteController::nsAutoCompleteController() :
   mDefaultIndexCompleted(false),
   mBackspaced(false),
   mPopupClosedByCompositionStart(false),
-  mIsIMEComposing(false),
-  mIgnoreHandleText(false),
+  mCompositionState(eCompositionState_None),
   mSearchStatus(nsAutoCompleteController::STATUS_NONE),
   mRowCount(0),
   mSearchesOngoing(0),
@@ -203,9 +203,22 @@ nsAutoCompleteController::StartSearch(const nsAString &aSearchString)
 NS_IMETHODIMP
 nsAutoCompleteController::HandleText()
 {
+  // Note: the events occur in the following order when IME is used.
+  // 1. a compositionstart event(HandleStartComposition)
+  // 2. some input events (HandleText), eCompositionState_Composing
+  // 3. a compositionend event(HandleEndComposition)
+  // 4. an input event(HandleText), eCompositionState_Committing
   // We should do nothing during composition.
-  if (mIsIMEComposing) {
+  if (mCompositionState == eCompositionState_Composing) {
     return NS_OK;
+  }
+
+  bool handlingCompositionCommit =
+    (mCompositionState == eCompositionState_Committing);
+  bool popupClosedByCompositionStart = mPopupClosedByCompositionStart;
+  if (handlingCompositionCommit) {
+    mCompositionState = eCompositionState_None;
+    mPopupClosedByCompositionStart = false;
   }
 
   if (!mInput) {
@@ -222,22 +235,6 @@ nsAutoCompleteController::HandleText()
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
   input->GetTextValue(newValue);
 
-  // Note: the events occur in the following order when IME is used.
-  // 1. composition start event(HandleStartComposition)
-  // 2. composition end event(HandleEndComposition)
-  // 3. input event(HandleText)
-  // Note that the input event occurs if IME composition is cancelled, as well.
-  // In HandleEndComposition, we are processing the popup properly.
-  // Therefore, the input event after composition end event should do nothing.
-  // (E.g., calling StopSearch() and ClosePopup().)
-  // If it is not, popup is always closed after composition end.
-  if (mIgnoreHandleText) {
-    mIgnoreHandleText = false;
-    if (newValue.Equals(mSearchString))
-      return NS_OK;
-    NS_ERROR("Now is after composition end event. But the value was changed.");
-  }
-
   // Stop all searches in case they are async.
   StopSearch();
 
@@ -253,8 +250,13 @@ nsAutoCompleteController::HandleText()
   NS_ENSURE_TRUE(!disabled, NS_OK);
 
   // Don't search again if the new string is the same as the last search
-  if (newValue.Length() > 0 && newValue.Equals(mSearchString))
+  // However, if this is called immediately after compositionend event,
+  // we need to search the same value again since the search was canceled
+  // at compositionstart event handler.
+  if (!handlingCompositionCommit && newValue.Length() > 0 &&
+      newValue.Equals(mSearchString)) {
     return NS_OK;
+  }
 
   // Determine if the user has removed text from the end (probably by backspacing)
   if (newValue.Length() < mSearchString.Length() &&
@@ -270,6 +272,13 @@ nsAutoCompleteController::HandleText()
 
   // Don't search if the value is empty
   if (newValue.Length() == 0) {
+    // If autocomplete popup was closed by compositionstart event handler,
+    // we should reopen it forcibly even if the value is empty.
+    if (popupClosedByCompositionStart && handlingCompositionCommit) {
+      bool cancel;
+      HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
+      return NS_OK;
+    }
     ClosePopup();
     return NS_OK;
   }
@@ -328,10 +337,10 @@ nsAutoCompleteController::HandleEscape(bool *_retval)
 NS_IMETHODIMP
 nsAutoCompleteController::HandleStartComposition()
 {
-  NS_ENSURE_TRUE(!mIsIMEComposing, NS_OK);
+  NS_ENSURE_TRUE(mCompositionState != eCompositionState_Composing, NS_OK);
 
   mPopupClosedByCompositionStart = false;
-  mIsIMEComposing = true;
+  mCompositionState = eCompositionState_Composing;
 
   if (!mInput)
     return NS_OK;
@@ -360,29 +369,14 @@ nsAutoCompleteController::HandleStartComposition()
 NS_IMETHODIMP
 nsAutoCompleteController::HandleEndComposition()
 {
-  NS_ENSURE_TRUE(mIsIMEComposing, NS_OK);
+  NS_ENSURE_TRUE(mCompositionState == eCompositionState_Composing, NS_OK);
 
-  mIsIMEComposing = false;
-  bool forceOpenPopup = mPopupClosedByCompositionStart;
-  mPopupClosedByCompositionStart = false;
-
-  if (!mInput)
-    return NS_OK;
-
-  nsAutoString value;
-  mInput->GetTextValue(value);
-  SetSearchString(EmptyString());
-  if (!value.IsEmpty()) {
-    // Show the popup with a filtered result set
-    HandleText();
-  } else if (forceOpenPopup) {
-    bool cancel;
-    HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
-  }
-  // On here, |value| and |mSearchString| are same. Therefore, next HandleText should be
-  // ignored. Because there are no reason to research.
-  mIgnoreHandleText = true;
-
+  // We can't yet retrieve the committed value from the editor, since it isn't
+  // completely committed yet. Set mCompositionState to
+  // eCompositionState_Committing, so that when HandleText() is called (in
+  // response to the "input" event), we know that we should handle the
+  // committed text.
+  mCompositionState = eCompositionState_Committing;
   return NS_OK;
 }
 

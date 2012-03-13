@@ -26,7 +26,7 @@ function run_test()
 function test_thread_lifetime()
 {
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    let pauseGrip = aPacket.frame["arguments"][0];
+    let pauseGrip = aPacket.frame.arguments[0];
 
     gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(aResponse) {
       let threadGrip = aResponse.threadGrip;

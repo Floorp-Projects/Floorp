@@ -127,7 +127,7 @@ class nsCookieEntry : public PLDHashEntryHdr
 
     static PLDHashNumber HashKey(KeyTypePointer aKey)
     {
-      return HashString(*aKey);
+      return mozilla::HashString(*aKey);
     }
 
     enum { ALLOW_MEMMOVE = true };

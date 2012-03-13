@@ -51,6 +51,7 @@
 #include "IDBFactory.h"
 #include "IndexedDatabaseManager.h"
 
+using namespace mozilla;
 USING_INDEXEDDB_NAMESPACE
 
 namespace {

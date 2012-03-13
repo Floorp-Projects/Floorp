@@ -76,6 +76,7 @@ const UINT32_SIZE = 4;
 const PARCEL_SIZE_SIZE = UINT32_SIZE;
 
 let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = false;
+let RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = false;
 
 /**
  * This object contains helpers buffering incoming data & deconstructing it
@@ -553,17 +554,26 @@ let RIL = {
   /**
    * Set quirk flags based on the RIL model detected. Note that this
    * requires the RIL being "warmed up" first, which happens when on
-   * an incoming or outgoing call.
+   * an incoming or outgoing voice call or data call.
    */
   rilQuirksInitialized: false,
   initRILQuirks: function initRILQuirks() {
+    if (this.rilQuirksInitialized) {
+      return;
+    }
+
     // The Samsung Galaxy S2 I-9100 radio sends an extra Uint32 in the
     // call state.
     let model_id = libcutils.property_get("ril.model_id");
     if (DEBUG) debug("Detected RIL model " + model_id);
     if (model_id == "I9100") {
-      if (DEBUG) debug("Enabling RILQUIRKS_CALLSTATE_EXTRA_UINT32 for I9100.");
+      if (DEBUG) {
+        debug("Detected I9100, enabling " +
+              "RILQUIRKS_CALLSTATE_EXTRA_UINT32, " +
+              "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP.");
+      }
       RILQUIRKS_CALLSTATE_EXTRA_UINT32 = true;
+      RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
     }
 
     this.rilQuirksInitialized = true;
@@ -941,8 +951,8 @@ let RIL = {
     Buf.writeUint32(options.p2);
     Buf.writeUint32(options.p3);
     Buf.writeString(options.data);
-    if (request.pin2 != null) {
-      Buf.writeString(pin2);
+    if (options.pin2 != null) {
+      Buf.writeString(options.pin2);
     }
     Buf.sendParcel();
   },
@@ -1045,9 +1055,7 @@ RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN() {
 RIL[REQUEST_CHANGE_SIM_PIN2] = null;
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
 RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
-  if (!this.rilQuirksInitialized) {
-    this.initRILQuirks();
-  }
+  this.initRILQuirks();
 
   let calls_length = 0;
   // The RIL won't even send us the length integer if there are no active calls.
@@ -1113,11 +1121,16 @@ RIL[REQUEST_UDUB] = function REQUEST_UDUB(length) {
 };
 RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
 RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
+  let signalStrength = Buf.readUint32();
+  // The SGS2 seems to compute the number of bars for us and expose those
+  // instead of the actual signal strength.
+  let bars = signalStrength >> 8;
+  signalStrength = signalStrength & 0xff;
   let strength = {
     // Valid values are (0-31, 99) as defined in TS 27.007 8.5.
-    // For some reason we're getting int32s like [99, 4, 0, 0] and [99, 3, 0, 0]
-    // here, so let's strip of anything beyond the first byte.
-    gsmSignalStrength: Buf.readUint32() & 0xff,
+    gsmSignalStrength: signalStrength,
+    // Non-standard extension by the SGS2.
+    bars:              bars,
     // GSM bit error rate (0-7, 99) as defined in TS 27.007 8.5.
     gsmBitErrorRate:   Buf.readUint32(),
     // The CDMA RSSI value.
@@ -1216,6 +1229,8 @@ RIL[REQUEST_GET_MUTE] = null;
 RIL[REQUEST_QUERY_CLIP] = null;
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
 RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length) {
+  this.initRILQuirks();
+
   let num = 0;
   if (length) {
     num = Buf.readUint32();
@@ -1313,7 +1328,41 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS
 };
 RIL[UNSOLICITED_ON_USSD] = null;
 RIL[UNSOLICITED_ON_USSD_REQUEST] = null;
-RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = null;
+
+RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() {
+  let dateString = Buf.readString();
+
+  // The data contained in the NITZ message is
+  // in the form "yy/mm/dd,hh:mm:ss(+/-)tz,dt"
+  // for example: 12/02/16,03:36:08-20,00,310410
+
+  // Always print the NITZ info so we can collection what different providers
+  // send down the pipe (see bug XXX).
+  // TODO once data is collected, add in |if (DEBUG)|
+  
+  debug("DateTimeZone string " + dateString);
+
+  let now = Date.now();
+	
+  let year = parseInt(dateString.substr(0, 2), 10);
+  let month = parseInt(dateString.substr(3, 2), 10);
+  let day = parseInt(dateString.substr(6, 2), 10);
+  let hours = parseInt(dateString.substr(9, 2), 10);
+  let minutes = parseInt(dateString.substr(12, 2), 10);
+  let seconds = parseInt(dateString.substr(15, 2), 10);
+  let tz = parseInt(dateString.substr(17, 3), 10); // TZ is in 15 min. units
+  let dst = parseInt(dateString.substr(21, 2), 10); // DST already is in local time
+
+  let timeInSeconds = Date.UTC(year + PDU_TIMESTAMP_YEAR_OFFSET, month - 1, day,
+                               hours, minutes, seconds) / 1000;
+
+  if (isNaN(timeInSeconds)) {
+    debug("NITZ failed to convert date");
+  } else {
+    Phone.onNITZ(timeInSeconds, tz*15, dst, now);
+  }
+};
+
 RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH() {
   this[REQUEST_SIGNAL_STRENGTH]();
 };
@@ -1616,6 +1665,7 @@ let Phone = {
     if ((!iccStatus) || (iccStatus.cardState == CARD_STATE_ABSENT)) {
       if (DEBUG) debug("ICC absent");
       if (this.cardState == GECKO_CARDSTATE_ABSENT) {
+        this.operator = null;
         return;
       }
       this.cardState = GECKO_CARDSTATE_ABSENT;
@@ -1653,6 +1703,7 @@ let Phone = {
           return;
         }
         this.cardState = GECKO_CARDSTATE_ABSENT;
+        this.operator = null;
         this.sendDOMMessage({type: "cardstatechange",
                              cardState: this.cardState});
         return;
@@ -1750,7 +1801,7 @@ let Phone = {
         let response = Buf.readString();
         let recordSize = parseInt(
             response.substr(RESPONSE_DATA_RECORD_LENGTH * 2, 2), 16) & 0xff;
-        let request = {
+        let options = {
           command: ICC_COMMAND_READ_RECORD,
           fileid:  ICC_EF_MSISDN,
           pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
@@ -1760,7 +1811,7 @@ let Phone = {
           data:    null,
           pin2:    null,
         };
-        RIL.iccIO(request);
+        RIL.iccIO(options);
         break;
 
       case ICC_COMMAND_READ_RECORD:
@@ -1995,6 +2046,9 @@ let Phone = {
             break;
           case DATACALL_ACTIVE_DOWN:
             newDataCall.state = GECKO_NETWORK_STATE_SUSPENDED;
+            if (RILQUIRKS_DATACALLSTATE_DOWN_IS_UP) {
+              newDataCall.state = GECKO_NETWORK_STATE_CONNECTED;
+            }
             break;
           case DATACALL_ACTIVE_UP:
             newDataCall.state = GECKO_NETWORK_STATE_CONNECTED;
@@ -2021,6 +2075,15 @@ let Phone = {
 
   onDataCallListChanged: function onDataCallListChanged() {
     RIL.getDataCallList();
+  },
+
+  onNITZ: function onNITZ(timeInSeconds, timeZoneInMinutes, dstFlag, timeStampInMS) {
+    let message = {type: "nitzTime",
+                   networkTimeInSeconds: timeInSeconds,
+                   networkTimeZoneInMinutes: timeZoneInMinutes,
+                   dstFlag: dstFlag,
+                   localTimeStampInMS: timeStampInMS};
+    this.sendDOMMessage(message);
   },
 
   /**
@@ -2231,7 +2294,7 @@ let Phone = {
    *  Get MSISDN
    */ 
   getMSISDN: function getMSISDN() {
-    let request = {
+    let options = {
       command: ICC_COMMAND_GET_RESPONSE,
       fileid:  ICC_EF_MSISDN,
       pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
@@ -2241,7 +2304,7 @@ let Phone = {
       data:    null,
       pin2:    null,
     };
-    RIL.iccIO(request);
+    RIL.iccIO(options);
   },
 
   /**

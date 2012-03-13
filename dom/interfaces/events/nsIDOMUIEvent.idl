@@ -74,9 +74,8 @@ interface nsIDOMUIEvent : nsIDOMEvent
   readonly attribute boolean            isChar;
 };
 
-[scriptable, uuid(610eb27e-9718-4acd-8ed1-7d1840bc6c7f)]
-interface nsIUIEventInit : nsIEventInit
+dictionary UIEventInit : EventInit
 {
-  attribute nsIDOMWindow view;
-  attribute long         detail;
+  nsIDOMWindow view;
+  long         detail;
 };

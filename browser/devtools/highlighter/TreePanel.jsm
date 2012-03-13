@@ -309,7 +309,7 @@ TreePanel.prototype = {
 
   /**
    * Handle double-click events in the html tree panel.
-   * (double-clicking an attribute value allows it to be edited)
+   * Double-clicking an attribute name or value allows it to be edited.
    * @param aEvent
    *        The mouse event.
    */
@@ -322,19 +322,33 @@ TreePanel.prototype = {
 
     let target = aEvent.target;
 
+    if (!this.hasClass(target, "editable")) {
+      return;
+    }
+
+    let repObj = this.getRepObject(target);
+
     if (this.hasClass(target, "nodeValue")) {
-      let repObj = this.getRepObject(target);
       let attrName = target.getAttribute("data-attributeName");
       let attrVal = target.innerHTML;
 
-      this.editAttributeValue(target, repObj, attrName, attrVal);
+      this.editAttribute(target, repObj, attrName, attrVal);
+    }
+
+    if (this.hasClass(target, "nodeName")) {
+      let attrName = target.innerHTML;
+      let attrValNode = target.nextSibling.nextSibling; // skip 2 (=)
+
+      if (attrValNode)
+        this.editAttribute(target, repObj, attrName, attrValNode.innerHTML);
     }
   },
 
   /**
-   * Starts the editor for an attribute value.
+   * Starts the editor for an attribute name or value.
    * @param aAttrObj
-   *        The DOM object representing the attribute value in the HTML Tree
+   *        The DOM object representing the attribute name or value in the HTML
+   *        Tree.
    * @param aRepObj
    *        The original DOM (target) object being inspected/edited
    * @param aAttrName
@@ -342,8 +356,8 @@ TreePanel.prototype = {
    * @param aAttrVal
    *        The current value of the attribute being edited
    */
-  editAttributeValue:
-  function TP_editAttributeValue(aAttrObj, aRepObj, aAttrName, aAttrVal)
+  editAttribute:
+  function TP_editAttribute(aAttrObj, aRepObj, aAttrName, aAttrVal)
   {
     let editor = this.treeBrowserDocument.getElementById("attribute-editor");
     let editorInput =
@@ -357,7 +371,8 @@ TreePanel.prototype = {
     this.editingContext = {
       attrObj: aAttrObj,
       repObj: aRepObj,
-      attrName: aAttrName
+      attrName: aAttrName,
+      attrValue: aAttrVal
     };
 
     // highlight attribute-value node in tree while editing
@@ -367,7 +382,7 @@ TreePanel.prototype = {
     this.addClass(editor, "editing");
 
     // offset the editor below the attribute-value node being edited
-    let editorVeritcalOffset = 2;
+    let editorVerticalOffset = 2;
 
     // keep the editor comfortably within the bounds of the viewport
     let editorViewportBoundary = 5;
@@ -384,7 +399,7 @@ TreePanel.prototype = {
                     // center the editor against the attribute value
                     ((editorDims.width - attrDims.width) / 2);
     let editorTop = attrDims.top + this.treeIFrame.contentWindow.scrollY +
-                    attrDims.height + editorVeritcalOffset;
+                    attrDims.height + editorVerticalOffset;
 
     // but, make sure the editor stays within the visible viewport
     editorLeft = Math.max(0, Math.min(
@@ -403,8 +418,13 @@ TreePanel.prototype = {
     editor.style.top = editorTop + "px";
 
     // set and select the text
-    editorInput.value = aAttrVal;
-    editorInput.select();
+    if (this.hasClass(aAttrObj, "nodeValue")) {
+      editorInput.value = aAttrVal;
+      editorInput.select();
+    } else {
+      editorInput.value = aAttrName;
+      editorInput.select();
+    }
 
     // listen for editor specific events
     this.bindEditorEvent(editor, "click", function(aEvent) {
@@ -510,15 +530,32 @@ TreePanel.prototype = {
   {
     let editorInput =
       this.treeBrowserDocument.getElementById("attribute-editor-input");
+    let dirty = false;
 
-    // set the new attribute value on the original target DOM element
-    this.editingContext.repObj.setAttribute(this.editingContext.attrName,
-                                              editorInput.value);
+    if (this.hasClass(this.editingContext.attrObj, "nodeValue")) {
+      // set the new attribute value on the original target DOM element
+      this.editingContext.repObj.setAttribute(this.editingContext.attrName,
+                                                editorInput.value);
 
-    // update the HTML tree attribute value
-    this.editingContext.attrObj.innerHTML = editorInput.value;
+      // update the HTML tree attribute value
+      this.editingContext.attrObj.innerHTML = editorInput.value;
+      dirty = true;
+    }
 
-    this.IUI.isDirty = true;
+    if (this.hasClass(this.editingContext.attrObj, "nodeName")) {
+      // remove the original attribute from the original target DOM element
+      this.editingContext.repObj.removeAttribute(this.editingContext.attrName);
+
+      // set the new attribute value on the original target DOM element
+      this.editingContext.repObj.setAttribute(editorInput.value,
+                                              this.editingContext.attrValue);
+
+      // update the HTML tree attribute value
+      this.editingContext.attrObj.innerHTML = editorInput.value;
+      dirty = true;
+    }
+
+    this.IUI.isDirty = dirty;
     this.IUI.nodeChanged(this.registrationObject);
 
     // event notification

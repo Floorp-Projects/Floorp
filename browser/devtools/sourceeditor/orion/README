@@ -22,6 +22,10 @@ Orion version: git clone from 2012-01-26
     http://git.eclipse.org/c/orion/org.eclipse.orion.client.git/commit/?id=27177e9a3dc70c20b4877e3eab3adfff1d56e342
     see https://bugs.eclipse.org/bugs/show_bug.cgi?id=370606
 
+  + patch for Mozilla Bug 730532 - remove CSS2Properties aliases for MozOpacity
+                                   and MozOutline*
+    see https://bugzilla.mozilla.org/show_bug.cgi?id=730532#c3
+
 # License
 
 The following files are licensed according to the contents in the LICENSE

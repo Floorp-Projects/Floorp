@@ -1909,6 +1909,7 @@ class FrameRegsIter
     StackFrame *fp() const { return iter_.fp(); }
     Value      *sp() const { return iter_.sp(); }
     jsbytecode *pc() const { return iter_.pc(); }
+    JSScript   *script() const { return iter_.script(); }
 };
 
 /*****************************************************************************/

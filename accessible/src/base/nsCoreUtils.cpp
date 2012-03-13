@@ -570,26 +570,6 @@ nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
     walkUp = walkUp->GetParent();
 }
 
-already_AddRefed<nsIDOMCSSStyleDeclaration>
-nsCoreUtils::GetComputedStyleDeclaration(const nsAString& aPseudoElt,
-                                         nsIContent *aContent)
-{
-  nsIContent* content = GetDOMElementFor(aContent);
-  if (!content)
-    return nsnull;
-
-  // Returns number of items in style declaration
-  nsCOMPtr<nsIDOMWindow> window =
-    do_QueryInterface(content->OwnerDoc()->GetWindow());
-  if (!window)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(content));
-  window->GetComputedStyle(domElement, aPseudoElt, getter_AddRefs(cssDecl));
-  return cssDecl.forget();
-}
-
 already_AddRefed<nsIBoxObject>
 nsCoreUtils::GetTreeBodyBoxObject(nsITreeBoxObject *aTreeBoxObj)
 {

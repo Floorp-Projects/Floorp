@@ -289,13 +289,6 @@ public:
                              nsAString& aLanguage);
 
   /**
-   * Return computed styles declaration for the given node.
-   */
-  static already_AddRefed<nsIDOMCSSStyleDeclaration>
-    GetComputedStyleDeclaration(const nsAString& aPseudoElt,
-                                nsIContent *aContent);
-
-  /**
    * Return box object for XUL treechildren element by tree box object.
    */
   static already_AddRefed<nsIBoxObject>

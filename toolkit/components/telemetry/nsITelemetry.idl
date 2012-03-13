@@ -70,7 +70,7 @@ interface nsITelemetrySaveSessionDataCallback : nsISupports
   void handle(in bool success);
 };
 
-[scriptable, uuid(db854295-478d-4de9-8211-d73ed7d81cd0)]
+[scriptable, uuid(f23a2c8d-9286-42e9-ab1b-ed287eeade6d)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -117,6 +117,14 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   readonly attribute jsval slowSQL;
+
+  /*
+   * An array of chrome hang reports. Each element is a hang report represented
+   * as an object containing the hang duration, call stack PCs and information
+   * about modules in memory.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval chromeHangs;
 
   /**
    * An object whose properties are the names of histograms defined in
