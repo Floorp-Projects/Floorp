@@ -1693,6 +1693,7 @@ struct nsConstructorFuncMapData
 
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Blob, nsDOMMultipartFile::NewBlob)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFileFile::NewFile)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozBlobBuilder, NS_NewBlobBuilder)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(Event)
@@ -5692,6 +5693,138 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
   return NS_OK;
 }
 
+// This code is temporary until we remove support for the constants defined
+// on IDBCursor/IDBRequest/IDBTransaction
+
+struct IDBConstant
+{
+  const char* interface;
+  const char* name;
+  const char* value;
+  
+  static const char* IDBCursor;
+  static const char* IDBRequest;
+  static const char* IDBTransaction;
+};
+
+const char* IDBConstant::IDBCursor = "IDBCursor";
+const char* IDBConstant::IDBRequest = "IDBRequest";
+const char* IDBConstant::IDBTransaction = "IDBTransaction";
+
+static const IDBConstant sIDBConstants[] = {
+  { IDBConstant::IDBCursor,      "NEXT",              "next" },
+  { IDBConstant::IDBCursor,      "NEXT_NO_DUPLICATE", "nextunique" },
+  { IDBConstant::IDBCursor,      "PREV",              "prev" },
+  { IDBConstant::IDBCursor,      "PREV_NO_DUPLICATE", "prevunique" },
+  { IDBConstant::IDBRequest,     "LOADING",           "pending" },
+  { IDBConstant::IDBRequest,     "DONE",              "done" },
+  { IDBConstant::IDBTransaction, "READ_ONLY",         "readonly" },
+  { IDBConstant::IDBTransaction, "READ_WRITE",        "readwrite" },
+  { IDBConstant::IDBTransaction, "VERSION_CHANGE",    "versionchange" },
+};
+
+static JSBool
+IDBConstantGetter(JSContext *cx, JSObject *obj, jsid id, jsval* vp)
+{
+  MOZ_ASSERT(JSID_IS_INT(id));
+  
+  int8_t index = JSID_TO_INT(id);
+  
+  MOZ_ASSERT((uint8_t)index < mozilla::ArrayLength(sIDBConstants));
+
+  const IDBConstant& c = sIDBConstants[index];
+
+  // Put a warning on the console
+  nsString warnText =
+    NS_LITERAL_STRING("The constant ") +
+    NS_ConvertASCIItoUTF16(c.interface) +
+    NS_LITERAL_STRING(".") +
+    NS_ConvertASCIItoUTF16(c.name) +
+    NS_LITERAL_STRING(" has been deprecated. Use the string value \"") +
+    NS_ConvertASCIItoUTF16(c.value) +
+    NS_LITERAL_STRING("\" instead.");
+
+  PRUint64 windowID = 0;
+  nsIScriptContext* context = GetScriptContextFromJSContext(cx);
+  if (context) {
+    nsCOMPtr<nsPIDOMWindow> window =
+      do_QueryInterface(context->GetGlobalObject());
+    if (window) {
+      window = window->GetCurrentInnerWindow();
+    }
+    NS_WARN_IF_FALSE(window, "Missing a window, got a door?");
+    if (window) {
+      windowID = window->WindowID();
+    }
+  }
+
+  nsCOMPtr<nsIScriptError> errorObject =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+  NS_WARN_IF_FALSE(errorObject, "Failed to create error object");
+  if (errorObject) {
+    nsresult rv = errorObject->InitWithWindowID(warnText.get(),
+                                                nsnull, // file name
+                                                nsnull, // source line
+                                                0, 0, // Line/col number
+                                                nsIScriptError::warningFlag,
+                                                "DOM Core", windowID);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to init error object");
+
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIConsoleService> consoleServ =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      if (consoleServ) {
+        consoleServ->LogMessage(errorObject);
+      }
+    }
+  }
+
+  // Redefine property to remove getter
+  NS_ConvertASCIItoUTF16 valStr(c.value);
+  jsval value;
+  if (!xpc::StringToJsval(cx, valStr, &value)) {
+    return JS_FALSE;
+  }
+  if (!::JS_DefineProperty(cx, obj, c.name, value, nsnull, nsnull,
+                           JSPROP_ENUMERATE)) {
+    return JS_FALSE;
+  }
+
+  // Return value
+  *vp = value;
+  return JS_TRUE;
+}
+
+static nsresult
+DefineIDBInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
+{
+  const char* interface;
+  if (aIID->Equals(NS_GET_IID(nsIIDBCursor))) {
+    interface = IDBConstant::IDBCursor;
+  }
+  else if (aIID->Equals(NS_GET_IID(nsIIDBRequest))) {
+    interface = IDBConstant::IDBRequest;
+  }
+  else if (aIID->Equals(NS_GET_IID(nsIIDBTransaction))) {
+    interface = IDBConstant::IDBTransaction;
+  }
+
+  for (int8_t i = 0; i < (int8_t)mozilla::ArrayLength(sIDBConstants); ++i) {
+    const IDBConstant& c = sIDBConstants[i];
+    if (c.interface != interface) {
+      continue;
+    }
+
+    if (!::JS_DefinePropertyWithTinyId(cx, obj, c.name, i, JSVAL_VOID,
+                                       IDBConstantGetter, nsnull,
+                                       JSPROP_ENUMERATE)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  return NS_OK;
+}
+
 class nsDOMConstructor : public nsIDOMDOMConstructor
 {
 protected:
@@ -6098,6 +6231,15 @@ nsDOMConstructor::ResolveInterfaceConstants(JSContext *cx, JSObject *obj)
     return NS_ERROR_FAILURE;
   }
 
+  // Special case a few IDB interfaces which for now are getting transitional
+  // constants.
+  if (class_iid->Equals(NS_GET_IID(nsIIDBCursor)) ||
+      class_iid->Equals(NS_GET_IID(nsIIDBRequest)) ||
+      class_iid->Equals(NS_GET_IID(nsIIDBTransaction))) {
+    rv = DefineIDBInterfaceConstants(cx, obj, class_iid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -6239,6 +6381,15 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
     if (primary_iid->Equals(NS_GET_IID(nsIIDBKeyRange)) &&
         !indexedDB::IDBKeyRange::DefineConstructors(cx, class_obj)) {
       return NS_ERROR_FAILURE;
+    }
+
+    // Special case a few IDB interfaces which for now are getting transitional
+    // constants.
+    if (primary_iid->Equals(NS_GET_IID(nsIIDBCursor)) ||
+        primary_iid->Equals(NS_GET_IID(nsIIDBRequest)) ||
+        primary_iid->Equals(NS_GET_IID(nsIIDBTransaction))) {
+      rv = DefineIDBInterfaceConstants(cx, class_obj, primary_iid);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     nsCOMPtr<nsIInterfaceInfoManager>

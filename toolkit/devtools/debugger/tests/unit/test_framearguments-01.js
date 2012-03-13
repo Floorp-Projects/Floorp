@@ -34,7 +34,7 @@ function test_pause_frame()
     do_check_eq(args[3].type, "null");
     do_check_eq(args[4].type, "undefined");
     do_check_eq(args[5].type, "object");
-    do_check_eq(args[5]["class"], "Object");
+    do_check_eq(args[5].class, "Object");
     do_check_true(!!args[5].actor);
 
     gThreadClient.resume(function() {

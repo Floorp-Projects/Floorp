@@ -103,5 +103,12 @@ interface nsIDOMMozBlobBuilder : nsISupports
 {
   nsIDOMBlob getBlob([optional] in DOMString contentType);
   nsIDOMFile getFile(in DOMString name, [optional] in DOMString contentType);
-  [implicit_jscontext] void append(in jsval data);
+  [implicit_jscontext] void append(in jsval data,
+                                   [optional] in DOMString endings);
+};
+
+dictionary BlobPropertyBag
+{
+  DOMString type;
+  DOMString endings = "transparent";
 };

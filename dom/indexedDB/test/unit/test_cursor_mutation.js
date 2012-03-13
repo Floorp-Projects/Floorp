@@ -71,7 +71,7 @@ function testSteps()
   sawAdded = false;
   sawRemoved = false;
 
-  db.transaction("foo", IDBTransaction.READ_WRITE).objectStore("foo")
+  db.transaction("foo", "readwrite").objectStore("foo")
     .index("name").openCursor().onsuccess = function(event) {
       event.target.transaction.oncomplete = continueToNextStep;
       let cursor = event.target.result;

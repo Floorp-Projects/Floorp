@@ -26,7 +26,7 @@ function run_test()
 function test_simple_eval()
 {
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    let arg1Actor = aPacket.frame["arguments"][0].actor;
+    let arg1Actor = aPacket.frame.arguments[0].actor;
     gThreadClient.eval(null, "({ obj: true })", function(aResponse) {
       do_check_eq(aResponse.type, "resumed");
       // Expect a pause notification immediately.
@@ -34,8 +34,8 @@ function test_simple_eval()
         // Check the return value...
         do_check_eq(aPacket.type, "paused");
         do_check_eq(aPacket.why.type, "clientEvaluated");
-        do_check_eq(aPacket.why.value.type, "object");
-        do_check_eq(aPacket.why.value["class"], "Object");
+        do_check_eq(aPacket.why.frameFinished.return.type, "object");
+        do_check_eq(aPacket.why.frameFinished.return.class, "Object");
 
         // Make sure the previous pause lifetime was correctly dropped.
         gClient.request({ to: arg1Actor, type: "bogusRequest" }, function(aResponse) {

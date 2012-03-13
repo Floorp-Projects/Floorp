@@ -54,8 +54,8 @@ browser.jar:
   skin/classic/browser/feeds/audioFeedIcon.png              (feeds/feedIcon.png)
   skin/classic/browser/feeds/audioFeedIcon16.png            (feeds/feedIcon16.png)
   skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
-  skin/classic/browser/newtab/strip.png                     (newtab/strip.png)
-  skin/classic/browser/newtab/toolbar.png                   (newtab/toolbar.png)
+  skin/classic/browser/newtab/controls.png                  (newtab/controls.png)
+  skin/classic/browser/newtab/noise.png                     (newtab/noise.png)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
