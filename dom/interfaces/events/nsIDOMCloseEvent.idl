@@ -60,10 +60,9 @@ interface nsIDOMCloseEvent : nsIDOMEvent
                       in DOMString aReason);
 };
 
-[scriptable, uuid(148ed08e-14f1-4be5-b2f8-23f765738379)]
-interface nsICloseEventInit : nsIEventInit
+dictionary CloseEventInit : EventInit
 {
-  attribute boolean wasClean;
-  attribute unsigned short code;
-  attribute DOMString reason;
+  boolean wasClean;
+  unsigned short code;
+  DOMString reason;
 };

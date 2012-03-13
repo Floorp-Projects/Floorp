@@ -45,11 +45,10 @@ interface nsIIDBTransaction;
 interface nsIDOMDOMStringList;
 interface nsIDOMEventListener;
 
-[scriptable, uuid(fb143548-08d1-43b4-95f2-a1cd58f8db76)]
-interface nsIIDBObjectStoreParameters : nsISupports
+dictionary IDBObjectStoreParameters
 {
-  attribute jsval keyPath;
-  attribute boolean autoIncrement;
+  jsval keyPath;
+  boolean autoIncrement;
 };
 
 /**
