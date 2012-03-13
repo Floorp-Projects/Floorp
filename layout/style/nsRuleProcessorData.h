@@ -51,101 +51,11 @@
 #include "nsCSSPseudoElements.h"
 #include "nsRuleWalker.h"
 #include "nsNthIndexCache.h"
-#include "mozilla/BloomFilter.h"
-#include "mozilla/GuardObjects.h"
 
 class nsIStyleSheet;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsAttrValue;
-
-/**
- * An AncestorFilter is used to keep track of ancestors so that we can
- * quickly tell that a particular selector is not relevant to a given
- * element.
- */
-class NS_STACK_CLASS AncestorFilter {
- public:
-  /**
-   * Initialize the filter.  If aElement is not null, it and all its
-   * ancestors will be passed to PushAncestor, starting from the root
-   * and going down the tree.
-   */
-  void Init(mozilla::dom::Element *aElement);
-
-  /* Maintenance of our ancestor state */
-  void PushAncestor(mozilla::dom::Element *aElement);
-  void PopAncestor();
-
-  /* Helper class for maintaining the ancestor state */
-  class NS_STACK_CLASS AutoAncestorPusher {
-  public:
-    AutoAncestorPusher(bool aDoPush,
-                       AncestorFilter &aFilter,
-                       mozilla::dom::Element *aElement
-                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mPushed(aDoPush && aElement), mFilter(aFilter)
-    {
-      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      if (mPushed) {
-        mFilter.PushAncestor(aElement);
-      }
-    }
-    ~AutoAncestorPusher() {
-      if (mPushed) {
-        mFilter.PopAncestor();
-      }
-    }
-
-  private:
-    bool mPushed;
-    AncestorFilter &mFilter;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  };
-
-  /* Check whether we might have an ancestor matching one of the given
-     atom hashes.  |hashes| must have length hashListLength */
-  template<size_t hashListLength>
-    bool MightHaveMatchingAncestor(const uint32_t* aHashes) const
-  {
-    MOZ_ASSERT(mFilter);
-    for (size_t i = 0; i < hashListLength && aHashes[i]; ++i) {
-      if (!mFilter->mightContain(aHashes[i])) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  bool HasFilter() const { return mFilter; }
-
-#ifdef DEBUG
-  void AssertHasAllAncestors(mozilla::dom::Element *aElement) const;
-#endif
-  
- private:
-  // Using 2^12 slots makes the Bloom filter a nice round page in
-  // size, so let's do that.  We get a false positive rate of 1% or
-  // less even with several hundred things in the filter.  Note that
-  // we allocate the filter lazily, because not all tree match
-  // contexts can use one effectively.
-  typedef mozilla::BloomFilter<12, nsIAtom> Filter;
-  nsAutoPtr<Filter> mFilter;
-
-  // Stack of indices to pop to.  These are indices into mHashes.
-  nsTArray<PRUint32> mPopTargets;
-
-  // List of hashes; this is what we pop using mPopTargets.  We store
-  // hashes of our ancestor element tag names, ids, and classes in
-  // here.
-  nsTArray<uint32_t> mHashes;
-
-  // A debug-only stack of Elements for use in assertions
-#ifdef DEBUG
-  nsTArray<mozilla::dom::Element*> mElements;
-#endif
-};
 
 /**
  * A |TreeMatchContext| has data about a matching operation.  The
@@ -217,9 +127,6 @@ struct NS_STACK_CLASS TreeMatchContext {
 
   // The nth-index cache we should use
   nsNthIndexCache mNthIndexCache;
-
-  // An ancestor filter
-  AncestorFilter mAncestorFilter;
 
   // Constructor to use when creating a tree match context for styling
   TreeMatchContext(bool aForStyling,
