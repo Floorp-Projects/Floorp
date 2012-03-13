@@ -93,61 +93,64 @@ public class EnsureClusterURLStage implements GlobalSyncStage {
        */
       @Override
       public void handleHttpResponse(HttpResponse response) {
+        try {
+          int status = response.getStatusLine().getStatusCode();
+          switch (status) {
+          case 200:
+            Log.i(LOG_TAG, "Got 200 for node/weave cluster URL request (user found; succeeding).");
+            HttpEntity entity = response.getEntity();
+            if (entity == null) {
+              delegate.handleThrottled();
+              BaseResource.consumeEntity(response);
+              return;
+            }
+            String output = null;
+            try {
+              InputStream content = entity.getContent();
+              BufferedReader reader = new BufferedReader(new InputStreamReader(content, "UTF-8"), 1024);
+              output = reader.readLine();
+              BaseResource.consumeReader(reader);
+              reader.close();
+            } catch (IllegalStateException e) {
+              delegate.handleError(e);
+              BaseResource.consumeEntity(response);
+              return;
+            } catch (IOException e) {
+              delegate.handleError(e);
+              BaseResource.consumeEntity(response);
+              return;
+            }
 
-        int status = response.getStatusLine().getStatusCode();
-        switch (status) {
-        case 200:
-          Log.i(LOG_TAG, "Got 200 for node/weave cluster URL request (user found; succeeding).");
-          HttpEntity entity = response.getEntity();
-          if (entity == null) {
-            delegate.handleThrottled();
-            SyncResourceDelegate.consumeEntity(response);
-            return;
-          }
-          String output = null;
-          try {
-            InputStream content = entity.getContent();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(content, "UTF-8"), 1024);
-            output = reader.readLine();
-            SyncResourceDelegate.consumeReader(reader);
-            reader.close();
-          } catch (IllegalStateException e) {
-            delegate.handleError(e);
-            SyncResourceDelegate.consumeEntity(response);
-            return;
-          } catch (IOException e) {
-            delegate.handleError(e);
-            SyncResourceDelegate.consumeEntity(response);
-            return;
-          }
+            if (output == null || output.equals("null")) {
+              delegate.handleThrottled();
+              return;
+            }
 
-          if (output == null || output.equals("null")) {
-            delegate.handleThrottled();
-            return;
+            try {
+              URI uri = new URI(output);
+              delegate.handleSuccess(uri);
+            } catch (URISyntaxException e) {
+              delegate.handleError(e);
+            }
+            break;
+          case 400:
+          case 404:
+            Log.i(LOG_TAG, "Got " + status + " for node/weave cluster URL request (user not found; failing).");
+            delegate.handleFailure(response);
+            break;
+          case 503:
+            Log.i(LOG_TAG, "Got 503 for node/weave cluster URL request (error fetching node; failing).");
+            delegate.handleFailure(response);
+            break;
+          default:
+            Log.w(LOG_TAG, "Got " + status + " for node/weave cluster URL request (unexpected HTTP status; failing).");
+            delegate.handleFailure(response);
           }
-
-          try {
-            URI uri = new URI(output);
-            delegate.handleSuccess(uri);
-          } catch (URISyntaxException e) {
-            delegate.handleError(e);
-          }
-          break;
-        case 400:
-        case 404:
-          Log.i(LOG_TAG, "Got " + status + " for node/weave cluster URL request (user not found; failing).");
-          delegate.handleFailure(response);
-          break;
-        case 503:
-          Log.i(LOG_TAG, "Got 503 for node/weave cluster URL request (error fetching node; failing).");
-          delegate.handleFailure(response);
-          break;
-        default:
-          Log.w(LOG_TAG, "Got " + status + " for node/weave cluster URL request (unexpected HTTP status; failing).");
-          delegate.handleFailure(response);
+        } finally {
+          BaseResource.consumeEntity(response);
         }
 
-        SyncResourceDelegate.consumeEntity(response);
+        BaseResource.consumeEntity(response);
       }
 
       @Override
