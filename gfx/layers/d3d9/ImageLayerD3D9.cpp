@@ -325,10 +325,11 @@ ImageLayerD3D9::RenderLayer()
 
   SetShaderTransformAndOpacity();
 
+  gfxIntSize size = mScaleMode == SCALE_NONE ? image->GetSize() : mScaleToSize;
+
   if (image->GetFormat() == Image::CAIRO_SURFACE || image->GetFormat() == Image::REMOTE_IMAGE_BITMAP)
   {
     bool hasAlpha = false;
-    gfxIntSize size;
 
     if (image->GetFormat() == Image::REMOTE_IMAGE_BITMAP) {
       RemoteBitmapImage *remoteImage =
@@ -343,7 +344,6 @@ ImageLayerD3D9::RenderLayer()
       }
 
       hasAlpha = remoteImage->mFormat == RemoteImageData::BGRA32;
-      size = remoteImage->mSize;
     } else {
       CairoImage *cairoImage =
         static_cast<CairoImage*>(image);
@@ -361,7 +361,6 @@ ImageLayerD3D9::RenderLayer()
       }
 
       hasAlpha = cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
-      size = cairoImage->mSize;
     }
 
     TextureD3D9BackendData *data =
@@ -433,8 +432,8 @@ ImageLayerD3D9::RenderLayer()
     device()->SetVertexShaderConstantF(CBvLayerQuad,
                                        ShaderConstantRect(0,
                                                           0,
-                                                          yuvImage->mSize.width,
-                                                          yuvImage->mSize.height),
+                                                          size.width,
+                                                          size.height),
                                        1);
 
     device()->SetVertexShaderConstantF(CBvTextureCoords,
