@@ -23,6 +23,7 @@
 
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"/>
 
 #ifdef MOZ_WEBSMS_BACKEND
     <!-- WebSMS -->
@@ -119,6 +120,13 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name="org.mozilla.gecko.GeckoMessageReceiver"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER">
+            <intent-filter>
+                  <action android:name="org.mozilla.gecko.INIT_PW"></action>
+            </intent-filter>
+        </receiver>
+
         <activity android:name="Restarter"
                   android:process="@ANDROID_PACKAGE_NAME@Restarter"
                   android:theme="@style/Gecko"
@@ -178,8 +186,8 @@
 
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.PasswordsProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.passwords"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
-                  android:protectionLevel="signature"/>
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"
+                  android:process="org.mozilla.gecko.PasswordsProvider"/>
 
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.FormHistoryProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.formhistory"
@@ -194,6 +202,9 @@
     </application>
 
     <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
+                android:protectionLevel="signature"/>
+
+    <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"
                 android:protectionLevel="signature"/>
 
     <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"

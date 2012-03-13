@@ -918,7 +918,7 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   nsRefPtr<gfxASurface> surface;
   AutoLockImage autoLock(mContainer, getter_AddRefs(surface));
   Image *image = autoLock.GetImage();
-  mSize = autoLock.GetSize();
+  gfxIntSize size = mSize = autoLock.GetSize();
 
   if (!surface || surface->CairoStatus()) {
     return nsnull;
@@ -930,6 +930,15 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   }
 
   pat->SetFilter(mFilter);
+  gfxIntSize sourceSize = surface->GetSize();
+  if (mScaleMode != SCALE_NONE) {
+    NS_ASSERTION(mScaleMode == SCALE_STRETCH,
+      "No other scalemodes than stretch and none supported yet.");
+    gfxMatrix mat = pat->GetMatrix();
+    mat.Scale(float(sourceSize.width) / mScaleToSize.width, float(sourceSize.height) / mScaleToSize.height);
+    pat->SetMatrix(mat);
+    size = mScaleToSize;
+  }
 
   // The visible region can extend outside the image.  If we're not
   // tiling, we don't want to draw into that area, so just draw within
@@ -937,7 +946,7 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   const nsIntRect* tileSrcRect = GetTileSourceRect();
   AutoSetOperator setOperator(aContext, GetOperator());
   PaintContext(pat,
-               tileSrcRect ? GetVisibleRegion() : nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
+               tileSrcRect ? GetVisibleRegion() : nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
                tileSrcRect,
                aOpacity, aContext);
 

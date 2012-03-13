@@ -34,6 +34,7 @@ fails-if(Android) == scale3d-all-separate.html scale3d-1-ref.html
 != backface-visibility-1a.html about:blank
 == backface-visibility-1b.html about:blank
 == backface-visibility-1c.html about:blank
+== backface-visibility-2.html backface-visibility-2-ref.html
 != perspective-origin-1a.html rotatex-perspective-1a.html
 == perspective-origin-1b.html perspective-origin-1a.html
 == perspective-origin-2a.html perspective-origin-2-ref.html

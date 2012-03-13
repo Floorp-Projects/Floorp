@@ -175,11 +175,14 @@ enum {
   // Set if the node is handling a click.
   NODE_HANDLING_CLICK          = 0x00040000U,
 
+  // Set if the node has had :hover selectors matched against it
+  NODE_HAS_RELEVANT_HOVER_RULES = 0x00080000U,
+
   // Two bits for the script-type ID.  Not enough to represent all
   // nsIProgrammingLanguage values, but we don't care.  In practice,
   // we can represent the ones we want, and we can fail the others at
   // runtime.
-  NODE_SCRIPT_TYPE_OFFSET =               19,
+  NODE_SCRIPT_TYPE_OFFSET =               20,
 
   NODE_SCRIPT_TYPE_SIZE =                  2,
 

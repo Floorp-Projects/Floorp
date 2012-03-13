@@ -55,12 +55,12 @@ function SI_test()
   let searchbar = stylePanel.cssHtmlTree.searchField;
   let propView = getFirstVisiblePropertyView();
   let rulesTable = propView.matchedSelectorsContainer;
-  let nameNode = propView.nameNode;
+  let matchedExpander = propView.matchedExpander;
 
-  info("Adding focus event handler to property name node");
-  nameNode.addEventListener("focus", function nameFocused() {
-    this.removeEventListener("focus", nameFocused);
-    info("property name is focused");
+  info("Adding focus event handler to property expander");
+  matchedExpander.addEventListener("focus", function expanderFocused() {
+    this.removeEventListener("focus", expanderFocused);
+    info("property expander is focused");
     info("checking expand / collapse");
     testKey(iframe.contentWindow, "VK_SPACE", rulesTable);
     testKey(iframe.contentWindow, "VK_RETURN", rulesTable);
@@ -74,7 +74,7 @@ function SI_test()
   searchbar.addEventListener("focus", function searchbarFocused() {
     this.removeEventListener("focus", searchbarFocused);
     info("search filter is focused");
-    info("tabbing to property name node");
+    info("tabbing to property expander node");
     EventUtils.synthesizeKey("VK_TAB", {}, iframe.contentWindow);
   });
 

@@ -12,9 +12,6 @@
   <script type="text/javascript;version=1.7">
     function testSteps()
     {
-      const READ_ONLY = Components.interfaces.nsIIDBTransaction.READ_ONLY;
-      const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
-
       const name = window.location.pathname;
       const description = "My Test Database";
       const osName = "foo";
@@ -34,82 +31,82 @@
 
       let key1, key2;
 
-      request = db.transaction([osName], READ_WRITE)
+      request = db.transaction([osName], "readwrite")
                   .objectStore(osName)
                   .add({});
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, "readwrite", "Correct mode");
         key1 = event.target.result;
         testGenerator.next();
       }
       yield;
 
-      request = db.transaction(osName, READ_WRITE).objectStore(osName).add({});
+      request = db.transaction(osName, "readwrite").objectStore(osName).add({});
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, "readwrite", "Correct mode");
         key2 = event.target.result;
         testGenerator.next();
       }
       yield;
 
-      request = db.transaction([osName], READ_WRITE)
+      request = db.transaction([osName], "readwrite")
                   .objectStore(osName)
                   .put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, "readwrite", "Correct mode");
         testGenerator.next();
       }
       yield;
 
-      request = db.transaction(osName, READ_WRITE)
+      request = db.transaction(osName, "readwrite")
                   .objectStore(osName)
                   .put({}, key2);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, "readwrite", "Correct mode");
         testGenerator.next();
       }
       yield;
 
-      request = db.transaction([osName], READ_WRITE)
+      request = db.transaction([osName], "readwrite")
                   .objectStore(osName)
                   .put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, "readwrite", "Correct mode");
         testGenerator.next();
       }
       yield;
 
-      request = db.transaction(osName, READ_WRITE)
+      request = db.transaction(osName, "readwrite")
                   .objectStore(osName)
                   .put({}, key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, "readwrite", "Correct mode");
         testGenerator.next();
       }
       yield;
 
-      request = db.transaction([osName], READ_WRITE)
+      request = db.transaction([osName], "readwrite")
                   .objectStore(osName)
                   .delete(key1);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, "readwrite", "Correct mode");
         testGenerator.next();
       }
       yield;
 
-      request = db.transaction(osName, READ_WRITE)
+      request = db.transaction(osName, "readwrite")
                   .objectStore(osName)
                   .delete(key2);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(event.target.transaction.mode, READ_WRITE, "Correct mode");
+        is(event.target.transaction.mode, "readwrite", "Correct mode");
         testGenerator.next();
       }
       yield;

@@ -58,6 +58,7 @@
 #include "nsIAtom.h"
 #include "nsISupportsImpl.h"
 #include "gfxPattern.h"
+#include "mozilla/HashFunctions.h"
 
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 
@@ -806,7 +807,7 @@ protected:
         bool KeyEquals(const KeyTypePointer aKey) const;
         static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
         static PLDHashNumber HashKey(const KeyTypePointer aKey) {
-            return NS_PTR_TO_INT32(aKey->mFontEntry) ^ aKey->mStyle->Hash();
+            return mozilla::HashGeneric(aKey->mStyle->Hash(), aKey->mFontEntry);
         }
         enum { ALLOW_MEMMOVE = true };
 

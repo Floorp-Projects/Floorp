@@ -59,7 +59,7 @@ public class DBUtils {
             aValues.remove(aOriginalKey);
         }
 
-        if (!aValues.containsKey(aOriginalKey)) {
+        if (!aValues.containsKey(aNewKey)) {
             aValues.put(aNewKey, value);
         }
     }

@@ -41,3 +41,6 @@ HTTP(..) == font-features-turkish-override-3.html font-features-ref.html
 HTTP(..) == font-features-turkish-override-4.html font-features-ref.html
 HTTP(..) == font-features-turkish-override-5.html font-features-turkish.html
 
+# check that last value wins if a feature is repeated
+HTTP(..) == font-features-order-1.html font-features-ref.html
+HTTP(..) == font-features-order-2.html font-features-noliga.html

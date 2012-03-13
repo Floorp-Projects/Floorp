@@ -46,7 +46,7 @@ pref("browser.homescreenURL", "file:///data/local/homescreen.html,file:///system
 #endif
 
 // URL for the dialer application.
-pref("dom.telephony.app.phone.url", "http://localhost:7777/data/local/apps/dialer/dialer.html http://localhost:7777/data/local/apps/homescreen/homescreen.html http://localhost:7777/apps/dialer/dialer.html http://localhost:7777/apps/homescreen/homescreen.html");
+pref("dom.telephony.app.phone.url", "http://localhost:7777/data/local/apps/dialer/dialer.html,http://localhost:7777/data/local/apps/homescreen/homescreen.html,http://localhost:7777/apps/dialer/dialer.html,http://localhost:7777/apps/homescreen/homescreen.html");
 
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
@@ -444,3 +444,12 @@ pref("power.screen.timeout", 60);
 pref("full-screen-api.enabled", true);
 
 pref("media.volume.steps", 10);
+
+// Data connection settings. These will eventually live in the
+// navigator.settings API, or even in a database where we can look
+// it up automatically (bug 729440), but for this will have to do.
+pref("ril.data.enabled", false);
+pref("ril.data.roaming.enabled", false);
+pref("ril.data.apn", "");
+pref("ril.data.user", "");
+pref("ril.data.passwd", "");

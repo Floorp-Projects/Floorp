@@ -93,10 +93,25 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, IDBWrapperCache)
 
+  enum Mode
+  {
+    READ_ONLY = 0,
+    READ_WRITE,
+    VERSION_CHANGE
+  };
+
+  enum ReadyState
+  {
+    INITIAL = 0,
+    LOADING,
+    COMMITTING,
+    DONE
+  };
+
   static already_AddRefed<IDBTransaction>
   Create(IDBDatabase* aDatabase,
          nsTArray<nsString>& aObjectStoreNames,
-         PRUint16 aMode,
+         Mode aMode,
          bool aDispatchDelayed);
 
   // nsIDOMEventTarget
@@ -130,8 +145,7 @@ public:
 
   bool IsWriteAllowed() const
   {
-    return mMode == nsIIDBTransaction::READ_WRITE ||
-           mMode == nsIIDBTransaction::VERSION_CHANGE;
+    return mMode == READ_WRITE || mMode == VERSION_CHANGE;
   }
 
   bool IsAborted() const
@@ -139,7 +153,8 @@ public:
     return mAborted;
   }
 
-  PRUint16 Mode()
+  // 'Get' prefix is to avoid name collisions with the enum
+  Mode GetMode()
   {
     return mMode;
   }
@@ -172,8 +187,8 @@ private:
   nsRefPtr<IDBDatabase> mDatabase;
   nsRefPtr<DatabaseInfo> mDatabaseInfo;
   nsTArray<nsString> mObjectStoreNames;
-  PRUint16 mReadyState;
-  PRUint16 mMode;
+  ReadyState mReadyState;
+  Mode mMode;
   PRUint32 mPendingRequests;
   PRUint32 mCreatedRecursionDepth;
 

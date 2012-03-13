@@ -182,9 +182,8 @@ interface nsIDOMEvent : nsISupports
   void                       stopImmediatePropagation();
 };
 
-[scriptable, uuid(fe864f0f-45df-404a-bb27-83c5d08be8d1)]
-interface nsIEventInit : nsISupports
+dictionary EventInit
 {
-  attribute boolean bubbles;
-  attribute boolean cancelable;
+  boolean bubbles;
+  boolean cancelable;
 };

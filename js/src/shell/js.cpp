@@ -1303,11 +1303,19 @@ SetDebug(JSContext *cx, unsigned argc, jsval *vp)
     return ok;
 }
 
+static JSScript *
+GetTopScript(JSContext *cx)
+{
+    JSScript *script;
+    JS_DescribeScriptedCaller(cx, &script, NULL);
+    return script;
+}
+
 static JSBool
 GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, JSScript **scriptp,
                    int32_t *ip)
 {
-    JSScript *script = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
+    JSScript *script = GetTopScript(cx);
     *ip = 0;
     if (argc != 0) {
         jsval v = argv[0];
@@ -1339,8 +1347,12 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rval,
             jsval closure)
 {
     JSString *str = JSVAL_TO_STRING(closure);
-    JSStackFrame *caller = JS_GetScriptedCaller(cx, NULL);
-    JSScript *script = JS_GetFrameScript(cx, caller);
+
+    FrameRegsIter iter(cx);
+    JS_ASSERT(!iter.done());
+
+    JSStackFrame *caller = Jsvalify(iter.fp());
+    JSScript *script = iter.script();
 
     size_t length;
     const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
@@ -1455,7 +1467,7 @@ LineToPC(JSContext *cx, unsigned argc, jsval *vp)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_LINE2PC_USAGE);
         return JS_FALSE;
     }
-    script = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
+    script = GetTopScript(cx);
     jsval v = JS_ARGV(cx, vp)[0];
     if (!JSVAL_IS_PRIMITIVE(v) &&
         JS_GetClass(JSVAL_TO_OBJECT(v)) == Jsvalify(&FunctionClass))
@@ -1801,8 +1813,7 @@ DisassembleToString(JSContext *cx, unsigned argc, jsval *vp)
     bool ok = true;
     if (p.argc == 0) {
         /* Without arguments, disassemble the current script. */
-        if (JSStackFrame *frame = JS_GetScriptedCaller(cx, NULL)) {
-            JSScript *script = JS_GetFrameScript(cx, frame);
+        if (JSScript *script = GetTopScript(cx)) {
             if (js_Disassemble(cx, script, p.lines, &sprinter)) {
                 SrcNotes(cx, script, &sprinter);
                 TryNotes(cx, script, &sprinter);
@@ -1839,8 +1850,7 @@ Disassemble(JSContext *cx, unsigned argc, jsval *vp)
     bool ok = true;
     if (p.argc == 0) {
         /* Without arguments, disassemble the current script. */
-        if (JSStackFrame *frame = JS_GetScriptedCaller(cx, NULL)) {
-            JSScript *script = JS_GetFrameScript(cx, frame);
+        if (JSScript *script = GetTopScript(cx)) {
             if (js_Disassemble(cx, script, p.lines, &sprinter)) {
                 SrcNotes(cx, script, &sprinter);
                 TryNotes(cx, script, &sprinter);
@@ -2670,9 +2680,10 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
         return true;
     }
 
-    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
-    JSScript *script = JS_GetFrameScript(cx, fp);
-    jsbytecode *pc = JS_GetFramePC(cx, fp);
+    JSScript *script;
+    unsigned lineno;
+
+    JS_DescribeScriptedCaller(cx, &script, &lineno);
     jsval rval;
     {
         JSAutoEnterCompartment ac;
@@ -2693,7 +2704,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
         }
         if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
                                  script->filename,
-                                 JS_PCToLineNumber(cx, script, pc),
+                                 lineno,
                                  &rval)) {
             return false;
         }
@@ -3379,9 +3390,8 @@ Snarf(JSContext *cx, unsigned argc, jsval *vp)
         return JS_FALSE;
 
     /* Get the currently executing script's name. */
-    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
-    JSScript *script = JS_GetFrameScript(cx, fp);
-    JS_ASSERT(fp && script->filename);
+    JSScript *script = GetTopScript(cx);
+    JS_ASSERT(script->filename);
     const char *pathname = filename.ptr();
 #ifdef XP_UNIX
     FreeOnReturn pnGuard(cx);

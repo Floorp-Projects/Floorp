@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<style>
+	#container {
+		position: relative;
+		margin: 10px auto;
+		width: 450px;
+		height: 281px;
+		z-index: 1;
+		-moz-perspective: 1000px;
+	}
+	#card {
+		width: 100%;
+		height: 100%;
+		-moz-transform-style: preserve-3d;
+        -moz-transform: rotateY(165deg);
+	}
+	.face {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+        -moz-backface-visibility: hidden;
+        background: red;
+	}
+	.face.back {
+		display: block;
+		-moz-transform: rotateY(180deg);
+		-moz-box-sizing: border-box;
+		padding: 10px;
+		color: white;
+		text-align: center;
+		background: green;
+	}
+	</style>
+	
+	<div id="container" class="hover">
+		<div id="card">
+			<div class="back face">
+			</div>
+  		</div>
+    </div>
+</body></html>

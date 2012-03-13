@@ -141,11 +141,15 @@ function RadioInterfaceLayer() {
   this.worker.onerror = this.onerror.bind(this);
   this.worker.onmessage = this.onmessage.bind(this);
   debug("Starting Worker\n");
-  this.currentState = {
-    signalStrength: null,
-    operator:       null,
+  this.radioState = {
     radioState:     null,
-    cardState:      null
+    cardState:      null,
+    connected:      null,
+    roaming:        null,
+    signalStrength: null,
+    bars:           null,
+    operator:       null,
+    type:           null,
   };
 }
 RadioInterfaceLayer.prototype = {
@@ -169,7 +173,7 @@ RadioInterfaceLayer.prototype = {
    * Process the incoming message from the RIL worker:
    * (1) Update the current state. This way any component that hasn't
    *     been listening for callbacks can easily catch up by looking at
-   *     this.currentState.
+   *     this.radioState.
    * (2) Update state in related systems such as the audio.
    * (3) Multiplex the message to telephone callbacks.
    */
@@ -190,22 +194,62 @@ RadioInterfaceLayer.prototype = {
         this.handleEnumerateCalls(message.calls);
         break;
       case "registrationstatechange":
-        this.currentState.registrationState = message.registrationState;
+        this.updateDataConnection(message.registrationState);
         break;
       case "gprsregistrationstatechange":
-        this.currentState.gprsRegistrationState = message.gprsRegistrationState;
+        let state = message.gprsRegistrationState;
+        this.updateDataConnection(state);
+
+        //TODO for simplicity's sake, for now we only look at
+        // gprsRegistrationState for the radio registration state.
+
+        if (!state || state.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
+          this.resetRadioState();
+          this.notifyRadioStateChanged();
+          return;
+        }
+
+        this.radioState.connected =
+          (state.regState == RIL.NETWORK_CREG_STATE_REGISTERED_HOME) ||
+          (state.regState == RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING);
+        this.radioState.roaming =
+          this.radioState.connected &&
+          (state.regState == RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING);
+        this.radioState.type = RIL.GECKO_RADIO_TECH[state.radioTech] || null;
+        this.notifyRadioStateChanged();
         break;
       case "signalstrengthchange":
-        this.currentState.signalStrength = message.signalStrength;
+        //TODO GSM only?
+        let signalStrength = message.signalStrength.gsmSignalStrength;
+        if (signalStrength == 99) {
+          signalStrength = null;
+        }
+        this.radioState.signalStrength = signalStrength;
+        if (message.signalStrength.bars) {
+          this.radioState.bars = message.signalStrength.bars;
+        } else if (signalStrength != null) {
+          //TODO pretty sure that the bars aren't linear, but meh...
+          // Convert signal strength (0...31) to bars (0...4).
+          this.radioState.bars = Math.round(signalStrength / 7.75);
+        } else {
+          this.radioState.bars = null;
+        }
+        this.notifyRadioStateChanged();
         break;
       case "operatorchange":
-        this.currentState.operator = message.operator;
+        this.radioState.operator = message.operator.alphaLong;
+        this.notifyRadioStateChanged();
         break;
       case "radiostatechange":
-        this.currentState.radioState = message.radioState;
+        this.radioState.radioState = message.radioState;
+        this.notifyRadioStateChanged();
         break;
       case "cardstatechange":
-        this.currentState.cardState = message.cardState;
+        this.radioState.cardState = message.cardState;
+        if (!message.cardState || message.cardState == "absent") {
+          this.resetRadioState();
+        }
+        this.notifyRadioStateChanged();
         break;
       case "sms-received":
         this.handleSmsReceived(message);
@@ -219,8 +263,58 @@ RadioInterfaceLayer.prototype = {
       case "datacalllist":
         this.handleDataCallList(message);
         break;
+      case "nitzTime":
+        // TODO bug 714349
+        // Send information to time manager to decide what to do with it
+        // Message contains networkTimeInSeconds, networkTimeZoneInMinutes,
+        // dstFlag,localTimeStampInMS
+        // indicating the time, daylight savings flag, and timezone
+        // sent from the network and a timestamp of when the message was received
+        // so an offset can be added if/when the time is actually set.
+        if (DEBUG) {
+          debug("nitzTime networkTime=" + message.networkTimeInSeconds
+               + " timezone=" + message.networkTimeZoneInMinutes
+               + " dst=" + message.dstFlag
+               + " timestamp=" + message.localTimeStampInMS);
+        }
+        break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
+    }
+  },
+
+  _isDataEnabled: function _isDataEnabled() {
+    try {
+      return Services.prefs.getBoolPref("ril.data.enabled");
+    } catch(ex) {
+      return false;
+    }
+  },
+
+  _isDataRoamingEnabled: function _isDataRoamingEnabled() {
+    try {
+      return Services.prefs.getBoolPref("ril.data.roaming.enabled");
+    } catch(ex) {
+      return false;
+    }
+  },
+
+  updateDataConnection: function updateDataConnection(state) {
+    if (!this._isDataEnabled()) {
+      return;
+    }
+
+    let isRegistered =
+      state.regState == RIL.NETWORK_CREG_STATE_REGISTERED_HOME ||
+        (this._isDataRoamingEnabled() &&
+         state.regState == RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING);
+    let haveDataConnection =
+      state.radioTech != RIL.NETWORK_CREG_TECH_UNKNOWN;
+
+    if (isRegistered && haveDataConnection) {
+      debug("Radio is ready for data connection.");
+      // RILNetworkInterface will ignore this if it's already connected.
+      RILNetworkInterface.connect();
     }
   },
 
@@ -361,13 +455,27 @@ RadioInterfaceLayer.prototype = {
                                   [datacalls, datacalls.length]);
   },
 
+  resetRadioState: function resetRadioState() {
+    this.radioState.connected = null;
+    this.radioState.roaming = null;
+    this.radioState.signalStrength = null;
+    this.radioState.bars = null;
+    this.radioState.operator = null;
+    this.radioState.type = null;
+  },
+
+  notifyRadioStateChanged: function notifyRadioStateChanged() {
+    debug("Radio state changed: " + JSON.stringify(this.radioState));
+    Services.obs.notifyObservers(null, "ril-radiostate-changed", null);
+  },
+
   // nsIRadioWorker
 
   worker: null,
 
   // nsIRadioInterfaceLayer
 
-  currentState: null,
+  radioState: null,
 
   dial: function dial(number) {
     debug("Dialing " + number);
@@ -569,6 +677,108 @@ RadioInterfaceLayer.prototype = {
 
   getDataCallList: function getDataCallList() {
     this.worker.postMessage({type: "getDataCallList"});
+  },
+
+};
+
+
+let RILNetworkInterface = {
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRILDataCallback]),
+
+  state: RIL.GECKO_NETWORK_STATE_UNKNOWN,
+  name: null,
+
+  worker: null,
+  cid: null,
+  registeredAsDataCallCallback: false,
+  connecting: false,
+
+  initWorker: function initWorker() {
+    debug("Starting net_worker.");
+    this.worker = new ChromeWorker("resource://gre/modules/net_worker.js");
+    this.worker.onerror = function onerror(event) {
+      debug("Received error from worker: " + event.filename +
+            ":" + event.lineno + ": " + event.message + "\n");
+      // Prevent the event from bubbling any further.
+      event.preventDefault();
+    };
+  },
+
+  // nsIRILDataCallback
+
+  dataCallStateChanged: function dataCallStateChanged(cid, interfaceName, callState) {
+    if (this.connecting &&
+        callState == RIL.GECKO_NETWORK_STATE_CONNECTING) {
+      this.connecting = false;
+      this.cid = cid;
+      this.name = interfaceName;
+      debug("Data call ID: " + cid + ", interface name: " + interfaceName);
+    }
+    if (this.cid != cid) {
+      return;
+    }
+    if (this.state == callState) {
+      return;
+    }
+
+    this.state = callState;
+
+    if (callState == RIL.GECKO_NETWORK_STATE_CONNECTED) {
+      debug("Data call is connected, going to configure networking bits.");
+      this.worker.postMessage({cmd: "setDefaultRouteAndDNS",
+                               ifname: this.name});
+    }
+  },
+
+  receiveDataCallList: function receiveDataCallList(dataCalls, length) {
+  },
+
+  // Helpers
+
+  get mRIL() {
+    delete this.mRIL;
+    return this.mRIL = Cc["@mozilla.org/telephony/system-worker-manager;1"]
+                         .getService(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIRadioInterfaceLayer);
+  },
+
+  connect: function connect() {
+    if (this.connecting ||
+        this.state == RIL.GECKO_NETWORK_STATE_CONNECTED ||
+        this.state == RIL.GECKO_NETWORK_STATE_SUSPENDED ||
+        this.state == RIL.GECKO_NETWORK_STATE_DISCONNECTING) {
+      return;
+    }
+    if (!this.registeredAsDataCallCallback) {
+      this.mRIL.registerDataCallCallback(this);
+      this.registeredAsDataCallCallback = true;
+    }
+
+    if (!this.worker) {
+      this.initWorker();
+    }
+
+    let apn, user, passwd;
+    // Eventually these values would be retrieved from the user's preferences
+    // via the settings API. For now we just use Gecko's preferences.
+    try {
+      apn = Services.prefs.getCharPref("ril.data.apn");
+      user = Services.prefs.getCharPref("ril.data.user");
+      passwd = Services.prefs.getCharPref("ril.data.passwd");
+    } catch (ex) {
+      debug("No APN settings found, not going to set up data connection.");
+      return;
+    }
+    debug("Going to set up data connection with APN " + apn);
+    this.mRIL.setupDataCall(RIL.DATACALL_RADIOTECHNOLOGY_GSM,
+                            apn, user, passwd,
+                            RIL.DATACALL_AUTH_PAP_OR_CHAP, "IP");
+    this.connecting = true;
+  },
+
+  disconnect: function disconnect() {
+    this.mRIL.deactivateDataCall(this.cid);
   },
 
 };

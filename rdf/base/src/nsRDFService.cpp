@@ -89,6 +89,9 @@
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
 #include "prbit.h"
+#include "mozilla/HashFunctions.h"
+
+using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -155,7 +158,7 @@ struct ResourceHashEntry : public PLDHashEntryHdr {
     static PLDHashNumber
     HashKey(PLDHashTable *table, const void *key)
     {
-        return nsCRT::HashCode(static_cast<const char *>(key));
+        return HashString(static_cast<const char *>(key));
     }
 
     static bool
@@ -193,7 +196,7 @@ struct LiteralHashEntry : public PLDHashEntryHdr {
     static PLDHashNumber
     HashKey(PLDHashTable *table, const void *key)
     {
-        return nsCRT::HashCode(static_cast<const PRUnichar *>(key));
+        return HashString(static_cast<const PRUnichar *>(key));
     }
 
     static bool
@@ -389,12 +392,7 @@ struct BlobHashEntry : public PLDHashEntryHdr {
     {
         const BlobImpl::Data *data =
             static_cast<const BlobImpl::Data *>(key);
-
-        const PRUint8 *p = data->mBytes, *limit = p + data->mLength;
-        PLDHashNumber h = 0;
-        for ( ; p < limit; ++p)
-            h = PR_ROTATE_LEFT32(h, 4) ^ *p;
-        return h;
+        return HashBytes(data->mBytes, data->mLength);
     }
 
     static bool

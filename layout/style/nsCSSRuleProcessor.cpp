@@ -124,17 +124,80 @@ struct RuleSelectorPair {
   nsCSSSelector*    mSelector; // which of |mRule|'s selectors
 };
 
+#define NS_IS_ANCESTOR_OPERATOR(ch) \
+  ((ch) == PRUnichar(' ') || (ch) == PRUnichar('>'))
+
 /**
  * A struct representing a particular rule in an ordered list of rules
  * (the ordering depending on the weight of mSelector and the order of
  * our rules to start with).
  */
 struct RuleValue : RuleSelectorPair {
+  enum {
+    eMaxAncestorHashes = 4
+  };
+
   RuleValue(const RuleSelectorPair& aRuleSelectorPair, PRInt32 aIndex) :
     RuleSelectorPair(aRuleSelectorPair),
     mIndex(aIndex)
-  {}
+  {
+    CollectAncestorHashes();
+  }
+
   PRInt32 mIndex; // High index means high weight/order.
+  uint32_t mAncestorSelectorHashes[eMaxAncestorHashes];
+
+private:
+  void CollectAncestorHashes() {
+    // Collect up our mAncestorSelectorHashes.  It's not clear whether it's
+    // better to stop once we've found eMaxAncestorHashes of them or to keep
+    // going and preferentially collect information from selectors higher up the
+    // chain...  Let's do the former for now.
+    size_t hashIndex = 0;
+    for (nsCSSSelector* sel = mSelector->mNext; sel; sel = sel->mNext) {
+      if (!NS_IS_ANCESTOR_OPERATOR(sel->mOperator)) {
+        // |sel| is going to select something that's not actually one of our
+        // ancestors, so don't add it to mAncestorSelectorHashes.  But keep
+        // going, because it'll select a sibling of one of our ancestors, so its
+        // ancestors would be our ancestors too.
+        continue;
+      }
+
+      // Now sel is supposed to select one of our ancestors.  Grab whatever info
+      // we can from it into mAncestorSelectorHashes.
+      nsAtomList* ids = sel->mIDList;
+      while (ids) {
+        mAncestorSelectorHashes[hashIndex++] = ids->mAtom->hash();
+        if (hashIndex == eMaxAncestorHashes) {
+          return;
+        }
+        ids = ids->mNext;
+      }
+
+      nsAtomList* classes = sel->mClassList;
+      while (classes) {
+        mAncestorSelectorHashes[hashIndex++] = classes->mAtom->hash();
+        if (hashIndex == eMaxAncestorHashes) {
+          return;
+        }
+        classes = classes->mNext;
+      }
+
+      // Only put in the tag name if it's all-lowercase.  Otherwise we run into
+      // trouble because we may test the wrong one of mLowercaseTag and
+      // mCasedTag against the filter.
+      if (sel->mLowercaseTag && sel->mCasedTag == sel->mLowercaseTag) {
+        mAncestorSelectorHashes[hashIndex++] = sel->mLowercaseTag->hash();
+        if (hashIndex == eMaxAncestorHashes) {
+          return;
+        }
+      }
+    }
+
+    while (hashIndex != eMaxAncestorHashes) {
+      mAncestorSelectorHashes[hashIndex++] = 0;
+    }
+  }
 };
 
 // ------------------------------
@@ -650,8 +713,9 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
 #endif
 
 static inline
-void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
-                     RuleProcessorData* data, NodeMatchContext& nodeContext);
+void ContentEnumFunc(const RuleValue &value, nsCSSSelector* selector,
+                     RuleProcessorData* data, NodeMatchContext& nodeContext,
+                     AncestorFilter *ancestorFilter);
 
 void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
                                  NodeMatchContext& aNodeContext)
@@ -722,6 +786,14 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
   NS_ASSERTION(valueCount <= testCount, "values exceeded list size");
 
   if (valueCount > 0) {
+    AncestorFilter *filter =
+      aData->mTreeMatchContext.mAncestorFilter.HasFilter() ?
+        &aData->mTreeMatchContext.mAncestorFilter : nsnull;
+#ifdef DEBUG
+    if (filter) {
+      filter->AssertHasAllAncestors(aElement);
+    }
+#endif
     // Merge the lists while there are still multiple lists to merge.
     while (valueCount > 1) {
       PRInt32 valueIndex = 0;
@@ -734,7 +806,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
         }
       }
       const RuleValue *cur = mEnumList[valueIndex].mCurValue;
-      ContentEnumFunc(cur->mRule, cur->mSelector, aData, aNodeContext);
+      ContentEnumFunc(*cur, cur->mSelector, aData, aNodeContext, filter);
       cur++;
       if (cur == mEnumList[valueIndex].mEnd) {
         mEnumList[valueIndex] = mEnumList[--valueCount];
@@ -747,7 +819,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
     for (const RuleValue *value = mEnumList[0].mCurValue,
                          *end = mEnumList[0].mEnd;
          value != end; ++value) {
-      ContentEnumFunc(value->mRule, value->mSelector, aData, aNodeContext);
+      ContentEnumFunc(*value, value->mSelector, aData, aNodeContext, filter);
     }
   }
 }
@@ -2042,6 +2114,11 @@ static bool SelectorMatches(Element* aElement,
         // selectors ":hover" and ":active".
         return false;
       } else {
+        if (aTreeMatchContext.mForStyling &&
+            statesToCheck.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER)) {
+          // Mark the element as having :hover-dependent style
+          aElement->SetFlags(NODE_HAS_RELEVANT_HOVER_RULES);
+        }
         if (aNodeMatchContext.mStateMask.HasAtLeastOneOfStates(statesToCheck)) {
           if (aDependence)
             *aDependence = true;
@@ -2235,8 +2312,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
           selector->mNext &&
           selector->mNext->mOperator != selector->mOperator &&
           !(selector->mOperator == '~' &&
-            (selector->mNext->mOperator == PRUnichar(' ') ||
-             selector->mNext->mOperator == PRUnichar('>')))) {
+            NS_IS_ANCESTOR_OPERATOR(selector->mNext->mOperator))) {
 
         // pretend the selector didn't match, and step through content
         // while testing the same selector
@@ -2265,11 +2341,18 @@ static bool SelectorMatchesTree(Element* aPrevElement,
 }
 
 static inline
-void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
-                     RuleProcessorData* data, NodeMatchContext& nodeContext)
+void ContentEnumFunc(const RuleValue& value, nsCSSSelector* aSelector,
+                     RuleProcessorData* data, NodeMatchContext& nodeContext,
+                     AncestorFilter *ancestorFilter)
 {
   if (nodeContext.mIsRelevantLink) {
     data->mTreeMatchContext.SetHaveRelevantLink();
+  }
+  if (ancestorFilter &&
+      !ancestorFilter->MightHaveMatchingAncestor<RuleValue::eMaxAncestorHashes>(
+          value.mAncestorSelectorHashes)) {
+    // We won't match; nothing else to do here
+    return;
   }
   if (SelectorMatches(data->mElement, aSelector, nodeContext,
                       data->mTreeMatchContext)) {
@@ -2277,8 +2360,9 @@ void ContentEnumFunc(css::StyleRule* aRule, nsCSSSelector* aSelector,
     if (!next || SelectorMatchesTree(data->mElement, next,
                                      data->mTreeMatchContext,
                                      !nodeContext.mIsRelevantLink)) {
-      aRule->RuleMatched();
-      data->mRuleWalker->Forward(aRule);
+      css::StyleRule *rule = value.mRule;
+      rule->RuleMatched();
+      data->mRuleWalker->Forward(rule);
       // nsStyleSet will deal with the !important rule
     }
   }
@@ -2348,8 +2432,8 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
            value != end; ++value) {
         if (aData->mComparator->PseudoMatches(value->mSelector)) {
-          ContentEnumFunc(value->mRule, value->mSelector->mNext, aData,
-                          nodeContext);
+          ContentEnumFunc(*value, value->mSelector->mNext, aData, nodeContext,
+                          nsnull);
         }
       }
     }
@@ -3180,3 +3264,99 @@ nsCSSRuleProcessor::SelectorListMatches(Element* aElement,
 
   return false;
 }
+
+// AncestorFilter out of line methods
+void
+AncestorFilter::Init(Element *aElement)
+{
+  MOZ_ASSERT(!mFilter);
+  MOZ_ASSERT(mHashes.IsEmpty());
+
+  mFilter = new Filter();
+
+  if (NS_LIKELY(aElement)) {
+    MOZ_ASSERT(aElement->IsInDoc(),
+               "aElement must be in the document for the assumption that "
+               "GetNodeParent() is non-null on all element ancestors of "
+               "aElement to be true");
+    // Collect up the ancestors
+    nsAutoTArray<Element*, 50> ancestors;
+    Element* cur = aElement;
+    do {
+      ancestors.AppendElement(cur);
+      nsINode* parent = cur->GetNodeParent();
+      if (!parent->IsElement()) {
+        break;
+      }
+      cur = parent->AsElement();
+    } while (true);
+
+    // Now push them in reverse order.
+    for (PRUint32 i = ancestors.Length(); i-- != 0; ) {
+      PushAncestor(ancestors[i]);
+    }
+  }
+}
+
+void
+AncestorFilter::PushAncestor(Element *aElement)
+{
+  MOZ_ASSERT(mFilter);
+
+  PRUint32 oldLength = mHashes.Length();
+
+  mPopTargets.AppendElement(oldLength);
+#ifdef DEBUG
+  mElements.AppendElement(aElement);
+#endif
+  mHashes.AppendElement(aElement->Tag()->hash());
+  nsIAtom *id = aElement->GetID();
+  if (id) {
+    mHashes.AppendElement(id->hash());
+  }
+  const nsAttrValue *classes = aElement->GetClasses();
+  if (classes) {
+    PRUint32 classCount = classes->GetAtomCount();
+    for (PRUint32 i = 0; i < classCount; ++i) {
+      mHashes.AppendElement(classes->AtomAt(i)->hash());
+    }
+  }
+
+  PRUint32 newLength = mHashes.Length();
+  for (PRUint32 i = oldLength; i < newLength; ++i) {
+    mFilter->add(mHashes[i]);
+  }
+}
+
+void
+AncestorFilter::PopAncestor()
+{
+  MOZ_ASSERT(!mPopTargets.IsEmpty());
+  MOZ_ASSERT(mPopTargets.Length() == mElements.Length());
+
+  PRUint32 popTargetLength = mPopTargets.Length();
+  PRUint32 newLength = mPopTargets[popTargetLength-1];
+
+  mPopTargets.TruncateLength(popTargetLength-1);
+#ifdef DEBUG
+  mElements.TruncateLength(popTargetLength-1);
+#endif
+
+  PRUint32 oldLength = mHashes.Length();
+  for (PRUint32 i = newLength; i < oldLength; ++i) {
+    mFilter->remove(mHashes[i]);
+  }
+  mHashes.TruncateLength(newLength);
+}
+
+#ifdef DEBUG
+void
+AncestorFilter::AssertHasAllAncestors(Element *aElement) const
+{
+  nsINode* cur = aElement->GetNodeParent();
+  while (cur && cur->IsElement()) {
+    MOZ_ASSERT(mElements.Contains(cur));
+    cur = cur->GetNodeParent();
+  }
+}
+#endif

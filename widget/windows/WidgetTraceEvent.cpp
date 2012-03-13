@@ -125,6 +125,7 @@ bool InitWidgetTracing()
 void CleanUpWidgetTracing()
 {
   CloseHandle(sEventHandle);
+  sEventHandle = NULL;
 }
 
 // This function is called from the main (UI) thread.
