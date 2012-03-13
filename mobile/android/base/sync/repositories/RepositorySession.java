@@ -1,40 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- * Jason Voll <jvoll@mozilla.com>
- * Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.repositories;
 
@@ -53,16 +19,22 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelega
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
 /**
- * A RepositorySession is created and used thusly:
+ * A <code>RepositorySession</code> is created and used thusly:
  *
- * * Construct, with a reference to its parent Repository, by calling
- *   Repository.createSession().
- * * Populate with saved information by calling unbundle().
- * * Begin a sync by calling begin().
- * * Perform operations such as fetchSince() and store().
- * * Finish by calling finish(), retrieving and storing the current bundle.
+ *<ul>
+ * <li>Construct, with a reference to its parent {@link Repository}, by calling
+ *   {@link Repository#createSession(RepositorySessionCreationDelegate, android.content.Context)}.</li>
+ * <li>Populate with saved information by calling {@link #unbundle(RepositorySessionBundle)}.</li>
+ * <li>Begin a sync by calling {@link #begin(RepositorySessionBeginDelegate)}. <code>begin()</code>
+ *   is an appropriate place to initialize expensive resources.</li>
+ * <li>Perform operations such as {@link #fetchSince(long, RepositorySessionFetchRecordsDelegate)} and
+ *   {@link #store(Record)}.</li>
+ * <li>Finish by calling {@link #finish(RepositorySessionFinishDelegate)}, retrieving and storing
+ *   the current bundle.</li>
+ *</ul>
  *
- * @author rnewman
+ * If <code>finish()</code> is not called, {@link #abort()} must be called. These calls must
+ * <em>always</em> be paired with <code>begin()</code>.
  *
  */
 public abstract class RepositorySession {
@@ -192,6 +164,13 @@ public abstract class RepositorySession {
     this.transitionFrom(SessionStatus.UNSTARTED, SessionStatus.ACTIVE);
   }
 
+  /**
+   * Start the session. This is an appropriate place to initialize
+   * data access components such as database handles.
+   *
+   * @param delegate
+   * @throws InvalidSessionTransitionException
+   */
   public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
     sharedBegin();
     delegate.deferredBeginDelegate(delegateQueue).onBeginSucceeded(this);
@@ -228,6 +207,10 @@ public abstract class RepositorySession {
     delegate.deferredFinishDelegate(delegateQueue).onFinishSucceeded(this, this.getBundle(null));
   }
 
+  /**
+   * Abnormally terminate the repository session, freeing or closing
+   * any resources that were opened during the lifetime of the session.
+   */
   public void abort() {
     // TODO: do something here.
     this.setStatus(SessionStatus.ABORTED);
@@ -243,6 +226,13 @@ public abstract class RepositorySession {
     }
   }
 
+  /**
+   * End the repository session, freeing or closing any resources
+   * that were opened during the lifetime of the session.
+   *
+   * @param delegate notified of success or failure.
+   * @throws InactiveSessionException
+   */
   public void finish(final RepositorySessionFinishDelegate delegate) throws InactiveSessionException {
     try {
       this.transitionFrom(SessionStatus.ACTIVE, SessionStatus.DONE);
