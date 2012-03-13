@@ -7,9 +7,6 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
-  const nsIIDBTransaction = Components.interfaces.nsIIDBTransaction;
-
   const name = this.window ? window.location.pathname : "Splendid Test";
   const description = "My Test Database";
   const objectStoreInfo = [
@@ -109,9 +106,7 @@ function testSteps()
       ok(event.target.transaction, "event has a transaction");
       ok(event.target.transaction.db === db,
          "transaction has the right db");
-      is(event.target.transaction.readyState, nsIIDBTransaction.LOADING,
-         "transaction has the correct readyState");
-      is(event.target.transaction.mode, nsIIDBTransaction.VERSION_CHANGE,
+      is(event.target.transaction.mode, "versionchange",
          "transaction has the correct mode");
       is(event.target.transaction.objectStoreNames.length, i + 1,
          "transaction only has one object store");

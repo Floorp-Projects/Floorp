@@ -329,6 +329,19 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
 
+void
+nsXHREventTarget::DisconnectFromOwner()
+{
+  nsDOMEventTargetHelper::DisconnectFromOwner();
+  NS_DISCONNECT_EVENT_HANDLER(Load)
+  NS_DISCONNECT_EVENT_HANDLER(Error)
+  NS_DISCONNECT_EVENT_HANDLER(Abort)
+  NS_DISCONNECT_EVENT_HANDLER(Load)
+  NS_DISCONNECT_EVENT_HANDLER(Progress)
+  NS_DISCONNECT_EVENT_HANDLER(Loadend)
+  NS_DISCONNECT_EVENT_HANDLER(Timeout)
+}
+
 NS_IMETHODIMP
 nsXHREventTarget::GetOnload(nsIDOMEventListener** aOnLoad)
 {
@@ -489,7 +502,7 @@ nsXMLHttpRequest::RootResultArrayBuffer()
 nsresult
 nsXMLHttpRequest::Init()
 {
-  // Set the original mScriptContext and mPrincipal, if available.
+  // Set the original mPrincipal, if available.
   // Get JSContext from stack.
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
@@ -515,12 +528,9 @@ nsXMLHttpRequest::Init()
 
   nsIScriptContext* context = GetScriptContextFromJSContext(cx);
   if (context) {
-    mScriptContext = context;
     nsCOMPtr<nsPIDOMWindow> window =
       do_QueryInterface(context->GetGlobalObject());
-    if (window) {
-      mOwner = window->GetCurrentInnerWindow();
-    }
+    BindToOwner(window ? window->GetCurrentInnerWindow() : nsnull);
   }
 
   return NS_OK;
@@ -536,18 +546,8 @@ nsXMLHttpRequest::Init(nsIPrincipal* aPrincipal,
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
 
-  // This object may have already been initialized in the other Init call above
-  // if JS was on the stack. Clear the old values for mScriptContext and mOwner
-  // if new ones are not supplied here.
-
   mPrincipal = aPrincipal;
-  mScriptContext = aScriptContext;
-  if (aOwnerWindow) {
-    mOwner = aOwnerWindow->GetCurrentInnerWindow();
-  }
-  else {
-    mOwner = nsnull;
-  }
+  BindToOwner(aOwnerWindow ? aOwnerWindow->GetCurrentInnerWindow() : nsnull);
   mBaseURI = aBaseURI;
 
   return NS_OK;
@@ -560,8 +560,8 @@ NS_IMETHODIMP
 nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                              PRUint32 argc, jsval *argv)
 {
-  mOwner = do_QueryInterface(aOwner);
-  if (!mOwner) {
+  nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aOwner);
+  if (!owner) {
     NS_WARNING("Unexpected nsIJSNativeInitializer owner");
     return NS_OK;
   }
@@ -571,10 +571,7 @@ nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
   nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal = do_QueryInterface(aOwner);
   NS_ENSURE_STATE(scriptPrincipal);
   mPrincipal = scriptPrincipal->GetPrincipal();
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aOwner);
-  NS_ENSURE_STATE(sgo);
-  mScriptContext = sgo->GetContext();
-  NS_ENSURE_STATE(mScriptContext);
+  BindToOwner(owner);
   return NS_OK; 
 }
 
@@ -705,6 +702,15 @@ NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
 NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
 
+void
+nsXMLHttpRequest::DisconnectFromOwner()
+{
+  nsXHREventTarget::DisconnectFromOwner();
+  NS_DISCONNECT_EVENT_HANDLER(UploadProgress)
+  NS_DISCONNECT_EVENT_HANDLER(Readystatechange)
+  Abort();
+}
+
 NS_IMETHODIMP
 nsXMLHttpRequest::GetOnreadystatechange(nsIDOMEventListener * *aOnreadystatechange)
 {
@@ -777,11 +783,11 @@ nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
   }
   if (mWarnAboutMultipartHtml) {
     mWarnAboutMultipartHtml = false;
-    LogMessage("HTMLMultipartXHRWarning", mOwner);
+    LogMessage("HTMLMultipartXHRWarning", GetOwner());
   }
   if (mWarnAboutSyncHtml) {
     mWarnAboutSyncHtml = false;
-    LogMessage("HTMLSyncXHRWarning", mOwner);
+    LogMessage("HTMLSyncXHRWarning", GetOwner());
   }
   return NS_OK;
 }
@@ -823,7 +829,7 @@ nsXMLHttpRequest::DetectCharset()
   if (mResponseType == XML_HTTP_RESPONSE_TYPE_JSON &&
       !mResponseCharset.EqualsLiteral("UTF-8")) {
     // The XHR spec says only UTF-8 is supported for responseType == "json"
-    LogMessage("JSONCharsetWarning", mOwner);
+    LogMessage("JSONCharsetWarning", GetOwner());
     mResponseCharset.AssignLiteral("UTF-8");
   }
 
@@ -1044,9 +1050,9 @@ NS_IMETHODIMP nsXMLHttpRequest::SetResponseType(const nsAString& aResponseType)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   // sync request is not allowed setting responseType in window context
-  if (mOwner &&
+  if (HasOrHasHadOwner() &&
       !(mState & (XML_HTTP_REQUEST_UNSENT | XML_HTTP_REQUEST_ASYNC))) {
-    LogMessage("ResponseTypeSyncXHRWarning", mOwner);
+    LogMessage("ResponseTypeSyncXHRWarning", GetOwner());
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
@@ -1479,12 +1485,15 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
 already_AddRefed<nsILoadGroup>
 nsXMLHttpRequest::GetLoadGroup() const
 {
-  if (mState & XML_HTTP_REQUEST_BACKGROUND) {
+  if (mState & XML_HTTP_REQUEST_BACKGROUND) {                 
     return nsnull;
   }
 
+  nsresult rv = NS_ERROR_FAILURE;
+  nsIScriptContext* sc =
+    const_cast<nsXMLHttpRequest*>(this)->GetContextForEventHandlers(&rv);
   nsCOMPtr<nsIDocument> doc =
-    nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
+    nsContentUtils::GetDocumentFromScriptContext(sc);
   if (doc) {
     return doc->GetDocumentLoadGroup();
   }
@@ -1563,7 +1572,7 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
 
   if (aUseLSEventWrapper) {
     nsCOMPtr<nsIDOMProgressEvent> xhrprogressEvent =
-      new nsXMLHttpProgressEvent(progress, aPosition, aTotalSize, mOwner);
+      new nsXMLHttpProgressEvent(progress, aPosition, aTotalSize, GetOwner());
     event = xhrprogressEvent;
   }
   aTarget->DispatchDOMEvent(nsnull, event, nsnull, nsnull);
@@ -1666,18 +1675,18 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
 
   // sync request is not allowed using withCredential or responseType
   // in window context
-  if (!async && mOwner &&
+  if (!async && HasOrHasHadOwner() &&
       (mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS ||
        mTimeoutMilliseconds ||
        mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT)) {
     if (mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS) {
-      LogMessage("WithCredentialsSyncXHRWarning", mOwner);
+      LogMessage("WithCredentialsSyncXHRWarning", GetOwner());
     }
     if (mTimeoutMilliseconds) {
-      LogMessage("TimeoutSyncXHRWarning", mOwner);
+      LogMessage("TimeoutSyncXHRWarning", GetOwner());
     }
     if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT) {
-      LogMessage("ResponseTypeSyncXHRWarning", mOwner);
+      LogMessage("ResponseTypeSyncXHRWarning", GetOwner());
     }
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
@@ -1711,8 +1720,10 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
 
   mState &= ~XML_HTTP_REQUEST_MPART_HEADERS;
 
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDocument> doc =
-    nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
+    nsContentUtils::GetDocumentFromScriptContext(sc);
   
   nsCOMPtr<nsIURI> baseURI;
   if (mBaseURI) {
@@ -1725,8 +1736,6 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
   rv = NS_NewURI(getter_AddRefs(uri), url, nsnull, baseURI);
   if (NS_FAILED(rv)) return rv;
 
-  // mScriptContext should be initialized because of GetBaseURI() above.
-  // Still need to consider the case that doc is nsnull however.
   rv = CheckInnerWindowCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
@@ -2123,8 +2132,10 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   if (mState & XML_HTTP_REQUEST_PARSEBODY) {
     nsCOMPtr<nsIURI> baseURI, docURI;
+    nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> doc =
-      nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
+      nsContentUtils::GetDocumentFromScriptContext(sc);
 
     if (doc) {
       docURI = doc->GetDocumentURI();
@@ -2136,7 +2147,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     // principal, so use mPrincipal when creating the document, then reset the
     // principal.
     const nsAString& emptyStr = EmptyString();
-    nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(mOwner);
+    nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(GetOwner());
     rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, docURI,
                                         baseURI, mPrincipal, global,
                                         mIsHtml ? DocumentFlavorHTML :
@@ -2578,8 +2589,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       nsCOMPtr<nsIURI> principalURI;
       mPrincipal->GetURI(getter_AddRefs(principalURI));
 
+      nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+      NS_ENSURE_SUCCESS(rv, rv);
       nsCOMPtr<nsIDocument> doc =
-        nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
+        nsContentUtils::GetDocumentFromScriptContext(sc);
 
       nsCOMPtr<nsIURI> docCurURI;
       nsCOMPtr<nsIURI> docOrigURI;
@@ -2836,9 +2849,9 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
     nsCOMPtr<nsIDocument> suspendedDoc;
     nsCOMPtr<nsIRunnable> resumeTimeoutRunnable;
-    if (mOwner) {
+    if (GetOwner()) {
       nsCOMPtr<nsIDOMWindow> topWindow;
-      if (NS_SUCCEEDED(mOwner->GetTop(getter_AddRefs(topWindow)))) {
+      if (NS_SUCCEEDED(GetOwner()->GetTop(getter_AddRefs(topWindow)))) {
         nsCOMPtr<nsPIDOMWindow> suspendedWindow(do_QueryInterface(topWindow));
         if (suspendedWindow &&
             (suspendedWindow = suspendedWindow->GetCurrentInnerWindow())) {
@@ -3008,7 +3021,8 @@ nsXMLHttpRequest::GetTimeout(PRUint32 *aTimeout)
 NS_IMETHODIMP
 nsXMLHttpRequest::SetTimeout(PRUint32 aTimeout)
 {
-  if ((mState & (XML_HTTP_REQUEST_ASYNC | XML_HTTP_REQUEST_UNSENT)) || !mOwner) {
+  if ((mState & (XML_HTTP_REQUEST_ASYNC | XML_HTTP_REQUEST_UNSENT)) ||
+      !HasOrHasHadOwner()) {
     mTimeoutMilliseconds = aTimeout;
     if (mRequestSentTime) {
       StartTimeoutTimer();
@@ -3018,7 +3032,7 @@ nsXMLHttpRequest::SetTimeout(PRUint32 aTimeout)
 
   /* Timeout is not supported for synchronous requests with an owning window,
      per XHR2 spec. */
-  LogMessage("TimeoutSyncXHRWarning", mOwner);
+  LogMessage("TimeoutSyncXHRWarning", GetOwner());
   return NS_ERROR_DOM_INVALID_ACCESS_ERR;
 }
 
@@ -3166,9 +3180,9 @@ nsXMLHttpRequest::SetWithCredentials(bool aWithCredentials)
   }
 
   // sync request is not allowed setting withCredentials in window context
-  if (mOwner &&
+  if (HasOrHasHadOwner() &&
       !(mState & (XML_HTTP_REQUEST_UNSENT | XML_HTTP_REQUEST_ASYNC))) {
-    LogMessage("WithCredentialsSyncXHRWarning", mOwner);
+    LogMessage("WithCredentialsSyncXHRWarning", GetOwner());
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
@@ -3519,8 +3533,8 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
     // of the dialogs works as it should when using tabs.
 
     nsCOMPtr<nsIDOMWindow> window;
-    if (mOwner) {
-      window = mOwner->GetOuterWindow();
+    if (GetOwner()) {
+      window = GetOwner()->GetOuterWindow();
     }
 
     return wwatch->GetPrompt(window, aIID,
@@ -3541,7 +3555,7 @@ nsXMLHttpRequest::GetUpload(nsIXMLHttpRequestUpload** aUpload)
     GetContextForEventHandlers(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!mUpload) {
-    mUpload = new nsXMLHttpRequestUpload(mOwner, scriptContext);
+    mUpload = new nsXMLHttpRequestUpload(this);
     NS_ENSURE_TRUE(mUpload, NS_ERROR_OUT_OF_MEMORY);
   }
   NS_ADDREF(*aUpload = mUpload);

@@ -78,8 +78,7 @@ public:
 
   nsDOMOfflineResourceList(nsIURI* aManifestURI,
                            nsIURI* aDocumentURI,
-                           nsPIDOMWindow* aWindow,
-                           nsIScriptContext* aScriptContext);
+                           nsPIDOMWindow* aWindow);
   virtual ~nsDOMOfflineResourceList();
 
   void FirePendingEvents();

@@ -42,7 +42,8 @@
 #include "nsIDOMPaintRequest.h"
 #include "nsIDOMPaintRequestList.h"
 #include "nsPresContext.h"
-#include "nsClientRect.h"
+#include "nsIDOMEvent.h"
+#include "dombindings.h"
 
 class nsPaintRequest : public nsIDOMPaintRequest
 {
@@ -61,20 +62,32 @@ private:
   nsInvalidateRequestList::Request mRequest;
 };
 
-class nsPaintRequestList : public nsIDOMPaintRequestList
+class nsPaintRequestList MOZ_FINAL : public nsIDOMPaintRequestList,
+                                     public nsWrapperCache
 {
 public:
-  nsPaintRequestList() {}
+  nsPaintRequestList(nsIDOMEvent *aParent) : mParent(aParent)
+  {
+    SetIsProxy();
+  }
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPaintRequestList)
   NS_DECL_NSIDOMPAINTREQUESTLIST
   
-  void Append(nsIDOMPaintRequest* aElement) { mArray.AppendObject(aElement); }
-
-  nsIDOMPaintRequest* GetItemAt(PRUint32 aIndex)
+  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                               bool *triedToWrap)
   {
-    return mArray.SafeObjectAt(aIndex);
+    return mozilla::dom::binding::PaintRequestList::create(cx, scope, this,
+                                                           triedToWrap);
   }
+
+  nsISupports* GetParentObject()
+  {
+    return mParent;
+  }
+
+  void Append(nsIDOMPaintRequest* aElement) { mArray.AppendObject(aElement); }
 
   static nsPaintRequestList* FromSupports(nsISupports* aSupports)
   {
@@ -97,6 +110,7 @@ private:
   ~nsPaintRequestList() {}
 
   nsCOMArray<nsIDOMPaintRequest> mArray;
+  nsCOMPtr<nsIDOMEvent> mParent;
 };
 
 #endif /*NSPAINTREQUEST_H_*/

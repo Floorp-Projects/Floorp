@@ -87,3 +87,7 @@ html|*#highlighter-nodeinfobar-tagname {
 html|*#highlighter-nodeinfobar-tagname {
   text-transform: lowercase;
 }
+
+.devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
+  display: none;
+}

@@ -112,43 +112,46 @@ public class GetRequestStage extends JPakeStage {
 
       @Override
       public void handleHttpResponse(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
-        switch (statusCode) {
-        case 200:
-          jpakeClient.pollTries = 0; // Reset pollTries for next GET.
-          callbackDelegate.handleSuccess(response);
-          break;
-        case 304:
-          Logger.debug(LOG_TAG, "Channel hasn't been updated yet. Will try again later");
-          if (pollTries >= jpakeClient.jpakeMaxTries) {
-            Logger.error(LOG_TAG, "Tried for " + pollTries + " times, maxTries " + jpakeClient.jpakeMaxTries + ", aborting");
-            callbackDelegate.handleFailure(Constants.JPAKE_ERROR_TIMEOUT);
+        try {
+          int statusCode = response.getStatusLine().getStatusCode();
+          switch (statusCode) {
+          case 200:
+            jpakeClient.pollTries = 0; // Reset pollTries for next GET.
+            callbackDelegate.handleSuccess(response);
+            break;
+          case 304:
+            Logger.debug(LOG_TAG, "Channel hasn't been updated yet. Will try again later");
+            if (pollTries >= jpakeClient.jpakeMaxTries) {
+              Logger.error(LOG_TAG, "Tried for " + pollTries + " times, maxTries " + jpakeClient.jpakeMaxTries + ", aborting");
+              callbackDelegate.handleFailure(Constants.JPAKE_ERROR_TIMEOUT);
+              break;
+            }
+            jpakeClient.pollTries += 1;
+            if (!jpakeClient.finished) {
+              Logger.debug(LOG_TAG, "Scheduling next GET request.");
+              scheduleGetRequest(jpakeClient.jpakePollInterval, jpakeClient);
+            } else {
+              Logger.debug(LOG_TAG, "Resetting pollTries");
+              jpakeClient.pollTries = 0;
+            }
+            break;
+          case 404:
+            Logger.error(LOG_TAG, "No data found in channel.");
+            callbackDelegate.handleFailure(Constants.JPAKE_ERROR_NODATA);
+            break;
+          case 412: // "Precondition failed"
+            Logger.debug(LOG_TAG, "Message already replaced on server by other party.");
+            callbackDelegate.handleSuccess(response);
+            break;
+          default:
+            Logger.error(LOG_TAG, "Could not retrieve data. Server responded with HTTP " + statusCode);
+            callbackDelegate.handleFailure(Constants.JPAKE_ERROR_SERVER);
             break;
           }
-          jpakeClient.pollTries += 1;
-          if (!jpakeClient.finished) {
-            Logger.debug(LOG_TAG, "Scheduling next GET request.");
-            scheduleGetRequest(jpakeClient.jpakePollInterval, jpakeClient);
-          } else {
-            Logger.debug(LOG_TAG, "Resetting pollTries");
-            jpakeClient.pollTries = 0;
-          }
-          break;
-        case 404:
-          Logger.error(LOG_TAG, "No data found in channel.");
-          callbackDelegate.handleFailure(Constants.JPAKE_ERROR_NODATA);
-          break;
-        case 412: // "Precondition failed"
-          Logger.debug(LOG_TAG, "Message already replaced on server by other party.");
-          callbackDelegate.handleSuccess(response);
-          break;
-        default:
-          Logger.error(LOG_TAG, "Could not retrieve data. Server responded with HTTP " + statusCode);
-          callbackDelegate.handleFailure(Constants.JPAKE_ERROR_SERVER);
-          break;
+        } finally {
+          // Clean up.
+          BaseResource.consumeEntity(response);
         }
-        // Clean up.
-        SyncResourceDelegate.consumeEntity(response.getEntity());
       }
 
       @Override

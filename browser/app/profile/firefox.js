@@ -282,7 +282,7 @@ pref("browser.urlbar.doubleClickSelectsAll", true);
 #else
 pref("browser.urlbar.doubleClickSelectsAll", false);
 #endif
-pref("browser.urlbar.autoFill", false);
+pref("browser.urlbar.autoFill", true);
 pref("browser.urlbar.autoFill.typed", true);
 // 0: Match anywhere (e.g., middle of words)
 // 1: Match on word boundaries and then try matching anywhere
@@ -1041,9 +1041,6 @@ pref("devtools.debugger.enabled", false);
 
 // The default Debugger UI height
 pref("devtools.debugger.ui.height", 250);
-
-// Disable remote debugging protocol logging
-pref("devtools.debugger.log", false);
 
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);

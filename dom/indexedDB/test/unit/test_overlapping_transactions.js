@@ -7,8 +7,6 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
-
   const name = this.window ? window.location.pathname : "Splendid Test";
   const description = "My Test Database";
   const objectStores = [ "foo", "bar" ];
@@ -33,7 +31,7 @@ function testSteps()
   for (let i = 0; i < 50; i++) {
     let stepNumber = 0;
 
-    request = db.transaction(["foo"], READ_WRITE)
+    request = db.transaction(["foo"], "readwrite")
                 .objectStore("foo")
                 .add({});
     request.onerror = errorHandler;
@@ -43,7 +41,7 @@ function testSteps()
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
     }
 
-    request = db.transaction(["foo"], READ_WRITE)
+    request = db.transaction(["foo"], "readwrite")
                 .objectStore("foo")
                 .add({});
     request.onerror = errorHandler;
@@ -53,7 +51,7 @@ function testSteps()
       event.target.transaction.oncomplete = grabEventAndContinueHandler;      
     }
 
-    request = db.transaction(["foo", "bar"], READ_WRITE)
+    request = db.transaction(["foo", "bar"], "readwrite")
                 .objectStore("bar")
                 .add({});
     request.onerror = errorHandler;
@@ -63,7 +61,7 @@ function testSteps()
       event.target.transaction.oncomplete = grabEventAndContinueHandler;      
     }
 
-    request = db.transaction(["foo", "bar"], READ_WRITE)
+    request = db.transaction(["foo", "bar"], "readwrite")
                 .objectStore("bar")
                 .add({});
     request.onerror = errorHandler;
@@ -73,7 +71,7 @@ function testSteps()
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
     }
 
-    request = db.transaction(["bar"], READ_WRITE)
+    request = db.transaction(["bar"], "readwrite")
                 .objectStore("bar")
                 .add({});
     request.onerror = errorHandler;

@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
        rows, so we just choose an arbitrary height limit that should give
        us plenty of vertical scrollability -->
   <richlistbox id="richlistbox" style="height:50px;">
+    <richlistitem id="richlistbox_item0" hidden="true"><label value="Item 0"/></richlistitem>
     <richlistitem id="richlistbox_item1"><label value="Item 1"/></richlistitem>
     <richlistitem id="richlistbox_item2"><label value="Item 2"/></richlistitem>
     <richlistitem id="richlistbox_item3"><label value="Item 3"/></richlistitem>
@@ -30,6 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
   </richlistbox>
 
   <listbox id="listbox" rows="2">
+    <listitem id="listbox_item0" label="Item 0" hidden="true"/>
     <listitem id="listbox_item1" label="Item 1"/>
     <listitem id="listbox_item2" label="Item 2"/>
     <listitem id="listbox_item3" label="Item 3"/>
@@ -43,6 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
   <box orient="horizontal">
     <arrowscrollbox id="hscrollbox" clicktoscroll="true" orient="horizontal"
      smoothscroll="false" style="max-width:80px;" flex="1">
+      <hbox style="width:40px; height:20px; background:black;" hidden="true"/>
       <hbox style="width:40px; height:20px; background:white;"/>
       <hbox style="width:40px; height:20px; background:black;"/>
       <hbox style="width:40px; height:20px; background:white;"/>
@@ -56,6 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
 
   <arrowscrollbox id="vscrollbox" clicktoscroll="true" orient="vertical"
    smoothscroll="false" style="max-height:80px;" flex="1">
+      <vbox style="width:100px; height:40px; background:black;" hidden="true"/>
       <vbox style="width:100px; height:40px; background:white;"/>
       <vbox style="width:100px; height:40px; background:black;"/>
       <vbox style="width:100px; height:40px; background:white;"/>

@@ -1818,6 +1818,7 @@ class StackIter
     StackSegment *seg_;
     Value        *sp_;
     jsbytecode   *pc_;
+    JSScript     *script_;
     CallArgs     args_;
 
     void poisonRegs();
@@ -1840,6 +1841,7 @@ class StackIter
     StackFrame *fp() const { JS_ASSERT(!done() && isScript()); return fp_; }
     Value      *sp() const { JS_ASSERT(!done() && isScript()); return sp_; }
     jsbytecode *pc() const { JS_ASSERT(!done() && isScript()); return pc_; }
+    JSScript   *script() const { JS_ASSERT(!done() && isScript()); return script_; }
 
     bool isNativeCall() const { JS_ASSERT(!done()); return state_ != SCRIPTED; }
     CallArgs nativeArgs() const { JS_ASSERT(!done() && isNativeCall()); return args_; }
@@ -1868,6 +1870,7 @@ class FrameRegsIter
     StackFrame *fp() const { return iter_.fp(); }
     Value      *sp() const { return iter_.sp(); }
     jsbytecode *pc() const { return iter_.pc(); }
+    JSScript   *script() const { return iter_.script(); }
 };
 
 /*****************************************************************************/

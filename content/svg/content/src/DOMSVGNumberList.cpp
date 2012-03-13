@@ -40,6 +40,8 @@
 #include "nsDOMError.h"
 #include "SVGAnimatedNumberList.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
+#include "dombindings.h"
 
 // See the comment in this file's header.
 
@@ -72,11 +74,16 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMSVGNumberList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMSVGNumberList)
   // No need to null check tmp - script/SMIL can't detach us from mAList
   ( tmp->IsAnimValList() ? tmp->mAList->mAnimVal : tmp->mAList->mBaseVal ) = nsnull;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMSVGNumberList)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMSVGNumberList)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGNumberList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGNumberList)
@@ -86,14 +93,23 @@ DOMCI_DATA(SVGNumberList, mozilla::DOMSVGNumberList)
 namespace mozilla {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGNumberList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGNumberList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGNumberList)
 NS_INTERFACE_MAP_END
 
 
+JSObject*
+DOMSVGNumberList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+                             bool *triedToWrap)
+{
+  return mozilla::dom::binding::SVGNumberList::create(cx, scope, this,
+                                                      triedToWrap);
+}
+
 nsIDOMSVGNumber*
-DOMSVGNumberList::GetItemWithoutAddRef(PRUint32 aIndex)
+DOMSVGNumberList::GetItemAt(PRUint32 aIndex)
 {
   if (IsAnimValList()) {
     Element()->FlushAnimations();
@@ -220,7 +236,7 @@ NS_IMETHODIMP
 DOMSVGNumberList::GetItem(PRUint32 index,
                           nsIDOMSVGNumber **_retval)
 {
-  *_retval = GetItemWithoutAddRef(index);
+  *_retval = GetItemAt(index);
   if (!*_retval) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }

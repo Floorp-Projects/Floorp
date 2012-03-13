@@ -42,8 +42,16 @@
 #define NS_NSSVERSION_CONTRACTID "@mozilla.org/security/nssversion;1"
 %}
 
-[scriptable, uuid(5f6c8e09-3311-4b24-b0d5-d6e75e7478a4)]
+[scriptable, uuid(a8a53a2b-75cc-4c68-a9bb-9791dbddaa00)]
 interface nsINSSVersion : nsISupports {
+    /* Minimal required versions as used at build time */
+    readonly attribute AString NSPR_MinVersion;
+    readonly attribute AString NSS_MinVersion;
+    readonly attribute AString NSSUTIL_MinVersion;
+    readonly attribute AString NSSSSL_MinVersion;
+    readonly attribute AString NSSSMIME_MinVersion;
+
+    /* Versions of libraries currently in use */
     readonly attribute AString NSPR_Version;
     readonly attribute AString NSS_Version;
     readonly attribute AString NSSUTIL_Version;

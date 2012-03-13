@@ -326,48 +326,10 @@ is(e.view, window, "view should be window");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
-// StorageEvent
+// UIEvent
 
 try {
-  e = new StorageEvent();
-} catch(exp) {
-  ex = true;
-}
-ok(ex, "First parameter is required!");
-ex = false;
-
-e = new StorageEvent("hello");
-ok(e.type, "hello", "Wrong event type!");
-ok(!e.isTrusted, "Event shouldn't be trusted!");
-ok(!e.bubbles, "Event shouldn't bubble!");
-ok(!e.cancelable, "Event shouldn't be cancelable!");
-is(e.key, "", "key should be ''");
-is(e.oldValue, null, "oldValue should be null");
-is(e.newValue, null, "newValue should be null");
-is(e.url, "", "url should be ''");
-document.dispatchEvent(e);
-is(receivedEvent, e, "Wrong event!");
-
-e = new StorageEvent("hello",
-  { bubbles: true, cancelable: true, key: "key",
-    oldValue: "oldValue", newValue: "newValue", url: "url",
-    storageArea: localStorage });
-ok(e.type, "hello", "Wrong event type!");
-ok(!e.isTrusted, "Event shouldn't be trusted!");
-ok(e.bubbles, "Event should bubble!");
-ok(e.cancelable, "Event should be cancelable!");
-is(e.key, "key", "Wrong value");
-is(e.oldValue, "oldValue", "Wrong value");
-is(e.newValue, "newValue", "Wrong value");
-is(e.url, "url", "Wrong value");
-is(e.storageArea, localStorage, "Wrong value");
-document.dispatchEvent(e);
-is(receivedEvent, e, "Wrong event!");
-
-// MouseEvent
-
-try {
-  e = new MouseEvent();
+  e = new UIEvent();
 } catch(exp) {
   ex = true;
 }

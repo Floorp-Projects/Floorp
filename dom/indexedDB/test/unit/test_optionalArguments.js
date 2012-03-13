@@ -152,7 +152,7 @@ function testSteps()
 
   is(event.target.result.name, data[3].name, "Correct data");
 
-  objectStore = db.transaction(osName, IDBTransaction.READ_WRITE)
+  objectStore = db.transaction(osName, "readwrite")
                   .objectStore(osName);
 
   try {

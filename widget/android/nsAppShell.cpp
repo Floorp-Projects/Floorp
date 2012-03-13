@@ -445,11 +445,23 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             break;
 
         nsCOMPtr<nsIDOMWindow> domWindow;
-        mBrowserApp->GetWindowForTab(curEvent->MetaState(), getter_AddRefs(domWindow));
+        nsCOMPtr<nsIBrowserTab> tab;
+        float scale;
+        mBrowserApp->GetBrowserTab(curEvent->MetaState(), getter_AddRefs(tab));
+        if (!tab)
+            break;
+
+        tab->GetWindow(getter_AddRefs(domWindow));
+        if (!domWindow)
+            break;
+
+        if (NS_FAILED(tab->GetScale(&scale)))
+            break;
+
         nsTArray<nsIntPoint> points = curEvent->Points();
         NS_ASSERTION(points.Length() == 2, "Screenshot event does not have enough coordinates");
         if (domWindow)
-            bridge->TakeScreenshot(domWindow, 0, 0, points[0].x, points[0].y, points[1].x, points[1].y, curEvent->MetaState());
+            bridge->TakeScreenshot(domWindow, 0, 0, points[0].x, points[0].y, points[1].x, points[1].y, curEvent->MetaState(), scale);
         break;
     }
 

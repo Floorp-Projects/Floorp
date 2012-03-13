@@ -198,7 +198,7 @@ public:
                    IDBRequest* aRequest,
                    IDBObjectStore* aObjectStore,
                    IDBKeyRange* aKeyRange,
-                   PRUint16 aDirection)
+                   IDBCursor::Direction aDirection)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
     mKeyRange(aKeyRange), mDirection(aDirection)
   { }
@@ -224,7 +224,7 @@ private:
   // In-params.
   nsRefPtr<IDBObjectStore> mObjectStore;
   nsRefPtr<IDBKeyRange> mKeyRange;
-  const PRUint16 mDirection;
+  const IDBCursor::Direction mDirection;
 
   // Out-params.
   Key mKey;
@@ -1637,7 +1637,7 @@ IDBObjectStore::Clear(nsIIDBRequest** _retval)
 
 NS_IMETHODIMP
 IDBObjectStore::OpenCursor(const jsval& aKey,
-                           PRUint16 aDirection,
+                           const nsAString& aDirection,
                            JSContext* aCx,
                            PRUint8 aOptionalArgCount,
                            nsIIDBRequest** _retval)
@@ -1650,21 +1650,16 @@ IDBObjectStore::OpenCursor(const jsval& aKey,
 
   nsresult rv;
 
+  IDBCursor::Direction direction = IDBCursor::NEXT;
+
   nsRefPtr<IDBKeyRange> keyRange;
   if (aOptionalArgCount) {
     rv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (aOptionalArgCount >= 2) {
-      if (aDirection != nsIIDBCursor::NEXT &&
-          aDirection != nsIIDBCursor::NEXT_NO_DUPLICATE &&
-          aDirection != nsIIDBCursor::PREV &&
-          aDirection != nsIIDBCursor::PREV_NO_DUPLICATE) {
-        return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
-      }
-    }
-    else {
-      aDirection = nsIIDBCursor::NEXT;
+      rv = IDBCursor::ParseDirection(aDirection, &direction);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -1672,7 +1667,7 @@ IDBObjectStore::OpenCursor(const jsval& aKey,
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<OpenCursorHelper> helper =
-    new OpenCursorHelper(mTransaction, request, this, keyRange, aDirection);
+    new OpenCursorHelper(mTransaction, request, this, keyRange, direction);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1750,7 +1745,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
 
   if (!transaction ||
       transaction != mTransaction ||
-      mTransaction->Mode() != nsIIDBTransaction::VERSION_CHANGE) {
+      mTransaction->GetMode() != IDBTransaction::VERSION_CHANGE) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -1876,7 +1871,7 @@ IDBObjectStore::DeleteIndex(const nsAString& aName)
 
   if (!transaction ||
       transaction != mTransaction ||
-      mTransaction->Mode() != nsIIDBTransaction::VERSION_CHANGE) {
+      mTransaction->GetMode() != IDBTransaction::VERSION_CHANGE) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -2285,13 +2280,13 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsCAutoString directionClause;
   switch (mDirection) {
-    case nsIIDBCursor::NEXT:
-    case nsIIDBCursor::NEXT_NO_DUPLICATE:
+    case IDBCursor::NEXT:
+    case IDBCursor::NEXT_UNIQUE:
       directionClause.AssignLiteral(" ORDER BY key_value ASC");
       break;
 
-    case nsIIDBCursor::PREV:
-    case nsIIDBCursor::PREV_NO_DUPLICATE:
+    case IDBCursor::PREV:
+    case IDBCursor::PREV_UNIQUE:
       directionClause.AssignLiteral(" ORDER BY key_value DESC");
       break;
 
@@ -2344,8 +2339,8 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(rangeKey, "range_key");
 
   switch (mDirection) {
-    case nsIIDBCursor::NEXT:
-    case nsIIDBCursor::NEXT_NO_DUPLICATE:
+    case IDBCursor::NEXT:
+    case IDBCursor::NEXT_UNIQUE:
       AppendConditionClause(keyValue, currentKey, false, false,
                             keyRangeClause);
       AppendConditionClause(keyValue, currentKey, false, true,
@@ -2360,8 +2355,8 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       }
       break;
 
-    case nsIIDBCursor::PREV:
-    case nsIIDBCursor::PREV_NO_DUPLICATE:
+    case IDBCursor::PREV:
+    case IDBCursor::PREV_UNIQUE:
       AppendConditionClause(keyValue, currentKey, true, false, keyRangeClause);
       AppendConditionClause(keyValue, currentKey, true, true,
                            continueToKeyRangeClause);

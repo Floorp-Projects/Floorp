@@ -48,12 +48,11 @@ interface nsIIDBTransaction;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
  * information.
  */
-[scriptable, builtinclass, uuid(a1e4a0ff-e0b2-431c-89cf-43b078189e27)]
+[scriptable, builtinclass, uuid(fe30ca60-bb90-4d68-af2f-4735f9228a54)]
 interface nsIIDBRequest : nsISupports
 {
-  const unsigned short LOADING = 1;
-  const unsigned short DONE = 2;
-  readonly attribute unsigned short readyState;
+  // "pending" or "done"
+  readonly attribute DOMString readyState;
 
   readonly attribute nsISupports source;
 

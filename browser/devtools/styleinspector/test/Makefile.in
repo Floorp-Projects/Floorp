@@ -65,6 +65,8 @@ _BROWSER_TEST_FILES = \
   browser_bug722196_property_view_media_queries.js \
   browser_bug722196_rule_view_media_queries.js \
   browser_bug_592743_specificity.js \
+  browser_ruleview_bug_703643_context_menu_copy.js \
+  browser_computedview_bug_703643_context_menu_copy.js \
   head.js \
   $(NULL)
 
