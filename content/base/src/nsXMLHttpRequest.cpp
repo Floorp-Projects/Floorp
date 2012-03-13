@@ -708,6 +708,7 @@ nsXMLHttpRequest::DisconnectFromOwner()
   nsXHREventTarget::DisconnectFromOwner();
   NS_DISCONNECT_EVENT_HANDLER(UploadProgress)
   NS_DISCONNECT_EVENT_HANDLER(Readystatechange)
+  Abort();
 }
 
 NS_IMETHODIMP

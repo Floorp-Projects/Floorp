@@ -1000,7 +1000,8 @@ static PLDHashOperator
 DisconnectEventTargetObjects(nsPtrHashKey<nsDOMEventTargetHelper>* aKey,
                              void* aClosure)
 {
-  aKey->GetKey()->DisconnectFromOwner();
+  nsRefPtr<nsDOMEventTargetHelper> target = aKey->GetKey();
+  target->DisconnectFromOwner();
   return PL_DHASH_NEXT;
 }
 

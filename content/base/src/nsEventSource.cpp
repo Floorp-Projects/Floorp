@@ -183,6 +183,7 @@ nsEventSource::DisconnectFromOwner()
   NS_DISCONNECT_EVENT_HANDLER(Open)
   NS_DISCONNECT_EVENT_HANDLER(Message)
   NS_DISCONNECT_EVENT_HANDLER(Error)
+  Close();
 }
 
 //-----------------------------------------------------------------------------
