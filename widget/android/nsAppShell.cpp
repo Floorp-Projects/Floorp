@@ -460,8 +460,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
         nsTArray<nsIntPoint> points = curEvent->Points();
         NS_ASSERTION(points.Length() == 2, "Screenshot event does not have enough coordinates");
-        if (domWindow)
-            bridge->TakeScreenshot(domWindow, 0, 0, points[0].x, points[0].y, points[1].x, points[1].y, curEvent->MetaState(), scale);
+        bridge->TakeScreenshot(domWindow, 0, 0, points[0].x, points[0].y, points[1].x, points[1].y, curEvent->MetaState(), scale);
         break;
     }
 
