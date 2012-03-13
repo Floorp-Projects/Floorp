@@ -190,7 +190,7 @@
       <method name="_canScrollToElement">
         <parameter name="element"/>
         <body>
-          return true;
+          return !element.hidden;
         </body>
       </method>
 
