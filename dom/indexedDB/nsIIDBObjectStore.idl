@@ -57,7 +57,7 @@ interface nsIIDBIndexParameters : nsISupports
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, builtinclass, uuid(e0d308ea-b804-4962-918a-28ec0aa4e42b)]
+[scriptable, builtinclass, uuid(43157a3c-bed1-4ce7-98c0-11365b852560)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
@@ -105,10 +105,11 @@ interface nsIIDBObjectStore : nsISupports
 
   // Success fires IDBTransactionEvent, result == IDBCursor or result == null if
   // no match.
+  // direction can be "next", "nextunique", "prev" or "prevunique"
   [implicit_jscontext, optional_argc]
   nsIIDBRequest
   openCursor([optional /* null */] in jsval range,
-             [optional /* NEXT */] in unsigned short direction);
+             [optional /* "next" */] in DOMString direction);
 
   [implicit_jscontext]
   nsIIDBIndex

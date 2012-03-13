@@ -20,8 +20,8 @@ function testSteps()
   db.createObjectStore("foo");
   yield;
 
-  let trans1 = db.transaction("foo", IDBTransaction.READ_WRITE);
-  let trans2 = db.transaction("foo", IDBTransaction.READ_WRITE);
+  let trans1 = db.transaction("foo", "readwrite");
+  let trans2 = db.transaction("foo", "readwrite");
 
   let request1 = trans2.objectStore("foo").put("2", 42);
   let request2 = trans1.objectStore("foo").put("1", 42);
@@ -35,7 +35,7 @@ function testSteps()
   yield;
   yield;
 
-  let trans3 = db.transaction("foo", IDBTransaction.READ);
+  let trans3 = db.transaction("foo", "readonly");
   let request = trans3.objectStore("foo").get(42);
   request.onsuccess = grabEventAndContinueHandler;
   request.onerror = errorHandler;

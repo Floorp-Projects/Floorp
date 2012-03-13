@@ -47,7 +47,7 @@ interface nsIIDBRequest;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBIndex for more
  * information.
  */
-[scriptable, builtinclass, uuid(233ec586-7b34-4263-b27e-a4991b757597)]
+[scriptable, builtinclass, uuid(a859747a-0f05-4dfb-8f42-05c61415d4e4)]
 interface nsIIDBIndex : nsISupports
 {
   readonly attribute DOMString name;
@@ -81,15 +81,17 @@ interface nsIIDBIndex : nsISupports
   getAllKeys([optional /* null */] in jsval key,
              [optional /* unlimited */] in unsigned long limit);
 
+  // direction can be "next", "nextunique", "prev" or "prevunique"
   [implicit_jscontext, optional_argc]
   nsIIDBRequest
   openCursor([optional /* null */] in jsval key,
-             [optional /* nsIIDBCursor::NEXT */] in unsigned short direction);
+             [optional /* "next" */] in DOMString direction);
 
+  // direction can be "next", "nextunique", "prev" or "prevunique"
   [implicit_jscontext, optional_argc]
   nsIIDBRequest
   openKeyCursor([optional /* null */] in jsval key,
-                [optional /* nsIIDBCursor::NEXT */] in unsigned short direction);
+                [optional /* "next" */] in DOMString direction);
 
   // Accepts null, a key value, or a nsIIDBKeyRange object.
   [implicit_jscontext, optional_argc]
