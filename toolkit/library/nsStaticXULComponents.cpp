@@ -198,6 +198,12 @@
 #endif
 #endif
 
+#if defined(MOZ_ENABLE_PROFILER_SPS)
+#define PROFILER_MODULE MODULE(nsProfilerModule)
+#else
+#define PROFILER_MODULE
+#endif
+
 #define XUL_MODULES                          \
     MODULE(nsUConvModule)                    \
     MODULE(nsI18nModule)                     \
@@ -214,7 +220,7 @@
     MODULE(nsWindowDataSourceModule)         \
     MODULE(nsParserModule)                   \
     MODULE(nsGfxModule)                      \
-    MODULE(nsProfilerModule)                 \
+    PROFILER_MODULE                          \
     WIDGET_MODULES                           \
     MODULE(nsImageLib2Module)                \
     ICON_MODULE                              \
