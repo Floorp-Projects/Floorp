@@ -87,6 +87,7 @@ FENNEC_JAVA_FILES = \
   GeckoEvent.java \
   GeckoEventListener.java \
   GeckoEventResponder.java \
+  GeckoHalDefines.java \
   GeckoInputConnection.java \
 	GeckoMessageReceiver.java \
   GeckoPreferences.java \
