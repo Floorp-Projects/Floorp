@@ -1990,7 +1990,7 @@ jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *jenv, jclass, jlong size);
 
 
-nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstW, PRInt32 dstH, PRInt32 tabId)
+nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstW, PRInt32 dstH, PRInt32 tabId, float scale)
 {
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
     if (!win)
@@ -2023,8 +2023,10 @@ nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt
         return NS_OK;
 
     void* data = jenv->GetDirectBufferAddress(buffer);
+    memset(data, 0, bufferSize);
     nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(dstW, dstH), stride, gfxASurface::ImageFormatRGB16_565);
     nsRefPtr<gfxContext> context = new gfxContext(surf);
+    context->Scale(scale * dstW / srcW, scale * dstH / srcH);
     nsresult rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
     NS_ENSURE_SUCCESS(rv, rv);
     AndroidBridge::AutoLocalJNIFrame jniFrame(jenv, 1);

@@ -26,9 +26,9 @@ function run_test()
 function test_named_function()
 {
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    let args = aPacket.frame["arguments"];
+    let args = aPacket.frame.arguments;
 
-    do_check_eq(args[0]["class"], "Function");
+    do_check_eq(args[0].class, "Function");
     // No name for an anonymous function.
 
     let objClient = gThreadClient.pauseGrip(args[0]);
@@ -49,9 +49,9 @@ function test_named_function()
 
 function test_anon_function() {
   gThreadClient.addOneTimeListener("paused", function(aEvent, aPacket) {
-    let args = aPacket.frame["arguments"];
+    let args = aPacket.frame.arguments;
 
-    do_check_eq(args[0]["class"], "Function");
+    do_check_eq(args[0].class, "Function");
     // No name for an anonymous function.
 
     let objClient = gThreadClient.pauseGrip(args[0]);

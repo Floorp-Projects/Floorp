@@ -166,21 +166,13 @@ public class FennecMochitestAssert implements Assert {
     }
 
     public void is(Object a, Object b, String name) {
-        boolean pass = a.equals(b);
-        String diag = "got " + a.toString() + ", expected " + b.toString();
-        if (pass) {
-            diag = a.toString() + " should equal " + b.toString();
-        }
-        ok(pass, name, diag);
+        boolean pass = checkObjectsEqual(a,b);
+        ok(pass, name, getEqualString(a,b, pass));
     }
     
     public void isnot(Object a, Object b, String name) {
-        boolean pass = !a.equals(b);
-        String diag = "didn't expect " + a.toString() + ", but got it";
-        if (pass) {
-            diag = a.toString() + " should not equal " + b.toString();
-        }
-        ok(pass, name, diag);
+        boolean pass = checkObjectsNotEqual(a,b);
+        ok(pass, name, getNotEqualString(a,b,pass));
     }
 
     public void ispixel(int actual, int r, int g, int b, String name) {
@@ -207,21 +199,50 @@ public class FennecMochitestAssert implements Assert {
     }
 
     public void todo_is(Object a, Object b, String name) {
-        boolean pass = a.equals(b);
-        String diag = "got " + a.toString() + ", expected " + b.toString();
-        if (pass) {
-            diag = a.toString() + " should equal " + b.toString();
-        }
-        todo(pass, name, diag);
+        boolean pass = checkObjectsEqual(a,b);
+        todo(pass, name, getEqualString(a,b,pass));
     }
-    
+
     public void todo_isnot(Object a, Object b, String name) {
-        boolean pass = !a.equals(b);
-        String diag = "didn't expect " + a.toString() + ", but got it";
-        if (pass) {
-            diag = a.toString() + " should not equal " + b.toString();
+        boolean pass = checkObjectsNotEqual(a,b);
+        todo(pass, name, getNotEqualString(a,b,pass));
+    }
+
+    private boolean checkObjectsEqual(Object a, Object b) {
+        if (a == null || b == null) {
+            if (a == null && b == null) {
+                return true;
+            }
+            return false;
+        } else {
+            return a.equals(b);
         }
-        todo(pass, name, diag);
+    }
+
+    private String getEqualString(Object a, Object b, boolean pass) {
+        if (pass) {
+            return a + " should equal " + b;
+        }
+        return "got " + a + ", expected " + b;
+    }
+
+    private boolean checkObjectsNotEqual(Object a, Object b) {
+        if (a == null || b == null) {
+            if ((a == null && b != null) || (a != null && b == null)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return !a.equals(b);
+        }
+    }
+
+    private String getNotEqualString(Object a, Object b, boolean pass) {
+        if(pass) {
+            return a + " should not equal " + b;
+        }
+        return "didn't expect " + a + ", but got it";
     }
 
     public void info(String name, String message) {

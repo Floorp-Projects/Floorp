@@ -112,6 +112,7 @@ public:
   // Determine if preferences allow WebSocket
   static bool PrefEnabled();
 
+  virtual void DisconnectFromOwner();
 protected:
   nsresult ParseURL(const nsString& aURL);
   nsresult EstablishConnection();

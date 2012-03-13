@@ -26,13 +26,15 @@ let DOMApplicationRegistry = {
   webapps: { },
 
   init: function() {
-    let messages = ["Webapps:Install", "Webapps:Uninstall",
+    this.messages = ["Webapps:Install", "Webapps:Uninstall",
                     "Webapps:GetSelf", "Webapps:GetInstalled",
                     "Webapps:Launch", "Webapps:GetAll"];
 
-    messages.forEach((function(msgName) {
+    this.messages.forEach((function(msgName) {
       ppmm.addMessageListener(msgName, this);
     }).bind(this));
+
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
 
     let appsDir = FileUtils.getDir("ProfD", ["webapps"], true, true);
     this.appsFile = FileUtils.getFile("ProfD", ["webapps", "webapps.json"], true);
@@ -49,6 +51,16 @@ let DOMApplicationRegistry = {
                            Ci.nsIPermissionManager.ALLOW_ACTION);
       });
     } catch(e) { }
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "xpcom-shutdown") {
+      this.messages.forEach((function(msgName) {
+        ppmm.removeMessageListener(msgName, this);
+      }).bind(this));
+      Services.obs.removeObserver(this, "xpcom-shutdown");
+      ppmm = null;
+    }
   },
 
   _loadJSONAsync: function(aFile, aCallback) {

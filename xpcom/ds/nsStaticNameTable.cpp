@@ -45,9 +45,12 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "prbit.h"
+#include "mozilla/HashFunctions.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsStaticNameTable.h"
+
+using namespace mozilla;
 
 struct NameTableKey
 {
@@ -113,14 +116,14 @@ caseInsensitiveStringHashKey(PLDHashTable *table, const void *key)
         for (const PRUnichar* s = tableKey->mKeyStr.m2b->get();
              *s != '\0';
              s++)
-            h = PR_ROTATE_LEFT32(h, 4) ^ (*s & ~0x20);
+            h = AddToHash(h, *s & ~0x20);
     } else {
         for (const unsigned char* s =
                  reinterpret_cast<const unsigned char*>
                                  (tableKey->mKeyStr.m1b->get());
              *s != '\0';
              s++)
-            h = PR_ROTATE_LEFT32(h, 4) ^ (*s & ~0x20);
+            h = AddToHash(h, *s & ~0x20);
     }
     return h;
 }

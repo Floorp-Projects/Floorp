@@ -185,6 +185,7 @@ _TEST_FILES =	\
 		test_bug718809.html \
 		test_font_inflation_reftests.html \
 		test_bug725426.html \
+		test_bug731777.html \
 		$(NULL)
 
 # Tests for bugs 441782, 467672 and 570378 don't pass reliably on Windows, because of bug 469208

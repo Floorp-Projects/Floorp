@@ -45,6 +45,7 @@ let Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
   Cu.import("resource://gre/modules/PluralForm.jsm");
@@ -238,7 +239,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
-    Services.obs.addObserver(this, "SearchEngines:Get", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
 
@@ -281,6 +281,7 @@ var BrowserApp = {
     ClipboardHelper.init();
     PermissionsHelper.init();
     CharacterEncoding.init();
+    SearchEngines.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -377,10 +378,12 @@ var BrowserApp = {
     const PREF_TELEMETRY_PROMPTED = "toolkit.telemetry.prompted";
     const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
     const PREF_TELEMETRY_REJECTED = "toolkit.telemetry.rejected";
+    const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
 
     // This is used to reprompt users when privacy message changes
     const TELEMETRY_PROMPT_REV = 2;
 
+    let serverOwner = Services.prefs.getCharPref(PREF_TELEMETRY_SERVER_OWNER);
     let telemetryPrompted = null;
     try {
       telemetryPrompted = Services.prefs.getIntPref(PREF_TELEMETRY_PROMPTED);
@@ -412,8 +415,17 @@ var BrowserApp = {
     ];
 
     let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-    let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
-    NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
+    let message = Strings.browser.formatStringFromName("telemetry.optin.message", [serverOwner, brandShortName], 2);
+    let learnMoreLabel = Strings.browser.GetStringFromName("telemetry.optin.learnMore");
+    let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    learnMoreUrl += "how-can-i-help-submitting-performance-data";
+    let options = {
+      link: {
+        label: learnMoreLabel,
+        url: learnMoreUrl
+      }
+    };
+    NativeWindow.doorhanger.show(message, "telemetry-optin", buttons, this.selectedTab.id, options);
   },
 
   shutdown: function shutdown() {
@@ -425,6 +437,7 @@ var BrowserApp = {
     XPInstallObserver.uninit();
     ConsoleAPI.uninit();
     CharacterEncoding.uninit();
+    SearchEngines.uninit();
   },
 
   get tabs() {
@@ -813,23 +826,6 @@ var BrowserApp = {
     }
   },
 
-  getSearchEngines: function() {
-    let engineData = Services.search.getVisibleEngines({});
-    let searchEngines = engineData.map(function (engine) {
-      return {
-        name: engine.name,
-        iconURI: engine.iconURI.spec
-      };
-    });
-
-    sendMessageToJava({
-      gecko: {
-        type: "SearchEngines:Data",
-        searchEngines: searchEngines
-      }
-    });
-  },
-
   scrollToFocusedInput: function(aBrowser) {
     let doc = aBrowser.contentDocument;
     if (!doc)
@@ -984,8 +980,6 @@ var BrowserApp = {
     } else if (aTopic == "Viewport:Change") {
       this.selectedTab.viewport = JSON.parse(aData);
       ViewportHandler.onResize();
-    } else if (aTopic == "SearchEngines:Get") {
-      this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
       var storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].  
         getService(Components.interfaces.nsILoginManagerStorage);
@@ -1011,13 +1005,9 @@ var BrowserApp = {
   },
 
   // nsIAndroidBrowserApp
-  getWindowForTab: function(tabId) {
-      let tab = this.getTabForId(tabId);
-      if (!tab.browser)
-	  return null;
-      return tab.browser.contentWindow;
+  getBrowserTab: function(tabId) {
+    return this.getTabForId(tabId);
   }
-
 };
 
 var NativeWindow = {
@@ -2253,11 +2243,23 @@ Tab.prototype = {
     }
   },
 
+  // nsIBrowserTab
+  get window() {
+    if (!this.browser)
+      return null;
+    return this.browser.contentWindow;
+  },
+
+  get scale() {
+    return this.viewport.zoom;
+  },
+
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIWebProgressListener,
     Ci.nsISHistoryListener,
     Ci.nsIObserver,
-    Ci.nsISupportsWeakReference
+    Ci.nsISupportsWeakReference,
+    Ci.nsIBrowserTab
   ])
 };
 
@@ -4351,4 +4353,122 @@ OverscrollController.prototype = {
   },
 
   onEvent : function onEvent(aEvent) { }
+};
+
+var SearchEngines = {
+  _contextMenuId: null,
+
+  init: function init() {
+    Services.obs.addObserver(this, "SearchEngines:Get", false);
+    let contextName = Strings.browser.GetStringFromName("contextmenu.addSearchEngine");
+    let filter = {
+      matches: function (aElement) {
+        return (aElement.form && NativeWindow.contextmenus.textContext.matches(aElement));
+      }
+    };
+    this._contextMenuId = NativeWindow.contextmenus.add(contextName, filter, this.addEngine);
+  },
+
+  uninit: function uninit() {
+    Services.obs.removeObserver(this, "SearchEngines:Get", false);
+    if (this._contextMenuId != null)
+      NativeWindow.contextmenus.remove(this._contextMenuId);
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    if (aTopic == "SearchEngines:Get") {
+      let engineData = Services.search.getVisibleEngines({});
+      let searchEngines = engineData.map(function (engine) {
+        return {
+          name: engine.name,
+          iconURI: (engine.iconURI ? engine.iconURI.spec : null)
+        };
+      });
+
+      sendMessageToJava({
+        gecko: {
+          type: "SearchEngines:Data",
+          searchEngines: searchEngines
+        }
+      });
+    }
+  },
+
+  addEngine: function addEngine(aElement) {
+    let form = aElement.form;
+    let charset = aElement.ownerDocument.characterSet;
+    let docURI = Services.io.newURI(aElement.ownerDocument.URL, charset, null);
+    let formURL = Services.io.newURI(form.getAttribute("action"), charset, docURI).spec;
+    let method = form.method.toUpperCase();
+    let formData = [];
+
+    for each (let el in form.elements) {
+      if (!el.type)
+        continue;
+
+      // make this text field a generic search parameter
+      if (aElement == el) {
+        formData.push({ name: el.name, value: "{searchTerms}" });
+        continue;
+      }
+
+      let type = el.type.toLowerCase();
+      let escapedName = escape(el.name);
+      let escapedValue = escape(el.value);
+
+      // add other form elements as parameters
+      switch (el.type) {
+        case "checkbox":
+        case "radio":
+          if (!el.checked) break;
+        case "text":
+        case "hidden":
+        case "textarea":
+          formData.push({ name: escapedName, value: escapedValue });
+          break;
+        case "select-one":
+          for each (let option in el.options) {
+            if (option.selected) {
+              formData.push({ name: escapedName, value: escapedValue });
+              break;
+            }
+          }
+      }
+    }
+
+    // prompt user for name of search engine
+    let promptTitle = Strings.browser.GetStringFromName("contextmenu.addSearchEngine");
+    let title = { value: (aElement.ownerDocument.title || docURI.host) };
+    if (!Services.prompt.prompt(null, promptTitle, null, title, null, {}))
+      return;
+
+    // fetch the favicon for this page
+    let dbFile = FileUtils.getFile("ProfD", ["browser.db"]);
+    let mDBConn = Services.storage.openDatabase(dbFile);
+    let stmts = [];
+    stmts[0] = mDBConn.createStatement("SELECT favicon FROM images WHERE url_key = ?");
+    stmts[0].bindStringParameter(0, docURI.spec);
+    let favicon = null;
+    mDBConn.executeAsync(stmts, stmts.length, {
+      handleResult: function (results) {
+        let bytes = results.getNextRow().getResultByName("favicon");
+        favicon = "data:image/png;base64," + btoa(String.fromCharCode.apply(null, bytes));
+      },
+      handleCompletion: function (reason) {
+        // if there's already an engine with this name, add a number to
+        // make the name unique (e.g., "Google" becomes "Google 2")
+        let name = title.value;
+        for (let i = 2; Services.search.getEngineByName(name); i++)
+          name = title.value + " " + i;
+
+        Services.search.addEngineWithDetails(name, favicon, null, null, method, formURL);
+        let engine = Services.search.getEngineByName(name);
+        engine.wrappedJSObject._queryCharset = charset;
+        for each (let param in formData) {
+          if (param.name && param.value)
+            engine.addParam(param.name, param.value, null);
+        }
+      }
+    });
+  }
 };

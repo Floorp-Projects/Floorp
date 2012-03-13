@@ -32,11 +32,15 @@ import org.mozilla.gecko.sync.Utils;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.ContentProviderResult;
+import android.content.ContentProviderOperation;
+import android.content.OperationApplicationException;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.MatrixCursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
@@ -1539,5 +1543,94 @@ public class BrowserProvider extends ContentProvider {
                 qualifyColumn(TABLE_HISTORY, History.IS_DELETED) + " = 0)";
 
         return deleteImages(uri, selection, null);
+    }
+
+    @Override
+    public ContentProviderResult[] applyBatch (ArrayList<ContentProviderOperation> operations)
+        throws OperationApplicationException {
+        final int numOperations = operations.size();
+        final ContentProviderResult[] results = new ContentProviderResult[numOperations];
+        boolean failures = false;
+        SQLiteDatabase db = null;
+
+        if (numOperations >= 1) {
+            // We only have 1 database for all Uri's that we can get
+            db = getWritableDatabase(operations.get(0).getUri());
+        } else {
+            // The original Android implementation returns a zero-length
+            // array in this case, we do the same.
+            return results;
+        }
+
+        // Note that the apply() call may cause us to generate
+        // additional transactions for the invidual operations.
+        // But Android's wrapper for SQLite supports nested transactions,
+        // so this will do the right thing.
+        db.beginTransaction();
+
+        for (int i = 0; i < numOperations; i++) {
+            try {
+                results[i] = operations.get(i).apply(this, results, i);
+            } catch (SQLException e) {
+                Log.w(LOGTAG, "SQLite Exception during applyBatch: ", e);
+                // The Android API makes it implementation-defined whether
+                // the failure of a single operation makes all others abort
+                // or not. For our use cases, best-effort operation makes
+                // more sense. Rolling back and forcing the caller to retry
+                // after it figures out what went wrong isn't very convenient
+                // anyway.
+                // Signal failed operation back, so the caller knows what
+                // went through and what didn't.
+                results[i] = new ContentProviderResult(0);
+                failures = true;
+                // http://www.sqlite.org/lang_conflict.html
+                // Note that we need a new transaction, subsequent operations
+                // on this one will fail (we're in ABORT by default, which
+                // isn't IGNORE). We still need to set it as successful to let
+                // everything before the failed op go through.
+                // We can't set conflict resolution on API level < 8, and even
+                // above 8 it requires splitting the call per operation
+                // (insert/update/delete).
+                db.setTransactionSuccessful();
+                db.endTransaction();
+                db.beginTransaction();
+            }
+        }
+
+        trace("Flushing DB applyBatch...");
+        db.setTransactionSuccessful();
+        db.endTransaction();
+
+        if (failures) {
+            throw new OperationApplicationException();
+        }
+
+        return results;
+    }
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        if (values == null)
+            return 0;
+
+        int numValues = values.length;
+        int successes = 0;
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        db.beginTransaction();
+
+        try {
+            for (int i = 0; i < numValues; i++) {
+                insertInTransaction(uri, values[i]);
+                successes++;
+            }
+            trace("Flushing DB bulkinsert...");
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+
+        return successes;
     }
 }

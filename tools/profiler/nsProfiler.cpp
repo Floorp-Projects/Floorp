@@ -96,6 +96,10 @@ AddSharedLibraryInfoToStream(std::ostream& aStream, SharedLibrary& aLib)
   aStream << "\"start\":" << aLib.GetStart();
   aStream << ",\"end\":" << aLib.GetEnd();
   aStream << ",\"name\":\"" << aLib.GetName() << "\"";
+#ifdef XP_WIN
+  aStream << ",\"pdbSignature\":\"" << aLib.GetPdbSignature().ToString() << "\"";
+  aStream << ",\"pdbAge\":" << aLib.GetPdbAge();
+#endif
   aStream << "}";
 }
 

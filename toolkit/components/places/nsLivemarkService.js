@@ -420,7 +420,7 @@ LivemarkService.prototype = {
       // otherwise checking for the livemark using any deprecated synchronous
       // API from an onItemAnnotation notification would give a wrong result.
       this._livemarks[livemark.id] = livemark;
-      this._guids[livemark.guid] = livemark.id;    
+      this._guids[aLivemarkInfo.guid] = livemark.id;    
     }
     catch (ex) {
       result = ex.result;

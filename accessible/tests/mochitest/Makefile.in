@@ -101,7 +101,6 @@ _TEST_FILES =\
 		test_descr.html \
 		test_nsIAccessibleDocument.html \
 		test_nsIAccessibleImage.html \
-		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
 		test_role_nsHyperTextAcc.html \
 		test_textboxes.html \

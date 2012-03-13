@@ -176,6 +176,16 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsEventSource, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsEventSource, nsDOMEventTargetHelper)
 
+void
+nsEventSource::DisconnectFromOwner()
+{
+  nsDOMEventTargetHelper::DisconnectFromOwner();
+  NS_DISCONNECT_EVENT_HANDLER(Open)
+  NS_DISCONNECT_EVENT_HANDLER(Message)
+  NS_DISCONNECT_EVENT_HANDLER(Error)
+  Close();
+}
+
 //-----------------------------------------------------------------------------
 // nsEventSource::nsIEventSource
 //-----------------------------------------------------------------------------
@@ -251,9 +261,6 @@ nsEventSource::Close()
   mSrc = nsnull;
   mFrozen = false;
 
-  mScriptContext = nsnull;
-  mOwner = nsnull;
-
   mUnicodeDecoder = nsnull;
 
   mReadyState = nsIEventSource::CLOSED;
@@ -278,13 +285,12 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
   }
 
   mPrincipal = aPrincipal;
-  mScriptContext = aScriptContext;
   mWithCredentials = aWithCredentials;
   if (aOwnerWindow) {
-    mOwner = aOwnerWindow->IsOuterWindow() ?
-      aOwnerWindow->GetCurrentInnerWindow() : aOwnerWindow;
+    BindToOwner(aOwnerWindow->IsOuterWindow() ?
+      aOwnerWindow->GetCurrentInnerWindow() : aOwnerWindow);
   } else {
-    mOwner = nsnull;
+    BindToOwner(aOwnerWindow);
   }
 
   nsCOMPtr<nsIJSContextStack> stack =
@@ -302,9 +308,11 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
   // Get the load group for the page. When requesting we'll add ourselves to it.
   // This way any pending requests will be automatically aborted if the user
   // leaves the page.
-  if (mScriptContext) {
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  if (sc) {
     nsCOMPtr<nsIDocument> doc =
-      nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
+      nsContentUtils::GetDocumentFromScriptContext(sc);
     if (doc) {
       mLoadGroup = doc->GetDocumentLoadGroup();
     }
@@ -312,7 +320,7 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
 
   // get the src
   nsCOMPtr<nsIURI> baseURI;
-  nsresult rv = GetBaseURI(getter_AddRefs(baseURI));
+  rv = GetBaseURI(getter_AddRefs(baseURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> srcURI;
@@ -457,7 +465,7 @@ nsEventSource::Observe(nsISupports* aSubject,
   }
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aSubject);
-  if (!mOwner || window != mOwner) {
+  if (!GetOwner() || window != GetOwner()) {
     return NS_OK;
   }
 
@@ -834,8 +842,8 @@ nsEventSource::GetInterface(const nsIID & aIID,
     // of the dialogs works as it should when using tabs.
 
     nsCOMPtr<nsIDOMWindow> window;
-    if (mOwner) {
-      window = mOwner->GetOuterWindow();
+    if (GetOwner()) {
+      window = GetOwner()->GetOuterWindow();
     }
 
     return wwatch->GetPrompt(window, aIID, aResult);
@@ -861,15 +869,17 @@ nsEventSource::GetBaseURI(nsIURI **aBaseURI)
   nsCOMPtr<nsIURI> baseURI;
 
   // first we try from document->GetBaseURI()
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   nsCOMPtr<nsIDocument> doc =
-    nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
+    nsContentUtils::GetDocumentFromScriptContext(sc);
   if (doc) {
     baseURI = doc->GetBaseURI();
   }
 
   // otherwise we get from the doc's principal
   if (!baseURI) {
-    nsresult rv = mPrincipal->GetURI(getter_AddRefs(baseURI));
+    rv = mPrincipal->GetURI(getter_AddRefs(baseURI));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1267,8 +1277,9 @@ nsEventSource::CheckCanRequestSrc(nsIURI* aSrc)
 
   // After the security manager, the content-policy check
 
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   nsCOMPtr<nsIDocument> doc =
-    nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
+    nsContentUtils::GetDocumentFromScriptContext(sc);
 
   // mScriptContext should be initialized because of GetBaseURI() above.
   // Still need to consider the case that doc is nsnull however.
@@ -1418,7 +1429,7 @@ nsEventSource::DispatchAllMessageEvents()
   }
 
   // Let's play get the JSContext
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(mOwner);
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(GetOwner());
   NS_ENSURE_TRUE(sgo,);
 
   nsIScriptContext* scriptContext = sgo->GetContext();

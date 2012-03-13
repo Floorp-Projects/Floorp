@@ -24,7 +24,7 @@ let gGrid = {
    */
   get cells() {
     let cells = [];
-    let children = this.node.querySelectorAll("li");
+    let children = this.node.querySelectorAll(".newtab-cell");
     for (let i = 0; i < children.length; i++)
       cells.push(new Cell(this, children[i]));
 
@@ -43,8 +43,8 @@ let gGrid = {
    * Initializes the grid.
    * @param aSelector The query selector of the grid.
    */
-  init: function Grid_init(aSelector) {
-    this._node = document.querySelector(aSelector);
+  init: function Grid_init() {
+    this._node = document.getElementById("newtab-grid");
     this._createSiteFragment();
     this._draw();
   },
@@ -96,21 +96,20 @@ let gGrid = {
    * Creates the DOM fragment that is re-used when creating sites.
    */
   _createSiteFragment: function Grid_createSiteFragment() {
-    let site = document.createElementNS(HTML_NAMESPACE, "a");
-    site.classList.add("site");
+    let site = document.createElementNS(HTML_NAMESPACE, "div");
+    site.classList.add("newtab-site");
     site.setAttribute("draggable", "true");
 
     // Create the site's inner HTML code.
     site.innerHTML =
-      '<img class="site-img" width="' + THUMB_WIDTH +'" ' +
-      ' height="' + THUMB_HEIGHT + '" alt=""/>' +
-      '<span class="site-title"/>' +
-      '<span class="site-strip">' +
-      '  <input class="button strip-button strip-button-pin" type="button"' +
-      '   tabindex="-1" title="' + newTabString("pin") + '"/>' +
-      '  <input class="button strip-button strip-button-block" type="button"' +
-      '   tabindex="-1" title="' + newTabString("block") + '"/>' +
-      '</span>';
+      '<a class="newtab-link">' +
+      '  <span class="newtab-thumbnail"/>' +
+      '  <span class="newtab-title"/>' +
+      '</a>' +
+      '<input type="button" title="' + newTabString("pin") + '"' +
+      '       class="newtab-control newtab-control-pin"/>' +
+      '<input type="button" title="' + newTabString("block") + '"' +
+      '       class="newtab-control newtab-control-block"/>';
 
     this._siteFragment = document.createDocumentFragment();
     this._siteFragment.appendChild(site);
