@@ -238,7 +238,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
-    Services.obs.addObserver(this, "SearchEngines:Get", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
 
@@ -281,6 +280,7 @@ var BrowserApp = {
     ClipboardHelper.init();
     PermissionsHelper.init();
     CharacterEncoding.init();
+    SearchEngines.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -436,6 +436,7 @@ var BrowserApp = {
     XPInstallObserver.uninit();
     ConsoleAPI.uninit();
     CharacterEncoding.uninit();
+    SearchEngines.uninit();
   },
 
   get tabs() {
@@ -824,23 +825,6 @@ var BrowserApp = {
     }
   },
 
-  getSearchEngines: function() {
-    let engineData = Services.search.getVisibleEngines({});
-    let searchEngines = engineData.map(function (engine) {
-      return {
-        name: engine.name,
-        iconURI: engine.iconURI.spec
-      };
-    });
-
-    sendMessageToJava({
-      gecko: {
-        type: "SearchEngines:Data",
-        searchEngines: searchEngines
-      }
-    });
-  },
-
   scrollToFocusedInput: function(aBrowser) {
     let doc = aBrowser.contentDocument;
     if (!doc)
@@ -995,8 +979,6 @@ var BrowserApp = {
     } else if (aTopic == "Viewport:Change") {
       this.selectedTab.viewport = JSON.parse(aData);
       ViewportHandler.onResize();
-    } else if (aTopic == "SearchEngines:Get") {
-      this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
       var storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].  
         getService(Components.interfaces.nsILoginManagerStorage);
@@ -4370,4 +4352,33 @@ OverscrollController.prototype = {
   },
 
   onEvent : function onEvent(aEvent) { }
+};
+
+var SearchEngines = {
+  init: function init() {
+    Services.obs.addObserver(this, "SearchEngines:Get", false);
+  },
+
+  uninit: function uninit() {
+    Services.obs.removeObserver(this, "SearchEngines:Get", false);
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    if (aTopic == "SearchEngines:Get") {
+      let engineData = Services.search.getVisibleEngines({});
+      let searchEngines = engineData.map(function (engine) {
+        return {
+          name: engine.name,
+          iconURI: (engine.iconURI ? engine.iconURI.spec : null)
+        };
+      });
+
+      sendMessageToJava({
+        gecko: {
+          type: "SearchEngines:Data",
+          searchEngines: searchEngines
+        }
+      });
+    }
+  }
 };
