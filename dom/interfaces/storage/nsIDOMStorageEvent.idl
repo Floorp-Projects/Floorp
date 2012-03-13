@@ -98,8 +98,8 @@ interface nsIDOMStorageEvent : nsIDOMEvent
 dictionary StorageEventInit : EventInit
 {
   DOMString key;
-  DOMString oldValue;
-  DOMString newValue;
+  DOMString? oldValue;
+  DOMString? newValue;
   DOMString url;
   nsIDOMStorage storageArea;
 };

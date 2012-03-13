@@ -340,7 +340,10 @@ def write_getter(a, iface, fd):
         fd.write("    NS_ENSURE_STATE(JS_ValueToECMAUint32(aCx, v, &u));\n")
         fd.write("    aDict.%s = u;\n" % a.name)
     elif realtype.count("nsAString"):
-        fd.write("    xpc_qsDOMString d(aCx, v, &v, xpc_qsDOMString::eStringify, xpc_qsDOMString::eStringify);\n")
+        if a.nullable:
+            fd.write("    xpc_qsDOMString d(aCx, v, &v, xpc_qsDOMString::eNull, xpc_qsDOMString::eNull);\n")
+        else:
+            fd.write("    xpc_qsDOMString d(aCx, v, &v, xpc_qsDOMString::eStringify, xpc_qsDOMString::eStringify);\n")
         fd.write("    NS_ENSURE_STATE(d.IsValid());\n")
         fd.write("    aDict.%s = d;\n" % a.name)
     elif realtype.count("nsIVariant"):
@@ -378,7 +381,15 @@ def write_cpp(iface, fd):
             fd.write(",")
         fd.write("\n")
 
-    fd.write("  {}\n\n")
+    fd.write("{")
+    hasnullable = False
+    for i in range(len(attributes)):
+        if attributes[i].nullable:
+            hasnullable = True
+            fd.write("\n  %s.SetIsVoid(true);" % attributes[i].name)
+    if hasnullable:
+        fd.write("\n")
+    fd.write("}\n\n")
     fd.write("%s::~%s() {}\n\n" % (iface.name, iface.name))
 
     fd.write("static nsresult\n%s_InitInternal(%s& aDict, JSContext* aCx, JSObject* aObj)\n" %
