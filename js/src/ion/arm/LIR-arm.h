@@ -131,12 +131,15 @@ class LDivI : public LBinaryMath<2>
     LIR_HEADER(DivI);
 
     LDivI(const LAllocation &lhs, const LAllocation &rhs,
-          const LDefinition &temp1, const LDefinition &temp2)
-    {
+          const LDefinition &temp1, const LDefinition &temp2) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp1);
         setTemp(1, temp2);
+    }
+
+    MDiv *mir() const {
+        return mir_->toDiv();
     }
 };
 
