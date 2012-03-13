@@ -47,9 +47,8 @@ interface nsIDOMHashChangeEvent : nsIDOMEvent
                            in DOMString newURLArg);
 };
 
-[scriptable, uuid(e56881c1-3714-45bb-bca3-1453ea24ee90)]
-interface nsIHashChangeEventInit : nsIEventInit
+dictionary HashChangeEventInit : EventInit
 {
-  attribute DOMString oldURL;
-  attribute DOMString newURL;
+  DOMString oldURL;
+  DOMString newURL;
 };
