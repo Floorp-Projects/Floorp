@@ -286,7 +286,7 @@ function testSteps()
   let gotRemoveEvent = false;
   let retval = false;
 
-  request = objectStore.openCursor(null, IDBCursor.NEXT);
+  request = objectStore.openCursor(null, "next");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
@@ -331,7 +331,7 @@ function testSteps()
 
   keyIndex = sortedKeys.length - 1;
 
-  request = objectStore.openCursor(null, IDBCursor.PREV);
+  request = objectStore.openCursor(null, "prev");
   request.onerror = errorHandler;
   request.onsuccess = function (event) {
     let cursor = event.target.result;

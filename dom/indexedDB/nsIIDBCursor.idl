@@ -46,14 +46,11 @@ interface nsIIDBRequest;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, builtinclass, uuid(9d5ddd43-132d-418e-81e8-17d64a6467a2)]
+[scriptable, builtinclass, uuid(01136b3a-d84c-487c-b929-f5d012346c44)]
 interface nsIIDBCursor : nsISupports
 {
-  const unsigned short NEXT = 0;
-  const unsigned short NEXT_NO_DUPLICATE = 1;
-  const unsigned short PREV = 2;
-  const unsigned short PREV_NO_DUPLICATE = 3;
-  readonly attribute unsigned short direction;
+  // "next", "nextunique", "prev" or "prevunique"
+  readonly attribute DOMString direction;
 
   readonly attribute nsISupports source;
 

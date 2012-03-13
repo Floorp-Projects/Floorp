@@ -27,7 +27,7 @@ function testSteps()
   event.target.onsuccess = continueToNextStep;
   yield;
 
-  objectStore = db.transaction("foo", IDBTransaction.READ_WRITE)
+  objectStore = db.transaction("foo", "readwrite")
                   .objectStore("foo");
   request = objectStore.add(data);
   request.onsuccess = grabEventAndContinueHandler;
@@ -56,7 +56,7 @@ function testSteps()
   is(obj.key, data.key, "Got the right key");
   is(obj.index, data.index, "Got the right property value");
 
-  objectStore = db.transaction("foo", IDBTransaction.READ_WRITE)
+  objectStore = db.transaction("foo", "readwrite")
                   .objectStore("foo");
   request = objectStore.delete(data.key);
   request.onsuccess = grabEventAndContinueHandler;

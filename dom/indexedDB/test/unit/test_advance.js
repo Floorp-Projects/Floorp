@@ -144,7 +144,7 @@ function testSteps()
 
   count = dataCount - 1;
 
-  getObjectStore().openCursor(null, IDBCursor.PREV).onsuccess = function(event) {
+  getObjectStore().openCursor(null, "prev").onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.primaryKey, count, "Got correct object");
@@ -167,7 +167,7 @@ function testSteps()
 
   count = dataCount - 1;
 
-  getObjectStore().openCursor(null, IDBCursor.PREV).onsuccess = function(event) {
+  getObjectStore().openCursor(null, "prev").onsuccess = function(event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.primaryKey, count, "Got correct object");

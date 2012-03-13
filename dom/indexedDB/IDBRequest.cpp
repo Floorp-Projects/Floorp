@@ -190,13 +190,16 @@ IDBRequest::UnrootResultValInternal()
 }
 
 NS_IMETHODIMP
-IDBRequest::GetReadyState(PRUint16* aReadyState)
+IDBRequest::GetReadyState(nsAString& aReadyState)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  *aReadyState = mHaveResultOrErrorCode ?
-                 nsIIDBRequest::DONE :
-                 nsIIDBRequest::LOADING;
+  if (mHaveResultOrErrorCode) {
+    aReadyState.AssignLiteral("done");
+  }
+  else {
+    aReadyState.AssignLiteral("pending");
+  }
 
   return NS_OK;
 }

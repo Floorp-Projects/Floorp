@@ -386,7 +386,7 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
   IDBTransaction* transaction = AsyncConnectionHelper::GetCurrentTransaction();
 
   if (!transaction ||
-      transaction->Mode() != nsIIDBTransaction::VERSION_CHANGE) {
+      transaction->GetMode() != IDBTransaction::VERSION_CHANGE) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -506,7 +506,7 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName)
   IDBTransaction* transaction = AsyncConnectionHelper::GetCurrentTransaction();
 
   if (!transaction ||
-      transaction->Mode() != nsIIDBTransaction::VERSION_CHANGE) {
+      transaction->GetMode() != IDBTransaction::VERSION_CHANGE) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -528,7 +528,7 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName)
 
 NS_IMETHODIMP
 IDBDatabase::Transaction(const jsval& aStoreNames,
-                         PRUint16 aMode,
+                         const nsAString& aMode,
                          JSContext* aCx,
                          PRUint8 aOptionalArgCount,
                          nsIIDBTransaction** _retval)
@@ -547,14 +547,14 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
+  IDBTransaction::Mode transactionMode = IDBTransaction::READ_ONLY;
   if (aOptionalArgCount) {
-    if (aMode != nsIIDBTransaction::READ_WRITE &&
-        aMode != nsIIDBTransaction::READ_ONLY) {
+    if (aMode.EqualsLiteral("readwrite")) {
+      transactionMode = IDBTransaction::READ_WRITE;
+    }
+    else if (!aMode.EqualsLiteral("readonly")) {
       return NS_ERROR_DOM_INDEXEDDB_NON_TRANSIENT_ERR;
     }
-  }
-  else {
-    aMode = nsIIDBTransaction::READ_ONLY;
   }
 
   nsresult rv;
@@ -657,7 +657,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
   }
 
   nsRefPtr<IDBTransaction> transaction =
-    IDBTransaction::Create(this, storesToOpen, aMode, false);
+    IDBTransaction::Create(this, storesToOpen, transactionMode, false);
   NS_ENSURE_TRUE(transaction, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   transaction.forget(_retval);
