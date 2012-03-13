@@ -44,6 +44,7 @@
 
 #include "nsAccessible.h"
 #include "nsCoreUtils.h"
+#include "nsWinUtils.h"
 #include "States.h"
 
 #include "nsString.h"
@@ -161,7 +162,7 @@ __try {
     return E_FAIL;
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl =
-    nsCoreUtils::GetComputedStyleDeclaration(EmptyString(), acc->GetContent());
+    nsWinUtils::GetComputedStyleDeclaration(acc->GetContent());
   NS_ENSURE_STATE(styleDecl);
 
   nsCOMPtr<nsIDOMCSSValue> cssGenericValue;
