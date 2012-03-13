@@ -754,6 +754,16 @@ ContentChild::RecvDeviceMotionChanged(const long int& type,
 }
 
 bool
+ContentChild::RecvNeedsCalibration()
+{
+    nsCOMPtr<nsIDeviceMotionUpdate> dmu = 
+        do_GetService(NS_DEVICE_MOTION_CONTRACTID);
+    if (dmu)
+        dmu->NeedsCalibration();
+    return true;
+}
+
+bool
 ContentChild::RecvScreenSizeChanged(const gfxIntSize& size)
 {
 #ifdef ANDROID

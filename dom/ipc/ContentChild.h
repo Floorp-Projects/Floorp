@@ -162,6 +162,8 @@ public:
                                          const double& x, const double& y,
                                          const double& z);
 
+    virtual bool RecvNeedsCalibration();
+
     virtual bool RecvScreenSizeChanged(const gfxIntSize &size);
 
     virtual bool RecvFlushMemory(const nsString& reason);

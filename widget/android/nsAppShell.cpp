@@ -331,6 +331,11 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         NativeEventCallback();
         break;
 
+    case AndroidGeckoEvent::SENSOR_ACCURACY:
+        if (curEvent->Flags() == 0)
+            gDeviceMotionSystem->NeedsCalibration();
+        break;
+
     case AndroidGeckoEvent::ACCELERATION_EVENT:
         gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ACCELERATION,
                                                  -curEvent->X(),
@@ -340,9 +345,9 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
     case AndroidGeckoEvent::ORIENTATION_EVENT:
         gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ORIENTATION,
-                                                 -curEvent->Alpha(),
-                                                 curEvent->Beta(),
-                                                 curEvent->Gamma());
+                                                 curEvent->Alpha(),
+                                                 -curEvent->Beta(),
+                                                 -curEvent->Gamma());
         mPendingOrientationEvents = false;
         break;
 

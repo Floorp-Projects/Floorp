@@ -76,6 +76,9 @@ private:
 
  protected:
 
+  void FireNeedsCalibration(nsIDOMDocument *domdoc,
+			    nsIDOMEventTarget *target);
+
   void FireDOMOrientationEvent(class nsIDOMDocument *domDoc, 
                                class nsIDOMEventTarget *target,
                                double alpha,
