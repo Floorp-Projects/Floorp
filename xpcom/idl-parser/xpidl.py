@@ -740,13 +740,15 @@ class Attribute(object):
     null = None
     undefined = None
     deprecated = False
+    nullable = False
     defvalue = None
 
-    def __init__(self, type, name, attlist, readonly, defvalue, location, doccomments):
+    def __init__(self, type, name, attlist, readonly, nullable, defvalue, location, doccomments):
         self.type = type
         self.name = name
         self.attlist = attlist
         self.readonly = readonly
+        self.nullable = nullable
         self.defvalue = defvalue
         self.location = location
         self.doccomments = doccomments
@@ -807,6 +809,10 @@ class Attribute(object):
         if (self.undefined is not None and
             getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Undefined' attribute can only be used on DOMString",
+                           self.location)
+        if (self.nullable and
+            getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
+            raise IDLError("Nullable types (T?) is supported only for DOMString",
                            self.location)
 
     def toIDL(self):
@@ -1110,7 +1116,7 @@ class IDLParser(object):
     t_LSHIFT = r'<<'
     t_RSHIFT=  r'>>'
 
-    literals = '"(){}[],;:=|+-*'
+    literals = '"(){}[],;:=|+-*?'
 
     t_ignore = ' \t'
 
@@ -1392,6 +1398,7 @@ class IDLParser(object):
                          name=p[5],
                          attlist=p[1]['attlist'],
                          readonly=p[2] is not None,
+                         nullable=False,
                          defvalue=None,
                          location=self.getLocation(p, 3),
                          doccomments=doccomments)
@@ -1485,19 +1492,28 @@ class IDLParser(object):
         p[0].insert(0, p[1])
 
     def p_dictmember(self, p):
-        """dictmember : attributes IDENTIFIER IDENTIFIER optdefvalue ';'"""
+        """dictmember : attributes IDENTIFIER optnullable IDENTIFIER optdefvalue ';'"""
         if 'doccomments' in p[1]:
             doccomments = p[1]['doccomments']
         else:
             doccomments = p.slice[2].doccomments
 
         p[0] = Attribute(type=p[2],
-                         name=p[3],
+                         name=p[4],
                          attlist=p[1]['attlist'],
                          readonly=False,
-                         defvalue=p[4],
+                         nullable=p[3] is not None,
+                         defvalue=p[5],
                          location=self.getLocation(p, 1),
                          doccomments=doccomments)
+
+    def p_optnullable(self, p):
+        """optnullable : '?'
+                       | """
+        if len(p) > 1:
+            p[0] = p[1]
+        else:
+            p[0] = None
 
     def p_optdefvalue(self, p):
         """optdefvalue : '=' STRING
