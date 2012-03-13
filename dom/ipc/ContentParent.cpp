@@ -1291,12 +1291,6 @@ ContentParent::OnMotionChange(nsIDeviceMotionData *aDeviceData) {
     return NS_OK;
 }
 
-NS_IMETHODIMP
-ContentParent::NeedsCalibration() {
-    unused << SendNeedsCalibration();
-    return NS_OK;
-}
-
 
 } // namespace dom
 } // namespace mozilla

@@ -59,7 +59,6 @@ CPPSRCS     = \
         $(NULL)
 
 LOCAL_INCLUDES  += -I$(topsrcdir)/dom/src/geolocation \
-                     -I$(topsrcdir)/content/events/src
                      $(NULL)
 
 include $(topsrcdir)/config/rules.mk

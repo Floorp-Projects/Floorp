@@ -1,5 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,13 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Android code.
+ * The Original Code is Geolocation.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2012
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Doug Turner <dougt@meer.net>  (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,16 +34,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko;
 
-public class GeckoHalDefines
+#include "domstubs.idl"
+
+[scriptable, uuid(93abae10-7024-49eb-8e05-1931343b0ebb)]
+interface nsIDOMGeoPositionAddress : nsISupports
 {
-    /*
-     * Keep these values consistent with |SensorType| in Hal.h
-    */
-    public static final int SENSOR_ORIENTATION = 0;
-    public static final int SENSOR_ACCELERATION = 1;
-    public static final int SENSOR_PROXIMITY = 2;
-    public static final int SENSOR_LINEAR_ACCELERATION = 3;
-    public static final int SENSOR_GYROSCOPE = 4;
+  readonly attribute DOMString streetNumber;
+  readonly attribute DOMString street;
+  readonly attribute DOMString premises;
+  readonly attribute DOMString city;
+  readonly attribute DOMString county;
+  readonly attribute DOMString region;
+  readonly attribute DOMString country;
+  readonly attribute DOMString postalCode;
 };
