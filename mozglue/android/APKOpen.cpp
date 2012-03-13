@@ -723,7 +723,6 @@ static int loadSQLiteLibs(const char *apkName)
 static mozglueresult
 loadNSSLibs(const char *apkName)
 {
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "loadNSSLibs");
   chdir(getenv("GRE_HOME"));
 
 #ifdef MOZ_OLD_LINKER
@@ -733,7 +732,7 @@ loadNSSLibs(const char *apkName)
   }
 #endif
 
-  Zip *zip = new Zip(apkName);
+  RefPtr<Zip> zip = new Zip(apkName);
   if (!lib_mapping) {
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
   }
@@ -772,14 +771,11 @@ loadNSSLibs(const char *apkName)
 #undef MOZLOAD
 #endif
 
-  delete zip;
-
 #ifdef MOZ_CRASHREPORTER
   free(file_ids);
   file_ids = NULL;
 #endif
 
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "loadNSSLibs 2");
   if (!nss_handle) {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libnss3!");
     return FAILURE;
@@ -795,7 +791,6 @@ loadNSSLibs(const char *apkName)
     return FAILURE;
   }
 
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "loadNSSLibs 3");
   return setup_nss_functions(nss_handle, nspr_handle, plc_handle);
 }
 
