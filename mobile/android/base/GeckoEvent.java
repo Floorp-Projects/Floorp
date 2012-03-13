@@ -89,6 +89,7 @@ public class GeckoEvent {
     private static final int PROXIMITY_EVENT = 23;
     private static final int ACTIVITY_RESUMING = 24;
     private static final int SCREENSHOT = 25;
+    private static final int SENSOR_ACCURACY = 26;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -292,9 +293,9 @@ public class GeckoEvent {
             
         case Sensor.TYPE_ORIENTATION:
             event = new GeckoEvent(ORIENTATION_EVENT);
-            event.mAlpha = -s.values[0];
-            event.mBeta = -s.values[1];
-            event.mGamma = -s.values[2];
+            event.mAlpha = s.values[0];
+            event.mBeta  = s.values[1];
+            event.mGamma = s.values[2];
             break;
 
         case Sensor.TYPE_PROXIMITY:
@@ -406,6 +407,12 @@ public class GeckoEvent {
         event.mPoints[0] = new Point(sw, sh);
         event.mPoints[1] = new Point(dw, dh);
         event.mMetaState = tabId;
+        return event;
+    }
+
+    public static GeckoEvent createSensorAccuracyEvent(int accuracy) {
+        GeckoEvent event = new GeckoEvent(SENSOR_ACCURACY);
+        event.mFlags = accuracy;
         return event;
     }
 }
