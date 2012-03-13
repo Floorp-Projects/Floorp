@@ -19,6 +19,7 @@
 #include "nsIDocShell.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "WindowIdentifier.h"
+#include "mozilla/dom/ScreenOrientation.h"
 
 using namespace mozilla::services;
 
@@ -294,6 +295,24 @@ protected:
 
 static WakeLockObserversManager sWakeLockObservers;
 
+class ScreenOrientationObserversManager : public CachingObserversManager<dom::ScreenOrientationWrapper>
+{
+protected:
+  void EnableNotifications() {
+    PROXY_IF_SANDBOXED(EnableScreenOrientationNotifications());
+  }
+
+  void DisableNotifications() {
+    PROXY_IF_SANDBOXED(DisableScreenOrientationNotifications());
+  }
+
+  void GetCurrentInformationInternal(dom::ScreenOrientationWrapper* aInfo) {
+    PROXY_IF_SANDBOXED(GetCurrentScreenOrientation(&(aInfo->orientation)));
+  }
+};
+
+static ScreenOrientationObserversManager sScreenOrientationObservers;
+
 void
 RegisterBatteryObserver(BatteryObserver* aObserver)
 {
@@ -506,6 +525,34 @@ NotifyWakeLockChange(const WakeLockInformation& aInfo)
 {
   AssertMainThread();
   sWakeLockObservers.BroadcastInformation(aInfo);
+}
+
+void
+RegisterScreenOrientationObserver(hal::ScreenOrientationObserver* aObserver)
+{
+  AssertMainThread();
+  sScreenOrientationObservers.AddObserver(aObserver);
+}
+
+void
+UnregisterScreenOrientationObserver(hal::ScreenOrientationObserver* aObserver)
+{
+  AssertMainThread();
+  sScreenOrientationObservers.RemoveObserver(aObserver);
+}
+
+void
+GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation)
+{
+  AssertMainThread();
+  *aScreenOrientation = sScreenOrientationObservers.GetCurrentInformation().orientation;
+}
+
+void
+NotifyScreenOrientationChange(const dom::ScreenOrientation& aScreenOrientation)
+{
+  sScreenOrientationObservers.CacheInformation(dom::ScreenOrientationWrapper(aScreenOrientation));
+  sScreenOrientationObservers.BroadcastCachedInformation();
 }
 
 } // namespace hal
