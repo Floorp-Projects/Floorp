@@ -66,6 +66,21 @@
                       -moz-linear-gradient(@customToolbarColor@, @customToolbarColor@);
   }
 
+  #navigator-toolbox[tabsontop=true] #urlbar:not(:-moz-lwtheme),
+  #navigator-toolbox[tabsontop=true] .searchbar-textbox:not(:-moz-lwtheme) {
+    border-color: hsla(210,54%,20%,.25) hsla(210,54%,20%,.27) hsla(210,54%,20%,.3);
+  }
+
+  #navigator-toolbox[tabsontop=true] #urlbar:not(:-moz-lwtheme):not([focused]):hover,
+  #navigator-toolbox[tabsontop=true] .searchbar-textbox:not(:-moz-lwtheme):not([focused]):hover {
+    border-color: hsla(210,54%,20%,.35) hsla(210,54%,20%,.37) hsla(210,54%,20%,.4);
+  }
+
+  #navigator-toolbox[tabsontop=true] #urlbar:not(:-moz-lwtheme)[focused],
+  #navigator-toolbox[tabsontop=true] .searchbar-textbox:not(:-moz-lwtheme)[focused] {
+    border-color: hsla(206,100%,60%,.65) hsla(206,100%,55%,.65) hsla(206,100%,50%,.65);
+  }
+
   #sidebar-splitter {
     border: 0;
     -moz-border-end: 1px solid #A9B7C9;
