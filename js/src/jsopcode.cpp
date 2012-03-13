@@ -5676,8 +5676,7 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
         goto do_fallback;
 
     fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
-    script = fp->script();
-    pc = cx->regs().pc;
+    script = cx->stack.currentScript(&pc);
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
     if (pc < script->main())
