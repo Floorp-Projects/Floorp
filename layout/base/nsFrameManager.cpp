@@ -1141,6 +1141,11 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
         parentContext = nsnull;
     }
     else {
+      MOZ_ASSERT(providerFrame->GetContent() == aFrame->GetContent(),
+                 "Postcondition for GetParentStyleContextFrame() violated. "
+                 "That means we need to add the current element to the "
+                 "ancestor filter.");
+
       // resolve the provider here (before aFrame below).
 
       // assumeDifferenceHint forces the parent's change to be also
@@ -1389,8 +1394,12 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       undisplayedParent = localContent;
     }
     if (checkUndisplayed && mUndisplayedMap) {
-      for (UndisplayedNode* undisplayed =
-                              mUndisplayedMap->GetFirstNode(undisplayedParent);
+      UndisplayedNode* undisplayed =
+        mUndisplayedMap->GetFirstNode(undisplayedParent);
+      for (AncestorFilter::AutoAncestorPusher
+             pushAncestor(undisplayed, aTreeMatchContext.mAncestorFilter,
+                          undisplayedParent ? undisplayedParent->AsElement()
+                                            : nsnull);
            undisplayed; undisplayed = undisplayed->mNext) {
         NS_ASSERTION(undisplayedParent ||
                      undisplayed->mContent ==
@@ -1538,7 +1547,12 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
 
       // now do children
       nsIFrame::ChildListIterator lists(aFrame);
-      for (; !lists.IsDone(); lists.Next()) {
+      for (AncestorFilter::AutoAncestorPusher
+             pushAncestor(!lists.IsDone(),
+                          aTreeMatchContext.mAncestorFilter,
+                          content && content->IsElement() ? content->AsElement()
+                                                          : nsnull);
+           !lists.IsDone(); lists.Next()) {
         nsFrameList::Enumerator childFrames(lists.CurrentList());
         for (; !childFrames.AtEnd(); childFrames.Next()) {
           nsIFrame* child = childFrames.get();
@@ -1649,8 +1663,9 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
                                       RestyleTracker&    aRestyleTracker,
                                       bool               aRestyleDescendants)
 {
+  nsIContent *content = aFrame->GetContent();
   if (aMinChange) {
-    aChangeList->AppendChange(aFrame, aFrame->GetContent(), aMinChange);
+    aChangeList->AppendChange(aFrame, content, aMinChange);
   }
 
   nsChangeHint topLevelChange = aMinChange;
@@ -1669,6 +1684,10 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
   TreeMatchContext treeMatchContext(true,
                                     nsRuleWalker::eRelevantLinkUnvisited,
                                     mPresShell->GetDocument());
+  nsIContent *parent = content ? content->GetParent() : nsnull;
+  Element *parentElement =
+    parent && parent->IsElement() ? parent->AsElement() : nsnull;
+  treeMatchContext.mAncestorFilter.Init(parentElement);
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
   do {
     // Outer loop over special siblings
