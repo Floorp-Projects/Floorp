@@ -126,6 +126,9 @@ public class GeckoAppShell
      * sVibrationMaybePlaying is true. */
     private static long sVibrationEndTime = 0;
 
+    /* Default value of how fast we should hint the Android sensors. */
+    private static int sDefaultSensorHint = 100;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -547,9 +550,9 @@ public class GeckoAppShell
 
         if (enable) {
             if (gAccelerometerSensor != null)
-                sm.registerListener(GeckoApp.mAppContext, gAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(GeckoApp.mAppContext, gAccelerometerSensor, sDefaultSensorHint);
             if (gOrientationSensor != null)
-                sm.registerListener(GeckoApp.mAppContext, gOrientationSensor,   SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(GeckoApp.mAppContext, gOrientationSensor,   sDefaultSensorHint);
         } else {
             if (gAccelerometerSensor != null)
                 sm.unregisterListener(GeckoApp.mAppContext, gAccelerometerSensor);
@@ -603,7 +606,7 @@ public class GeckoAppShell
             if(gProximitySensor == null)
                 gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
             sm.registerListener(GeckoApp.mAppContext, gProximitySensor,
-                                SensorManager.SENSOR_DELAY_GAME);
+                                sDefaultSensorHint);
             break;
         }
     }
