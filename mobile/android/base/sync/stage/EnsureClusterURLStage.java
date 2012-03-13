@@ -1,39 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Android Sync Client.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2011
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Richard Newman <rnewman@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.stage;
 
@@ -46,6 +13,8 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.NodeAuthenticationException;
+import org.mozilla.gecko.sync.NullClusterURLException;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncResourceDelegate;
@@ -57,8 +26,28 @@ import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 
 public class EnsureClusterURLStage implements GlobalSyncStage {
   public interface ClusterURLFetchDelegate {
-    public void handleSuccess(String url);
+    /**
+     * 200 - Success.
+     * @param url The node/weave cluster URL returned by the server.
+     */
+    public void handleSuccess(URI url);
+
+    /**
+     * 200 - Success, but the server returned 'null', meaning no node can be
+     * assigned at this time, probably due to registration throttling.
+     */
+    public void handleThrottled();
+
+    /**
+     * 404 - User not found.
+     * 503 - Service unavailable.
+     * @param response The server's response.
+     */
     public void handleFailure(HttpResponse response);
+
+    /**
+     * An unexpected error occurred.
+     */
     public void handleError(Exception e);
   }
 
@@ -66,25 +55,53 @@ public class EnsureClusterURLStage implements GlobalSyncStage {
 
   // TODO: if cluster URL has changed since last time, we need to ensure that we do
   // a fresh start. This takes place at the GlobalSession level. Verify!
-  public static void fetchClusterURL(final GlobalSession session,
+  /**
+   * Fetch a node/weave cluster URL from a server.
+   *
+   * @param nodeWeaveURL
+   *          Where to request the cluster URL from, usually something like:
+   *          <code>https://server/pathname/version/username/node/weave</code>.
+   * @throws URISyntaxException
+   */
+  public static void fetchClusterURL(final String nodeWeaveURL,
                                      final ClusterURLFetchDelegate delegate) throws URISyntaxException {
-    Log.i(LOG_TAG, "In fetchClusterURL. Server URL is " + session.config.serverURL);
-    String nodeWeaveURL = session.config.nodeWeaveURL();
-    Log.d(LOG_TAG, "node/weave is " + nodeWeaveURL);
+    Log.d(LOG_TAG, "In fetchClusterURL: node/weave is " + nodeWeaveURL);
 
     BaseResource resource = new BaseResource(nodeWeaveURL);
     resource.delegate = new SyncResourceDelegate(resource) {
 
+      /**
+       * Handle the response for GET https://server/pathname/version/username/node/weave.
+       *
+       * Returns the Sync Node that the client is located on.
+       * Storage operations should be directed to that node.
+       *
+       * Return value: the node URL, an unadorned (not JSON) string.
+       *
+       * node may be 'null' if no node can be assigned at this time, probably
+       * due to registration throttling.
+       *
+       * Possible errors:
+       *
+       * 503: there was an error getting a node | empty body
+       *
+       * 400: for historical reasons treated as 404.
+       *
+       * 404: user not found | empty body
+       *
+       * {@link http://docs.services.mozilla.com/reg/apis.html}
+       */
       @Override
       public void handleHttpResponse(HttpResponse response) {
+
         int status = response.getStatusLine().getStatusCode();
         switch (status) {
         case 200:
-          Log.i(LOG_TAG, "Got 200 for node/weave fetch.");
-          // Great!
+          Log.i(LOG_TAG, "Got 200 for node/weave cluster URL request (user found; succeeding).");
           HttpEntity entity = response.getEntity();
           if (entity == null) {
-            delegate.handleSuccess(null);
+            delegate.handleThrottled();
+            SyncResourceDelegate.consumeEntity(response);
             return;
           }
           String output = null;
@@ -96,26 +113,41 @@ public class EnsureClusterURLStage implements GlobalSyncStage {
             reader.close();
           } catch (IllegalStateException e) {
             delegate.handleError(e);
+            SyncResourceDelegate.consumeEntity(response);
+            return;
           } catch (IOException e) {
             delegate.handleError(e);
+            SyncResourceDelegate.consumeEntity(response);
+            return;
           }
 
           if (output == null || output.equals("null")) {
-            delegate.handleSuccess(null);
+            delegate.handleThrottled();
+            return;
           }
-          delegate.handleSuccess(output);
+
+          try {
+            URI uri = new URI(output);
+            delegate.handleSuccess(uri);
+          } catch (URISyntaxException e) {
+            delegate.handleError(e);
+          }
           break;
         case 400:
         case 404:
-          Log.i(LOG_TAG, "Got " + status + " for cluster URL request.");
+          Log.i(LOG_TAG, "Got " + status + " for node/weave cluster URL request (user not found; failing).");
           delegate.handleFailure(response);
-          SyncResourceDelegate.consumeEntity(response.getEntity());
+          break;
+        case 503:
+          Log.i(LOG_TAG, "Got 503 for node/weave cluster URL request (error fetching node; failing).");
+          delegate.handleFailure(response);
           break;
         default:
-          Log.w(LOG_TAG, "Got " + status + " fetching node/weave. Returning failure.");
+          Log.w(LOG_TAG, "Got " + status + " for node/weave cluster URL request (unexpected HTTP status; failing).");
           delegate.handleFailure(response);
-          SyncResourceDelegate.consumeEntity(response.getEntity());
         }
+
+        SyncResourceDelegate.consumeEntity(response);
       }
 
       @Override
@@ -138,9 +170,11 @@ public class EnsureClusterURLStage implements GlobalSyncStage {
   }
 
   public void execute(final GlobalSession session) throws NoSuchStageException {
+    final URI oldClusterURL = session.config.getClusterURL();
+    final boolean wantNodeAssignment = session.callback.wantNodeAssignment();
 
-    if (session.config.getClusterURL() != null) {
-      Log.i(LOG_TAG, "Cluster URL already set. Continuing with sync.");
+    if (!wantNodeAssignment && oldClusterURL != null) {
+      Log.i(LOG_TAG, "Cluster URL is already set and not stale. Continuing with sync.");
       session.advance();
       return;
     }
@@ -149,27 +183,30 @@ public class EnsureClusterURLStage implements GlobalSyncStage {
     final ClusterURLFetchDelegate delegate = new ClusterURLFetchDelegate() {
 
       @Override
-      public void handleSuccess(final String url) {
+      public void handleSuccess(final URI url) {
         Log.i(LOG_TAG, "Node assignment pointed us to " + url);
 
-        try {
-          session.config.setClusterURL(url);
-          ThreadPool.run(new Runnable() {
-            @Override
-            public void run() {
-              session.advance();
-            }
-          });
+        if (oldClusterURL != null && oldClusterURL.equals(url)) {
+          // Our cluster URL is marked as stale and the fresh cluster URL is the same -- this is the user's problem.
+          session.callback.informNodeAuthenticationFailed(session, url);
+          session.abort(new NodeAuthenticationException(), "User password has changed.");
           return;
-        } catch (URISyntaxException e) {
-          final URISyntaxException uriException = e;
-          ThreadPool.run(new Runnable() {
-            @Override
-            public void run() {
-              session.abort(uriException, "Invalid cluster URL.");
-            }
-          });
         }
+
+        session.callback.informNodeAssigned(session, oldClusterURL, url); // No matter what, we're getting a new node/weave clusterURL.
+        session.config.setClusterURL(url);
+
+        ThreadPool.run(new Runnable() {
+          @Override
+          public void run() {
+            session.advance();
+          }
+        });
+      }
+
+      @Override
+      public void handleThrottled() {
+        session.abort(new NullClusterURLException(), "Got 'null' cluster URL. Aborting.");
       }
 
       @Override
@@ -202,7 +239,7 @@ public class EnsureClusterURLStage implements GlobalSyncStage {
       @Override
       public void run() {
         try {
-          fetchClusterURL(session, delegate);
+          fetchClusterURL(session.config.nodeWeaveURL(), delegate);
         } catch (URISyntaxException e) {
           session.abort(e, "Invalid URL for node/weave.");
         }
