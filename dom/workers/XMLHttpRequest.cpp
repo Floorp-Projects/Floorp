@@ -75,6 +75,7 @@ class XMLHttpRequestUpload : public events::EventTarget
     STRING_onloadstart,
     STRING_onprogress,
     STRING_onloadend,
+    STRING_ontimeout,
 
     STRING_COUNT
   };
@@ -239,6 +240,8 @@ JSPropertySpec XMLHttpRequestUpload::sProperties[] = {
     GetEventListener, SetEventListener },
   { sEventStrings[STRING_onloadend], STRING_onloadend, PROPERTY_FLAGS,
     GetEventListener, SetEventListener },
+  { sEventStrings[STRING_ontimeout], STRING_ontimeout, PROPERTY_FLAGS,
+    GetEventListener, SetEventListener },
   { 0, 0, 0, NULL, NULL }
 };
 
@@ -248,7 +251,8 @@ const char* const XMLHttpRequestUpload::sEventStrings[STRING_COUNT] = {
   "onload",
   "onloadstart",
   "onprogress",
-  "onloadend"
+  "onloadend",
+  "ontimeout"
 };
 
 class XMLHttpRequest
@@ -271,6 +275,7 @@ class XMLHttpRequest
     SLOT_withCredentials,
     SLOT_upload,
     SLOT_responseType,
+    SLOT_timeout,
 
     SLOT_COUNT
   };
@@ -292,6 +297,7 @@ class XMLHttpRequest
     STRING_onloadstart,
     STRING_onprogress,
     STRING_onloadend,
+    STRING_ontimeout,
 
     STRING_COUNT
   };
@@ -399,6 +405,7 @@ private:
     JS_SetReservedSlot(obj, SLOT_withCredentials, JSVAL_FALSE);
     JS_SetReservedSlot(obj, SLOT_upload, JSVAL_NULL);
     JS_SetReservedSlot(obj, SLOT_responseType, STRING_TO_JSVAL(textStr));
+    JS_SetReservedSlot(obj, SLOT_timeout, zero);
 
     WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
     XMLHttpRequestPrivate* priv = new XMLHttpRequestPrivate(obj, workerPrivate);
@@ -528,6 +535,7 @@ private:
   IMPL_SETTER(MozBackgroundRequest)
   IMPL_SETTER(WithCredentials)
   IMPL_SETTER(ResponseType)
+  IMPL_SETTER(Timeout)
 
 #undef IMPL_SETTER
 
@@ -798,6 +806,8 @@ JSPropertySpec XMLHttpRequest::sProperties[] = {
     js_GetterOnlyPropertyStub },
   { "responseType", SLOT_responseType, PROPERTY_FLAGS, GetProperty,
     SetResponseType },
+  { "timeout", SLOT_timeout, PROPERTY_FLAGS, GetProperty,
+    SetTimeout },
   { sEventStrings[STRING_onreadystatechange], STRING_onreadystatechange,
     PROPERTY_FLAGS, GetEventListener, SetEventListener },
   { sEventStrings[STRING_onabort], STRING_onabort, PROPERTY_FLAGS,
@@ -811,6 +821,8 @@ JSPropertySpec XMLHttpRequest::sProperties[] = {
   { sEventStrings[STRING_onprogress], STRING_onprogress, PROPERTY_FLAGS,
     GetEventListener, SetEventListener },
   { sEventStrings[STRING_onloadend], STRING_onloadend, PROPERTY_FLAGS,
+    GetEventListener, SetEventListener },
+  { sEventStrings[STRING_ontimeout], STRING_ontimeout, PROPERTY_FLAGS,
     GetEventListener, SetEventListener },
 
 #undef GENERIC_READONLY_PROPERTY
@@ -846,7 +858,8 @@ const char* const XMLHttpRequest::sEventStrings[STRING_COUNT] = {
   "onload",
   "onloadstart",
   "onprogress",
-  "onloadend"
+  "onloadend",
+  "ontimeout"
 };
 
 // static

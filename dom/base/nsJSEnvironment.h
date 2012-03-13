@@ -56,6 +56,10 @@ namespace mozilla {
 template <class> class Maybe;
 }
 
+// The amount of time we wait between a request to GC (due to leaving
+// a page) and doing the actual GC.
+#define NS_GC_DELAY                 4000 // ms
+
 class nsJSContext : public nsIScriptContext,
                     public nsIXPCScriptNotify
 {

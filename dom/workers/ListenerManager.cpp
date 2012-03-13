@@ -435,6 +435,8 @@ ListenerManager::DispatchEvent(JSContext* aCx, JSObject* aTarget,
 
     static const char sHandleEventChars[] = "handleEvent";
 
+    JSObject* thisObj = aTarget;
+
     JSBool hasHandleEvent;
     if (!JS_HasProperty(aCx, listenerObj, sHandleEventChars, &hasHandleEvent)) {
       if (!JS_ReportPendingException(aCx)) {
@@ -450,11 +452,13 @@ ListenerManager::DispatchEvent(JSContext* aCx, JSObject* aTarget,
         }
         continue;
       }
+
+      thisObj = listenerObj;
     }
 
     jsval argv[] = { OBJECT_TO_JSVAL(aEvent) };
     jsval rval = JSVAL_VOID;
-    if (!JS_CallFunctionValue(aCx, aTarget, listenerVal, ArrayLength(argv),
+    if (!JS_CallFunctionValue(aCx, thisObj, listenerVal, ArrayLength(argv),
                               argv, &rval)) {
       if (!JS_ReportPendingException(aCx)) {
         return false;

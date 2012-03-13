@@ -51,10 +51,9 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
+#include "mozilla/HashFunctions.h"
 
-namespace css = mozilla::css;
-
-using mozilla::SVGAttrValueWrapper;
+using namespace mozilla;
 
 #define MISC_STR_PTR(_cont) \
   reinterpret_cast<void*>((_cont)->mStringBits & NS_ATTRVALUE_POINTERVALUE_MASK)
@@ -392,7 +391,7 @@ nsAttrValue::SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized)
 }
 
 void
-nsAttrValue::SetTo(const mozilla::SVGLengthList& aValue,
+nsAttrValue::SetTo(const SVGLengthList& aValue,
                    const nsAString* aSerialized)
 {
   // While an empty string will parse as a length list, there's no need to store
@@ -404,7 +403,7 @@ nsAttrValue::SetTo(const mozilla::SVGLengthList& aValue,
 }
 
 void
-nsAttrValue::SetTo(const mozilla::SVGNumberList& aValue,
+nsAttrValue::SetTo(const SVGNumberList& aValue,
                    const nsAString* aSerialized)
 {
   // While an empty string will parse as a number list, there's no need to store
@@ -422,7 +421,7 @@ nsAttrValue::SetTo(const nsSVGNumberPair& aValue, const nsAString* aSerialized)
 }
 
 void
-nsAttrValue::SetTo(const mozilla::SVGPathData& aValue,
+nsAttrValue::SetTo(const SVGPathData& aValue,
                    const nsAString* aSerialized)
 {
   // While an empty string will parse as path data, there's no need to store it
@@ -434,7 +433,7 @@ nsAttrValue::SetTo(const mozilla::SVGPathData& aValue,
 }
 
 void
-nsAttrValue::SetTo(const mozilla::SVGPointList& aValue,
+nsAttrValue::SetTo(const SVGPointList& aValue,
                    const nsAString* aSerialized)
 {
   // While an empty string will parse as a point list, there's no need to store
@@ -446,14 +445,14 @@ nsAttrValue::SetTo(const mozilla::SVGPointList& aValue,
 }
 
 void
-nsAttrValue::SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
+nsAttrValue::SetTo(const SVGAnimatedPreserveAspectRatio& aValue,
                    const nsAString* aSerialized)
 {
   SetSVGType(eSVGPreserveAspectRatio, &aValue, aSerialized);
 }
 
 void
-nsAttrValue::SetTo(const mozilla::SVGStringList& aValue,
+nsAttrValue::SetTo(const SVGStringList& aValue,
                    const nsAString* aSerialized)
 {
   // While an empty string will parse as a string list, there's no need to store
@@ -465,7 +464,7 @@ nsAttrValue::SetTo(const mozilla::SVGStringList& aValue,
 }
 
 void
-nsAttrValue::SetTo(const mozilla::SVGTransformList& aValue,
+nsAttrValue::SetTo(const SVGTransformList& aValue,
                    const nsAString* aSerialized)
 {
   // While an empty string will parse as a transform list, there's no need to
@@ -764,7 +763,7 @@ nsAttrValue::HashValue() const
       nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
         PRUint32 len = str->StorageSize()/sizeof(PRUnichar) - 1;
-        return nsCRT::HashCode(static_cast<PRUnichar*>(str->Data()), len);
+        return HashString(static_cast<PRUnichar*>(str->Data()), len);
       }
 
       return 0;
@@ -812,14 +811,14 @@ nsAttrValue::HashValue() const
     }
     case eAtomArray:
     {
-      PRUint32 retval = 0;
+      PRUint32 hash = 0;
       PRUint32 count = cont->mAtomArray->Length();
       for (nsCOMPtr<nsIAtom> *cur = cont->mAtomArray->Elements(),
                              *end = cur + count;
            cur != end; ++cur) {
-        retval ^= NS_PTR_TO_INT32(cur->get());
+        hash = AddToHash(hash, cur->get());
       }
-      return retval;
+      return hash;
     }
     case eDoubleValue:
     {

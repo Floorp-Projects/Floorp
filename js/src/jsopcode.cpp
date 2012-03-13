@@ -2715,8 +2715,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
              */
             uint32_t format = cs->format;
             bool matchPC = false;
-            if (StackFrame *fp = js_GetScriptedCaller(cx, NULL)) {
-                jsbytecode *npc = fp->pcQuadratic(cx);
+            FrameRegsIter iter(cx);
+            if (!iter.done()) {
+                jsbytecode *npc = iter.pc();
                 if (pc == npc) {
                     matchPC = true;
                 } else if (format & JOF_DECOMPOSE) {

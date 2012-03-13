@@ -145,3 +145,5 @@ browser.jar:
   skin/classic/browser/syncQuota.css
   skin/classic/browser/syncProgress.css
 #endif
+  skin/classic/browser/webapps-16.png
+  skin/classic/browser/webapps-64.png
