@@ -124,17 +124,80 @@ struct RuleSelectorPair {
   nsCSSSelector*    mSelector; // which of |mRule|'s selectors
 };
 
+#define NS_IS_ANCESTOR_OPERATOR(ch) \
+  ((ch) == PRUnichar(' ') || (ch) == PRUnichar('>'))
+
 /**
  * A struct representing a particular rule in an ordered list of rules
  * (the ordering depending on the weight of mSelector and the order of
  * our rules to start with).
  */
 struct RuleValue : RuleSelectorPair {
+  enum {
+    eMaxAncestorHashes = 4
+  };
+
   RuleValue(const RuleSelectorPair& aRuleSelectorPair, PRInt32 aIndex) :
     RuleSelectorPair(aRuleSelectorPair),
     mIndex(aIndex)
-  {}
+  {
+    CollectAncestorHashes();
+  }
+
   PRInt32 mIndex; // High index means high weight/order.
+  uint32_t mAncestorSelectorHashes[eMaxAncestorHashes];
+
+private:
+  void CollectAncestorHashes() {
+    // Collect up our mAncestorSelectorHashes.  It's not clear whether it's
+    // better to stop once we've found eMaxAncestorHashes of them or to keep
+    // going and preferentially collect information from selectors higher up the
+    // chain...  Let's do the former for now.
+    size_t hashIndex = 0;
+    for (nsCSSSelector* sel = mSelector->mNext; sel; sel = sel->mNext) {
+      if (!NS_IS_ANCESTOR_OPERATOR(sel->mOperator)) {
+        // |sel| is going to select something that's not actually one of our
+        // ancestors, so don't add it to mAncestorSelectorHashes.  But keep
+        // going, because it'll select a sibling of one of our ancestors, so its
+        // ancestors would be our ancestors too.
+        continue;
+      }
+
+      // Now sel is supposed to select one of our ancestors.  Grab whatever info
+      // we can from it into mAncestorSelectorHashes.
+      nsAtomList* ids = sel->mIDList;
+      while (ids) {
+        mAncestorSelectorHashes[hashIndex++] = ids->mAtom->hash();
+        if (hashIndex == eMaxAncestorHashes) {
+          return;
+        }
+        ids = ids->mNext;
+      }
+
+      nsAtomList* classes = sel->mClassList;
+      while (classes) {
+        mAncestorSelectorHashes[hashIndex++] = classes->mAtom->hash();
+        if (hashIndex == eMaxAncestorHashes) {
+          return;
+        }
+        classes = classes->mNext;
+      }
+
+      // Only put in the tag name if it's all-lowercase.  Otherwise we run into
+      // trouble because we may test the wrong one of mLowercaseTag and
+      // mCasedTag against the filter.
+      if (sel->mLowercaseTag && sel->mCasedTag == sel->mLowercaseTag) {
+        mAncestorSelectorHashes[hashIndex++] = sel->mLowercaseTag->hash();
+        if (hashIndex == eMaxAncestorHashes) {
+          return;
+        }
+      }
+    }
+
+    while (hashIndex != eMaxAncestorHashes) {
+      mAncestorSelectorHashes[hashIndex++] = 0;
+    }
+  }
 };
 
 // ------------------------------
@@ -2235,8 +2298,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
           selector->mNext &&
           selector->mNext->mOperator != selector->mOperator &&
           !(selector->mOperator == '~' &&
-            (selector->mNext->mOperator == PRUnichar(' ') ||
-             selector->mNext->mOperator == PRUnichar('>')))) {
+            NS_IS_ANCESTOR_OPERATOR(selector->mNext->mOperator))) {
 
         // pretend the selector didn't match, and step through content
         // while testing the same selector
