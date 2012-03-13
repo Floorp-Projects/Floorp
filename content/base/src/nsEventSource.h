@@ -102,6 +102,7 @@ public:
   // Determine if preferences allow EventSource
   static bool PrefEnabled();
 
+  virtual void DisconnectFromOwner();
 protected:
   nsresult GetBaseURI(nsIURI **aBaseURI);
 

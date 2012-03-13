@@ -262,8 +262,6 @@ IDBCursor::CreateCommon(IDBRequest* aRequest,
   nsRefPtr<IDBCursor> cursor = new IDBCursor();
 
   IDBDatabase* database = aTransaction->Database();
-  cursor->mScriptContext = database->GetScriptContext();
-  cursor->mOwner = database->GetOwner();
   cursor->mScriptOwner = database->GetScriptOwner();
 
   if (cursor->mScriptOwner) {
@@ -376,8 +374,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBCursor)
                                                        nsIDOMEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mObjectStore)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mIndex)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOwner)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mScriptContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
@@ -421,8 +417,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBCursor)
     tmp->mHaveValue = false;
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRequest)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOwner)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mScriptContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBCursor)
