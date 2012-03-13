@@ -53,6 +53,15 @@ class nsWinUtils
 {
 public:
   /**
+   * Return computed styles declaration for the given node.
+   *
+   * @note Please use it carefully since it can shutdown the accessible tree
+   *       you operate on.
+   */
+  static already_AddRefed<nsIDOMCSSStyleDeclaration>
+    GetComputedStyleDeclaration(nsIContent* aContent);
+
+  /**
    * Convert nsIArray array of accessible objects to an array of IUnknown*
    * objects used in IA2 methods.
    */

@@ -109,9 +109,8 @@ public:
             return "nsRDFConInstanceTestNode::Element"; }
 
         virtual PLHashNumber Hash() const {
-            return (PLHashNumber(NS_PTR_TO_INT32(mContainer.get())) >> 4) ^
-                PLHashNumber(mContainerTest) ^
-                (PLHashNumber(mEmptyTest) << 4); }
+            return mozilla::HashGeneric(mContainerTest, mEmptyTest, mContainer.get());
+        }
 
         virtual bool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {

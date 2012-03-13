@@ -420,5 +420,11 @@ HISTOGRAM(TOTAL_COUNT_HIGH_ERRORS, 1, 3000, 10, EXPONENTIAL, "Number of histogra
 HISTOGRAM(TOTAL_COUNT_LOW_ERRORS, 1, 3000, 10, EXPONENTIAL, "Number of histograms with total count low errors")
 HISTOGRAM_FLAG(TELEMETRY_TEST_FLAG, "a testing histogram; not meant to be touched")
 
+/**
+ * Startup Crash Detection
+ */
+HISTOGRAM_FLAG(STARTUP_CRASH_DETECTED, "Whether there was a crash during the last startup")
+HISTOGRAM(SAFE_MODE_USAGE, 1, 3, 4, LINEAR, "Whether the user is in safe mode (No, Yes, Forced)")
+
 #undef HISTOGRAM_BOOLEAN
 #undef HISTOGRAM_FLAG

@@ -105,24 +105,26 @@ public class PutRequestStage extends JPakeStage {
 
       @Override
       public void handleHttpResponse(HttpResponse response) {
-        int statusCode = response.getStatusLine().getStatusCode();
-        switch (statusCode) {
-        case 200:
-          Header etagHeader = response.getFirstHeader("etag");
-          if (etagHeader == null) {
-            Logger.error(LOG_TAG, "Server did not supply ETag.");
+        try {
+          int statusCode = response.getStatusLine().getStatusCode();
+          switch (statusCode) {
+          case 200:
+            Header etagHeader = response.getFirstHeader("etag");
+            if (etagHeader == null) {
+              Logger.error(LOG_TAG, "Server did not supply ETag.");
+              callbackDelegate.handleFailure(Constants.JPAKE_ERROR_SERVER);
+              return;
+            }
+            jpakeClient.myEtag = etagHeader.getValue();
+            callbackDelegate.handleSuccess(response);
+            break;
+          default:
+            Logger.error(LOG_TAG, "Could not upload data. Server responded with HTTP " + statusCode);
             callbackDelegate.handleFailure(Constants.JPAKE_ERROR_SERVER);
-            SyncResourceDelegate.consumeEntity(response.getEntity());
-            return;
           }
-          jpakeClient.myEtag = etagHeader.getValue();
-          callbackDelegate.handleSuccess(response);
-          break;
-        default:
-          Logger.error(LOG_TAG, "Could not upload data. Server responded with HTTP " + statusCode);
-          callbackDelegate.handleFailure(Constants.JPAKE_ERROR_SERVER);
+        } finally {
+          BaseResource.consumeEntity(response);
         }
-        SyncResourceDelegate.consumeEntity(response.getEntity());
       }
 
       @Override

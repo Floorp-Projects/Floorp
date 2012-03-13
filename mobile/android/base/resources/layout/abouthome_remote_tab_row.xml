@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+          android:id="@+id/remote_tab_title"
+          android:layout_width="fill_parent"
+          android:layout_height="47dip"
+          android:paddingLeft="12dip"
+          android:paddingRight="12dip"
+          android:gravity="center_vertical"
+          android:textSize="15sp"
+          android:textColor="#222222"
+          android:singleLine="true"
+          android:ellipsize="middle"
+          android:background="@drawable/abouthome_separator"/>

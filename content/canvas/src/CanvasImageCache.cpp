@@ -102,7 +102,7 @@ public:
   static KeyTypePointer KeyToPointer(KeyType& key) { return &key; }
   static PLDHashNumber HashKey(KeyTypePointer key)
   {
-    return (NS_PTR_TO_INT32(key->mImage) ^ NS_PTR_TO_INT32(key->mCanvas)) >> 2;
+    return HashGeneric(key->mImage, key->mCanvas);
   }
   enum { ALLOW_MEMMOVE = true };
 

@@ -122,6 +122,7 @@ _TEST_FILES = \
   workersDisabled_worker.js \
   test_xhr_implicit_cancel.html \
   xhr_implicit_cancel_worker.js \
+  test_xhr_timeout.html \
   $(NULL)
 
 _SUBDIR_TEST_FILES = \

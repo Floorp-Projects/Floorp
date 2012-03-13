@@ -139,6 +139,13 @@
       testGroupAttrs("h5", 0, 0, 5);
       testGroupAttrs("h6", 0, 0, 6);
 
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA combobox
+      testGroupAttrs("combo1_opt1", 1, 4);
+      testGroupAttrs("combo1_opt2", 2, 4);
+      testGroupAttrs("combo1_opt3", 3, 4);
+      testGroupAttrs("combo1_opt4", 4, 4);
+
       SimpleTest.finish();
     }
 
@@ -304,6 +311,13 @@
   <h4 id="h4">heading4</h4>
   <h5 id="h5">heading5</h5>
   <h6 id="h6">heading6</h6>
+
+  <ul id="combo1" role="combobox">Password
+    <li id="combo1_opt1" role="option">Xyzzy</li>
+    <li id="combo1_opt2" role="option">Plughs</li>
+    <li id="combo1_opt3" role="option">Shazaam</li>
+    <li id="combo1_opt4" role="option">JoeSentMe</li>
+  </ul>
 
 </body>
 </html>
