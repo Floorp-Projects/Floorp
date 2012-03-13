@@ -1981,10 +1981,33 @@ fi
 dnl ========================================================
 dnl SPS Profiler
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(sps,
-[  --enable-sps          Enable sps profiling tool.],
-    MOZ_ENABLE_PROFILER_SPS=1,
-    MOZ_ENABLE_PROFILER_SPS= )
+MOZ_ENABLE_PROFILER_SPS=1
+
+case "${OS_TARGET}" in
+Android)
+    case "${CPU_ARCH}" in
+    x86 | arm) ;;
+    *)
+        MOZ_ENABLE_PROFILER_SPS=
+    esac
+    ;;
+Linux)
+    case "${CPU_ARCH}" in
+    x86 | x86_64) ;;
+    *)
+        MOZ_ENABLE_PROFILER_SPS=
+    esac
+    ;;
+WINNT|Darwin) ;;
+*)
+    MOZ_ENABLE_PROFILER_SPS=
+    ;;
+esac
+
+MOZ_ARG_DISABLE_BOOL(sps,
+[  --disable-sps         Disable sps profiling tool.],
+    MOZ_ENABLE_PROFILER_SPS=,
+    MOZ_ENABLE_PROFILER_SPS=1)
 if test -n "$MOZ_ENABLE_PROFILER_SPS"; then
     AC_DEFINE(MOZ_ENABLE_PROFILER_SPS)
 fi
