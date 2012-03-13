@@ -2424,9 +2424,8 @@ public:
    * Get the frame whose style context should be the parent of this
    * frame's style context (i.e., provide the parent style context).
    * This frame must either be an ancestor of this frame or a child.  If
-   * this returns a child frame, then the child frame must be sure to
-   * return a grandparent or higher!  Furthermore, if a child frame is
-   * returned it must have the same GetContent() as this frame.
+   * this frame returns a child frame, then the child frame must be sure
+   * to return a grandparent or higher!
    *
    * @return The frame whose style context should be the parent of this frame's
    *         style context.  Null is permitted, and means that this frame's

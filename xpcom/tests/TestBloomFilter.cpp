@@ -32,30 +32,30 @@ int main()
   FilterChecker multiple(0x20001);
 
   filter->add(&one);
-  if (!filter->mightContain(&one)) {
+  if (!filter->mayContain(&one)) {
     fail("Filter should contain 'one'");
     return -1;
   }
 
-  if (filter->mightContain(&multiple)) {
+  if (filter->mayContain(&multiple)) {
     fail("Filter claims to contain 'multiple' when it should not");
     return -1;
   }
 
-  if (!filter->mightContain(&many)) {
+  if (!filter->mayContain(&many)) {
     fail("Filter should contain 'many' (false positive)");
     return -1;
   }
 
   filter->add(&two);
-  if (!filter->mightContain(&multiple)) {
+  if (!filter->mayContain(&multiple)) {
     fail("Filter should contain 'multiple' (false positive)");
     return -1;
   }
 
   // Test basic removals
   filter->remove(&two);
-  if (filter->mightContain(&multiple)) {
+  if (filter->mayContain(&multiple)) {
     fail("Filter claims to contain 'multiple' when it should not after two was "
          "removed");
     return -1;
@@ -66,7 +66,7 @@ int main()
   for (unsigned i = 0; i < FILTER_SIZE - 1; ++i) {
     filter->add(&two);
   }
-  if (!filter->mightContain(&multiple)) {
+  if (!filter->mayContain(&multiple)) {
     fail("Filter should contain 'multiple' after 'two' added lots of times "
          "(false positive)");
     return -1;
@@ -74,7 +74,7 @@ int main()
   for (unsigned i = 0; i < FILTER_SIZE - 1; ++i) {
     filter->remove(&two);
   }
-  if (filter->mightContain(&multiple)) {
+  if (filter->mayContain(&multiple)) {
     fail("Filter claims to contain 'multiple' when it should not after two was "
          "removed lots of times");
     return -1;
@@ -84,7 +84,7 @@ int main()
   for (unsigned i = 0; i < FILTER_SIZE + 1; ++i) {
     filter->add(&two);
   }
-  if (!filter->mightContain(&multiple)) {
+  if (!filter->mayContain(&multiple)) {
     fail("Filter should contain 'multiple' after 'two' added lots more times "
          "(false positive)");
     return -1;
@@ -92,26 +92,26 @@ int main()
   for (unsigned i = 0; i < FILTER_SIZE + 1; ++i) {
     filter->remove(&two);
   }
-  if (!filter->mightContain(&multiple)) {
+  if (!filter->mayContain(&multiple)) {
     fail("Filter claims to not contain 'multiple' even though we should have "
          "run out of space in the buckets (false positive)");
     return -1;
   }
-  if (!filter->mightContain(&two)) {
+  if (!filter->mayContain(&two)) {
     fail("Filter claims to not contain 'two' even though we should have run "
          "out of space in the buckets (false positive)");
     return -1;
   }
 
   filter->remove(&one);
-  if (filter->mightContain(&one)) {
+  if (filter->mayContain(&one)) {
     fail("Filter should not contain 'one', because we didn't overflow its "
          "bucket");
     return -1;
   }
   
   filter->clear();
-  if (filter->mightContain(&multiple)) {
+  if (filter->mayContain(&multiple)) {
     fail("clear() failed to work");
     return -1;
   }
