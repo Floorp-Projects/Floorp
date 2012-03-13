@@ -3242,3 +3242,99 @@ nsCSSRuleProcessor::SelectorListMatches(Element* aElement,
 
   return false;
 }
+
+// AncestorFilter out of line methods
+void
+AncestorFilter::Init(Element *aElement)
+{
+  MOZ_ASSERT(!mFilter);
+  MOZ_ASSERT(mHashes.IsEmpty());
+
+  mFilter = new Filter();
+
+  if (NS_LIKELY(aElement)) {
+    MOZ_ASSERT(aElement->IsInDoc(),
+               "aElement must be in the document for the assumption that "
+               "GetNodeParent() is non-null on all element ancestors of "
+               "aElement to be true");
+    // Collect up the ancestors
+    nsAutoTArray<Element*, 50> ancestors;
+    Element* cur = aElement;
+    do {
+      ancestors.AppendElement(cur);
+      nsINode* parent = cur->GetNodeParent();
+      if (!parent->IsElement()) {
+        break;
+      }
+      cur = parent->AsElement();
+    } while (true);
+
+    // Now push them in reverse order.
+    for (PRUint32 i = ancestors.Length(); i-- != 0; ) {
+      PushAncestor(ancestors[i]);
+    }
+  }
+}
+
+void
+AncestorFilter::PushAncestor(Element *aElement)
+{
+  MOZ_ASSERT(mFilter);
+
+  PRUint32 oldLength = mHashes.Length();
+
+  mPopTargets.AppendElement(oldLength);
+#ifdef DEBUG
+  mElements.AppendElement(aElement);
+#endif
+  mHashes.AppendElement(aElement->Tag()->hash());
+  nsIAtom *id = aElement->GetID();
+  if (id) {
+    mHashes.AppendElement(id->hash());
+  }
+  const nsAttrValue *classes = aElement->GetClasses();
+  if (classes) {
+    PRUint32 classCount = classes->GetAtomCount();
+    for (PRUint32 i = 0; i < classCount; ++i) {
+      mHashes.AppendElement(classes->AtomAt(i)->hash());
+    }
+  }
+
+  PRUint32 newLength = mHashes.Length();
+  for (PRUint32 i = oldLength; i < newLength; ++i) {
+    mFilter->add(mHashes[i]);
+  }
+}
+
+void
+AncestorFilter::PopAncestor()
+{
+  MOZ_ASSERT(!mPopTargets.IsEmpty());
+  MOZ_ASSERT(mPopTargets.Length() == mElements.Length());
+
+  PRUint32 popTargetLength = mPopTargets.Length();
+  PRUint32 newLength = mPopTargets[popTargetLength-1];
+
+  mPopTargets.TruncateLength(popTargetLength-1);
+#ifdef DEBUG
+  mElements.TruncateLength(popTargetLength-1);
+#endif
+
+  PRUint32 oldLength = mHashes.Length();
+  for (PRUint32 i = newLength; i < oldLength; ++i) {
+    mFilter->remove(mHashes[i]);
+  }
+  mHashes.TruncateLength(newLength);
+}
+
+#ifdef DEBUG
+void
+AncestorFilter::AssertHasAllAncestors(Element *aElement) const
+{
+  nsINode* cur = aElement->GetNodeParent();
+  while (cur && cur->IsElement()) {
+    MOZ_ASSERT(mElements.Contains(cur));
+    cur = cur->GetNodeParent();
+  }
+}
+#endif
