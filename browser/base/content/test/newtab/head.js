@@ -270,10 +270,15 @@ function simulateDrop(aDropTarget, aDragSource) {
  * Resumes testing when all pages have been updated.
  */
 function whenPagesUpdated() {
-  NewTabUtils.allPages.register({
+  let page = {
     update: function () {
       NewTabUtils.allPages.unregister(this);
       executeSoon(TestRunner.next);
     }
+  };
+
+  NewTabUtils.allPages.register(page);
+  registerCleanupFunction(function () {
+    NewTabUtils.allPages.unregister(this);
   });
 }
