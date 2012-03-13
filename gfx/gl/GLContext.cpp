@@ -1853,7 +1853,9 @@ GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
 
     GLint currentPackAlignment = 0;
     fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &currentPackAlignment);
-    fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+
+    if (currentPackAlignment != 4)
+        fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
 
     GLenum format;
     GLenum datatype;
@@ -1876,7 +1878,8 @@ GLContext::ReadPixelsIntoImageSurface(GLint aX, GLint aY,
         }
     }
 
-    fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
+    if (currentPackAlignment != 4)
+        fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
 }
 
 void
