@@ -45,6 +45,7 @@ let Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
   Cu.import("resource://gre/modules/PluralForm.jsm");
@@ -4355,12 +4356,23 @@ OverscrollController.prototype = {
 };
 
 var SearchEngines = {
+  _contextMenuId: null,
+
   init: function init() {
     Services.obs.addObserver(this, "SearchEngines:Get", false);
+    let contextName = Strings.browser.GetStringFromName("contextmenu.addSearchEngine");
+    let filter = {
+      matches: function (aElement) {
+        return (aElement.form && NativeWindow.contextmenus.textContext.matches(aElement));
+      }
+    };
+    this._contextMenuId = NativeWindow.contextmenus.add(contextName, filter, this.addEngine);
   },
 
   uninit: function uninit() {
     Services.obs.removeObserver(this, "SearchEngines:Get", false);
+    if (this._contextMenuId != null)
+      NativeWindow.contextmenus.remove(this._contextMenuId);
   },
 
   observe: function observe(aSubject, aTopic, aData) {
@@ -4380,5 +4392,83 @@ var SearchEngines = {
         }
       });
     }
+  },
+
+  addEngine: function addEngine(aElement) {
+    let form = aElement.form;
+    let charset = aElement.ownerDocument.characterSet;
+    let docURI = Services.io.newURI(aElement.ownerDocument.URL, charset, null);
+    let formURL = Services.io.newURI(form.getAttribute("action"), charset, docURI).spec;
+    let method = form.method.toUpperCase();
+    let formData = [];
+
+    for each (let el in form.elements) {
+      if (!el.type)
+        continue;
+
+      // make this text field a generic search parameter
+      if (aElement == el) {
+        formData.push({ name: el.name, value: "{searchTerms}" });
+        continue;
+      }
+
+      let type = el.type.toLowerCase();
+      let escapedName = escape(el.name);
+      let escapedValue = escape(el.value);
+
+      // add other form elements as parameters
+      switch (el.type) {
+        case "checkbox":
+        case "radio":
+          if (!el.checked) break;
+        case "text":
+        case "hidden":
+        case "textarea":
+          formData.push({ name: escapedName, value: escapedValue });
+          break;
+        case "select-one":
+          for each (let option in el.options) {
+            if (option.selected) {
+              formData.push({ name: escapedName, value: escapedValue });
+              break;
+            }
+          }
+      }
+    }
+
+    // prompt user for name of search engine
+    let promptTitle = Strings.browser.GetStringFromName("contextmenu.addSearchEngine");
+    let title = { value: (aElement.ownerDocument.title || docURI.host) };
+    if (!Services.prompt.prompt(null, promptTitle, null, title, null, {}))
+      return;
+
+    // fetch the favicon for this page
+    let dbFile = FileUtils.getFile("ProfD", ["browser.db"]);
+    let mDBConn = Services.storage.openDatabase(dbFile);
+    let stmts = [];
+    stmts[0] = mDBConn.createStatement("SELECT favicon FROM images WHERE url_key = ?");
+    stmts[0].bindStringParameter(0, docURI.spec);
+    let favicon = null;
+    mDBConn.executeAsync(stmts, stmts.length, {
+      handleResult: function (results) {
+        let bytes = results.getNextRow().getResultByName("favicon");
+        favicon = "data:image/png;base64," + btoa(String.fromCharCode.apply(null, bytes));
+      },
+      handleCompletion: function (reason) {
+        // if there's already an engine with this name, add a number to
+        // make the name unique (e.g., "Google" becomes "Google 2")
+        let name = title.value;
+        for (let i = 2; Services.search.getEngineByName(name); i++)
+          name = title.value + " " + i;
+
+        Services.search.addEngineWithDetails(name, favicon, null, null, method, formURL);
+        let engine = Services.search.getEngineByName(name);
+        engine.wrappedJSObject._queryCharset = charset;
+        for each (let param in formData) {
+          if (param.name && param.value)
+            engine.addParam(param.name, param.value, null);
+        }
+      }
+    });
   }
 };
