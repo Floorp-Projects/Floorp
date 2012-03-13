@@ -9,8 +9,8 @@ import java.net.URISyntaxException;
 
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.GlobalSession;
-import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.HTTPFailureException;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.MetaGlobalException;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
@@ -22,8 +22,6 @@ import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.Server11Repository;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerDelegate;
-
-import ch.boye.httpclientandroidlib.HttpResponse;
 
 import android.util.Log;
 

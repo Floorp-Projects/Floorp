@@ -60,6 +60,14 @@ public interface ResourceDelegate {
   void addHeaders(HttpRequestBase request, DefaultHttpClient client);
 
   // Response handling.
+
+  /**
+   * Override this to handle an HttpResponse.
+   *
+   * ResourceDelegate implementers <b>must</b> ensure that HTTP responses are
+   * fully consumed to ensure that connections are returned to the pool, for
+   * example by calling <code>EntityUtils.consume(response.getEntity())</code>.
+   */
   void handleHttpResponse(HttpResponse response);
   void handleHttpProtocolException(ClientProtocolException e);
   void handleHttpIOException(IOException e);
