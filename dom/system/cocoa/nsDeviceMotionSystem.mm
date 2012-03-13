@@ -44,6 +44,7 @@
 
 #import "smslib.h"
 #define MEAN_GRAVITY 9.80665
+#define DEFAULT_SENSOR_POLL 100
 
 nsDeviceMotionSystem::nsDeviceMotionSystem()
 {
@@ -79,7 +80,7 @@ void nsDeviceMotionSystem::Startup()
   if (mUpdateTimer)
     mUpdateTimer->InitWithFuncCallback(UpdateHandler,
                                        this,
-                                       mUpdateInterval,
+                                       DEFAULT_SENSOR_POLL,
                                        nsITimer::TYPE_REPEATING_SLACK);
 }
 
