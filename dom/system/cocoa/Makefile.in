@@ -52,6 +52,7 @@ EXPORT_LIBRARY = 1
 include $(topsrcdir)/config/config.mk
 
 CMMSRCS     = \
+        smslib.mm \
         nsDeviceMotionSystem.mm \
         $(NULL)
 
