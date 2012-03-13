@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.sync.stage.EnsureClusterURLStage;
+
+import ch.boye.httpclientandroidlib.HttpResponse;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -332,7 +335,7 @@ public class SyncConfiguration implements CredentialsSource {
     return clusterURL.toASCIIString();
   }
 
-  public void setAndPersistClusterURL(URI u, SharedPreferences prefs) {
+  protected void setAndPersistClusterURL(URI u, SharedPreferences prefs) {
     boolean shouldPersist = (prefs != null) && (clusterURL == null);
 
     Logger.debug(LOG_TAG, "Setting cluster URL to " + u.toASCIIString() +
@@ -345,11 +348,7 @@ public class SyncConfiguration implements CredentialsSource {
     }
   }
 
-  public void setClusterURL(URI u) {
-    setClusterURL(u, this.getPrefs());
-  }
-
-  public void setClusterURL(URI u, SharedPreferences prefs) {
+  protected void setClusterURL(URI u, SharedPreferences prefs) {
     if (u == null) {
       Logger.warn(LOG_TAG, "Refusing to set cluster URL to null.");
       return;
@@ -363,8 +362,8 @@ public class SyncConfiguration implements CredentialsSource {
     Logger.info(LOG_TAG, "Set cluster URL to " + clusterURL.toASCIIString() + ", given input " + u.toASCIIString());
   }
 
-  public void setClusterURL(String url) throws URISyntaxException {
-    this.setClusterURL(new URI(url));
+  public void setClusterURL(URI u) {
+    setClusterURL(u, this.getPrefs());
   }
 
   /**
