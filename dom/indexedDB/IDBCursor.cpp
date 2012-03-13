@@ -463,7 +463,7 @@ IDBCursor::GetDirection(nsAString& aDirection)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  switch(mDirection) {
+  switch (mDirection) {
     case NEXT:
       aDirection.AssignLiteral("next");
       break;

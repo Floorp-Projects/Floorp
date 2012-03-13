@@ -123,7 +123,7 @@ ContactDB.prototype = {
    * Start a new transaction.
    * 
    * @param txn_type
-   *        Type of transaction (e.g. IDBTransaction.READ_WRITE)
+   *        Type of transaction (e.g. "readwrite")
    * @param callback
    *        Function to call when the transaction is available. It will
    *        be invoked with the transaction and the 'contacts' object store.
@@ -234,7 +234,7 @@ ContactDB.prototype = {
 
   saveContact: function saveContact(aContact, successCb, errorCb) {
     let contact = this.makeImport(aContact);
-    this.newTxn(Ci.nsIIDBTransaction.READ_WRITE, function (txn, store) {
+    this.newTxn("readwrite", function (txn, store) {
       debug("Going to update" + JSON.stringify(contact));
 
       // Look up the existing record and compare the update timestamp.
@@ -263,14 +263,14 @@ ContactDB.prototype = {
   },
 
   removeContact: function removeContact(aId, aSuccessCb, aErrorCb) {
-    this.newTxn(Ci.nsIIDBTransaction.READ_WRITE, function (txn, store) {
+    this.newTxn("readwrite", function (txn, store) {
       debug("Going to delete" + aId);
       store.delete(aId);
     }, aSuccessCb, aErrorCb);
   },
 
   clear: function clear(aSuccessCb, aErrorCb) {
-    this.newTxn(Ci.nsIIDBTransaction.READ_WRITE, function (txn, store) {
+    this.newTxn("readwrite", function (txn, store) {
       debug("Going to clear all!");
       store.clear();
     }, aSuccessCb, aErrorCb);
@@ -297,7 +297,7 @@ ContactDB.prototype = {
     debug("ContactDB:find val:" + aOptions.filterValue + " by: " + aOptions.filterBy + " op: " + aOptions.filterOp + "\n");
 
     let self = this;
-    this.newTxn(Ci.nsIIDBTransaction.READ_ONLY, function (txn, store) {
+    this.newTxn("readonly", function (txn, store) {
       if (aOptions && aOptions.filterOp == "equals") {
         self._findWithIndex(txn, store, aOptions);
       } else if (aOptions && aOptions.filterBy) {
