@@ -581,6 +581,12 @@ private:
  */
 class THEBES_API ImageLayer : public Layer {
 public:
+  enum ScaleMode {
+    SCALE_NONE,
+    SCALE_STRETCH // Unimplemented on GL layers and e10s
+  // Unimplemented - SCALE_PRESERVE_ASPECT_RATIO_CONTAIN
+  };
+
   /**
    * CONSTRUCTION PHASE ONLY
    * Set the ImageContainer. aContainer must have the same layer manager
@@ -595,6 +601,17 @@ public:
    * Set the filter used to resample this image if necessary.
    */
   void SetFilter(gfxPattern::GraphicsFilter aFilter) { mFilter = aFilter; }
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the size to scale the image to and the mode at which to scale.
+   */
+  void SetScaleToSize(const gfxIntSize &aSize, ScaleMode aMode)
+  {
+    mScaleToSize = aSize;
+    mScaleMode = aMode;
+  }
+
 
   ImageContainer* GetContainer() { return mContainer; }
   gfxPattern::GraphicsFilter GetFilter() { return mFilter; }
@@ -620,12 +637,16 @@ public:
 
 protected:
   ImageLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}
+    : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD)
+    , mScaleMode(SCALE_NONE) {}
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
 
+
   nsRefPtr<ImageContainer> mContainer;
   gfxPattern::GraphicsFilter mFilter;
+  gfxIntSize mScaleToSize;
+  ScaleMode mScaleMode;
 };
 
 /****** Image subtypes for the different formats ******/
