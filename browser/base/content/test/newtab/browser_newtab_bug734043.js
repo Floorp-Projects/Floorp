@@ -8,7 +8,7 @@ function runTests() {
   yield addNewTabPageTab();
 
   let receivedError = false;
-  let block = cw.document.querySelector(".strip-button-block");
+  let block = cw.document.querySelector(".newtab-control-block");
 
   function onError() {
     receivedError = true;

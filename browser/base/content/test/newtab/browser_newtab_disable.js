@@ -15,7 +15,7 @@ function runTests() {
 
   ok(!gridNode.hasAttribute("page-disabled"), "page is not disabled");
 
-  cw.gToolbar.hide();
+  NewTabUtils.allPages.enabled = false;
   ok(gridNode.hasAttribute("page-disabled"), "page is disabled");
 
   let oldGridNode = cw.gGrid.node;
@@ -28,7 +28,7 @@ function runTests() {
   // check that no sites have been rendered
   is(0, cw.document.querySelectorAll(".site").length, "no sites have been rendered");
 
-  cw.gToolbar.show();
+  NewTabUtils.allPages.enabled = true;
   ok(!gridNode.hasAttribute("page-disabled"), "page is not disabled");
   ok(!oldGridNode.hasAttribute("page-disabled"), "old page is not disabled");
 }
