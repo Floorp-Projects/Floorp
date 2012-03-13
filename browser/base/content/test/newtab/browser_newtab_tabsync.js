@@ -8,6 +8,9 @@
  * state.
  */
 function runTests() {
+  // Disabled until bug 716543 is fixed.
+  return;
+
   setLinks("0,1,2,3,4,5,6,7,8,9");
   setPinnedLinks(",1");
 
