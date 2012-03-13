@@ -50,6 +50,9 @@
 #include "nsIPrefService.h"
 #include "nsDOMDeviceMotionEvent.h"
 
+// also see sDefaultSensorHint in mobile/android/base/GeckoAppShell.java
+#define DEFAULT_SENSOR_POLL 100
+
 static const nsTArray<nsIDOMWindow*>::index_type NoIndex =
     nsTArray<nsIDOMWindow*>::NoIndex;
 
@@ -117,18 +120,12 @@ NS_IMPL_ISUPPORTS2(nsDeviceMotion, nsIDeviceMotion, nsIDeviceMotionUpdate)
 
 nsDeviceMotion::nsDeviceMotion()
 : mStarted(false),
-  mUpdateInterval(50), /* default to 50 ms */
   mEnabled(true)
 {
   nsCOMPtr<nsIPrefBranch> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefSrv) {
-    PRInt32 value;
-    nsresult rv = prefSrv->GetIntPref("device.motion.update.interval", &value);
-    if (NS_SUCCEEDED(rv))
-      mUpdateInterval = value;
-
     bool bvalue;
-    rv = prefSrv->GetBoolPref("device.motion.enabled", &bvalue);
+    nsresult rv = prefSrv->GetBoolPref("device.motion.enabled", &bvalue);
     if (NS_SUCCEEDED(rv) && bvalue == false)
       mEnabled = false;
   }
@@ -322,7 +319,7 @@ nsDeviceMotion::FireDOMMotionEvent(nsIDOMDocument *domdoc,
                             nsnull,
                             acceleration,
                             nsnull,
-                            0);
+                            DEFAULT_SENSOR_POLL);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
   if (privateEvent)
