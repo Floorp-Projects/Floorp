@@ -45,7 +45,8 @@
 
 using namespace mozilla;
 
-class nsDOMMultipartFile : public nsDOMFileBase
+class nsDOMMultipartFile : public nsDOMFileBase,
+                           public nsIJSNativeInitializer
 {
 public:
   // Create as a file
@@ -65,35 +66,53 @@ public:
   {
   }
 
+  // Create as a blob to be later initialized
+  nsDOMMultipartFile()
+    : nsDOMFileBase(EmptyString(), UINT64_MAX)
+  {
+  }
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIJSNativeInitializer
+  NS_IMETHOD Initialize(nsISupports* aOwner,
+                        JSContext* aCx,
+                        JSObject* aObj,
+                        PRUint32 aArgc,
+                        jsval* aArgv);
+
   already_AddRefed<nsIDOMBlob>
   CreateSlice(PRUint64 aStart, PRUint64 aLength, const nsAString& aContentType);
 
   NS_IMETHOD GetSize(PRUint64*);
   NS_IMETHOD GetInternalStream(nsIInputStream**);
 
+  // DOMClassInfo constructor (for Blob([b1, "foo"], { type: "image/png" }))
+  static nsresult
+  NewBlob(nsISupports* *aNewObject);
+
+  virtual const nsTArray<nsCOMPtr<nsIDOMBlob> >*
+  GetSubBlobs() const { return &mBlobs; }
+
 protected:
   nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
 };
 
-class nsDOMBlobBuilder : public nsIDOMMozBlobBuilder
-{
+class BlobSet {
 public:
-  nsDOMBlobBuilder()
+  BlobSet()
     : mData(nsnull), mDataLen(0), mDataBufferLen(0)
   {}
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZBLOBBUILDER
-
-  nsresult GetBlobInternal(const nsAString& aContentType,
-                           bool aClearBuffer, nsIDOMBlob** aBlob);
   nsresult AppendVoidPtr(const void* aData, PRUint32 aLength);
-
-protected:
-  nsresult AppendString(JSString* aString, JSContext* aCx);
+  nsresult AppendString(JSString* aString, bool nativeEOL, JSContext* aCx);
   nsresult AppendBlob(nsIDOMBlob* aBlob);
   nsresult AppendArrayBuffer(JSObject* aBuffer);
+  nsresult AppendBlobs(const nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlob);
 
+  nsTArray<nsCOMPtr<nsIDOMBlob> >& GetBlobs() { Flush(); return mBlobs; }
+
+protected:
   bool ExpandBufferSize(PRUint64 aSize)
   {
     if (mDataBufferLen >= mDataLen + aSize) {
@@ -138,6 +157,25 @@ protected:
   void* mData;
   PRUint64 mDataLen;
   PRUint64 mDataBufferLen;
+};
+
+class nsDOMBlobBuilder : public nsIDOMMozBlobBuilder
+{
+public:
+  nsDOMBlobBuilder()
+    : mBlobSet()
+  {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMMOZBLOBBUILDER
+
+  nsresult AppendVoidPtr(const void* aData, PRUint32 aLength)
+  { return mBlobSet.AppendVoidPtr(aData, aLength); }
+
+  nsresult GetBlobInternal(const nsAString& aContentType,
+                           bool aClearBuffer, nsIDOMBlob** aBlob);
+protected:
+  BlobSet mBlobSet;
 };
 
 #endif

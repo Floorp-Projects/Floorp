@@ -57,7 +57,7 @@ function testSteps()
       const indexName = indexData[indexIndex].name;
 
       let objectStore =
-        db.transaction(objectStoreName, IDBTransaction.READ_WRITE)
+        db.transaction(objectStoreName, "readwrite")
           .objectStore(objectStoreName);
       ok(true, "Got objectStore " + objectStoreName);
 
@@ -133,7 +133,7 @@ function testSteps()
 
       is(keyIndex, 1, "Saw all the items");
 
-      db.transaction(objectStoreName, IDBTransaction.READ_WRITE)
+      db.transaction(objectStoreName, "readwrite")
         .objectStore(objectStoreName).clear()
         .onsuccess = continueToNextStep;
       yield;

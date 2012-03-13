@@ -376,31 +376,26 @@ PlacesViewBase.prototype = {
   _setLivemarkStatusMenuItem:
   function PVB_setLivemarkStatusMenuItem(aPopup, aStatus) {
     let statusMenuitem = aPopup._statusMenuitem;
-    let stringId = "";
-    if (aStatus == Ci.mozILivemark.STATUS_LOADING)
-      stringId = "bookmarksLivemarkLoading";
-    else if (aStatus == Ci.mozILivemark.STATUS_FAILED)
-      stringId = "bookmarksLivemarkFailed";
-
-    if (stringId && !statusMenuitem) {
+    if (!statusMenuitem) {
       // Create the status menuitem and cache it in the popup object.
       statusMenuitem = document.createElement("menuitem");
-      statusMenuitem.setAttribute("livemarkStatus", stringId);
       statusMenuitem.className = "livemarkstatus-menuitem";
-      statusMenuitem.setAttribute("label", PlacesUIUtils.getString(stringId));
       statusMenuitem.setAttribute("disabled", true);
-      aPopup.insertBefore(statusMenuitem, aPopup._startMarker.nextSibling);
       aPopup._statusMenuitem = statusMenuitem;
     }
-    else if (stringId &&
-             statusMenuitem.getAttribute("livemarkStatus") != stringId) {
+
+    if (aStatus == Ci.mozILivemark.STATUS_LOADING ||
+        aStatus == Ci.mozILivemark.STATUS_FAILED) {
       // Status has changed, update the cached status menuitem.
+      let stringId = aStatus == Ci.mozILivemark.STATUS_LOADING ?
+                       "bookmarksLivemarkLoading" : "bookmarksLivemarkFailed";
       statusMenuitem.setAttribute("label", PlacesUIUtils.getString(stringId));
+      if (aPopup._startMarker.nextSibling != statusMenuitem)
+        aPopup.insertBefore(statusMenuitem, aPopup._startMarker.nextSibling);
     }
-    else if (!stringId && statusMenuitem) {
+    else {
       // The livemark has finished loading.
       aPopup.removeChild(aPopup._statusMenuitem);
-      aPopup._statusMenuitem = null;
     }
   },
 
@@ -892,6 +887,14 @@ function PlacesToolbar(aPlace) {
   this._addEventListeners(this._rootElt, ["overflow", "underflow"], true);
   this._addEventListeners(window, ["resize", "unload"], false);
 
+  // If personal-bookmarks has been dragged to the tabs toolbar,
+  // we have to track addition and removals of tabs, to properly
+  // recalculate the available space for bookmarks.
+  // TODO (bug 734730): Use a performant mutation listener when available.
+  if (this._viewElt.parentNode.parentNode == document.getElementById("TabsToolbar")) {
+    this._addEventListeners(gBrowser.tabContainer, ["TabOpen", "TabClose"], false);
+  }
+
   PlacesViewBase.call(this, aPlace);
 
   Services.telemetry.getHistogramById("FX_BOOKMARKS_TOOLBAR_INIT_MS")
@@ -918,6 +921,7 @@ PlacesToolbar.prototype = {
                                true);
     this._removeEventListeners(this._rootElt, ["overflow", "underflow"], true);
     this._removeEventListeners(window, ["resize", "unload"], false);
+    this._removeEventListeners(gBrowser.tabContainer, ["TabOpen", "TabClose"], false);
 
     PlacesViewBase.prototype.uninit.apply(this, arguments);
   },
@@ -1017,9 +1021,10 @@ PlacesToolbar.prototype = {
 
   _updateChevronPopupNodesVisibility:
   function PT__updateChevronPopupNodesVisibility() {
-    for (let i = 0; i < this._chevronPopup.childNodes.length; i++) {
-      this._chevronPopup.childNodes[i].hidden =
-        this._rootElt.childNodes[i].style.visibility != "hidden";
+    for (let i = 0, node = this._chevronPopup._startMarker.nextSibling;
+         node != this._chevronPopup._endMarker;
+         i++, node = node.nextSibling) {
+      node.hidden = this._rootElt.childNodes[i].style.visibility != "hidden";
     }
   },
 
@@ -1071,7 +1076,11 @@ PlacesToolbar.prototype = {
         if (aEvent.detail == 0)
           return;
 
+        this.updateChevron();
         this._chevron.collapsed = true;
+        break;
+      case "TabOpen":
+      case "TabClose":
         this.updateChevron();
         break;
       case "dragstart":

@@ -39,6 +39,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/content/devtools/styleinspector.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/csshtmltree.css" type="text/css"?>
 
 <!DOCTYPE window [
@@ -114,8 +115,11 @@ To visually debug the templates without running firefox, alter the display:none
             ${selector.humanReadableText(__element)}
           </td>
           <td class="rule-link">
-            <a target="_blank" onclick="${selector.openStyleEditor}" class="link"
-               title="${selector.selectorInfo.href}">${selector.selectorInfo.source}</a>
+            <a target="_blank" class="link"
+               onclick="${selector.openStyleEditor}"
+               onkeydown="${selector.maybeOpenStyleEditor}"
+               title="${selector.selectorInfo.href}"
+               tabindex="0">${selector.selectorInfo.source}</a>
           </td>
         </tr>
       </loop>

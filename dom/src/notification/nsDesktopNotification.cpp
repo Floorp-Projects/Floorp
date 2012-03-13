@@ -99,7 +99,6 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
                                                    const nsAString & description,
                                                    const nsAString & iconURL,
                                                    nsPIDOMWindow *aWindow,
-                                                   nsIScriptContext* aScriptContext,
                                                    nsIURI* uri)
   : mTitle(title)
   , mDescription(description)
@@ -108,9 +107,7 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
   , mAllow(false)
   , mShowHasBeenCalled(false)
 {
-  mOwner = aWindow;
-  mScriptContext = aScriptContext;
-
+  BindToOwner(aWindow);
   if (Preferences::GetBool("notification.disabled", false)) {
     return;
   }
@@ -131,12 +128,12 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
     // if for some reason mOwner is null, just silently
     // bail.  The user will not see a notification, and that
     // is fine.
-    if (!mOwner)
+    if (!GetOwner())
       return;
 
     // because owner implements nsITabChild, we can assume that it is
     // the one and only TabChild for this docshell.
-    TabChild* child = GetTabChildFrom(mOwner->GetDocShell());
+    TabChild* child = GetTabChildFrom(GetOwner()->GetDocShell());
     
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.
@@ -263,11 +260,11 @@ nsDesktopNotificationCenter::CreateNotification(const nsAString & title,
                                                 const nsAString & iconURL,
                                                 nsIDOMDesktopNotification **aResult)
 {
+  NS_ENSURE_STATE(mOwner);
   nsRefPtr<nsIDOMDesktopNotification> notification = new nsDOMDesktopNotification(title, 
                                                                                   description,
                                                                                   iconURL,
                                                                                   mOwner,
-                                                                                  mScriptContext,
                                                                                   mURI);
   notification.forget(aResult);
   return NS_OK;
@@ -298,7 +295,8 @@ nsDesktopNotificationRequest::GetWindow(nsIDOMWindow * *aRequestingWindow)
   if (!mDesktopNotification)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mDesktopNotification->mOwner);
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(mDesktopNotification->GetOwner());
   NS_IF_ADDREF(*aRequestingWindow = window);
   return NS_OK;
 }

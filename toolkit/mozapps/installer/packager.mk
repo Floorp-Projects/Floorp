@@ -78,6 +78,8 @@ PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
 SDK_PATH      = $(PKG_PATH)
 ifeq ($(MOZ_APP_NAME),xulrunner)
 SDK_PATH = sdk/
+# Don't codesign xulrunner internally
+MOZ_INTERNAL_SIGNING_FORMAT =
 endif
 SDK_SUFFIX    = $(PKG_SUFFIX)
 SDK           = $(SDK_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
@@ -567,6 +569,11 @@ ifdef MOZ_SIGN_PACKAGE_CMD
 MAKE_PACKAGE    += && $(MOZ_SIGN_PACKAGE_CMD) "$(PACKAGE)"
 endif
 
+ifdef MOZ_SIGN_CMD
+MAKE_SDK           += && $(MOZ_SIGN_CMD) -f gpg $(SDK)
+UPLOAD_EXTRA_FILES += $(SDK).asc
+endif
+
 # dummy macro if we don't have PSM built
 SIGN_NSS		=
 ifdef MOZ_CAN_RUN_PROGRAMS
@@ -827,10 +834,12 @@ ifdef MOZ_POST_STAGING_CMD
 	cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && $(MOZ_POST_STAGING_CMD)
 endif # MOZ_POST_STAGING_CMD
 ifndef LIBXUL_SDK
+ifdef MOZ_PACKAGE_JSSHELL
 # Package JavaScript Shell
 	@echo "Packaging JavaScript Shell..."
 	$(RM) $(PKG_JSSHELL)
 	$(MAKE_JSSHELL)
+endif # MOZ_PACKAGE_JSSHELL
 endif # LIBXUL_SDK
 
 make-package: stage-package $(PACKAGE_XULRUNNER) make-sourcestamp-file
@@ -1007,9 +1016,42 @@ endif
 CREATE_SOURCE_TAR = $(TAR) -c --owner=0 --group=0 --numeric-owner \
   --mode="go-w" $(SRC_TAR_EXCLUDE_PATHS) -f
 
+SOURCE_TAR = $(DIST)/$(PKG_SRCPACK_PATH)$(PKG_SRCPACK_BASENAME).tar.bz2
+HG_BUNDLE_FILE = $(DIST)/$(PKG_SRCPACK_PATH)$(PKG_BUNDLE_BASENAME).bundle
+SOURCE_CHECKSUM_FILE = $(DIST)/$(PKG_SRCPACK_PATH)$(PKG_SRCPACK_BASENAME).checksums
+SOURCE_UPLOAD_FILES = $(SOURCE_TAR)
+
+HG ?= hg
+CREATE_HG_BUNDLE_CMD  = $(HG) -v -R $(topsrcdir) bundle --base null
+ifdef HG_BUNDLE_REVISION
+CREATE_HG_BUNDLE_CMD += -r $(HG_BUNDLE_REVISION)
+endif
+CREATE_HG_BUNDLE_CMD += $(HG_BUNDLE_FILE)
+ifdef UPLOAD_HG_BUNDLE
+SOURCE_UPLOAD_FILES  += $(HG_BUNDLE_FILE)
+endif
+
+ifdef MOZ_SIGN_CMD
+SIGN_SOURCE_TAR_CMD  = $(MOZ_SIGN_CMD) -f gpg $(SOURCE_TAR)
+SOURCE_UPLOAD_FILES += $(SOURCE_TAR).asc
+SIGN_HG_BUNDLE_CMD   = $(MOZ_SIGN_CMD) -f gpg $(HG_BUNDLE_FILE)
+ifdef UPLOAD_HG_BUNDLE
+SOURCE_UPLOAD_FILES += $(HG_BUNDLE_FILE).asc
+endif
+endif
+
 # source-package creates a source tarball from the files in MOZ_PKG_SRCDIR,
 # which is either set to a clean checkout or defaults to $topsrcdir
 source-package:
 	@echo "Packaging source tarball..."
-	mkdir -p $(DIST)/$(PKG_SRCPACK_PATH)
-	(cd $(MOZ_PKG_SRCDIR) && $(CREATE_SOURCE_TAR) - $(DIR_TO_BE_PACKAGED)) | bzip2 -vf > $(DIST)/$(PKG_SRCPACK_PATH)$(PKG_SRCPACK_BASENAME).tar.bz2
+	$(MKDIR) -p $(DIST)/$(PKG_SRCPACK_PATH)
+	(cd $(MOZ_PKG_SRCDIR) && $(CREATE_SOURCE_TAR) - $(DIR_TO_BE_PACKAGED)) | bzip2 -vf > $(SOURCE_TAR)
+	$(SIGN_SOURCE_TAR_CMD)
+
+hg-bundle:
+	$(MKDIR) -p $(DIST)/$(PKG_SRCPACK_PATH)
+	$(CREATE_HG_BUNDLE_CMD)
+	$(SIGN_HG_BUNDLE_CMD)
+
+upload-source:
+	$(MAKE) upload UPLOAD_FILES="$(SOURCE_UPLOAD_FILES)" CHECKSUM_FILE="$(SOURCE_CHECKSUM_FILE)"

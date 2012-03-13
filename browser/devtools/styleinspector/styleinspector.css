@@ -35,11 +35,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-.ruleview {
-  overflow: auto;
+#root {
+  display: -moz-box;
 }
 
-.ruleview-computedlist:not(.styleinspector-open) {
+.helplink {
+  display: block;
+}
+
+.expander,
+.property-name,
+.ruleview-propertyname,
+.ruleview-warning,
+.ruleview-expander {
+  display: inline-block;
+}
+
+#propertyContainer {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+  overflow-y: auto;
+  -moz-user-select: text;
+}
+
+.ruleview {
+  overflow: auto;
+  -moz-user-select: text;
+}
+
+.property-view-hidden,
+.property-content-hidden,
+.ruleview-computedlist:not(.styleinspector-open),
+.ruleview-warning[hidden] {
   display: none;
 }
 

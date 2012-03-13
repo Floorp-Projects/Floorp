@@ -83,7 +83,7 @@
 #define SAMPLER_H
 
 // Redefine the macros for platforms where SPS is supported.
-#if defined(ANDROID) || defined(__linux__) || defined(XP_MACOSX) || defined(XP_WIN)
+#ifdef MOZ_ENABLE_PROFILER_SPS
 
 #include "sps_sampler.h"
 

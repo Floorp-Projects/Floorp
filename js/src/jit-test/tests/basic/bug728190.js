@@ -1,3 +1,4 @@
+// |jit-test| slow;
 
 function TestCase(n, d, e, a) {}
 var lfcode = new Array();

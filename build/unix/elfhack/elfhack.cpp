@@ -507,6 +507,11 @@ void do_file(const char *name, bool backup = false, bool force = false)
     Elf *elf = new Elf(file);
     unsigned int size = elf->getSize();
     fprintf(stderr, "%s: ", name);
+    if (elf->getType() != ET_DYN) {
+        fprintf(stderr, "Not a shared object. Skipping\n");
+        delete elf;
+        return;
+    }
 
     for (ElfSection *section = elf->getSection(1); section != NULL;
          section = section->getNext()) {

@@ -4303,7 +4303,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
 
 static Class prop_iter_class = {
     "PropertyIterator",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(1),
     JS_PropertyStub,         /* addProperty */
     JS_PropertyStub,         /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -6655,6 +6655,25 @@ JS_IsIdentifier(JSContext *cx, JSString *str, JSBool *isIdentifier)
 
     *isIdentifier = js::IsIdentifier(linearStr);
     return true;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno)
+{
+    if (script)
+        *script = NULL;
+    if (lineno)
+        *lineno = 0;
+
+    FrameRegsIter i(cx);
+    if (i.done())
+        return JS_FALSE;
+
+    if (script)
+        *script = i.script();
+    if (lineno)
+        *lineno = js::PCToLineNumber(i.script(), i.pc());
+    return JS_TRUE;
 }
 
 #ifdef JS_THREADSAFE

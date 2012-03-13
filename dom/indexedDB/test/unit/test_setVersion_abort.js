@@ -7,9 +7,6 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
-  const VERSION_CHANGE = Components.interfaces.nsIIDBTransaction.VERSION_CHANGE;
-
   const name = this.window ? window.location.pathname : "Splendid Test";
   const description = "My Test Database";
 
