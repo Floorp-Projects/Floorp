@@ -8085,8 +8085,14 @@ nsCSSFrameConstructor::ContentStateChanged(nsIContent* aContent,
     primaryFrame->ContentStatesChanged(aStateMask);
   }
 
-  nsRestyleHint rshint = 
-    styleSet->HasStateDependentStyle(presContext, aElement, aStateMask);
+  if (aStateMask.HasState(NS_EVENT_STATE_HOVER) &&
+      !aElement->HasFlag(NODE_HAS_RELEVANT_HOVER_RULES)) {
+    aStateMask &= ~NS_EVENT_STATE_HOVER;
+  }
+
+  nsRestyleHint rshint = aStateMask.IsEmpty() ?
+      nsRestyleHint(0) :
+      styleSet->HasStateDependentStyle(presContext, aElement, aStateMask);
       
   if (aStateMask.HasState(NS_EVENT_STATE_HOVER) && rshint != 0) {
     ++mHoverGeneration;
