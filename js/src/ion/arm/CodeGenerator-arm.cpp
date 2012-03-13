@@ -452,12 +452,17 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
     // Extract the registers from this instruction
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
-    // Prevent INT_MIN / -1;
-    // The integer division will give INT_MIN, but we want -(double)INT_MIN.
-    masm.ma_cmp(lhs, Imm32(INT_MIN)); // sets EQ if lhs == INT_MIN
-    masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT_MIN), sets EQ if rhs == -1
-    if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-        return false;
+    MDiv *mir = ins->mir();
+
+    if (mir->canBeNegativeOverflow()) {
+        // Prevent INT_MIN / -1;
+        // The integer division will give INT_MIN, but we want -(double)INT_MIN.
+        masm.ma_cmp(lhs, Imm32(INT_MIN)); // sets EQ if lhs == INT_MIN
+        masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT_MIN), sets EQ if rhs == -1
+        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+            return false;
+    }
+
     // 0/X (with X < 0) is bad because both of these values *should* be doubles, and
     // the result should be -0.0, which cannot be represented in integers.
     // X/0 is bad because it will give garbage (or abort), when it should give
@@ -471,10 +476,12 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
     // the flags necessary for LT to trigger, we don't test X, and take the
     // bailout because the EQ flag is set.
     // if (Y > 0), we don't set EQ, and we don't trigger LT, so we don't take the bailout.
-    masm.ma_cmp(rhs, Imm32(0));
-    masm.ma_cmp(lhs, Imm32(0), Assembler::LessThan);
-    if (!bailoutIf(Assembler::Equal, ins->snapshot()))
-        return false;
+    if (mir->canBeDividebyZero() || mir->canBeNegativeZero()) {
+        masm.ma_cmp(rhs, Imm32(0));
+        masm.ma_cmp(lhs, Imm32(0), Assembler::LessThan);
+        if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+            return false;
+    }
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);

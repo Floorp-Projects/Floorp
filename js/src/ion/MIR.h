@@ -2001,6 +2001,48 @@ class MDiv : public MBinaryArithInstruction
         JS_NOT_REACHED("not used");
         return 1;
     }
+
+    bool canBeDivideByZero() {
+        MDefinition *rhs = getOperand(1);
+        if (rhs->isConstant() && !rhs->toConstant()->value().isInt32(0))
+            return false;
+        else
+            return true;
+    }
+
+    bool canBeNegativeOverflow() {
+        MDefinition *lhs = getOperand(0);
+        MDefinition *rhs = getOperand(1);
+
+        // If lhs is a constant int != INT32_MIN, then
+        // negative overflow check can be skipped.
+        if (lhs->isConstant() && !lhs->toConstant()->value().isInt32(INT32_MIN))
+            return false;
+
+        // If rhs is a constant int != -1, likewise.
+        if (rhs->isConstant() && !rhs->toConstant()->value().isInt32(-1))
+            return false;
+
+        return true;
+    }
+
+    bool canBeNegativeZero() {
+        MDefinition *lhs = getOperand(0);
+        MDefinition *rhs = getOperand(1);
+
+        // If lhs is != 0, then negative zero check can be skipped.
+        if (lhs->isConstant() && !lhs->toConstant()->value().isInt32(0))
+            return false;
+
+        // If rhs is > 0, likewise.
+        if (rhs->isConstant()) {
+            const js::Value &val = rhs->toConstant()->value();
+            if (val.isInt32() && val.toInt32() >= 0)
+                return false;
+        }
+
+        return true;
+    }
 };
 
 class MMod : public MBinaryArithInstruction
