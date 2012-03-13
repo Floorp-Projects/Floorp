@@ -333,7 +333,9 @@ HttpChannelParent::RecvUpdateAssociatedContentSecurity(const PRInt32& high,
 
 // Bug 621446 investigation, we don't want conditional PR_Aborts bellow to be
 // merged to a single address.
+#ifdef _MSC_VER
 #pragma warning(disable : 4068)
+#endif
 #pragma GCC optimize ("O0")
 
 bool
