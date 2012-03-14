@@ -554,13 +554,23 @@ public class BrowserProvider extends ContentProvider {
         public void onOpen(SQLiteDatabase db) {
             debug("Opening browser.db: " + db.getPath());
 
+            Cursor cursor = null;
+            if (Build.VERSION.SDK_INT >= 8) {
+                try {
+                    cursor = db.rawQuery("PRAGMA foreign_keys=ON", null);
+                } finally {
+                    if (cursor != null)
+                        cursor.close();
+                }
+            }
+
             // From Honeycomb on, it's possible to run several db
             // commands in parallel using multiple connections.
             if (Build.VERSION.SDK_INT >= 11) {
                 db.enableWriteAheadLogging();
             } else {
                 // Pre-Honeycomb, we can do some lesser optimizations.
-                Cursor cursor = null;
+                cursor = null;
                 try {
                     cursor = db.rawQuery("PRAGMA synchronous=NORMAL", null);
                 } finally {
