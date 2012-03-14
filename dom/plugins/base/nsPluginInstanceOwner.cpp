@@ -415,8 +415,13 @@ nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
   // If we're going to null out mInstance after use, be sure to call
   // mInstance->InvalidateOwner() here, since it now won't be called
   // from our destructor.  This fixes bug 613376.
-  if (mInstance && !aInstance)
+  if (mInstance && !aInstance) {
     mInstance->InvalidateOwner();
+
+#ifdef MOZ_WIDGET_ANDROID
+    RemovePluginView();
+#endif
+  }
 
   mInstance = aInstance;
 
