@@ -74,7 +74,7 @@ protected:
   nsresult GetRect(nsRect& aRect);
   nsresult GetAvailRect(nsRect& aRect);
 
-  nsIDocShell* mDocShell; // Weak Reference
+  bool mIsChrome;
 
   mozilla::dom::ScreenOrientation mOrientation;
 
@@ -87,6 +87,8 @@ private:
   static bool sAllowScreenBrightnessProperty;
 
   static void Initialize();
+
+  bool IsWhiteListed();
 
   NS_DECL_EVENT_HANDLER(mozorientationchange)
 };
