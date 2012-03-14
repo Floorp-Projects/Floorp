@@ -49,8 +49,6 @@ EXPORTS		= \
 		nsIUGenCategory.h \
 		nsUnicharUtilCIID.h \
 		nsUnicodeNormalizer.h \
-		nsUnicodeProperties.h \
-		nsUnicodeScriptCodes.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
