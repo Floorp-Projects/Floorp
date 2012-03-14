@@ -56,6 +56,23 @@ using namespace mozilla::dom;
 /* static */ bool nsScreen::sAllowScreenEnabledProperty = false;
 /* static */ bool nsScreen::sAllowScreenBrightnessProperty = false;
 
+namespace {
+
+bool
+IsChromeType(nsIDocShell *aDocShell)
+{
+  nsCOMPtr<nsIDocShellTreeItem> ds = do_QueryInterface(aDocShell);
+  if (!ds) {
+    return false;
+  }
+
+  PRInt32 itemType;
+  ds->GetItemType(&itemType);
+  return itemType == nsIDocShellTreeItem::typeChrome;
+}
+
+} // anonymous namespace
+
 /* static */ void
 nsScreen::Initialize()
 {
@@ -89,7 +106,7 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
 
   nsRefPtr<nsScreen> screen = new nsScreen();
   screen->BindToOwner(aWindow);
-  screen->mDocShell = aWindow->GetDocShell();
+  screen->mIsChrome = IsChromeType(aWindow->GetDocShell());
 
   hal::RegisterScreenOrientationObserver(screen);
   hal::GetCurrentScreenOrientation(&(screen->mOrientation));
@@ -132,6 +149,28 @@ NS_IMPL_ADDREF_INHERITED(nsScreen, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsScreen, nsDOMEventTargetHelper)
 
 NS_IMPL_EVENT_HANDLER(nsScreen, mozorientationchange)
+
+bool
+nsScreen::IsWhiteListed() {
+  if (mIsChrome) {
+    return true;
+  }
+
+  if (!GetOwner()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_GetInterface(GetOwner()->GetDocShell());
+  if (!doc) {
+    return false;
+  }
+
+  nsIPrincipal *principal = doc->NodePrincipal();
+  nsCOMPtr<nsIURI> principalURI;
+  principal->GetURI(getter_AddRefs(principalURI));
+  return nsContentUtils::URIIsChromeOrInPref(principalURI,
+                                             "dom.mozScreenWhitelist");
+}
 
 NS_IMETHODIMP
 nsScreen::GetTop(PRInt32* aTop)
@@ -251,7 +290,7 @@ nsScreen::GetAvailTop(PRInt32* aAvailTop)
 nsDeviceContext*
 nsScreen::GetDeviceContext()
 {
-  return nsLayoutUtils::GetDeviceContextForScreenInfo(mDocShell);
+  return nsLayoutUtils::GetDeviceContextForScreenInfo(GetOwner());
 }
 
 nsresult
@@ -292,39 +331,10 @@ nsScreen::GetAvailRect(nsRect& aRect)
   return NS_OK;
 }
 
-namespace {
-
-bool IsWhiteListed(nsIDocShell *aDocShell) {
-  nsCOMPtr<nsIDocShellTreeItem> ds = do_QueryInterface(aDocShell);
-  if (!ds) {
-    return false;
-  }
-
-  PRInt32 itemType;
-  ds->GetItemType(&itemType);
-  if (itemType == nsIDocShellTreeItem::typeChrome) {
-    return true;
-  }
-
-  nsCOMPtr<nsIDocument> doc = do_GetInterface(aDocShell);
-  nsIPrincipal *principal = doc->NodePrincipal();
-
-  nsCOMPtr<nsIURI> principalURI;
-  principal->GetURI(getter_AddRefs(principalURI));
-  if (nsContentUtils::URIIsChromeOrInPref(principalURI,
-                                          "dom.mozScreenWhitelist")) {
-    return true;
-  }
-
-  return false;
-}
-
-} // anonymous namespace
-
 nsresult
 nsScreen::GetMozEnabled(bool *aEnabled)
 {
-  if (!sAllowScreenEnabledProperty || !IsWhiteListed(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || !IsWhiteListed()) {
     *aEnabled = true;
     return NS_OK;
   }
@@ -336,7 +346,7 @@ nsScreen::GetMozEnabled(bool *aEnabled)
 nsresult
 nsScreen::SetMozEnabled(bool aEnabled)
 {
-  if (!sAllowScreenEnabledProperty || !IsWhiteListed(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || !IsWhiteListed()) {
     return NS_OK;
   }
 
@@ -349,7 +359,7 @@ nsScreen::SetMozEnabled(bool aEnabled)
 nsresult
 nsScreen::GetMozBrightness(double *aBrightness)
 {
-  if (!sAllowScreenEnabledProperty || !IsWhiteListed(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || !IsWhiteListed()) {
     *aBrightness = 1;
     return NS_OK;
   }
@@ -361,7 +371,7 @@ nsScreen::GetMozBrightness(double *aBrightness)
 nsresult
 nsScreen::SetMozBrightness(double aBrightness)
 {
-  if (!sAllowScreenEnabledProperty || !IsWhiteListed(mDocShell)) {
+  if (!sAllowScreenEnabledProperty || !IsWhiteListed()) {
     return NS_OK;
   }
 
