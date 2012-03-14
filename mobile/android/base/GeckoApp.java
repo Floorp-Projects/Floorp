@@ -139,8 +139,6 @@ abstract public class GeckoApp
     public static FormAssistPopup mFormAssistPopup;
     public Favicons mFavicons;
 
-    private Geocoder mGeocoder;
-    private Address  mLastGeoAddress;
     private static LayerController mLayerController;
     private static PlaceholderLayerClient mPlaceholderLayerClient;
     private static GeckoSoftwareLayerClient mSoftwareLayerClient;
@@ -2610,6 +2608,8 @@ abstract public class GeckoApp
     // accelerometer
     public void onAccuracyChanged(Sensor sensor, int accuracy)
     {
+        Log.w(LOGTAG, "onAccuracyChanged "+accuracy);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorAccuracyEvent(accuracy));
     }
 
     public void onSensorChanged(SensorEvent event)
@@ -2618,51 +2618,12 @@ abstract public class GeckoApp
         GeckoAppShell.sendEventToGecko(GeckoEvent.createSensorEvent(event));
     }
 
-    private class GeocoderRunnable implements Runnable {
-        Location mLocation;
-        GeocoderRunnable (Location location) {
-            mLocation = location;
-        }
-        public void run() {
-            try {
-                List<Address> addresses = mGeocoder.getFromLocation(mLocation.getLatitude(),
-                                                                    mLocation.getLongitude(), 1);
-                // grab the first address.  in the future,
-                // may want to expose multiple, or filter
-                // for best.
-                mLastGeoAddress = addresses.get(0);
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(mLocation, mLastGeoAddress));
-            } catch (Exception e) {
-                Log.w(LOGTAG, "GeocoderTask "+e);
-            }
-        }
-    }
-
     // geolocation
     public void onLocationChanged(Location location)
     {
         Log.w(LOGTAG, "onLocationChanged "+location);
-        if (mGeocoder == null)
-            mGeocoder = new Geocoder(mLayerController.getView().getContext(), Locale.getDefault());
 
-        if (mLastGeoAddress == null) {
-            GeckoAppShell.getHandler().post(new GeocoderRunnable(location));
-        }
-        else {
-            float[] results = new float[1];
-            Location.distanceBetween(location.getLatitude(),
-                                     location.getLongitude(),
-                                     mLastGeoAddress.getLatitude(),
-                                     mLastGeoAddress.getLongitude(),
-                                     results);
-            // pfm value.  don't want to slam the
-            // geocoder with very similar values, so
-            // only call after about 100m
-            if (results[0] > 100)
-                GeckoAppShell.getHandler().post(new GeocoderRunnable(location));
-        }
-
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location, mLastGeoAddress));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
     }
 
     public void onProviderDisabled(String provider)

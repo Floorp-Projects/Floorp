@@ -3161,6 +3161,44 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     if (cs) {
       cs->LogStringMessage(msg.get());
     }
+
+    NS_NAMED_MULTILINE_LITERAL_STRING(kJSONFmt,
+      NS_LL("{ \"duration\": %llu, ")
+         NS_LL("\"suspected\": %lu, ")
+         NS_LL("\"visited\": { ")
+             NS_LL("\"RCed\": %lu, ")
+             NS_LL("\"GCed\": %lu }, ")
+         NS_LL("\"collected\": { ")
+             NS_LL("\"RCed\": %lu, ")
+             NS_LL("\"GCed\": %lu }, ")
+         NS_LL("\"waiting_for_gc\": %lu, ")
+         NS_LL("\"forced_gc\": %d, ")
+         NS_LL("\"forget_skippable\": { ")
+             NS_LL("\"times_before_cc\": %lu, ")
+             NS_LL("\"min\": %lu, ")
+             NS_LL("\"max\": %lu, ")
+             NS_LL("\"avg\": %lu, ")
+             NS_LL("\"total\": %lu, ")
+             NS_LL("\"removed\": %lu } ")
+       NS_LL("}"));
+    nsString json;
+    json.Adopt(nsTextFormatter::smprintf(kJSONFmt.get(),
+                                        (now - start) / PR_USEC_PER_MSEC, suspected,
+                                        ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
+                                        ccResults.mFreedRefCounted, ccResults.mFreedGCed,
+                                        sCCollectedWaitingForGC,
+                                        ccResults.mForcedGC,
+                                        sForgetSkippableBeforeCC,
+                                        sMinForgetSkippableTime / PR_USEC_PER_MSEC,
+                                        sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
+                                        (sTotalForgetSkippableTime / cleanups) /
+                                          PR_USEC_PER_MSEC,
+                                        sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
+                                        sRemovedPurples));
+    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(nsnull, "cycle-collection-statistics", json.get());
+    }
   }
   sMinForgetSkippableTime = PR_UINT32_MAX;
   sMaxForgetSkippableTime = 0;
@@ -3417,12 +3455,39 @@ nsJSContext::GC(js::gcreason::Reason aReason)
   PokeGC(aReason);
 }
 
+class NotifyGCEndRunnable : public nsRunnable
+{
+  nsString mMessage;
+
+public:
+  NotifyGCEndRunnable(const nsString& aMessage) : mMessage(aMessage) {}
+
+  NS_DECL_NSIRUNNABLE
+};
+
+NS_IMETHODIMP
+NotifyGCEndRunnable::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+  if (!observerService) {
+    return NS_OK;
+  }
+
+  const jschar oomMsg[3] = { '{', '}', 0 };
+  const jschar *toSend = mMessage.get() ? mMessage.get() : oomMsg;
+  observerService->NotifyObservers(nsnull, "garbage-collection-statistics", toSend);
+
+  return NS_OK;
+}
+
 static void
 DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescription &aDesc)
 {
   NS_ASSERTION(NS_IsMainThread(), "GCs must run on the main thread");
 
-  if (aDesc.logMessage && sPostGCEventsToConsole) {
+  if (aProgress == js::GC_CYCLE_END && sPostGCEventsToConsole) {
     PRTime now = PR_Now();
     PRTime delta = 0;
     if (sFirstCollectionTime) {
@@ -3432,10 +3497,11 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
     }
 
     NS_NAMED_LITERAL_STRING(kFmt, "GC(T+%.1f) %s");
-    nsString msg;
+    nsString msg, gcstats;
+    gcstats.Adopt(aDesc.formatMessage(aRt));
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(),
                                         double(delta) / PR_USEC_PER_SEC,
-                                        aDesc.logMessage));
+                                        gcstats.get()));
     nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     if (cs) {
       cs->LogStringMessage(msg.get());
@@ -3462,6 +3528,11 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
 
     sCCollectedWaitingForGC = 0;
     sCleanupSinceLastGC = false;
+
+    nsString json;
+    json.Adopt(aDesc.formatJSON(aRt));
+    nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
+    NS_DispatchToMainThread(notify);
 
     if (aDesc.isCompartment) {
       // If this is a compartment GC, restart it. We still want

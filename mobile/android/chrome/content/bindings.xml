@@ -109,33 +109,6 @@
     </handlers>
   </binding>
 
-  <binding id="chrome-select-option">
-    <content orient="horizontal" flex="1">
-      <xul:image class="chrome-select-option-image" anonid="check"/>
-      <xul:label anonid="label" xbl:inherits="value=label"/>
-    </content>
-
-    <implementation>
-      <property name="selected">
-        <getter>
-          <![CDATA[
-            return this.hasAttribute("selected");
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            if (val)
-              this.setAttribute("selected", "true");
-            else
-              this.removeAttribute("selected");
-            return val;
-          ]]>
-        </setter>
-      </property>
-    </implementation>
-  </binding>
-
-
   <binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <handlers>
       <handler event="TapLong" phase="capturing">
@@ -260,71 +233,5 @@
         ]]></body>
       </method>
     </implementation>
-  </binding>
-  
-  <binding id="setting-fulltoggle-bool" extends="chrome://mozapps/content/extensions/setting.xml#setting-bool">
-    <handlers>
-      <handler event="click" button="0" phase="capturing">
-        <![CDATA[
-        event.stopPropagation();
-        ]]>
-      </handler>
-      <handler event="command" button="0" phase="capturing">
-        <![CDATA[
-        event.stopPropagation();
-        ]]>
-      </handler>
-      <handler event="TapSingle" button="0" phase="capturing">
-        <![CDATA[
-        this.input.setChecked(!this.value);
-        this.inputChanged();
-        this.fireEvent("oncommand");
-        ]]>
-      </handler>
-    </handlers>
-  </binding>
-
-  <binding id="setting-fulltoggle-boolint" extends="chrome://mozapps/content/extensions/setting.xml#setting-boolint">
-    <handlers>
-      <handler event="click" button="0" phase="capturing">
-        <![CDATA[
-        event.stopPropagation();
-        ]]>
-      </handler>
-      <handler event="command" button="0" phase="capturing">
-        <![CDATA[
-        event.stopPropagation();
-        ]]>
-      </handler>
-      <handler event="TapSingle" button="0" phase="capturing">
-        <![CDATA[
-        this.input.setChecked(!this.value);
-        this.inputChanged();
-        this.fireEvent("oncommand");
-        ]]>
-      </handler>
-    </handlers>
-  </binding>
-
-  <binding id="setting-fulltoggle-localized-bool" extends="chrome://mozapps/content/extensions/setting.xml#setting-localized-bool">
-    <handlers>
-      <handler event="click" button="0" phase="capturing">
-        <![CDATA[
-        event.stopPropagation();
-        ]]>
-      </handler>
-      <handler event="command" button="0" phase="capturing">
-        <![CDATA[
-        event.stopPropagation();
-        ]]>
-      </handler>
-      <handler event="TapSingle" button="0" phase="capturing">
-        <![CDATA[
-        this.input.setChecked(!this.value);
-        this.inputChanged();
-        this.fireEvent("oncommand");
-        ]]>
-      </handler>
-    </handlers>
   </binding>
 </bindings>
