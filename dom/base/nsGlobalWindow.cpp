@@ -809,7 +809,7 @@ nsOuterWindowProxy::finalize(JSContext *cx, JSObject *proxy)
   if (global) {
     nsWrapperCache *cache;
     CallQueryInterface(global, &cache);
-    cache->ClearWrapperIfProxy();
+    cache->ClearWrapper();
   }
 }
 
