@@ -406,12 +406,8 @@ public:
 
     void SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
                              base::Thread* aCompositorThread);
-    void ScheduleComposite();
-    void SchedulePauseComposition();
-    void ScheduleResumeComposition();
     void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
     void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
-    void SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter);
     void GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 
     jobject CreateSurface();
@@ -433,10 +429,6 @@ protected:
     AndroidGeckoSurfaceView mSurfaceView;
 
     AndroidGeckoLayerClient *mLayerClient;
-
-    nsRefPtr<mozilla::layers::CompositorParent> mCompositorParent;
-    base::Thread *mCompositorThread;
-    AndroidViewTransformGetter *mViewTransformGetter;
 
     // the GeckoAppShell java class
     jclass mGeckoAppShellClass;

@@ -660,9 +660,6 @@ AndroidGeckoLayerClient::Init(jobject jobj)
 {
     NS_ASSERTION(wrapped_obj == nsnull, "Init called on non-null wrapped_obj!");
     wrapped_obj = jobj;
-
-    // Register the view transform getter.
-    AndroidBridge::Bridge()->SetViewTransformGetter(mViewTransformGetter);
 }
 
 void
@@ -773,7 +770,7 @@ void
 AndroidGeckoLayerClient::SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight)
 {
     NS_ASSERTION(!isNull(), "SetFirstPaintViewport called on null layer client!");
-    JNIEnv *env = GetJNIForThread();
+    JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
     if (!env)
         return;
 
@@ -785,12 +782,31 @@ void
 AndroidGeckoLayerClient::SetPageSize(float aZoom, float aPageWidth, float aPageHeight)
 {
     NS_ASSERTION(!isNull(), "SetPageSize called on null layer client!");
-    JNIEnv *env = GetJNIForThread();
+    JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
     if (!env)
         return;
 
     AndroidBridge::AutoLocalJNIFrame jniFrame(env);
     return env->CallVoidMethod(wrapped_obj, jSetPageSize, aZoom, aPageWidth, aPageHeight);
+}
+
+void
+AndroidGeckoLayerClient::GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+{
+    NS_ASSERTION(!isNull(), "GetViewTransform called on null layer client!");
+    JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
+    if (!env)
+        return;
+
+    AndroidViewTransform viewTransform;
+    AndroidBridge::AutoLocalJNIFrame jniFrame(env);
+
+    jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jGetViewTransformMethod);
+    NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
+    viewTransform.Init(viewTransformJObj);
+
+    aScrollOffset = nsIntPoint(viewTransform.GetX(), viewTransform.GetY());
+    aScaleX = aScaleY = viewTransform.GetScale();
 }
 
 jobject
@@ -827,20 +843,6 @@ jobject
 AndroidGeckoSurfaceView::GetSurfaceHolder()
 {
     return GetJNIForThread()->CallObjectMethod(wrapped_obj, jGetHolderMethod);
-}
-
-void
-AndroidGeckoLayerClient::GetViewTransform(AndroidViewTransform& aViewTransform)
-{
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at GetViewTransform()!");
-    if (!env) {
-        return;
-    }
-
-    jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jGetViewTransformMethod);
-    NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
-    aViewTransform.Init(viewTransformJObj);
 }
 
 void
@@ -954,19 +956,6 @@ AndroidViewTransform::GetScale()
     if (!env)
         return 0.0f;
     return env->GetFloatField(wrapped_obj, jScaleField);
-}
-
-void
-AndroidGeckoLayerClientViewTransformGetter::operator()(nsIntPoint& aScrollOffset, float& aScaleX,
-                                                         float& aScaleY)
-{
-    AndroidViewTransform viewTransform;
-
-    AndroidBridge::AutoLocalJNIFrame jniFrame(GetJNIForThread());
-    mLayerClient.GetViewTransform(viewTransform);
-
-    aScrollOffset = nsIntPoint(viewTransform.GetX(), viewTransform.GetY());
-    aScaleX = aScaleY = viewTransform.GetScale();
 }
 
 void
