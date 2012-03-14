@@ -1852,7 +1852,9 @@ void
 AndroidBridge::SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
                                    ::base::Thread* aCompositorThread)
 {
+#ifdef MOZ_JAVA_COMPOSITOR
     nsWindow::SetCompositorParent(aCompositorParent, aCompositorThread);
+#endif
 }
 
 void
