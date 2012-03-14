@@ -43,7 +43,7 @@
 }
 
 .ruleview-property:not(:hover) > .ruleview-enableproperty {
-  visibility: hidden;
+  pointer-events: none;
 }
 
 .ruleview-namecontainer {
