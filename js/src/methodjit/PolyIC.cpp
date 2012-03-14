@@ -562,6 +562,13 @@ class SetPropCompiler : public PICStubCompiler
                 return disable("ops define property hook");
 
             /*
+             * Don't add properties for SETNAME, which requires checks in
+             * strict mode code.
+             */
+            if (JSOp(*f.pc()) == JSOP_SETNAME)
+                return disable("add property under SETNAME");
+
+            /*
              * When adding a property we need to check shapes along the entire
              * prototype chain to watch for an added setter.
              */
