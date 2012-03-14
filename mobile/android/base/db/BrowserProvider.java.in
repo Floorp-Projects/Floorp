@@ -632,7 +632,7 @@ public class BrowserProvider extends ContentProvider {
         return dbHelper;
     }
 
-    private String getDatabasePath(String profile, boolean isTest) {
+    public String getDatabasePath(String profile, boolean isTest) {
         trace("Getting database path for profile: " + profile);
 
         // On Android releases older than 2.3, it's not possible to use
