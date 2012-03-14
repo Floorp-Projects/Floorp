@@ -140,10 +140,8 @@ Promise.prototype.reject = function(data) {
 Promise.prototype._complete = function(list, status, data, name) {
   // Complain if we've already been completed
   if (this._status != Promise.PENDING) {
-    if (typeof 'console' === 'object') {
-      console.error('Promise complete. Attempted ' + name + '() with ', data);
-      console.error('Prev status = ', this._status, ', value = ', this._value);
-    }
+    Promise._error("Promise complete.", "Attempted ", name, "() with ", data);
+    Promise._error("Previous status: ", this._status, ", value =", this._value);
     throw new Error('Promise already complete');
   }
 
@@ -171,6 +169,33 @@ Promise.prototype._complete = function(list, status, data, name) {
 
   return this;
 };
+
+/**
+ * Log an error on the most appropriate channel.
+ *
+ * If the console is available, this method uses |console.warn|. Otherwise,
+ * this method falls back to |dump|.
+ *
+ * @param {...*} items Items to log.
+ */
+Promise._error = null;
+if (typeof console != "undefined" && console.warn) {
+  Promise._error = function() {
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift("Promise");
+    console.warn.call(console, args);
+  };
+} else {
+  Promise._error = function() {
+    var i;
+    var len = arguments.length;
+    dump("Promise: ");
+    for (i = 0; i < len; ++i) {
+      dump(arguments[i]+" ");
+    }
+    dump("\n");
+  };
+}
 
 /**
  * Takes an array of promises and returns a promise that that is fulfilled once
@@ -212,4 +237,87 @@ Promise.group = function(promiseList) {
   });
 
   return groupPromise;
+};
+
+/**
+ * Trap errors.
+ *
+ * This function serves as an asynchronous counterpart to |catch|.
+ *
+ * Example:
+ *  myPromise.chainPromise(a) //May reject
+ *           .chainPromise(b) //May reject
+ *           .chainPromise(c) //May reject
+ *           .trap(d)       //Catch any rejection from a, b or c
+ *           .chainPromise(e) //If either a, b and c or
+ *                            //d has resolved, execute
+ *
+ * Scenario 1:
+ *   If a, b, c resolve, e is executed as if d had not been added.
+ *
+ * Scenario 2:
+ *   If a, b or c rejects, d is executed. If d resolves, we proceed
+ *   with e as if nothing had happened. Otherwise, we proceed with
+ *   the rejection of d.
+ *
+ * @param {Function} aTrap Called if |this| promise is rejected,
+ *   with one argument: the rejection.
+ * @return {Promise} A new promise. This promise resolves if all
+ *   previous promises have resolved or if |aTrap| succeeds.
+ */
+Promise.prototype.trap = function(aTrap) {
+  var promise = new Promise();
+  var resolve = Promise.prototype.resolve.bind(promise);
+  var reject = function(aRejection) {
+    try {
+      //Attempt to handle issue
+      var result = aTrap.call(aTrap, aRejection);
+      promise.resolve(result);
+    } catch (x) {
+      promise.reject(x);
+    }
+  };
+  this.then(resolve, reject);
+  return promise;
+};
+
+/**
+ * Execute regardless of errors.
+ *
+ * This function serves as an asynchronous counterpart to |finally|.
+ *
+ * Example:
+ *  myPromise.chainPromise(a) //May reject
+ *           .chainPromise(b) //May reject
+ *           .chainPromise(c) //May reject
+ *           .always(d)       //Executed regardless
+ *           .chainPromise(e)
+ *
+ * Whether |a|, |b| or |c| resolve or reject, |d| is executed.
+ *
+ * @param {Function} aTrap Called regardless of whether |this|
+ *   succeeds or fails.
+ * @return {Promise} A new promise. This promise holds the same
+ *   resolution/rejection as |this|.
+ */
+Promise.prototype.always = function(aTrap) {
+  var promise = new Promise();
+  var resolve = function(result) {
+    try {
+      aTrap.call(aTrap);
+      promise.resolve(result);
+    } catch (x) {
+      promise.reject(x);
+    }
+  };
+  var reject = function(result) {
+    try {
+      aTrap.call(aTrap);
+      promise.reject(result);
+    } catch (x) {
+      promise.reject(result);
+    }
+  };
+  this.then(resolve, reject);
+  return promise;
 };
