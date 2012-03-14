@@ -37,10 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsIDOMEventTarget.idl"
 
-[scriptable, uuid(4507e43f-097c-452a-bfc4-dbb99748f6fd)]
-interface nsIDOMScreen : nsISupports
+[scriptable, uuid(6366afc9-0072-4231-a4ec-98cd65f350ef)]
+interface nsIDOMScreen : nsIDOMEventTarget
 {
   readonly attribute long             top;
   readonly attribute long             left;
@@ -75,4 +75,13 @@ interface nsIDOMScreen : nsISupports
    * @throw NS_ERROR_INVALID_ARG if brightness is not in the range [0, 1].
    */
   attribute double mozBrightness;
+
+  /**
+   * Returns the current screen orientation.
+   * Can be: landscape-primary, landscape-secondary,
+   *         portrait-primary or portrait-secondary.
+   */
+  readonly attribute DOMString       mozOrientation;
+
+  attribute nsIDOMEventListener      onmozorientationchange;
 };
