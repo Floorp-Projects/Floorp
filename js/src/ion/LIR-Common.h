@@ -744,12 +744,27 @@ class LNotD : public LInstructionHelper<1, 1, 0>
 };
 
 // Boolean complement operation on a value.
-class LNotV : public LCallInstructionHelper<1, BOX_PIECES, 0>
+class LNotV : public LInstructionHelper<1, BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(NotV);
 
     static const size_t Input = 0;
+    LNotV(const LDefinition &temp)
+    {
+        setTemp(0, temp);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+
+    const LAllocation *tempFloat() {
+        return getTemp(0)->output();
+    }
 };
 
 // Bitwise not operation, takes a 32-bit integer as input and returning
