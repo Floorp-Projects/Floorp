@@ -109,7 +109,8 @@ let gTests = [
     ok(snippetsElt, "Found snippets element");
     is(snippetsElt.getElementsByTagName("span").length, 1,
        "A default snippet is visible.");
-
+    let storage = getStorage();
+    storage.removeItem("snippets");
     executeSoon(runNextTest);
   }
 },
