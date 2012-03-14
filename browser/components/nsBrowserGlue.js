@@ -915,7 +915,7 @@ BrowserGlue.prototype = {
     Services.prefs.clearUserPref(PREF_TELEMETRY_PROMPTED);
     Services.prefs.clearUserPref(PREF_TELEMETRY_ENABLED);
     
-    var telemetryPrompt = browserBundle.formatStringFromName("telemetryPrompt", [productName, serverOwner], 2);
+    var telemetryPrompt = browserBundle.formatStringFromName("telemetryOptInPrompt", [productName, serverOwner], 2);
 
     var buttons = [
                     {
