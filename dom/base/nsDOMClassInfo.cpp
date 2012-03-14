@@ -39,7 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/Util.h"
-#include "SmsFilter.h" // On top because it includes basictypes.h.
+// On top because they include basictypes.h:
+#include "SmsFilter.h"
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -2475,6 +2476,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Screen, nsIDOMScreen)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMScreen)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMPrototype, nsIDOMDOMConstructor)
