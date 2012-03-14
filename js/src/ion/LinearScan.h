@@ -280,7 +280,6 @@ class LiveInterval
     { }
 
     bool addRange(CodePosition from, CodePosition to);
-    bool addRangeAtHead(CodePosition from, CodePosition to);
     void setFrom(CodePosition from);
     CodePosition intersect(LiveInterval *other);
     bool covers(CodePosition pos);
@@ -367,10 +366,6 @@ class LiveInterval
     UsePositionIterator usesEnd() const {
         return uses_.end();
     }
-
-#ifdef DEBUG
-    void validateRanges();
-#endif
 };
 
 /*
@@ -610,17 +605,10 @@ class LinearScanAllocator
 
     // Run-time state
     UnhandledQueue unhandled;
-
-    // Active/inactive intervals, allocation is a register.
     InlineList<LiveInterval> active;
     InlineList<LiveInterval> inactive;
-
-    // Active intervals using a stack slot.
-    InlineList<LiveInterval> activeSlots;
     InlineList<LiveInterval> fixed;
-#ifdef DEBUG
     InlineList<LiveInterval> handled;
-#endif
     LiveInterval *current;
 
     bool createDataStructures();
@@ -638,7 +626,7 @@ class LinearScanAllocator
     bool splitBlockingIntervals(LAllocation allocation);
     bool assign(LAllocation allocation);
     bool spill();
-    void freeCanonicalSpillSlot(LiveInterval *interval);
+    void freeAllocation(LiveInterval *interval, LAllocation *alloc);
     void finishInterval(LiveInterval *interval);
     AnyRegister::Code findBestFreeRegister(CodePosition *freeUntil);
     AnyRegister::Code findBestBlockedRegister(CodePosition *nextUsed);
@@ -655,20 +643,17 @@ class LinearScanAllocator
     size_t findFirstSafepoint(LiveInterval *interval, size_t firstSafepoint);
     size_t findFirstNonCallSafepoint(CodePosition from);
 
-    bool addFixedRangeAtHead(AnyRegister reg, CodePosition from, CodePosition to) {
-        if (!fixedIntervals[reg.code()]->addRangeAtHead(from, to))
-            return false;
-        return fixedIntervalsUnion->addRangeAtHead(from, to);
+    void addFixedRange(AnyRegister reg, CodePosition from, CodePosition to) {
+        fixedIntervals[reg.code()]->addRange(from, to);
+        fixedIntervalsUnion->addRange(from, to);
     }
 
 #ifdef DEBUG
     void validateIntervals();
     void validateAllocations();
-    void validateVirtualRegisters();
 #else
     inline void validateIntervals() { };
     inline void validateAllocations() { };
-    inline void validateVirtualRegisters() { };
 #endif
 
     CodePosition outputOf(uint32 pos) {
