@@ -1,0 +1,865 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.content.ContentValues;
+import android.content.ContentUris;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.os.Build;
+import android.util.Log;
+
+import java.io.File;
+import java.lang.reflect.Method;
+
+/*
+ * This test is meant to exercise all operations exposed by Fennec's
+ * history and bookmarks content provider. It does so in an isolated
+ * environment (see ContentProviderTest) without affecting any UI-related
+ * code.
+ */
+public class testBrowserProvider extends ContentProviderTest {
+    private String PLACES_FOLDER_GUID;
+    private String MOBILE_FOLDER_GUID;
+    private String MENU_FOLDER_GUID;
+    private String TAGS_FOLDER_GUID;
+    private String TOOLBAR_FOLDER_GUID;
+    private String UNFILED_FOLDER_GUID;
+
+    private Uri mBookmarksUri;
+    private Uri mHistoryUri;
+    private Uri mImagesUri;
+
+    private String mBookmarksIdCol;
+    private String mBookmarksTitleCol;
+    private String mBookmarksUrlCol;
+    private String mBookmarksFaviconCol;
+    private String mBookmarksThumbnailCol;
+    private String mBookmarksParentCol;
+    private String mBookmarksIsFolderCol;
+    private String mBookmarksPositionCol;
+    private String mBookmarksTagsCol;
+    private String mBookmarksDescriptionCol;
+    private String mBookmarksKeywordCol;
+    private String mBookmarksGuidCol;
+    private String mBookmarksIsDeletedCol;
+    private String mBookmarksDateCreatedCol;
+    private String mBookmarksDateModifiedCol;
+    private long mMobileFolderId;
+
+    private String mHistoryIdCol;
+    private String mHistoryTitleCol;
+    private String mHistoryUrlCol;
+    private String mHistoryVisitsCol;
+    private String mHistoryFaviconCol;
+    private String mHistoryThumbnailCol;
+    private String mHistoryLastVisitedCol;
+    private String mHistoryGuidCol;
+    private String mHistoryIsDeletedCol;
+    private String mHistoryDateCreatedCol;
+    private String mHistoryDateModifiedCol;
+
+    private String mImagesThumbnailCol;
+    private String mImagesFaviconCol;
+    private String mImagesUrlCol;
+
+    private void loadContractInfo() throws Exception {
+        mBookmarksUri = getContentUri("Bookmarks");
+        mHistoryUri = getContentUri("History");
+        mImagesUri = getContentUri("Images");
+
+        PLACES_FOLDER_GUID = getStringColumn("Bookmarks", "PLACES_FOLDER_GUID");
+        MOBILE_FOLDER_GUID = getStringColumn("Bookmarks", "MOBILE_FOLDER_GUID");
+        MENU_FOLDER_GUID = getStringColumn("Bookmarks", "MENU_FOLDER_GUID");
+        TAGS_FOLDER_GUID = getStringColumn("Bookmarks", "TAGS_FOLDER_GUID");
+        TOOLBAR_FOLDER_GUID = getStringColumn("Bookmarks", "TOOLBAR_FOLDER_GUID");
+        UNFILED_FOLDER_GUID = getStringColumn("Bookmarks", "UNFILED_FOLDER_GUID");
+
+        mBookmarksIdCol = getStringColumn("Bookmarks", "_ID");
+        mBookmarksTitleCol = getStringColumn("Bookmarks", "TITLE");
+        mBookmarksUrlCol = getStringColumn("Bookmarks", "URL");
+        mBookmarksFaviconCol = getStringColumn("Bookmarks", "FAVICON");
+        mBookmarksThumbnailCol = getStringColumn("Bookmarks", "THUMBNAIL");
+        mBookmarksParentCol = getStringColumn("Bookmarks", "PARENT");
+        mBookmarksIsFolderCol = getStringColumn("Bookmarks", "IS_FOLDER");
+        mBookmarksPositionCol = getStringColumn("Bookmarks", "POSITION");
+        mBookmarksTagsCol = getStringColumn("Bookmarks", "TAGS");
+        mBookmarksDescriptionCol = getStringColumn("Bookmarks", "DESCRIPTION");
+        mBookmarksKeywordCol= getStringColumn("Bookmarks", "KEYWORD");
+        mBookmarksGuidCol = getStringColumn("Bookmarks", "GUID");
+        mBookmarksIsDeletedCol = getStringColumn("Bookmarks", "IS_DELETED");
+        mBookmarksDateCreatedCol = getStringColumn("Bookmarks", "DATE_CREATED");
+        mBookmarksDateModifiedCol = getStringColumn("Bookmarks", "DATE_MODIFIED");
+
+        mHistoryIdCol = getStringColumn("History", "_ID");
+        mHistoryTitleCol = getStringColumn("History", "TITLE");
+        mHistoryUrlCol = getStringColumn("History", "URL");
+        mHistoryVisitsCol = getStringColumn("History", "VISITS");
+        mHistoryLastVisitedCol = getStringColumn("History", "DATE_LAST_VISITED");
+        mHistoryFaviconCol = getStringColumn("History", "FAVICON");
+        mHistoryThumbnailCol = getStringColumn("History", "THUMBNAIL");
+        mHistoryGuidCol = getStringColumn("History", "GUID");
+        mHistoryIsDeletedCol = getStringColumn("History", "IS_DELETED");
+        mHistoryDateCreatedCol = getStringColumn("History", "DATE_CREATED");
+        mHistoryDateModifiedCol = getStringColumn("History", "DATE_MODIFIED");
+
+        mImagesUrlCol = getStringColumn("Images", "URL");
+        mImagesFaviconCol = getStringColumn("Images", "FAVICON");
+        mImagesThumbnailCol = getStringColumn("Images", "THUMBNAIL");
+    }
+
+    private void loadMobileFolderId() throws Exception {
+        Cursor c = getBookmarkByGuid(MOBILE_FOLDER_GUID);
+        mAsserter.is(c.moveToFirst(), true, "Mobile bookmarks folder is present");
+
+        mMobileFolderId = c.getLong(c.getColumnIndex(mBookmarksIdCol));
+    }
+
+    private void ensureEmptyDatabase() throws Exception {
+        Cursor c = null;
+
+        String guid = getStringColumn("Bookmarks", "GUID");
+
+        mProvider.delete(appendUriParam(mBookmarksUri, "PARAM_IS_SYNC", "1"),
+                         guid + " != ? AND " +
+                         guid + " != ? AND " +
+                         guid + " != ? AND " +
+                         guid + " != ? AND " +
+                         guid + " != ? AND " +
+                         guid + " != ?",
+                         new String[] { PLACES_FOLDER_GUID,
+                                        MOBILE_FOLDER_GUID,
+                                        MENU_FOLDER_GUID,
+                                        TAGS_FOLDER_GUID,
+                                        TOOLBAR_FOLDER_GUID,
+                                        UNFILED_FOLDER_GUID});
+
+        c = mProvider.query(appendUriParam(mBookmarksUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
+        mAsserter.is(c.getCount(), 6, "All non-special bookmarks and folders were deleted");
+
+        mProvider.delete(appendUriParam(mHistoryUri, "PARAM_IS_SYNC", "1"), null, null);
+        c = mProvider.query(appendUriParam(mHistoryUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
+        mAsserter.is(c.getCount(), 0, "All history entries were deleted");
+
+        mProvider.delete(appendUriParam(mImagesUri, "PARAM_IS_SYNC", "1"), null, null);
+        c = mProvider.query(appendUriParam(mImagesUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
+        mAsserter.is(c.getCount(), 0, "All images were deleted");
+    }
+
+    private ContentValues createBookmark(String title, String url, long parentId,
+            int isFolder, int position, String tags, String description,
+                String keyword) throws Exception {
+        ContentValues bookmark = new ContentValues();
+
+        bookmark.put(mBookmarksTitleCol, title);
+        bookmark.put(mBookmarksUrlCol, url);
+        bookmark.put(mBookmarksParentCol, parentId);
+        bookmark.put(mBookmarksIsFolderCol, isFolder);
+        bookmark.put(mBookmarksPositionCol, position);
+        bookmark.put(mBookmarksTagsCol, tags);
+        bookmark.put(mBookmarksDescriptionCol, description);
+        bookmark.put(mBookmarksKeywordCol, keyword);
+
+        return bookmark;
+    }
+
+    private ContentValues createOneBookmark() throws Exception {
+        return createBookmark("Example", "http://example.com", mMobileFolderId,
+                0, 0, "tags", "description", "keyword");
+    }
+
+    private Cursor getBookmarkByGuid(String guid) throws Exception {
+        return mProvider.query(mBookmarksUri, null,
+                               mBookmarksGuidCol + " = ?",
+                               new String[] { guid },
+                               null);
+    }
+
+    private Cursor getBookmarkById(long id) throws Exception {
+        return getBookmarkById(mBookmarksUri, id, null);
+    }
+
+    private Cursor getBookmarkById(long id, String[] projection) throws Exception {
+        return getBookmarkById(mBookmarksUri, id, projection);
+    }
+
+    private Cursor getBookmarkById(Uri bookmarksUri, long id) throws Exception {
+        return getBookmarkById(bookmarksUri, id, null);
+    }
+
+    private Cursor getBookmarkById(Uri bookmarksUri, long id, String[] projection) throws Exception {
+        return mProvider.query(bookmarksUri, projection,
+                               mBookmarksIdCol + " = ?",
+                               new String[] { String.valueOf(id) },
+                               null);
+    }
+
+    private ContentValues createHistoryEntry(String title, String url, int visits, long lastVisited) throws Exception {
+        ContentValues historyEntry = new ContentValues();
+
+        historyEntry.put(mHistoryTitleCol, title);
+        historyEntry.put(mHistoryUrlCol, url);
+        historyEntry.put(mHistoryVisitsCol, visits);
+        historyEntry.put(mHistoryLastVisitedCol, lastVisited);
+
+        return historyEntry;
+    }
+
+    private ContentValues createOneHistoryEntry() throws Exception {
+        return createHistoryEntry("Example", "http://example.com", 10, System.currentTimeMillis());
+    }
+
+    private Cursor getHistoryEntryById(long id) throws Exception {
+        return getHistoryEntryById(mHistoryUri, id, null);
+    }
+
+    private Cursor getHistoryEntryById(long id, String[] projection) throws Exception {
+        return getHistoryEntryById(mHistoryUri, id, projection);
+    }
+
+    private Cursor getHistoryEntryById(Uri historyUri, long id) throws Exception {
+        return getHistoryEntryById(historyUri, id, null);
+    }
+
+    private Cursor getHistoryEntryById(Uri historyUri, long id, String[] projection) throws Exception {
+        return mProvider.query(historyUri, projection,
+                               mHistoryIdCol + " = ?",
+                               new String[] { String.valueOf(id) },
+                               null);
+    }
+
+    private Cursor getImagesByUrl(String url) throws Exception {
+        return mProvider.query(mImagesUri, null,
+                               mImagesUrlCol + " = ?",
+                               new String[] { url },
+                               null);
+    }
+
+    public void setUp() throws Exception {
+        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY_URI");
+        loadContractInfo();
+
+        mTests.add(new TestSpecialFolders());
+
+        mTests.add(new TestInsertBookmarks());
+        mTests.add(new TestInsertBookmarksImages());
+        mTests.add(new TestDeleteBookmarks());
+        mTests.add(new TestDeleteBookmarksImages());
+        mTests.add(new TestUpdateBookmarks());
+        mTests.add(new TestUpdateBookmarksImages());
+
+        mTests.add(new TestInsertHistory());
+        mTests.add(new TestInsertHistoryImages());
+        mTests.add(new TestDeleteHistory());
+        mTests.add(new TestDeleteHistoryImages());
+        mTests.add(new TestUpdateHistory());
+        mTests.add(new TestUpdateHistoryImages());
+    }
+
+    public void testBrowserProvider() throws Exception {
+        setTestType("mochitest");
+
+        loadMobileFolderId();
+
+        for (int i = 0; i < mTests.size(); i++) {
+            Runnable test = mTests.get(i);
+
+            setTestName(test.getClass().getSimpleName());
+            ensureEmptyDatabase();
+            test.run();
+        }
+    }
+
+    public void tearDown() throws Exception {
+        super.tearDown();
+    }
+
+    abstract class Test implements Runnable {
+        public void run() {
+            try {
+                test();
+            } catch (Exception e) {
+                mAsserter.is(true, false, "Test " + this.getClass().getName() +
+                        " threw exception: " + e);
+            }
+        }
+
+        public abstract void test() throws Exception;
+    }
+
+    class TestSpecialFolders extends Test {
+        public void test() throws Exception {
+            Cursor c = mProvider.query(mBookmarksUri,
+                                       new String[] { mBookmarksIdCol,
+                                                      mBookmarksGuidCol,
+                                                      mBookmarksParentCol },
+                                       mBookmarksGuidCol + " = ? OR " +
+                                       mBookmarksGuidCol + " = ? OR " +
+                                       mBookmarksGuidCol + " = ? OR " +
+                                       mBookmarksGuidCol + " = ? OR " +
+                                       mBookmarksGuidCol + " = ? OR " +
+                                       mBookmarksGuidCol + " = ?",
+                                       new String[] { PLACES_FOLDER_GUID,
+                                                      MOBILE_FOLDER_GUID,
+                                                      MENU_FOLDER_GUID,
+                                                      TAGS_FOLDER_GUID,
+                                                      TOOLBAR_FOLDER_GUID,
+                                                      UNFILED_FOLDER_GUID },
+                                       null);
+
+            mAsserter.is(c.getCount(), 6, "Right number of special folders");
+
+            int rootId = getIntColumn("Bookmarks", "FIXED_ROOT_ID");
+
+            while (c.moveToNext()) {
+                int id = c.getInt(c.getColumnIndex(mBookmarksIdCol));
+                String guid = c.getString(c.getColumnIndex(mBookmarksGuidCol));
+                int parentId = c.getInt(c.getColumnIndex(mBookmarksParentCol));
+
+                if (guid.equals(PLACES_FOLDER_GUID)) {
+                    mAsserter.is(new Integer(id), new Integer(rootId), "The id of places folder is correct");
+                }
+
+                mAsserter.is(new Integer(parentId), new Integer(rootId),
+                             "The PARENT of the " + guid + " special folder is correct");
+            }
+        }
+    }
+
+    class TestInsertBookmarks extends Test {
+        private long insertWithNullCol(String colName) throws Exception {
+            ContentValues b = createOneBookmark();
+            b.putNull(colName);
+            long id = -1;
+
+            try {
+                id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            } catch (Exception e) {}
+
+            return id;
+        }
+
+        public void test() throws Exception {
+            ContentValues b = createOneBookmark();
+            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            Cursor c = getBookmarkById(id);
+
+            mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTitleCol)), b.getAsString(mBookmarksTitleCol),
+                         "Inserted bookmark has correct title");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksUrlCol)), b.getAsString(mBookmarksUrlCol),
+                         "Inserted bookmark has correct URL");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTagsCol)), b.getAsString(mBookmarksTagsCol),
+                         "Inserted bookmark has correct tags");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksKeywordCol)), b.getAsString(mBookmarksKeywordCol),
+                         "Inserted bookmark has correct keyword");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksDescriptionCol)), b.getAsString(mBookmarksDescriptionCol),
+                         "Inserted bookmark has correct description");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksPositionCol)), b.getAsString(mBookmarksPositionCol),
+                         "Inserted bookmark has correct position");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksIsFolderCol)), b.getAsString(mBookmarksIsFolderCol),
+                         "Inserted bookmark has correct is-folder flag");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksParentCol)), b.getAsString(mBookmarksParentCol),
+                         "Inserted bookmark has correct parent ID");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksIsDeletedCol)), String.valueOf(0),
+                         "Inserted bookmark has correct is-deleted state");
+
+            id = insertWithNullCol(mBookmarksPositionCol);
+            mAsserter.is(new Long(id), new Long(-1),
+                         "Should not be able to insert bookmark with null position");
+
+            id = insertWithNullCol(mBookmarksIsFolderCol);
+            mAsserter.is(new Long(id), new Long(-1),
+                         "Should not be able to insert bookmark with null is-folder flag");
+
+            b = createOneBookmark();
+            b.put(mBookmarksParentCol, -1);
+            id = -1;
+
+            if (Build.VERSION.SDK_INT >= 8) {
+                try {
+                    id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+                } catch (Exception e) {}
+
+                mAsserter.is(new Long(id), new Long(-1),
+                             "Should not be able to insert bookmark with invalid parent");
+            }
+        }
+    }
+
+    class TestInsertBookmarksImages extends Test {
+        public void test() throws Exception {
+            ContentValues b = createOneBookmark();
+
+            final String favicon = "FAVICON";
+            final String thumbnail = "THUMBNAIL";
+
+            b.put(mBookmarksFaviconCol, favicon.getBytes("UTF8"));
+            b.put(mBookmarksThumbnailCol, thumbnail.getBytes("UTF8"));
+
+            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            Cursor c = getBookmarkById(id, new String[] { mBookmarksFaviconCol, mBookmarksThumbnailCol });
+
+            mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mBookmarksFaviconCol)), "UTF8"),
+                         favicon, "Inserted bookmark has corresponding favicon image");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mBookmarksThumbnailCol)), "UTF8"),
+                         thumbnail, "Inserted bookmark has corresponding thumbnail image");
+
+            c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
+            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
+                         favicon, "Inserted image has corresponding favicon image");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesThumbnailCol)), "UTF8"),
+                         thumbnail, "Inserted image has corresponding thumbnail image");
+        }
+    }
+
+    class TestDeleteBookmarks extends Test {
+        private long insertOneBookmark() throws Exception {
+            ContentValues b = createOneBookmark();
+            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+
+            Cursor c = getBookmarkById(id);
+            mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
+
+            return id;
+        }
+
+        public void test() throws Exception {
+            long id = insertOneBookmark();
+
+            int deleted = mProvider.delete(mBookmarksUri,
+                                           mBookmarksIdCol + " = ?",
+                                           new String[] { String.valueOf(id) });
+
+            mAsserter.is((deleted == 1), true, "Inserted bookmark was deleted");
+
+            Cursor c = getBookmarkById(appendUriParam(mBookmarksUri, "PARAM_SHOW_DELETED", "1"), id);
+            mAsserter.is(c.moveToFirst(), true, "Deleted bookmark was only marked as deleted");
+
+            deleted = mProvider.delete(appendUriParam(mBookmarksUri, "PARAM_IS_SYNC", "1"),
+                                       mBookmarksIdCol + " = ?",
+                                       new String[] { String.valueOf(id) });
+
+            mAsserter.is((deleted == 1), true, "Inserted bookmark was deleted");
+
+            c = getBookmarkById(appendUriParam(mBookmarksUri, "PARAM_SHOW_DELETED", "1"), id);
+            mAsserter.is(c.moveToFirst(), false, "Inserted bookmark is now actually deleted");
+
+            id = insertOneBookmark();
+
+            deleted = mProvider.delete(ContentUris.withAppendedId(mBookmarksUri, id), null, null);
+            mAsserter.is((deleted == 1), true,
+                         "Inserted bookmark was deleted using URI with id");
+
+            c = getBookmarkById(id);
+            mAsserter.is(c.moveToFirst(), false,
+                         "Inserted bookmark can't be found after deletion using URI with ID");
+
+            if (Build.VERSION.SDK_INT >= 8) {
+                ContentValues b = createBookmark("Folder", null, mMobileFolderId,
+                        1 /* is folder */, 0, "folderTags", "folderDescription", "folderKeyword");
+
+                long parentId = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+                c = getBookmarkById(parentId);
+                mAsserter.is(c.moveToFirst(), true, "Inserted bookmarks folder found");
+
+                b = createBookmark("Example", "http://example.com", parentId, 0, 0, "tags",
+                        "description", "keyword");
+
+                id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+                c = getBookmarkById(id);
+                mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
+
+                deleted = 0;
+                try {
+                    Uri uri = ContentUris.withAppendedId(mBookmarksUri, parentId);
+                    deleted = mProvider.delete(appendUriParam(uri, "PARAM_IS_SYNC", "1"), null, null);
+                } catch(Exception e) {}
+
+                mAsserter.is((deleted == 0), true,
+                             "Should not be able to delete folder that causes orphan bookmarks");
+            }
+        }
+    }
+
+    class TestDeleteBookmarksImages extends Test {
+        public void test() throws Exception {
+            ContentValues b = createOneBookmark();
+            b.put(mBookmarksFaviconCol, new String("FAVICON").getBytes("UTF8"));
+
+            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+
+            Cursor c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
+            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+
+            mProvider.delete(ContentUris.withAppendedId(mBookmarksUri, id), null, null);
+
+            c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
+            mAsserter.is(c.moveToFirst(), false, "Image is deleted with last reference to it");
+        }
+    }
+
+    class TestUpdateBookmarks extends Test {
+        private int updateWithNullCol(long id, String colName) throws Exception {
+            ContentValues u = new ContentValues();
+            u.putNull(colName);
+
+            int updated = 0;
+
+            try {
+                updated = mProvider.update(mBookmarksUri, u,
+                                           mBookmarksIdCol + " = ?",
+                                           new String[] { String.valueOf(id) });
+            } catch (Exception e) {}
+
+            return updated;
+        }
+
+        public void test() throws Exception {
+            ContentValues b = createOneBookmark();
+            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+
+            Cursor c = getBookmarkById(id);
+            mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
+
+            long dateCreated = c.getLong(c.getColumnIndex(mBookmarksDateCreatedCol));
+            long dateModified = c.getLong(c.getColumnIndex(mBookmarksDateModifiedCol));
+
+            ContentValues u = new ContentValues();
+            u.put(mBookmarksTitleCol, b.getAsString(mBookmarksTitleCol) + "CHANGED");
+            u.put(mBookmarksUrlCol, b.getAsString(mBookmarksUrlCol) + "/more/stuff");
+            u.put(mBookmarksTagsCol, b.getAsString(mBookmarksTagsCol) + "CHANGED");
+            u.put(mBookmarksDescriptionCol, b.getAsString(mBookmarksDescriptionCol) + "CHANGED");
+            u.put(mBookmarksKeywordCol, b.getAsString(mBookmarksKeywordCol) + "CHANGED");
+            u.put(mBookmarksIsFolderCol, 1);
+            u.put(mBookmarksPositionCol, 10);
+
+            int updated = mProvider.update(mBookmarksUri, u,
+                                           mBookmarksIdCol + " = ?",
+                                           new String[] { String.valueOf(id) });
+
+            mAsserter.is((updated == 1), true, "Inserted bookmark was updated");
+
+            c = getBookmarkById(id);
+            mAsserter.is(c.moveToFirst(), true, "Updated bookmark found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTitleCol)), u.getAsString(mBookmarksTitleCol),
+                         "Inserted bookmark has correct title");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksUrlCol)), u.getAsString(mBookmarksUrlCol),
+                         "Inserted bookmark has correct URL");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksTagsCol)), u.getAsString(mBookmarksTagsCol),
+                         "Inserted bookmark has correct tags");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksKeywordCol)), u.getAsString(mBookmarksKeywordCol),
+                         "Inserted bookmark has correct keyword");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksDescriptionCol)), u.getAsString(mBookmarksDescriptionCol),
+                         "Inserted bookmark has correct description");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksPositionCol)), u.getAsString(mBookmarksPositionCol),
+                         "Inserted bookmark has correct position");
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksIsFolderCol)), u.getAsString(mBookmarksIsFolderCol),
+                         "Inserted bookmark has correct is-folder flag");
+
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mBookmarksDateCreatedCol))),
+                         new Long(dateCreated),
+                         "Updated bookmark has same creation date");
+
+            mAsserter.isnot(new Long(c.getLong(c.getColumnIndex(mBookmarksDateModifiedCol))),
+                            new Long(dateModified),
+                            "Updated bookmark has new modification date");
+
+            updated = updateWithNullCol(id, mBookmarksPositionCol);
+            mAsserter.is((updated > 0), false,
+                         "Should not be able to update bookmark with null position");
+
+            updated = updateWithNullCol(id, mBookmarksIsFolderCol);
+            mAsserter.is((updated > 0), false,
+                         "Should not be able to update bookmark with null is-folder flag");
+
+            u = new ContentValues();
+            u.put(mBookmarksUrlCol, "http://examples2.com");
+
+            updated = mProvider.update(ContentUris.withAppendedId(mBookmarksUri, id), u, null, null);
+
+            c = getBookmarkById(id);
+            mAsserter.is(c.moveToFirst(), true, "Updated bookmark found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mBookmarksUrlCol)), u.getAsString(mBookmarksUrlCol),
+                         "Updated bookmark has correct URL using URI with id");
+        }
+    }
+
+    class TestUpdateBookmarksImages extends Test {
+        public void test() throws Exception {
+            ContentValues b = createOneBookmark();
+
+            final String favicon = "FAVICON";
+            b.put(mBookmarksFaviconCol, favicon.getBytes("UTF8"));
+
+            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+
+            Cursor c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
+            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
+                         favicon, "Inserted image has corresponding favicon image");
+
+            ContentValues u = new ContentValues();
+            final String newFavicon = "NEW_FAVICON";
+            u.put(mBookmarksFaviconCol, newFavicon.getBytes("UTF8"));
+
+            mProvider.update(ContentUris.withAppendedId(mBookmarksUri, id), u, null, null);
+
+            c = getImagesByUrl(b.getAsString(mBookmarksUrlCol));
+            mAsserter.is(c.moveToFirst(), true, "Updated images found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
+                         newFavicon, "Updated image has corresponding favicon image");
+        }
+    }
+
+    class TestInsertHistory extends Test {
+        private long insertWithNullCol(String colName) throws Exception {
+            ContentValues h = createOneHistoryEntry();
+            h.putNull(colName);
+            long id = -1;
+
+            try {
+                id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            } catch (Exception e) {}
+
+            return id;
+        }
+
+        public void test() throws Exception {
+            ContentValues h = createOneHistoryEntry();
+            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            Cursor c = getHistoryEntryById(id);
+
+            mAsserter.is(c.moveToFirst(), true, "Inserted history entry found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryTitleCol)), h.getAsString(mHistoryTitleCol),
+                         "Inserted history entry has correct title");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryUrlCol)), h.getAsString(mHistoryUrlCol),
+                         "Inserted history entry has correct URL");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryVisitsCol)), h.getAsString(mHistoryVisitsCol),
+                         "Inserted history entry has correct number of visits");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryLastVisitedCol)), h.getAsString(mHistoryLastVisitedCol),
+                         "Inserted history entry has correct last visited date");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryIsDeletedCol)), String.valueOf(0),
+                         "Inserted history entry has correct is-deleted state");
+
+            id = insertWithNullCol(mHistoryUrlCol);
+            mAsserter.is(new Long(id), new Long(-1),
+                         "Should not be able to insert history with null URL");
+
+            id = insertWithNullCol(mHistoryVisitsCol);
+            mAsserter.is(new Long(id), new Long(-1),
+                         "Should not be able to insert history with null number of visits");
+        }
+    }
+
+    class TestInsertHistoryImages extends Test {
+        public void test() throws Exception {
+            ContentValues h = createOneHistoryEntry();
+
+            final String favicon = "FAVICON";
+            final String thumbnail = "THUMBNAIL";
+
+            h.put(mHistoryFaviconCol, favicon.getBytes("UTF8"));
+            h.put(mHistoryThumbnailCol, thumbnail.getBytes("UTF8"));
+
+            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            Cursor c = getHistoryEntryById(id, new String[] { mHistoryFaviconCol, mHistoryThumbnailCol });
+
+            mAsserter.is(c.moveToFirst(), true, "Inserted history entry found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mHistoryFaviconCol)), "UTF8"),
+                         favicon, "Inserted history entry has corresponding favicon image");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mHistoryThumbnailCol)), "UTF8"),
+                         thumbnail, "Inserted history entry has corresponding thumbnail image");
+
+            c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
+            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
+                         favicon, "Inserted image has corresponding favicon image");
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesThumbnailCol)), "UTF8"),
+                         thumbnail, "Inserted image has corresponding thumbnail image");
+        }
+    }
+
+    class TestDeleteHistory extends Test {
+        private long insertOneHistoryEntry() throws Exception {
+            ContentValues h = createOneHistoryEntry();
+            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+
+            Cursor c = getHistoryEntryById(id);
+            mAsserter.is(c.moveToFirst(), true, "Inserted history entry found");
+
+            return id;
+        }
+
+        public void test() throws Exception {
+            long id = insertOneHistoryEntry();
+
+            int deleted = mProvider.delete(mHistoryUri,
+                                           mHistoryIdCol + " = ?",
+                                           new String[] { String.valueOf(id) });
+
+            mAsserter.is((deleted == 1), true, "Inserted history entry was deleted");
+
+            Cursor c = getHistoryEntryById(appendUriParam(mHistoryUri, "PARAM_SHOW_DELETED", "1"), id);
+            mAsserter.is(c.moveToFirst(), true, "Deleted history entry was only marked as deleted");
+
+            deleted = mProvider.delete(appendUriParam(mHistoryUri, "PARAM_IS_SYNC", "1"),
+                                       mHistoryIdCol + " = ?",
+                                       new String[] { String.valueOf(id) });
+
+            mAsserter.is((deleted == 1), true, "Inserted history entry was deleted");
+
+            c = getHistoryEntryById(appendUriParam(mHistoryUri, "PARAM_SHOW_DELETED", "1"), id);
+            mAsserter.is(c.moveToFirst(), false, "Inserted history is now actually deleted");
+
+            id = insertOneHistoryEntry();
+
+            deleted = mProvider.delete(ContentUris.withAppendedId(mHistoryUri, id), null, null);
+            mAsserter.is((deleted == 1), true,
+                         "Inserted history entry was deleted using URI with id");
+
+            c = getHistoryEntryById(id);
+            mAsserter.is(c.moveToFirst(), false,
+                         "Inserted history entry can't be found after deletion using URI with ID");
+        }
+    }
+
+    class TestDeleteHistoryImages extends Test {
+        public void test() throws Exception {
+            ContentValues h = createOneHistoryEntry();
+            h.put(mHistoryFaviconCol, new String("FAVICON").getBytes("UTF8"));
+
+            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+
+            Cursor c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
+            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+
+            mProvider.delete(ContentUris.withAppendedId(mHistoryUri, id), null, null);
+
+            c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
+            mAsserter.is(c.moveToFirst(), false, "Image is deleted with last reference to it");
+        }
+    }
+
+    class TestUpdateHistory extends Test {
+        private int updateWithNullCol(long id, String colName) throws Exception {
+            ContentValues u = new ContentValues();
+            u.putNull(colName);
+
+            int updated = 0;
+
+            try {
+                updated = mProvider.update(mHistoryUri, u,
+                                           mHistoryIdCol + " = ?",
+                                           new String[] { String.valueOf(id) });
+            } catch (Exception e) {}
+
+            return updated;
+        }
+
+        public void test() throws Exception {
+            ContentValues h = createOneHistoryEntry();
+            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+
+            Cursor c = getHistoryEntryById(id);
+            mAsserter.is(c.moveToFirst(), true, "Inserted history entry found");
+
+            long dateCreated = c.getLong(c.getColumnIndex(mHistoryDateCreatedCol));
+            long dateModified = c.getLong(c.getColumnIndex(mHistoryDateModifiedCol));
+
+            ContentValues u = new ContentValues();
+            u.put(mHistoryVisitsCol, h.getAsInteger(mHistoryVisitsCol) + 1);
+            u.put(mHistoryLastVisitedCol, System.currentTimeMillis());
+            u.put(mHistoryTitleCol, h.getAsString(mHistoryTitleCol) + "CHANGED");
+            u.put(mHistoryUrlCol, h.getAsString(mHistoryUrlCol) + "/more/stuff");
+
+            int updated = mProvider.update(mHistoryUri, u,
+                                           mHistoryIdCol + " = ?",
+                                           new String[] { String.valueOf(id) });
+
+            mAsserter.is((updated == 1), true, "Inserted history entry was updated");
+
+            c = getHistoryEntryById(id);
+            mAsserter.is(c.moveToFirst(), true, "Updated history entry found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryTitleCol)), u.getAsString(mHistoryTitleCol),
+                         "Updated history entry has correct title");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryUrlCol)), u.getAsString(mHistoryUrlCol),
+                         "Updated history entry has correct URL");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryVisitsCol)), u.getAsString(mHistoryVisitsCol),
+                         "Updated history entry has correct number of visits");
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryLastVisitedCol)), u.getAsString(mHistoryLastVisitedCol),
+                         "Updated history entry has correct last visited date");
+
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mHistoryDateCreatedCol))),
+                         new Long(dateCreated),
+                         "Updated history entry has same creation date");
+
+            mAsserter.isnot(new Long(c.getLong(c.getColumnIndex(mHistoryDateModifiedCol))),
+                            new Long(dateModified),
+                            "Updated history entry has new modification date");
+
+            updated = updateWithNullCol(id, mHistoryUrlCol);
+            mAsserter.is((updated > 0), false,
+                         "Should not be able to update history with null URL");
+
+            updated = updateWithNullCol(id, mHistoryVisitsCol);
+            mAsserter.is((updated > 0), false,
+                         "Should not be able to update history with null number of visits");
+
+            u = new ContentValues();
+            u.put(mHistoryUrlCol, "http://examples2.com");
+
+            updated = mProvider.update(ContentUris.withAppendedId(mHistoryUri, id), u, null, null);
+
+            c = getHistoryEntryById(id);
+            mAsserter.is(c.moveToFirst(), true, "Updated history entry found");
+
+            mAsserter.is(c.getString(c.getColumnIndex(mHistoryUrlCol)), u.getAsString(mHistoryUrlCol),
+                         "Updated history entry has correct URL using URI with id");
+        }
+    }
+
+    class TestUpdateHistoryImages extends Test {
+        public void test() throws Exception {
+            ContentValues h = createOneHistoryEntry();
+
+            final String favicon = "FAVICON";
+            h.put(mHistoryFaviconCol, favicon.getBytes("UTF8"));
+
+            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+
+            Cursor c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
+            mAsserter.is(c.moveToFirst(), true, "Inserted images found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
+                         favicon, "Inserted image has corresponding favicon image");
+
+            ContentValues u = new ContentValues();
+            final String newFavicon = "NEW_FAVICON";
+            u.put(mHistoryFaviconCol, newFavicon.getBytes("UTF8"));
+
+            mProvider.update(ContentUris.withAppendedId(mHistoryUri, id), u, null, null);
+
+            c = getImagesByUrl(h.getAsString(mHistoryUrlCol));
+            mAsserter.is(c.moveToFirst(), true, "Updated images found");
+
+            mAsserter.is(new String(c.getBlob(c.getColumnIndex(mImagesFaviconCol)), "UTF8"),
+                         newFavicon, "Updated image has corresponding favicon image");
+        }
+    }
+}
