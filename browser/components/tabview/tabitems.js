@@ -985,20 +985,21 @@ let TabItems = {
       let tabItem = tab._tabViewTabItem;
 
       // Even if the page hasn't loaded, display the favicon and title
-
       // ___ icon
-      if (UI.shouldLoadFavIcon(tab.linkedBrowser)) {
-        let iconUrl = UI.getFavIconUrlForTab(tab);
-
-        if (tabItem.$favImage[0].src != iconUrl)
-          tabItem.$favImage[0].src = iconUrl;
-
-        iQ(tabItem.$fav[0]).show();
-      } else {
-        if (tabItem.$favImage[0].hasAttribute("src"))
-          tabItem.$favImage[0].removeAttribute("src");
-        iQ(tabItem.$fav[0]).hide();
-      }
+      UI.getFavIconUrlForTab(tab, function TabItems__update_getFavIconUrlCallback(iconUrl) {
+        let favImage = tabItem.$favImage[0];
+        let fav = tabItem.$fav;
+        if (iconUrl) {
+          if (favImage.src != iconUrl)
+            favImage.src = iconUrl;
+          fav.show();
+        } else {
+          if (favImage.hasAttribute("src"))
+            favImage.removeAttribute("src");
+          fav.hide();
+        }
+        tabItem._sendToSubscribers("iconUpdated");
+      });
 
       // ___ label
       let label = tab.label;
