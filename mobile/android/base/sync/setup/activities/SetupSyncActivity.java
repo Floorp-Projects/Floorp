@@ -13,6 +13,7 @@ import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.jpake.JPakeClient;
 import org.mozilla.gecko.sync.jpake.JPakeNoActivePairingException;
 import org.mozilla.gecko.sync.setup.Constants;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
@@ -362,7 +363,7 @@ public class SetupSyncActivity extends AccountAuthenticatorActivity {
       String serverURL    = (String) jCreds.get(Constants.JSON_KEY_SERVER);
 
       Logger.debug(LOG_TAG, "Using account manager " + mAccountManager);
-      final Intent intent = AccountActivity.createAccount(mContext, mAccountManager,
+      final Intent intent = SyncAccounts.createAccount(mContext, mAccountManager,
                                                           accountName,
                                                           syncKey, password, serverURL);
       setAccountAuthenticatorResult(intent.getExtras());

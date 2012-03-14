@@ -252,10 +252,9 @@ public class GeckoEvent {
         }
     }
 
-    public GeckoEvent(Location l, Address a) {
+    public GeckoEvent(Location l) {
         mType = LOCATION_EVENT;
         mLocation = l;
-        mAddress  = a;
     }
 
     public GeckoEvent(int imeAction, int offset, int count) {
