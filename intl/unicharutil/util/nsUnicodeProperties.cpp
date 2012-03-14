@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define HB_DONT_DEFINE_STDINT  1
+
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeScriptCodes.h"
 #include "nsUnicodePropertyData.cpp"
@@ -42,8 +44,6 @@
 #include "mozilla/Util.h"
 #include "nsMemory.h"
 #include "nsCharTraits.h"
-
-#include "harfbuzz/hb-unicode.h"
 
 #define UNICODE_BMP_LIMIT 0x10000
 #define UNICODE_LIMIT     0x110000
@@ -137,12 +137,11 @@ GetCombiningClass(PRUint32 aCh)
         return sCClassValues[sCClassPages[0][aCh >> kCClassCharBits]]
                             [aCh & ((1 << kCClassCharBits) - 1)];
     }
-    if (aCh < UNICODE_LIMIT) {
+    if (aCh < (kCClassMaxPlane + 1) * 0x10000) {
         return sCClassValues[sCClassPages[sCClassPlanes[(aCh >> 16) - 1]]
                                          [(aCh & 0xffff) >> kCClassCharBits]]
                             [aCh & ((1 << kCClassCharBits) - 1)];
     }
-    NS_NOTREACHED("invalid Unicode character!");
     return 0;
 }
 
@@ -153,12 +152,11 @@ GetGeneralCategory(PRUint32 aCh)
         return sCatEAWValues[sCatEAWPages[0][aCh >> kCatEAWCharBits]]
                             [aCh & ((1 << kCatEAWCharBits) - 1)].mCategory;
     }
-    if (aCh < UNICODE_LIMIT) {
+    if (aCh < (kCatEAWMaxPlane + 1) * 0x10000) {
         return sCatEAWValues[sCatEAWPages[sCatEAWPlanes[(aCh >> 16) - 1]]
                                          [(aCh & 0xffff) >> kCatEAWCharBits]]
                             [aCh & ((1 << kCatEAWCharBits) - 1)].mCategory;
     }
-    NS_NOTREACHED("invalid Unicode character!");
     return PRUint8(HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED);
 }
 
@@ -169,12 +167,11 @@ GetEastAsianWidth(PRUint32 aCh)
         return sCatEAWValues[sCatEAWPages[0][aCh >> kCatEAWCharBits]]
                             [aCh & ((1 << kCatEAWCharBits) - 1)].mEAW;
     }
-    if (aCh < UNICODE_LIMIT) {
+    if (aCh < (kCatEAWMaxPlane + 1) * 0x10000) {
         return sCatEAWValues[sCatEAWPages[sCatEAWPlanes[(aCh >> 16) - 1]]
                                          [(aCh & 0xffff) >> kCatEAWCharBits]]
                             [aCh & ((1 << kCatEAWCharBits) - 1)].mEAW;
     }
-    NS_NOTREACHED("invalid Unicode character!");
     return 0;
 }
 
@@ -185,12 +182,11 @@ GetScriptCode(PRUint32 aCh)
         return sScriptValues[sScriptPages[0][aCh >> kScriptCharBits]]
                             [aCh & ((1 << kScriptCharBits) - 1)];
     }
-    if (aCh < UNICODE_LIMIT) {
+    if (aCh < (kScriptMaxPlane + 1) * 0x10000) {
         return sScriptValues[sScriptPages[sScriptPlanes[(aCh >> 16) - 1]]
                                          [(aCh & 0xffff) >> kScriptCharBits]]
                             [aCh & ((1 << kScriptCharBits) - 1)];
     }
-    NS_NOTREACHED("invalid Unicode character!");
     return MOZ_SCRIPT_UNKNOWN;
 }
 
@@ -213,6 +209,70 @@ GetHangulSyllableType(PRUint32 aCh)
                                    [aCh & ((1 << kHangulCharBits) - 1)]);
     }
     return HST_NONE;
+}
+
+static inline PRUint32
+GetCaseMapValue(PRUint32 aCh)
+{
+    if (aCh < UNICODE_BMP_LIMIT) {
+        return sCaseMapValues[sCaseMapPages[0][aCh >> kCaseMapCharBits]]
+                             [aCh & ((1 << kCaseMapCharBits) - 1)];
+    }
+    if (aCh < (kCaseMapMaxPlane + 1) * 0x10000) {
+        return sCaseMapValues[sCaseMapPages[sCaseMapPlanes[(aCh >> 16) - 1]]
+                                           [(aCh & 0xffff) >> kCaseMapCharBits]]
+                             [aCh & ((1 << kCaseMapCharBits) - 1)];
+    }
+    return 0;
+}
+
+PRUint32
+GetUppercase(PRUint32 aCh)
+{
+    PRUint32 mapValue = GetCaseMapValue(aCh);
+    if (mapValue & (kLowerToUpper | kTitleToUpper)) {
+        return aCh ^ (mapValue & kCaseMapCharMask);
+    }
+    if (mapValue & kLowerToTitle) {
+        return GetUppercase(aCh ^ (mapValue & kCaseMapCharMask));
+    }
+    return aCh;
+}
+
+PRUint32
+GetLowercase(PRUint32 aCh)
+{
+    PRUint32 mapValue = GetCaseMapValue(aCh);
+    if (mapValue & kUpperToLower) {
+        return aCh ^ (mapValue & kCaseMapCharMask);
+    }
+    if (mapValue & kTitleToUpper) {
+        return GetLowercase(aCh ^ (mapValue & kCaseMapCharMask));
+    }
+    return aCh;
+}
+
+PRUint32
+GetTitlecaseForLower(PRUint32 aCh)
+{
+    PRUint32 mapValue = GetCaseMapValue(aCh);
+    if (mapValue & (kLowerToTitle | kLowerToUpper)) {
+        return aCh ^ (mapValue & kCaseMapCharMask);
+    }
+    return aCh;
+}
+
+PRUint32
+GetTitlecaseForAll(PRUint32 aCh)
+{
+    PRUint32 mapValue = GetCaseMapValue(aCh);
+    if (mapValue & (kLowerToTitle | kLowerToUpper)) {
+        return aCh ^ (mapValue & kCaseMapCharMask);
+    }
+    if (mapValue & kUpperToLower) {
+        return GetTitlecaseForLower(aCh ^ (mapValue & kCaseMapCharMask));
+    }
+    return aCh;
 }
 
 bool
