@@ -822,7 +822,6 @@ LinearScanAllocator::allocateRegisters()
 
         // If we don't really need this in a register, don't allocate one
         if (req->kind() != Requirement::REGISTER && hint->kind() == Requirement::NONE) {
-            // FIXME: Eager spill ok? Check for canonical spill location?
             IonSpew(IonSpew_RegAlloc, "  Eagerly spilling virtual register %d",
                     current->reg() ? current->reg()->reg() : 0);
             if (!spill())
@@ -1986,26 +1985,37 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
         }
     }
 
-    // Search for any uses for requirements or hints
     UsePosition *fixedOp = NULL;
     UsePosition *registerOp = NULL;
 
-    for (UsePositionIterator usePos(interval->usesBegin()); usePos != interval->usesEnd(); usePos++) {
-        if (interval->start() == usePos->pos || interval->start() == usePos->pos.previous()) {
-            if (usePos->use->policy() == LUse::FIXED) {
+    // Search uses at the start of the interval for requirements.
+    UsePositionIterator usePos(interval->usesBegin());
+    for (; usePos != interval->usesEnd(); usePos++) {
+        if (interval->start().next() < usePos->pos)
+            break;
+
+        LUse::Policy policy = usePos->use->policy();
+        if (policy == LUse::FIXED) {
+            fixedOp = *usePos;
+            interval->setRequirement(Requirement(Requirement::REGISTER));
+            break;
+        } else if (policy == LUse::REGISTER) {
+            // Register uses get a REGISTER requirement
+            interval->setRequirement(Requirement(Requirement::REGISTER));
+        }
+    }
+
+    // Search other uses for hints. If the virtual register already has a
+    // canonical spill location, we will eagerly spill this interval, so we
+    // don't have to search for hints.
+    if (!fixedOp && !interval->reg()->canonicalSpill()) {
+        for (; usePos != interval->usesEnd(); usePos++) {
+            LUse::Policy policy = usePos->use->policy();
+            if (policy == LUse::FIXED) {
                 fixedOp = *usePos;
-                interval->setRequirement(Requirement(Requirement::REGISTER));
                 break;
-            } else if (usePos->use->policy() == LUse::REGISTER) {
-                // Register uses get a REGISTER requirement
-                interval->setRequirement(Requirement(Requirement::REGISTER));
-            }
-        } else {
-            if (usePos->use->policy() == LUse::FIXED) {
-                if (!fixedOp)
-                    fixedOp = *usePos;
-            } else if (usePos->use->policy() == LUse::REGISTER) {
-                if (!registerOp || usePos->pos.ins() < registerOp->pos.ins())
+            } else if (policy == LUse::REGISTER) {
+                if (!registerOp)
                     registerOp = *usePos;
             }
         }
