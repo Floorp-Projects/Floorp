@@ -59,6 +59,7 @@
 #include "jsxml.h"
 
 #include "frontend/TokenStream.h"
+#include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
@@ -66,7 +67,6 @@
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::gc;
