@@ -780,6 +780,18 @@ LinearScanAllocator::allocateRegisters()
                 }
             }
 
+            for (IntervalIterator i(activeSlots.begin()); i != activeSlots.end(); ) {
+                LiveInterval *it = *i;
+                JS_ASSERT(it->numRanges() > 0);
+
+                if (it->end() <= position) {
+                    i = active.removeAt(i);
+                    finishInterval(it);
+                } else {
+                    i++;
+                }
+            }
+
             // Shift inactive intervals to the active or handled sets as appropriate
             for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
                 LiveInterval *it = *i;
@@ -1320,7 +1332,7 @@ LinearScanAllocator::splitBlockingIntervals(LAllocation allocation)
 
     // Split the blocking interval if it exists.
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
-        if (i->getAllocation()->isRegister() && *i->getAllocation() == allocation) {
+        if (*i->getAllocation() == allocation) {
             IonSpew(IonSpew_RegAlloc, " Splitting active interval %u = [%u, %u]",
                     i->reg()->ins()->id(), i->start().pos(), i->end().pos());
 
@@ -1340,7 +1352,7 @@ LinearScanAllocator::splitBlockingIntervals(LAllocation allocation)
 
     // Split any inactive intervals at the next live point.
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
-        if (i->getAllocation()->isRegister() && *i->getAllocation() == allocation) {
+        if (*i->getAllocation() == allocation) {
             IonSpew(IonSpew_RegAlloc, " Splitting inactive interval %u = [%u, %u]",
                     i->reg()->ins()->id(), i->start().pos(), i->end().pos());
 
@@ -1407,7 +1419,10 @@ LinearScanAllocator::assign(LAllocation allocation)
         }
     }
 
-    active.pushBack(current);
+    if (allocation.isRegister())
+        active.pushBack(current);
+    else if (allocation.isStackSlot())
+        activeSlots.pushBack(current);
 
     return true;
 }
@@ -1504,16 +1519,18 @@ LinearScanAllocator::spill()
 }
 
 void
-LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
+LinearScanAllocator::freeCanonicalSpillSlot(LiveInterval *interval)
 {
     VirtualRegister *mine = interval->reg();
+    LAllocation *spillSlot = mine->canonicalSpill();
+    if (!spillSlot->isStackSlot())
+        return;
+
     if (!IsNunbox(mine)) {
-        if (alloc->isStackSlot()) {
-            if (alloc->toStackSlot()->isDouble())
-                finishedDoubleSlots_.append(interval);
-            else
-                finishedSlots_.append(interval);
-        }
+        if (spillSlot->toStackSlot()->isDouble())
+            finishedDoubleSlots_.append(interval);
+        else
+            finishedSlots_.append(interval);
         return;
     }
 
@@ -1522,17 +1539,8 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
     // know both intervals have been finished.
     VirtualRegister *other = otherHalfOfNunbox(mine);
     if (other->finished()) {
-        if (!mine->canonicalSpill() && !other->canonicalSpill())
-            return;
-
-        JS_ASSERT_IF(mine->canonicalSpill() && other->canonicalSpill(),
-                     mine->canonicalSpill()->isStackSlot() == other->canonicalSpill()->isStackSlot());
-
-        VirtualRegister *candidate = mine->canonicalSpill() ? mine : other;
-        if (!candidate->canonicalSpill()->isStackSlot())
-            return;
-
-        finishedDoubleSlots_.append(candidate->lastInterval());
+        JS_ASSERT_IF(other->canonicalSpill(), other->canonicalSpill()->isStackSlot());
+        finishedDoubleSlots_.append(interval);
     }
 #endif
 }
@@ -1540,23 +1548,23 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
 void
 LinearScanAllocator::finishInterval(LiveInterval *interval)
 {
-    LAllocation *alloc = interval->getAllocation();
+    DebugOnly<LAllocation *> alloc = interval->getAllocation();
     JS_ASSERT(!alloc->isUse());
 
-    // Toss out the bogus interval now that it's run its course
-    if (!interval->reg())
-        return;
-
     // All spills should be equal to the canonical spill location.
-    JS_ASSERT_IF(alloc->isStackSlot(), *alloc == *interval->reg()->canonicalSpill());
+    LAllocation *canonicalSpill = interval->reg()->canonicalSpill();
+    JS_ASSERT_IF(alloc->isStackSlot(), *alloc == *canonicalSpill);
 
     bool lastInterval = interval->index() == (interval->reg()->numIntervals() - 1);
     if (lastInterval) {
-        freeAllocation(interval, alloc);
+        if (canonicalSpill)
+            freeCanonicalSpillSlot(interval);
         interval->reg()->setFinished();
     }
 
+#ifdef DEBUG
     handled.pushBack(interval);
+#endif
 }
 
 /*
@@ -1578,20 +1586,16 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
             freeUntilPos[i] = CodePosition::MAX;
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
-        if (i->getAllocation()->isRegister()) {
-            AnyRegister reg = i->getAllocation()->toRegister();
-            IonSpew(IonSpew_RegAlloc, "   Register %s not free", reg.name());
-            freeUntilPos[reg.code()] = CodePosition::MIN;
-        }
+        AnyRegister reg = i->getAllocation()->toRegister();
+        IonSpew(IonSpew_RegAlloc, "   Register %s not free", reg.name());
+        freeUntilPos[reg.code()] = CodePosition::MIN;
     }
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); i++) {
-        if (i->getAllocation()->isRegister()) {
-            AnyRegister reg = i->getAllocation()->toRegister();
-            CodePosition pos = current->intersect(*i);
-            if (pos != CodePosition::MIN && pos < freeUntilPos[reg.code()]) {
-                freeUntilPos[reg.code()] = pos;
-                IonSpew(IonSpew_RegAlloc, "   Register %s free until %u", reg.name(), pos.pos());
-            }
+        AnyRegister reg = i->getAllocation()->toRegister();
+        CodePosition pos = current->intersect(*i);
+        if (pos != CodePosition::MIN && pos < freeUntilPos[reg.code()]) {
+            freeUntilPos[reg.code()] = pos;
+            IonSpew(IonSpew_RegAlloc, "   Register %s free until %u", reg.name(), pos.pos());
         }
     }
 
@@ -1671,26 +1675,22 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
             nextUsePos[i] = CodePosition::MAX;
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
-        if (i->getAllocation()->isRegister()) {
-            AnyRegister reg = i->getAllocation()->toRegister();
-            if (i->start().ins() == current->start().ins()) {
-                nextUsePos[reg.code()] = CodePosition::MIN;
-                IonSpew(IonSpew_RegAlloc, "   Disqualifying %s due to recency", reg.name());
-            } else if (nextUsePos[reg.code()] != CodePosition::MIN) {
-                nextUsePos[reg.code()] = i->nextUsePosAfter(current->start());
-                IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.name(),
-                        nextUsePos[reg.code()].pos());
-            }
+        AnyRegister reg = i->getAllocation()->toRegister();
+        if (i->start().ins() == current->start().ins()) {
+            nextUsePos[reg.code()] = CodePosition::MIN;
+            IonSpew(IonSpew_RegAlloc, "   Disqualifying %s due to recency", reg.name());
+        } else if (nextUsePos[reg.code()] != CodePosition::MIN) {
+            nextUsePos[reg.code()] = i->nextUsePosAfter(current->start());
+            IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.name(),
+                    nextUsePos[reg.code()].pos());
         }
     }
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); i++) {
-        if (i->getAllocation()->isRegister()) {
-            AnyRegister reg = i->getAllocation()->toRegister();
-            CodePosition pos = i->nextUsePosAfter(current->start());
-            if (pos < nextUsePos[reg.code()]) {
-                nextUsePos[reg.code()] = pos;
-                IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.name(), pos.pos());
-            }
+        AnyRegister reg = i->getAllocation()->toRegister();
+        CodePosition pos = i->nextUsePosAfter(current->start());
+        if (pos < nextUsePos[reg.code()]) {
+            nextUsePos[reg.code()] = pos;
+            IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.name(), pos.pos());
         }
     }
 
@@ -1846,6 +1846,7 @@ LinearScanAllocator::validateIntervals()
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
         JS_ASSERT(i->numRanges() > 0);
         JS_ASSERT(i->covers(current->start()));
+        JS_ASSERT(i->getAllocation()->isRegister());
 
         for (IntervalIterator j(active.begin()); j != i; j++)
             JS_ASSERT(canCoexist(*i, *j));
@@ -1855,6 +1856,7 @@ LinearScanAllocator::validateIntervals()
         JS_ASSERT(i->numRanges() > 0);
         JS_ASSERT(i->end() >= current->start());
         JS_ASSERT(!i->covers(current->start()));
+        JS_ASSERT(i->getAllocation()->isRegister());
 
         for (IntervalIterator j(active.begin()); j != active.end(); j++) {
             JS_ASSERT(*i != *j);
