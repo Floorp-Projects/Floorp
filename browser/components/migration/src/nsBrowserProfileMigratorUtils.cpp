@@ -178,6 +178,5 @@ ImportDefaultBookmarks()
   if (NS_FAILED(rv))
     return rv;
 
-  rv = importer->ImportHTMLFromURI(bookmarksURI, true);
-  return rv;
+  return importer->ImportHTMLFromURI(bookmarksURI, true);
 }
