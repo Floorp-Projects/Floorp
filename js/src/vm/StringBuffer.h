@@ -34,7 +34,6 @@ class StringBuffer
 
     CharBuffer cb;
 
-    inline bool checkLength(size_t length);
     JSContext *context() const { return cb.allocPolicy().context(); }
     jschar *extractWellSized();
 
@@ -44,14 +43,14 @@ class StringBuffer
   public:
     explicit StringBuffer(JSContext *cx) : cb(cx) { }
 
-    inline bool reserve(size_t len);
-    inline bool resize(size_t len);
-    inline bool append(const jschar c);
-    inline bool append(const jschar *chars, size_t len);
-    inline bool append(const jschar *begin, const jschar *end);
+    inline bool reserve(size_t len) { return cb.reserve(len); }
+    inline bool resize(size_t len) { return cb.resize(len); }
+    inline bool append(const jschar c) { return cb.append(c); }
+    inline bool append(const jschar *chars, size_t len) { return cb.append(chars, len); }
+    inline bool append(const jschar *begin, const jschar *end) { return cb.append(begin, end); }
     inline bool append(JSString *str);
     inline bool append(JSLinearString *str);
-    inline bool appendN(const jschar c, size_t n);
+    inline bool appendN(const jschar c, size_t n) { return cb.appendN(c, n); }
     inline bool appendInflated(const char *cstr, size_t len);
 
     template <size_t ArrayLength>
@@ -78,7 +77,7 @@ class StringBuffer
     const jschar *begin() const { return cb.begin(); }
     const jschar *end() const { return cb.end(); }
     bool empty() const { return cb.empty(); }
-    inline size_t length() const;
+    size_t length() const { return cb.length(); }
 
     /*
      * Creates a string from the characters in this buffer, then (regardless
@@ -106,13 +105,6 @@ StringBuffer::append(JSString *str)
     return append(linear);
 }
 
-inline size_t
-StringBuffer::length() const
-{
-    JS_ASSERT(cb.length() <= JSString::MAX_LENGTH);
-    return cb.length();
-}
-
 inline bool
 StringBuffer::appendInflated(const char *cstr, size_t cstrlen)
 {
@@ -124,6 +116,26 @@ StringBuffer::appendInflated(const char *cstr, size_t cstrlen)
                                                begin() + lengthBefore, &cstrlen);
     JS_ASSERT(ok && oldcstrlen == cstrlen);
     return true;
+}
+
+/* ES5 9.8 ToString, appending the result to the string buffer. */
+extern bool
+ValueToStringBufferSlow(JSContext *cx, const Value &v, StringBuffer &sb);
+
+inline bool
+ValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
+{
+    if (v.isString())
+        return sb.append(v.toString());
+
+    return ValueToStringBufferSlow(cx, v, sb);
+}
+
+/* ES5 9.8 ToString for booleans, appending the result to the string buffer. */
+inline bool
+BooleanToStringBuffer(JSContext *cx, bool b, StringBuffer &sb)
+{
+    return b ? sb.append("true") : sb.append("false");
 }
 
 }  /* namespace js */
