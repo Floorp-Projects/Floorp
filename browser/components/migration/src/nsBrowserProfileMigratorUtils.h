@@ -99,18 +99,10 @@ void GetMigrateDataFromArray(MigrationData* aDataArray,
 // this is already cloned, modify it to your heart's content
 void GetProfilePath(nsIProfileStartup* aStartup, nsCOMPtr<nsIFile>& aProfileDir);
 
-// In-place import from aBookmarksFile into a folder in the user's bookmarks.
-// If the importIntoRoot parameter has a value of true, the bookmarks will be
-// imported into the bookmarks root folder. Otherwise, they'll be imported into
-// a new folder with the name "From (STR:aImportSourceNameKey)".
-// aImportSourceNameKey is a key into migration.properties with the pretty name
-// of the application.
-nsresult ImportBookmarksHTML(nsIFile* aBookmarksFile, 
-                             bool aImportIntoRoot,
-                             bool aOverwriteDefaults,
-                             const PRUnichar* aImportSourceNameKey);
-
-nsresult InitializeBookmarks(nsIFile* aTargetProfile);
+/**
+ * Imports default bookmarks to the profile.
+ */
+nsresult ImportDefaultBookmarks();
 
 #endif
 
