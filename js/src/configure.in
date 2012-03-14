@@ -5398,6 +5398,8 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
   if test "$_MSC_VER"; then
     # Use a wrapper script for cl and ml that looks more like gcc.
     # autotools can't quite handle an MSVC build environment yet.
+    LDFLAGS=
+    CFLAGS=
     ac_configure_args="$ac_configure_args LD=link CPP=\"cl -nologo -EP\" SHELL=sh.exe"
     case "${target_cpu}" in
     x86_64)
