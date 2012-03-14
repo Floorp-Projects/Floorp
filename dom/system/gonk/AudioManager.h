@@ -48,7 +48,7 @@
 
 namespace mozilla {
 namespace dom {
-namespace telephony {
+namespace gonk {
 
 class AudioManager : public nsIAudioManager
 {

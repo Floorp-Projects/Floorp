@@ -38,7 +38,7 @@
 #include "AudioManager.h"
 #include <media/AudioSystem.h>
 
-using namespace mozilla::dom::telephony;
+using namespace mozilla::dom::gonk;
 using namespace android;
 
 NS_IMPL_ISUPPORTS1(AudioManager, nsIAudioManager)
