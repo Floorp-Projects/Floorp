@@ -850,10 +850,20 @@ nsHtml5StreamParser::WriteStreamBytes(const PRUint8* aFromSegment,
       }
 
       // Emit the REPLACEMENT CHARACTER
+      if (end >= NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
+        nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
+          nsHtml5OwningUTF16Buffer::FalliblyCreate(
+            NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
+        if (!newBuf) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        mLastBuffer = (mLastBuffer->next = newBuf.forget());
+        end = 0;
+      }
       mLastBuffer->getBuffer()[end] = 0xFFFD;
       ++end;
       mLastBuffer->setEnd(end);
-      if (end == NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
+      if (end >= NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
         nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
           nsHtml5OwningUTF16Buffer::FalliblyCreate(
             NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
