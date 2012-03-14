@@ -476,7 +476,7 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
     // the flags necessary for LT to trigger, we don't test X, and take the
     // bailout because the EQ flag is set.
     // if (Y > 0), we don't set EQ, and we don't trigger LT, so we don't take the bailout.
-    if (mir->canBeDividebyZero() || mir->canBeNegativeZero()) {
+    if (mir->canBeDivideByZero() || mir->canBeNegativeZero()) {
         masm.ma_cmp(rhs, Imm32(0));
         masm.ma_cmp(lhs, Imm32(0), Assembler::LessThan);
         if (!bailoutIf(Assembler::Equal, ins->snapshot()))
