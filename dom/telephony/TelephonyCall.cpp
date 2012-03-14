@@ -78,7 +78,7 @@ TelephonyCall::ChangeStateInternal(PRUint16 aCallState, bool aFireEvents)
     case nsIRadioInterfaceLayer::CALL_STATE_DIALING:
       stateString.AssignLiteral("dialing");
       break;
-    case nsIRadioInterfaceLayer::CALL_STATE_RINGING:
+    case nsIRadioInterfaceLayer::CALL_STATE_ALERTING:
       stateString.AssignLiteral("ringing");
       break;
     case nsIRadioInterfaceLayer::CALL_STATE_BUSY:
