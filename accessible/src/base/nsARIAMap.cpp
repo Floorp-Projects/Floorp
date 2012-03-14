@@ -98,7 +98,8 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    states::READONLY
+    kNoReqStates,
+    eReadonlyUntilEditable
   },
   {
     "button",
@@ -168,7 +169,8 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    states::READONLY
+    kNoReqStates,
+    eReadonlyUntilEditable
   },
   {
     "grid",
@@ -661,7 +663,10 @@ nsStateMapEntry nsARIAMap::gWAIStateMap[] = {
 
   // eARIASelectable
   nsStateMapEntry(&nsGkAtoms::aria_selected, kBoolType,
-                  states::SELECTABLE, states::SELECTED, 0, true)
+                  states::SELECTABLE, states::SELECTED, 0, true),
+
+  // eReadonlyUntilEditable
+  nsStateMapEntry(states::READONLY, states::EDITABLE)
 };
 
 /**
@@ -742,6 +747,23 @@ nsStateMapEntry::nsStateMapEntry() :
   mDefinedIfAbsent(false)
 {}
 
+nsStateMapEntry::nsStateMapEntry(PRUint64 aDefaultState,
+                                 PRUint64 aExclusingState) :
+  mAttributeName(nsnull),
+  mIsToken(false),
+  mPermanentState(0),
+  mValue1(nsnull),
+  mState1(0),
+  mValue2(nsnull),
+  mState2(0),
+  mValue3(nsnull),
+  mState3(0),
+  mDefaultState(aDefaultState),
+  mDefinedIfAbsent(false),
+  mExcludingState(aExclusingState)
+{
+}
+
 nsStateMapEntry::nsStateMapEntry(nsIAtom** aAttrName, eStateValueType aType,
                                  PRUint64 aPermanentState,
                                  PRUint64 aTrueState,
@@ -757,7 +779,8 @@ nsStateMapEntry::nsStateMapEntry(nsIAtom** aAttrName, eStateValueType aType,
   mValue3(nsnull),
   mState3(0),
   mDefaultState(aTrueState),
-  mDefinedIfAbsent(aDefinedIfAbsent)
+  mDefinedIfAbsent(aDefinedIfAbsent),
+  mExcludingState(0)
 {
   if (aType == kMixedType) {
     mValue2 = "mixed";
@@ -773,7 +796,7 @@ nsStateMapEntry::nsStateMapEntry(nsIAtom** aAttrName,
   mValue1(aValue1), mState1(aState1),
   mValue2(aValue2), mState2(aState2),
   mValue3(aValue3), mState3(aState3),
-  mDefaultState(0), mDefinedIfAbsent(false)
+  mDefaultState(0), mDefinedIfAbsent(false), mExcludingState(0)
 {
 }
 
@@ -786,7 +809,7 @@ nsStateMapEntry::nsStateMapEntry(nsIAtom** aAttrName,
   mValue1(aValue1), mState1(aState1),
   mValue2(aValue2), mState2(aState2),
   mValue3(aValue3), mState3(aState3),
-  mDefaultState(0), mDefinedIfAbsent(true)
+  mDefaultState(0), mDefinedIfAbsent(true), mExcludingState(0)
 {
   if (aDefaultStateRule == eUseFirstState)
     mDefaultState = aState1;
@@ -801,6 +824,15 @@ nsStateMapEntry::MapToStates(nsIContent* aContent, PRUint64* aState,
     return false;
 
   const nsStateMapEntry& entry = nsARIAMap::gWAIStateMap[aStateMapEntryID];
+
+  // Non ARIA attribute case. Expose default state until excluding state is
+  // presented.
+  if (!entry.mAttributeName) {
+    if (!(*aState & entry.mExcludingState))
+      *aState |= entry.mDefaultState;
+
+    return true;
+  }
 
   if (entry.mIsToken) {
     // If attribute is considered as defined when it's absent then let's act

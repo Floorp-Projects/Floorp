@@ -27,9 +27,8 @@ function testAction(aID, aAcc, aNumActions, aActionName, aActionDescription)
   }
 }
 
-function testThis(aID, aName, aValue, aDescription, aRole, aState,
-                  aExtraState, aAbsentState, aNumActions, aActionName,
-                  aActionDescription)
+function testThis(aID, aName, aValue, aDescription, aRole,
+                  aNumActions, aActionName, aActionDescription)
 {
   var acc = getAccessible(aID);
   if (!acc)
@@ -39,8 +38,6 @@ function testThis(aID, aName, aValue, aDescription, aRole, aState,
   testValue(aID, acc, aValue, aRole);
   is(acc.description, aDescription, "Wrong description for " + aID + "!");
   testRole(aID, aRole);
-
-  testStates(acc, aState, aExtraState, aAbsentState);
 
   testAction(aID, acc, aNumActions, aActionName, aActionDescription);
 }
