@@ -58,6 +58,10 @@ class nsIdleService;
 namespace mozilla {
     class AndroidGeckoEvent;
     class AndroidKeyEvent;
+
+    namespace layers {
+        class CompositorParent;
+    }
 }
 
 class nsWindow :
@@ -183,6 +187,12 @@ public:
 #ifdef MOZ_JAVA_COMPOSITOR
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
+
+    static void SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
+                                    ::base::Thread* aCompositorThread);
+    static void ScheduleComposite();
+    static void SchedulePauseComposition();
+    static void ScheduleResumeComposition();
 #endif
 
 protected:
@@ -253,6 +263,9 @@ private:
 
 #ifdef MOZ_JAVA_COMPOSITOR
     mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
+
+    static nsRefPtr<mozilla::layers::CompositorParent> sCompositorParent;
+    static base::Thread *sCompositorThread;
 #endif
 };
 

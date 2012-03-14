@@ -464,7 +464,6 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         break;
     }
 
-
     case AndroidGeckoEvent::VIEWPORT:
     case AndroidGeckoEvent::BROADCAST: {
 
