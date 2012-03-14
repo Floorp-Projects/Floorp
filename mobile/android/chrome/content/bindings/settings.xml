@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="setting-fulltoggle-bool" extends="chrome://mozapps/content/extensions/setting.xml#setting-bool">
+    <handlers>
+      <handler event="command" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        ]]>
+      </handler>
+      <handler event="click" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        this.input.checked = !this.input.checked;
+        this.inputChanged();
+        this.fireEvent("oncommand");
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="setting-fulltoggle-boolint" extends="chrome://mozapps/content/extensions/setting.xml#setting-boolint">
+    <handlers>
+      <handler event="command" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        ]]>
+      </handler>
+      <handler event="click" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        this.input.checked = !this.input.checked;
+        this.inputChanged();
+        this.fireEvent("oncommand");
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="setting-fulltoggle-localized-bool" extends="chrome://mozapps/content/extensions/setting.xml#setting-localized-bool">
+    <handlers>
+      <handler event="command" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        ]]>
+      </handler>
+      <handler event="click" button="0" phase="capturing">
+        <![CDATA[
+        event.stopPropagation();
+        this.input.checked = !this.input.checked;
+        this.inputChanged();
+        this.fireEvent("oncommand");
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+</bindings>
