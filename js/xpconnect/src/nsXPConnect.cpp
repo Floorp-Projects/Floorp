@@ -2364,7 +2364,7 @@ nsXPConnect::Peek(JSContext * *_retval)
         return NS_ERROR_FAILURE;
     }
 
-    *_retval = data->GetJSContextStack()->Peek();
+    *_retval = xpc_UnmarkGrayContext(data->GetJSContextStack()->Peek());
     return NS_OK;
 }
 
@@ -2469,7 +2469,7 @@ nsXPConnect::Pop(JSContext * *_retval)
 
     JSContext *cx = data->GetJSContextStack()->Pop();
     if (_retval)
-        *_retval = cx;
+        *_retval = xpc_UnmarkGrayContext(cx);
     return NS_OK;
 }
 
