@@ -430,25 +430,6 @@ public:
     static jmethodID jGetTimeMethod;
 };
 
-class AndroidAddress : public WrappedJavaObject
-{
-public:
-    static void InitAddressClass(JNIEnv *jEnv);
-    static nsGeoPositionAddress* CreateGeoPositionAddress(JNIEnv *jenv, jobject jobj);
-    static jclass jAddressClass;
-    static jmethodID jGetAddressLineMethod;
-    static jmethodID jGetAdminAreaMethod;
-    static jmethodID jGetCountryNameMethod;
-    static jmethodID jGetFeatureNameMethod;
-    static jmethodID jGetLocalityMethod;
-    static jmethodID jGetPostalCodeMethod;
-    static jmethodID jGetPremisesMethod;
-    static jmethodID jGetSubAdminAreaMethod;
-    static jmethodID jGetSubLocalityMethod;
-    static jmethodID jGetSubThoroughfareMethod;
-    static jmethodID jGetThoroughfareMethod;
-};
-
 class AndroidGeckoEvent : public WrappedJavaObject
 {
 public:
@@ -485,9 +466,6 @@ public:
     nsTArray<float> Pressures() { return mPressures; }
     nsTArray<float> Orientations() { return mOrientations; }
     nsTArray<nsIntPoint> PointRadii() { return mPointRadii; }
-    double Alpha() { return mAlpha; }
-    double Beta() { return mBeta; }
-    double Gamma() { return mGamma; }
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
@@ -507,7 +485,6 @@ public:
     int RangeForeColor() { return mRangeForeColor; }
     int RangeBackColor() { return mRangeBackColor; }
     nsGeoPosition* GeoPosition() { return mGeoPosition; }
-    nsGeoPositionAddress* GeoAddress() { return mGeoAddress; }
     double Bandwidth() { return mBandwidth; }
     bool CanBeMetered() { return mCanBeMetered; }
 
@@ -526,13 +503,11 @@ protected:
     int mOffset, mCount;
     int mRangeType, mRangeStyles;
     int mRangeForeColor, mRangeBackColor;
-    double mAlpha, mBeta, mGamma;
     double mX, mY, mZ;
     double mDistance;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra;
     nsRefPtr<nsGeoPosition> mGeoPosition;
-    nsRefPtr<nsGeoPositionAddress> mGeoAddress;
     double mBandwidth;
     bool mCanBeMetered;
 
@@ -561,9 +536,6 @@ protected:
     static jfieldID jOrientations;
     static jfieldID jPressures;
     static jfieldID jPointRadii;
-    static jfieldID jAlphaField;
-    static jfieldID jBetaField;
-    static jfieldID jGammaField;
     static jfieldID jXField;
     static jfieldID jYField;
     static jfieldID jZField;
@@ -585,7 +557,6 @@ protected:
     static jfieldID jRangeForeColorField;
     static jfieldID jRangeBackColorField;
     static jfieldID jLocationField;
-    static jfieldID jAddressField;
 
     static jfieldID jBandwidthField;
     static jfieldID jCanBeMeteredField;
@@ -595,8 +566,8 @@ public:
         NATIVE_POKE = 0,
         KEY_EVENT = 1,
         MOTION_EVENT = 2,
-        ORIENTATION_EVENT = 3,
-        ACCELERATION_EVENT = 4,
+        SENSOR_EVENT = 3,
+        UNUSED1_EVENT = 4,
         LOCATION_EVENT = 5,
         IME_EVENT = 6,
         DRAW = 7,
@@ -617,6 +588,7 @@ public:
         PROXIMITY_EVENT = 23,
         ACTIVITY_RESUMING = 24,
         SCREENSHOT = 25,
+        SENSOR_ACCURACY = 26,
         dummy_java_enum_list_end
     };
 

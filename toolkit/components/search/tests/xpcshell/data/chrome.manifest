@@ -1,1 +1,3 @@
 locale testsearchplugin ar jar:jar:searchTest.jar!/chrome/searchTest.jar!/
+content testsearchplugin ./
+

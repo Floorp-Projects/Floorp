@@ -87,6 +87,7 @@ FENNEC_JAVA_FILES = \
   GeckoEvent.java \
   GeckoEventListener.java \
   GeckoEventResponder.java \
+  GeckoHalDefines.java \
   GeckoInputConnection.java \
 	GeckoMessageReceiver.java \
   GeckoPreferences.java \
@@ -235,6 +236,7 @@ RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
   res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar.xml \
+  res/layout/awesomebar_actionbar.xml \
   res/layout/awesomebar_folder_row.xml \
   res/layout/awesomebar_folder_header_row.xml \
   res/layout/awesomebar_header_row.xml \
