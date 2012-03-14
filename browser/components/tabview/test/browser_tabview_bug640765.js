@@ -11,10 +11,6 @@ function test() {
   let newTabTwo = gBrowser.addTab();
   let newTabThree = gBrowser.addTab();
 
-  gBrowser.pinTab(newTabOne);
-  gBrowser.pinTab(newTabTwo);
-  gBrowser.pinTab(newTabThree);
-
   registerCleanupFunction(function() {
     TabView.hide();
     while (gBrowser.tabs.length > 1)
@@ -27,37 +23,47 @@ function test() {
 
     groupItem = contentWindow.GroupItems.groupItems[0];
 
-    is(xulTabForAppTabIcon(0), newTabOne,
-       "New tab one matches the first app tab icon in tabview");
-    is(xulTabForAppTabIcon(1), newTabTwo,
-       "New tab two matches the second app tab icon in tabview");
-    is(xulTabForAppTabIcon(2), newTabThree,
-       "New tab three matches the third app tab icon in tabview");
+    whenAppTabIconAdded(function() {
+      whenAppTabIconAdded(function() {
+        whenAppTabIconAdded(function() {
 
-    // move the last tab to the first position
-    gBrowser.moveTabTo(newTabThree, 0);
-    is(xulTabForAppTabIcon(0), newTabThree,
-       "New tab three matches the first app tab icon in tabview");
-    is(xulTabForAppTabIcon(1), newTabOne,
-       "New tab one matches the second app tab icon in tabview");
-    is(xulTabForAppTabIcon(2), newTabTwo,
-       "New tab two matches the third app tab icon in tabview");
+          is(xulTabForAppTabIcon(0), newTabOne,
+            "New tab one matches the first app tab icon in tabview");
+          is(xulTabForAppTabIcon(1), newTabTwo,
+            "New tab two matches the second app tab icon in tabview");
+          is(xulTabForAppTabIcon(2), newTabThree,
+            "New tab three matches the third app tab icon in tabview");
 
-    // move the first tab to the second position
-    gBrowser.moveTabTo(newTabThree, 1);
-    is(xulTabForAppTabIcon(0), newTabOne,
-       "New tab one matches the first app tab icon in tabview");
-    is(xulTabForAppTabIcon(1), newTabThree,
-       "New tab three matches the second app tab icon in tabview");
-    is(xulTabForAppTabIcon(2), newTabTwo,
-       "New tab two matches the third app tab icon in tabview");
+          // move the last tab to the first position
+          gBrowser.moveTabTo(newTabThree, 0);
+          is(xulTabForAppTabIcon(0), newTabThree,
+            "New tab three matches the first app tab icon in tabview");
+          is(xulTabForAppTabIcon(1), newTabOne,
+            "New tab one matches the second app tab icon in tabview");
+          is(xulTabForAppTabIcon(2), newTabTwo,
+            "New tab two matches the third app tab icon in tabview");
 
-    hideTabView(function() {
-      gBrowser.removeTab(newTabOne);
-      gBrowser.removeTab(newTabTwo);
-      gBrowser.removeTab(newTabThree);
-      finish();
+          // move the first tab to the second position
+          gBrowser.moveTabTo(newTabThree, 1);
+          is(xulTabForAppTabIcon(0), newTabOne,
+            "New tab one matches the first app tab icon in tabview");
+          is(xulTabForAppTabIcon(1), newTabThree,
+            "New tab three matches the second app tab icon in tabview");
+          is(xulTabForAppTabIcon(2), newTabTwo,
+            "New tab two matches the third app tab icon in tabview");
+
+          hideTabView(function() {
+            gBrowser.removeTab(newTabOne);
+            gBrowser.removeTab(newTabTwo);
+            gBrowser.removeTab(newTabThree);
+            finish();
+          });
+        });
+        gBrowser.pinTab(newTabThree);
+      });
+      gBrowser.pinTab(newTabTwo);
     });
+    gBrowser.pinTab(newTabOne);
   });
 }
 
