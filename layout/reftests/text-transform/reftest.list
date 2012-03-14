@@ -8,6 +8,6 @@
 == all-upper.html all-upper-ref.html
 == all-lower.html all-lower-ref.html
 == all-title.html all-title-ref.html
-!= smtp-upper.html smtp-upper-ref.html # bug 210501
-!= smtp-lower.html smtp-lower-ref.html # bug 210501
-!= smtp-title.html smtp-title-ref.html # bug 210501
+== smtp-upper.html smtp-upper-ref.html
+== smtp-lower.html smtp-lower-ref.html
+== smtp-title.html smtp-title-ref.html
