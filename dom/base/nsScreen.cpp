@@ -47,8 +47,10 @@
 #include "nsLayoutUtils.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsDOMEvent.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 /* static */ bool nsScreen::sInitialized = false;
 /* static */ bool nsScreen::sAllowScreenEnabledProperty = false;
@@ -65,42 +67,71 @@ nsScreen::Initialize()
                                "dom.screenBrightnessProperty.enabled");
 }
 
-//
-//  Screen class implementation
-//
-nsScreen::nsScreen(nsIDocShell* aDocShell)
-  : mDocShell(aDocShell)
+void
+nsScreen::Invalidate()
+{
+  hal::UnregisterScreenOrientationObserver(this);
+}
+
+/* static */ already_AddRefed<nsScreen>
+nsScreen::Create(nsPIDOMWindow* aWindow)
 {
   if (!sInitialized) {
     Initialize();
   }
+
+  if (!aWindow->GetDocShell()) {
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
+  NS_ENSURE_TRUE(sgo, nsnull);
+
+  nsRefPtr<nsScreen> screen = new nsScreen();
+  screen->BindToOwner(aWindow);
+  screen->mDocShell = aWindow->GetDocShell();
+
+  hal::RegisterScreenOrientationObserver(screen);
+  hal::GetCurrentScreenOrientation(&(screen->mOrientation));
+
+  return screen.forget();
+}
+
+nsScreen::nsScreen()
+{
 }
 
 nsScreen::~nsScreen()
 {
+  Invalidate();
 }
 
 
 DOMCI_DATA(Screen, nsScreen)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsScreen)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsScreen,
+                                                  nsDOMEventTargetHelper)
+  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(mozorientationchange)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsScreen,
+                                                nsDOMEventTargetHelper)
+  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(mozorientationchange)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 // QueryInterface implementation for nsScreen
-NS_INTERFACE_MAP_BEGIN(nsScreen)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsScreen)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScreen)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMScreen)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Screen)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
+NS_IMPL_ADDREF_INHERITED(nsScreen, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(nsScreen, nsDOMEventTargetHelper)
 
-NS_IMPL_ADDREF(nsScreen)
-NS_IMPL_RELEASE(nsScreen)
-
-
-NS_IMETHODIMP
-nsScreen::SetDocShell(nsIDocShell* aDocShell)
-{
-   mDocShell = aDocShell; // Weak Reference
-   return NS_OK;
-}
+NS_IMPL_EVENT_HANDLER(nsScreen, mozorientationchange)
 
 NS_IMETHODIMP
 nsScreen::GetTop(PRInt32* aTop)
@@ -336,5 +367,65 @@ nsScreen::SetMozBrightness(double aBrightness)
 
   NS_ENSURE_TRUE(0 <= aBrightness && aBrightness <= 1, NS_ERROR_INVALID_ARG);
   hal::SetScreenBrightness(aBrightness);
+  return NS_OK;
+}
+
+void
+nsScreen::Notify(const ScreenOrientationWrapper& aOrientation)
+{
+  ScreenOrientation previousOrientation = mOrientation;
+  mOrientation = aOrientation.orientation;
+
+  NS_ASSERTION(mOrientation != eScreenOrientation_Current &&
+               mOrientation != eScreenOrientation_EndGuard &&
+               mOrientation != eScreenOrientation_Portrait &&
+               mOrientation != eScreenOrientation_Landscape,
+               "Invalid orientation value passed to notify method!");
+
+  if (mOrientation != previousOrientation) {
+    // TODO: use an helper method, see bug 720768.
+    nsRefPtr<nsDOMEvent> event = new nsDOMEvent(nsnull, nsnull);
+    nsresult rv = event->InitEvent(NS_LITERAL_STRING("mozorientationchange"), false, false);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    rv = event->SetTrusted(true);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    bool dummy;
+    rv = DispatchEvent(event, &dummy);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+  }
+}
+
+NS_IMETHODIMP
+nsScreen::GetMozOrientation(nsAString& aOrientation)
+{
+  switch (mOrientation) {
+    case eScreenOrientation_Current:
+    case eScreenOrientation_EndGuard:
+    case eScreenOrientation_Portrait:
+    case eScreenOrientation_Landscape:
+      NS_ASSERTION(false, "Shouldn't be used when getting value!");
+      return NS_ERROR_FAILURE;
+    case eScreenOrientation_PortraitPrimary:
+      aOrientation.AssignLiteral("portrait-primary");
+      break;
+    case eScreenOrientation_PortraitSecondary:
+      aOrientation.AssignLiteral("portrait-secondary");
+      break;
+    case eScreenOrientation_LandscapePrimary:
+      aOrientation.AssignLiteral("landscape-primary");
+      break;
+    case eScreenOrientation_LandscapeSecondary:
+      aOrientation.AssignLiteral("landscape-secondary");
+      break;
+  }
+
   return NS_OK;
 }
