@@ -70,7 +70,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 
-[scriptable, uuid(73b48170-55d5-11e1-b86c-0800200c9a66)]
+[scriptable, uuid(5740d0fe-9f4e-431f-b8b3-b82f9b7ff4cf)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -188,6 +188,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * privileges.
    */
   void setResolution(in float aXResolution, in float aYResolution);
+
+  /**
+   * Whether the next paint should be flagged as the first paint for a document.
+   * This gives a way to track the next paint that occurs after the flag is
+   * set. The flag gets cleared after the next paint.
+   *
+   * Can only be accessed with UniversalXPConnect privileges.
+   */
+  attribute boolean isFirstPaint;
 
   /** Synthesize a mouse event. The event types supported are:
    *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu

@@ -39,7 +39,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
+import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 
@@ -143,7 +143,7 @@ public class GeckoAppShell
 
     // helper methods
     //    public static native void setSurfaceView(GeckoSurfaceView sv);
-    public static native void setSoftwareLayerClient(GeckoSoftwareLayerClient client);
+    public static native void setLayerClient(GeckoLayerClient client);
     public static native void putenv(String map);
     public static native void onResume();
     public static native void onLowMemory();
@@ -198,7 +198,9 @@ public class GeckoAppShell
 
     public static native ByteBuffer allocateDirectBuffer(long size);
     public static native void freeDirectBuffer(ByteBuffer buf);
-    public static native void bindWidgetTexture();
+    public static native void scheduleComposite();
+    public static native void schedulePauseComposition();
+    public static native void scheduleResumeComposition();
 
     private static class GeckoMediaScannerClient implements MediaScannerConnectionClient {
         private String mFile = "";
@@ -415,9 +417,9 @@ public class GeckoAppShell
         Log.i(LOGTAG, "post native init");
 
         // Tell Gecko where the target byte buffer is for rendering
-        GeckoAppShell.setSoftwareLayerClient(GeckoApp.mAppContext.getSoftwareLayerClient());
+        GeckoAppShell.setLayerClient(GeckoApp.mAppContext.getLayerClient());
 
-        Log.i(LOGTAG, "setSoftwareLayerClient called");
+        Log.i(LOGTAG, "setLayerClient called");
 
         // First argument is the .apk path
         String combinedArgs = apkPath + " -greomni " + apkPath;
@@ -446,8 +448,7 @@ public class GeckoAppShell
     private static void geckoLoaded() {
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
-        mInputConnection = GeckoInputConnection.create(v);
-        v.setInputConnectionHandler(mInputConnection);
+        mInputConnection = v.setInputConnectionHandler();
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
@@ -545,8 +546,6 @@ public class GeckoAppShell
     public static void enableLocation(final boolean enable) {
         getMainHandler().post(new Runnable() { 
                 public void run() {
-                    LayerView v = GeckoApp.mAppContext.getLayerController().getView();
-
                     LocationManager lm = (LocationManager)
                         GeckoApp.mAppContext.getSystemService(Context.LOCATION_SERVICE);
 

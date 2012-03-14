@@ -58,6 +58,8 @@
 
 namespace mozilla {
 
+class AndroidGeckoLayerClient;
+
 void InitAndroidJavaWrappers(JNIEnv *jEnv);
 
 /*
@@ -151,31 +153,75 @@ protected:
     static jfieldID jTopField;
 };
 
-class AndroidGeckoSoftwareLayerClient : public WrappedJavaObject {
+class AndroidViewTransform : public WrappedJavaObject {
 public:
-    static void InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv);
- 
-     void Init(jobject jobj);
- 
-    AndroidGeckoSoftwareLayerClient() {}
-    AndroidGeckoSoftwareLayerClient(jobject jobj) { Init(jobj); }
+    static void InitViewTransformClass(JNIEnv *jEnv);
 
-    jobject LockBuffer();
-    unsigned char *LockBufferBits();
-    void UnlockBuffer();
-    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture);
-    void EndDrawing(const nsIntRect &aRect);
+    void Init(jobject jobj);
+
+    AndroidViewTransform() {}
+    AndroidViewTransform(jobject jobj) { Init(jobj); }
+
+    float GetX();
+    float GetY();
+    float GetScale();
 
 private:
-    static jclass jGeckoSoftwareLayerClientClass;
-    static jmethodID jLockBufferMethod;
-    static jmethodID jUnlockBufferMethod;
-
-protected:
-     static jmethodID jBeginDrawingMethod;
-     static jmethodID jEndDrawingMethod;
+    static jclass jViewTransformClass;
+    static jfieldID jXField;
+    static jfieldID jYField;
+    static jfieldID jScaleField;
 };
 
+class AndroidLayerRendererFrame : public WrappedJavaObject {
+public:
+    static void InitLayerRendererFrameClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+    void Dispose();
+
+    void BeginDrawing();
+    void DrawBackground();
+    void DrawForeground();
+    void EndDrawing();
+
+private:
+    static jclass jLayerRendererFrameClass;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jDrawBackgroundMethod;
+    static jmethodID jDrawForegroundMethod;
+    static jmethodID jEndDrawingMethod;
+};
+
+class AndroidGeckoLayerClient : public WrappedJavaObject {
+public:
+    static void InitGeckoLayerClientClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+
+    AndroidGeckoLayerClient() {}
+    AndroidGeckoLayerClient(jobject jobj) { Init(jobj); }
+
+    bool BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata);
+    void EndDrawing();
+    void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
+    void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
+    void GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+    void CreateFrame(AndroidLayerRendererFrame& aFrame);
+    void ActivateProgram();
+    void DeactivateProgram();
+
+protected:
+    static jclass jGeckoLayerClientClass;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jEndDrawingMethod;
+    static jmethodID jSetFirstPaintViewport;
+    static jmethodID jSetPageSize;
+    static jmethodID jGetViewTransformMethod;
+    static jmethodID jCreateFrameMethod;
+    static jmethodID jActivateProgramMethod;
+    static jmethodID jDeactivateProgramMethod;
+};
 
 class AndroidGeckoSurfaceView : public WrappedJavaObject
 {

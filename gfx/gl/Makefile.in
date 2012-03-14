@@ -123,6 +123,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += GLContextProviderEGL.cpp
 endif
 
+ifdef MOZ_JAVA_COMPOSITOR
+DEFINES += -DMOZ_JAVA_COMPOSITOR
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES := $(filter-out -DUNICODE,$(DEFINES))

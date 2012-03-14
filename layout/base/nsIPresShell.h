@@ -1147,6 +1147,16 @@ public:
   float GetYResolution() { return mYResolution; }
 
   /**
+   * Set the isFirstPaint flag.
+   */
+  void SetIsFirstPaint(bool aIsFirstPaint) { mIsFirstPaint = aIsFirstPaint; }
+
+  /**
+   * Get the isFirstPaint flag.
+   */
+  bool GetIsFirstPaint() const { return mIsFirstPaint; }
+
+  /**
    * Dispatch a mouse move event based on the most recent mouse position if
    * this PresShell is visible. This is used when the contents of the page
    * moved (aFromScroll is false) or scrolled (aFromScroll is true).
@@ -1260,6 +1270,8 @@ protected:
   bool                      mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
   bool                      mIsActive;
   bool                      mFrozen;
+
+  bool                      mIsFirstPaint;
 
   bool                      mObservesMutationsForPrint;
 
