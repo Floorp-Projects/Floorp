@@ -681,17 +681,19 @@ public class BrowserProvider extends ContentProvider {
         // predefined max age. It's important not be too greedy here and
         // remove only a few old deleted records at a time.
 
-        String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
-
         // The PARAM_SHOW_DELETED argument is necessary to return the records
         // that were marked as deleted. We use PARAM_IS_SYNC here to ensure
         // that we'll be actually deleting records instead of flagging them.
-        Uri uriWithArgs = targetUri.buildUpon()
-                .appendQueryParameter(BrowserContract.PARAM_PROFILE, profile)
+        Uri.Builder uriBuilder = targetUri.buildUpon()
                 .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(DELETED_RECORDS_PURGE_LIMIT))
                 .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1")
-                .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "1")
-                .build();
+                .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "1");
+
+        String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+        if (!TextUtils.isEmpty(profile))
+            uriBuilder = uriBuilder.appendQueryParameter(BrowserContract.PARAM_PROFILE, profile);
+
+        Uri uriWithArgs = uriBuilder.build();
 
         Cursor cursor = null;
 
