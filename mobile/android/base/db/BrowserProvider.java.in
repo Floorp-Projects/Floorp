@@ -608,7 +608,7 @@ public class BrowserProvider extends ContentProvider {
         }
     }
 
-    private DatabaseHelper getDatabaseHelperForProfile(String profile) {
+    private DatabaseHelper getDatabaseHelperForProfile(String profile, boolean isTest) {
         // Each profile has a separate browser.db database. The target
         // profile is provided using a URI query argument in each request
         // to our content provider.
@@ -624,7 +624,7 @@ public class BrowserProvider extends ContentProvider {
             if (dbHelper != null) {
                 return dbHelper;
             }
-            dbHelper = new DatabaseHelper(getContext(), getDatabasePath(profile));
+            dbHelper = new DatabaseHelper(getContext(), getDatabasePath(profile, isTest));
             mDatabasePerProfile.put(profile, dbHelper);
         }
 
@@ -632,13 +632,15 @@ public class BrowserProvider extends ContentProvider {
         return dbHelper;
     }
 
-    private String getDatabasePath(String profile) {
+    private String getDatabasePath(String profile, boolean isTest) {
         trace("Getting database path for profile: " + profile);
 
         // On Android releases older than 2.3, it's not possible to use
         // SQLiteOpenHelper with a full path. Fallback to using separate
         // db files per profile in the app directory.
-        if (Build.VERSION.SDK_INT <= 8) {
+        if (isTest) {
+            return DATABASE_NAME;
+        } else if(Build.VERSION.SDK_INT <= 8) {
             return "browser-" + profile + ".db";
         }
 
@@ -662,7 +664,7 @@ public class BrowserProvider extends ContentProvider {
         if (uri != null)
             profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
 
-        return getDatabaseHelperForProfile(profile).getReadableDatabase();
+        return getDatabaseHelperForProfile(profile, isTest(uri)).getReadableDatabase();
     }
 
     private SQLiteDatabase getWritableDatabase(Uri uri) {
@@ -673,7 +675,7 @@ public class BrowserProvider extends ContentProvider {
         if (uri != null)
             profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
 
-        return getDatabaseHelperForProfile(profile).getWritableDatabase();
+        return getDatabaseHelperForProfile(profile, isTest(uri)).getWritableDatabase();
     }
 
     private void cleanupSomeDeletedRecords(Uri fromUri, Uri targetUri, String tableName) {
@@ -692,6 +694,9 @@ public class BrowserProvider extends ContentProvider {
         String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
         if (!TextUtils.isEmpty(profile))
             uriBuilder = uriBuilder.appendQueryParameter(BrowserContract.PARAM_PROFILE, profile);
+
+        if (isTest(fromUri))
+            uriBuilder = uriBuilder.appendQueryParameter(BrowserContract.PARAM_IS_TEST, "1");
 
         Uri uriWithArgs = uriBuilder.build();
 
@@ -723,6 +728,11 @@ public class BrowserProvider extends ContentProvider {
     private boolean isCallerSync(Uri uri) {
         String isSync = uri.getQueryParameter(BrowserContract.PARAM_IS_SYNC);
         return !TextUtils.isEmpty(isSync);
+    }
+
+    private boolean isTest(Uri uri) {
+        String isTest = uri.getQueryParameter(BrowserContract.PARAM_IS_TEST);
+        return !TextUtils.isEmpty(isTest);
     }
 
     private boolean shouldShowDeleted(Uri uri) {
