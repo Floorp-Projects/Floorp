@@ -185,6 +185,17 @@ MDefinition::foldsTo(bool useValueNumbers)
     return this;
 }
 
+MDefinition *
+MTest::foldsTo(bool useValueNumbers)
+{
+    MDefinition *op = getOperand(0);
+
+    if (op->isNot())
+        return MTest::New(op->toNot()->operand(), ifFalse(), ifTrue());
+
+    return this;
+}
+
 void
 MDefinition::printOpcode(FILE *fp)
 {

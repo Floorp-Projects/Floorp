@@ -186,49 +186,11 @@ bool
 CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
 {
     const ValueOperand value = ToValue(lir, LTestVAndBranch::Input);
-
-    Register tag = masm.splitTagForTest(value);
-
-    Assembler::Condition cond;
-
-    // Eventually we will want some sort of type filter here. For now, just
-    // emit all easy cases. For speed we use the cached tag for all comparison,
-    // except for doubles, which we test last (as the operation can clobber the
-    // tag, which may be in ScratchReg).
-    masm.branchTestUndefined(Assembler::Equal, tag, lir->ifFalse());
-
-    masm.branchTestNull(Assembler::Equal, tag, lir->ifFalse());
-    masm.branchTestObject(Assembler::Equal, tag, lir->ifTrue());
-
-    Label notBoolean;
-    masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-    masm.branchTestBooleanTruthy(false, value, lir->ifFalse());
-    masm.jump(lir->ifTrue());
-    masm.bind(&notBoolean);
-
-    Label notInt32;
-    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
-    cond = masm.testInt32Truthy(false, value);
-    masm.j(cond, lir->ifFalse());
-    masm.jump(lir->ifTrue());
-    masm.bind(&notInt32);
-
-    // Test if a string is non-empty.
-    Label notString;
-    masm.branchTestString(Assembler::NotEqual, tag, &notString);
-    cond = masm.testStringTruthy(false, value);
-    masm.j(cond, lir->ifFalse());
-    masm.jump(lir->ifTrue());
-    masm.bind(&notString);
-
-    // If we reach here the value is a double.
-    masm.unboxDouble(value, ToFloatRegister(lir->tempFloat()));
-    cond = masm.testDoubleTruthy(false, ToFloatRegister(lir->tempFloat()));
-    masm.j(cond, lir->ifFalse());
-    masm.jump(lir->ifTrue());
-
+    masm.branchTestValueTruthy(value, lir->ifTrue(), ToFloatRegister(lir->tempFloat()));
+    masm.jump(lir->ifFalse());
     return true;
 }
+
 
 bool
 CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32 *lir)
@@ -538,7 +500,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.adjustStack(unusedStack);
 
     // Push a Value containing the callee object: natives are allowed to access their callee before
-    // setting the return value. The StackPointer is moved to &vp[0].
+    // setitng the return value. The StackPointer is moved to &vp[0].
     masm.Push(ObjectValue(*target));
 
     // Preload arguments into registers.
@@ -1218,13 +1180,23 @@ CodeGenerator::visitSetInitializedLength(LSetInitializedLength *lir)
 }
 
 bool
-CodeGenerator::visitNotV(LNotV *ins)
+CodeGenerator::visitNotV(LNotV *lir)
 {
-    typedef bool (*pf)(JSContext *, const Value &, JSBool *);
-    static const VMFunction FValueToBooleanComplement = FunctionInfo<pf>(ValueToBooleanComplement);
+    Label setFalse;
+    Label join;
+    masm.branchTestValueTruthy(ToValue(lir, LNotV::Input), &setFalse, ToFloatRegister(lir->tempFloat()));
 
-    pushArg(ToValue(ins, LNotV::Input));
-    return callVM(FValueToBooleanComplement, ins);
+    // fallthrough to set true
+    masm.move32(Imm32(1), ToRegister(lir->getDef(0)));
+    masm.jump(&join);
+
+    // true case rediercts to setFalse
+    masm.bind(&setFalse);
+    masm.move32(Imm32(0), ToRegister(lir->getDef(0)));
+
+    // both branches meet here.
+    masm.bind(&join);
+    return true;
 }
 
 bool

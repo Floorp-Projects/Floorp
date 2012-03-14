@@ -903,6 +903,7 @@ class MTest
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    MDefinition *foldsTo(bool useValueNumbers);
 };
 
 // Returns from this function to the previous caller.
