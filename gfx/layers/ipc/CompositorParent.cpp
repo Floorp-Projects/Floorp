@@ -185,7 +185,7 @@ CompositorParent::Composite()
 
   mLastCompose = mozilla::TimeStamp::Now();
 
-  if (mPaused || !mLayerManager) {
+  if (mPaused || !mLayerManager || !mLayerManager->GetRoot()) {
     return;
   }
 
