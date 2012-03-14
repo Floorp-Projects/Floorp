@@ -81,6 +81,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "vm/StringBuffer.h"
 #include "js/MemoryMetrics.h"
 
 #include "jsarrayinlines.h"
@@ -91,7 +92,6 @@
 #include "jsscriptinlines.h"
 
 #include "vm/MethodGuard-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"

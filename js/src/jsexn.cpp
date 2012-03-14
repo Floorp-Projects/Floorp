@@ -65,13 +65,13 @@
 #include "jswrapper.h"
 
 #include "vm/GlobalObject.h"
+#include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 using namespace mozilla;
 using namespace js;

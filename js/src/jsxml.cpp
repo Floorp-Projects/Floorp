@@ -71,6 +71,7 @@
 #include "frontend/TokenStream.h"
 #include "vm/GlobalObject.h"
 #include "vm/MethodGuard.h"
+#include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -78,7 +79,6 @@
 
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 #ifdef DEBUG
 #include <string.h>     /* for #ifdef DEBUG memset calls */

@@ -39,14 +39,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "frontend/TokenStream.h"
-#include "vm/RegExpStatics.h"
 #include "vm/MatchPairs.h"
+#include "vm/RegExpStatics.h"
+#include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"
 
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using js::detail::RegExpCode;
