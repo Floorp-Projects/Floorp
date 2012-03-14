@@ -113,6 +113,7 @@ const ORION_ANNOTATION_TYPES = {
   breakpoint: "orion.annotation.breakpoint",
   task: "orion.annotation.task",
   currentLine: "orion.annotation.currentLine",
+  debugLocation: "mozilla.annotation.debugLocation",
 };
 
 /**
@@ -354,12 +355,7 @@ SourceEditor.prototype = {
         {styleClass: "ruler annotations"});
       this._annotationRuler.onClick = this._annotationRulerClick.bind(this);
       this._annotationRuler.addAnnotationType(ORION_ANNOTATION_TYPES.breakpoint);
-      this._annotationRuler.setMultiAnnotation({
-        html: "<div class='annotationHTML multiple'></div>"
-      });
-      this._annotationRuler.setMultiAnnotationOverlay({
-        html: "<div class='annotationHTML overlay'></div>"
-      });
+      this._annotationRuler.addAnnotationType(ORION_ANNOTATION_TYPES.debugLocation);
       this._view.addRuler(this._annotationRuler);
     }
 
@@ -385,6 +381,7 @@ SourceEditor.prototype = {
       this._overviewRuler.addAnnotationType(ORION_ANNOTATION_TYPES.matchingBracket);
       this._overviewRuler.addAnnotationType(ORION_ANNOTATION_TYPES.currentBracket);
       this._overviewRuler.addAnnotationType(ORION_ANNOTATION_TYPES.breakpoint);
+      this._overviewRuler.addAnnotationType(ORION_ANNOTATION_TYPES.debugLocation);
       this._overviewRuler.addAnnotationType(ORION_ANNOTATION_TYPES.task);
       this._view.addRuler(this._overviewRuler);
     }
@@ -911,6 +908,7 @@ SourceEditor.prototype = {
     styler.addAnnotationType(ORION_ANNOTATION_TYPES.matchingBracket);
     styler.addAnnotationType(ORION_ANNOTATION_TYPES.currentBracket);
     styler.addAnnotationType(ORION_ANNOTATION_TYPES.task);
+    styler.addAnnotationType(ORION_ANNOTATION_TYPES.debugLocation);
 
     if (this._config.highlightCurrentLine) {
       styler.addAnnotationType(ORION_ANNOTATION_TYPES.currentLine);
@@ -1690,6 +1688,65 @@ SourceEditor.prototype = {
   get readOnly()
   {
     return this._view.getOptions("readonly");
+  },
+
+  /**
+   * Set the current debugger location at the given line index. This is useful in
+   * a debugger or in any other context where the user needs to track the
+   * current state, where a debugger-like environment is at.
+   *
+   * @param number aLineIndex
+   *        Line index of the current debugger location, starting from 0.
+   *        Use any negative number to clear the current location.
+   */
+  setDebugLocation: function SE_setDebugLocation(aLineIndex)
+  {
+    let annotations = this._getAnnotationsByType("debugLocation", 0,
+                                                 this.getCharCount());
+    if (annotations.length > 0) {
+      annotations.forEach(this._annotationModel.removeAnnotation,
+                          this._annotationModel);
+    }
+    if (aLineIndex < 0) {
+      return;
+    }
+
+    let lineStart = this._model.getLineStart(aLineIndex);
+    let lineEnd = this._model.getLineEnd(aLineIndex);
+    let lineText = this._model.getLine(aLineIndex);
+    let title = SourceEditorUI.strings.
+                formatStringFromName("annotation.debugLocation.title",
+                                     [lineText], 1);
+
+    let annotation = {
+      type: ORION_ANNOTATION_TYPES.debugLocation,
+      start: lineStart,
+      end: lineEnd,
+      title: title,
+      style: {styleClass: "annotation debugLocation"},
+      html: "<div class='annotationHTML debugLocation'></div>",
+      overviewStyle: {styleClass: "annotationOverview debugLocation"},
+      rangeStyle: {styleClass: "annotationRange debugLocation"},
+      lineStyle: {styleClass: "annotationLine debugLocation"},
+    };
+    this._annotationModel.addAnnotation(annotation);
+  },
+
+  /**
+   * Retrieve the current debugger line index configured for this editor.
+   *
+   * @return number
+   *         The line index starting from 0 where the current debugger is
+   *         paused. If no debugger location has been set -1 is returned.
+   */
+  getDebugLocation: function SE_getDebugLocation()
+  {
+    let annotations = this._getAnnotationsByType("debugLocation", 0,
+                                                 this.getCharCount());
+    if (annotations.length > 0) {
+      return this._model.getLineAtOffset(annotations[0].start);
+    }
+    return -1;
   },
 
   /**

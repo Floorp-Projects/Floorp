@@ -62,6 +62,7 @@ _BROWSER_TEST_FILES = \
 		browser_bug700893_dirty_state.js \
 		browser_bug729480_line_vertical_align.js \
 		browser_bug725430_comment_uncomment.js \
+		browser_bug731721_debugger_stepping.js \
 		head.js \
 
 libs:: $(_BROWSER_TEST_FILES)
