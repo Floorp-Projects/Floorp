@@ -80,7 +80,7 @@ nsDOMSettableTokenList::SetValue(const nsAString& aValue)
 }
 
 JSObject*
-nsDOMSettableTokenList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+nsDOMSettableTokenList::WrapObject(JSContext *cx, JSObject *scope,
                                    bool *triedToWrap)
 {
   return mozilla::dom::binding::DOMSettableTokenList::create(cx, scope, this,

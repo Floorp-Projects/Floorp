@@ -210,7 +210,7 @@ private:
     static bool hasPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id);
 
 public:
-    static JSObject *create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *list,
+    static JSObject *create(JSContext *cx, JSObject *scope, ListType *list,
                             nsWrapperCache* cache, bool *triedToWrap);
 
     static JSObject *getPrototype(JSContext *cx, XPCWrappedNativeScope *scope, bool *enabled)
