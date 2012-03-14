@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Patrick Walton <pcwalton@mozilla.com>
+ *   Chris Lord <chrislord.net@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,40 +38,37 @@
 
 package org.mozilla.gecko.gfx;
 
-/**
- * A layer client provides tiles and manages other information used by the layer controller.
- */
-public abstract class LayerClient {
-    private LayerController mLayerController;
+import android.graphics.Rect;
 
-    public abstract void geometryChanged();
-    public abstract void viewportSizeChanged();
-    protected abstract void render();
-
-    public LayerController getLayerController() { return mLayerController; }
-    public void setLayerController(LayerController layerController) {
-        mLayerController = layerController;
+public class VirtualLayer extends Layer {
+    public VirtualLayer(IntSize size) {
+        super(size);
     }
 
-    /**
-     * A utility function for calling Layer.beginTransaction with the
-     * appropriate LayerView.
-     */
-    public void beginTransaction(Layer aLayer) {
-        if (mLayerController != null) {
-            LayerView view = mLayerController.getView();
-            if (view != null) {
-                aLayer.beginTransaction(view);
-                return;
-            }
-        }
-
-        aLayer.beginTransaction();
+    @Override
+    public void draw(RenderContext context) {
+        // No-op.
     }
 
-    // Included for symmetry.
-    public void endTransaction(Layer aLayer) {
-        aLayer.endTransaction();
+    void setPositionAndResolution(Rect newPosition, float newResolution) {
+        // This is an optimized version of the following code:
+        // beginTransaction();
+        // try {
+        //     setPosition(newPosition);
+        //     setResolution(newResolution);
+        //     performUpdates(null);
+        // } finally {
+        //     endTransaction();
+        // }
+
+        // it is safe to drop the transaction lock in this instance (i.e. for the
+        // VirtualLayer that is just a shadow of what gecko is painting) because
+        // the position and resolution of this layer are never used for anything
+        // meaningful.
+        // XXX The above is not true any more; the compositor uses these values
+        // in order to determine where to draw the checkerboard. The values are
+        // also used in LayerController's convertViewPointToLayerPoint function.
+        mPosition = newPosition;
+        mResolution = newResolution;
     }
 }
-

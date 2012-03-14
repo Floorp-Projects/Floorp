@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *   Patrick Walton <pcwalton@mozilla.com>
- *   Arkady Blyakher <rkadyb@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,39 +37,15 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.opengl.GLES20;
-import java.util.ArrayList;
+public class ViewTransform {
+    public float x;
+    public float y;
+    public float scale;
 
-/** Manages a list of dead tiles, so we don't leak resources. */
-public class TextureReaper {
-    private static TextureReaper sSharedInstance;
-    private ArrayList<Integer> mDeadTextureIDs;
-
-    private TextureReaper() { mDeadTextureIDs = new ArrayList<Integer>(); }
-
-    public static TextureReaper get() {
-        if (sSharedInstance == null)
-            sSharedInstance = new TextureReaper();
-        return sSharedInstance;
-    }
-
-    public void add(int[] textureIDs) {
-        for (int textureID : textureIDs)
-            add(textureID);
-    }
-
-    public void add(int textureID) {
-        mDeadTextureIDs.add(textureID);
-    }
-
-    public void reap() {
-        int[] deadTextureIDs = new int[mDeadTextureIDs.size()];
-        for (int i = 0; i < deadTextureIDs.length; i++)
-            deadTextureIDs[i] = mDeadTextureIDs.get(i);
-        mDeadTextureIDs.clear();
-
-        GLES20.glDeleteTextures(deadTextureIDs.length, deadTextureIDs, 0);
+    public ViewTransform(float inX, float inY, float inScale) {
+        x = inX;
+        y = inY;
+        scale = inScale;
     }
 }
-
 

@@ -182,6 +182,13 @@ public:
   void Scale(float aX, float aY, float aZ);
 
   /**
+   * Return the currently set scaling factors.
+   */
+  float GetXScale() const { return _11; }
+  float GetYScale() const { return _22; }
+  float GetZScale() const { return _33; }
+
+  /**
    * Rotate around the X axis..
    *
    * This creates this temporary matrix:

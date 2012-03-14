@@ -174,5 +174,71 @@ public:
 #endif
 };
 
+namespace mozilla {
+namespace gfx {
+
+/*
+ * Copyright 2008 The Android Open Source Project
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+// Some helper functions for power-of-two arithmetic
+// from Skia
+#if defined(__arm__)
+    #define CountLeadingZeroes(x) __builtin_clz(x)
+#else
+
+#define sub_shift(zeros, x, n)  \
+    zeros -= n;                 \
+    x >>= n
+
+static inline int CountLeadingZeroes(uint32_t aNumber)
+{
+    if (aNumber == 0) {
+        return 32;
+    }
+    int zeros = 31;
+    if (aNumber & 0xFFFF0000) {
+        sub_shift(zeros, aNumber, 16);
+    }
+    if (aNumber & 0xFF00) {
+        sub_shift(zeros, aNumber, 8);
+    }
+    if (aNumber & 0xF0) {
+        sub_shift(zeros, aNumber, 4);
+    }
+    if (aNumber & 0xC) {
+        sub_shift(zeros, aNumber, 2);
+    }
+    if (aNumber & 0x2) {
+        sub_shift(zeros, aNumber, 1);
+    }
+    return zeros;
+}
+#endif
+
+/**
+ * Returns true if |aNumber| is a power of two
+ */
+static inline bool
+IsPowerOfTwo(int aNumber)
+{
+    return (aNumber & (aNumber - 1)) == 0;
+}
+
+/**
+ * Returns the first integer greater than |aNumber| which is a power of two
+ * Undefined for |aNumber| < 0
+ */
+static inline int
+NextPowerOfTwo(int aNumber)
+{
+    return 1 << (32 - CountLeadingZeroes(aNumber - 1));
+}
+
+} // namespace gfx
+} // namespace mozilla
 
 #endif

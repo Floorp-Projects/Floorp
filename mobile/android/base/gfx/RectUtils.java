@@ -58,6 +58,16 @@ public final class RectUtils {
         }
     }
 
+    public static String toJSON(RectF rect) {
+        StringBuffer sb = new StringBuffer(256);
+        sb.append("{ \"left\": ").append(rect.left)
+          .append(", \"top\": ").append(rect.top)
+          .append(", \"right\": ").append(rect.right)
+          .append(", \"bottom\": ").append(rect.bottom)
+          .append('}');
+        return sb.toString();
+    }
+
     public static Rect contract(Rect rect, int lessWidth, int lessHeight) {
         float halfLessWidth = lessWidth / 2.0f;
         float halfLessHeight = lessHeight / 2.0f;

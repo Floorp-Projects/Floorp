@@ -47,12 +47,6 @@ namespace layers {
 
 static int colorId = 0;
 
-// This should be done in the printf but android's printf is buggy
-const char* colors[] = {
-    "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
-    "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"
-    };
-
 static gfx3DMatrix GetRootTransform(Layer *aLayer) {
   gfx3DMatrix layerTrans = aLayer->GetTransform().ProjectTo2D();
   if (aLayer->GetParent() != NULL) {
@@ -70,10 +64,13 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx3DMatrix aRoo
   gfxRect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
   trans.TransformBounds(rect);
 
-  printf_stderr("%s RENDERTRACE %u rect #%02X%s %i %i %i %i\n",
-    aLayer->Name(), (int)PR_IntervalNow(),
-    colorId, aColor,
-    (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+  if (strcmp(aLayer->Name(), "ContainerLayer") != 0 &&
+      strcmp(aLayer->Name(), "ShadowContainerLayer") != 0) {
+    printf_stderr("%s RENDERTRACE %u rect #%02X%s %i %i %i %i\n",
+      aLayer->Name(), (int)PR_IntervalNow(),
+      colorId, aColor,
+      (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+  }
 
   colorId++;
 
@@ -98,6 +95,20 @@ void RenderTraceInvalidateStart(Layer *aLayer, const char *aColor, const nsIntRe
 void RenderTraceInvalidateEnd(Layer *aLayer, const char *aColor) {
   // Clear with an empty rect
   RenderTraceInvalidateStart(aLayer, aColor, nsIntRect());
+}
+
+void renderTraceEventStart(const char *aComment, const char *aColor) {
+  printf_stderr("%s RENDERTRACE %u fillrect #%s 0 0 10 10\n",
+    aComment, (int)PR_IntervalNow(), aColor);
+}
+
+void renderTraceEventEnd(const char *aComment, const char *aColor) {
+  printf_stderr("%s RENDERTRACE %u fillrect #%s 0 0 0 0\n",
+    aComment, (int)PR_IntervalNow(), aColor);
+}
+
+void renderTraceEventEnd(const char *aColor) {
+  renderTraceEventEnd("", aColor);
 }
 
 }

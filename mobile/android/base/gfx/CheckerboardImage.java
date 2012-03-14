@@ -79,7 +79,11 @@ public class CheckerboardImage extends CairoImage {
         checkerboard image that is tinted to the color. Otherwise just return a flat
         image of the color. */
     public void update(boolean showChecks, int color) {
-        mMainColor = color;
+        // XXX We don't handle setting the color to white (-1),
+        //     there a bug somewhere but I'm not sure where,
+        //     let's hardcode the color for now to black and come back and fix it.
+        //mMainColor = color;
+        mMainColor = 0;
         mShowChecks = showChecks;
 
         short mainColor16 = convertTo16Bit(mMainColor);

@@ -57,8 +57,8 @@ TelephonyCall::Create(Telephony* aTelephony, const nsAString& aNumber,
 
   nsRefPtr<TelephonyCall> call = new TelephonyCall();
 
-  call->mOwner = aTelephony->Owner();
-  call->mScriptContext = aTelephony->ScriptContext();
+  call->BindToOwner(aTelephony->GetOwner());
+
   call->mTelephony = aTelephony;
   call->mNumber = aNumber;
   call->mCallIndex = aCallIndex;
