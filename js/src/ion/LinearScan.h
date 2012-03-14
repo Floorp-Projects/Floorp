@@ -605,10 +605,17 @@ class LinearScanAllocator
 
     // Run-time state
     UnhandledQueue unhandled;
+
+    // Active/inactive intervals, allocation is a register.
     InlineList<LiveInterval> active;
     InlineList<LiveInterval> inactive;
+
+    // Active intervals using a stack slot.
+    InlineList<LiveInterval> activeSlots;
     InlineList<LiveInterval> fixed;
+#ifdef DEBUG
     InlineList<LiveInterval> handled;
+#endif
     LiveInterval *current;
 
     bool createDataStructures();
@@ -626,7 +633,7 @@ class LinearScanAllocator
     bool splitBlockingIntervals(LAllocation allocation);
     bool assign(LAllocation allocation);
     bool spill();
-    void freeAllocation(LiveInterval *interval, LAllocation *alloc);
+    void freeCanonicalSpillSlot(LiveInterval *interval);
     void finishInterval(LiveInterval *interval);
     AnyRegister::Code findBestFreeRegister(CodePosition *freeUntil);
     AnyRegister::Code findBestBlockedRegister(CodePosition *nextUsed);
