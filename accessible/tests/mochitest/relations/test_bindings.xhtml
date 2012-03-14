@@ -1,0 +1,103 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>Accessible relations for bindings</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style>
+    .button {
+      -moz-binding: url('#custombutton');
+    }
+
+    .button2 {
+      -moz-binding: url('#custombutton2');
+    }
+  </style>
+
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="custombutton">
+      <content aria-labelledby="button.label label">
+        <label xmlns="http://www.w3.org/1999/xhtml" anonid="button.label">
+          anon label
+        </label>
+        <button xmlns="http://www.w3.org/1999/xhtml" anonid="button.button"
+                aria-labelledby="button.label label">
+          a button
+        </button>
+        <div xmlns="http://www.w3.org/1999/xhtml"
+             anonid="button.button2" class="button2"
+             aria-labelledby="button.label"></div>
+        <div xmlns="http://www.w3.org/1999/xhtml"
+             anonid="button.button3" class="button2"></div>
+      </content>
+    </binding>
+    <binding id="custombutton2">
+      <content aria-labelledby="button2.label">
+        <label xmlns="http://www.w3.org/1999/xhtml" anonid="button2.label">
+          nested anon label
+        </label>
+      </content>
+    </binding>
+  </bindings>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+
+  <script type="application/javascript">
+    function doTests()
+    {
+      var button = document.getElementById("button");
+      var anonLabel = document.
+        getAnonymousElementByAttribute(button, "anonid", "button.label");
+      var anonButton = document.
+        getAnonymousElementByAttribute(button, "anonid", "button.button");
+      var anonButton2 = document.
+        getAnonymousElementByAttribute(button, "anonid", "button.button2");
+      var anonButton3 = document.
+        getAnonymousElementByAttribute(button, "anonid", "button.button3");
+      var anonAnonLabel = document.
+        getAnonymousElementByAttribute(anonButton3, "anonid", "button2.label");
+
+      testRelation("label", RELATION_LABEL_FOR, button);
+      testRelation(anonLabel, RELATION_LABEL_FOR, [button, anonButton, anonButton2]);
+      testRelation(button, RELATION_LABELLED_BY, [anonLabel, "label"]);
+      testRelation(anonButton, RELATION_LABELLED_BY, anonLabel);
+      testRelation(anonButton2, RELATION_LABELLED_BY, anonLabel);
+      testRelation(anonButton3, RELATION_LABELLED_BY, anonAnonLabel);
+      testRelation(anonAnonLabel, RELATION_LABEL_FOR, anonButton3);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=421242"
+     title="Allow relations in anonymous content for binding parent">
+    Mozilla Bug 421242
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <label id="label">explicit label</label>
+  <div id="button" class="button"></div>
+</body>
+</html>
