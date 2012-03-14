@@ -185,6 +185,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallSetProperty(LInstruction *ins);
 
     ConstantOrRegister getSetPropertyValue(LInstruction *ins);
+    bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);
 };
 
 } // namespace ion

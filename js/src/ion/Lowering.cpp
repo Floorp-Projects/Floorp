@@ -1042,10 +1042,10 @@ LIRGenerator::visitNot(MNot *ins)
       case MIRType_Object:
         return define(new LInteger(0), ins);
       case MIRType_Value: {
-        LNotV *lir = new LNotV;
+          LNotV *lir = new LNotV(tempFloat());
         if (!useBox(lir, LNotV::Input, op))
             return false;
-        return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+        return define(lir, ins);
       }
 
       default:

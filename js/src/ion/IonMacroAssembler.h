@@ -243,6 +243,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         PopRegsInMask(RegisterSet(set, FloatRegisterSet()));
     }
 
+    void branchTestValueTruthy(const ValueOperand &value, Label *ifTrue, FloatRegister fr);
+
     using MacroAssemblerSpecific::Push;
 
     void Push(TypedOrValueRegister v) {
