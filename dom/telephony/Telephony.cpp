@@ -58,6 +58,7 @@
 #include "TelephonyCall.h"
 
 USING_TELEPHONY_NAMESPACE
+using namespace mozilla::dom::gonk;
 using mozilla::Preferences;
 
 #define DOM_TELEPHONY_APP_PHONE_URL_PREF "dom.telephony.app.phone.url"

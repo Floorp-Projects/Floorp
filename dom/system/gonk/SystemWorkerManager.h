@@ -40,14 +40,20 @@
 #ifndef mozilla_dom_system_b2g_systemworkermanager_h__
 #define mozilla_dom_system_b2g_systemworkermanager_h__
 
-#include "TelephonyCommon.h"
-
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsDOMEventTargetHelper.h"
+#include "nsStringGlue.h"
+#include "nsTArray.h"
 
 class nsIWorkerHolder;
 
-BEGIN_TELEPHONY_NAMESPACE
+namespace mozilla {
+namespace dom {
+namespace gonk {
 
 class SystemWorkerManager : public nsIObserver,
                             public nsIInterfaceRequestor
@@ -79,6 +85,8 @@ private:
   bool mShutdown;
 };
 
-END_TELEPHONY_NAMESPACE
+}
+}
+}
 
 #endif // mozilla_dom_system_b2g_systemworkermanager_h__
