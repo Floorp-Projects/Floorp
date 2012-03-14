@@ -78,7 +78,7 @@ function testRelation(aIdentifier, aRelType, aRelatedIdentifiers)
       }
     }
 
-    ok(isFound, relatedIds[idx] + " is not a target of" + relDescr);
+    ok(isFound, prettyName(relatedIds[idx]) + " is not a target of" + relDescr);
   }
 
   // Check if all obtained targets are given related accessibles.

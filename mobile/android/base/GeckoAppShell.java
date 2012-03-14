@@ -126,6 +126,15 @@ public class GeckoAppShell
      * sVibrationMaybePlaying is true. */
     private static long sVibrationEndTime = 0;
 
+    /* Default value of how fast we should hint the Android sensors. */
+    private static int sDefaultSensorHint = 100;
+
+    private static Sensor gAccelerometerSensor = null;
+    private static Sensor gLinearAccelerometerSensor = null;
+    private static Sensor gGyroscopeSensor = null;
+    private static Sensor gOrientationSensor = null;
+    private static Sensor gProximitySensor = null;
+
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
@@ -533,31 +542,6 @@ public class GeckoAppShell
             tmp.countDown();
     }
 
-    static Sensor gAccelerometerSensor = null;
-    static Sensor gOrientationSensor = null;
-
-    public static void enableDeviceMotion(boolean enable) {
-        LayerView v = GeckoApp.mAppContext.getLayerController().getView();
-        SensorManager sm = (SensorManager) v.getContext().getSystemService(Context.SENSOR_SERVICE);
-
-        if (gAccelerometerSensor == null || gOrientationSensor == null) {
-            gAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            gOrientationSensor   = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-        }
-
-        if (enable) {
-            if (gAccelerometerSensor != null)
-                sm.registerListener(GeckoApp.mAppContext, gAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
-            if (gOrientationSensor != null)
-                sm.registerListener(GeckoApp.mAppContext, gOrientationSensor,   SensorManager.SENSOR_DELAY_GAME);
-        } else {
-            if (gAccelerometerSensor != null)
-                sm.unregisterListener(GeckoApp.mAppContext, gAccelerometerSensor);
-            if (gOrientationSensor != null)
-                sm.unregisterListener(GeckoApp.mAppContext, gOrientationSensor);
-        }
-    }
-
     public static void enableLocation(final boolean enable) {
         getMainHandler().post(new Runnable() { 
                 public void run() {
@@ -585,26 +569,46 @@ public class GeckoAppShell
             });
     }
 
-    /*
-     * Keep these values consistent with |SensorType| in Hal.h
-     */
-    private static final int SENSOR_ORIENTATION = 1;
-    private static final int SENSOR_ACCELERATION = 2;
-    private static final int SENSOR_PROXIMITY = 3;
-
-    private static Sensor gProximitySensor = null;
-
     public static void enableSensor(int aSensortype) {
         SensorManager sm = (SensorManager)
             GeckoApp.mAppContext.getSystemService(Context.SENSOR_SERVICE);
 
         switch(aSensortype) {
-        case SENSOR_PROXIMITY:
+        case GeckoHalDefines.SENSOR_ORIENTATION:
+            if(gOrientationSensor == null)
+                gOrientationSensor = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+            if (gOrientationSensor != null)
+                sm.registerListener(GeckoApp.mAppContext, gOrientationSensor, sDefaultSensorHint);
+            break;
+
+        case GeckoHalDefines.SENSOR_ACCELERATION:
+            if(gAccelerometerSensor == null)
+                gAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            if (gAccelerometerSensor != null)
+                sm.registerListener(GeckoApp.mAppContext, gAccelerometerSensor, sDefaultSensorHint);
+            break;
+
+        case GeckoHalDefines.SENSOR_PROXIMITY:
             if(gProximitySensor == null)
                 gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-            sm.registerListener(GeckoApp.mAppContext, gProximitySensor,
-                                SensorManager.SENSOR_DELAY_GAME);
+            if (gProximitySensor != null)
+                sm.registerListener(GeckoApp.mAppContext, gProximitySensor, sDefaultSensorHint);
             break;
+
+        case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
+            if(gLinearAccelerometerSensor == null)
+                gLinearAccelerometerSensor = sm.getDefaultSensor(10);
+            if (gLinearAccelerometerSensor != null)
+                sm.registerListener(GeckoApp.mAppContext, gLinearAccelerometerSensor, sDefaultSensorHint);
+            break;
+
+        case GeckoHalDefines.SENSOR_GYROSCOPE:
+            if(gGyroscopeSensor == null)
+                gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            if (gGyroscopeSensor != null)
+                sm.registerListener(GeckoApp.mAppContext, gGyroscopeSensor, sDefaultSensorHint);
+            break;
+
         }
     }
 
@@ -612,9 +616,30 @@ public class GeckoAppShell
         SensorManager sm = (SensorManager)
             GeckoApp.mAppContext.getSystemService(Context.SENSOR_SERVICE);
 
-        switch(aSensortype) {
-        case SENSOR_PROXIMITY:
-            sm.unregisterListener(GeckoApp.mAppContext, gProximitySensor);
+        switch (aSensortype) {
+        case GeckoHalDefines.SENSOR_ORIENTATION:
+            if (gOrientationSensor != null)
+                sm.unregisterListener(GeckoApp.mAppContext, gOrientationSensor);
+            break;
+
+        case GeckoHalDefines.SENSOR_ACCELERATION:
+            if (gAccelerometerSensor != null)
+                sm.unregisterListener(GeckoApp.mAppContext, gAccelerometerSensor);
+            break;
+
+        case GeckoHalDefines.SENSOR_PROXIMITY:
+            if (gProximitySensor != null)
+                sm.unregisterListener(GeckoApp.mAppContext, gProximitySensor);
+            break;
+
+        case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
+            if (gLinearAccelerometerSensor != null)
+                sm.unregisterListener(GeckoApp.mAppContext, gLinearAccelerometerSensor);
+            break;
+
+        case GeckoHalDefines.SENSOR_GYROSCOPE:
+            if (gGyroscopeSensor != null)
+                sm.unregisterListener(GeckoApp.mAppContext, gGyroscopeSensor);
             break;
         }
     }

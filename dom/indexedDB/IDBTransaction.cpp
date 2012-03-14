@@ -532,7 +532,7 @@ IDBTransaction::GetMode(nsAString& aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  switch(mMode) {
+  switch (mMode) {
     case READ_ONLY:
       aMode.AssignLiteral("readonly");
       break;
