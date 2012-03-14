@@ -187,7 +187,8 @@ enum eStateMapEntryID
   eARIAReadonly,
   eARIAReadonlyOrEditable,
   eARIARequired,
-  eARIASelectable
+  eARIASelectable,
+  eReadonlyUntilEditable
 };
 
 class nsStateMapEntry
@@ -197,6 +198,12 @@ public:
    * Used to create stub.
    */
   nsStateMapEntry();
+
+  /**
+   * Used to expose permanent states presented until accessible has an excluding
+   * state.
+   */
+  nsStateMapEntry(PRUint64 aDefaultState, PRUint64 aExclusingState);
 
   /**
    * Used for ARIA attributes having boolean or mixed values.
@@ -260,6 +267,9 @@ private:
 
   // Permanent and false states are applied if attribute is absent
   bool mDefinedIfAbsent;
+
+  // If this state is presented in state bits then default state is not exposed.
+  PRUint64 mExcludingState;
 };
 
 

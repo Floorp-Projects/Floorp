@@ -168,11 +168,8 @@ nsHyperTextAccessible::NativeState()
 
   nsCOMPtr<nsIEditor> editor = GetEditor();
   if (editor) {
-    PRUint32 flags;
-    editor->GetFlags(&flags);
-    if (0 == (flags & nsIPlaintextEditor::eEditorReadonlyMask)) {
-      states |= states::EDITABLE;
-    }
+    states |= states::EDITABLE;
+
   } else if (mContent->Tag() == nsGkAtoms::article) {
     // We want <article> to behave like a document in terms of readonly state.
     states |= states::READONLY;
