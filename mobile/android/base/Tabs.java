@@ -149,7 +149,6 @@ public class Tabs implements GeckoEventListener {
 
         // Pass a message to Gecko to update tab state in BrowserApp
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Selected", String.valueOf(tab.getId())));
-        GeckoApp.mAppContext.getAsyncThumbnailForTab(tab, true);
         return selectedTab = tab;
     }
 
@@ -311,7 +310,7 @@ public class Tabs implements GeckoEventListener {
             final Tab tab = iterator.next();
             GeckoAppShell.getHandler().post(new Runnable() {
                 public void run() {
-                    GeckoApp.mAppContext.getAsyncThumbnailForTab(tab, false);
+                    GeckoApp.mAppContext.getAndProcessThumbnailForTab(tab, false);
                 }
             });
         }
