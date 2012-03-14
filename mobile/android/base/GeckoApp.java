@@ -2456,12 +2456,17 @@ abstract public class GeckoApp
         }
     }
 
-    private String mImageFilePath = "";
-    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
-
-    public String showFilePicker(String aMimeType) {
+    private Intent getFilePickerIntent(String aMimeType) {
         ArrayList<Intent> intents = new ArrayList<Intent>();
         PromptService.PromptListItem[] items = getItemsAndIntentsForFilePicker(aMimeType, intents);
+
+        if (intents.size() == 0) {
+            Log.i(LOGTAG, "no activities for the file picker!");
+            return null;
+        }
+
+        if (intents.size() == 1)
+            return intents.get(0);
 
         GeckoAppShell.getHandler().post(new FilePickerPromptRunnable(getFilePickerTitle(aMimeType), items));
 
@@ -2470,7 +2475,7 @@ abstract public class GeckoApp
             promptServiceResult = PromptService.waitForReturn();
         } catch (InterruptedException e) {
             Log.e(LOGTAG, "showing prompt failed: ",  e);
-            return "";
+            return null;
         }
 
         int itemId = -1;
@@ -2478,14 +2483,25 @@ abstract public class GeckoApp
             itemId = new JSONObject(promptServiceResult).getInt("button");
 
             if (itemId == -1) {
-                return "";
+                return null;
             }
         } catch (org.json.JSONException e) {
             Log.e(LOGTAG, "result from promptservice was invalid: ", e);
-            return "";
+            return null;
         }
 
-        Intent intent = intents.get(itemId);
+        return intents.get(itemId);
+    }
+
+    private String mImageFilePath = "";
+    private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
+
+    public String showFilePicker(String aMimeType) {
+        Intent intent = getFilePickerIntent(aMimeType);
+
+        if (intent == null) {
+            return "";
+        }
 
         if (intent.getAction().equals(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)) {
             startActivityForResult(intent, CAMERA_IMAGE_CAPTURE_REQUEST);
