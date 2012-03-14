@@ -748,7 +748,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
   }
 
   return rv;
-#elif defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
+#elif (defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)) && defined(MOZ_X11)
   // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
   nsIWidget* win = mObjectFrame->GetNearestWidget();
   if (!win)
