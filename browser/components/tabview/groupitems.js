@@ -234,10 +234,12 @@ function GroupItem(listOfEls, options) {
     .addClass("appTabTray")
     .appendTo(appTabTrayContainer);
 
-  AllTabs.tabs.forEach(function(xulTab) {
+  let pinnedTabCount = gBrowser._numPinnedTabs;
+  AllTabs.tabs.forEach(function (xulTab, index) {
+    // only adjust tray when it's the last app tab.
     if (xulTab.pinned)
-      self.addAppTab(xulTab, {dontAdjustTray: true});
-  });
+      this.addAppTab(xulTab, {dontAdjustTray: index + 1 < pinnedTabCount});
+  }, this);
 
   // ___ Undo Close
   this.$undoContainer = null;
@@ -758,7 +760,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
 
       UI.setActive(self);
-      self._sendToSubscribers("groupShown", { groupItemId: self.id });
+      self._sendToSubscribers("groupShown");
     };
 
     let $container = iQ(this.container).show();
@@ -927,7 +929,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         easing: "tabviewBounce",
         duration: 170,
         complete: function() {
-          self._sendToSubscribers("groupHidden", { groupItemId: self.id });
+          self._sendToSubscribers("groupHidden");
         }
       });
     }, 50);
@@ -1052,7 +1054,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         this.arrange({animate: !options.immediately});
 
       this._unfreezeItemSize({dontArrange: true});
-      this._sendToSubscribers("childAdded",{ groupItemId: this.id, item: item });
+      this._sendToSubscribers("childAdded", { item: item });
 
       UI.setReorderTabsOnHide(this);
     } catch(e) {
@@ -1155,7 +1157,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         this._unfreezeItemSize({dontArrange: true});
       }
 
-      this._sendToSubscribers("childRemoved",{ groupItemId: this.id, item: item });
+      this._sendToSubscribers("childRemoved", { item: item });
     } catch(e) {
       Utils.log(e);
     }
@@ -1181,36 +1183,46 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Adds the given xul:tab as an app tab in this group's apptab tray
   //
   // Parameters:
+  //   xulTab - the xul:tab.
   //   options - change how the app tab is added.
   //
   // Options:
-  //   dontAdjustTray - (boolean) if true, the $appTabTray size is not adjusted,
-  //                    which means that the adjustAppTabTray() method is not
-  //                    called.
+  //   position - the position of the app tab should be added to.
+  //   dontAdjustTray - (boolean) if true, do not adjust the tray.
   addAppTab: function GroupItem_addAppTab(xulTab, options) {
-    let self = this;
+    GroupItems.getAppTabFavIconUrl(xulTab, function(iconUrl) {
+      let self = this;
+      let $appTab = iQ("<img>")
+        .addClass("appTabIcon")
+        .attr("src", iconUrl)
+        .data("xulTab", xulTab)
+        .mousedown(function GroupItem_addAppTab_onAppTabMousedown(event) {
+          // stop mousedown propagation to disable group dragging on app tabs
+          event.stopPropagation();
+        })
+        .click(function GroupItem_addAppTab_onAppTabClick(event) {
+          if (!Utils.isLeftClick(event))
+            return;
 
-    let iconUrl = GroupItems.getAppTabFavIconUrl(xulTab);
-    let $appTab = iQ("<img>")
-      .addClass("appTabIcon")
-      .attr("src", iconUrl)
-      .data("xulTab", xulTab)
-      .appendTo(this.$appTabTray)
-      .mousedown(function onAppTabMousedown(event) {
-        // stop mousedown propagation to disable group dragging on app tabs
-        event.stopPropagation();
-      })
-      .click(function(event) {
-        if (!Utils.isLeftClick(event))
-          return;
+          UI.setActive(self, { dontSetActiveTabInGroup: true });
+          UI.goToTab(iQ(this).data("xulTab"));
+        });
 
-        UI.setActive(self, { dontSetActiveTabInGroup: true });
-        UI.goToTab(iQ(this).data("xulTab"));
-      });
+      if (options && "position" in options) {
+        let children = this.$appTabTray[0].childNodes;
 
-    // adjust the tray, if needed.
-    if (!options || !options.dontAdjustTray)
-      this.adjustAppTabTray(true);
+        if (options.position >= children.length)
+          $appTab.appendTo(this.$appTabTray);
+        else
+          this.$appTabTray[0].insertBefore($appTab[0], children[options.position]);
+      } else {
+        $appTab.appendTo(this.$appTabTray);
+      }
+      if (!options || !options.dontAdjustTray)
+        this.adjustAppTabTray(true);
+
+      this._sendToSubscribers("appTabIconAdded", { item: $appTab });
+    }.bind(this));
   },
 
   // ----------
@@ -2078,16 +2090,11 @@ let GroupItems = {
     if (!xulTab.pinned)
       return;
 
-    let iconUrl = this.getAppTabFavIconUrl(xulTab);
-    this.groupItems.forEach(function(groupItem) {
-      iQ(".appTabIcon", groupItem.$appTabTray).each(function(icon) {
-        let $icon = iQ(icon);
-        if ($icon.data("xulTab") != xulTab)
-          return true;
-
-        if (iconUrl != $icon.attr("src"))
-          $icon.attr("src", iconUrl);
-        return false;
+    this.getAppTabFavIconUrl(xulTab, function(iconUrl) {
+      iQ(".appTabIcon").each(function GroupItems__updateAppTabIcons_forEach(icon) {
+         let $icon = iQ(icon);
+         if ($icon.data("xulTab") == xulTab && iconUrl != $icon.attr("src"))
+           $icon.attr("src", iconUrl);
       });
     });
   },
@@ -2095,15 +2102,10 @@ let GroupItems = {
   // ----------
   // Function: getAppTabFavIconUrl
   // Gets the fav icon url for app tab.
-  getAppTabFavIconUrl: function GroupItems_getAppTabFavIconUrl(xulTab) {
-    let iconUrl;
-
-    if (UI.shouldLoadFavIcon(xulTab.linkedBrowser))
-      iconUrl = UI.getFavIconUrlForTab(xulTab);
-    else
-      iconUrl = gFavIconService.defaultFavicon.spec;
-
-    return iconUrl;
+  getAppTabFavIconUrl: function GroupItems_getAppTabFavIconUrl(xulTab, callback) {
+    UI.getFavIconUrlForTab(xulTab, function GroupItems_getAppTabFavIconUrl_getFavIconUrlForTab(iconUrl) {
+      callback(iconUrl || gFavIconService.defaultFavicon.spec);
+    });
   },
 
   // ----------
