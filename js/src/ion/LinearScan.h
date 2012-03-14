@@ -280,6 +280,7 @@ class LiveInterval
     { }
 
     bool addRange(CodePosition from, CodePosition to);
+    bool addRangeAtHead(CodePosition from, CodePosition to);
     void setFrom(CodePosition from);
     CodePosition intersect(LiveInterval *other);
     bool covers(CodePosition pos);
@@ -366,6 +367,10 @@ class LiveInterval
     UsePositionIterator usesEnd() const {
         return uses_.end();
     }
+
+#ifdef DEBUG
+    void validateRanges();
+#endif
 };
 
 /*
@@ -677,17 +682,20 @@ class LinearScanAllocator
     size_t findFirstSafepoint(LiveInterval *interval, size_t firstSafepoint);
     size_t findFirstNonCallSafepoint(CodePosition from);
 
-    void addFixedRange(AnyRegister reg, CodePosition from, CodePosition to) {
-        fixedIntervals[reg.code()]->addRange(from, to);
-        fixedIntervalsUnion->addRange(from, to);
+    bool addFixedRangeAtHead(AnyRegister reg, CodePosition from, CodePosition to) {
+        if (!fixedIntervals[reg.code()]->addRangeAtHead(from, to))
+            return false;
+        return fixedIntervalsUnion->addRangeAtHead(from, to);
     }
 
 #ifdef DEBUG
     void validateIntervals();
     void validateAllocations();
+    void validateVirtualRegisters();
 #else
     inline void validateIntervals() { };
     inline void validateAllocations() { };
+    inline void validateVirtualRegisters() { };
 #endif
 
     CodePosition outputOf(uint32 pos) {

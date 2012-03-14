@@ -117,9 +117,38 @@ Requirement::priority() const
 }
 
 bool
+LiveInterval::addRangeAtHead(CodePosition from, CodePosition to)
+{
+    JS_ASSERT(from < to);
+
+    Range newRange(from, to);
+
+    if (ranges_.empty())
+        return ranges_.append(newRange);
+
+    Range &first = ranges_.back();
+    if (to < first.from)
+        return ranges_.append(newRange);
+
+    if (to == first.from) {
+        first.from = from;
+        return true;
+    }
+
+    JS_ASSERT(from < first.to);
+    JS_ASSERT(to > first.from);
+    if (from < first.from)
+        first.from = from;
+    if (to > first.to)
+        first.to = to;
+
+    return true;
+}
+
+bool
 LiveInterval::addRange(CodePosition from, CodePosition to)
 {
-    JS_ASSERT(from <= to);
+    JS_ASSERT(from < to);
 
     Range newRange(from, to);
 
@@ -516,8 +545,11 @@ LinearScanAllocator::buildLivenessInfo()
         // Variables are assumed alive for the entire block, a define shortens
         // the interval to the point of definition.
         for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
-            vregs[*liveRegId].getInterval(0)->addRange(inputOf(block->firstId()),
-                                                       outputOf(block->lastId()).next());
+            if (!vregs[*liveRegId].getInterval(0)->addRangeAtHead(inputOf(block->firstId()),
+                                                                  outputOf(block->lastId()).next()))
+            {
+                return false;
+            }
         }
 
         // Shorten the front end of live intervals for live variables to their
@@ -525,8 +557,10 @@ LinearScanAllocator::buildLivenessInfo()
         for (LInstructionReverseIterator ins = block->rbegin(); ins != block->rend(); ins++) {
             // Calls may clobber registers, so force a spill and reload around the callsite.
             if (ins->isCall()) {
-                for (AnyRegisterIterator iter(RegisterSet::All()); iter.more(); iter++)
-                    addFixedRange(*iter, inputOf(*ins), outputOf(*ins));
+                for (AnyRegisterIterator iter(RegisterSet::All()); iter.more(); iter++) {
+                    if (!addFixedRangeAtHead(*iter, inputOf(*ins), outputOf(*ins)))
+                        return false;
+                }
             }
 
             for (size_t i = 0; i < ins->numDefs(); i++) {
@@ -539,7 +573,8 @@ LinearScanAllocator::buildLivenessInfo()
                         // for the virtual register starts at the next instruction. The
                         // next instruction is an LNop so this is fine.
                         AnyRegister reg = def->output()->toRegister();
-                        addFixedRange(reg, inputOf(*ins), outputOf(*ins).next());
+                        if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins).next()))
+                            return false;
                         from = outputOf(*ins).next();
                     } else {
                         from = inputOf(*ins);
@@ -550,8 +585,10 @@ LinearScanAllocator::buildLivenessInfo()
 
                     // Ensure that if there aren't any uses, there's at least
                     // some interval for the output to go into.
-                    if (interval->numRanges() == 0)
-                        interval->addRange(from, from.next());
+                    if (interval->numRanges() == 0) {
+                        if (!interval->addRangeAtHead(from, from.next()))
+                            return false;
+                    }
                     live->remove(def->virtualRegister());
                 }
             }
@@ -565,10 +602,14 @@ LinearScanAllocator::buildLivenessInfo()
                     continue;
                 }
 
-                if (temp->policy() == LDefinition::PRESET)
-                    addFixedRange(temp->output()->toRegister(), inputOf(*ins), outputOf(*ins));
-                else
-                    vregs[temp].getInterval(0)->addRange(inputOf(*ins), outputOf(*ins));
+                if (temp->policy() == LDefinition::PRESET) {
+                    AnyRegister reg = temp->output()->toRegister();
+                    if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins)))
+                        return false;
+                } else {
+                    if (!vregs[temp].getInterval(0)->addRangeAtHead(inputOf(*ins), outputOf(*ins)))
+                        return false;
+                }
             }
 
             for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next()) {
@@ -582,7 +623,8 @@ LinearScanAllocator::buildLivenessInfo()
                     if (use->isFixedRegister()) {
                         JS_ASSERT(!use->usedAtStart());
                         AnyRegister reg = GetFixedRegister(vregs[use].def(), use);
-                        addFixedRange(reg, inputOf(*ins), outputOf(*ins));
+                        if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins)))
+                            return false;
                         to = inputOf(*ins);
                     } else {
                         // Call instruction operands default to at-start, since the
@@ -594,7 +636,8 @@ LinearScanAllocator::buildLivenessInfo()
                     }
 
                     LiveInterval *interval = vregs[use].getInterval(0);
-                    interval->addRange(inputOf(block->firstId()), to);
+                    if (!interval->addRangeAtHead(inputOf(block->firstId()), to))
+                        return false;
                     interval->addUse(new UsePosition(use, to));
 
                     live->insert(use->virtualRegister());
@@ -612,8 +655,11 @@ LinearScanAllocator::buildLivenessInfo()
             } else {
                 // This is a dead phi, so add a dummy range over all phis. This
                 // can go away if we have an earlier dead code elimination pass.
-                vregs[def].getInterval(0)->addRange(inputOf(block->firstId()),
-                                                    outputOf(block->firstId()));
+                if (!vregs[def].getInterval(0)->addRangeAtHead(inputOf(block->firstId()),
+                                                               outputOf(block->firstId())))
+                {
+                    return false;
+                }
             }
         }
 
@@ -629,9 +675,12 @@ LinearScanAllocator::buildLivenessInfo()
                 JS_ASSERT(loopBlock->id() >= mblock->id());
 
                 // Add an interval for this entire loop block
+                CodePosition from = inputOf(loopBlock->lir()->firstId());
+                CodePosition to = outputOf(loopBlock->lir()->lastId()).next();
+
                 for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
-                    vregs[*liveRegId].getInterval(0)->addRange(inputOf(loopBlock->lir()->firstId()),
-                                                               outputOf(loopBlock->lir()->lastId()).next());
+                    if (!vregs[*liveRegId].getInterval(0)->addRange(from, to))
+                        return false;
                 }
 
                 // Fix up the liveIn set to account for the new interval
@@ -670,12 +719,17 @@ LinearScanAllocator::buildLivenessInfo()
         JS_ASSERT_IF(!mblock->numPredecessors(), live->empty());
     }
 
+    validateVirtualRegisters();
+
     // If the script has an infinite loop, there may be no MReturn and therefore
     // no fixed intervals. Add a small range to fixedIntervalsUnion so that the
     // rest of the allocator can assume it has at least one range.
     if (fixedIntervalsUnion->numRanges() == 0) {
-        fixedIntervalsUnion->addRange(CodePosition(0, CodePosition::INPUT),
-                                      CodePosition(0, CodePosition::OUTPUT));
+        if (!fixedIntervalsUnion->addRangeAtHead(CodePosition(0, CodePosition::INPUT),
+                                                 CodePosition(0, CodePosition::OUTPUT)))
+        {
+            return false;
+        }
     }
 
     return true;
@@ -875,6 +929,7 @@ LinearScanAllocator::allocateRegisters()
     }
 
     validateAllocations();
+    validateVirtualRegisters();
 
     return true;
 }
@@ -1866,7 +1921,45 @@ LinearScanAllocator::validateAllocations()
         JS_ASSERT(found);
     }
 }
-#endif
+
+void
+LiveInterval::validateRanges()
+{
+    Range *prev = NULL;
+
+    for (size_t i = ranges_.length() - 1; i < ranges_.length(); i--) {
+        Range *range = &ranges_[i];
+
+        JS_ASSERT(range->from < range->to);
+        JS_ASSERT_IF(prev, prev->to <= range->from);
+        prev = range;
+    }
+}
+
+void
+LinearScanAllocator::validateVirtualRegisters()
+{
+    for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
+        VirtualRegister *reg = &vregs[i];
+
+        LiveInterval *prev = NULL;
+        for (size_t j = 0; j < reg->numIntervals(); j++) {
+            LiveInterval *interval = reg->getInterval(j);
+            JS_ASSERT(reg == interval->reg());
+            JS_ASSERT(interval->index() == j);
+
+            if (interval->numRanges() == 0)
+                continue;
+
+            JS_ASSERT_IF(prev, prev->end() <= interval->start());
+            interval->validateRanges();
+
+            prev = interval;
+        }
+    }
+}
+
+#endif // DEBUG
 
 bool
 LinearScanAllocator::go()
