@@ -80,7 +80,7 @@ public:
 
   NS_DECL_NSIDOMCLIENTRECTLIST
   
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);
 
   nsISupports* GetParentObject()
