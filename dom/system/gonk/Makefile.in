@@ -7,13 +7,13 @@ topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
 
-relativesrcdir   = dom/system/b2g
+relativesrcdir   = dom/system/gonk
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
-LIBRARY_NAME     = domsystemb2g_s
-XPIDL_MODULE     = dom_system_b2g
+LIBRARY_NAME     = domsystemgonk_s
+XPIDL_MODULE     = dom_system_gonk
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
