@@ -504,10 +504,17 @@ SuspectExpandos(XPCWrappedNative *wrapper, JSObject *expando, void *arg)
 }
 
 static PLDHashOperator
-SuspectDOMExpandos(nsPtrHashKey<JSObject> *expando, void *arg)
+SuspectDOMExpandos(nsPtrHashKey<JSObject> *key, void *arg)
 {
     Closure *closure = static_cast<Closure*>(arg);
-    closure->cb->NoteXPCOMRoot(static_cast<nsISupports*>(js::GetObjectPrivate(expando->GetKey())));
+    JSObject* obj = key->GetKey();
+    nsISupports* native = nsnull;
+    if (js::IsProxy(obj)) {
+        NS_ASSERTION(mozilla::dom::binding::instanceIsProxy(obj),
+                     "Not a DOM proxy?");
+        native = static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
+    }
+    closure->cb->NoteXPCOMRoot(native);
     return PL_DHASH_NEXT;
 }
 

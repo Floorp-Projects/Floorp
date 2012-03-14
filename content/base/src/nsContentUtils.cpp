@@ -6541,11 +6541,19 @@ nsContentUtils::ReleaseWrapper(nsISupports* aScriptObjectHolder,
                                nsWrapperCache* aCache)
 {
   if (aCache->PreservingWrapper()) {
-    DropJSObjects(aScriptObjectHolder);
+    JSObject* obj = aCache->GetWrapperPreserveColor();
+    if (aCache->IsProxy()) {
+      JSCompartment *compartment = js::GetObjectCompartment(obj);
+      xpc::CompartmentPrivate *priv =
+        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
+      priv->RemoveDOMExpandoObject(obj);
+    }
+    else {
+      DropJSObjects(aScriptObjectHolder);
+    }
+
     aCache->SetPreservingWrapper(false);
   }
-
-  aCache->ClearWrapperIfProxy();
 }
 
 // static
@@ -6558,13 +6566,6 @@ nsContentUtils::TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
     if (wrapper) {
       aCallback(nsIProgrammingLanguage::JAVASCRIPT, wrapper,
                 "Preserved wrapper", aClosure);
-    }
-  }
-  else {
-    JSObject *expando = aCache->GetExpandoObjectPreserveColor();
-    if (expando) {
-      aCallback(nsIProgrammingLanguage::JAVASCRIPT, expando, "Expando object",
-                aClosure);
     }
   }
 }

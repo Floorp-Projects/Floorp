@@ -58,6 +58,10 @@ namespace mozilla {
 namespace dom {
 namespace binding {
 
+enum {
+    JSPROXYSLOT_PROTOSHAPE = 0,
+    JSPROXYSLOT_EXPANDO = 1
+};
 
 static jsid s_prototype_id = JSID_VOID;
 
@@ -737,8 +741,12 @@ ListBase<LC>::ensureExpandoObject(JSContext *cx, JSObject *obj)
         JSCompartment *compartment = js::GetObjectCompartment(obj);
         xpc::CompartmentPrivate *priv =
             static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
-        if (!priv->RegisterDOMExpandoObject(expando))
+        if (!priv->RegisterDOMExpandoObject(obj))
             return NULL;
+
+        nsWrapperCache* cache;
+        CallQueryInterface(getListObject(obj), &cache);
+        cache->SetPreservingWrapper(true);
 
         js::SetProxyExtra(obj, JSPROXYSLOT_EXPANDO, ObjectValue(*expando));
         JS_SetPrivate(expando, js::GetProxyPrivate(obj).toPrivate());

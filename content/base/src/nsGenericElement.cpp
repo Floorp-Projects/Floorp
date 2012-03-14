@@ -170,18 +170,6 @@ PRUint32 nsMutationGuard::sMutationCount = 0;
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 
-void
-nsWrapperCache::RemoveExpandoObject()
-{
-  JSObject *expando = GetExpandoObjectPreserveColor();
-  if (expando) {
-    JSCompartment *compartment = js::GetObjectCompartment(expando);
-    xpc::CompartmentPrivate *priv =
-      static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
-    priv->RemoveDOMExpandoObject(expando);
-  }
-}
-
 //----------------------------------------------------------------------
 
 nsINode::nsSlots::~nsSlots()
@@ -1697,13 +1685,10 @@ nsINode::SetExplicitBaseURI(nsIURI* aURI)
 
 //----------------------------------------------------------------------
 
-static JSObject*
+static inline JSObject*
 GetJSObjectChild(nsWrapperCache* aCache)
 {
-  if (aCache->PreservingWrapper()) {
-    return aCache->GetWrapperPreserveColor();
-  }
-  return aCache->GetExpandoObjectPreserveColor();
+  return aCache->PreservingWrapper() ? aCache->GetWrapperPreserveColor() : NULL;
 }
 
 static bool
