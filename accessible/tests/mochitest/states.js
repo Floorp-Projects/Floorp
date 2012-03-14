@@ -102,15 +102,6 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
               "Not focusable " + id + " must be not focused!");
   }
 
-  // readonly/editable
-  if (state & STATE_READONLY)
-    isState(extraState & EXT_STATE_EDITABLE, 0, true,
-            "Read-only " + id + " cannot be editable!");
-
-  if (extraState & EXT_STATE_EDITABLE)
-    isState(state & STATE_READONLY, 0, true,
-            "Editable " + id + " cannot be readonly!");
-
   // multiline/singleline
   if (extraState & EXT_STATE_MULTI_LINE)
     isState(extraState & EXT_STATE_SINGLE_LINE, 0, true,

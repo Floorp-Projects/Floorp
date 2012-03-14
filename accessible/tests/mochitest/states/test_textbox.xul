@@ -23,65 +23,83 @@
       //////////////////////////////////////////////////////////////////////////
       // Ordinary textbox
       testStates("textbox",
-                 STATE_FOCUSABLE, EXT_STATE_EDITABLE,
-                 STATE_PROTECTED | STATE_UNAVAILABLE, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_FOCUSABLE,
+                 EXT_STATE_EDITABLE,
+                 STATE_PROTECTED | STATE_UNAVAILABLE,
+                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  "ordinary textbox");
 
       //////////////////////////////////////////////////////////////////////////
       // Password textbox
       testStates("password",
-                 STATE_FOCUSABLE | STATE_PROTECTED, EXT_STATE_EDITABLE,
-                 STATE_UNAVAILABLE, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_FOCUSABLE | STATE_PROTECTED,
+                 EXT_STATE_EDITABLE,
+                 STATE_UNAVAILABLE,
+                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  "password textbox");
 
       //////////////////////////////////////////////////////////////////////////
       // Textarea
       testStates("textarea",
-                 STATE_FOCUSABLE, EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE,
-                 STATE_PROTECTED | STATE_UNAVAILABLE, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_FOCUSABLE,
+                 EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE,
+                 STATE_PROTECTED | STATE_UNAVAILABLE,
+                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  "multiline textbox");
 
       //////////////////////////////////////////////////////////////////////////
       // Readonly textbox
       testStates("readonly_textbox",
-                 STATE_FOCUSABLE | STATE_READONLY, 0,
-                 STATE_PROTECTED | STATE_UNAVAILABLE, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_FOCUSABLE | STATE_READONLY,
+                 EXT_STATE_EDITABLE,
+                 STATE_PROTECTED | STATE_UNAVAILABLE,
+                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  "readonly textbox");
 
       //////////////////////////////////////////////////////////////////////////
       // Disabled textbox
       testStates("disabled_textbox",
-                 STATE_UNAVAILABLE, 0,
-                 STATE_FOCUSABLE | STATE_PROTECTED, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_UNAVAILABLE,
+                 EXT_STATE_EDITABLE,
+                 STATE_FOCUSABLE | STATE_PROTECTED,
+                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  "readonly textbox");
 
       //////////////////////////////////////////////////////////////////////////
       // Readonly textarea
       testStates("readonly_textarea",
-                 STATE_FOCUSABLE | STATE_READONLY, EXT_STATE_MULTI_LINE,
-                 STATE_PROTECTED | STATE_UNAVAILABLE, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_FOCUSABLE | STATE_READONLY,
+                 EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE,
+                 STATE_PROTECTED | STATE_UNAVAILABLE,
+                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  "readonly multiline textbox");
 
       //////////////////////////////////////////////////////////////////////////
       // Disabled textarea
       testStates("disabled_textarea",
-                 STATE_UNAVAILABLE, EXT_STATE_MULTI_LINE,
-                 STATE_PROTECTED | STATE_FOCUSABLE, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_UNAVAILABLE,
+                 EXT_STATE_EDITABLE| EXT_STATE_MULTI_LINE,
+                 STATE_PROTECTED | STATE_FOCUSABLE,
+                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  "readonly multiline textbox");
 
       //////////////////////////////////////////////////////////////////////////
       // Search textbox without search button, searches as you type and filters
       // a separate control.
       testStates("searchbox",
-                 STATE_FOCUSABLE, EXT_STATE_EDITABLE | EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                 STATE_PROTECTED | STATE_UNAVAILABLE, 0,
+                 STATE_FOCUSABLE,
+                 EXT_STATE_EDITABLE | EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_PROTECTED | STATE_UNAVAILABLE,
+                 0,
                  "searchbox");
 
       //////////////////////////////////////////////////////////////////////////
       // Search textbox with search button, does not support autoCompletion.
       testStates("searchfield",
-                 STATE_FOCUSABLE, EXT_STATE_EDITABLE,
-                 STATE_PROTECTED | STATE_UNAVAILABLE, EXT_STATE_SUPPORTS_AUTOCOMPLETION,
+                 STATE_FOCUSABLE,
+                 EXT_STATE_EDITABLE,
+                 STATE_PROTECTED | STATE_UNAVAILABLE,
+                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  "searchfield");
 
       SimpleTest.finish();
