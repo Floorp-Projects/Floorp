@@ -79,13 +79,6 @@ body {
   color: #999999;
 }
 
-.addon-item:not([optionsURL]) .options-header,
-.addon-item[optionsURL=""] .options-header,
-.addon-item:not([optionsURL]) .options-box,
-.addon-item[optionsURL=""] .options-box {
-  display: none;
-}
-
 .inner {
   background-image: url("chrome://browser/skin/images/row-bg-light.png");
   min-height: 70px;
@@ -175,4 +168,108 @@ body[dir="ltr"] .favicon {
 
 .addon-item[isDisabled="true"] .favicon {
   opacity: 0.3;
+}
+
+.options-header {
+  font-weight: bold;
+  padding: 12px 24px;
+}
+
+.options-box {
+  margin: 0 12px;
+}
+
+.addon-item:not([optionsURL]) .options-header,
+.addon-item[optionsURL=""] .options-header,
+.addon-item:not([optionsURL]) .options-box,
+.addon-item[optionsURL=""] .options-box {
+  display: none;
+}
+
+setting {
+  padding: 12px 18px;
+  border-top: 2px solid;
+  -moz-border-top-colors: #bac2ac #ffffff;
+  -moz-box-sizing: border-box;
+  width: 100%;
+}
+
+setting > vbox {
+  -moz-box-flex: 1;
+}
+
+.preferences-title {
+  font-weight: bold;
+}
+
+.preferences-description:empty {
+  display: none;
+}
+
+/* Put setting textboxes on a separate row */
+setting[type="integer"],
+setting[type="string"] {
+  -moz-box-align: stretch;
+  -moz-box-orient: vertical;
+}
+
+setting[type="integer"] > .preferences-alignment > textbox,
+setting[type="string"] > .preferences-alignment > textbox {
+  width: 100%;
+}
+
+.preferences-alignment > textbox {
+  font-size: 22px !important;
+}
+
+.preferences-alignment > input[type="checkbox"] {
+  -moz-appearance: none !important;
+  width: 22px !important;
+  height: 22px !important;
+}
+
+/* XBL bindings */
+
+settings {
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
+}
+
+setting {
+  display: none;
+}
+
+setting[type="bool"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://browser/content/bindings/settings.xml#setting-fulltoggle-bool");
+}
+
+setting[type="bool"][localized="true"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://browser/content/bindings/settings.xml#setting-fulltoggle-localized-bool");
+}
+
+setting[type="boolint"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://browser/content/bindings/settings.xml#setting-fulltoggle-boolint");
+}
+
+setting[type="integer"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-integer");
+}
+
+setting[type="control"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-control");
+}
+
+setting[type="string"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
+}
+
+setting[type="radio"],
+setting[type="menulist"] {
+  display: -moz-box;
+  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
 }
