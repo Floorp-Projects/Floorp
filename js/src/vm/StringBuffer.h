@@ -34,7 +34,6 @@ class StringBuffer
 
     CharBuffer cb;
 
-    inline bool checkLength(size_t length);
     JSContext *context() const { return cb.allocPolicy().context(); }
     jschar *extractWellSized();
 
