@@ -1827,7 +1827,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     return NS_ERROR_FAILURE;
   }
 
-  JSAutoRequest ar(cx);
+  XPCAutoRequest ar(cx);
 
   nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
   NS_ASSERTION(!aState || wsh, "What kind of weird state are you giving me here?");
