@@ -972,8 +972,7 @@ Navigator::GetMozPower(nsIDOMMozPowerManager** aPower)
     mPowerManager->Init(win);
   }
 
-  nsCOMPtr<nsIDOMMozPowerManager> power =
-    do_QueryInterface(NS_ISUPPORTS_CAST(nsIDOMMozPowerManager*, mPowerManager));
+  nsCOMPtr<nsIDOMMozPowerManager> power(mPowerManager);
   power.forget(aPower);
 
   return NS_OK;
