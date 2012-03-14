@@ -76,10 +76,10 @@ DeclMarker(XML, JSXML)
  * after we transition to exact rooting.
  */
 void
-MarkKind(JSTracer *trc, void *thing, JSGCTraceKind kind);
+MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
 void
-MarkGCThingRoot(JSTracer *trc, void *thing, const char *name);
+MarkGCThingRoot(JSTracer *trc, void **thingp, const char *name);
 
 /*** ID Marking ***/
 

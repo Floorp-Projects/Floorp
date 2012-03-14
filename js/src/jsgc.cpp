@@ -1084,7 +1084,9 @@ MarkIfGCThingWord(JSTracer *trc, uintptr_t w)
     JS_snprintf(nameBuf, sizeof(nameBuf), pattern, thing);
     JS_SET_TRACING_NAME(trc, nameBuf);
 #endif
-    MarkKind(trc, thing, traceKind);
+    void *tmp = thing;
+    MarkKind(trc, &tmp, traceKind);
+    JS_ASSERT(tmp == thing);
 
 #ifdef DEBUG
     if (trc->runtime->gcIncrementalState == MARK_ROOTS)
@@ -1130,7 +1132,7 @@ MarkConservativeStackRoots(JSTracer *trc, bool useSavedRoots)
              root++)
         {
             JS_SET_TRACING_NAME(trc, "cstack");
-            MarkKind(trc, root->thing, root->kind);
+            MarkKind(trc, &root->thing, root->kind);
         }
         return;
     }
@@ -2057,7 +2059,9 @@ GCMarker::markBufferedGrayRoots()
         debugPrintArg = elem->debugPrintArg;
         debugPrintIndex = elem->debugPrintIndex;
 #endif
-        MarkKind(this, elem->thing, elem->kind);
+        void *tmp = elem->thing;
+        MarkKind(this, &tmp, elem->kind);
+        JS_ASSERT(tmp == elem->thing);
     }
 
     grayRoots.clearAndFree();
@@ -2147,7 +2151,7 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
 #endif
     const char *name = entry.value.name ? entry.value.name : "root";
     if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
-        MarkGCThingRoot(trc, *reinterpret_cast<void **>(entry.key), name);
+        MarkGCThingRoot(trc, reinterpret_cast<void **>(entry.key), name);
     else
         MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
 }
@@ -2156,7 +2160,9 @@ static void
 gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
 {
     JS_ASSERT(entry.value >= 1);
-    MarkGCThingRoot(trc, entry.key, "locked object");
+    void *tmp = entry.key;
+    MarkGCThingRoot(trc, &tmp, "locked object");
+    JS_ASSERT(tmp == entry.key);
 }
 
 namespace js {
