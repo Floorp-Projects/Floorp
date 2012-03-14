@@ -178,7 +178,12 @@ public:
   }
 
   void RemoveObserver(Observer<InfoType>* aObserver) {
-    MOZ_ASSERT(mObservers);
+    // If mObservers is null, that means there are no observers, so removing one
+    // must be a no-op.
+    if (!mObservers) {
+      return;
+    }
+
     mObservers->RemoveObserver(aObserver);
 
     if (mObservers->Length() == 0) {
