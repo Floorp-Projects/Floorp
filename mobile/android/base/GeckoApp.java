@@ -111,11 +111,12 @@ abstract public class GeckoApp
     public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
     public static final String ACTION_UPDATE        = "org.mozilla.gecko.UPDATE";
     public static final String ACTION_INIT_PW       = "org.mozilla.gecko.INIT_PW";
-    public static final String SAVED_STATE_URI      = "uri";
-    public static final String SAVED_STATE_TITLE    = "title";
-    public static final String SAVED_STATE_VIEWPORT = "viewport";
-    public static final String SAVED_STATE_SCREEN   = "screen";
-    public static final String SAVED_STATE_SESSION  = "session";
+    private static final String SAVED_STATE_URI      = "uri";
+    private static final String SAVED_STATE_TITLE    = "title";
+    private static final String SAVED_STATE_VIEWPORT = "viewport";
+    private static final String SAVED_STATE_SCREEN   = "/sdcard/lastscreen.png";
+    private static final String SAVED_STATE_SESSION  = "session";
+    private static final String SAVED_STATE_FILESIZE  = "filesize";
 
     StartupMode mStartupMode = null;
     private LinearLayout mMainLayout;
@@ -141,15 +142,16 @@ abstract public class GeckoApp
     public Favicons mFavicons;
 
     private static LayerController mLayerController;
-    private static PlaceholderLayerClient mPlaceholderLayerClient;
+    private static PlaceholderLayerClient mPlaceholderLayerClient = null;
     private static GeckoLayerClient mLayerClient;
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
 
-    public String mLastTitle;
-    public String mLastSnapshotUri;
-    public String mLastViewport;
-    public byte[] mLastScreen;
+    public String mLastTitle = null;
+    public String mLastSnapshotUri = null;
+    public String mLastViewport = null;
+    public byte[] mLastScreen = null;
+    private int mLastScreenFilesize;
     public int mOwnActivityDepth = 0;
     private boolean mRestoreSession = false;
     private boolean mInitialized = false;
@@ -544,87 +546,91 @@ abstract public class GeckoApp
         if (outState == null)
             outState = new Bundle();
 
-        new SessionSnapshotRunnable(null).run();
-
-        outState.putString(SAVED_STATE_TITLE, mLastTitle);
-        outState.putString(SAVED_STATE_VIEWPORT, mLastViewport);
-        outState.putByteArray(SAVED_STATE_SCREEN, mLastScreen);
-        outState.putBoolean(SAVED_STATE_SESSION, true);
+        getSessionSnapshot(outState);
     }
 
-    public class SessionSnapshotRunnable implements Runnable {
-        Tab mThumbnailTab;
-        SessionSnapshotRunnable(Tab thumbnailTab) {
-            mThumbnailTab = thumbnailTab;
+    /* This function saves the state of the current browsing session, which includes:
+     *     - a screenshot of currently selected tab
+     *     - the title of the last history entry for the currently selected tab
+     *     - a boolean to indicate a saved state
+     */
+    private void getSessionSnapshot(final Bundle outState) {
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab == null)
+            return;
+
+        outState.putInt(SAVED_STATE_FILESIZE, mLastScreen.length);
+        if (mLastScreen != null) {
+            try {
+                FileOutputStream fos = new FileOutputStream(SAVED_STATE_SCREEN);
+                fos.write(mLastScreen);
+                fos.close();
+            } catch (IOException e) {
+                Log.e(LOGTAG, "Failed to write last screenshot to file!");
+            }
         }
 
-        public void run() {
-            if (mLayerClient == null)
-                return;
+        HistoryEntry lastHistoryEntry = tab.getLastHistoryEntry();
+        if (lastHistoryEntry != null) {
+            outState.putString(SAVED_STATE_TITLE, lastHistoryEntry.mTitle);
+            outState.putString(SAVED_STATE_URI, lastHistoryEntry.mUri);
+        }
 
-            synchronized (mLayerClient) {
-                if (!Tabs.getInstance().isSelectedTab(mThumbnailTab))
-                    return;
+        if (getLayerController().getLayerClient() == mSoftwareLayerClient) {
+            ViewportMetrics viewportMetrics = mSoftwareLayerClient.getGeckoViewportMetrics();
+            if (viewportMetrics != null) {
+                outState.putString(SAVED_STATE_VIEWPORT, viewportMetrics.toJSON());
+            }
+        }
 
-                HistoryEntry lastHistoryEntry = mThumbnailTab.getLastHistoryEntry();
-                if (lastHistoryEntry == null)
-                    return;
+        outState.putBoolean(SAVED_STATE_SESSION, true); 
+    }
 
-                ViewportMetrics viewportMetrics = mLayerClient.getGeckoViewportMetrics();
-                // If we don't have viewport metrics, the screenshot won't be right so bail
-                if (viewportMetrics == null)
-                    return;
-                
+    void getAsyncThumbnailForTab(final Tab tab, boolean forceBigScreenshot) {
+        // This function captures and processes a screenshot asynchronously for any tab, and can specify the screenshot to be thumbnail sized or not  
+        if (!tab.hasLoaded()) {
+            if (!forceBigScreenshot) {
+                byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
+                if (thumbnail != null) {
+                    processThumbnail(tab, null, thumbnail);
+                }
+            }
+            return;
+        }
+
+        HistoryEntry lastHistoryEntry = tab.getLastHistoryEntry();
+        if (lastHistoryEntry != null) {
+            ViewportMetrics viewportMetrics = mSoftwareLayerClient.getGeckoViewportMetrics();
+            // If we don't have viewport metrics, the screenshot won't be right so bail
+            if (viewportMetrics != null && mLastTitle != null && mLastSnapshotUri != null) {                                
                 String viewportJSON = viewportMetrics.toJSON();
                 // If the title, uri and viewport haven't changed, the old screenshot is probably valid
                 // Ordering of .equals() below is important since mLast* variables may be null
                 if (viewportJSON.equals(mLastViewport) &&
                     lastHistoryEntry.mTitle.equals(mLastTitle) &&
                     lastHistoryEntry.mUri.equals(mLastSnapshotUri))
-                    return; 
-
-                mLastViewport = viewportJSON;
-                mLastTitle = lastHistoryEntry.mTitle;
-                mLastSnapshotUri = lastHistoryEntry.mUri;
-                getAndProcessThumbnailForTab(mThumbnailTab, true);
+                    return;
             }
         }
-    }
 
-    void getAndProcessThumbnailForTab(final Tab tab, boolean forceBigSceenshot) {
-        boolean isSelectedTab = Tabs.getInstance().isSelectedTab(tab);
-        final Bitmap bitmap = isSelectedTab ? mLayerClient.getBitmap() : null;
-        
-        if (bitmap != null) {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-            processThumbnail(tab, bitmap, bos.toByteArray());
-        } else {
-            if (tab.getState() == Tab.STATE_DELAYED) {
-                byte[] thumbnail = BrowserDB.getThumbnailForUrl(getContentResolver(), tab.getURL());
-                if (thumbnail != null)
-                    processThumbnail(tab, null, thumbnail);
-                return;
-            }
-
-            mLastScreen = null;
-            View view = mLayerController.getView();
-            int sw = forceBigSceenshot ? view.getWidth() : tab.getMinScreenshotWidth();
-            int sh = forceBigSceenshot ? view.getHeight(): tab.getMinScreenshotHeight();
-            int dw = forceBigSceenshot ? sw : tab.getThumbnailWidth();
-            int dh = forceBigSceenshot ? sh : tab.getThumbnailHeight();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), sw, sh, dw, dh));
-        }
+        int sw = forceBigScreenshot ? mSoftwareLayerClient.getWidth() : tab.getMinScreenshotWidth();
+        int sh = forceBigScreenshot ? mSoftwareLayerClient.getHeight(): tab.getMinScreenshotHeight();
+        int dw = forceBigScreenshot ? sw : tab.getThumbnailWidth();
+        int dh = forceBigScreenshot ? sh : tab.getThumbnailHeight();
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(), sw, sh, dw, dh));
     }
     
     void processThumbnail(Tab thumbnailTab, Bitmap bitmap, byte[] compressed) {
-        if (Tabs.getInstance().isSelectedTab(thumbnailTab)) {
+        if (Tabs.getInstance().isSelectedTab(thumbnailTab)
+            && bitmap.getWidth() == mSoftwareLayerClient.getWidth()
+            && bitmap.getHeight() == mSoftwareLayerClient.getHeight()) {
             if (compressed == null) {
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
                 compressed = bos.toByteArray();
             }
             mLastScreen = compressed;
+            return;
         }
 
         if ("about:home".equals(thumbnailTab.getURL())) {
@@ -959,7 +965,6 @@ abstract public class GeckoApp
                 });
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
-                connectGeckoLayerClient();
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
@@ -1253,13 +1258,21 @@ abstract public class GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setProgressVisibility(false);
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
+                               
+                if (mPlaceholderLayerClient != null) {
+                    connectGeckoLayerClient();
+                }
+                
+                if (Tabs.getInstance().isSelectedTab(tab) 
+                    && !tab.getURL().equals("about:home")) {
+                    GeckoAppShell.getHandler().postDelayed(new Runnable() {
+                        public void run() {
+                            getAsyncThumbnailForTab(tab,true);
+                        }
+                    }, 2000);
+                }
             }
         });
-
-        if (Tabs.getInstance().isSelectedTab(tab)) {
-            Runnable r = new SessionSnapshotRunnable(tab);
-            GeckoAppShell.getHandler().postDelayed(r, 500);
-        }
     }
 
     void handleShowToast(final String message, final String duration) {
@@ -1624,8 +1637,9 @@ abstract public class GeckoApp
         if (savedInstanceState != null) {
             mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
             mLastViewport = savedInstanceState.getString(SAVED_STATE_VIEWPORT);
-            mLastScreen = savedInstanceState.getByteArray(SAVED_STATE_SCREEN);
+            mLastScreenFilesize = savedInstanceState.getInt(SAVED_STATE_FILESIZE);
             mRestoreSession = savedInstanceState.getBoolean(SAVED_STATE_SESSION);
+            mLastSnapshotUri = savedInstanceState.getString(SAVED_STATE_URI);
         }
 
         super.onCreate(savedInstanceState);
@@ -1651,6 +1665,19 @@ abstract public class GeckoApp
 
     private void initialize() {
         mInitialized = true;
+
+        byte[] lastScreen = null;
+
+        if (mLastScreenFilesize > 0) {
+            try {
+                FileInputStream fis = new FileInputStream(SAVED_STATE_SCREEN);
+                lastScreen = new byte[mLastScreenFilesize];
+                fis.read(lastScreen, 0, mLastScreenFilesize);
+                fis.close();
+            } catch (IOException e) {
+                Log.e(LOGTAG, "Failed to read last screenshot from file!");
+            }
+        }
 
         Intent intent = getIntent();
         String action = intent.getAction();
@@ -1744,7 +1771,13 @@ abstract public class GeckoApp
              * run experience, perhaps?
              */
             mLayerController = new LayerController(this);
-            mPlaceholderLayerClient = new PlaceholderLayerClient(mLayerController, mLastViewport);
+            if (lastScreen != null) {
+                mLastScreen = lastScreen;
+                mPlaceholderLayerClient = PlaceholderLayerClient.createInstance(this);
+                mLayerController.setLayerClient(mPlaceholderLayerClient);
+            } else {
+                mLayerController.setLayerClient(mSoftwareLayerClient);
+            }
 
             mGeckoLayout.addView(mLayerController.getView(), 0);
         }
@@ -2032,9 +2065,6 @@ abstract public class GeckoApp
     public void onPause()
     {
         Log.i(LOGTAG, "pause");
-
-        Runnable r = new SessionSnapshotRunnable(null);
-        GeckoAppShell.getHandler().post(r);
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createPauseEvent(mOwnActivityDepth));
         // The user is navigating away from this activity, but nothing
@@ -2566,6 +2596,13 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
         } else {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
+        }
+
+        // If placeholder snapshot screenshot is being shown and we're trying to load a request
+        // (switching tab, loading new url, etc.) that is different from the snapshot's url, then
+        // switch to showing the GeckoSoftwareLayerClient to load this new url 
+        if (mPlaceholderLayerClient != null && mLastSnapshotUri != null && !mLastSnapshotUri.equals(url)) {
+            connectGeckoLayerClient();
         }
     }
 
