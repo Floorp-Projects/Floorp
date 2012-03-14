@@ -28,6 +28,7 @@ function init() {
   Services.obs.addObserver(Addons, "browser-search-engine-modified", false);
 
   AddonManager.addInstallListener(Addons);
+  AddonManager.addAddonListener(Addons);
   Addons.getAddons();
   showList();
 }
@@ -35,6 +36,7 @@ function init() {
 function uninit() {
   Services.obs.removeObserver(Addons, "browser-search-engine-modified");
   AddonManager.removeInstallListener(Addons);
+  AddonManager.removeAddonListener(Addons);
 }
 
 function openLink(aElement) {
@@ -418,6 +420,18 @@ var Addons = {
 
   hideRestart: function hideRestart(aMode) {
     // TODO (bug 704406)
+  },
+
+  onEnabled: function(aAddon) {
+    let listItem = this._getElementForAddon(aAddon.id);
+    if (!listItem)
+      return;
+
+    // Reload the details to pick up any options now that it's enabled.
+    listItem.setAttribute("optionsURL", aAddon.optionsURL || "");
+    let detailItem = document.querySelector("#addons-details > .addon-item");
+    if (aAddon == detailItem.addon)
+      this.showDetails(listItem);
   },
 
   onInstallEnded: function(aInstall, aAddon) {
