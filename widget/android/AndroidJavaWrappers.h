@@ -153,25 +153,6 @@ protected:
     static jfieldID jTopField;
 };
 
-
-/** A callback that retrieves the view transform. */
-class AndroidViewTransformGetter
-{
-public:
-    virtual void operator()(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY) = 0;
-};
-
-class AndroidGeckoLayerClientViewTransformGetter : public AndroidViewTransformGetter {
-public:
-    AndroidGeckoLayerClientViewTransformGetter(AndroidGeckoLayerClient& aLayerClient)
-    : mLayerClient(aLayerClient) {}
-
-    virtual void operator()(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
-
-private:
-    AndroidGeckoLayerClient& mLayerClient;
-};
-
 class AndroidViewTransform : public WrappedJavaObject {
 public:
     static void InitViewTransformClass(JNIEnv *jEnv);
@@ -218,17 +199,14 @@ public:
 
     void Init(jobject jobj);
 
-    AndroidGeckoLayerClient()
-    : mViewTransformGetter(*this) {}
-
-    AndroidGeckoLayerClient(jobject jobj)
-    : mViewTransformGetter(*this) { Init(jobj); }
+    AndroidGeckoLayerClient() {}
+    AndroidGeckoLayerClient(jobject jobj) { Init(jobj); }
 
     bool BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata);
     void EndDrawing();
     void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
     void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
-    void GetViewTransform(AndroidViewTransform& aViewTransform);
+    void GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
     void CreateFrame(AndroidLayerRendererFrame& aFrame);
     void ActivateProgram();
     void DeactivateProgram();
@@ -243,8 +221,6 @@ protected:
     static jmethodID jCreateFrameMethod;
     static jmethodID jActivateProgramMethod;
     static jmethodID jDeactivateProgramMethod;
-
-    AndroidGeckoLayerClientViewTransformGetter mViewTransformGetter;
 };
 
 class AndroidGeckoSurfaceView : public WrappedJavaObject

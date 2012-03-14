@@ -894,19 +894,19 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyReadingMessageListFailed(JNIEnv* jenv
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_scheduleComposite(JNIEnv*, jclass)
 {
-    AndroidBridge::Bridge()->ScheduleComposite();
+    nsWindow::ScheduleComposite();
 }
 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_schedulePauseComposition(JNIEnv*, jclass)
 {
-    AndroidBridge::Bridge()->SchedulePauseComposition();
+    nsWindow::SchedulePauseComposition();
 }
 
 NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv*, jclass)
 {
-    AndroidBridge::Bridge()->ScheduleResumeComposition();
+    nsWindow::ScheduleResumeComposition();
 }
 
 #endif

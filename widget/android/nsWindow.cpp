@@ -96,6 +96,8 @@ bool nsWindow::sAccessibilityEnabled = false;
 #endif
 
 #ifdef MOZ_JAVA_COMPOSITOR
+#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
 #endif
@@ -765,9 +767,6 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
 
     nsWindow *topWindow = TopWindow();
 
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### nsWindow::GetLayerManager this=%p "
-                        "topWindow=%p", this, topWindow);
-
     if (!topWindow) {
         printf_stderr(" -- no topwindow\n");
         mLayerManager = CreateBasicLayerManager();
@@ -1138,8 +1137,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 #ifdef MOZ_JAVA_COMPOSITOR
     // We haven't been given a window-size yet, so do nothing
     if (gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0) {
-        __android_log_print(ANDROID_LOG_ERROR, "Gecko",
-                            "### No window size yet -- skipping draw!");
         return;
     }
 
@@ -1157,7 +1154,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         metadataProvider->PaintingSuppressed(&paintingSuppressed);
     }
     if (paintingSuppressed) {
-        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### Painting suppressed!");
         return;
     }
     layers::renderTraceEventEnd("Check supress", "424242");
@@ -1169,13 +1165,6 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     }
     layers::renderTraceEventEnd("Get Drawable", "424343");
 
-#if 0
-    // BEGIN HACK: gl layers
-    nsPaintEvent event(true, NS_PAINT, this);
-    nsIntRect tileRect(0, 0, gAndroidBounds.width, gAndroidBounds.height);
-    event.region = tileRect;
-#endif
-
     layers::renderTraceEventStart("Get surface", "424545");
     static unsigned char bits2[32 * 32 * 2];
     nsRefPtr<gfxImageSurface> targetSurface =
@@ -1183,23 +1172,11 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                             gfxASurface::ImageFormatRGB16_565);
     layers::renderTraceEventEnd("Get surface", "424545");
 
-#if 0
-    nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
-    AutoLayerManagerSetup setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
-
-    nsEventStatus status;
-    status = DispatchEvent(&event);
-
-    return;
-    // END HACK: gl layers
-#endif
-
     layers::renderTraceEventStart("Check Bridge", "434444");
     nsIntRect dirtyRect = ae->Rect().Intersect(nsIntRect(0, 0, gAndroidBounds.width, gAndroidBounds.height));
 
     AndroidGeckoLayerClient &client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height, metadata)) {
-        __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### BeginDrawing returned false!");
         return;
     }
     layers::renderTraceEventEnd("Check Bridge", "434444");
@@ -2311,5 +2288,43 @@ nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {
 
     mLayerRendererFrame.Dispose();
 }
+
+// off-main-thread compositor fields and functions
+
+nsRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent = 0;
+base::Thread * nsWindow::sCompositorThread = 0;
+
+void
+nsWindow::SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
+                              ::base::Thread* aCompositorThread)
+{
+    sCompositorParent = aCompositorParent;
+    sCompositorThread = aCompositorThread;
+}
+
+void
+nsWindow::ScheduleComposite()
+{
+    if (sCompositorParent) {
+        sCompositorParent->ScheduleRenderOnCompositorThread();
+    }
+}
+
+void
+nsWindow::SchedulePauseComposition()
+{
+    if (sCompositorParent) {
+        sCompositorParent->SchedulePauseOnCompositorThread();
+    }
+}
+
+void
+nsWindow::ScheduleResumeComposition()
+{
+    if (sCompositorParent) {
+        sCompositorParent->ScheduleResumeOnCompositorThread();
+    }
+}
+
 #endif
 

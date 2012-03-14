@@ -1066,7 +1066,7 @@ void
 AndroidBridge::RegisterCompositor()
 {
     ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
-    JNIEnv *env = GetJNIForThread();
+    JNIEnv *env = GetJNIForThread();    // called on the compositor thread
     if (!env)
         return;
 
@@ -1078,7 +1078,6 @@ AndroidBridge::RegisterCompositor()
 
     sController.Acquire(env, glController);
     sController.SetGLVersion(2);
-    __android_log_print(ANDROID_LOG_ERROR, "Gecko", "Registered Compositor");
 }
 
 EGLSurface
@@ -1853,32 +1852,7 @@ void
 AndroidBridge::SetCompositorParent(mozilla::layers::CompositorParent* aCompositorParent,
                                    ::base::Thread* aCompositorThread)
 {
-    mCompositorParent = aCompositorParent;
-    mCompositorThread = aCompositorThread;
-}
-
-void
-AndroidBridge::ScheduleComposite()
-{
-    if (mCompositorParent) {
-        mCompositorParent->ScheduleRenderOnCompositorThread();
-    }
-}
-
-void
-AndroidBridge::SchedulePauseComposition()
-{
-    if (mCompositorParent) {
-        mCompositorParent->SchedulePauseOnCompositorThread();
-    }
-}
-
-void
-AndroidBridge::ScheduleResumeComposition()
-{
-    if (mCompositorParent) {
-        mCompositorParent->ScheduleResumeOnCompositorThread();
-    }
+    nsWindow::SetCompositorParent(aCompositorParent, aCompositorThread);
 }
 
 void
@@ -1902,22 +1876,17 @@ AndroidBridge::SetPageSize(float aZoom, float aPageWidth, float aPageHeight)
 }
 
 void
-AndroidBridge::SetViewTransformGetter(AndroidViewTransformGetter& aViewTransformGetter)
-{
-    mViewTransformGetter = &aViewTransformGetter;
-}
-
-void
 AndroidBridge::GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
 {
-    if (mViewTransformGetter) {
-        (*mViewTransformGetter)(aScrollOffset, aScaleX, aScaleY);
-    }
+    AndroidGeckoLayerClient *client = mLayerClient;
+    if (!client)
+        return;
+
+    client->GetViewTransform(aScrollOffset, aScaleX, aScaleY);
 }
 
 AndroidBridge::AndroidBridge()
 : mLayerClient(NULL)
-, mViewTransformGetter(NULL)
 {
 }
 
