@@ -47,7 +47,8 @@ StringBuffer::finishString()
         return cx->runtime->atomState.emptyAtom;
 
     size_t length = cb.length();
-    JS_ASSERT(checkLength(length));
+    if (!JSString::validateLength(cx, length))
+        return NULL;
 
     JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
     if (JSShortString::lengthFits(length))
