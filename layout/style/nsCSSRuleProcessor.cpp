@@ -137,18 +137,19 @@ struct RuleValue : RuleSelectorPair {
     eMaxAncestorHashes = 4
   };
 
-  RuleValue(const RuleSelectorPair& aRuleSelectorPair, PRInt32 aIndex) :
+  RuleValue(const RuleSelectorPair& aRuleSelectorPair, PRInt32 aIndex,
+            bool aQuirksMode) :
     RuleSelectorPair(aRuleSelectorPair),
     mIndex(aIndex)
   {
-    CollectAncestorHashes();
+    CollectAncestorHashes(aQuirksMode);
   }
 
   PRInt32 mIndex; // High index means high weight/order.
   uint32_t mAncestorSelectorHashes[eMaxAncestorHashes];
 
 private:
-  void CollectAncestorHashes() {
+  void CollectAncestorHashes(bool aQuirksMode) {
     // Collect up our mAncestorSelectorHashes.  It's not clear whether it's
     // better to stop once we've found eMaxAncestorHashes of them or to keep
     // going and preferentially collect information from selectors higher up the
@@ -163,24 +164,28 @@ private:
         continue;
       }
 
-      // Now sel is supposed to select one of our ancestors.  Grab whatever info
-      // we can from it into mAncestorSelectorHashes.
-      nsAtomList* ids = sel->mIDList;
-      while (ids) {
-        mAncestorSelectorHashes[hashIndex++] = ids->mAtom->hash();
-        if (hashIndex == eMaxAncestorHashes) {
-          return;
+      // Now sel is supposed to select one of our ancestors.  Grab
+      // whatever info we can from it into mAncestorSelectorHashes.
+      // But in qurks mode, don't grab IDs and classes because those
+      // need to be matched case-insensitively.
+      if (!aQuirksMode) {
+        nsAtomList* ids = sel->mIDList;
+        while (ids) {
+          mAncestorSelectorHashes[hashIndex++] = ids->mAtom->hash();
+          if (hashIndex == eMaxAncestorHashes) {
+            return;
+          }
+          ids = ids->mNext;
         }
-        ids = ids->mNext;
-      }
 
-      nsAtomList* classes = sel->mClassList;
-      while (classes) {
-        mAncestorSelectorHashes[hashIndex++] = classes->mAtom->hash();
-        if (hashIndex == eMaxAncestorHashes) {
-          return;
+        nsAtomList* classes = sel->mClassList;
+        while (classes) {
+          mAncestorSelectorHashes[hashIndex++] = classes->mAtom->hash();
+          if (hashIndex == eMaxAncestorHashes) {
+            return;
+          }
+          classes = classes->mNext;
         }
-        classes = classes->mNext;
       }
 
       // Only put in the tag name if it's all-lowercase.  Otherwise we run into
@@ -628,7 +633,7 @@ void RuleHash::AppendRuleToTable(PLDHashTable* aTable, const void* aKey,
                                          (PL_DHashTableOperate(aTable, aKey, PL_DHASH_ADD));
   if (!entry)
     return;
-  entry->mRules.AppendElement(RuleValue(aRuleInfo, mRuleCount++));
+  entry->mRules.AppendElement(RuleValue(aRuleInfo, mRuleCount++, mQuirksMode));
 }
 
 static void
@@ -646,7 +651,7 @@ AppendRuleToTagTable(PLDHashTable* aTable, nsIAtom* aKey,
 
 void RuleHash::AppendUniversalRule(const RuleSelectorPair& aRuleInfo)
 {
-  mUniversalRules.AppendElement(RuleValue(aRuleInfo, mRuleCount++));
+  mUniversalRules.AppendElement(RuleValue(aRuleInfo, mRuleCount++, mQuirksMode));
 }
 
 void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
@@ -673,7 +678,7 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
     RULE_HASH_STAT_INCREMENT(mClassSelectors);
   }
   else if (selector->mLowercaseTag) {
-    RuleValue ruleValue(aRuleInfo, mRuleCount++);
+    RuleValue ruleValue(aRuleInfo, mRuleCount++, mQuirksMode);
     if (!mTagTable.ops) {
       PL_DHashTableInit(&mTagTable, &RuleHash_TagTable_Ops, nsnull,
                         sizeof(RuleHashTagTableEntry), 16);
@@ -2904,7 +2909,7 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
     // rules in order; just pass 0.
     AppendRuleToTagTable(&cascade->mAnonBoxRules,
                          aRuleInfo->mSelector->mLowercaseTag,
-                         RuleValue(*aRuleInfo, 0));
+                         RuleValue(*aRuleInfo, 0, aCascade->mQuirksMode));
   } else {
 #ifdef MOZ_XUL
     NS_ASSERTION(pseudoType == nsCSSPseudoElements::ePseudo_XULTree,
@@ -2913,7 +2918,7 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
     // rules in order; just pass 0.
     AppendRuleToTagTable(&cascade->mXULTreeRules,
                          aRuleInfo->mSelector->mLowercaseTag,
-                         RuleValue(*aRuleInfo, 0));
+                         RuleValue(*aRuleInfo, 0, aCascade->mQuirksMode));
 #else
     NS_NOTREACHED("Unexpected pseudo type");
 #endif
