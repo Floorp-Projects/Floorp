@@ -210,13 +210,17 @@ function loadSnippets()
   let updateURL = localStorage["snippets-update-url"];
   if (updateURL && (!lastUpdate ||
                     Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS)) {
+    // Try to update from network.
+    let xhr = new XMLHttpRequest();
+    try {
+      xhr.open("GET", updateURL, true);
+    } catch (ex) {
+      showSnippets();
+      return;
+    }
     // Even if fetching should fail we don't want to spam the server, thus
     // set the last update time regardless its results.  Will retry tomorrow.
     localStorage["snippets-last-update"] = Date.now();
-
-    // Try to update from network.
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', updateURL, true);
     xhr.onerror = function (event) {
       showSnippets();
     };
