@@ -267,6 +267,8 @@ public:
   virtual bool IsCompositingCheap();
   virtual bool HasShadowManagerInternal() const { return HasShadowManager(); }
 
+  virtual void SetIsFirstPaint() MOZ_OVERRIDE;
+
 private:
   /**
    * Forward transaction results to the parent context.

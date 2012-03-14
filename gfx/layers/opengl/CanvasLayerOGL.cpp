@@ -283,7 +283,11 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
 
-  mOGLManager->BindAndDrawQuad(program, mNeedsYFlip ? true : false);
+  if (gl()->CanUploadNonPowerOfTwo()) {
+    mOGLManager->BindAndDrawQuad(program, mNeedsYFlip ? true : false);
+  } else {
+    mOGLManager->BindAndDrawQuadWithTextureRect(program, drawRect, drawRect.Size());
+  }
 
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
   if (mPixmap && !mDelayedUpdates) {
@@ -415,11 +419,29 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   program->SetTextureUnit(0);
 
   mTexImage->BeginTileIteration();
-  do {
-    TextureImage::ScopedBindTextureAndApplyFilter texBind(mTexImage, LOCAL_GL_TEXTURE0);
-    program->SetLayerQuadRect(mTexImage->GetTileRect());
-    mOGLManager->BindAndDrawQuad(program, mNeedsYFlip); // FIXME flip order of tiles?
-  } while (mTexImage->NextTile());
+  if (gl()->CanUploadNonPowerOfTwo()) {
+    do {
+      TextureImage::ScopedBindTextureAndApplyFilter texBind(mTexImage, LOCAL_GL_TEXTURE0);
+      program->SetLayerQuadRect(mTexImage->GetTileRect());
+      mOGLManager->BindAndDrawQuad(program, mNeedsYFlip); // FIXME flip order of tiles?
+    } while (mTexImage->NextTile());
+  } else {
+    do {
+      TextureImage::ScopedBindTextureAndApplyFilter texBind(mTexImage, LOCAL_GL_TEXTURE0);
+      program->SetLayerQuadRect(mTexImage->GetTileRect());
+      // We can't use BindAndDrawQuad because that always uploads the whole texture from 0.0f -> 1.0f
+      // in x and y. We use BindAndDrawQuadWithTextureRect to actually draw a subrect of the texture
+      // We need to reset the origin to 0,0 from the tile rect because the tile originates at 0,0 in the
+      // actual texture, even though its origin in the composed (tiled) texture is not 0,0
+      // FIXME: we need to handle mNeedsYFlip, Bug #728625
+      mOGLManager->BindAndDrawQuadWithTextureRect(program,
+                                                  nsIntRect(0, 0, mTexImage->GetTileRect().width,
+                                                                  mTexImage->GetTileRect().height),
+                                                  mTexImage->GetTileRect().Size(),
+                                                  mTexImage->GetWrapMode(),
+                                                  mNeedsYFlip);
+    } while (mTexImage->NextTile());
+  }
 }
 
 void

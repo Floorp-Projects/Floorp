@@ -118,18 +118,6 @@ public:
     return mRIL;
   }
 
-  nsPIDOMWindow*
-  Owner() const
-  {
-    return mOwner;
-  }
-
-  nsIScriptContext*
-  ScriptContext() const
-  {
-    return mScriptContext;
-  }
-
 private:
   Telephony();
   ~Telephony();
