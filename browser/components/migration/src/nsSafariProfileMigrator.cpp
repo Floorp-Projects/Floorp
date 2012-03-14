@@ -78,6 +78,8 @@
 #define SAFARI_HOME_PAGE_PREF             "HomePage"
 #define MIGRATION_BUNDLE                  "chrome://browser/locale/migration/migration.properties"
 
+using namespace mozilla;
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsSafariProfileMigrator
 
