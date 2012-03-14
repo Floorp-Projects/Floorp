@@ -183,7 +183,7 @@ public:
    * object doesn't actually support creating a wrapper through its WrapObject
    * hook.
    */
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
     *triedToWrap = false;

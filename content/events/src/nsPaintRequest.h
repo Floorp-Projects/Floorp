@@ -75,7 +75,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPaintRequestList)
   NS_DECL_NSIDOMPAINTREQUESTLIST
   
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
     return mozilla::dom::binding::PaintRequestList::create(cx, scope, this,

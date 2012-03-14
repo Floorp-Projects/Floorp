@@ -86,7 +86,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TableRowsCollection)
 
   // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
     return mozilla::dom::binding::HTMLCollection::create(cx, scope, this,
