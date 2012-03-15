@@ -595,7 +595,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLen
                                          const Parameters* aParams, PRUint32 aFlags)
 {
     NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
 
@@ -629,7 +629,7 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
 #endif
     NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
 
