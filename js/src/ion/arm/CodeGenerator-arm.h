@@ -88,7 +88,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool generateOutOfLineCode();
 
     bool emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
-    void emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
     void emitRoundDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
     // Emits a conditional set.
@@ -125,7 +124,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitMathD(LMathD *math);
     virtual bool visitRound(LRound *lir);
     virtual bool visitTableSwitch(LTableSwitch *ins);
-
+    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);

@@ -60,6 +60,8 @@ class MacroAssemblerARM : public Assembler
   public:
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
 
+    void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
+
     // somewhat direct wrappers for the low-level assembler funcitons
     // bitops
     // attempt to encode a virtual alu instruction using
