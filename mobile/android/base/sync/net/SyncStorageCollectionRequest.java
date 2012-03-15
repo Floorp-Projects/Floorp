@@ -58,7 +58,6 @@ public class SyncStorageCollectionRequest extends SyncStorageRequest {
 
       HttpEntity entity = response.getEntity();
       Header contentType = entity.getContentType();
-      System.out.println("content type is " + contentType.getValue());
       if (!contentType.getValue().startsWith("application/newlines")) {
         // Not incremental!
         super.handleHttpResponse(response);
