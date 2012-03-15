@@ -9,8 +9,7 @@
 }
 
 div,
-span,
-a {
+span {
   font: inherit;
 }
 
@@ -132,12 +131,15 @@ a {
 .variable {
   -moz-margin-start: 1px;
   -moz-margin-end: 1px;
+  margin-top: 2px;
   border-bottom: 1px dotted #aaa;
 }
 
+.variable > .title > .arrow {
+  margin-top: -2px;
+}
+
 .variable > .title > .name {
-  padding-top: 2px;
-  padding-bottom: 2px;
   color: #048;
   font-weight: 600;
 }
@@ -146,15 +148,12 @@ a {
  * Property element
  */
 
-.property > .title > .key {
-  padding-top: 2px;
-  padding-bottom: 2px;
-  color: #881090;
+.property > .title > .arrow {
+  margin-top: -2px;
 }
 
-.property > .title > .value {
-  padding-top: 2px;
-  padding-bottom: 2px;
+.property > .title > .key {
+  color: #881090;
 }
 
 /**
@@ -226,18 +225,4 @@ a {
     -moz-transform-origin: top;
     -moz-transform: scaleY(1);
   }
-}
-
-/**
- * Display helpers
- */
-
-.unselectable {
-  padding-top: 2px;
-  padding-bottom: 2px;
-}
-
-.info {
-  padding-top: 2px;
-  padding-bottom: 2px;
 }

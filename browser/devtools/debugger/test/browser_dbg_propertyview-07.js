@@ -55,37 +55,37 @@ function testFrameParameters()
       is(localNodes.length, 11,
         "The localScope should contain all the created variable elements.");
 
-      is(localNodes[0].querySelector(".info").textContent, "[object Proxy]",
+      is(localNodes[0].querySelector(".value").textContent, "[object Proxy]",
         "Should have the right property value for 'this'.");
 
-      is(localNodes[1].querySelector(".info").textContent, "[object Object]",
+      is(localNodes[1].querySelector(".value").textContent, "[object Object]",
         "Should have the right property value for 'aArg'.");
 
-      is(localNodes[2].querySelector(".info").textContent, '"beta"',
+      is(localNodes[2].querySelector(".value").textContent, '"beta"',
         "Should have the right property value for 'bArg'.");
 
-      is(localNodes[3].querySelector(".info").textContent, "3",
+      is(localNodes[3].querySelector(".value").textContent, "3",
         "Should have the right property value for 'cArg'.");
 
-      is(localNodes[4].querySelector(".info").textContent, "false",
+      is(localNodes[4].querySelector(".value").textContent, "false",
         "Should have the right property value for 'dArg'.");
 
-      is(localNodes[5].querySelector(".info").textContent, "null",
+      is(localNodes[5].querySelector(".value").textContent, "null",
         "Should have the right property value for 'eArg'.");
 
-      is(localNodes[6].querySelector(".info").textContent, "undefined",
+      is(localNodes[6].querySelector(".value").textContent, "undefined",
         "Should have the right property value for 'fArg'.");
 
-      is(localNodes[7].querySelector(".info").textContent, "1",
+      is(localNodes[7].querySelector(".value").textContent, "1",
        "Should have the right property value for 'a'.");
 
-      is(localNodes[8].querySelector(".info").textContent, "[object Object]",
+      is(localNodes[8].querySelector(".value").textContent, "[object Object]",
        "Should have the right property value for 'b'.");
 
-      is(localNodes[9].querySelector(".info").textContent, "[object Object]",
+      is(localNodes[9].querySelector(".value").textContent, "[object Object]",
        "Should have the right property value for 'c'.");
 
-      is(localNodes[10].querySelector(".info").textContent, "[object Arguments]",
+      is(localNodes[10].querySelector(".value").textContent, "[object Arguments]",
         "Should have the right property value for 'arguments'.");
 
       resumeAndFinish();
