@@ -20,6 +20,8 @@
         '../interface',
         '../../../interface',
         '<(webrtc_root)/common_video/libyuv/include',
+# added for mozilla for use_system_libjpeg
+        '$(DIST)/include',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
@@ -91,8 +93,12 @@
               },
             }],  # mac
             ['OS=="win"', {
-              'dependencies': [
-                '<(webrtc_root)/modules/video_capture/main/source/Windows/direct_show_base_classes.gyp:direct_show_base_classes',
+              'conditions': [
+                ['build_with_mozilla==0', {
+                  'dependencies': [
+                    '<(webrtc_root)/modules/video_capture/main/source/Windows/direct_show_base_classes.gyp:direct_show_base_classes',
+                  ],
+                }],
               ],
               'include_dirs': [
                 'Windows',
@@ -108,6 +114,10 @@
                 'Windows/video_capture_windows.cc',
                 'Windows/device_info_windows.cc',
                 'Windows/video_capture_factory_windows.cc',
+                'Windows/BasePin.cpp',
+                'Windows/BaseFilter.cpp',
+                'Windows/BaseInputPin.cpp',
+                'Windows/MediaType.cpp',
               ],
               'msvs_settings': {
                 'VCLibrarianTool': {
