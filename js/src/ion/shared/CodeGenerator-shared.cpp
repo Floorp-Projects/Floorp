@@ -48,6 +48,9 @@
 using namespace js;
 using namespace js::ion;
 
+namespace js {
+namespace ion {
+
 CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
   : gen(gen),
     graph(graph),
@@ -401,6 +404,58 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
     return true;
 }
 
+class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
+{
+    FloatRegister src_;
+    Register dest_;
+
+  public:
+    OutOfLineTruncateSlow(FloatRegister src, Register dest)
+      : src_(src), dest_(dest)
+    { }
+
+    bool accept(CodeGeneratorShared *codegen) {
+        return codegen->visitOutOfLineTruncateSlow(this);
+    }
+    FloatRegister src() const {
+        return src_;
+    }
+    Register dest() const {
+        return dest_;
+    }
+};
+
+bool
+CodeGeneratorShared::emitTruncateDouble(const FloatRegister &src, const Register &dest)
+{
+    OutOfLineTruncateSlow *ool = new OutOfLineTruncateSlow(src, dest);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    masm.branchTruncateDouble(src, dest, ool->entry());
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
+{
+    FloatRegister src = ool->src();
+    Register dest = ool->dest();
+
+    saveVolatile(dest);
+
+    masm.setupUnalignedABICall(1, dest);
+    masm.passABIArg(src);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js_DoubleToECMAInt32));
+    masm.storeCallResult(dest);
+
+    restoreVolatile(dest);
+
+    masm.jump(ool->rejoin());
+    return true;
+}
+
 void
 CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation *index, MIRType type)
 {
@@ -416,3 +471,5 @@ CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation *index, MIR
     }
 }
 
+} // namespace ion
+} // namespace js

@@ -816,7 +816,7 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
 
       case MIRType_Double:
       {
-        LTruncateDToInt32 *lir = new LTruncateDToInt32(useRegister(opd));
+        LTruncateDToInt32 *lir = new LTruncateDToInt32(useRegister(opd), tempFloat());
         return assignSnapshot(lir) && define(lir, truncate);
       }
 

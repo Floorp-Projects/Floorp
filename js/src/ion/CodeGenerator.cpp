@@ -79,7 +79,8 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
     Label fails;
     switch (lir->mode()) {
       case LValueToInt32::TRUNCATE:
-        emitTruncateDouble(temp, output, &fails);
+        if (!emitTruncateDouble(temp, output))
+            return false;
         break;
       default:
         JS_ASSERT(lir->mode() == LValueToInt32::NORMAL);
@@ -191,18 +192,6 @@ CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
     return true;
 }
 
-
-bool
-CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32 *lir)
-{
-    Label fails;
-
-    emitTruncateDouble(ToFloatRegister(lir->input()), ToRegister(lir->output()), &fails);
-    if (!bailoutFrom(&fails, lir->snapshot()))
-        return false;
-
-    return true;
-}
 
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)

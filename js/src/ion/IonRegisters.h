@@ -416,6 +416,9 @@ class TypedRegisterSet
             T::Codes::AllocatableMask & T::Codes::VolatileMask;
         return TypedRegisterSet(~in.bits_ & allocatableVolatile);
     }
+    static inline TypedRegisterSet Volatile() {
+        return TypedRegisterSet(T::Codes::AllocatableMask & T::Codes::VolatileMask);
+    }
     void intersect(TypedRegisterSet other) {
         bits_ &= ~other.bits_;
     }
@@ -497,6 +500,9 @@ class RegisterSet {
     static inline RegisterSet VolatileNot(const RegisterSet &in) {
         return RegisterSet(GeneralRegisterSet::VolatileNot(in.gpr_),
                            FloatRegisterSet::VolatileNot(in.fpu_));
+    }
+    static inline RegisterSet Volatile() {
+        return RegisterSet(GeneralRegisterSet::Volatile(), FloatRegisterSet::Volatile());
     }
     bool has(Register reg) const {
         return gpr_.has(reg);

@@ -49,6 +49,7 @@ namespace ion {
 
 class OutOfLineBailout;
 class MulNegativeZeroCheck;
+class OutOfLineTruncate;
 
 class CodeGeneratorX86Shared : public CodeGeneratorShared
 {
@@ -91,7 +92,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool generateOutOfLineCode();
 
     void emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
-    void emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
     Operand createArrayElementOperand(Register elements, const LAllocation *index);
 
@@ -139,10 +139,12 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitTableSwitch(LTableSwitch *ins);
     virtual bool visitGuardShape(LGuardShape *guard);
     virtual bool visitGuardClass(LGuardClass *guard);
+    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
     bool visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool);
+    bool visitOutOfLineTruncate(OutOfLineTruncate *ool);
     bool generateInvalidateEpilogue();
 };
 
