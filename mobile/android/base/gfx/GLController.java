@@ -111,14 +111,12 @@ public class GLController {
             mEGLSurface = null;
         }
 
-        if (mEGLContext == null) {
+        if (mEGLContext != null) {
             if (!mEGL.eglDestroyContext(mEGLDisplay, mEGLContext)) {
                 throw new GLControllerException("EGL context could not be destroyed!");
             }
 
             mGL = null;
-            mEGLDisplay = null;
-            mEGLConfig = null;
             mEGLContext = null;
         }
     }
