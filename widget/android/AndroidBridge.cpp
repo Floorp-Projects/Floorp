@@ -1936,7 +1936,6 @@ NS_IMETHODIMP nsAndroidBridge::SetDrawMetadataProvider(nsIAndroidDrawMetadataPro
 
 void
 AndroidBridge::SetPreventPanning(bool aPreventPanning) {
-    ALOG_BRIDGE("AndroidBridge::PreventPanning");
     JNIEnv *env = GetJNIEnv();
     if (!env)
         return;
