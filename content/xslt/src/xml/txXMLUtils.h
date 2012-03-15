@@ -48,10 +48,12 @@
 #include "nsDependentSubstring.h"
 #include "nsIAtom.h"
 #include "txXPathNode.h"
-#include "nsIParserService.h"
 #include "nsContentUtils.h"
 
 #define kExpatSeparatorChar 0xFFFF
+
+extern "C" int MOZ_XMLIsLetter(const char* ptr);
+extern "C" int MOZ_XMLIsNCNameChar(const char* ptr);
 
 class nsIAtom;
 class txNamespaceMap;
@@ -156,17 +158,15 @@ public:
      */
     static bool isLetter(PRUnichar aChar)
     {
-        nsIParserService* ps = nsContentUtils::GetParserService();
-        return ps && ps->IsXMLLetter(aChar);
-    }
+        return !!MOZ_XMLIsLetter(reinterpret_cast<const char*>(&aChar));
+    }   
 
     /**
      * Returns true if the given character is an allowable NCName character
      */
     static bool isNCNameChar(PRUnichar aChar)
     {
-        nsIParserService* ps = nsContentUtils::GetParserService();
-        return ps && ps->IsXMLNCNameChar(aChar);
+        return !!MOZ_XMLIsNCNameChar(reinterpret_cast<const char*>(&aChar));
     }
 
     /*
