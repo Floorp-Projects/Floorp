@@ -10,7 +10,7 @@
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html
-fails-if(cocoaWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == preserve3d-1a.html preserve3d-1-ref.html
+fails-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank 
 == preserve3d-2a.html preserve3d-2-ref.html
@@ -21,8 +21,8 @@ fails-if(cocoaWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == preserve3d-1
 == preserve3d-4a.html green-rect.html
 == preserve3d-5a.html preserve3d-5-ref.html
 == scale3d-z.html scalez-1-ref.html
-fails-if(Android) == scale3d-all.html scale3d-1-ref.html
-fails-if(Android) == scale3d-all-separate.html scale3d-1-ref.html
+fuzzy-if(d2d&&layersGPUAccelerated,52,680) fails-if(Android) == scale3d-all.html scale3d-1-ref.html # subpixel AA
+fuzzy-if(d2d&&layersGPUAccelerated,52,680) fails-if(Android) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
 == scale3d-xz.html scale3d-1-ref.html
 == translatez-1a.html translatez-1-ref.html
 != translatez-1b.html translatez-1-ref.html
