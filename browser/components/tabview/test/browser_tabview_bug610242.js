@@ -66,31 +66,35 @@ function onTabViewWindowLoaded(win) {
     }
   }
 
-  let children = group.getChildren();
-  let len = children.length;
-  let iconUpdateCounter = 0;
+  afterAllTabsLoaded(function() {
+    afterAllTabItemsUpdated(function() {
+      let children = group.getChildren();
+      let len = children.length;
+      let iconUpdateCounter = 0;
 
-  children.forEach(function(tabItem) {
-    tabItem.addSubscriber("iconUpdated", function onIconUpdated() {
-      // the tab is not loaded completely so ignore it.
-      if (tabItem.tab.linkedBrowser.currentURI.spec == "about:blank")
-        return;
+      children.forEach(function(tabItem) {
+        tabItem.addSubscriber("iconUpdated", function onIconUpdated() {
+          // the tab is not loaded completely so ignore it.
+          if (tabItem.tab.linkedBrowser.currentURI.spec == "about:blank")
+            return;
 
-      tabItem.removeSubscriber("iconUpdated", onIconUpdated);
+          tabItem.removeSubscriber("iconUpdated", onIconUpdated);
 
-      if (++iconUpdateCounter == len) {
-        check(datatext, "datatext", false);
-        check(datahtml, "datahtml", false);
-        check(mozilla, "about:mozilla", false);
-        check(robots, "about:robots", true);
-        check(html, "html", true);
-        check(png, "png", false);
-        check(svg, "svg", true);
+          if (++iconUpdateCounter == len) {
+            check(datatext, "datatext", false);
+            check(datahtml, "datahtml", false);
+            check(mozilla, "about:mozilla", false);
+            check(robots, "about:robots", true);
+            check(html, "html", true);
+            check(png, "png", false);
+            check(svg, "svg", true);
 
-        // Get rid of the group and its children
-        // The group close will trigger a finish().
-        closeGroupItem(group);
-      }
-    });
-  });
+            // Get rid of the group and its children
+            // The group close will trigger a finish().
+            closeGroupItem(group);
+          }
+        });
+      });
+    }, win);
+  }, win);
 }
