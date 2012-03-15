@@ -84,12 +84,6 @@ nsScreen::Initialize()
                                "dom.screenBrightnessProperty.enabled");
 }
 
-void
-nsScreen::Invalidate()
-{
-  hal::UnregisterScreenOrientationObserver(this);
-}
-
 /* static */ already_AddRefed<nsScreen>
 nsScreen::Create(nsPIDOMWindow* aWindow)
 {
@@ -120,7 +114,7 @@ nsScreen::nsScreen()
 
 nsScreen::~nsScreen()
 {
-  Invalidate();
+  hal::UnregisterScreenOrientationObserver(this);
 }
 
 
