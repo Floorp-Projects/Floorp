@@ -270,7 +270,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
                     ImmutableViewportMetrics oldMetrics = mLayerController.getViewportMetrics();
                     newMetrics.setSize(oldMetrics.getSize());
                     mLayerController.setViewportMetrics(newMetrics);
-                    mLayerController.abortPanZoomAnimation(false);
+                    mLayerController.abortPanZoomAnimation();
                     mDisplayPort = calculateDisplayPort(mLayerController.getViewportMetrics());
                     mReturnDisplayPort = mDisplayPort;
                 }
@@ -335,7 +335,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
             // sends the request after aborting the animation. The display port request is actually
             // a full viewport update, which is fine because if browser.js has somehow moved to
             // be out of sync with this first-paint viewport, then we force them back in sync.
-            mLayerController.abortPanZoomAnimation(true);
+            mLayerController.abortPanZoomAnimation();
         }
     }
 
