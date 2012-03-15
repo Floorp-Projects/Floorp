@@ -1,0 +1,22 @@
+<!doctype html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=719515
+-->
+<title>Test for Bug 719515</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=719515">Mozilla Bug 719515</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script>
+getSelection().collapse(document.body, 0);
+var range = getSelection().getRangeAt(0);
+getSelection().extend(document.body, 1);
+isnot(range, getSelection().getRangeAt(0),
+      "extend() must replace existing ranges, not mutate them");
+range = getSelection().getRangeAt(0);
+getSelection().extend(document.body, 1);
+isnot(range, getSelection().getRangeAt(0),
+      "extend() must replace existing ranges, not mutate them (even for no-op extend()s");
+</script>
