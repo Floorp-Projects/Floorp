@@ -219,6 +219,8 @@ ArchiveReader::VerifyProductInformation(const char *MARChannelID,
     }
   }
 
+// Temporarily disabled - see Bug 735784
+#if 0
   if (rv == OK) {
     /* Compare both versions to ensure we don't have a downgrade
         -1 if appVersion is older than productInfoBlock.productVersion
@@ -235,6 +237,7 @@ ArchiveReader::VerifyProductInformation(const char *MARChannelID,
       rv = VERSION_DOWNGRADE_ERROR;
     }
   }
+#endif
 
   free((void *)productInfoBlock.MARChannelID);
   free((void *)productInfoBlock.productVersion);
