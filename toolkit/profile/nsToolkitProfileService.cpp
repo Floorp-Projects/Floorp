@@ -486,7 +486,8 @@ nsToolkitProfileService::Init()
         if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("1"))
             mChosen = currentProfile;
     }
-
+    if (!mChosen && mFirst && !mFirst->mNext) // only one profile
+        mChosen = mFirst;
     return NS_OK;
 }
 
