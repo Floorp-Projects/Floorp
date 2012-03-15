@@ -2369,19 +2369,19 @@ pref("font.name-list.serif.zh-CN", "STSong,Heiti SC");
 pref("font.name-list.sans-serif.zh-CN", "STHeiti,Heiti SC");
 pref("font.name-list.monospace.zh-CN", "STHeiti,Heiti SC");
 
-pref("font.name.serif.zh-TW", "Apple LiSung"); 
-pref("font.name.sans-serif.zh-TW", "Apple LiGothic");  
-pref("font.name.monospace.zh-TW", "Apple LiGothic");  
-pref("font.name-list.serif.zh-TW", "Apple LiSung,Heiti TC");
-pref("font.name-list.sans-serif.zh-TW", "Apple LiGothic,Heiti TC");
-pref("font.name-list.monospace.zh-TW", "Apple LiGothic,Heiti TC");
+pref("font.name.serif.zh-TW", "Times"); 
+pref("font.name.sans-serif.zh-TW", "Helvetica");  
+pref("font.name.monospace.zh-TW", "Courier");  
+pref("font.name-list.serif.zh-TW", "Times,LiSong Pro,Heiti TC");
+pref("font.name-list.sans-serif.zh-TW", "Helvetica,Heiti TC,LiHei Pro");
+pref("font.name-list.monospace.zh-TW", "Courier,Heiti TC,LiHei Pro");
 
-pref("font.name.serif.zh-HK", "LiSong Pro");
-pref("font.name.sans-serif.zh-HK", "LiHei Pro");
-pref("font.name.monospace.zh-HK", "LiHei Pro");
-pref("font.name-list.serif.zh-HK", "LiSong Pro,Heiti TC");
-pref("font.name-list.sans-serif.zh-HK", "LiHei Pro,Heiti TC");
-pref("font.name-list.monospace.zh-HK", "LiHei Pro,Heiti TC");
+pref("font.name.serif.zh-HK", "Times");
+pref("font.name.sans-serif.zh-HK", "Helvetica");
+pref("font.name.monospace.zh-HK", "Courier");
+pref("font.name-list.serif.zh-HK", "Times,LiSong Pro,Heiti TC");
+pref("font.name-list.sans-serif.zh-HK", "Helvetica,Heiti TC,LiHei Pro");
+pref("font.name-list.monospace.zh-HK", "Courier,Heiti TC,LiHei Pro");
 
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
