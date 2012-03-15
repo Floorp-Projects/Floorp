@@ -2558,7 +2558,8 @@ public:
     // Call this, don't call "new gfxTextRun" directly. This does custom
     // allocation and initialization
     static gfxTextRun *Create(const gfxTextRunFactory::Parameters *aParams,
-        const void *aText, PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
+                              PRUint32 aLength, gfxFontGroup *aFontGroup,
+                              PRUint32 aFlags);
 
     // The text is divided into GlyphRuns as necessary
     struct GlyphRun {
@@ -2780,7 +2781,7 @@ protected:
      * new, after allocating a block large enough for the glyph records to
      * follow the base textrun object.
      */
-    gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+    gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
                PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
     /**
@@ -3037,7 +3038,7 @@ protected:
      */
     gfxTextRun *MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags);
     gfxTextRun *MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags);
-    gfxTextRun *MakeBlankTextRun(const void* aText, PRUint32 aLength,
+    gfxTextRun *MakeBlankTextRun(PRUint32 aLength,
                                  const Parameters *aParams, PRUint32 aFlags);
 
     // Used for construction/destruction.  Not intended to change the font set
