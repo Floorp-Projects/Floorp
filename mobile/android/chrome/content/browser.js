@@ -2813,6 +2813,11 @@ var FormAssistant = {
         // Remove focus from the textbox to avoid some bad IME interactions
         this._currentInputElement.blur();
         this._currentInputElement.value = aData;
+
+        let event = this._currentInputElement.ownerDocument.createEvent("Events");
+        event.initEvent("DOMAutoComplete", true, true);
+        this._currentInputElement.dispatchEvent(event);
+
         break;
 
       case "FormAssist:Hidden":
