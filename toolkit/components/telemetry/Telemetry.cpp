@@ -1464,10 +1464,15 @@ private:
 
 NS_IMETHODIMP
 TelemetryImpl::LoadHistograms(nsIFile *file,
-                              nsITelemetryLoadSessionDataCallback *callback)
+                              nsITelemetryLoadSessionDataCallback *callback,
+                              bool isSynchronous)
 {
   nsCOMPtr<nsIRunnable> event = new LoadHistogramEvent(file, callback);
-  return NS_DispatchToCurrentThread(event);
+  if (isSynchronous) {
+    return event ? event->Run() : NS_ERROR_FAILURE;
+  } else {
+    return NS_DispatchToCurrentThread(event);
+  }
 }
 
 NS_IMETHODIMP
