@@ -1321,7 +1321,7 @@ abstract public class GeckoApp
                 // want to load the image straight away. If tab is still
                 // loading, we only load the favicon once the page's content
                 // is fully loaded (see handleContentLoaded()).
-                if (tab.getState() != tab.STATE_LOADING) {
+                if (tab.getState() != Tab.STATE_LOADING) {
                     mMainHandler.post(new Runnable() {
                         public void run() {
                             loadFavicon(tab);

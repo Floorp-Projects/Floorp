@@ -142,14 +142,13 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         mView = new LayerView(context, this);
         mCheckerboardShouldShowChecks = true;
 
-        Tabs.getInstance().registerOnTabsChangedListener(this);
+        Tabs.registerOnTabsChangedListener(this);
 
-        ViewConfiguration vc = ViewConfiguration.get(mContext); 
-        mTimeout = vc.getLongPressTimeout();
+        mTimeout = ViewConfiguration.getLongPressTimeout();
     }
 
     public void onDestroy() {
-        Tabs.getInstance().unregisterOnTabsChangedListener(this);
+        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     public void setRoot(Layer layer) { mRootLayer = layer; }
