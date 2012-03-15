@@ -22,4 +22,5 @@
 <!ENTITY abouthome.historyButton.label   "History">
 <!ENTITY abouthome.settingsButton.label  "Settings">
 <!ENTITY abouthome.addonsButton.label    "Add-ons">
+<!ENTITY abouthome.appsButton.label      "Marketplace">
 <!ENTITY abouthome.downloadsButton.label "Downloads">
