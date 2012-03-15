@@ -1313,7 +1313,6 @@ nsGlobalWindow::FreeInnerObjects()
   }
 
   if (mScreen) {
-    mScreen->Invalidate();
     mScreen = nsnull;
   }
 
