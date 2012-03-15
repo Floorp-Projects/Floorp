@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=735544
+-->
+<window title="Mozilla Bug 735544"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=735544"
+     target="_blank">Mozilla Bug 735544</a>
+ <iframe id='ifr0' onload="frameDone(0);" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_exnstack.html" />
+ <iframe id='ifr1' onload="frameDone(1);" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_exnstack.html" />
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 735544 - Allow exception stacks to cross compartment boundaries **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  var gFramesDone = [false, false];
+  function frameDone(idx) {
+    gFramesDone[idx] = true;
+    if (gFramesDone[0] && gFramesDone[1])
+      startTest();
+  }
+
+  function throwAsChrome() {
+
+    // Grab the iframe content windows.
+    var cwin0 = document.getElementById('ifr0').contentWindow;
+    var cwin1 = document.getElementById('ifr1').contentWindow;
+
+    // Have cwin0 call a function on cwin1 that throws.
+    cwin0.wrappedJSObject.doThrow(cwin1);
+  }
+
+  function startTest() {
+
+    try {
+      throwAsChrome();
+      ok(false, "should throw");
+    } catch (e) {
+
+      stackFrames = e.stack.split("\n");
+
+      ok(/throwAsInner/.exec(stackFrames[0]),
+         "The bottom frame should be thrown by the inner");
+
+      ok(/throwAsOuter/.exec(stackFrames[2]),
+         "The 3rd-from-bottom frame should be thrown by the other");
+      ok(/Window/.exec(stackFrames[2]), "Should have a |Window| argument");
+
+      ok(!/throwAsChrome/.exec(e.stack),
+         "The entire stack should not cross into chrome.");
+    }
+
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+
+</window>
