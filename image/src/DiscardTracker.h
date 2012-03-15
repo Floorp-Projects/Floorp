@@ -1,87 +1,113 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-   ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2010
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Bobby Holley <bobbyholley@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef mozilla_imagelib_DiscardTracker_h_
 #define mozilla_imagelib_DiscardTracker_h_
 
-#define DISCARD_TIMEOUT_PREF "image.mem.min_discard_timeout_ms"
+#include "mozilla/LinkedList.h"
+#include "mozilla/TimeStamp.h"
 
 class nsITimer;
 
 namespace mozilla {
 namespace image {
+
 class RasterImage;
 
-// Struct to make a RasterImage insertable into the tracker list. This
-// is embedded within each RasterImage object, and we do 'this->curr = this'
-// on RasterImage construction. Thus, a RasterImage must always call
-// DiscardTracker::Remove() in its destructor to avoid having the tracker
-// point to bogus memory.
-struct DiscardTrackerNode
-{
-  // Pointer to the RasterImage that this node tracks
-  RasterImage *curr;
-
-  // Pointers to the previous and next nodes in the list
-  DiscardTrackerNode *prev, *next;
-};
-
 /**
- * This static class maintains a linked list of RasterImage nodes. When Reset()
- * is called, the node is removed from its position in the list (if it was there
- * before) and appended to the end. When Remove() is called, the node is removed
- * from the list. The timer fires once every MIN_DISCARD_TIMEOUT_MS ms. When it
- * does, it calls Discard() on each container preceding it, and then appends
- * itself to the end of the list. Thus, the discard timeout varies between
- * MIN_DISCARD_TIMEOUT_MS and 2*MIN_DISCARD_TIMEOUT_MS.
+ * This static class maintains a linked list of RasterImage objects which are
+ * eligible for discarding.
+ *
+ * When Reset() is called, the node is removed from its position in the list
+ * (if it was there before) and appended to the beginnings of the list.
+ *
+ * Periodically (on a timer and when we notice that we're using more memory
+ * than we'd like for decoded images), we go through the list and discard
+ * decoded data from images at the end of the list.
  */
 class DiscardTracker
 {
   public:
-    static nsresult Reset(struct DiscardTrackerNode *node);
-    static void Remove(struct DiscardTrackerNode *node);
+    /**
+     * The DiscardTracker keeps a linked list of Node objects.  Each object
+     * points to a RasterImage and contains a timestamp indicating when the
+     * node was inserted into the tracker.
+     *
+     * This structure is embedded within each RasterImage object, and we do
+     * |mDiscardTrackerNode.img = this| on RasterImage construction.  Thus, a
+     * RasterImage must always call DiscardTracker::Remove() in its destructor
+     * to avoid having the tracker point to bogus memory.
+     */
+    struct Node : public LinkedListElement<Node>
+    {
+      RasterImage *img;
+      TimeStamp timestamp;
+    };
+
+    /**
+     * Add an image to the front of the tracker's list, or move it to the front
+     * if it's already in the list.
+     */
+    static nsresult Reset(struct Node* node);
+
+    /**
+     * Remove a node from the tracker; do nothing if the node is currently
+     * untracked.
+     */
+    static void Remove(struct Node* node);
+
+    /**
+     * Shut the discard tracker down.  This should be called on XPCOM shutdown
+     * so we destroy the discard timer's nsITimer.
+     */
     static void Shutdown();
-    static void ReloadTimeout();
+
+    /**
+     * Discard the decoded image data for all images tracked by the discard
+     * tracker.
+     */
     static void DiscardAll();
+
+    /**
+     * Inform the discard tracker that we've allocated or deallocated some
+     * memory for a decoded image.  We use this to determine when we've
+     * allocated too much memory and should discard some images.
+     */
+    static void InformAllocation(PRInt64 bytes);
+
   private:
+    /**
+     * This is called when the discard timer fires; it calls into DiscardNow().
+     */
+    friend int DiscardTimeoutChangedCallback(const char* aPref, void *aClosure);
+
+    /**
+     * When run, this runnable sets sDiscardRunnablePending to false and calls
+     * DiscardNow().
+     */
+    class DiscardRunnable : public nsRunnable
+    {
+      NS_IMETHOD Run();
+    };
+
     static nsresult Initialize();
-    static nsresult TimerOn();
-    static void TimerOff();
+    static void ReloadTimeout();
+    static nsresult EnableTimer();
+    static void DisableTimer();
+    static void MaybeDiscardSoon();
     static void TimerCallback(nsITimer *aTimer, void *aClosure);
+    static void DiscardNow();
+
+    static LinkedList<Node> sDiscardableImages;
+    static nsCOMPtr<nsITimer> sTimer;
+    static bool sInitialized;
+    static bool sTimerOn;
+    static bool sDiscardRunnablePending;
+    static PRInt64 sCurrentDecodedImageBytes;
+    static PRUint32 sMinDiscardTimeoutMs;
+    static PRUint32 sMaxDecodedImageKB;
 };
 
 } // namespace image
