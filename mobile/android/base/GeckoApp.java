@@ -2709,8 +2709,8 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     public void reset(int aX, int aY, int aWidth, int aHeight, ImmutableViewportMetrics aViewport) {
         PointF origin = aViewport.getOrigin();
 
-        x = mOriginalX = aX + (int)origin.x;
-        y = mOriginalY = aY + (int)origin.y;
+        this.x = mOriginalX = aX;
+        this.y = mOriginalY = aY;
         width = mOriginalWidth = aWidth;
         height = mOriginalHeight = aHeight;
         mOriginalViewport = aViewport;
@@ -2720,8 +2720,8 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     }
 
     private void reposition(Point aOffset, float aResolution) {
-        x = mOriginalX + aOffset.x;
-        y = mOriginalY + aOffset.y;
+        this.x = mOriginalX + aOffset.x;
+        this.y = mOriginalY + aOffset.y;
 
         if (!FloatUtils.fuzzyEquals(mLastResolution, aResolution)) {
             width = Math.round(aResolution * mOriginalWidth);

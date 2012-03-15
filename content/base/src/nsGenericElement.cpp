@@ -1759,7 +1759,7 @@ NS_INTERFACE_TABLE_HEAD(nsChildContentList)
 NS_INTERFACE_MAP_END
 
 JSObject*
-nsChildContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+nsChildContentList::WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
 {
   return mozilla::dom::binding::NodeList::create(cx, scope, this, triedToWrap);

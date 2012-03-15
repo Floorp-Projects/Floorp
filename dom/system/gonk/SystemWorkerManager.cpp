@@ -55,8 +55,9 @@
 #include "nsRadioInterfaceLayer.h"
 #include "nsWifiWorker.h"
 
-USING_TELEPHONY_NAMESPACE
+
 USING_WORKERS_NAMESPACE
+using namespace mozilla::dom::gonk;
 using namespace mozilla::ipc;
 
 namespace {

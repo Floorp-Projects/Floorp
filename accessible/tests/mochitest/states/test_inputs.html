@@ -16,37 +16,66 @@
   <script type="application/javascript">
   function doTest()
   {
-    // 'required' state. Also piggyback 'unavailable' testing here.
+    ////////////////////////////////////////////////////////////////////////////
+    // 'editable' and 'multiline' states.
+    testStates("input", 0, EXT_STATE_EDITABLE, 0, EXT_STATE_MULTI_LINE);
+    testStates("textarea", 0, EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE);
+
+    testStates("input_readonly", 0, EXT_STATE_EDITABLE);
+    testStates("input_disabled", 0, EXT_STATE_EDITABLE);
+    testStates("textarea_readonly", 0, EXT_STATE_EDITABLE);
+    testStates("textarea_disabled", 0, EXT_STATE_EDITABLE);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // 'required', 'readonly' and 'unavailable' states.
     var maybe_required = ["input","search","radio","checkbox","textarea"];
     var never_required = ["submit","button","reset","image"];
 
     var i;
     for (i in maybe_required) {
-      testStates(maybe_required[i], STATE_REQUIRED, 0, STATE_UNAVAILABLE);
-      testStates(maybe_required[i] + "2", 0, 0, STATE_REQUIRED);
-      testStates(maybe_required[i] + "3", STATE_UNAVAILABLE);
+      testStates(maybe_required[i],
+                 STATE_FOCUSABLE, 0,
+                 STATE_REQUIRED | STATE_READONLY | STATE_UNAVAILABLE);
+
+      testStates(maybe_required[i] + "_required",
+                 STATE_FOCUSABLE | STATE_REQUIRED, 0,
+                 STATE_UNAVAILABLE | STATE_READONLY);
+
+      var readonlyID = maybe_required[i] + "_readonly";
+      if (document.getElementById(readonlyID)) {
+        testStates(readonlyID,
+                   STATE_FOCUSABLE | STATE_READONLY, 0,
+                   STATE_UNAVAILABLE | STATE_REQUIRED);
+      }
+
+      testStates(maybe_required[i] + "_disabled",
+                 STATE_UNAVAILABLE, 0,
+                 STATE_FOCUSABLE | STATE_READONLY | STATE_REQUIRED);
     }
 
     for (i in never_required) {
       testStates(never_required[i], 0, 0, STATE_REQUIRED);
     }
 
+    ////////////////////////////////////////////////////////////////////////////
     // inherited 'unavailable' state
     testStates("f", STATE_UNAVAILABLE);
     testStates("f_input", STATE_UNAVAILABLE);
     testStates("f_input_disabled", STATE_UNAVAILABLE);
 
+    ////////////////////////////////////////////////////////////////////////////
     // inherited from file control
     var fileTextField = getAccessible("file").firstChild;
     testStates(fileTextField, STATE_UNAVAILABLE | STATE_REQUIRED);
     var fileBrowseButton = getAccessible("file").lastChild;
     testStates(fileBrowseButton, STATE_UNAVAILABLE | STATE_REQUIRED);
 
-    /**
-     * maxlength doesn't make the element invalid until bug 613016 and bug 613019
-     * are fixed. Commenting out related lines and adding a todo to make sure
-     * it will be uncommented as soon as possible.
-     */
+    ////////////////////////////////////////////////////////////////////////////
+    // 'invalid' state
+
+    // XXX: maxlength doesn't make the element invalid until bug 613016 and
+    // bug 613019 are fixed. Commenting out related lines and adding a todo to
+    // make sure it will be uncommented as soon as possible.
     var todoInput = document.createElement("input");
     todoInput.maxLength = '2';
     todoInput.value = 'foo';
@@ -71,6 +100,7 @@
       testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
     }
 
+    ////////////////////////////////////////////////////////////////////////////
     // autocomplete states
     testStates("autocomplete-default", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
     testStates("autocomplete-off", 0, 0, 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
@@ -121,6 +151,11 @@
      title="File input control should be propogate states to descendants">
     Mozilla Bug 699017
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=733382"
+     title="Editable state bit should be present on readonly inputs">
+    Mozilla Bug 733382
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -128,21 +163,24 @@
 
 
   <form>
-    <input id="input" type="input" required>
-    <input id="input2" type="input">
-    <input id="input3" type="input" disabled>
-    <input id="search" type="search" required>
-    <input id="search2" type="search">
-    <input id="search3" type="search" disabled>
-    <input id="radio" type="radio" required>
-    <input id="radio2" type="radio">
-    <input id="radio3" type="radio" disabled>
-    <input id="checkbox" type="checkbox" required>
-    <input id="checkbox2" type="checkbox">
-    <input id="checkbox3" type="checkbox" disabled>
-    <textarea id="textarea" required></textarea>
-    <textarea id="textarea2"></textarea>
-    <textarea id="textarea3" disabled></textarea>
+    <input id="input" type="input">
+    <input id="input_required" type="input" required>
+    <input id="input_readonly" type="input" readonly>
+    <input id="input_disabled" type="input" disabled>
+    <input id="search" type="search">
+    <input id="search_required" type="search" required>
+    <input id="search_readonly" type="search" readonly>
+    <input id="search_disabled" type="search" disabled>
+    <input id="radio" type="radio">
+    <input id="radio_required" type="radio" required>
+    <input id="radio_disabled" type="radio" disabled>
+    <input id="checkbox" type="checkbox">
+    <input id="checkbox_required" type="checkbox" required>
+    <input id="checkbox_disabled" type="checkbox" disabled>
+    <textarea id="textarea"></textarea>
+    <textarea id="textarea_required" required></textarea>
+    <textarea id="textarea_readonly" readonly></textarea>
+    <textarea id="textarea_disabled" disabled></textarea>
   </form>
 
   <!-- bogus required usage -->
