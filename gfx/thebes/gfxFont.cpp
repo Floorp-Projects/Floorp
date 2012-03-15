@@ -3749,12 +3749,12 @@ gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
 }
 
 gfxFontStyle::gfxFontStyle() :
-    style(FONT_STYLE_NORMAL), systemFont(true), printerFont(false), 
-    weight(FONT_WEIGHT_NORMAL),
-    stretch(NS_FONT_STRETCH_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
-    sizeAdjust(0.0f),
     language(gfxAtoms::x_western),
-    languageOverride(NO_FONT_LANGUAGE_OVERRIDE)
+    size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(0.0f),
+    languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    weight(FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
+    systemFont(true), printerFont(false), 
+    style(FONT_STYLE_NORMAL)
 {
 }
 
@@ -3764,11 +3764,12 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
                            bool aPrinterFont,
                            const nsString& aFeatureSettings,
                            const nsString& aLanguageOverride):
-    style(aStyle), systemFont(aSystemFont), printerFont(aPrinterFont),
-    weight(aWeight), stretch(aStretch),
-    size(aSize), sizeAdjust(aSizeAdjust),
     language(aLanguage),
-    languageOverride(ParseFontLanguageOverride(aLanguageOverride))
+    size(aSize), sizeAdjust(aSizeAdjust),
+    languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
+    weight(aWeight), stretch(aStretch),
+    systemFont(aSystemFont), printerFont(aPrinterFont),
+    style(aStyle)
 {
     ParseFontFeatureSettings(aFeatureSettings, featureSettings);
 
@@ -3792,12 +3793,12 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
 }
 
 gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
-    style(aStyle.style), systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
-    weight(aStyle.weight),
-    stretch(aStyle.stretch), size(aStyle.size),
-    sizeAdjust(aStyle.sizeAdjust),
     language(aStyle.language),
-    languageOverride(aStyle.languageOverride)
+    size(aStyle.size), sizeAdjust(aStyle.sizeAdjust),
+    languageOverride(aStyle.languageOverride),
+    weight(aStyle.weight), stretch(aStyle.stretch),
+    systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
+    style(aStyle.style)
 {
     featureSettings.AppendElements(aStyle.featureSettings);
 }
