@@ -2028,26 +2028,16 @@ Tab.prototype = {
         aMetadata.maxZoom *= scaleRatio;
     }
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
-    this.updateViewportSize();
+    this.updateViewportSize(gScreenWidth);
   },
 
   /** Update viewport when the metadata or the window size changes. */
-  updateViewportSize: function updateViewportSize() {
+  updateViewportSize: function updateViewportSize(aOldScreenWidth) {
     // When this function gets called on window resize, we must execute
     // this.sendViewportUpdate() so that refreshDisplayPort is called.
     // Ensure that when making changes to this function that code path
     // is not accidentally removed (the call to sendViewportUpdate() is
     // at the very end).
-
-    if (window.outerWidth == 0 || window.outerHeight == 0) {
-        // this happens sometimes when starting up fennec. we don't want zero
-        // values corrupting our viewport numbers, so ignore this one.
-        return;
-    }
-
-    let oldScreenWidth = gScreenWidth;
-    gScreenWidth = window.outerWidth;
-    gScreenHeight = window.outerHeight;
 
     let browser = this.browser;
     if (!browser)
@@ -2109,7 +2099,7 @@ Tab.prototype = {
     // In all of these cases, we maintain how much actual content is visible
     // within the screen width. Note that "actual content" may be different
     // with respect to CSS pixels because of the CSS viewport size changing.
-    let zoomScale = (screenW * oldBrowserWidth) / (oldScreenWidth * viewportW);
+    let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
     this.setResolution(this._zoom * zoomScale, false);
     this.sendViewportUpdate();
   },
@@ -3199,10 +3189,22 @@ var ViewportHandler = {
         break;
 
       case "resize":
+        // guard against zero values corrupting our viewport numbers. this happens sometimes
+        // during initialization.
+        if (window.outerWidth == 0 || window.outerHeight == 0)
+          break;
+
         // check dimensions changed to avoid infinite loop because updateViewportSize
         // triggers a resize on the content window and will trigger this listener again
-        if (window.outerWidth != gScreenWidth || window.outerHeight != gScreenHeight)
-          BrowserApp.selectedTab.updateViewportSize();
+        if (window.outerWidth == gScreenWidth && window.outerHeight == gScreenHeight)
+          break;
+
+        let oldScreenWidth = gScreenWidth;
+        gScreenWidth = window.outerWidth;
+        gScreenHeight = window.outerHeight;
+        let tabs = BrowserApp.tabs;
+        for (let i = 0; i < tabs.length; i++)
+          tabs[i].updateViewportSize(oldScreenWidth);
         break;
     }
   },
