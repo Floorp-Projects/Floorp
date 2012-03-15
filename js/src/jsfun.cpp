@@ -761,65 +761,44 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
     if (argc < 2 || vp[3].isNullOrUndefined())
         return js_fun_call(cx, (argc > 0) ? 1 : 0, vp);
 
-    InvokeArgsGuard args;
-    if (vp[3].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
-        /*
-         * Pretend we have been passed the 'arguments' object for the current
-         * function and read actuals out of the frame.
-         *
-         * N.B. Changes here need to be propagated to stubs::SplatApplyArgs.
-         */
-        /* Steps 4-6. */
-        unsigned length = cx->fp()->numActualArgs();
-        JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
+    /* N.B. Changes need to be propagated to stubs::SplatApplyArgs. */
 
-        if (!cx->stack.pushInvokeArgs(cx, length, &args))
-            return false;
-
-        /* Push fval, obj, and aobj's elements as args. */
-        args.calleev() = fval;
-        args.thisv() = vp[2];
-
-        /* Steps 7-8. */
-        cx->fp()->forEachCanonicalActualArg(CopyTo(args.array()));
-    } else {
-        /* Step 3. */
-        if (!vp[3].isObject()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS, js_apply_str);
-            return false;
-        }
-
-        /*
-         * Steps 4-5 (note erratum removing steps originally numbered 5 and 7 in
-         * original version of ES5).
-         */
-        JSObject *aobj = &vp[3].toObject();
-        uint32_t length;
-        if (!js_GetLengthProperty(cx, aobj, &length))
-            return false;
-
-        /* Step 6. */
-        if (length > StackSpace::ARGS_LENGTH_MAX) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_MANY_FUN_APPLY_ARGS);
-            return false;
-        }
-
-        if (!cx->stack.pushInvokeArgs(cx, length, &args))
-            return false;
-
-        /* Push fval, obj, and aobj's elements as args. */
-        args.calleev() = fval;
-        args.thisv() = vp[2];
-
-        /* Steps 7-8. */
-        if (!GetElements(cx, aobj, length, args.array()))
-            return false;
+    /* Step 3. */
+    if (!vp[3].isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS, js_apply_str);
+        return false;
     }
+
+    /*
+     * Steps 4-5 (note erratum removing steps originally numbered 5 and 7 in
+     * original version of ES5).
+     */
+    JSObject *aobj = &vp[3].toObject();
+    uint32_t length;
+    if (!js_GetLengthProperty(cx, aobj, &length))
+        return false;
+
+    /* Step 6. */
+    if (length > StackSpace::ARGS_LENGTH_MAX) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_MANY_FUN_APPLY_ARGS);
+        return false;
+    }
+
+    InvokeArgsGuard args;
+    if (!cx->stack.pushInvokeArgs(cx, length, &args))
+        return false;
+
+    /* Push fval, obj, and aobj's elements as args. */
+    args.calleev() = fval;
+    args.thisv() = vp[2];
+
+    /* Steps 7-8. */
+    if (!GetElements(cx, aobj, length, args.array()))
+        return false;
 
     /* Step 9. */
     if (!Invoke(cx, args))
         return false;
-
     *vp = args.rval();
     return true;
 }
