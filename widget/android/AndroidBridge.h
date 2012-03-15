@@ -282,8 +282,6 @@ public:
 
     void FireAndWaitForTracerEvent();
 
-    bool GetAccessibilityEnabled();
-
     class AutoLocalJNIFrame {
     public:
         AutoLocalJNIFrame(int nEntries = 128)
@@ -521,7 +519,6 @@ protected:
     jmethodID jEnableBatteryNotifications;
     jmethodID jDisableBatteryNotifications;
     jmethodID jGetCurrentBatteryInformation;
-    jmethodID jGetAccessibilityEnabled;
     jmethodID jHandleGeckoMessage;
     jmethodID jCheckUriVisited;
     jmethodID jMarkUriVisited;

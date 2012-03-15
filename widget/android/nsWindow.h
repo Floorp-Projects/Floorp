@@ -43,10 +43,6 @@
 
 #include "nsTArray.h"
 
-#ifdef ACCESSIBILITY
-#include "nsAccessible.h"
-#endif
-
 #ifdef MOZ_JAVA_COMPOSITOR
 #include "AndroidJavaWrappers.h"
 #include "Layers.h"
@@ -181,10 +177,6 @@ public:
 
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
-#ifdef ACCESSIBILITY
-    static bool sAccessibilityEnabled;
-#endif
-
 #ifdef MOZ_JAVA_COMPOSITOR
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
@@ -247,21 +239,6 @@ private:
                               const nsIntPoint &refPoint, PRUint64 time);
     void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
     void RedrawAll();
-
-#ifdef ACCESSIBILITY
-    nsRefPtr<nsAccessible> mRootAccessible;
-
-    /**
-     * Request to create the accessible for this window if it is top level.
-     */
-    void CreateRootAccessible();
-
-    /**
-     * Generate the NS_GETACCESSIBLE event to get accessible for this window
-     * and return it.
-     */
-    nsAccessible *DispatchAccessibleEvent();
-#endif // ACCESSIBILITY
 
 #ifdef MOZ_JAVA_COMPOSITOR
     mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
