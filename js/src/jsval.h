@@ -275,7 +275,6 @@ typedef uint64_t JSValueShiftedTag;
 typedef enum JSWhyMagic
 {
     JS_ARRAY_HOLE,               /* a hole in a dense array */
-    JS_ARGS_HOLE,                /* a hole in the args object's array */
     JS_NATIVE_ENUMERATE,         /* indicates that a custom enumerate hook forwarded
                                   * to JS_EnumerateState, which really means the object can be
                                   * enumerated like a native object. */
@@ -289,6 +288,7 @@ typedef enum JSWhyMagic
     JS_UNASSIGNED_ARGUMENTS,     /* the initial value of callobj.arguments */
     JS_OPTIMIZED_ARGUMENTS,      /* optimized-away 'arguments' value */
     JS_IS_CONSTRUCTING,          /* magic value passed to natives to indicate construction */
+    JS_OVERWRITTEN_CALLEE,       /* arguments.callee has been overwritten */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 

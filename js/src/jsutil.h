@@ -297,6 +297,66 @@ UnsignedPtrDiff(const void *bigger, const void *smaller)
  */
 enum MaybeReportError { REPORT_ERROR = true, DONT_REPORT_ERROR = false };
 
+/*****************************************************************************/
+
+/* A bit array is an array of bits represented by an array of words (size_t). */
+
+static inline unsigned
+NumWordsForBitArrayOfLength(size_t length)
+{
+    return (length + (JS_BITS_PER_WORD - 1)) / JS_BITS_PER_WORD;
+}
+
+static inline unsigned
+BitArrayIndexToWordIndex(size_t length, size_t bitIndex)
+{
+    unsigned wordIndex = bitIndex / JS_BITS_PER_WORD;
+    JS_ASSERT(wordIndex < length);
+    return wordIndex;
+}
+
+static inline size_t
+BitArrayIndexToWordMask(size_t i)
+{
+    return size_t(1) << (i % JS_BITS_PER_WORD);
+}
+
+static inline bool
+IsBitArrayElementSet(size_t *array, size_t length, size_t i)
+{
+    return array[BitArrayIndexToWordIndex(length, i)] & BitArrayIndexToWordMask(i);
+}
+
+static inline bool
+IsAnyBitArrayElementSet(size_t *array, size_t length)
+{
+    unsigned numWords = NumWordsForBitArrayOfLength(length);
+    for (unsigned i = 0; i < numWords; ++i) {
+        if (array[i])
+            return true;
+    }
+    return false;
+}
+
+static inline void
+SetBitArrayElement(size_t *array, size_t length, size_t i)
+{
+    array[BitArrayIndexToWordIndex(length, i)] |= BitArrayIndexToWordMask(i);
+}
+
+static inline void
+ClearBitArrayElement(size_t *array, size_t length, size_t i)
+{
+    array[BitArrayIndexToWordIndex(length, i)] &= ~BitArrayIndexToWordMask(i);
+}
+
+static inline void
+ClearAllBitArrayElements(size_t *array, size_t length)
+{
+    for (unsigned i = 0; i < length; ++i)
+        array[i] = 0;
+}
+
 }  /* namespace js */
 #endif  /* __cplusplus */
 
