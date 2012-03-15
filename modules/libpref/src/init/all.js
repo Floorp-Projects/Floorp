@@ -44,8 +44,13 @@
  * entries at the top.
  */
 
-// SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
-//  The first character after a period must be alphabetic.
+/*
+ * SYNTAX HINTS:
+ *
+ *  - Dashes are delimiters; use underscores instead.
+ *  - The first character after a period must be alphabetic.
+ *  - Computed values (e.g. 50 * 1024) don't work.
+ */
 
 pref("keyword.URL", "http://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
 pref("keyword.enabled", false);

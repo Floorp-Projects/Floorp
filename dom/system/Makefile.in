@@ -62,7 +62,7 @@ DIRS = android
 endif
 
 ifdef MOZ_B2G_RIL
-DIRS += b2g
+DIRS += gonk
 endif
 
 CPPSRCS     = \
