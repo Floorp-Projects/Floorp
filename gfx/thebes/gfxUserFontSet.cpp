@@ -82,7 +82,7 @@ gfxProxyFontEntry::gfxProxyFontEntry(const nsTArray<gfxFontFaceSrc>& aFontFaceSr
     mSrcIndex = 0;
     mWeight = aWeight;
     mStretch = aStretch;
-    mItalic = (aItalicStyle & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+    mItalic = (aItalicStyle & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
     mFeatureSettings.AppendElements(aFeatureSettings);
     mLanguageOverride = aLanguageOverride;
     mIsUserFont = true;
@@ -127,7 +127,7 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     bool found;
 
     if (aWeight == 0)
-        aWeight = FONT_WEIGHT_NORMAL;
+        aWeight = NS_FONT_WEIGHT_NORMAL;
 
     // stretch, italic/oblique ==> zero implies normal
 
@@ -154,8 +154,8 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     if (LOG_ENABLED()) {
         LOG(("userfonts (%p) added (%s) with style: %s weight: %d stretch: %d",
              this, NS_ConvertUTF16toUTF8(aFamilyName).get(),
-             (aItalicStyle & FONT_STYLE_ITALIC ? "italic" :
-                 (aItalicStyle & FONT_STYLE_OBLIQUE ? "oblique" : "normal")),
+             (aItalicStyle & NS_FONT_STYLE_ITALIC ? "italic" :
+                 (aItalicStyle & NS_FONT_STYLE_OBLIQUE ? "oblique" : "normal")),
              aWeight, aStretch));
     }
 #endif

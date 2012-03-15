@@ -326,7 +326,7 @@ ATSFontEntry::ATSFontEntry(const nsAString& aPostscriptName,
     mWeight = aWeight;
     mStretch = aStretch;
     mFixedPitch = false; // xxx - do we need this for downloaded fonts?
-    mItalic = (aItalicStyle & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+    mItalic = (aItalicStyle & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
     mUserFontData = aUserFontData;
     mIsUserFont = (aUserFontData != nsnull) || aIsLocal;
     mIsLocalUserFont = aIsLocal;
@@ -423,7 +423,7 @@ CGFontEntry::CGFontEntry(const nsAString& aPostscriptName,
     mWeight = aWeight;
     mStretch = aStretch;
     mFixedPitch = false; // xxx - do we need this for downloaded fonts?
-    mItalic = (aItalicStyle & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+    mItalic = (aItalicStyle & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
     mIsUserFont = aIsUserFont;
     mIsLocalUserFont = aIsLocal;
 }
@@ -1024,12 +1024,12 @@ gfxMacPlatformFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                 new ATSFontEntry(aFontName, fontRef,
                                  w, aProxyEntry->mStretch,
                                  aProxyEntry->mItalic ?
-                                     FONT_STYLE_ITALIC : FONT_STYLE_NORMAL,
+                                     NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
                                  nsnull, true);
         } else {
             newFontEntry =
                 new ATSFontEntry(aFontName, fontRef,
-                                 400, 0, FONT_STYLE_NORMAL, nsnull, false);
+                                 400, 0, NS_FONT_STYLE_NORMAL, nsnull, false);
         }
     } else {
         // lookup face based on postscript or full name
@@ -1046,12 +1046,12 @@ gfxMacPlatformFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                 new CGFontEntry(aFontName, fontRef,
                                 w, aProxyEntry->mStretch,
                                 aProxyEntry->mItalic ?
-                                    FONT_STYLE_ITALIC : FONT_STYLE_NORMAL,
+                                    NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
                                 true, true);
         } else {
             newFontEntry =
                 new CGFontEntry(aFontName, fontRef,
-                                400, 0, FONT_STYLE_NORMAL,
+                                400, 0, NS_FONT_STYLE_NORMAL,
                                 false, false);
         }
         ::CFRelease(fontRef);
@@ -1107,7 +1107,7 @@ gfxMacPlatformFontList::MakePlatformFontCG(const gfxProxyFontEntry *aProxyEntry,
         newFontEntry(new CGFontEntry(uniqueName, fontRef, w,
                                      aProxyEntry->mStretch,
                                      aProxyEntry->mItalic ?
-                                         FONT_STYLE_ITALIC : FONT_STYLE_NORMAL,
+                                         NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
                                      true, false));
     ::CFRelease(fontRef);
 
@@ -1251,7 +1251,7 @@ gfxMacPlatformFontList::MakePlatformFontATS(const gfxProxyFontEntry *aProxyEntry
                              fontRef,
                              w, aProxyEntry->mStretch,
                              aProxyEntry->mItalic ?
-                                 FONT_STYLE_ITALIC : FONT_STYLE_NORMAL,
+                                 NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
                              userFontData, false);
 
         // if succeeded and font cmap is good, return the new font

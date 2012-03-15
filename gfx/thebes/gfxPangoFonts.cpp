@@ -1304,8 +1304,8 @@ FindFontPatterns(gfxUserFontSet *mUserFontSet,
                                      needsBold, aWaitForUserFont));
 
     // Accept synthetic oblique for italic and oblique.
-    if (!fontEntry && aStyle != FONT_STYLE_NORMAL) {
-        style.style = FONT_STYLE_NORMAL;
+    if (!fontEntry && aStyle != NS_FONT_STYLE_NORMAL) {
+        style.style = NS_FONT_STYLE_NORMAL;
         fontEntry = static_cast<gfxUserFcFontEntry*>
             (mUserFontSet->FindFontEntry(utf16Family, style, aFoundFamily,
                                          needsBold, aWaitForUserFont));

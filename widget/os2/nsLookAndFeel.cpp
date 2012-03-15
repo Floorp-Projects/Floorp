@@ -532,11 +532,11 @@ nsLookAndFeel::GetFont(FontID aID, nsString& aFontName,
   // do, otherwise it's bad luck
   NS_NAMED_LITERAL_CSTRING(spcBold, " Bold");
   if ((pos = fontFace.Find(spcBold.get(), false, 0, -1)) > -1) {
-    aFontStyle.weight = FONT_WEIGHT_BOLD;
+    aFontStyle.weight = NS_FONT_WEIGHT_BOLD;
     // strip the attribute, now that we have set it in the gfxFontStyle
     fontFace.Cut(pos, spcBold.Length());
   } else {
-    aFontStyle.weight = FONT_WEIGHT_NORMAL;
+    aFontStyle.weight = NS_FONT_WEIGHT_NORMAL;
   }
 
   // FIXME: Set aFontStyle.stretch correctly!
@@ -547,23 +547,23 @@ nsLookAndFeel::GetFont(FontID aID, nsString& aFontName,
   NS_NAMED_LITERAL_CSTRING(spcOblique, " Oblique");
   NS_NAMED_LITERAL_CSTRING(spcObli, " Obli");
   if ((pos = fontFace.Find(spcItalic.get(), false, 0, -1)) > -1) {
-    aFontStyle.style = FONT_STYLE_ITALIC;
+    aFontStyle.style = NS_FONT_STYLE_ITALIC;
     fontFace.Cut(pos, spcItalic.Length());
   } else if ((pos = fontFace.Find(spcOblique.get(), false, 0, -1)) > -1) {
     // oblique fonts are rare on OS/2 and not specially supported by
     // the GPI system, but at least we are trying...
-    aFontStyle.style = FONT_STYLE_OBLIQUE;
+    aFontStyle.style = NS_FONT_STYLE_OBLIQUE;
     fontFace.Cut(pos, spcOblique.Length());
   } else if ((pos = fontFace.Find(spcObli.get(), false, 0, -1)) > -1) {
     // especially oblique often gets cut by the 32 char limit to "Obli",
     // so search for that, too (anything shorter would be ambiguous)
-    aFontStyle.style = FONT_STYLE_OBLIQUE;
+    aFontStyle.style = NS_FONT_STYLE_OBLIQUE;
     // In this case, assume that this is the last property in the line
     // and cut off everything else, too
     // This is needed in case it was really Obliq or Obliqu...
     fontFace.Cut(pos, fontFace.Length());
   } else {
-    aFontStyle.style = FONT_STYLE_NORMAL;
+    aFontStyle.style = NS_FONT_STYLE_NORMAL;
   }
 
   // just throw away any modifiers that are separated by dots (which are either

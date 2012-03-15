@@ -545,7 +545,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule *aRule, PRUint8 aSheetType,
 
   PRUint32 weight = NS_STYLE_FONT_WEIGHT_NORMAL;
   PRUint32 stretch = NS_STYLE_FONT_STRETCH_NORMAL;
-  PRUint32 italicStyle = FONT_STYLE_NORMAL;
+  PRUint32 italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   nsString featureSettings, languageOverride;
 
   // set up weight
@@ -578,7 +578,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule *aRule, PRUint8 aSheetType,
   if (unit == eCSSUnit_Enumerated) {
     italicStyle = val.GetIntValue();
   } else if (unit == eCSSUnit_Normal) {
-    italicStyle = FONT_STYLE_NORMAL;
+    italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   } else {
     NS_ASSERTION(unit == eCSSUnit_Null,
                  "@font-face style has unexpected unit");
