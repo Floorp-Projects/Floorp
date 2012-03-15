@@ -58,7 +58,7 @@ namespace mozilla {
 static const uint32_t GoldenRatioU32 = 0x9E3779B9U;
 
 inline uint32_t
-RotateLeft32(uint32_t value, uint8_t bits)
+RotateBitsLeft32(uint32_t value, uint8_t bits)
 {
   MOZ_ASSERT(bits < 32);
   return (value << bits) | (value >> (32 - bits));
@@ -90,7 +90,7 @@ AddU32ToHash(uint32_t hash, uint32_t value)
    * Otherwise, if |hash| is 0 (as it often is for the beginning of a message),
    * the expression
    *
-   *   (GoldenRatioU32 * RotateLeft(hash, 5)) |xor| value
+   *   (GoldenRatioU32 * RotateBitsLeft(hash, 5)) |xor| value
    *
    * evaluates to |value|.
    *
@@ -108,7 +108,7 @@ AddU32ToHash(uint32_t hash, uint32_t value)
    * multiplicative effect.  Our golden ratio constant has order 2^29, which is
    * more than enough for our purposes.)
    */
-  return GoldenRatioU32 * (RotateLeft32(hash, 5) ^ value);
+  return GoldenRatioU32 * (RotateBitsLeft32(hash, 5) ^ value);
 }
 
 /**
