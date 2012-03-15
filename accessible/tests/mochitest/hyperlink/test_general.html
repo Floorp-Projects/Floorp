@@ -9,6 +9,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="../common.js"></script>
@@ -88,6 +90,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
 
       //////////////////////////////////////////////////////////////////////////
       // image map and its link children
+      ensureImageMapTree("imgmap");
+
       var imageMapHyperlinkAcc = getAccessible("imgmap",
                                                [nsIAccessibleHyperLink]);
       testThis("imgmap", imageMapHyperlinkAcc, ROLE_IMAGE_MAP, 2, "b", true,
@@ -268,7 +272,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
   ><img width="447" id="imgmap"
         height="15"
         usemap="#atoz_map"
-        src="letters.gif"><br>Empty link:<br
+        src="../letters.gif"><br>Empty link:<br
   ><a id="emptyLink" href=""><img src=""></a
   ><br>Link with embedded span<br
   ><a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a

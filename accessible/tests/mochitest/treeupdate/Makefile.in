@@ -54,6 +54,7 @@ _TEST_FILES =\
 		test_doc.html \
 		test_gencontent.html \
 		test_hidden.html \
+		test_imagemap.html \
 		test_list_editabledoc.html \
 		test_list.html \
 		test_menu.xul \
