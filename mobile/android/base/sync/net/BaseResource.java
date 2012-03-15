@@ -11,8 +11,11 @@ import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
+
+import org.mozilla.gecko.sync.Logger;
 
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
@@ -20,6 +23,7 @@ import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.HttpVersion;
 import ch.boye.httpclientandroidlib.auth.Credentials;
 import ch.boye.httpclientandroidlib.auth.UsernamePasswordCredentials;
+import ch.boye.httpclientandroidlib.client.AuthCache;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 import ch.boye.httpclientandroidlib.client.methods.HttpDelete;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
@@ -27,13 +31,14 @@ import ch.boye.httpclientandroidlib.client.methods.HttpPost;
 import ch.boye.httpclientandroidlib.client.methods.HttpPut;
 import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
 import ch.boye.httpclientandroidlib.client.methods.HttpUriRequest;
+import ch.boye.httpclientandroidlib.client.protocol.ClientContext;
 import ch.boye.httpclientandroidlib.conn.ClientConnectionManager;
 import ch.boye.httpclientandroidlib.conn.scheme.PlainSocketFactory;
 import ch.boye.httpclientandroidlib.conn.scheme.Scheme;
 import ch.boye.httpclientandroidlib.conn.scheme.SchemeRegistry;
 import ch.boye.httpclientandroidlib.conn.ssl.SSLSocketFactory;
 import ch.boye.httpclientandroidlib.impl.auth.BasicScheme;
-import ch.boye.httpclientandroidlib.impl.client.AbstractHttpClient;
+import ch.boye.httpclientandroidlib.impl.client.BasicAuthCache;
 import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import ch.boye.httpclientandroidlib.impl.conn.tsccm.ThreadSafeClientConnManager;
 import ch.boye.httpclientandroidlib.params.HttpConnectionParams;
@@ -42,8 +47,6 @@ import ch.boye.httpclientandroidlib.params.HttpProtocolParams;
 import ch.boye.httpclientandroidlib.protocol.BasicHttpContext;
 import ch.boye.httpclientandroidlib.protocol.HttpContext;
 import ch.boye.httpclientandroidlib.util.EntityUtils;
-
-import org.mozilla.gecko.sync.Logger;
 
 /**
  * Provide simple HTTP access to a Sync server or similar.
@@ -54,9 +57,15 @@ import org.mozilla.gecko.sync.Logger;
 public class BaseResource implements Resource {
   private static final String ANDROID_LOOPBACK_IP = "10.0.2.2";
 
+  private static final int MAX_TOTAL_CONNECTIONS     = 20;
+  private static final int MAX_CONNECTIONS_PER_ROUTE = 10;
+
+  private static final long MAX_IDLE_TIME_SECONDS = 30;
+
   public static boolean rewriteLocalhost = true;
 
   private static final String LOG_TAG = "BaseResource";
+
   protected URI uri;
   protected BasicHttpContext context;
   protected DefaultHttpClient client;
@@ -95,14 +104,21 @@ public class BaseResource implements Resource {
   }
 
   /**
-   * Apply the provided credentials string to the provided request.
-   * @param credentials
-   *        A string, "user:pass".
-   * @param client
-   * @param request
-   * @param context
+   * This shuts up HttpClient, which will otherwise debug log about there
+   * being no auth cache in the context.
    */
-  private static void applyCredentials(String credentials, AbstractHttpClient client, HttpUriRequest request, HttpContext context) {
+  private static void addAuthCacheToContext(HttpUriRequest request, HttpContext context) {
+    AuthCache authCache = new BasicAuthCache();                // Not thread safe.
+    context.setAttribute(ClientContext.AUTH_CACHE, authCache);
+  }
+
+  /**
+   * Apply the provided credentials string to the provided request.
+   * @param credentials a string, "user:pass".
+   */
+  private static void applyCredentials(String credentials, HttpUriRequest request, HttpContext context) {
+    addAuthCacheToContext(request, context);
+
     Credentials creds = new UsernamePasswordCredentials(credentials);
     Header header = BasicScheme.authenticate(creds, "US-ASCII", false);
     request.addHeader(header);
@@ -115,20 +131,23 @@ public class BaseResource implements Resource {
    * @throws KeyManagementException
    */
   private void prepareClient() throws KeyManagementException, NoSuchAlgorithmException {
-    ClientConnectionManager connectionManager = getConnectionManager();
     context = new BasicHttpContext();
-    client = new DefaultHttpClient(connectionManager);
+
+    // We could reuse these client instances, except that we mess around
+    // with their parameters… so we'd need a pool of some kind.
+    client = new DefaultHttpClient(getConnectionManager());
 
     // TODO: Eventually we should use Apache HttpAsyncClient. It's not out of alpha yet.
     // Until then, we synchronously make the request, then invoke our delegate's callback.
     String credentials = delegate.getCredentials();
     if (credentials != null) {
-      BaseResource.applyCredentials(credentials, client, request, context);
+      BaseResource.applyCredentials(credentials, request, context);
     }
 
     HttpParams params = client.getParams();
     HttpConnectionParams.setConnectionTimeout(params, delegate.connectionTimeout());
     HttpConnectionParams.setSoTimeout(params, delegate.socketTimeout());
+    HttpConnectionParams.setStaleCheckingEnabled(params, false);
     HttpProtocolParams.setContentCharset(params, charset);
     HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
     delegate.addHeaders(request, client);
@@ -148,6 +167,7 @@ public class BaseResource implements Resource {
     }
   }
 
+  // Call within a synchronized block on connManagerMonitor.
   private static ClientConnectionManager enableTLSConnectionManager() throws KeyManagementException, NoSuchAlgorithmException  {
     SSLContext sslContext = SSLContext.getInstance("TLS");
     sslContext.init(null, null, new SecureRandom());
@@ -156,6 +176,9 @@ public class BaseResource implements Resource {
     schemeRegistry.register(new Scheme("https", 443, sf));
     schemeRegistry.register(new Scheme("http", 80, new PlainSocketFactory()));
     ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(schemeRegistry);
+
+    cm.setMaxTotal(MAX_TOTAL_CONNECTIONS);
+    cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
     connManager = cm;
     return cm;
   }
@@ -169,6 +192,37 @@ public class BaseResource implements Resource {
       }
       return enableTLSConnectionManager();
     }
+  }
+
+  /**
+   * Do some cleanup, so we don't need the stale connection check.
+   */
+  public static void closeExpiredConnections() {
+    ClientConnectionManager connectionManager;
+    synchronized (connManagerMonitor) {
+      connectionManager = connManager;
+    }
+    if (connectionManager == null) {
+      return;
+    }
+    Logger.trace(LOG_TAG, "Closing expired connections.");
+    connectionManager.closeExpiredConnections();
+
+    Logger.trace(LOG_TAG, "Closing idle connections.");
+    connectionManager.closeIdleConnections(MAX_IDLE_TIME_SECONDS, TimeUnit.SECONDS);
+  }
+
+  public static void shutdownConnectionManager() {
+    ClientConnectionManager connectionManager;
+    synchronized (connManagerMonitor) {
+      connectionManager = connManager;
+      connManager = null;
+    }
+    if (connectionManager == null) {
+      return;
+    }
+    Logger.debug(LOG_TAG, "Shutting down connection manager.");
+    connectionManager.shutdown();
   }
 
   private void execute() {
@@ -239,7 +293,7 @@ public class BaseResource implements Resource {
   public static void consumeEntity(HttpEntity entity) {
     try {
       EntityUtils.consume(entity);
-    } catch (Exception e) {
+    } catch (IOException e) {
       // Doesn't matter.
     }
   }
@@ -255,7 +309,13 @@ public class BaseResource implements Resource {
    *          The HttpResponse to be consumed.
    */
   public static void consumeEntity(HttpResponse response) {
-    consumeEntity(response.getEntity());
+    if (response == null) {
+      return;
+    }
+    try {
+      EntityUtils.consume(response.getEntity());
+    } catch (IOException e) {
+    }
   }
 
   /**
@@ -269,9 +329,10 @@ public class BaseResource implements Resource {
    *          The SyncStorageResponse to be consumed.
    */
   public static void consumeEntity(SyncStorageResponse response) {
-    if (response.httpResponse() != null) {
-      consumeEntity(response.httpResponse());
+    if (response.httpResponse() == null) {
+      return;
     }
+    consumeEntity(response.httpResponse());
   }
 
   /**
@@ -284,10 +345,9 @@ public class BaseResource implements Resource {
    */
   public static void consumeReader(BufferedReader reader) {
     try {
-      while ((reader.readLine()) != null) {
-      }
+      reader.close();
     } catch (IOException e) {
-      return;
+      // Do nothing.
     }
   }
 }
