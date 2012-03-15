@@ -367,7 +367,7 @@ var BrowserApp = {
     ];
 
     let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-    let message = Strings.browser.formatStringFromName("telemetry.optin.message", [serverOwner, brandShortName], 2);
+    let message = Strings.browser.formatStringFromName("telemetry.optin.message2", [serverOwner, brandShortName], 2);
     let learnMoreLabel = Strings.browser.GetStringFromName("telemetry.optin.learnMore");
     let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
     learnMoreUrl += "how-can-i-help-submitting-performance-data";
@@ -599,14 +599,6 @@ var BrowserApp = {
     let evt = document.createEvent("UIEvents");
     evt.initUIEvent("TabSelect", true, false, window, null);
     aTab.browser.dispatchEvent(evt);
-
-    let message = {
-      gecko: {
-        type: "Tab:Selected:Done",
-        tabID: aTab.id
-      }
-    };
-    sendMessageToJava(message);
   },
 
   quit: function quit() {

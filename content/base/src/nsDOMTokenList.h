@@ -58,7 +58,7 @@ public:
 
   void DropReference();
 
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);
 
   nsINode *GetParentObject()

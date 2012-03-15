@@ -60,16 +60,26 @@ static void
 SetupCapitalization(const PRUnichar* aWord, PRUint32 aLength,
                     bool* aCapitalization)
 {
-  // Capitalize the first non-punctuation character after a space or start
+  // Capitalize the first alphanumeric character after a space or start
   // of the word.
   // The only space character a word can contain is NBSP.
   bool capitalizeNextChar = true;
   for (PRUint32 i = 0; i < aLength; ++i) {
-    if (capitalizeNextChar && !nsContentUtils::IsFirstLetterPunctuation(aWord[i])) {
-      aCapitalization[i] = true;
-      capitalizeNextChar = false;
+    PRUint32 ch = aWord[i];
+    if (capitalizeNextChar) {
+      if (NS_IS_HIGH_SURROGATE(ch) && i + 1 < aLength &&
+          NS_IS_LOW_SURROGATE(aWord[i + 1])) {
+        ch = SURROGATE_TO_UCS4(ch, aWord[i + 1]);
+      }
+      if (nsContentUtils::IsAlphanumeric(ch)) {
+        aCapitalization[i] = true;
+        capitalizeNextChar = false;
+      }
+      if (!IS_IN_BMP(ch)) {
+        ++i;
+      }
     }
-    if (aWord[i] == 0xA0 /*NBSP*/) {
+    if (ch == 0xA0 /*NBSP*/) {
       capitalizeNextChar = true;
     }
   }

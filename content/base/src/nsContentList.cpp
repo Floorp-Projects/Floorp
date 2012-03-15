@@ -192,7 +192,7 @@ NS_IMPL_ADDREF_INHERITED(nsSimpleContentList, nsBaseContentList)
 NS_IMPL_RELEASE_INHERITED(nsSimpleContentList, nsBaseContentList)
 
 JSObject*
-nsSimpleContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+nsSimpleContentList::WrapObject(JSContext *cx, JSObject *scope,
                                 bool *triedToWrap)
 {
   return mozilla::dom::binding::NodeList::create(cx, scope, this, triedToWrap);
@@ -509,8 +509,7 @@ nsContentList::~nsContentList()
 }
 
 JSObject*
-nsContentList::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
-                          bool *triedToWrap)
+nsContentList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
   return mozilla::dom::binding::HTMLCollection::create(cx, scope, this,
                                                        triedToWrap);

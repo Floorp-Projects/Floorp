@@ -82,6 +82,14 @@ enum HSType {
 
 HSType GetHangulSyllableType(PRUint32 aCh);
 
+// Case mappings for the full Unicode range;
+// note that it may be worth testing for ASCII chars and taking
+// a separate fast-path before calling these, in perf-critical places
+PRUint32 GetUppercase(PRUint32 aCh);
+PRUint32 GetLowercase(PRUint32 aCh);
+PRUint32 GetTitlecaseForLower(PRUint32 aCh); // maps LC to titlecase, UC unchanged
+PRUint32 GetTitlecaseForAll(PRUint32 aCh); // maps both UC and LC to titlecase
+
 enum ShapingType {
     SHAPING_DEFAULT   = 0x0001,
     SHAPING_ARABIC    = 0x0002,
