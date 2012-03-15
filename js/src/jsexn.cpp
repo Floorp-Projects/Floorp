@@ -290,11 +290,42 @@ struct SuppressErrorsGuard
     }
 };
 
-struct AppendArg {
+struct AppendWrappedArg {
+    JSContext *cx;
     Vector<Value> &values;
-    AppendArg(Vector<Value> &values) : values(values) {}
+    AppendWrappedArg(JSContext *cx, Vector<Value> &values)
+      : cx(cx),
+        values(values)
+    {}
+
     bool operator()(unsigned, Value *vp) {
-        return values.append(*vp);
+        Value v = *vp;
+
+        /*
+         * Try to wrap.
+         *
+         * If wrap() fails, there's a good chance that it's because we're
+         * already in the process of throwing a native stack limit exception.
+         *
+         * This causes wrap() to throw, but it can't actually create an exception
+         * because we're already making one here, and cx->generatingError is true.
+         * So it returns false without an exception set on the stack. If we propagate
+         * that, it constitutes an uncatchable exception.
+         *
+         * So we just ignore exceptions. If wrap actually does set a pending
+         * exception, or if the caller sloppily left an exception on cx (which the
+         * e4x parser does), it doesn't matter - it will be overwritten shortly.
+         *
+         * NB: In the sloppy e4x case, one might thing we should clear the
+         * exception before calling wrap(). But wrap() has to be ok with pending
+         * exceptions, since it wraps exception objects during cross-compartment
+         * unwinding.
+         */
+        if (!cx->compartment->wrap(cx, &v))
+            v = JSVAL_VOID;
+
+        /* Append the value. */
+        return values.append(v);
     }
 };
 
@@ -315,16 +346,14 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     {
         SuppressErrorsGuard seg(cx);
         for (FrameRegsIter i(cx); !i.done(); ++i) {
-            /*
-             * An exception object stores stack values from 'fp' which may be
-             * in a different compartment from 'exnObject'. Engine compartment
-             * invariants require such values to be wrapped. A simpler solution
-             * is to just cut off the backtrace at compartment boundaries.
-             * Also, avoid exposing values from different security principals.
-             */
             StackFrame *fp = i.fp();
-            if (fp->compartment() != cx->compartment)
-                break;
+
+            /*
+             * Ask the crystal CAPS ball whether we can see values across
+             * compartment boundaries.
+             *
+             * NB: 'fp' may point to cross-compartment values that require wrapping.
+             */
             if (checkAccess && fp->isNonEvalFunctionFrame()) {
                 Value v = NullValue();
                 jsid callerid = ATOM_TO_JSID(cx->runtime->atomState.callerAtom);
@@ -338,7 +367,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
             if (fp->isNonEvalFunctionFrame()) {
                 frame.funName = fp->fun()->atom ? fp->fun()->atom : cx->runtime->emptyString;
                 frame.argc = fp->numActualArgs();
-                if (!fp->forEachCanonicalActualArg(AppendArg(values)))
+                if (!fp->forEachCanonicalActualArg(AppendWrappedArg(cx, values)))
                     return false;
             } else {
                 frame.funName = NULL;
@@ -591,7 +620,7 @@ ValueToShortSource(JSContext *cx, const Value &v)
          * memory, for too many classes (see Mozilla bug 166743).
          */
         char buf[100];
-        JS_snprintf(buf, sizeof buf, "[object %s]", obj->getClass()->name);
+        JS_snprintf(buf, sizeof buf, "[object %s]", js::UnwrapObject(obj, false)->getClass()->name);
         str = JS_NewStringCopyZ(cx, buf);
     }
 
