@@ -3,7 +3,7 @@
  */
 
 // install.rdf size, icon.png size, subfile.txt size
-const ADDON_SIZE = 635 + 15 + 26;
+const ADDON_SIZE = 672 + 15 + 26;
 
 // This verifies the functionality of getResourceURI
 // There are two cases - with a filename it returns an nsIFileURL to the filename
@@ -67,6 +67,13 @@ function run_test() {
         do_check_eq(a1.size, ADDON_SIZE);
 
         a1.uninstall();
+
+        try {
+          // hasResource should never throw an exception.
+          do_check_false(a1.hasResource("icon.png"));
+        } catch (e) {
+          do_check_true(false);
+        }
 
         restartManager();
 
