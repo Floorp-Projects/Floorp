@@ -199,10 +199,12 @@ DiscardTracker::EnableTimer()
     return NS_OK;
   sTimerOn = true;
 
-  // Activate
+  // Activate the timer.  Have it call us back in (sMinDiscardTimeoutMs / 2)
+  // ms, so that an image is discarded between sMinDiscardTimeoutMs and
+  // (3/2 * sMinDiscardTimeoutMs) ms after it's unlocked.
   return sTimer->InitWithFuncCallback(TimerCallback,
                                       nsnull,
-                                      sMinDiscardTimeoutMs,
+                                      sMinDiscardTimeoutMs / 2,
                                       nsITimer::TYPE_REPEATING_SLACK);
 }
 
