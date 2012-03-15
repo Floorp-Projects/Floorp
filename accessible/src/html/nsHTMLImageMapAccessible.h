@@ -51,8 +51,8 @@
 class nsHTMLImageMapAccessible : public nsHTMLImageAccessibleWrap
 {
 public:
-  nsHTMLImageMapAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
-                           nsIDOMHTMLMapElement* aMapElm);
+  nsHTMLImageMapAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  virtual ~nsHTMLImageMapAccessible() { }
 
   // nsISupports and cycle collector
   NS_DECL_ISUPPORTS_INHERITED
@@ -65,15 +65,26 @@ public:
   virtual nsAccessible* AnchorAt(PRUint32 aAnchorIndex);
   virtual already_AddRefed<nsIURI> AnchorURIAt(PRUint32 aAnchorIndex);
 
+  /**
+   * Update area children of the image map.
+   */
+  void UpdateChildAreas(bool aDoFireEvents = true);
+
 protected:
 
   // nsAccessible
   virtual void CacheChildren();
-
-private:
-  // Reference on linked map element if any.
-  nsCOMPtr<nsIDOMHTMLMapElement> mMapElement;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessible downcasting method
+
+inline nsHTMLImageMapAccessible*
+nsAccessible::AsImageMap()
+{
+  return IsImageMapAccessible() ?
+    static_cast<nsHTMLImageMapAccessible*>(this) : nsnull;
+}
 
 
 /**
@@ -88,6 +99,9 @@ public:
   // nsIAccessible
 
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
+
+  // nsAccessNode
+  virtual bool IsPrimaryForNode() const;
 
   // nsAccessible
   virtual void Description(nsString& aDescription);

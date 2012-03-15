@@ -486,6 +486,21 @@ function testDefunctAccessible(aAcc, aNodeOrId)
   ok(success, "parent" + msg);
 }
 
+/**
+ * Ensure that image map accessible tree is created.
+ */
+function ensureImageMapTree(aID)
+{
+  // XXX: We send a useless mouse move to the image to force it to setup its
+  // image map, because flushing layout won't do it. Hopefully bug 135040
+  // will make this not suck.
+  synthesizeMouse(getNode(aID), 10, 10, { type: "mousemove" });
+
+  // XXX This may affect a11y more than other code because imagemaps may not
+  // get drawn or have an mouse event over them. Bug 570322 tracks a11y
+  // dealing with this.
+  todo(false, "Need to remove this image map workaround.");
+}
 
 /**
  * Convert role to human readable string.
