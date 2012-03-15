@@ -2379,9 +2379,9 @@ abstract public class GeckoApp
             // if we're not adding a new tab, show the old url
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
-                Tab.HistoryEntry he = tab.getLastHistoryEntry();
-                if (he != null) {
-                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, he.mUri);
+                String url = tab.getURL();
+                if (url != null) {
+                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, url);
                 }
             }
         }
