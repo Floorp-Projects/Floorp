@@ -215,6 +215,7 @@ body[dir=rtl] #defaultSnippet2 {
               0 -1px 0 hsla(0,0%,100%,.25);
 }
 
+#launcher:not([session]),
 body[narrow] #launcher[session] {
   display: block; /* display separator and restore button on separate lines */
   text-align: center;
