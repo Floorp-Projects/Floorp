@@ -167,7 +167,6 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetCurrentBatteryInformation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getCurrentBatteryInformation", "()[D");
     jRemovePluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "removePluginView", "(Landroid/view/View;)V");
 
-    jGetAccessibilityEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getAccessibilityEnabled", "()Z");
     jHandleGeckoMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
     jCheckUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "checkUriVisited", "(Ljava/lang/String;)V");
     jMarkUriVisited = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
@@ -814,18 +813,6 @@ AndroidBridge::HideProgressDialogOnce()
         env->CallStaticVoidMethod(mGeckoAppShellClass, jHideProgressDialog);
         once = true;
     }
-}
-
-bool
-AndroidBridge::GetAccessibilityEnabled()
-{
-    ALOG_BRIDGE("AndroidBridge::GetAccessibilityEnabled");
-
-    JNIEnv *env = GetJNIEnv();
-    if (!env)
-        return false;
-
-    return env->CallStaticBooleanMethod(mGeckoAppShellClass, jGetAccessibilityEnabled);
 }
 
 void

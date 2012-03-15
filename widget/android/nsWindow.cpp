@@ -91,10 +91,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 static gfxIntSize gAndroidBounds = gfxIntSize(0, 0);
 static gfxIntSize gAndroidScreenBounds;
 
-#ifdef ACCESSIBILITY
-bool nsWindow::sAccessibilityEnabled = false;
-#endif
-
 #ifdef MOZ_JAVA_COMPOSITOR
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -196,9 +192,6 @@ nsWindow::nsWindow() :
     mIsVisible(false),
     mParent(nsnull),
     mFocus(nsnull),
-#ifdef ACCESSIBILITY
-    mRootAccessible(nsnull),
-#endif
     mIMEComposing(false)
 {
 }
@@ -209,10 +202,6 @@ nsWindow::~nsWindow()
     nsWindow *top = FindTopLevel();
     if (top->mFocus == this)
         top->mFocus = nsnull;
-#ifdef ACCESSIBILITY
-    if (mRootAccessible)
-        mRootAccessible = nsnull;
-#endif
     ALOG("nsWindow %p destructor", (void*)this);
 #ifdef MOZ_JAVA_COMPOSITOR
     SetCompositor(NULL, NULL, NULL);
@@ -416,49 +405,12 @@ nsWindow::Show(bool aState)
         RedrawAll();
     }
 
-#ifdef ACCESSIBILITY
-    static bool sAccessibilityChecked = false;
-    if (!sAccessibilityChecked) {
-        sAccessibilityChecked = true;
-        sAccessibilityEnabled =
-            AndroidBridge::Bridge()->GetAccessibilityEnabled();
-     } 
-    if (aState && sAccessibilityEnabled)
-        CreateRootAccessible();
-#endif
-
 #ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
 #endif
 
     return NS_OK;
 }
-
-#ifdef ACCESSIBILITY
-void
-nsWindow::CreateRootAccessible()
-{
-    if (IsTopLevel() && !mRootAccessible) {
-        ALOG(("nsWindow:: Create Toplevel Accessibility\n"));
-        nsAccessible *acc = DispatchAccessibleEvent();
-
-        if (acc) {
-            mRootAccessible = acc;
-        }
-    }
-}
-
-nsAccessible*
-nsWindow::DispatchAccessibleEvent()
-{
-    nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-
-    return event.mAccessible;
-}
-#endif
 
 NS_IMETHODIMP
 nsWindow::SetModal(bool aState)
