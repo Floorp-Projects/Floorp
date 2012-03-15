@@ -825,7 +825,7 @@ PropertiesView.prototype = {
 
     // Contains generic nodes and functionality.
     let element = this._createPropertyElement(aName, aId, "variable",
-                                              aScope.querySelector(".details"));
+                                              aScope.getElementsByClassName("details")[0]);
 
     // Make sure the element was created successfully.
     if (!element) {
@@ -845,19 +845,25 @@ PropertiesView.prototype = {
     // Setup the additional elements specific for a variable node.
     element.refresh(function() {
       let separator = document.createElement("span");
-      let info = document.createElement("span");
-      let title = element.querySelector(".title");
-      let arrow = element.querySelector(".arrow");
+      let value = document.createElement("span");
+      let title = element.getElementsByClassName("title")[0];
 
       // Separator shouldn't be selectable.
       separator.className = "unselectable";
       separator.appendChild(document.createTextNode(": "));
 
       // The variable information (type, class and/or value).
-      info.className = "info";
+      value.className = "value";
+
+      // Handle the click event when pressing the element value label.
+      value.addEventListener("click", this._activateElementInputMode.bind({
+        scope: this,
+        element: element,
+        value: value
+      }));
 
       title.appendChild(separator);
-      title.appendChild(info);
+      title.appendChild(value);
 
     }.bind(this));
 
@@ -898,17 +904,35 @@ PropertiesView.prototype = {
       aGrip = { type: "null" };
     }
 
-    let info = aVar.querySelector(".info") || aVar.target.info;
+    let value = aVar.getElementsByClassName("value")[0];
 
-    // Make sure the info node exists.
-    if (!info) {
+    // Make sure the value node exists.
+    if (!value) {
       return null;
     }
 
-    info.textContent = this._propertyString(aGrip);
-    info.classList.add(this._propertyColor(aGrip));
-
+    this._applyGrip(value, aGrip);
     return aVar;
+  },
+
+  /**
+   * Applies the necessary text content and class name to a value node based
+   * on a grip.
+   *
+   * @param object aValueNode
+   *        The value node to apply the changes to.
+   * @param object aGrip
+   *        @see DebuggerView.Properties._setGrip
+   */
+  _applyGrip: function DVP__applyGrip(aValueNode, aGrip) {
+    let prevGrip = aValueNode.currentGrip;
+    if (prevGrip) {
+      aValueNode.classList.remove(this._propertyColor(prevGrip));
+    }
+
+    aValueNode.textContent = this._propertyString(aGrip);
+    aValueNode.classList.add(this._propertyColor(aGrip));
+    aValueNode.currentGrip = aGrip;
   },
 
   /**
@@ -1000,7 +1024,7 @@ PropertiesView.prototype = {
 
     // Contains generic nodes and functionality.
     let element = this._createPropertyElement(aName, aId, "property",
-                                              aVar.querySelector(".details"));
+                                              aVar.getElementsByClassName("details")[0]);
 
     // Make sure the element was created successfully.
     if (!element) {
@@ -1021,15 +1045,14 @@ PropertiesView.prototype = {
     element.refresh(function(pKey, pGrip) {
       let propertyString = this._propertyString(pGrip);
       let propertyColor = this._propertyColor(pGrip);
-      let key = document.createElement("div");
-      let value = document.createElement("div");
+      let title = element.getElementsByClassName("title")[0];
+      let name = title.getElementsByClassName("name")[0];
       let separator = document.createElement("span");
-      let title = element.querySelector(".title");
-      let arrow = element.querySelector(".arrow");
+      let value = document.createElement("span");
 
       // Use a key element to specify the property name.
-      key.className = "key";
-      key.appendChild(document.createTextNode(pKey));
+      name.className = "key";
+      name.appendChild(document.createTextNode(pKey));
 
       // Use a value element to specify the property value.
       value.className = "value";
@@ -1041,18 +1064,19 @@ PropertiesView.prototype = {
       separator.appendChild(document.createTextNode(": "));
 
       if ("undefined" !== typeof pKey) {
-        title.appendChild(key);
+        title.appendChild(name);
       }
       if ("undefined" !== typeof pGrip) {
         title.appendChild(separator);
         title.appendChild(value);
       }
 
-      // Make the property also behave as a variable, to allow
-      // recursively adding properties to properties.
-      element.target = {
-        info: value
-      };
+      // Handle the click event when pressing the element value label.
+      value.addEventListener("click", this._activateElementInputMode.bind({
+        scope: this,
+        element: element,
+        value: value
+      }));
 
       // Save the property to the variable for easier access.
       Object.defineProperty(aVar, pKey, { value: element,
@@ -1063,6 +1087,143 @@ PropertiesView.prototype = {
 
     // Return the element for later use if necessary.
     return element;
+  },
+
+  /**
+   * Makes an element's (variable or priperty) value editable.
+   * Make sure 'this' is bound to an object containing the properties:
+   * {
+   *   "scope": the original scope to be used, probably DebuggerView.Properties,
+   *   "element": the element whose value should be made editable,
+   *   "value": the node displaying the value
+   * }
+   *
+   * @param event aEvent [optional]
+   *        The event requesting this action.
+   */
+  _activateElementInputMode: function DVP__activateElementInputMode(aEvent) {
+    if (aEvent) {
+      aEvent.stopPropagation();
+    }
+
+    let self = this.scope;
+    let element = this.element;
+    let value = this.value;
+    let title = this.value.parentNode;
+    let initialTextContent = value.textContent;
+
+    // When editing an object we need to collapse it first, in order to avoid
+    // displaying an inconsistent state while the user is editing.
+    element._previouslyExpanded = element.expanded;
+    element._preventExpand = true;
+    element.collapse();
+    element.forceHideArrow();
+
+    // Create a texbox input element which will be shown in the current
+    // element's value location.
+    let textbox = document.createElement("textbox");
+    textbox.setAttribute("value", value.textContent);
+    textbox.className = "element-input";
+    textbox.width = value.clientWidth + 1;
+
+    // Save the new value when the texbox looses focus or ENTER is pressed.
+    function DVP_element_textbox_blur(aTextboxEvent) {
+      DVP_element_textbox_save();
+    }
+
+    function DVP_element_textbox_keydown(aTextboxEvent) {
+      if (aTextboxEvent.keyCode === aTextboxEvent.DOM_VK_RETURN ||
+          aTextboxEvent.keyCode === aTextboxEvent.DOM_VK_ENTER) {
+        DVP_element_textbox_save();
+        return;
+      }
+      if (aTextboxEvent.keyCode === aTextboxEvent.DOM_VK_ESCAPE) {
+        value.textContent = initialTextContent;
+        DVP_element_textbox_clear();
+        return;
+      }
+      value.textContent = textbox.value;
+    }
+
+    function DVP_element_textbox_keypress(aTextboxEvent) {
+      if (aTextboxEvent.keyCode === aTextboxEvent.DOM_VK_LEFT ||
+          aTextboxEvent.keyCode === aTextboxEvent.DOM_VK_RIGHT ||
+          aTextboxEvent.keyCode === aTextboxEvent.DOM_VK_UP ||
+          aTextboxEvent.keyCode === aTextboxEvent.DOM_VK_DOWN) {
+        return;
+      }
+      if (value.clientWidth > textbox.width - 1) {
+        textbox.width = value.clientWidth + 30;
+      }
+    }
+
+    // The actual save mechanism for the new variable/property value.
+    function DVP_element_textbox_save() {
+      if (textbox.value !== value.textContent) {
+        // TODO: use the debugger client API to send the value to the debuggee,
+        // after bug 724862 lands.
+        let result = eval(textbox.value);
+        let grip;
+
+        // Construct the grip based on the evaluated expression in the textbox.
+        switch (typeof result) {
+          case "number":
+          case "boolean":
+          case "string":
+            grip = result;
+            break;
+          case "object":
+            if (result === null) {
+              grip = {
+                "type": "null"
+              };
+            } else {
+              grip = {
+                "type": "object",
+                "class": result.constructor.name || "Object"
+              };
+            }
+            break;
+          case "undefined":
+            grip = { type: "undefined" };
+        }
+
+        self._applyGrip(value, grip);
+      }
+      DVP_element_textbox_clear();
+    }
+
+    // Removes the event listeners and appends the value node again.
+    function DVP_element_textbox_clear() {
+      element._preventExpand = false;
+      if (element._previouslyExpanded) {
+        element._previouslyExpanded = false;
+        element.expand();
+      }
+      element.showArrow();
+
+      textbox.removeEventListener("blur", DVP_element_textbox_blur, false);
+      textbox.removeEventListener("keydown", DVP_element_textbox_keydown, false);
+      textbox.removeEventListener("keypress", DVP_element_textbox_keypress, false);
+      title.removeChild(textbox);
+      value.removeAttribute("offscreen");
+    }
+
+    textbox.addEventListener("blur", DVP_element_textbox_blur, false);
+    textbox.addEventListener("keydown", DVP_element_textbox_keydown, false);
+    textbox.addEventListener("keypress", DVP_element_textbox_keypress, false);
+    title.appendChild(textbox);
+    value.setAttribute("offscreen", "");
+
+    textbox.select();
+
+    // When the value is a string (displayed as "value"), then we probably want
+    // to change it to another string in the textbox, so to avoid typing the ""
+    // again, tackle with the selection bounds just a bit.
+    if (value.textContent.match(/^"[^"]*"$/)) {
+      textbox.selectionEnd--;
+      textbox.selectionStart++;
+    }
   },
 
   /**
@@ -1170,10 +1331,17 @@ PropertiesView.prototype = {
 
     // The title element, containing the arrow and the name.
     title.className = "title";
-    title.addEventListener("click", function() { element.toggle(); }, true);
 
     // The node element which will contain any added scope variables.
     details.className = "details";
+
+    // Add the click event handler for the title, or arrow and name.
+    if (aClass === "scope") {
+      title.addEventListener("click", function() { element.toggle(); }, false);
+    } else {
+      arrow.addEventListener("click", function() { element.toggle(); }, false);
+      name.addEventListener("click", function() { element.toggle(); }, false);
+    }
 
     title.appendChild(arrow);
     title.appendChild(name);
@@ -1217,6 +1385,9 @@ PropertiesView.prototype = {
      *         The same element.
      */
     element.expand = function DVP_element_expand() {
+      if (element._preventExpand) {
+        return;
+      }
       arrow.setAttribute("open", "");
       details.setAttribute("open", "");
 
@@ -1232,6 +1403,9 @@ PropertiesView.prototype = {
      *         The same element.
      */
     element.collapse = function DVP_element_collapse() {
+      if (element._preventCollapse) {
+        return;
+      }
       arrow.removeAttribute("open");
       details.removeAttribute("open");
 
@@ -1261,24 +1435,9 @@ PropertiesView.prototype = {
      *         The same element.
      */
     element.showArrow = function DVP_element_showArrow() {
-      if (details.childNodes.length) {
+      if (element._forceShowArrow || details.childNodes.length) {
         arrow.style.visibility = "visible";
       }
-      return element;
-    };
-
-    /**
-     * Forces the element expand/collapse arrow to be visible, even if there
-     * are no child elements.
-     *
-     * @param boolean aPreventHideFlag
-     *        Prevents the arrow to be hidden when requested.
-     * @return object
-     *         The same element.
-     */
-    element.forceShowArrow = function DVP_element_forceShowArrow(aPreventHideFlag) {
-      element._preventHide = aPreventHideFlag;
-      arrow.style.visibility = "visible";
       return element;
     };
 
@@ -1288,9 +1447,34 @@ PropertiesView.prototype = {
      *         The same element.
      */
     element.hideArrow = function DVP_element_hideArrow() {
-      if (!element._preventHide) {
+      if (!element._forceShowArrow) {
         arrow.style.visibility = "hidden";
       }
+      return element;
+    };
+
+    /**
+     * Forces the element expand/collapse arrow to be visible, even if there
+     * are no child elements.
+     *
+     * @return object
+     *         The same element.
+     */
+    element.forceShowArrow = function DVP_element_forceShowArrow() {
+      element._forceShowArrow = true;
+      arrow.style.visibility = "visible";
+      return element;
+    };
+
+    /**
+     * Forces the element expand/collapse arrow to be hidden, even if there
+     * are some child elements.
+     *
+     * @return object
+     *         The same element.
+     */
+    element.forceHideArrow = function DVP_element_forceHideArrow() {
+      arrow.style.visibility = "hidden";
       return element;
     };
 
@@ -1336,7 +1520,7 @@ PropertiesView.prototype = {
      *         The same element.
      */
     element.empty = function DVP_element_empty() {
-      // this details node won't have any elements, so hide the arrow
+      // This details node won't have any elements, so hide the arrow.
       arrow.style.visibility = "hidden";
       while (details.firstChild) {
         details.removeChild(details.firstChild);
@@ -1363,6 +1547,24 @@ PropertiesView.prototype = {
     };
 
     /**
+     * Returns if the element expander (arrow) is visible.
+     * @return boolean
+     *         True if the arrow is visible.
+     */
+    Object.defineProperty(element, "arrowVisible", {
+      get: function DVP_element_getArrowVisible() {
+        return arrow.style.visibility !== "hidden";
+      },
+      set: function DVP_element_setExpanded(value) {
+        if (value) {
+          element.showArrow();
+        } else {
+          element.hideArrow();
+        }
+      }
+    });
+
+    /**
      * Generic function refreshing the internal state of the element when
      * it's modified (e.g. a child detail, variable, property is added).
      *
@@ -1377,8 +1579,8 @@ PropertiesView.prototype = {
       }
 
       let node = aParent.parentNode;
-      let arrow = node.querySelector(".arrow");
-      let children = node.querySelector(".details").childNodes.length;
+      let arrow = node.getElementsByClassName("arrow")[0];
+      let children = node.getElementsByClassName("details")[0].childNodes.length;
 
       // If the parent details node has at least one element, set the
       // expand/collapse arrow visible.

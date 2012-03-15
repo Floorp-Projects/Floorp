@@ -53,7 +53,7 @@ function testFrameParameters()
       is(localNodes.length, 11,
         "The localScope should contain all the created variable elements.");
 
-      is(localNodes[0].querySelector(".info").textContent, "[object Proxy]",
+      is(localNodes[0].querySelector(".value").textContent, "[object Proxy]",
         "Should have the right property value for 'this'.");
 
       // Expand the 'this', 'arguments' and 'c' tree nodes. This causes
@@ -86,7 +86,7 @@ function testFrameParameters()
                         .textContent.search(/object/) != -1,
           "__proto__ should be an object.");
 
-        is(localNodes[9].querySelector(".info").textContent, "[object Object]",
+        is(localNodes[9].querySelector(".value").textContent, "[object Object]",
           "Should have the right property value for 'c'.");
 
         is(localNodes[9].querySelectorAll(".property > .title > .key")[1]
@@ -97,7 +97,7 @@ function testFrameParameters()
                         .textContent, 1,
           "Should have the right value for 'c.a'.");
 
-        is(localNodes[10].querySelector(".info").textContent,
+        is(localNodes[10].querySelector(".value").textContent,
          "[object Arguments]",
          "Should have the right property value for 'arguments'.");
 

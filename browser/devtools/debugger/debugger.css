@@ -85,6 +85,7 @@
 
 .variable > .title {
   white-space: nowrap;
+  display: block;
 }
 
 .variable > .details {
@@ -107,14 +108,7 @@
 
 .property > .title {
   white-space: nowrap;
-}
-
-.property > .title > .key {
-  display: inline-block;
-}
-
-.property > .title > .value {
-  display: inline-block;
+  display: block;
 }
 
 .property > .details {
@@ -124,6 +118,21 @@
 .property > .details[open] {
   display: -moz-box;
   -moz-box-orient: vertical;
+}
+
+.value[offscreen] {
+  position: fixed;
+  top: -100000px;
+  left: -100000px;
+}
+
+/**
+ * Expand/collapse arrow
+ */
+
+.arrow {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 /**

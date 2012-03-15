@@ -30,6 +30,8 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_propertyview-06.js \
 	browser_dbg_propertyview-07.js \
 	browser_dbg_propertyview-08.js \
+	browser_dbg_propertyview-edit.js \
+	browser_dbg_propertyview-edit2.js \
 	browser_dbg_panesize.js \
 	browser_dbg_stack-01.js \
 	browser_dbg_stack-02.js \
