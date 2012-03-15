@@ -66,6 +66,23 @@ MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister
     as_vcvt(dest, dest.sintOverlay());
 }
 
+// there are two options for implementing emitTruncateDouble.
+// 1) convert the floating point value to an integer, if it did not fit,
+//        then it was clamped to INT_MIN/INT_MAX, and we can test it.
+//        NOTE: if the value really was supposed to be INT_MAX / INT_MIN
+//        then it will be wrong.
+// 2) convert the floating point value to an integer, if it did not fit,
+//        then it set one or two bits in the fpcsr.  Check those.
+void
+MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail)
+{
+    ma_vcvt_F64_I32(src, ScratchFloatReg);
+    ma_vxfer(ScratchFloatReg, dest);
+    ma_cmp(dest, Imm32(0x7fffffff));
+    ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
+    ma_b(fail, Assembler::Equal);
+}
+
 bool
 MacroAssemblerARM::alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
                            SetCond_ sc, Condition c)

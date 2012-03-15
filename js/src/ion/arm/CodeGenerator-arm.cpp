@@ -899,49 +899,11 @@ CodeGeneratorARM::emitRoundDouble(const FloatRegister &src, const Register &dest
     masm.ma_b(fail, Assembler::Equal);
 }
 
-// there are two options for implementing emitTruncateDouble.
-// 1) convert the floating point value to an integer, if it did not fit,
-//        then it was clamped to INT_MIN/INT_MAX, and we can test it.
-//        NOTE: if the value really was supposed to be INT_MAX / INT_MIN
-//        then it will be wrong.
-// 2) convert the floating point value to an integer, if it did not fit,
-//        then it set one or two bits in the fpcsr.  Check those.
-void
-CodeGeneratorARM::emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail)
+bool
+CodeGeneratorARM::visitTruncateDToInt32(LTruncateDToInt32 *ins)
 {
-    masm.ma_vcvt_F64_I32(src, ScratchFloatReg);
-    masm.ma_vxfer(ScratchFloatReg, dest);
-    masm.ma_cmp(dest, Imm32(0x7fffffff));
-    masm.ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
-    Label join;
-    masm.ma_b(&join, Assembler::NotEqual);
-
-    // oh god, i'm a bad person, this is so the label is referenced :(
-    masm.ma_b(fail, Assembler::NotEqual);
-    if (dest != r0)
-        masm.Push(r0);
-    if (dest != r1)
-        masm.Push(r1);
-    if (dest != r2)
-        masm.Push(r2);
-    if (dest != r3)
-        masm.Push(r3);
-    masm.setupAlignedABICall(1);
-    masm.passABIArg(src);
-    masm.callWithABI((void*)js_DoubleToECMAInt32);
-
-    masm.ma_mov(r0, dest);
-    if (dest != r3)
-        masm.Pop(r3);
-    if (dest != r2)
-        masm.Pop(r2);
-    if (dest != r1)
-        masm.Pop(r1);
-    if (dest != r0)
-        masm.Pop(r0);
-    masm.bind(&join);
+    return emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()));
 }
-// "x86-only"
 
 // The first two size classes are 128 and 256 bytes respectively. After that we
 // increment by 512.

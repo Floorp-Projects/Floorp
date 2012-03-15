@@ -62,6 +62,7 @@ class MacroAssembler;
 
 template <class ArgSeq, class StoreOutputTo>
 class OutOfLineCallVM;
+class OutOfLineTruncateSlow;
 
 class CodeGeneratorShared : public LInstructionVisitor
 {
@@ -197,6 +198,8 @@ class CodeGeneratorShared : public LInstructionVisitor
     // |returnPointOffset|.
     bool markOsiPoint(LOsiPoint *ins, uint32 *returnPointOffset);
 
+    bool emitTruncateDouble(const FloatRegister &src, const Register &dest);
+
     void emitPreBarrier(Register base, const LAllocation *index, MIRType type);
 
     inline bool isNextBlock(LBlock *block) {
@@ -204,6 +207,18 @@ class CodeGeneratorShared : public LInstructionVisitor
     }
 
   public:
+    void saveVolatile(Register output) {
+        RegisterSet regs = RegisterSet::Volatile();
+        regs.maybeTake(output);
+        masm.PushRegsInMask(regs);
+    }
+
+    void restoreVolatile(Register output) {
+        RegisterSet regs = RegisterSet::Volatile();
+        regs.maybeTake(output);
+        masm.PopRegsInMask(regs);
+    }
+
     // These functions have to be called before and after any callVM and before
     // any modifications of the stack.  Modification of the stack made after
     // these calls should update the framePushed variable, needed by the exit
@@ -250,6 +265,8 @@ class CodeGeneratorShared : public LInstructionVisitor
   public:
     template <class ArgSeq, class StoreOutputTo>
     bool visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo> *ool);
+
+    bool visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool);
 };
 
 // Wrapper around Label, on the heap, to avoid a bogus assert with OOM.
