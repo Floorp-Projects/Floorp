@@ -130,7 +130,6 @@ public class GeckoLayerClient implements GeckoEventResponder,
             mRootLayer.setPositionAndResolution(RectUtils.round(position), mGeckoViewport.getZoomFactor());
         }
 
-        Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - endDrawing");
         /* Used by robocop for testing purposes */
         if (mDrawListener != null) {
             mDrawListener.drawFinished();
