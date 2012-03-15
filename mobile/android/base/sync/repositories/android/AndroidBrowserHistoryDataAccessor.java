@@ -121,4 +121,7 @@ public class AndroidBrowserHistoryDataAccessor extends AndroidBrowserRepositoryD
     dataExtender.delete(guid);
   }
 
+  public void closeExtender() {
+    dataExtender.close();
+  }
 }
