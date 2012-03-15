@@ -65,6 +65,13 @@ js_PutCallObject(StackFrame *fp)
     JS_ASSERT_IF(fp->isEvalFrame(), fp->isStrictEvalFrame());
     JS_ASSERT(fp->isEvalFrame() == callobj.isForEval());
 
+    /* Get the arguments object to snapshot fp's actual argument values. */
+    if (fp->hasArgsObj()) {
+        if (callobj.arguments().isMagic(JS_UNASSIGNED_ARGUMENTS))
+            callobj.setArguments(ObjectValue(fp->argsObj()));
+        js_PutArgsObject(fp);
+    }
+
     JSScript *script = fp->script();
     Bindings &bindings = script->bindings;
 
@@ -246,8 +253,6 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
 
     callobj->setStackFrame(fp);
     fp->setScopeChainWithOwnCallObj(*callobj);
-    if (fp->hasArgsObj())
-        callobj->setArguments(ObjectValue(fp->argsObj()));
     return callobj;
 }
 
@@ -266,33 +271,26 @@ CallObject::createForStrictEval(JSContext *cx, StackFrame *fp)
 JSBool
 CallObject::getArgumentsOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    *vp = obj->asCall().arguments();
+    CallObject &callobj = obj->asCall();
 
-    /*
-     * This can only happen through eval-in-frame. Eventually, this logic can
-     * be hoisted into debugger scope wrappers. That will allow 'arguments' to
-     * be a pure data property and allow call_resolve to be removed.
-     */
-    if (vp->isMagic(JS_UNASSIGNED_ARGUMENTS)) {
-#ifdef DEBUG
-        for (StackFrame *fp = cx->fp(); !fp->isDebuggerFrame(); fp = fp->prev())
-            JS_ASSERT(fp->isEvalFrame());
-#endif
-        StackFrame *fp = obj->asCall().maybeStackFrame();
-        ArgumentsObject *argsObj = ArgumentsObject::createUnexpected(cx, fp);
-        if (!argsObj)
+    StackFrame *fp = callobj.maybeStackFrame();
+    if (fp && callobj.arguments().isMagic(JS_UNASSIGNED_ARGUMENTS)) {
+        JSObject *argsobj = js_GetArgsObject(cx, fp);
+        if (!argsobj)
             return false;
-
-        *vp = ObjectValue(*argsObj);
-        obj->asCall().setArguments(*vp);
+        vp->setObject(*argsobj);
+    } else {
+        /* Nested functions cannot get the 'arguments' of enclosing scopes. */
+        JS_ASSERT(!callobj.arguments().isMagic(JS_UNASSIGNED_ARGUMENTS));
+        *vp = callobj.arguments();
     }
-
     return true;
 }
 
 JSBool
 CallObject::setArgumentsOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
+    /* Nested functions cannot set the 'arguments' of enclosing scopes. */
     JS_ASSERT(obj->asCall().maybeStackFrame());
     obj->asCall().setArguments(*vp);
     return true;
