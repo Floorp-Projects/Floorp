@@ -484,8 +484,8 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
 {
     // hack for now
     if (aID == eFont_Window || aID == eFont_Document) {
-        aFontStyle.style      = FONT_STYLE_NORMAL;
-        aFontStyle.weight     = FONT_WEIGHT_NORMAL;
+        aFontStyle.style      = NS_FONT_STYLE_NORMAL;
+        aFontStyle.weight     = NS_FONT_WEIGHT_NORMAL;
         aFontStyle.stretch    = NS_FONT_STRETCH_NORMAL;
         aFontStyle.size       = 14;
         aFontStyle.systemFont = true;
@@ -577,9 +577,9 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
 
     NSFontSymbolicTraits traits = [[font fontDescriptor] symbolicTraits];
     aFontStyle.style =
-        (traits & NSFontItalicTrait) ?  FONT_STYLE_ITALIC : FONT_STYLE_NORMAL;
+        (traits & NSFontItalicTrait) ?  NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL;
     aFontStyle.weight =
-        (traits & NSFontBoldTrait) ? FONT_WEIGHT_BOLD : FONT_WEIGHT_NORMAL;
+        (traits & NSFontBoldTrait) ? NS_FONT_WEIGHT_BOLD : NS_FONT_WEIGHT_NORMAL;
     aFontStyle.stretch =
         (traits & NSFontExpandedTrait) ?
             NS_FONT_STRETCH_EXPANDED : (traits & NSFontCondensedTrait) ?

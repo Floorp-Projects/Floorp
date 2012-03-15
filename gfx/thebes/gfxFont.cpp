@@ -457,7 +457,8 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
         return fe;
     }
 
-    bool wantItalic = (aFontStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+    bool wantItalic = (aFontStyle.style &
+                       (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
 
     // Most families are "simple", having just Regular/Bold/Italic/BoldItalic,
     // or some subset of these. In this case, we have exactly 4 entries in mAvailableFonts,
@@ -698,7 +699,7 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
     if (aStyle) {
          // italics
          bool wantItalic =
-             ((aStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0);
+             (aStyle->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
          if (aFontEntry->IsItalic() == wantItalic) {
              rank += 10;
          }
@@ -3183,8 +3184,8 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                         NS_ConvertUTF16toUTF8(mFamilies).get(),
                         lang.get(), runScript, runLen,
                         PRUint32(mStyle.weight), PRUint32(mStyle.stretch),
-                        (mStyle.style & FONT_STYLE_ITALIC ? "italic" :
-                        (mStyle.style & FONT_STYLE_OBLIQUE ? "oblique" :
+                        (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
+                        (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
                                                                 "normal")),
                         NS_ConvertUTF16toUTF8(textPtr + runStart, runLen).get()));
             }
@@ -3751,9 +3752,9 @@ gfxFontStyle::gfxFontStyle() :
     language(gfxAtoms::x_western),
     size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(0.0f),
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
-    weight(FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
+    weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
     systemFont(true), printerFont(false), 
-    style(FONT_STYLE_NORMAL)
+    style(NS_FONT_STYLE_NORMAL)
 {
 }
 
