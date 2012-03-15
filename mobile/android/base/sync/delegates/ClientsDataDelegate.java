@@ -9,4 +9,5 @@ public interface ClientsDataDelegate {
   public String getClientName();
   public void setClientsCount(int clientsCount);
   public int getClientsCount();
+  public boolean isLocalGUID(String guid);
 }

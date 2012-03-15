@@ -423,6 +423,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   }
 
   @Override
+  public boolean isLocalGUID(String guid) {
+    return getAccountGUID().equals(guid);
+  }
+
+  @Override
   public synchronized int getClientsCount() {
     String clientsCount = mAccountManager.getUserData(localAccount, Constants.NUM_CLIENTS);
     if (clientsCount == null) {
