@@ -1,60 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              style="@style/Screen"
-              android:padding="10dip" >
-
-    <TextView android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:padding="10dip"
-              android:textAppearance="?android:attr/textAppearanceMediumInverse"
-              android:textColor="?android:attr/textColorPrimaryInverse"
-              android:textStyle="bold"
-              android:text="@string/crash_message"/>
-
-    <TextView android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:padding="10dip"
-              android:textAppearance="?android:attr/textAppearanceMediumInverse"
-              android:textColor="?android:attr/textColorPrimaryInverse"
-              android:text="@string/crash_help_message"/>
-
-    <CheckBox android:id="@+id/send_report"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:checked="true"
-              android:textAppearance="?android:attr/textAppearanceMediumInverse"
-              android:textColor="?android:attr/textColorPrimaryInverse"
-              android:text="@string/crash_send_report_message"/>
-
-    <CheckBox android:id="@+id/include_url"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:textAppearance="?android:attr/textAppearanceMediumInverse"
-              android:textColor="?android:attr/textColorPrimaryInverse"
-              android:text="@string/crash_include_url"/>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            style="@style/Screen">
 
     <LinearLayout android:layout_width="fill_parent"
+                  android:layout_height="fill_parent"
+                  android:orientation="vertical"
+                  android:padding="10dip">
+        
+        <TextView android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:orientation="horizontal"
                   android:padding="10dip"
-                  android:gravity="center_horizontal">
-
-        <Button android:id="@+id/close"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="10px"
-                android:minWidth="120sp"
-                android:onClick="onCloseClick"
-                android:text="@string/crash_close_label"/>
-
-        <Button android:id="@+id/restart"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10px"
-                android:minWidth="120sp"
-                android:onClick="onRestartClick"
-                android:text="@string/crash_restart_label"/>
-    
+                  android:textAppearance="?android:attr/textAppearanceMediumInverse"
+                  android:textColor="?android:attr/textColorPrimaryInverse"
+                  android:textStyle="bold"
+                  android:text="@string/crash_message"/>
+        
+        <TextView android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:padding="10dip"
+                  android:textAppearance="?android:attr/textAppearanceMediumInverse"
+                  android:textColor="?android:attr/textColorPrimaryInverse"
+                  android:text="@string/crash_help_message"/>
+        
+        <CheckBox android:id="@+id/send_report"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:checked="true"
+                  android:textAppearance="?android:attr/textAppearanceMediumInverse"
+                  android:textColor="?android:attr/textColorPrimaryInverse"
+                  android:text="@string/crash_send_report_message"/>
+        
+        <CheckBox android:id="@+id/include_url"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:textAppearance="?android:attr/textAppearanceMediumInverse"
+                  android:textColor="?android:attr/textColorPrimaryInverse"
+                  android:text="@string/crash_include_url"/>
+        
+        <LinearLayout android:layout_width="fill_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="horizontal"
+                      android:padding="10dip"
+                      android:gravity="center_horizontal">
+        
+            <Button android:id="@+id/close"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="10px"
+                    android:minWidth="120sp"
+                    android:onClick="onCloseClick"
+                    android:text="@string/crash_close_label"/>
+        
+            <Button android:id="@+id/restart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10px"
+                    android:minWidth="120sp"
+                    android:onClick="onRestartClick"
+                    android:text="@string/crash_restart_label"/>
+        
+        </LinearLayout>
+   
     </LinearLayout>
 
-</LinearLayout>
+</ScrollView>
