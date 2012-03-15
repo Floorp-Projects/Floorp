@@ -122,23 +122,13 @@ struct THEBES_API gfxFontStyle {
                  const nsString& aLanguageOverride);
     gfxFontStyle(const gfxFontStyle& aStyle);
 
-    // The style of font (normal, italic, oblique)
-    PRUint8 style : 7;
+    // the language (may be an internal langGroup code rather than an actual
+    // language code) specified in the document or element's lang property,
+    // or inferred from the charset
+    nsRefPtr<nsIAtom> language;
 
-    // Say that this font is a system font and therefore does not
-    // require certain fixup that we do for fonts from untrusted
-    // sources.
-    bool systemFont : 1;
-
-    // Say that this font is used for print or print preview.
-    bool printerFont : 1;
-
-    // The weight of the font: 100, 200, ... 900.
-    PRUint16 weight;
-
-    // The stretch of the font (the sum of various NS_FONT_STRETCH_*
-    // constants; see gfxFontConstants.h).
-    PRInt16 stretch;
+    // custom opentype feature settings
+    nsTArray<gfxFontFeature> featureSettings;
 
     // The logical size of the font, in pixels
     gfxFloat size;
@@ -148,11 +138,6 @@ struct THEBES_API gfxFontStyle {
     // rendering or measuring a string. A value of 0 means no adjustment
     // needs to be done.
     float sizeAdjust;
-
-    // the language (may be an internal langGroup code rather than an actual
-    // language code) specified in the document or element's lang property,
-    // or inferred from the charset
-    nsRefPtr<nsIAtom> language;
 
     // Language system tag, to override document language;
     // an OpenType "language system" tag represented as a 32-bit integer
@@ -166,8 +151,23 @@ struct THEBES_API gfxFontStyle {
     // in order to get correct glyph shapes.)
     PRUint32 languageOverride;
 
-    // custom opentype feature settings
-    nsTArray<gfxFontFeature> featureSettings;
+    // The weight of the font: 100, 200, ... 900.
+    PRUint16 weight;
+
+    // The stretch of the font (the sum of various NS_FONT_STRETCH_*
+    // constants; see gfxFontConstants.h).
+    PRInt8 stretch;
+
+    // Say that this font is a system font and therefore does not
+    // require certain fixup that we do for fonts from untrusted
+    // sources.
+    bool systemFont : 1;
+
+    // Say that this font is used for print or print preview.
+    bool printerFont : 1;
+
+    // The style of font (normal, italic, oblique)
+    PRUint8 style : 2;
 
     // Return the final adjusted font size for the given aspect ratio.
     // Not meant to be called when sizeAdjust = 0.
