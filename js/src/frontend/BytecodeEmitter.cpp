@@ -2743,6 +2743,20 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToMain();
     }
 
+    /*
+     * Strict mode functions' arguments objects copy initial parameter values.
+     * We create arguments objects lazily -- but that doesn't work for strict
+     * mode functions where a parameter might be modified and arguments might
+     * be accessed. For such functions we synthesize an access to arguments to
+     * initialize it with the original parameter values.
+     */
+    if (bce->needsEagerArguments()) {
+        bce->switchToProlog();
+        if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0 || Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
+        bce->switchToMain();
+    }
+
     return EmitTree(cx, bce, body) &&
            Emit1(cx, bce, JSOP_STOP) >= 0 &&
            JSScript::NewScriptFromEmitter(cx, bce);
