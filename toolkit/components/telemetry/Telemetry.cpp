@@ -1200,11 +1200,21 @@ TelemetrySessionData::SampleReflector(EntryType *entry, JSContext *cx,
     return false;
   }
   JS::AutoObjectRooter root(cx, snapshot);
-  return (ReflectHistogramAndSamples(cx, snapshot, h, entry->mData)
-          && JS_DefineProperty(cx, snapshots,
-                               h->histogram_name().c_str(),
-                               OBJECT_TO_JSVAL(snapshot), NULL, NULL,
-                               JSPROP_ENUMERATE));
+  switch (ReflectHistogramAndSamples(cx, snapshot, h, entry->mData)) {
+  case REFLECT_OK:
+    return JS_DefineProperty(cx, snapshots,
+                             h->histogram_name().c_str(),
+                             OBJECT_TO_JSVAL(snapshot), NULL, NULL,
+                             JSPROP_ENUMERATE);
+  case REFLECT_CORRUPT:
+    // Just ignore this one.
+    return true;
+  case REFLECT_FAILURE:
+    return false;
+  default:
+    MOZ_NOT_REACHED("unhandled reflection status");
+    return false;
+  }
 }
 
 NS_IMETHODIMP
