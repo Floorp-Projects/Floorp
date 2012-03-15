@@ -190,6 +190,8 @@ public class SyncConfiguration implements CredentialsSource {
   public String          prefsPath;
   public PrefsSource     prefsSource;
 
+  public static final String CLIENT_RECORD_TIMESTAMP = "serverClientRecordTimestamp";
+
   /**
    * Create a new SyncConfiguration instance. Pass in a PrefsSource to
    * provide access to preferences.
@@ -368,5 +370,13 @@ public class SyncConfiguration implements CredentialsSource {
    */
   public Editor getEditor() {
     return this.getPrefs().edit();
+  }
+
+  public void persistServerClientRecordTimestamp(long timestamp) {
+    getEditor().putLong(SyncConfiguration.CLIENT_RECORD_TIMESTAMP, timestamp).commit();
+  }
+
+  public long getPersistedServerClientRecordTimestamp() {
+    return getPrefs().getLong(SyncConfiguration.CLIENT_RECORD_TIMESTAMP, 0);
   }
 }
