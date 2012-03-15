@@ -2223,7 +2223,6 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_IFNE)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
-          {
             /*
              * For calls of the form 'f.apply(x, arguments)' we can avoid
              * creating an args object by having ic::SplatApplyArgs pull
@@ -2231,40 +2230,21 @@ mjit::Compiler::generateMethod()
              * 'apply' actually refers to js_fun_apply. If this is not true,
              * the slow path in JSOP_FUNAPPLY will create the args object.
              */
-            if (!script->needsArgsObj()) {
-                if (canUseApplyTricks()) {
-                    /*
-                     * Check for interrupts at the JSOP_ARGUMENTS when using
-                     * apply tricks, see inlineCallHelper().
-                     */
-                    interruptCheckHelper();
+            if (canUseApplyTricks()) {
+                /*
+                 * Check for interrupts at the JSOP_ARGUMENTS when using
+                 * apply tricks, see inlineCallHelper().
+                 */
+                interruptCheckHelper();
 
-                    applyTricks = LazyArgsObj;
-                    pushSyncedEntry(0);
-                } else {
-                    /*
-                     * When analyzing whether a script needsArgsObject, the analysis in
-                     * analyzeSSA uses the simple predicate SpeculateApplyOptimization.
-                     * The actual mjit predicate for using the optimization is
-                     * canUseApplyTricks which depends on temporal compiler state.
-                     * Thus, script->needsArgsObj can be over-optimistic and needs to
-                     * be checked here and corrected.
-                     */
-                    if (SpeculateApplyOptimization(PC)) {
-                        if (!script->applySpeculationFailed(cx))
-                            return Compile_Error;
-
-                        /* All our assumptions are wrong, try again. */
-                        return Compile_Retry;
-                    }
-
-                    frame.push(MagicValue(JS_OPTIMIZED_ARGUMENTS));
-                }
-            } else {
+                applyTricks = LazyArgsObj;
+                pushSyncedEntry(0);
+            } else if (script->needsArgsObj()) {
                 jsop_arguments(REJOIN_FALLTHROUGH);
                 pushSyncedEntry(0);
+            } else {
+                frame.push(MagicValue(JS_OPTIMIZED_ARGUMENTS));
             }
-          }
           END_CASE(JSOP_ARGUMENTS)
 
           BEGIN_CASE(JSOP_ITERNEXT)
@@ -4091,7 +4071,6 @@ bool
 mjit::Compiler::canUseApplyTricks()
 {
     JS_ASSERT(*PC == JSOP_ARGUMENTS);
-    JS_ASSERT(!script->needsArgsObj());
     jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
     return *nextpc == JSOP_FUNAPPLY &&
            IsLowerableFunCallOrApply(nextpc) &&
