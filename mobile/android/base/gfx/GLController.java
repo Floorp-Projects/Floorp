@@ -94,6 +94,10 @@ public class GLController {
     }
 
     public void disposeGLContext() {
+        if (mEGL == null) {
+            return;
+        }
+
         if (!mEGL.eglMakeCurrent(mEGLDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE,
                                  EGL10.EGL_NO_CONTEXT)) {
             throw new GLControllerException("EGL context could not be released!");
