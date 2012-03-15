@@ -2998,16 +2998,15 @@ gfxTextRun *
 gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags)
 {
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
-    return gfxTextRun::Create(aParams, nsnull, 0, this, aFlags);
+    return gfxTextRun::Create(aParams, 0, this, aFlags);
 }
 
 gfxTextRun *
 gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
 {
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
-    static const PRUint8 space = ' ';
 
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, &space, 1, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, 1, this, aFlags);
     if (!textRun) {
         return nsnull;
     }
@@ -3030,11 +3029,11 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
 }
 
 gfxTextRun *
-gfxFontGroup::MakeBlankTextRun(const void* aText, PRUint32 aLength,
+gfxFontGroup::MakeBlankTextRun(PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
     gfxTextRun *textRun =
-        gfxTextRun::Create(aParams, aText, aLength, this, aFlags);
+        gfxTextRun::Create(aParams, aLength, this, aFlags);
     if (!textRun) {
         return nsnull;
     }
@@ -3060,10 +3059,10 @@ gfxFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
         // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
         // them, and always create at least size 1 fonts, i.e. they still
         // render something for size 0 fonts.
-        return MakeBlankTextRun(aString, aLength, aParams, aFlags);
+        return MakeBlankTextRun(aLength, aParams, aFlags);
     }
 
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength,
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength,
                                              this, aFlags);
     if (!textRun) {
         return nsnull;
@@ -3087,10 +3086,10 @@ gfxFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
         return MakeSpaceTextRun(aParams, aFlags);
     }
     if (GetStyle()->size == 0) {
-        return MakeBlankTextRun(aString, aLength, aParams, aFlags);
+        return MakeBlankTextRun(aLength, aParams, aFlags);
     }
 
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength,
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength,
                                              this, aFlags);
     if (!textRun) {
         return nsnull;
@@ -4027,7 +4026,7 @@ gfxTextRun::AllocateStorageForTextRun(size_t aSize, PRUint32 aLength)
 }
 
 gfxTextRun *
-gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams,
                    PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
 {
     void *storage = AllocateStorageForTextRun(sizeof(gfxTextRun), aLength);
@@ -4035,10 +4034,10 @@ gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams, const void *aTe
         return nsnull;
     }
 
-    return new (storage) gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
+    return new (storage) gfxTextRun(aParams, aLength, aFontGroup, aFlags);
 }
 
-gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
                        PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
   : mUserData(aParams->mUserData),
     mFontGroup(aFontGroup),
