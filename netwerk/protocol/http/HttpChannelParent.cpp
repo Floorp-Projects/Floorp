@@ -450,6 +450,15 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   }
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
+
+  // Sanity check: we should have either both remove/local socket address or
+  // neither.
+  PRNetAddr selfAddr = httpChan->GetSelfAddr();
+  PRNetAddr peerAddr = httpChan->GetPeerAddr();
+  if (selfAddr.raw.family != peerAddr.raw.family) {
+    NS_WARNING("Parent: socket has multiple address families!");
+  }
+
   if (mIPCClosed || 
       !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
                           !!responseHead,
