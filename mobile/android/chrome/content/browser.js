@@ -1664,12 +1664,22 @@ Tab.prototype = {
   },
 
   sendViewportUpdate: function() {
-    if (BrowserApp.selectedTab != this)
-      return;
-    if (!BrowserApp.isBrowserContentDocumentDisplayed())
-      return;
-    let message = this.getViewport();
-    message.type = "Viewport:Update";
+    let message;
+    if (BrowserApp.selectedTab == this) {
+      // for foreground tabs, send the viewport update unless the document
+      // displayed is different from the content document
+      if (!BrowserApp.isBrowserContentDocumentDisplayed())
+        return;
+      message = this.getViewport();
+      message.type = "Viewport:Update";
+    } else {
+      // for bcakground tabs, request a new display port calculation, so that
+      // when we do switch to that tab, we have the correct display port and
+      // don't need to draw twice (once to allow the first-paint viewport to
+      // get to java, and again once java figures out the display port).
+      message = this.getViewport();
+      message.type = "Viewport:CalculateDisplayPort";
+    }
     let displayPort = sendMessageToJava({ gecko: message });
     if (displayPort != null)
       this.setDisplayPort(message.x, message.y, JSON.parse(displayPort));
