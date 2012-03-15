@@ -1877,11 +1877,10 @@ GetPropMaybeCached(VMFrame &f, ic::PICInfo *pic, bool cached)
 
     PropertyName *name = pic->name;
     if (name == f.cx->runtime->atomState.lengthAtom) {
-        if (f.regs.sp[-1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
+        if (f.regs.sp[-1].isMagic(JS_LAZY_ARGUMENTS)) {
             f.regs.sp[-1].setInt32(f.regs.fp()->numActualArgs());
             return;
-        }
-        if (!f.regs.sp[-1].isPrimitive()) {
+        } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
             if (obj->isArray() ||
                 (obj->isArguments() && !obj->asArguments().hasOverriddenLength()) ||

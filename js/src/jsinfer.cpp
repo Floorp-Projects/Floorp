@@ -921,6 +921,34 @@ TypeSet::addSubsetBarrier(JSContext *cx, JSScript *script, jsbytecode *pc, TypeS
     add(cx, cx->typeLifoAlloc().new_<TypeConstraintSubsetBarrier>(script, pc, target));
 }
 
+/*
+ * Constraint which marks a pushed ARGUMENTS value as unknown if the script has
+ * an arguments object created in the future.
+ */
+class TypeConstraintLazyArguments : public TypeConstraint
+{
+public:
+    TypeSet *target;
+
+    TypeConstraintLazyArguments(TypeSet *target)
+        : TypeConstraint("lazyArgs"), target(target)
+    {}
+
+    void newType(JSContext *cx, TypeSet *source, Type type) {}
+
+    void newObjectState(JSContext *cx, TypeObject *object, bool force)
+    {
+        if (object->hasAnyFlags(OBJECT_FLAG_CREATED_ARGUMENTS))
+            target->addType(cx, Type::UnknownType());
+    }
+};
+
+void
+TypeSet::addLazyArguments(JSContext *cx, TypeSet *target)
+{
+    add(cx, cx->typeLifoAlloc().new_<TypeConstraintLazyArguments>(target));
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeConstraint
 /////////////////////////////////////////////////////////////////////
@@ -1624,6 +1652,47 @@ TypeSet::HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags flags
     types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
                       cx->compartment->types.compiledInfo, flags), false);
     return false;
+}
+
+void
+types::MarkArgumentsCreated(JSContext *cx, JSScript *script)
+{
+    JS_ASSERT(!script->createdArgs);
+
+    script->createdArgs = true;
+    script->uninlineable = true;
+
+    MarkTypeObjectFlags(cx, script->function(),
+                        OBJECT_FLAG_CREATED_ARGUMENTS | OBJECT_FLAG_UNINLINEABLE);
+
+    if (!script->usedLazyArgs)
+        return;
+
+    AutoEnterTypeInference enter(cx);
+
+#ifdef JS_METHODJIT
+    mjit::ExpandInlineFrames(cx->compartment);
+#endif
+
+    if (!script->ensureRanAnalysis(cx, NULL))
+        return;
+
+    ScriptAnalysis *analysis = script->analysis();
+
+    for (FrameRegsIter iter(cx); !iter.done(); ++iter) {
+        StackFrame *fp = iter.fp();
+        if (fp->isScriptFrame() && fp->script() == script) {
+            /*
+             * Check locals and stack slots, assignment to individual arguments
+             * is treated as an escape on the arguments.
+             */
+            Value *sp = fp->base() + analysis->getCode(iter.pc()).stackDepth;
+            for (Value *vp = fp->slots(); vp < sp; vp++) {
+                if (vp->isParticularMagic(JS_LAZY_ARGUMENTS))
+                    *vp = ObjectOrNullValue(js_GetArgsObject(cx, fp));
+            }
+        }
+    }
 }
 
 static inline void
@@ -2917,6 +2986,9 @@ TypeObject::setFlags(JSContext *cx, TypeObjectFlags flags)
 
     if (singleton) {
         /* Make sure flags are consistent with persistent object state. */
+        JS_ASSERT_IF(flags & OBJECT_FLAG_CREATED_ARGUMENTS,
+                     (flags & OBJECT_FLAG_UNINLINEABLE) &&
+                     interpretedFunction->script()->createdArgs);
         JS_ASSERT_IF(flags & OBJECT_FLAG_UNINLINEABLE,
                      interpretedFunction->script()->uninlineable);
         JS_ASSERT_IF(flags & OBJECT_FLAG_REENTRANT_FUNCTION,
@@ -3627,13 +3699,20 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
       }
 
-      case JSOP_ARGUMENTS:
+      case JSOP_ARGUMENTS: {
         /* Compute a precise type only when we know the arguments won't escape. */
-        if (script->needsArgsObj())
+        TypeObject *funType = script->function()->getType(cx);
+        if (funType->unknownProperties() || funType->hasAnyFlags(OBJECT_FLAG_CREATED_ARGUMENTS)) {
             pushed[0].addType(cx, Type::UnknownType());
-        else
-            pushed[0].addType(cx, Type::LazyArgsType());
+            break;
+        }
+        TypeSet *types = funType->getProperty(cx, JSID_EMPTY, false);
+        if (!types)
+            break;
+        types->addLazyArguments(cx, &pushed[0]);
+        pushed[0].addType(cx, Type::LazyArgsType());
         break;
+      }
 
       case JSOP_SETPROP:
       case JSOP_SETMETHOD: {
@@ -4156,6 +4235,122 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
         }
         result = result->next;
     }
+
+    if (!script->usesArguments || script->createdArgs)
+        return;
+
+    /*
+     * Do additional analysis to determine whether the arguments object in the
+     * script can escape.
+     */
+
+    /*
+     * Note: don't check for strict mode code here, even though arguments
+     * accesses in such scripts will always be deoptimized. These scripts can
+     * have a JSOP_ARGUMENTS in their prologue which the usesArguments check
+     * above does not account for. We filter in the interpreter and JITs
+     * themselves.
+     */
+    if (script->function()->isHeavyweight() || cx->compartment->debugMode() || localsAliasStack()) {
+        MarkArgumentsCreated(cx, script);
+        return;
+    }
+
+    offset = 0;
+    while (offset < script->length) {
+        Bytecode *code = maybeCode(offset);
+        jsbytecode *pc = script->code + offset;
+
+        if (code && JSOp(*pc) == JSOP_ARGUMENTS) {
+            Vector<SSAValue> seen(cx);
+            if (!followEscapingArguments(cx, SSAValue::PushedValue(offset, 0), &seen)) {
+                MarkArgumentsCreated(cx, script);
+                return;
+            }
+        }
+
+        offset += GetBytecodeLength(pc);
+    }
+
+    /*
+     * The VM is now free to use the arguments in this script lazily. If we end
+     * up creating an arguments object for the script in the future or regard
+     * the arguments as escaping, we need to walk the stack and replace lazy
+     * arguments objects with actual arguments objects.
+     */
+    script->usedLazyArgs = true;
+}
+
+bool
+ScriptAnalysis::followEscapingArguments(JSContext *cx, const SSAValue &v, Vector<SSAValue> *seen)
+{
+    /*
+     * trackUseChain is false for initial values of variables, which
+     * cannot hold the script's arguments object.
+     */
+    if (!trackUseChain(v))
+        return true;
+
+    for (unsigned i = 0; i < seen->length(); i++) {
+        if (v == (*seen)[i])
+            return true;
+    }
+    if (!seen->append(v)) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return false;
+    }
+
+    SSAUseChain *use = useChain(v);
+    while (use) {
+        if (!followEscapingArguments(cx, use, seen))
+            return false;
+        use = use->next;
+    }
+
+    return true;
+}
+
+bool
+ScriptAnalysis::followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<SSAValue> *seen)
+{
+    if (!use->popped)
+        return followEscapingArguments(cx, SSAValue::PhiValue(use->offset, use->u.phi), seen);
+
+    jsbytecode *pc = script->code + use->offset;
+    uint32_t which = use->u.which;
+
+    JSOp op = JSOp(*pc);
+
+    if (op == JSOP_POP || op == JSOP_POPN)
+        return true;
+
+    /* Allow GETELEM and LENGTH on arguments objects that don't escape. */
+
+    /*
+     * Note: if the element index is not an integer we will mark the arguments
+     * as escaping at the access site.
+     */
+    if (op == JSOP_GETELEM && which == 1)
+        return true;
+
+    if (op == JSOP_LENGTH)
+        return true;
+
+    /* Allow assignments to non-closed locals (but not arguments). */
+
+    if (op == JSOP_SETLOCAL) {
+        uint32_t slot = GetBytecodeSlot(script, pc);
+        if (!trackSlot(slot))
+            return false;
+        if (!followEscapingArguments(cx, SSAValue::PushedValue(use->offset, 0), seen))
+            return false;
+        return followEscapingArguments(cx, SSAValue::WrittenVar(slot, use->offset), seen);
+    }
+
+    if (op == JSOP_GETLOCAL)
+        return followEscapingArguments(cx, SSAValue::PushedValue(use->offset, 0), seen);
+
+    return false;
 }
 
 bool
@@ -5508,6 +5703,8 @@ JSObject::makeLazyType(JSContext *cx)
     if (isFunction() && toFunction()->isInterpreted()) {
         type->interpretedFunction = toFunction();
         JSScript *script = type->interpretedFunction->script();
+        if (script->createdArgs)
+            type->flags |= OBJECT_FLAG_CREATED_ARGUMENTS;
         if (script->uninlineable)
             type->flags |= OBJECT_FLAG_UNINLINEABLE;
         if (script->reentrantOuterFunction)

@@ -1081,10 +1081,6 @@ ic::SplatApplyArgs(VMFrame &f)
 
         StackFrame *fp = f.regs.fp();
         unsigned n;
-
-        /* XXX: this will flip to !fp->hasArgsObj() in a later patch. */
-        JS_ASSERT(fp->hasArgsObj());
-
         if (!fp->hasArgsObj()) {
             /* Extract the common/fast path where there is no args obj. */
             n = fp->numActualArgs();
