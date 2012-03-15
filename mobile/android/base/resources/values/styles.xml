@@ -38,7 +38,7 @@
     <!-- Address bar -->
     <style name="AddressBar">
         <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">42dip</item>
+        <item name="android:layout_height">48dip</item>
         <item name="android:orientation">horizontal</item>
     </style>
 
