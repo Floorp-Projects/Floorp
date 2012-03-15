@@ -129,27 +129,6 @@ class nsIParserService : public nsISupports {
   virtual nsresult CheckQName(const nsAString& aQName,
                               bool aNamespaceAware,
                               const PRUnichar** aColon) = 0;
-  virtual bool IsXMLLetter(PRUnichar aChar) = 0;
-  virtual bool IsXMLNCNameChar(PRUnichar aChar) = 0;
-
-  /**
-   * Decodes an entity into a UTF-16 character. If a ; is found between aStart
-   * and aEnd it will try to decode the entity and set aNext to point to the
-   * character after the ;. The resulting UTF-16 character will be written in
-   * aResult, so if the entity is a valid numeric entity there needs to be
-   * space for at least two PRUnichars.
-   *
-   * @param aStart pointer to the character after the ampersand. 
-   * @param aEnd pointer to the position after the last character of the
-   *             string.
-   * @param aNext [out] will be set to the character after the ; or null if
-   *                    the decoding was unsuccessful.
-   * @param aResult the buffer to write the resulting UTF-16 character in.
-   * @return the number of PRUnichars written to aResult.
-   */
-  virtual PRUint32 DecodeEntity(const PRUnichar* aStart, const PRUnichar* aEnd,
-                                const PRUnichar** aNext,
-                                PRUnichar* aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIParserService, NS_IPARSERSERVICE_IID)

@@ -72,24 +72,6 @@ public:
 
   nsresult CheckQName(const nsAString& aQName,
                       bool aNamespaceAware, const PRUnichar** aColon);
-
-  bool IsXMLLetter(PRUnichar aChar)
-  {
-    return !!MOZ_XMLIsLetter(reinterpret_cast<const char*>(&aChar));
-  }
-  bool IsXMLNCNameChar(PRUnichar aChar)
-  {
-    return !!MOZ_XMLIsNCNameChar(reinterpret_cast<const char*>(&aChar));
-  }
-  PRUint32 DecodeEntity(const PRUnichar* aStart, const PRUnichar* aEnd,
-                        const PRUnichar** aNext, PRUnichar* aResult)
-  {
-    *aNext = nsnull;
-    return MOZ_XMLTranslateEntity(reinterpret_cast<const char*>(aStart),
-                                  reinterpret_cast<const char*>(aEnd),
-                                  reinterpret_cast<const char**>(aNext),
-                                  aResult);
-  }
 };
 
 #endif
