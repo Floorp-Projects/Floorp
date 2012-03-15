@@ -218,58 +218,6 @@ add_test(function test_emptytitle_export()
   });
 });
 
-add_test(function test_import_preplaces_to_folder()
-{
-  // Test importing a pre-Places canonical bookmarks file to a specific folder.
-  // 1. create a new folder
-  // 2. import bookmarks.preplaces.html to that folder
-  // 3. run the test-suite
-
-  let testFolder = PlacesUtils.bookmarks.createFolder(
-    PlacesUtils.bookmarksMenuFolderId, "test-import",
-    PlacesUtils.bookmarks.DEFAULT_INDEX
-  );
-  try {
-    importer.importHTMLFromFileToFolder(gBookmarksFileOld, testFolder, false);
-  } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
-
-  waitForAsyncUpdates(function () {
-    // Import-to-folder creates subfolders for toolbar and unfiled.
-    testImportedBookmarksToFolder(testFolder);
-
-    waitForAsyncUpdates(function () {
-      remove_all_bookmarks();
-      run_next_test();
-    });
-  });
-});
-
-add_test(function test_import_to_folder()
-{
-  // Test importing a Places canonical bookmarks file to a specific folder.
-  // 1. create a new folder
-  // 2. import bookmarks.exported.html to that folder
-  // 3. run the test-suite
-
-  let testFolder = PlacesUtils.bookmarks.createFolder(
-    PlacesUtils.bookmarksMenuFolderId, "test-import",
-    PlacesUtils.bookmarks.DEFAULT_INDEX
-  );
-  try {
-    importer.importHTMLFromFileToFolder(gBookmarksFileNew, testFolder, false);
-  } catch(ex) { do_throw("couldn't import the exported file to folder: " + ex); }
-
-  waitForAsyncUpdates(function () {
-    // Import-to-folder creates subfolders for toolbar and unfiled.
-    testImportedBookmarksToFolder(testFolder);
-
-    waitForAsyncUpdates(function () {
-      remove_all_bookmarks();
-      run_next_test();
-    });
-  });
-});
-
 add_test(function test_import_ontop()
 {
   // Test importing the exported bookmarks.html file *on top of* the existing
