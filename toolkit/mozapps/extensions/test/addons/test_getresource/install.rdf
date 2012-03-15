@@ -10,7 +10,7 @@
     <!-- Front End MetaData -->
     <em:name>Test 1</em:name>
     <em:description>Test Description</em:description>
-
+    <em:bootstrap>true</em:bootstrap>
     <em:targetApplication>
       <Description>
         <em:id>xpcshell@tests.mozilla.org</em:id>
