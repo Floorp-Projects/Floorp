@@ -436,18 +436,24 @@ TelemetryPing.prototype = {
     // Use a deterministic url for testing.
     let isTestPing = (reason == "test-ping");
     let havePreviousSession = !!this._prevSession;
-    let slug = (isTestPing
-                ? reason
-                : (havePreviousSession
-                   ? this._prevSession.uuid
-                   : this._uuid));
     let payloadObj = {
       ver: PAYLOAD_VERSION,
-      info: this.getMetadata(reason)
     };
 
+    let previousHistograms = null;
+    try {
+      if (havePreviousSession) {
+        previousHistograms = this.getHistograms(this._prevSession.snapshots);
+      }
+    } catch (e) {
+      // Some problem with getting information from our saved data.
+      // Act like we never knew about it.
+      havePreviousSession = false;
+      this._prevSession = null;
+    }
+
     if (havePreviousSession) {
-      payloadObj.histograms = this.getHistograms(this._prevSession.snapshots);
+      payloadObj.histograms = previousHistograms;
     }
     else {
       payloadObj.simpleMeasurements = getSimpleMeasurements();
@@ -461,6 +467,12 @@ TelemetryPing.prototype = {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
     }
 
+    let slug = (isTestPing
+                ? reason
+                : (havePreviousSession
+                   ? this._prevSession.uuid
+                   : this._uuid));
+    payloadObj.info = this.getMetadata(havePreviousSession ? "saved-session" : reason);
     return { previous: !!havePreviousSession,
              slug: slug, payload: JSON.stringify(payloadObj) };
   },
