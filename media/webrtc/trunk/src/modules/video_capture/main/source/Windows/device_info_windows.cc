@@ -16,13 +16,29 @@
 #include "ref_count.h"
 #include "trace.h"
 
-#include <Streams.h>
 #include <Dvdmedia.h>
 
 namespace webrtc
 {
 namespace videocapturemodule
 {
+
+  void _FreeMediaType(AM_MEDIA_TYPE& mt)
+{
+    if (mt.cbFormat != 0)
+    {
+        CoTaskMemFree((PVOID)mt.pbFormat);
+        mt.cbFormat = 0;
+        mt.pbFormat = NULL;
+    }
+    if (mt.pUnk != NULL)
+    {
+        // pUnk should not be used.
+        mt.pUnk->Release();
+        mt.pUnk = NULL;
+    }
+}
+
 VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo(
                                                         const WebRtc_Word32 id)
 {
@@ -661,7 +677,7 @@ WebRtc_Word32 DeviceInfoWindows::CreateCapabilityMap(
                          capability->width, capability->height,
                          capability->rawType, capability->maxFPS);
         }
-        DeleteMediaType(pmt);
+        _FreeMediaType(*pmt);
         pmt = NULL;
     }
     RELEASE_AND_CLEAR(streamConfig);
