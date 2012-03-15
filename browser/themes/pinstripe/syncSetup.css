@@ -33,8 +33,7 @@ wizardpage {
 }
 
 .wizard-buttons {
-  border-top: 2px solid #ccd9ea;
-  background-color: #f1f5fb;
+  background-color: rgba(0,0,0,0.1);
   padding: 1em;
 }
 
