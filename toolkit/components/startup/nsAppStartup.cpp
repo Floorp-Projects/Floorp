@@ -872,6 +872,15 @@ nsAppStartup::TrackStartupCrashBegin(bool *aIsSafeModeNecessary)
   Preferences::GetInt(kPrefRecentCrashes, &recentCrashes);
   mIsSafeModeNecessary = (recentCrashes > maxResumedCrashes && maxResumedCrashes != -1);
 
+  // Bug 731613 - Don't check if the last startup was a crash if XRE_PROFILE_PATH is set.  After
+  // profile manager, the profile lock's mod. time has been changed so can't be used on this startup.
+  // After a restart, it's safe to assume the last startup was successful.
+  char *xreProfilePath = PR_GetEnv("XRE_PROFILE_PATH");
+  if (xreProfilePath) {
+    GetAutomaticSafeModeNecessary(aIsSafeModeNecessary);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // time of last successful startup
   PRInt32 lastSuccessfulStartup;
   rv = Preferences::GetInt(kPrefLastSuccess, &lastSuccessfulStartup);
