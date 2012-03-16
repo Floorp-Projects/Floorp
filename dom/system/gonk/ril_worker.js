@@ -2497,8 +2497,17 @@ let GsmPDUHelper = {
   /**
    * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
    * (UCS2) data.
+   *
+   * @param msg
+   *        message object for output.
+   * @param length
+   *        length of user data to read in octets.
+   * @param codingScheme
+   *        coding scheme used to decode user data.
+   * @param hasHeader
+   *        whether a header is embedded.
    */
-  readUserData: function readUserData(length, codingScheme, hasHeader) {
+  readUserData: function readUserData(msg, length, codingScheme, hasHeader) {
     if (DEBUG) {
       debug("Reading " + length + " bytes of user data.");
       debug("Coding scheme: " + codingScheme);
@@ -2535,43 +2544,45 @@ let GsmPDUHelper = {
         break;
     }
 
-    let header;
+    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
+
     let paddingBits = 0;
     if (hasHeader) {
-      header = this.readUserDataHeader();
+      msg.header = this.readUserDataHeader();
 
       if (encoding == PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
-        let headerBits = (header.length + 1) * 8;
+        let headerBits = (msg.header.length + 1) * 8;
         let headerSeptets = Math.ceil(headerBits / 7);
 
         length -= headerSeptets;
         paddingBits = headerSeptets * 7 - headerBits;
       } else {
-        length -= (header.length + 1);
+        length -= (msg.header.length + 1);
       }
     }
 
-    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
+    msg.body = null;
     switch (encoding) {
       case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
         // 7 bit encoding allows 140 octets, which means 160 characters
         // ((140x8) / 7 = 160 chars)
         if (length > PDU_MAX_USER_DATA_7BIT) {
           if (DEBUG) debug("PDU error: user data is too long: " + length);
-          return null;
+          break;
         }
 
-        return this.readSeptetsToString(length,
-                                        paddingBits,
-                                        hasHeader ? header.langIndex : PDU_NL_IDENTIFIER_DEFAULT,
-                                        hasHeader ? header.langShiftIndex : PDU_NL_IDENTIFIER_DEFAULT);
+        let langIndex = hasHeader ? msg.header.langIndex : PDU_NL_IDENTIFIER_DEFAULT;
+        let langShiftIndex = hasHeader ? msg.header.langShiftIndex : PDU_NL_IDENTIFIER_DEFAULT;
+        msg.body = this.readSeptetsToString(length, paddingBits, langIndex,
+                                            langShiftIndex);
+        break;
       case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
         // Unsupported.
-        return null;
+        break;
       case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
-        return this.readUCS2String(length);
+        msg.body = this.readUCS2String(length);
+        break;
     }
-    return null;
   },
 
   /**
@@ -2685,9 +2696,8 @@ let GsmPDUHelper = {
 
     // - TP-User-Data -
     if (userDataLength > 0) {
-      msg.body = this.readUserData(userDataLength,
-                                   dataCodingScheme,
-                                   hasUserDataHeader);
+      this.readUserData(msg, userDataLength, dataCodingScheme,
+                        hasUserDataHeader);
     }
 
     return msg;
