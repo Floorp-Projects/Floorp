@@ -1077,7 +1077,7 @@ function isWepHexKey(s) {
 let netToDOM;
 let netFromDOM;
 
-function nsWifiWorker() {
+function WifiWorker() {
   var self = this;
 
   this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
@@ -1333,7 +1333,7 @@ function nsWifiWorker() {
   debug("Wifi starting");
 }
 
-nsWifiWorker.prototype = {
+WifiWorker.prototype = {
   classID:   WIFIWORKER_CID,
   classInfo: XPCOMUtils.generateCI({classID: WIFIWORKER_CID,
                                     contractID: WIFIWORKER_CONTRACTID,
@@ -1478,12 +1478,12 @@ nsWifiWorker.prototype = {
   }
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([nsWifiWorker]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiWorker]);
 
 let debug;
 if (DEBUG) {
   debug = function (s) {
-    dump("-*- nsWifiWorker component: " + s + "\n");
+    dump("-*- WifiWorker component: " + s + "\n");
   };
 } else {
   debug = function (s) {};
