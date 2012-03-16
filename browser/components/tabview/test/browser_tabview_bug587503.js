@@ -3,6 +3,7 @@
 
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
 
   newWindowWithTabView(onTabViewWindowLoaded);
 }
@@ -105,8 +106,8 @@ function onTabViewWindowLoaded(win) {
             // Close the window and we're done!
             win.close();
             finish();
-          }, 6000, false);
-        },1000);
+          }, 10000, false);
+        }, 2000);
         
       });
     

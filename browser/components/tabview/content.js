@@ -94,11 +94,21 @@ let WindowMessageHandler = {
                     !webProgress.isLoadingDocument);
 
     sendAsyncMessage(cx.name, {isLoaded: isLoaded});
+  },
+
+  // ----------
+  // Function: isImageDocument
+  // Checks if the currently active document is an image document or not.
+  isImageDocument: function WMH_isImageDocument(cx) {
+    let isImageDocument = (content.document instanceof Ci.nsIImageDocument);
+
+    sendAsyncMessage(cx.name, {isImageDocument: isImageDocument});
   }
 };
 
 // add message listeners
 addMessageListener("Panorama:isDocumentLoaded", WindowMessageHandler.isDocumentLoaded);
+addMessageListener("Panorama:isImageDocument", WindowMessageHandler.isImageDocument);
 
 // ----------
 // WebProgressListener

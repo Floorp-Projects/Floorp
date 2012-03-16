@@ -158,6 +158,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug673196.js \
                  browser_tabview_bug673729.js \
                  browser_tabview_bug677310.js \
+                 browser_tabview_bug678374.js \
                  browser_tabview_bug679853.js \
                  browser_tabview_bug681599.js \
                  browser_tabview_bug685476.js \
@@ -192,6 +193,8 @@ _BROWSER_FILES = \
                  search2.html \
                  test_bug600645.html \
                  test_bug644097.html \
+                 test_bug678374.html \
+                 test_bug678374_icon16.png \
                  $(NULL)
 
 # browser_tabview_bug597980.js is disabled for leaking, see bug 711907
