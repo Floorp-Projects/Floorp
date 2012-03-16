@@ -36,7 +36,6 @@
 
 #include "GLContextProvider.h"
 #include "GLContext.h"
-#include "GLLibraryLoader.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "WGLLibrary.h"
@@ -148,7 +147,7 @@ WGLLibrary::EnsureInitialized()
 
     gUseDoubleBufferedWindows = PR_GetEnv("MOZ_WGL_DB") != nsnull;
 
-    GLLibraryLoader::SymLoadStruct earlySymbols[] = {
+    LibrarySymbolLoader::SymLoadStruct earlySymbols[] = {
         { (PRFuncPtr*) &fCreateContext, { "wglCreateContext", NULL } },
         { (PRFuncPtr*) &fMakeCurrent, { "wglMakeCurrent", NULL } },
         { (PRFuncPtr*) &fGetProcAddress, { "wglGetProcAddress", NULL } },
@@ -159,7 +158,7 @@ WGLLibrary::EnsureInitialized()
         { NULL, { NULL } }
     };
 
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &earlySymbols[0])) {
+    if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &earlySymbols[0])) {
         NS_WARNING("Couldn't find required entry points in OpenGL DLL (early init)");
         return false;
     }
@@ -184,7 +183,7 @@ WGLLibrary::EnsureInitialized()
     // Now we can grab all the other symbols that we couldn't without having
     // a context current.
 
-    GLLibraryLoader::SymLoadStruct pbufferSymbols[] = {
+    LibrarySymbolLoader::SymLoadStruct pbufferSymbols[] = {
         { (PRFuncPtr*) &fCreatePbuffer, { "wglCreatePbufferARB", "wglCreatePbufferEXT", NULL } },
         { (PRFuncPtr*) &fDestroyPbuffer, { "wglDestroyPbufferARB", "wglDestroyPbufferEXT", NULL } },
         { (PRFuncPtr*) &fGetPbufferDC, { "wglGetPbufferDCARB", "wglGetPbufferDCEXT", NULL } },
@@ -193,42 +192,42 @@ WGLLibrary::EnsureInitialized()
         { NULL, { NULL } }
     };
 
-    GLLibraryLoader::SymLoadStruct pixFmtSymbols[] = {
+    LibrarySymbolLoader::SymLoadStruct pixFmtSymbols[] = {
         { (PRFuncPtr*) &fChoosePixelFormat, { "wglChoosePixelFormatARB", "wglChoosePixelFormatEXT", NULL } },
         { (PRFuncPtr*) &fGetPixelFormatAttribiv, { "wglGetPixelFormatAttribivARB", "wglGetPixelFormatAttribivEXT", NULL } },
         { NULL, { NULL } }
     };
 
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &pbufferSymbols[0],
-         (GLLibraryLoader::PlatformLookupFunction)fGetProcAddress))
+    if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &pbufferSymbols[0],
+         (LibrarySymbolLoader::PlatformLookupFunction)fGetProcAddress))
     {
         // this isn't an error, just means that pbuffers aren't supported
         fCreatePbuffer = nsnull;
     }
 
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &pixFmtSymbols[0],
-         (GLLibraryLoader::PlatformLookupFunction)fGetProcAddress))
+    if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &pixFmtSymbols[0],
+         (LibrarySymbolLoader::PlatformLookupFunction)fGetProcAddress))
     {
         // this isn't an error, just means that we don't have the pixel format extension
         fChoosePixelFormat = nsnull;
     }
 
-    GLLibraryLoader::SymLoadStruct extensionsSymbols[] = {
+    LibrarySymbolLoader::SymLoadStruct extensionsSymbols[] = {
         { (PRFuncPtr *) &fGetExtensionsString, { "wglGetExtensionsStringARB", NULL} },
         { NULL, { NULL } }
     };
 
-    GLLibraryLoader::SymLoadStruct robustnessSymbols[] = {
+    LibrarySymbolLoader::SymLoadStruct robustnessSymbols[] = {
         { (PRFuncPtr *) &fCreateContextAttribs, { "wglCreateContextAttribsARB", NULL} },
         { NULL, { NULL } }
     };
 
-    if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &extensionsSymbols[0],
-        (GLLibraryLoader::PlatformLookupFunction)fGetProcAddress)) {
+    if (LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &extensionsSymbols[0],
+        (LibrarySymbolLoader::PlatformLookupFunction)fGetProcAddress)) {
         const char *wglExts = fGetExtensionsString(gSharedWindowDC);
         if (wglExts && HasExtension(wglExts, "WGL_ARB_create_context")) {
-            GLLibraryLoader::LoadSymbols(mOGLLibrary, &robustnessSymbols[0],
-            (GLLibraryLoader::PlatformLookupFunction)fGetProcAddress);
+            LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &robustnessSymbols[0],
+            (LibrarySymbolLoader::PlatformLookupFunction)fGetProcAddress);
             if (HasExtension(wglExts, "WGL_ARB_create_context_robustness")) {
                 mHasRobustness = true;
             }
