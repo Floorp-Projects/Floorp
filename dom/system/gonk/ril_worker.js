@@ -2046,7 +2046,7 @@ let Phone = {
                                datacall: currentDataCall});
         }
       } else {
-        delete this.currentCalls[currentDataCall.callIndex];
+        delete this.currentDataCalls[currentDataCall.callIndex];
         currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
         this.sendDOMMessage({type: "datacallstatechange",
                              datacall: currentDataCall});
