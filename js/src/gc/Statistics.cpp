@@ -107,7 +107,7 @@ class StatisticsSerializer
     }
 
     void appendIfNonzeroMS(const char *name, double v) {
-        if (asJSON_ || v)
+        if (asJSON_ || v >= 0.1)
             appendNumber(name, "%.1f", "ms", v);
     }
 
@@ -284,19 +284,28 @@ static void
 formatPhases(StatisticsSerializer &ss, const char *name, int64_t *times)
 {
     ss.beginObject(name);
+    ss.appendIfNonzeroMS("Begin Callback", t(times[PHASE_GC_BEGIN]));
+    ss.appendIfNonzeroMS("Wait Background Thread", t(times[PHASE_WAIT_BACKGROUND_THREAD]));
+    ss.appendIfNonzeroMS("Purge", t(times[PHASE_PURGE]));
     ss.appendIfNonzeroMS("Mark", t(times[PHASE_MARK]));
     ss.appendIfNonzeroMS("Mark Roots", t(times[PHASE_MARK_ROOTS]));
     ss.appendIfNonzeroMS("Mark Delayed", t(times[PHASE_MARK_DELAYED]));
     ss.appendIfNonzeroMS("Mark Other", t(times[PHASE_MARK_OTHER]));
+    ss.appendIfNonzeroMS("Finalize Start Callback", t(times[PHASE_FINALIZE_START]));
     ss.appendIfNonzeroMS("Sweep", t(times[PHASE_SWEEP]));
+    ss.appendIfNonzeroMS("Sweep Compartments", t(times[PHASE_SWEEP_COMPARTMENTS]));
     ss.appendIfNonzeroMS("Sweep Object", t(times[PHASE_SWEEP_OBJECT]));
     ss.appendIfNonzeroMS("Sweep String", t(times[PHASE_SWEEP_STRING]));
     ss.appendIfNonzeroMS("Sweep Script", t(times[PHASE_SWEEP_SCRIPT]));
     ss.appendIfNonzeroMS("Sweep Shape", t(times[PHASE_SWEEP_SHAPE]));
     ss.appendIfNonzeroMS("Discard Code", t(times[PHASE_DISCARD_CODE]));
     ss.appendIfNonzeroMS("Discard Analysis", t(times[PHASE_DISCARD_ANALYSIS]));
-    ss.appendIfNonzeroMS("XPConnect", t(times[PHASE_XPCONNECT]));
+    ss.appendIfNonzeroMS("Discard TI", t(times[PHASE_DISCARD_TI]));
+    ss.appendIfNonzeroMS("Sweep Types", t(times[PHASE_SWEEP_TYPES]));
+    ss.appendIfNonzeroMS("Clear Script Analysis", t(times[PHASE_CLEAR_SCRIPT_ANALYSIS]));
+    ss.appendIfNonzeroMS("Finalize End Callback", t(times[PHASE_FINALIZE_END]));
     ss.appendIfNonzeroMS("Deallocate", t(times[PHASE_DESTROY]));
+    ss.appendIfNonzeroMS("End Callback", t(times[PHASE_GC_END]));
     ss.endObject();
 }
 
@@ -326,6 +335,7 @@ Statistics::formatData(StatisticsSerializer &ss)
         ss.appendString("Nonincremental Reason",
                         nonincrementalReason ? nonincrementalReason : "none");
     }
+    ss.appendNumber("Allocated", "%u", "MB", unsigned(preBytes / 1024 / 1024));
     ss.appendNumber("+Chunks", "%d", "", counts[STAT_NEW_CHUNK]);
     ss.appendNumber("-Chunks", "%d", "", counts[STAT_DESTROY_CHUNK]);
     ss.endLine();
@@ -463,6 +473,8 @@ Statistics::beginGC()
     slices.clearAndFree();
     nonincrementalReason = NULL;
 
+    preBytes = runtime->gcBytes;
+
     Probes::GCStart();
 }
 
@@ -489,8 +501,6 @@ Statistics::endGC()
 
     if (fp)
         printStats();
-
-    PodArrayZero(counts);
 }
 
 void
@@ -532,6 +542,10 @@ Statistics::endSlice()
         else
             (*cb)(runtime, GC_SLICE_END, GCDescription(!!compartment));
     }
+
+    /* Do this after the slice callback since it uses these values. */
+    if (last)
+        PodArrayZero(counts);
 }
 
 void
