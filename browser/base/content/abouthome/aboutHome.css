@@ -229,6 +229,9 @@ body[narrow] #launcher[session] {
   padding: 14px 6px;
   min-width: 88px;
   max-width: 176px;
+  max-height: 85px;
+  vertical-align: top;
+  white-space: normal;
   background: transparent padding-box;
   border: 1px solid transparent;
   border-radius: 2.5px;
@@ -241,9 +244,6 @@ body[narrow] #launcher[session] {
 
 body[narrow] #launcher[session] > .launchButton {
   margin: 4px 1px;
-  max-height: 85px;
-  vertical-align: top;
-  white-space: normal;
 }
 
 .launchButton:hover {
