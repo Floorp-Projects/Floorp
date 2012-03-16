@@ -245,7 +245,7 @@ interface nsIProtocolHandler : nsISupports
      * Channels for this protocol don't need to spin the event loop to handle
      * Open() and reads on the resulting stream.
      */
-    const unsigned long URI_SYNC_LOAD_DOESNT_SPIN_EVENT_LOOP = (1<<15);
+    const unsigned long URI_SYNC_LOAD_IS_OK = (1<<15);
 
     /**
      * This protocol handler can be proxied via a proxy (socks or http)

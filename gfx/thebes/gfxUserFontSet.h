@@ -272,7 +272,7 @@ protected:
     // Ownership of aFontData is passed in here; the font set must
     // ensure that it is eventually deleted with NS_Free().
     gfxFontEntry* LoadFont(gfxProxyFontEntry *aProxy,
-                           const PRUint8* &aFontData, PRUint32 &aLength);
+                           const PRUint8 *aFontData, PRUint32 &aLength);
 
     // parse data for a data URL
     virtual nsresult SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,

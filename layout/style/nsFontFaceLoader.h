@@ -109,7 +109,7 @@ protected:
 
   nsresult CheckFontLoad(gfxProxyFontEntry *aFontToLoad,
                          const gfxFontFaceSrc *aFontFaceSrc,
-                         nsCOMPtr<nsIPrincipal>& aPrincipal);
+                         nsIPrincipal **aPrincipal);
 
   virtual nsresult SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
                                     const gfxFontFaceSrc *aFontFaceSrc,
