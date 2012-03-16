@@ -422,12 +422,14 @@ RadioInterfaceLayer.prototype = {
   handleSmsSent: function handleSmsSent(message) {
     debug("handleSmsSent: " + JSON.stringify(message));
     let timestamp = Date.now();
-    let id = gSmsDatabaseService.saveSentMessage(message.number, message.body, timestamp);
+    let id = gSmsDatabaseService.saveSentMessage(message.number,
+                                                 message.fullBody,
+                                                 timestamp);
     let sms = gSmsService.createSmsMessage(id,
                                            DOM_SMS_DELIVERY_SENT,
                                            null,
                                            message.number,
-                                           message.body,
+                                           message.fullBody,
                                            timestamp);
     //TODO handle errors (bug 727319)
     gSmsRequestManager.notifySmsSent(message.requestId, sms);
@@ -549,6 +551,19 @@ RadioInterfaceLayer.prototype = {
   segmentRef16Bit: false,
 
   /**
+   * Get valid SMS concatenation reference number.
+   */
+  _segmentRef: 0,
+  get nextSegmentRef() {
+    let ref = this._segmentRef++;
+
+    this._segmentRef %= (this.segmentRef16Bit ? 65535 : 255);
+
+    // 0 is not a valid SMS concatenation reference number.
+    return ref + 1;
+  },
+
+  /**
    * Calculate encoded length using specified locking/single shift table
    *
    * @param message
@@ -610,7 +625,7 @@ RadioInterfaceLayer.prototype = {
    *        a message string to be encoded.
    *
    * @return null or an options object with attributes `dcs`,
-   *         `userDataHeaderLength`, `encodedBodyLength`, `langIndex`,
+   *         `userDataHeaderLength`, `encodedFullBodyLength`, `langIndex`,
    *         `langShiftIndex`, `segmentMaxSeq` set.
    *
    * @see #_calculateUserDataLength().
@@ -664,7 +679,7 @@ RadioInterfaceLayer.prototype = {
 
       options = {
         dcs: RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET,
-        encodedBodyLength: bodySeptets,
+        encodedFullBodyLength: bodySeptets,
         userDataHeaderLength: headerLen,
         langIndex: langIndex,
         langShiftIndex: langShiftIndex,
@@ -682,7 +697,7 @@ RadioInterfaceLayer.prototype = {
    *        a message string to be encoded.
    *
    * @return an options object with attributes `dcs`, `userDataHeaderLength`,
-   *         `encodedBodyLength`, `segmentMaxSeq` set.
+   *         `encodedFullBodyLength`, `segmentMaxSeq` set.
    *
    * @see #_calculateUserDataLength().
    */
@@ -705,7 +720,7 @@ RadioInterfaceLayer.prototype = {
 
     return {
       dcs: RIL.PDU_DCS_MSG_CODING_16BITS_ALPHABET,
-      encodedBodyLength: bodyChars * 2,
+      encodedFullBodyLength: bodyChars * 2,
       userDataHeaderLength: headerLen,
       segmentMaxSeq: segments,
     };
@@ -722,12 +737,12 @@ RadioInterfaceLayer.prototype = {
    * @param dcs
    *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
    *        constants.
-   * @param body
-   *        Original text message.
+   * @param fullBody
+   *        Original unfragmented text message.
    * @param userDataHeaderLength
    *        Length of embedded user data header, in bytes. The whole header
    *        size will be userDataHeaderLength + 1; 0 for no header.
-   * @param encodedBodyLength
+   * @param encodedFullBodyLength
    *        Length of the message body when encoded with the given DCS. For
    *        UCS2, in bytes; for 7-bit, in septets.
    * @param langIndex
@@ -746,7 +761,7 @@ RadioInterfaceLayer.prototype = {
     }
 
     if (options) {
-      options.body = message;
+      options.fullBody = message;
     }
 
     debug("_calculateUserDataLength: " + JSON.stringify(options));
@@ -868,11 +883,11 @@ RadioInterfaceLayer.prototype = {
     if (options.dcs == RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
       const langTable = RIL.PDU_NL_LOCKING_SHIFT_TABLES[options.langIndex];
       const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[options.langShiftIndex];
-      options.segments = this._fragmentText7Bit(options.body,
+      options.segments = this._fragmentText7Bit(options.fullBody,
                                                 langTable, langShiftTable,
                                                 options.userDataHeaderLength);
     } else {
-      options.segments = this._fragmentTextUCS2(options.body,
+      options.segments = this._fragmentTextUCS2(options.fullBody,
                                                 options.userDataHeaderLength);
     }
 
@@ -892,6 +907,12 @@ RadioInterfaceLayer.prototype = {
     options.number = number;
     options.requestId = requestId;
     options.processId = processId;
+
+    this._fragmentText(message, options);
+    if (options.segmentMaxSeq > 1) {
+      options.segmentRef16Bit = this.segmentRef16Bit;
+      options.segmentRef = this.nextSegmentRef;
+    }
 
     this.worker.postMessage(options);
   },
