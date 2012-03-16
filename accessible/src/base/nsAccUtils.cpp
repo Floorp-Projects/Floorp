@@ -322,20 +322,6 @@ nsAccUtils::GetSelectableContainer(nsAccessible* aAccessible, PRUint64 aState)
   return parent;
 }
 
-nsAccessible*
-nsAccUtils::GetMultiSelectableContainer(nsINode* aNode)
-{
-  nsAccessible* accessible = GetAccService()->GetAccessible(aNode, nsnull);
-  if (accessible) {
-    nsAccessible* container = GetSelectableContainer(accessible,
-                                                     accessible->State());
-    if (container && container->State() & states::MULTISELECTABLE)
-      return container;
-  }
-
-  return nsnull;
-}
-
 bool
 nsAccUtils::IsARIASelected(nsAccessible *aAccessible)
 {
