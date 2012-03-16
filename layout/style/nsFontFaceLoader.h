@@ -72,7 +72,7 @@ public:
 
   // starts loading process, creating and initializing a nsFontFaceLoader obj
   // returns whether load process successfully started or not
-  nsresult StartLoad(gfxProxyFontEntry *aFontToLoad, 
+  nsresult StartLoad(gfxProxyFontEntry *aFontToLoad,
                      const gfxFontFaceSrc *aFontFaceSrc);
 
   // Called by nsFontFaceLoader when the loader has completed normally.
@@ -106,6 +106,15 @@ protected:
                               const char *aMessage,
                               PRUint32 aFlags = nsIScriptError::errorFlag,
                               nsresult aStatus = 0);
+
+  nsresult CheckFontLoad(gfxProxyFontEntry *aFontToLoad,
+                         const gfxFontFaceSrc *aFontFaceSrc,
+                         nsCOMPtr<nsIPrincipal>& aPrincipal);
+
+  virtual nsresult SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
+                                    const gfxFontFaceSrc *aFontFaceSrc,
+                                    PRUint8* &aBuffer,
+                                    PRUint32 &aBufferLength);
 
   nsPresContext *mPresContext;  // weak reference
 
