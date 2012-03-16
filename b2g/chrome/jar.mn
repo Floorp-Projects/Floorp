@@ -4,6 +4,7 @@ chrome.jar:
 % content branding %content/branding/
 % content browser %content/
 
+  content/dbg-browser-actors.js         (content/dbg-browser-actors.js)
 * content/shell.xul                     (content/shell.xul)
 * content/shell.js                      (content/shell.js)
 #ifndef MOZ_TOUCH
