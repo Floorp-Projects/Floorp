@@ -2533,7 +2533,7 @@ pref("ui.key.generalAccessKey", -1);
 // Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta (Cmd)
 // (values can be combined, e.g. 3 for Ctrl+Shift)
 pref("ui.key.chromeAccess", 2);
-pref("ui.key.contentAccess", 2);
+pref("ui.key.contentAccess", 6);
 
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
