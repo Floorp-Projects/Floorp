@@ -236,9 +236,21 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
         obj = JSVAL_TO_OBJECT(v);
         NS_ASSERTION(IS_WN_WRAPPER(obj), "bad object");
 
+        // Because the underlying native didn't have a PreCreate hook, we had
+        // to a new (or possibly pre-existing) XPCWN in our compartment.
+        // This could be a problem for chrome code that passes XPCOM objects
+        // across compartments, because the effects of QI would disappear across
+        // compartments.
+        //
+        // So whenever we pull an XPCWN across compartments in this manner, we
+        // give the destination object the union of the two native sets. We try
+        // to do this cleverly in the common case to avoid too much overhead.
         XPCWrappedNative *newwn = static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(obj));
-        if (newwn->GetSet()->GetInterfaceCount() < wn->GetSet()->GetInterfaceCount())
-            newwn->SetSet(wn->GetSet());
+        XPCNativeSet *unionSet = XPCNativeSet::GetNewOrUsed(ccx, newwn->GetSet(),
+                                                            wn->GetSet(), false);
+        if (!unionSet)
+            return nsnull;
+        newwn->SetSet(unionSet);
     }
 
     return DoubleWrap(cx, obj, flags);

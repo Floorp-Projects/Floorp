@@ -1882,6 +1882,18 @@ public:
                                       XPCNativeInterface* newInterface,
                                       PRUint16 position);
 
+    // This generates a union set.
+    //
+    // If preserveFirstSetOrder is true, the elements from |firstSet| come first,
+    // followed by any non-duplicate items from |secondSet|. If false, the same
+    // algorithm is applied; but if we detect that |secondSet| is a superset of
+    // |firstSet|, we return |secondSet| without worrying about whether the
+    // ordering might differ from |firstSet|.
+    static XPCNativeSet* GetNewOrUsed(XPCCallContext& ccx,
+                                      XPCNativeSet* firstSet,
+                                      XPCNativeSet* secondSet,
+                                      bool preserveFirstSetOrder);
+
     static void ClearCacheEntryForClassInfo(nsIClassInfo* classInfo);
 
     inline JSBool FindMember(jsid name, XPCNativeMember** pMember,
