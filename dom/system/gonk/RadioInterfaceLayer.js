@@ -532,6 +532,144 @@ RadioInterfaceLayer.prototype = {
     gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION, force);
   },
 
+  /**
+   * List of tuples of national language identifier pairs.
+   */
+  enabledGsmTableTuples: [
+    [RIL.PDU_NL_IDENTIFIER_DEFAULT, RIL.PDU_NL_IDENTIFIER_DEFAULT],
+  ],
+
+  /**
+   * Calculate encoded length using specified locking/single shift table
+   *
+   * @param message
+   *        message string to be encoded.
+   * @param langTable
+   *        locking shift table string.
+   * @param langShiftTable
+   *        single shift table string.
+   *
+   * @return encoded length in septets.
+   *
+   * @note that the algorithm used in this function must match exactly with
+   * GsmPDUHelper#writeStringAsSeptets.
+   */
+  _calculateLangEncodedSeptets: function _calculateLangEncodedSeptets(message, langTable, langShiftTable) {
+    let length = 0;
+    for (let msgIndex = 0; msgIndex < message.length; msgIndex++) {
+      let septet = langTable.indexOf(message.charAt(msgIndex));
+
+      // According to 3GPP TS 23.038, section 6.1.1 General notes, "The
+      // characters marked '1)' are not used but are displayed as a space."
+      if (septet == RIL.PDU_NL_EXTENDED_ESCAPE) {
+        continue;
+      }
+
+      if (septet >= 0) {
+        length++;
+        continue;
+      }
+
+      septet = langShiftTable.indexOf(message.charAt(msgIndex));
+      if (septet == -1) {
+        return -1;
+      }
+
+      // According to 3GPP TS 23.038 B.2, "This code represents a control
+      // character and therefore must not be used for language specific
+      // characters."
+      if (septet == RIL.PDU_NL_RESERVED_CONTROL) {
+        continue;
+      }
+
+      // The character is not found in locking shfit table, but could be
+      // encoded as <escape><char> with single shift table. Note that it's
+      // still possible for septet to has the value of PDU_NL_EXTENDED_ESCAPE,
+      // but we can display it as a space in this case as said in previous
+      // comment.
+      length += 2;
+    }
+
+    return length;
+  },
+
+  /**
+   * Calculate user data length and its encoding.
+   *
+   * The `options` parameter object should contain the `body` attribute, and
+   * the `dcs`, `userDataHeaderLength`, `encodedBodyLength`, `langIndex`,
+   * `langShiftIndex` attributes will be set as return:
+   *
+   * @param body
+   *        String containing the message body.
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param userDataHeaderLength
+   *        Length of embedded user data header, in bytes. The whole header
+   *        size will be userDataHeaderLength + 1; 0 for no header.
+   * @param encodedBodyLength
+   *        Length of the message body when encoded with the given DCS. For
+   *        UCS2, in bytes; for 7-bit, in septets.
+   * @param langIndex
+   *        Table index used for normal 7-bit encoded character lookup.
+   * @param langShiftIndex
+   *        Table index used for escaped 7-bit encoded character lookup.
+   */
+  _calculateUserDataLength: function _calculateUserDataLength(options) {
+    //TODO: support multipart SMS, see bug 712933
+    options.dcs = RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET;
+    options.langIndex = RIL.PDU_NL_IDENTIFIER_DEFAULT;
+    options.langShiftIndex = RIL.PDU_NL_IDENTIFIER_DEFAULT;
+    options.encodedBodyLength = 0;
+    options.userDataHeaderLength = 0;
+
+    let needUCS2 = true;
+    let minUserDataSeptets = Number.MAX_VALUE;
+    for (let i = 0; i < this.enabledGsmTableTuples.length; i++) {
+      let [langIndex, langShiftIndex] = this.enabledGsmTableTuples[i];
+
+      const langTable = RIL.PDU_NL_LOCKING_SHIFT_TABLES[langIndex];
+      const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[langShiftIndex];
+
+      let bodySeptets = this._calculateLangEncodedSeptets(options.body,
+                                                          langTable,
+                                                          langShiftTable);
+      if (bodySeptets < 0) {
+        continue;
+      }
+
+      let headerLen = 0;
+      if (langIndex != RIL.PDU_NL_IDENTIFIER_DEFAULT) {
+        headerLen += 3; // IEI + len + langIndex
+      }
+      if (langShiftIndex != RIL.PDU_NL_IDENTIFIER_DEFAULT) {
+        headerLen += 3; // IEI + len + langShiftIndex
+      }
+
+      // Calculate full user data length, note the extra byte is for header len
+      let headerSeptets = Math.ceil((headerLen ? headerLen + 1 : 0) * 8 / 7);
+      let userDataSeptets = bodySeptets + headerSeptets;
+      if (userDataSeptets >= minUserDataSeptets) {
+        continue;
+      }
+
+      needUCS2 = false;
+      minUserDataSeptets = userDataSeptets;
+
+      options.encodedBodyLength = bodySeptets;
+      options.userDataHeaderLength = headerLen;
+      options.langIndex = langIndex;
+      options.langShiftIndex = langShiftIndex;
+    }
+
+    if (needUCS2) {
+      options.dcs = RIL.PDU_DCS_MSG_CODING_16BITS_ALPHABET;
+      options.encodedBodyLength = options.body.length * 2;
+      options.userDataHeaderLength = 0;
+    }
+  },
+
   getNumberOfMessagesForText: function getNumberOfMessagesForText(text) {
     //TODO: this assumes 7bit encoding, which is incorrect. Need to look
     // for characters not supported by 7bit alphabets and then calculate
@@ -540,11 +678,16 @@ RadioInterfaceLayer.prototype = {
   },
 
   sendSMS: function sendSMS(number, message, requestId, processId) {
-    this.worker.postMessage({type: "sendSMS",
-                             number: number,
-                             body: message,
-                             requestId: requestId,
-                             processId: processId});
+    let options = {
+      type: "sendSMS",
+      number: number,
+      body: message,
+      requestId: requestId,
+      processId: processId
+    };
+
+    this._calculateUserDataLength(options);
+    this.worker.postMessage(options);
   },
 
   _callbacks: null,
