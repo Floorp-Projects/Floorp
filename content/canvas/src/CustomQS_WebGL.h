@@ -512,9 +512,8 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, unsigned ar
         return JS_FALSE;
     }
 
-    int32_t transpose;
-    if (!JS_ValueToECMAInt32(cx, argv[1], &transpose))
-        return JS_FALSE;
+    JSBool transpose;
+    MOZ_ALWAYS_TRUE(JS_ValueToBoolean(cx, argv[1], &transpose));
 
     if (JSVAL_IS_PRIMITIVE(argv[2])) {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 2);
@@ -544,11 +543,11 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, unsigned ar
     }
 
     if (nElements == 2) {
-        rv = self->UniformMatrix2fv_array(location, transpose ? 1 : 0, wa);
+        rv = self->UniformMatrix2fv_array(location, transpose, wa);
     } else if (nElements == 3) {
-        rv = self->UniformMatrix3fv_array(location, transpose ? 1 : 0, wa);
+        rv = self->UniformMatrix3fv_array(location, transpose, wa);
     } else if (nElements == 4) {
-        rv = self->UniformMatrix4fv_array(location, transpose ? 1 : 0, wa);
+        rv = self->UniformMatrix4fv_array(location, transpose, wa);
     }
 
     if (NS_FAILED(rv))
