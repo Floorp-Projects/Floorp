@@ -177,7 +177,7 @@ interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
   const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
-[scriptable, builtinclass, uuid(c0d5f7cb-91ad-433c-a426-a701e06d4413)]
+[scriptable, builtinclass, uuid(cabad79d-222c-40d1-a746-4942278c0bba)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -624,10 +624,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   // Modified: void glBufferData(WebGLenum target, long size, const void* data, WebGLenum usage);
   [implicit_jscontext] void bufferData(in long target, in jsval data, in long usage);
 
-  void bufferSubData([optional] in long dummy);
-  [noscript] void bufferSubData_buf(in WebGLenum target, in long offset, in WebGLJSObjectPtr data);
-  [noscript] void bufferSubData_array(in WebGLenum target, in long offset, in WebGLJSObjectPtr data);
-  [noscript] void bufferSubData_null();
+  void bufferSubData(in long target, in long offset, in jsval data);
 
   WebGLenum checkFramebufferStatus(in WebGLenum target);
   void clear(in WebGLbitfield mask);
