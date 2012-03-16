@@ -58,3 +58,4 @@ fails == default-box-sizing-collapse-quirks.html default-box-sizing-collapse-qui
 == colgroup-vs-column-2.html colgroup-vs-column-2-ref.html
 == colgroup-vs-column-3.html colgroup-vs-column-3-ref.html
 == colgroup-vs-column-4.html colgroup-vs-column-4-ref.html
+== dynamic-fixed-layout-1.html dynamic-fixed-layout-1-ref.html
