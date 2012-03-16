@@ -4058,6 +4058,33 @@ WebGLContext::DOMElementToImageSurface(Element* imageOrCanvas,
     return NS_OK;
 }
 
+template<size_t type>
+static JSObject*
+GetTypedArray(JSContext* aCx, const JS::Value& aValue)
+{
+    if (!aValue.isObject()) {
+        return NULL;
+    }
+
+    JSObject& value = aValue.toObject();
+
+    if (js::GetObjectClass(&value) == &js::TypedArray::fastClasses[type]) {
+        return &value;
+    }
+
+    if (JS_IsArrayObject(aCx, &value)) {
+        return js_CreateTypedArrayWithArray(aCx, type, &value);
+    }
+
+    return NULL;
+}
+
+static JSObject*
+GetFloat32Array(JSContext* aCx, const JS::Value& aValue)
+{
+    return GetTypedArray<js::TypedArray::TYPE_FLOAT32>(aCx, aValue);
+}
+
 #define OBTAIN_UNIFORM_LOCATION(info)                                   \
     WebGLUniformLocation *location_object;                              \
     bool isNull;                                                      \
@@ -4074,46 +4101,70 @@ WebGLContext::DOMElementToImageSurface(Element* imageOrCanvas,
         return ErrorInvalidOperation("%s: This uniform location is obsolete since the program has been relinked", info); \
     GLint location = location_object->Location();
 
-#define SIMPLE_ARRAY_METHOD_UNIFORM(name, cnt, arrayType, ptrType)      \
-NS_IMETHODIMP                                                           \
-WebGLContext::name(PRInt32) {                                     \
-     return NS_ERROR_NOT_IMPLEMENTED;                                   \
-}                                                                       \
-NS_IMETHODIMP                                                           \
-WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, JSObject *wa) \
-{                                                                       \
-    if (!IsContextStable())                                                   \
-        return NS_OK;                                                   \
-    OBTAIN_UNIFORM_LOCATION(#name ": location")                         \
-    if (!wa || JS_GetTypedArrayType(wa) != js::TypedArray::arrayType)   \
+#define SIMPLE_ARRAY_METHOD_UNIFORM(name, cnt, arrayType, ptrType)              \
+NS_IMETHODIMP                                                                   \
+WebGLContext::name(nsIWebGLUniformLocation *aLocation, const JS::Value& aValue, \
+                   JSContext* aCx)                                              \
+{                                                                               \
+    JSObject* wa = GetTypedArray<js::TypedArray::arrayType>(aCx, aValue);       \
+    if (!wa) {                                                                  \
+        return NS_ERROR_FAILURE;                                                \
+    }                                                                           \
+                                                                                \
+    if (!IsContextStable()) {                                                   \
+        return NS_OK;                                                           \
+    }                                                                           \
+                                                                                \
+    nsIWebGLUniformLocation* ploc = aLocation;                                  \
+    OBTAIN_UNIFORM_LOCATION(#name ": location")                                 \
+    if (JS_GetTypedArrayType(wa) != js::TypedArray::arrayType) {                \
         return ErrorInvalidOperation(#name ": array must be " #arrayType);      \
-    if (JS_GetTypedArrayLength(wa) == 0 || JS_GetTypedArrayLength(wa) % cnt != 0)\
-        return ErrorInvalidValue(#name ": array must be > 0 elements and have a length multiple of %d", cnt); \
-    MakeContextCurrent();                                               \
-    gl->f##name(location, JS_GetTypedArrayLength(wa) / cnt, (ptrType *)JS_GetTypedArrayData(wa));            \
-    return NS_OK;                                                       \
+    }                                                                           \
+    if (JS_GetTypedArrayLength(wa) == 0 ||                                      \
+        JS_GetTypedArrayLength(wa) % cnt != 0) {                                \
+        return ErrorInvalidValue(#name ": array must be > 0 elements and have " \
+                                "a length multiple of %d", cnt);                \
+    }                                                                           \
+                                                                                \
+    MakeContextCurrent();                                                       \
+    gl->f##name(location, JS_GetTypedArrayLength(wa) / cnt,                     \
+                static_cast<ptrType*>(JS_GetTypedArrayData(wa)));               \
+    return NS_OK;                                                               \
 }
 
-#define SIMPLE_MATRIX_METHOD_UNIFORM(name, dim, arrayType, ptrType)     \
-NS_IMETHODIMP                                                           \
-WebGLContext::name(PRInt32) {                                     \
-     return NS_ERROR_NOT_IMPLEMENTED;                                   \
-}                                                                       \
-NS_IMETHODIMP                                                           \
-WebGLContext::name##_array(nsIWebGLUniformLocation *ploc, WebGLboolean transpose, JSObject *wa)  \
-{                                                                       \
-    if (!IsContextStable())                                                   \
-        return NS_OK;                                                   \
-    OBTAIN_UNIFORM_LOCATION(#name ": location")                         \
-    if (!wa || JS_GetTypedArrayType(wa) != js::TypedArray::arrayType)                   \
-        return ErrorInvalidValue(#name ": array must be " #arrayType);      \
-    if (JS_GetTypedArrayLength(wa) == 0 || JS_GetTypedArrayLength(wa) % (dim*dim) != 0)                 \
-        return ErrorInvalidValue(#name ": array length must be >0 and multiple of %d", dim*dim); \
-    if (transpose)                                                      \
-        return ErrorInvalidValue(#name ": transpose must be FALSE as per the OpenGL ES 2.0 spec"); \
-    MakeContextCurrent();                                               \
-    gl->f##name(location, JS_GetTypedArrayLength(wa) / (dim*dim), transpose, (ptrType *)JS_GetTypedArrayData(wa)); \
-    return NS_OK;                                                       \
+#define SIMPLE_MATRIX_METHOD_UNIFORM(name, dim)                                 \
+NS_IMETHODIMP                                                                   \
+WebGLContext::name(nsIWebGLUniformLocation* aLocation, bool aTranspose,         \
+                   const JS::Value& aValue, JSContext* aCx)                     \
+{                                                                               \
+    JSObject* wa = GetFloat32Array(aCx, aValue);                                \
+    if (!wa) {                                                                  \
+        return NS_ERROR_FAILURE;                                                \
+    }                                                                           \
+                                                                                \
+    if (!IsContextStable()) {                                                   \
+        return NS_OK;                                                           \
+    }                                                                           \
+                                                                                \
+    nsIWebGLUniformLocation* ploc = aLocation;                                  \
+    OBTAIN_UNIFORM_LOCATION(#name ": location")                                 \
+    if (JS_GetTypedArrayType(wa) != js::TypedArray::TYPE_FLOAT32) {             \
+        return ErrorInvalidValue(#name ": array must be TYPE_FLOAT32");         \
+    }                                                                           \
+    if (JS_GetTypedArrayLength(wa) == 0 ||                                      \
+        JS_GetTypedArrayLength(wa) % (dim*dim) != 0) {                          \
+        return ErrorInvalidValue(#name ": array length must be >0 and "         \
+                                 "multiple of %d", dim*dim);                    \
+    }                                                                           \
+    if (aTranspose) {                                                           \
+        return ErrorInvalidValue(#name ": transpose must be FALSE as per the "  \
+                                 "OpenGL ES 2.0 spec");                         \
+    }                                                                           \
+                                                                                \
+    MakeContextCurrent();                                                       \
+    gl->f##name(location, JS_GetTypedArrayLength(wa) / (dim*dim), false,        \
+                static_cast<WebGLfloat*>(JS_GetTypedArrayData(wa)));            \
+    return NS_OK;                                                               \
 }
 
 #define SIMPLE_METHOD_UNIFORM_1(glname, name, t1)        \
@@ -4168,9 +4219,9 @@ SIMPLE_ARRAY_METHOD_UNIFORM(Uniform2fv, 2, TYPE_FLOAT32, WebGLfloat)
 SIMPLE_ARRAY_METHOD_UNIFORM(Uniform3fv, 3, TYPE_FLOAT32, WebGLfloat)
 SIMPLE_ARRAY_METHOD_UNIFORM(Uniform4fv, 4, TYPE_FLOAT32, WebGLfloat)
 
-SIMPLE_MATRIX_METHOD_UNIFORM(UniformMatrix2fv, 2, TYPE_FLOAT32, WebGLfloat)
-SIMPLE_MATRIX_METHOD_UNIFORM(UniformMatrix3fv, 3, TYPE_FLOAT32, WebGLfloat)
-SIMPLE_MATRIX_METHOD_UNIFORM(UniformMatrix4fv, 4, TYPE_FLOAT32, WebGLfloat)
+SIMPLE_MATRIX_METHOD_UNIFORM(UniformMatrix2fv, 2)
+SIMPLE_MATRIX_METHOD_UNIFORM(UniformMatrix3fv, 3)
+SIMPLE_MATRIX_METHOD_UNIFORM(UniformMatrix4fv, 4)
 
 NS_IMETHODIMP
 WebGLContext::VertexAttrib1f(PRUint32 index, WebGLfloat x0)

@@ -177,7 +177,7 @@ interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
   const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
-[scriptable, builtinclass, uuid(aae55fc4-b650-4178-920a-c985b720d9bb)]
+[scriptable, builtinclass, uuid(77c303b8-9d86-48d4-a118-0c32358520ee)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -807,32 +807,18 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void uniform4f (in nsIWebGLUniformLocation location, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z, in WebGLfloat w);
   void uniform4i (in nsIWebGLUniformLocation location, in WebGLint x, in WebGLint y, in WebGLint z, in WebGLint w);
 
-  void uniform1fv([optional] in long dummy);
-  void uniform1iv([optional] in long dummy);
-  void uniform2fv([optional] in long dummy);
-  void uniform2iv([optional] in long dummy);
-  void uniform3fv([optional] in long dummy);
-  void uniform3iv([optional] in long dummy);
-  void uniform4fv([optional] in long dummy);
-  void uniform4iv([optional] in long dummy);
+  [implicit_jscontext] void uniform1fv(in nsIWebGLUniformLocation location, in jsval v);
+  [implicit_jscontext] void uniform1iv(in nsIWebGLUniformLocation location, in jsval v);
+  [implicit_jscontext] void uniform2fv(in nsIWebGLUniformLocation location, in jsval v);
+  [implicit_jscontext] void uniform2iv(in nsIWebGLUniformLocation location, in jsval v);
+  [implicit_jscontext] void uniform3fv(in nsIWebGLUniformLocation location, in jsval v);
+  [implicit_jscontext] void uniform3iv(in nsIWebGLUniformLocation location, in jsval v);
+  [implicit_jscontext] void uniform4fv(in nsIWebGLUniformLocation location, in jsval v);
+  [implicit_jscontext] void uniform4iv(in nsIWebGLUniformLocation location, in jsval v);
 
-  [noscript] void uniform1fv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
-  [noscript] void uniform1iv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
-  [noscript] void uniform2fv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
-  [noscript] void uniform2iv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
-  [noscript] void uniform3fv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
-  [noscript] void uniform3iv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
-  [noscript] void uniform4fv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
-  [noscript] void uniform4iv_array (in nsIWebGLUniformLocation location, in WebGLJSObjectPtr v);
-
-  // Modified. These are modified by replacing 'count' and 'value' with a WebGLJSObjectPtr
-  void uniformMatrix2fv([optional] in long dummy);
-  void uniformMatrix3fv([optional] in long dummy);
-  void uniformMatrix4fv([optional] in long dummy);
-
-  [noscript] void uniformMatrix2fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLJSObjectPtr value);
-  [noscript] void uniformMatrix3fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLJSObjectPtr value);
-  [noscript] void uniformMatrix4fv_array (in nsIWebGLUniformLocation location, in WebGLboolean transpose, in WebGLJSObjectPtr value);
+  [implicit_jscontext] void uniformMatrix2fv(in nsIWebGLUniformLocation location, in boolean transpose, in jsval value);
+  [implicit_jscontext] void uniformMatrix3fv(in nsIWebGLUniformLocation location, in boolean transpose, in jsval value);
+  [implicit_jscontext] void uniformMatrix4fv(in nsIWebGLUniformLocation location, in boolean transpose, in jsval value);
 
   // Added API using top entry from the passed nsIWebGLMatrixStack
   //ZZ void glUniformMatrix(in WebGLint location, in WebGLboolean transpose, in nsIWebGLMatrixStack value);
