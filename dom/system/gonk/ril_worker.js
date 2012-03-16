@@ -660,6 +660,41 @@ let RIL = {
    },
 
   /**
+   *  Request an ICC I/O operation.
+   * 
+   *  See TS 27.007 "restricted SIM" operation, "AT Command +CRSM".
+   *  The sequence is in the same order as how libril reads this parcel,
+   *  see the struct RIL_SIM_IO_v5 or RIL_SIM_IO_v6 defined in ril.h
+   *
+   *  @param command 
+   *         The I/O command, one of the ICC_COMMAND_* constants.
+   *  @param fileid
+   *         The file to operate on, one of the ICC_EF_* constants.
+   *  @param pathid
+   *         String type, check pathid from TS 27.007 +CRSM  
+   *  @param p1, p2, p3
+   *         Arbitrary integer parameters for the command.
+   *  @param data
+   *         String parameter for the command.
+   *  @param pin2 [optional]
+   *         String containing the PIN2.
+   */
+  iccIO: function iccIO(options) {
+    let token = Buf.newParcel(REQUEST_SIM_IO, options);
+    Buf.writeUint32(options.command);
+    Buf.writeUint32(options.fileid);
+    Buf.writeString(options.path);
+    Buf.writeUint32(options.p1);
+    Buf.writeUint32(options.p2);
+    Buf.writeUint32(options.p3);
+    Buf.writeString(options.data);
+    if (options.pin2 != null) {
+      Buf.writeString(options.pin2);
+    }
+    Buf.sendParcel();
+  },
+  
+  /**
    * Request the phone's radio power to be switched on or off.
    *
    * @param on
@@ -921,41 +956,6 @@ let RIL = {
     return token;
   },
 
-   /**
-   *  Request an ICC I/O operation.
-   * 
-   *  See TS 27.007 "restricted SIM" operation, "AT Command +CRSM".
-   *  The sequence is in the same order as how libril reads this parcel,
-   *  see the struct RIL_SIM_IO_v5 or RIL_SIM_IO_v6 defined in ril.h
-   *
-   *  @param command 
-   *         The I/O command, one of the ICC_COMMAND_* constants.
-   *  @param fileid
-   *         The file to operate on, one of the ICC_EF_* constants.
-   *  @param pathid
-   *         String type, check pathid from TS 27.007 +CRSM  
-   *  @param p1, p2, p3
-   *         Arbitrary integer parameters for the command.
-   *  @param data
-   *         String parameter for the command.
-   *  @param pin2 [optional]
-   *         String containing the PIN2.
-   */
-  iccIO: function iccIO (options) {
-    let token = Buf.newParcel(REQUEST_SIM_IO, options);
-    Buf.writeUint32(options.command);
-    Buf.writeUint32(options.fileid);
-    Buf.writeString(options.path);
-    Buf.writeUint32(options.p1);
-    Buf.writeUint32(options.p2);
-    Buf.writeUint32(options.p3);
-    Buf.writeString(options.data);
-    if (options.pin2 != null) {
-      Buf.writeString(options.pin2);
-    }
-    Buf.sendParcel();
-  },
-  
   /**
    * Deactivate a data call.
    *
@@ -1790,7 +1790,7 @@ let Phone = {
     // See GSM11.11 section 9.4 for sw1 and sw2
     if (sw1 != STATUS_NORMAL_ENDING) {
       // TODO: error 
-      // Wait for fix for Bug 713451 to report error.
+      // Wait for fix for Bug 733990 to report error.
       debug("Error in iccIO");
     }
     if (DEBUG) debug("ICC I/O (" + sw1 + "/" + sw2 + ")");
@@ -2270,8 +2270,8 @@ let Phone = {
   },
 
   /**
-   *  Get MSISDN
-   */ 
+   * Read the MSISDN from the ICC.
+   */
   getMSISDN: function getMSISDN() {
     let options = {
       command: ICC_COMMAND_GET_RESPONSE,
@@ -2414,8 +2414,10 @@ let GsmPDUHelper = {
     let number = 0;
     for (let i = 0; i < length; i++) {
       let octet = this.readHexOctet();
-      if (octet == 0xff)
+      // Ignore 'ff' octets as they're often used as filler.
+      if (octet == 0xff) {
         continue;
+      }
       // If the first nibble is an "F" , only the second nibble is to be taken
       // into account.
       if ((octet & 0xf0) == 0xf0) {
@@ -2440,6 +2442,11 @@ let GsmPDUHelper = {
     let delimiter = Buf.readUint16();
     if (!(length & 1)) {
       delimiter |= Buf.readUint16();
+    }
+    if (DEBUG) {
+      if (delimiter != 0) {
+        debug("Something's wrong, found string delimiter: " + delimiter);
+      }
     }
     return bcd;
   },
