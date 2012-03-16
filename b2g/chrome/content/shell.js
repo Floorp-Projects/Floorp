@@ -17,6 +17,7 @@ const LocalFile = CC('@mozilla.org/file/local;1',
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/ContactService.jsm');
+Cu.import('resource://gre/modules/Webapps.jsm');
 
 XPCOMUtils.defineLazyGetter(Services, 'env', function() {
   return Cc['@mozilla.org/process/environment;1']
@@ -166,6 +167,8 @@ var shell = {
     }
 
     CustomEventManager.init();
+
+    WebappsHelper.init();
 
     let browser = this.contentBrowser;
     browser.homePage = homeURL;
@@ -471,5 +474,22 @@ AlertsHelper = {
     let id = this.registerListener(cookie, alertListener);
     shell.sendEvent(content, "mozChromeEvent", { type: "desktop-notification", id: id, icon: imageUrl, 
                                                  title: title, text: text } );
+  }
+}
+
+WebappsHelper = {
+  init: function webapps_init() {
+    Services.obs.addObserver(this, "webapps-launch", false);
+  },
+
+  observe: function webapps_observe(subject, topic, data) {
+    let json = JSON.parse(data);
+    DOMApplicationRegistry.getManifestFor(json.origin, function(aManifest) {
+      if (!aManifest)
+        return;
+
+      let manifest = new DOMApplicationManifest(aManifest, json.origin);
+      shell.sendEvent(content, "mozChromeEvent", { type: "webapps-launch", url: manifest.fullLaunchPath(), origin: json.origin });
+    });
   }
 }
