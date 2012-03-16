@@ -110,6 +110,11 @@ let gBrowserThumbnails = {
 
     let channel = aBrowser.docShell.currentDocumentChannel;
 
+    // Don't take screenshots of internally redirecting about: pages.
+    // This includes error pages.
+    if (channel.originalURI.schemeIs("about"))
+      return false;
+
     try {
       // If the channel is a nsIHttpChannel get its http status code.
       let httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
