@@ -294,7 +294,7 @@ nsIDOMWebGLRenderingContext_CompressedTexSubImage2D(JSContext *cx, unsigned argc
     if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
         return JS_FALSE;
 
-    if (argc != 7)
+    if (argc < 8)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
     jsval *argv = JS_ARGV(cx, vp);
