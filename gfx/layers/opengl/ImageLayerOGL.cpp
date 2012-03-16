@@ -40,6 +40,7 @@
 
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
+#include "gfxUtils.h"
 #include "yuv_convert.h"
 #include "GLContextProvider.h"
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
@@ -47,6 +48,7 @@
 # include "mozilla/X11Util.h"
 #endif
 
+using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
 namespace mozilla {
@@ -342,8 +344,9 @@ ImageLayerOGL::RenderLayer(int,
 
     bool tileIsWholeImage = (mTileSourceRect == nsIntRect(0, 0, iwidth, iheight)) 
                             || !mUseTileSourceRect;
-    bool imageIsPowerOfTwo = ((iwidth  & (iwidth - 1)) == 0 &&
-                              (iheight & (iheight - 1)) == 0);
+    bool imageIsPowerOfTwo = IsPowerOfTwo(iwidth) &&
+                             IsPowerOfTwo(iheight);
+
     bool canDoNPOT = (
           gl()->IsExtensionSupported(GLContext::ARB_texture_non_power_of_two) ||
           gl()->IsExtensionSupported(GLContext::OES_texture_npot));
@@ -787,11 +790,26 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     mTexImage->SetFilter(mFilter);
     mTexImage->BeginTileIteration();
-    do {
-      TextureImage::ScopedBindTextureAndApplyFilter texBind(mTexImage, LOCAL_GL_TEXTURE0);
-      colorProgram->SetLayerQuadRect(mTexImage->GetTileRect());
-      mOGLManager->BindAndDrawQuad(colorProgram);
-    } while (mTexImage->NextTile());
+
+    if (gl()->CanUploadNonPowerOfTwo()) {
+      do {
+        TextureImage::ScopedBindTextureAndApplyFilter texBind(mTexImage, LOCAL_GL_TEXTURE0);
+        colorProgram->SetLayerQuadRect(mTexImage->GetTileRect());
+        mOGLManager->BindAndDrawQuad(colorProgram);
+      } while (mTexImage->NextTile());
+    } else {
+      do {
+        TextureImage::ScopedBindTextureAndApplyFilter texBind(mTexImage, LOCAL_GL_TEXTURE0);
+        colorProgram->SetLayerQuadRect(mTexImage->GetTileRect());
+        // We can't use BindAndDrawQuad because that always uploads the whole texture from 0.0f -> 1.0f
+        // in x and y. We use BindAndDrawQuadWithTextureRect to actually draw a subrect of the texture
+        mOGLManager->BindAndDrawQuadWithTextureRect(colorProgram,
+                                                    nsIntRect(0, 0, mTexImage->GetTileRect().width,
+                                                                    mTexImage->GetTileRect().height),
+                                                    mTexImage->GetTileRect().Size());
+      } while (mTexImage->NextTile());
+    }
+
   } else {
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mYUVTexture[0].GetTextureID());

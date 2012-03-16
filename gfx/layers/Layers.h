@@ -486,6 +486,11 @@ public:
   LayerUserData* GetUserData(void* aKey)
   { return mUserData.Get(aKey); }
 
+  /**
+   * Flag the next paint as the first for a document.
+   */
+  virtual void SetIsFirstPaint() {}
+
   // We always declare the following logging symbols, because it's
   // extremely tricky to conditionally declare them.  However, for
   // ifndef MOZ_LAYERS_HAVE_LOG builds, they only have trivial

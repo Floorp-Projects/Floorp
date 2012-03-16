@@ -1,6 +1,7 @@
 == capitalize-1.html capitalize-ref.html
 == capitalize-2.html capitalize-ref.html
 == capitalize-3.html capitalize-3-ref.html
+== capitalize-4.html capitalize-4-ref.html
 == lowercase-1.html lowercase-ref.html
 == small-caps-1.html small-caps-1-ref.html
 == uppercase-1.html uppercase-ref.html
@@ -8,6 +9,6 @@
 == all-upper.html all-upper-ref.html
 == all-lower.html all-lower-ref.html
 == all-title.html all-title-ref.html
-!= smtp-upper.html smtp-upper-ref.html # bug 210501
-!= smtp-lower.html smtp-lower-ref.html # bug 210501
-!= smtp-title.html smtp-title-ref.html # bug 210501
+== smtp-upper.html smtp-upper-ref.html
+== smtp-lower.html smtp-lower-ref.html
+== smtp-title.html smtp-title-ref.html

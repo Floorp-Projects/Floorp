@@ -41,6 +41,9 @@
 #include "nsAccessible.h"
 
 #include "mozilla/dom/Element.h"
+#include "nsBindingManager.h"
+
+using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////////////
 // AccIterator
@@ -129,17 +132,21 @@ RelatedAccIterator::Next()
 
     // Return related accessible for the given attribute and if the provider
     // content is in the same binding in the case of XBL usage.
-    if (provider->mRelAttr == mRelAttr &&
-        (!mBindingParent ||
-         mBindingParent == provider->mContent->GetBindingParent())) {
-      nsAccessible* related = mDocument->GetAccessible(provider->mContent);
-      if (related)
-        return related;
+    if (provider->mRelAttr == mRelAttr) {
+      nsIContent* bindingParent = provider->mContent->GetBindingParent();
+      bool inScope = mBindingParent == bindingParent ||
+        mBindingParent == provider->mContent;
 
-      // If the document content is pointed by relation then return the document
-      // itself.
-      if (provider->mContent == mDocument->GetContent())
-        return mDocument;
+      if (inScope) {
+        nsAccessible* related = mDocument->GetAccessible(provider->mContent);
+        if (related)
+          return related;
+
+        // If the document content is pointed by relation then return the document
+        // itself.
+        if (provider->mContent == mDocument->GetContent())
+          return mDocument;
+      }
     }
   }
 
@@ -271,18 +278,10 @@ XULDescriptionIterator::Next()
 ////////////////////////////////////////////////////////////////////////////////
 
 IDRefsIterator::IDRefsIterator(nsIContent* aContent, nsIAtom* aIDRefsAttr) :
-  mCurrIdx(0)
+  mCurrIdx(0), mContent(aContent)
 {
-  if (!aContent->IsInDoc() ||
-      !aContent->GetAttr(kNameSpaceID_None, aIDRefsAttr, mIDs))
-    return;
-
-  if (aContent->IsInAnonymousSubtree()) {
-    mXBLDocument = do_QueryInterface(aContent->OwnerDoc());
-    mBindingParent = do_QueryInterface(aContent->GetBindingParent());
-  } else {
-    mDocument = aContent->OwnerDoc();
-  }
+  if (mContent->IsInDoc())
+    mContent->GetAttr(kNameSpaceID_None, aIDRefsAttr, mIDs);
 }
 
 const nsDependentSubstring
@@ -324,20 +323,45 @@ IDRefsIterator::NextElem()
 nsIContent*
 IDRefsIterator::GetElem(const nsDependentSubstring& aID)
 {
-  if (mXBLDocument) {
-    // If content is anonymous subtree then use "anonid" attribute to get
-    // elements, otherwise search elements in DOM by ID attribute.
-
-    nsCOMPtr<nsIDOMElement> refElm;
-    mXBLDocument->GetAnonymousElementByAttribute(mBindingParent,
-                                                 NS_LITERAL_STRING("anonid"),
-                                                 aID,
-                                                 getter_AddRefs(refElm));
-    nsCOMPtr<nsIContent> refContent = do_QueryInterface(refElm);
-    return refContent;
+  // Get elements in DOM tree by ID attribute if this is an explicit content.
+  // In case of bound element check its anonymous subtree.
+  if (!mContent->IsInAnonymousSubtree()) {
+    dom::Element* refElm = mContent->OwnerDoc()->GetElementById(aID);
+    if (refElm || !mContent->OwnerDoc()->BindingManager()->GetBinding(mContent))
+      return refElm;
   }
 
-  return mDocument->GetElementById(aID);
+  // If content is in anonymous subtree or an element having anonymous subtree
+  // then use "anonid" attribute to get elements in anonymous subtree.
+  nsCOMPtr<nsIDOMElement> refDOMElm;
+  nsCOMPtr<nsIDOMDocumentXBL> xblDocument =
+    do_QueryInterface(mContent->OwnerDoc());
+
+  // Check inside the binding the element is contained in.
+  nsIContent* bindingParent = mContent->GetBindingParent();
+  if (bindingParent) {
+    nsCOMPtr<nsIDOMElement> bindingParentElm = do_QueryInterface(bindingParent);
+    xblDocument->GetAnonymousElementByAttribute(bindingParentElm,
+                                                NS_LITERAL_STRING("anonid"),
+                                                aID,
+                                                getter_AddRefs(refDOMElm));
+    nsCOMPtr<dom::Element> refElm = do_QueryInterface(refDOMElm);
+    if (refElm)
+      return refElm;
+  }
+
+  // Check inside the binding of the element.
+  if (mContent->OwnerDoc()->BindingManager()->GetBinding(mContent)) {
+    nsCOMPtr<nsIDOMElement> elm = do_QueryInterface(mContent);
+    xblDocument->GetAnonymousElementByAttribute(elm,
+                                                NS_LITERAL_STRING("anonid"),
+                                                aID,
+                                                getter_AddRefs(refDOMElm));
+    nsCOMPtr<dom::Element> refElm = do_QueryInterface(refDOMElm);
+    return refElm;
+  }
+
+  return nsnull;
 }
 
 nsAccessible*

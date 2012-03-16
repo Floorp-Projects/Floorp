@@ -22,22 +22,32 @@
       frameDocCheckbox = document.getElementById("frame_doc_checkbox").contentDocument;
       frameDocTextbox = document.getElementById("frame_doc_textbox").contentDocument;
 
-      testStates(frameDoc, STATE_READONLY, 0, 0, 0, "test1: frameDoc");
-      testStates(frameDocArticle, STATE_READONLY, 0, 0, 0, "test1: frameDocArticle");
-      testStates(frameDocCheckbox, 0, 0, STATE_READONLY, 0, "test1: frameDocCheckbox");
-      testStates(frameDocTextbox, 0, EXT_STATE_EDITABLE, 0, 0, "test1: frameDocTextbox");
+      testStates(frameDoc, STATE_READONLY, 0, 0, 0,
+                 "test1: frameDoc");
+      testStates(frameDocArticle, STATE_READONLY, 0, 0, 0,
+                 "test1: frameDocArticle");
+      testStates(frameDocCheckbox, 0, 0, STATE_READONLY, 0,
+                 "test1: frameDocCheckbox");
+      testStates(frameDocTextbox, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
+                 "test1: frameDocTextbox");
 
       frameDoc.designMode = "on";
-      testStates(frameDoc,  0, EXT_STATE_EDITABLE, 0, 0, "test2: frameDoc");
-      testStates(frameDocArticle, STATE_READONLY, 0, 0, 0, "test2: frameDocArticle");
-      testStates(frameDocCheckbox, 0, 0, STATE_READONLY, 0, "test2: frameDocCheckbox");
-      testStates(frameDocTextbox, 0, EXT_STATE_EDITABLE, 0, 0, "test2: frameDocTextbox");
+      testStates(frameDoc,  0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
+                 "test2: frameDoc");
+      testStates(frameDocArticle, STATE_READONLY, 0, 0, 0,
+                 "test2: frameDocArticle");
+      testStates(frameDocCheckbox, 0, 0, STATE_READONLY, 0,
+                 "test2: frameDocCheckbox");
+      testStates(frameDocTextbox, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
+                 "test2: frameDocTextbox");
 
       frameDocArticle.designMode = "on";
-      testStates(frameDocArticle, 0, EXT_STATE_EDITABLE, 0, 0, "test3: frameDocArticle");
+      testStates(frameDocArticle, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0,
+                 "test3: frameDocArticle");
 
       frameDocCheckbox.designMode = "on";
-      testStates(frameDocCheckbox, 0, 0, STATE_READONLY, 0, "test4: frameDocCheckbox");
+      testStates(frameDocCheckbox, 0, 0, STATE_READONLY, 0,
+                 "test4: frameDocCheckbox");
 
       // Replace iframe document body before the document accessible tree is
       // created. Check the states are updated for new body.

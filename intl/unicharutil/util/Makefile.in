@@ -63,11 +63,14 @@ SDK_HEADERS = \
 EXPORTS = \
 	nsCompressedCharMap.h \
 	nsBidiUtils.h \
+	nsUnicodeProperties.h \
+	nsUnicodeScriptCodes.h \
 	$(NULL)
 
 CPPSRCS	= \
 	nsUnicharUtils.cpp \
 	nsBidiUtils.cpp \
+	nsUnicodeProperties.cpp \
 	$(NULL)
 
 FORCE_STATIC_LIB = 1
