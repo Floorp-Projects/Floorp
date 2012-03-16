@@ -554,7 +554,7 @@ RadioInterfaceLayer.prototype = {
    * @note that the algorithm used in this function must match exactly with
    * GsmPDUHelper#writeStringAsSeptets.
    */
-  _calculateLangEncodedSeptets: function _calculateLangEncodedSeptets(message, langTable, langShiftTable) {
+  _countGsm7BitSeptets: function _countGsm7BitSeptets(message, langTable, langShiftTable) {
     let length = 0;
     for (let msgIndex = 0; msgIndex < message.length; msgIndex++) {
       let septet = langTable.indexOf(message.charAt(msgIndex));
@@ -571,7 +571,7 @@ RadioInterfaceLayer.prototype = {
       }
 
       septet = langShiftTable.indexOf(message.charAt(msgIndex));
-      if (septet == -1) {
+      if (septet < 0) {
         return -1;
       }
 
@@ -594,37 +594,21 @@ RadioInterfaceLayer.prototype = {
   },
 
   /**
-   * Calculate user data length and its encoding.
+   * Calculate user data length of specified message string encoded in GSM 7Bit
+   * alphabets.
    *
-   * The `options` parameter object should contain the `body` attribute, and
-   * the `dcs`, `userDataHeaderLength`, `encodedBodyLength`, `langIndex`,
-   * `langShiftIndex` attributes will be set as return:
+   * @param message
+   *        a message string to be encoded.
    *
-   * @param body
-   *        String containing the message body.
-   * @param dcs
-   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
-   *        constants.
-   * @param userDataHeaderLength
-   *        Length of embedded user data header, in bytes. The whole header
-   *        size will be userDataHeaderLength + 1; 0 for no header.
-   * @param encodedBodyLength
-   *        Length of the message body when encoded with the given DCS. For
-   *        UCS2, in bytes; for 7-bit, in septets.
-   * @param langIndex
-   *        Table index used for normal 7-bit encoded character lookup.
-   * @param langShiftIndex
-   *        Table index used for escaped 7-bit encoded character lookup.
+   * @return null or an options object with attributes `dcs`,
+   *         `userDataHeaderLength`, `encodedBodyLength`, `langIndex`,
+   *         `langShiftIndex` set.
+   *
+   * @see #_calculateUserDataLength().
    */
-  _calculateUserDataLength: function _calculateUserDataLength(options) {
+  _calculateUserDataLength7Bit: function _calculateUserDataLength7Bit(message) {
     //TODO: support multipart SMS, see bug 712933
-    options.dcs = RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET;
-    options.langIndex = RIL.PDU_NL_IDENTIFIER_DEFAULT;
-    options.langShiftIndex = RIL.PDU_NL_IDENTIFIER_DEFAULT;
-    options.encodedBodyLength = 0;
-    options.userDataHeaderLength = 0;
-
-    let needUCS2 = true;
+    let options = null;
     let minUserDataSeptets = Number.MAX_VALUE;
     for (let i = 0; i < this.enabledGsmTableTuples.length; i++) {
       let [langIndex, langShiftIndex] = this.enabledGsmTableTuples[i];
@@ -632,9 +616,9 @@ RadioInterfaceLayer.prototype = {
       const langTable = RIL.PDU_NL_LOCKING_SHIFT_TABLES[langIndex];
       const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[langShiftIndex];
 
-      let bodySeptets = this._calculateLangEncodedSeptets(options.body,
-                                                          langTable,
-                                                          langShiftTable);
+      let bodySeptets = this._countGsm7BitSeptets(message,
+                                                  langTable,
+                                                  langShiftTable);
       if (bodySeptets < 0) {
         continue;
       }
@@ -654,20 +638,75 @@ RadioInterfaceLayer.prototype = {
         continue;
       }
 
-      needUCS2 = false;
       minUserDataSeptets = userDataSeptets;
 
-      options.encodedBodyLength = bodySeptets;
-      options.userDataHeaderLength = headerLen;
-      options.langIndex = langIndex;
-      options.langShiftIndex = langShiftIndex;
+      options = {
+        dcs: RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET,
+        encodedBodyLength: bodySeptets,
+        userDataHeaderLength: headerLen,
+        langIndex: langIndex,
+        langShiftIndex: langShiftIndex,
+      };
     }
 
-    if (needUCS2) {
-      options.dcs = RIL.PDU_DCS_MSG_CODING_16BITS_ALPHABET;
-      options.encodedBodyLength = options.body.length * 2;
-      options.userDataHeaderLength = 0;
+    return options;
+  },
+
+  /**
+   * Calculate user data length of specified message string encoded in UCS2.
+   *
+   * @param message
+   *        a message string to be encoded.
+   *
+   * @return an options object with attributes `dcs`, `userDataHeaderLength`,
+   *         `encodedBodyLength` set.
+   *
+   * @see #_calculateUserDataLength().
+   */
+  _calculateUserDataLengthUCS2: function _calculateUserDataLengthUCS2(message) {
+    return {
+      dcs: RIL.PDU_DCS_MSG_CODING_16BITS_ALPHABET,
+      encodedBodyLength: message.length * 2,
+      userDataHeaderLength: 0,
+    };
+  },
+
+  /**
+   * Calculate user data length and its encoding.
+   *
+   * @param message
+   *        a message string to be encoded.
+   *
+   * @return an options object with some or all of following attributes set:
+   *
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param body
+   *        Original text message.
+   * @param userDataHeaderLength
+   *        Length of embedded user data header, in bytes. The whole header
+   *        size will be userDataHeaderLength + 1; 0 for no header.
+   * @param encodedBodyLength
+   *        Length of the message body when encoded with the given DCS. For
+   *        UCS2, in bytes; for 7-bit, in septets.
+   * @param langIndex
+   *        Table index used for normal 7-bit encoded character lookup.
+   * @param langShiftIndex
+   *        Table index used for escaped 7-bit encoded character lookup.
+   */
+  _calculateUserDataLength: function _calculateUserDataLength(message) {
+    let options = this._calculateUserDataLength7Bit(message);
+    if (!options) {
+      options = this._calculateUserDataLengthUCS2(message);
     }
+
+    if (options) {
+      options.body = message;
+    }
+
+    debug("_calculateUserDataLength: " + JSON.stringify(options));
+    return options;
   },
 
   getNumberOfMessagesForText: function getNumberOfMessagesForText(text) {
@@ -678,15 +717,12 @@ RadioInterfaceLayer.prototype = {
   },
 
   sendSMS: function sendSMS(number, message, requestId, processId) {
-    let options = {
-      type: "sendSMS",
-      number: number,
-      body: message,
-      requestId: requestId,
-      processId: processId
-    };
+    let options = this._calculateUserDataLength(message);
+    options.type = "sendSMS";
+    options.number = number;
+    options.requestId = requestId;
+    options.processId = processId;
 
-    this._calculateUserDataLength(options);
     this.worker.postMessage(options);
   },
 

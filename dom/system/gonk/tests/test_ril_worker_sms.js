@@ -55,10 +55,10 @@ add_test(function test_nl_single_shift_tables_validity() {
 });
 
 /**
- * Verify RadioInterfaceLayer#_calculateLangEncodedSeptets() and
+ * Verify RadioInterfaceLayer#_countGsm7BitSeptets() and
  * GsmPDUHelper#writeStringAsSeptets() algorithm match each other.
  */
-add_test(function test_RadioInterfaceLayer__calculateLangEncodedSeptets() {
+add_test(function test_RadioInterfaceLayer__countGsm7BitSeptets() {
   let ril = newRadioInterfaceLayer();
 
   let worker = newWorker({
@@ -80,9 +80,9 @@ add_test(function test_RadioInterfaceLayer__calculateLangEncodedSeptets() {
 
   function do_check_calc(str, expectedCalcLen, lst, sst) {
     do_check_eq(expectedCalcLen,
-                ril._calculateLangEncodedSeptets(str,
-                                                 PDU_NL_LOCKING_SHIFT_TABLES[lst],
-                                                 PDU_NL_SINGLE_SHIFT_TABLES[sst]));
+                ril._countGsm7BitSeptets(str,
+                                         PDU_NL_LOCKING_SHIFT_TABLES[lst],
+                                         PDU_NL_SINGLE_SHIFT_TABLES[sst]));
 
     helper.resetOctetWritten();
     helper.writeStringAsSeptets(str, 0, lst, sst);
@@ -141,8 +141,7 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
 
   function test_calc(str, expected, enabledGsmTableTuples) {
     ril.enabledGsmTableTuples = enabledGsmTableTuples;
-    let options = {body: str};
-    ril._calculateUserDataLength(options);
+    let options = ril._calculateUserDataLength(str);
 
     do_check_eq(expected[0], options.dcs);
     do_check_eq(expected[1], options.encodedBodyLength);
@@ -153,9 +152,9 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
 
   // Test UCS fallback
   // - No any default enabled nl tables
-  test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0, 0, 0], []);
+  test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0,], []);
   // - Character not defined in enabled nl tables
-  test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0, 0, 0], [[2, 2]]);
+  test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0,], [[2, 2]]);
 
   // With GSM default nl tables
   test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 0, 0, 0], [[0, 0]]);
@@ -400,8 +399,7 @@ function test_receiving_7bit_alphabets(lst, sst) {
   for (let i = 0; i < text.length;) {
     let len = Math.min(70, text.length - i);
     let expected = text.substring(i, i + len);
-    let septets = ril._calculateLangEncodedSeptets(expected, langTable,
-                                                   langShiftTable);
+    let septets = ril._countGsm7BitSeptets(expected, langTable, langShiftTable);
     let rawBytes = get7bitRawBytes(expected);
     let pdu = compose7bitPdu(lst, sst, rawBytes, septets);
     add_test_receiving_sms(expected, pdu);
