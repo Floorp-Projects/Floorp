@@ -25,7 +25,7 @@ function runTests() {
   checkGrid("0,1,2,3,7,8,9,,");
 
   // we removed a pinned site
-  reset();
+  yield restore();
   setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks(",1");
 
@@ -37,7 +37,7 @@ function runTests() {
 
   // we remove the last site on the grid (which is pinned) and expect the gap
   // to be re-filled and the new site to be unpinned
-  reset();
+  yield restore();
   setLinks("0,1,2,3,4,5,6,7,8,9");
   setPinnedLinks(",,,,,,,,8");
 
@@ -49,7 +49,7 @@ function runTests() {
 
   // we remove the first site on the grid with the last one pinned. all cells
   // but the last one should shift to the left and a new site fades in
-  reset();
+  yield restore();
   setLinks("0,1,2,3,4,5,6,7,8,9");
   setPinnedLinks(",,,,,,,,8");
 

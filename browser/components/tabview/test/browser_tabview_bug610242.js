@@ -29,6 +29,7 @@ function onTabViewWindowLoaded(win) {
   let datatext = win.gBrowser.loadOneTab("data:text/plain,bug610242", bg);
   let datahtml = win.gBrowser.loadOneTab("data:text/html,<blink>don't blink!</blink>", bg);
   let mozilla  = win.gBrowser.loadOneTab("about:mozilla", bg);
+  let robots   = win.gBrowser.loadOneTab("about:robots", bg);
   let html     = win.gBrowser.loadOneTab("http://example.com", bg);
   let png      = win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/base/content/test/moz.png", bg);
   let svg      = win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/base/content/test/title_test.svg", bg);
@@ -46,13 +47,11 @@ function onTabViewWindowLoaded(win) {
     is(win.gBrowser.tabs.length, 1, "There is only one tab left");
     is(win.gBrowser.visibleTabs.length, 1, "There is also only one visible tab");
 
-    let onTabViewHidden = function() {
-      win.removeEventListener("tabviewhidden", onTabViewHidden, false);
+    whenTabViewIsHidden(function() {
       win.close();
       ok(win.closed, "new window is closed");
       finish();
-    };
-    win.addEventListener("tabviewhidden", onTabViewHidden, false);
+    }, win);
     win.gBrowser.selectedTab = originalTab;
 
     win.TabView.hide();
@@ -69,16 +68,33 @@ function onTabViewWindowLoaded(win) {
 
   afterAllTabsLoaded(function() {
     afterAllTabItemsUpdated(function() {
-      check(datatext, "datatext", false);
-      check(datahtml, "datahtml", false);
-      check(mozilla, "about:mozilla", true);
-      check(html, "html", true);
-      check(png, "png", false);
-      check(svg, "svg", true);
-  
-      // Get rid of the group and its children
-      // The group close will trigger a finish().
-      closeGroupItem(group);
-    }, win);  
+      let children = group.getChildren();
+      let len = children.length;
+      let iconUpdateCounter = 0;
+
+      children.forEach(function(tabItem) {
+        tabItem.addSubscriber("iconUpdated", function onIconUpdated() {
+          // the tab is not loaded completely so ignore it.
+          if (tabItem.tab.linkedBrowser.currentURI.spec == "about:blank")
+            return;
+
+          tabItem.removeSubscriber("iconUpdated", onIconUpdated);
+
+          if (++iconUpdateCounter == len) {
+            check(datatext, "datatext", false);
+            check(datahtml, "datahtml", false);
+            check(mozilla, "about:mozilla", false);
+            check(robots, "about:robots", true);
+            check(html, "html", true);
+            check(png, "png", false);
+            check(svg, "svg", true);
+
+            // Get rid of the group and its children
+            // The group close will trigger a finish().
+            closeGroupItem(group);
+          }
+        });
+      });
+    }, win);
   }, win);
 }
