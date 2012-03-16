@@ -88,7 +88,7 @@ function start() {
     // is the Darwin version.
     is106orHigher = (kDarwinVersion >= 10.0);
     if (!is106orHigher) {
-      dump("WebGL mochitest disabled on Mac OSX versions older than 10.6\n");
+      todo(false, "WebGL mochitest disabled on Mac OSX versions older than 10.6.");
       SimpleTest.finish();
       return;
     }
