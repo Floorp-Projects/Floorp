@@ -982,6 +982,18 @@ let RIL = {
 
     //TODO: verify values on 'options'
 
+    if (options.segmentMaxSeq > 1) {
+      if (!options.segmentSeq) {
+        // Fist segment to send
+        options.segmentSeq = 1;
+        options.body = options.segments[0].body;
+        options.encodedBodyLength = options.segments[0].encodedBodyLength;
+      }
+    } else {
+      options.body = options.fullBody;
+      options.encodedBodyLength = options.encodedFullBodyLength;
+    }
+
     Buf.newParcel(REQUEST_SEND_SMS, options);
     Buf.writeUint32(2);
     Buf.writeString(options.SMSC);
@@ -1655,6 +1667,20 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   options.messageRef = Buf.readUint32();
   options.ackPDU = Buf.readString();
   options.errorCode = Buf.readUint32();
+
+  //TODO handle errors (bug 727319)
+  if ((options.segmentMaxSeq > 1)
+      && (options.segmentSeq < options.segmentMaxSeq)) {
+    // Setup attributes for sending next segment
+    let next = options.segmentSeq;
+    options.body = options.segments[next].body;
+    options.encodedBodyLength = options.segments[next].encodedBodyLength;
+    options.segmentSeq = next + 1;
+
+    this.sendSMS(options);
+    return;
+  }
+
   options.type = "sms-sent";
   this.sendDOMMessage(options);
 };
@@ -2440,6 +2466,20 @@ let GsmPDUHelper = {
    */
   writeUserDataHeader: function writeUserDataHeader(options) {
     this.writeHexOctet(options.userDataHeaderLength);
+
+    if (options.segmentMaxSeq > 1) {
+      if (options.segmentRef16Bit) {
+        this.writeHexOctet(PDU_IEI_CONCATENATED_SHORT_MESSAGES_16BIT);
+        this.writeHexOctet(4);
+        this.writeHexOctet((options.segmentRef >> 8) & 0xFF);
+      } else {
+        this.writeHexOctet(PDU_IEI_CONCATENATED_SHORT_MESSAGES_8BIT);
+        this.writeHexOctet(3);
+      }
+      this.writeHexOctet(options.segmentRef & 0xFF);
+      this.writeHexOctet(options.segmentMaxSeq & 0xFF);
+      this.writeHexOctet(options.segmentSeq & 0xFF);
+    }
 
     if (options.langIndex != PDU_NL_IDENTIFIER_DEFAULT) {
       this.writeHexOctet(PDU_IEI_NATIONAL_LANGUAGE_LOCKING_SHIFT);

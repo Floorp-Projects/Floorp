@@ -144,7 +144,7 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
     let options = ril._calculateUserDataLength(str);
 
     do_check_eq(expected[0], options.dcs);
-    do_check_eq(expected[1], options.encodedBodyLength);
+    do_check_eq(expected[1], options.encodedFullBodyLength);
     do_check_eq(expected[2], options.userDataHeaderLength);
     do_check_eq(expected[3], options.langIndex);
     do_check_eq(expected[4], options.langShiftIndex);
@@ -224,7 +224,7 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength7Bit_multipar
   function test_calc(str, expected) {
     let options = ril._calculateUserDataLength7Bit(str);
 
-    do_check_eq(expected[0], options.encodedBodyLength);
+    do_check_eq(expected[0], options.encodedFullBodyLength);
     do_check_eq(expected[1], options.userDataHeaderLength);
     do_check_eq(expected[2], options.segmentMaxSeq);
   }
