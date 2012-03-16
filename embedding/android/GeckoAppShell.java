@@ -1839,4 +1839,16 @@ public class GeckoAppShell
 
     // This is only used in Native Fennec.
     public static void setPreventPanning(final boolean aPreventPanning) { }
+
+    public static short getScreenOrientation() {
+        return GeckoScreenOrientationListener.getInstance().getScreenOrientation();
+    }
+
+    public static void enableScreenOrientationNotifications() {
+        GeckoScreenOrientationListener.getInstance().enableNotifications();
+    }
+
+    public static void disableScreenOrientationNotifications() {
+        GeckoScreenOrientationListener.getInstance().disableNotifications();
+    }
 }
