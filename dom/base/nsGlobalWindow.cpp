@@ -2140,6 +2140,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       }
     }
 
+    // Enter the new global's compartment.
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, mJSObject)) {
+      NS_ERROR("unable to enter a compartment");
+      return NS_ERROR_FAILURE;
+    }
+
     // If we created a new inner window above, we need to do the last little bit
     // of initialization now that the dust has settled.
     if (createdInnerWindow) {
@@ -2151,12 +2158,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       NS_ABORT_IF_FALSE(wrapper, "bad wrapper");
       rv = wrapper->FinishInitForWrappedGlobal();
       NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, mJSObject)) {
-      NS_ERROR("unable to enter a compartment");
-      return NS_ERROR_FAILURE;
     }
 
     // XXX Not sure if this is needed.
