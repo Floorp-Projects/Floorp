@@ -390,8 +390,8 @@
 @BINPATH@/components/SmsDatabaseService.js
 @BINPATH@/components/nsWifiWorker.js
 @BINPATH@/components/nsWifiWorker.manifest
-@BINPATH@/components/nsDOMWifiManager.js
-@BINPATH@/components/nsDOMWifiManager.manifest
+@BINPATH@/components/DOMWifiManager.js
+@BINPATH@/components/DOMWifiManager.manifest
 #endif
 @BINPATH@/components/BrowserProfileMigrators.manifest
 @BINPATH@/components/ProfileMigrator.js
