@@ -51,7 +51,6 @@
 
 #include "prenv.h"
 #include "GLContextProvider.h"
-#include "GLLibraryLoader.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "GLXLibrary.h"
@@ -121,7 +120,7 @@ GLXLibrary::EnsureInitialized()
         mDebug = true;
     }
 
-    GLLibraryLoader::SymLoadStruct symbols[] = {
+    LibrarySymbolLoader::SymLoadStruct symbols[] = {
         /* functions that were in GLX 1.0 */
         { (PRFuncPtr*) &xDestroyContextInternal, { "glXDestroyContext", NULL } },
         { (PRFuncPtr*) &xMakeCurrentInternal, { "glXMakeCurrent", NULL } },
@@ -137,7 +136,7 @@ GLXLibrary::EnsureInitialized()
         { NULL, { NULL } }
     };
 
-    GLLibraryLoader::SymLoadStruct symbols13[] = {
+    LibrarySymbolLoader::SymLoadStruct symbols13[] = {
         /* functions introduced in GLX 1.3 */
         { (PRFuncPtr*) &xChooseFBConfigInternal, { "glXChooseFBConfig", NULL } },
         { (PRFuncPtr*) &xGetFBConfigAttribInternal, { "glXGetFBConfigAttrib", NULL } },
@@ -151,7 +150,7 @@ GLXLibrary::EnsureInitialized()
         { NULL, { NULL } }
     };
 
-    GLLibraryLoader::SymLoadStruct symbols13_ext[] = {
+    LibrarySymbolLoader::SymLoadStruct symbols13_ext[] = {
         /* extension equivalents for functions introduced in GLX 1.3 */
         // GLX_SGIX_fbconfig extension
         { (PRFuncPtr*) &xChooseFBConfigInternal, { "glXChooseFBConfigSGIX", NULL } },
@@ -165,31 +164,31 @@ GLXLibrary::EnsureInitialized()
         { NULL, { NULL } }
     };
 
-    GLLibraryLoader::SymLoadStruct symbols14[] = {
+    LibrarySymbolLoader::SymLoadStruct symbols14[] = {
         /* functions introduced in GLX 1.4 */
         { (PRFuncPtr*) &xGetProcAddressInternal, { "glXGetProcAddress", NULL } },
         { NULL, { NULL } }
     };
 
-    GLLibraryLoader::SymLoadStruct symbols14_ext[] = {
+    LibrarySymbolLoader::SymLoadStruct symbols14_ext[] = {
         /* extension equivalents for functions introduced in GLX 1.4 */
         // GLX_ARB_get_proc_address extension
         { (PRFuncPtr*) &xGetProcAddressInternal, { "glXGetProcAddressARB", NULL } },
         { NULL, { NULL } }
     };
 
-    GLLibraryLoader::SymLoadStruct symbols_texturefrompixmap[] = {
+    LibrarySymbolLoader::SymLoadStruct symbols_texturefrompixmap[] = {
         { (PRFuncPtr*) &xBindTexImageInternal, { "glXBindTexImageEXT", NULL } },
         { (PRFuncPtr*) &xReleaseTexImageInternal, { "glXReleaseTexImageEXT", NULL } },
         { NULL, { NULL } }
     };
 
-    GLLibraryLoader::SymLoadStruct symbols_robustness[] = {
+    LibrarySymbolLoader::SymLoadStruct symbols_robustness[] = {
         { (PRFuncPtr*) &xCreateContextAttribsInternal, { "glXCreateContextAttribsARB", NULL } },
         { NULL, { NULL } }
     };
 
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &symbols[0])) {
+    if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &symbols[0])) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
         return false;
     }
@@ -216,7 +215,7 @@ GLXLibrary::EnsureInitialized()
 
     extensionsStr = xQueryExtensionsString(display, screen);
 
-    GLLibraryLoader::SymLoadStruct *sym13;
+    LibrarySymbolLoader::SymLoadStruct *sym13;
     if (!GLXVersionCheck(1, 3)) {
         // Even if we don't have 1.3, we might have equivalent extensions
         // (as on the Intel X server).
@@ -227,12 +226,12 @@ GLXLibrary::EnsureInitialized()
     } else {
         sym13 = symbols13;
     }
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, sym13)) {
+    if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, sym13)) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
         return false;
     }
 
-    GLLibraryLoader::SymLoadStruct *sym14;
+    LibrarySymbolLoader::SymLoadStruct *sym14;
     if (!GLXVersionCheck(1, 4)) {
         // Even if we don't have 1.4, we might have equivalent extensions
         // (as on the Intel X server).
@@ -243,14 +242,14 @@ GLXLibrary::EnsureInitialized()
     } else {
         sym14 = symbols14;
     }
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, sym14)) {
+    if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, sym14)) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
         return false;
     }
 
     if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
-        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap, 
-                                         (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
+        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap, 
+                                         (LibrarySymbolLoader::PlatformLookupFunction)&xGetProcAddress))
     {
         mHasTextureFromPixmap = true;
     } else {
@@ -258,7 +257,7 @@ GLXLibrary::EnsureInitialized()
     }
 
     if (HasExtension(extensionsStr, "GLX_ARB_create_context_robustness") &&
-        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_robustness)) {
+        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_robustness)) {
         mHasRobustness = true;
     }
 
