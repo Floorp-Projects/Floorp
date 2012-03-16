@@ -55,10 +55,12 @@ add_test(function test_nl_single_shift_tables_validity() {
 });
 
 /**
- * Verify GsmPDUHelper#_calculateLangEncodedSeptets() and
+ * Verify RadioInterfaceLayer#_calculateLangEncodedSeptets() and
  * GsmPDUHelper#writeStringAsSeptets() algorithm match each other.
  */
-add_test(function test_GsmPDUHelper__calculateLangEncodedSeptets() {
+add_test(function test_RadioInterfaceLayer__calculateLangEncodedSeptets() {
+  let ril = newRadioInterfaceLayer();
+
   let worker = newWorker({
     postRILMessage: function fakePostRILMessage(data) {
       // Do nothing
@@ -78,9 +80,9 @@ add_test(function test_GsmPDUHelper__calculateLangEncodedSeptets() {
 
   function do_check_calc(str, expectedCalcLen, lst, sst) {
     do_check_eq(expectedCalcLen,
-                helper._calculateLangEncodedSeptets(str,
-                                                    PDU_NL_LOCKING_SHIFT_TABLES[lst],
-                                                    PDU_NL_SINGLE_SHIFT_TABLES[sst]));
+                ril._calculateLangEncodedSeptets(str,
+                                                 PDU_NL_LOCKING_SHIFT_TABLES[lst],
+                                                 PDU_NL_SINGLE_SHIFT_TABLES[sst]));
 
     helper.resetOctetWritten();
     helper.writeStringAsSeptets(str, 0, lst, sst);
@@ -131,25 +133,16 @@ add_test(function test_GsmPDUHelper__calculateLangEncodedSeptets() {
 });
 
 /**
- * Verify GsmPDUHelper#calculateUserDataLength handles national language
+ * Verify RadioInterfaceLayer#calculateUserDataLength handles national language
  * selection correctly.
  */
-add_test(function test_GsmPDUHelper_calculateUserDataLength() {
-  let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
-      // Do nothing
-    },
-    postMessage: function fakePostMessage(message) {
-      // Do nothing
-    }
-  });
+add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
+  let ril = newRadioInterfaceLayer();
 
-  let helper = worker.GsmPDUHelper;
-  let calc = helper.calculateUserDataLength;
   function test_calc(str, expected, enabledGsmTableTuples) {
-    helper.enabledGsmTableTuples = enabledGsmTableTuples;
+    ril.enabledGsmTableTuples = enabledGsmTableTuples;
     let options = {body: str};
-    calc.call(helper, options);
+    ril._calculateUserDataLength(options);
 
     do_check_eq(expected[0], options.dcs);
     do_check_eq(expected[1], options.encodedBodyLength);
@@ -386,6 +379,8 @@ function add_test_receiving_sms(expected, pdu) {
 }
 
 function test_receiving_7bit_alphabets(lst, sst) {
+  let ril = newRadioInterfaceLayer();
+
   let worker = newWriteHexOctetAsUint8Worker();
   let helper = worker.GsmPDUHelper;
   let buf = worker.Buf;
@@ -405,8 +400,8 @@ function test_receiving_7bit_alphabets(lst, sst) {
   for (let i = 0; i < text.length;) {
     let len = Math.min(70, text.length - i);
     let expected = text.substring(i, i + len);
-    let septets = helper._calculateLangEncodedSeptets(expected, langTable,
-                                                      langShiftTable);
+    let septets = ril._calculateLangEncodedSeptets(expected, langTable,
+                                                   langShiftTable);
     let rawBytes = get7bitRawBytes(expected);
     let pdu = compose7bitPdu(lst, sst, rawBytes, septets);
     add_test_receiving_sms(expected, pdu);

@@ -120,6 +120,20 @@ function newIncomingParcel(fakeParcelSize, response, request, data) {
 }
 
 /**
+ *
+ */
+function newRadioInterfaceLayer() {
+  let ril_ns = {
+    ChromeWorker: function ChromeWorker() {
+      // Stub function
+    },
+  };
+
+  subscriptLoader.loadSubScript("resource://gre/components/RadioInterfaceLayer.js", ril_ns);
+  return new ril_ns.RadioInterfaceLayer();
+}
+
+/**
  * Test whether specified function throws exception with expected
  * result.
  *
