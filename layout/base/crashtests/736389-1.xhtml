@@ -1,0 +1,47 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+/* this stylesheet is reduced from quirk.css */
+
+li {
+  list-style-position: inside;
+}
+
+.t:first-child {
+  padding-top: 1em;
+}
+
+</style>
+
+<script>
+
+function rm(n) { n.parentNode.removeChild(n); }
+
+window.addEventListener("load", function() {
+  document.documentElement.offsetHeight;
+  rm(document.getElementById('x'));
+}, false);
+
+</script>
+</head>
+
+<body style="-moz-column-count: 2000;">
+  <li>
+    <ol class="t" style="position: relative;">
+      <span id="x"></span>
+      <ol class="t" style="list-style-position: inside;">
+        <div style="position: absolute;">
+          <li>
+            <div style="position: absolute;">
+              <li>
+                <ol class="t"></ol>
+              </li>
+            </div>
+          </li>
+        </div>
+      </ol>
+    </ol>
+  </li>
+</body>
+
+</html>
