@@ -97,7 +97,7 @@ jmethodID AndroidGeckoLayerClient::jBeginDrawingMethod = 0;
 jmethodID AndroidGeckoLayerClient::jEndDrawingMethod = 0;
 jmethodID AndroidGeckoLayerClient::jSetFirstPaintViewport = 0;
 jmethodID AndroidGeckoLayerClient::jSetPageSize = 0;
-jmethodID AndroidGeckoLayerClient::jGetViewTransformMethod = 0;
+jmethodID AndroidGeckoLayerClient::jSyncViewportInfoMethod = 0;
 jmethodID AndroidGeckoLayerClient::jCreateFrameMethod = 0;
 jmethodID AndroidGeckoLayerClient::jActivateProgramMethod = 0;
 jmethodID AndroidGeckoLayerClient::jDeactivateProgramMethod = 0;
@@ -274,8 +274,8 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
     jEndDrawingMethod = getMethod("endDrawing", "()V");
     jSetFirstPaintViewport = getMethod("setFirstPaintViewport", "(FFFFF)V");
     jSetPageSize = getMethod("setPageSize", "(FFF)V");
-    jGetViewTransformMethod = getMethod("getViewTransform",
-                                        "()Lorg/mozilla/gecko/gfx/ViewTransform;");
+    jSyncViewportInfoMethod = getMethod("syncViewportInfo",
+                                        "(IIII)Lorg/mozilla/gecko/gfx/ViewTransform;");
     jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
     jActivateProgramMethod = getMethod("activateProgram", "()V");
     jDeactivateProgramMethod = getMethod("deactivateProgram", "()V");
@@ -707,9 +707,9 @@ AndroidGeckoLayerClient::SetPageSize(float aZoom, float aPageWidth, float aPageH
 }
 
 void
-AndroidGeckoLayerClient::GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+AndroidGeckoLayerClient::SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
 {
-    NS_ASSERTION(!isNull(), "GetViewTransform called on null layer client!");
+    NS_ASSERTION(!isNull(), "SyncViewportInfo called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
     if (!env)
         return;
@@ -717,7 +717,9 @@ AndroidGeckoLayerClient::GetViewTransform(nsIntPoint& aScrollOffset, float& aSca
     AndroidViewTransform viewTransform;
     AndroidBridge::AutoLocalJNIFrame jniFrame(env);
 
-    jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jGetViewTransformMethod);
+    jobject viewTransformJObj = env->CallObjectMethod(wrapped_obj, jSyncViewportInfoMethod,
+                                                      aDisplayPort.x, aDisplayPort.y,
+                                                      aDisplayPort.width, aDisplayPort.height);
     NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
     viewTransform.Init(viewTransformJObj);
 

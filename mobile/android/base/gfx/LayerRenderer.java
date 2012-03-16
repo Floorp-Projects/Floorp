@@ -266,7 +266,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
      * Called whenever a new frame is about to be drawn.
      */
     public void onDrawFrame(GL10 gl) {
-        RenderContext pageContext = createPageContext(), screenContext = createScreenContext();
+        RenderContext pageContext = createPageContext(mView.getController().getViewportMetrics());
+        RenderContext screenContext = createScreenContext();
         Frame frame = createFrame(pageContext, screenContext);
         synchronized (mView.getController()) {
             frame.beginDrawing();
@@ -306,14 +307,10 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         return createContext(viewport, pageSize, 1.0f);
     }
 
-    public RenderContext createPageContext() {
-        LayerController layerController = mView.getController();
-
-        Rect viewport = new Rect();
-        layerController.getViewport().round(viewport);
-
-        FloatSize pageSize = new FloatSize(layerController.getPageSize());
-        float zoomFactor = layerController.getZoomFactor();
+    public RenderContext createPageContext(ImmutableViewportMetrics metrics) {
+        Rect viewport = RectUtils.round(metrics.getViewport());
+        FloatSize pageSize = metrics.getPageSize();
+        float zoomFactor = metrics.zoomFactor;
         return createContext(new RectF(viewport), pageSize, zoomFactor);
     }
 
@@ -583,7 +580,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             Rect rootMask = null;
             Layer rootLayer = mView.getController().getRoot();
             if (rootLayer != null) {
-                RectF rootBounds = rootLayer.getBounds(mPageContext);
+                RectF rootBounds = rootLayer.getDisplayPortBounds(mPageContext);
                 rootBounds.offset(-mPageContext.viewport.left, -mPageContext.viewport.top);
                 rootMask = new Rect();
                 rootBounds.roundOut(rootMask);
