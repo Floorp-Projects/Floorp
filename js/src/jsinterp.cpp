@@ -458,7 +458,9 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 	
 #ifdef JS_ION
     if (ion::IsEnabled()) {
-        ion::MethodStatus status = ion::Compile(cx, script, fp, NULL);
+        ion::MethodStatus status = ion::CanEnter(cx, script, fp);
+        if (status == ion::Method_Error)
+            return false;
         if (status == ion::Method_Compiled)
             return ion::Cannon(cx, fp);
     }
@@ -1841,6 +1843,8 @@ BEGIN_CASE(JSOP_LOOPENTRY)
     if (ion::IsEnabled()) {
         ion::MethodStatus status =
             ion::CanEnterAtBranch(cx, script, regs.fp(), regs.pc);
+        if (status == ion::Method_Error)
+            goto error;
         if (status == ion::Method_Compiled) {
             interpReturnOK = ion::SideCannon(cx, regs.fp(), regs.pc);
             if (entryFrame != regs.fp())
@@ -2800,7 +2804,9 @@ BEGIN_CASE(JSOP_FUNAPPLY)
 	
 #ifdef JS_ION
     if (!newType && ion::IsEnabled()) {
-        ion::MethodStatus status = ion::Compile(cx, script, regs.fp(), NULL);
+        ion::MethodStatus status = ion::CanEnter(cx, script, regs.fp());
+        if (status == ion::Method_Error)
+            goto error;
         if (status == ion::Method_Compiled) {
             interpReturnOK = ion::Cannon(cx, regs.fp());
             CHECK_INTERRUPT_HANDLER();

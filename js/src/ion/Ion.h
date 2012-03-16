@@ -129,6 +129,7 @@ struct IonOptions
 
 enum MethodStatus
 {
+    Method_Error,
     Method_CantCompile,
     Method_Skipped,
     Method_Compiled
@@ -161,8 +162,7 @@ bool SetIonContext(IonContext *ctx);
 
 MethodStatus CanEnterAtBranch(JSContext *cx, JSScript *script,
                               StackFrame *fp, jsbytecode *pc);
-MethodStatus Compile(JSContext *cx, JSScript *script,
-                     js::StackFrame *fp, jsbytecode *osrPc);
+MethodStatus CanEnter(JSContext *cx, JSScript *script, StackFrame *fp);
 
 bool Cannon(JSContext *cx, StackFrame *fp);
 bool SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
