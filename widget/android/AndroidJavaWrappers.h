@@ -206,7 +206,7 @@ public:
     void EndDrawing();
     void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
     void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
-    void SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+    void GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
     void CreateFrame(AndroidLayerRendererFrame& aFrame);
     void ActivateProgram();
     void DeactivateProgram();
@@ -217,7 +217,7 @@ protected:
     static jmethodID jEndDrawingMethod;
     static jmethodID jSetFirstPaintViewport;
     static jmethodID jSetPageSize;
-    static jmethodID jSyncViewportInfoMethod;
+    static jmethodID jGetViewTransformMethod;
     static jmethodID jCreateFrameMethod;
     static jmethodID jActivateProgramMethod;
     static jmethodID jDeactivateProgramMethod;

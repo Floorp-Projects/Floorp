@@ -50,12 +50,11 @@ public class VirtualLayer extends Layer {
         // No-op.
     }
 
-    void setMetrics(Rect newPosition, Rect newDisplayPort, float newResolution) {
+    void setPositionAndResolution(Rect newPosition, float newResolution) {
         // This is an optimized version of the following code:
         // beginTransaction();
         // try {
         //     setPosition(newPosition);
-        //     setDisplayPort(newDisplayPort);
         //     setResolution(newResolution);
         //     performUpdates(null);
         // } finally {
@@ -70,7 +69,6 @@ public class VirtualLayer extends Layer {
         // in order to determine where to draw the checkerboard. The values are
         // also used in LayerController's convertViewPointToLayerPoint function.
         mPosition = newPosition;
-        mDisplayPort = newDisplayPort;
         mResolution = newResolution;
     }
 }
