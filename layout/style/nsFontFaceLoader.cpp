@@ -341,9 +341,9 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
                          const gfxFontFaceSrc *aFontFaceSrc)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal;
+  nsIPrincipal *principal = nsnull;
 
-  rv = CheckFontLoad(aProxy, aFontFaceSrc, principal);
+  rv = CheckFontLoad(aProxy, aFontFaceSrc, &principal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIPresShell *ps = mPresContext->PresShell();
@@ -814,7 +814,7 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
 nsresult
 nsUserFontSet::CheckFontLoad(gfxProxyFontEntry *aFontToLoad,
                              const gfxFontFaceSrc *aFontFaceSrc,
-                             nsCOMPtr<nsIPrincipal>& aPrincipal)
+                             nsIPrincipal **aPrincipal)
 {
   nsresult rv;
 
@@ -832,18 +832,20 @@ nsUserFontSet::CheckFontLoad(gfxProxyFontEntry *aFontToLoad,
   // use document principal, original principal if flag set
   // this enables user stylesheets to load font files via
   // @font-face rules
-  aPrincipal = ps->GetDocument()->NodePrincipal();
+  *aPrincipal = ps->GetDocument()->NodePrincipal();
 
   NS_ASSERTION(aFontFaceSrc->mOriginPrincipal,
                "null origin principal in @font-face rule");
   if (aFontFaceSrc->mUseOriginPrincipal) {
-    aPrincipal = do_QueryInterface(aFontFaceSrc->mOriginPrincipal);
+    nsCOMPtr<nsIPrincipal> p = do_QueryInterface(aFontFaceSrc->mOriginPrincipal);
+    *aPrincipal = p;
   }
 
-  rv = nsFontFaceLoader::CheckLoadAllowed(aPrincipal, aFontFaceSrc->mURI,
+  rv = nsFontFaceLoader::CheckLoadAllowed(*aPrincipal, aFontFaceSrc->mURI,
                                           ps->GetDocument());
   if (NS_FAILED(rv)) {
-    LogMessage(aFontToLoad, "download not allowed", nsIScriptError::errorFlag, rv);
+    LogMessage(aFontToLoad, "download not allowed",
+               nsIScriptError::errorFlag, rv);
   }
 
   return rv;
@@ -856,9 +858,9 @@ nsUserFontSet::SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
                                 PRUint32 &aBufferLength)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal;
+  nsIPrincipal *principal = nsnull;
 
-  rv = CheckFontLoad(aFontToLoad, aFontFaceSrc, principal);
+  rv = CheckFontLoad(aFontToLoad, aFontFaceSrc, &principal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel;
