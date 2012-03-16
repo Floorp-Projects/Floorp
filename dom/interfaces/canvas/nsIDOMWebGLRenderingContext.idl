@@ -177,7 +177,7 @@ interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
   const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
-[scriptable, builtinclass, uuid(6db28d5b-f230-4d81-a457-b82c5369fc11)]
+[scriptable, builtinclass, uuid(aae55fc4-b650-4178-920a-c985b720d9bb)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -749,9 +749,8 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void pixelStorei(in WebGLenum pname, in WebGLint param);
   void polygonOffset(in WebGLfloat factor, in WebGLfloat units);
 
-  void readPixels([optional] in long dummy);
-  [noscript] void readPixels_array(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
-                                   in WebGLenum format, in WebGLenum type, in WebGLJSObjectPtr pixels);
+  void readPixels(in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height,
+                  in WebGLenum format, in WebGLenum type, in jsval pixels);
 
   //void glReleaseShaderCompiler();
 
