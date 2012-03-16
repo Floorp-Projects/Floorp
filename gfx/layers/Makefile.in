@@ -134,6 +134,7 @@ EXPORTS_mozilla/layers =\
         ShadowLayersChild.h \
         ShadowLayersParent.h \
         ShadowLayersManager.h \
+        RenderTrace.h \
         $(NULL)
 
 CPPSRCS += \

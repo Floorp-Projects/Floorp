@@ -56,7 +56,7 @@
 
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
 
-#define BOOKMARKS_FILE_NAME NS_LITERAL_STRING("bookmarks.html")
+#define DEFAULT_BOOKMARKS NS_LITERAL_CSTRING("resource:///defaults/profile/bookmarks.html")
 
 void SetUnicharPref(const char* aPref, const nsAString& aValue,
                     nsIPrefBranch* aPrefs)
@@ -164,72 +164,19 @@ GetProfilePath(nsIProfileStartup* aStartup, nsCOMPtr<nsIFile>& aProfileDir)
 }
 
 nsresult
-ImportBookmarksHTML(nsIFile* aBookmarksFile, 
-                    bool aImportIntoRoot,
-                    bool aOverwriteDefaults,
-                    const PRUnichar* aImportSourceNameKey)
+ImportDefaultBookmarks()
 {
-  nsresult rv;
+  nsCOMPtr<nsIPlacesImportExportService> importer =
+    do_GetService(NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID);
+  NS_ENSURE_STATE(importer);
 
-  nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(aBookmarksFile));
-  NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIPlacesImportExportService> importer = do_GetService(NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIIOService> ioService = mozilla::services::GetIOService();
+  NS_ENSURE_STATE(ioService);
+  nsCOMPtr<nsIURI> bookmarksURI;
+  nsresult rv = ioService->NewURI(DEFAULT_BOOKMARKS, nsnull, nsnull,
+                                  getter_AddRefs(bookmarksURI));
+  if (NS_FAILED(rv))
+    return rv;
 
-  // Import file directly into the bookmarks root folder.
-  if (aImportIntoRoot) {
-    rv = importer->ImportHTMLFromFile(localFile, aOverwriteDefaults);
-    NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
-  }
-
-  // Get the source application name.
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIStringBundle> bundle;
-  rv = bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString sourceName;
-  rv = bundle->GetStringFromName(aImportSourceNameKey,
-                                 getter_Copies(sourceName));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const PRUnichar* sourceNameStrings[] = { sourceName.get() };
-  nsString importedBookmarksTitle;
-  rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedBookmarksFolder").get(),
-                                    sourceNameStrings, 1, 
-                                    getter_Copies(importedBookmarksTitle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Get the bookmarks service.
-  nsCOMPtr<nsINavBookmarksService> bms =
-    do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Create an imported bookmarks folder under the bookmarks menu.
-  PRInt64 root;
-  rv = bms->GetBookmarksMenuFolder(&root);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt64 folder;
-  rv = bms->CreateFolder(root, NS_ConvertUTF16toUTF8(importedBookmarksTitle),
-                         nsINavBookmarksService::DEFAULT_INDEX, &folder);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Import the bookmarks into the folder.
-  return importer->ImportHTMLFromFileToFolder(localFile, folder, false);
-}
-
-nsresult
-InitializeBookmarks(nsIFile* aTargetProfile)
-{
-  nsCOMPtr<nsIFile> bookmarksFile;
-  aTargetProfile->Clone(getter_AddRefs(bookmarksFile));
-  bookmarksFile->Append(BOOKMARKS_FILE_NAME);
-  
-  nsresult rv = ImportBookmarksHTML(bookmarksFile, true, true, EmptyString().get());
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
+  return importer->ImportHTMLFromURI(bookmarksURI, true);
 }

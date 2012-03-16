@@ -1,0 +1,28 @@
+{
+    "[app]/amazondotcom.xml": {
+        "used": 0,
+        "order": 4
+    },
+    "[app]/eBay.xml": {
+        "used": 0,
+        "order": 1
+    },
+    "[app]/wikipedia.xml": {
+        "used": 0,
+        "order": 6
+    },
+    "[app]/twitter.xml": {
+        "used": 0,
+        "order": 7
+    },
+    "[app]/google.xml": {
+        "used": 1,
+        "order": 2
+    },
+    "[app]/bing.xml": {
+        "order": 5
+    },
+    "[app]/yahoo.xml": {
+        "order": 3
+    }
+}

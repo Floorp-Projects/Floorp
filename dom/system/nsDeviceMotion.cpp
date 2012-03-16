@@ -44,11 +44,14 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIServiceManager.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMDeviceOrientationEvent.h"
-#include "nsIDOMDeviceMotionEvent.h"
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
-#include "nsDOMDeviceMotionEvent.h"
+
+using mozilla::TimeStamp;
+using mozilla::TimeDuration;
+
+// also see sDefaultSensorHint in mobile/android/base/GeckoAppShell.java
+#define DEFAULT_SENSOR_POLL 100
 
 static const nsTArray<nsIDOMWindow*>::index_type NoIndex =
     nsTArray<nsIDOMWindow*>::NoIndex;
@@ -117,21 +120,16 @@ NS_IMPL_ISUPPORTS2(nsDeviceMotion, nsIDeviceMotion, nsIDeviceMotionUpdate)
 
 nsDeviceMotion::nsDeviceMotion()
 : mStarted(false),
-  mUpdateInterval(50), /* default to 50 ms */
   mEnabled(true)
 {
   nsCOMPtr<nsIPrefBranch> prefSrv = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefSrv) {
-    PRInt32 value;
-    nsresult rv = prefSrv->GetIntPref("device.motion.update.interval", &value);
-    if (NS_SUCCEEDED(rv))
-      mUpdateInterval = value;
-
     bool bvalue;
-    rv = prefSrv->GetBoolPref("device.motion.enabled", &bvalue);
+    nsresult rv = prefSrv->GetBoolPref("device.motion.enabled", &bvalue);
     if (NS_SUCCEEDED(rv) && bvalue == false)
       mEnabled = false;
   }
+  mLastDOMMotionEventTime = TimeStamp::Now();
 }
 
 nsDeviceMotion::~nsDeviceMotion()
@@ -255,13 +253,73 @@ nsDeviceMotion::DeviceMotionChanged(PRUint32 type, double x, double y, double z)
 
     if (domdoc) {
       nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(windowListeners[i]);
-      if (type == nsIDeviceMotionData::TYPE_ACCELERATION)
-        FireDOMMotionEvent(domdoc, target, x, y, z);
+      if (type == nsIDeviceMotionData::TYPE_ACCELERATION || 
+        type == nsIDeviceMotionData::TYPE_LINEAR_ACCELERATION || 
+        type == nsIDeviceMotionData::TYPE_GYROSCOPE )
+        FireDOMMotionEvent(domdoc, target, type, x, y, z);
       else if (type == nsIDeviceMotionData::TYPE_ORIENTATION)
         FireDOMOrientationEvent(domdoc, target, x, y, z);
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDeviceMotion::NeedsCalibration()
+{
+  if (!mEnabled)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMArray<nsIDeviceMotionListener> listeners = mListeners;
+  for (PRUint32 i = listeners.Count(); i > 0 ; ) {
+    --i;
+    listeners[i]->NeedsCalibration();
+  }
+
+  nsCOMArray<nsIDOMWindow> windowListeners;
+  for (PRUint32 i = 0; i < mWindowListeners.Length(); i++) {
+    windowListeners.AppendObject(mWindowListeners[i]);
+  }
+
+  for (PRUint32 i = windowListeners.Count(); i > 0 ; ) {
+    --i;
+
+    // check to see if this window is in the background.  if
+    // it is, don't send any device motion to it.
+    nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(windowListeners[i]);
+    if (!pwindow ||
+        !pwindow->GetOuterWindow() ||
+        pwindow->GetOuterWindow()->IsBackground())
+      continue;
+
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    windowListeners[i]->GetDocument(getter_AddRefs(domdoc));
+
+    if (domdoc) {
+	nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(windowListeners[i]);
+        FireNeedsCalibration(domdoc, target);
+    }
+  }
+
+  return NS_OK;
+}
+
+void
+nsDeviceMotion::FireNeedsCalibration(nsIDOMDocument *domdoc,
+				    nsIDOMEventTarget *target)
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  domdoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  if (!event)
+    return;
+
+  event->InitEvent(NS_LITERAL_STRING("compassneedscalibration"), true, false);
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  if (privateEvent)
+    privateEvent->SetTrusted(true);
+  
+  bool defaultActionEnabled = true;
+  target->DispatchEvent(event, &defaultActionEnabled);
 }
 
 void
@@ -300,34 +358,57 @@ nsDeviceMotion::FireDOMOrientationEvent(nsIDOMDocument *domdoc,
 void
 nsDeviceMotion::FireDOMMotionEvent(nsIDOMDocument *domdoc,
                                    nsIDOMEventTarget *target,
+                                   PRUint32 type,
                                    double x,
                                    double y,
                                    double z) {
+  // Attempt to coalesce events
+  bool fireEvent = TimeStamp::Now() > mLastDOMMotionEventTime + TimeDuration::FromMilliseconds(DEFAULT_SENSOR_POLL);
+
+  switch (type) {
+  case nsIDeviceMotionData::TYPE_LINEAR_ACCELERATION:
+      mLastAcceleration = new nsDOMDeviceAcceleration(x, y, z);
+      break;
+  case nsIDeviceMotionData::TYPE_ACCELERATION:
+      mLastAccelerationIncluduingGravity = new nsDOMDeviceAcceleration(x, y, z);
+      break;
+  case nsIDeviceMotionData::TYPE_GYROSCOPE:
+      mLastRotationRate = new nsDOMDeviceRotationRate(x, y, z);
+      break;
+  }
+
+  if (!fireEvent && (!mLastAcceleration || !mLastAccelerationIncluduingGravity || !mLastRotationRate)) {
+      return;
+  }
+
   nsCOMPtr<nsIDOMEvent> event;
-  bool defaultActionEnabled = true;
   domdoc->CreateEvent(NS_LITERAL_STRING("DeviceMotionEvent"), getter_AddRefs(event));
 
   nsCOMPtr<nsIDOMDeviceMotionEvent> me = do_QueryInterface(event);
 
   if (!me) {
     return;
-}
-
-  // Currently acceleration as determined includes gravity.
-  nsRefPtr<nsDOMDeviceAcceleration> acceleration = new nsDOMDeviceAcceleration(x, y, z);
+  }
 
   me->InitDeviceMotionEvent(NS_LITERAL_STRING("devicemotion"),
                             true,
                             false,
-                            nsnull,
-                            acceleration,
-                            nsnull,
-                            0);
+                            mLastAcceleration,
+                            mLastAccelerationIncluduingGravity,
+                            mLastRotationRate,
+                            DEFAULT_SENSOR_POLL);
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
   if (privateEvent)
     privateEvent->SetTrusted(true);
   
+  bool defaultActionEnabled = true;
   target->DispatchEvent(event, &defaultActionEnabled);
+
+  mLastRotationRate = nsnull;
+  mLastAccelerationIncluduingGravity = nsnull;
+  mLastAcceleration = nsnull;
+  mLastDOMMotionEventTime = TimeStamp::Now();
+
 }
 

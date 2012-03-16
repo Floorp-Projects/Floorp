@@ -75,13 +75,11 @@ LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/android \
-                   $(NULL)
+LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/android
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/b2g \
-                   $(NULL)
+LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/gonk
 endif
 
 EXPORTS         += nsGeoPositionIPCSerialiser.h

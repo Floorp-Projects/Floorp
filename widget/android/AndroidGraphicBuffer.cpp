@@ -47,11 +47,8 @@
 #define EGL_NATIVE_BUFFER_ANDROID 0x3140
 #define EGL_IMAGE_PRESERVED_KHR   0x30D2
 
-typedef void* EGLContext;
-typedef void* EGLImageKHR;
-typedef void* EGLClientBuffer;
-typedef void* EGLDisplay;
-
+typedef void *EGLContext;
+typedef void *EGLDisplay;
 typedef PRUint32 EGLenum;
 typedef PRInt32 EGLint;
 typedef PRUint32 EGLBoolean;

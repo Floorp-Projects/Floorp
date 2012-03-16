@@ -20,7 +20,7 @@
       testStates(getRootAccessible(), 0, EXT_STATE_ACTIVE);
 
       // Bug 509696, 607219.
-      testStates(document, STATE_READONLY); // role=""
+      testStates(document, STATE_READONLY, 0); // role=""
 
       document.body.setAttribute("role","banner"); // no platform mapping
       testStates(document, STATE_READONLY);
@@ -32,20 +32,20 @@
       // Bugs 454997 and 467387
       testStates(document, STATE_READONLY);
       testStates("document", STATE_READONLY);
-      testStates("editable_document", 0, EXT_STATE_EDITABLE);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
 
       document.designMode = "on";
 
-      testStates(document, 0, EXT_STATE_EDITABLE);
-      testStates("p", 0, EXT_STATE_EDITABLE);
-      testStates("document", 0, EXT_STATE_EDITABLE);
-      testStates("editable_document", 0, EXT_STATE_EDITABLE);
+      testStates(document, 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("p", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
 
       document.designMode = "off";
 
       testStates(document, STATE_READONLY);
       testStates("document", STATE_READONLY);
-      testStates("editable_document", 0, EXT_STATE_EDITABLE);
+      testStates("editable_document", 0, EXT_STATE_EDITABLE, STATE_READONLY);
 
       SimpleTest.finish();
     }
