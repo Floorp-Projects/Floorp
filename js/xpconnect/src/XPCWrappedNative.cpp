@@ -61,9 +61,9 @@ bool
 xpc_OkToHandOutWrapper(nsWrapperCache *cache)
 {
     NS_ABORT_IF_FALSE(cache->GetWrapper(), "Must have wrapper");
-    NS_ABORT_IF_FALSE(cache->IsProxy() || IS_WN_WRAPPER(cache->GetWrapper()),
+    NS_ABORT_IF_FALSE(cache->IsDOMBinding() || IS_WN_WRAPPER(cache->GetWrapper()),
                       "Must have proxy or XPCWrappedNative wrapper");
-    return cache->IsProxy() ?
+    return cache->IsDOMBinding() ?
         mozilla::dom::binding::instanceIsProxy(cache->GetWrapper()) :
         !static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(cache->GetWrapper()))->
             NeedsSOW();
