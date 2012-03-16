@@ -76,18 +76,12 @@ public class GeckoLayerClient implements GeckoEventResponder,
     /* The viewport that Gecko is currently displaying. */
     private ViewportMetrics mGeckoViewport;
 
-    /*
-     * The viewport metrics being used to draw the current frame. This is only
-     * accessed by the compositor thread, and so needs no synchronisation.
-     */
-    private ImmutableViewportMetrics mFrameMetrics;
-
     private String mLastCheckerboardColor;
 
     /* Used by robocop for testing purposes */
     private DrawListener mDrawListener;
 
-    /* Used as a temporary ViewTransform by syncViewportInfo */
+    /* Used as a temporary ViewTransform by getViewTransform */
     private ViewTransform mCurrentViewTransform;
 
     public GeckoLayerClient(Context context) {
@@ -133,6 +127,11 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public void endDrawing() {
+        synchronized (mLayerController) {
+            RectF position = mGeckoViewport.getViewport();
+            mRootLayer.setPositionAndResolution(RectUtils.round(position), mGeckoViewport.getZoomFactor());
+        }
+
         /* Used by robocop for testing purposes */
         if (mDrawListener != null) {
             mDrawListener.drawFinished();
@@ -320,7 +319,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
       * is different from the document composited on the last frame. In these cases, the viewport
       * information we have in Java is no longer valid and needs to be replaced with the new
       * viewport information provided. setPageSize will never be invoked on the same frame that
-      * this function is invoked on; and this function will always be called prior to syncViewportInfo.
+      * this function is invoked on; and this function will always be called prior to getViewTransform.
       */
     public void setFirstPaintViewport(float offsetX, float offsetY, float zoom, float pageWidth, float pageHeight) {
         synchronized (mLayerController) {
@@ -344,7 +343,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
       * The compositor invokes this function whenever it determines that the page size
       * has changed (based on the information it gets from layout). If setFirstPaintViewport
       * is invoked on a frame, then this function will not be. For any given frame, this
-      * function will be invoked before syncViewportInfo.
+      * function will be invoked before getViewTransform.
       */
     public void setPageSize(float zoom, float pageWidth, float pageHeight) {
         synchronized (mLayerController) {
@@ -364,32 +363,19 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
     /** This function is invoked by Gecko via JNI; be careful when modifying signature.
       * The compositor invokes this function on every frame to figure out what part of the
-      * page to display, and to inform Java of the current display port. Since it is called
-      * on every frame, it needs to be ultra-fast.
+      * page to display. Since it is called on every frame, it needs to be ultra-fast.
       * It avoids taking any locks or allocating any objects. We keep around a
       * mCurrentViewTransform so we don't need to allocate a new ViewTransform
       * everytime we're called. NOTE: we might be able to return a ImmutableViewportMetrics
       * which would avoid the copy into mCurrentViewTransform.
       */
-    public ViewTransform syncViewportInfo(int x, int y, int width, int height) {
+    public ViewTransform getViewTransform() {
         // getViewportMetrics is thread safe so we don't need to synchronize
-        // on mLayerController.
-        // We save the viewport metrics here, so we later use it later in
-        // createFrame (which will be called by nsWindow::DrawWindowUnderlay on
-        // the native side, by the compositor). The LayerController's viewport
-        // metrics can change between here and there, as it's accessed outside
-        // of the compositor thread.
-        mFrameMetrics = mLayerController.getViewportMetrics();
-
-        // Update the root layer metrics
-        mRootLayer.setMetrics(RectUtils.round(mGeckoViewport.getViewport()),
-                              new Rect(x, y, x + width, y + height),
-                              mGeckoViewport.getZoomFactor());
-
-        mCurrentViewTransform.x = mFrameMetrics.viewportRectLeft;
-        mCurrentViewTransform.y = mFrameMetrics.viewportRectTop;
-        mCurrentViewTransform.scale = mFrameMetrics.zoomFactor;
-
+        // on myLayerController.
+        ImmutableViewportMetrics viewportMetrics = mLayerController.getViewportMetrics();
+        mCurrentViewTransform.x = viewportMetrics.viewportRectLeft;
+        mCurrentViewTransform.y = viewportMetrics.viewportRectTop;
+        mCurrentViewTransform.scale = viewportMetrics.zoomFactor;
         return mCurrentViewTransform;
     }
 
@@ -403,7 +389,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         }
 
         // Build the contexts and create the frame.
-        Layer.RenderContext pageContext = mLayerRenderer.createPageContext(mFrameMetrics);
+        Layer.RenderContext pageContext = mLayerRenderer.createPageContext();
         Layer.RenderContext screenContext = mLayerRenderer.createScreenContext();
         return mLayerRenderer.createFrame(pageContext, screenContext);
     }

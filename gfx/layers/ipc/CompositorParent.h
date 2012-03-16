@@ -123,11 +123,10 @@ private:
   // Platform specific functions
 #ifdef MOZ_WIDGET_ANDROID
   /**
-   * Informs Java of the current display port, and asks Java for its viewport
-   * position and zoom, to use in updating the world transform in
-   * TransformShadowTree.
+   * Asks Java for the viewport position and updates the world transform
+   * accordingly.
    */
-  void SyncViewportInfo();
+  void RequestViewTransform();
 
   /**
    * Does a breadth-first search to find the first layer in the tree with a
