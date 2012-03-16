@@ -353,13 +353,7 @@ class TableTicker: public Sampler {
     , mPrimaryThreadProfile(aEntrySize, aStack)
     , mSaveRequested(false)
   {
-#if defined(USE_LIBUNWIND) && defined(ANDROID)
-    // We don't have the Gecko Profiler add-on on Android, but we know that
-    // libunwind is available, so we can always walk the stacks.
-    mUseStackWalk = true;
-#else
     mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
-#endif
 
     //XXX: It's probably worth splitting the jank profiler out from the regular profiler at some point
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
