@@ -54,6 +54,7 @@
 #endif
 
 #include "GLDefs.h"
+#include "GLLibraryLoader.h"
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
@@ -84,46 +85,6 @@ namespace mozilla {
 namespace gl {
 class GLContext;
 
-class LibrarySymbolLoader
-{
-public:
-    bool OpenLibrary(const char *library);
-
-    typedef PRFuncPtr (GLAPIENTRY * PlatformLookupFunction) (const char *);
-
-    enum {
-        MAX_SYMBOL_NAMES = 5,
-        MAX_SYMBOL_LENGTH = 128
-    };
-
-    typedef struct {
-        PRFuncPtr *symPointer;
-        const char *symNames[MAX_SYMBOL_NAMES];
-    } SymLoadStruct;
-
-    bool LoadSymbols(SymLoadStruct *firstStruct,
-                       bool tryplatform = false,
-                       const char *prefix = nsnull);
-
-    /*
-     * Static version of the functions in this class
-     */
-    static PRFuncPtr LookupSymbol(PRLibrary *lib,
-                                  const char *symname,
-                                  PlatformLookupFunction lookupFunction = nsnull);
-    static bool LoadSymbols(PRLibrary *lib,
-                              SymLoadStruct *firstStruct,
-                              PlatformLookupFunction lookupFunction = nsnull,
-                              const char *prefix = nsnull);
-protected:
-    LibrarySymbolLoader() {
-        mLibrary = nsnull;
-        mLookupFunc = nsnull;
-    }
-
-    PRLibrary *mLibrary;
-    PlatformLookupFunction mLookupFunc;
-};
 
 enum ShaderProgramType {
     RGBALayerProgramType,
@@ -534,7 +495,7 @@ struct THEBES_API ContextFormat
 };
 
 class GLContext
-    : public LibrarySymbolLoader
+    : public GLLibraryLoader
 {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
 public:
