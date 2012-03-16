@@ -533,6 +533,9 @@ abstract public class GeckoApp
             case R.id.char_encoding:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
                 return true;
+            case R.id.toggle_profiling:
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }

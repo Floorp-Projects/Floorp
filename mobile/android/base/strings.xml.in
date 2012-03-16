@@ -88,6 +88,9 @@
   <string name="addons">&addons;</string>
   <string name="downloads">&downloads;</string>
   <string name="char_encoding">&char_encoding;</string>
+  <!-- This string only appears in developer builds, which
+       is why it is not localizable. -->
+  <string name="toggle_profiling">Toggle Profiling</string>
 
   <string name="site_settings_title">&site_settings_title;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>
