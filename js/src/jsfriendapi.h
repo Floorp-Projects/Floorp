@@ -706,7 +706,7 @@ struct JS_FRIEND_API(GCDescription) {
       : isCompartment(isCompartment) {}
 
     jschar *formatMessage(JSRuntime *rt) const;
-    jschar *formatJSON(JSRuntime *rt) const;
+    jschar *formatJSON(JSRuntime *rt, uint64_t timestamp) const;
 };
 
 typedef void
