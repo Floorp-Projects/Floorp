@@ -23,6 +23,11 @@ const FILTER_TIMESTAMP = "timestamp";
 const FILTER_NUMBERS = "numbers";
 const FILTER_DELIVERY = "delivery";
 
+const READ_ONLY = "readonly";
+const READ_WRITE = "readwrite";
+const PREV = "prev";
+const NEXT = "next";
+
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
                                    "@mozilla.org/sms/smsservice;1",
                                    "nsISmsService");
@@ -44,13 +49,13 @@ function SmsDatabaseService() {
   gIDBManager.initWindowless(GLOBAL_SCOPE);
 
   let that = this;
-  this.newTxn(Ci.nsIIDBTransaction.READ_ONLY, function(error, txn, store){
+  this.newTxn(READ_ONLY, function(error, txn, store){
     if (error) {
       return;
     }
     // In order to get the highest key value, we open a key cursor in reverse
     // order and get only the first pointed value.
-    let request = store.openCursor(null, Ci.nsIIDBCursor.PREV);
+    let request = store.openCursor(null, PREV);
     request.onsuccess = function onsuccess(event) {
       let cursor = event.target.result;
       if (!cursor) {
@@ -165,7 +170,7 @@ SmsDatabaseService.prototype = {
    * Start a new transaction.
    *
    * @param txn_type
-   *        Type of transaction (e.g. IDBTransaction.READ_WRITE)
+   *        Type of transaction (e.g. READ_WRITE)
    * @param callback
    *        Function to call when the transaction is available. It will
    *        be invoked with the transaction and the 'sms' object store.
@@ -254,7 +259,7 @@ SmsDatabaseService.prototype = {
   onMessageListCreated: function onMessageListCreated(messageList, requestId) {
     if (DEBUG) debug("Message list created: " + messageList);
     let self = this;
-    self.newTxn(Ci.nsIIDBTransaction.READ_ONLY, function (error, txn, store) {
+    self.newTxn(READ_ONLY, function (error, txn, store) {
       if (error) {
         gSmsRequestManager.notifyReadMessageListFailed(
           requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
@@ -295,7 +300,7 @@ SmsDatabaseService.prototype = {
     this.lastKey += 1;
     message.id = this.lastKey;
     if (DEBUG) debug("Going to store " + JSON.stringify(message));
-    this.newTxn(Ci.nsIIDBTransaction.READ_WRITE, function(error, txn, store) {
+    this.newTxn(READ_WRITE, function(error, txn, store) {
       if (error) {
         return;
       }
@@ -330,7 +335,7 @@ SmsDatabaseService.prototype = {
 
   getMessage: function getMessage(messageId, requestId) {
     if (DEBUG) debug("Retrieving message with ID " + messageId);
-    this.newTxn(Ci.nsIIDBTransaction.READ_ONLY, function (error, txn, store) {
+    this.newTxn(READ_ONLY, function (error, txn, store) {
       if (error) {
         if (DEBUG) debug(error);
         gSmsRequestManager.notifyGetSmsFailed(
@@ -383,7 +388,7 @@ SmsDatabaseService.prototype = {
 
   deleteMessage: function deleteMessage(messageId, requestId) {
     let self = this;
-    this.newTxn(Ci.nsIIDBTransaction.READ_WRITE, function (error, txn, store) {
+    this.newTxn(READ_WRITE, function (error, txn, store) {
       if (error) {
         gSmsRequestManager.notifySmsDeleteFailed(
           requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
@@ -404,7 +409,7 @@ SmsDatabaseService.prototype = {
         // the message. As IndexedDB does not provide the affected records info,
         // we need to try to get the message from the database again to check
         // that it is actually gone.
-        self.newTxn(Ci.nsIIDBTransaction.READ_ONLY, function (error, txn, store) {
+        self.newTxn(READ_ONLY, function (error, txn, store) {
           let request = store.getAll(messageId);
           request.onsuccess = function onsuccess(event) {
             let deleted = (event.target.result.length == 0);
@@ -478,7 +483,7 @@ SmsDatabaseService.prototype = {
     };
 
     let self = this;
-    this.newTxn(Ci.nsIIDBTransaction.READ_ONLY, function (error, txn, store) {
+    this.newTxn(READ_ONLY, function (error, txn, store) {
       if (error) {
         errorCb(error);
         return;
@@ -495,7 +500,7 @@ SmsDatabaseService.prototype = {
       } else if (filter.endDate != null) {
         timeKeyRange = IDBKeyRange.upperBound(filter.endDate.getTime());
       }
-      let direction = reverse ? Ci.nsIIDBCursor.PREV : Ci.nsIIDBCursor.NEXT;
+      let direction = reverse ? PREV : NEXT;
       let timeRequest = store.index("timestamp").openKeyCursor(timeKeyRange,
                                                                direction);
 
@@ -573,7 +578,7 @@ SmsDatabaseService.prototype = {
       gSmsRequestManager.notifyNoMessageInList(requestId);
       return;
     }
-    this.newTxn(Ci.nsIIDBTransaction.READ_ONLY, function (error, txn, store) {
+    this.newTxn(READ_ONLY, function (error, txn, store) {
       if (DEBUG) debug("Fetching message " + messageId);
       let request = store.get(messageId);
       let message;
