@@ -20,6 +20,7 @@ Browser context menu tests.
 
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -70,6 +71,16 @@ function invokeItemAction(generatedItemId)
   ok(item, "Got generated XUL menu item");
   item.doCommand();
   ok(!pagemenu.hasAttribute("hopeless"), "attribute got removed");
+}
+
+function selectText(element) {
+  // Clear any previous selections before selecting new element.
+  subwindow.getSelection().removeAllRanges();
+
+  var div = subwindow.document.createRange();
+  div.setStartBefore(element);
+  div.setEndAfter(element);
+  subwindow.getSelection().addRange(div);
 }
 
 function getVisibleMenuItems(aMenu, aData) {
@@ -667,6 +678,45 @@ function runTest(testNum) {
                           "context-viewinfo",     true
                          ].concat(inspectItems));
         closeContextMenu();
+        selectText(selecttext); // Select text prior to opening context menu.
+        openContextMenuFor(selecttext); // Invoke context menu for next test.
+        return;
+
+    case 22:
+        // Context menu for selected text
+        if (Services.appinfo.OS == "Darwin") {
+          // This test is only enabled on Mac due to bug 736399.
+          checkContextMenu(["context-copy",                        true,
+                            "context-selectall",                   true,
+                            "---",                                 null,
+                            "context-searchselect",                true,
+                            "context-viewpartialsource-selection", true
+                           ].concat(inspectItems));
+        }
+        closeContextMenu();
+        selectText(selecttextlink); // Select text prior to opening context menu.
+        openContextMenuFor(selecttextlink); // Invoke context menu for next test.
+        return;
+
+    case 23:
+        // Context menu for selected text which matches valid URL pattern
+        if (Services.appinfo.OS == "Darwin") {
+          // This test is only enabled on Mac due to bug 736399.
+          checkContextMenu(["context-openlinkincurrent",           true,
+                            "context-openlinkintab",               true,
+                            "context-openlink",                    true,
+                            "---",                                 null,
+                            "context-bookmarklink",                true,
+                            "context-savelink",                    true,
+                            "context-sendlink",                    true,
+                            "context-copy",                        true,
+                            "context-selectall",                   true,
+                            "---",                                 null,
+                            "context-searchselect",                true,
+                            "context-viewpartialsource-selection", true
+                           ].concat(inspectItems));
+        }
+        closeContextMenu();
 
         subwindow.close();
         SimpleTest.finish();
@@ -674,7 +724,6 @@ function runTest(testNum) {
 
     /*
      * Other things that would be nice to test:
-     *  - selected text
      *  - spelling / misspelled word (in text input?)
      *  - check state of disabled items
      *  - test execution of menu items (maybe as a separate test?)
@@ -734,6 +783,8 @@ function startTest() {
     contenteditable.focus(); // content editable needs to be focused to enable spellcheck
     inputspell = subwindow.document.getElementById("test-input-spellcheck");
     pagemenu = subwindow.document.getElementById("test-pagemenu");
+    selecttext = subwindow.document.getElementById("test-select-text");
+    selecttextlink = subwindow.document.getElementById("test-select-text-link");
 
     contextMenu.addEventListener("popupshown", function() { runTest(++testNum); }, false);
     runTest(1);
