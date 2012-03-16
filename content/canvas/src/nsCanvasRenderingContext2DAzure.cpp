@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -82,7 +82,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIXPConnect.h"
-#include "jsapi.h"
 #include "nsDisplayList.h"
 
 #include "nsTArray.h"
@@ -106,15 +105,21 @@
 #include "nsIMemoryReporter.h"
 #include "nsStyleUtil.h"
 #include "CanvasImageCache.h"
+#include "CheckedInt.h"
 
 #include <algorithm>
-#include "mozilla/dom/ContentParent.h"
-#include "mozilla/ipc/PDocumentRendererParent.h"
-#include "mozilla/dom/PBrowserParent.h"
-#include "mozilla/ipc/DocumentRendererParent.h"
 
+#include "jsapi.h"
+#include "jstypedarray.h"
+
+#include "mozilla/Assertions.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ImageData.h"
+#include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/ipc/DocumentRendererParent.h"
+#include "mozilla/ipc/PDocumentRendererParent.h"
 #include "mozilla/Preferences.h"
 
 #ifdef XP_WIN
@@ -443,6 +448,10 @@ public:
   nsresult BezierTo(const Point& aCP1, const Point& aCP2, const Point& aCP3);
 
 protected:
+  nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
+                             uint32_t aWidth, uint32_t aHeight,
+                             JSObject** aRetval);
+
   nsresult InitializeWithTarget(DrawTarget *surface, PRInt32 width, PRInt32 height);
 
   /**
@@ -3992,15 +4001,10 @@ nsCanvasRenderingContext2DAzure::EnsureUnpremultiplyTable() {
 
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::GetImageData()
-{
-  /* Should never be called -- GetImageData_explicit is the QS entry point */
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2DAzure::GetImageData_explicit(PRInt32 x, PRInt32 y, PRUint32 w, PRUint32 h,
-                                                       PRUint8 *aData, PRUint32 aDataLen)
+nsCanvasRenderingContext2DAzure::GetImageData(double aSx, double aSy,
+                                              double aSw, double aSh,
+                                              JSContext* aCx,
+                                              nsIDOMImageData** aRetval)
 {
   if (!mValid)
     return NS_ERROR_FAILURE;
@@ -4020,33 +4024,97 @@ nsCanvasRenderingContext2DAzure::GetImageData_explicit(PRInt32 x, PRInt32 y, PRU
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (w == 0 || h == 0 || aDataLen != w * h * 4)
-    return NS_ERROR_DOM_SYNTAX_ERR;
+  if (!NS_finite(aSx) || !NS_finite(aSy) ||
+      !NS_finite(aSw) || !NS_finite(aSh)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
-  CheckedInt32 rightMost = CheckedInt32(x) + w;
-  CheckedInt32 bottomMost = CheckedInt32(y) + h;
+  if (!aSw || !aSh) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
 
-  if (!rightMost.valid() || !bottomMost.valid())
+  int32_t x = JS_DoubleToInt32(aSx);
+  int32_t y = JS_DoubleToInt32(aSy);
+  int32_t wi = JS_DoubleToInt32(aSw);
+  int32_t hi = JS_DoubleToInt32(aSh);
+
+  // Handle negative width and height by flipping the rectangle over in the
+  // relevant direction.
+  uint32_t w, h;
+  if (aSw < 0) {
+    w = -wi;
+    x -= w;
+  } else {
+    w = wi;
+  }
+  if (aSh < 0) {
+    h = -hi;
+    y -= h;
+  } else {
+    h = hi;
+  }
+
+  if (w == 0) {
+    w = 1;
+  }
+  if (h == 0) {
+    h = 1;
+  }
+
+  JSObject* array;
+  nsresult rv = GetImageDataArray(aCx, x, y, w, h, &array);
+  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(array);
+
+  nsRefPtr<ImageData> imageData = new ImageData(w, h, *array);
+  imageData.forget(aRetval);
+  return NS_OK;
+}
+
+nsresult
+nsCanvasRenderingContext2DAzure::GetImageDataArray(JSContext* aCx,
+                                                   int32_t aX,
+                                                   int32_t aY,
+                                                   uint32_t aWidth,
+                                                   uint32_t aHeight,
+                                                   JSObject** aRetval)
+{
+  MOZ_ASSERT(aWidth && aHeight);
+
+  CheckedInt<uint32_t> len = CheckedInt<uint32_t>(aWidth) * aHeight * 4;
+  if (!len.valid()) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  CheckedInt<int32_t> rightMost = CheckedInt<int32_t>(aX) + aWidth;
+  CheckedInt<int32_t> bottomMost = CheckedInt<int32_t>(aY) + aHeight;
+
+  if (!rightMost.valid() || !bottomMost.valid()) {
     return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+
+  JSObject* darray =
+    js_CreateTypedArray(aCx, js::TypedArray::TYPE_UINT8_CLAMPED, len.value());
+  if (!darray) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (mZero) {
+    *aRetval = darray;
     return NS_OK;
   }
 
-  IntRect srcRect(0, 0, mWidth, mHeight);
-  IntRect destRect(x, y, w, h);
+  uint8_t* data = static_cast<uint8_t*>(JS_GetTypedArrayData(darray));
 
-  if (!srcRect.Contains(destRect)) {
-    // Some data is outside the canvas surface, clear the destination.
-    memset(aData, 0, aDataLen);
-  }
+  IntRect srcRect(0, 0, mWidth, mHeight);
+  IntRect destRect(aX, aY, aWidth, aHeight);
 
   IntRect srcReadRect = srcRect.Intersect(destRect);
   IntRect dstWriteRect = srcReadRect;
-  dstWriteRect.MoveBy(-x, -y);
+  dstWriteRect.MoveBy(-aX, -aY);
 
-  PRUint8 *src = aData;
-  PRUint32 srcStride = w * 4;
+  uint8_t* src = data;
+  uint32_t srcStride = aWidth * 4;
   
   RefPtr<DataSourceSurface> readback;
   if (!srcReadRect.IsEmpty()) {
@@ -4063,10 +4131,10 @@ nsCanvasRenderingContext2DAzure::GetImageData_explicit(PRInt32 x, PRInt32 y, PRU
 
   // NOTE! dst is the same as src, and this relies on reading
   // from src and advancing that ptr before writing to dst.
-  PRUint8 *dst = aData + dstWriteRect.y * (w * 4) + dstWriteRect.x * 4;
+  uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
 
-  for (int j = 0; j < dstWriteRect.height; j++) {
-    for (int i = 0; i < dstWriteRect.width; i++) {
+  for (int32_t j = 0; j < dstWriteRect.height; ++j) {
+    for (int32_t i = 0; i < dstWriteRect.width; ++i) {
       // XXX Is there some useful swizzle MMX we can use here?
 #ifdef IS_LITTLE_ENDIAN
       PRUint8 b = *src++;
@@ -4086,8 +4154,10 @@ nsCanvasRenderingContext2DAzure::GetImageData_explicit(PRInt32 x, PRInt32 y, PRU
       *dst++ = a;
     }
     src += srcStride - (dstWriteRect.width * 4);
-    dst += (w * 4) - (dstWriteRect.width * 4);
+    dst += (aWidth * 4) - (dstWriteRect.width * 4);
   }
+
+  *aRetval = darray;
   return NS_OK;
 }
 

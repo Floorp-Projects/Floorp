@@ -161,9 +161,6 @@ static bool
 CreateImageData(JSContext* cx,
                 uint32_t w,
                 uint32_t h,
-                nsIDOMCanvasRenderingContext2D* self,
-                int32_t x,
-                int32_t y,
                 jsval* vp)
 {
     using mozilla::CheckedInt;
@@ -184,19 +181,6 @@ CreateImageData(JSContext* cx,
     JS::AutoObjectRooter rd(cx, darray);
     if (!darray) {
         return false;
-    }
-
-    if (self) {
-        JSObject *tdest = js::TypedArray::getTypedArray(darray);
-
-        // make the call
-        nsresult rv =
-            self->GetImageData_explicit(x, y, w, h,
-                                        static_cast<PRUint8*>(JS_GetTypedArrayData(tdest)),
-                                        JS_GetTypedArrayByteLength(tdest));
-        if (NS_FAILED(rv)) {
-            return xpc_qsThrowMethodFailed(cx, rv, vp);
-        }
     }
 
     // Do JS_NewObject after CreateTypedArray, so that gc will get
@@ -239,7 +223,7 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, unsigned argc, jsv
             return false;
         }
 
-        return CreateImageData(cx, data_width, data_height, NULL, 0, 0, vp);
+        return CreateImageData(cx, data_width, data_height, vp);
     }
 
     double width, height;
@@ -258,64 +242,7 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, unsigned argc, jsv
 
     uint32_t w = NS_ABS(wi);
     uint32_t h = NS_ABS(hi);
-    return CreateImageData(cx, w, h, NULL, 0, 0, vp);
-}
-
-static JSBool
-nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, unsigned argc, jsval *vp)
-{
-    XPC_QS_ASSERT_CONTEXT_OK(cx);
-
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj)
-        return JS_FALSE;
-
-    nsIDOMCanvasRenderingContext2D *self;
-    xpc_qsSelfRef selfref;
-    JS::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
-        return JS_FALSE;
-
-    if (argc < 4)
-        return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
-
-    jsval *argv = JS_ARGV(cx, vp);
-
-    double xd, yd, width, height;
-    if (!JS_ValueToNumber(cx, argv[0], &xd) ||
-        !JS_ValueToNumber(cx, argv[1], &yd) ||
-        !JS_ValueToNumber(cx, argv[2], &width) ||
-        !JS_ValueToNumber(cx, argv[3], &height))
-        return false;
-
-    if (!NS_finite(xd) || !NS_finite(yd) ||
-        !NS_finite(width) || !NS_finite(height))
-        return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-    if (!width || !height)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    int32_t x = JS_DoubleToInt32(xd);
-    int32_t y = JS_DoubleToInt32(yd);
-    int32_t wi = JS_DoubleToInt32(width);
-    int32_t hi = JS_DoubleToInt32(height);
-
-    // Handle negative width and height by flipping the rectangle over in the
-    // relevant direction.
-    uint32_t w, h;
-    if (width < 0) {
-        w = -wi;
-        x -= w;
-    } else {
-        w = wi;
-    }
-    if (height < 0) {
-        h = -hi;
-        y -= h;
-    } else {
-        h = hi;
-    }
-    return CreateImageData(cx, w, h, self, x, y, vp);
+    return CreateImageData(cx, w, h, vp);
 }
 
 static JSBool
