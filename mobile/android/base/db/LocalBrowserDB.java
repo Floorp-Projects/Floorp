@@ -135,11 +135,14 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             selectionArgs = DBUtils.appendSelectionArgs(selectionArgs, new String[] { urlFilter.toString() });
         }
 
-        // ORDER BY is number of visits times a multiplier from 1 - 120 of how recently the site
-        // was accessed with a site accessed today getting 120 and a site accessed 119 or more
-        // days ago getting 1
-        final String sortOrder = History.VISITS + " * MAX(1, (" +
-                History.DATE_LAST_VISITED + " - " + System.currentTimeMillis() + ") / 86400000 + 120) DESC";
+        // Our version of frecency is computed by scaling the number of visits by a multiplier
+        // that approximates Gaussian decay, based on how long ago the entry was last visited.
+        // Since we're limited by the math we can do with sqlite, we're calculating this
+        // approximation using the Cauchy distribution: multiplier = 15^2 / (age^2 + 15^2).
+        // Using 15 as our scale parameter, we get a constant 15^2 = 225. Following this math,
+        // frecencyScore = numVisits * max(1, 100 * 225 / (age*age + 225)). (See bug 704977)
+        final String age = "(" + History.DATE_LAST_VISITED + " - " + System.currentTimeMillis() + ") / 86400000";
+        final String sortOrder = History.VISITS + " * MAX(1, 100 * 225 / (" + age + "*" + age + " + 225)) DESC";
 
         Cursor c = cr.query(historyUriWithLimit(limit),
                             projection,
