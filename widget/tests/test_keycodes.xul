@@ -491,44 +491,44 @@ function runAccessKeyTests()
     testKey({layout:"US", keyCode:0, chars:"a", unmodifiedChars:"a"},
             "a", false);
     testKey({layout:"US", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
-            "a", true);
+            "a", false);
     testKey({layout:"US", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"a"},
-            "A", true);
+            "A", false);
 
     // Shift-ctrl does not activate accesskeys
     testKey({layout:"US", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
             "a", false);
     testKey({layout:"US", keyCode:0, ctrl:1, shift:1, chars:"\u0001", unmodifiedChars:"A"},
             "A", false);
-    // Alt-ctrl does not activate accesskeys
+    // Alt-ctrl activate accesskeys
     testKey({layout:"US", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"a"},
-            "a", false);
+            "a", true);
     testKey({layout:"US", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"a"},
-            "A", false);
+            "A", true);
             
     // Greek layout can activate a Latin accesskey
-    testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+    testKey({layout:"Greek", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
             "a", true);
-    testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+    testKey({layout:"Greek", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
             "A", true);
     // ... and a Greek accesskey!
-    testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+    testKey({layout:"Greek", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
             "\u03b1", true);
-    testKey({layout:"Greek", keyCode:0, ctrl:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
+    testKey({layout:"Greek", keyCode:0, ctrl:1, alt:1, chars:"\u0001", unmodifiedChars:"\u03b1"},
             "\u0391", true);
 
     // bug 359638
-    testKey({layout:"US", keyCode:47, ctrl:1, chars:".", unmodifiedChars:"."},
+    testKey({layout:"US", keyCode:47, ctrl:1, alt:1, chars:".", unmodifiedChars:"."},
             ".", true);
 
     // German (KCHR/KeyTranslate case)
-    testKey({layout:"German", keyCode:0, ctrl:1, chars:"a", unmodifiedChars:"a"},
+    testKey({layout:"German", keyCode:0, ctrl:1, alt:1, chars:"a", unmodifiedChars:"a"},
             "a", true);
-    testKey({layout:"German", keyCode:0, ctrl:1, chars:"a", unmodifiedChars:"a"},
+    testKey({layout:"German", keyCode:0, ctrl:1, alt:1, chars:"a", unmodifiedChars:"a"},
             "A", true);
-    testKey({layout:"German", keyCode:33, ctrl:1, chars:"\u00fc", unmodifiedChars:"\u00fc"},
+    testKey({layout:"German", keyCode:33, ctrl:1, alt:1, chars:"\u00fc", unmodifiedChars:"\u00fc"},
             "\u00fc", true);
-    testKey({layout:"German", keyCode:33, ctrl:1, chars:"\u00fc", unmodifiedChars:"\u00fc"},
+    testKey({layout:"German", keyCode:33, ctrl:1, alt:1, chars:"\u00fc", unmodifiedChars:"\u00fc"},
             "\u00dc", true);
   }
   else if (IS_WIN) {
