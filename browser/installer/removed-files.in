@@ -935,8 +935,8 @@ xpicleanup@BIN_SUFFIX@
   components/nsTelephonyWorker.js
   components/Telephony.manifest
   components/Telephony.js
-  components/nsWifiWorker.js
-  components/nsWifiWorker.manifest
+  components/WifiWorker.js
+  components/WifiWorker.manifest
   components/DOMWifiManager.js
   components/DOMWifiManager.manifest
 #endif
