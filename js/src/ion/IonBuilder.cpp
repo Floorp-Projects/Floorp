@@ -2321,6 +2321,7 @@ IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder, InliningDat
     JS_ASSERT(*pc == JSOP_CALL);
     jsbytecode *postCall = GetNextPc(pc);
     MBasicBlock *bottom = newBlock(NULL, postCall);
+    bottom->setCallerResumePoint(callerResumePoint_);
 
     // Link graph exits to |bottom| via MGotos, replacing MReturns.
     Vector<MDefinition *, 8, IonAllocPolicy> retvalDefns;

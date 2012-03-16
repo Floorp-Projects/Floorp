@@ -1421,7 +1421,10 @@ SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint
     }
     fprintf(IonSpewFile, "\n");
 
-    fprintf(IonSpewFile, "    pc: %p\n", resumePoint->pc());
+    fprintf(IonSpewFile, "    pc: %p (script: %p, offset: %d)\n",
+            resumePoint->pc(),
+            resumePoint->block()->info().script(),
+            resumePoint->pc() - resumePoint->block()->info().script()->code);
 
     for (size_t i = 0; i < resumePoint->numOperands(); i++) {
         MDefinition *in = resumePoint->getOperand(i);
