@@ -731,9 +731,12 @@ nsImageMap::FreeAreas()
   PRUint32 i, n = mAreas.Length();
   for (i = 0; i < n; i++) {
     Area* area = mAreas.ElementAt(i);
-    NS_ASSERTION(area->mArea->GetPrimaryFrame() == mImageFrame,
-                 "Unexpected primary frame");
-    area->mArea->SetPrimaryFrame(nsnull);
+    if (area->mArea->IsInDoc()) {
+      NS_ASSERTION(area->mArea->GetPrimaryFrame() == mImageFrame,
+                   "Unexpected primary frame");
+
+      area->mArea->SetPrimaryFrame(nsnull);
+    }
 
     area->mArea->RemoveSystemEventListener(NS_LITERAL_STRING("focus"), this,
                                            false);

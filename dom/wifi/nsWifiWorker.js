@@ -187,7 +187,7 @@ var WifiManager = (function() {
   }
 
   function removeNetworkCommand(netId, callback) {
-    doBooleanCommand("REMOVE_NETWORK " + netId, callback);
+    doBooleanCommand("REMOVE_NETWORK " + netId, "OK", callback);
   }
 
   function enableNetworkCommand(netId, disableOthers, callback) {
@@ -439,6 +439,7 @@ var WifiManager = (function() {
     controlMessage({ cmd: "dhcp_do_request", ifname: ifname }, function(data) {
       if (!data.status)
         dhcpInfo = data;
+      notify("dhcpconnected", { info: dhcpInfo });
       callback(data.status ? null : data);
     });
   }
@@ -447,6 +448,7 @@ var WifiManager = (function() {
     controlMessage({ cmd: "dhcp_stop", ifname: ifname }, function(data) {
       if (!data.status)
         dhcpInfo = null;
+      notify("dhcplost");
       callback(!data.status);
     });
   }
@@ -455,6 +457,7 @@ var WifiManager = (function() {
     controlMessage({ cmd: "dhcp_release_lease", ifname: ifname }, function(data) {
       if (!data.status)
         dhcpInfo = null;
+      notify("dhcplost");
       callback(!data.status);
     });
   }
@@ -483,7 +486,10 @@ var WifiManager = (function() {
 
   var manager = {};
 
+  var suppressEvents = false;
   function notify(eventName, eventObject) {
+    if (suppressEvents)
+      return;
     var handler = manager["on" + eventName];
     if (handler) {
       if (!eventObject)
@@ -510,15 +516,46 @@ var WifiManager = (function() {
       return;
     }
 
+    var ssid;
+    var bssid;
+    var state;
+    var ip_address;
+    var id;
+
     var lines = status.split("\n");
     for (let i = 0; i < lines.length; ++i) {
       let [key, value] = lines[i].split("=");
-      if (key === "wpa_state") {
-        notifyStateChange({ state: value });
-        if (value === "COMPLETED")
-          onconnected(reconnected);
+      switch (key) {
+        case "wpa_state":
+          state = value;
+          break;
+        case "ssid":
+          ssid = value;
+          break;
+        case "bssid":
+          bssid = value;
+          break;
+        case "ip_address":
+          ip_address = value;
+          break;
+        case "id":
+          id = value;
+          break;
       }
     }
+
+    if (bssid && ssid) {
+      manager.connectionInfo.bssid = bssid;
+      manager.connectionInfo.ssid = ssid;
+      manager.connectionInfo.id = id;
+    }
+
+    if (ip_address)
+      dhcpInfo = { ip_address: ip_address };
+
+    notifyStateChange({ state: state, fromStatus: true });
+    if (state === "COMPLETED")
+      onconnected(reconnected);
   }
 
   // try to connect to the supplicant
@@ -595,12 +632,14 @@ var WifiManager = (function() {
     // Check to see if there was already a DHCP process:
     getProperty("init.svc.dhcpcd_" + manager.ifname, "stopped", function(value) {
       if (value === "running") {
+        notify("dhcpconnected");
         return;
       }
 
       // Some phones use a different property name for the dhcpcd daemon.
       getProperty("init.svc.dhcpcd", "stopped", function(value) {
         if (value === "running") {
+          notify("dhcpconnected");
           return;
         }
 
@@ -618,10 +657,18 @@ var WifiManager = (function() {
   function handleEvent(event) {
     debug("Event coming in: " + event);
     if (event.indexOf("CTRL-EVENT-") !== 0) {
-      debug("Got weird event, possibly not doing anything.");
       if (event.indexOf("WPA:") == 0 &&
           event.indexOf("pre-shared key may be incorrect") != -1) {
         notify("passwordmaybeincorrect");
+      }
+
+      // This is ugly, but we need to grab the SSID here. While we're at it,
+      // we grab the BSSID as well.
+      var match = /Trying to associate with ([^ ]+) \(SSID='([^']+)' freq=\d+ MHz\)/.exec(event);
+      if (match) {
+        debug("Matched: " + match[1] + " and " + match[2]);
+        manager.connectionInfo.bssid = match[1];
+        manager.connectionInfo.ssid = match[2];
       }
       return true;
     }
@@ -640,6 +687,11 @@ var WifiManager = (function() {
       if (!("state" in fields))
         return true;
       fields.state = supplicantStatesMap[fields.state];
+
+      // The BSSID field is only valid in the ASSOCIATING and ASSOCIATED
+      // states.
+      if (fields.state === "ASSOCIATING" || fields.state == "ASSOCIATED")
+        manager.connectionInfo.bssid = fields.BSSID;
       notifyStateChange(fields);
       return true;
     }
@@ -666,6 +718,8 @@ var WifiManager = (function() {
     }
     if (eventData.indexOf("CTRL-EVENT-DISCONNECTED") === 0) {
       notifyStateChange({ state: "DISCONNECTED" });
+      manager.connectionInfo.bssid = null;
+      manager.connectionInfo.ssid = null;
       return true;
     }
     if (eventData.indexOf("CTRL-EVENT-CONNECTED") === 0) {
@@ -730,13 +784,11 @@ var WifiManager = (function() {
     // First, check to see if there's a wpa_supplicant running that we can
     // connect to.
     getProperty(SUPP_PROP, "stopped", function (value) {
-      debug(SUPP_PROP + " was " + value);
       if (value !== "running") {
         stopDhcp(manager.ifname, function() { callback(false) });
         return;
       }
 
-      debug(SUPP_PROP + " was running, trying to connect");
       // It's running, try to reconnect to it.
       connectToSupplicant(function (retval) {
         if (retval === 0) {
@@ -751,25 +803,30 @@ var WifiManager = (function() {
         }
 
         debug("Didn't connect, trying other method.");
+        suppressEvents = true;
         stopDhcp(manager.ifname, function() {
           // Ignore any errors.
-          killSupplicant(function() { callback(false); });
+          killSupplicant(function() {
+            suppressEvents = false;
+            callback(false);
+          });
         });
       });
     });
   }
 
   // Initial state
-  var airplaneMode = false;
   manager.state = "UNINITIALIZED";
+  manager.connectionInfo = { ssid: null, bssid: null, id: -1 };
+  manager.enabled = true;
 
   // Public interface of the wifi service
   manager.setWifiEnabled = function(enable, callback) {
-    var targetState = enable ? "ENABLED" : "DISABLED";
-    if (enable == targetState)
-      return true;
-    if (enable && airplaneMode)
-      return false;
+    if ((enable && manager.state !== "UNINITIALIZED") ||
+        (!enable && manager.state === "UNINITIALIZED")) {
+      return;
+    }
+
     if (enable) {
       // Kill any existing connections if necessary.
       getProperty("wifi.interface", "tiwlan0", function (ifname) {
@@ -804,10 +861,12 @@ var WifiManager = (function() {
       });
     } else {
       stopSupplicant(function (status) {
-        if (ok < 0) {
+        if (status < 0) {
           callback(-1);
           return;
         }
+
+        manager.state = "UNINITIALIZED";
         disableInterface(manager.ifname, function (ok) {
           unloadDriver(callback);
         });
@@ -819,14 +878,17 @@ var WifiManager = (function() {
   manager.reconnect = reconnectCommand;
   manager.reassociate = reassociateCommand;
 
-  var networkConfigurationFields = ["ssid", "bssid", "psk", "wep_key0", "wep_key1", "wep_key2", "wep_key3",
-                                    "wep_tx_keyidx", "priority", "key_mgmt", "scan_ssid", "disabled"];
+  var networkConfigurationFields = [
+    "ssid", "bssid", "psk", "wep_key0", "wep_key1", "wep_key2", "wep_key3",
+    "wep_tx_keyidx", "priority", "key_mgmt", "scan_ssid", "disabled",
+    "identity", "password", "auth_alg"
+  ];
 
   manager.getNetworkConfiguration = function(config, callback) {
     var netId = config.netId;
     var done = 0;
     for (var n = 0; n < networkConfigurationFields.length; ++n) {
-      var fieldName = networkConfigurationFields[n];
+      let fieldName = networkConfigurationFields[n];
       getNetworkVariableCommand(netId, fieldName, function(value) {
         config[fieldName] = value;
         if (++done == networkConfigurationFields.length)
@@ -839,7 +901,7 @@ var WifiManager = (function() {
     var done = 0;
     var errors = 0;
     for (var n = 0; n < networkConfigurationFields.length; ++n) {
-      var fieldName = networkConfigurationFields[n];
+      let fieldName = networkConfigurationFields[n];
       if (!(fieldName in config)) {
         ++done;
       } else {
@@ -857,10 +919,17 @@ var WifiManager = (function() {
   }
   manager.getConfiguredNetworks = function(callback) {
     listNetworksCommand(function (reply) {
-      var networks = {};
+      var networks = Object.create(null);
+      var lines = reply.split("\n");
+      if (lines.length === 1) {
+        // We need to make sure we call the callback even if there are no
+        // configured networks.
+        callback(networks);
+        return;
+      }
+
       var done = 0;
       var errors = 0;
-      var lines = reply.split("\n");
       for (var n = 1; n < lines.length; ++n) {
         var result = lines[n].split("\t");
         var netId = result[0];
@@ -896,7 +965,14 @@ var WifiManager = (function() {
   manager.addNetwork = function(config, callback) {
     addNetworkCommand(function (netId) {
       config.netId = netId;
-      manager.setNetworkConfiguration(config, callback);
+      manager.setNetworkConfiguration(config, function (ok) {
+        if (!ok) {
+          removeNetworkCommand(netId, function() { callback(false); });
+          return;
+        }
+
+        callback(ok);
+      });
     });
   }
   manager.updateNetwork = function(config, callback) {
@@ -913,6 +989,9 @@ var WifiManager = (function() {
                  ((n >> 24) & 0xFF);
   }
 
+  manager.saveConfig = function(callback) {
+    saveConfigCommand(callback);
+  }
   manager.enableNetwork = function(netId, disableOthers, callback) {
     enableNetworkCommand(netId, disableOthers, callback);
   }
@@ -928,68 +1007,252 @@ var WifiManager = (function() {
   return manager;
 })();
 
-function WifiNetwork(ssid, bssid, flags, signal) {
-  this.ssid = ssid;
-  this.bssid = bssid;
-  this.flags = flags;
-  this.signal = Number(signal);
+function getKeyManagement(flags) {
+  var types = [];
+  if (!flags)
+    return types;
+
+  if (/\[WPA2?-PSK/.test(flags))
+    types.push("WPA-PSK");
+  if (/\[WPA2?-EAP/.test(flags))
+    types.push("WPA-EAP");
+  if (/\[WEP/.test(flags))
+    types.push("WEP");
+  return types;
 }
 
-WifiNetwork.prototype.QueryInterface = XPCOMUtils.generateQI([Ci.nsIWifiNetwork]);
+// These constants shamelessly ripped from WifiManager.java
+// strength is the value returned by scan_results. It is nominally in dB. We
+// transform it into a percentage for clients looking to simply show a
+// relative indication of the strength of a network.
+const MIN_RSSI = -100;
+const MAX_RSSI = -55;
+
+function calculateSignal(strength) {
+  // Some wifi drivers represent their signal strengths as 8-bit integers, so
+  // in order to avoid negative numbers, they add 256 to the actual values.
+  // While we don't *know* that this is the case here, we make an educated
+  // guess.
+  if (strength > 0)
+    strength -= 256;
+
+  if (strength <= MIN_RSSI)
+    return 0;
+  if (strength >= MAX_RSSI)
+    return 100;
+  return Math.floor(((strength - MIN_RSSI) / (MAX_RSSI - MIN_RSSI)) * 100);
+}
+
+function ScanResult(ssid, bssid, flags, signal) {
+  this.ssid = ssid;
+  this.bssid = bssid;
+  this.capabilities = getKeyManagement(flags);
+  this.signal = calculateSignal(Number(signal));
+}
+
+function quote(s) {
+  return '"' + s + '"';
+}
+
+function dequote(s) {
+  if (s[0] != '"' || s[s.length - 1] != '"')
+    throw "Invalid argument, not a quoted string: " + s;
+  return s.substr(1, s.length - 2);
+}
+
+function isWepHexKey(s) {
+  if (s.length != 10 && s.length != 26 && s.length != 58)
+    return false;
+  return !/[^a-fA-F0-9]/.test(s);
+}
+
+// TODO Make the difference between a DOM-based network object and our
+// networks objects much clearer.
+let netToDOM;
+let netFromDOM;
 
 function nsWifiWorker() {
+  var self = this;
+
+  this._mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
+  const messages = ["WifiManager:setEnabled", "WifiManager:getNetworks",
+                    "WifiManager:associate", "WifiManager:getState"];
+
+  messages.forEach((function(msgName) {
+    this._mm.addMessageListener(msgName, this);
+  }).bind(this));
+
+  this.wantScanResults = [];
+
+  this._needToEnableNetworks = false;
+  this._highestPriority = -1;
+
+  // networks is a map from SSID -> a scan result.
+  this.networks = Object.create(null);
+
+  // configuredNetworks is a map from SSID -> our view of a network. It only
+  // lists networks known to the wpa_supplicant. The SSID field (and other
+  // fields) are quoted for ease of use with WifiManager commands.
+  // Note that we don't have to worry about escaping embedded quotes since in
+  // all cases, the supplicant will take the last quotation that we pass it as
+  // the end of the string.
+  this.configuredNetworks = Object.create(null);
+
+  this.currentNetwork = null;
+
+  // Given a connection status network, takes a network from
+  // self.configuredNetworks and prepares it for the DOM.
+  netToDOM = function(net) {
+    var pub = { ssid: dequote(net.ssid) };
+    if (net.netId)
+      pub.known = true;
+    return pub;
+  };
+
+  netFromDOM = function(net) {
+    // Takes a network from the DOM and makes it suitable for insertion into
+    // self.configuredNetworks (that is calling addNetwork will do the right
+    // thing).
+    // NB: Modifies net in place: safe since we don't share objects between
+    // the dom and the chrome code.
+
+    // Things that are useful for the UI but not to us.
+    delete net.bssid;
+    delete net.signal;
+
+    net.ssid = quote(net.ssid);
+
+    let wep = false;
+    if ("keyManagement" in net) {
+      if (net.keyManagement === "WEP") {
+        wep = true;
+        net.keyManagement = "NONE";
+      }
+
+      net.key_mgmt = net.keyManagement; // WPA2-PSK, WPA-PSK, etc.
+      delete net.keyManagement;
+    } else {
+      net.key_mgmt = "NONE";
+    }
+
+    function checkAssign(name, checkStar) {
+      if (name in net) {
+        let value = net[name];
+        if (checkStar && value === '*')
+          delete net[name];
+        else
+          net[name] = quote(value);
+      }
+    }
+
+    checkAssign("psk", true);
+    checkAssign("identity", false);
+    checkAssign("password", true);
+    if (wep && net.wep && net.wep != '*') {
+      net.wep_key0 = isWepHexKey(net.wep) ? net.wep : quote(net.wep);
+      net.auth_alg = "OPEN SHARED";
+    }
+
+    return net;
+  };
+
   WifiManager.onsupplicantconnection = function() {
     debug("Connected to supplicant");
     WifiManager.getMacAddress(function (mac) {
       debug("Got mac: " + mac);
     });
-    connectToMozilla();
+
+    WifiManager.getConfiguredNetworks(function(networks) {
+      if (!networks) {
+        debug("Unable to get configured networks");
+        return;
+      }
+
+      // Convert between netId-based and ssid-based indexing.
+      for (let net in networks) {
+        let network = networks[net];
+        if (!network.ssid) {
+          delete networks[net]; // TODO support these?
+          continue;
+        }
+
+        if (network.priority && network.priority > self._highestPriority)
+          self._highestPriority = network.priority;
+        networks[dequote(network.ssid)] = network;
+        delete networks[net];
+      }
+
+      self.configuredNetworks = networks;
+
+      // Prime this.networks.
+      self.waitForScan(function firstScan() {});
+    });
   }
   WifiManager.onsupplicantlost = function() {
-    debug("Couldn't connect to supplicant");
+    debug("Supplicant died!");
   }
 
-  var self = this;
-
-  this.networks = Object.create(null);
   WifiManager.onstatechange = function() {
     debug("State change: " + this.prevState + " -> " + this.state);
-  }
 
-  function connectToMozilla() {
-    // We're not trying to connect so try to find an open Mozilla network.
-    // TODO Don't do this for pre-existing networks.
-    // TODO Remove me in favor of UI and a way to select a network.
+    if (this.state === "DORMANT") {
+      // The dormant state is a bad state to be in since we won't
+      // automatically connect. Try to knock us out of it. We only
+      // hit this state when we've failed to run DHCP, so trying
+      // again isn't the worst thing we can do. Eventually, we'll
+      // need to detect if we're looping in this state and bail out.
+      WifiManager.reconnect(function(){});
+    } else if (this.state === "ASSOCIATING") {
+      // id has not yet been filled in, so we can only report the ssid and
+      // bssid.
+      self.currentNetwork =
+        { bssid: WifiManager.connectionInfo.bssid,
+          ssid: quote(WifiManager.connectionInfo.ssid) };
+    } else if (this.state === "ASSOCIATED") {
+      self.currentNetwork.netId = this.id;
+      WifiManager.getNetworkConfiguration(self.currentNetwork, function (){});
+    } else if (this.state === "COMPLETED") {
+      // Now that we've successfully completed the connection, re-enable the
+      // rest of our networks.
+      // XXX Need to do this eventually if the user entered an incorrect
+      // password. For now, we require user interaction to break the loop and
+      // select a better network!
+      if (self._needToEnableNetworks) {
+        self._enableAllNetworks();
+        self._needToEnableNetworks = false;
+      }
 
-    debug("Haven't connected to a network, trying a default (for now)");
-    var configs = [
-      { "ssid": '"mozilla demo"', "key_mgmt": "NONE", "scan_ssid": 1, "disabled": 0 },
-      { "ssid": '"Mozilla"', "key_mgmt": "NONE", "disabled": 0 },
-      { "ssid": '"Mozilla Guest"', "key_mgmt": "NONE", "scan_ssid": 1, "disabled": 0 },
-    ];
+      // We get the ASSOCIATED event when we've associated but not connected, so
+      // wait until the handshake is complete.
+      if (this.fromStatus) {
+        // In this case, we connected to an already-connected wpa_supplicant,
+        // because of that we need to gather information about the current
+        // network here.
+        self.currentNetwork = { ssid: quote(WifiManager.connectionInfo.ssid),
+                                known: true }
+        WifiManager.getNetworkConfiguration(self.currentNetwork, function(){});
+      }
 
-    var i = 0;
-    function addThem() {
-      WifiManager.addNetwork(configs[i++], function(ok) {
-        if (!ok) {
-          debug("Unable to add the network!");
-          return;
-        }
-
-        if (i < configs.length) {
-          addThem();
-          return;
-        }
-
-        // Some drivers might not automatically start scanning. In that case,
-        // we need to give them a hint.
-        WifiManager.scan(false, function(){});
-      });
+      self._fireEvent("onassociate", netToDOM(self.currentNetwork));
+    } else if (this.state === "DISCONNECTED") {
+      self._fireEvent("ondisconnect");
+      self.currentNetwork = null;
     }
-    addThem();
-  }
+  };
+
+  WifiManager.ondhcpconnected = function() {
+    if (this.info)
+      self._fireEvent("onconnect", netToDOM(self.currentNetwork));
+    else
+      WifiManager.disconnect(function(){});
+  };
 
   WifiManager.onscanresultsavailable = function() {
+    if (self.wantScanResults.length === 0) {
+      debug("Scan results available, but we don't need them");
+      return;
+    }
+
     debug("Scan results are available! Asking for them.");
     WifiManager.getScanResults(function(r) {
       // Now that we have scan results, there's no more need to continue
@@ -997,20 +1260,52 @@ function nsWifiWorker() {
       WifiManager.setScanMode("inactive", function() {});
       let lines = r.split("\n");
       // NB: Skip the header line.
+      self.networks = Object.create(null);
       for (let i = 1; i < lines.length; ++i) {
         // bssid / frequency / signal level / flags / ssid
         var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s+(.*)/.exec(lines[i]);
 
-        // TODO Choose bssid based on strength?
-        if (match && match[5])
-          self.networks[match[5]] = new WifiNetwork(match[5], match[1], match[4], match[3]);
-        else if (!match)
+        if (match && match[5]) {
+          let ssid = match[5];
+
+          // If this is the first time that we've seen this SSID in the scan
+          // results, add it to the list along with any other information.
+          // Also, we use the highest signal strength that we see.
+          let network = self.networks[ssid];
+          if (!network) {
+            network = self.networks[ssid] =
+              new ScanResult(ssid, match[1], match[4], match[3]);
+
+            if (ssid in self.configuredNetworks) {
+              let known = self.configuredNetworks[ssid];
+              network.known = true;
+
+              if ("identity" in known && known.identity)
+                network.identity = dequote(known.identity);
+
+              // Note: we don't hand out passwords here! The * marks that there
+              // is a password that we're hiding.
+              if (("psk" in known && known.psk) ||
+                  ("password" in known && known.password) ||
+                  ("wep_key0" in known && known.wep_key0)) {
+                network.password = "*";
+              }
+            }
+          }
+
+          if (network.bssid === WifiManager.connectionInfo.bssid)
+            network.connected = true;
+
+          let signal = calculateSignal(Number(match[3]));
+          if (signal > network.signal)
+            network.signal = signal;
+        } else if (!match) {
           debug("Match didn't find anything for: " + lines[i]);
+        }
       }
 
-      if (self.wantScanResults) {
-        self.wantScanResults();
-      }
+      self.wantScanResults.forEach(function(callback) { callback(self.networks) });
+      self.wantScanResults = [];
     });
   }
 
@@ -1037,20 +1332,122 @@ nsWifiWorker.prototype = {
 
   // Internal methods.
   waitForScan: function(callback) {
-    if (this.wantScanResults) {
-      var older = this.wantScanResults;
-      this.wantScanResults = function() { callback(); older(); };
-    } else {
-      this.wantScanResults = callback;
+    this.wantScanResults.push(callback);
+  },
+
+  // In order to select a specific network, we disable the rest of the
+  // networks known to us. However, in general, we want the supplicant to
+  // connect to which ever network it thinks is best, so when we select the
+  // proper network (or fail to), we need to re-enable the rest.
+  _enableAllNetworks: function() {
+    for each (let net in this.configuredNetworks) {
+      WifiManager.enableNetwork(net.netId, false, function(ok) {
+        net.disabled = ok ? 1 : 0;
+      });
     }
   },
 
   // nsIWifi
 
-  setWifiEnabled: function(enable) {
-    WifiManager.setWifiEnabled(enable, function (ok) {
-      debug(ok);
-    });
+  _fireEvent: function(message, data) {
+    this._mm.sendAsyncMessage("WifiManager:" + message, { network: data });
+  },
+
+  _sendMessage: function(message, success, data, rid, mid) {
+    this._mm.sendAsyncMessage(message + (success ? ":OK" : ":NO"),
+                              { data: data, rid: rid, mid: mid });
+  },
+
+  receiveMessage: function MessageManager_receiveMessage(aMessage) {
+    let msg = aMessage.json;
+    switch (aMessage.name) {
+      case "WifiManager:setEnabled":
+        this.setWifiEnabled(msg.data, msg.rid, msg.mid);
+        break;
+      case "WifiManager:getNetworks":
+        this.getNetworks(msg.rid, msg.mid);
+        break;
+      case "WifiManager:associate":
+        this.associate(msg.data, msg.rid, msg.mid);
+        break;
+      case "WifiManager:getState": {
+        let net = this.currentNetwork ? netToDOM(this.currentNetwork) : null;
+        return { network: net,
+                 enabled: WifiManager.state !== "UNINITIALIZED", };
+      }
+    }
+  },
+
+  getNetworks: function(rid, mid) {
+    this.waitForScan((function (networks) {
+      this._sendMessage("WifiManager:getNetworks:Return",
+                        networks !== null, networks, rid, mid);
+    }).bind(this));
+    WifiManager.scan(true, function() {});
+  },
+
+  setWifiEnabled: function(enable, rid, mid) {
+    WifiManager.setWifiEnabled(enable, (function (status) {
+      if (enable && status === 0)
+        WifiManager.start();
+      this._sendMessage("WifiManager:setEnabled:Return",
+                        (status === 0), enable, rid, mid);
+    }).bind(this));
+  },
+
+  associate: function(network, rid, mid) {
+    const message = "WifiManager:associate:Return";
+    let privnet = network;
+    let self = this;
+    function networkReady() {
+      // saveConfig now before we disable most of the other networks.
+      WifiManager.saveConfig(function() {
+        WifiManager.enableNetwork(privnet.netId, true, function (ok) {
+          if (ok)
+            self._needToEnableNetworks = true;
+          if (WifiManager.state === "DISCONNECTED" ||
+              WifiManager.state === "SCANNING") {
+            WifiManager.reconnect(function (ok) {
+              self._sendMessage(message, ok, ok, rid, mid);
+            });
+          } else {
+            self._sendMessage(message, ok, ok, rid, mid);
+          }
+        });
+      });
+    }
+
+    let ssid = privnet.ssid;
+    let configured;
+
+    if (ssid in this.configuredNetworks)
+      configured = this.configuredNetworks[ssid];
+
+    netFromDOM(privnet);
+
+    // XXX Do we have to worry about overflow/going too high here?
+    privnet.priority = ++this._highestPriority;
+    if (configured) {
+      privnet.netId = configured.netId;
+      WifiManager.updateNetwork(privnet, (function(ok) {
+        if (!ok) {
+          this._sendMessage(message, false, "Network is misconfigured", rid, mid);
+          return;
+        }
+
+        networkReady();
+      }).bind(this));
+    } else {
+      WifiManager.addNetwork(privnet, (function(ok) {
+        if (!ok) {
+          this._sendMessage(message, false, "Network is misconfigured", rid, mid);
+          return;
+        }
+
+        this.configuredNetworks[ssid] = privnet;
+        networkReady();
+      }).bind(this));
+    }
   },
 
   // This is a bit ugly, but works. In particular, this depends on the fact

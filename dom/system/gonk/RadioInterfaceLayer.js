@@ -82,7 +82,7 @@ function convertRILCallState(state) {
     case RIL.CALL_STATE_DIALING:
       return nsIRadioInterfaceLayer.CALL_STATE_DIALING;
     case RIL.CALL_STATE_ALERTING:
-      return nsIRadioInterfaceLayer.CALL_STATE_RINGING;
+      return nsIRadioInterfaceLayer.CALL_STATE_ALERTING;
     case RIL.CALL_STATE_INCOMING:
       return nsIRadioInterfaceLayer.CALL_STATE_INCOMING;
     case RIL.CALL_STATE_WAITING:
@@ -354,7 +354,7 @@ RadioInterfaceLayer.prototype = {
     debug("handleCallStateChange: " + JSON.stringify(call));
     call.state = convertRILCallState(call.state);
     if (call.state == nsIRadioInterfaceLayer.CALL_STATE_DIALING ||
-        call.state == nsIRadioInterfaceLayer.CALL_STATE_RINGING ||
+        call.state == nsIRadioInterfaceLayer.CALL_STATE_ALERTING ||
         call.state == nsIRadioInterfaceLayer.CALL_STATE_CONNECTED) {
       // This is now the active call.
       this._activeCall = call;
