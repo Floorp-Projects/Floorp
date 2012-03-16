@@ -981,8 +981,6 @@ customMethodCalls = {
     'nsIDOMWebGLRenderingContext_ReadPixels': CUSTOM_QS,
     'nsIDOMWebGLRenderingContext_TexImage2D': CUSTOM_QS,
     'nsIDOMWebGLRenderingContext_TexSubImage2D': CUSTOM_QS,
-    'nsIDOMWebGLRenderingContext_CompressedTexImage2D': CUSTOM_QS,
-    'nsIDOMWebGLRenderingContext_CompressedTexSubImage2D': CUSTOM_QS,
     'nsIDOMWebGLRenderingContext_Uniform1iv': CUSTOM_QS_TN,
     'nsIDOMWebGLRenderingContext_Uniform2iv': CUSTOM_QS_TN,
     'nsIDOMWebGLRenderingContext_Uniform3iv': CUSTOM_QS_TN,
