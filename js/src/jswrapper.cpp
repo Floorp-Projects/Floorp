@@ -230,8 +230,7 @@ bool
 Wrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
                Value *vp)
 {
-    // FIXME (bug 596351): Need deal with strict mode.
-    SET(wrappedObject(wrapper)->setGeneric(cx, id, vp, false));
+    SET(wrappedObject(wrapper)->setGeneric(cx, id, vp, strict));
 }
 
 bool
