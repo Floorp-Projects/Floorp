@@ -1595,10 +1595,10 @@ SprintDoubleValue(Sprinter *sp, jsval v, JSOp *opp)
             JS_ReportOutOfMemory(sp->context);
             return -1;
         }
-        JS_ASSERT(strcmp(s, js_Infinity_str) &&
+        JS_ASSERT(strcmp(s, "Infinity") &&
                   (*s != '-' ||
-                   strcmp(s + 1, js_Infinity_str)) &&
-                  strcmp(s, js_NaN_str));
+                   strcmp(s + 1, "Infinity")) &&
+                  strcmp(s, "NaN"));
         todo = Sprint(sp, s);
     }
     return todo;
