@@ -1002,7 +1002,6 @@ customMethodCalls = {
     'nsIDOMWebGLRenderingContext_VertexAttrib4fv': CUSTOM_QS,
     # Canvas 2D
     'nsIDOMCanvasRenderingContext2D_CreateImageData': CUSTOM_QS,
-    'nsIDOMCanvasRenderingContext2D_GetImageData': CUSTOM_QS,
     'nsIDOMCanvasRenderingContext2D_PutImageData': CUSTOM_QS,
     # Nasty hack to make the ordering of |arc| and |arcTo| correct.
     # |arc| is not traceable because it has an optional argument.
