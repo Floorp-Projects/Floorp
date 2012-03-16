@@ -409,8 +409,8 @@
 @BINPATH@/components/SmsDatabaseService.js
 @BINPATH@/components/nsWifiWorker.js
 @BINPATH@/components/nsWifiWorker.manifest
-@BINPATH@/components/nsDOMWifiManager.js
-@BINPATH@/components/nsDOMWifiManager.manifest
+@BINPATH@/components/DOMWifiManager.js
+@BINPATH@/components/DOMWifiManager.manifest
 #endif
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts.dylib
