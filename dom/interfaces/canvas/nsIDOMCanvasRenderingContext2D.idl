@@ -62,7 +62,15 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(274213a8-df51-4b52-bfad-d306a1d5f642)]
+[scriptable, builtinclass, uuid(1ea11207-b3e3-4ffc-a256-bf5c7011e806)]
+interface nsIDOMImageData : nsISupports
+{
+  readonly attribute unsigned long width;
+  readonly attribute unsigned long height;
+  readonly attribute jsval data;
+};
+
+[scriptable, uuid(c835c768-2dcc-461c-82f5-3653710d2942)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -190,15 +198,15 @@ enum CanvasMultiGetterType {
   // void putImageData (in ImageData d, in float x, in float y);
   // ImageData = { width: #, height: #, data: [r, g, b, a, ...] }
 
-  // These are just dummy functions; for JS, they are implemented as quickstubs
-  // that call the _explicit methods below.  Native callers should use the _explit
-  // methods directly.
-  void getImageData();
+  [implicit_jscontext]
+  nsIDOMImageData getImageData(in double sx, in double sy, in double sw, in double sh);
+
+  // This is just a dummy function; for JS, it is implemented as a quickstub
+  // that call the _explicit methods below.  Native callers should use the
+  // _explicit method directly.
   void putImageData();
 
-  // dataLen must be == width*height*4 in both of these calls
-  [noscript] void getImageData_explicit(in long x, in long y, in unsigned long width, in unsigned long height,
-                                        [array, size_is(dataLen)] in octet dataPtr, in unsigned long dataLen);
+  // dataLen must be == width*height*4 in this call
   [noscript] void putImageData_explicit(in long x, in long y, in unsigned long width, in unsigned long height,
                                         [array, size_is(dataLen)] in octet dataPtr, in unsigned long dataLen, in boolean hasDirtyRect,
                                         in long dirtyX, in long dirtyY, in long dirtyWidth, in long dirtyHeight);

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -688,6 +688,13 @@ protected:
         return ((x + y - 1) / y) * y;
     }
 
+    nsresult BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage);
+    nsresult BufferData_buf(WebGLenum target, JSObject* data, WebGLenum usage);
+    nsresult BufferData_array(WebGLenum target, JSObject* data, WebGLenum usage);
+
+    nsresult BufferSubData_buf(WebGLenum target, PRInt32 offset, JSObject* data);
+    nsresult BufferSubData_array(WebGLenum target, PRInt32 offset, JSObject* data);
+
     nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
     nsHTMLCanvasElement *HTMLCanvasElement() {
         return static_cast<nsHTMLCanvasElement*>(mCanvasElement.get());
@@ -804,8 +811,6 @@ protected:
                                 void *pixels, PRUint32 byteLength,
                                 int jsArrayType,
                                 int srcFormat, bool srcPremultiplied);
-    nsresult ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
-                             WebGLenum format, WebGLenum type, JSObject* pixels);
     nsresult TexParameter_base(WebGLenum target, WebGLenum pname,
                                WebGLint *intParamPtr, WebGLfloat *floatParamPtr);
 
