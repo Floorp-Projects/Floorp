@@ -591,6 +591,26 @@ let RIL = {
    */
   networkSelectionMode: null,
 
+  /**
+   * Active calls
+   */
+  currentCalls: {},
+
+  /**
+   * Mute or unmute the radio.
+   */
+  _muted: true,
+  get muted() {
+    return this._muted;
+  },
+  set muted(val) {
+    val = Boolean(val);
+    if (this._muted != val) {
+      this.setMute(val);
+      this._muted = val;
+    }
+  },
+
 
   /**
    * Set quirk flags based on the RIL model detected. Note that this
@@ -841,6 +861,8 @@ let RIL = {
    *        Call index (1-based) as reported by REQUEST_GET_CURRENT_CALLS.
    */
   hangUp: function hangUp(options) {
+    //TODO need to check whether call is holding/waiting/background
+    // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
     Buf.newParcel(REQUEST_HANGUP);
     Buf.writeUint32(1);
     Buf.writeUint32(options.callIndex);
@@ -862,16 +884,36 @@ let RIL = {
 
   /**
    * Answer an incoming call.
+   *
+   * @param callIndex
+   *        Call index of the call to answer.
    */
   answerCall: function answerCall() {
-    Buf.simpleRequest(REQUEST_ANSWER);
+    // Check for races. Since we dispatched the incoming call notification the
+    // incoming call may have changed. The main thread thinks that it is
+    // answering the call with the given index, so only answer if that is still
+    // incoming.
+    let call = this.currentCalls[options.callIndex];
+    if (call && call.state == CALL_STATE_INCOMING) {
+      Buf.simpleRequest(REQUEST_ANSWER);
+    }
   },
 
   /**
    * Reject an incoming call.
+   *
+   * @param callIndex
+   *        Call index of the call to reject.
    */
   rejectCall: function rejectCall() {
-    Buf.simpleRequest(REQUEST_UDUB);
+    // Check for races. Since we dispatched the incoming call notification the
+    // incoming call may have changed. The main thread thinks that it is
+    // rejecting the call with the given index, so only reject if that is still
+    // incoming.
+    let call = this.currentCalls[options.callIndex];
+    if (call && call.state == CALL_STATE_INCOMING) {
+      Buf.simpleRequest(REQUEST_UDUB);
+    }
   },
 
   /**
@@ -1189,7 +1231,68 @@ let RIL = {
     }
   },
 
- 
+  _processCalls: function _processCalls(newCalls) {
+    // Go through the calls we currently have on file and see if any of them
+    // changed state. Remove them from the newCalls map as we deal with them
+    // so that only new calls remain in the map after we're done.
+    for each (let currentCall in this.currentCalls) {
+      let newCall;
+      if (newCalls) {
+        newCall = newCalls[currentCall.callIndex];
+        delete newCalls[currentCall.callIndex];
+      }
+
+      if (newCall) {
+        // Call is still valid.
+        if (newCall.state != currentCall.state) {
+          // State has changed.
+          currentCall.state = newCall.state;
+          this._handleChangedCallState(currentCall);
+        }
+      } else {
+        // Call is no longer reported by the radio. Remove from our map and
+        // send disconnected state change.
+        delete this.currentCalls[currentCall.callIndex];
+        this._handleDisconnectedCall(currentCall);
+      }
+    }
+
+    // Go through any remaining calls that are new to us.
+    for each (let newCall in newCalls) {
+      if (newCall.isVoice) {
+        // Format international numbers appropriately.
+        if (newCall.number &&
+            newCall.toa == TOA_INTERNATIONAL &&
+            newCall.number[0] != "+") {
+          newCall.number = "+" + newCall.number;
+        }
+        // Add to our map.
+        this.currentCalls[newCall.callIndex] = newCall;
+        this._handleChangedCallState(newCall);
+      }
+    }
+
+    // Update our mute status. If there is anything in our currentCalls map then
+    // we know it's a voice call and we should leave audio on.
+    this.muted = Object.getOwnPropertyNames(this.currentCalls).length == 0;
+  },
+
+  _handleChangedCallState: function _handleChangedCallState(changedCall) {
+    let message = {type: "callStateChange",
+                   call: {callIndex: changedCall.callIndex,
+                          state: changedCall.state,
+                          number: changedCall.number,
+                          name: changedCall.name}};
+    Phone.sendDOMMessage(message);
+  },
+
+  _handleDisconnectedCall: function _handleDisconnectedCall(disconnectedCall) {
+    let message = {type: "callDisconnected",
+                   call: {callIndex: disconnectedCall.callIndex}};
+    Phone.sendDOMMessage(message);
+  },
+
+
   /**
    * Handle the RIL request errors
    */ 
@@ -1265,7 +1368,7 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
     calls_length = Buf.readUint32();
   }
   if (!calls_length) {
-    Phone.onCurrentCalls(null);
+    this._processCalls(null);
     return;
   }
 
@@ -1300,7 +1403,7 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
 
     calls[call.callIndex] = call;
   }
-  Phone.onCurrentCalls(calls);
+  this._processCalls(calls);
 };
 RIL[REQUEST_DIAL] = null;
 RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length) {
@@ -1590,7 +1693,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
   this.radioState = newState;
 };
 RIL[UNSOLICITED_RESPONSE_CALL_STATE_CHANGED] = function UNSOLICITED_RESPONSE_CALL_STATE_CHANGED() {
-  Phone.onCallStateChanged();
+  this.getCurrentCalls();
 };
 RIL[UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED() {
   if (DEBUG) debug("Network state changed, re-requesting phone state.");
@@ -1698,101 +1801,14 @@ let Phone = {
   MSISDN: null,
 
   /**
-   * Active calls
-   */
-  currentCalls: {},
-
-  /**
-   * Mute or unmute the radio.
-   */
-  _muted: true,
-
-  /**
    * Existing data calls.
    */
   currentDataCalls: {},
-
-  get muted() {
-    return this._muted;
-  },
-
-  set muted(val) {
-    val = Boolean(val);
-    if (this._muted != val) {
-      RIL.setMute(val);
-      this._muted = val;
-    }
-  },
-
-  _handleChangedCallState: function _handleChangedCallState(changedCall) {
-    let message = {type: "callStateChange",
-                   call: {callIndex: changedCall.callIndex,
-                          state: changedCall.state,
-                          number: changedCall.number,
-                          name: changedCall.name}};
-    this.sendDOMMessage(message);
-  },
-
-  _handleDisconnectedCall: function _handleDisconnectedCall(disconnectedCall) {
-    let message = {type: "callDisconnected",
-                   call: {callIndex: disconnectedCall.callIndex}};
-    this.sendDOMMessage(message);
-  },
 
   /**
    * Handlers for messages from the RIL. They all begin with on* and are called
    * from RIL object.
    */
-
-  onCurrentCalls: function onCurrentCalls(newCalls) {
-    // Go through the calls we currently have on file and see if any of them
-    // changed state. Remove them from the newCalls map as we deal with them
-    // so that only new calls remain in the map after we're done.
-    for each (let currentCall in this.currentCalls) {
-      let newCall;
-      if (newCalls) {
-        newCall = newCalls[currentCall.callIndex];
-        delete newCalls[currentCall.callIndex];
-      }
-
-      if (newCall) {
-        // Call is still valid.
-        if (newCall.state != currentCall.state) {
-          // State has changed.
-          currentCall.state = newCall.state;
-          this._handleChangedCallState(currentCall);
-        }
-      } else {
-        // Call is no longer reported by the radio. Remove from our map and
-        // send disconnected state change.
-        delete this.currentCalls[currentCall.callIndex];
-        this._handleDisconnectedCall(currentCall);
-      }
-    }
-
-    // Go through any remaining calls that are new to us.
-    for each (let newCall in newCalls) {
-      if (newCall.isVoice) {
-        // Format international numbers appropriately.
-        if (newCall.number &&
-            newCall.toa == TOA_INTERNATIONAL &&
-            newCall.number[0] != "+") {
-          newCall.number = "+" + newCall.number;
-        }
-        // Add to our map.
-        this.currentCalls[newCall.callIndex] = newCall;
-        this._handleChangedCallState(newCall);
-      }
-    }
-
-    // Update our mute status. If there is anything in our currentCalls map then
-    // we know it's a voice call and we should leave audio on.
-    this.muted = Object.getOwnPropertyNames(this.currentCalls).length == 0;
-  },
-
-  onCallStateChanged: function onCallStateChanged() {
-    RIL.getCurrentCalls();
-  },
 
   onICCIO: function onICCIO(options) {
     switch (options.fileid) {
@@ -1985,7 +2001,7 @@ let Phone = {
   enumerateCalls: function enumerateCalls() {
     if (DEBUG) debug("Sending all current calls");
     let calls = [];
-    for each (let call in this.currentCalls) {
+    for each (let call in RIL.currentCalls) {
       calls.push(call);
     }
     this.sendDOMMessage({type: "enumerateCalls", calls: calls});
@@ -2044,8 +2060,6 @@ let Phone = {
    *        Call index of the call to hang up.
    */
   hangUp: function hangUp(options) {
-    //TODO need to check whether call is holding/waiting/background
-    // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
     RIL.hangUp(options);
   },
 
@@ -2056,14 +2070,7 @@ let Phone = {
    *        Call index of the call to answer.
    */
   answerCall: function answerCall(options) {
-    // Check for races. Since we dispatched the incoming call notification the
-    // incoming call may have changed. The main thread thinks that it is
-    // answering the call with the given index, so only answer if that is still
-    // incoming.
-    let call = this.currentCalls[options.callIndex];
-    if (call && call.state == CALL_STATE_INCOMING) {
-      RIL.answerCall();
-    }
+    RIL.answerCall(options);
   },
 
   /**
@@ -2073,14 +2080,7 @@ let Phone = {
    *        Call index of the call to reject.
    */
   rejectCall: function rejectCall(options) {
-    // Check for races. Since we dispatched the incoming call notification the
-    // incoming call may have changed. The main thread thinks that it is
-    // rejecting the call with the given index, so only reject if that is still
-    // incoming.
-    let call = this.currentCalls[options.callIndex];
-    if (call && call.state == CALL_STATE_INCOMING) {
-      RIL.rejectCall();
-    }
+    RIL.rejectCall(options);
   },
 
   /**
