@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -432,28 +432,36 @@ GLenum WebGLContext::CheckedBufferData(GLenum target,
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferData(PRInt32 dummy)
+WebGLContext::BufferData(PRInt32 target, const JS::Value& data, PRInt32 usage,
+                         JSContext* cx)
 {
-    if (!IsContextStable())
-        return NS_OK;
+    if (data.isNull()) {
+        // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
+        return ErrorInvalidValue("bufferData: null object passed");
+    }
 
-    // this should never be called
-    LogMessageIfVerbose("BufferData");
-    return NS_ERROR_FAILURE;
+    if (data.isObject()) {
+        JSObject& dataObj = data.toObject();
+        if (js_IsArrayBuffer(&dataObj)) {
+            return BufferData_buf(target, &dataObj, usage);
+        }
+
+        if (js_IsTypedArray(&dataObj)) {
+            return BufferData_array(target, &dataObj, usage);
+        }
+
+        return ErrorInvalidValue("bufferData: object passed that is not an "
+                                 "ArrayBufferView or ArrayBuffer");
+    }
+
+    MOZ_ASSERT(data.isPrimitive());
+    int32_t size;
+    // ToInt32 cannot fail for primitives.
+    MOZ_ALWAYS_TRUE(JS_ValueToECMAInt32(cx, data, &size));
+    return BufferData_size(target, size, usage);
 }
 
-NS_IMETHODIMP
-WebGLContext::BufferData_null()
-{
-    if (!IsContextStable())
-        return NS_OK;
-
-    // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
-    return ErrorInvalidValue("bufferData: null object passed");
-}
-
-
-NS_IMETHODIMP
+nsresult
 WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage)
 {
     if (!IsContextStable())
@@ -494,7 +502,7 @@ WebGLContext::BufferData_size(WebGLenum target, WebGLsizei size, WebGLenum usage
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 WebGLContext::BufferData_buf(WebGLenum target, JSObject *wb, WebGLenum usage)
 {
     if (!IsContextStable())
@@ -535,7 +543,7 @@ WebGLContext::BufferData_buf(WebGLenum target, JSObject *wb, WebGLenum usage)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 WebGLContext::BufferData_array(WebGLenum target, JSObject *wa, WebGLenum usage)
 {
     if (!IsContextStable())
