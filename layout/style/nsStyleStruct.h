@@ -1561,7 +1561,7 @@ struct nsStyleDisplay {
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   nsRefPtr<nsCSSValue::URL> mBinding;    // [reset]
-  nsRect    mClip;              // [reset] offsets from upper-left border edge
+  nsRect  mClip;                // [reset] offsets from upper-left border edge
   float   mOpacity;             // [reset]
   PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
   PRUint8 mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
@@ -1578,7 +1578,7 @@ struct nsStyleDisplay {
   PRUint8 mOverflowX;           // [reset] see nsStyleConsts.h
   PRUint8 mOverflowY;           // [reset] see nsStyleConsts.h
   PRUint8 mResize;              // [reset] see nsStyleConsts.h
-  PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
+  PRUint8 mClipFlags;           // [reset] see nsStyleConsts.h
   PRUint8 mOrient;              // [reset] see nsStyleConsts.h
 
   // mSpecifiedTransform is the list of transform functions as
