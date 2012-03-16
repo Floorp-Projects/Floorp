@@ -36,9 +36,8 @@
 
 function test() {
   /** Test for Bug 484108 **/
-  requestLongerTimeout(2);
-
   waitForExplicitFinish();
+  requestLongerTimeout(3);
 
   // builds the tests state based on a few parameters
   function buildTestState(num, selected, hidden) {
@@ -54,109 +53,105 @@ function test() {
     return state;
   }
 
-  // builds an array of the indexs we expect to see in the order they get loaded
-  function buildExpectedOrder(num, selected, shown) {
-    // assume selected is 1-based index
-    selected--;
-    let expected = [selected];
-    // fill left to selected if space
-    for (let i = selected - (shown - expected.length); i >= 0 && i < selected; i++)
-      expected.push(i);
-    // fill from left to right until right length or end
-    for (let i = selected + 1; expected.length < shown && i < num; i++)
-      expected.push(i);
-    // fill in the remaining
-    for (let i = 0; i < num; i++) {
-      if (expected.indexOf(i) == -1) {
-        expected.push(i);
-      }
+  let tests = [
+    { testNum: 1,
+      totalTabs: 13,
+      selectedTab: 1,
+      shownTabs: 6,
+      hiddenTabs: [],
+      order: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    },
+    { testNum: 2,
+      totalTabs: 13,
+      selectedTab: 13,
+      shownTabs: 6,
+      hiddenTabs: [],
+      order: [12, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6]
+    },
+    { testNum: 3,
+      totalTabs: 13,
+      selectedTab: 4,
+      shownTabs: 6,
+      hiddenTabs: [],
+      order: [3, 4, 5, 6, 7, 8, 0, 1, 2, 9, 10, 11, 12]
+    },
+    { testNum: 4,
+      totalTabs: 13,
+      selectedTab: 11,
+      shownTabs: 6,
+      hiddenTabs: [],
+      order: [10, 7, 8, 9, 11, 12, 0, 1, 2, 3, 4, 5, 6]
+    },
+    { testNum: 5,
+      totalTabs: 13,
+      selectedTab: 13,
+      shownTabs: 6,
+      hiddenTabs: [0, 4, 9],
+      order: [12, 6, 7, 8, 10, 11, 1, 2, 3, 5, 0, 4, 9]
+    },
+    { testNum: 6,
+      totalTabs: 13,
+      selectedTab: 4,
+      shownTabs: 6,
+      hiddenTabs: [1, 7, 12],
+      order: [3, 4, 5, 6, 8, 9, 0, 2, 10, 11, 1, 7, 12]
+    },
+    { testNum: 7,
+      totalTabs: 13,
+      selectedTab: 4,
+      shownTabs: 6,
+      hiddenTabs: [0, 1, 2],
+      order: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2]
     }
-    return expected;
-  }
-
-  // the number of tests we're running
-  let numTests = 7;
-  let completedTests = 0;
+  ];
 
   let tabMinWidth = parseInt(getComputedStyle(gBrowser.selectedTab, null).minWidth);
+  let testIndex = 0;
 
-  function runTest(testNum, totalTabs, selectedTab, shownTabs, hiddenTabs, order) {
-    let test = {
-      state: buildTestState(totalTabs, selectedTab, hiddenTabs),
-      numTabsToShow: shownTabs,
-      expectedOrder: order,
-      actualOrder: [],
-      windowWidth: null,
-      callback: null,
-      window: null,
+  function runNextTest() {
+    if (tests.length == 0) {
+      finish();
+      return;
+    }
 
-      handleSSTabRestoring: function (aEvent) {
-        let tab = aEvent.originalTarget;
-        let tabbrowser = this.window.gBrowser;
-        let currentIndex = Array.indexOf(tabbrowser.tabs, tab);
-        this.actualOrder.push(currentIndex);
+    info ("Starting test " + (++testIndex));
+    let test = tests.shift();
+    let state = buildTestState(test.totalTabs, test.selectedTab, test.hiddenTabs);
+    let tabbarWidth = Math.floor((test.shownTabs - 0.5) * tabMinWidth);
+    let win = openDialog(location, "_blank", "chrome,all,dialog=no");
+    let actualOrder = [];
 
-        if (this.actualOrder.length < this.state.windows[0].tabs.length)
-          return;
+    win.addEventListener("SSTabRestoring", function onSSTabRestoring(aEvent) {
+      let tab = aEvent.originalTarget;
+      let currentIndex = Array.indexOf(win.gBrowser.tabs, tab);
+      actualOrder.push(currentIndex);
 
-        // all of the tabs should be restoring or restored by now
-        is(this.actualOrder.length, this.state.windows[0].tabs.length,
-           "Test #" + testNum + ": Number of restored tabs is as expected");
+      if (actualOrder.length < state.windows[0].tabs.length)
+        return;
 
-        is(this.actualOrder.join(" "), this.expectedOrder.join(" "),
-           "Test #" + testNum + ": 'visible' tabs restored first");
+      // all of the tabs should be restoring or restored by now
+      is(actualOrder.length, state.windows[0].tabs.length,
+         "Test #" + testIndex + ": Number of restored tabs is as expected");
 
-        // cleanup
-        this.window.close();
-        // if we're all done, explicitly finish
-        if (++completedTests == numTests) {
-          this.window.removeEventListener("load", this, false);
-          this.window.removeEventListener("SSTabRestoring", this, false);
-          finish();
-        }
-      },
+      is(actualOrder.join(" "), test.order.join(" "),
+         "Test #" + testIndex + ": 'visible' tabs restored first");
 
-      handleLoad: function (aEvent) {
-        let _this = this;
-        executeSoon(function () {
-          let extent = _this.window.outerWidth - _this.window.gBrowser.tabContainer.mTabstrip.scrollClientSize;
-          let windowWidth = _this.tabbarWidth + extent;
-          _this.window.resizeTo(windowWidth, _this.window.outerHeight);
-          ss.setWindowState(_this.window, JSON.stringify(_this.state), true);
-        });
-      },
+      // Cleanup.
+      win.removeEventListener("SSTabRestoring", onSSTabRestoring, false);
+      win.close();
+      executeSoon(runNextTest);
+    }, false);
 
-      // Implement nsIDOMEventListener for handling various window and tab events
-      handleEvent: function (aEvent) {
-        switch (aEvent.type) {
-          case "load":
-            this.handleLoad(aEvent);
-            break;
-          case "SSTabRestoring":
-            this.handleSSTabRestoring(aEvent);
-            break;
-        }
-      },
+    win.addEventListener("load", function onLoad(aEvent) {
+      win.removeEventListener("load", onLoad, false);
+      executeSoon(function () {
+        let extent = win.outerWidth - win.gBrowser.tabContainer.mTabstrip.scrollClientSize;
+        let windowWidth = tabbarWidth + extent;
+        win.resizeTo(windowWidth, win.outerHeight);
+        ss.setWindowState(win, JSON.stringify(state), true);
+      });
+    }, false);
+  };
 
-      // setup and actually run the test
-      run: function () {
-        this.tabbarWidth = Math.floor((this.numTabsToShow - 0.5) * tabMinWidth);
-        this.window = openDialog(location, "_blank", "chrome,all,dialog=no");
-        this.window.addEventListener("SSTabRestoring", this, false);
-        this.window.addEventListener("load", this, false);
-      }
-    };
-    test.run();
-  }
-
-  // actually create & run the tests
-  runTest(1, 13, 1,  6, [],         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
-  runTest(2, 13, 13, 6, [],         [12, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6]);
-  runTest(3, 13, 4,  6, [],         [3, 4, 5, 6, 7, 8, 0, 1, 2, 9, 10, 11, 12]);
-  runTest(4, 13, 11, 6, [],         [10, 7, 8, 9, 11, 12, 0, 1, 2, 3, 4, 5, 6]);
-  runTest(5, 13, 13, 6, [0, 4, 9],  [12, 6, 7, 8, 10, 11, 1, 2, 3, 5, 0, 4, 9]);
-  runTest(6, 13, 4,  6, [1, 7, 12], [3, 4, 5, 6, 8, 9, 0, 2, 10, 11, 1, 7, 12]);
-  runTest(7, 13, 4,  6, [0, 1, 2],  [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 2]);
-
-  // finish() is run by the last test to finish, so no cleanup down here
+  runNextTest();
 }
