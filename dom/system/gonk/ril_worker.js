@@ -49,11 +49,11 @@
  * - postRILMessage()/"RILMessageEvent" events for RIL IPC thread
  *   communication.
  *
- * The three objects in this file represent individual parts of this
+ * The two main objects in this file represent individual parts of this
  * communication chain:
  *
- * - RILMessageEvent -> Buf -> RIL -> Phone -> postMessage()
- * - "message" event -> Phone -> RIL -> Buf -> postRILMessage()
+ * - RILMessageEvent -> Buf -> RIL -> postMessage() -> nsIRadioInterfaceLayer
+ * - nsIRadioInterfaceLayer -> postMessage() -> RIL -> Buf -> postRILMessage()
  *
  * Note: The code below is purposely lean on abstractions to be as lean in
  * terms of object allocations. As a result, it may look more like C than
@@ -543,10 +543,11 @@ let Buf = {
 
 
 /**
- * Provide a high-level API representing the RIL's capabilities. This is
- * where parcels are sent and received from and translated into API calls.
- * For the most part, this object is pretty boring as it simply translates
- * between method calls and RIL parcels. Somebody's gotta do the job...
+ * The RIL state machine.
+ * 
+ * This object communicates with rild via parcels and with the main thread
+ * via post messages. It maintains state about the radio, ICC, calls, etc.
+ * and acts upon state changes accordingly.
  */
 let RIL = {
 
@@ -668,6 +669,20 @@ let RIL = {
     return defaultValue;
   },
 
+
+  /**
+   * Outgoing requests to the RIL. These can be triggered from the
+   * main thread via messages that look like this:
+   *
+   *   {type:  "methodName",
+   *    extra: "parameters",
+   *    go:    "here"}
+   *
+   * So if one of the following methods takes arguments, it takes only one,
+   * an object, which then contains all of the parameters as attributes.
+   * The "@param" documentation is to be interpreted accordingly.
+   */
+
   /**
    * Retrieve the ICC's status.
    */
@@ -712,7 +727,6 @@ let RIL = {
    * @param newPin
    *        String containing the new PIN value.
    *
-   * Response will call Phone.onEnterICCPUK().
    */
    enterICCPUK: function enterICCPUK(options) {
      Buf.newParcel(REQUEST_ENTER_SIM_PUK);
@@ -756,7 +770,7 @@ let RIL = {
     }
     Buf.sendParcel();
   },
-  
+
   /**
    * Read the MSISDN from the ICC.
    */
@@ -911,7 +925,7 @@ let RIL = {
    * @param callIndex
    *        Call index of the call to answer.
    */
-  answerCall: function answerCall() {
+  answerCall: function answerCall(options) {
     // Check for races. Since we dispatched the incoming call notification the
     // incoming call may have changed. The main thread thinks that it is
     // answering the call with the given index, so only answer if that is still
@@ -1100,10 +1114,9 @@ let RIL = {
     Buf.writeString(options.reason || DATACALL_DEACTIVATE_NO_REASON);
     Buf.sendParcel();
 
-
     datacall.state = GECKO_NETWORK_STATE_DISCONNECTING;
-    Phone.sendDOMMessage({type: "datacallstatechange",
-                          datacall: datacall});
+    this.sendDOMMessage({type: "datacallstatechange",
+                         datacall: datacall});
   },
 
   /**
@@ -1125,9 +1138,6 @@ let RIL = {
    * Process ICC status.
    */
   _processICCStatus: function _processICCStatus(iccStatus) {
-    if (DEBUG) {
-      debug("iccStatus: " + JSON.stringify(iccStatus));
-    }
     this.iccStatus = iccStatus;
 
     if ((!iccStatus) || (iccStatus.cardState == CARD_STATE_ABSENT)) {
@@ -1137,8 +1147,8 @@ let RIL = {
         return;
       }
       this.cardState = GECKO_CARDSTATE_ABSENT;
-      Phone.sendDOMMessage({type: "cardstatechange",
-                            cardState: this.cardState});
+      this.sendDOMMessage({type: "cardstatechange",
+                           cardState: this.cardState});
       return;
     }
 
@@ -1153,8 +1163,8 @@ let RIL = {
         return;
       }
       this.cardState = GECKO_CARDSTATE_NOT_READY;
-      Phone.sendDOMMessage({type: "cardstatechange",
-                            cardState: this.cardState});
+      this.sendDOMMessage({type: "cardstatechange",
+                           cardState: this.cardState});
       return;
     }
 
@@ -1172,8 +1182,8 @@ let RIL = {
         }
         this.cardState = GECKO_CARDSTATE_ABSENT;
         this.operator = null;
-        Phone.sendDOMMessage({type: "cardstatechange",
-                              cardState: this.cardState});
+        this.sendDOMMessage({type: "cardstatechange",
+                             cardState: this.cardState});
         return;
       }
 
@@ -1201,11 +1211,14 @@ let RIL = {
         return;
       }
       this.cardState = newCardState;
-      Phone.sendDOMMessage({type: "cardstatechange",
-                            cardState: this.cardState});
+      this.sendDOMMessage({type: "cardstatechange",
+                           cardState: this.cardState});
     }
   },
 
+  /**
+   * Process the MSISDN ICC I/O response.
+   */
   _processMSISDNResponse: function _processMSISDNResponse(options) {
     let sw1 = Buf.readUint32();
     let sw2 = Buf.readUint32();
@@ -1232,7 +1245,7 @@ let RIL = {
           data:    null,
           pin2:    null,
         };
-        RIL.iccIO(options);
+        this.iccIO(options);
         break;
 
       case ICC_COMMAND_READ_RECORD:
@@ -1280,8 +1293,8 @@ let RIL = {
     }
 
     if (stateChanged) {
-      Phone.sendDOMMessage({type: "registrationstatechange",
-                            registrationState: rs});
+      this.sendDOMMessage({type: "registrationstatechange",
+                           registrationState: rs});
     }
   },
 
@@ -1302,11 +1315,14 @@ let RIL = {
     }
 
     if (stateChanged) {
-      Phone.sendDOMMessage({type: "gprsregistrationstatechange",
-                            gprsRegistrationState: rs});
+      this.sendDOMMessage({type: "gprsregistrationstatechange",
+                           gprsRegistrationState: rs});
     }
   },
 
+  /**
+   * Helpers for processing call state.
+   */
   _processCalls: function _processCalls(newCalls) {
     // Go through the calls we currently have on file and see if any of them
     // changed state. Remove them from the newCalls map as we deal with them
@@ -1359,13 +1375,13 @@ let RIL = {
                           state: changedCall.state,
                           number: changedCall.number,
                           name: changedCall.name}};
-    Phone.sendDOMMessage(message);
+    this.sendDOMMessage(message);
   },
 
   _handleDisconnectedCall: function _handleDisconnectedCall(disconnectedCall) {
     let message = {type: "callDisconnected",
                    call: {callIndex: disconnectedCall.callIndex}};
-    Phone.sendDOMMessage(message);
+    this.sendDOMMessage(message);
   },
 
   _processDataCallList: function _processDataCallList(datacalls) {
@@ -1410,13 +1426,61 @@ let RIL = {
     }
   },
 
+  /**
+   * Handle incoming messages from the main UI thread.
+   *
+   * @param message
+   *        Object containing the message. Messages are supposed
+   */
+  handleDOMMessage: function handleMessage(message) {
+    if (DEBUG) debug("Received DOM message " + JSON.stringify(message));
+    let method = this[message.type];
+    if (typeof method != "function") {
+      if (DEBUG) {
+        debug("Don't know what to do with message " + JSON.stringify(message));
+      }
+      return;
+    }
+    method.call(this, message);
+  },
+
+  /**
+   * Get a list of current voice calls.
+   */
+  enumerateCalls: function enumerateCalls() {
+    if (DEBUG) debug("Sending all current calls");
+    let calls = [];
+    for each (let call in this.currentCalls) {
+      calls.push(call);
+    }
+    this.sendDOMMessage({type: "enumerateCalls", calls: calls});
+  },
+
+  /**
+   * Get a list of current data calls.
+   */
+  enumerateDataCalls: function enumerateDataCalls() {
+    let datacall_list = [];
+    for each (let datacall in this.currentDataCalls) {
+      datacall_list.push(datacall);
+    }
+    this.sendDOMMessage({type: "datacalllist",
+                         datacalls: datacall_list});
+  },
+
+  /**
+   * Send messages to the main thread.
+   */
+  sendDOMMessage: function sendDOMMessage(message) {
+    postMessage(message, "*");
+  },
 
   /**
    * Handle the RIL request errors
    */ 
   handleRequestError: function handleRequestError(options) {	  
 	options.type = "error";
-	Phone.sendDOMMessage(options);
+	this.sendDOMMessage(options);
   },   
 
   /**
@@ -1460,6 +1524,7 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
       pin2:           Buf.readUint32()
     });
   }
+
   if (DEBUG) debug("iccStatus: " + JSON.stringify(iccStatus));
   this._processICCStatus(iccStatus);
 };
@@ -1560,8 +1625,8 @@ RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
     evdoSNR:           Buf.readUint32()
   };
   if (DEBUG) debug("Signal strength " + JSON.stringify(strength));
-  Phone.sendDOMMessage({type: "signalstrengthchange",
-                        signalStrength: strength});
+  this.sendDOMMessage({type: "signalstrengthchange",
+                       signalStrength: strength});
 };
 RIL[REQUEST_REGISTRATION_STATE] = function REQUEST_REGISTRATION_STATE(length) {
   let state = Buf.readStringList();
@@ -1583,8 +1648,8 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length) {
     this.operator = {alphaLong:  operator[0],
                      alphaShort: operator[1],
                      numeric:    operator[2]};
-    Phone.sendDOMMessage({type: "operatorchange",
-                          operator: this.operator});
+    this.sendDOMMessage({type: "operatorchange",
+                         operator: this.operator});
   }
 };
 RIL[REQUEST_RADIO_POWER] = null;
@@ -1594,7 +1659,7 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   options.ackPDU = Buf.readString();
   options.errorCode = Buf.readUint32();
   options.type = "sms-sent";
-  Phone.sendDOMMessage(options);
+  this.sendDOMMessage(options);
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
 RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
@@ -1607,8 +1672,8 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   options.active = DATACALL_ACTIVE_UNKNOWN;
   options.state = GECKO_NETWORK_STATE_CONNECTING;
   this.currentDataCalls[options.cid] = options;
-  Phone.sendDOMMessage({type: "datacallstatechange",
-                        datacall: options});
+  this.sendDOMMessage({type: "datacallstatechange",
+                       datacall: options});
 
   // Let's get the list of data calls to ensure we know whether it's active
   // or not.
@@ -1641,7 +1706,7 @@ RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length
   let datacall = this.currentDataCalls[options.cid];
   delete this.currentDataCalls[options.cid];
   datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-  Phone.sendDOMMessage({type: "datacallstatechange",
+  this.sendDOMMessage({type: "datacallstatechange",
                        datacall: datacall});
 };
 RIL[REQUEST_QUERY_FACILITY_LOCK] = null;
@@ -1781,7 +1846,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
     }
     this.getBasebandVersion();
     this.setScreenState(true);
-    Phone.sendDOMMessage({
+    this.sendDOMMessage({
       type: "radiostatechange",
       radioState: (newState == RADIO_STATE_OFF) ?
                    GECKO_RADIOSTATE_OFF : GECKO_RADIOSTATE_READY
@@ -1799,7 +1864,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
     // The radio is no longer available, we need to deal with any
     // remaining pending requests.
     //TODO do that
-    Phone.sendDOMMessage({type: "radiostatechange",
+    this.sendDOMMessage({type: "radiostatechange",
                          radioState: GECKO_RADIOSTATE_UNAVAILABLE});
   }
 
@@ -1812,14 +1877,14 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
     this.getSignalStrength();
     this.getSMSCAddress();
     this.getMSISDN();
-    Phone.sendDOMMessage({type: "cardstatechange",
+    this.sendDOMMessage({type: "cardstatechange",
                          cardState: GECKO_CARDSTATE_READY});
   }
   if (newState == RADIO_STATE_SIM_LOCKED_OR_ABSENT  ||
       newState == RADIO_STATE_RUIM_LOCKED_OR_ABSENT) {
     this.getICCStatus();
-    Phone.sendDOMMessage({type: "cardstatechange",
-                          cardState: GECKO_CARDSTATE_UNAVAILABLE});
+    this.sendDOMMessage({type: "cardstatechange",
+                         cardState: GECKO_CARDSTATE_UNAVAILABLE});
   }
 
   let wasOn = this.radioState != RADIO_STATE_OFF &&
@@ -1913,10 +1978,15 @@ RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() 
                                hours, minutes, seconds) / 1000;
 
   if (isNaN(timeInSeconds)) {
-    debug("NITZ failed to convert date");
-  } else {
-    Phone.onNITZ(timeInSeconds, tz*15, dst, now);
+    if (DEBUG) debug("NITZ failed to convert date");
+    return;
   }
+
+  this.sendDOMMessage({type: "nitzTime",
+                       networkTimeInSeconds: timeInSeconds,
+                       networkTimeZoneInMinutes: tz * 15,
+                       dstFlag: dst,
+                       localTimeStampInMS: now});
 };
 
 RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH() {
@@ -1960,201 +2030,6 @@ RIL[UNSOLICITED_CDMA_INFO_REC] = null;
 RIL[UNSOLICITED_OEM_HOOK_RAW] = null;
 RIL[UNSOLICITED_RINGBACK_TONE] = null;
 RIL[UNSOLICITED_RESEND_INCALL_MUTE] = null;
-
-
-/**
- * This object represents the phone's state and functionality. It is
- * essentially a state machine that's being acted upon from RIL and the
- * mainthread via postMessage communication.
- */
-let Phone = {
-
-  /**
-   * Handlers for messages from the RIL. They all begin with on* and are called
-   * from RIL object.
-   */
-
-  onNITZ: function onNITZ(timeInSeconds, timeZoneInMinutes, dstFlag, timeStampInMS) {
-    let message = {type: "nitzTime",
-                   networkTimeInSeconds: timeInSeconds,
-                   networkTimeZoneInMinutes: timeZoneInMinutes,
-                   dstFlag: dstFlag,
-                   localTimeStampInMS: timeStampInMS};
-    this.sendDOMMessage(message);
-  },
-
-  /**
-   * Outgoing requests to the RIL. These can be triggered from the
-   * main thread via messages that look like this:
-   *
-   *   {type:  "methodName",
-   *    extra: "parameters",
-   *    go:    "here"}
-   *
-   * So if one of the following methods takes arguments, it takes only one,
-   * an object, which then contains all of the parameters as attributes.
-   * The "@param" documentation is to be interpreted accordingly.
-   */
-
-  /**
-   * Get a list of current voice calls.
-   */
-  enumerateCalls: function enumerateCalls() {
-    if (DEBUG) debug("Sending all current calls");
-    let calls = [];
-    for each (let call in RIL.currentCalls) {
-      calls.push(call);
-    }
-    this.sendDOMMessage({type: "enumerateCalls", calls: calls});
-  },
-
-  enumerateDataCalls: function enumerateDataCalls() {
-    let datacall_list = [];
-    for each (let datacall in RIL.currentDataCalls) {
-      datacall_list.push(datacall);
-    }
-    this.sendDOMMessage({type: "datacalllist",
-                         datacalls: datacall_list});
-  },
-
-  /**
-   * Dial the phone.
-   *
-   * @param number
-   *        String containing the number to dial.
-   */
-  dial: function dial(options) {
-    RIL.dial(options);
-  },
-
-  /**
-   * Send DTMF Tone
-   *
-   * @param dtmfChar
-   *        String containing the DTMF signal to send.
-   */
-  sendTone: function sendTone(options) {
-    RIL.sendTone(options);
-  },
-
-  /**
-   * Start DTMF Tone
-   *
-   * @param dtmfChar
-   *        String containing the DTMF signal to send.
-   */
-  startTone: function startTone(options) {
-    RIL.startTone(options);
-  },
-
-  /**
-   * Stop DTMF Tone
-   */
-  stopTone: function stopTone() {
-    RIL.stopTone();
-  },
-
-  /**
-   * Hang up a call.
-   *
-   * @param callIndex
-   *        Call index of the call to hang up.
-   */
-  hangUp: function hangUp(options) {
-    RIL.hangUp(options);
-  },
-
-  /**
-   * Answer an incoming call.
-   *
-   * @param callIndex
-   *        Call index of the call to answer.
-   */
-  answerCall: function answerCall(options) {
-    RIL.answerCall(options);
-  },
-
-  /**
-   * Reject an incoming call.
-   *
-   * @param callIndex
-   *        Call index of the call to reject.
-   */
-  rejectCall: function rejectCall(options) {
-    RIL.rejectCall(options);
-  },
-
-  /**
-   * Send an SMS.
-   *
-   * @param number
-   *        String containing the recipient number.
-   * @param body
-   *        String containing the message text.
-   * @param requestId
-   *        String identifying the sms request used by the SmsRequestManager.
-   * @param processId
-   *        String containing the processId for the SmsRequestManager.
-   */
-  sendSMS: function sendSMS(options) {
-    RIL.sendSms(options);
-  },
-
-  /**
-   * Setup a data call (PDP).
-   */
-  setupDataCall: function setupDataCall(options) {
-    if (DEBUG) debug("setupDataCall: " + JSON.stringify(options));
-    RIL.setupDataCall(options);
-  },
-
-  /**
-   * Deactivate a data call (PDP).
-   */
-  deactivateDataCall: function deactivateDataCall(options) {
-    RIL.deactivateDataCall(options);
-  },
-
-  /**
-   * Get the list of data calls.
-   */
-  getDataCallList: function getDataCallList(options) {
-    RIL.getDataCallList();
-  },
-
-  /**
-   * Get failure cause code for the last failed PDP context.
-   */
-  getFailCauseCode: function getFailCauseCode(options) {
-    RIL.getFailCauseCode();
-  },
-
-  /**
-   * Handle incoming messages from the main UI thread.
-   *
-   * @param message
-   *        Object containing the message. Messages are supposed
-   */
-  handleDOMMessage: function handleMessage(message) {
-    if (DEBUG) debug("Received DOM message " + JSON.stringify(message));
-    let method = this[message.type];
-    if (typeof method != "function") {
-      if (DEBUG) {
-        debug("Don't know what to do with message " + JSON.stringify(message));
-      }
-      return;
-    }
-    method.call(this, message);
-  },
-
-  /**
-   * Send messages to the main UI thread.
-   */
-  sendDOMMessage: function sendDOMMessage(message) {
-    postMessage(message, "*");
-  }
-
-};
 
 
 /**
@@ -3109,7 +2984,7 @@ function onRILMessage(data) {
 };
 
 onmessage = function onmessage(event) {
-  Phone.handleDOMMessage(event.data);
+  RIL.handleDOMMessage(event.data);
 };
 
 onerror = function onerror(event) {
