@@ -62,6 +62,14 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
+[scriptable, builtinclass, uuid(1ea11207-b3e3-4ffc-a256-bf5c7011e806)]
+interface nsIDOMImageData : nsISupports
+{
+  readonly attribute unsigned long width;
+  readonly attribute unsigned long height;
+  readonly attribute jsval data;
+};
+
 [scriptable, uuid(274213a8-df51-4b52-bfad-d306a1d5f642)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {

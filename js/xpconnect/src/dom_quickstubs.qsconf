@@ -97,6 +97,7 @@ members = [
     'nsIDOMTextMetrics.*',
     'nsIDOMCanvasGradient.*',
     'nsIDOMCanvasPattern.*',
+    'nsIDOMImageData.*',
 
     # dom/interfaces/core
     'nsIDOMCharacterData.data',
@@ -484,6 +485,7 @@ irregularFilenames = {
     'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
     'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
+    'nsIDOMImageData': 'nsIDOMCanvasRenderingContext2D',
 
     'nsIDOMBlob': 'nsIDOMFile',
 
@@ -524,6 +526,7 @@ customIncludes = [
     'nsSVGStylableElement.h',
     'nsHTMLDocument.h',
     'nsDOMQS.h',
+    'mozilla/dom/ImageData.h'
     ]
 
 customQuickStubs = [
@@ -534,6 +537,7 @@ customQuickStubs = [
 customReturnInterfaces = [
     'nsIDOMCanvasPattern',
     'nsIDOMCanvasGradient',
+    'nsIDOMImageData'
     ]
 
 nsIDOMNode_GetChildNodes_customMethodCallCode = """
@@ -1003,5 +1007,19 @@ customMethodCalls = {
     # Nasty hack to make the ordering of |arc| and |arcTo| correct.
     # |arc| is not traceable because it has an optional argument.
     'nsIDOMCanvasRenderingContext2D_ArcTo' : { 'traceable' : False },
+
+    'nsIDOMImageData_GetWidth': {
+        'thisType': 'nsIDOMImageData',
+        'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->GetWidth();',
+        'canFail': False
+        },
+    'nsIDOMImageData_GetHeight': {
+        'thisType': 'nsIDOMImageData',
+        'code': 'uint32_t result = static_cast<mozilla::dom::ImageData*>(self)->GetHeight();',
+        'canFail': False
+        },
+    'nsIDOMImageData_GetData': {
+        'canFail': False
+        }
     }
 
