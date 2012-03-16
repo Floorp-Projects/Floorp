@@ -52,9 +52,11 @@ public abstract class Layer {
     private boolean mInTransaction;
     private Rect mNewPosition;
     private float mNewResolution;
+    private Rect mNewDisplayPort;
 
     protected Rect mPosition;
     protected float mResolution;
+    protected Rect mDisplayPort;
 
     public Layer() {
         this(null);
@@ -100,12 +102,22 @@ public abstract class Layer {
     }
 
     /**
+     * Returns the pixel boundaries of the layer's display-port rect. If no display port
+     * is set, returns the bounds of the layer.
+     */
+    protected RectF getDisplayPortBounds(RenderContext context) {
+        if (mDisplayPort != null)
+            return RectUtils.scale(new RectF(mDisplayPort), context.zoomFactor / mResolution);
+        return getBounds(context);
+    }
+
+    /**
      * Returns the region of the layer that is considered valid. The default
-     * implementation of this will return the bounds of the layer, but this
-     * may be overridden.
+     * implementation of this will return the display-port bounds of the layer,
+     * but this may be overridden.
      */
     public Region getValidRegion(RenderContext context) {
-        return new Region(RectUtils.round(getBounds(context)));
+        return new Region(RectUtils.round(getDisplayPortBounds(context)));
     }
 
     /**
@@ -165,6 +177,22 @@ public abstract class Layer {
     }
 
     /**
+     * Returns the layer's display port, or null if none is set. This is the
+     * rectangle that represents the area the layer will render, which may be
+     * different to its position.
+     */
+    public Rect getDisplayPort() {
+        return mDisplayPort;
+    }
+
+    /** Sets the layer's display port. */
+    public void setDisplayPort(Rect newDisplayPort) {
+        if (!mInTransaction)
+            throw new RuntimeException("setDisplayPort() is only valid inside a transaction");
+        mNewDisplayPort = newDisplayPort;
+    }
+
+    /**
      * Subclasses may override this method to perform custom layer updates. This will be called
      * with the transaction lock held. Subclass implementations of this method must call the
      * superclass implementation. Returns false if there is still work to be done after this
@@ -174,6 +202,10 @@ public abstract class Layer {
         if (mNewPosition != null) {
             mPosition = mNewPosition;
             mNewPosition = null;
+        }
+        if (mNewDisplayPort != null) {
+            mDisplayPort = mNewDisplayPort;
+            mNewDisplayPort = null;
         }
         if (mNewResolution != 0.0f) {
             mResolution = mNewResolution;

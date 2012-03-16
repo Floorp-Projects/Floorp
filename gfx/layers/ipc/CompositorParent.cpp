@@ -284,9 +284,9 @@ CompositorParent::TransformShadowTree()
                                                   mContentSize.height);
   }
 
-  // We request the view transform from Java after sending the above notifications,
-  // so that Java can take these into account in its response.
-  RequestViewTransform();
+  // We synchronise the viewport information with Java after sending the above
+  // notifications, so that Java can take these into account in its response.
+  SyncViewportInfo();
 
   // Handle transformations for asynchronous panning and zooming. We determine the
   // zoom used by Gecko from the transformation set on the root layer, and we
@@ -314,9 +314,20 @@ CompositorParent::TransformShadowTree()
 
 #ifdef MOZ_WIDGET_ANDROID
 void
-CompositorParent::RequestViewTransform()
+CompositorParent::SyncViewportInfo()
 {
-  mozilla::AndroidBridge::Bridge()->GetViewTransform(mScrollOffset, mXScale, mYScale);
+  ContainerLayer* container = GetPrimaryScrollableLayer()->AsContainerLayer();
+  const FrameMetrics* metrics = &container->GetFrameMetrics();
+
+  if (metrics) {
+    // Calculate the absolute display port to send to Java
+    nsIntRect displayPort = container->GetFrameMetrics().mDisplayPort;
+    nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
+    displayPort.x += scrollOffset.x;
+    displayPort.y += scrollOffset.y;
+
+    mozilla::AndroidBridge::Bridge()->SyncViewportInfo(displayPort, mScrollOffset, mXScale, mYScale);
+  }
 }
 #endif
 
