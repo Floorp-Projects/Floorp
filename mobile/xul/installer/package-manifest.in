@@ -403,8 +403,8 @@
 @BINPATH@/components/nsTelephonyWorker.js
 @BINPATH@/components/Telephony.manifest
 @BINPATH@/components/Telephony.js
-@BINPATH@/components/nsWifiWorker.js
-@BINPATH@/components/nsWifiWorker.manifest
+@BINPATH@/components/WifiWorker.js
+@BINPATH@/components/WifiWorker.manifest
 @BINPATH@/components/DOMWifiManager.js
 @BINPATH@/components/DOMWifiManager.manifest
 #endif
