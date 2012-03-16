@@ -2199,10 +2199,6 @@ WINNT|Darwin) ;;
     ;;
 esac
 
-MOZ_ARG_DISABLE_BOOL(sps,
-[  --disable-sps         Disable sps profiling tool.],
-    MOZ_ENABLE_PROFILER_SPS=,
-    MOZ_ENABLE_PROFILER_SPS=1)
 if test -n "$MOZ_ENABLE_PROFILER_SPS"; then
     AC_DEFINE(MOZ_ENABLE_PROFILER_SPS)
 fi
