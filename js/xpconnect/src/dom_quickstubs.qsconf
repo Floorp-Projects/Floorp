@@ -980,10 +980,6 @@ customMethodCalls = {
     # WebGL
     'nsIDOMWebGLRenderingContext_TexImage2D': CUSTOM_QS,
     'nsIDOMWebGLRenderingContext_TexSubImage2D': CUSTOM_QS,
-    'nsIDOMWebGLRenderingContext_VertexAttrib1fv': CUSTOM_QS,
-    'nsIDOMWebGLRenderingContext_VertexAttrib2fv': CUSTOM_QS,
-    'nsIDOMWebGLRenderingContext_VertexAttrib3fv': CUSTOM_QS,
-    'nsIDOMWebGLRenderingContext_VertexAttrib4fv': CUSTOM_QS,
     # Canvas 2D
     'nsIDOMCanvasRenderingContext2D_CreateImageData': CUSTOM_QS,
     'nsIDOMCanvasRenderingContext2D_PutImageData': CUSTOM_QS,
