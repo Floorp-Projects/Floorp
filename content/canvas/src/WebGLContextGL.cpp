@@ -585,24 +585,30 @@ WebGLContext::BufferData_array(WebGLenum target, JSObject *wa, WebGLenum usage)
 }
 
 NS_IMETHODIMP
-WebGLContext::BufferSubData(PRInt32)
+WebGLContext::BufferSubData(PRInt32 target, PRInt32 offset, const JS::Value& data)
 {
-    if (!IsContextStable())
+    if (data.isNull()) {
+        // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
         return NS_OK;
+    }
+
+    if (!data.isObject()) {
+        return NS_ERROR_FAILURE;
+    }
+
+    JSObject& dataObj = data.toObject();
+    if (js_IsArrayBuffer(&dataObj)) {
+        return BufferSubData_buf(target, offset, &dataObj);
+    }
+
+    if (js_IsTypedArray(&dataObj)) {
+        return BufferSubData_array(target, offset, &dataObj);
+    }
 
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-WebGLContext::BufferSubData_null()
-{
-    if (!IsContextStable())
-        return NS_OK;
-
-    return NS_OK; // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
-}
-
-NS_IMETHODIMP
+nsresult
 WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, JSObject *wb)
 {
     if (!IsContextStable())
@@ -642,7 +648,7 @@ WebGLContext::BufferSubData_buf(GLenum target, WebGLsizei byteOffset, JSObject *
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 WebGLContext::BufferSubData_array(WebGLenum target, WebGLsizei byteOffset, JSObject *wa)
 {
     if (!IsContextStable())
