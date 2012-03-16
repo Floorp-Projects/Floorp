@@ -5283,47 +5283,25 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
   return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
-static nsresult
-GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
-{
-  NS_ASSERTION((aChild && aParent), "bad args");
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
-  nsCOMPtr<nsIContent> cChild = do_QueryInterface(aChild);
-
-  if (!cChild || !content)
-    return NS_ERROR_NULL_POINTER;
-
-  aOffset = content->IndexOf(cChild);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsTypedSelection::SelectAllChildren(nsIDOMNode* aParentNode)
 {
   NS_ENSURE_ARG_POINTER(aParentNode);
-  
-  if (mFrameSelection) 
+  nsCOMPtr<nsINode> node = do_QueryInterface(aParentNode);
+
+  if (mFrameSelection)
   {
     mFrameSelection->PostReason(nsISelectionListener::SELECTALL_REASON);
   }
-  nsresult result = Collapse(aParentNode, 0);
-  if (NS_SUCCEEDED(result))
+  nsresult result = Collapse(node, 0);
+  if (NS_FAILED(result))
+    return result;
+
+  if (mFrameSelection)
   {
-    nsCOMPtr<nsIDOMNode>lastChild;
-    result = aParentNode->GetLastChild(getter_AddRefs(lastChild));
-    if ((NS_SUCCEEDED(result)) && lastChild)
-    {
-      PRInt32 numBodyChildren=0;
-      GetChildOffset(lastChild, aParentNode, numBodyChildren);
-      if (mFrameSelection) 
-      {
-        mFrameSelection->PostReason(nsISelectionListener::SELECTALL_REASON);
-      }
-      result = Extend(aParentNode, numBodyChildren+1);
-    }
+    mFrameSelection->PostReason(nsISelectionListener::SELECTALL_REASON);
   }
-  return result;
+  return Extend(node, node->GetChildCount());
 }
 
 NS_IMETHODIMP
