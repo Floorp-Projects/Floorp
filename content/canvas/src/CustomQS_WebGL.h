@@ -77,64 +77,6 @@ helper_isFloat32Array(JSObject *obj) {
     return js::GetObjectClass(obj) == &js::TypedArray::fastClasses[js::TypedArray::TYPE_FLOAT32];
 }
 
-/*
- * ReadPixels takes:
- *    ReadPixels(int, int, int, int, uint, uint, ArrayBufferView)
- */
-static JSBool
-nsIDOMWebGLRenderingContext_ReadPixels(JSContext *cx, unsigned argc, jsval *vp)
-{
-    XPC_QS_ASSERT_CONTEXT_OK(cx);
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj)
-        return JS_FALSE;
-
-    nsresult rv;
-
-    nsIDOMWebGLRenderingContext *self;
-    xpc_qsSelfRef selfref;
-    JS::AutoValueRooter tvr(cx);
-    if (!xpc_qsUnwrapThis(cx, obj, &self, &selfref.ptr, tvr.jsval_addr(), nsnull))
-        return JS_FALSE;
-
-    if (argc < 7)
-        return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
-
-    jsval *argv = JS_ARGV(cx, vp);
-
-    // arguments common to all cases
-    GET_INT32_ARG(argv0, 0);
-    GET_INT32_ARG(argv1, 1);
-    GET_INT32_ARG(argv2, 2);
-    GET_INT32_ARG(argv3, 3);
-    GET_UINT32_ARG(argv4, 4);
-    GET_UINT32_ARG(argv5, 5);
-
-    if (argc == 7 &&
-        !JSVAL_IS_PRIMITIVE(argv[6]))
-    {
-        JSObject *argv6 = JSVAL_TO_OBJECT(argv[6]);
-        if (js_IsTypedArray(argv6)) {
-            rv = self->ReadPixels_array(argv0, argv1, argv2, argv3,
-                                        argv4, argv5,
-                                        js::TypedArray::getTypedArray(argv6));
-        } else {
-            xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
-            return JS_FALSE;
-        }
-    } else {
-        xpc_qsThrow(cx, NS_ERROR_FAILURE);
-        return JS_FALSE;
-    }
-
-    if (NS_FAILED(rv))
-        return xpc_qsThrowMethodFailed(cx, rv, vp);
-
-    *vp = JSVAL_VOID;
-    return JS_TRUE;
-}
-
-
 class CallTexImage2D
 {
 private:
