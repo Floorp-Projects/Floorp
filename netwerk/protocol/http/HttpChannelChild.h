@@ -106,6 +106,10 @@ public:
                               bool aMerge);
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
+  NS_IMETHOD GetLocalAddress(nsACString& addr);
+  NS_IMETHOD GetLocalPort(PRInt32* port);
+  NS_IMETHOD GetRemoteAddress(nsACString& addr);
+  NS_IMETHOD GetRemotePort(PRInt32* port);
   // nsISupportsPriority
   NS_IMETHOD SetPriority(PRInt32 value);
   // nsIResumableChannel
