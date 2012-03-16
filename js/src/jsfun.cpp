@@ -1199,7 +1199,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
     fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
-        fun->script().init(NULL);
+        fun->mutableScript().init(NULL);
         fun->initEnvironment(parent);
     } else {
         fun->u.native = native;
@@ -1265,7 +1265,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT(script->compartment() != cx->compartment);
 
-            clone->script().init(NULL);
+            clone->mutableScript().init(NULL);
             JSScript *cscript = CloneScript(cx, script);
             if (!cscript)
                 return NULL;

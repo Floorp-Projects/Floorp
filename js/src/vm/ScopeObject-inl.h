@@ -221,6 +221,7 @@ BlockObject::slotCount() const
 inline HeapSlot &
 BlockObject::slotValue(unsigned i)
 {
+    JS_ASSERT(i < slotCount());
     return getSlotRef(RESERVED_SLOTS + i);
 }
 
@@ -259,9 +260,15 @@ StaticBlockObject::maybeDefinitionParseNode(unsigned i)
 }
 
 inline void
-StaticBlockObject::poisonDefinitionParseNode(unsigned i)
+StaticBlockObject::setAliased(unsigned i, bool aliased)
 {
-    slotValue(i).init(this, i, PrivateValue(NULL));
+    slotValue(i).init(this, i, BooleanValue(aliased));
+}
+
+inline bool
+StaticBlockObject::isAliased(unsigned i)
+{
+    return slotValue(i).isTrue();
 }
 
 inline StaticBlockObject &

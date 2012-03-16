@@ -514,7 +514,7 @@ struct JSScript : public js::gc::Cell
     bool            savedCallerFun:1; /* can call getCallerFunction() */
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
-    bool            usesEval:1;       /* script uses eval() */
+    bool            bindingsAccessedDynamically:1; /* see TCF_BINDINGS_ACCESSED_DYNAMICALLY */
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */
@@ -806,6 +806,11 @@ struct JSScript : public js::gc::Cell
         return arr->vector[index];
     }
 
+
+#ifdef DEBUG
+    bool varIsAliased(unsigned varSlot);
+    bool argIsAliased(unsigned argSlot);
+#endif
   private:
     /*
      * Recompile with or without single-stepping support, as directed

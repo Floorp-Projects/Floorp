@@ -570,6 +570,9 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
     StackFrame *fp = Valueify(fpArg);
     JS_ASSERT(cx->stack.containsSlow(fp));
 
+    if (!fp->compartment()->debugMode())
+        return NULL;
+
     if (!fp->isFunctionFrame())
         return NULL;
 

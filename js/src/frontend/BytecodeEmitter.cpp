@@ -978,7 +978,7 @@ EmitArguments(JSContext *cx, BytecodeEmitter *bce)
 bool
 BytecodeEmitter::shouldNoteClosedName(ParseNode *pn)
 {
-    return !callsEval() && pn->isDefn() && pn->isClosed();
+    return !bindingsAccessedDynamically() && pn->isDefn() && pn->isClosed();
 }
 
 bool
@@ -1056,7 +1056,6 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
 
     for (unsigned i = 0; i < blockObj.slotCount(); i++) {
         Definition *dn = blockObj.maybeDefinitionParseNode(i);
-        blockObj.poisonDefinitionParseNode(i);
 
         /* Beware the empty destructuring dummy. */
         if (!dn) {
@@ -1074,6 +1073,9 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
             JS_ASSERT(pnu->pn_cookie.isFree());
         }
 #endif
+
+        bool aliased = bce->bindingsAccessedDynamically() || bce->shouldNoteClosedName(dn);
+        blockObj.setAliased(i, aliased);
     }
 
     /*
@@ -3267,14 +3269,16 @@ EmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp,
     return JS_TRUE;
 }
 
+enum GroupOption { GroupIsDecl, GroupIsNotDecl };
+
 /*
  * Helper called with pop out param initialized to a JSOP_POP* opcode.  If we
  * can emit a group assignment sequence, which results in 0 stack depth delta,
  * we set *pop to JSOP_NOP so callers can veto emitting pn followed by a pop.
  */
-static JSBool
+static bool
 MaybeEmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *pn,
-                         JSOp *pop)
+                         GroupOption groupOption, JSOp *pop)
 {
     JS_ASSERT(pn->isKind(PNK_ASSIGN));
     JS_ASSERT(pn->isOp(JSOP_NOP));
@@ -3284,9 +3288,12 @@ MaybeEmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, Par
     ParseNode *rhs = pn->pn_right;
     if (lhs->isKind(PNK_RB) && rhs->isKind(PNK_RB) &&
         !(rhs->pn_xflags & PNX_HOLEY) &&
-        lhs->pn_count <= rhs->pn_count) {
+        lhs->pn_count <= rhs->pn_count)
+    {
+        if (groupOption == GroupIsDecl && !EmitDestructuringDecls(cx, bce, prologOp, lhs))
+            return false;
         if (!EmitGroupAssignment(cx, bce, prologOp, lhs, rhs))
-            return JS_FALSE;
+            return false;
         *pop = JSOP_NOP;
     }
     return JS_TRUE;
@@ -3409,7 +3416,7 @@ EmitVariables(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption 
                     if (!MaybeEmitLetGroupDecl(cx, bce, pn2, letNotes, &op))
                         return JS_FALSE;
                 } else {
-                    if (!MaybeEmitGroupAssignment(cx, bce, pn->getOp(), pn2, &op))
+                    if (!MaybeEmitGroupAssignment(cx, bce, pn->getOp(), pn2, GroupIsDecl, &op))
                         return JS_FALSE;
                 }
             }
@@ -4788,7 +4795,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 #if JS_HAS_DESTRUCTURING
         if (pn3->isKind(PNK_ASSIGN)) {
             JS_ASSERT(pn3->isOp(JSOP_NOP));
-            if (!MaybeEmitGroupAssignment(cx, bce, op, pn3, &op))
+            if (!MaybeEmitGroupAssignment(cx, bce, op, pn3, GroupIsNotDecl, &op))
                 return false;
         }
 #endif
@@ -4860,7 +4867,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 #if JS_HAS_DESTRUCTURING
         if (pn3->isKind(PNK_ASSIGN)) {
             JS_ASSERT(pn3->isOp(JSOP_NOP));
-            if (!MaybeEmitGroupAssignment(cx, bce, op, pn3, &op))
+            if (!MaybeEmitGroupAssignment(cx, bce, op, pn3, GroupIsNotDecl, &op))
                 return false;
         }
 #endif
@@ -5345,7 +5352,7 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 #if JS_HAS_DESTRUCTURING
         if (!wantval &&
             pn2->isKind(PNK_ASSIGN) &&
-            !MaybeEmitGroupAssignment(cx, bce, op, pn2, &op))
+            !MaybeEmitGroupAssignment(cx, bce, op, pn2, GroupIsNotDecl, &op))
         {
             return false;
         }

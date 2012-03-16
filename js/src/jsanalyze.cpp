@@ -184,7 +184,9 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     PodZero(escapedSlots, numSlots);
 
-    if (script->usesEval || script->mayNeedArgsObj() || script->compartment()->debugMode()) {
+    if (script->bindingsAccessedDynamically || script->mayNeedArgsObj() ||
+        script->compartment()->debugMode())
+    {
         for (unsigned i = 0; i < nargs; i++)
             escapedSlots[ArgSlot(i)] = true;
     } else {
@@ -195,7 +197,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         }
     }
 
-    if (script->usesEval || script->compartment()->debugMode()) {
+    if (script->bindingsAccessedDynamically || script->compartment()->debugMode()) {
         for (unsigned i = 0; i < script->nfixed; i++)
             escapedSlots[LocalSlot(script, i)] = true;
     } else {
@@ -219,7 +221,9 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     isInlineable = true;
     if (script->numClosedArgs() || script->numClosedVars() || heavyweight ||
-        script->usesEval || script->mayNeedArgsObj() || cx->compartment->debugMode()) {
+        script->bindingsAccessedDynamically || script->mayNeedArgsObj() ||
+        cx->compartment->debugMode())
+    {
         isInlineable = false;
     }
 
@@ -1645,7 +1649,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
     /* Ensured by analyzeBytecode. */
     JS_ASSERT(script->function());
     JS_ASSERT(script->mayNeedArgsObj());
-    JS_ASSERT(!script->usesEval);
+    JS_ASSERT(!script->bindingsAccessedDynamically);
 
     /*
      * Since let variables are not tracked, we cannot soundly perform this
