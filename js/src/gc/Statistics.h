@@ -106,7 +106,7 @@ struct Statistics {
     }
 
     jschar *formatMessage();
-    jschar *formatJSON();
+    jschar *formatJSON(uint64_t timestamp);
 
   private:
     JSRuntime *runtime;
@@ -156,7 +156,7 @@ struct Statistics {
 
     int64_t gcDuration();
     void printStats();
-    bool formatData(StatisticsSerializer &ss);
+    bool formatData(StatisticsSerializer &ss, uint64_t timestamp);
 
     double computeMMU(int64_t resolution);
 };

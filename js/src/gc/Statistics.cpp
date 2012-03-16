@@ -310,7 +310,7 @@ formatPhases(StatisticsSerializer &ss, const char *name, int64_t *times)
 }
 
 bool
-Statistics::formatData(StatisticsSerializer &ss)
+Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
 {
     int64_t total = 0, longest = 0;
     for (SliceData *slice = slices.begin(); slice != slices.end(); slice++) {
@@ -323,6 +323,8 @@ Statistics::formatData(StatisticsSerializer &ss)
     double mmu50 = computeMMU(50 * PRMJ_USEC_PER_MSEC);
 
     ss.beginObject(NULL);
+    if (ss.isJSON())
+        ss.appendNumber("Timestamp", "%llu", "", (unsigned long long)timestamp);
     ss.appendNumber("Total Time", "%.1f", "ms", t(total));
     ss.appendString("Type", compartment ? "compartment" : "global");
     ss.appendNumber("MMU (20ms)", "%d", "%", int(mmu20 * 100));
@@ -377,15 +379,15 @@ jschar *
 Statistics::formatMessage()
 {
     StatisticsSerializer ss(StatisticsSerializer::AsText);
-    formatData(ss);
+    formatData(ss, 0);
     return ss.finishJSString();
 }
 
 jschar *
-Statistics::formatJSON()
+Statistics::formatJSON(uint64_t timestamp)
 {
     StatisticsSerializer ss(StatisticsSerializer::AsJSON);
-    formatData(ss);
+    formatData(ss, timestamp);
     return ss.finishJSString();
 }
 
@@ -449,7 +451,7 @@ Statistics::printStats()
 {
     if (fullFormat) {
         StatisticsSerializer ss(StatisticsSerializer::AsText);
-        formatData(ss);
+        formatData(ss, 0);
         char *msg = ss.finishCString();
         if (msg) {
             fprintf(fp, "GC(T+%.3fs) %s\n", t(slices[0].start - startupTime) / 1000.0, msg);
