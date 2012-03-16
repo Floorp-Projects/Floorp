@@ -173,6 +173,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitLoadFixedSlot(MLoadFixedSlot *ins);
     bool visitStoreFixedSlot(MStoreFixedSlot *ins);
     bool visitGetPropertyCache(MGetPropertyCache *ins);
+    bool visitGetElementCache(MGetElementCache *ins);
     bool visitBindNameCache(MBindNameCache *ins);
     bool visitGuardClass(MGuardClass *ins);
     bool visitCallGetProperty(MCallGetProperty *ins);

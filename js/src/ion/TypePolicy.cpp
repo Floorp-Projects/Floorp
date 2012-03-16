@@ -260,41 +260,6 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
     return true;
 }
 
-void
-ObjectPolicy::adjustInput(MInstruction *def, size_t operand)
-{
-    MDefinition *in = def->getOperand(operand);
-    if (in->type() == MIRType_Object || in->type() == MIRType_Slots ||
-        in->type() == MIRType_Elements || in->type() == MIRType_UpvarSlots)
-    {
-        return;
-    }
-
-    // Once we have C++ calls, we can change this to insert a PrimitiveToObject
-    // call.
-    if (in->type() != MIRType_Value)
-        in = boxAt(def, in);
-
-    MUnbox *replace = MUnbox::New(in, MIRType_Object, MUnbox::Fallible);
-    def->block()->insertBefore(def, replace);
-    def->replaceOperand(operand, replace);
-}
-
-bool
-ObjectPolicy::adjustInputs(MInstruction *def)
-{
-    for (size_t i = 0; i < def->numOperands(); i++)
-        adjustInput(def, i);
-    return true;
-}
-
-bool
-SingleObjectPolicy::adjustInputs(MInstruction *def)
-{
-    adjustInput(def, 0);
-    return true;
-}
-
 bool
 StringPolicy::staticAdjustInputs(MInstruction *def)
 {
@@ -340,6 +305,44 @@ DoublePolicy<Op>::staticAdjustInputs(MInstruction *def)
 }
 
 template bool DoublePolicy<0>::staticAdjustInputs(MInstruction *def);
+
+template <unsigned Op>
+bool
+BoxPolicy<Op>::staticAdjustInputs(MInstruction *ins)
+{
+    MDefinition *in = ins->getOperand(Op);
+    if (in->type() == MIRType_Value)
+        return true;
+
+    ins->replaceOperand(Op, boxAt(ins, in));
+    return true;
+}
+
+template bool BoxPolicy<0>::staticAdjustInputs(MInstruction *ins);
+template bool BoxPolicy<1>::staticAdjustInputs(MInstruction *ins);
+
+template <unsigned Op>
+bool
+ObjectPolicy<Op>::staticAdjustInputs(MInstruction *ins)
+{
+    MDefinition *in = ins->getOperand(Op);
+    if (in->type() == MIRType_Object || in->type() == MIRType_Slots ||
+        in->type() == MIRType_Elements || in->type() == MIRType_UpvarSlots)
+    {
+        return true;
+    }
+
+    if (in->type() != MIRType_Value)
+        in = boxAt(ins, in);
+
+    MUnbox *replace = MUnbox::New(in, MIRType_Object, MUnbox::Fallible);
+    ins->block()->insertBefore(ins, replace);
+    ins->replaceOperand(Op, replace);
+    return true;
+}
+
+template bool ObjectPolicy<0>::staticAdjustInputs(MInstruction *ins);
+template bool ObjectPolicy<1>::staticAdjustInputs(MInstruction *ins);
 
 bool
 CallPolicy::adjustInputs(MInstruction *ins)

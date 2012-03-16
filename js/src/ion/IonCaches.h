@@ -54,6 +54,7 @@ namespace ion {
 
 class IonCacheGetProperty;
 class IonCacheSetProperty;
+class IonCacheGetElement;
 class IonCacheBindName;
 
 // Common structure encoding the state of a polymorphic inline cache contained
@@ -117,6 +118,7 @@ class IonCache
         Invalid = 0,
         GetProperty,
         SetProperty,
+        GetElement,
         BindName
     } kind : 8;
 
@@ -146,6 +148,12 @@ class IonCache
             ConstantOrRegisterSpace value;
             bool strict;
         } setprop;
+        struct {
+            Register object;
+            ConstantOrRegisterSpace index;
+            TypedOrValueRegisterSpace output;
+            bool monitoredResult;
+        } getelem;
         struct {
             Register scopeChain;
             PropertyName *name;
@@ -211,6 +219,11 @@ class IonCache
     IonCacheSetProperty &toSetProperty() {
         JS_ASSERT(kind == SetProperty);
         return * (IonCacheSetProperty *) this;
+    }
+
+    IonCacheGetElement &toGetElement() {
+        JS_ASSERT(kind == GetElement);
+        return * (IonCacheGetElement *) this;
     }
 
     IonCacheBindName &toBindName() {
@@ -287,6 +300,40 @@ class IonCacheSetProperty : public IonCache
     bool attachNativeExisting(JSContext *cx, JSObject *obj, const Shape *shape);
 };
 
+class IonCacheGetElement : public IonCache
+{
+  public:
+    IonCacheGetElement(CodeOffsetJump initialJump,
+                       CodeOffsetLabel rejoinLabel,
+                       CodeOffsetLabel cacheLabel,
+                       RegisterSet liveRegs,
+                       Register object, ConstantOrRegister index,
+                       TypedOrValueRegister output, bool monitoredResult)
+    {
+        init(GetElement, liveRegs, initialJump, rejoinLabel, cacheLabel);
+        u.getelem.object = object;
+        u.getelem.index.data() = index;
+        u.getelem.output.data() = output;
+        u.getelem.monitoredResult = monitoredResult;
+    }
+
+    Register object() const {
+        return u.getelem.object;
+    }
+    ConstantOrRegister index() const {
+        return u.getelem.index.data();
+    }
+    TypedOrValueRegister output() const {
+        return u.getelem.output.data();
+    }
+    bool monitoredResult() const {
+        return u.getelem.monitoredResult;
+    }
+
+    bool attachGetProp(JSContext *cx, JSObject *obj, const Value &idval, PropertyName *name,
+                       Value *res);
+};
+
 class IonCacheBindName : public IonCache
 {
   public:
@@ -322,6 +369,9 @@ GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp);
 
 bool
 SetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &value);
+
+bool
+GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &idval, Value *res);
 
 JSObject *
 BindNameCache(JSContext *cx, size_t cacheIndex, JSObject *scopeChain);
