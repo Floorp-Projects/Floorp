@@ -572,6 +572,8 @@ let RIL = {
   IMEI: null,
   IMEISV: null,
   IMSI: null,
+  SMSC: null,
+  MSISDN: null,
 
   registrationState: {},
   gprsRegistrationState: {},
@@ -756,6 +758,22 @@ let RIL = {
   },
   
   /**
+   * Read the MSISDN from the ICC.
+   */
+  getMSISDN: function getMSISDN() {
+    this.iccIO({
+      command: ICC_COMMAND_GET_RESPONSE,
+      fileid:  ICC_EF_MSISDN,
+      pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+      p1:      0, // For GET_RESPONSE, p1 = 0
+      p2:      0, // For GET_RESPONSE, p2 = 0
+      p3:      GET_RESPONSE_EF_SIZE_BYTES,
+      data:    null,
+      pin2:    null,
+    });
+  },
+
+  /**
    * Request the phone's radio power to be switched on or off.
    *
    * @param on
@@ -926,28 +944,34 @@ let RIL = {
    *
    * The `options` parameter object should contain the following attributes:
    *
-   * @param SMSC
-   *        String containing the SMSC PDU in hex format.
    * @param number
-   *        String containing the recipients address.
+   *        String containing the recipient number.
    * @param body
-   *        String containing the message body.
-   * @param dcs
-   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
-   *        constants.
-   * @param userDataHeaderLength
-   *        Length of embedded user data header, in bytes. The whole header
-   *        size will be userDataHeaderLength + 1; 0 for no header.
-   * @param encodedBodyLength
-   *        Length of the message body when encoded with the given DCS. For
-   *        UCS2, in bytes; for 7-bit, in septets.
-   * @param langIndex
-   *        Table index used for normal 7-bit encoded character lookup.
-   * @param langShiftIndex
-   *        Table index used for escaped 7-bit encoded character lookup.
+   *        String containing the message text.
+   * @param requestId
+   *        String identifying the sms request used by the SmsRequestManager.
+   * @param processId
+   *        String containing the processId for the SmsRequestManager.
    */
   sendSMS: function sendSMS(options) {
-    let token = Buf.newParcel(REQUEST_SEND_SMS, options);
+    // Get the SMS Center address
+    if (!this.SMSC) {
+      // We request the SMS center address again, passing it the SMS options
+      // in order to try to send it again after retrieving the SMSC number.
+      this.getSMSCAddress(options);
+      return;
+    }
+    // We explicitly save this information on the options object so that we
+    // can refer to it later, in particular on the main thread (where this
+    // object may get sent eventually.)
+    options.SMSC = this.SMSC;
+
+    //TODO: verify values on 'options'
+    //TODO: the data encoding and length in octets should eventually be
+    // computed on the mainthread and passed down to us.
+    GsmPDUHelper.calculateUserDataLength(options);
+
+    Buf.newParcel(REQUEST_SEND_SMS, options);
     Buf.writeUint32(2);
     Buf.writeString(options.SMSC);
     GsmPDUHelper.writeMessage(options);
@@ -1180,6 +1204,44 @@ let RIL = {
       Phone.sendDOMMessage({type: "cardstatechange",
                             cardState: this.cardState});
     }
+  },
+
+  _processMSISDNResponse: function _processMSISDNResponse(options) {
+    let sw1 = Buf.readUint32();
+    let sw2 = Buf.readUint32();
+    // See GSM11.11 section 9.4 for sw1 and sw2
+    if (sw1 != STATUS_NORMAL_ENDING) {
+      // TODO: error 
+      // Wait for fix for Bug 733990 to report error.
+      debug("Error in iccIO");
+    }
+    if (DEBUG) debug("ICC I/O (" + sw1 + "/" + sw2 + ")");
+
+    switch (options.command) {
+      case ICC_COMMAND_GET_RESPONSE:
+        let response = Buf.readString();
+        let recordSize = parseInt(
+            response.substr(RESPONSE_DATA_RECORD_LENGTH * 2, 2), 16) & 0xff;
+        let options = {
+          command: ICC_COMMAND_READ_RECORD,
+          fileid:  ICC_EF_MSISDN,
+          pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
+          p1:      1, // Record number, MSISDN is always in the 1st record
+          p2:      READ_RECORD_ABSOLUTE_MODE,
+          p3:      recordSize,
+          data:    null,
+          pin2:    null,
+        };
+        RIL.iccIO(options);
+        break;
+
+      case ICC_COMMAND_READ_RECORD:
+        // Ignore 2 bytes prefix, which is 4 chars
+        let number = GsmPDUHelper.readStringAsBCD().toString().substr(4); 
+        if (DEBUG) debug("MSISDN: " + number);
+        this.MSISDN = number;
+        break;
+    } 
   },
 
   _processRegistrationState: function _processRegistrationState(state) {
@@ -1531,7 +1593,8 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   options.messageRef = Buf.readUint32();
   options.ackPDU = Buf.readString();
   options.errorCode = Buf.readUint32();
-  Phone.onSendSMS(options);
+  options.type = "sms-sent";
+  Phone.sendDOMMessage(options);
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
 RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
@@ -1552,7 +1615,11 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   this.getDataCallList();
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
-  Phone.onICCIO(options);
+  switch (options.fileid) {
+    case ICC_EF_MSISDN:
+      this._processMSISDNResponse(options);
+      break;
+  }
 };
 RIL[REQUEST_SEND_USSD] = null;
 RIL[REQUEST_CANCEL_USSD] = null;
@@ -1666,8 +1733,16 @@ RIL[REQUEST_CDMA_DELETE_SMS_ON_RUIM] = null;
 RIL[REQUEST_DEVICE_IDENTITY] = null;
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
 RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
-  let smsc = Buf.readString();
-  Phone.onGetSMSCAddress(smsc, options);
+  //TODO: notify main thread if we fail retrieving the SMSC, especially
+  // if there was a pending SMS (bug 727319).
+  this.SMSC = Buf.readString();
+  // If the SMSC was not retrieved on RIL initialization, an attempt to
+  // get it is triggered from this.sendSMS followed by the 'options'
+  // parameter of the SMS, so that we can send it after successfully
+  // retrieving the SMSC.
+  if (this.SMSC && options.body) {
+    this.sendSMS(options);
+  }
 };
 RIL[REQUEST_SET_SMSC_ADDRESS] = null;
 RIL[REQUEST_REPORT_SMS_MEMORY_STATUS] = null;
@@ -1735,8 +1810,8 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
     this.getICCStatus();
     this.requestNetworkInfo();
     this.getSignalStrength();
-    Phone.getSMSCAddress();
-    Phone.getMSISDN();
+    this.getSMSCAddress();
+    this.getMSISDN();
     Phone.sendDOMMessage({type: "cardstatechange",
                          cardState: GECKO_CARDSTATE_READY});
   }
@@ -1768,7 +1843,36 @@ RIL[UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RESPONSE_
   this.requestNetworkInfo();
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length) {
-  Phone.onNewSMS(length);
+  if (!length) {
+    if (DEBUG) debug("Received empty SMS!");
+    //TODO: should we acknowledge the SMS here? maybe only after multiple
+    //failures.
+    return;
+  }
+  // An SMS is a string, but we won't read it as such, so let's read the
+  // string length and then defer to PDU parsing helper.
+  let messageStringLength = Buf.readUint32();
+  if (DEBUG) debug("Got new SMS, length " + messageStringLength);
+  let message = GsmPDUHelper.readMessage();
+  if (DEBUG) debug(message);
+
+  // Read string delimiters. See Buf.readString().
+  let delimiter = Buf.readUint16();
+  if (!(messageStringLength & 1)) {
+    delimiter |= Buf.readUint16();
+  }
+  if (DEBUG) {
+    if (delimiter != 0) {
+      debug("Something's wrong, found string delimiter: " + delimiter);
+    }
+  }
+
+  message.type = "sms-received";
+  this.sendDOMMessage(message);
+
+  //TODO: this might be a lie? do we want to wait for the mainthread to
+  // report back?
+  this.acknowledgeSMS(true, SMS_HANDLED);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
   let info = Buf.readStringList();
@@ -1865,110 +1969,10 @@ RIL[UNSOLICITED_RESEND_INCALL_MUTE] = null;
  */
 let Phone = {
 
-  SMSC: null,
-  MSISDN: null,
-
   /**
    * Handlers for messages from the RIL. They all begin with on* and are called
    * from RIL object.
    */
-
-  onICCIO: function onICCIO(options) {
-    switch (options.fileid) {
-      case ICC_EF_MSISDN:
-        this.readMSISDNResponse(options);
-        break;
-    }
-  },
-  
-  readMSISDNResponse: function readMSISDNResponse(options) {
-    let sw1 = Buf.readUint32();
-    let sw2 = Buf.readUint32();
-    // See GSM11.11 section 9.4 for sw1 and sw2
-    if (sw1 != STATUS_NORMAL_ENDING) {
-      // TODO: error 
-      // Wait for fix for Bug 733990 to report error.
-      debug("Error in iccIO");
-    }
-    if (DEBUG) debug("ICC I/O (" + sw1 + "/" + sw2 + ")");
-
-    switch (options.command) {
-      case ICC_COMMAND_GET_RESPONSE:
-        let response = Buf.readString();
-        let recordSize = parseInt(
-            response.substr(RESPONSE_DATA_RECORD_LENGTH * 2, 2), 16) & 0xff;
-        let options = {
-          command: ICC_COMMAND_READ_RECORD,
-          fileid:  ICC_EF_MSISDN,
-          pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
-          p1:      1, // Record number, MSISDN is always in the 1st record
-          p2:      READ_RECORD_ABSOLUTE_MODE,
-          p3:      recordSize,
-          data:    null,
-          pin2:    null,
-        };
-        RIL.iccIO(options);
-        break;
-
-      case ICC_COMMAND_READ_RECORD:
-        // Ignore 2 bytes prefix, which is 4 chars
-        let number = GsmPDUHelper.readStringAsBCD().toString().substr(4); 
-        if (DEBUG) debug("MSISDN: " + number);
-        this.MSISDN = number;
-        break;
-    } 
-  },
-
-  onGetSMSCAddress: function onGetSMSCAddress(smsc, options) {
-    //TODO: notify main thread if we fail retrieving the SMSC, especially
-    // if there was a pending SMS (bug 727319).
-    this.SMSC = smsc;
-    // If the SMSC was not retrieved on RIL initialization, an attempt to
-    // get it is triggered from this.sendSMS followed by the 'options'
-    // parameter of the SMS, so that we can send it after successfully
-    // retrieving the SMSC.
-    if (smsc && options.body) {
-      this.sendSMS(options);
-    }
-  },
-
-  onSendSMS: function onSendSMS(options) {
-    options.type = "sms-sent";
-    this.sendDOMMessage(options);
-  },
-
-  onNewSMS: function onNewSMS(payloadLength) {
-    if (!payloadLength) {
-      if (DEBUG) debug("Received empty SMS!");
-      //TODO: should we acknowledge the SMS here? maybe only after multiple
-      //failures.
-      return;
-    }
-    // An SMS is a string, but we won't read it as such, so let's read the
-    // string length and then defer to PDU parsing helper.
-    let messageStringLength = Buf.readUint32();
-    if (DEBUG) debug("Got new SMS, length " + messageStringLength);
-    let message = GsmPDUHelper.readMessage();
-    if (DEBUG) debug(message);
-
-    // Read string delimiters. See Buf.readString().
-    let delimiter = Buf.readUint16();
-    if (!(messageStringLength & 1)) {
-      delimiter |= Buf.readUint16();
-    }
-    if (DEBUG) {
-      if (delimiter != 0) {
-        debug("Something's wrong, found string delimiter: " + delimiter);
-      }
-    }
-
-    message.type = "sms-received";
-    this.sendDOMMessage(message);
-
-    //TODO: this might be a lie? do we want to wait for the mainthread to
-    // report back?
-    RIL.acknowledgeSMS(true, SMS_HANDLED);
-  },
 
   onNITZ: function onNITZ(timeInSeconds, timeZoneInMinutes, dstFlag, timeStampInMS) {
     let message = {type: "nitzTime",
@@ -2093,23 +2097,7 @@ let Phone = {
    *        String containing the processId for the SmsRequestManager.
    */
   sendSMS: function sendSMS(options) {
-    // Get the SMS Center address
-    if (!this.SMSC) {
-      // We request the SMS center address again, passing it the SMS options
-      // in order to try to send it again after retrieving the SMSC number.
-      RIL.getSMSCAddress(options);
-      return;
-    }
-    // We explicitly save this information on the options object so that we
-    // can refer to it later, in particular on the main thread (where this
-    // object may get sent eventually.)
-    options.SMSC = this.SMSC;
-
-    //TODO: verify values on 'options'
-    //TODO: the data encoding and length in octets should eventually be
-    // computed on the mainthread and passed down to us.
-    GsmPDUHelper.calculateUserDataLength(options);
-    RIL.sendSMS(options);
+    RIL.sendSms(options);
   },
 
   /**
@@ -2139,23 +2127,6 @@ let Phone = {
    */
   getFailCauseCode: function getFailCauseCode(options) {
     RIL.getFailCauseCode();
-  },
-
-  /**
-   * Read the MSISDN from the ICC.
-   */
-  getMSISDN: function getMSISDN() {
-    let options = {
-      command: ICC_COMMAND_GET_RESPONSE,
-      fileid:  ICC_EF_MSISDN,
-      pathid:  EF_PATH_MF_SIM + EF_PATH_DF_TELECOM,
-      p1:      0, // For GET_RESPONSE, p1 = 0
-      p2:      0, // For GET_RESPONSE, p2 = 0
-      p3:      GET_RESPONSE_EF_SIZE_BYTES,
-      data:    null,
-      pin2:    null,
-    };
-    RIL.iccIO(options);
   },
 
   /**
