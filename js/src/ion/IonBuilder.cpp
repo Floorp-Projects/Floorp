@@ -3394,7 +3394,22 @@ IonBuilder::jsop_getelem()
     MDefinition *rhs = current->pop();
     MDefinition *lhs = current->pop();
 
-    MInstruction *ins = MCallGetElement::New(lhs, rhs);
+    MInstruction *ins;
+
+    // TI does not account for GETELEM with string indexes, so we have to monitor
+    // the result of MGetElementCache if it's expected to access string properties.
+    // If the result of MGetElementCache is not monitored, we won't generate any
+    // getprop stubs.
+    bool mustMonitorResult = false;
+    bool cacheable = false;
+
+    oracle->elementReadGeneric(script, pc, &cacheable, &mustMonitorResult);
+
+    if (cacheable)
+        ins = MGetElementCache::New(lhs, rhs, mustMonitorResult);
+    else
+        ins = MCallGetElement::New(lhs, rhs);
+
     current->add(ins);
     current->push(ins);
 
@@ -3404,7 +3419,8 @@ IonBuilder::jsop_getelem()
     types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
     types::TypeSet *types = oracle->propertyRead(script, pc);
 
-    monitorResult(ins, types);
+    if (mustMonitorResult)
+        monitorResult(ins, types);
     return pushTypeBarrier(ins, types, barrier);
 }
 

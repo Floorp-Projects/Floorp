@@ -1223,6 +1223,21 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 }
 
 bool
+LIRGenerator::visitGetElementCache(MGetElementCache *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+    JS_ASSERT(ins->index()->type() == MIRType_Value);
+    JS_ASSERT(ins->type() == MIRType_Value);
+
+    LGetElementCacheV *lir = new LGetElementCacheV(useRegister(ins->object()));
+    if (!useBox(lir, LGetElementCacheV::Index, ins->index()))
+        return false;
+    if (!defineBox(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitBindNameCache(MBindNameCache *ins)
 {
     JS_ASSERT(ins->scopeChain()->type() == MIRType_Object);

@@ -227,6 +227,20 @@ TypeInferenceOracle::elementReadIsPacked(JSScript *script, jsbytecode *pc)
     return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
 }
 
+void
+TypeInferenceOracle::elementReadGeneric(JSScript *script, jsbytecode *pc, bool *cacheable, bool *monitorResult)
+{
+    MIRType obj = getMIRType(script->analysis()->poppedTypes(pc, 1));
+    MIRType id = getMIRType(script->analysis()->poppedTypes(pc, 0));
+
+    *cacheable = (obj == MIRType_Object &&
+                  (id == MIRType_Value || id == MIRType_Int32 || id == MIRType_String));
+    if (*cacheable)
+        *monitorResult = (id == MIRType_String || script->analysis()->getCode(pc).getStringElement);
+    else
+        *monitorResult = true;
+}
+
 bool
 TypeInferenceOracle::elementWriteIsDense(JSScript *script, jsbytecode *pc)
 {

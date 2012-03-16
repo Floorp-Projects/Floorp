@@ -126,6 +126,10 @@ class TypeOracle
     virtual bool elementReadIsPacked(JSScript *script, jsbytecode *pc) {
         return false;
     }
+    virtual void elementReadGeneric(JSScript *script, jsbytecode *pc, bool *cacheable, bool *monitorResult) {
+        *cacheable = false;
+        *monitorResult = true;
+    }
     virtual bool setElementHasWrittenHoles(JSScript *script, jsbytecode *pc) {
         return true;
     }
@@ -231,6 +235,7 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *getCallReturn(JSScript *caller, jsbytecode *pc);
     bool elementReadIsDense(JSScript *script, jsbytecode *pc);
     bool elementReadIsPacked(JSScript *script, jsbytecode *pc);
+    void elementReadGeneric(JSScript *script, jsbytecode *pc, bool *cacheable, bool *monitorResult);
     bool elementWriteIsDense(JSScript *script, jsbytecode *pc);
     bool elementWriteIsPacked(JSScript *script, jsbytecode *pc);
     bool setElementHasWrittenHoles(JSScript *script, jsbytecode *pc);

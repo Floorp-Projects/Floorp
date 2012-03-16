@@ -1631,6 +1631,26 @@ MacroAssemblerARMCompat::testNumber(Condition cond, const Register &tag)
     return cond == Equal ? BelowOrEqual : Above;
 }
 
+void
+MacroAssemblerARMCompat::branchTestValue(Condition cond, const ValueOperand &value, const Value &v,
+                                         Label *label)
+{
+    // If cond == NotEqual, branch when a.payload != b.payload || a.tag != b.tag.
+    // If the payloads are equal, compare the tags. If the payloads are not equal,
+    // short circuit true (NotEqual).
+    //
+    // If cand == Equal, branch when a.payload == b.payload && a.tag == b.tag.
+    // If the payloads are equal, compare the tags. If the payloads are not equal,
+    // short circuit false (NotEqual).
+    jsval_layout jv = JSVAL_TO_IMPL(v);
+    if (v.isMarkable())
+        ma_cmp(value.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell *>(v.toGCThing())));
+    else
+        ma_cmp(value.payloadReg(), Imm32(jv.s.payload.i32));
+    ma_cmp(value.typeReg(), Imm32(jv.s.tag), Equal);
+    ma_b(label, cond);
+}
+
 // unboxing code
 void
 MacroAssemblerARMCompat::unboxInt32(const ValueOperand &operand, const Register &dest)

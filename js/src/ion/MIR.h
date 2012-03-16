@@ -2378,7 +2378,7 @@ class MLambda
 
 class MLambdaJoinableForCallOrSet
   : public MBinaryInstruction,
-    public ObjectPolicy
+    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >
 {
     HeapPtr<JSFunction> fun_;
 
@@ -3080,6 +3080,40 @@ class MGetPropertyCache
         return atom_;
     }
     TypePolicy *typePolicy() { return this; }
+};
+
+class MGetElementCache
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >
+{
+    // See the comment in IonBuilder::jsop_getelem.
+    bool monitoredResult_;
+
+    MGetElementCache(MDefinition *obj, MDefinition *value, bool monitoredResult)
+      : MBinaryInstruction(obj, value), monitoredResult_(monitoredResult)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GetElementCache);
+
+    static MGetElementCache *New(MDefinition *obj, MDefinition *value, bool monitoredResult) {
+        return new MGetElementCache(obj, value, monitoredResult);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    bool monitoredResult() const {
+        return monitoredResult_;
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
 };
 
 class MBindNameCache

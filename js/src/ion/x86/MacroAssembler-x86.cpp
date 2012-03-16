@@ -178,3 +178,28 @@ MacroAssemblerX86::handleException()
     ret();
 }
 
+void
+MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand &value, const Value &v, Label *label)
+{
+    jsval_layout jv = JSVAL_TO_IMPL(v);
+    if (v.isMarkable())
+        cmpl(value.payloadReg(), ImmGCPtr(reinterpret_cast<gc::Cell *>(v.toGCThing())));
+    else
+        cmpl(value.payloadReg(), Imm32(jv.s.payload.i32));
+
+    if (cond == Equal) {
+        Label done;
+        j(NotEqual, &done);
+        {
+            cmpl(value.typeReg(), Imm32(jv.s.tag));
+            j(Equal, label);
+        }
+        bind(&done);
+    } else {
+        JS_ASSERT(cond == NotEqual);
+        j(NotEqual, label);
+
+        cmpl(value.typeReg(), Imm32(jv.s.tag));
+        j(NotEqual, label);
+    }
+}

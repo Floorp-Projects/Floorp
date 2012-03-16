@@ -139,6 +139,7 @@
     _(FunctionEnvironment)          \
     _(GetPropertyCacheV)            \
     _(GetPropertyCacheT)            \
+    _(GetElementCacheV)             \
     _(BindNameCache)                \
     _(CallGetProperty)              \
     _(CallGetName)                  \

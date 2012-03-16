@@ -513,6 +513,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Condition testError(Condition cond, const ValueOperand &src) {
         return testMagic(cond, src);
     }
+    void branchTestValue(Condition cond, const ValueOperand &value, const Value &v, Label *label) {
+        JS_ASSERT(value.valueReg() != ScratchReg);
+        moveValue(v, ScratchReg);
+        cmpq(value.valueReg(), ScratchReg);
+        j(cond, label);
+    }
 
     // Note that the |dest| register here may be ScratchReg, so we shouldn't
     // use it.
