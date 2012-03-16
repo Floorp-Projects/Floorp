@@ -4312,33 +4312,39 @@ WebGLContext::VertexAttrib4f(PRUint32 index, WebGLfloat x0, WebGLfloat x1,
     return NS_OK;
 }
 
-#define SIMPLE_ARRAY_METHOD_NO_COUNT(name, cnt, arrayType, ptrType)  \
-NS_IMETHODIMP                                                           \
-WebGLContext::name(PRInt32) {                                     \
-     return NS_ERROR_NOT_IMPLEMENTED;                                   \
-}                                                                       \
-NS_IMETHODIMP                                                           \
-WebGLContext::name##_array(WebGLuint idx, JSObject *wa)           \
-{                                                                       \
-    if (!IsContextStable())                                                   \
-        return NS_OK;                                                   \
-    if (!wa || JS_GetTypedArrayType(wa) != js::TypedArray::arrayType)                   \
-        return ErrorInvalidOperation(#name ": array must be " #arrayType); \
-    if (JS_GetTypedArrayLength(wa) < cnt)                                               \
-        return ErrorInvalidOperation(#name ": array must be >= %d elements", cnt); \
-    MakeContextCurrent();                                               \
-    ptrType *ptr = (ptrType *)JS_GetTypedArrayData(wa);                                  \
-    if (idx) {                                                        \
-        gl->f##name(idx, ptr);                                          \
-    } else {                                                            \
-        mVertexAttrib0Vector[0] = ptr[0];                               \
-        mVertexAttrib0Vector[1] = cnt > 1 ? ptr[1] : ptrType(0);        \
-        mVertexAttrib0Vector[2] = cnt > 2 ? ptr[2] : ptrType(0);        \
-        mVertexAttrib0Vector[3] = cnt > 3 ? ptr[3] : ptrType(1);        \
-        if (gl->IsGLES2())                                              \
-            gl->f##name(idx, ptr);                                      \
-    }                                                                   \
-    return NS_OK;                                                       \
+#define SIMPLE_ARRAY_METHOD_NO_COUNT(name, cnt, arrayType, ptrType)             \
+NS_IMETHODIMP                                                                   \
+WebGLContext::name(WebGLuint idx, const JS::Value& aValue, JSContext* aCx)      \
+{                                                                               \
+    JSObject* wa = GetFloat32Array(aCx, aValue);                                \
+    if (!wa) {                                                                  \
+        return NS_ERROR_FAILURE;                                                \
+    }                                                                           \
+                                                                                \
+    if (!IsContextStable()) {                                                   \
+        return NS_OK;                                                           \
+    }                                                                           \
+    if (JS_GetTypedArrayType(wa) != js::TypedArray::arrayType) {                \
+        return ErrorInvalidOperation(#name ": array must be " #arrayType);      \
+    }                                                                           \
+    if (JS_GetTypedArrayLength(wa) < cnt) {                                     \
+        return ErrorInvalidOperation(#name ": array must be >= %d elements",    \
+                                     cnt);                                      \
+    }                                                                           \
+                                                                                \
+    MakeContextCurrent();                                                       \
+    ptrType *ptr = static_cast<ptrType*>(JS_GetTypedArrayData(wa));             \
+    if (idx) {                                                                  \
+        gl->f##name(idx, ptr);                                                  \
+    } else {                                                                    \
+        mVertexAttrib0Vector[0] = ptr[0];                                       \
+        mVertexAttrib0Vector[1] = cnt > 1 ? ptr[1] : ptrType(0);                \
+        mVertexAttrib0Vector[2] = cnt > 2 ? ptr[2] : ptrType(0);                \
+        mVertexAttrib0Vector[3] = cnt > 3 ? ptr[3] : ptrType(1);                \
+        if (gl->IsGLES2())                                                      \
+            gl->f##name(idx, ptr);                                              \
+    }                                                                           \
+    return NS_OK;                                                               \
 }
 
 SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib1fv, 1, TYPE_FLOAT32, WebGLfloat)
