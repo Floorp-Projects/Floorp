@@ -1,45 +1,3 @@
-settings {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
-}
-
-setting[type="bool"] {
-  -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-bool");
-}
-
-setting[type="bool"][localized="true"] {
-  -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-localized-bool");
-}
-
-setting[type="boolint"] {
-  -moz-binding: url("chrome://browser/content/bindings.xml#setting-fulltoggle-boolint");
-}
-
-setting[type="integer"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-integer");
-}
-
-setting[type="control"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-control");
-}
-
-setting[type="string"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-string");
-}
-
-setting[type="color"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-color");
-}
-
-setting[type="file"],
-setting[type="directory"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-path");
-}
-
-setting[type="radio"],
-setting[type="menulist"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#setting-multi");
-}
-
 radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
 }
@@ -50,10 +8,6 @@ checkbox {
 
 menulist {
   -moz-binding: url("chrome://browser/content/bindings.xml#menulist");
-}
-
-.chrome-select-option {
-  -moz-binding: url("chrome://browser/content/bindings.xml#chrome-select-option");
 }
 
 /* richlist defaults ------------------------------------------------------- */

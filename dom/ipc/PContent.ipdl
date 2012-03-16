@@ -134,6 +134,7 @@ child:
     AddPermission(Permission permission);
 
     DeviceMotionChanged(long type, double x, double y, double z);
+    NeedsCalibration();
 
     ScreenSizeChanged(gfxIntSize size);
 

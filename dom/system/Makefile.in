@@ -62,7 +62,7 @@ DIRS = android
 endif
 
 ifdef MOZ_B2G_RIL
-DIRS += b2g
+DIRS += gonk
 endif
 
 CPPSRCS     = \
@@ -86,6 +86,9 @@ endif
 EXPORTS     = \
   nsDeviceMotion.h \
   $(NULL)
+
+# We fire the nsDOMDeviceAcceleration
+LOCAL_INCLUDES += -I$(topsrcdir)/content/events/src
 
 include $(topsrcdir)/config/config.mk
 

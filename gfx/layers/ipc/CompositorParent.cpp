@@ -43,12 +43,25 @@
 #include "ShadowLayersParent.h"
 #include "LayerManagerOGL.h"
 #include "nsIWidget.h"
+#include "nsGkAtoms.h"
+#include "RenderTrace.h"
+
+#if defined(MOZ_WIDGET_ANDROID)
+#include "AndroidBridge.h"
+#include <android/log.h>
+#endif
+
+using base::Thread;
 
 namespace mozilla {
 namespace layers {
 
-CompositorParent::CompositorParent(nsIWidget* aWidget)
-  : mStopped(false), mWidget(aWidget)
+CompositorParent::CompositorParent(nsIWidget* aWidget, base::Thread* aCompositorThread)
+  : mCompositorThread(aCompositorThread)
+  , mWidget(aWidget)
+  , mCurrentCompositeTask(NULL)
+  , mPaused(false)
+  , mIsFirstPaint(false)
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -71,33 +84,160 @@ CompositorParent::Destroy()
 bool
 CompositorParent::RecvStop()
 {
-  mStopped = true;
+  mPaused = true;
   Destroy();
   return true;
 }
 
 void
+CompositorParent::ScheduleRenderOnCompositorThread()
+{
+  CancelableTask *renderTask = NewRunnableMethod(this, &CompositorParent::ScheduleComposition);
+  mCompositorThread->message_loop()->PostTask(FROM_HERE, renderTask);
+}
+
+void
+CompositorParent::PauseComposition()
+{
+  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+                    "PauseComposition() can only be called on the compositor thread");
+  if (!mPaused) {
+    mPaused = true;
+
+#ifdef MOZ_WIDGET_ANDROID
+    static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->ReleaseSurface();
+#endif
+  }
+}
+
+void
+CompositorParent::ResumeComposition()
+{
+  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+                    "ResumeComposition() can only be called on the compositor thread");
+  mPaused = false;
+
+#ifdef MOZ_WIDGET_ANDROID
+  static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->RenewSurface();
+#endif
+}
+
+void
+CompositorParent::SchedulePauseOnCompositorThread()
+{
+  CancelableTask *pauseTask = NewRunnableMethod(this,
+                                                &CompositorParent::PauseComposition);
+  mCompositorThread->message_loop()->PostTask(FROM_HERE, pauseTask);
+}
+
+void
+CompositorParent::ScheduleResumeOnCompositorThread()
+{
+  CancelableTask *resumeTask = NewRunnableMethod(this,
+                                                 &CompositorParent::ResumeComposition);
+  mCompositorThread->message_loop()->PostTask(FROM_HERE, resumeTask);
+}
+
+void
 CompositorParent::ScheduleComposition()
 {
-  CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
-  MessageLoop::current()->PostTask(FROM_HERE, composeTask);
+  if (mCurrentCompositeTask) {
+    return;
+  }
 
-#ifdef MOZ_RENDERTRACE
-  Layer* aLayer = mLayerManager->GetRoot();
-  mozilla::layers::RenderTraceLayers(aLayer, "0000");
+  bool initialComposition = mLastCompose.IsNull();
+  TimeDuration delta;
+  if (!initialComposition)
+    delta = mozilla::TimeStamp::Now() - mLastCompose;
+
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  mExpectedComposeTime = mozilla::TimeStamp::Now() + TimeDuration::FromMilliseconds(15);
 #endif
 
+  mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
+
+  // Since 60 fps is the maximum frame rate we can acheive, scheduling composition
+  // events less than 15 ms apart wastes computation..
+  if (!initialComposition && delta.ToMilliseconds() < 15) {
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+    mExpectedComposeTime = mozilla::TimeStamp::Now() + TimeDuration::FromMilliseconds(15 - delta.ToMilliseconds());
+#endif
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, mCurrentCompositeTask, 15 - delta.ToMilliseconds());
+  } else {
+    MessageLoop::current()->PostTask(FROM_HERE, mCurrentCompositeTask);
+  }
+}
+
+void
+CompositorParent::SetTransformation(float aScale, nsIntPoint aScrollOffset)
+{
+  mXScale = aScale;
+  mYScale = aScale;
+  mScrollOffset = aScrollOffset;
 }
 
 void
 CompositorParent::Composite()
 {
-  if (mStopped || !mLayerManager) {
+  NS_ABORT_IF_FALSE(mCompositorThread->thread_id() == PlatformThread::CurrentId(),
+                    "Composite can only be called on the compositor thread");
+  mCurrentCompositeTask = NULL;
+
+  mLastCompose = mozilla::TimeStamp::Now();
+
+  if (mPaused || !mLayerManager || !mLayerManager->GetRoot()) {
     return;
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  TransformShadowTree();
+#endif
+
+  Layer* aLayer = mLayerManager->GetRoot();
+  mozilla::layers::RenderTraceLayers(aLayer, "0000");
+
   mLayerManager->EndEmptyTransaction();
+
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  if (mExpectedComposeTime + TimeDuration::FromMilliseconds(15) < mozilla::TimeStamp::Now()) {
+    printf_stderr("Compositor: Composite took %i ms.\n",
+                  15 + (int)(mozilla::TimeStamp::Now() - mExpectedComposeTime).ToMilliseconds());
+  }
+#endif
 }
+
+#ifdef MOZ_WIDGET_ANDROID
+// Do a breadth-first search to find the first layer in the tree that is
+// scrollable.
+Layer*
+CompositorParent::GetPrimaryScrollableLayer()
+{
+  Layer* root = mLayerManager->GetRoot();
+
+  nsTArray<Layer*> queue;
+  queue.AppendElement(root);
+  while (queue.Length()) {
+    ContainerLayer* containerLayer = queue[0]->AsContainerLayer();
+    queue.RemoveElementAt(0);
+    if (!containerLayer) {
+      continue;
+    }
+
+    const FrameMetrics& frameMetrics = containerLayer->GetFrameMetrics();
+    if (frameMetrics.IsScrollable()) {
+      return containerLayer;
+    }
+
+    Layer* child = containerLayer->GetFirstChild();
+    while (child) {
+      queue.AppendElement(child);
+      child = child->GetNextSibling();
+    }
+  }
+
+  return root;
+}
+#endif
 
 // Go down shadow layer tree, setting properties to match their non-shadow
 // counterparts.
@@ -117,8 +257,73 @@ SetShadowProperties(Layer* aLayer)
 }
 
 void
-CompositorParent::ShadowLayersUpdated()
+CompositorParent::TransformShadowTree()
 {
+#ifdef MOZ_WIDGET_ANDROID
+  Layer* layer = GetPrimaryScrollableLayer();
+  ShadowLayer* shadow = layer->AsShadowLayer();
+  ContainerLayer* container = layer->AsContainerLayer();
+
+  const FrameMetrics* metrics = &container->GetFrameMetrics();
+  const gfx3DMatrix& rootTransform = mLayerManager->GetRoot()->GetTransform();
+  const gfx3DMatrix& currentTransform = layer->GetTransform();
+
+  float rootScaleX = rootTransform.GetXScale();
+  float rootScaleY = rootTransform.GetYScale();
+
+  if (mIsFirstPaint && metrics) {
+    nsIntPoint scrollOffset = metrics->mViewportScrollOffset;
+    mContentSize = metrics->mContentSize;
+    mozilla::AndroidBridge::Bridge()->SetFirstPaintViewport(scrollOffset.x, scrollOffset.y,
+                                                            1/rootScaleX, mContentSize.width,
+                                                            mContentSize.height);
+    mIsFirstPaint = false;
+  } else if (metrics && (metrics->mContentSize != mContentSize)) {
+    mContentSize = metrics->mContentSize;
+    mozilla::AndroidBridge::Bridge()->SetPageSize(1/rootScaleX, mContentSize.width,
+                                                  mContentSize.height);
+  }
+
+  // We request the view transform from Java after sending the above notifications,
+  // so that Java can take these into account in its response.
+  RequestViewTransform();
+
+  // Handle transformations for asynchronous panning and zooming. We determine the
+  // zoom used by Gecko from the transformation set on the root layer, and we
+  // determine the scroll offset used by Gecko from the frame metrics of the
+  // primary scrollable layer. We compare this to the desired zoom and scroll
+  // offset in the view transform we obtained from Java in order to compute the
+  // transformation we need to apply.
+  if (metrics && metrics->IsScrollable()) {
+    float tempScaleDiffX = rootScaleX * mXScale;
+    float tempScaleDiffY = rootScaleY * mYScale;
+
+    nsIntPoint metricsScrollOffset = metrics->mViewportScrollOffset;
+
+    nsIntPoint scrollCompensation(
+      (mScrollOffset.x / tempScaleDiffX - metricsScrollOffset.x) * mXScale,
+      (mScrollOffset.y / tempScaleDiffY - metricsScrollOffset.y) * mYScale);
+    ViewTransform treeTransform(-scrollCompensation, mXScale, mYScale);
+    shadow->SetShadowTransform(gfx3DMatrix(treeTransform) * currentTransform);
+  } else {
+    ViewTransform treeTransform(nsIntPoint(0,0), mXScale, mYScale);
+    shadow->SetShadowTransform(gfx3DMatrix(treeTransform) * currentTransform);
+  }
+#endif
+}
+
+#ifdef MOZ_WIDGET_ANDROID
+void
+CompositorParent::RequestViewTransform()
+{
+  mozilla::AndroidBridge::Bridge()->GetViewTransform(mScrollOffset, mXScale, mYScale);
+}
+#endif
+
+void
+CompositorParent::ShadowLayersUpdated(bool isFirstPaint)
+{
+  mIsFirstPaint = mIsFirstPaint || isFirstPaint;
   const nsTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
   NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
                     "can only support at most 1 ShadowLayersParent");

@@ -87,6 +87,7 @@ FENNEC_JAVA_FILES = \
   GeckoEvent.java \
   GeckoEventListener.java \
   GeckoEventResponder.java \
+  GeckoHalDefines.java \
   GeckoInputConnection.java \
 	GeckoMessageReceiver.java \
   GeckoPreferences.java \
@@ -116,16 +117,18 @@ FENNEC_JAVA_FILES = \
   gfx/CairoImage.java \
   gfx/CairoUtils.java \
   gfx/CheckerboardImage.java \
+  gfx/FlexibleGLSurfaceView.java \
   gfx/FloatSize.java \
-  gfx/GeckoSoftwareLayerClient.java \
+  gfx/GeckoLayerClient.java \
+  gfx/GLController.java \
+  gfx/GLThread.java \
+  gfx/ImmutableViewportMetrics.java \
   gfx/InputConnectionHandler.java \
   gfx/IntSize.java \
   gfx/Layer.java \
-  gfx/LayerClient.java \
   gfx/LayerController.java \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
-  gfx/MultiTileLayer.java \
   gfx/NinePatchTileLayer.java \
   gfx/PanningPerfAPI.java \
   gfx/PlaceholderLayerClient.java \
@@ -138,8 +141,9 @@ FENNEC_JAVA_FILES = \
   gfx/TextureGenerator.java \
   gfx/TextureReaper.java \
   gfx/TileLayer.java \
+  gfx/ViewTransform.java \
   gfx/ViewportMetrics.java \
-  gfx/WidgetTileLayer.java \
+  gfx/VirtualLayer.java \
   ui/Axis.java \
   ui/PanZoomController.java \
   ui/SimpleScaleGestureDetector.java \
@@ -232,6 +236,7 @@ RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
   res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar.xml \
+  res/layout/awesomebar_actionbar.xml \
   res/layout/awesomebar_folder_row.xml \
   res/layout/awesomebar_folder_header_row.xml \
   res/layout/awesomebar_header_row.xml \

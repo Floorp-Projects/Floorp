@@ -705,7 +705,8 @@ CustomElf::CallInit()
 
   for (Array<void *>::iterator it = init_array.begin();
        it < init_array.end(); ++it) {
-    if (*it)
+    /* Android x86 NDK wrongly puts 0xffffffff in INIT_ARRAY */
+    if (*it && *it != reinterpret_cast<void *>(-1))
       CallFunction(*it);
   }
   initialized = true;
@@ -719,7 +720,8 @@ CustomElf::CallFini()
     return;
   for (Array<void *>::iterator it = fini_array.begin();
        it < fini_array.end(); ++it) {
-    if (*it)
+    /* Android x86 NDK wrongly puts 0xffffffff in FINI_ARRAY */
+    if (*it && *it != reinterpret_cast<void *>(-1))
       CallFunction(*it);
   }
   if (fini)

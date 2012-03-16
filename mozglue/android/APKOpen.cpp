@@ -322,7 +322,7 @@ SHELL_WRAPPER0(nativeInit)
 SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
 SHELL_WRAPPER0(processNextNativeEvent)
 SHELL_WRAPPER1(setSurfaceView, jobject)
-SHELL_WRAPPER1(setSoftwareLayerClient, jobject)
+SHELL_WRAPPER2(setLayerClient, jobject, jint)
 SHELL_WRAPPER0(onResume)
 SHELL_WRAPPER0(onLowMemory)
 SHELL_WRAPPER3(callObserver, jstring, jstring, jstring)
@@ -334,6 +334,9 @@ SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble)
 SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong)
 SHELL_WRAPPER0(bindWidgetTexture)
+SHELL_WRAPPER0(scheduleComposite)
+SHELL_WRAPPER0(schedulePauseComposition)
+SHELL_WRAPPER0(scheduleResumeComposition)
 SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong)
 SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong)
 SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong)
@@ -635,7 +638,7 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(notifyGeckoOfEvent);
   GETFUNC(processNextNativeEvent);
   GETFUNC(setSurfaceView);
-  GETFUNC(setSoftwareLayerClient);
+  GETFUNC(setLayerClient);
   GETFUNC(onResume);
   GETFUNC(onLowMemory);
   GETFUNC(callObserver);
@@ -647,6 +650,9 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(notifyBatteryChange);
   GETFUNC(notifySmsReceived);
   GETFUNC(bindWidgetTexture);
+  GETFUNC(scheduleComposite);
+  GETFUNC(schedulePauseComposition);
+  GETFUNC(scheduleResumeComposition);
   GETFUNC(saveMessageInSentbox);
   GETFUNC(notifySmsSent);
   GETFUNC(notifySmsDelivered);
@@ -723,7 +729,6 @@ static int loadSQLiteLibs(const char *apkName)
 static mozglueresult
 loadNSSLibs(const char *apkName)
 {
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "loadNSSLibs");
   chdir(getenv("GRE_HOME"));
 
 #ifdef MOZ_OLD_LINKER
@@ -733,7 +738,7 @@ loadNSSLibs(const char *apkName)
   }
 #endif
 
-  Zip *zip = new Zip(apkName);
+  RefPtr<Zip> zip = new Zip(apkName);
   if (!lib_mapping) {
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
   }
@@ -772,14 +777,11 @@ loadNSSLibs(const char *apkName)
 #undef MOZLOAD
 #endif
 
-  delete zip;
-
 #ifdef MOZ_CRASHREPORTER
   free(file_ids);
   file_ids = NULL;
 #endif
 
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "loadNSSLibs 2");
   if (!nss_handle) {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libnss3!");
     return FAILURE;
@@ -795,7 +797,6 @@ loadNSSLibs(const char *apkName)
     return FAILURE;
   }
 
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "loadNSSLibs 3");
   return setup_nss_functions(nss_handle, nspr_handle, plc_handle);
 }
 

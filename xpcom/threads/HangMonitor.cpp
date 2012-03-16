@@ -51,7 +51,7 @@
 #include <windows.h>
 #endif
 
-#if defined(MOZ_PROFILING) && defined(XP_WIN)
+#if defined(MOZ_ENABLE_PROFILER_SPS) && defined(MOZ_PROFILING) && defined(XP_WIN)
   #define REPORT_CHROME_HANGS
 #endif
 
@@ -217,8 +217,10 @@ ThreadMain(void*)
   PRIntervalTime lastTimestamp = 0;
   int waitCount = 0;
 
+#ifdef REPORT_CHROME_HANGS
   Telemetry::HangStack hangStack;
   SharedLibraryInfo hangModuleMap;
+#endif
 
   while (true) {
     if (gShutdown) {

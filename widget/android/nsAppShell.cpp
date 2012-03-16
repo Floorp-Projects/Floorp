@@ -96,7 +96,7 @@ nsAppShell::nsAppShell()
       mQueueCond(mCondLock, "nsAppShell.mQueueCond"),
       mNumDraws(0),
       mNumViewports(0),
-      mPendingOrientationEvents(false)
+      mPendingSensorEvents(false)
 {
     gAppShell = this;
 }
@@ -331,32 +331,54 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         NativeEventCallback();
         break;
 
-    case AndroidGeckoEvent::ACCELERATION_EVENT:
-        gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ACCELERATION,
-                                                 -curEvent->X(),
-                                                 curEvent->Y(),
-                                                 curEvent->Z());
+    case AndroidGeckoEvent::SENSOR_ACCURACY:
+        if (curEvent->Flags() == 0)
+            gDeviceMotionSystem->NeedsCalibration();
         break;
 
-    case AndroidGeckoEvent::ORIENTATION_EVENT:
-        gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ORIENTATION,
-                                                 -curEvent->Alpha(),
-                                                 curEvent->Beta(),
-                                                 curEvent->Gamma());
-        mPendingOrientationEvents = false;
-        break;
+    case AndroidGeckoEvent::SENSOR_EVENT:
+        mPendingSensorEvents = false;
+        switch (curEvent->Flags()) {
+        case hal::SENSOR_ORIENTATION:
+            gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ORIENTATION,
+                                                     curEvent->X(),
+                                                     -curEvent->Y(),
+                                                     -curEvent->Z());
+            break;
+
+        case hal::SENSOR_ACCELERATION:
+            gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_ACCELERATION,
+                                                     -curEvent->X(),
+                                                     curEvent->Y(),
+                                                     curEvent->Z());
+            break;
+
+        case hal::SENSOR_LINEAR_ACCELERATION:
+            gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_LINEAR_ACCELERATION,
+                                                     -curEvent->X(),
+                                                     curEvent->Y(),
+                                                     curEvent->Z());
+            break;
+
+        case hal::SENSOR_GYROSCOPE:
+            gDeviceMotionSystem->DeviceMotionChanged(nsIDeviceMotionData::TYPE_GYROSCOPE,
+                                                     -curEvent->X(),
+                                                     curEvent->Y(),
+                                                     curEvent->Z());
+            break;
+
+        default:
+            __android_log_print(ANDROID_LOG_ERROR, "Gecko", "### SENSOR_EVENT fired, but type wasn't known %d", curEvent->Flags());
+        }
+         break;
 
     case AndroidGeckoEvent::LOCATION_EVENT: {
         if (!gLocationCallback)
             break;
 
         nsGeoPosition* p = curEvent->GeoPosition();
-        nsGeoPositionAddress* a = curEvent->GeoAddress();
-
-        if (p) {
-            p->SetAddress(a);
+        if (p)
             gLocationCallback->Update(curEvent->GeoPosition());
-        }
         else
             NS_WARNING("Received location event without geoposition!");
         break;
@@ -459,7 +481,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             break;
 
         nsTArray<nsIntPoint> points = curEvent->Points();
-        NS_ASSERTION(points.Length() != 2, "Screenshot event does not have enough coordinates");
+        NS_ASSERTION(points.Length() == 2, "Screenshot event does not have enough coordinates");
         bridge->TakeScreenshot(domWindow, 0, 0, points[0].x, points[0].y, points[1].x, points[1].y, curEvent->MetaState(), scale);
         break;
     }
@@ -602,10 +624,10 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
                     delete event;
                 }
             }
-        } else if (ae->Type() == AndroidGeckoEvent::ORIENTATION_EVENT) {
-            if (!mPendingOrientationEvents)
-                 mEventQueue.AppendElement(ae);
-            mPendingOrientationEvents = true;
+        } else if (ae->Type() == AndroidGeckoEvent::SENSOR_EVENT) {
+            if (!mPendingSensorEvents)
+                mEventQueue.AppendElement(ae);
+            mPendingSensorEvents = true;
         } else {
             mEventQueue.AppendElement(ae);
         }

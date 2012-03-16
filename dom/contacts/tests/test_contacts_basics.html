@@ -46,7 +46,7 @@ var adr2 = {
 
 var properties1 = {
   name: "Testname1",
-  familyName: "TestFamilyName",
+  familyName: ["TestFamilyName","Wagner"],
   givenName: ["Test1","Test2"],
   nickname: "nicktest",
   tel: ["123456"],
@@ -212,6 +212,66 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
+    ok(true, "Retrieving by substring");
+    var options = {filterBy: ["name"],
+                   filterOp: "contains",
+                   filterValue: properties1.name.substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring2");
+    var options = {filterBy: ["givenName"],
+                   filterOp: "contains",
+                   filterValue: properties1.givenName[0].substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring3");
+    var options = {filterBy: ["name", "givenName"],
+                   filterOp: "contains",
+                   filterValue: properties1.givenName[0].substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring3, Testing multi entry");
+    var options = {filterBy: ["name", "givenName", "familyName"],
+                   filterOp: "contains",
+                   filterValue: properties1.familyName[1].substring(0,3).toLowerCase()};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      checkContacts(createResult1, properties1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
     ok(true, "Retrieving all contacts");
     req = mozContacts.find({});
     req.onsuccess = function() {
@@ -306,7 +366,7 @@ var steps = [
   function () {
     ok(true, "Searching contacts by query");
     var options = {filterBy: ["name", "email"],
-                   filterOp: "icontains",
+                   filterOp: "contains",
                    filterValue: properties1.name[0].substring(0,4)};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -321,7 +381,7 @@ var steps = [
   function () {
     ok(true, "Searching contacts by query");
     var options = {filterBy: ["nickname", "email"],
-                   filterOp: "icontains",
+                   filterOp: "contains",
                    filterValue: properties1.nickname};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -429,7 +489,7 @@ var steps = [
   function () {
     console.log("Searching contacts by query1");
     var options = {filterBy: ["name", "email"],
-                   filterOp: "icontains",
+                   filterOp: "contains",
                    filterValue: properties1.name[0].substring(0, 4)}
     req = mozContacts.find(options)
     req.onsuccess = function () {
@@ -444,7 +504,7 @@ var steps = [
   function () {
     ok(true, "Searching contacts by query2");
     var options = {filterBy: ["name", "email"],
-                   filterOp: "icontains",
+                   filterOp: "contains",
                    filterValue: properties2.name[0].substring(0, 4)};
     req = mozContacts.find(options);
     req.onsuccess = function () {
@@ -538,12 +598,26 @@ var steps = [
   function () {
     ok(true, "Retrieving all contacts2");
     var options = {filterBy: ["name"],
-                   filterOp: "icontains",
-                   filterValue: properties2.name[0].substring(0, 4)};
-    req = mozContacts.find({});
+                   filterOp: "contains",
+                   filterValue: properties1.name[0].substring(0, 4)};
+    req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 100, "100 Entries.");
       checkContacts(createResult1, req.result[99]);
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving all contacts3");
+    var options = {filterBy: ["name", "givenName", "tel", "email", "note"],
+                   filterOp: "contains",
+                   filterValue: properties1.name[0].substring(0, 4),
+                   filterLimit: 15 };
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 15, "15 Entries.");
+      checkContacts(createResult1, req.result[10]);
       next();
     }
     req.onerror = onFailure;
@@ -588,7 +662,7 @@ var steps = [
   function () {
     ok(true, "Retrieving all contacts");
     var options = {filterBy: ["name"],
-                   filterOp: "icontains",
+                   filterOp: "contains",
                    filterValue: properties2.name[0].substring(0, 4)};
     req = mozContacts.find({});
     req.onsuccess = function () {

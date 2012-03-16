@@ -55,7 +55,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 2;
+    static final int DATABASE_VERSION = 3;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -546,6 +546,7 @@ public class BrowserProvider extends ContentProvider {
                  }
              }
 
+             db.setTransactionSuccessful();
              db.endTransaction();
         }
 

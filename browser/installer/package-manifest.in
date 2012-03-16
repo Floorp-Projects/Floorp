@@ -149,7 +149,7 @@
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/dom_telephony.xpt
 @BINPATH@/components/dom_wifi.xpt
-@BINPATH@/components/dom_system_b2g.xpt
+@BINPATH@/components/dom_system_gonk.xpt
 #endif
 @BINPATH@/components/dom_battery.xpt
 #ifdef MOZ_B2G_BT
@@ -388,6 +388,8 @@
 @BINPATH@/components/SmsDatabaseService.js
 @BINPATH@/components/nsWifiWorker.js
 @BINPATH@/components/nsWifiWorker.manifest
+@BINPATH@/components/nsDOMWifiManager.js
+@BINPATH@/components/nsDOMWifiManager.manifest
 #endif
 @BINPATH@/components/BrowserProfileMigrators.manifest
 @BINPATH@/components/ProfileMigrator.js
