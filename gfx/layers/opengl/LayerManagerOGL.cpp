@@ -204,22 +204,12 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
   // We unfortunately can't do generic initialization here, since the
   // concrete type actually matters.  This macro generates the
   // initialization using a concrete type and index.
-
-  enum {
-    // Causes Initialize to fail if shdaer can't compile
-    SHADER_MANDATORY,
-    // Sets the shader as NULL if it fails to compile
-    SHADER_OPTIONAL
-  };
-#define SHADER_PROGRAM(penum, ptype, vsstr, fsstr, optional) do {                 \
+#define SHADER_PROGRAM(penum, ptype, vsstr, fsstr) do {                           \
     NS_ASSERTION(programIndex++ == penum, "out of order shader initialization!"); \
     ptype *p = new ptype(mGLContext);                                             \
     if (!p->Initialize(vsstr, fsstr)) {                                           \
       delete p;                                                                   \
-      if (optional == SHADER_OPTIONAL)                                            \
-        p = nsnull;                                                               \
-      else                                                                        \
-        return false;                                                             \
+      return false;                                                            \
     }                                                                             \
     mPrograms.AppendElement(p);                                                   \
   } while (0)
@@ -233,33 +223,28 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
 
   /* Layer programs */
   SHADER_PROGRAM(RGBALayerProgramType, ColorTextureLayerProgram,
-                 sLayerVS, sRGBATextureLayerFS, SHADER_MANDATORY);
+                 sLayerVS, sRGBATextureLayerFS);
   SHADER_PROGRAM(BGRALayerProgramType, ColorTextureLayerProgram,
-                 sLayerVS, sBGRATextureLayerFS, SHADER_MANDATORY);
+                 sLayerVS, sBGRATextureLayerFS);
   SHADER_PROGRAM(RGBXLayerProgramType, ColorTextureLayerProgram,
-                 sLayerVS, sRGBXTextureLayerFS, SHADER_MANDATORY);
+                 sLayerVS, sRGBXTextureLayerFS);
   SHADER_PROGRAM(BGRXLayerProgramType, ColorTextureLayerProgram,
-                 sLayerVS, sBGRXTextureLayerFS, SHADER_MANDATORY);
+                 sLayerVS, sBGRXTextureLayerFS);
   SHADER_PROGRAM(RGBARectLayerProgramType, ColorTextureLayerProgram,
-                 sLayerVS, sRGBARectTextureLayerFS, SHADER_MANDATORY);
+                 sLayerVS, sRGBARectTextureLayerFS);
   SHADER_PROGRAM(ColorLayerProgramType, SolidColorLayerProgram,
-                 sLayerVS, sSolidColorLayerFS, SHADER_MANDATORY);
+                 sLayerVS, sSolidColorLayerFS);
   SHADER_PROGRAM(YCbCrLayerProgramType, YCbCrTextureLayerProgram,
-                 sLayerVS, sYCbCrTextureLayerFS, SHADER_MANDATORY);
+                 sLayerVS, sYCbCrTextureLayerFS);
   SHADER_PROGRAM(ComponentAlphaPass1ProgramType, ComponentAlphaTextureLayerProgram,
-                 sLayerVS, sComponentPass1FS, SHADER_MANDATORY);
+                 sLayerVS, sComponentPass1FS);
   SHADER_PROGRAM(ComponentAlphaPass2ProgramType, ComponentAlphaTextureLayerProgram,
-                 sLayerVS, sComponentPass2FS, SHADER_MANDATORY);
+                 sLayerVS, sComponentPass2FS);
   /* Copy programs (used for final framebuffer blit) */
   SHADER_PROGRAM(Copy2DProgramType, CopyProgram,
-                 sCopyVS, sCopy2DFS, SHADER_MANDATORY);
+                 sCopyVS, sCopy2DFS);
   SHADER_PROGRAM(Copy2DRectProgramType, CopyProgram,
-                 sCopyVS, sCopy2DRectFS, SHADER_MANDATORY);
-
-#ifdef ANDROID
-  SHADER_PROGRAM(Copy2DExternalProgramType, CopyProgram,
-                 sCopyVS, sCopy2DExternalFS, SHADER_OPTIONAL);
-#endif
+                 sCopyVS, sCopy2DRectFS);
 
 #undef SHADER_PROGRAM
 
