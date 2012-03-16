@@ -616,10 +616,10 @@ let RIL = {
    *
    * Response will call Phone.onEnterICCPIN().
    */
-  enterICCPIN: function enterICCPIN(pin) {
+  enterICCPIN: function enterICCPIN(options) {
     Buf.newParcel(REQUEST_ENTER_SIM_PIN);
     Buf.writeUint32(1);
-    Buf.writeString(pin);
+    Buf.writeString(options.pin);
     Buf.sendParcel();
   },
 
@@ -633,11 +633,11 @@ let RIL = {
    *
    * Response will call Phone.onChangeICCPIN().
    */
-  changeICCPIN: function changeICCPIN(oldPin, newPin) {
+  changeICCPIN: function changeICCPIN(options) {
     Buf.newParcel(REQUEST_CHANGE_SIM_PIN);
     Buf.writeUint32(2);
-    Buf.writeString(oldPin);
-    Buf.writeString(newPin);
+    Buf.writeString(options.oldPin);
+    Buf.writeString(options.newPin);
     Buf.sendParcel();
   },
 
@@ -651,11 +651,11 @@ let RIL = {
    *
    * Response will call Phone.onEnterICCPUK().
    */
-   enterICCPUK: function enterICCPUK(puk, newPin) {
+   enterICCPUK: function enterICCPUK(options) {
      Buf.newParcel(REQUEST_ENTER_SIM_PUK);
      Buf.writeUint32(2);
-     Buf.writeString(puk);
-     Buf.writeString(newPin);
+     Buf.writeString(options.puk);
+     Buf.writeString(options.newPin);
      Buf.sendParcel();
    },
 
@@ -765,18 +765,18 @@ let RIL = {
   /**
    * Dial the phone.
    *
-   * @param address
-   *        String containing the address (number) to dial.
+   * @param number
+   *        String containing the number to dial.
    * @param clirMode
    *        Integer doing something XXX TODO
    * @param uusInfo
    *        Integer doing something XXX TODO
    */
-  dial: function dial(address, clirMode, uusInfo) {
+  dial: function dial(options) {
     let token = Buf.newParcel(REQUEST_DIAL);
-    Buf.writeString(address);
-    Buf.writeUint32(clirMode || 0);
-    Buf.writeUint32(uusInfo || 0);
+    Buf.writeString(options.number);
+    Buf.writeUint32(options.clirMode || 0);
+    Buf.writeUint32(options.uusInfo || 0);
     // TODO Why do we need this extra 0? It was put it in to make this
     // match the format of the binary message.
     Buf.writeUint32(0);
@@ -789,10 +789,10 @@ let RIL = {
    * @param callIndex
    *        Call index (1-based) as reported by REQUEST_GET_CURRENT_CALLS.
    */
-  hangUp: function hangUp(callIndex) {
+  hangUp: function hangUp(options) {
     Buf.newParcel(REQUEST_HANGUP);
     Buf.writeUint32(1);
-    Buf.writeUint32(callIndex);
+    Buf.writeUint32(options.callIndex);
     Buf.sendParcel();
   },
 
@@ -850,10 +850,6 @@ let RIL = {
    */
   sendSMS: function sendSMS(options) {
     let token = Buf.newParcel(REQUEST_SEND_SMS, options);
-    //TODO we want to map token to the input values so that on the
-    // response from the RIL device we know which SMS request was successful
-    // or not. Maybe we should build that functionality into newParcel() and
-    // handle it within tokenRequestMap[].
     Buf.writeUint32(2);
     Buf.writeString(options.SMSC);
     GsmPDUHelper.writeMessage(options);
@@ -882,9 +878,9 @@ let RIL = {
    * @param dtmfChar
    *        DTMF signal to send, 0-9, *, +
    */
-  startTone: function startTone(dtmfChar) {
+  startTone: function startTone(options) {
     Buf.newParcel(REQUEST_DTMF_START);
-    Buf.writeString(dtmfChar);
+    Buf.writeString(options.dtmfChar);
     Buf.sendParcel();
   },
 
@@ -892,9 +888,15 @@ let RIL = {
     Buf.simpleRequest(REQUEST_DTMF_STOP);
   },
 
-  sendTone: function sendTone(dtmfChar) {
+  /**
+   * Send a DTMF tone.
+   *
+   * @param dtmfChar
+   *        DTMF signal to send, 0-9, *, +
+   */
+  sendTone: function sendTone(options) {
     Buf.newParcel(REQUEST_DTMF);
-    Buf.writeString(dtmfChar);
+    Buf.writeString(options.dtmfChar);
     Buf.sendParcel();
   },
 
@@ -911,12 +913,12 @@ let RIL = {
   /**
    * Set the Short Message Service Center address.
    *
-   * @param smsc
+   * @param SMSC
    *        Short Message Service Center address in PDU format.
    */
-  setSMSCAddress: function setSMSCAddress(smsc) {
+  setSMSCAddress: function setSMSCAddress(options) {
     Buf.newParcel(REQUEST_SET_SMSC_ADDRESS);
-    Buf.writeString(smsc);
+    Buf.writeString(options.SMSC);
     Buf.sendParcel();
   },
 
@@ -2123,7 +2125,7 @@ let Phone = {
    *        String containing the number to dial.
    */
   dial: function dial(options) {
-    RIL.dial(options.number, 0, 0);
+    RIL.dial(options);
   },
 
   /**
@@ -2133,7 +2135,7 @@ let Phone = {
    *        String containing the DTMF signal to send.
    */
   sendTone: function sendTone(options) {
-    RIL.sendTone(options.dtmfChar);
+    RIL.sendTone(options);
   },
 
   /**
@@ -2143,7 +2145,7 @@ let Phone = {
    *        String containing the DTMF signal to send.
    */
   startTone: function startTone(options) {
-    RIL.startTone(options.dtmfChar);
+    RIL.startTone(options);
   },
 
   /**
@@ -2162,7 +2164,7 @@ let Phone = {
   hangUp: function hangUp(options) {
     //TODO need to check whether call is holding/waiting/background
     // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
-    RIL.hangUp(options.callIndex);
+    RIL.hangUp(options);
   },
 
   /**
