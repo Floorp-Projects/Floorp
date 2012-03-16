@@ -177,7 +177,7 @@ interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
   const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
-[scriptable, builtinclass, uuid(cabad79d-222c-40d1-a746-4942278c0bba)]
+[scriptable, builtinclass, uuid(6db28d5b-f230-4d81-a457-b82c5369fc11)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -634,15 +634,13 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void colorMask(in WebGLboolean red, in WebGLboolean green, in WebGLboolean blue, in WebGLboolean alpha);
   void compileShader([optional] in nsIWebGLShader shader);
 
-  void compressedTexImage2D([optional] in long dummy);
-  [noscript] void compressedTexImage2D_array(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
-                                             in WebGLsizei width, in WebGLsizei height, in WebGLint border,
-                                             in WebGLJSObjectPtr pixels);
+  void compressedTexImage2D(in WebGLenum target, in WebGLint level, in WebGLenum internalformat,
+                            in WebGLsizei width, in WebGLsizei height, in WebGLint border,
+                            in jsval pixels);
 
-  void compressedTexSubImage2D([optional] in long dummy);
-  [noscript] void compressedTexSubImage2D_array(in WebGLenum target, in WebGLint level, in WebGLint xoffset,
-                                                in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
-                                                in WebGLenum format, in WebGLJSObjectPtr pixels);
+  void compressedTexSubImage2D(in WebGLenum target, in WebGLint level, in WebGLint xoffset,
+                               in WebGLint yoffset, in WebGLsizei width, in WebGLsizei height,
+                               in WebGLenum format, in jsval pixels);
 
   void copyTexImage2D(in WebGLenum target, in WebGLint level, in WebGLenum internalformat, 
                       in WebGLint x, in WebGLint y, in WebGLsizei width, in WebGLsizei height, in WebGLint border);
