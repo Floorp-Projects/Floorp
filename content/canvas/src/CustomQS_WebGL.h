@@ -42,6 +42,7 @@
 
 #include "jsapi.h"
 #include "jstypedarray.h"
+#include "CustomQS_Canvas.h"
 
 #define GET_INT32_ARG(var, index) \
   int32_t var; \
@@ -479,33 +480,16 @@ TexImage2DImageDataOrElement(JSContext* cx, T& self, JS::Value* object)
 
     // Failed to interpret object as an Element, now try to interpret it as
     // ImageData.
-    JSObject* imageData = &object->toObject();
-
-    jsval js_width, js_height, js_data;
-    if (!JS_GetProperty(cx, imageData, "width", &js_width) ||
-        !JS_GetProperty(cx, imageData, "height", &js_height) ||
-        !JS_GetProperty(cx, imageData, "data", &js_data)) {
+    uint32_t int_width, int_height;
+    JS::Anchor<JSObject*> obj_data;
+    if (!GetImageData(cx, *object, &int_width, &int_height, &obj_data)) {
         return false;
     }
-    if (js_width  == JSVAL_VOID ||
-        js_height == JSVAL_VOID ||
-        !js_data.isObject())
-    {
-        return xpc_qsThrow(cx, NS_ERROR_FAILURE);
-    }
-    int32_t int_width, int_height;
-    JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
-    if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
-        !JS_ValueToECMAInt32(cx, js_height, &int_height))
-    {
-        return false;
-    }
-    if (!js_IsTypedArray(obj_data))
-    {
+    if (!js_IsTypedArray(obj_data.get())) {
         return xpc_qsThrow(cx, NS_ERROR_FAILURE);
     }
 
-    nsresult rv = self.DoCallForImageData(int_width, int_height, obj_data);
+    nsresult rv = self.DoCallForImageData(int_width, int_height, obj_data.get());
     return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
 }
 
