@@ -463,6 +463,7 @@ let Buf = {
       let error = this.readUint32();
 
       options = this.tokenRequestMap[token];
+      delete this.tokenRequestMap[token];
       request_type = options.rilRequestType;
 
       options.rilRequestError = error;
@@ -478,7 +479,6 @@ let Buf = {
         debug("Solicited response for request type " + request_type +
               ", token " + token);
       }
-      delete this.tokenRequestMap[token];
     } else if (response_type == RESPONSE_TYPE_UNSOLICITED) {
       request_type = this.readUint32();
       if (DEBUG) debug("Unsolicited response for request type " + request_type);
