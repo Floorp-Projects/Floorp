@@ -330,6 +330,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return testGCThing(cond, value.typeReg());
     }
 
+    void branchTestValue(Condition cond, const ValueOperand &value, const Value &v, Label *label);
+
     void cmpPtr(const Register &lhs, const ImmWord rhs) {
         cmpl(lhs, Imm32(rhs.value));
     }

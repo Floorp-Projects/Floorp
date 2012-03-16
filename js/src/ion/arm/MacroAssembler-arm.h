@@ -519,6 +519,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, c);
     }
 
+    void branchTestValue(Condition cond, const ValueOperand &value, const Value &v, Label *label);
+
     // unboxing code
     void unboxInt32(const ValueOperand &operand, const Register &dest);
     void unboxBoolean(const ValueOperand &operand, const Register &dest);

@@ -1948,6 +1948,8 @@ class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
           case LInstruction::LOp_GetPropertyCacheT:
           case LInstruction::LOp_GetPropertyCacheV:
             return codegen->visitOutOfLineCacheGetProperty(this);
+          case LInstruction::LOp_GetElementCacheV:
+            return codegen->visitOutOfLineGetElementCache(this);
           case LInstruction::LOp_SetPropertyCacheT:
           case LInstruction::LOp_SetPropertyCacheV:
             return codegen->visitOutOfLineSetPropertyCache(this);
@@ -2022,6 +2024,44 @@ CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
 
     masm.jump(ool->rejoin());
 
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineGetElementCache(OutOfLineCache *ool)
+{
+    LGetElementCacheV *ins = ool->cache()->toGetElementCacheV();
+    const MGetElementCache *mir = ins->mir();
+
+    Register obj = ToRegister(ins->object());
+    ConstantOrRegister index = TypedOrValueRegister(ToValue(ins, LGetElementCacheV::Index));
+    TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
+
+    RegisterSet liveRegs = ins->safepoint()->liveRegs();
+
+    IonCacheGetElement cache(ool->getInlineJump(), ool->getInlineLabel(),
+                             masm.labelForPatch(), liveRegs,
+                             obj, index, output,
+                             mir->monitoredResult());
+
+    cache.setScriptedLocation(mir->block()->info().script(), mir->resumePoint()->pc());
+    size_t cacheIndex = allocateCache(cache);
+
+    saveLive(ins);
+
+    typedef bool (*pf)(JSContext *, size_t, JSObject *, const Value &, Value *);
+    static const VMFunction Info = FunctionInfo<pf>(GetElementCache);
+
+    pushArg(index);
+    pushArg(obj);
+    pushArg(Imm32(cacheIndex));
+    if (!callVM(Info, ins))
+        return false;
+
+    masm.storeCallResultValue(output);
+    restoreLive(ins);
+
+    masm.jump(ool->rejoin());
     return true;
 }
 

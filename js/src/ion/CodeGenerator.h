@@ -160,6 +160,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool);
 
     bool visitOutOfLineCacheGetProperty(OutOfLineCache *ool);
+    bool visitOutOfLineGetElementCache(OutOfLineCache *ool);
     bool visitOutOfLineSetPropertyCache(OutOfLineCache *ool);
     bool visitOutOfLineBindNameCache(OutOfLineCache *ool);
 
@@ -167,6 +168,9 @@ class CodeGenerator : public CodeGeneratorSpecific
         return visitCache(ins);
     }
     bool visitGetPropertyCacheT(LGetPropertyCacheT *ins) {
+        return visitCache(ins);
+    }
+    bool visitGetElementCacheV(LGetElementCacheV *ins) {
         return visitCache(ins);
     }
     bool visitBindNameCache(LBindNameCache *ins) {

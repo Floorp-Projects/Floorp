@@ -67,7 +67,7 @@ class TypePolicy
 class BoxInputsPolicy : public TypePolicy
 {
   protected:
-    MDefinition *boxAt(MInstruction *at, MDefinition *operand);
+    static MDefinition *boxAt(MInstruction *at, MDefinition *operand);
 
   public:
     virtual bool adjustInputs(MInstruction *def);
@@ -138,23 +138,6 @@ class CallPolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *def);
 };
 
-class ObjectPolicy : public BoxInputsPolicy
-{
-  protected:
-    void adjustInput(MInstruction *def, size_t operand);
-
-  public:
-    bool adjustInputs(MInstruction *def);
-};
-
-// Single-object input. If the input is a Value, it is unboxed. If it is
-// a primitive, we use ValueToNonNullObject.
-class SingleObjectPolicy : public ObjectPolicy
-{
-  public:
-    bool adjustInputs(MInstruction *def);
-};
-
 // Single-string input. If the input is a Value, it is unboxed.
 class StringPolicy : public BoxInputsPolicy
 {
@@ -184,6 +167,31 @@ class DoublePolicy : public BoxInputsPolicy
     static bool staticAdjustInputs(MInstruction *def);
     bool adjustInputs(MInstruction *def) {
         return staticAdjustInputs(def);
+    }
+};
+
+template <unsigned Op>
+class ObjectPolicy : public BoxInputsPolicy
+{
+  public:
+    static bool staticAdjustInputs(MInstruction *ins);
+    bool adjustInputs(MInstruction *ins) {
+        return staticAdjustInputs(ins);
+    }
+};
+
+// Single-object input. If the input is a Value, it is unboxed. If it is
+// a primitive, we use ValueToNonNullObject.
+class SingleObjectPolicy : public ObjectPolicy<0>
+{ };
+
+template <unsigned Op>
+class BoxPolicy : public BoxInputsPolicy
+{
+  public:
+    static bool staticAdjustInputs(MInstruction *ins);
+    bool adjustInputs(MInstruction *ins) {
+        return staticAdjustInputs(ins);
     }
 };
 
