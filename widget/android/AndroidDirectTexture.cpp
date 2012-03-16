@@ -142,7 +142,7 @@ AndroidDirectTexture::Reallocate(PRUint32 aWidth, PRUint32 aHeight, gfxASurface:
 }
 
 bool
-AndroidDirectTexture::Bind(GLenum target)
+AndroidDirectTexture::Bind()
 {
   MutexAutoLock lock(mLock);
 
@@ -153,7 +153,7 @@ AndroidDirectTexture::Bind(GLenum target)
     mNeedFlip = false;
   }
 
-  return mFrontBuffer->Bind(target);
+  return mFrontBuffer->Bind();
 }
 
 } /* mozilla */
