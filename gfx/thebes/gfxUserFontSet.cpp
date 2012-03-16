@@ -462,6 +462,7 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
     // download successful, make platform font using font data
     if (NS_SUCCEEDED(aDownloadStatus)) {
         gfxFontEntry *fe = LoadFont(aProxy, aFontData, aLength);
+        aFontData = nsnull;
 
         if (fe) {
             IncrementGeneration();
@@ -546,11 +547,10 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                 nsresult rv;
                 bool loadDoesntSpin = false;
                 rv = NS_URIChainHasFlags(currSrc.mURI,
-                       nsIProtocolHandler::URI_SYNC_LOAD_DOESNT_SPIN_EVENT_LOOP,
+                       nsIProtocolHandler::URI_SYNC_LOAD_IS_OK,
                        &loadDoesntSpin);
 
-                if (NS_SUCCEEDED(rv) && loadDoesntSpin)
-                {
+                if (NS_SUCCEEDED(rv) && loadDoesntSpin) {
                     PRUint8 *buffer = nsnull;
                     PRUint32 bufferLength = 0;
 
@@ -558,9 +558,8 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                     rv = SyncLoadFontData(aProxyEntry, &currSrc, buffer,
                                           bufferLength);
 
-                    const PRUint8 *buf2 = buffer;
                     if (NS_SUCCEEDED(rv) &&
-                        LoadFont(aProxyEntry, buf2, bufferLength)) {
+                        LoadFont(aProxyEntry, buffer, bufferLength)) {
                         return STATUS_LOADED;
                     } else {
                         LogMessage(aProxyEntry, "font load failed",
@@ -624,7 +623,7 @@ gfxUserFontSet::IncrementGeneration()
 
 gfxFontEntry*
 gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
-                         const PRUint8* &aFontData, PRUint32 &aLength)
+                         const PRUint8 *aFontData, PRUint32 &aLength)
 {
     gfxFontEntry *fe = nsnull;
 
@@ -731,9 +730,7 @@ gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
         }
 #endif
         ReplaceFontEntry(aProxy, fe);
-
     } else {
-
 #ifdef PR_LOGGING
         if (LOG_ENABLED()) {
             nsCAutoString fontURI;
@@ -744,7 +741,6 @@ gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
                  NS_ConvertUTF16toUTF8(aProxy->mFamily->Name()).get()));
         }
 #endif
-
     }
 
     return fe;
