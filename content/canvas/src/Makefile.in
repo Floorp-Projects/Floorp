@@ -54,6 +54,12 @@ EXPORTS = \
 	CustomQS_WebGL.h \
 	$(NULL)
 
+EXPORTS_NAMESPACES = mozilla/dom
+
+EXPORTS_mozilla/dom = \
+  ImageData.h \
+  $(NULL)
+
 CPPSRCS	= \
 	CanvasImageCache.cpp \
 	CanvasUtils.cpp \
@@ -61,6 +67,7 @@ CPPSRCS	= \
 	nsCanvasRenderingContext2DAzure.cpp \
 	DocumentRendererParent.cpp \
 	DocumentRendererChild.cpp \
+	ImageData.cpp \
 	$(NULL)
 
 ifdef MOZ_WEBGL
