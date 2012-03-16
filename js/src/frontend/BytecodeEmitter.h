@@ -56,6 +56,8 @@
 
 namespace js {
 
+typedef HashSet<JSAtom *> FuncStmtSet;
+
 /*
  * NB: If you add enumerators for scope statements, add them between STMT_WITH
  * and STMT_CATCH, or you will break the STMT_TYPE_IS_SCOPE macro. If you add
@@ -229,8 +231,29 @@ JS_ENUM_HEADER(TreeContextFlags, uint32_t)
      */
     TCF_STRICT_MODE_CODE =                 0x10000,
 
-    /* The function calls 'eval'. */
-    TCF_FUN_CALLS_EVAL =                   0x20000,
+    /*
+     * The (static) bindings of this script need to support dynamic name
+     * read/write access. Here, 'dynamic' means dynamic dictionary lookup on
+     * the scope chain for a dynamic set of keys. The primary examples are:
+     *  - direct eval
+     *  - function::
+     *  - with
+     * since both effectively allow any name to be accessed. Non-exmaples are:
+     *  - upvars of nested functions
+     *  - function statement
+     * since the set of assigned name is known dynamically. 'with' could be in
+     * the non-example category, provided the set of all free variables within
+     * the with block was noted. However, we do not optimize 'with' so, for
+     * simplicity, 'with' is treated like eval.
+     *
+     * Note: access through the arguments object is not considered dynamic
+     * binding access since it does not go through the normal name lookup
+     * mechanism. This is debatable and could be changed (although care must be
+     * taken not to turn off the whole 'arguments' optimization). To answer the
+     * more general "is this argument aliased" question, script->needsArgsObj
+     * should be tested (see JSScript::argIsAlised).
+     */
+    TCF_BINDINGS_ACCESSED_DYNAMICALLY =    0x20000,
 
     /* The function mutates a positional (non-destructuring) parameter. */
     TCF_FUN_MUTATES_PARAMETER =            0x40000,
@@ -277,7 +300,7 @@ static const uint32_t TCF_FUN_FLAGS = TCF_FUN_USES_ARGUMENTS |
                                       TCF_FUN_HEAVYWEIGHT |
                                       TCF_FUN_IS_GENERATOR |
                                       TCF_FUN_USES_OWN_NAME |
-                                      TCF_FUN_CALLS_EVAL |
+                                      TCF_BINDINGS_ACCESSED_DYNAMICALLY |
                                       TCF_FUN_MIGHT_ALIAS_LOCALS |
                                       TCF_FUN_MUTATES_PARAMETER |
                                       TCF_STRICT_MODE_CODE |
@@ -351,6 +374,10 @@ struct TreeContext {                /* tree context for semantic checks */
                                        arguments if we're compiling a function */
     Bindings::StackRoot bindingsRoot; /* root for stack allocated bindings. */
 
+    FuncStmtSet *funcStmts;         /* Set of (non-top-level) function statements
+                                       that will alias any top-level bindings with
+                                       the same name. */
+
     void trace(JSTracer *trc);
 
     inline TreeContext(Parser *prs);
@@ -409,12 +436,12 @@ struct TreeContext {                /* tree context for semantic checks */
         return flags & TCF_FUN_USES_ARGUMENTS;
     }
 
-    void noteCallsEval() {
-        flags |= TCF_FUN_CALLS_EVAL;
+    void noteBindingsAccessedDynamically() {
+        flags |= TCF_BINDINGS_ACCESSED_DYNAMICALLY;
     }
 
-    bool callsEval() const {
-        return flags & TCF_FUN_CALLS_EVAL;
+    bool bindingsAccessedDynamically() const {
+        return flags & TCF_BINDINGS_ACCESSED_DYNAMICALLY;
     }
 
     void noteMightAliasLocals() {
@@ -440,7 +467,7 @@ struct TreeContext {                /* tree context for semantic checks */
         JS_ASSERT_IF(inStrictMode(),
                      !(flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_LOCAL_ARGUMENTS)));
         return !inStrictMode() &&
-               (callsEval() ||
+               (bindingsAccessedDynamically() ||
                 flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_LOCAL_ARGUMENTS));
     }
 
@@ -469,7 +496,8 @@ struct TreeContext {                /* tree context for semantic checks */
     }
 
     bool needsEagerArguments() const {
-        return inStrictMode() && ((usesArguments() && mutatesParameter()) || callsEval());
+        return inStrictMode() &&
+               (bindingsAccessedDynamically() || (usesArguments() && mutatesParameter()));
     }
 
     void noteHasExtensibleScope() {

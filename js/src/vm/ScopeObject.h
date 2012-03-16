@@ -250,7 +250,13 @@ class StaticBlockObject : public BlockObject
      */
     void setDefinitionParseNode(unsigned i, Definition *def);
     Definition *maybeDefinitionParseNode(unsigned i);
-    void poisonDefinitionParseNode(unsigned i);
+
+    /*
+     * A let binding is aliased is accessed lexically by nested functions or
+     * dynamically through dynamic name lookup (eval, with, function::, etc).
+     */
+    void setAliased(unsigned i, bool aliased);
+    bool isAliased(unsigned i);
 
     const Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
 };

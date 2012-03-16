@@ -397,7 +397,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         NoScriptRval,
         SavedCallerFun,
         StrictModeCode,
-        UsesEval,
+        ContainsDynamicNameAccess,
         MayNeedArgsObj,
         NeedsArgsObj,
         OwnFilename,
@@ -552,8 +552,8 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
             scriptBits |= (1 << SavedCallerFun);
         if (script->strictModeCode)
             scriptBits |= (1 << StrictModeCode);
-        if (script->usesEval)
-            scriptBits |= (1 << UsesEval);
+        if (script->bindingsAccessedDynamically)
+            scriptBits |= (1 << ContainsDynamicNameAccess);
         if (script->mayNeedArgsObj()) {
             scriptBits |= (1 << MayNeedArgsObj);
             /*
@@ -629,8 +629,8 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
             script->savedCallerFun = true;
         if (scriptBits & (1 << StrictModeCode))
             script->strictModeCode = true;
-        if (scriptBits & (1 << UsesEval))
-            script->usesEval = true;
+        if (scriptBits & (1 << ContainsDynamicNameAccess))
+            script->bindingsAccessedDynamically = true;
         if (scriptBits & (1 << MayNeedArgsObj)) {
             script->setMayNeedArgsObj();
             if (scriptBits & (1 << NeedsArgsObj))
@@ -1263,8 +1263,8 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         if (fp && fp->isFunctionFrame())
             script->savedCallerFun = true;
     }
-    if (bce->callsEval())
-        script->usesEval = true;
+    if (bce->bindingsAccessedDynamically())
+        script->bindingsAccessedDynamically = true;
     if (bce->flags & TCF_HAS_SINGLETONS)
         script->hasSingletons = true;
 
@@ -1939,3 +1939,40 @@ JSScript::applySpeculationFailed(JSContext *cx)
 
     return true;
 }
+
+#ifdef DEBUG
+bool
+JSScript::varIsAliased(unsigned varSlot)
+{
+    if (bindingsAccessedDynamically)
+        return true;
+
+    for (uint32_t i = 0; i < numClosedVars(); ++i) {
+        if (closedVars()->vector[i] == varSlot) {
+            JS_ASSERT(function()->isHeavyweight());
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool
+JSScript::argIsAliased(unsigned argSlot)
+{
+    if (bindingsAccessedDynamically)
+        return true;
+
+    if (needsArgsObj())
+        return true;
+
+    for (uint32_t i = 0; i < numClosedArgs(); ++i) {
+        if (closedArgs()->vector[i] == argSlot) {
+            JS_ASSERT(function()->isHeavyweight());
+            return true;
+        }
+    }
+
+    return false;
+}
+#endif
