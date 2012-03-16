@@ -450,6 +450,10 @@ extern const size_t      js_common_atom_count;
 #define JS_BOOLEAN_STR(type) (js_common_atom_names[1 + (type)])
 #define JS_TYPE_STR(type)    (js_common_atom_names[1 + 2 + (type)])
 
+/* Type names. */
+extern const char   js_object_str[];
+extern const char   js_undefined_str[];
+
 /* Well-known predefined C strings. */
 #define JS_PROTO(name,code,init) extern const char js_##name##_str[];
 #include "jsproto.tbl"
@@ -463,20 +467,17 @@ extern const char   js_BYTES_PER_ELEMENT_str[];
 extern const char   js_call_str[];
 extern const char   js_callee_str[];
 extern const char   js_caller_str[];
-extern const char   js_class_prototype_str[];
-extern const char   js_close_str[];
+extern const char   js_classPrototype_str[];
 extern const char   js_constructor_str[];
-extern const char   js_count_str[];
-extern const char   js_etago_str[];
 extern const char   js_each_str[];
 extern const char   js_eval_str[];
 extern const char   js_fileName_str[];
 extern const char   js_get_str[];
-extern const char   js_getter_str[];
 extern const char   js_global_str[];
 extern const char   js_ignoreCase_str[];
 extern const char   js_index_str[];
 extern const char   js_input_str[];
+extern const char   js_toISOString_str[];
 extern const char   js_iterator_str[];
 extern const char   js_join_str[];
 extern const char   js_lastIndex_str[];
@@ -485,38 +486,74 @@ extern const char   js_lineNumber_str[];
 extern const char   js_message_str[];
 extern const char   js_multiline_str[];
 extern const char   js_name_str[];
-extern const char   js_namespace_str[];
 extern const char   js_next_str[];
 extern const char   js_noSuchMethod_str[];
-extern const char   js_object_str[];
+extern const char   js_objectNull_str[];
+extern const char   js_objectUndefined_str[];
+extern const char   js_of_str[];
 extern const char   js_proto_str[];
-extern const char   js_ptagc_str[];
-extern const char   js_qualifier_str[];
-extern const char   js_send_str[];
-extern const char   js_setter_str[];
 extern const char   js_set_str[];
 extern const char   js_source_str[];
-extern const char   js_space_str[];
 extern const char   js_stack_str[];
 extern const char   js_sticky_str[];
-extern const char   js_stago_str[];
-extern const char   js_star_str[];
-extern const char   js_starQualifier_str[];
-extern const char   js_tagc_str[];
 extern const char   js_toGMTString_str[];
 extern const char   js_toLocaleString_str[];
 extern const char   js_toSource_str[];
 extern const char   js_toString_str[];
 extern const char   js_toUTCString_str[];
-extern const char   js_undefined_str[];
 extern const char   js_valueOf_str[];
 extern const char   js_toJSON_str[];
-extern const char   js_xml_str[];
+extern const char   js_void0_str[];
 extern const char   js_enumerable_str[];
 extern const char   js_configurable_str[];
 extern const char   js_writable_str[];
 extern const char   js_value_str[];
 extern const char   js_test_str[];
+extern const char   js_useStrict_str[];
+extern const char   js_loc_str[];
+extern const char   js_line_str[];
+extern const char   js_Infinity_str[];
+extern const char   js_NaN_str[];
+extern const char   js_builder_str[];
+
+#if JS_HAS_XML_SUPPORT
+extern const char   js_etago_str[];
+extern const char   js_namespace_str[];
+extern const char   js_ptagc_str[];
+extern const char   js_qualifier_str[];
+extern const char   js_space_str[];
+extern const char   js_stago_str[];
+extern const char   js_star_str[];
+extern const char   js_starQualifier_str[];
+extern const char   js_tagc_str[];
+extern const char   js_xml_str[];
+extern const char   js_functionNamespaceURI_str[];
+#endif
+
+extern const char   js_Proxy_str[];
+extern const char   js_getOwnPropertyDescriptor_str[];
+extern const char   js_getPropertyDescriptor_str[];
+extern const char   js_defineProperty_str[];
+extern const char   js_getOwnPropertyNames_str[];
+extern const char   js_enumerate_str[];
+extern const char   js_fix_str[];
+extern const char   js_has_str[];
+extern const char   js_hasOwn_str[];
+extern const char   js_keys_str[];
+extern const char   js_iterate_str[];
+extern const char   js_WeakMap_str[];
+extern const char   js_byteLength_str[];
+extern const char   js_return_str[];
+extern const char   js_throw_str[];
+
+#if JS_HAS_GENERATORS
+extern const char   js_close_str[];
+extern const char   js_send_str[];
+#endif
+
+/* Constant strings that are not atomized. */
+extern const char   js_getter_str[];
+extern const char   js_setter_str[];
 
 /*
  * Initialize atom state. Return true on success, false on failure to allocate
