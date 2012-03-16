@@ -1891,13 +1891,13 @@ AndroidBridge::SetPageSize(float aZoom, float aPageWidth, float aPageHeight)
 }
 
 void
-AndroidBridge::GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
+AndroidBridge::SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
         return;
 
-    client->GetViewTransform(aScrollOffset, aScaleX, aScaleY);
+    client->SyncViewportInfo(aDisplayPort, aScrollOffset, aScaleX, aScaleY);
 }
 
 AndroidBridge::AndroidBridge()
