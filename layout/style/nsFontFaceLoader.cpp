@@ -273,7 +273,7 @@ nsFontFaceLoader::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
                                    nsISupports* aContext)
 {
   nsresult rv;
-  
+
   if (!aSourcePrincipal)
     return NS_OK;
 
@@ -303,7 +303,7 @@ nsFontFaceLoader::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
 
   return NS_OK;
 }
-  
+
 nsUserFontSet::nsUserFontSet(nsPresContext *aContext)
   : mPresContext(aContext)
 {
@@ -336,40 +336,19 @@ nsUserFontSet::RemoveLoader(nsFontFaceLoader *aLoader)
   mLoaders.RemoveEntry(aLoader);
 }
 
-nsresult 
+nsresult
 nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
                          const gfxFontFaceSrc *aFontFaceSrc)
 {
   nsresult rv;
-  
-  // check same-site origin
+  nsCOMPtr<nsIPrincipal> principal;
+
+  rv = CheckFontLoad(aProxy, aFontFaceSrc, principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsIPresShell *ps = mPresContext->PresShell();
   if (!ps)
     return NS_ERROR_FAILURE;
-    
-  NS_ASSERTION(aFontFaceSrc && !aFontFaceSrc->mIsLocal, 
-               "bad font face url passed to fontloader");
-  NS_ASSERTION(aFontFaceSrc->mURI, "null font uri");
-  if (!aFontFaceSrc->mURI)
-    return NS_ERROR_FAILURE;
-
-  // use document principal, original principal if flag set
-  // this enables user stylesheets to load font files via
-  // @font-face rules
-  nsCOMPtr<nsIPrincipal> principal = ps->GetDocument()->NodePrincipal();
-
-  NS_ASSERTION(aFontFaceSrc->mOriginPrincipal, 
-               "null origin principal in @font-face rule");
-  if (aFontFaceSrc->mUseOriginPrincipal) {
-    principal = do_QueryInterface(aFontFaceSrc->mOriginPrincipal);
-  }
-  
-  rv = nsFontFaceLoader::CheckLoadAllowed(principal, aFontFaceSrc->mURI, 
-                                          ps->GetDocument());
-  if (NS_FAILED(rv)) {
-    LogMessage(aProxy, "download not allowed", nsIScriptError::errorFlag, rv);
-    return rv;
-  }
 
   nsCOMPtr<nsIStreamLoader> streamLoader;
   nsCOMPtr<nsILoadGroup> loadGroup(ps->GetDocument()->GetDocumentLoadGroup());
@@ -408,17 +387,17 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
     if (aFontFaceSrc->mReferrer)
       aFontFaceSrc->mReferrer->GetSpec(referrerURI);
     LOG(("fontdownloader (%p) download start - font uri: (%s) "
-         "referrer uri: (%s)\n", 
+         "referrer uri: (%s)\n",
          fontLoader.get(), fontURI.get(), referrerURI.get()));
   }
-#endif  
+#endif
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel)
     httpChannel->SetReferrer(aFontFaceSrc->mReferrer);
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   bool inherits = false;
   rv = NS_URIChainHasFlags(aFontFaceSrc->mURI,
                            nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
@@ -428,7 +407,7 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
     rv = channel->AsyncOpen(streamLoader, nsnull);
   } else {
     nsCOMPtr<nsIStreamListener> listener =
-      new nsCORSListenerProxy(streamLoader, principal, channel, 
+      new nsCORSListenerProxy(streamLoader, principal, channel,
                               false, &rv);
     if (NS_FAILED(rv)) {
       fontLoader->DropChannel();  // explicitly need to break ref cycle
@@ -827,6 +806,125 @@ nsUserFontSet::LogMessage(gfxProxyFontEntry *aProxy,
                                      innerWindowID);
   if (NS_SUCCEEDED(rv)) {
     console->LogMessage(scriptError);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsUserFontSet::CheckFontLoad(gfxProxyFontEntry *aFontToLoad,
+                             const gfxFontFaceSrc *aFontFaceSrc,
+                             nsCOMPtr<nsIPrincipal>& aPrincipal)
+{
+  nsresult rv;
+
+  // check same-site origin
+  nsIPresShell *ps = mPresContext->PresShell();
+  if (!ps)
+    return NS_ERROR_FAILURE;
+
+  NS_ASSERTION(aFontFaceSrc && !aFontFaceSrc->mIsLocal,
+               "bad font face url passed to fontloader");
+  NS_ASSERTION(aFontFaceSrc->mURI, "null font uri");
+  if (!aFontFaceSrc->mURI)
+    return NS_ERROR_FAILURE;
+
+  // use document principal, original principal if flag set
+  // this enables user stylesheets to load font files via
+  // @font-face rules
+  aPrincipal = ps->GetDocument()->NodePrincipal();
+
+  NS_ASSERTION(aFontFaceSrc->mOriginPrincipal,
+               "null origin principal in @font-face rule");
+  if (aFontFaceSrc->mUseOriginPrincipal) {
+    aPrincipal = do_QueryInterface(aFontFaceSrc->mOriginPrincipal);
+  }
+
+  rv = nsFontFaceLoader::CheckLoadAllowed(aPrincipal, aFontFaceSrc->mURI,
+                                          ps->GetDocument());
+  if (NS_FAILED(rv)) {
+    LogMessage(aFontToLoad, "download not allowed", nsIScriptError::errorFlag, rv);
+  }
+
+  return rv;
+}
+
+nsresult
+nsUserFontSet::SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
+                                const gfxFontFaceSrc *aFontFaceSrc,
+                                PRUint8* &aBuffer,
+                                PRUint32 &aBufferLength)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal;
+
+  rv = CheckFontLoad(aFontToLoad, aFontFaceSrc, principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannel> channel;
+  // get Content Security Policy from principal to pass into channel
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = principal->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (csp) {
+    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_FONT);
+  }
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     aFontFaceSrc->mURI,
+                     nsnull,
+                     nsnull,
+                     nsnull,
+                     nsIRequest::LOAD_NORMAL,
+                     channelPolicy);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // blocking stream is OK for data URIs
+  nsCOMPtr<nsIInputStream> stream;
+  rv = channel->Open(getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stream->Available(&aBufferLength);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aBufferLength == 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // read all the decoded data
+  aBuffer = static_cast<PRUint8*> (NS_Alloc(sizeof(PRUint8) * aBufferLength));
+  if (!aBuffer) {
+    aBufferLength = 0;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  PRUint32 numRead, totalRead = 0;
+  while (NS_SUCCEEDED(rv =
+           stream->Read(reinterpret_cast<char*>(aBuffer + totalRead),
+                        aBufferLength - totalRead, &numRead)) &&
+         numRead != 0)
+  {
+    totalRead += numRead;
+    if (totalRead > aBufferLength) {
+      rv = NS_ERROR_FAILURE;
+      break;
+    }
+  }
+
+  // make sure there's a mime type
+  if (NS_SUCCEEDED(rv)) {
+    nsCAutoString mimeType;
+    rv = channel->GetContentType(mimeType);
+    aBufferLength = totalRead;
+  }
+
+  if (NS_FAILED(rv)) {
+    NS_Free(aBuffer);
+    aBuffer = nsnull;
+    aBufferLength = 0;
+    return rv;
   }
 
   return NS_OK;
