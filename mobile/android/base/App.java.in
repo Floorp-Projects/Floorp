@@ -65,5 +65,16 @@ public class App extends GeckoApp {
             return "Redirector/@MOZ_APP_VERSION@ (Android; rv:@MOZ_APP_VERSION@)";
         return getDefaultUAString();
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+#ifdef MOZ_PROFILING
+        if (item.getItemId() == R.id.toggle_profiling) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
+            return true;
+        }
+#endif
+        return super.onOptionsItemSelected(item);
+    }
 };
 
