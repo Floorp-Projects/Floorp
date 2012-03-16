@@ -112,7 +112,7 @@ public class GeckoScreenOrientationListener
     }
 
     if (mShouldNotify && mOrientation != previousOrientation) {
-      GeckoAppShell.sendEventToGecko(new GeckoEvent(mOrientation));
+      GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenOrientationEvent(mOrientation));
     }
   }
 
