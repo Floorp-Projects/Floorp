@@ -438,7 +438,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         }
         if (oldColWidths.ElementAt(col) != colFrame->GetFinalWidth()) {
             mTableFrame->DidResizeColumns();
-        }
             break;
+        }
     }
 }

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- The fixed height on the body is in fact needed to reproduce bug 735579
+       for some reason -->
+  <body style="height: 100px;">
+    <script>
+      window.onload = function() {
+        var target = document.getElementById("test-target");
+        window.targetWidth = target.getBoundingClientRect().width;
+        target.style.width = "100px";
+        document.documentElement.className = "";
+      }
+    </script>
+    <table style="width: 250px; table-layout: fixed;">
+      <tr>
+        <td style="width: 100px; background: #CC99CC;">A</td>
+        <td id="test-target" style="background: #99CCCC;">B</td>
+        <td style="background: #CCCC99;">C</td>
+      </tr>
+      <tr>
+        <td style="background: #CC99CC;">D</td>
+        <td style="background: #99CCCC;">E</td>
+        <td style="background: #CCCC99;">F</td>
+      </tr>
+    </table>
+  </body>
+</html>
