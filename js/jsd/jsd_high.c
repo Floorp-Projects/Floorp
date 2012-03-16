@@ -276,6 +276,10 @@ jsd_DebuggerPause(JSDContext* jsdc, JSBool forceAllHooksOff)
     JS_SetDebugErrorHook(jsdc->jsrt, NULL, NULL);
 }
 
+static JSBool
+jsd_DebugErrorHook(JSContext *cx, const char *message,
+                   JSErrorReport *report, void *closure);
+
 void
 jsd_DebuggerUnpause(JSDContext* jsdc)
 {

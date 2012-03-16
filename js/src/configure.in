@@ -1621,14 +1621,26 @@ if test "$GNU_CC"; then
     _MOZ_RTTI_FLAGS_ON=-frtti
     _MOZ_RTTI_FLAGS_OFF=-fno-rtti
 
-    # Turn on GNU specific features
-    # -Wall - turn on all warnings
-    # -pedantic - make compiler warn about non-ANSI stuff, and
-    #             be a little bit stricter
-    # Warnings slamm took out for now (these were giving more noise than help):
-    # -Wbad-function-cast - warns when casting a function to a new return type
-    # -Wshadow - removed because it generates more noise than help --pete
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
+    # Turn on GNU-specific warnings:
+    # -Wall - turn on a lot of warnings
+    # -pedantic - this is turned on below
+    # -Wpointer-arith - enabled with -pedantic, but good to have even if not
+    # -Werror=declaration-after-statement - MSVC doesn't like these
+    # -Werror=return-type - catches missing returns, zero false positives
+    # -Wtype-limits - catches overflow bugs, few false positives
+    # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
+    #
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wpointer-arith -Werror=declaration-after-statement"
+    MOZ_C_SUPPORTS_WARNING(-W, error=return-type, ac_c_has_werror_return_type)
+    MOZ_C_SUPPORTS_WARNING(-W, type-limits, ac_c_has_wtype_limits)
+    MOZ_C_SUPPORTS_WARNING(-W, empty-body, ac_c_has_wempty_body)
+    
+    # Turn off the following warnings that -Wall/-pedantic turn on:
+    # -Wno-overlength-strings - we exceed the minimum maximum length frequently
+    # -Wno-unused - lots of violations in third-party code
+    #
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-overlength-strings -Wno-unused"
+
     if test -z "$INTEL_CC" -a -z "$CLANG_CC"; then
        # Don't use -Wcast-align with ICC or clang
        case "$CPU_ARCH" in
@@ -1644,12 +1656,9 @@ if test "$GNU_CC"; then
     dnl Turn pedantic on but disable the warnings for long long
     _PEDANTIC=1
 
-    if test -z "$INTEL_CC"; then
-      _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -W"
-    fi
-
     _DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
+
 elif test "$SOLARIS_SUNPRO_CC"; then
     DSO_CFLAGS=''
     if test "$CPU_ARCH" = "sparc"; then
@@ -1675,8 +1684,30 @@ else
 fi
 
 if test "$GNU_CXX"; then
-    # Turn on GNU specific features
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
+    # Turn on GNU-specific warnings:
+    # -Wall - turn on a lot of warnings
+    # -pedantic - this is turned on below
+    # -Wpointer-arith - enabled with -pedantic, but good to have even if not
+    # -Woverloaded-virtual - ???
+    # -Werror=return-type - catches missing returns, zero false positives
+    # -Wtype-limits - catches overflow bugs, few false positives
+    # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
+    #
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual"
+    MOZ_CXX_SUPPORTS_WARNING(-W, error=return-type, ac_cxx_has_werror_return_type)
+    MOZ_CXX_SUPPORTS_WARNING(-W, type-limits, ac_cxx_has_wtype_limits)
+    MOZ_CXX_SUPPORTS_WARNING(-W, empty-body, ac_cxx_has_wempty_body)
+
+    # Turn off the following warnings that -Wall/-pedantic turn on:
+    # -Wno-overlength-strings - we exceed the minimum maximum length frequently
+    # -Wno-ctor-dtor-privacy - ???
+    # -Wno-invalid-offsetof - we use offsetof on non-POD types frequently
+    # -Wno-variadic-macros - ???
+    #
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-overlength-strings -Wno-ctor-dtor-privacy"
+    MOZ_CXX_SUPPORTS_WARNING(-Wno-, invalid-offsetof, ac_cxx_has_wno_invalid_offsetof)
+    MOZ_CXX_SUPPORTS_WARNING(-Wno-, variadic-macros, ac_cxx_has_wno_variadic_macros)
+
     if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
        # Don't use -Wcast-align with ICC or clang
        case "$CPU_ARCH" in
@@ -1700,81 +1731,7 @@ if test "$GNU_CXX"; then
     # deleted function syntax.
     if test "$CLANG_CXX"; then
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-c++0x-extensions"
-    fi
-
-    AC_CACHE_CHECK(whether the compiler supports -Wno-extended-offsetof,
-                   ac_has_wno_extended_offsetof,
-        [
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS -Wno-extended-offsetof"
-            AC_TRY_COMPILE([$configure_static_assert_macros
-                            #ifndef __has_warning
-                            #define __has_warning(x) 0
-                            #endif],
-                           [CONFIGURE_STATIC_ASSERT(__has_warning("-Wextended-offsetof"))],
-                           ac_has_wno_extended_offsetof="yes",
-                           ac_has_wno_extended_offsetof="no")
-            CXXFLAGS="$_SAVE_CXXFLAGS"
-            AC_LANG_RESTORE
-        ])
-    if test "$ac_has_wno_extended_offsetof" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-extended-offsetof"
-    fi
-
-    AC_CACHE_CHECK(whether the compiler supports -Wno-invalid-offsetof,
-                   ac_has_wno_invalid_offsetof,
-        [
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS -Wno-invalid-offsetof"
-            AC_TRY_COMPILE([],
-                           [return(0);],
-                           ac_has_wno_invalid_offsetof="yes",
-                           ac_has_wno_invalid_offsetof="no")
-            CXXFLAGS="$_SAVE_CXXFLAGS"
-            AC_LANG_RESTORE
-        ])
-    if test "$ac_has_wno_invalid_offsetof" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-invalid-offsetof"
-    fi
-
-    AC_CACHE_CHECK(whether the compiler supports -Wno-variadic-macros,
-                   ac_has_wno_variadic_macros,
-        [
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS -Wno-variadic-macros"
-            AC_TRY_COMPILE([],
-                           [return(0);],
-                           ac_has_wno_variadic_macros="yes",
-                           ac_has_wno_variadic_macros="no")
-            CXXFLAGS="$_SAVE_CXXFLAGS"
-            AC_LANG_RESTORE
-        ])
-    if test "$ac_has_wno_variadic_macros" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-variadic-macros"
-    fi
-
-    AC_CACHE_CHECK(whether the compiler supports -Werror=return-type,
-                   ac_has_werror_return_type,
-        [
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS -Werror=return-type"
-            AC_TRY_COMPILE([],
-                           [return(0);],
-                           ac_has_werror_return_type="yes",
-                           ac_has_werror_return_type="no")
-            CXXFLAGS="$_SAVE_CXXFLAGS"
-            AC_LANG_RESTORE
-        ])
-    if test "$ac_has_werror_return_type" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=return-type"
+        MOZ_CXX_SUPPORTS_WARNING(-Wno-, extended-offsetof, ac_cxx_has_wno_extended_offsetof)
     fi
 
 else

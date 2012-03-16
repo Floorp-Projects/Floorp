@@ -1767,7 +1767,7 @@ nsSMILTimedElement::GetNextGreater(const InstanceTimeList& aList,
 {
   nsSMILInstanceTime* result = nsnull;
   while ((result = GetNextGreaterOrEqual(aList, aBase, aPosition)) &&
-         result->Time() == aBase);
+         result->Time() == aBase) { }
   return result;
 }
 
