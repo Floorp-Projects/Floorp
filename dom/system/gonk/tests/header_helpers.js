@@ -45,6 +45,9 @@ function newWorker(custom_ns) {
   // The 'self' variable in a worker points to the worker's own namespace.
   worker_ns.self = worker_ns;
 
+  // systemlibs.js utilizes ctypes for loading native libraries.
+  Cu.import("resource://gre/modules/ctypes.jsm", worker_ns);
+
   // Copy the custom definitions over.
   for (let key in custom_ns) {
     worker_ns[key] = custom_ns[key];
