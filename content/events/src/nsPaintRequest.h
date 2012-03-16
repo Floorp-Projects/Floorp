@@ -68,7 +68,7 @@ class nsPaintRequestList MOZ_FINAL : public nsIDOMPaintRequestList,
 public:
   nsPaintRequestList(nsIDOMEvent *aParent) : mParent(aParent)
   {
-    SetIsProxy();
+    SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

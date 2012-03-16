@@ -171,7 +171,7 @@ private:
     : mElement(aElement)
     , mIsAnimValList(aIsAnimValList)
   {
-    SetIsProxy();
+    SetIsDOMBinding();
 
     InternalListWillChangeTo(InternalList()); // Sync mItems
   }

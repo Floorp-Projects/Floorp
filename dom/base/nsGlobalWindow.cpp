@@ -936,7 +936,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     Freeze();
 
     mObserver = nsnull;
-    SetIsProxy();
+    SetIsDOMBinding();
   }
 
   // We could have failed the first time through trying
