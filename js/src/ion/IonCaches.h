@@ -152,7 +152,8 @@ class IonCache
             Register object;
             ConstantOrRegisterSpace index;
             TypedOrValueRegisterSpace output;
-            bool monitoredResult;
+            bool monitoredResult : 1;
+            bool hasDenseArrayStub : 1;
         } getelem;
         struct {
             Register scopeChain;
@@ -315,6 +316,7 @@ class IonCacheGetElement : public IonCache
         u.getelem.index.data() = index;
         u.getelem.output.data() = output;
         u.getelem.monitoredResult = monitoredResult;
+        u.getelem.hasDenseArrayStub = false;
     }
 
     Register object() const {
@@ -329,9 +331,17 @@ class IonCacheGetElement : public IonCache
     bool monitoredResult() const {
         return u.getelem.monitoredResult;
     }
+    bool hasDenseArrayStub() const {
+        return u.getelem.hasDenseArrayStub;
+    }
+    void setHasDenseArrayStub() {
+        JS_ASSERT(!hasDenseArrayStub());
+        u.getelem.hasDenseArrayStub = true;
+    }
 
     bool attachGetProp(JSContext *cx, JSObject *obj, const Value &idval, PropertyName *name,
                        Value *res);
+    bool attachDenseArray(JSContext *cx, JSObject *obj, const Value &idval, Value *res);
 };
 
 class IonCacheBindName : public IonCache

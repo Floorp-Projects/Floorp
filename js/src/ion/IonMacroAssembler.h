@@ -133,6 +133,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadBaseShape(obj, scratch);
         branchPtr(cond, Address(scratch, BaseShape::offsetOfClass()), ImmWord(clasp), label);
     }
+    void branchTestObjShape(Condition cond, Register obj, Shape *shape, Label *label) {
+        branchPtr(Assembler::NotEqual, Address(obj, JSObject::offsetOfShape()),
+                  ImmGCPtr(shape), label);
+    }
 
     void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
         loadPtr(Address(obj, JSObject::getPrivateDataOffset(nfixed)), dest);

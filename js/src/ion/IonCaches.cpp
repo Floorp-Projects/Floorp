@@ -442,6 +442,91 @@ IonCacheGetElement::attachGetProp(JSContext *cx, JSObject *obj, const Value &idv
     return true;
 }
 
+// Get the common shape used by all dense arrays with a prototype at globalObj.
+static inline Shape *
+GetDenseArrayShape(JSContext *cx, JSObject *globalObj)
+{
+    JSObject *proto = globalObj->global().getOrCreateArrayPrototype(cx);
+    if (!proto)
+        return NULL;
+
+    return EmptyShape::getInitialShape(cx, &ArrayClass, proto,
+                                       proto->getParent(), gc::FINALIZE_OBJECT0);
+}
+
+bool
+IonCacheGetElement::attachDenseArray(JSContext *cx, JSObject *obj, const Value &idval, Value *res)
+{
+    JS_ASSERT(obj->isDenseArray());
+    JS_ASSERT(idval.isInt32());
+
+    Label failures;
+    MacroAssembler masm;
+
+    // Guard object is a dense array.
+    Shape *shape = GetDenseArrayShape(cx, script->global());
+    if (!shape)
+        return false;
+    masm.branchTestObjShape(Assembler::NotEqual, object(), shape, &failures);
+
+    // Ensure the index is an int32 value.
+    ValueOperand val = index().reg().valueReg();
+    masm.branchTestInt32(Assembler::NotEqual, val, &failures);
+
+    // Load elements vector.
+    masm.push(object());
+    masm.loadPtr(Address(object(), JSObject::offsetOfElements()), object());
+
+    // Unbox the index.
+    ValueOperand out = output().valueReg();
+    Register scratchReg = out.scratchReg();
+    masm.unboxInt32(val, scratchReg);
+
+    Label hole;
+
+    // Guard on the initialized length.
+    Address initLength(object(), ObjectElements::offsetOfInitializedLength());
+    masm.branch32(Assembler::BelowOrEqual, initLength, scratchReg, &hole);
+
+    // Load the value.
+    masm.loadValue(BaseIndex(object(), scratchReg, TimesEight), out);
+
+    // Hole check.
+    masm.branchTestMagic(Assembler::Equal, out, &hole);
+
+    masm.pop(object());
+    Label rejoin_;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin_);
+    masm.bind(&rejoin_);
+
+    // All failures flow to here.
+    masm.bind(&hole);
+    masm.pop(object());
+    masm.bind(&failures);
+
+    Label exit_;
+    CodeOffsetJump exitOffset = masm.jumpWithPatch(&exit_);
+    masm.bind(&exit_);
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+
+    PatchJump(lastJump(), CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    setHasDenseArrayStub();
+    IonSpew(IonSpew_InlineCaches, "Generated GETELEM dense array stub at %p", code->raw());
+
+    return true;
+}
+
 bool
 js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &idval, Value *res)
 {
@@ -455,14 +540,21 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const 
         return false;
 
     if (cache.stubCount() < MAX_STUBS) {
-        cache.incrementStubCount();
 
         if (obj->isNative() && cache.monitoredResult()) {
+            cache.incrementStubCount();
+
             uint32_t dummy;
             if (idval.isString() && JSID_IS_ATOM(id) && !JSID_TO_ATOM(id)->isIndex(&dummy)) {
                 if (!cache.attachGetProp(cx, obj, idval, JSID_TO_ATOM(id)->asPropertyName(), res))
                     return false;
             }
+        } else if (!cache.hasDenseArrayStub() && obj->isDenseArray() && idval.isInt32()) {
+            // Generate at most one dense array stub.
+            cache.incrementStubCount();
+
+            if (!cache.attachDenseArray(cx, obj, idval, res))
+                return false;
         }
     }
 
