@@ -2,9 +2,9 @@
 #export GONK_PRODUCT=generic
 #gonk="/home/cjones/mozilla/gonk-toolchain-$GONK_TOOLCHAIN_VERSION"
 
-mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/objdir-prof-gonk
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-b2g
 
-mk_add_options MOZ_MAKE_FLAGS="-s -j16"
+mk_add_options MOZ_MAKE_FLAGS="-j8"
 
 ac_add_options --enable-application=b2g
 
