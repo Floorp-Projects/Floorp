@@ -387,6 +387,7 @@ SmsDatabaseService.prototype = {
   },
 
   deleteMessage: function deleteMessage(messageId, requestId) {
+    let deleted = false;
     let self = this;
     this.newTxn(READ_WRITE, function (error, txn, store) {
       if (error) {
@@ -394,39 +395,20 @@ SmsDatabaseService.prototype = {
           requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
         return;
       }
-      let request = store.delete(messageId);
+      let request = store.count(messageId);
 
-      request.onerror = function onerror(event) {
-        if (DEBUG) debug("Caught error on request ", event.target.errorCode);
-        //TODO look at event.target.errorCode
-        gSmsRequestManager.notifySmsDeleteFailed(
-          requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
+      request.onsuccess = function onsuccess(event) {        
+        let count = event.target.result;
+        if (DEBUG) debug("Count for messageId " + messageId + ": " + count);
+        deleted = (count == 1);
+        if (deleted) {
+          store.delete(messageId);
+        }
       };
 
       txn.oncomplete = function oncomplete(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
-        // Once we transaction is done, we need to check if we actually deleted
-        // the message. As IndexedDB does not provide the affected records info,
-        // we need to try to get the message from the database again to check
-        // that it is actually gone.
-        self.newTxn(READ_ONLY, function (error, txn, store) {
-          let request = store.getAll(messageId);
-          request.onsuccess = function onsuccess(event) {
-            let deleted = (event.target.result.length == 0);
-            gSmsRequestManager.notifySmsDeleted(requestId, deleted);
-          };
-          request.onerror = function onerror(event) {
-            if (DEBUG) {
-              debug("Error checking the message deletion " +
-                    event.target.errorCode);
-            }
-            //TODO should we notify here as an internal error? The failed check
-            //     does not mean that the deletion has failed, so maybe we
-            //     should notify successfully.
-            gSmsRequestManager.notifySmsDeleteFailed(
-              requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
-          };
-        });
+        gSmsRequestManager.notifySmsDeleted(requestId, deleted);
       };
 
       txn.onerror = function onerror(event) {
