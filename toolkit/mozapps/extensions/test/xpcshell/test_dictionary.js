@@ -28,6 +28,7 @@ var testserver;
  */
 var HunspellEngine = {
   dictionaryDirs: [],
+  listener: null,
   
   QueryInterface: function hunspell_qi(iid) {
     if (iid.equals(Components.interfaces.nsISupports) ||
@@ -47,10 +48,14 @@ var HunspellEngine = {
 
   addDirectory: function hunspell_addDirectory(dir) {
     this.dictionaryDirs.push(dir);
+    if (this.listener)
+      this.listener("addDirectory");
   },
 
   removeDirectory: function hunspell_addDirectory(dir) {
     this.dictionaryDirs.splice(this.dictionaryDirs.indexOf(dir), 1);
+    if (this.listener)
+      this.listener("removeDirectory");
   },
 
   getInterface: function hunspell_gi(iid) {
@@ -136,7 +141,11 @@ function run_test_1() {
       "onInstallEnded",
     ], function() {
       do_check_true(addon.hasResource("install.rdf"));
-      check_test_1();
+      HunspellEngine.listener = function(aEvent) {
+        HunspellEngine.listener = null;
+        do_check_eq(aEvent, "addDirectory");
+        check_test_1();
+      };
     });
     install.install();
   });
@@ -566,32 +575,36 @@ function check_test_23() {
 // the uninstall method
 function run_test_25() {
   installAllFiles([do_get_addon("test_dictionary")], function() {
-    do_check_true(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
-
-    installAllFiles([do_get_addon("test_dictionary_2")], function() {
-      // Needs a restart to complete this so the old version stays running
+    HunspellEngine.listener = function(aEvent) {
+      HunspellEngine.listener = null;
+      do_check_eq(aEvent, "addDirectory");
       do_check_true(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
-
-      AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
-        do_check_neq(b1, null);
-        do_check_eq(b1.version, "1.0");
-        do_check_true(b1.isActive);
-        do_check_true(hasFlag(b1.pendingOperations, AddonManager.PENDING_UPGRADE));
-
-        restartManager();
-
-        do_check_false(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
-
+  
+      installAllFiles([do_get_addon("test_dictionary_2")], function() {
+        // Needs a restart to complete this so the old version stays running
+        do_check_true(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
+  
         AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
           do_check_neq(b1, null);
-          do_check_eq(b1.version, "2.0");
+          do_check_eq(b1.version, "1.0");
           do_check_true(b1.isActive);
-          do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
-
-          run_test_26();
+          do_check_true(hasFlag(b1.pendingOperations, AddonManager.PENDING_UPGRADE));
+  
+          restartManager();
+  
+          do_check_false(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
+  
+          AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1) {
+            do_check_neq(b1, null);
+            do_check_eq(b1.version, "2.0");
+            do_check_true(b1.isActive);
+            do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
+  
+            run_test_26();
+          });
         });
       });
-    });
+    };
   });
 }
 
