@@ -1,7 +1,7 @@
 pref("security.enable_ssl3",             true);
 pref("security.enable_tls",		 true);
 pref("security.enable_tls_session_tickets", true);
-pref("security.enable_md5_signatures", true);
+pref("security.enable_md5_signatures", false);
 
 pref("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", false);
 pref("security.ssl.renego_unrestricted_hosts", "");
