@@ -615,3 +615,5 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/B2GComponents.manifest
 @BINPATH@/components/B2GComponents.xpt
 @BINPATH@/components/CameraContent.js
+@BINPATH@/components/AlertsService.js
+@BINPATH@/components/ContentPermissionPrompt.js
