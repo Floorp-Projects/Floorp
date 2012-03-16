@@ -3333,18 +3333,19 @@ WebGLContext::PixelStorei(WebGLenum pname, WebGLint param)
 GL_SAME_METHOD_2(PolygonOffset, PolygonOffset, WebGLfloat, WebGLfloat)
 
 NS_IMETHODIMP
-WebGLContext::ReadPixels(PRInt32)
+WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
+                         WebGLenum format, WebGLenum type, const JS::Value& pixelsVal)
 {
-    if (!IsContextStable())
+    if (!pixelsVal.isObject() || !js_IsTypedArray(&pixelsVal.toObject())) {
+        return NS_ERROR_FAILURE;
+    }
+
+    JSObject& pixels = pixelsVal.toObject();
+
+    if (!IsContextStable()) {
         return NS_OK;
+    }
 
-    return NS_ERROR_FAILURE;
-}
-
-nsresult
-WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
-                              WebGLenum format, WebGLenum type, JSObject* pixels)
-{
     if (HTMLCanvasElement()->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
         LogMessageIfVerbose("ReadPixels: Not allowed");
         return NS_ERROR_DOM_SECURITY_ERR;
@@ -3353,16 +3354,13 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     if (width < 0 || height < 0)
         return ErrorInvalidValue("ReadPixels: negative size passed");
 
-    if (!pixels)
-        return ErrorInvalidValue("ReadPixels: null array passed");
-
     const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
     WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     WebGLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
-    void* data = JS_GetTypedArrayData(pixels);
-    PRUint32 dataByteLen = JS_GetTypedArrayByteLength(pixels);
-    int dataType = JS_GetTypedArrayType(pixels);
+    void* data = JS_GetTypedArrayData(&pixels);
+    PRUint32 dataByteLen = JS_GetTypedArrayByteLength(&pixels);
+    int dataType = JS_GetTypedArrayType(&pixels);
 
     PRUint32 channels = 0;
 
@@ -3559,16 +3557,6 @@ WebGLContext::ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsiz
     }
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-WebGLContext::ReadPixels_array(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
-                               WebGLenum format, WebGLenum type, JSObject *pixels)
-{
-    if (!IsContextStable())
-        return NS_OK;
-
-    return ReadPixels_base(x, y, width, height, format, type, pixels);
 }
 
 NS_IMETHODIMP

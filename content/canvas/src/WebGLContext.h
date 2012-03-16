@@ -811,8 +811,6 @@ protected:
                                 void *pixels, PRUint32 byteLength,
                                 int jsArrayType,
                                 int srcFormat, bool srcPremultiplied);
-    nsresult ReadPixels_base(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height,
-                             WebGLenum format, WebGLenum type, JSObject* pixels);
     nsresult TexParameter_base(WebGLenum target, WebGLenum pname,
                                WebGLint *intParamPtr, WebGLfloat *floatParamPtr);
 

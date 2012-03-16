@@ -978,7 +978,6 @@ customMethodCalls = {
         'unwrapThisFailureFatal' : False
         },
     # WebGL
-    'nsIDOMWebGLRenderingContext_ReadPixels': CUSTOM_QS,
     'nsIDOMWebGLRenderingContext_TexImage2D': CUSTOM_QS,
     'nsIDOMWebGLRenderingContext_TexSubImage2D': CUSTOM_QS,
     'nsIDOMWebGLRenderingContext_Uniform1iv': CUSTOM_QS_TN,
