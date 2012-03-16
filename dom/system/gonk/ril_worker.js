@@ -597,6 +597,11 @@ let RIL = {
   currentCalls: {},
 
   /**
+   * Existing data calls.
+   */
+  currentDataCalls: {},
+
+  /**
    * Mute or unmute the radio.
    */
   _muted: true,
@@ -1060,12 +1065,21 @@ let RIL = {
    *        One of DATACALL_DEACTIVATE_* constants.
    */
   deactivateDataCall: function deactivateDataCall(options) {
+    let datacall = this.currentDataCalls[options.cid];
+    if (!datacall) {
+      return;
+    }
+
     let token = Buf.newParcel(REQUEST_DEACTIVATE_DATA_CALL);
     Buf.writeUint32(2);
     Buf.writeString(options.cid);
     Buf.writeString(options.reason || DATACALL_DEACTIVATE_NO_REASON);
     Buf.sendParcel();
-    return token;
+
+
+    datacall.state = GECKO_NETWORK_STATE_DISCONNECTING;
+    Phone.sendDOMMessage({type: "datacallstatechange",
+                          datacall: datacall});
   },
 
   /**
@@ -1292,6 +1306,48 @@ let RIL = {
     Phone.sendDOMMessage(message);
   },
 
+  _processDataCallList: function _processDataCallList(datacalls) {
+    for each (let currentDataCall in this.currentDataCalls) {
+      let newDataCall;
+      if (datacalls) {
+        newDataCall = datacalls[currentDataCall.cid];
+        delete datacalls[currentDataCall.cid];
+      }
+
+      if (newDataCall) {
+        switch (newDataCall.active) {
+          case DATACALL_INACTIVE:
+            newDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+            break;
+          case DATACALL_ACTIVE_DOWN:
+            newDataCall.state = GECKO_NETWORK_STATE_SUSPENDED;
+            if (RILQUIRKS_DATACALLSTATE_DOWN_IS_UP) {
+              newDataCall.state = GECKO_NETWORK_STATE_CONNECTED;
+            }
+            break;
+          case DATACALL_ACTIVE_UP:
+            newDataCall.state = GECKO_NETWORK_STATE_CONNECTED;
+            break;
+        }
+        if (newDataCall.state != currentDataCall.state) {
+          currentDataCall.active = newDataCall.active;
+          currentDataCall.state = newDataCall.state;
+          this.sendDOMMessage({type: "datacallstatechange",
+                               datacall: currentDataCall});
+        }
+      } else {
+        delete this.currentDataCalls[currentDataCall.callIndex];
+        currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+        this.sendDOMMessage({type: "datacallstatechange",
+                             datacall: currentDataCall});
+      }
+    }
+
+    for each (let datacall in datacalls) {
+      if (DEBUG) debug("Unexpected data call: " + JSON.stringify(datacall));
+    }
+  },
+
 
   /**
    * Handle the RIL request errors
@@ -1485,7 +1541,15 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
   options.ipaddr = ipaddr;
   options.dns = dns;
   options.gw = gw;
-  Phone.onSetupDataCall(options);
+  options.active = DATACALL_ACTIVE_UNKNOWN;
+  options.state = GECKO_NETWORK_STATE_CONNECTING;
+  this.currentDataCalls[options.cid] = options;
+  Phone.sendDOMMessage({type: "datacallstatechange",
+                        datacall: options});
+
+  // Let's get the list of data calls to ensure we know whether it's active
+  // or not.
+  this.getDataCallList();
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
   Phone.onICCIO(options);
@@ -1507,7 +1571,11 @@ RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV() {
 };
 RIL[REQUEST_ANSWER] = null;
 RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length, options) {
-  Phone.onDeactivateDataCall(options);
+  let datacall = this.currentDataCalls[options.cid];
+  delete this.currentDataCalls[options.cid];
+  datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
+  Phone.sendDOMMessage({type: "datacallstatechange",
+                       datacall: datacall});
 };
 RIL[REQUEST_QUERY_FACILITY_LOCK] = null;
 RIL[REQUEST_SET_FACILITY_LOCK] = null;
@@ -1537,7 +1605,7 @@ RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length) {
     num = Buf.readUint32();
   }
   if (!num) {
-    Phone.onDataCallList(null);
+    this._processDataCallList(null);
     return;
   }
 
@@ -1553,7 +1621,7 @@ RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length) {
     datacalls[datacall.cid] = datacall;
   }
 
-  Phone.onDataCallList(datacalls);
+  this._processDataCallList(datacalls);
 };
 RIL[REQUEST_RESET_RADIO] = null;
 RIL[REQUEST_OEM_HOOK_RAW] = null;
@@ -1751,7 +1819,7 @@ RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH() {
   this[REQUEST_SIGNAL_STRENGTH]();
 };
 RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CHANGED(length) {
-  Phone.onDataCallListChanged();
+  this.getDataCallList();
 };
 RIL[UNSOLICITED_SUPP_SVC_NOTIFICATION] = null;
 RIL[UNSOLICITED_STK_SESSION_END] = null;
@@ -1799,11 +1867,6 @@ let Phone = {
 
   SMSC: null,
   MSISDN: null,
-
-  /**
-   * Existing data calls.
-   */
-  currentDataCalls: {},
 
   /**
    * Handlers for messages from the RIL. They all begin with on* and are called
@@ -1907,72 +1970,6 @@ let Phone = {
     RIL.acknowledgeSMS(true, SMS_HANDLED);
   },
 
-  onSetupDataCall: function onSetupDataCall(options) {
-    options.active = DATACALL_ACTIVE_UNKNOWN;
-    options.state = GECKO_NETWORK_STATE_CONNECTING;
-    this.currentDataCalls[options.cid] = options;
-    this.sendDOMMessage({type: "datacallstatechange",
-                         datacall: options});
-
-    // Let's get the list of data calls to ensure we know whether it's active
-    // or not.
-    RIL.getDataCallList();
-  },
-
-  onDeactivateDataCall: function onDeactivateDataCall(options) {
-    let datacall = this.currentDataCalls[options.cid];
-    delete this.currentDataCalls[options.cid];
-    datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-    this.sendDOMMessage({type: "datacallstatechange",
-                         datacall: datacall});
-  },
-
-  onDataCallList: function onDataCallList(datacalls) {
-    for each (let currentDataCall in this.currentDataCalls) {
-      let newDataCall;
-      if (datacalls) {
-        newDataCall = datacalls[currentDataCall.cid];
-        delete datacalls[currentDataCall.cid];
-      }
-
-      if (newDataCall) {
-        switch (newDataCall.active) {
-          case DATACALL_INACTIVE:
-            newDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-            break;
-          case DATACALL_ACTIVE_DOWN:
-            newDataCall.state = GECKO_NETWORK_STATE_SUSPENDED;
-            if (RILQUIRKS_DATACALLSTATE_DOWN_IS_UP) {
-              newDataCall.state = GECKO_NETWORK_STATE_CONNECTED;
-            }
-            break;
-          case DATACALL_ACTIVE_UP:
-            newDataCall.state = GECKO_NETWORK_STATE_CONNECTED;
-            break;
-        }
-        if (newDataCall.state != currentDataCall.state) {
-          currentDataCall.active = newDataCall.active;
-          currentDataCall.state = newDataCall.state;
-          this.sendDOMMessage({type: "datacallstatechange",
-                               datacall: currentDataCall});
-        }
-      } else {
-        delete this.currentDataCalls[currentDataCall.callIndex];
-        currentDataCall.state = GECKO_NETWORK_STATE_DISCONNECTED;
-        this.sendDOMMessage({type: "datacallstatechange",
-                             datacall: currentDataCall});
-      }
-    }
-
-    for each (let datacall in datacalls) {
-      if (DEBUG) debug("Unexpected data call: " + JSON.stringify(datacall));
-    }
-  },
-
-  onDataCallListChanged: function onDataCallListChanged() {
-    RIL.getDataCallList();
-  },
-
   onNITZ: function onNITZ(timeInSeconds, timeZoneInMinutes, dstFlag, timeStampInMS) {
     let message = {type: "nitzTime",
                    networkTimeInSeconds: timeInSeconds,
@@ -2009,7 +2006,7 @@ let Phone = {
 
   enumerateDataCalls: function enumerateDataCalls() {
     let datacall_list = [];
-    for each (let datacall in this.currentDataCalls) {
+    for each (let datacall in RIL.currentDataCalls) {
       datacall_list.push(datacall);
     }
     this.sendDOMMessage({type: "datacalllist",
@@ -2127,16 +2124,7 @@ let Phone = {
    * Deactivate a data call (PDP).
    */
   deactivateDataCall: function deactivateDataCall(options) {
-    if (!(options.cid in this.currentDataCalls)) {
-      return;
-    }
-
     RIL.deactivateDataCall(options);
-
-    let datacall = this.currentDataCalls[options.cid];
-    datacall.state = GECKO_NETWORK_STATE_DISCONNECTING;
-    this.sendDOMMessage({type: "datacallstatechange",
-                         datacall: datacall});
   },
 
   /**
