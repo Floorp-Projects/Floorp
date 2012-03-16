@@ -4567,20 +4567,17 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
 }
 
 NS_IMETHODIMP
-WebGLContext::CompressedTexImage2D(PRInt32)
+WebGLContext::CompressedTexImage2D(WebGLenum target, WebGLint level, WebGLenum internalformat,
+                                   WebGLsizei width, WebGLsizei height, WebGLint border,
+                                   const JS::Value& pixels)
 {
-    NS_RUNTIMEABORT("CompressedTexImage2D(PRInt32) should never be called");
+    if (!pixels.isObject() || !js_IsTypedArray(&pixels.toObject())) {
+        return NS_ERROR_FAILURE;
+    }
 
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-WebGLContext::CompressedTexImage2D_array(WebGLenum target, WebGLint level, WebGLenum internalformat,
-                                         WebGLsizei width, WebGLsizei height, WebGLint border,
-                                         JSObject *pixels)
-{
-    if (!IsContextStable())
+    if (!IsContextStable()) {
         return NS_OK;
+    }
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
     if (!tex)
@@ -4590,24 +4587,22 @@ WebGLContext::CompressedTexImage2D_array(WebGLenum target, WebGLint level, WebGL
 }
 
 NS_IMETHODIMP
-WebGLContext::CompressedTexSubImage2D(PRInt32)
+WebGLContext::CompressedTexSubImage2D(WebGLenum target, WebGLint level, WebGLint xoffset,
+                                      WebGLint yoffset, WebGLsizei width, WebGLsizei height,
+                                      WebGLenum format, const JS::Value& pixels)
 {
-    NS_RUNTIMEABORT("CompressedTexSubImage2D(PRInt32) should never be called");
+    if (!pixels.isObject() || !js_IsTypedArray(&pixels.toObject())) {
+        return NS_ERROR_FAILURE;
+    }
 
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-WebGLContext::CompressedTexSubImage2D_array(WebGLenum target, WebGLint level, WebGLint xoffset,
-                                            WebGLint yoffset, WebGLsizei width, WebGLsizei height,
-                                            WebGLenum format, JSObject *pixels)
-{
-    if (!IsContextStable())
+    if (!IsContextStable()) {
         return NS_OK;
+    }
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
-    if (!tex)
+    if (!tex) {
         return ErrorInvalidOperation("compressedTexSubImage2D: no texture is bound to this target");
+    }
 
     return ErrorInvalidEnum("compressedTexSubImage2D: compressed textures are not supported");
 }
