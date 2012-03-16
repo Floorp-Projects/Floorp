@@ -3720,7 +3720,20 @@ nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
   if (JSVAL_IS_PRIMITIVE(object))
     return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-  JSObject *obj = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(object));
+  // Wrappers are parented to their the global in their home compartment. But
+  // when getting the global for a cross-compartment wrapper, we really want
+  // a wrapper for the foreign global. So we need to unwrap before getting the
+  // parent, enter the compartment for the duration of the call, and wrap the
+  // result.
+  JSObject *obj = JSVAL_TO_OBJECT(object);
+  obj = js::UnwrapObject(obj);
+  {
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, obj))
+      return NS_ERROR_FAILURE;
+    obj = JS_GetGlobalForObject(cx, obj);
+  }
+  JS_WrapObject(cx, &obj);
   *retval = OBJECT_TO_JSVAL(obj);
 
   // Outerize if necessary.
