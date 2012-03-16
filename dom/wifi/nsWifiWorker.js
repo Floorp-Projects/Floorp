@@ -437,8 +437,7 @@ var WifiManager = (function() {
   var dhcpInfo = null;
   function runDhcp(ifname, callback) {
     controlMessage({ cmd: "dhcp_do_request", ifname: ifname }, function(data) {
-      if (!data.status)
-        dhcpInfo = data;
+      dhcpInfo = data.status ? null : data;
       notify("dhcpconnected", { info: dhcpInfo });
       callback(data.status ? null : data);
     });
@@ -902,7 +901,14 @@ var WifiManager = (function() {
     var errors = 0;
     for (var n = 0; n < networkConfigurationFields.length; ++n) {
       let fieldName = networkConfigurationFields[n];
-      if (!(fieldName in config)) {
+      if (!(fieldName in config) ||
+          // These fields are special: We can't retrieve them from the
+          // supplicant, and often we have a star in our config. In that case,
+          // we need to avoid overwriting the correct password with a *.
+          (fieldName === "password" ||
+           fieldName === "wep_key0" ||
+           fieldName === "psk") &&
+          config[fieldName] === '*') {
         ++done;
       } else {
         setNetworkVariableCommand(netId, fieldName, config[fieldName], function(ok) {
@@ -1109,7 +1115,7 @@ function nsWifiWorker() {
     return pub;
   };
 
-  netFromDOM = function(net) {
+  netFromDOM = function(net, configured) {
     // Takes a network from the DOM and makes it suitable for insertion into
     // self.configuredNetworks (that is calling addNetwork will do the right
     // thing).
@@ -1119,6 +1125,10 @@ function nsWifiWorker() {
     // Things that are useful for the UI but not to us.
     delete net.bssid;
     delete net.signal;
+    delete net.capabilities;
+
+    if (!configured)
+      configured = {};
 
     net.ssid = quote(net.ssid);
 
@@ -1129,19 +1139,23 @@ function nsWifiWorker() {
         net.keyManagement = "NONE";
       }
 
-      net.key_mgmt = net.keyManagement; // WPA2-PSK, WPA-PSK, etc.
+      configured.key_mgmt = net.key_mgmt = net.keyManagement; // WPA2-PSK, WPA-PSK, etc.
       delete net.keyManagement;
     } else {
-      net.key_mgmt = "NONE";
+      configured.key_mgmt = net.key_mgmt = "NONE";
     }
 
     function checkAssign(name, checkStar) {
       if (name in net) {
         let value = net[name];
-        if (checkStar && value === '*')
-          delete net[name];
-        else
-          net[name] = quote(value);
+        if (!value || (checkStar && value === '*')) {
+          if (name in configured)
+            net[name] = configured[name];
+          else
+            delete net[name];
+        } else {
+          configured[name] = net[name] = quote(value);
+        }
       }
     }
 
@@ -1149,8 +1163,8 @@ function nsWifiWorker() {
     checkAssign("identity", false);
     checkAssign("password", true);
     if (wep && net.wep && net.wep != '*') {
-      net.wep_key0 = isWepHexKey(net.wep) ? net.wep : quote(net.wep);
-      net.auth_alg = "OPEN SHARED";
+      configured.wep_key0 = net.wep_key0 = isWepHexKey(net.wep) ? net.wep : quote(net.wep);
+      configured.auth_alg = net.auth_alg = "OPEN SHARED";
     }
 
     return net;
@@ -1423,7 +1437,7 @@ nsWifiWorker.prototype = {
     if (ssid in this.configuredNetworks)
       configured = this.configuredNetworks[ssid];
 
-    netFromDOM(privnet);
+    netFromDOM(privnet, configured);
 
     // XXX Do we have to worry about overflow/going too high here?
     privnet.priority = ++this._highestPriority;
@@ -1438,6 +1452,11 @@ nsWifiWorker.prototype = {
         networkReady();
       }).bind(this));
     } else {
+      // networkReady, above, calls saveConfig. We want to remember the new
+      // network as being enabled, which isn't the default, so we explicitly
+      // set it to being "enabled" before we add it and save the
+      // configuration.
+      privnet.disabled = 0;
       WifiManager.addNetwork(privnet, (function(ok) {
         if (!ok) {
           this._sendMessage(message, false, "Network is misconfigured", rid, mid);
