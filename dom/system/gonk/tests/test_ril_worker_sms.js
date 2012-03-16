@@ -203,6 +203,101 @@ add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
   run_next_test();
 });
 
+function generateStringOfLength(str, length) {
+  while (str.length < length) {
+    if (str.length < (length / 2)) {
+      str = str + str;
+    } else {
+      str = str + str.substr(0, length - str.length);
+    }
+  }
+
+  return str;
+}
+
+/**
+ * Verify RadioInterfaceLayer#_calculateUserDataLength7Bit multipart handling.
+ */
+add_test(function test_RadioInterfaceLayer__calculateUserDataLength7Bit_multipart() {
+  let ril = newRadioInterfaceLayer();
+
+  function test_calc(str, expected) {
+    let options = ril._calculateUserDataLength7Bit(str);
+
+    do_check_eq(expected[0], options.encodedBodyLength);
+    do_check_eq(expected[1], options.userDataHeaderLength);
+    do_check_eq(expected[2], options.segmentMaxSeq);
+  }
+
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT),
+            [PDU_MAX_USER_DATA_7BIT, 0, 1]);
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT + 1),
+            [PDU_MAX_USER_DATA_7BIT + 1, 5, 2]);
+
+  run_next_test();
+});
+
+/**
+ * Verify RadioInterfaceLayer#_fragmentText7Bit().
+ */
+add_test(function test_RadioInterfaceLayer__fragmentText7Bit() {
+  let ril = newRadioInterfaceLayer();
+
+  function test_calc(str, expected) {
+    let options = ril._fragmentText(str);
+    if (expected) {
+      do_check_eq(expected, options.segments.length);
+    } else {
+      do_check_eq(null, options.segments);
+    }
+  }
+
+  // Boundary checks
+  test_calc("");
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT));
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT + 1), 2);
+
+  // Escaped character
+  test_calc(generateStringOfLength("{", PDU_MAX_USER_DATA_7BIT / 2));
+  test_calc(generateStringOfLength("{", PDU_MAX_USER_DATA_7BIT / 2 + 1), 2);
+  // Escaped character cannot be separated
+  test_calc(generateStringOfLength("{", (PDU_MAX_USER_DATA_7BIT - 7) * 2 / 2), 3);
+
+  // Test headerLen, 7 = Math.ceil(6 * 8 / 7), 6 = headerLen + 1
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT - 7));
+  test_calc(generateStringOfLength("A", (PDU_MAX_USER_DATA_7BIT - 7) * 2), 2);
+  test_calc(generateStringOfLength("A", (PDU_MAX_USER_DATA_7BIT - 7) * 3), 3);
+
+  run_next_test();
+});
+
+/**
+ * Verify RadioInterfaceLayer#_fragmentTextUCS2().
+ */
+add_test(function test_RadioInterfaceLayer__fragmentTextUCS2() {
+  let ril = newRadioInterfaceLayer();
+
+  function test_calc(str, expected) {
+    let options = ril._fragmentText(str);
+    if (expected) {
+      do_check_eq(expected, options.segments.length);
+    } else {
+      do_check_eq(null, options.segments);
+    }
+  }
+
+  // Boundary checks
+  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2));
+  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2 + 1), 2);
+
+  // UCS2 character cannot be separated
+  ril.segmentRef16Bit = true;
+  test_calc(generateStringOfLength("\ua2db", (PDU_MAX_USER_DATA_UCS2 * 2 - 7) * 2 / 2), 3);
+  ril.segmentRef16Bit = false;
+
+  run_next_test();
+});
+
 /**
  * Verify GsmPDUHelper#writeStringAsSeptets() padding bits handling.
  */

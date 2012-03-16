@@ -534,10 +534,19 @@ RadioInterfaceLayer.prototype = {
 
   /**
    * List of tuples of national language identifier pairs.
+   *
+   * TODO: Support static/runtime settings, see bug 733331.
    */
   enabledGsmTableTuples: [
     [RIL.PDU_NL_IDENTIFIER_DEFAULT, RIL.PDU_NL_IDENTIFIER_DEFAULT],
   ],
+
+  /**
+   * Use 16-bit reference number for concatenated outgoint messages.
+   *
+   * TODO: Support static/runtime settings, see bug 733331.
+   */
+  segmentRef16Bit: false,
 
   /**
    * Calculate encoded length using specified locking/single shift table
@@ -602,12 +611,11 @@ RadioInterfaceLayer.prototype = {
    *
    * @return null or an options object with attributes `dcs`,
    *         `userDataHeaderLength`, `encodedBodyLength`, `langIndex`,
-   *         `langShiftIndex` set.
+   *         `langShiftIndex`, `segmentMaxSeq` set.
    *
    * @see #_calculateUserDataLength().
    */
   _calculateUserDataLength7Bit: function _calculateUserDataLength7Bit(message) {
-    //TODO: support multipart SMS, see bug 712933
     let options = null;
     let minUserDataSeptets = Number.MAX_VALUE;
     for (let i = 0; i < this.enabledGsmTableTuples.length; i++) {
@@ -634,6 +642,20 @@ RadioInterfaceLayer.prototype = {
       // Calculate full user data length, note the extra byte is for header len
       let headerSeptets = Math.ceil((headerLen ? headerLen + 1 : 0) * 8 / 7);
       let userDataSeptets = bodySeptets + headerSeptets;
+      let segments = bodySeptets ? 1 : 0;
+      if (userDataSeptets > RIL.PDU_MAX_USER_DATA_7BIT) {
+        if (this.segmentRef16Bit) {
+          headerLen += 6;
+        } else {
+          headerLen += 5;
+        }
+
+        headerSeptets = Math.ceil((headerLen + 1) * 8 / 7);
+        let segmentSeptets = RIL.PDU_MAX_USER_DATA_7BIT - headerSeptets;
+        segments = Math.ceil(bodySeptets / segmentSeptets);
+        userDataSeptets = bodySeptets + headerSeptets * segments;
+      }
+
       if (userDataSeptets >= minUserDataSeptets) {
         continue;
       }
@@ -646,6 +668,7 @@ RadioInterfaceLayer.prototype = {
         userDataHeaderLength: headerLen,
         langIndex: langIndex,
         langShiftIndex: langShiftIndex,
+        segmentMaxSeq: segments,
       };
     }
 
@@ -659,15 +682,32 @@ RadioInterfaceLayer.prototype = {
    *        a message string to be encoded.
    *
    * @return an options object with attributes `dcs`, `userDataHeaderLength`,
-   *         `encodedBodyLength` set.
+   *         `encodedBodyLength`, `segmentMaxSeq` set.
    *
    * @see #_calculateUserDataLength().
    */
   _calculateUserDataLengthUCS2: function _calculateUserDataLengthUCS2(message) {
+    let bodyChars = message.length;
+    let headerLen = 0;
+    let headerChars = Math.ceil((headerLen ? headerLen + 1 : 0) / 2);
+    let segments = bodyChars ? 1 : 0;
+    if ((bodyChars + headerChars) > RIL.PDU_MAX_USER_DATA_UCS2) {
+      if (this.segmentRef16Bit) {
+        headerLen += 6;
+      } else {
+        headerLen += 5;
+      }
+
+      headerChars = Math.ceil((headerLen + 1) / 2);
+      let segmentChars = RIL.PDU_MAX_USER_DATA_UCS2 - headerChars;
+      segments = Math.ceil(bodyChars / segmentChars);
+    }
+
     return {
       dcs: RIL.PDU_DCS_MSG_CODING_16BITS_ALPHABET,
-      encodedBodyLength: message.length * 2,
-      userDataHeaderLength: 0,
+      encodedBodyLength: bodyChars * 2,
+      userDataHeaderLength: headerLen,
+      segmentMaxSeq: segments,
     };
   },
 
@@ -694,6 +734,10 @@ RadioInterfaceLayer.prototype = {
    *        Table index used for normal 7-bit encoded character lookup.
    * @param langShiftIndex
    *        Table index used for escaped 7-bit encoded character lookup.
+   * @param segmentMaxSeq
+   *        Max sequence number of a multi-part messages, or 1 for single one.
+   *        This number might not be accurate for a multi-part message until
+   *        it's processed by #_fragmentText() again.
    */
   _calculateUserDataLength: function _calculateUserDataLength(message) {
     let options = this._calculateUserDataLength7Bit(message);
@@ -709,11 +753,137 @@ RadioInterfaceLayer.prototype = {
     return options;
   },
 
+  /**
+   * Fragment GSM 7-Bit encodable string for transmission.
+   *
+   * @param text
+   *        text string to be fragmented.
+   * @param langTable
+   *        locking shift table string.
+   * @param langShiftTable
+   *        single shift table string.
+   * @param headerLen
+   *        Length of prepended user data header.
+   *
+   * @return an array of objects. See #_fragmentText() for detailed definition.
+   */
+  _fragmentText7Bit: function _fragmentText7Bit(text, langTable, langShiftTable, headerLen) {
+    const headerSeptets = Math.ceil((headerLen ? headerLen + 1 : 0) * 8 / 7);
+    const segmentSeptets = RIL.PDU_MAX_USER_DATA_7BIT - headerSeptets;
+    let ret = [];
+    let begin = 0, len = 0;
+    for (let i = 0, inc = 0; i < text.length; i++) {
+      let septet = langTable.indexOf(text.charAt(i));
+      if (septet == RIL.PDU_NL_EXTENDED_ESCAPE) {
+        continue;
+      }
+
+      if (septet >= 0) {
+        inc = 1;
+      } else {
+        septet = langShiftTable.indexOf(text.charAt(i));
+        if (septet < 0) {
+          throw new Error("Given text cannot be encoded with GSM 7-bit Alphabet!");
+        }
+
+        if (septet == RIL.PDU_NL_RESERVED_CONTROL) {
+          continue;
+        }
+
+        inc = 2;
+      }
+
+      if ((len + inc) > segmentSeptets) {
+        ret.push({
+          body: text.substring(begin, i),
+          encodedBodyLength: len,
+        });
+        begin = i;
+        len = 0;
+      }
+
+      len += inc;
+    }
+
+    if (len) {
+      ret.push({
+        body: text.substring(begin),
+        encodedBodyLength: len,
+      });
+    }
+
+    return ret;
+  },
+
+  /**
+   * Fragment UCS2 encodable string for transmission.
+   *
+   * @param text
+   *        text string to be fragmented.
+   * @param headerLen
+   *        Length of prepended user data header.
+   *
+   * @return an array of objects. See #_fragmentText() for detailed definition.
+   */
+  _fragmentTextUCS2: function _fragmentTextUCS2(text, headerLen) {
+    const headerChars = Math.ceil((headerLen ? headerLen + 1 : 0) / 2);
+    const segmentChars = RIL.PDU_MAX_USER_DATA_UCS2 - headerChars;
+    let ret = [];
+    for (let offset = 0; offset < text.length; offset += segmentChars) {
+      let str = text.substr(offset, segmentChars);
+      ret.push({
+        body: str,
+        encodedBodyLength: str.length * 2,
+      });
+    }
+
+    return ret;
+  },
+
+  /**
+   * Fragment string for transmission.
+   *
+   * Fragment input text string into an array of objects that contains
+   * attributes `body`, substring for this segment, `encodedBodyLength`,
+   * length of the encoded segment body in septets.
+   *
+   * @param text
+   *        Text string to be fragmented.
+   * @param options
+   *        Optional pre-calculated option object. The output array will be
+   *        stored at options.segments if there are multiple segments.
+   *
+   * @return Populated options object.
+   */
+  _fragmentText: function _fragmentText(text, options) {
+    if (!options) {
+      options = this._calculateUserDataLength(text);
+    }
+
+    if (options.segmentMaxSeq <= 1) {
+      options.segments = null;
+      return options;
+    }
+
+    if (options.dcs == RIL.PDU_DCS_MSG_CODING_7BITS_ALPHABET) {
+      const langTable = RIL.PDU_NL_LOCKING_SHIFT_TABLES[options.langIndex];
+      const langShiftTable = RIL.PDU_NL_SINGLE_SHIFT_TABLES[options.langShiftIndex];
+      options.segments = this._fragmentText7Bit(options.body,
+                                                langTable, langShiftTable,
+                                                options.userDataHeaderLength);
+    } else {
+      options.segments = this._fragmentTextUCS2(options.body,
+                                                options.userDataHeaderLength);
+    }
+
+    // Re-sync options.segmentMaxSeq with actual length of returning array.
+    options.segmentMaxSeq = options.segments.length;
+
+    return options;
+  },
+
   getNumberOfMessagesForText: function getNumberOfMessagesForText(text) {
-    //TODO: this assumes 7bit encoding, which is incorrect. Need to look
-    // for characters not supported by 7bit alphabets and then calculate
-    // length in UCS2 encoding.
-    return Math.ceil(text.length / 160);
+    return this._fragmentText(text).segmentMaxSeq;
   },
 
   sendSMS: function sendSMS(number, message, requestId, processId) {
