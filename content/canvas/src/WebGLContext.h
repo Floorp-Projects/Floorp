@@ -692,6 +692,9 @@ protected:
     nsresult BufferData_buf(WebGLenum target, JSObject* data, WebGLenum usage);
     nsresult BufferData_array(WebGLenum target, JSObject* data, WebGLenum usage);
 
+    nsresult BufferSubData_buf(WebGLenum target, PRInt32 offset, JSObject* data);
+    nsresult BufferSubData_array(WebGLenum target, PRInt32 offset, JSObject* data);
+
     nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
     nsHTMLCanvasElement *HTMLCanvasElement() {
         return static_cast<nsHTMLCanvasElement*>(mCanvasElement.get());
