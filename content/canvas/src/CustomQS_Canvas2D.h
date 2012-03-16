@@ -158,10 +158,7 @@ nsIDOMCanvasRenderingContext2D_GetFillStyle(JSContext *cx, JSObject *obj, jsid i
 }
 
 static bool
-CreateImageData(JSContext* cx,
-                uint32_t w,
-                uint32_t h,
-                jsval* vp)
+CreateImageData(JSContext* cx, JSObject* obj, uint32_t w, uint32_t h, jsval* vp)
 {
     using mozilla::CheckedInt;
 
@@ -183,25 +180,13 @@ CreateImageData(JSContext* cx,
         return false;
     }
 
-    // Do JS_NewObject after CreateTypedArray, so that gc will get
-    // triggered here if necessary
-    JSObject* result = JS_NewObject(cx, NULL, NULL, NULL);
-    JS::AutoObjectRooter rr(cx, result);
-    if (!result) {
-        return false;
-    }
-
-    if (!JS_DefineProperty(cx, result, "width", INT_TO_JSVAL(w), NULL, NULL,
-                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "height", INT_TO_JSVAL(h), NULL, NULL,
-                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "data", OBJECT_TO_JSVAL(darray), NULL, NULL,
-                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
-        return false;
-    }
-
-    *vp = OBJECT_TO_JSVAL(result);
-    return true;
+    XPCLazyCallContext lccx(JS_CALLER, cx, obj);
+    const nsIID *iid = &NS_GET_IID(nsIDOMImageData);
+    nsRefPtr<mozilla::dom::ImageData> imageData =
+        new mozilla::dom::ImageData(w, h, *darray);
+    qsObjectHelper helper(imageData, NULL);
+    return xpc_qsXPCOMObjectToJsval(lccx, helper, iid,
+                                    &interfaces[k_nsIDOMImageData], vp);
 }
 
 static JSBool
@@ -209,7 +194,10 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, unsigned argc, jsv
 {
     XPC_QS_ASSERT_CONTEXT_OK(cx);
 
-    /* Note: this doesn't need JS_THIS_OBJECT */
+    JSObject* obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj) {
+        return false;
+    }
 
     if (argc < 1)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
@@ -223,7 +211,7 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, unsigned argc, jsv
             return false;
         }
 
-        return CreateImageData(cx, data_width, data_height, vp);
+        return CreateImageData(cx, obj, data_width, data_height, vp);
     }
 
     double width, height;
@@ -242,7 +230,7 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, unsigned argc, jsv
 
     uint32_t w = NS_ABS(wi);
     uint32_t h = NS_ABS(hi);
-    return CreateImageData(cx, w, h, vp);
+    return CreateImageData(cx, obj, w, h, vp);
 }
 
 static JSBool

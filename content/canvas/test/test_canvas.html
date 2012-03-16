@@ -7605,7 +7605,7 @@ ok(window.Uint8ClampedArray !== undefined, "window.Uint8ClampedArray !== undefin
 window.ImageData.prototype.thisImplementsImageData = true;
 window.Uint8ClampedArray.prototype.thisImplementsUint8ClampedArray = true;
 var imgdata = ctx.createImageData(1, 1);
-todo(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
+ok(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
 ok(imgdata.data.thisImplementsUint8ClampedArray, "imgdata.data.thisImplementsUint8ClampedArray");
 
 
@@ -7629,7 +7629,7 @@ ok(window.Uint8ClampedArray !== undefined, "window.Uint8ClampedArray !== undefin
 window.ImageData.prototype.thisImplementsImageData = true;
 window.Uint8ClampedArray.prototype.thisImplementsUint8ClampedArray = true;
 var imgdata = ctx.createImageData(ctx.createImageData(1, 1));
-todo(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
+ok(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
 ok(imgdata.data.thisImplementsUint8ClampedArray, "imgdata.data.thisImplementsUint8ClampedArray");
 
 
