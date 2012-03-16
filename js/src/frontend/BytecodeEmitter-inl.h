@@ -52,7 +52,8 @@ TreeContext::TreeContext(Parser *prs)
     topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
     decls(prs->context), parser(prs), yieldNode(NULL), argumentsNode(NULL), scopeChain_(NULL),
     lexdeps(prs->context), parent(prs->tc), staticLevel(0), funbox(NULL), functionList(NULL),
-    innermostWith(NULL), bindings(prs->context), bindingsRoot(prs->context, &bindings)
+    innermostWith(NULL), bindings(prs->context), bindingsRoot(prs->context, &bindings),
+    funcStmts(NULL)
 {
     prs->tc = this;
 }
@@ -66,6 +67,7 @@ inline
 TreeContext::~TreeContext()
 {
     parser->tc = this->parent;
+    parser->context->delete_(funcStmts);
 }
 
 } /* namespace js */
