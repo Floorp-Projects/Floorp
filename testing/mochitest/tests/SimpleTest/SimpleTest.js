@@ -315,11 +315,6 @@ SimpleTest.report = function () {
     var failed = 0;
     var todo = 0;
 
-    // Report tests which did not actually check anything.
-    if (SimpleTest._tests.length == 0)
-      // ToDo: Do s/todo/ok/ when all the tests are fixed. (Bug 483407)
-      SimpleTest.todo(false, "[SimpleTest.report()] No checks actually run.");
-
     var tallyAndCreateDiv = function (test) {
             var cls, msg, div;
             var diag = test.diag ? " - " + test.diag : "";
@@ -685,6 +680,13 @@ SimpleTest.finish = function () {
                       + "callbacks run.  Maybe the test terminated "
                       + "prematurely -- be sure to use "
                       + "SimpleTest.waitForExplicitFinish().");
+    }
+    if (SimpleTest._tests.length == 0) {
+        SimpleTest.ok(false, "[SimpleTest.finish()] No checks actually run. "
+                           + "(You need to call ok(), is(), or similar "
+                           + "functions at least once.  Make sure you use "
+                           + "SimpleTest.waitForExplicitFinish() if you need "
+                           + "it.)");
     }
 
     if (parentRunner) {
