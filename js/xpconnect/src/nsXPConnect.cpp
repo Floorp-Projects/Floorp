@@ -63,9 +63,7 @@
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
 
-#ifdef MOZ_JSDEBUGGER
 #include "jsdIDebuggerService.h"
-#endif
 
 #include "XPCQuickStubs.h"
 #include "dombindings.h"
@@ -2445,10 +2443,8 @@ nsXPConnect::Peek(JSContext * *_retval)
     return NS_OK;
 }
 
-#ifdef MOZ_JSDEBUGGER
 void
-nsXPConnect::CheckForDebugMode(JSRuntime *rt) 
-{
+nsXPConnect::CheckForDebugMode(JSRuntime *rt) {
     JSContext *cx = NULL;
 
     if (gDebugMode == gDesiredDebugMode) {
@@ -2515,14 +2511,6 @@ fail:
         JS_SetRuntimeDebugMode(rt, false);
     gDesiredDebugMode = gDebugMode = false;
 }
-#else //MOZ_JSDEBUGGER not defined
-void
-nsXPConnect::CheckForDebugMode(JSRuntime *rt) 
-{
-    gDesiredDebugMode = gDebugMode = false;
-}
-#endif //#ifdef MOZ_JSDEBUGGER
-
 
 NS_EXPORT_(void)
 xpc_ActivateDebugMode()
