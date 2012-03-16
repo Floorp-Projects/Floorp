@@ -613,8 +613,6 @@ let RIL = {
    *
    * @param pin
    *        String containing the PIN.
-   *
-   * Response will call Phone.onEnterICCPIN().
    */
   enterICCPIN: function enterICCPIN(options) {
     Buf.newParcel(REQUEST_ENTER_SIM_PIN);
@@ -630,8 +628,6 @@ let RIL = {
    *        String containing the old PIN value
    * @param newPin
    *        String containing the new PIN value
-   *
-   * Response will call Phone.onChangeICCPIN().
    */
   changeICCPIN: function changeICCPIN(options) {
     Buf.newParcel(REQUEST_CHANGE_SIM_PIN);
@@ -1042,17 +1038,15 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
 };
 RIL[REQUEST_ENTER_SIM_PIN] = function REQUEST_ENTER_SIM_PIN() {
   let response = Buf.readUint32List();
-  Phone.onEnterICCPIN(response);
+  if (DEBUG) debug("REQUEST_ENTER_SIM_PIN returned " + response);
 };
 RIL[REQUEST_ENTER_SIM_PUK] = function REQUEST_ENTER_SIM_PUK() {
   let response = Buf.readUint32List();
-  Phone.onEnterICCPUK(response);
+  if (DEBUG) debug("REQUEST_ENTER_SIM_PUK returned " + response);
 };
 RIL[REQUEST_ENTER_SIM_PIN2] = null;
 RIL[REQUEST_ENTER_SIM_PUK2] = null;
-RIL[REQUEST_CHANGE_SIM_PIN] = function REQUEST_CHANGE_SIM_PIN() {
-  Phone.onChangeICCPIN();
-};
+RIL[REQUEST_CHANGE_SIM_PIN] = null;
 RIL[REQUEST_CHANGE_SIM_PIN2] = null;
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
 RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
@@ -1102,24 +1096,18 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
   }
   Phone.onCurrentCalls(calls);
 };
-RIL[REQUEST_DIAL] = function REQUEST_DIAL(length) {
-  Phone.onDial();
-};
+RIL[REQUEST_DIAL] = null;
 RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length) {
   let imsi = Buf.readString();
   Phone.onIMSI(imsi);
 };
-RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length) {
-  Phone.onHangUp();
-};
+RIL[REQUEST_HANGUP] = null;
 RIL[REQUEST_HANGUP_WAITING_OR_BACKGROUND] = null;
 RIL[REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND] = null;
 RIL[REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE] = null;
 RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = null;
 RIL[REQUEST_CONFERENCE] = null;
-RIL[REQUEST_UDUB] = function REQUEST_UDUB(length) {
-  Phone.onRejectCall();
-};
+RIL[REQUEST_UDUB] = null;
 RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
 RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
   let signalStrength = Buf.readUint32();
@@ -1160,9 +1148,7 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length) {
   Phone.onOperator(operator);
 };
 RIL[REQUEST_RADIO_POWER] = null;
-RIL[REQUEST_DTMF] = function REQUEST_DTMF() {
-  Phone.onSendTone();
-};
+RIL[REQUEST_DTMF] = null;
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   options.messageRef = Buf.readUint32();
   options.ackPDU = Buf.readString();
@@ -1190,9 +1176,7 @@ RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = null;
 RIL[REQUEST_SET_CALL_FORWARD] = null;
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
 RIL[REQUEST_SET_CALL_WAITING] = null;
-RIL[REQUEST_SMS_ACKNOWLEDGE] = function REQUEST_SMS_ACKNOWLEDGE() {
-  Phone.onAcknowledgeSMS();
-};
+RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI() {
   let imei = Buf.readString();
   Phone.onIMEI(imei);
@@ -1201,9 +1185,7 @@ RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV() {
   let imeiSV = Buf.readString();
   Phone.onIMEISV(imeiSV);
 };
-RIL[REQUEST_ANSWER] = function REQUEST_ANSWER(length) {
-  Phone.onAnswerCall();
-};
+RIL[REQUEST_ANSWER] = null;
 RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length, options) {
   Phone.onDeactivateDataCall(options);
 };
@@ -1217,20 +1199,14 @@ RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELEC
 RIL[REQUEST_SET_NETWORK_SELECTION_AUTOMATIC] = null;
 RIL[REQUEST_SET_NETWORK_SELECTION_MANUAL] = null;
 RIL[REQUEST_QUERY_AVAILABLE_NETWORKS] = null;
-RIL[REQUEST_DTMF_START] = function REQUEST_DTMF_START() {
-  Phone.onStartTone();
-};
-RIL[REQUEST_DTMF_STOP] = function REQUEST_DTMF_STOP() {
-  Phone.onStopTone();
-};
+RIL[REQUEST_DTMF_START] = null;
+RIL[REQUEST_DTMF_STOP] = null;
 RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION() {
   let version = Buf.readString();
   Phone.onBasebandVersion(version);
 };
 RIL[REQUEST_SEPARATE_CONNECTION] = null;
-RIL[REQUEST_SET_MUTE] = function REQUEST_SET_MUTE(length) {
-  Phone.onSetMute();
-};
+RIL[REQUEST_SET_MUTE] = null;
 RIL[REQUEST_GET_MUTE] = null;
 RIL[REQUEST_QUERY_CLIP] = null;
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
@@ -1306,9 +1282,7 @@ RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, option
   let smsc = Buf.readString();
   Phone.onGetSMSCAddress(smsc, options);
 };
-RIL[REQUEST_SET_SMSC_ADDRESS] = function REQUEST_SET_SMSC_ADDRESS() {
-  Phone.onSetSMSCAddress();
-};
+RIL[REQUEST_SET_SMSC_ADDRESS] = null;
 RIL[REQUEST_REPORT_SMS_MEMORY_STATUS] = null;
 RIL[REQUEST_REPORT_STK_SERVICE_IS_RUNNING] = null;
 RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {
@@ -1326,11 +1300,11 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
   let info = Buf.readStringList();
-  Phone.onNewSMSStatusReport(info);
+  //TODO
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM(length) {
   let info = Buf.readUint32List();
-  Phone.onNewSMSOnSIM(message);
+  //TODO
 };
 RIL[UNSOLICITED_ON_USSD] = null;
 RIL[UNSOLICITED_ON_USSD_REQUEST] = null;
@@ -1393,7 +1367,8 @@ RIL[UNSOLICITED_CALL_RING] = function UNSOLICITED_CALL_RING() {
       signal:     Buf.readUint32()
     };
   }
-  Phone.onCallRing(info);
+  // For now we don't need to do anything here because we'll also get a
+  // call state changed notification.
 };
 RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = function UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED() {
   Phone.onICCStatusChanged();
@@ -1647,11 +1622,6 @@ let Phone = {
     RIL.getCurrentCalls();
   },
 
-  onCallRing: function onCallRing(info) {
-    // For now we don't need to do anything here because we'll also get a
-    // call state changed notification.
-  },
-
   onNetworkStateChanged: function onNetworkStateChanged() {
     if (DEBUG) debug("Network state changed, re-requesting phone state.");
     this.requestNetworkInfo();
@@ -1741,21 +1711,6 @@ let Phone = {
 
   onICCStatusChanged: function onICCStatusChanged() {
     RIL.getICCStatus();
-  },
-
-  onEnterICCPIN: function onEnterICCPIN(response) {
-    if (DEBUG) debug("REQUEST_ENTER_SIM_PIN returned " + response);
-    //TODO
-  },
-
-  onChangeICCPIN: function onChangeICCPIN() {
-    if (DEBUG) debug("REQUEST_CHANGE_SIM_PIN");
-    //TODO
-  },
-
-  onEnterICCPUK: function onEnterICCPUK(response) {
-    if (DEBUG) debug("REQUEST_ENTER_SIM_PUK returned " + response);
-    //TODO
   },
 
   onNetworkSelectionMode: function onNetworkSelectionMode(mode) {
@@ -1909,30 +1864,6 @@ let Phone = {
                          signalStrength: strength});
   },
 
-  onDial: function onDial() {
-  },
-
-  onHangUp: function onHangUp() {
-  },
-
-  onAnswerCall: function onAnswerCall() {
-  },
-
-  onRejectCall: function onRejectCall() {
-  },
-
-  onSetMute: function onSetMute() {
-  },
-
-  onSendTone: function onSendTone() {
-  },
-
-  onStartTone: function onStartTone() {
-  },
-
-  onStopTone: function onStopTone() {
-  },
-
   onGetSMSCAddress: function onGetSMSCAddress(smsc, options) {
     //TODO: notify main thread if we fail retrieving the SMSC, especially
     // if there was a pending SMS (bug 727319).
@@ -1944,9 +1875,6 @@ let Phone = {
     if (smsc && options.body) {
       this.sendSMS(options);
     }
-  },
-
-  onSetSMSCAddress: function onSetSMSCAddress() {
   },
 
   onSendSMS: function onSendSMS(options) {
@@ -1985,17 +1913,6 @@ let Phone = {
     //TODO: this might be a lie? do we want to wait for the mainthread to
     // report back?
     RIL.acknowledgeSMS(true, SMS_HANDLED);
-  },
-
-  onNewSMSStatusReport: function onNewSMSStatusReport(info) {
-    //TODO
-  },
-
-  onNewSMSOnSIM: function onNewSMSOnSIM(info) {
-    //TODO
-  },
-
-  onAcknowledgeSMS: function onAcknowledgeSMS() {
   },
 
   onSetupDataCall: function onSetupDataCall(options) {
