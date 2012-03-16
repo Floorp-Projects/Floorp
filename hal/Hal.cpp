@@ -179,13 +179,16 @@ public:
   }
 
   void RemoveObserver(Observer<InfoType>* aObserver) {
-    // If mObservers is null, that means there are no observers, so removing one
-    // must be a no-op.
-    if (!mObservers) {
-      return;
-    }
+    // If mObservers is null, that means there are no observers.
+    // In addition, if RemoveObserver() returns false, that means we didn't
+    // find the observer.
+    // In both cases, that is a logical error we want to make sure the developer
+    // notices.
 
-    mObservers->RemoveObserver(aObserver);
+    MOZ_ASSERT(mObservers);
+
+    DebugOnly<bool> removed = mObservers->RemoveObserver(aObserver);
+    MOZ_ASSERT(removed);
 
     if (mObservers->Length() == 0) {
       DisableNotifications();
