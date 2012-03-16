@@ -8,6 +8,9 @@
 namespace mozilla {
 namespace dom {
 
+// Make sure that any change here is also made in
+// * mobile/android/base/GeckoScreenOrientationListener.java
+// * embedding/android/GeckoScreenOrientationListener.java
 enum ScreenOrientation {
   eScreenOrientation_Current            = 0,
   eScreenOrientation_PortraitPrimary    = 1,  // 00000001
