@@ -177,7 +177,7 @@ interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
   const WebGLenum MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
 };
 
-[scriptable, builtinclass, uuid(77c303b8-9d86-48d4-a118-0c32358520ee)]
+[scriptable, builtinclass, uuid(dcba5412-42b4-4897-b2f4-56a5cae7ef2d)]
 interface nsIDOMWebGLRenderingContext : nsISupports
 {
   //
@@ -832,15 +832,10 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   void vertexAttrib3f(in WebGLuint indx, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z);
   void vertexAttrib4f(in WebGLuint indx, in WebGLfloat x, in WebGLfloat y, in WebGLfloat z, in WebGLfloat w);
 
-  void vertexAttrib1fv([optional] in long dummy);
-  void vertexAttrib2fv([optional] in long dummy);
-  void vertexAttrib3fv([optional] in long dummy);
-  void vertexAttrib4fv([optional] in long dummy);
-
-  [noscript] void vertexAttrib1fv_array(in WebGLuint indx, in WebGLJSObjectPtr values);
-  [noscript] void vertexAttrib2fv_array(in WebGLuint indx, in WebGLJSObjectPtr values);
-  [noscript] void vertexAttrib3fv_array(in WebGLuint indx, in WebGLJSObjectPtr values);
-  [noscript] void vertexAttrib4fv_array(in WebGLuint indx, in WebGLJSObjectPtr values);
+  [implicit_jscontext] void vertexAttrib1fv(in WebGLuint indx, in jsval values);
+  [implicit_jscontext] void vertexAttrib2fv(in WebGLuint indx, in jsval values);
+  [implicit_jscontext] void vertexAttrib3fv(in WebGLuint indx, in jsval values);
+  [implicit_jscontext] void vertexAttrib4fv(in WebGLuint indx, in jsval values);
 
   // size is number of elements per attrib; offset, stride are in bytes
   void vertexAttribPointer(in WebGLuint idx, in WebGLint size, in WebGLenum type, in WebGLboolean normalized, in WebGLsizei stride, in WebGLsizeiptr offset);
