@@ -256,12 +256,16 @@ public class Favicons {
 
         // Runs in background thread
         private void saveFaviconToDb(BitmapDrawable favicon) {
-            Log.d(LOGTAG, "Saving favicon on browser database for URL = " + mPageUrl);
-            ContentResolver resolver = mContext.getContentResolver();
-            BrowserDB.updateFaviconForUrl(resolver, mPageUrl, favicon);
+            // since the Async task can run this on any number of threads in the
+            // pool, we need to protect against inserting the same url twice
+            synchronized(mDbHelper) {
+                Log.d(LOGTAG, "Saving favicon on browser database for URL = " + mPageUrl);
+                ContentResolver resolver = mContext.getContentResolver();
+                BrowserDB.updateFaviconForUrl(resolver, mPageUrl, favicon);
 
-            Log.d(LOGTAG, "Saving favicon URL for URL = " + mPageUrl);
-            mDbHelper.setFaviconUrlForPageUrl(mPageUrl, mFaviconUrl);
+                Log.d(LOGTAG, "Saving favicon URL for URL = " + mPageUrl);
+                mDbHelper.setFaviconUrlForPageUrl(mPageUrl, mFaviconUrl);
+            }
         }
 
         // Runs in background thread
