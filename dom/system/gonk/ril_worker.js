@@ -479,7 +479,6 @@ let Buf = {
               ", token " + token);
       }
       delete this.tokenRequestMap[token];
-      this.lastSolicitedToken = token;
     } else if (response_type == RESPONSE_TYPE_UNSOLICITED) {
       request_type = this.readUint32();
       if (DEBUG) debug("Unsolicited response for request type " + request_type);
@@ -908,16 +907,16 @@ let RIL = {
    * @param pdptype
    *        String containing PDP type to request. ("IP", "IPV6", ...)
    */
-  setupDataCall: function (radioTech, apn, user, passwd, chappap, pdptype) {
+  setupDataCall: function setupDataCall(options) {
     let token = Buf.newParcel(REQUEST_SETUP_DATA_CALL);
     Buf.writeUint32(7);
-    Buf.writeString(radioTech.toString());
+    Buf.writeString(options.radioTech.toString());
     Buf.writeString(DATACALL_PROFILE_DEFAULT.toString());
-    Buf.writeString(apn);
-    Buf.writeString(user);
-    Buf.writeString(passwd);
-    Buf.writeString(chappap.toString());
-    Buf.writeString(pdptype);
+    Buf.writeString(options.apn);
+    Buf.writeString(options.user);
+    Buf.writeString(options.passwd);
+    Buf.writeString(options.chappap.toString());
+    Buf.writeString(options.pdptype);
     Buf.sendParcel();
     return token;
   },
@@ -965,11 +964,11 @@ let RIL = {
    * @param reason
    *        One of DATACALL_DEACTIVATE_* constants.
    */
-  deactivateDataCall: function (cid, reason) {
+  deactivateDataCall: function deactivateDataCall(options) {
     let token = Buf.newParcel(REQUEST_DEACTIVATE_DATA_CALL);
     Buf.writeUint32(2);
-    Buf.writeString(cid);
-    Buf.writeString(reason);
+    Buf.writeString(options.cid);
+    Buf.writeString(options.reason || DATACALL_DEACTIVATE_NO_REASON);
     Buf.sendParcel();
     return token;
   },
@@ -1169,9 +1168,14 @@ RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
   Phone.onSendSMS(options);
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
-RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL() {
+RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options) {
   let [cid, ifname, ipaddr, dns, gw] = Buf.readStringList();
-  Phone.onSetupDataCall(Buf.lastSolicitedToken, cid, ifname, ipaddr, dns, gw);
+  options.cid = cid;
+  options.ifname = ifname;
+  options.ipaddr = ipaddr;
+  options.dns = dns;
+  options.gw = gw;
+  Phone.onSetupDataCall(options);
 };
 RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
   Phone.onICCIO(options);
@@ -1198,8 +1202,8 @@ RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV() {
 RIL[REQUEST_ANSWER] = function REQUEST_ANSWER(length) {
   Phone.onAnswerCall();
 };
-RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL() {
-  Phone.onDeactivateDataCall(Buf.lastSolicitedToken);
+RIL[REQUEST_DEACTIVATE_DATA_CALL] = function REQUEST_DEACTIVATE_DATA_CALL(length, options) {
+  Phone.onDeactivateDataCall(options);
 };
 RIL[REQUEST_QUERY_FACILITY_LOCK] = null;
 RIL[REQUEST_SET_FACILITY_LOCK] = null;
@@ -1469,11 +1473,6 @@ let Phone = {
    * Existing data calls.
    */
   currentDataCalls: {},
-
-  /**
-   * Tracks active requests to the RIL concerning 3G data calls.
-   */
-  activeDataRequests: {},
 
   get muted() {
     return this._muted;
@@ -1997,33 +1996,19 @@ let Phone = {
   onAcknowledgeSMS: function onAcknowledgeSMS() {
   },
 
-  onSetupDataCall: function onSetupDataCall(token, cid, ifname, ipaddr,
-                                            dns, gw) {
-    let options = this.activeDataRequests[token];
-    delete this.activeDataRequests[token];
-
-    let datacall = this.currentDataCalls[cid] = {
-      active: -1,
-      state: GECKO_NETWORK_STATE_CONNECTING,
-      cid: cid,
-      apn: options.apn,
-      ifname: ifname,
-      ipaddr: ipaddr,
-      dns: dns,
-      gw: gw,
-    };
+  onSetupDataCall: function onSetupDataCall(options) {
+    options.active = DATACALL_ACTIVE_UNKNOWN;
+    options.state = GECKO_NETWORK_STATE_CONNECTING;
+    this.currentDataCalls[options.cid] = options;
     this.sendDOMMessage({type: "datacallstatechange",
-                         datacall: datacall});
+                         datacall: options});
 
     // Let's get the list of data calls to ensure we know whether it's active
     // or not.
     RIL.getDataCallList();
   },
 
-  onDeactivateDataCall: function onDeactivateDataCall(token) {
-    let options = this.activeDataRequests[token];
-    delete this.activeDataRequests[token];
-
+  onDeactivateDataCall: function onDeactivateDataCall(options) {
     let datacall = this.currentDataCalls[options.cid];
     delete this.currentDataCalls[options.cid];
     datacall.state = GECKO_NETWORK_STATE_DISCONNECTED;
@@ -2251,11 +2236,7 @@ let Phone = {
    */
   setupDataCall: function setupDataCall(options) {
     if (DEBUG) debug("setupDataCall: " + JSON.stringify(options));
-
-    let token = RIL.setupDataCall(options.radioTech, options.apn,
-                                  options.user, options.passwd,
-                                  options.chappap, options.pdptype);
-    this.activeDataRequests[token] = options;
+    RIL.setupDataCall(options);
   },
 
   /**
@@ -2266,9 +2247,7 @@ let Phone = {
       return;
     }
 
-    let reason = options.reason || DATACALL_DEACTIVATE_NO_REASON;
-    let token = RIL.deactivateDataCall(options.cid, reason);
-    this.activeDataRequests[token] = options;
+    RIL.deactivateDataCall(options);
 
     let datacall = this.currentDataCalls[options.cid];
     datacall.state = GECKO_NETWORK_STATE_DISCONNECTING;
