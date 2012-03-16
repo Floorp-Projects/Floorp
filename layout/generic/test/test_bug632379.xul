@@ -196,6 +196,7 @@ function openSubmenu()
     synthesizeKey("5", {});
 }
 
+SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(doTest);
 
 ]]></script>
