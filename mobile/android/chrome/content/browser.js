@@ -193,6 +193,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "Passwords:Init", false);
     Services.obs.addObserver(this, "FormHistory:Init", false);
+    Services.obs.addObserver(this, "ToggleProfiling", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -952,6 +953,14 @@ var BrowserApp = {
       Services.obs.removeObserver(this, "FormHistory:Init", false);
     } else if (aTopic == "sessionstore-state-purge-complete") {
       sendMessageToJava({ gecko: { type: "Session:StatePurged" }});
+    } else if (aTopic == "ToggleProfiling") {
+      let profiler = Cc["@mozilla.org/tools/profiler;1"].
+                       getService(Ci.nsIProfiler);
+      if (profiler.IsActive()) {
+        profiler.StopProfiler();
+      } else {
+        profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
+      }
     }
   },
 
