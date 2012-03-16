@@ -1418,7 +1418,7 @@ void
 JSCompartment::reduceGCTriggerBytes(size_t amount)
 {
     JS_ASSERT(amount > 0);
-    JS_ASSERT(gcTriggerBytes - amount >= 0);
+    JS_ASSERT(gcTriggerBytes >= amount);
     if (gcTriggerBytes - amount < GC_ALLOCATION_THRESHOLD * GC_HEAP_GROWTH_FACTOR)
         return;
     gcTriggerBytes -= amount;
