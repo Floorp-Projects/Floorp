@@ -151,6 +151,11 @@ class IonCompartment
         return invalidator_;
     }
 
+    EnterIonCode enterJITInfallible() {
+        JS_ASSERT(enterJIT_);
+        return enterJIT_.get()->as<EnterIonCode>();
+    }
+
     EnterIonCode enterJIT(JSContext *cx) {
         if (!enterJIT_) {
             enterJIT_ = generateEnterJIT(cx);
@@ -158,6 +163,11 @@ class IonCompartment
                 return NULL;
         }
         return enterJIT_.get()->as<EnterIonCode>();
+    }
+
+    DoOsrIonCode osrPrologueInfallible() {
+        JS_ASSERT(osrPrologue_);
+        return osrPrologue_.get()->as<DoOsrIonCode>();
     }
 
     DoOsrIonCode osrPrologue(JSContext *cx) {
