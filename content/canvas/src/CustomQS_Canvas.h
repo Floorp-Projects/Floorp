@@ -7,6 +7,8 @@
 
 #include "jsapi.h"
 
+#include "mozilla/dom/ImageData.h"
+
 static bool
 GetPositiveInt(JSContext* cx, JSObject& obj, const char* name, uint32_t* out)
 {
@@ -24,13 +26,28 @@ GetPositiveInt(JSContext* cx, JSObject& obj, const char* name, uint32_t* out)
 }
 
 static bool
-GetImageData(JSContext* cx, const JS::Value& imageData,
+GetImageData(JSContext* cx, JS::Value& imageData,
              uint32_t* width, uint32_t* height, JS::Anchor<JSObject*>* array)
 {
   if (!imageData.isObject()) {
     return xpc_qsThrow(cx, NS_ERROR_DOM_TYPE_MISMATCH_ERR);
   }
 
+  nsIDOMImageData* domImageData;
+  xpc_qsSelfRef imageDataRef;
+  if (NS_SUCCEEDED(xpc_qsUnwrapArg<nsIDOMImageData>(cx, imageData,
+                                                    &domImageData,
+                                                    &imageDataRef.ptr,
+                                                    &imageData))) {
+    mozilla::dom::ImageData* concreteImageData =
+      static_cast<mozilla::dom::ImageData*>(domImageData);
+    *width = concreteImageData->GetWidth();
+    *height = concreteImageData->GetHeight();
+    array->set(concreteImageData->GetDataObject());
+    return true;
+  }
+
+  // TODO - bug 625804: Remove support for duck-typed ImageData.
   JSObject& dataObject = imageData.toObject();
 
   if (!GetPositiveInt(cx, dataObject, "width", width) ||
