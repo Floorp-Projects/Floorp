@@ -117,8 +117,6 @@ struct CommonLayerAttributes {
   float opacity;
   bool useClipRect;
   nsIntRect clipRect;
-  bool useTileSourceRect;
-  nsIntRect tileSourceRect;
   bool isFixedPosition;
 };
 
