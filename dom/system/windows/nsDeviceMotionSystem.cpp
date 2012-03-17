@@ -39,6 +39,8 @@
 #include "nsIServiceManager.h"
 #include "windows.h"
 
+#define DEFAULT_SENSOR_POLL 100
+
 ////////////////////////////
 // ThinkPad
 ////////////////////////////
@@ -156,7 +158,7 @@ void nsDeviceMotionSystem::Startup()
   if (mUpdateTimer)
     mUpdateTimer->InitWithFuncCallback(UpdateHandler,
                                        this,
-                                       mUpdateInterval,
+                                       DEFAULT_SENSOR_POLL,
                                        nsITimer::TYPE_REPEATING_SLACK);
 }
 

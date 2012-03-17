@@ -5081,7 +5081,7 @@ nsTypedSelection::Extend(nsINode* aParentNode, PRInt32 aOffset)
 
   // First, find the range containing the old focus point:
   if (!mAnchorFocusRange)
-    return NS_ERROR_NOT_INITIALIZED;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   if (!mFrameSelection)
     return NS_ERROR_NOT_INITIALIZED; // Can't do selection

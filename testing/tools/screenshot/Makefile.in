@@ -53,4 +53,13 @@ OS_LIBS = $(MOZ_GTK2_LIBS) $(XSS_LIBS)
 endif # X11
 endif # GTK2
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+
+PROGRAM = screenshot$(BIN_SUFFIX)
+CPPSRCS = win32-screenshot.cpp
+MOZ_GLUE_PROGRAM_LDFLAGS =
+USE_STATIC_LIBS = 1
+
+endif # windows
+
 include $(topsrcdir)/config/rules.mk

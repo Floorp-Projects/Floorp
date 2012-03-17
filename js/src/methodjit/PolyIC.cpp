@@ -562,6 +562,13 @@ class SetPropCompiler : public PICStubCompiler
                 return disable("ops define property hook");
 
             /*
+             * Don't add properties for SETNAME, which requires checks in
+             * strict mode code.
+             */
+            if (JSOp(*f.pc()) == JSOP_SETNAME)
+                return disable("add property under SETNAME");
+
+            /*
              * When adding a property we need to check shapes along the entire
              * prototype chain to watch for an added setter.
              */
@@ -1870,10 +1877,11 @@ GetPropMaybeCached(VMFrame &f, ic::PICInfo *pic, bool cached)
 
     PropertyName *name = pic->name;
     if (name == f.cx->runtime->atomState.lengthAtom) {
-        if (f.regs.sp[-1].isMagic(JS_LAZY_ARGUMENTS)) {
+        if (f.regs.sp[-1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
             f.regs.sp[-1].setInt32(f.regs.fp()->numActualArgs());
             return;
-        } else if (!f.regs.sp[-1].isPrimitive()) {
+        }
+        if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
             if (obj->isArray() ||
                 (obj->isArguments() && !obj->asArguments().hasOverriddenLength()) ||

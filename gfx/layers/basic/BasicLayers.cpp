@@ -690,9 +690,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
     nsIntRegion toDraw = IntersectWithClip(GetEffectiveVisibleRegion(), aContext);
 
-#ifdef MOZ_RENDERTRACE
     RenderTraceInvalidateStart(this, "FFFF00", toDraw.GetBounds());
-#endif
 
     if (!toDraw.IsEmpty() && !IsHidden()) {
       if (!aCallback) {
@@ -730,9 +728,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       aContext->Restore();
     }
 
-#ifdef MOZ_RENDERTRACE
     RenderTraceInvalidateEnd(this, "FFFF00");
-#endif
     return;
   }
 
@@ -759,9 +755,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       nsIntRegion extendedDrawRegion = state.mRegionToDraw;
       SetAntialiasingFlags(this, state.mContext);
 
-#ifdef MOZ_RENDERTRACE
       RenderTraceInvalidateStart(this, "FFFF00", state.mRegionToDraw.GetBounds());
-#endif
 
       PaintBuffer(state.mContext,
                   state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
@@ -769,9 +763,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
                   aCallback, aCallbackData);
       Mutated();
 
-#ifdef MOZ_RENDERTRACE
       RenderTraceInvalidateEnd(this, "FFFF00");
-#endif
     } else {
       // It's possible that state.mRegionToInvalidate is nonempty here,
       // if we are shrinking the valid region to nothing.
@@ -1628,10 +1620,8 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
   mPhase = PHASE_DRAWING;
 #endif
 
-#ifdef MOZ_RENDERTRACE
   Layer* aLayer = GetRoot();
   RenderTraceLayers(aLayer, "FF00");
-#endif
 
   mTransactionIncomplete = false;
 
@@ -1862,6 +1852,8 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                               void* aCallbackData,
                               ReadbackProcessor* aReadback)
 {
+  RenderTraceScope trace("BasicLayerManager::PaintLayer", "707070");
+
   const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
   const gfx3DMatrix& effectiveTransform = aLayer->GetEffectiveTransform();
   BasicContainerLayer* container = static_cast<BasicContainerLayer*>(aLayer);
@@ -3423,6 +3415,7 @@ BasicShadowLayerManager::EndEmptyTransaction()
 void
 BasicShadowLayerManager::ForwardTransaction()
 {
+  RenderTraceScope rendertrace("Foward Transaction", "000090");
 #ifdef DEBUG
   mPhase = PHASE_FORWARD;
 #endif
@@ -3518,6 +3511,12 @@ BasicShadowLayerManager::IsCompositingCheap()
   // Whether compositing is cheap depends on the parent backend.
   return mShadowManager &&
          LayerManager::IsCompositingCheap(GetParentBackendType());
+}
+
+void
+BasicShadowLayerManager::SetIsFirstPaint()
+{
+  ShadowLayerForwarder::SetIsFirstPaint();
 }
 
 }

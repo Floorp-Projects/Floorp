@@ -727,12 +727,18 @@ class StackFrame
     template <class Op> inline bool forEachFormalArg(Op op);
 
     bool hasArgsObj() const {
+        /*
+         * HAS_ARGS_OBJ is still technically not equivalent to
+         * script()->needsArgsObj() during functionPrologue (where GC can
+         * observe a frame that needsArgsObj but has not yet been given the
+         * args). This can be fixed by creating and rooting the args/call
+         * object before pushing the frame, which should be done eventually.
+         */
         return !!(flags_ & HAS_ARGS_OBJ);
     }
 
     ArgumentsObject &argsObj() const {
         JS_ASSERT(hasArgsObj());
-        JS_ASSERT(!isEvalFrame());
         return *argsObj_;
     }
 
@@ -740,7 +746,12 @@ class StackFrame
         return hasArgsObj() ? &argsObj() : NULL;
     }
 
-    inline void setArgsObj(ArgumentsObject &obj);
+    void initArgsObj(ArgumentsObject &argsObj) {
+        JS_ASSERT(script()->needsArgsObj());
+        JS_ASSERT(!hasArgsObj());
+        argsObj_ = &argsObj;
+        flags_ |= HAS_ARGS_OBJ;
+    }
 
     /*
      * This value
@@ -903,8 +914,8 @@ class StackFrame
     /*
      * Epilogue for function frames: put any args or call object for the frame
      * which may still be live, and maintain type nesting invariants. Note:
-     * this does not mark the epilogue as having been completed, since the
-     * frame is about to be popped. Use updateEpilogueFlags for this.
+     * this does mark the epilogue as having been completed, since the frame is
+     * about to be popped. Use updateEpilogueFlags for this.
      */
     inline void functionEpilogue();
 

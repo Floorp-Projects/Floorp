@@ -194,8 +194,14 @@ nsImageFrame::CreateAccessible()
 {
   nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
-    return accService->CreateHTMLImageAccessible(mContent,
-                                                 PresContext()->PresShell());
+    // Don't use GetImageMap() to avoid reentrancy into accessibility.
+    if (HasImageMap()) {
+      return accService->CreateHTMLImageMapAccessible(mContent,
+                                                      PresContext()->PresShell());
+    } else {
+      return accService->CreateHTMLImageAccessible(mContent,
+                                                   PresContext()->PresShell());
+    }
   }
 
   return nsnull;
@@ -208,6 +214,13 @@ nsImageFrame::DisconnectMap()
   if (mImageMap) {
     mImageMap->Destroy();
     NS_RELEASE(mImageMap);
+
+#ifdef ACCESSIBILITY
+  nsAccessibilityService* accService = GetAccService();
+  if (accService) {
+    accService->RecreateAccessible(PresContext()->PresShell(), mContent);
+  }
+#endif
   }
 }
 
@@ -1422,15 +1435,7 @@ nsImageMap*
 nsImageFrame::GetImageMap()
 {
   if (!mImageMap) {
-    nsIDocument* doc = mContent->GetDocument();
-    if (!doc) {
-      return nsnull;
-    }
-
-    nsAutoString usemap;
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, usemap);
-
-    nsCOMPtr<nsIContent> map = doc->FindImageMap(usemap);
+    nsIContent* map = GetMapElement();
     if (map) {
       mImageMap = new nsImageMap();
       NS_ADDREF(mImageMap);

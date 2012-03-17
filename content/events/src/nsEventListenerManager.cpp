@@ -79,7 +79,6 @@
 #include "nsDataHashtable.h"
 #include "nsCOMArray.h"
 #include "nsEventListenerService.h"
-#include "nsDOMEvent.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"

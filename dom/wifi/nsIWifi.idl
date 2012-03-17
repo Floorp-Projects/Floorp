@@ -36,15 +36,78 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-
-[scriptable, uuid(14c815f0-e9db-41d4-a15e-f3e69140f83b)]
-interface nsIWifiNetwork : nsISupports {
-    readonly attribute DOMString ssid; // can be null
-    readonly attribute DOMString bssid; // can be null
-    readonly attribute DOMString flags; // TODO make this be real flags instead of a string
-    readonly attribute long signal;
-};
+#include "nsIDOMDOMRequest.idl"
+#include "nsIDOMEvent.idl"
 
 [scriptable, uuid(9DCE05BF-659C-4427-A050-0EAC3BB6C1C0)]
 interface nsIWifi : nsISupports {
+};
+
+[scriptable, uuid(1509221f-470e-4445-b476-88e74fd5c617)]
+interface nsIDOMWifiManager : nsISupports {
+    /**
+     * TODO Remove in favor of a settings API.
+     * Activates or disactivates wifi.
+     * onsuccess: Wifi has been successfully activated and can start
+     *            attempting to connect to networks. request.value will be true.
+     * onerror: Wifi was not successfully activated. (TODO provide details!)
+     */
+    nsIDOMDOMRequest setEnabled(in boolean enabled);
+
+    /**
+     * Returns the list of currently available networks as well as the list of
+     * currently configured networks.
+     * onsuccess: We have obtained the current list of networks. request.value
+     *            is an object whose property names are SSIDs and values are
+     *            network objects.
+     * onerror: We were unable to obtain a list of property names.
+     */
+    nsIDOMDOMRequest getNetworks();
+
+    /**
+     * Takes one of the networks returned from getNetworks and tries to
+     * connect to it.
+     * @param network A network object with information about the network,
+     *                such as the SSID, key management desired, etc.
+     * onsuccess: We have started attempting to associate with the network.
+     *            request.value is true.
+     * onerror: We were unable to select the network. This most likely means a
+     *          configuration error.
+     */
+    nsIDOMDOMRequest associate(in jsval network);
+
+    /**
+     * TODO Remove in favor of a settings API.
+     * Returns whether or not wifi is currently enabled.
+     */
+    readonly attribute boolean enabled;
+
+    /**
+     * A network object describing the currently connected network.
+     */
+    readonly attribute jsval connectedNetwork;
+
+    /**
+     * These three functions serve as state notification listeners.
+     * onassociate: Fires when we have connected to an access point but do not
+     *              yet have an IP address.
+     * onconnect: Fires once we are fully connected to an access point and can
+     *            access the internet.
+     * ondisconnect: Fires when we either fail to connect to an access point
+     *               (transition: onassociate -> ondisconnect) or when we were
+     *               connected to a network but have disconnected for any
+     *               reason (transition: onconnect -> ondisconnect).
+     */
+             attribute nsIDOMEventListener onassociate;
+             attribute nsIDOMEventListener onconnect;
+             attribute nsIDOMEventListener ondisconnect;
+};
+
+[scriptable, uuid(4674c6f1-ea64-44db-ac2f-e7bd6514dfd6)]
+interface nsIDOMWifiStateChangeEvent : nsIDOMEvent {
+    /**
+     * Network object with a SSID field describing the network affected by
+     * this change.
+     */
+    readonly attribute jsval network;
 };

@@ -638,7 +638,7 @@ GetSystemFontInfo(GtkWidget *aWidget,
 {
     GtkSettings *settings = gtk_widget_get_settings(aWidget);
 
-    aFontStyle->style       = FONT_STYLE_NORMAL;
+    aFontStyle->style       = NS_FONT_STYLE_NORMAL;
 
     gchar *fontname;
     g_object_get(settings, "gtk-font-name", &fontname, NULL);
@@ -742,8 +742,8 @@ GetSystemFontInfo(LookAndFeel::FontID /*unused */,
                   gfxFontStyle *aFontStyle)
 {
     /* FIXME: DFB FT2 Hardcoding the system font info for now. */
-    aFontStyle->style      = FONT_STYLE_NORMAL;
-    aFontStyle->weight     = 400;
+    aFontStyle->style      = NS_FONT_STYLE_NORMAL;
+    aFontStyle->weight     = NS_FONT_WEIGHT_NORMAL;
     aFontStyle->size       = 40/3;
     aFontStyle->stretch    = NS_FONT_STRETCH_NORMAL;
     aFontStyle->systemFont = true;

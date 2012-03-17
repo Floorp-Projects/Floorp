@@ -7600,21 +7600,13 @@ function test_2d_imageData_create_type() {
 var canvas = document.getElementById('c261');
 var ctx = canvas.getContext('2d');
 
-var _thrown_outer = false;
-try {
-
-todo(window.ImageData !== undefined, "window.ImageData !== undefined");
+ok(window.ImageData !== undefined, "window.ImageData !== undefined");
 ok(window.Uint8ClampedArray !== undefined, "window.Uint8ClampedArray !== undefined");
 window.ImageData.prototype.thisImplementsImageData = true;
 window.Uint8ClampedArray.prototype.thisImplementsUint8ClampedArray = true;
 var imgdata = ctx.createImageData(1, 1);
 ok(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
 ok(imgdata.data.thisImplementsUint8ClampedArray, "imgdata.data.thisImplementsUint8ClampedArray");
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
 
 
 }
@@ -7632,21 +7624,13 @@ function test_2d_imageData_create1_type() {
 var canvas = document.getElementById('c261a');
 var ctx = canvas.getContext('2d');
 
-var _thrown_outer = false;
-try {
-
-todo(window.ImageData !== undefined, "window.ImageData !== undefined");
+ok(window.ImageData !== undefined, "window.ImageData !== undefined");
 ok(window.Uint8ClampedArray !== undefined, "window.Uint8ClampedArray !== undefined");
 window.ImageData.prototype.thisImplementsImageData = true;
 window.Uint8ClampedArray.prototype.thisImplementsUint8ClampedArray = true;
 var imgdata = ctx.createImageData(ctx.createImageData(1, 1));
-todo(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
+ok(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
 ok(imgdata.data.thisImplementsUint8ClampedArray, "imgdata.data.thisImplementsUint8ClampedArray");
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
 
 
 }
@@ -7681,7 +7665,7 @@ var _thrown = undefined; try {
 <!-- [[[ test_2d.imageData.create1.zero.html ]]] -->
 
 <p>Canvas test: 2d.imageData.create1.zero - bug 630040</p>
-<!-- Testing: createImageData(null) throws NOT_SUPPORTED_ERR -->
+<!-- Testing: createImageData(null) throws TypeError -->
 <canvas id="c262a" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
 <script>
 
@@ -7692,7 +7676,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createImageData(null);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 
 
 }
@@ -8058,9 +8042,6 @@ function test_2d_imageData_get_source_negative() {
 var canvas = document.getElementById('c272');
 var ctx = canvas.getContext('2d');
 
-var _thrown_outer = false;
-try {
-
 ctx.fillStyle = '#000';
 ctx.fillRect(0, 0, 100, 50);
 ctx.fillStyle = '#fff';
@@ -8081,11 +8062,6 @@ ok(imgdata2.data[0] === 0, "imgdata2.data[\""+(0)+"\"] === 0");
 ok(imgdata2.data[1] === 0, "imgdata2.data[\""+(1)+"\"] === 0");
 ok(imgdata2.data[2] === 0, "imgdata2.data[\""+(2)+"\"] === 0");
 ok(imgdata2.data[3] === 0, "imgdata2.data[\""+(3)+"\"] === 0");
-
-} catch (e) {
-    _thrown_outer = true;
-}
-ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
 
 
 }
@@ -8238,21 +8214,13 @@ function test_2d_imageData_get_type() {
 var canvas = document.getElementById('c276');
 var ctx = canvas.getContext('2d');
 
-var _thrown_outer = false;
-try {
-
-todo(window.ImageData !== undefined, "window.ImageData !== undefined");
+ok(window.ImageData !== undefined, "window.ImageData !== undefined");
 ok(window.Uint8ClampedArray !== undefined, "window.Uint8ClampedArray !== undefined");
 window.ImageData.prototype.thisImplementsImageData = true;
 window.Uint8ClampedArray.prototype.thisImplementsUint8ClampedArray = true;
 var imgdata = ctx.getImageData(0, 0, 1, 1);
 ok(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
 ok(imgdata.data.thisImplementsUint8ClampedArray, "imgdata.data.thisImplementsUint8ClampedArray");
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
 
 
 }
@@ -8376,7 +8344,7 @@ function test_2d_imageData_object_ctor() {
 var canvas = document.getElementById('c280');
 var ctx = canvas.getContext('2d');
 
-todo(window.ImageData !== undefined, "window.ImageData !== undefined");
+ok(window.ImageData !== undefined, "window.ImageData !== undefined");
 try { var _thrown = false;
   new window.ImageData(1,1);
 } catch (e) { _thrown = true; } finally { ok(_thrown, "should throw exception"); }
@@ -10790,7 +10758,7 @@ if (ctx.createImageData) {
 } catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
     var _thrown = undefined; try {
   ctx.createImageData(1);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
 }
 if (ctx.getImageData) {
     var _thrown = undefined; try {

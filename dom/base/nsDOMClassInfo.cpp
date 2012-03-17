@@ -1302,6 +1302,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TextMetrics, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(ImageData, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(SmartCardEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1420,9 +1422,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS) 
   
   NS_DEFINE_CLASSINFO_DATA(GeoPositionCoords, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(GeoPositionAddress, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(GeoPositionError, nsDOMGenericSH,
@@ -3854,6 +3853,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTextMetrics)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(ImageData, nsIDOMImageData)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMImageData)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(XSLTProcessor, nsIXSLTProcessor)
     DOM_CLASSINFO_MAP_ENTRY(nsIXSLTProcessor)
     DOM_CLASSINFO_MAP_ENTRY(nsIXSLTProcessorPrivate)
@@ -4018,10 +4021,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(GeoPositionCoords, nsIDOMGeoPositionCoords)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeoPositionCoords)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(GeoPositionAddress, nsIDOMGeoPositionAddress)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMGeoPositionAddress)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(GeoPositionError, nsIDOMGeoPositionError)

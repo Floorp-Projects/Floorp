@@ -40,8 +40,6 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.gfx.LayerClient;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.ui.PanZoomController;
 import org.mozilla.gecko.ui.SimpleScaleGestureDetector;
 import org.mozilla.gecko.GeckoApp;
@@ -52,6 +50,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
@@ -66,6 +65,8 @@ import android.view.ViewConfiguration;
 import java.lang.Math;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The layer controller manages a tile that represents the visible page. It does panning and
@@ -80,7 +81,20 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     private Layer mRootLayer;                   /* The root layer. */
     private LayerView mView;                    /* The main rendering view. */
     private Context mContext;                   /* The current context. */
-    private ViewportMetrics mViewportMetrics;   /* The current viewport metrics. */
+
+    /* This is volatile so that we can read and write to it from different threads.
+     * We avoid synchronization to make getting the viewport metrics from
+     * the compositor as cheap as possible. The viewport is immutable so
+     * we don't need to worry about anyone mutating it while we're reading from it.
+     * Specifically:
+     * 1) reading mViewportMetrics from any thread is fine without synchronization
+     * 2) writing to mViewportMetrics requires synchronizing on the layer controller object
+     * 3) whenver reading multiple fields from mViewportMetrics without synchronization (i.e. in
+     *    case 1 above) you should always frist grab a local copy of the reference, and then use
+     *    that because mViewportMetrics might get reassigned in between reading the different
+     *    fields. */
+    private volatile ImmutableViewportMetrics mViewportMetrics;   /* The current viewport metrics. */
+
     private boolean mWaitForTouchListeners;
 
     private PanZoomController mPanZoomController;
@@ -90,7 +104,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      */
 
     private OnTouchListener mOnTouchListener;       /* The touch listener. */
-    private LayerClient mLayerClient;               /* The layer client. */
+    private GeckoLayerClient mLayerClient;          /* The layer client. */
 
     /* The new color for the checkerboard. */
     private int mCheckerboardColor;
@@ -117,27 +131,29 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     private Timer allowDefaultTimer =  null;
     private PointF initialTouchLocation = null;
 
+    private static Pattern sColorPattern;
+
     public LayerController(Context context) {
         mContext = context;
 
         mForceRedraw = true;
-        mViewportMetrics = new ViewportMetrics();
+        mViewportMetrics = new ImmutableViewportMetrics(new ViewportMetrics());
         mPanZoomController = new PanZoomController(this);
         mView = new LayerView(context, this);
+        mCheckerboardShouldShowChecks = true;
 
-        Tabs.getInstance().registerOnTabsChangedListener(this);
+        Tabs.registerOnTabsChangedListener(this);
 
-        ViewConfiguration vc = ViewConfiguration.get(mContext); 
-        mTimeout = vc.getLongPressTimeout();
+        mTimeout = ViewConfiguration.getLongPressTimeout();
     }
 
     public void onDestroy() {
-        Tabs.getInstance().unregisterOnTabsChangedListener(this);
+        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     public void setRoot(Layer layer) { mRootLayer = layer; }
 
-    public void setLayerClient(LayerClient layerClient) {
+    public void setLayerClient(GeckoLayerClient layerClient) {
         mLayerClient = layerClient;
         layerClient.setLayerController(this);
     }
@@ -146,11 +162,10 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         mForceRedraw = true;
     }
 
-    public LayerClient getLayerClient()           { return mLayerClient; }
     public Layer getRoot()                        { return mRootLayer; }
     public LayerView getView()                    { return mView; }
     public Context getContext()                   { return mContext; }
-    public ViewportMetrics getViewportMetrics()   { return mViewportMetrics; }
+    public ImmutableViewportMetrics getViewportMetrics()   { return mViewportMetrics; }
 
     public RectF getViewport() {
         return mViewportMetrics.getViewport();
@@ -169,7 +184,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
     }
 
     public float getZoomFactor() {
-        return mViewportMetrics.getZoomFactor();
+        return mViewportMetrics.zoomFactor;
     }
 
     public Bitmap getBackgroundPattern()    { return getDrawable("background"); }
@@ -199,47 +214,22 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      * result in an infinite loop.
      */
     public void setViewportSize(FloatSize size) {
-        // Resize the viewport, and modify its zoom factor so that the page retains proportionally
-        // zoomed relative to the screen.
-        float oldHeight = mViewportMetrics.getSize().height;
-        float oldWidth = mViewportMetrics.getSize().width;
-        float oldZoomFactor = mViewportMetrics.getZoomFactor();
-        mViewportMetrics.setSize(size);
+        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
+        viewportMetrics.setSize(size);
+        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
-        // if the viewport got larger (presumably because the vkb went away), and the page
-        // is smaller than the new viewport size, increase the page size so that the panzoomcontroller
-        // doesn't zoom in to make it fit (bug 718270). this page size change is in anticipation of
-        // gecko increasing the page size to match the new viewport size, which will happen the next
-        // time we get a draw update.
-        if (size.width >= oldWidth && size.height >= oldHeight) {
-            FloatSize pageSize = mViewportMetrics.getPageSize();
-            if (pageSize.width < size.width || pageSize.height < size.height) {
-                mViewportMetrics.setPageSize(new FloatSize(Math.max(pageSize.width, size.width),
-                                                           Math.max(pageSize.height, size.height)));
-            }
-        }
-
-        PointF newFocus = new PointF(size.width / 2.0f, size.height / 2.0f);
-        float newZoomFactor = size.width * oldZoomFactor / oldWidth;
-        mViewportMetrics.scaleTo(newZoomFactor, newFocus);
-
-        Log.d(LOGTAG, "setViewportSize: " + mViewportMetrics);
-        setForceRedraw();
-
-        if (mLayerClient != null)
+        if (mLayerClient != null) {
             mLayerClient.viewportSizeChanged();
-
-        notifyLayerClientOfGeometryChange();
-        mPanZoomController.abortAnimation();
-        mView.requestRender();
+        }
     }
 
     /** Scrolls the viewport by the given offset. You must hold the monitor while calling this. */
     public void scrollBy(PointF point) {
-        PointF origin = mViewportMetrics.getOrigin();
+        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
+        PointF origin = viewportMetrics.getOrigin();
         origin.offset(point.x, point.y);
-        mViewportMetrics.setOrigin(origin);
-        Log.d(LOGTAG, "scrollBy: " + mViewportMetrics);
+        viewportMetrics.setOrigin(origin);
+        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
         notifyLayerClientOfGeometryChange();
         GeckoApp.mAppContext.repositionPluginViews(false);
@@ -251,10 +241,11 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         if (mViewportMetrics.getPageSize().fuzzyEquals(size))
             return;
 
-        mViewportMetrics.setPageSize(size);
-        Log.d(LOGTAG, "setPageSize: " + mViewportMetrics);
+        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
+        viewportMetrics.setPageSize(size);
+        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
-        // Page size is owned by the LayerClient, so no need to notify it of
+        // Page size is owned by the layer client, so no need to notify it of
         // this change.
 
         mView.post(new Runnable() {
@@ -272,8 +263,7 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      * while calling this.
      */
     public void setViewportMetrics(ViewportMetrics viewport) {
-        mViewportMetrics = new ViewportMetrics(viewport);
-        Log.d(LOGTAG, "setViewportMetrics: " + mViewportMetrics);
+        mViewportMetrics = new ImmutableViewportMetrics(viewport);
         // this function may or may not be called on the UI thread,
         // but repositionPluginViews must only be called on the UI thread.
         GeckoApp.mAppContext.runOnUiThread(new Runnable() {
@@ -289,8 +279,9 @@ public class LayerController implements Tabs.OnTabsChangedListener {
      * scale operation. You must hold the monitor while calling this.
      */
     public void scaleWithFocus(float zoomFactor, PointF focus) {
-        mViewportMetrics.scaleTo(zoomFactor, focus);
-        Log.d(LOGTAG, "scaleWithFocus: " + mViewportMetrics + "; zf=" + zoomFactor);
+        ViewportMetrics viewportMetrics = new ViewportMetrics(mViewportMetrics);
+        viewportMetrics.scaleTo(zoomFactor, focus);
+        mViewportMetrics = new ImmutableViewportMetrics(viewportMetrics);
 
         // We assume the zoom level will only be modified by the
         // PanZoomController, so no need to notify it of this change.
@@ -335,16 +326,11 @@ public class LayerController implements Tabs.OnTabsChangedListener {
             return true;
         }
 
-        return aboutToCheckerboard() && mPanZoomController.getRedrawHint();
-    }
+        if (!mPanZoomController.getRedrawHint()) {
+            return false;
+        }
 
-    private RectF getTileRect() {
-        if (mRootLayer == null)
-            return new RectF();
-
-        float x = mRootLayer.getOrigin().x, y = mRootLayer.getOrigin().y;
-        IntSize layerSize = mRootLayer.getSize();
-        return new RectF(x, y, x + layerSize.width, y + layerSize.height);
+        return aboutToCheckerboard();
     }
 
     // Returns true if a checkerboard is about to be visible.
@@ -359,29 +345,37 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         if (adjustedViewport.right > pageSize.width) adjustedViewport.right = pageSize.width;
         if (adjustedViewport.bottom > pageSize.height) adjustedViewport.bottom = pageSize.height;
 
-        return !getTileRect().contains(adjustedViewport);
+        RectF displayPort = (mLayerClient == null ? new RectF() : mLayerClient.getDisplayPort());
+        return !displayPort.contains(adjustedViewport);
     }
 
     /**
      * Converts a point from layer view coordinates to layer coordinates. In other words, given a
      * point measured in pixels from the top left corner of the layer view, returns the point in
      * pixels measured from the top left corner of the root layer, in the coordinate system of the
-     * layer itself. This method is used by the viewport controller as part of the process of
-     * translating touch events to Gecko's coordinate system.
+     * layer itself (CSS pixels). This method is used as part of the process of translating touch
+     * events to Gecko's coordinate system.
      */
     public PointF convertViewPointToLayerPoint(PointF viewPoint) {
         if (mRootLayer == null)
             return null;
 
-        // Undo the transforms.
-        PointF origin = mViewportMetrics.getOrigin();
-        PointF newPoint = new PointF(origin.x, origin.y);
-        newPoint.offset(viewPoint.x, viewPoint.y);
+        ImmutableViewportMetrics viewportMetrics = mViewportMetrics;
+        PointF origin = viewportMetrics.getOrigin();
+        float zoom = viewportMetrics.zoomFactor;
+        Rect rootPosition = mRootLayer.getPosition();
+        float rootScale = mRootLayer.getResolution();
 
-        Point rootOrigin = mRootLayer.getOrigin();
-        newPoint.offset(-rootOrigin.x, -rootOrigin.y);
+        // viewPoint + origin gives the coordinate in device pixels from the top-left corner of the page.
+        // Divided by zoom, this gives us the coordinate in CSS pixels from the top-left corner of the page.
+        // rootPosition / rootScale is where Gecko thinks it is (scrollTo position) in CSS pixels from
+        // the top-left corner of the page. Subtracting the two gives us the offset of the viewPoint from
+        // the current Gecko coordinate in CSS pixels.
+        PointF layerPoint = new PointF(
+                ((viewPoint.x + origin.x) / zoom) - (rootPosition.left / rootScale),
+                ((viewPoint.y + origin.y) / zoom) - (rootPosition.top / rootScale));
 
-        return newPoint;
+        return layerPoint;
     }
 
     /*
@@ -480,5 +474,29 @@ public class LayerController implements Tabs.OnTabsChangedListener {
         mCheckerboardColor = newColor;
         mView.requestRender();
     }
+
+    /** Parses and sets a new color for the checkerboard. */
+    public void setCheckerboardColor(String newColor) {
+        setCheckerboardColor(parseColorFromGecko(newColor));
+    }
+
+    // Parses a color from an RGB triple of the form "rgb([0-9]+, [0-9]+, [0-9]+)". If the color
+    // cannot be parsed, returns white.
+    private static int parseColorFromGecko(String string) {
+        if (sColorPattern == null) {
+            sColorPattern = Pattern.compile("rgb\\((\\d+),\\s*(\\d+),\\s*(\\d+)\\)");
+        }
+
+        Matcher matcher = sColorPattern.matcher(string);
+        if (!matcher.matches()) {
+            return Color.WHITE;
+        }
+
+        int r = Integer.parseInt(matcher.group(1));
+        int g = Integer.parseInt(matcher.group(2));
+        int b = Integer.parseInt(matcher.group(3));
+        return Color.rgb(r, g, b);
+    } 
+
 }
 

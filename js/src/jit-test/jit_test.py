@@ -431,7 +431,6 @@ def main(argv):
         op.error('missing JS_SHELL argument')
     # We need to make sure we are using backslashes on Windows.
     JS, test_args = os.path.normpath(args[0]), args[1:]
-    JS = os.path.realpath(JS) # Burst through the symlinks!
 
     if stdio_might_be_broken():
         # Prefer erring on the side of caution and not using stdio if

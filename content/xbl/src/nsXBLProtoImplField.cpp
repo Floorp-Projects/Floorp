@@ -40,7 +40,6 @@
 #include "nsString.h"
 #include "jsapi.h"
 #include "nsIContent.h"
-#include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "mozilla/FunctionTimer.h"

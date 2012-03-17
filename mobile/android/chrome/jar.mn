@@ -16,6 +16,7 @@ chrome.jar:
 * content/browser.js                   (content/browser.js)
 * content/bindings.xml                 (content/bindings.xml)
   content/bindings/checkbox.xml        (content/bindings/checkbox.xml)
+  content/bindings/settings.xml        (content/bindings/settings.xml)
   content/bindings/dialog.xml          (content/bindings/dialog.xml)
   content/browser.css                  (content/browser.css)
   content/cursor.css                   (content/cursor.css)

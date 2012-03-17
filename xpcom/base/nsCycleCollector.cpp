@@ -220,7 +220,6 @@ struct nsCycleCollectorParams
 #ifdef DEBUG_CC
     bool mReportStats;
     bool mHookMalloc;
-    bool mFaultIsFatal;
     bool mLogPointers;
     PRUint32 mShutdownCollections;
 #endif
@@ -232,7 +231,6 @@ struct nsCycleCollectorParams
                         PR_GetEnv("XPCOM_CC_DRAW_GRAPHS") != NULL),
         mReportStats   (PR_GetEnv("XPCOM_CC_REPORT_STATS") != NULL),
         mHookMalloc    (PR_GetEnv("XPCOM_CC_HOOK_MALLOC") != NULL),
-        mFaultIsFatal  (PR_GetEnv("XPCOM_CC_FAULT_IS_FATAL") != NULL),
         mLogPointers   (PR_GetEnv("XPCOM_CC_LOG_POINTERS") != NULL),
 
         mShutdownCollections(DEFAULT_SHUTDOWN_COLLECTIONS)
@@ -1243,68 +1241,15 @@ static nsCycleCollector *sCollector = nsnull;
 // Utility functions
 ////////////////////////////////////////////////////////////////////////
 
-class CCRunnableFaultReport : public nsRunnable {
-public:
-    CCRunnableFaultReport(const nsCString& report)
-    {
-        CopyUTF8toUTF16(report, mReport);
-    }
-    
-    NS_IMETHOD Run() {
-        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-        if (obs) {
-            obs->NotifyObservers(nsnull, "cycle-collector-fault",
-                                 mReport.get());
-        }
-
-        nsCOMPtr<nsIConsoleService> cons =
-            do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-        if (cons) {
-            cons->LogStringMessage(mReport.get());
-        }
-        return NS_OK;
-    }
-
-private:
-    nsString mReport;
-};
-
-static void
+MOZ_NEVER_INLINE static void
 Fault(const char *msg, const void *ptr=nsnull)
 {
-#ifdef DEBUG_CC
-    // This should be nearly impossible, but just in case.
-    if (!sCollector)
-        return;
+    if (ptr)
+        printf("Fault in cycle collector: %s (ptr: %p)\n", msg, ptr);
+    else
+        printf("Fault in cycle collector: %s\n", msg);
 
-    if (sCollector->mParams.mFaultIsFatal) {
-
-        if (ptr)
-            printf("Fatal fault in cycle collector: %s (ptr: %p)\n", msg, ptr);
-        else
-            printf("Fatal fault in cycle collector: %s\n", msg);
-
-        exit(1);
-    }
-#endif
-
-    nsPrintfCString str(256, "Fault in cycle collector: %s (ptr: %p)\n",
-                        msg, ptr);
-    NS_NOTREACHED(str.get());
-
-    // When faults are not fatal, we assume we're running in a
-    // production environment and we therefore want to disable the
-    // collector on a fault. This will unfortunately cause the browser
-    // to leak pretty fast wherever creates cyclical garbage, but it's
-    // probably a better user experience than crashing. Besides, we
-    // *should* never hit a fault.
-
-    sCollector->mParams.mDoNothing = true;
-
-    // Report to observers off an event so we don't run JS under GC
-    // (which is where we might be right now).
-    nsCOMPtr<nsIRunnable> ev = new CCRunnableFaultReport(str);
-    NS_DispatchToMainThread(ev);
+    NS_RUNTIMEABORT("cycle collector fault");
 }
 
 #ifdef DEBUG_CC
@@ -1332,7 +1277,7 @@ Fault(const char *msg, PtrInfo *pi)
     Fault(msg, pi->mPointer);
 }
 #else
-inline void
+static void
 Fault(const char *msg, PtrInfo *pi)
 {
     Fault(msg, pi->mPointer);

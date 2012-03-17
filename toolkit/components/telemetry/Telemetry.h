@@ -44,7 +44,9 @@
 #include "mozilla/StartupTimeline.h"
 #include "nsTArray.h"
 #include "nsStringGlue.h"
+#if defined(MOZ_ENABLE_PROFILER_SPS)
 #include "shared-libraries.h"
+#endif
 
 namespace base {
   class Histogram;
@@ -171,9 +173,11 @@ typedef nsTArray<uintptr_t> HangStack;
  * @param callStack - Array of PCs from the hung call stack
  * @param moduleMap - Array of info about modules in memory (for symbolication)
  */
+#if defined(MOZ_ENABLE_PROFILER_SPS)
 void RecordChromeHang(PRUint32 duration,
                       const HangStack &callStack,
                       SharedLibraryInfo &moduleMap);
+#endif
 
 } // namespace Telemetry
 } // namespace mozilla

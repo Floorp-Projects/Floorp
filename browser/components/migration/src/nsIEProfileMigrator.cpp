@@ -1404,11 +1404,10 @@ nsIEProfileMigrator::CopyFavoritesBatched(bool aReplace)
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
-    // Initialize the default bookmarks
-    nsCOMPtr<nsIFile> profile;
-    GetProfilePath(nsnull, profile);
-    rv = InitializeBookmarks(profile);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // If importing defaults fails for whatever reason, let the import process
+    // continue.
+    DebugOnly<nsresult> rv = ImportDefaultBookmarks();
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to import default bookmarks");
 
     // Locate the Links toolbar folder, we want to replace the Personal Toolbar
     // content with Favorites in this folder.

@@ -63,61 +63,6 @@ typedef enum JSTryNoteKind {
     JSTRY_ITER
 } JSTryNoteKind;
 
-namespace js {
-
-/*
- * Indicates a location in the stack that an upvar value can be retrieved from
- * as a two tuple of (level, slot).
- *
- * Some existing client code uses the level value as a delta, or level "skip"
- * quantity. We could probably document that through use of more types at some
- * point in the future.
- *
- * Existing XDR code wants this to be backed by a 32b integer for serialization,
- * so we oblige.
- *
- * TODO: consider giving more bits to the slot value and takings ome from the level.
- */
-class UpvarCookie
-{
-    uint32_t value;
-
-    static const uint32_t FREE_VALUE = 0xfffffffful;
-
-    void checkInvariants() {
-        JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32_t));
-        JS_STATIC_ASSERT(UPVAR_LEVEL_LIMIT < FREE_LEVEL);
-    }
-
-  public:
-    /*
-     * All levels above-and-including FREE_LEVEL are reserved so that
-     * FREE_VALUE can be used as a special value.
-     */
-    static const uint16_t FREE_LEVEL = 0x3fff;
-
-    /*
-     * If a function has a higher static level than this limit, we will not
-     * optimize it using UPVAR opcodes.
-     */
-    static const uint16_t UPVAR_LEVEL_LIMIT = 16;
-    static const uint16_t CALLEE_SLOT = 0xffff;
-    static bool isLevelReserved(uint16_t level) { return level >= FREE_LEVEL; }
-
-    bool isFree() const { return value == FREE_VALUE; }
-    uint32_t asInteger() const { return value; }
-    /* isFree check should be performed before using these accessors. */
-    uint16_t level() const { JS_ASSERT(!isFree()); return uint16_t(value >> 16); }
-    uint16_t slot() const { JS_ASSERT(!isFree()); return uint16_t(value); }
-
-    void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
-    void set(uint16_t newLevel, uint16_t newSlot) { value = (uint32_t(newLevel) << 16) | newSlot; }
-    void makeFree() { set(0xffff, 0xffff); JS_ASSERT(isFree()); }
-    void fromInteger(uint32_t u32) { value = u32; }
-};
-
-}
-
 /*
  * Exception handling record.
  */
@@ -140,11 +85,6 @@ typedef struct JSObjectArray {
     uint32_t        length;     /* count of indexed objects */
 } JSObjectArray;
 
-typedef struct JSUpvarArray {
-    js::UpvarCookie *vector;    /* array of indexed upvar cookies */
-    uint32_t        length;     /* count of indexed upvar cookies */
-} JSUpvarArray;
-
 typedef struct JSConstArray {
     js::HeapValue   *vector;    /* array of indexed constant values */
     uint32_t        length;
@@ -163,19 +103,19 @@ struct GlobalSlotArray {
 
 struct Shape;
 
-enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT, UPVAR };
+enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT };
 
 /*
- * Formal parameters, local variables, and upvars are stored in a shape tree
+ * Formal parameters and local variables are stored in a shape tree
  * path encapsulated within this class.  This class represents bindings for
  * both function and top-level scripts (the latter is needed to track names in
  * strict mode eval code, to give such code its own lexical environment).
  */
-class Bindings {
+class Bindings
+{
     HeapPtr<Shape> lastBinding;
     uint16_t nargs;
     uint16_t nvars;
-    uint16_t nupvars;
     bool     hasDup_:1;     // true if there are duplicate argument names
 
     inline Shape *initialShape(JSContext *cx) const;
@@ -198,13 +138,9 @@ class Bindings {
 
     uint16_t countArgs() const { return nargs; }
     uint16_t countVars() const { return nvars; }
-    uint16_t countUpvars() const { return nupvars; }
 
-    unsigned countArgsAndVars() const { return nargs + nvars; }
+    unsigned countLocalNames() const { return nargs + nvars; }
 
-    unsigned countLocalNames() const { return nargs + nvars + nupvars; }
-
-    bool hasUpvars() const { return nupvars > 0; }
     bool hasLocalNames() const { return countLocalNames() > 0; }
 
     /* Ensure these bindings have a shape lineage. */
@@ -226,10 +162,7 @@ class Bindings {
     bool setParent(JSContext *cx, JSObject *obj);
 
     enum {
-        /*
-         * A script may have no more than this many arguments, variables, or
-         * upvars.
-         */
+        /* A script may have no more than this many arguments or variables. */
         BINDING_COUNT_LIMIT = 0xFFFF
     };
 
@@ -246,8 +179,7 @@ class Bindings {
      *
      * The parser builds shape paths for functions, usable by Call objects at
      * runtime, by calling an "add" method. All ARGUMENT bindings must be added
-     * before before any VARIABLE or CONSTANT bindings, which themselves must
-     * be added before all UPVAR bindings.
+     * before before any VARIABLE or CONSTANT bindings.
      */
     bool add(JSContext *cx, JSAtom *name, BindingKind kind);
 
@@ -257,9 +189,6 @@ class Bindings {
     }
     bool addConstant(JSContext *cx, JSAtom *name) {
         return add(cx, name, CONSTANT);
-    }
-    bool addUpvar(JSContext *cx, JSAtom *name) {
-        return add(cx, name, UPVAR);
     }
     bool addArgument(JSContext *cx, JSAtom *name, uint16_t *slotp) {
         JS_ASSERT(name != NULL); /* not destructuring */
@@ -316,7 +245,6 @@ class Bindings {
      */
     const js::Shape *lastArgument() const;
     const js::Shape *lastVariable() const;
-    const js::Shape *lastUpvar() const;
 
     void trace(JSTracer *trc);
 
@@ -395,11 +323,20 @@ class DebugScript
     BreakpointSite  *breakpoints[1];
 };
 
+/*
+ * NB: after a successful JSXDR_DECODE, js_XDRScript callers must do any
+ * required subsequent set-up of owning function or script object and then call
+ * js_CallNewScriptHook.
+ */
+extern JSBool
+XDRScript(JSXDRState *xdr, JSScript **scriptp);
+
 } /* namespace js */
 
 static const uint32_t JS_SCRIPT_COOKIE = 0xc00cee;
 
-struct JSScript : public js::gc::Cell {
+struct JSScript : public js::gc::Cell
+{
     /*
      * Two successively less primitive ways to make a new JSScript.  The first
      * does *not* call a non-null cx->runtime->newScriptHook -- only the second,
@@ -412,12 +349,14 @@ struct JSScript : public js::gc::Cell {
      * kind (function or other) of new JSScript.
      */
     static JSScript *NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
-                               uint32_t nobjects, uint32_t nupvars, uint32_t nregexps,
+                               uint32_t nobjects, uint32_t nregexps,
                                uint32_t ntrynotes, uint32_t nconsts, uint32_t nglobals,
                                uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets,
                                JSVersion version);
 
     static JSScript *NewScriptFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
+
+    friend JSBool js::XDRScript(JSXDRState *, JSScript **);
 
 #ifdef JS_CRASH_DIAGNOSTICS
     /*
@@ -443,8 +382,6 @@ struct JSScript : public js::gc::Cell {
     uint8_t         objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
                                        objects */
-    uint8_t         upvarsOffset;   /* offset of the array of display ("up")
-                                       closure vars */
     uint8_t         regexpsOffset;  /* offset to the array of to-be-cloned
                                        regexps  */
     uint8_t         trynotesOffset; /* offset to the array of try notes */
@@ -464,7 +401,6 @@ struct JSScript : public js::gc::Cell {
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
     bool            usesEval:1;       /* script uses eval() */
-    bool            usesArguments:1;  /* script uses arguments */
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */
@@ -477,8 +413,6 @@ struct JSScript : public js::gc::Cell {
                                         * outer function */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
-    bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
-    bool            createdArgs:1;    /* script has had arguments objects created */
     bool            uninlineable:1;   /* script is considered uninlineable by analysis */
     bool            reentrantOuterFunction:1; /* outer function marked reentrant */
     bool            typesPurged:1;    /* TypeScript has been purged at some point */
@@ -487,6 +421,29 @@ struct JSScript : public js::gc::Cell {
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
 #endif
     bool            callDestroyHook:1;/* need to call destroy hook */
+
+    /*
+     * An arguments object is created for a function script (when the function
+     * is first called) iff script->needsArgsObj(). There are several cases
+     * where the 'arguments' keyword is technically used but which don't really
+     * need an object (e.g., 'arguments[i]', 'f.apply(null, arguments')'). This
+     * determination is made during script analysis which occurs lazily (right
+     * before a script is run). Thus, the output of the front-end is a
+     * conservative 'mayNeedArgsObj' which leads to further analysis in
+     * analyzeBytecode and analyzeSSA. To avoid the complexity of spurious
+     * argument objects creation, we maintain the invariant that needsArgsObj()
+     * is only queried after this analysis has occurred (analyzedArgsUsage()).
+     */
+  private:
+    bool            mayNeedArgsObj_:1;
+    bool            analyzedArgsUsage_:1;
+    bool            needsArgsObj_:1;
+  public:
+    bool mayNeedArgsObj() const { return mayNeedArgsObj_; }
+    bool analyzedArgsUsage() const { return analyzedArgsUsage_; }
+    bool needsArgsObj() const { JS_ASSERT(analyzedArgsUsage()); return needsArgsObj_; }
+    void setNeedsArgsObj(bool needsArgsObj);
+    bool applySpeculationFailed(JSContext *cx);
 
     uint32_t        natoms;     /* length of atoms array */
     uint16_t        nslots;     /* vars plus maximum stack depth */
@@ -694,11 +651,6 @@ struct JSScript : public js::gc::Cell {
     JSObjectArray *objects() {
         JS_ASSERT(isValidOffset(objectsOffset));
         return reinterpret_cast<JSObjectArray *>(data + objectsOffset);
-    }
-
-    JSUpvarArray *upvars() {
-        JS_ASSERT(isValidOffset(upvarsOffset));
-        return reinterpret_cast<JSUpvarArray *>(data + upvarsOffset);
     }
 
     JSObjectArray *regexps() {
@@ -944,14 +896,6 @@ CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_C
 
 extern JSScript *
 CloneScript(JSContext *cx, JSScript *script);
-
-/*
- * NB: after a successful JSXDR_DECODE, XDRScript callers must do any
- * required subsequent set-up of owning function or script object and then call
- * js_CallNewScriptHook.
- */
-extern JSBool
-XDRScript(JSXDRState *xdr, JSScript **scriptp);
 
 }
 

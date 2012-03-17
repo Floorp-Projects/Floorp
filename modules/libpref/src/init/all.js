@@ -44,10 +44,15 @@
  * entries at the top.
  */
 
-// SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
-//  The first character after a period must be alphabetic.
+/*
+ * SYNTAX HINTS:
+ *
+ *  - Dashes are delimiters; use underscores instead.
+ *  - The first character after a period must be alphabetic.
+ *  - Computed values (e.g. 50 * 1024) don't work.
+ */
 
-pref("keyword.URL", "http://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
+pref("keyword.URL", "https://www.google.com/search?ie=UTF-8&oe=utf-8&q=");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.compatMode.firefox", false);
@@ -234,6 +239,10 @@ pref("gfx.canvas.azure.enabled", true);
 #ifdef XP_MACOSX
 pref("gfx.canvas.azure.enabled", true);
 #endif
+#endif
+
+#ifdef ANDROID
+pref("gfx.textures.poweroftwo.force-enabled", false);
 #endif
 
 pref("accessibility.browsewithcaret", false);
@@ -2360,19 +2369,19 @@ pref("font.name-list.serif.zh-CN", "STSong,Heiti SC");
 pref("font.name-list.sans-serif.zh-CN", "STHeiti,Heiti SC");
 pref("font.name-list.monospace.zh-CN", "STHeiti,Heiti SC");
 
-pref("font.name.serif.zh-TW", "Apple LiSung"); 
-pref("font.name.sans-serif.zh-TW", "Apple LiGothic");  
-pref("font.name.monospace.zh-TW", "Apple LiGothic");  
-pref("font.name-list.serif.zh-TW", "Apple LiSung,Heiti TC");
-pref("font.name-list.sans-serif.zh-TW", "Apple LiGothic,Heiti TC");
-pref("font.name-list.monospace.zh-TW", "Apple LiGothic,Heiti TC");
+pref("font.name.serif.zh-TW", "Times"); 
+pref("font.name.sans-serif.zh-TW", "Helvetica");  
+pref("font.name.monospace.zh-TW", "Courier");  
+pref("font.name-list.serif.zh-TW", "Times,LiSong Pro,Heiti TC");
+pref("font.name-list.sans-serif.zh-TW", "Helvetica,Heiti TC,LiHei Pro");
+pref("font.name-list.monospace.zh-TW", "Courier,Heiti TC,LiHei Pro");
 
-pref("font.name.serif.zh-HK", "LiSong Pro");
-pref("font.name.sans-serif.zh-HK", "LiHei Pro");
-pref("font.name.monospace.zh-HK", "LiHei Pro");
-pref("font.name-list.serif.zh-HK", "LiSong Pro,Heiti TC");
-pref("font.name-list.sans-serif.zh-HK", "LiHei Pro,Heiti TC");
-pref("font.name-list.monospace.zh-HK", "LiHei Pro,Heiti TC");
+pref("font.name.serif.zh-HK", "Times");
+pref("font.name.sans-serif.zh-HK", "Helvetica");
+pref("font.name.monospace.zh-HK", "Courier");
+pref("font.name-list.serif.zh-HK", "Times,LiSong Pro,Heiti TC");
+pref("font.name-list.sans-serif.zh-HK", "Helvetica,Heiti TC,LiHei Pro");
+pref("font.name-list.monospace.zh-HK", "Courier,Heiti TC,LiHei Pro");
 
 pref("font.default.ar", "sans-serif");
 pref("font.size.variable.ar", 16);
@@ -2524,7 +2533,7 @@ pref("ui.key.generalAccessKey", -1);
 // Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta (Cmd)
 // (values can be combined, e.g. 3 for Ctrl+Shift)
 pref("ui.key.chromeAccess", 2);
-pref("ui.key.contentAccess", 2);
+pref("ui.key.contentAccess", 6);
 
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
@@ -3365,6 +3374,10 @@ pref("image.mem.max_ms_before_yield", 5);
 
 // The maximum source data size for which we auto sync decode
 pref("image.mem.max_bytes_for_sync_decode", 150000);
+
+// The maximum amount of decoded image data we'll willingly keep around (we
+// might keep around more than this, but we'll try to get down to this value).
+pref("image.mem.max_decoded_image_kb", 51200);
 
 // WebGL prefs
 pref("webgl.force-enabled", false);

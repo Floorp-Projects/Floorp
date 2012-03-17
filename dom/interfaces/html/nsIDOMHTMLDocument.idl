@@ -91,8 +91,8 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
   attribute DOMString       designMode;
 
   boolean                   execCommand(in DOMString commandID,
-                                        in boolean doShowUI,
-                                        in DOMString value);
+                                        [optional] in boolean doShowUI,
+                                        [optional] in DOMString value);
 
   // returns true if the help is being shown for command (false if not)
   boolean                   execCommandShowHelp(in DOMString commandID);

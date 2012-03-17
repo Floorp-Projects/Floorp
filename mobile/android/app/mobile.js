@@ -252,7 +252,7 @@ pref("privacy.popups.showBrowserMessage", true);
 pref("dom.disable_window_open_dialog_feature", true);
 
 pref("keyword.enabled", true);
-pref("keyword.URL", "http://www.google.com/m?ie=UTF-8&oe=UTF-8&sourceid=navclient&gfns=1&q=");
+pref("keyword.URL", "https://www.google.com/m?ie=UTF-8&oe=UTF-8&sourceid=navclient&gfns=1&q=");
 
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
@@ -600,6 +600,8 @@ pref("layers.acceleration.disabled", false);
 #else
 pref("layers.acceleration.disabled", true);
 #endif
+
+pref("layers.offmainthreadcomposition.enabled", true);
 
 pref("notification.feature.enabled", true);
 

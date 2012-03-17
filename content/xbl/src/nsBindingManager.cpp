@@ -113,7 +113,7 @@ public:
   nsXBLInsertionPoint* GetInsertionPointAt(PRInt32 i) { return static_cast<nsXBLInsertionPoint*>(mElements->ElementAt(i)); }
   void RemoveInsertionPointAt(PRInt32 i) { mElements->RemoveElementAt(i); }
 
-  virtual JSObject* WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+  virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap)
   {
     return mozilla::dom::binding::NodeList::create(cx, scope, this,

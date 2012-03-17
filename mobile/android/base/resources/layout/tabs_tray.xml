@@ -20,7 +20,8 @@
                        android:layout_height="2dp"
                        android:background="@drawable/tabs_tray_list_divider"/>
 
-         <RelativeLayout android:layout_width="fill_parent"
+         <RelativeLayout android:id="@+id/toolbar"
+                         android:layout_width="fill_parent"
                          android:layout_height="50dip"
                          android:background="@drawable/tabs_tray_bg_repeat">
 

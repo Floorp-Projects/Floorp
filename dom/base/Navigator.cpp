@@ -567,6 +567,13 @@ Navigator::JavaEnabled(bool* aReturn)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Navigator::TaintEnabled(bool *aReturn)
+{
+  *aReturn = false;
+  return NS_OK;
+}
+
 void
 Navigator::RefreshMIMEArray()
 {
@@ -965,8 +972,7 @@ Navigator::GetMozPower(nsIDOMMozPowerManager** aPower)
     mPowerManager->Init(win);
   }
 
-  nsCOMPtr<nsIDOMMozPowerManager> power =
-    do_QueryInterface(NS_ISUPPORTS_CAST(nsIDOMMozPowerManager*, mPowerManager));
+  nsCOMPtr<nsIDOMMozPowerManager> power(mPowerManager);
   power.forget(aPower);
 
   return NS_OK;
