@@ -113,6 +113,18 @@ public:
     oldBuffer.forget(aOldBuffer);
   }
 
+  nsIntRect Rect() {
+    return mBufferRect;
+  }
+
+  nsIntPoint Rotation() {
+    return mBufferRotation;
+  }
+
+  nsRefPtr<gfxASurface> Buffer() {
+    return mBuffer;
+  }
+
   /**
    * Wipe out all retained contents. Call this when the entire
    * buffer becomes invalid.
@@ -141,6 +153,8 @@ public:
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
        OptionalThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
        OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion);
+  virtual void EnsureTextureUpdated();
+  virtual void EnsureTextureUpdated(nsIntRegion& aRegion);
   virtual void DestroyFrontBuffer();
 
   virtual void Disconnect();
@@ -161,6 +175,10 @@ public:
 
 private:
   nsRefPtr<ShadowBufferOGL> mBuffer;
+
+  // When doing delayed texture upload, this is the region of the buffer that
+  // still requires uploading.
+  nsIntRegion mRegionPendingUpload;
 
   // Following used for double-buffering
   ShadowThebesLayerBufferOGL mFrontBuffer;
