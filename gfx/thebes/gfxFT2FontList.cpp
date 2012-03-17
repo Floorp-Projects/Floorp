@@ -766,6 +766,14 @@ gfxFT2FontList::AppendFacesFromFontFile(nsCString& aFileName,
                 if (family->IsBadUnderlineFamily()) {
                     fe->mIsBadUnderlineFont = true;
                 }
+
+                // bug 721719 - set the IgnoreGSUB flag on entries for Roboto
+                // because of unwanted on-by-default "ae" ligature.
+                // (See also AppendFaceFromFontListEntry.)
+                if (name.EqualsLiteral("roboto")) {
+                    fe->mIgnoreGSUB = true;
+                }
+
                 AppendToFaceList(faceList, name, fe);
 #ifdef PR_LOGGING
                 if (LOG_ENABLED()) {
@@ -974,6 +982,17 @@ gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
         family->AddFontEntry(fe);
         if (family->IsBadUnderlineFamily()) {
             fe->mIsBadUnderlineFont = true;
+        }
+
+        // bug 721719 - set the IgnoreGSUB flag on entries for Roboto
+        // because of unwanted on-by-default "ae" ligature.
+        // This totally sucks, but if we don't hack around these broken fonts
+        // we get really bad text rendering, which we can't inflict on users. :(
+        // If we accumulate a few more examples of this stuff, it'll be time
+        // to create some prefs for the list of fonts where we need to ignore
+        // layout tables. Sigh.
+        if (name.EqualsLiteral("roboto")) {
+            fe->mIgnoreGSUB = true;
         }
     }
 }
