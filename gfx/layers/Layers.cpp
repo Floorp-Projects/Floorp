@@ -671,9 +671,6 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   if (1.0 != mOpacity) {
     aTo.AppendPrintf(" [opacity=%g]", mOpacity);
   }
-  if (const nsIntRect* tileSourceRect = GetTileSourceRect()) {
-    AppendToString(aTo, *tileSourceRect, " [tileSrc=", "]");
-  }
   if (GetContentFlags() & CONTENT_OPAQUE) {
     aTo += " [opaqueContent]";
   }
