@@ -172,9 +172,11 @@ struct THEBES_API PlanarYCbCrOGLBackendData : public ImageBackendData
 
 struct CairoOGLBackendData : public ImageBackendData
 {
-  CairoOGLBackendData() : mLayerProgram(gl::RGBALayerProgramType) {}
+  CairoOGLBackendData() : mLayerProgram(gl::RGBALayerProgramType), mTiling(false) {}
+  void SetTiling(bool aTiling);
   GLTexture mTexture;
   gl::ShaderProgramType mLayerProgram;
+  bool mTiling;
 };
 
 class ShadowImageLayerOGL : public ShadowImageLayer,
