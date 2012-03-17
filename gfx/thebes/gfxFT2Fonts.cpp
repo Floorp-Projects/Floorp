@@ -144,6 +144,7 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
             familyArray.AppendElement(nsDependentString(logFont.lfFaceName));
 #elif defined(ANDROID)
         familyArray.AppendElement(NS_LITERAL_STRING("Droid Sans"));
+        familyArray.AppendElement(NS_LITERAL_STRING("Roboto"));
 #else
 #error "Platform not supported"
 #endif
