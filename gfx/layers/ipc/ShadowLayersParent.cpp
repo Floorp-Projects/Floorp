@@ -225,7 +225,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetOpacity(common.opacity());
       layer->SetClipRect(common.useClipRect() ? &common.clipRect() : NULL);
       layer->SetTransform(common.transform());
-      layer->SetTileSourceRect(common.useTileSourceRect() ? &common.tileSourceRect() : NULL);
       static bool fixedPositionLayersEnabled = getenv("MOZ_ENABLE_FIXED_POSITION_LAYERS") != 0;
       if (fixedPositionLayersEnabled) {
         layer->SetIsFixedPosition(common.isFixedPosition());
