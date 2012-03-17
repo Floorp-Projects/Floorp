@@ -885,14 +885,19 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
     }
 
     bool result = true;
-    for (unsigned i = 0; i < mImages.Length(); i++) {
-        int xPos = (i % mColumns) * mTileSize;
-        int yPos = (i / mColumns) * mTileSize;
+    int oldCurrentImage = mCurrentImage;
+    BeginTileIteration();
+    do {
+        nsIntRect tileRect = GetTileRect();
+        int xPos = tileRect.x;
+        int yPos = tileRect.y;
+
         nsIntRegion tileRegion;
-        nsIntRect tileRect = nsIntRect(nsIntPoint(xPos, yPos), mImages[i]->GetSize());
         tileRegion.And(region, tileRect); // intersect with tile
+
         if (tileRegion.IsEmpty())
             continue;
+
         if (mGL->CanUploadSubTextures()) {
           tileRegion.MoveBy(-xPos, -yPos); // translate into tile local space
         } else {
@@ -900,10 +905,17 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
           tileRect.x = tileRect.y = 0;
           tileRegion = nsIntRegion(tileRect);
         }
-        result &= mImages[i]->DirectUpdate(aSurf,
-                                           tileRegion,
-                                           aFrom + nsIntPoint(xPos, yPos));
-    }
+
+        result &= mImages[mCurrentImage]->
+          DirectUpdate(aSurf, tileRegion, aFrom + nsIntPoint(xPos, yPos));
+
+        // Override a callback cancelling iteration if the texture wasn't valid.
+        // We need to force the update in that situation, or we may end up
+        // showing invalid/out-of-date texture data.
+    } while (NextTile() ||
+             (mTextureState != Valid && mCurrentImage < mImages.Length()));
+    mCurrentImage = oldCurrentImage;
+
     mShaderType = mImages[0]->GetShaderProgramType();
     mTextureState = Valid;
     return result;
@@ -1060,11 +1072,8 @@ bool TiledTextureImage::NextTile()
         continueIteration = mIterationCallback(this, mCurrentImage,
                                                mIterationCallbackData);
 
-    if (mCurrentImage + 1 < mImages.Length()) {
-        mCurrentImage++;
-        return continueIteration;
-    }
-    return false;
+    mCurrentImage++;
+    return continueIteration && (mCurrentImage < mImages.Length());
 }
 
 void TiledTextureImage::SetIterationCallback(TileIterationCallback aCallback,
