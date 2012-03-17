@@ -380,33 +380,57 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
           case 2:
             masm.ma_add(ToRegister(lhs), ToRegister(lhs), ToRegister(dest), SetCond);
             break;
-          default:
-#if 0
-            if (!mul->canOverflow() && constant > 0) {
-                // Use shift if cannot overflow and constant is power of 2
-                int32 shift;
+          default: {
+            bool handled = false;
+            if (!mul->canOverflow()) {
+                // If it cannot overflow, we can do lots of optimizations
+                Register src = ToRegister(lhs);
+                uint32 shift;
+                JS_FLOOR_LOG2(shift, constant);
+                uint32 rest = constant - (1 << shift);
+                // See if the constant has one bit set, meaning it can be encoded as a bitshift
+                if ((1 << shift) == constant) {
+                    masm.ma_lsl(Imm32(shift), src, ToRegister(dest));
+                    handled = true;
+                } else {
+                    // If the constant cannot be encoded as (1<<C1), see if it can be encoded as
+                    // (1<<C1) | (1<<C2), which can be computed using an add and a shift
+                    uint32 shift_rest;
+                    JS_FLOOR_LOG2(shift_rest, rest);
+                    if ((1 << shift_rest) == rest) {
+                        masm.as_add(ToRegister(dest), src, lsl(src, shift-shift_rest));
+                        if (shift_rest != 0)
+                            masm.ma_lsl(Imm32(shift_rest), ToRegister(dest), ToRegister(dest));
+                        handled = true;
+                    }
+                }
+            } else if (ToRegister(lhs) != ToRegister(dest)) {
+                // To stay on the safe side, only optimize things that are a
+                // power of 2.
+
+                uint32 shift;
                 JS_FLOOR_LOG2(shift, constant);
                 if ((1 << shift) == constant) {
+                    // dest = lhs * pow(2,shift)
                     masm.ma_lsl(Imm32(shift), ToRegister(lhs), ToRegister(dest));
-                    return true;
-                }
-            } else if (!mul->canOverflow()) {
-                int32 shift;
-                JS_FLOOR_LOG2(shift, -constant);
-                if ((1<<shift) == -constant) {
-                    // since lsl is actually a modifier, and not an instruction,
-                    // we can emit mvn dest, op1 lsl 3 for op1 * -8
-                    // although mvn is a bitwise negate, not an actual negate
+                    // At runtime, check (lhs == dest >> shift), if this does not hold,
+                    // some bits were lost due to overflow, and the computation should
+                    // be resumed as a double.
+                    masm.as_cmp(ToRegister(lhs), asr(ToRegister(dest), shift));
+                    c = Assembler::NotEqual;
+                    handled = true;
                 }
             }
-#endif
-            if (mul->canOverflow()) {
-                c = masm.ma_check_mul(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), c);
-            } else {
-                masm.ma_mul(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest));
+
+            if (!handled) {
+                if (mul->canOverflow()) {
+                    c = masm.ma_check_mul(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), c);
+                } else {
+                    masm.ma_mul(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest));
+                }
             }
         }
-
+        }
         // Bailout on overflow
         if (mul->canOverflow() && !bailoutIf(c, ins->snapshot()))
             return false;
