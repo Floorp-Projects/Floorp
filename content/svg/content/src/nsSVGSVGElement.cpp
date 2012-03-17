@@ -61,7 +61,6 @@
 #include "nsSVGUtils.h"
 #include "nsSVGSVGElement.h"
 #include "nsContentErrors.h" // For NS_PROPTABLE_PROP_OVERWRITTEN
-#include "nsContentUtils.h"
 #include "nsStyleUtil.h"
 
 #include "nsEventDispatcher.h"

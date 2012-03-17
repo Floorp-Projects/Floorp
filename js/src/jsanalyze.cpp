@@ -162,11 +162,13 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
      * other than through ARG* and LOCAL* opcodes (though arguments can still
      * be indirectly read but not written through 'arguments' properties).
      * All escaping locals are treated as having possible use-before-defs.
+     * Conservatively use 'mayNeedArgsObj' instead of 'needsArgsObj'
+     * (needsArgsObj requires SSA which requires escapedSlots).
      */
 
     PodZero(escapedSlots, numSlots);
 
-    if (script->usesEval || script->usesArguments || script->compartment()->debugMode()) {
+    if (script->usesEval || script->mayNeedArgsObj() || script->compartment()->debugMode()) {
         for (unsigned i = 0; i < nargs; i++)
             escapedSlots[ArgSlot(i)] = true;
     } else {
@@ -201,7 +203,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     isInlineable = true;
     if (script->nClosedArgs || script->nClosedVars || heavyweight ||
-        script->usesEval || script->usesArguments || cx->compartment->debugMode()) {
+        script->usesEval || script->mayNeedArgsObj() || cx->compartment->debugMode()) {
         isInlineable = false;
     }
 
@@ -510,11 +512,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_THROW:
           case JSOP_EXCEPTION:
           case JSOP_DEFLOCALFUN:
-          case JSOP_DEFLOCALFUN_FC:
           case JSOP_LAMBDA:
-          case JSOP_LAMBDA_FC:
-          case JSOP_GETFCSLOT:
-          case JSOP_CALLFCSLOT:
           case JSOP_DEBUGGER:
           case JSOP_FUNCALL:
           case JSOP_FUNAPPLY:
@@ -675,6 +673,19 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     JS_ASSERT(forwardJump == 0 && forwardCatch == 0);
 
     ranBytecode_ = true;
+
+    /*
+     * Always ensure that a script's arguments usage has been analyzed before
+     * entering the script. This allows the functionPrologue to ensure that
+     * arguments are always created eagerly which simplifies interp logic.
+     */
+    if (!script->analyzedArgsUsage()) {
+        if (!script->mayNeedArgsObj())
+            script->setNeedsArgsObj(false);
+        else
+            analyzeSSA(cx);
+        JS_ASSERT_IF(!failed(), script->analyzedArgsUsage());
+    }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -790,8 +801,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
           case JSOP_SETARG:
           case JSOP_SETLOCAL:
           case JSOP_SETLOCALPOP:
-          case JSOP_DEFLOCALFUN:
-          case JSOP_DEFLOCALFUN_FC: {
+          case JSOP_DEFLOCALFUN: {
             uint32_t slot = GetBytecodeSlot(script, pc);
             if (!slotEscapes(slot))
                 killVariable(cx, lifetimes[slot], offset, saved, savedCount);
@@ -1598,6 +1608,77 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
     }
 
     ranSSA_ = true;
+
+    /*
+     * Now that we have full SSA information for the script, analyze whether
+     * the arguments object is actually needed. The first pass performed by the
+     * frontend just looked for the 'arguments' keyword. Here, we can see how
+     * 'arguments' is used and optimize several cases where we can read values
+     * from the stack frame directly.
+     */
+    if (script->analyzedArgsUsage())
+        return;
+
+    /* Ensured by analyzeBytecode. */
+    JS_ASSERT(script->function());
+    JS_ASSERT(script->mayNeedArgsObj());
+    JS_ASSERT(!script->usesEval);
+
+    /*
+     * Since let variables are not tracked, we cannot soundly perform this
+     * analysis in their presence.
+     */
+    if (localsAliasStack()) {
+        script->setNeedsArgsObj(true);
+        return;
+    }
+
+    /*
+     * In the case of 'f.apply(x, arguments)', we want to avoid creating
+     * 'arguments' eagerly: 'f.apply' can read directly out of the frame.
+     * However, if 'f.apply' turns out to not be Function.prototype.apply, we
+     * need to set flip script->needsArgsObj and fix up all stack frames. To
+     * avoid a full stack scan (to find outstanding JS_OPTIMIZED_APPLY magic
+     * values), we only apply this optimization when there are no other uses of
+     * 'arguments' in the function. See Script::applySpeculationFailed.
+     * Also, to simplify logic involving closed-over variables and call
+     * objects, we skip the optimization for heavyweight functions.
+     */
+    bool canOptimizeApply = !script->function()->isHeavyweight();
+    bool haveOptimizedApply = false;
+
+    jsbytecode *pc;
+    for (offset = 0; offset < script->length; offset += GetBytecodeLength(pc)) {
+        pc = script->code + offset;
+
+        /* Ensured by NewScriptFromEmitter. */
+        JS_ASSERT_IF(script->strictModeCode, *pc != JSOP_SETARG);
+
+        /* The front-end took care of dynamic ways to name 'arguments'. */
+        if (JSOp(*pc) != JSOP_ARGUMENTS)
+            continue;
+
+        /* A null Bytecode* means unreachable. */
+        if (!maybeCode(offset))
+            continue;
+
+        if (SpeculateApplyOptimization(pc) && canOptimizeApply) {
+            haveOptimizedApply = true;
+            continue;
+        }
+
+        Vector<SSAValue> seen(cx);
+        if (haveOptimizedApply ||
+            !followEscapingArguments(cx, SSAValue::PushedValue(offset, 0), &seen))
+        {
+            script->setNeedsArgsObj(true);
+            return;
+        }
+
+        canOptimizeApply = false;
+    }
+
+    script->setNeedsArgsObj(false);
 }
 
 /* Get a phi node's capacity for a given length. */
@@ -1879,6 +1960,74 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32_t offset)
     code.newValues[count].value.clear();
 
     cx->delete_(pending);
+}
+
+bool
+ScriptAnalysis::followEscapingArguments(JSContext *cx, const SSAValue &v, Vector<SSAValue> *seen)
+{
+    /*
+     * trackUseChain is false for initial values of variables, which
+     * cannot hold the script's arguments object.
+     */
+    if (!trackUseChain(v))
+        return true;
+
+    for (unsigned i = 0; i < seen->length(); i++) {
+        if (v == (*seen)[i])
+            return true;
+    }
+    if (!seen->append(v)) {
+        cx->compartment->types.setPendingNukeTypes(cx);
+        return false;
+    }
+
+    SSAUseChain *use = useChain(v);
+    while (use) {
+        if (!followEscapingArguments(cx, use, seen))
+            return false;
+        use = use->next;
+    }
+
+    return true;
+}
+
+bool
+ScriptAnalysis::followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<SSAValue> *seen)
+{
+    if (!use->popped)
+        return followEscapingArguments(cx, SSAValue::PhiValue(use->offset, use->u.phi), seen);
+
+    jsbytecode *pc = script->code + use->offset;
+    uint32_t which = use->u.which;
+
+    JSOp op = JSOp(*pc);
+
+    if (op == JSOP_POP || op == JSOP_POPN)
+        return true;
+
+    /* arguments[i] can read fp->canonicalActualArg(i) directly. */
+    if (op == JSOP_GETELEM && which == 1)
+        return true;
+
+    /* arguments.length length can read fp->numActualArgs() directly. */
+    if (op == JSOP_LENGTH)
+        return true;
+
+    /* Allow assignments to non-closed locals (but not arguments). */
+
+    if (op == JSOP_SETLOCAL) {
+        uint32_t slot = GetBytecodeSlot(script, pc);
+        if (!trackSlot(slot) || script->strictModeCode)
+            return false;
+        if (!followEscapingArguments(cx, SSAValue::PushedValue(use->offset, 0), seen))
+            return false;
+        return followEscapingArguments(cx, SSAValue::WrittenVar(slot, use->offset), seen);
+    }
+
+    if (op == JSOP_GETLOCAL)
+        return followEscapingArguments(cx, SSAValue::PushedValue(use->offset, 0), seen);
+
+    return false;
 }
 
 CrossSSAValue

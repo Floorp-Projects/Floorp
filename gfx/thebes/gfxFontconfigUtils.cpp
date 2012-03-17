@@ -73,11 +73,11 @@ gfxFontconfigUtils::FcSlantToThebesStyle(int aFcSlant)
 {
     switch (aFcSlant) {
         case FC_SLANT_ITALIC:
-            return FONT_STYLE_ITALIC;
+            return NS_FONT_STYLE_ITALIC;
         case FC_SLANT_OBLIQUE:
-            return FONT_STYLE_OBLIQUE;
+            return NS_FONT_STYLE_OBLIQUE;
         default:
-            return FONT_STYLE_NORMAL;
+            return NS_FONT_STYLE_NORMAL;
     }
 }
 
@@ -86,7 +86,7 @@ gfxFontconfigUtils::GetThebesStyle(FcPattern *aPattern)
 {
     int slant;
     if (FcPatternGetInteger(aPattern, FC_SLANT, 0, &slant) != FcResultMatch) {
-        return FONT_STYLE_NORMAL;
+        return NS_FONT_STYLE_NORMAL;
     }
 
     return FcSlantToThebesStyle(slant);
@@ -95,9 +95,9 @@ gfxFontconfigUtils::GetThebesStyle(FcPattern *aPattern)
 /* static */ int
 gfxFontconfigUtils::GetFcSlant(const gfxFontStyle& aFontStyle)
 {
-    if (aFontStyle.style == FONT_STYLE_ITALIC)
+    if (aFontStyle.style == NS_FONT_STYLE_ITALIC)
         return FC_SLANT_ITALIC;
-    if (aFontStyle.style == FONT_STYLE_OBLIQUE)
+    if (aFontStyle.style == NS_FONT_STYLE_OBLIQUE)
         return FC_SLANT_OBLIQUE;
 
     return FC_SLANT_ROMAN;
@@ -124,7 +124,7 @@ gfxFontconfigUtils::GetThebesWeight(FcPattern *aPattern)
 {
     int weight;
     if (FcPatternGetInteger(aPattern, FC_WEIGHT, 0, &weight) != FcResultMatch)
-        return FONT_WEIGHT_NORMAL;
+        return NS_FONT_WEIGHT_NORMAL;
 
     if (weight <= (FC_WEIGHT_THIN + FC_WEIGHT_EXTRALIGHT) / 2)
         return 100;

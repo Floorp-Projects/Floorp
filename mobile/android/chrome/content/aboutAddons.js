@@ -28,6 +28,7 @@ function init() {
   Services.obs.addObserver(Addons, "browser-search-engine-modified", false);
 
   AddonManager.addInstallListener(Addons);
+  AddonManager.addAddonListener(Addons);
   Addons.getAddons();
   showList();
 }
@@ -35,6 +36,7 @@ function init() {
 function uninit() {
   Services.obs.removeObserver(Addons, "browser-search-engine-modified");
   AddonManager.removeInstallListener(Addons);
+  AddonManager.removeAddonListener(Addons);
 }
 
 function openLink(aElement) {
@@ -294,93 +296,71 @@ var Addons = {
     details.style.display = "block";
   },
 
-  enable: function enable() {
+  setEnabled: function setEnabled(aValue, aAddon) {
     let detailItem = document.querySelector("#addons-details > .addon-item");
-    if (!detailItem.addon)
+    let addon = aAddon || detailItem.addon;
+    if (!addon)
       return;
 
     let opType;
-    let isDisabled;
-    if (detailItem.addon.type == "search") {
-      isDisabled = false;
-      detailItem.addon.engine.hidden = false;
-      opType = "needs-enable";
-    } else if (detailItem.addon.type == "theme") {
-      // We can have only one theme enabled, so disable the current one if any
-      let theme = null;
-      let list = document.getElementById("addons-list");
-      let item = list.firstElementChild;
-      while (item) {
-        if (item.addon && (item.addon.type == "theme") && (item.addon.isActive)) {
-          theme = item;
-          break;
+    if (addon.type == "search") {
+      addon.engine.hidden = !aValue;
+      opType = aValue ? "needs-enable" : "needs-disable";
+    } else if (addon.type == "theme") {
+      if (aValue) {
+        // We can have only one theme enabled, so disable the current one if any
+        let list = document.getElementById("addons-list");
+        let item = list.firstElementChild;
+        while (item) {
+          if (item.addon && (item.addon.type == "theme") && (item.addon.isActive)) {
+            this.setEnabled(false, item);
+            break;
+          }
+          item = item.nextSibling;
         }
-        item = item.nextSibling;
       }
-      if (theme)
-        this.disable(theme);
-
-      detailItem.addon.userDisabled = false;
-      isDisabled = false;
+      addon.userDisabled = !aValue;
+    } else if (addon.type == "locale") {
+      addon.userDisabled = !aValue;
     } else {
-      detailItem.addon.userDisabled = false;
-      isDisabled = false;
-      opType = this._getOpTypeForOperations(detailItem.addon.pendingOperations);
+      addon.userDisabled = !aValue;
+      opType = this._getOpTypeForOperations(addon.pendingOperations);
 
-      if (detailItem.addon.pendingOperations & AddonManager.PENDING_ENABLE) {
+      if ((addon.pendingOperations & AddonManager.PENDING_ENABLE) ||
+          (addon.pendingOperations & AddonManager.PENDING_DISABLE)) {
         this.showRestart();
-      } else {
-        if (detailItem.getAttribute("opType") == "needs-disable")
-          this.hideRestart();
+      } else if (addon == detailItem.addon &&
+            detailItem.getAttribute("opType") == "needs-disable" ||
+            detailItem.getAttribute("opType") == "needs-enable") {
+        this.hideRestart();
       }
     }
 
-    detailItem.setAttribute("opType", opType);
-    detailItem.setAttribute("isDisabled", isDisabled);
+    if (addon == detailItem.addon) {
+      detailItem.setAttribute("isDisabled", !aValue);
+      if (opType)
+        detailItem.setAttribute("opType", opType);
+      else
+        detailItem.removeAttribute("opType");
+    }
 
     // Sync to the list item
-    let listItem = this._getElementForAddon(detailItem.addon.id);
-    listItem.setAttribute("isDisabled", detailItem.getAttribute("isDisabled"));
-    listItem.setAttribute("opType", detailItem.getAttribute("opType"));
+    let listItem = this._getElementForAddon(addon.id);
+    if (listItem) {
+      listItem.setAttribute("isDisabled", !aValue);
+      if (opType)
+        listItem.setAttribute("opType", opType);
+      else
+        listItem.removeAttribute("opType");
+    }
+  },
+
+  enable: function enable() {
+    this.setEnabled(true);
   },
 
   disable: function disable() {
-    let detailItem = document.querySelector("#addons-details > .addon-item");
-    if (!detailItem.addon)
-      return;
-
-    let opType;
-    let isDisabled;
-    if (detailItem.addon.type == "search") {
-      isDisabled = true;
-      detailItem.addon.engine.hidden = true;
-      opType = "needs-disable";
-    } else if (detailItem.addon.type == "theme") {
-      detailItem.addon.userDisabled = true;
-      isDisabled = true;
-    } else if (detailItem.addon.type == "locale") {
-      detailItem.addon.userDisabled = true;
-      isDisabled = true;
-    } else {
-      detailItem.addon.userDisabled = true;
-      opType = this._getOpTypeForOperations(detailItem.addon.pendingOperations);
-      isDisabled = !detailItem.addon.isActive;
-
-      if (detailItem.addon.pendingOperations & AddonManager.PENDING_DISABLE) {
-        this.showRestart();
-      } else {
-        if (detailItem.getAttribute("opType") == "needs-enable")
-          this.hideRestart();
-      }
-    }
-
-    detailItem.setAttribute("opType", opType);
-    detailItem.setAttribute("isDisabled", isDisabled);
-
-    // Sync to the list item
-    let listItem = this._getElementForAddon(detailItem.addon.id);
-    listItem.setAttribute("isDisabled", detailItem.getAttribute("isDisabled"));
-    listItem.setAttribute("opType", detailItem.getAttribute("opType"));
+    this.setEnabled(false);
   },
 
   uninstall: function uninstall() {
@@ -440,6 +420,18 @@ var Addons = {
 
   hideRestart: function hideRestart(aMode) {
     // TODO (bug 704406)
+  },
+
+  onEnabled: function(aAddon) {
+    let listItem = this._getElementForAddon(aAddon.id);
+    if (!listItem)
+      return;
+
+    // Reload the details to pick up any options now that it's enabled.
+    listItem.setAttribute("optionsURL", aAddon.optionsURL || "");
+    let detailItem = document.querySelector("#addons-details > .addon-item");
+    if (aAddon == detailItem.addon)
+      this.showDetails(listItem);
   },
 
   onInstallEnded: function(aInstall, aAddon) {

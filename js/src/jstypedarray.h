@@ -290,9 +290,6 @@ IsFastTypedArrayClass(const Class *clasp);
 
 /* Friend API methods */
 
-JS_FRIEND_API(JSObject *)
-js_InitTypedArrayClasses(JSContext *cx, JSObject *obj);
-
 JS_FRIEND_API(JSBool)
 js_IsTypedArray(JSObject *obj);
 

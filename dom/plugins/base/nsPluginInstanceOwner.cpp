@@ -415,8 +415,13 @@ nsPluginInstanceOwner::SetInstance(nsNPAPIPluginInstance *aInstance)
   // If we're going to null out mInstance after use, be sure to call
   // mInstance->InvalidateOwner() here, since it now won't be called
   // from our destructor.  This fixes bug 613376.
-  if (mInstance && !aInstance)
+  if (mInstance && !aInstance) {
     mInstance->InvalidateOwner();
+
+#ifdef MOZ_WIDGET_ANDROID
+    RemovePluginView();
+#endif
+  }
 
   mInstance = aInstance;
 
@@ -748,7 +753,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
   }
 
   return rv;
-#elif defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
+#elif (defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)) && defined(MOZ_X11)
   // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
   nsIWidget* win = mObjectFrame->GetNearestWidget();
   if (!win)
@@ -2917,8 +2922,14 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   PRInt32 model = mInstance->GetANPDrawingModel();
 
+  float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
+  float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
+
+  gfxRect scaledFrameRect = aFrameRect;
+  scaledFrameRect.Scale(xResolution, yResolution);
+
   if (model == kSurface_ANPDrawingModel) {
-    if (!AddPluginView(aFrameRect)) {
+    if (!AddPluginView(scaledFrameRect)) {
       Invalidate();
     }
     return;
@@ -2928,11 +2939,9 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
     if (!mLayer)
       mLayer = new AndroidMediaLayer();
 
-    // FIXME: this is gross
-    float zoomLevel = aFrameRect.width / (float)mPluginWindow->width;
-    mLayer->UpdatePosition(aFrameRect, zoomLevel);
+    mLayer->UpdatePosition(scaledFrameRect, xResolution);
 
-    SendSize((int)aFrameRect.width, (int)aFrameRect.height);
+    SendSize((int)scaledFrameRect.width, (int)scaledFrameRect.height);
     return;
   }
 

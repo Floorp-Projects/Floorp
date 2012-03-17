@@ -154,7 +154,7 @@ SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/bluetooth/$(LIB_PREFIX)dombluetooth_s.$(LIB_
 endif #}
 
 ifdef MOZ_B2G_RIL #{
-SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/system/b2g/$(LIB_PREFIX)domsystemb2g_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/system/gonk/$(LIB_PREFIX)domsystemgonk_s.$(LIB_SUFFIX)
 endif #}
 
 ifdef MOZ_MEDIA
@@ -275,7 +275,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   $(NULL)
 
 ifdef MOZ_B2G_RIL #{
-LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/system/b2g
+LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/system/gonk
 endif #}
 
 ifdef MOZ_B2G_BT #{

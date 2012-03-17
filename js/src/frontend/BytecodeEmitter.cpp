@@ -110,8 +110,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, unsigned lineno)
     emitLevel(0),
     constMap(parser->context),
     constList(parser->context),
-    upvarIndices(parser->context),
-    upvarMap(parser->context),
     globalScope(NULL),
     globalUses(parser->context),
     globalMap(parser->context),
@@ -1367,79 +1365,8 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     JS_ASSERT(bce->staticLevel >= level);
 
     const unsigned skip = bce->staticLevel - level;
-    if (skip != 0) {
-        JS_ASSERT(bce->inFunction());
-        JS_ASSERT_IF(cookie.slot() != UpvarCookie::CALLEE_SLOT, bce->roLexdeps->lookup(atom));
-        JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-
-        /*
-         * If op is a mutating opcode, this upvar's lookup skips too many levels,
-         * or the function is heavyweight, we fall back on JSOP_*NAME*.
-         */
-        if (op != JSOP_NAME)
-            return JS_TRUE;
-        if (skip >= UpvarCookie::UPVAR_LEVEL_LIMIT)
-            return JS_TRUE;
-        if (bce->flags & TCF_FUN_HEAVYWEIGHT)
-            return JS_TRUE;
-
-        if (!bce->fun()->isFlatClosure())
-            return JS_TRUE;
-
-        if (!bce->upvarIndices.ensureMap(cx))
-            return JS_FALSE;
-
-        AtomIndexAddPtr p = bce->upvarIndices->lookupForAdd(atom);
-        jsatomid index;
-        if (p) {
-            index = p.value();
-        } else {
-            if (!bce->bindings.addUpvar(cx, atom))
-                return JS_FALSE;
-
-            index = bce->upvarIndices->count();
-            if (!bce->upvarIndices->add(p, atom, index))
-                return JS_FALSE;
-
-            UpvarCookies &upvarMap = bce->upvarMap;
-            /* upvarMap should have the same number of UpvarCookies as there are lexdeps. */
-            size_t lexdepCount = bce->roLexdeps->count();
-
-            JS_ASSERT_IF(!upvarMap.empty(), lexdepCount == upvarMap.length());
-            if (upvarMap.empty()) {
-                /* Lazily initialize the upvar map with exactly the necessary capacity. */
-                if (lexdepCount <= upvarMap.sMaxInlineStorage) {
-                    JS_ALWAYS_TRUE(upvarMap.growByUninitialized(lexdepCount));
-                } else {
-                    void *buf = upvarMap.allocPolicy().malloc_(lexdepCount * sizeof(UpvarCookie));
-                    if (!buf)
-                        return JS_FALSE;
-                    upvarMap.replaceRawBuffer(static_cast<UpvarCookie *>(buf), lexdepCount);
-                }
-                for (size_t i = 0; i < lexdepCount; ++i)
-                    upvarMap[i] = UpvarCookie();
-            }
-
-            unsigned slot = cookie.slot();
-            if (slot != UpvarCookie::CALLEE_SLOT && dn_kind != Definition::ARG) {
-                TreeContext *tc = bce;
-                do {
-                    tc = tc->parent;
-                } while (tc->staticLevel != level);
-                if (tc->inFunction())
-                    slot += tc->fun()->nargs;
-            }
-
-            JS_ASSERT(index < upvarMap.length());
-            upvarMap[index].set(skip, slot);
-        }
-
-        pn->setOp(JSOP_GETFCSLOT);
-        JS_ASSERT((index & JS_BITMASK(16)) == index);
-        pn->pn_cookie.set(0, index);
-        pn->pn_dflags |= PND_BOUND;
+    if (skip != 0)
         return JS_TRUE;
-    }
 
     /*
      * We are compiling a function body and may be able to optimize name
@@ -1833,9 +1760,6 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool callContex
             break;
           case JSOP_GETLOCAL:
             op = JSOP_CALLLOCAL;
-            break;
-          case JSOP_GETFCSLOT:
-            op = JSOP_CALLFCSLOT;
             break;
           default:
             JS_ASSERT(op == JSOP_ARGUMENTS || op == JSOP_CALLEE);
@@ -2815,20 +2739,6 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToProlog();
         JS_ASSERT(bce->next() == bce->base());
         if (Emit1(cx, bce, JSOP_GENERATOR) < 0)
-            return false;
-        bce->switchToMain();
-    }
-
-    /*
-     * Strict mode functions' arguments objects copy initial parameter values.
-     * We create arguments objects lazily -- but that doesn't work for strict
-     * mode functions where a parameter might be modified and arguments might
-     * be accessed. For such functions we synthesize an access to arguments to
-     * initialize it with the original parameter values.
-     */
-    if (bce->needsEagerArguments()) {
-        bce->switchToProlog();
-        if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0 || Emit1(cx, bce, JSOP_POP) < 0)
             return false;
         bce->switchToMain();
     }
@@ -4048,7 +3958,7 @@ EmitCatch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_NAME:
         /* Inline and specialize BindNameToSlot for pn2. */
         JS_ASSERT(!pn2->pn_cookie.isFree());
-        EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_cookie.asInteger());
+        EMIT_UINT16_IMM_OP(JSOP_SETLOCALPOP, pn2->pn_cookie.slot());
         break;
 
       default:
@@ -5122,8 +5032,6 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         if (pn->pn_cookie.isFree()) {
             bce->switchToProlog();
-            MOZ_ASSERT(!fun->isFlatClosure(),
-                       "global functions can't have upvars, so they are never flat");
             if (!EmitFunctionOp(cx, JSOP_DEFFUN, index, bce))
                 return false;
             if (!UpdateLineNumberNotes(cx, bce, pn->pn_pos.begin.lineno))
@@ -5140,14 +5048,13 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
         JS_ASSERT(index < JS_BIT(20));
         pn->pn_index = index;
-        JSOp op = fun->isFlatClosure() ? JSOP_DEFLOCALFUN_FC : JSOP_DEFLOCALFUN;
         if (pn->isClosed() &&
             !bce->callsEval() &&
             !bce->closedVars.append(pn->pn_cookie.slot()))
         {
             return false;
         }
-        return EmitSlotObjectOp(cx, op, slot, index, bce);
+        return EmitSlotObjectOp(cx, JSOP_DEFLOCALFUN, slot, index, bce);
     }
 
     return true;
@@ -5794,8 +5701,7 @@ EmitIncOrDec(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (Emit1(cx, bce, op) < 0)
                 return false;
         } else if (!pn2->pn_cookie.isFree()) {
-            jsatomid atomIndex = pn2->pn_cookie.asInteger();
-            EMIT_UINT16_IMM_OP(op, atomIndex);
+            EMIT_UINT16_IMM_OP(op, pn2->pn_cookie.slot());
         } else {
             JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
             if (js_CodeSpec[op].format & (JOF_INC | JOF_DEC)) {

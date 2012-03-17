@@ -46,11 +46,13 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =\
+		test_bindings.xhtml \
 		test_embeds.xul \
 		test_general.html \
 		test_general.xul \
 		test_tabbrowser.xul \
 		test_tree.xul \
+		test_ui_modalprompt.html \
 		test_update.html \
 		$(NULL)
 

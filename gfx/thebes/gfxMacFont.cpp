@@ -95,7 +95,7 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
     bool needsOblique =
         (mFontEntry != NULL) &&
         (!mFontEntry->IsItalic() &&
-         (mStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)));
+         (mStyle.style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)));
 
     if (needsOblique) {
         double skewfactor = (needsOblique ? Fix2X(kATSItalicQDSkew) : 0);

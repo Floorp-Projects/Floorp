@@ -7,9 +7,14 @@ let tabState = {
 
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
+
+  Services.prefs.setIntPref("browser.sessionstore.interval", 4000);
+  registerCleanupFunction(function () {
+    Services.prefs.clearUserPref("browser.sessionstore.interval");
+  });
 
   let tab = gBrowser.addTab("about:blank");
-  registerCleanupFunction(function () gBrowser.removeTab(tab));
 
   let browser = tab.linkedBrowser;
 
@@ -26,7 +31,9 @@ function test() {
           is(entries.length, 1, "tab has one history entry");
           ok(!entries[0].children, "history entry has no subframes");
 
-          finish();
+          // Make sure that we reset the state.
+          let blankState = { windows: [{ tabs: [{ entries: [{ url: "about:blank" }] }]}]};
+          waitForBrowserState(blankState, finish);
         });
 
         // reload the browser to deprecate the subframes
@@ -36,8 +43,8 @@ function test() {
       // create a dynamic subframe
       let doc = browser.contentDocument;
       let iframe = doc.createElement("iframe");
-      iframe.setAttribute("src", "about:mozilla");
       doc.body.appendChild(iframe);
+      iframe.setAttribute("src", "about:mozilla");
     });
   });
 }
@@ -53,5 +60,5 @@ function whenChildCount(aEntry, aChildCount, aCallback) {
   if (aEntry.childCount == aChildCount)
     aCallback();
   else
-    executeSoon(function () whenChildCount(aEntry, aChildCount, aCallback));
+    setTimeout(function () whenChildCount(aEntry, aChildCount, aCallback), 100);
 }

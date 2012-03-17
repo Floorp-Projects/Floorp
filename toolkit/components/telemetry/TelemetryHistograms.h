@@ -53,12 +53,15 @@
 #define HISTOGRAM_BOOLEAN(id, message) HISTOGRAM(id, 0, 1, 2, BOOLEAN, message)
 /* Likewise for FLAG histograms. */
 #define HISTOGRAM_FLAG(id, message) HISTOGRAM(id, 0, 1, 2, FLAG, message)
+/* Convenience macro for LINEAR histograms where we want buckets from 1 to N, inclusive. */
+#define HISTOGRAM_ENUMERATED_VALUES(id, n, message) \
+  HISTOGRAM(id, 1, n, n+1, LINEAR, message)
 
 /**
  * a11y telemetry
  */
 HISTOGRAM_BOOLEAN(A11Y_INSTANTIATED, "has accessibility support been instantiated")
-HISTOGRAM(A11Y_CONSUMERS, 1, 9, 10, LINEAR, "Accessibility client by enum id")
+HISTOGRAM_ENUMERATED_VALUES(A11Y_CONSUMERS, 9, "Accessibility client by enum id")
 HISTOGRAM_BOOLEAN(A11Y_ISIMPLEDOM_USAGE, "have the ISimpleDOM* accessibility interfaces been used")
 HISTOGRAM_BOOLEAN(A11Y_IATABLE_USAGE, "has the IAccessibleTable accessibility interface been used")
 HISTOGRAM_BOOLEAN(A11Y_XFORMS_USAGE, "has XForms accessibility been instantiated")
@@ -424,7 +427,8 @@ HISTOGRAM_FLAG(TELEMETRY_TEST_FLAG, "a testing histogram; not meant to be touche
  * Startup Crash Detection
  */
 HISTOGRAM_FLAG(STARTUP_CRASH_DETECTED, "Whether there was a crash during the last startup")
-HISTOGRAM(SAFE_MODE_USAGE, 1, 3, 4, LINEAR, "Whether the user is in safe mode (No, Yes, Forced)")
+HISTOGRAM_ENUMERATED_VALUES(SAFE_MODE_USAGE, 3, "Whether the user is in safe mode (No, Yes, Forced)")
 
+#undef HISTOGRAM_ENUMERATED_VALUES
 #undef HISTOGRAM_BOOLEAN
 #undef HISTOGRAM_FLAG

@@ -1561,7 +1561,7 @@ public class GeckoAppShell
         Log.i("GeckoShell", "post to " + (mainThread ? "main " : "") + "java thread");
         getMainHandler().post(new GeckoRunnableCallback());
     }
-    
+
     public static android.hardware.Camera sCamera = null;
     
     static native void cameraCallbackBridge(byte[] data);

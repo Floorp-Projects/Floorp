@@ -8,6 +8,7 @@ function install(data, reason) {
 }
 
 function startup(data, reason) {
+  Components.utils.reportError("bootstrap startup");
   Components.utils.import(data.resourceURI.spec + "version.jsm");
   Services.prefs.setIntPref("bootstraptest.active_version", VERSION);
   Services.prefs.setIntPref("bootstraptest.startup_reason", reason);

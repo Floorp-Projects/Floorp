@@ -436,18 +436,24 @@ TelemetryPing.prototype = {
     // Use a deterministic url for testing.
     let isTestPing = (reason == "test-ping");
     let havePreviousSession = !!this._prevSession;
-    let slug = (isTestPing
-                ? reason
-                : (havePreviousSession
-                   ? this._prevSession.uuid
-                   : this._uuid));
     let payloadObj = {
       ver: PAYLOAD_VERSION,
-      info: this.getMetadata(reason)
     };
 
+    let previousHistograms = null;
+    try {
+      if (havePreviousSession) {
+        previousHistograms = this.getHistograms(this._prevSession.snapshots);
+      }
+    } catch (e) {
+      // Some problem with getting information from our saved data.
+      // Act like we never knew about it.
+      havePreviousSession = false;
+      this._prevSession = null;
+    }
+
     if (havePreviousSession) {
-      payloadObj.histograms = this.getHistograms(this._prevSession.snapshots);
+      payloadObj.histograms = previousHistograms;
     }
     else {
       payloadObj.simpleMeasurements = getSimpleMeasurements();
@@ -461,6 +467,12 @@ TelemetryPing.prototype = {
       payloadObj.slowSQLStartup = this._slowSQLStartup;
     }
 
+    let slug = (isTestPing
+                ? reason
+                : (havePreviousSession
+                   ? this._prevSession.uuid
+                   : this._uuid));
+    payloadObj.info = this.getMetadata(havePreviousSession ? "saved-session" : reason);
     return { previous: !!havePreviousSession,
              slug: slug, payload: JSON.stringify(payloadObj) };
   },
@@ -623,12 +635,15 @@ TelemetryPing.prototype = {
       delete self._timer
     }
     this._timer.initWithCallback(timerCallback, TELEMETRY_DELAY, Ci.nsITimer.TYPE_ONE_SHOT);
+    this.loadHistograms(this.savedHistogramsFile(), false);
+  },
 
-    // Load data from the previous session.
+  loadHistograms: function loadHistograms(file, sync) {
+    let self = this;
     let loadCallback = function(data) {
       self._prevSession = data;
     }
-    Telemetry.loadHistograms(this.savedHistogramsFile(), loadCallback);
+    Telemetry.loadHistograms(file, loadCallback, sync);
   },
 
   /** 
@@ -702,6 +717,14 @@ TelemetryPing.prototype = {
       let data = this.getSessionPayloadAndSlug("gather-payload");
 
       aSubject.QueryInterface(Ci.nsISupportsString).data = data.payload;
+      break;
+    case "test-save-histograms":
+      Telemetry.saveHistograms(aSubject.QueryInterface(Ci.nsILocalFile),
+                               aData, function (success) success,
+                               /*isSynchronous=*/true);
+      break;
+    case "test-load-histograms":
+      this.loadHistograms(aSubject.QueryInterface(Ci.nsILocalFile), true);
       break;
     case "test-ping":
       server = aData;

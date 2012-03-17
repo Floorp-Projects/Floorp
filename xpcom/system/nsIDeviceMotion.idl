@@ -43,6 +43,8 @@ interface nsIDeviceMotionData : nsISupports
 {
   const unsigned long TYPE_ACCELERATION = 0;
   const unsigned long TYPE_ORIENTATION = 1;
+  const unsigned long TYPE_LINEAR_ACCELERATION = 2;
+  const unsigned long TYPE_GYROSCOPE = 3;
 
   readonly attribute unsigned long type;
 
@@ -51,10 +53,11 @@ interface nsIDeviceMotionData : nsISupports
   readonly attribute double z;
 };
 
-[scriptable, uuid(f01774a2-3b7e-4630-954b-196dc178221f)]
+[scriptable, uuid(D29EA788-CCB6-4875-88E0-32A34BB71CBB)]
 interface nsIDeviceMotionListener : nsISupports
 {
   void onMotionChange(in nsIDeviceMotionData aMotionData);
+  void needsCalibration();
 };
 
 [scriptable, uuid(B6E5C463-AAA6-44E2-BD07-7A7DC6192E68)]
@@ -73,9 +76,10 @@ interface nsIDeviceMotion : nsISupports
 /* for use by IPC system to notify non-chrome processes of 
  * device motion events
  */
-[uuid(d3a56f08-b7b1-46bb-9dc1-fc3665a3631a)]
+[uuid(C12C0157-DCFF-41B5-83F3-89179BF6CA4E)]
 interface nsIDeviceMotionUpdate : nsIDeviceMotion
 {
   /* must be called on the main thread or else */
   void deviceMotionChanged(in unsigned long type, in double x, in double y, in double z);
+  void needsCalibration();
 };

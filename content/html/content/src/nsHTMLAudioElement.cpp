@@ -49,7 +49,6 @@
 #include "plbase64.h"
 #include "nsNetUtil.h"
 #include "prmem.h"
-#include "nsNetUtil.h"
 #include "nsXPCOMStrings.h"
 #include "prlock.h"
 #include "nsThreadUtils.h"

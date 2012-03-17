@@ -54,13 +54,13 @@
 #include "jsstr.h"
 
 #include "vm/GlobalObject.h"
+#include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/MethodGuard-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::types;

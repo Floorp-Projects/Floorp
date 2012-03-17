@@ -331,161 +331,6 @@ MarkFunArgs(JSContext *cx, FunctionBox *funbox, uint32_t functionCount)
     return true;
 }
 
-static uint32_t
-MinBlockId(ParseNode *fn, uint32_t id)
-{
-    if (fn->pn_blockid < id)
-        return false;
-    if (fn->isDefn()) {
-        for (ParseNode *pn = fn->dn_uses; pn; pn = pn->pn_link) {
-            if (pn->pn_blockid < id)
-                return false;
-        }
-    }
-    return true;
-}
-
-static inline bool
-CanFlattenUpvar(Definition *dn, FunctionBox *funbox, uint32_t tcflags)
-{
-    /*
-     * Consider the current function (the lambda, innermost below) using a var
-     * x defined two static levels up:
-     *
-     *  function f() {
-     *      // z = g();
-     *      var x = 42;
-     *      function g() {
-     *          return function () { return x; };
-     *      }
-     *      return g();
-     *  }
-     *
-     * So long as (1) the initialization in 'var x = 42' dominates all uses of
-     * g and (2) x is not reassigned, it is safe to optimize the lambda to a
-     * flat closure. Uncommenting the early call to g makes this optimization
-     * unsafe (z could name a global setter that calls its argument).
-     */
-    FunctionBox *afunbox = funbox;
-    unsigned dnLevel = dn->frameLevel();
-
-    JS_ASSERT(dnLevel <= funbox->level);
-    while (afunbox->level != dnLevel) {
-        afunbox = afunbox->parent;
-
-        /*
-         * NB: afunbox can't be null because we are sure to find a function box
-         * whose level == dnLevel before we would try to walk above the root of
-         * the funbox tree. See bug 493260 comments 16-18.
-         *
-         * Assert but check anyway, to protect future changes that bind eval
-         * upvars in the parser.
-         */
-        JS_ASSERT(afunbox);
-
-        /*
-         * If this function is reaching up across an enclosing funarg, then we
-         * cannot copy dn's value into a flat closure slot. The flat closure
-         * code assumes the upvars to be copied are in frames still on the
-         * stack.
-         */
-        if (!afunbox || afunbox->node->isFunArg())
-            return false;
-
-        /*
-         * Reaching up for dn across a generator also means we can't flatten,
-         * since the generator iterator does not run until later, in general.
-         * See bug 563034.
-         */
-        if (afunbox->tcflags & TCF_FUN_IS_GENERATOR)
-            return false;
-    }
-
-    /*
-     * If afunbox's function (which is at the same level as dn) is in a loop,
-     * pessimistically assume the variable initializer may be in the same loop.
-     * A flat closure would then be unsafe, as the captured variable could be
-     * assigned after the closure is created. See bug 493232.
-     */
-    if (afunbox->inLoop)
-        return false;
-
-    /*
-     * |with| and eval used as an operator defeat lexical scoping: they can be
-     * used to assign to any in-scope variable. Therefore they must disable
-     * flat closures that use such upvars.  The parser detects these as special
-     * forms and marks the function heavyweight.
-     */
-    if ((afunbox->parent ? afunbox->parent->tcflags : tcflags) & TCF_FUN_HEAVYWEIGHT)
-        return false;
-
-    /*
-     * If afunbox's function is not a lambda, it will be hoisted, so it could
-     * capture the undefined value that by default initializes var, let, and
-     * const bindings. And if dn is a function that comes at (meaning a
-     * function refers to its own name) or strictly after afunbox, we also
-     * defeat the flat closure optimization for this dn.
-     */
-    JSFunction *afun = afunbox->function();
-    if (!(afun->flags & JSFUN_LAMBDA)) {
-        if (dn->isBindingForm() || dn->pn_pos >= afunbox->node->pn_pos)
-            return false;
-    }
-
-    if (!dn->isInitialized())
-        return false;
-
-    Definition::Kind dnKind = dn->kind();
-    if (dnKind != Definition::CONST) {
-        if (dn->isAssigned())
-            return false;
-
-        /*
-         * Any formal could be mutated behind our back via the arguments
-         * object, so deoptimize if the outer function uses arguments.
-         *
-         * In a Function constructor call where the final argument -- the body
-         * source for the function to create -- contains a nested function
-         * definition or expression, afunbox->parent will be null. The body
-         * source might use |arguments| outside of any nested functions it may
-         * contain, so we have to check the tcflags parameter that was passed
-         * in from js::frontend::CompileFunctionBody.
-         */
-        if (dnKind == Definition::ARG &&
-            ((afunbox->parent ? afunbox->parent->tcflags : tcflags) & TCF_FUN_USES_ARGUMENTS)) {
-            return false;
-        }
-    }
-
-    /*
-     * Check quick-and-dirty dominance relation. Function definitions dominate
-     * their uses thanks to hoisting.  Other binding forms hoist as undefined,
-     * of course, so check forward-reference and blockid relations.
-     */
-    if (dnKind != Definition::FUNCTION) {
-        /*
-         * Watch out for code such as
-         *
-         *   (function () {
-         *   ...
-         *   var jQuery = ... = function (...) {
-         *       return new jQuery.foo.bar(baz);
-         *   }
-         *   ...
-         *   })();
-         *
-         * where the jQuery variable is not reassigned, but of course is not
-         * initialized at the time that the would-be-flat closure containing
-         * the jQuery upvar is formed.
-         */
-        if (dn->pn_pos.end >= afunbox->node->pn_pos.end)
-            return false;
-        if (!MinBlockId(afunbox->node, dn->pn_blockid))
-            return false;
-    }
-    return true;
-}
-
 static void
 FlagHeavyweights(Definition *dn, FunctionBox *funbox, uint32_t *tcflags)
 {
@@ -539,70 +384,31 @@ SetFunctionKinds(FunctionBox *funbox, uint32_t *tcflags, bool isDirectEval)
             JS_ASSERT(!fun->isNullClosure());
         } else {
             bool hasUpvars = false;
-            bool canFlatten = true;
 
             if (pn->isKind(PNK_UPVARS)) {
                 AtomDefnMapPtr upvars = pn->pn_names;
                 JS_ASSERT(!upvars->empty());
 
-                /*
-                 * For each lexical dependency from this closure to an outer
-                 * binding, analyze whether it is safe to copy the binding's
-                 * value into a flat closure slot when the closure is formed.
-                 */
+                /* Determine whether the this function contains upvars. */
                 for (AtomDefnRange r = upvars->all(); !r.empty(); r.popFront()) {
-                    Definition *defn = r.front().value();
-                    Definition *lexdep = defn->resolve();
-
-                    if (!lexdep->isFreeVar()) {
+                    if (!r.front().value()->resolve()->isFreeVar()) {
                         hasUpvars = true;
-                        if (!CanFlattenUpvar(lexdep, funbox, *tcflags)) {
-                            /*
-                             * Can't flatten. Enclosing functions holding
-                             * variables used by this function will be flagged
-                             * heavyweight below. FIXME bug 545759: re-enable
-                             * partial flat closures.
-                             */
-                            canFlatten = false;
-                            break;
-                        }
+                        break;
                     }
                 }
             }
 
-            /*
-             * Top-level functions, and (extension) functions not at top level
-             * which are also not directly within other functions, aren't
-             * flattened.
-             */
-            if (fn->isOp(JSOP_DEFFUN))
-                canFlatten = false;
-
             if (!hasUpvars) {
                 /* No lexical dependencies => null closure, for best performance. */
                 fun->setKind(JSFUN_NULL_CLOSURE);
-            } else if (canFlatten) {
-                fun->setKind(JSFUN_FLAT_CLOSURE);
-                switch (fn->getOp()) {
-                  case JSOP_DEFLOCALFUN:
-                    fn->setOp(JSOP_DEFLOCALFUN_FC);
-                    break;
-                  case JSOP_LAMBDA:
-                    fn->setOp(JSOP_LAMBDA_FC);
-                    break;
-                  default:
-                    /* js::frontend::EmitTree's PNK_FUNCTION case sets op. */
-                    JS_ASSERT(fn->isOp(JSOP_NOP));
-                }
             }
         }
 
         if (fun->kind() == JSFUN_INTERPRETED && pn->isKind(PNK_UPVARS)) {
             /*
-             * One or more upvars cannot be safely snapshot into a flat
-             * closure's non-reserved slot (see JSOP_GETFCSLOT), so we loop
-             * again over all upvars, and for each non-free upvar, ensure that
-             * its containing function has been flagged as heavyweight.
+             * We loop again over all upvars, and for each non-free upvar,
+             * ensure that its containing function has been flagged as
+             * heavyweight.
              *
              * The emitter must see TCF_FUN_HEAVYWEIGHT accurately before
              * generating any code for a tree of nested functions.

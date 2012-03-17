@@ -1575,7 +1575,7 @@ asserts(0-11) == 582146-1.html about:blank
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
-fuzzy-if(d2d,1,1051) fails-if(Android) fails-if(cocoaWidget) == 586683-1.html 586683-1-ref.html
+fuzzy-if(d2d,52,1051) fails-if(Android) fails-if(cocoaWidget) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
@@ -1695,3 +1695,4 @@ fuzzy-if(d2d,1,19) fuzzy-if(cocoaWidget,1,170) == 718521.html 718521-ref.html
 == 722923-1.html 722923-1-ref.html
 == 729143-1.html 729143-1-ref.html
 needs-focus == 731726-1.html 731726-1-ref.html
+== 735481-1.html 735481-1-ref.html

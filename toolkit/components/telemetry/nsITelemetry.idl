@@ -192,7 +192,8 @@ interface nsITelemetry : nsISupports
    * @param callback - function to process histogram information
    */
   void loadHistograms(in nsIFile file,
-                      in nsITelemetryLoadSessionDataCallback callback);
+                      in nsITelemetryLoadSessionDataCallback callback,
+                      in bool isSynchronous);
 
   /**
    * Set this to false to disable gathering of telemetry statistics.

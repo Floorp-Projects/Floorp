@@ -150,7 +150,7 @@ private:
                        const PRUnichar* aString, PRUint32 aLength,
                        const PRUint32 aFlags, nsStyleContext** aStyles,
                        bool aOwnsFactory)
-    : gfxTextRun(aParams, aString, aLength, aFontGroup, aFlags),
+    : gfxTextRun(aParams, aLength, aFontGroup, aFlags),
       mFactory(aFactory), mString(aString, aLength),
       mOwnsFactory(aOwnsFactory), mNeedsRebuild(true)
   {

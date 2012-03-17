@@ -267,6 +267,23 @@ protected:
     // in the src list
     LoadStatus LoadNext(gfxProxyFontEntry *aProxyEntry);
 
+    // helper method for creating a platform font
+    // returns font entry if platform font creation successful
+    // Ownership of aFontData is passed in here; the font set must
+    // ensure that it is eventually deleted with NS_Free().
+    gfxFontEntry* LoadFont(gfxProxyFontEntry *aProxy,
+                           const PRUint8 *aFontData, PRUint32 &aLength);
+
+    // parse data for a data URL
+    virtual nsresult SyncLoadFontData(gfxProxyFontEntry *aFontToLoad,
+                                      const gfxFontFaceSrc *aFontFaceSrc,
+                                      PRUint8* &aBuffer,
+                                      PRUint32 &aBufferLength)
+    {
+        // implemented in nsUserFontSet
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
     gfxMixedFontFamily *GetFamily(const nsAString& aName) const;
 
     // report a problem of some kind (implemented in nsUserFontSet)

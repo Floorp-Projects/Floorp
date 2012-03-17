@@ -1717,32 +1717,7 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
 
         if (fun->isNullClosure())
             Sprint(sp, " NULL_CLOSURE");
-        else if (fun->isFlatClosure())
-            Sprint(sp, " FLAT_CLOSURE");
 
-        JSScript *script = fun->script();
-        if (script->bindings.hasUpvars()) {
-            Sprint(sp, "\nupvars: {\n");
-
-            Vector<JSAtom *> localNames(cx);
-            if (!script->bindings.getLocalNameArray(cx, &localNames))
-                return false;
-
-            JSUpvarArray *uva = script->upvars();
-            unsigned upvar_base = script->bindings.countArgsAndVars();
-
-            for (uint32_t i = 0, n = uva->length; i < n; i++) {
-                JSAtom *atom = localNames[upvar_base + i];
-                UpvarCookie cookie = uva->vector[i];
-                JSAutoByteString printable;
-                if (js_AtomToPrintableString(cx, atom, &printable)) {
-                    Sprint(sp, "  %s: {skip:%u, slot:%u},\n",
-                           printable.ptr(), cookie.level(), cookie.slot());
-                }
-            }
-
-            Sprint(sp, "}");
-        }
         Sprint(sp, "\n");
     }
 

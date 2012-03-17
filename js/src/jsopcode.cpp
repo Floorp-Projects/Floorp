@@ -73,6 +73,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
+#include "vm/StringBuffer.h"
 
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
@@ -81,7 +82,6 @@
 #include "jsautooplen.h"
 
 #include "vm/RegExpObject-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 using namespace mozilla;
 using namespace js;
@@ -2530,15 +2530,6 @@ InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, unsigned depth)
     return JS_TRUE;
 }
 
-template <typename T>
-void
-Swap(T &a, T &b)
-{
-    T tmp = a;
-    a = b;
-    b = tmp;
-}
-
 /*
  * If nb is non-negative, decompile nb bytecodes starting at pc.  Otherwise
  * the decompiler starts at pc and continues until it reaches an opcode for
@@ -3520,55 +3511,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     return NULL;
                 todo = -2;
                 break;
-              }
-
-              case JSOP_GETFCSLOT:
-              case JSOP_CALLFCSLOT:
-              {
-                if (!jp->fun)
-                    jp->fun = jp->script->getCallerFunction();
-
-                if (!jp->localNames) {
-                    JS_ASSERT(fun == jp->fun);
-                    jp->localNames = cx->new_<Vector<JSAtom *> >(cx);
-                    if (!jp->localNames ||
-                        !jp->fun->script()->bindings.getLocalNameArray(cx, jp->localNames))
-                    {
-                        return NULL;
-                    }
-                }
-
-                unsigned index = GET_UINT16(pc);
-                if (index < jp->fun->script()->bindings.countUpvars()) {
-                    index += jp->fun->script()->bindings.countArgsAndVars();
-                } else {
-                    JSUpvarArray *uva;
-#ifdef DEBUG
-                    /*
-                     * We must be in an eval called from jp->fun, where
-                     * jp->script is the eval-compiled script.
-                     *
-                     * However, it's possible that a js_Invoke already
-                     * pushed a frame trying to call Construct on an
-                     * object that's not a constructor, causing us to be
-                     * called with an intervening frame on the stack.
-                     */
-                    StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
-                    if (fp) {
-                        while (!fp->isEvalFrame())
-                            fp = fp->prev();
-                        JS_ASSERT(fp->script() == jp->script);
-                        JS_ASSERT(fp->prev()->fun() == jp->fun);
-                        JS_ASSERT(jp->fun->isInterpreted());
-                        JS_ASSERT(jp->script != jp->fun->script());
-                        JS_ASSERT(JSScript::isValidOffset(jp->script->upvarsOffset));
-                    }
-#endif
-                    uva = jp->script->upvars();
-                    index = uva->vector[index].slot();
-                }
-                atom = GetArgOrVarAtom(jp, index);
-                goto do_name;
               }
 
               case JSOP_CALLLOCAL:
@@ -4710,7 +4652,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 break;
 
               case JSOP_LAMBDA:
-              case JSOP_LAMBDA_FC:
 #if JS_HAS_GENERATOR_EXPRS
                 sn = js_GetSrcNote(jp->script, pc);
                 if (sn && SN_TYPE(sn) == SRC_GENEXP) {
