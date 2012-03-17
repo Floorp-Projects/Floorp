@@ -378,7 +378,7 @@ public:
   virtual const char* Name() const { return "OGL"; }
 #endif // MOZ_LAYERS_HAVE_LOG
 
-  const nsIntSize& GetWigetSize() {
+  const nsIntSize& GetWidgetSize() {
     return mWidgetSize;
   }
 
