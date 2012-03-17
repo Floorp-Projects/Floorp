@@ -860,6 +860,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     , mGL(aGL)
     , mUseNearestFilter(aUseNearestFilter)
     , mTextureState(Created)
+    , mIterationCallback(nsnull)
 {
     mTileSize = mGL->WantsSmallTiles() ? 256 : mGL->GetMaxTextureSize();
     if (aSize != nsIntSize(0,0)) {
@@ -1053,11 +1054,24 @@ void TiledTextureImage::BeginTileIteration()
 
 bool TiledTextureImage::NextTile()
 {
+    bool continueIteration = true;
+
+    if (mIterationCallback)
+        continueIteration = mIterationCallback(this, mCurrentImage,
+                                               mIterationCallbackData);
+
     if (mCurrentImage + 1 < mImages.Length()) {
         mCurrentImage++;
-        return true;
+        return continueIteration;
     }
     return false;
+}
+
+void TiledTextureImage::SetIterationCallback(TileIterationCallback aCallback,
+                                             void* aCallbackData)
+{
+    mIterationCallback = aCallback;
+    mIterationCallbackData = aCallbackData;
 }
 
 nsIntRect TiledTextureImage::GetTileRect()

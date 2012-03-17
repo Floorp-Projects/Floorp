@@ -184,6 +184,18 @@ public:
         return false;
     };
 
+    // Function prototype for a tile iteration callback. Returning false will
+    // cause iteration to be interrupted (i.e. the corresponding NextTile call
+    // will return false).
+    typedef bool (* TileIterationCallback)(TextureImage* aImage,
+                                           int aTileNumber,
+                                           void* aCallbackData);
+
+    // Sets a callback to be called every time NextTile is called.
+    virtual void SetIterationCallback(TileIterationCallback aCallback,
+                                      void* aCallbackData) {
+    };
+
     virtual nsIntRect GetTileRect() {
         return nsIntRect(nsIntPoint(0,0), mSize);
     };
@@ -407,6 +419,8 @@ public:
     virtual PRUint32 GetTileCount();
     virtual void BeginTileIteration();
     virtual bool NextTile();
+    virtual void SetIterationCallback(TileIterationCallback aCallback,
+                                      void* aCallbackData);
     virtual nsIntRect GetTileRect();
     virtual GLuint GetTextureID() {
         return mImages[mCurrentImage]->GetTextureID();
@@ -417,6 +431,8 @@ public:
     virtual void ApplyFilter();
 protected:
     unsigned int mCurrentImage;
+    TileIterationCallback mIterationCallback;
+    void* mIterationCallbackData;
     nsTArray< nsRefPtr<TextureImage> > mImages;
     bool mInUpdate;
     nsIntSize mSize;
