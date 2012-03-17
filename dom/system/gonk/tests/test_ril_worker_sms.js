@@ -55,10 +55,12 @@ add_test(function test_nl_single_shift_tables_validity() {
 });
 
 /**
- * Verify GsmPDUHelper#_calculateLangEncodedSeptets() and
+ * Verify RadioInterfaceLayer#_countGsm7BitSeptets() and
  * GsmPDUHelper#writeStringAsSeptets() algorithm match each other.
  */
-add_test(function test_GsmPDUHelper__calculateLangEncodedSeptets() {
+add_test(function test_RadioInterfaceLayer__countGsm7BitSeptets() {
+  let ril = newRadioInterfaceLayer();
+
   let worker = newWorker({
     postRILMessage: function fakePostRILMessage(data) {
       // Do nothing
@@ -78,9 +80,9 @@ add_test(function test_GsmPDUHelper__calculateLangEncodedSeptets() {
 
   function do_check_calc(str, expectedCalcLen, lst, sst) {
     do_check_eq(expectedCalcLen,
-                helper._calculateLangEncodedSeptets(str,
-                                                    PDU_NL_LOCKING_SHIFT_TABLES[lst],
-                                                    PDU_NL_SINGLE_SHIFT_TABLES[sst]));
+                ril._countGsm7BitSeptets(str,
+                                         PDU_NL_LOCKING_SHIFT_TABLES[lst],
+                                         PDU_NL_SINGLE_SHIFT_TABLES[sst]));
 
     helper.resetOctetWritten();
     helper.writeStringAsSeptets(str, 0, lst, sst);
@@ -131,28 +133,18 @@ add_test(function test_GsmPDUHelper__calculateLangEncodedSeptets() {
 });
 
 /**
- * Verify GsmPDUHelper#calculateUserDataLength handles national language
+ * Verify RadioInterfaceLayer#calculateUserDataLength handles national language
  * selection correctly.
  */
-add_test(function test_GsmPDUHelper_calculateUserDataLength() {
-  let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
-      // Do nothing
-    },
-    postMessage: function fakePostMessage(message) {
-      // Do nothing
-    }
-  });
+add_test(function test_RadioInterfaceLayer__calculateUserDataLength() {
+  let ril = newRadioInterfaceLayer();
 
-  let helper = worker.GsmPDUHelper;
-  let calc = helper.calculateUserDataLength;
   function test_calc(str, expected, enabledGsmTableTuples) {
-    helper.enabledGsmTableTuples = enabledGsmTableTuples;
-    let options = {body: str};
-    calc.call(helper, options);
+    ril.enabledGsmTableTuples = enabledGsmTableTuples;
+    let options = ril._calculateUserDataLength(str);
 
     do_check_eq(expected[0], options.dcs);
-    do_check_eq(expected[1], options.encodedBodyLength);
+    do_check_eq(expected[1], options.encodedFullBodyLength);
     do_check_eq(expected[2], options.userDataHeaderLength);
     do_check_eq(expected[3], options.langIndex);
     do_check_eq(expected[4], options.langShiftIndex);
@@ -160,9 +152,9 @@ add_test(function test_GsmPDUHelper_calculateUserDataLength() {
 
   // Test UCS fallback
   // - No any default enabled nl tables
-  test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0, 0, 0], []);
+  test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0,], []);
   // - Character not defined in enabled nl tables
-  test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0, 0, 0], [[2, 2]]);
+  test_calc("A", [PDU_DCS_MSG_CODING_16BITS_ALPHABET, 2, 0,], [[2, 2]]);
 
   // With GSM default nl tables
   test_calc("A", [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 1, 0, 0, 0], [[0, 0]]);
@@ -207,6 +199,101 @@ add_test(function test_GsmPDUHelper_calculateUserDataLength() {
   //   fix, the best choice should be the second one.
   test_calc(ESCAPE + ESCAPE + ESCAPE + ESCAPE + ESCAPE + "\\",
             [PDU_DCS_MSG_CODING_7BITS_ALPHABET, 2, 0, 0, 0], [[3, 0], [0, 0]]);
+
+  run_next_test();
+});
+
+function generateStringOfLength(str, length) {
+  while (str.length < length) {
+    if (str.length < (length / 2)) {
+      str = str + str;
+    } else {
+      str = str + str.substr(0, length - str.length);
+    }
+  }
+
+  return str;
+}
+
+/**
+ * Verify RadioInterfaceLayer#_calculateUserDataLength7Bit multipart handling.
+ */
+add_test(function test_RadioInterfaceLayer__calculateUserDataLength7Bit_multipart() {
+  let ril = newRadioInterfaceLayer();
+
+  function test_calc(str, expected) {
+    let options = ril._calculateUserDataLength7Bit(str);
+
+    do_check_eq(expected[0], options.encodedFullBodyLength);
+    do_check_eq(expected[1], options.userDataHeaderLength);
+    do_check_eq(expected[2], options.segmentMaxSeq);
+  }
+
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT),
+            [PDU_MAX_USER_DATA_7BIT, 0, 1]);
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT + 1),
+            [PDU_MAX_USER_DATA_7BIT + 1, 5, 2]);
+
+  run_next_test();
+});
+
+/**
+ * Verify RadioInterfaceLayer#_fragmentText7Bit().
+ */
+add_test(function test_RadioInterfaceLayer__fragmentText7Bit() {
+  let ril = newRadioInterfaceLayer();
+
+  function test_calc(str, expected) {
+    let options = ril._fragmentText(str);
+    if (expected) {
+      do_check_eq(expected, options.segments.length);
+    } else {
+      do_check_eq(null, options.segments);
+    }
+  }
+
+  // Boundary checks
+  test_calc("");
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT));
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT + 1), 2);
+
+  // Escaped character
+  test_calc(generateStringOfLength("{", PDU_MAX_USER_DATA_7BIT / 2));
+  test_calc(generateStringOfLength("{", PDU_MAX_USER_DATA_7BIT / 2 + 1), 2);
+  // Escaped character cannot be separated
+  test_calc(generateStringOfLength("{", (PDU_MAX_USER_DATA_7BIT - 7) * 2 / 2), 3);
+
+  // Test headerLen, 7 = Math.ceil(6 * 8 / 7), 6 = headerLen + 1
+  test_calc(generateStringOfLength("A", PDU_MAX_USER_DATA_7BIT - 7));
+  test_calc(generateStringOfLength("A", (PDU_MAX_USER_DATA_7BIT - 7) * 2), 2);
+  test_calc(generateStringOfLength("A", (PDU_MAX_USER_DATA_7BIT - 7) * 3), 3);
+
+  run_next_test();
+});
+
+/**
+ * Verify RadioInterfaceLayer#_fragmentTextUCS2().
+ */
+add_test(function test_RadioInterfaceLayer__fragmentTextUCS2() {
+  let ril = newRadioInterfaceLayer();
+
+  function test_calc(str, expected) {
+    let options = ril._fragmentText(str);
+    if (expected) {
+      do_check_eq(expected, options.segments.length);
+    } else {
+      do_check_eq(null, options.segments);
+    }
+  }
+
+  // Boundary checks
+  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2));
+  test_calc(generateStringOfLength("\ua2db", PDU_MAX_USER_DATA_UCS2 + 1), 2);
+
+  // UCS2 character cannot be separated
+  ril.segmentRef16Bit = true;
+  test_calc(generateStringOfLength("\ua2db", (PDU_MAX_USER_DATA_UCS2 * 2 - 7) * 2 / 2), 3);
+  ril.segmentRef16Bit = false;
 
   run_next_test();
 });
@@ -386,6 +473,8 @@ function add_test_receiving_sms(expected, pdu) {
 }
 
 function test_receiving_7bit_alphabets(lst, sst) {
+  let ril = newRadioInterfaceLayer();
+
   let worker = newWriteHexOctetAsUint8Worker();
   let helper = worker.GsmPDUHelper;
   let buf = worker.Buf;
@@ -405,8 +494,7 @@ function test_receiving_7bit_alphabets(lst, sst) {
   for (let i = 0; i < text.length;) {
     let len = Math.min(70, text.length - i);
     let expected = text.substring(i, i + len);
-    let septets = helper._calculateLangEncodedSeptets(expected, langTable,
-                                                      langShiftTable);
+    let septets = ril._countGsm7BitSeptets(expected, langTable, langShiftTable);
     let rawBytes = get7bitRawBytes(expected);
     let pdu = compose7bitPdu(lst, sst, rawBytes, septets);
     add_test_receiving_sms(expected, pdu);

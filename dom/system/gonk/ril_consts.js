@@ -413,8 +413,12 @@ const PDU_MTI_SMS_STATUS_COMMAND  = 0x02;
 const PDU_MTI_SMS_SUBMIT          = 0x01;
 const PDU_MTI_SMS_DELIVER         = 0x00;
 
-// User Data max length in octets
+// User Data max length in septets
 const PDU_MAX_USER_DATA_7BIT = 160;
+// User Data max length in octets
+const PDU_MAX_USER_DATA_8BIT = 140;
+// User Data max length in chars
+const PDU_MAX_USER_DATA_UCS2 = 70;
 
 // DCS - Data Coding Scheme
 const PDU_DCS_MSG_CODING_7BITS_ALPHABET = 0x00;
