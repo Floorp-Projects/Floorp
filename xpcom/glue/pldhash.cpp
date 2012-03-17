@@ -234,13 +234,12 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
     PRUint32 nbytes;
 
 #ifdef DEBUG
-    if (entrySize > 10 * sizeof(void *)) {
+    if (entrySize > 16 * sizeof(void *)) {
         printf_stderr(
                 "pldhash: for the table at address %p, the given entrySize"
-                " of %lu %s favors chaining over double hashing.\n",
+                " of %lu definitely favors chaining over double hashing.\n",
                 (void *) table,
-                (unsigned long) entrySize,
-                (entrySize > 16 * sizeof(void*)) ? "definitely" : "probably");
+                (unsigned long) entrySize);
     }
 #endif
 
