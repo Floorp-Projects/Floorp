@@ -79,15 +79,6 @@ class nsILanguageAtomService;
 
 typedef struct _hb_blob_t hb_blob_t;
 
-// We should eliminate these synonyms when it won't cause many merge conflicts.
-#define FONT_STYLE_NORMAL              NS_FONT_STYLE_NORMAL
-#define FONT_STYLE_ITALIC              NS_FONT_STYLE_ITALIC
-#define FONT_STYLE_OBLIQUE             NS_FONT_STYLE_OBLIQUE
-
-// We should eliminate these synonyms when it won't cause many merge conflicts.
-#define FONT_WEIGHT_NORMAL             NS_FONT_WEIGHT_NORMAL
-#define FONT_WEIGHT_BOLD               NS_FONT_WEIGHT_BOLD
-
 #define FONT_MAX_SIZE                  2000.0
 
 #define NO_FONT_LANGUAGE_OVERRIDE      0
@@ -122,23 +113,13 @@ struct THEBES_API gfxFontStyle {
                  const nsString& aLanguageOverride);
     gfxFontStyle(const gfxFontStyle& aStyle);
 
-    // The style of font (normal, italic, oblique)
-    PRUint8 style : 7;
+    // the language (may be an internal langGroup code rather than an actual
+    // language code) specified in the document or element's lang property,
+    // or inferred from the charset
+    nsRefPtr<nsIAtom> language;
 
-    // Say that this font is a system font and therefore does not
-    // require certain fixup that we do for fonts from untrusted
-    // sources.
-    bool systemFont : 1;
-
-    // Say that this font is used for print or print preview.
-    bool printerFont : 1;
-
-    // The weight of the font: 100, 200, ... 900.
-    PRUint16 weight;
-
-    // The stretch of the font (the sum of various NS_FONT_STRETCH_*
-    // constants; see gfxFontConstants.h).
-    PRInt16 stretch;
+    // custom opentype feature settings
+    nsTArray<gfxFontFeature> featureSettings;
 
     // The logical size of the font, in pixels
     gfxFloat size;
@@ -148,11 +129,6 @@ struct THEBES_API gfxFontStyle {
     // rendering or measuring a string. A value of 0 means no adjustment
     // needs to be done.
     float sizeAdjust;
-
-    // the language (may be an internal langGroup code rather than an actual
-    // language code) specified in the document or element's lang property,
-    // or inferred from the charset
-    nsRefPtr<nsIAtom> language;
 
     // Language system tag, to override document language;
     // an OpenType "language system" tag represented as a 32-bit integer
@@ -166,8 +142,23 @@ struct THEBES_API gfxFontStyle {
     // in order to get correct glyph shapes.)
     PRUint32 languageOverride;
 
-    // custom opentype feature settings
-    nsTArray<gfxFontFeature> featureSettings;
+    // The weight of the font: 100, 200, ... 900.
+    PRUint16 weight;
+
+    // The stretch of the font (the sum of various NS_FONT_STRETCH_*
+    // constants; see gfxFontConstants.h).
+    PRInt8 stretch;
+
+    // Say that this font is a system font and therefore does not
+    // require certain fixup that we do for fonts from untrusted
+    // sources.
+    bool systemFont : 1;
+
+    // Say that this font is used for print or print preview.
+    bool printerFont : 1;
+
+    // The style of font (normal, italic, oblique)
+    PRUint8 style : 2;
 
     // Return the final adjusted font size for the given aspect ratio.
     // Not meant to be called when sizeAdjust = 0.
@@ -2558,7 +2549,8 @@ public:
     // Call this, don't call "new gfxTextRun" directly. This does custom
     // allocation and initialization
     static gfxTextRun *Create(const gfxTextRunFactory::Parameters *aParams,
-        const void *aText, PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
+                              PRUint32 aLength, gfxFontGroup *aFontGroup,
+                              PRUint32 aFlags);
 
     // The text is divided into GlyphRuns as necessary
     struct GlyphRun {
@@ -2780,7 +2772,7 @@ protected:
      * new, after allocating a block large enough for the glyph records to
      * follow the base textrun object.
      */
-    gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+    gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
                PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
     /**
@@ -3037,7 +3029,7 @@ protected:
      */
     gfxTextRun *MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags);
     gfxTextRun *MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags);
-    gfxTextRun *MakeBlankTextRun(const void* aText, PRUint32 aLength,
+    gfxTextRun *MakeBlankTextRun(PRUint32 aLength,
                                  const Parameters *aParams, PRUint32 aFlags);
 
     // Used for construction/destruction.  Not intended to change the font set

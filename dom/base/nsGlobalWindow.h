@@ -301,8 +301,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsWrapperCache
-  JSObject *WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
-                       bool *triedToWrap)
+  JSObject *WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
   {
     NS_ASSERTION(IsOuterWindow(),
                  "Inner window supports nsWrapperCache, fix WrapObject!");

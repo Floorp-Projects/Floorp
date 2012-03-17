@@ -45,7 +45,7 @@ interface nsIURI;
  * and exporting Places data.
  */
 
-[scriptable, uuid(47a4a09e-c708-4e68-b2f2-664d982ce026)]
+[scriptable, uuid(08f4626e-af3f-4e84-bd01-cf09175c4f94)]
 interface nsIPlacesImportExportService: nsISupports
 {
   /**
@@ -68,21 +68,6 @@ interface nsIPlacesImportExportService: nsISupports
    * Same thing as importHTMLFromFile, but takes a URI instead
    */
   void importHTMLFromURI(in nsIURI aURI, in boolean aIsInitialImport);
-
-  /**
-   * Loads the given bookmarks.html file and puts it in the given folder
-   *
-   * Three nsIObserverService notifications are fired as a result of the
-   * import.  "bookmarks-restore-begin" is fired just before the import is
-   * started.  "bookmarks-restore-success" is fired right after the
-   * bookmarks are successfully imported.  "bookmarks-restore-failed" is
-   * fired right after a failure occurs when importing the bookmarks.
-   * Observers will be passed through their data parameters either "html"
-   * if aIsInitialImport is false or "html-initial" if aIsInitialImport is
-   * true.  The observer subject will be an nsISupportsPRInt64 whose value
-   * is aFolder.
-   */
-  void importHTMLFromFileToFolder(in nsILocalFile aFile, in PRInt64 aFolder, in boolean aIsInitialImport);
 
   /**
    * Saves the current bookmarks hierarchy to a bookmarks.html file.

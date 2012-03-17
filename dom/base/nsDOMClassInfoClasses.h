@@ -350,6 +350,7 @@ DOMCI_CLASS(CanvasRenderingContext2D)
 DOMCI_CLASS(CanvasGradient)
 DOMCI_CLASS(CanvasPattern)
 DOMCI_CLASS(TextMetrics)
+DOMCI_CLASS(ImageData)
 
 // SmartCard Events
 DOMCI_CLASS(SmartCardEvent)
@@ -422,7 +423,6 @@ DOMCI_CLASS(MessageEvent)
 DOMCI_CLASS(GeoGeolocation)
 DOMCI_CLASS(GeoPosition)
 DOMCI_CLASS(GeoPositionCoords)
-DOMCI_CLASS(GeoPositionAddress)
 DOMCI_CLASS(GeoPositionError)
 
 DOMCI_CLASS(MozBatteryManager)

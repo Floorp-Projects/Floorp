@@ -47,6 +47,7 @@ XPIDL_MODULE	= xpcom_io
 LIBRARY_NAME	= xpcomio_s
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API = 1
+LIBXUL_LIBRARY  = 1
 
 # work around bug 408258
 ifdef GNU_CC 

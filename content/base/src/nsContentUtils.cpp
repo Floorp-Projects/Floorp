@@ -83,7 +83,6 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIXMLContentSink.h"
 #include "nsHTMLParts.h"
-#include "nsIParserService.h"
 #include "nsIServiceManager.h"
 #include "nsIAttribute.h"
 #include "nsContentList.h"
@@ -124,7 +123,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIWordBreaker.h"
 #include "nsUnicodeProperties.h"
 #include "harfbuzz/hb-common.h"
-#include "jsdbgapi.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsBindingManager.h"
@@ -146,7 +144,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsCompressedCharMap.h"
 #include "nsINativeKeyBindings.h"
 #include "nsIDOMNSEvent.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsXULPopupManager.h"
 #include "nsIPermissionManager.h"
 #include "nsIContentPrefService.h"
@@ -159,7 +156,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDragService.h"
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsCPrefetchService.h"
 #include "nsIChromeRegistry.h"
@@ -216,7 +212,9 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsCharSeparatedTokenizer.h"
-#include "nsUnicharUtils.h"
+
+extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
+                                      const char** next, PRUnichar* result);
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -792,9 +790,6 @@ nsContentUtils::GetPseudoAttributeValue(const nsString& aSource, nsIAtom *aName,
     // the value is between start and iter.
 
     if (aName->Equals(attrName)) {
-      nsIParserService* parserService = nsContentUtils::GetParserService();
-      NS_ENSURE_TRUE(parserService, false);
-
       // We'll accumulate as many characters as possible (until we hit either
       // the end of the string or the beginning of an entity). Chunks will be
       // delimited by start and chunkEnd.
@@ -812,10 +807,13 @@ nsContentUtils::GetPseudoAttributeValue(const nsString& aSource, nsIAtom *aName,
           // Point to first character after the ampersand.
           ++chunkEnd;
 
-          const PRUnichar *afterEntity;
+          const PRUnichar *afterEntity = nsnull;
           PRUnichar result[2];
           PRUint32 count =
-            parserService->DecodeEntity(chunkEnd, iter, &afterEntity, result);
+            MOZ_XMLTranslateEntity(reinterpret_cast<const char*>(chunkEnd),
+                                  reinterpret_cast<const char*>(iter),
+                                  reinterpret_cast<const char**>(&afterEntity),
+                                  result);
           if (count == 0) {
             aValue.Truncate();
 

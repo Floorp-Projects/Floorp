@@ -144,7 +144,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         functionProto->flags |= JSFUN_PROTOTYPE;
 
         JSScript *script =
-            JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, JSVERSION_DEFAULT);
+            JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, JSVERSION_DEFAULT);
         if (!script)
             return NULL;
         script->noScriptRval = true;

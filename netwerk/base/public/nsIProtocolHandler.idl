@@ -242,6 +242,12 @@ interface nsIProtocolHandler : nsISupports
     // Note that 1 << 14 is used above
 
     /**
+     * Channels for this protocol don't need to spin the event loop to handle
+     * Open() and reads on the resulting stream.
+     */
+    const unsigned long URI_SYNC_LOAD_IS_OK = (1<<15);
+
+    /**
      * This protocol handler can be proxied via a proxy (socks or http)
      * (e.g., irc, smtp, http, etc.).  If the protocol supports transparent
      * proxying, the handler should implement nsIProxiedProtocolHandler.

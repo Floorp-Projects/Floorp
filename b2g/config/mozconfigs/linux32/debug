@@ -1,0 +1,21 @@
+#GONK_TOOLCHAIN_VERSION=0
+#export GONK_PRODUCT=generic
+#gonk="/home/cjones/mozilla/gonk-toolchain-$GONK_TOOLCHAIN_VERSION"
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-b2g
+
+mk_add_options MOZ_MAKE_FLAGS="-j8"
+
+ac_add_options --enable-application=b2g
+
+ac_add_options --target=arm-android-eabi
+ac_add_options --with-gonk="$gonk"
+ac_add_options --with-endian=little
+ac_add_options --disable-elf-hack
+ac_add_options --enable-debug-symbols
+ac_add_options --enable-profiling
+ac_add_options --with-ccache
+ac_add_options --enable-marionette
+
+# Enable dump() from JS.
+export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP

@@ -5,6 +5,7 @@
 #include "base/platform_thread.h"
 
 #import <Foundation/Foundation.h>
+#include <dlfcn.h>
 
 #include "base/logging.h"
 #include "base/scoped_nsautorelease_pool.h"
@@ -51,3 +52,26 @@ void InitThreading() {
 }
 
 }  // namespace base
+
+// static
+void PlatformThread::SetName(const char* name) {
+  // pthread_setname_np is only available in 10.6 or later, so test
+  // for it at runtime.
+  int (*dynamic_pthread_setname_np)(const char*);
+  *reinterpret_cast<void**>(&dynamic_pthread_setname_np) =
+      dlsym(RTLD_DEFAULT, "pthread_setname_np");
+  if (!dynamic_pthread_setname_np)
+    return;
+
+  // Mac OS X does not expose the length limit of the name, so
+  // hardcode it.
+  const int kMaxNameLength = 63;
+  std::string shortened_name = std::string(name).substr(0, kMaxNameLength);
+  // pthread_setname() fails (harmlessly) in the sandbox, ignore when it does.
+  // See http://crbug.com/47058
+
+  // The name parameter is copied thus it's safe to release it after calling.
+  // Checked against the bionic implementation in bionic/libc/bionic/pthread.c
+  dynamic_pthread_setname_np(shortened_name.c_str());
+}
+

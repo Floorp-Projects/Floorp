@@ -471,16 +471,6 @@ class Value
         return JSVAL_IS_MAGIC_IMPL(data);
     }
 
-    /*
-     * Although the Value class comment says 'magic' is a singleton type, it is
-     * technically possible to use the payload. This should be avoided to
-     * preserve the ability for the strong assertions in isMagic().
-     */
-    JS_ALWAYS_INLINE
-    bool isParticularMagic(JSWhyMagic why) const {
-        return isMagic() && data.s.payload.why == why;
-    }
-
     JS_ALWAYS_INLINE
     bool isMarkable() const {
         return JSVAL_IS_TRACEABLE_IMPL(data);

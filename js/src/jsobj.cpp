@@ -81,6 +81,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "vm/StringBuffer.h"
 #include "js/MemoryMetrics.h"
 
 #include "jsarrayinlines.h"
@@ -91,7 +92,6 @@
 #include "jsscriptinlines.h"
 
 #include "vm/MethodGuard-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -5751,9 +5751,10 @@ js_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBoo
 namespace js {
 
 bool
-HasDataProperty(JSContext *cx, JSObject *obj, jsid methodid, Value *vp)
+HasDataProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    if (const Shape *shape = obj->nativeLookup(cx, methodid)) {
+    JS_ASSERT(id == js_CheckForStringIndex(id));
+    if (const Shape *shape = obj->nativeLookup(cx, id)) {
         if (shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
             *vp = obj->nativeGetSlot(shape->slot());
             return true;

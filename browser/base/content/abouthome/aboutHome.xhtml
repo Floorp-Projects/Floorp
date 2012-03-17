@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is aboutHome.xhtml.
+#
+# The Initial Developer of the Original Code is the Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Marco Bonardo <mak77@bonardo.net> (original author)
+#   Mihai Sucan <mihai.sucan@gmail.com>
+#   Stephen Horlander <shorlander@mozilla.com>
+#   Frank Yan <fyan@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % aboutHomeDTD SYSTEM "chrome://browser/locale/aboutHome.dtd">
+  %aboutHomeDTD;
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+  %browserDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&abouthome.pageTitle;</title>
+
+    <link rel="icon" type="image/png" id="favicon"
+          href="chrome://branding/content/icon16.png"/>
+    <link rel="stylesheet" type="text/css" media="all"
+          href="chrome://browser/content/abouthome/aboutHome.css"/>
+
+    <script type="text/javascript;version=1.8"
+            src="chrome://browser/content/abouthome/aboutHome.js"/>
+  </head>
+
+  <body dir="&locale.dir;" onload="onLoad(event)">
+    <div id="container">
+      <div class="spacer"/>
+      <div id="topSection">
+        <img id="brandLogo" src="chrome://branding/content/about-logo.png" alt=""/>
+
+        <div id="searchContainer">
+          <form name="searchForm" id="searchForm" onsubmit="onSearchSubmit(event)">
+            <div id="searchLogoContainer"><img id="searchEngineLogo"/></div>
+            <input type="text" name="q" value="" id="searchText" maxlength="256"/>
+            <input id="searchSubmit" type="submit" value="&abouthome.searchEngineButton.label;"/>
+          </form>
+        </div>
+
+        <div id="snippetContainer">
+          <div id="defaultSnippets" hidden="true">
+            <span id="defaultSnippet1">&abouthome.defaultSnippet1.v1;</span>
+            <span id="defaultSnippet2">&abouthome.defaultSnippet2.v1;</span>
+          </div>
+          <div id="snippets"/>
+        </div>
+      </div>
+      <div class="spacer"/>
+
+      <div id="launcher" session="true">
+        <button class="launchButton" id="bookmarks">&abouthome.bookmarksButton.label;</button>
+        <button class="launchButton" id="history">&abouthome.historyButton.label;</button>
+        <button class="launchButton" id="settings">&abouthome.settingsButton.label;</button>
+        <button class="launchButton" id="addons">&abouthome.addonsButton.label;</button>
+        <button class="launchButton" id="downloads">&abouthome.downloadsButton.label;</button>
+        <button class="launchButton" id="sync">&syncBrand.shortName.label;</button>
+        <div id="restorePreviousSessionSeparator"/>
+        <button class="launchButton" id="restorePreviousSession">&historyRestoreLastSession.label;</button>
+      </div>
+
+      <a id="aboutMozilla" href="http://www.mozilla.com/about/"/>
+    </div>
+  </body>
+</html>

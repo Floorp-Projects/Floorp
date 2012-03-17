@@ -65,13 +65,6 @@ js_PutCallObject(StackFrame *fp)
     JS_ASSERT_IF(fp->isEvalFrame(), fp->isStrictEvalFrame());
     JS_ASSERT(fp->isEvalFrame() == callobj.isForEval());
 
-    /* Get the arguments object to snapshot fp's actual argument values. */
-    if (fp->hasArgsObj()) {
-        if (callobj.arguments().isMagic(JS_UNASSIGNED_ARGUMENTS))
-            callobj.setArguments(ObjectValue(fp->argsObj()));
-        js_PutArgsObject(fp);
-    }
-
     JSScript *script = fp->script();
     Bindings &bindings = script->bindings;
 
@@ -86,7 +79,7 @@ js_PutCallObject(StackFrame *fp)
         JS_ASSERT(script == callobj.getCalleeFunction()->script());
         JS_ASSERT(script == fun->script());
 
-        unsigned n = bindings.countArgsAndVars();
+        unsigned n = bindings.countLocalNames();
         if (n > 0) {
             uint32_t nvars = bindings.countVars();
             uint32_t nargs = bindings.countArgs();
@@ -253,6 +246,8 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
 
     callobj->setStackFrame(fp);
     fp->setScopeChainWithOwnCallObj(*callobj);
+    if (fp->hasArgsObj())
+        callobj->setArguments(ObjectValue(fp->argsObj()));
     return callobj;
 }
 
@@ -271,26 +266,29 @@ CallObject::createForStrictEval(JSContext *cx, StackFrame *fp)
 JSBool
 CallObject::getArgumentsOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    CallObject &callobj = obj->asCall();
+    *vp = obj->asCall().arguments();
 
-    StackFrame *fp = callobj.maybeStackFrame();
-    if (fp && callobj.arguments().isMagic(JS_UNASSIGNED_ARGUMENTS)) {
-        JSObject *argsobj = js_GetArgsObject(cx, fp);
-        if (!argsobj)
+    /*
+     * This can only happen through eval-in-frame. Eventually, this logic can
+     * be hoisted into debugger scope wrappers. That will allow 'arguments' to
+     * be a pure data property and allow call_resolve to be removed.
+     */
+    if (vp->isMagic(JS_UNASSIGNED_ARGUMENTS)) {
+        StackFrame *fp = obj->asCall().maybeStackFrame();
+        ArgumentsObject *argsObj = ArgumentsObject::createUnexpected(cx, fp);
+        if (!argsObj)
             return false;
-        vp->setObject(*argsobj);
-    } else {
-        /* Nested functions cannot get the 'arguments' of enclosing scopes. */
-        JS_ASSERT(!callobj.arguments().isMagic(JS_UNASSIGNED_ARGUMENTS));
-        *vp = callobj.arguments();
+
+        *vp = ObjectValue(*argsObj);
+        obj->asCall().setArguments(*vp);
     }
+
     return true;
 }
 
 JSBool
 CallObject::setArgumentsOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
-    /* Nested functions cannot set the 'arguments' of enclosing scopes. */
     JS_ASSERT(obj->asCall().maybeStackFrame());
     obj->asCall().setArguments(*vp);
     return true;
@@ -333,28 +331,6 @@ CallObject::setArgOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value
 }
 
 JSBool
-CallObject::getUpvarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
-{
-    CallObject &callobj = obj->asCall();
-    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    unsigned i = (uint16_t) JSID_TO_INT(id);
-
-    *vp = callobj.getCallee()->toFunction()->getFlatClosureUpvar(i);
-    return true;
-}
-
-JSBool
-CallObject::setUpvarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
-{
-    CallObject &callobj = obj->asCall();
-    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
-    unsigned i = (uint16_t) JSID_TO_INT(id);
-
-    callobj.getCallee()->toFunction()->setFlatClosureUpvar(i, *vp);
-    return true;
-}
-
-JSBool
 CallObject::getVarOp(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
@@ -388,6 +364,22 @@ CallObject::setVarOp(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value
 
     TypeScript::SetLocal(cx, script, i, *vp);
 
+    return true;
+}
+
+bool
+CallObject::containsVarOrArg(PropertyName *name, Value *vp, JSContext *cx)
+{
+    jsid id = ATOM_TO_JSID(name);
+    const Shape *shape = nativeLookup(cx, id);
+    if (!shape)
+        return false;
+
+    PropertyOp op = shape->getterOp();
+    if (op != getVarOp && op != getArgOp)
+        return false;
+
+    JS_ALWAYS_TRUE(op(cx, this, INT_TO_JSID(shape->shortid()), vp));
     return true;
 }
 
@@ -869,6 +861,19 @@ block_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *v
      * The value in *vp will be written back to the slot in obj that was
      * allocated when this let binding was defined.
      */
+    return true;
+}
+
+bool
+ClonedBlockObject::containsVar(PropertyName *name, Value *vp, JSContext *cx)
+{
+    jsid id = ATOM_TO_JSID(name);
+    const Shape *shape = nativeLookup(cx, id);
+    if (!shape)
+        return false;
+
+    JS_ASSERT(shape->getterOp() == block_getProperty);
+    JS_ALWAYS_TRUE(block_getProperty(cx, this, INT_TO_JSID(shape->shortid()), vp));
     return true;
 }
 

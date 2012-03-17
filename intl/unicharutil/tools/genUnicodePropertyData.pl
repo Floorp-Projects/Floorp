@@ -133,10 +133,12 @@ my @combining;
 my @eaw;
 my @mirror;
 my @hangul;
+my @casemap;
 for (my $i = 0; $i < 0x110000; ++$i) {
     $script[$i] = $scriptCode{"UNKNOWN"};
     $category[$i] = $catCode{"UNASSIGNED"};
     $combining[$i] = 0;
+    $casemap[$i] = 0;
 }
 
 my %ucd2hb = (
@@ -181,9 +183,16 @@ while (<FH>) {
 }
 close FH;
 
+my $kTitleToUpper = 0x80000000;
+my $kUpperToLower = 0x40000000;
+my $kLowerToTitle = 0x20000000;
+my $kLowerToUpper = 0x10000000;
+my $kCaseMapCharMask = 0x001fffff;
+
 # read UnicodeData.txt
 open FH, "< $ARGV[1]/UnicodeData.txt" or die "can't open UCD file UnicodeData.txt\n";
 while (<FH>) {
+    chomp;
     my @fields = split /;/;
     if ($fields[1] =~ /First/) {
         my $first = hex "0x$fields[0]";
@@ -203,6 +212,27 @@ while (<FH>) {
         my $usv = hex "0x$fields[0]";
         $category[$usv] = $catCode{$ucd2hb{$fields[2]}};
         $combining[$usv] = $fields[3];
+        my $upper = hex $fields[12];
+        my $lower = hex $fields[13];
+        my $title = hex $fields[14];
+        # we only store one mapping for each character,
+        # but also record what kind of mapping it is
+        if ($upper && $lower) {
+            $casemap[$usv] |= $kTitleToUpper;
+            $casemap[$usv] |= ($usv ^ $upper);
+        }
+        elsif ($lower) {
+            $casemap[$usv] |= $kUpperToLower;
+            $casemap[$usv] |= ($usv ^ $lower);
+        }
+        elsif ($title && ($title != $upper)) {
+            $casemap[$usv] |= $kLowerToTitle;
+            $casemap[$usv] |= ($usv ^ $title);
+        }
+        elsif ($upper) {
+            $casemap[$usv] |= $kLowerToUpper;
+            $casemap[$usv] |= ($usv ^ $upper);
+        }
     }
 }
 close FH;
@@ -393,7 +423,7 @@ sub sprintScript
   my $usv = shift;
   return sprintf("%d,", $script[$usv]);
 }
-&genTables("Script", "PRUint8", 10, 6, \&sprintScript, 1);
+&genTables("Script", "PRUint8", 10, 6, \&sprintScript, 16);
 
 sub sprintCC
 {
@@ -423,7 +453,7 @@ sub sprintCatEAW
   return sprintf("{%d,%d},", $eaw[$usv], $category[$usv]);
 }
 &genTables("CatEAW", "struct {\n  unsigned char mEAW:3;\n  unsigned char mCategory:5;\n}",
-           9, 7, \&sprintCatEAW, 1);
+           9, 7, \&sprintCatEAW, 16);
 
 sub sprintHangulType
 {
@@ -432,10 +462,24 @@ sub sprintHangulType
 }
 &genTables("Hangul", "PRUint8", 10, 6, \&sprintHangulType, 0);
 
+sub sprintCasemap
+{
+  my $usv = shift;
+  return sprintf("0x%08x,", $casemap[$usv]);
+}
+&genTables("CaseMap", "PRUint32", 11, 5, \&sprintCasemap, 1);
+
+printf DATA_TABLES "const PRUint32 kTitleToUpper = 0x%08x;\n", $kTitleToUpper;
+printf DATA_TABLES "const PRUint32 kUpperToLower = 0x%08x;\n", $kUpperToLower;
+printf DATA_TABLES "const PRUint32 kLowerToTitle = 0x%08x;\n", $kLowerToTitle;
+printf DATA_TABLES "const PRUint32 kLowerToUpper = 0x%08x;\n", $kLowerToUpper;
+printf DATA_TABLES "const PRUint32 kCaseMapCharMask = 0x%08x;\n\n", $kCaseMapCharMask;
+
 sub genTables
 {
-  my ($prefix, $type, $indexBits, $charBits, $func, $smp) = @_;
+  my ($prefix, $type, $indexBits, $charBits, $func, $maxPlane) = @_;
 
+  print DATA_TABLES "#define k${prefix}MaxPlane  $maxPlane\n";
   print DATA_TABLES "#define k${prefix}IndexBits $indexBits\n";
   print DATA_TABLES "#define k${prefix}CharBits  $charBits\n";
 
@@ -446,8 +490,8 @@ sub genTables
   my @pageMap = ();
   my @char = ();
   
-  my $planeMap = "\x00" x 16;
-  foreach my $plane (0 .. ($smp ? 16 : 0)) {
+  my $planeMap = "\x00" x $maxPlane;
+  foreach my $plane (0 .. $maxPlane) {
     my $pageMap = "\x00" x $indexLen * 2;
     foreach my $page (0 .. $indexLen - 1) {
         my $charValues = "";
@@ -473,8 +517,8 @@ sub genTables
     }
   }
 
-  if ($smp) {
-    print DATA_TABLES "static const PRUint8 s${prefix}Planes[16] = {";
+  if ($maxPlane) {
+    print DATA_TABLES "static const PRUint8 s${prefix}Planes[$maxPlane] = {";
     print DATA_TABLES join(',', map { sprintf("%d", $_) } unpack('C*', $planeMap));
     print DATA_TABLES "};\n\n";
   }
@@ -498,7 +542,9 @@ sub genTables
   }
   print DATA_TABLES "};\n\n";
 
-  print STDERR "Data for $prefix = ", $pmCount*$indexLen*$pmBits/8 + $chCount*$dataLen + 16, "\n";
+  print STDERR "Data for $prefix = ", $pmCount*$indexLen*$pmBits/8 +
+                                      $chCount*$dataLen*(($type =~ /32/) ? 4 : 1) +
+                                      $maxPlane, "\n";
 }
 
 print DATA_TABLES <<__END;

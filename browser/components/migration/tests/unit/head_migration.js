@@ -22,7 +22,3 @@ function newMigratorFor(aKey) {
   let cid = "@mozilla.org/profile/migrator;1?app=browser&type=" + aKey;
   return Cc[cid].createInstance(Ci.nsIBrowserProfileMigrator);
 }
-
-let (bookmarkshtml = do_get_file("bookmarks.html")) {
-  bookmarkshtml.copyTo(gProfD, "bookmarks.html");
-}

@@ -93,8 +93,7 @@ public:
   // nsIContent is that it exists with an IID
 
   nsIContent(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsINode(aNodeInfo),
-      mPrimaryFrame(nsnull)
+    : nsINode(aNodeInfo)
   {
     NS_ASSERTION(mNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
@@ -859,8 +858,12 @@ public:
    * In the case of absolutely positioned elements and floated elements, this
    * frame is the out of flow frame, not the placeholder.
    */
-  nsIFrame* GetPrimaryFrame() const { return mPrimaryFrame; }
+  nsIFrame* GetPrimaryFrame() const
+  {
+    return IsInDoc() ? mPrimaryFrame : nsnull;
+  }
   void SetPrimaryFrame(nsIFrame* aFrame) {
+    NS_ASSERTION(IsInDoc(), "This will end badly!");
     NS_PRECONDITION(!aFrame || !mPrimaryFrame || aFrame == mPrimaryFrame,
                     "Losing track of existing primary frame");
     mPrimaryFrame = aFrame;
@@ -961,11 +964,6 @@ private:
    * called if the NODE_MAY_HAVE_CLASS flag is set.
    */
   virtual const nsAttrValue* DoGetClasses() const = 0;
-
-  /**
-   * Pointer to our primary frame.  Might be null.
-   */
-  nsIFrame* mPrimaryFrame;
 
 public:
 #ifdef DEBUG

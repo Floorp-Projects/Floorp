@@ -21,6 +21,7 @@ import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
+import org.mozilla.gecko.sync.net.ConnectionMonitorThread;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 
@@ -290,12 +291,20 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
       // notify us in a failure case. Oh, concurrent programming.
       new Thread(fetchAuthToken).start();
 
+      // Start our stale connection monitor thread.
+      ConnectionMonitorThread stale = new ConnectionMonitorThread();
+      stale.start();
+
       Log.i(LOG_TAG, "Waiting on sync monitor.");
       try {
         syncMonitor.wait();
         long next = System.currentTimeMillis() + MINIMUM_SYNC_INTERVAL_MILLISECONDS;
         Log.i(LOG_TAG, "Setting minimum next sync time to " + next);
         extendEarliestNextSync(next);
+
+        // And we're done with HTTP stuff.
+        stale.shutdown();
+
       } catch (InterruptedException e) {
         Log.i(LOG_TAG, "Waiting on sync monitor interrupted.", e);
       }
@@ -329,6 +338,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
     Log.i(LOG_TAG, "Performing sync.");
     this.syncResult   = syncResult;
     this.localAccount = account;
+
     // TODO: default serverURL.
     GlobalSession globalSession = new GlobalSession(SyncConfiguration.DEFAULT_USER_API,
                                                     serverURL, username, password, prefsPath,
@@ -420,6 +430,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   public synchronized void setClientsCount(int clientsCount) {
     mAccountManager.setUserData(localAccount, Constants.NUM_CLIENTS,
         Integer.toString(clientsCount));
+  }
+
+  @Override
+  public boolean isLocalGUID(String guid) {
+    return getAccountGUID().equals(guid);
   }
 
   @Override

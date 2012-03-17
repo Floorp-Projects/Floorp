@@ -9,33 +9,61 @@ var EXPORTED_SYMBOLS = [ "Promise" ];
 
 /**
  * Create an unfulfilled promise
+ *
+ * @param {*=} aTrace A debugging value
+ *
  * @constructor
  */
-function Promise() {
+function Promise(aTrace) {
   this._status = Promise.PENDING;
   this._value = undefined;
   this._onSuccessHandlers = [];
   this._onErrorHandlers = [];
+  this._trace = aTrace;
 
   // Debugging help
-  this._id = Promise._nextId++;
-  Promise._outstanding[this._id] = this;
+  if (Promise.Debug._debug) {
+    this._id = Promise.Debug._nextId++;
+    Promise.Debug._outstanding[this._id] = this;
+  }
 }
 
 /**
- * We give promises and ID so we can track which are outstanding
+ * Debugging options and tools.
  */
-Promise._nextId = 0;
+Promise.Debug = {
+  /**
+   * Set current debugging mode.
+   *
+   * @param {boolean} value If |true|, maintain _nextId, _outstanding, _recent.
+   * Otherwise, cleanup debugging data.
+   */
+  setDebug: function(value) {
+    Promise.Debug._debug = value;
+    if (!value) {
+      Promise.Debug._outstanding = [];
+      Promise.Debug._recent = [];
+    }
+  },
 
-/**
- * Outstanding promises. Handy list for debugging only
- */
-Promise._outstanding = [];
+  _debug: false,
 
-/**
- * Recently resolved promises. Also for debugging only
- */
-Promise._recent = [];
+  /**
+   * We give promises and ID so we can track which are outstanding.
+   */
+  _nextId: 0,
+
+  /**
+   * Outstanding promises. Handy for debugging (only).
+   */
+  _outstanding: [],
+
+  /**
+   * Recently resolved promises. Also for debugging only.
+   */
+  _recent: []
+};
+
 
 /**
  * A promise can be in one of 2 states.
@@ -140,12 +168,49 @@ Promise.prototype.reject = function(data) {
 Promise.prototype._complete = function(list, status, data, name) {
   // Complain if we've already been completed
   if (this._status != Promise.PENDING) {
-    if (typeof 'console' === 'object') {
-      console.error('Promise complete. Attempted ' + name + '() with ', data);
-      console.error('Prev status = ', this._status, ', value = ', this._value);
-    }
+    Promise._error("Promise complete.", "Attempted ", name, "() with ", data);
+    Promise._error("Previous status: ", this._status, ", value =", this._value);
     throw new Error('Promise already complete');
   }
+
+  if (list.length == 0 && status == Promise.ERROR) {
+    var frame;
+    var text;
+
+    //Complain if a rejection is ignored
+    //(this is the equivalent of an empty catch-all clause)
+    Promise._error("Promise rejection ignored and silently dropped", data);
+    if (data.stack) {// This looks like an exception. Try harder to display it
+      if (data.fileName && data.lineNumber) {
+        Promise._error("Error originating at", data.fileName,
+                       ", line", data.lineNumber );
+      }
+      try {
+        for (frame = data.stack; frame; frame = frame.caller) {
+          text += frame + "\n";
+        }
+        Promise._error("Attempting to extract exception stack", text);
+      } catch (x) {
+        Promise._error("Could not extract exception stack.");
+      }
+    } else {
+      Promise._error("Exception stack not available.");
+    }
+    if (Components && Components.stack) {
+      try {
+        text = "";
+        for (frame = Components.stack; frame; frame = frame.caller) {
+          text += frame + "\n";
+        }
+        Promise._error("Attempting to extract current stack", text);
+      } catch (x) {
+        Promise._error("Could not extract current stack.");
+      }
+    } else {
+      Promise._error("Current stack not available.");
+    }
+  }
+
 
   this._status = status;
   this._value = data;
@@ -159,7 +224,7 @@ Promise.prototype._complete = function(list, status, data, name) {
 
   // Remove the given {promise} from the _outstanding list, and add it to the
   // _recent list, pruning more than 20 recent promises from that list
-  delete Promise._outstanding[this._id];
+  delete Promise.Debug._outstanding[this._id];
   // The original code includes this very useful debugging aid, however there
   // is concern that it will create a memory leak, so we leave it out here.
   /*
@@ -171,6 +236,33 @@ Promise.prototype._complete = function(list, status, data, name) {
 
   return this;
 };
+
+/**
+ * Log an error on the most appropriate channel.
+ *
+ * If the console is available, this method uses |console.warn|. Otherwise,
+ * this method falls back to |dump|.
+ *
+ * @param {...*} items Items to log.
+ */
+Promise._error = null;
+if (typeof console != "undefined" && console.warn) {
+  Promise._error = function() {
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift("Promise");
+    console.warn.call(console, args);
+  };
+} else {
+  Promise._error = function() {
+    var i;
+    var len = arguments.length;
+    dump("Promise: ");
+    for (i = 0; i < len; ++i) {
+      dump(arguments[i]+" ");
+    }
+    dump("\n");
+  };
+}
 
 /**
  * Takes an array of promises and returns a promise that that is fulfilled once
@@ -212,4 +304,106 @@ Promise.group = function(promiseList) {
   });
 
   return groupPromise;
+};
+
+/**
+ * Trap errors.
+ *
+ * This function serves as an asynchronous counterpart to |catch|.
+ *
+ * Example:
+ *  myPromise.chainPromise(a) //May reject
+ *           .chainPromise(b) //May reject
+ *           .chainPromise(c) //May reject
+ *           .trap(d)       //Catch any rejection from a, b or c
+ *           .chainPromise(e) //If either a, b and c or
+ *                            //d has resolved, execute
+ *
+ * Scenario 1:
+ *   If a, b, c resolve, e is executed as if d had not been added.
+ *
+ * Scenario 2:
+ *   If a, b or c rejects, d is executed. If d resolves, we proceed
+ *   with e as if nothing had happened. Otherwise, we proceed with
+ *   the rejection of d.
+ *
+ * @param {Function} aTrap Called if |this| promise is rejected,
+ *   with one argument: the rejection.
+ * @return {Promise} A new promise. This promise resolves if all
+ *   previous promises have resolved or if |aTrap| succeeds.
+ */
+Promise.prototype.trap = function(aTrap) {
+  var promise = new Promise();
+  var resolve = Promise.prototype.resolve.bind(promise);
+  var reject = function(aRejection) {
+    try {
+      //Attempt to handle issue
+      var result = aTrap.call(aTrap, aRejection);
+      promise.resolve(result);
+    } catch (x) {
+      promise.reject(x);
+    }
+  };
+  this.then(resolve, reject);
+  return promise;
+};
+
+/**
+ * Execute regardless of errors.
+ *
+ * This function serves as an asynchronous counterpart to |finally|.
+ *
+ * Example:
+ *  myPromise.chainPromise(a) //May reject
+ *           .chainPromise(b) //May reject
+ *           .chainPromise(c) //May reject
+ *           .always(d)       //Executed regardless
+ *           .chainPromise(e)
+ *
+ * Whether |a|, |b| or |c| resolve or reject, |d| is executed.
+ *
+ * @param {Function} aTrap Called regardless of whether |this|
+ *   succeeds or fails.
+ * @return {Promise} A new promise. This promise holds the same
+ *   resolution/rejection as |this|.
+ */
+Promise.prototype.always = function(aTrap) {
+  var promise = new Promise();
+  var resolve = function(result) {
+    try {
+      aTrap.call(aTrap);
+      promise.resolve(result);
+    } catch (x) {
+      promise.reject(x);
+    }
+  };
+  var reject = function(result) {
+    try {
+      aTrap.call(aTrap);
+      promise.reject(result);
+    } catch (x) {
+      promise.reject(result);
+    }
+  };
+  this.then(resolve, reject);
+  return promise;
+};
+
+
+Promise.prototype.toString = function() {
+  var status;
+  switch (this._status) {
+  case Promise.PENDING:
+    status = "pending";
+    break;
+  case Promise.SUCCESS:
+    status = "resolved";
+    break;
+  case Promise.ERROR:
+    status = "rejected";
+    break;
+  default:
+    status = "invalid status: "+this._status;
+  }
+  return "[Promise " + this._id + " (" + status + ")]";
 };

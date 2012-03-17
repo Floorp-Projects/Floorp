@@ -370,8 +370,9 @@ public:
   void BindAndDrawQuadWithTextureRect(LayerProgram *aProg,
                                       const nsIntRect& aTexCoordRect,
                                       const nsIntSize& aTexSize,
-                                      GLenum aWrapMode = LOCAL_GL_REPEAT);
-                                      
+                                      GLenum aWrapMode = LOCAL_GL_REPEAT,
+                                      bool aFlipped = false);
+
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "OGL"; }
@@ -391,7 +392,7 @@ public:
    * to a window of the given dimensions.
    */
   void SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTransformPolicy);
-  
+
   /**
    * Setup World transform matrix.
    * Transform will be ignored if it is not PreservesAxisAlignedRectangles

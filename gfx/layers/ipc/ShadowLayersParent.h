@@ -78,6 +78,7 @@ public:
 
 protected:
   NS_OVERRIDE virtual bool RecvUpdate(const EditArray& cset,
+                                      const bool& isFirstPaint,
                                       EditReplyArray* reply);
 
   NS_OVERRIDE virtual PLayerParent* AllocPLayer();

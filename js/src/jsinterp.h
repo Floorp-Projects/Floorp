@@ -264,20 +264,6 @@ extern bool
 ValueToId(JSContext *cx, const Value &v, jsid *idp);
 
 /*
- * @param closureLevel      The static level of the closure that the cookie
- *                          pertains to.
- * @param cookie            Level amount is a "skip" (delta) value from the
- *                          closure level.
- * @return  The value of the upvar.
- */
-extern const Value &
-GetUpvar(JSContext *cx, unsigned level, UpvarCookie cookie);
-
-/* Search the call stack for the nearest frame with static level targetLevel. */
-extern StackFrame *
-FindUpvarFrame(JSContext *cx, unsigned targetLevel);
-
-/*
  * A linked list of the |FrameRegs regs;| variables belonging to all
  * js::Interpret C++ frames on this thread's stack.
  *

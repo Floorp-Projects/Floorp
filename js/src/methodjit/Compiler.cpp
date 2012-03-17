@@ -1110,7 +1110,7 @@ mjit::Compiler::generatePrologue()
          * stub for heavyweight functions (including nesting outer functions).
          */
         JS_ASSERT_IF(nesting && nesting->children, script->function()->isHeavyweight());
-        if (script->function()->isHeavyweight()) {
+        if (script->function()->isHeavyweight() || script->needsArgsObj()) {
             prepareStubCall(Uses(0));
             INLINE_STUBCALL(stubs::FunctionFramePrologue, REJOIN_FUNCTION_PROLOGUE);
         } else {
@@ -1157,21 +1157,6 @@ mjit::Compiler::generatePrologue()
                 OOL_STUBCALL(stubs::FunctionFramePrologue, REJOIN_FUNCTION_PROLOGUE);
                 stubcc.crossJump(stubcc.masm.jump(), masm.label());
             }
-        }
-
-        if (outerScript->usesArguments && !script->function()->isHeavyweight()) {
-            /*
-             * Make sure that fp->u.nactual is always coherent. This may be
-             * inspected directly by JIT code, and is not guaranteed to be
-             * correct if the UNDERFLOW and OVERFLOW flags are not set.
-             */
-            Jump hasArgs = masm.branchTest32(Assembler::NonZero, FrameFlagsAddress(),
-                                             Imm32(StackFrame::UNDERFLOW_ARGS |
-                                                   StackFrame::OVERFLOW_ARGS |
-                                                   StackFrame::HAS_ARGS_OBJ));
-            masm.storePtr(ImmPtr((void *)(size_t) script->function()->nargs),
-                          Address(JSFrameReg, StackFrame::offsetOfNumActual()));
-            hasArgs.linkTo(masm.label(), &masm);
         }
 
         j.linkTo(masm.label(), &masm);
@@ -2238,6 +2223,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_IFNE)
 
           BEGIN_CASE(JSOP_ARGUMENTS)
+          {
             /*
              * For calls of the form 'f.apply(x, arguments)' we can avoid
              * creating an args object by having ic::SplatApplyArgs pull
@@ -2245,23 +2231,40 @@ mjit::Compiler::generateMethod()
              * 'apply' actually refers to js_fun_apply. If this is not true,
              * the slow path in JSOP_FUNAPPLY will create the args object.
              */
-            if (canUseApplyTricks()) {
-                /*
-                 * Check for interrupts at the JSOP_ARGUMENTS when using
-                 * apply tricks, see inlineCallHelper().
-                 */
-                interruptCheckHelper();
+            if (!script->needsArgsObj()) {
+                if (canUseApplyTricks()) {
+                    /*
+                     * Check for interrupts at the JSOP_ARGUMENTS when using
+                     * apply tricks, see inlineCallHelper().
+                     */
+                    interruptCheckHelper();
 
-                applyTricks = LazyArgsObj;
-                pushSyncedEntry(0);
-            } else if (cx->typeInferenceEnabled() && !script->strictModeCode &&
-                       !types::TypeSet::HasObjectFlags(cx, script->function()->getType(cx),
-                                                       types::OBJECT_FLAG_CREATED_ARGUMENTS)) {
-                frame.push(MagicValue(JS_LAZY_ARGUMENTS));
+                    applyTricks = LazyArgsObj;
+                    pushSyncedEntry(0);
+                } else {
+                    /*
+                     * When analyzing whether a script needsArgsObject, the analysis in
+                     * analyzeSSA uses the simple predicate SpeculateApplyOptimization.
+                     * The actual mjit predicate for using the optimization is
+                     * canUseApplyTricks which depends on temporal compiler state.
+                     * Thus, script->needsArgsObj can be over-optimistic and needs to
+                     * be checked here and corrected.
+                     */
+                    if (SpeculateApplyOptimization(PC)) {
+                        if (!script->applySpeculationFailed(cx))
+                            return Compile_Error;
+
+                        /* All our assumptions are wrong, try again. */
+                        return Compile_Retry;
+                    }
+
+                    frame.push(MagicValue(JS_OPTIMIZED_ARGUMENTS));
+                }
             } else {
                 jsop_arguments(REJOIN_FALLTHROUGH);
                 pushSyncedEntry(0);
             }
+          }
           END_CASE(JSOP_ARGUMENTS)
 
           BEGIN_CASE(JSOP_ITERNEXT)
@@ -3054,25 +3057,6 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_SETCONST)
 
-          BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
-          {
-            uint32_t slot = GET_SLOTNO(PC);
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC + SLOTNO_LEN));
-
-            /* See JSOP_DEFLOCALFUN. */
-            markUndefinedLocal(PC - script->code, slot);
-
-            prepareStubCall(Uses(frame.frameSlots()));
-            masm.move(ImmPtr(fun), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::DefLocalFun_FC, REJOIN_DEFLOCALFUN);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot, true);
-            frame.pop();
-            updateVarType();
-          }
-          END_CASE(JSOP_DEFLOCALFUN_FC)
-
           BEGIN_CASE(JSOP_LAMBDA)
           {
             JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC));
@@ -3116,27 +3100,6 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRY)
             frame.syncAndForgetEverything();
           END_CASE(JSOP_TRY)
-
-          BEGIN_CASE(JSOP_GETFCSLOT)
-          BEGIN_CASE(JSOP_CALLFCSLOT)
-          {
-            unsigned index = GET_UINT16(PC);
-
-            // Load the callee's payload into a register.
-            frame.pushCallee();
-            RegisterID reg = frame.copyDataIntoReg(frame.peek(-1));
-            frame.pop();
-
-            // obj->getFlatClosureUpvars()
-            Address upvarAddress(reg, JSFunction::getFlatClosureUpvarsOffset());
-            masm.loadPrivate(upvarAddress, reg);
-            // push ((Value *) reg)[index]
-
-            BarrierState barrier = pushAddressMaybeBarrier(Address(reg, index * sizeof(Value)),
-                                                           knownPushedType(0), true);
-            finishBarrier(barrier, REJOIN_GETTER, 0);
-          }
-          END_CASE(JSOP_CALLFCSLOT)
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
           {
@@ -3236,17 +3199,6 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_HOLE)
             frame.push(MagicValue(JS_ARRAY_HOLE));
           END_CASE(JSOP_HOLE)
-
-          BEGIN_CASE(JSOP_LAMBDA_FC)
-          {
-            JSFunction *fun = script->getFunction(GET_UINT32_INDEX(PC));
-            prepareStubCall(Uses(frame.frameSlots()));
-            masm.move(ImmPtr(fun), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::FlatLambda, REJOIN_PUSH_OBJECT);
-            frame.takeReg(Registers::ReturnReg);
-            frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-          }
-          END_CASE(JSOP_LAMBDA_FC)
 
           BEGIN_CASE(JSOP_LOOPHEAD)
           {
@@ -3874,14 +3826,16 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
      */
     if (script->function()) {
         types::TypeScriptNesting *nesting = script->nesting();
-        if (script->function()->isHeavyweight() || (nesting && nesting->children)) {
+        if (script->function()->isHeavyweight() || script->needsArgsObj() ||
+            (nesting && nesting->children))
+        {
             prepareStubCall(Uses(fe ? 1 : 0));
             INLINE_STUBCALL(stubs::FunctionFrameEpilogue, REJOIN_NONE);
         } else {
-            /* if (hasCallObj() || hasArgsObj()) */
+            /* if hasCallObj() */
             Jump putObjs = masm.branchTest32(Assembler::NonZero,
                                              Address(JSFrameReg, StackFrame::offsetOfFlags()),
-                                             Imm32(StackFrame::HAS_CALL_OBJ | StackFrame::HAS_ARGS_OBJ));
+                                             Imm32(StackFrame::HAS_CALL_OBJ));
             stubcc.linkExit(putObjs, Uses(frame.frameSlots()));
 
             stubcc.leave();
@@ -4137,6 +4091,7 @@ bool
 mjit::Compiler::canUseApplyTricks()
 {
     JS_ASSERT(*PC == JSOP_ARGUMENTS);
+    JS_ASSERT(!script->needsArgsObj());
     jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
     return *nextpc == JSOP_FUNAPPLY &&
            IsLowerableFunCallOrApply(nextpc) &&
@@ -6931,7 +6886,7 @@ mjit::Compiler::jsop_regexp()
      */
     analyze::SSAUseChain *uses =
         analysis->useChain(analyze::SSAValue::PushedValue(PC - script->code, 0));
-    if (uses && uses->popped && !uses->next) {
+    if (uses && uses->popped && !uses->next && !reobj->global() && !reobj->sticky()) {
         jsbytecode *use = script->code + uses->offset;
         uint32_t which = uses->u.which;
         if (JSOp(*use) == JSOP_CALLPROP) {

@@ -152,25 +152,6 @@ struct JSXML;
 
 namespace js {
 
-/*
- * Ideally, we would like to make the argument to functions like MarkShape be a
- * HeapPtr<const js::Shape>. That would ensure that we don't forget to
- * barrier any fields that we mark through. However, that would prohibit us from
- * passing in a derived class like HeapPtr<js::EmptyShape>.
- *
- * To overcome the problem, we make the argument to MarkShape be a
- * MarkablePtr<const js::Shape>. And we allow conversions from HeapPtr<T>
- * to MarkablePtr<U> as long as T can be converted to U.
- */
-template<class T>
-class MarkablePtr
-{
-  public:
-    T *value;
-
-    explicit MarkablePtr(T *value) : value(value) {}
-};
-
 template<class T, typename Unioned = uintptr_t>
 class HeapPtr
 {
@@ -231,13 +212,6 @@ class HeapPtr
     T *operator->() const { return value; }
 
     operator T*() const { return value; }
-
-    /*
-     * This coerces to MarkablePtr<U> as long as T can coerce to U. See the
-     * comment for MarkablePtr above.
-     */
-    template<class U>
-    operator MarkablePtr<U>() const { return MarkablePtr<U>(value); }
 
   private:
     void pre() { T::writeBarrierPre(value); }
@@ -507,9 +481,6 @@ class ReadBarriered
     void set(T *v) { value = v; }
 
     operator bool() { return !!value; }
-
-    template<class U>
-    operator MarkablePtr<U>() const { return MarkablePtr<U>(value); }
 };
 
 class ReadBarrieredValue

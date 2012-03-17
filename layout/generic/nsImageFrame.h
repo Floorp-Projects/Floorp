@@ -183,7 +183,25 @@ public:
 
   nsRect GetInnerArea() const;
 
+  /**
+   * Return a map element associated with this image.
+   */
+  mozilla::dom::Element* GetMapElement() const
+  {
+    nsAutoString usemap;
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, usemap)) {
+      return mContent->OwnerDoc()->FindImageMap(usemap);
+    }
+    return nsnull;
+  }
+
+  /**
+   * Return true if the image has associated image map.
+   */
+  bool HasImageMap() const { return mImageMap || GetMapElement(); }
+
   nsImageMap* GetImageMap();
+  nsImageMap* GetExistingImageMap() const { return mImageMap; }
 
   virtual void AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                  InlineMinWidthData *aData);

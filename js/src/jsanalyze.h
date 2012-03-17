@@ -41,6 +41,7 @@
 #ifndef jsanalyze_h___
 #define jsanalyze_h___
 
+#include "jsautooplen.h"
 #include "jscompartment.h"
 #include "jscntxt.h"
 #include "jsinfer.h"
@@ -255,7 +256,6 @@ ExtendedDef(jsbytecode *pc)
       case JSOP_SETLOCAL:
       case JSOP_SETLOCALPOP:
       case JSOP_DEFLOCALFUN:
-      case JSOP_DEFLOCALFUN_FC:
       case JSOP_INCLOCAL:
       case JSOP_DECLOCAL:
       case JSOP_LOCALINC:
@@ -385,7 +385,6 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
       case JSOP_SETLOCAL:
       case JSOP_SETLOCALPOP:
       case JSOP_DEFLOCALFUN:
-      case JSOP_DEFLOCALFUN_FC:
       case JSOP_INCLOCAL:
       case JSOP_DECLOCAL:
       case JSOP_LOCALINC:
@@ -410,7 +409,6 @@ BytecodeUpdatesSlot(JSOp op)
       case JSOP_SETLOCAL:
       case JSOP_SETLOCALPOP:
       case JSOP_DEFLOCALFUN:
-      case JSOP_DEFLOCALFUN_FC:
       case JSOP_INCARG:
       case JSOP_DECARG:
       case JSOP_ARGINC:
@@ -1357,6 +1355,14 @@ class CrossScriptSSA
 #ifdef DEBUG
 void PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc);
 #endif
+
+static inline bool
+SpeculateApplyOptimization(jsbytecode *pc)
+{
+    JS_ASSERT(*pc == JSOP_ARGUMENTS);
+    jsbytecode *nextpc = pc + JSOP_ARGUMENTS_LENGTH;
+    return *nextpc == JSOP_FUNAPPLY && GET_ARGC(nextpc) == 2;
+}
 
 } /* namespace analyze */
 } /* namespace js */

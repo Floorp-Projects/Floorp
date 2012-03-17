@@ -51,7 +51,6 @@
 #include "nsIForm.h"
 #include "nsFormSubmission.h"
 #include "nsIFormProcessor.h"
-#include "nsContentCreatorFunctions.h"
 
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsEventStates.h"
@@ -2061,7 +2060,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHTMLOptionCollection)
 
 
 JSObject*
-nsHTMLOptionCollection::WrapObject(JSContext *cx, XPCWrappedNativeScope *scope,
+nsHTMLOptionCollection::WrapObject(JSContext *cx, JSObject *scope,
                                    bool *triedToWrap)
 {
   return mozilla::dom::binding::HTMLOptionsCollection::create(cx, scope, this,

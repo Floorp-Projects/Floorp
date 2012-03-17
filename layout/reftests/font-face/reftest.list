@@ -31,6 +31,15 @@ fails-if(Android) == src-list-local-full.html src-list-local-full-ref.html
 fails-if(Android) == src-list-local-full-quotes.html src-list-local-full-ref.html
 HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html
 
+# data url tests (these don't need the HTTP server)
+== src-list-data-1.html src-list-data-ref.html
+== src-list-data-2.html src-list-data-ref.html
+== src-list-data-3.html src-list-data-ref.html
+== src-list-data-4.html src-list-data-ref.html
+
+# load with data url vs. font data load
+HTTP(..) == src-list-actual-font-ref.html src-list-data-1.html
+
 # localized full fontnames should *not* match, only English ones (need locale-invariant key)
 skip HTTP(..) == src-list-local-localized.html src-list-local-localized-ref.html # 486787, 486497
 

@@ -73,6 +73,7 @@
 
 #include "vm/GlobalObject.h"
 #include "vm/MethodGuard.h"
+#include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -82,7 +83,6 @@
 #include "vm/MethodGuard-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/String-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::types;

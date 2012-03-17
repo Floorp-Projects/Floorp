@@ -1086,6 +1086,14 @@ class nsIWidget : public nsISupports {
                                           bool* aAllowRetaining = nsnull) = 0;
 
     /**
+     * Called before the LayerManager draws the layer tree.
+     *
+     * @param aManager The drawing LayerManager.
+     * @param aWidgetRect The current widget rect that is being drawn.
+     */
+    virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) = 0;
+
+    /**
      * Called after the LayerManager draws the layer tree
      *
      * @param aManager The drawing LayerManager.

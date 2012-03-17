@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML img map accessible tree update tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    function insertArea(aImageMapID, aMapID)
+    {
+      this.imageMap = getAccessible(aImageMapID);
+      this.mapNode = getNode(aMapID);
+
+      function getInsertedArea(aThisObj)
+      {
+        return aThisObj.imageMap.firstChild;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getInsertedArea, this),
+        new invokerChecker(EVENT_REORDER, this.imageMap)
+      ];
+
+      this.invoke = function insertArea_invoke()
+      {
+        var areaElm = document.createElement("area");
+        areaElm.setAttribute("href",
+                             "http://www.bbc.co.uk/radio4/atoz/index.shtml#a");
+        areaElm.setAttribute("coords", "0,0,13,14");
+        areaElm.setAttribute("alt", "a");
+        areaElm.setAttribute("shape", "rect");
+
+        this.mapNode.insertBefore(areaElm, this.mapNode.firstChild);
+      }
+
+      this.finalCheck = function insertArea_finalCheck()
+      {
+        var accTree =
+          { IMAGE_MAP: [
+            {
+              role: ROLE_LINK,
+              name: "a",
+              children: [ ]
+            },
+            {
+              role: ROLE_LINK,
+              name: "b",
+              children: [ ]
+            },
+          ] };
+        testAccessibleTree(this.imageMap, accTree);
+      }
+
+      this.getID = function insertArea_getID()
+      {
+        return "insert area element";
+      }
+    }
+
+    function appendArea(aImageMapID, aMapID)
+    {
+      this.imageMap = getAccessible(aImageMapID);
+      this.mapNode = getNode(aMapID);
+
+      function getAppendedArea(aThisObj)
+      {
+        return aThisObj.imageMap.lastChild;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getAppendedArea, this),
+        new invokerChecker(EVENT_REORDER, this.imageMap)
+      ];
+
+      this.invoke = function appendArea_invoke()
+      {
+        var areaElm = document.createElement("area");
+        areaElm.setAttribute("href",
+                             "http://www.bbc.co.uk/radio4/atoz/index.shtml#c");
+        areaElm.setAttribute("coords", "34,0,47,14");
+        areaElm.setAttribute("alt", "c");
+        areaElm.setAttribute("shape", "rect");
+
+        this.mapNode.appendChild(areaElm);
+      }
+
+      this.finalCheck = function appendArea_finalCheck()
+      {
+        var accTree =
+          { IMAGE_MAP: [
+            {
+              role: ROLE_LINK,
+              name: "a",
+              children: [ ]
+            },
+            {
+              role: ROLE_LINK,
+              name: "b",
+              children: [ ]
+            },
+            {
+              role: ROLE_LINK,
+              name: "c",
+              children: [ ]
+            }
+          ] };
+        testAccessibleTree(this.imageMap, accTree);
+      }
+
+      this.getID = function appendArea_getID()
+      {
+        return "append area element";
+      }
+    }
+
+    function removeArea(aImageMapID, aMapID)
+    {
+      this.imageMap = getAccessible(aImageMapID);
+      this.area = null;
+      this.mapNode = getNode(aMapID);
+
+      function getRemovedArea(aThisObj)
+      {
+        return aThisObj.area;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getRemovedArea, this),
+        new invokerChecker(EVENT_REORDER, this.imageMap)
+      ];
+
+      this.invoke = function removeArea_invoke()
+      {
+        this.area = this.imageMap.firstChild;
+        this.mapNode.removeChild(this.mapNode.firstElementChild);
+      }
+
+      this.finalCheck = function removeArea_finalCheck()
+      {
+        var accTree =
+          { IMAGE_MAP: [
+            {
+              role: ROLE_LINK,
+              name: "b",
+              children: [ ]
+            },
+            {
+              role: ROLE_LINK,
+              name: "c",
+              children: [ ]
+            }
+          ] };
+        testAccessibleTree(this.imageMap, accTree);
+      }
+
+      this.getID = function removeArea_getID()
+      {
+        return "remove area element";
+      }
+    }
+
+    function removeNameOnMap(aImageMapContainerID, aImageMapID, aMapID)
+    {
+      this.container = getAccessible(aImageMapContainerID);
+      this.containerNode = this.container.DOMNode;
+      this.imageMap = getAccessible(aImageMapID);
+      this.imgNode = this.imageMap.DOMNode;
+      this.mapNode = getNode(aMapID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.imageMap),
+        new invokerChecker(EVENT_SHOW, this.imgNode),
+        new invokerChecker(EVENT_REORDER, this.container)
+      ];
+
+      this.invoke = function removeNameOnMap_invoke()
+      {
+        this.mapNode.removeAttribute("name");
+      }
+
+      this.finalCheck = function removeNameOnMap_finalCheck()
+      {
+        var accTree =
+          { SECTION: [
+            { GRAPHIC: [ ] }
+          ] };
+        testAccessibleTree(this.container, accTree);
+      }
+
+      this.getID = function removeNameOnMap_getID()
+      {
+        return "remove @name on map element";
+      }
+    }
+
+    function restoreNameOnMap(aImageMapContainerID, aImageMapID, aMapID)
+    {
+      this.container = getAccessible(aImageMapContainerID);
+      this.containerNode = this.container.DOMNode;
+      this.imageMap = null;
+      this.imgNode = getNode(aImageMapID);
+      this.mapNode = getNode(aMapID);
+
+      function getImageMap(aThisObj)
+      {
+        return aThisObj.imageMap;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getImageMap, this),
+        new invokerChecker(EVENT_SHOW, this.imgNode),
+        new invokerChecker(EVENT_REORDER, this.container)
+      ];
+
+      this.invoke = function restoreNameOnMap_invoke()
+      {
+        this.imageMap = getAccessible(aImageMapID);
+        this.mapNode.setAttribute("name", "atoz_map");
+      }
+
+      this.finalCheck = function removeNameOnMap_finalCheck()
+      {
+        var accTree =
+          { SECTION: [
+            { IMAGE_MAP: [
+              { LINK: [ ] },
+              { LINK: [ ] }
+            ] }
+          ] };
+        testAccessibleTree(this.container, accTree);
+      }
+
+      this.getID = function removeNameOnMap_getID()
+      {
+        return "restore @name on map element";
+      }
+    }
+
+    function removeMap(aImageMapContainerID, aImageMapID, aMapID)
+    {
+      this.container = getAccessible(aImageMapContainerID);
+      this.containerNode = this.container.DOMNode;
+      this.imageMap = null;
+      this.imgNode = getNode(aImageMapID);
+      this.mapNode = getNode(aMapID);
+
+      function getImageMap(aThisObj)
+      {
+        return aThisObj.imageMap;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getImageMap, this),
+        new invokerChecker(EVENT_SHOW, this.imgNode),
+        new invokerChecker(EVENT_REORDER, this.container)
+      ];
+
+      this.invoke = function removeMap_invoke()
+      {
+        this.imageMap = getAccessible(aImageMapID);
+        this.mapNode.parentNode.removeChild(this.mapNode);
+      }
+
+      this.finalCheck = function removeMap_finalCheck()
+      {
+        var accTree =
+          { SECTION: [
+            { GRAPHIC: [ ] }
+          ] };
+        testAccessibleTree(this.container, accTree);
+      }
+
+      this.getID = function removeMap_getID()
+      {
+        return "remove map element";
+      }
+    }
+
+    function insertMap(aImageMapContainerID, aImageID)
+    {
+      this.container = getAccessible(aImageMapContainerID);
+      this.containerNode = this.container.DOMNode;
+      this.image = null;
+      this.imgMapNode = getNode(aImageID);
+
+      function getImage(aThisObj)
+      {
+        return aThisObj.image;
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getImage, this),
+        new invokerChecker(EVENT_SHOW, this.imgMapNode),
+        new invokerChecker(EVENT_REORDER, this.container)
+      ];
+
+      this.invoke = function insertMap_invoke()
+      {
+        this.image = getAccessible(aImageID);
+
+        var map = document.createElement("map");
+        map.setAttribute("name", "atoz_map");
+        map.setAttribute("id", "map");
+
+        var area = document.createElement("area")
+        area.setAttribute("href",
+                          "http://www.bbc.co.uk/radio4/atoz/index.shtml#b");
+        area.setAttribute("coords", "17,0,30,14");
+        area.setAttribute("alt", "b");
+        area.setAttribute("shape", "rect");
+
+        map.appendChild(area);
+
+        this.containerNode.appendChild(map);
+
+        ensureImageMapTree(aImageID);
+      }
+
+      this.finalCheck = function insertMap_finalCheck()
+      {
+        var accTree =
+          { SECTION: [
+            { IMAGE_MAP: [
+              { LINK: [ ] }
+            ] }
+          ] };
+        testAccessibleTree(this.container, accTree);
+      }
+
+      this.getID = function insertMap_getID()
+      {
+        return "insert map element";
+      }
+    }
+
+    //gA11yEventDumpToConsole = true;
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new insertArea("imgmap", "map"));
+      gQueue.push(new appendArea("imgmap", "map"));
+      gQueue.push(new removeArea("imgmap", "map"));
+      gQueue.push(new removeNameOnMap("container", "imgmap", "map"));
+      gQueue.push(new restoreNameOnMap("container", "imgmap", "map"));
+      gQueue.push(new removeMap("container", "imgmap", "map"));
+      gQueue.push(new insertMap("container", "imgmap"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Image map accessible tree is not updated when image map is changed"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=732389">
+    Mozilla Bug 732389
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <map name="atoz_map" id="map">
+    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+          coords="17,0,30,14" alt="b" shape="rect">
+  </map>
+
+  <div id="container">
+    <img id="imgmap" width="447" height="15"
+         usemap="#atoz_map"
+         src="../letters.gif">
+  </div>
+
+</body>
+</html>

@@ -85,7 +85,6 @@
 #include "nsXBLBinding.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsEventListenerManager.h"
 #include "nsGUIEvent.h"
 
 #include "prprf.h"

@@ -55,7 +55,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 2;
+    static final int DATABASE_VERSION = 3;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -546,6 +546,7 @@ public class BrowserProvider extends ContentProvider {
                  }
              }
 
+             db.setTransactionSuccessful();
              db.endTransaction();
         }
 
@@ -553,13 +554,23 @@ public class BrowserProvider extends ContentProvider {
         public void onOpen(SQLiteDatabase db) {
             debug("Opening browser.db: " + db.getPath());
 
+            Cursor cursor = null;
+            if (Build.VERSION.SDK_INT >= 8) {
+                try {
+                    cursor = db.rawQuery("PRAGMA foreign_keys=ON", null);
+                } finally {
+                    if (cursor != null)
+                        cursor.close();
+                }
+            }
+
             // From Honeycomb on, it's possible to run several db
             // commands in parallel using multiple connections.
             if (Build.VERSION.SDK_INT >= 11) {
                 db.enableWriteAheadLogging();
             } else {
                 // Pre-Honeycomb, we can do some lesser optimizations.
-                Cursor cursor = null;
+                cursor = null;
                 try {
                     cursor = db.rawQuery("PRAGMA synchronous=NORMAL", null);
                 } finally {
@@ -597,7 +608,7 @@ public class BrowserProvider extends ContentProvider {
         }
     }
 
-    private DatabaseHelper getDatabaseHelperForProfile(String profile) {
+    private DatabaseHelper getDatabaseHelperForProfile(String profile, boolean isTest) {
         // Each profile has a separate browser.db database. The target
         // profile is provided using a URI query argument in each request
         // to our content provider.
@@ -613,7 +624,7 @@ public class BrowserProvider extends ContentProvider {
             if (dbHelper != null) {
                 return dbHelper;
             }
-            dbHelper = new DatabaseHelper(getContext(), getDatabasePath(profile));
+            dbHelper = new DatabaseHelper(getContext(), getDatabasePath(profile, isTest));
             mDatabasePerProfile.put(profile, dbHelper);
         }
 
@@ -621,13 +632,15 @@ public class BrowserProvider extends ContentProvider {
         return dbHelper;
     }
 
-    private String getDatabasePath(String profile) {
+    public String getDatabasePath(String profile, boolean isTest) {
         trace("Getting database path for profile: " + profile);
 
         // On Android releases older than 2.3, it's not possible to use
         // SQLiteOpenHelper with a full path. Fallback to using separate
         // db files per profile in the app directory.
-        if (Build.VERSION.SDK_INT <= 8) {
+        if (isTest) {
+            return DATABASE_NAME;
+        } else if(Build.VERSION.SDK_INT <= 8) {
             return "browser-" + profile + ".db";
         }
 
@@ -651,7 +664,7 @@ public class BrowserProvider extends ContentProvider {
         if (uri != null)
             profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
 
-        return getDatabaseHelperForProfile(profile).getReadableDatabase();
+        return getDatabaseHelperForProfile(profile, isTest(uri)).getReadableDatabase();
     }
 
     private SQLiteDatabase getWritableDatabase(Uri uri) {
@@ -662,7 +675,7 @@ public class BrowserProvider extends ContentProvider {
         if (uri != null)
             profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
 
-        return getDatabaseHelperForProfile(profile).getWritableDatabase();
+        return getDatabaseHelperForProfile(profile, isTest(uri)).getWritableDatabase();
     }
 
     private void cleanupSomeDeletedRecords(Uri fromUri, Uri targetUri, String tableName) {
@@ -670,17 +683,22 @@ public class BrowserProvider extends ContentProvider {
         // predefined max age. It's important not be too greedy here and
         // remove only a few old deleted records at a time.
 
-        String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
-
         // The PARAM_SHOW_DELETED argument is necessary to return the records
         // that were marked as deleted. We use PARAM_IS_SYNC here to ensure
         // that we'll be actually deleting records instead of flagging them.
-        Uri uriWithArgs = targetUri.buildUpon()
-                .appendQueryParameter(BrowserContract.PARAM_PROFILE, profile)
+        Uri.Builder uriBuilder = targetUri.buildUpon()
                 .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(DELETED_RECORDS_PURGE_LIMIT))
                 .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1")
-                .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "1")
-                .build();
+                .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "1");
+
+        String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+        if (!TextUtils.isEmpty(profile))
+            uriBuilder = uriBuilder.appendQueryParameter(BrowserContract.PARAM_PROFILE, profile);
+
+        if (isTest(fromUri))
+            uriBuilder = uriBuilder.appendQueryParameter(BrowserContract.PARAM_IS_TEST, "1");
+
+        Uri uriWithArgs = uriBuilder.build();
 
         Cursor cursor = null;
 
@@ -710,6 +728,11 @@ public class BrowserProvider extends ContentProvider {
     private boolean isCallerSync(Uri uri) {
         String isSync = uri.getQueryParameter(BrowserContract.PARAM_IS_SYNC);
         return !TextUtils.isEmpty(isSync);
+    }
+
+    private boolean isTest(Uri uri) {
+        String isTest = uri.getQueryParameter(BrowserContract.PARAM_IS_TEST);
+        return !TextUtils.isEmpty(isTest);
     }
 
     private boolean shouldShowDeleted(Uri uri) {

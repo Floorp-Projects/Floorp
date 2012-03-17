@@ -18,8 +18,8 @@ public abstract class CachedSQLiteOpenHelper extends SQLiteOpenHelper {
 
   // Cache these so we don't have to track them across cursors. Call `close`
   // when you're done.
-  private static SQLiteDatabase readableDatabase;
-  private static SQLiteDatabase writableDatabase;
+  private SQLiteDatabase readableDatabase;
+  private SQLiteDatabase writableDatabase;
 
   synchronized protected SQLiteDatabase getCachedReadableDatabase() {
     if (readableDatabase == null) {
@@ -51,5 +51,11 @@ public abstract class CachedSQLiteOpenHelper extends SQLiteOpenHelper {
       writableDatabase = null;
     }
     super.close();
+  }
+
+  // Used for testing.
+  public boolean isClosed() {
+    return readableDatabase == null &&
+           writableDatabase == null;
   }
 }

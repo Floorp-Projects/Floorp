@@ -58,6 +58,8 @@
 
 namespace mozilla {
 
+class AndroidGeckoLayerClient;
+
 void InitAndroidJavaWrappers(JNIEnv *jEnv);
 
 /*
@@ -151,31 +153,75 @@ protected:
     static jfieldID jTopField;
 };
 
-class AndroidGeckoSoftwareLayerClient : public WrappedJavaObject {
+class AndroidViewTransform : public WrappedJavaObject {
 public:
-    static void InitGeckoSoftwareLayerClientClass(JNIEnv *jEnv);
- 
-     void Init(jobject jobj);
- 
-    AndroidGeckoSoftwareLayerClient() {}
-    AndroidGeckoSoftwareLayerClient(jobject jobj) { Init(jobj); }
+    static void InitViewTransformClass(JNIEnv *jEnv);
 
-    jobject LockBuffer();
-    unsigned char *LockBufferBits();
-    void UnlockBuffer();
-    bool BeginDrawing(int aWidth, int aHeight, int aTileWidth, int aTileHeight, nsIntRect &aDirtyRect, const nsAString &aMetadata, bool aHasDirectTexture);
-    void EndDrawing(const nsIntRect &aRect);
+    void Init(jobject jobj);
+
+    AndroidViewTransform() {}
+    AndroidViewTransform(jobject jobj) { Init(jobj); }
+
+    float GetX();
+    float GetY();
+    float GetScale();
 
 private:
-    static jclass jGeckoSoftwareLayerClientClass;
-    static jmethodID jLockBufferMethod;
-    static jmethodID jUnlockBufferMethod;
-
-protected:
-     static jmethodID jBeginDrawingMethod;
-     static jmethodID jEndDrawingMethod;
+    static jclass jViewTransformClass;
+    static jfieldID jXField;
+    static jfieldID jYField;
+    static jfieldID jScaleField;
 };
 
+class AndroidLayerRendererFrame : public WrappedJavaObject {
+public:
+    static void InitLayerRendererFrameClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+    void Dispose();
+
+    void BeginDrawing();
+    void DrawBackground();
+    void DrawForeground();
+    void EndDrawing();
+
+private:
+    static jclass jLayerRendererFrameClass;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jDrawBackgroundMethod;
+    static jmethodID jDrawForegroundMethod;
+    static jmethodID jEndDrawingMethod;
+};
+
+class AndroidGeckoLayerClient : public WrappedJavaObject {
+public:
+    static void InitGeckoLayerClientClass(JNIEnv *jEnv);
+
+    void Init(jobject jobj);
+
+    AndroidGeckoLayerClient() {}
+    AndroidGeckoLayerClient(jobject jobj) { Init(jobj); }
+
+    bool BeginDrawing(int aWidth, int aHeight, const nsAString &aMetadata);
+    void EndDrawing();
+    void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
+    void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
+    void GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+    void CreateFrame(AndroidLayerRendererFrame& aFrame);
+    void ActivateProgram();
+    void DeactivateProgram();
+
+protected:
+    static jclass jGeckoLayerClientClass;
+    static jmethodID jBeginDrawingMethod;
+    static jmethodID jEndDrawingMethod;
+    static jmethodID jSetFirstPaintViewport;
+    static jmethodID jSetPageSize;
+    static jmethodID jGetViewTransformMethod;
+    static jmethodID jCreateFrameMethod;
+    static jmethodID jActivateProgramMethod;
+    static jmethodID jDeactivateProgramMethod;
+};
 
 class AndroidGeckoSurfaceView : public WrappedJavaObject
 {
@@ -384,25 +430,6 @@ public:
     static jmethodID jGetTimeMethod;
 };
 
-class AndroidAddress : public WrappedJavaObject
-{
-public:
-    static void InitAddressClass(JNIEnv *jEnv);
-    static nsGeoPositionAddress* CreateGeoPositionAddress(JNIEnv *jenv, jobject jobj);
-    static jclass jAddressClass;
-    static jmethodID jGetAddressLineMethod;
-    static jmethodID jGetAdminAreaMethod;
-    static jmethodID jGetCountryNameMethod;
-    static jmethodID jGetFeatureNameMethod;
-    static jmethodID jGetLocalityMethod;
-    static jmethodID jGetPostalCodeMethod;
-    static jmethodID jGetPremisesMethod;
-    static jmethodID jGetSubAdminAreaMethod;
-    static jmethodID jGetSubLocalityMethod;
-    static jmethodID jGetSubThoroughfareMethod;
-    static jmethodID jGetThoroughfareMethod;
-};
-
 class AndroidGeckoEvent : public WrappedJavaObject
 {
 public:
@@ -439,9 +466,6 @@ public:
     nsTArray<float> Pressures() { return mPressures; }
     nsTArray<float> Orientations() { return mOrientations; }
     nsTArray<nsIntPoint> PointRadii() { return mPointRadii; }
-    double Alpha() { return mAlpha; }
-    double Beta() { return mBeta; }
-    double Gamma() { return mGamma; }
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
@@ -461,7 +485,6 @@ public:
     int RangeForeColor() { return mRangeForeColor; }
     int RangeBackColor() { return mRangeBackColor; }
     nsGeoPosition* GeoPosition() { return mGeoPosition; }
-    nsGeoPositionAddress* GeoAddress() { return mGeoAddress; }
     double Bandwidth() { return mBandwidth; }
     bool CanBeMetered() { return mCanBeMetered; }
 
@@ -480,13 +503,11 @@ protected:
     int mOffset, mCount;
     int mRangeType, mRangeStyles;
     int mRangeForeColor, mRangeBackColor;
-    double mAlpha, mBeta, mGamma;
     double mX, mY, mZ;
     double mDistance;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra;
     nsRefPtr<nsGeoPosition> mGeoPosition;
-    nsRefPtr<nsGeoPositionAddress> mGeoAddress;
     double mBandwidth;
     bool mCanBeMetered;
 
@@ -515,9 +536,6 @@ protected:
     static jfieldID jOrientations;
     static jfieldID jPressures;
     static jfieldID jPointRadii;
-    static jfieldID jAlphaField;
-    static jfieldID jBetaField;
-    static jfieldID jGammaField;
     static jfieldID jXField;
     static jfieldID jYField;
     static jfieldID jZField;
@@ -539,7 +557,6 @@ protected:
     static jfieldID jRangeForeColorField;
     static jfieldID jRangeBackColorField;
     static jfieldID jLocationField;
-    static jfieldID jAddressField;
 
     static jfieldID jBandwidthField;
     static jfieldID jCanBeMeteredField;
@@ -549,8 +566,8 @@ public:
         NATIVE_POKE = 0,
         KEY_EVENT = 1,
         MOTION_EVENT = 2,
-        ORIENTATION_EVENT = 3,
-        ACCELERATION_EVENT = 4,
+        SENSOR_EVENT = 3,
+        UNUSED1_EVENT = 4,
         LOCATION_EVENT = 5,
         IME_EVENT = 6,
         DRAW = 7,
@@ -571,6 +588,7 @@ public:
         PROXIMITY_EVENT = 23,
         ACTIVITY_RESUMING = 24,
         SCREENSHOT = 25,
+        SENSOR_ACCURACY = 26,
         dummy_java_enum_list_end
     };
 

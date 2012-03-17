@@ -20,25 +20,26 @@
       if (docAcc) {
         testStates(docAcc, STATE_READONLY);
         testStates("aria_article", STATE_READONLY);
-        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
+        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE,
+                   STATE_READONLY);
         testStates("article", STATE_READONLY);
-        testStates("editable_article", 0, EXT_STATE_EDITABLE);
+        testStates("editable_article", 0, EXT_STATE_EDITABLE, STATE_READONLY);
 
         document.designMode = "on";
 
-        testStates(docAcc, 0, EXT_STATE_EDITABLE);
-        testStates("aria_article", 0, EXT_STATE_EDITABLE);
-        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
-        testStates("article", 0, EXT_STATE_EDITABLE);
-        testStates("editable_article", 0, EXT_STATE_EDITABLE);
+        testStates(docAcc, 0, EXT_STATE_EDITABLE, STATE_READONLY);
+        testStates("aria_article", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+        testStates("article", 0, EXT_STATE_EDITABLE, STATE_READONLY);
+        testStates("editable_article", 0, EXT_STATE_EDITABLE, STATE_READONLY);
   
         document.designMode = "off";
 
         testStates(docAcc, STATE_READONLY);
         testStates("aria_article", STATE_READONLY);
-        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE);
+        testStates("editable_aria_article", 0, EXT_STATE_EDITABLE, STATE_READONLY);
         testStates("article", STATE_READONLY);
-        testStates("editable_article", 0, EXT_STATE_EDITABLE);
+        testStates("editable_article", 0, EXT_STATE_EDITABLE, STATE_READONLY);
       }
       SimpleTest.finish();
     }
