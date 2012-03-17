@@ -305,7 +305,6 @@ ImageLayerOGL::RenderLayer(int,
       return;
     }
 
-    data->SetTiling(mUseTileSourceRect);
     gl()->MakeCurrent();
     unsigned int iwidth  = cairoImage->mSize.width;
     unsigned int iheight = cairoImage->mSize.height;
@@ -342,68 +341,16 @@ ImageLayerOGL::RenderLayer(int,
 
     nsIntRect rect = GetVisibleRegion().GetBounds();
 
-    bool tileIsWholeImage = (mTileSourceRect == nsIntRect(0, 0, iwidth, iheight)) 
-                            || !mUseTileSourceRect;
-    bool imageIsPowerOfTwo = IsPowerOfTwo(iwidth) &&
-                             IsPowerOfTwo(iheight);
-
-    bool canDoNPOT = (
-          gl()->IsExtensionSupported(GLContext::ARB_texture_non_power_of_two) ||
-          gl()->IsExtensionSupported(GLContext::OES_texture_npot));
-
     GLContext::RectTriangles triangleBuffer;
-    // do GL_REPEAT if we can - should be the fastest option.
-    // draw a single rect for the whole region, a little overdraw
-    // on the gpu should be faster than tesselating
-    // maybe we can write a shader that can also handle texture subrects
-    // and repeat?
-    if (tileIsWholeImage && (imageIsPowerOfTwo || canDoNPOT)) {
-        // we need to anchor the repeating texture appropriately
-        // otherwise it will start from the region border instead
-        // of the layer origin. This is the offset into the texture
-        // that the region border represents
-        float tex_offset_u = (float)(rect.x % iwidth) / iwidth;
-        float tex_offset_v = (float)(rect.y % iheight) / iheight;
-        triangleBuffer.addRect(rect.x, rect.y,
-                               rect.x + rect.width, rect.y + rect.height,
-                               tex_offset_u, tex_offset_v,
-                               tex_offset_u + (float)rect.width / (float)iwidth,
-                               tex_offset_v + (float)rect.height / (float)iheight);
-    }
-    // can't do fast path via GL_REPEAT - we have to tessellate individual rects.
-    else {
-        unsigned int twidth = mTileSourceRect.width;
-        unsigned int theight = mTileSourceRect.height;
 
-        nsIntRegion region = GetVisibleRegion();
-        // image subrect in texture coordinates
-        float subrect_tl_u = float(mTileSourceRect.x) / float(iwidth);
-        float subrect_tl_v = float(mTileSourceRect.y) / float(iheight);
-        float subrect_br_u = float(mTileSourceRect.width + mTileSourceRect.x) / float(iwidth);
-        float subrect_br_v = float(mTileSourceRect.height + mTileSourceRect.y) / float(iheight);
+    float tex_offset_u = float(rect.x % iwidth) / iwidth;
+    float tex_offset_v = float(rect.y % iheight) / iheight;
+    triangleBuffer.addRect(rect.x, rect.y,
+                           rect.x + rect.width, rect.y + rect.height,
+                           tex_offset_u, tex_offset_v,
+                           tex_offset_u + float(rect.width) / float(iwidth),
+                           tex_offset_v + float(rect.height) / float(iheight));
 
-        // round rect position down to multiples of texture size
-        // this way we start at multiples of rect positions
-        rect.x = (rect.x / iwidth) * iwidth;
-        rect.y = (rect.y / iheight) * iheight;
-        // round up size to accomodate for rounding down above
-        rect.width  = (rect.width / iwidth + 2) * iwidth;
-        rect.height = (rect.height / iheight + 2) * iheight;
-
-        // tesselate the visible region with tiles of subrect size
-        for (int y = rect.y; y < rect.y + rect.height;  y += theight) {
-            for (int x = rect.x; x < rect.x + rect.width; x += twidth) {
-                // when we already tessellate, we might as well save on overdraw here
-                if (!region.Intersects(nsIntRect(x, y, twidth, theight))) {
-                    continue;
-                }
-                triangleBuffer.addRect(x, y,
-                                       x + twidth, y + theight,
-                                       subrect_tl_u, subrect_tl_v,
-                                       subrect_br_u, subrect_br_v);
-            }
-        }
-    }
     GLuint vertAttribIndex =
         program->AttribLocation(LayerProgram::VertexAttrib);
     GLuint texCoordAttribIndex =
@@ -626,25 +573,6 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
                                tex, true);
 
   aImage->SetBackendData(LayerManager::LAYERS_OPENGL, backendData.forget());
-}
-
-void CairoOGLBackendData::SetTiling(bool aTiling)
-{
-  if (aTiling == mTiling)
-      return;
-  mozilla::gl::GLContext *gl = mTexture.GetGLContext();
-  gl->MakeCurrent();
-  gl->fActiveTexture(LOCAL_GL_TEXTURE0);
-  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture.GetTextureID());
-  mTiling = aTiling;
-
-  if (aTiling) {
-    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_REPEAT);
-    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_REPEAT);
-  } else {
-    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-  }
 }
 
 ShadowImageLayerOGL::ShadowImageLayerOGL(LayerManagerOGL* aManager)
