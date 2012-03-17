@@ -5,6 +5,7 @@
 var counter = 0;
 
 var interval = setInterval(function() {
+  dump("WorkerAlive\n"); 
   postMessage(++counter);
 }, 100);
 
