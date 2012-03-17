@@ -880,7 +880,6 @@ public:
 
   static void PaintContext(gfxPattern* aPattern,
                            const nsIntRegion& aVisible,
-                           const nsIntRect* aTileSourceRect,
                            float aOpacity,
                            gfxContext* aContext);
 
@@ -940,14 +939,11 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
     size = mScaleToSize;
   }
 
-  // The visible region can extend outside the image.  If we're not
-  // tiling, we don't want to draw into that area, so just draw within
-  // the image bounds.
-  const nsIntRect* tileSrcRect = GetTileSourceRect();
+  // The visible region can extend outside the image, so just draw
+  // within the image bounds.
   AutoSetOperator setOperator(aContext, GetOperator());
   PaintContext(pat,
-               tileSrcRect ? GetVisibleRegion() : nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
-               tileSrcRect,
+               nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
                aOpacity, aContext);
 
   GetContainer()->NotifyPaintedImage(image);
@@ -958,7 +954,6 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
 /*static*/ void
 BasicImageLayer::PaintContext(gfxPattern* aPattern,
                               const nsIntRegion& aVisible,
-                              const nsIntRect* aTileSourceRect,
                               float aOpacity,
                               gfxContext* aContext)
 {
@@ -978,31 +973,13 @@ BasicImageLayer::PaintContext(gfxPattern* aPattern,
     }
   }
 
-  if (!aTileSourceRect) {
-    aContext->NewPath();
-    // No need to snap here; our transform has already taken care of it.
-    // XXX true for arbitrary regions?  Don't care yet though
-    gfxUtils::PathFromRegion(aContext, aVisible);
-    aPattern->SetExtend(extend);
-    aContext->SetPattern(aPattern);
-    aContext->FillWithOpacity(aOpacity);
-  } else {
-    nsRefPtr<gfxASurface> source = aPattern->GetSurface();
-    NS_ABORT_IF_FALSE(source, "Expecting a surface pattern");
-    gfxIntSize sourceSize = source->GetSize();
-    nsIntRect sourceRect(0, 0, sourceSize.width, sourceSize.height);
-    NS_ABORT_IF_FALSE(sourceRect == *aTileSourceRect,
-                      "Cowardly refusing to create a temporary surface for tiling");
-
-    gfxContextAutoSaveRestore saveRestore(aContext);
-
-    aContext->NewPath();
-    gfxUtils::PathFromRegion(aContext, aVisible);
-
-    aPattern->SetExtend(gfxPattern::EXTEND_REPEAT);
-    aContext->SetPattern(aPattern);
-    aContext->FillWithOpacity(aOpacity);
-  }
+  aContext->NewPath();
+  // No need to snap here; our transform has already taken care of it.
+  // XXX true for arbitrary regions?  Don't care yet though
+  gfxUtils::PathFromRegion(aContext, aVisible);
+  aPattern->SetExtend(extend);
+  aContext->SetPattern(aPattern);
+  aContext->FillWithOpacity(aOpacity);
 
   // Reset extend mode for callers that need to reuse the pattern
   aPattern->SetExtend(extend);
@@ -2629,7 +2606,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext)
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
   PaintContext(pat,
                nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
-               nsnull, 1.0, tmpCtx);
+               1.0, tmpCtx);
 
   BasicManager()->PaintedImage(BasicManager()->Hold(this),
                                mBackBuffer);
@@ -3075,14 +3052,11 @@ BasicShadowImageLayer::Paint(gfxContext* aContext)
   nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
   pat->SetFilter(mFilter);
 
-  // The visible region can extend outside the image.  If we're not
-  // tiling, we don't want to draw into that area, so just draw within
-  // the image bounds.
-  const nsIntRect* tileSrcRect = GetTileSourceRect();
+  // The visible region can extend outside the image, so just draw
+  // within the image bounds.
   AutoSetOperator setOperator(aContext, GetOperator());
   BasicImageLayer::PaintContext(pat,
-                                tileSrcRect ? GetEffectiveVisibleRegion() : nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
-                                tileSrcRect,
+                                nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
                                 GetEffectiveOpacity(), aContext);
 }
 
