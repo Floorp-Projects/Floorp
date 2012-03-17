@@ -408,13 +408,13 @@ RadioInterfaceLayer.prototype = {
   handleSmsReceived: function handleSmsReceived(message) {
     debug("handleSmsReceived: " + JSON.stringify(message));
     let id = gSmsDatabaseService.saveReceivedMessage(message.sender || null,
-                                                     message.body || null,
+                                                     message.fullBody || null,
                                                      message.timestamp);
     let sms = gSmsService.createSmsMessage(id,
                                            DOM_SMS_DELIVERY_RECEIVED,
                                            message.sender || null,
                                            message.receiver || null,
-                                           message.body || null,
+                                           message.fullBody || null,
                                            message.timestamp);
     Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
   },
