@@ -45,6 +45,7 @@
 #include "LayerManagerOGL.h"
 #include "gfxImageSurface.h"
 #include "GLContext.h"
+#include "base/task.h"
 
 
 namespace mozilla {
@@ -155,6 +156,7 @@ public:
        OptionalThebesBuffer* aReadOnlyFront, nsIntRegion* aFrontUpdatedRegion);
   virtual void EnsureTextureUpdated();
   virtual void EnsureTextureUpdated(nsIntRegion& aRegion);
+  virtual void ProgressiveUpload();
   virtual void DestroyFrontBuffer();
 
   virtual void Disconnect();
@@ -179,6 +181,9 @@ private:
   // When doing delayed texture upload, this is the region of the buffer that
   // still requires uploading.
   nsIntRegion mRegionPendingUpload;
+
+  // Task used for progressive texture upload.
+  CancelableTask* mUploadTask;
 
   // Following used for double-buffering
   ShadowThebesLayerBufferOGL mFrontBuffer;

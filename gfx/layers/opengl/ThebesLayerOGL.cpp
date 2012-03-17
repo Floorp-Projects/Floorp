@@ -48,6 +48,8 @@
 #include "gfxUtils.h"
 #include "gfxTeeSurface.h"
 
+#include "base/message_loop.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -982,6 +984,7 @@ ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
 ShadowThebesLayerOGL::ShadowThebesLayerOGL(LayerManagerOGL *aManager)
   : ShadowThebesLayer(aManager, nsnull)
   , LayerOGL(aManager)
+  , mUploadTask(nsnull)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
@@ -1096,6 +1099,59 @@ ShadowThebesLayerOGL::EnsureTextureUpdated(nsIntRegion& aRegion)
   }
 }
 
+static bool
+ProgressiveUploadCallback(gl::TextureImage* aImage, int aTileNumber,
+                          void *aData)
+{
+  nsIntRegion* regionPendingUpload = (nsIntRegion*)aData;
+
+  // Continue iteration if nothing was uploaded
+  nsIntRect tileRect = aImage->GetTileRect();
+  if (!regionPendingUpload->Intersects(tileRect))
+    return true;
+
+  regionPendingUpload->Sub(*regionPendingUpload, tileRect);
+
+  // XXX If there was a function on MessageLoop to see if there were pending
+  // tasks, we could return true here depending on that. As it is, always return
+  // false and schedule another upload immediately after this one.
+  return false;
+}
+
+void
+ShadowThebesLayerOGL::ProgressiveUpload()
+{
+  if (mRegionPendingUpload.IsEmpty())
+    return;
+
+  // Set a tile iteration callback so we can cancel the upload after a tile
+  // has been uploaded and subtract it from mRegionPendingUpload
+  mBuffer->EnsureTexture(mFrontBuffer.Buffer()->GetSize(),
+                         mFrontBuffer.Buffer()->GetContentType());
+  nsRefPtr<gl::TextureImage> tiledImage = mBuffer->GetTextureImage().get();
+  if (tiledImage->GetTileCount() > 1)
+    tiledImage->SetIterationCallback(ProgressiveUploadCallback, (void *)&mRegionPendingUpload);
+  else
+    mRegionPendingUpload.SetEmpty();
+
+  // Upload a tile
+  mBuffer->DirectUpdate(mFrontBuffer.Buffer(), mRegionPendingUpload);
+
+  // Remove the iteration callback
+  tiledImage->SetIterationCallback(nsnull, nsnull);
+
+  // Mark the task as completed
+  mUploadTask = nsnull;
+
+  if (!mRegionPendingUpload.IsEmpty()) {
+    // Schedule another upload task
+    mUploadTask = NewRunnableMethod(this, &ShadowThebesLayerOGL::ProgressiveUpload);
+    // Post a delayed task to complete more of the upload - give a reasonable delay to allow
+    // for events to be processed.
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, mUploadTask, 5);
+  }
+}
+
 void
 ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
                            const nsIntRegion& aUpdatedRegion,
@@ -1151,6 +1207,12 @@ ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
       }
       nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(mFrontBufferDescriptor);
       mBuffer->Upload(surf, aUpdatedRegion, aNewFront.rect(), aNewFront.rotation(), true, mRegionPendingUpload);
+
+      // Schedule a task to progressively upload the texture
+      if (!mUploadTask) {
+        mUploadTask = NewRunnableMethod(this, &ShadowThebesLayerOGL::ProgressiveUpload);
+        MessageLoop::current()->PostDelayedTask(FROM_HERE, mUploadTask, 5);
+      }
     }
 
     *aReadOnlyFront = aNewFront;
