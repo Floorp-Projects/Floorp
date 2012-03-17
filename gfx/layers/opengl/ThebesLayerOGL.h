@@ -85,6 +85,50 @@ private:
   nsRefPtr<Buffer> mBuffer;
 };
 
+class ShadowThebesLayerBufferOGL
+{
+public:
+  ShadowThebesLayerBufferOGL()
+  {
+    MOZ_COUNT_CTOR(ShadowThebesLayerBufferOGL);
+  }
+
+  ~ShadowThebesLayerBufferOGL()
+  {
+    MOZ_COUNT_DTOR(ShadowThebesLayerBufferOGL);
+  }
+
+  void Swap(gfxASurface* aNewBuffer,
+            const nsIntRect& aNewRect, const nsIntPoint& aNewRotation,
+            gfxASurface** aOldBuffer,
+            nsIntRect* aOldRect, nsIntPoint* aOldRotation)
+  {
+    *aOldRect = mBufferRect;
+    *aOldRotation = mBufferRotation;
+    nsRefPtr<gfxASurface> oldBuffer = mBuffer;
+
+    mBufferRect = aNewRect;
+    mBufferRotation = aNewRotation;
+    mBuffer = aNewBuffer;
+    oldBuffer.forget(aOldBuffer);
+  }
+
+  /**
+   * Wipe out all retained contents. Call this when the entire
+   * buffer becomes invalid.
+   */
+  void Clear()
+  {
+    mBuffer = nsnull;
+    mBufferRect.SetEmpty();
+  }
+
+protected:
+  nsRefPtr<gfxASurface> mBuffer;
+  nsIntRect mBufferRect;
+  nsIntPoint mBufferRotation;
+};
+
 class ShadowThebesLayerOGL : public ShadowThebesLayer,
                              public LayerOGL
 {
@@ -92,6 +136,7 @@ public:
   ShadowThebesLayerOGL(LayerManagerOGL *aManager);
   virtual ~ShadowThebesLayerOGL();
 
+  virtual bool ShouldDoubleBuffer();
   virtual void
   Swap(const ThebesBuffer& aNewFront, const nsIntRegion& aUpdatedRegion,
        OptionalThebesBuffer* aNewBack, nsIntRegion* aNewBackValidRegion,
@@ -99,6 +144,12 @@ public:
   virtual void DestroyFrontBuffer();
 
   virtual void Disconnect();
+
+  virtual void SetValidRegion(const nsIntRegion& aRegion)
+  {
+    mOldValidRegion = mValidRegion;
+    ShadowThebesLayer::SetValidRegion(aRegion);
+  }
 
   // LayerOGL impl
   void Destroy();
@@ -110,6 +161,16 @@ public:
 
 private:
   nsRefPtr<ShadowBufferOGL> mBuffer;
+
+  // Following used for double-buffering
+  ShadowThebesLayerBufferOGL mFrontBuffer;
+  // Describes the gfxASurface we hand out to |mFrontBuffer|.
+  SurfaceDescriptor mFrontBufferDescriptor;
+  // When we receive an update from our remote partner, we stow away
+  // our previous parameters that described our previous front buffer.
+  // Then when we Swap() back/front buffers, we can return these
+  // parameters to our partner (adjusted as needed).
+  nsIntRegion mOldValidRegion;
 };
 
 } /* layers */
