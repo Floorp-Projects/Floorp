@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1331241604000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1331848989000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -65,8 +65,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i72" id="{4ED1F68A-5463-4931-9384-8FFF5ED91D92}">
-                        <versionRange  minVersion="0" maxVersion="3.4.1.194" severity="1">
+      <emItem  blockID="i72" os="WINNT" id="{4ED1F68A-5463-4931-9384-8FFF5ED91D92}">
+                        <versionRange  minVersion="3.4.1" maxVersion="3.4.1.194" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i40" id="{28387537-e3f9-4ed7-860c-11e69af4a8a0}">
@@ -151,6 +151,10 @@
                   </emItem>
       <emItem  blockID="i3" id="langpack-vi-VN@firefox.mozilla.org">
                         <versionRange  minVersion="2.0" maxVersion="2.0">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i73" id="a1g0a9g219d@a1.com">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i51" id="admin@youtubeplayer.com">
