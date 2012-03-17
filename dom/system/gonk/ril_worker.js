@@ -605,6 +605,13 @@ let RIL = {
   currentDataCalls: {},
 
   /**
+   * Hash map for received multipart sms fragments. Messages are hashed with
+   * its sender address and concatenation reference number. Three additional
+   * attributes `segmentMaxSeq`, `receivedSegments`, `segments` are inserted.
+   */
+  _receivedSmsSegmentsMap: {},
+
+  /**
    * Mute or unmute the radio.
    */
   _muted: true,
@@ -1378,6 +1385,59 @@ let RIL = {
     this.muted = Object.getOwnPropertyNames(this.currentCalls).length == 0;
   },
 
+  /**
+   * Helper for processing received multipart SMS.
+   *
+   * @return null for handled segments, and an object containing full message
+   *         body once all segments are received.
+   */
+  _processReceivedSmsSegment: function _processReceivedSmsSegment(original) {
+    let hash = original.sender + ":" + original.header.segmentRef;
+    let seq = original.header.segmentSeq;
+
+    let options = this._receivedSmsSegmentsMap[hash];
+    if (!options) {
+      options = original;
+      this._receivedSmsSegmentsMap[hash] = options;
+
+      options.segmentMaxSeq = original.header.segmentMaxSeq;
+      options.receivedSegments = 0;
+      options.segments = [];
+    } else if (options.segments[seq]) {
+      // Duplicated segment?
+      if (DEBUG) {
+        debug("Got duplicated segment no." + seq + " of a multipart SMS: "
+              + JSON.stringify(original));
+      }
+      return null;
+    }
+
+    options.segments[seq] = original.body;
+    options.receivedSegments++;
+    if (options.receivedSegments < options.segmentMaxSeq) {
+      if (DEBUG) {
+        debug("Got segment no." + seq + " of a multipart SMS: "
+              + JSON.stringify(options));
+      }
+      return null;
+    }
+
+    // Remove from map
+    delete this._receivedSmsSegmentsMap[hash];
+
+    // Rebuild full body
+    options.fullBody = "";
+    for (let i = 1; i <= options.segmentMaxSeq; i++) {
+      options.fullBody += options.segments[i];
+    }
+
+    if (DEBUG) {
+      debug("Got full multipart SMS: " + JSON.stringify(options));
+    }
+
+    return options;
+  },
+
   _handleChangedCallState: function _handleChangedCallState(changedCall) {
     let message = {type: "callStateChange",
                    call: {callIndex: changedCall.callIndex,
@@ -1955,8 +2015,16 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length
     }
   }
 
-  message.type = "sms-received";
-  this.sendDOMMessage(message);
+  if (message.header && (message.header.segmentMaxSeq > 1)) {
+    message = this._processReceivedSmsSegment(message);
+  } else {
+    message.fullBody = message.body;
+  }
+
+  if (message) {
+    message.type = "sms-received";
+    this.sendDOMMessage(message);
+  }
 
   //TODO: this might be a lie? do we want to wait for the mainthread to
   // report back?
@@ -2413,6 +2481,30 @@ let GsmPDUHelper = {
       dataAvailable -= 2;
 
       switch (id) {
+        case PDU_IEI_CONCATENATED_SHORT_MESSAGES_8BIT: {
+          let ref = this.readHexOctet();
+          let max = this.readHexOctet();
+          let seq = this.readHexOctet();
+          dataAvailable -= 3;
+          if (max && seq && (seq <= max)) {
+            header.segmentRef = ref;
+            header.segmentMaxSeq = max;
+            header.segmentSeq = seq;
+          }
+          break;
+        }
+        case PDU_IEI_CONCATENATED_SHORT_MESSAGES_16BIT: {
+          let ref = (this.readHexOctet() << 8) | this.readHexOctet();
+          let max = this.readHexOctet();
+          let seq = this.readHexOctet();
+          dataAvailable -= 4;
+          if (max && seq && (seq <= max)) {
+            header.segmentRef = ref;
+            header.segmentMaxSeq = max;
+            header.segmentSeq = seq;
+          }
+          break;
+        }
         case PDU_IEI_NATIONAL_LANGUAGE_SINGLE_SHIFT:
           let langShiftIndex = this.readHexOctet();
           --dataAvailable;
