@@ -343,8 +343,8 @@ ImageLayerOGL::RenderLayer(int,
 
     GLContext::RectTriangles triangleBuffer;
 
-    float tex_offset_u = float((rect.x % iwidth) / iwidth);
-    float tex_offset_v = float((rect.y % iheight) / iheight);
+    float tex_offset_u = float(rect.x % iwidth) / iwidth;
+    float tex_offset_v = float(rect.y % iheight) / iheight;
     triangleBuffer.addRect(rect.x, rect.y,
                            rect.x + rect.width, rect.y + rect.height,
                            tex_offset_u, tex_offset_v,
