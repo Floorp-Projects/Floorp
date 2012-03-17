@@ -102,6 +102,7 @@ public:
   ThebesLayerBufferOGL(ThebesLayer* aLayer, LayerOGL* aOGLLayer)
     : mLayer(aLayer)
     , mOGLLayer(aOGLLayer)
+    , mInitialised(true)
   {}
   virtual ~ThebesLayerBufferOGL() {}
 
@@ -118,6 +119,8 @@ public:
     return nsIntSize(0, 0);
   }
 
+  bool Initialised() { return mInitialised; }
+
 protected:
   virtual nsIntPoint GetOriginOffset() = 0;
 
@@ -127,6 +130,7 @@ protected:
   LayerOGL* mOGLLayer;
   nsRefPtr<TextureImage> mTexImage;
   nsRefPtr<TextureImage> mTexImageOnWhite;
+  bool mInitialised;
 };
 
 void
@@ -134,7 +138,9 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
                                LayerManagerOGL* aManager,
                                PRUint32 aFlags)
 {
-  if (!mTexImage)
+  NS_ASSERTION(Initialised(), "RenderTo with uninitialised buffer!");
+
+  if (!mTexImage || !Initialised())
     return;
 
   if (mTexImage->InUpdate()) {
@@ -883,15 +889,24 @@ class ShadowBufferOGL : public ThebesLayerBufferOGL
 public:
   ShadowBufferOGL(ShadowThebesLayerOGL* aLayer)
     : ThebesLayerBufferOGL(aLayer, aLayer)
-  {}
+  {
+    mInitialised = false;
+  }
 
   virtual PaintState BeginPaint(ContentType aContentType, PRUint32) {
     NS_RUNTIMEABORT("can't BeginPaint for a shadow layer");
     return PaintState();
   }
 
+  void EnsureTexture(gfxIntSize aSize, ContentType aContentType);
+
+  void DirectUpdate(gfxASurface* aUpdate, nsIntRegion& aRegion);
+
   void Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
-              const nsIntRect& aRect, const nsIntPoint& aRotation);
+              const nsIntRect& aRect, const nsIntPoint& aRotation,
+              bool aDelayUpload, nsIntRegion& aPendingUploadRegion);
+
+  nsRefPtr<TextureImage> GetTextureImage() { return mTexImage; }
 
 protected:
   virtual nsIntPoint GetOriginOffset() {
@@ -904,27 +919,41 @@ private:
 };
 
 void
-ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
-                        const nsIntRect& aRect, const nsIntPoint& aRotation)
+ShadowBufferOGL::EnsureTexture(gfxIntSize aSize, ContentType aContentType)
 {
-  gfxIntSize size = aUpdate->GetSize();
   if (!mTexImage ||
-      GetSize() != nsIntSize(size.width, size.height) ||
-      mTexImage->GetContentType() != aUpdate->GetContentType()) {
+      GetSize() != nsIntSize(aSize.width, aSize.height) ||
+      mTexImage->GetContentType() != aContentType) {
     // XXX we should do something here to decide whether to use REPEAT or not,
     // but I'm not sure what
     mTexImage = CreateClampOrRepeatTextureImage(gl(),
-      nsIntSize(size.width, size.height), aUpdate->GetContentType(), ALLOW_REPEAT);
+      nsIntSize(aSize.width, aSize.height), aContentType, ALLOW_REPEAT);
+    mInitialised = false;
   }
+}
 
-  nsIntRegion destRegion(aUpdated);
+void
+ShadowBufferOGL::DirectUpdate(gfxASurface* aUpdate, nsIntRegion& aRegion)
+{
+  EnsureTexture(aUpdate->GetSize(), aUpdate->GetContentType());
+  mInitialised = true;
+  mTexImage->DirectUpdate(aUpdate, aRegion);
+}
+
+void
+ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
+                        const nsIntRect& aRect, const nsIntPoint& aRotation,
+                        bool aDelayUpload, nsIntRegion& aPendingUploadRegion)
+{
   // aUpdated is in screen coordinates.  Move it so that the layer's
   // top-left is 0,0
+  nsIntRegion destRegion(aUpdated);
   nsIntPoint visTopLeft = mLayer->GetVisibleRegion().GetBounds().TopLeft();
   destRegion.MoveBy(-visTopLeft);
 
   // Correct for rotation
   destRegion.MoveBy(aRotation);
+  gfxIntSize size = aUpdate->GetSize();
   nsIntRect destBounds = destRegion.GetBounds();
   destRegion.MoveBy((destBounds.x >= size.width) ? -size.width : 0,
                     (destBounds.y >= size.height) ? -size.height : 0);
@@ -935,8 +964,16 @@ ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
                ((destBounds.y % size.height) + destBounds.height <= size.height),
                "Updated region lies across rotation boundaries!");
 
-  // NB: this gfxContext must not escape EndUpdate() below
-  mTexImage->DirectUpdate(aUpdate, destRegion);
+  if (aDelayUpload) {
+    // Record the region that needs to be updated, and clip it to the size of
+    // the texture.
+    aPendingUploadRegion.Or(aPendingUploadRegion, destRegion).
+      And(aPendingUploadRegion, nsIntRect(0, 0, size.width, size.height));
+  } else {
+    // NB: this gfxContext must not escape EndUpdate() below
+    DirectUpdate(aUpdate, destRegion);
+    aPendingUploadRegion.Sub(aPendingUploadRegion, destRegion);
+  }
 
   mBufferRect = aRect;
   mBufferRotation = aRotation;
@@ -960,14 +997,103 @@ ShadowThebesLayerOGL::ShouldDoubleBuffer()
    * when uploading textures. This is a work-around for the lack of an
    * asynchronous texture upload facility.
    *
+   * As the progressive upload relies on tile size, doing this when large
+   * tiles are in use is harder to justify.
+   *
    * XXX When bug 730718 is fixed, we will likely want this only to apply for
    *     Adreno-equipped devices (which have broken sub-image texture updates,
    *     and no threaded texture upload capability).
    */
-  return true;
+  return gl()->WantsSmallTiles();
 #else
   return false;
 #endif
+}
+
+void
+ShadowThebesLayerOGL::EnsureTextureUpdated()
+{
+  if (mRegionPendingUpload.IsEmpty() || !IsSurfaceDescriptorValid(mFrontBufferDescriptor))
+    return;
+
+  mBuffer->DirectUpdate(mFrontBuffer.Buffer(), mRegionPendingUpload);
+  mRegionPendingUpload.SetEmpty();
+}
+
+static bool
+EnsureTextureUpdatedCallback(gl::TextureImage* aImage, int aTileNumber,
+                             void *aData)
+{
+  // If this tile intersects with the region we asked to update, it will be
+  // entirely updated - so add it to the update region so that our pending-
+  // upload region will be correctly updated after the iteration finishes.
+  nsIntRegion* updateRegion = (nsIntRegion*)aData;
+  nsIntRect tileRect = aImage->GetTileRect();
+  if (updateRegion->Intersects(tileRect))
+    updateRegion->Or(*updateRegion, tileRect);
+  return true;
+}
+
+void
+ShadowThebesLayerOGL::EnsureTextureUpdated(nsIntRegion& aRegion)
+{
+  if (mRegionPendingUpload.IsEmpty() || !IsSurfaceDescriptorValid(mFrontBufferDescriptor))
+    return;
+
+  // Do this in possibly 4 chunks, to account for rotation boundaries
+  nsIntRegion updateRegion;
+  nsIntRect bufferRect = mFrontBuffer.Rect();
+  for (int i = 0; i < 4; i++) {
+    switch(i) {
+      case 0:
+        // The given region is in unrotated texture space, so alter the
+        // update region to account for buffer rotation on first iteration.
+        aRegion.MoveBy(mFrontBuffer.Rotation());
+        break;
+      case 1:
+      case 3:
+        // On the 2nd and 4th iteration, move the region left, to make sure
+        // texture is updated on both sides of the x-axis rotation boundary.
+        aRegion.MoveBy(-bufferRect.width, 0);
+        break;
+      case 2:
+        // On the 3rd iteration, move the region up to make sure the texture
+        // is updated no both sides of the y-axis rotation boundary.
+        aRegion.MoveBy(bufferRect.width, -bufferRect.height);
+    }
+
+    // Check if any part of the texture that's pending upload intersects with
+    // this region.
+    updateRegion.And(aRegion, mRegionPendingUpload);
+
+    if (updateRegion.IsEmpty())
+      continue;
+
+    nsRefPtr<TextureImage> texImage;
+    if (!gl()->CanUploadSubTextures()) {
+      // When sub-textures are unsupported, TiledTextureImage expands the
+      // boundaries of DirectUpdate to tile boundaries. So that we don't
+      // re-upload texture data, use the tile iteration to monitor how much
+      // of the texture was actually uploaded.
+      gfxASurface* surface = mFrontBuffer.Buffer();
+      gfxIntSize size = surface->GetSize();
+      mBuffer->EnsureTexture(size, surface->GetContentType());
+      texImage = mBuffer->GetTextureImage().get();
+      if (texImage->GetTileCount() > 1)
+        texImage->SetIterationCallback(EnsureTextureUpdatedCallback, (void *)&updateRegion);
+      else
+        updateRegion = nsIntRect(0, 0, size.width, size.height);
+    }
+
+    // Upload this quadrant of the region.
+    mBuffer->DirectUpdate(mFrontBuffer.Buffer(), updateRegion);
+
+    if (!gl()->CanUploadSubTextures())
+      texImage->SetIterationCallback(nsnull, nsnull);
+
+    // Remove the updated region from the pending-upload region.
+    mRegionPendingUpload.Sub(mRegionPendingUpload, updateRegion);
+  }
 }
 
 void
@@ -1024,7 +1150,7 @@ ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
         mBuffer = new ShadowBufferOGL(this);
       }
       nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(mFrontBufferDescriptor);
-      mBuffer->Upload(surf, aUpdatedRegion, aNewFront.rect(), aNewFront.rotation());
+      mBuffer->Upload(surf, aUpdatedRegion, aNewFront.rect(), aNewFront.rotation(), true, mRegionPendingUpload);
     }
 
     *aReadOnlyFront = aNewFront;
@@ -1039,7 +1165,7 @@ ShadowThebesLayerOGL::Swap(const ThebesBuffer& aNewFront,
       mBuffer = new ShadowBufferOGL(this);
     }
     nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront.buffer());
-    mBuffer->Upload(surf, aUpdatedRegion, aNewFront.rect(), aNewFront.rotation());
+    mBuffer->Upload(surf, aUpdatedRegion, aNewFront.rect(), aNewFront.rotation(), false, mRegionPendingUpload);
   }
 
   *aNewBack = aNewFront;
@@ -1100,6 +1226,47 @@ ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   NS_ABORT_IF_FALSE(mBuffer, "should have a buffer here");
 
   mOGLManager->MakeCurrent();
+
+  if (ShouldDoubleBuffer()) {
+    // Find out what part of the screen this layer intersects with
+    gfxMatrix transform2d;
+    const gfx3DMatrix& transform = GetLayer()->GetEffectiveTransform();
+
+    if (transform.Is2D(&transform2d) && transform2d.PreservesAxisAlignedRectangles()) {
+      // Find out the layer rect in screen coordinates and store this in layerRect.
+      // Derived from ThebesLayerBufferOGL::RenderTo.
+      nsIntRect bufferRect = mFrontBuffer.Rect();
+      gfxRect layerRect = transform2d.Transform(gfxRect(bufferRect));
+      layerRect.MoveBy(gfxPoint(aOffset));
+
+      // Find how much of this rect will be visible taking into account the size
+      // of the widget being rendered to.
+      nsIntSize widgetSize = mOGLManager->GetWidgetSize();
+      gfxRect clippedLayerRect = layerRect.Intersect(gfxRect(0, 0, widgetSize.width, widgetSize.height));
+
+      // Now derive the area of the texture that will be visible to make sure
+      // it's updated.
+      gfxPoint scaleFactor = gfxPoint(bufferRect.width / (float)layerRect.width,
+                                      bufferRect.height / (float)layerRect.height);
+      float x1 = (clippedLayerRect.x - layerRect.x) * scaleFactor.x;
+      float y1 = (clippedLayerRect.y - layerRect.y) * scaleFactor.y;
+      float x2 = (clippedLayerRect.XMost() - layerRect.x) * scaleFactor.x;
+      float y2 = (clippedLayerRect.YMost() - layerRect.y) * scaleFactor.y;
+
+      // No need to clamp x2, y2, EnsureTextureUpdated will do that for us
+      nsIntRect updateRect = nsIntRect(NS_MAX(0.0f, x1), NS_MAX(0.0f, y1),
+                                       NS_MAX(0.0f, x2 - x1), NS_MAX(0.0f, y2 - y1));
+
+      nsIntRegion updateRegion = updateRect;
+      EnsureTextureUpdated(updateRegion);
+    } else {
+      // 3D or rotation transform, just give up and upload the whole thing.
+      // XXX It's not hard to find the intersecting rect given a 3D transform, but
+      //     it's more expensive and, I expect, less likely to give benefit.
+      EnsureTextureUpdated();
+    }
+  }
+
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
