@@ -38,6 +38,8 @@ function test_nested_breakpoint()
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
         do_check_eq(aPacket.type, "paused");
+        do_check_eq(aPacket.frame.where.url, path);
+        do_check_eq(aPacket.frame.where.line, location.line + 1);
         do_check_eq(aPacket.why.type, "breakpoint");
         do_check_eq(aPacket.why.actors[0], bpClient.actor);
         // Check that the breakpoint worked.
