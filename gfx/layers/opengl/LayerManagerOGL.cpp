@@ -136,8 +136,11 @@ LayerManagerOGL::CleanupResources()
 
   ctx->MakeCurrent();
 
-  for (unsigned int i = 0; i < mPrograms.Length(); ++i)
-    delete mPrograms[i];
+  for (PRUint32 i = 0; i < mPrograms.Length(); ++i) {
+    for (PRUint32 type = MaskNone; type < NumMaskTypes; ++type) {
+      delete mPrograms[i].mVariations[type];
+    }
+  }
   mPrograms.Clear();
 
   ctx->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
@@ -182,15 +185,23 @@ LayerManagerOGL::CreateContext()
 }
 
 bool
-LayerManagerOGL::InitAndAddProgram(ShaderProgramType aType)
+LayerManagerOGL::InitAndAddPrograms(ShaderProgramType aType)
 {
-  ShaderProgramOGL* p = new ShaderProgramOGL(this->gl(),
-    ProgramProfileOGL::GetProfileFor(aType));
-  if (!p->Initialize()) {
-    delete p;
-    return false;
+  for (PRUint32 maskType = MaskNone; maskType < NumMaskTypes; ++maskType) {
+    if (ProgramProfileOGL::ProgramExists(aType, static_cast<MaskType>(maskType))) {
+      ShaderProgramOGL* p = new ShaderProgramOGL(this->gl(),
+        ProgramProfileOGL::GetProfileFor(aType, static_cast<MaskType>(maskType)));
+      if (!p->Initialize()) {
+        delete p;
+        mPrograms[aType].mVariations[maskType] = nsnull;
+        return false;
+      }
+      mPrograms[aType].mVariations[maskType] = p;
+    } else {
+      mPrograms[aType].mVariations[maskType] = nsnull;
+    }
   }
-  mPrograms.AppendElement(p);
+
   return true;
 }
 
@@ -219,8 +230,9 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
   // we must initialise shaders in order
+  mPrograms.AppendElements(NumProgramTypes);
   for (int type = 0; type < NumProgramTypes; ++type) {
-    if (!InitAndAddProgram(static_cast<ShaderProgramType>(type)))
+    if (!InitAndAddPrograms(static_cast<ShaderProgramType>(type)))
       return false;
   }
 
@@ -1078,38 +1090,16 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
   aTarget->Paint();
 }
 
-LayerManagerOGL::ProgramType LayerManagerOGL::sLayerProgramTypes[] = {
-  gl::RGBALayerProgramType,
-  gl::BGRALayerProgramType,
-  gl::RGBXLayerProgramType,
-  gl::BGRXLayerProgramType,
-  gl::RGBARectLayerProgramType,
-  gl::ColorLayerProgramType,
-  gl::YCbCrLayerProgramType,
-  gl::ComponentAlphaPass1ProgramType,
-  gl::ComponentAlphaPass2ProgramType
-};
-
-#define FOR_EACH_LAYER_PROGRAM(vname)                         \
-  for (size_t lpindex = 0;                                    \
-       lpindex < ArrayLength(sLayerProgramTypes);             \
-       ++lpindex)                                             \
-  {                                                           \
-    ShaderProgramOGL *vname = static_cast<ShaderProgramOGL*>  \
-      (mPrograms[sLayerProgramTypes[lpindex]]);               \
-    do
-
-#define FOR_EACH_LAYER_PROGRAM_END                            \
-    while (0);                                                \
-  }                                                           \
-
 void
 LayerManagerOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
 {
-  FOR_EACH_LAYER_PROGRAM(lp) {
-    lp->Activate();
-    lp->SetProjectionMatrix(aMatrix);
-  } FOR_EACH_LAYER_PROGRAM_END
+  for (unsigned int i = 0; i < mPrograms.Length(); ++i) {
+    for (PRUint32 mask = MaskNone; mask < NumMaskTypes; ++mask) {
+      if (mPrograms[i].mVariations[mask]) {
+        mPrograms[i].mVariations[mask]->CheckAndSetProjectionMatrix(aMatrix);
+      }
+    }
+  }
 }
 
 static GLenum
@@ -1283,7 +1273,6 @@ LayerManagerOGL::CreateShadowCanvasLayer()
   }
   return nsRefPtr<ShadowCanvasLayerOGL>(new ShadowCanvasLayerOGL(this)).forget();
 }
-
 
 } /* layers */
 } /* mozilla */
