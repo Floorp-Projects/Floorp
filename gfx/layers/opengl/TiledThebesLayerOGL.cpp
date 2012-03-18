@@ -189,11 +189,11 @@ TiledThebesLayerOGL::RenderTile(TiledTexture aTile,
                                 nsIntSize aTextureBounds)
 {
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, aTile.mTextureHandle);
-    ColorTextureLayerProgram *program;
+    ShaderProgramOGL *program;
     if (aTile.mFormat == LOCAL_GL_RGB) {
-      program = mOGLManager->GetRGBXLayerProgram();
+      program = mOGLManager->GetProgram(gl::RGBXLayerProgramType);
     } else {
-      program = mOGLManager->GetBGRALayerProgram();
+      program = mOGLManager->GetProgram(gl::BGRARectLayerProgramType);
     }
     program->Activate();
     program->SetTextureUnit(0);
