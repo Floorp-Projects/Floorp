@@ -182,7 +182,8 @@ public:
     mGLContext->MakeCurrent(aForce);
   }
 
-  ShaderProgramOGL* GetBasicLayerProgram(bool aOpaque, bool aIsRGB)
+  ShaderProgramOGL* GetBasicLayerProgram(bool aOpaque, bool aIsRGB,
+                                         MaskType aMask = MaskNone)
   {
     gl::ShaderProgramType format = gl::BGRALayerProgramType;
     if (aIsRGB) {
@@ -196,17 +197,25 @@ public:
         format = gl::BGRXLayerProgramType;
       }
     }
-    return GetProgram(format);
+    return GetProgram(format, aMask);
   }
 
-  ShaderProgramOGL* GetProgram(gl::ShaderProgramType aType) {
-    NS_ASSERTION(aType >= 0 && aType < gl::NumProgramTypes,
+  ShaderProgramOGL* GetProgram(gl::ShaderProgramType aType,
+                               Layer* aMaskLayer) {
+    if (aMaskLayer)
+      return GetProgram(aType, Mask2d);
+    return GetProgram(aType, MaskNone);
+  }
+
+  ShaderProgramOGL* GetProgram(gl::ShaderProgramType aType,
+                               MaskType aMask = MaskNone) {
+    NS_ASSERTION(ProgramProfileOGL::ProgramExists(aType, aMask),
                  "Invalid program type.");
-    return mPrograms[aType];
+    return mPrograms[aType].mVariations[aMask];
   }
 
-  ShaderProgramOGL* GetFBOLayerProgram() {
-    return static_cast<ShaderProgramOGL*>(mPrograms[GetFBOLayerProgramType()]);
+  ShaderProgramOGL* GetFBOLayerProgram(MaskType aMask = MaskNone) {
+    return GetProgram(GetFBOLayerProgramType(), aMask);
   }
 
   gl::ShaderProgramType GetFBOLayerProgramType() {
@@ -384,15 +393,16 @@ private:
 
   already_AddRefed<mozilla::gl::GLContext> CreateContext();
 
-  static ProgramType sLayerProgramTypes[];
-
   /** Backbuffer */
   GLuint mBackBufferFBO;
   GLuint mBackBufferTexture;
   nsIntSize mBackBufferSize;
 
   /** Shader Programs */
-  nsTArray<ShaderProgramOGL*> mPrograms;
+  struct ShaderProgramVariations {
+    ShaderProgramOGL* mVariations[NumMaskTypes];
+  };
+  nsTArray<ShaderProgramVariations> mPrograms;
 
   /** Texture target to use for FBOs */
   GLenum mFBOTextureTarget;
@@ -446,10 +456,11 @@ private:
   void SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix);
 
   /**
-   * helper method for Initialize, creates a program, initialises it,
-   * and adds it to mPrograms
+   * Helper method for Initialize, creates all valid variations of a program,
+   * initialises them, and adds them to mPrograms
+   * returns false if any initialisation fails
    */
-  bool InitAndAddProgram(gl::ShaderProgramType aType);
+  bool InitAndAddPrograms(gl::ShaderProgramType aType);
 
   /* Thebes layer callbacks; valid at the end of a transaciton,
    * while rendering */

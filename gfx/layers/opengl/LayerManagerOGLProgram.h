@@ -50,6 +50,15 @@
 namespace mozilla {
 namespace layers {
 
+// The kinds of mask layer a shader can support
+// We rely on the items in this enum being sequential
+enum MaskType {
+  MaskNone = 0,   // no mask layer
+  Mask2d,         // mask layer for layers with 2D transforms
+  Mask3d,         // mask layer for layers with 3D transforms
+  NumMaskTypes
+};
+
 /**
  * This struct represents the shaders that make up a program and the uniform
  * and attribute parmeters that those shaders take.
@@ -62,7 +71,32 @@ struct ProgramProfileOGL
    * Factory method; creates an instance of this class for the given
    * ShaderProgramType
    */
-  static ProgramProfileOGL GetProfileFor(gl::ShaderProgramType aType);
+  static ProgramProfileOGL GetProfileFor(gl::ShaderProgramType aType,
+                                         MaskType aMask);
+
+  /**
+   * returns true if such a shader program exists
+   */
+  static bool ProgramExists(gl::ShaderProgramType aType, MaskType aMask)
+  {
+    if (aType < 0 ||
+        aType >= gl::NumProgramTypes)
+      return false;
+
+    if (aMask < MaskNone ||
+        aMask >= NumMaskTypes)
+      return false;
+
+    if (aMask == Mask2d &&
+        (aType == gl::Copy2DProgramType ||
+         aType == gl::Copy2DRectProgramType))
+      return false;
+
+    return aMask != Mask3d ||
+           aType == gl::RGBARectLayerProgramType ||
+           aType == gl::RGBALayerProgramType;
+  }
+
 
   /**
    * These two methods lookup the location of a uniform and attribute,
@@ -106,14 +140,14 @@ struct ProgramProfileOGL
 
   nsTArray<Argument> mUniforms;
   nsTArray<Argument> mAttributes;
+  PRUint32 mTextureCount;
+  bool mHasMatrixProj;
 private:
-  ProgramProfileOGL() {}
+  ProgramProfileOGL() :
+    mTextureCount(0),
+    mHasMatrixProj(false) {}
 };
 
-
-#define ASSERT_LOCATION NS_ASSERTION(aLocation >= 0, "Invalid location");  \
-  if (aLocation == GLuint(-1))                                             \
-    return;
 
 #if defined(DEBUG)
 #define CHECK_CURRENT_PROGRAM 1
@@ -195,6 +229,9 @@ public:
     SetMatrixUniform(mProfile.LookupUniformLocation("uLayerQuadTransform"), m);
   }
 
+  // activates this program and sets its projection matrix, if the program uses one
+  void CheckAndSetProjectionMatrix(const gfx3DMatrix& aMatrix);
+
   void SetProjectionMatrix(const gfx3DMatrix& aMatrix) {
     SetMatrixUniform(mProfile.LookupUniformLocation("uMatrixProj"), aMatrix);
   }
@@ -265,23 +302,23 @@ protected:
   static int sCurrentProgramKey;
 #endif
 
-  void SetUniform(GLuint aLocation, float aFloatValue) {
+  void SetUniform(GLint aLocation, float aFloatValue) {
     ASSERT_THIS_PROGRAM;
-    ASSERT_LOCATION;
+    NS_ASSERTION(aLocation >= 0, "Invalid location");
 
     mGL->fUniform1f(aLocation, aFloatValue);
   }
 
-  void SetUniform(GLuint aLocation, const gfxRGBA& aColor) {
+  void SetUniform(GLint aLocation, const gfxRGBA& aColor) {
     ASSERT_THIS_PROGRAM;
-    ASSERT_LOCATION;
+    NS_ASSERTION(aLocation >= 0, "Invalid location");
 
     mGL->fUniform4f(aLocation, float(aColor.r), float(aColor.g), float(aColor.b), float(aColor.a));
   }
 
-  void SetUniform(GLuint aLocation, int aLength, float *aFloatValues) {
+  void SetUniform(GLint aLocation, int aLength, float *aFloatValues) {
     ASSERT_THIS_PROGRAM;
-    ASSERT_LOCATION;
+    NS_ASSERTION(aLocation >= 0, "Invalid location");
 
     if (aLength == 1) {
       mGL->fUniform1fv(aLocation, 1, aFloatValues);
@@ -296,20 +333,20 @@ protected:
     }
   }
 
-  void SetUniform(GLuint aLocation, GLint aIntValue) {
+  void SetUniform(GLint aLocation, GLint aIntValue) {
     ASSERT_THIS_PROGRAM;
-    ASSERT_LOCATION;
+    NS_ASSERTION(aLocation >= 0, "Invalid location");
 
     mGL->fUniform1i(aLocation, aIntValue);
   }
 
-  void SetMatrixUniform(GLuint aLocation, const gfx3DMatrix& aMatrix) {
+  void SetMatrixUniform(GLint aLocation, const gfx3DMatrix& aMatrix) {
     SetMatrixUniform(aLocation, &aMatrix._11);
   }
 
-  void SetMatrixUniform(GLuint aLocation, const float *aFloatValues) {
+  void SetMatrixUniform(GLint aLocation, const float *aFloatValues) {
     ASSERT_THIS_PROGRAM;
-    ASSERT_LOCATION;
+    NS_ASSERTION(aLocation >= 0, "Invalid location");
 
     mGL->fUniformMatrix4fv(aLocation, 1, false, aFloatValues);
   }
