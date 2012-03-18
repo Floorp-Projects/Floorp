@@ -38,6 +38,7 @@
 #define __NS_SVGPAINTSERVERFRAME_H__
 
 #include "nsSVGContainerFrame.h"
+#include "nsSVGUtils.h"
 
 class gfxContext;
 class nsSVGGeometryFrame;

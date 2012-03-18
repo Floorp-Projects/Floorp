@@ -46,6 +46,7 @@
 class nsIFrame;
 class nsSVGLength2;
 class nsSVGElement;
+class nsSVGViewBox;
 class gfxContext;
 class gfxASurface;
 
