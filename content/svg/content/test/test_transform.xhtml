@@ -71,11 +71,15 @@ function run()
                  0, "matrix");
 
   // set the SVGTransform to be a translate() then convert to a matrix
-  t.setTranslate(0, 0);
+  t.setTranslate(0, 10);
   m.a = 2;
 
   // test that the SVGTransform now reflects the matrix value
-  is(t.type, SVGTransform.SVG_TRANSFORM_MATRIX, 't.type for matrix');
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_MATRIX,
+                 2, 0,
+                 0, 1,
+                 0, 10,
+                 0, "matrix");
 
   // set the SVGTransform to be a rotate()
   t.setRotate(90, 0, 0);
