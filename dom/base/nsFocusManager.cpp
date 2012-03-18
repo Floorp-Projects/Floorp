@@ -1960,8 +1960,8 @@ nsFocusManager::ScrollIntoView(nsIPresShell* aPresShell,
   // if the noscroll flag isn't set, scroll the newly focused element into view
   if (!(aFlags & FLAG_NOSCROLL))
     aPresShell->ScrollContentIntoView(aContent,
-                                      NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
-                                      NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
+                                      nsIPresShell::ScrollAxis(),
+                                      nsIPresShell::ScrollAxis(),
                                       nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
