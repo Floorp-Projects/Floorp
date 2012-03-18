@@ -275,7 +275,8 @@ ImageLayerOGL::RenderLayer(int,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, data->mTextures[0].GetTextureID());
     gl()->ApplyFilterToBoundTexture(mFilter);
     
-    ShaderProgramOGL *program = mOGLManager->GetProgram(YCbCrLayerProgramType);
+    ShaderProgramOGL *program = mOGLManager->GetProgram(YCbCrLayerProgramType,
+                                                        GetMaskLayer());
 
     program->Activate();
     program->SetLayerQuadRect(nsIntRect(0, 0,
@@ -285,6 +286,7 @@ ImageLayerOGL::RenderLayer(int,
     program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
     program->SetYCbCrTextureUnits(0, 1, 2);
+    program->LoadMask(GetMaskLayer());
 
     mOGLManager->BindAndDrawQuadWithTextureRect(program,
                                                 yuvImage->mData.GetPictureRect(),
@@ -342,7 +344,7 @@ ImageLayerOGL::RenderLayer(int,
 #endif
 
     ShaderProgramOGL *program = 
-      mOGLManager->GetProgram(data->mLayerProgram);
+      mOGLManager->GetProgram(data->mLayerProgram, GetMaskLayer());
 
     gl()->ApplyFilterToBoundTexture(mFilter);
 
@@ -355,6 +357,7 @@ ImageLayerOGL::RenderLayer(int,
     program->SetLayerOpacity(GetEffectiveOpacity());
     program->SetRenderOffset(aOffset);
     program->SetTextureUnit(0);
+    program->LoadMask(GetMaskLayer());
 
     nsIntRect rect = GetVisibleRegion().GetBounds();
 
@@ -430,7 +433,8 @@ ImageLayerOGL::RenderLayer(int,
      gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, data->mTexture.GetTextureID());
 
-     ShaderProgramOGL *program = mOGLManager->GetProgram(gl::RGBARectLayerProgramType);
+     ShaderProgramOGL *program =
+       mOGLManager->GetProgram(gl::RGBARectLayerProgramType, GetMaskLayer());
      
      program->Activate();
      if (program->GetTexCoordMultiplierUniformLocation() != -1) {
@@ -447,6 +451,7 @@ ImageLayerOGL::RenderLayer(int,
      program->SetLayerOpacity(GetEffectiveOpacity());
      program->SetRenderOffset(aOffset);
      program->SetTextureUnit(0);
+     program->LoadMask(GetMaskLayer());
     
      mOGLManager->BindAndDrawQuad(program);
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
@@ -800,6 +805,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   mOGLManager->MakeCurrent();
 
   if (mTexImage) {
+    //TODO[nrc] shadow layer masking?
     ShaderProgramOGL *colorProgram =
       mOGLManager->GetProgram(mTexImage->GetShaderProgramType());
 
@@ -842,6 +848,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mYUVTexture[2].GetTextureID());
     gl()->ApplyFilterToBoundTexture(mFilter);
 
+    //TODO[nrc] shadow layer masking?
     ShaderProgramOGL *yuvProgram = mOGLManager->GetProgram(YCbCrLayerProgramType);
 
     yuvProgram->Activate();
