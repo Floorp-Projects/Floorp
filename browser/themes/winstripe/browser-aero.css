@@ -2,7 +2,7 @@
 %include browser.css
 %undef WINSTRIPE_AERO
 
-%define customToolbarColor hsl(214,44%,87%)
+%define customToolbarColor hsl(210,75%,92%)
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
