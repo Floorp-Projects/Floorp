@@ -85,7 +85,6 @@ class NetworkInformation;
 } // namespace hal
 
 namespace dom {
-class ScreenOrientationWrapper;
 namespace sms {
 struct SmsFilterData;
 } // namespace sms
@@ -241,8 +240,7 @@ public:
 
     int GetDPI();
 
-    void ShowFilePickerForExtensions(nsAString& aFilePath, const nsAString& aExtensions);
-    void ShowFilePickerForMimeType(nsAString& aFilePath, const nsAString& aMimeType);
+    void ShowFilePicker(nsAString& aFilePath, nsAString& aFilters);
 
     void PerformHapticFeedback(bool aIsLongPress);
 
@@ -417,14 +415,6 @@ public:
     void ShowSurface(jobject surface, const gfxRect& aRect, bool aInverted, bool aBlend);
     void HideSurface(jobject surface);
 
-    // This method doesn't take a ScreenOrientation because it's an enum and
-    // that would require including the header which requires include IPC
-    // headers which requires including basictypes.h which requires a lot of
-    // changes...
-    void GetScreenOrientation(dom::ScreenOrientationWrapper& aOrientation);
-    void EnableScreenOrientationNotifications();
-    void DisableScreenOrientationNotifications();
-
 protected:
     static AndroidBridge *sBridge;
 
@@ -479,8 +469,7 @@ protected:
     jmethodID jGetClipboardText;
     jmethodID jSetClipboardText;
     jmethodID jShowAlertNotification;
-    jmethodID jShowFilePickerForExtensions;
-    jmethodID jShowFilePickerForMimeType;
+    jmethodID jShowFilePicker;
     jmethodID jAlertsProgressListener_OnProgress;
     jmethodID jAlertsProgressListener_OnCancel;
     jmethodID jGetDpi;
@@ -527,10 +516,6 @@ protected:
     jmethodID jGetCurrentNetworkInformation;
     jmethodID jEnableNetworkNotifications;
     jmethodID jDisableNetworkNotifications;
-
-    jmethodID jGetScreenOrientation;
-    jmethodID jEnableScreenOrientationNotifications;
-    jmethodID jDisableScreenOrientationNotifications;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

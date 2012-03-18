@@ -113,7 +113,6 @@ EXPORTS_mozilla/dom = \
   DOMError.h \
   DOMRequest.h \
   StructuredCloneTags.h \
-  ScreenOrientation.h \
   $(NULL)
 
 CPPSRCS =			\

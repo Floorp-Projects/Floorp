@@ -4054,9 +4054,9 @@ nsLayoutUtils::GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
 }
 
 nsDeviceContext*
-nsLayoutUtils::GetDeviceContextForScreenInfo(nsPIDOMWindow* aWindow)
+nsLayoutUtils::GetDeviceContextForScreenInfo(nsIDocShell* aDocShell)
 {
-  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
+  nsCOMPtr<nsIDocShell> docShell = aDocShell;
   while (docShell) {
     // Now make sure our size is up to date.  That will mean that the device
     // context does the right thing on multi-monitor systems when we return it to

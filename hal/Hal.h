@@ -16,7 +16,6 @@
 #include "mozilla/dom/network/Types.h"
 #include "mozilla/dom/power/Types.h"
 #include "mozilla/hal_sandbox/PHal.h"
-#include "mozilla/dom/ScreenOrientation.h"
 
 /*
  * Hal.h contains the public Hal API.
@@ -37,16 +36,7 @@ class nsIDOMWindow;
 
 namespace mozilla {
 
-template <class T>
-class Observer;
-
-namespace dom {
-class ScreenOrientationWrapper;
-}
-
 namespace hal {
-
-typedef Observer<dom::ScreenOrientationWrapper> ScreenOrientationObserver;
 
 class WindowIdentifier;
 
@@ -299,29 +289,6 @@ void GetWakeLockInfo(const nsAString &aTopic, hal::WakeLockInformation *aWakeLoc
  * @param aWakeLockInfo The new wake lock information.
  */
 void NotifyWakeLockChange(const hal::WakeLockInformation& aWakeLockInfo);
-
-/**
- * Inform the backend there is a new screen orientation observer.
- * @param aScreenOrientationObserver The observer that should be added.
- */
-void RegisterScreenOrientationObserver(hal::ScreenOrientationObserver* aScreenOrientationObserver);
-
-/**
- * Inform the backend a screen orientation observer unregistered.
- * @param aScreenOrientationObserver The observer that should be removed.
- */
-void UnregisterScreenOrientationObserver(hal::ScreenOrientationObserver* aScreenOrientationObserver);
-
-/**
- * Returns the current screen orientation.
- */
-void GetCurrentScreenOrientation(dom::ScreenOrientation* aScreenOrientation);
-
-/**
- * Notify of a change in the screen orientation.
- * @param aScreenOrientation The new screen orientation.
- */
-void NotifyScreenOrientationChange(const dom::ScreenOrientation& aScreenOrientation);
 
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
