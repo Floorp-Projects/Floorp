@@ -108,8 +108,20 @@ IonBuilder::optimizeNativeCall(uint32 argc)
     MIRType thisType = MIRTypeFromValueType(thisTypes->getKnownTypeTag(cx));
     MDefinitionVector argv;
 
-    if (argc == 0)
+    if (argc == 0) {
+        if (native == js_Array) {
+            if (!discardCall(argc, argv, current))
+                return false;
+            types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
+            MNewArray *ins = new MNewArray(0, type);
+            current->add(ins);
+            current->push(ins);
+            if (!resumeAfter(ins))
+                return false;
+            return true;
+        }
         return false;
+    }
 
     types::TypeSet *arg1Types = oracle->getCallArg(script, argc, 1, pc);
     MIRType arg1Type = MIRTypeFromValueType(arg1Types->getKnownTypeTag(cx));
@@ -212,6 +224,24 @@ IonBuilder::optimizeNativeCall(uint32 argc)
             current->push(ins);
             return true;
         }
+        if (native == js_Array) {
+            if (arg1Type == MIRType_Int32) {
+                MDefinition *argv1 = current->peek(-1);
+                if (argv1->isConstant()) {
+                    int32 arg = argv1->toConstant()->value().toInt32();
+                    if (!discardCall(argc, argv, current))
+                        return false;
+                    types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
+                    MNewArray *ins = new MNewArray(arg, type);
+                    current->add(ins);
+                    current->push(ins);
+                    if (!resumeAfter(ins))
+                        return false;
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
