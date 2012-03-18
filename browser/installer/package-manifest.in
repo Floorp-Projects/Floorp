@@ -25,18 +25,20 @@
 [@AB_CD@]
 @BINPATH@/chrome/@AB_CD@@JAREXT@
 @BINPATH@/chrome/@AB_CD@.manifest
-@BINPATH@/@PREF_DIR@/firefox-l10n.js
-@BINPATH@/searchplugins/*
 @BINPATH@/defaults/profile/bookmarks.html
+@BINPATH@/defaults/profile/chrome/*
 @BINPATH@/defaults/profile/localstore.rdf
 @BINPATH@/defaults/profile/mimeTypes.rdf
-@BINPATH@/defaults/profile/chrome/*
-@BINPATH@/update.locale
-@BINPATH@/updater.ini
 @BINPATH@/dictionaries/*
 @BINPATH@/hyphenation/*
+@BINPATH@/@PREF_DIR@/firefox-l10n.js
+@BINPATH@/searchplugins/*
 #ifdef XP_WIN32
 @BINPATH@/uninstall/helper.exe
+#endif
+#ifdef MOZ_UPDATER
+@BINPATH@/update.locale
+@BINPATH@/updater.ini
 #endif
 
 [xpcom]
@@ -556,10 +558,12 @@ bin/libfreebl_32int64_3.so
 
 ; [Updater]
 ;
+#ifdef MOZ_UPDATER
 #ifdef XP_MACOSX
 @BINPATH@/updater.app/
 #else
 @BINPATH@/updater@BIN_SUFFIX@
+#endif
 #endif
 
 ; [MaintenanceService]
