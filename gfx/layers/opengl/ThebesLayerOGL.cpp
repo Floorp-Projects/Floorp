@@ -170,11 +170,13 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     if (passes == 2) {
       ShaderProgramOGL* alphaProgram;
       if (pass == 1) {
-        alphaProgram = aManager->GetProgram(gl::ComponentAlphaPass1ProgramType);
+        alphaProgram = aManager->GetProgram(gl::ComponentAlphaPass1ProgramType,
+                                            mLayer->GetMaskLayer());
         gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
       } else {
-        alphaProgram = aManager->GetProgram(gl::ComponentAlphaPass2ProgramType);
+        alphaProgram = aManager->GetProgram(gl::ComponentAlphaPass2ProgramType,
+                                            mLayer->GetMaskLayer());
         gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
       }
@@ -187,7 +189,8 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
       // Note BGR: Cairo's image surfaces are always in what
       // OpenGL and our shaders consider BGR format.
       ShaderProgramOGL* basicProgram =
-        aManager->GetProgram(mTexImage->GetShaderProgramType());
+        aManager->GetProgram(mTexImage->GetShaderProgramType(),
+                             mLayer->GetMaskLayer());
 
       basicProgram->Activate();
       basicProgram->SetTextureUnit(0);
@@ -197,6 +200,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     program->SetLayerOpacity(mLayer->GetEffectiveOpacity());
     program->SetLayerTransform(mLayer->GetEffectiveTransform());
     program->SetRenderOffset(aOffset);
+    program->LoadMask(mLayer->GetMaskLayer());
 
     const nsIntRegion& visibleRegion = mLayer->GetEffectiveVisibleRegion();
     nsIntRegion tmpRegion;
