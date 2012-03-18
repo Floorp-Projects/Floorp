@@ -63,7 +63,7 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
   color.b *= opacity;
   color.a = opacity;
 
-  SolidColorLayerProgram *program = aManager->GetColorLayerProgram();
+  ShaderProgramOGL *program = aManager->GetProgram(gl::ColorLayerProgramType);
   program->Activate();
   program->SetLayerQuadRect(visibleRect);
   program->SetLayerTransform(aLayer->GetEffectiveTransform());

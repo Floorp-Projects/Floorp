@@ -87,6 +87,7 @@ CPPSRCS = \
         ThebesLayerOGL.cpp \
         TiledThebesLayerOGL.cpp \
         ReusableTileStoreOGL.cpp \
+        LayerManagerOGLProgram.cpp \
         LayerSorter.cpp \
         ImageLayers.cpp \
         $(NULL)

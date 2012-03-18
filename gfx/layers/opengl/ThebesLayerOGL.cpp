@@ -165,16 +165,16 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
 
   PRInt32 passes = mTexImageOnWhite ? 2 : 1;
   for (PRInt32 pass = 1; pass <= passes; ++pass) {
-    LayerProgram *program;
+    ShaderProgramOGL *program;
 
     if (passes == 2) {
-      ComponentAlphaTextureLayerProgram *alphaProgram;
+      ShaderProgramOGL* alphaProgram;
       if (pass == 1) {
-        alphaProgram = aManager->GetComponentAlphaPass1LayerProgram();
+        alphaProgram = aManager->GetProgram(gl::ComponentAlphaPass1ProgramType);
         gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
       } else {
-        alphaProgram = aManager->GetComponentAlphaPass2LayerProgram();
+        alphaProgram = aManager->GetProgram(gl::ComponentAlphaPass2ProgramType);
         gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
       }
@@ -186,8 +186,8 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     } else {
       // Note BGR: Cairo's image surfaces are always in what
       // OpenGL and our shaders consider BGR format.
-      ColorTextureLayerProgram *basicProgram =
-        aManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
+      ShaderProgramOGL* basicProgram =
+        aManager->GetProgram(mTexImage->GetShaderProgramType());
 
       basicProgram->Activate();
       basicProgram->SetTextureUnit(0);
