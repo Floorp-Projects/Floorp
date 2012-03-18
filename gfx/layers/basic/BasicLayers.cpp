@@ -1357,24 +1357,28 @@ already_AddRefed<gfxContext>
 BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
                                               gfxASurface::gfxContentType aContent)
 {
-  if (mCachedSurfaceInUse || !aTarget->IsCairo()) {
-    // We can't cache Azure DrawTargets at this point.
-    aTarget->PushGroup(aContent);
-    nsRefPtr<gfxContext> result = aTarget;
-    return result.forget();
+  nsRefPtr<gfxContext> ctx;
+  // We can't cache Azure DrawTargets at this point.
+  if (!mCachedSurfaceInUse && aTarget->IsCairo()) {
+    gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
+    aTarget->IdentityMatrix();
+
+    nsRefPtr<gfxASurface> currentSurf = aTarget->CurrentSurface();
+    gfxRect clip = aTarget->GetClipExtents();
+    clip.RoundOut();
+
+    ctx = mCachedSurface.Get(aContent, clip, currentSurf);
+
+    if (ctx) {
+      mCachedSurfaceInUse = true;
+      /* Align our buffer for the original surface */
+      ctx->SetMatrix(saveMatrix.Matrix());
+      return ctx.forget();
+    }
   }
-  mCachedSurfaceInUse = true;
 
-  gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
-  aTarget->IdentityMatrix();
-
-  nsRefPtr<gfxASurface> currentSurf = aTarget->CurrentSurface();
-  gfxRect clip = aTarget->GetClipExtents();
-  clip.RoundOut();
-
-  nsRefPtr<gfxContext> ctx = mCachedSurface.Get(aContent, clip, currentSurf);
-  /* Align our buffer for the original surface */
-  ctx->SetMatrix(saveMatrix.Matrix());
+  ctx = aTarget;
+  ctx->PushGroup(aContent);
   return ctx.forget();
 }
 
