@@ -397,9 +397,9 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 {
   mOGLManager->MakeCurrent();
 
-  //TODO[nrc] shadow layer masking?
   ShaderProgramOGL *program =
-    mOGLManager->GetProgram(mTexImage->GetShaderProgramType());
+    mOGLManager->GetProgram(mTexImage->GetShaderProgramType(),
+                            GetMaskLayer());
 
 
   gfx3DMatrix effectiveTransform = GetEffectiveTransform();
@@ -424,6 +424,7 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
+  program->LoadMask(GetMaskLayer());
 
   mTexImage->BeginTileIteration();
   if (gl()->CanUploadNonPowerOfTwo()) {

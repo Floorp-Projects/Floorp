@@ -85,6 +85,7 @@ class CanvasLayer;
 class ReadbackLayer;
 class ReadbackProcessor;
 class ShadowLayer;
+class ShadowableLayer;
 class ShadowLayerForwarder;
 class ShadowLayerManager;
 class SpecificLayerAttributes;
@@ -728,6 +729,7 @@ public:
 #endif
 
     mMaskLayer = aMaskLayer;
+    Mutated();
   }
 
   /**
@@ -839,6 +841,12 @@ public:
    * ShadowLayer.  Can be used anytime.
    */
   virtual ShadowLayer* AsShadowLayer() { return nsnull; }
+
+  /**
+   * Dynamic cast to a ShadowableLayer.  Return null if this is not a
+   * ShadowableLayer.  Can be used anytime.
+   */
+  virtual ShadowableLayer* AsShadowableLayer() { return nsnull; }
 
   // These getters can be used anytime.  They return the effective
   // values that should be used when drawing this layer to screen,

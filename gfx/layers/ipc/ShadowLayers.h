@@ -173,6 +173,16 @@ public:
                    ShadowableLayer* aChild);
 
   /**
+   * Set aMaskLayer as the mask on aLayer.
+   * Note that only image layers are properly supported
+   * ShadowLayersParent::UpdateMask and accompanying ipdl
+   * will need changing to update properties for other kinds
+   * of mask layer.
+   */
+  void SetMask(ShadowableLayer* aLayer,
+               ShadowableLayer* aMaskLayer);
+
+  /**
    * Notify the shadow manager that the specified layer's back buffer
    * has new pixels and should become the new front buffer, and be
    * re-rendered, in the compositing process.  The former front buffer
