@@ -97,6 +97,8 @@ public:
 
   void ClearGlobalObjectOwner();
 
+  void UnmarkScriptContext();
+
 protected:
   virtual ~nsXBLDocGlobalObject();
 
@@ -360,6 +362,14 @@ nsXBLDocGlobalObject::ClearGlobalObjectOwner()
   mGlobalObjectOwner = nsnull;
 }
 
+void
+nsXBLDocGlobalObject::UnmarkScriptContext()
+{
+  if (mScriptContext) {
+    xpc_UnmarkGrayObject(mScriptContext->GetNativeGlobal());
+  }
+}
+
 JSObject *
 nsXBLDocGlobalObject::GetGlobalJSObject()
 {
@@ -509,8 +519,12 @@ nsXBLDocumentInfo::MarkInCCGeneration(PRUint32 aGeneration)
   if (mDocument) {
     mDocument->MarkUncollectableForCCGeneration(aGeneration);
   }
+  // Unmark any JS we hold
   if (mBindingTable) {
     mBindingTable->Enumerate(UnmarkProtos, nsnull);
+  }
+  if (mGlobalObject) {
+    mGlobalObject->UnmarkScriptContext();
   }
 }
 
