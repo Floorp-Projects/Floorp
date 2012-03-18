@@ -66,7 +66,7 @@ html|html {
     color: #000;
     background-color: #CCD9EA;
     background-image: /* Fade-out texture at the top */
-                      -moz-linear-gradient(top, rgb(231,237,246), rgba(231,237,246,0) 156px),
+                      -moz-linear-gradient(top, rgb(237,245,252), rgba(237,245,252,0) 156px),
                       /* Texture */
                       url("chrome://global/skin/inContentUI/background-texture.png");
   }
@@ -77,7 +77,7 @@ html|html {
     color: #000;
     /* Blame shorlander for this monstrosity. */
     background-image: /* Fade-out texture and light beams at the top */
-                      -moz-linear-gradient(top, rgb(231,237,246) 3px, rgba(231,237,246,0) 156px),
+                      -moz-linear-gradient(top, rgb(237,245,252) 3px, rgba(237,245,252,0) 156px),
                       /* Side gradients */
                       -moz-linear-gradient(left,
                                            rgba(255,255,255,0.2), rgba(255,255,255,0) 40%,
