@@ -117,6 +117,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
 
         GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:CalculateDisplayPort", this);
+        GeckoAppShell.registerGeckoEventListener("Checkerboard:Toggle", this);
 
         view.setListener(this);
         view.setLayerRenderer(mLayerRenderer);
@@ -290,6 +291,14 @@ public class GeckoLayerClient implements GeckoEventResponder,
             } else if ("Viewport:CalculateDisplayPort".equals(event)) {
                 ImmutableViewportMetrics newMetrics = new ImmutableViewportMetrics(new ViewportMetrics(message));
                 mReturnDisplayPort = calculateDisplayPort(newMetrics);
+            } else if ("Checkerboard:Toggle".equals(event)) {
+                try {
+                    boolean showChecks = message.getBoolean("value");
+                    mLayerController.setCheckerboardShowChecks(showChecks);
+                    Log.i(LOGTAG, "Showing checks: " + showChecks);
+                } catch(JSONException ex) {
+                    Log.e(LOGTAG, "Error decoding JSON", ex);
+                }
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Unable to create viewport metrics in " + event + " handler", e);
