@@ -342,6 +342,8 @@ public:
                                       GLenum aWrapMode = LOCAL_GL_REPEAT,
                                       bool aFlipped = false);
 
+  virtual gfxASurface::gfxImageFormat MaskImageFormat() 
+  { return gfxASurface::ImageFormatARGB32; }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "OGL"; }
@@ -521,6 +523,22 @@ public:
   LayerManagerOGL* OGLManager() const { return mOGLManager; }
   GLContext *gl() const { return mOGLManager->gl(); }
   virtual void CleanupResources() = 0;
+
+  /*
+   * Loads the result of rendering the layer as an OpenGL texture in aTextureUnit.
+   * Will try to use an existing texture if possible, or a temporary
+   * one if not. It is the callee's responsibility to release the texture.
+   * Will return true if a texture could be constructed and loaded, false otherwise.
+   * The texture will not be transformed, i.e., it will be in the same coord
+   * space as this.
+   * Any layer that can be used as a mask layer should override this method.
+   * aSize will contain the size of the image.
+   */
+  virtual bool LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
+  {
+    NS_WARNING("LoadAsTexture called without being overriden");
+    return false;
+  }
 
 protected:
   LayerManagerOGL *mOGLManager;

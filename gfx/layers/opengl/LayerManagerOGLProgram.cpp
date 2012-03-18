@@ -332,6 +332,38 @@ ShaderProgramOGL::CheckAndSetProjectionMatrix(const gfx3DMatrix& aMatrix)
   }
 }
 
+bool
+ShaderProgramOGL::LoadMask(Layer* aMaskLayer)
+{
+  if (!aMaskLayer) {
+    return false;
+  }
+
+  gfxIntSize size;
+  if (!static_cast<LayerOGL*>(aMaskLayer->ImplData())
+        ->LoadAsTexture(LOCAL_GL_TEXTURE0 + mProfile.mTextureCount - 1, &size)){
+    return false;
+  }
+
+  SetUniform(mProfile.LookupUniformLocation("uMaskTexture"),
+              (GLint)(mProfile.mTextureCount - 1));
+
+  gfxMatrix maskTransform;
+  bool isMask2D = aMaskLayer->GetEffectiveTransform().CanDraw2D(&maskTransform);
+  NS_ASSERTION(isMask2D, "How did we end up with a 3D transform here?!");
+  gfxRect bounds = gfxRect(gfxPoint(), size);
+  bounds = maskTransform.TransformBounds(bounds);
+
+  gfx3DMatrix m;
+  m._11 = 1.0f/bounds.width;
+  m._22 = 1.0f/bounds.height;
+  m._41 = float(-bounds.x)/bounds.width;
+  m._42 = float(-bounds.y)/bounds.height;
+
+  SetMatrixUniform(mProfile.LookupUniformLocation("uMaskQuadTransform"), m);
+
+  return true;
+}
 
 } /* layers */
 } /* mozilla */

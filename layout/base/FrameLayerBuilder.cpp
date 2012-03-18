@@ -2761,9 +2761,9 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
     return;
   }
   
-  nsRefPtr<gfxASurface> surface =
-    aLayer->Manager()->CreateOptimalSurface(boundingRect.Size(),
-                                            aLayer->Manager()->MaskImageFormat());
+   nsRefPtr<gfxASurface> surface =
+     aLayer->Manager()->CreateOptimalSurface(boundingRect.Size(),
+                                             aLayer->Manager()->MaskImageFormat());
 
   // fail if we can't get the right surface
   if (!surface || surface->CairoStatus()) {
@@ -2780,7 +2780,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   scale.Scale(mParameters.mXScale, mParameters.mYScale);
   context->Multiply(scale);
   
-  // useful for debugging
+  // useful for debugging, make masked areas semi-opaque
   //context->SetColor(gfxRGBA(0, 0, 0, 0.3));
   //context->Paint();
 
