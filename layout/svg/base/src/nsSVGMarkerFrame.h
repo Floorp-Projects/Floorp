@@ -38,11 +38,13 @@
 #define __NS_SVGMARKERFRAME_H__
 
 #include "nsSVGContainerFrame.h"
+#include "nsSVGUtils.h"
 #include "gfxMatrix.h"
 
 class gfxContext;
 class nsRenderingContext;
 class nsSVGPathGeometryFrame;
+class nsSVGSVGElement;
 class nsIURI;
 class nsIContent;
 struct nsSVGMark;
