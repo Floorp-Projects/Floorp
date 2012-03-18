@@ -680,6 +680,17 @@ ShadowImageLayerD3D9::RenderLayer()
 
 }
 
+already_AddRefed<IDirect3DTexture9>
+ShadowImageLayerD3D9::GetAsTexture(gfxIntSize* aSize)
+{
+  if (!mBuffer) {
+    return nsnull;
+  }
+  
+  *aSize = mBuffer->GetSize();
+  nsRefPtr<IDirect3DTexture9> result = mBuffer->GetTexture();
+  return result.forget();
+}
 
 } /* layers */
 } /* mozilla */

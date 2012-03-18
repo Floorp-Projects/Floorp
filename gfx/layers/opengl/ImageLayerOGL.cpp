@@ -805,15 +805,15 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   mOGLManager->MakeCurrent();
 
   if (mTexImage) {
-    //TODO[nrc] shadow layer masking?
     ShaderProgramOGL *colorProgram =
-      mOGLManager->GetProgram(mTexImage->GetShaderProgramType());
+      mOGLManager->GetProgram(mTexImage->GetShaderProgramType(), GetMaskLayer());
 
     colorProgram->Activate();
     colorProgram->SetTextureUnit(0);
     colorProgram->SetLayerTransform(GetEffectiveTransform());
     colorProgram->SetLayerOpacity(GetEffectiveOpacity());
     colorProgram->SetRenderOffset(aOffset);
+    colorProgram->LoadMask(GetMaskLayer());
 
     mTexImage->SetFilter(mFilter);
     mTexImage->BeginTileIteration();
@@ -848,8 +848,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mYUVTexture[2].GetTextureID());
     gl()->ApplyFilterToBoundTexture(mFilter);
 
-    //TODO[nrc] shadow layer masking?
-    ShaderProgramOGL *yuvProgram = mOGLManager->GetProgram(YCbCrLayerProgramType);
+    ShaderProgramOGL *yuvProgram = mOGLManager->GetProgram(YCbCrLayerProgramType, GetMaskLayer());
 
     yuvProgram->Activate();
     yuvProgram->SetLayerQuadRect(nsIntRect(0, 0,
@@ -859,11 +858,25 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     yuvProgram->SetLayerTransform(GetEffectiveTransform());
     yuvProgram->SetLayerOpacity(GetEffectiveOpacity());
     yuvProgram->SetRenderOffset(aOffset);
+    yuvProgram->LoadMask(GetMaskLayer());
 
     mOGLManager->BindAndDrawQuadWithTextureRect(yuvProgram,
                                                 mPictureRect,
                                                 nsIntSize(mSize.width, mSize.height));
  }
+}
+
+bool
+ShadowImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
+{
+  if (!mTexImage) {
+    return false;
+  }
+
+  mTexImage->BindTextureAndApplyFilter(aTextureUnit);
+
+  *aSize = mTexImage->GetSize();
+  return true;
 }
 
 void

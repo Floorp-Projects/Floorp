@@ -312,6 +312,12 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
     common.clipRect() = (common.useClipRect() ?
                          *mutant->GetClipRect() : nsIntRect());
     common.isFixedPosition() = mutant->GetIsFixedPosition();
+    if (Layer* maskLayer = mutant->GetMaskLayer()) {
+      common.maskLayerChild() = Shadow(maskLayer->AsShadowableLayer());
+    } else {
+      common.maskLayerChild() = NULL;
+    }
+    common.maskLayerParent() = NULL;
     attrs.specific() = null_t();
     mutant->FillSpecificAttributes(attrs.specific());
 

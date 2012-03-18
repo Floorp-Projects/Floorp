@@ -64,8 +64,6 @@ public:
                            void* aCallbackData,
                            ReadbackProcessor* aReadback) {}
 
-  virtual ShadowableLayer* AsShadowableLayer() { return nsnull; }
-
   /**
    * Implementations return true here if they *must* retain their
    * layer contents.  This is true of shadowable layers with shadows,

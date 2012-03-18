@@ -892,6 +892,7 @@ protected:
     return static_cast<BasicLayerManager*>(mManager);
   }
 
+  // only paints the image if aContext is non-null
   already_AddRefed<gfxPattern>
   GetAndPaintCurrentImage(gfxContext* aContext,
                           float aOpacity,
@@ -946,12 +947,14 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
 
   // The visible region can extend outside the image, so just draw
   // within the image bounds.
-  AutoSetOperator setOperator(aContext, GetOperator());
-  PaintContext(pat,
-               nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
-               aOpacity, aContext, aMaskLayer);
+  if (aContext) {
+    AutoSetOperator setOperator(aContext, GetOperator());
+    PaintContext(pat,
+                 nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
+                 aOpacity, aContext, aMaskLayer);
 
-  GetContainer()->NotifyPaintedImage(image);
+    GetContainer()->NotifyPaintedImage(image);
+  }
 
   return pat.forget();
 }
@@ -1076,14 +1079,14 @@ public:
 
   virtual void PaintWithOpacity(gfxContext* aContext,
                                 float aOpacity,
-                                Layer* aMaskLayer = nsnull);
+                                Layer* aMaskLayer);
 
 protected:
   BasicLayerManager* BasicManager()
   {
     return static_cast<BasicLayerManager*>(mManager);
   }
-  void UpdateSurface(gfxASurface* aDestSurface = nsnull);
+  void UpdateSurface(gfxASurface* aDestSurface = nsnull, Layer* aMaskLayer = nsnull);
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
@@ -1147,7 +1150,7 @@ BasicCanvasLayer::Initialize(const Data& aData)
 }
 
 void
-BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
+BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
 {
   if (mDrawTarget) {
     mDrawTarget->Flush();
@@ -1156,7 +1159,7 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
   if (!mGLContext && aDestSurface) {
     nsRefPtr<gfxContext> tmpCtx = new gfxContext(aDestSurface);
     tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    BasicCanvasLayer::PaintWithOpacity(tmpCtx, 1.0f);
+    BasicCanvasLayer::PaintWithOpacity(tmpCtx, 1.0f, aMaskLayer);
     return;
   }
 
@@ -1982,6 +1985,14 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     groupTarget = aTarget;
   }
 
+  if (aLayer->GetFirstChild() &&
+      aLayer->GetMaskLayer() &&
+      HasShadowManager()) {
+    // 'paint' the mask so that it gets sent to the shadow layer tree
+    static_cast<BasicImplData*>(aLayer->GetMaskLayer()->ImplData())
+      ->Paint(nsnull, nsnull);
+  }
+
   /* Only paint ourself, or our children - This optimization relies on this! */
   Layer* child = aLayer->GetFirstChild();
   if (!child) {
@@ -2068,7 +2079,8 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       }
       AutoSetOperator setOperator(aTarget, container->GetOperator());
       gfxMatrix temp = aTarget->CurrentMatrix();
-      PaintWithMask(aTarget, aLayer->GetEffectiveOpacity(), aLayer->GetMaskLayer());
+      PaintWithMask(aTarget, aLayer->GetEffectiveOpacity(),
+                    HasShadowManager() ? nsnull : aLayer->GetMaskLayer());
     }
   }
 
@@ -2161,7 +2173,7 @@ BasicShadowableLayer::~BasicShadowableLayer()
 static ShadowableLayer*
 ToShadowable(Layer* aLayer)
 {
-  return ToData(aLayer)->AsShadowableLayer();
+  return aLayer->AsShadowableLayer();
 }
 
 // Some layers, like ReadbackLayers, can't be shadowed and shadowing
@@ -2259,6 +2271,12 @@ public:
     MOZ_COUNT_DTOR(BasicShadowableThebesLayer);
   }
 
+  virtual void PaintThebes(gfxContext* aContext,
+                           Layer* aMaskLayer,
+                           LayerManager::DrawThebesLayerCallback aCallback,
+                           void* aCallbackData,
+                           ReadbackProcessor* aReadback);
+
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
     aAttrs = ThebesLayerAttributes(GetValidRegion());
@@ -2321,6 +2339,27 @@ private:
   nsIntRegion mFrontValidRegion;
   PRPackedBool mFrontAndBackBufferDiffer;
 };
+
+
+void
+BasicShadowableThebesLayer::PaintThebes(gfxContext* aContext,
+                                        Layer* aMaskLayer,
+                                        LayerManager::DrawThebesLayerCallback aCallback,
+                                        void* aCallbackData,
+                                        ReadbackProcessor* aReadback)
+{
+  if (!HasShadow()) {
+    BasicThebesLayer::PaintThebes(aContext, aMaskLayer, aCallback, aCallbackData, aReadback);
+    return;
+  }
+
+  BasicThebesLayer::PaintThebes(aContext, nsnull, aCallback, aCallbackData, aReadback);
+  if (aMaskLayer) {
+    static_cast<BasicImplData*>(aMaskLayer->ImplData())
+      ->Paint(aContext, nsnull);
+  }
+}
+
 
 void
 BasicShadowableThebesLayer::SetBackBufferAndAttrs(const OptionalThebesBuffer& aBuffer,
@@ -2560,8 +2599,6 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     return;
   }
 
-  //TODO[nrc] masking
-
   if (!mContainer) {
     return;
   }
@@ -2572,6 +2609,11 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 
   if (!image) {
     return;
+  }
+
+  if (aMaskLayer) {
+    static_cast<BasicImplData*>(aMaskLayer->ImplData())
+      ->Paint(aContext, nsnull);
   }
 
   if (image->GetFormat() == Image::PLANAR_YCBCR && BasicManager()->IsCompositingCheap()) {
@@ -2620,8 +2662,8 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
 
   gfxIntSize oldSize = mSize;
   nsRefPtr<gfxPattern> pat = GetAndPaintCurrentImage
-    (aContext, GetEffectiveOpacity(), aMaskLayer);
-  if (!pat || !HasShadow())
+    (aContext, GetEffectiveOpacity(), nsnull);
+  if (!pat)
     return;
 
   bool isOpaque = (GetContentFlags() & CONTENT_OPAQUE);
@@ -2645,7 +2687,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
   PaintContext(pat,
                nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
-               1.0, tmpCtx, aMaskLayer);
+               1.0, tmpCtx, nsnull);
 
   BasicManager()->PaintedImage(BasicManager()->Hold(this),
                                mBackBuffer);
@@ -2678,7 +2720,25 @@ public:
   {
     BasicShadowableLayer::Disconnect();
   }
+
+  virtual void Paint(gfxContext* aContext, Layer* aMaskLayer);
 };
+
+void
+BasicShadowableColorLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
+{
+  // TODO[nrc] move this back inside the if, and clear the context some other way
+  BasicColorLayer::Paint(aContext, aMaskLayer);
+
+  if (!HasShadow()) {
+    return;
+  }
+
+  if (aMaskLayer) {
+    static_cast<BasicImplData*>(aMaskLayer->ImplData())
+      ->Paint(aContext, nsnull);
+  }
+}
 
 class BasicShadowableCanvasLayer : public BasicCanvasLayer,
                                    public BasicShadowableLayer
@@ -2763,8 +2823,6 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     return;
   }
 
-  //TODO[nrc] masking
-
   bool isOpaque = (GetContentFlags() & CONTENT_OPAQUE);
   if (!IsSurfaceDescriptorValid(mBackBuffer) ||
       isOpaque != mBufferIsOpaque) {
@@ -2781,7 +2839,12 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
   nsRefPtr<gfxASurface> backSurface =
     BasicManager()->OpenDescriptor(mBackBuffer);
 
-  UpdateSurface(backSurface);
+
+  if (aMaskLayer) {
+    static_cast<BasicImplData*>(aMaskLayer->ImplData())
+      ->Paint(aContext, nsnull);
+  }
+  UpdateSurface(backSurface, nsnull);
   FireDidTransactionCallback();
 
   BasicManager()->PaintedCanvas(BasicManager()->Hold(this),
@@ -2998,6 +3061,7 @@ public:
     if (!idealTransform.CanDraw2D()) {
       mEffectiveTransform = idealTransform;
       ComputeEffectiveTransformsForChildren(gfx3DMatrix());
+      ComputeEffectiveTransformForMaskLayer(gfx3DMatrix());
       mUseIntermediateSurface = true;
       return;
     }
@@ -3006,6 +3070,8 @@ public:
     // We always pass the ideal matrix down to our children, so there is no
     // need to apply any compensation using the residual from SnapTransform.
     ComputeEffectiveTransformsForChildren(idealTransform);
+
+    ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
 
     /* If we have a single child, it can just inherit our opacity,
      * otherwise we need a PushGroup and we need to mark ourselves as using
@@ -3047,6 +3113,7 @@ public:
   }
 
   virtual void Paint(gfxContext* aContext, Layer* aMaskLayer);
+  already_AddRefed<gfxASurface> GetAsSurface();
 
 protected:
   BasicShadowLayerManager* BasicManager()
@@ -3105,6 +3172,16 @@ BasicShadowImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
                                 GetEffectiveOpacity(), aContext,
                                 aMaskLayer);
 }
+
+already_AddRefed<gfxASurface>
+BasicShadowImageLayer::GetAsSurface()
+{
+  if (!IsSurfaceDescriptorValid(mFrontBuffer)) {
+    return nsnull;
+  }
+
+  return BasicManager()->OpenDescriptor(mFrontBuffer);
+ }
 
 class BasicShadowColorLayer : public ShadowColorLayer,
                               public BasicImplData
@@ -3237,8 +3314,7 @@ BasicShadowCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
   // No need to snap here; our transform has already taken care of it
   aContext->Rectangle(r);
   aContext->SetPattern(pat);
-  //TODO[nrc] masking
-  aContext->FillWithOpacity(GetEffectiveOpacity());
+  FillWithMask(aContext, GetEffectiveOpacity(), aMaskLayer);
 
   if (mNeedsYFlip) {
     aContext->SetMatrix(m);

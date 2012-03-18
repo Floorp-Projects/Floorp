@@ -108,6 +108,8 @@ public:
 
   virtual void RenderLayer();
 
+  virtual already_AddRefed<IDirect3DTexture9> GetAsTexture(gfxIntSize* aSize);
+
 private:
   nsRefPtr<ShadowBufferD3D9> mBuffer;
   nsRefPtr<PlanarYCbCrImage> mYCbCrImage;
