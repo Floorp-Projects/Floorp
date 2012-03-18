@@ -69,8 +69,7 @@ BasicTiledLayerBuffer::PaintThebes(BasicTiledThebesLayer* aLayer,
                                    const nsIntRegion& aNewValidRegion,
                                    const nsIntRegion& aPaintRegion,
                                    LayerManager::DrawThebesLayerCallback aCallback,
-                                   void* aCallbackData,
-                                   Layer* aMaskLayer)
+                                   void* aCallbackData)
 {
   mThebesLayer = aLayer;
   mCallback = aCallback;
@@ -235,9 +234,13 @@ BasicTiledThebesLayer::PaintThebes(gfxContext* aContext,
   if (regionToPaint.IsEmpty())
     return;
 
-  mTiledBuffer.PaintThebes(this, mVisibleRegion, regionToPaint, aCallback, aCallbackData, aMaskLayer);
+  mTiledBuffer.PaintThebes(this, mVisibleRegion, regionToPaint, aCallback, aCallbackData);
   mTiledBuffer.ReadLock();
   mValidRegion = mVisibleRegion;
+  if (aMaskLayer) {
+    static_cast<BasicImplData*>(aMaskLayer->ImplData())
+      ->Paint(aContext, nsnull);
+  }
 
   BasicManager()->PaintedTiledLayerBuffer(BasicManager()->Hold(this), &mTiledBuffer);
 }

@@ -160,7 +160,8 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
                                 const nsIntRegion& aValidRegion,
                                 const gfxSize& aResolution,
                                 const gfx3DMatrix& aTransform,
-                                const nsIntPoint& aRenderOffset)
+                                const nsIntPoint& aRenderOffset,
+                                Layer* aMaskLayer)
 {
   // Render old tiles to fill in gaps we haven't had the time to render yet.
   for (PRUint32 i = 0; i < mTiles.Length(); i++) {
@@ -200,7 +201,7 @@ ReusableTileStoreOGL::DrawTiles(TiledThebesLayerOGL* aLayer,
     uint16_t tileStartY = tile->mTileOrigin.y % tile->mTileSize;
     nsIntPoint tileOffset(tile->mTileOrigin.x - tileStartX, tile->mTileOrigin.y - tileStartY);
     nsIntSize textureSize(tile->mTileSize, tile->mTileSize);
-    aLayer->RenderTile(tile->mTexture, transform, aRenderOffset, tile->mTileRegion, tileOffset, textureSize);
+    aLayer->RenderTile(tile->mTexture, transform, aRenderOffset, tile->mTileRegion, tileOffset, textureSize, aMaskLayer);
   }
 }
 

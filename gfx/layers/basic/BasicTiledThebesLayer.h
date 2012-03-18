@@ -86,8 +86,7 @@ public:
                    const nsIntRegion& aNewValidRegion,
                    const nsIntRegion& aPaintRegion,
                    LayerManager::DrawThebesLayerCallback aCallback,
-                   void* aCallbackData,
-                   Layer* aMaskLayer);
+                   void* aCallbackData);
 
   BasicTiledLayerTile GetPlaceholderTile() const {
     return mPlaceholder;
