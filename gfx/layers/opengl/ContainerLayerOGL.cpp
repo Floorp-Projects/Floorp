@@ -279,7 +279,7 @@ ContainerRender(Container* aContainer,
 
     aContainer->gl()->fBindTexture(aManager->FBOTextureTarget(), containerSurface);
 
-    ColorTextureLayerProgram *rgb = aManager->GetFBOLayerProgram();
+    ShaderProgramOGL *rgb = aManager->GetFBOLayerProgram();
 
     rgb->Activate();
     rgb->SetLayerQuadRect(visibleRect);
@@ -290,9 +290,7 @@ ContainerRender(Container* aContainer,
 
     if (rgb->GetTexCoordMultiplierUniformLocation() != -1) {
       // 2DRect case, get the multiplier right for a sampler2DRect
-      float f[] = { float(visibleRect.width), float(visibleRect.height) };
-      rgb->SetUniform(rgb->GetTexCoordMultiplierUniformLocation(),
-                      2, f);
+      rgb->SetTexCoordMultiplier(visibleRect.width, visibleRect.height);
     }
 
     // Drawing is always flipped, but when copying between surfaces we want to avoid

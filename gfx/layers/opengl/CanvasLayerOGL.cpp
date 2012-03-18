@@ -240,7 +240,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
   }
 
-  ColorTextureLayerProgram *program = nsnull;
+  ShaderProgramOGL *program = nsnull;
 
   bool useGLContext = mCanvasGLContext &&
     mCanvasGLContext->GetContextType() == gl()->GetContextType();
@@ -269,7 +269,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   }
 
   if (!program) {
-    program = mOGLManager->GetColorTextureLayerProgram(mLayerProgram);
+    program = mOGLManager->GetProgram(mLayerProgram);
   }
 
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
@@ -394,8 +394,8 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 {
   mOGLManager->MakeCurrent();
 
-  ColorTextureLayerProgram *program =
-    mOGLManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
+  ShaderProgramOGL *program =
+    mOGLManager->GetProgram(mTexImage->GetShaderProgramType());
 
 
   gfx3DMatrix effectiveTransform = GetEffectiveTransform();

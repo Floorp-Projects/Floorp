@@ -274,8 +274,8 @@ ImageLayerOGL::RenderLayer(int,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, data->mTextures[0].GetTextureID());
     gl()->ApplyFilterToBoundTexture(mFilter);
-
-    YCbCrTextureLayerProgram *program = mOGLManager->GetYCbCrLayerProgram();
+    
+    ShaderProgramOGL *program = mOGLManager->GetProgram(YCbCrLayerProgramType);
 
     program->Activate();
     program->SetLayerQuadRect(nsIntRect(0, 0,
@@ -341,8 +341,8 @@ ImageLayerOGL::RenderLayer(int,
     }
 #endif
 
-    ColorTextureLayerProgram *program = 
-      mOGLManager->GetColorTextureLayerProgram(data->mLayerProgram);
+    ShaderProgramOGL *program = 
+      mOGLManager->GetProgram(data->mLayerProgram);
 
     gl()->ApplyFilterToBoundTexture(mFilter);
 
@@ -369,9 +369,9 @@ ImageLayerOGL::RenderLayer(int,
                            tex_offset_v + float(rect.height) / float(iheight));
 
     GLuint vertAttribIndex =
-        program->AttribLocation(LayerProgram::VertexAttrib);
+        program->AttribLocation(ShaderProgramOGL::VertexCoordAttrib);
     GLuint texCoordAttribIndex =
-        program->AttribLocation(LayerProgram::TexCoordAttrib);
+        program->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
     NS_ASSERTION(texCoordAttribIndex != GLuint(-1), "no texture coords?");
 
     gl()->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
@@ -430,15 +430,12 @@ ImageLayerOGL::RenderLayer(int,
      gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
      gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, data->mTexture.GetTextureID());
 
-     ColorTextureLayerProgram *program = 
-       mOGLManager->GetRGBARectLayerProgram();
+     ShaderProgramOGL *program = mOGLManager->GetProgram(gl::RGBARectLayerProgramType);
      
      program->Activate();
      if (program->GetTexCoordMultiplierUniformLocation() != -1) {
        // 2DRect case, get the multiplier right for a sampler2DRect
-       float f[] = { float(ioImage->GetSize().width), float(ioImage->GetSize().height) };
-       program->SetUniform(program->GetTexCoordMultiplierUniformLocation(),
-                           2, f);
+       program->SetTexCoordMultiplier(ioImage->GetSize().width, ioImage->GetSize().height);
      } else {
        NS_ASSERTION(0, "no rects?");
      }
@@ -712,8 +709,8 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   mOGLManager->MakeCurrent();
 
   if (mTexImage) {
-    ColorTextureLayerProgram *colorProgram =
-      mOGLManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
+    ShaderProgramOGL *colorProgram =
+      mOGLManager->GetProgram(mTexImage->GetShaderProgramType());
 
     colorProgram->Activate();
     colorProgram->SetTextureUnit(0);
@@ -754,7 +751,7 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mYUVTexture[2].GetTextureID());
     gl()->ApplyFilterToBoundTexture(mFilter);
 
-    YCbCrTextureLayerProgram *yuvProgram = mOGLManager->GetYCbCrLayerProgram();
+    ShaderProgramOGL *yuvProgram = mOGLManager->GetProgram(YCbCrLayerProgramType);
 
     yuvProgram->Activate();
     yuvProgram->SetLayerQuadRect(nsIntRect(0, 0,
