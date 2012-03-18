@@ -123,4 +123,9 @@
   <string name="abouthome_no_top_sites">&abouthome_no_top_sites;</string>
   <string name="abouthome_about_sync">&abouthome_about_sync;</string>
   <string name="abouthome_sync_bold_name">&abouthome_sync_bold_name;</string>
+
+  <string name="filepicker_title">&filepicker_title;</string>
+  <string name="filepicker_audio_title">&filepicker_audio_title;</string>
+  <string name="filepicker_image_title">&filepicker_image_title;</string>
+  <string name="filepicker_video_title">&filepicker_video_title;</string>
 </resources>
