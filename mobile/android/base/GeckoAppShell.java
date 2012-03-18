@@ -1099,13 +1099,9 @@ public class GeckoAppShell
         GeckoApp.mAppContext.setFullScreen(fullscreen);
     }
 
-    public static String showFilePickerForExtensions(String aExtensions) {
+    public static String showFilePicker(String aFilters) {
         return GeckoApp.mAppContext.
-            showFilePicker(getMimeTypeFromExtensions(aExtensions));
-    }
-
-    public static String showFilePickerForMimeType(String aMimeType) {
-        return GeckoApp.mAppContext.showFilePicker(aMimeType);
+            showFilePicker(getMimeTypeFromExtensions(aFilters));
     }
 
     public static void performHapticFeedback(boolean aIsLongPress) {
@@ -1630,6 +1626,8 @@ public class GeckoAppShell
         }
     }
 
+    static SynchronousQueue<String> sPromptQueue = null;
+
     public static void registerGeckoEventListener(String event, GeckoEventListener listener) {
         if (mEventListeners == null)
             mEventListeners = new HashMap<String, ArrayList<GeckoEventListener>>();
@@ -1689,6 +1687,8 @@ public class GeckoAppShell
             String type = geckoObject.getString("type");
             
             if (type.equals("Prompt:Show")) {
+                if (sPromptQueue == null)
+                    sPromptQueue = new SynchronousQueue<String>();
                 getHandler().post(new Runnable() {
                     public void run() {
                         getPromptService().processMessage(geckoObject);
@@ -1697,7 +1697,9 @@ public class GeckoAppShell
 
                 String promptServiceResult = "";
                 try {
-                    promptServiceResult = PromptService.waitForReturn();
+                    while (null == (promptServiceResult = sPromptQueue.poll(1, TimeUnit.MILLISECONDS))) {
+                        processNextNativeEvent();
+                    }
                 } catch (InterruptedException e) {
                     Log.i(LOGTAG, "showing prompt ",  e);
                 }
@@ -1993,17 +1995,5 @@ public class GeckoAppShell
 
     public static byte[] decodeBase64(String s, int flags) {
         return decodeBase64(s.getBytes(), flags);
-    }
-
-    public static short getScreenOrientation() {
-        return GeckoScreenOrientationListener.getInstance().getScreenOrientation();
-    }
-
-    public static void enableScreenOrientationNotifications() {
-        GeckoScreenOrientationListener.getInstance().enableNotifications();
-    }
-
-    public static void disableScreenOrientationNotifications() {
-        GeckoScreenOrientationListener.getInstance().disableNotifications();
     }
 }
