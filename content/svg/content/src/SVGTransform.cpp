@@ -53,7 +53,7 @@ SVGTransform::GetValueAsString(nsAString& aValue) const
 
   switch (mType) {
     case nsIDOMSVGTransform::SVG_TRANSFORM_TRANSLATE:
-      if (mMatrix.x0 != 0.0f)
+      if (mMatrix.x0 != mMatrix.y0)
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
             NS_LITERAL_STRING("translate(%g, %g)").get(),
             mMatrix.x0, mMatrix.y0);
