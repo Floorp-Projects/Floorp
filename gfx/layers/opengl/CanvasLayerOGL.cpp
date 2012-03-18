@@ -249,7 +249,9 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
   if (useGLContext) {
     gl()->BindTex2DOffscreen(mCanvasGLContext);
-    program = mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(), true);
+    program = mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(),
+                                                true,
+                                                GetMaskLayer() ? Mask2d : MaskNone);
   } else if (mDelayedUpdates) {
     NS_ABORT_IF_FALSE(mCanvasSurface || mDrawTarget, "WebGL canvases should always be using full texture upload");
     
@@ -269,7 +271,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   }
 
   if (!program) {
-    program = mOGLManager->GetProgram(mLayerProgram);
+    program = mOGLManager->GetProgram(mLayerProgram, GetMaskLayer());
   }
 
 #if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
@@ -286,6 +288,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   program->SetLayerOpacity(GetEffectiveOpacity());
   program->SetRenderOffset(aOffset);
   program->SetTextureUnit(0);
+  program->LoadMask(GetMaskLayer());
 
   if (gl()->CanUploadNonPowerOfTwo()) {
     mOGLManager->BindAndDrawQuad(program, mNeedsYFlip ? true : false);
@@ -394,6 +397,7 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 {
   mOGLManager->MakeCurrent();
 
+  //TODO[nrc] shadow layer masking?
   ShaderProgramOGL *program =
     mOGLManager->GetProgram(mTexImage->GetShaderProgramType());
 

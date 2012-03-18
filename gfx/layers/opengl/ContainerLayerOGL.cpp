@@ -279,7 +279,16 @@ ContainerRender(Container* aContainer,
 
     aContainer->gl()->fBindTexture(aManager->FBOTextureTarget(), containerSurface);
 
-    ShaderProgramOGL *rgb = aManager->GetFBOLayerProgram();
+    MaskType maskType = MaskNone;
+    if (aContainer->GetMaskLayer()) {
+      if (!aContainer->GetTransform().CanDraw2D()) {
+        maskType = Mask3d;
+      } else {
+        maskType = Mask2d;
+      }
+    }
+    ShaderProgramOGL *rgb =
+      aManager->GetFBOLayerProgram(maskType);
 
     rgb->Activate();
     rgb->SetLayerQuadRect(visibleRect);
@@ -287,6 +296,7 @@ ContainerRender(Container* aContainer,
     rgb->SetLayerOpacity(opacity);
     rgb->SetRenderOffset(aOffset);
     rgb->SetTextureUnit(0);
+    rgb->LoadMask(aContainer->GetMaskLayer());
 
     if (rgb->GetTexCoordMultiplierUniformLocation() != -1) {
       // 2DRect case, get the multiplier right for a sampler2DRect
