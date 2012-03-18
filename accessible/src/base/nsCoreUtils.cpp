@@ -296,18 +296,19 @@ nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame,
                                nsIDOMNode *aEndNode, PRInt32 aEndIndex,
                                PRUint32 aScrollType)
 {
-  PRInt16 vPercent, hPercent;
-  ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
+  nsIPresShell::ScrollAxis vertical, horizontal;
+  ConvertScrollTypeToPercents(aScrollType, &vertical, &horizontal);
 
   return ScrollSubstringTo(aFrame, aStartNode, aStartIndex, aEndNode, aEndIndex,
-                           vPercent, hPercent);
+                           vertical, horizontal);
 }
 
 nsresult
 nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame,
                                nsIDOMNode *aStartNode, PRInt32 aStartIndex,
                                nsIDOMNode *aEndNode, PRInt32 aEndIndex,
-                               PRInt16 aVPercent, PRInt16 aHPercent)
+                               nsIPresShell::ScrollAxis aVertical,
+                               nsIPresShell::ScrollAxis aHorizontal)
 {
   if (!aFrame || !aStartNode || !aEndNode)
     return NS_ERROR_FAILURE;
@@ -331,7 +332,7 @@ nsCoreUtils::ScrollSubstringTo(nsIFrame *aFrame,
   selection->AddRange(scrollToRange);
 
   privSel->ScrollIntoView(nsISelectionController::SELECTION_ANCHOR_REGION,
-                          true, aVPercent, aHPercent);
+                          true, aVertical, aHorizontal);
 
   selection->CollapseToStart();
 
@@ -365,39 +366,57 @@ nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
 
 void
 nsCoreUtils::ConvertScrollTypeToPercents(PRUint32 aScrollType,
-                                         PRInt16 *aVPercent,
-                                         PRInt16 *aHPercent)
+                                         nsIPresShell::ScrollAxis *aVertical,
+                                         nsIPresShell::ScrollAxis *aHorizontal)
 {
+  PRInt16 whereY, whereX;
+  nsIPresShell::WhenToScroll whenY, whenX;
   switch (aScrollType)
   {
     case nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT:
-      *aVPercent = NS_PRESSHELL_SCROLL_TOP;
-      *aHPercent = NS_PRESSHELL_SCROLL_LEFT;
+      whereY = nsIPresShell::SCROLL_TOP;
+      whenY  = nsIPresShell::SCROLL_ALWAYS;
+      whereX = nsIPresShell::SCROLL_LEFT;
+      whenX  = nsIPresShell::SCROLL_ALWAYS;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT:
-      *aVPercent = NS_PRESSHELL_SCROLL_BOTTOM;
-      *aHPercent = NS_PRESSHELL_SCROLL_RIGHT;
+      whereY = nsIPresShell::SCROLL_BOTTOM;
+      whenY  = nsIPresShell::SCROLL_ALWAYS;
+      whereX = nsIPresShell::SCROLL_RIGHT;
+      whenX  = nsIPresShell::SCROLL_ALWAYS;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE:
-      *aVPercent = NS_PRESSHELL_SCROLL_TOP;
-      *aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      whereY = nsIPresShell::SCROLL_TOP;
+      whenY  = nsIPresShell::SCROLL_ALWAYS;
+      whereX = nsIPresShell::SCROLL_MINIMUM;
+      whenX  = nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_EDGE:
-      *aVPercent = NS_PRESSHELL_SCROLL_BOTTOM;
-      *aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      whereY = nsIPresShell::SCROLL_BOTTOM;
+      whenY  = nsIPresShell::SCROLL_ALWAYS;
+      whereX = nsIPresShell::SCROLL_MINIMUM;
+      whenX  = nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_LEFT_EDGE:
-      *aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
-      *aHPercent = NS_PRESSHELL_SCROLL_LEFT;
+      whereY = nsIPresShell::SCROLL_MINIMUM;
+      whenY  = nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE;
+      whereX = nsIPresShell::SCROLL_LEFT;
+      whenX  = nsIPresShell::SCROLL_ALWAYS;
       break;
     case nsIAccessibleScrollType::SCROLL_TYPE_RIGHT_EDGE:
-      *aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
-      *aHPercent = NS_PRESSHELL_SCROLL_RIGHT;
+      whereY = nsIPresShell::SCROLL_MINIMUM;
+      whenY  = nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE;
+      whereX = nsIPresShell::SCROLL_RIGHT;
+      whenX  = nsIPresShell::SCROLL_ALWAYS;
       break;
     default:
-      *aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
-      *aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      whereY = nsIPresShell::SCROLL_MINIMUM;
+      whenY  = nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE;
+      whereX = nsIPresShell::SCROLL_MINIMUM;
+      whenX  = nsIPresShell::SCROLL_IF_NOT_FULLY_VISIBLE;
   }
+  *aVertical = nsIPresShell::ScrollAxis(whereY, whenY);
+  *aHorizontal = nsIPresShell::ScrollAxis(whereX, whenX);
 }
 
 nsIntPoint
