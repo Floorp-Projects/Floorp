@@ -48,6 +48,7 @@ public:
 
     NS_IMETHODIMP Init(nsIDOMWindow *parent, const nsAString& title,
                        PRInt16 mode);
+    NS_IMETHOD AppendFilters(PRInt32 aFilterMask);
     NS_IMETHOD AppendFilter(const nsAString & aTitle,
                             const nsAString & aFilter);
     NS_IMETHOD GetDefaultString(nsAString & aDefaultString);
@@ -62,6 +63,7 @@ public:
 private:
     void InitNative(nsIWidget*, const nsAString&, PRInt16) {};
     nsString mFilePath;
-    nsString mFilters;
+    nsString mExtensionsFilter;
+    nsString mMimeTypeFilter;
 };
 #endif

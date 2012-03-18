@@ -1105,9 +1105,13 @@ public class GeckoAppShell
         GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
     }
 
-    public static String showFilePicker(String aFilters) {
+    public static String showFilePickerForExtensions(String aExtensions) {
         return GeckoApp.mAppContext.
-            showFilePicker(getMimeTypeFromExtensions(aFilters));
+            showFilePicker(getMimeTypeFromExtensions(aExtensions));
+    }
+
+    public static String showFilePickerForMimeType(String aMimeType) {
+        return GeckoApp.mAppContext.showFilePicker(aMimeType);
     }
 
     public static void performHapticFeedback(boolean aIsLongPress) {
