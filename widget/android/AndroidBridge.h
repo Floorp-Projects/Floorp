@@ -240,7 +240,8 @@ public:
 
     int GetDPI();
 
-    void ShowFilePicker(nsAString& aFilePath, nsAString& aFilters);
+    void ShowFilePickerForExtensions(nsAString& aFilePath, const nsAString& aExtensions);
+    void ShowFilePickerForMimeType(nsAString& aFilePath, const nsAString& aMimeType);
 
     void PerformHapticFeedback(bool aIsLongPress);
 
@@ -469,7 +470,8 @@ protected:
     jmethodID jGetClipboardText;
     jmethodID jSetClipboardText;
     jmethodID jShowAlertNotification;
-    jmethodID jShowFilePicker;
+    jmethodID jShowFilePickerForExtensions;
+    jmethodID jShowFilePickerForMimeType;
     jmethodID jAlertsProgressListener_OnProgress;
     jmethodID jAlertsProgressListener_OnCancel;
     jmethodID jGetDpi;
