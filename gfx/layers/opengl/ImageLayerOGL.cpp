@@ -577,6 +577,97 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
   aImage->SetBackendData(LayerManager::LAYERS_OPENGL, backendData.forget());
 }
 
+/*
+ * Returns a size that is larger than and closest to aSize where both
+ * width and height are powers of two.
+ * If the OpenGL setup is capable of using non-POT textures, then it
+ * will just return aSize.
+ */
+gfxIntSize CalculatePOTSize(const gfxIntSize& aSize, GLContext* gl)
+{
+  if (gl->CanUploadNonPowerOfTwo())
+    return aSize;
+
+  return gfxIntSize(NextPowerOfTwo(aSize.width), NextPowerOfTwo(aSize.height));
+}
+
+bool
+ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
+{
+  // this method shares a lot of code with RenderLayer, but it doesn't seem
+  // to be possible to factor it out into a helper method
+
+  if (!GetContainer()) {
+    return false;
+  }
+
+  AutoLockImage autoLock(GetContainer());
+
+  Image *image = autoLock.GetImage();
+  if (!image) {
+    return false;
+  }
+
+  if (image->GetFormat() != Image::CAIRO_SURFACE) {
+    return false;
+  }
+
+  CairoImage* cairoImage = static_cast<CairoImage*>(image);
+
+  if (!cairoImage->mSurface) {
+    return false;
+  }
+
+  CairoOGLBackendData *data = static_cast<CairoOGLBackendData*>(
+    cairoImage->GetBackendData(LayerManager::LAYERS_OPENGL));
+
+  if (!data) {
+    // allocate a new texture and save the details in the backend data
+    data = new CairoOGLBackendData;
+    data->mTextureSize = CalculatePOTSize(cairoImage->mSize, gl());
+
+    GLTexture &texture = data->mTexture;
+    texture.Allocate(mOGLManager->gl());
+
+    if (!texture.IsAllocated()) {
+      return false;
+    }
+
+    mozilla::gl::GLContext *texGL = texture.GetGLContext();
+    texGL->MakeCurrent();
+
+    GLuint texID = texture.GetTextureID();
+
+    data->mLayerProgram =
+      texGL->UploadSurfaceToTexture(cairoImage->mSurface,
+                                    nsIntRect(0,0,
+                                              data->mTextureSize.width,
+                                              data->mTextureSize.height),
+                                    texID, true, nsIntPoint(0,0), false,
+                                    aTextureUnit);
+
+    cairoImage->SetBackendData(LayerManager::LAYERS_OPENGL, data);
+
+    gl()->MakeCurrent();
+    gl()->fActiveTexture(aTextureUnit);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, texID);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
+                         LOCAL_GL_LINEAR);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER,
+                         LOCAL_GL_LINEAR);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
+                         LOCAL_GL_CLAMP_TO_EDGE);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
+                         LOCAL_GL_CLAMP_TO_EDGE);
+  } else {
+    gl()->fActiveTexture(aTextureUnit);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, data->mTexture.GetTextureID());
+  }
+
+  *aSize = data->mTextureSize;
+  return true;
+}
+
 ShadowImageLayerOGL::ShadowImageLayerOGL(LayerManagerOGL* aManager)
   : ShadowImageLayer(aManager, nsnull)
   , LayerOGL(aManager)
