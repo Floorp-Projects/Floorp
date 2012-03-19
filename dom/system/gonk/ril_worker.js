@@ -576,8 +576,8 @@ let RIL = {
   SMSC: null,
   MSISDN: null,
 
-  registrationState: {},
-  gprsRegistrationState: {},
+  voiceRegistrationState: {},
+  dataRegistrationState: {},
 
   /**
    * List of strings identifying the network operator.
@@ -820,12 +820,12 @@ let RIL = {
     Buf.sendParcel();
   },
 
-  getRegistrationState: function getRegistrationState() {
-    Buf.simpleRequest(REQUEST_REGISTRATION_STATE);
+  getVoiceRegistrationState: function getVoiceRegistrationState() {
+    Buf.simpleRequest(REQUEST_VOICE_REGISTRATION_STATE);
   },
 
-  getGPRSRegistrationState: function getGPRSRegistrationState() {
-    Buf.simpleRequest(REQUEST_GPRS_REGISTRATION_STATE);
+  getDataRegistrationState: function getDataRegistrationState() {
+    Buf.simpleRequest(REQUEST_DATA_REGISTRATION_STATE);
   },
 
   getOperator: function getOperator() {
@@ -841,8 +841,8 @@ let RIL = {
    */
   requestNetworkInfo: function requestNetworkInfo() {
     if (DEBUG) debug("Requesting phone state");
-    this.getRegistrationState();
-    this.getGPRSRegistrationState(); //TODO only GSM
+    this.getVoiceRegistrationState();
+    this.getDataRegistrationState(); //TODO only GSM
     this.getOperator();
     this.getNetworkSelectionMode();
   },
@@ -1205,20 +1205,20 @@ let RIL = {
 
       let newCardState;
       switch (app.app_state) {
-        case CARD_APP_STATE_PIN:
+        case CARD_APPSTATE_PIN:
           newCardState = GECKO_CARDSTATE_PIN_REQUIRED;
           break;
-        case CARD_APP_STATE_PUK:
+        case CARD_APPSTATE_PUK:
           newCardState = GECKO_CARDSTATE_PUK_REQUIRED;
           break;
-        case CARD_APP_STATE_SUBSCRIPTION_PERSO:
+        case CARD_APPSTATE_SUBSCRIPTION_PERSO:
           newCardState = GECKO_CARDSTATE_NETWORK_LOCKED;
           break;
-        case CARD_APP_STATE_READY:
+        case CARD_APPSTATE_READY:
           newCardState = GECKO_CARDSTATE_READY;
           break;
-        case CARD_APP_STATE_UNKNOWN:
-        case CARD_APP_STATE_DETECTED:
+        case CARD_APPSTATE_UNKNOWN:
+        case CARD_APPSTATE_DETECTED:
         default:
           newCardState = GECKO_CARDSTATE_NOT_READY;
       }
@@ -1274,8 +1274,8 @@ let RIL = {
     } 
   },
 
-  _processRegistrationState: function _processRegistrationState(state) {
-    let rs = this.registrationState;
+  _processVoiceRegistrationState: function _processVoiceRegistrationState(state) {
+    let rs = this.voiceRegistrationState;
     let stateChanged = false;
 
     let regState = RIL.parseInt(state[0], NETWORK_CREG_STATE_UNKNOWN);
@@ -1310,13 +1310,13 @@ let RIL = {
     }
 
     if (stateChanged) {
-      this.sendDOMMessage({type: "registrationstatechange",
-                           registrationState: rs});
+      this.sendDOMMessage({type: "voiceregistrationstatechange",
+                           voiceRegistrationState: rs});
     }
   },
 
-  _processGPRSRegistrationState: function _processGPRSRegistrationState(state) {
-    let rs = this.gprsRegistrationState;
+  _processDataRegistrationState: function _processDataRegistrationState(state) {
+    let rs = this.dataRegistrationState;
     let stateChanged = false;
 
     let regState = RIL.parseInt(state[0], NETWORK_CREG_STATE_UNKNOWN);
@@ -1332,8 +1332,8 @@ let RIL = {
     }
 
     if (stateChanged) {
-      this.sendDOMMessage({type: "gprsregistrationstatechange",
-                           gprsRegistrationState: rs});
+      this.sendDOMMessage({type: "dataregistrationstatechange",
+                           dataRegistrationState: rs});
     }
   },
 
@@ -1584,9 +1584,9 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS() {
 
   for (let i = 0 ; i < apps_length ; i++) {
     iccStatus.apps.push({
-      app_type:       Buf.readUint32(), // APPTYPE_*
-      app_state:      Buf.readUint32(), // CARD_APP_STATE_*
-      perso_substate: Buf.readUint32(), // PERSOSUBSTATE_*
+      app_type:       Buf.readUint32(), // CARD_APPTYPE_*
+      app_state:      Buf.readUint32(), // CARD_APPSTATE_*
+      perso_substate: Buf.readUint32(), // CARD_PERSOSUBSTATE_*
       aid:            Buf.readString(),
       app_label:      Buf.readString(),
       pin1_replaced:  Buf.readUint32(),
@@ -1700,13 +1700,13 @@ RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
   this.sendDOMMessage({type: "signalstrengthchange",
                        signalStrength: strength});
 };
-RIL[REQUEST_REGISTRATION_STATE] = function REQUEST_REGISTRATION_STATE(length) {
+RIL[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_REGISTRATION_STATE(length) {
   let state = Buf.readStringList();
-  this._processRegistrationState(state);
+  this._processVoiceRegistrationState(state);
 };
-RIL[REQUEST_GPRS_REGISTRATION_STATE] = function REQUEST_GPRS_REGISTRATION_STATE(length) {
+RIL[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length) {
   let state = Buf.readStringList();
-  this._processGPRSRegistrationState(state);
+  this._processDataRegistrationState(state);
 };
 RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length) {
   let operator = Buf.readStringList();
@@ -1989,7 +1989,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
 RIL[UNSOLICITED_RESPONSE_CALL_STATE_CHANGED] = function UNSOLICITED_RESPONSE_CALL_STATE_CHANGED() {
   this.getCurrentCalls();
 };
-RIL[UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED() {
+RIL[UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RESPONSE_VOICE_NETWORK_STATE_CHANGED() {
   if (DEBUG) debug("Network state changed, re-requesting phone state.");
   this.requestNetworkInfo();
 };
