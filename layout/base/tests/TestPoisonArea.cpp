@@ -397,7 +397,7 @@ ReservePoisonArea()
     uintptr_t result = (((uintptr_t(0x7FFFFFFFu) << 31) << 1 |
                          uintptr_t(0xF0DEAFFFu)) &
                         ~uintptr_t(PAGESIZE-1));
-    printf("INFO | poison area assumed at 0x%.*"PRIxPTR"\n", SIZxPTR, result);
+    printf("INFO | poison area assumed at 0x%.*" PRIxPTR "\n", SIZxPTR, result);
     return result;
   } else {
     // First see if we can allocate the preferred poison address from the OS.
@@ -405,7 +405,7 @@ ReservePoisonArea()
     void *result = ReserveRegion(candidate, false);
     if (result == (void *)candidate) {
       // success - inaccessible page allocated
-      printf("INFO | poison area allocated at 0x%.*"PRIxPTR
+      printf("INFO | poison area allocated at 0x%.*" PRIxPTR
              " (preferred addr)\n", SIZxPTR, (uintptr_t)result);
       return candidate;
     }
@@ -416,7 +416,7 @@ ReservePoisonArea()
       // success - selected page cannot be usable memory
       if (result != MAP_FAILED)
         ReleaseRegion(result);
-      printf("INFO | poison area assumed at 0x%.*"PRIxPTR
+      printf("INFO | poison area assumed at 0x%.*" PRIxPTR
              " (preferred addr)\n", SIZxPTR, candidate);
       return candidate;
     }
@@ -424,7 +424,7 @@ ReservePoisonArea()
     // The preferred address is already in use.  Did the OS give us a
     // consolation prize?
     if (result != MAP_FAILED) {
-      printf("INFO | poison area allocated at 0x%.*"PRIxPTR
+      printf("INFO | poison area allocated at 0x%.*" PRIxPTR
              " (consolation prize)\n", SIZxPTR, (uintptr_t)result);
       return (uintptr_t)result;
     }
@@ -433,7 +433,7 @@ ReservePoisonArea()
     // the address.
     result = ReserveRegion(0, false);
     if (result != MAP_FAILED) {
-      printf("INFO | poison area allocated at 0x%.*"PRIxPTR
+      printf("INFO | poison area allocated at 0x%.*" PRIxPTR
              " (fallback)\n", SIZxPTR, (uintptr_t)result);
       return (uintptr_t)result;
     }
@@ -455,7 +455,7 @@ ReservePositiveControl()
     printf("ERROR | allocating positive control | %s\n", LastErrMsg());
     return 0;
   }
-  printf("INFO | positive control allocated at 0x%.*"PRIxPTR"\n",
+  printf("INFO | positive control allocated at 0x%.*" PRIxPTR "\n",
          SIZxPTR, (uintptr_t)result);
   return (uintptr_t)result;
 }
@@ -486,7 +486,7 @@ ReserveNegativeControl()
     return 0;
   }
 
-  printf("INFO | negative control allocated at 0x%.*"PRIxPTR"\n",
+  printf("INFO | negative control allocated at 0x%.*" PRIxPTR "\n",
          SIZxPTR, (uintptr_t)result);
   return (uintptr_t)result;
 }

@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGContainerFrame.h"
+#include "nsSVGElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 
@@ -263,7 +264,7 @@ nsSVGDisplayContainerFrame::GetBBoxContribution(
     if (svgKid) {
       gfxMatrix transform = aToBBoxUserspace;
       nsIContent *content = kid->GetContent();
-      if (content->IsSVG() && !content->IsNodeOfType(nsINode::eTEXT)) {
+      if (content->IsSVG()) {
         transform = static_cast<nsSVGElement*>(content)->
                       PrependLocalTransformsTo(aToBBoxUserspace);
       }
@@ -271,7 +272,7 @@ nsSVGDisplayContainerFrame::GetBBoxContribution(
       // to use UnionEdges, but we must special case the first bbox so that we don't
       // include the initial gfxRect(0,0,0,0).
       gfxRect childBBox = svgKid->GetBBoxContribution(transform, aFlags);
-      if (firstChild) {
+      if (firstChild && (childBBox.Width() > 0 || childBBox.Height() > 0)) {
         bboxUnion = childBBox;
         firstChild = false;
         continue;

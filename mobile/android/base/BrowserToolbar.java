@@ -292,10 +292,17 @@ public class BrowserToolbar extends LinearLayout {
 
     public void setTitle(CharSequence title) {
         Tab tab = Tabs.getInstance().getSelectedTab();
+
+        // We use about:empty as a placeholder for an external page load and
+        // we don't want to change the title
+        if (tab != null && "about:empty".equals(tab.getURL()))
+            return;
+
         // Setting a null title for about:home will ensure we just see
         // the "Enter Search or Address" placeholder text
         if (tab != null && "about:home".equals(tab.getURL()))
             title = null;
+
         mAwesomeBar.setText(title);
     }
 

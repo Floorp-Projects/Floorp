@@ -450,7 +450,7 @@ nsSize nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                      nsSize aMargin,
                                      nsSize aBorder,
                                      nsSize aPadding,
-                                     bool aShrinkWrap)
+                                     PRUint32 aFlags)
 {
   nsSize size = GetVideoIntrinsicSize(aRenderingContext);
 

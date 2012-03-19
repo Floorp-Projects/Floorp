@@ -408,7 +408,7 @@ public:
                              base::Thread* aCompositorThread);
     void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight);
     void SetPageSize(float aZoom, float aPageWidth, float aPageHeight);
-    void GetViewTransform(nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
+    void SyncViewportInfo(const nsIntRect& aDisplayPort, nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 
     jobject CreateSurface();
     void DestroySurface(jobject surface);

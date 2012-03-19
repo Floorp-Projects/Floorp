@@ -73,6 +73,7 @@
 
 #include "vm/GlobalObject.h"
 #include "vm/MethodGuard.h"
+#include "vm/StringBuffer.h"
 
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
@@ -82,7 +83,6 @@
 #include "vm/MethodGuard-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/String-inl.h"
-#include "vm/StringBuffer-inl.h"
 
 using namespace js;
 using namespace js::types;
@@ -448,8 +448,6 @@ js::num_parseInt(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-const char js_Infinity_str[]   = "Infinity";
-const char js_NaN_str[]        = "NaN";
 const char js_isNaN_str[]      = "isNaN";
 const char js_isFinite_str[]   = "isFinite";
 const char js_parseFloat_str[] = "parseFloat";
@@ -886,7 +884,7 @@ enum nc_slot {
  * using union jsdpun.
  */
 static JSConstDoubleSpec number_constants[] = {
-    {0,                         js_NaN_str,          0,{0,0,0}},
+    {0,                         "NaN",               0,{0,0,0}},
     {0,                         "POSITIVE_INFINITY", 0,{0,0,0}},
     {0,                         "NEGATIVE_INFINITY", 0,{0,0,0}},
     {1.7976931348623157E+308,   "MAX_VALUE",         0,{0,0,0}},
@@ -1388,7 +1386,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
     istr = cstr;
     if ((negative = (*istr == '-')) != 0 || *istr == '+')
         istr++;
-    if (*istr == 'I' && !strncmp(istr, js_Infinity_str, sizeof js_Infinity_str - 1)) {
+    if (*istr == 'I' && !strncmp(istr, "Infinity", 8)) {
         d = negative ? js_NegativeInfinity : js_PositiveInfinity;
         estr = istr + 8;
     } else {

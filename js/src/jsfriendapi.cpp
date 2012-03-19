@@ -724,9 +724,9 @@ GCDescription::formatMessage(JSRuntime *rt) const
 }
 
 jschar *
-GCDescription::formatJSON(JSRuntime *rt) const
+GCDescription::formatJSON(JSRuntime *rt, uint64_t timestamp) const
 {
-    return rt->gcStats.formatJSON();
+    return rt->gcStats.formatJSON(timestamp);
 }
 
 JS_FRIEND_API(bool)

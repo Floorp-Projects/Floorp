@@ -9,6 +9,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="../common.js"></script>
@@ -53,6 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       testThis("InvalidAriaHyperlink", 63, 2, "Invalid link");
 
       // image map, but not its link children. They are not part of hypertext.
+      ensureImageMapTree("imgmap");
       testThis("imgmap", 76, 3, "b");
 
       // empty hyperlink
@@ -131,7 +134,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
    ><img width="447" id="imgmap"
          height="15"
          usemap="#atoz_map"
-         src="letters.gif"></img><br
+         src="../letters.gif"></img><br
   >Empty link:<br
   ><a id="emptyLink" href=""><img src=""></img></a><br
   >Link with embedded span<br

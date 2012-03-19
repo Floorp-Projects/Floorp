@@ -10,8 +10,6 @@ Cu.import("resource:///modules/NewTabUtils.jsm", tmp);
 let NewTabUtils = tmp.NewTabUtils;
 
 registerCleanupFunction(function () {
-  reset();
-
   while (gBrowser.tabs.length > 1)
     gBrowser.removeTab(gBrowser.tabs[1]);
 
@@ -57,8 +55,29 @@ let TestRunner = {
     try {
       TestRunner._iter.next();
     } catch (e if e instanceof StopIteration) {
-      finish();
+      TestRunner.finish();
     }
+  },
+
+  /**
+   * Finishes all tests and cleans up.
+   */
+  finish: function () {
+    function cleanupAndFinish() {
+      // Restore the old provider.
+      NewTabUtils.links._provider = originalProvider;
+
+      whenPagesUpdated(finish);
+      NewTabUtils.restore();
+    }
+
+    let callbacks = NewTabUtils.links._populateCallbacks;
+    let numCallbacks = callbacks.length;
+
+    if (numCallbacks)
+      callbacks.splice(0, numCallbacks, cleanupAndFinish);
+    else
+      cleanupAndFinish();
   }
 };
 
@@ -106,13 +125,11 @@ function setPinnedLinks(aLinksPattern) {
 }
 
 /**
- * Resets the lists of blocked and pinned links and clears the storage.
+ * Restore the grid state.
  */
-function reset() {
-  NewTabUtils.reset();
-
-  // Restore the old provider to prevent memory leaks.
-  NewTabUtils.links._provider = originalProvider;
+function restore() {
+  whenPagesUpdated();
+  NewTabUtils.restore();
 }
 
 /**
@@ -269,11 +286,11 @@ function simulateDrop(aDropTarget, aDragSource) {
 /**
  * Resumes testing when all pages have been updated.
  */
-function whenPagesUpdated() {
+function whenPagesUpdated(aCallback) {
   let page = {
     update: function () {
       NewTabUtils.allPages.unregister(this);
-      executeSoon(TestRunner.next);
+      executeSoon(aCallback || TestRunner.next);
     }
   };
 

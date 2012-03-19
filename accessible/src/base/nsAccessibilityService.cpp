@@ -298,19 +298,20 @@ already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateHTMLImageAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
-  nsAutoString mapElmName;
-  aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, mapElmName);
-  nsCOMPtr<nsIDOMHTMLMapElement> mapElm;
-  if (nsIDocument* document = aContent->GetCurrentDoc()) {
-    mapElm = do_QueryInterface(document->FindImageMap(mapElmName));
-  }
-
-  nsAccessible* accessible = mapElm ?
-    new nsHTMLImageMapAccessible(aContent, 
-                                 nsAccUtils::GetDocAccessibleFor(aPresShell), 
-                                 mapElm) :
-    new nsHTMLImageAccessibleWrap(aContent, 
+  nsAccessible* accessible =
+    new nsHTMLImageAccessibleWrap(aContent,
                                   nsAccUtils::GetDocAccessibleFor(aPresShell));
+  NS_ADDREF(accessible);
+  return accessible;
+}
+
+already_AddRefed<nsAccessible>
+nsAccessibilityService::CreateHTMLImageMapAccessible(nsIContent* aContent,
+                                                     nsIPresShell* aPresShell)
+{
+  nsAccessible* accessible =
+    new nsHTMLImageMapAccessible(aContent,
+                                 nsAccUtils::GetDocAccessibleFor(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -607,6 +608,28 @@ nsAccessibilityService::UpdateListBullet(nsIPresShell* aPresShell,
       nsHTMLLIAccessible* listItem = accessible->AsHTMLListItem();
       if (listItem)
         listItem->UpdateBullet(aHasBullet);
+    }
+  }
+}
+
+void
+nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame)
+{
+  nsIPresShell* presShell = aImageFrame->PresContext()->PresShell();
+  nsDocAccessible* document = GetDocAccessible(presShell->GetDocument());
+  if (document) {
+    nsAccessible* accessible =
+      document->GetAccessible(aImageFrame->GetContent());
+    if (accessible) {
+      nsHTMLImageMapAccessible* imageMap = accessible->AsImageMap();
+      if (imageMap) {
+        imageMap->UpdateChildAreas();
+        return;
+      }
+
+      // If image map was initialized after we created an accessible (that'll
+      // be an image accessible) then recreate it.
+      RecreateAccessible(presShell, aImageFrame->GetContent());
     }
   }
 }

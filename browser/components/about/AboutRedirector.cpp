@@ -102,7 +102,7 @@ static RedirEntry kRedirMap[] = {
   { "sync-tabs", "chrome://browser/content/sync/aboutSyncTabs.xul",
     nsIAboutModule::ALLOW_SCRIPT },
 #endif
-  { "home", "chrome://browser/content/aboutHome.xhtml",
+  { "home", "chrome://browser/content/abouthome/aboutHome.xhtml",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::ALLOW_SCRIPT },
   { "newtab", "chrome://browser/content/newtab/newTab.xul",

@@ -71,4 +71,13 @@ public class VirtualLayer extends Layer {
         mPosition = newPosition;
         mResolution = newResolution;
     }
+
+    @Override
+    public void setDisplayPort(Rect displayPort) {
+        // Similar to the above, this removes the lock from setDisplayPort. As
+        // this is currently only called by the Compositor, and it is only
+        // accessed by the composition thread, it is safe to remove the locks
+        // from this call.
+        mDisplayPort = displayPort;
+    }
 }

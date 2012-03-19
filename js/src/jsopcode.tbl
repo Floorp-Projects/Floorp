@@ -364,13 +364,8 @@ OPDEF(JSOP_PICK,        133, "pick",      NULL,       2,  0,  0,  0,  JOF_UINT8|
 OPDEF(JSOP_TRY,         134,"try",        NULL,       1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  0,  JOF_BYTE)
 
-/*
- * Get a slot from a flat closure function object that contains a snapshot of
- * the closure-invariant upvar values. The immediate operand indexes the upvar
- * in the function's u.i.script->upvars() array.
- */
-OPDEF(JSOP_GETFCSLOT,   136,"getfcslot",  NULL,       3,  0,  1, 19,  JOF_UINT16|JOF_NAME|JOF_TYPESET)
-OPDEF(JSOP_CALLFCSLOT,  137,"callfcslot", NULL,       3,  0,  1, 19,  JOF_UINT16|JOF_NAME|JOF_TYPESET)
+OPDEF(JSOP_UNUSED26,    136,"unused20",  NULL,        1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED27,    137,"unused21",  NULL,        1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Define a local function object as a local variable.
@@ -543,12 +538,8 @@ OPDEF(JSOP_LENGTH,        217, "length",       NULL,  5,  1,  1, 18,  JOF_ATOM|J
 OPDEF(JSOP_HOLE,          218, "hole",         NULL,  1,  0,  1,  0,  JOF_BYTE)
 
 OPDEF(JSOP_UNUSED17,      219,"unused17",      NULL,  1,  0,  0,  0,  JOF_BYTE)
-
-/*
- * Variants of JSOP_{DEFLOCALFUN,LAMBDA} optimized for the flat closure case.
- */
-OPDEF(JSOP_DEFLOCALFUN_FC,220,"deflocalfun_fc",NULL,  7,  0,  0,  0,  JOF_SLOTOBJECT|JOF_DECLARING|JOF_TMPSLOT)
-OPDEF(JSOP_LAMBDA_FC,     221,"lambda_fc",     NULL,  5,  0,  1, 19,  JOF_OBJECT)
+OPDEF(JSOP_UNUSED24,      220,"unused18",      NULL,  1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED25,      221,"unused19",      NULL,  1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Joined function object as method optimization support.

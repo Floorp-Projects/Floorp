@@ -59,6 +59,7 @@ public class BrowserContract {
     public static final String PARAM_LIMIT = "limit";
     public static final String PARAM_IS_SYNC = "sync";
     public static final String PARAM_SHOW_DELETED = "show_deleted";
+    public static final String PARAM_IS_TEST = "test";
 
     public interface CommonColumns {
         public static final String _ID = "_id";

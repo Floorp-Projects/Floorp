@@ -90,7 +90,6 @@
 #include "nsIDOMNotifyAudioAvailableEvent.h"
 #include "nsMediaFragmentURIParser.h"
 #include "nsURIHashKey.h"
-#include "nsContentUtils.h"
 #include "nsIScriptError.h"
 
 #ifdef MOZ_OGG

@@ -1042,47 +1042,42 @@ nsIFrame* nsAccessible::GetBoundsFrame()
   return GetFrame();
 }
 
-/* void removeSelection (); */
 NS_IMETHODIMP nsAccessible::SetSelected(bool aSelect)
 {
-  // Add or remove selection
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  if (State() & states::SELECTABLE) {
-    nsAccessible* multiSelect =
-      nsAccUtils::GetMultiSelectableContainer(mContent);
-    if (!multiSelect) {
-      return aSelect ? TakeFocus() : NS_ERROR_FAILURE;
+  nsAccessible* select = nsAccUtils::GetSelectableContainer(this, State());
+  if (select) {
+    if (select->State() & states::MULTISELECTABLE) {
+      if (mRoleMapEntry) {
+        if (aSelect) {
+          return mContent->SetAttr(kNameSpaceID_None,
+                                   nsGkAtoms::aria_selected,
+                                   NS_LITERAL_STRING("true"), true);
+        }
+        return mContent->UnsetAttr(kNameSpaceID_None,
+                                   nsGkAtoms::aria_selected, true);
+      }
+
+      return NS_OK;
     }
 
-    if (mRoleMapEntry) {
-      if (aSelect) {
-        return mContent->SetAttr(kNameSpaceID_None,
-                                 nsGkAtoms::aria_selected,
-                                 NS_LITERAL_STRING("true"), true);
-      }
-      return mContent->UnsetAttr(kNameSpaceID_None,
-                                 nsGkAtoms::aria_selected, true);
-    }
+    return aSelect ? TakeFocus() : NS_ERROR_FAILURE;
   }
 
   return NS_OK;
 }
 
-/* void takeSelection (); */
 NS_IMETHODIMP nsAccessible::TakeSelection()
 {
-  // Select only this item
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  if (State() & states::SELECTABLE) {
-    nsAccessible* multiSelect =
-      nsAccUtils::GetMultiSelectableContainer(mContent);
-    if (multiSelect)
-      multiSelect->ClearSelection();
-
+  nsAccessible* select = nsAccUtils::GetSelectableContainer(this, State());
+  if (select) {
+    if (select->State() & states::MULTISELECTABLE)
+      select->ClearSelection();
     return SetSelected(true);
   }
 

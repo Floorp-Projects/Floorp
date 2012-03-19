@@ -38,6 +38,7 @@
 #define __NS_SVGMASKFRAME_H__
 
 #include "nsSVGContainerFrame.h"
+#include "nsSVGUtils.h"
 #include "gfxPattern.h"
 #include "gfxMatrix.h"
 

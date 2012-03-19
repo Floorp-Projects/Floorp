@@ -87,7 +87,7 @@
 #define NS_ERROR_MODULE_LDAP       20
 #define NS_ERROR_MODULE_SECURITY   21
 #define NS_ERROR_MODULE_DOM_XPATH  22
-// 23 used to be NS_ERROR_MODULE_DOM_RANGE (see bug 711047)
+/* 23 used to be NS_ERROR_MODULE_DOM_RANGE (see bug 711047) */
 #define NS_ERROR_MODULE_URILOADER  24
 #define NS_ERROR_MODULE_CONTENT    25
 #define NS_ERROR_MODULE_PYXPCOM    26
@@ -226,33 +226,6 @@ inline int NS_SUCCEEDED(nsresult _nsresult) {
 
 /* Returned when a factory already is registered */
 #define NS_ERROR_FACTORY_EXISTS            (NS_ERROR_BASE + 0x100)
-
-
-/* For COM compatibility reasons, we want to use exact error code numbers
-   for NS_ERROR_PROXY_INVALID_IN_PARAMETER and NS_ERROR_PROXY_INVALID_OUT_PARAMETER.
-   The first matches:
-
-     #define RPC_E_INVALID_PARAMETER          _HRESULT_TYPEDEF_(0x80010010L)
-
-   Errors returning this mean that the xpcom proxy code could not create a proxy for
-   one of the in paramaters.
-
-   Because of this, we are ignoring the convention if using a base and offset for
-   error numbers.
-
-*/
-
-/* Returned when a proxy could not be create a proxy for one of the IN parameters
-   This is returned only when the "real" method has NOT been invoked.
-*/
-
-#define NS_ERROR_PROXY_INVALID_IN_PARAMETER        ((nsresult) 0x80010010L)
-
-/* Returned when a proxy could not be create a proxy for one of the OUT parameters
-   This is returned only when the "real" method has ALREADY been invoked.
-*/
-
-#define NS_ERROR_PROXY_INVALID_OUT_PARAMETER       ((nsresult) 0x80010011L)
 
 
 /*@}*/

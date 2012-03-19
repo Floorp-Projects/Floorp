@@ -94,7 +94,11 @@ let gDrop = {
       // A new link was dragged onto the grid. Create it by pinning its URL.
       let dt = aEvent.dataTransfer;
       let [url, title] = dt.getData("text/x-moz-url").split(/[\r\n]+/);
-      gPinnedLinks.pin({url: url, title: title}, index);
+      let link = {url: url, title: title};
+      gPinnedLinks.pin(link, index);
+
+      // Make sure the newly added link is not blocked.
+      gBlockedLinks.unblock(link);
     }
   },
 

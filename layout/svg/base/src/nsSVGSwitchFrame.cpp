@@ -38,6 +38,7 @@
 
 #include "nsSVGGFrame.h"
 #include "nsSVGSwitchElement.h"
+#include "nsSVGUtils.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"
 

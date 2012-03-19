@@ -66,6 +66,16 @@ public:
    */
   nsIContent* GetArea(nscoord aX, nscoord aY) const;
 
+  /**
+   * Return area elements count associated with the image map.
+   */
+  PRUint32 AreaCount() const { return mAreas.Length(); }
+
+  /**
+   * Return area element at the given index.
+   */
+  nsIContent* GetAreaAt(PRUint32 aIndex) const;
+
   void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
   
   /** 

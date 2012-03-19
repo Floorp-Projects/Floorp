@@ -700,8 +700,8 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       utility = ['/usr/sbin/screencapture', '-C', '-x', '-t', 'png']
       imgoutput = 'file'
     elif self.IS_WIN32:
-      self.log.info("If you fixed bug 589668, you'd get a screenshot here")
-      return
+      utility = [os.path.join(utilityPath, "screenshot.exe")]
+      imgoutput = 'file'
 
     # Run the capture correctly for the type of capture
     try:
@@ -727,7 +727,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       if imgoutput == 'stdout':
         image = dumper_out
       elif imgoutput == 'file':
-        with open(imgfilename) as imgfile:
+        with open(imgfilename, 'rb') as imgfile:
           image = imgfile.read()
     except IOError, err:
         self.log.info("Failed to read image from %s", imgoutput)

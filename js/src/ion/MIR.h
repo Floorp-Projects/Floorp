@@ -2538,35 +2538,6 @@ class MElements
     }
 };
 
-class MFlatClosureUpvars
-  : public MUnaryInstruction
-{
-    MFlatClosureUpvars(MDefinition *callee)
-      : MUnaryInstruction(callee)
-    {
-        JS_ASSERT(callee->type() == MIRType_Object);
-        setResultType(MIRType_UpvarSlots);
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(FlatClosureUpvars);
-
-    static MFlatClosureUpvars *New(MDefinition *callee) {
-        return new MFlatClosureUpvars(callee);
-    }
-
-    MDefinition *callee() const {
-        return getOperand(0);
-    }
-    bool congruentTo(MDefinition * const &ins) const {
-        return congruentIfOperandsEqual(ins);
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::Load(AliasSet::ObjectFields);
-    }
-};
-
 // Load a dense array's initialized length from an elements vector.
 class MInitializedLength
   : public MUnaryInstruction

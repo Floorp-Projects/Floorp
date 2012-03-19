@@ -217,11 +217,16 @@ NS_IMETHODIMP nsGBKToUnicode::ConvertNoBuff(const char* aSrc,
                }
              }
            }
+           aSrc += 4;
+           i += 3;
         } else {
           *aDest = UCS2_NO_MAPPING; 
+          // If the third and fourth bytes are not in the legal ranges for
+          // a four-byte sequnce, resynchronize on the second byte
+          // (which we know is in the range of LEGAL_GBK_4BYTE_SECOND_BYTE,
+          //  0x30-0x39)
+          aSrc++;
         }
-        aSrc += 4;
-        i+=3;
       }
       else if ((PRUint8) aSrc[0] == (PRUint8)0xA0 )
       {

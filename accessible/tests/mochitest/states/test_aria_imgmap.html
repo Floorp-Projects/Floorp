@@ -19,21 +19,22 @@
   <script type="application/javascript">
   function doTest()
   {
-    //XXX We send a useless mouse move to the image to force it to setup its
-    // image map, because flushing layout won't do it. Hopefully bug 135040
-    // will make this not suck.
-    synthesizeMouse($("imagemap"), 10, 10, { type: "mousemove" });
-    //XXX This may affect a11y more than other code because imagemaps may not
-    // get drawn or have an mouse event over them. Bug 570322 tracks a11y
-    // dealing with this.
-    todo(false, "Need to remove this image map workaround.");
+    ensureImageMapTree("imagemap");
 
-    testStates("t1", 0, EXT_STATE_EDITABLE, STATE_LINKED);
-    testStates("t2", 0, EXT_STATE_EDITABLE, STATE_LINKED);
-    testStates("rb1", (STATE_CHECKABLE | STATE_CHECKED), 0, STATE_LINKED);
-    testStates("rb2", STATE_CHECKABLE, 0, STATE_CHECKED, STATE_LINKED);
-    testStates("cb1", (STATE_CHECKABLE | STATE_CHECKED), 0, STATE_LINKED);
-    testStates("cbox", (STATE_HASPOPUP | STATE_COLLAPSED),
+    var imageMap = getAccessible("imagemap");
+
+    var t1 = imageMap.getChildAt(0);
+    testStates(t1, 0, EXT_STATE_EDITABLE, STATE_LINKED);
+    var t2 = imageMap.getChildAt(1);
+    testStates(t2, 0, EXT_STATE_EDITABLE, STATE_LINKED);
+    var rb1 = imageMap.getChildAt(2);
+    testStates(rb1, (STATE_CHECKABLE | STATE_CHECKED), 0, STATE_LINKED);
+    var rb2 = imageMap.getChildAt(3);
+    testStates(rb2, STATE_CHECKABLE, 0, STATE_CHECKED, STATE_LINKED);
+    var cb1 = imageMap.getChildAt(4);
+    testStates(cb1, (STATE_CHECKABLE | STATE_CHECKED), 0, STATE_LINKED);
+    var cbox = imageMap.getChildAt(5);
+    testStates(cbox, (STATE_HASPOPUP | STATE_COLLAPSED),
                EXT_STATE_EXPANDABLE, STATE_LINKED);
 
     SimpleTest.finish();
