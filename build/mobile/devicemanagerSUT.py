@@ -543,12 +543,6 @@ class DeviceManagerSUT(DeviceManager):
     except AgentError:
       return None
 
-    # HACK: when using am instrument, we block on the exec call.  Also this results in launching 
-    #       org.mozilla.fennec which will not be found in processExist().
-    if re.search('am instrument -w -e class org.mozilla', appname):
-      print "terminating early due to am instrument vs org.mozilla.f*"
-      return 1
-
     # wait up to 30 seconds for process to start up
     timeslept = 0
     while (timeslept <= 30):
