@@ -82,6 +82,7 @@
 #include "FrameLayerBuilder.h"
 #include "nsSMILKeySpline.h"
 #include "nsSubDocumentFrame.h"
+#include "nsSVGOuterSVGFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -606,6 +607,12 @@ nsHTMLScrollFrame::GuessVScrollbarNeeded(const ScrollReflowState& aState)
     return false;
 
   if (mInner.mIsRoot) {
+    nsIFrame *f = mInner.mScrolledFrame->GetFirstPrincipalChild();
+    if (f && f->GetType() == nsGkAtoms::svgOuterSVGFrame &&
+        static_cast<nsSVGOuterSVGFrame*>(f)->VerticalScrollbarNotNeeded()) {
+      // Common SVG case - avoid a bad guess.
+      return false;
+    }
     // Assume that there will be a scrollbar; it seems to me
     // that 'most pages' do have a scrollbar, and anyway, it's cheaper
     // to do an extra reflow for the pages that *don't* need a
