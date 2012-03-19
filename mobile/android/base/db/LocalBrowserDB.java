@@ -80,7 +80,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     private final String mProfile;
     private long mMobileFolderId;
-    private long mTagsFolderId;
+
+    // Use wrapped Boolean so that we can have a null state
+    private Boolean mDesktopBookmarksExist;
 
     private final Uri mBookmarksUriWithProfile;
     private final Uri mParentsUriWithProfile;
@@ -100,7 +102,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     public LocalBrowserDB(String profile) {
         mProfile = profile;
         mMobileFolderId = -1;
-        mTagsFolderId = -1;
+        mDesktopBookmarksExist = null;
 
         mBookmarksUriWithProfile = appendProfile(Bookmarks.CONTENT_URI);
         mParentsUriWithProfile = appendProfile(Bookmarks.PARENTS_CONTENT_URI);
@@ -111,9 +113,19 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1").build();
     }
 
+    // Invalidate cached data
+    public void invalidateCachedState() {
+        mDesktopBookmarksExist = null;
+    }
+
     private Uri historyUriWithLimit(int limit) {
         return mHistoryUriWithProfile.buildUpon().appendQueryParameter(BrowserContract.PARAM_LIMIT,
                                                                        String.valueOf(limit)).build();
+    }
+
+    private Uri bookmarksUriWithLimit(int limit) {
+        return mBookmarksUriWithProfile.buildUpon().appendQueryParameter(BrowserContract.PARAM_LIMIT,
+                                                                         String.valueOf(limit)).build();
     }
 
     private Uri appendProfile(Uri uri) {
@@ -330,6 +342,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     public Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
         Cursor c = null;
 
+        // If there are no desktop bookmarks, use the mobile bookmarks folder
+        // for the root folder view
+        if (folderId == Bookmarks.FIXED_ROOT_ID && !desktopBookmarksExist(cr))
+            folderId = getMobileBookmarksFolderId(cr);
+
         if (folderId == Bookmarks.FIXED_ROOT_ID) {
             // Because of sync, we can end up with some additional records under
             // the root node that we don't want to see. Since sync doesn't 
@@ -357,6 +374,32 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         }
 
         return new LocalDBCursor(c);
+    }
+
+    // Returns true if any desktop bookmarks exist, which will be true if the user
+    // has set up sync at one point, or done a profile migration from XUL fennec.
+    private boolean desktopBookmarksExist(ContentResolver cr) {
+        if (mDesktopBookmarksExist != null)
+            return mDesktopBookmarksExist;
+
+        Cursor c = null;
+        int count = 0;
+        try {
+            c = cr.query(bookmarksUriWithLimit(1),
+                         new String[] { Bookmarks._ID },
+                         Bookmarks.PARENT + " != ? AND " +
+                         Bookmarks.PARENT + " != ?",
+                         new String[] { String.valueOf(getMobileBookmarksFolderId(cr)),
+                                        String.valueOf(Bookmarks.FIXED_ROOT_ID) },
+                         null);
+            count = c.getCount();
+        } finally {
+            c.close();
+        }
+
+        // Cache result for future queries
+        mDesktopBookmarksExist = (count == 1);
+        return mDesktopBookmarksExist;
     }
 
     public boolean isBookmark(ContentResolver cr, String uri) {

@@ -58,6 +58,8 @@ public class BrowserDB {
     private static BrowserDBIface sDb;
 
     public interface BrowserDBIface {
+        public void invalidateCachedState();
+
         public Cursor filter(ContentResolver cr, CharSequence constraint, int limit);
 
         public Cursor getTopSites(ContentResolver cr, int limit);
@@ -105,6 +107,10 @@ public class BrowserDB {
     static {
         // Forcing local DB no option to switch to Android DB for now
         sDb = new LocalBrowserDB(BrowserContract.DEFAULT_PROFILE);
+    }
+
+    public static void invalidateCachedState() {
+        sDb.invalidateCachedState();
     }
 
     public static Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
