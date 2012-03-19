@@ -983,14 +983,11 @@ nsGenericHTMLElement::ScrollIntoView(bool aTop, PRUint8 optional_argc)
     aTop = true;
   }
 
-  PRInt16 vpercent = aTop ? nsIPresShell::SCROLL_TOP :
-    nsIPresShell::SCROLL_BOTTOM;
+  PRIntn vpercent = aTop ? NS_PRESSHELL_SCROLL_TOP :
+    NS_PRESSHELL_SCROLL_BOTTOM;
 
-  presShell->ScrollContentIntoView(this,
-                                   nsIPresShell::ScrollAxis(
-                                     vpercent,
-                                     nsIPresShell::SCROLL_ALWAYS),
-                                   nsIPresShell::ScrollAxis(),
+  presShell->ScrollContentIntoView(this, vpercent,
+                                   NS_PRESSHELL_SCROLL_ANYWHERE,
                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 
   return NS_OK;
