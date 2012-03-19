@@ -126,6 +126,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsIParserUtils.h"
 
 using namespace mozilla;
 
@@ -2370,7 +2371,9 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
                                         false,
                                         true);
   if (!aTrustedInput) {
-    nsTreeSanitizer sanitizer(!!aContextLocalName, !aContextLocalName);
+    nsTreeSanitizer sanitizer(aContextLocalName ?
+                              nsIParserUtils::SanitizerAllowStyle :
+                              nsIParserUtils::SanitizerAllowComments);
     sanitizer.Sanitize(fragment);
   }
   *outNode = do_QueryInterface(frag);
