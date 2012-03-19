@@ -905,17 +905,9 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
   if (mEditor->IsDisabled()) {
     return NS_OK;
   }
-  
-  // If the spell check skip flag is still enabled from creation time,
-  // disable it because focused editors are allowed to spell check.
-  PRUint32 currentFlags = 0;
-  mEditor->GetFlags(&currentFlags);
-  if(currentFlags & nsIPlaintextEditor::eEditorSkipSpellCheck)
-  {
-    currentFlags ^= nsIPlaintextEditor::eEditorSkipSpellCheck;
-    mEditor->SetFlags(currentFlags);
-  }
-  
+
+  // Spell check a textarea the first time that it is focused.
+  SpellCheckIfNeeded();
 
   nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetTarget(getter_AddRefs(target));
@@ -1011,5 +1003,18 @@ nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
   }
 
   return NS_OK;
+}
+
+void
+nsEditorEventListener::SpellCheckIfNeeded() {
+  // If the spell check skip flag is still enabled from creation time,
+  // disable it because focused editors are allowed to spell check.
+  PRUint32 currentFlags = 0;
+  mEditor->GetFlags(&currentFlags);
+  if(currentFlags & nsIPlaintextEditor::eEditorSkipSpellCheck)
+  {
+    currentFlags ^= nsIPlaintextEditor::eEditorSkipSpellCheck;
+    mEditor->SetFlags(currentFlags);
+  }
 }
 
