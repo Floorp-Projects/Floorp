@@ -860,7 +860,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
                     if (gTopLevelWindows[i]->mIsVisible)
                         gTopLevelWindows[i]->Resize(gAndroidBounds.width,
                                                     gAndroidBounds.height,
-                                                    true);
+                                                    false);
                 }
             }
 
