@@ -235,11 +235,6 @@ var BrowserApp = {
     CharacterEncoding.init();
     SearchEngines.init();
 
-    // Init LoginManager
-    Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-    // Init FormHistory
-    Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
-
     let url = "about:home";
     let forceRestore = false;
     if ("arguments" in window) {
@@ -324,6 +319,29 @@ var BrowserApp = {
         "value": Services.prefs.getBoolPref("gfx.show_checkerboard_pattern")
       }
     });
+
+    if (this.isAppUpdated())
+      this.onUpdate();
+  },
+
+  isAppUpdated: function() {
+    let savedmstone = null;
+    try {
+      savedmstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone");
+    } catch (e) {
+    }
+#expand    let ourmstone = "__MOZ_APP_VERSION__";
+    if (ourmstone != savedmstone) {
+      Services.prefs.setCharPref("browser.startup.homepage_override.mstone", ourmstone);
+      return savedmstone ? "upgrade" : "new";
+    }
+    return "";
+  },
+
+  onAppUpdated: function() {
+    // initialize the form history and passwords databases on upgrades
+    Services.obs.notifyObservers(null, "FormHistory:Init", "");
+    Services.obs.notifyObservers(null, "Passwords:Init", "");
   },
 
   _showTelemetryPrompt: function _showTelemetryPrompt() {
@@ -914,15 +932,17 @@ var BrowserApp = {
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
-      var storage = Components.classes["@mozilla.org/login-manager/storage/mozStorage;1"].  
-        getService(Components.interfaces.nsILoginManagerStorage);
+      // Init LoginManager
+      Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+      // Force creation/upgrade of signons.sqlite
+      var storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].getService(Ci.nsILoginManagerStorage);
       storage.init();
 
       sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
       Services.obs.removeObserver(this, "Passwords:Init", false);
     } else if (aTopic == "FormHistory:Init") {
-      var fh = Components.classes["@mozilla.org/satchel/form-history;1"].  
-        getService(Components.interfaces.nsIFormHistory2);
+      var fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+      // Force creation/upgrade of formhistory.sqlite
       var db = fh.DBConnection;
       sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
       Services.obs.removeObserver(this, "FormHistory:Init", false);
