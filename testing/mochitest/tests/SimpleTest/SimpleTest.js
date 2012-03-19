@@ -467,6 +467,7 @@ SimpleTest.requestLongerTimeout = function (factor) {
 SimpleTest.waitForFocus_started = false;
 SimpleTest.waitForFocus_loaded = false;
 SimpleTest.waitForFocus_focused = false;
+SimpleTest._pendingWaitForFocusCount = 0;
 
 /**
  * If the page is not yet loaded, waits for the load event. In addition, if
@@ -487,6 +488,7 @@ SimpleTest.waitForFocus_focused = false;
  *        true if targetWindow.location is 'about:blank'. Defaults to false
  */
 SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
+    SimpleTest._pendingWaitForFocusCount++;
     if (!targetWindow)
       targetWindow = window;
 
@@ -508,6 +510,7 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
         if (SimpleTest.waitForFocus_loaded &&
             SimpleTest.waitForFocus_focused &&
             !SimpleTest.waitForFocus_started) {
+            SimpleTest._pendingWaitForFocusCount--;
             SimpleTest.waitForFocus_started = true;
             setTimeout(callback, 0, targetWindow);
         }
@@ -675,6 +678,15 @@ SimpleTest.finish = function () {
     if (SimpleTest._expectingUncaughtException) {
         SimpleTest.ok(false, "expectUncaughtException was called but no uncaught exception was detected!");
     }
+    if (SimpleTest._pendingWaitForFocusCount != 0) {
+        SimpleTest.is(SimpleTest._pendingWaitForFocusCount, 0,
+                      "[SimpleTest.finish()] waitForFocus() was called a "
+                      + "different number of times from the number of "
+                      + "callbacks run.  Maybe the test terminated "
+                      + "prematurely -- be sure to use "
+                      + "SimpleTest.waitForExplicitFinish().");
+    }
+
     if (parentRunner) {
         /* We're running in an iframe, and the parent has a TestRunner */
         parentRunner.testFinished(SimpleTest._tests);
