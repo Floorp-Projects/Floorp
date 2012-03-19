@@ -238,7 +238,7 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     public void setUp() throws Exception {
-        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY_URI");
+        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
         loadContractInfo();
 
         mTests.add(new TestSpecialFolders());
