@@ -80,6 +80,16 @@ function run()
                  0, 1,
                  0, 10,
                  0, "matrix");
+                 
+  // If ty is not supplied it is assumed to be zero
+  g.setAttribute("transform", "translate(5)");                
+
+  // test that the SVGTransform now reflects the matrix value
+  checkTransform(t, SVGTransform.SVG_TRANSFORM_TRANSLATE,
+                 1, 0,
+                 0, 1,
+                 5, 0,
+                 0, "transform");
 
   // set the SVGTransform to be a rotate()
   t.setRotate(90, 0, 0);

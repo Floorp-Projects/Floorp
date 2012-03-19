@@ -52,7 +52,7 @@
       path:        aPath,
       kind:        aKind,
       units:       BYTES,
-      description: "(description)",
+      description: "Desc.",
       amount:      aAmount
     };
   }

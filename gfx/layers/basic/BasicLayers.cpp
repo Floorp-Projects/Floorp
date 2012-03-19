@@ -102,7 +102,9 @@ class ShadowableLayer;
 class BasicImplData {
 public:
   BasicImplData() : mHidden(false),
-    mClipToVisibleRegion(false), mOperator(gfxContext::OPERATOR_OVER)
+    mClipToVisibleRegion(false),
+    mDrawAtomically(false),
+    mOperator(gfxContext::OPERATOR_OVER)
   {
     MOZ_COUNT_CTOR(BasicImplData);
   }
@@ -170,9 +172,12 @@ public:
   bool GetClipToVisibleRegion() { return mClipToVisibleRegion; }
   void SetClipToVisibleRegion(bool aClip) { mClipToVisibleRegion = aClip; }
 
+  void SetDrawAtomically(bool aDrawAtomically) { mDrawAtomically = aDrawAtomically; }
+
 protected:
   bool mHidden;
   bool mClipToVisibleRegion;
+  bool mDrawAtomically;
   gfxContext::GraphicsOperator mOperator;
 };
 
@@ -741,6 +746,9 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
     }
 #endif
+    if (mDrawAtomically) {
+      flags |= ThebesLayerBuffer::PAINT_NO_ROTATION;
+    }
     Buffer::PaintState state =
       mBuffer.BeginPaint(this, contentType, flags);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
@@ -766,9 +774,10 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       RenderTraceInvalidateEnd(this, "FFFF00");
     } else {
       // It's possible that state.mRegionToInvalidate is nonempty here,
-      // if we are shrinking the valid region to nothing.
-      NS_ASSERTION(state.mRegionToDraw.IsEmpty(),
-                   "If we need to draw, we should have a context");
+      // if we are shrinking the valid region to nothing. So use mRegionToDraw
+      // instead.
+      NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
+                       "No context when we have something to draw; resource exhaustion?");
     }
   }
 
@@ -1356,24 +1365,28 @@ already_AddRefed<gfxContext>
 BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
                                               gfxASurface::gfxContentType aContent)
 {
-  if (mCachedSurfaceInUse || !aTarget->IsCairo()) {
-    // We can't cache Azure DrawTargets at this point.
-    aTarget->PushGroup(aContent);
-    nsRefPtr<gfxContext> result = aTarget;
-    return result.forget();
+  nsRefPtr<gfxContext> ctx;
+  // We can't cache Azure DrawTargets at this point.
+  if (!mCachedSurfaceInUse && aTarget->IsCairo()) {
+    gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
+    aTarget->IdentityMatrix();
+
+    nsRefPtr<gfxASurface> currentSurf = aTarget->CurrentSurface();
+    gfxRect clip = aTarget->GetClipExtents();
+    clip.RoundOut();
+
+    ctx = mCachedSurface.Get(aContent, clip, currentSurf);
+
+    if (ctx) {
+      mCachedSurfaceInUse = true;
+      /* Align our buffer for the original surface */
+      ctx->SetMatrix(saveMatrix.Matrix());
+      return ctx.forget();
+    }
   }
-  mCachedSurfaceInUse = true;
 
-  gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
-  aTarget->IdentityMatrix();
-
-  nsRefPtr<gfxASurface> currentSurf = aTarget->CurrentSurface();
-  gfxRect clip = aTarget->GetClipExtents();
-  clip.RoundOut();
-
-  nsRefPtr<gfxContext> ctx = mCachedSurface.Get(aContent, clip, currentSurf);
-  /* Align our buffer for the original surface */
-  ctx->SetMatrix(saveMatrix.Matrix());
+  ctx = aTarget;
+  ctx->PushGroup(aContent);
   return ctx.forget();
 }
 
@@ -1422,7 +1435,8 @@ TransformIntRect(nsIntRect& aRect, const gfxMatrix& aMatrix,
  * all layers to the same coordinate system (the "root coordinate system").
  * It can't be used as is by accelerated layers because of intermediate surfaces.
  * This must set the hidden flag to true or false on *all* layers in the subtree.
- * It also sets the operator for all layers to "OVER".
+ * It also sets the operator for all layers to "OVER", and call
+ * SetDrawAtomically(false).
  * It clears mClipToVisibleRegion on all layers.
  * @param aClipRect the cliprect, in the root coordinate system. We assume
  * that any layer drawing is clipped to this rect. It is therefore not
@@ -1473,6 +1487,7 @@ MarkLayersHidden(Layer* aLayer, const nsIntRect& aClipRect,
   BasicImplData* data = ToData(aLayer);
   data->SetOperator(gfxContext::OPERATOR_OVER);
   data->SetClipToVisibleRegion(false);
+  data->SetDrawAtomically(false);
 
   if (!aLayer->AsContainerLayer()) {
     gfxMatrix transform;
@@ -1556,6 +1571,7 @@ ApplyDoubleBuffering(Layer* aLayer, const nsIntRect& aVisibleRect)
   // are cleared. This can also be faster than OPERATOR_OVER.
   if (!container) {
     data->SetOperator(gfxContext::OPERATOR_SOURCE);
+    data->SetDrawAtomically(true);
   } else {
     if (container->UseIntermediateSurface() ||
         !container->ChildrenPartitionVisibleRegion(newVisibleRect)) {
