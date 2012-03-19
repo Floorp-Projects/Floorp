@@ -454,8 +454,7 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, jsval *ret)
     "JSHistogram",  /* name */
     JSCLASS_HAS_PRIVATE, /* flags */
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
   };
 
   JSObject *obj = JS_NewObject(cx, &JSHistogram_class, NULL, NULL);

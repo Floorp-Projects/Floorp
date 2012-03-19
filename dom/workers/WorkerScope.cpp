@@ -592,8 +592,7 @@ JSClass WorkerGlobalScope::sClass = {
   "WorkerGlobalScope",
   0,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
-  JSCLASS_NO_OPTIONAL_MEMBERS
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 JSPropertySpec WorkerGlobalScope::sProperties[] = {
