@@ -226,7 +226,7 @@ IonBuilder::optimizeNativeCall(uint32 argc)
         }
         if (native == js_Array) {
             if (arg1Type == MIRType_Int32) {
-                MDefinition *argv1 = current->peek(-1);
+                MDefinition *argv1 = current->peek(-1)->toPassArg()->getArgument();
                 if (argv1->isConstant()) {
                     int32 arg = argv1->toConstant()->value().toInt32();
                     if (!discardCall(argc, argv, current))
