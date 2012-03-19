@@ -39,7 +39,7 @@ abstract class ContentProviderTest extends AndroidTestCase {
     protected ArrayList<Runnable> mTests;
     protected Class mProviderClass;
     protected Class mProviderContract;
-    protected Uri mProviderAuthority;
+    protected String mProviderAuthority;
     protected IsolatedContext mProviderContext;
     protected String mLogFile;
 
@@ -61,9 +61,9 @@ abstract class ContentProviderTest extends AndroidTestCase {
     }
 
     private void setUpProviderClassAndAuthority(String providerClassName,
-            String authorityUriField) throws Exception {
+            String authorityField) throws Exception {
         mProviderContract = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract");
-        mProviderAuthority = (Uri) mProviderContract.getField(authorityUriField).get(null);
+        mProviderAuthority = (String) mProviderContract.getField(authorityField).get(null);
         mProviderClass = mClassLoader.loadClass(providerClassName);
     }
 
@@ -82,7 +82,7 @@ abstract class ContentProviderTest extends AndroidTestCase {
         mProvider = (ContentProvider) mProviderClass.newInstance();
         mProvider.attachInfo(mProviderContext, null);
 
-        mResolver.addProvider(mProviderAuthority.toString(), mProvider);
+        mResolver.addProvider(mProviderAuthority, mProvider);
     }
 
     private void loadRobotiumConfig() {
