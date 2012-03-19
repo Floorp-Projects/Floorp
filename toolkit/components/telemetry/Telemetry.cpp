@@ -1089,6 +1089,20 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, jsval *ret)
       if (!JS_SetElement(cx, moduleInfoArray, 4, &val)) {
         return NS_ERROR_FAILURE;
       }
+
+      // Name of associated PDB file
+      const char *pdbName = "";
+#if defined(MOZ_PROFILING) && defined(XP_WIN)
+      pdbName = module.GetPdbName();
+#endif
+      str = JS_NewStringCopyZ(cx, pdbName);
+      if (!str) {
+        return NS_ERROR_FAILURE;
+      }
+      val = STRING_TO_JSVAL(str);
+      if (!JS_SetElement(cx, moduleInfoArray, 5, &val)) {
+        return NS_ERROR_FAILURE;
+      }
     }
 #endif
   }
