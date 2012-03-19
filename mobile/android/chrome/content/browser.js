@@ -235,6 +235,11 @@ var BrowserApp = {
     CharacterEncoding.init();
     SearchEngines.init();
 
+    // Init LoginManager
+    Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+    // Init FormHistory
+    Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+
     let url = "about:home";
     let forceRestore = false;
     if ("arguments" in window) {
@@ -932,18 +937,16 @@ var BrowserApp = {
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
     } else if (aTopic == "Passwords:Init") {
-      // Init LoginManager
-      Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
       // Force creation/upgrade of signons.sqlite
-      var storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].getService(Ci.nsILoginManagerStorage);
+      let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].getService(Ci.nsILoginManagerStorage);
       storage.init();
 
       sendMessageToJava({gecko: { type: "Passwords:Init:Return" }});
       Services.obs.removeObserver(this, "Passwords:Init", false);
     } else if (aTopic == "FormHistory:Init") {
-      var fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+      let fh = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
       // Force creation/upgrade of formhistory.sqlite
-      var db = fh.DBConnection;
+      let db = fh.DBConnection;
       sendMessageToJava({gecko: { type: "FormHistory:Init:Return" }});
       Services.obs.removeObserver(this, "FormHistory:Init", false);
     } else if (aTopic == "sessionstore-state-purge-complete") {
