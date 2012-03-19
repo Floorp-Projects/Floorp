@@ -12,7 +12,9 @@ do_load_httpd_js();
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
+const gTestUUID = "3512c938-d9d2-4722-a575-a7f67086d3b2";
 const PATH = "/submit/telemetry/test-ping";
+const SAVED_PATH = "/submit/telemetry/" + gTestUUID;
 const SERVER = "http://localhost:4444";
 const IGNORE_HISTOGRAM = "test::ignore_me";
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
@@ -46,16 +48,26 @@ function nonexistentServerObserver(aSubject, aTopic, aData) {
 
 function telemetryObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(telemetryObserver, aTopic);
-  httpserver.registerPathHandler(PATH, checkHistograms);
+  httpserver.registerPathHandler(PATH, checkPersistedHistograms);
   Telemetry.newHistogram(IGNORE_HISTOGRAM, 1, 2, 3, Telemetry.HISTOGRAM_BOOLEAN);
   Telemetry.histogramFrom(IGNORE_CLONED_HISTOGRAM, IGNORE_HISTOGRAM_TO_CLONE);
   Services.startup.interrupted = true;
+  let dirService = Cc["@mozilla.org/file/directory_service;1"]
+                    .getService(Ci.nsIProperties);
+  let tmpDir = dirService.get("TmpD", Ci.nsILocalFile);
+  let histogramsFile = tmpDir.clone();
+  histogramsFile.append("saved-histograms.dat");
+  if (histogramsFile.exists()) {
+    histogramsFile.remove(true);
+  }
+  do_register_cleanup(function () histogramsFile.remove(true));
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  TelemetryPing.observe(histogramsFile, "test-save-histograms", gTestUUID);
+  TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
   telemetry_ping();
 }
 
-function checkHistograms(request, response) {
-  // do not need the http server anymore
-  httpserver.stop(do_test_finished);
+function decodeRequestPayload(request) {
   let s = request.bodyInputStream;
   let payload = null;
   let decoder = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON)
@@ -83,12 +95,12 @@ function checkHistograms(request, response) {
     payload = decoder.decodeFromStream(s, s.available());
   }
 
-  do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
-  do_check_true(payload.simpleMeasurements.uptime >= 0);
-  do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
+  return payload;
+}
+
+function checkPayloadInfo(payload, reason) {
   // get rid of the non-deterministic field
   const expected_info = {
-    reason: "test-ping",
     OS: "XPCShell", 
     appID: "xpcshell@tests.mozilla.org", 
     appVersion: "1", 
@@ -101,6 +113,7 @@ function checkHistograms(request, response) {
     do_check_eq(payload.info[f], expected_info[f]);
   }
 
+  do_check_eq(payload.info.reason, reason);
   do_check_true("appUpdateChannel" in payload.info);
   do_check_true("locale" in payload.info);
 
@@ -118,6 +131,24 @@ function checkHistograms(request, response) {
   }
   catch (x) {
   }
+}
+
+function checkPersistedHistograms(request, response) {
+  let payload = decodeRequestPayload(request);
+
+  checkPayloadInfo(payload, "saved-session");
+  httpserver.registerPathHandler(PATH, checkHistograms);
+}
+
+function checkHistograms(request, response) {
+  // do not need the http server anymore
+  httpserver.stop(do_test_finished);
+  let payload = decodeRequestPayload(request);
+
+  checkPayloadInfo(payload, "test-ping");
+  do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
+  do_check_true(payload.simpleMeasurements.uptime >= 0);
+  do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
 
   const TELEMETRY_PING = "TELEMETRY_PING";
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";

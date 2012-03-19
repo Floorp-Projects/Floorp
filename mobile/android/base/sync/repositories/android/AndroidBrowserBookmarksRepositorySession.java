@@ -468,11 +468,16 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     }
     BookmarkRecord bmk = (BookmarkRecord) record;
 
+    if (forbiddenGUID(bmk.guid)) {
+      Logger.debug(LOG_TAG, "Ignoring forbidden record with guid: " + bmk.guid);
+      return true;
+    }
+
     if (bmk.isBookmark() ||
         bmk.isFolder()) {
       return false;
     }
-    Logger.info(LOG_TAG, "Ignoring record with guid: " + bmk.guid + " and type: " + bmk.type);
+    Logger.debug(LOG_TAG, "Ignoring record with guid: " + bmk.guid + " and type: " + bmk.type);
     return true;
   }
   

@@ -3163,7 +3163,8 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     }
 
     NS_NAMED_MULTILINE_LITERAL_STRING(kJSONFmt,
-      NS_LL("{ \"duration\": %llu, ")
+       NS_LL("{ \"timestamp\": %llu, ")
+         NS_LL("\"duration\": %llu, ")
          NS_LL("\"suspected\": %lu, ")
          NS_LL("\"visited\": { ")
              NS_LL("\"RCed\": %lu, ")
@@ -3183,18 +3184,18 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
        NS_LL("}"));
     nsString json;
     json.Adopt(nsTextFormatter::smprintf(kJSONFmt.get(),
-                                        (now - start) / PR_USEC_PER_MSEC, suspected,
-                                        ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
-                                        ccResults.mFreedRefCounted, ccResults.mFreedGCed,
-                                        sCCollectedWaitingForGC,
-                                        ccResults.mForcedGC,
-                                        sForgetSkippableBeforeCC,
-                                        sMinForgetSkippableTime / PR_USEC_PER_MSEC,
-                                        sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
-                                        (sTotalForgetSkippableTime / cleanups) /
-                                          PR_USEC_PER_MSEC,
-                                        sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
-                                        sRemovedPurples));
+                                         now, (now - start) / PR_USEC_PER_MSEC, suspected,
+                                         ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
+                                         ccResults.mFreedRefCounted, ccResults.mFreedGCed,
+                                         sCCollectedWaitingForGC,
+                                         ccResults.mForcedGC,
+                                         sForgetSkippableBeforeCC,
+                                         sMinForgetSkippableTime / PR_USEC_PER_MSEC,
+                                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
+                                         (sTotalForgetSkippableTime / cleanups) /
+                                           PR_USEC_PER_MSEC,
+                                         sTotalForgetSkippableTime / PR_USEC_PER_MSEC,
+                                         sRemovedPurples));
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
     if (observerService) {
       observerService->NotifyObservers(nsnull, "cycle-collection-statistics", json.get());
@@ -3506,6 +3507,11 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
     if (cs) {
       cs->LogStringMessage(msg.get());
     }
+
+    nsString json;
+    json.Adopt(aDesc.formatJSON(aRt, now));
+    nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
+    NS_DispatchToMainThread(notify);
   }
 
   // Prevent cycle collections and shrinking during incremental GC.
@@ -3528,11 +3534,6 @@ DOMGCSliceCallback(JSRuntime *aRt, js::GCProgress aProgress, const js::GCDescrip
 
     sCCollectedWaitingForGC = 0;
     sCleanupSinceLastGC = false;
-
-    nsString json;
-    json.Adopt(aDesc.formatJSON(aRt));
-    nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
-    NS_DispatchToMainThread(notify);
 
     if (aDesc.isCompartment) {
       // If this is a compartment GC, restart it. We still want

@@ -256,7 +256,7 @@ function test_loadSave()
   };
   let saveCallback = function(success) {
     do_check_true(success);
-    Telemetry.loadHistograms(tmpFile, loadCallback);
+    Telemetry.loadHistograms(tmpFile, loadCallback, false);
     saveFinished = true;
   };
   do_test_pending();

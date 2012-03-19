@@ -54,7 +54,7 @@ class TelephonyCall : public nsDOMEventTargetHelper,
 {
   NS_DECL_EVENT_HANDLER(statechange)
   NS_DECL_EVENT_HANDLER(dialing)
-  NS_DECL_EVENT_HANDLER(ringing)
+  NS_DECL_EVENT_HANDLER(alerting)
   NS_DECL_EVENT_HANDLER(busy)
   NS_DECL_EVENT_HANDLER(connecting)
   NS_DECL_EVENT_HANDLER(connected)

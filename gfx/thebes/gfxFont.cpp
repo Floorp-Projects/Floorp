@@ -457,7 +457,8 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
         return fe;
     }
 
-    bool wantItalic = (aFontStyle.style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0;
+    bool wantItalic = (aFontStyle.style &
+                       (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
 
     // Most families are "simple", having just Regular/Bold/Italic/BoldItalic,
     // or some subset of these. In this case, we have exactly 4 entries in mAvailableFonts,
@@ -698,7 +699,7 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
     if (aStyle) {
          // italics
          bool wantItalic =
-             ((aStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) != 0);
+             (aStyle->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
          if (aFontEntry->IsItalic() == wantItalic) {
              rank += 10;
          }
@@ -2998,16 +2999,15 @@ gfxTextRun *
 gfxFontGroup::MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags)
 {
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
-    return gfxTextRun::Create(aParams, nsnull, 0, this, aFlags);
+    return gfxTextRun::Create(aParams, 0, this, aFlags);
 }
 
 gfxTextRun *
 gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
 {
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
-    static const PRUint8 space = ' ';
 
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, &space, 1, this, aFlags);
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, 1, this, aFlags);
     if (!textRun) {
         return nsnull;
     }
@@ -3030,11 +3030,11 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
 }
 
 gfxTextRun *
-gfxFontGroup::MakeBlankTextRun(const void* aText, PRUint32 aLength,
+gfxFontGroup::MakeBlankTextRun(PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
 {
     gfxTextRun *textRun =
-        gfxTextRun::Create(aParams, aText, aLength, this, aFlags);
+        gfxTextRun::Create(aParams, aLength, this, aFlags);
     if (!textRun) {
         return nsnull;
     }
@@ -3060,10 +3060,10 @@ gfxFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
         // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
         // them, and always create at least size 1 fonts, i.e. they still
         // render something for size 0 fonts.
-        return MakeBlankTextRun(aString, aLength, aParams, aFlags);
+        return MakeBlankTextRun(aLength, aParams, aFlags);
     }
 
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength,
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength,
                                              this, aFlags);
     if (!textRun) {
         return nsnull;
@@ -3087,10 +3087,10 @@ gfxFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
         return MakeSpaceTextRun(aParams, aFlags);
     }
     if (GetStyle()->size == 0) {
-        return MakeBlankTextRun(aString, aLength, aParams, aFlags);
+        return MakeBlankTextRun(aLength, aParams, aFlags);
     }
 
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength,
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aLength,
                                              this, aFlags);
     if (!textRun) {
         return nsnull;
@@ -3184,8 +3184,8 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
                         NS_ConvertUTF16toUTF8(mFamilies).get(),
                         lang.get(), runScript, runLen,
                         PRUint32(mStyle.weight), PRUint32(mStyle.stretch),
-                        (mStyle.style & FONT_STYLE_ITALIC ? "italic" :
-                        (mStyle.style & FONT_STYLE_OBLIQUE ? "oblique" :
+                        (mStyle.style & NS_FONT_STYLE_ITALIC ? "italic" :
+                        (mStyle.style & NS_FONT_STYLE_OBLIQUE ? "oblique" :
                                                                 "normal")),
                         NS_ConvertUTF16toUTF8(textPtr + runStart, runLen).get()));
             }
@@ -3749,12 +3749,12 @@ gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
 }
 
 gfxFontStyle::gfxFontStyle() :
-    style(FONT_STYLE_NORMAL), systemFont(true), printerFont(false), 
-    weight(FONT_WEIGHT_NORMAL),
-    stretch(NS_FONT_STRETCH_NORMAL), size(DEFAULT_PIXEL_FONT_SIZE),
-    sizeAdjust(0.0f),
     language(gfxAtoms::x_western),
-    languageOverride(NO_FONT_LANGUAGE_OVERRIDE)
+    size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(0.0f),
+    languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
+    systemFont(true), printerFont(false), 
+    style(NS_FONT_STYLE_NORMAL)
 {
 }
 
@@ -3764,11 +3764,12 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
                            bool aPrinterFont,
                            const nsString& aFeatureSettings,
                            const nsString& aLanguageOverride):
-    style(aStyle), systemFont(aSystemFont), printerFont(aPrinterFont),
-    weight(aWeight), stretch(aStretch),
-    size(aSize), sizeAdjust(aSizeAdjust),
     language(aLanguage),
-    languageOverride(ParseFontLanguageOverride(aLanguageOverride))
+    size(aSize), sizeAdjust(aSizeAdjust),
+    languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
+    weight(aWeight), stretch(aStretch),
+    systemFont(aSystemFont), printerFont(aPrinterFont),
+    style(aStyle)
 {
     ParseFontFeatureSettings(aFeatureSettings, featureSettings);
 
@@ -3792,12 +3793,12 @@ gfxFontStyle::gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
 }
 
 gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
-    style(aStyle.style), systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
-    weight(aStyle.weight),
-    stretch(aStyle.stretch), size(aStyle.size),
-    sizeAdjust(aStyle.sizeAdjust),
     language(aStyle.language),
-    languageOverride(aStyle.languageOverride)
+    size(aStyle.size), sizeAdjust(aStyle.sizeAdjust),
+    languageOverride(aStyle.languageOverride),
+    weight(aStyle.weight), stretch(aStyle.stretch),
+    systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
+    style(aStyle.style)
 {
     featureSettings.AppendElements(aStyle.featureSettings);
 }
@@ -4026,7 +4027,7 @@ gfxTextRun::AllocateStorageForTextRun(size_t aSize, PRUint32 aLength)
 }
 
 gfxTextRun *
-gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams,
                    PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
 {
     void *storage = AllocateStorageForTextRun(sizeof(gfxTextRun), aLength);
@@ -4034,10 +4035,10 @@ gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams, const void *aTe
         return nsnull;
     }
 
-    return new (storage) gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
+    return new (storage) gfxTextRun(aParams, aLength, aFontGroup, aFlags);
 }
 
-gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
+gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
                        PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
   : mUserData(aParams->mUserData),
     mFontGroup(aFontGroup),

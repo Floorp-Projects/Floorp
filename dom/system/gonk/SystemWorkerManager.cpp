@@ -53,7 +53,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsRadioInterfaceLayer.h"
-#include "nsWifiWorker.h"
+#include "WifiWorker.h"
 
 
 USING_WORKERS_NAMESPACE

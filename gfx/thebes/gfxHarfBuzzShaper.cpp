@@ -117,8 +117,14 @@ HBGetTable(hb_face_t *face, hb_tag_t aTag, void *aUserData)
     // bug 589682 - ignore the GDEF table in buggy fonts (applies to
     // Italic and BoldItalic faces of Times New Roman)
     if (aTag == TRUETYPE_TAG('G','D','E','F') &&
-        font->GetFontEntry()->IgnoreGDEF())
-    {
+        font->GetFontEntry()->IgnoreGDEF()) {
+        return nsnull;
+    }
+
+    // bug 721719 - ignore the GSUB table in buggy fonts (applies to Roboto,
+    // at least on some Android ICS devices; set in gfxFT2FontList.cpp)
+    if (aTag == TRUETYPE_TAG('G','S','U','B') &&
+        font->GetFontEntry()->IgnoreGSUB()) {
         return nsnull;
     }
 

@@ -71,7 +71,6 @@ public class Logger {
     if (out != null) {
       return out.booleanValue();
     }
-    Log.d("XXX", "Calling out to isLoggable for INFO!");
     out = Log.isLoggable(logTag, Log.INFO);
     isInfoLoggable.put(logTag, out);
     return out;
@@ -82,7 +81,6 @@ public class Logger {
     if (out != null) {
       return out.booleanValue();
     }
-    Log.d("XXX", "Calling out to isLoggable for DEBUG!");
     out = Log.isLoggable(logTag, Log.DEBUG);
     isDebugLoggable.put(logTag, out);
     return out;
@@ -93,7 +91,6 @@ public class Logger {
     if (out != null) {
       return out.booleanValue();
     }
-    Log.d("XXX", "Calling out to isLoggable for VERBOSE!");
     out = Log.isLoggable(logTag, Log.VERBOSE);
     isVerboseLoggable.put(logTag, out);
     return out;

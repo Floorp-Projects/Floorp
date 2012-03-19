@@ -10,6 +10,7 @@
 #define INITGUID
 #include <windows.h>
 #define AVVENDOR
+#include <objidl.h>
 #include <msoav.h>
 #include <shlobj.h>
 

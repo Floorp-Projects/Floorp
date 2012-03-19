@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=246699
  **/
 function hasStack(e)
 {
-  return e instanceof Error && /inciteCaps/.test(e.stack);
+  return e.constructor.name === "Error" && /inciteCaps/.test(e.stack);
 }
 
 function inciteCaps(f)

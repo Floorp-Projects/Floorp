@@ -16,14 +16,14 @@ const DEBUG = true; // set to false to suppress debug messages
 const DOMWIFIMANAGER_CONTRACTID = "@mozilla.org/wifimanager;1";
 const DOMWIFIMANAGER_CID        = Components.ID("{2cf775a7-1837-410c-9e26-323c42e076da}");
 
-function nsDOMWifiManager() {
+function DOMWifiManager() {
 }
 
-nsDOMWifiManager.prototype = {
+DOMWifiManager.prototype = {
   classID:   DOMWIFIMANAGER_CID,
   classInfo: XPCOMUtils.generateCI({classID: DOMWIFIMANAGER_CID,
                                     contractID: DOMWIFIMANAGER_CONTRACTID,
-                                    classDescription: "nsDOMWifiManager",
+                                    classDescription: "DOMWifiManager",
                                     interfaces: [Ci.nsIDOMWifiManager],
                                     flags: Ci.nsIClassInfo.DOM_OBJECT}),
 
@@ -250,12 +250,12 @@ WifiStateChangeEvent.prototype = {
                                     classDescription: "Wifi State Change Event"})
 };
 
-const NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDOMWifiManager]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([DOMWifiManager]);
 
 let debug;
 if (DEBUG) {
   debug = function (s) {
-    dump("-*- nsDOMWifiManager component: " + s + "\n");
+    dump("-*- DOMWifiManager component: " + s + "\n");
   };
 } else {
   debug = function (s) {};

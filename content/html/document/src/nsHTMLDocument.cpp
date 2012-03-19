@@ -81,7 +81,6 @@
 #include "nsNodeUtils.h"
 
 #include "nsNetCID.h"
-#include "nsIIOService.h"
 #include "nsICookieService.h"
 
 #include "nsIServiceManager.h"

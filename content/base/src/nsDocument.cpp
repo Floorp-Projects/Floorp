@@ -155,7 +155,6 @@
 #include "nsIDateTimeFormat.h"
 #include "nsEventDispatcher.h"
 #include "nsMutationEvent.h"
-#include "nsIDOMXPathEvaluator.h"
 #include "nsDOMCID.h"
 
 #include "jsapi.h"
@@ -8249,10 +8248,10 @@ void
 nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation)
 {
   PR_STATIC_ASSERT(eDeprecatedOperationCount <= 64);
-  if (mWarnedAbout & (1 << aOperation)) {
+  if (mWarnedAbout & (1ull << aOperation)) {
     return;
   }
-  mWarnedAbout |= (1 << aOperation);
+  mWarnedAbout |= (1ull << aOperation);
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   "DOM Core", this,
                                   nsContentUtils::eDOM_PROPERTIES,

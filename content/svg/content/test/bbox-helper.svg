@@ -14,4 +14,9 @@
     <circle cx="200" cy="50" r="5"/>
     <path d="M 200,100 L 300,100"/>
   </g>
+  <g id="e">
+    <!-- empty container should not affect parent's bbox -->
+    <g/>
+    <circle cx="100" cy="100" r="5"/>
+  </g>
 </svg>

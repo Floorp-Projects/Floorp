@@ -42,9 +42,9 @@
 #include "jsnum.h"
 #include "jsonparser.h"
 
-#include "jsobjinlines.h"
+#include "vm/StringBuffer.h"
 
-#include "vm/StringBuffer-inl.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 

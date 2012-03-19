@@ -1024,6 +1024,7 @@ DrawTargetD2D::PushClipRect(const Rect &aRect)
   mPushedClips.push_back(clip);
 
   mRT->SetTransform(D2D1::IdentityMatrix());
+  mTransformDirty = true;
   if (mClipsArePushed) {
     mRT->PushAxisAlignedClip(clip.mBounds, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
   }

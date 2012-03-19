@@ -615,11 +615,12 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
 
   // FIXME: What about oblique?
   aFontStyle.style =
-    (ptrLogFont->lfItalic) ? FONT_STYLE_ITALIC : FONT_STYLE_NORMAL;
+    (ptrLogFont->lfItalic) ? NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL;
 
   // FIXME: Other weights?
   aFontStyle.weight =
-    (ptrLogFont->lfWeight == FW_BOLD ? FONT_WEIGHT_BOLD : FONT_WEIGHT_NORMAL);
+    (ptrLogFont->lfWeight == FW_BOLD ?
+        NS_FONT_WEIGHT_BOLD : NS_FONT_WEIGHT_NORMAL);
 
   // FIXME: Set aFontStyle->stretch correctly!
   aFontStyle.stretch = NS_FONT_STRETCH_NORMAL;
