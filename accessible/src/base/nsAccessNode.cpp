@@ -277,9 +277,9 @@ nsAccessNode::ScrollTo(PRUint32 aScrollType)
   if (!content)
     return;
 
-  nsIPresShell::ScrollAxis vertical, horizontal;
-  nsCoreUtils::ConvertScrollTypeToPercents(aScrollType, &vertical, &horizontal);
-  shell->ScrollContentIntoView(content, vertical, horizontal,
+  PRInt16 vPercent, hPercent;
+  nsCoreUtils::ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
+  shell->ScrollContentIntoView(content, vPercent, hPercent,
                                nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
 }
 
