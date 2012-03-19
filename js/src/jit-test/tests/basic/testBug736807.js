@@ -1,7 +1,8 @@
 function f() {
     newGlobal('new-compartment').eval('\
         try {\
-          gczeal(2,1); \
+          if (typeof gczeal === "function") \
+              gczeal(2,1); \
           throw new Error();\
         } catch (e) { \
           gc(); \
