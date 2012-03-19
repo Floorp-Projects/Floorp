@@ -1920,10 +1920,10 @@ WorkerPrivateParent<Derived>::Start()
   return false;
 }
 
+// aCx is null when called from the finalizer
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus,
-                                            bool aFromJSObjectFinalizer)
+WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus)
 {
   AssertIsOnParentThread();
 
@@ -1962,9 +1962,8 @@ WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus,
   mQueuedRunnables.Clear();
 
   nsRefPtr<NotifyRunnable> runnable =
-    new NotifyRunnable(ParentAsWorkerPrivate(), aFromJSObjectFinalizer,
-                       aStatus);
-  return runnable->Dispatch(aFromJSObjectFinalizer ? nsnull : aCx);
+    new NotifyRunnable(ParentAsWorkerPrivate(), !aCx, aStatus);
+  return runnable->Dispatch(aCx);
 }
 
 template <class Derived>
@@ -2053,7 +2052,7 @@ WorkerPrivateParent<Derived>::_Finalize(JSFreeOp* aFop)
   // Clear the JS object.
   mJSObject = nsnull;
 
-  if (!TerminatePrivate(aFop->context, true)) {
+  if (!TerminatePrivate(nsnull)) {
     NS_WARNING("Failed to terminate!");
   }
 
@@ -2147,9 +2146,8 @@ WorkerPrivateParent<Derived>::RootJSObject(JSContext* aCx, bool aRoot)
         return false;
       }
     }
-    else if (!JS_RemoveObjectRoot(aCx, &mJSObject)) {
-      NS_WARNING("JS_RemoveObjectRoot failed!");
-      return false;
+    else {
+      JS_RemoveObjectRoot(aCx, &mJSObject);
     }
 
     mJSObjectRooted = aRoot;

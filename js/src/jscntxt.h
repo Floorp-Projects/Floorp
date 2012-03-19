@@ -183,6 +183,47 @@ struct ConservativeGCData
     }
 };
 
+class FreeOp : public JSFreeOp {
+    bool        shouldFreeLater_;
+    bool        onBackgroundThread_;
+  public:
+    JSContext   *context;
+
+    static FreeOp *get(JSFreeOp *fop) {
+        return static_cast<FreeOp *>(fop);
+    }
+
+    FreeOp(JSRuntime *rt, bool shouldFreeLater, bool onBackgroundThread, JSContext *cx)
+      : JSFreeOp(rt),
+        shouldFreeLater_(shouldFreeLater),
+        onBackgroundThread_(onBackgroundThread),
+        context(cx)
+    {
+    }
+
+    bool shouldFreeLater() const {
+        return shouldFreeLater_;
+    }
+
+    bool onBackgroundThread() const {
+        return onBackgroundThread_;
+    }
+
+    inline void free_(void* p);
+
+    JS_DECLARE_DELETE_METHODS(free_, inline)
+
+    static void staticAsserts() {
+        /*
+         * Check that JSFreeOp is the first base class for FreeOp and we can
+         * reinterpret a pointer to JSFreeOp as a pointer to FreeOp without
+         * any offset adjustments. JSClass::freeOp <-> Class::freeOp depends
+         * on this.
+         */
+        JS_STATIC_ASSERT(offsetof(FreeOp, shouldFreeLater_) == sizeof(JSFreeOp));
+    }
+};
+
 } /* namespace js */
 
 struct JSRuntime : js::RuntimeFriendFields
@@ -505,6 +546,14 @@ struct JSRuntime : js::RuntimeFriendFields
     js::GCHelperThread  gcHelperThread;
 #endif /* JS_THREADSAFE */
 
+  private:
+    js::FreeOp          defaultFreeOp_;
+
+  public:
+    js::FreeOp *defaultFreeOp() {
+        return &defaultFreeOp_;
+    }
+
     uint32_t            debuggerMutations;
 
     const JSSecurityCallbacks *securityCallbacks;
@@ -807,52 +856,16 @@ typedef HashSet<JSObject *,
                 DefaultHasher<JSObject *>,
                 SystemAllocPolicy> BusyArraysSet;
 
-class FreeOp : public JSFreeOp {
-    bool        shouldFreeLater_;
-    bool        onBackgroundThread_;
-  public:
-
-    static FreeOp *get(JSFreeOp *fop) {
-        return static_cast<FreeOp *>(fop);
-    }
-
-    FreeOp(JSRuntime *rt, bool shouldFreeLater, bool onBackgroundThread, JSContext *cx)
-      : JSFreeOp(rt, cx),
-        shouldFreeLater_(shouldFreeLater),
-        onBackgroundThread_(onBackgroundThread)
-    {
-    }
-
-    bool shouldFreeLater() const {
-        return shouldFreeLater_;
-    }
-
-    bool onBackgroundThread() const {
-        return onBackgroundThread_;
-    }
-
-    void free_(void* p) {
+inline void
+FreeOp::free_(void* p) {
 #ifdef JS_THREADSAFE
-        if (shouldFreeLater()) {
-            runtime()->gcHelperThread.freeLater(p);
-            return;
-        }
+    if (shouldFreeLater()) {
+        runtime()->gcHelperThread.freeLater(p);
+        return;
+    }
 #endif
-        runtime()->free_(p);
-    }
-
-    JS_DECLARE_DELETE_METHODS(free_, inline)
-
-    static void staticAsserts() {
-        /*
-         * Check that JSFreeOp is the first base class for FreeOp and we can
-         * reinterpret a pointer to JSFreeOp as a pointer to FreeOp without
-         * any offset adjustments. JSClass::freeOp <-> Class::freeOp depends
-         * on this.
-         */
-        JS_STATIC_ASSERT(offsetof(FreeOp, shouldFreeLater_) == sizeof(JSFreeOp));
-    }
-};
+    runtime()->free_(p);
+}
 
 } /* namespace js */
 

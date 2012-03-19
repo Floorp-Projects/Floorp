@@ -4094,9 +4094,9 @@ its_finalize(JSFreeOp *fop, JSObject *obj)
         fprintf(gOutFile, "finalizing it\n");
     rootedVal = (jsval *) JS_GetPrivate(obj);
     if (rootedVal) {
-      JS_RemoveValueRoot(fop->context, rootedVal);
-      JS_SetPrivate(obj, NULL);
-      delete rootedVal;
+        JS_RemoveValueRootRT(fop->runtime(), rootedVal);
+        JS_SetPrivate(obj, NULL);
+        delete rootedVal;
     }
 }
 

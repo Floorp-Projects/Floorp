@@ -1270,12 +1270,11 @@ js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name)
                                  RootInfo(name, JS_GC_ROOT_GCTHING_PTR));
 }
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(void)
 js_RemoveRoot(JSRuntime *rt, void *rp)
 {
     rt->gcRootsHash.remove(rp);
-    rt->gcPoke = JS_TRUE;
-    return JS_TRUE;
+    rt->gcPoke = true;
 }
 
 typedef RootedValueMap::Range RootRange;
