@@ -452,10 +452,10 @@ listTemplate = (
 "    JS_EnumerateStub,\n"
 "    JS_ResolveStub,\n"
 "    JS_ConvertStub,\n"
-"    JS_FinalizeStub,\n"
+"    NULL,                   /* finalize    */\n"
 "    NULL,                   /* checkAccess */\n"
-"    NULL,                   /* call */\n"
-"    NULL,                   /* construct */\n"
+"    NULL,                   /* call        */\n"
+"    NULL,                   /* construct   */\n"
 "    interface_hasInstance\n"
 "};\n"
 "\n")

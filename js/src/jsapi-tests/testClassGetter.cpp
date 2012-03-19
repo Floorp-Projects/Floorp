@@ -35,9 +35,7 @@ static JSClass ptestClass = {
     JS_StrictPropertyStub, // set
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub,
-    JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_ConvertStub
 };
 
 static JSBool test_fn(JSContext *cx, unsigned argc, jsval *vp)

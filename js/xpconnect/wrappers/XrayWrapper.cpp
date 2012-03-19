@@ -109,8 +109,7 @@ JSClass HolderClass = {
     "NativePropertyHolder",
     JSCLASS_HAS_RESERVED_SLOTS(3),
     JS_PropertyStub,        JS_PropertyStub, holder_get,      holder_set,
-    JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub,  NULL,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub
 };
 
 }
