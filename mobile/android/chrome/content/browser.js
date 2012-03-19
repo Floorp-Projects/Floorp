@@ -1633,6 +1633,23 @@ Tab.prototype = {
     }
   },
 
+  getPageSize: function(aDocument, aDefaultWidth, aDefaultHeight) {
+    if (aDocument instanceof SVGDocument) {
+      let rect = aDocument.rootElement.getBoundingClientRect();
+      // we need to add rect.left and rect.top twice so that the SVG is drawn
+      // centered on the page; if we add it only once then the SVG will be
+      // on the bottom-right of the page and if we don't add it at all then
+      // we end up with a cropped SVG (see bug 712065)
+      return [Math.ceil(rect.left + rect.width + rect.left),
+              Math.ceil(rect.top + rect.height + rect.top)];
+    } else {
+      let body = aDocument.body || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
+      let html = aDocument.documentElement || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
+      return [Math.max(body.scrollWidth, html.scrollWidth),
+              Math.max(body.scrollHeight, html.scrollHeight)];
+    }
+  },
+
   getViewport: function() {
     let viewport = {
       width: gScreenWidth,
@@ -1652,21 +1669,7 @@ Tab.prototype = {
 
     let doc = this.browser.contentDocument;
     if (doc != null) {
-      let pageWidth = viewport.width, pageHeight = viewport.height;
-      if (doc instanceof SVGDocument) {
-        let rect = doc.rootElement.getBoundingClientRect();
-        // we need to add rect.left and rect.top twice so that the SVG is drawn
-        // centered on the page; if we add it only once then the SVG will be
-        // on the bottom-right of the page and if we don't add it at all then
-        // we end up with a cropped SVG (see bug 712065)
-        pageWidth = Math.ceil(rect.left + rect.width + rect.left);
-        pageHeight = Math.ceil(rect.top + rect.height + rect.top);
-      } else {
-        let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-        let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-        pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
-        pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
-      }
+      let [pageWidth, pageHeight] = this.getPageSize(doc, viewport.width, viewport.height);
 
       /* Transform the page width and height based on the zoom factor. */
       pageWidth *= viewport.zoom;
@@ -2108,11 +2111,21 @@ Tab.prototype = {
     }
 
     // Make sure the viewport height is not shorter than the window when
-    // the page is zoomed out to show its full width.
-    let minScale = this.getPageZoomLevel();
-    viewportH = Math.max(viewportH, screenH / minScale);
-
+    // the page is zoomed out to show its full width. Note that before
+    // we set the viewport width, the "full width" of the page isn't properly
+    // defined, so that's why we have to call setBrowserSize twice - once
+    // to set the width, and the second time to figure out the height based
+    // on the layout at that width.
     let oldBrowserWidth = this.browserWidth;
+    this.setBrowserSize(viewportW, viewportH);
+    let minScale = 1.0;
+    if (this.browser.contentDocument) {
+      // this may get run during a Viewport:Change message while the document
+      // has not yet loaded, so need to guard against a null document.
+      let [pageWidth, pageHeight] = this.getPageSize(this.browser.contentDocument, viewportW, viewportH);
+      minScale = gScreenWidth / pageWidth;
+    }
+    viewportH = Math.max(viewportH, screenH / minScale);
     this.setBrowserSize(viewportW, viewportH);
 
     // Avoid having the scroll position jump around after device rotation.
@@ -2135,15 +2148,6 @@ Tab.prototype = {
     let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
     this.setResolution(this._zoom * zoomScale, false);
     this.sendViewportUpdate();
-  },
-
-  getPageZoomLevel: function getPageZoomLevel() {
-    // This may get called during a Viewport:Change message while the document
-    // has not loaded yet.
-    if (!this.browser.contentDocument || !this.browser.contentDocument.body)
-      return 1.0;
-
-    return gScreenWidth / this.browser.contentDocument.body.clientWidth;
   },
 
   setBrowserSize: function(aWidth, aHeight) {
