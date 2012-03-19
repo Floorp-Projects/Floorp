@@ -5977,7 +5977,7 @@ TypeCompartment::sweep(JSContext *cx)
 }
 
 void
-JSCompartment::sweepNewTypeObjectTable(JSContext *cx, TypeObjectSet &table)
+JSCompartment::sweepNewTypeObjectTable(TypeObjectSet &table)
 {
     if (table.initialized()) {
         for (TypeObjectSet::Enum e(table); !e.empty(); e.popFront()) {

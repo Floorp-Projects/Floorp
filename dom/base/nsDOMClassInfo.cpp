@@ -4799,7 +4799,7 @@ nsDOMClassInfo::Convert(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+nsDOMClassInfo::Finalize(nsIXPConnectWrappedNative *wrapper, JSFreeOp *fop,
                          JSObject *obj)
 {
   NS_WARNING("nsDOMClassInfo::Finalize Don't call me!");
@@ -7403,7 +7403,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSFreeOp *fop,
                      JSObject *obj)
 {
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
@@ -8940,7 +8940,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsid id,
 // sGlobalScopePolluterClass!
 
 void
-nsHTMLDocumentSH::ReleaseDocument(JSContext *cx, JSObject *obj)
+nsHTMLDocumentSH::ReleaseDocument(JSFreeOp *fop, JSObject *obj)
 {
   nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(obj);
 

@@ -2230,6 +2230,12 @@ JS_free(JSContext *cx, void *p)
 }
 
 JS_PUBLIC_API(void)
+JS_freeop(JSFreeOp *fop, void *p)
+{
+    return FreeOp::get(fop)->free_(p);
+}
+
+JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes)
 {
     return cx->runtime->updateMallocCounter(cx, nbytes);
@@ -4190,7 +4196,7 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    JSFinalizeOp clearOp = obj->getOps()->clear;
+    ClearOp clearOp = obj->getOps()->clear;
     if (clearOp)
         clearOp(cx, obj);
 
@@ -4230,7 +4236,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
 const uint32_t JSSLOT_ITER_INDEX = 0;
 
 static void
-prop_iter_finalize(JSContext *cx, JSObject *obj)
+prop_iter_finalize(FreeOp *fop, JSObject *obj)
 {
     void *pdata = obj->getPrivate();
     if (!pdata)
@@ -4239,7 +4245,7 @@ prop_iter_finalize(JSContext *cx, JSObject *obj)
     if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() >= 0) {
         /* Non-native case: destroy the ida enumerated when obj was created. */
         JSIdArray *ida = (JSIdArray *) pdata;
-        JS_DestroyIdArray(cx, ida);
+        JS_DestroyIdArray(fop->context, ida);
     }
 }
 

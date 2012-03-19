@@ -287,7 +287,7 @@ public:
   _Trace(JSTracer* aTrc) MOZ_OVERRIDE;
 
   virtual void
-  _Finalize(JSContext* aCx) MOZ_OVERRIDE;
+  _Finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   void
   Finish(JSContext* aCx)

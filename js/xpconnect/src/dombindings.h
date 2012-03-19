@@ -228,7 +228,7 @@ public:
     /* Spidermonkey extensions. */
     bool hasInstance(JSContext *cx, JSObject *proxy, const JS::Value *vp, bool *bp);
     JSString *obj_toString(JSContext *cx, JSObject *proxy);
-    void finalize(JSContext *cx, JSObject *proxy);
+    void finalize(JSFreeOp *fop, JSObject *proxy);
 
     static bool proxyHandlerIsList(js::ProxyHandler *handler) {
         return handler == &instance;

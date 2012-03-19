@@ -1215,7 +1215,7 @@ BaseShape::getUnowned(JSContext *cx, const StackBaseShape &base)
 }
 
 void
-JSCompartment::sweepBaseShapeTable(JSContext *cx)
+JSCompartment::sweepBaseShapeTable()
 {
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
@@ -1227,10 +1227,10 @@ JSCompartment::sweepBaseShapeTable(JSContext *cx)
 }
 
 void
-BaseShape::finalize(JSContext *cx, bool background)
+BaseShape::finalize(FreeOp *fop)
 {
     if (table_) {
-        cx->delete_(table_);
+        fop->delete_(table_);
         table_ = NULL;
     }
 }
@@ -1397,7 +1397,7 @@ EmptyShape::insertInitialShape(JSContext *cx, Shape *shape, JSObject *proto)
 }
 
 void
-JSCompartment::sweepInitialShapeTable(JSContext *cx)
+JSCompartment::sweepInitialShapeTable()
 {
     if (initialShapes.initialized()) {
         for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {

@@ -203,7 +203,7 @@ struct JSXML : js::gc::Cell {
     void *pad;
 #endif
 
-    void finalize(JSContext *cx, bool background);
+    void finalize(js::FreeOp *fop);
 
     static void writeBarrierPre(JSXML *xml);
     static void writeBarrierPost(JSXML *xml, void *addr);

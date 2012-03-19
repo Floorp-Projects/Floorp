@@ -2888,7 +2888,7 @@ sandbox_resolve(JSContext *cx, JSObject *obj, jsid id)
 }
 
 static void
-sandbox_finalize(JSContext *cx, JSObject *obj)
+sandbox_finalize(JSFreeOp *fop, JSObject *obj)
 {
     nsIScriptObjectPrincipal *sop =
         (nsIScriptObjectPrincipal *)xpc_GetJSPrivate(obj);

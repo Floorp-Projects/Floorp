@@ -416,7 +416,7 @@ public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
                         JSObject **objp, bool *_retval);
-  NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+  NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSFreeOp *fop,
                       JSObject *obj);
   NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, JSObject * *_retval);
@@ -798,7 +798,7 @@ public:
                                        jsval *vp);
   static JSBool DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsid id,
                                       unsigned flags, JSObject **objp);
-  static void ReleaseDocument(JSContext *cx, JSObject *obj);
+  static void ReleaseDocument(JSFreeOp *fop, JSObject *obj);
   static JSBool CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp);
   static JSBool DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
                                              jsid id, jsval *vp);

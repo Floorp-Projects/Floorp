@@ -844,8 +844,8 @@ struct JSObject : public js::ObjectImpl
      */
     inline bool isCallable();
 
-    inline void finish(JSContext *cx);
-    JS_ALWAYS_INLINE void finalize(JSContext *cx, bool background);
+    inline void finish(js::FreeOp *fop);
+    JS_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 
     inline bool hasProperty(JSContext *cx, jsid id, bool *foundp, unsigned flags = 0);
 
