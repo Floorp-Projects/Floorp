@@ -681,7 +681,7 @@ public class AboutHomeContent extends ScrollView
                 break;
 
             final TextView row = (TextView) mInflater.inflate(R.layout.abouthome_remote_tab_row, mRemoteTabsLayout, false);
-            row.setText(tab.title);
+            row.setText(TextUtils.isEmpty(tab.title) ? tab.url : tab.title);
             row.setTag(tab.url);
             mRemoteTabsLayout.addView(row);
             row.setOnClickListener(mRemoteTabClickListener);
