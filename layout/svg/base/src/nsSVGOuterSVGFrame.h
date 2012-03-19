@@ -150,6 +150,12 @@ public:
   }
 #endif
 
+  /**
+   * Return true only if the height is unspecified (defaulting to 100%) or else
+   * the height is explicitly set to a percentage value no greater than 100%.
+   */
+  bool VerticalScrollbarNotNeeded() const;
+
 protected:
 
   /* Returns true if our content is the document element and our document is
