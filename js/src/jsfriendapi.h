@@ -307,7 +307,6 @@ TraceWeakMaps(WeakMapTracer *trc);
 extern JS_FRIEND_API(bool)
 GCThingIsMarkedGray(void *thing);
 
-
 /*
  * Shadow declarations of JS internal structures, for access by inline access
  * functions below. Do not use these structures in any other way. When adding
@@ -763,7 +762,6 @@ class ObjectPtr
             IncrementalReferenceBarrier(value);
         value = NULL;
     }
-    void finalize(JSContext *cx) { finalize(JS_GetRuntime(cx)); }
 
     void init(JSObject *obj) { value = obj; }
 
@@ -786,6 +784,17 @@ class ObjectPtr
 
 extern JS_FRIEND_API(JSObject *)
 GetTestingFunctions(JSContext *cx);
+
+/*
+ * Helper to convert FreeOp to JSFreeOp when the definition of FreeOp is not
+ * available and the compiler does not know that FreeOp inherits from
+ * JSFreeOp.
+ */
+inline JSFreeOp *
+CastToJSFreeOp(FreeOp *fop)
+{
+    return reinterpret_cast<JSFreeOp *>(fop);
+}
 
 } /* namespace js */
 

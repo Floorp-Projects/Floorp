@@ -1470,10 +1470,10 @@ XMLHttpRequest::_Trace(JSTracer* aTrc)
 }
 
 void
-XMLHttpRequest::_Finalize(JSContext* aCx)
+XMLHttpRequest::_Finalize(JSFreeOp* aFop)
 {
   ReleaseProxy(XHRIsGoingAway);
-  XMLHttpRequestEventTarget::_Finalize(aCx);
+  XMLHttpRequestEventTarget::_Finalize(aFop);
 }
 
 // static

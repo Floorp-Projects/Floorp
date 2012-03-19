@@ -132,7 +132,7 @@ private:
   }
 
   static void
-  Finalize(JSContext* aCx, JSObject* aObj)
+  Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
     JS_ASSERT(JS_GetClass(aObj) == &sClass);
     delete static_cast<Location*>(JS_GetPrivate(aObj));

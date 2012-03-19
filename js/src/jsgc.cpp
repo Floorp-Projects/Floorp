@@ -274,7 +274,7 @@ Arena::staticAsserts()
 
 template<typename T>
 inline bool
-Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize, bool background)
+Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
 {
     /* Enforce requirements on size of T. */
     JS_ASSERT(thingSize % Cell::CellSize == 0);
@@ -325,7 +325,7 @@ Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize, bool backg
             } else {
                 if (!newFreeSpanStart)
                     newFreeSpanStart = thing;
-                t->finalize(cx, background);
+                t->finalize(fop);
                 JS_POISON(t, JS_FREE_PATTERN, thingSize);
             }
         }
@@ -360,7 +360,7 @@ Arena::finalize(JSContext *cx, AllocKind thingKind, size_t thingSize, bool backg
 
 template<typename T>
 inline void
-FinalizeTypedArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind, bool background)
+FinalizeTypedArenas(FreeOp *fop, ArenaLists::ArenaList *al, AllocKind thingKind)
 {
     /*
      * Release empty arenas and move non-full arenas with some free things into
@@ -372,7 +372,7 @@ FinalizeTypedArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKin
     ArenaHeader **ap = &al->head;
     size_t thingSize = Arena::thingSize(thingKind);
     while (ArenaHeader *aheader = *ap) {
-        bool allClear = aheader->getArena()->finalize<T>(cx, thingKind, thingSize, background);
+        bool allClear = aheader->getArena()->finalize<T>(fop, thingKind, thingSize);
         if (allClear) {
             *ap = aheader->next;
             aheader->chunk()->releaseArena(aheader);
@@ -397,7 +397,7 @@ FinalizeTypedArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKin
  * after the al->head.
  */
 static void
-FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind, bool background)
+FinalizeArenas(FreeOp *fop, ArenaLists::ArenaList *al, AllocKind thingKind)
 {
     switch(thingKind) {
       case FINALIZE_OBJECT0:
@@ -412,33 +412,33 @@ FinalizeArenas(JSContext *cx, ArenaLists::ArenaList *al, AllocKind thingKind, bo
       case FINALIZE_OBJECT12_BACKGROUND:
       case FINALIZE_OBJECT16:
       case FINALIZE_OBJECT16_BACKGROUND:
-        FinalizeTypedArenas<JSObject>(cx, al, thingKind, background);
+        FinalizeTypedArenas<JSObject>(fop, al, thingKind);
         break;
       case FINALIZE_SCRIPT:
-	FinalizeTypedArenas<JSScript>(cx, al, thingKind, background);
+	FinalizeTypedArenas<JSScript>(fop, al, thingKind);
         break;
       case FINALIZE_SHAPE:
-	FinalizeTypedArenas<Shape>(cx, al, thingKind, background);
+	FinalizeTypedArenas<Shape>(fop, al, thingKind);
         break;
       case FINALIZE_BASE_SHAPE:
-        FinalizeTypedArenas<BaseShape>(cx, al, thingKind, background);
+        FinalizeTypedArenas<BaseShape>(fop, al, thingKind);
         break;
       case FINALIZE_TYPE_OBJECT:
-	FinalizeTypedArenas<types::TypeObject>(cx, al, thingKind, background);
+	FinalizeTypedArenas<types::TypeObject>(fop, al, thingKind);
         break;
 #if JS_HAS_XML_SUPPORT
       case FINALIZE_XML:
-	FinalizeTypedArenas<JSXML>(cx, al, thingKind, background);
+	FinalizeTypedArenas<JSXML>(fop, al, thingKind);
         break;
 #endif
       case FINALIZE_STRING:
-	FinalizeTypedArenas<JSString>(cx, al, thingKind, background);
+	FinalizeTypedArenas<JSString>(fop, al, thingKind);
         break;
       case FINALIZE_SHORT_STRING:
-	FinalizeTypedArenas<JSShortString>(cx, al, thingKind, background);
+	FinalizeTypedArenas<JSShortString>(fop, al, thingKind);
         break;
       case FINALIZE_EXTERNAL_STRING:
-	FinalizeTypedArenas<JSExternalString>(cx, al, thingKind, background);
+	FinalizeTypedArenas<JSExternalString>(fop, al, thingKind);
         break;
     }
 }
@@ -1491,16 +1491,17 @@ ArenaLists::allocateFromArena(JSCompartment *comp, AllocKind thingKind)
 }
 
 void
-ArenaLists::finalizeNow(JSContext *cx, AllocKind thingKind)
+ArenaLists::finalizeNow(FreeOp *fop, AllocKind thingKind)
 {
+    JS_ASSERT(!fop->onBackgroundThread());
 #ifdef JS_THREADSAFE
     JS_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE);
 #endif
-    FinalizeArenas(cx, &arenaLists[thingKind], thingKind, false);
+    FinalizeArenas(fop, &arenaLists[thingKind], thingKind);
 }
 
 inline void
-ArenaLists::finalizeLater(JSContext *cx, AllocKind thingKind)
+ArenaLists::finalizeLater(FreeOp *fop, AllocKind thingKind)
 {
     JS_ASSERT(thingKind == FINALIZE_OBJECT0_BACKGROUND  ||
               thingKind == FINALIZE_OBJECT2_BACKGROUND  ||
@@ -1510,9 +1511,10 @@ ArenaLists::finalizeLater(JSContext *cx, AllocKind thingKind)
               thingKind == FINALIZE_OBJECT16_BACKGROUND ||
               thingKind == FINALIZE_SHORT_STRING        ||
               thingKind == FINALIZE_STRING);
+    JS_ASSERT(!fop->onBackgroundThread());
 
 #ifdef JS_THREADSAFE
-    JS_ASSERT(!cx->runtime->gcHelperThread.sweeping());
+    JS_ASSERT(!fop->runtime()->gcHelperThread.sweeping());
 
     ArenaList *al = &arenaLists[thingKind];
     if (!al->head) {
@@ -1528,37 +1530,38 @@ ArenaLists::finalizeLater(JSContext *cx, AllocKind thingKind)
     JS_ASSERT(backgroundFinalizeState[thingKind] == BFS_DONE ||
               backgroundFinalizeState[thingKind] == BFS_JUST_FINISHED);
 
-    if (cx->gcBackgroundFree) {
+    if (fop->shouldFreeLater()) {
         /*
          * To ensure the finalization order even during the background GC we
          * must use infallibleAppend so arenas scheduled for background
          * finalization would not be finalized now if the append fails.
          */
-        cx->gcBackgroundFree->finalizeVector.infallibleAppend(al->head);
+        fop->runtime()->gcHelperThread.finalizeVector.infallibleAppend(al->head);
         al->clear();
         backgroundFinalizeState[thingKind] = BFS_RUN;
     } else {
-        FinalizeArenas(cx, al, thingKind, false);
+        FinalizeArenas(fop, al, thingKind);
         backgroundFinalizeState[thingKind] = BFS_DONE;
     }
 
 #else /* !JS_THREADSAFE */
 
-    finalizeNow(cx, thingKind);
+    finalizeNow(fop, thingKind);
 
 #endif
 }
 
 #ifdef JS_THREADSAFE
 /*static*/ void
-ArenaLists::backgroundFinalize(JSContext *cx, ArenaHeader *listHead)
+ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
 {
+    JS_ASSERT(fop->onBackgroundThread());
     JS_ASSERT(listHead);
     AllocKind thingKind = listHead->getAllocKind();
     JSCompartment *comp = listHead->compartment;
     ArenaList finalized;
     finalized.head = listHead;
-    FinalizeArenas(cx, &finalized, thingKind, true);
+    FinalizeArenas(fop, &finalized, thingKind);
 
     /*
      * After we finish the finalization al->cursor must point to the end of
@@ -1568,7 +1571,7 @@ ArenaLists::backgroundFinalize(JSContext *cx, ArenaHeader *listHead)
     ArenaLists *lists = &comp->arenas;
     ArenaList *al = &lists->arenaLists[thingKind];
 
-    AutoLockGC lock(cx->runtime);
+    AutoLockGC lock(fop->runtime());
     JS_ASSERT(lists->backgroundFinalizeState[thingKind] == BFS_RUN);
     JS_ASSERT(!*al->cursor);
 
@@ -1593,50 +1596,50 @@ ArenaLists::backgroundFinalize(JSContext *cx, ArenaHeader *listHead)
 #endif /* JS_THREADSAFE */
 
 void
-ArenaLists::finalizeObjects(JSContext *cx)
+ArenaLists::finalizeObjects(FreeOp *fop)
 {
-    finalizeNow(cx, FINALIZE_OBJECT0);
-    finalizeNow(cx, FINALIZE_OBJECT2);
-    finalizeNow(cx, FINALIZE_OBJECT4);
-    finalizeNow(cx, FINALIZE_OBJECT8);
-    finalizeNow(cx, FINALIZE_OBJECT12);
-    finalizeNow(cx, FINALIZE_OBJECT16);
+    finalizeNow(fop, FINALIZE_OBJECT0);
+    finalizeNow(fop, FINALIZE_OBJECT2);
+    finalizeNow(fop, FINALIZE_OBJECT4);
+    finalizeNow(fop, FINALIZE_OBJECT8);
+    finalizeNow(fop, FINALIZE_OBJECT12);
+    finalizeNow(fop, FINALIZE_OBJECT16);
 
 #ifdef JS_THREADSAFE
-    finalizeLater(cx, FINALIZE_OBJECT0_BACKGROUND);
-    finalizeLater(cx, FINALIZE_OBJECT2_BACKGROUND);
-    finalizeLater(cx, FINALIZE_OBJECT4_BACKGROUND);
-    finalizeLater(cx, FINALIZE_OBJECT8_BACKGROUND);
-    finalizeLater(cx, FINALIZE_OBJECT12_BACKGROUND);
-    finalizeLater(cx, FINALIZE_OBJECT16_BACKGROUND);
+    finalizeLater(fop, FINALIZE_OBJECT0_BACKGROUND);
+    finalizeLater(fop, FINALIZE_OBJECT2_BACKGROUND);
+    finalizeLater(fop, FINALIZE_OBJECT4_BACKGROUND);
+    finalizeLater(fop, FINALIZE_OBJECT8_BACKGROUND);
+    finalizeLater(fop, FINALIZE_OBJECT12_BACKGROUND);
+    finalizeLater(fop, FINALIZE_OBJECT16_BACKGROUND);
 #endif
 
 #if JS_HAS_XML_SUPPORT
-    finalizeNow(cx, FINALIZE_XML);
+    finalizeNow(fop, FINALIZE_XML);
 #endif
 }
 
 void
-ArenaLists::finalizeStrings(JSContext *cx)
+ArenaLists::finalizeStrings(FreeOp *fop)
 {
-    finalizeLater(cx, FINALIZE_SHORT_STRING);
-    finalizeLater(cx, FINALIZE_STRING);
+    finalizeLater(fop, FINALIZE_SHORT_STRING);
+    finalizeLater(fop, FINALIZE_STRING);
 
-    finalizeNow(cx, FINALIZE_EXTERNAL_STRING);
+    finalizeNow(fop, FINALIZE_EXTERNAL_STRING);
 }
 
 void
-ArenaLists::finalizeShapes(JSContext *cx)
+ArenaLists::finalizeShapes(FreeOp *fop)
 {
-    finalizeNow(cx, FINALIZE_SHAPE);
-    finalizeNow(cx, FINALIZE_BASE_SHAPE);
-    finalizeNow(cx, FINALIZE_TYPE_OBJECT);
+    finalizeNow(fop, FINALIZE_SHAPE);
+    finalizeNow(fop, FINALIZE_BASE_SHAPE);
+    finalizeNow(fop, FINALIZE_TYPE_OBJECT);
 }
 
 void
-ArenaLists::finalizeScripts(JSContext *cx)
+ArenaLists::finalizeScripts(FreeOp *fop)
 {
-    finalizeNow(cx, FINALIZE_SCRIPT);
+    finalizeNow(fop, FINALIZE_SCRIPT);
 }
 
 static void
@@ -2771,8 +2774,9 @@ GCHelperThread::doSweep()
          * We must finalize in the insert order, see comments in
          * finalizeObjects.
          */
+        FreeOp fop(rt, false, true, cx);
         for (ArenaHeader **i = finalizeVector.begin(); i != finalizeVector.end(); ++i)
-            ArenaLists::backgroundFinalize(cx, *i);
+            ArenaLists::backgroundFinalize(&fop, *i);
         finalizeVector.resize(0);
 
         if (freeCursor) {
@@ -2827,9 +2831,9 @@ ReleaseObservedTypes(JSRuntime *rt)
 }
 
 static void
-SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
+SweepCompartments(FreeOp *fop, JSGCInvocationKind gckind)
 {
-    JSRuntime *rt = cx->runtime;
+    JSRuntime *rt = fop->runtime();
     JSCompartmentCallback callback = rt->compartmentCallback;
 
     /* Skip the atomsCompartment. */
@@ -2847,10 +2851,10 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
         {
             compartment->arenas.checkEmptyFreeLists();
             if (callback)
-                JS_ALWAYS_TRUE(callback(cx, compartment, JSCOMPARTMENT_DESTROY));
+                JS_ALWAYS_TRUE(callback(fop->context, compartment, JSCOMPARTMENT_DESTROY));
             if (compartment->principals)
                 JS_DropPrincipals(rt, compartment->principals);
-            cx->delete_(compartment);
+            fop->delete_(compartment);
             continue;
         }
         *write++ = compartment;
@@ -3112,10 +3116,11 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
     for (GCCompartmentsIter c(rt); !c.done(); c.next())
         c->arenas.purge();
 
+    FreeOp fop(rt, !!cx->gcBackgroundFree, false, cx);
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_START);
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(cx, JSFINALIZE_START);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_START);
     }
 
     /* Finalize unreachable (key,value) pairs in all weak maps. */
@@ -3127,14 +3132,14 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
     WatchpointMap::sweepAll(rt);
 
     /* Detach unreachable debuggers and global objects from each other. */
-    Debugger::sweepAll(cx);
+    Debugger::sweepAll(&fop);
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_COMPARTMENTS);
 
         bool releaseTypes = rt->gcIsFull && ReleaseObservedTypes(rt);
         for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            c->sweep(cx, releaseTypes);
+            c->sweep(&fop, releaseTypes);
     }
 
     {
@@ -3145,29 +3150,29 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
          * finalizer can access the other things even if they will be freed.
          */
         for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            c->arenas.finalizeObjects(cx);
+            c->arenas.finalizeObjects(&fop);
     }
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_STRING);
         for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            c->arenas.finalizeStrings(cx);
+            c->arenas.finalizeStrings(&fop);
     }
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_SCRIPT);
         for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            c->arenas.finalizeScripts(cx);
+            c->arenas.finalizeScripts(&fop);
     }
 
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_SHAPE);
         for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            c->arenas.finalizeShapes(cx);
+            c->arenas.finalizeShapes(&fop);
     }
 
 #ifdef DEBUG
-     PropertyTree::dumpShapes(cx);
+     PropertyTree::dumpShapes(rt);
 #endif
 
     {
@@ -3187,7 +3192,7 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
          * sure we don't miss sweeping any compartments.
          */
         if (rt->gcIsFull)
-            SweepCompartments(cx, gckind);
+            SweepCompartments(&fop, gckind);
 
 #ifndef JS_THREADSAFE
         /*
@@ -3202,7 +3207,7 @@ SweepPhase(JSContext *cx, JSGCInvocationKind gckind)
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_END);
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(cx, JSFINALIZE_END);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_END);
     }
 
     for (CompartmentsIter c(rt); !c.done(); c.next())

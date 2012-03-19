@@ -803,7 +803,7 @@ struct JSScript : public js::gc::Cell
     uint32_t stepModeCount() { return debug ? (debug->stepMode & stepCountMask) : 0; }
 #endif
 
-    void finalize(JSContext *cx, bool background);
+    void finalize(js::FreeOp *fop);
 
     static inline void writeBarrierPre(JSScript *script);
     static inline void writeBarrierPost(JSScript *script, void *addr);

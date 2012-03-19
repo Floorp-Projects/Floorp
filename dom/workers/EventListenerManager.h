@@ -39,10 +39,10 @@ public:
   }
 
   void
-  _Finalize(JSContext* aCx)
+  _Finalize(JSFreeOp* aFop)
   {
     if (!PR_CLIST_IS_EMPTY(&mCollectionHead)) {
-      FinalizeInternal(aCx);
+      FinalizeInternal(aFop);
     }
   }
 
@@ -110,7 +110,7 @@ private:
   TraceInternal(JSTracer* aTrc) const;
 
   void
-  FinalizeInternal(JSContext* aCx);
+  FinalizeInternal(JSFreeOp* aFop);
 
   void
   Add(JSContext* aCx, const jsid& aType, JSObject* aListener, Phase aPhase,

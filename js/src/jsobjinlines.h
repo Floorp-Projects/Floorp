@@ -241,11 +241,11 @@ JSObject::deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, bool 
 }
 
 inline void
-JSObject::finalize(JSContext *cx, bool background)
+JSObject::finalize(js::FreeOp *fop)
 {
     js::Probes::finalizeObject(this);
 
-    if (!background) {
+    if (!fop->onBackgroundThread()) {
         /*
          * Finalize obj first, in case it needs map and slots. Objects with
          * finalize hooks are not finalized in the background, as the class is
@@ -253,10 +253,10 @@ JSObject::finalize(JSContext *cx, bool background)
          */
         js::Class *clasp = getClass();
         if (clasp->finalize)
-            clasp->finalize(cx, this);
+            clasp->finalize(fop, this);
     }
 
-    finish(cx);
+    finish(fop);
 }
 
 inline JSObject *
@@ -892,12 +892,12 @@ JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
 }
 
 inline void
-JSObject::finish(JSContext *cx)
+JSObject::finish(js::FreeOp *fop)
 {
     if (hasDynamicSlots())
-        cx->free_(slots);
+        fop->free_(slots);
     if (hasDynamicElements())
-        cx->free_(getElementsHeader());
+        fop->free_(getElementsHeader());
 }
 
 inline bool

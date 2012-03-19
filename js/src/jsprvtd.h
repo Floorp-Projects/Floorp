@@ -324,6 +324,8 @@ enum XDRMode {
 template <XDRMode mode>
 class XDRState;
 
+class FreeOp;
+
 } /* namespace js */
 
 namespace JSC {

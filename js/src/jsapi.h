@@ -1344,13 +1344,34 @@ typedef JSBool
 typedef JSType
 (* JSTypeOfOp)(JSContext *cx, JSObject *obj);
 
+typedef struct JSFreeOp JSFreeOp;
+
+struct JSFreeOp {
+    JSContext   *context;
+#ifndef __cplusplus
+    JSRuntime   *runtime;
+#else
+  private:
+    JSRuntime   *runtime_;
+
+  protected:
+    JSFreeOp(JSRuntime *rt, JSContext *cx)
+      : context(cx), runtime_(rt) { }
+
+  public:
+    JSRuntime *runtime() const {
+        return runtime_;
+    }
+#endif
+};
+
 /*
  * Finalize obj, which the garbage collector has determined to be unreachable
  * from other live objects or from GC roots.  Obviously, finalizers must never
  * store a reference to obj.
  */
 typedef void
-(* JSFinalizeOp)(JSContext *cx, JSObject *obj);
+(* JSFinalizeOp)(JSFreeOp *fop, JSObject *obj);
 
 /*
  * Finalizes external strings created by JS_NewExternalString.
@@ -1455,7 +1476,7 @@ typedef enum JSFinalizeStatus {
 } JSFinalizeStatus;
 
 typedef void
-(* JSFinalizeCallback)(JSContext *cx, JSFinalizeStatus status);
+(* JSFinalizeCallback)(JSFreeOp *fop, JSFinalizeStatus status);
 
 /*
  * Generic trace operation that calls JS_CallTracer on each traceable thing
@@ -2954,8 +2975,19 @@ JS_malloc(JSContext *cx, size_t nbytes);
 extern JS_PUBLIC_API(void *)
 JS_realloc(JSContext *cx, void *p, size_t nbytes);
 
+/*
+ * A wrapper for js_free(p) that may delay js_free(p) invocation as a
+ * performance optimization.
+ */
 extern JS_PUBLIC_API(void)
 JS_free(JSContext *cx, void *p);
+
+/*
+ * A wrapper for js_free(p) that may delay js_free(p) invocation as a
+ * performance optimization as specified by the given JSFreeOp instance.
+ */
+extern JS_PUBLIC_API(void)
+JS_freeop(JSFreeOp *fop, void *p);
 
 extern JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext *cx, size_t nbytes);

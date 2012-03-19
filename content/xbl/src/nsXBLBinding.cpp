@@ -102,7 +102,7 @@
 // The JS class for XBLBinding
 //
 static void
-XBLFinalize(JSContext *cx, JSObject *obj)
+XBLFinalize(JSFreeOp *fop, JSObject *obj)
 {
   nsXBLDocumentInfo* docInfo =
     static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(obj));

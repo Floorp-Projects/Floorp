@@ -390,7 +390,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
 static unsigned finalizeCount = 0;
 
 static void
-finalize_counter_finalize(JSContext *cx, JSObject *obj)
+finalize_counter_finalize(JSFreeOp *fop, JSObject *obj)
 {
     JS_ATOMIC_INCREMENT(&finalizeCount);
 }
