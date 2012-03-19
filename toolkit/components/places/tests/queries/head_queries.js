@@ -177,20 +177,6 @@ function populateDB(aArray) {
             }
           }
 
-          if (qdata.isFavicon) {
-            // Not planning on doing deep testing of favIcon service so these two
-            // calls should be sufficient to get favicons into the database
-            try {
-              PlacesUtils.favicons.setFaviconData(uri(qdata.faviconURI),
-                                                  qdata.favicon,
-                                                  qdata.faviconLen,
-                                                  qdata.faviconMimeType,
-                                                  qdata.faviconExpiration);
-            } catch (ex) {}
-            PlacesUtils.favicons.setFaviconUrlForPage(uri(qdata.uri),
-                                                      uri(qdata.faviconURI));
-          }
-
           if (qdata.isFolder) {
             let folderId = PlacesUtils.bookmarks.createFolder(qdata.parentFolder,
                                                               qdata.title,
@@ -286,12 +272,6 @@ function queryData(obj) {
   this.annoMimeType = obj.annoMimeType ? obj.annoMimeType : "";
   this.isTag = obj.isTag ? obj.isTag : false;
   this.tagArray = obj.tagArray ? obj.tagArray : null;
-  this.isFavicon = obj.isFavicon ? obj.isFavicon : false;
-  this.faviconURI = obj.faviconURI ? obj.faviconURI : "";
-  this.faviconLen = obj.faviconLen ? obj.faviconLen : 0;
-  this.faviconMimeType = obj.faviconMimeType ? obj.faviconMimeType : "";
-  this.faviconExpiration = obj.faviconExpiration ?
-                           obj.faviconExpiration : futureday;
   this.isLivemark = obj.isLivemark ? obj.isLivemark : false;
   this.parentFolder = obj.parentFolder ? obj.parentFolder
                                        : PlacesUtils.placesRootId;

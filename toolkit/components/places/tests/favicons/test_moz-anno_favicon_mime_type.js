@@ -107,8 +107,8 @@ function run_test()
   // Test that the content type of a favicon we add ends up being image/png.
   let (testURI = uri("http://mozilla.org/")) {
     // Add the data before opening
-    fs.setFaviconDataFromDataURL(testURI, testFaviconData,
-                                 (Date.now() + 60 * 60 * 24 * 1000) * 1000);
+    fs.replaceFaviconDataFromDataURL(testURI, testFaviconData,
+                                     (Date.now() + 60 * 60 * 24 * 1000) * 1000);
 
     // Open the channel
     let channel = ios.newChannel(moz_anno_favicon_prefix + testURI.spec, null,
