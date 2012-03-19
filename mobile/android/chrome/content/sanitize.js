@@ -251,7 +251,7 @@ Sanitizer.prototype = {
       
       get canClear()
       {
-        Services.logins.countLogins("", "", ""); // count all logins
+        let count = Services.logins.countLogins("", "", ""); // count all logins
         return (count > 0);
       }
     },
