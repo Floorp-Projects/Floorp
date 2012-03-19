@@ -401,8 +401,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   mShadowLayersManager->ShadowLayersUpdated(isFirstPaint);
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
-  printf_stderr("Compositor: Layers update took %i ms (blocking gecko).\n",
-                (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds());
+  int compositeTime = (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds();
+  if (compositeTime > 15) {
+    printf_stderr("Compositor: Layers update took %i ms (blocking gecko).\n", compositeTime);
+  }
 #endif
 
   return true;
