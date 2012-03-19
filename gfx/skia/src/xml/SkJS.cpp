@@ -155,7 +155,7 @@ JSClass global_class = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,
-    JS_ConvertStub,   JS_FinalizeStub
+    JS_ConvertStub
 };
 
 SkJS::SkJS(void* hwnd) : SkOSWindow(hwnd) {

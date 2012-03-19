@@ -59,8 +59,7 @@ document_resolve(JSContext *cx, JSObject *obj, jsid id, unsigned flags, JSObject
 static JSClass document_class = {
     "document", JSCLASS_NEW_RESOLVE,
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, (JSResolveOp) document_resolve, JS_ConvertStub, JS_FinalizeStub,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_EnumerateStub, (JSResolveOp) document_resolve, JS_ConvertStub
 };
 
 BEGIN_TEST(testLookup_bug570195)

@@ -3609,9 +3609,6 @@ JS_ResolveStub(JSContext *cx, JSObject *obj, jsid id);
 extern JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
 
-extern JS_PUBLIC_API(void)
-JS_FinalizeStub(JSContext *cx, JSObject *obj);
-
 struct JSConstDoubleSpec {
     double          dval;
     const char      *name;

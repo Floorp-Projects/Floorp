@@ -2594,8 +2594,7 @@ static JSClass sandbox_class = {
     JS_PropertyStub,   JS_PropertyStub,
     JS_PropertyStub,   JS_StrictPropertyStub,
     sandbox_enumerate, (JSResolveOp)sandbox_resolve,
-    JS_ConvertStub,    NULL,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_ConvertStub
 };
 
 static JSObject *
@@ -2855,8 +2854,7 @@ static JSClass resolver_class = {
     JS_PropertyStub,   JS_PropertyStub,
     JS_PropertyStub,   JS_StrictPropertyStub,
     resolver_enumerate, (JSResolveOp)resolver_resolve,
-    JS_ConvertStub,    NULL,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_ConvertStub
 };
 
 
@@ -3280,8 +3278,7 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
         JS_PropertyStub,  JS_PropertyStub,
         JS_PropertyStub,  JS_StrictPropertyStub,
         JS_EnumerateStub, JS_ResolveStub,
-        JS_ConvertStub,   NULL,
-        JSCLASS_NO_OPTIONAL_MEMBERS
+        JS_ConvertStub
     };
 
     JSObject *fakeGlobal = JS_NewGlobalObject(cx, &dummy_class);
@@ -4112,8 +4109,7 @@ static JSClass its_class = {
     "It", JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_PRIVATE,
     its_addProperty,  its_delProperty,  its_getProperty,  its_setProperty,
     (JSEnumerateOp)its_enumerate, (JSResolveOp)its_resolve,
-    its_convert,      its_finalize,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    its_convert,      its_finalize
 };
 
 static JSBool
@@ -4406,8 +4402,7 @@ JSClass global_class = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,
-    JS_ConvertStub,   its_finalize,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_ConvertStub,   its_finalize
 };
 
 static JSBool
@@ -4520,8 +4515,7 @@ static JSClass env_class = {
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  env_setProperty,
     env_enumerate, (JSResolveOp) env_resolve,
-    JS_ConvertStub,   NULL,
-    JSCLASS_NO_OPTIONAL_MEMBERS
+    JS_ConvertStub
 };
 
 /*
