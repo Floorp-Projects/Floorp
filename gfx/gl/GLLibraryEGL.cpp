@@ -141,9 +141,6 @@ GLLibraryEGL::EnsureInitialized()
         SYMBOL(BindTexImage),
         SYMBOL(ReleaseTexImage),
         SYMBOL(QuerySurface),
-#ifdef MOZ_WIDGET_GONK
-        SYMBOL(SetSwapRectangleANDROID),
-#endif
         { NULL, { NULL } }
     };
 
