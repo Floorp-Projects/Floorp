@@ -53,6 +53,7 @@ EXTRA_PP_COMPONENTS = \
         CameraContent.js \
         AlertsService.js \
         ContentPermissionPrompt.js \
+        MozKeyboard.js \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk
