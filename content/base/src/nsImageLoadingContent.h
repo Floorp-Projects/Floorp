@@ -298,6 +298,12 @@ protected:
   nsCOMPtr<imgIRequest>& PreparePendingRequest();
 
   /**
+   * Switch our pending request to be our current request.
+   * mPendingRequest must be non-null!
+   */
+  void MakePendingRequestCurrent();
+
+  /**
    * Cancels and nulls-out the "current" and "pending" requests if they exist.
    */
   void ClearCurrentRequest(nsresult aReason);
