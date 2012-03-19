@@ -143,7 +143,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(
     KIND_OTHER,
     UNITS_BYTES,
     GetD2DSurfaceVramUsage,
-    "Video memory used by D2D surfaces")
+    "Video memory used by D2D surfaces.")
 
 #endif
 
