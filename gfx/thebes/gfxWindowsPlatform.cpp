@@ -1428,9 +1428,9 @@ gfxWindowsPlatform::SetupClearTypeParams()
 
         // For parameters that have not been explicitly set,
         // we copy values from default params (or our overridden value for contrast)
-        gamma =
-            gamma >= 1.0 && gamma <= 2.2 ?
-                gamma : defaultRenderingParams->GetGamma();
+        if (gamma < 1.0 || gamma > 2.2) {
+            gamma = defaultRenderingParams->GetGamma();
+        }
 
         if (level < 0.0 || level > 1.0) {
             level = defaultRenderingParams->GetClearTypeLevel();
