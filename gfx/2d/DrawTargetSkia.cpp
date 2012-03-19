@@ -543,7 +543,8 @@ void
 DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
                            const GlyphBuffer &aBuffer,
                            const Pattern &aPattern,
-                           const DrawOptions &aOptions)
+                           const DrawOptions &aOptions,
+                           const GlyphRenderingOptions*)
 {
   if (aFont->GetType() != FONT_MAC && aFont->GetType() != FONT_SKIA) {
     return;
