@@ -816,7 +816,8 @@ private:
       mItemCount(0),
       mLineBoundaryAtStart(false),
       mLineBoundaryAtEnd(false),
-      mParentHasNoXBLChildren(false)
+      mParentHasNoXBLChildren(false),
+      mTriedConstructingFrames(false)
     {
       PR_INIT_CLIST(&mItems);
       memset(mDesiredParentCounts, 0, sizeof(mDesiredParentCounts));
@@ -832,6 +833,20 @@ private:
 
       // Leaves our mItems pointing to deleted memory in both directions,
       // but that's OK at this point.
+
+      // Create the undisplayed entries for our mUndisplayedItems, if any, but
+      // only if we have tried constructing frames for this item list.  If we
+      // haven't, then we're just throwing it away and will probably try again.
+      if (!mUndisplayedItems.IsEmpty() && mTriedConstructingFrames) {
+        // We could store the frame manager in a member, but just
+        // getting it off the style context is not too bad.
+        nsFrameManager *mgr =
+          mUndisplayedItems[0].mStyleContext->PresContext()->FrameManager();
+        for (PRUint32 i = 0; i < mUndisplayedItems.Length(); ++i) {
+          UndisplayedItem& item = mUndisplayedItems[i];
+          mgr->SetUndisplayedContent(item.mContent, item.mStyleContext);
+        }
+      }
     }
 
     void SetLineBoundaryAtStart(bool aBoundary) { mLineBoundaryAtStart = aBoundary; }
@@ -839,6 +854,7 @@ private:
     void SetParentHasNoXBLChildren(bool aHasNoXBLChildren) {
       mParentHasNoXBLChildren = aHasNoXBLChildren;
     }
+    void SetTriedConstructingFrames() { mTriedConstructingFrames = true; }
     bool HasLineBoundaryAtStart() { return mLineBoundaryAtStart; }
     bool HasLineBoundaryAtEnd() { return mLineBoundaryAtEnd; }
     bool ParentHasNoXBLChildren() { return mParentHasNoXBLChildren; }
@@ -869,6 +885,11 @@ private:
       ++mItemCount;
       ++mDesiredParentCounts[item->DesiredParentType()];
       return item;
+    }
+
+    void AppendUndisplayedItem(nsIContent* aContent,
+                               nsStyleContext* aStyleContext) {
+      mUndisplayedItems.AppendElement(UndisplayedItem(aContent, aStyleContext));
     }
 
     void InlineItemAdded() { ++mInlineCount; }
@@ -977,6 +998,15 @@ private:
       return static_cast<FrameConstructionItem*>(item);
     }
 
+    struct UndisplayedItem {
+      UndisplayedItem(nsIContent* aContent, nsStyleContext* aStyleContext) :
+        mContent(aContent), mStyleContext(aStyleContext)
+      {}
+
+      nsIContent * const mContent;
+      nsRefPtr<nsStyleContext> mStyleContext;
+    };
+
     // Adjust our various counts for aItem being added or removed.  aDelta
     // should be either +1 or -1 depending on which is happening.
     void AdjustCountsForItem(FrameConstructionItem* aItem, PRInt32 aDelta);
@@ -995,6 +1025,10 @@ private:
     bool mLineBoundaryAtEnd;
     // True if the parent is guaranteed to have no XBL anonymous children
     bool mParentHasNoXBLChildren;
+    // True if we have tried constructing frames from this list
+    bool mTriedConstructingFrames;
+
+    nsTArray<UndisplayedItem> mUndisplayedItems;
   };
 
   typedef FrameConstructionItemList::Iterator FCItemIterator;
@@ -1097,7 +1131,7 @@ private:
     FrameConstructionItemList mChildItems;
 
   private:
-    FrameConstructionItem(const FrameConstructionItem& aOther); /* not implemented */
+    FrameConstructionItem(const FrameConstructionItem& aOther) MOZ_DELETE; /* not implemented */
   };
 
   /**
@@ -1778,6 +1812,18 @@ private:
     mCountersDirty = true;
     mDocument->SetNeedLayoutFlush();
   }
+
+  /**
+   * Add the pair (aContent, aStyleContext) to the undisplayed items
+   * in aList as needed.  This method enforces the invariant that all
+   * style contexts in the undisplayed content map must be non-pseudo
+   * contexts and also handles unbinding undisplayed generated content
+   * as needed.
+   */
+  static void SetAsUndisplayedContent(FrameConstructionItemList& aList,
+                                      nsIContent* aContent,
+                                      nsStyleContext* aStyleContext,
+                                      bool aIsGeneratedContent);
 
 public:
 

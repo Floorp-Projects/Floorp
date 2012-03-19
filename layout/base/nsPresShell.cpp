@@ -5662,7 +5662,6 @@ PresShell::RecordMouseLocation(nsGUIEvent* aEvent)
   }
 }
 
-#ifdef MOZ_TOUCH
 static void
 EvictTouchPoint(nsCOMPtr<nsIDOMTouch>& aTouch)
 {
@@ -5710,7 +5709,6 @@ AppendToTouchList(const PRUint32& aKey, nsCOMPtr<nsIDOMTouch>& aData, void *aTou
   touches->AppendElement(aData);
   return PL_DHASH_NEXT;
 }
-#endif // MOZ_TOUCH
 
 nsresult
 PresShell::HandleEvent(nsIFrame        *aFrame,
@@ -5924,7 +5922,6 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
     // with a window-level mouse exit event since we want to start sending
     // mouse out events at the root EventStateManager.
     if (!captureRetarget && !isWindowLevelMouseExit) {
-#ifdef MOZ_TOUCH
       nsPoint eventPoint;
       if (aEvent->message == NS_TOUCH_START) {
         // Add any new touches to the queue
@@ -5973,10 +5970,6 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
       } else {
         eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
       }
-#else
-      nsPoint eventPoint
-          = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
-#endif
       {
         bool ignoreRootScrollFrame = false;
         if (aEvent->eventStructType == NS_MOUSE_EVENT) {
@@ -6376,9 +6369,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
   nsresult rv = NS_OK;
 
   if (!NS_EVENT_NEEDS_FRAME(aEvent) || GetCurrentEventFrame()) {
-#ifdef MOZ_TOUCH
     bool touchIsNew = false;
-#endif
     bool isHandlingUserInput = false;
 
     // XXX How about IME events and input events for plugins?
@@ -6421,7 +6412,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
       case NS_MOUSE_BUTTON_UP:
         isHandlingUserInput = true;
         break;
-#ifdef MOZ_TOUCH
       case NS_TOUCH_CANCEL:
       case NS_TOUCH_END: {
         // Remove the changed touches
@@ -6501,7 +6491,6 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
         }
         break;
       }
-#endif
       case NS_DRAGDROP_DROP:
         nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
         if (session) {
@@ -6560,14 +6549,10 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
       // because they do not have a reliable refPoint.
       if (!IsSynthesizedMouseEvent(aEvent)) {
         nsPresShellEventCB eventCB(this);
-#ifdef MOZ_TOUCH
         if (aEvent->eventStructType == NS_TOUCH_EVENT) {
           DispatchTouchEvent(aEvent, aStatus, &eventCB, touchIsNew);
         }
         else if (mCurrentEventContent) {
-#else
-        if (mCurrentEventContent) {
-#endif
           nsEventDispatcher::Dispatch(mCurrentEventContent, mPresContext,
                                       aEvent, nsnull, aStatus, &eventCB);
         }

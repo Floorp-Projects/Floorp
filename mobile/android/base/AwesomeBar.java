@@ -413,6 +413,10 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         super.onResume();
         if (mText != null && mText.getText() != null)
             updateGoButton(mText.getText().toString());
+
+        // Invlidate the cached value that keeps track of whether or
+        // not desktop bookmarks exist
+        BrowserDB.invalidateCachedState();
     }
 
     @Override

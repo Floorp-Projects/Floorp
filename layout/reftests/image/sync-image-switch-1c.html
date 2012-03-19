@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <input type="image" src="blue-16x20.png">
+  <script>
+    var otherImageSrc = "blue-32x32.png"
+    window.onload = function() {
+      var img = document.querySelector("input");
+      img.src = otherImageSrc;
+      img.style.width = img.naturalWidth + "px";
+      img.style.height = img.naturalHeight + "px";
+      document.documentElement.className = "";
+    }
+    var otherImage = new Image;
+    otherImage.src = otherImageSrc;
+  </script>
+</html>

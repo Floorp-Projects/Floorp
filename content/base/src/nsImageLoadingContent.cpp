@@ -61,6 +61,7 @@
 #include "nsNetUtil.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsGenericElement.h"
+#include "nsImageFrame.h"
 
 #include "nsIPresShell.h"
 #include "nsEventStates.h"
@@ -300,10 +301,7 @@ nsImageLoadingContent::OnStopDecode(imgIRequest* aRequest,
 
   // If the pending request is loaded, switch to it.
   if (aRequest == mPendingRequest) {
-    PrepareCurrentRequest() = mPendingRequest;
-    mPendingRequest = nsnull;
-    mCurrentRequestNeedsResetAnimation = mPendingRequestNeedsResetAnimation;
-    mPendingRequestNeedsResetAnimation = false;
+    MakePendingRequestCurrent();
   }
   NS_ABORT_IF_FALSE(aRequest == mCurrentRequest,
                     "One way or another, we should be current by now");
@@ -792,6 +790,26 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                  getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
+
+    // Handle cases when we just ended up with a pending request but it's
+    // already done.  In that situation we have to synchronously switch that
+    // request to being the current request, because websites depend on that
+    // behavior.
+    if (req == mPendingRequest) {
+      PRUint32 pendingLoadStatus;
+      rv = req->GetImageStatus(&pendingLoadStatus);
+      if (NS_SUCCEEDED(rv) &&
+          (pendingLoadStatus & imgIRequest::STATUS_LOAD_COMPLETE)) {
+        MakePendingRequestCurrent();
+        MOZ_ASSERT(mCurrentRequest,
+                   "How could we not have a current request here?");
+
+        nsImageFrame *f = do_QueryFrame(GetOurPrimaryFrame());
+        if (f) {
+          f->NotifyNewCurrentRequest(mCurrentRequest, NS_OK);
+        }
+      }
+    }
   } else {
     // If we don't have a current URI, we might as well store this URI so people
     // know what we tried (and failed) to load.
@@ -1044,6 +1062,16 @@ nsImageLoadingContent::PreparePendingRequest()
 
   // Return a reference.
   return mPendingRequest;
+}
+
+void
+nsImageLoadingContent::MakePendingRequestCurrent()
+{
+  MOZ_ASSERT(mPendingRequest);
+  PrepareCurrentRequest() = mPendingRequest;
+  mPendingRequest = nsnull;
+  mCurrentRequestNeedsResetAnimation = mPendingRequestNeedsResetAnimation;
+  mPendingRequestNeedsResetAnimation = false;
 }
 
 void

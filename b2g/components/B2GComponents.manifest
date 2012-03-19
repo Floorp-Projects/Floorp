@@ -13,3 +13,8 @@ contract @mozilla.org/alerts-service;1 {5dce03b2-8faa-4b6e-9242-6ddb0411750c}
 # ContentPermissionPrompt.js
 component {8c719f03-afe0-4aac-91ff-6c215895d467} ContentPermissionPrompt.js
 contract @mozilla.org/content-permission/prompt;1 {8c719f03-afe0-4aac-91ff-6c215895d467}
+
+# MozKeyboard.js
+component {397a7fdf-2254-47be-b74e-76625a1a66d5} MozKeyboard.js
+contract @mozilla.org/b2g-keyboard;1 {397a7fdf-2254-47be-b74e-76625a1a66d5}
+category JavaScript-navigator-property mozKeyboard @mozilla.org/b2g-keyboard;1

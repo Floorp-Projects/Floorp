@@ -201,7 +201,9 @@
 @BINPATH@/components/inspector.xpt
 @BINPATH@/components/intl.xpt
 @BINPATH@/components/jar.xpt
+#ifdef MOZ_JSDEBUGGER
 @BINPATH@/components/jsdservice.xpt
+#endif
 @BINPATH@/components/jsdebugger.xpt
 @BINPATH@/components/jsinspector.xpt
 @BINPATH@/components/layout_base.xpt

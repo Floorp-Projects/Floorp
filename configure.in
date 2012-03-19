@@ -4851,7 +4851,6 @@ cairo-uikit)
 
 cairo-android)
     AC_DEFINE(MOZ_WIDGET_ANDROID)
-    AC_DEFINE(MOZ_TOUCH)
     MOZ_WIDGET_TOOLKIT=android
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
@@ -4861,7 +4860,6 @@ cairo-android)
     if test "$MOZ_BUILD_APP" = "mobile/xul"; then
         MOZ_OLD_LINKER=1
     fi
-    MOZ_TOUCH=1
     ;;
 
 cairo-gonk)
