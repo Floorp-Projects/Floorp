@@ -102,7 +102,9 @@ class ShadowableLayer;
 class BasicImplData {
 public:
   BasicImplData() : mHidden(false),
-    mClipToVisibleRegion(false), mOperator(gfxContext::OPERATOR_OVER)
+    mClipToVisibleRegion(false),
+    mDrawAtomically(false),
+    mOperator(gfxContext::OPERATOR_OVER)
   {
     MOZ_COUNT_CTOR(BasicImplData);
   }
@@ -170,9 +172,12 @@ public:
   bool GetClipToVisibleRegion() { return mClipToVisibleRegion; }
   void SetClipToVisibleRegion(bool aClip) { mClipToVisibleRegion = aClip; }
 
+  void SetDrawAtomically(bool aDrawAtomically) { mDrawAtomically = aDrawAtomically; }
+
 protected:
   bool mHidden;
   bool mClipToVisibleRegion;
+  bool mDrawAtomically;
   gfxContext::GraphicsOperator mOperator;
 };
 
@@ -741,6 +746,9 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
     }
 #endif
+    if (mDrawAtomically) {
+      flags |= ThebesLayerBuffer::PAINT_NO_ROTATION;
+    }
     Buffer::PaintState state =
       mBuffer.BeginPaint(this, contentType, flags);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
@@ -1427,7 +1435,8 @@ TransformIntRect(nsIntRect& aRect, const gfxMatrix& aMatrix,
  * all layers to the same coordinate system (the "root coordinate system").
  * It can't be used as is by accelerated layers because of intermediate surfaces.
  * This must set the hidden flag to true or false on *all* layers in the subtree.
- * It also sets the operator for all layers to "OVER".
+ * It also sets the operator for all layers to "OVER", and call
+ * SetDrawAtomically(false).
  * It clears mClipToVisibleRegion on all layers.
  * @param aClipRect the cliprect, in the root coordinate system. We assume
  * that any layer drawing is clipped to this rect. It is therefore not
@@ -1478,6 +1487,7 @@ MarkLayersHidden(Layer* aLayer, const nsIntRect& aClipRect,
   BasicImplData* data = ToData(aLayer);
   data->SetOperator(gfxContext::OPERATOR_OVER);
   data->SetClipToVisibleRegion(false);
+  data->SetDrawAtomically(false);
 
   if (!aLayer->AsContainerLayer()) {
     gfxMatrix transform;
@@ -1561,6 +1571,7 @@ ApplyDoubleBuffering(Layer* aLayer, const nsIntRect& aVisibleRect)
   // are cleared. This can also be faster than OPERATOR_OVER.
   if (!container) {
     data->SetOperator(gfxContext::OPERATOR_SOURCE);
+    data->SetDrawAtomically(true);
   } else {
     if (container->UseIntermediateSurface() ||
         !container->ChildrenPartitionVisibleRegion(newVisibleRect)) {
